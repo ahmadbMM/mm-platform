@@ -1,0 +1,9 @@
+{
+  "name": "mm-platform",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r typecheck"
+  }
+}

@@ -1,0 +1,3 @@
+@import "@mm/design-tokens/tokens.css";
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--mm-offwhite); color: var(--mm-black); }

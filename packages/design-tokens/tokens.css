@@ -1,0 +1,38 @@
+/* MicroMobility design tokens v1, extracted from the DC bundles (Aug 2026).
+   Rules: neon green only on dark surfaces/fills; #077A4B for text/links on light;
+   logotype + backgrounds at 100% tint only. Staff portal uses its own palette (below). */
+:root {
+  /* brand */
+  --mm-black: #1A1919;
+  --mm-offwhite: #FBF9F4;
+  --mm-green-neon: #03FF89;   /* dark surfaces + fills only, never small text on light */
+  --mm-green-ink: #077A4B;    /* text/links on light backgrounds */
+
+  /* neutrals (from bundle usage) */
+  --mm-n900: #0D100D;
+  --mm-n800: #2B332D;
+  --mm-n600: #57605A;
+  --mm-n400: #8A938C;
+  --mm-n300: #B9C0BA;
+  --mm-n200: #D5DBD6;
+  --mm-white: #FFFFFF;
+
+  /* semantic */
+  --mm-warning: #F5B301;
+  --mm-error: #B3261E;
+  --mm-error-soft: #FF8A80;
+
+  /* type */
+  --mm-font-en: "Space Grotesk", system-ui, sans-serif;
+  --mm-font-ar: "IBM Plex Sans Arabic", system-ui, sans-serif;
+}
+html[dir="rtl"] body { font-family: var(--mm-font-ar); letter-spacing: 0; line-height: 1.7; }
+html[dir="ltr"] body { font-family: var(--mm-font-en); }
+
+/* staff portal palette (back-office only) */
+:root[data-surface="staff"] {
+  --mm-bg: #F2F2EC;
+  --mm-card: #FFFFFF;
+  --mm-hairline: #E2E2D8;
+  --mm-accent: #0C7A3D;
+}
