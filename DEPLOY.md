@@ -25,13 +25,14 @@ on the old host; the website moving does not change that.
 
 ## Before the first production deploy
 
-1. Decide which Supabase project the site talks to and set `NEXT_PUBLIC_SUPABASE_URL` and
-   `NEXT_PUBLIC_SUPABASE_ANON_KEY` for it (locally in `apps/web/.env.local`, in CI as
-   repository variables). The rentals handoff says: the live rentals project, no migration.
-2. Give the store a home the site can link to (for example `store.micromobility.sa` pointed
-   at Salla, or a plain link to the Salla address).
-3. Add the repository secrets CI needs: `CLOUDFLARE_API_TOKEN` (Workers Scripts: Edit, Zone >
-   Workers Routes: Edit for micromobility.sa) and `CLOUDFLARE_ACCOUNT_ID`.
+1. The site talks to a clone of the rentals database in a new Supabase account (decided
+   2026-09-18). See `CLONE.md`. Set `NEXT_PUBLIC_SUPABASE_URL` and
+   `NEXT_PUBLIC_SUPABASE_ANON_KEY` for it, locally in `apps/web/.env.local` and in GitHub as
+   repository **variables** of the same names.
+2. The shop is a hosted Salla store, so it cannot be served from inside a path. The path
+   forwards instead: `/store`, `/en/store` and `/ar/store` open it (`apps/web/next.config.ts`).
+3. Add the repository **secrets** CI needs: `CLOUDFLARE_API_TOKEN` (Account > Workers Scripts:
+   Edit; Zone > Workers Routes: Edit for micromobility.sa) and `CLOUDFLARE_ACCOUNT_ID`.
 
 ## Preview without touching the domain
 
@@ -40,14 +41,17 @@ pnpm install
 pnpm --filter web preview          # builds and serves the Worker locally on :8787
 ```
 
-To put a preview on the internet without claiming the root, deploy once with the routes
-commented out: Cloudflare gives the Worker a `workers.dev` address.
+
+## Deploys
+
+Every push to `main` builds and deploys the **preview** Worker, `micromobility-web-preview`, to
+its `workers.dev` address. It never touches the domain.
 
 ## Cutover
 
-```bash
-pnpm --filter web deploy           # or push to main and let CI do it
-```
+Set the repository variable `MM_PRODUCTION` to `on` (Settings > Secrets and variables > Actions >
+Variables). From the next push, CI also runs `wrangler deploy --env production`, which claims the
+root and `www`. To do it by hand instead: `pnpm --filter web exec wrangler deploy --env production`.
 
 Then check, in this order: `https://micromobility.sa/` (site, redirected to `/en` or `/ar`),
 `https://micromobility.sa/petromin` (registration form, unchanged), and send a test email to
@@ -60,4 +64,6 @@ micromobility-web > Settings > Domains & Routes; the old forward takes over agai
   supports that from 1.20.3, marked experimental. If that ever bites, the fallback is Next 15
   with an edge `middleware.ts`.
 - ESLint stays on 9.x: the React plugin inside `eslint-config-next` does not load on ESLint 10.
+- The Worker bundle is about 2.2 MB compressed. Cloudflare's free Workers plan allows 3 MB; the
+  paid plan 10 MB. Worth the paid plan before the site grows much.
 - pnpm 11 only runs the build scripts listed under `allowBuilds` in `pnpm-workspace.yaml`.
