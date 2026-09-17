@@ -4,6 +4,15 @@
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
-  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" }
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  // The main website answers the root and www of micromobility.sa. Routes, not custom
+  // domains, on purpose: the DNS records stay as they are (proxied A records at the old
+  // host), and the more specific route the Petromin worker holds on /petromin* keeps
+  // winning for that path. A Worker route also runs before the old forward to the store,
+  // so the forward can simply be deleted at cutover.
+  "routes": [
+    { "pattern": "micromobility.sa/*",     "zone_name": "micromobility.sa" },
+    { "pattern": "www.micromobility.sa/*", "zone_name": "micromobility.sa" }
+  ]
   // Later: NEXT_INC_CACHE_R2_BUCKET binding for ISR caching (see OpenNext caching docs)
 }

@@ -4,25 +4,27 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "lint": "next lint",
+    "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "preview": "opennextjs-cloudflare build && wrangler dev",
     "deploy": "opennextjs-cloudflare build && wrangler deploy"
   },
   "dependencies": {
     "@mm/design-tokens": "workspace:*",
-    "@supabase/ssr": "latest",
-    "@supabase/supabase-js": "latest",
-    "next": "latest",
-    "next-intl": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "@supabase/ssr": "0.8.0",
+    "@supabase/supabase-js": "2.110.0",
+    "next": "16.3.5",
+    "next-intl": "4.14.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "latest",
+    "@opennextjs/cloudflare": "1.20.6",
     "@types/node": "latest",
     "@types/react": "latest",
-    "typescript": "latest",
-    "wrangler": "latest"
+    "typescript": "5.9.3",
+    "wrangler": "4.134.0",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.5"
   }
 }
