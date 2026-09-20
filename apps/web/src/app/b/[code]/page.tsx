@@ -55,18 +55,31 @@ export async function generateMetadata({
 }: { params: Promise<{ code: string }> }): Promise<Metadata> {
   const { code } = await params;
   // The tab title is read by the same person as the page, so it is built in their language.
-  const [row, lang] = await Promise.all([getBikeByNumber(code), readBikeLang()]);
-  const name = row ? bikeTitle(row, tFor(lang)).title : `#${code}`;
+  const [found, lang] = await Promise.all([getBikeByNumber(code), readBikeLang()]);
+  const name = found.status === "found" ? bikeTitle(found.row, tFor(lang)).title : `#${code}`;
   return { title: `${name} · MicroMobility`, robots: { index: false, follow: false } };
 }
 
 export default async function BikePage({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  const [row, lang] = await Promise.all([getBikeByNumber(code), readBikeLang()]);
+  const [found, lang] = await Promise.all([getBikeByNumber(code), readBikeLang()]);
   const t = tFor(lang);
 
+  // A fleet we could not reach is a fault to retry, not a sticker to give up on. Saying
+  // "unrecognised" here would send a rider away from a bike that is sitting right in front
+  // of them, and would hide a broken deployment behind a sentence about their sticker.
+  if (found.status === "unavailable") {
+    return (
+      <main className="bk-unknown">
+        <h1>{t("errTitle")}</h1>
+        <p>{t("errBody")}</p>
+        <a className="bk-cta" href={`/b/${encodeURIComponent(code)}`}>{t("errCta")}</a>
+      </main>
+    );
+  }
+
   // An unrecognised sticker is a dead end, not an error page: say so and offer the way out.
-  if (!row) {
+  if (found.status === "missing") {
     return (
       <main className="bk-unknown">
         <h1>{t("unknownTitle")}</h1>
@@ -77,6 +90,7 @@ export default async function BikePage({ params }: { params: Promise<{ code: str
     );
   }
 
+  const row = found.row;
   const state = bikeState(row);
   const price = ridePrice(row);
   const heading = bikeTitle(row, t);

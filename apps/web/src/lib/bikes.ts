@@ -41,15 +41,27 @@ export function bikeState(row: BikeRow): BikeState {
 }
 
 /**
- * One bike by the number printed on its sticker. Returns null when no bike carries that
- * number — which is also the answer for a tag whose bike was deleted, so the caller can
- * render the unknown-tag state either way.
+ * The three answers a tag can get. "missing" and "unavailable" are deliberately NOT the same:
+ * a sticker nobody has linked to a bike is a dead end the rider should be told about, while a
+ * database we could not reach is a temporary fault they should retry. Collapsing both into null
+ * meant a missing environment variable on the Worker would have told every rider, on every bike,
+ * that their sticker was unrecognised — with nothing anywhere pointing at the real cause.
  */
-export async function getBikeByNumber(code: string): Promise<BikeRow | null> {
-  if (!/^\d{1,6}$/.test(code)) return null;          // the sticker is a number and nothing else
+export type BikeLookup =
+  | { status: "found"; row: BikeRow }
+  | { status: "missing" }
+  | { status: "unavailable"; reason: string };
+
+export async function getBikeByNumber(code: string): Promise<BikeLookup> {
+  if (!/^\d{1,6}$/.test(code)) return { status: "missing" };   // the sticker is a number, nothing else
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
+  if (!url || !key) {
+    // A deployment fault, not a rider's fault. Loud, because the page cannot say it.
+    console.error("[bike] NEXT_PUBLIC_SUPABASE_URL / _ANON_KEY missing — no bike can resolve");
+    return { status: "unavailable", reason: "config" };
+  }
 
   const endpoint =
     `${url}/rest/v1/bikes?select=${PUBLIC_COLS}&bike_number=eq.${Number(code)}&limit=1`;
@@ -61,11 +73,23 @@ export async function getBikeByNumber(code: string): Promise<BikeRow | null> {
       // A bike's status changes as it goes out and comes back, so the page is never cached.
       cache: "no-store",
     });
-  } catch { return null; }
-  if (!res.ok) return null;
+  } catch (e) {
+    console.error("[bike] fleet unreachable:", e);
+    return { status: "unavailable", reason: "network" };
+  }
+  if (!res.ok) {
+    console.error(`[bike] fleet responded ${res.status}`);
+    return { status: "unavailable", reason: `http_${res.status}` };
+  }
 
-  const rows = (await res.json()) as BikeRow[];
-  return rows?.[0] ?? null;
+  try {
+    const rows = (await res.json()) as BikeRow[];
+    const row = rows?.[0];
+    return row ? { status: "found", row } : { status: "missing" };
+  } catch (e) {
+    console.error("[bike] unreadable answer from the fleet:", e);
+    return { status: "unavailable", reason: "parse" };
+  }
 }
 
 /**
@@ -87,10 +111,9 @@ const TYPE_RATED = new Set(["Road", "Mountain", "Hybrid"]);
 
 /**
  * Returns null when there is no price to state: an "Own" bike is not rented, and a bike whose
- * type we do not recognise has no known rate. The rentals app falls back to DEFAULT_PRICE here,
- * but it is quoting staff who can see the record; this page is quoting a rider standing at a
- * bike rack, and a number assembled from a default constant is a guess wearing a price tag.
- * Silence is the honest answer.
+ * type we do not recognise has no known rate. The rentals app falls back to a default constant
+ * here, but it is quoting staff who can see the record; this page is quoting a rider standing at
+ * a bike rack, and a number assembled from a default is a guess wearing a price tag.
  */
 export function ridePrice(row: BikeRow): number | null {
   const type = String(row.type ?? "").trim();
