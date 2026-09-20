@@ -103,13 +103,13 @@ describe("the price is the one the rider is actually charged", () => {
   it("ignores rental_price for the types the rentals app rates by type", () => {
     // the whole fleet is Road/Mountain/Hybrid; priceForBike() ignores the column for these
     expect(ridePrice(bike({ type: "Road", rental_price: 95 }))).toBe(75);
-    expect(ridePrice(bike({ type: "Mountain", rental_price: 95 }))).toBe(50);
-    expect(ridePrice(bike({ type: "Hybrid", rental_price: 95 }))).toBe(50);
+    expect(ridePrice(bike({ type: "Mountain", rental_price: 95 }))).toBe(57.5);
+    expect(ridePrice(bike({ type: "Hybrid", rental_price: 95 }))).toBe(57.5);
   });
 
   it("uses rental_price for the types that are priced per bike", () => {
     expect(ridePrice(bike({ type: "Kids", rental_price: 120 }))).toBe(120);
-    expect(ridePrice(bike({ type: "Kids" }))).toBe(50);
+    expect(ridePrice(bike({ type: "Kids" }))).toBe(57.5);
   });
 
   it("states no price rather than inventing one", () => {

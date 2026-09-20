@@ -117,8 +117,12 @@ export async function getBikeByNumber(code: string): Promise<BikeLookup> {
  * source of truth, and the database has no column that holds the charged price.
  */
 const RIDE_PRICES: Record<string, number> = {
-  Road: 75, Mountain: 50, Hybrid: 50, Kids: 50, Any: 50, "Road Carbon": 250, Own: 0,
+  Road: 75, Mountain: 57.5, Hybrid: 57.5, Kids: 57.5, Any: 57.5, "Road Carbon": 250, Own: 0,
 };
+// Petromin employees ride the same bikes at the older 50, but that is a property of the
+// SESSION they booked, and a bike page has no session: a rider tapping a tag has not chosen a
+// ride yet. So this page states the standard fare, which is what an ordinary rider pays. The
+// Petromin exception lives where it can be applied correctly - the booking price trigger.
 const TYPE_RATED = new Set(["Road", "Mountain", "Hybrid"]);
 
 /**
