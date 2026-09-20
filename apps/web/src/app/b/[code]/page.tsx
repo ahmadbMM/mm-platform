@@ -1,54 +1,14 @@
 import type { Metadata } from "next";
 import LangToggle from "../LangToggle";
-import { bikeState, filled, getBikeByNumber, ridePrice, type BikeRow } from "@/lib/bikes";
-import { bikeTitle, fmtDate, fmtPrice, speedsLabel, tFor, translateValue, type BikeLang } from "@/lib/bike-i18n";
+import { bikeState, getBikeByNumber, ridePrice } from "@/lib/bikes";
+import { filled } from "@/lib/filled";
+import { buildGroups } from "@/lib/bike-fields";
+import { bikeTitle, fmtPrice, tFor, translateValue } from "@/lib/bike-i18n";
 import { readBikeLang } from "@/lib/bike-lang";
 
 // Where a rider goes to book. The rentals app answers on its own origin today and moves to
 // micromobility.sa/experiences later; when it does, this one line changes and nothing else.
 const BOOKING_URL = "https://micromobilityrentals.pages.dev";
-
-type Field = { label: string; value: string };
-type Group = { heading?: string; fields: Field[] };
-
-/**
- * The page shows what staff filled in and nothing else: every candidate is pushed with its
- * raw value, the blanks are dropped, and a group with nothing left never renders its heading.
- * No placeholder dashes — a field exists on screen only because it exists on the record.
- */
-function buildGroups(row: BikeRow, lang: BikeLang, titleUsedBrandModel: boolean): Group[] {
-  const t = tFor(lang);
-  const tv = (v: string) => translateValue(v, t);
-
-  const spec: Array<[string, unknown]> = [
-    // Already the headline when the title was built from them — a spec row repeating it
-    // would just be the same two words twice on one screen.
-    [t("fBrand"), titleUsedBrandModel ? null : row.brand],
-    [t("fModel"), titleUsedBrandModel ? null : row.model],
-    [t("fFrame"), filled(row.frame_type) ? tv(row.frame_type!) : null],
-    [t("fSize"), filled(row.size) ? tv(row.size!) : null],
-    [t("fGroupset"), row.groupset],
-    // A count of zero speeds or zero kilos is a broken import, not a specification.
-    [t("fSpeeds"), Number(row.speeds) > 0 ? speedsLabel(Number(row.speeds), lang) : null],
-    [t("fWheels"), row.wheel_size],
-    [t("fBrakes"), row.brake_type],
-    [t("fWeight"), Number(row.weight_kg) > 0 ? `${row.weight_kg} ${t("unitKg")}` : null],
-    [t("fColour"), (row.color_names ?? []).filter(filled).join(" · ") || null],
-  ];
-
-  const service: Array<[string, unknown]> = [
-    [t("fInService"), filled(row.in_service_date) ? fmtDate(row.in_service_date!, lang) : null],
-    [t("fLastService"), filled(row.last_serviced_at) ? fmtDate(row.last_serviced_at!, lang) : null],
-  ];
-
-  const pick = (pairs: Array<[string, unknown]>): Field[] =>
-    pairs.filter(([, v]) => filled(v)).map(([label, v]) => ({ label, value: String(v).trim() }));
-
-  return ([
-    { heading: t("specs"), fields: pick(spec) },
-    { heading: t("service"), fields: pick(service) },
-  ] as Group[]).filter((g) => g.fields.length > 0);
-}
 
 export async function generateMetadata({
   params,
@@ -111,7 +71,12 @@ export default async function BikePage({ params }: { params: Promise<{ code: str
 
   return (
     <main className="bk-page">
-      <div className="bk-hero" data-photo={heroStyle ? "yes" : "none"} style={heroStyle}>
+      <div
+        className="bk-hero"
+        data-photo={heroStyle ? "yes" : "none"}
+        data-type={filled(row.type) ? String(row.type).trim() : undefined}
+        style={heroStyle}
+      >
         <div className="bk-hero-bar">
           <div className="bk-hero-start">
             {/* The mark is inline so the hero never waits on a second request. */}
@@ -124,6 +89,15 @@ export default async function BikePage({ params }: { params: Promise<{ code: str
           </div>
           <span className="bk-code lat">#{row.bike_number}</span>
         </div>
+        {!heroStyle && (
+          <div className="bk-watermark" aria-hidden="true">
+            <svg viewBox="0 0 32 32" fill="none">
+              <circle cx="9" cy="22" r="6.5" stroke="#FBF9F4" strokeWidth="2" />
+              <circle cx="23" cy="22" r="6.5" stroke="#FBF9F4" strokeWidth="2" />
+              <path d="M9 22l5-11h6l3 11" stroke="#FBF9F4" strokeWidth="2" strokeLinejoin="round" />
+            </svg>
+          </div>
+        )}
       </div>
 
       <div className="bk-title">
@@ -162,6 +136,9 @@ export default async function BikePage({ params }: { params: Promise<{ code: str
         </div>
       )}
 
+      {/* The handoff also specifies a secondary "See this bike in the store" button. It is not
+          built: the shop is a hosted Salla store on its own domain with no per-bike product
+          URL to point at, so there is no destination for it yet. Add it here when there is. */}
       <footer className="bk-foot">
         {state === "hold" ? (
           <p className="bk-notice">{t("holdNotice")}</p>

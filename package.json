@@ -4,7 +4,8 @@
   "scripts": {
     "dev": "pnpm --filter web dev",
     "lint": "pnpm -r lint",
-    "typecheck": "pnpm -r typecheck"
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test"
   },
   "packageManager": "pnpm@11.22.0"
 }

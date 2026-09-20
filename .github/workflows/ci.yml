@@ -15,6 +15,7 @@ jobs:
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint && pnpm typecheck
+      - run: pnpm --filter web test
       - run: pnpm --filter web exec opennextjs-cloudflare build
       # The production deploy below needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
       # Without them wrangler-action runs with empty values and fails, turning a push red for

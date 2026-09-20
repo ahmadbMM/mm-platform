@@ -20,8 +20,7 @@
 [dir="rtl"] .bk-price,
 [dir="rtl"] .bk-price-label,
 [dir="rtl"] .bk-pill,
-[dir="rtl"] .bk-cta,
-[dir="rtl"] .bk-cta2 { letter-spacing: 0; }
+[dir="rtl"] .bk-cta { letter-spacing: 0; }
 [dir="rtl"] .bk-page h1,
 [dir="rtl"] .bk-unknown h1 { line-height: 1.25; }
 
@@ -49,14 +48,38 @@
   background-size: cover;
   background-position: center 60%;
 }
-/* No photo on the record means no photo on the page: the hero collapses to just the bar
-   rather than leaving a tall empty band pretending an image failed to load. */
-.bk-hero[data-photo="none"] { height: auto; background-color: transparent; }
+/* Most bikes have no photo, and a full-height empty band reads as an image that failed to
+   load. Instead the hero shrinks to a quiet branded panel: a tint carrying the bike's own
+   type, and the mark watermarked behind it. It anchors the page without pretending to show
+   the bike, so nothing here claims a photo exists when one does not. */
+.bk-hero[data-photo="none"] {
+  height: auto;
+  min-height: 132px;
+  display: flex;
+  flex-direction: column;
+  background-color: transparent;
+  background-image:
+    radial-gradient(120% 90% at 50% 0%, var(--bk-tint, rgba(3, 255, 137, .10)) 0%, rgba(26, 25, 25, 0) 70%);
+  border-bottom: 1px solid rgba(251, 249, 244, .10);
+}
 .bk-hero[data-photo="none"] .bk-hero-bar {
   position: static;
   margin: 0 20px;
   padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
 }
+.bk-watermark {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 10px 0 14px;
+  pointer-events: none;
+}
+.bk-watermark svg { width: 62px; height: 62px; opacity: .13; display: block; }
+
+/* The tint follows the kind of bike, so a Road page and a Mountain page are not identical. */
+.bk-hero[data-type="Road"]     { --bk-tint: rgba(3, 255, 137, .13); }
+.bk-hero[data-type="Mountain"] { --bk-tint: rgba(185, 138, 26, .16); }
+.bk-hero[data-type="Hybrid"]   { --bk-tint: rgba(120, 190, 255, .13); }
 
 .bk-hero-bar {
   position: absolute;
@@ -165,14 +188,6 @@
   font-size: 17px; font-weight: 700;
 }
 .bk-cta:hover { color: var(--mm-black); }
-.bk-cta2 {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  min-height: 50px; border-radius: 999px;
-  background: transparent; color: var(--mm-offwhite);
-  border: 1px solid rgba(251, 249, 244, .32);
-  font-size: 16px; font-weight: 600;
-}
-.bk-cta2:hover { color: var(--mm-offwhite); }
 .bk-notice {
   padding: 14px 16px; border-radius: 12px;
   background: rgba(251, 249, 244, .08);

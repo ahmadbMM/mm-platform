@@ -7,7 +7,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "preview": "opennextjs-cloudflare build && wrangler dev",
-    "deploy": "opennextjs-cloudflare build && wrangler deploy"
+    "deploy": "opennextjs-cloudflare build && wrangler deploy",
+    "test": "vitest run"
   },
   "dependencies": {
     "@mm/design-tokens": "workspace:*",
@@ -22,9 +23,10 @@
     "@opennextjs/cloudflare": "1.20.6",
     "@types/node": "latest",
     "@types/react": "latest",
-    "typescript": "5.9.3",
-    "wrangler": "4.134.0",
     "eslint": "9.39.5",
-    "eslint-config-next": "16.3.5"
+    "eslint-config-next": "16.3.5",
+    "typescript": "5.9.3",
+    "vitest": "^3.2.7",
+    "wrangler": "4.134.0"
   }
 }
