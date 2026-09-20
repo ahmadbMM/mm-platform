@@ -1,5 +1,7 @@
 -- 0001: mm schema bootstrap (identity module + conventions)
--- Run on STAGING (ariyvnxeywozmwxmylhb) first, then production. Additive only; never touches public.*
+-- Run on the new site's OWN Supabase project (see CLONE.md); it does not exist yet, so this
+-- has not been run anywhere. Additive only; never touches public.*
+-- NOT ariyvnxeywozmwxmylhb: that is the old rentals rollback copy, not staging for this site.
 -- After applying: Dashboard > Settings > API > add 'mm' to Exposed schemas.
 
 create schema if not exists mm;
