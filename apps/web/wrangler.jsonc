@@ -9,19 +9,28 @@
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "workers_dev": true,
   "env": {
-    // `wrangler deploy --env production` = the real site. It answers the root and www of
-    // micromobility.sa by ROUTE, not custom domain, on purpose: the DNS records stay as they
-    // are (proxied A records at the old host), the Petromin worker's more specific route on
-    // /petromin* keeps winning for that path, and a Worker route runs before the old forward
-    // to the store, so that forward stops applying at the first production deploy.
+    // `wrangler deploy --env production` = the real site. It answers micromobility.sa by
+    // ROUTE, not custom domain, on purpose: the DNS records stay as they are (proxied A
+    // records at the old host) and the Petromin worker's more specific /petromin* route
+    // keeps winning for that path.
+    //
+    // The route is deliberately NARROW for now. `/b/*` is the NFC bike pages and nothing
+    // else, so the bike stickers go live on the real domain while the root keeps forwarding
+    // to the Salla store. A Worker route runs before that forward, so widening this list is
+    // what actually claims the site — do it when the full site is ready, by replacing the
+    // /b/* entry with:
+    //   { "pattern": "micromobility.sa/*",     "zone_name": "micromobility.sa" },
+    //   { "pattern": "www.micromobility.sa/*", "zone_name": "micromobility.sa" }
+    // The chips keep holding /b/42 either way; nothing has to be rewritten at cutover.
+    //
     // CI only runs this once the repository variable MM_PRODUCTION is set to "on".
     "production": {
       "name": "micromobility-web",
       "workers_dev": false,
       "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
       "routes": [
-        { "pattern": "micromobility.sa/*",     "zone_name": "micromobility.sa" },
-        { "pattern": "www.micromobility.sa/*", "zone_name": "micromobility.sa" }
+        { "pattern": "micromobility.sa/b/*",     "zone_name": "micromobility.sa" },
+        { "pattern": "www.micromobility.sa/b/*", "zone_name": "micromobility.sa" }
       ]
     }
   }

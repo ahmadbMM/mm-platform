@@ -1,0 +1,195 @@
+/* The NFC bike page. A phone-first dark page; the handoff's per-frame numbers (SE 320,
+   15 Pro 393, Pro Max 430) become clamp() ranges so a real device lands between them. */
+
+/* next/font self-hosts the two faces under generated family names and exposes them as these
+   two variables. tokens.css points body at "Space Grotesk" and "IBM Plex Sans Arabic" by
+   literal name, which matches nothing — so both fonts were being downloaded on every tap and
+   no text ever used them. Redefining the tokens here, after globals.css, connects the two. */
+:root {
+  --mm-font-en: var(--bk-font-en), "Space Grotesk", system-ui, sans-serif;
+  --mm-font-ar: var(--bk-font-ar), "IBM Plex Sans Arabic", system-ui, sans-serif;
+}
+
+/* Arabic is cursive: letter-spacing pries joined letters apart and tightening line-height
+   clips the vowel marks. tokens.css guards this on body, but the rules below are on elements
+   and win, so the guard is restated for the text that actually renders Arabic words. */
+[dir="rtl"] .bk-page h1,
+[dir="rtl"] .bk-unknown h1,
+[dir="rtl"] .bk-group h2,
+[dir="rtl"] .bk-label,
+[dir="rtl"] .bk-price,
+[dir="rtl"] .bk-price-label,
+[dir="rtl"] .bk-pill,
+[dir="rtl"] .bk-cta,
+[dir="rtl"] .bk-cta2 { letter-spacing: 0; }
+[dir="rtl"] .bk-page h1,
+[dir="rtl"] .bk-unknown h1 { line-height: 1.25; }
+
+.bk-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--mm-black);
+  color: var(--mm-offwhite);
+  overflow-x: hidden;
+}
+.bk-page a { color: var(--mm-green-ink); text-decoration: none; }
+.bk-page a:hover { color: #06603b; }
+
+/* Codes, refs, times and numerals stay left-to-right inside Arabic text. */
+.lat { direction: ltr; unicode-bidi: embed; font-variant-numeric: tabular-nums; }
+[dir="rtl"] .mirror-rtl { display: inline-block; transform: scaleX(-1); }
+
+/* ── hero ─────────────────────────────────────────────────────────────────── */
+.bk-hero {
+  position: relative;
+  flex: none;
+  height: clamp(227px, 40vh, 372px);
+  background-color: #111010;
+  background-size: cover;
+  background-position: center 60%;
+}
+/* No photo on the record means no photo on the page: the hero collapses to just the bar
+   rather than leaving a tall empty band pretending an image failed to load. */
+.bk-hero[data-photo="none"] { height: auto; background-color: transparent; }
+.bk-hero[data-photo="none"] .bk-hero-bar {
+  position: static;
+  margin: 0 20px;
+  padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+}
+
+.bk-hero-bar {
+  position: absolute;
+  top: calc(env(safe-area-inset-top, 0px) + 16px);
+  inset-inline: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+/* Both children are flex:none: in Arabic the chip used to grow and slide under the mark. */
+.bk-hero-start { display: flex; align-items: center; gap: 4px; flex: none; }
+.bk-mark { width: 28px; height: 28px; display: block; }
+
+.bk-globe {
+  flex: none;
+  width: 32px; height: 32px;
+  min-width: 44px; min-height: 44px;   /* hit area, not ink */
+  display: grid; place-items: center;
+  background: none; border: 0; padding: 0;
+  color: var(--mm-offwhite); cursor: pointer;
+}
+.bk-globe svg { width: 22px; height: 22px; }
+
+.bk-code {
+  flex: none;
+  font-size: 15px; font-weight: 500; letter-spacing: 1.5px;
+  padding: 5px 10px; border-radius: 6px;
+  background: rgba(26, 25, 25, .55);
+  border: 1px solid rgba(251, 249, 244, .25);
+  white-space: nowrap;
+}
+
+/* ── title ────────────────────────────────────────────────────────────────── */
+.bk-title { padding: 6px 20px 0; display: flex; flex-direction: column; gap: 10px; }
+.bk-title h1 {
+  margin: 0;
+  font-size: clamp(26px, 7.2vw, 32px);
+  line-height: 1.02; letter-spacing: -1px; font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.bk-cat { margin: 0; font-size: 16px; color: rgba(251, 249, 244, .78); }
+
+.bk-pill {
+  align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 8px;
+  height: 34px; padding: 0 14px; border-radius: 999px;
+  font-size: 14px; font-weight: 700;
+  color: var(--mm-offwhite);
+  background: rgba(251, 249, 244, .12);
+  border: 1px solid rgba(251, 249, 244, .28);
+}
+.bk-pill::before {
+  content: ""; width: 8px; height: 8px; border-radius: 50%;
+  background: currentColor; flex: none;
+}
+.bk-pill[data-state="available"] {
+  color: var(--mm-green-neon);
+  background: rgba(3, 255, 137, .14);
+  border-color: var(--mm-green-neon);
+}
+
+.bk-price {
+  margin: 2px 0 0;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  font-size: 22px; font-weight: 700; letter-spacing: -.4px;
+  color: var(--mm-green-neon);
+}
+.bk-price-label {
+  font-size: 13px; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 1px; color: rgba(251, 249, 244, .72);
+}
+
+/* ── specs ────────────────────────────────────────────────────────────────── */
+.bk-groups { padding: 22px 20px 0; display: flex; flex-direction: column; gap: 22px; }
+.bk-group h2 {
+  margin: 0 0 12px;
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.8px; color: var(--mm-green-neon);
+}
+.bk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+  gap: 16px 18px;
+}
+.bk-field { border-top: 1px solid rgba(251, 249, 244, .14); padding-top: 10px; }
+.bk-label {
+  margin: 0 0 2px;
+  font-size: 13px; font-weight: 500; text-transform: uppercase;
+  letter-spacing: 1px; color: rgba(251, 249, 244, .72);
+}
+.bk-value { margin: 0; font-size: 18px; font-weight: 500; line-height: 1.3; overflow-wrap: anywhere; }
+
+/* ── footer ───────────────────────────────────────────────────────────────── */
+.bk-foot {
+  position: sticky; bottom: 0;
+  margin-top: auto;
+  padding: 12px 20px calc(env(safe-area-inset-bottom, 0px) + 26px);
+  display: flex; flex-direction: column; gap: 10px;
+  background: linear-gradient(rgba(26, 25, 25, 0), var(--mm-black) 40%);
+}
+.bk-cta {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 54px; border-radius: 999px;
+  background: var(--mm-green-neon); color: var(--mm-black);
+  font-size: 17px; font-weight: 700;
+}
+.bk-cta:hover { color: var(--mm-black); }
+.bk-cta2 {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 50px; border-radius: 999px;
+  background: transparent; color: var(--mm-offwhite);
+  border: 1px solid rgba(251, 249, 244, .32);
+  font-size: 16px; font-weight: 600;
+}
+.bk-cta2:hover { color: var(--mm-offwhite); }
+.bk-notice {
+  padding: 14px 16px; border-radius: 12px;
+  background: rgba(251, 249, 244, .08);
+  border: 1px solid rgba(251, 249, 244, .16);
+  font-size: 15px; line-height: 1.45;
+}
+
+/* ── unknown tag ──────────────────────────────────────────────────────────── */
+.bk-unknown {
+  min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 32px 24px;
+  text-align: center;
+  background: var(--mm-black); color: var(--mm-offwhite);
+}
+.bk-unknown h1 {
+  margin: 0; font-size: 26px; letter-spacing: -.6px; text-wrap: balance;
+}
+.bk-unknown p { margin: 0; font-size: 16px; color: rgba(251, 249, 244, .75); }
+.bk-unknown .bk-cta { margin-top: 10px; padding: 0 28px; min-height: 52px; }
