@@ -16,10 +16,19 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint && pnpm typecheck
       - run: pnpm --filter web exec opennextjs-cloudflare build
+      # Both deploys need CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID. Until somebody sets
+      # them, wrangler-action would run with empty values and fail, turning every push red for
+      # a step that was never going to work. Check once and skip instead, the way the rentals
+      # repo does, so a red run means something is actually broken.
+      - id: secrets
+        name: Check for Cloudflare credentials
+        run: echo "present=${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}" >> "$GITHUB_OUTPUT"
+      - if: steps.secrets.outputs.present != 'true'
+        name: Skip (no Cloudflare token — nothing deploys)
+        run: echo "CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set; the build is verified, nothing is deployed."
       # Every push to main: the preview Worker (a workers.dev address, never the domain).
-      # Needs the secrets CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
       - name: Deploy preview
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && steps.secrets.outputs.present == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -29,7 +38,7 @@ jobs:
       # The real site on micromobility.sa: only once the repository variable
       # MM_PRODUCTION is set to "on" (Settings > Secrets and variables > Actions > Variables).
       - name: Deploy production
-        if: github.ref == 'refs/heads/main' && vars.MM_PRODUCTION == 'on'
+        if: github.ref == 'refs/heads/main' && vars.MM_PRODUCTION == 'on' && steps.secrets.outputs.present == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
