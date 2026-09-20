@@ -54,7 +54,7 @@
 .bk-hero[data-photo="none"] {
   background-image:
     linear-gradient(to top, #1A1919 0%, rgba(26,25,25,.2) 45%, rgba(26,25,25,.35) 100%),
-    url("/assets/bike-detail.jpg");
+    url("/b/assets/bike-detail.jpg");
 }
 /* The watermark field (docs/loading-screen-handoff.md). It bleeds past every edge so no mark
    is visibly cropped at a corner, and it never takes a pointer. --bk-wm scales the mark widths
@@ -71,7 +71,7 @@
   position: absolute;
   display: block;
   aspect-ratio: 1;
-  background: url("/assets/brand-mark-white.svg") center / contain no-repeat;
+  background: url("/b/assets/brand-mark-white.svg") center / contain no-repeat;
 }
 .bk-field-wide { display: none; }
 @media (max-width: 400px) { .bk-field { --bk-wm: .8; } }
@@ -104,7 +104,7 @@
   flex: none;
   width: 28px; height: 28px;
   display: block;
-  background: url("/assets/brand-mark-white.svg") center / contain no-repeat;
+  background: url("/b/assets/brand-mark-white.svg") center / contain no-repeat;
 }
 
 .bk-globe {
@@ -265,8 +265,8 @@
 .bk-mark {
   width: 88px; height: 88px;
   background: var(--mm-green-neon);
-  -webkit-mask: url("/assets/brand-mark-white.svg") center / contain no-repeat;
-          mask: url("/assets/brand-mark-white.svg") center / contain no-repeat;
+  -webkit-mask: url("/b/assets/brand-mark-white.svg") center / contain no-repeat;
+          mask: url("/b/assets/brand-mark-white.svg") center / contain no-repeat;
 }
 @keyframes bkSpin { to { transform: rotate(360deg); } }
 

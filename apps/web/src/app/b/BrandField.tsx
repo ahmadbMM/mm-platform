@@ -13,6 +13,10 @@
  * Each mark is a span with the SVG as a background rather than an <img>: one cached request
  * for all of them, no 38 elements for next/image to wrap, and nothing for a screen reader to
  * find. The field is decorative and carries aria-hidden.
+ *
+ * The assets live under /b/assets, not /assets, because the production Worker claims only
+ * micromobility.sa/b/* — anything outside that prefix still falls through to the old forward
+ * to the store, so a mark at /assets would 302 away and never paint.
  */
 type Mark = [left: number, width: number];
 type Row = { top: number; marks: Mark[] };
