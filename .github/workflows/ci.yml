@@ -16,25 +16,27 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint && pnpm typecheck
       - run: pnpm --filter web exec opennextjs-cloudflare build
-      # Both deploys need CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID. Until somebody sets
-      # them, wrangler-action would run with empty values and fail, turning every push red for
-      # a step that was never going to work. Check once and skip instead, the way the rentals
-      # repo does, so a red run means something is actually broken.
+      # The production deploy below needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+      # Without them wrangler-action runs with empty values and fails, turning a push red for
+      # a step that was never going to work, so check once and skip instead.
       - id: secrets
         name: Check for Cloudflare credentials
         run: echo "present=${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}" >> "$GITHUB_OUTPUT"
       - if: steps.secrets.outputs.present != 'true'
         name: Skip (no Cloudflare token — nothing deploys)
         run: echo "CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID not set; the build is verified, nothing is deployed."
-      # Every push to main: the preview Worker (a workers.dev address, never the domain).
-      - name: Deploy preview
-        if: github.ref == 'refs/heads/main' && steps.secrets.outputs.present == 'true'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/web
-          command: deploy
+      # NO AUTOMATIC PREVIEW. A push builds, lints and typechecks; it deploys nothing.
+      #
+      # There used to be a "Deploy preview" step here that ran `wrangler deploy` on every push
+      # to main and created the Worker `micromobility-web-preview` on a workers.dev address.
+      # It was removed on 2026-09-20 at the owner's request, and that Worker was deleted: a
+      # push should not put anything into the Cloudflare account unasked. To preview, deploy
+      # by hand from apps/web:
+      #
+      #   CLOUDFLARE_ACCOUNT_ID=<account> npx wrangler deploy
+      #
+      # To bring the automatic preview back, restore this step from git history
+      # (commit 9b3e25d has the last version) and re-add it below the secrets check.
       # The real site on micromobility.sa: only once the repository variable
       # MM_PRODUCTION is set to "on" (Settings > Secrets and variables > Actions > Variables).
       - name: Deploy production
