@@ -29,14 +29,26 @@ export type BikeState = "available" | "staged" | "out" | "returned" | "hold";
 
 
 
+/**
+ * The rentals app writes exactly four statuses; the handoff spec names five states. This maps
+ * one to the other, and accepts the spec's own words too so either vocabulary resolves.
+ *
+ * An unrecognised status resolves to "hold", NOT to "available". The default used to be
+ * available, which meant a typo, a future status or a bad restore would put a Book button
+ * under a bike that might be in the workshop. Wrongly resting a good bike is a visible
+ * mistake someone fixes; wrongly renting a broken one is a silent one.
+ */
 export function bikeState(row: BikeRow): BikeState {
   if (filled(row.retired_date)) return "hold";
-  switch ((row.status || "").toLowerCase()) {
-    case "in-use": return "out";
-    case "maintenance": case "retired": return "hold";
+  switch ((row.status || "").trim().toLowerCase()) {
+    case "available": return "available";
+    case "in-use": case "out": return "out";
+    case "maintenance": case "retired": case "hold": return "hold";
     case "returned": return "returned";
-    case "staged": return "staged";
-    default: return "available";
+    case "staged": case "reserved": return "staged";
+    default:
+      console.warn(`[bike] unrecognised status ${JSON.stringify(row.status)} — resting it`);
+      return "hold";
   }
 }
 

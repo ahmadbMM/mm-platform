@@ -20,7 +20,7 @@ export function buildGroups(row: BikeRow, lang: BikeLang, titleUsedBrandModel: b
     [t("fBrand"), titleUsedBrandModel ? null : row.brand],
     [t("fModel"), titleUsedBrandModel ? null : row.model],
     [t("fFrame"), filled(row.frame_type) ? tv(row.frame_type!) : null],
-    [t("fSize"), filled(row.size) ? tv(row.size!) : null],
+    [t("fSize"), row.size],
     [t("fGroupset"), row.groupset],
     // A count of zero speeds or zero kilos is a broken import, not a specification.
     [t("fSpeeds"), Number(row.speeds) > 0 ? speedsLabel(Number(row.speeds), lang) : null],

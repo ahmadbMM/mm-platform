@@ -1,14 +1,21 @@
 import type { Metadata } from "next";
+import BrandField from "../BrandField";
 import LangToggle from "../LangToggle";
 import { bikeState, getBikeByNumber, ridePrice } from "@/lib/bikes";
 import { filled } from "@/lib/filled";
 import { buildGroups } from "@/lib/bike-fields";
-import { bikeTitle, fmtPrice, tFor, translateValue } from "@/lib/bike-i18n";
+import { bikeTitle, fmtPrice, tFor } from "@/lib/bike-i18n";
 import { readBikeLang } from "@/lib/bike-lang";
 
 // Where a rider goes to book. The rentals app answers on its own origin today and moves to
 // micromobility.sa/experiences later; when it does, this one line changes and nothing else.
 const BOOKING_URL = "https://micromobilityrentals.pages.dev";
+// The handoff keeps a secondary "See this bike in the store" button in the markup behind a
+// flag, hidden by default. It stays hidden here for a concrete reason: the shop is a hosted
+// Salla store on its own domain and the bikes table has no per-bike product id to link to.
+// Turn this on once one exists, and give STORE_URL the real product path.
+const SHOW_STORE_CTA = false;
+const STORE_URL = "https://micromobility.sa/store";
 
 export async function generateMetadata({
   params,
@@ -31,6 +38,7 @@ export default async function BikePage({ params }: { params: Promise<{ code: str
   if (found.status === "unavailable") {
     return (
       <main className="bk-unknown">
+        <BrandField />
         <h1>{t("errTitle")}</h1>
         <p>{t("errBody")}</p>
         <a className="bk-cta" href={`/b/${encodeURIComponent(code)}`}>{t("errCta")}</a>
@@ -42,8 +50,8 @@ export default async function BikePage({ params }: { params: Promise<{ code: str
   if (found.status === "missing") {
     return (
       <main className="bk-unknown">
+        <BrandField />
         <h1>{t("unknownTitle")}</h1>
-        <p>{t("unknownBody")}</p>
         <p className="lat">micromobility.sa/b/{code}</p>
         <a className="bk-cta" href="https://micromobility.sa">{t("unknownCta")}</a>
       </main>
@@ -62,49 +70,33 @@ export default async function BikePage({ params }: { params: Promise<{ code: str
       }
     : undefined;
 
-  // The line under the title says what the title did not. When the headline is already
-  // "Mountain bike" the type would only repeat itself, so only the frame material is left.
-  const category = [heading.fromType ? null : row.type, row.frame_type]
-    .filter(filled)
-    .map((v) => translateValue(String(v), t))
-    .join(" · ");
+  // "Road bike, size M", as the reference design writes it. When the headline is already
+  // "Road bike" the type would only repeat itself, so the size carries the line alone.
+  const kindKey = `t${String(row.type ?? "").trim()}`;
+  const kind = !heading.fromType && t(kindKey) !== kindKey ? t(kindKey) : null;
+  const sized = filled(row.size) ? t("catSize").replace("{0}", String(row.size).trim()) : null;
+  // Arabic separates with \u060C, not a Latin comma.
+  const category = [kind, sized].filter(Boolean).join(t("listSep"));
 
   return (
     <main className="bk-page">
       <div
         className="bk-hero"
         data-photo={heroStyle ? "yes" : "none"}
-        data-type={filled(row.type) ? String(row.type).trim() : undefined}
         style={heroStyle}
       >
         <div className="bk-hero-bar">
           <div className="bk-hero-start">
-            {/* The mark is inline so the hero never waits on a second request. */}
-            <svg className="bk-mark" viewBox="0 0 32 32" fill="none" aria-label="MicroMobility">
-              <circle cx="9" cy="22" r="6.5" stroke="#FBF9F4" strokeWidth="2" />
-              <circle cx="23" cy="22" r="6.5" stroke="#FBF9F4" strokeWidth="2" />
-              <path d="M9 22l5-11h6l3 11" stroke="#FBF9F4" strokeWidth="2" strokeLinejoin="round" />
-            </svg>
+            <span className="bk-brand" role="img" aria-label="MicroMobility" />
             <LangToggle lang={lang} />
           </div>
           <span className="bk-code lat">#{row.bike_number}</span>
         </div>
-        {!heroStyle && (
-          <div className="bk-watermark" aria-hidden="true">
-            <svg viewBox="0 0 32 32" fill="none">
-              <circle cx="9" cy="22" r="6.5" stroke="#FBF9F4" strokeWidth="2" />
-              <circle cx="23" cy="22" r="6.5" stroke="#FBF9F4" strokeWidth="2" />
-              <path d="M9 22l5-11h6l3 11" stroke="#FBF9F4" strokeWidth="2" strokeLinejoin="round" />
-            </svg>
-          </div>
-        )}
       </div>
 
       <div className="bk-title">
         <h1>{heading.title}</h1>
-        {/* Dropped when the headline is already the bike's kind: all that would be left is
-            the frame material, which the specification grid states properly a few lines down. */}
-        {category && !heading.fromType && <p className="bk-cat">{category}</p>}
+        {category && <p className="bk-cat">{category}</p>}
         <span className="bk-pill" data-state={state}>
           {t(`st${state[0].toUpperCase()}${state.slice(1)}`)}
         </span>
@@ -148,6 +140,11 @@ export default async function BikePage({ params }: { params: Promise<{ code: str
             <a className="bk-cta" href={BOOKING_URL} target="_blank" rel="noopener">
               {t("book")}
             </a>
+            {SHOW_STORE_CTA && (
+              <a className="bk-cta2" href={STORE_URL}>
+                {t("store")} <span className="mirror-rtl">→</span>
+              </a>
+            )}
           </>
         )}
       </footer>

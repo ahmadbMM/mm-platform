@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildGroups } from "../bike-fields";
 import { bikeTitle } from "../bike-i18n";
 import { filled } from "../filled";
-import { ridePrice, type BikeRow } from "../bikes";
+import { bikeState, ridePrice, type BikeRow } from "../bikes";
 
 /**
  * The rule these tests exist to defend, in the owner's words:
@@ -126,5 +126,26 @@ describe("filled() is the single shared rule", () => {
   });
   it.each(["Trek", "0", 0, 8.7, "29\""])("accepts %o", (v) => {
     expect(filled(v)).toBe(true);
+  });
+});
+
+describe("an unreadable status never offers the bike for hire", () => {
+  it("maps the statuses the rentals app actually writes", () => {
+    expect(bikeState(bike({ status: "available" }))).toBe("available");
+    expect(bikeState(bike({ status: "in-use" }))).toBe("out");
+    expect(bikeState(bike({ status: "maintenance" }))).toBe("hold");
+    expect(bikeState(bike({ status: "retired" }))).toBe("hold");
+  });
+
+  it("rests a bike whose status it cannot read", () => {
+    // shipped bug: the default branch was "available", so a typo put a Book button under a
+    // bike that might be in the workshop.
+    expect(bikeState(bike({ status: "avaliable" }))).toBe("hold");
+    expect(bikeState(bike({ status: null }))).toBe("hold");
+    expect(bikeState(bike({ status: "something new" }))).toBe("hold");
+  });
+
+  it("rests anything with a retired date, whatever the status says", () => {
+    expect(bikeState(bike({ status: "available", retired_date: "2026-09-15" }))).toBe("hold");
   });
 });

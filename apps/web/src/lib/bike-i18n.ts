@@ -20,6 +20,8 @@ const EN: Dict = {
   book: "Book an Experience",
   store: "See this bike in the store",
   price: "Ride price",
+  catSize: "size {0}",
+  listSep: ", ",
   specs: "Specification",
   service: "Service",
   errTitle: "We can’t load this bike right now",
@@ -40,7 +42,6 @@ const EN: Dict = {
   // values
   vRoad: "Road", vMountain: "Mountain", vHybrid: "Hybrid",
   vAluminum: "Aluminium", vCarbon: "Carbon",
-  vXS: "Extra small", vS: "Small", vM: "Medium", vL: "Large", vXL: "Extra large",
   unitKg: "kg",
   // Headline for a bike whose name is still the auto-generated fleet code.
   tRoad: "Road bike", tMountain: "Mountain bike", tHybrid: "Hybrid bike", tGravel: "Gravel bike", tKids: "Kids bike",
@@ -51,6 +52,8 @@ const AR: Dict = {
   book: "احجز تجربة",
   store: "شاهد هذه الدراجة في المتجر",
   price: "سعر الجولة",
+  catSize: "مقاس {0}",
+  listSep: "، ",
   specs: "المواصفات",
   service: "الصيانة",
   errTitle: "لا يمكننا تحميل بيانات هذه الدراجة الآن",
@@ -68,7 +71,6 @@ const AR: Dict = {
   fWeight: "الوزن", fColour: "اللون", fInService: "في الخدمة منذ", fLastService: "آخر صيانة",
   vRoad: "طريق", vMountain: "جبلية", vHybrid: "هجينة",
   vAluminum: "ألمنيوم", vCarbon: "كربون",
-  vXS: "صغير جداً", vS: "صغير", vM: "متوسط", vL: "كبير", vXL: "كبير جداً",
   unitKg: "كجم",
   // Headline for a bike whose name is still the auto-generated fleet code.
   tRoad: "دراجة طريق", tMountain: "دراجة جبلية", tHybrid: "دراجة هجينة", tGravel: "دراجة غرافل", tKids: "دراجة أطفال",
@@ -79,6 +81,8 @@ const ES: Dict = {
   book: "Reserva una experiencia",
   store: "Ver esta bici en la tienda",
   price: "Precio del paseo",
+  catSize: "talla {0}",
+  listSep: ", ",
   specs: "Especificaciones",
   service: "Mantenimiento",
   errTitle: "No podemos cargar esta bici ahora mismo",
@@ -96,7 +100,6 @@ const ES: Dict = {
   fWeight: "Peso", fColour: "Color", fInService: "En servicio desde", fLastService: "Último mantenimiento",
   vRoad: "Carretera", vMountain: "Montaña", vHybrid: "Híbrida",
   vAluminum: "Aluminio", vCarbon: "Carbono",
-  vXS: "Muy pequeña", vS: "Pequeña", vM: "Mediana", vL: "Grande", vXL: "Muy grande",
   unitKg: "kg",
   // Headline for a bike whose name is still the auto-generated fleet code.
   tRoad: "Bicicleta de carretera", tMountain: "Bicicleta de montaña", tHybrid: "Bicicleta híbrida", tGravel: "Bicicleta de gravel", tKids: "Bicicleta infantil",
@@ -113,12 +116,15 @@ export function tFor(lang: BikeLang) {
 /**
  * Fleet values are free text typed by staff, so a translation is offered when we know the
  * word and the original is kept when we don't. A bike is never blanked for lack of a phrase.
+ *
+ * Sizes are deliberately absent from this map. "M" is an international frame code, the same
+ * letter that is printed on the bike and written on the booking — expanding it to "Medium"
+ * would be translating a code that has no translation, and rewriting what staff typed.
  */
 export function translateValue(v: string, t: (k: string) => string): string {
   const key: string = ({
     road: "vRoad", mountain: "vMountain", hybrid: "vHybrid",
     aluminum: "vAluminum", aluminium: "vAluminum", carbon: "vCarbon",
-    xs: "vXS", s: "vS", m: "vM", l: "vL", xl: "vXL",
   } as Record<string, string>)[v.trim().toLowerCase()] ?? "";
   return key ? t(key) : v;
 }
