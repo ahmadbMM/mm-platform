@@ -248,9 +248,14 @@
   background: var(--mm-black);
   overflow: hidden;
 }
+/* One ratio governs the mark at every size, so the spinner stays in proportion whatever the
+   ring does. The handoff had the mark filling most of the ring (88 of 132); it sits smaller
+   now at the owner's request, and this is the single number that decides it. */
 .bk-spinner {
   position: relative; z-index: 1;
-  width: 132px; height: 132px;
+  --bk-ring: 132px;
+  --bk-mark-ratio: .52;
+  width: var(--bk-ring); height: var(--bk-ring);
   display: inline-flex; align-items: center; justify-content: center;
 }
 .bk-ring {
@@ -263,21 +268,16 @@
 /* A CSS mask, not an <img>: that is what makes the mark neon from a white source file, and
    it is why the asset must stay single-colour white rather than being recoloured on disk. */
 .bk-mark {
-  width: 88px; height: 88px;
+  width: calc(var(--bk-ring) * var(--bk-mark-ratio));
+  height: calc(var(--bk-ring) * var(--bk-mark-ratio));
   background: var(--mm-green-neon);
   -webkit-mask: url("/b/assets/brand-mark-white.svg") center / contain no-repeat;
           mask: url("/b/assets/brand-mark-white.svg") center / contain no-repeat;
 }
 @keyframes bkSpin { to { transform: rotate(360deg); } }
 
-@media (max-width: 400px) {
-  .bk-spinner { width: 112px; height: 112px; }
-  .bk-mark { width: 74px; height: 74px; }
-}
-@media (min-width: 1025px) {
-  .bk-spinner { width: 160px; height: 160px; }
-  .bk-mark { width: 106px; height: 106px; }
-}
+@media (max-width: 400px) { .bk-spinner { --bk-ring: 112px; } }
+@media (min-width: 1025px) { .bk-spinner { --bk-ring: 160px; } }
 
 /* Still reads as "loading" without the motion: a complete green ring, no rotation. */
 @media (prefers-reduced-motion: reduce) {
