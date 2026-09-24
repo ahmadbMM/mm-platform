@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { normalizePhone, rpc } from "@/lib/rpc-client";
 import { fmtNum } from "@/lib/fill";
 
 // A member's card (club_card): the email and mobile of their Micromobility account open it.
-// Credits and the tier come from their real rides.
+// Credits and the tier come from their real rides. A signed-in rider's email and mobile are
+// passed in (/account, /club), and the card opens by itself.
 type Card = { ok: boolean; error?: string; member?: boolean; first_name?: string; since?: string | null; credits?: number; tier?: number; next?: number | null; rides?: number };
-type Props = { locale: string; title: string; text: string; notMember: string; applyBtn: string; applyHref: string; tierNames: [string, string, string] };
+type Props = { locale: string; title: string; text: string; notMember: string; applyBtn: string; applyHref: string; tierNames: [string, string, string]; email?: string; phone?: string };
 const T = {
   en: {
     email: "Email", phone: "Mobile number", open: "Open my card", opening: "Opening…", label: "Membership card", credits: "ride credits",
@@ -24,8 +25,8 @@ const T = {
 export default function ClubCard(p: Props) {
   const ar = p.locale === "ar";
   const t = ar ? T.ar : T.en;
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState(p.email ?? "");
+  const [phone, setPhone] = useState(p.phone ?? "");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [card, setCard] = useState<Card | null>(null);
@@ -39,6 +40,15 @@ export default function ClubCard(p: Props) {
     } catch { setErr(t.errors.generic); }
     setBusy(false);
   }
+
+  // Opened once for a signed-in rider; a card that is not theirs to open simply shows the form.
+  const auto = useRef(!!(p.email && p.phone));
+  useEffect(() => {
+    if (!auto.current) return;
+    auto.current = false;
+    const id = setTimeout(open, 0);
+    return () => clearTimeout(id);
+  });
 
   if (card && card.member) {
     const tier = card.tier ?? 0, credits = card.credits ?? 0, next = card.next ?? null;
@@ -66,8 +76,8 @@ export default function ClubCard(p: Props) {
 
   return (
     <div className="club-lookup">
-      <h2>{p.title}</h2>
-      <p>{p.text}</p>
+      {p.title && <h2>{p.title}</h2>}
+      {p.text && <p>{p.text}</p>}
       <div className="club-lookup-row">
         <input className="club-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.email} aria-label={t.email} type="email" autoComplete="email" dir="ltr" maxLength={254} />
         <input className="club-input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.phone} aria-label={t.phone} inputMode="tel" autoComplete="tel" dir="ltr" maxLength={20} />

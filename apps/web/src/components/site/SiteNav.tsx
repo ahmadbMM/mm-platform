@@ -9,6 +9,8 @@ import { BOOKING_URL, NAV_LINKS, pick } from "@/lib/links";
 export default function SiteNav({ locale, hidden = [] }: { locale: string; hidden?: string[] }) {
   const ar = locale === "ar";
   const links = NAV_LINKS.filter((l) => !l.footer && !hidden.includes(l.key));
+  // The account page, once staff switch it on; until then the booking app's own account.
+  const accountHref = hidden.includes("account") ? BOOKING_URL : null;
   const path = usePathname();
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function SiteNav({ locale, hidden = [] }: { locale: string; hidde
           <Link href={path} locale={other} className="mm-nav-lang" hrefLang={other} lang={other} aria-label={ar ? "English" : "العربية"}>
             {ar ? "EN" : "ع"}
           </Link>
-          <a href={BOOKING_URL} className="mm-nav-account">{ar ? "حسابي" : "Account"}</a>
+          {accountHref ? <a href={accountHref} className="mm-nav-account">{ar ? "حسابي" : "Account"}</a> : <Link href="/account" className="mm-nav-account">{ar ? "حسابي" : "Account"}</Link>}
           <button type="button" className="mm-nav-burger" aria-expanded={open} aria-controls="mm-nav-sheet" aria-label={ar ? "القائمة" : "Menu"} onClick={() => setOpen((o) => !o)}>
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -48,7 +50,7 @@ export default function SiteNav({ locale, hidden = [] }: { locale: string; hidde
           {links.map((l) => l.external
             ? <a key={l.key} href={l.href} onClick={() => setOpen(false)}>{pick(l, locale)}<span aria-hidden="true">{ar ? "←" : "→"}</span></a>
             : <Link key={l.key} href={l.href} onClick={() => setOpen(false)}>{pick(l, locale)}<span aria-hidden="true">{ar ? "←" : "→"}</span></Link>)}
-          <a href={BOOKING_URL}>{ar ? "حسابي" : "Account"}<span aria-hidden="true">{ar ? "←" : "→"}</span></a>
+          {accountHref ? <a href={accountHref}>{ar ? "حسابي" : "Account"}<span aria-hidden="true">{ar ? "←" : "→"}</span></a> : <Link href="/account" onClick={() => setOpen(false)}>{ar ? "حسابي" : "Account"}<span aria-hidden="true">{ar ? "←" : "→"}</span></Link>}
         </nav>
       )}
     </>

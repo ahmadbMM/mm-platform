@@ -9,6 +9,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum } from "@/lib/fill";
 import { localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
+import { getAccount } from "@/lib/account";
 
 // micromobility.sa/club - the Community membership as the Club: how it works, a member's card,
 // the upcoming community rides. Joining is the community application, received by the staff
@@ -30,7 +31,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const L = asLocale(locale);
   const ar = L === "ar";
-  const { content, previewing, hidden } = await pageState("club");
+  const [{ content, previewing, hidden }, acct] = await Promise.all([pageState("club"), getAccount()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(clubSchema, content, L);
   const r = c.rules;
@@ -85,7 +86,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
           </div>
         )}
         <section className="club-join" id="card">
-          <ClubCard locale={locale} title={S(c.card.title)} text={S(c.card.text)} notMember={S(c.card.notMember)} applyBtn={S(c.hero.applyBtn)} applyHref={applyHref} tierNames={tierNames} />
+          <ClubCard locale={locale} title={S(c.card.title)} text={S(c.card.text)} notMember={S(c.card.notMember)} applyBtn={S(c.hero.applyBtn)} applyHref={applyHref} tierNames={tierNames} email={acct?.email} phone={acct?.phone} />
           {earn.length > 0 && (
             <div className="club-earn">
               <h3>{S(c.earn.title)}</h3>

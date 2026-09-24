@@ -86,6 +86,20 @@ export function upcoming(sessions: RideSession[], now: string): RideSession[] {
     .sort((a, b) => a.date.localeCompare(b.date) || (a.times?.[0] ?? "").localeCompare(b.times?.[0] ?? ""));
 }
 
+/** The names a page gives each kind of session (Experiences > Next dates). */
+export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
+  const S = (v: unknown) => (typeof v === "string" ? v : "");
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), petromin: "" };
+}
+
+/** What to call a session, as the booking app does: a circuit night by its fixed name, any other
+ *  session by what staff called it, else its kind. Staff titles are typed once, in English; on
+ *  the Arabic page a title that is just the kind's English name reads as the Arabic one. */
+export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Record<RideKind, string>, enNames: Record<RideKind, string>, ar: boolean): string {
+  if (s.kind === "jcc" || !s.title) return names[s.kind];
+  return ar && s.title.toLowerCase() === enNames[s.kind].trim().toLowerCase() ? names[s.kind] : s.title;
+}
+
 const TTL_MS = 60_000;
 let cache: { at: number; data: RideData | null } | null = null;
 

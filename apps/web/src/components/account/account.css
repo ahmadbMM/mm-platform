@@ -1,0 +1,44 @@
+/* Account - from Account.dc.html (Claude Design launch package): the sign-in card and, signed in,
+   the next rides, the Club card and shortcuts. */
+.ac { background: linear-gradient(135deg, #fbf9f4, #e6ece6); padding: 70px 7vw 90px; min-height: 60svh; }
+.ac-card { max-width: 460px; margin: 0 auto; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 28px; padding: clamp(24px, 4vw, 40px); box-shadow: 0 30px 80px rgba(0, 0, 0, .06); }
+.ac-logo { height: 34px; width: auto; display: block; margin-bottom: 22px; }
+.ac-eyebrow { color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 10px; }
+html[lang="ar"] .ac-eyebrow { letter-spacing: 0; font-size: 13px; }
+.ac h1 { font-size: clamp(32px, 4vw, 46px); letter-spacing: -1.6px; line-height: 1; margin: 0 0 10px; }
+.ac-text { color: #57605a; font-size: 15px; line-height: 1.6; margin: 0 0 22px; }
+.ac-form { display: flex; flex-direction: column; gap: 14px; }
+.ac-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: #2e352f; }
+.ac-form input { border: 1px solid rgba(0, 0, 0, .18); border-radius: 12px; padding: 14px 14px; font: inherit; font-size: 16px; font-weight: 400; background: #fff; color: #1a1919; min-width: 0; width: 100%; box-sizing: border-box; }
+.ac-form input:focus { outline: none; border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
+.ac-pwd { display: flex; gap: 8px; }
+.ac-pwd button { flex: none; border: 1px solid rgba(0, 0, 0, .18); background: #fbf9f4; border-radius: 12px; padding: 0 14px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; color: #2e352f; }
+.ac-err { color: #b3261e; font-size: 13.5px; font-weight: 600; margin: 0; }
+.ac-go { border: 0; border-radius: 999px; min-height: 52px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 4px; }
+.ac-go:disabled { opacity: .6; cursor: default; }
+.ac-notes { list-style: none; margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid rgba(0, 0, 0, .08); display: flex; flex-direction: column; gap: 10px; color: #57605a; font-size: 13.5px; line-height: 1.5; }
+.ac .ac-notes a { color: #077a4b; font-weight: 600; }
+
+.ac-in { background: #fbf9f4; }
+.ac-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 34px; max-width: 980px; }
+.ac-who { color: #57605a; font-size: 14px; margin: 0; }
+.ac-out { border: 1px solid rgba(0, 0, 0, .2); background: #fff; border-radius: 999px; min-height: 44px; padding: 0 20px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; color: #1a1919; }
+.ac-sec { max-width: 980px; margin-bottom: 40px; }
+.ac-sec h2 { font-size: clamp(22px, 2.4vw, 30px); letter-spacing: -1px; margin: 0 0 14px; }
+.ac-sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.ac .ac-sec-head a, .ac .ac-empty a { color: #077a4b; font-weight: 700; font-size: 14px; }
+.ac-empty { background: #fff; border: 1px dashed rgba(0, 0, 0, .2); border-radius: 14px; padding: 20px; color: #57605a; margin: 0; }
+.ac-rides { display: flex; flex-direction: column; gap: 10px; }
+.ac-ride { background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 18px; padding: 16px 20px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 16px; align-items: center; }
+.ac-ride strong { display: block; font-size: 16px; }
+.ac-ride > div span { color: #57605a; font-size: 13.5px; }
+.ac-ride ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ac-ride li { display: flex; justify-content: space-between; gap: 10px; font-size: 14px; }
+.ac-ride em { font-style: normal; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(7, 122, 75, .1); color: #077a4b; white-space: nowrap; }
+.ac-ride em.waitlist { background: rgba(122, 90, 16, .12); color: #7a5a10; }
+.ac-links { display: flex; flex-wrap: wrap; gap: 10px; max-width: 980px; }
+.ac .ac-links a { background: #fff; border: 1px solid rgba(0, 0, 0, .1); border-radius: 999px; min-height: 44px; padding: 0 18px; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+@media (max-width: 700px) {
+  .ac { padding: 40px 16px 64px; }
+  .ac-ride { grid-template-columns: 1fr; gap: 10px; }
+}

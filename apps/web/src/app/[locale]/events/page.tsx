@@ -7,7 +7,7 @@ import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { loadRides, upcoming, type RideKind, type RideSession } from "@/lib/rides";
+import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // micromobility.sa/events - every upcoming session in the booking system, month by month, each
@@ -35,9 +35,8 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const d = resolvePage(experiencesSchema, content, L).dates;
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
-  const names = (x: Sec): Record<RideKind, string> => ({ jcc: S(x.jccName), saturday: S(x.satName), swim: S(x.swimName), workshop: S(x.workshopName), snd96: S(x.snd96Name), petromin: "" });
-  const kindName = names(d), enName = names(dEn);
-  const name = (s: RideSession) => (s.kind === "jcc" || !s.title ? kindName[s.kind] : ar && s.title.toLowerCase() === enName[s.kind].trim().toLowerCase() ? kindName[s.kind] : s.title);
+  const kindName = kindNames(d), enName = kindNames(dEn);
+  const name = (s: RideSession) => sessionName(s, kindName, enName, ar);
   const sessions = upcoming(rides?.sessions ?? [], riyadhClock(new Date())).slice(0, Math.max(1, N(c.hero.count)));
   const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { ...o, timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const months: { key: string; label: string; items: RideSession[] }[] = [];

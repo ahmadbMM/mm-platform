@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadRides, resetRides, rideKind, slotTimes, toSession, upcoming, type RideSession } from "../rides";
+import { kindNames, loadRides, resetRides, rideKind, sessionName, slotTimes, toSession, upcoming, type RideSession } from "../rides";
 
 // /experiences shows the booking system's own prices and sessions. The rules mirror the booking
 // app and the database, so the page never promises a ride someone cannot book.
@@ -108,5 +108,19 @@ describe("loadRides", () => {
   it("answers null when it never read anything", async () => {
     const down = vi.fn(async () => { throw new Error("offline"); });
     expect(await loadRides(down as unknown as typeof fetch, 0)).toBeNull();
+  });
+});
+
+describe("sessionName", () => {
+  const en = kindNames({ jccName: "Evening Circuit Session", satName: "Saturday Social Ride", swimName: "Triathlon Pool Session", workshopName: "T100 Triathlon Prep", snd96Name: "National Day Ride" });
+  const ar = kindNames({ jccName: "جلسة الحلبة المسائية", satName: "جولة السبت الاجتماعية", swimName: "جلسة المسبح", workshopName: "T100", snd96Name: "اليوم الوطني" });
+  it("names a circuit night by its fixed name and any other session by its title, else its kind", () => {
+    expect(sessionName({ kind: "jcc", title: "Special night" }, en, en, false)).toBe("Evening Circuit Session");
+    expect(sessionName({ kind: "saturday", title: "Founders ride" }, en, en, false)).toBe("Founders ride");
+    expect(sessionName({ kind: "swim", title: null }, en, en, false)).toBe("Triathlon Pool Session");
+  });
+  it("reads a title that is just the kind's English name in Arabic on the Arabic page", () => {
+    expect(sessionName({ kind: "saturday", title: "saturday social ride" }, ar, en, true)).toBe("جولة السبت الاجتماعية");
+    expect(sessionName({ kind: "saturday", title: "Founders ride" }, ar, en, true)).toBe("Founders ride");
   });
 });

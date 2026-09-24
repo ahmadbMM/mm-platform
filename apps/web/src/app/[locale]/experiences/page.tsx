@@ -7,7 +7,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { loadRides, upcoming, type RideKind, type RideSession } from "@/lib/rides";
+import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // micromobility.sa/experiences - the rides: what kinds there are, the bike prices and the next
@@ -56,16 +56,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   // A price line that needs the live price is left out while the price is unknown.
   const priceLine = (v: unknown) => (S(v).includes("{from}") && !from ? "" : fill(S(v), { from: from ?? "" }));
 
-  // Named as the booking app names them: a circuit night by its fixed name, any other session by
-  // what staff called it, else its kind. Staff titles are typed once, in English; on the Arabic
-  // page a title that is just the kind's English name reads as the Arabic one.
-  const names = (x: Sec): Record<RideKind, string> => ({ jcc: S(x.jccName), saturday: S(x.satName), swim: S(x.swimName), workshop: S(x.workshopName), snd96: S(x.snd96Name), petromin: "" });
-  const kindName = names(d);
-  const enName = ar ? names(resolvePage(experiencesSchema, content, "en").dates) : kindName;
-  const name = (s: RideSession) => {
-    if (s.kind === "jcc" || !s.title) return kindName[s.kind];
-    return ar && s.title.toLowerCase() === enName[s.kind].trim().toLowerCase() ? kindName[s.kind] : s.title;
-  };
+  const kindName = kindNames(d);
+  const enName = ar ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
+  const name = (s: RideSession) => sessionName(s, kindName, enName, ar);
   const day = (iso: string) => new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   // A ride that gathers names its two times; any other session is a window.
   const when = (s: RideSession) => {

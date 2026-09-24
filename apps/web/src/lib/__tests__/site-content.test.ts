@@ -74,7 +74,7 @@ describe("page switches", () => {
     expect(pageOn(on, "help")).toBe(false);
     expect(pageOn(on, "workshop")).toBe(false); // only an explicit true, as the staff page reads it
     expect(pageOn(null, "club")).toBe(false);
-    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes", "journal"]);
+    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes", "journal", "account"]);
   });
   it("knows which addresses belong to a switched page", () => {
     expect(switchedPageOf("/en/club")).toBe("club");

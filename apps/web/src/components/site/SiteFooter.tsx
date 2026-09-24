@@ -53,7 +53,7 @@ export default function SiteFooter({ locale, c, hidden = [] }: { locale: string;
         <div>
           <h4>{L("Company", "الشركة")}</h4>
           <ul>
-            <li><a href={BOOKING_URL}>{L("My Account", "حسابي")}</a></li>
+            <li>{hidden.includes("account") ? <a href={BOOKING_URL}>{L("My Account", "حسابي")}</a> : <Link href="/account">{L("My Account", "حسابي")}</Link>}</li>
             <li><Link href="/privacy">{L("Privacy Notice", "إشعار الخصوصية")}</Link></li>
           </ul>
         </div>
