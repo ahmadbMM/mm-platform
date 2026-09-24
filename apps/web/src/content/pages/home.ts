@@ -175,7 +175,7 @@ export const homeSchema: PageSchema = {
         txt("rentTitle", 50, "Experiences: title", "التجارب: العنوان", "Ride with us.", "اركب معنا."),
         long("rentText", 160, "Experiences: text", "التجارب: النص", "Book a bike on the Jeddah Corniche Circuit, or join a Micromobility experience.", "احجز دراجة في حلبة كورنيش جدة، أو انضم لإحدى تجارب مايكروموبيليتي."),
         txt("rentBtn", 30, "Experiences: button", "التجارب: الزر", "Book a ride", "احجز جولة"),
-        link("rentHref", "Experiences: link", "التجارب: الرابط", "https://micromobilityrentals.pages.dev/"),
+        link("rentHref", "Experiences: link", "التجارب: الرابط", "/experiences"),
         img("rentImage", "Experiences: photo", "التجارب: الصورة", "/site/home/split-rides.jpg"),
         txt("bizTitle", 50, "Business: title", "الشركات: العنوان", "For business.", "للشركات."),
         long("bizText", 160, "Business: text", "الشركات: النص", "Fleets, events, activations and maintenance contracts built around your brand.", "أساطيل وفعاليات وتفعيلات وعقود صيانة مبنية حول علامتك."),

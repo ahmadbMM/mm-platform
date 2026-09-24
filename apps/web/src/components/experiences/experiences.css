@@ -1,0 +1,71 @@
+/* Experiences - from Rentals.dc.html (Claude Design launch package). */
+.xp { background: #fbf9f4; }
+.xp-hero { position: relative; min-height: 64svh; display: flex; flex-direction: column; justify-content: flex-end; background-size: cover; background-position: center; background-color: #123019;
+  color: #fbf9f4; padding: 80px clamp(22px, 6vw, 72px) 56px; }
+.xp-eyebrow { color: #03ff89; text-transform: uppercase; letter-spacing: 2.4px; font-size: 11.5px; font-weight: 700; margin: 0 0 12px; }
+.xp-hero h1 { font-size: clamp(36px, 5.4vw, 66px); line-height: .96; letter-spacing: -2.2px; margin: 0 0 14px; max-width: 720px; }
+.xp-hero-text { color: #d5dbd6; font-size: clamp(15px, 1.5vw, 17px); line-height: 1.55; margin: 0 0 24px; max-width: 520px; text-wrap: pretty; }
+.xp-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.xp .xp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 52px; padding: 0 26px; border-radius: 999px; background: #077a4b; color: #fbf9f4;
+  font-weight: 700; font-size: 15px; border: 1.5px solid #077a4b; transition: background .2s ease; }
+.xp .xp-btn:hover { background: #06603b; }
+.xp .xp-btn.ghost { background: transparent; border-color: rgba(251, 249, 244, .55); color: #fbf9f4; }
+.xp .xp-btn.ghost:hover { background: rgba(251, 249, 244, .12); }
+.xp .xp-btn.line { background: #fff; border-color: rgba(26, 25, 25, .25); color: #1a1919; height: 48px; font-size: 14px; }
+.xp .xp-btn.line:hover { background: #f3f1ea; }
+
+.xp-wrap { max-width: 1040px; margin: 0 auto; padding: 64px clamp(22px, 6vw, 72px) 96px; }
+.xp-sec { margin-bottom: 64px; }
+.xp-sec h2 { font-size: clamp(26px, 3vw, 36px); letter-spacing: -1.2px; margin: 0 0 20px; line-height: 1.05; }
+.xp-label { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.6px; color: #57605a; margin: 0 0 10px; }
+.xp-lead { color: #57605a; font-size: 15px; line-height: 1.55; margin: -8px 0 20px; max-width: 600px; }
+.xp-note { color: #57605a; font-size: 13.5px; line-height: 1.55; margin: 14px 0 0; max-width: 640px; text-wrap: pretty; }
+.xp-note a { color: #077a4b; font-weight: 700; white-space: nowrap; }
+.xp-empty { background: #fff; border: 1px dashed rgba(26, 25, 25, .25); border-radius: 12px; padding: 22px; color: #57605a; font-size: 15px; margin: 0; }
+
+.xp-rides { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.xp-ride { background: #fff; border: 1.5px solid rgba(26, 25, 25, .12); border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 8px; }
+.xp-kind { display: inline-flex; align-items: center; gap: 7px; color: var(--kind); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.6px; }
+.xp-kind i { width: 7px; height: 7px; border-radius: 50%; background: var(--kind); flex: none; }
+.xp-ride strong { font-size: 18px; letter-spacing: -.4px; line-height: 1.15; }
+.xp-ride-when { color: #57605a; font-size: 13px; font-weight: 600; }
+.xp-ride p { color: #57605a; font-size: 13.5px; line-height: 1.55; margin: 2px 0 0; text-wrap: pretty; }
+.xp-ride-price { margin-top: auto; padding-top: 6px; font-size: 13px; font-weight: 700; color: #077a4b; }
+
+.xp-dates { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.xp .xp-date { background: #fff; color: #1a1919; border: 1.5px solid rgba(26, 25, 25, .14); border-inline-start: 4px solid var(--kind); border-radius: 12px; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 4px; min-height: 64px; transition: border-color .2s ease, box-shadow .2s ease; }
+.xp .xp-date:hover { border-color: rgba(7, 122, 75, .55); border-inline-start-color: var(--kind); box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
+.xp-date-day { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--kind); }
+.xp-date strong { font-size: 16px; letter-spacing: -.3px; line-height: 1.2; }
+.xp-date-time { color: #57605a; font-size: 13px; font-weight: 600; }
+.xp-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.xp-tags:empty { display: none; }
+.xp-tags em { font-style: normal; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: rgba(7, 122, 75, .1); color: #077a4b; }
+.xp-tags em.warn { background: rgba(122, 90, 16, .12); color: #7a5a10; }
+.xp-date-go { margin-top: auto; padding-top: 8px; font-size: 13px; font-weight: 700; color: #077a4b; }
+.xp-date.is-full .xp-date-go { color: #7a5a10; }
+
+.xp-prices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.xp-prices div { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 12px; padding: 14px 18px; }
+.xp-prices span { font-size: 15px; font-weight: 600; }
+.xp-prices strong { font-size: 18px; letter-spacing: -.4px; white-space: nowrap; }
+
+.xp-good { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.xp-good div { background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; padding: 18px 20px; }
+.xp-good strong { display: block; font-size: 16px; margin-bottom: 6px; }
+.xp-good p { color: #57605a; font-size: 14px; line-height: 1.55; margin: 0; text-wrap: pretty; }
+
+.xp-end { border-top: 2px solid #1a1919; padding-top: 24px; }
+
+html[lang="ar"] :is(.xp-eyebrow, .xp-label, .xp-kind, .xp-date-day) { letter-spacing: 0; }
+html[lang="ar"] .xp-eyebrow { font-size: 13px; }
+
+@media (max-width: 767px) {
+  .xp-hero { min-height: 58svh; padding: 64px 20px 40px; }
+  .xp-hero h1 { font-size: 36px; letter-spacing: -1.6px; }
+  .xp-wrap { padding: 44px 20px 72px; }
+  .xp-sec { margin-bottom: 48px; }
+  .xp-rides, .xp-dates, .xp-prices, .xp-good { grid-template-columns: 1fr; }
+  .xp .xp-btn { flex: 1 1 auto; }
+}
