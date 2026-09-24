@@ -1,5 +1,6 @@
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter, { type FooterContent } from "@/components/site/SiteFooter";
+import { footerFrom } from "@/components/site/PageShell";
 import AnnouncementBar, { type Announcement } from "@/components/site/AnnouncementBar";
 import PreviewBar from "@/components/site/PreviewBar";
 import BuildStory, { type Step } from "@/components/home/BuildStory";
@@ -38,14 +39,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
     prios: [{ id: "speed", label: S(q.pSpeed) }, { id: "comfort", label: S(q.pComfort) }, { id: "value", label: S(q.pValue) }],
     recs: { road: recs("road"), city: recs("city"), trail: recs("trail") },
   };
-  const footer: FooterContent = {
-    contact: {
-      address: S(contact.address), mapsHref: S(contact.mapsHref), jccName: S(contact.jccName), jccAddress: S(contact.jccAddress), jccHref: S(contact.jccHref),
-      email: S(contact.email), phone: S(contact.phone), hoursText: S(contact.hoursText),
-    },
-    social: Object.fromEntries(Object.entries(site.social).map(([k, x]) => [k, S(x)])),
-    legal: { company: S(site.legal.company), vat: S(site.legal.vat), cr: S(site.legal.cr) },
-  };
+  const footer: FooterContent = footerFrom(site);
 
   return (
     <div className="mm-site" dir={ar ? "rtl" : "ltr"}>

@@ -9,11 +9,21 @@ type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 
 export function footerFrom(site: Record<string, Sec>): FooterContent {
-  const c = site.contact;
+  const c = site.contact, f = site.footer;
+  const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
+  const links = (v: unknown) => list(v).map((l) => ({ label: S(l.label), href: S(l.href) }));
   return {
     contact: { address: S(c.address), mapsHref: S(c.mapsHref), jccName: S(c.jccName), jccAddress: S(c.jccAddress), jccHref: S(c.jccHref), email: S(c.email), phone: S(c.phone), hoursText: S(c.hoursText) },
     social: Object.fromEntries(Object.entries(site.social).map(([k, x]) => [k, S(x)])),
     legal: { company: S(site.legal.company), vat: S(site.legal.vat), cr: S(site.legal.cr) },
+    payments: list(f.payments).map((p) => ({ name: S(p.name), logo: S(p.logo) })),
+    showroom: f.showroom === true,
+    trust: list(f.trust).map((t) => S(t.text)).filter(Boolean),
+    columns: [
+      { title: S(f.shopTitle), links: links(f.shop) },
+      { title: S(f.exploreTitle), links: links(f.explore) },
+      { title: S(f.companyTitle), links: links(f.company) },
+    ],
   };
 }
 

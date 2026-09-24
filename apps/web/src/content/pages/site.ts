@@ -2,8 +2,9 @@ import { bi, type PageSchema } from "@/content/types";
 
 // Site-wide content: what the header, footer and several pages share - contact details, hours,
 // social links, the announcement bar and the legal line. Keys "site.<section>.<field>".
-// Claims nobody has confirmed yet (payment methods, "Maroof verified", unused social accounts)
-// start empty or off, and nothing is shown for them until staff fill them in.
+// The footer is the design's own (SiteFooter.dc.html), every part of it staff-editable: its
+// payment marks, trust line, link columns and social accounts start as the design has them
+// (owner, 2026-09-25: "add everything as it is in the design"); staff remove what does not apply.
 export const siteSchema: PageSchema = {
   page: "site",
   label: bi("Whole site", "الموقع كاملاً"),
@@ -51,10 +52,12 @@ export const siteSchema: PageSchema = {
       fields: [
         { id: "instagram", type: "link", label: bi("Instagram", "إنستغرام"), def: "https://instagram.com/micromobilitysa" },
         { id: "whatsapp", type: "link", label: bi("WhatsApp", "واتساب"), def: "https://wa.me/966566668818" },
-        { id: "x", type: "link", label: bi("X", "إكس"), def: "" },
-        { id: "tiktok", type: "link", label: bi("TikTok", "تيك توك"), def: "" },
-        { id: "snapchat", type: "link", label: bi("Snapchat", "سناب شات"), def: "" },
-        { id: "youtube", type: "link", label: bi("YouTube", "يوتيوب"), def: "" },
+        { id: "x", type: "link", label: bi("X", "إكس"), def: "https://x.com/micromobilitysa" },
+        { id: "tiktok", type: "link", label: bi("TikTok", "تيك توك"), def: "https://tiktok.com/@micromobilitysa" },
+        { id: "snapchat", type: "link", label: bi("Snapchat", "سناب شات"), def: "https://snapchat.com/add/micromobilitysa" },
+        { id: "youtube", type: "link", label: bi("YouTube", "يوتيوب"), def: "https://youtube.com/@micromobilitysa" },
+        { id: "facebook", type: "link", label: bi("Facebook", "فيسبوك"), def: "https://facebook.com/micromobilitysa" },
+        { id: "telegram", type: "link", label: bi("Telegram", "تيليجرام"), def: "https://t.me/micromobilitysa" },
       ],
     },
     {
@@ -63,7 +66,54 @@ export const siteSchema: PageSchema = {
       fields: [
         { id: "company", type: "text", max: 120, label: bi("Name on the © line", "الاسم في سطر الحقوق"), def: bi("MicroMobility", "مايكروموبيليتي") },
         { id: "vat", type: "text", max: 40, label: bi("VAT number", "الرقم الضريبي"), def: bi("312555068900003", "312555068900003") },
-        { id: "cr", type: "text", max: 40, label: bi("Commercial registration", "السجل التجاري"), hint: bi("Shown only once filled in.", "يظهر فقط بعد تعبئته."), def: bi("", "") },
+        { id: "cr", type: "text", max: 40, label: bi("Commercial registration", "السجل التجاري"), hint: bi("As in the Privacy Notice. Empty hides it.", "كما في إشعار الخصوصية. الفارغ يخفيه."), def: bi("1009107240", "1009107240") },
+      ],
+    },
+    {
+      id: "footer",
+      label: bi("Footer", "التذييل"),
+      hint: bi("A link to a page that is switched off is not shown.", "الرابط إلى صفحة متوقفة لا يظهر."),
+      fields: [
+        {
+          id: "payments", type: "list", maxItems: 8, label: bi("Payment marks", "شعارات الدفع"),
+          item: [{ id: "name", type: "text", max: 30, label: bi("Name", "الاسم"), def: bi("", "") }, { id: "logo", type: "image", label: bi("Logo", "الشعار"), def: "" }],
+          def: [["Visa", "visa"], ["Mastercard", "mastercard"], ["mada", "mada"], ["tabby", "tabby"]].map(([n, f]) => ({ name: bi(n, n), logo: { url: `/site/payments/${f}.svg` } })),
+        },
+        { id: "showroom", type: "toggle", label: bi("Show \"Prepay at Showroom\"", "إظهار «الدفع المسبق في المعرض»"), def: true },
+        {
+          id: "trust", type: "list", maxItems: 6, label: bi("Trust line", "سطر الثقة"),
+          item: [{ id: "text", type: "text", max: 40, label: bi("Text", "النص"), def: bi("", "") }],
+          def: [["Maroof verified", "موثّق في معروف"], ["VAT reg. 15%", "رقم ضريبي 15%"], ["Secure SSL checkout", "دفع آمن SSL"], ["14-day returns", "إرجاع خلال 14 يوم"]].map(([e, a]) => ({ text: bi(e, a) })),
+        },
+        { id: "shopTitle", type: "text", max: 30, label: bi("Column 1: title", "العمود ١: العنوان"), def: bi("Shop", "تسوّق") },
+        {
+          id: "shop", type: "list", maxItems: 10, label: bi("Column 1: links", "العمود ١: الروابط"),
+          item: [{ id: "label", type: "text", max: 40, label: bi("Text", "النص"), def: bi("", "") }, { id: "href", type: "link", label: bi("Link", "الرابط"), def: "" }],
+          def: [
+            [["Store", "المتجر"], "/store"], [["Bike Designer", "مصمم الدراجات"], "/store"], [["Find your size", "أوجد مقاسك"], "/#fit-quiz"],
+            [["Experiences", "التجارب"], "/experiences"], [["Book a Service", "حجز صيانة"], "/workshop"], [["Financing & Installments", "التمويل والتقسيط"], "/help"],
+            [["Track Your Order", "تتبع الطلب"], "/store"],
+          ].map(([[e, a], h]) => ({ label: bi(e as string, a as string), href: { href: h as string } })),
+        },
+        { id: "exploreTitle", type: "text", max: 30, label: bi("Column 2: title", "العمود ٢: العنوان"), def: bi("Explore", "استكشف") },
+        {
+          id: "explore", type: "list", maxItems: 10, label: bi("Column 2: links", "العمود ٢: الروابط"),
+          item: [{ id: "label", type: "text", max: 40, label: bi("Text", "النص"), def: bi("", "") }, { id: "href", type: "link", label: bi("Link", "الرابط"), def: "" }],
+          def: [
+            [["Gallery", "المعرض"], "/gallery"], [["Ambassadors Program", "برنامج السفراء"], "/ambassadors"], [["Micromobility Club", "نادي مايكروموبيليتي"], "/club"],
+            [["For Business", "للشركات"], "/business"], [["Events", "الفعاليات"], "/events"], [["Routes", "المسارات"], "/routes"], [["Journal", "المدونة"], "/journal"],
+          ].map(([[e, a], h]) => ({ label: bi(e as string, a as string), href: { href: h as string } })),
+        },
+        { id: "companyTitle", type: "text", max: 30, label: bi("Column 3: title", "العمود ٣: العنوان"), def: bi("Company", "الشركة") },
+        {
+          id: "company", type: "list", maxItems: 10, label: bi("Column 3: links", "العمود ٣: الروابط"),
+          item: [{ id: "label", type: "text", max: 40, label: bi("Text", "النص"), def: bi("", "") }, { id: "href", type: "link", label: bi("Link", "الرابط"), def: "" }],
+          def: [
+            [["About Us", "من نحن"], "/about"], [["My Account", "حسابي"], "/account"], [["Help Center", "مركز المساعدة"], "/help"],
+            [["Returns + Exchanges", "الإرجاع والاستبدال"], "/help#returns"], [["Shipping", "الشحن"], "/help#delivery"],
+            [["Privacy Policy", "سياسة الخصوصية"], "/privacy"], [["Terms & Conditions", "الشروط والأحكام"], "/privacy"],
+          ].map(([[e, a], h]) => ({ label: bi(e as string, a as string), href: { href: h as string } })),
+        },
       ],
     },
   ],

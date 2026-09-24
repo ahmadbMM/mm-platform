@@ -47,18 +47,55 @@ html[lang="ar"] .mm-site p { line-height: 1.85; }
 .mm-preview-bar button { border: 0; border-radius: 999px; padding: 8px 14px; background: #fbf9f4; color: #1a1919; font-weight: 700; font-size: 12.5px; cursor: pointer; font-family: inherit; }
 
 /* ── Footer ── */
-.mm-foot { background: #0d100d; color: #b9c0ba; padding: 64px clamp(20px, 6vw, 72px) calc(28px + env(safe-area-inset-bottom, 0px)); font-size: 14px; }
-.mm-foot-grid { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 40px; max-width: 1240px; margin: 0 auto 40px; }
-.mm-foot h4 { color: #fbf9f4; font-size: 13px; letter-spacing: 1.6px; text-transform: uppercase; margin: 0 0 16px; }
-html[lang="ar"] .mm-foot h4 { letter-spacing: 0; }
-.mm-foot ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.mm-foot { background: #111511; color: #d5dbd6; padding: 0 0 calc(28px + env(safe-area-inset-bottom, 0px)); }
+.mm-foot a { color: #d5dbd6; transition: color .2s ease; }
 .mm-foot a:hover { color: #03ff89; }
-.mm-foot-brand img { height: 30px; width: auto; margin-bottom: 16px; }
-.mm-foot-brand p { margin: 0 0 8px; line-height: 1.6; }
-.mm-foot-social { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
-.mm-foot-social a { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .18); font-size: 12.5px; font-weight: 700; color: #fbf9f4; }
-.mm-foot-bottom { max-width: 1240px; margin: 0 auto; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, .1); display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; font-size: 12.5px; color: #8a938c; }
-@media (max-width: 900px) { .mm-foot-grid { grid-template-columns: 1fr 1fr; gap: 28px 18px; } .mm-foot-brand { grid-column: 1 / -1; } }
+.mm-foot-pay { background: #fbf9f4; border-top: 1px solid rgba(26, 25, 25, .06); border-bottom: 1px solid rgba(26, 25, 25, .06); padding: 18px 7vw; }
+.mm-foot-pay > div { display: flex; align-items: center; justify-content: center; gap: clamp(20px, 4.4vw, 64px); flex-wrap: wrap; max-width: 1440px; margin: 0 auto; color: #077a4b; }
+.mm-foot-pay img { height: 26px; width: auto; display: block; }
+.mm-foot-pay img.pay-mastercard { height: 38px; }
+.mm-foot-pay img.pay-tabby { height: 44px; }
+.mm-foot-hub { display: inline-flex; align-items: center; gap: 9px; }
+.mm-foot-hub > span { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; line-height: 1.25; }
+.mm-foot-hub span span { font-family: var(--cs-font-ar), sans-serif; font-size: 12px; font-weight: 500; }
+.mm-foot-hub b { font-family: var(--cs-font-ar), sans-serif; font-size: 13.5px; font-weight: 700; }
+.mm-foot-hub small { font-size: 9.5px; font-weight: 700; direction: ltr; }
+.mm-foot-main { padding: 36px 7vw 0; }
+.mm-foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; margin: 0 auto 36px; max-width: 1440px; }
+.mm-foot-mark { display: block; width: 120px; height: 60px; margin: 0 0 20px; background: #0fa463; -webkit-mask: url("/site/brand-wordmark.png") left center / contain no-repeat; mask: url("/site/brand-wordmark.png") left center / contain no-repeat; }
+[dir="rtl"] .mm-foot-mark { -webkit-mask-position: right center; mask-position: right center; }
+.mm-foot-brand p { font-size: 14.5px; line-height: 1.7; margin: 0 0 6px; max-width: 320px; }
+[dir="rtl"] .mm-foot-brand p { line-height: 1.9; }
+.mm-foot-brand p > span:first-child { color: #8a938c; }
+.mm-foot-brand p.mm-foot-hours { margin-bottom: 20px; }
+.mm-foot-dirs { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 26px; }
+.mm-foot .mm-foot-dirs a { display: inline-flex; align-items: center; gap: 7px; color: #fbf9f4; font-weight: 700; font-size: 15px; border-bottom: 2px solid #03ff89; padding-bottom: 3px; }
+.mm-foot-social { display: flex; gap: 10px; flex-wrap: wrap; }
+.mm-foot .mm-foot-social a { width: 40px; height: 40px; border-radius: 50%; background: #077a4b; color: #fbf9f4; display: inline-flex; align-items: center; justify-content: center; transition: background .2s ease, color .2s ease; }
+.mm-foot .mm-foot-social a:hover { background: #fbf9f4; color: #077a4b; }
+.mm-foot-col h3 { color: #0fa463; font-size: 25px; font-weight: 700; letter-spacing: -.5px; margin: 0 0 22px; }
+.mm-foot-col > div { display: flex; flex-direction: column; gap: 15px; font-size: 15.5px; align-items: flex-start; }
+.mm-foot-up { display: flex; justify-content: flex-end; max-width: 1440px; margin: 0 auto 14px; }
+.mm-foot-totop { width: 52px; height: 52px; border-radius: 14px; background: #fbf9f4; border: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #0d100d; transition: background .2s ease, color .2s ease; }
+.mm-foot-totop:hover { background: #077a4b; color: #fbf9f4; }
+.mm-foot-trust { display: flex; justify-content: center; align-items: center; gap: 14px 22px; flex-wrap: wrap; max-width: 1440px; margin: 0 auto 22px; padding-bottom: 22px; border-bottom: 1px solid rgba(255, 255, 255, .12); }
+.mm-foot-trust span { display: inline-flex; align-items: center; gap: 8px; color: #c3cac4; font-size: 12px; font-weight: 600; }
+.mm-foot-bottom { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; padding-top: 4px; max-width: 1440px; margin: 0 auto; font-size: 14px; color: #b9c0ba; }
+.mm-foot-bottom .mm-lat { color: #8a938c; }
+@media (max-width: 1100px) { .mm-foot-grid { grid-template-columns: 1fr 1fr; gap: 44px 36px; } }
+@media (max-width: 760px) {
+  .mm-foot-grid { grid-template-columns: 1fr 1fr; gap: 24px 18px; }
+  .mm-foot-brand { grid-column: 1 / -1; }
+  .mm-foot-col h3 { font-size: 20px; margin-bottom: 14px; }
+  .mm-foot-col > div { gap: 11px; font-size: 13.5px; }
+  .mm-foot-pay > div { flex-wrap: nowrap; justify-content: space-between; gap: 10px; overflow-x: auto; scrollbar-width: none; }
+  .mm-foot-pay > div::-webkit-scrollbar { display: none; }
+  .mm-foot-pay img, .mm-foot-pay svg { height: 15px; width: auto; flex: none; }
+  .mm-foot-pay img.pay-mastercard { height: 19px; }
+  .mm-foot-pay img.pay-tabby { height: 20px; }
+  .mm-foot-hub > span { display: none; }
+  .mm-foot-bottom { flex-direction: column; align-items: flex-start; gap: 12px; font-size: 12.5px; }
+}
 
 /* ── The live open / closed sign (OpenNow): Home and About ── */
 @keyframes mmPing { 0% { transform: scale(1); opacity: .55; } 70%, 100% { transform: scale(3.2); opacity: 0; } }
