@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PageShell from "@/components/site/PageShell";
+import { Link } from "@/i18n/navigation";
 import "@/components/journal/journal.css";
 import { fmtDate, journalState } from "@/components/journal/journal-data";
 import { siteSchema } from "@/content/pages/site";
@@ -32,7 +33,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ locale
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <article className="jr jr-article">
-        <a className="jr-back" href={`/${locale}/journal`}><span aria-hidden="true">{ar ? "→" : "←"}</span> {S(j.hero.eyebrow)}</a>
+        <Link className="jr-back" href="/journal"><span aria-hidden="true">{ar ? "→" : "←"}</span> {S(j.hero.eyebrow)}</Link>
         <span className="jr-meta">{[p.tag, fmtDate(p.date, ar), ar ? `${readMinutes(p.body)} د قراءة` : `${readMinutes(p.body)} min read`].filter(Boolean).join(" · ")}</span>
         <h1>{p.title}</h1>
         {p.excerpt && <p className="jr-lead">{p.excerpt}</p>}
@@ -47,7 +48,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ locale
           <h2 id="jr-more-h">{S(j.hero.more)}</h2>
           <div className="jr-grid">
             {others.map((x) => (
-              <a key={x.slug} href={`/${locale}/journal/${x.slug}`}>
+              <a key={x.slug} href={`/journal/${x.slug}`}>
                 <div className="jr-cover" style={x.cover ? { backgroundImage: `url('${x.cover}')` } : undefined} aria-hidden="true" />
                 <span className="jr-meta">{[x.tag, fmtDate(x.date, ar)].filter(Boolean).join(" · ")}</span>
                 <strong>{x.title}</strong>

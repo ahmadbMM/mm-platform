@@ -22,17 +22,16 @@ export const NAV_LINKS: NavLink[] = [
 
 export const pick = (l: { en: string; ar: string }, locale: string) => (locale === "ar" ? l.ar : l.en);
 
-/** A staff-entered link, in the visitor's language when it is one of this site's pages:
- *  "/business" on the Arabic site is "/ar/business". Other sites, #anchors, mailto:, tel:, and
- *  paths that are not language pages (/store, /b/…, /media/…, /site/…) are left as they are. */
-export function localHref(href: string, locale: string): string {
-  if (!/^\/(?!\/)/.test(href) || /^\/(en|ar)(\/|$|[?#])/.test(href) || /^\/(store|b|media|site|api)(\/|$|[?#])/.test(href)) return href;
-  return `/${locale}${href === "/" ? "" : href}`;
-}
+/** A staff-entered link, as visitors follow it. This site's addresses carry no language
+ *  (i18n/routing.ts): "/business" is the same page in English and Arabic and the visitor's
+ *  language travels in a cookie, so every link is used as typed. An old "/ar/business" still
+ *  works and switches to Arabic. The locale is no longer needed; it stays in the signature so
+ *  every page can keep passing it. */
+export const localHref: (href: string, locale: string) => string = (href) => href;
 
 /** A link to another site, opened in the visitor's language: the booking app reads ?lang= (and
  *  so keeps the language the visitor was reading in). A lang already in the link is kept; a
- *  link on this site goes through localHref. */
+ *  link on this site is used as typed. */
 export function bookingLink(href: string, locale: string): string {
   if (!/^https?:\/\//i.test(href)) return localHref(href, locale);
   try {

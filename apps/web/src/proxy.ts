@@ -1,11 +1,15 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
-import { routing } from "./i18n/routing";
+import { LANG_COOKIE, routing } from "./i18n/routing";
 import { HOME_BUILT, hiddenPageTarget, isComingSoon, loadSiteContent } from "./lib/site";
 import { comingSoonTarget } from "./lib/coming-soon-route";
 import { PREVIEW_COOKIE, isStaffToken } from "./lib/preview";
+import { alternateLinks, askedLang } from "./lib/lang-url";
 
 const intl = createMiddleware(routing);
+
+// The staff preview page; the staff page still opens it as /en/preview or /ar/preview.
+const PREVIEW_PAGE = /^(?:\/(?:en|ar))?\/preview\/?$/;
 
 export default async function proxy(req: NextRequest) {
   // The handoff spec writes the tag URL as /?bike=42; the chips carry /b/42 instead. Anything
@@ -20,8 +24,17 @@ export default async function proxy(req: NextRequest) {
       return NextResponse.redirect(to, 307);
     }
   }
-  // While the site is Coming Soon, it is the only page: /en/login, /about and anything else
-  // go back to it. /store forwards to the shop before this runs (next.config redirects), and
+  // ?lang=ar / ?lang=en shows the page in that language at the address as given, and keeps it
+  // as the visitor's language from then on. next-intl reads the language from the cookie, so
+  // the request is given it here; the answer (a page or a redirect) sets it for the next ones.
+  const lang = askedLang(searchParams);
+  if (lang) req.cookies.set(LANG_COOKIE.name, lang);
+  const keepLang = (res: NextResponse) => {
+    if (lang) res.cookies.set(LANG_COOKIE.name, lang, { path: "/", maxAge: LANG_COOKIE.maxAge, sameSite: "lax" });
+    return res;
+  };
+  // While the site is Coming Soon, it is the only page: /login, /about and anything else go
+  // back to it. /store forwards to the shop before this runs (next.config redirects), and
   // /b/* never reaches here (matcher below).
   // Until Home exists the site is closed whatever staff have set, so nothing is read here yet.
   // Once it is open, a page staff have not switched on (Website > Pages) goes to Home the same way.
@@ -30,11 +43,15 @@ export default async function proxy(req: NextRequest) {
   const soon = closed ? comingSoonTarget(pathname) : hiddenPageTarget(pathname, content);
   // A signed-in staff member previewing the site (lib/preview.ts) passes; the preview page itself
   // must always load, since it is how preview starts.
-  const previewing = soon && !/^\/(en|ar)\/preview\/?$/.test(pathname) ? await isStaffToken(req.cookies.get(PREVIEW_COOKIE)?.value) : false;
-  if (soon && !previewing && !/^\/(en|ar)\/preview\/?$/.test(pathname)) return NextResponse.redirect(new URL(soon, req.url), 307);
-  return intl(req);
+  const previewing = soon && !PREVIEW_PAGE.test(pathname) ? await isStaffToken(req.cookies.get(PREVIEW_COOKIE)?.value) : false;
+  if (soon && !previewing && !PREVIEW_PAGE.test(pathname)) return keepLang(NextResponse.redirect(new URL(soon, req.url), 307));
+  const res = keepLang(intl(req));
+  if (res.status < 300 || res.status >= 400) res.headers.set("Link", alternateLinks(new URL(req.url)));
+  return res;
 }
 
 // /b/* is excluded on purpose: the NFC chips hold micromobility.sa/b/42 and that URL must
-// never be rewritten to /en/b/42. Those pages carry their own language cookie instead.
-export const config = { matcher: ["/((?!api|b|_next|.*\\..*).*)"] };
+// never be handled as a site page. Those pages carry their own language cookie instead.
+// Only /b and /api themselves and what is under them: a bare "b" also caught /business, which
+// was a 404 once its address lost the /en in front.
+export const config = { matcher: ["/((?!api/|api$|b/|b$|_next|.*\\..*).*)"] };

@@ -7,7 +7,7 @@ export default function PreviewBar({ locale }: { locale: string }) {
   return (
     <div className="mm-preview-bar" role="status" dir={ar ? "rtl" : "ltr"}>
       <span><strong>{ar ? "معاينة الموظفين" : "Staff preview"}</strong> · {ar ? "الزوار لا يرون هذه الصفحة بعد" : "visitors don't see this page yet"}</span>
-      <button type="button" onClick={() => fetch("/api/preview", { method: "DELETE" }).finally(() => window.location.replace(`/${locale}`))}>
+      <button type="button" onClick={() => fetch("/api/preview", { method: "DELETE" }).finally(() => window.location.replace("/"))}>
         {ar ? "إنهاء المعاينة" : "Exit preview"}
       </button>
     </div>

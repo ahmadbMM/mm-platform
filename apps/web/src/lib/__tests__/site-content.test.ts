@@ -77,16 +77,25 @@ describe("page switches", () => {
     expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes", "journal", "account"]);
   });
   it("knows which addresses belong to a switched page", () => {
+    expect(switchedPageOf("/club")).toBe("club");
+    expect(switchedPageOf("/help/")).toBe("help");
+    expect(switchedPageOf("/experiences/extra")).toBe("experiences");
+    // the old addresses with a language still count
     expect(switchedPageOf("/en/club")).toBe("club");
     expect(switchedPageOf("/ar/help/")).toBe("help");
-    expect(switchedPageOf("/en/experiences/extra")).toBe("experiences");
-    for (const p of ["/", "/en", "/ar/", "/en/preview", "/en/login", "/en/clubs", "/club", "/b/42"]) expect(switchedPageOf(p)).toBeNull();
+    for (const p of ["/", "/en", "/ar/", "/preview", "/en/preview", "/login", "/clubs", "/english", "/b/42"]) expect(switchedPageOf(p), p).toBeNull();
   });
-  it("sends a switched-off page to that language's Home", () => {
+  it("sends a switched-off page to Home", () => {
+    expect(hiddenPageTarget("/help", on)).toBe("/");
+    expect(hiddenPageTarget("/experiences/extra", null)).toBe("/");
+    expect(hiddenPageTarget("/club", on)).toBeNull();
+    expect(hiddenPageTarget("/", on)).toBeNull();
+    expect(hiddenPageTarget("/preview", on)).toBeNull();
+  });
+  it("keeps the language of an old /en/... or /ar/... address it turns away", () => {
     expect(hiddenPageTarget("/ar/help", on)).toBe("/ar");
     expect(hiddenPageTarget("/en/experiences", null)).toBe("/en");
     expect(hiddenPageTarget("/en/club", on)).toBeNull();
     expect(hiddenPageTarget("/en", on)).toBeNull();
-    expect(hiddenPageTarget("/en/preview", on)).toBeNull();
   });
 });

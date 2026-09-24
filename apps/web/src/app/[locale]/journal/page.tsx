@@ -24,7 +24,7 @@ export default async function JournalPage({ params, searchParams }: { params: Pr
   const tags = [...new Set(posts.map((p) => p.tag).filter(Boolean))];
   const shown = tag && tags.includes(tag) ? posts.filter((p) => p.tag === tag) : posts;
   const [feature, ...rest] = shown;
-  const href = (slug: string) => `/${locale}/journal/${slug}`;
+  const href = (slug: string) => `/journal/${slug}`;
   const meta = (p: (typeof posts)[number]) => [p.tag, fmtDate(p.date, ar), ar ? `${readMinutes(p.body)} د قراءة` : `${readMinutes(p.body)} min read`].filter(Boolean).join(" · ");
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
@@ -35,7 +35,7 @@ export default async function JournalPage({ params, searchParams }: { params: Pr
         {tags.length > 1 && (
           <nav className="jr-chips" aria-label={S(j.hero.all)}>
             {["", ...tags].map((t) => (
-              <a key={t || "all"} href={t ? `/${locale}/journal?tag=${encodeURIComponent(t)}` : `/${locale}/journal`} aria-current={(t === tag || (!t && !tags.includes(tag))) ? "page" : undefined}>{t || S(j.hero.all)}</a>
+              <a key={t || "all"} href={t ? `/journal?tag=${encodeURIComponent(t)}` : "/journal"} aria-current={(t === tag || (!t && !tags.includes(tag))) ? "page" : undefined}>{t || S(j.hero.all)}</a>
             ))}
           </nav>
         )}

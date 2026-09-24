@@ -1,9 +1,9 @@
 // The public website's launch state. micromobility.sa is controlled from the staff page
 // (owner, 2026-09-24): its Website section writes public.site_content, and this file reads it.
 //
-// While the site is Coming Soon, it shows only the Coming Soon screen: every other page under a
-// locale (the unfinished login included) is sent back to it, and search engines are asked to
-// keep out. The NFC bike pages (/b/*) and the /store forward to the Salla shop keep working.
+// While the site is Coming Soon, it shows only the Coming Soon screen: every other page (the
+// unfinished login included) is sent back to it, and search engines are asked to keep out. The
+// NFC bike pages (/b/*) and the /store forward to the Salla shop keep working.
 //
 // Staff turn Coming Soon off with the switch in the staff page. Until the Home page exists the
 // site stays closed whatever the switch says: there would be nothing behind it (the staff page
@@ -90,16 +90,18 @@ export function pageOn(content: SiteContent | null, page: SwitchedPage): boolean
   return content?.[`page.${page}.visible`] === true;
 }
 
-/** The switched page an address belongs to (/en/club, /ar/help/...), or null. */
+/** The switched page an address belongs to (/club, /help/..., and the old /en/club), or null. */
 export function switchedPageOf(pathname: string): SwitchedPage | null {
-  const m = pathname.match(/^\/(?:en|ar)\/([a-z_]+)(?:\/|$)/);
+  const m = pathname.match(/^(?:\/(?:en|ar))?\/([a-z_]+)(?:\/|$)/);
   return m && (SWITCHED_PAGES as readonly string[]).includes(m[1]) ? (m[1] as SwitchedPage) : null;
 }
 
-/** Where a request for a page staff have not switched on goes: that language's Home. */
+/** Where a request for a page staff have not switched on goes: Home. An old /en/... or /ar/...
+ *  address goes to /en or /ar, which next-intl sends on to Home in that language. */
 export function hiddenPageTarget(pathname: string, content: SiteContent | null): string | null {
   const page = switchedPageOf(pathname);
-  return page && !pageOn(content, page) ? pathname.slice(0, 3) : null;
+  if (!page || pageOn(content, page)) return null;
+  return pathname.match(/^\/(?:en|ar)(?=\/)/)?.[0] ?? "/";
 }
 
 /** The switched pages a visitor does not see, for the menus. */
