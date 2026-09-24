@@ -1,6 +1,8 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
+import { COMING_SOON } from "./lib/site";
+import { comingSoonTarget } from "./lib/coming-soon-route";
 
 const intl = createMiddleware(routing);
 
@@ -17,6 +19,11 @@ export default function proxy(req: NextRequest) {
       return NextResponse.redirect(to, 307);
     }
   }
+  // While the site is Coming Soon, it is the only page: /en/login, /about and anything else
+  // go back to it. /store forwards to the shop before this runs (next.config redirects), and
+  // /b/* never reaches here (matcher below).
+  const soon = COMING_SOON ? comingSoonTarget(pathname) : null;
+  if (soon) return NextResponse.redirect(new URL(soon, req.url), 307);
   return intl(req);
 }
 

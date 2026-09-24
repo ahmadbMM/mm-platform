@@ -33,11 +33,14 @@
       // Without this route those bundles fall through to the old forward and answer 302 to the
       // store, which renders the bike page as unstyled HTML with no script. /b/assets is ours
       // and stays inside /b/* on purpose, so this is the only extra prefix the site claims.
+      // Widened 2026-09-24: the site now answers the whole domain with the Coming Soon screen
+      // (src/lib/site.ts COMING_SOON), which links to the Salla store; /store still forwards
+      // there. The /petromin* and /community/registration* Workers have more specific routes
+      // and keep winning. Rollback = put the four narrow routes back (/b/*, /_next/* on both
+      // hosts) and deploy: the old forward to Salla answers everything else again.
       "routes": [
-        { "pattern": "micromobility.sa/b/*",         "zone_name": "micromobility.sa" },
-        { "pattern": "www.micromobility.sa/b/*",     "zone_name": "micromobility.sa" },
-        { "pattern": "micromobility.sa/_next/*",     "zone_name": "micromobility.sa" },
-        { "pattern": "www.micromobility.sa/_next/*", "zone_name": "micromobility.sa" }
+        { "pattern": "micromobility.sa/*",     "zone_name": "micromobility.sa" },
+        { "pattern": "www.micromobility.sa/*", "zone_name": "micromobility.sa" }
       ]
     }
   }

@@ -1,0 +1,60 @@
+/* Coming Soon — taken from ComingSoon.dc.html (launch package, "site" mode). */
+@keyframes csUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes csPulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
+
+.cs {
+  position: fixed; inset: 0; display: grid; place-items: center; overflow: hidden;
+  padding: 52px clamp(20px, 5vw, 64px); background: #0d100d; color: #fbf9f4;
+  font-family: var(--cs-font-en), var(--cs-font-ar), sans-serif;
+}
+html[lang="ar"] .cs { font-family: var(--cs-font-ar), var(--cs-font-en), sans-serif; }
+.cs-mark {
+  position: fixed; top: 22px; left: 50%; transform: translateX(-50%); z-index: 2;
+  width: 112px; height: 56px; background: #03ff89;
+  -webkit-mask: url("/b/assets/brand.png") center / contain no-repeat;
+  mask: url("/b/assets/brand.png") center / contain no-repeat;
+}
+.cs-lang {
+  position: fixed; top: 34px; inset-inline-end: clamp(16px, 4vw, 40px); z-index: 2;
+  color: #c9d0ca; font-size: 14px; font-weight: 600; text-decoration: none;
+}
+.cs-lang:hover, .cs-lang:focus-visible { color: #03ff89; }
+.cs-shade {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(ellipse 70% 60% at 50% 50%, rgba(6,8,6,.72) 0%, rgba(6,8,6,.9) 70%, rgba(6,8,6,.96) 100%);
+}
+.cs-body {
+  position: relative; z-index: 1; width: 100%; max-width: 560px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  animation: csUp .8s ease .1s both;
+}
+.cs-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px;
+  color: #03ff89; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+}
+html[lang="ar"] .cs-eyebrow { letter-spacing: 0; font-size: 14px; }
+.cs-dot { width: 8px; height: 8px; border-radius: 50%; background: #03ff89; animation: csPulse 1.6s ease-in-out infinite; }
+.cs-title {
+  margin: 0 0 16px; font-size: clamp(40px, 5.4vw, 68px); line-height: .98; letter-spacing: -2.4px; text-wrap: balance;
+}
+html[lang="ar"] .cs-title { letter-spacing: 0; line-height: 1.2; }
+.cs-sub { margin: 0 0 14px; max-width: 460px; color: #c9d0ca; font-size: 16px; line-height: 1.6; text-wrap: pretty; }
+.cs-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  width: 100%; max-width: 440px; margin-top: 26px;
+}
+.cs-actions .cs-btn:first-child { grid-column: 1 / -1; } /* the store: what micromobility.sa opened until now */
+.cs-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 52px; padding: 0 20px;
+  border-radius: 999px; font-weight: 700; font-size: 15px; text-decoration: none;
+}
+.cs-btn-neon { background: #03ff89; color: #0d100d; }
+.cs-btn-neon:hover { background: #4dffab; }
+.cs-btn-line { border: 1.5px solid rgba(251,249,244,.4); color: #fbf9f4; }
+.cs-btn-line:hover { border-color: #03ff89; color: #03ff89; }
+.cs-btn:focus-visible, .cs-lang:focus-visible { outline: 2px solid #03ff89; outline-offset: 3px; }
+@media (max-width: 760px) {
+  .cs-title { font-size: 40px; letter-spacing: -1.8px; }
+  .cs-actions { grid-template-columns: 1fr; max-width: 420px; }
+}
+@media (prefers-reduced-motion: reduce) { .cs-body, .cs-dot { animation: none; } }
