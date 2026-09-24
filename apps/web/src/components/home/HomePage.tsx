@@ -8,6 +8,7 @@ import FitQuiz, { type QuizText } from "@/components/home/FitQuiz";
 import OpenNow from "@/components/home/OpenNow";
 import "@/components/site/site.css";
 import "@/components/home/home.css";
+import { localHref } from "@/lib/links";
 
 // Home, from Home.dc.html. Everything it says comes from the staff page (site_content), else
 // the design's words. Sections whose content is still empty (reviews, the numbers strip, the
@@ -19,6 +20,7 @@ const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 
 export default function HomePage({ locale, home, site, preview }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean }) {
   const ar = locale === "ar";
+  const H = (v: unknown) => localHref(S(v), locale);
   const arrow = ar ? "←" : "→";
   const e = home.entry, h = home.hero, f = home.feature, st = home.story, c = home.community, r = home.reviews, q = home.quiz, sp = home.split, v = home.visit;
   const contact = site.contact;
@@ -61,7 +63,7 @@ export default function HomePage({ locale, home, site, preview }: { locale: stri
               <span className="hm-btn hm-green hm-entry-btn">{S(e.riderBtn)} <span className="hm-arw">{arrow}</span></span>
             </span>
           </a>
-          <a className="hm-entry-half biz" href={S(e.bizHref)}>
+          <a className="hm-entry-half biz" href={H(e.bizHref)}>
             <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${S(e.bizImage)}')` }} />
             <span className="hm-entry-copy">
               <span className="hm-entry-tick" />
@@ -78,7 +80,7 @@ export default function HomePage({ locale, home, site, preview }: { locale: stri
             <p>{S(e.phoneText)}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <a href="#start" className="hm-btn hm-green">{S(e.riderBtn)} <span className="hm-arw">{arrow}</span></a>
-              <a href={S(e.bizHref)} className="hm-btn hm-ghost">{S(e.bizBtn)} <span className="hm-arw">{arrow}</span></a>
+              <a href={H(e.bizHref)} className="hm-btn hm-ghost">{S(e.bizBtn)} <span className="hm-arw">{arrow}</span></a>
             </div>
           </div>
         </section>
@@ -114,15 +116,15 @@ export default function HomePage({ locale, home, site, preview }: { locale: stri
         {/* Featured bike */}
         <section className="hm-feature" aria-label={S(f.title)}>
           <div className="hm-feature-card">
-            <a href={S(f.ctaHref)} className="hm-feature-img" style={{ backgroundImage: `url('${S(f.image)}')` }} aria-label={S(f.title)} />
+            <a href={H(f.ctaHref)} className="hm-feature-img" style={{ backgroundImage: `url('${S(f.image)}')` }} aria-label={S(f.title)} />
             <div className="hm-feature-body">
               <span className="hm-eyebrow">{S(f.eyebrow)}</span>
               <h2>{S(f.title)}</h2>
               <p>{S(f.text)}</p>
               <div className="hm-chips">{list(f.chips).map((x, i) => S(x.label) && <span key={i}>{S(x.label)}</span>)}</div>
               <div className="hm-feature-ctas">
-                <a href={S(f.ctaHref)} className="hm-btn hm-green">{S(f.cta)}</a>
-                <a href={S(f.cta2Href)} className="hm-btn hm-line">{S(f.cta2)}</a>
+                <a href={H(f.ctaHref)} className="hm-btn hm-green">{S(f.cta)}</a>
+                <a href={H(f.cta2Href)} className="hm-btn hm-line">{S(f.cta2)}</a>
               </div>
             </div>
           </div>
@@ -136,7 +138,7 @@ export default function HomePage({ locale, home, site, preview }: { locale: stri
           <p>{S(c.text)}</p>
           {photos.length > 0 && <PhotoWall photos={photos} label={S(c.title)} closeLabel={ar ? "إغلاق" : "Close"} />}
           {S(c.button) && S(c.buttonHref) && (
-            <div className="hm-center"><a href={S(c.buttonHref)} className="hm-outline-btn">{S(c.button)}</a></div>
+            <div className="hm-center"><a href={H(c.buttonHref)} className="hm-outline-btn">{S(c.button)}</a></div>
           )}
           {stats.length > 0 && (
             <div className="hm-stats">
@@ -167,10 +169,10 @@ export default function HomePage({ locale, home, site, preview }: { locale: stri
 
         {/* Experiences & business */}
         <section className="hm-split" id="split">
-          <a href={S(sp.rentHref)} style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.06) 55%),url('${S(sp.rentImage)}')` }}>
+          <a href={H(sp.rentHref)} style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.06) 55%),url('${S(sp.rentImage)}')` }}>
             <div><h3>{S(sp.rentTitle)}</h3><p>{S(sp.rentText)}</p><span className="hm-btn hm-green">{S(sp.rentBtn)}</span></div>
           </a>
-          <a href={S(sp.bizHref)} style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.06) 55%),url('${S(sp.bizImage)}')` }}>
+          <a href={H(sp.bizHref)} style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.06) 55%),url('${S(sp.bizImage)}')` }}>
             <div><h3>{S(sp.bizTitle)}</h3><p>{S(sp.bizText)}</p><span className="hm-btn hm-light">{S(sp.bizBtn)}</span></div>
           </a>
         </section>

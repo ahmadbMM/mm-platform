@@ -1,0 +1,38 @@
+/* Help centre - from Help.dc.html (Claude Design launch package), plus the message form. */
+.hp { position: relative; overflow: hidden; padding: 56px clamp(16px, 7vw, 110px) 80px; background: radial-gradient(circle at 80% 0%, #e3eede, #fbf9f4 60%); }
+.hp-ghost { position: absolute; top: -12px; inset-inline-end: -1.5%; font-size: clamp(90px, 15vw, 230px); font-weight: 800; letter-spacing: -8px; line-height: .8; color: rgba(10, 13, 9, .04); pointer-events: none; user-select: none; white-space: nowrap; z-index: 0; }
+.hp > * { position: relative; z-index: 1; }
+.hp-eyebrow { color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 12px; }
+html[lang="ar"] .hp-eyebrow { letter-spacing: 0; font-size: 13px; }
+.hp h1 { font-size: clamp(38px, 5vw, 64px); line-height: .94; letter-spacing: -2px; margin: 0 0 10px; }
+.hp-lead { color: #57605a; font-size: 16px; line-height: 1.65; margin: 0 0 30px; max-width: 560px; }
+.hp-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 34px; }
+.hp-tabs button { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); border-radius: 999px; padding: 11px 22px; background: #fff; color: #1a1919; font-weight: 700; font-size: 14px; font-family: inherit; min-height: 44px; transition: all .25s ease; }
+.hp-tabs button[aria-selected="true"] { background: #1a1919; color: #fbf9f4; border-color: #1a1919; }
+.hp-list { display: flex; flex-direction: column; gap: 12px; max-width: 820px; }
+.hp-q { background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 18px; transition: border-color .25s ease; }
+.hp-q:hover { border-color: rgba(7, 122, 75, .4); }
+.hp-q.open { border-color: rgba(7, 122, 75, .35); }
+.hp-q button { cursor: pointer; width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 14px; background: none; border: 0; padding: 20px 24px; font-family: inherit; text-align: start; color: #1a1919; }
+.hp-q strong { font-size: 15.5px; line-height: 1.4; }
+.hp-chip { flex: none; width: 28px; height: 28px; border-radius: 50%; background: rgba(7, 122, 75, .1); color: #077a4b; display: inline-flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; transition: all .25s ease; }
+.hp-q.open .hp-chip { background: #077a4b; color: #fff; }
+.hp-q p { color: #57605a; font-size: 14.5px; line-height: 1.75; margin: 0; padding: 0 24px 20px; white-space: pre-line; }
+.hp-ask { margin-top: 44px; max-width: 820px; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 24px; padding: clamp(22px, 4vw, 36px); box-sizing: border-box; }
+.hp-ask h2 { font-size: 24px; margin: 0 0 6px; }
+.hp-ask > p { color: #57605a; font-size: 14.5px; line-height: 1.6; margin: 0 0 18px; }
+.hp-cta { margin-top: 20px; background: #0c231a; border-radius: 24px; padding: 32px clamp(22px, 4vw, 44px); color: #fbf9f4; display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; max-width: 820px; box-sizing: border-box; }
+.hp-cta h3 { font-size: 22px; margin: 0 0 6px; color: #fbf9f4; }
+.hp-cta p { color: #b9c0ba; font-size: 14px; line-height: 1.6; margin: 0; }
+.hp-cta-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.hp-cta a { display: inline-flex; align-items: center; gap: 8px; padding: 13px 24px; border-radius: 999px; font-weight: 700; font-size: 14px; min-height: 44px; box-sizing: border-box; }
+.hp-cta a.wa { background: #077a4b; color: #fbf9f4; }
+.hp-cta a.call { border: 1px solid rgba(255, 255, 255, .3); color: #fbf9f4; }
+@media (max-width: 760px) {
+  .hp { padding: 40px 22px 56px; }
+  .hp h1 { font-size: 34px; letter-spacing: -1.3px; }
+  .hp-q button { padding: 16px 18px; }
+  .hp-q p { padding: 0 18px 16px; }
+  .hp-cta a { width: 100%; justify-content: center; }
+  .hp-cta-btns { width: 100%; }
+}

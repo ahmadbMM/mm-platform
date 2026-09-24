@@ -1,0 +1,49 @@
+/* For business - from B2B.dc.html (Claude Design launch package). */
+.bz { background: linear-gradient(135deg, #fbf9f4, #e6ece6); }
+.bz-hero { padding: 90px 7vw 40px; }
+.bz-hero img { height: 110px; width: auto; display: block; margin-bottom: 26px; }
+.bz-eyebrow { display: block; color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 14px; }
+html[lang="ar"] .bz-eyebrow { letter-spacing: 0; font-size: 13px; }
+.bz-hero h1 { font-size: clamp(44px, 6vw, 92px); line-height: .92; letter-spacing: -3px; margin: 0 0 18px; max-width: 960px; }
+.bz-hero p { color: #4e554f; font-size: 18px; line-height: 1.65; max-width: 640px; margin: 0; }
+.bz-tabs { display: flex; gap: 10px; flex-wrap: wrap; padding: 0 7vw 40px; }
+.bz-tabs button { cursor: pointer; border: 1px solid rgba(0, 0, 0, .25); background: transparent; color: #2e352f; border-radius: 999px; padding: 12px 24px; font-weight: 700; font-size: 14px; font-family: inherit; min-height: 44px; }
+.bz-tabs button[aria-selected="true"] { background: #1a1919; color: #fbf9f4; border-color: #1a1919; }
+.bz-svc { padding: 0 7vw 70px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+.bz-svc-img { border-radius: 34px; min-height: 400px; background-size: cover; background-position: center; background-color: #dfe5df; }
+.bz-svc h2 { font-size: clamp(30px, 3.4vw, 48px); letter-spacing: -1.5px; line-height: 1; margin: 0 0 16px; }
+.bz-svc p { color: #4e554f; font-size: 17px; line-height: 1.65; margin: 0 0 20px; }
+.bz-points { display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.bz-points li { font-size: 15px; color: #2e352f; }
+.bz-points li::before { content: "+"; color: #077a4b; font-weight: 700; margin-inline-end: 8px; }
+.bz-proof-wrap { padding: 0 7vw 70px; }
+.bz-proof { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+.bz-proof div { padding: 28px; border-radius: 24px; background: #fff; box-shadow: 0 20px 60px rgba(0, 0, 0, .07); }
+.bz-proof strong { display: block; font-size: clamp(28px, 3vw, 44px); letter-spacing: -1.5px; color: #077a4b; }
+html[lang="ar"] .bz-proof strong { letter-spacing: 0; }
+.bz-proof span { color: #4e554f; font-size: 14px; font-weight: 600; }
+.bz-logos { margin-top: 44px; text-align: center; }
+.bz-logos p { color: #077a4b; text-transform: uppercase; letter-spacing: 3px; font-size: 12px; font-weight: 700; margin: 0 0 26px; }
+html[lang="ar"] .bz-logos p { letter-spacing: 0; font-size: 13px; }
+.bz-logo-row { display: flex; justify-content: center; align-items: center; gap: clamp(28px, 5vw, 64px); flex-wrap: wrap; margin-bottom: 44px; }
+.bz-logo-row img { height: 48px; width: auto; max-width: 160px; object-fit: contain; filter: grayscale(1); opacity: .75; transition: filter .3s ease, opacity .3s ease; }
+.bz-logo-row img:hover { filter: grayscale(0); opacity: 1; }
+.bz-logo-row span { font-weight: 800; font-size: 24px; letter-spacing: 3px; color: #57605a; opacity: .8; text-transform: uppercase; }
+.bz-form-wrap { padding: 0 7vw 100px; }
+.bz-form { border-radius: 40px; background: #fbf9f4; color: #1a1919; padding: clamp(30px, 5vw, 64px); display: grid; grid-template-columns: .8fr 1.2fr; gap: 50px; }
+.bz-form h2 { font-size: clamp(30px, 3.6vw, 52px); letter-spacing: -2px; line-height: .98; margin: 0 0 14px; }
+.bz-form > div > p:last-child { color: #57605a; font-size: 16px; line-height: 1.6; margin: 0; }
+@media (max-width: 900px) {
+  .bz-hero { padding: 48px 22px 28px; }
+  .bz-hero img { height: 72px; }
+  .bz-hero h1 { font-size: 40px; letter-spacing: -1.5px; }
+  .bz-tabs { padding: 0 22px 28px; }
+  .bz-svc { grid-template-columns: 1fr; padding: 0 22px 48px; gap: 24px; }
+  .bz-svc-img { min-height: 240px; border-radius: 24px; }
+  .bz-proof-wrap { padding: 0 22px 48px; }
+  .bz-proof { grid-template-columns: 1fr 1fr; }
+  .bz-proof div { padding: 20px; }
+  .bz-logo-row img { height: 38px; }
+  .bz-form-wrap { padding: 0 16px 60px; }
+  .bz-form { grid-template-columns: 1fr; gap: 24px; border-radius: 28px; }
+}

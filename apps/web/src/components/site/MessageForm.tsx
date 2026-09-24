@@ -1,0 +1,96 @@
+"use client";
+
+import { useState } from "react";
+import { cleanName, normalizePhone, rpc } from "@/lib/rpc-client";
+
+// A message to the team (site_message_send): the business enquiry and the help centre's form.
+// Both land in the staff page's Messages. A name, the message and one way to answer (email or
+// mobile) are required; the database checks everything again.
+type Props = {
+  locale: string;
+  kind: "business" | "help";
+  topic: string;
+  withCompany?: boolean;
+  sendLabel: string;
+  doneTitle: string;
+  doneText: string;
+  className?: string;
+};
+
+const T = {
+  en: {
+    name: "Name", company: "Company", email: "Email", phone: "Mobile", message: "Message", sending: "Sending…",
+    placeholderBiz: "What would you like to build with us?", placeholderHelp: "How can we help?", ref: "Reference", another: "Send another",
+    errors: {
+      name: "Enter your name - letters and spaces only.", email: "Check the email address.", phone: "Check the mobile number, e.g. 05XXXXXXXX.",
+      contact: "Add an email or a mobile number so we can answer.", message: "Write your message.", throttled: "Too many messages from this network - try again in a few minutes.",
+      generic: "It could not be sent. Check the connection and try again.",
+    } as Record<string, string>,
+  },
+  ar: {
+    name: "الاسم", company: "الشركة", email: "البريد الإلكتروني", phone: "الجوال", message: "الرسالة", sending: "جارٍ الإرسال…",
+    placeholderBiz: "ماذا تريد أن تبني معنا؟", placeholderHelp: "كيف نقدر نساعدك؟", ref: "رقم الرسالة", another: "رسالة أخرى",
+    errors: {
+      name: "أدخل اسمك - حروف ومسافات فقط.", email: "تحقق من البريد الإلكتروني.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.",
+      contact: "أضف بريداً إلكترونياً أو رقم جوال لنرد عليك.", message: "اكتب رسالتك.", throttled: "رسائل كثيرة من هذه الشبكة - حاول بعد دقائق.",
+      generic: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً.",
+    } as Record<string, string>,
+  },
+};
+
+export default function MessageForm(p: Props) {
+  const ar = p.locale === "ar";
+  const t = ar ? T.ar : T.en;
+  const [name, setName] = useState("");
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const [done, setDone] = useState("");
+
+  async function send() {
+    setErr("");
+    const nm = cleanName(name), em = email.trim().toLowerCase(), ph = phone.trim() ? normalizePhone(phone) : "";
+    if (!nm || !/^[\p{L}\s]+$/u.test(nm)) return setErr(t.errors.name);
+    if (em && !/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(em)) return setErr(t.errors.email);
+    if (ph && (!/^\+[1-9]\d{7,14}$/.test(ph) || (ph.startsWith("+966") && !/^\+9665\d{8}$/.test(ph)))) return setErr(t.errors.phone);
+    if (!em && !ph) return setErr(t.errors.contact);
+    if (!message.trim()) return setErr(t.errors.message);
+    setBusy(true);
+    try {
+      const r = await rpc<{ ok: boolean; ref?: string; error?: string }>("site_message_send", {
+        p: { kind: p.kind, topic: p.topic, name: nm, company: p.withCompany ? company.trim() : "", email: em, phone: ph, message: message.trim(), lang: ar ? "ar" : "en" },
+      });
+      if (r.ok && r.ref) setDone(r.ref);
+      else setErr(t.errors[r.error || ""] || t.errors.generic);
+    } catch {
+      setErr(t.errors.generic);
+    }
+    setBusy(false);
+  }
+
+  if (done) {
+    return (
+      <div className={`mf-done ${p.className || ""}`} role="status">
+        <strong>{p.doneTitle}</strong>
+        <span>{p.doneText}</span>
+        <small>{t.ref}: <b className="mm-lat">{done}</b></small>
+        <button type="button" className="mf-again" onClick={() => { setDone(""); setMessage(""); }}>{t.another}</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`mf-fields ${p.className || ""}`}>
+      <input className={`mf-input${p.withCompany ? "" : " mf-wide"}`} value={name} onChange={(e) => setName(e.target.value.replace(/[-‐-―]/g, " "))} placeholder={t.name} aria-label={t.name} autoComplete="name" maxLength={120} />
+      {p.withCompany && <input className="mf-input" value={company} onChange={(e) => setCompany(e.target.value)} placeholder={t.company} aria-label={t.company} autoComplete="organization" maxLength={120} />}
+      <input className="mf-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.email} aria-label={t.email} type="email" autoComplete="email" dir="ltr" maxLength={254} />
+      <input className="mf-input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.phone} aria-label={t.phone} inputMode="tel" autoComplete="tel" dir="ltr" maxLength={20} />
+      <textarea className="mf-input mf-wide" value={message} onChange={(e) => setMessage(e.target.value)} placeholder={p.kind === "business" ? t.placeholderBiz : t.placeholderHelp} aria-label={t.message} rows={4} maxLength={2000} />
+      {err && <p className="mf-err mf-wide" role="alert">{err}</p>}
+      <button type="button" className="mf-send mf-wide" onClick={send} disabled={busy}>{busy ? t.sending : p.sendLabel}</button>
+    </div>
+  );
+}

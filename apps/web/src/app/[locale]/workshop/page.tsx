@@ -7,6 +7,7 @@ import { siteSchema } from "@/content/pages/site";
 import { workshopSchema } from "@/content/pages/workshop";
 import { asLocale, resolvePage } from "@/lib/content";
 import { pageState } from "@/lib/page-state";
+import { slugId } from "@/lib/slug";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // micromobility.sa/workshop - a service request, received by the staff page (Workshop section).
@@ -14,7 +15,7 @@ type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const slug = (s: string, i: number) => (s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || `service-${i + 1}`);
+const slug = (s: string, i: number) => slugId(s, `service-${i + 1}`);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
