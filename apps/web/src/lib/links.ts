@@ -1,6 +1,8 @@
 // Where the site's links go today. Pages that are not built yet are simply not linked; the
 // booking app (every Book button on /experiences) and the Salla shop (/store) live elsewhere.
 export const BOOKING_URL = "https://micromobilityrentals.pages.dev/";
+/** The Salla shop's cart (the shop itself is STORE in next.config.ts), for the header's cart icon. */
+export const STORE_CART_URL = "https://stepdragon.com.sa/cart";
 
 /** footer: listed in the footer only (the header has no room for every page). */
 export type NavLink = { key: string; href: string; en: string; ar: string; external?: boolean; footer?: boolean };

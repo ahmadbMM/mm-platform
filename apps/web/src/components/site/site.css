@@ -19,10 +19,13 @@ html[lang="ar"] .mm-site p { line-height: 1.85; }
 .mm-nav-links { display: flex; gap: 24px; font-size: 14px; font-weight: 500; position: absolute; left: 0; right: 0; width: max-content; margin-inline: auto; align-items: center; height: 100%; }
 .mm-nav-links a { color: rgba(10, 13, 9, .68); transition: color .2s ease; }
 .mm-nav-links a:hover, .mm-nav-links a[aria-current="page"] { color: #077a4b; }
-.mm-nav-end { display: flex; align-items: center; gap: 8px; }
-.mm-nav-lang { display: inline-flex; align-items: center; justify-content: center; min-width: 36px; height: 36px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .25); font-size: 13px; font-weight: 700; }
-.mm-nav-lang:hover { background: rgba(0, 0, 0, .07); }
-.mm-nav-account { display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 999px; background: #1a1919; color: #fbf9f4 !important; font-size: 13px; font-weight: 700; }
+.mm-nav-end { display: flex; align-items: center; gap: 2px; }
+/* The design's round icons (SiteNav.dc.html): search, language, account, cart. */
+.mm-nav-icon { width: 40px; height: 40px; border-radius: 50%; border: 0; background: transparent; color: #1a1919 !important; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background .2s ease; padding: 0; }
+.mm-nav-icon:hover { background: rgba(0, 0, 0, .07); }
+.mm-nav-globe:hover .mm-globe-spin { transform-origin: 12px 12px; animation: mmGlobe 1.2s ease-in-out; }
+@keyframes mmGlobe { to { transform: rotate(180deg); } }
+@media (prefers-reduced-motion: reduce) { .mm-nav-globe:hover .mm-globe-spin { animation: none; } }
 .mm-nav-burger { display: none; width: 40px; height: 40px; border: 0; background: none; border-radius: 10px; cursor: pointer; color: inherit; align-items: center; justify-content: center; }
 .mm-nav-burger:hover { background: rgba(0, 0, 0, .07); }
 .mm-nav-sheet { position: fixed; top: 52px; left: 0; right: 0; bottom: 0; z-index: 59; background: #0d100d; color: #fbf9f4; padding: 24px clamp(22px, 6vw, 48px) calc(26px + env(safe-area-inset-bottom, 0px));
@@ -32,7 +35,6 @@ html[lang="ar"] .mm-site p { line-height: 1.85; }
 @media (max-width: 1000px) { /* eight sections need ~610px in the middle of the bar */
   .mm-nav-links { display: none; }
   .mm-nav-burger { display: inline-flex; }
-  .mm-nav-account { display: none; }
 }
 
 /* ── Announcement bar ── */
@@ -105,3 +107,15 @@ html[lang="ar"] .mm-site p { line-height: 1.85; }
 .hm-open .dot span + span { animation: mmPing 2.4s ease-out infinite; }
 .hm-open strong { font-size: 14px; }
 .hm-open em { font-style: normal; color: #8a938c; font-size: 14px; }
+
+/* ── The header's search ── */
+.mm-search { position: fixed; inset: 0; z-index: 70; }
+.mm-search-scrim { position: absolute; inset: 0; border: 0; background: rgba(10, 13, 9, .35); cursor: default; }
+.mm-search-box { position: relative; z-index: 1; background: #fff; border-bottom: 1px solid rgba(0, 0, 0, .08); padding: 14px clamp(16px, 4vw, 40px) 18px; box-shadow: 0 20px 50px rgba(0, 0, 0, .12); }
+.mm-search-row { display: flex; align-items: center; gap: 10px; max-width: 760px; margin: 0 auto; border-bottom: 2px solid #1a1919; padding-bottom: 8px; color: #1a1919; }
+.mm-search-row input { flex: 1; min-width: 0; border: 0; outline: none; font: inherit; font-size: 20px; padding: 8px 0; background: transparent; color: #1a1919; }
+.mm-search-row button { width: 40px; height: 40px; border: 0; background: none; font-size: 28px; line-height: 1; cursor: pointer; color: #57605a; }
+.mm-search-list { max-width: 760px; margin: 10px auto 0; display: flex; flex-direction: column; max-height: 60svh; overflow-y: auto; }
+.mm-search-list a { display: flex; justify-content: space-between; align-items: center; padding: 12px 4px; border-bottom: 1px solid rgba(0, 0, 0, .06); font-size: 16px; font-weight: 600; color: #1a1919; }
+.mm-search-list a:hover { color: #077a4b; }
+.mm-search-list p { color: #57605a; margin: 12px 4px; }
