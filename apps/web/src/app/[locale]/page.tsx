@@ -7,7 +7,7 @@ import { homeSchema } from "@/content/pages/home";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { PREVIEW_COOKIE, isStaffToken } from "@/lib/preview";
-import { HOME_BUILT, isComingSoon, loadSiteContent, siteText } from "@/lib/site";
+import { HOME_BUILT, hiddenPages, isComingSoon, loadSiteContent, siteText } from "@/lib/site";
 
 // micromobility.sa. While the site is closed (Coming Soon on in the staff page, or Home not
 // released yet) visitors get the Coming Soon screen and staff previewing get the real Home.
@@ -50,5 +50,5 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     );
   }
   const L = asLocale(locale);
-  return <HomePage locale={locale} home={resolvePage(homeSchema, s.content, L)} site={resolvePage(siteSchema, s.content, L)} preview={s.previewing} />;
+  return <HomePage locale={locale} home={resolvePage(homeSchema, s.content, L)} site={resolvePage(siteSchema, s.content, L)} preview={s.previewing} hidden={s.previewing ? [] : hiddenPages(s.content)} />;
 }

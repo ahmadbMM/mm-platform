@@ -16,7 +16,7 @@ const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const { content, closed } = await pageState();
+  const { content, closed } = await pageState("help");
   const h = resolvePage(helpSchema, content, asLocale(locale));
   return { title: `${S(h.intro.eyebrow)} · Micromobility`, description: S(h.intro.text), robots: closed ? { index: false, follow: false } : undefined };
 }
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function HelpPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const L = asLocale(locale);
-  const { content, previewing } = await pageState();
+  const { content, previewing, hidden } = await pageState("help");
   const site = resolvePage(siteSchema, content, L);
   const h = resolvePage(helpSchema, content, L);
   const tabs: HelpTab[] = HELP_TOPICS.map((id) => ({
@@ -35,7 +35,7 @@ export default async function HelpPage({ params }: { params: Promise<{ locale: s
   const wa = S(site.social.whatsapp) || (phone ? `https://wa.me/${phone.replace(/\D/g, "")}` : "");
   const ar = L === "ar";
   return (
-    <PageShell locale={locale} site={site} preview={previewing}>
+    <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <section className="hp">
         <div className="hp-ghost" aria-hidden="true">SUPPORT</div>
         <p className="hp-eyebrow">{S(h.intro.eyebrow)}</p>

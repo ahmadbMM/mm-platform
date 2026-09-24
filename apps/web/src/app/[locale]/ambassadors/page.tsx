@@ -21,7 +21,7 @@ const lines = (v: string) => v.split("\n").map((x) => x.trim()).filter(Boolean);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const { content, closed } = await pageState();
+  const { content, closed } = await pageState("ambassadors");
   const a = resolvePage(ambassadorsSchema, content, asLocale(locale));
   return { title: `${S(a.hero.eyebrow)} · Micromobility`, robots: closed ? { index: false, follow: false } : undefined };
 }
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function AmbassadorsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const L = asLocale(locale);
-  const { content, previewing } = await pageState();
+  const { content, previewing, hidden } = await pageState("ambassadors");
   const site = resolvePage(siteSchema, content, L);
   const a = resolvePage(ambassadorsSchema, content, L);
   const r = a.rules;
@@ -48,7 +48,7 @@ export default async function AmbassadorsPage({ params }: { params: Promise<{ lo
     { label: S(how.eventLabel), value: numbers.eventPts, note: F(how.eventNote) },
   ].filter((x) => x.value > 0);
   return (
-    <PageShell locale={locale} site={site} preview={previewing}>
+    <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="amb">
         <section className="amb-hero">
           <div>

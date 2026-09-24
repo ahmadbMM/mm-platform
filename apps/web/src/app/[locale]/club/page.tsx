@@ -21,7 +21,7 @@ const lines = (v: string) => v.split("\n").map((x) => x.trim()).filter(Boolean);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const { content, closed } = await pageState();
+  const { content, closed } = await pageState("club");
   const c = resolvePage(clubSchema, content, asLocale(locale));
   return { title: `${S(c.hero.eyebrow)} · Micromobility`, description: S(c.hero.text), robots: closed ? { index: false, follow: false } : undefined };
 }
@@ -30,7 +30,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const L = asLocale(locale);
   const ar = L === "ar";
-  const { content, previewing } = await pageState();
+  const { content, previewing, hidden } = await pageState("club");
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(clubSchema, content, L);
   const r = c.rules;
@@ -52,7 +52,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
     { name: tierNames[2], req: `${shown.legendAt} ${credits}`, perks: lines(F(c.tiers.t3Perks)) },
   ];
   return (
-    <PageShell locale={locale} site={site} preview={previewing}>
+    <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="club">
         <section className="club-hero">
           <div>

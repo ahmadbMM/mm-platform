@@ -15,7 +15,7 @@ const SOCIAL_NAMES: Record<string, { en: string; ar: string }> = {
   tiktok: { en: "TikTok", ar: "تيك توك" }, snapchat: { en: "Snapchat", ar: "سناب شات" }, youtube: { en: "YouTube", ar: "يوتيوب" },
 };
 
-export default function SiteFooter({ locale, c }: { locale: string; c: FooterContent }) {
+export default function SiteFooter({ locale, c, hidden = [] }: { locale: string; c: FooterContent; hidden?: string[] }) {
   const ar = locale === "ar";
   const L = (en: string, a: string) => (ar ? a : en);
   const year = new Date().getFullYear();
@@ -39,7 +39,7 @@ export default function SiteFooter({ locale, c }: { locale: string; c: FooterCon
         <div>
           <h4>{L("Explore", "استكشف")}</h4>
           <ul>
-            {NAV_LINKS.map((l) => <li key={l.key}>{l.external ? <a href={l.href}>{pick(l, locale)}</a> : <Link href={l.href}>{pick(l, locale)}</Link>}</li>)}
+            {NAV_LINKS.filter((l) => !hidden.includes(l.key)).map((l) => <li key={l.key}>{l.external ? <a href={l.href}>{pick(l, locale)}</a> : <Link href={l.href}>{pick(l, locale)}</Link>}</li>)}
           </ul>
         </div>
         <div>

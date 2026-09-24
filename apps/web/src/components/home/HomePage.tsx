@@ -18,7 +18,7 @@ const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 
-export default function HomePage({ locale, home, site, preview }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean }) {
+export default function HomePage({ locale, home, site, preview, hidden = [] }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean; hidden?: string[] }) {
   const ar = locale === "ar";
   const H = (v: unknown) => localHref(S(v), locale);
   const arrow = ar ? "←" : "→";
@@ -49,7 +49,7 @@ export default function HomePage({ locale, home, site, preview }: { locale: stri
 
   return (
     <div className="mm-site" dir={ar ? "rtl" : "ltr"}>
-      <SiteNav locale={locale} />
+      <SiteNav locale={locale} hidden={hidden} />
       <main id="mm-main" style={{ paddingTop: 52 }}>
         {/* Welcome: riders or business */}
         <section className="hm-entry" aria-label={`${S(e.riderTitle)} / ${S(e.bizTitle)}`}>
@@ -197,7 +197,7 @@ export default function HomePage({ locale, home, site, preview }: { locale: stri
           <iframe title={S(v.title)} src="https://www.google.com/maps?q=Micromobility+Jeddah+Saudi+Arabia&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
         </section>
       </main>
-      <SiteFooter locale={locale} c={footer} />
+      <SiteFooter locale={locale} c={footer} hidden={hidden} />
       {preview && <PreviewBar locale={locale} />}
     </div>
   );

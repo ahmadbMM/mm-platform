@@ -17,7 +17,7 @@ const lines = (v: unknown) => S(v).split("\n").map((x) => x.trim()).filter(Boole
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const { content, closed } = await pageState();
+  const { content, closed } = await pageState("business");
   const b = resolvePage(businessSchema, content, asLocale(locale));
   return { title: `${S(b.hero.eyebrow)} · Micromobility`, description: S(b.hero.text), robots: closed ? { index: false, follow: false } : undefined };
 }
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function BusinessPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const L = asLocale(locale);
-  const { content, previewing } = await pageState();
+  const { content, previewing, hidden } = await pageState("business");
   const site = resolvePage(siteSchema, content, L);
   const b = resolvePage(businessSchema, content, L);
   const en = resolvePage(businessSchema, content, "en");
@@ -34,7 +34,7 @@ export default async function BusinessPage({ params }: { params: Promise<{ local
   })).filter((s) => s.tab && s.title);
   const logos = (v: unknown) => list(v).map((x) => ({ name: S(x.name), logo: S(x.logo) })).filter((x) => x.name || x.logo);
   return (
-    <PageShell locale={locale} site={site} preview={previewing}>
+    <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="bz">
         <section className="bz-hero">
           <img src="/site/logo-dark.png" alt="Micromobility" />

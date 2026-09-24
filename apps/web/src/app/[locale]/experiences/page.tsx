@@ -30,7 +30,7 @@ const TYPE_NAME: Record<string, [string, string]> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const { content, closed } = await pageState();
+  const { content, closed } = await pageState("experiences");
   const c = resolvePage(experiencesSchema, content, asLocale(locale));
   return { title: `${locale === "ar" ? "التجارب" : "Experiences"} · Micromobility`, description: S(c.hero.text), robots: closed ? { index: false, follow: false } : undefined };
 }
@@ -39,7 +39,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const { locale } = await params;
   const L = asLocale(locale);
   const ar = L === "ar";
-  const [{ content, previewing }, rides] = await Promise.all([pageState(), loadRides()]);
+  const [{ content, previewing, hidden }, rides] = await Promise.all([pageState("experiences"), loadRides()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(experiencesSchema, content, L);
   const d = c.dates;
@@ -83,7 +83,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const whatsapp = S(site.social.whatsapp);
 
   return (
-    <PageShell locale={locale} site={site} preview={previewing}>
+    <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="xp">
         <section className="xp-hero" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,.25) 46%,rgba(0,0,0,.12) 70%),url('${S(c.hero.image)}')` }}>
           <p className="xp-eyebrow">{S(c.hero.eyebrow)}</p>

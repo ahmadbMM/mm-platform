@@ -17,13 +17,14 @@ export function footerFrom(site: Record<string, Sec>): FooterContent {
   };
 }
 
-export default function PageShell({ locale, site, preview, children }: { locale: string; site: Record<string, Sec>; preview: boolean; children: ReactNode }) {
+/** `hidden`: the pages staff have not switched on, left out of the header and footer. */
+export default function PageShell({ locale, site, preview, hidden = [], children }: { locale: string; site: Record<string, Sec>; preview: boolean; hidden?: string[]; children: ReactNode }) {
   const ar = locale === "ar";
   return (
     <div className="mm-site" dir={ar ? "rtl" : "ltr"}>
-      <SiteNav locale={locale} />
+      <SiteNav locale={locale} hidden={hidden} />
       <main id="mm-main" style={{ paddingTop: 52 }}>{children}</main>
-      <SiteFooter locale={locale} c={footerFrom(site)} />
+      <SiteFooter locale={locale} c={footerFrom(site)} hidden={hidden} />
       {preview && <PreviewBar locale={locale} />}
     </div>
   );

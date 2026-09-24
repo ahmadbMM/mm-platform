@@ -6,8 +6,9 @@ import { BOOKING_URL, NAV_LINKS, pick } from "@/lib/links";
 
 // The header from SiteNav.dc.html: logo, the site's sections in the middle, language and
 // account on the end; below 900px the sections open as a full-height dark sheet.
-export default function SiteNav({ locale }: { locale: string }) {
+export default function SiteNav({ locale, hidden = [] }: { locale: string; hidden?: string[] }) {
   const ar = locale === "ar";
+  const links = NAV_LINKS.filter((l) => !hidden.includes(l.key));
   const path = usePathname();
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -26,7 +27,7 @@ export default function SiteNav({ locale }: { locale: string }) {
           <img src="/site/logo-mark-dark.png" alt="Micromobility" width={40} height={26} />
         </Link>
         <nav className="mm-nav-links" aria-label={ar ? "الأقسام" : "Sections"}>
-          {NAV_LINKS.map((l) => l.external
+          {links.map((l) => l.external
             ? <a key={l.key} href={l.href}>{pick(l, locale)}</a>
             : <Link key={l.key} href={l.href} aria-current={path === l.href ? "page" : undefined}>{pick(l, locale)}</Link>)}
         </nav>
@@ -44,7 +45,7 @@ export default function SiteNav({ locale }: { locale: string }) {
       </header>
       {open && (
         <nav id="mm-nav-sheet" className="mm-nav-sheet" dir={ar ? "rtl" : "ltr"} aria-label={ar ? "الأقسام" : "Sections"}>
-          {NAV_LINKS.map((l) => l.external
+          {links.map((l) => l.external
             ? <a key={l.key} href={l.href} onClick={() => setOpen(false)}>{pick(l, locale)}<span aria-hidden="true">{ar ? "←" : "→"}</span></a>
             : <Link key={l.key} href={l.href} onClick={() => setOpen(false)}>{pick(l, locale)}<span aria-hidden="true">{ar ? "←" : "→"}</span></Link>)}
           <a href={BOOKING_URL}>{ar ? "حسابي" : "Account"}<span aria-hidden="true">{ar ? "←" : "→"}</span></a>

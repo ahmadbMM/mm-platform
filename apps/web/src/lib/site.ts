@@ -49,6 +49,34 @@ export function resetSiteContent(): void {
   cache = null;
 }
 
+/** The pages staff switch on one at a time (staff page: Website > Pages; its SITE_PAGES lists
+ *  the same keys). Home is not one of them - it opens with the Coming Soon switch. */
+export const SWITCHED_PAGES = ["experiences", "workshop", "business", "help", "ambassadors", "club"] as const;
+export type SwitchedPage = (typeof SWITCHED_PAGES)[number];
+
+/** A page is shown once staff switch it on - an explicit true, read the way the staff page reads
+ *  it. Until then it is left out of the menus and its address goes to Home. */
+export function pageOn(content: SiteContent | null, page: SwitchedPage): boolean {
+  return content?.[`page.${page}.visible`] === true;
+}
+
+/** The switched page an address belongs to (/en/club, /ar/help/...), or null. */
+export function switchedPageOf(pathname: string): SwitchedPage | null {
+  const m = pathname.match(/^\/(?:en|ar)\/([a-z_]+)(?:\/|$)/);
+  return m && (SWITCHED_PAGES as readonly string[]).includes(m[1]) ? (m[1] as SwitchedPage) : null;
+}
+
+/** Where a request for a page staff have not switched on goes: that language's Home. */
+export function hiddenPageTarget(pathname: string, content: SiteContent | null): string | null {
+  const page = switchedPageOf(pathname);
+  return page && !pageOn(content, page) ? pathname.slice(0, 3) : null;
+}
+
+/** The switched pages a visitor does not see, for the menus. */
+export function hiddenPages(content: SiteContent | null): SwitchedPage[] {
+  return SWITCHED_PAGES.filter((p) => !pageOn(content, p));
+}
+
 /** Closed unless Home exists AND staff have explicitly switched Coming Soon off. */
 export function isComingSoon(content: SiteContent | null, homeBuilt: boolean = HOME_BUILT): boolean {
   return !(homeBuilt && content?.["site.coming_soon"] === false);

@@ -3,18 +3,21 @@
 import { useEffect, useState } from "react";
 import { useLocale } from "next-intl";
 
-// Opened from the staff page: /<locale>/preview#t=<access token>. The token stays out of the
-// address the server sees (a #fragment is never sent), is handed to /api/preview, and the
-// browser is sent to the real Home page.
+// Opened from the staff page: /<locale>/preview#t=<access token>, and &to=/<page> to open one
+// page (the staff page's Pages list). The token stays out of the address the server sees (a
+// #fragment is never sent), is handed to /api/preview, and the browser is sent to the page -
+// Home unless `to` names one of this site's pages.
 export default function Preview() {
   const locale = useLocale();
   const ar = locale === "ar";
   const [failed, setFailed] = useState(false);
   useEffect(() => {
-    const t = new URLSearchParams(window.location.hash.slice(1)).get("t") || "";
+    const q = new URLSearchParams(window.location.hash.slice(1));
+    const t = q.get("t") || "";
+    const to = /^\/[a-z][a-z_-]{0,40}$/.test(q.get("to") || "") ? q.get("to") : "";
     history.replaceState(null, "", window.location.pathname); // do not leave the token in history
     fetch("/api/preview", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ token: t }) })
-      .then((r) => (r.ok ? window.location.replace(`/${locale}`) : setFailed(true)))
+      .then((r) => (r.ok ? window.location.replace(`/${locale}${to}`) : setFailed(true)))
       .catch(() => setFailed(true));
   }, [locale]);
   return (

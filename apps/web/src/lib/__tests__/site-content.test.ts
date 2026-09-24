@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { isComingSoon, loadSiteContent, resetSiteContent, siteText } from "../site";
+import { hiddenPages, hiddenPageTarget, isComingSoon, loadSiteContent, pageOn, resetSiteContent, siteText, switchedPageOf } from "../site";
 
 // micromobility.sa reads what staff set in the staff page (public.site_content). The rules
 // that keep it safe: a minute's cache, the last good copy through a failed read, the site's
@@ -64,5 +64,29 @@ describe("siteText", () => {
     expect(siteText(c, "coming_soon.title", "ar", "قريباً.")).toBe("قريباً.");
     expect(siteText(c, "coming_soon.sub", "en", "Our new website is on its way.")).toBe("Our new website is on its way.");
     expect(siteText(null, "coming_soon.title", "en", "Coming soon.")).toBe("Coming soon.");
+  });
+});
+
+describe("page switches", () => {
+  const on = { "page.club.visible": true, "page.help.visible": false, "page.workshop.visible": "true" };
+  it("shows a page only once staff switch it on", () => {
+    expect(pageOn(on, "club")).toBe(true);
+    expect(pageOn(on, "help")).toBe(false);
+    expect(pageOn(on, "workshop")).toBe(false); // only an explicit true, as the staff page reads it
+    expect(pageOn(null, "club")).toBe(false);
+    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors"]);
+  });
+  it("knows which addresses belong to a switched page", () => {
+    expect(switchedPageOf("/en/club")).toBe("club");
+    expect(switchedPageOf("/ar/help/")).toBe("help");
+    expect(switchedPageOf("/en/experiences/extra")).toBe("experiences");
+    for (const p of ["/", "/en", "/ar/", "/en/preview", "/en/login", "/en/clubs", "/club", "/b/42"]) expect(switchedPageOf(p)).toBeNull();
+  });
+  it("sends a switched-off page to that language's Home", () => {
+    expect(hiddenPageTarget("/ar/help", on)).toBe("/ar");
+    expect(hiddenPageTarget("/en/experiences", null)).toBe("/en");
+    expect(hiddenPageTarget("/en/club", on)).toBeNull();
+    expect(hiddenPageTarget("/en", on)).toBeNull();
+    expect(hiddenPageTarget("/en/preview", on)).toBeNull();
   });
 });

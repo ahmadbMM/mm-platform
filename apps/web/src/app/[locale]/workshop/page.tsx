@@ -19,7 +19,7 @@ const slug = (s: string, i: number) => slugId(s, `service-${i + 1}`);
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const { content, closed } = await pageState();
+  const { content, closed } = await pageState("workshop");
   const w = resolvePage(workshopSchema, content, asLocale(locale));
   return { title: `${S(w.intro.title)} · Micromobility`, description: S(w.intro.text), robots: closed ? { index: false, follow: false } : undefined };
 }
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function WorkshopPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const L = asLocale(locale);
-  const { content, previewing } = await pageState();
+  const { content, previewing, hidden } = await pageState("workshop");
   const site = resolvePage(siteSchema, content, L);
   const w = resolvePage(workshopSchema, content, L);
   // Service ids come from the English names so the staff page's list reads the same whatever
@@ -39,7 +39,7 @@ export default async function WorkshopPage({ params }: { params: Promise<{ local
   })).filter((s) => s.name);
   const parts = list(w.services.parts).map((p, i) => ({ id: slug(S(list(enNames.services.parts)[i]?.label), i).replace(/^service-/, "part-"), label: S(p.label), price: N(p.price) })).filter((p) => p.label);
   return (
-    <PageShell locale={locale} site={site} preview={previewing}>
+    <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <section className="ws-grid">
         <div className="ws-intro">
           <span className="ws-eyebrow">{S(w.intro.eyebrow)}</span>
