@@ -27,7 +27,9 @@ export async function loadSiteContent(fetchImpl: typeof fetch = fetch, now: numb
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (url && key) {
     try {
-      const res = await fetchImpl(`${url}/rest/v1/site_content?select=key,value`, {
+      // The Journal's articles are read only by the Journal's pages (loadJournalContent): they are
+      // the one part of the content that grows, and every page reads this every minute.
+      const res = await fetchImpl(`${url}/rest/v1/site_content?select=key,value&key=not.like.journal.*`, {
         headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" },
         cache: "no-store",
         signal: AbortSignal.timeout(2500),
@@ -47,11 +49,39 @@ export async function loadSiteContent(fetchImpl: typeof fetch = fetch, now: numb
 /** For tests: forget the cached copy. */
 export function resetSiteContent(): void {
   cache = null;
+  journalCache = null;
+}
+
+let journalCache: { at: number; data: SiteContent | null } | null = null;
+
+/** The Journal's own content (journal.* keys), read only by the Journal's pages, kept the same way. */
+export async function loadJournalContent(fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<SiteContent | null> {
+  if (journalCache && now - journalCache.at < TTL_MS) return journalCache.data;
+  let data: SiteContent | null = journalCache?.data ?? null;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (url && key) {
+    try {
+      const res = await fetchImpl(`${url}/rest/v1/site_content?select=key,value&key=like.journal.*`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(2500),
+      });
+      if (res.ok) {
+        const rows = (await res.json()) as { key: string; value: unknown }[];
+        if (Array.isArray(rows)) data = Object.fromEntries(rows.map((r) => [r.key, r.value]));
+      }
+    } catch {
+      // unreachable or slow: keep what we had
+    }
+  }
+  journalCache = { at: now, data };
+  return data;
 }
 
 /** The pages staff switch on one at a time (staff page: Website > Pages; its SITE_PAGES lists
  *  the same keys). Home is not one of them - it opens with the Coming Soon switch. */
-export const SWITCHED_PAGES = ["experiences", "workshop", "business", "help", "ambassadors", "club", "about", "events", "gallery", "routes"] as const;
+export const SWITCHED_PAGES = ["experiences", "workshop", "business", "help", "ambassadors", "club", "about", "events", "gallery", "routes", "journal"] as const;
 export type SwitchedPage = (typeof SWITCHED_PAGES)[number];
 
 /** A page is shown once staff switch it on - an explicit true, read the way the staff page reads

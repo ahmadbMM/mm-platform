@@ -17,6 +17,7 @@ export const NAV_LINKS: NavLink[] = [
   { key: "events", href: "/events", en: "Events", ar: "الفعاليات", footer: true },
   { key: "gallery", href: "/gallery", en: "Gallery", ar: "المعرض", footer: true },
   { key: "routes", href: "/routes", en: "Routes", ar: "المسارات", footer: true },
+  { key: "journal", href: "/journal", en: "Journal", ar: "المدونة", footer: true },
 ];
 
 export const pick = (l: { en: string; ar: string }, locale: string) => (locale === "ar" ? l.ar : l.en);

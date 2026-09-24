@@ -24,7 +24,7 @@ describe("loadSiteContent", () => {
     expect(b).toBe(a);
     expect(f).toHaveBeenCalledTimes(1);
     const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
-    expect(url).toBe("https://example.supabase.co/rest/v1/site_content?select=key,value");
+    expect(url).toBe("https://example.supabase.co/rest/v1/site_content?select=key,value&key=not.like.journal.*");
     expect((init.headers as Record<string, string>).apikey).toBe("anon");
     await loadSiteContent(f as unknown as typeof fetch, 62_000);
     expect(f).toHaveBeenCalledTimes(2);
@@ -74,7 +74,7 @@ describe("page switches", () => {
     expect(pageOn(on, "help")).toBe(false);
     expect(pageOn(on, "workshop")).toBe(false); // only an explicit true, as the staff page reads it
     expect(pageOn(null, "club")).toBe(false);
-    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes"]);
+    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes", "journal"]);
   });
   it("knows which addresses belong to a switched page", () => {
     expect(switchedPageOf("/en/club")).toBe("club");
