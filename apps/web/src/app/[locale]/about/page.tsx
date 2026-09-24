@@ -166,6 +166,19 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
           )}
         </section>
 
+        {(S(site.legal.legalName) || S(site.legal.cr)) && (
+          <section className="ab-company" aria-labelledby="ab-company-h">
+            <h2 id="ab-company-h">{ar ? "بيانات الشركة" : "Company details"}</h2>
+            <dl>
+              {S(site.legal.legalName) && <div>{dt("Legal name", "الاسم النظامي")}<dd>{S(site.legal.legalName)}</dd></div>}
+              {S(site.legal.cr) && <div>{dt("Commercial registration", "السجل التجاري")}<dd className="mm-lat">{S(site.legal.cr)}</dd></div>}
+              {S(site.legal.unified) && <div>{dt("Unified number", "الرقم الموحد")}<dd className="mm-lat">{S(site.legal.unified)}</dd></div>}
+              {S(site.legal.vat) && <div>{dt("VAT number", "الرقم الضريبي")}<dd className="mm-lat">{S(site.legal.vat)}</dd></div>}
+              {S(site.legal.address) && <div>{dt("Registered address", "العنوان المسجل")}<dd>{S(site.legal.address)}{S(site.legal.shortAddress) && <small className="mm-lat">{ar ? "العنوان المختصر" : "Short address"} {S(site.legal.shortAddress)}</small>}</dd></div>}
+            </dl>
+          </section>
+        )}
+
         <section className="ab-jobs" id="jobs" aria-labelledby="ab-jobs-h">
           <div className="ab-jobs-card">
             <div className="ab-jobs-info">

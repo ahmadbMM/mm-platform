@@ -66,7 +66,12 @@ export const siteSchema: PageSchema = {
       fields: [
         { id: "company", type: "text", max: 120, label: bi("Name on the © line", "الاسم في سطر الحقوق"), def: bi("MicroMobility", "مايكروموبيليتي") },
         { id: "vat", type: "text", max: 40, label: bi("VAT number", "الرقم الضريبي"), def: bi("312555068900003", "312555068900003") },
-        { id: "cr", type: "text", max: 40, label: bi("Commercial registration", "السجل التجاري"), hint: bi("As in the Privacy Notice. Empty hides it.", "كما في إشعار الخصوصية. الفارغ يخفيه."), def: bi("1009107240", "1009107240") },
+        { id: "cr", type: "text", max: 40, label: bi("Commercial registration", "السجل التجاري"), hint: bi("As on the registration certificate. Empty hides it.", "كما في شهادة التسجيل. الفارغ يخفيه."), def: bi("1009107240", "1009107240") },
+        // From the company's registration, VAT and national-address certificates (owner, 2026-09-25).
+        { id: "legalName", type: "text", max: 120, label: bi("Legal name", "الاسم النظامي"), def: bi("Micromobility Company Ltd.", "شركة التنقل الدقيق المحدودة") },
+        { id: "unified", type: "text", max: 40, label: bi("Unified number", "الرقم الموحد"), def: bi("7041881512", "7041881512") },
+        { id: "address", type: "text", max: 160, label: bi("Registered address", "العنوان المسجل"), def: bi("7933 Ibn Anuq Al Fedha St, Al Mansurah, Riyadh 12692 (additional no. 2987)", "7933 شارع ابن عنق الفضة، حي المنصورة، الرياض 12692 (الرقم الإضافي 2987)") },
+        { id: "shortAddress", type: "text", max: 20, label: bi("National short address", "العنوان المختصر"), def: bi("RCMA7933", "RCMA7933") },
       ],
     },
     {

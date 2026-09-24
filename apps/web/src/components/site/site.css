@@ -84,6 +84,7 @@ html[lang="ar"] .mm-site p { line-height: 1.85; }
 .mm-foot-trust span { display: inline-flex; align-items: center; gap: 8px; color: #c3cac4; font-size: 12px; font-weight: 600; }
 .mm-foot-bottom { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; padding-top: 4px; max-width: 1440px; margin: 0 auto; font-size: 14px; color: #b9c0ba; }
 .mm-foot-bottom .mm-lat { color: #8a938c; }
+.mm-foot-legal { max-width: 1440px; margin: 12px auto 0; font-size: 12px; color: #8a938c; line-height: 1.6; }
 @media (max-width: 1100px) { .mm-foot-grid { grid-template-columns: 1fr 1fr; gap: 44px 36px; } }
 @media (max-width: 760px) {
   .mm-foot-grid { grid-template-columns: 1fr 1fr; gap: 24px 18px; }

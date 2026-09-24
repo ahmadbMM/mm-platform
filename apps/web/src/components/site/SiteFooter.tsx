@@ -11,7 +11,7 @@ export type FooterLink = { label: string; href: string };
 export type FooterContent = {
   contact: { address: string; mapsHref: string; jccName: string; jccAddress: string; jccHref: string; email: string; phone: string; hoursText: string };
   social: Record<string, string>;
-  legal: { company: string; vat: string; cr: string };
+  legal: { company: string; vat: string; cr: string; legalName: string; unified: string; address: string };
   payments: { name: string; logo: string }[];
   showroom: boolean;
   trust: string[];
@@ -100,6 +100,11 @@ export default function SiteFooter({ locale, c, hidden = [] }: { locale: string;
             {c.legal.cr ? ` · ${L("CR", "س.ت")} ${c.legal.cr}` : ""}
           </span>
         </div>
+        {(c.legal.legalName || c.legal.address) && (
+          <p className="mm-foot-legal">
+            {[c.legal.legalName, c.legal.unified && `${L("Unified No.", "الرقم الموحد")} ${c.legal.unified}`, c.legal.address].filter(Boolean).join(" · ")}
+          </p>
+        )}
       </div>
     </footer>
   );

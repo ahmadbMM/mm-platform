@@ -73,6 +73,14 @@ html[lang="ar"] .ab-contact dt { letter-spacing: 0; font-size: 13px; }
 .ab .ab-line { background: #fff; color: #1a1919; border: 1px solid rgba(0, 0, 0, .2); }
 .ab-map { width: 100%; min-height: 460px; border: 0; border-radius: 34px; filter: grayscale(.3) contrast(1.05); background: #dfe5df; }
 
+.ab-company { padding: 0 7vw 60px; }
+.ab-company h2 { font-size: clamp(22px, 2.4vw, 30px); letter-spacing: -1px; margin: 0 0 14px; }
+.ab-company dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+.ab-company dl > div { background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 16px; padding: 14px 18px; }
+.ab-company dt { color: #077a4b; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 4px; }
+html[lang="ar"] .ab-company dt { letter-spacing: 0; font-size: 13px; }
+.ab-company dd { margin: 0; color: #2b332d; font-size: 14.5px; line-height: 1.55; }
+.ab-company dd small { display: block; color: #57605a; font-size: 12.5px; margin-top: 2px; }
 .ab-jobs { padding: 0 7vw 80px; scroll-margin-top: 70px; }
 .ab-jobs-card { border-radius: 26px; background: #11150f; color: #fbf9f4; padding: clamp(24px, 3vw, 40px); display: grid; grid-template-columns: .8fr 1.2fr; gap: 32px; align-items: start; }
 .ab-jobs-info h2 { font-size: clamp(26px, 3vw, 38px); letter-spacing: -1.2px; margin: 0 0 10px; }
@@ -94,7 +102,7 @@ html[lang="ar"] .ab-contact dt { letter-spacing: 0; font-size: 13px; }
   .ab-lead { font-size: 16px; }
   .ab-stats { padding: 0 22px 40px; }
   .ab-stats div { padding: 18px; }
-  .ab-vm, .ab-sec, .ab-contact, .ab-jobs { padding-left: 22px; padding-right: 22px; }
+  .ab-vm, .ab-sec, .ab-contact, .ab-company, .ab-jobs { padding-left: 22px; padding-right: 22px; }
   .ab-vm, .ab-sec { padding-bottom: 48px; }
   .ab-vm > div { padding: 24px; }
   .ab-vm > div > p:last-child { font-size: 16px; }
