@@ -1,52 +1,54 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
+import ComingSoon from "@/components/ComingSoon";
+import HomePage from "@/components/home/HomePage";
+import { homeSchema } from "@/content/pages/home";
+import { siteSchema } from "@/content/pages/site";
+import { asLocale, resolvePage } from "@/lib/content";
+import { PREVIEW_COOKIE, isStaffToken } from "@/lib/preview";
 import { HOME_BUILT, isComingSoon, loadSiteContent, siteText } from "@/lib/site";
-import "./coming-soon.css";
 
-// The Coming Soon screen from the Claude Design launch package (ComingSoon.dc.html, "site"
-// mode), and nothing else, as the owner asked (2026-09-24): the neon mark, "Coming soon."
-// and one line. No menu, no footer, no buttons, no language switch - the language follows
-// the device (next-intl picks /ar or /en from the browser).
-//
-// Its three lines are edited in the staff page (Website > Coming Soon screen, keys
-// coming_soon.eyebrow / .title / .sub). What is not set there reads as the design wrote it
-// (messages/*.json), and so does everything when the database cannot be reached.
-async function lines(locale: string) {
+// micromobility.sa. While the site is closed (Coming Soon on in the staff page, or Home not
+// released yet) visitors get the Coming Soon screen and staff previewing get the real Home.
+// Once staff open the site, everyone gets Home.
+async function state(locale: string) {
   const [t, content] = await Promise.all([getTranslations({ locale, namespace: "comingSoon" }), loadSiteContent()]);
-  return {
-    eyebrow: siteText(content, "coming_soon.eyebrow", locale, t("eyebrow")),
-    title: siteText(content, "coming_soon.title", locale, t("title")),
-    sub: siteText(content, "coming_soon.sub", locale, t("sub")),
-    metaTitle: t("metaTitle"),
-    closed: HOME_BUILT ? isComingSoon(content) : true,
-  };
+  const closed = HOME_BUILT ? isComingSoon(content) : true;
+  const previewing = closed ? await isStaffToken((await cookies()).get(PREVIEW_COOKIE)?.value) : false;
+  return { t, content, closed, previewing, showHome: !closed || previewing };
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  const l = await lines(locale);
-  return {
-    title: l.metaTitle,
-    description: l.sub,
-    robots: l.closed ? { index: false, follow: false } : undefined,
-  };
+  const s = await state(locale);
+  const ar = locale === "ar";
+  return s.showHome
+    ? {
+        title: ar ? "مايكروموبيليتي - دراجات فاخرة وتجارب ومجتمع دراجات في جدة" : "Micromobility - Premium Bikes, Experiences & Cycling Community in Jeddah",
+        description: ar ? "الموزع الحصري في السعودية لـ Battle وAlvas وCamp وStrauss. متجر دراجات وتجارب وورشة ومجتمع دراجات في جدة."
+          : "Exclusive KSA distributor of Battle, Alvas, Camp & Strauss. Bike store, experiences, workshop and cycling community in Jeddah.",
+        robots: s.closed ? { index: false, follow: false } : undefined,
+      }
+    : {
+        title: s.t("metaTitle"),
+        description: siteText(s.content, "coming_soon.sub", locale, s.t("sub")),
+        robots: { index: false, follow: false },
+      };
 }
 
-export default async function ComingSoon({ params }: { params: Promise<{ locale: string }> }) {
+export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const l = await lines(locale);
-  return (
-    <main className="cs">
-      <span className="cs-mark" role="img" aria-label="Micromobility" />
-      <div className="cs-shade" aria-hidden="true" />
-      <div className="cs-body">
-        <span className="cs-eyebrow">
-          <span className="cs-dot" aria-hidden="true" />
-          {l.eyebrow}
-        </span>
-        <h1 className="cs-title">{l.title}</h1>
-        <p className="cs-sub">{l.sub}</p>
-      </div>
-    </main>
-  );
+  const s = await state(locale);
+  if (!s.showHome) {
+    return (
+      <ComingSoon
+        eyebrow={siteText(s.content, "coming_soon.eyebrow", locale, s.t("eyebrow"))}
+        title={siteText(s.content, "coming_soon.title", locale, s.t("title"))}
+        sub={siteText(s.content, "coming_soon.sub", locale, s.t("sub"))}
+      />
+    );
+  }
+  const L = asLocale(locale);
+  return <HomePage locale={locale} home={resolvePage(homeSchema, s.content, L)} site={resolvePage(siteSchema, s.content, L)} preview={s.previewing} />;
 }

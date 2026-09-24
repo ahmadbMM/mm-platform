@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
 import { HOME_BUILT, isComingSoon, loadSiteContent } from "./lib/site";
 import { comingSoonTarget } from "./lib/coming-soon-route";
+import { PREVIEW_COOKIE, isStaffToken } from "./lib/preview";
 
 const intl = createMiddleware(routing);
 
@@ -25,7 +26,10 @@ export default async function proxy(req: NextRequest) {
   // Until Home exists the site is closed whatever staff have set, so nothing is read here yet.
   const closed = HOME_BUILT ? isComingSoon(await loadSiteContent()) : true;
   const soon = closed ? comingSoonTarget(pathname) : null;
-  if (soon) return NextResponse.redirect(new URL(soon, req.url), 307);
+  // A signed-in staff member previewing the site (lib/preview.ts) passes; the preview page itself
+  // must always load, since it is how preview starts.
+  const previewing = soon && !/^\/(en|ar)\/preview\/?$/.test(pathname) ? await isStaffToken(req.cookies.get(PREVIEW_COOKIE)?.value) : false;
+  if (soon && !previewing && !/^\/(en|ar)\/preview\/?$/.test(pathname)) return NextResponse.redirect(new URL(soon, req.url), 307);
   return intl(req);
 }
 
