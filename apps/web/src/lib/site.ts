@@ -51,7 +51,7 @@ export function resetSiteContent(): void {
 
 /** The pages staff switch on one at a time (staff page: Website > Pages; its SITE_PAGES lists
  *  the same keys). Home is not one of them - it opens with the Coming Soon switch. */
-export const SWITCHED_PAGES = ["experiences", "workshop", "business", "help", "ambassadors", "club"] as const;
+export const SWITCHED_PAGES = ["experiences", "workshop", "business", "help", "ambassadors", "club", "about", "events", "gallery", "routes"] as const;
 export type SwitchedPage = (typeof SWITCHED_PAGES)[number];
 
 /** A page is shown once staff switch it on - an explicit true, read the way the staff page reads

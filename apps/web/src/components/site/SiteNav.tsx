@@ -8,7 +8,7 @@ import { BOOKING_URL, NAV_LINKS, pick } from "@/lib/links";
 // account on the end; below 900px the sections open as a full-height dark sheet.
 export default function SiteNav({ locale, hidden = [] }: { locale: string; hidden?: string[] }) {
   const ar = locale === "ar";
-  const links = NAV_LINKS.filter((l) => !hidden.includes(l.key));
+  const links = NAV_LINKS.filter((l) => !l.footer && !hidden.includes(l.key));
   const path = usePathname();
   const [open, setOpen] = useState(false);
   useEffect(() => {

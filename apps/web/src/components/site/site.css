@@ -29,7 +29,7 @@ html[lang="ar"] .mm-site p { line-height: 1.85; }
   display: flex; flex-direction: column; overflow-y: auto; }
 .mm-nav-sheet a { display: flex; align-items: center; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, .08); font-size: 22px; font-weight: 700; }
 .mm-nav-sheet a:hover { color: #03ff89; }
-@media (max-width: 900px) {
+@media (max-width: 1000px) { /* eight sections need ~610px in the middle of the bar */
   .mm-nav-links { display: none; }
   .mm-nav-burger { display: inline-flex; }
   .mm-nav-account { display: none; }
@@ -59,3 +59,12 @@ html[lang="ar"] .mm-foot h4 { letter-spacing: 0; }
 .mm-foot-social a { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, .18); font-size: 12.5px; font-weight: 700; color: #fbf9f4; }
 .mm-foot-bottom { max-width: 1240px; margin: 0 auto; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, .1); display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; font-size: 12.5px; color: #8a938c; }
 @media (max-width: 900px) { .mm-foot-grid { grid-template-columns: 1fr 1fr; gap: 28px 18px; } .mm-foot-brand { grid-column: 1 / -1; } }
+
+/* ── The live open / closed sign (OpenNow): Home and About ── */
+@keyframes mmPing { 0% { transform: scale(1); opacity: .55; } 70%, 100% { transform: scale(3.2); opacity: 0; } }
+.hm-open { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 20px; min-height: 20px; }
+.hm-open .dot { position: relative; width: 9px; height: 9px; flex: none; }
+.hm-open .dot span { position: absolute; inset: 0; border-radius: 50%; }
+.hm-open .dot span + span { animation: mmPing 2.4s ease-out infinite; }
+.hm-open strong { font-size: 14px; }
+.hm-open em { font-style: normal; color: #8a938c; font-size: 14px; }

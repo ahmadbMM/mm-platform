@@ -1,9 +1,9 @@
 // Where the site's links go today. Pages that are not built yet are simply not linked; the
 // booking app (every Book button on /experiences) and the Salla shop (/store) live elsewhere.
 export const BOOKING_URL = "https://micromobilityrentals.pages.dev/";
-export const PRIVACY_URL = "https://micromobilityrentals.pages.dev/?privacy";
 
-export type NavLink = { key: string; href: string; en: string; ar: string; external?: boolean };
+/** footer: listed in the footer only (the header has no room for every page). */
+export type NavLink = { key: string; href: string; en: string; ar: string; external?: boolean; footer?: boolean };
 
 export const NAV_LINKS: NavLink[] = [
   { key: "store", href: "/store", en: "Store", ar: "المتجر", external: true },
@@ -12,7 +12,11 @@ export const NAV_LINKS: NavLink[] = [
   { key: "club", href: "/club", en: "Club", ar: "النادي" },
   { key: "ambassadors", href: "/ambassadors", en: "Ambassadors", ar: "السفراء" },
   { key: "business", href: "/business", en: "Business", ar: "للشركات" },
+  { key: "about", href: "/about", en: "About", ar: "من نحن" },
   { key: "help", href: "/help", en: "Help", ar: "المساعدة" },
+  { key: "events", href: "/events", en: "Events", ar: "الفعاليات", footer: true },
+  { key: "gallery", href: "/gallery", en: "Gallery", ar: "المعرض", footer: true },
+  { key: "routes", href: "/routes", en: "Routes", ar: "المسارات", footer: true },
 ];
 
 export const pick = (l: { en: string; ar: string }, locale: string) => (locale === "ar" ? l.ar : l.en);

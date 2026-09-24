@@ -4,7 +4,6 @@
 @keyframes mmBikeIn { 0% { opacity: 0; transform: translateX(70px) rotate(2.5deg); } 100% { opacity: 1; transform: none; } }
 @keyframes mmKen { 0% { transform: scale(1.02); } 100% { transform: scale(1.11); } }
 @keyframes mmMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-@keyframes mmPing { 0% { transform: scale(1); opacity: .55; } 70%, 100% { transform: scale(3.2); opacity: 0; } }
 @keyframes mmZoomIn { 0% { opacity: 0; transform: scale(.94); } 100% { opacity: 1; transform: scale(1); } }
 
 .hm-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-sizing: border-box; border-radius: 999px; font-weight: 700; }
@@ -163,12 +162,6 @@
 .hm-visit .lead { color: #57605a; font-size: 17px; line-height: 1.6; margin: 0 0 12px; }
 .hm-visit .meta { color: #8a938c; font-size: 14px; line-height: 1.8; margin: 0 0 12px; }
 .hm-visit .meta a { color: #077a4b; font-weight: 700; }
-.hm-open { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 20px; min-height: 20px; }
-.hm-open .dot { position: relative; width: 9px; height: 9px; flex: none; }
-.hm-open .dot span { position: absolute; inset: 0; border-radius: 50%; }
-.hm-open .dot span + span { animation: mmPing 2.4s ease-out infinite; }
-.hm-open strong { font-size: 14px; }
-.hm-open em { font-style: normal; color: #8a938c; font-size: 14px; }
 .hm-visit-btns { display: flex; flex-direction: column; align-items: stretch; gap: 12px; max-width: 320px; margin-top: 20px; }
 .hm-visit-btns a { display: flex; align-items: center; justify-content: center; gap: 9px; box-sizing: border-box; height: 52px; border-radius: 14px; font-weight: 700; font-size: 14px; }
 .hm-visit-btns .rating { background: #fff; border: 1px solid rgba(0, 0, 0, .1); box-shadow: 0 10px 30px rgba(9, 48, 26, .08); }

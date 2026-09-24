@@ -1,5 +1,5 @@
 import { Link } from "@/i18n/navigation";
-import { BOOKING_URL, NAV_LINKS, PRIVACY_URL, pick } from "@/lib/links";
+import { BOOKING_URL, NAV_LINKS, pick } from "@/lib/links";
 
 // The footer from SiteFooter.dc.html, with only what exists behind it: the sections that are
 // live, the contact block and hours from the staff-editable site content, social links that
@@ -54,7 +54,7 @@ export default function SiteFooter({ locale, c, hidden = [] }: { locale: string;
           <h4>{L("Company", "الشركة")}</h4>
           <ul>
             <li><a href={BOOKING_URL}>{L("My Account", "حسابي")}</a></li>
-            <li><a href={PRIVACY_URL}>{L("Privacy Notice", "إشعار الخصوصية")}</a></li>
+            <li><Link href="/privacy">{L("Privacy Notice", "إشعار الخصوصية")}</Link></li>
           </ul>
         </div>
       </div>
