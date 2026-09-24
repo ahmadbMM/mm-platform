@@ -29,6 +29,7 @@ const T = {
     about: (m: number) => `~${m} min`, parts: "Add parts (optional)", day: "Preferred day", time: "Preferred time", name: "Your name",
     phone: "Mobile number", bike: "Your bike (e.g. ALVAS DA54 AL)", notes: "Anything we should know? (optional)", total: "Estimated total",
     send: "Send request", sending: "Sending…", ref: "Your reference", another: "Request another",
+    code: "Have a code?", apply: "Apply", codeOn: (c: string, d: string) => `Code ${c}: ${d} off`, codeBad: "That code isn't valid.", codeRemove: "Remove",
     errors: { name: "Enter your name - letters and spaces only.", phone: "Check the mobile number, e.g. 05XXXXXXXX.", service: "Pick a service.",
       day: "Pick a day.", pickup_address: "Add the pickup address.", throttled: "Too many requests from this network - try again in a few minutes.",
       generic: "It could not be sent. Check the connection and try again." } as Record<string, string>,
@@ -40,6 +41,7 @@ const T = {
     about: (m: number) => `~${m} دقيقة`, parts: "أضف قطعاً (اختياري)", day: "اليوم المفضل", time: "الوقت المفضل", name: "اسمك",
     phone: "رقم الجوال", bike: "دراجتك (مثال: ALVAS DA54 AL)", notes: "أي تفاصيل تهمنا؟ (اختياري)", total: "الإجمالي التقريبي",
     send: "أرسل الطلب", sending: "جارٍ الإرسال…", ref: "رقم طلبك", another: "طلب آخر",
+    code: "لديك كود؟", apply: "تطبيق", codeOn: (c: string, d: string) => `الكود ${c}: خصم ${d}`, codeBad: "هذا الكود غير صالح.", codeRemove: "إزالة",
     errors: { name: "أدخل اسمك - حروف ومسافات فقط.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.", service: "اختر خدمة.",
       day: "اختر يوماً.", pickup_address: "أضف عنوان الاستلام.", throttled: "طلبات كثيرة من هذه الشبكة - حاول بعد دقائق.",
       generic: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً." } as Record<string, string>,
@@ -65,6 +67,9 @@ export default function WorkshopForm(p: WorkshopFormProps) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState("");
+  const [codeIn, setCodeIn] = useState("");
+  const [promo, setPromo] = useState<{ code: string; kind: string; value: number } | null>(null);
+  const [codeErr, setCodeErr] = useState("");
 
   const money = (n: number) => (n === 0 ? t.free : ar ? `${n.toLocaleString("ar-SA-u-nu-latn")} ر.س` : `SAR ${n.toLocaleString("en-US")}`);
   const dayList = useMemo(() => {
@@ -79,7 +84,21 @@ export default function WorkshopForm(p: WorkshopFormProps) {
 
   const service = p.services[svc];
   const partsTotal = p.parts.reduce((s, x) => s + (parts[x.id] ? x.price : 0), 0);
-  const total = (service ? service.price : 0) + partsTotal + (lane === "pickup" ? p.pickupFee : 0);
+  const gross = (service ? service.price : 0) + partsTotal + (lane === "pickup" ? p.pickupFee : 0);
+  // A code (an ambassador's, or any promo code the booking app takes) comes off the estimate;
+  // the workshop confirms the final price.
+  const off = !promo ? 0 : promo.kind === "flat" ? Math.min(promo.value, gross) : Math.round(gross * promo.value) / 100;
+  const total = Math.max(0, Math.round(gross - off)); // an estimate: whole riyals
+  async function applyCode() {
+    setCodeErr("");
+    const v = codeIn.trim().replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c)));
+    if (!v) return;
+    try {
+      const r = await rpc<{ ok: boolean; code?: string; kind?: string; value?: number }>("promo_lookup", { p_code: v });
+      if (r.ok && r.code) setPromo({ code: r.code, kind: r.kind || "percent", value: Number(r.value) || 0 });
+      else { setPromo(null); setCodeErr(t.codeBad); }
+    } catch { setCodeErr(t.codeBad); }
+  }
   const lanes: { id: Lane; label: string; sub: string }[] = [
     { id: "dropoff", label: t.dropoff, sub: t.dropoffSub },
     ...(p.wait ? [{ id: "wait" as Lane, label: t.wait, sub: t.waitSub }] : []),
@@ -101,7 +120,7 @@ export default function WorkshopForm(p: WorkshopFormProps) {
           name: nm, phone: ph, service: service.id, service_label: service.name, price: total, // the estimate the customer saw
           parts: p.parts.filter((x) => parts[x.id]).map((x) => ({ id: x.id, label: x.label, price: x.price })),
           lane, pickup_address: lane === "pickup" ? addr.trim() : "", preferred_date: day, preferred_time: time,
-          bike: bike.trim(), notes: notes.trim(), lang: ar ? "ar" : "en",
+          bike: bike.trim(), notes: notes.trim(), lang: ar ? "ar" : "en", code: promo ? promo.code : "",
         },
       });
       if (r.ok && r.ref) setDone(r.ref);
@@ -209,6 +228,15 @@ export default function WorkshopForm(p: WorkshopFormProps) {
         <textarea className="ws-input" value={notes} onChange={(e) => setNotes(e.target.value)} placeholder={t.notes} aria-label={t.notes} rows={3} maxLength={600} />
       </div>
 
+      {promo ? (
+        <p className="ws-code-on"><span>{t.codeOn(promo.code, promo.kind === "flat" ? money(promo.value) : `${promo.value}%`)}</span><button type="button" onClick={() => { setPromo(null); setCodeIn(""); }}>{t.codeRemove}</button></p>
+      ) : (
+        <div className="ws-code">
+          <input className="ws-input" value={codeIn} onChange={(e) => { setCodeIn(e.target.value); setCodeErr(""); }} placeholder={t.code} aria-label={t.code} dir="ltr" maxLength={40} autoCapitalize="characters" />
+          <button type="button" className="ws-btn ws-btn-line" onClick={applyCode} disabled={!codeIn.trim()}>{t.apply}</button>
+        </div>
+      )}
+      {codeErr && <p className="ws-err" role="alert">{codeErr}</p>}
       <div className="ws-total"><span>{t.total}</span><strong>{money(total)}</strong></div>
       {err && <p className="ws-err" role="alert">{err}</p>}
       <button type="button" className="ws-btn ws-btn-green" onClick={send} disabled={busy}>{busy ? t.sending : t.send}</button>

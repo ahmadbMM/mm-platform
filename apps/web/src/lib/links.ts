@@ -9,6 +9,8 @@ export const NAV_LINKS: NavLink[] = [
   { key: "store", href: "/store", en: "Store", ar: "المتجر", external: true },
   { key: "experiences", href: BOOKING_URL, en: "Experiences", ar: "التجارب", external: true },
   { key: "workshop", href: "/workshop", en: "Workshop", ar: "الورشة" },
+  { key: "club", href: "/club", en: "Club", ar: "النادي" },
+  { key: "ambassadors", href: "/ambassadors", en: "Ambassadors", ar: "السفراء" },
   { key: "business", href: "/business", en: "Business", ar: "للشركات" },
   { key: "help", href: "/help", en: "Help", ar: "المساعدة" },
 ];
