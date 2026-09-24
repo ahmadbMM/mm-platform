@@ -1,12 +1,12 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { routing } from "./i18n/routing";
-import { COMING_SOON } from "./lib/site";
+import { HOME_BUILT, isComingSoon, loadSiteContent } from "./lib/site";
 import { comingSoonTarget } from "./lib/coming-soon-route";
 
 const intl = createMiddleware(routing);
 
-export default function proxy(req: NextRequest) {
+export default async function proxy(req: NextRequest) {
   // The handoff spec writes the tag URL as /?bike=42; the chips carry /b/42 instead. Anything
   // still using the old form is moved over here rather than through next.config redirects,
   // because those append the original query and would leave ?bike=42 sitting in the address
@@ -22,7 +22,9 @@ export default function proxy(req: NextRequest) {
   // While the site is Coming Soon, it is the only page: /en/login, /about and anything else
   // go back to it. /store forwards to the shop before this runs (next.config redirects), and
   // /b/* never reaches here (matcher below).
-  const soon = COMING_SOON ? comingSoonTarget(pathname) : null;
+  // Until Home exists the site is closed whatever staff have set, so nothing is read here yet.
+  const closed = HOME_BUILT ? isComingSoon(await loadSiteContent()) : true;
+  const soon = closed ? comingSoonTarget(pathname) : null;
   if (soon) return NextResponse.redirect(new URL(soon, req.url), 307);
   return intl(req);
 }
