@@ -26,9 +26,9 @@ export default function SiteNav({ locale }: { locale: string }) {
           <img src="/site/logo-mark-dark.png" alt="Micromobility" width={40} height={26} />
         </Link>
         <nav className="mm-nav-links" aria-label={ar ? "الأقسام" : "Sections"}>
-          {NAV_LINKS.map((l) => (
-            <a key={l.key} href={l.href}>{pick(l, locale)}</a>
-          ))}
+          {NAV_LINKS.map((l) => l.external
+            ? <a key={l.key} href={l.href}>{pick(l, locale)}</a>
+            : <Link key={l.key} href={l.href} aria-current={path === l.href ? "page" : undefined}>{pick(l, locale)}</Link>)}
         </nav>
         <div className="mm-nav-end">
           <Link href={path} locale={other} className="mm-nav-lang" hrefLang={other} lang={other} aria-label={ar ? "English" : "العربية"}>
@@ -44,9 +44,9 @@ export default function SiteNav({ locale }: { locale: string }) {
       </header>
       {open && (
         <nav id="mm-nav-sheet" className="mm-nav-sheet" dir={ar ? "rtl" : "ltr"} aria-label={ar ? "الأقسام" : "Sections"}>
-          {NAV_LINKS.map((l) => (
-            <a key={l.key} href={l.href} onClick={() => setOpen(false)}>{pick(l, locale)}<span aria-hidden="true">{ar ? "←" : "→"}</span></a>
-          ))}
+          {NAV_LINKS.map((l) => l.external
+            ? <a key={l.key} href={l.href} onClick={() => setOpen(false)}>{pick(l, locale)}<span aria-hidden="true">{ar ? "←" : "→"}</span></a>
+            : <Link key={l.key} href={l.href} onClick={() => setOpen(false)}>{pick(l, locale)}<span aria-hidden="true">{ar ? "←" : "→"}</span></Link>)}
           <a href={BOOKING_URL}>{ar ? "حسابي" : "Account"}<span aria-hidden="true">{ar ? "←" : "→"}</span></a>
         </nav>
       )}

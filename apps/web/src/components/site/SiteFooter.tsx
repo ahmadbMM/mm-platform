@@ -1,3 +1,4 @@
+import { Link } from "@/i18n/navigation";
 import { BOOKING_URL, NAV_LINKS, PRIVACY_URL, pick } from "@/lib/links";
 
 // The footer from SiteFooter.dc.html, with only what exists behind it: the sections that are
@@ -38,7 +39,7 @@ export default function SiteFooter({ locale, c }: { locale: string; c: FooterCon
         <div>
           <h4>{L("Explore", "استكشف")}</h4>
           <ul>
-            {NAV_LINKS.map((l) => <li key={l.key}><a href={l.href}>{pick(l, locale)}</a></li>)}
+            {NAV_LINKS.map((l) => <li key={l.key}>{l.external ? <a href={l.href}>{pick(l, locale)}</a> : <Link href={l.href}>{pick(l, locale)}</Link>}</li>)}
           </ul>
         </div>
         <div>

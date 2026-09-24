@@ -8,6 +8,7 @@ export type NavLink = { key: string; href: string; en: string; ar: string; exter
 export const NAV_LINKS: NavLink[] = [
   { key: "store", href: "/store", en: "Store", ar: "المتجر", external: true },
   { key: "experiences", href: BOOKING_URL, en: "Experiences", ar: "التجارب", external: true },
+  { key: "workshop", href: "/workshop", en: "Workshop", ar: "الورشة" },
 ];
 
 export const pick = (l: { en: string; ar: string }, locale: string) => (locale === "ar" ? l.ar : l.en);

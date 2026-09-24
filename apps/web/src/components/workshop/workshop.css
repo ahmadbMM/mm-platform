@@ -1,0 +1,81 @@
+/* Workshop - from Workshop.dc.html (Claude Design launch package). */
+/* Desktop: the intro and the tracker on the left, the request card on the right. Phone: intro,
+   then the request card (what most visitors came for), then the tracker. */
+.ws-grid { padding: 70px 6vw 90px; display: grid; grid-template-columns: 1fr 1.05fr; grid-template-rows: auto 1fr; grid-template-areas: "intro form" "track form"; column-gap: 48px; row-gap: 20px; align-items: start; }
+.ws-intro { grid-area: intro; }
+.ws-eyebrow { display: block; color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 14px; }
+html[lang="ar"] .ws-eyebrow { letter-spacing: 0; font-size: 13px; }
+.ws-grid h1 { font-size: clamp(42px, 5vw, 76px); line-height: .92; letter-spacing: -3px; margin: 0 0 18px; }
+.ws-lead { color: #57605a; font-size: 17.5px; line-height: 1.65; max-width: 520px; margin: 0 0 26px; }
+.ws-features { display: flex; flex-direction: column; gap: 8px; margin: 0 0 28px; padding: 0; list-style: none; color: #4a534c; font-size: 15px; }
+.ws-features li::before { content: "+"; color: #077a4b; font-weight: 700; margin-inline-end: 8px; }
+.ws-photo { border-radius: 28px; overflow: hidden; min-height: 280px; background-size: cover; background-position: center; display: flex; align-items: flex-end; padding: 22px; box-sizing: border-box; color: #fbf9f4; }
+.ws-photo strong { display: block; font-size: 16px; }
+.ws-photo span { color: #d5dbd6; font-size: 13.5px; }
+.ws-track { grid-area: track; border: 1px solid rgba(0, 0, 0, .09); border-radius: 20px; padding: 20px 22px; background: #fff; }
+.ws-track-title { display: block; font-size: 15px; margin-bottom: 4px; }
+.ws-track .ws-hint { margin: 0 0 12px; }
+.ws-track-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; }
+.ws-track-res { margin-top: 14px; font-size: 13.5px; color: #4a534c; }
+.ws-track-res p { margin: 8px 0 0; }
+.ws-track-head { font-size: 14px; color: #1a1919; margin-bottom: 10px; }
+.ws-stages { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+.ws-stages li { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-size: 10.5px; line-height: 1.25; color: #8a938c; }
+.ws-stages li span { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; background: rgba(0, 0, 0, .06); color: #8a938c; }
+.ws-stages li.done span { background: #077a4b; color: #fbf9f4; }
+.ws-stages li.now { color: #1a1919; font-weight: 700; }
+.ws-stages li.now span { background: #03ff89; color: #0d100d; }
+.ws-card { grid-area: form; background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 30px; padding: 30px; position: sticky; top: 84px; }
+.ws-card h2 { font-size: 22px; letter-spacing: -.5px; margin: 0 0 4px; }
+.ws-sub { color: #8a938c; font-size: 13.5px; margin: 0 0 18px; }
+.ws-label { font-size: 13.5px; color: #57605a; font-weight: 600; display: block; margin: 0 0 8px; }
+.ws-hint { color: #8a938c; font-size: 12px; margin: -4px 0 10px; }
+.ws-lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 7px; margin-bottom: 16px; }
+.ws-lane { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); background: #fff; color: #1a1919; border-radius: 14px; padding: 12px 10px; font-family: inherit; text-align: start; min-height: 64px; display: flex; flex-direction: column; gap: 3px; }
+.ws-lane strong { font-size: 12.5px; line-height: 1.2; }
+.ws-lane span { font-size: 10.5px; color: #8a938c; line-height: 1.3; }
+.ws-lane[aria-checked="true"] { border-color: #077a4b; background: rgba(7, 122, 75, .06); }
+.ws-chips, .ws-days { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px; }
+.ws-chips button, .ws-days button { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); background: #fff; color: #1a1919; border-radius: 999px; padding: 8px 14px; font-size: 12.5px; font-weight: 700; font-family: inherit; min-height: 40px; }
+.ws-days button { border-radius: 12px; min-height: 44px; }
+.ws-chips button[aria-pressed="true"], .ws-days button[aria-pressed="true"] { background: #1a1919; color: #03ff89; border-color: #1a1919; }
+.ws-suggest { font-size: 12px; color: #06603b; font-weight: 700; margin: -8px 0 14px; }
+.ws-services { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+.ws-svc { border: 1px solid rgba(0, 0, 0, .12); border-radius: 16px; overflow: hidden; background: #fff; }
+.ws-svc.on { border-color: #077a4b; background: rgba(7, 122, 75, .04); }
+.ws-svc > button { cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: transparent; border: 0; padding: 15px 18px; color: #1a1919; font-family: inherit; text-align: start; width: 100%; min-height: 56px; }
+.ws-svc strong { display: block; font-size: 15px; }
+.ws-svc small { color: #8a938c; font-size: 12.5px; }
+.ws-price { font-weight: 700; font-size: 14px; white-space: nowrap; }
+.ws-incl { padding: 0 18px 15px; }
+.ws-incl span { font-size: 10.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #077a4b; display: block; margin-bottom: 8px; }
+.ws-incl ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
+.ws-incl li { color: #4a534c; font-size: 12.5px; }
+.ws-incl li::before { content: "✓"; color: #077a4b; font-weight: 700; margin-inline-end: 8px; }
+.ws-parts { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.ws-part { display: flex; align-items: center; gap: 10px; border: 1px solid rgba(0, 0, 0, .1); border-radius: 12px; padding: 10px 12px; font-size: 13.5px; cursor: pointer; }
+.ws-part span:nth-of-type(1) { flex: 1; }
+.ws-part input { width: 18px; height: 18px; accent-color: #077a4b; appearance: auto; -webkit-appearance: checkbox; margin: 0; }
+.ws-fields { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+.ws-input { background: #fff; border: 1px solid rgba(0, 0, 0, .16); border-radius: 12px; padding: 12px 15px; color: #1a1919; font-size: 14px; outline: none; font-family: inherit; width: 100%; box-sizing: border-box; }
+.ws-input:focus { border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
+textarea.ws-input { resize: vertical; min-height: 76px; }
+.ws-total { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid rgba(0, 0, 0, .08); padding-top: 14px; margin-bottom: 12px; }
+.ws-total strong { font-size: 20px; }
+.ws-err { color: #b3261e; font-size: 13px; font-weight: 600; margin: 0 0 12px; }
+.ws-btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; font-weight: 700; font-size: 15px; font-family: inherit; cursor: pointer; min-height: 52px; padding: 0 24px; border: 0; }
+.ws-btn:disabled { opacity: .6; cursor: default; }
+.ws-btn-green { background: #077a4b; color: #fbf9f4; width: 100%; }
+.ws-btn-dark { background: #1a1919; color: #fbf9f4; min-height: 46px; font-size: 14px; }
+.ws-btn-line { border: 1px solid rgba(0, 0, 0, .2); background: #fff; color: #1a1919; }
+.ws-done { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.ws-done .ws-eyebrow { margin: 0 0 8px; }
+.ws-ref-label { margin: 0; color: #8a938c; font-size: 13px; }
+.ws-ref { font-size: 40px; letter-spacing: -1px; }
+.ws-done-text { color: #57605a; font-size: 15px; line-height: 1.6; max-width: 360px; margin: 6px 0 16px; }
+@media (max-width: 900px) {
+  .ws-grid { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "intro" "form" "track"; padding: 40px 22px 60px; row-gap: 28px; }
+  .ws-card { position: static; padding: 22px 18px; border-radius: 22px; }
+  .ws-track-row { grid-template-columns: 1fr; }
+  .ws-stages { grid-template-columns: repeat(3, 1fr); row-gap: 12px; }
+}

@@ -41,7 +41,7 @@ html[lang="ar"] .mm-site p { line-height: 1.85; }
 @media (max-width: 760px) { .mm-ann { font-size: 11.5px; gap: 12px; padding: 6px 12px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; } .mm-ann span { overflow: hidden; text-overflow: ellipsis; min-width: 0; } }
 
 /* ── Staff preview bar ── */
-.mm-preview-bar { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); z-index: 90; display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px;
+.mm-preview-bar { position: fixed; bottom: 16px; left: 12px; right: 12px; width: fit-content; margin-inline: auto; z-index: 90; display: flex; align-items: center; gap: 12px; padding: 10px 12px 10px 16px;
   background: #1a1919; color: #fbf9f4; border: 1px solid rgba(3, 255, 137, .35); border-radius: 999px; font-size: 13px; box-shadow: 0 18px 50px rgba(0, 0, 0, .35); max-width: calc(100vw - 24px); }
 .mm-preview-bar strong { color: #03ff89; }
 .mm-preview-bar button { border: 0; border-radius: 999px; padding: 8px 14px; background: #fbf9f4; color: #1a1919; font-weight: 700; font-size: 12.5px; cursor: pointer; font-family: inherit; }
