@@ -17,25 +17,28 @@ import { BOOKING_URL, bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, loadSessionsById } from "@/lib/rides";
 import { riyadhClock } from "@/lib/workshop-days";
+import { serverL } from "@/i18n/dicts";
+import { phrase } from "@/i18n/tx";
+import { isRtl, intlOf } from "@/i18n/locales";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
 // the next rides (their tickets and changes stay in the booking app), the Club card opened with
 // the account's own email and mobile, and shortcuts.
 const S = (v: unknown) => (typeof v === "string" ? v : "");
-const TYPE_NAME: Record<string, [string, string]> = {
-  Road: ["Road", "طريق"], Hybrid: ["Hybrid", "هجين"], Mountain: ["Mountain", "جبلي"], "Road Carbon": ["Road Carbon", "طريق كربون"],
-  Kids: ["Kids", "أطفال"], Any: ["Any bike", "أي دراجة"], Own: ["Own bike", "دراجتي الخاصة"],
+const TYPE_NAME: Record<string, { en: string; ar: string }> = {
+  Road: phrase("Road", "طريق"), Hybrid: phrase("Hybrid", "هجين"), Mountain: phrase("Mountain", "جبلي"), "Road Carbon": phrase("Road Carbon", "طريق كربون"),
+  Kids: phrase("Kids", "أطفال"), Any: phrase("Any bike", "أي دراجة"), Own: phrase("Own bike", "دراجتي الخاصة"),
 };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  return { title: `${locale === "ar" ? "الحساب" : "Account"} · Micromobility`, robots: { index: false, follow: false } };
+  return { title: `${serverL(locale)("Account", "الحساب")} · Micromobility`, robots: { index: false, follow: false } };
 }
 
 export default async function AccountPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const L = asLocale(locale);
-  const ar = L === "ar";
+  const tx = serverL(locale);
   const [{ content, previewing, hidden }, acct] = await Promise.all([pageState("account"), getAccount()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(accountSchema, content, L);
@@ -50,7 +53,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
             <p className="ac-eyebrow">{S(c.signin.eyebrow)}</p>
             <h1>{S(c.signin.title)}</h1>
             <p className="ac-text">{S(c.signin.text)}</p>
-            <SignIn locale={locale} />
+            <SignIn />
             <ul className="ac-notes">
               <li><a href={book}>{S(c.signin.create)}</a></li>
               <li>{S(c.signin.forgot)}</li>
@@ -66,21 +69,21 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   const now = riyadhClock(new Date());
   const bookings = upcomingBookings(rows, now.slice(0, 10));
   const d = resolvePage(experiencesSchema, content, L).dates;
-  const names = { ...kindNames(d), petromin: ar ? "بترومين" : "Petromin" };
+  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
   // a booking on a Petromin night or on a session staff closed since is named too
   const booked = await loadSessionsById(bookings.map((b) => b.sessionId));
   const sessions = new Map([...(rides?.sessions ?? []), ...booked].map((s) => [s.id, s]));
-  const day = (iso: string) => new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
-  const statusText = { booked: ar ? "محجوز" : "Booked", waitlist: ar ? "قائمة الانتظار" : "Waitlist", riding: ar ? "في الجولة" : "On the ride" };
+  const day = (iso: string) => new Intl.DateTimeFormat(intlOf(locale), { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
+  const statusText = { booked: tx("Booked", "محجوز"), waitlist: tx("Waitlist", "قائمة الانتظار"), riding: tx("On the ride", "في الجولة") };
   const first = acct.name.trim().split(/\s+/)[0] || acct.name;
   const club = resolvePage(clubSchema, content, L);
   const tierNames: [string, string, string] = [S(club.tiers.t1Name), S(club.tiers.t2Name), S(club.tiers.t3Name)];
   const shortcuts = [
-    ["experiences", ar ? "احجز جولة" : "Book a ride", "/experiences"],
-    ["workshop", ar ? "اطلب صيانة" : "Request a service", "/workshop"],
-    ["ambassadors", ar ? "برنامج السفراء" : "Ambassador Program", "/ambassadors"],
-    ["help", ar ? "المساعدة" : "Help", "/help"],
+    ["experiences", tx("Book a ride", "احجز جولة"), "/experiences"],
+    ["workshop", tx("Request a service", "اطلب صيانة"), "/workshop"],
+    ["ambassadors", tx("Ambassador Program", "برنامج السفراء"), "/ambassadors"],
+    ["help", tx("Help", "المساعدة"), "/help"],
   ].filter(([k]) => !hidden.includes(k));
 
   return (
@@ -92,22 +95,22 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
             <h1>{fill(S(c.home.hello), { name: first })}</h1>
             <p className="ac-who" dir="ltr">{[acct.email, acct.phone].filter(Boolean).join(" · ")}</p>
           </div>
-          <SignOut label={ar ? "تسجيل الخروج" : "Sign out"} />
+          <SignOut label={tx("Sign out", "تسجيل الخروج")} />
         </header>
 
         <section className="ac-sec" aria-labelledby="ac-rides-h">
-          <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <span aria-hidden="true">{ar ? "←" : "→"}</span></a></div>
+          <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a></div>
           {bookings.length === 0 ? (
-            <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{ar ? "المواعيد ←" : "See the dates →"}</a>}</p>
+            <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <span aria-hidden="true">{isRtl(locale) ? "←" : "→"}</span></a>}</p>
           ) : (
             <div className="ac-rides">
               {bookings.map((b) => {
                 const s = sessions.get(b.sessionId);
-                const name = s ? sessionName(s, names, enNames, ar) : ar ? "جولة" : "Ride";
+                const name = s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة");
                 return (
                   <div key={b.sessionId} className="ac-ride">
                     <div><strong>{name}</strong><span>{day(b.date)}{s?.times ? <> · <bdi dir="ltr">{s.times[0]}</bdi></> : null}</span></div>
-                    <ul>{b.riders.map((r, i) => <li key={i}><span>{r.name}{r.type && r.type !== "None" ? ` · ${TYPE_NAME[r.type]?.[ar ? 1 : 0] ?? r.type}` : ""}{r.size ? ` · ${r.size}` : ""}</span><em className={r.status}>{statusText[r.status]}</em></li>)}</ul>
+                    <ul>{b.riders.map((r, i) => <li key={i}><span>{r.name}{r.type && r.type !== "None" ? ` · ${TYPE_NAME[r.type] ? tx(TYPE_NAME[r.type].en, TYPE_NAME[r.type].ar) : r.type}` : ""}{r.size ? ` · ${r.size}` : ""}</span><em className={r.status}>{statusText[r.status]}</em></li>)}</ul>
                   </div>
                 );
               })}
@@ -123,8 +126,8 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
         )}
 
         {shortcuts.length > 0 && (
-          <nav className="ac-links" aria-label={ar ? "اختصارات" : "Shortcuts"}>
-            {shortcuts.map(([k, label, href]) => <a key={k} href={localHref(href, locale)}>{label} <span aria-hidden="true">{ar ? "←" : "→"}</span></a>)}
+          <nav className="ac-links" aria-label={tx("Shortcuts", "اختصارات")}>
+            {shortcuts.map(([k, label, href]) => <a key={k} href={localHref(href, locale)}>{label} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a>)}
           </nav>
         )}
       </div>

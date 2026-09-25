@@ -97,11 +97,11 @@ export function kindNames(d: Record<string, unknown>): Record<RideKind, string> 
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other
- *  session by what staff called it, else its kind. Staff titles are typed once, in English; on
- *  the Arabic page a title that is just the kind's English name reads as the Arabic one. */
-export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Record<RideKind, string>, enNames: Record<RideKind, string>, ar: boolean): string {
+ *  session by what staff called it, else its kind. Staff titles are typed once, in English; in any
+ *  other language a title that is just the kind's English name reads as that language's name. */
+export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Record<RideKind, string>, enNames: Record<RideKind, string>, localized: boolean): string {
   if (s.kind === "jcc" || !s.title) return names[s.kind];
-  return ar && s.title.toLowerCase() === enNames[s.kind].trim().toLowerCase() ? names[s.kind] : s.title;
+  return localized && s.title.toLowerCase() === enNames[s.kind].trim().toLowerCase() ? names[s.kind] : s.title;
 }
 
 /** Booked sessions by id, whatever their state (a Petromin night, one staff have closed since):

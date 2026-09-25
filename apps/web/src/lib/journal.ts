@@ -28,10 +28,13 @@ export function parseBody(text: string): Block[] {
   return out;
 }
 
-/** Minutes to read, at about 200 words a minute; at least one. */
+/** Minutes to read, at about 200 words a minute; at least one. Chinese and Japanese are written
+ *  without spaces, so their characters count at about 400 a minute instead. */
 export function readMinutes(text: string): number {
-  const words = text.trim().split(/\s+/).filter(Boolean).length;
-  return Math.max(1, Math.round(words / 200));
+  const cjk = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/g;
+  const chars = (text.match(cjk) ?? []).length;
+  const words = text.replace(cjk, " ").trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round((words + chars / 2) / 200));
 }
 
 export type Post = { slug: string; title: string; tag: string; date: string; cover: string; excerpt: string; body: string; cta: string; ctaHref: string };

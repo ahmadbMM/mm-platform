@@ -3,7 +3,7 @@
 .bz-hero { padding: 90px 7vw 40px; }
 .bz-hero img { height: 110px; width: auto; display: block; margin-bottom: 26px; }
 .bz-eyebrow { display: block; color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 14px; }
-html[lang="ar"] .bz-eyebrow { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .bz-eyebrow { letter-spacing: 0; font-size: 13px; }
 .bz-hero h1 { font-size: clamp(44px, 6vw, 92px); line-height: .92; letter-spacing: -3px; margin: 0 0 18px; max-width: 960px; }
 .bz-hero p { color: #4e554f; font-size: 18px; line-height: 1.65; max-width: 640px; margin: 0; }
 .bz-tabs { display: flex; gap: 10px; flex-wrap: wrap; padding: 0 7vw 40px; }
@@ -20,11 +20,16 @@ html[lang="ar"] .bz-eyebrow { letter-spacing: 0; font-size: 13px; }
 .bz-proof { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
 .bz-proof div { padding: 28px; border-radius: 24px; background: #fff; box-shadow: 0 20px 60px rgba(0, 0, 0, .07); }
 .bz-proof strong { display: block; font-size: clamp(28px, 3vw, 44px); letter-spacing: -1.5px; color: #077a4b; }
-html[lang="ar"] .bz-proof strong { letter-spacing: 0; }
+html:is([lang="ar"], [lang="ur"]) .bz-proof strong { letter-spacing: 0; }
 .bz-proof span { color: #4e554f; font-size: 14px; font-weight: 600; }
+/* One word can be the whole figure ("Мероприятия", "Événements"): on a phone the cards stack
+   rather than squeeze two such words side by side. */
+@media (max-width: 480px) { .bz-proof { grid-template-columns: 1fr; } }
+.bz-proof > div { min-width: 0; }
+.bz-proof strong { overflow-wrap: break-word; hyphens: auto; }
 .bz-logos { margin-top: 44px; text-align: center; }
 .bz-logos p { color: #077a4b; text-transform: uppercase; letter-spacing: 3px; font-size: 12px; font-weight: 700; margin: 0 0 26px; }
-html[lang="ar"] .bz-logos p { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .bz-logos p { letter-spacing: 0; font-size: 13px; }
 .bz-logo-row { display: flex; justify-content: center; align-items: center; gap: clamp(28px, 5vw, 64px); flex-wrap: wrap; margin-bottom: 44px; }
 .bz-logo-row img { height: 48px; width: auto; max-width: 160px; object-fit: contain; filter: grayscale(1); opacity: .75; transition: filter .3s ease, opacity .3s ease; }
 .bz-logo-row img:hover { filter: grayscale(0); opacity: 1; }

@@ -2,18 +2,21 @@
 
 import { useEffect, useState } from "react";
 import { rpc } from "@/lib/rpc-client";
+import { useL } from "@/i18n/TxProvider";
+import { intlOf } from "@/i18n/locales";
+import { phrase } from "@/i18n/tx";
 
 // The next open community rides (club_rides), read in the visitor's browser.
 type Ride = { title: string; date: string; time: string | null; kind: string | null };
 type Props = { locale: string; href: string; empty: string };
 const KIND: Record<string, { en: string; ar: string }> = {
-  saturday: { en: "Saturday Social Ride", ar: "ركبة السبت الاجتماعية" },
-  swim: { en: "Triathlon Pool Session", ar: "جلسة سباحة للترياثلون" },
-  workshop: { en: "Club workshop", ar: "ورشة النادي" },
+  saturday: phrase("Saturday Social Ride", "ركبة السبت الاجتماعية"),
+  swim: phrase("Triathlon Pool Session", "جلسة سباحة للترياثلون"),
+  workshop: phrase("Club workshop", "ورشة النادي"),
 };
 
 export default function ClubRides(p: Props) {
-  const ar = p.locale === "ar";
+  const tx = useL();
   const [rides, setRides] = useState<Ride[] | null>(null);
   useEffect(() => {
     let live = true;
@@ -26,17 +29,17 @@ export default function ClubRides(p: Props) {
   const nameOf = (r: Ride) => {
     const k = r.kind && KIND[r.kind] ? KIND[r.kind] : null;
     if (r.title && !(k && r.title.trim().toLowerCase() === k.en.toLowerCase())) return r.title;
-    return k ? (ar ? k.ar : k.en) : ar ? "ركبة المجتمع" : "Community ride";
+    return k ? tx(k.en, k.ar) : tx("Community ride", "ركبة المجتمع");
   };
   const whenOf = (r: Ride) => {
     const m = /^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})$/.exec(String(r.time || "").trim());
     if (!m) return r.time ? <bdi dir="ltr">{r.time}</bdi> : null;
     return r.kind === "saturday" || r.kind === "snd96"
-      ? <>{ar ? "التجمع" : "Gathering"} <bdi dir="ltr">{m[1]}</bdi> · {ar ? "الانطلاق" : "Start"} <bdi dir="ltr">{m[2]}</bdi></>
+      ? <>{tx("Gathering", "التجمع")} <bdi dir="ltr">{m[1]}</bdi> · {tx("Start", "الانطلاق")} <bdi dir="ltr">{m[2]}</bdi></>
       : <bdi dir="ltr">{m[1]} – {m[2]}</bdi>;
   };
   if (!rides.length) return <p className="club-rides-empty">{p.empty}</p>;
-  const day = (d: string) => new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${d}T00:00:00Z`));
+  const day = (d: string) => new Intl.DateTimeFormat(intlOf(p.locale), { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${d}T00:00:00Z`));
   return (
     <div className="club-rides-grid">
       {rides.map((r, i) => {

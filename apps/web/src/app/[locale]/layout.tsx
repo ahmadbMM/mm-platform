@@ -3,6 +3,9 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import { Space_Grotesk, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { routing } from "@/i18n/routing";
+import { localeInfo } from "@/i18n/locales";
+import { clientDict } from "@/i18n/dicts";
+import { TxProvider } from "@/i18n/TxProvider";
 import "../globals.css";
 
 // Self-hosted at build time, like the bike pages: no third-party font request.
@@ -20,10 +23,13 @@ export default async function LocaleLayout({
 }: { children: React.ReactNode; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
+  const info = localeInfo(locale);
   return (
-    <html lang={locale} dir={locale === "ar" ? "rtl" : "ltr"} className={`${grotesk.variable} ${plexAr.variable}`}>
+    <html lang={info.html} dir={info.dir} className={`${grotesk.variable} ${plexAr.variable}`}>
       <body>
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <TxProvider locale={locale} dict={clientDict(locale)}>{children}</TxProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

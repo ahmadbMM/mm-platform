@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { cleanName, normalizePhone, rpc } from "@/lib/rpc-client";
+import { useLocalize } from "@/i18n/TxProvider";
+import { T } from "./MessageForm.text";
 
 // A message to the team (site_message_send): the business enquiry, the help centre's form and a
 // job application (About). All land in the staff page's Messages. A name, the message and one
@@ -21,30 +23,9 @@ type Props = {
   className?: string;
 };
 
-const T = {
-  en: {
-    name: "Name", company: "Company", email: "Email", phone: "Mobile", message: "Message", sending: "Sending…",
-    placeholderBiz: "What would you like to build with us?", placeholderHelp: "How can we help?", ref: "Reference", another: "Send another",
-    errors: {
-      name: "Enter your name - letters and spaces only.", email: "Check the email address.", phone: "Check the mobile number, e.g. 05XXXXXXXX.",
-      contact: "Add an email or a mobile number so we can answer.", message: "Write your message.", throttled: "Too many messages from this network - try again in a few minutes.",
-      generic: "It could not be sent. Check the connection and try again.",
-    } as Record<string, string>,
-  },
-  ar: {
-    name: "الاسم", company: "الشركة", email: "البريد الإلكتروني", phone: "الجوال", message: "الرسالة", sending: "جارٍ الإرسال…",
-    placeholderBiz: "ماذا تريد أن تبني معنا؟", placeholderHelp: "كيف نقدر نساعدك؟", ref: "رقم الرسالة", another: "رسالة أخرى",
-    errors: {
-      name: "أدخل اسمك - حروف ومسافات فقط.", email: "تحقق من البريد الإلكتروني.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.",
-      contact: "أضف بريداً إلكترونياً أو رقم جوال لنرد عليك.", message: "اكتب رسالتك.", throttled: "رسائل كثيرة من هذه الشبكة - حاول بعد دقائق.",
-      generic: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً.",
-    } as Record<string, string>,
-  },
-};
 
 export default function MessageForm(p: Props) {
-  const ar = p.locale === "ar";
-  const t = ar ? T.ar : T.en;
+  const t = useLocalize(T);
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [email, setEmail] = useState("");
@@ -66,7 +47,7 @@ export default function MessageForm(p: Props) {
     setBusy(true);
     try {
       const r = await rpc<{ ok: boolean; ref?: string; error?: string }>("site_message_send", {
-        p: { kind: p.kind, topic: p.topics ? topic : p.topic, name: nm, company: p.withCompany ? company.trim() : "", email: em, phone: ph, message: message.trim(), lang: ar ? "ar" : "en" },
+        p: { kind: p.kind, topic: p.topics ? topic : p.topic, name: nm, company: p.withCompany ? company.trim() : "", email: em, phone: ph, message: message.trim(), lang: (p.locale === "ar" ? "ar" : "en") },
       });
       if (r.ok && r.ref) setDone(r.ref);
       else setErr(t.errors[r.error || ""] || t.errors.generic);

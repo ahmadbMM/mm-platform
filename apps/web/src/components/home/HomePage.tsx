@@ -10,6 +10,8 @@ import OpenNow from "@/components/home/OpenNow";
 import "@/components/site/site.css";
 import "@/components/home/home.css";
 import { BOOKING_URL, bookingLink, localHref, pageOf } from "@/lib/links";
+import { serverL } from "@/i18n/dicts";
+import { localeInfo, isRtl } from "@/i18n/locales";
 
 // Home, from Home.dc.html. Everything it says comes from the staff page (site_content), else
 // the design's words. Sections whose content is still empty (reviews, the numbers strip, the
@@ -20,7 +22,7 @@ const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 
 export default function HomePage({ locale, home, site, preview, hidden = [] }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean; hidden?: string[] }) {
-  const ar = locale === "ar";
+  const tx = serverL(locale);
   // A button to a page staff have switched off would only reload Home (the proxy sends it back
   // here): a ride page opens the booking app instead, any other the WhatsApp chat.
   const RIDE_PAGES = new Set(["experiences", "events", "club", "routes"]);
@@ -29,7 +31,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
     if (!pg || !hidden.includes(pg)) return localHref(href, locale);
     return RIDE_PAGES.has(pg) ? bookingLink(BOOKING_URL, locale) : (S(site.social?.whatsapp) || bookingLink(BOOKING_URL, locale));
   };
-  const arrow = ar ? "←" : "→";
+  const arrow = (isRtl(locale) ? "←" : "→");
   const e = home.entry, h = home.hero, f = home.feature, st = home.story, c = home.community, r = home.reviews, q = home.quiz, sp = home.split, v = home.visit;
   const contact = site.contact;
   const announcements: Announcement[] = list(site.announce.messages).map((m) => ({ text: S(m.text), cta: S(m.cta), href: S(m.href) }));
@@ -49,7 +51,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
   const footer: FooterContent = footerFrom(site);
 
   return (
-    <div className="mm-site" dir={ar ? "rtl" : "ltr"}>
+    <div className="mm-site" dir={localeInfo(locale).dir}>
       <SiteNav locale={locale} hidden={hidden} />
       <main id="mm-main" style={{ paddingTop: 52 }}>
         {/* Welcome: riders or business */}
@@ -131,13 +133,13 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
           </div>
         </section>
 
-        <BuildStory eyebrow={S(st.eyebrow)} title={S(st.title)} steps={steps} ar={ar} />
+        <BuildStory eyebrow={S(st.eyebrow)} title={S(st.title)} steps={steps} />
 
         {/* Community */}
         <section className="hm-community" aria-label={S(c.title)}>
           <h2>{S(c.title)}</h2>
           <p>{S(c.text)}</p>
-          {photos.length > 0 && <PhotoWall photos={photos} label={S(c.title)} closeLabel={ar ? "إغلاق" : "Close"} />}
+          {photos.length > 0 && <PhotoWall photos={photos} label={S(c.title)} closeLabel={tx("Close", "إغلاق")} />}
           {S(c.button) && S(c.buttonHref) && (
             <div className="hm-center"><a href={H(c.buttonHref)} className="hm-outline-btn">{S(c.button)}</a></div>
           )}
@@ -156,7 +158,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
             <div className="hm-reviews-track" dir="ltr">
               <div className="hm-reviews-row">
                 {[...reviews, ...reviews].map((x, i) => (
-                  <figure className="hm-review" key={i} dir={ar ? "rtl" : "ltr"} aria-hidden={i >= reviews.length ? true : undefined}>
+                  <figure className="hm-review" key={i} dir={localeInfo(locale).dir} aria-hidden={i >= reviews.length ? true : undefined}>
                     <blockquote>“{x.quote}”</blockquote>
                     <figcaption><span className="init">{x.name.trim().charAt(0)}</span><span><strong>{x.name}</strong><small>{x.role}</small></span></figcaption>
                   </figure>
@@ -166,7 +168,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
           </section>
         )}
 
-        <FitQuiz q={quiz} ar={ar} arrow={arrow} />
+        <FitQuiz q={quiz} locale={locale} arrow={arrow} />
 
         {/* Experiences & business */}
         <section className="hm-split" id="split">
@@ -185,7 +187,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
             <p className="lead">{S(v.text)}</p>
             <p className="meta">{S(contact.address)}<br />{S(contact.hoursText)}</p>
             <p className="meta"><a href={S(contact.jccHref)} target="_blank" rel="noopener noreferrer">{S(contact.jccName)} {arrow}</a></p>
-            <OpenNow openHour={N(contact.openHour)} closeHour={N(contact.closeHour)} fridayClosed={contact.fridayClosed === true} ar={ar} />
+            <OpenNow openHour={N(contact.openHour)} closeHour={N(contact.closeHour)} fridayClosed={contact.fridayClosed === true} />
             <div className="hm-visit-btns">
               {rating > 0 && (
                 <a href={S(v.reviewsHref)} target="_blank" rel="noopener noreferrer" className="rating">

@@ -88,7 +88,7 @@ export default async function BikePage({ params }: { params: Promise<{ code: str
         <div className="bk-hero-bar">
           <div className="bk-hero-start">
             <span className="bk-brand" role="img" aria-label="MicroMobility" />
-            <LangToggle lang={lang} />
+            <LangToggle lang={lang} label={t("lang")} />
           </div>
           <span className="bk-code lat">#{row.bike_number}</span>
         </div>

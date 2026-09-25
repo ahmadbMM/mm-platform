@@ -47,7 +47,7 @@ describe("?lang=", () => {
     expect(langCookie(res)).toBe("ar");
   });
   it("ignores a language the site does not have", async () => {
-    const res = await call("/?lang=fr", { "accept-language": "en", cookie: "NEXT_LOCALE=ar" });
+    const res = await call("/?lang=xx", { "accept-language": "en", cookie: "NEXT_LOCALE=ar" });
     expect(rewrittenTo(res)).toBe("/ar");
     expect(langCookie(res)).toBeNull();
   });

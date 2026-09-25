@@ -2,25 +2,18 @@
 
 import { useState } from "react";
 import { normalizePhone, rpc } from "@/lib/rpc-client";
+import { intlOf } from "@/i18n/locales";
+import { fmtSar } from "@/lib/fill";
+import { useLocalize } from "@/i18n/TxProvider";
+import { T } from "./WorkshopTrack.text";
 
 // "Where's my bike?": the reference from the request plus the phone it was sent with
 // (workshop_track). Shows the stage the staff page has set.
 const STAGES = ["new", "confirmed", "in_workshop", "awaiting_parts", "ready", "completed"] as const;
-const L = {
-  en: { title: "Track your service", hint: "Your reference looks like W-0042.", ref: "Reference", phone: "Mobile number", go: "Check", busy: "Checking…",
-    notFound: "No request matches that reference and number.", throttled: "Too many checks - try again in a few minutes.", error: "Could not check right now. Try again.",
-    scheduled: "Booked for", price: "Price", cancelled: "This request was cancelled.",
-    stages: { new: "Received", confirmed: "Confirmed", in_workshop: "In the workshop", awaiting_parts: "Waiting for parts", ready: "Ready for pickup", completed: "Completed" } as Record<string, string> },
-  ar: { title: "تتبّع صيانتك", hint: "رقم طلبك يبدأ بـ W، مثل W-0042.", ref: "رقم الطلب", phone: "رقم الجوال", go: "تحقق", busy: "جارٍ التحقق…",
-    notFound: "لا يوجد طلب بهذا الرقم وهذا الجوال.", throttled: "محاولات كثيرة - حاول بعد دقائق.", error: "تعذّر التحقق الآن. حاول مجدداً.",
-    scheduled: "الموعد", price: "السعر", cancelled: "أُلغي هذا الطلب.",
-    stages: { new: "تم الاستلام", confirmed: "مؤكد", in_workshop: "في الورشة", awaiting_parts: "بانتظار القطع", ready: "جاهزة للاستلام", completed: "مكتملة" } as Record<string, string> },
-};
 type Res = { ok: boolean; error?: string; ref?: string; status?: string; service?: string | null; scheduled_for?: string | null; preferred_date?: string | null; preferred_time?: string | null; price?: number | null };
 
 export default function WorkshopTrack({ locale }: { locale: string }) {
-  const ar = locale === "ar";
-  const t = ar ? L.ar : L.en;
+  const t = useLocalize(T);
   const [ref, setRef] = useState("");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
@@ -36,7 +29,7 @@ export default function WorkshopTrack({ locale }: { locale: string }) {
   }
   const idx = res?.status ? STAGES.indexOf(res.status as (typeof STAGES)[number]) : -1;
   const when = res?.scheduled_for
-    ? new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(new Date(res.scheduled_for))
+    ? new Intl.DateTimeFormat(intlOf(locale), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(new Date(res.scheduled_for))
     : "";
   return (
     <div className="ws-track">
@@ -59,7 +52,7 @@ export default function WorkshopTrack({ locale }: { locale: string }) {
             </ol>
           )}
           {when && <p>{t.scheduled}: {when}</p>}
-          {typeof res.price === "number" && <p>{t.price}: {ar ? `${res.price.toLocaleString("ar-SA-u-nu-latn")} ر.س` : `SAR ${res.price.toLocaleString("en-US")}`}</p>}
+          {typeof res.price === "number" && <p>{t.price}: {fmtSar(res.price, locale)}</p>}
         </div>
       )}
     </div>

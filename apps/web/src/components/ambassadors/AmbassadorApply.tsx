@@ -2,26 +2,15 @@
 
 import { useState } from "react";
 import { cleanName, normalizePhone, rpc } from "@/lib/rpc-client";
+import { useLocalize } from "@/i18n/TxProvider";
+import { T } from "./AmbassadorApply.text";
 
 // The application (ambassador_apply): it lands in the staff page's Ambassadors section, where
 // the team approves it and sends the code on WhatsApp.
 type Props = { locale: string; title: string; text: string; button: string; note: string; doneTitle: string; doneText: string };
-const T = {
-  en: {
-    name: "Full name", phone: "Mobile number", insta: "Instagram (optional)", why: "Why you? Tell us about your community and riding", sending: "Sending…",
-    already: "You have already applied with this number - the team will be in touch.", active: "This number already has an ambassador code - open your card above.",
-    errors: { name: "Enter your name - letters and spaces only.", phone: "Check the mobile number, e.g. 05XXXXXXXX.", instagram: "Check the Instagram handle.", throttled: "Too many tries from this network - wait a few minutes.", generic: "It could not be sent. Check the connection and try again." } as Record<string, string>,
-  },
-  ar: {
-    name: "الاسم الكامل", phone: "رقم الجوال", insta: "حساب إنستغرام (اختياري)", why: "لماذا أنت؟ حدثنا عن مجتمعك وركوبك", sending: "جارٍ الإرسال…",
-    already: "سبق أن قدّمت بهذا الرقم - سيتواصل معك الفريق.", active: "لهذا الرقم كود سفير بالفعل - افتح بطاقتك في الأعلى.",
-    errors: { name: "أدخل اسمك - حروف ومسافات فقط.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.", instagram: "تحقق من حساب إنستغرام.", throttled: "محاولات كثيرة من هذه الشبكة - انتظر دقائق.", generic: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً." } as Record<string, string>,
-  },
-};
 
 export default function AmbassadorApply(p: Props) {
-  const ar = p.locale === "ar";
-  const t = ar ? T.ar : T.en;
+  const t = useLocalize(T);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [insta, setInsta] = useState("");
@@ -38,7 +27,7 @@ export default function AmbassadorApply(p: Props) {
     setBusy(true);
     try {
       const r = await rpc<{ ok: boolean; status?: string; repeat?: boolean; error?: string }>("ambassador_apply", {
-        p: { name: nm, phone: ph, instagram: insta.trim(), why: why.trim(), lang: ar ? "ar" : "en" },
+        p: { name: nm, phone: ph, instagram: insta.trim(), why: why.trim(), lang: (p.locale === "ar" ? "ar" : "en") },
       });
       if (r.ok) setDone(r.repeat ? (r.status === "pending" ? "pending" : "active") : "new");
       else setErr(t.errors[r.error || ""] || t.errors.generic);

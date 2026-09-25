@@ -1,22 +1,35 @@
 import { filled } from "./filled";
-// The bike page carries its own dictionary rather than a locale segment: the NFC chips hold
+import { LOCALE_CODES, intlOf, isRtl, type Locale } from "@/i18n/locales";
+import { dictOf } from "@/i18n/dicts";
+import { fill, tr } from "@/i18n/tx";
+// The bike page carries its own language rather than a locale segment: the NFC chips hold
 // /b/42 and must keep holding it, so language is a preference on the device, not part of the
-// tag URL. Every string ships in all three languages — nothing on this page is hardcoded.
-export const BIKE_LANGS = ["en", "ar", "es"] as const;
-export type BikeLang = (typeof BIKE_LANGS)[number];
+// tag URL. It speaks every language the site does (i18n/locales.ts): English and Arabic are
+// written here, and every other language translates the English through the site's own
+// dictionaries (src/i18n/tx/<code>.json) - nothing on this page is hardcoded in one language.
+export const BIKE_LANGS = LOCALE_CODES;
+export type BikeLang = Locale;
 
 export function isBikeLang(v: unknown): v is BikeLang {
   return typeof v === "string" && (BIKE_LANGS as readonly string[]).includes(v);
 }
-export function nextLang(l: BikeLang): BikeLang {
-  return BIKE_LANGS[(BIKE_LANGS.indexOf(l) + 1) % BIKE_LANGS.length];
+export const dirOf = (l: BikeLang) => (isRtl(l) ? "rtl" : "ltr");
+
+/** The first of a phone's languages (its Accept-Language, best first) that the page speaks.
+ *  "fil" is Filipino, which the site offers as Tagalog; "in" is Indonesian's old code. */
+export function fromAcceptLanguage(header: string | null | undefined): BikeLang | null {
+  for (const part of String(header ?? "").toLowerCase().split(",")) {
+    const base = part.split(";")[0].trim().split("-")[0];
+    const code = base === "fil" ? "tl" : base === "in" ? "id" : base;
+    if (isBikeLang(code)) return code;
+  }
+  return null;
 }
-export const dirOf = (l: BikeLang) => (l === "ar" ? "rtl" : "ltr");
 
 type Dict = Record<string, string>;
 
 const EN: Dict = {
-  langName: "English",
+  lang: "Language",
   book: "Book an Experience",
   store: "See this bike in the store",
   price: "Ride price",
@@ -48,7 +61,7 @@ const EN: Dict = {
 };
 
 const AR: Dict = {
-  langName: "العربية",
+  lang: "اللغة",
   book: "احجز تجربة",
   store: "شاهد هذه الدراجة في المتجر",
   price: "سعر الجولة",
@@ -76,41 +89,17 @@ const AR: Dict = {
   tRoad: "دراجة طريق", tMountain: "دراجة جبلية", tHybrid: "دراجة هجينة", tGravel: "دراجة غرافل", tKids: "دراجة أطفال",
 };
 
-const ES: Dict = {
-  langName: "Español",
-  book: "Reserva una experiencia",
-  store: "Ver esta bici en la tienda",
-  price: "Precio del paseo",
-  catSize: "talla {0}",
-  listSep: ", ",
-  specs: "Especificaciones",
-  service: "Mantenimiento",
-  errTitle: "No podemos cargar esta bici ahora mismo",
-  errBody: "Ha fallado algo por nuestra parte. Comprueba tu conexión e inténtalo de nuevo.",
-  errCta: "Reintentar",
-  unknownTitle: "No reconocemos esta etiqueta",
-  unknownBody: "Esta pegatina aún no está vinculada a ninguna bici.",
-  unknownCta: "Ir a micromobility.sa",
-  holdNotice: "Esta bici está descansando. Ahora mismo está fuera de servicio y no se puede reservar; cualquier otra bici de la flota sí.",
-  outNotice: "Esta bici está en ruta ahora mismo.",
-  stAvailable: "Disponible", stStaged: "Reservada", stOut: "En ruta",
-  stReturned: "En preparación", stHold: "Fuera de servicio",
-  fBrand: "Marca", fModel: "Modelo", fFrame: "Material del cuadro", fSize: "Talla",
-  fGroupset: "Grupo", fSpeeds: "Velocidades", fWheels: "Ruedas", fBrakes: "Frenos",
-  fWeight: "Peso", fColour: "Color", fInService: "En servicio desde", fLastService: "Último mantenimiento",
-  vRoad: "Carretera", vMountain: "Montaña", vHybrid: "Híbrida",
-  vAluminum: "Aluminio", vCarbon: "Carbono",
-  unitKg: "kg",
-  // Headline for a bike whose name is still the auto-generated fleet code.
-  tRoad: "Bicicleta de carretera", tMountain: "Bicicleta de montaña", tHybrid: "Bicicleta híbrida", tGravel: "Bicicleta de gravel", tKids: "Bicicleta infantil",
-};
-
-const DICTS: Record<BikeLang, Dict> = { en: EN, ar: AR, es: ES };
+/** The English texts, for the site's list of what is translated (src/i18n/extract.ts). */
+export const BIKE_EN: Readonly<Dict> = EN;
 
 /** Falls back to English rather than showing a key, so a missed string is never visible. */
 export function tFor(lang: BikeLang) {
-  const d = DICTS[lang] ?? EN;
-  return (key: string): string => d[key] ?? EN[key] ?? key;
+  const dict = lang === "en" || lang === "ar" ? null : dictOf(lang);
+  return (key: string): string => {
+    const en = EN[key];
+    if (en === undefined) return key;
+    return lang === "ar" ? (AR[key] ?? en) : tr(lang, dict, en);
+  };
 }
 
 /**
@@ -139,9 +128,8 @@ export function translateValue(v: string, t: (k: string) => string): string {
 export function fmtDate(iso: string, lang: BikeLang): string {
   const d = new Date(iso);
   if (isNaN(d.getTime())) return iso;
-  const tag = lang === "ar" ? "ar" : lang === "es" ? "es-ES" : "en-GB";
   try {
-    return new Intl.DateTimeFormat(tag, {
+    return new Intl.DateTimeFormat(intlOf(lang), {
       year: "numeric", month: "short", day: "numeric",
       calendar: "gregory", numberingSystem: "latn",
       // last_serviced_at is a timestamptz and the Worker runs in UTC, so a service logged at
@@ -153,9 +141,8 @@ export function fmtDate(iso: string, lang: BikeLang): string {
 
 /** Same reasoning as fmtDate: one numeral system across the whole page. */
 export function fmtPrice(amount: number, lang: BikeLang): string {
-  const tag = lang === "ar" ? "ar" : lang === "es" ? "es-ES" : "en-GB";
   try {
-    return new Intl.NumberFormat(tag, {
+    return new Intl.NumberFormat(intlOf(lang), {
       style: "currency", currency: "SAR", numberingSystem: "latn",
       minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
     }).format(amount);
@@ -202,24 +189,37 @@ export function bikeTitle(
 
 /**
  * "22 speed" was wrong, and so was "1 velocidades". Speeds is the only counted noun on the
- * page, but it is counted in three languages with three different plural systems — Arabic
- * alone distinguishes one, two, few and many — so the count picks the form through
- * Intl.PluralRules rather than through a bolted-on "s".
+ * page, and every language counts it its own way - Arabic distinguishes one, two, few and many,
+ * Russian one, few and many, and Chinese, Japanese, Indonesian and Malay do not change the noun
+ * at all - so the count picks the form through Intl.PluralRules rather than a bolted-on "s".
+ * Each form is the whole phrase, because "21速" and "21段" take no space.
  */
 const SPEED_FORMS: Record<BikeLang, Partial<Record<Intl.LDMLPluralRule, string>>> = {
-  en: { one: "speed", other: "speeds" },
-  es: { one: "velocidad", other: "velocidades" },
-  ar: { one: "سرعة", two: "سرعتان", few: "سرعات", many: "سرعة", other: "سرعة", zero: "سرعة" },
+  en: { one: "{0} speed", other: "{0} speeds" },
+  ar: { one: "{0} سرعة", two: "{0} سرعتان", few: "{0} سرعات", many: "{0} سرعة", other: "{0} سرعة", zero: "{0} سرعة" },
+  id: { other: "{0} speed" }, // as Indonesian shops write it ("21 speed"); "kecepatan" reads as velocity
+  ms: { other: "{0} kelajuan" },
+  de: { one: "{0} Gang", other: "{0} Gänge" },
+  es: { one: "{0} velocidad", other: "{0} velocidades" },
+  fr: { one: "{0} vitesse", other: "{0} vitesses" },
+  pt: { one: "{0} marcha", other: "{0} marchas" },
+  tl: { other: "{0} speed" },
+  ru: { one: "{0} скорость", few: "{0} скорости", many: "{0} скоростей", other: "{0} скорости" },
+  ur: { other: "{0} گیئر" },
+  hi: { other: "{0} गियर" },
+  ne: { other: "{0} गियर" },
+  bn: { other: "{0} গিয়ার" },
+  zh: { other: "{0}速" },
+  ja: { other: "{0}段" },
 };
-const PLURAL_LOCALE: Record<BikeLang, string> = { en: "en", es: "es", ar: "ar" };
 
 export function speedsLabel(n: number, lang: BikeLang): string {
   const forms = SPEED_FORMS[lang] ?? SPEED_FORMS.en;
   let rule: Intl.LDMLPluralRule = "other";
   try {
-    rule = new Intl.PluralRules(PLURAL_LOCALE[lang]).select(n);
+    rule = new Intl.PluralRules(lang).select(n);
   } catch {
     /* an engine without the locale still gets a sensible word below */
   }
-  return `${n} ${forms[rule] ?? forms.other ?? ""}`.trim();
+  return fill(forms[rule] ?? forms.other ?? "{0}", n);
 }

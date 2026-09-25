@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useL } from "@/i18n/TxProvider";
+import { fill } from "@/lib/fill";
 
 // The live "Open now · closes 22:00" sign, worked out in Jeddah time from the hours staff set.
-export default function OpenNow({ openHour, closeHour, fridayClosed, ar }: { openHour: number; closeHour: number; fridayClosed: boolean; ar: boolean }) {
+export default function OpenNow({ openHour, closeHour, fridayClosed }: { openHour: number; closeHour: number; fridayClosed: boolean }) {
+  const tx = useL();
   const [now, setNow] = useState<Date | null>(null);
   useEffect(() => {
     // The time is read in the browser (Jeddah's clock, not the server's cache), after the first paint.
@@ -19,13 +22,13 @@ export default function OpenNow({ openHour, closeHour, fridayClosed, ar }: { ope
   const closedToday = fri && fridayClosed;
   const open = !closedToday && h >= openHour && h < closeHour;
   const hh = (n: number) => `${n}:00`;
-  const status = open ? (ar ? "مفتوح الآن" : "Open now") : (ar ? "مغلق" : "Closed");
+  const status = open ? (tx("Open now", "مفتوح الآن")) : (tx("Closed", "مغلق"));
   // After closing on a Thursday, "tomorrow" would be the closed Friday: say Saturday.
   const nextIsFriday = ksa.getDay() === 4 && fridayClosed;
-  const later = nextIsFriday ? (ar ? "يفتح السبت" : "opens Saturday") : (ar ? "يفتح غداً" : "opens tomorrow");
-  const detail = open ? (ar ? `يغلق ${hh(closeHour)}` : `closes ${hh(closeHour)}`)
-    : closedToday ? (ar ? "يفتح غداً" : "opens tomorrow")
-    : h < openHour ? (ar ? `يفتح ${hh(openHour)}` : `opens ${hh(openHour)}`) : later;
+  const later = nextIsFriday ? (tx("opens Saturday", "يفتح السبت")) : (tx("opens tomorrow", "يفتح غداً"));
+  const detail = open ? fill(tx("closes {time}", "يغلق {time}"), { time: hh(closeHour) })
+    : closedToday ? (tx("opens tomorrow", "يفتح غداً"))
+    : h < openHour ? fill(tx("opens {time}", "يفتح {time}"), { time: hh(openHour) }) : later;
   const col = open ? "#077a4b" : "#b3261e";
   return (
     <div className="hm-open" role="status">

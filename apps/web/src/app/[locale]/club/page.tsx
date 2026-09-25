@@ -10,6 +10,8 @@ import { fill, fmtNum } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { getAccount } from "@/lib/account";
+import { serverL } from "@/i18n/dicts";
+import { isRtl } from "@/i18n/locales";
 
 // micromobility.sa/club - the Community membership as the Club: how it works, a member's card,
 // the upcoming community rides. Joining is the community application, received by the staff
@@ -30,7 +32,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function ClubPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const L = asLocale(locale);
-  const ar = L === "ar";
+  const tx = serverL(locale);
   const [{ content, previewing, hidden }, acct] = await Promise.all([pageState("club"), getAccount()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(clubSchema, content, L);
@@ -38,19 +40,18 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const shown = { perTen: fmtNum(N(r.perTen), locale), groupRidePts: fmtNum(N(r.groupRidePts), locale), reviewPts: fmtNum(N(r.reviewPts), locale), proAt: fmtNum(N(r.proAt), locale), legendAt: fmtNum(N(r.legendAt), locale) };
   const F = (v: unknown) => fill(S(v), shown);
   const tierNames: [string, string, string] = [S(c.tiers.t1Name), S(c.tiers.t2Name), S(c.tiers.t3Name)];
-  const credits = ar ? "رصيد" : "credits";
   const applyHref = localHref(S(c.hero.applyHref), locale);
   const ridesHref = bookingLink(S(c.hero.ridesHref), locale);
   const words = lines(S(c.hero.marquee));
   const earn = [
-    { label: S(c.earn.paidLabel), value: ar ? `${shown.perTen} لكل 10 ر.س` : `${shown.perTen} / SAR 10`, on: N(r.perTen) > 0 },
+    { label: S(c.earn.paidLabel), value: fill(tx("{n} / SAR 10", "{n} لكل 10 ر.س"), { n: shown.perTen }), on: N(r.perTen) > 0 },
     { label: S(c.earn.groupLabel), value: `+${shown.groupRidePts}`, on: N(r.groupRidePts) > 0 },
     { label: S(c.earn.reviewLabel), value: `+${shown.reviewPts}`, on: N(r.reviewPts) > 0 },
   ].filter((x) => x.on);
   const tiers = [
     { name: tierNames[0], req: S(c.tiers.t1Req), perks: lines(F(c.tiers.t1Perks)) },
-    { name: tierNames[1], req: `${shown.proAt} ${credits}`, perks: lines(F(c.tiers.t2Perks)) },
-    { name: tierNames[2], req: `${shown.legendAt} ${credits}`, perks: lines(F(c.tiers.t3Perks)) },
+    { name: tierNames[1], req: fill(tx("{n} credits", "{n} رصيد"), { n: shown.proAt }), perks: lines(F(c.tiers.t2Perks)) },
+    { name: tierNames[2], req: fill(tx("{n} credits", "{n} رصيد"), { n: shown.legendAt }), perks: lines(F(c.tiers.t3Perks)) },
   ];
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
@@ -70,13 +71,13 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
           </div>
           <div className="club-cardviz tier-1" aria-hidden="true">
             <div className="club-cardviz-top">
-              <span className="club-cardviz-brand"><img src="/site/logo-mark.png" alt="" /><span>{ar ? "بطاقة العضوية" : "Membership card"}</span></span>
+              <span className="club-cardviz-brand"><img src="/site/logo-mark.png" alt="" /><span>{tx("Membership card", "بطاقة العضوية")}</span></span>
               <span className="club-pill">{tierNames[1]}</span>
             </div>
             <div className="club-cardviz-bottom">
-              <span className="club-cardviz-label">{ar ? "رصيد ركوب" : "ride credits"}</span>
+              <span className="club-cardviz-label">{tx("ride credits", "رصيد ركوب")}</span>
               <strong className="club-cardviz-num">—</strong>
-              <div className="club-cardviz-foot"><strong>{ar ? "بطاقتك بانتظارك" : "Your card awaits"}</strong><span>{ar ? "انضم لتفعيل بطاقتك" : "Join to activate your card"}</span></div>
+              <div className="club-cardviz-foot"><strong>{tx("Your card awaits", "بطاقتك بانتظارك")}</strong><span>{tx("Join to activate your card", "انضم لتفعيل بطاقتك")}</span></div>
             </div>
           </div>
         </section>
@@ -102,7 +103,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
               <div key={i} className={`club-tier${i === 2 ? " legend" : ""}`}>
                 <div className={`club-cardviz tier-${i}`} aria-hidden="true">
                   <div className="club-cardviz-top">
-                    <span className="club-cardviz-brand"><img src={i === 2 ? "/site/logo-mark-dark.png" : "/site/logo-mark.png"} alt="" /><span>{ar ? "بطاقة العضوية" : "Membership card"}</span></span>
+                    <span className="club-cardviz-brand"><img src={i === 2 ? "/site/logo-mark-dark.png" : "/site/logo-mark.png"} alt="" /><span>{tx("Membership card", "بطاقة العضوية")}</span></span>
                     <span className="club-pill">{x.name}</span>
                   </div>
                   <div className="club-cardviz-bottom"><strong className="club-cardviz-num">{x.req}</strong></div>
@@ -121,7 +122,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         <section className="club-rides">
           <div className="club-rides-head">
             <div><p>{S(c.rides.eyebrow)}</p><h2>{S(c.rides.title)}</h2></div>
-            <a href={bookingLink(S(c.rides.allHref), locale)}>{S(c.rides.allLabel)} {ar ? "←" : "→"}</a>
+            <a href={bookingLink(S(c.rides.allHref), locale)}>{S(c.rides.allLabel)} {(isRtl(locale) ? "←" : "→")}</a>
           </div>
           <ClubRides locale={locale} href={bookingLink(S(c.rides.allHref), locale)} empty={S(c.rides.empty)} />
         </section>

@@ -11,6 +11,9 @@ import { fill } from "@/lib/fill";
 import { localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { slugId } from "@/lib/slug";
+import { serverL } from "@/i18n/dicts";
+import { phrase } from "@/i18n/tx";
+import { isRtl } from "@/i18n/locales";
 
 // micromobility.sa/about - who we are (the company profile's own story, numbers, vision, mission
 // and values), where to find us, visitor questions, the contact details with a live open / closed
@@ -20,8 +23,8 @@ const S = (v: unknown) => (typeof v === "string" ? v : "");
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 
-const SOCIAL: Record<string, [string, string]> = {
-  instagram: ["Instagram", "إنستغرام"], x: ["X", "إكس"], tiktok: ["TikTok", "تيك توك"], snapchat: ["Snapchat", "سناب شات"], youtube: ["YouTube", "يوتيوب"],
+const SOCIAL: Record<string, { en: string; ar: string }> = {
+  instagram: phrase("Instagram", "إنستغرام"), x: phrase("X", "إكس"), tiktok: phrase("TikTok", "تيك توك"), snapchat: phrase("Snapchat", "سناب شات"), youtube: phrase("YouTube", "يوتيوب"),
 };
 
 /** The site page a link opens (/club, /en/club#x), for leaving out links to pages that are off. */
@@ -37,12 +40,12 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const L = asLocale(locale);
-  const ar = L === "ar";
+  const tx = serverL(locale);
   const { content, previewing, hidden } = await pageState("about");
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(aboutSchema, content, L);
   const en = resolvePage(aboutSchema, content, "en");
-  const arrow = ar ? "←" : "→";
+  const arrow = (isRtl(locale) ? "←" : "→");
   const shown = (href: string) => !hidden.includes(pageOfLink(href));
 
   const contact = site.contact;
@@ -62,7 +65,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
   const enRoles = list(en.jobs.roles);
   const roles = list(c.jobs.roles).map((r, i) => ({ title: S(r.title), text: S(r.text), id: slugId(S(enRoles[i]?.title) || S(r.title), `role-${i + 1}`) })).filter((x) => x.title);
   const topics = [...roles.map((r) => ({ id: r.id, label: r.title })), { id: "general", label: S(c.jobs.anyRole) }];
-  const dt = (e: string, a: string) => <dt>{ar ? a : e}</dt>;
+  const dt = (label: string) => <dt>{label}</dt>;
 
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
@@ -74,7 +77,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
         </section>
 
         {numbers.length > 0 && (
-          <section className="ab-stats" aria-label={ar ? "بالأرقام" : "In numbers"}>
+          <section className="ab-stats" aria-label={tx("In numbers", "بالأرقام")}>
             {numbers.map((x, i) => <div key={i}><strong>{S(x.value)}</strong><span>{S(x.label)}</span></div>)}
           </section>
         )}
@@ -145,15 +148,15 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
           <div className="ab-contact-card">
             <div className="ab-contact-head">
               <h2 id="ab-contact-h">{S(c.contact.title)}</h2>
-              <OpenNow openHour={N(contact.openHour)} closeHour={N(contact.closeHour)} fridayClosed={contact.fridayClosed === true} ar={ar} />
+              <OpenNow openHour={N(contact.openHour)} closeHour={N(contact.closeHour)} fridayClosed={contact.fridayClosed === true} />
             </div>
             <dl>
-              {S(contact.address) && <div>{dt("Store", "المتجر")}<dd>{S(contact.mapsHref) ? <a href={S(contact.mapsHref)} target="_blank" rel="noopener noreferrer">{S(contact.address)}</a> : S(contact.address)}</dd></div>}
-              {S(contact.jccName) && <div>{dt("Second branch", "الفرع الثاني")}<dd>{S(contact.jccHref) ? <a href={S(contact.jccHref)} target="_blank" rel="noopener noreferrer">{S(contact.jccName)}</a> : S(contact.jccName)}{S(contact.jccAddress) && <small>{S(contact.jccAddress)}</small>}</dd></div>}
-              {S(contact.phone) && <div>{dt("Phone", "الجوال")}<dd><a href={`tel:${S(contact.phone).replace(/\s/g, "")}`} className="mm-lat">{S(contact.phone)}</a></dd></div>}
-              {S(contact.email) && <div>{dt("Email", "البريد")}<dd><a href={`mailto:${S(contact.email)}`} className="mm-lat">{S(contact.email)}</a></dd></div>}
-              {hours && <div>{dt("Hours", "ساعات العمل")}<dd>{hours}</dd></div>}
-              {socials.length > 0 && <div>{dt("Follow us", "تابعنا")}<dd className="ab-social">{socials.map(([k, v]) => <a key={k} href={S(v)} target="_blank" rel="noopener noreferrer">{SOCIAL[k][ar ? 1 : 0]}</a>)}</dd></div>}
+              {S(contact.address) && <div>{dt(tx("Store", "المتجر"))}<dd>{S(contact.mapsHref) ? <a href={S(contact.mapsHref)} target="_blank" rel="noopener noreferrer">{S(contact.address)}</a> : S(contact.address)}</dd></div>}
+              {S(contact.jccName) && <div>{dt(tx("Second branch", "الفرع الثاني"))}<dd>{S(contact.jccHref) ? <a href={S(contact.jccHref)} target="_blank" rel="noopener noreferrer">{S(contact.jccName)}</a> : S(contact.jccName)}{S(contact.jccAddress) && <small>{S(contact.jccAddress)}</small>}</dd></div>}
+              {S(contact.phone) && <div>{dt(tx("Phone", "الجوال"))}<dd><a href={`tel:${S(contact.phone).replace(/\s/g, "")}`} className="mm-lat">{S(contact.phone)}</a></dd></div>}
+              {S(contact.email) && <div>{dt(tx("Email", "البريد"))}<dd><a href={`mailto:${S(contact.email)}`} className="mm-lat">{S(contact.email)}</a></dd></div>}
+              {hours && <div>{dt(tx("Hours", "ساعات العمل"))}<dd>{hours}</dd></div>}
+              {socials.length > 0 && <div>{dt(tx("Follow us", "تابعنا"))}<dd className="ab-social">{socials.map(([k, v]) => <a key={k} href={S(v)} target="_blank" rel="noopener noreferrer">{tx(SOCIAL[k].en, SOCIAL[k].ar)}</a>)}</dd></div>}
             </dl>
             <div className="ab-contact-btns">
               {whatsapp && S(c.contact.waBtn) && <a className="ab-wa" href={whatsapp} target="_blank" rel="noopener noreferrer">{S(c.contact.waBtn)}</a>}
@@ -168,13 +171,13 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
 
         {(S(site.legal.legalName) || S(site.legal.cr)) && (
           <section className="ab-company" aria-labelledby="ab-company-h">
-            <h2 id="ab-company-h">{ar ? "بيانات الشركة" : "Company details"}</h2>
+            <h2 id="ab-company-h">{tx("Company details", "بيانات الشركة")}</h2>
             <dl>
-              {S(site.legal.legalName) && <div>{dt("Legal name", "الاسم النظامي")}<dd>{S(site.legal.legalName)}</dd></div>}
-              {S(site.legal.cr) && <div>{dt("Commercial registration", "السجل التجاري")}<dd className="mm-lat">{S(site.legal.cr)}</dd></div>}
-              {S(site.legal.unified) && <div>{dt("Unified number", "الرقم الموحد")}<dd className="mm-lat">{S(site.legal.unified)}</dd></div>}
-              {S(site.legal.vat) && <div>{dt("VAT number", "الرقم الضريبي")}<dd className="mm-lat">{S(site.legal.vat)}</dd></div>}
-              {S(site.legal.address) && <div>{dt("Registered address", "العنوان المسجل")}<dd>{S(site.legal.address)}{S(site.legal.shortAddress) && <small className="mm-lat">{ar ? "العنوان المختصر" : "Short address"} {S(site.legal.shortAddress)}</small>}</dd></div>}
+              {S(site.legal.legalName) && <div>{dt(tx("Legal name", "الاسم النظامي"))}<dd>{S(site.legal.legalName)}</dd></div>}
+              {S(site.legal.cr) && <div>{dt(tx("Commercial registration", "السجل التجاري"))}<dd className="mm-lat">{S(site.legal.cr)}</dd></div>}
+              {S(site.legal.unified) && <div>{dt(tx("Unified number", "الرقم الموحد"))}<dd className="mm-lat">{S(site.legal.unified)}</dd></div>}
+              {S(site.legal.vat) && <div>{dt(tx("VAT number", "الرقم الضريبي"))}<dd className="mm-lat">{S(site.legal.vat)}</dd></div>}
+              {S(site.legal.address) && <div>{dt(tx("Registered address", "العنوان المسجل"))}<dd>{S(site.legal.address)}{S(site.legal.shortAddress) && <small className="mm-lat">{tx("Short address", "العنوان المختصر")} {S(site.legal.shortAddress)}</small>}</dd></div>}
             </dl>
           </section>
         )}
@@ -193,7 +196,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
               )}
             </div>
             <div className="ab-jobs-form">
-              <MessageForm locale={locale} kind="jobs" topic="general" topics={topics} topicLabel={ar ? "الوظيفة" : "Role"} placeholder={S(c.jobs.placeholder)}
+              <MessageForm locale={locale} kind="jobs" topic="general" topics={topics} topicLabel={tx("Role", "الوظيفة")} placeholder={S(c.jobs.placeholder)}
                 sendLabel={S(c.jobs.button)} doneTitle={S(c.jobs.doneTitle)} doneText={S(c.jobs.doneText)} />
             </div>
           </div>

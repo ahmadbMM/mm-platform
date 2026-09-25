@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { fmtSar } from "@/lib/fill";
 
 // "Which bike fits your lifestyle?" - where you ride, then what matters most; the answer is one
 // of three bikes with the reason that fits your priority. Every word and bike is staff-edited.
@@ -8,11 +9,11 @@ type Rec = { name: string; image: string; price: number; why: Record<"speed" | "
 export type QuizText = { title: string; text: string; q1: string; q2: string; match: string; cta: string; ctaHref: string; retake: string;
   rides: { id: "road" | "city" | "trail"; label: string }[]; prios: { id: "speed" | "comfort" | "value"; label: string }[]; recs: Record<"road" | "city" | "trail", Rec> };
 
-export default function FitQuiz({ q, ar, arrow }: { q: QuizText; ar: boolean; arrow: string }) {
+export default function FitQuiz({ q, locale, arrow }: { q: QuizText; locale: string; arrow: string }) {
   const [ride, setRide] = useState<"" | "road" | "city" | "trail">("");
   const [prio, setPrio] = useState<"" | "speed" | "comfort" | "value">("");
   const rec = ride && prio ? q.recs[ride] : null;
-  const money = (n: number) => (ar ? `${n.toLocaleString("ar-SA-u-nu-latn")} ر.س` : `SAR ${n.toLocaleString("en-US")}`);
+  const money = (n: number) => fmtSar(n, locale);
   return (
     <section className="hm-quiz" id="fit-quiz" aria-label={q.title}>
       <div className="hm-quiz-card">

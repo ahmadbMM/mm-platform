@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { isRtl } from "@/i18n/locales";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates; then the ride - its prices and rules - and the button that opens
@@ -19,7 +20,6 @@ export type StepText = {
 type Props = { locale: string; events: StepEvent[]; prices: { type: string; label: string; price: string }[]; bookHref: string; clubHref: string; text: StepText };
 
 export default function ExperienceSteps({ locale, events, prices, bookHref, clubHref, text: t }: Props) {
-  const ar = locale === "ar";
   const [step, setStep] = useState(1);
   const [ev, setEv] = useState<StepEvent | null>(null);
   const [sess, setSess] = useState<StepSession | null>(null);
@@ -28,8 +28,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
     setStep(n);
     requestAnimationFrame(() => top.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
   };
-  const arrow = ar ? "←" : "→";
-  const back = ar ? "→" : "←";
+  const arrow = (isRtl(locale) ? "←" : "→");
+  const back = (isRtl(locale) ? "→" : "←");
   const when = (s: StepSession) => (s.when ? (s.when.gather
     ? <>{t.gather} <bdi dir="ltr">{s.when.a}</bdi> · {t.start} <bdi dir="ltr">{s.when.b}</bdi></>
     : <bdi dir="ltr">{s.when.a} – {s.when.b}</bdi>) : null);

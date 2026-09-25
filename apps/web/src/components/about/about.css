@@ -1,7 +1,7 @@
 /* About & Contact - from About.dc.html (Claude Design launch package). */
 .ab { background: #fbf9f4; padding-bottom: 20px; }
 .ab-eyebrow { color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 12px; }
-html[lang="ar"] .ab-eyebrow { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .ab-eyebrow { letter-spacing: 0; font-size: 13px; }
 .ab-hero { padding: 90px 7vw 56px; max-width: 900px; }
 .ab-hero h1 { font-size: clamp(44px, 6vw, 88px); line-height: .92; letter-spacing: -3px; margin: 0 0 20px; }
 .ab-lead { color: #57605a; font-size: 19px; line-height: 1.7; margin: 0; max-width: 760px; text-wrap: pretty; }
@@ -62,7 +62,7 @@ html[lang="ar"] .ab-eyebrow { letter-spacing: 0; font-size: 13px; }
 .ab-contact-head .hm-open { margin: 0; }
 .ab-contact dl { display: flex; flex-direction: column; gap: 16px; font-size: 15px; margin: 0; }
 .ab-contact dt { color: #077a4b; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; }
-html[lang="ar"] .ab-contact dt { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .ab-contact dt { letter-spacing: 0; font-size: 13px; }
 .ab-contact dd { margin: 0; color: #2b332d; }
 .ab-contact dd small { display: block; color: #57605a; font-size: 13px; margin-top: 2px; }
 .ab .ab-contact dd a:hover { color: #077a4b; }
@@ -78,7 +78,7 @@ html[lang="ar"] .ab-contact dt { letter-spacing: 0; font-size: 13px; }
 .ab-company dl { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .ab-company dl > div { background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 16px; padding: 14px 18px; }
 .ab-company dt { color: #077a4b; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 4px; }
-html[lang="ar"] .ab-company dt { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .ab-company dt { letter-spacing: 0; font-size: 13px; }
 .ab-company dd { margin: 0; color: #2b332d; font-size: 14.5px; line-height: 1.55; }
 .ab-company dd small { display: block; color: #57605a; font-size: 12.5px; margin-top: 2px; }
 .ab-jobs { padding: 0 7vw 80px; scroll-margin-top: 70px; }

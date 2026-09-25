@@ -6,6 +6,7 @@ import { gallerySchema } from "@/content/pages/gallery";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { pageState } from "@/lib/page-state";
+import { serverL } from "@/i18n/dicts";
 
 // micromobility.sa/gallery - the photos staff upload, with their captions and tags.
 type Sec = Record<string, unknown>;
@@ -31,7 +32,7 @@ export default async function GalleryPage({ params }: { params: Promise<{ locale
       <div className="pg">
         <p className="pg-eyebrow">{S(c.hero.eyebrow)}</p>
         <h1>{S(c.hero.title)}</h1>
-        <GalleryGrid photos={photos} allLabel={S(c.hero.all)} closeLabel={L === "ar" ? "إغلاق" : "Close"} />
+        <GalleryGrid photos={photos} allLabel={S(c.hero.all)} closeLabel={serverL(locale)("Close", "إغلاق")} />
       </div>
     </PageShell>
   );

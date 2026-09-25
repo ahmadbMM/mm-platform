@@ -9,6 +9,7 @@ import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum } from "@/lib/fill";
 import { pageState } from "@/lib/page-state";
+import { serverL } from "@/i18n/dicts";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // micromobility.sa/ambassadors - the programme, an ambassador's card, and the application,
@@ -36,8 +37,8 @@ export default async function AmbassadorsPage({ params }: { params: Promise<{ lo
   const numbers = { discount: N(r.discount), rentalPts: N(r.rentalPts), eventPts: N(r.eventPts), workshopPts: N(r.workshopPts), captainAt: N(r.captainAt), eliteAt: N(r.eliteAt) };
   const shown = Object.fromEntries(Object.entries(numbers).map(([k, v]) => [k, fmtNum(v, locale)]));
   const F = (v: unknown) => fill(S(v), shown);
-  const ar = L === "ar";
-  const pts = (n: number) => (ar ? `+${fmtNum(n, locale)} نقطة` : `+${fmtNum(n, locale)} pts`);
+  const tx = serverL(locale);
+  const pts = (n: number) => fill(tx("+{n} pts", "+{n} نقطة"), { n: fmtNum(n, locale) });
   const now = riyadhClock(new Date());
   const season = `Q${Math.floor((Number(now.slice(5, 7)) - 1) / 3) + 1} ${now.slice(0, 4)}`;
   const h = a.hero, how = a.how, tiers = a.tiers;
@@ -98,8 +99,8 @@ export default async function AmbassadorsPage({ params }: { params: Promise<{ lo
           <div className="amb-tiers">
             {[
               { name: tierNames[0], req: S(tiers.t1Req), perks: lines(F(tiers.t1Perks)) },
-              { name: tierNames[1], req: ar ? `${shown.captainAt} نقطة` : `${shown.captainAt} pts`, perks: lines(F(tiers.t2Perks)) },
-              { name: tierNames[2], req: ar ? `${shown.eliteAt} نقطة` : `${shown.eliteAt} pts`, perks: lines(F(tiers.t3Perks)) },
+              { name: tierNames[1], req: fill(tx("{n} pts", "{n} نقطة"), { n: shown.captainAt }), perks: lines(F(tiers.t2Perks)) },
+              { name: tierNames[2], req: fill(tx("{n} pts", "{n} نقطة"), { n: shown.eliteAt }), perks: lines(F(tiers.t3Perks)) },
             ].map((x, i) => (
               <div key={i} className={`amb-tier${i === 2 ? " elite" : ""}`}>
                 <div><strong>{x.name}</strong><small>{x.req}</small></div>

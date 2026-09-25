@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { rpc } from "@/lib/rpc-client";
-import { fmtNum } from "@/lib/fill";
+import { fill, fmtNum } from "@/lib/fill";
+import { useL } from "@/i18n/TxProvider";
 
 // This quarter's top five (ambassador_board), read in the visitor's browser: first names and
 // codes only. Nothing is shown until there is someone on it.
@@ -11,7 +12,7 @@ type Props = { locale: string; title: string; text: string };
 const MEDAL = ["#c49411", "#8a938c", "#b0764a"];
 
 export default function AmbassadorBoard(p: Props) {
-  const ar = p.locale === "ar";
+  const tx = useL();
   const [rows, setRows] = useState<Row[]>([]);
   useEffect(() => {
     let live = true;
@@ -29,8 +30,9 @@ export default function AmbassadorBoard(p: Props) {
           <li key={r.code}>
             <strong style={{ color: MEDAL[i] || "#8a938c" }}>{N(i + 1)}</strong>
             <span>{r.first_name} <small className="mm-lat">· {r.code}</small></span>
-            <small>{N(r.uses)} {ar ? "استخدام" : "uses"}</small>
-            <b>{N(r.season)} {ar ? "نقطة" : "pts"}</b>
+            {/* English says "1 use"; every other language translates "{n} uses" in a form right for any number. */}
+            <small>{fill(r.uses === 1 && p.locale === "en" ? "{n} use" : tx("{n} uses", "{n} استخدام"), { n: N(r.uses) })}</small>
+            <b>{fill(tx("{n} pts", "{n} نقطة"), { n: N(r.season) })}</b>
           </li>
         ))}
       </ol>

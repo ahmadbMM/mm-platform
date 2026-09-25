@@ -88,7 +88,7 @@ export const siteSchema: PageSchema = {
         {
           id: "trust", type: "list", maxItems: 6, label: bi("Trust line", "سطر الثقة"),
           item: [{ id: "text", type: "text", max: 40, label: bi("Text", "النص"), def: bi("", "") }],
-          def: [["Maroof verified", "موثّق في معروف"], ["VAT reg. 15%", "رقم ضريبي 15%"], ["Secure SSL checkout", "دفع آمن SSL"], ["14-day returns", "إرجاع خلال 14 يوم"]].map(([e, a]) => ({ text: bi(e, a) })),
+          def: [["Maroof verified", "موثّق في معروف"], ["VAT reg. 15%", "رقم ضريبي 15%"], ["Secure SSL checkout", "دفع آمن SSL"], ["7-day returns", "إرجاع خلال 7 أيام"]].map(([e, a]) => ({ text: bi(e, a) })),
         },
         { id: "shopTitle", type: "text", max: 30, label: bi("Column 1: title", "العمود ١: العنوان"), def: bi("Shop", "تسوّق") },
         {

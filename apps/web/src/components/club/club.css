@@ -4,7 +4,7 @@
 .club { background: #fbf9f4; }
 .club-hero { padding: 96px 7vw 70px; display: grid; grid-template-columns: 1.05fr .95fr; gap: 48px; align-items: center; background: radial-gradient(circle at 82% 18%, #11321f, #0b0e0a 68%); color: #fbf9f4; }
 .club-eyebrow { color: #03ff89; text-transform: uppercase; letter-spacing: 3px; font-size: 12px; font-weight: 700; margin: 0 0 16px; }
-html[lang="ar"] .club-eyebrow { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .club-eyebrow { letter-spacing: 0; font-size: 13px; }
 .club-hero h1 { font-size: clamp(40px, 5.4vw, 78px); line-height: .92; letter-spacing: -2.5px; margin: 0 0 18px; }
 .club-hero-text { color: rgba(251, 249, 244, .72); font-size: 18px; line-height: 1.6; max-width: 520px; margin: 0 0 28px; }
 .club-hero-btns { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
@@ -64,7 +64,7 @@ html[lang="ar"] .club-eyebrow { letter-spacing: 0; font-size: 13px; }
 .club-link { background: none; border: 0; color: #57605a; font-family: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; align-self: flex-start; padding: 0; }
 .club-earn { display: flex; flex-direction: column; gap: 14px; }
 .club-earn h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 1.5px; color: #4a534c; margin: 0; }
-html[lang="ar"] .club-earn h3 { letter-spacing: 0; }
+html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }
 .club-earn-row { display: flex; align-items: center; gap: 14px; border-bottom: 1px solid rgba(0, 0, 0, .07); padding-bottom: 12px; }
 .club-earn-row span { flex: 1; font-size: 14px; color: #2b332d; font-weight: 600; }
 .club-earn-row strong { color: #077a4b; font-size: 13.5px; white-space: nowrap; }

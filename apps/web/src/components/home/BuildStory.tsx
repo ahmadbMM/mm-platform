@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 // step. Phones and reduced-motion settings get the design's stated fallback (hidden / static).
 export type Step = { title: string; text: string; image: string };
 
-export default function BuildStory({ eyebrow, title, steps }: { eyebrow: string; title: string; steps: Step[]; ar: boolean }) {
+export default function BuildStory({ eyebrow, title, steps }: { eyebrow: string; title: string; steps: Step[] }) {
   const wrap = useRef<HTMLElement>(null);
   const [idx, setIdx] = useState(0);
   const [frac, setFrac] = useState(0);
