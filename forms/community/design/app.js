@@ -265,32 +265,36 @@
   $("#email").addEventListener("input", function () { emailFix = null; clearMsg("f-email"); acked[2] = null; });
 
   /* ── Name: the staff check's rules, as errors for the rider ─────────────────────────── */
-  // Letters of any script and their marks, and spaces: the database's own rule
-  // (_name_chars_ok), so a symbol is refused here rather than by the server. A dash is not a
-  // name character there either: one typed becomes a space, as on the booking site.
-  var NAME_BAD = /[^\p{L}\p{M}\s]/u;
+  // Letters of any script and their marks, spaces and periods ("Md. Rahman"): the database's own
+  // rule (_name_chars_ok), so a symbol is refused here rather than by the server. A dash is not a
+  // name character there either: one typed becomes a space, as on the booking site. A period comes
+  // right after a letter; one that would start the name or a word, or follow another, is dropped.
+  var NAME_BAD = /[^\p{L}\p{M}\s.]/u;
   var DASHES = /[-\u2010-\u2015\u2212]/g;
-  function titleCase(v) { return clean(v).replace(/(^|[\s\-'\u2019])(\p{L})/gu, function (m, sep, ch) { return sep + ch.toLocaleUpperCase(); }); }
+  function nameDots(v) { return v.replace(/\.{2,}/g, ".").replace(/(^|\s)\.+/g, "$1"); }
+  function titleCase(v) { return clean(v).replace(/(^|[\s\-'\u2019.])(\p{L})/gu, function (m, sep, ch) { return sep + ch.toLocaleUpperCase(); }); }
   function checkName(s) {
     if (!s) return { hard: ["Enter your first and last name"] };
-    if (NAME_BAD.test(s)) return { hard: ["Use letters only, without numbers or symbols"] };
+    if (NAME_BAD.test(s) || /(^|[\s.])\./.test(s)) return { hard: ["Names can only contain letters, spaces and periods."] };
     var letters = s.replace(/[\u064B-\u0670\u065F]/g, "");
     if (/[A-Za-z]/.test(letters) && /[\u0600-\u06FF]/.test(letters)) return { hard: ["Write your name in one alphabet"] };
     var parts = letters.replace(/[^\p{L}\p{M}\s'\u2019.-]/gu, " ").split(/\s+/).filter(function (p) { return p.replace(/[.'\u2019\p{M}-]/gu, ""); });
     var bare = function (p) { return p.replace(/[.'\u2019-]/g, ""); };
     var cjk = parts.length === 1 && /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(parts[0]);
     if (parts.length < 2 && !cjk) return { hard: ["Enter your first and last name"] };
-    // Every word has at least two letters, the middle one too (the site's rule since 2026-09-25).
-    if (parts.length > 1 && parts.some(function (p) { return Array.from(bare(p)).length < 2; })) return { hard: ["Write your first and last name in full, not initials"] };
+    // Every word has at least two letters, the middle one too (the site's rule since 2026-09-25). A
+    // period ends a word as a space does: "J.R." is two initials, "Md." a word.
+    if (parts.length > 1 && parts.some(function (p) { return p.split(".").some(function (w) { w = bare(w); return w && Array.from(w).length < 2; }); })) return { hard: ["Write your first and last name in full, not initials"] };
     if (parts.some(function (p) { return /^(test|asdf|qwerty|user|admin|none|null|name|x{2,}|abc|unknown|other|guest)$/i.test(bare(p)); })) return { hard: ["Please enter your real name"] };
     if (/(\p{L})\1\1/iu.test(letters)) return { soft: ["Please check the spelling of your name."] };
     return {};
   }
-  // As the rider types, anything outside the rule is dropped on the spot (the site does the same).
+  // As the rider types, anything outside the rule is dropped on the spot (the site does the same):
+  // a dash turns into a space and a stray period just goes, quietly; any other sign says why.
   $("#name").addEventListener("input", function () {
-    var el = this, v = el.value.replace(DASHES, " "), c = v.replace(/[^\p{L}\p{M}\s]/gu, "");
-    if (v !== el.value && c === v) { var at0 = el.selectionStart; el.value = v; try { el.setSelectionRange(at0, at0); } catch (e) {} clearMsg("f-name"); acked[1] = null; return; }
-    if (c !== v) { var at = Math.max(0, (el.selectionStart == null ? c.length : el.selectionStart) - (v.length - c.length)); el.value = c; try { el.setSelectionRange(at, at); } catch (e) {} setErr("f-name", "Use letters only, without numbers or symbols"); return; }
+    var el = this, raw = el.value, v = raw.replace(DASHES, " "), k = v.replace(/[^\p{L}\p{M}\s.]/gu, ""), c = nameDots(k);
+    if (c !== raw) { var at = Math.max(0, (el.selectionStart == null ? c.length : el.selectionStart) - (raw.length - c.length)); el.value = c; try { el.setSelectionRange(at, at); } catch (e) {} }
+    if (k !== v) { setErr("f-name", "Names can only contain letters, spaces and periods."); return; }
     clearMsg("f-name"); acked[1] = null;
   });
 

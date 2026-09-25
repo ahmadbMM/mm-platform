@@ -3481,16 +3481,16 @@ var qrcode = function() {
   var PV_KEYS = ["I have read the Privacy Notice.", "Read the Privacy Notice", "Please confirm you’ve read the Privacy Notice.", "Privacy Notice", "This notice is available in English and Arabic.", "Close"];
   Object.keys(PV_T).forEach(function (l) { T[l] = T[l] || {}; PV_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = PV_T[l][i]; }); });
   /* Why a typed character did not appear in a name box - the rentals site's own words. */
-  var NAME_CHARS = "Names can only contain letters and spaces.";
+  var NAME_CHARS = "Names can only contain letters, spaces and periods.";
   var NC_T = {
-    ar: "يمكن أن يحتوي الاسم على حروف ومسافات فقط.",
-    fr: "Le nom ne peut contenir que des lettres et des espaces.",
-    es: "El nombre solo puede contener letras y espacios.",
-    pt: "O nome só pode conter letras e espaços.",
-    hi: "नाम में केवल अक्षर और रिक्त स्थान हो सकते हैं।",
-    ne: "नाममा अक्षर र खाली ठाउँ मात्र हुन सक्छन्।",
-    tl: "Mga titik at espasyo lamang ang puwede sa pangalan.",
-    bn: "নামে শুধু অক্ষর ও ফাঁকা জায়গা থাকতে পারে।"
+    ar: "يمكن أن يحتوي الاسم على حروف ومسافات ونقاط فقط.",
+    fr: "Le nom ne peut contenir que des lettres, des espaces et des points.",
+    es: "El nombre solo puede contener letras, espacios y puntos.",
+    pt: "O nome só pode conter letras, espaços e pontos.",
+    hi: "नाम में केवल अक्षर, रिक्त स्थान और बिंदु (.) हो सकते हैं।",
+    ne: "नाममा अक्षर, खाली ठाउँ र बिन्दु (.) मात्र हुन सक्छन्।",
+    tl: "Mga titik, espasyo at tuldok lamang ang puwede sa pangalan.",
+    bn: "নামে শুধু অক্ষর, ফাঁকা জায়গা ও বিন্দু (.) থাকতে পারে।"
   };
   Object.keys(NC_T).forEach(function (l) { T[l] = T[l] || {}; if (!T[l][NAME_CHARS]) T[l][NAME_CHARS] = NC_T[l]; });
   // The design paints every data-t element once, on load, before this file runs. Anything
@@ -3507,11 +3507,14 @@ var qrcode = function() {
   var _sb = null;
   function sbClient() { if (!_sb) _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); return _sb; }
   function toAscii(s) { return String(s).replace(/[\u0660-\u0669]/g, function (c) { return String(c.charCodeAt(0) - 0x0660); }).replace(/[\u06F0-\u06F9]/g, function (c) { return String(c.charCodeAt(0) - 0x06F0); }); }
-  /* Names hold letters and spaces only, as on the rentals site: a dash becomes a space ("Al-Harbi"
-     is "Al Harbi", not "AlHarbi"), and digits, emoji and other signs are dropped as they are typed.
-     Letters of every script and their combining marks stay (Hindi, Nepali and Bengali vowel signs). */
-  var NAME_DASHES = /[\p{Pd}\u2212]/gu, NAME_BAD = /[^\p{L}\p{M}\s]/gu;
-  function cleanName(v) { return String(v || "").replace(NAME_DASHES, " ").replace(NAME_BAD, ""); }
+  /* Names hold letters, spaces and periods, as on the rentals site: a dash becomes a space
+     ("Al-Harbi" is "Al Harbi", not "AlHarbi"), and digits, emoji and other signs are dropped as they
+     are typed. Letters of every script and their combining marks stay (Hindi, Nepali and Bengali
+     vowel signs). A period comes right after a letter ("Md. Rahman"): one that would start the name
+     or a word, or follow another period, is dropped, as the database refuses it. */
+  var NAME_DASHES = /[\p{Pd}\u2212]/gu, NAME_BAD = /[^\p{L}\p{M}\s.]/gu;
+  function nameSigns(v) { return String(v || "").replace(NAME_DASHES, " ").replace(NAME_BAD, ""); }
+  function cleanName(v) { return nameSigns(v).replace(/\.{2,}/g, ".").replace(/(^|\s)\.+/g, "$1"); }
   // A name box's message: the given one, or back to the box's own ("Enter your full name").
   function nameMsg(f, msg) {
     var err = f && f.querySelector(".err"); if (!err) return;
@@ -3520,12 +3523,15 @@ var qrcode = function() {
   }
   // Runs after the box's own input handler has cleared its error. What the rule drops goes on
   // the spot, the caret kept where it was, and the reason stays under the box for three seconds
-  // rather than flashing away on the next keystroke.
+  // rather than flashing away on the next keystroke. A stray period just goes, without the reason:
+  // a period may be typed.
   function onNameInput(el) {
     var f = el.closest(".field"), v = el.value, c = cleanName(v);
     if (c !== v) {
       var at = Math.max(0, (el.selectionStart == null ? c.length : el.selectionStart) - (v.length - c.length));
       el.value = c; try { el.setSelectionRange(at, at); } catch (e) {}
+    }
+    if (nameSigns(v) !== v) {
       el._nameHintUntil = Date.now() + 3000;
       clearTimeout(el._nameHintTimer);
       el._nameHintTimer = setTimeout(function () { if (el._nameHintUntil) { el._nameHintUntil = 0; f.classList.remove("invalid"); nameMsg(f); } }, 3000);
