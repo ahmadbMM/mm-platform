@@ -18,6 +18,13 @@ type Base = {
   label: Bi;
   /** Shown under the field in the staff editor. */
   hint?: Bi;
+  /** Staff may clear it to leave it out: a value saved empty shows nothing instead of the
+   *  default (a deleted row still shows the default). Text falls back to the other language
+   *  before it counts as empty, for values like a registration number typed in one box. */
+  optional?: boolean;
+  /** One value in every language (a phone, a date, a registration number): the English box, else
+   *  the Arabic one, so a value typed in only one box shows on both pages. */
+  mono?: boolean;
 };
 
 export type TextField = Base & { type: "text" | "longtext"; max: number; def: Bi };

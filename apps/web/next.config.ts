@@ -12,6 +12,10 @@ const STORE = "https://stepdragon.com.sa";
 const config: NextConfig = {
   async redirects() {
     return [
+      // Addresses carry no language any more (the visitor's is in ?lang= or the NEXT_LOCALE
+      // cookie), so plain /store has to ask which shop to open; Arabic stays the default.
+      { source: "/store", has: [{ type: "query", key: "lang", value: "en" }], destination: `${STORE}/en`, permanent: false },
+      { source: "/store", has: [{ type: "cookie", key: "NEXT_LOCALE", value: "en" }], destination: `${STORE}/en`, permanent: false },
       { source: "/store", destination: `${STORE}/ar`, permanent: false },
       { source: "/ar/store", destination: `${STORE}/ar`, permanent: false },
       { source: "/en/store", destination: `${STORE}/en`, permanent: false },

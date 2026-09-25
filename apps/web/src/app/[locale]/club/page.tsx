@@ -7,7 +7,7 @@ import { clubSchema } from "@/content/pages/club";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum } from "@/lib/fill";
-import { localHref } from "@/lib/links";
+import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { getAccount } from "@/lib/account";
 
@@ -40,10 +40,10 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const tierNames: [string, string, string] = [S(c.tiers.t1Name), S(c.tiers.t2Name), S(c.tiers.t3Name)];
   const credits = ar ? "رصيد" : "credits";
   const applyHref = localHref(S(c.hero.applyHref), locale);
-  const ridesHref = localHref(S(c.hero.ridesHref), locale);
+  const ridesHref = bookingLink(S(c.hero.ridesHref), locale);
   const words = lines(S(c.hero.marquee));
   const earn = [
-    { label: S(c.earn.paidLabel), value: ar ? `${shown.perTen} لكل ١٠ ر.س` : `${shown.perTen} / SAR 10`, on: N(r.perTen) > 0 },
+    { label: S(c.earn.paidLabel), value: ar ? `${shown.perTen} لكل 10 ر.س` : `${shown.perTen} / SAR 10`, on: N(r.perTen) > 0 },
     { label: S(c.earn.groupLabel), value: `+${shown.groupRidePts}`, on: N(r.groupRidePts) > 0 },
     { label: S(c.earn.reviewLabel), value: `+${shown.reviewPts}`, on: N(r.reviewPts) > 0 },
   ].filter((x) => x.on);
@@ -121,9 +121,9 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         <section className="club-rides">
           <div className="club-rides-head">
             <div><p>{S(c.rides.eyebrow)}</p><h2>{S(c.rides.title)}</h2></div>
-            <a href={localHref(S(c.rides.allHref), locale)}>{S(c.rides.allLabel)} {ar ? "←" : "→"}</a>
+            <a href={bookingLink(S(c.rides.allHref), locale)}>{S(c.rides.allLabel)} {ar ? "←" : "→"}</a>
           </div>
-          <ClubRides locale={locale} href={localHref(S(c.rides.allHref), locale)} empty={S(c.rides.empty)} />
+          <ClubRides locale={locale} href={bookingLink(S(c.rides.allHref), locale)} empty={S(c.rides.empty)} />
         </section>
         <section className="club-sec">
           <h2 style={{ marginBottom: 22 }}>{S(c.faq.title)}</h2>

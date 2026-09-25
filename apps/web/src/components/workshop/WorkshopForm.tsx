@@ -8,7 +8,8 @@ import { dayOptions, timesFor } from "@/lib/workshop-days";
 // gets to us, a service (or describes the problem and gets one suggested), optional parts, a
 // preferred day and time, and leaves a name and phone. It goes to the staff page through
 // workshop_request(); the team confirms by phone. Nothing is charged online.
-export type Service = { id: string; name: string; sub: string; price: number; mins: number; includes: string[] };
+// pos: the service's place (from 1) in the staff list, which a symptom's "service no." names
+export type Service = { id: string; pos: number; name: string; sub: string; price: number; mins: number; includes: string[] };
 export type WorkshopFormProps = {
   locale: string;
   formTitle: string; formSub: string;
@@ -57,6 +58,7 @@ export default function WorkshopForm(p: WorkshopFormProps) {
   const [addr, setAddr] = useState("");
   const [svc, setSvc] = useState(0);
   const [symptom, setSymptom] = useState(-1);
+  const svcAt = (n: number) => p.services.findIndex((x) => x.pos === n); // a symptom's service, by its place in the staff list
   const [parts, setParts] = useState<Record<string, boolean>>({});
   const [day, setDay] = useState("");
   const [time, setTime] = useState("");
@@ -168,11 +170,11 @@ export default function WorkshopForm(p: WorkshopFormProps) {
           <p className="ws-hint">{t.notSureHint}</p>
           <div className="ws-chips">
             {p.symptoms.map((s, i) => (
-              <button key={i} type="button" aria-pressed={symptom === i} onClick={() => { setSymptom(i); if (p.services[s.service - 1]) setSvc(s.service - 1); }}>{s.label}</button>
+              <button key={i} type="button" aria-pressed={symptom === i} onClick={() => { setSymptom(i); const k = svcAt(s.service); if (k >= 0) setSvc(k); }}>{s.label}</button>
             ))}
           </div>
-          {symptom >= 0 && p.services[p.symptoms[symptom].service - 1] && (
-            <p className="ws-suggest">{t.suggested}: {p.services[p.symptoms[symptom].service - 1].name}</p>
+          {symptom >= 0 && svcAt(p.symptoms[symptom].service) >= 0 && (
+            <p className="ws-suggest">{t.suggested}: {p.services[svcAt(p.symptoms[symptom].service)].name}</p>
           )}
         </>
       )}

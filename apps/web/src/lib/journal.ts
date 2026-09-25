@@ -40,15 +40,23 @@ export type Post = { slug: string; title: string; tag: string; date: string; cov
  *  languages), a second article with the same title numbered, hidden ones left out. */
 export function toPosts(items: Record<string, unknown>[], enItems: Record<string, unknown>[]): Post[] {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  const seen = new Map<string, number>();
+  const ascii = (v: string) => v.replace(/[٠-٩]/g, (c) => String(c.charCodeAt(0) - 0x660)).replace(/[۰-۹]/g, (c) => String(c.charCodeAt(0) - 0x6f0)).trim();
+  // Every article's address is settled from the whole English list first - hidden ones and ones
+  // without this language's text included - so an article has the same address on both pages,
+  // publishing another never renames it, and a numbered address never collides with a real one.
+  const taken = new Set<string>();
+  const slugs = items.map((it, i) => {
+    const base = slugId(S(enItems[i]?.title) || S(it.title), `article-${i + 1}`);
+    let slug = base;
+    for (let n = 2; taken.has(slug); n++) slug = `${base}-${n}`;
+    taken.add(slug);
+    return slug;
+  });
   const posts: Post[] = [];
   items.forEach((it, i) => {
     if (it.show === false || !S(it.title) || !S(it.body)) return;
-    let slug = slugId(S(enItems[i]?.title) || S(it.title), `article-${i + 1}`);
-    const n = (seen.get(slug) ?? 0) + 1;
-    seen.set(slug, n);
-    if (n > 1) slug = `${slug}-${n}`;
-    posts.push({ slug, title: S(it.title), tag: S(it.tag), date: /^\d{4}-\d{2}-\d{2}$/.test(S(it.date)) ? S(it.date) : "", cover: S(it.cover), excerpt: S(it.excerpt), body: S(it.body), cta: S(it.cta), ctaHref: S(it.ctaHref) });
+    const date = ascii(S(it.date));
+    posts.push({ slug: slugs[i], title: S(it.title), tag: S(it.tag), date: /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : "", cover: S(it.cover), excerpt: S(it.excerpt), body: S(it.body), cta: S(it.cta), ctaHref: S(it.ctaHref) });
   });
   return posts.sort((a, b) => b.date.localeCompare(a.date));
 }

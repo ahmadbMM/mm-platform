@@ -38,7 +38,7 @@ export const journalSchema: PageSchema = {
           item: [
             txt("title", 90, "Title", "العنوان", "", ""),
             txt("tag", 24, "Tag", "الوسم", "", ""),
-            txt("date", 10, "Date (YYYY-MM-DD)", "التاريخ (YYYY-MM-DD)", "", ""),
+            { ...txt("date", 10, "Date (YYYY-MM-DD)", "التاريخ (YYYY-MM-DD)", "", ""), mono: true },
             { id: "cover", type: "image", label: bi("Cover photo", "صورة الغلاف"), def: "" },
             long("excerpt", 240, "Summary", "الملخص", "", ""),
             long("body", 8000, "Article", "المقال", "", ""),
@@ -53,7 +53,7 @@ export const journalSchema: PageSchema = {
                 "Our evening sessions run on the Jeddah Corniche Circuit on Sundays and Tuesdays, 9-11pm. Booking takes a minute.\n\n## Before you go\n- Pick a date on the Experiences page and tap Book.\n- Sign in with your Micromobility account, or create one.\n- Add up to three riders, with each rider's height - the bike size is set from it.\n- Choose a bike type for each rider: Road, Hybrid, Mountain, Kids or Road Carbon.\n\n## On the night\nPayment is collected at the booth at the circuit - have your queue number ready. Bikes are handed out first come, first served, so come early to get the bike type you chose.\n\nA full night still takes bookings on its waitlist, and we move you up if a place opens.",
                 "جلساتنا المسائية على حلبة كورنيش جدة يومي الأحد والثلاثاء من 9 إلى 11 مساءً. الحجز يأخذ دقيقة.\n\n## قبل أن تذهب\n- اختر موعداً من صفحة التجارب واضغط احجز.\n- سجّل الدخول بحساب مايكروموبيليتي، أو أنشئ حساباً.\n- أضف حتى ثلاثة ركاب مع طول كل راكب - يُحدَّد مقاس الدراجة منه.\n- اختر نوع الدراجة لكل راكب: طريق أو هجين أو جبلي أو أطفال أو طريق كربون.\n\n## في الأمسية\nالدفع يتم عند الكشك في الحلبة - جهّز رقم طابورك. تُوزَّع الدراجات على أساس الأول فالأول، فتعال مبكراً لتحصل على نوع الدراجة الذي اخترته.\n\nالأمسية الممتلئة تقبل الحجز في قائمة الانتظار، ونرفعك إذا توفر مكان.",
               ],
-              ["See the dates", "شاهد المواعيد"], "/experiences#dates"),
+              ["See the dates", "شاهد المواعيد"], "/experiences#book"),
             post(["Chain care on the coast: a five-minute routine", "العناية بالسلسلة على الساحل: روتين خمس دقائق"], ["Maintenance", "صيانة"], "/site/workshop/mechanic.jpg",
               ["Sea air and dust wear a chain fast. A weekly wipe and a drop of lube go a long way.", "هواء البحر والغبار يستهلكان السلسلة بسرعة. مسح أسبوعي ونقطة زيت يصنعان الفرق."],
               [

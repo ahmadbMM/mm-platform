@@ -34,7 +34,7 @@ export default async function WorkshopPage({ params }: { params: Promise<{ local
   // language the customer used.
   const enNames = resolvePage(workshopSchema, content, "en");
   const services: Service[] = list(w.services.items).map((s, i) => ({
-    id: slug(S(list(enNames.services.items)[i]?.name), i), name: S(s.name), sub: S(s.sub), price: N(s.price), mins: N(s.mins),
+    id: slug(S(list(enNames.services.items)[i]?.name), i), pos: i + 1, name: S(s.name), sub: S(s.sub), price: N(s.price), mins: N(s.mins),
     includes: S(s.includes).split("\n").map((x) => x.trim()).filter(Boolean),
   })).filter((s) => s.name);
   const parts = list(w.services.parts).map((p, i) => ({ id: slug(S(list(enNames.services.parts)[i]?.label), i).replace(/^service-/, "part-"), label: S(p.label), price: N(p.price) })).filter((p) => p.label);

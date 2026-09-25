@@ -15,8 +15,15 @@ export function fieldValue(field: ItemField, raw: unknown, locale: Locale): stri
   switch (field.type) {
     case "text":
     case "longtext": {
+      if (field.mono) {
+        const m = isBi(raw) ? raw.en.trim() || raw.ar.trim() : "";
+        if (m) return m;
+        return field.optional && isBi(raw) ? "" : field.def.en || field.def.ar;
+      }
       const v = isBi(raw) ? raw[locale].trim() : "";
-      return v || field.def[locale];
+      if (v) return v;
+      if (field.optional && isBi(raw)) return raw[locale === "ar" ? "en" : "ar"].trim();
+      return field.def[locale];
     }
     case "image": {
       const u = raw && typeof raw === "object" ? (raw as { url?: unknown }).url : undefined;
@@ -24,6 +31,7 @@ export function fieldValue(field: ItemField, raw: unknown, locale: Locale): stri
     }
     case "link": {
       const h = raw && typeof raw === "object" ? (raw as { href?: unknown }).href : undefined;
+      if (field.optional && h === "") return "";
       return typeof h === "string" && safeUrl(h) ? h : field.def;
     }
     case "number": {

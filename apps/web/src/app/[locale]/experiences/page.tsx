@@ -48,6 +48,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     return i(a.type) - i(b.type) || a.type.localeCompare(b.type);
   });
   const sar = (n: number) => (ar ? `${fmtNum(n, locale)} ر.س` : `SAR ${fmtNum(n, locale)}`);
+  // "No preference" rides whatever bike is free: from its own price up to the dearest standard bike
+  const anyTop = Math.max(0, ...prices.filter((p) => ["Road", "Hybrid", "Mountain"].includes(p.type)).map((p) => p.price));
 
   const kindName = kindNames(d);
   const enName = ar ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
@@ -59,7 +61,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const toStep = (s: RideSession): StepSession => ({
     id: s.id, day: day(s.date), name: sessionName(s, kindName, enName, ar),
     when: s.times ? { gather: s.gather, a: s.times[0], b: s.times[1] } : null,
-    members: s.members, free: s.free, full: s.full, paid: !s.free,
+    members: s.members, free: s.free, full: s.full, paid: !s.free, noCarbon: s.noCarbon,
   });
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count))).map(toStep);
   const card = (key: string, p: string, always: boolean): StepEvent | null => {
@@ -94,7 +96,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
             <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={localHref("/club", locale)} text={text}
-              prices={prices.map((p) => ({ label: TYPE_NAME[p.type] ? TYPE_NAME[p.type][ar ? 1 : 0] : p.type, price: p.price > 0 ? sar(p.price) : S(d.free) }))} />
+              prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? TYPE_NAME[p.type][ar ? 1 : 0] : p.type, price: p.price > 0 ? (p.type === "Any" && anyTop > p.price ? `${sar(p.price)} – ${sar(anyTop)}` : sar(p.price)) : S(d.free) }))} />
           </section>
 
           {good.length > 0 && (
@@ -108,7 +110,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
 
           <div className="xp-btns xp-end">
             {directions && S(c.good.directions) && <a className="xp-btn line" href={directions} target="_blank" rel="noopener">{S(c.good.directions)}</a>}
-            {whatsapp && <a className="xp-btn line" href={whatsapp} target="_blank" rel="noopener">WhatsApp</a>}
+            {whatsapp && <a className="xp-btn line" href={whatsapp} target="_blank" rel="noopener">{ar ? "واتساب" : "WhatsApp"}</a>}
           </div>
         </div>
       </div>

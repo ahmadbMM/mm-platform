@@ -21,7 +21,9 @@ type Props = {
   tierNames: [string, string, string];
   labels: { rental: string; workshop: string; event: string };
   rewardsTitle: string;
-  rewards: { label: string; cost: number }[];
+  // idx: the reward's place in the staff list, which ambassador_redeem counts by (rows without a
+  // label in this language are left out here, so the place on screen is not it)
+  rewards: { label: string; cost: number; idx: number }[];
 };
 
 const T = {
@@ -144,7 +146,7 @@ export default function AmbassadorPortal(p: Props) {
                 <li key={i} className={balance >= r.cost && active ? "" : "off"}>
                   <span>{r.label}</span>
                   <small>{N(r.cost)}</small>
-                  <button type="button" onClick={() => redeem(i)} disabled={!active || balance < r.cost}>{t.redeem}</button>
+                  <button type="button" onClick={() => redeem(r.idx)} disabled={!active || balance < r.cost}>{t.redeem}</button>
                 </li>
               ))}
             </ul>

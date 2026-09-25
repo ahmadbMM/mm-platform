@@ -33,11 +33,11 @@ describe("slotTimes", () => {
 
 describe("toSession", () => {
   it("shows a circuit night as open to all and paid", () => {
-    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false });
+    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false });
   });
   it("marks a community ride members-only and free, unless the session says otherwise", () => {
     const sat = toSession(row({ event_kind: "community", ride_kind: "saturday", title: "Saturday Social Ride", bike_slots: '{"_time":"05:45 - 06:15"}' }));
-    expect(sat).toMatchObject({ kind: "saturday", members: true, free: true, gather: true, title: "Saturday Social Ride", times: ["05:45", "06:15"] });
+    expect(sat).toMatchObject({ kind: "saturday", members: true, free: true, gather: true, title: "Saturday Social Ride", times: ["05:45", "06:15"], noCarbon: true });
     expect(toSession(row({ event_kind: "community", ride_kind: "workshop", open_to_all: true }))).toMatchObject({ members: false, free: true, gather: false });
     expect(toSession(row({ event_kind: "community", ride_kind: "saturday", paid_ride: true }))).toMatchObject({ members: true, free: false });
   });
@@ -55,7 +55,7 @@ describe("toSession", () => {
 });
 
 describe("upcoming", () => {
-  const s = (date: string, times: [string, string] | null, id = date): RideSession => ({ id, date, full: false, title: null, kind: "jcc", members: false, free: false, times, gather: false });
+  const s = (date: string, times: [string, string] | null, id = date): RideSession => ({ id, date, full: false, title: null, kind: "jcc", members: false, free: false, times, gather: false, noCarbon: false });
   it("keeps what is still ahead, soonest first", () => {
     const got = upcoming([s("2026-09-29", ["21:00", "23:00"]), s("2026-09-23", ["21:00", "23:00"]), s("2026-09-27", ["21:00", "23:00"]), s("2026-09-27", ["18:00", "19:00"], "pool")], "2026-09-24T22:30");
     expect(got.map((x) => x.id)).toEqual(["pool", "2026-09-27", "2026-09-29"]);

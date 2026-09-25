@@ -24,6 +24,10 @@ export const NAV_LINKS: NavLink[] = [
 
 export const pick = (l: { en: string; ar: string }, locale: string) => (locale === "ar" ? l.ar : l.en);
 
+/** The page a link on this site opens ("/business#x" → "business", an old "/ar/club" → "club");
+ *  "" for anything else. Used to leave out or redirect links to pages staff have switched off. */
+export const pageOf = (href: string) => (/^\/(?!\/)/.test(href) ? (href.match(/^\/(?:(?:en|ar)\/)?([a-z_-]+)/) || [])[1] || "" : "");
+
 /** A staff-entered link, as visitors follow it. This site's addresses carry no language
  *  (i18n/routing.ts): "/business" is the same page in English and Arabic and the visitor's
  *  language travels in a cookie, so every link is used as typed. An old "/ar/business" still
