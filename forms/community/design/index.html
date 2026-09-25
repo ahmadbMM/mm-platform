@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fbf9f4">
+<title>Community Membership Application | Micromobility</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<meta name="description" content="Join the Micromobility community rides in Jeddah. Tell us a little about yourself and our team replies by WhatsApp or email.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Micromobility">
+<meta property="og:title" content="Community Membership Application | Micromobility">
+<meta property="og:description" content="Join the Micromobility community rides in Jeddah. Tell us a little about yourself and our team replies by WhatsApp or email.">
+<meta property="og:url" content="https://micromobility.sa/community/registration">
+<meta property="og:image" content="https://micromobility.sa/community/registration/og-image.png?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://micromobility.sa/community/registration/og-image.png?v=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://micromobility.sa">
+    <span class="mark"><img src="logo-mark.png" alt="Micromobility"></span>
+    <span class="brand-label" data-t="Community">Community</span>
+  </a>
+  <label class="lang-wrap">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"></path></svg>
+    <select id="lang" class="lang" aria-label="Language" data-t-aria="Language"></select>
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+  </label>
+</header>
+
+<main class="wrap">
+  <section id="card" class="card" data-state="form">
+    <div id="banner" class="banner" role="alert" hidden>
+      <span class="banner-text"></span>
+      <button class="banner-close" type="button" data-t="Dismiss">Dismiss</button>
+    </div>
+
+    <form id="form" class="form" novalidate autocomplete="on">
+      <span class="eyebrow" data-t="Micromobility Community">Micromobility Community</span>
+      <h1 class="title" data-t="Community Membership Application">Community Membership Application</h1>
+      <p class="lead" data-t="Tell us a little about yourself. Our team reviews every application and replies to you by WhatsApp or email.">Tell us a little about yourself. Our team reviews every application and replies to you by WhatsApp or email.</p>
+
+      <ol id="stepper" class="stepper" aria-label="Progress">
+        <li class="stepper-item" data-step="1"><span class="stepper-bar"></span><span class="stepper-label" data-t="About you">About you</span></li>
+        <li class="stepper-item" data-step="2"><span class="stepper-bar"></span><span class="stepper-label" data-t="Contact">Contact</span></li>
+        <li class="stepper-item" data-step="3"><span class="stepper-bar"></span><span class="stepper-label" data-t="Riding">Riding</span></li>
+      </ol>
+
+      <fieldset class="step" data-step="1">
+        <legend class="step-title" data-t="About you">About you</legend>
+        <p class="lead" data-t="Please use your real details: your rider profile is made from them.">Please use your real details: your rider profile is made from them.</p>
+        <div id="f-name" class="field">
+          <label for="name" data-t="Full name">Full name</label>
+          <input id="name" name="name" type="text" autocomplete="name" maxlength="120">
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-birth" class="field">
+          <span class="label" id="birth-label" data-t="Date of birth">Date of birth</span>
+          <div class="dob-row" role="group" aria-labelledby="birth-label">
+            <span class="sel-wrap"><select id="birth-d" class="dob-part" data-site-aria="dobDay"></select></span>
+            <span class="sel-wrap"><select id="birth-m" class="dob-part" data-site-aria="dobMonth"></select></span>
+            <span class="sel-wrap"><select id="birth-y" class="dob-part" data-site-aria="dobYear"></select></span>
+          </div>
+          <p class="err" aria-live="polite"></p>
+          <p class="warn" aria-live="polite"></p>
+        </div>
+        <div id="f-gender" class="field">
+          <span class="label" id="gender-label" data-t="Gender">Gender</span>
+          <div id="genders" class="types two" role="radiogroup" aria-labelledby="gender-label">
+            <button type="button" class="tile" data-v="male" role="radio" aria-checked="false" data-site="genderMale">Male</button>
+            <button type="button" class="tile" data-v="female" role="radio" aria-checked="false" data-site="genderFemale">Female</button>
+          </div>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-nat" class="field">
+          <label for="nat" data-t="Nationality">Nationality</label>
+          <span class="sel-wrap wide"><select id="nat" name="nationality"></select></span>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-height" class="field">
+          <label for="height" data-t="Height in cm">Height in cm</label>
+          <input id="height" name="height" type="text" inputmode="numeric" maxlength="3" placeholder="175" autocomplete="off">
+          <p class="err" aria-live="polite"></p>
+          <p class="warn" aria-live="polite"></p>
+        </div>
+      </fieldset>
+
+      <fieldset class="step" data-step="2" hidden>
+        <legend class="step-title" data-t="How we reach you">How we reach you</legend>
+        <p class="lead" data-t="Our reply comes here, so please check both carefully.">Our reply comes here, so please check both carefully.</p>
+        <div id="f-phone" class="field">
+          <label for="phone" data-t="Mobile number">Mobile number</label>
+          <div class="phone-row" dir="ltr">
+            <label class="cc-wrap">
+              <span class="cc-face" aria-hidden="true"><span id="cc-flag" class="cc-flag"></span><span id="cc-code">+966</span></span>
+              <select id="cc" class="cc" aria-label="Country code" data-t-aria="Country code"></select>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+            </label>
+            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="5X XXX XXXX">
+          </div>
+          <p class="err" aria-live="polite"></p>
+          <p class="warn" aria-live="polite"></p>
+        </div>
+        <div id="f-email" class="field">
+          <label for="email" data-t="Email address">Email address</label>
+          <input id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="254" placeholder="name@example.com">
+          <p class="err" aria-live="polite"></p>
+          <p class="warn" aria-live="polite"></p>
+          <button type="button" id="email-fix" class="fix" hidden></button>
+        </div>
+        <div id="f-ig" class="field">
+          <label for="ig" data-t="Instagram">Instagram</label>
+          <input id="ig" name="instagram" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="120" placeholder="@username">
+          <p class="hint" data-t="Your Instagram username, or a link to your profile">Your Instagram username, or a link to your profile</p>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-li" class="field">
+          <label for="li" data-t="LinkedIn">LinkedIn</label>
+          <input id="li" name="linkedin" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="200" placeholder="linkedin.com/in/your-name">
+          <p class="hint" data-t="The link to your LinkedIn profile">The link to your LinkedIn profile</p>
+          <p class="err" aria-live="polite"></p>
+        </div>
+      </fieldset>
+
+      <fieldset class="step" data-step="3" hidden>
+        <legend class="step-title" data-t="Your riding">Your riding</legend>
+        <p class="lead" data-t="Last step.">Last step.</p>
+        <div id="f-prof" class="field">
+          <label for="prof" data-t="Profession">Profession</label>
+          <input id="prof" name="profession" type="text" autocomplete="organization-title" maxlength="80" placeholder="Engineer" data-t-placeholder="e.g. Engineer">
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-type" class="field">
+          <span class="label" id="type-label" data-t="Type of bike">Type of bike</span>
+          <div id="types" class="types" role="radiogroup" aria-labelledby="type-label">
+            <button type="button" class="tile" data-v="Road" role="radio" aria-checked="false" data-t="Road">Road</button>
+            <button type="button" class="tile" data-v="Hybrid" role="radio" aria-checked="false" data-t="Hybrid">Hybrid</button>
+            <button type="button" class="tile" data-v="Mountain" role="radio" aria-checked="false" data-t="Mountain">Mountain</button>
+          </div>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-ack" class="field consent">
+          <div id="ack" class="tick" role="checkbox" aria-checked="false" aria-required="true" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" id="ack-lbl"></span></div>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-news" class="field consent">
+          <div id="news" class="tick" role="checkbox" aria-checked="false" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" data-site="rideNewsOpt">Send me ride news and announcements by WhatsApp and email. I can stop at any time.</span></div>
+        </div>
+      </fieldset>
+
+      <div class="actions">
+        <button id="back" class="back" type="button" hidden>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="back-arrow"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+          <span data-t="Back">Back</span>
+        </button>
+        <button id="next" class="submit" type="button"><span data-t="Continue">Continue</span></button>
+        <button id="submit" class="submit" type="submit" hidden>
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="submit-label" data-t="Send application">Send application</span>
+          <span class="submit-busy" data-t="Sending...">Sending...</span>
+        </button>
+      </div>
+    </form>
+
+    <div id="success" class="success" hidden tabindex="-1">
+      <div class="check" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <h1 class="title" data-t="Application received">Application received</h1>
+      <p id="result" class="result"></p>
+      <p id="result-contact" class="done-note"></p>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span data-t="MicroMobility, Jeddah">MicroMobility, Jeddah</span>
+  <a href="https://micromobility.sa">micromobility.sa</a>
+  <button type="button" id="pv-open-foot" class="pv-link foot-pv" data-site="privacyNotice">Privacy Notice</button>
+  <a id="help" class="help" href="https://wa.me/966566668818" target="_blank" rel="noopener" data-t="Need help? WhatsApp us">Need help? WhatsApp us</a>
+</footer>
+
+<div id="pv" class="pv-backdrop" hidden>
+  <div class="pv-box" role="dialog" aria-modal="true" aria-labelledby="pv-title">
+    <div class="pv-head">
+      <div><h2 class="pv-title" id="pv-title" data-site="privacyNotice">Privacy Notice</h2><div class="pv-upd" id="pv-upd"></div></div>
+      <button type="button" class="pv-x" id="pv-x" data-site-aria="closeBtn" aria-label="Close">&times;</button>
+    </div>
+    <div class="pv-note" id="pv-note" data-site="privacyEnArOnly" hidden></div>
+    <div class="pv-body" id="pv-body"></div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

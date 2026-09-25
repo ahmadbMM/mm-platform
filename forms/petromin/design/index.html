@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#fbf9f4">
+<title>Employees Bike Registration Form | Micromobility for Petromin</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://micromobility.sa">
+    <span class="mark"><img src="logo-mark.png" alt="Micromobility"></span>
+    <span class="partner" aria-label="Petromin"><img class="partner-logo" src="petromin-logo.png" alt="Petromin"></span>
+  </a>
+  <label class="lang-wrap" aria-label="Language">
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c3 3.5 3 14.5 0 18M12 3c-3 3.5-3 14.5 0 18"></path></svg>
+    <select id="lang" class="lang"><option value="en">English</option></select>
+    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+  </label>
+</header>
+
+<main class="wrap">
+  <section id="card" class="card" data-state="form" data-step="1">
+    <div id="banner" class="banner" role="alert" hidden>
+      <span class="banner-text" data-t="Could not reach the server">Could not reach the server</span>
+      <button class="banner-close" type="button" data-t="Dismiss" aria-label="Dismiss">Dismiss</button>
+    </div>
+
+    <form id="form" class="form" novalidate>
+      <h1 class="title" data-t="Employees Bike Registration Form">Employees Bike Registration Form</h1>
+
+      <ol id="stepper" class="stepper" aria-label="Progress">
+        <li class="stepper-item" data-step="1"><span class="stepper-bar"></span><span class="stepper-label" data-t="Session">Session</span></li>
+        <li class="stepper-item" data-step="2"><span class="stepper-bar"></span><span class="stepper-label" data-t="Your details">Your details</span></li>
+        <li class="stepper-item" data-step="3"><span class="stepper-bar"></span><span class="stepper-label" data-t="Bike">Bike</span></li>
+      </ol>
+
+      <fieldset class="step" data-step="1">
+        <legend class="step-title" data-t="Choose your session">Choose your session</legend>
+        <p class="lead" data-t="Pick the session you want to ride. Sessions come from the MicroMobility Rentals calendar.">Pick the session you want to ride. Sessions come from the MicroMobility Rentals calendar.</p>
+        <div id="f-session" class="field">
+          <div id="sessions" class="sessions" role="radiogroup" aria-label="Session"></div>
+          <p class="err" data-t="Choose a session">Choose a session</p>
+        </div>
+      </fieldset>
+
+      <fieldset class="step" data-step="2" hidden>
+        <legend class="step-title" data-t="Your details">Your details</legend>
+        <p class="lead" data-t="We use these to find your booking and reach you at the desk.">We use these to find your booking and reach you at the desk.</p>
+        <div id="f-company" class="field">
+          <span class="label" id="company-label" data-t="Your company">Your company</span>
+          <div id="companies" class="companies" role="radiogroup" aria-labelledby="company-label">
+            <button type="button" class="company" data-v="Petromin" role="radio" aria-checked="false" aria-label="Petromin"><img src="petromin-logo.png" alt="Petromin"></button>
+            <button type="button" class="company" data-v="Petrolube" role="radio" aria-checked="false" aria-label="Petrolube"><img src="petrolube-logo.png" alt="Petrolube"></button>
+          </div>
+          <p class="err" data-t="Choose your company">Choose your company</p>
+        </div>
+        <div id="f-badge" class="field">
+          <label for="badge" data-t="Badge number">Badge number</label>
+          <input id="badge" name="badge" type="text" inputmode="numeric" autocomplete="off" placeholder="104582" data-t-placeholder="104582">
+          <p class="err" data-t="Enter your badge number">Enter your badge number</p>
+        </div>
+        <div id="f-name" class="field">
+          <label for="name" data-t="Full name">Full name</label>
+          <input id="name" name="name" type="text" autocomplete="name" aria-describedby="name-hint">
+          <p id="name-hint" class="hint" data-t="Use the same name you booked with so we can find your booking">Use the same name you booked with so we can find your booking</p>
+          <p class="err" data-t="Enter your full name">Enter your full name</p>
+        </div>
+        <div id="f-phone" class="field">
+          <label for="phone" data-t="Mobile number">Mobile number</label>
+          <div class="phone-row" dir="ltr">
+            <label class="cc-wrap" aria-label="Country code">
+              <select id="cc" class="cc"><option value="966" data-iso="SA" selected>SA +966</option></select>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+            </label>
+            <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="5X XXX XXXX" data-t-placeholder="5X XXX XXXX">
+            <input id="phone-e164" name="phone_e164" type="hidden">
+          </div>
+          <p class="err" data-t="Enter a valid Saudi mobile number (05XXXXXXXX)">Enter a valid Saudi mobile number (05XXXXXXXX)</p>
+        </div>
+      </fieldset>
+
+      <fieldset class="step" data-step="3" hidden>
+        <legend class="step-title" data-t="Height and bike">Height and bike</legend>
+        <p class="lead" data-t="We size the bike to your height.">We size the bike to your height.</p>
+        <div id="f-height" class="field">
+          <label for="height" data-t="Height in cm">Height in cm</label>
+          <input id="height" name="height" type="number" inputmode="numeric" min="100" max="250" placeholder="175" data-t-placeholder="175">
+          <p class="err" data-t="Enter your height in cm (100 to 250)">Enter your height in cm (100 to 250)</p>
+        </div>
+        <div id="f-type" class="field">
+          <span class="label" id="type-label" data-t="Bike type">Bike type</span>
+          <div id="types" class="types" role="radiogroup" aria-labelledby="type-label">
+            <button type="button" class="tile" data-v="Hybrid" role="radio" aria-checked="false" data-t="Hybrid">Hybrid</button>
+            <button type="button" class="tile" data-v="Mountain" role="radio" aria-checked="false" data-t="Mountain">Mountain</button>
+          </div>
+          <p class="err" data-t="Choose a bike type">Choose a bike type</p>
+        </div>
+        <div id="f-riders" class="field">
+          <span class="label" data-t="Riding with someone?">Riding with someone?</span>
+          <p class="lead" data-t="Add up to four companions. Each gets their own bike under your booking number.">Add up to four companions. Each gets their own bike under your booking number.</p>
+          <div id="riders" class="riders"></div>
+          <button type="button" id="add-rider" class="back" data-t="Add another rider">Add another rider</button>
+        </div>
+        <div id="f-privacy" class="field privacy-field">
+          <label class="privacy-check"><input id="privacy" type="checkbox"> <span data-t="I have read the Privacy Notice.">I have read the Privacy Notice.</span></label>
+          <button type="button" class="privacy-link" data-privacy-open data-t="Read the Privacy Notice">Read the Privacy Notice</button>
+          <p class="err" data-t="Please confirm you’ve read the Privacy Notice.">Please confirm you’ve read the Privacy Notice.</p>
+        </div>
+      </fieldset>
+
+      <div class="actions">
+        <button id="cancel-edit" class="back" type="button" hidden><span data-t="Cancel">Cancel</span></button>
+        <button id="back" class="back" type="button" hidden>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="back-arrow"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
+          <span data-t="Back">Back</span>
+        </button>
+        <button id="next" class="submit" type="button">
+          <span data-t="Continue">Continue</span>
+        </button>
+        <button id="submit" class="submit" type="submit" hidden>
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="submit-label" data-t="Register">Register</span>
+          <span class="submit-busy" data-t="Registering...">Registering...</span>
+        </button>
+      </div>
+    </form>
+
+    <div id="success" class="success" hidden>
+      <div class="check" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <h1 class="title" data-t="You are registered">You are registered</h1>
+      <p id="result" class="result" data-t="Your registration for {d} is confirmed." data-args='{"d":"Wed 23 Sep, 18:00"}'>Your registration for Wed 23 Sep, 18:00 is confirmed.</p>
+      <div class="ticket" id="ticket">
+        <div class="ticket-top">
+          <div class="ticket-label" data-t="Booking">Booking</div>
+          <div class="ticket-num" id="chip-booking-value">P-001</div>
+          <span id="chip-riders" class="ticket-party" hidden><b id="chip-riders-value">3</b> <span data-t="riders">riders</span></span>
+          <div class="ticket-qr">
+            <div id="qr" class="qr" role="img" aria-label="Booking QR code"></div>
+            <p class="qr-note" data-t="Scan this code at the desk">Scan this code at the desk</p>
+          </div>
+        </div>
+        <div class="ticket-cols">
+          <div class="ticket-col" id="chip-session"><div class="tl" data-t="Session">Session</div><div class="ticket-value" id="chip-session-value">Wed 23 Sep, 18:00</div></div>
+          <div class="ticket-col"><div class="tl" data-t="Name">Name</div><div class="ticket-value" id="tk-name">—</div></div>
+          <div class="ticket-col" id="chip"><div class="tl" data-t="Badge">Badge</div><div class="ticket-value" id="chip-value">104582</div></div>
+          <div class="ticket-col" id="chip-company"><div class="tl" data-t="Company">Company</div><div class="ticket-value" id="chip-company-value">Petromin</div></div>
+        </div>
+        <p id="riders-note" class="ticket-riders" hidden></p>
+      </div>
+      <p class="done-note" data-t="Show this screen and your booking number at the desk to collect your bike.">Show this screen and your booking number at the desk to collect your bike.</p>
+      <button id="edit" class="edit" type="button" data-t="Edit my booking">Edit my booking</button>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <span data-t="MicroMobility, Jeddah">MicroMobility, Jeddah</span>
+  <a href="https://micromobility.sa">micromobility.sa</a>
+  <a id="help" class="help" href="https://wa.me/966579543997" target="_blank" rel="noopener" data-t="Need help? WhatsApp us">Need help? WhatsApp us</a>
+  <button type="button" class="privacy-link foot-privacy" data-privacy-open data-t="Privacy Notice">Privacy Notice</button>
+</footer>
+
+<dialog id="privacy-dialog" class="privacy-dialog" aria-labelledby="pv-title">
+  <div class="pv-head">
+    <h2 id="pv-title" class="pv-title" data-t="Privacy Notice">Privacy Notice</h2>
+  </div>
+  <p id="pv-note" class="pv-note" data-t="This notice is available in English and Arabic." hidden>This notice is available in English and Arabic.</p>
+  <div id="pv-body" class="pv-body"></div>
+  <button type="button" id="pv-close" class="back pv-close" data-t="Close">Close</button>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

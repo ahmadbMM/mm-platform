@@ -7,3 +7,8 @@ node_modules
 .DS_Store
 supabase/.temp
 *.tsbuildinfo
+
+# The registration forms: Playwright output, and the card screenshot card.spec.ts writes
+forms/*/test-results/
+forms/*/playwright-report/
+forms/petromin/card.png

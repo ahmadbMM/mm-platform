@@ -1,0 +1,12 @@
+{
+  "name": "forms-community",
+  "private": true,
+  "scripts": {
+    "sync": "node scripts/sync-shared.mjs",
+    "build": "node scripts/build.mjs",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}

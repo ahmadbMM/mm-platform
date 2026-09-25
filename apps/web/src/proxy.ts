@@ -8,6 +8,13 @@ import { alternateLinks, askedLang } from "./lib/lang-url";
 
 const intl = createMiddleware(routing);
 
+// The registration forms' addresses (see the matcher below).
+const FORM_ADDRESSES = ["/community/registration", "/petromin"];
+export function formAddress(pathname: string): string | null {
+  const p = pathname.toLowerCase().replace(/\/+$/, "");
+  return FORM_ADDRESSES.includes(p) ? p : null;
+}
+
 // The staff preview page; the staff page still opens it as /en/preview or /ar/preview.
 const PREVIEW_PAGE = /^(?:\/(?:en|ar))?\/preview\/?$/;
 
@@ -17,6 +24,10 @@ export default async function proxy(req: NextRequest) {
   // because those append the original query and would leave ?bike=42 sitting in the address
   // bar. The code belongs in the path or nowhere.
   const { pathname, searchParams } = req.nextUrl;
+  // The forms answer at one lower-case address each; a link typed or printed another way
+  // (/Petromin, /community/Registration/) is sent there, as their own Workers did.
+  const form = formAddress(pathname);
+  if (form && form !== pathname) return NextResponse.redirect(new URL(form + req.nextUrl.search, req.url), 301);
   if (pathname === "/") {
     const code = searchParams.get("bike");
     if (code && /^\d{1,6}$/.test(code)) {
@@ -54,4 +65,7 @@ export default async function proxy(req: NextRequest) {
 // never be handled as a site page. Those pages carry their own language cookie instead.
 // Only /b and /api themselves and what is under them: a bare "b" also caught /business, which
 // was a 404 once its address lost the /en in front.
-export const config = { matcher: ["/((?!api/|api$|b/|b$|_next|.*\\..*).*)"] };
+// The two registration forms are excluded too (app/community/registration, app/petromin): they
+// are public whatever Coming Soon says, and they carry their own languages. Their exact
+// addresses only - /Petromin and the like still come here and are sent to the real one.
+export const config = { matcher: ["/((?!api/|api$|b/|b$|_next|community/registration$|petromin$|.*\\..*).*)"] };

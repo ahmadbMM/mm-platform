@@ -1,0 +1,11 @@
+{
+  "name": "forms-petromin",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/merge-design.mjs",
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0"
+  }
+}
