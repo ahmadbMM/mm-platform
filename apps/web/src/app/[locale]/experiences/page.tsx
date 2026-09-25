@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import PageShell from "@/components/site/PageShell";
 import "@/components/experiences/experiences.css";
+import "@/components/booking/booking.css";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
@@ -10,9 +11,10 @@ import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import { riyadhClock } from "@/lib/workshop-days";
+import { fmtClock, fmtDayDate } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
-import { isRtl, intlOf } from "@/i18n/locales";
+import { isRtl } from "@/i18n/locales";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
@@ -56,14 +58,14 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
 
   const kindName = kindNames(d);
   const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
-  const day = (iso: string) => new Intl.DateTimeFormat(intlOf(locale), { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const all = upcoming(rides?.sessions ?? [], riyadhClock(new Date()));
   // The booking app's events (_evMatch): the circuit, the community rides, and the National Day
   // ride and the T100 workshop, which have cards of their own while they have dates.
   const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96" };
   const toStep = (s: RideSession): StepSession => ({
-    id: s.id, day: day(s.date), name: sessionName(s, kindName, enName, L !== "en"),
-    when: s.times ? { gather: s.gather, a: s.times[0], b: s.times[1] } : null,
+    // the booking app's session card: "Sunday · 26 Sept 2026", and its times in the rider's clock
+    id: s.id, kind: s.kind, day: fmtDayDate(s.date, locale), name: sessionName(s, kindName, enName, L !== "en"),
+    when: s.times ? { gather: s.gather, a: fmtClock(s.times[0], locale), b: fmtClock(s.times[1], locale) } : null,
     members: s.members, free: s.free, full: s.full, paid: !s.free, noCarbon: s.noCarbon,
   });
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count))).map(toStep);
@@ -77,6 +79,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),
     cont: S(st.continue), waitlist: S(d.waitlist), back: S(st.back), noDates: S(st.noDates), handoff: S(st.handoff),
     members: S(d.members), free: S(d.free), full: S(d.full), gather: S(d.gather), start: S(d.start), membersNote: S(d.membersNote), clubLink: S(d.clubLink),
+    available: tx("Available", "متاح"), waitlisted: tx("Waitlist", "قائمة الانتظار"),
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
   };
 

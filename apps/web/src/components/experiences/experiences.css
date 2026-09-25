@@ -99,12 +99,6 @@ html:is([lang="ar"], [lang="ur"]) .xs-picked { letter-spacing: 0; font-size: 13p
 html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size: 21px; letter-spacing: 0; }
 .xs-ev-meta { font-size: 13px; font-weight: 700; color: #57605a; margin-top: 8px; }
 
-.xs-dates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-.xs-date { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: start; background: #fff; color: #1a1919; border: 1.5px solid rgba(26, 25, 25, .18); border-radius: 12px; padding: 14px 16px; min-height: 64px; cursor: pointer; font: inherit; transition: border-color .2s ease, box-shadow .2s ease; }
-.xs-date:hover { border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
-.xs-day { font-size: 15px; font-weight: 700; }
-.xs-date strong { font-size: 14px; color: #077a4b; }
-.xs-time { color: #57605a; font-size: 13px; font-weight: 600; }
 .xs-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
 .xs-tags:empty { display: none; }
 .xs-tags em { font-style: normal; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: rgba(7, 122, 75, .1); color: #077a4b; }
@@ -127,7 +121,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs .xs-go:hover { background: #06603b; }
 .xs-handoff { color: #57605a; font-size: 13px; margin: 10px 0 0; }
 @media (max-width: 767px) {
-  .xs-dates, .xs-prices > div { grid-template-columns: 1fr; }
+  .xs-prices > div { grid-template-columns: 1fr; }
   .xs-event { padding: 20px; gap: 14px; min-height: 104px; }
   .xs-ev-title { font-size: 20px; }
   .xs-logo { height: 54px; }
