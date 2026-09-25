@@ -3,6 +3,10 @@
 import { useMemo, useState } from "react";
 import { cleanName, normalizePhone, rpc } from "@/lib/rpc-client";
 import { dayOptions, timesFor } from "@/lib/workshop-days";
+import { intlOf } from "@/i18n/locales";
+import { fmtSar } from "@/lib/fill";
+import { useLocalize } from "@/i18n/TxProvider";
+import { T } from "./WorkshopForm.text";
 
 // The Workshop request card (Workshop.dc.html, right column). The customer picks how the bike
 // gets to us, a service (or describes the problem and gets one suggested), optional parts, a
@@ -22,38 +26,11 @@ export type WorkshopFormProps = {
   doneTitle: string; doneText: string;
 };
 
-const T = {
-  en: {
-    lane: "How it's serviced", dropoff: "Drop off", dropoffSub: "You bring the bike in", wait: "While you wait", waitSub: "Quick fixes",
-    pickup: "Pickup & delivery", pickupSub: "We come to you", pickupAddr: "Pickup address", notSure: "Not sure? Describe the problem",
-    notSureHint: "Pick one and we'll suggest the right service.", suggested: "Suggested", included: "What's included", free: "Free",
-    about: (m: number) => `~${m} min`, parts: "Add parts (optional)", day: "Preferred day", time: "Preferred time", name: "Your name",
-    phone: "Mobile number", bike: "Your bike (e.g. ALVAS DA54 AL)", notes: "Anything we should know? (optional)", total: "Estimated total",
-    send: "Send request", sending: "Sending…", ref: "Your reference", another: "Request another",
-    code: "Have a code?", apply: "Apply", codeOn: (c: string, d: string) => `Code ${c}: ${d} off`, codeBad: "That code isn't valid.", codeRemove: "Remove",
-    errors: { name: "Enter your name - letters and spaces only.", phone: "Check the mobile number, e.g. 05XXXXXXXX.", service: "Pick a service.",
-      day: "Pick a day.", pickup_address: "Add the pickup address.", throttled: "Too many requests from this network - try again in a few minutes.",
-      generic: "It could not be sent. Check the connection and try again." } as Record<string, string>,
-  },
-  ar: {
-    lane: "طريقة الخدمة", dropoff: "إحضار للورشة", dropoffSub: "أنت تُحضر الدراجة", wait: "انتظار سريع", waitSub: "إصلاحات سريعة",
-    pickup: "استلام وتوصيل", pickupSub: "نأتي إليك", pickupAddr: "عنوان الاستلام", notSure: "غير متأكد؟ صف المشكلة",
-    notSureHint: "اختر عرضاً ونقترح الخدمة المناسبة.", suggested: "مقترح", included: "ماذا يشمل", free: "مجاناً",
-    about: (m: number) => `~${m} دقيقة`, parts: "أضف قطعاً (اختياري)", day: "اليوم المفضل", time: "الوقت المفضل", name: "اسمك",
-    phone: "رقم الجوال", bike: "دراجتك (مثال: ALVAS DA54 AL)", notes: "أي تفاصيل تهمنا؟ (اختياري)", total: "الإجمالي التقريبي",
-    send: "أرسل الطلب", sending: "جارٍ الإرسال…", ref: "رقم طلبك", another: "طلب آخر",
-    code: "لديك كود؟", apply: "تطبيق", codeOn: (c: string, d: string) => `الكود ${c}: خصم ${d}`, codeBad: "هذا الكود غير صالح.", codeRemove: "إزالة",
-    errors: { name: "أدخل اسمك - حروف ومسافات فقط.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.", service: "اختر خدمة.",
-      day: "اختر يوماً.", pickup_address: "أضف عنوان الاستلام.", throttled: "طلبات كثيرة من هذه الشبكة - حاول بعد دقائق.",
-      generic: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً." } as Record<string, string>,
-  },
-};
 
 type Lane = "dropoff" | "wait" | "pickup";
 
 export default function WorkshopForm(p: WorkshopFormProps) {
-  const ar = p.locale === "ar";
-  const t = ar ? T.ar : T.en;
+  const t = useLocalize(T);
   const [lane, setLane] = useState<Lane>("dropoff");
   const [addr, setAddr] = useState("");
   const [svc, setSvc] = useState(0);
@@ -73,11 +50,11 @@ export default function WorkshopForm(p: WorkshopFormProps) {
   const [promo, setPromo] = useState<{ code: string; kind: string; value: number } | null>(null);
   const [codeErr, setCodeErr] = useState("");
 
-  const money = (n: number) => (n === 0 ? t.free : ar ? `${n.toLocaleString("ar-SA-u-nu-latn")} ر.س` : `SAR ${n.toLocaleString("en-US")}`);
+  const money = (n: number) => (n === 0 ? t.free : fmtSar(n, p.locale));
   const dayList = useMemo(() => {
-    const fmt = new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+    const fmt = new Intl.DateTimeFormat(intlOf(p.locale), { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
     return dayOptions(p.now, p.days, p.fridayClosed, p.times, p.closeHour).map((iso) => ({ iso, label: fmt.format(new Date(`${iso}T00:00:00Z`)) }));
-  }, [ar, p.now, p.days, p.fridayClosed, p.times, p.closeHour]);
+  }, [p.locale, p.now, p.days, p.fridayClosed, p.times, p.closeHour]);
   const timeList = day ? timesFor(day, p.now, p.times) : p.times;
   function pickDay(iso: string) {
     setDay(iso);
@@ -122,7 +99,7 @@ export default function WorkshopForm(p: WorkshopFormProps) {
           name: nm, phone: ph, service: service.id, service_label: service.name, price: total, // the estimate the customer saw
           parts: p.parts.filter((x) => parts[x.id]).map((x) => ({ id: x.id, label: x.label, price: x.price })),
           lane, pickup_address: lane === "pickup" ? addr.trim() : "", preferred_date: day, preferred_time: time,
-          bike: bike.trim(), notes: notes.trim(), lang: ar ? "ar" : "en", code: promo ? promo.code : "",
+          bike: bike.trim(), notes: notes.trim(), lang: (p.locale === "ar" ? "ar" : "en"), code: promo ? promo.code : "",
         },
       });
       if (r.ok && r.ref) setDone(r.ref);

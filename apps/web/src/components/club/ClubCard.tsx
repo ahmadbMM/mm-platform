@@ -3,28 +3,18 @@
 import { useEffect, useRef, useState } from "react";
 import { normalizePhone, rpc } from "@/lib/rpc-client";
 import { fmtNum } from "@/lib/fill";
+import { intlOf } from "@/i18n/locales";
+import { useLocalize } from "@/i18n/TxProvider";
+import { T } from "./ClubCard.text";
 
 // A member's card (club_card): the email and mobile of their Micromobility account open it.
 // Credits and the tier come from their real rides. A signed-in rider's email and mobile are
 // passed in (/account, /club), and the card opens by itself.
 type Card = { ok: boolean; error?: string; member?: boolean; first_name?: string; since?: string | null; credits?: number; tier?: number; next?: number | null; rides?: number };
 type Props = { locale: string; title: string; text: string; notMember: string; applyBtn: string; applyHref: string; tierNames: [string, string, string]; email?: string; phone?: string };
-const T = {
-  en: {
-    email: "Email", phone: "Mobile number", open: "Open my card", opening: "Opening…", label: "Membership card", credits: "ride credits",
-    since: "Member since", rides: (n: string) => `${n} rides completed`, toNext: (n: string, t: string) => `${n} credits to reach ${t}`, top: "Top tier - enjoy every perk",
-    close: "Close my card", errors: { not_found: "Enter the email and the mobile number.", throttled: "Too many tries - wait a few minutes.", generic: "It could not be opened. Check the connection and try again." } as Record<string, string>,
-  },
-  ar: {
-    email: "البريد الإلكتروني", phone: "رقم الجوال", open: "افتح بطاقتي", opening: "جارٍ الفتح…", label: "بطاقة العضوية", credits: "رصيد ركوب",
-    since: "عضو منذ", rides: (n: string) => `${n} رحلة مكتملة`, toNext: (n: string, t: string) => `${n} رصيد للوصول إلى ${t}`, top: "أعلى مستوى - استمتع بكل المزايا",
-    close: "أغلق بطاقتي", errors: { not_found: "أدخل البريد الإلكتروني ورقم الجوال.", throttled: "محاولات كثيرة - انتظر دقائق.", generic: "تعذّر الفتح. تحقق من الاتصال وحاول مجدداً." } as Record<string, string>,
-  },
-};
 
 export default function ClubCard(p: Props) {
-  const ar = p.locale === "ar";
-  const t = ar ? T.ar : T.en;
+  const t = useLocalize(T);
   const [email, setEmail] = useState(p.email ?? "");
   const [phone, setPhone] = useState(p.phone ?? "");
   const [busy, setBusy] = useState(false);
@@ -53,7 +43,7 @@ export default function ClubCard(p: Props) {
   if (card && card.member) {
     const tier = card.tier ?? 0, credits = card.credits ?? 0, next = card.next ?? null;
     const pct = tier >= 2 || !next ? 100 : Math.min(100, Math.round((credits / next) * 100));
-    const since = card.since ? new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date(card.since)) : "";
+    const since = card.since ? new Intl.DateTimeFormat(intlOf(p.locale), { month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date(card.since)) : "";
     return (
       <div className="club-mine">
         <div className={`club-cardviz tier-${tier}`}>

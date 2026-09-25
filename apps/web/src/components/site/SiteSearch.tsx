@@ -1,13 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { NAV_LINKS, pick } from "@/lib/links";
+import { NAV_LINKS } from "@/lib/links";
+import { useL } from "@/i18n/TxProvider";
+import { localeInfo } from "@/i18n/locales";
+import { phrase } from "@/i18n/tx";
 
-// The header's search (SiteNav.dc.html): finds this site's pages by their names and what they are
-// about, in English and Arabic. Pages staff have switched off are not offered.
+// The header's search (SiteNav.dc.html): finds this site's pages by their names - in English,
+// Arabic and the page's language - and by what they are about. Pages staff have switched off are
+// not offered.
 const EXTRA = [
-  { key: "privacy", href: "/privacy", en: "Privacy Notice", ar: "إشعار الخصوصية" },
-  { key: "account", href: "/account", en: "My Account", ar: "حسابي" },
+  { key: "privacy", href: "/privacy", ...phrase("Privacy Notice", "إشعار الخصوصية") },
+  { key: "account", href: "/account", ...phrase("My Account", "حسابي") },
 ];
 const WORDS: Record<string, string> = {
   store: "shop buy bikes accessories helmet gear متجر شراء دراجات إكسسوارات",
@@ -27,7 +31,8 @@ const WORDS: Record<string, string> = {
 };
 
 export default function SiteSearch({ locale, hidden, onClose }: { locale: string; hidden: string[]; onClose: () => void }) {
-  const ar = locale === "ar";
+  const tx = useL();
+  const info = localeInfo(locale);
   const [q, setQ] = useState("");
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => {
@@ -38,22 +43,22 @@ export default function SiteSearch({ locale, hidden, onClose }: { locale: string
   }, [onClose]);
   const pages = [...NAV_LINKS, ...EXTRA].filter((p) => !hidden.includes(p.key));
   const needle = q.trim().toLowerCase();
-  const found = needle ? pages.filter((p) => `${p.en} ${p.ar} ${WORDS[p.key] ?? ""}`.toLowerCase().includes(needle)) : pages;
+  const found = needle ? pages.filter((p) => `${p.en} ${p.ar} ${tx(p.en, p.ar)} ${WORDS[p.key] ?? ""}`.toLowerCase().includes(needle)) : pages;
   return (
-    <div className="mm-search" role="dialog" aria-modal="true" aria-label={ar ? "بحث" : "Search"} dir={ar ? "rtl" : "ltr"}>
+    <div className="mm-search" role="dialog" aria-modal="true" aria-label={tx("Search", "بحث")} dir={info.dir}>
       <div className="mm-search-box">
         <div className="mm-search-row">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.8-3.8" /></svg>
-          <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder={ar ? "ابحث في الموقع" : "Search the site"} aria-label={ar ? "ابحث في الموقع" : "Search the site"} />
-          <button type="button" onClick={onClose} aria-label={ar ? "إغلاق" : "Close"}>×</button>
+          <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder={tx("Search the site", "ابحث في الموقع")} aria-label={tx("Search the site", "ابحث في الموقع")} />
+          <button type="button" onClick={onClose} aria-label={tx("Close", "إغلاق")}>×</button>
         </div>
         <div className="mm-search-list">
-          {found.length === 0 ? <p>{ar ? "لا نتائج." : "Nothing found."}</p> : found.map((p) => (
-            <a key={p.key} href={p.href} onClick={onClose}>{pick(p, locale)}<span aria-hidden="true">{ar ? "←" : "→"}</span></a>
+          {found.length === 0 ? <p>{tx("Nothing found.", "لا نتائج.")}</p> : found.map((p) => (
+            <a key={p.key} href={p.href} onClick={onClose}>{tx(p.en, p.ar)}<span aria-hidden="true">{info.dir === "rtl" ? "←" : "→"}</span></a>
           ))}
         </div>
       </div>
-      <button type="button" className="mm-search-scrim" aria-label={ar ? "إغلاق" : "Close"} onClick={onClose} />
+      <button type="button" className="mm-search-scrim" aria-label={tx("Close", "إغلاق")} onClick={onClose} />
     </div>
   );
 }

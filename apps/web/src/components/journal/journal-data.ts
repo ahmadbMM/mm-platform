@@ -3,6 +3,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { toPosts, type Post } from "@/lib/journal";
 import { pageState } from "@/lib/page-state";
 import { loadJournalContent } from "@/lib/site";
+import { intlOf } from "@/i18n/locales";
 
 // What both Journal pages need: the page state, and the Journal's own content (read apart from
 // the rest of the site's content, see loadJournalContent), resolved for the page's language.
@@ -17,5 +18,5 @@ export async function journalState(locale: string) {
   return { ...state, content, L, j, posts };
 }
 
-export const fmtDate = (iso: string, ar: boolean) =>
-  iso ? new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`)) : "";
+export const fmtDate = (iso: string, locale: string) =>
+  iso ? new Intl.DateTimeFormat(intlOf(locale), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`)) : "";

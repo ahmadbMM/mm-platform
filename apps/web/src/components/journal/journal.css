@@ -1,14 +1,14 @@
 /* The Journal - from Journal.dc.html (Claude Design launch package). */
 .jr { background: #fbf9f4; padding: 80px 7vw 70px; }
 .jr-eyebrow { color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 12px; }
-html[lang="ar"] .jr-eyebrow { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .jr-eyebrow { letter-spacing: 0; font-size: 13px; }
 .jr h1 { font-size: clamp(42px, 5.6vw, 80px); line-height: .94; letter-spacing: -2.6px; margin: 0 0 16px; max-width: 900px; }
 .jr-lead { color: #57605a; font-size: 18px; line-height: 1.65; margin: 0 0 30px; max-width: 680px; text-wrap: pretty; }
 .jr-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 28px; }
 .jr .jr-chips a { min-height: 40px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .2); display: inline-flex; align-items: center; color: #4a534c; font-size: 13.5px; font-weight: 700; }
 .jr .jr-chips a[aria-current="page"] { background: #03ff89; border-color: #03ff89; color: #1a1919; }
 .jr-meta { display: block; color: #077a4b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
-html[lang="ar"] .jr-meta { letter-spacing: 0; }
+html:is([lang="ar"], [lang="ur"]) .jr-meta { letter-spacing: 0; }
 .jr-cover { border-radius: 20px; background: #dfe5df center / cover no-repeat; }
 .jr .jr-feature { display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 28px; padding: 18px; margin-bottom: 18px; transition: border-color .2s ease; }
 .jr .jr-feature:hover { border-color: rgba(7, 122, 75, .5); }

@@ -7,6 +7,7 @@ import { HELP_TOPICS, helpSchema } from "@/content/pages/help";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { pageState } from "@/lib/page-state";
+import { serverL } from "@/i18n/dicts";
 
 // micromobility.sa/help - answers, WhatsApp and a call, and a message form whose messages land in
 // the staff page (Messages).
@@ -33,7 +34,7 @@ export default async function HelpPage({ params }: { params: Promise<{ locale: s
   })).filter((x) => x.items.length > 0);
   const phone = S(site.contact.phone).replace(/[^\d+]/g, "");
   const wa = S(site.social.whatsapp) || (phone ? `https://wa.me/${phone.replace(/\D/g, "")}` : "");
-  const ar = L === "ar";
+  const tx = serverL(locale);
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <section className="hp">
@@ -53,8 +54,8 @@ export default async function HelpPage({ params }: { params: Promise<{ locale: s
               <p>{S(h.contact.ctaText)}</p>
             </div>
             <div className="hp-cta-btns">
-              {wa && <a className="wa" href={wa} target="_blank" rel="noopener noreferrer">{ar ? "واتساب" : "WhatsApp us"}</a>}
-              {phone && <a className="call" href={`tel:${phone}`}>{ar ? "اتصل بنا" : "Call us"}</a>}
+              {wa && <a className="wa" href={wa} target="_blank" rel="noopener noreferrer">{tx("WhatsApp us", "واتساب")}</a>}
+              {phone && <a className="call" href={`tel:${phone}`}>{tx("Call us", "اتصل بنا")}</a>}
             </div>
           </div>
         )}

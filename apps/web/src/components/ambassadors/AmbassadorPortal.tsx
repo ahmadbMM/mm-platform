@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { normalizePhone, rpc } from "@/lib/rpc-client";
 import { fill, fmtNum } from "@/lib/fill";
+import { intlOf } from "@/i18n/locales";
+import { useLocalize } from "@/i18n/TxProvider";
+import { T } from "./AmbassadorPortal.text";
 
 // An ambassador's card (ambassador_portal): their code and the mobile they applied with open it.
 // Points, the tier and what earned them come from the database; rewards are asked for here and
@@ -26,30 +29,9 @@ type Props = {
   rewards: { label: string; cost: number; idx: number }[];
 };
 
-const T = {
-  en: {
-    code: "Your code", phone: "Mobile number", open: "Open my card", opening: "Opening…", card: "Ambassador card",
-    points: "Points", pending: "Pending", uses: "Uses", copy: "Copy", copied: "Copied ✓", share: "Share your code on WhatsApp",
-    toNext: (n: string, t: string) => `${n} pts to reach ${t}`, top: "Top tier - full perks", paused: "Your code is paused - the team will be in touch.",
-    ledger: "Referral ledger", ledgerEmpty: "No uses yet - share your code and every booking made with it shows up here.",
-    confirmed: "Confirmed", pendingSt: "Pending", voided: "Voided", redeem: "Redeem", requested: "Asked for", given: "Handed over", redemption: "Reward",
-    redeemed: "Asked for - the team hands it over in store.", notEnough: "Not enough points yet.", close: "Close my card",
-    errors: { not_found: "No active ambassador has that code and mobile.", throttled: "Too many tries - wait a few minutes.", generic: "It could not be opened. Check the connection and try again." } as Record<string, string>,
-  },
-  ar: {
-    code: "كودك", phone: "رقم الجوال", open: "افتح بطاقتي", opening: "جارٍ الفتح…", card: "بطاقة السفير",
-    points: "النقاط", pending: "قيد التأكيد", uses: "الاستخدامات", copy: "انسخ", copied: "تم النسخ ✓", share: "شارك كودك عبر واتساب",
-    toNext: (n: string, t: string) => `${n} نقطة للوصول إلى ${t}`, top: "أعلى مستوى - كل المزايا", paused: "كودك موقوف مؤقتاً - سيتواصل معك الفريق.",
-    ledger: "سجل الإحالات", ledgerEmpty: "لا استخدامات بعد - شارك كودك وسيظهر هنا كل حجز يُستخدم فيه.",
-    confirmed: "مؤكدة", pendingSt: "قيد التأكيد", voided: "ملغاة", redeem: "استبدال", requested: "مطلوبة", given: "تم التسليم", redemption: "مكافأة",
-    redeemed: "تم الطلب - يسلّمها الفريق في المتجر.", notEnough: "النقاط غير كافية بعد.", close: "أغلق بطاقتي",
-    errors: { not_found: "لا يوجد سفير نشط بهذا الكود والجوال.", throttled: "محاولات كثيرة - انتظر دقائق.", generic: "تعذّر الفتح. تحقق من الاتصال وحاول مجدداً." } as Record<string, string>,
-  },
-};
 
 export default function AmbassadorPortal(p: Props) {
-  const ar = p.locale === "ar";
-  const t = ar ? T.ar : T.en;
+  const t = useLocalize(T);
   const [code, setCode] = useState("");
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
@@ -95,7 +77,7 @@ export default function AmbassadorPortal(p: Props) {
   const wa = `https://wa.me/?text=${encodeURIComponent(fill(p.share, { code: data.code || "", discount: p.discount }))}`;
   const ctx: Record<string, string> = { rental: p.labels.rental, workshop: p.labels.workshop, event: p.labels.event };
   const st: Record<string, string> = { confirmed: t.confirmed, pending: t.pendingSt, void: t.voided, requested: t.requested, given: t.given };
-  const day = (iso: string) => new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date(iso));
+  const day = (iso: string) => new Intl.DateTimeFormat(intlOf(p.locale), { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date(iso));
   const ledger = [
     ...(data.events || []).map((e) => ({ at: e.at, label: ctx[e.context] || e.context, pts: e.points, status: e.status })),
     ...(data.redemptions || []).map((r) => ({ at: r.at, label: `${t.redemption} · ${r.item}`, pts: -r.points, status: r.status })),

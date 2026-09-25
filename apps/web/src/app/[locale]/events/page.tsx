@@ -9,6 +9,8 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { riyadhClock } from "@/lib/workshop-days";
+import { serverL } from "@/i18n/dicts";
+import { intlOf } from "@/i18n/locales";
 
 // micromobility.sa/events - every upcoming session in the booking system, month by month, each
 // booked in the booking app; sessions are named the way /experiences names them.
@@ -28,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function EventsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const L = asLocale(locale);
-  const ar = L === "ar";
+  const tx = serverL(locale);
   const [{ content, previewing, hidden }, rides] = await Promise.all([pageState("events"), loadRides()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(eventsSchema, content, L);
@@ -36,9 +38,9 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
   const kindName = kindNames(d), enName = kindNames(dEn);
-  const name = (s: RideSession) => sessionName(s, kindName, enName, ar);
+  const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en");
   const sessions = upcoming(rides?.sessions ?? [], riyadhClock(new Date())).slice(0, Math.max(1, N(c.hero.count)));
-  const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { ...o, timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
+  const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(intlOf(locale), { ...o, timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const months: { key: string; label: string; items: RideSession[] }[] = [];
   for (const s of sessions) {
     const key = s.date.slice(0, 7);
@@ -95,7 +97,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
             <div className="pg-places">
               {places.map((p, i) => (
                 <a key={i} href={S(p.href) || undefined} target="_blank" rel="noopener noreferrer">
-                  <strong>{S(p.name)}</strong>{S(p.text) && <span>{S(p.text)}</span>}{S(p.href) && <em>{ar ? "الاتجاهات ←" : "Directions →"}</em>}
+                  <strong>{S(p.name)}</strong>{S(p.text) && <span>{S(p.text)}</span>}{S(p.href) && <em>{tx("Directions →", "الاتجاهات ←")}</em>}
                 </a>
               ))}
             </div>

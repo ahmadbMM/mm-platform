@@ -1,11 +1,14 @@
 import type { Bi, Field, ItemField, ItemValue, PageSchema, Section } from "@/content/types";
 import type { SiteContent } from "@/lib/site";
+import { dictOf } from "../i18n/dicts";
+import { tr } from "../i18n/tx";
 
 // Reads a page's content: what staff saved in site_content, else the schema's default. Every
 // value is checked against its field's type, so a malformed row can never break a page - it
 // reads as the default instead.
 
-export type Locale = "en" | "ar";
+export type { Locale } from "../i18n/locales";
+import { LOCALE_CODES, type Locale } from "../i18n/locales";
 
 const isBi = (v: unknown): v is Bi =>
   !!v && typeof v === "object" && typeof (v as Bi).en === "string" && typeof (v as Bi).ar === "string";
@@ -19,6 +22,13 @@ export function fieldValue(field: ItemField, raw: unknown, locale: Locale): stri
         const m = isBi(raw) ? raw.en.trim() || raw.ar.trim() : "";
         if (m) return m;
         return field.optional && isBi(raw) ? "" : field.def.en || field.def.ar;
+      }
+      if (locale !== "en" && locale !== "ar") {
+        // A translated language: a version staff wrote for it, else the English translated
+        // (src/i18n/tx), else the English itself.
+        const own = raw && typeof raw === "object" ? (raw as Record<string, unknown>)[locale] : undefined;
+        if (typeof own === "string" && own.trim()) return own.trim();
+        return tr(locale, dictOf(locale), fieldValue(field, raw, "en") as string);
       }
       const v = isBi(raw) ? raw[locale].trim() : "";
       if (v) return v;
@@ -81,4 +91,4 @@ export function resolveSection(page: string, s: Section, content: SiteContent | 
   return sec;
 }
 
-export const asLocale = (l: string): Locale => (l === "ar" ? "ar" : "en");
+export const asLocale = (l: string): Locale => ((LOCALE_CODES as readonly string[]).includes(l) ? (l as Locale) : "en");

@@ -3,7 +3,7 @@
 .hp-ghost { position: absolute; top: -12px; inset-inline-end: -1.5%; font-size: clamp(90px, 15vw, 230px); font-weight: 800; letter-spacing: -8px; line-height: .8; color: rgba(10, 13, 9, .04); pointer-events: none; user-select: none; white-space: nowrap; z-index: 0; }
 .hp > * { position: relative; z-index: 1; }
 .hp-eyebrow { color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 12px; }
-html[lang="ar"] .hp-eyebrow { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .hp-eyebrow { letter-spacing: 0; font-size: 13px; }
 .hp h1 { font-size: clamp(38px, 5vw, 64px); line-height: .94; letter-spacing: -2px; margin: 0 0 10px; }
 .hp-lead { color: #57605a; font-size: 16px; line-height: 1.65; margin: 0 0 30px; max-width: 560px; }
 .hp-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 34px; }

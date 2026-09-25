@@ -4,12 +4,15 @@ import "@/components/experiences/experiences.css";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
-import { fmtNum } from "@/lib/fill";
+import { fmtSar } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import { riyadhClock } from "@/lib/workshop-days";
+import { serverL } from "@/i18n/dicts";
+import { phrase } from "@/i18n/tx";
+import { isRtl, intlOf } from "@/i18n/locales";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
@@ -21,22 +24,22 @@ const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 
 // The booking app's bike types, in the order a rider meets them there.
 const TYPE_ORDER = ["Road", "Hybrid", "Mountain", "Road Carbon", "Kids", "Gravel", "Any"];
-const TYPE_NAME: Record<string, [string, string]> = {
-  Road: ["Road", "طريق"], Hybrid: ["Hybrid", "هجين"], Mountain: ["Mountain", "جبلي"], "Road Carbon": ["Road Carbon", "طريق كربون"],
-  Kids: ["Kids", "أطفال"], Gravel: ["Gravel", "حصى"], Any: ["No preference", "بلا تفضيل"],
+const TYPE_NAME: Record<string, { en: string; ar: string }> = {
+  Road: phrase("Road", "طريق"), Hybrid: phrase("Hybrid", "هجين"), Mountain: phrase("Mountain", "جبلي"), "Road Carbon": phrase("Road Carbon", "طريق كربون"),
+  Kids: phrase("Kids", "أطفال"), Gravel: phrase("Gravel", "حصى"), Any: phrase("No preference", "بلا تفضيل"),
 };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { content, closed } = await pageState("experiences");
   const c = resolvePage(experiencesSchema, content, asLocale(locale));
-  return { title: `${locale === "ar" ? "التجارب" : "Experiences"} · Micromobility`, description: S(c.hero.text), robots: closed ? { index: false, follow: false } : undefined };
+  return { title: `${serverL(locale)("Experiences", "التجارب")} · Micromobility`, description: S(c.hero.text), robots: closed ? { index: false, follow: false } : undefined };
 }
 
 export default async function ExperiencesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const L = asLocale(locale);
-  const ar = L === "ar";
+  const tx = serverL(locale);
   const [{ content, previewing, hidden }, rides] = await Promise.all([pageState("experiences"), loadRides()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(experiencesSchema, content, L);
@@ -47,19 +50,19 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     const i = (t: string) => (TYPE_ORDER.indexOf(t) + 1 || 99);
     return i(a.type) - i(b.type) || a.type.localeCompare(b.type);
   });
-  const sar = (n: number) => (ar ? `${fmtNum(n, locale)} ر.س` : `SAR ${fmtNum(n, locale)}`);
+  const sar = (n: number) => fmtSar(n, locale);
   // "No preference" rides whatever bike is free: from its own price up to the dearest standard bike
   const anyTop = Math.max(0, ...prices.filter((p) => ["Road", "Hybrid", "Mountain"].includes(p.type)).map((p) => p.price));
 
   const kindName = kindNames(d);
-  const enName = ar ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
-  const day = (iso: string) => new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
+  const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
+  const day = (iso: string) => new Intl.DateTimeFormat(intlOf(locale), { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const all = upcoming(rides?.sessions ?? [], riyadhClock(new Date()));
   // The booking app's events (_evMatch): the circuit, the community rides, and the National Day
   // ride and the T100 workshop, which have cards of their own while they have dates.
   const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96" };
   const toStep = (s: RideSession): StepSession => ({
-    id: s.id, day: day(s.date), name: sessionName(s, kindName, enName, ar),
+    id: s.id, day: day(s.date), name: sessionName(s, kindName, enName, L !== "en"),
     when: s.times ? { gather: s.gather, a: s.times[0], b: s.times[1] } : null,
     members: s.members, free: s.free, full: s.full, paid: !s.free, noCarbon: s.noCarbon,
   });
@@ -89,14 +92,14 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
           <h1>{S(c.hero.title)}</h1>
           <p className="xp-hero-text">{S(c.hero.text)}</p>
           <div className="xp-btns">
-            <a className="xp-btn" href="#book">{S(c.hero.bookBtn)} <span aria-hidden="true">{ar ? "←" : "→"}</span></a>
+            <a className="xp-btn" href="#book">{S(c.hero.bookBtn)} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a>
           </div>
         </section>
 
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
             <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={localHref("/club", locale)} text={text}
-              prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? TYPE_NAME[p.type][ar ? 1 : 0] : p.type, price: p.price > 0 ? (p.type === "Any" && anyTop > p.price ? `${sar(p.price)} – ${sar(anyTop)}` : sar(p.price)) : S(d.free) }))} />
+              prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? (p.type === "Any" && anyTop > p.price ? `${sar(p.price)} – ${sar(anyTop)}` : sar(p.price)) : S(d.free) }))} />
           </section>
 
           {good.length > 0 && (
@@ -110,7 +113,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
 
           <div className="xp-btns xp-end">
             {directions && S(c.good.directions) && <a className="xp-btn line" href={directions} target="_blank" rel="noopener">{S(c.good.directions)}</a>}
-            {whatsapp && <a className="xp-btn line" href={whatsapp} target="_blank" rel="noopener">{ar ? "واتساب" : "WhatsApp"}</a>}
+            {whatsapp && <a className="xp-btn line" href={whatsapp} target="_blank" rel="noopener">{tx("WhatsApp", "واتساب")}</a>}
           </div>
         </div>
       </div>

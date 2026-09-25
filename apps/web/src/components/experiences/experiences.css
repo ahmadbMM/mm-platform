@@ -58,8 +58,8 @@
 
 .xp-end { border-top: 2px solid #1a1919; padding-top: 24px; }
 
-html[lang="ar"] :is(.xp-eyebrow, .xp-label, .xp-kind, .xp-date-day) { letter-spacing: 0; }
-html[lang="ar"] .xp-eyebrow { font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) :is(.xp-eyebrow, .xp-label, .xp-kind, .xp-date-day) { letter-spacing: 0; }
+html:is([lang="ar"], [lang="ur"]) .xp-eyebrow { font-size: 13px; }
 
 @media (max-width: 767px) {
   .xp-hero { min-height: 58svh; padding: 64px 20px 40px; }
@@ -82,7 +82,7 @@ html[lang="ar"] .xp-eyebrow { font-size: 13px; }
 .xs-bar li.cur .xs-lbl { color: #1a1919; }
 .xs-title { font-size: clamp(26px, 3vw, 36px); letter-spacing: -1.2px; margin: 0 0 20px; line-height: 1.05; }
 .xs-picked { margin: 0 0 6px; color: #077a4b; font-size: 12px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; }
-html[lang="ar"] .xs-picked { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .xs-picked { letter-spacing: 0; font-size: 13px; }
 .xs-back { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; margin: 0 0 18px; min-height: 36px; color: #57605a; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; }
 .xs-back:hover { color: #077a4b; }
 
@@ -96,7 +96,7 @@ html[lang="ar"] .xs-picked { letter-spacing: 0; font-size: 13px; }
 .xs-logo.small { height: 40px; }
 .xs-copy { display: flex; flex-direction: column; min-width: 0; }
 .xs-ev-title { font-weight: 700; text-transform: uppercase; font-size: 24px; letter-spacing: .3px; line-height: 1.1; }
-html[lang="ar"] .xs-ev-title { text-transform: none; font-size: 21px; letter-spacing: 0; }
+html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size: 21px; letter-spacing: 0; }
 .xs-ev-meta { font-size: 13px; font-weight: 700; color: #57605a; margin-top: 8px; }
 
 .xs-dates { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }

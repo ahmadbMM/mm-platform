@@ -2,6 +2,7 @@
 // names one: a link shared in Arabic, the booking app's own ?lang=, and the per-language
 // addresses search engines are given.
 import { routing } from "../i18n/routing";
+import { localeInfo } from "../i18n/locales";
 
 export type Lang = (typeof routing.locales)[number];
 
@@ -22,7 +23,8 @@ export function alternateLinks(url: URL): string {
     return u.toString();
   };
   return [
-    ...routing.locales.map((l) => `<${at(l)}>; rel="alternate"; hreflang="${l}"`),
+    // hreflang names the language as the page does (<html lang>): zh-Hans, not zh.
+    ...routing.locales.map((l) => `<${at(l)}>; rel="alternate"; hreflang="${localeInfo(l).html}"`),
     `<${at(null)}>; rel="alternate"; hreflang="x-default"`,
   ].join(", ");
 }

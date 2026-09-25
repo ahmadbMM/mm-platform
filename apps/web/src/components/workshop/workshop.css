@@ -4,7 +4,7 @@
 .ws-grid { padding: 70px 6vw 90px; display: grid; grid-template-columns: 1fr 1.05fr; grid-template-rows: auto 1fr; grid-template-areas: "intro form" "track form"; column-gap: 48px; row-gap: 20px; align-items: start; }
 .ws-intro { grid-area: intro; }
 .ws-eyebrow { display: block; color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 14px; }
-html[lang="ar"] .ws-eyebrow { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .ws-eyebrow { letter-spacing: 0; font-size: 13px; }
 .ws-grid h1 { font-size: clamp(42px, 5vw, 76px); line-height: .92; letter-spacing: -3px; margin: 0 0 18px; }
 .ws-lead { color: #57605a; font-size: 17.5px; line-height: 1.65; max-width: 520px; margin: 0 0 26px; }
 .ws-features { display: flex; flex-direction: column; gap: 8px; margin: 0 0 28px; padding: 0; list-style: none; color: #4a534c; font-size: 15px; }

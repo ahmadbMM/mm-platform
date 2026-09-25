@@ -4,9 +4,10 @@ import "@/components/pages/pages.css";
 import { routesSchema } from "@/content/pages/routes";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
-import { fmtNum } from "@/lib/fill";
+import { fmtNum, fill } from "@/lib/fill";
 import { localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
+import { serverL } from "@/i18n/dicts";
 
 // micromobility.sa/routes - places to ride in and around Jeddah, each with a map link.
 type Sec = Record<string, unknown>;
@@ -24,13 +25,17 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function RoutesPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   const L = asLocale(locale);
-  const ar = L === "ar";
+  const tx = serverL(locale);
   const { content, previewing, hidden } = await pageState("routes");
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(routesSchema, content, L);
   const routes = list(c.routes.items).filter((r) => S(r.name));
   const n = (v: number) => fmtNum(v, locale);
-  const time = (m: number) => (m >= 60 ? (ar ? `${n(Math.floor(m / 60))} س ${m % 60 ? `${n(m % 60)} د` : ""}` : `${Math.floor(m / 60)} h${m % 60 ? ` ${m % 60} min` : ""}`) : ar ? `${n(m)} د` : `${m} min`).trim();
+  const time = (m: number) => {
+    const h = Math.floor(m / 60), rest = m % 60;
+    if (m < 60) return fill(tx("{m} min", "{m} د"), { m: n(m) });
+    return rest ? fill(tx("{h} h {m} min", "{h} س {m} د"), { h: n(h), m: n(rest) }) : fill(tx("{h} h", "{h} س"), { h: n(h) });
+  };
   const ctaHref = S(c.cta.href);
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
@@ -41,10 +46,10 @@ export default async function RoutesPage({ params }: { params: Promise<{ locale:
         <div className="pg-routes">
           {routes.map((r, i) => {
             const stats = [
-              N(r.km) > 0 && [ar ? "المسافة" : "Distance", ar ? `${n(N(r.km))} كم` : `${n(N(r.km))} km`],
-              N(r.climb) > 0 && [ar ? "الصعود" : "Climb", ar ? `${n(N(r.climb))} م` : `${n(N(r.climb))} m`],
-              N(r.minutes) > 0 && [ar ? "الوقت" : "Time", time(N(r.minutes))],
-              S(r.surface) && [ar ? "السطح" : "Surface", S(r.surface)],
+              N(r.km) > 0 && [tx("Distance", "المسافة"), fill(tx("{n} km", "{n} كم"), { n: n(N(r.km)) })],
+              N(r.climb) > 0 && [tx("Climb", "الصعود"), fill(tx("{n} m", "{n} م"), { n: n(N(r.climb)) })],
+              N(r.minutes) > 0 && [tx("Time", "الوقت"), time(N(r.minutes))],
+              S(r.surface) && [tx("Surface", "السطح"), S(r.surface)],
             ].filter(Boolean) as [string, string][];
             return (
               <div key={i} className="pg-route">
@@ -54,7 +59,7 @@ export default async function RoutesPage({ params }: { params: Promise<{ locale:
                 </div>
                 {stats.length > 0 && <div className="pg-stats">{stats.map(([k, v]) => <span key={k}>{k}<strong>{v}</strong></span>)}</div>}
                 {S(r.text) && <p>{S(r.text)}</p>}
-                {S(r.href) && <a href={localHref(S(r.href), locale)} target={S(r.href).startsWith("/") ? undefined : "_blank"} rel="noopener noreferrer">{ar ? "افتح في الخرائط ←" : "Open in Maps →"}</a>}
+                {S(r.href) && <a href={localHref(S(r.href), locale)} target={S(r.href).startsWith("/") ? undefined : "_blank"} rel="noopener noreferrer">{tx("Open in Maps →", "افتح في الخرائط ←")}</a>}
               </div>
             );
           })}

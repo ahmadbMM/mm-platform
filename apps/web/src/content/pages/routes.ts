@@ -46,7 +46,7 @@ export const routesSchema: PageSchema = {
               ["A slow, flat ride through old Jeddah - coral-stone houses, the souq and coffee stops.", "جولة هادئة ومسطّحة في جدة القديمة - بيوت الحجر المنقبي والسوق ومحطات القهوة."], maps("Al-Balad, Jeddah")),
             route(["Obhur coast", "ساحل أبحر"], ["North Obhur", "أبحر الشمالية"], ["Moderate", "متوسط"], ["Paved", "مُعبّد"],
               ["A longer coastal road north to the Obhur marinas.", "طريق ساحلي أطول شمالاً حتى مراسي أبحر."], maps("Obhur, Jeddah")),
-            route(["Asfan desert gravel", "حصى عسفان الصحراوي"], ["Northeast of Jeddah", "شمال شرق جدة"], ["Hard", "صعب"], ["Gravel", "حصى"],
+            route(["Asfan desert gravel", "حصى عسفان الصحراوي"], ["Northeast of Jeddah", "شمال شرق جدة"], ["Hard", "صعب"], ["Gravel track", "طريق حصوي"],
               ["Off-road in the desert beyond Asfan - loose gravel and long climbs. Bring spares and plenty of water.", "طريق وعر في الصحراء خلف عسفان - حصى متحرّك وصعود طويل. أحضر قطع غيار وماءً وفيراً."], maps("Asfan, Saudi Arabia")),
           ],
         },

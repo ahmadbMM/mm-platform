@@ -5,6 +5,9 @@ import { fmtDate, journalState } from "@/components/journal/journal-data";
 import { siteSchema } from "@/content/pages/site";
 import { resolvePage } from "@/lib/content";
 import { readMinutes } from "@/lib/journal";
+import { isRtl } from "@/i18n/locales";
+import { serverL } from "@/i18n/dicts";
+import { fill } from "@/lib/fill";
 
 // micromobility.sa/journal - the articles staff write, newest first, with their tags as filters.
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -19,13 +22,13 @@ export default async function JournalPage({ params, searchParams }: { params: Pr
   const { locale } = await params;
   const { tag = "" } = await searchParams;
   const { content, previewing, hidden, L, j, posts } = await journalState(locale);
-  const ar = L === "ar";
+  const tx = serverL(locale);
   const site = resolvePage(siteSchema, content, L);
   const tags = [...new Set(posts.map((p) => p.tag).filter(Boolean))];
   const shown = tag && tags.includes(tag) ? posts.filter((p) => p.tag === tag) : posts;
   const [feature, ...rest] = shown;
   const href = (slug: string) => `/journal/${slug}`;
-  const meta = (p: (typeof posts)[number]) => [p.tag, fmtDate(p.date, ar), ar ? `${readMinutes(p.body)} د قراءة` : `${readMinutes(p.body)} min read`].filter(Boolean).join(" · ");
+  const meta = (p: (typeof posts)[number]) => [p.tag, fmtDate(p.date, locale), fill(tx("{n} min read", "{n} د قراءة"), { n: readMinutes(p.body) })].filter(Boolean).join(" · ");
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="jr">
@@ -49,7 +52,7 @@ export default async function JournalPage({ params, searchParams }: { params: Pr
                 <span className="jr-meta">{meta(feature)}</span>
                 <h2>{feature.title}</h2>
                 {feature.excerpt && <p>{feature.excerpt}</p>}
-                <span className="jr-go">{S(j.hero.readMore)} <span aria-hidden="true">{ar ? "←" : "→"}</span></span>
+                <span className="jr-go">{S(j.hero.readMore)} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></span>
               </div>
             </a>
             {rest.length > 0 && (

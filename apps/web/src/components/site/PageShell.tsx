@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter, { type FooterContent } from "@/components/site/SiteFooter";
 import PreviewBar from "@/components/site/PreviewBar";
+import { localeInfo } from "@/i18n/locales";
 import "@/components/site/site.css";
 
 // The frame every inner page shares: header, the page, footer, and the staff preview bar.
@@ -29,9 +30,8 @@ export function footerFrom(site: Record<string, Sec>): FooterContent {
 
 /** `hidden`: the pages staff have not switched on, left out of the header and footer. */
 export default function PageShell({ locale, site, preview, hidden = [], children }: { locale: string; site: Record<string, Sec>; preview: boolean; hidden?: string[]; children: ReactNode }) {
-  const ar = locale === "ar";
   return (
-    <div className="mm-site" dir={ar ? "rtl" : "ltr"}>
+    <div className="mm-site" dir={localeInfo(locale).dir}>
       <SiteNav locale={locale} hidden={hidden} />
       <main id="mm-main" style={{ paddingTop: 52 }}>{children}</main>
       <SiteFooter locale={locale} c={footerFrom(site)} hidden={hidden} />
