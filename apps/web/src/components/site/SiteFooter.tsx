@@ -36,11 +36,11 @@ function showPhone(p: string): string {
 /** The site page a link opens ("/help#returns" -> "help"), or "" for anything else. */
 const Arrow = () => <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8" /></svg>;
 
-export default function SiteFooter({ locale, c, hidden = [] }: { locale: string; c: FooterContent; hidden?: string[] }) {
+export default function SiteFooter({ locale, c, hidden = [], booking = BOOKING_URL }: { locale: string; c: FooterContent; hidden?: string[]; booking?: string }) {
   const tx = serverL(locale);
   const year = riyadhClock(new Date()).slice(0, 4);
   const socials = SOCIAL_ORDER.map((id) => [id, c.social[id]] as const).filter(([, href]) => !!href);
-  const link = (l: FooterLink) => (pageOf(l.href) === "account" && hidden.includes("account") ? { ...l, href: bookingLink(BOOKING_URL, locale) } : l.href.startsWith(BOOKING_URL) ? { ...l, href: bookingLink(l.href, locale) } : l);
+  const link = (l: FooterLink) => (pageOf(l.href) === "account" && hidden.includes("account") ? { ...l, href: bookingLink(booking, locale) } : l.href.startsWith(BOOKING_URL) || l.href.startsWith(booking) ? { ...l, href: bookingLink(l.href, locale) } : l);
   const columns = c.columns
     .map((col) => ({ ...col, links: col.links.map(link).filter((l) => l.label && l.href && !(pageOf(l.href) && pageOf(l.href) !== "account" && hidden.includes(pageOf(l.href)))) }))
     .filter((col) => col.links.length > 0);

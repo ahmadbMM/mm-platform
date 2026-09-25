@@ -116,3 +116,19 @@ describe("the registration forms' addresses", () => {
     }
   });
 });
+
+describe("/store", () => {
+  // No database here, so the shop's address is the site's own default (Website > Other addresses).
+  it("opens the shop in Arabic, or in English when the visitor reads English", async () => {
+    const to = async (path: string, headers: Record<string, string> = {}) => {
+      const res = await call(path, headers);
+      expect(res.status).toBe(307);
+      return res.headers.get("location");
+    };
+    expect(await to("/store")).toBe("https://stepdragon.com.sa/ar");
+    expect(await to("/store?lang=en")).toBe("https://stepdragon.com.sa/en");
+    expect(await to("/store", { cookie: "NEXT_LOCALE=en" })).toBe("https://stepdragon.com.sa/en");
+    expect(await to("/en/store")).toBe("https://stepdragon.com.sa/en");
+    expect(await to("/ar/store", { cookie: "NEXT_LOCALE=en" })).toBe("https://stepdragon.com.sa/ar");
+  });
+});

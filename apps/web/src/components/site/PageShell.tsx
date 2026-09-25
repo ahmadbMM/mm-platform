@@ -3,6 +3,7 @@ import SiteNav from "@/components/site/SiteNav";
 import SiteFooter, { type FooterContent } from "@/components/site/SiteFooter";
 import PreviewBar from "@/components/site/PreviewBar";
 import { localeInfo } from "@/i18n/locales";
+import { BOOKING_URL, STORE_CART_URL } from "@/lib/links";
 import "@/components/site/site.css";
 
 // The frame every inner page shares: header, the page, footer, and the staff preview bar.
@@ -28,13 +29,24 @@ export function footerFrom(site: Record<string, Sec>): FooterContent {
   };
 }
 
+/** What the header needs from the site's settings (Website > Whole site): its words and the
+ *  addresses staff set, else the site's own. */
+export function navFrom(site: Record<string, Sec>): { labels: Record<string, string>; booking: string; cart: string } {
+  const links = site.links ?? {};
+  return {
+    labels: Object.fromEntries(Object.entries(site.menu ?? {}).map(([k, v]) => [k, S(v)])),
+    booking: S(links.booking) || BOOKING_URL,
+    cart: S(links.cart) || STORE_CART_URL,
+  };
+}
+
 /** `hidden`: the pages staff have not switched on, left out of the header and footer. */
 export default function PageShell({ locale, site, preview, hidden = [], children }: { locale: string; site: Record<string, Sec>; preview: boolean; hidden?: string[]; children: ReactNode }) {
   return (
     <div className="mm-site" dir={localeInfo(locale).dir}>
-      <SiteNav locale={locale} hidden={hidden} />
+      <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} />
       <main id="mm-main" style={{ paddingTop: 52 }}>{children}</main>
-      <SiteFooter locale={locale} c={footerFrom(site)} hidden={hidden} />
+      <SiteFooter locale={locale} c={footerFrom(site)} hidden={hidden} booking={navFrom(site).booking} />
       {preview && <PreviewBar locale={locale} />}
     </div>
   );

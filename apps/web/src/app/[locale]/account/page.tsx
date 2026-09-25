@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
-import PageShell from "@/components/site/PageShell";
+import PageShell, { navFrom } from "@/components/site/PageShell";
 import ClubCard from "@/components/club/ClubCard";
 import SignIn from "@/components/account/SignIn";
 import SignOut from "@/components/account/SignOut";
@@ -17,7 +17,7 @@ import { siteSchema } from "@/content/pages/site";
 import { accountBookings, getAccount } from "@/lib/account";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill } from "@/lib/fill";
-import { BOOKING_URL, bookingLink, localHref } from "@/lib/links";
+import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName } from "@/lib/rides";
 import { ticketCue, ticketGroups } from "@/lib/tickets";
@@ -41,14 +41,17 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return pageMeta({ path: "/account", locale, title: `${serverL(locale)("Account", "الحساب")} · Micromobility`, noindex: true });
 }
 
-export default async function AccountPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function AccountPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { locale } = await params;
+  const expired = (await searchParams).handoff === "expired";
   const L = asLocale(locale);
   const tx = serverL(locale);
   const [{ content, previewing, hidden }, acct] = await Promise.all([pageState("account"), getAccount()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(accountSchema, content, L);
-  const book = bookingLink(BOOKING_URL, locale);
+  const app = navFrom(site).booking; // the booking app as staff set it
+  const book = bookingLink(app, locale);
+  const handoff = (auth?: string) => bookingLink(`${app.replace(/[?#].*$/, "")}?handoff=site${auth ? `&auth=${auth}` : ""}`, locale);
 
   if (!acct) {
     return (
@@ -59,11 +62,14 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
             <p className="ac-eyebrow">{S(c.signin.eyebrow)}</p>
             <h1>{S(c.signin.title)}</h1>
             <p className="ac-text">{S(c.signin.text)}</p>
+            {expired && <p className="ac-err" role="status">{tx("That sign-in link has expired. Please sign in again.", "انتهت صلاحية رابط تسجيل الدخول. يرجى تسجيل الدخول مجدداً.")}</p>}
             <SignIn locale={locale} />
+            {/* Sign-up, a password reset and Google or Apple happen in the booking app, which hands
+                the rider back here signed in (?handoff=site; api/account/handoff). */}
             <ul className="ac-notes">
-              <li><a href={book}>{S(c.signin.create)}</a></li>
-              <li>{S(c.signin.forgot)}</li>
-              <li><a href={book}>{S(c.signin.oauth)}</a></li>
+              <li><a href={handoff("signup")}>{S(c.signin.create)}</a></li>
+              <li><a href={handoff("forgot")}>{S(c.signin.forgot)}</a></li>
+              <li><a href={handoff()}>{S(c.signin.oauth)}</a></li>
             </ul>
           </section>
         </div>
@@ -90,7 +96,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   // Edit does; Reschedule and Cancel open its My Bookings.
   const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96" };
   const appLink = (params: Record<string, string>) => {
-    try { const u = new URL(BOOKING_URL); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
+    try { const u = new URL(app); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
     catch { return book; }
   };
   const manage = appLink({ tab: "bookings" });

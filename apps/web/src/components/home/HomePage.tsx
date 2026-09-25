@@ -1,6 +1,6 @@
 import SiteNav from "@/components/site/SiteNav";
 import SiteFooter, { type FooterContent } from "@/components/site/SiteFooter";
-import { footerFrom } from "@/components/site/PageShell";
+import { footerFrom, navFrom } from "@/components/site/PageShell";
 import AnnouncementBar, { type Announcement } from "@/components/site/AnnouncementBar";
 import PreviewBar from "@/components/site/PreviewBar";
 import BuildStory, { type Step } from "@/components/home/BuildStory";
@@ -9,7 +9,7 @@ import FitQuiz, { type QuizText } from "@/components/home/FitQuiz";
 import OpenNow from "@/components/home/OpenNow";
 import "@/components/site/site.css";
 import "@/components/home/home.css";
-import { BOOKING_URL, bookingLink, localHref, pageOf } from "@/lib/links";
+import { bookingLink, localHref, pageOf } from "@/lib/links";
 import { serverL } from "@/i18n/dicts";
 import { localeInfo, isRtl } from "@/i18n/locales";
 import { bg, srcSet } from "@/lib/img";
@@ -27,10 +27,11 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
   // A button to a page staff have switched off would only reload Home (the proxy sends it back
   // here): a ride page opens the booking app instead, any other the WhatsApp chat.
   const RIDE_PAGES = new Set(["experiences", "events", "club", "routes"]);
+  const book0 = navFrom(site).booking; // the booking app as staff set it
   const H = (v: unknown) => {
     const href = S(v), pg = pageOf(href);
     if (!pg || !hidden.includes(pg)) return localHref(href, locale);
-    return RIDE_PAGES.has(pg) ? bookingLink(BOOKING_URL, locale) : (S(site.social?.whatsapp) || bookingLink(BOOKING_URL, locale));
+    return RIDE_PAGES.has(pg) ? bookingLink(book0, locale) : (S(site.social?.whatsapp) || bookingLink(book0, locale));
   };
   const arrow = (isRtl(locale) ? "←" : "→");
   const e = home.entry, h = home.hero, f = home.feature, st = home.story, c = home.community, r = home.reviews, q = home.quiz, sp = home.split, v = home.visit;
@@ -53,7 +54,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
 
   return (
     <div className="mm-site" dir={localeInfo(locale).dir}>
-      <SiteNav locale={locale} hidden={hidden} />
+      <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} />
       <main id="mm-main" style={{ paddingTop: 52 }}>
         {/* Welcome: riders or business */}
         <section className="hm-entry" aria-label={`${S(e.riderTitle)} / ${S(e.bizTitle)}`}>
@@ -202,7 +203,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
           <iframe title={S(v.title)} src="https://www.google.com/maps?q=Micromobility+Jeddah+Saudi+Arabia&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
         </section>
       </main>
-      <SiteFooter locale={locale} c={footer} hidden={hidden} />
+      <SiteFooter locale={locale} c={footer} hidden={hidden} booking={book0} />
       {preview && <PreviewBar locale={locale} />}
     </div>
   );

@@ -7,18 +7,29 @@ import { useL } from "@/i18n/TxProvider";
 import { LOCALES, isRtl, localeInfo } from "@/i18n/locales";
 import { BOOKING_URL, COMMUNITY, HEADER, NAV_LINKS, STORE_CART_URL, bookingLink, type NavLink } from "@/lib/links";
 
+type NavProps = {
+  locale: string;
+  hidden?: string[];
+  /** The words staff set for each section (Website > Whole site > Header menu), in this language. */
+  labels?: Record<string, string>;
+  /** The booking app and the store's cart, as staff set them. */
+  booking?: string;
+  cart?: string;
+};
+
 // The header from SiteNav.dc.html: logo, the site's sections in the middle, and the design's
 // round icons on the end - search, language, account and the cart (the Salla store's cart);
 // below 1080px the sections open as a full-height dark sheet. Community opens the pages its
 // riders use (links.ts, COMMUNITY); the globe opens every language the site speaks.
-export default function SiteNav({ locale, hidden = [] }: { locale: string; hidden?: string[] }) {
+export default function SiteNav({ locale, hidden = [], labels = {}, booking = BOOKING_URL, cart = STORE_CART_URL }: NavProps) {
   const tx = useL();
+  const name = (l: { key: string; en: string; ar: string }) => labels[l.key] || tx(l.en, l.ar);
   const rtl = isRtl(locale);
   const arrow = rtl ? "←" : "→";
   const byKey = (k: string) => NAV_LINKS.find((l) => l.key === k && !hidden.includes(l.key));
   const community = COMMUNITY.pages.map(byKey).filter((l): l is NavLink => !!l);
   // The account page, once staff switch it on; until then the booking app's own account.
-  const accountHref = hidden.includes("account") ? bookingLink(BOOKING_URL, locale) : null;
+  const accountHref = hidden.includes("account") ? bookingLink(booking, locale) : null;
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState(false);
@@ -50,8 +61,8 @@ export default function SiteNav({ locale, hidden = [] }: { locale: string; hidde
   }, [menu]);
 
   const item = (l: NavLink, onClick?: () => void, tail?: React.ReactNode) => l.external
-    ? <a key={l.key} href={l.href} onClick={onClick}>{tx(l.en, l.ar)}{tail}</a>
-    : <Link key={l.key} href={l.href} onClick={onClick} aria-current={path === l.href ? "page" : undefined}>{tx(l.en, l.ar)}{tail}</Link>;
+    ? <a key={l.key} href={l.href} onClick={onClick}>{name(l)}{tail}</a>
+    : <Link key={l.key} href={l.href} onClick={onClick} aria-current={path === l.href ? "page" : undefined}>{name(l)}{tail}</Link>;
   const inCommunity = community.some((l) => l.href === path);
   const here = localeInfo(locale);
 
@@ -72,7 +83,7 @@ export default function SiteNav({ locale, hidden = [] }: { locale: string; hidde
                 onMouseLeave={() => { hovering.current = false; setMenu((m) => (m === "community" ? "" : m)); }}>
                 <button type="button" aria-expanded={menu === "community"} aria-controls="mm-nav-community" aria-current={inCommunity ? "page" : undefined}
                   onClick={() => setMenu((m) => (m === "community" && !hovering.current ? "" : "community"))}>
-                  {tx(COMMUNITY.en, COMMUNITY.ar)}
+                  {name(COMMUNITY)}
                   <svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2.5 4.5L6 8l3.5-3.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </button>
                 <div id="mm-nav-community" className="mm-nav-panel">
@@ -112,7 +123,7 @@ export default function SiteNav({ locale, hidden = [] }: { locale: string; hidde
               ? <a href={accountHref} className="mm-nav-icon" title={label} aria-label={label}>{icon}</a>
               : <Link href="/account" className="mm-nav-icon" title={label} aria-label={label}>{icon}</Link>;
           })()}
-          <a href={STORE_CART_URL} className="mm-nav-icon" title={tx("Cart", "السلة")} aria-label={tx("Cart", "السلة")}>
+          <a href={cart} className="mm-nav-icon" title={tx("Cart", "السلة")} aria-label={tx("Cart", "السلة")}>
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="M5.5 8.5h13L17.4 20a1.5 1.5 0 0 1-1.5 1.3H8.1A1.5 1.5 0 0 1 6.6 20L5.5 8.5z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg>
           </a>
           <button type="button" className="mm-nav-burger" aria-expanded={open} aria-controls="mm-nav-sheet" aria-label={tx("Menu", "القائمة")} onClick={() => setOpen((o) => !o)}>
@@ -132,7 +143,7 @@ export default function SiteNav({ locale, hidden = [] }: { locale: string; hidde
             if (!community.length) return null;
             return (
               <div key={k} className="mm-nav-sheet-group">
-                <p>{tx(COMMUNITY.en, COMMUNITY.ar)}</p>
+                <p>{name(COMMUNITY)}</p>
                 {community.map((l) => item(l, close, tail))}
               </div>
             );

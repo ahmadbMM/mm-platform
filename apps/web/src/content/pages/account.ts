@@ -17,9 +17,9 @@ export const accountSchema: PageSchema = {
         txt("eyebrow", 40, "Small label", "العبارة الصغيرة", "One account for everything", "حساب واحد لكل شيء"),
         txt("title", 40, "Title", "العنوان", "Welcome back", "أهلاً بعودتك"),
         long("text", 200, "Text", "النص", "Sign in with your Micromobility account - the one you book rides with.", "سجّل الدخول بحساب مايكروموبيليتي - الحساب نفسه الذي تحجز به جولاتك."),
-        long("create", 160, "New here", "جديد هنا", "New here? Create your account in the booking app - it takes a minute.", "جديد هنا؟ أنشئ حسابك في تطبيق الحجز خلال دقيقة."),
-        long("forgot", 200, "Forgot your password", "نسيت كلمة المرور", "Forgot your password? Staff at the Corniche Circuit booth can reset it for you.", "نسيت كلمة المرور؟ يمكن لفريقنا في كشك حلبة الكورنيش إعادة تعيينها لك."),
-        long("oauth", 200, "Google or Apple accounts", "حسابات Google أو Apple", "Signed up with Google or Apple? Sign in on the booking app for now.", "سجّلت عبر Google أو Apple؟ سجّل الدخول من تطبيق الحجز حالياً."),
+        long("create", 160, "New here", "جديد هنا", "New here? Create your account in the booking app - it takes a minute, and you come back here signed in.", "جديد هنا؟ أنشئ حسابك في تطبيق الحجز خلال دقيقة، وستعود إلى هنا مسجّلاً دخولك."),
+        long("forgot", 200, "Forgot your password", "نسيت كلمة المرور", "Forgot your password? Reset it in the booking app with your email and mobile number, and you come back here signed in.", "نسيت كلمة المرور؟ أعد تعيينها في تطبيق الحجز ببريدك الإلكتروني ورقم جوالك، وستعود إلى هنا مسجّلاً دخولك."),
+        long("oauth", 200, "Google or Apple accounts", "حسابات Google أو Apple", "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.", "سجّلت عبر Google أو Apple؟ تابع به في تطبيق الحجز، وستعود إلى هنا مسجّلاً دخولك."),
       ],
     },
     {

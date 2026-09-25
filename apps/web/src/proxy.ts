@@ -5,6 +5,7 @@ import { hiddenPageTarget, isComingSoon, loadSiteContent, siteCanOpen } from "./
 import { comingSoonTarget } from "./lib/coming-soon-route";
 import { PREVIEW_COOKIE, isStaffToken } from "./lib/preview";
 import { alternateLinks, askedLang } from "./lib/lang-url";
+import { STORE_URL } from "./lib/links";
 
 const intl = createMiddleware(routing);
 
@@ -13,6 +14,21 @@ const FORM_ADDRESSES = ["/community/registration", "/petromin"];
 export function formAddress(pathname: string): string | null {
   const p = pathname.toLowerCase().replace(/\/+$/, "");
   return FORM_ADDRESSES.includes(p) ? p : null;
+}
+
+// micromobility.sa/store opens the online store (a hosted Salla shop, on its own domain), at the
+// address staff set (Website > Whole site > Other addresses), in English when the visitor reads
+// English and in Arabic otherwise. Before Coming Soon, so the shop is reachable while the site is
+// closed. Temporary (307): the shop's address can change without browsers keeping the old one.
+const STORE_PATH = /^\/(?:(en|ar)\/)?store\/?$/;
+export async function storeTarget(pathname: string, req: NextRequest): Promise<string | null> {
+  const m = pathname.match(STORE_PATH);
+  if (!m) return null;
+  const set = (await loadSiteContent())?.["site.links.store"];
+  const href = set && typeof set === "object" ? String((set as { href?: unknown }).href ?? "") : "";
+  const base = (/^https:\/\//i.test(href) ? href : STORE_URL).replace(/\/+$/, "");
+  const lang = m[1] || askedLang(req.nextUrl.searchParams) || req.cookies.get(LANG_COOKIE.name)?.value;
+  return `${base}/${lang === "en" ? "en" : "ar"}`;
 }
 
 // The staff preview page; the staff page still opens it as /en/preview or /ar/preview.
@@ -28,6 +44,8 @@ export default async function proxy(req: NextRequest) {
   // (/Petromin, /community/Registration/) is sent there, as their own Workers did.
   const form = formAddress(pathname);
   if (form && form !== pathname) return NextResponse.redirect(new URL(form + req.nextUrl.search, req.url), 301);
+  const store = await storeTarget(pathname, req);
+  if (store) return NextResponse.redirect(store, 307);
   if (pathname === "/") {
     const code = searchParams.get("bike");
     if (code && /^\d{1,6}$/.test(code)) {

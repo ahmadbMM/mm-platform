@@ -1,4 +1,5 @@
 import { bi, type PageSchema } from "@/content/types";
+import { BOOKING_URL, COMMUNITY, NAV_LINKS, STORE_CART_URL, STORE_URL } from "@/lib/links";
 
 // Site-wide content: what the header, footer and several pages share - contact details, hours,
 // social links, the announcement bar and the legal line. Keys "site.<section>.<field>".
@@ -59,6 +60,23 @@ export const siteSchema: PageSchema = {
         { id: "facebook", type: "link", optional: true, label: bi("Facebook", "فيسبوك"), def: "https://facebook.com/micromobilitysa" },
         { id: "telegram", type: "link", optional: true, label: bi("Telegram", "تيليجرام"), def: "https://t.me/micromobilitysa" },
       ],
+    },
+    {
+      // The addresses the whole site links to that are not its own pages (lib/links.ts has the same
+      // as fallbacks). The shop opens at /store, which adds /en or /ar for the visitor's language.
+      id: "links",
+      label: bi("Other addresses", "العناوين الأخرى"),
+      fields: [
+        { id: "booking", type: "link", label: bi("Booking app", "تطبيق الحجز"), hint: bi("Where Book, the account icon and My Bookings go.", "وجهة أزرار الحجز وأيقونة الحساب وحجوزاتي."), def: BOOKING_URL },
+        { id: "store", type: "link", label: bi("Online store", "المتجر الإلكتروني"), hint: bi("micromobility.sa/store opens it, in English or Arabic.", "يفتحه micromobility.sa/store بالإنجليزية أو العربية."), def: STORE_URL },
+        { id: "cart", type: "link", label: bi("Store cart", "سلة المتجر"), hint: bi("The header's cart icon.", "أيقونة السلة في الترويسة."), def: STORE_CART_URL },
+      ],
+    },
+    {
+      // The header's words for each section. A page that is switched off is left out whatever its name.
+      id: "menu",
+      label: bi("Header menu", "قائمة الترويسة"),
+      fields: [...NAV_LINKS, COMMUNITY].map((l) => ({ id: l.key, type: "text" as const, max: 24, label: bi(l.en, l.ar), def: bi(l.en, l.ar) })),
     },
     {
       id: "legal",
