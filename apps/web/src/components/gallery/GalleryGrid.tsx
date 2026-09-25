@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { sized, srcSet } from "@/lib/img";
 
 // The gallery grid: tag filters (once there are two tags), photos in columns, and a photo opens
 // large with its caption. Escape or a tap closes it.
@@ -30,7 +31,7 @@ export default function GalleryGrid({ photos, allLabel, closeLabel }: { photos: 
         {shown.map((p, i) => (
           <figure key={p.src + i}>
             <button type="button" onClick={() => setOpen(p)} aria-label={p.caption || `${i + 1}`}>
-              <img src={p.src} alt={p.caption} loading="lazy" />
+              <img src={sized(p.src, 640)} srcSet={srcSet(p.src)} sizes="(max-width: 700px) 50vw, 33vw" alt={p.caption} loading="lazy" />
             </button>
             {(p.caption || p.tag) && <figcaption>{p.tag && <span>{p.tag}</span>}{p.caption}</figcaption>}
           </figure>
@@ -39,7 +40,7 @@ export default function GalleryGrid({ photos, allLabel, closeLabel }: { photos: 
       {open && (
         <div className="pg-lightbox" role="dialog" aria-modal="true" aria-label={open.caption || allLabel} onClick={() => setOpen(null)}>
           <button type="button" className="pg-close" aria-label={closeLabel} onClick={() => setOpen(null)}>×</button>
-          <img src={open.src} alt={open.caption} />
+          <img src={sized(open.src, 1280)} alt={open.caption} />
           {open.caption && <p>{open.caption}</p>}
         </div>
       )}

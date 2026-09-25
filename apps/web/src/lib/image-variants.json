@@ -1,0 +1,148 @@
+{
+ "/site/about/circuit.jpg": {
+  "width": 666,
+  "variants": [
+   640
+  ]
+ },
+ "/site/experiences/hero.jpg": {
+  "width": 800,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/entry-biz.jpg": {
+  "width": 1116,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/entry-riders.jpg": {
+  "width": 1331,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/home/feature.jpg": {
+  "width": 1600,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/home/gallery-12.jpg": {
+  "width": 900,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/gallery-2.jpg": {
+  "width": 900,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/gallery-4.jpg": {
+  "width": 662,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/gallery-6.jpg": {
+  "width": 900,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/gallery-7.jpg": {
+  "width": 656,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/gallery-8.jpg": {
+  "width": 900,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/gallery-9.jpg": {
+  "width": 693,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/hero-bike.webp": {
+  "width": 1600,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/home/quiz-city.jpg": {
+  "width": 900,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/quiz-trail.jpg": {
+  "width": 900,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/split-biz.jpg": {
+  "width": 781,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/split-rides.jpg": {
+  "width": 781,
+  "variants": [
+   640
+  ]
+ },
+ "/site/home/story-1.jpg": {
+  "width": 1800,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/home/story-2.jpg": {
+  "width": 1800,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/home/story-3.jpg": {
+  "width": 1800,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/home/story-4.jpg": {
+  "width": 1800,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/og.jpg": {
+  "width": 1200,
+  "variants": [
+   640
+  ]
+ },
+ "/site/workshop/mechanic.jpg": {
+  "width": 1600,
+  "variants": [
+   640,
+   1280
+  ]
+ }
+}

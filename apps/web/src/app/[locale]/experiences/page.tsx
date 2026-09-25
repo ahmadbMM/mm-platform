@@ -16,6 +16,7 @@ import { fmtClock, fmtDayDate } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
 import { isRtl } from "@/i18n/locales";
+import { bg } from "@/lib/img";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
@@ -91,7 +92,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="xp">
-        <section className="xp-hero" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,.25) 46%,rgba(0,0,0,.12) 70%),url('${S(c.hero.image)}')` }}>
+        <section className="xp-hero" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,.25) 46%,rgba(0,0,0,.12) 70%),url('${bg(S(c.hero.image))}')` }}>
           <p className="xp-eyebrow">{S(c.hero.eyebrow)}</p>
           <h1>{S(c.hero.title)}</h1>
           <p className="xp-hero-text">{S(c.hero.text)}</p>

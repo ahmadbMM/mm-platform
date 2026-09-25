@@ -10,6 +10,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { pageState } from "@/lib/page-state";
 import { slugId } from "@/lib/slug";
 import { riyadhClock } from "@/lib/workshop-days";
+import { bg } from "@/lib/img";
 
 // micromobility.sa/workshop - a service request, received by the staff page (Workshop section).
 type Sec = Record<string, unknown>;
@@ -47,7 +48,7 @@ export default async function WorkshopPage({ params }: { params: Promise<{ local
           <h1>{S(w.intro.title)}</h1>
           <p className="ws-lead">{S(w.intro.text)}</p>
           <ul className="ws-features">{list(w.intro.features).map((f, i) => S(f.label) && <li key={i}>{S(f.label)}</li>)}</ul>
-          <div className="ws-photo" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.55),transparent),url('${S(w.intro.image)}')` }}>
+          <div className="ws-photo" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.55),transparent),url('${bg(S(w.intro.image))}')` }}>
             <div><strong>{S(w.intro.locTitle)}</strong><span>{S(site.contact.hoursText)}</span></div>
           </div>
         </div>

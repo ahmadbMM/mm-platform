@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { fmtSar } from "@/lib/fill";
+import { bg } from "@/lib/img";
 
 // "Which bike fits your lifestyle?" - where you ride, then what matters most; the answer is one
 // of three bikes with the reason that fits your priority. Every word and bike is staff-edited.
@@ -36,7 +37,7 @@ export default function FitQuiz({ q, locale, arrow }: { q: QuizText; locale: str
           )}
           {rec && prio && (
             <div className="hm-quiz-result" aria-live="polite">
-              <div className="pic" style={{ backgroundImage: `url('${rec.image}')` }} />
+              <div className="pic" style={{ backgroundImage: `url('${bg(rec.image, 640)}')` }} />
               <div className="body">
                 <span className="lbl">{q.match}</span>
                 <strong>{rec.name}</strong>

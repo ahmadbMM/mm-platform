@@ -15,6 +15,7 @@ import { slugId } from "@/lib/slug";
 import { serverL } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
 import { isRtl } from "@/i18n/locales";
+import { bg } from "@/lib/img";
 
 // micromobility.sa/about - who we are (the company profile's own story, numbers, vision, mission
 // and values), where to find us, visitor questions, the contact details with a live open / closed
@@ -106,7 +107,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             <div className="ab-tour">
               {places.map((x, i) => (
                 <div key={i}>
-                  {S(x.image) ? <div className="ab-tour-img" role="img" aria-label={S(x.name)} style={{ backgroundImage: `url('${S(x.image)}')` }} /> : <div className="ab-tour-img" aria-hidden="true" />}
+                  {S(x.image) ? <div className="ab-tour-img" role="img" aria-label={S(x.name)} style={{ backgroundImage: `url('${bg(S(x.image), 640)}')` }} /> : <div className="ab-tour-img" aria-hidden="true" />}
                   <div className="ab-tour-cap"><strong className="ab-num">{String(i + 1).padStart(2, "0")}</strong><div><strong>{S(x.name)}</strong>{S(x.text) && <span>{S(x.text)}</span>}</div></div>
                 </div>
               ))}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import MessageForm from "@/components/site/MessageForm";
+import { bg } from "@/lib/img";
 
 // The service tabs and the enquiry form share one piece of state: the form notes which service
 // the visitor was reading (the tab's id, from its English name), so the staff page knows.
@@ -37,7 +38,7 @@ export default function BusinessBody(p: Props) {
       )}
       {svc && (
         <section className="bz-svc" id="bz-svc" role="tabpanel">
-          <div className="bz-svc-img" style={svc.image ? { backgroundImage: `url('${svc.image}')` } : undefined} role="img" aria-label={svc.title} />
+          <div className="bz-svc-img" style={svc.image ? { backgroundImage: `url('${bg(svc.image)}')` } : undefined} role="img" aria-label={svc.title} />
           <div>
             <h2>{svc.title}</h2>
             <p>{svc.text}</p>

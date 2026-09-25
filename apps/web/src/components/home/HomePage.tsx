@@ -12,6 +12,7 @@ import "@/components/home/home.css";
 import { BOOKING_URL, bookingLink, localHref, pageOf } from "@/lib/links";
 import { serverL } from "@/i18n/dicts";
 import { localeInfo, isRtl } from "@/i18n/locales";
+import { bg, srcSet } from "@/lib/img";
 
 // Home, from Home.dc.html. Everything it says comes from the staff page (site_content), else
 // the design's words. Sections whose content is still empty (reviews, the numbers strip, the
@@ -57,7 +58,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
         {/* Welcome: riders or business */}
         <section className="hm-entry" aria-label={`${S(e.riderTitle)} / ${S(e.bizTitle)}`}>
           <a className="hm-entry-half riders" href="#start">
-            <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${S(e.riderImage)}')` }} />
+            <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${bg(S(e.riderImage))}')` }} />
             <span className="hm-entry-copy">
               <span className="hm-entry-tick" />
               <span className="hm-entry-eyebrow">{S(e.riderEyebrow)}</span>
@@ -67,7 +68,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
             </span>
           </a>
           <a className="hm-entry-half biz" href={H(e.bizHref)}>
-            <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${S(e.bizImage)}')` }} />
+            <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${bg(S(e.bizImage))}')` }} />
             <span className="hm-entry-copy">
               <span className="hm-entry-tick" />
               <span className="hm-entry-eyebrow">{S(e.bizEyebrow)}</span>
@@ -77,7 +78,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
             </span>
           </a>
           <div className="hm-entry-divider" aria-hidden="true" />
-          <div className="hm-entry-phone" style={{ backgroundImage: `linear-gradient(to top,rgba(251,249,244,.95),rgba(251,249,244,.5) 40%,rgba(251,249,244,0) 70%),url('${S(e.riderImage)}')` }}>
+          <div className="hm-entry-phone" style={{ backgroundImage: `linear-gradient(to top,rgba(251,249,244,.95),rgba(251,249,244,.5) 40%,rgba(251,249,244,0) 70%),url('${bg(S(e.riderImage))}')` }}>
             <p className="hm-est mm-lat">EST. JEDDAH · 21°32′N</p>
             <h2>{S(e.phoneTitle)}</h2>
             <p>{S(e.phoneText)}</p>
@@ -100,7 +101,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
           <h2 className="hm-hero-title">{S(h.title)}</h2>
           <p className="hm-hero-text">{S(h.text)}</p>
           <div className="hm-hero-bike">
-            <img src={S(h.image)} alt={S(h.eyebrow)} width={1180} height={620} fetchPriority="high" decoding="async" />
+            <img src={S(h.image)} srcSet={srcSet(S(h.image))} sizes="(max-width: 1240px) 94vw, 1180px" alt={S(h.eyebrow)} width={1180} height={620} fetchPriority="high" decoding="async" />
           </div>
           <div className="hm-badges">
             {list(h.badges).map((b, i) => S(b.title) && (
@@ -119,7 +120,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
         {/* Featured bike */}
         <section className="hm-feature" aria-label={S(f.title)}>
           <div className="hm-feature-card">
-            <a href={H(f.ctaHref)} className="hm-feature-img" style={{ backgroundImage: `url('${S(f.image)}')` }} aria-label={S(f.title)} />
+            <a href={H(f.ctaHref)} className="hm-feature-img" style={{ backgroundImage: `url('${bg(S(f.image))}')` }} aria-label={S(f.title)} />
             <div className="hm-feature-body">
               <span className="hm-eyebrow">{S(f.eyebrow)}</span>
               <h2>{S(f.title)}</h2>
@@ -172,10 +173,10 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
 
         {/* Experiences & business */}
         <section className="hm-split" id="split">
-          <a href={H(sp.rentHref)} style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.06) 55%),url('${S(sp.rentImage)}')` }}>
+          <a href={H(sp.rentHref)} style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.06) 55%),url('${bg(S(sp.rentImage))}')` }}>
             <div><h3>{S(sp.rentTitle)}</h3><p>{S(sp.rentText)}</p><span className="hm-btn hm-green">{S(sp.rentBtn)}</span></div>
           </a>
-          <a href={H(sp.bizHref)} style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.06) 55%),url('${S(sp.bizImage)}')` }}>
+          <a href={H(sp.bizHref)} style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.06) 55%),url('${bg(S(sp.bizImage))}')` }}>
             <div><h3>{S(sp.bizTitle)}</h3><p>{S(sp.bizText)}</p><span className="hm-btn hm-light">{S(sp.bizBtn)}</span></div>
           </a>
         </section>

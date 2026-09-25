@@ -9,6 +9,7 @@ import { readMinutes } from "@/lib/journal";
 import { isRtl } from "@/i18n/locales";
 import { serverL } from "@/i18n/dicts";
 import { fill } from "@/lib/fill";
+import { bg } from "@/lib/img";
 
 // micromobility.sa/journal - the articles staff write, newest first, with their tags as filters.
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -48,7 +49,7 @@ export default async function JournalPage({ params, searchParams }: { params: Pr
         ) : (
           <>
             <a className="jr-feature" href={href(feature.slug)}>
-              <div className="jr-cover" style={feature.cover ? { backgroundImage: `url('${feature.cover}')` } : undefined} aria-hidden="true" />
+              <div className="jr-cover" style={feature.cover ? { backgroundImage: `url('${bg(feature.cover)}')` } : undefined} aria-hidden="true" />
               <div>
                 <span className="jr-meta">{meta(feature)}</span>
                 <h2>{feature.title}</h2>
@@ -60,7 +61,7 @@ export default async function JournalPage({ params, searchParams }: { params: Pr
               <div className="jr-grid">
                 {rest.map((p) => (
                   <a key={p.slug} href={href(p.slug)}>
-                    <div className="jr-cover" style={p.cover ? { backgroundImage: `url('${p.cover}')` } : undefined} aria-hidden="true" />
+                    <div className="jr-cover" style={p.cover ? { backgroundImage: `url('${bg(p.cover, 640)}')` } : undefined} aria-hidden="true" />
                     <span className="jr-meta">{meta(p)}</span>
                     <strong>{p.title}</strong>
                     {p.excerpt && <p>{p.excerpt}</p>}
