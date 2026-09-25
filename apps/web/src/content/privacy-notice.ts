@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-09-23";
+export const PRIVACY_VERSION = "2026-09-25";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
  "en": [
   {
@@ -52,13 +52,13 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "Date of birth",
-      "Optional; required on a community membership application",
+      "Optional for your first eight bookings, then required. Community members: required before booking, and on a membership application",
       "Age rules and safety, including making sure under-18s are booked by a parent or guardian; age categories for events, races and leaderboards; age-group totals; birthday messages, only if you’ve chosen ride news"
      ],
      [
       "Nationality",
-      "Optional; required on a community membership application",
-      "Participation totals only, for example Saudi and non-Saudi riders. <strong>Never shared per person, and never used to decide who can book.</strong>"
+      "Optional for your first eight bookings, then required. Community members: required before booking, and on a membership application",
+      "Participation totals only, for example Saudi and non-Saudi riders. <strong>Never shared per person. Which nationality you give never decides who can book.</strong>"
      ],
      [
       "Country and city",
@@ -120,7 +120,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
   {
    "ul": [
     "<strong>Without the required details,</strong> we can’t create your account or give you a bike that fits.",
-    "<strong>Without the optional details,</strong> nothing changes."
+    "<strong>Without your date of birth and nationality,</strong> you can make up to eight bookings. Community members can’t book until they add them.",
+    "<strong>Without the other optional details,</strong> nothing changes."
    ]
   },
   {
@@ -300,13 +301,13 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "تاريخ الميلاد",
-      "اختياري؛ وإلزامي في طلب عضوية المجتمع",
+      "اختياري في أول ثمانية حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية",
       "تطبيق قواعد العمر والسلامة، ومنها التأكد من أن حجز من هم دون 18 عامًا يتم عبر أحد الوالدين أو الولي؛ وفئات الأعمار في الفعاليات والسباقات ولوحات الصدارة؛ وإحصاءات الفئات العمرية؛ ورسائل عيد الميلاد، فقط إذا اخترت أخبار الرحلات"
      ],
      [
       "الجنسية",
-      "اختياري؛ وإلزامي في طلب عضوية المجتمع",
-      "إحصاءات مجمّعة للمشاركة فقط، مثل أعداد الراكبين السعوديين وغير السعوديين. <strong>لا تُشارك على مستوى الأفراد إطلاقًا، ولا تُستخدم لتحديد من يحق له الحجز.</strong>"
+      "اختياري في أول ثمانية حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية",
+      "إحصاءات مجمّعة للمشاركة فقط، مثل أعداد الراكبين السعوديين وغير السعوديين. <strong>لا تُشارك على مستوى الأفراد إطلاقًا، ولا تحدّد الجنسية التي تذكرها من يحق له الحجز.</strong>"
      ],
      [
       "الدولة والمدينة",
@@ -368,7 +369,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
   {
    "ul": [
     "<strong>دون البيانات الإلزامية</strong> لا يمكننا إنشاء حسابك أو توفير دراجة بمقاس مناسب لك.",
-    "<strong>دون البيانات الاختيارية</strong> لا يتغيّر شيء."
+    "<strong>دون تاريخ الميلاد والجنسية</strong> يمكنك إجراء ثمانية حجوزات كحد أقصى، ولا يستطيع أعضاء المجتمع الحجز حتى يضيفوهما.",
+    "<strong>دون البيانات الاختيارية الأخرى</strong> لا يتغيّر شيء."
    ]
   },
   {
