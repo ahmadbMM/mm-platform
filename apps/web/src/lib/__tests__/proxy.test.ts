@@ -101,4 +101,18 @@ describe("which addresses the proxy sees", () => {
   it("leaves the bike tags, the API and files alone", () => {
     for (const p of ["/b", "/b/42", "/api", "/api/preview", "/_next/static/x.js", "/site/logo.png", "/robots.txt"]) expect(seen(p), p).toBe(false);
   });
+  it("leaves the two registration forms alone, so Coming Soon never covers them", () => {
+    for (const p of ["/petromin", "/community/registration", "/community/registration/og-image.png"]) expect(seen(p), p).toBe(false);
+    for (const p of ["/community", "/petrominx", "/Petromin", "/community/Registration"]) expect(seen(p), p).toBe(true);
+  });
+});
+
+describe("the registration forms' addresses", () => {
+  it("send another spelling to the one real address, with its query", async () => {
+    for (const [from, to] of [["/Petromin", "/petromin"], ["/PETROMIN/", "/petromin"], ["/community/Registration?lang=ar", "/community/registration?lang=ar"]]) {
+      const res = await call(from);
+      expect(res.status, from).toBe(301);
+      expect(redirectedTo(res), from).toBe(to);
+    }
+  });
 });

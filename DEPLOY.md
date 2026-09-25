@@ -10,9 +10,10 @@ Petromin registration page, changes.
   `www.micromobility.sa/*`. Routes, not custom domains, on purpose:
   - The DNS records stay exactly as they are. The root and `www` are already proxied A records
     (orange cloud) pointing at the old host; a Worker route answers before that host is asked.
-  - The Petromin worker (`mm-partner-register`) holds the more specific route
-    `micromobility.sa/petromin*`, and the more specific route wins, so
-    `micromobility.sa/petromin` keeps serving the registration form.
+  - The two registration forms (`forms/petromin` at `/petromin`, `forms/community` at
+    `/community/registration`) are served by this Worker too, outside Coming Soon. Until their
+    old Workers' routes are removed (below), those more specific routes still win and the old
+    Workers keep answering there.
   - A Worker route runs before the old forward to the Salla store, so the forward stops
     applying the moment this Worker is deployed. Delete the forward afterwards to keep the
     zone tidy (Rules > Redirect Rules in the dashboard, or on the old host if it lives there).
@@ -67,3 +68,22 @@ micromobility-web > Settings > Domains & Routes; the old forward takes over agai
 - The Worker bundle is about 2.2 MB compressed. Cloudflare's free Workers plan allows 3 MB; the
   paid plan 10 MB. Worth the paid plan before the site grows much.
 - pnpm 11 only runs the build scripts listed under `allowBuilds` in `pnpm-workspace.yaml`.
+
+## Moving the two forms onto this Worker (once)
+
+The forms used to be Workers of their own: `mm-partner-register` (routes
+`micromobility.sa/petromin*`, `www.micromobility.sa/petromin*`) and `mm-community-register`
+(routes `micromobility.sa/community/registration*`, `www.micromobility.sa/community/registration*`).
+This Worker now serves the same pages at the same addresses, but a more specific route wins, so:
+
+1. Merge the change that brought `forms/` in; CI tests the forms and deploys this Worker.
+   Nothing changes for riders yet.
+2. Cloudflare dashboard (the account that holds the micromobility.sa zone) > Workers & Pages >
+   each of the two Workers > Settings > Domains & Routes: delete its two routes. Not on a
+   Petromin ride night.
+3. Open https://micromobility.sa/petromin and https://micromobility.sa/community/registration:
+   the same forms, now answered by `micromobility-web`.
+
+To go back, add the routes again (or `npx wrangler deploy` in the old repos). Once it has run a
+week without trouble, the two old Workers can be deleted.
+

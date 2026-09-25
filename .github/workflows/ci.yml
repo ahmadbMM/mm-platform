@@ -16,6 +16,19 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint && pnpm typecheck
       - run: pnpm --filter web test
+      # The two registration forms (forms/community, forms/petromin; npm packages of their own,
+      # outside the pnpm workspace): the pages the website serves must be what their sources
+      # build, and the forms are driven in a browser. Here, before the deploy, so a broken form
+      # never reaches micromobility.sa.
+      - name: Forms are built from their sources
+        run: (cd forms/community && npm run build) && (cd forms/petromin && npm run build) && git diff --exit-code
+      - name: Form specs
+        run: |
+          npm ci --prefix forms/community --no-audit --no-fund
+          npm ci --prefix forms/petromin --no-audit --no-fund
+          (cd forms/community && npx playwright install --with-deps chromium)
+          (cd forms/community && npm run e2e)
+          (cd forms/petromin && npm run e2e)
       - run: pnpm --filter web exec opennextjs-cloudflare build
       # The production deploy below needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
       # Without them wrangler-action runs with empty values and fails, turning a push red for
