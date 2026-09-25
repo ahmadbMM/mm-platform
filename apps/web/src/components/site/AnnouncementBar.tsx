@@ -18,7 +18,7 @@ export default function AnnouncementBar({ items, arrow }: { items: Announcement[
   if (!list.length) return null;
   const m = list[i % list.length];
   return (
-    <div className="mm-ann" id="start" role="region" aria-label="Announcements" aria-live="polite">
+    <div className="mm-ann" role="region" aria-label="Announcements" aria-live="polite">
       <span>{m.text}</span>
       {m.cta && m.href ? <a href={m.href}>{m.cta} {arrow}</a> : null}
     </div>

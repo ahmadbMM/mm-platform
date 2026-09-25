@@ -80,7 +80,7 @@ export const workshopSchema: PageSchema = {
         { id: "days", type: "number", min: 3, max: 30, step: 1, label: bi("Days ahead customers can pick", "عدد الأيام المتاحة للاختيار"), def: 7 },
         { id: "times", type: "list", maxItems: 8, label: bi("Times customers can pick", "الأوقات المتاحة للاختيار"),
           hint: bi("24-hour time, e.g. 17:00.", "بنظام ٢٤ ساعة، مثل 17:00."),
-          item: [txt("time", 5, "Time", "الوقت", "", "")],
+          item: [{ ...txt("time", 5, "Time", "الوقت", "", ""), mono: true }],
           def: ["15:00", "17:00", "19:00", "21:00"].map((x) => ({ time: bi(x, x) })) },
         txt("doneTitle", 60, "After sending: title", "بعد الإرسال: العنوان", "Request received", "تم استلام طلبك"),
         long("doneText", 200, "After sending: text", "بعد الإرسال: النص", "The team will call to confirm. Bring your bike 10 minutes before your time.", "سيتواصل معك الفريق للتأكيد. أحضر دراجتك قبل موعدك بـ ١٠ دقائق."),

@@ -75,7 +75,7 @@ export default async function AmbassadorsPage({ params }: { params: Promise<{ lo
             locale={locale} title={S(a.portal.title)} text={S(a.portal.text)} share={S(a.portal.share)} discount={numbers.discount}
             tierNames={tierNames} labels={{ rental: S(how.rentalLabel), workshop: S(how.workshopLabel), event: S(how.eventLabel) }}
             rewardsTitle={S(a.redeem.title)}
-            rewards={list(a.redeem.items).map((x) => ({ label: S(x.label), cost: N(x.cost) })).filter((x) => x.label && x.cost > 0)}
+            rewards={list(a.redeem.items).map((x, idx) => ({ label: S(x.label), cost: N(x.cost), idx })).filter((x) => x.label && x.cost > 0)}
           />
         </div>
         <section className="amb-sec" id="how">

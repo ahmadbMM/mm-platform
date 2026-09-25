@@ -18,7 +18,7 @@ export default function OpenNow({ openHour, closeHour, fridayClosed, ar }: { ope
   const fri = ksa.getDay() === 5;
   const closedToday = fri && fridayClosed;
   const open = !closedToday && h >= openHour && h < closeHour;
-  const hh = (n: number) => (ar ? `${n}:٠٠` : `${n}:00`);
+  const hh = (n: number) => `${n}:00`;
   const status = open ? (ar ? "مفتوح الآن" : "Open now") : (ar ? "مغلق" : "Closed");
   // After closing on a Thursday, "tomorrow" would be the closed Friday: say Saturday.
   const nextIsFriday = ksa.getDay() === 4 && fridayClosed;

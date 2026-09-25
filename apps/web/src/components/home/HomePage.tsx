@@ -9,7 +9,7 @@ import FitQuiz, { type QuizText } from "@/components/home/FitQuiz";
 import OpenNow from "@/components/home/OpenNow";
 import "@/components/site/site.css";
 import "@/components/home/home.css";
-import { localHref } from "@/lib/links";
+import { BOOKING_URL, bookingLink, localHref, pageOf } from "@/lib/links";
 
 // Home, from Home.dc.html. Everything it says comes from the staff page (site_content), else
 // the design's words. Sections whose content is still empty (reviews, the numbers strip, the
@@ -21,7 +21,14 @@ const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 
 export default function HomePage({ locale, home, site, preview, hidden = [] }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean; hidden?: string[] }) {
   const ar = locale === "ar";
-  const H = (v: unknown) => localHref(S(v), locale);
+  // A button to a page staff have switched off would only reload Home (the proxy sends it back
+  // here): a ride page opens the booking app instead, any other the WhatsApp chat.
+  const RIDE_PAGES = new Set(["experiences", "events", "club", "routes"]);
+  const H = (v: unknown) => {
+    const href = S(v), pg = pageOf(href);
+    if (!pg || !hidden.includes(pg)) return localHref(href, locale);
+    return RIDE_PAGES.has(pg) ? bookingLink(BOOKING_URL, locale) : (S(site.social?.whatsapp) || bookingLink(BOOKING_URL, locale));
+  };
   const arrow = ar ? "←" : "→";
   const e = home.entry, h = home.hero, f = home.feature, st = home.story, c = home.community, r = home.reviews, q = home.quiz, sp = home.split, v = home.visit;
   const contact = site.contact;
@@ -82,7 +89,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
         <AnnouncementBar items={announcements} arrow={arrow} />
 
         {/* Hero */}
-        <header className="hm-hero">
+        <header className="hm-hero" id="start">
           <div className="hm-hero-meta">
             <span className="hm-coord mm-lat">EST. JEDDAH</span>
             <span className="hm-hero-eyebrow">{S(h.eyebrow)}</span>
@@ -146,10 +153,10 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
           <section className="hm-reviews" aria-label={S(r.title)}>
             <div className="hm-reviews-rule"><span /><img src="/site/logo-dark.png" alt="" /><span /></div>
             <h2>{S(r.title)}</h2>
-            <div className="hm-reviews-track">
+            <div className="hm-reviews-track" dir="ltr">
               <div className="hm-reviews-row">
                 {[...reviews, ...reviews].map((x, i) => (
-                  <figure className="hm-review" key={i} aria-hidden={i >= reviews.length ? true : undefined}>
+                  <figure className="hm-review" key={i} dir={ar ? "rtl" : "ltr"} aria-hidden={i >= reviews.length ? true : undefined}>
                     <blockquote>“{x.quote}”</blockquote>
                     <figcaption><span className="init">{x.name.trim().charAt(0)}</span><span><strong>{x.name}</strong><small>{x.role}</small></span></figcaption>
                   </figure>

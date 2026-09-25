@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import SiteSearch from "@/components/site/SiteSearch";
-import { BOOKING_URL, NAV_LINKS, STORE_CART_URL, pick } from "@/lib/links";
+import { BOOKING_URL, NAV_LINKS, STORE_CART_URL, bookingLink, pick } from "@/lib/links";
 
 // The header from SiteNav.dc.html: logo, the site's sections in the middle, and the design's
 // round icons on the end - search, language, account and the cart (the Salla store's cart);
@@ -12,7 +12,7 @@ export default function SiteNav({ locale, hidden = [] }: { locale: string; hidde
   const ar = locale === "ar";
   const links = NAV_LINKS.filter((l) => !l.footer && !hidden.includes(l.key));
   // The account page, once staff switch it on; until then the booking app's own account.
-  const accountHref = hidden.includes("account") ? BOOKING_URL : null;
+  const accountHref = hidden.includes("account") ? bookingLink(BOOKING_URL, locale) : null;
   const path = usePathname();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState(false);

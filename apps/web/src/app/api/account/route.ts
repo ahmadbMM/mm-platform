@@ -1,5 +1,6 @@
 import { ACCOUNT_COOKIE, ACCOUNT_MAX_AGE, encodeSession, sameOrigin } from "@/lib/account-core";
 import { rpcServer } from "@/lib/account";
+import { normalizePhone } from "@/lib/rpc-client";
 
 // Sign in (POST {identifier, password}) and out (DELETE) with a Micromobility account. The
 // password goes to the booking app's own customer_login (which meters failed tries per email /
@@ -18,6 +19,9 @@ export async function POST(req: Request) {
     password = String(b.password ?? "").slice(0, 200);
   } catch { /* empty body */ }
   if (!identifier || !password) return json({ ok: false, error: "missing" }, 400);
+  // As the booking app signs in: an email in lower case, a mobile in the stored +966 form. A
+  // number typed 05…/5… never matched the stored one, and every try counted toward the lock.
+  identifier = identifier.includes("@") ? identifier.toLowerCase() : normalizePhone(identifier);
   const r = await rpcServer<{ id?: string; name?: string; session_token?: string }[]>("customer_login", { p_identifier: identifier, p_pwd: password });
   if (/LOCKED/.test(r.message)) return json({ ok: false, error: "locked" }, 429);
   const row = Array.isArray(r.data) ? r.data[0] : null;

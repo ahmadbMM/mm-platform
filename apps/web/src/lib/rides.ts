@@ -29,6 +29,9 @@ export type RideSession = {
   /** [first, second] times as written by staff: start-end, or gather-start when `gather`. */
   times: [string, string] | null;
   gather: boolean;
+  /** No Road Carbon bike on this ride: the booking app's _noCarbon, community rides except
+   *  Petromin (and Petromin nights are not on this site at all). */
+  noCarbon: boolean;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -57,11 +60,11 @@ export function slotTimes(slots: unknown): [string, string] | null {
 
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
  *  booked through the company's own form (micromobility.sa/petromin), so they are left out. */
-export function toSession(r: Row): RideSession | null {
+export function toSession(r: Row, keepAll = false): RideSession | null {
   if (typeof r.id !== "string" || typeof r.session_date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(r.session_date)) return null;
-  if (r.status !== "open" && r.status !== "full") return null;
+  if (!keepAll && r.status !== "open" && r.status !== "full") return null;
   const kind = rideKind(r);
-  if (kind === "petromin") return null;
+  if (!keepAll && kind === "petromin") return null;
   const community = r.event_kind === "community";
   return {
     id: r.id,
@@ -73,6 +76,7 @@ export function toSession(r: Row): RideSession | null {
     free: community && kind !== "snd96" && r.paid_ride !== true,
     times: slotTimes(r.bike_slots),
     gather: kind === "saturday" || kind === "snd96",
+    noCarbon: community,
   };
 }
 
@@ -98,6 +102,22 @@ export function kindNames(d: Record<string, unknown>): Record<RideKind, string> 
 export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Record<RideKind, string>, enNames: Record<RideKind, string>, ar: boolean): string {
   if (s.kind === "jcc" || !s.title) return names[s.kind];
   return ar && s.title.toLowerCase() === enNames[s.kind].trim().toLowerCase() ? names[s.kind] : s.title;
+}
+
+/** Booked sessions by id, whatever their state (a Petromin night, one staff have closed since):
+ *  the Account page names a rider's bookings with them. Ids are checked before they reach the
+ *  query string. */
+export async function loadSessionsById(ids: string[], fetchImpl: typeof fetch = fetch): Promise<RideSession[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const clean = [...new Set(ids)].filter((x) => /^[A-Za-z0-9_-]{1,64}$/.test(x)).slice(0, 40);
+  if (!url || !key || !clean.length) return [];
+  const cols = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride";
+  try {
+    const rows = await getJson(fetchImpl, `${url}/rest/v1/sessions?select=${cols}&id=in.(${clean.join(",")})`, key);
+    return Array.isArray(rows) ? (rows as Row[]).map((r) => toSession(r, true)).filter((x): x is RideSession => x !== null) : [];
+  } catch {
+    return [];
+  }
 }
 
 const TTL_MS = 60_000;
@@ -137,7 +157,7 @@ export async function loadRides(fetchImpl: typeof fetch = fetch, now: number = D
         .map((x) => ({ type: x.type as string, price: x.price as number }));
     }
     if (s.status === "fulfilled" && Array.isArray(s.value)) {
-      sessions = (s.value as Row[]).map(toSession).filter((x): x is RideSession => x !== null);
+      sessions = (s.value as Row[]).map((r) => toSession(r)).filter((x): x is RideSession => x !== null);
     }
   }
   const data = prices || sessions ? { prices: prices ?? [], sessions: sessions ?? [] } : null;

@@ -14,7 +14,7 @@ export async function isStaffToken(token: string | undefined | null, fetchImpl: 
   if (hit && hit.until > now) return hit.ok;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  let ok = false;
+  let ok = false, sure = false;
   if (url && key) {
     try {
       const res = await fetchImpl(`${url}/rest/v1/rpc/is_staff`, {
@@ -25,12 +25,16 @@ export async function isStaffToken(token: string | undefined | null, fetchImpl: 
         signal: AbortSignal.timeout(2500),
       });
       ok = res.ok && (await res.json()) === true;
+      // an answer, yes or no (a 401 is a no); a timeout or a 5xx is not, and is asked again
+      sure = res.ok || res.status === 401 || res.status === 403;
     } catch {
       ok = false;
     }
   }
-  if (seen.size > 500) seen.clear();
-  seen.set(token, { ok, until: now + TTL_MS });
+  if (sure) {
+    if (seen.size > 500) seen.clear();
+    seen.set(token, { ok, until: now + TTL_MS });
+  }
   return ok;
 }
 

@@ -8,6 +8,7 @@ import { useRef, useState } from "react";
 export type StepSession = {
   id: string; day: string; name: string; when: { gather: boolean; a: string; b: string } | null;
   members: boolean; free: boolean; full: boolean; paid: boolean;
+  noCarbon: boolean; // the ride offers no Road Carbon bike, so its price is not shown
 };
 export type StepEvent = { key: string; title: string; meta: string; logo: string; note: string; sessions: StepSession[] };
 export type StepText = {
@@ -15,7 +16,7 @@ export type StepText = {
   noDates: string; handoff: string; members: string; free: string; full: string; gather: string; start: string; membersNote: string; clubLink: string;
   pricesTitle: string; pricesText: string; codeNote: string;
 };
-type Props = { locale: string; events: StepEvent[]; prices: { label: string; price: string }[]; bookHref: string; clubHref: string; text: StepText };
+type Props = { locale: string; events: StepEvent[]; prices: { type: string; label: string; price: string }[]; bookHref: string; clubHref: string; text: StepText };
 
 export default function ExperienceSteps({ locale, events, prices, bookHref, clubHref, text: t }: Props) {
   const ar = locale === "ar";
@@ -112,11 +113,11 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             </div>
             {tags(sess)}
             {ev.note && <p className="xs-rules">{ev.note}</p>}
-            {sess.paid && prices.length > 0 && (
+            {sess.paid && prices.some((p) => !(sess.noCarbon && p.type === "Road Carbon")) && (
               <div className="xs-prices">
                 <p className="xs-prices-h">{t.pricesTitle}</p>
                 {t.pricesText && <p className="xs-prices-t">{t.pricesText}</p>}
-                <div>{prices.map((p) => <span key={p.label}><span>{p.label}</span><strong>{p.price}</strong></span>)}</div>
+                <div>{prices.filter((p) => !(sess.noCarbon && p.type === "Road Carbon")).map((p) => <span key={p.label}><span>{p.label}</span><strong>{p.price}</strong></span>)}</div>
                 {t.codeNote && <p className="xs-prices-t">{t.codeNote}</p>}
               </div>
             )}

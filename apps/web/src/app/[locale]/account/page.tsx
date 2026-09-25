@@ -15,7 +15,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { fill } from "@/lib/fill";
 import { BOOKING_URL, bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { kindNames, loadRides, sessionName } from "@/lib/rides";
+import { kindNames, loadRides, sessionName, loadSessionsById } from "@/lib/rides";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
@@ -68,7 +68,9 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
   const d = resolvePage(experiencesSchema, content, L).dates;
   const names = { ...kindNames(d), petromin: ar ? "بترومين" : "Petromin" };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
-  const sessions = new Map((rides?.sessions ?? []).map((s) => [s.id, s]));
+  // a booking on a Petromin night or on a session staff closed since is named too
+  const booked = await loadSessionsById(bookings.map((b) => b.sessionId));
+  const sessions = new Map([...(rides?.sessions ?? []), ...booked].map((s) => [s.id, s]));
   const day = (iso: string) => new Intl.DateTimeFormat(ar ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const statusText = { booked: ar ? "محجوز" : "Booked", waitlist: ar ? "قائمة الانتظار" : "Waitlist", riding: ar ? "في الجولة" : "On the ride" };
   const first = acct.name.trim().split(/\s+/)[0] || acct.name;

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 // step. Phones and reduced-motion settings get the design's stated fallback (hidden / static).
 export type Step = { title: string; text: string; image: string };
 
-export default function BuildStory({ eyebrow, title, steps, ar }: { eyebrow: string; title: string; steps: Step[]; ar: boolean }) {
+export default function BuildStory({ eyebrow, title, steps }: { eyebrow: string; title: string; steps: Step[]; ar: boolean }) {
   const wrap = useRef<HTMLElement>(null);
   const [idx, setIdx] = useState(0);
   const [frac, setFrac] = useState(0);
@@ -32,11 +32,13 @@ export default function BuildStory({ eyebrow, title, steps, ar }: { eyebrow: str
     const el = wrap.current;
     if (!el) return;
     const total = el.offsetHeight - window.innerHeight;
+    // reduced motion lays the story out one screen tall: nothing to scroll, so the step is set here
+    if (total <= 0) { setIdx(i); setFrac(1); return; }
     const top = el.getBoundingClientRect().top + window.scrollY;
     window.scrollTo({ top: Math.round(top + total * (i / n) + 2), behavior: "smooth" });
   };
   if (!steps.length) return null;
-  const nums = ar ? ["٠١", "٠٢", "٠٣", "٠٤"] : ["01", "02", "03", "04"];
+  const nums = ["01", "02", "03", "04"];
   const cur = steps[idx] || steps[0];
   return (
     <section className="hm-story" ref={wrap} aria-label={title}>
