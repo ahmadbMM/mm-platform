@@ -53,7 +53,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "Date of birth",
       "Optional for your first eight bookings, then required. Community members: required before booking, and on a membership application",
-      "Age rules and safety, including making sure under-18s are booked by a parent or guardian; age categories for events, races and leaderboards; age-group totals; birthday messages, only if you’ve chosen ride news"
+      "Age rules and safety, including making sure under-18s are booked by a parent or guardian; age categories for events, races and leaderboards; age-group totals; a birthday greeting from our team"
      ],
      [
       "Nationality",
@@ -302,7 +302,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "تاريخ الميلاد",
       "اختياري في أول ثمانية حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية",
-      "تطبيق قواعد العمر والسلامة، ومنها التأكد من أن حجز من هم دون 18 عامًا يتم عبر أحد الوالدين أو الولي؛ وفئات الأعمار في الفعاليات والسباقات ولوحات الصدارة؛ وإحصاءات الفئات العمرية؛ ورسائل عيد الميلاد، فقط إذا اخترت أخبار الرحلات"
+      "تطبيق قواعد العمر والسلامة، ومنها التأكد من أن حجز من هم دون 18 عامًا يتم عبر أحد الوالدين أو الولي؛ وفئات الأعمار في الفعاليات والسباقات ولوحات الصدارة؛ وإحصاءات الفئات العمرية؛ وتهنئة بعيد ميلادك من فريقنا"
      ],
      [
       "الجنسية",
