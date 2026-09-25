@@ -123,7 +123,7 @@ export async function loadSessionsById(ids: string[], fetchImpl: typeof fetch = 
 const TTL_MS = 60_000;
 let cache: { at: number; data: RideData | null } | null = null;
 
-async function getJson(fetchImpl: typeof fetch, url: string, key: string): Promise<unknown> {
+export async function getJson(fetchImpl: typeof fetch, url: string, key: string): Promise<unknown> {
   const res = await fetchImpl(url, {
     headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" },
     cache: "no-store",

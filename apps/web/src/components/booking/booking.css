@@ -1,0 +1,110 @@
+/* The booking app's own cards, on the website: the ticket (My Account) and the session card
+   (Experiences, picking a date). Values read from the booking app's customer theme as rendered:
+   green #077a4b, orange #8a5c14, ink #1a1919, muted #4f565c / #6f6d63. */
+
+/* ── Ticket ──────────────────────────────────────────────────────────────────── */
+.tk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 360px)); gap: 18px; align-items: start; }
+.tk-card { position: relative; overflow: hidden; background: #fff; color: #1a1919; font-size: 14px;
+  border: 1px solid rgba(26, 25, 25, .14); border-radius: 16px; box-shadow: 0 12px 32px rgba(26, 25, 25, .1); }
+.tk-card::before { content: ""; position: absolute; top: 0; inset-inline: 0; height: 3px; background: #077a4b; }
+.tk-head { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px; border-bottom: 1px dashed rgba(26, 25, 25, .16); }
+.tk-num-block { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tk-card p { margin: 0; }
+.tk-label { font-family: var(--tk-font-label), var(--cs-font-en), var(--cs-font-ar), sans-serif; font-size: 11px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: #077a4b; }
+.tk-label.wl { color: #8a5c14; }
+.tk-num { font-weight: 700; color: #1a1919; line-height: 1; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.tk-num.big { font-size: 72px; letter-spacing: -3px; }
+.tk-num.mid { font-size: 40px; letter-spacing: -1px; }
+.tk-num.small { font-size: 24px; letter-spacing: -1px; line-height: 1.1; }
+.tk-wl-note { max-width: 190px; font-size: 11px; font-weight: 600; line-height: 1.45; color: #8a5c14; }
+.tk-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex: none; }
+.tk-qr { display: inline-block; line-height: 0; padding: 6px; background: #fff; border: 1px solid rgba(26, 25, 25, .14); border-radius: 3px; }
+.tk-qr-hold { width: 132px; height: 132px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 12px; text-align: center;
+  border: 1px dashed rgba(26, 25, 25, .16); border-radius: 10px; }
+.tk-qr-hold span { font-size: 10px; font-weight: 700; line-height: 1.5; color: #4f565c; }
+.tk-when { font-size: 10px; font-weight: 700; line-height: 1.4; color: #4f565c; text-align: end; }
+.tk-when .go { color: #077a4b; }
+.tk-body { padding: 2px 18px 0; }
+.tk-note { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 9px 12px; font-size: 12px; font-weight: 800; color: #1a1919;
+  background: #fbf9f4; border: 1px solid rgba(26, 25, 25, .1); border-radius: 10px; }
+.tk-note .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.tk-note.go { color: #077a4b; }
+.tk-note.warn { color: #8a5c14; }
+.tk-ok { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+  background: rgba(7, 122, 75, .08); border: 1px solid rgba(7, 122, 75, .25); color: #077a4b; }
+.tk-ok-tick { width: 20px; height: 20px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: #077a4b; color: #fff; font-size: 12px; font-weight: 900; }
+.tk-ok strong { display: block; font-size: 13px; font-weight: 800; }
+.tk-ok small { display: block; margin-top: 2px; font-size: 11px; font-weight: 600; color: #4f565c; }
+.tk-riders-h { padding-top: 10px; font-size: 10px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: #4f565c; }
+.tk-rider { padding: 11px 0; border-bottom: 1px solid rgba(26, 25, 25, .14); }
+.tk-rider-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.tk-q { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; height: 22px; padding: 0 8px; border-radius: 999px;
+  background: #fff; border: 1px solid rgba(26, 25, 25, .3); font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tk-w { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; color: #8a5c14; white-space: nowrap; }
+.tk-w .dot, .tk-pay .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; flex: none; }
+.tk-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 800; overflow-wrap: anywhere; }
+.tk-type { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 3px; white-space: nowrap;
+  font-family: var(--tk-font-label), var(--cs-font-en), var(--cs-font-ar), sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase;
+  background: rgba(26, 25, 25, .07); color: #1a1919; border: 1px solid rgba(26, 25, 25, .14); }
+/* The booking app's colour for each bike type (.type-road, .type-hybrid ...). */
+.tk-type.t-hybrid, .tk-type.t-kids { background: rgba(7, 122, 75, .1); color: #077a4b; border-color: rgba(7, 122, 75, .22); }
+.tk-type.t-gravel { background: rgba(7, 122, 75, .08); color: #077a4b; border-color: rgba(7, 122, 75, .2); }
+.tk-type.t-roadcarbon { background: rgba(7, 122, 75, .14); color: #077a4b; border-color: rgba(7, 122, 75, .45); font-weight: 800; }
+.tk-type.t-any { background: rgba(26, 25, 25, .05); color: #6f6d63; border-color: rgba(26, 25, 25, .09); }
+.tk-rider-pay { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.tk-rider-pay > span:first-child { font-size: 13px; font-weight: 800; color: #6f6d63; }
+.tk-rider-pay > span.paid { color: #077a4b; }
+.tk-pay { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+.tk-pay.due { color: #8a5c14; }
+.tk-pay.paid { color: #06603b; }
+.tk-total { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; }
+.tk-total span { font-size: 11px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; color: #4f565c; }
+.tk-total strong { font-size: 18px; font-weight: 900; color: #077a4b; }
+.tk-actions { display: flex; gap: 8px; padding: 0 18px 16px; }
+.tk-manage { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px 16px; }
+.tk-btn { flex: 1; min-width: 88px; height: 44px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border-radius: 999px; background: #fff; color: #1a1919 !important; border: 1px solid rgba(26, 25, 25, .25);
+  font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .2s, border-color .2s; }
+.tk-btn svg { flex: none; } /* a long label must not squeeze the icon to nothing */
+.tk-btn:hover { background: rgba(26, 25, 25, .04); }
+.tk-btn.solid { background: #00b467; border-color: #00b467; color: #04140c !important; }
+.tk-btn.solid:hover { background: #00a35d; }
+.tk-btn.red { color: #a33b2e !important; border-color: rgba(163, 59, 46, .4); }
+/* Arabic script joins its letters: no tracking, no capitals (as the booking app does for ar/ur). */
+html:is([lang="ar"], [lang="ur"]) :is(.tk-label, .tk-type, .tk-riders-h, .tk-total span, .sc-chip) { letter-spacing: 0; text-transform: none; }
+html:is([lang="ar"], [lang="ur"]) :is(.tk-label, .tk-type) { font-family: var(--cs-font-ar), sans-serif; }
+@media (max-width: 560px) {
+  .tk-grid { grid-template-columns: 1fr; }
+  .tk-head { padding: 16px 14px 14px; gap: 14px; }
+  .tk-num.big { font-size: 56px; letter-spacing: -2px; }
+  .tk-qr svg { width: 104px; height: 104px; }
+  .tk-qr-hold { width: 116px; height: 116px; }
+}
+
+/* ── Session card (a date to book) ───────────────────────────────────────────── */
+.sc-list { display: flex; flex-direction: column; gap: 10px; }
+.sc-card { --ev: #077a4b; position: relative; width: 100%; display: flex; flex-direction: column; gap: 4px; text-align: start; cursor: pointer;
+  padding: 14px 16px; padding-inline-start: 35px; min-height: 58px; font: inherit; color: #1a1919;
+  background: #fff; border: 1px solid rgba(26, 25, 25, .14); border-radius: 12px; transition: border-color .2s, box-shadow .2s; }
+.sc-card:hover { border-color: rgba(7, 122, 75, .4); box-shadow: 0 0 14px rgba(7, 122, 75, .12); }
+.sc-card:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+.sc-card.full { opacity: .72; }
+.sc-card.ev-jcc { --ev: #2f63ad; }
+.sc-card.ev-swim { --ev: #0d7d8f; }
+.sc-card.ev-workshop { --ev: #c2410c; }
+.sc-card.ev-snd96 { --ev: #00894a; }
+.sc-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.sc-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ev); }
+.sc-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.sc-tag { padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700; background: rgba(26, 25, 25, .06); color: #4f565c; }
+.sc-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sc-dot { width: 9px; height: 9px; flex: none; margin-inline-start: -19px; border-radius: 50%; border: 1.5px solid var(--ev); }
+.sc-date { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
+.sc-spots { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #06603b; white-space: nowrap; }
+.sc-spots::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.sc-spots.full { color: #a33b2e; }
+.sc-time { font-size: 12px; color: #6f6d63; }
+@media (max-width: 560px) {
+  .sc-card { padding: 12px; padding-inline-start: 31px; }
+  .sc-spots { font-size: 11px; }
+}

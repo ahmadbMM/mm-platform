@@ -25,26 +25,9 @@ export function decodeSession(v: string | undefined | null): Session | null {
   return id.length <= 100 && /^[A-Za-z0-9_-]{16,200}$/.test(token) ? { id, token } : null;
 }
 
-export type BookingRow = { id?: unknown; session_id?: unknown; session_date?: unknown; status?: unknown; name?: unknown; type_preference?: unknown; size?: unknown };
-export type Booking = { sessionId: string; date: string; riders: { name: string; type: string; size: string; status: "booked" | "waitlist" | "riding" }[] };
-
-/** The account's bookings still ahead (today, Riyadh, and later), one entry per session, soonest
- *  first. Cancelled, finished and removed rows are left out; queue numbers are not shown here -
- *  the booking app decides when a ride's queue is public. */
-export function upcomingBookings(rows: BookingRow[], today: string): Booking[] {
-  const S = (v: unknown) => (typeof v === "string" ? v : "");
-  const by = new Map<string, Booking>();
-  for (const r of rows) {
-    const status = r.status === "waiting" ? "booked" : r.status === "waitlist" ? "waitlist" : r.status === "active" ? "riding" : null;
-    const date = S(r.session_date);
-    if (!status || !/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today) continue;
-    const sid = S(r.session_id) || date;
-    const b = by.get(sid) ?? { sessionId: sid, date, riders: [] };
-    b.riders.push({ name: S(r.name), type: S(r.type_preference), size: S(r.size), status });
-    by.set(sid, b);
-  }
-  return [...by.values()].sort((a, b) => a.date.localeCompare(b.date) || a.sessionId.localeCompare(b.sessionId));
-}
+/** A queue_entries row as the account's own my_bookings returns it (the whole row). My Account
+ *  reads it as the booking app's ticket (lib/tickets.ts). */
+export type BookingRow = Record<string, unknown>;
 
 /** Only this site's own pages may ask to sign in or out (a plain same-origin check). */
 export function sameOrigin(origin: string | null, requestUrl: string): boolean {

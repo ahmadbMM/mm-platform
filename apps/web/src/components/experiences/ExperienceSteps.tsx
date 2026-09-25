@@ -4,10 +4,11 @@ import { useRef, useState } from "react";
 import { isRtl } from "@/i18n/locales";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
-// cards; then one of its dates; then the ride - its prices and rules - and the button that opens
-// the booking app on exactly that event and date (?ev=<event>&session=<id>).
+// cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
+// and rules - and the button that opens the booking app on exactly that event and date
+// (?ev=<event>&session=<id>).
 export type StepSession = {
-  id: string; day: string; name: string; when: { gather: boolean; a: string; b: string } | null;
+  id: string; kind: string; day: string; name: string; when: { gather: boolean; a: string; b: string } | null;
   members: boolean; free: boolean; full: boolean; paid: boolean;
   noCarbon: boolean; // the ride offers no Road Carbon bike, so its price is not shown
 };
@@ -15,6 +16,8 @@ export type StepEvent = { key: string; title: string; meta: string; logo: string
 export type StepText = {
   steps: [string, string, string]; eventTitle: string; dateTitle: string; bookTitle: string; cont: string; waitlist: string; back: string;
   noDates: string; handoff: string; members: string; free: string; full: string; gather: string; start: string; membersNote: string; clubLink: string;
+  /** The booking app's session card says Available or Waitlist on the right. */
+  available: string; waitlisted: string;
   pricesTitle: string; pricesText: string; codeNote: string;
 };
 type Props = { locale: string; events: StepEvent[]; prices: { type: string; label: string; price: string }[]; bookHref: string; clubHref: string; text: StepText };
@@ -87,13 +90,22 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           {ev.sessions.length === 0 ? (
             <p className="xs-empty">{t.noDates}</p>
           ) : (
-            <div className="xs-dates">
+            <div className="sc-list">
               {ev.sessions.map((s) => (
-                <button key={s.id} type="button" className={`xs-date${s.full ? " is-full" : ""}`} onClick={() => { setSess(s); go(3); }}>
-                  <span className="xs-day">{s.day}</span>
-                  {ev.key === "community" && <strong>{s.name}</strong>}
-                  {s.when && <span className="xs-time">{when(s)}</span>}
-                  {tags(s)}
+                <button key={s.id} type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}`} onClick={() => { setSess(s); go(3); }}>
+                  {(ev.key === "community" || s.members || s.free) && (
+                    <span className="sc-kicker">
+                      {ev.key === "community" && <span className="sc-chip">{s.name}</span>}
+                      {s.members && <span className="sc-tag">{t.members}</span>}
+                      {s.free && <span className="sc-tag">{t.free}</span>}
+                    </span>
+                  )}
+                  <span className="sc-head">
+                    <span className="sc-dot" aria-hidden="true" />
+                    <span className="sc-date">{s.day}</span>
+                    <span className={`sc-spots${s.full ? " full" : ""}`}>{s.full ? t.waitlisted : t.available}</span>
+                  </span>
+                  {s.when && <span className="sc-time">{when(s)}</span>}
                 </button>
               ))}
             </div>

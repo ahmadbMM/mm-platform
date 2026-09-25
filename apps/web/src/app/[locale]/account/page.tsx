@@ -4,30 +4,35 @@ import ClubCard from "@/components/club/ClubCard";
 import SignIn from "@/components/account/SignIn";
 import SignOut from "@/components/account/SignOut";
 import "@/components/account/account.css";
+import "@/components/booking/booking.css";
+import TicketCard from "@/components/booking/TicketCard";
+import { T as TICKET } from "@/components/booking/tickets.text";
+import { labelFont } from "@/components/booking/label-font";
 import "@/components/club/club.css";
 import { accountSchema } from "@/content/pages/account";
 import { clubSchema } from "@/content/pages/club";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { accountBookings, getAccount } from "@/lib/account";
-import { upcomingBookings } from "@/lib/account-core";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill } from "@/lib/fill";
 import { BOOKING_URL, bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { kindNames, loadRides, sessionName, loadSessionsById } from "@/lib/rides";
+import { kindNames, sessionName } from "@/lib/rides";
+import { ticketCue, ticketGroups } from "@/lib/tickets";
+import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { riyadhClock } from "@/lib/workshop-days";
-import { serverL } from "@/i18n/dicts";
+import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
-import { isRtl, intlOf } from "@/i18n/locales";
+import { isRtl } from "@/i18n/locales";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
-// the next rides (their tickets and changes stay in the booking app), the Club card opened with
-// the account's own email and mobile, and shortcuts.
+// the next rides as the booking app's own tickets (changing one opens the booking app), the Club
+// card opened with the account's own email and mobile, and shortcuts.
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const TYPE_NAME: Record<string, { en: string; ar: string }> = {
   Road: phrase("Road", "طريق"), Hybrid: phrase("Hybrid", "هجين"), Mountain: phrase("Mountain", "جبلي"), "Road Carbon": phrase("Road Carbon", "طريق كربون"),
-  Kids: phrase("Kids", "أطفال"), Any: phrase("Any bike", "أي دراجة"), Own: phrase("Own bike", "دراجتي الخاصة"),
+  Kids: phrase("Kids", "أطفال"), Gravel: phrase("Gravel", "حصى"), Any: phrase("Any bike", "أي دراجة"), Own: phrase("Own bike", "دراجتي الخاصة"),
 };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -65,17 +70,29 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
     );
   }
 
-  const [rows, rides] = await Promise.all([accountBookings(acct), loadRides()]);
+  const rows = await accountBookings(acct);
   const now = riyadhClock(new Date());
-  const bookings = upcomingBookings(rows, now.slice(0, 10));
+  const groups = ticketGroups(rows, now.slice(0, 10));
   const d = resolvePage(experiencesSchema, content, L).dates;
   const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
-  // a booking on a Petromin night or on a session staff closed since is named too
-  const booked = await loadSessionsById(bookings.map((b) => b.sessionId));
-  const sessions = new Map([...(rides?.sessions ?? []), ...booked].map((s) => [s.id, s]));
-  const day = (iso: string) => new Intl.DateTimeFormat(intlOf(locale), { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
-  const statusText = { booked: tx("Booked", "محجوز"), waitlist: tx("Waitlist", "قائمة الانتظار"), riding: tx("On the ride", "في الجولة") };
+  // every booked session, whatever its state now (a Petromin night, one staff closed since)
+  const sessions = await loadTicketSessions(groups.map((g) => g.sessionId));
+  // "You're next!" on a numbered night: whether anyone still waiting holds a lower number
+  const ahead = await Promise.all(groups.map((g) => {
+    const s = sessions.get(g.sessionId), first = g.rows.find((r) => r.status === "waiting" && r.queueNum != null);
+    return s && !s.approval && first ? anyoneAhead(g.sessionId, first.queueNum as number) : Promise.resolve(null);
+  }));
+  const ticketText = serverLocalize(TICKET, locale);
+  const typeName = (ty: string) => (TYPE_NAME[ty] ? tx(TYPE_NAME[ty].en, TYPE_NAME[ty].ar) : ty);
+  // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
+  // Edit does; Reschedule and Cancel open its My Bookings.
+  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96" };
+  const appLink = (params: Record<string, string>) => {
+    try { const u = new URL(BOOKING_URL); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
+    catch { return book; }
+  };
+  const manage = appLink({ tab: "bookings" });
   const first = acct.name.trim().split(/\s+/)[0] || acct.name;
   const club = resolvePage(clubSchema, content, L);
   const tierNames: [string, string, string] = [S(club.tiers.t1Name), S(club.tiers.t2Name), S(club.tiers.t3Name)];
@@ -100,18 +117,18 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
 
         <section className="ac-sec" aria-labelledby="ac-rides-h">
           <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a></div>
-          {bookings.length === 0 ? (
+          {groups.length === 0 ? (
             <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <span aria-hidden="true">{isRtl(locale) ? "←" : "→"}</span></a>}</p>
           ) : (
-            <div className="ac-rides">
-              {bookings.map((b) => {
-                const s = sessions.get(b.sessionId);
-                const name = s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة");
+            <div className={`tk-grid ${labelFont.variable}`}>
+              {groups.map((g, i) => {
+                const s = sessions.get(g.sessionId);
+                const ev = s ? EV[s.kind] : undefined;
                 return (
-                  <div key={b.sessionId} className="ac-ride">
-                    <div><strong>{name}</strong><span>{day(b.date)}{s?.times ? <> · <bdi dir="ltr">{s.times[0]}</bdi></> : null}</span></div>
-                    <ul>{b.riders.map((r, i) => <li key={i}><span>{r.name}{r.type && r.type !== "None" ? ` · ${TYPE_NAME[r.type] ? tx(TYPE_NAME[r.type].en, TYPE_NAME[r.type].ar) : r.type}` : ""}{r.size ? ` · ${r.size}` : ""}</span><em className={r.status}>{statusText[r.status]}</em></li>)}</ul>
-                  </div>
+                  <TicketCard key={g.sessionId} locale={locale} rows={g.rows} session={s}
+                    name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
+                    cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
+                    links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place: s?.approval ? s.meetUrl : S(site.contact.jccHref) || null }} />
                 );
               })}
             </div>
