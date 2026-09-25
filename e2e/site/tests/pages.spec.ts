@@ -10,9 +10,10 @@ const PAGES = ["/", "/about", "/club", "/experiences", "/workshop", "/help", "/e
 
 async function open(page: Page, path: string) {
   const errors: string[] = [];
-  page.on("pageerror", (e) => errors.push(e.message));
+  // The site's own errors only: an embedded third party (the Google Maps frame) is not ours to fail on.
+  page.on("pageerror", (e) => { if (!/https?:\/\/(?!localhost)/.test(e.stack || "")) errors.push(e.message); });
   page.on("console", (m) => { if (m.type() === "error" && !/Failed to load resource|ERR_FAILED|net::/.test(m.text())) errors.push(m.text()); });
-  await page.route(/supabase\.co|cloudflareinsights\.com|challenges\.cloudflare\.com/, (r) => r.abort());
+  await page.route(/supabase\.co|cloudflareinsights\.com|challenges\.cloudflare\.com|google\.com\/maps|gstatic\.com|googleapis\.com/, (r) => r.abort());
   const res = await page.goto(path, { waitUntil: "networkidle" });
   return { res, errors };
 }
