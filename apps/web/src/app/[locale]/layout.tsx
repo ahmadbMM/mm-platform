@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
+import Script from "next/script";
 import { Space_Grotesk, IBM_Plex_Sans_Arabic } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import { localeInfo } from "@/i18n/locales";
@@ -15,6 +16,11 @@ const grotesk = Space_Grotesk({ subsets: ["latin"], display: "swap", variable: "
 const plexAr = IBM_Plex_Sans_Arabic({
   subsets: ["arabic"], weight: ["400", "500", "600", "700"], display: "swap", variable: "--cs-font-ar", preload: false,
 });
+
+// Cloudflare Web Analytics, which the Privacy Notice names: cookie-free page counts. Its beacon is
+// added here when the site token is set (NEXT_PUBLIC_CF_BEACON_TOKEN at build; DEPLOY.md
+// "Monitoring"); with Cloudflare's automatic setup instead, Cloudflare adds it and this stays off.
+const BEACON = process.env.NEXT_PUBLIC_CF_BEACON_TOKEN || "";
 
 // Relative share images (/site/..., /media/...) resolve against the site's own address; without
 // this Next falls back to http://localhost:3000 on Cloudflare and every WhatsApp preview breaks.
@@ -32,6 +38,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider>
           <TxProvider locale={locale} dict={clientDict(locale)}>{children}</TxProvider>
         </NextIntlClientProvider>
+        {BEACON && <Script src="https://static.cloudflareinsights.com/beacon.min.js" strategy="afterInteractive" data-cf-beacon={JSON.stringify({ token: BEACON })} />}
       </body>
     </html>
   );

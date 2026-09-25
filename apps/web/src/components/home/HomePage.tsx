@@ -80,7 +80,8 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
           <div className="hm-entry-divider" aria-hidden="true" />
           <div className="hm-entry-phone" style={{ backgroundImage: `linear-gradient(to top,rgba(251,249,244,.95),rgba(251,249,244,.5) 40%,rgba(251,249,244,0) 70%),url('${bg(S(e.riderImage))}')` }}>
             <p className="hm-est mm-lat">EST. JEDDAH · 21°32′N</p>
-            <h2>{S(e.phoneTitle)}</h2>
+            {/* The page's heading on a phone: the desktop halves (and their h1) are not shown there. */}
+            <h1>{S(e.phoneTitle)}</h1>
             <p>{S(e.phoneText)}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
               <a href="#start" className="hm-btn hm-green">{S(e.riderBtn)} <span className="hm-arw">{arrow}</span></a>

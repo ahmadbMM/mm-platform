@@ -10,6 +10,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       # Cloudflare Turnstile on the sign-in (DEPLOY.md, "Sign-in protection"); empty = off.
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
+      # Cloudflare Web Analytics site token (DEPLOY.md, "Monitoring"); empty = no beacon from the site.
+      NEXT_PUBLIC_CF_BEACON_TOKEN: ${{ vars.NEXT_PUBLIC_CF_BEACON_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4          # version comes from "packageManager" in package.json
@@ -32,6 +34,13 @@ jobs:
           (cd forms/community && npm run e2e)
           (cd forms/petromin && npm run e2e)
       - run: pnpm --filter web exec opennextjs-cloudflare build
+      # The site's own pages in a browser, English and Arabic, desktop and phone, with an
+      # accessibility check (e2e/site). Runs on the build above, open whatever the real site's
+      # switch says (MM_TEST_SITE_OPEN); it only reads the database's public content.
+      - name: Site pages in a browser
+        run: |
+          npm ci --prefix e2e/site --no-audit --no-fund
+          (cd e2e/site && npx playwright install --with-deps chromium && npm run e2e)
       # The production deploy below needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
       # Without them wrangler-action runs with empty values and fails, turning a push red for
       # a step that was never going to work, so check once and skip instead.
@@ -63,3 +72,16 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/web
           command: deploy --env production
+      # The live site answers after the deploy: the site, its health check (which reads the
+      # database), the two forms and a bike page. A red run here means production needs a look.
+      - name: The live site answers
+        if: github.ref == 'refs/heads/main' && vars.MM_PRODUCTION == 'on' && steps.secrets.outputs.present == 'true'
+        run: |
+          sleep 20
+          fail=0
+          for u in / /api/health /petromin /community/registration /b/1 /robots.txt; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 10 --retry-all-errors "https://micromobility.sa$u")
+            echo "$u $code"
+            [ "$code" = 200 ] || fail=1
+          done
+          exit $fail

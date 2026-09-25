@@ -1,0 +1,13 @@
+{
+  "name": "mm-site-e2e",
+  "private": true,
+  "description": "The website's own pages in a browser, in English and Arabic, with an accessibility check (CI runs it before every deploy).",
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "axe-core": "^4.10.0"
+  }
+}

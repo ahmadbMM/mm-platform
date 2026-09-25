@@ -76,6 +76,21 @@ ask for a Cloudflare Turnstile check, which is off until both of its keys exist:
 
 To turn it off again, delete the secret first, then the variable.
 
+## Monitoring
+
+- **Workers Logs** are on (`observability` in `apps/web/wrangler.jsonc`): dashboard > Workers & Pages >
+  micromobility-web > Logs. A page that fails in a visitor's browser is reported there too, as a
+  `page-error` line (`/api/log-error`), with the digest Next shows.
+- **Web Analytics** (named in the Privacy Notice): dashboard > Analytics & Logs > Web Analytics >
+  Add a site > micromobility.sa. Either choose the automatic setup (Cloudflare adds the beacon;
+  nothing else to do), or copy the site token into the repository **variable**
+  `NEXT_PUBLIC_CF_BEACON_TOKEN` and push, and the site adds it itself. Not both.
+- **Uptime**: point a monitor (UptimeRobot's free plan, 5-minute checks, alerts by email or app)
+  at `https://micromobility.sa/api/health` (200 when the site can read the database, 503 when it
+  cannot), and at `/petromin` on ride nights.
+- **CI** checks the site's pages in a browser before every deploy (`e2e/site`), and the live
+  addresses after it ("The live site answers").
+
 ## Toolchain notes
 
 - Versions are pinned. Next 16 runs `src/proxy.ts` on the Node runtime; the Cloudflare adapter
