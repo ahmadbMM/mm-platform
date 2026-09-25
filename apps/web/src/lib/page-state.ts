@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { PREVIEW_COOKIE, isStaffToken } from "@/lib/preview";
-import { HOME_BUILT, hiddenPages, isComingSoon, loadSiteContent, pageOn, type SiteContent, type SwitchedPage } from "@/lib/site";
+import { hiddenPages, isComingSoon, loadSiteContent, pageOn, siteCanOpen, type SiteContent, type SwitchedPage } from "@/lib/site";
 
 // What every page needs to know first: the staff content, whether the page is closed to
 // visitors (the site is Coming Soon, or staff have not switched this page on), and whether this
@@ -9,7 +9,7 @@ import { HOME_BUILT, hiddenPages, isComingSoon, loadSiteContent, pageOn, type Si
 // (staff previewing see every page).
 export async function pageState(page?: SwitchedPage): Promise<{ content: SiteContent | null; closed: boolean; previewing: boolean; hidden: string[] }> {
   const content = await loadSiteContent();
-  const closed = (HOME_BUILT ? isComingSoon(content) : true) || (page ? !pageOn(content, page) : false);
+  const closed = (siteCanOpen() ? isComingSoon(content) : true) || (page ? !pageOn(content, page) : false);
   const previewing = closed ? await isStaffToken((await cookies()).get(PREVIEW_COOKIE)?.value) : false;
   return { content, closed, previewing, hidden: previewing ? [] : hiddenPages(content) };
 }

@@ -1,7 +1,7 @@
 import createMiddleware from "next-intl/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 import { LANG_COOKIE, routing } from "./i18n/routing";
-import { HOME_BUILT, hiddenPageTarget, isComingSoon, loadSiteContent } from "./lib/site";
+import { hiddenPageTarget, isComingSoon, loadSiteContent, siteCanOpen } from "./lib/site";
 import { comingSoonTarget } from "./lib/coming-soon-route";
 import { PREVIEW_COOKIE, isStaffToken } from "./lib/preview";
 import { alternateLinks, askedLang } from "./lib/lang-url";
@@ -49,8 +49,8 @@ export default async function proxy(req: NextRequest) {
   // /b/* never reaches here (matcher below).
   // Until Home exists the site is closed whatever staff have set, so nothing is read here yet.
   // Once it is open, a page staff have not switched on (Website > Pages) goes to Home the same way.
-  const content = HOME_BUILT ? await loadSiteContent() : null;
-  const closed = HOME_BUILT ? isComingSoon(content) : true;
+  const content = siteCanOpen() ? await loadSiteContent() : null;
+  const closed = siteCanOpen() ? isComingSoon(content) : true;
   const soon = closed ? comingSoonTarget(pathname) : hiddenPageTarget(pathname, content);
   // A signed-in staff member previewing the site (lib/preview.ts) passes; the preview page itself
   // must always load, since it is how preview starts.

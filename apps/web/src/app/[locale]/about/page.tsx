@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import MessageForm from "@/components/site/MessageForm";
 import OpenNow from "@/components/home/OpenNow";
@@ -34,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const { content, closed } = await pageState("about");
   const c = resolvePage(aboutSchema, content, asLocale(locale));
-  return { title: `${S(c.hero.eyebrow)} · Micromobility`, description: S(c.hero.text), robots: closed ? { index: false, follow: false } : undefined };
+  return pageMeta({ path: "/about", locale, title: `${S(c.hero.eyebrow)} · Micromobility`, description: S(c.hero.text), closed });
 }
 
 export default async function AboutPage({ params }: { params: Promise<{ locale: string }> }) {

@@ -23,7 +23,7 @@ html:is([lang="ar"], [lang="ur"]) .amb-eyebrow { letter-spacing: 0; font-size: 1
 .amb-demo small { color: rgba(251, 249, 244, .45); font-size: 12px; }
 .amb-sec { padding: 44px 7vw 20px; max-width: 1160px; margin: 0 auto; box-sizing: content-box; }
 .amb-sec h2 { font-size: clamp(24px, 2.8vw, 40px); letter-spacing: -1px; margin: 0 0 8px; }
-.amb-muted { color: #8a938c; font-size: 14px; margin: 0 0 18px; max-width: 620px; line-height: 1.6; }
+.amb-muted { color: #5f6862; font-size: 14px; margin: 0 0 18px; max-width: 620px; line-height: 1.6; }
 .amb-steps, .amb-rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; margin-top: 18px; }
 .amb-steps > div, .amb-rules > div { background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 22px; padding: 24px; display: flex; flex-direction: column; gap: 8px; }
 .amb-steps span { width: 34px; height: 34px; border-radius: 50%; background: #077a4b; color: #fbf9f4; display: grid; place-items: center; font-size: 15px; font-weight: 800; }
@@ -34,7 +34,7 @@ html:is([lang="ar"], [lang="ur"]) .amb-eyebrow { letter-spacing: 0; font-size: 1
 .amb-tier { background: #fff; border: 1.5px solid rgba(0, 0, 0, .1); border-radius: 24px; padding: 26px; display: flex; flex-direction: column; gap: 12px; }
 .amb-tier.elite { background: linear-gradient(135deg, #123019, #11150f 72%); color: #fbf9f4; border-color: rgba(3, 255, 137, .3); }
 .amb-tier strong { font-size: 20px; display: block; }
-.amb-tier small { color: #8a938c; font-size: 12.5px; }
+.amb-tier small { color: #5f6862; font-size: 12.5px; }
 .amb-tier.elite small { color: rgba(251, 249, 244, .6); }
 .amb-tier ul { list-style: none; margin: 0; padding: 14px 0 0; border-top: 1px solid rgba(0, 0, 0, .09); display: flex; flex-direction: column; gap: 8px; }
 .amb-tier.elite ul { border-top-color: rgba(255, 255, 255, .14); }
@@ -46,7 +46,7 @@ html:is([lang="ar"], [lang="ur"]) .amb-eyebrow { letter-spacing: 0; font-size: 1
 .amb-board li:last-child { border-bottom: 0; }
 .amb-board li > strong { flex: none; width: 28px; font-size: 16px; }
 .amb-board li > span { flex: 1; font-weight: 600; color: #2b332d; }
-.amb-board li small { color: #8a938c; font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.amb-board li small { color: #5f6862; font-size: 12.5px; font-weight: 500; white-space: nowrap; }
 .amb-board b { color: #077a4b; white-space: nowrap; }
 /* The card lookup and the card itself */
 .amb-portal-wrap { padding: 60px 7vw 20px; max-width: 1160px; margin: 0 auto; box-sizing: content-box; }
@@ -87,14 +87,14 @@ html:is([lang="ar"], [lang="ur"]) .amb-panel-title { letter-spacing: 0; }
 .amb-ledger, .amb-rewards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .amb-ledger li, .amb-rewards li { display: flex; align-items: center; gap: 12px; border-bottom: 1px solid rgba(0, 0, 0, .07); padding-bottom: 9px; font-size: 13.5px; }
 .amb-ledger-label { flex: 1; color: #2b332d; font-weight: 600; }
-.amb-ledger-label small { display: block; color: #8a938c; font-size: 11.5px; font-weight: 500; }
+.amb-ledger-label small { display: block; color: #5f6862; font-size: 11.5px; font-weight: 500; }
 .amb-ledger strong { color: #077a4b; white-space: nowrap; }
 .amb-ledger strong.neg { color: #8a6a12; }
 .amb-st { font-size: 11px; font-weight: 700; border-radius: 999px; padding: 4px 10px; background: rgba(196, 148, 17, .12); color: #8a6a12; white-space: nowrap; }
 .amb-st.confirmed, .amb-st.given { background: rgba(7, 122, 75, .1); color: #077a4b; }
 .amb-st.void { background: rgba(0, 0, 0, .06); color: #6b746d; }
 .amb-rewards li span { flex: 1; font-size: 14px; color: #2b332d; font-weight: 600; }
-.amb-rewards li small { color: #8a938c; font-size: 12.5px; white-space: nowrap; }
+.amb-rewards li small { color: #5f6862; font-size: 12.5px; white-space: nowrap; }
 .amb-rewards li.off { opacity: .45; }
 .amb-rewards button { cursor: pointer; border: 1px solid rgba(7, 122, 75, .4); background: rgba(7, 122, 75, .06); color: #077a4b; border-radius: 999px; padding: 9px 16px; font-weight: 700; font-size: 12px; font-family: inherit; min-height: 38px; }
 .amb-rewards button:disabled { cursor: default; }
@@ -108,7 +108,7 @@ html:is([lang="ar"], [lang="ur"]) .amb-panel-title { letter-spacing: 0; }
 .amb-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .amb-wide { grid-column: 1 / -1; }
 textarea.amb-input { resize: vertical; min-height: 90px; }
-.amb-apply-note { color: #8a938c; font-size: 12px; text-align: center; margin: 14px 0 0; }
+.amb-apply-note { color: #5f6862; font-size: 12px; text-align: center; margin: 14px 0 0; }
 .amb-done { display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; border: 1px solid rgba(7, 122, 75, .4); border-radius: 20px; background: rgba(7, 122, 75, .08); padding: 28px; }
 .amb-done strong { color: #077a4b; font-size: 20px; }
 .amb-done span { color: #57605a; font-size: 14.5px; line-height: 1.6; }

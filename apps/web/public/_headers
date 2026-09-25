@@ -1,0 +1,11 @@
+# Headers for the files Cloudflare serves straight from the Worker's static assets (they never
+# reach the site's code, so next.config headers() does not apply to them).
+#
+# Next's build files carry a hash in their name - a new build writes new names - so a browser may
+# keep them for a year. They were sent with max-age=0 and downloaded again on every page.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The site's own photos and logos keep their names across builds; a day is safe.
+/site/*
+  Cache-Control: public, max-age=86400

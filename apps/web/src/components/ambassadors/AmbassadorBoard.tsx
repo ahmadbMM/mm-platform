@@ -9,7 +9,7 @@ import { useL } from "@/i18n/TxProvider";
 // codes only. Nothing is shown until there is someone on it.
 type Row = { first_name: string; code: string; uses: number; season: number };
 type Props = { locale: string; title: string; text: string };
-const MEDAL = ["#c49411", "#8a938c", "#b0764a"];
+const MEDAL = ["#8a6800", "#65706a", "#9a5f33"]; // gold, silver, bronze - dark enough to read as text (4.5:1)
 
 export default function AmbassadorBoard(p: Props) {
   const tx = useL();
@@ -28,7 +28,7 @@ export default function AmbassadorBoard(p: Props) {
       <ol className="amb-board">
         {rows.map((r, i) => (
           <li key={r.code}>
-            <strong style={{ color: MEDAL[i] || "#8a938c" }}>{N(i + 1)}</strong>
+            <strong style={{ color: MEDAL[i] || "#5f6862" }}>{N(i + 1)}</strong>
             <span>{r.first_name} <small className="mm-lat">· {r.code}</small></span>
             {/* English says "1 use"; every other language translates "{n} uses" in a form right for any number. */}
             <small>{fill(r.uses === 1 && p.locale === "en" ? "{n} use" : tx("{n} uses", "{n} استخدام"), { n: N(r.uses) })}</small>

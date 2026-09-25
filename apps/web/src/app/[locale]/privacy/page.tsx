@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import "@/components/pages/pages.css";
 import { PRIVACY_NOTICE, PRIVACY_VERSION, type NoticeBlock } from "@/content/privacy-notice";
@@ -17,11 +18,13 @@ import { fill } from "@/lib/fill";
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { closed } = await pageState();
-  return { title: `${serverL(locale)("Privacy Notice", "إشعار الخصوصية")} · Micromobility`, robots: closed ? { index: false, follow: false } : undefined };
+  const tx = serverL(locale);
+  return pageMeta({ path: "/privacy", locale, title: `${tx("Privacy Notice", "إشعار الخصوصية")} · Micromobility`,
+    description: tx("How Micromobility collects, uses and protects your personal data, and the choices you have.", "كيف تجمع مايكروموبيليتي بياناتك الشخصية وتستخدمها وتحميها، والخيارات المتاحة لك."), closed });
 }
 
 function Block({ b }: { b: NoticeBlock }) {
-  if (b.h) return <h3>{b.h}</h3>;
+  if (b.h) return <h2>{b.h}</h2>;
   if (b.p) return <p dangerouslySetInnerHTML={{ __html: b.p }} />;
   if (b.ul) return <ul>{b.ul.map((x, i) => <li key={i} dangerouslySetInnerHTML={{ __html: x }} />)}</ul>;
   if (b.table) {

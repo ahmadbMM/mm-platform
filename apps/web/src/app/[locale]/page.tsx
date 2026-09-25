@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { cookies } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import ComingSoon from "@/components/ComingSoon";
 import HomePage from "@/components/home/HomePage";
+import JsonLd from "@/components/site/JsonLd";
+import { companyData } from "@/lib/structured-data";
 import { homeSchema } from "@/content/pages/home";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { PREVIEW_COOKIE, isStaffToken } from "@/lib/preview";
-import { HOME_BUILT, hiddenPages, isComingSoon, loadSiteContent, siteText } from "@/lib/site";
+import { hiddenPages, isComingSoon, loadSiteContent, siteCanOpen, siteText } from "@/lib/site";
 import { serverL } from "@/i18n/dicts";
 
 // micromobility.sa. While the site is closed (Coming Soon on in the staff page, or Home not
@@ -15,7 +18,7 @@ import { serverL } from "@/i18n/dicts";
 // Once staff open the site, everyone gets Home.
 async function state(locale: string) {
   const [t, content] = await Promise.all([getTranslations({ locale, namespace: "comingSoon" }), loadSiteContent()]);
-  const closed = HOME_BUILT ? isComingSoon(content) : true;
+  const closed = siteCanOpen() ? isComingSoon(content) : true;
   const previewing = closed ? await isStaffToken((await cookies()).get(PREVIEW_COOKIE)?.value) : false;
   // A Coming Soon text staff wrote: in this language, or - in a translated one - their English
   // translated (src/i18n/tx); else the default message.
@@ -34,17 +37,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const s = await state(locale);
   const tx = serverL(locale);
   return s.showHome
-    ? {
+    ? pageMeta({
+        path: "/", locale, closed: s.closed,
         title: tx("Micromobility - Premium Bikes, Experiences & Cycling Community in Jeddah", "مايكروموبيليتي - دراجات فاخرة وتجارب ومجتمع دراجات في جدة"),
         description: tx("Exclusive KSA distributor of Battle, Alvas, Camp & Strauss. Bike store, experiences, workshop and cycling community in Jeddah.",
           "الموزع الحصري في السعودية لـ Battle وAlvas وCamp وStrauss. متجر دراجات وتجارب وورشة ومجتمع دراجات في جدة."),
-        robots: s.closed ? { index: false, follow: false } : undefined,
-      }
-    : {
-        title: s.t("metaTitle"),
-        description: s.soon("coming_soon.sub", s.t("sub")),
-        robots: { index: false, follow: false },
-      };
+      })
+    : pageMeta({ path: "/", locale, noindex: true, title: s.t("metaTitle"), description: s.soon("coming_soon.sub", s.t("sub")) });
 }
 
 export default async function Page({ params }: { params: Promise<{ locale: string }> }) {
@@ -60,5 +59,11 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
     );
   }
   const L = asLocale(locale);
-  return <HomePage locale={locale} home={resolvePage(homeSchema, s.content, L)} site={resolvePage(siteSchema, s.content, L)} preview={s.previewing} hidden={s.previewing ? [] : hiddenPages(s.content)} />;
+  const site = resolvePage(siteSchema, s.content, L);
+  return (
+    <>
+      <JsonLd data={companyData(site as Record<string, Record<string, unknown>>, locale)} />
+      <HomePage locale={locale} home={resolvePage(homeSchema, s.content, L)} site={site} preview={s.previewing} hidden={s.previewing ? [] : hiddenPages(s.content)} />
+    </>
+  );
 }

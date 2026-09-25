@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import HelpBody, { type HelpTab } from "@/components/help/HelpBody";
 import "@/components/help/help.css";
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const { content, closed } = await pageState("help");
   const h = resolvePage(helpSchema, content, asLocale(locale));
-  return { title: `${S(h.intro.eyebrow)} · Micromobility`, description: S(h.intro.text), robots: closed ? { index: false, follow: false } : undefined };
+  return pageMeta({ path: "/help", locale, title: `${S(h.intro.eyebrow)} · Micromobility`, description: S(h.intro.text), closed });
 }
 
 export default async function HelpPage({ params }: { params: Promise<{ locale: string }> }) {

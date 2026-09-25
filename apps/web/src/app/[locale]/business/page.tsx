@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import BusinessBody, { type BizService } from "@/components/business/BusinessBody";
 import "@/components/business/business.css";
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const { content, closed } = await pageState("business");
   const b = resolvePage(businessSchema, content, asLocale(locale));
-  return { title: `${S(b.hero.eyebrow)} · Micromobility`, description: S(b.hero.text), robots: closed ? { index: false, follow: false } : undefined };
+  return pageMeta({ path: "/business", locale, title: `${S(b.hero.eyebrow)} · Micromobility`, description: S(b.hero.text), closed });
 }
 
 export default async function BusinessPage({ params }: { params: Promise<{ locale: string }> }) {

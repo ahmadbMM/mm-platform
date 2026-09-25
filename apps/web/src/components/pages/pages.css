@@ -68,7 +68,7 @@ html:is([lang="ar"], [lang="ur"]) .pg-month { letter-spacing: 0; }
 /* Privacy */
 .pg-privacy { max-width: 860px; }
 .pg-updated { color: #57605a; font-size: 14px; margin: 0 0 32px; }
-.pg-notice h3 { font-size: 20px; letter-spacing: -.3px; margin: 30px 0 10px; }
+.pg-notice h2 { font-size: 20px; letter-spacing: -.3px; line-height: 1.3; margin: 30px 0 10px; }
 .pg-notice p, .pg-notice li { color: #2e352f; font-size: 15px; line-height: 1.7; }
 .pg-notice p { margin: 0 0 12px; }
 .pg-notice ul { margin: 0 0 12px; padding-inline-start: 22px; }
@@ -90,3 +90,8 @@ html:is([lang="ar"], [lang="ur"]) .pg-month { letter-spacing: 0; }
   .pg-notice td { display: block; border: 0; padding: 3px 0; }
   .pg-notice td::before { content: attr(data-label) ": "; font-weight: 700; color: #57605a; }
 }
+
+/* The 404 and error pages (app/[locale]/not-found.tsx, error.tsx). */
+.pg-missing { min-height: 60vh; }
+.pg-actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; }
+button.pg-btn { border: 0; cursor: pointer; font: inherit; font-weight: 700; font-size: 15px; }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import "@/components/pages/pages.css";
 import { routesSchema } from "@/content/pages/routes";
@@ -19,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const { content, closed } = await pageState("routes");
   const c = resolvePage(routesSchema, content, asLocale(locale));
-  return { title: `${S(c.hero.eyebrow)} · Micromobility`, description: S(c.hero.text), robots: closed ? { index: false, follow: false } : undefined };
+  return pageMeta({ path: "/routes", locale, title: `${S(c.hero.eyebrow)} · Micromobility`, description: S(c.hero.text), closed });
 }
 
 export default async function RoutesPage({ params }: { params: Promise<{ locale: string }> }) {

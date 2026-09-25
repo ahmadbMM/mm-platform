@@ -20,20 +20,20 @@ html:is([lang="ar"], [lang="ur"]) .ws-eyebrow { letter-spacing: 0; font-size: 13
 .ws-track-res p { margin: 8px 0 0; }
 .ws-track-head { font-size: 14px; color: #1a1919; margin-bottom: 10px; }
 .ws-stages { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
-.ws-stages li { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-size: 10.5px; line-height: 1.25; color: #8a938c; }
-.ws-stages li span { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; background: rgba(0, 0, 0, .06); color: #8a938c; }
+.ws-stages li { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; font-size: 10.5px; line-height: 1.25; color: #5f6862; }
+.ws-stages li span { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; background: rgba(0, 0, 0, .06); color: #5f6862; }
 .ws-stages li.done span { background: #077a4b; color: #fbf9f4; }
 .ws-stages li.now { color: #1a1919; font-weight: 700; }
 .ws-stages li.now span { background: #03ff89; color: #0d100d; }
 .ws-card { grid-area: form; background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 30px; padding: 30px; position: sticky; top: 84px; }
 .ws-card h2 { font-size: 22px; letter-spacing: -.5px; margin: 0 0 4px; }
-.ws-sub { color: #8a938c; font-size: 13.5px; margin: 0 0 18px; }
+.ws-sub { color: #5f6862; font-size: 13.5px; margin: 0 0 18px; }
 .ws-label { font-size: 13.5px; color: #57605a; font-weight: 600; display: block; margin: 0 0 8px; }
-.ws-hint { color: #8a938c; font-size: 12px; margin: -4px 0 10px; }
+.ws-hint { color: #5f6862; font-size: 12px; margin: -4px 0 10px; }
 .ws-lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 7px; margin-bottom: 16px; }
 .ws-lane { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); background: #fff; color: #1a1919; border-radius: 14px; padding: 12px 10px; font-family: inherit; text-align: start; min-height: 64px; display: flex; flex-direction: column; gap: 3px; }
 .ws-lane strong { font-size: 12.5px; line-height: 1.2; }
-.ws-lane span { font-size: 10.5px; color: #8a938c; line-height: 1.3; }
+.ws-lane span { font-size: 10.5px; color: #5f6862; line-height: 1.3; }
 .ws-lane[aria-checked="true"] { border-color: #077a4b; background: rgba(7, 122, 75, .06); }
 .ws-chips, .ws-days { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px; }
 .ws-chips button, .ws-days button { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); background: #fff; color: #1a1919; border-radius: 999px; padding: 8px 14px; font-size: 12.5px; font-weight: 700; font-family: inherit; min-height: 40px; }
@@ -45,7 +45,7 @@ html:is([lang="ar"], [lang="ur"]) .ws-eyebrow { letter-spacing: 0; font-size: 13
 .ws-svc.on { border-color: #077a4b; background: rgba(7, 122, 75, .04); }
 .ws-svc > button { cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: transparent; border: 0; padding: 15px 18px; color: #1a1919; font-family: inherit; text-align: start; width: 100%; min-height: 56px; }
 .ws-svc strong { display: block; font-size: 15px; }
-.ws-svc small { color: #8a938c; font-size: 12.5px; }
+.ws-svc small { color: #5f6862; font-size: 12.5px; }
 .ws-price { font-weight: 700; font-size: 14px; white-space: nowrap; }
 .ws-incl { padding: 0 18px 15px; }
 .ws-incl span { font-size: 10.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #077a4b; display: block; margin-bottom: 8px; }
@@ -74,7 +74,7 @@ textarea.ws-input { resize: vertical; min-height: 76px; }
 .ws-btn-line { border: 1px solid rgba(0, 0, 0, .2); background: #fff; color: #1a1919; }
 .ws-done { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .ws-done .ws-eyebrow { margin: 0 0 8px; }
-.ws-ref-label { margin: 0; color: #8a938c; font-size: 13px; }
+.ws-ref-label { margin: 0; color: #5f6862; font-size: 13px; }
 .ws-ref { font-size: 40px; letter-spacing: -1px; }
 .ws-done-text { color: #57605a; font-size: 15px; line-height: 1.6; max-width: 360px; margin: 6px 0 16px; }
 @media (max-width: 900px) {

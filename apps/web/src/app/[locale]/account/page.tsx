@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import ClubCard from "@/components/club/ClubCard";
 import SignIn from "@/components/account/SignIn";
@@ -37,7 +38,7 @@ const TYPE_NAME: Record<string, { en: string; ar: string }> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  return { title: `${serverL(locale)("Account", "الحساب")} · Micromobility`, robots: { index: false, follow: false } };
+  return pageMeta({ path: "/account", locale, title: `${serverL(locale)("Account", "الحساب")} · Micromobility`, noindex: true });
 }
 
 export default async function AccountPage({ params }: { params: Promise<{ locale: string }> }) {

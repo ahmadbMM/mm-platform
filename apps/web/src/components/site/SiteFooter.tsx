@@ -82,7 +82,7 @@ export default function SiteFooter({ locale, c, hidden = [] }: { locale: string;
           </div>
           {columns.map((col, i) => (
             <div key={i} className="mm-foot-col">
-              <h3>{col.title}</h3>
+              <h2>{col.title}</h2>
               <div>{col.links.map((l, j) => <a key={j} href={l.href}>{l.label}</a>)}</div>
             </div>
           ))}

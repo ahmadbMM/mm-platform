@@ -10,6 +10,14 @@
 // locks the switch for the same reason). Set HOME_BUILT when Home ships.
 export const HOME_BUILT = false;
 
+// Tests only: MM_TEST_SITE_OPEN=1 (CI's page checks, local audits) treats the site as open and
+// every page as switched on, whatever staff have set, so pages can be checked while the real site
+// is Coming Soon. It is a server setting that is never set on the Worker.
+export const TEST_OPEN = process.env.MM_TEST_SITE_OPEN === "1";
+
+/** Whether the site's state has to be read at all: not while it is closed whatever staff say. */
+export const siteCanOpen = () => HOME_BUILT || TEST_OPEN;
+
 export type SiteContent = Record<string, unknown>;
 
 const TTL_MS = 60_000; // a staff save shows within a minute
@@ -87,7 +95,7 @@ export type SwitchedPage = (typeof SWITCHED_PAGES)[number];
 /** A page is shown once staff switch it on - an explicit true, read the way the staff page reads
  *  it. Until then it is left out of the menus and its address goes to Home. */
 export function pageOn(content: SiteContent | null, page: SwitchedPage): boolean {
-  return content?.[`page.${page}.visible`] === true;
+  return TEST_OPEN || content?.[`page.${page}.visible`] === true;
 }
 
 /** The switched page an address belongs to (/club, /help/..., and the old /en/club), or null. */
@@ -111,6 +119,7 @@ export function hiddenPages(content: SiteContent | null): SwitchedPage[] {
 
 /** Closed unless Home exists AND staff have explicitly switched Coming Soon off. */
 export function isComingSoon(content: SiteContent | null, homeBuilt: boolean = HOME_BUILT): boolean {
+  if (TEST_OPEN) return false;
   return !(homeBuilt && content?.["site.coming_soon"] === false);
 }
 

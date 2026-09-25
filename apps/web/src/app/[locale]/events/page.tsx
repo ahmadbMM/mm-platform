@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
+import JsonLd from "@/components/site/JsonLd";
+import { eventsData } from "@/lib/structured-data";
 import "@/components/pages/pages.css";
 import { eventsSchema } from "@/content/pages/events";
 import { experiencesSchema } from "@/content/pages/experiences";
@@ -24,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const { content, closed } = await pageState("events");
   const c = resolvePage(eventsSchema, content, asLocale(locale));
-  return { title: `${S(c.hero.eyebrow)} · Micromobility`, description: S(c.hero.text), robots: closed ? { index: false, follow: false } : undefined };
+  return pageMeta({ path: "/events", locale, title: `${S(c.hero.eyebrow)} · Micromobility`, description: S(c.hero.text), closed });
 }
 
 export default async function EventsPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -53,6 +56,11 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="pg">
+        {/* The public rides, for search engines; members-only ones are not advertised. */}
+        <JsonLd data={eventsData(sessions.filter((s) => !s.members).map((s) => ({
+          name: name(s), date: s.date, times: s.times, gather: s.gather, full: s.full, url: book,
+          place: s.kind === "jcc" || s.kind === "snd96" ? "Jeddah Corniche Circuit" : "Jeddah",
+        })))} />
         <p className="pg-eyebrow">{S(c.hero.eyebrow)}</p>
         <h1>{S(c.hero.title)}</h1>
         {S(c.hero.text) && <p className="pg-lead">{S(c.hero.text)}</p>}

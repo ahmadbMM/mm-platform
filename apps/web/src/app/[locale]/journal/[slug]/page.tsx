@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import PageShell from "@/components/site/PageShell";
+import JsonLd from "@/components/site/JsonLd";
+import { articleData } from "@/lib/structured-data";
 import { Link } from "@/i18n/navigation";
 import "@/components/journal/journal.css";
 import { fmtDate, journalState } from "@/components/journal/journal-data";
@@ -20,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { posts, closed } = await journalState(locale);
   const p = posts.find((x) => x.slug === slug);
   if (!p) return { robots: { index: false, follow: false } };
-  return { title: `${p.title} · Micromobility`, description: p.excerpt, robots: closed ? { index: false, follow: false } : undefined, openGraph: p.cover ? { images: [p.cover] } : undefined };
+  return pageMeta({ path: `/journal/${slug}`, locale, title: `${p.title} · Micromobility`, description: p.excerpt, closed, image: p.cover || undefined, type: "article" });
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
@@ -35,6 +38,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ locale
   const showCta = p.cta && p.ctaHref && !hidden.includes(ctaPage);
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
+      <JsonLd data={articleData(p, locale)} />
       <article className="jr jr-article">
         <Link className="jr-back" href="/journal"><span aria-hidden="true">{(isRtl(locale) ? "→" : "←")}</span> {S(j.hero.eyebrow)}</Link>
         <span className="jr-meta">{[p.tag, fmtDate(p.date, locale), fill(tx("{n} min read", "{n} د قراءة"), { n: readMinutes(p.body) })].filter(Boolean).join(" · ")}</span>

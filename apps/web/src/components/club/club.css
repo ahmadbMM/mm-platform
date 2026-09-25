@@ -68,7 +68,7 @@ html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }
 .club-earn-row { display: flex; align-items: center; gap: 14px; border-bottom: 1px solid rgba(0, 0, 0, .07); padding-bottom: 12px; }
 .club-earn-row span { flex: 1; font-size: 14px; color: #2b332d; font-weight: 600; }
 .club-earn-row strong { color: #077a4b; font-size: 13.5px; white-space: nowrap; }
-.club-earn p { color: #8a938c; font-size: 12.5px; line-height: 1.6; margin: 4px 0 0; }
+.club-earn p { color: #5f6862; font-size: 12.5px; line-height: 1.6; margin: 4px 0 0; }
 .club-sec { padding: 40px 7vw; max-width: 1180px; margin: 0 auto; box-sizing: content-box; }
 .club-center { text-align: center; margin-bottom: 36px; }
 .club-center p { color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 10px; }
@@ -79,7 +79,7 @@ html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }
 .club-tier .club-cardviz { padding: 18px; border-radius: 18px; box-shadow: 0 18px 44px rgba(0, 0, 0, .28); }
 .club-tier .club-cardviz-num { font-size: 21px; letter-spacing: -.4px; }
 .club-tier > div > strong { font-size: 22px; display: block; }
-.club-tier > div > small { color: #8a938c; font-size: 13px; }
+.club-tier > div > small { color: #5f6862; font-size: 13px; }
 .club-tier.legend > div > small { color: rgba(251, 249, 244, .6); }
 .club-tier ul { list-style: none; margin: 0; padding: 16px 0 0; border-top: 1px solid rgba(0, 0, 0, .09); display: flex; flex-direction: column; gap: 9px; flex: 1; }
 .club-tier.legend ul { border-top-color: rgba(255, 255, 255, .14); }

@@ -100,7 +100,7 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
 .mm-foot-social { display: flex; gap: 10px; flex-wrap: wrap; }
 .mm-foot .mm-foot-social a { width: 40px; height: 40px; border-radius: 50%; background: #077a4b; color: #fbf9f4; display: inline-flex; align-items: center; justify-content: center; transition: background .2s ease, color .2s ease; }
 .mm-foot .mm-foot-social a:hover { background: #fbf9f4; color: #077a4b; }
-.mm-foot-col h3 { color: #0fa463; font-size: 25px; font-weight: 700; letter-spacing: -.5px; margin: 0 0 22px; }
+.mm-foot-col h2 { color: #0fa463; font-size: 25px; font-weight: 700; letter-spacing: -.5px; margin: 0 0 22px; }
 .mm-foot-col > div { display: flex; flex-direction: column; gap: 15px; font-size: 15.5px; align-items: flex-start; }
 .mm-foot-up { display: flex; justify-content: flex-end; max-width: 1440px; margin: 0 auto 14px; }
 .mm-foot-totop { width: 52px; height: 52px; border-radius: 14px; background: #fbf9f4; border: 0; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #0d100d; transition: background .2s ease, color .2s ease; }
@@ -114,7 +114,7 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
 @media (max-width: 760px) {
   .mm-foot-grid { grid-template-columns: 1fr 1fr; gap: 24px 18px; }
   .mm-foot-brand { grid-column: 1 / -1; }
-  .mm-foot-col h3 { font-size: 20px; margin-bottom: 14px; }
+  .mm-foot-col h2 { font-size: 20px; margin-bottom: 14px; }
   .mm-foot-col > div { gap: 11px; font-size: 13.5px; }
   .mm-foot-pay > div { flex-wrap: nowrap; justify-content: space-between; gap: 10px; overflow-x: auto; scrollbar-width: none; }
   .mm-foot-pay > div::-webkit-scrollbar { display: none; }
@@ -132,7 +132,7 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
 .hm-open .dot span { position: absolute; inset: 0; border-radius: 50%; }
 .hm-open .dot span + span { animation: mmPing 2.4s ease-out infinite; }
 .hm-open strong { font-size: 14px; }
-.hm-open em { font-style: normal; color: #8a938c; font-size: 14px; }
+.hm-open em { font-style: normal; color: #5f6862; font-size: 14px; }
 
 /* ── The header's search ── */
 .mm-search { position: fixed; inset: 0; z-index: 70; }

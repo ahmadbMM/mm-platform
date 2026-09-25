@@ -10,8 +10,10 @@ import "../globals.css";
 
 // Self-hosted at build time, like the bike pages: no third-party font request.
 const grotesk = Space_Grotesk({ subsets: ["latin"], display: "swap", variable: "--cs-font-en" });
+// Not preloaded: its four weights were fetched up front on every page, English included. Arabic
+// and Urdu pages still get it as soon as their stylesheet asks (display: swap).
 const plexAr = IBM_Plex_Sans_Arabic({
-  subsets: ["arabic"], weight: ["400", "500", "600", "700"], display: "swap", variable: "--cs-font-ar",
+  subsets: ["arabic"], weight: ["400", "500", "600", "700"], display: "swap", variable: "--cs-font-ar", preload: false,
 });
 
 // Relative share images (/site/..., /media/...) resolve against the site's own address; without

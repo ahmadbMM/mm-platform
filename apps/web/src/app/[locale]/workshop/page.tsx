@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import WorkshopForm, { type Service } from "@/components/workshop/WorkshopForm";
 import WorkshopTrack from "@/components/workshop/WorkshopTrack";
@@ -21,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const { content, closed } = await pageState("workshop");
   const w = resolvePage(workshopSchema, content, asLocale(locale));
-  return { title: `${S(w.intro.title)} · Micromobility`, description: S(w.intro.text), robots: closed ? { index: false, follow: false } : undefined };
+  return pageMeta({ path: "/workshop", locale, title: `${S(w.intro.title).replace(/[.。।۔!]\s*$/, "")} · Micromobility`, description: S(w.intro.text), closed });
 }
 
 export default async function WorkshopPage({ params }: { params: Promise<{ locale: string }> }) {

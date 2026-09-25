@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import AmbassadorPortal from "@/components/ambassadors/AmbassadorPortal";
 import AmbassadorApply from "@/components/ambassadors/AmbassadorApply";
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const { content, closed } = await pageState("ambassadors");
   const a = resolvePage(ambassadorsSchema, content, asLocale(locale));
-  return { title: `${S(a.hero.eyebrow)} · Micromobility`, robots: closed ? { index: false, follow: false } : undefined };
+  return pageMeta({ path: "/ambassadors", locale, title: `${S(a.hero.eyebrow)} · Micromobility`, description: fill(S(a.hero.text), { discount: fmtNum(N(a.rules.discount), locale) }), closed });
 }
 
 export default async function AmbassadorsPage({ params }: { params: Promise<{ locale: string }> }) {

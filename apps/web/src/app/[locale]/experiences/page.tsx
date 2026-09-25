@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import "@/components/experiences/experiences.css";
 import "@/components/booking/booking.css";
@@ -35,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const { content, closed } = await pageState("experiences");
   const c = resolvePage(experiencesSchema, content, asLocale(locale));
-  return { title: `${serverL(locale)("Experiences", "التجارب")} · Micromobility`, description: S(c.hero.text), robots: closed ? { index: false, follow: false } : undefined };
+  return pageMeta({ path: "/experiences", locale, title: `${serverL(locale)("Experiences", "التجارب")} · Micromobility`, description: S(c.hero.text), closed });
 }
 
 export default async function ExperiencesPage({ params }: { params: Promise<{ locale: string }> }) {

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import GalleryGrid from "@/components/gallery/GalleryGrid";
 import "@/components/pages/pages.css";
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const { content, closed } = await pageState("gallery");
   const c = resolvePage(gallerySchema, content, asLocale(locale));
-  return { title: `${S(c.hero.eyebrow)} · Micromobility`, description: S(c.hero.title), robots: closed ? { index: false, follow: false } : undefined };
+  return pageMeta({ path: "/gallery", locale, title: `${S(c.hero.eyebrow)} · Micromobility`, description: S(c.hero.title), closed });
 }
 
 export default async function GalleryPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -26,13 +27,16 @@ export default async function GalleryPage({ params }: { params: Promise<{ locale
   const { content, previewing, hidden } = await pageState("gallery");
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(gallerySchema, content, L);
+  const tx = serverL(locale);
   const photos = list(c.photos.items).map((p) => ({ src: S(p.image), caption: S(p.caption), tag: S(p.tag) })).filter((p) => p.src);
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="pg">
         <p className="pg-eyebrow">{S(c.hero.eyebrow)}</p>
         <h1>{S(c.hero.title)}</h1>
-        <GalleryGrid photos={photos} allLabel={S(c.hero.all)} closeLabel={serverL(locale)("Close", "إغلاق")} />
+        {photos.length > 0
+          ? <GalleryGrid photos={photos} allLabel={S(c.hero.all)} closeLabel={tx("Close", "إغلاق")} />
+          : <p className="pg-empty">{tx("No photos yet - check back soon.", "لا توجد صور بعد، عُد قريباً.")}</p>}
       </div>
     </PageShell>
   );

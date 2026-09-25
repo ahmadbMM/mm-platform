@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import "@/components/journal/journal.css";
 import { fmtDate, journalState } from "@/components/journal/journal-data";
@@ -15,7 +16,7 @@ const S = (v: unknown) => (typeof v === "string" ? v : "");
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { j, closed } = await journalState(locale);
-  return { title: `${S(j.hero.eyebrow)} · Micromobility`, description: S(j.hero.text), robots: closed ? { index: false, follow: false } : undefined };
+  return pageMeta({ path: "/journal", locale, title: `${S(j.hero.eyebrow)} · Micromobility`, description: S(j.hero.text), closed });
 }
 
 export default async function JournalPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<{ tag?: string }> }) {
