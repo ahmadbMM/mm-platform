@@ -25,6 +25,10 @@ type Base = {
   /** One value in every language (a phone, a date, a registration number): the English box, else
    *  the Arabic one, so a value typed in only one box shows on both pages. */
   mono?: boolean;
+  /** Written in English and Arabic only (legal text, like the Privacy Notice): every other language
+   *  shows the English, with a note on the page. Never translated through src/i18n/tx, so it is not
+   *  on the list of texts to translate. */
+  enArOnly?: boolean;
 };
 
 export type TextField = Base & { type: "text" | "longtext"; max: number; def: Bi };

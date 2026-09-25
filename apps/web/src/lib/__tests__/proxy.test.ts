@@ -3,8 +3,8 @@ import { NextRequest } from "next/server";
 import proxy, { config } from "../../proxy";
 
 // The addresses carry no language (i18n/routing.ts). These run the real proxy on requests as a
-// browser sends them; the site is Coming Soon (HOME_BUILT is false), so every page but / is sent
-// back to it.
+// browser sends them; there is no database here, so nothing staff set is read and the site is
+// Coming Soon: every page but / is sent back to it.
 const SITE = "https://micromobility.sa";
 const call = (path: string, headers: Record<string, string> = {}) => proxy(new NextRequest(SITE + path, { headers }));
 const rewrittenTo = (res: Response) => new URL(res.headers.get("x-middleware-rewrite") || "").pathname;

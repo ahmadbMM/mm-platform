@@ -59,6 +59,23 @@ Then check, in this order: `https://micromobility.sa/` (site, redirected to `/en
 an address on the domain. Roll back by deleting the two routes in Workers & Pages >
 micromobility-web > Settings > Domains & Routes; the old forward takes over again at once.
 
+## Sign-in protection
+
+The account sign-in (`/api/account`) allows each connection 10 tries a minute, with Cloudflare's
+rate limiter (`LOGIN_LIMIT` in `apps/web/wrangler.jsonc`; nothing to set up). On top of that it can
+ask for a Cloudflare Turnstile check, which is off until both of its keys exist:
+
+1. Cloudflare dashboard (the account that holds micromobility.sa) > Turnstile > Add widget:
+   hostname `micromobility.sa` (and `www.micromobility.sa`), mode Managed.
+2. GitHub > mm-platform > Settings > Secrets and variables > Actions > **Variables**: add
+   `NEXT_PUBLIC_TURNSTILE_SITE_KEY` = the widget's site key. Push anything (or re-run the last
+   run) so the form is built with it.
+3. Only then, the secret key as a Worker secret:
+   `cd apps/web && npx wrangler secret put TURNSTILE_SECRET_KEY --env production`.
+   The order matters: with the secret set but no site key in the page, every sign-in is refused.
+
+To turn it off again, delete the secret first, then the variable.
+
 ## Toolchain notes
 
 - Versions are pinned. Next 16 runs `src/proxy.ts` on the Node runtime; the Cloudflare adapter

@@ -89,7 +89,7 @@ export const homeSchema: PageSchema = {
           item: [txt("title", 50, "Step title", "عنوان الخطوة", "", ""), long("text", 200, "Step text", "نص الخطوة", "", ""), img("image", "Step photo", "صورة الخطوة", "/site/home/story-1.jpg")],
           def: [
             { title: bi("Pick the frame", "اختر الإطار"), text: bi("Carbon, alloy, trail or city — sized to your height and confirmed on the fitting jig.", "كربون أو ألمنيوم، طريق أو جبلية — بمقاسك ومؤكّد على جهاز القياس."), image: { url: "/site/home/story-1.jpg" } },
-            { title: bi("Paint and parts", "الطلاء والقطع"), text: bi("Colour, groupset, wheels and cockpit — chosen in the designer, priced live.", "اللون والمجموعة والعجلات والمقود في المصمم بأسعار مباشرة."), image: { url: "/site/home/story-2.jpg" } },
+            { title: bi("Paint and parts", "الطلاء والقطع"), text: bi("Colour, groupset, wheels and cockpit — choose them with our team in the store.", "اللون والمجموعة والعجلات والمقود — اخترها مع فريقنا في المتجر."), image: { url: "/site/home/story-2.jpg" } },
             { title: bi("Hand-built in Jeddah", "تُبنى يدوياً في جدة"), text: bi("Torqued, aligned and wheel-trued on the stand. Every fastener checked twice.", "عزم ومحاذاة وضبط عجلات على الحامل. كل مسمار يُفحص مرتين."), image: { url: "/site/home/story-3.jpg" } },
             { title: bi("First ride, together", "أول جولة، معاً"), text: bi("Get fitted, collect your bike, and roll onto the corniche.", "اضبط قياسك، استلم دراجتك، وانطلق إلى الكورنيش."), image: { url: "/site/home/story-4.jpg" } },
           ],

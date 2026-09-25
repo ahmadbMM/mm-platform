@@ -42,6 +42,24 @@ describe("loadSiteContent", () => {
     const down = vi.fn(async () => { throw new Error("offline"); });
     expect(await loadSiteContent(down as unknown as typeof fetch, 0)).toBeNull();
   });
+
+  it("a Worker that has just started takes the edge's last good copy when the database is down", async () => {
+    // Cloudflare's cache at the edge, as a Worker sees it (caches.default).
+    const store = new Map<string, string>();
+    vi.stubGlobal("caches", { default: {
+      match: async (k: string) => (store.has(k) ? new Response(store.get(k)) : undefined),
+      put: async (k: string, r: Response) => { store.set(k, await r.text()); },
+    } });
+    try {
+      await loadSiteContent(rows([{ key: "site.coming_soon", value: false }]) as unknown as typeof fetch, 0);
+      await new Promise((r) => setTimeout(r, 0)); // the edge copy is written in the background
+      resetSiteContent(); // a new instance: nothing in memory
+      const down = vi.fn(async () => { throw new Error("offline"); });
+      expect(await loadSiteContent(down as unknown as typeof fetch, 0)).toEqual({ "site.coming_soon": false });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe("isComingSoon", () => {
@@ -74,7 +92,7 @@ describe("page switches", () => {
     expect(pageOn(on, "help")).toBe(false);
     expect(pageOn(on, "workshop")).toBe(false); // only an explicit true, as the staff page reads it
     expect(pageOn(null, "club")).toBe(false);
-    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes", "journal", "account"]);
+    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes", "journal", "account", "terms"]);
   });
   it("knows which addresses belong to a switched page", () => {
     expect(switchedPageOf("/club")).toBe("club");

@@ -42,3 +42,4 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
   .ac { padding: 40px 16px 64px; }
   .ac-ride { grid-template-columns: 1fr; gap: 10px; }
 }
+.ac-check { min-height: 65px; margin: 4px 0 0; }

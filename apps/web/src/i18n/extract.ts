@@ -32,12 +32,13 @@ function files(dir: string): string[] {
 }
 
 function fieldTexts(f: Field | ItemField, out: Set<string>) {
+  if (f.enArOnly) return; // English and Arabic only: not translated (content/types.ts)
   if (f.type === "text" || f.type === "longtext") {
     if (!f.mono && f.def.en.trim()) out.add(f.def.en.trim());
   } else if (f.type === "list") {
     for (const item of f.def) {
       for (const sub of f.item) {
-        if ((sub.type === "text" || sub.type === "longtext") && !sub.mono) {
+        if ((sub.type === "text" || sub.type === "longtext") && !sub.mono && !sub.enArOnly) {
           const v = item[sub.id] as { en?: unknown } | undefined;
           if (v && typeof v.en === "string" && v.en.trim()) out.add(v.en.trim());
         }

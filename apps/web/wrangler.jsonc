@@ -8,6 +8,9 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "workers_dev": true,
+  // Sign-in tries per connection (src/lib/sign-in-guard.ts): 10 a minute. Bindings are not
+  // inherited, so production repeats it.
+  "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
   "env": {
     // `wrangler deploy --env production` = the real site. It answers micromobility.sa by
     // ROUTE, not custom domain, on purpose: the DNS records stay as they are (proxied A
@@ -28,6 +31,7 @@
       "name": "micromobility-web",
       "workers_dev": false,
       "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+      "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
       // /_next/* is not optional and cannot be moved: Next serves its own CSS, JavaScript and
       // self-hosted fonts from there, at the root, whatever path the page itself lives on.
       // Without this route those bundles fall through to the old forward and answer 302 to the

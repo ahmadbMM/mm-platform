@@ -59,7 +59,7 @@ export default async function AccountPage({ params }: { params: Promise<{ locale
             <p className="ac-eyebrow">{S(c.signin.eyebrow)}</p>
             <h1>{S(c.signin.title)}</h1>
             <p className="ac-text">{S(c.signin.text)}</p>
-            <SignIn />
+            <SignIn locale={locale} />
             <ul className="ac-notes">
               <li><a href={book}>{S(c.signin.create)}</a></li>
               <li>{S(c.signin.forgot)}</li>

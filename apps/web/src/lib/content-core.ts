@@ -30,6 +30,7 @@ export function fieldValue(field: ItemField, raw: unknown, locale: Locale, trans
         if (m) return m;
         return field.optional && isBi(raw) ? "" : field.def.en || field.def.ar;
       }
+      if (locale !== "en" && locale !== "ar" && field.enArOnly) return fieldValue(field, raw, "en", translate);
       if (locale !== "en" && locale !== "ar") {
         // A translated language: a version staff wrote for it, else the English translated
         // (src/i18n/tx), else the English itself.
