@@ -4,11 +4,11 @@ export const T = {
   en: {
     name: "Full name", phone: "Mobile number", insta: "Instagram (optional)", why: "Why you? Tell us about your community and riding", sending: "Sending…",
     already: "You have already applied with this number - the team will be in touch.", active: "This number already has an ambassador code - open your card above.",
-    errors: { name: "Enter your name - letters and spaces only.", phone: "Check the mobile number, e.g. 05XXXXXXXX.", instagram: "Check the Instagram handle.", throttled: "Too many tries from this network - wait a few minutes.", generic: "It could not be sent. Check the connection and try again." } as Record<string, string>,
+    errors: { name: "Enter your name - letters, spaces and periods only.", phone: "Check the mobile number, e.g. 05XXXXXXXX.", instagram: "Check the Instagram handle.", throttled: "Too many tries from this network - wait a few minutes.", generic: "It could not be sent. Check the connection and try again." } as Record<string, string>,
   },
   ar: {
     name: "الاسم الكامل", phone: "رقم الجوال", insta: "حساب إنستغرام (اختياري)", why: "لماذا أنت؟ حدثنا عن مجتمعك وركوبك", sending: "جارٍ الإرسال…",
     already: "سبق أن قدّمت بهذا الرقم - سيتواصل معك الفريق.", active: "لهذا الرقم كود سفير بالفعل - افتح بطاقتك في الأعلى.",
-    errors: { name: "أدخل اسمك - حروف ومسافات فقط.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.", instagram: "تحقق من حساب إنستغرام.", throttled: "محاولات كثيرة من هذه الشبكة - انتظر دقائق.", generic: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً." } as Record<string, string>,
+    errors: { name: "أدخل اسمك - حروف ومسافات ونقاط فقط.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.", instagram: "تحقق من حساب إنستغرام.", throttled: "محاولات كثيرة من هذه الشبكة - انتظر دقائق.", generic: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً." } as Record<string, string>,
   },
 };

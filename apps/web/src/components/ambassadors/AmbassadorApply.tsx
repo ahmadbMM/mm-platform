@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { cleanName, normalizePhone, rpc } from "@/lib/rpc-client";
+import { cleanName, nameOk, normalizePhone, rpc } from "@/lib/rpc-client";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./AmbassadorApply.text";
 
@@ -22,7 +22,7 @@ export default function AmbassadorApply(p: Props) {
   async function send() {
     setErr("");
     const nm = cleanName(name), ph = normalizePhone(phone);
-    if (!nm || !/^[\p{L}\s]+$/u.test(nm)) return setErr(t.errors.name);
+    if (!nameOk(nm)) return setErr(t.errors.name);
     if (!/^\+[1-9]\d{7,14}$/.test(ph) || (ph.startsWith("+966") && !/^\+9665\d{8}$/.test(ph))) return setErr(t.errors.phone);
     setBusy(true);
     try {
