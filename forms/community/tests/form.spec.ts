@@ -75,13 +75,15 @@ test('Mountain is a bike type; the name and phone fields carry no hints', async 
   expect(errs).toEqual([]);
 });
 
-test('names: letters only, first and last, no initials, one alphabet', async ({ page }) => {
+test('names: letters and periods only, first and last, no initials, one alphabet', async ({ page }) => {
   await open(page);
   const err = page.locator('#f-name .err');
   for (const [name, msg] of [
     ['Karim', 'Enter your first and last name'],
     ['K Mansour', 'Write your first and last name in full, not initials'],
     ['Karim A Mansour', 'Write your first and last name in full, not initials'], // a middle initial too, since 2026-09-25
+    ['Karim A. Mansour', 'Write your first and last name in full, not initials'], // a period does not make an initial a name
+    ['J.R. Mansour', 'Write your first and last name in full, not initials'],
     ['Karim منصور', 'Write your name in one alphabet'],
     ['Test User', 'Please enter your real name'],
   ]) {
@@ -94,6 +96,14 @@ test('names: letters only, first and last, no initials, one alphabet', async ({ 
   await page.fill('#name', 'Karim Al-Mansour');
   await expect(page.locator('#name')).toHaveValue('Karim Al Mansour');
   await expect(err).toHaveText('');
+  // A period after a letter stays ("Md. Karim"); a stray one goes, without a message
+  await page.locator('#name').fill('');
+  await page.locator('#name').pressSequentially('Md.. .Karim Mansour');
+  await expect(page.locator('#name')).toHaveValue('Md. Karim Mansour');
+  await expect(err).toHaveText('');
+  await page.locator('#name').pressSequentially('3');
+  await expect(page.locator('#name')).toHaveValue('Md. Karim Mansour');
+  await expect(err).toHaveText('Names can only contain letters, spaces and periods.');
 });
 
 test('phones: Saudi mobiles only on +966, the mobile rules elsewhere, and a paste with its code', async ({ page }) => {

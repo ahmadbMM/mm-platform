@@ -29,5 +29,11 @@ export function normalizePhone(raw: string): string {
   return d;
 }
 
-/** Names are letters and spaces only; a typed dash becomes a space (the site-wide name rule). */
-export const cleanName = (s: string) => s.replace(/[-‐-―]/g, " ").replace(/\s+/g, " ").trim();
+/** The site-wide name rule (the booking app's, and the database's _name_chars_ok): letters of any
+ *  script with their marks (Hindi, Nepali and Bengali vowel signs, Arabic harakat), spaces and
+ *  periods ("Md. Rahman"). A typed dash becomes a space; a period that would start the name or a
+ *  word, or follow another period, is dropped. */
+export const cleanName = (s: string) =>
+  s.replace(/[-‐-―]/g, " ").replace(/\.{2,}/g, ".").replace(/(^|\s)\.+/g, "$1").replace(/\s+/g, " ").trim();
+/** A cleaned name the database takes: nothing but letters, marks, spaces and periods, and a letter in it. */
+export const nameOk = (s: string) => /^[\p{L}\p{M}\s.]+$/u.test(s) && /\p{L}/u.test(s);
