@@ -84,7 +84,28 @@ Keep each term consistent everywhere it appears.
 - **credits** (Club ride credits) and **points** (ambassador points) are two different things. Keep them apart.
 - **code**: a personal promo or ambassador code.
 - **waitlist**: the queue for a place when a session is full.
-- **tier**: a membership level. The tier names Scout, Rider, Captain, Elite (ambassadors) and Rider, Pro, Legend (Club) are program names. Translate them if your language naturally would, or keep the English if that is the norm there, and then render each name the same way everywhere it appears. Tier names are filled into templates such as "{0} credits to reach {1}".
+- **tier**: a membership level. The tier names are Scout, Captain, Elite (ambassadors) and Rider, Pro, Legend (Club). **Every language translates them** (the owner's decision, 2026-09-25): a real word of the language, never the English and never a sound-for-sound transliteration (スカウト, स्काउट, رايدر). Render each name the same way everywhere it appears, and add the language's word for "level" (Stufe, nivel, स्तर, درجہ, ランク…) where the bare name would read as a plain word ("Fahrer" alone is "driver"). Tier names are filled into templates such as "{0} credits to reach {1}". The names in use:
+
+  | | Scout | Captain | Elite | Rider | Pro | Legend |
+  |---|---|---|---|---|---|---|
+  | ar | كشاف | قائد | نخبة | راكب | محترف | أسطورة |
+  | de | Späher | Kapitän | Elite | Fahrer | Profi | Legende |
+  | fr | Éclaireur | Capitaine | Élite | Cycliste | Pro | Légende |
+  | es | Explorador | Capitán | Élite | Ciclista | Profesional | Leyenda |
+  | pt | Explorador | Capitão | Elite | Ciclista | Profissional | Lenda |
+  | ru | Разведчик | Капитан | Элита | Велосипедист | Профи | Легенда |
+  | id | Penjelajah | Kapten | Elit | Pesepeda | Profesional | Legenda |
+  | ms | Peneroka | Kapten | Elit | Penunggang | Profesional | Legenda |
+  | tl | Manggagalugad | Kapitan | Piling-pili | Siklista | Propesyonal | Alamat |
+  | hi | खोजी | कप्तान | श्रेष्ठ | सवार | माहिर | दिग्गज |
+  | ne | अन्वेषक | कप्तान | विशिष्ट | सवार | सिपालु | दिग्गज |
+  | bn | অভিযাত্রী | অধিনায়ক | অভিজাত | আরোহী | দক্ষ | কিংবদন্তি |
+  | ur | کھوجی | کپتان | ممتاز | سوار | ماہر | افسانوی |
+  | zh | 探索者 | 队长 | 精英 | 骑士 | 高手 | 传奇 |
+  | ja | 探検家 | 隊長 | 精鋭 | 乗り手 | 達人 | 伝説 |
+
+  Nepali Elite is विशिष्ट because श्रेष्ठ alone reads as the surname Shrestha; Bengali Scout is অভিযাত্রী (explorer), not অনুসন্ধানী (investigative). "Pro fitting" is a professional bike fitting, not the tier.
+- **Shift levers**: the controls on the handlebar that change gear, covered by a two-year warranty. Only the levers, never the derailleur or the whole gear system (Russian шифтеры, not переключатели передач).
 - **Bike types**: Road bike, Mountain bike, Hybrid bike (in Japanese クロスバイク), Gravel bike, Kids bike. "Road Carbon" is the rental type for a carbon road bike. "Own bike" means the rider brings their own. "Any bike" means no preference.
 - **Groupset**: the cycling term for the drivetrain and brakes set. Use the term cyclists in your language use.
 - **Corniche**: Jeddah's seafront. "Jeddah Corniche Circuit" (JCC) is the Formula 1 street circuit. Use the name your language's F1 coverage uses, or the booking app's term where one is given. "JCC" stays "JCC".

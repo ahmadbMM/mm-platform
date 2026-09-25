@@ -116,7 +116,7 @@ export const aboutSchema: PageSchema = {
           def: [
             { q: bi("When is the store open?", "متى يفتح المتجر؟"), a: bi("We're open {hours}.", "نفتح {hours}.") },
             { q: bi("Where can I rent a bike?", "أين أستأجر دراجة؟"), a: bi("At the Jeddah Corniche Circuit: evening sessions on Sundays and Tuesdays, open to everyone. Pick a date and book on the Experiences page.", "في حلبة كورنيش جدة: جلسات مسائية يومي الأحد والثلاثاء مفتوحة للجميع. اختر موعدك واحجز من صفحة التجارب.") },
-            { q: bi("Does my bike come with a warranty?", "هل تأتي دراجتي بضمان؟"), a: bi("Yes: two years of free maintenance (spare parts not included), a two-year warranty on gear shifters and a two-year replacement service for all the brands we sell. Terms and conditions apply.", "نعم: صيانة مجانية لمدة سنتين (لا تشمل قطع الغيار)، وضمان سنتين على مبدلات السرعة، وخدمة استبدال لمدة سنتين لجميع العلامات التي نبيعها. تطبق الشروط والأحكام.") },
+            { q: bi("Does my bike come with a warranty?", "هل تأتي دراجتي بضمان؟"), a: bi("Yes: two years of free maintenance (spare parts not included), a two-year warranty on shift levers and a two-year replacement service for all the brands we sell. Terms and conditions apply.", "نعم: صيانة مجانية لمدة سنتين (لا تشمل قطع الغيار)، وضمان سنتين على أذرع تبديل السرعات، وخدمة استبدال لمدة سنتين لجميع العلامات التي نبيعها. تطبق الشروط والأحكام.") },
             { q: bi("How do I book a service?", "كيف أحجز صيانة؟"), a: bi("Request it on the Workshop page: pick the service and a preferred day and time, and we confirm.", "اطلبها من صفحة الورشة: اختر الخدمة واليوم والوقت المفضل، ونؤكد لك الموعد.") },
           ],
         },

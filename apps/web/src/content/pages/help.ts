@@ -74,7 +74,7 @@ export const helpSchema: PageSchema = {
         txt("warrantyTab", 30, "Tab 4: name", "التبويب ٤: الاسم", "Warranty", "الضمان"),
         answers("warranty", "Tab 4: questions", "التبويب ٤: الأسئلة", [
           qa(["What does the warranty cover?", "ماذا يشمل الضمان؟"],
-            ["Manufacturing defects, with full after-sales support. Gear shifters are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.", "العيوب المصنعية مع دعم فني كامل بعد البيع. مبدلات السرعة مضمونة لمدة سنتين وتشمل قطع الغيار، ولا يشمل الضمان سوء الاستخدام والعجلات. تطبق الشروط والأحكام."]),
+            ["Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.", "العيوب المصنعية مع دعم فني كامل بعد البيع. أذرع تبديل السرعات مضمونة لمدة سنتين وتشمل قطع الغيار، ولا يشمل الضمان سوء الاستخدام والعجلات. تطبق الشروط والأحكام."]),
           qa(["Is maintenance included?", "هل الصيانة مشمولة؟"],
             ["Yes: two years of free maintenance. Spare parts are not included.", "نعم: صيانة مجانية لمدة سنتين، ولا تشمل قطع الغيار."]),
           qa(["Is there a replacement service?", "هل تتوفر خدمة استبدال؟"],
