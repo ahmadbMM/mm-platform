@@ -47,8 +47,10 @@
       // and stays inside /b/* on purpose, so this is the only extra prefix the site claims.
       // Widened 2026-09-24: the site now answers the whole domain with the Coming Soon screen
       // (src/lib/site.ts COMING_SOON); /store still forwards to the Salla store. The /petromin* and /community/registration* Workers have more specific routes
-      // and keep winning. Rollback = put the four narrow routes back (/b/*, /_next/* on both
-      // hosts) and deploy: the old forward to Salla answers everything else again.
+      // and keep winning. Rollback = put the narrow routes back and deploy: the old forward to
+      // Salla answers everything else again. Since 2026-09-27 the tag pages live at /bikes/<n>
+      // (the stickers' /b/<n> redirects there), so the narrow set is /b/*, /bikes/* and /_next/*
+      // on both hosts.
       "routes": [
         { "pattern": "micromobility.sa/*",     "zone_name": "micromobility.sa" },
         { "pattern": "www.micromobility.sa/*", "zone_name": "micromobility.sa" }

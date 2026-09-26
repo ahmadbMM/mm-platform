@@ -23,9 +23,14 @@ describe("pageCacheKey", () => {
     expect(pageCacheKey(get("/club?lang=en&utm_source=x"), "v1")).toBeNull();
     expect(pageCacheKey(get("/club?lang=en", "", "POST"), "v1")).toBeNull();
   });
-  it("never keeps the account page, the API, media, bike pages, forms or files", () => {
-    for (const p of ["/account", "/api/account", "/media/home/x.jpg", "/b/42", "/petromin", "/community/registration", "/preview", "/en/club", "/robots.txt", "/_next/static/x.js"]) {
+  it("never keeps the account page, the API, media, bike tag pages, forms or files", () => {
+    for (const p of ["/account", "/api/account", "/media/home/x.jpg", "/b/42", "/bikes/42", "/bikes/000042/", "/petromin", "/community/registration", "/preview", "/en/club", "/robots.txt", "/_next/static/x.js"]) {
       expect(pageCacheKey(get(`${p}${p.includes("?") ? "&" : "?"}lang=en`), "v1"), p).toBeNull();
+    }
+  });
+  it("keeps the bike catalogue's pages, which only a staff edit changes", () => {
+    for (const p of ["/bikes", "/bikes/road", "/bikes/road/carbon", "/bikes/road/carbon/alvas-da54"]) {
+      expect(pageCacheKey(get(`${p}?lang=en`), "v1"), p).toBe(`https://page-cache.micromobility.sa${p}?lang=en&v=v1`);
     }
   });
 });

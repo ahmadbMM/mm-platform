@@ -57,7 +57,7 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
 .mm-nav-sheet-group { display: flex; flex-direction: column; }
 .mm-nav-sheet-group > p { margin: 18px 0 2px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(251, 249, 244, .5); }
 .mm-nav-sheet-group a { font-size: 19px; padding-inline-start: 14px; }
-@media (max-width: 1080px) { /* six sections, in the longest of the site's languages, need ~640px in the middle of the bar */
+@media (max-width: 1180px) { /* seven sections, in the longest of the site's languages, need ~720px in the middle of the bar */
   .mm-nav-links { display: none; }
   .mm-nav-burger { display: inline-flex; }
 }

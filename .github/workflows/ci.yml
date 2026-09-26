@@ -73,13 +73,14 @@ jobs:
           workingDirectory: apps/web
           command: deploy --env production
       # The live site answers after the deploy: the site, its health check (which reads the
-      # database), the two forms and a bike page. A red run here means production needs a look.
+      # database), the two forms and a bike's tag page (at its new address; /b/1 answers a redirect
+      # to it). A red run here means production needs a look.
       - name: The live site answers
         if: github.ref == 'refs/heads/main' && vars.MM_PRODUCTION == 'on' && steps.secrets.outputs.present == 'true'
         run: |
           sleep 20
           fail=0
-          for u in / /api/health /petromin /community/registration /b/1 /robots.txt; do
+          for u in / /api/health /petromin /community/registration /bikes/1 /robots.txt; do
             code=$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 10 --retry-all-errors "https://micromobility.sa$u")
             echo "$u $code"
             [ "$code" = 200 ] || fail=1

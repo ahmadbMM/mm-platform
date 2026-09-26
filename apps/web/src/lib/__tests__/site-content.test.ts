@@ -92,12 +92,14 @@ describe("page switches", () => {
     expect(pageOn(on, "help")).toBe(false);
     expect(pageOn(on, "workshop")).toBe(false); // only an explicit true, as the staff page reads it
     expect(pageOn(null, "club")).toBe(false);
-    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes", "journal", "account", "terms"]);
+    expect(hiddenPages(on)).toEqual(["experiences", "workshop", "business", "help", "ambassadors", "about", "events", "gallery", "routes", "journal", "account", "terms", "bikes"]);
   });
   it("knows which addresses belong to a switched page", () => {
     expect(switchedPageOf("/club")).toBe("club");
     expect(switchedPageOf("/help/")).toBe("help");
     expect(switchedPageOf("/experiences/extra")).toBe("experiences");
+    // a fleet bike's tag page counts as the Bikes page here; the proxy lets it through first
+    expect(switchedPageOf("/bikes/42")).toBe("bikes");
     // the old addresses with a language still count
     expect(switchedPageOf("/en/club")).toBe("club");
     expect(switchedPageOf("/ar/help/")).toBe("help");

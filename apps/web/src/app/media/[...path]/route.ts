@@ -4,6 +4,9 @@
 //
 // ?w=640 or ?w=1280 asks for the smaller WebP copy the staff page saves beside a photo it uploads
 // (<name>.w640.webp); a photo uploaded before those copies existed is answered with itself.
+//
+// Besides photos, the bucket holds the bike catalogue's spec sheets (PDFs). Anything else it
+// might hold is not served: the type is the storage's own, never guessed from the name (nosniff).
 const WIDTHS = new Set(["640", "1280"]);
 
 export async function GET(req: Request, { params }: { params: Promise<{ path: string[] }> }) {
@@ -19,8 +22,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
   if (!res || !res.ok) res = await fetch(`${url}/storage/v1/object/public/site/${rel}`, init as RequestInit);
   if (!res.ok) return new Response("Not found", { status: 404, headers: { "cache-control": "public, max-age=60" } });
   const type = res.headers.get("content-type") || "application/octet-stream";
-  if (!/^image\//.test(type)) return new Response("Not found", { status: 404 });
+  if (!/^image\//.test(type) && !/^application\/pdf\b/.test(type)) return new Response("Not found", { status: 404 });
   return new Response(res.body, {
-    headers: { "content-type": type, "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff" },
+    // inline: a spec sheet opens in the browser's own viewer rather than downloading.
+    headers: { "content-type": type, "content-disposition": "inline", "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff" },
   });
 }

@@ -13,6 +13,7 @@ export type NavLink = { key: string; href: string; en: string; ar: string; exter
 
 export const NAV_LINKS: NavLink[] = [
   { key: "store", href: "/store", ...phrase("Store", "المتجر"), external: true },
+  { key: "bikes", href: "/bikes", ...phrase("Bikes", "الدراجات") },
   { key: "experiences", href: "/experiences", ...phrase("Experiences", "التجارب") },
   { key: "workshop", href: "/workshop", ...phrase("Workshop", "الورشة") },
   { key: "club", href: "/club", ...phrase("Club", "النادي") },
@@ -27,10 +28,10 @@ export const NAV_LINKS: NavLink[] = [
 ];
 
 /** The header (owner, 2026-09-25): the sections, with Community holding the pages its riders
- *  use, and every page reachable from it. Help is not a header section - the footer and the
- *  search reach it. */
+ *  use, and every page reachable from it. Bikes (the catalogue, 2026-09-27) sits next to the
+ *  store it sells for. Help is not a header section - the footer and the search reach it. */
 export const COMMUNITY = { key: "community", ...phrase("Community", "المجتمع"), pages: ["club", "ambassadors", "events", "routes", "gallery", "journal"] };
-export const HEADER: string[] = ["store", "experiences", "workshop", "community", "business", "about"];
+export const HEADER: string[] = ["store", "bikes", "experiences", "workshop", "community", "business", "about"];
 
 
 /** The page a link on this site opens ("/business#x" → "business", an old "/ar/club" → "club");

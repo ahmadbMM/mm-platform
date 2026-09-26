@@ -126,6 +126,16 @@ const RIDE_PRICES: Record<string, number> = {
 const TYPE_RATED = new Set(["Road", "Mountain", "Hybrid"]);
 
 /**
+ * What a ride on a bike of this type costs, or null when there is no price to state: "Own" is
+ * not rented, and a type we do not know (Gravel, until it is listed) has no known rate. The
+ * catalogue's model pages quote this by the model's ride_type; the fleet pages through ridePrice.
+ */
+export function priceForType(type: string): number | null {
+  const price = RIDE_PRICES[type.trim()];
+  return typeof price === "number" && price > 0 ? price : null;
+}
+
+/**
  * Returns null when there is no price to state: an "Own" bike is not rented, and a bike whose
  * type we do not recognise has no known rate. The rentals app falls back to a default constant
  * here, but it is quoting staff who can see the record; this page is quoting a rider standing at
@@ -133,12 +143,7 @@ const TYPE_RATED = new Set(["Road", "Mountain", "Hybrid"]);
  */
 export function ridePrice(row: BikeRow): number | null {
   const type = String(row.type ?? "").trim();
-  const byType = RIDE_PRICES[type];
-
-  let price: number | undefined;
-  if (TYPE_RATED.has(type)) price = byType;              // the app ignores rental_price for these
-  else if (typeof row.rental_price === "number") price = row.rental_price;
-  else price = byType;
-
-  return typeof price === "number" && price > 0 ? price : null;
+  if (TYPE_RATED.has(type)) return priceForType(type);   // the app ignores rental_price for these
+  if (typeof row.rental_price === "number") return row.rental_price > 0 ? row.rental_price : null;
+  return priceForType(type);
 }

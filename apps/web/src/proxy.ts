@@ -33,12 +33,15 @@ export async function storeTarget(pathname: string, req: NextRequest): Promise<s
 
 // The staff preview page; the staff page still opens it as /en/preview or /ar/preview.
 const PREVIEW_PAGE = /^(?:\/(?:en|ar))?\/preview\/?$/;
+// A fleet bike's NFC tag page: /bikes/<its number> (components/bikes/FleetBike.tsx).
+const FLEET_PAGE = /^\/bikes\/\d{1,6}\/?$/;
 
 export default async function proxy(req: NextRequest) {
-  // The handoff spec writes the tag URL as /?bike=42; the chips carry /b/42 instead. Anything
-  // still using the old form is moved over here rather than through next.config redirects,
-  // because those append the original query and would leave ?bike=42 sitting in the address
-  // bar. The code belongs in the path or nowhere.
+  // The handoff spec writes the tag URL as /?bike=42; the chips carry /b/42, and the page now
+  // lives at /bikes/42 (next.config redirects the chips' address there). Anything still using
+  // the query form is moved over here rather than through next.config redirects, because those
+  // append the original query and would leave ?bike=42 sitting in the address bar. The code
+  // belongs in the path or nowhere.
   const { pathname, searchParams } = req.nextUrl;
   // The forms answer at one lower-case address each; a link typed or printed another way
   // (/Petromin, /community/Registration/) is sent there, as their own Workers did.
@@ -49,7 +52,7 @@ export default async function proxy(req: NextRequest) {
   if (pathname === "/") {
     const code = searchParams.get("bike");
     if (code && /^\d{1,6}$/.test(code)) {
-      const to = new URL(`/b/${Number(code)}`, req.url);
+      const to = new URL(`/bikes/${Number(code)}`, req.url);
       return NextResponse.redirect(to, 307);
     }
   }
@@ -62,9 +65,14 @@ export default async function proxy(req: NextRequest) {
     if (lang) res.cookies.set(LANG_COOKIE.name, lang, { path: "/", maxAge: LANG_COOKIE.maxAge, sameSite: "lax" });
     return res;
   };
+  // A fleet bike's tag page (/bikes/42: a rider tapping a sticker) opens whatever the site's
+  // state - Coming Soon on, or the Bikes page not switched on. It is never a catalogue page: a
+  // category's address starts with a letter (the database insists), so digits can only be a tag.
+  // No Link header: the page is kept out of search engines.
+  if (FLEET_PAGE.test(pathname)) return keepLang(intl(req));
   // While the site is Coming Soon, it is the only page: /login, /about and anything else go
-  // back to it. /store forwards to the shop before this runs (next.config redirects), and
-  // /b/* never reaches here (matcher below).
+  // back to it. /store forwards to the shop before this runs (above), and the old /b/42 tag
+  // address is redirected to /bikes/42 before this runs (next.config redirects).
   // Until Home exists the site is closed whatever staff have set, so nothing is read here yet.
   // Once it is open, a page staff have not switched on (Website > Pages) goes to Home the same way.
   const content = siteCanOpen() ? await loadSiteContent() : null;
@@ -79,8 +87,9 @@ export default async function proxy(req: NextRequest) {
   return res;
 }
 
-// /b/* is excluded on purpose: the NFC chips hold micromobility.sa/b/42 and that URL must
-// never be handled as a site page. Those pages carry their own language cookie instead.
+// /b/* is the tag pages' old address: the NFC chips hold micromobility.sa/b/42, and next.config
+// redirects it to /bikes/42 before anything here runs. It stays excluded so that address is never
+// handled as a site page, whatever else changes. /bikes/42 itself does come here (FLEET_PAGE).
 // Only /b and /api themselves and what is under them: a bare "b" also caught /business, which
 // was a 404 once its address lost the /en in front.
 // The two registration forms are excluded too (app/community/registration, app/petromin): they

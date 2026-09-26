@@ -7,14 +7,15 @@ import { LOCALE_CODES } from "../i18n/locales";
 //   - in a language the request names (?lang=, or the NEXT_LOCALE cookie a first visit sets), so
 //     a visitor's language is never guessed - a first visit with neither is rendered as before;
 //   - not signed in and not a staff preview (their cookies bring their own pages: the Club card,
-//     the preview bar), and never the account page, the API, media, the NFC bike pages or the forms;
+//     the preview bar), and never the account page, the API, media, the NFC bike pages (a bike's
+//     status is live: /bikes/42, and its old address /b/42) or the forms;
 //   - for this deploy only: a new deploy's pages name new build files, so the key carries its id.
 // Staff edits already show within a minute (lib/site.ts reads them once a minute), so a minute's
 // copy changes nothing staff see. PAGE_CACHE = "off" (a Worker variable) turns it off at once.
 
 export const PAGE_TTL = 60;
 const LANGS = new Set<string>(LOCALE_CODES);
-const SKIP = /^\/(?:api|_next|media|b|petromin|community|account|preview|login|en|ar)(?:\/|$)/;
+const SKIP = /^\/(?:api|_next|media|b|petromin|community|account|preview|login|en|ar|bikes\/\d{1,6})(?:\/|$)/;
 const PRIVATE = ["mm_acct", "mm_preview"];
 const LANG_COOKIE = "NEXT_LOCALE";
 

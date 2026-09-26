@@ -18,6 +18,7 @@ const EXTRA = [
 ];
 const WORDS: Record<string, string> = {
   store: "shop buy bikes accessories helmet gear متجر شراء دراجات إكسسوارات",
+  bikes: "catalogue catalog models specs specifications road mountain hybrid gravel kids carbon موديلات مواصفات طريق جبلية هجينة أطفال",
   experiences: "rides rental rent book bike session circuit jcc sports day تأجير حجز جولة حلبة دراجة يوم الرياضة",
   workshop: "service repair maintenance fix tune صيانة إصلاح ورشة",
   club: "membership members community credits عضوية أعضاء مجتمع رصيد",

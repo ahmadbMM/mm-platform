@@ -1,13 +1,26 @@
-/* The NFC bike page. A phone-first dark page; the handoff's per-frame numbers (SE 320,
-   15 Pro 393, Pro Max 430) become clamp() ranges so a real device lands between them. */
+/* The NFC bike page (components/bikes/FleetBike.tsx). A phone-first dark page; the handoff's
+   per-frame numbers (SE 320, 15 Pro 393, Pro Max 430) become clamp() ranges so a real device
+   lands between them. */
 
-/* next/font self-hosts the two faces under generated family names and exposes them as these
-   two variables. tokens.css points body at "Space Grotesk" and "IBM Plex Sans Arabic" by
-   literal name, which matches nothing — so both fonts were being downloaded on every tap and
-   no text ever used them. Redefining the tokens here, after globals.css, connects the two. */
-:root {
-  --mm-font-en: var(--bk-font-en), "Space Grotesk", system-ui, sans-serif;
-  --mm-font-ar: var(--bk-font-ar), "IBM Plex Sans Arabic", system-ui, sans-serif;
+/* The page is rendered inside the site's layout, whose body is off-white in the site's fonts.
+   Everything here hangs off .bk-root instead of html/body, so nothing of the site shows through
+   and nothing here leaks onto the site: the wrapper is the page's whole height and its own
+   black. next/font self-hosts the two faces under generated family names, exposed by the site's
+   layout as --cs-font-en / --cs-font-ar; tokens.css points body at "Space Grotesk" and "IBM Plex
+   Sans Arabic" by literal name, which matches nothing, so the wrapper names the real faces. */
+.bk-root {
+  --bk-font-en: var(--cs-font-en);
+  --bk-font-ar: var(--cs-font-ar);
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--mm-black);
+  color: var(--mm-offwhite);
+  font-family: var(--bk-font-en), "Space Grotesk", system-ui, sans-serif;
+}
+html:is([lang="ar"], [lang="ur"]) .bk-root {
+  font-family: var(--bk-font-ar), "IBM Plex Sans Arabic", system-ui, sans-serif;
+  letter-spacing: 0;
+  line-height: 1.7;
 }
 
 /* Arabic is cursive: letter-spacing pries joined letters apart and tightening line-height
@@ -257,50 +270,3 @@
 }
 .bk-unknown p { margin: 0; font-size: 16px; color: rgba(251, 249, 244, .75); }
 .bk-unknown .bk-cta { margin-top: 12px; padding: 0 24px; min-height: 52px; }
-
-/* ── loading (docs/loading-screen-handoff.md) ─────────────────────────────── */
-.bk-loading {
-  position: fixed; inset: 0; z-index: 60;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--mm-black);
-  overflow: hidden;
-}
-/* One ratio governs the mark at every size, so the spinner stays in proportion whatever the
-   ring does. The handoff had the mark filling most of the ring (88 of 132); it sits smaller
-   now at the owner's request, and this is the single number that decides it. */
-.bk-spinner {
-  position: relative; z-index: 1;
-  --bk-ring: 132px;
-  --bk-mark-ratio: .52;
-  width: var(--bk-ring); height: var(--bk-ring);
-  display: inline-flex; align-items: center; justify-content: center;
-}
-.bk-ring {
-  position: absolute; inset: 0;
-  border-radius: 50%;
-  border: 3px solid rgba(251, 249, 244, .12);
-  border-top-color: var(--mm-green-neon);
-  animation: bkSpin 1s linear infinite;
-}
-/* A CSS mask, not an <img>: that is what makes the mark neon from a white source file, and
-   it is why the asset must stay single-colour white rather than being recoloured on disk. */
-.bk-mark {
-  width: calc(var(--bk-ring) * var(--bk-mark-ratio));
-  height: calc(var(--bk-ring) * var(--bk-mark-ratio));
-  background: var(--mm-green-neon);
-  -webkit-mask: url("/b/assets/brand-mark-white.svg") center / contain no-repeat;
-          mask: url("/b/assets/brand-mark-white.svg") center / contain no-repeat;
-}
-@keyframes bkSpin { to { transform: rotate(360deg); } }
-
-@media (max-width: 400px) { .bk-spinner { --bk-ring: 112px; } }
-@media (min-width: 1025px) { .bk-spinner { --bk-ring: 160px; } }
-
-/* Still reads as "loading" without the motion: a complete green ring, no rotation. */
-@media (prefers-reduced-motion: reduce) {
-  .bk-ring {
-    animation: none;
-    border-color: var(--mm-green-neon);
-    opacity: .4;
-  }
-}

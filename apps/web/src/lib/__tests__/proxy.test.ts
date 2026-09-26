@@ -88,17 +88,34 @@ describe("while the site is Coming Soon", () => {
   it("still sends a bike tag's /?bike= to its page", async () => {
     const res = await call("/?bike=42");
     expect(res.status).toBe(307);
-    expect(redirectedTo(res)).toBe("/b/42");
+    expect(redirectedTo(res)).toBe("/bikes/42");
+  });
+  it("still opens a fleet bike's tag page, in the language asked for", async () => {
+    // A rider tapping a sticker must reach the bike whatever the site's state (the Bikes page
+    // itself is a switched page and goes back to Home like the others).
+    for (const p of ["/bikes/42", "/bikes/000001/", "/bikes/999999"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(200);
+      expect(rewrittenTo(res), p).toBe(`/en${p.replace(/\/$/, "")}`);
+    }
+    const ar = await call("/bikes/42?lang=ar");
+    expect(rewrittenTo(ar)).toBe("/ar/bikes/42");
+    expect(langCookie(ar)).toBe("ar");
+    for (const p of ["/bikes", "/bikes/road", "/bikes/road/42", "/bikes/1234567"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(307);
+      expect(redirectedTo(res), p).toBe("/");
+    }
   });
 });
 
 describe("which addresses the proxy sees", () => {
   // The matcher as a plain regular expression, anchored the way Next.js anchors it.
   const seen = (p: string) => new RegExp(`^${config.matcher[0]}$`).test(p);
-  it("sees every site page, those starting with b or api included", () => {
-    for (const p of ["/", "/business", "/business/fleet", "/bikes", "/apis", "/club", "/en/business"]) expect(seen(p), p).toBe(true);
+  it("sees every site page, those starting with b or api included, and the tag pages", () => {
+    for (const p of ["/", "/business", "/business/fleet", "/bikes", "/bikes/42", "/bikes/road/carbon/x", "/apis", "/club", "/en/business"]) expect(seen(p), p).toBe(true);
   });
-  it("leaves the bike tags, the API and files alone", () => {
+  it("leaves the tags' old address (next.config redirects it), the API and files alone", () => {
     for (const p of ["/b", "/b/42", "/api", "/api/preview", "/_next/static/x.js", "/site/logo.png", "/robots.txt"]) expect(seen(p), p).toBe(false);
   });
   it("leaves the two registration forms alone, so Coming Soon never covers them", () => {

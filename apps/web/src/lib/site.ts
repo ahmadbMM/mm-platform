@@ -3,7 +3,7 @@
 //
 // While the site is Coming Soon, it shows only the Coming Soon screen: every other page (the
 // unfinished login included) is sent back to it, and search engines are asked to keep out. The
-// NFC bike pages (/b/*) and the /store forward to the Salla shop keep working.
+// NFC bike pages (/bikes/42, formerly /b/42) and the /store forward to the Salla shop keep working.
 //
 // Staff turn Coming Soon off with the switch in the staff page (Website). Home exists, so that
 // switch is now the one thing that opens the site (released 2026-09-25; the staff page's
@@ -102,7 +102,7 @@ export async function loadJournalContent(fetchImpl: typeof fetch = fetch, now: n
 
 /** The pages staff switch on one at a time (staff page: Website > Pages; its SITE_PAGES lists
  *  the same keys). Home is not one of them - it opens with the Coming Soon switch. */
-export const SWITCHED_PAGES = ["experiences", "workshop", "business", "help", "ambassadors", "club", "about", "events", "gallery", "routes", "journal", "account", "terms"] as const;
+export const SWITCHED_PAGES = ["experiences", "workshop", "business", "help", "ambassadors", "club", "about", "events", "gallery", "routes", "journal", "account", "terms", "bikes"] as const;
 export type SwitchedPage = (typeof SWITCHED_PAGES)[number];
 
 /** A page is shown once staff switch it on - an explicit true, read the way the staff page reads

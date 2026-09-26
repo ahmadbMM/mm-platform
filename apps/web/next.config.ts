@@ -39,6 +39,12 @@ const SECURITY_HEADERS = [
 
 const config: NextConfig = {
   poweredByHeader: false,
+  async redirects() {
+    // The NFC stickers on the fleet hold micromobility.sa/b/42 and must keep working forever; the
+    // page itself moved to /bikes/42 (2026-09-27, with the bike catalogue). Permanent, so a phone
+    // that has tapped once keeps the new address.
+    return [{ source: "/b/:code(\\d{1,6})", destination: "/bikes/:code", permanent: true }];
+  },
   async headers() {
     // Every page and API answer except the two registration forms, which keep their own.
     return [{ source: "/((?!petromin$|community/registration$).*)", headers: SECURITY_HEADERS }];

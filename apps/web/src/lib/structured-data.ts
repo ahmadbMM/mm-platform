@@ -1,8 +1,10 @@
 import { DEFAULT_SHARE_IMAGE, SITE_NAME, SITE_URL, langPath } from "@/lib/seo";
+import type { CatalogModel } from "@/lib/catalog";
 
 // Structured data (schema.org JSON-LD) for search engines: who the company is and where its store
-// is (Home), the rides a visitor can book (Events), and the Journal's articles. Everything comes
-// from what staff set on the site; nothing here is shown to visitors.
+// is (Home), the rides a visitor can book (Events), the Journal's articles and the bike
+// catalogue's models. Everything comes from what staff set on the site; nothing here is shown to
+// visitors.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 const N = (v: unknown) => (typeof v === "number" ? v : NaN);
@@ -88,5 +90,21 @@ export function articleData(p: { title: string; excerpt: string; date: string; c
     mainEntityOfPage: langPath(`${SITE_URL}/journal/${p.slug}`, locale),
     author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
     publisher: { "@type": "Organization", name: SITE_NAME, logo: { "@type": "ImageObject", url: abs("/site/logo-dark.png") } },
+  };
+}
+
+/** One model of the bike catalogue (lib/catalog.ts). No offers: the catalogue states what a ride
+ *  costs, not a sale price, and the store sells on its own site. */
+export function productData(model: CatalogModel, locale: string, x: { path: string; image: string; category: string; description: string }): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: [model.brand, model.name].map(S).filter(Boolean).join(" "),
+    brand: S(model.brand) ? { "@type": "Brand", name: S(model.brand) } : undefined,
+    image: abs(x.image || DEFAULT_SHARE_IMAGE),
+    description: S(x.description) || undefined,
+    category: S(x.category) || undefined,
+    url: langPath(SITE_URL + x.path, locale),
+    manufacturer: S(model.brand) ? { "@type": "Organization", name: S(model.brand) } : undefined,
   };
 }
