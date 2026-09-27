@@ -2,9 +2,9 @@ import { bi, type PageSchema } from "@/content/types";
 
 // The Gallery (Gallery.dc.html): photos staff upload, each with an optional caption and tag; the
 // tags become the filters. It starts with the community photos from Home's photo wall.
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 
-export const gallerySchema: PageSchema = {
+export const gallerySchema = {
   page: "gallery",
   label: bi("Gallery", "المعرض"),
   sections: [
@@ -34,4 +34,4 @@ export const gallerySchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

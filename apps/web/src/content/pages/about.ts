@@ -5,12 +5,12 @@ import { bi, type PageSchema } from "@/content/types";
 // placeholders ("[Year]", "[Name]"), and its test loop, trade-ins, parking and nutrition brands
 // were examples, so they are left out. The contact details come from the site-wide content.
 // "Join the team" sends an application that lands in the staff page's Messages (kind jobs).
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const link = (id: string, en: string, ar: string, def: string) => ({ id, type: "link" as const, label: bi(en, ar), def });
-const img = (id: string, en: string, ar: string, def: string) => ({ id, type: "image" as const, label: bi(en, ar), def });
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const link = <I extends string>(id: I, en: string, ar: string, def: string) => ({ id, type: "link" as const, label: bi(en, ar), def });
+const img = <I extends string>(id: I, en: string, ar: string, def: string) => ({ id, type: "image" as const, label: bi(en, ar), def });
 
-export const aboutSchema: PageSchema = {
+export const aboutSchema = {
   page: "about",
   label: bi("About & Contact", "من نحن والتواصل"),
   sections: [
@@ -157,4 +157,4 @@ export const aboutSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

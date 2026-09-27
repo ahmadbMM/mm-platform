@@ -9,11 +9,11 @@ import { bi, type PageSchema } from "@/content/types";
 // Legal text, in English and Arabic only (enArOnly), like the Privacy Notice: every other language
 // shows the English with a note. A clause's text is plain: a blank line starts a paragraph and a
 // line starting "- " is a list item (lib/journal.ts parseBody).
-const para = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) =>
+const para = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) =>
   ({ id, type: "longtext" as const, max, enArOnly: true, label: bi(en, ar), def: bi(dEn, dAr) });
 const clause = (title: [string, string], body: [string, string]) => ({ title: bi(...title), body: bi(...body) });
 
-export const termsSchema: PageSchema = {
+export const termsSchema = {
   page: "terms",
   label: bi("Terms & Conditions", "الشروط والأحكام"),
   sections: [
@@ -80,4 +80,4 @@ export const termsSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

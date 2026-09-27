@@ -4,12 +4,12 @@ import { bi, type PageSchema } from "@/content/types";
 // partners, and an enquiry form that lands in the staff page's Messages. Service photos are the
 // brand's own where the design used stock. Partners add Battle and Alvas from the company
 // profile. The design's "24/7 fleet support" is left out until it is a promise staff make.
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 // List defaults are written the way they are stored: an image is { url }.
 const logo = (en: string, url = "") => (url ? { name: bi(en, en), logo: { url } } : { name: bi(en, en) });
 
-export const businessSchema: PageSchema = {
+export const businessSchema = {
   page: "business",
   label: bi("For business", "للشركات"),
   sections: [
@@ -104,4 +104,4 @@ export const businessSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

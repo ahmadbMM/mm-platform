@@ -6,7 +6,7 @@ import { BOOKING_URL, COMMUNITY, NAV_LINKS, STORE_CART_URL, STORE_URL } from "@/
 // The footer is the design's own (SiteFooter.dc.html), every part of it staff-editable: its
 // payment marks, trust line, link columns and social accounts start as the design has them
 // (owner, 2026-09-25: "add everything as it is in the design"); staff remove what does not apply.
-export const siteSchema: PageSchema = {
+export const siteSchema = {
   page: "site",
   label: bi("Whole site", "الموقع كاملاً"),
   sections: [
@@ -140,4 +140,4 @@ export const siteSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

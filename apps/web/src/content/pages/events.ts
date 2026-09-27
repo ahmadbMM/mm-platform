@@ -4,10 +4,10 @@ import { BOOKING_URL } from "@/lib/links";
 // Events (Events.dc.html): the design's events, RSVPs, passes and "640 riders" were examples.
 // Here the list is the booking system's own upcoming sessions (the same read as /experiences,
 // named the way Experiences names them), each booked in the booking app, plus where we meet.
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 
-export const eventsSchema: PageSchema = {
+export const eventsSchema = {
   page: "events",
   label: bi("Events", "الفعاليات"),
   sections: [
@@ -50,4 +50,4 @@ export const eventsSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

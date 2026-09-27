@@ -4,14 +4,14 @@ import { bi, type PageSchema } from "@/content/types";
 // default is the design's own words. Three things the design filled with invented examples -
 // customer reviews, the "500+ bikes delivered"-style stats and the Google rating - start EMPTY:
 // their sections stay hidden until staff enter real ones.
-const img = (id: string, en: string, ar: string, def: string) => ({ id, type: "image" as const, label: bi(en, ar), def });
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) =>
+const img = <I extends string>(id: I, en: string, ar: string, def: string) => ({ id, type: "image" as const, label: bi(en, ar), def });
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) =>
   ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) =>
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) =>
   ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const link = (id: string, en: string, ar: string, def: string) => ({ id, type: "link" as const, label: bi(en, ar), def });
+const link = <I extends string>(id: I, en: string, ar: string, def: string) => ({ id, type: "link" as const, label: bi(en, ar), def });
 
-export const homeSchema: PageSchema = {
+export const homeSchema = {
   page: "home",
   label: bi("Home", "الرئيسية"),
   sections: [
@@ -197,4 +197,4 @@ export const homeSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

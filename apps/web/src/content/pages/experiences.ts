@@ -8,10 +8,10 @@ import { BOOKING_URL } from "@/lib/links";
 // app's own: three riders per account on a circuit evening, one seat per member on a community
 // ride, each rider's height setting the bike size, payment at the circuit booth, bikes handed out
 // first come first served. The design's add-on prices and its "up to 10 bikes" were examples.
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 
-export const experiencesSchema: PageSchema = {
+export const experiencesSchema = {
   page: "experiences",
   label: bi("Experiences", "التجارب"),
   sections: [
@@ -118,4 +118,4 @@ export const experiencesSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

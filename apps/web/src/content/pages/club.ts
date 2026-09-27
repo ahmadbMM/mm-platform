@@ -7,13 +7,13 @@ import { BOOKING_URL } from "@/lib/links";
 // 20260924180000, which applies the numbers in the rules section). Left out of the design until
 // they are real: the member count, the demo leaderboard and challenges, "refer a friend"
 // credits and "2x credits on events" (nothing counts them yet).
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const num = (id: string, en: string, ar: string, def: number, min: number, max: number) => ({ id, type: "number" as const, min, max, step: 1, label: bi(en, ar), def });
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const num = <I extends string>(id: I, en: string, ar: string, def: number, min: number, max: number) => ({ id, type: "number" as const, min, max, step: 1, label: bi(en, ar), def });
 
 export const COMMUNITY_FORM_URL = "https://micromobility.sa/community/registration";
 
-export const clubSchema: PageSchema = {
+export const clubSchema = {
   page: "club",
   label: bi("The Club", "النادي"),
   sections: [
@@ -139,4 +139,4 @@ export const clubSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

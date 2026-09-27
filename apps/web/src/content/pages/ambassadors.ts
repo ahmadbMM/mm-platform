@@ -7,13 +7,13 @@ import { bi, type PageSchema } from "@/content/types";
 // Left out of the design until they are real: store orders (the shop is still Salla, so its
 // orders cannot count yet) and the share-card / QR poster downloads (the design's QR was not a
 // real code).
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const num = (id: string, en: string, ar: string, def: number, min: number, max: number, hint?: [string, string]) =>
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const num = <I extends string>(id: I, en: string, ar: string, def: number, min: number, max: number, hint?: [string, string]) =>
   ({ id, type: "number" as const, min, max, step: 1, label: bi(en, ar), def, ...(hint ? { hint: bi(...hint) } : {}) });
 const PLACEHOLDERS: [string, string] = ["You can write {discount}, {rentalPts}, {eventPts}, {workshopPts}, {captainAt} or {eliteAt} - the page fills in the number.", "يمكنك كتابة {discount} أو {rentalPts} أو {eventPts} أو {workshopPts} أو {captainAt} أو {eliteAt} وتظهر القيمة مكانها."];
 
-export const ambassadorsSchema: PageSchema = {
+export const ambassadorsSchema = {
   page: "ambassadors",
   label: bi("Ambassadors", "السفراء"),
   sections: [
@@ -146,4 +146,4 @@ export const ambassadorsSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

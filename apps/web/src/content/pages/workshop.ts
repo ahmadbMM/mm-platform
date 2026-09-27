@@ -4,10 +4,10 @@ import { bi, type PageSchema } from "@/content/types";
 // picks a service, a preferred day and time and how the bike gets to us; the staff page confirms.
 // Left out on purpose: the design's named mechanics, turnaround / rating / review numbers and the
 // annual plan price - invented examples, not the business's.
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 
-export const workshopSchema: PageSchema = {
+export const workshopSchema = {
   page: "workshop",
   label: bi("Workshop", "الورشة"),
   sections: [
@@ -87,4 +87,4 @@ export const workshopSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

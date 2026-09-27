@@ -1,4 +1,4 @@
-import { bi, type PageSchema, type ListField } from "@/content/types";
+import { bi, type PageSchema } from "@/content/types";
 
 // The help centre (Help.dc.html): answers in four tabs, WhatsApp and a call, and - so a question
 // can be asked here too - a message form that lands in the staff page's Messages. A tab with no
@@ -7,18 +7,18 @@ import { bi, type PageSchema, type ListField } from "@/content/types";
 // pickup, orders reviewed and confirmed before they are prepared), and the returns answers follow
 // the Ministry of Commerce's rules (7 days to return, 15 to exchange, unused, with the invoice) -
 // written 2026-09-25 for the owner to confirm; staff change them in Website > Help.
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 const qa = (q: [string, string], a: [string, string]) => ({ q: bi(...q), a: bi(...a) });
-const answers = (id: string, en: string, ar: string, def: ReturnType<typeof qa>[]): ListField => ({
-  id, type: "list", maxItems: 12, label: bi(en, ar),
+const answers = <I extends string>(id: I, en: string, ar: string, def: ReturnType<typeof qa>[]) => ({
+  id, type: "list" as const, maxItems: 12, label: bi(en, ar),
   item: [txt("q", 120, "Question", "السؤال", "", ""), long("a", 700, "Answer", "الإجابة", "", "")],
   def,
 });
 
 export const HELP_TOPICS = ["faq", "delivery", "returns", "warranty"] as const;
 
-export const helpSchema: PageSchema = {
+export const helpSchema = {
   page: "help",
   label: bi("Help centre", "مركز المساعدة"),
   sections: [
@@ -96,4 +96,4 @@ export const helpSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

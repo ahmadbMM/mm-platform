@@ -5,13 +5,13 @@ import { bi, type PageSchema } from "@/content/types";
 // Journal starts with three short ones that say only what is true of the rides and the workshop.
 // An article is plain text: a blank line starts a paragraph, "## " a heading, "- " a list item
 // (lib/journal.ts). Its address is made from its English title.
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 
 const post = (title: [string, string], tag: [string, string], cover: string, excerpt: [string, string], body: [string, string], cta: [string, string], ctaHref: string) =>
   ({ title: bi(...title), tag: bi(...tag), date: bi("2026-09-24", "2026-09-24"), cover: { url: cover }, excerpt: bi(...excerpt), body: bi(...body), cta: bi(...cta), ctaHref: { href: ctaHref }, show: true });
 
-export const journalSchema: PageSchema = {
+export const journalSchema = {
   page: "journal",
   label: bi("Journal", "المدونة"),
   sections: [
@@ -73,4 +73,4 @@ export const journalSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

@@ -71,7 +71,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     members: s.members, free: s.free, full: s.full, paid: !s.free, noCarbon: s.noCarbon,
   });
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count))).map(toStep);
-  const card = (key: string, p: string, always: boolean): StepEvent | null => {
+  const card = (key: string, p: "snd" | "jcc" | "comm" | "ws", always: boolean): StepEvent | null => {
     const sessions = sessionsOf(key);
     if (!always && sessions.length === 0) return null;
     return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: S(e[`${p}Note`]), sessions };
