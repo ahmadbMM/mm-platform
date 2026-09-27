@@ -18,7 +18,7 @@
 .tk-num.small { font-size: 24px; letter-spacing: -1px; line-height: 1.1; }
 .tk-wl-note { max-width: 190px; font-size: 11px; font-weight: 600; line-height: 1.45; color: #8a5c14; }
 .tk-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex: none; }
-.tk-qr { display: inline-block; line-height: 0; padding: 6px; background: #fff; border: 1px solid rgba(26, 25, 25, .14); border-radius: 3px; }
+.tk-qr { display: inline-block; line-height: 0; border: 1px solid rgba(26, 25, 25, .14); border-radius: 3px; overflow: hidden; } /* the white tile is the svg's own (Qr.tsx) */
 .tk-qr-hold { width: 132px; height: 132px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 12px; text-align: center;
   border: 1px dashed rgba(26, 25, 25, .16); border-radius: 10px; }
 .tk-qr-hold span { font-size: 10px; font-weight: 700; line-height: 1.5; color: #4f565c; }
@@ -82,7 +82,7 @@ html:is([lang="ar"], [lang="ur"]) :is(.tk-label, .tk-type) { font-family: var(--
   .tk-grid { grid-template-columns: 1fr; }
   .tk-head { padding: 16px 14px 14px; gap: 14px; }
   .tk-num.big { font-size: 56px; letter-spacing: -2px; }
-  .tk-qr svg { width: 104px; height: 104px; }
+  .tk-qr svg { width: 116px; height: 116px; } /* 104 of code + the 6px tile each side */
   .tk-qr-hold { width: 116px; height: 116px; }
 }
 
