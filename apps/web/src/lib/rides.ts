@@ -10,14 +10,17 @@ import { riyadhClock } from "./workshop-days";
 //
 // The rules below mirror the booking app (app.src.html) and the database, never guess:
 //   kind     _rideKind: snd96 first, anything not 'community' is a circuit night (jcc), then
-//            petromin / swim / workshop, and every other community row is the Saturday ride.
+//            petromin / swim / workshop / event, and every other community row is the Saturday ride.
 //   members  _community_booking_gate: event_kind 'community' without open_to_all is booked only
 //            by members (the Saturday tag, the Club).
 //   free     _isFreeRide: a community ride (not snd96) that is not a paid ride.
 //   gather   _gathersTime: the Saturday and National Day rides store "gather - start", the
 //            others "start - end".
+//   event    a ticketed event (ride_kind 'event', 2026-09-28): seats instead of bikes, its own
+//            price per seat (sessions.price; _fare_now charges it instead of a bike fare), open to
+//            everyone or to members (open_to_all), a description, no approval, no queue numbers.
 
-export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96";
+export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event";
 export type RidePrice = { type: string; price: number };
 export type RideSession = {
   id: string;
@@ -33,20 +36,37 @@ export type RideSession = {
   /** No Road Carbon bike on this ride: the booking app's _noCarbon, community rides except
    *  Petromin (and Petromin nights are not on this site at all). */
   noCarbon: boolean;
+  /** What the session is, as staff described it (an event's blurb); null when none. */
+  description: string | null;
+  /** An event's price per seat in SAR, null on a free event and on every other kind. */
+  price: number | null;
+  /** An event's seats (sessions.capacity); null on every other kind. */
+  seats: number | null;
+  /** The route the ride follows: an item's slug on the Routes page (sessions.route_slug), or null. */
+  routeSlug: string | null;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
 type Row = {
   id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; ride_kind?: unknown;
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
+  description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
   const k = r.ride_kind;
   if (k === "snd96") return "snd96";
   if (r.event_kind !== "community") return "jcc";
-  return k === "petromin" || k === "swim" || k === "workshop" ? k : "saturday";
+  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" ? k : "saturday";
 }
+
+/** A route's slug as the Routes page writes one (content/pages/routes.ts): lower-case letters,
+ *  digits and single hyphens. Anything else reads as no route. */
+export const ROUTE_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+export const routeSlugOf = (v: unknown): string | null => (typeof v === "string" && v.length <= 60 && ROUTE_SLUG.test(v) ? v : null);
+
+const num = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() && Number.isFinite(Number(v)) ? Number(v) : null;
 
 /** "21:00 - 23:00" from the session's settings (stored as JSON text, or an object). */
 export function slotTimes(slots: unknown): [string, string] | null {
@@ -67,6 +87,8 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
   const kind = rideKind(r);
   if (!keepAll && kind === "petromin") return null;
   const community = r.event_kind === "community";
+  const free = community && kind !== "snd96" && r.paid_ride !== true;
+  const price = num(r.price), seats = num(r.capacity);
   return {
     id: r.id,
     date: r.session_date,
@@ -74,10 +96,15 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     title: typeof r.title === "string" && r.title.trim() ? r.title.trim() : null,
     kind,
     members: community && r.open_to_all !== true,
-    free: community && kind !== "snd96" && r.paid_ride !== true,
+    free,
     times: slotTimes(r.bike_slots),
     gather: kind === "saturday" || kind === "snd96",
     noCarbon: community,
+    description: typeof r.description === "string" && r.description.trim() ? r.description.trim().slice(0, 2000) : null,
+    // the database charges an event's seat only when the event is a paid ride (_fare_now)
+    price: kind === "event" && !free && price !== null && price > 0 ? price : null,
+    seats: kind === "event" && seats !== null && Number.isInteger(seats) && seats > 0 ? seats : null,
+    routeSlug: routeSlugOf(r.route_slug),
   };
 }
 
@@ -94,7 +121,7 @@ export function upcoming(sessions: RideSession[], now: string): RideSession[] {
 /** The names a page gives each kind of session (Experiences > Next dates). */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), petromin: "" };
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), petromin: "" };
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other
@@ -105,6 +132,37 @@ export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Recor
   return localized && s.title.toLowerCase() === enNames[s.kind].trim().toLowerCase() ? names[s.kind] : s.title;
 }
 
+// The columns a sessions read asks for. The last three (description, price, route_slug) arrive
+// with the 2026-09-28 migrations; until the owner applies them PostgREST refuses the whole read
+// (400, 42703 "column does not exist"), so a read that fails that way is asked again with the
+// columns that have always been there, and the new ones are left out for ten minutes before they
+// are tried again. A session read that way simply has no description, price or route.
+export const SESSION_COLS = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity";
+export const SESSION_COLS_NEW = "description,price,route_slug";
+const RETRY_NEW_MS = 10 * 60_000;
+const MISSING: unique symbol = Symbol.for("mm.sessions.newColsMissingUntil");
+const missingUntil = (): number => (globalThis as { [MISSING]?: number })[MISSING] ?? 0;
+
+/** Rows of `sessions` matching `filter` (a PostgREST query string), with `cols` and the new
+ *  columns when the database has them. Throws when neither read answers. */
+export async function sessionRows(fetchImpl: typeof fetch, url: string, key: string, filter: string, cols: string = SESSION_COLS, now: number = Date.now()): Promise<unknown> {
+  const withNew = `${url}/rest/v1/sessions?select=${cols},${SESSION_COLS_NEW}&${filter}`;
+  const without = `${url}/rest/v1/sessions?select=${cols}&${filter}`;
+  if (now < missingUntil()) return getJson(fetchImpl, without, key);
+  try {
+    return await getJson(fetchImpl, withNew, key);
+  } catch (e) {
+    if (!(e instanceof Error) || e.message !== "400") throw e;
+    (globalThis as { [MISSING]?: number })[MISSING] = now + RETRY_NEW_MS;
+    return getJson(fetchImpl, without, key);
+  }
+}
+
+/** Tests only: try the new columns again at once. */
+export function resetSessionColumns(): void {
+  delete (globalThis as { [MISSING]?: number })[MISSING];
+}
+
 /** Booked sessions by id, whatever their state (a Petromin night, one staff have closed since):
  *  the Account page names a rider's bookings with them. Ids are checked before they reach the
  *  query string. */
@@ -112,9 +170,8 @@ export async function loadSessionsById(ids: string[], fetchImpl: typeof fetch = 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const clean = [...new Set(ids)].filter((x) => /^[A-Za-z0-9_-]{1,64}$/.test(x)).slice(0, 40);
   if (!url || !key || !clean.length) return [];
-  const cols = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride";
   try {
-    const rows = await getJson(fetchImpl, `${url}/rest/v1/sessions?select=${cols}&id=in.(${clean.join(",")})`, key);
+    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`);
     return Array.isArray(rows) ? (rows as Row[]).map((r) => toSession(r, true)).filter((x): x is RideSession => x !== null) : [];
   } catch {
     return [];
@@ -143,10 +200,9 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (url && key) {
     const today = riyadhClock(new Date(now)).slice(0, 10);
-    const cols = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride";
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=type,price`, key),
-      getJson(fetchImpl, `${url}/rest/v1/sessions?select=${cols}&session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, key),
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) {
       prices = (p.value as { type?: unknown; price?: unknown }[])
@@ -174,4 +230,5 @@ export async function loadRides(fetchImpl: typeof fetch = fetch, now: number = D
 /** For tests: forget the cached copy. */
 export function resetRides(): void {
   resetMemo(KEY);
+  resetSessionColumns();
 }

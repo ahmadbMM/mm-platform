@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { kindNames, loadRides, resetRides, rideKind, sessionName, slotTimes, toSession, upcoming, type RideSession } from "../rides";
+import { kindNames, loadRides, resetRides, rideKind, routeSlugOf, sessionName, sessionRows, slotTimes, toSession, upcoming, type RideSession } from "../rides";
 import { memoSettled } from "../memo";
 
 // /experiences shows the booking system's own prices and sessions. The rules mirror the booking
@@ -17,6 +17,8 @@ describe("rideKind", () => {
     expect(rideKind({ event_kind: "community", ride_kind: "petromin" })).toBe("petromin");
     expect(rideKind({ event_kind: "community", ride_kind: "saturday" })).toBe("saturday");
     expect(rideKind({ event_kind: "community", ride_kind: null })).toBe("saturday");
+    expect(rideKind({ event_kind: "community", ride_kind: "event" })).toBe("event"); // a ticketed event (2026-09-28)
+    expect(rideKind({ event_kind: null, ride_kind: "event" })).toBe("jcc");
     // a kind that is not a community event is a circuit night, whatever it says
     expect(rideKind({ event_kind: null, ride_kind: "swim" })).toBe("jcc");
   });
@@ -34,7 +36,7 @@ describe("slotTimes", () => {
 
 describe("toSession", () => {
   it("shows a circuit night as open to all and paid", () => {
-    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false });
+    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null });
   });
   it("marks a community ride members-only and free, unless the session says otherwise", () => {
     const sat = toSession(row({ event_kind: "community", ride_kind: "saturday", title: "Saturday Social Ride", bike_slots: '{"_time":"05:45 - 06:15"}' }));
@@ -47,6 +49,21 @@ describe("toSession", () => {
     // the database's members gate reads event_kind alone
     expect(toSession(row({ ride_kind: "snd96", event_kind: "community" }))).toMatchObject({ members: true, free: false });
   });
+  it("reads a ticketed event: its blurb, its seat price only when it is a paid ride, its seats, who may book", () => {
+    const ev = { id: "2026-10-05-ev", event_kind: "community", ride_kind: "event", title: "Bike maintenance 101", description: "  Two hours on brakes, gears and flats.  ", price: 50, paid_ride: true, open_to_all: true, capacity: 40, bike_slots: '{"_time":"19:00 - 21:00"}' };
+    expect(toSession(row(ev))).toMatchObject({ kind: "event", title: "Bike maintenance 101", description: "Two hours on brakes, gears and flats.", price: 50, seats: 40, members: false, free: false, gather: false });
+    // a free event: the database charges nothing whatever the price column says (_fare_now)
+    expect(toSession(row({ ...ev, paid_ride: false }))).toMatchObject({ free: true, price: null, seats: 40 });
+    // a members' event, and one with no seats or blurb set
+    expect(toSession(row({ ...ev, open_to_all: false }))).toMatchObject({ members: true });
+    expect(toSession(row({ ...ev, capacity: null, description: "", price: "50" }))).toMatchObject({ seats: null, description: null, price: 50 });
+    // seats and a price mean nothing on a ride
+    expect(toSession(row({ capacity: 150, price: 75, paid_ride: true }))).toMatchObject({ kind: "jcc", price: null, seats: null });
+  });
+  it("carries the route a ride follows, when the slug is one the Routes page could hold", () => {
+    expect(toSession(row({ route_slug: "obhur-coast" }))?.routeSlug).toBe("obhur-coast");
+    for (const bad of ["Obhur Coast", "-x", "a--b", "", null, 42, "x".repeat(61)]) expect(routeSlugOf(bad), String(bad)).toBeNull();
+  });
   it("shows a full session, and leaves out closed, deleted and Petromin ones", () => {
     expect(toSession(row({ status: "full" }))?.full).toBe(true);
     for (const status of ["closed", "deleted", null]) expect(toSession(row({ status }))).toBeNull();
@@ -56,7 +73,7 @@ describe("toSession", () => {
 });
 
 describe("upcoming", () => {
-  const s = (date: string, times: [string, string] | null, id = date): RideSession => ({ id, date, full: false, title: null, kind: "jcc", members: false, free: false, times, gather: false, noCarbon: false });
+  const s = (date: string, times: [string, string] | null, id = date): RideSession => ({ id, date, full: false, title: null, kind: "jcc", members: false, free: false, times, gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null });
   it("keeps what is still ahead, soonest first", () => {
     const got = upcoming([s("2026-09-29", ["21:00", "23:00"]), s("2026-09-23", ["21:00", "23:00"]), s("2026-09-27", ["21:00", "23:00"]), s("2026-09-27", ["18:00", "19:00"], "pool")], "2026-09-24T22:30");
     expect(got.map((x) => x.id)).toEqual(["pool", "2026-09-27", "2026-09-29"]);
@@ -117,13 +134,42 @@ describe("loadRides", () => {
   });
 });
 
+describe("sessionRows", () => {
+  const json = (v: unknown, status = 200) => new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
+  beforeEach(() => resetRides());
+  it("asks for the new columns, and asks again without them when the database does not have them yet", async () => {
+    // PostgREST refuses the whole read (400, 42703) for a column that does not exist
+    const f = vi.fn(async (url: string) => (url.includes("route_slug") ? json({ code: "42703", message: "column sessions.route_slug does not exist" }, 400) : json([{ id: "a" }])));
+    expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", undefined, 1000)).toEqual([{ id: "a" }]);
+    expect(f).toHaveBeenCalledTimes(2);
+    expect(f.mock.calls[0][0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,description,price,route_slug&id=eq.a");
+    expect(f.mock.calls[1][0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity&id=eq.a");
+    // for the next ten minutes the old columns are asked for straight away; then the new ones are tried again
+    expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", undefined, 2000)).toEqual([{ id: "a" }]);
+    expect(f).toHaveBeenCalledTimes(3);
+    expect(f.mock.calls[2][0]).not.toContain("route_slug");
+    await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", undefined, 1000 + 11 * 60_000);
+    expect(f.mock.calls[3][0]).toContain("route_slug");
+  });
+  it("takes the new columns when the database has them, and passes any other failure on", async () => {
+    const ok = vi.fn(async () => json([{ id: "a", route_slug: "obhur-coast" }]));
+    expect(await sessionRows(ok as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a")).toEqual([{ id: "a", route_slug: "obhur-coast" }]);
+    expect(ok).toHaveBeenCalledTimes(1);
+    const down = vi.fn(async () => json({ message: "down" }, 503));
+    await expect(sessionRows(down as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a")).rejects.toThrow("503");
+    expect(down).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe("sessionName", () => {
-  const en = kindNames({ jccName: "Evening Circuit Session", satName: "Saturday Social Ride", swimName: "Triathlon Pool Session", workshopName: "T100 Triathlon Prep", snd96Name: "National Day Ride" });
+  const en = kindNames({ jccName: "Evening Circuit Session", satName: "Saturday Social Ride", swimName: "Triathlon Pool Session", workshopName: "T100 Triathlon Prep", snd96Name: "National Day Ride", eventName: "Event" });
   const ar = kindNames({ jccName: "جلسة الحلبة المسائية", satName: "جولة السبت الاجتماعية", swimName: "جلسة المسبح", workshopName: "T100", snd96Name: "اليوم الوطني" });
   it("names a circuit night by its fixed name and any other session by its title, else its kind", () => {
     expect(sessionName({ kind: "jcc", title: "Special night" }, en, en, false)).toBe("Evening Circuit Session");
     expect(sessionName({ kind: "saturday", title: "Founders ride" }, en, en, false)).toBe("Founders ride");
     expect(sessionName({ kind: "swim", title: null }, en, en, false)).toBe("Triathlon Pool Session");
+    expect(sessionName({ kind: "event", title: "Bike maintenance 101" }, en, en, false)).toBe("Bike maintenance 101");
+    expect(sessionName({ kind: "event", title: null }, en, en, false)).toBe("Event");
   });
   it("reads a title that is just the kind's English name in Arabic on the Arabic page", () => {
     expect(sessionName({ kind: "saturday", title: "saturday social ride" }, ar, en, true)).toBe("جولة السبت الاجتماعية");

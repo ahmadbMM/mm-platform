@@ -6,7 +6,7 @@ import "@/components/booking/booking.css";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
-import { fmtSar } from "@/lib/fill";
+import { fmtNum, fmtSar } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
@@ -63,26 +63,31 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const all = upcoming(rides?.sessions ?? [], riyadhClock(new Date()));
   // The booking app's events (_evMatch): the circuit, the community rides, and the National Day
   // ride and the T100 workshop, which have cards of their own while they have dates.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96" };
+  // A ticketed event (ride_kind 'event') has a card of its own too, while one is on the books.
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event" };
   const toStep = (s: RideSession): StepSession => ({
     // the booking app's session card: "Sunday · 26 Sept 2026", and its times in the rider's clock
     id: s.id, kind: s.kind, day: fmtDayDate(s.date, locale), name: sessionName(s, kindName, enName, L !== "en"),
     when: s.times ? { gather: s.gather, a: fmtClock(s.times[0], locale), b: fmtClock(s.times[1], locale) } : null,
     members: s.members, free: s.free, full: s.full, paid: !s.free, noCarbon: s.noCarbon,
+    // a copy kept at the edge from before these fields existed reads as an event without them
+    event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
+    seatPrice: s.kind === "event" && s.price != null ? sar(s.price) : null, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
   });
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count))).map(toStep);
-  const card = (key: string, p: "snd" | "jcc" | "comm" | "ws", always: boolean): StepEvent | null => {
+  const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): StepEvent | null => {
     const sessions = sessionsOf(key);
     if (!always && sessions.length === 0) return null;
     return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: S(e[`${p}Note`]), sessions };
   };
-  const events = [card("snd96", "snd", false), card("jcc", "jcc", true), card("community", "comm", true), card("workshop", "ws", false)].filter((x): x is StepEvent => !!x);
+  const events = [card("snd96", "snd", false), card("jcc", "jcc", true), card("community", "comm", true), card("workshop", "ws", false), card("event", "ev", false)].filter((x): x is StepEvent => !!x);
   const text: StepText = {
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),
     cont: S(st.continue), waitlist: S(d.waitlist), back: S(st.back), noDates: S(st.noDates), handoff: S(st.handoff),
     members: S(d.members), free: S(d.free), full: S(d.full), gather: S(d.gather), start: S(d.start), membersNote: S(d.membersNote), clubLink: S(d.clubLink),
     available: tx("Available", "متاح"), waitlisted: tx("Waitlist", "قائمة الانتظار"),
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
+    everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats),
   };
 
   const good = list(c.good.items).filter((g) => S(g.title));

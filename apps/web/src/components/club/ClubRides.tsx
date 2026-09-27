@@ -13,6 +13,7 @@ const KIND: Record<string, { en: string; ar: string }> = {
   saturday: phrase("Saturday Social Ride", "ركبة السبت الاجتماعية"),
   swim: phrase("Triathlon Pool Session", "جلسة سباحة للترياثلون"),
   workshop: phrase("Club workshop", "ورشة النادي"),
+  event: phrase("Event", "فعالية"),
 };
 
 export default function ClubRides(p: Props) {

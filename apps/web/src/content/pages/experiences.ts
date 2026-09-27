@@ -64,6 +64,11 @@ export const experiencesSchema = {
         txt("wsMeta", 60, "T100: line", "T100: السطر", "In partnership with Saudi Triathlon Federation", "بالشراكة مع الاتحاد السعودي للترايثلون"),
         { id: "wsLogo", type: "image", label: bi("T100: logo", "T100: الشعار"), def: "/site/logo-dark.png" },
         long("wsNote", 240, "T100: rules", "T100: القواعد", "Open to every signed-in customer. One place per account, no bike needed, complimentary. The team approves the list.", "متاحة لكل عميل مسجّل. مقعد واحد لكل حساب، بلا دراجة، ومجاناً. يعتمد الفريق القائمة."),
+        // Ticketed events (ride_kind 'event', 2026-09-28): the card shows while an event is on the books.
+        txt("evTitle", 40, "Events: title", "الفعاليات: العنوان", "Events", "الفعاليات"),
+        txt("evMeta", 60, "Events: line", "الفعاليات: السطر", "Talks, classes and festivals", "محاضرات ودورات ومهرجانات"),
+        { id: "evLogo", type: "image", label: bi("Events: logo", "الفعاليات: الشعار"), def: "/site/logo-dark.png" },
+        long("evNote", 240, "Events: rules", "الفعاليات: القواعد", "Seats, not bikes. Each event says who may book - everyone, or Club members - and what a seat costs. Up to 5 seats per booking; first come, first seated.", "مقاعد لا دراجات. كل فعالية تحدد من يحجز - الجميع أو أعضاء النادي - وسعر المقعد. حتى 5 مقاعد لكل حجز، والأسبقية لمن يحجز أولاً."),
       ],
     },
     {
@@ -77,7 +82,11 @@ export const experiencesSchema = {
         txt("swimName", 50, "Name: pool session", "الاسم: جلسة المسبح", "Triathlon Pool Session", "جلسة مسبح الترايثلون"),
         txt("workshopName", 50, "Name: triathlon workshop", "الاسم: ورشة الترايثلون", "T100 Triathlon Prep", "T100 التحضير للترايثلون"),
         txt("snd96Name", 50, "Name: National Day ride", "الاسم: جولة اليوم الوطني", "Saudi National Day Ride", "جولة اليوم الوطني السعودي"),
+        txt("eventName", 50, "Name: event without a title", "الاسم: فعالية بلا عنوان", "Event", "فعالية"),
         txt("members", 30, "Tag: members only", "الوسم: للأعضاء فقط", "Members", "للأعضاء"),
+        txt("everyone", 30, "Tag: open to everyone", "الوسم: للجميع", "Open to everyone", "للجميع"),
+        txt("perSeat", 40, "Event: price per seat ({price})", "الفعالية: سعر المقعد ({price})", "{price} per seat", "{price} للمقعد"),
+        txt("seats", 40, "Event: seats ({n})", "الفعالية: المقاعد ({n})", "{n} seats", "المقاعد: {n}"),
         txt("free", 30, "Tag: free", "الوسم: مجاني", "Complimentary", "مجاناً"),
         txt("full", 40, "Tag: full", "الوسم: ممتلئة", "Full · waitlist open", "ممتلئة · قائمة الانتظار متاحة"),
         txt("book", 30, "Button: book", "الزر: احجز", "Book", "احجز"),

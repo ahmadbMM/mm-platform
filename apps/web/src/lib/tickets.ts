@@ -3,7 +3,7 @@
 // account's own my_bookings returns. Plain logic here, so it can be tested; the card is
 // components/booking/TicketCard.tsx.
 import { intlOf } from "@/i18n/locales";
-import { rideKind, slotTimes, type RideKind } from "./rides";
+import { rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
 
 export type TicketStatus = "waiting" | "waitlist" | "active";
 export type TicketRow = {
@@ -24,8 +24,10 @@ export type TicketSession = {
   collect: string | null;
   meetUrl: string | null;
   free: boolean;
-  /** The ride has bikes to hand out (not the pool, not the workshop). */
+  /** The ride has bikes to hand out (not the pool, not the workshop, not a ticketed event). */
   bikes: boolean;
+  /** The route the ride follows (an item's slug on the Routes page), or null. */
+  routeSlug: string | null;
 };
 
 type Row = Record<string, unknown>;
@@ -74,7 +76,8 @@ export function ticketSession(r: Row): TicketSession | null {
     collect,
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event",
+    routeSlug: routeSlugOf(r.route_slug),
   };
 }
 

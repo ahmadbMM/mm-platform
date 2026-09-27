@@ -93,6 +93,10 @@ html:is([lang="ar"], [lang="ur"]) :is(.tk-label, .tk-type) { font-family: var(--
 .sc-card.ev-swim { --ev: #0d7d8f; }
 .sc-card.ev-workshop { --ev: #c2410c; }
 .sc-card.ev-snd96 { --ev: #00894a; }
+.sc-card.ev-event { --ev: #6d28d9; }
+/* A ticketed event's card says what it is and what a seat costs. */
+.sc-desc { font-size: 12.5px; color: #4f565c; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sc-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; font-weight: 700; color: #06603b; }
 .sc-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
 .sc-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--ev); }
 .sc-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }

@@ -50,6 +50,7 @@ html:is([lang="ar"], [lang="ur"]) .pg-month { letter-spacing: 0; }
 .pg-date strong { display: block; font-size: 30px; letter-spacing: -1px; line-height: 1; }
 .pg-date span { font-size: 12px; font-weight: 700; color: var(--kind); text-transform: uppercase; }
 .pg-event-body strong { display: block; font-size: 17px; letter-spacing: -.3px; }
+.pg-event-desc { margin: 4px 0 0; color: #57605a; font-size: 13.5px; line-height: 1.5; max-width: 620px; }
 .pg-event-meta { display: flex; flex-wrap: wrap; gap: 6px 10px; margin-top: 6px; align-items: center; color: #57605a; font-size: 13.5px; }
 .pg-event-meta em { font-style: normal; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: rgba(7, 122, 75, .1); color: #077a4b; }
 .pg-event-meta em.warn { background: rgba(122, 90, 16, .12); color: #7a5a10; }

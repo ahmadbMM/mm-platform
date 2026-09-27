@@ -23,6 +23,7 @@ export const eventsSchema = {
         { id: "bookHref", type: "link", label: bi("Booking link", "رابط الحجز"), def: BOOKING_URL },
         txt("rideTag", 30, "Tag: circuit ride", "الوسم: جولة الحلبة", "Circuit ride", "جولة الحلبة"),
         txt("communityTag", 30, "Tag: community event", "الوسم: فعالية مجتمعية", "Community event", "فعالية مجتمعية"),
+        txt("eventTag", 30, "Tag: ticketed event", "الوسم: فعالية بتذاكر", "Event", "فعالية"),
       ],
     },
     {

@@ -8,6 +8,7 @@ import { eventsSchema } from "@/content/pages/events";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
+import { fill, fmtNum, fmtSar } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
@@ -21,7 +22,7 @@ type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e" };
+const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9" };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -40,6 +41,11 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const d = resolvePage(experiencesSchema, content, L).dates;
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
+  // Book opens the booking app on that event and date (?ev=&session=), as the Experiences steps do.
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event" };
+  const bookAt = (s: RideSession) => {
+    try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
+  };
   const kindName = kindNames(d), enName = kindNames(dEn);
   const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en");
   const sessions = upcoming(rides?.sessions ?? [], riyadhClock(new Date())).slice(0, Math.max(1, N(c.hero.count)));
@@ -74,17 +80,22 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                     <div className="pg-date"><strong>{fmt(s.date, { day: "numeric" })}</strong><span>{fmt(s.date, { weekday: "short" })}</span></div>
                     <div className="pg-event-body">
                       <strong>{name(s)}</strong>
+                      {s.kind === "event" && s.description && <p className="pg-event-desc">{s.description}</p>}
                       <div className="pg-event-meta">
                         {s.times && (s.gather
                           ? <span>{S(d.gather)} <bdi dir="ltr">{s.times[0]}</bdi> · {S(d.start)} <bdi dir="ltr">{s.times[1]}</bdi></span>
                           : <span><bdi dir="ltr">{s.times[0]} – {s.times[1]}</bdi></span>)}
-                        <em>{s.kind === "jcc" || s.kind === "snd96" ? S(c.hero.rideTag) : S(c.hero.communityTag)}</em>
+                        {/* an event's seat price and seats; a copy kept at the edge from before these fields existed has none */}
+                        {s.kind === "event" && s.price != null && <span>{fill(S(d.perSeat), { price: fmtSar(s.price, locale) })}</span>}
+                        {s.kind === "event" && s.seats != null && <span>{fill(S(d.seats), { n: fmtNum(s.seats, locale) })}</span>}
+                        <em>{s.kind === "jcc" || s.kind === "snd96" ? S(c.hero.rideTag) : s.kind === "event" ? S(c.hero.eventTag) : S(c.hero.communityTag)}</em>
                         {s.members && <em>{S(d.members)}</em>}
+                        {s.kind === "event" && !s.members && <em>{S(d.everyone)}</em>}
                         {s.free && <em>{S(d.free)}</em>}
                         {s.full && <em className="warn">{S(d.full)}</em>}
                       </div>
                     </div>
-                    <a href={book}>{s.full ? S(d.waitlist) : S(d.book)}</a>
+                    <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>
                   </div>
                 ))}
               </div>

@@ -94,7 +94,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const typeName = (ty: string) => (TYPE_NAME[ty] ? tx(TYPE_NAME[ty].en, TYPE_NAME[ty].ar) : ty);
   // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
   // Edit does; Reschedule and Cancel open its My Bookings.
-  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96" };
+  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event" };
   const appLink = (params: Record<string, string>) => {
     try { const u = new URL(app); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
     catch { return book; }

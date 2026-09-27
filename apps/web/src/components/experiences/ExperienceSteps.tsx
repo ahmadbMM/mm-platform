@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { isRtl } from "@/i18n/locales";
+import { fill } from "@/lib/fill";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -11,6 +12,9 @@ export type StepSession = {
   id: string; kind: string; day: string; name: string; when: { gather: boolean; a: string; b: string } | null;
   members: boolean; free: boolean; full: boolean; paid: boolean;
   noCarbon: boolean; // the ride offers no Road Carbon bike, so its price is not shown
+  /** A ticketed event: seats instead of bikes, so no bike prices - its own blurb, the seat price
+   *  as the page writes it (null when free) and its seats as a number the page has formatted. */
+  event: boolean; description: string | null; seatPrice: string | null; seats: string | null;
 };
 export type StepEvent = { key: string; title: string; meta: string; logo: string; note: string; sessions: StepSession[] };
 export type StepText = {
@@ -19,6 +23,8 @@ export type StepText = {
   /** The booking app's session card says Available or Waitlist on the right. */
   available: string; waitlisted: string;
   pricesTitle: string; pricesText: string; codeNote: string;
+  /** An event's facts: "Open to everyone", "{price} per seat", "{n} seats" (the page fills them). */
+  everyone: string; perSeat: string; seats: string;
 };
 type Props = { locale: string; events: StepEvent[]; prices: { type: string; label: string; price: string }[]; bookHref: string; clubHref: string; text: StepText };
 
@@ -39,10 +45,20 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   const tags = (s: StepSession) => (
     <span className="xs-tags">
       {s.members && <em>{t.members}</em>}
+      {s.event && !s.members && <em>{t.everyone}</em>}
       {s.free && <em>{t.free}</em>}
       {s.full && <em className="warn">{t.full}</em>}
     </span>
   );
+  // An event's seat price and seats, on its card and in the summary.
+  const facts = (s: StepSession) => (s.event && (s.seatPrice || s.seats) ? (
+    <span className="sc-facts">
+      {s.seatPrice && <span>{fill(t.perSeat, { price: s.seatPrice })}</span>}
+      {s.seats && <span>{fill(t.seats, { n: s.seats })}</span>}
+    </span>
+  ) : null);
+  // The community rides and the events are named by their own title, the fixed events by the card's.
+  const named = (e: StepEvent) => e.key === "community" || e.key === "event";
   const link = (() => {
     if (!ev || !sess) return bookHref;
     try {
@@ -93,10 +109,11 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             <div className="sc-list">
               {ev.sessions.map((s) => (
                 <button key={s.id} type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}`} onClick={() => { setSess(s); go(3); }}>
-                  {(ev.key === "community" || s.members || s.free) && (
+                  {(named(ev) || s.members || s.free) && (
                     <span className="sc-kicker">
-                      {ev.key === "community" && <span className="sc-chip">{s.name}</span>}
+                      {named(ev) && <span className="sc-chip">{s.name}</span>}
                       {s.members && <span className="sc-tag">{t.members}</span>}
+                      {s.event && !s.members && <span className="sc-tag">{t.everyone}</span>}
                       {s.free && <span className="sc-tag">{t.free}</span>}
                     </span>
                   )}
@@ -106,6 +123,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                     <span className={`sc-spots${s.full ? " full" : ""}`}>{s.full ? t.waitlisted : t.available}</span>
                   </span>
                   {s.when && <span className="sc-time">{when(s)}</span>}
+                  {s.event && s.description && <span className="sc-desc">{s.description}</span>}
+                  {facts(s)}
                 </button>
               ))}
             </div>
@@ -121,11 +140,13 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           <div className="xs-summary">
             <div className="xs-sum-head">
               {ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
-              <div><strong>{ev.key === "community" ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}</span></div>
+              <div><strong>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}</span></div>
             </div>
             {tags(sess)}
+            {sess.event && sess.description && <p className="xs-rules">{sess.description}</p>}
+            {facts(sess)}
             {ev.note && <p className="xs-rules">{ev.note}</p>}
-            {sess.paid && prices.some((p) => !(sess.noCarbon && p.type === "Road Carbon")) && (
+            {sess.paid && !sess.event && prices.some((p) => !(sess.noCarbon && p.type === "Road Carbon")) && (
               <div className="xs-prices">
                 <p className="xs-prices-h">{t.pricesTitle}</p>
                 {t.pricesText && <p className="xs-prices-t">{t.pricesText}</p>}

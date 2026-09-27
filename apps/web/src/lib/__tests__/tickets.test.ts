@@ -16,6 +16,9 @@ describe("a session as the ticket reads it", () => {
     expect(ticketSession({ ...satRow, hide_queue: false })!.published).toBe(true);
     expect(ticketSession({ ...satRow, meet_url: "javascript:alert(1)" })!.meetUrl).toBeNull();
     expect(ticketSession({ ...satRow, ride_kind: "swim" })).toMatchObject({ bikes: false, gathers: false }); // the pool is a start - end window
+    // a ticketed event: seats, no bikes, nobody approves, and the route a ride follows when one is set
+    expect(ticketSession({ ...satRow, ride_kind: "event", needs_approval: false, route_slug: "al-balad-heritage-ride" })).toMatchObject({ kind: "event", bikes: false, approval: false, gathers: false, routeSlug: "al-balad-heritage-ride" });
+    expect(jcc.routeSlug).toBeNull();
   });
 });
 

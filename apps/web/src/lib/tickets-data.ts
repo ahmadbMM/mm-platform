@@ -2,10 +2,11 @@
 // sessions as the ticket needs them, and whether anyone still waiting holds a lower number -
 // both with the public key, as the booking app's own customers read them (queue_public carries
 // no names).
-import { getJson } from "./rides";
+import { getJson, sessionRows } from "./rides";
 import { ticketSession, type TicketSession } from "./tickets";
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
+// The route column rides along through sessionRows, which leaves it out while the database does not have it yet.
 const COLS = "id,session_date,day,title,ride_kind,event_kind,bike_slots,needs_approval,hide_queue,meet_url,paid_ride,open_to_all,status";
 
 /** The booked sessions by id, whatever their state (a closed night still shows its ticket). */
@@ -14,7 +15,7 @@ export async function loadTicketSessions(ids: string[], fetchImpl: typeof fetch 
   const clean = [...new Set(ids)].filter((x) => ID.test(x)).slice(0, 40);
   if (!url || !key || !clean.length) return new Map();
   try {
-    const rows = await getJson(fetchImpl, `${url}/rest/v1/sessions?select=${COLS}&id=in.(${clean.join(",")})`, key);
+    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`, COLS);
     const list = Array.isArray(rows) ? rows.map((r) => ticketSession(r as Record<string, unknown>)).filter((x): x is TicketSession => x !== null) : [];
     return new Map(list.map((s) => [s.id, s]));
   } catch {
