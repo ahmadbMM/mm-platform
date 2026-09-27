@@ -37,6 +37,7 @@ export const T = {
     wlPos: (n: string) => `You are W${n} in line for a spot. We will let you know if one frees up — you can still come and ask at the booth.`,
     gatherAt: (n: string) => `Gathering at ${n}`,
     collectFrom: (n: string) => `Collect bikes from ${n}`,
+    route: "Route",
   },
   ar: {
     queueNumber: "رقم الطابور",
@@ -68,5 +69,6 @@ export const T = {
     wlPos: (n: string) => `أنت رقم W${n} في انتظار مقعد. سنخبرك إذا توفّر مقعد، ويمكنك أيضاً السؤال في الكشك.`,
     gatherAt: (n: string) => `التجمع في ${n}`,
     collectFrom: (n: string) => `استلام الدراجات من ${n}`,
+    route: "المسار",
   },
 };

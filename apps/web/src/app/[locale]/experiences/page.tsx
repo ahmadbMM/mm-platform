@@ -10,6 +10,7 @@ import { fmtNum, fmtSar } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
+import { routeNameOf, routeNames } from "@/lib/route-names";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import { riyadhClock } from "@/lib/workshop-days";
 import { fmtClock, fmtDayDate } from "@/lib/tickets";
@@ -60,6 +61,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
 
   const kindName = kindNames(d);
   const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
+  const routes = routeNames(content, L); // a ride that follows a route on the Routes page is named after it
   const all = upcoming(rides?.sessions ?? [], riyadhClock(new Date()));
   // The booking app's events (_evMatch): the circuit, the community rides, and the National Day
   // ride and the T100 workshop, which have cards of their own while they have dates.
@@ -73,6 +75,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     // a copy kept at the edge from before these fields existed reads as an event without them
     event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
     seatPrice: s.kind === "event" && s.price != null ? sar(s.price) : null, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
+    route: routeNameOf(routes, s.routeSlug),
   });
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count))).map(toStep);
   const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): StepEvent | null => {
@@ -87,7 +90,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     members: S(d.members), free: S(d.free), full: S(d.full), gather: S(d.gather), start: S(d.start), membersNote: S(d.membersNote), clubLink: S(d.clubLink),
     available: tx("Available", "متاح"), waitlisted: tx("Waitlist", "قائمة الانتظار"),
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
-    everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats),
+    everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),
   };
 
   const good = list(c.good.items).filter((g) => S(g.title));

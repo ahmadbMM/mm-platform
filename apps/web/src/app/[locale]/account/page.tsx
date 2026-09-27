@@ -20,6 +20,7 @@ import { fill } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName } from "@/lib/rides";
+import { routeNameOf, routeNames } from "@/lib/route-names";
 import { ticketCue, ticketGroups } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { riyadhClock } from "@/lib/workshop-days";
@@ -85,6 +86,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
   // every booked session, whatever its state now (a Petromin night, one staff closed since)
   const sessions = await loadTicketSessions(groups.map((g) => g.sessionId));
+  const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it on its ticket
   // "You're next!" on a numbered night: whether anyone still waiting holds a lower number
   const ahead = await Promise.all(groups.map((g) => {
     const s = sessions.get(g.sessionId), first = g.rows.find((r) => r.status === "waiting" && r.queueNum != null);
@@ -135,7 +137,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                   <TicketCard key={g.sessionId} locale={locale} rows={g.rows} session={s}
                     name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
                     cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place: s?.approval ? s.meetUrl : S(site.contact.jccHref) || null }} />
+                    links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place: s?.approval ? s.meetUrl : S(site.contact.jccHref) || null }}
+                    route={routeNameOf(routes, s?.routeSlug)} />
                 );
               })}
             </div>

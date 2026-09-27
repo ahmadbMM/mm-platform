@@ -12,6 +12,7 @@ import { fill, fmtNum, fmtSar } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
+import { routeNameOf, routeNames } from "@/lib/route-names";
 import { riyadhClock } from "@/lib/workshop-days";
 import { serverL } from "@/i18n/dicts";
 import { intlOf } from "@/i18n/locales";
@@ -47,6 +48,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
   const kindName = kindNames(d), enName = kindNames(dEn);
+  const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it
   const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en");
   const sessions = upcoming(rides?.sessions ?? [], riyadhClock(new Date())).slice(0, Math.max(1, N(c.hero.count)));
   const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(intlOf(locale), { ...o, timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
@@ -85,6 +87,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {s.times && (s.gather
                           ? <span>{S(d.gather)} <bdi dir="ltr">{s.times[0]}</bdi> · {S(d.start)} <bdi dir="ltr">{s.times[1]}</bdi></span>
                           : <span><bdi dir="ltr">{s.times[0]} – {s.times[1]}</bdi></span>)}
+                        {routeNameOf(routes, s.routeSlug) && <span>{tx("Route", "المسار")}: {routeNameOf(routes, s.routeSlug)}</span>}
                         {/* an event's seat price and seats; a copy kept at the edge from before these fields existed has none */}
                         {s.kind === "event" && s.price != null && <span>{fill(S(d.perSeat), { price: fmtSar(s.price, locale) })}</span>}
                         {s.kind === "event" && s.seats != null && <span>{fill(S(d.seats), { n: fmtNum(s.seats, locale) })}</span>}

@@ -21,6 +21,8 @@ type Props = {
   start: string;
   typeName: (type: string) => string;
   links: { edit: string | null; manage: string; place: string | null };
+  /** The route the ride follows, named after the Routes page's list; null when none. */
+  route?: string | null;
 };
 
 const Bike = () => (
@@ -39,7 +41,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, rows, session: s, name, cue, t, gather, start, typeName, links }: Props) {
+export default function TicketCard({ locale, rows, session: s, name, cue, t, gather, start, typeName, links, route = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order
   const allWl = rows.every((r) => r.status === "waitlist");
@@ -78,6 +80,7 @@ export default function TicketCard({ locale, rows, session: s, name, cue, t, gat
             {f({ weekday: "long" })}<br />{f({ day: "numeric", month: "short", year: "numeric" })}
             {when && <><br /><bdi>{when}</bdi></>}
             {green && <><br /><span className="go">{green}</span></>}
+            {route && <><br /><span className="tk-route">{t.route}: {route}</span></>}
           </p>
         </div>
       </div>

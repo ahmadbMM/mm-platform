@@ -24,6 +24,7 @@
 .tk-qr-hold span { font-size: 10px; font-weight: 700; line-height: 1.5; color: #4f565c; }
 .tk-when { font-size: 10px; font-weight: 700; line-height: 1.4; color: #4f565c; text-align: end; }
 .tk-when .go { color: #077a4b; }
+.tk-when .tk-route { color: #1a1919; }
 .tk-body { padding: 2px 18px 0; }
 .tk-note { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 9px 12px; font-size: 12px; font-weight: 800; color: #1a1919;
   background: #fbf9f4; border: 1px solid rgba(26, 25, 25, .1); border-radius: 10px; }

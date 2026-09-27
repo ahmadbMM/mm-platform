@@ -10,8 +10,11 @@ const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: 
 const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 const num = <I extends string>(id: I, en: string, ar: string, max: number, step: number) => ({ id, type: "number" as const, min: 0, max, step, label: bi(en, ar), hint: bi("0 hides it.", "صفر يخفيه."), def: 0 });
 const maps = (q: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
+// A route's slug: the name a ride is tied to a route by (sessions.route_slug, set by staff on the
+// session), one value in every language. The defaults' slugs come from their English names.
+const slugOf = (name: string) => name.toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 const route = (name: [string, string], area: [string, string], level: [string, string], surface: [string, string], text: [string, string], href: string, km = 0) =>
-  ({ name: bi(...name), area: bi(...area), level: bi(...level), surface: bi(...surface), text: bi(...text), km, climb: 0, minutes: 0, href: { href } });
+  ({ slug: bi(slugOf(name[0]), slugOf(name[0])), name: bi(...name), area: bi(...area), level: bi(...level), surface: bi(...surface), text: bi(...text), km, climb: 0, minutes: 0, href: { href }, gpxHref: { href: "" }, stravaHref: { href: "" }, komootHref: { href: "" } });
 
 export const routesSchema = {
   page: "routes",
@@ -33,10 +36,14 @@ export const routesSchema = {
         {
           id: "items", type: "list", maxItems: 12, label: bi("Routes", "المسارات"),
           item: [
+            { id: "slug", type: "text" as const, max: 40, mono: true, label: bi("Slug (the route's id)", "المعرّف (slug)"), hint: bi("Lower-case letters, digits and hyphens, e.g. obhur-coast. Staff tie a ride to this route by typing it on the session; the booking app and the website then name the route on the ride.", "أحرف لاتينية صغيرة وأرقام وشرطات، مثل obhur-coast. يربط الموظفون الجولة بهذا المسار بكتابته في الجلسة، فيظهر اسم المسار على الجولة في التطبيق والموقع."), def: bi("", "") },
             txt("name", 50, "Name", "الاسم", "", ""), txt("area", 50, "Area", "المنطقة", "", ""), txt("level", 20, "Level", "المستوى", "", ""),
             txt("surface", 30, "Surface", "السطح", "", ""), long("text", 300, "Description", "الوصف", "", ""),
             num("km", "Distance (km)", "المسافة (كم)", 500, 0.1), num("climb", "Climb (m)", "الصعود (م)", 5000, 1), num("minutes", "Time (minutes)", "الوقت (دقائق)", 1440, 5),
             { id: "href", type: "link", label: bi("Map link", "رابط الخريطة"), def: "" },
+            { id: "gpxHref", type: "link", label: bi("GPX file", "ملف GPX"), hint: bi("A link to the route's GPX file (https, or a file uploaded to the site). The page draws its elevation profile, reads the distance and climb from it when the fields above are 0, and offers it to download.", "رابط ملف GPX للمسار (https أو ملف مرفوع على الموقع). ترسم الصفحة منحنى الارتفاع، وتقرأ المسافة والصعود منه عندما تكون الحقول أعلاه صفراً، وتتيح تنزيله."), def: "" },
+            { id: "stravaHref", type: "link", label: bi("Strava link", "رابط Strava"), def: "" },
+            { id: "komootHref", type: "link", label: bi("Komoot link", "رابط Komoot"), def: "" },
           ],
           def: [
             route(["Jeddah Corniche Circuit", "حلبة كورنيش جدة"], ["Corniche", "الكورنيش"], ["Easy", "سهل"], ["Race track", "حلبة سباق"],
