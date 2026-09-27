@@ -3,20 +3,28 @@ import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import ClubCard from "@/components/club/ClubCard";
 import ClubRides from "@/components/club/ClubRides";
+import MembersArea from "@/components/club/MembersArea";
 import "@/components/club/club.css";
 import { clubSchema } from "@/content/pages/club";
+import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { getAccount } from "@/lib/account";
+import { getAccount, rpcServer } from "@/lib/account";
+import { memberArea } from "@/lib/members";
+import { kindNames, sessionName, type RideKind } from "@/lib/rides";
+import { riyadhClock } from "@/lib/workshop-days";
 import { serverL } from "@/i18n/dicts";
 import { isRtl } from "@/i18n/locales";
 
 // micromobility.sa/club - the Community membership as the Club: how it works, a member's card,
 // the upcoming community rides. Joining is the community application, received by the staff
-// page (Community > Applications).
+// page (Community > Applications). A signed-in member sees the members' area in the card's place
+// (member_area; components/club/MembersArea.tsx) - their own membership, never another member's -
+// and a signed-in visitor who is not a member a line saying so; while the database does not have
+// the function yet, the card opens as before.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -35,6 +43,8 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const L = asLocale(locale);
   const tx = serverL(locale);
   const [{ content, previewing, hidden }, acct] = await Promise.all([pageState("club"), getAccount()]);
+  const area = acct ? memberArea(await rpcServer<unknown>("member_area", { p_id: acct.id, p_token: acct.token })) : null;
+  const members = area?.ok ? area : null;
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(clubSchema, content, L);
   const r = c.rules;
@@ -43,6 +53,16 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const tierNames: [string, string, string] = [S(c.tiers.t1Name), S(c.tiers.t2Name), S(c.tiers.t3Name)];
   const applyHref = localHref(S(c.hero.applyHref), locale);
   const ridesHref = bookingLink(S(c.hero.ridesHref), locale);
+  // The members' rides are named as Experiences names them, and booked in the booking app on that ride.
+  const d = resolvePage(experiencesSchema, content, L).dates;
+  const kindName = kindNames(d), enName = kindNames(resolvePage(experiencesSchema, content, "en").dates);
+  const asKind = (k: string | null): RideKind => (k && k in kindName ? (k as RideKind) : "saturday");
+  const nameOf = (kind: string | null, title: string) => sessionName({ kind: asKind(kind), title: title || null }, kindName, enName, L !== "en");
+  const bookAt = (id: string, kind: string | null) => {
+    const ev = kind === "event" || kind === "workshop" || kind === "snd96" ? kind : "community";
+    try { const u = new URL(bookingLink(S(c.rides.allHref), locale)); u.searchParams.set("ev", ev); u.searchParams.set("session", id); return u.toString(); } catch { return ridesHref; }
+  };
+  const today = riyadhClock(new Date()).slice(0, 10);
   const words = lines(S(c.hero.marquee));
   const earn = [
     { label: S(c.earn.paidLabel), value: fill(tx("{n} / SAR 10", "{n} لكل 10 ر.س"), { n: shown.perTen }), on: N(r.perTen) > 0 },
@@ -88,7 +108,16 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
           </div>
         )}
         <section className="club-join" id="card">
-          <ClubCard locale={locale} title={S(c.card.title)} text={S(c.card.text)} notMember={S(c.card.notMember)} applyBtn={S(c.hero.applyBtn)} applyHref={applyHref} tierNames={tierNames} email={acct?.email} phone={acct?.phone} />
+          {members?.member ? (
+            <MembersArea locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} />
+          ) : members ? (
+            <div className="club-lookup">
+              <h2>{S(c.card.title)}</h2>
+              <div className="club-notmember" role="status"><span>{S(c.card.notMember)}</span><a href={applyHref}>{S(c.hero.applyBtn)}</a></div>
+            </div>
+          ) : (
+            <ClubCard locale={locale} title={S(c.card.title)} text={S(c.card.text)} notMember={S(c.card.notMember)} applyBtn={S(c.hero.applyBtn)} applyHref={applyHref} tierNames={tierNames} email={acct?.email} phone={acct?.phone} />
+          )}
           {earn.length > 0 && (
             <div className="club-earn">
               <h3>{S(c.earn.title)}</h3>
