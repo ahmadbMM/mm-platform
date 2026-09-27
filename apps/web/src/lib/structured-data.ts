@@ -2,9 +2,9 @@ import { DEFAULT_SHARE_IMAGE, SITE_NAME, SITE_URL, langPath } from "@/lib/seo";
 import type { CatalogModel } from "@/lib/catalog";
 
 // Structured data (schema.org JSON-LD) for search engines: who the company is and where its store
-// is (Home), the rides a visitor can book (Events), the Journal's articles and the bike
-// catalogue's models. Everything comes from what staff set on the site; nothing here is shown to
-// visitors.
+// is (Home), the rides a visitor can book (Events), the Journal's articles, the bike catalogue's
+// models and where each catalogue page sits. Everything comes from what staff set on the site;
+// nothing here is shown to visitors.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 const N = (v: unknown) => (typeof v === "number" ? v : NaN);
@@ -106,5 +106,15 @@ export function productData(model: CatalogModel, locale: string, x: { path: stri
     category: S(x.category) || undefined,
     url: langPath(SITE_URL + x.path, locale),
     manufacturer: S(model.brand) ? { "@type": "Organization", name: S(model.brand) } : undefined,
+  };
+}
+
+/** Where a catalogue page sits - Bikes › Road › Carbon › the model - for the trail search engines
+ *  show under a result. The last item is the page itself, at its own address. */
+export function breadcrumbData(items: { name: string; path: string }[], locale: string): object {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: items.map((x, i) => ({ "@type": "ListItem", position: i + 1, name: x.name, item: langPath(SITE_URL + x.path, locale) })),
   };
 }

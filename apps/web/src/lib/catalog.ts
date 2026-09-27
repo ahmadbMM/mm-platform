@@ -6,8 +6,9 @@
 // Read with the public key. Row security already shows the public only published categories and
 // models (and the colours and photos of published models); the reads ask for published rows too,
 // so that a policy change can never widen what this page shows. Everything is read in one go and
-// kept for a minute per Worker instance, the way the site's content is (lib/site.ts): a staff
-// save shows within a minute, and a failed read keeps the last good copy.
+// kept for a minute per Worker instance, the way the site's content is (lib/site.ts, lib/memo.ts):
+// a staff save shows within a minute, and a failed read keeps the last good copy.
+import { edgeStore, memo, resetMemo } from "./memo";
 
 export type CatalogCategory = {
   id: string;
@@ -91,7 +92,7 @@ export type Catalog = {
 };
 
 const TTL_MS = 60_000; // a staff save shows within a minute
-let held: { at: number; data: Catalog | null } | null = null;
+const KEY = "catalog";
 
 // Each table's columns and order. Named rather than "*", so a column staff gain later is never
 // sent to the page unasked; the order is the one staff set, then the name.
@@ -139,19 +140,19 @@ async function readCatalog(fetchImpl: typeof fetch): Promise<Catalog | null> {
 }
 
 /**
- * The published catalogue, kept for a minute per Worker instance. A failed read keeps the last
- * good copy; with none, null - and the pages show their empty state.
+ * The published catalogue, read once per Worker instance and kept for a minute (lib/memo.ts:
+ * everyone asking at once shares the read, a copy past the minute is served while it is refreshed,
+ * and a failed read keeps the last good copy - this instance's, else the edge's). Null only when
+ * nothing has ever been read: the pages then fail (error.tsx, nothing cached) rather than answer
+ * "not found", or an empty catalogue the edge would keep for a minute.
  */
 export async function loadCatalog(fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<Catalog | null> {
-  if (held && now - held.at < TTL_MS) return held.data;
-  const fresh = await readCatalog(fetchImpl);
-  held = { at: now, data: fresh ?? held?.data ?? null };
-  return held.data;
+  return memo<Catalog>(KEY, { ttl: TTL_MS, now, read: () => readCatalog(fetchImpl), keep: edgeStore("catalog") });
 }
 
 /** For tests: forget the cached copy. */
 export function resetCatalog(): void {
-  held = null;
+  resetMemo(KEY);
 }
 
 // ── Pure helpers ─────────────────────────────────────────────────────────────

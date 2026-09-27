@@ -9,6 +9,8 @@ import petrominPage from "../../forms/petromin-page";
 // The website serves the two registration forms exactly as their builds leave them
 // (forms/community, forms/petromin), with the headers their own Workers sent.
 const forms = resolve(__dirname, "../../../../../forms");
+// The database host the site is built for (headers.ts reads it the same way).
+const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://amyqxovbnlreassrqihr.supabase.co";
 
 describe("the registration forms", () => {
   it("are the pages the form builds wrote (run the form's build after changing it)", () => {
@@ -32,7 +34,7 @@ describe("the registration forms", () => {
     for (const h of [c, p]) {
       expect(h.get("x-robots-tag")).toBe("noindex");
       expect(h.get("cache-control")).toBe("public, max-age=300");
-      expect(h.get("content-security-policy")).toContain("connect-src 'self' https://amyqxovbnlreassrqihr.supabase.co https://cloudflareinsights.com");
+      expect(h.get("content-security-policy")).toContain(`connect-src 'self' ${SUPABASE} https://cloudflareinsights.com`);
       expect(h.get("content-security-policy")).toContain("frame-ancestors 'none'");
     }
     expect(c.get("content-security-policy")).toContain("form-action 'none'");

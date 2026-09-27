@@ -1,3 +1,4 @@
+import { edgeStore, memo, resetMemo } from "./memo";
 import { riyadhClock } from "./workshop-days";
 
 // The rides a visitor can book, read from the booking system itself: the bike prices
@@ -121,7 +122,7 @@ export async function loadSessionsById(ids: string[], fetchImpl: typeof fetch = 
 }
 
 const TTL_MS = 60_000;
-let cache: { at: number; data: RideData | null } | null = null;
+const KEY = "rides";
 
 export async function getJson(fetchImpl: typeof fetch, url: string, key: string): Promise<unknown> {
   const res = await fetchImpl(url, {
@@ -133,13 +134,9 @@ export async function getJson(fetchImpl: typeof fetch, url: string, key: string)
   return res.json();
 }
 
-/**
- * The prices and the sessions from today (Riyadh) on. Null only when nothing has ever been
- * read; the page then shows its own words without prices or dates.
- */
-export async function loadRides(fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<RideData | null> {
-  if (cache && now - cache.at < TTL_MS) return cache.data;
-  const prev = cache?.data ?? null;
+/** One read of both: the prices and the sessions from today (Riyadh) on. Each keeps the copy it
+ *  replaces when its own read fails; null when neither has ever been read. */
+async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: number): Promise<RideData | null> {
   let prices = prev?.prices ?? null;
   let sessions = prev?.sessions ?? null;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -160,12 +157,21 @@ export async function loadRides(fetchImpl: typeof fetch = fetch, now: number = D
       sessions = (s.value as Row[]).map((r) => toSession(r)).filter((x): x is RideSession => x !== null);
     }
   }
-  const data = prices || sessions ? { prices: prices ?? [], sessions: sessions ?? [] } : null;
-  cache = { at: now, data };
-  return data;
+  return prices || sessions ? { prices: prices ?? [], sessions: sessions ?? [] } : null;
+}
+
+/**
+ * The prices and the sessions from today (Riyadh) on, read once per Worker instance and kept for a
+ * minute (lib/memo.ts: everyone asking at once shares the read, a copy past the minute is served
+ * while it is refreshed, and the last good copy - this instance's, else the edge's - stands in for
+ * a failed read). Null only when nothing has ever been read; the page then shows its own words
+ * without prices or dates.
+ */
+export async function loadRides(fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<RideData | null> {
+  return memo<RideData>(KEY, { ttl: TTL_MS, now, read: (prev) => readRides(prev, fetchImpl, now), keep: edgeStore("rides") });
 }
 
 /** For tests: forget the cached copy. */
 export function resetRides(): void {
-  cache = null;
+  resetMemo(KEY);
 }

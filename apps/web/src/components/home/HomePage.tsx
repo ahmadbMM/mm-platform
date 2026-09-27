@@ -51,15 +51,23 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
     recs: { road: recs("road"), city: recs("city"), trail: recs("trail") },
   };
   const footer: FooterContent = footerFrom(site);
+  // The welcome photos, at the size the split screen draws them (home.css).
+  const riderBg = bg(S(e.riderImage)), bizBg = bg(S(e.bizImage));
 
   return (
     <div className="mm-site" dir={localeInfo(locale).dir}>
+      {/* The welcome photos are the first thing on the screen and its largest element, so they are
+          asked for before the stylesheet names them (React puts these <link>s in <head>). The riders'
+          photo is drawn on every screen - a half, or the phone's whole screen; the business one only
+          where the halves show (home.css hides them at 760px and below). */}
+      <link rel="preload" as="image" href={riderBg} fetchPriority="high" />
+      <link rel="preload" as="image" href={bizBg} fetchPriority="high" media="(min-width: 761px)" />
       <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} />
       <main id="mm-main" style={{ paddingTop: 52 }}>
         {/* Welcome: riders or business */}
         <section className="hm-entry" aria-label={`${S(e.riderTitle)} / ${S(e.bizTitle)}`}>
           <a className="hm-entry-half riders" href="#start">
-            <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${bg(S(e.riderImage))}')` }} />
+            <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${riderBg}')` }} />
             <span className="hm-entry-copy">
               <span className="hm-entry-tick" />
               <span className="hm-entry-eyebrow">{S(e.riderEyebrow)}</span>
@@ -69,7 +77,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
             </span>
           </a>
           <a className="hm-entry-half biz" href={H(e.bizHref)}>
-            <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${bg(S(e.bizImage))}')` }} />
+            <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${bizBg}')` }} />
             <span className="hm-entry-copy">
               <span className="hm-entry-tick" />
               <span className="hm-entry-eyebrow">{S(e.bizEyebrow)}</span>
@@ -79,7 +87,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
             </span>
           </a>
           <div className="hm-entry-divider" aria-hidden="true" />
-          <div className="hm-entry-phone" style={{ backgroundImage: `linear-gradient(to top,rgba(251,249,244,.95),rgba(251,249,244,.5) 40%,rgba(251,249,244,0) 70%),url('${bg(S(e.riderImage))}')` }}>
+          <div className="hm-entry-phone" style={{ backgroundImage: `linear-gradient(to top,rgba(251,249,244,.95),rgba(251,249,244,.5) 40%,rgba(251,249,244,0) 70%),url('${riderBg}')` }}>
             <p className="hm-est mm-lat">EST. JEDDAH · 21°32′N</p>
             {/* The page's heading on a phone: the desktop halves (and their h1) are not shown there. */}
             <h1>{S(e.phoneTitle)}</h1>
@@ -103,7 +111,9 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
           <h2 className="hm-hero-title">{S(h.title)}</h2>
           <p className="hm-hero-text">{S(h.text)}</p>
           <div className="hm-hero-bike">
-            <img src={S(h.image)} srcSet={srcSet(S(h.image))} sizes="(max-width: 1240px) 94vw, 1180px" alt={S(h.eyebrow)} width={1180} height={620} fetchPriority="high" decoding="async" />
+            {/* A screen below the welcome, so fetched only as the visitor nears it: marked high
+                priority, it used to download before the welcome photos that are actually on screen. */}
+            <img src={S(h.image)} srcSet={srcSet(S(h.image))} sizes="(max-width: 1240px) 94vw, 1180px" alt={S(h.eyebrow)} width={1180} height={620} loading="lazy" decoding="async" />
           </div>
           <div className="hm-badges">
             {list(h.badges).map((b, i) => S(b.title) && (

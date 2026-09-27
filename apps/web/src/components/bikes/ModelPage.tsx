@@ -3,12 +3,12 @@ import JsonLd from "@/components/site/JsonLd";
 import BikeGallery from "./BikeGallery";
 import Crumbs from "./Crumbs";
 import ModelCard from "./ModelCard";
-import { S, type BikesState } from "./catalog-data";
+import type { BikesState } from "./catalog-data";
 import { categoryOf, colorsOf, coverOf, modelPath, modelsIn, paragraphs, photosOf, pick, specGroups, subtypeOf, type Catalog, type CatalogModel } from "@/lib/catalog";
 import { priceForType } from "@/lib/bikes";
 import { fill, fmtNum } from "@/lib/fill";
 import { bookingLink } from "@/lib/links";
-import { productData } from "@/lib/structured-data";
+import { breadcrumbData, productData } from "@/lib/structured-data";
 import "@/components/pages/pages.css";
 import "./catalog.css";
 
@@ -38,13 +38,16 @@ export default function ModelPage({ locale, model, catalog, s }: { locale: strin
   const groups = specGroups(model, catalog.fields, locale);
   const desc = paragraphs(pick(locale, model.description_en, model.description_ar));
   const siblings = cat ? modelsIn(catalog, cat).filter((m) => m.id !== model.id).slice(0, 3) : [];
-  const crumbs = [{ href: "/bikes", label: S(c.hero.eyebrow) }];
+  const crumbs = [{ href: "/bikes", label: c.hero.eyebrow }];
   if (cat) crumbs.push({ href: `/bikes/${cat.slug}`, label: catName });
   if (cat && sub) crumbs.push({ href: `/bikes/${cat.slug}/${sub.slug}`, label: pick(locale, sub.name_en, sub.name_ar) });
   const cover = coverOf(model, catalog.photos);
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
-      <JsonLd data={productData(model, locale, { path: modelPath(model, catalog.categories), image: cover?.url ?? "", category: catName, description: modelDescription(model, locale) })} />
+      <JsonLd data={[
+        productData(model, locale, { path: modelPath(model, catalog.categories), image: cover?.url ?? "", category: catName, description: modelDescription(model, locale) }),
+        breadcrumbData([...crumbs.map((x) => ({ name: x.label, path: x.href })), { name: title, path: modelPath(model, catalog.categories) }], locale),
+      ]} />
       <div className="pg ct">
         <Crumbs items={crumbs} current={title} label={tx("Breadcrumb", "مسار الصفحة")} />
         <div className={photos.length ? "ct-model" : "ct-model ct-model-text"}>

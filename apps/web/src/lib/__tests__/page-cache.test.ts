@@ -20,8 +20,14 @@ describe("pageCacheKey", () => {
   it("leaves signed-in visitors, staff previews and other queries alone", () => {
     expect(pageCacheKey(get("/club?lang=en", "mm_acct=abc"), "v1")).toBeNull();
     expect(pageCacheKey(get("/?lang=en", "NEXT_LOCALE=en; mm_preview=tok"), "v1")).toBeNull();
-    expect(pageCacheKey(get("/club?lang=en&utm_source=x"), "v1")).toBeNull();
+    expect(pageCacheKey(get("/club?lang=en&tag=x"), "v1")).toBeNull();
     expect(pageCacheKey(get("/club?lang=en", "", "POST"), "v1")).toBeNull();
+  });
+  it("ignores tracking parameters: a shared link is the same page, under the same key", () => {
+    expect(pageCacheKey(get("/club?lang=en&utm_source=ig&utm_medium=story"), "v1")).toBe("https://page-cache.micromobility.sa/club?lang=en&v=v1");
+    expect(pageCacheKey(get("/club?fbclid=abc", "NEXT_LOCALE=ar"), "v1")).toBe("https://page-cache.micromobility.sa/club?lang=ar&v=v1");
+    for (const q of ["gclid=1", "igshid=2", "mc_cid=3&mc_eid=4", "UTM_CAMPAIGN=x"]) expect(pageCacheKey(get(`/club?lang=en&${q}`), "v1"), q).toBe("https://page-cache.micromobility.sa/club?lang=en&v=v1");
+    expect(pageCacheKey(get("/club?lang=en&utm=x"), "v1")).toBeNull(); // not one of them
   });
   it("never keeps the account page, the API, media, bike tag pages, forms or files", () => {
     for (const p of ["/account", "/api/account", "/media/home/x.jpg", "/b/42", "/bikes/42", "/bikes/000042/", "/petromin", "/community/registration", "/preview", "/en/club", "/robots.txt", "/_next/static/x.js"]) {

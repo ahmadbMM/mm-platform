@@ -2,7 +2,10 @@
 // self-contained pages the website serves as they are; each build writes its page into this
 // folder. These are the headers their own Cloudflare Workers sent, kept word for word: the pages
 // talk to Supabase from the browser and Cloudflare Web Analytics (named in the Privacy Notice)
-// injects its beacon, so both are allowed and nothing else is.
+// injects its beacon, so both are allowed and nothing else is. The database's host is the one the
+// site is built for (NEXT_PUBLIC_SUPABASE_URL, as apps/web/next.config.ts reads it): the forms'
+// pages name the same project, and when the database moves (CLONE.md) they are repointed together.
+const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://amyqxovbnlreassrqihr.supabase.co";
 const COMMON = {
   "content-type": "text/html; charset=utf-8",
   "cache-control": "public, max-age=300",
@@ -16,7 +19,7 @@ const csp = (extraScript: string, extra: string[] = []) => [
   `script-src 'self' 'unsafe-inline'${extraScript} https://static.cloudflareinsights.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src https://fonts.gstatic.com",
-  "connect-src 'self' https://amyqxovbnlreassrqihr.supabase.co https://cloudflareinsights.com",
+  `connect-src 'self' ${SUPABASE} https://cloudflareinsights.com`,
   "img-src 'self' data:",
   "frame-ancestors 'none'",
   "base-uri 'none'",

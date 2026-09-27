@@ -1,3 +1,5 @@
+import { edgeStore, memo, resetMemo } from "./memo";
+
 // The public website's launch state. micromobility.sa is controlled from the staff page
 // (owner, 2026-09-24): its Website section writes public.site_content, and this file reads it.
 //
@@ -22,32 +24,7 @@ export const siteCanOpen = () => HOME_BUILT || TEST_OPEN;
 export type SiteContent = Record<string, unknown>;
 
 const TTL_MS = 60_000; // a staff save shows within a minute
-let cache: { at: number; data: SiteContent | null } | null = null;
-let journalCache: { at: number; data: SiteContent | null } | null = null;
-
-// The last good copy is also kept in Cloudflare's cache at the edge (a week), so a Worker instance
-// that has only just started - and so has nothing in memory - still has the site as staff set it
-// when the database cannot be reached. Without it, "nothing read" meant Coming Soon on and every
-// page off: a database outage would have closed the whole site. Local runs have no edge cache and
-// skip this.
-const EDGE_TTL = 7 * 24 * 60 * 60;
-const edgeKey = (kind: string) => `https://micromobility.sa/__site-content/${kind}/v1`;
-type EdgeCache = { match(k: string): Promise<Response | undefined>; put(k: string, r: Response): Promise<void> };
-const edgeCache = (): EdgeCache | null => {
-  try { return ((globalThis as { caches?: { default?: EdgeCache } }).caches?.default) ?? null; } catch { return null; }
-};
-async function edgeRead(kind: string): Promise<SiteContent | null> {
-  try {
-    const hit = await edgeCache()?.match(edgeKey(kind));
-    const data = hit ? await hit.json() : null;
-    return data && typeof data === "object" ? (data as SiteContent) : null;
-  } catch { return null; }
-}
-async function edgeWrite(kind: string, data: SiteContent): Promise<void> {
-  try {
-    await edgeCache()?.put(edgeKey(kind), new Response(JSON.stringify(data), { headers: { "content-type": "application/json", "cache-control": `public, max-age=${EDGE_TTL}` } }));
-  } catch { /* the edge copy is a convenience */ }
-}
+const KEY = "site-content:";
 
 /** One read of site_content with the public key; null when it could not be read. */
 async function readRows(filter: string, fetchImpl: typeof fetch): Promise<SiteContent | null> {
@@ -68,36 +45,26 @@ async function readRows(filter: string, fetchImpl: typeof fetch): Promise<SiteCo
   }
 }
 
-/** Read, kept for a minute per Worker instance. A failed read keeps the last good copy: this
- *  instance's, else the edge's; with neither, null - and every caller falls back to the site's
- *  own defaults, which keep the site on Coming Soon. */
-async function loadKind(kind: string, filter: string, held: { at: number; data: SiteContent | null } | null, fetchImpl: typeof fetch, now: number) {
-  if (held && now - held.at < TTL_MS) return held;
-  const fresh = await readRows(filter, fetchImpl);
-  if (fresh) { void edgeWrite(kind, fresh); return { at: now, data: fresh }; }
-  return { at: now, data: held?.data ?? (await edgeRead(kind)) };
-}
-
 /**
- * Everything staff have set, as { key: value }. The Journal's articles are read only by the
- * Journal's pages (loadJournalContent): they are the one part of the content that grows, and every
- * page reads this every minute.
+ * Everything staff have set, as { key: value }. Read once per Worker instance and kept for a minute
+ * (lib/memo.ts: everyone asking at once shares the read, a copy past the minute is served while it
+ * is refreshed, and the last good copy - this instance's, else the edge's - stands in for a failed
+ * read). With nothing ever read, null: every caller falls back to the site's own defaults, which
+ * keep the site on Coming Soon. The Journal's articles are read only by the Journal's pages
+ * (loadJournalContent): they are the one part of the content that grows, and every page reads this.
  */
 export async function loadSiteContent(fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<SiteContent | null> {
-  cache = await loadKind("site", "key=not.like.journal.*", cache, fetchImpl, now);
-  return cache.data;
+  return memo<SiteContent>(`${KEY}site`, { ttl: TTL_MS, now, read: () => readRows("key=not.like.journal.*", fetchImpl), keep: edgeStore("site") });
 }
 
-/** For tests: forget the cached copy. */
+/** For tests: forget the cached copies. */
 export function resetSiteContent(): void {
-  cache = null;
-  journalCache = null;
+  resetMemo(KEY);
 }
 
 /** The Journal's own content (journal.* keys), read only by the Journal's pages, kept the same way. */
 export async function loadJournalContent(fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<SiteContent | null> {
-  journalCache = await loadKind("journal", "key=like.journal.*", journalCache, fetchImpl, now);
-  return journalCache.data;
+  return memo<SiteContent>(`${KEY}journal`, { ttl: TTL_MS, now, read: () => readRows("key=like.journal.*", fetchImpl), keep: edgeStore("journal") });
 }
 
 /** The pages staff switch on one at a time (staff page: Website > Pages; its SITE_PAGES lists

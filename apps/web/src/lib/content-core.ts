@@ -1,4 +1,4 @@
-import type { Bi, Field, ItemField, ItemValue, PageSchema, Section } from "@/content/types";
+import type { Bi, Field, ItemField, ItemValue, PageSchema, ResolvedPage, ResolvedSection, Section } from "@/content/types";
 import type { SiteContent } from "@/lib/site";
 
 // Reads a page's content: what staff saved in site_content, else the schema's default. Every
@@ -71,7 +71,7 @@ export function safeUrl(u: string): boolean {
 
 type Resolved = Record<string, unknown>;
 
-function resolveItem(fields: ItemField[], raw: ItemValue | undefined, locale: Locale, translate: Translate): Resolved {
+function resolveItem(fields: readonly ItemField[], raw: ItemValue | undefined, locale: Locale, translate: Translate): Resolved {
   const out: Resolved = {};
   for (const f of fields) out[f.id] = fieldValue(f, raw ? raw[f.id] : undefined, locale, translate);
   return out;
@@ -85,18 +85,19 @@ function resolveField(field: Field, raw: unknown, locale: Locale, translate: Tra
 
 /**
  * The whole page as { section: { field: value } }, in one language. Keys in site_content are
- * "<page>.<section>.<field>".
+ * "<page>.<section>.<field>". Typed from the schema (content/types.ts ResolvedPage): a schema
+ * declared `as const` gives each field its own type, a plain PageSchema gives { [id]: value }.
  */
-export function resolvePage(schema: PageSchema, content: SiteContent | null, locale: Locale, translate: Translate = untranslated): Record<string, Resolved> {
+export function resolvePage<P extends PageSchema>(schema: P, content: SiteContent | null, locale: Locale, translate: Translate = untranslated): ResolvedPage<P> {
   const out: Record<string, Resolved> = {};
   for (const s of schema.sections) out[s.id] = resolveSection(schema.page, s, content, locale, translate);
-  return out;
+  return out as unknown as ResolvedPage<P>;
 }
 
-export function resolveSection(page: string, s: Section, content: SiteContent | null, locale: Locale, translate: Translate = untranslated): Resolved {
+export function resolveSection<S extends Section>(page: string, s: S, content: SiteContent | null, locale: Locale, translate: Translate = untranslated): ResolvedSection<S> {
   const sec: Resolved = {};
   for (const f of s.fields) sec[f.id] = resolveField(f, content?.[`${page}.${s.id}.${f.id}`], locale, translate);
-  return sec;
+  return sec as unknown as ResolvedSection<S>;
 }
 
 export const asLocale = (l: string): Locale => ((LOCALE_CODES as readonly string[]).includes(l) ? (l as Locale) : "en");

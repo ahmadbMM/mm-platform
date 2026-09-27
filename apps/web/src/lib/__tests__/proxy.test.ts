@@ -25,10 +25,9 @@ describe("an address without a language", () => {
     expect(rewrittenTo(await call("/", { "accept-language": "ar", cookie: "NEXT_LOCALE=en" }))).toBe("/en");
     expect(rewrittenTo(await call("/", { cookie: "NEXT_LOCALE=ar" }))).toBe("/ar");
   });
-  it("tells search engines where the page is in each language", async () => {
-    const link = (await call("/")).headers.get("link") || "";
-    expect(link).toContain(`<${SITE}/?lang=ar>; rel="alternate"; hreflang="ar"`);
-    expect(link).toContain(`<${SITE}/>; rel="alternate"; hreflang="x-default"`);
+  it("sends no Link header: the page's own <link rel=alternate> tags name its languages (lib/seo.ts)", async () => {
+    expect((await call("/")).headers.get("link")).toBeNull();
+    expect((await call("/?tag=news")).headers.get("link")).toBeNull();
   });
 });
 

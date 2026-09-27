@@ -4,14 +4,16 @@ import { bi, type PageSchema } from "@/content/types";
 // map with made-up distances, climbs and times (and a "Friday sunrise ride" that does not
 // exist), so the routes start with what is true of each place; distance, climb and time show
 // once staff fill them in. The circuit's lap is the Jeddah Corniche Circuit's own 6.174 km.
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const num = (id: string, en: string, ar: string, max: number, step: number) => ({ id, type: "number" as const, min: 0, max, step, label: bi(en, ar), hint: bi("0 hides it.", "صفر يخفيه."), def: 0 });
+// Declared `as const`, with the field ids kept as they are written, so the page reads `c.routes.items`
+// as a list of routes with a name, a distance and so on (content/types.ts ResolvedPage).
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const num = <I extends string>(id: I, en: string, ar: string, max: number, step: number) => ({ id, type: "number" as const, min: 0, max, step, label: bi(en, ar), hint: bi("0 hides it.", "صفر يخفيه."), def: 0 });
 const maps = (q: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}`;
 const route = (name: [string, string], area: [string, string], level: [string, string], surface: [string, string], text: [string, string], href: string, km = 0) =>
   ({ name: bi(...name), area: bi(...area), level: bi(...level), surface: bi(...surface), text: bi(...text), km, climb: 0, minutes: 0, href: { href } });
 
-export const routesSchema: PageSchema = {
+export const routesSchema = {
   page: "routes",
   label: bi("Routes", "المسارات"),
   sections: [
@@ -63,4 +65,4 @@ export const routesSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

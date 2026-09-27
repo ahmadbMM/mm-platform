@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { kindNames, loadRides, resetRides, rideKind, sessionName, slotTimes, toSession, upcoming, type RideSession } from "../rides";
+import { memoSettled } from "../memo";
 
 // /experiences shows the booking system's own prices and sessions. The rules mirror the booking
 // app and the database, so the page never promises a ride someone cannot book.
@@ -91,18 +92,23 @@ describe("loadRides", () => {
     expect(urls.find((u) => u.includes("/sessions?"))).toMatch(/session_date=gte\.2026-09-25&status=in\.\(open,full\)/);
     expect(await loadRides(f as unknown as typeof fetch, at + 30_000)).toBe(a);
     expect(f).toHaveBeenCalledTimes(2);
-    await loadRides(f as unknown as typeof fetch, at + 61_000);
+    expect(await loadRides(f as unknown as typeof fetch, at + 61_000)).toBe(a); // past the minute: served as it is, refreshed behind
     expect(f).toHaveBeenCalledTimes(4);
+    await memoSettled();
   });
 
   it("keeps the last good copy of each through a failed read", async () => {
-    await loadRides(ok() as unknown as typeof fetch, 0);
+    const a = await loadRides(ok() as unknown as typeof fetch, 0);
     const half = vi.fn(async (url: string) => (url.includes("ride_prices") ? json({ message: "down" }, 503) : json([])));
-    const b = await loadRides(half as unknown as typeof fetch, 70_000);
-    expect(b?.prices).toHaveLength(2);
-    expect(b?.sessions).toEqual([]);
+    expect(await loadRides(half as unknown as typeof fetch, 70_000)).toBe(a); // served as it was while the refresh runs
+    await memoSettled();
+    const b = await loadRides(half as unknown as typeof fetch, 80_000);
+    expect(b?.prices).toHaveLength(2); // the prices' read failed: kept
+    expect(b?.sessions).toEqual([]); // the sessions' read answered: taken
     const down = vi.fn(async () => { throw new Error("offline"); });
-    expect((await loadRides(down as unknown as typeof fetch, 140_000))?.prices).toHaveLength(2);
+    expect(await loadRides(down as unknown as typeof fetch, 140_000)).toBe(b);
+    await memoSettled();
+    expect((await loadRides(down as unknown as typeof fetch, 150_000))?.prices).toHaveLength(2);
   });
 
   it("answers null when it never read anything", async () => {

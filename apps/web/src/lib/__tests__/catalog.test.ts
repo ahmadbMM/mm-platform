@@ -4,6 +4,7 @@ import {
   type Catalog, type CatalogModel,
 } from "../catalog";
 import { priceForType } from "../bikes";
+import { memoSettled } from "../memo";
 
 // The bike catalogue (lib/catalog.ts): how it is read, and how a model's address, its
 // specifications and its cover photo are worked out from the five tables.
@@ -148,18 +149,39 @@ describe("loadCatalog", () => {
     expect(((f.mock.calls[0] as unknown as [string, RequestInit])[1].headers as Record<string, string>).apikey).toBe("anon");
     // a model whose category is not published has no page: left out
     expect(a?.models.map((m) => m.slug)).toEqual(["da54"]);
-    await loadCatalog(f as unknown as typeof fetch, 62_000);
+    expect(await loadCatalog(f as unknown as typeof fetch, 62_000)).toBe(a); // past the minute: served as it is, refreshed behind
     expect(f).toHaveBeenCalledTimes(10);
+    await memoSettled();
   });
 
   it("keeps the last good copy when a read fails, and answers null when it never read anything", async () => {
     const good = await loadCatalog(rows(FULL) as unknown as typeof fetch, 0);
     const down = vi.fn(async () => { throw new Error("offline"); });
     expect(await loadCatalog(down as unknown as typeof fetch, 70_000)).toBe(good);
+    await memoSettled();
+    expect(await loadCatalog(down as unknown as typeof fetch, 80_000)).toBe(good); // the refresh failed: the copy stays
     const refused = vi.fn(async () => new Response("{}", { status: 402 }));
     expect(await loadCatalog(refused as unknown as typeof fetch, 140_000)).toBe(good);
+    await memoSettled();
     resetCatalog();
     expect(await loadCatalog(down as unknown as typeof fetch, 0)).toBeNull();
+  });
+
+  it("a Worker that has just started takes the edge's copy when the database is down", async () => {
+    // Cloudflare's cache at the edge, as a Worker sees it (caches.default).
+    const store = new Map<string, string>();
+    vi.stubGlobal("caches", { default: {
+      match: async (k: string) => (store.has(k) ? new Response(store.get(k)) : undefined),
+      put: async (k: string, r: Response) => { store.set(k, await r.text()); },
+    } });
+    try {
+      const good = await loadCatalog(rows(FULL) as unknown as typeof fetch, 0);
+      resetCatalog(); // a new instance: nothing in memory
+      const down = vi.fn(async () => { throw new Error("offline"); });
+      expect(await loadCatalog(down as unknown as typeof fetch, 0)).toEqual(good);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it("counts a read that misses one table as failed", async () => {

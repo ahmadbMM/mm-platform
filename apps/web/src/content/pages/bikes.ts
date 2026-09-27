@@ -3,10 +3,12 @@ import { bi, type PageSchema } from "@/content/types";
 // Bikes (micromobility.sa/bikes): the words around the bike catalogue. The catalogue itself -
 // categories, models, specifications, photos - is edited in the staff page's Website > Bikes
 // catalog and read by lib/catalog.ts; this page holds only the top and bottom of the page.
-const txt = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
-const long = (id: string, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+// Declared `as const`, with the field ids kept as they are written, so the pages read `c.hero.title`
+// as a string the compiler checks (content/types.ts ResolvedPage).
+const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
+const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 
-export const bikesSchema: PageSchema = {
+export const bikesSchema = {
   page: "bikes",
   label: bi("Bikes", "الدراجات"),
   sections: [
@@ -30,4 +32,4 @@ export const bikesSchema: PageSchema = {
       ],
     },
   ],
-};
+} as const satisfies PageSchema;

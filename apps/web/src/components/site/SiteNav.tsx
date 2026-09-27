@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import SiteSearch from "@/components/site/SiteSearch";
 import { useL } from "@/i18n/TxProvider";
@@ -37,8 +37,9 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
   type Menu = "" | "community" | "lang";
   const [opened, setOpened] = useState<{ menu: Menu; at: string }>({ menu: "", at: "" });
   const menu: Menu = opened.at === path ? opened.menu : "";
-  const setMenu = (next: Menu | ((m: Menu) => Menu)) =>
-    setOpened((o) => ({ menu: typeof next === "function" ? next(o.at === path ? o.menu : "") : next, at: path }));
+  // Stable between renders (it changes only with the page), so the effect below can depend on it.
+  const setMenu = useCallback((next: Menu | ((m: Menu) => Menu)) =>
+    setOpened((o) => ({ menu: typeof next === "function" ? next(o.at === path ? o.menu : "") : next, at: path })), [path]);
   const bar = useRef<HTMLElement>(null);
   // A mouse opens Community by hovering, and the click that naturally follows must not shut it
   // again; a tap or the keyboard (no hover) toggles it.
@@ -58,7 +59,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
     document.addEventListener("keydown", esc);
     document.addEventListener("mousedown", away);
     return () => { document.removeEventListener("keydown", esc); document.removeEventListener("mousedown", away); };
-  }, [menu]);
+  }, [menu, setMenu]);
 
   const item = (l: NavLink, onClick?: () => void, tail?: React.ReactNode) => l.external
     ? <a key={l.key} href={l.href} onClick={onClick}>{name(l)}{tail}</a>

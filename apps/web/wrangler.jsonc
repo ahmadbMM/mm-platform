@@ -1,7 +1,9 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // Default target = the PREVIEW Worker: a workers.dev address, no claim on the domain.
-  // Every push to main deploys this one.
+  // The default target is only ever deployed BY HAND (`npx wrangler deploy` from apps/web): a copy
+  // of the site on a workers.dev address, with no claim on the domain, to look at before a push. CI
+  // never deploys it - the automatic preview went on 2026-09-20 (DEPLOY.md, "Deploys") - and
+  // deploys `production` below instead.
   "name": "micromobility-web-preview",
   // worker.js wraps the site OpenNext builds (.open-next/worker.js) with the edge page cache.
   "main": "worker.js",
@@ -18,21 +20,19 @@
   // is kept and searchable in the dashboard (Workers & Pages > micromobility-web > Logs).
   "observability": { "enabled": true },
   "env": {
-    // `wrangler deploy --env production` = the real site. It answers micromobility.sa by
-    // ROUTE, not custom domain, on purpose: the DNS records stay as they are (proxied A
-    // records at the old host) and the Petromin worker's more specific /petromin* route
-    // keeps winning for that path.
+    // `wrangler deploy --env production` = the real site, micromobility-web, which answers the
+    // whole domain - both hosts, everything under them, since 2026-09-24 - by ROUTE, not custom
+    // domain, on purpose: the DNS records stay as they are (proxied A records at the old host,
+    // where company email lives), and a Worker route answers before the old forward to the Salla
+    // store did. The two registration forms are served by this Worker too (/petromin,
+    // /community/registration); while their retired Workers' more specific routes still exist,
+    // those win for their paths (DEPLOY.md, "Moving the two forms onto this Worker"). The fleet's
+    // NFC tag pages are ordinary paths of the site now (/bikes/<n>; the stickers' /b/<n> redirects
+    // there, next.config.ts), nothing separate to route. Rollback = delete the two routes in the
+    // dashboard (Workers & Pages > micromobility-web > Settings > Domains & Routes): the old
+    // forward answers everything again at once.
     //
-    // The route is deliberately NARROW for now. `/b/*` is the NFC bike pages and nothing
-    // else, so the bike stickers go live on the real domain while the root keeps forwarding
-    // to the Salla store. A Worker route runs before that forward, so widening this list is
-    // what actually claims the site — do it when the full site is ready, by replacing the
-    // /b/* entry with:
-    //   { "pattern": "micromobility.sa/*",     "zone_name": "micromobility.sa" },
-    //   { "pattern": "www.micromobility.sa/*", "zone_name": "micromobility.sa" }
-    // The chips keep holding /b/42 either way; nothing has to be rewritten at cutover.
-    //
-    // CI only runs this once the repository variable MM_PRODUCTION is set to "on".
+    // CI only runs this while the repository variable MM_PRODUCTION is "on".
     "production": {
       "name": "micromobility-web",
       "workers_dev": false,
@@ -40,17 +40,8 @@
       "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "observability": { "enabled": true },
-      // /_next/* is not optional and cannot be moved: Next serves its own CSS, JavaScript and
-      // self-hosted fonts from there, at the root, whatever path the page itself lives on.
-      // Without this route those bundles fall through to the old forward and answer 302 to the
-      // store, which renders the bike page as unstyled HTML with no script. /b/assets is ours
-      // and stays inside /b/* on purpose, so this is the only extra prefix the site claims.
-      // Widened 2026-09-24: the site now answers the whole domain with the Coming Soon screen
-      // (src/lib/site.ts COMING_SOON); /store still forwards to the Salla store. The /petromin* and /community/registration* Workers have more specific routes
-      // and keep winning. Rollback = put the narrow routes back and deploy: the old forward to
-      // Salla answers everything else again. Since 2026-09-27 the tag pages live at /bikes/<n>
-      // (the stickers' /b/<n> redirects there), so the narrow set is /b/*, /bikes/* and /_next/*
-      // on both hosts.
+      // Everything on both hosts. /store forwards to the Salla store from inside the site
+      // (src/proxy.ts); Next's own CSS, JavaScript and fonts are under /_next/ and come with it.
       "routes": [
         { "pattern": "micromobility.sa/*",     "zone_name": "micromobility.sa" },
         { "pattern": "www.micromobility.sa/*", "zone_name": "micromobility.sa" }

@@ -1,10 +1,12 @@
 import PageShell from "@/components/site/PageShell";
+import JsonLd from "@/components/site/JsonLd";
 import Crumbs from "./Crumbs";
 import ModelCard from "./ModelCard";
-import { S, type BikesState } from "./catalog-data";
+import type { BikesState } from "./catalog-data";
 import { modelsIn, pick, subtypeOf, subtypesOf, type Catalog, type CatalogCategory } from "@/lib/catalog";
 import { bg } from "@/lib/img";
 import { fill, fmtNum } from "@/lib/fill";
+import { breadcrumbData } from "@/lib/structured-data";
 import "@/components/pages/pages.css";
 import "./catalog.css";
 
@@ -27,13 +29,15 @@ export default function CategoryPage({ locale, category, subtype, catalog, s }: 
   const subs = subtype ? [] : subtypesOf(catalog, category.id);
   const models = modelsIn(catalog, here);
   const loose = subtype ? models : models.filter((m) => !subtypeOf(m, catalog.categories));
-  const crumbs = [{ href: "/bikes", label: S(c.hero.eyebrow) }];
+  const crumbs = [{ href: "/bikes", label: c.hero.eyebrow }];
   if (subtype) crumbs.push({ href: `/bikes/${category.slug}`, label: pick(locale, category.name_en, category.name_ar) });
+  const path = subtype ? `/bikes/${category.slug}/${subtype.slug}` : `/bikes/${category.slug}`;
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
+      <JsonLd data={breadcrumbData([...crumbs.map((x) => ({ name: x.label, path: x.href })), { name, path }], locale)} />
       <div className="pg ct">
         <Crumbs items={crumbs} current={name} label={tx("Breadcrumb", "مسار الصفحة")} />
-        <p className="pg-eyebrow">{subtype ? pick(locale, category.name_en, category.name_ar) : S(c.hero.eyebrow)}</p>
+        <p className="pg-eyebrow">{subtype ? pick(locale, category.name_en, category.name_ar) : c.hero.eyebrow}</p>
         <h1>{name}</h1>
         {blurb && <p className="pg-lead">{blurb}</p>}
         {subs.length > 0 && (

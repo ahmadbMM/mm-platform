@@ -1,8 +1,7 @@
 // The language in an address. Paths carry none (i18n/routing.ts), so ?lang= is how an address
 // names one: a link shared in Arabic, the booking app's own ?lang=, and the per-language
-// addresses search engines are given.
+// addresses search engines are given (lib/seo.ts).
 import { routing } from "../i18n/routing";
-import { localeInfo } from "../i18n/locales";
 
 export type Lang = (typeof routing.locales)[number];
 
@@ -10,21 +9,4 @@ export type Lang = (typeof routing.locales)[number];
 export function askedLang(params: URLSearchParams): Lang | null {
   const v = params.get("lang") ?? "";
   return (routing.locales as readonly string[]).includes(v) ? (v as Lang) : null;
-}
-
-/** An HTTP Link header naming this page in each language, and the plain address as the default.
- *  next-intl sends this only when the language is in the path, so search engines would otherwise
- *  see one language per page and never the Arabic site. */
-export function alternateLinks(url: URL): string {
-  const at = (lang: Lang | null) => {
-    const u = new URL(url.pathname + url.search, url.origin);
-    if (lang) u.searchParams.set("lang", lang);
-    else u.searchParams.delete("lang");
-    return u.toString();
-  };
-  return [
-    // hreflang names the language as the page does (<html lang>): zh-Hans, not zh.
-    ...routing.locales.map((l) => `<${at(l)}>; rel="alternate"; hreflang="${localeInfo(l).html}"`),
-    `<${at(null)}>; rel="alternate"; hreflang="x-default"`,
-  ].join(", ");
 }

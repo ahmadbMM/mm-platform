@@ -17,6 +17,6 @@ export const fieldValue = (field: ItemField, raw: unknown, locale: Locale) => co
 
 /** The whole page as { section: { field: value } }, in one language. Keys in site_content are
  *  "<page>.<section>.<field>". */
-export const resolvePage = (schema: PageSchema, content: SiteContent | null, locale: Locale) => core.resolvePage(schema, content, locale, translate);
+export const resolvePage = <P extends PageSchema>(schema: P, content: SiteContent | null, locale: Locale) => core.resolvePage(schema, content, locale, translate);
 
-export const resolveSection = (page: string, s: Section, content: SiteContent | null, locale: Locale) => core.resolveSection(page, s, content, locale, translate);
+export const resolveSection = <S extends Section>(page: string, s: S, content: SiteContent | null, locale: Locale) => core.resolveSection(page, s, content, locale, translate);

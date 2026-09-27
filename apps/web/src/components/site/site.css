@@ -84,8 +84,12 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
 .mm-foot-pay img.pay-tabby { height: 44px; }
 .mm-foot-hub { display: inline-flex; align-items: center; gap: 9px; }
 .mm-foot-hub > span { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; line-height: 1.25; }
-.mm-foot-hub span span { font-family: var(--cs-font-ar), sans-serif; font-size: 12px; font-weight: 500; }
-.mm-foot-hub b { font-family: var(--cs-font-ar), sans-serif; font-size: 13.5px; font-weight: 700; }
+/* The mark's two Arabic words are drawn with the device's own Arabic face everywhere but on the
+   Arabic and Urdu pages: set in the site's Arabic font, they made every English page download two
+   of its weights - about 98 KB - for these two words alone. */
+.mm-foot-hub span span { font-family: system-ui, "Segoe UI", "Noto Sans Arabic", "Noto Naskh Arabic", "Geeza Pro", Tahoma, Arial, sans-serif; font-size: 12px; font-weight: 500; }
+.mm-foot-hub b { font-family: system-ui, "Segoe UI", "Noto Sans Arabic", "Noto Naskh Arabic", "Geeza Pro", Tahoma, Arial, sans-serif; font-size: 13.5px; font-weight: 700; }
+html:is([lang="ar"], [lang="ur"]) .mm-foot-hub :is(span span, b) { font-family: var(--cs-font-ar), sans-serif; }
 .mm-foot-hub small { font-size: 9.5px; font-weight: 700; direction: ltr; }
 .mm-foot-main { padding: 36px 7vw 0; }
 .mm-foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; margin: 0 auto 36px; max-width: 1440px; }

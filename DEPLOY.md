@@ -45,19 +45,27 @@ pnpm --filter web preview          # builds and serves the Worker locally on :87
 
 ## Deploys
 
-Every push to `main` builds and deploys the **preview** Worker, `micromobility-web-preview`, to
-its `workers.dev` address. It never touches the domain.
+A push to `main` runs the checks (lint, types, unit tests, then the forms and the site's pages in a
+browser) and, only when the repository variable `MM_PRODUCTION` is `on` and the Cloudflare secrets
+exist, deploys the one Worker there is: `micromobility-web`, which answers the whole domain (the two
+routes in `apps/web/wrangler.jsonc`). There is no preview deploy. The automatic
+`micromobility-web-preview` Worker was removed on 2026-09-20 at the owner's request, so a push puts
+nothing into the Cloudflare account unasked. To look at a build first, run it locally
+(`pnpm --filter web preview`, above) or deploy the default target by hand from `apps/web`
+(`npx wrangler deploy`): a copy on a `workers.dev` address, with no claim on the domain.
 
-## Cutover
+## Production, and rolling back
 
-Set the repository variable `MM_PRODUCTION` to `on` (Settings > Secrets and variables > Actions >
-Variables). From the next push, CI also runs `wrangler deploy --env production`, which claims the
-root and `www`. To do it by hand instead: `pnpm --filter web exec wrangler deploy --env production`.
+The routes claim the root and `www` since 2026-09-24 (before that, `production` listed only the tag
+pages' `/b/*`). `MM_PRODUCTION` (Settings > Secrets and variables > Actions > Variables) is the
+switch: set to anything but `on`, a push still runs every check and deploys nothing. To deploy by
+hand: `pnpm --filter web exec wrangler deploy --env production`.
 
-Then check, in this order: `https://micromobility.sa/` (site, redirected to `/en` or `/ar`),
-`https://micromobility.sa/petromin` (registration form, unchanged), and send a test email to
-an address on the domain. Roll back by deleting the two routes in Workers & Pages >
-micromobility-web > Settings > Domains & Routes; the old forward takes over again at once.
+After a deploy, check in this order: `https://micromobility.sa/` (the site), `/api/health`,
+`https://micromobility.sa/petromin` (the registration form), and send a test email to an address on
+the domain (CI does the first four, "The live site answers"). Roll back by deleting the two routes in
+Workers & Pages > micromobility-web > Settings > Domains & Routes; the old forward takes over again at
+once.
 
 ## Sign-in protection
 
@@ -97,8 +105,9 @@ To turn it off again, delete the secret first, then the variable.
   supports that from 1.20.3, marked experimental. If that ever bites, the fallback is Next 15
   with an edge `middleware.ts`.
 - ESLint stays on 9.x: the React plugin inside `eslint-config-next` does not load on ESLint 10.
-- The Worker bundle is about 2.2 MB compressed. Cloudflare's free Workers plan allows 3 MB; the
-  paid plan 10 MB. Worth the paid plan before the site grows much.
+- The Worker bundle is about 3.3 MB compressed as wrangler measures it (`wrangler deploy --dry-run`,
+  2026-09-27; it was 2.2 MB when the site was a few pages). Cloudflare's free Workers plan allows
+  3 MB, the paid plan 10 MB.
 - pnpm 11 only runs the build scripts listed under `allowBuilds` in `pnpm-workspace.yaml`.
 
 ## Moving the two forms onto this Worker (once)

@@ -84,6 +84,9 @@ export async function getBikeByNumber(code: string): Promise<BikeLookup> {
       headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" },
       // A bike's status changes as it goes out and comes back, so the page is never cached.
       cache: "no-store",
+      // Eight seconds: a rider is standing at the bike. Past that the page says the fleet could not
+      // be reached and offers to try again, rather than hanging on a slow database.
+      signal: AbortSignal.timeout(8000),
     });
   } catch (e) {
     console.error("[bike] fleet unreachable:", e);

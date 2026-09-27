@@ -4,7 +4,7 @@ import { LANG_COOKIE, routing } from "./i18n/routing";
 import { hiddenPageTarget, isComingSoon, loadSiteContent, siteCanOpen } from "./lib/site";
 import { comingSoonTarget } from "./lib/coming-soon-route";
 import { PREVIEW_COOKIE, isStaffToken } from "./lib/preview";
-import { alternateLinks, askedLang } from "./lib/lang-url";
+import { askedLang } from "./lib/lang-url";
 import { STORE_URL } from "./lib/links";
 
 const intl = createMiddleware(routing);
@@ -68,7 +68,6 @@ export default async function proxy(req: NextRequest) {
   // A fleet bike's tag page (/bikes/42: a rider tapping a sticker) opens whatever the site's
   // state - Coming Soon on, or the Bikes page not switched on. It is never a catalogue page: a
   // category's address starts with a letter (the database insists), so digits can only be a tag.
-  // No Link header: the page is kept out of search engines.
   if (FLEET_PAGE.test(pathname)) return keepLang(intl(req));
   // While the site is Coming Soon, it is the only page: /login, /about and anything else go
   // back to it. /store forwards to the shop before this runs (above), and the old /b/42 tag
@@ -82,9 +81,9 @@ export default async function proxy(req: NextRequest) {
   // must always load, since it is how preview starts.
   const previewing = soon && !PREVIEW_PAGE.test(pathname) ? await isStaffToken(req.cookies.get(PREVIEW_COOKIE)?.value) : false;
   if (soon && !previewing && !PREVIEW_PAGE.test(pathname)) return keepLang(NextResponse.redirect(new URL(soon, req.url), 307));
-  const res = keepLang(intl(req));
-  if (res.status < 300 || res.status >= 400) res.headers.set("Link", alternateLinks(new URL(req.url)));
-  return res;
+  // No Link header naming the page's languages: the page's own <link rel="alternate"> tags do that
+  // (lib/seo.ts), and the header - 1.5 KB on every answer, the page's data included - said the same.
+  return keepLang(intl(req));
 }
 
 // /b/* is the tag pages' old address: the NFC chips hold micromobility.sa/b/42, and next.config

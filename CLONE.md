@@ -35,7 +35,13 @@ The rentals app writes to the old database every night. So:
 - **Cutover night, in a closed window:** run the clone again, then repoint, in the same hour,
   everything that holds the old project's URL and anon key:
   - the rentals app (`app.src.html`, then `npm run build:html`, push),
-  - the Petromin registration worker (`petromin-worker/src/live-submit.js`, deploy),
+  - the two registration forms this site serves (`forms/`): the project's URL and anon key are
+    written into `forms/petromin/src/live-submit.js` and `forms/community/design/app.js`, and the
+    URL again as the `preconnect` in `forms/petromin/scripts/merge-design.mjs` and
+    `forms/community/scripts/build.mjs`; then `npm run build` in each form and commit the
+    `src/page.html` it writes (CI checks they match). The headers the site sends with the forms
+    take the host from `NEXT_PUBLIC_SUPABASE_URL` (`apps/web/src/forms/headers.ts`), so they
+    follow the variables below,
   - this site (`NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, locally and as
     repository variables).
 - Keep the old project alive for a rollback window, as was done on 4 July.

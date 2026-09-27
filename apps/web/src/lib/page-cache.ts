@@ -18,6 +18,9 @@ const LANGS = new Set<string>(LOCALE_CODES);
 const SKIP = /^\/(?:api|_next|media|b|petromin|community|account|preview|login|en|ar|bikes\/\d{1,6})(?:\/|$)/;
 const PRIVATE = ["mm_acct", "mm_preview"];
 const LANG_COOKIE = "NEXT_LOCALE";
+// Tracking parameters (utm_*, fbclid...) change nothing on the page: a link from Instagram or a
+// newsletter is the same page, so they neither stop the copy being used nor give it a key of its own.
+const TRACKING = /^(?:utm_[a-z]+|fbclid|gclid|igshid|mc_cid|mc_eid)$/i;
 
 type Cache = { match(k: string): Promise<Response | undefined>; put(k: string, r: Response): Promise<void> };
 type Ctx = { waitUntil(p: Promise<unknown>): void };
@@ -38,7 +41,7 @@ export function pageCacheKey(req: Request, version: string): string | null {
   if (req.method !== "GET") return null;
   const url = new URL(req.url);
   if (SKIP.test(url.pathname) || /\.[a-z0-9]+$/i.test(url.pathname)) return null;
-  for (const k of url.searchParams.keys()) if (k !== "lang") return null;
+  for (const k of url.searchParams.keys()) if (k !== "lang" && !TRACKING.test(k)) return null;
   const cookie = req.headers.get("cookie");
   if (PRIVATE.some((n) => cookieOf(cookie, n) !== null)) return null;
   const asked = url.searchParams.get("lang");

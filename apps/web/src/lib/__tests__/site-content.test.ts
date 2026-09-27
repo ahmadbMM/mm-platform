@@ -1,9 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { hiddenPages, hiddenPageTarget, isComingSoon, loadSiteContent, pageOn, resetSiteContent, siteText, switchedPageOf } from "../site";
+import { memoSettled } from "../memo";
 
 // micromobility.sa reads what staff set in the staff page (public.site_content). The rules
-// that keep it safe: a minute's cache, the last good copy through a failed read, the site's
-// own wording when nothing is set, and Coming Soon unless Home exists AND staff opened it.
+// that keep it safe: a minute's cache served while it is refreshed (lib/memo.ts), the last good
+// copy through a failed read, the site's own wording when nothing is set, and Coming Soon unless
+// Home exists AND staff opened it.
 
 const rows = (r: { key: string; value: unknown }[]) =>
   vi.fn(async () => new Response(JSON.stringify(r), { status: 200, headers: { "content-type": "application/json" } }));
@@ -28,14 +30,38 @@ describe("loadSiteContent", () => {
     expect((init.headers as Record<string, string>).apikey).toBe("anon");
     await loadSiteContent(f as unknown as typeof fetch, 62_000);
     expect(f).toHaveBeenCalledTimes(2);
+    await memoSettled();
+  });
+
+  it("shares one read between everyone asking at once - the proxy, the metadata and the page", async () => {
+    const f = rows([{ key: "site.coming_soon", value: false }]);
+    const all = await Promise.all([1, 2, 3, 4].map(() => loadSiteContent(f as unknown as typeof fetch, 0)));
+    expect(f).toHaveBeenCalledTimes(1);
+    for (const c of all) expect(c).toBe(all[0]);
+  });
+
+  it("after the minute, serves the copy it has and refreshes it behind the visitor", async () => {
+    let title = "Soon!";
+    const f = vi.fn(async () => new Response(JSON.stringify([{ key: "coming_soon.title", value: { en: title, ar: "" } }]), { status: 200, headers: { "content-type": "application/json" } }));
+    const a = await loadSiteContent(f as unknown as typeof fetch, 0);
+    title = "Sooner!";
+    expect(await loadSiteContent(f as unknown as typeof fetch, 61_000)).toBe(a); // at once, as it was
+    expect(f).toHaveBeenCalledTimes(2); // the refresh is on its way
+    await memoSettled();
+    expect(await loadSiteContent(f as unknown as typeof fetch, 62_000)).toEqual({ "coming_soon.title": { en: "Sooner!", ar: "" } });
+    expect(f).toHaveBeenCalledTimes(2);
   });
 
   it("keeps the last good copy when a read fails", async () => {
     await loadSiteContent(rows([{ key: "site.coming_soon", value: true }]) as unknown as typeof fetch, 0);
     const down = vi.fn(async () => { throw new Error("offline"); });
     expect(await loadSiteContent(down as unknown as typeof fetch, 70_000)).toEqual({ "site.coming_soon": true });
+    await memoSettled();
+    expect(await loadSiteContent(down as unknown as typeof fetch, 80_000)).toEqual({ "site.coming_soon": true }); // the refresh failed: the copy stays
     const refused = vi.fn(async () => new Response("{}", { status: 402 }));
     expect(await loadSiteContent(refused as unknown as typeof fetch, 140_000)).toEqual({ "site.coming_soon": true });
+    await memoSettled();
+    expect(await loadSiteContent(refused as unknown as typeof fetch, 150_000)).toEqual({ "site.coming_soon": true });
   });
 
   it("answers null when it never read anything", async () => {
@@ -51,8 +77,7 @@ describe("loadSiteContent", () => {
       put: async (k: string, r: Response) => { store.set(k, await r.text()); },
     } });
     try {
-      await loadSiteContent(rows([{ key: "site.coming_soon", value: false }]) as unknown as typeof fetch, 0);
-      await new Promise((r) => setTimeout(r, 0)); // the edge copy is written in the background
+      await loadSiteContent(rows([{ key: "site.coming_soon", value: false }]) as unknown as typeof fetch, 0); // written to the edge too
       resetSiteContent(); // a new instance: nothing in memory
       const down = vi.fn(async () => { throw new Error("offline"); });
       expect(await loadSiteContent(down as unknown as typeof fetch, 0)).toEqual({ "site.coming_soon": false });

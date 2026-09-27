@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { pageMeta } from "@/lib/seo";
 import ModelPage, { modelDescription, modelTitle } from "@/components/bikes/ModelPage";
-import { bikesState } from "@/components/bikes/catalog-data";
+import { bikesState, catalogOrThrow } from "@/components/bikes/catalog-data";
 import { coverOf, findModel, loadCatalog, modelPath } from "@/lib/catalog";
 import { pageState } from "@/lib/page-state";
 
@@ -22,9 +22,10 @@ export async function generateMetadata({ params }: { params: Params }): Promise<
 export default async function Page({ params }: { params: Params }) {
   const { locale, category, sub, model } = await params;
   const s = await bikesState(locale);
-  const m = s.catalog ? findModel(s.catalog, model) : null;
-  if (!s.catalog || !m) notFound();
-  const canonical = modelPath(m, s.catalog.categories);
+  const catalog = catalogOrThrow(s);
+  const m = findModel(catalog, model);
+  if (!m) notFound();
+  const canonical = modelPath(m, catalog.categories);
   if (canonical !== `/bikes/${category}/${sub}/${model}`) permanentRedirect(canonical);
-  return <ModelPage locale={locale} model={m} catalog={s.catalog} s={s} />;
+  return <ModelPage locale={locale} model={m} catalog={catalog} s={s} />;
 }
