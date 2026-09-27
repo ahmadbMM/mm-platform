@@ -20,7 +20,8 @@ type Props = {
   gather: string;
   start: string;
   typeName: (type: string) => string;
-  links: { edit: string | null; manage: string; place: string | null };
+  /** live: the live ride map (/live?session=), on the day of the ride only. */
+  links: { edit: string | null; manage: string; place: string | null; live?: string | null };
   /** The route the ride follows, named after the Routes page's list; null when none. */
   route?: string | null;
 };
@@ -33,6 +34,11 @@ const Bike = () => (
 const Pin = () => (
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21Z" /><circle cx="12" cy="9.5" r="2.5" />
+  </svg>
+);
+const Live = () => (
+  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="3" /><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7" />
   </svg>
 );
 const Again = () => (
@@ -118,6 +124,7 @@ export default function TicketCard({ locale, rows, session: s, name, cue, t, gat
       <div className="tk-actions">
         {ics && <a className="tk-btn" href={`data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`} download={`micromobility-${primary.date.replace(/-/g, "")}.ics`}>{t.calendar}</a>}
         {links.place && <a className="tk-btn" href={links.place} target="_blank" rel="noopener"><Pin />{s?.approval ? t.meetingPoint : t.directions}</a>}
+        {links.live && <a className="tk-btn solid" href={links.live}><Live />{t.liveMap}</a>}
       </div>
       {canEdit && (
         <div className="tk-manage">

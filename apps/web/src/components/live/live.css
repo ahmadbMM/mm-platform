@@ -1,0 +1,16 @@
+/* The live ride map (/live): MapLibre GL on OpenStreetMap tiles, the leader and the sweeper as markers. */
+.lv { display: flex; flex-direction: column; gap: 14px; max-width: 980px; }
+.lv-note { margin: 0; background: #fff; border: 1px dashed rgba(0, 0, 0, .2); border-radius: 14px; padding: 18px 20px; color: #57605a; font-size: 15px; line-height: 1.55; }
+.lv-note.warn { border-style: solid; border-color: rgba(138, 92, 20, .4); color: #8a5c14; }
+.lv-map-wrap { position: relative; }
+.lv-map { height: min(62svh, 560px); min-height: 320px; border-radius: 22px; overflow: hidden; background: #e8ece8; border: 1px solid rgba(0, 0, 0, .1); }
+.lv-map-note { position: absolute; inset: 0; margin: 0; display: flex; align-items: center; justify-content: center; color: #57605a; font-size: 14px; font-weight: 600; pointer-events: none; }
+.lv-legend { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.lv-chip { display: inline-flex; align-items: center; gap: 8px; flex-wrap: wrap; background: #fff; border: 1px solid rgba(0, 0, 0, .1); border-radius: 999px; padding: 8px 14px 8px 12px; font-size: 13.5px; color: #57605a; }
+.lv-chip i { width: 10px; height: 10px; border-radius: 50%; background: var(--c); flex: none; }
+.lv-chip strong { color: #1a1919; }
+.lv-btn { margin-inline-start: auto; border: 1px solid rgba(0, 0, 0, .2); background: #fff; border-radius: 999px; min-height: 40px; padding: 0 18px; font: inherit; font-weight: 700; font-size: 13.5px; cursor: pointer; color: #1a1919; }
+.lv-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; max-width: 980px; }
+.lv-head p { margin: 0; color: #57605a; font-size: 15px; }
+.lv .maplibregl-ctrl-attrib { font-size: 11px; }
+@media (max-width: 700px) { .lv-map { border-radius: 16px; } .lv-btn { margin-inline-start: 0; } }

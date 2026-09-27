@@ -38,6 +38,7 @@ export const T = {
     gatherAt: (n: string) => `Gathering at ${n}`,
     collectFrom: (n: string) => `Collect bikes from ${n}`,
     route: "Route",
+    liveMap: "Live map",
   },
   ar: {
     queueNumber: "رقم الطابور",
@@ -70,5 +71,6 @@ export const T = {
     gatherAt: (n: string) => `التجمع في ${n}`,
     collectFrom: (n: string) => `استلام الدراجات من ${n}`,
     route: "المسار",
+    liveMap: "الخريطة الحية",
   },
 };

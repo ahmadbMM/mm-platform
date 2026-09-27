@@ -7,18 +7,22 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // The site's security headers. The pages load nothing from elsewhere but the Google Maps embed,
 // the database (the forms and the account page call it from the browser), photos (the site's own,
 // staff uploads through /media, and https images staff paste), Cloudflare Web Analytics (named in
-// the Privacy Notice) and Cloudflare Turnstile (the sign-in check, once its keys are set). Next
-// writes its own small inline scripts, hence 'unsafe-inline' for scripts. No site may frame a page
-// (the staff preview opens in its own window). The two registration forms send their own headers
-// (src/forms/headers.ts) and are left out here.
+// the Privacy Notice), Cloudflare Turnstile (the sign-in check, once its keys are set) and, on the
+// live ride map (/live), MapLibre GL from jsDelivr with OpenStreetMap's tiles - MapLibre runs its
+// tile work in a Worker it makes from a blob, hence worker-src. Next writes its own small inline
+// scripts, hence 'unsafe-inline' for scripts. No site may frame a page (the staff preview opens in
+// its own window). The two registration forms send their own headers (src/forms/headers.ts) and
+// are left out here.
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://amyqxovbnlreassrqihr.supabase.co";
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com",
-  "style-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' ${SUPABASE} https://cloudflareinsights.com`,
+  `connect-src 'self' ${SUPABASE} https://cloudflareinsights.com https://tile.openstreetmap.org`,
+  "worker-src 'self' blob:",
+  "child-src 'self' blob:",
   "frame-src https://www.google.com https://challenges.cloudflare.com",
   "frame-ancestors 'self'",
   "base-uri 'self'",

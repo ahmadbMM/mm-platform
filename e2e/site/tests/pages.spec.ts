@@ -6,7 +6,9 @@ import { createRequire } from "node:module";
 // heading, its search-engine tags, no script errors, and no serious accessibility problems (axe,
 // WCAG 2.1 A/AA). An unknown address gets the site's own 404.
 const AXE = readFileSync(createRequire(import.meta.url).resolve("axe-core/axe.min.js"), "utf8");
-const PAGES = ["/", "/about", "/club", "/experiences", "/workshop", "/help", "/events", "/journal", "/business", "/ambassadors", "/gallery", "/routes", "/privacy", "/terms", "/account", "/bikes"];
+const PAGES = ["/", "/about", "/club", "/experiences", "/workshop", "/help", "/events", "/journal", "/business", "/ambassadors", "/gallery", "/routes", "/privacy", "/terms", "/account", "/bikes", "/live"];
+// The account page and the live ride map are private: no canonical address, never indexed.
+const PRIVATE = new Set(["/account", "/live"]);
 
 async function open(page: Page, path: string) {
   const errors: string[] = [];
@@ -35,7 +37,7 @@ for (const lang of ["en", "ar"] as const) {
       await expect(page.locator("html")).toHaveAttribute("lang", lang);
       await expect(page.locator("html")).toHaveAttribute("dir", lang === "ar" ? "rtl" : "ltr");
       await expect(page.locator("h1:visible")).toHaveCount(1); // exactly one heading, on every screen
-      if (path !== "/account") {
+      if (!PRIVATE.has(path)) {
         await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", new RegExp(`lang=${lang}$`));
         expect(await page.locator('link[rel="alternate"][hreflang]').count()).toBe(17);
         await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /^https:\/\/micromobility\.sa\//);

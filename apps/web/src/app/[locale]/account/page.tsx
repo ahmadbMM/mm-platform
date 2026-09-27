@@ -137,7 +137,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                   <TicketCard key={g.sessionId} locale={locale} rows={g.rows} session={s}
                     name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
                     cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place: s?.approval ? s.meetUrl : S(site.contact.jccHref) || null }}
+                    links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place: s?.approval ? s.meetUrl : S(site.contact.jccHref) || null,
+                      live: g.date === now.slice(0, 10) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={routeNameOf(routes, s?.routeSlug)} />
                 );
               })}
