@@ -43,3 +43,27 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
   .ac-ride { grid-template-columns: 1fr; gap: 10px; }
 }
 .ac-check { min-height: 65px; margin: 4px 0 0; }
+
+/* Rate your ride (RateRide.tsx): the booking app's post-ride rating, on the account. */
+.rr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 420px)); gap: 16px; align-items: start; }
+.rr-card { background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+.rr-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
+.rr-head strong { font-size: 16px; }
+.rr-head span { color: #57605a; font-size: 13.5px; }
+.rr-form { display: flex; flex-direction: column; gap: 14px; }
+.rr-scale { border: 0; margin: 0; padding: 0; min-width: 0; }
+.rr-scale legend { font-size: 13px; font-weight: 700; color: #2e352f; padding: 0; margin-bottom: 8px; }
+.rr-scale-row { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
+.rr-scale-row button, .rr-tags button { cursor: pointer; font: inherit; font-weight: 700; color: #2e352f; background: #fbf9f4; border: 1px solid rgba(0, 0, 0, .16); border-radius: 10px; min-height: 40px; }
+.rr-scale-row button { font-size: 13px; padding: 0; font-variant-numeric: tabular-nums; }
+.rr-scale-row button.on, .rr-tags button.on { background: #077a4b; border-color: #077a4b; color: #fbf9f4; }
+.rr-scale-ends { display: flex; justify-content: space-between; margin-top: 4px; font-size: 11px; color: #57605a; }
+.rr-tags p { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #2e352f; }
+.rr-tags div { display: flex; flex-wrap: wrap; gap: 6px; }
+.rr-tags button { border-radius: 999px; padding: 0 14px; font-size: 13px; }
+.rr-note { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: #2e352f; }
+.rr-note textarea { border: 1px solid rgba(0, 0, 0, .18); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 14px; font-weight: 400; resize: vertical; min-height: 44px; background: #fff; color: #1a1919; }
+.rr-note textarea:focus { outline: none; border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
+.rr-send { border: 0; border-radius: 999px; min-height: 46px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 14.5px; cursor: pointer; }
+.rr-send:disabled { opacity: .6; cursor: default; }
+.rr-thanks { margin: 0; background: rgba(7, 122, 75, .08); border: 1px solid rgba(7, 122, 75, .25); color: #077a4b; border-radius: 14px; padding: 14px 16px; font-weight: 600; font-size: 14px; line-height: 1.5; }

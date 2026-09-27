@@ -1,4 +1,5 @@
 import Qr from "./Qr";
+import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
 import { fmtSar } from "@/lib/fill";
 import { intlOf } from "@/i18n/locales";
@@ -24,6 +25,8 @@ type Props = {
   links: { edit: string | null; manage: string; place: string | null; live?: string | null };
   /** The route the ride follows, named after the Routes page's list; null when none. */
   route?: string | null;
+  /** The booking (and the party's rows) a Google Wallet pass is made for (WalletButton); null for none. */
+  wallet?: { bookingId: string; groupIds: string[] } | null;
 };
 
 const Bike = () => (
@@ -47,7 +50,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, rows, session: s, name, cue, t, gather, start, typeName, links, route = null }: Props) {
+export default function TicketCard({ locale, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order
   const allWl = rows.every((r) => r.status === "waitlist");
@@ -126,6 +129,7 @@ export default function TicketCard({ locale, rows, session: s, name, cue, t, gat
         {links.place && <a className="tk-btn" href={links.place} target="_blank" rel="noopener"><Pin />{s?.approval ? t.meetingPoint : t.directions}</a>}
         {links.live && <a className="tk-btn solid" href={links.live}><Live />{t.liveMap}</a>}
       </div>
+      {wallet && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
       {canEdit && (
         <div className="tk-manage">
           {!noNum && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}

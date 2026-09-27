@@ -7,6 +7,7 @@ import SignOut from "@/components/account/SignOut";
 import "@/components/account/account.css";
 import "@/components/booking/booking.css";
 import TicketCard from "@/components/booking/TicketCard";
+import RateRide from "@/components/account/RateRide";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import { labelFont } from "@/components/booking/label-font";
 import "@/components/club/club.css";
@@ -21,7 +22,8 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName } from "@/lib/rides";
 import { routeNameOf, routeNames } from "@/lib/route-names";
-import { ticketCue, ticketGroups } from "@/lib/tickets";
+import { isRated } from "@/lib/rating";
+import { fmtDayDate, ticketCue, ticketGroups } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { riyadhClock } from "@/lib/workshop-days";
 import { serverL, serverLocalize } from "@/i18n/dicts";
@@ -84,8 +86,15 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const d = resolvePage(experiencesSchema, content, L).dates;
   const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
+  // Completed bookings not rated yet, newest first, one per night: the booking app's post-ride
+  // rating (RateRide), the tags of the 2026-09-27 round included.
+  const toRate = rows
+    .filter((r) => r.status === "done" && typeof r.id === "string" && !isRated(r) && /^\d{4}-\d{2}-\d{2}$/.test(S(r.session_date)))
+    .sort((a, b) => S(b.session_date).localeCompare(S(a.session_date)))
+    .filter((r, i, all) => all.findIndex((x) => S(x.session_id) === S(r.session_id)) === i)
+    .slice(0, 5);
   // every booked session, whatever its state now (a Petromin night, one staff closed since)
-  const sessions = await loadTicketSessions(groups.map((g) => g.sessionId));
+  const sessions = await loadTicketSessions([...groups.map((g) => g.sessionId), ...toRate.map((r) => S(r.session_id))]);
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it on its ticket
   // "You're next!" on a numbered night: whether anyone still waiting holds a lower number
   const ahead = await Promise.all(groups.map((g) => {
@@ -139,12 +148,24 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                     cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
                     links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place: s?.approval ? s.meetUrl : S(site.contact.jccHref) || null,
                       live: g.date === now.slice(0, 10) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
-                    route={routeNameOf(routes, s?.routeSlug)} />
+                    route={routeNameOf(routes, s?.routeSlug)} wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} />
                 );
               })}
             </div>
           )}
         </section>
+
+        {toRate.length > 0 && (
+          <section className="ac-sec" aria-labelledby="ac-rate-h">
+            <h2 id="ac-rate-h">{tx("Rate your rides", "قيّم جولاتك")}</h2>
+            <div className="rr-grid">
+              {toRate.map((r) => {
+                const s = sessions.get(S(r.session_id));
+                return <RateRide key={S(r.id)} entryId={S(r.id)} name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")} when={fmtDayDate(S(r.session_date), locale)} bikes={s ? s.bikes : true} />;
+              })}
+            </div>
+          </section>
+        )}
 
         {!hidden.includes("club") && (
           <section className="ac-sec" aria-labelledby="ac-club-h">
