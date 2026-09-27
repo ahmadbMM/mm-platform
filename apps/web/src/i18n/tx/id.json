@@ -99,6 +99,8 @@
  "Book your service ahead of the queue; Legends get a priority lane.": "Pesan servis Anda mendahului antrean; anggota Legenda mendapat jalur prioritas.",
  "Booked": "Sudah dipesan",
  "Booked for": "Jadwal",
+ "Booking opens {date}": "Pemesanan dibuka {date}",
+ "Booking opens {date} at {time}": "Pemesanan dibuka {date} pukul {time}",
  "Brake adjustment\nGear indexing\nTyre pressure check\nQuick safety check": "Penyetelan rem\nPenyetelan indexing gigi\nPengecekan tekanan ban\nPengecekan keselamatan singkat",
  "Brakes": "Rem",
  "Brakes squeal": "Rem berdecit",

@@ -100,6 +100,8 @@
   "Book your service ahead of the queue; Legends get a priority lane.",
   "Booked",
   "Booked for",
+  "Booking opens {date}",
+  "Booking opens {date} at {time}",
   "Brake adjustment\nGear indexing\nTyre pressure check\nQuick safety check",
   "Brakes",
   "Brakes squeal",

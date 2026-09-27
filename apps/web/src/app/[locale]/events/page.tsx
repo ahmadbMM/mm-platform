@@ -13,6 +13,7 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { routeNameOf, routeNames } from "@/lib/route-names";
+import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { riyadhClock } from "@/lib/workshop-days";
 import { serverL } from "@/i18n/dicts";
 import { intlOf } from "@/i18n/locales";
@@ -50,7 +51,11 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const kindName = kindNames(d), enName = kindNames(dEn);
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it
   const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en");
-  const sessions = upcoming(rides?.sessions ?? [], riyadhClock(new Date())).slice(0, Math.max(1, N(c.hero.count)));
+  const now = riyadhClock(new Date());
+  const sessions = upcoming(rides?.sessions ?? [], now).slice(0, Math.max(1, N(c.hero.count)));
+  // The booking window (site_content booking.window): a date not open yet is greyed, with when it opens, never hidden.
+  const window = siteBookingWindow(content);
+  const opens = (s: RideSession) => (window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null);
   const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(intlOf(locale), { ...o, timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const months: { key: string; label: string; items: RideSession[] }[] = [];
   for (const s of sessions) {
@@ -78,7 +83,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
               <div key={m.key} style={{ display: "contents" }}>
                 <p className="pg-month">{m.label}</p>
                 {m.items.map((s) => (
-                  <div key={s.id} className={`pg-event${s.full ? " is-full" : ""}`} style={{ ["--kind" as string]: KIND_COLOUR[s.kind] }}>
+                  <div key={s.id} className={`pg-event${s.full ? " is-full" : ""}${opens(s) ? " is-closed" : ""}`} style={{ ["--kind" as string]: KIND_COLOUR[s.kind] }}>
                     <div className="pg-date"><strong>{fmt(s.date, { day: "numeric" })}</strong><span>{fmt(s.date, { weekday: "short" })}</span></div>
                     <div className="pg-event-body">
                       <strong>{name(s)}</strong>
@@ -98,7 +103,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {s.full && <em className="warn">{S(d.full)}</em>}
                       </div>
                     </div>
-                    <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>
+                    {opens(s) ? <span className="pg-opens">{opens(s)}</span> : <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>}
                   </div>
                 ))}
               </div>

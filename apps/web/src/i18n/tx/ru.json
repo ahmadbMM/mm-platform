@@ -99,6 +99,8 @@
  "Book your service ahead of the queue; Legends get a priority lane.": "Записывайтесь на обслуживание в обход общей очереди; для уровня «Легенда» — отдельная приоритетная очередь.",
  "Booked": "Забронировано",
  "Booked for": "Назначено на",
+ "Booking opens {date}": "Бронирование откроется {date}",
+ "Booking opens {date} at {time}": "Бронирование откроется {date} в {time}",
  "Brake adjustment\nGear indexing\nTyre pressure check\nQuick safety check": "Регулировка тормозов\nНастройка переключения передач\nПроверка давления в шинах\nБыстрая проверка безопасности",
  "Brakes": "Тормоза",
  "Brakes squeal": "Скрипят тормоза",

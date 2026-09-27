@@ -99,6 +99,8 @@
  "Book your service ahead of the queue; Legends get a priority lane.": "Réservez votre entretien avant les autres ; les membres Légende disposent d’une file prioritaire.",
  "Booked": "Réservé",
  "Booked for": "Réservé pour",
+ "Booking opens {date}": "Réservation ouverte le {date}",
+ "Booking opens {date} at {time}": "Réservation ouverte le {date} à {time}",
  "Brake adjustment\nGear indexing\nTyre pressure check\nQuick safety check": "Réglage des freins\nIndexation des vitesses\nContrôle de la pression des pneus\nContrôle de sécurité rapide",
  "Brakes": "Freins",
  "Brakes squeal": "Les freins grincent",

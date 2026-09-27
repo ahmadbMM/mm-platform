@@ -11,6 +11,7 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { routeNameOf, routeNames } from "@/lib/route-names";
+import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import { riyadhClock } from "@/lib/workshop-days";
 import { fmtClock, fmtDayDate } from "@/lib/tickets";
@@ -62,7 +63,10 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const kindName = kindNames(d);
   const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page is named after it
-  const all = upcoming(rides?.sessions ?? [], riyadhClock(new Date()));
+  const now = riyadhClock(new Date());
+  const all = upcoming(rides?.sessions ?? [], now);
+  // The booking window (site_content booking.window): a date not open yet is shown greyed, never hidden.
+  const window = siteBookingWindow(content);
   // The booking app's events (_evMatch): the circuit, the community rides, and the National Day
   // ride and the T100 workshop, which have cards of their own while they have dates.
   // A ticketed event (ride_kind 'event') has a card of its own too, while one is on the books.
@@ -76,6 +80,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
     seatPrice: s.kind === "event" && s.price != null ? sar(s.price) : null, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
     route: routeNameOf(routes, s.routeSlug),
+    opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,
   });
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count))).map(toStep);
   const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): StepEvent | null => {

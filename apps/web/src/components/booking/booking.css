@@ -94,6 +94,10 @@ html:is([lang="ar"], [lang="ur"]) :is(.tk-label, .tk-type) { font-family: var(--
 .sc-card:hover { border-color: rgba(7, 122, 75, .4); box-shadow: 0 0 14px rgba(7, 122, 75, .12); }
 .sc-card:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
 .sc-card.full { opacity: .72; }
+/* Not open to book yet (the booking window): greyed, not gone, with when it opens on the right. */
+.sc-card.closed { opacity: .62; cursor: default; }
+.sc-card.closed:hover { border-color: rgba(26, 25, 25, .14); box-shadow: none; }
+.sc-spots.closed { color: #8a5c14; white-space: normal; text-align: end; max-width: 55%; }
 .sc-card.ev-jcc { --ev: #2f63ad; }
 .sc-card.ev-swim { --ev: #0d7d8f; }
 .sc-card.ev-workshop { --ev: #c2410c; }

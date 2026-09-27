@@ -99,6 +99,8 @@
  "Book your service ahead of the queue; Legends get a priority lane.": "ほかのお客様より先に整備を予約できます。「伝説」ランクの方には優先レーンがあります。",
  "Booked": "予約済み",
  "Booked for": "予約日時",
+ "Booking opens {date}": "{date}に予約開始",
+ "Booking opens {date} at {time}": "{date} {time}に予約開始",
  "Brake adjustment\nGear indexing\nTyre pressure check\nQuick safety check": "ブレーキ調整\n変速のインデックス調整\nタイヤ空気圧チェック\n簡易安全点検",
  "Brakes": "ブレーキ",
  "Brakes squeal": "ブレーキが鳴る",

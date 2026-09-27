@@ -99,6 +99,8 @@
  "Book your service ahead of the queue; Legends get a priority lane.": "预约保养享优先排期；传奇级会员还享有优先通道。",
  "Booked": "已预订",
  "Booked for": "预约时间",
+ "Booking opens {date}": "{date} 开放预订",
+ "Booking opens {date} at {time}": "{date} {time} 开放预订",
  "Brake adjustment\nGear indexing\nTyre pressure check\nQuick safety check": "刹车调整\n变速校准\n胎压检查\n快速安全检查",
  "Brakes": "刹车",
  "Brakes squeal": "刹车异响",

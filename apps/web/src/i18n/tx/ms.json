@@ -99,6 +99,8 @@
  "Book your service ahead of the queue; Legends get a priority lane.": "Tempah servis anda mendahului giliran; ahli Legenda mendapat laluan keutamaan.",
  "Booked": "Telah ditempah",
  "Booked for": "Ditempah untuk",
+ "Booking opens {date}": "Tempahan dibuka {date}",
+ "Booking opens {date} at {time}": "Tempahan dibuka {date} pada {time}",
  "Brake adjustment\nGear indexing\nTyre pressure check\nQuick safety check": "Pelarasan brek\nPelarasan indeks gear\nSemakan tekanan tayar\nSemakan keselamatan pantas",
  "Brakes": "Brek",
  "Brakes squeal": "Brek berdecit",

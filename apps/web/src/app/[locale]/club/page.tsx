@@ -14,6 +14,7 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { getAccount, rpcServer } from "@/lib/account";
 import { memberArea } from "@/lib/members";
+import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { kindNames, sessionName, type RideKind } from "@/lib/rides";
 import { riyadhClock } from "@/lib/workshop-days";
 import { serverL } from "@/i18n/dicts";
@@ -62,7 +63,9 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
     const ev = kind === "event" || kind === "workshop" || kind === "snd96" ? kind : "community";
     try { const u = new URL(bookingLink(S(c.rides.allHref), locale)); u.searchParams.set("ev", ev); u.searchParams.set("session", id); return u.toString(); } catch { return ridesHref; }
   };
-  const today = riyadhClock(new Date()).slice(0, 10);
+  const now = riyadhClock(new Date()), today = now.slice(0, 10);
+  const window = siteBookingWindow(content); // a members' ride not open to book yet says when it opens
+  const opens = (date: string) => (window && notOpenYet(date, window, now) ? opensText(date, window, locale, tx) : null);
   const words = lines(S(c.hero.marquee));
   const earn = [
     { label: S(c.earn.paidLabel), value: fill(tx("{n} / SAR 10", "{n} لكل 10 ر.س"), { n: shown.perTen }), on: N(r.perTen) > 0 },
@@ -109,7 +112,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         )}
         <section className="club-join" id="card">
           {members?.member ? (
-            <MembersArea locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} />
+            <MembersArea locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens} />
           ) : members ? (
             <div className="club-lookup">
               <h2>{S(c.card.title)}</h2>

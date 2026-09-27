@@ -17,6 +17,8 @@ export type StepSession = {
   event: boolean; description: string | null; seatPrice: string | null; seats: string | null;
   /** The route the ride follows, named after the Routes page's list; null when none. */
   route: string | null;
+  /** Not open to book yet (the booking window): the words for when it opens; null when it may be booked. */
+  opens: string | null;
 };
 export type StepEvent = { key: string; title: string; meta: string; logo: string; note: string; sessions: StepSession[] };
 export type StepText = {
@@ -112,7 +114,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           ) : (
             <div className="sc-list">
               {ev.sessions.map((s) => (
-                <button key={s.id} type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}`} onClick={() => { setSess(s); go(3); }}>
+                <button key={s.id} type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}${s.opens ? " closed" : ""}`} disabled={!!s.opens} aria-disabled={!!s.opens} onClick={() => { setSess(s); go(3); }}>
                   {(named(ev) || s.members || s.free) && (
                     <span className="sc-kicker">
                       {named(ev) && <span className="sc-chip">{s.name}</span>}
@@ -124,7 +126,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                   <span className="sc-head">
                     <span className="sc-dot" aria-hidden="true" />
                     <span className="sc-date">{s.day}</span>
-                    <span className={`sc-spots${s.full ? " full" : ""}`}>{s.full ? t.waitlisted : t.available}</span>
+                    {s.opens ? <span className="sc-spots closed">{s.opens}</span> : <span className={`sc-spots${s.full ? " full" : ""}`}>{s.full ? t.waitlisted : t.available}</span>}
                   </span>
                   {s.when && <span className="sc-time">{when(s)}</span>}
                   {s.route && <span className="sc-time">{t.route}: {s.route}</span>}

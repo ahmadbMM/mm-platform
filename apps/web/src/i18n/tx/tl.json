@@ -99,6 +99,8 @@
  "Book your service ahead of the queue; Legends get a priority lane.": "I-book ang iyong service nang mauna sa pila; may priority lane ang mga Alamat.",
  "Booked": "Naka-book",
  "Booked for": "Naka-book sa",
+ "Booking opens {date}": "Magbubukas ang booking sa {date}",
+ "Booking opens {date} at {time}": "Magbubukas ang booking sa {date} nang {time}",
  "Brake adjustment\nGear indexing\nTyre pressure check\nQuick safety check": "Pag-adjust ng preno\nPag-index ng gear\nPag-check ng hangin ng gulong\nMabilisang safety check",
  "Brakes": "Preno",
  "Brakes squeal": "Umiingit ang preno",

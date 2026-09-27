@@ -99,6 +99,8 @@
  "Book your service ahead of the queue; Legends get a priority lane.": "اپنی سروس دوسروں سے پہلے بُک کریں؛ افسانوی درجے کے ممبران کو ترجیحی لین ملتی ہے۔",
  "Booked": "بُک شدہ",
  "Booked for": "طے شدہ وقت",
+ "Booking opens {date}": "بکنگ {date} کو کھلے گی",
+ "Booking opens {date} at {time}": "بکنگ {date} کو {time} بجے کھلے گی",
  "Brake adjustment\nGear indexing\nTyre pressure check\nQuick safety check": "بریک ایڈجسٹمنٹ\nگیئر انڈیکسنگ\nٹائر پریشر کی جانچ\nفوری حفاظتی جانچ",
  "Brakes": "بریک",
  "Brakes squeal": "بریک سے چیں چیں کی آواز",
