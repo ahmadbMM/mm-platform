@@ -8,8 +8,6 @@ export const T = {
     age: "Age", gender: "Gender", male: "Male", female: "Female",
     height: "Height (cm)", heightHint: "It helps us bring the right bike size.",
     level: "Riding so far", never: "Never ridden a bike", tried: "Tried, but can't ride yet", refresh: "Rode before - needs a refresher",
-    days: "Best days", weekdays: "Weekdays", weekends: "Weekends",
-    times: "Best time of day", morning: "Morning", afternoon: "Afternoon", evening: "Evening",
     details: "Your details", parentHint: "As the parent: your own name, mobile and email.",
     name: "Your full name", phone: "Mobile number", email: "Email", notes: "Anything we should know? (optional)",
     // The Privacy Notice's name is a link in the sentence: its place comes from the template.
@@ -32,8 +30,6 @@ export const T = {
     age: "العمر", gender: "الجنس", male: "ذكر", female: "أنثى",
     height: "الطول (سم)", heightHint: "يساعدنا على تجهيز دراجة بالمقاس المناسب.",
     level: "الخبرة في الركوب حتى الآن", never: "لا خبرة سابقة في ركوب الدراجة", tried: "محاولات سابقة دون إتقان الركوب بعد", refresh: "خبرة سابقة تحتاج إلى تنشيط",
-    days: "الأيام المناسبة", weekdays: "أيام الأسبوع", weekends: "نهاية الأسبوع",
-    times: "الوقت المناسب من اليوم", morning: "الصباح", afternoon: "بعد الظهر", evening: "المساء",
     details: "بياناتك", parentHint: "بصفتك وليّ الأمر: اسمك ورقم جوالك وبريدك الإلكتروني.",
     name: "اسمك الكامل", phone: "رقم الجوال", email: "البريد الإلكتروني", notes: "أي تفاصيل تهمنا؟ (اختياري)",
     privacy: (link: string) => `قرأت ${link}`, privacyLink: "إشعار الخصوصية",

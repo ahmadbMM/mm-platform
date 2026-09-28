@@ -2,15 +2,15 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { rpc } from "@/lib/rpc-client";
-import { AGES, DAYS, HEIGHT, LEVELS, TIMES, learnPayload, type ForWhom, type Gender, type LearnFields } from "@/lib/learn";
+import { AGES, HEIGHT, LEVELS, learnPayload, type ForWhom, type Gender, type LearnFields } from "@/lib/learn";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./LearnForm.text";
 
 // The Learn to ride sign-up card (/experiences/learn, right column). Who is learning - the visitor
 // or their child - with the learner's age, gender and height (the height picks the bike's size),
-// how much they have ridden, the days and times that suit, and the details of the person signing
-// up (a child's parent). It goes to the staff page through learn_apply(); the team contacts them
-// with the lesson's date and time and, for someone new, sets up their booking app account. Nothing
+// how much they have ridden, and the details of the person signing up (a child's parent). It goes
+// to the staff page through learn_apply(); it does not ask when suits them - the team picks the
+// lesson's date and time and sends it and, for someone new, sets up their booking app account. Nothing
 // is booked or charged here. The form checks what the database checks (lib/learn.ts) and shows one
 // message at a time, about the first thing to fix.
 export type LearnFormProps = {
@@ -23,7 +23,7 @@ export type LearnFormProps = {
 
 // What a new learner starts from: "Sign up someone else" keeps the contact details and the
 // Privacy Notice box, and clears the rest.
-const LEARNER = { forWhom: "", learnerName: "", age: "", gender: "", height: "", level: "", days: [], times: [], notes: "" } as const;
+const LEARNER = { forWhom: "", learnerName: "", age: "", gender: "", height: "", level: "", notes: "" } as const;
 const BLANK: LearnFields = { ...LEARNER, name: "", phone: "", email: "", privacy: false };
 // Where the Privacy Notice's name goes in the translated sentence (LearnForm.text.ts, privacy).
 const SLOT = "\u0000";
@@ -42,7 +42,6 @@ export default function LearnForm(p: LearnFormProps) {
   const doneBox = useRef<HTMLDivElement>(null);
   useEffect(() => { if (done) doneBox.current?.scrollIntoView({ block: "center" }); }, [done]);
   const set = <K extends keyof LearnFields>(k: K, v: LearnFields[K]) => { setF((x) => ({ ...x, [k]: v })); setErr(""); };
-  const toggle = (k: "days" | "times", code: string) => set(k, f[k].includes(code) ? f[k].filter((x) => x !== code) : [...f[k], code]);
   const child = f.forWhom === "child";
   // The database answers learner_age for both kinds of learner; the message names the right range.
   const message = (code: string) => (code === "learner_age" && child ? t.errors.learner_age_child : t.errors[code] || t.errors.generic);
@@ -116,15 +115,6 @@ export default function LearnForm(p: LearnFormProps) {
       <span className="ln-label" id={`${id}level`}>{t.level}</span>
       <div className="ln-levels" role="radiogroup" aria-labelledby={`${id}level`}>
         {LEVELS.map((l) => radio(f.level === l, () => set("level", l), t[l], "ln-level"))}
-      </div>
-
-      <span className="ln-label" id={`${id}days`}>{t.days}</span>
-      <div className="ln-pills" role="group" aria-labelledby={`${id}days`}>
-        {DAYS.map((d) => <button key={d} type="button" className="ln-pill" aria-pressed={f.days.includes(d)} onClick={() => toggle("days", d)}>{t[d]}</button>)}
-      </div>
-      <span className="ln-label" id={`${id}times`}>{t.times}</span>
-      <div className="ln-pills" role="group" aria-labelledby={`${id}times`}>
-        {TIMES.map((x) => <button key={x} type="button" className="ln-pill" aria-pressed={f.times.includes(x)} onClick={() => toggle("times", x)}>{t[x]}</button>)}
       </div>
 
       <div className="ln-details">

@@ -9,19 +9,15 @@ import { cleanName, nameOk, namePartsOk, normalizePhone } from "./rpc-client";
 //   - a Saudi mobile as +9665XXXXXXXX, any other country as +<8 to 15 digits>; an email;
 //   - the learner: 12 to 99 signing up for themselves, 3 to 17 for a child (a child's first name
 //     is enough, 60 at most, the same letters rule); male or female; 80 to 250 cm tall;
-//   - how much riding so far; the days and times that suit, both optional;
+//   - how much riding so far (the form does not ask when suits them: staff pick the lesson's time);
 //   - notes up to 600 characters, and the version of the Privacy Notice they confirmed.
 
 export const FOR_WHOM = ["self", "child"] as const;
 export const GENDERS = ["male", "female"] as const;
 export const LEVELS = ["never", "tried", "refresh"] as const;
-export const DAYS = ["weekdays", "weekends"] as const;
-export const TIMES = ["morning", "afternoon", "evening"] as const;
 export type ForWhom = (typeof FOR_WHOM)[number];
 export type Gender = (typeof GENDERS)[number];
 export type Level = (typeof LEVELS)[number];
-export type Day = (typeof DAYS)[number];
-export type Time = (typeof TIMES)[number];
 
 /** The ages a learner may be: from 12 they sign up themselves, younger through a parent. */
 export const AGES: Record<ForWhom, readonly [number, number]> = { self: [12, 99], child: [3, 17] };
@@ -36,8 +32,6 @@ export type LearnFields = {
   gender: Gender | "";
   height: string;
   level: Level | "";
-  days: readonly string[];
-  times: readonly string[];
   name: string;
   phone: string;
   email: string;
@@ -59,8 +53,6 @@ export type LearnPayload = {
   learner_gender: Gender;
   learner_height: number;
   level: Level;
-  days: Day[];
-  times: Time[];
   notes: string;
   lang: string;
   privacy_version: string;
@@ -111,10 +103,7 @@ export function learnPayload(f: LearnFields, lang: string, privacyVersion: strin
   return {
     payload: {
       for_whom: f.forWhom, name, email, phone, learner_name: learner, learner_age: age, learner_gender: f.gender, learner_height: height,
-      level: f.level,
-      // the codes the database knows, each once, in the form's order
-      days: DAYS.filter((d) => f.days.includes(d)), times: TIMES.filter((t) => f.times.includes(t)),
-      notes, lang: /^[a-z]{2}$/.test(lang) ? lang : "en", privacy_version: privacyVersion,
+      level: f.level, notes, lang: /^[a-z]{2}$/.test(lang) ? lang : "en", privacy_version: privacyVersion,
     },
   };
 }

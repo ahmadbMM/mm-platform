@@ -7,7 +7,7 @@ import { namePartsOk } from "../rpc-client";
 // database reads.
 
 const adult: LearnFields = {
-  forWhom: "self", learnerName: "", age: "30", gender: "female", height: "165", level: "never", days: [], times: [],
+  forWhom: "self", learnerName: "", age: "30", gender: "female", height: "165", level: "never",
   name: "Sara Al Harbi", phone: "0551234567", email: "Sara@Example.com", notes: "", privacy: true,
 };
 const kid: LearnFields = { ...adult, forWhom: "child", learnerName: "Omar", age: "7", gender: "male", height: "120" };
@@ -19,10 +19,10 @@ const error = (x: Partial<LearnFields>, base: LearnFields = adult) => {
 
 describe("learnPayload", () => {
   it("sends a sign-up for oneself as the database reads it", () => {
-    expect(learnPayload({ ...adult, days: ["weekends", "weekdays", "weekends", "sundays"], times: ["evening", "x"], notes: "  A little nervous.  " }, "ar", "2026-09-25")).toEqual({
+    expect(learnPayload({ ...adult, notes: "  A little nervous.  " }, "ar", "2026-09-25")).toEqual({
       payload: {
         for_whom: "self", name: "Sara Al Harbi", email: "sara@example.com", phone: "+966551234567", learner_name: "", learner_age: 30,
-        learner_gender: "female", learner_height: 165, level: "never", days: ["weekdays", "weekends"], times: ["evening"],
+        learner_gender: "female", learner_height: 165, level: "never",
         notes: "A little nervous.", lang: "ar", privacy_version: "2026-09-25",
       },
     });
@@ -36,7 +36,7 @@ describe("learnPayload", () => {
   });
 
   it("asks who is learning first, then goes down the form one thing at a time", () => {
-    const empty: LearnFields = { forWhom: "", learnerName: "", age: "", gender: "", height: "", level: "", days: [], times: [], name: "", phone: "", email: "", notes: "", privacy: false };
+    const empty: LearnFields = { forWhom: "", learnerName: "", age: "", gender: "", height: "", level: "", name: "", phone: "", email: "", notes: "", privacy: false };
     expect(learnPayload(empty, "en", "2026-09-25")).toEqual({ error: "for_whom" });
     const steps: [Partial<LearnFields>, string | null][] = [
       [{ forWhom: "child" }, "learner_name"],
