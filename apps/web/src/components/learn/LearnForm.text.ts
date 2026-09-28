@@ -1,10 +1,12 @@
 // LearnForm's own words, in English and Arabic; every other language translates the English
 // (src/i18n/tx), a sentence with values in it as its template. The Arabic of the choices reads
-// the same whoever is learning - the visitor or their child.
+// the same whoever is learning - the visitor, their child or another adult.
 export const T = {
   en: {
-    who: "Who is learning?", self: "Me", child: "My child",
-    childName: "Child's name", childNameHint: "First name is enough.",
+    who: "Who is learning?", self: "Me", child: "My child", other: "Someone else",
+    // Each learner's card, by its place in the list; the button under the list adds one.
+    learner: (n: number) => `Learner ${n}`, remove: (n: number) => `Remove learner ${n}`, add: "Add another learner",
+    childName: "Child's name", childNameHint: "First name is enough.", otherName: "Their full name",
     age: "Age", gender: "Gender", male: "Male", female: "Female",
     height: "Height (cm)", heightHint: "It helps us bring the right bike size.",
     level: "Riding so far", never: "Never ridden a bike", tried: "Tried, but can't ride yet", refresh: "Rode before - needs a refresher",
@@ -21,10 +23,13 @@ export const T = {
     // The Privacy Notice's name is a link in the sentence: its place comes from the template.
     privacy: (link: string) => `I have read the ${link}`, privacyLink: "Privacy Notice",
     use: "We use these details to arrange the lesson, and to set up your Micromobility account if you don't have one yet.",
-    send: "Sign up", sending: "Sending…", again: "Sign up someone else",
+    send: "Sign up", sending: "Sending…", again: "Sign up more learners",
+    // A learner's message names their card: "Learner 2: Enter the child's age, from 3 to 17."
+    learnerError: (n: number, message: string) => `Learner ${n}: ${message}`,
     errors: {
-      for_whom: "Choose who is learning.", learner_name: "Enter the child's name - letters only.",
-      learner_age: "Enter an age from 12 to 99. Under 12? Choose My child.", learner_age_child: "Enter the child's age, from 3 to 17.",
+      learner_who: "Choose who is learning.", learner_name: "Enter the child's name - letters only.", learner_name_other: "Enter their full name - letters only.",
+      learner_age: "Enter an age from 12 to 99. Under 12? Choose My child.", learner_age_child: "Enter the child's age, from 3 to 17.", learner_age_other: "Enter their age, from 12 to 99.",
+      learner_twice: "This learner is already on the list.", learners: "Check the list of learners: from 1 to 5, each one only once.",
       learner_gender: "Choose male or female.", learner_height: "Enter a height between 80 and 250 cm.", level: "Choose how much riding so far.",
       name: "Enter your first and last name - letters, spaces and periods only.", phone: "Check the mobile number, e.g. 05XXXXXXXX.",
       email: "Check the email address.", heard_from: "Please tell us how you heard about us.",
@@ -34,8 +39,9 @@ export const T = {
     } as Record<string, string>,
   },
   ar: {
-    who: "مَن سيتعلّم؟", self: "أنا", child: "طفلي",
-    childName: "اسم الطفل", childNameHint: "يكفي الاسم الأول.",
+    who: "مَن سيتعلّم؟", self: "أنا", child: "طفلي", other: "شخص آخر",
+    learner: (n: number) => `المتعلّم ${n}`, remove: (n: number) => `إزالة المتعلّم ${n}`, add: "إضافة متعلّم آخر",
+    childName: "اسم الطفل", childNameHint: "يكفي الاسم الأول.", otherName: "الاسم الكامل",
     age: "العمر", gender: "الجنس", male: "ذكر", female: "أنثى",
     height: "الطول (سم)", heightHint: "يساعدنا على تجهيز دراجة بالمقاس المناسب.",
     level: "الخبرة في الركوب حتى الآن", never: "لا خبرة سابقة في ركوب الدراجة", tried: "محاولات سابقة دون إتقان الركوب بعد", refresh: "خبرة سابقة تحتاج إلى تنشيط",
@@ -50,10 +56,12 @@ export const T = {
     } as Record<string, string>,
     privacy: (link: string) => `قرأت ${link}`, privacyLink: "إشعار الخصوصية",
     use: "نستخدم هذه البيانات لترتيب الدرس، ولإنشاء حسابك في مايكروموبيليتي إن لم يكن لديك حساب بعد.",
-    send: "سجّل الآن", sending: "جارٍ الإرسال…", again: "سجّل شخصاً آخر",
+    send: "سجّل الآن", sending: "جارٍ الإرسال…", again: "سجّل متعلّمين آخرين",
+    learnerError: (n: number, message: string) => `المتعلّم ${n}: ${message}`,
     errors: {
-      for_whom: "اختر مَن سيتعلّم.", learner_name: "أدخل اسم الطفل - حروف فقط.",
-      learner_age: "أدخل عمراً من 12 إلى 99. أصغر من 12 عاماً؟ اختر «طفلي».", learner_age_child: "أدخل عمر الطفل، من 3 إلى 17.",
+      learner_who: "اختر مَن سيتعلّم.", learner_name: "أدخل اسم الطفل - حروف فقط.", learner_name_other: "أدخل الاسم الكامل - حروف فقط.",
+      learner_age: "أدخل عمراً من 12 إلى 99. أصغر من 12 عاماً؟ اختر «طفلي».", learner_age_child: "أدخل عمر الطفل، من 3 إلى 17.", learner_age_other: "أدخل العمر، من 12 إلى 99.",
+      learner_twice: "هذا المتعلّم مُضاف إلى القائمة من قبل.", learners: "راجع قائمة المتعلّمين: من 1 إلى 5، وكلٌّ منهم مرة واحدة فقط.",
       learner_gender: "حدّد الجنس: ذكر أو أنثى.", learner_height: "أدخل طولاً بين 80 و250 سم.", level: "اختر مستوى الخبرة في الركوب.",
       name: "أدخل اسمك الأول واسم العائلة - حروف ومسافات ونقاط فقط.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.",
       email: "تحقق من البريد الإلكتروني.", heard_from: "أخبرنا من فضلك كيف عرفت عنا.",

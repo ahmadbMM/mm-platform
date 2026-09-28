@@ -1,24 +1,95 @@
 import { describe, expect, it } from "vitest";
-import { HEARD, emailOk, learnPayload, phoneOk, wholeNumber, type LearnFields } from "../learn";
+import { HEARD, emailOk, learnPayload, phoneOk, wholeNumber, type LearnFields, type LearnerFields } from "../learn";
 import { learnFrame } from "../learn-page";
 import { namePartsOk } from "../rpc-client";
 
 // The Learn to ride sign-up (/experiences/learn): the form refuses what learn_apply() would, with
-// the database's own error codes, one at a time in the form's order, and sends exactly what the
-// database reads.
+// the database's own error codes - a learner's with their place in the list - one at a time in the
+// form's order (every learner's card, then the person signing up), and sends exactly what the
+// database reads: the contact, and 1 to 5 learners (the owner, 2026-09-28).
 
-const adult: LearnFields = {
-  forWhom: "self", learnerName: "", age: "30", gender: "female", height: "165", level: "never",
-  name: "Sara Al Harbi", phone: "0551234567", email: "Sara@Example.com", heard: "instagram", notes: "", privacy: true,
-};
-const kid: LearnFields = { ...adult, forWhom: "child", learnerName: "Omar", age: "7", gender: "male", height: "120" };
-const send = (x: Partial<LearnFields>, base: LearnFields = adult) => learnPayload({ ...base, ...x }, "en", "2026-09-25");
-const error = (x: Partial<LearnFields>, base: LearnFields = adult) => {
-  const r = send(x, base);
+const me: LearnerFields = { who: "self", name: "", age: "30", gender: "female", height: "165", level: "never" };
+const kid: LearnerFields = { who: "child", name: "Omar", age: "7", gender: "male", height: "120", level: "tried" };
+const friend: LearnerFields = { who: "other", name: "Lina Saleh", age: "34", gender: "female", height: "160", level: "refresh" };
+const form: LearnFields = { learners: [me], name: "Sara Al Harbi", phone: "0551234567", email: "Sara@Example.com", heard: "instagram", notes: "", privacy: true };
+const send = (x: Partial<LearnFields>) => learnPayload({ ...form, ...x }, "en", "2026-09-25");
+const error = (x: Partial<LearnFields>) => {
+  const r = send(x);
   return "error" in r ? r.error : null;
+};
+/** The problem with one learner's card, the others as they are. */
+const learnerError = (l: Partial<LearnerFields>, base: LearnerFields = me) => {
+  const r = send({ learners: [{ ...base, ...l }] });
+  return "error" in r ? r : null;
 };
 
 describe("learnPayload", () => {
+  it("sends one learner - the person signing up - as the database reads it, and nothing of the old single-learner form", () => {
+    const r = learnPayload({ ...form, notes: "  A little nervous.  " }, "ar", "2026-09-25");
+    expect(r).toEqual({
+      payload: {
+        name: "Sara Al Harbi", email: "sara@example.com", phone: "+966551234567", heard_from: "instagram", notes: "A little nervous.", lang: "ar", privacy_version: "2026-09-25",
+        learners: [{ who: "self", name: "", age: 30, gender: "female", height: 165, level: "never" }],
+      },
+    });
+    expect(Object.keys("payload" in r ? r.payload : {})).toEqual(["name", "email", "phone", "heard_from", "notes", "lang", "privacy_version", "learners"]);
+  });
+
+  it("sends three learners in their order: the person signing up, their child and another adult", () => {
+    const r = send({ learners: [me, { ...kid, name: "  Omar-Ali " }, { ...friend, age: "٣٤" }] });
+    expect("payload" in r && r.payload.learners).toEqual([
+      { who: "self", name: "", age: 30, gender: "female", height: 165, level: "never" },
+      { who: "child", name: "Omar Ali", age: 7, gender: "male", height: 120, level: "tried" },
+      { who: "other", name: "Lina Saleh", age: 34, gender: "female", height: 160, level: "refresh" },
+    ]);
+  });
+
+  it("leaves out a name typed on the person signing up's own card: theirs is the contact's", () => {
+    const r = send({ learners: [{ ...me, name: "Someone" }] });
+    expect("payload" in r && r.payload.learners[0].name).toBe("");
+  });
+
+  it("takes 1 to 5 learners", () => {
+    expect(send({ learners: [] })).toEqual({ error: "learners" });
+    const five = [me, kid, { ...kid, name: "Lina" }, { ...kid, name: "Huda" }, friend];
+    expect(error({ learners: five })).toBeNull();
+    expect(send({ learners: [...five, { ...friend, name: "Ali Omar" }] })).toEqual({ error: "learners" });
+  });
+
+  it("takes the person signing up once at most, and never the same learner twice", () => {
+    expect(send({ learners: [kid, me, { ...me, age: "40" }] })).toEqual({ error: "learners", index: 2 });
+    expect(send({ learners: [kid, friend, { ...kid, name: " omar ", age: "9" }] })).toEqual({ error: "learners", index: 2 });
+    expect(send({ learners: [friend, { ...friend, name: "LINA  SALEH" }] })).toEqual({ error: "learners", index: 1 });
+    // the same name as a child and as another adult is two people
+    expect(error({ learners: [{ ...kid, name: "Lina Saleh" }, friend] })).toBeNull();
+  });
+
+  it("names the card of the first learner with a problem, and checks the person signing up only after every card", () => {
+    const empty: LearnerFields = { who: "", name: "", age: "", gender: "", height: "", level: "" };
+    const blank: LearnFields = { learners: [kid, empty, { ...friend, age: "5" }], name: "", phone: "", email: "", heard: "", notes: "", privacy: false };
+    const steps: [(f: LearnFields) => LearnFields, { error: string; index?: number } | null][] = [
+      [(f) => f, { error: "learner_who", index: 1 }],
+      [(f) => ({ ...f, learners: [f.learners[0], { ...empty, who: "child" }, f.learners[2]] }), { error: "learner_name", index: 1 }],
+      [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], name: "Lina" }, f.learners[2]] }), { error: "learner_age", index: 1 }],
+      [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], age: "6" }, f.learners[2]] }), { error: "learner_gender", index: 1 }],
+      [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], gender: "female" }, f.learners[2]] }), { error: "learner_height", index: 1 }],
+      [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], height: "115" }, f.learners[2]] }), { error: "level", index: 1 }],
+      [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], level: "never" }, f.learners[2]] }), { error: "learner_age", index: 2 }],
+      [(f) => ({ ...f, learners: [f.learners[0], f.learners[1], { ...f.learners[2], age: "34" }] }), { error: "name" }],
+      [(f) => ({ ...f, name: "Huda Saleh" }), { error: "phone" }],
+      [(f) => ({ ...f, phone: "+966 50 123 4567" }), { error: "email" }],
+      [(f) => ({ ...f, email: "huda@example.sa" }), { error: "heard_from" }],
+      [(f) => ({ ...f, heard: "invited" }), { error: "privacy" }],
+      [(f) => ({ ...f, privacy: true }), null],
+    ];
+    let f = blank;
+    for (const [step, next] of steps) {
+      f = step(f);
+      const r = learnPayload(f, "en", "2026-09-25");
+      expect("error" in r ? r : null, JSON.stringify(next)).toEqual(next);
+    }
+  });
+
   // How they heard of us (the owner, 2026-09-28): required, and one of customers.heard_from's codes
   // - the list learn_apply() checks (20260928230000), 'desk' being the booking desk's own.
   it("sends how they heard of us, any of the booking app's answers, and refuses anything else", () => {
@@ -32,82 +103,44 @@ describe("learnPayload", () => {
     expect(error({ heard: "radio" as LearnFields["heard"] })).toBe("heard_from");
   });
 
-  it("sends a sign-up for oneself as the database reads it", () => {
-    expect(learnPayload({ ...adult, notes: "  A little nervous.  " }, "ar", "2026-09-25")).toEqual({
-      payload: {
-        for_whom: "self", name: "Sara Al Harbi", email: "sara@example.com", phone: "+966551234567", learner_name: "", learner_age: 30,
-        learner_gender: "female", learner_height: 165, level: "never", heard_from: "instagram",
-        notes: "A little nervous.", lang: "ar", privacy_version: "2026-09-25",
-      },
-    });
-  });
-
-  it("sends a child's first name, and leaves a name typed for oneself out", () => {
-    const r = send({ learnerName: "  Omar-Ali ", level: "tried" }, kid);
-    expect("payload" in r && r.payload).toMatchObject({ for_whom: "child", learner_name: "Omar Ali", learner_age: 7, learner_gender: "male", learner_height: 120, level: "tried" });
-    const own = send({ learnerName: "Someone" });
-    expect("payload" in own && own.payload.learner_name).toBe("");
-  });
-
-  it("asks who is learning first, then goes down the form one thing at a time", () => {
-    const empty: LearnFields = { forWhom: "", learnerName: "", age: "", gender: "", height: "", level: "", name: "", phone: "", email: "", heard: "", notes: "", privacy: false };
-    expect(learnPayload(empty, "en", "2026-09-25")).toEqual({ error: "for_whom" });
-    const steps: [Partial<LearnFields>, string | null][] = [
-      [{ forWhom: "child" }, "learner_name"],
-      [{ learnerName: "Lina" }, "learner_age"],
-      [{ age: "6" }, "learner_gender"],
-      [{ gender: "female" }, "learner_height"],
-      [{ height: "115" }, "level"],
-      [{ level: "refresh" }, "name"],
-      [{ name: "Huda Saleh" }, "phone"],
-      [{ phone: "+966 50 123 4567" }, "email"],
-      [{ email: "huda@example.sa" }, "heard_from"],
-      [{ heard: "invited" }, "privacy"],
-      [{ privacy: true }, null],
-    ];
-    let form = empty;
-    for (const [add, next] of steps) {
-      form = { ...form, ...add };
-      const r = learnPayload(form, "en", "2026-09-25");
-      expect("error" in r ? r.error : null, JSON.stringify(add)).toBe(next);
+  it("takes 12 to 99 for the person signing up and another adult - younger signs up as a child - and 3 to 17 for a child", () => {
+    for (const base of [me, friend]) {
+      expect(learnerError({ age: "11" }, base)).toEqual({ error: "learner_age", index: 0 });
+      expect(learnerError({ age: "12" }, base)).toBeNull();
+      expect(learnerError({ age: "99" }, base)).toBeNull();
+      expect(learnerError({ age: "100" }, base)).toEqual({ error: "learner_age", index: 0 });
     }
-  });
-
-  it("takes 12 to 99 for oneself - younger signs up as a child - and 3 to 17 for a child", () => {
-    expect(error({ age: "11" })).toBe("learner_age");
-    expect(error({ age: "12" })).toBeNull();
-    expect(error({ age: "99" })).toBeNull();
-    expect(error({ age: "100" })).toBe("learner_age");
-    expect(error({ age: "2" }, kid)).toBe("learner_age");
-    expect(error({ age: "3" }, kid)).toBeNull();
-    expect(error({ age: "17" }, kid)).toBeNull();
-    expect(error({ age: "18" }, kid)).toBe("learner_age");
+    expect(learnerError({ age: "2" }, kid)?.error).toBe("learner_age");
+    expect(learnerError({ age: "3" }, kid)).toBeNull();
+    expect(learnerError({ age: "17" }, kid)).toBeNull();
+    expect(learnerError({ age: "18" }, kid)?.error).toBe("learner_age");
   });
 
   it("takes a height from 80 to 250 cm", () => {
-    for (const h of ["79", "251", "1.65", "", "abc"]) expect(error({ height: h }), h).toBe("learner_height");
-    for (const h of ["80", "250", " 170 "]) expect(error({ height: h }), h).toBeNull();
+    for (const h of ["79", "251", "1.65", "", "abc"]) expect(learnerError({ height: h })?.error, h).toBe("learner_height");
+    for (const h of ["80", "250", " 170 "]) expect(learnerError({ height: h }), h).toBeNull();
   });
 
-  it("needs a gender and a riding level from the lists", () => {
-    expect(error({ gender: "" })).toBe("learner_gender");
-    expect(error({ gender: "other" as LearnFields["gender"] })).toBe("learner_gender");
-    expect(error({ level: "" })).toBe("level");
-    expect(error({ level: "expert" as LearnFields["level"] })).toBe("level");
+  it("needs to know who each learner is, their gender and their riding so far, from the lists", () => {
+    expect(learnerError({ who: "" })?.error).toBe("learner_who");
+    expect(learnerError({ who: "parent" as LearnerFields["who"] })?.error).toBe("learner_who");
+    expect(learnerError({ gender: "" })?.error).toBe("learner_gender");
+    expect(learnerError({ gender: "other" as LearnerFields["gender"] })?.error).toBe("learner_gender");
+    expect(learnerError({ level: "" })?.error).toBe("level");
+    expect(learnerError({ level: "expert" as LearnerFields["level"] })?.error).toBe("level");
   });
 
-  it("needs a first and last name, letters and periods, each part two letters or more", () => {
+  it("takes a child's or another adult's name with the letters rule, each part two letters or more, up to 60 characters", () => {
+    for (const base of [kid, friend]) {
+      for (const n of ["", "O", "Omar 2", "Lina_S", "a".repeat(61), "Lina S"]) expect(learnerError({ name: n }, base)?.error, n).toBe("learner_name");
+      for (const n of ["عمر", "Md. Rahman", "Lina", "Kerry-Ann"]) expect(learnerError({ name: n }, base), n).toBeNull();
+    }
+  });
+
+  it("needs a first and last name for the person signing up, letters and periods, each part two letters or more", () => {
     for (const n of ["Sara", "Sara K", "Sara 2nd", "Sara_Harbi X", "S. Harbi", "  "]) expect(error({ name: n }), n).toBe("name");
     for (const n of ["Md. Rahman", "سارة الحربي", "Kerry-Ann Stander", "अमित कुमार"]) expect(error({ name: n }), n).toBeNull();
     expect(error({ name: `Sara ${"a".repeat(116)}` })).toBe("name"); // 121 characters
-  });
-
-  it("takes a child's first name alone, with the same letters rule, up to 60 characters", () => {
-    expect(error({ learnerName: "" }, kid)).toBe("learner_name");
-    expect(error({ learnerName: "O" }, kid)).toBe("learner_name");
-    expect(error({ learnerName: "Omar 2" }, kid)).toBe("learner_name");
-    expect(error({ learnerName: "عمر" }, kid)).toBeNull();
-    expect(error({ learnerName: "a".repeat(61) }, kid)).toBe("learner_name");
   });
 
   it("reads a Saudi mobile typed any usual way, and another country's with its code", () => {
@@ -124,11 +157,11 @@ describe("learnPayload", () => {
 
   it("needs the Privacy Notice box, and sends the notice's version", () => {
     expect(error({ privacy: false })).toBe("privacy");
-    expect(learnPayload(adult, "en", "")).toEqual({ error: "privacy" });
+    expect(learnPayload(form, "en", "")).toEqual({ error: "privacy" });
   });
 
   it("sends the page's language, English when it is not a two-letter code", () => {
-    const zh = learnPayload(adult, "zh", "2026-09-25"), odd = learnPayload(adult, "zh-Hans", "2026-09-25");
+    const zh = learnPayload(form, "zh", "2026-09-25"), odd = learnPayload(form, "zh-Hans", "2026-09-25");
     expect("payload" in zh && zh.payload.lang).toBe("zh");
     expect("payload" in odd && odd.payload.lang).toBe("en");
   });
