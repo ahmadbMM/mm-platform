@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emailOk, learnPayload, phoneOk, wholeNumber, type LearnFields } from "../learn";
+import { HEARD, emailOk, learnPayload, phoneOk, wholeNumber, type LearnFields } from "../learn";
 import { learnFrame } from "../learn-page";
 import { namePartsOk } from "../rpc-client";
 
@@ -9,7 +9,7 @@ import { namePartsOk } from "../rpc-client";
 
 const adult: LearnFields = {
   forWhom: "self", learnerName: "", age: "30", gender: "female", height: "165", level: "never",
-  name: "Sara Al Harbi", phone: "0551234567", email: "Sara@Example.com", notes: "", privacy: true,
+  name: "Sara Al Harbi", phone: "0551234567", email: "Sara@Example.com", heard: "instagram", notes: "", privacy: true,
 };
 const kid: LearnFields = { ...adult, forWhom: "child", learnerName: "Omar", age: "7", gender: "male", height: "120" };
 const send = (x: Partial<LearnFields>, base: LearnFields = adult) => learnPayload({ ...base, ...x }, "en", "2026-09-25");
@@ -19,11 +19,24 @@ const error = (x: Partial<LearnFields>, base: LearnFields = adult) => {
 };
 
 describe("learnPayload", () => {
+  // How they heard of us (the owner, 2026-09-28): required, and one of customers.heard_from's codes
+  // - the list learn_apply() checks (20260928230000), 'desk' being the booking desk's own.
+  it("sends how they heard of us, any of the booking app's answers, and refuses anything else", () => {
+    expect([...HEARD]).toEqual(["instagram", "tiktok", "snapchat", "x", "facebook", "youtube", "whatsapp", "google", "friend", "invited", "passed_by", "event", "hotel", "school", "work", "community", "other"]);
+    for (const h of HEARD) {
+      const r = send({ heard: h });
+      expect("payload" in r && r.payload.heard_from, h).toBe(h);
+    }
+    expect(error({ heard: "" })).toBe("heard_from");
+    expect(error({ heard: "desk" as LearnFields["heard"] })).toBe("heard_from");
+    expect(error({ heard: "radio" as LearnFields["heard"] })).toBe("heard_from");
+  });
+
   it("sends a sign-up for oneself as the database reads it", () => {
     expect(learnPayload({ ...adult, notes: "  A little nervous.  " }, "ar", "2026-09-25")).toEqual({
       payload: {
         for_whom: "self", name: "Sara Al Harbi", email: "sara@example.com", phone: "+966551234567", learner_name: "", learner_age: 30,
-        learner_gender: "female", learner_height: 165, level: "never",
+        learner_gender: "female", learner_height: 165, level: "never", heard_from: "instagram",
         notes: "A little nervous.", lang: "ar", privacy_version: "2026-09-25",
       },
     });
@@ -37,7 +50,7 @@ describe("learnPayload", () => {
   });
 
   it("asks who is learning first, then goes down the form one thing at a time", () => {
-    const empty: LearnFields = { forWhom: "", learnerName: "", age: "", gender: "", height: "", level: "", name: "", phone: "", email: "", notes: "", privacy: false };
+    const empty: LearnFields = { forWhom: "", learnerName: "", age: "", gender: "", height: "", level: "", name: "", phone: "", email: "", heard: "", notes: "", privacy: false };
     expect(learnPayload(empty, "en", "2026-09-25")).toEqual({ error: "for_whom" });
     const steps: [Partial<LearnFields>, string | null][] = [
       [{ forWhom: "child" }, "learner_name"],
@@ -48,7 +61,8 @@ describe("learnPayload", () => {
       [{ level: "refresh" }, "name"],
       [{ name: "Huda Saleh" }, "phone"],
       [{ phone: "+966 50 123 4567" }, "email"],
-      [{ email: "huda@example.sa" }, "privacy"],
+      [{ email: "huda@example.sa" }, "heard_from"],
+      [{ heard: "invited" }, "privacy"],
       [{ privacy: true }, null],
     ];
     let form = empty;

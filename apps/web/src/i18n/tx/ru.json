@@ -930,5 +930,19 @@
  "{price} per seat": "{price} за место",
  "{year} model": "Модель {year} года",
  "~{0} min": "~{0} мин",
- "Škoda": "Škoda"
+ "Škoda": "Škoda",
+ "A community ride": "Заезд сообщества",
+ "A friend or family": "Друзья или семья",
+ "An event or exhibition": "Мероприятие или выставка",
+ "Choose one": "Выберите вариант",
+ "Google search": "Поиск в Google",
+ "Hotel or tour": "Отель или тур",
+ "How did you hear about us?": "Как вы о нас узнали?",
+ "Invited by MicroMobility": "Приглашение от MicroMobility",
+ "Other": "Другое",
+ "Passed by the circuit": "Проезжал(а) мимо трассы",
+ "Please tell us how you heard about us.": "Пожалуйста, расскажите, как вы о нас узнали.",
+ "School or university": "Школа или университет",
+ "Work or my company": "Работа или моя компания",
+ "X (Twitter)": "X (Twitter)"
 }

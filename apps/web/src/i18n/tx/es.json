@@ -930,5 +930,19 @@
  "{price} per seat": "{price} por asiento",
  "{year} model": "Modelo {year}",
  "~{0} min": "~{0} min",
- "Škoda": "Škoda"
+ "Škoda": "Škoda",
+ "A community ride": "Un recorrido comunitario",
+ "A friend or family": "Un amigo o la familia",
+ "An event or exhibition": "Un evento o una exposición",
+ "Choose one": "Elige una opción",
+ "Google search": "Búsqueda en Google",
+ "Hotel or tour": "Hotel o tour",
+ "How did you hear about us?": "¿Cómo nos conociste?",
+ "Invited by MicroMobility": "Invitado por MicroMobility",
+ "Other": "Otro",
+ "Passed by the circuit": "Pasé por el circuito",
+ "Please tell us how you heard about us.": "Dinos cómo nos conociste, por favor.",
+ "School or university": "Colegio o universidad",
+ "Work or my company": "El trabajo o mi empresa",
+ "X (Twitter)": "X (Twitter)"
 }

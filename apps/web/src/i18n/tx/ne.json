@@ -930,5 +930,19 @@
  "{price} per seat": "{price} प्रति सिट",
  "{year} model": "मोडल {year}",
  "~{0} min": "~{0} मिनेट",
- "Škoda": "Škoda"
+ "Škoda": "Škoda",
+ "A community ride": "कम्युनिटी राइड",
+ "A friend or family": "साथी वा परिवार",
+ "An event or exhibition": "कुनै कार्यक्रम वा प्रदर्शनी",
+ "Choose one": "एउटा छान्नुहोस्",
+ "Google search": "Google खोज",
+ "Hotel or tour": "होटल वा टुर",
+ "How did you hear about us?": "तपाईंले हाम्रो बारेमा कसरी थाहा पाउनुभयो?",
+ "Invited by MicroMobility": "MicroMobility द्वारा निम्तो पाएर",
+ "Other": "अन्य",
+ "Passed by the circuit": "सर्किट नजिकबाट जाँदा",
+ "Please tell us how you heard about us.": "कृपया भन्नुहोस्, तपाईंले हाम्रो बारेमा कसरी थाहा पाउनुभयो।",
+ "School or university": "विद्यालय वा विश्वविद्यालय",
+ "Work or my company": "काम वा मेरो कम्पनी",
+ "X (Twitter)": "X (Twitter)"
 }

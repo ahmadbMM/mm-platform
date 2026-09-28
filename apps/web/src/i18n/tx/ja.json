@@ -930,5 +930,19 @@
  "{price} per seat": "1席あたり{price}",
  "{year} model": "{year}年モデル",
  "~{0} min": "約{0}分",
- "Škoda": "Škoda"
+ "Škoda": "Škoda",
+ "A community ride": "コミュニティライド",
+ "A friend or family": "友人・家族",
+ "An event or exhibition": "イベント・展示会",
+ "Choose one": "選択してください",
+ "Google search": "Google 検索",
+ "Hotel or tour": "ホテル・ツアー",
+ "How did you hear about us?": "私たちを知ったきっかけは？",
+ "Invited by MicroMobility": "MicroMobility からの招待",
+ "Other": "その他",
+ "Passed by the circuit": "サーキットの近くを通った",
+ "Please tell us how you heard about us.": "私たちを知ったきっかけを教えてください。",
+ "School or university": "学校・大学",
+ "Work or my company": "仕事・勤務先",
+ "X (Twitter)": "X（Twitter）"
 }

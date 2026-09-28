@@ -23,6 +23,11 @@
 .ln-input:focus { border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
 .ln-input::placeholder { color: #8a938c; }
 textarea.ln-input { resize: vertical; min-height: 84px; }
+/* How they heard of us: a native select dressed as the boxes, its arrow on the end side. */
+.ln-select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-inline-end: 40px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235b635d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 15px center; }
+[dir="rtl"] .ln-select { background-position: left 15px center; }
+.ln-select.ln-ph { color: #8a938c; }
+.ln-select option { color: #1a1919; }
 .ln-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 
 /* Who is learning: two big choices */

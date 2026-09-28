@@ -10,14 +10,20 @@ import { cleanName, nameOk, namePartsOk, normalizePhone } from "./rpc-client";
 //   - the learner: 12 to 99 signing up for themselves, 3 to 17 for a child (a child's first name
 //     is enough, 60 at most, the same letters rule); male or female; 80 to 250 cm tall;
 //   - how much riding so far (the form does not ask when suits them: staff pick the lesson's time);
+//   - how they heard of us (one of HEARD, required: the owner, 2026-09-28 - asked here and on the
+//     community form, no longer at the booking app's sign-up);
 //   - notes up to 600 characters, and the version of the Privacy Notice they confirmed.
 
 export const FOR_WHOM = ["self", "child"] as const;
 export const GENDERS = ["male", "female"] as const;
 export const LEVELS = ["never", "tried", "refresh"] as const;
+/** How they heard of us: customers.heard_from's codes (the booking app's HEARD_OPTS), which the
+ *  database checks too; 'desk' is the booking desk's own and never offered. */
+export const HEARD = ["instagram", "tiktok", "snapchat", "x", "facebook", "youtube", "whatsapp", "google", "friend", "invited", "passed_by", "event", "hotel", "school", "work", "community", "other"] as const;
 export type ForWhom = (typeof FOR_WHOM)[number];
 export type Gender = (typeof GENDERS)[number];
 export type Level = (typeof LEVELS)[number];
+export type Heard = (typeof HEARD)[number];
 
 /** The ages a learner may be: from 12 they sign up themselves, younger through a parent. */
 export const AGES: Record<ForWhom, readonly [number, number]> = { self: [12, 99], child: [3, 17] };
@@ -35,12 +41,13 @@ export type LearnFields = {
   name: string;
   phone: string;
   email: string;
+  heard: Heard | "";
   notes: string;
   privacy: boolean;
 };
 
 /** learn_apply()'s error codes for what was filled in (it also answers "throttled"). */
-export type LearnError = "for_whom" | "learner_name" | "learner_age" | "learner_gender" | "learner_height" | "level" | "name" | "phone" | "email" | "notes" | "privacy";
+export type LearnError = "for_whom" | "learner_name" | "learner_age" | "learner_gender" | "learner_height" | "level" | "name" | "phone" | "email" | "heard_from" | "notes" | "privacy";
 
 /** learn_apply()'s argument, p. */
 export type LearnPayload = {
@@ -53,6 +60,7 @@ export type LearnPayload = {
   learner_gender: Gender;
   learner_height: number;
   level: Level;
+  heard_from: Heard;
   notes: string;
   lang: string;
   privacy_version: string;
@@ -97,13 +105,14 @@ export function learnPayload(f: LearnFields, lang: string, privacyVersion: strin
   if (!phoneOk(phone)) return { error: "phone" };
   const email = f.email.trim().toLowerCase();
   if (!emailOk(email)) return { error: "email" };
+  if (!oneOf(HEARD, f.heard)) return { error: "heard_from" };
   const notes = f.notes.trim();
   if (chars(notes) > NOTES_MAX) return { error: "notes" };
   if (!f.privacy || !/^\d{4}-\d{2}-\d{2}$/.test(privacyVersion)) return { error: "privacy" };
   return {
     payload: {
       for_whom: f.forWhom, name, email, phone, learner_name: learner, learner_age: age, learner_gender: f.gender, learner_height: height,
-      level: f.level, notes, lang: /^[a-z]{2}$/.test(lang) ? lang : "en", privacy_version: privacyVersion,
+      level: f.level, heard_from: f.heard, notes, lang: /^[a-z]{2}$/.test(lang) ? lang : "en", privacy_version: privacyVersion,
     },
   };
 }

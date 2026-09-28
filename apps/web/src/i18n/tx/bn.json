@@ -930,5 +930,19 @@
  "{price} per seat": "প্রতি আসন {price}",
  "{year} model": "মডেল {year}",
  "~{0} min": "~{0} মিনিট",
- "Škoda": "Škoda"
+ "Škoda": "Škoda",
+ "A community ride": "কমিউনিটি রাইড",
+ "A friend or family": "বন্ধু বা পরিবার",
+ "An event or exhibition": "কোনো ইভেন্ট বা প্রদর্শনী",
+ "Choose one": "একটি বেছে নিন",
+ "Google search": "Google সার্চ",
+ "Hotel or tour": "হোটেল বা ট্যুর",
+ "How did you hear about us?": "আপনি আমাদের সম্পর্কে কীভাবে জানলেন?",
+ "Invited by MicroMobility": "MicroMobility-এর আমন্ত্রণে",
+ "Other": "অন্যান্য",
+ "Passed by the circuit": "সার্কিটের পাশ দিয়ে যাওয়ার সময়",
+ "Please tell us how you heard about us.": "অনুগ্রহ করে বলুন আপনি আমাদের সম্পর্কে কীভাবে জানলেন।",
+ "School or university": "স্কুল বা বিশ্ববিদ্যালয়",
+ "Work or my company": "কাজ বা আমার কোম্পানি",
+ "X (Twitter)": "X (Twitter)"
 }

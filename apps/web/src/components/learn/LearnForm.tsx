@@ -2,14 +2,15 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { rpc } from "@/lib/rpc-client";
-import { AGES, HEIGHT, LEVELS, learnPayload, type ForWhom, type Gender, type LearnFields } from "@/lib/learn";
+import { AGES, HEARD, HEIGHT, LEVELS, learnPayload, type ForWhom, type Gender, type Heard, type LearnFields } from "@/lib/learn";
 import { useLocalize } from "@/i18n/TxProvider";
 import NoticeLink from "@/components/privacy/NoticeLink";
 import { T } from "./LearnForm.text";
 
 // The Learn to ride sign-up card (/experiences/learn, right column). Who is learning - the visitor
 // or their child - with the learner's age, gender and height (the height picks the bike's size),
-// how much they have ridden, and the details of the person signing up (a child's parent). It goes
+// how much they have ridden, and the details of the person signing up (a child's parent) with how they
+// heard of us (the owner, 2026-09-28: asked here and on the community form, not at the app's sign-up). It goes
 // to the staff page through learn_apply(); it does not ask when suits them - the team picks the
 // lesson's date and time and sends it and, for someone new, sets up their booking app account. Nothing
 // is booked or charged here. The form checks what the database checks (lib/learn.ts) and shows one
@@ -25,10 +26,10 @@ export type LearnFormProps = {
   notice: string;
 };
 
-// What a new learner starts from: "Sign up someone else" keeps the contact details and the
-// Privacy Notice box, and clears the rest.
+// What a new learner starts from: "Sign up someone else" keeps the contact details, how they heard
+// of us and the Privacy Notice box, and clears the rest.
 const LEARNER = { forWhom: "", learnerName: "", age: "", gender: "", height: "", level: "", notes: "" } as const;
-const BLANK: LearnFields = { ...LEARNER, name: "", phone: "", email: "", privacy: false };
+const BLANK: LearnFields = { ...LEARNER, name: "", phone: "", email: "", heard: "", privacy: false };
 // Where the Privacy Notice's name goes in the translated sentence (LearnForm.text.ts, privacy).
 const SLOT = "\u0000";
 // A range as the box's hint, kept left to right in Arabic and Urdu too ("3–17", never "17–3").
@@ -135,6 +136,13 @@ export default function LearnForm(p: LearnFormProps) {
         <label className="ln-field">
           <span>{t.email}</span>
           <input className="ln-input" value={f.email} onChange={(e) => set("email", e.target.value)} type="email" autoComplete="email" dir="ltr" maxLength={254} />
+        </label>
+        <label className="ln-field">
+          <span>{t.heard}</span>
+          <select className={`ln-input ln-select${f.heard ? "" : " ln-ph"}`} value={f.heard} onChange={(e) => set("heard", e.target.value as Heard | "")}>
+            <option value="">{t.heardPick}</option>
+            {HEARD.map((h) => <option key={h} value={h}>{t.heardOpts[h]}</option>)}
+          </select>
         </label>
         <label className="ln-field">
           <span>{t.notes}</span>
