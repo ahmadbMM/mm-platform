@@ -69,7 +69,7 @@
     $$("[data-site]").forEach(function (el) { el.textContent = site(el.getAttribute("data-site")); });
     $$("[data-site-aria]").forEach(function (el) { el.setAttribute("aria-label", site(el.getAttribute("data-site-aria"))); });
     $("#ack-lbl").innerHTML = esc(site("privacyAckOpt")).replace("{0}", '<button type="button" class="pv-link" id="pv-open">' + esc(site("privacyNotice")) + "</button>") + ' <span class="req" aria-hidden="true">*</span>';
-    buildNationalities(); buildDob(); buildCc();
+    buildNationalities(); buildDob(); buildCc(); buildHeard();
     $$(".field").forEach(function (f) { paintField(f.id); });
     if (!$("#pv").hidden) renderNotice();
     if (sent) showSuccess(sent);
@@ -102,6 +102,15 @@
     sel.classList.toggle("ph", !sel.value);
   }
   $("#nat").addEventListener("change", function () { this.classList.toggle("ph", !this.value); clearMsg("f-nat"); });
+
+  /* ── How they heard of us: the booking site's answers (customers.heard_from's codes), in its words ── */
+  function buildHeard() {
+    var sel = $("#heard"), cur = sel.value;
+    sel.innerHTML = '<option value="">' + esc(tr("Choose one")) + "</option>" +
+      SH.HEARD_OPTS.map(function (c) { return '<option value="' + c + '"' + (c === cur ? " selected" : "") + ">" + esc(site("heard_" + c)) + "</option>"; }).join("");
+    sel.classList.toggle("ph", !sel.value);
+  }
+  $("#heard").addEventListener("change", function () { this.classList.toggle("ph", !this.value); clearMsg("f-heard"); });
 
   /* ── Date of birth: day / month / year, the site's rule (never in the future, nobody five
      or younger), in Riyadh's calendar day. ───────────────────────────────────────────── */
@@ -422,11 +431,12 @@
       var prof = clean($("#prof").value);
       if (prof.length < 2 || prof.length > 80 || !/\p{L}/u.test(prof) || /[<>"`{}]/.test(prof)) hard["f-prof"] = ["Enter your profession"];
       if (!bikeType) hard["f-type"] = ["Choose a bike type"];
+      if (!$("#heard").value) hard["f-heard"] = ["Please tell us how you heard about us."];
       if (!ack) hard["f-ack"] = ["privacyAckRequired", null, true];
     }
     return { hard: hard, soft: soft };
   }
-  var STEP_FIELDS = { 1: ["f-name", "f-birth", "f-gender", "f-nat", "f-height"], 2: ["f-phone", "f-email", "f-ig", "f-li"], 3: ["f-prof", "f-type", "f-ack"] };
+  var STEP_FIELDS = { 1: ["f-name", "f-birth", "f-gender", "f-nat", "f-height"], 2: ["f-phone", "f-email", "f-ig", "f-li"], 3: ["f-prof", "f-type", "f-heard", "f-ack"] };
   // Shows the step's problems; true when the rider may go on.
   function passStep(n) {
     var r = check(n), hk = Object.keys(r.hard), sk = Object.keys(r.soft);
@@ -447,7 +457,7 @@
   $("#back").addEventListener("click", function () { hideBanner(); goStep(step - 1); });
 
   /* ── Submit ─────────────────────────────────────────────────────────────── */
-  var FIELD_OF = { name: ["f-name", 1, "Enter your first and last name"], birth_date: ["f-birth", 1, "Choose your date of birth"], gender: ["f-gender", 1, "Choose your gender"], nationality: ["f-nat", 1, "Choose your nationality"], height: ["f-height", 1, "Enter your height in cm (100 to 250)"], phone: ["f-phone", 2, "Enter a valid mobile number"], email: ["f-email", 2, "Enter a valid email address"], instagram: ["f-ig", 2, "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", 2, "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", 3, "Enter your profession"], bike_type: ["f-type", 3, "Choose a bike type"], privacy: ["f-ack", 3, "privacyAckRequired"] };
+  var FIELD_OF = { name: ["f-name", 1, "Enter your first and last name"], birth_date: ["f-birth", 1, "Choose your date of birth"], gender: ["f-gender", 1, "Choose your gender"], nationality: ["f-nat", 1, "Choose your nationality"], height: ["f-height", 1, "Enter your height in cm (100 to 250)"], phone: ["f-phone", 2, "Enter a valid mobile number"], email: ["f-email", 2, "Enter a valid email address"], instagram: ["f-ig", 2, "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", 2, "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", 3, "Enter your profession"], bike_type: ["f-type", 3, "Choose a bike type"], heard_from: ["f-heard", 3, "Please tell us how you heard about us."], privacy: ["f-ack", 3, "privacyAckRequired"] };
   var sent = null, busy = false;
   function setLoading(on) { busy = on; $("#submit").classList.toggle("loading", on); $("#submit").disabled = on; }
   $("#form").addEventListener("submit", async function (e) {
@@ -464,7 +474,7 @@
       name: titleCase($("#name").value), email: clean($("#email").value).toLowerCase(), phone: e164(),
       height: parseInt(toAscii($("#height").value), 10), birth_date: birthValue(), gender: gender,
       nationality: $("#nat").value, bike_type: bikeType, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
-      profession: clean($("#prof").value), lang: lang, privacy_version: SH.PRIVACY_VERSION, ride_news: news
+      profession: clean($("#prof").value), heard_from: $("#heard").value, lang: lang, privacy_version: SH.PRIVACY_VERSION, ride_news: news
     };
     setLoading(true);
     var res = null;

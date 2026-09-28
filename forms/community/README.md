@@ -6,7 +6,9 @@ It moved here from its own repo and Cloudflare Worker (`~/code/community-worker`
 `mm-community-register`) on 2026-09-25; it is due to be rebuilt as a real website page later.
 
 Riders fill in name, date of birth, gender, nationality, height, mobile, email, Instagram,
-LinkedIn, profession and bike type (Road, Hybrid or Mountain), confirm the Privacy Notice (required) and
+LinkedIn, profession, bike type (Road, Hybrid or Mountain) and how they heard of us (the booking
+site's answers and their labels, synced; since 2026-09-28 this form and the learn-to-ride form ask it,
+the booking app's sign-up no longer does), confirm the Privacy Notice (required) and
 may ask for ride news (optional). Every field is checked the way the booking site's staff
 "Looks off" check reads accounts (misspelt email providers, throwaway domains, phone numbers
 against Google's libphonenumber mobile rules, initials-only names, and so on), then sent to

@@ -72,6 +72,8 @@ var FORM_T = {
   "Paste the link to your own profile (linkedin.com/in/…)": "الصق رابط ملفك الشخصي الخاص بك (linkedin.com/in/…)",
   "Enter your profession": "أدخل مهنتك",
   "Choose a bike type": "اختر نوع الدراجة",
+  "Choose one": "اختر واحداً",
+  "Please tell us how you heard about us.": "أخبرنا من فضلك كيف عرفت عنا.",
   "Could not reach the server. Please try again.": "تعذّر الوصول إلى الخادم. يُرجى المحاولة مرة أخرى.",
   "Too many applications from this network. Please try again in a few minutes.": "وصلت طلبات كثيرة من هذه الشبكة. يُرجى المحاولة مرة أخرى بعد بضع دقائق."
  },
@@ -146,6 +148,8 @@ var FORM_T = {
   "Paste the link to your own profile (linkedin.com/in/…)": "Collez le lien vers votre propre profil (linkedin.com/in/…)",
   "Enter your profession": "Saisissez votre profession",
   "Choose a bike type": "Choisissez un type de vélo",
+  "Choose one": "Choisissez",
+  "Please tell us how you heard about us.": "Dites-nous comment vous nous avez connus.",
   "Could not reach the server. Please try again.": "Impossible de joindre le serveur. Veuillez réessayer.",
   "Too many applications from this network. Please try again in a few minutes.": "Trop de demandes depuis ce réseau. Réessayez dans quelques minutes."
  },
@@ -220,6 +224,8 @@ var FORM_T = {
   "Paste the link to your own profile (linkedin.com/in/…)": "Pega el enlace a tu propio perfil (linkedin.com/in/…)",
   "Enter your profession": "Introduce tu profesión",
   "Choose a bike type": "Elige un tipo de bici",
+  "Choose one": "Elige una opción",
+  "Please tell us how you heard about us.": "Dinos cómo nos conociste, por favor.",
   "Could not reach the server. Please try again.": "No se pudo conectar con el servidor. Inténtalo de nuevo.",
   "Too many applications from this network. Please try again in a few minutes.": "Demasiadas solicitudes desde esta red. Inténtalo de nuevo en unos minutos."
  },
@@ -294,6 +300,8 @@ var FORM_T = {
   "Paste the link to your own profile (linkedin.com/in/…)": "Cole o link do seu próprio perfil (linkedin.com/in/…)",
   "Enter your profession": "Informe sua profissão",
   "Choose a bike type": "Escolha um tipo de bicicleta",
+  "Choose one": "Escolha uma opção",
+  "Please tell us how you heard about us.": "Conte-nos como você nos conheceu.",
   "Could not reach the server. Please try again.": "Não foi possível conectar ao servidor. Tente novamente.",
   "Too many applications from this network. Please try again in a few minutes.": "Muitas solicitações a partir desta rede. Tente novamente em alguns minutos."
  },
@@ -368,6 +376,8 @@ var FORM_T = {
   "Paste the link to your own profile (linkedin.com/in/…)": "اپنی ذاتی پروفائل کا لنک پیسٹ کریں (linkedin.com/in/…)",
   "Enter your profession": "اپنا پیشہ درج کریں",
   "Choose a bike type": "سائیکل کی قسم منتخب کریں",
+  "Choose one": "ایک منتخب کریں",
+  "Please tell us how you heard about us.": "براہ کرم بتائیں آپ کو ہمارے بارے میں کیسے پتا چلا۔",
   "Could not reach the server. Please try again.": "سرور تک رسائی نہیں ہو سکی۔ براہِ کرم دوبارہ کوشش کریں۔",
   "Too many applications from this network. Please try again in a few minutes.": "اس نیٹ ورک سے بہت زیادہ درخواستیں آئی ہیں۔ براہِ کرم چند منٹ بعد دوبارہ کوشش کریں۔"
  },
@@ -442,6 +452,8 @@ var FORM_T = {
   "Paste the link to your own profile (linkedin.com/in/…)": "अपनी खुद की प्रोफ़ाइल का लिंक पेस्ट करें (linkedin.com/in/…)",
   "Enter your profession": "अपना पेशा दर्ज करें",
   "Choose a bike type": "साइकिल का प्रकार चुनें",
+  "Choose one": "एक चुनें",
+  "Please tell us how you heard about us.": "कृपया बताएँ कि आपको हमारे बारे में कैसे पता चला।",
   "Could not reach the server. Please try again.": "सर्वर तक नहीं पहुँच सके। कृपया फिर से कोशिश करें।",
   "Too many applications from this network. Please try again in a few minutes.": "इस नेटवर्क से बहुत सारे आवेदन आए हैं। कृपया कुछ मिनट बाद फिर से कोशिश करें।"
  },
@@ -516,6 +528,8 @@ var FORM_T = {
   "Paste the link to your own profile (linkedin.com/in/…)": "I-paste ang link sa sarili mong profile (linkedin.com/in/…)",
   "Enter your profession": "Ilagay ang iyong propesyon",
   "Choose a bike type": "Pumili ng uri ng bisikleta",
+  "Choose one": "Pumili ng isa",
+  "Please tell us how you heard about us.": "Pakisabi kung paano mo kami nalaman.",
   "Could not reach the server. Please try again.": "Hindi maabot ang server. Pakisubukan ulit.",
   "Too many applications from this network. Please try again in a few minutes.": "Masyadong maraming aplikasyon mula sa network na ito. Pakisubukan ulit pagkalipas ng ilang minuto."
  },
@@ -590,6 +604,8 @@ var FORM_T = {
   "Paste the link to your own profile (linkedin.com/in/…)": "आफ्नै प्रोफाइलको लिंक पेस्ट गर्नुहोस् (linkedin.com/in/…)",
   "Enter your profession": "आफ्नो पेशा लेख्नुहोस्",
   "Choose a bike type": "साइकलको प्रकार छान्नुहोस्",
+  "Choose one": "एउटा छान्नुहोस्",
+  "Please tell us how you heard about us.": "कृपया भन्नुहोस्, तपाईंले हाम्रो बारेमा कसरी थाहा पाउनुभयो।",
   "Could not reach the server. Please try again.": "सर्भरमा पुग्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
   "Too many applications from this network. Please try again in a few minutes.": "यो नेटवर्कबाट धेरै आवेदन आए। कृपया केही मिनेटपछि फेरि प्रयास गर्नुहोस्।"
  },
@@ -664,6 +680,8 @@ var FORM_T = {
   "Paste the link to your own profile (linkedin.com/in/…)": "নিজের প্রোফাইলের লিংক পেস্ট করুন (linkedin.com/in/…)",
   "Enter your profession": "আপনার পেশা লিখুন",
   "Choose a bike type": "সাইকেলের ধরন বেছে নিন",
+  "Choose one": "একটি বেছে নিন",
+  "Please tell us how you heard about us.": "অনুগ্রহ করে বলুন আপনি আমাদের সম্পর্কে কীভাবে জানলেন।",
   "Could not reach the server. Please try again.": "সার্ভারে পৌঁছানো গেল না। অনুগ্রহ করে আবার চেষ্টা করুন।",
   "Too many applications from this network. Please try again in a few minutes.": "এই নেটওয়ার্ক থেকে অনেক বেশি আবেদন এসেছে। অনুগ্রহ করে কয়েক মিনিট পরে আবার চেষ্টা করুন।"
  }

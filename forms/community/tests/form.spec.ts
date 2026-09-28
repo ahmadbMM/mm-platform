@@ -43,8 +43,11 @@ test('a complete application: the payload is clean and the rider is told we will
   await page.fill('#prof', 'Architect');
   await page.click('#types .tile[data-v="Road"]');
   await page.click('#submit');
+  await expect(page.locator('#f-heard .err')).toHaveText('Please tell us how you heard about us.');
   await expect(page.locator('#f-ack .err')).toHaveText('Please confirm you’ve read the Privacy Notice.');
   expect(sent.length).toBe(0);
+  await page.selectOption('#heard', 'instagram');
+  await expect(page.locator('#f-heard .err')).toHaveText('');
   await page.click('#ack .tick-box');
   await page.click('#news .tick-box');
   await page.click('#submit');
@@ -53,7 +56,7 @@ test('a complete application: the payload is clean and the rider is told we will
   expect(sent).toEqual([{ p: {
     name: 'Karim Mansour', email: 'karim.mansour@gmail.com', phone: '+966552468013', height: 178, birth_date: '1994-03-12',
     gender: 'male', nationality: 'Egypt', bike_type: 'Road', instagram: 'karim.rides', linkedin: 'karim-mansour-arch',
-    profession: 'Architect', lang: 'en', privacy_version: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), ride_news: true,
+    profession: 'Architect', heard_from: 'instagram', lang: 'en', privacy_version: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), ride_news: true,
   } }]);
   expect(errs).toEqual([]);
 });
@@ -68,6 +71,7 @@ test('Mountain is a bike type; the name and phone fields carry no hints', async 
   await expect(page.locator('#types .tile')).toHaveText(['Road', 'Hybrid', 'Mountain']);
   await page.fill('#prof', 'Architect');
   await page.click('#types .tile[data-v="Mountain"]');
+  await page.selectOption('#heard', 'friend');
   await page.click('#ack .tick-box');
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
@@ -192,6 +196,7 @@ test('Instagram and LinkedIn may be left empty, and nothing on the page says so'
   await expect(page.locator('#f-li .err')).toHaveText('');
   await page.fill('#prof', 'Architect');
   await page.click('#types .tile[data-v="Road"]');
+  await page.selectOption('#heard', 'invited');
   await page.click('#ack .tick-box');
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
@@ -217,11 +222,40 @@ test('a server answer about a field goes back to that field', async ({ page }) =
   await page.unroute('**/rest/v1/rpc/community_apply');
   await page.route('**/rest/v1/rpc/community_apply', (r) => r.fulfill(json({ ok: false, error: 'email' })));
   await stepOne(page); await stepTwo(page);
-  await page.fill('#prof', 'Architect'); await page.click('#types .tile[data-v="Hybrid"]'); await page.click('#ack .tick-box');
+  await page.fill('#prof', 'Architect'); await page.click('#types .tile[data-v="Hybrid"]'); await page.selectOption('#heard', 'google'); await page.click('#ack .tick-box');
   await page.click('#submit');
   await expect(page.locator('fieldset.step[data-step="2"]')).toBeVisible();
   await expect(page.locator('#f-email .err')).toHaveText('Enter a valid email address');
   expect(sent.length).toBe(0);
+});
+
+// "How did you hear about us?" (the owner, 2026-09-28: asked here and on the learn-to-ride form, no
+// longer at the booking app's sign-up): the booking site's answers, in its words, and a code the
+// server does not take goes back to the field.
+test('how they heard of us: every answer the booking site knows, Invited among them, in the page language', async ({ page }) => {
+  const { errs } = await open(page);
+  await stepOne(page); await stepTwo(page); // the question is on the last step
+  const opts = page.locator('#heard option');
+  expect(await opts.evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value))).toEqual(['', 'instagram', 'tiktok', 'snapchat', 'x', 'facebook', 'youtube', 'whatsapp', 'google', 'friend', 'invited', 'passed_by', 'event', 'hotel', 'school', 'work', 'community', 'other']);
+  await expect(page.locator('#f-heard label')).toHaveText('How did you hear about us?');
+  await expect(page.locator('#heard option[value=""]')).toHaveText('Choose one');
+  await expect(page.locator('#heard option[value="invited"]')).toHaveText('Invited by MicroMobility');
+  await page.selectOption('#heard', 'passed_by');
+  await page.selectOption('#lang', 'ar');
+  await expect(page.locator('#f-heard label')).toHaveText('كيف عرفت عنا؟');
+  await expect(page.locator('#heard')).toHaveValue('passed_by'); // the answer survives the language change
+  await expect(page.locator('#heard option[value="passed_by"]')).toHaveText('مررت بالحلبة');
+  expect(errs).toEqual([]);
+});
+
+test('a server answer about how they heard of us goes back to that field', async ({ page }) => {
+  await open(page);
+  await page.unroute('**/rest/v1/rpc/community_apply');
+  await page.route('**/rest/v1/rpc/community_apply', (r) => r.fulfill(json({ ok: false, error: 'heard_from' })));
+  await stepOne(page); await stepTwo(page);
+  await page.fill('#prof', 'Architect'); await page.click('#types .tile[data-v="Road"]'); await page.selectOption('#heard', 'other'); await page.click('#ack .tick-box');
+  await page.click('#submit');
+  await expect(page.locator('#f-heard .err')).toHaveText('Please tell us how you heard about us.');
 });
 
 for (const lang of ['ar', 'ur', 'fr', 'es', 'pt', 'hi', 'ne', 'bn', 'tl']) {
