@@ -1,0 +1,36 @@
+/* The Learn to ride question (LearnTeaser.tsx): a dark band with the site's green, on Home right
+   above the Experiences & business cards (their width, their radius, their gap) and on Experiences
+   between the booking steps and Good to know. */
+.ln-tz { position: relative; overflow: hidden; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 22px 40px;
+  border-radius: 30px; padding: clamp(28px, 4vw, 52px); color: #fbf9f4; background-color: #0d100d;
+  background-image: radial-gradient(90% 140% at 100% 0%, rgba(3, 255, 137, .16), rgba(3, 255, 137, 0) 60%), radial-gradient(60% 90% at 0% 100%, rgba(7, 122, 75, .35), rgba(7, 122, 75, 0) 70%); }
+[dir="rtl"] .ln-tz { background-image: radial-gradient(90% 140% at 0% 0%, rgba(3, 255, 137, .16), rgba(3, 255, 137, 0) 60%), radial-gradient(60% 90% at 100% 100%, rgba(7, 122, 75, .35), rgba(7, 122, 75, 0) 70%); }
+.ln-tz-eyebrow { color: #03ff89; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 12px; }
+.mm-site .ln-tz h2 { font-size: clamp(28px, 3.4vw, 48px); line-height: 1; letter-spacing: -1.6px; margin: 0 0 12px; max-width: 18ch; text-wrap: balance; }
+.ln-tz-text { color: #cfd6cf; font-size: 16px; line-height: 1.6; margin: 0; max-width: 540px; text-wrap: pretty; }
+.mm-site .ln-tz-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 28px; border-radius: 999px; background: #077a4b; color: #fbf9f4;
+  font-weight: 700; font-size: 15px; white-space: nowrap; transition: background .2s ease; }
+.mm-site .ln-tz-btn:hover { background: #06603b; }
+.ln-tz-btn span { display: inline-block; transition: transform .3s ease; }
+.ln-tz-btn:hover span { transform: translateX(5px); }
+[dir="rtl"] .ln-tz-btn:hover span { transform: translateX(-5px); }
+.ln-tz-btn:focus-visible { outline: 3px solid #03ff89; outline-offset: 3px; }
+html:is([lang="ar"], [lang="ur"]) .ln-tz-eyebrow { letter-spacing: 0; font-size: 13px; }
+
+.ln-tz-home { margin: 0 6vw 20px; }
+.ln-tz-experiences { margin: 0 0 64px; border-radius: 22px; }
+
+@media (max-width: 767px) {
+  .ln-tz { grid-template-columns: minmax(0, 1fr); align-items: start; border-radius: 22px; padding: 28px 22px; }
+  .mm-site .ln-tz h2 { font-size: 28px; letter-spacing: -1px; }
+  .ln-tz-text { font-size: 15px; }
+  .mm-site .ln-tz-btn { width: 100%; white-space: normal; text-align: center; }
+  .ln-tz-experiences { margin-bottom: 48px; }
+}
+/* On a phone Home leaves the Experiences & business cards out: the question stands on its own there. */
+@media (max-width: 760px) {
+  .ln-tz-home { margin: 0 16px 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ln-tz-btn span { transition: none; }
+}

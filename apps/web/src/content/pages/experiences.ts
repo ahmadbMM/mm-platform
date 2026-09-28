@@ -126,5 +126,30 @@ export const experiencesSchema = {
         txt("directions", 30, "Button: directions", "الزر: الاتجاهات", "Directions", "الاتجاهات"),
       ],
     },
+    {
+      // Learn to ride (owner, 2026-09-28): a sign-up for lessons at /experiences/learn, received by
+      // the staff page through learn_apply(); the team contacts each person with a lesson time. The
+      // question (the teaser* fields) also sits on Home and on this page. The sign-up belongs to
+      // Experiences: its address is under /experiences, so switching Experiences off (Website >
+      // Pages) closes it too, and `on` closes just the lessons.
+      id: "learn",
+      label: bi("Learn to ride", "تعلّم ركوب الدراجة"),
+      hint: bi("The lessons sign-up at micromobility.sa/experiences/learn. Its question (the first four texts) also shows on Home and on the Experiences page.", "صفحة التسجيل في الدروس على micromobility.sa/experiences/learn. يظهر سؤالها (النصوص الأربعة الأولى) أيضاً في الصفحة الرئيسية وصفحة التجارب."),
+      fields: [
+        { id: "on", type: "toggle", label: bi("Offer lessons", "إتاحة الدروس"), hint: bi("Off hides the question on Home and Experiences and closes the sign-up page.", "الإيقاف يخفي السؤال من الصفحة الرئيسية وصفحة التجارب ويغلق صفحة التسجيل."), def: true },
+        txt("teaserEyebrow", 40, "Question: small label", "السؤال: العبارة الصغيرة", "Learn to ride", "تعلّم ركوب الدراجة"),
+        txt("teaserTitle", 70, "Question: title", "السؤال: العنوان", "Never learned to ride? We'll teach you.", "لم تتعلّم ركوب الدراجة بعد؟ سنعلّمك."),
+        long("teaserText", 200, "Question: text", "السؤال: النص", "Kids and adults welcome. Sign up, and we'll contact you with your lesson's date and time.", "للصغار والكبار. سجّل، وسنتواصل معك بموعد درسك ووقته."),
+        txt("teaserBtn", 30, "Question: button", "السؤال: الزر", "Sign up for a lesson", "سجّل في درس"),
+        txt("eyebrow", 40, "Sign-up page: small label", "صفحة التسجيل: العبارة الصغيرة", "Learn to ride", "تعلّم ركوب الدراجة"),
+        txt("title", 60, "Sign-up page: title", "صفحة التسجيل: العنوان", "Learn to ride with us.", "تعلّم ركوب الدراجة معنا."),
+        long("text", 300, "Sign-up page: text", "صفحة التسجيل: النص", "First time on a bike, or never quite got the hang of it? We'll teach you step by step. Tell us who is learning and when suits you, and we'll get back to you with a lesson time.", "أول مرة تركب فيها دراجة، أو لم تتقن الركوب من قبل؟ سنعلّمك خطوة بخطوة. أخبرنا مَن سيتعلّم وما الوقت المناسب، وسنعود إليك بموعد الدرس."),
+        { id: "image", type: "image", label: bi("Sign-up page: photo", "صفحة التسجيل: الصورة"), def: "/site/experiences/hero.jpg" },
+        txt("formTitle", 50, "Form: title", "النموذج: العنوان", "Sign up", "سجّل الآن"),
+        long("formSub", 200, "Form: text under the title", "النموذج: النص تحت العنوان", "It takes a minute. We'll contact you with your lesson's date and time.", "لن يستغرق سوى دقيقة. سنتواصل معك بموعد درسك ووقته."),
+        txt("doneTitle", 50, "After sending: title", "بعد الإرسال: العنوان", "You're signed up!", "تم تسجيلك!"),
+        long("doneText", 240, "After sending: text", "بعد الإرسال: النص", "Thank you. We'll contact you soon with your lesson's date and time.", "شكراً لك. سنتواصل معك قريباً بموعد درسك ووقته."),
+      ],
+    },
   ],
 } as const satisfies PageSchema;

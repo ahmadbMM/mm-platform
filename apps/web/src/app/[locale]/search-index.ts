@@ -3,6 +3,7 @@
 import { journalState } from "@/components/journal/journal-data";
 import { aboutSchema } from "@/content/pages/about";
 import { clubSchema } from "@/content/pages/club";
+import { experiencesSchema } from "@/content/pages/experiences";
 import { HELP_TOPICS, helpSchema } from "@/content/pages/help";
 import { siteSchema } from "@/content/pages/site";
 import { termsSchema } from "@/content/pages/terms";
@@ -12,9 +13,15 @@ import { pageState } from "@/lib/page-state";
 
 // What the header's search looks through besides the pages' names (components/site/SiteSearch.tsx):
 // the Help answers, the About and Club questions, the Journal's articles and the Terms' clauses,
-// in the visitor's language, from pages the visitor can open. A server action, so it is read with
-// the pages' own dictionaries; kept a minute per language, as staff edits are.
-export type SearchItem = { title: string; text: string; href: string };
+// in the visitor's language, from pages the visitor can open, and the Learn to ride sign-up (a page
+// of Experiences' own, with no place in the menus). A server action, so it is read with the pages'
+// own dictionaries; kept a minute per language, as staff edits are.
+/** `words`: more words it is found by, never shown. */
+export type SearchItem = { title: string; text: string; href: string; words?: string };
+
+// What someone looking for lessons might type, in English and Arabic (with and without the shadda).
+const LEARN_WORDS = "learn learning lesson lessons beginner beginners teach teaching training first time balance kids children adults "
+  + "تعلم تعلّم تعليم درس دروس مبتدئ مبتدئين تدريب أطفال الكبار";
 
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -41,6 +48,10 @@ export async function searchIndex(locale: string): Promise<SearchItem[]> {
     qa(list(resolvePage(aboutSchema, content, L).faq.items), "/about", { hours });
   }
   if (on("club")) qa(list(resolvePage(clubSchema, content, L).faq.items), "/club");
+  if (on("experiences")) {
+    const l = resolvePage(experiencesSchema, content, L).learn;
+    if (l.on) items.push({ title: l.eyebrow || l.title, text: l.teaserText, href: "/experiences/learn", words: LEARN_WORDS });
+  }
   if (on("journal")) {
     const { posts } = await journalState(L);
     for (const p of posts) items.push({ title: p.title, text: p.excerpt, href: `/journal/${p.slug}` });

@@ -13,6 +13,7 @@ import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSe
 import { routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
+import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
 import { fmtClock, fmtDayDate } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
@@ -99,6 +100,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   };
 
   const good = list(c.good.items).filter((g) => S(g.title));
+  const learn = learnTeaser(c.learn); // Learn to ride: the lessons sign-up, while staff offer lessons
   const directions = S(site.contact.jccHref);
   const whatsapp = S(site.social.whatsapp);
 
@@ -119,6 +121,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
             <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={localHref("/club", locale)} text={text}
               prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? (p.type === "Any" && anyTop > p.price ? `${sar(p.price)} – ${sar(anyTop)}` : sar(p.price)) : S(d.free) }))} />
           </section>
+
+          {learn && <LearnTeaser locale={locale} t={learn} place="experiences" />}
 
           {good.length > 0 && (
             <section className="xp-sec" aria-labelledby="xp-good-h">

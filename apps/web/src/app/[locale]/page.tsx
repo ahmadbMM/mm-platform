@@ -6,12 +6,14 @@ import ComingSoon from "@/components/ComingSoon";
 import HomePage from "@/components/home/HomePage";
 import JsonLd from "@/components/site/JsonLd";
 import { companyData } from "@/lib/structured-data";
+import { experiencesSchema } from "@/content/pages/experiences";
 import { homeSchema } from "@/content/pages/home";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { PREVIEW_COOKIE, isStaffToken } from "@/lib/preview";
 import { hiddenPages, isComingSoon, loadSiteContent, siteCanOpen, siteText } from "@/lib/site";
 import { serverL } from "@/i18n/dicts";
+import { learnTeaser } from "@/components/learn/LearnTeaser";
 
 // micromobility.sa. While the site is closed (Coming Soon on in the staff page, or Home not
 // released yet) visitors get the Coming Soon screen and staff previewing get the real Home.
@@ -60,10 +62,14 @@ export default async function Page({ params }: { params: Promise<{ locale: strin
   }
   const L = asLocale(locale);
   const site = resolvePage(siteSchema, s.content, L);
+  const hidden = s.previewing ? [] : hiddenPages(s.content);
+  // The Learn to ride question, from the Experiences page's content: only while staff offer
+  // lessons and Experiences is open - the sign-up it leads to lives under /experiences.
+  const learn = hidden.includes("experiences") ? null : learnTeaser(resolvePage(experiencesSchema, s.content, L).learn);
   return (
     <>
       <JsonLd data={companyData(site as Record<string, Record<string, unknown>>, locale)} />
-      <HomePage locale={locale} home={resolvePage(homeSchema, s.content, L)} site={site} preview={s.previewing} hidden={s.previewing ? [] : hiddenPages(s.content)} />
+      <HomePage locale={locale} home={resolvePage(homeSchema, s.content, L)} site={site} preview={s.previewing} hidden={hidden} learn={learn} />
     </>
   );
 }

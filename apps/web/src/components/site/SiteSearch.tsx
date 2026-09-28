@@ -63,7 +63,7 @@ export default function SiteSearch({ locale, hidden, onClose }: { locale: string
   const pages = [...NAV_LINKS, ...EXTRA].filter((p) => !hidden.includes(p.key));
   const needle = q.trim().toLowerCase();
   const found = needle ? pages.filter((p) => `${p.en} ${p.ar} ${tx(p.en, p.ar)} ${WORDS[p.key] ?? ""}`.toLowerCase().includes(needle)) : pages;
-  const answers = needle.length > 1 ? items.filter((x) => `${x.title} ${x.text}`.toLowerCase().includes(needle)).slice(0, MAX_ITEMS) : [];
+  const answers = needle.length > 1 ? items.filter((x) => `${x.title} ${x.text} ${x.words ?? ""}`.toLowerCase().includes(needle)).slice(0, MAX_ITEMS) : [];
   return (
     <div className="mm-search" role="dialog" aria-modal="true" aria-label={tx("Search", "بحث")} dir={info.dir}>
       <div className="mm-search-box">

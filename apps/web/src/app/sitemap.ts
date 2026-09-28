@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { experiencesSchema } from "@/content/pages/experiences";
 import { journalSchema } from "@/content/pages/journal";
 import { resolvePage } from "@/lib/content-core";
 import { toPosts } from "@/lib/journal";
@@ -12,14 +13,16 @@ import { loadCatalog, modelPath, subtypesOf, topCategories } from "@/lib/catalog
 // no language, so each language is its own ?lang= address and every entry names all sixteen
 // (hreflang), which is how search engines find the Arabic, Urdu and other versions at all.
 // Empty while the site is Coming Soon; afterwards it lists Home, the Privacy Notice, the pages
-// staff have switched on (not the account page, which is private), the Journal's articles and
-// the bike catalogue's categories, sub-types and models (never the fleet's tag pages).
+// staff have switched on (not the account page, which is private), the Learn to ride sign-up
+// while Experiences is on and staff offer lessons, the Journal's articles and the bike
+// catalogue's categories, sub-types and models (never the fleet's tag pages).
 const PRIVATE = new Set(["account"]);
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { content, closed } = await pageState();
   if (closed) return [];
   const paths = ["/", "/privacy", ...SWITCHED_PAGES.filter((p) => !PRIVATE.has(p) && pageOn(content, p)).map((p) => `/${p}`)];
+  if (pageOn(content, "experiences") && resolvePage(experiencesSchema, content, "en").learn.on) paths.push("/experiences/learn");
   if (pageOn(content, "journal")) {
     // The articles' addresses, read in English only - the dictionary-free reader, so this route
     // does not carry every language's text (lib/content-core.ts). Same rule as the Journal's pages.

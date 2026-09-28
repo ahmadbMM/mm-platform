@@ -7,6 +7,7 @@ import BuildStory, { type Step } from "@/components/home/BuildStory";
 import PhotoWall from "@/components/home/PhotoWall";
 import FitQuiz, { type QuizText } from "@/components/home/FitQuiz";
 import OpenNow from "@/components/home/OpenNow";
+import LearnTeaser, { type LearnTeaserText } from "@/components/learn/LearnTeaser";
 import "@/components/site/site.css";
 import "@/components/home/home.css";
 import { bookingLink, localHref, pageOf } from "@/lib/links";
@@ -22,7 +23,8 @@ const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 
-export default function HomePage({ locale, home, site, preview, hidden = [] }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean; hidden?: string[] }) {
+/** `learn`: the Learn to ride question (Experiences > Learn to ride), or null while it is not offered. */
+export default function HomePage({ locale, home, site, preview, hidden = [], learn = null }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean; hidden?: string[]; learn?: LearnTeaserText | null }) {
   const tx = serverL(locale);
   // A button to a page staff have switched off would only reload Home (the proxy sends it back
   // here): a ride page opens the booking app instead, any other the WhatsApp chat.
@@ -182,6 +184,9 @@ export default function HomePage({ locale, home, site, preview, hidden = [] }: {
         )}
 
         <FitQuiz q={quiz} locale={locale} arrow={arrow} />
+
+        {/* Learn to ride: the question, leading to the lessons sign-up */}
+        {learn && <LearnTeaser locale={locale} t={learn} place="home" />}
 
         {/* Experiences & business */}
         <section className="hm-split" id="split">

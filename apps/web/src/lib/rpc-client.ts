@@ -37,3 +37,7 @@ export const cleanName = (s: string) =>
   s.replace(/[-‐-―]/g, " ").replace(/\.{2,}/g, ".").replace(/(^|\s)\.+/g, "$1").replace(/\s+/g, " ").trim();
 /** A cleaned name the database takes: nothing but letters, marks, spaces and periods, and a letter in it. */
 export const nameOk = (s: string) => /^[\p{L}\p{M}\s.]+$/u.test(s) && /\p{L}/u.test(s);
+/** Every part of a name at least two characters long, the parts split at spaces and periods: the
+ *  database's _name_parts_ok, which an account's name must pass ("Md. Rahman" yes, "Ali K" no).
+ *  Characters as the database counts them, a letter's marks included. */
+export const namePartsOk = (s: string) => s.split(/[\s.]+/).every((w) => w === "" || [...w].length >= 2);
