@@ -144,7 +144,7 @@ export const experiencesSchema = {
         txt("eyebrow", 40, "Sign-up page: small label", "صفحة التسجيل: العبارة الصغيرة", "Learn to ride", "تعلّم ركوب الدراجة"),
         txt("title", 60, "Sign-up page: title", "صفحة التسجيل: العنوان", "Learn to ride with us.", "تعلّم ركوب الدراجة معنا."),
         long("text", 300, "Sign-up page: text", "صفحة التسجيل: النص", "First time on a bike, or never quite got the hang of it? We'll teach you step by step. Tell us who is learning, and we'll get back to you with a lesson time.", "أول مرة تركب فيها دراجة، أو لم تتقن الركوب من قبل؟ سنعلّمك خطوة بخطوة. أخبرنا مَن سيتعلّم، وسنعود إليك بموعد الدرس."),
-        { id: "image", type: "image", label: bi("Sign-up page: photo", "صفحة التسجيل: الصورة"), def: "/site/experiences/hero.jpg" },
+        { id: "image", type: "image", label: bi("Sign-up page: link preview photo", "صفحة التسجيل: صورة معاينة الرابط"), hint: bi("The picture a shared link to the sign-up page shows (WhatsApp, Instagram). The page itself has no photo.", "الصورة التي تظهر عند مشاركة رابط صفحة التسجيل (واتساب، إنستغرام). الصفحة نفسها بلا صورة."), def: "/site/experiences/hero.jpg" },
         txt("formTitle", 50, "Form: title", "النموذج: العنوان", "Sign up", "سجّل الآن"),
         long("formSub", 200, "Form: text under the title", "النموذج: النص تحت العنوان", "It takes a minute. We'll contact you with your lesson's date and time.", "لن يستغرق سوى دقيقة. سنتواصل معك بموعد درسك ووقته."),
         txt("doneTitle", 50, "After sending: title", "بعد الإرسال: العنوان", "You're signed up!", "تم تسجيلك!"),

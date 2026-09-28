@@ -12,7 +12,6 @@ import { PRIVACY_VERSION } from "@/content/privacy-notice";
 import { asLocale, resolvePage } from "@/lib/content";
 import { learnFrame } from "@/lib/learn-page";
 import { pageState } from "@/lib/page-state";
-import { sized, srcSet } from "@/lib/img";
 
 // micromobility.sa/experiences/learn - the Learn to ride sign-up, received by the staff page
 // (learn_apply). Its words are the Experiences page's (Experiences > Learn to ride). It opens
@@ -22,7 +21,8 @@ import { sized, srcSet } from "@/lib/img";
 // site is open it has the header and footer of every page (lib/learn-page.ts). The Privacy Notice
 // opens in a dialog on the page in both. With the lessons switched off, the address goes to the
 // Experiences page - Coming Soon while the site is closed - and the question on Home and
-// Experiences that leads here is gone too.
+// Experiences that leads here is gone too. No photo on the page (owner, 2026-09-28): the intro is
+// words alone beside the form; its photo setting is only the picture a shared link shows.
 const NOTICE = "ln-notice";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
@@ -48,7 +48,6 @@ export default async function LearnPage({ params }: { params: Promise<{ locale: 
           <p className="ln-eyebrow">{l.eyebrow}</p>
           <h1>{l.title}</h1>
           <p className="ln-lead">{l.text}</p>
-          {l.image && <img className="ln-photo" src={sized(l.image, 800)} srcSet={srcSet(l.image)} sizes="(max-width: 900px) 92vw, 44vw" alt="" width={800} height={600} decoding="async" />}
         </div>
         <LearnForm locale={locale} formTitle={l.formTitle} formSub={l.formSub} doneTitle={l.doneTitle} doneText={l.doneText} privacyVersion={PRIVACY_VERSION} notice={NOTICE} />
       </section>

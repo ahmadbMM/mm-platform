@@ -6,8 +6,7 @@
 @media (min-width: 901px) and (min-height: 860px) { .ln-intro { position: sticky; top: 84px; } }
 .ln-eyebrow { color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 14px; }
 .ln-grid h1 { font-size: clamp(42px, 5vw, 72px); line-height: .94; letter-spacing: -3px; margin: 0 0 18px; text-wrap: balance; }
-.ln-lead { color: #57605a; font-size: 17.5px; line-height: 1.65; max-width: 520px; margin: 0 0 28px; text-wrap: pretty; }
-.ln-photo { display: block; width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: center 20%; border-radius: 28px; background: #e9ede8; }
+.ln-lead { color: #57605a; font-size: 17.5px; line-height: 1.65; max-width: 520px; margin: 0; text-wrap: pretty; }
 
 /* The sign-up card */
 .ln-card { background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 30px; padding: 30px; }
@@ -118,8 +117,7 @@ html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13
 
 @media (max-width: 900px) {
   .ln-grid { grid-template-columns: minmax(0, 1fr); padding: 40px 22px 60px; row-gap: 28px; }
-  .ln-lead { font-size: 16px; margin-bottom: 22px; }
-  .ln-photo { aspect-ratio: 16 / 10; border-radius: 22px; }
+  .ln-lead { font-size: 16px; }
   .ln-card { padding: 22px 18px; border-radius: 22px; }
   .ln-top { height: 58px; }
   .ln-alone .ln-grid { padding-top: 32px; }
