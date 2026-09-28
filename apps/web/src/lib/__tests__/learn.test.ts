@@ -1,18 +1,24 @@
 import { describe, expect, it } from "vitest";
-import { HEARD, emailOk, learnPayload, phoneOk, wholeNumber, type LearnFields, type LearnerFields } from "../learn";
+import { HEARD, ageOn, emailOk, igNorm, learnPayload, liNorm, phoneOk, wholeNumber, type LearnFields, type LearnerFields } from "../learn";
 import { learnFrame } from "../learn-page";
 import { namePartsOk } from "../rpc-client";
 
 // The Learn to ride sign-up (/experiences/learn): the form refuses what learn_apply() would, with
 // the database's own error codes - a learner's with their place in the list - one at a time in the
 // form's order (every learner's card, then the person signing up), and sends exactly what the
-// database reads: the contact, and 1 to 5 learners (the owner, 2026-09-28).
+// database reads: the contact, and 1 to 5 learners (the owner, 2026-09-28). The person signing up
+// also gives what the community form asks, for the account (the owner, 2026-09-28), and "Me" takes
+// their age, gender and height from it; a learner may be any age up to 99.
 
 const me: LearnerFields = { who: "self", name: "", age: "30", gender: "female", height: "165", level: "never" };
 const kid: LearnerFields = { who: "child", name: "Omar", age: "7", gender: "male", height: "120", level: "tried" };
 const friend: LearnerFields = { who: "other", name: "Lina Saleh", age: "34", gender: "female", height: "160", level: "refresh" };
-const form: LearnFields = { learners: [me], name: "Sara Al Harbi", phone: "0551234567", email: "Sara@Example.com", heard: "instagram", notes: "", privacy: true };
-const send = (x: Partial<LearnFields>) => learnPayload({ ...form, ...x }, "en", "2026-09-25");
+const TODAY = "2026-09-28";
+const form: LearnFields = {
+  learners: [me], name: "Sara Al Harbi", birth: "1996-02-10", gender: "female", nationality: "Saudi Arabia", height: "165",
+  phone: "0551234567", email: "Sara@Example.com", instagram: "", linkedin: "", profession: "Designer", heard: "instagram", notes: "", privacy: true, news: false,
+};
+const send = (x: Partial<LearnFields>) => learnPayload({ ...form, ...x }, "en", "2026-09-25", TODAY);
 const error = (x: Partial<LearnFields>) => {
   const r = send(x);
   return "error" in r ? r.error : null;
@@ -25,14 +31,16 @@ const learnerError = (l: Partial<LearnerFields>, base: LearnerFields = me) => {
 
 describe("learnPayload", () => {
   it("sends one learner - the person signing up - as the database reads it, and nothing of the old single-learner form", () => {
-    const r = learnPayload({ ...form, notes: "  A little nervous.  " }, "ar", "2026-09-25");
+    const r = learnPayload({ ...form, notes: "  A little nervous.  " }, "ar", "2026-09-25", TODAY);
     expect(r).toEqual({
       payload: {
-        name: "Sara Al Harbi", email: "sara@example.com", phone: "+966551234567", heard_from: "instagram", notes: "A little nervous.", lang: "ar", privacy_version: "2026-09-25",
+        name: "Sara Al Harbi", birth_date: "1996-02-10", gender: "female", nationality: "Saudi Arabia", height: 165,
+        email: "sara@example.com", phone: "+966551234567", instagram: "", linkedin: "", profession: "Designer",
+        heard_from: "instagram", notes: "A little nervous.", ride_news: false, lang: "ar", privacy_version: "2026-09-25",
         learners: [{ who: "self", name: "", age: 30, gender: "female", height: 165, level: "never" }],
       },
     });
-    expect(Object.keys("payload" in r ? r.payload : {})).toEqual(["name", "email", "phone", "heard_from", "notes", "lang", "privacy_version", "learners"]);
+    expect(Object.keys("payload" in r ? r.payload : {})).toEqual(["name", "birth_date", "gender", "nationality", "height", "email", "phone", "instagram", "linkedin", "profession", "heard_from", "notes", "ride_news", "lang", "privacy_version", "learners"]);
   });
 
   it("sends three learners in their order: the person signing up, their child and another adult", () => {
@@ -66,7 +74,7 @@ describe("learnPayload", () => {
 
   it("names the card of the first learner with a problem, and checks the person signing up only after every card", () => {
     const empty: LearnerFields = { who: "", name: "", age: "", gender: "", height: "", level: "" };
-    const blank: LearnFields = { learners: [kid, empty, { ...friend, age: "5" }], name: "", phone: "", email: "", heard: "", notes: "", privacy: false };
+    const blank: LearnFields = { learners: [kid, empty, { ...friend, age: "100" }], name: "", birth: "", gender: "", nationality: "", height: "", phone: "", email: "", instagram: "", linkedin: "", profession: "", heard: "", notes: "", privacy: false, news: false };
     const steps: [(f: LearnFields) => LearnFields, { error: string; index?: number } | null][] = [
       [(f) => f, { error: "learner_who", index: 1 }],
       [(f) => ({ ...f, learners: [f.learners[0], { ...empty, who: "child" }, f.learners[2]] }), { error: "learner_name", index: 1 }],
@@ -76,16 +84,21 @@ describe("learnPayload", () => {
       [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], height: "115" }, f.learners[2]] }), { error: "level", index: 1 }],
       [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], level: "never" }, f.learners[2]] }), { error: "learner_age", index: 2 }],
       [(f) => ({ ...f, learners: [f.learners[0], f.learners[1], { ...f.learners[2], age: "34" }] }), { error: "name" }],
-      [(f) => ({ ...f, name: "Huda Saleh" }), { error: "phone" }],
+      [(f) => ({ ...f, name: "Huda Saleh" }), { error: "birth_date" }],
+      [(f) => ({ ...f, birth: "1988-11-03" }), { error: "gender" }],
+      [(f) => ({ ...f, gender: "female" }), { error: "nationality" }],
+      [(f) => ({ ...f, nationality: "Jordan" }), { error: "height" }],
+      [(f) => ({ ...f, height: "160" }), { error: "phone" }],
       [(f) => ({ ...f, phone: "+966 50 123 4567" }), { error: "email" }],
-      [(f) => ({ ...f, email: "huda@example.sa" }), { error: "heard_from" }],
+      [(f) => ({ ...f, email: "huda@example.sa" }), { error: "profession" }],
+      [(f) => ({ ...f, profession: "Teacher" }), { error: "heard_from" }],
       [(f) => ({ ...f, heard: "invited" }), { error: "privacy" }],
       [(f) => ({ ...f, privacy: true }), null],
     ];
     let f = blank;
     for (const [step, next] of steps) {
       f = step(f);
-      const r = learnPayload(f, "en", "2026-09-25");
+      const r = learnPayload(f, "en", "2026-09-25", TODAY);
       expect("error" in r ? r : null, JSON.stringify(next)).toEqual(next);
     }
   });
@@ -103,29 +116,61 @@ describe("learnPayload", () => {
     expect(error({ heard: "radio" as LearnFields["heard"] })).toBe("heard_from");
   });
 
-  it("takes 12 to 99 for the person signing up and another adult - younger signs up as a child - and 3 to 17 for a child", () => {
-    for (const base of [me, friend]) {
-      expect(learnerError({ age: "11" }, base)).toEqual({ error: "learner_age", index: 0 });
-      expect(learnerError({ age: "12" }, base)).toBeNull();
-      expect(learnerError({ age: "99" }, base)).toBeNull();
-      expect(learnerError({ age: "100" }, base)).toEqual({ error: "learner_age", index: 0 });
+  it("takes a child or another adult of any age up to 99 - no minimum (the owner, 2026-09-28)", () => {
+    for (const base of [kid, friend]) {
+      for (const a of ["1", "2", "5", "11", "17", "18", "99"]) expect(learnerError({ age: a }, base), a).toBeNull();
+      for (const a of ["0", "100", ""]) expect(learnerError({ age: a }, base), a).toEqual({ error: "learner_age", index: 0 });
     }
-    expect(learnerError({ age: "2" }, kid)?.error).toBe("learner_age");
-    expect(learnerError({ age: "3" }, kid)).toBeNull();
-    expect(learnerError({ age: "17" }, kid)).toBeNull();
-    expect(learnerError({ age: "18" }, kid)?.error).toBe("learner_age");
   });
 
-  it("takes a height from 80 to 250 cm", () => {
-    for (const h of ["79", "251", "1.65", "", "abc"]) expect(learnerError({ height: h })?.error, h).toBe("learner_height");
-    for (const h of ["80", "250", " 170 "]) expect(learnerError({ height: h }), h).toBeNull();
+  it("gives Me the person's own age, gender and height, whatever the card holds", () => {
+    const r = send({ learners: [{ ...me, age: "12", gender: "male", height: "90" }], gender: "female", height: "171" });
+    expect("payload" in r && r.payload.learners[0]).toEqual({ who: "self", name: "", age: 30, gender: "female", height: 171, level: "never" });
+    // a Me card whose person's details are wrong points at the details, not at the card
+    expect(send({ birth: "" })).toEqual({ error: "birth_date" });
+    expect(send({ height: "" })).toEqual({ error: "height" });
+    // the person may be a baby only if nobody is "Me": a child of theirs is fine at any age
+    expect(send({ birth: "2026-03-01" })).toEqual({ error: "birth_date" });
+    expect(error({ birth: "2026-03-01", learners: [kid] })).toBeNull();
+  });
+
+  it("takes a learner's height from 80 to 250 cm", () => {
+    for (const h of ["79", "251", "1.65", "", "abc"]) expect(learnerError({ height: h }, friend)?.error, h).toBe("learner_height");
+    for (const h of ["80", "250", " 170 "]) expect(learnerError({ height: h }, friend), h).toBeNull();
+  });
+
+  it("needs the person's date of birth: a real day, not in the future, at most 99 years ago", () => {
+    for (const b of ["", "1996-02-30", "1996-13-01", "2026-09-29", "1926-09-28", "96-02-10"]) expect(error({ birth: b, learners: [kid] }), b).toBe("birth_date");
+    for (const b of ["1926-09-29", "2026-09-28", "2000-02-29"]) expect(error({ birth: b, learners: [kid] }), b).toBeNull();
+  });
+
+  it("needs the person's gender, a nationality from the booking app's list and a height from 80 to 250 cm", () => {
+    expect(error({ gender: "" })).toBe("gender");
+    for (const n of ["", "Saudi", "Israel", "saudi arabia"]) expect(error({ nationality: n }), n).toBe("nationality");
+    for (const n of ["Palestine", "Côte d'Ivoire", "United States"]) expect(error({ nationality: n }), n).toBeNull();
+    for (const h of ["79", "251", ""]) expect(error({ height: h }), h).toBe("height");
+  });
+
+  it("takes Instagram and LinkedIn empty, or as a handle or a link, and sends the bare name", () => {
+    const r = send({ instagram: "https://www.instagram.com/sara.h/?igsh=abc", linkedin: "https://www.linkedin.com/in/sara-al-harbi/" });
+    expect("payload" in r && [r.payload.instagram, r.payload.linkedin]).toEqual(["sara.h", "sara-al-harbi"]);
+    expect(error({ instagram: "@sara_h" })).toBeNull();
+    expect(error({ instagram: "sara h" })).toBe("instagram");
+    expect(error({ linkedin: "linkedin.com/company/micromobility" })).toBe("linkedin");
+  });
+
+  it("needs a profession - letters, 2 to 80 characters - and sends the ride news answer", () => {
+    for (const x of ["", "A", "123", "<b>Chef</b>", "x".repeat(81)]) expect(error({ profession: x }), x).toBe("profession");
+    for (const x of ["Chef", "مهندس", "  Civil   engineer "]) expect(error({ profession: x }), x).toBeNull();
+    const r = send({ profession: "  Civil   engineer ", news: true });
+    expect("payload" in r && [r.payload.profession, r.payload.ride_news]).toEqual(["Civil engineer", true]);
   });
 
   it("needs to know who each learner is, their gender and their riding so far, from the lists", () => {
     expect(learnerError({ who: "" })?.error).toBe("learner_who");
     expect(learnerError({ who: "parent" as LearnerFields["who"] })?.error).toBe("learner_who");
-    expect(learnerError({ gender: "" })?.error).toBe("learner_gender");
-    expect(learnerError({ gender: "other" as LearnerFields["gender"] })?.error).toBe("learner_gender");
+    expect(learnerError({ gender: "" }, friend)?.error).toBe("learner_gender");
+    expect(learnerError({ gender: "other" as LearnerFields["gender"] }, friend)?.error).toBe("learner_gender");
     expect(learnerError({ level: "" })?.error).toBe("level");
     expect(learnerError({ level: "expert" as LearnerFields["level"] })?.error).toBe("level");
   });
@@ -157,17 +202,31 @@ describe("learnPayload", () => {
 
   it("needs the Privacy Notice box, and sends the notice's version", () => {
     expect(error({ privacy: false })).toBe("privacy");
-    expect(learnPayload(form, "en", "")).toEqual({ error: "privacy" });
+    expect(learnPayload(form, "en", "", TODAY)).toEqual({ error: "privacy" });
   });
 
   it("sends the page's language, English when it is not a two-letter code", () => {
-    const zh = learnPayload(form, "zh", "2026-09-25"), odd = learnPayload(form, "zh-Hans", "2026-09-25");
+    const zh = learnPayload(form, "zh", "2026-09-25", TODAY), odd = learnPayload(form, "zh-Hans", "2026-09-25", TODAY);
     expect("payload" in zh && zh.payload.lang).toBe("zh");
     expect("payload" in odd && odd.payload.lang).toBe("en");
   });
 });
 
 describe("the pieces", () => {
+  it("ageOn counts whole years, the birthday itself included, and refuses a day that does not exist", () => {
+    expect(ageOn("1996-02-10", "2026-02-09")).toBe(29);
+    expect(ageOn("1996-02-10", "2026-02-10")).toBe(30);
+    expect(ageOn("2000-02-29", "2026-02-28")).toBe(25);
+    expect(ageOn("1996-02-30", "2026-09-28")).toBeNull();
+  });
+
+  it("igNorm and liNorm leave the bare handle, as the community form does", () => {
+    expect(igNorm(" @sara.h ")).toBe("sara.h");
+    expect(igNorm("instagram.com/sara.h/")).toBe("sara.h");
+    expect(liNorm("https://sa.linkedin.com/in/sara-al-harbi?trk=x")).toBe("sara-al-harbi");
+    expect(liNorm("in/sara")).toBe("sara");
+  });
+
   it("wholeNumber reads Arabic-Indic and Persian digits and nothing else in the box", () => {
     expect(wholeNumber("١٢٠")).toBe(120);
     expect(wholeNumber("۱۶۵")).toBe(165);

@@ -28,6 +28,11 @@ textarea.ln-input { resize: vertical; min-height: 84px; }
 .ln-select.ln-ph { color: #8a938c; }
 .ln-select option { color: #1a1919; }
 .ln-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+/* The date of birth: day, month, year side by side, on a phone too (a tighter arrow). */
+.ln-dob { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.5fr) minmax(0, 1fr); gap: 8px; }
+.ln-dob .ln-select { padding-inline-end: 28px; background-position: right 10px center; }
+[dir="rtl"] .ln-dob .ln-select { background-position: left 10px center; }
+.ln-field > .ln-label { margin: 0; }
 
 /* The learners: a card each (up to five), numbered, with a remove button once there are two. */
 .ln-learner { border: 1px solid rgba(0, 0, 0, .1); border-radius: 20px; padding: 16px 16px 18px; margin: 0 0 12px; background: #fcfcfa; }

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { rpc } from "@/lib/rpc-client";
-import { AGES, HEARD, HEIGHT, LEVELS, MAX_LEARNERS, WHO, learnPayload, type Gender, type Heard, type LearnFields, type LearnerFields, type LearnProblem } from "@/lib/learn";
+import { AGE, HEARD, HEIGHT, LEVELS, MAX_LEARNERS, WHO, learnPayload, riyadhToday, type Gender, type Heard, type LearnFields, type LearnerFields, type LearnProblem } from "@/lib/learn";
+import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
 import { useLocalize } from "@/i18n/TxProvider";
 import NoticeLink from "@/components/privacy/NoticeLink";
 import { T } from "./LearnForm.text";
@@ -14,7 +15,10 @@ import { T } from "./LearnForm.text";
 // how they heard of us (the owner, 2026-09-28: asked here and on the community form, not at the
 // app's sign-up). It goes to the staff page through learn_apply(); it does not ask when suits them -
 // the team picks the lessons' date and time and sends it and, for someone new, sets up their
-// booking app account. Nothing is booked or charged here. The form checks what the database
+// booking app account - made from what the person gives here, the community form's questions (the
+// owner, 2026-09-28): date of birth, gender, nationality, height, Instagram, LinkedIn and
+// profession, and the ride news box. A "Me" card asks only the riding so far: the age, gender and
+// height are the person's own. Nothing is booked or charged here. The form checks what the database
 // checks (lib/learn.ts) and shows one message at a time, about the first thing to fix; a learner's
 // names their card and sits in it, and the card is brought into view with the keyboard on it.
 export type LearnFormProps = {
@@ -37,6 +41,8 @@ const EMPTY: LearnerFields = { who: "", name: "", age: "", gender: "", height: "
 const SLOT = "\u0000";
 // A range as the box's hint, kept left to right in Arabic and Urdu too ("3–17", never "17–3").
 const range = (a: number, b: number) => `⁦${a}–${b}⁩`;
+// No store to follow: only whether the page is drawing on the server or in the browser.
+const never = () => () => {};
 // A typed dash becomes a space, as in every name box on the site (lib/rpc-client.ts, cleanName).
 const dashless = (v: string) => v.replace(/[-‐-―]/g, " ");
 
@@ -44,7 +50,13 @@ export default function LearnForm(p: LearnFormProps) {
   const t = useLocalize(T);
   const id = useId();
   const next = useRef(1); // the next card's key
-  const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], name: "", phone: "", email: "", heard: "", notes: "", privacy: false });
+  const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], name: "", birth: "", gender: "", nationality: "", height: "", phone: "", email: "", instagram: "", linkedin: "", profession: "", heard: "", notes: "", privacy: false, news: false });
+  // The date of birth as three pickers; the form holds it as YYYY-MM-DD once all three are chosen.
+  const [bd, setBd] = useState({ d: "", m: "", y: "" });
+  // The names of the months and the countries are the browser's (see lib/nationality.ts): drawn
+  // once the page is up, so the server's first draw and the browser's agree.
+  const onClient = useSyncExternalStore(never, () => true, () => false);
+  const names = useMemo<{ months: string[]; nats: NatOption[] } | null>(() => (onClient ? { months: monthNames(p.locale), nats: natOptions(p.locale) } : null), [onClient, p.locale]);
   const [busy, setBusy] = useState(false);
   // The one message on show; a learner's carries their card's place (from 0).
   const [err, setErr] = useState<{ text: string; index?: number } | null>(null);
@@ -69,6 +81,13 @@ export default function LearnForm(p: LearnFormProps) {
   }, [focus]);
 
   const setContact = <K extends keyof Contact>(k: K, v: Contact[K]) => { setF((x) => ({ ...x, [k]: v })); setErr(null); };
+  const setBirth = (k: "d" | "m" | "y", v: string) => {
+    const n = { ...bd, [k]: v };
+    setBd(n);
+    setContact("birth", n.y && n.m && n.d ? `${n.y}-${n.m}-${n.d}` : "");
+  };
+  const thisYear = Number(riyadhToday().slice(0, 4));
+  const two = (n: number) => String(n).padStart(2, "0");
   const setLearner = (i: number, patch: Partial<LearnerFields>) => {
     setF((x) => ({ ...x, learners: x.learners.map((c, j) => (j === i ? { ...c, ...patch } : c)) }));
     setErr(null);
@@ -86,6 +105,8 @@ export default function LearnForm(p: LearnFormProps) {
     setFocus({ to: "add", n: ++moves.current });
   }
   const selfAt = f.learners.findIndex((c) => c.who === "self");
+  // Why the height is asked, once: under the first card with its own height, else by the person's.
+  const rowAt = f.learners.findIndex((c) => c.who !== "self");
   const anyChild = f.learners.some((c) => c.who === "child");
 
   // A problem as the visitor reads it. The database answers learner_age and learner_name for every
@@ -94,7 +115,8 @@ export default function LearnForm(p: LearnFormProps) {
     const i = typeof r.index === "number" && Number.isInteger(r.index) && r.index >= 0 && r.index < f.learners.length ? r.index : undefined;
     const who = i === undefined ? "" : f.learners[i].who;
     const e = t.errors;
-    const text = r.error === "learner_age" && who === "child" ? e.learner_age_child
+    const text = r.error === "learner_age" && who === "self" ? e.birth_date
+      : r.error === "learner_age" && who === "child" ? e.learner_age_child
       : r.error === "learner_age" && who === "other" ? e.learner_age_other
       : r.error === "learner_name" && who === "other" ? e.learner_name_other
       : r.error === "learners" && i !== undefined ? e.learner_twice
@@ -169,23 +191,26 @@ export default function LearnForm(p: LearnFormProps) {
                 {c.who === "child" && <small className="ln-hint">{t.childNameHint}</small>}
               </label>
             )}
-            <div className="ln-row">
-              <label className="ln-field">
-                <span>{t.age}</span>
-                <input className="ln-input" value={c.age} onChange={(e) => setLearner(i, { age: e.target.value })} inputMode="numeric" maxLength={3} placeholder={range(...AGES[c.who === "child" ? "child" : "self"])} />
-              </label>
-              <label className="ln-field">
-                <span>{t.height}</span>
-                <input className="ln-input" value={c.height} onChange={(e) => setLearner(i, { height: e.target.value })} inputMode="numeric" maxLength={3} placeholder={range(...HEIGHT)} />
-              </label>
-            </div>
-            {/* Why the height is asked, once: it is the same for every learner. */}
-            {i === 0 && <p className="ln-hint ln-hint-row">{t.heightHint}</p>}
+            {c.who === "self" ? <p className="ln-hint ln-hint-row">{t.selfNote}</p> : (
+              <>
+                <div className="ln-row">
+                  <label className="ln-field">
+                    <span>{t.age}</span>
+                    <input className="ln-input" value={c.age} onChange={(e) => setLearner(i, { age: e.target.value })} inputMode="numeric" maxLength={3} placeholder={range(...AGE)} />
+                  </label>
+                  <label className="ln-field">
+                    <span>{t.height}</span>
+                    <input className="ln-input" value={c.height} onChange={(e) => setLearner(i, { height: e.target.value })} inputMode="numeric" maxLength={3} placeholder={range(...HEIGHT)} />
+                  </label>
+                </div>
+                {i === rowAt && <p className="ln-hint ln-hint-row">{t.heightHint}</p>}
 
-            <span className="ln-label" id={`${cid}g`}>{t.gender}</span>
-            <div className="ln-pills" role="radiogroup" aria-labelledby={`${cid}g`}>
-              {(["male", "female"] as Gender[]).map((g) => radio(c.gender === g, () => setLearner(i, { gender: g }), t[g], "ln-pill"))}
-            </div>
+                <span className="ln-label" id={`${cid}g`}>{t.gender}</span>
+                <div className="ln-pills" role="radiogroup" aria-labelledby={`${cid}g`}>
+                  {(["male", "female"] as Gender[]).map((g) => radio(c.gender === g, () => setLearner(i, { gender: g }), t[g], "ln-pill"))}
+                </div>
+              </>
+            )}
 
             <span className="ln-label" id={`${cid}l`}>{t.level}</span>
             <div className="ln-levels" role="radiogroup" aria-labelledby={`${cid}l`}>
@@ -206,6 +231,39 @@ export default function LearnForm(p: LearnFormProps) {
           <span>{t.name}</span>
           <input className="ln-input" value={f.name} onChange={(e) => setContact("name", dashless(e.target.value))} autoComplete="name" maxLength={120} />
         </label>
+        <div className="ln-field">
+          <span className="ln-label" id={`${id}b`}>{t.birth}</span>
+          <div className="ln-dob" role="group" aria-labelledby={`${id}b`}>
+            <select className={`ln-input ln-select${bd.d ? "" : " ln-ph"}`} aria-label={t.day} value={bd.d} onChange={(e) => setBirth("d", e.target.value)}>
+              <option value="">{t.day}</option>
+              {Array.from({ length: 31 }, (_, k) => <option key={k} value={two(k + 1)}>{k + 1}</option>)}
+            </select>
+            <select className={`ln-input ln-select${bd.m ? "" : " ln-ph"}`} aria-label={t.month} value={bd.m} onChange={(e) => setBirth("m", e.target.value)}>
+              <option value="">{t.month}</option>
+              {Array.from({ length: 12 }, (_, k) => <option key={k} value={two(k + 1)}>{names ? names.months[k] : two(k + 1)}</option>)}
+            </select>
+            <select className={`ln-input ln-select${bd.y ? "" : " ln-ph"}`} aria-label={t.year} value={bd.y} onChange={(e) => setBirth("y", e.target.value)}>
+              <option value="">{t.year}</option>
+              {Array.from({ length: AGE[1] + 1 }, (_, k) => <option key={k} value={String(thisYear - k)}>{thisYear - k}</option>)}
+            </select>
+          </div>
+        </div>
+        <span className="ln-label" id={`${id}g`}>{t.gender}</span>
+        <div className="ln-pills" role="radiogroup" aria-labelledby={`${id}g`}>
+          {(["male", "female"] as Gender[]).map((g) => radio(f.gender === g, () => setContact("gender", g), t[g], "ln-pill"))}
+        </div>
+        <label className="ln-field">
+          <span>{t.nationality}</span>
+          <select className={`ln-input ln-select${f.nationality ? "" : " ln-ph"}`} value={f.nationality} onChange={(e) => setContact("nationality", e.target.value)}>
+            <option value="">{t.natPick}</option>
+            {names?.nats.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+        </label>
+        <label className="ln-field">
+          <span>{t.height}</span>
+          <input className="ln-input" value={f.height} onChange={(e) => setContact("height", e.target.value)} inputMode="numeric" maxLength={3} placeholder={range(...HEIGHT)} />
+          {rowAt < 0 && <small className="ln-hint">{t.heightHint}</small>}
+        </label>
         <label className="ln-field">
           <span>{t.phone}</span>
           <input className="ln-input" value={f.phone} onChange={(e) => setContact("phone", e.target.value)} inputMode="tel" autoComplete="tel" dir="ltr" maxLength={20} placeholder="05XXXXXXXX" />
@@ -213,6 +271,20 @@ export default function LearnForm(p: LearnFormProps) {
         <label className="ln-field">
           <span>{t.email}</span>
           <input className="ln-input" value={f.email} onChange={(e) => setContact("email", e.target.value)} type="email" autoComplete="email" dir="ltr" maxLength={254} />
+        </label>
+        <label className="ln-field">
+          <span>{t.instagram}</span>
+          <input className="ln-input" value={f.instagram} onChange={(e) => setContact("instagram", e.target.value)} autoComplete="off" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={120} placeholder="@username" />
+          <small className="ln-hint">{t.instagramHint}</small>
+        </label>
+        <label className="ln-field">
+          <span>{t.linkedin}</span>
+          <input className="ln-input" value={f.linkedin} onChange={(e) => setContact("linkedin", e.target.value)} autoComplete="off" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={200} placeholder="linkedin.com/in/your-name" />
+          <small className="ln-hint">{t.linkedinHint}</small>
+        </label>
+        <label className="ln-field">
+          <span>{t.profession}</span>
+          <input className="ln-input" value={f.profession} onChange={(e) => setContact("profession", e.target.value)} autoComplete="organization-title" maxLength={80} placeholder={t.professionPh} />
         </label>
         <label className="ln-field">
           <span>{t.heard}</span>
@@ -230,6 +302,10 @@ export default function LearnForm(p: LearnFormProps) {
       <label className="ln-check">
         <input type="checkbox" checked={f.privacy} onChange={(e) => setContact("privacy", e.target.checked)} />
         <span>{before}<NoticeLink dialog={p.notice}>{t.privacyLink}</NoticeLink>{after}</span>
+      </label>
+      <label className="ln-check">
+        <input type="checkbox" checked={f.news} onChange={(e) => setContact("news", e.target.checked)} />
+        <span>{t.news}</span>
       </label>
       <p className="ln-use">{t.use}</p>
 

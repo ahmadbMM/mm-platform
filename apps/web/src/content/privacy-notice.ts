@@ -52,12 +52,12 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "Date of birth",
-      "Optional for your first eight bookings, then required. Community members: required before booking, and on a membership application",
+      "Optional for your first eight bookings, then required. Community members: required before booking, and on a membership application. On a learn-to-ride sign-up: required from the person signing up",
       "Age rules and safety, including making sure under-18s are booked by a parent or guardian; age categories for events, races and leaderboards; age-group totals; a birthday greeting from our team"
      ],
      [
       "Nationality",
-      "Optional for your first eight bookings, then required. Community members: required before booking, and on a membership application",
+      "Optional for your first eight bookings, then required. Community members: required before booking, and on a membership application. On a learn-to-ride sign-up: required from the person signing up",
       "Participation totals only, for example Saudi and non-Saudi riders. <strong>Never shared per person. Which nationality you give never decides who can book.</strong>"
      ],
      [
@@ -67,13 +67,13 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "Social media handles",
-      "Optional; required on a community membership application. Seen only by our staff.",
+      "Optional; required on a community membership application, and asked on a learn-to-ride sign-up. Seen only by our staff.",
       "So our staff can get to know riders who may be invited to join our riding community. We never post, tag or share them."
      ],
      [
       "Profession",
-      "Asked only on a community membership application. Seen only by our staff.",
-      "So our staff can get to know the riders who apply to join our riding community. We never share it."
+      "Asked on a community membership application and a learn-to-ride sign-up. Seen only by our staff.",
+      "So our staff can get to know the riders who apply to join our riding community or sign up for a riding lesson. We never share it."
      ],
      [
       "Learn-to-ride sign-up: each learner’s name (for a child or another adult), age, gender, height and riding experience",
@@ -312,12 +312,12 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "تاريخ الميلاد",
-      "اختياري في أول ثمانية حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية",
+      "اختياري في أول ثمانية حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية. في التسجيل في دروس تعلّم الركوب: إلزامي لمن يسجّل",
       "تطبيق قواعد العمر والسلامة، ومنها التأكد من أن حجز من هم دون 18 عامًا يتم عبر أحد الوالدين أو الولي؛ وفئات الأعمار في الفعاليات والسباقات ولوحات الصدارة؛ وإحصاءات الفئات العمرية؛ وتهنئة بعيد ميلادك من فريقنا"
      ],
      [
       "الجنسية",
-      "اختياري في أول ثمانية حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية",
+      "اختياري في أول ثمانية حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية. في التسجيل في دروس تعلّم الركوب: إلزامي لمن يسجّل",
       "إحصاءات مجمّعة للمشاركة فقط، مثل أعداد الراكبين السعوديين وغير السعوديين. <strong>لا تُشارك على مستوى الأفراد إطلاقًا، ولا تحدّد الجنسية التي تذكرها من يحق له الحجز.</strong>"
      ],
      [
@@ -327,13 +327,13 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "حسابات التواصل الاجتماعي",
-      "اختياري؛ وإلزامي في طلب عضوية المجتمع. لا يطّلع عليها إلا موظفونا.",
+      "اختياري؛ وإلزامي في طلب عضوية المجتمع، ونسأل عنها في التسجيل في دروس تعلّم الركوب. لا يطّلع عليها إلا موظفونا.",
       "ليتعرّف موظفونا على الراكبين الذين قد تتم دعوتهم للانضمام إلى مجتمع الركوب لدينا. لا ننشرها ولا نشير إليها ولا نشاركها إطلاقًا."
      ],
      [
       "المهنة",
-      "تُطلب في طلب عضوية المجتمع فقط، ولا يطّلع عليها إلا موظفونا.",
-      "ليتعرّف موظفونا على الراكبين المتقدّمين للانضمام إلى مجتمع الركوب لدينا. لا نشاركها إطلاقًا."
+      "تُطلب في طلب عضوية المجتمع وفي التسجيل في دروس تعلّم الركوب، ولا يطّلع عليها إلا موظفونا.",
+      "ليتعرّف موظفونا على الراكبين المتقدّمين للانضمام إلى مجتمع الركوب لدينا أو المسجّلين في دروس تعلّم الركوب. لا نشاركها إطلاقًا."
      ],
      [
       "التسجيل في دروس تعلّم الركوب: اسم كل متعلّم (للطفل أو لشخص بالغ آخر) وعمره وجنسه وطوله وخبرته في الركوب",
