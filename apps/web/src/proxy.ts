@@ -35,6 +35,12 @@ export async function storeTarget(pathname: string, req: NextRequest): Promise<s
 const PREVIEW_PAGE = /^(?:\/(?:en|ar))?\/preview\/?$/;
 // A fleet bike's NFC tag page: /bikes/<its number> (components/bikes/FleetBike.tsx).
 const FLEET_PAGE = /^\/bikes\/\d{1,6}\/?$/;
+// The Learn to ride sign-up (owner, 2026-09-28: usable now, "linked to the main website the same
+// way the forms are"): open whatever Coming Soon and the Experiences switch say. Only its own
+// switch (Experiences > Learn to ride) closes it, which the page itself reads; while the site is
+// Coming Soon the page stands alone, with nothing that leads into the closed site
+// (app/[locale]/experiences/learn). The old /en and /ar addresses too, which next-intl sends on.
+const LEARN_PAGE = /^(?:\/(?:en|ar))?\/experiences\/learn\/?$/;
 
 export default async function proxy(req: NextRequest) {
   // The handoff spec writes the tag URL as /?bike=42; the chips carry /b/42, and the page now
@@ -68,7 +74,8 @@ export default async function proxy(req: NextRequest) {
   // A fleet bike's tag page (/bikes/42: a rider tapping a sticker) opens whatever the site's
   // state - Coming Soon on, or the Bikes page not switched on. It is never a catalogue page: a
   // category's address starts with a letter (the database insists), so digits can only be a tag.
-  if (FLEET_PAGE.test(pathname)) return keepLang(intl(req));
+  // The Learn to ride sign-up opens the same way (LEARN_PAGE).
+  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname)) return keepLang(intl(req));
   // While the site is Coming Soon, it is the only page: /login, /about and anything else go
   // back to it. /store forwards to the shop before this runs (above), and the old /b/42 tag
   // address is redirected to /bikes/42 before this runs (next.config redirects).

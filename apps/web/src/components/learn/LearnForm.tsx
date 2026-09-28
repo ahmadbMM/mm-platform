@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { rpc } from "@/lib/rpc-client";
 import { AGES, HEIGHT, LEVELS, learnPayload, type ForWhom, type Gender, type LearnFields } from "@/lib/learn";
 import { useLocalize } from "@/i18n/TxProvider";
+import NoticeLink from "@/components/privacy/NoticeLink";
 import { T } from "./LearnForm.text";
 
 // The Learn to ride sign-up card (/experiences/learn, right column). Who is learning - the visitor
@@ -19,6 +20,9 @@ export type LearnFormProps = {
   doneTitle: string; doneText: string;
   /** The Privacy Notice the box confirms (content/privacy-notice.ts). */
   privacyVersion: string;
+  /** The id of the page's Privacy Notice dialog (NoticeDialog): the box's link opens it there, so
+   *  reading the notice never leaves the form, whatever the site's state. */
+  notice: string;
 };
 
 // What a new learner starts from: "Sign up someone else" keeps the contact details and the
@@ -140,7 +144,7 @@ export default function LearnForm(p: LearnFormProps) {
 
       <label className="ln-check">
         <input type="checkbox" checked={f.privacy} onChange={(e) => set("privacy", e.target.checked)} />
-        <span>{before}<a href="/privacy" target="_blank" rel="noopener">{t.privacyLink}</a>{after}</span>
+        <span>{before}<NoticeLink dialog={p.notice}>{t.privacyLink}</NoticeLink>{after}</span>
       </label>
       <p className="ln-use">{t.use}</p>
 

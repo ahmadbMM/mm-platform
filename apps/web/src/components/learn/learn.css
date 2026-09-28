@@ -65,11 +65,39 @@ textarea.ln-input { resize: vertical; min-height: 84px; }
 
 html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13px; }
 
+/* The page's own frame while the site is Coming Soon (LearnAlone.tsx): a slim bar with the brand
+   and the language, the page, one line at the foot. The globe is the fleet tag pages' (LangToggle,
+   whose look lives with each page that uses it), dark on this light bar. */
+.ln-alone { display: flex; flex-direction: column; }
+.ln-alone main { flex: 1; }
+.ln-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 64px; padding: 0 clamp(16px, 4vw, 40px); background: #fff; border-bottom: 1px solid rgba(0, 0, 0, .08); }
+.ln-top-mark { display: block; width: 76px; height: 38px; background: #077a4b; -webkit-mask: url("/site/brand-wordmark.png") left center / contain no-repeat; mask: url("/site/brand-wordmark.png") left center / contain no-repeat; }
+[dir="rtl"] .ln-top-mark { -webkit-mask-position: right center; mask-position: right center; }
+.ln-top .bk-lang { position: relative; flex: none; }
+.ln-top .bk-globe { width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; background: transparent; color: #1a1919; cursor: pointer; display: grid; place-items: center; transition: background .2s ease; }
+.ln-top .bk-globe:hover { background: rgba(0, 0, 0, .07); }
+.ln-top .bk-globe:focus-visible { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
+.ln-top .bk-globe svg { width: 21px; height: 21px; }
+.ln-top .bk-lang-menu { position: absolute; top: calc(100% + 6px); inset-inline-end: 0; z-index: 20; width: 210px; max-height: min(70vh, 520px); overflow-y: auto; padding: 6px;
+  display: flex; flex-direction: column; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 14px; box-shadow: 0 18px 50px rgba(10, 13, 9, .16); }
+.ln-top .bk-lang-menu button { padding: 9px 12px; border: 0; border-radius: 9px; background: none; font: inherit; font-size: 14px; color: #1a1919; text-align: start; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ln-top .bk-lang-menu button:hover { background: rgba(0, 0, 0, .05); }
+.ln-top .bk-lang-menu button[aria-checked="true"] { color: #077a4b; font-weight: 700; }
+.ln-top .bk-lang-menu button[aria-checked="true"]::after { content: "✓"; }
+.ln-alone .ln-grid { padding-top: 52px; }
+@media (min-width: 901px) and (min-height: 860px) { .ln-alone .ln-intro { top: 32px; } }
+.ln-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 18px; padding: 22px clamp(16px, 4vw, 40px) calc(22px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(0, 0, 0, .08); color: #5f6862; font-size: 13px; text-align: center; }
+.mm-site .ln-foot-link { color: #077a4b; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+
 @media (max-width: 900px) {
   .ln-grid { grid-template-columns: minmax(0, 1fr); padding: 40px 22px 60px; row-gap: 28px; }
   .ln-lead { font-size: 16px; margin-bottom: 22px; }
   .ln-photo { aspect-ratio: 16 / 10; border-radius: 22px; }
   .ln-card { padding: 22px 18px; border-radius: 22px; }
+  .ln-top { height: 58px; }
+  .ln-alone .ln-grid { padding-top: 32px; }
 }
 @media (max-width: 380px) {
   .ln-row { grid-template-columns: minmax(0, 1fr); gap: 0; }

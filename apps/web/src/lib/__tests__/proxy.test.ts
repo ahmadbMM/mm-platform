@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 import proxy, { config } from "../../proxy";
+import { resetSiteContent } from "../site";
 
 // The addresses carry no language (i18n/routing.ts). These run the real proxy on requests as a
 // browser sends them; there is no database here, so nothing staff set is read and the site is
@@ -105,6 +106,56 @@ describe("while the site is Coming Soon", () => {
       expect(res.status, p).toBe(307);
       expect(redirectedTo(res), p).toBe("/");
     }
+  });
+  it("still opens the Learn to ride sign-up, in the language asked for", async () => {
+    // Usable now, the way the registration forms are (owner, 2026-09-28): the page stands alone
+    // while the site is closed. The rest of Experiences stays behind Coming Soon.
+    for (const p of ["/experiences/learn", "/experiences/learn/"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(200);
+      expect(rewrittenTo(res), p).toBe("/en/experiences/learn");
+    }
+    const ar = await call("/experiences/learn?lang=ar");
+    expect(ar.status).toBe(200);
+    expect(rewrittenTo(ar)).toBe("/ar/experiences/learn");
+    expect(langCookie(ar)).toBe("ar");
+    expect(rewrittenTo(await call("/experiences/learn", { cookie: "NEXT_LOCALE=zh" }))).toBe("/zh/experiences/learn");
+    const old = await call("/ar/experiences/learn");
+    expect(old.status).toBe(307);
+    expect(redirectedTo(old)).toBe("/experiences/learn");
+    expect(langCookie(old)).toBe("ar");
+    for (const p of ["/experiences", "/experiences/", "/experiences/learning", "/experiences/learn/more", "/experiences/x", "/learn"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(307);
+      expect(redirectedTo(res), p).toBe("/");
+    }
+  });
+});
+
+describe("once the site is open", () => {
+  // What staff set, as the database answers it: Coming Soon off, the Club page switched on and
+  // the Experiences page not (Website > Pages).
+  beforeEach(() => {
+    resetSiteContent();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify([{ key: "site.coming_soon", value: false }, { key: "page.club.visible", value: true }]), { status: 200, headers: { "content-type": "application/json" } })));
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    resetSiteContent();
+  });
+  it("opens the Learn to ride sign-up while the Experiences page is switched off, and sends the rest of Experiences to Home", async () => {
+    const res = await call("/experiences/learn");
+    expect(res.status).toBe(200);
+    expect(rewrittenTo(res)).toBe("/en/experiences/learn");
+    for (const p of ["/experiences", "/experiences/other"]) {
+      const off = await call(p);
+      expect(off.status, p).toBe(307);
+      expect(redirectedTo(off), p).toBe("/");
+    }
+    expect(rewrittenTo(await call("/club"))).toBe("/en/club"); // the site is open: a page staff switched on opens
   });
 });
 

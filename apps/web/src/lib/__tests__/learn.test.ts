@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emailOk, learnPayload, phoneOk, wholeNumber, type LearnFields } from "../learn";
+import { learnFrame } from "../learn-page";
 import { namePartsOk } from "../rpc-client";
 
 // The Learn to ride sign-up (/experiences/learn): the form refuses what learn_apply() would, with
@@ -146,5 +147,25 @@ describe("the pieces", () => {
     expect(namePartsOk("Ali K")).toBe(false);
     expect(namePartsOk("A.Rahman")).toBe(false);
     expect(namePartsOk("कि")).toBe(true); // a letter and its vowel sign: two characters, as Postgres counts them
+  });
+});
+
+describe("the page's frame", () => {
+  // The page opens whatever the site's state (proxy.ts); while the site is Coming Soon it must not
+  // lead into it. The site's browser checks run it open only (MM_TEST_SITE_OPEN), so the choice is
+  // checked here.
+  const open = { "site.coming_soon": false };
+  it("stands alone while the site is Coming Soon, whatever the Experiences switch says", () => {
+    expect(learnFrame(null, false)).toBe("alone"); // nothing read: Coming Soon
+    expect(learnFrame({ "site.coming_soon": true }, false)).toBe("alone");
+    expect(learnFrame({ "site.coming_soon": true, "page.experiences.visible": true }, false)).toBe("alone");
+    expect(learnFrame(open, false, false)).toBe("alone"); // Home not released: closed whatever staff set
+  });
+  it("has the site's header and footer once the site is open, the Experiences page on or off", () => {
+    expect(learnFrame(open, false)).toBe("site");
+    expect(learnFrame({ ...open, "page.experiences.visible": true }, false)).toBe("site");
+  });
+  it("shows staff previewing the closed site the page as it will be", () => {
+    expect(learnFrame({ "site.coming_soon": true }, true)).toBe("site");
   });
 });

@@ -1,0 +1,25 @@
+/* The Privacy Notice in a dialog (NoticeDialog.tsx): a card over the page on a computer, the whole
+   screen on a phone, its title and close button staying put while the notice scrolls under them.
+   The notice's own look is .pg-notice (pages.css), as on /privacy. */
+.pv-dialog { width: min(760px, calc(100vw - 32px)); max-width: none; max-height: min(88vh, 920px); padding: 0; border: 0; border-radius: 24px; background: #fbf9f4; color: #1a1919;
+  box-shadow: 0 30px 90px rgba(10, 13, 9, .35); overflow: hidden; }
+.pv-dialog[open] { display: flex; }
+.pv-dialog::backdrop { background: rgba(10, 13, 9, .55); }
+.pv-dialog-box { display: flex; flex-direction: column; width: 100%; min-height: 0; }
+.pv-dialog-head { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 16px 14px 24px; background: #fff; border-bottom: 1px solid rgba(0, 0, 0, .08); }
+[dir="rtl"] .pv-dialog-head { padding: 14px 24px 14px 16px; }
+.mm-site .pv-dialog-head h2 { margin: 0; font-size: 20px; letter-spacing: -.3px; line-height: 1.2; }
+.pv-dialog-head form { margin: 0; }
+.pv-dialog-x { width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(0, 0, 0, .06); color: #1a1919; cursor: pointer; display: grid; place-items: center; }
+.pv-dialog-x:hover { background: rgba(0, 0, 0, .1); }
+.pv-dialog-x:focus-visible { outline: 3px solid rgba(7, 122, 75, .4); outline-offset: 2px; }
+.pv-dialog-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 24px 28px; }
+.pv-dialog-meta { color: #57605a; font-size: 13.5px; margin: 0 0 6px; }
+.mm-site .pv-dialog .pg-notice h3 { font-size: 17px; letter-spacing: -.2px; line-height: 1.3; margin: 26px 0 8px; }
+
+@media (max-width: 760px) {
+  .pv-dialog { width: 100%; height: 100%; max-width: 100%; max-height: 100%; margin: 0; border-radius: 0; }
+  .pv-dialog-box { height: 100%; }
+  .pv-dialog-head { padding-top: calc(10px + env(safe-area-inset-top, 0px)); padding-bottom: 10px; }
+  .pv-dialog-body { flex: 1; padding: 16px 20px calc(28px + env(safe-area-inset-bottom, 0px)); }
+}

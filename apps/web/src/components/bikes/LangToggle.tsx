@@ -9,7 +9,10 @@ import { LANG_COOKIE } from "@/i18n/routing";
  * A bare globe, as the handoff asks: no pill, no border, no label. It opens every language the
  * site speaks, each in its own name. The choice goes in the site's own language cookie, so the
  * server renders it next time and the rest of the site follows, and the server is asked for a
- * fresh pass: the page changes language without a reload.
+ * fresh pass: the page changes language without a reload. An address that names its language
+ * (?lang=, as a shared link does) is given the new one instead, since the old one would win again.
+ * The fleet's tag pages use it, and the Learn to ride sign-up while the site is Coming Soon; it
+ * has no look of its own (bike.css, learn.css).
  */
 // One year, lax: a display preference, never sent cross-site.
 function saveLang(code: string) {
@@ -34,7 +37,10 @@ export default function LangToggle({ lang, label }: { lang: string; label: strin
     setOpen(false);
     if (code === lang) return;
     saveLang(code);
-    start(() => router.refresh());
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has("lang")) return start(() => router.refresh());
+    url.searchParams.set("lang", code);
+    start(() => router.replace(url.pathname + url.search + url.hash, { scroll: false }));
   }
 
   return (
