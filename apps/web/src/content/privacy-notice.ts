@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-09-25";
+export const PRIVACY_VERSION = "2026-09-28";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
  "en": [
   {
@@ -76,6 +76,16 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "So our staff can get to know the riders who apply to join our riding community. We never share it."
      ],
      [
+      "Learn-to-ride sign-up: each learner’s name (for a child or another adult), age, gender, height and riding experience",
+      "Asked only on a learn-to-ride sign-up. Seen only by our staff.",
+      "Arranging the lesson, having a bike of the right size ready and teaching at the right level"
+     ],
+     [
+      "How you heard about us",
+      "Asked on a community membership application and a learn-to-ride sign-up",
+      "Knowing how riders find us, in totals only"
+     ],
+     [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
       "Created as you use the service",
       "Running your rides, safety, payments and records"
@@ -96,6 +106,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>From you,</strong> when you sign up, edit your profile, book or give feedback.",
     "<strong>From the person who booked you,</strong> if someone booked you as part of their party. They give us your name and height.",
     "<strong>From our community membership application</strong> at micromobility.sa/community/registration, if you apply to join our riding community. Our staff read it and reply. If you are accepted and have no account yet, we create one from those details with a temporary password, which you must change the first time you sign in.",
+    "<strong>From our learn-to-ride sign-up</strong> at micromobility.sa/experiences/learn, if you sign up for a riding lesson for yourself, your children or other adults. Our staff contact you to arrange the lesson. If you have no account yet, we create one from your details with a temporary password, which you must change the first time you sign in. If you sign up another adult, tell them first and make sure they agree.",
     "<strong>From Apple or Google,</strong> if you sign in with them. They give us your name and email address, or an Apple relay address.",
     "<strong>From your device:</strong> a short technical report if the website hits an error (the error, the page and your browser type), and anonymous visit counts through Cloudflare Web Analytics, which uses no cookies."
    ]
@@ -238,7 +249,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    "h": "Children"
   },
   {
-   "p": "Riders under 18 must be booked by a parent or guardian, who provides their details and agrees to the waiver on their behalf."
+   "p": "Riders under 18 must be booked by a parent or guardian, who provides their details and agrees to the waiver on their behalf. A child is signed up for a riding lesson by a parent or guardian, who provides the child’s details."
   },
   {
    "h": "Data breaches"
@@ -325,6 +336,16 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "ليتعرّف موظفونا على الراكبين المتقدّمين للانضمام إلى مجتمع الركوب لدينا. لا نشاركها إطلاقًا."
      ],
      [
+      "التسجيل في دروس تعلّم الركوب: اسم كل متعلّم (للطفل أو لشخص بالغ آخر) وعمره وجنسه وطوله وخبرته في الركوب",
+      "يُطلب في التسجيل في دروس تعلّم الركوب فقط، ولا يطّلع عليه إلا موظفونا.",
+      "ترتيب الدرس، وتجهيز دراجة بالمقاس المناسب، والتعليم بالمستوى المناسب"
+     ],
+     [
+      "كيف عرفت عنا",
+      "يُسأل في طلب عضوية المجتمع وفي التسجيل في دروس تعلّم الركوب",
+      "معرفة كيف يصل إلينا الراكبون، في صورة أعداد إجمالية فقط"
+     ],
+     [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
       "تُسجَّل أثناء استخدامك للخدمة",
       "تشغيل رحلاتك، والسلامة، والمدفوعات، والسجلات"
@@ -345,6 +366,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>منك مباشرة،</strong> عند التسجيل أو تعديل ملفك الشخصي أو الحجز أو تقديم ملاحظاتك.",
     "<strong>من الشخص الذي حجز لك،</strong> إذا حجز لك أحدهم ضمن مجموعته، فيزوّدنا باسمك وطولك.",
     "<strong>من طلب عضوية المجتمع</strong> عبر micromobility.sa/community/registration، إذا تقدّمت للانضمام إلى مجتمع الركوب لدينا. يطّلع موظفونا على طلبك ويردّون عليك. وإذا قُبلت ولم يكن لديك حساب، ننشئ لك حسابًا من تلك البيانات بكلمة مرور مؤقتة، يجب عليك تغييرها عند أول تسجيل دخول.",
+    "<strong>من التسجيل في دروس تعلّم الركوب</strong> عبر micromobility.sa/experiences/learn، إذا سجّلت في درس ركوب لنفسك أو لأطفالك أو لبالغين آخرين. يتواصل معك موظفونا لترتيب الدرس. وإذا لم يكن لديك حساب، ننشئ لك حسابًا من بياناتك بكلمة مرور مؤقتة يجب تغييرها عند أول تسجيل دخول. وإذا سجّلت شخصًا بالغًا آخر، فأبلغه أولًا وتأكد من موافقته.",
     "<strong>من Apple أو Google،</strong> إذا سجّلت الدخول عبرهما، فيزوّداننا باسمك وبريدك الإلكتروني أو عنوان بريد Apple البديل.",
     "<strong>من جهازك:</strong> تقرير تقني مختصر إذا واجه الموقع خطأً (الخطأ والصفحة ونوع المتصفح)، وأعداد زيارات مجهولة الهوية عبر Cloudflare Web Analytics الذي لا يستخدم ملفات تعريف الارتباط."
    ]
@@ -487,7 +509,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    "h": "الأطفال"
   },
   {
-   "p": "يجب أن يتم حجز الراكبين دون 18 عامًا عبر أحد الوالدين أو الولي، الذي يقدّم بياناتهم ويوافق على الإقرار نيابةً عنهم."
+   "p": "يجب أن يتم حجز الراكبين دون 18 عامًا عبر أحد الوالدين أو الولي، الذي يقدّم بياناتهم ويوافق على الإقرار نيابةً عنهم. ويسجّل الطفلَ في درس الركوب أحدُ والديه أو وليّ أمره، ويقدّم بيانات الطفل."
   },
   {
    "h": "تسرّب البيانات"
