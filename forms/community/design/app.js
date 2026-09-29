@@ -431,9 +431,9 @@
     } else {
       var prof = clean($("#prof").value);
       if (prof.length < 2 || prof.length > 80 || !/\p{L}/u.test(prof) || /[<>"`{}]/.test(prof)) hard["f-prof"] = ["Enter your profession"];
-      // Where they work or study (the owner, 2026-09-29), checked as profession is, up to 120.
+      // Their company (the owner, 2026-09-29; sent as workplace), checked as profession is, up to 120.
       var work = clean($("#work").value);
-      if (Array.from(work).length < 2 || Array.from(work).length > 120 || !/\p{L}/u.test(work) || /[<>"`{}]/.test(work)) hard["f-work"] = ["Enter your workplace"];
+      if (Array.from(work).length < 2 || Array.from(work).length > 120 || !/\p{L}/u.test(work) || /[<>"`{}]/.test(work)) hard["f-work"] = ["Enter your company"];
       if (!bikeType) hard["f-type"] = ["Choose a bike type"];
       if (!$("#heard").value) hard["f-heard"] = ["Please tell us how you heard about us."];
       if (!ack) hard["f-ack"] = ["privacyAckRequired", null, true];
@@ -461,7 +461,7 @@
   $("#back").addEventListener("click", function () { hideBanner(); goStep(step - 1); });
 
   /* ── Submit ─────────────────────────────────────────────────────────────── */
-  var FIELD_OF = { name: ["f-name", 1, "Enter your first and last name"], birth_date: ["f-birth", 1, "Choose your date of birth"], gender: ["f-gender", 1, "Choose your gender"], nationality: ["f-nat", 1, "Choose your nationality"], height: ["f-height", 1, "Enter your height in cm (100 to 250)"], phone: ["f-phone", 2, "Enter a valid mobile number"], email: ["f-email", 2, "Enter a valid email address"], instagram: ["f-ig", 2, "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", 2, "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", 3, "Enter your profession"], workplace: ["f-work", 3, "Enter your workplace"], bike_type: ["f-type", 3, "Choose a bike type"], heard_from: ["f-heard", 3, "Please tell us how you heard about us."], privacy: ["f-ack", 3, "privacyAckRequired"] };
+  var FIELD_OF = { name: ["f-name", 1, "Enter your first and last name"], birth_date: ["f-birth", 1, "Choose your date of birth"], gender: ["f-gender", 1, "Choose your gender"], nationality: ["f-nat", 1, "Choose your nationality"], height: ["f-height", 1, "Enter your height in cm (100 to 250)"], phone: ["f-phone", 2, "Enter a valid mobile number"], email: ["f-email", 2, "Enter a valid email address"], instagram: ["f-ig", 2, "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", 2, "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", 3, "Enter your profession"], workplace: ["f-work", 3, "Enter your company"], bike_type: ["f-type", 3, "Choose a bike type"], heard_from: ["f-heard", 3, "Please tell us how you heard about us."], privacy: ["f-ack", 3, "privacyAckRequired"] };
   var sent = null, busy = false;
   function setLoading(on) { busy = on; $("#submit").classList.toggle("loading", on); $("#submit").disabled = on; }
   $("#form").addEventListener("submit", async function (e) {

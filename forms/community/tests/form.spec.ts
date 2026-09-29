@@ -229,26 +229,26 @@ test('a server answer about a field goes back to that field', async ({ page }) =
   expect(sent.length).toBe(0);
 });
 
-// Workplace (the owner, 2026-09-29: asked here and on the learn-to-ride form, kept on the account):
+// Company (the owner, 2026-09-29: asked here and on the learn-to-ride form, kept on the account; sent as workplace):
 // required, checked as profession is, up to 120 characters; a server answer about it goes back to it.
-test('workplace: required, beside the profession, and in the page language', async ({ page }) => {
+test('company: required, beside the profession, and in the page language', async ({ page }) => {
   const { errs, sent } = await open(page);
   await stepOne(page); await stepTwo(page);
-  await expect(page.locator('#f-work label')).toHaveText('Workplace');
-  await expect(page.locator('#f-work .hint')).toHaveText('Your company, school or university');
+  await expect(page.locator('#f-work label')).toHaveText('Company');
+  await expect(page.locator('#f-work .hint')).toHaveText('The company you work for');
   await page.fill('#prof', 'Architect'); await page.click('#types .tile[data-v="Road"]'); await page.selectOption('#heard', 'friend'); await page.click('#ack .tick-box');
   await page.click('#submit');
-  await expect(page.locator('#f-work .err')).toHaveText('Enter your workplace');
+  await expect(page.locator('#f-work .err')).toHaveText('Enter your company');
   for (const bad of ['x', '12345', '<b>Aramco</b>', '--- ...']) {
     await page.fill('#work', bad);
     await expect(page.locator('#f-work .err')).toHaveText(''); // typing clears the message
     await page.click('#submit');
-    await expect(page.locator('#f-work .err')).toHaveText('Enter your workplace');
+    await expect(page.locator('#f-work .err')).toHaveText('Enter your company');
   }
   expect(sent.length).toBe(0);
   await page.selectOption('#lang', 'ar');
-  await expect(page.locator('#f-work label')).toHaveText('جهة العمل');
-  await expect(page.locator('#f-work .err')).toHaveText('أدخل جهة عملك');
+  await expect(page.locator('#f-work label')).toHaveText('الشركة');
+  await expect(page.locator('#f-work .err')).toHaveText('أدخل اسم شركتك');
   await page.fill('#work', 'جامعة الملك عبدالعزيز');
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
@@ -256,14 +256,14 @@ test('workplace: required, beside the profession, and in the page language', asy
   expect(errs).toEqual([]);
 });
 
-test('a server answer about the workplace goes back to that field', async ({ page }) => {
+test('a server answer about the company goes back to that field', async ({ page }) => {
   await open(page);
   await page.unroute('**/rest/v1/rpc/community_apply');
   await page.route('**/rest/v1/rpc/community_apply', (r) => r.fulfill(json({ ok: false, error: 'workplace' })));
   await stepOne(page); await stepTwo(page);
   await page.fill('#prof', 'Architect'); await page.fill('#work', 'Saudi Aramco'); await page.click('#types .tile[data-v="Road"]'); await page.selectOption('#heard', 'other'); await page.click('#ack .tick-box');
   await page.click('#submit');
-  await expect(page.locator('#f-work .err')).toHaveText('Enter your workplace');
+  await expect(page.locator('#f-work .err')).toHaveText('Enter your company');
 });
 
 // "How did you hear about us?" (the owner, 2026-09-28: asked here and on the learn-to-ride form, no

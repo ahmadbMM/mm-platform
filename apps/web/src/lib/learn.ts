@@ -17,8 +17,8 @@ import { NATIONALITIES } from "@/content/nationalities";
 // most - because staff turn a new person into a booking app account, whose names follow it; what
 // the community form asks (the owner, 2026-09-28: for that account): a date of birth (never in the
 // future, at most 99 years ago), gender, nationality (the booking app's list), height (80 to 250),
-// profession and workplace (the owner, 2026-09-29: where they work or study, 2 to 120 characters,
-// checked as profession is), and Instagram and LinkedIn, which may be left empty (the form does not say so);
+// profession and workplace (the owner, 2026-09-29: the company they work for, labelled Company, 2 to
+// 120 characters, checked as profession is), and Instagram and LinkedIn, which may be left empty (the form does not say so);
 // a Saudi mobile as +9665XXXXXXXX, any other country as +<8 to 15 digits>; an email; how they
 // heard of us (one of HEARD, required: asked here and on the community form, no longer at the
 // booking app's sign-up); notes up to 600 characters; ride news, yes or no; and the version of the

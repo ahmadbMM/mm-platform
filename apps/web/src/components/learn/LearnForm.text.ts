@@ -19,8 +19,8 @@ export const T = {
     birth: "Date of birth", day: "Day", month: "Month", year: "Year",
     nationality: "Nationality", natPick: "Choose your nationality",
     profession: "Profession", professionPh: "e.g. Engineer",
-    // Where they work or study (the owner, 2026-09-29), in the community form's words.
-    workplace: "Workplace", workplaceHint: "Your company, school or university",
+    // Their company (the owner, 2026-09-29; sent as workplace), in the community form's words.
+    workplace: "Company", workplaceHint: "The company you work for",
     instagram: "Instagram", instagramHint: "Your Instagram username, or a link to your profile",
     linkedin: "LinkedIn", linkedinHint: "The link to your LinkedIn profile",
     // The booking app's own ride news box (rideNewsOpt).
@@ -47,7 +47,7 @@ export const T = {
       name: "Enter your first and last name - letters, spaces and periods only.", phone: "Check the mobile number, e.g. 05XXXXXXXX.",
       email: "Check the email address.", heard_from: "Please tell us how you heard about us.",
       birth_date: "Choose your date of birth.", gender: "Choose your gender.", nationality: "Choose your nationality.",
-      height: "Enter your height in cm (80 to 250).", profession: "Enter your profession.", workplace: "Enter your workplace.",
+      height: "Enter your height in cm (80 to 250).", profession: "Enter your profession.", workplace: "Enter your company.",
       instagram: "An Instagram username has only letters, numbers, dots and underscores.", linkedin: "Paste the link to your own profile (linkedin.com/in/…).",
       notes: "Keep the note to 600 characters.", privacy: "Please confirm you have read the Privacy Notice.",
       throttled: "Too many sign-ups from this network - try again in a few minutes.",
@@ -67,7 +67,7 @@ export const T = {
     birth: "تاريخ الميلاد", day: "اليوم", month: "الشهر", year: "السنة",
     nationality: "الجنسية", natPick: "اختر جنسيتك",
     profession: "المهنة", professionPh: "مثال: مهندس",
-    workplace: "جهة العمل", workplaceHint: "اسم شركتك أو مدرستك أو جامعتك",
+    workplace: "الشركة", workplaceHint: "الشركة التي تعمل فيها",
     instagram: "Instagram", instagramHint: "اسم المستخدم في Instagram، أو رابط حسابك",
     linkedin: "LinkedIn", linkedinHint: "رابط ملفك الشخصي على LinkedIn",
     news: "أرسلوا لي أخبار الرحلات والإعلانات عبر واتساب والبريد الإلكتروني، ويمكنني إيقافها في أي وقت.",
@@ -90,7 +90,7 @@ export const T = {
       name: "أدخل اسمك الأول واسم العائلة - حروف ومسافات ونقاط فقط.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.",
       email: "تحقق من البريد الإلكتروني.", heard_from: "أخبرنا من فضلك كيف عرفت عنا.",
       birth_date: "اختر تاريخ ميلادك.", gender: "اختر جنسك.", nationality: "اختر جنسيتك.",
-      height: "أدخل طولك بالسنتيمتر (من 80 إلى 250).", profession: "أدخل مهنتك.", workplace: "أدخل جهة عملك.",
+      height: "أدخل طولك بالسنتيمتر (من 80 إلى 250).", profession: "أدخل مهنتك.", workplace: "أدخل اسم شركتك.",
       instagram: "يتكوّن اسم المستخدم في Instagram من حروف وأرقام ونقاط وشرطات سفلية فقط.", linkedin: "الصق رابط ملفك الشخصي الخاص بك (linkedin.com/in/…).",
       notes: "اجعل الملاحظة في حدود 600 حرف.", privacy: "يرجى تأكيد قراءتك لإشعار الخصوصية.",
       throttled: "تسجيلات كثيرة من هذه الشبكة - حاول بعد دقائق.",

@@ -71,7 +71,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "So our staff can get to know riders who may be invited to join our riding community. We never post, tag or share them."
      ],
      [
-      "Profession and workplace",
+      "Profession and company",
       "Asked on a community membership application and a learn-to-ride sign-up; optional on your account page. Seen only by our staff.",
       "So our staff can get to know the riders who apply to join our riding community or sign up for a riding lesson. We never share them."
      ],
@@ -331,7 +331,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "ليتعرّف موظفونا على الراكبين الذين قد تتم دعوتهم للانضمام إلى مجتمع الركوب لدينا. لا ننشرها ولا نشير إليها ولا نشاركها إطلاقًا."
      ],
      [
-      "المهنة وجهة العمل",
+      "المهنة والشركة",
       "تُطلبان في طلب عضوية المجتمع وفي التسجيل في دروس تعلّم الركوب، وهما اختياريتان في صفحة حسابك، ولا يطّلع عليهما إلا موظفونا.",
       "ليتعرّف موظفونا على الراكبين المتقدّمين للانضمام إلى مجتمع الركوب لدينا أو المسجّلين في دروس تعلّم الركوب. لا نشاركهما إطلاقًا."
      ],
