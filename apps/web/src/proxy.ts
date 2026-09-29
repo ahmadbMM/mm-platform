@@ -42,6 +42,21 @@ const FLEET_PAGE = /^\/bikes\/\d{1,6}\/?$/;
 // (app/[locale]/experiences/learn). The old /en and /ar addresses too, which next-intl sends on.
 const LEARN_PAGE = /^(?:\/(?:en|ar))?\/experiences\/learn\/?$/;
 
+// A staff phone tapping a bike's chip goes to the staff app, not the bike's page (owner,
+// 2026-09-29): staff.micromobility.sa/?bike=42 puts the bike into the check-in open on that phone,
+// or opens the return of the rider who has it. The staff app marks its phones with this cookie,
+// written for micromobility.sa each time its panel opens and taken away on sign-out; a rider's
+// phone has none and gets the page. It only picks the address - the staff app asks for its own
+// sign-in before it shows a bike - and the answer is never kept, since the same address answers
+// two ways. /bikes/42 and the chips' older /?bike=42 (/b/42 reaches /bikes/42 first, next.config).
+export const STAFF_TAP_COOKIE = "mm_staff_tap";
+const STAFF_APP = "https://staff.micromobility.sa";
+export function staffTapTarget(pathname: string, searchParams: URLSearchParams, cookie: string | undefined): string | null {
+  if (cookie !== "1") return null;
+  const code = FLEET_PAGE.test(pathname) ? pathname.split("/")[2] : pathname === "/" ? searchParams.get("bike") : null;
+  return code && /^\d{1,6}$/.test(code) ? `${STAFF_APP}/?bike=${Number(code)}` : null;
+}
+
 export default async function proxy(req: NextRequest) {
   // The handoff spec writes the tag URL as /?bike=42; the chips carry /b/42, and the page now
   // lives at /bikes/42 (next.config redirects the chips' address there). Anything still using
@@ -55,6 +70,12 @@ export default async function proxy(req: NextRequest) {
   if (form && form !== pathname) return NextResponse.redirect(new URL(form + req.nextUrl.search, req.url), 301);
   const store = await storeTarget(pathname, req);
   if (store) return NextResponse.redirect(store, 307);
+  const staffTap = staffTapTarget(pathname, searchParams, req.cookies.get(STAFF_TAP_COOKIE)?.value);
+  if (staffTap) {
+    const res = NextResponse.redirect(staffTap, 307);
+    res.headers.set("Cache-Control", "private, no-store");
+    return res;
+  }
   if (pathname === "/") {
     const code = searchParams.get("bike");
     if (code && /^\d{1,6}$/.test(code)) {

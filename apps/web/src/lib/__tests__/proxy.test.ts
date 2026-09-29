@@ -132,6 +132,33 @@ describe("while the site is Coming Soon", () => {
   });
 });
 
+describe("a staff phone tapping a bike's chip", () => {
+  // The staff app writes mm_staff_tap=1 for micromobility.sa on the phones it is signed in on.
+  const staff = { cookie: "NEXT_LOCALE=ar; mm_staff_tap=1" };
+  it("goes to the staff app with the bike's number, never kept by a cache", async () => {
+    for (const [p, to] of [["/bikes/42", "42"], ["/bikes/042/", "42"], ["/bikes/999999", "999999"], ["/?bike=042", "42"], ["/bikes/42?lang=ar", "42"]]) {
+      const res = await call(p, staff);
+      expect(res.status, p).toBe(307);
+      expect(res.headers.get("location"), p).toBe(`https://staff.micromobility.sa/?bike=${to}`);
+      expect(res.headers.get("cache-control"), p).toBe("private, no-store");
+    }
+  });
+  it("a rider's phone, or any other value, still gets the bike's page", async () => {
+    for (const cookie of ["", "mm_staff_tap=", "mm_staff_tap=0", "mm_staff_tap=true", "xmm_staff_tap=1"]) {
+      const res = await call("/bikes/42", cookie ? { cookie } : {});
+      expect(res.status, cookie).toBe(200);
+      expect(rewrittenTo(res), cookie).toBe("/en/bikes/42");
+    }
+    expect(redirectedTo(await call("/?bike=42", { cookie: "mm_staff_tap=0" }))).toBe("/bikes/42");
+  });
+  it("only a bike's number is sent on: other pages open as they would for anyone", async () => {
+    for (const p of ["/", "/bikes", "/bikes/road", "/bikes/1234567", "/?bike=abc", "/club?bike=42"]) {
+      const res = await call(p, staff);
+      expect(res.headers.get("location") || "", p).not.toContain("staff.micromobility.sa");
+    }
+  });
+});
+
 describe("once the site is open", () => {
   // What staff set, as the database answers it: Coming Soon off, the Club page switched on and
   // the Experiences page not (Website > Pages).
