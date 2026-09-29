@@ -71,9 +71,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "So our staff can get to know riders who may be invited to join our riding community. We never post, tag or share them."
      ],
      [
-      "Profession",
-      "Asked on a community membership application and a learn-to-ride sign-up. Seen only by our staff.",
-      "So our staff can get to know the riders who apply to join our riding community or sign up for a riding lesson. We never share it."
+      "Profession and workplace",
+      "Asked on a community membership application and a learn-to-ride sign-up; optional on your account page. Seen only by our staff.",
+      "So our staff can get to know the riders who apply to join our riding community or sign up for a riding lesson. We never share them."
      ],
      [
       "Learn-to-ride sign-up: each learner’s name (for a child or another adult), age, gender, height and riding experience",
@@ -82,7 +82,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "How you heard about us",
-      "Asked on a community membership application and a learn-to-ride sign-up",
+      "Asked on a community membership application and a learn-to-ride sign-up; optional on your account page",
       "Knowing how riders find us, in totals only"
      ],
      [
@@ -331,9 +331,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "ليتعرّف موظفونا على الراكبين الذين قد تتم دعوتهم للانضمام إلى مجتمع الركوب لدينا. لا ننشرها ولا نشير إليها ولا نشاركها إطلاقًا."
      ],
      [
-      "المهنة",
-      "تُطلب في طلب عضوية المجتمع وفي التسجيل في دروس تعلّم الركوب، ولا يطّلع عليها إلا موظفونا.",
-      "ليتعرّف موظفونا على الراكبين المتقدّمين للانضمام إلى مجتمع الركوب لدينا أو المسجّلين في دروس تعلّم الركوب. لا نشاركها إطلاقًا."
+      "المهنة وجهة العمل",
+      "تُطلبان في طلب عضوية المجتمع وفي التسجيل في دروس تعلّم الركوب، وهما اختياريتان في صفحة حسابك، ولا يطّلع عليهما إلا موظفونا.",
+      "ليتعرّف موظفونا على الراكبين المتقدّمين للانضمام إلى مجتمع الركوب لدينا أو المسجّلين في دروس تعلّم الركوب. لا نشاركهما إطلاقًا."
      ],
      [
       "التسجيل في دروس تعلّم الركوب: اسم كل متعلّم (للطفل أو لشخص بالغ آخر) وعمره وجنسه وطوله وخبرته في الركوب",
@@ -342,7 +342,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "كيف عرفت عنا",
-      "يُسأل في طلب عضوية المجتمع وفي التسجيل في دروس تعلّم الركوب",
+      "يُسأل في طلب عضوية المجتمع وفي التسجيل في دروس تعلّم الركوب، وهو اختياري في صفحة حسابك",
       "معرفة كيف يصل إلينا الراكبون، في صورة أعداد إجمالية فقط"
      ],
      [

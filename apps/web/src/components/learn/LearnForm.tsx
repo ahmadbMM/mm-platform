@@ -17,7 +17,7 @@ import { T } from "./LearnForm.text";
 // the team picks the lessons' date and time and sends it and, for someone new, sets up their
 // booking app account - made from what the person gives here, the community form's questions (the
 // owner, 2026-09-28): date of birth, gender, nationality, height, Instagram, LinkedIn and
-// profession, and the ride news box. A "Me" card asks only the riding so far: the age, gender and
+// profession, and the ride news box - and workplace (the owner, 2026-09-29), asked on both forms. A "Me" card asks only the riding so far: the age, gender and
 // height are the person's own. Nothing is booked or charged here. The form checks what the database
 // checks (lib/learn.ts) and shows one message at a time, about the first thing to fix; a learner's
 // names their card and sits in it, and the card is brought into view with the keyboard on it.
@@ -50,7 +50,7 @@ export default function LearnForm(p: LearnFormProps) {
   const t = useLocalize(T);
   const id = useId();
   const next = useRef(1); // the next card's key
-  const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], name: "", birth: "", gender: "", nationality: "", height: "", phone: "", email: "", instagram: "", linkedin: "", profession: "", heard: "", notes: "", privacy: false, news: false });
+  const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], name: "", birth: "", gender: "", nationality: "", height: "", phone: "", email: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "", privacy: false, news: false });
   // The date of birth as three pickers; the form holds it as YYYY-MM-DD once all three are chosen.
   const [bd, setBd] = useState({ d: "", m: "", y: "" });
   // The names of the months and the countries are the browser's (see lib/nationality.ts): drawn
@@ -285,6 +285,11 @@ export default function LearnForm(p: LearnFormProps) {
         <label className="ln-field">
           <span>{t.profession}</span>
           <input className="ln-input" value={f.profession} onChange={(e) => setContact("profession", e.target.value)} autoComplete="organization-title" maxLength={80} placeholder={t.professionPh} />
+        </label>
+        <label className="ln-field">
+          <span>{t.workplace}</span>
+          <input className="ln-input" value={f.workplace} onChange={(e) => setContact("workplace", e.target.value)} autoComplete="organization" maxLength={120} />
+          <small className="ln-hint">{t.workplaceHint}</small>
         </label>
         <label className="ln-field">
           <span>{t.heard}</span>

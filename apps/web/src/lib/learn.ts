@@ -16,8 +16,9 @@ import { NATIONALITIES } from "@/content/nationalities";
 // And the person signing up (the contact): first and last name - the same letters rule, 120 at
 // most - because staff turn a new person into a booking app account, whose names follow it; what
 // the community form asks (the owner, 2026-09-28: for that account): a date of birth (never in the
-// future, at most 99 years ago), gender, nationality (the booking app's list), height (80 to 250)
-// and profession, and Instagram and LinkedIn, which may be left empty (the form does not say so);
+// future, at most 99 years ago), gender, nationality (the booking app's list), height (80 to 250),
+// profession and workplace (the owner, 2026-09-29: where they work or study, 2 to 120 characters,
+// checked as profession is), and Instagram and LinkedIn, which may be left empty (the form does not say so);
 // a Saudi mobile as +9665XXXXXXXX, any other country as +<8 to 15 digits>; an email; how they
 // heard of us (one of HEARD, required: asked here and on the community form, no longer at the
 // booking app's sign-up); notes up to 600 characters; ride news, yes or no; and the version of the
@@ -65,6 +66,7 @@ export type LearnFields = {
   instagram: string;
   linkedin: string;
   profession: string;
+  workplace: string;
   heard: Heard | "";
   notes: string;
   privacy: boolean;
@@ -75,7 +77,7 @@ export type LearnFields = {
  *  own, with their place in the list, and the sign-up's. "learners" is the list itself - none, more
  *  than five, "self" twice or the same learner twice (the form names the card for the last two). */
 export type LearnerError = "learner_who" | "learner_name" | "learner_age" | "learner_gender" | "learner_height" | "level";
-export type PersonError = "name" | "birth_date" | "gender" | "nationality" | "height" | "phone" | "email" | "instagram" | "linkedin" | "profession" | "heard_from" | "notes" | "privacy";
+export type PersonError = "name" | "birth_date" | "gender" | "nationality" | "height" | "phone" | "email" | "instagram" | "linkedin" | "profession" | "workplace" | "heard_from" | "notes" | "privacy";
 export type LearnProblem = { error: LearnerError; index: number } | { error: "learners"; index?: number } | { error: PersonError; index?: undefined };
 
 /** One learner, as learn_apply() reads them. */
@@ -93,6 +95,7 @@ export type LearnPayload = {
   instagram: string;
   linkedin: string;
   profession: string;
+  workplace: string;
   heard_from: Heard;
   notes: string;
   ride_news: boolean;
@@ -216,12 +219,14 @@ export function learnPayload(f: LearnFields, lang: string, privacyVersion: strin
   if (!liOk(linkedin)) return { error: "linkedin" };
   const profession = f.profession.trim().replace(/\s+/g, " ");
   if (chars(profession) < 2 || chars(profession) > 80 || !/\p{L}/u.test(profession) || /[<>"`{}]/.test(profession)) return { error: "profession" };
+  const workplace = f.workplace.trim().replace(/\s+/g, " ");
+  if (chars(workplace) < 2 || chars(workplace) > 120 || !/\p{L}/u.test(workplace) || /[<>"`{}]/.test(workplace)) return { error: "workplace" };
   if (!oneOf(HEARD, f.heard)) return { error: "heard_from" };
   const notes = f.notes.trim();
   if (chars(notes) > NOTES_MAX) return { error: "notes" };
   if (!f.privacy || !/^\d{4}-\d{2}-\d{2}$/.test(privacyVersion)) return { error: "privacy" };
   // "Me" takes the person's own age, gender and height (the database does the same).
   const all = learners.map((l) => (l.who === "self" ? { ...l, age, gender: f.gender as Gender, height } : l));
-  return { payload: { name, birth_date: f.birth, gender: f.gender, nationality: f.nationality, height, email, phone, instagram, linkedin, profession,
+  return { payload: { name, birth_date: f.birth, gender: f.gender, nationality: f.nationality, height, email, phone, instagram, linkedin, profession, workplace,
     heard_from: f.heard, notes, ride_news: f.news, lang: /^[a-z]{2}$/.test(lang) ? lang : "en", privacy_version: privacyVersion, learners: all } };
 }

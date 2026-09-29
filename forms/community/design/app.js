@@ -321,6 +321,7 @@
   $("#ig").addEventListener("input", function () { clearMsg("f-ig"); });
   $("#li").addEventListener("input", function () { clearMsg("f-li"); });
   $("#prof").addEventListener("input", function () { clearMsg("f-prof"); });
+  $("#work").addEventListener("input", function () { clearMsg("f-work"); });
   $("#height").addEventListener("input", function () { var v = toAscii(this.value).replace(/\D/g, "").slice(0, 3); if (v !== this.value) this.value = v; clearMsg("f-height"); acked[1] = null; });
 
   /* ── Tiles and tick boxes ───────────────────────────────────────────────── */
@@ -430,13 +431,16 @@
     } else {
       var prof = clean($("#prof").value);
       if (prof.length < 2 || prof.length > 80 || !/\p{L}/u.test(prof) || /[<>"`{}]/.test(prof)) hard["f-prof"] = ["Enter your profession"];
+      // Where they work or study (the owner, 2026-09-29), checked as profession is, up to 120.
+      var work = clean($("#work").value);
+      if (Array.from(work).length < 2 || Array.from(work).length > 120 || !/\p{L}/u.test(work) || /[<>"`{}]/.test(work)) hard["f-work"] = ["Enter your workplace"];
       if (!bikeType) hard["f-type"] = ["Choose a bike type"];
       if (!$("#heard").value) hard["f-heard"] = ["Please tell us how you heard about us."];
       if (!ack) hard["f-ack"] = ["privacyAckRequired", null, true];
     }
     return { hard: hard, soft: soft };
   }
-  var STEP_FIELDS = { 1: ["f-name", "f-birth", "f-gender", "f-nat", "f-height"], 2: ["f-phone", "f-email", "f-ig", "f-li"], 3: ["f-prof", "f-type", "f-heard", "f-ack"] };
+  var STEP_FIELDS = { 1: ["f-name", "f-birth", "f-gender", "f-nat", "f-height"], 2: ["f-phone", "f-email", "f-ig", "f-li"], 3: ["f-prof", "f-work", "f-type", "f-heard", "f-ack"] };
   // Shows the step's problems; true when the rider may go on.
   function passStep(n) {
     var r = check(n), hk = Object.keys(r.hard), sk = Object.keys(r.soft);
@@ -457,7 +461,7 @@
   $("#back").addEventListener("click", function () { hideBanner(); goStep(step - 1); });
 
   /* ── Submit ─────────────────────────────────────────────────────────────── */
-  var FIELD_OF = { name: ["f-name", 1, "Enter your first and last name"], birth_date: ["f-birth", 1, "Choose your date of birth"], gender: ["f-gender", 1, "Choose your gender"], nationality: ["f-nat", 1, "Choose your nationality"], height: ["f-height", 1, "Enter your height in cm (100 to 250)"], phone: ["f-phone", 2, "Enter a valid mobile number"], email: ["f-email", 2, "Enter a valid email address"], instagram: ["f-ig", 2, "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", 2, "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", 3, "Enter your profession"], bike_type: ["f-type", 3, "Choose a bike type"], heard_from: ["f-heard", 3, "Please tell us how you heard about us."], privacy: ["f-ack", 3, "privacyAckRequired"] };
+  var FIELD_OF = { name: ["f-name", 1, "Enter your first and last name"], birth_date: ["f-birth", 1, "Choose your date of birth"], gender: ["f-gender", 1, "Choose your gender"], nationality: ["f-nat", 1, "Choose your nationality"], height: ["f-height", 1, "Enter your height in cm (100 to 250)"], phone: ["f-phone", 2, "Enter a valid mobile number"], email: ["f-email", 2, "Enter a valid email address"], instagram: ["f-ig", 2, "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", 2, "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", 3, "Enter your profession"], workplace: ["f-work", 3, "Enter your workplace"], bike_type: ["f-type", 3, "Choose a bike type"], heard_from: ["f-heard", 3, "Please tell us how you heard about us."], privacy: ["f-ack", 3, "privacyAckRequired"] };
   var sent = null, busy = false;
   function setLoading(on) { busy = on; $("#submit").classList.toggle("loading", on); $("#submit").disabled = on; }
   $("#form").addEventListener("submit", async function (e) {
@@ -474,7 +478,7 @@
       name: titleCase($("#name").value), email: clean($("#email").value).toLowerCase(), phone: e164(),
       height: parseInt(toAscii($("#height").value), 10), birth_date: birthValue(), gender: gender,
       nationality: $("#nat").value, bike_type: bikeType, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
-      profession: clean($("#prof").value), heard_from: $("#heard").value, lang: lang, privacy_version: SH.PRIVACY_VERSION, ride_news: news
+      profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang, privacy_version: SH.PRIVACY_VERSION, ride_news: news
     };
     setLoading(true);
     var res = null;

@@ -40,7 +40,7 @@ test('a complete application: the payload is clean and the rider is told we will
   await expect(page.locator('.title').first()).toHaveText('Community Membership Application');
   await stepOne(page);
   await stepTwo(page);
-  await page.fill('#prof', 'Architect');
+  await page.fill('#prof', 'Architect'); await page.fill('#work', '  Saudi   Aramco ');
   await page.click('#types .tile[data-v="Road"]');
   await page.click('#submit');
   await expect(page.locator('#f-heard .err')).toHaveText('Please tell us how you heard about us.');
@@ -56,7 +56,7 @@ test('a complete application: the payload is clean and the rider is told we will
   expect(sent).toEqual([{ p: {
     name: 'Karim Mansour', email: 'karim.mansour@gmail.com', phone: '+966552468013', height: 178, birth_date: '1994-03-12',
     gender: 'male', nationality: 'Egypt', bike_type: 'Road', instagram: 'karim.rides', linkedin: 'karim-mansour-arch',
-    profession: 'Architect', heard_from: 'instagram', lang: 'en', privacy_version: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), ride_news: true,
+    profession: 'Architect', workplace: 'Saudi Aramco', heard_from: 'instagram', lang: 'en', privacy_version: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), ride_news: true,
   } }]);
   expect(errs).toEqual([]);
 });
@@ -69,7 +69,7 @@ test('Mountain is a bike type; the name and phone fields carry no hints', async 
   await expect(page.locator('body')).not.toContainText('Not a Saudi number');
   await stepOne(page); await stepTwo(page);
   await expect(page.locator('#types .tile')).toHaveText(['Road', 'Hybrid', 'Mountain']);
-  await page.fill('#prof', 'Architect');
+  await page.fill('#prof', 'Architect'); await page.fill('#work', '  Saudi   Aramco ');
   await page.click('#types .tile[data-v="Mountain"]');
   await page.selectOption('#heard', 'friend');
   await page.click('#ack .tick-box');
@@ -194,7 +194,7 @@ test('Instagram and LinkedIn may be left empty, and nothing on the page says so'
   await page.click('#next');
   await expect(page.locator('#f-ig .err')).toHaveText('');
   await expect(page.locator('#f-li .err')).toHaveText('');
-  await page.fill('#prof', 'Architect');
+  await page.fill('#prof', 'Architect'); await page.fill('#work', '  Saudi   Aramco ');
   await page.click('#types .tile[data-v="Road"]');
   await page.selectOption('#heard', 'invited');
   await page.click('#ack .tick-box');
@@ -222,11 +222,48 @@ test('a server answer about a field goes back to that field', async ({ page }) =
   await page.unroute('**/rest/v1/rpc/community_apply');
   await page.route('**/rest/v1/rpc/community_apply', (r) => r.fulfill(json({ ok: false, error: 'email' })));
   await stepOne(page); await stepTwo(page);
-  await page.fill('#prof', 'Architect'); await page.click('#types .tile[data-v="Hybrid"]'); await page.selectOption('#heard', 'google'); await page.click('#ack .tick-box');
+  await page.fill('#prof', 'Architect'); await page.fill('#work', '  Saudi   Aramco '); await page.click('#types .tile[data-v="Hybrid"]'); await page.selectOption('#heard', 'google'); await page.click('#ack .tick-box');
   await page.click('#submit');
   await expect(page.locator('fieldset.step[data-step="2"]')).toBeVisible();
   await expect(page.locator('#f-email .err')).toHaveText('Enter a valid email address');
   expect(sent.length).toBe(0);
+});
+
+// Workplace (the owner, 2026-09-29: asked here and on the learn-to-ride form, kept on the account):
+// required, checked as profession is, up to 120 characters; a server answer about it goes back to it.
+test('workplace: required, beside the profession, and in the page language', async ({ page }) => {
+  const { errs, sent } = await open(page);
+  await stepOne(page); await stepTwo(page);
+  await expect(page.locator('#f-work label')).toHaveText('Workplace');
+  await expect(page.locator('#f-work .hint')).toHaveText('Your company, school or university');
+  await page.fill('#prof', 'Architect'); await page.click('#types .tile[data-v="Road"]'); await page.selectOption('#heard', 'friend'); await page.click('#ack .tick-box');
+  await page.click('#submit');
+  await expect(page.locator('#f-work .err')).toHaveText('Enter your workplace');
+  for (const bad of ['x', '12345', '<b>Aramco</b>', '--- ...']) {
+    await page.fill('#work', bad);
+    await expect(page.locator('#f-work .err')).toHaveText(''); // typing clears the message
+    await page.click('#submit');
+    await expect(page.locator('#f-work .err')).toHaveText('Enter your workplace');
+  }
+  expect(sent.length).toBe(0);
+  await page.selectOption('#lang', 'ar');
+  await expect(page.locator('#f-work label')).toHaveText('جهة العمل');
+  await expect(page.locator('#f-work .err')).toHaveText('أدخل جهة عملك');
+  await page.fill('#work', 'جامعة الملك عبدالعزيز');
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect((sent[0].p as Record<string, unknown>).workplace).toBe('جامعة الملك عبدالعزيز');
+  expect(errs).toEqual([]);
+});
+
+test('a server answer about the workplace goes back to that field', async ({ page }) => {
+  await open(page);
+  await page.unroute('**/rest/v1/rpc/community_apply');
+  await page.route('**/rest/v1/rpc/community_apply', (r) => r.fulfill(json({ ok: false, error: 'workplace' })));
+  await stepOne(page); await stepTwo(page);
+  await page.fill('#prof', 'Architect'); await page.fill('#work', 'Saudi Aramco'); await page.click('#types .tile[data-v="Road"]'); await page.selectOption('#heard', 'other'); await page.click('#ack .tick-box');
+  await page.click('#submit');
+  await expect(page.locator('#f-work .err')).toHaveText('Enter your workplace');
 });
 
 // "How did you hear about us?" (the owner, 2026-09-28: asked here and on the learn-to-ride form, no
@@ -253,7 +290,7 @@ test('a server answer about how they heard of us goes back to that field', async
   await page.unroute('**/rest/v1/rpc/community_apply');
   await page.route('**/rest/v1/rpc/community_apply', (r) => r.fulfill(json({ ok: false, error: 'heard_from' })));
   await stepOne(page); await stepTwo(page);
-  await page.fill('#prof', 'Architect'); await page.click('#types .tile[data-v="Road"]'); await page.selectOption('#heard', 'other'); await page.click('#ack .tick-box');
+  await page.fill('#prof', 'Architect'); await page.fill('#work', '  Saudi   Aramco '); await page.click('#types .tile[data-v="Road"]'); await page.selectOption('#heard', 'other'); await page.click('#ack .tick-box');
   await page.click('#submit');
   await expect(page.locator('#f-heard .err')).toHaveText('Please tell us how you heard about us.');
 });

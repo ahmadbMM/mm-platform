@@ -16,7 +16,7 @@ const friend: LearnerFields = { who: "other", name: "Lina Saleh", age: "34", gen
 const TODAY = "2026-09-28";
 const form: LearnFields = {
   learners: [me], name: "Sara Al Harbi", birth: "1996-02-10", gender: "female", nationality: "Saudi Arabia", height: "165",
-  phone: "0551234567", email: "Sara@Example.com", instagram: "", linkedin: "", profession: "Designer", heard: "instagram", notes: "", privacy: true, news: false,
+  phone: "0551234567", email: "Sara@Example.com", instagram: "", linkedin: "", profession: "Designer", workplace: "Saudi Aramco", heard: "instagram", notes: "", privacy: true, news: false,
 };
 const send = (x: Partial<LearnFields>) => learnPayload({ ...form, ...x }, "en", "2026-09-25", TODAY);
 const error = (x: Partial<LearnFields>) => {
@@ -36,11 +36,11 @@ describe("learnPayload", () => {
       payload: {
         name: "Sara Al Harbi", birth_date: "1996-02-10", gender: "female", nationality: "Saudi Arabia", height: 165,
         email: "sara@example.com", phone: "+966551234567", instagram: "", linkedin: "", profession: "Designer",
-        heard_from: "instagram", notes: "A little nervous.", ride_news: false, lang: "ar", privacy_version: "2026-09-25",
+        workplace: "Saudi Aramco", heard_from: "instagram", notes: "A little nervous.", ride_news: false, lang: "ar", privacy_version: "2026-09-25",
         learners: [{ who: "self", name: "", age: 30, gender: "female", height: 165, level: "never" }],
       },
     });
-    expect(Object.keys("payload" in r ? r.payload : {})).toEqual(["name", "birth_date", "gender", "nationality", "height", "email", "phone", "instagram", "linkedin", "profession", "heard_from", "notes", "ride_news", "lang", "privacy_version", "learners"]);
+    expect(Object.keys("payload" in r ? r.payload : {})).toEqual(["name", "birth_date", "gender", "nationality", "height", "email", "phone", "instagram", "linkedin", "profession", "workplace", "heard_from", "notes", "ride_news", "lang", "privacy_version", "learners"]);
   });
 
   it("sends three learners in their order: the person signing up, their child and another adult", () => {
@@ -74,7 +74,7 @@ describe("learnPayload", () => {
 
   it("names the card of the first learner with a problem, and checks the person signing up only after every card", () => {
     const empty: LearnerFields = { who: "", name: "", age: "", gender: "", height: "", level: "" };
-    const blank: LearnFields = { learners: [kid, empty, { ...friend, age: "100" }], name: "", birth: "", gender: "", nationality: "", height: "", phone: "", email: "", instagram: "", linkedin: "", profession: "", heard: "", notes: "", privacy: false, news: false };
+    const blank: LearnFields = { learners: [kid, empty, { ...friend, age: "100" }], name: "", birth: "", gender: "", nationality: "", height: "", phone: "", email: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "", privacy: false, news: false };
     const steps: [(f: LearnFields) => LearnFields, { error: string; index?: number } | null][] = [
       [(f) => f, { error: "learner_who", index: 1 }],
       [(f) => ({ ...f, learners: [f.learners[0], { ...empty, who: "child" }, f.learners[2]] }), { error: "learner_name", index: 1 }],
@@ -91,7 +91,8 @@ describe("learnPayload", () => {
       [(f) => ({ ...f, height: "160" }), { error: "phone" }],
       [(f) => ({ ...f, phone: "+966 50 123 4567" }), { error: "email" }],
       [(f) => ({ ...f, email: "huda@example.sa" }), { error: "profession" }],
-      [(f) => ({ ...f, profession: "Teacher" }), { error: "heard_from" }],
+      [(f) => ({ ...f, profession: "Teacher" }), { error: "workplace" }],
+      [(f) => ({ ...f, workplace: "King Abdulaziz University" }), { error: "heard_from" }],
       [(f) => ({ ...f, heard: "invited" }), { error: "privacy" }],
       [(f) => ({ ...f, privacy: true }), null],
     ];
@@ -164,6 +165,14 @@ describe("learnPayload", () => {
     for (const x of ["Chef", "مهندس", "  Civil   engineer "]) expect(error({ profession: x }), x).toBeNull();
     const r = send({ profession: "  Civil   engineer ", news: true });
     expect("payload" in r && [r.payload.profession, r.payload.ride_news]).toEqual(["Civil engineer", true]);
+  });
+
+  // Workplace (the owner, 2026-09-29): where they work or study, checked as profession is, up to 120.
+  it("needs a workplace - letters, 2 to 120 characters - and sends it with its spaces folded", () => {
+    for (const x of ["", "A", "12345", "<b>Aramco</b>", "--- ...", "x".repeat(121)]) expect(error({ workplace: x }), x).toBe("workplace");
+    for (const x of ["KFSH", "جامعة الملك عبدالعزيز", "x".repeat(120)]) expect(error({ workplace: x }), x).toBeNull();
+    const r = send({ workplace: "  King   Abdulaziz  University " });
+    expect("payload" in r && r.payload.workplace).toBe("King Abdulaziz University");
   });
 
   it("needs to know who each learner is, their gender and their riding so far, from the lists", () => {
