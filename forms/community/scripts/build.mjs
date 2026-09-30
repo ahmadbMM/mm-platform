@@ -21,7 +21,7 @@ for (const m of js.matchAll(/tr\("([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/(?:hard|soft)(?:\["f-[a-z]+"\])?\s*[:=]\s*\["([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/"f-[a-z]+", \d, "([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/showBanner\("([^"]+)"/g)) keys.add(m[1]);
-['dobErrFuture', 'dobErrYoung', 'privacyAckRequired'].forEach((k) => keys.delete(k)); // the site's own strings (shared.js)
+['dobErrFuture', 'dobErrYoung', 'privacyAckRequired', 'errPasswordLen', 'errPasswordMatch'].forEach((k) => keys.delete(k)); // the site's own strings (shared.js)
 const ph = (s) => (s.match(/\{[a-z0-9]+\}/g) || []).sort().join(',');
 const problems = [];
 for (const { code } of SHARED.LANGS) {

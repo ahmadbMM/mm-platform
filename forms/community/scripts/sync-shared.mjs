@@ -2,7 +2,8 @@
 // never drift: the Privacy Notice (English + Arabic) and its version, the language list, the
 // nationality and calling-code lists, the Arabic country names, the phone-number rules the
 // staff "Looks off" check uses, and the site's own translations of the strings both show
-// (consent boxes, date-of-birth picker, gender, and "How did you hear about us?" with its answers).
+// (consent boxes, date-of-birth picker, gender, "How did you hear about us?" with its answers, and the
+// sign-up's own labels and password messages for the account step).
 //
 //   node scripts/sync-shared.mjs [path to the micromobilityrentals checkout]
 //   default: $RENTALS_DIR or ~/micromobilityrentals
@@ -58,7 +59,10 @@ if (bad.length) throw new Error('sync-shared: a list offers Israel: ' + bad.join
 
 const KEYS = ['privacyNotice', 'privacyUpdated', 'privacyEnArOnly', 'privacyAckOpt', 'privacyAckRequired', 'rideNewsOpt',
   'closeBtn', 'dobDay', 'dobMonth', 'dobYear', 'dobErrFuture', 'dobErrYoung', 'genderMale', 'genderFemale',
-  'heardLabel', ...HEARD_OPTS.map((c) => 'heard_' + c)];
+  'heardLabel', ...HEARD_OPTS.map((c) => 'heard_' + c),
+  // The account step is the booking site's sign-up: its labels, password rule and messages, word for word.
+  'firstName', 'lastName', 'phFirstName', 'phLastName', 'authPassword', 'authConfirmPassword', 'fixPwHint',
+  'errPasswordLen', 'errPasswordMatch', 'errTooManyTries', 'authHaveTitle', 'authLogin', 'authSignupBtn'];
 const SITE_T = {};
 for (const { code } of LANGS) {
   const pack = code === 'en' || code === 'ar' ? LANG[code] : JSON.parse(readFileSync(join(rentals, 'i18n', code + '.json'), 'utf8'));

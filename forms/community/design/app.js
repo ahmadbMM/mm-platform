@@ -1,8 +1,16 @@
 /* Community membership application (micromobility.sa/community/registration).
-   Three steps, the booking site's own checks on every field (the staff "Looks off" rules, run
-   BEFORE the details reach us), the site's Privacy Notice and consent boxes, and one call to
-   community_apply. Hard problems stop the step; a soft one ("is 212 cm right?") is shown once
-   and the rider goes on by pressing Continue again. */
+   Two steps (the owner, 2026-09-30: "let the applicant create an account first with the same sign
+   up requirements that is in the sign up landing page then take them to the next step"):
+   1. the booking site's own sign-up - name, gender, email, mobile, password, height, the Privacy
+      Notice and ride news - which makes the account (customer_signup, customer_consents);
+   2. the community questions the sign-up does not ask, sent from that account
+      (customer_community_apply).
+   Someone who has an account signs in on the booking site, which hands them back here signed in
+   (?code=, a one-time code from customer_handoff_create), straight onto step 2; so does the
+   "Apply" button of the booking site's members-only popup. Every field is checked the way the
+   booking site's staff "Looks off" check reads accounts, BEFORE it reaches us. Hard problems stop
+   the step; a soft one ("is 212 cm right?") is shown once and the rider goes on by pressing the
+   button again. */
 (function () {
   "use strict";
   // The public anon key (the same one the booking site ships): community_apply is a
@@ -10,6 +18,8 @@
   var SUPABASE_URL = "https://amyqxovbnlreassrqihr.supabase.co";
   var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFteXF4b3ZibmxyZWFzc3JxaWhyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwOTk0NzUsImV4cCI6MjA5ODY3NTQ3NX0.NzlLzOqZfTqx2TyeyNeqXwDPfvcPV2q4DHqPrlS8Tjk";
   var LANG_KEY = "mm-community-lang";
+  // The booking site: where an existing account signs in (it hands the rider back here signed in).
+  var BOOKING_URL = "https://micromobilityrentals.pages.dev/";
 
   var SH = window.SHARED, T = window.FORM_T || {};
   var html = document.documentElement;
@@ -39,7 +49,7 @@
     f.classList.toggle("warned", !m.err && !!m.warn);
     var e = $(".err", f), w = $(".warn", f);
     if (e) e.textContent = m.err ? (m.err.site ? fill(site(m.err.k), m.err.a) : tr(m.err.k, m.err.a)) : "";
-    if (w) w.textContent = !m.err && m.warn ? tr(m.warn.k, m.warn.a) + " " + tr("If it is right, press Continue again.") : "";
+    if (w) w.textContent = !m.err && m.warn ? tr(m.warn.k, m.warn.a) + " " + tr("If it is right, press the button again.") : "";
     if (id === "f-email") paintEmailFix();
   }
 
@@ -68,12 +78,16 @@
     $$("[data-t-aria]").forEach(function (el) { el.setAttribute("aria-label", tr(el.getAttribute("data-t-aria"))); });
     $$("[data-site]").forEach(function (el) { el.textContent = site(el.getAttribute("data-site")); });
     $$("[data-site-aria]").forEach(function (el) { el.setAttribute("aria-label", site(el.getAttribute("data-site-aria"))); });
+    $$("[data-site-placeholder]").forEach(function (el) { el.placeholder = site(el.getAttribute("data-site-placeholder")); });
+    $$("#signin-link, #banner-signin").forEach(function (a) { a.href = signInUrl(); });
+    $("#member-go").href = BOOKING_URL + "?lang=" + lang;
+    paintWho();
     $("#ack-lbl").innerHTML = esc(site("privacyAckOpt")).replace("{0}", '<button type="button" class="pv-link" id="pv-open">' + esc(site("privacyNotice")) + "</button>") + ' <span class="req" aria-hidden="true">*</span>';
     buildNationalities(); buildDob(); buildCc(); buildHeard();
     $$(".field").forEach(function (f) { paintField(f.id); });
     if (!$("#pv").hidden) renderNotice();
     if (sent) showSuccess(sent);
-    if (bannerKey) showBanner(bannerKey);
+    if (bannerKey) showBanner(bannerKey, bannerSignIn);
   }
   (function buildLangs() {
     var sel = $("#lang");
@@ -298,14 +312,19 @@
     if (/(\p{L})\1\1/iu.test(letters)) return { soft: ["Please check the spelling of your name."] };
     return {};
   }
-  // As the rider types, anything outside the rule is dropped on the spot (the site does the same):
-  // a dash turns into a space and a stray period just goes, quietly; any other sign says why.
-  $("#name").addEventListener("input", function () {
+  // The sign-up's two boxes, first and last name, read as one name. As the rider types, anything
+  // outside the rule is dropped on the spot (the site does the same): a dash turns into a space and
+  // a stray period just goes, quietly; any other sign says why.
+  function nameInput() {
     var el = this, raw = el.value, v = raw.replace(DASHES, " "), k = v.replace(/[^\p{L}\p{M}\s.]/gu, ""), c = nameDots(k);
     if (c !== raw) { var at = Math.max(0, (el.selectionStart == null ? c.length : el.selectionStart) - (raw.length - c.length)); el.value = c; try { el.setSelectionRange(at, at); } catch (e) {} }
     if (k !== v) { setErr("f-name", "Names can only contain letters, spaces and periods."); return; }
     clearMsg("f-name"); acked[1] = null;
-  });
+  }
+  $("#first").addEventListener("input", nameInput);
+  $("#last").addEventListener("input", nameInput);
+  function nameParts() { return { first: clean($("#first").value), last: clean($("#last").value) }; }
+  function fullName() { var n = nameParts(); return titleCase(n.first + " " + n.last); }
 
   /* ── Social handles: a pasted link becomes the bare handle the site stores ─────────── */
   function igNorm(raw) {
@@ -322,10 +341,14 @@
   $("#li").addEventListener("input", function () { clearMsg("f-li"); });
   $("#prof").addEventListener("input", function () { clearMsg("f-prof"); });
   $("#work").addEventListener("input", function () { clearMsg("f-work"); });
-  $("#height").addEventListener("input", function () { var v = toAscii(this.value).replace(/\D/g, "").slice(0, 3); if (v !== this.value) this.value = v; clearMsg("f-height"); acked[1] = null; });
+  function heightInput(id) { return function () { var v = toAscii(this.value).replace(/\D/g, "").slice(0, 3); if (v !== this.value) this.value = v; clearMsg(id); acked[1] = null; }; }
+  $("#height").addEventListener("input", heightInput("f-height"));
+  $("#xheight").addEventListener("input", heightInput("f-xheight"));
+  $("#pwd").addEventListener("input", function () { clearMsg("f-pwd"); });
+  $("#pwd2").addEventListener("input", function () { clearMsg("f-pwd2"); });
 
   /* ── Tiles and tick boxes ───────────────────────────────────────────────── */
-  var gender = null, bikeType = null, ack = false, news = false;
+  var gender = null, xgender = null, bikeType = null, ack = false, news = false;
   function tiles(groupSel, fieldId, onPick) {
     $(groupSel).addEventListener("click", function (e) {
       var b = e.target.closest(".tile"); if (!b) return;
@@ -334,6 +357,7 @@
     });
   }
   tiles("#genders", "f-gender", function (v) { gender = v; });
+  tiles("#xgenders", "f-xgender", function (v) { xgender = v; });
   tiles("#types", "f-type", function (v) { bikeType = v; });
   function tick(id, get, set) {
     var el = document.getElementById(id);
@@ -371,40 +395,47 @@
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#pv").hidden) closeNotice(); });
 
   /* ── Banner ─────────────────────────────────────────────────────────────── */
-  var bannerKey = null;
-  function showBanner(k) { bannerKey = k; $("#banner .banner-text").textContent = tr(k); $("#banner").hidden = false; }
-  function hideBanner() { bannerKey = null; $("#banner").hidden = true; }
+  var bannerKey = null, bannerSignIn = false;
+  // The sign-in link rides along where signing in is the way on (a used link, a session gone).
+  function showBanner(k, signIn) {
+    bannerKey = k; bannerSignIn = !!signIn;
+    $("#banner .banner-text").textContent = k.indexOf("site:") === 0 ? site(k.slice(5)) : tr(k);
+    $("#banner-signin").hidden = !signIn; $("#banner").hidden = false;
+  }
+  function hideBanner() { bannerKey = null; bannerSignIn = false; $("#banner").hidden = true; }
+  function signInUrl() { return BOOKING_URL + "?handoff=community&lang=" + lang; }
   $("#banner .banner-close").addEventListener("click", hideBanner);
 
   /* ── Steps ──────────────────────────────────────────────────────────────── */
+  // 1 makes the account; once it exists there is no way back to it (it would make a second one).
   var step = 1, acked = {}; // acked[step] = the soft warnings the rider has already seen there
+  var acct = null; // the signed-in applicant: {id, token, name, email, phone, made, needGender, needHeight}
   function goStep(n) {
     step = n;
     $$("fieldset.step").forEach(function (f) { f.hidden = +f.getAttribute("data-step") !== n; });
     $$(".stepper-item").forEach(function (li) { var s = +li.getAttribute("data-step"); li.classList.toggle("active", s === n); li.classList.toggle("done", s < n); });
-    $("#back").hidden = n === 1; $("#next").hidden = n === 3; $("#submit").hidden = n !== 3;
+    $("#next").hidden = n !== 1; $("#submit").hidden = n !== 2;
+    $("#acct-made").hidden = !(n === 2 && acct && acct.made);
+    $("#acct-who").hidden = !(n === 2 && acct && !acct.made);
     var card = $("#card"); if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ behavior: "smooth", block: "start" });
   }
+  function paintWho() {
+    var w = $("#acct-who"); if (!acct || acct.made) { w.textContent = ""; return; }
+    w.textContent = tr("Applying as {name}", { name: acct.name || "" }) + (acct.email ? " · ⁦" + acct.email + "⁩" : "");
+  }
+  function passwordErr(pw) { return pw.length < 8 || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw); }
   // Every field of a step: {hard:{field:[k,a,site]}, soft:{field:[k,a]}}
   function check(n) {
     var hard = {}, soft = {}, r;
     if (n === 1) {
-      r = checkName(clean($("#name").value)); if (r.hard) hard["f-name"] = r.hard; else if (r.soft) soft["f-name"] = r.soft;
-      var b = birthValue();
-      if (!b) hard["f-birth"] = ["Choose your date of birth"];
-      else if (b > todayKsa()) hard["f-birth"] = ["dobErrFuture", null, true];
-      else if (b > dobMax()) hard["f-birth"] = ["dobErrYoung", null, true];
-      else if (ageAt(b) > 85) soft["f-birth"] = ["Please check your date of birth."];
+      var nm = nameParts();
+      if (!nm.first || !nm.last) hard["f-name"] = ["Enter your first and last name"];
+      else { r = checkName(nm.first + " " + nm.last); if (r.hard) hard["f-name"] = r.hard; else if (r.soft) soft["f-name"] = r.soft; }
       if (!gender) hard["f-gender"] = ["Choose your gender"];
-      if (!$("#nat").value) hard["f-nat"] = ["Choose your nationality"];
-      var h = parseInt(toAscii($("#height").value), 10);
-      if (!(h >= 100 && h <= 250)) hard["f-height"] = ["Enter your height in cm (100 to 250)"];
-      else {
-        var age = b && !hard["f-birth"] ? ageAt(b) : null;
-        var band = age == null ? [140, 209] : age < 12 ? [100, 175] : age < 16 ? [125, 205] : [140, 209];
-        if (h < band[0] || h > band[1]) soft["f-height"] = ["Is {n} cm right?", { n: h }];
-      }
-    } else if (n === 2) {
+      var em = clean($("#email").value).toLowerCase();
+      emailFix = null;
+      if (!em) hard["f-email"] = ["Enter your email address"];
+      else { r = checkEmail(em); if (r.hard) { hard["f-email"] = r.hard; emailFix = r.fix || null; } else if (r.soft) soft["f-email"] = r.soft; }
       var raw = $("#phone").value.replace(/\D/g, "");
       var p = e164(), d = p.replace(/\D/g, "");
       if (!raw) hard["f-phone"] = ["Enter your mobile number"];
@@ -420,15 +451,27 @@
         var tail = d.slice(-9);
         if (/(\d)\1{5,}/.test(tail) || /0123456|1234567|2345678|3456789|9876543|8765432/.test(tail)) soft["f-phone"] = ["Please check this number: it does not look like a real one."];
       }
-      var em = clean($("#email").value).toLowerCase();
-      emailFix = null;
-      if (!em) hard["f-email"] = ["Enter your email address"];
-      else { r = checkEmail(em); if (r.hard) { hard["f-email"] = r.hard; emailFix = r.fix || null; } else if (r.soft) soft["f-email"] = r.soft; }
+      // The sign-up's password rule: 8 characters, an upper-case letter and a digit, typed twice.
+      var pw = $("#pwd").value;
+      if (passwordErr(pw)) hard["f-pwd"] = ["errPasswordLen", null, true];
+      else if ($("#pwd2").value !== pw) hard["f-pwd2"] = ["errPasswordMatch", null, true];
+      var h = parseInt(toAscii($("#height").value), 10);
+      if (!(h >= 100 && h <= 250)) hard["f-height"] = ["Enter your height in cm (100 to 250)"];
+      else if (h < 140 || h > 209) soft["f-height"] = ["Is {n} cm right?", { n: h }];
+      if (!ack) hard["f-ack"] = ["privacyAckRequired", null, true];
+    } else {
+      if (acct && acct.needGender && !xgender) hard["f-xgender"] = ["Choose your gender"];
+      if (acct && acct.needHeight) { var xh = parseInt(toAscii($("#xheight").value), 10); if (!(xh >= 100 && xh <= 250)) hard["f-xheight"] = ["Enter your height in cm (100 to 250)"]; }
+      var b = birthValue();
+      if (!b) hard["f-birth"] = ["Choose your date of birth"];
+      else if (b > todayKsa()) hard["f-birth"] = ["dobErrFuture", null, true];
+      else if (b > dobMax()) hard["f-birth"] = ["dobErrYoung", null, true];
+      else if (ageAt(b) > 85) soft["f-birth"] = ["Please check your date of birth."];
+      if (!$("#nat").value) hard["f-nat"] = ["Choose your nationality"];
       var ig = igNorm($("#ig").value);
       if (ig && !/^[A-Za-z0-9._]{1,30}$/.test(ig)) hard["f-ig"] = ["An Instagram username has only letters, numbers, dots and underscores"];
       var li = liNorm($("#li").value);
       if (li && (/\//.test(li) || !/^[A-Za-z0-9\-_.%]{3,100}$/.test(li))) hard["f-li"] = ["Paste the link to your own profile (linkedin.com/in/…)"];
-    } else {
       var prof = clean($("#prof").value);
       if (prof.length < 2 || prof.length > 80 || !/\p{L}/u.test(prof) || /[<>"`{}]/.test(prof)) hard["f-prof"] = ["Enter your profession"];
       // Their company (the owner, 2026-09-29; sent as workplace), checked as profession is, up to 120.
@@ -436,11 +479,10 @@
       if (Array.from(work).length < 2 || Array.from(work).length > 120 || !/\p{L}/u.test(work) || /[<>"`{}]/.test(work)) hard["f-work"] = ["Enter your company"];
       if (!bikeType) hard["f-type"] = ["Choose a bike type"];
       if (!$("#heard").value) hard["f-heard"] = ["Please tell us how you heard about us."];
-      if (!ack) hard["f-ack"] = ["privacyAckRequired", null, true];
     }
     return { hard: hard, soft: soft };
   }
-  var STEP_FIELDS = { 1: ["f-name", "f-birth", "f-gender", "f-nat", "f-height"], 2: ["f-phone", "f-email", "f-ig", "f-li"], 3: ["f-prof", "f-work", "f-type", "f-heard", "f-ack"] };
+  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-pwd", "f-pwd2", "f-height", "f-ack"], 2: ["f-xgender", "f-xheight", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-type", "f-heard"] };
   // Shows the step's problems; true when the rider may go on.
   function passStep(n) {
     var r = check(n), hk = Object.keys(r.hard), sk = Object.keys(r.soft);
@@ -457,56 +499,154 @@
     var f = document.getElementById(id); if (!f) return;
     var el = $("input, select, .tile, .tick", f); if (el) { el.focus({ preventScroll: true }); f.scrollIntoView({ behavior: "smooth", block: "center" }); }
   }
-  $("#next").addEventListener("click", function () { hideBanner(); if (passStep(step)) goStep(step + 1); });
-  $("#back").addEventListener("click", function () { hideBanner(); goStep(step - 1); });
 
-  /* ── Submit ─────────────────────────────────────────────────────────────── */
-  var FIELD_OF = { name: ["f-name", 1, "Enter your first and last name"], birth_date: ["f-birth", 1, "Choose your date of birth"], gender: ["f-gender", 1, "Choose your gender"], nationality: ["f-nat", 1, "Choose your nationality"], height: ["f-height", 1, "Enter your height in cm (100 to 250)"], phone: ["f-phone", 2, "Enter a valid mobile number"], email: ["f-email", 2, "Enter a valid email address"], instagram: ["f-ig", 2, "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", 2, "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", 3, "Enter your profession"], workplace: ["f-work", 3, "Enter your company"], bike_type: ["f-type", 3, "Choose a bike type"], heard_from: ["f-heard", 3, "Please tell us how you heard about us."], privacy: ["f-ack", 3, "privacyAckRequired"] };
+  /* ── The database ───────────────────────────────────────────────────────── */
+  // One RPC with the public key: {data} when it answered, {error} when it refused or never answered.
+  async function rpc(fn, body) {
+    try {
+      var resp = await fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, {
+        method: "POST",
+        headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+      var data = null; try { data = await resp.json(); } catch (e) {}
+      return resp.ok ? { data: data } : { error: data || { message: "HTTP " + resp.status } };
+    } catch (err) { return { error: { message: "network" } }; }
+  }
+  function uid() { return Math.random().toString(36).slice(2, 9) + Date.now().toString(36); } // the booking site's own account ids
+  function setLoading(btn, on) { busy = on; $(btn).classList.toggle("loading", on); $(btn).disabled = on; }
   var sent = null, busy = false;
-  function setLoading(on) { busy = on; $("#submit").classList.toggle("loading", on); $("#submit").disabled = on; }
+
+  /* ── Step 1: the account ────────────────────────────────────────────────── */
+  $("#next").addEventListener("click", function () { hideBanner(); if (!busy && step === 1 && passStep(1)) createAccount(); });
+  async function createAccount() {
+    var email = clean($("#email").value).toLowerCase(), phone = e164(), name = fullName();
+    setLoading("#next", true);
+    try {
+      // Each on its own, so the message says which one is taken (as the sign-up page does).
+      var ex = await rpc("customer_exists", { p_email: email, p_phone: "" });
+      if (ex.data === true) { setErr("f-email", "An account with this email already exists. Sign in to apply with it."); showBanner("An account with this email already exists. Sign in to apply with it.", true); focusField("f-email"); return; }
+      ex = await rpc("customer_exists", { p_email: "", p_phone: phone });
+      if (ex.data === true) { setErr("f-phone", "An account with this mobile number already exists. Sign in to apply with it."); showBanner("An account with this mobile number already exists. Sign in to apply with it.", true); focusField("f-phone"); return; }
+      var id = uid();
+      var r = await rpc("customer_signup", {
+        p_id: id, p_name: name, p_email: email, p_phone: phone, p_pwd: $("#pwd").value,
+        p_height: parseInt(toAscii($("#height").value), 10), p_type_preference: "Any", p_gender: gender
+      });
+      if (r.error) { signupRefused(r.error); return; }
+      var tok = r.data && r.data[0] && r.data[0].session_token;
+      if (!tok) { showBanner("Could not reach the server. Please try again."); return; }
+      // The notice they confirmed and their ride-news answer, recorded the moment the account exists.
+      await rpc("customer_consents", { p_id: id, p_token: tok, p_privacy: SH.PRIVACY_VERSION, p_ride_news: news });
+      acct = { id: id, token: tok, name: name, email: email, phone: phone, made: true, needGender: false, needHeight: false };
+      $("#pwd").value = ""; $("#pwd2").value = "";
+      enterStepTwo(null);
+    } finally { setLoading("#next", false); }
+  }
+  var SITE_TOO_MANY = "site:errTooManyTries"; // the sign-up page's own words
+  function signupRefused(e) {
+    var m = String((e.code || "") + " " + (e.message || "") + " " + (e.details || "") + " " + (e.hint || ""));
+    if (/name_chars/.test(m)) { setErr("f-name", "Names can only contain letters, spaces and periods."); focusField("f-name"); }
+    else if (/name_short/.test(m)) { setErr("f-name", "Write your first and last name in full, not initials"); focusField("f-name"); }
+    else if (/23505|DUPLICATE/i.test(m)) { setErr("f-email", "An account with this email already exists. Sign in to apply with it."); showBanner("An account with this email already exists. Sign in to apply with it.", true); focusField("f-email"); }
+    else if (/RATE_LIMITED/.test(m)) showBanner(SITE_TOO_MANY);
+    else if (/BAD_INPUT/.test(m) && /phone/.test(m)) { setErr("f-phone", "Enter a valid mobile number"); focusField("f-phone"); }
+    else if (/BAD_INPUT/.test(m) && /height/.test(m)) { setErr("f-height", "Enter your height in cm (100 to 250)"); focusField("f-height"); }
+    else showBanner("Could not reach the server. Please try again.");
+  }
+
+  /* ── Step 2: the community questions ────────────────────────────────────── */
+  // The answers to start from: a waiting application's, else what the account already holds.
+  function prefill(me) {
+    if (!me) return;
+    if (me.birth_date && /^\d{4}-\d{2}-\d{2}$/.test(me.birth_date)) {
+      var b = me.birth_date.split("-").map(Number);
+      $("#birth-y").value = String(b[0]); buildDob(); $("#birth-m").value = String(b[1]); buildDob(); $("#birth-d").value = String(b[2]); buildDob();
+    }
+    if (me.nationality && $$("#nat option").some(function (o) { return o.value === me.nationality; })) { $("#nat").value = me.nationality; $("#nat").classList.remove("ph"); }
+    if (me.instagram) $("#ig").value = me.instagram;
+    if (me.linkedin) $("#li").value = me.linkedin;
+    if (me.profession) $("#prof").value = me.profession;
+    if (me.workplace) $("#work").value = me.workplace;
+    if (me.bike_type) { var t = $('#types .tile[data-v="' + me.bike_type + '"]'); if (t) t.click(); }
+    if (me.heard_from && SH.HEARD_OPTS.indexOf(me.heard_from) >= 0) { $("#heard").value = me.heard_from; $("#heard").classList.remove("ph"); }
+  }
+  function enterStepTwo(me) {
+    $("#f-xgender").hidden = !acct.needGender; $("#f-xheight").hidden = !acct.needHeight;
+    $("#acct-pending").hidden = !(me && me.pending);
+    prefill(me); paintWho();
+    goStep(2);
+    if (acct.made) $("#acct-made").focus({ preventScroll: true });
+  }
+  var FIELD_OF = { gender: ["f-xgender", "Choose your gender"], height: ["f-xheight", "Enter your height in cm (100 to 250)"], birth_date: ["f-birth", "Choose your date of birth"], nationality: ["f-nat", "Choose your nationality"], instagram: ["f-ig", "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", "Enter your profession"], workplace: ["f-work", "Enter your company"], bike_type: ["f-type", "Choose a bike type"], heard_from: ["f-heard", "Please tell us how you heard about us."] };
   $("#form").addEventListener("submit", async function (e) {
     e.preventDefault();
     if (busy) return;
     hideBanner();
-    if (step < 3) { if (passStep(step)) goStep(step + 1); return; }
-    // Steps 1 and 2 are checked again: a language change or a Back may have left one half-done.
-    for (var n = 1; n <= 3; n++) {
-      if (n < 3) { var r = check(n); if (Object.keys(r.hard).length) { goStep(n); passStep(n); return; } }
-      else if (!passStep(3)) return;
-    }
+    if (step === 1) { if (passStep(1)) createAccount(); return; }
+    if (!acct || !passStep(2)) return;
     var payload = {
-      name: titleCase($("#name").value), email: clean($("#email").value).toLowerCase(), phone: e164(),
-      height: parseInt(toAscii($("#height").value), 10), birth_date: birthValue(), gender: gender,
-      nationality: $("#nat").value, bike_type: bikeType, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
-      profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang, privacy_version: SH.PRIVACY_VERSION, ride_news: news
+      birth_date: birthValue(), nationality: $("#nat").value, bike_type: bikeType, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
+      profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang, privacy_version: SH.PRIVACY_VERSION
     };
-    setLoading(true);
-    var res = null;
-    try {
-      var resp = await fetch(SUPABASE_URL + "/rest/v1/rpc/community_apply", {
-        method: "POST",
-        headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" },
-        body: JSON.stringify({ p: payload })
-      });
-      res = resp.ok ? await resp.json() : null;
-    } catch (err) { res = null; }
-    setLoading(false);
-    if (!res) { showBanner("Could not reach the server. Please try again."); return; }
+    if (acct.needGender) payload.gender = xgender;
+    if (acct.needHeight) payload.height = parseInt(toAscii($("#xheight").value), 10);
+    setLoading("#submit", true);
+    var r = await rpc("customer_community_apply", { p_id: acct.id, p_token: acct.token, p: payload });
+    setLoading("#submit", false);
+    var res = r.data;
+    if (!res || typeof res !== "object") { showBanner("Could not reach the server. Please try again."); return; }
     if (!res.ok) {
       if (res.error === "throttled") { showBanner("Too many applications from this network. Please try again in a few minutes."); return; }
+      if (res.error === "member") { showMember(); return; }
+      if (res.error === "signed_out") { showBanner("You were signed out. Sign in again to send your application.", true); return; }
+      if (res.error === "account") { showBanner("Your account has no email or mobile number yet. Add them on the booking site, then apply."); return; }
       var f = FIELD_OF[res.error];
-      if (f) { goStep(f[1]); setErr(f[0], f[2], null, f[2] === "privacyAckRequired"); focusField(f[0]); return; }
+      if (f) { if (res.error === "gender" || res.error === "height") { $("#" + f[0]).hidden = false; acct["need" + (res.error === "gender" ? "Gender" : "Height")] = true; } setErr(f[0], f[1]); focusField(f[0]); return; }
       showBanner("Could not reach the server. Please try again."); return;
     }
-    showSuccess(payload);
+    showSuccess({ name: acct.name, phone: acct.phone, email: acct.email });
   });
   function showSuccess(p) {
     sent = p;
     $("#card").setAttribute("data-state", "success");
-    $("#form").hidden = true; $("#success").hidden = false;
-    $("#result").textContent = tr("Thank you, {name}. Our team will review your application and reply to you shortly.", { name: p.name.split(" ")[0] });
-    $("#result-contact").textContent = tr("We will reply on {phone} or {email}.", { phone: "\u2066" + p.phone + "\u2069", email: "\u2066" + p.email + "\u2069" });
+    $("#form").hidden = true; $("#member").hidden = true; $("#success").hidden = false;
+    $("#result").textContent = tr("Thank you, {name}. Our team will review your application and reply to you shortly.", { name: String(p.name || "").split(" ")[0] });
+    $("#result-contact").textContent = p.phone && p.email ? tr("We will reply on {phone} or {email}.", { phone: "⁦" + p.phone + "⁩", email: "⁦" + p.email + "⁩" }) : "";
     if (document.activeElement && document.activeElement.closest && document.activeElement.closest("#form")) $("#success").focus();
+  }
+  function showMember() {
+    hideBanner();
+    $("#card").setAttribute("data-state", "member");
+    $("#form").hidden = true; $("#member").hidden = false;
+    $("#member").focus({ preventScroll: true });
+  }
+
+  /* ── Arriving signed in ─────────────────────────────────────────────────── */
+  // ?code= is a one-time code (two minutes, one use) the booking site made for a signed-in rider:
+  // their "Sign in" from here, or the Apply button of its members-only popup. It leaves the
+  // address at once; the session it trades for is kept in this page only, never stored.
+  async function arrive() {
+    var q = new URLSearchParams(location.search), code = q.get("code");
+    if (code == null) return;
+    q.delete("code");
+    try { history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q.toString() : "") + location.hash); } catch (e) {}
+    if (!/^[0-9a-f]{48}$/.test(code)) { showBanner("This sign-in link has expired. Sign in again to continue.", true); return; }
+    $("#card").setAttribute("data-state", "loading"); $("#loading").hidden = false;
+    try {
+      var r = await rpc("customer_handoff_redeem", { p_code: code });
+      var row = Array.isArray(r.data) ? r.data[0] : null;
+      if (!row || !row.id || !row.session_token) { showBanner(r.error && r.error.message === "network" ? "Could not reach the server. Please try again." : "This sign-in link has expired. Sign in again to continue.", true); return; }
+      var m = await rpc("customer_community_me", { p_id: row.id, p_token: row.session_token });
+      var me = m.data && typeof m.data === "object" ? m.data : null;
+      if (!me) { showBanner("Could not reach the server. Please try again."); return; }
+      acct = { id: row.id, token: row.session_token, name: me.name || row.name || "", email: me.email || "", phone: me.phone || "", made: false, needGender: !me.gender, needHeight: !me.height };
+      if (me.member) { showMember(); return; }
+      enterStepTwo(me);
+    } finally {
+      $("#loading").hidden = true;
+      if ($("#card").getAttribute("data-state") === "loading") $("#card").setAttribute("data-state", "form");
+    }
   }
 
   // Test hook: the specs read the payload the form would send without a network.
@@ -514,4 +654,5 @@
 
   setLang(pickLang(), false);
   goStep(1);
+  arrive();
 })();

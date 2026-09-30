@@ -39,34 +39,31 @@
   <section id="card" class="card" data-state="form">
     <div id="banner" class="banner" role="alert" hidden>
       <span class="banner-text"></span>
+      <a id="banner-signin" class="banner-act" href="https://micromobilityrentals.pages.dev/?handoff=community" data-site="authLogin" hidden>Sign in</a>
       <button class="banner-close" type="button" data-t="Dismiss">Dismiss</button>
     </div>
 
     <form id="form" class="form" novalidate autocomplete="on">
       <span class="eyebrow" data-t="Micromobility Community">Micromobility Community</span>
       <h1 class="title" data-t="Community Membership Application">Community Membership Application</h1>
-      <p class="lead" data-t="Tell us a little about yourself. Our team reviews every application and replies to you by WhatsApp or email.">Tell us a little about yourself. Our team reviews every application and replies to you by WhatsApp or email.</p>
+      <p class="lead" data-t="First you create your Micromobility account, then you tell us a little about yourself. Our team reviews every application and replies to you by WhatsApp or email.">First you create your Micromobility account, then you tell us a little about yourself. Our team reviews every application and replies to you by WhatsApp or email.</p>
 
       <ol id="stepper" class="stepper" aria-label="Progress">
-        <li class="stepper-item" data-step="1"><span class="stepper-bar"></span><span class="stepper-label" data-t="About you">About you</span></li>
-        <li class="stepper-item" data-step="2"><span class="stepper-bar"></span><span class="stepper-label" data-t="Contact">Contact</span></li>
-        <li class="stepper-item" data-step="3"><span class="stepper-bar"></span><span class="stepper-label" data-t="Riding">Riding</span></li>
+        <li class="stepper-item" data-step="1"><span class="stepper-bar"></span><span class="stepper-label" data-t="Your account">Your account</span></li>
+        <li class="stepper-item" data-step="2"><span class="stepper-bar"></span><span class="stepper-label" data-t="Membership">Membership</span></li>
       </ol>
 
+      <div id="loading" class="loading-note" role="status" hidden><span class="spinner-dark" aria-hidden="true"></span><span data-t="Loading...">Loading...</span></div>
+
+      <!-- Step 1: the booking site's own sign-up (the same questions, the same rules), which makes the account. -->
       <fieldset class="step" data-step="1">
-        <legend class="step-title" data-t="About you">About you</legend>
-        <p class="lead" data-t="Please use your real details: your rider profile is made from them.">Please use your real details: your rider profile is made from them.</p>
+        <legend class="step-title" data-t="Create your account">Create your account</legend>
+        <p class="lead" data-t="This is the account you book rides with. You sign in with your email or mobile number and your password.">This is the account you book rides with. You sign in with your email or mobile number and your password.</p>
+        <p class="have-acct"><span data-site="authHaveTitle">Already have an account?</span> <a id="signin-link" class="pv-link" href="https://micromobilityrentals.pages.dev/?handoff=community" data-site="authLogin">Sign in</a></p>
         <div id="f-name" class="field">
-          <label for="name" data-t="Full name">Full name</label>
-          <input id="name" name="name" type="text" autocomplete="name" maxlength="120">
-          <p class="err" aria-live="polite"></p>
-        </div>
-        <div id="f-birth" class="field">
-          <span class="label" id="birth-label" data-t="Date of birth">Date of birth</span>
-          <div class="dob-row" role="group" aria-labelledby="birth-label">
-            <span class="sel-wrap"><select id="birth-d" class="dob-part" data-site-aria="dobDay"></select></span>
-            <span class="sel-wrap"><select id="birth-m" class="dob-part" data-site-aria="dobMonth"></select></span>
-            <span class="sel-wrap"><select id="birth-y" class="dob-part" data-site-aria="dobYear"></select></span>
+          <div class="name-row">
+            <span class="name-part"><label for="first" data-site="firstName">First Name</label><input id="first" name="first" type="text" autocomplete="given-name" autocapitalize="words" maxlength="60" data-site-placeholder="phFirstName"></span>
+            <span class="name-part"><label for="last" data-site="lastName">Last Name</label><input id="last" name="last" type="text" autocomplete="family-name" autocapitalize="words" maxlength="60" data-site-placeholder="phLastName"></span>
           </div>
           <p class="err" aria-live="polite"></p>
           <p class="warn" aria-live="polite"></p>
@@ -79,22 +76,13 @@
           </div>
           <p class="err" aria-live="polite"></p>
         </div>
-        <div id="f-nat" class="field">
-          <label for="nat" data-t="Nationality">Nationality</label>
-          <span class="sel-wrap wide"><select id="nat" name="nationality"></select></span>
-          <p class="err" aria-live="polite"></p>
-        </div>
-        <div id="f-height" class="field">
-          <label for="height" data-t="Height in cm">Height in cm</label>
-          <input id="height" name="height" type="text" inputmode="numeric" maxlength="3" placeholder="175" autocomplete="off">
+        <div id="f-email" class="field">
+          <label for="email" data-t="Email address">Email address</label>
+          <input id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="254" placeholder="name@example.com">
           <p class="err" aria-live="polite"></p>
           <p class="warn" aria-live="polite"></p>
+          <button type="button" id="email-fix" class="fix" hidden></button>
         </div>
-      </fieldset>
-
-      <fieldset class="step" data-step="2" hidden>
-        <legend class="step-title" data-t="How we reach you">How we reach you</legend>
-        <p class="lead" data-t="Our reply comes here, so please check both carefully.">Our reply comes here, so please check both carefully.</p>
         <div id="f-phone" class="field">
           <label for="phone" data-t="Mobile number">Mobile number</label>
           <div class="phone-row" dir="ltr">
@@ -108,12 +96,70 @@
           <p class="err" aria-live="polite"></p>
           <p class="warn" aria-live="polite"></p>
         </div>
-        <div id="f-email" class="field">
-          <label for="email" data-t="Email address">Email address</label>
-          <input id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="254" placeholder="name@example.com">
+        <div id="f-pwd" class="field">
+          <label for="pwd" data-site="authPassword">Password</label>
+          <input id="pwd" name="password" type="password" autocomplete="new-password" maxlength="72" dir="ltr">
+          <p class="hint" data-site="fixPwHint">At least 8 characters, with an uppercase letter and a number.</p>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-pwd2" class="field">
+          <label for="pwd2" data-site="authConfirmPassword">Confirm Password</label>
+          <input id="pwd2" name="password2" type="password" autocomplete="new-password" maxlength="72" dir="ltr">
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-height" class="field">
+          <label for="height" data-t="Height in cm">Height in cm</label>
+          <input id="height" name="height" type="text" inputmode="numeric" maxlength="3" placeholder="175" autocomplete="off">
           <p class="err" aria-live="polite"></p>
           <p class="warn" aria-live="polite"></p>
-          <button type="button" id="email-fix" class="fix" hidden></button>
+        </div>
+        <div id="f-ack" class="field consent">
+          <div id="ack" class="tick" role="checkbox" aria-checked="false" aria-required="true" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" id="ack-lbl"></span></div>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-news" class="field consent">
+          <div id="news" class="tick" role="checkbox" aria-checked="false" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" data-site="rideNewsOpt">Send me ride news and announcements by WhatsApp and email. I can stop at any time.</span></div>
+        </div>
+      </fieldset>
+
+      <div id="acct-made" class="acct-note" role="status" tabindex="-1" hidden>
+        <span class="acct-check" aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+        <span><b class="acct-title" data-t="Your account has been created">Your account has been created</b><span class="acct-sub" data-t="You can now sign in and book rides with your email or mobile number and your password. Next, tell us a little more about yourself for your membership.">You can now sign in and book rides with your email or mobile number and your password. Next, tell us a little more about yourself for your membership.</span></span>
+      </div>
+      <p id="acct-who" class="acct-who" hidden></p>
+      <p id="acct-pending" class="acct-who" data-t="You have already sent an application. Sending it again updates it." hidden>You have already sent an application. Sending it again updates it.</p>
+
+      <!-- Step 2: the community questions the sign-up does not ask, sent from the signed-in account. -->
+      <fieldset class="step" data-step="2" hidden>
+        <legend class="step-title" data-t="Your membership application">Your membership application</legend>
+        <p class="lead" data-t="A few more questions for our team.">A few more questions for our team.</p>
+        <div id="f-xgender" class="field" hidden>
+          <span class="label" id="xgender-label" data-t="Gender">Gender</span>
+          <div id="xgenders" class="types two" role="radiogroup" aria-labelledby="xgender-label">
+            <button type="button" class="tile" data-v="male" role="radio" aria-checked="false" data-site="genderMale">Male</button>
+            <button type="button" class="tile" data-v="female" role="radio" aria-checked="false" data-site="genderFemale">Female</button>
+          </div>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-xheight" class="field" hidden>
+          <label for="xheight" data-t="Height in cm">Height in cm</label>
+          <input id="xheight" name="xheight" type="text" inputmode="numeric" maxlength="3" placeholder="175" autocomplete="off">
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-birth" class="field">
+          <span class="label" id="birth-label" data-t="Date of birth">Date of birth</span>
+          <div class="dob-row" role="group" aria-labelledby="birth-label">
+            <span class="sel-wrap"><select id="birth-d" class="dob-part" data-site-aria="dobDay"></select></span>
+            <span class="sel-wrap"><select id="birth-m" class="dob-part" data-site-aria="dobMonth"></select></span>
+            <span class="sel-wrap"><select id="birth-y" class="dob-part" data-site-aria="dobYear"></select></span>
+          </div>
+          <p class="err" aria-live="polite"></p>
+          <p class="warn" aria-live="polite"></p>
+        </div>
+        <div id="f-nat" class="field">
+          <label for="nat" data-t="Nationality">Nationality</label>
+          <span class="sel-wrap wide"><select id="nat" name="nationality"></select></span>
+          <p class="err" aria-live="polite"></p>
         </div>
         <div id="f-ig" class="field">
           <label for="ig" data-t="Instagram">Instagram</label>
@@ -127,11 +173,6 @@
           <p class="hint" data-t="The link to your LinkedIn profile">The link to your LinkedIn profile</p>
           <p class="err" aria-live="polite"></p>
         </div>
-      </fieldset>
-
-      <fieldset class="step" data-step="3" hidden>
-        <legend class="step-title" data-t="Your riding">Your riding</legend>
-        <p class="lead" data-t="Last step.">Last step.</p>
         <div id="f-prof" class="field">
           <label for="prof" data-t="Profession">Profession</label>
           <input id="prof" name="profession" type="text" autocomplete="organization-title" maxlength="80" placeholder="Engineer" data-t-placeholder="e.g. Engineer">
@@ -157,21 +198,14 @@
           <span class="sel-wrap wide"><select id="heard" name="heard_from"></select></span>
           <p class="err" aria-live="polite"></p>
         </div>
-        <div id="f-ack" class="field consent">
-          <div id="ack" class="tick" role="checkbox" aria-checked="false" aria-required="true" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" id="ack-lbl"></span></div>
-          <p class="err" aria-live="polite"></p>
-        </div>
-        <div id="f-news" class="field consent">
-          <div id="news" class="tick" role="checkbox" aria-checked="false" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" data-site="rideNewsOpt">Send me ride news and announcements by WhatsApp and email. I can stop at any time.</span></div>
-        </div>
       </fieldset>
 
       <div class="actions">
-        <button id="back" class="back" type="button" hidden>
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="back-arrow"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>
-          <span data-t="Back">Back</span>
+        <button id="next" class="submit" type="button">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="submit-label" data-site="authSignupBtn">Create account</span>
+          <span class="submit-busy" data-t="Creating your account...">Creating your account...</span>
         </button>
-        <button id="next" class="submit" type="button"><span data-t="Continue">Continue</span></button>
         <button id="submit" class="submit" type="submit" hidden>
           <span class="spinner" aria-hidden="true"></span>
           <span class="submit-label" data-t="Send application">Send application</span>
@@ -179,6 +213,16 @@
         </button>
       </div>
     </form>
+
+    <!-- A member already: nothing to apply for. -->
+    <div id="member" class="success" hidden tabindex="-1">
+      <div class="check" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+      </div>
+      <h1 class="title" data-t="You are already a community member">You are already a community member</h1>
+      <p class="result" data-t="Your account is already part of the Micromobility community. You can book the community rides on the booking site.">Your account is already part of the Micromobility community. You can book the community rides on the booking site.</p>
+      <a id="member-go" class="submit member-go" href="https://micromobilityrentals.pages.dev/" data-t="Open the booking site">Open the booking site</a>
+    </div>
 
     <div id="success" class="success" hidden tabindex="-1">
       <div class="check" aria-hidden="true">
