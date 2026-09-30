@@ -348,7 +348,7 @@
   $("#pwd2").addEventListener("input", function () { clearMsg("f-pwd2"); });
 
   /* ── Tiles and tick boxes ───────────────────────────────────────────────── */
-  var gender = null, xgender = null, bikeType = null, ack = false, news = false;
+  var gender = null, xgender = null, bikeType = null, ownBike = null, ack = false, news = false;
   function tiles(groupSel, fieldId, onPick) {
     $(groupSel).addEventListener("click", function (e) {
       var b = e.target.closest(".tile"); if (!b) return;
@@ -359,6 +359,8 @@
   tiles("#genders", "f-gender", function (v) { gender = v; });
   tiles("#xgenders", "f-xgender", function (v) { xgender = v; });
   tiles("#types", "f-type", function (v) { bikeType = v; });
+  // Their own bike, yes or no (the owner, 2026-09-30); sent as own_bike, true or false.
+  tiles("#owns", "f-own", function (v) { ownBike = v === "yes"; });
   function tick(id, get, set) {
     var el = document.getElementById(id);
     function toggle() { set(!get()); el.setAttribute("aria-checked", String(get())); if (id === "ack") clearMsg("f-ack"); }
@@ -477,12 +479,13 @@
       // Their company (the owner, 2026-09-29; sent as workplace), checked as profession is, up to 120.
       var work = clean($("#work").value);
       if (Array.from(work).length < 2 || Array.from(work).length > 120 || !/\p{L}/u.test(work) || /[<>"`{}]/.test(work)) hard["f-work"] = ["Enter your company"];
+      if (ownBike === null) hard["f-own"] = ["Tell us whether you have your own bike"];
       if (!bikeType) hard["f-type"] = ["Choose a bike type"];
       if (!$("#heard").value) hard["f-heard"] = ["Please tell us how you heard about us."];
     }
     return { hard: hard, soft: soft };
   }
-  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-pwd", "f-pwd2", "f-height", "f-ack"], 2: ["f-xgender", "f-xheight", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-type", "f-heard"] };
+  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-pwd", "f-pwd2", "f-height", "f-ack"], 2: ["f-xgender", "f-xheight", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-own", "f-type", "f-heard"] };
   // Shows the step's problems; true when the rider may go on.
   function passStep(n) {
     var r = check(n), hk = Object.keys(r.hard), sk = Object.keys(r.soft);
@@ -568,6 +571,7 @@
     if (me.linkedin) $("#li").value = me.linkedin;
     if (me.profession) $("#prof").value = me.profession;
     if (me.workplace) $("#work").value = me.workplace;
+    if (typeof me.own_bike === "boolean") { var o = $('#owns .tile[data-v="' + (me.own_bike ? "yes" : "no") + '"]'); if (o) o.click(); }
     if (me.bike_type) { var t = $('#types .tile[data-v="' + me.bike_type + '"]'); if (t) t.click(); }
     if (me.heard_from && SH.HEARD_OPTS.indexOf(me.heard_from) >= 0) { $("#heard").value = me.heard_from; $("#heard").classList.remove("ph"); }
   }
@@ -578,7 +582,7 @@
     goStep(2);
     if (acct.made) $("#acct-made").focus({ preventScroll: true });
   }
-  var FIELD_OF = { gender: ["f-xgender", "Choose your gender"], height: ["f-xheight", "Enter your height in cm (100 to 250)"], birth_date: ["f-birth", "Choose your date of birth"], nationality: ["f-nat", "Choose your nationality"], instagram: ["f-ig", "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", "Enter your profession"], workplace: ["f-work", "Enter your company"], bike_type: ["f-type", "Choose a bike type"], heard_from: ["f-heard", "Please tell us how you heard about us."] };
+  var FIELD_OF = { gender: ["f-xgender", "Choose your gender"], height: ["f-xheight", "Enter your height in cm (100 to 250)"], birth_date: ["f-birth", "Choose your date of birth"], nationality: ["f-nat", "Choose your nationality"], instagram: ["f-ig", "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", "Enter your profession"], workplace: ["f-work", "Enter your company"], own_bike: ["f-own", "Tell us whether you have your own bike"], bike_type: ["f-type", "Choose a bike type"], heard_from: ["f-heard", "Please tell us how you heard about us."] };
   $("#form").addEventListener("submit", async function (e) {
     e.preventDefault();
     if (busy) return;
@@ -586,7 +590,7 @@
     if (step === 1) { if (passStep(1)) createAccount(); return; }
     if (!acct || !passStep(2)) return;
     var payload = {
-      birth_date: birthValue(), nationality: $("#nat").value, bike_type: bikeType, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
+      birth_date: birthValue(), nationality: $("#nat").value, bike_type: bikeType, own_bike: ownBike, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
       profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang, privacy_version: SH.PRIVACY_VERSION
     };
     if (acct.needGender) payload.gender = xgender;

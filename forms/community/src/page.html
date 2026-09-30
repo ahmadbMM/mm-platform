@@ -569,6 +569,14 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
           <p class="hint" data-t="The company you work for">The company you work for</p>
           <p class="err" aria-live="polite"></p>
         </div>
+        <div id="f-own" class="field">
+          <span class="label" id="own-label" data-t="Do you have your own bike?">Do you have your own bike?</span>
+          <div id="owns" class="types two" role="radiogroup" aria-labelledby="own-label">
+            <button type="button" class="tile" data-v="yes" role="radio" aria-checked="false" data-t="Yes, I have one">Yes, I have one</button>
+            <button type="button" class="tile" data-v="no" role="radio" aria-checked="false" data-t="No, not yet">No, not yet</button>
+          </div>
+          <p class="err" aria-live="polite"></p>
+        </div>
         <div id="f-type" class="field">
           <span class="label" id="type-label" data-t="Type of bike">Type of bike</span>
           <div id="types" class="types" role="radiogroup" aria-labelledby="type-label">
@@ -707,6 +715,10 @@ var FORM_T = {
   "Enter your profession": "أدخل مهنتك",
   "Enter your company": "أدخل اسم شركتك",
   "Choose a bike type": "اختر نوع الدراجة",
+  "Do you have your own bike?": "هل لديك دراجة خاصة بك؟",
+  "Yes, I have one": "نعم، لديّ دراجة",
+  "No, not yet": "لا، ليس بعد",
+  "Tell us whether you have your own bike": "أخبرنا إن كانت لديك دراجة خاصة بك",
   "Choose one": "اختر واحداً",
   "Please tell us how you heard about us.": "أخبرنا من فضلك كيف عرفت عنا.",
   "Could not reach the server. Please try again.": "تعذّر الوصول إلى الخادم. يُرجى المحاولة مرة أخرى.",
@@ -795,6 +807,10 @@ var FORM_T = {
   "Enter your profession": "Saisissez votre profession",
   "Enter your company": "Saisissez votre entreprise",
   "Choose a bike type": "Choisissez un type de vélo",
+  "Do you have your own bike?": "Avez-vous votre propre vélo ?",
+  "Yes, I have one": "Oui, j’en ai un",
+  "No, not yet": "Non, pas encore",
+  "Tell us whether you have your own bike": "Dites-nous si vous avez votre propre vélo",
   "Choose one": "Choisissez",
   "Please tell us how you heard about us.": "Dites-nous comment vous nous avez connus.",
   "Could not reach the server. Please try again.": "Impossible de joindre le serveur. Veuillez réessayer.",
@@ -883,6 +899,10 @@ var FORM_T = {
   "Enter your profession": "Introduce tu profesión",
   "Enter your company": "Introduce tu empresa",
   "Choose a bike type": "Elige un tipo de bici",
+  "Do you have your own bike?": "¿Tienes tu propia bici?",
+  "Yes, I have one": "Sí, tengo una",
+  "No, not yet": "No, todavía no",
+  "Tell us whether you have your own bike": "Dinos si tienes tu propia bici",
   "Choose one": "Elige una opción",
   "Please tell us how you heard about us.": "Dinos cómo nos conociste, por favor.",
   "Could not reach the server. Please try again.": "No se pudo conectar con el servidor. Inténtalo de nuevo.",
@@ -971,6 +991,10 @@ var FORM_T = {
   "Enter your profession": "Informe sua profissão",
   "Enter your company": "Informe sua empresa",
   "Choose a bike type": "Escolha um tipo de bicicleta",
+  "Do you have your own bike?": "Você tem sua própria bicicleta?",
+  "Yes, I have one": "Sim, tenho uma",
+  "No, not yet": "Não, ainda não",
+  "Tell us whether you have your own bike": "Diga se você tem sua própria bicicleta",
   "Choose one": "Escolha uma opção",
   "Please tell us how you heard about us.": "Conte-nos como você nos conheceu.",
   "Could not reach the server. Please try again.": "Não foi possível conectar ao servidor. Tente novamente.",
@@ -1059,6 +1083,10 @@ var FORM_T = {
   "Enter your profession": "اپنا پیشہ درج کریں",
   "Enter your company": "اپنی کمپنی درج کریں",
   "Choose a bike type": "سائیکل کی قسم منتخب کریں",
+  "Do you have your own bike?": "کیا آپ کے پاس اپنی سائیکل ہے؟",
+  "Yes, I have one": "جی ہاں، میرے پاس ہے",
+  "No, not yet": "نہیں، ابھی نہیں",
+  "Tell us whether you have your own bike": "بتائیں کہ آپ کے پاس اپنی سائیکل ہے یا نہیں",
   "Choose one": "ایک منتخب کریں",
   "Please tell us how you heard about us.": "براہ کرم بتائیں آپ کو ہمارے بارے میں کیسے پتا چلا۔",
   "Could not reach the server. Please try again.": "سرور تک رسائی نہیں ہو سکی۔ براہِ کرم دوبارہ کوشش کریں۔",
@@ -1147,6 +1175,10 @@ var FORM_T = {
   "Enter your profession": "अपना पेशा दर्ज करें",
   "Enter your company": "अपनी कंपनी दर्ज करें",
   "Choose a bike type": "साइकिल का प्रकार चुनें",
+  "Do you have your own bike?": "क्या आपके पास अपनी साइकिल है?",
+  "Yes, I have one": "हाँ, मेरे पास है",
+  "No, not yet": "नहीं, अभी नहीं",
+  "Tell us whether you have your own bike": "बताएँ कि आपके पास अपनी साइकिल है या नहीं",
   "Choose one": "एक चुनें",
   "Please tell us how you heard about us.": "कृपया बताएँ कि आपको हमारे बारे में कैसे पता चला।",
   "Could not reach the server. Please try again.": "सर्वर तक नहीं पहुँच सके। कृपया फिर से कोशिश करें।",
@@ -1235,6 +1267,10 @@ var FORM_T = {
   "Enter your profession": "Ilagay ang iyong propesyon",
   "Enter your company": "Ilagay ang iyong kumpanya",
   "Choose a bike type": "Pumili ng uri ng bisikleta",
+  "Do you have your own bike?": "May sarili ka bang bisikleta?",
+  "Yes, I have one": "Oo, mayroon ako",
+  "No, not yet": "Wala pa",
+  "Tell us whether you have your own bike": "Sabihin sa amin kung may sarili kang bisikleta",
   "Choose one": "Pumili ng isa",
   "Please tell us how you heard about us.": "Pakisabi kung paano mo kami nalaman.",
   "Could not reach the server. Please try again.": "Hindi maabot ang server. Pakisubukan ulit.",
@@ -1323,6 +1359,10 @@ var FORM_T = {
   "Enter your profession": "आफ्नो पेशा लेख्नुहोस्",
   "Enter your company": "आफ्नो कम्पनी लेख्नुहोस्",
   "Choose a bike type": "साइकलको प्रकार छान्नुहोस्",
+  "Do you have your own bike?": "के तपाईंसँग आफ्नै साइकल छ?",
+  "Yes, I have one": "छ, मसँग एउटा छ",
+  "No, not yet": "छैन, अहिलेसम्म छैन",
+  "Tell us whether you have your own bike": "तपाईंसँग आफ्नै साइकल छ कि छैन भन्नुहोस्",
   "Choose one": "एउटा छान्नुहोस्",
   "Please tell us how you heard about us.": "कृपया भन्नुहोस्, तपाईंले हाम्रो बारेमा कसरी थाहा पाउनुभयो।",
   "Could not reach the server. Please try again.": "सर्भरमा पुग्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
@@ -1411,6 +1451,10 @@ var FORM_T = {
   "Enter your profession": "আপনার পেশা লিখুন",
   "Enter your company": "আপনার কোম্পানির নাম লিখুন",
   "Choose a bike type": "সাইকেলের ধরন বেছে নিন",
+  "Do you have your own bike?": "আপনার কি নিজের সাইকেল আছে?",
+  "Yes, I have one": "হ্যাঁ, আমার একটা আছে",
+  "No, not yet": "না, এখনও নেই",
+  "Tell us whether you have your own bike": "আপনার নিজের সাইকেল আছে কি না জানান",
   "Choose one": "একটি বেছে নিন",
   "Please tell us how you heard about us.": "অনুগ্রহ করে বলুন আপনি আমাদের সম্পর্কে কীভাবে জানলেন।",
   "Could not reach the server. Please try again.": "সার্ভারে পৌঁছানো গেল না। অনুগ্রহ করে আবার চেষ্টা করুন।",
@@ -1792,7 +1836,7 @@ var FORM_T = {
   $("#pwd2").addEventListener("input", function () { clearMsg("f-pwd2"); });
 
   /* ── Tiles and tick boxes ───────────────────────────────────────────────── */
-  var gender = null, xgender = null, bikeType = null, ack = false, news = false;
+  var gender = null, xgender = null, bikeType = null, ownBike = null, ack = false, news = false;
   function tiles(groupSel, fieldId, onPick) {
     $(groupSel).addEventListener("click", function (e) {
       var b = e.target.closest(".tile"); if (!b) return;
@@ -1803,6 +1847,8 @@ var FORM_T = {
   tiles("#genders", "f-gender", function (v) { gender = v; });
   tiles("#xgenders", "f-xgender", function (v) { xgender = v; });
   tiles("#types", "f-type", function (v) { bikeType = v; });
+  // Their own bike, yes or no (the owner, 2026-09-30); sent as own_bike, true or false.
+  tiles("#owns", "f-own", function (v) { ownBike = v === "yes"; });
   function tick(id, get, set) {
     var el = document.getElementById(id);
     function toggle() { set(!get()); el.setAttribute("aria-checked", String(get())); if (id === "ack") clearMsg("f-ack"); }
@@ -1921,12 +1967,13 @@ var FORM_T = {
       // Their company (the owner, 2026-09-29; sent as workplace), checked as profession is, up to 120.
       var work = clean($("#work").value);
       if (Array.from(work).length < 2 || Array.from(work).length > 120 || !/\p{L}/u.test(work) || /[<>"`{}]/.test(work)) hard["f-work"] = ["Enter your company"];
+      if (ownBike === null) hard["f-own"] = ["Tell us whether you have your own bike"];
       if (!bikeType) hard["f-type"] = ["Choose a bike type"];
       if (!$("#heard").value) hard["f-heard"] = ["Please tell us how you heard about us."];
     }
     return { hard: hard, soft: soft };
   }
-  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-pwd", "f-pwd2", "f-height", "f-ack"], 2: ["f-xgender", "f-xheight", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-type", "f-heard"] };
+  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-pwd", "f-pwd2", "f-height", "f-ack"], 2: ["f-xgender", "f-xheight", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-own", "f-type", "f-heard"] };
   // Shows the step's problems; true when the rider may go on.
   function passStep(n) {
     var r = check(n), hk = Object.keys(r.hard), sk = Object.keys(r.soft);
@@ -2012,6 +2059,7 @@ var FORM_T = {
     if (me.linkedin) $("#li").value = me.linkedin;
     if (me.profession) $("#prof").value = me.profession;
     if (me.workplace) $("#work").value = me.workplace;
+    if (typeof me.own_bike === "boolean") { var o = $('#owns .tile[data-v="' + (me.own_bike ? "yes" : "no") + '"]'); if (o) o.click(); }
     if (me.bike_type) { var t = $('#types .tile[data-v="' + me.bike_type + '"]'); if (t) t.click(); }
     if (me.heard_from && SH.HEARD_OPTS.indexOf(me.heard_from) >= 0) { $("#heard").value = me.heard_from; $("#heard").classList.remove("ph"); }
   }
@@ -2022,7 +2070,7 @@ var FORM_T = {
     goStep(2);
     if (acct.made) $("#acct-made").focus({ preventScroll: true });
   }
-  var FIELD_OF = { gender: ["f-xgender", "Choose your gender"], height: ["f-xheight", "Enter your height in cm (100 to 250)"], birth_date: ["f-birth", "Choose your date of birth"], nationality: ["f-nat", "Choose your nationality"], instagram: ["f-ig", "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", "Enter your profession"], workplace: ["f-work", "Enter your company"], bike_type: ["f-type", "Choose a bike type"], heard_from: ["f-heard", "Please tell us how you heard about us."] };
+  var FIELD_OF = { gender: ["f-xgender", "Choose your gender"], height: ["f-xheight", "Enter your height in cm (100 to 250)"], birth_date: ["f-birth", "Choose your date of birth"], nationality: ["f-nat", "Choose your nationality"], instagram: ["f-ig", "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", "Enter your profession"], workplace: ["f-work", "Enter your company"], own_bike: ["f-own", "Tell us whether you have your own bike"], bike_type: ["f-type", "Choose a bike type"], heard_from: ["f-heard", "Please tell us how you heard about us."] };
   $("#form").addEventListener("submit", async function (e) {
     e.preventDefault();
     if (busy) return;
@@ -2030,7 +2078,7 @@ var FORM_T = {
     if (step === 1) { if (passStep(1)) createAccount(); return; }
     if (!acct || !passStep(2)) return;
     var payload = {
-      birth_date: birthValue(), nationality: $("#nat").value, bike_type: bikeType, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
+      birth_date: birthValue(), nationality: $("#nat").value, bike_type: bikeType, own_bike: ownBike, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
       profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang, privacy_version: SH.PRIVACY_VERSION
     };
     if (acct.needGender) payload.gender = xgender;

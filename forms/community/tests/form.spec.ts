@@ -51,7 +51,7 @@ async function accountStep(page: Page, o: { first?: string; last?: string; phone
   if (o.news && (await page.locator('#news').getAttribute('aria-checked')) !== 'true') await page.click('#news .tick-box');
   await page.click('#next');
 }
-async function communityStep(page: Page, o: { heard?: string; type?: string; work?: string } = {}) {
+async function communityStep(page: Page, o: { heard?: string; type?: string; work?: string; own?: string } = {}) {
   await page.selectOption('#birth-y', '1994');
   await page.selectOption('#birth-m', '3');
   await page.selectOption('#birth-d', '12');
@@ -60,6 +60,7 @@ async function communityStep(page: Page, o: { heard?: string; type?: string; wor
   await page.fill('#li', 'https://sa.linkedin.com/in/karim-mansour-arch/');
   await page.fill('#prof', 'Architect');
   await page.fill('#work', o.work ?? '  Saudi   Aramco ');
+  if (o.own !== '') await page.click(`#owns .tile[data-v="${o.own ?? 'yes'}"]`);
   await page.click(`#types .tile[data-v="${o.type ?? 'Road'}"]`);
   if (o.heard !== '') await page.selectOption('#heard', o.heard ?? 'instagram');
 }
@@ -92,7 +93,7 @@ test('step 1 makes the account, says so, and step 2 sends the community answers 
   await expect(page.locator('#result')).toHaveText('Thank you, Karim. Our team will review your application and reply to you shortly.');
   await expect(page.locator('#result-contact')).toContainText('+966552468013');
   expect(of('customer_community_apply')).toEqual([{ p_id: su[0].p_id, p_token: 'tok-new', p: {
-    birth_date: '1994-03-12', nationality: 'Egypt', bike_type: 'Road', instagram: 'karim.rides', linkedin: 'karim-mansour-arch',
+    birth_date: '1994-03-12', nationality: 'Egypt', bike_type: 'Road', own_bike: true, instagram: 'karim.rides', linkedin: 'karim-mansour-arch',
     profession: 'Architect', workplace: 'Saudi Aramco', heard_from: 'instagram', lang: 'en', privacy_version: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
   } }]);
   expect(errs).toEqual([]);
@@ -324,7 +325,7 @@ test('a server answer about a community field goes back to that field', async ({
 // members-only popup, sends the rider back with a one-time code.
 test('arriving signed in starts on step 2: who is applying, their answers so far, and no account step', async ({ page }) => {
   const { errs, of } = await open(page, `?code=${CODE}&lang=en`, {
-    customer_community_me: () => json({ ...ME, pending: true, birth_date: '1994-03-12', nationality: 'Egypt', profession: 'Architect', workplace: 'Saudi Aramco', bike_type: 'Hybrid', heard_from: 'friend', instagram: 'karim.rides' }),
+    customer_community_me: () => json({ ...ME, pending: true, birth_date: '1994-03-12', nationality: 'Egypt', profession: 'Architect', workplace: 'Saudi Aramco', bike_type: 'Hybrid', own_bike: false, heard_from: 'friend', instagram: 'karim.rides' }),
   });
   await expect(step(page, 2)).toBeVisible();
   await expect(step(page, 1)).toBeHidden();
@@ -338,12 +339,13 @@ test('arriving signed in starts on step 2: who is applying, their answers so far
   await expect(page.locator('#birth-d')).toHaveValue('12');
   await expect(page.locator('#nat')).toHaveValue('Egypt');
   await expect(page.locator('#types .tile[data-v="Hybrid"]')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#owns .tile[data-v="no"]')).toHaveAttribute('aria-checked', 'true'); // their earlier answer
   await expect(page.locator('#heard')).toHaveValue('friend');
   await expect(page.locator('#f-xgender')).toBeHidden();
   await expect(page.locator('#f-xheight')).toBeHidden();
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
-  expect(of('customer_community_apply')).toEqual([{ p_id: 'c-karim', p_token: 'tok-handed', p: expect.objectContaining({ birth_date: '1994-03-12', bike_type: 'Hybrid', profession: 'Architect', instagram: 'karim.rides' }) }]);
+  expect(of('customer_community_apply')).toEqual([{ p_id: 'c-karim', p_token: 'tok-handed', p: expect.objectContaining({ birth_date: '1994-03-12', bike_type: 'Hybrid', own_bike: false, profession: 'Architect', instagram: 'karim.rides' }) }]);
   expect(of('customer_signup')).toEqual([]);
   expect(errs).toEqual([]);
 });
@@ -389,4 +391,28 @@ test('Arabic: the account step and the account-made note in the page language', 
   await page.click('#next');
   await expect(page.locator('#acct-made .acct-title')).toHaveText('تم إنشاء حسابك');
   expect(errs).toEqual([]);
+});
+
+// The owner, 2026-09-30: "add a new field that has two options ask the registrant if he has a bike or not".
+test('step 2 asks whether they have their own bike, and will not go on without an answer', async ({ page }) => {
+  const { of } = await open(page);
+  await accountStep(page);
+  await expect(page.locator('#f-own .label')).toHaveText('Do you have your own bike?');
+  await expect(page.locator('#owns .tile')).toHaveText(['Yes, I have one', 'No, not yet']);
+  await communityStep(page, { own: '' });
+  await page.click('#submit');
+  await expect(page.locator('#f-own .err')).toHaveText('Tell us whether you have your own bike');
+  expect(of('customer_community_apply')).toEqual([]);
+  await page.click('#owns .tile[data-v="no"]');
+  await expect(page.locator('#f-own .err')).toHaveText('');
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('customer_community_apply')[0].p).toMatchObject({ own_bike: false });
+});
+
+test('the own-bike question reads in Arabic', async ({ page }) => {
+  await open(page, '?lang=ar');
+  await accountStep(page);
+  await expect(page.locator('#f-own .label')).toHaveText('هل لديك دراجة خاصة بك؟');
+  await expect(page.locator('#owns .tile')).toHaveText(['نعم، لديّ دراجة', 'لا، ليس بعد']);
 });
