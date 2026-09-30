@@ -13,6 +13,27 @@ export async function rpc<T>(fn: string, args: Record<string, unknown>): Promise
   return (await res.json()) as T;
 }
 
+/** The same call, keeping a refusal: {data} when the database answered, {error} with its code and
+ *  message when it raised (customer_signup's DUPLICATE, RATE_LIMITED, name_short...) or when the
+ *  request never arrived ({ network: true }). */
+export async function rpcResult<T>(fn: string, args: Record<string, unknown>): Promise<{ data: T } | { error: { code?: string; message?: string; network?: boolean } }> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return { error: { network: true } };
+  try {
+    const res = await fetch(`${url}/rest/v1/rpc/${fn}`, {
+      method: "POST",
+      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+      body: JSON.stringify(args),
+    });
+    const body = await res.json().catch(() => null);
+    if (res.ok) return { data: body as T };
+    return { error: { code: body?.code, message: [body?.message, body?.details, body?.hint].filter(Boolean).join(" ") } };
+  } catch {
+    return { error: { network: true } };
+  }
+}
+
 /** A Saudi mobile typed any usual way (05…, 5…, 9665…, +9665…) as +9665XXXXXXXX; other +codes kept. */
 export function normalizePhone(raw: string): string {
   const d = raw

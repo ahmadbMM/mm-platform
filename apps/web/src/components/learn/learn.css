@@ -135,3 +135,23 @@ html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13
 @media (max-width: 380px) {
   .ln-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
 }
+
+/* Two steps (2026-09-30): the account, then the lesson. */
+.ln-steps { list-style: none; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: -6px 0 20px; padding: 0; }
+.ln-steps li { display: flex; flex-direction: column; gap: 7px; font-size: 12px; font-weight: 700; letter-spacing: .3px; color: #5f6862; }
+.ln-steps li::before { content: ""; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, .08); }
+.ln-steps li.on { color: #1a1919; }
+.ln-steps li.on::before { background: #1a1919; }
+.ln-steps li.done { color: #077a4b; }
+.ln-steps li.done::before { background: #077a4b; }
+.ln-have { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 6px; }
+.ln-step-title { font-size: 17px; margin: 0 0 6px; }
+.ln-back { display: block; margin: 14px auto 0; padding: 6px 10px; border: 0; background: none; color: #5f6862; font: inherit; font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ln-oauth { margin-top: 14px; text-align: center; }
+.ln-oauth a { color: #077a4b; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.ln-step-top:focus { outline: none; }
+.ln-made { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 20px; padding: 14px 16px; border-radius: 16px; background: rgba(7, 122, 75, .07); border: 1px solid rgba(7, 122, 75, .3); }
+.ln-made-mark { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #077a4b; color: #fbf9f4; font-weight: 700; }
+.ln-made b { display: block; color: #077a4b; font-size: 16px; }
+.ln-made span span { display: block; margin-top: 2px; font-size: 13.5px; color: #5f6862; line-height: 1.5; }
+.ln-who-am { margin: 0 0 18px; padding: 10px 14px; border-radius: 12px; background: rgba(0, 0, 0, .05); font-size: 14px; font-weight: 600; color: #5f6862; }

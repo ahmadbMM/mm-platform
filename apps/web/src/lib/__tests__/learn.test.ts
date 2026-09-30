@@ -1,24 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { HEARD, ageOn, emailOk, igNorm, learnPayload, liNorm, phoneOk, wholeNumber, type LearnFields, type LearnerFields } from "../learn";
+import { HEARD, accountArgs, ageOn, emailOk, igNorm, learnPayload, liNorm, passwordOk, phoneOk, signinIdentifier, wholeNumber, type AccountFields, type LearnFields, type LearnerFields } from "../learn";
 import { learnFrame } from "../learn-page";
 import { namePartsOk } from "../rpc-client";
 
-// The Learn to ride sign-up (/experiences/learn): the form refuses what learn_apply() would, with
-// the database's own error codes - a learner's with their place in the list - one at a time in the
-// form's order (every learner's card, then the person signing up), and sends exactly what the
-// database reads: the contact, and 1 to 5 learners (the owner, 2026-09-28). The person signing up
-// also gives what the community form asks, for the account (the owner, 2026-09-28), and "Me" takes
-// their age, gender and height from it; a learner may be any age up to 99.
+// The Learn to ride sign-up (/experiences/learn), in two steps since 2026-09-30: the account (the
+// booking app's own sign-up, accountArgs, or a sign-in, signinIdentifier), then the lesson. Step 2
+// refuses what learn_apply() would, with the database's own error codes - a learner's with their
+// place in the list - one at a time in the form's order (every learner's card, then the person
+// signing up), and sends exactly what customer_learn_apply() reads: 1 to 5 learners (the owner,
+// 2026-09-28) and what the community form asks; the name, email, mobile, ride news and notice are
+// the account's. "Me" takes the person's age, gender and height; a learner may be any age up to 99.
 
 const me: LearnerFields = { who: "self", name: "", age: "30", gender: "female", height: "165", level: "never" };
 const kid: LearnerFields = { who: "child", name: "Omar", age: "7", gender: "male", height: "120", level: "tried" };
 const friend: LearnerFields = { who: "other", name: "Lina Saleh", age: "34", gender: "female", height: "160", level: "refresh" };
 const TODAY = "2026-09-28";
 const form: LearnFields = {
-  learners: [me], name: "Sara Al Harbi", birth: "1996-02-10", gender: "female", nationality: "Saudi Arabia", height: "165",
-  phone: "0551234567", email: "Sara@Example.com", instagram: "", linkedin: "", profession: "Designer", workplace: "Saudi Aramco", heard: "instagram", notes: "", privacy: true, news: false,
+  learners: [me], birth: "1996-02-10", gender: "female", nationality: "Saudi Arabia", height: "165",
+  instagram: "", linkedin: "", profession: "Designer", workplace: "Saudi Aramco", heard: "instagram", notes: "",
 };
-const send = (x: Partial<LearnFields>) => learnPayload({ ...form, ...x }, "en", "2026-09-25", TODAY);
+const send = (x: Partial<LearnFields>) => learnPayload({ ...form, ...x }, "en", TODAY);
 const error = (x: Partial<LearnFields>) => {
   const r = send(x);
   return "error" in r ? r.error : null;
@@ -30,17 +31,17 @@ const learnerError = (l: Partial<LearnerFields>, base: LearnerFields = me) => {
 };
 
 describe("learnPayload", () => {
-  it("sends one learner - the person signing up - as the database reads it, and nothing of the old single-learner form", () => {
-    const r = learnPayload({ ...form, notes: "  A little nervous.  " }, "ar", "2026-09-25", TODAY);
+  it("sends one learner - the person signing up - as customer_learn_apply reads it, and nothing the account holds", () => {
+    const r = learnPayload({ ...form, notes: "  A little nervous.  " }, "ar", TODAY);
     expect(r).toEqual({
       payload: {
-        name: "Sara Al Harbi", birth_date: "1996-02-10", gender: "female", nationality: "Saudi Arabia", height: 165,
-        email: "sara@example.com", phone: "+966551234567", instagram: "", linkedin: "", profession: "Designer",
-        workplace: "Saudi Aramco", heard_from: "instagram", notes: "A little nervous.", ride_news: false, lang: "ar", privacy_version: "2026-09-25",
+        birth_date: "1996-02-10", gender: "female", nationality: "Saudi Arabia", height: 165,
+        instagram: "", linkedin: "", profession: "Designer",
+        workplace: "Saudi Aramco", heard_from: "instagram", notes: "A little nervous.", lang: "ar",
         learners: [{ who: "self", name: "", age: 30, gender: "female", height: 165, level: "never" }],
       },
     });
-    expect(Object.keys("payload" in r ? r.payload : {})).toEqual(["name", "birth_date", "gender", "nationality", "height", "email", "phone", "instagram", "linkedin", "profession", "workplace", "heard_from", "notes", "ride_news", "lang", "privacy_version", "learners"]);
+    expect(Object.keys("payload" in r ? r.payload : {})).toEqual(["birth_date", "gender", "nationality", "height", "instagram", "linkedin", "profession", "workplace", "heard_from", "notes", "lang", "learners"]);
   });
 
   it("sends three learners in their order: the person signing up, their child and another adult", () => {
@@ -74,7 +75,7 @@ describe("learnPayload", () => {
 
   it("names the card of the first learner with a problem, and checks the person signing up only after every card", () => {
     const empty: LearnerFields = { who: "", name: "", age: "", gender: "", height: "", level: "" };
-    const blank: LearnFields = { learners: [kid, empty, { ...friend, age: "100" }], name: "", birth: "", gender: "", nationality: "", height: "", phone: "", email: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "", privacy: false, news: false };
+    const blank: LearnFields = { learners: [kid, empty, { ...friend, age: "100" }], birth: "", gender: "", nationality: "", height: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "" };
     const steps: [(f: LearnFields) => LearnFields, { error: string; index?: number } | null][] = [
       [(f) => f, { error: "learner_who", index: 1 }],
       [(f) => ({ ...f, learners: [f.learners[0], { ...empty, who: "child" }, f.learners[2]] }), { error: "learner_name", index: 1 }],
@@ -83,23 +84,19 @@ describe("learnPayload", () => {
       [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], gender: "female" }, f.learners[2]] }), { error: "learner_height", index: 1 }],
       [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], height: "115" }, f.learners[2]] }), { error: "level", index: 1 }],
       [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], level: "never" }, f.learners[2]] }), { error: "learner_age", index: 2 }],
-      [(f) => ({ ...f, learners: [f.learners[0], f.learners[1], { ...f.learners[2], age: "34" }] }), { error: "name" }],
-      [(f) => ({ ...f, name: "Huda Saleh" }), { error: "birth_date" }],
+      [(f) => ({ ...f, learners: [f.learners[0], f.learners[1], { ...f.learners[2], age: "34" }] }), { error: "birth_date" }],
       [(f) => ({ ...f, birth: "1988-11-03" }), { error: "gender" }],
       [(f) => ({ ...f, gender: "female" }), { error: "nationality" }],
       [(f) => ({ ...f, nationality: "Jordan" }), { error: "height" }],
-      [(f) => ({ ...f, height: "160" }), { error: "phone" }],
-      [(f) => ({ ...f, phone: "+966 50 123 4567" }), { error: "email" }],
-      [(f) => ({ ...f, email: "huda@example.sa" }), { error: "profession" }],
+      [(f) => ({ ...f, height: "160" }), { error: "profession" }],
       [(f) => ({ ...f, profession: "Teacher" }), { error: "workplace" }],
       [(f) => ({ ...f, workplace: "King Abdulaziz University" }), { error: "heard_from" }],
-      [(f) => ({ ...f, heard: "invited" }), { error: "privacy" }],
-      [(f) => ({ ...f, privacy: true }), null],
+      [(f) => ({ ...f, heard: "invited" }), null],
     ];
     let f = blank;
     for (const [step, next] of steps) {
       f = step(f);
-      const r = learnPayload(f, "en", "2026-09-25", TODAY);
+      const r = learnPayload(f, "en", TODAY);
       expect("error" in r ? r : null, JSON.stringify(next)).toEqual(next);
     }
   });
@@ -160,11 +157,11 @@ describe("learnPayload", () => {
     expect(error({ linkedin: "linkedin.com/company/micromobility" })).toBe("linkedin");
   });
 
-  it("needs a profession - letters, 2 to 80 characters - and sends the ride news answer", () => {
+  it("needs a profession - letters, 2 to 80 characters", () => {
     for (const x of ["", "A", "123", "<b>Chef</b>", "x".repeat(81)]) expect(error({ profession: x }), x).toBe("profession");
     for (const x of ["Chef", "مهندس", "  Civil   engineer "]) expect(error({ profession: x }), x).toBeNull();
-    const r = send({ profession: "  Civil   engineer ", news: true });
-    expect("payload" in r && [r.payload.profession, r.payload.ride_news]).toEqual(["Civil engineer", true]);
+    const r = send({ profession: "  Civil   engineer " });
+    expect("payload" in r && r.payload.profession).toBe("Civil engineer");
   });
 
   // Workplace (the owner, 2026-09-29): where they work or study, checked as profession is, up to 120.
@@ -191,33 +188,71 @@ describe("learnPayload", () => {
     }
   });
 
-  it("needs a first and last name for the person signing up, letters and periods, each part two letters or more", () => {
-    for (const n of ["Sara", "Sara K", "Sara 2nd", "Sara_Harbi X", "S. Harbi", "  "]) expect(error({ name: n }), n).toBe("name");
-    for (const n of ["Md. Rahman", "سارة الحربي", "Kerry-Ann Stander", "अमित कुमार"]) expect(error({ name: n }), n).toBeNull();
-    expect(error({ name: `Sara ${"a".repeat(116)}` })).toBe("name"); // 121 characters
-  });
-
-  it("reads a Saudi mobile typed any usual way, and another country's with its code", () => {
-    for (const p of ["0551234567", "551234567", "+966 55 123 4567", "٠٥٥١٢٣٤٥٦٧", "+44 7700 900123"]) expect(error({ phone: p }), p).toBeNull();
-    for (const p of ["", "12345", "+966112345678", "+9665512345"]) expect(error({ phone: p }), p).toBe("phone");
-  });
-
-  it("needs an email and keeps notes to 600 characters", () => {
-    expect(error({ email: "" })).toBe("email");
-    expect(error({ email: "sara@example" })).toBe("email");
+  it("keeps notes to 600 characters", () => {
     expect(error({ notes: "x".repeat(600) })).toBeNull();
     expect(error({ notes: "x".repeat(601) })).toBe("notes");
   });
 
-  it("needs the Privacy Notice box, and sends the notice's version", () => {
-    expect(error({ privacy: false })).toBe("privacy");
-    expect(learnPayload(form, "en", "", TODAY)).toEqual({ error: "privacy" });
-  });
-
   it("sends the page's language, English when it is not a two-letter code", () => {
-    const zh = learnPayload(form, "zh", "2026-09-25", TODAY), odd = learnPayload(form, "zh-Hans", "2026-09-25", TODAY);
+    const zh = learnPayload(form, "zh", TODAY), odd = learnPayload(form, "zh-Hans", TODAY);
     expect("payload" in zh && zh.payload.lang).toBe("zh");
     expect("payload" in odd && odd.payload.lang).toBe("en");
+  });
+});
+
+// Step 1 for someone new: the booking app's own sign-up, its questions and rules (the owner, 2026-09-30).
+describe("accountArgs", () => {
+  const acc: AccountFields = { first: "sara", last: "al harbi", gender: "female", email: " Sara@Example.com ", phone: "0551234567", password: "Ride2Work", password2: "Ride2Work", height: "165", privacy: true, news: true };
+  const aerr = (x: Partial<AccountFields>) => { const r = accountArgs({ ...acc, ...x }); return "error" in r ? r.error : null; };
+
+  it("sends customer_signup's argument: the name in capitals, a lower-cased email, the mobile as stored, the account's type Any", () => {
+    expect(accountArgs(acc)).toEqual({ args: { p_name: "Sara Al Harbi", p_email: "sara@example.com", p_phone: "+966551234567", p_pwd: "Ride2Work", p_height: 165, p_type_preference: "Any", p_gender: "female" } });
+  });
+
+  it("checks in the form's order: names, gender, email, mobile, password, its confirmation, height, the Privacy Notice", () => {
+    const blank: AccountFields = { first: "", last: "", gender: "", email: "", phone: "", password: "", password2: "", height: "", privacy: false, news: false };
+    const steps: [Partial<AccountFields>, string | null][] = [
+      [{}, "first"], [{ first: "Huda" }, "last"], [{ last: "Saleh" }, "gender"], [{ gender: "female" }, "email"],
+      [{ email: "huda@example.sa" }, "phone"], [{ phone: "+966 50 123 4567" }, "password"], [{ password: "Ride2Work" }, "password2"],
+      [{ password2: "Ride2Work" }, "acct_height"], [{ height: "160" }, "privacy"], [{ privacy: true }, null],
+    ];
+    let a = blank;
+    for (const [x, want] of steps) {
+      a = { ...a, ...x };
+      const r = accountArgs(a);
+      expect("error" in r ? r.error : null, JSON.stringify(x)).toBe(want);
+    }
+  });
+
+  it("takes each name with the site's letters rule, every part two letters or more", () => {
+    for (const n of ["S", "Sara 2", "Sara_H", "  "]) expect(aerr({ first: n }), n).toBe("first");
+    for (const n of ["K", "Al H"]) expect(aerr({ last: n }), n).toBe("last");
+    for (const n of ["Md.", "سارة", "Kerry Ann"]) expect(aerr({ first: n }), n).toBeNull();
+  });
+
+  it("refuses a hidden Apple address, and asks the password rule twice", () => {
+    expect(aerr({ email: "x7k@privaterelay.appleid.com" })).toBe("email");
+    for (const p of ["Short1", "nouppercase1", "NoDigitsHere"]) expect(aerr({ password: p, password2: p }), p).toBe("password");
+    expect(aerr({ password2: "Ride2Walk" })).toBe("password2");
+    expect(passwordOk("Ride2Work")).toBe(true);
+  });
+
+  it("takes a height of 100 to 250 cm, as the booking app's sign-up does", () => {
+    for (const h of ["99", "251", "", "1.65"]) expect(aerr({ height: h }), h).toBe("acct_height");
+    for (const h of ["100", "250", "١٦٥"]) expect(aerr({ height: h }), h).toBeNull();
+  });
+
+  it("reads a Saudi mobile typed any usual way, and another country's with its code", () => {
+    for (const p of ["0551234567", "551234567", "+966 55 123 4567", "٠٥٥١٢٣٤٥٦٧", "+44 7700 900123"]) expect(aerr({ phone: p }), p).toBeNull();
+    for (const p of ["", "12345", "+966112345678", "+9665512345"]) expect(aerr({ phone: p }), p).toBe("phone");
+  });
+});
+
+describe("signinIdentifier", () => {
+  it("lower-cases an email and writes a mobile as the database stores it", () => {
+    expect(signinIdentifier("  Sara@Example.com ")).toBe("sara@example.com");
+    expect(signinIdentifier("055 123 4567")).toBe("+966551234567");
+    expect(signinIdentifier("+44 7700 900123")).toBe("+447700900123");
   });
 });
 

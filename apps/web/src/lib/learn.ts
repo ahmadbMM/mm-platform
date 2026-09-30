@@ -2,7 +2,14 @@ import { cleanName, nameOk, namePartsOk, normalizePhone } from "./rpc-client";
 import { NATIONALITIES } from "@/content/nationalities";
 
 // The Learn to ride sign-up (components/learn/LearnForm.tsx, at /experiences/learn): what the form
-// checks before it sends, and what it sends to learn_apply(). The database checks everything again
+// checks before it sends, and what it sends. Since 2026-09-30 it has two steps (the owner: "apply the
+// 2 steps registration on learn to ride too and add a question asking if the learner has an account
+// or not, if he has skip the sign up procedure"): the account - made with the booking app's own
+// sign-up (accountArgs: customer_exists, customer_signup, customer_consents) or signed in to
+// (signinIdentifier: customer_login, or the booking app's hand-over) - then the lesson, sent from
+// that account with customer_learn_apply(id, token, p), which takes the person's name, email,
+// mobile, ride news and confirmed notice from the account and hands the rest to learn_apply(). The
+// database checks everything again
 // and answers with the same error codes - a learner's with that learner's place in the list
 // (`index`, from 0) - so one set of messages covers both. One sign-up carries 1 to 5 learners (the
 // owner, 2026-09-28: a family signs up together), each one:
@@ -13,17 +20,15 @@ import { NATIONALITIES } from "@/content/nationalities";
 //     least two letters, 60 at most (a child's first name is enough) - never the same one twice;
 //   - male or female, 80 to 250 cm tall, and how much riding so far (the form does not ask when
 //     suits them: staff pick the lesson's time).
-// And the person signing up (the contact): first and last name - the same letters rule, 120 at
-// most - because staff turn a new person into a booking app account, whose names follow it; what
-// the community form asks (the owner, 2026-09-28: for that account): a date of birth (never in the
+// And the person signing up, from step 2: what the community form asks (the owner, 2026-09-28): a
+// date of birth (never in the
 // future, at most 99 years ago), gender, nationality (the booking app's list), height (80 to 250),
 // profession and workplace (the owner, 2026-09-29: the company they work for, labelled Company, 2 to
 // 120 characters, checked as profession is), and Instagram and LinkedIn, which may be left empty (the form does not say so);
-// a Saudi mobile as +9665XXXXXXXX, any other country as +<8 to 15 digits>; an email; how they
-// heard of us (one of HEARD, required: asked here and on the community form, no longer at the
-// booking app's sign-up); notes up to 600 characters; ride news, yes or no; and the version of the
-// Privacy Notice they confirmed. The bike type the community form asks is not asked: the account's
-// preference is 'Any'.
+// how they heard of us (one of HEARD, required: asked here and on the community form, no longer at
+// the booking app's sign-up); notes up to 600 characters. The gender and height are the account's
+// (asked only of an older account without them). The bike type the community form asks is not
+// asked: the account's preference is 'Any'.
 
 export const WHO = ["self", "child", "other"] as const;
 export const GENDERS = ["male", "female"] as const;
@@ -52,57 +57,70 @@ export type LearnerFields = {
   level: Level | "";
 };
 
-/** The form as the visitor filled it in: the learners, then the person signing up. `birth` is
- *  the date of birth as YYYY-MM-DD, "" until the day, month and year are all chosen. */
+/** Step 2 as the visitor filled it in: the learners, then the person signing up. `birth` is the
+ *  date of birth as YYYY-MM-DD, "" until the day, month and year are all chosen; `gender` and
+ *  `height` are the account's, filled in by the form (asked only of an account without them). */
 export type LearnFields = {
   learners: readonly LearnerFields[];
-  name: string;
   birth: string;
   gender: Gender | "";
   nationality: string;
   height: string;
-  phone: string;
-  email: string;
   instagram: string;
   linkedin: string;
   profession: string;
   workplace: string;
   heard: Heard | "";
   notes: string;
-  privacy: boolean;
-  news: boolean;
 };
 
 /** learn_apply()'s error codes for what was filled in (it also answers "throttled"): a learner's
  *  own, with their place in the list, and the sign-up's. "learners" is the list itself - none, more
  *  than five, "self" twice or the same learner twice (the form names the card for the last two). */
 export type LearnerError = "learner_who" | "learner_name" | "learner_age" | "learner_gender" | "learner_height" | "level";
-export type PersonError = "name" | "birth_date" | "gender" | "nationality" | "height" | "phone" | "email" | "instagram" | "linkedin" | "profession" | "workplace" | "heard_from" | "notes" | "privacy";
+export type PersonError = "birth_date" | "gender" | "nationality" | "height" | "instagram" | "linkedin" | "profession" | "workplace" | "heard_from" | "notes";
 export type LearnProblem = { error: LearnerError; index: number } | { error: "learners"; index?: number } | { error: PersonError; index?: undefined };
 
 /** One learner, as learn_apply() reads them. */
 export type LearnerPayload = { who: Who; name: string; age: number; gender: Gender; height: number; level: Level };
 
-/** learn_apply()'s argument, p. */
+/** customer_learn_apply()'s argument, p: the rest is the account's. */
 export type LearnPayload = {
-  name: string;
   birth_date: string;
   gender: Gender;
   nationality: string;
   height: number;
-  email: string;
-  phone: string;
   instagram: string;
   linkedin: string;
   profession: string;
   workplace: string;
   heard_from: Heard;
   notes: string;
-  ride_news: boolean;
   lang: string;
-  privacy_version: string;
   learners: LearnerPayload[];
 };
+
+/** Step 1, a new account: the booking app's sign-up, its questions and its rules. */
+export type AccountFields = {
+  first: string;
+  last: string;
+  gender: Gender | "";
+  email: string;
+  phone: string;
+  password: string;
+  password2: string;
+  height: string;
+  privacy: boolean;
+  news: boolean;
+};
+/** What is wrong with step 1, in the form's order. */
+export type AccountError = "first" | "last" | "gender" | "email" | "phone" | "password" | "password2" | "acct_height" | "privacy";
+/** customer_signup()'s argument, less the id the form makes. */
+export type SignupArgs = { p_name: string; p_email: string; p_phone: string; p_pwd: string; p_height: number; p_type_preference: "Any"; p_gender: Gender };
+/** The account's height rule: the booking app's sign-up (customer_signup) takes 100 to 250 cm. */
+export const ACCOUNT_HEIGHT = [100, 250] as const;
+/** The booking app's password rule: 8 characters or more, an upper-case letter and a digit. */
+export const passwordOk = (p: string) => p.length >= 8 && /[A-Z]/.test(p) && /[0-9]/.test(p);
 
 const chars = (s: string) => [...s].length; // as the database counts them: code points
 const oneOf = <T extends string>(list: readonly T[], v: string): v is T => (list as readonly string[]).includes(v);
@@ -176,12 +194,11 @@ function learner(l: LearnerFields, index: number, before: readonly LearnerPayloa
 }
 
 /**
- * The sign-up checked in the form's own order - every learner's card from the first, then the
- * person signing up - so the one message shown is about the first thing to fix; and, when all is
- * well, learn_apply()'s argument. `lang` is the page's language (its two-letter code),
- * `privacyVersion` the Privacy Notice the box confirms.
+ * Step 2 checked in the form's own order - every learner's card from the first, then the person
+ * signing up - so the one message shown is about the first thing to fix; and, when all is well,
+ * customer_learn_apply()'s argument. `lang` is the page's language (its two-letter code).
  */
-export function learnPayload(f: LearnFields, lang: string, privacyVersion: string, today: string = riyadhToday()): LearnProblem | { payload: LearnPayload } {
+export function learnPayload(f: LearnFields, lang: string, today: string = riyadhToday()): LearnProblem | { payload: LearnPayload } {
   if (f.learners.length < 1 || f.learners.length > MAX_LEARNERS) return { error: "learners" };
   // The person's own age, gender and height, for a "Me" card: checked with their details below, so
   // here only taken when they are already right.
@@ -201,8 +218,6 @@ export function learnPayload(f: LearnFields, lang: string, privacyVersion: strin
     if ("error" in r) return r;
     learners.push(r);
   }
-  const name = cleanName(f.name);
-  if (chars(name) > 120 || !/\s/.test(name) || !nameOk(name) || !namePartsOk(name)) return { error: "name" };
   const age = ageOn(f.birth, today);
   if (age === null || f.birth > today || age > AGE[1]) return { error: "birth_date" };
   if (!oneOf(GENDERS, f.gender)) return { error: "gender" };
@@ -210,10 +225,6 @@ export function learnPayload(f: LearnFields, lang: string, privacyVersion: strin
   const height = wholeNumber(f.height);
   if (height === null || height < HEIGHT[0] || height > HEIGHT[1]) return { error: "height" };
   if (learners.some((l) => l.who === "self") && age < AGE[0]) return { error: "birth_date" };
-  const phone = normalizePhone(f.phone);
-  if (!phoneOk(phone)) return { error: "phone" };
-  const email = f.email.trim().toLowerCase();
-  if (!emailOk(email)) return { error: "email" };
   const instagram = igNorm(f.instagram), linkedin = liNorm(f.linkedin);
   if (!igOk(instagram)) return { error: "instagram" };
   if (!liOk(linkedin)) return { error: "linkedin" };
@@ -224,9 +235,39 @@ export function learnPayload(f: LearnFields, lang: string, privacyVersion: strin
   if (!oneOf(HEARD, f.heard)) return { error: "heard_from" };
   const notes = f.notes.trim();
   if (chars(notes) > NOTES_MAX) return { error: "notes" };
-  if (!f.privacy || !/^\d{4}-\d{2}-\d{2}$/.test(privacyVersion)) return { error: "privacy" };
   // "Me" takes the person's own age, gender and height (the database does the same).
   const all = learners.map((l) => (l.who === "self" ? { ...l, age, gender: f.gender as Gender, height } : l));
-  return { payload: { name, birth_date: f.birth, gender: f.gender, nationality: f.nationality, height, email, phone, instagram, linkedin, profession, workplace,
-    heard_from: f.heard, notes, ride_news: f.news, lang: /^[a-z]{2}$/.test(lang) ? lang : "en", privacy_version: privacyVersion, learners: all } };
+  return { payload: { birth_date: f.birth, gender: f.gender, nationality: f.nationality, height, instagram, linkedin, profession, workplace,
+    heard_from: f.heard, notes, lang: /^[a-z]{2}$/.test(lang) ? lang : "en", learners: all } };
+}
+
+/**
+ * Step 1 checked in the form's order, as the booking app's sign-up checks it (first and last name
+ * with the site's letters rule, gender, email, mobile, the password rule twice, a height of 100 to
+ * 250 cm, the Privacy Notice box); when all is well, customer_signup()'s argument.
+ */
+export function accountArgs(a: AccountFields): { error: AccountError } | { args: SignupArgs } {
+  const first = cleanName(a.first), last = cleanName(a.last);
+  if (!first || !nameOk(first) || !namePartsOk(first)) return { error: "first" };
+  if (!last || !nameOk(last) || !namePartsOk(last)) return { error: "last" };
+  const name = `${first} ${last}`.replace(/(^|[\s.])(\p{L})/gu, (_, sep: string, ch: string) => sep + ch.toLocaleUpperCase());
+  if (chars(name) > 120) return { error: "last" };
+  if (!oneOf(GENDERS, a.gender)) return { error: "gender" };
+  const email = a.email.trim().toLowerCase();
+  if (!emailOk(email) || /@privaterelay\.appleid\.com$/.test(email)) return { error: "email" };
+  const phone = normalizePhone(a.phone);
+  if (!phoneOk(phone)) return { error: "phone" };
+  if (!passwordOk(a.password)) return { error: "password" };
+  if (a.password2 !== a.password) return { error: "password2" };
+  const height = wholeNumber(a.height);
+  if (height === null || height < ACCOUNT_HEIGHT[0] || height > ACCOUNT_HEIGHT[1]) return { error: "acct_height" };
+  if (!a.privacy) return { error: "privacy" };
+  return { args: { p_name: name, p_email: email, p_phone: phone, p_pwd: a.password, p_height: height, p_type_preference: "Any", p_gender: a.gender } };
+}
+
+/** What customer_login() takes as the email or mobile typed to sign in: a lower-cased email, or a
+ *  mobile as the database stores it (a Saudi one as +9665XXXXXXXX). */
+export function signinIdentifier(raw: string): string {
+  const v = raw.trim();
+  return v.includes("@") ? v.toLowerCase() : normalizePhone(v);
 }
