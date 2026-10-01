@@ -11,7 +11,11 @@ import { fill } from "@/lib/fill";
 export type StepSession = {
   id: string; kind: string; day: string; name: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
-  near: string | null; when: { gather: boolean; a: string; b: string } | null;
+  near: string | null;
+  /** Under the time: when bikes go out and the price from (the booking app's sess-card-meta). */
+  meta?: string[];
+  /** The route's distance for the summary ("6.17 km a lap"), or null. */
+  routeKm?: string | null; when: { gather: boolean; a: string; b: string } | null;
   members: boolean; free: boolean; full: boolean; paid: boolean;
   noCarbon: boolean; // the ride offers no Road Carbon bike, so its price is not shown
   /** A ticketed event: seats instead of bikes, so no bike prices - its own blurb, the seat price
@@ -131,6 +135,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                     {s.opens ? <span className="sc-spots closed">{s.opens}</span> : <span className={`sc-spots${s.full ? " full" : ""}`}>{s.full ? t.waitlisted : t.available}</span>}
                   </span>
                   {s.when && <span className="sc-time">{when(s)}</span>}
+                  {s.meta && s.meta.length > 0 && <span className="sc-meta">{s.meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}
                   {s.route && <span className="sc-time">{t.route}: {s.route}</span>}
                   {s.event && s.description && <span className="sc-desc">{s.description}</span>}
                   {facts(s)}
@@ -149,7 +154,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           <div className="xs-summary">
             <div className="xs-sum-head">
               {ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
-              <div><strong>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}</span></div>
+              <div><strong>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}</span></div>
             </div>
             {tags(sess)}
             {sess.event && sess.description && <p className="xs-rules">{sess.description}</p>}

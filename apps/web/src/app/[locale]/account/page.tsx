@@ -8,6 +8,8 @@ import "@/components/account/account.css";
 import "@/components/booking/booking.css";
 import TicketCard from "@/components/booking/TicketCard";
 import RateRide from "@/components/account/RateRide";
+import RideRecord from "@/components/account/RideRecord";
+import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import "@/components/club/club.css";
 import { accountSchema } from "@/content/pages/account";
@@ -20,10 +22,12 @@ import { fill } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName } from "@/lib/rides";
-import { routeNameOf, routeNames } from "@/lib/route-names";
+import { routeItems } from "@/lib/route-names";
 import { isRated } from "@/lib/rating";
-import { fmtDayDate, ticketCue, ticketGroups } from "@/lib/tickets";
+import { doneToday, fmtDayDate, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
+import { badgeProgress, closestBadges, recordRows, rideStats } from "@/lib/ride-record";
+import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
 import { riyadhClock } from "@/lib/workshop-days";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
@@ -81,7 +85,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
   const rows = await accountBookings(acct);
   const now = riyadhClock(new Date());
-  const groups = ticketGroups(rows, now.slice(0, 10));
+  const today = now.slice(0, 10);
+  const groups = ticketGroups(rows, today);
+  const doneTonight = doneToday(rows, today);
   const d = resolvePage(experiencesSchema, content, L).dates;
   const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
@@ -93,8 +99,20 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     .filter((r, i, all) => all.findIndex((x) => S(x.session_id) === S(r.session_id)) === i)
     .slice(0, 5);
   // every booked session, whatever its state now (a Petromin night, one staff closed since)
-  const sessions = await loadTicketSessions([...groups.map((g) => g.sessionId), ...toRate.map((r) => S(r.session_id))]);
-  const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it on its ticket
+  const record = recordRows(rows);
+  const [sessions, recSessions, badges] = await Promise.all([
+    loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => S(r.session_id))]),
+    // every night ridden, for Your rides and the badges (the kind of ride, and whether it was free)
+    loadRecordSessions(record.filter((r) => r.status === "done").map((r) => r.sessionId)),
+    loadBadgeData(acct),
+  ]);
+  // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
+  const past = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
+  const routes = routeItems(content, L); // a ride that follows a route on the Routes page names it on its ticket
+  // tonight's bike, by name, for the steps and the line under the header
+  const bikeOf = new Map(await Promise.all([...groups, ...past].filter((g) => g.date === today).map(async (g) => [g.sessionId, await bikeName(g.rows.find((r) => r.bikeId)?.bikeId ?? null)] as const)));
+  const stats = rideStats(record, recSessions, today);
+  const closest = closestBadges(badgeProgress(record, recSessions, badges, today));
   // "You're next" on a numbered night: whether anyone still waiting holds a lower number. Said on
   // the ride's day only, as the booking app does: a week ahead it counts a queue nobody stands in.
   const ahead = await Promise.all(groups.map((g) => {
@@ -102,6 +120,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     return s && !s.approval && first && g.date === now.slice(0, 10) ? anyoneAhead(g.sessionId, first.queueNum as number) : Promise.resolve(null);
   }));
   const ticketText = serverLocalize(TICKET, locale);
+  const recordText = serverLocalize(RECORD, locale);
+  const drawn = new Date().getTime(); // the countdown's first line, before the browser takes over
   const typeName = (ty: string) => (TYPE_NAME[ty] ? tx(TYPE_NAME[ty].en, TYPE_NAME[ty].ar) : ty);
   // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
   // Edit does; Reschedule and Cancel open its My Bookings.
@@ -135,7 +155,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
         <section className="ac-sec" aria-labelledby="ac-rides-h">
           <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a></div>
-          {groups.length === 0 ? (
+          {groups.length === 0 && past.length === 0 ? (
             <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <span aria-hidden="true">{isRtl(locale) ? "←" : "→"}</span></a>}</p>
           ) : (
             <div className="tk-grid">
@@ -148,12 +168,28 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                     cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
                     links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place: s?.approval ? s.meetUrl : S(site.contact.jccHref) || null,
                       live: g.date === now.slice(0, 10) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
-                    route={routeNameOf(routes, s?.routeSlug)} wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} />
+                    route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} />
+                );
+              })}
+              {past.map((g) => {
+                const s = sessions.get(g.sessionId);
+                return (
+                  <TicketCard key={g.sessionId} past locale={locale} today={today} rows={g.rows} session={s}
+                    name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
+                    cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
+                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} />
                 );
               })}
             </div>
           )}
         </section>
+
+        {(stats || closest.length > 0) && (
+          <section className="ac-sec" aria-label={recordText.yourRides}>
+            <RideRecord locale={locale} stats={stats} closest={closest} t={recordText} typeName={typeName} dur={{ h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM }} />
+          </section>
+        )}
 
         {toRate.length > 0 && (
           <section className="ac-sec" aria-labelledby="ac-rate-h">

@@ -119,6 +119,51 @@
 html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 @keyframes tk-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 @media (prefers-reduced-motion: reduce) { .tk-card.tk-today::after { animation: none; } }
+/* A ride tonight that is over: a record, paper and quieter. */
+.tk-past .tk-num { color: #4a4843; }
+.tk-past .tk-num.big { font-size: 40px; letter-spacing: -1px; }
+
+/* The ride night (91816da): the countdown, where the rider is, and the route. */
+.tk-cd { display: flex; align-items: center; gap: 7px; margin-top: 12px !important; font-size: 15px; font-weight: 600; color: #077a4b; font-variant-numeric: tabular-nums; }
+.tk-stages { display: flex; list-style: none; margin: 12px 0 4px; padding: 0; }
+.tk-stages li { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 3px; position: relative; padding-top: 14px; font-size: 12px; color: #a7a399; }
+.tk-stages li::before { content: ""; position: absolute; top: 4px; inset-inline: 0; height: 2px; background: rgba(26, 25, 25, .12); }
+.tk-stages li.on::before { background: #077a4b; }
+.tk-stages li:last-child::before { inset-inline-end: auto; width: 10px; }
+.tk-st-dot { position: absolute; top: 0; inset-inline-start: 0; width: 10px; height: 10px; border-radius: 50%; background: #fff; border: 2px solid rgba(26, 25, 25, .24); box-sizing: border-box; }
+.tk-stages li.on .tk-st-dot { background: #077a4b; border-color: #077a4b; }
+.tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(7, 122, 75, .08); }
+.tk-stages li.on { color: #4a4843; }
+.tk-stages li.cur .tk-st-l { color: #1a1919; font-weight: 700; }
+.tk-st-l { line-height: 1.25; padding-inline-end: 6px; }
+.tk-st-s { font-size: 12px; color: #6e6b63; font-variant-numeric: tabular-nums; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-inline-end: 6px; }
+.tk-rt { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin: 12px 0; padding: 12px 14px; border: 1px solid rgba(26, 25, 25, .12); border-radius: 10px; }
+.tk-rt-txt { min-width: 0; display: grid; gap: 2px; }
+.tk-rt-k { font-size: 12px; color: #6e6b63; }
+.tk-rt-n { font-size: 15px; font-weight: 700; color: #1a1919; }
+.tk-rt-m { font-size: 13px; color: #4a4843; font-variant-numeric: tabular-nums; }
+.tk-rt-done { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: #077a4b; }
+.tk-rt-a { font-size: 13px; font-weight: 600; color: #077a4b; }
+.tk-rt-osm { font-size: 12px; color: #a7a399; margin-top: 2px !important; }
+.tk-rt-map { flex: none; width: 30px; height: 118px; overflow: visible; }
+.tk-rt-map path { fill: none; stroke: #077a4b; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
+.tk-rt-map circle { fill: #fff; stroke: #1a1919; stroke-width: 1.6; }
+.tk-live .tk-cd { color: #03ff89; }
+.tk-live .tk-stages li { color: rgba(251, 249, 244, .66); }
+.tk-live .tk-stages li::before { background: rgba(251, 249, 244, .16); }
+.tk-live .tk-stages li.on::before { background: #03ff89; }
+.tk-live .tk-st-dot { background: #1a1919; border-color: rgba(251, 249, 244, .66); }
+.tk-live .tk-stages li.on .tk-st-dot { background: #03ff89; border-color: #03ff89; }
+.tk-live .tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(251, 249, 244, .16); }
+.tk-live .tk-stages li.cur .tk-st-l { color: #fbf9f4; }
+.tk-live .tk-st-s { color: rgba(251, 249, 244, .66); }
+.tk-live .tk-rt { border-color: rgba(251, 249, 244, .16); }
+.tk-live :is(.tk-rt-k, .tk-rt-m, .tk-rt-osm) { color: rgba(251, 249, 244, .66); }
+.tk-live .tk-rt-n { color: #fbf9f4; }
+.tk-live .tk-rt-a { color: #03ff89; }
+.tk-live .tk-rt-map path { stroke: #03ff89; }
+.tk-live .tk-rt-map circle { fill: #1a1919; stroke: #fbf9f4; }
+
 /* A waitlist place is not a ticket yet: paper, a dashed edge, the number quiet. */
 .tk-card.tk-wl { border: 1.5px dashed #b98a1a; }
 .tk-wl .tk-num { color: #6e6b63; }
@@ -163,6 +208,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .sc-spots.full { color: #a33b2e; }
 .sc-time { font-size: 12px; color: #6f6d63; }
 .sc-dw { color: #077a4b; font-weight: 700; }
+.sc-meta { font-size: 12px; color: #6f6d63; }
 @media (max-width: 560px) {
   .sc-card { padding: 12px; padding-inline-start: 31px; }
   .sc-spots { font-size: 11px; }

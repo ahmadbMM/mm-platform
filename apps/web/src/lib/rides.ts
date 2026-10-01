@@ -44,6 +44,9 @@ export type RideSession = {
   seats: number | null;
   /** The route the ride follows: an item's slug on the Routes page (sessions.route_slug), or null. */
   routeSlug: string | null;
+  /** When bikes go out ("20:15"): the booking app's sessionCollectTime; null on a ride without
+   *  bikes or one that gathers (the gathering is the moment to turn up). */
+  collect: string | null;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -79,6 +82,21 @@ export function slotTimes(slots: unknown): [string, string] | null {
   return m ? [m[1].padStart(5, "0"), m[2].padStart(5, "0")] : null;
 }
 
+/** When bikes go out, as the booking app's sessionCollectTime: the session's own _collect, or 45
+ *  minutes before the start (COLLECT_BEFORE_MIN). "HH:MM", or null without a time to go by. */
+export function collectTime(slots: unknown): string | null {
+  let o: unknown = slots;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { o = null; }
+  }
+  const c = o && typeof o === "object" ? (o as Record<string, unknown>)._collect : null;
+  if (typeof c === "string" && /^\s*\d{1,2}:\d{2}\s*$/.test(c)) return c.trim().padStart(5, "0");
+  const t = slotTimes(slots);
+  if (!t) return null;
+  const m = Math.max(0, Number(t[0].slice(0, 2)) * 60 + Number(t[0].slice(3)) - 45);
+  return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+}
+
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
  *  booked through the company's own form (micromobility.sa/petromin), so they are left out. */
 export function toSession(r: Row, keepAll = false): RideSession | null {
@@ -105,6 +123,7 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     price: kind === "event" && !free && price !== null && price > 0 ? price : null,
     seats: kind === "event" && seats !== null && Number.isInteger(seats) && seats > 0 ? seats : null,
     routeSlug: routeSlugOf(r.route_slug),
+    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" ? null : collectTime(r.bike_slots),
   };
 }
 

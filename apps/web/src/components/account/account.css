@@ -67,3 +67,33 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .rr-send { border: 0; border-radius: 999px; min-height: 46px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 14.5px; cursor: pointer; }
 .rr-send:disabled { opacity: .6; cursor: default; }
 .rr-thanks { margin: 0; background: rgba(7, 122, 75, .08); border: 1px solid rgba(7, 122, 75, .25); color: #077a4b; border-radius: 14px; padding: 14px 16px; font-weight: 600; font-size: 14px; line-height: 1.5; }
+
+/* Your rides and the closest badges (the booking app's .myr and .bd-next, 91816da). */
+.myr { margin: 0 0 8px; padding: 16px 20px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; color: #1a1919; }
+.myr p { margin: 0; }
+.myr-h { font-size: 15px; font-weight: 700; margin-bottom: 10px !important; }
+.myr-weeks { display: grid; grid-template-columns: repeat(26, minmax(0, 1fr)); gap: 3px; }
+.myr-weeks i { display: block; aspect-ratio: 1; max-height: 14px; border-radius: 3px; background: #ece8df; }
+.myr-weeks i.on { background: #077a4b; }
+.myr-wl { font-size: 12px; color: #6e6b63; margin-top: 6px !important; }
+.myr-f { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px 16px; margin: 14px 0 0; }
+.myr-f dt { font-size: 12px; color: #6e6b63; }
+.myr-f dd { margin: 2px 0 0; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.bd-next { display: grid; gap: 8px; margin: 10px 0 12px; }
+.bd-next-h { margin: 0; font-size: 13px; color: #6e6b63; }
+.bd-next-row { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; padding: 10px 12px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 10px; color: #1a1919; }
+.bd-next-t { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.bd-next-t strong { font-size: 15px; }
+.bd-next-t small { font-size: 12px; color: #6e6b63; }
+.bd-next-bar { display: block; height: 4px; margin-top: 4px; background: #ece8df; border-radius: 2px; overflow: hidden; }
+.bd-next-bar i { display: block; height: 100%; background: #077a4b; }
+.bd-next-n { font-size: 13px; font-weight: 700; color: #4a4843; font-variant-numeric: tabular-nums; }
+/* A badge: its glyph on a hexagon in its colour (the booking app's .bdg-m). */
+.bdg-m { width: 26px; height: 26px; flex: none; display: inline-block; vertical-align: middle; color: var(--bc, #077a4b); }
+.bdg-m.bd-next-ic { width: 34px; height: 34px; }
+.bdg-m .bdg-hex { fill: currentColor; fill-opacity: .16; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+.bdg-m g { fill: currentColor; }
+.bdg-m .o { opacity: .4; }
+.bdg-m .s { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.bdc-green { --bc: #077a4b; } .bdc-gold { --bc: #e0a414; } .bdc-blue { --bc: #3d8bfd; } .bdc-red { --bc: #f0525f; }
+.bdc-purple { --bc: #9d6cff; } .bdc-orange { --bc: #f98a3c; } .bdc-teal { --bc: #17b4ac; } .bdc-silver { --bc: #98a2b3; }

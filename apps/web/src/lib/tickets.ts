@@ -3,12 +3,14 @@
 // account's own my_bookings returns. Plain logic here, so it can be tested; the card is
 // components/booking/TicketCard.tsx.
 import { intlOf } from "@/i18n/locales";
-import { rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
+import { collectTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
 
-export type TicketStatus = "waiting" | "waitlist" | "active";
+export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
 export type TicketRow = {
   id: string; sessionId: string; date: string; day: string; queueNum: number | null; status: TicketStatus;
   waitlistNum: number | null; approval: string | null; price: number; paid: boolean; name: string; type: string;
+  /** The desk's check-in and return (ISO), the minutes it timed on the bike, and the bike handed over. */
+  checkedInAt: string | null; checkedOutAt: string | null; rideDuration: number | null; bikeId: string | null;
 };
 export type TicketSession = {
   id: string; date: string; kind: RideKind; title: string | null;
@@ -24,6 +26,9 @@ export type TicketSession = {
   collect: string | null;
   meetUrl: string | null;
   free: boolean;
+  /** Nothing to pay, as the booking app's _isFreeRide counts it for a ride ridden: any community
+   *  ride not marked paid, National Day among them. */
+  freeRide: boolean;
   /** The ride has bikes to hand out (not the pool, not the workshop, not a ticketed event). */
   bikes: boolean;
   /** The route the ride follows (an item's slug on the Routes page), or null. */
@@ -36,25 +41,52 @@ type Row = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() && Number.isFinite(Number(v)) ? Number(v) : null);
 
-/** The account's live bookings still ahead (today, Riyadh, and later), one list per session,
- *  soonest first - the booking app's Current & upcoming. */
-export function ticketGroups(rows: Row[], today: string): { sessionId: string; date: string; rows: TicketRow[] }[] {
-  const by = new Map<string, { sessionId: string; date: string; rows: TicketRow[] }>();
-  for (const r of rows) {
-    const status = r.status === "waiting" || r.status === "waitlist" || r.status === "active" ? r.status : null;
-    const date = S(r.session_date);
-    if (!status || !/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today) continue;
-    const sessionId = S(r.session_id) || date;
-    const g = by.get(sessionId) ?? { sessionId, date, rows: [] };
-    g.rows.push({
-      id: S(r.id), sessionId, date, day: S(r.session_day), queueNum: N(r.queue_num), status,
-      waitlistNum: N(r.waitlist_num), approval: S(r.approval) || null, price: N(r.price) ?? 0, paid: r.paid === true,
-      name: S(r.name), type: S(r.type_preference),
-    });
-    by.set(sessionId, g);
+/** A my_bookings row as the ticket reads it, or null for a status it never shows. */
+export function ticketRow(r: Row): TicketRow | null {
+  const status = r.status === "waiting" || r.status === "waitlist" || r.status === "active" || r.status === "done" ? r.status : null;
+  const date = S(r.session_date);
+  if (!status || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
+  // assigned_bike_id holds one id, or a JSON list of them for a rider handed more than one
+  let bike = S(r.assigned_bike_id).trim();
+  if (bike.startsWith("[")) { try { const a = JSON.parse(bike) as unknown; bike = Array.isArray(a) && typeof a[0] === "string" ? a[0] : ""; } catch { bike = ""; } }
+  return {
+    id: S(r.id), sessionId: S(r.session_id) || date, date, day: S(r.session_day), queueNum: N(r.queue_num), status,
+    waitlistNum: N(r.waitlist_num), approval: S(r.approval) || null, price: N(r.price) ?? 0, paid: r.paid === true,
+    name: S(r.name), type: S(r.type_preference),
+    checkedInAt: S(r.checked_in_at) || null, checkedOutAt: S(r.checked_out_at) || null, rideDuration: N(r.ride_duration), bikeId: bike || null,
+  };
+}
+
+type Group = { sessionId: string; date: string; rows: TicketRow[] };
+const grouped = (list: TicketRow[]): Group[] => {
+  const by = new Map<string, Group>();
+  for (const r of list) {
+    const g = by.get(r.sessionId) ?? { sessionId: r.sessionId, date: r.date, rows: [] };
+    g.rows.push(r);
+    by.set(r.sessionId, g);
   }
   for (const g of by.values()) g.rows.sort((a, b) => (a.queueNum ?? 0) - (b.queueNum ?? 0));
   return [...by.values()].sort((a, b) => a.date.localeCompare(b.date) || a.sessionId.localeCompare(b.sessionId));
+};
+
+/** The account's live bookings still ahead (today, Riyadh, and later), one list per session,
+ *  soonest first - the booking app's Current & upcoming. */
+export function ticketGroups(rows: Row[], today: string): Group[] {
+  return grouped(rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.status !== "done" && r.date >= today));
+}
+
+/** Tonight's rides already over (every row of the night done, nothing still ahead on it): the
+ *  booking app keeps them on the page as a past card that says the ride is done, with the night's
+ *  steps, until the day ends. Whether each counts as ridden (rideCompleted) needs the session. */
+export function doneToday(rows: Row[], today: string): Group[] {
+  const all = rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.date === today);
+  const live = new Set(all.filter((r) => r.status !== "done").map((r) => r.sessionId));
+  return grouped(all.filter((r) => r.status === "done" && !live.has(r.sessionId)));
+}
+
+/** A ride that counts as ridden (_rideCompleted): done, and paid or on a free community ride. */
+export function rideCompleted(r: Pick<TicketRow, "status" | "paid">, free: boolean): boolean {
+  return r.status === "done" && (r.paid || free);
 }
 
 /** A sessions row as the ticket reads it. */
@@ -62,12 +94,8 @@ export function ticketSession(r: Row): TicketSession | null {
   if (typeof r.id !== "string" || typeof r.session_date !== "string") return null;
   const kind = rideKind(r);
   const community = r.event_kind === "community";
-  let collect: string | null = null;
-  try {
-    const o = typeof r.bike_slots === "string" ? JSON.parse(r.bike_slots) : r.bike_slots;
-    const c = o && typeof o === "object" ? (o as Record<string, unknown>)._collect : null;
-    if (typeof c === "string" && /^\d{1,2}:\d{2}$/.test(c.trim())) collect = c.trim().padStart(5, "0");
-  } catch { /* no collect time */ }
+  // the session's own time, or 45 minutes before the start (sessionCollectTime)
+  const collect = collectTime(r.bike_slots);
   const meet = S(r.meet_url);
   return {
     id: r.id, date: r.session_date, kind, title: S(r.title).trim() || null,
@@ -78,6 +106,7 @@ export function ticketSession(r: Row): TicketSession | null {
     collect,
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
+    freeRide: community && r.paid_ride !== true,
     bikes: kind !== "swim" && kind !== "workshop" && kind !== "event",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
@@ -141,6 +170,78 @@ export function venueOf(s: TicketSession | undefined): { kind: "meet" } | { kind
   const loc = s?.location ?? "";
   return !loc || loc === "JCC" ? { kind: "circuit" } : { kind: "text", text: loc };
 }
+
+// ── The ride night on the ticket (the booking app's 2026-10-01 round, 91816da) ─────────────
+
+/** A moment of the ride's day in Riyadh, as epoch milliseconds (_ksaAt). */
+export function ksaAt(date: string, hhmm: string | null): number {
+  const m = hhmm ? /^(\d{1,2}):(\d{2})$/.exec(hhmm.trim()) : null;
+  return m ? Date.parse(`${date}T00:00:00+03:00`) + (Number(m[1]) * 60 + Number(m[2])) * 6e4 : NaN;
+}
+
+/** What today's ticket counts down to (_cdAttr): the gathering then the start on a ride that
+ *  gathers; else bike collection (a ride with bikes) then the start. */
+export type CdKey = "collect" | "gather" | "start";
+export function countdownMoments(s: TicketSession | undefined, date: string): [number, CdKey][] {
+  if (!s?.times) return [];
+  const out: [number, CdKey][] = s.gathers
+    ? [[ksaAt(date, s.times[0]), "gather"], [ksaAt(date, s.times[1]), "start"]]
+    : [...(s.bikes ? [[ksaAt(date, s.collect), "collect"] as [number, CdKey]] : []), [ksaAt(date, s.times[0]), "start"]];
+  return out.filter((x) => Number.isFinite(x[0]));
+}
+
+/** The countdown's line at `now`: the first moment still ahead and the minutes to it (at least
+ *  1), or null once the start has passed (_cdLine). */
+export function countdownAt(moments: [number, CdKey][], now: number): { key: CdKey; min: number } | null {
+  for (const [at, key] of moments) if (at > now) return { key, min: Math.max(1, Math.ceil((at - now) / 6e4)) };
+  return null;
+}
+
+/** Where the rider is on the ride's day (_tkStages): Booked, Checked in, On the bike (only where
+ *  there are bikes), Done, read off the rows as the desk wrote them. `sub` is the check-in time,
+ *  the bike's name while out, or the return time (Riyadh clock). */
+export type Stage = { key: "booked" | "in" | "bike" | "done"; on: boolean; sub: string };
+export function ticketStages(rows: TicketRow[], bikes: boolean, bikeName: string | null, locale: string): { stages: Stage[]; cur: number } {
+  const inn = rows.some((r) => r.status === "active" || r.status === "done");
+  const done = rows.length > 0 && rows.every((r) => r.status === "done");
+  const ins = rows.map((r) => r.checkedInAt).filter((x): x is string => !!x).sort();
+  const outs = rows.map((r) => r.checkedOutAt).filter((x): x is string => !!x).sort();
+  const hm = (iso: string | undefined) => {
+    if (!iso) return "";
+    try {
+      return new Intl.DateTimeFormat(locale === "en" ? "en-US" : intlOf(locale), { timeZone: "Asia/Riyadh", hour: "numeric", minute: "2-digit" }).format(new Date(iso));
+    } catch { return ""; }
+  };
+  const handed = rows.some((r) => !!r.bikeId); // a bike the public key cannot name still counts
+  const stages: Stage[] = [
+    { key: "booked", on: true, sub: "" },
+    { key: "in", on: inn, sub: hm(ins[0]) },
+    ...(bikes ? [{ key: "bike" as const, on: done || (inn && handed), sub: bikeName && !done ? bikeName : "" }] : []),
+    { key: "done", on: done, sub: done ? hm(outs[outs.length - 1]) : "" },
+  ];
+  return { stages, cur: stages.reduce((c, x, i) => (x.on ? i : c), 0) };
+}
+
+/** The route a ride follows, for its ticket (_rideRoute): a route on the Routes page by its slug,
+ *  or, for a bike ride on the circuit with none of its own, the Jeddah Corniche Circuit itself
+ *  (6.174 km a lap, drawn on the ticket). Nothing for a ride without bikes, or one that meets at
+ *  a map link without a route. */
+export type RouteItem = { name: string; km: number; level: string; surface: string; href: string };
+export type TicketRoute = { name: string | null; km: number; lap: boolean; note: string | null; href: string | null; track: boolean };
+export function ticketRoute(s: TicketSession | undefined, routes: Map<string, RouteItem>): TicketRoute | null {
+  if (!s || !s.bikes) return null;
+  if (s.routeSlug) {
+    const r = routes.get(s.routeSlug);
+    if (!r) return null;
+    return { name: r.name, km: r.km > 0 ? r.km : 0, lap: false, note: [r.level, r.surface].filter(Boolean).join(" · ") || null, href: /^https:\/\//i.test(r.href) ? r.href : null, track: false };
+  }
+  if (s.approval && s.meetUrl) return null;
+  if (s.location && s.location !== "JCC") return null;
+  return { name: null, km: 6.174, lap: true, note: null, href: null, track: true };
+}
+
+/** "6.17" - a distance as the ticket writes it (_kmTxt). */
+export const kmText = (km: number) => String(Math.round(km * 100) / 100);
 
 /** "#4", "#4 – #5" or "#4, #7". */
 export function queueNumbers(rows: TicketRow[]): string {

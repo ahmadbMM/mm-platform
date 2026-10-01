@@ -10,14 +10,14 @@ import { fmtNum, fmtSar } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
-import { routeNameOf, routeNames } from "@/lib/route-names";
+import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
-import { dayWord, fmtClock, fmtDayDate } from "@/lib/tickets";
+import { dayWord, fmtClock, fmtDayDate, kmText } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
-import { phrase } from "@/i18n/tx";
+import { fill as fillAt, phrase } from "@/i18n/tx";
 import { isRtl } from "@/i18n/locales";
 import { bg } from "@/lib/img";
 
@@ -64,6 +64,18 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const kindName = kindNames(d);
   const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page is named after it
+  const routeKm = routeItems(content, L);
+  // What a ride costs before anything is picked (_sessFromPrice): the cheapest bike it offers.
+  const fromPrice = (s: RideSession) => {
+    const ps = prices.filter((p) => p.type !== "Any" && p.type !== "Own" && !(s.noCarbon && p.type === "Road Carbon")).map((p) => p.price);
+    return ps.length ? fillAt(tx("from {0}", "من {0}"), sar(Math.min(...ps))) : null;
+  };
+  // A route's distance on the booking summary (the booking app's reg-side row): the route's own,
+  // or a lap of the circuit on a circuit night without one.
+  const kmOf = (s: RideSession) => {
+    const km = s.routeSlug ? routeKm.get(s.routeSlug)?.km ?? 0 : s.kind === "jcc" ? 6.174 : 0;
+    return km > 0 ? fillAt(s.routeSlug ? tx("{0} km", "{0} كم") : tx("{0} km a lap", "{0} كم للفة"), kmText(km)) : null;
+  };
   const now = riyadhClock(new Date());
   const all = upcoming(rides?.sessions ?? [], now);
   // The booking window (site_content booking.window): a date not open yet is shown greyed, never hidden.
@@ -84,6 +96,10 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
     seatPrice: s.kind === "event" && s.price != null ? sar(s.price) : null, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
     route: routeNameOf(routes, s.routeSlug),
+    routeKm: kmOf(s),
+    // when bikes go out and the price from, under the time, as the booking app's session card says them
+    meta: [s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), fmtClock(s.collect, locale)) : null,
+      s.kind !== "event" && !s.free && s.kind !== "swim" && s.kind !== "workshop" ? fromPrice(s) : null].filter((x): x is string => !!x),
     opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,
   });
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count))).map(toStep);
