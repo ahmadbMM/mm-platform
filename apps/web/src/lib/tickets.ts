@@ -28,6 +28,8 @@ export type TicketSession = {
   bikes: boolean;
   /** The route the ride follows (an item's slug on the Routes page), or null. */
   routeSlug: string | null;
+  /** Where staff said the ride is (sessions.location): "JCC", a place's name, or null (the circuit). */
+  location: string | null;
 };
 
 type Row = Record<string, unknown>;
@@ -78,6 +80,7 @@ export function ticketSession(r: Row): TicketSession | null {
     free: community && kind !== "snd96" && r.paid_ride !== true,
     bikes: kind !== "swim" && kind !== "workshop" && kind !== "event",
     routeSlug: routeSlugOf(r.route_slug),
+    location: S(r.location).trim() || null,
   };
 }
 
@@ -109,6 +112,34 @@ export function ticketCue(rows: TicketRow[], s: TicketSession | undefined, ahead
   if (st === "active") return "onBike";
   if (st === "waiting" && s && !s.approval && ahead !== null) return ahead ? "inQueue" : "next";
   return null;
+}
+
+/** How the card is drawn (the booking app's tk-live / tk-wl): a place held - booked or checked in,
+ *  its code out - is the night ticket, dark with neon; a waitlist place stays paper with a dashed
+ *  edge; a reservation staff have not confirmed stays paper. The National Day card keeps its own. */
+export function ticketLook(rows: TicketRow[], s: TicketSession | undefined): "live" | "wl" | "" {
+  if (s?.kind === "snd96") return "";
+  if (rows.length && rows.every((r) => r.status === "waitlist")) return "wl";
+  const st = rows.some((r) => r.status === "active") ? "active" : rows[0]?.status;
+  return codeReady(rows, s) && (st === "waiting" || st === "active") ? "live" : "";
+}
+
+/** "today" or "tomorrow" for a ride day (both Riyadh dates, YYYY-MM-DD), else null: _dayWord. */
+export function dayWord(date: string, today: string): "today" | "tomorrow" | null {
+  if (date === today) return "today";
+  const t = new Date(`${today}T12:00:00Z`);
+  if (Number.isNaN(t.getTime())) return null;
+  t.setUTCDate(t.getUTCDate() + 1);
+  return date === t.toISOString().slice(0, 10) ? "tomorrow" : null;
+}
+
+/** Where the ride is, by name (_venueName): a ride staff approve that meets at a map link is its
+ *  meeting point; a night on the circuit (no place, or "JCC") the Jeddah Corniche Circuit; any
+ *  other place as staff wrote it. */
+export function venueOf(s: TicketSession | undefined): { kind: "meet" } | { kind: "circuit" } | { kind: "text"; text: string } {
+  if (s?.approval && s.meetUrl) return { kind: "meet" };
+  const loc = s?.location ?? "";
+  return !loc || loc === "JCC" ? { kind: "circuit" } : { kind: "text", text: loc };
 }
 
 /** "#4", "#4 – #5" or "#4, #7". */

@@ -15,7 +15,7 @@ import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
-import { fmtClock, fmtDayDate } from "@/lib/tickets";
+import { dayWord, fmtClock, fmtDayDate } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
 import { isRtl } from "@/i18n/locales";
@@ -74,7 +74,10 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event" };
   const toStep = (s: RideSession): StepSession => ({
     // the booking app's session card: "Sunday · 26 Sept 2026", and its times in the rider's clock
-    id: s.id, kind: s.kind, day: fmtDayDate(s.date, locale), name: sessionName(s, kindName, enName, L !== "en"),
+    id: s.id, kind: s.kind, day: fmtDayDate(s.date, locale),
+    // today or tomorrow said in words, as the booking app's session card does (_dayWord)
+    near: ((w) => (w === "today" ? tx("Today", "اليوم") : w === "tomorrow" ? tx("Tomorrow", "غداً") : null))(dayWord(s.date, now.slice(0, 10))),
+    name: sessionName(s, kindName, enName, L !== "en"),
     when: s.times ? { gather: s.gather, a: fmtClock(s.times[0], locale), b: fmtClock(s.times[1], locale) } : null,
     members: s.members, free: s.free, full: s.full, paid: !s.free, noCarbon: s.noCarbon,
     // a copy kept at the edge from before these fields existed reads as an event without them

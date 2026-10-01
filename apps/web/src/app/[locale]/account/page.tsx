@@ -9,7 +9,6 @@ import "@/components/booking/booking.css";
 import TicketCard from "@/components/booking/TicketCard";
 import RateRide from "@/components/account/RateRide";
 import { T as TICKET } from "@/components/booking/tickets.text";
-import { labelFont } from "@/components/booking/label-font";
 import "@/components/club/club.css";
 import { accountSchema } from "@/content/pages/account";
 import { clubSchema } from "@/content/pages/club";
@@ -96,10 +95,11 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // every booked session, whatever its state now (a Petromin night, one staff closed since)
   const sessions = await loadTicketSessions([...groups.map((g) => g.sessionId), ...toRate.map((r) => S(r.session_id))]);
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it on its ticket
-  // "You're next!" on a numbered night: whether anyone still waiting holds a lower number
+  // "You're next" on a numbered night: whether anyone still waiting holds a lower number. Said on
+  // the ride's day only, as the booking app does: a week ahead it counts a queue nobody stands in.
   const ahead = await Promise.all(groups.map((g) => {
     const s = sessions.get(g.sessionId), first = g.rows.find((r) => r.status === "waiting" && r.queueNum != null);
-    return s && !s.approval && first ? anyoneAhead(g.sessionId, first.queueNum as number) : Promise.resolve(null);
+    return s && !s.approval && first && g.date === now.slice(0, 10) ? anyoneAhead(g.sessionId, first.queueNum as number) : Promise.resolve(null);
   }));
   const ticketText = serverLocalize(TICKET, locale);
   const typeName = (ty: string) => (TYPE_NAME[ty] ? tx(TYPE_NAME[ty].en, TYPE_NAME[ty].ar) : ty);
@@ -138,12 +138,12 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           {groups.length === 0 ? (
             <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <span aria-hidden="true">{isRtl(locale) ? "←" : "→"}</span></a>}</p>
           ) : (
-            <div className={`tk-grid ${labelFont.variable}`}>
+            <div className="tk-grid">
               {groups.map((g, i) => {
                 const s = sessions.get(g.sessionId);
                 const ev = s ? EV[s.kind] : undefined;
                 return (
-                  <TicketCard key={g.sessionId} locale={locale} rows={g.rows} session={s}
+                  <TicketCard key={g.sessionId} locale={locale} today={now.slice(0, 10)} rows={g.rows} session={s}
                     name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
                     cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
                     links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place: s?.approval ? s.meetUrl : S(site.contact.jccHref) || null,

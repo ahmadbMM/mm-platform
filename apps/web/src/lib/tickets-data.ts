@@ -7,7 +7,7 @@ import { ticketSession, type TicketSession } from "./tickets";
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 // The route column rides along through sessionRows, which leaves it out while the database does not have it yet.
-const COLS = "id,session_date,day,title,ride_kind,event_kind,bike_slots,needs_approval,hide_queue,meet_url,paid_ride,open_to_all,status";
+const COLS = "id,session_date,day,title,ride_kind,event_kind,bike_slots,needs_approval,hide_queue,meet_url,paid_ride,open_to_all,status,location";
 
 /** The booked sessions by id, whatever their state (a closed night still shows its ticket). */
 export async function loadTicketSessions(ids: string[], fetchImpl: typeof fetch = fetch): Promise<Map<string, TicketSession>> {

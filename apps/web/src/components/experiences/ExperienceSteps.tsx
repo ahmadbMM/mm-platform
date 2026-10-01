@@ -9,7 +9,9 @@ import { fill } from "@/lib/fill";
 // and rules - and the button that opens the booking app on exactly that event and date
 // (?ev=<event>&session=<id>).
 export type StepSession = {
-  id: string; kind: string; day: string; name: string; when: { gather: boolean; a: string; b: string } | null;
+  id: string; kind: string; day: string; name: string;
+  /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
+  near: string | null; when: { gather: boolean; a: string; b: string } | null;
   members: boolean; free: boolean; full: boolean; paid: boolean;
   noCarbon: boolean; // the ride offers no Road Carbon bike, so its price is not shown
   /** A ticketed event: seats instead of bikes, so no bike prices - its own blurb, the seat price
@@ -125,7 +127,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                   )}
                   <span className="sc-head">
                     <span className="sc-dot" aria-hidden="true" />
-                    <span className="sc-date">{s.day}</span>
+                    <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
                     {s.opens ? <span className="sc-spots closed">{s.opens}</span> : <span className={`sc-spots${s.full ? " full" : ""}`}>{s.full ? t.waitlisted : t.available}</span>}
                   </span>
                   {s.when && <span className="sc-time">{when(s)}</span>}

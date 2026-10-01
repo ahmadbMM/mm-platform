@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookingRef, codeReady, fmtClock, fmtDayDate, icsFor, queueNumbers, ticketCue, ticketGroups, ticketSession, type TicketRow } from "../tickets";
+import { bookingRef, codeReady, dayWord, fmtClock, fmtDayDate, icsFor, queueNumbers, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
 
 // My Account's tickets follow the booking app's own rules (renderBookingTicket, bookingRef,
 // downloadBookingICS): what the code says, when it is shown, and what the line under it says.
@@ -56,6 +56,32 @@ describe("the tickets", () => {
     expect(ticketCue([row({ approval: "approved" })], pub, null)).toBe("confirmed");
     expect(ticketCue([row({ approval: "pending" })], pub, null)).toBe("pending");
     expect(ticketCue([row({ status: "waitlist" })], pub, null)).toBe("waitlist");
+  });
+  it("are dark only while a place is held, as the booking app's night ticket (tk-live)", () => {
+    expect(ticketLook([row({})], jcc)).toBe("live");
+    expect(ticketLook([row({ status: "active" })], jcc)).toBe("live");
+    expect(ticketLook([row({ status: "waitlist" })], jcc)).toBe("wl");
+    expect(ticketLook([row({ status: "waitlist" }), row({ status: "waitlist" })], jcc)).toBe("wl");
+    // a reservation staff have not confirmed stays paper until its code is out
+    expect(ticketLook([row({ approval: "approved" })], sat)).toBe("");
+    expect(ticketLook([row({ approval: "approved" })], { ...sat, published: true })).toBe("live");
+    expect(ticketLook([row({ approval: "pending" })], { ...sat, published: true })).toBe("");
+    // the National Day card keeps its own skin
+    expect(ticketLook([row({})], { ...jcc, kind: "snd96" })).toBe("");
+  });
+  it("say Today and Tomorrow, on the Riyadh calendar, across a month's end", () => {
+    expect(dayWord("2099-03-01", "2099-03-01")).toBe("today");
+    expect(dayWord("2099-03-02", "2099-03-01")).toBe("tomorrow");
+    expect(dayWord("2099-03-01", "2099-02-28")).toBe("tomorrow");
+    expect(dayWord("2099-03-03", "2099-03-01")).toBeNull();
+    expect(dayWord("2099-02-28", "2099-03-01")).toBeNull();
+  });
+  it("name the venue: the circuit, a place staff wrote, or the meeting point", () => {
+    expect(venueOf(jcc)).toEqual({ kind: "circuit" });
+    expect(venueOf(ticketSession({ ...jccRow, location: "JCC" })!)).toEqual({ kind: "circuit" });
+    expect(venueOf(ticketSession({ ...jccRow, location: " Obhur " })!)).toEqual({ kind: "text", text: "Obhur" });
+    expect(venueOf(sat)).toEqual({ kind: "meet" });
+    expect(venueOf(undefined)).toEqual({ kind: "circuit" });
   });
   it("number a party as the booking app does", () => {
     expect(queueNumbers([row({ queueNum: 4 })])).toBe("#4");
