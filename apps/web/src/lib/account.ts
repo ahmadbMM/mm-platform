@@ -4,7 +4,9 @@ import { ACCOUNT_COOKIE, decodeSession, type BookingRow, type Session } from "./
 // The signed-in account on the server: the cookie set by /api/account, checked against the
 // booking app's own session (customer_profile), and the account's bookings (my_bookings).
 
-export type Account = Session & { name: string; email: string; phone: string };
+export type Account = Session & { name: string; email: string; phone: string;
+  /** The rest of customer_profile's row, for Race Ready (lib/ride-record.ts profilePct). */
+  profile?: Record<string, unknown> };
 
 export async function rpcServer<T>(fn: string, args: Record<string, unknown>): Promise<{ status: number; data: T | null; message: string }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -31,9 +33,9 @@ export async function rpcServer<T>(fn: string, args: Record<string, unknown>): P
 export async function getAccount(): Promise<Account | null> {
   const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
   if (!s) return null;
-  const r = await rpcServer<{ name?: string; email?: string; phone?: string }[]>("customer_profile", { p_id: s.id, p_token: s.token });
+  const r = await rpcServer<({ name?: string; email?: string; phone?: string } & Record<string, unknown>)[]>("customer_profile", { p_id: s.id, p_token: s.token });
   const p = Array.isArray(r.data) ? r.data[0] : null;
-  return p ? { ...s, name: p.name || "", email: p.email || "", phone: p.phone || "" } : null;
+  return p ? { ...s, name: p.name || "", email: p.email || "", phone: p.phone || "", profile: p } : null;
 }
 
 export async function accountBookings(a: Session): Promise<BookingRow[]> {

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { isRtl } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
+import { fill as fillAt } from "@/i18n/tx";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -15,7 +16,9 @@ export type StepSession = {
   /** Under the time: when bikes go out and the price from (the booking app's sess-card-meta). */
   meta?: string[];
   /** The route's distance for the summary ("6.17 km a lap"), or null. */
-  routeKm?: string | null; when: { gather: boolean; a: string; b: string } | null;
+  routeKm?: string | null;
+  /** Places left when counted (lib/rides.ts); said on the card at 3 or fewer. */
+  left?: number | null; when: { gather: boolean; a: string; b: string } | null;
   members: boolean; free: boolean; full: boolean; paid: boolean;
   noCarbon: boolean; // the ride offers no Road Carbon bike, so its price is not shown
   /** A ticketed event: seats instead of bikes, so no bike prices - its own blurb, the seat price
@@ -32,6 +35,8 @@ export type StepText = {
   noDates: string; handoff: string; members: string; free: string; full: string; gather: string; start: string; membersNote: string; clubLink: string;
   /** The booking app's session card says Available or Waitlist on the right. */
   available: string; waitlisted: string;
+  /** "{0} spot left" / "{0} spots left": a ride with three places or fewer (spotsLeftLabel). */
+  left1: string; leftN: string;
   pricesTitle: string; pricesText: string; codeNote: string;
   /** An event's facts: "Open to everyone", "{price} per seat", "{n} seats" (the page fills them). */
   everyone: string; perSeat: string; seats: string;
@@ -132,7 +137,9 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                   <span className="sc-head">
                     <span className="sc-dot" aria-hidden="true" />
                     <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
-                    {s.opens ? <span className="sc-spots closed">{s.opens}</span> : <span className={`sc-spots${s.full ? " full" : ""}`}>{s.full ? t.waitlisted : t.available}</span>}
+                    {s.opens ? <span className="sc-spots closed">{s.opens}</span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
+                      : s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
+                      : <span className="sc-spots">{t.available}</span>}
                   </span>
                   {s.when && <span className="sc-time">{when(s)}</span>}
                   {s.meta && s.meta.length > 0 && <span className="sc-meta">{s.meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}

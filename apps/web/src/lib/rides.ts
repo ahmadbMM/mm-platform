@@ -47,13 +47,20 @@ export type RideSession = {
   /** When bikes go out ("20:15"): the booking app's sessionCollectTime; null on a ride without
    *  bikes or one that gathers (the gathering is the moment to turn up). */
   collect: string | null;
+  /** Places left (the booking app's spotsLeft on a ride nobody approves): capacity (12 when
+   *  unset) less the bookings holding one; null when not counted (a ride staff approve, a full
+   *  one, one further out, or a count that failed). The cards say it at 3 or fewer. */
+  left?: number | null;
+  /** A community ride staff approve (needs_approval not false): no places-left count. */
+  approval?: boolean;
+  capacity?: number | null;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
 type Row = {
   id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; ride_kind?: unknown;
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
-  description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown;
+  description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -123,6 +130,9 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     price: kind === "event" && !free && price !== null && price > 0 ? price : null,
     seats: kind === "event" && seats !== null && Number.isInteger(seats) && seats > 0 ? seats : null,
     routeSlug: routeSlugOf(r.route_slug),
+    approval: community && r.needs_approval !== false,
+    capacity: seats,
+    left: null,
     collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" ? null : collectTime(r.bike_slots),
   };
 }
@@ -156,7 +166,7 @@ export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Recor
 // (400, 42703 "column does not exist"), so a read that fails that way is asked again with the
 // columns that have always been there, and the new ones are left out for ten minutes before they
 // are tried again. A session read that way simply has no description, price or route.
-export const SESSION_COLS = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity";
+export const SESSION_COLS = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval";
 export const SESSION_COLS_NEW = "description,price,route_slug";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.newColsMissingUntil");
@@ -210,6 +220,33 @@ export async function getJson(fetchImpl: typeof fetch, url: string, key: string)
   return res.json();
 }
 
+/** How many bookings hold a place on a session (_holdsSpot): every row but a cancelled, removed or
+ *  no-show one, and not a rider on their own bike (who holds a place only on a Petromin night,
+ *  which this site never lists). Asked as a count, so nothing but the number comes back. */
+export async function placesTaken(fetchImpl: typeof fetch, url: string, key: string, sessionId: string): Promise<number | null> {
+  if (!/^[A-Za-z0-9_-]{1,64}$/.test(sessionId)) return null;
+  try {
+    const res = await fetchImpl(`${url}/rest/v1/queue_public?select=id&session_id=eq.${sessionId}&status=not.in.(cancelled,removed,noshow)&or=(type_preference.is.null,type_preference.neq.Own)`, {
+      method: "HEAD",
+      headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: "count=exact" },
+      cache: "no-store",
+      signal: AbortSignal.timeout(2500),
+    });
+    const m = /\/(\d+)$/.exec(res.headers.get("content-range") ?? "");
+    return res.ok && m ? Number(m[1]) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The places left on the soonest open sessions nobody approves (at most 12 counts a read). */
+async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, url: string, key: string): Promise<RideSession[]> {
+  const ask = sessions.filter((s) => !s.full && !s.approval).slice(0, 12);
+  const counts = await Promise.all(ask.map((s) => placesTaken(fetchImpl, url, key, s.id)));
+  const left = new Map(ask.map((s, i) => [s.id, counts[i] == null ? null : Math.max(0, (s.capacity || 12) - (counts[i] as number))]));
+  return sessions.map((s) => (left.has(s.id) ? { ...s, left: left.get(s.id) ?? null } : s));
+}
+
 /** One read of both: the prices and the sessions from today (Riyadh) on. Each keeps the copy it
  *  replaces when its own read fails; null when neither has ever been read. */
 async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: number): Promise<RideData | null> {
@@ -229,7 +266,7 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
         .map((x) => ({ type: x.type as string, price: x.price as number }));
     }
     if (s.status === "fulfilled" && Array.isArray(s.value)) {
-      sessions = (s.value as Row[]).map((r) => toSession(r)).filter((x): x is RideSession => x !== null);
+      sessions = await withPlacesLeft((s.value as Row[]).map((r) => toSession(r)).filter((x): x is RideSession => x !== null), fetchImpl, url, key);
     }
   }
   return prices || sessions ? { prices: prices ?? [], sessions: sessions ?? [] } : null;

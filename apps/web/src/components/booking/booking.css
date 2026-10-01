@@ -206,6 +206,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .sc-spots { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #06603b; white-space: nowrap; }
 .sc-spots::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .sc-spots.full { color: #a33b2e; }
+.sc-spots.low { color: #7a5a10; }
 .sc-time { font-size: 12px; color: #6f6d63; }
 .sc-dw { color: #077a4b; font-weight: 700; }
 .sc-meta { font-size: 12px; color: #6f6d63; }

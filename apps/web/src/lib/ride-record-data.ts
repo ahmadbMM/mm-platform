@@ -19,10 +19,10 @@ export async function loadRecordSessions(ids: string[], fetchImpl: typeof fetch 
   for (let i = 0; i < clean.length; i += 80) chunks.push(clean.slice(i, i + 80));
   await Promise.all(chunks.map(async (c) => {
     try {
-      const rows = await getJson(fetchImpl, `${url}/rest/v1/sessions?select=id,ride_kind,event_kind,paid_ride&id=in.(${c.join(",")})`, key);
+      const rows = await getJson(fetchImpl, `${url}/rest/v1/sessions?select=id,ride_kind,event_kind,paid_ride,needs_approval&id=in.(${c.join(",")})`, key);
       if (!Array.isArray(rows)) return;
       for (const r of rows as Record<string, unknown>[]) {
-        if (typeof r.id === "string") out.set(r.id, { kind: rideKind(r), freeRide: r.event_kind === "community" && r.paid_ride !== true });
+        if (typeof r.id === "string") out.set(r.id, { kind: rideKind(r), freeRide: r.event_kind === "community" && r.paid_ride !== true, approval: r.event_kind === "community" && r.needs_approval !== false });
       }
     } catch { /* that chunk counts as unknown sessions */ }
   }));

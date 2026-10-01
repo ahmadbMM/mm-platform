@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { badgeProgress, closestBadges, perfectWeeks, recordRows, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
+import { badgeList, closestBadges, perfectWeeks, profilePct, recordRows, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
 
 // My Account's record follows the booking app's account page (_myrStats, _mrBadges, bd-next).
 const today = "2026-10-01"; // a Thursday
@@ -32,29 +32,60 @@ describe("dated badges and perfect weeks", () => {
   });
 });
 
-describe("the closest badges", () => {
+describe("the badges", () => {
   const rows = recordRows(["2026-09-01", "2026-09-08", "2026-09-15", "2026-09-22"].map((d) => row({ session_id: d })));
   const ses = new Map<string, RecordSession>(rows.map((r) => [r.sessionId, { kind: "jcc", freeRide: false }]));
-  it("are the two begun with the least left", () => {
-    const c = closestBadges(badgeProgress(rows, ses, empty, today));
-    expect(c.map((x) => [x.slug, x.n, x.of])).toEqual([["regular", 4, 5], ["safety_car", 4, 6]]);
+  const list = (data: BadgeData = empty, r = rows, s = ses, profile: Record<string, unknown> | null = null) => badgeList(r, s, data, today, profile);
+  const on = (data?: BadgeData) => list(data).filter((x) => x.on).map((x) => x.slug);
+  it("are earned by riding, as the booking app counts them", () => {
+    expect(on()).toEqual(["first_lap", "front_row", "streak"]);
+    expect(list().find((x) => x.slug === "regular")).toMatchObject({ on: false, p: "4/5" });
   });
-  it("leave out one staff gave, and one the catalogue retired", () => {
-    const given = closestBadges(badgeProgress(rows, ses, { ...empty, mine: [{ slug: "regular" }] }, today));
-    expect(given.map((x) => x.slug)).not.toContain("regular");
-    const cat = closestBadges(badgeProgress(rows, ses, { ...empty, catalog: [{ slug: "podium" }, { slug: "regular" }] }, today));
-    expect(cat.map((x) => x.slug)).toEqual(["regular", "podium"]);
+  it("keep National Day 96 and Back on Track out until earned, and staff's own badges last", () => {
+    const slugs = list().map((x) => x.slug);
+    expect(slugs).not.toContain("national_day_96");
+    expect(slugs).not.toContain("back_on_track");
+    expect(slugs.slice(-7)).toEqual(["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit"]);
+  });
+  it("put a badge staff gave first, with their note and the day", () => {
+    const L = list({ ...empty, mine: [{ slug: "champion", note: "Won the hill climb", at: "2026-09-30T18:00:00Z" }] });
+    expect(L[0]).toMatchObject({ slug: "champion", on: true, given: { note: "Won the hill climb", at: "2026-09-30T18:00:00Z" } });
+    expect(L.filter((x) => x.slug === "champion")).toHaveLength(1);
+  });
+  it("leave out a badge the catalogue no longer lists, unless the rider holds it", () => {
+    const cat = [{ slug: "first_lap" }, { slug: "regular" }];
+    expect(list({ ...empty, catalog: cat }).map((x) => x.slug)).toEqual(["first_lap", "front_row", "streak", "regular"]);
+  });
+  it("count Race Ready from the profile", () => {
+    const full = { name: "A", email: "a@b.c", phone: "+966500000000", height: 170, birth_date: "1990-01-01", country: "SA", city: "Jeddah", photo: "x", type_preference: "Road" };
+    expect(profilePct(full)).toBe(100);
+    expect(profilePct({ ...full, type_preference: "Any", photo: null })).toBe(78);
+    expect(list(empty, rows, ses, full)[0]).toMatchObject({ slug: "complete_profile", on: true, color: "special" });
+  });
+  it("say when a dated badge opens", () => {
+    const season = { slug: "winter_series", rule: { rides: 6, windows: [{ from: "12-01", to: "02-29" }] } };
+    expect(list({ ...empty, seasons: [season] }).find((x) => x.slug === "winter_series")).toMatchObject({ on: false, p: "0/6", season: { curTo: null, next: "2026-12-01" } });
+  });
+  it("bring the two begun with the least left forward", () => {
+    expect(closestBadges(list()).map((x) => [x.item.slug, x.n, x.of])).toEqual([["regular", 4, 5], ["safety_car", 4, 6]]);
+    expect(closestBadges(list({ ...empty, mine: [{ slug: "regular" }] })).map((x) => x.item.slug)).not.toContain("regular");
   });
   it("do not count an unpaid ride, unless the ride was free", () => {
     const unpaid = recordRows([row({ session_id: "s1", session_date: "2026-09-01", paid: false })]);
     expect(unpaid).toHaveLength(1);
-    expect(badgeProgress(unpaid, new Map([["s1", { kind: "jcc", freeRide: false }]]), empty, today).find((p) => p.slug === "first_lap")!.on).toBe(false);
-    expect(badgeProgress(unpaid, new Map([["s1", { kind: "saturday", freeRide: true }]]), empty, today).find((p) => p.slug === "first_lap")!.on).toBe(true);
+    expect(badgeList(unpaid, new Map([["s1", { kind: "jcc", freeRide: false }]]), empty, today, null).find((x) => x.slug === "first_lap")!.on).toBe(false);
+    expect(badgeList(unpaid, new Map([["s1", { kind: "saturday", freeRide: true }]]), empty, today, null).find((x) => x.slug === "first_lap")!.on).toBe(true);
   });
-  it("break a clean sheet on a no-show", () => {
-    const r = recordRows([row({ session_id: "2026-09-01" }), row({ session_id: "2026-09-08", status: "noshow" }), row({ session_id: "2026-09-15" })]);
+  it("break a clean sheet on a no-show, and count add-ons for Fuel Stop", () => {
+    const r = recordRows([row({ session_id: "2026-09-01" }), row({ session_id: "2026-09-08", status: "noshow" }), row({ session_id: "2026-09-15", addons: '[{"id":"w","qty":1}]' })]);
     const s = new Map<string, RecordSession>(r.map((x) => [x.sessionId, { kind: "jcc", freeRide: false }]));
-    expect(badgeProgress(r, s, empty, today).find((p) => p.slug === "clean_sheet")!.n).toBe(1);
+    const L = badgeList(r, s, empty, today, null);
+    expect(L.find((x) => x.slug === "clean_sheet")!.p).toBe("1/10");
+    expect(L.find((x) => x.slug === "fuel")!.on).toBe(true);
+  });
+  it("give Front Row only where the number is shown", () => {
+    const appr = new Map<string, RecordSession>(rows.map((r) => [r.sessionId, { kind: "saturday", freeRide: true, approval: true }]));
+    expect(list(empty, rows, appr).find((x) => x.slug === "front_row")!.on).toBe(false);
   });
 });
 

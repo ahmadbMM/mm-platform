@@ -97,6 +97,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     seatPrice: s.kind === "event" && s.price != null ? sar(s.price) : null, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
     route: routeNameOf(routes, s.routeSlug),
     routeKm: kmOf(s),
+    left: s.left ?? null,
     // when bikes go out and the price from, under the time, as the booking app's session card says them
     meta: [s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), fmtClock(s.collect, locale)) : null,
       s.kind !== "event" && !s.free && s.kind !== "swim" && s.kind !== "workshop" ? fromPrice(s) : null].filter((x): x is string => !!x),
@@ -114,6 +115,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     cont: S(st.continue), waitlist: S(d.waitlist), back: S(st.back), noDates: S(st.noDates), handoff: S(st.handoff),
     members: S(d.members), free: S(d.free), full: S(d.full), gather: S(d.gather), start: S(d.start), membersNote: S(d.membersNote), clubLink: S(d.clubLink),
     available: tx("Available", "متاح"), waitlisted: tx("Waitlist", "قائمة الانتظار"),
+    left1: tx("{0} spot left", "{0} مقعد متبقي"), leftN: tx("{0} spots left", "{0} مقاعد متبقية"),
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
     everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),
   };

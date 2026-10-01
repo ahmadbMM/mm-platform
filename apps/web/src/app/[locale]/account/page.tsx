@@ -26,7 +26,7 @@ import { routeItems } from "@/lib/route-names";
 import { isRated } from "@/lib/rating";
 import { doneToday, fmtDayDate, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
-import { badgeProgress, closestBadges, recordRows, rideStats } from "@/lib/ride-record";
+import { badgeList, recordRows, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
 import { riyadhClock } from "@/lib/workshop-days";
 import { serverL, serverLocalize } from "@/i18n/dicts";
@@ -102,8 +102,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const record = recordRows(rows);
   const [sessions, recSessions, badges] = await Promise.all([
     loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => S(r.session_id))]),
-    // every night ridden, for Your rides and the badges (the kind of ride, and whether it was free)
-    loadRecordSessions(record.filter((r) => r.status === "done").map((r) => r.sessionId)),
+    // every night booked, for Your rides and the badges (the kind of ride, whether it was free, whether staff approve it)
+    loadRecordSessions(record.map((r) => r.sessionId)),
     loadBadgeData(acct),
   ]);
   // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
@@ -112,7 +112,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // tonight's bike, by name, for the steps and the line under the header
   const bikeOf = new Map(await Promise.all([...groups, ...past].filter((g) => g.date === today).map(async (g) => [g.sessionId, await bikeName(g.rows.find((r) => r.bikeId)?.bikeId ?? null)] as const)));
   const stats = rideStats(record, recSessions, today);
-  const closest = closestBadges(badgeProgress(record, recSessions, badges, today));
+  const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
   // "You're next" on a numbered night: whether anyone still waiting holds a lower number. Said on
   // the ride's day only, as the booking app does: a week ahead it counts a queue nobody stands in.
   const ahead = await Promise.all(groups.map((g) => {
@@ -185,9 +185,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           )}
         </section>
 
-        {(stats || closest.length > 0) && (
+        {(stats || allBadges.length > 0) && (
           <section className="ac-sec" aria-label={recordText.yourRides}>
-            <RideRecord locale={locale} stats={stats} closest={closest} t={recordText} typeName={typeName} dur={{ h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM }} />
+            <RideRecord locale={locale} stats={stats} badges={allBadges} t={recordText} typeName={typeName} dur={{ h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM }} />
           </section>
         )}
 

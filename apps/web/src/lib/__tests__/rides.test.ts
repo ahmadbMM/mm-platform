@@ -36,7 +36,7 @@ describe("slotTimes", () => {
 
 describe("toSession", () => {
   it("shows a circuit night as open to all and paid", () => {
-    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null, collect: "20:15" });
+    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null, collect: "20:15", approval: false, capacity: null, left: null });
   });
   it("marks a community ride members-only and free, unless the session says otherwise", () => {
     const sat = toSession(row({ event_kind: "community", ride_kind: "saturday", title: "Saturday Social Ride", bike_slots: '{"_time":"05:45 - 06:15"}' }));
@@ -124,9 +124,25 @@ describe("loadRides", () => {
     expect(urls).toContain("https://example.supabase.co/rest/v1/ride_prices?select=type,price");
     expect(urls.find((u) => u.includes("/sessions?"))).toMatch(/session_date=gte\.2026-09-25&status=in\.\(open,full\)/);
     expect(await loadRides(f as unknown as typeof fetch, at + 30_000)).toBe(a);
-    expect(f).toHaveBeenCalledTimes(2);
+    expect(f).toHaveBeenCalledTimes(3); // the prices, the sessions, and the open night's places
     expect(await loadRides(f as unknown as typeof fetch, at + 61_000)).toBe(a); // past the minute: served as it is, refreshed behind
-    expect(f).toHaveBeenCalledTimes(4);
+    await memoSettled();
+    expect(f).toHaveBeenCalledTimes(6);
+  });
+
+  it("counts the places left on an open night nobody approves, as a number only", async () => {
+    const taken = (n: number) => new Response(null, { status: 200, headers: { "content-range": `0-0/${n}` } });
+    const f = vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === "HEAD") return taken(url.includes("session_id=eq.2026-09-27") ? 148 : 0);
+      if (url.includes("ride_prices")) return json(PRICES);
+      return json([row({ capacity: 150 }), row({ id: "2026-09-28", session_date: "2026-09-28" }), row({ id: "full", session_date: "2026-09-29", status: "full" }),
+        row({ id: "sat", session_date: "2026-09-30", event_kind: "community", ride_kind: "saturday" })]);
+    });
+    const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
+    expect(Object.fromEntries(r!.sessions.map((x) => [x.id, x.left]))).toEqual({ "2026-09-27": 2, "2026-09-28": 12, full: null, sat: null });
+    const head = f.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === "HEAD").map((c) => c[0] as string);
+    expect(head).toHaveLength(2);
+    expect(head[0]).toMatch(/queue_public\?select=id&session_id=eq\.2026-09-27&status=not\.in\.\(cancelled,removed,noshow\)&or=\(type_preference\.is\.null,type_preference\.neq\.Own\)/);
     await memoSettled();
   });
 
@@ -158,8 +174,8 @@ describe("sessionRows", () => {
     const f = vi.fn(async (url: string) => (url.includes("route_slug") ? json({ code: "42703", message: "column sessions.route_slug does not exist" }, 400) : json([{ id: "a" }])));
     expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", undefined, 1000)).toEqual([{ id: "a" }]);
     expect(f).toHaveBeenCalledTimes(2);
-    expect(f.mock.calls[0][0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,description,price,route_slug&id=eq.a");
-    expect(f.mock.calls[1][0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity&id=eq.a");
+    expect(f.mock.calls[0][0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug&id=eq.a");
+    expect(f.mock.calls[1][0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval&id=eq.a");
     // for the next ten minutes the old columns are asked for straight away; then the new ones are tried again
     expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", undefined, 2000)).toEqual([{ id: "a" }]);
     expect(f).toHaveBeenCalledTimes(3);
