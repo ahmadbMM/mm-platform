@@ -24,7 +24,11 @@ jobs:
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint && pnpm typecheck
+      # Unit tests never read a real database (they say so: "there is no database here"). With the
+      # project's address set they read its content, and on staging - open, Coming Soon off - the
+      # Coming Soon tests then failed. Blank it for this step only.
       - run: pnpm --filter web test
+        env: { NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_ANON_KEY: "" }
       # The two registration forms (forms/community, forms/petromin; npm packages of their own,
       # outside the pnpm workspace): the pages the website serves must be what their sources
       # build, and the forms are driven in a browser. Here, before the deploy, so a broken form
