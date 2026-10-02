@@ -46,6 +46,21 @@
         { "pattern": "micromobility.sa/*",     "zone_name": "micromobility.sa" },
         { "pattern": "www.micromobility.sa/*", "zone_name": "micromobility.sa" }
       ]
+    },
+    // `wrangler deploy --env staging` = staging.micromobility.sa, deployed by CI from the `staging`
+    // branch. A custom domain (Cloudflare makes its DNS record), behind Cloudflare Access so only
+    // the team opens it. Built against the staging database (repository variables
+    // STAGING_SUPABASE_URL / STAGING_SUPABASE_ANON_KEY), never production's. worker.js reads
+    // MM_ENV: noindex on everything, robots.txt shuts crawlers out, titles start with [Staging].
+    "staging": {
+      "name": "micromobility-web-staging",
+      "workers_dev": false,
+      "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+      "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }],
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "observability": { "enabled": true },
+      "vars": { "MM_ENV": "staging" },
+      "routes": [{ "pattern": "staging.micromobility.sa", "custom_domain": true }]
     }
   }
   // Later: NEXT_INC_CACHE_R2_BUCKET binding for ISR caching (see OpenNext caching docs)

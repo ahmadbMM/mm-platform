@@ -1,13 +1,15 @@
 name: ci
 on:
-  push: { branches: [main] }
+  push: { branches: [main, staging] }
   pull_request:
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
-      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      # The `staging` branch builds against the staging database (STAGING_SUPABASE_*), everything
+      # else against production's.
+      NEXT_PUBLIC_SUPABASE_URL: ${{ github.ref == 'refs/heads/staging' && vars.STAGING_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ github.ref == 'refs/heads/staging' && vars.STAGING_SUPABASE_ANON_KEY || vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
       # Cloudflare Turnstile on the sign-in (DEPLOY.md, "Sign-in protection"); empty = off.
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
       # Cloudflare Web Analytics site token (DEPLOY.md, "Monitoring"); empty = no beacon from the site.
@@ -33,6 +35,16 @@ jobs:
           (cd forms/community && npx playwright install --with-deps chromium)
           (cd forms/community && npm run e2e)
           (cd forms/petromin && npm run e2e)
+      # Staging: the forms' built pages name production's project; point them at staging's, after
+      # the check above that they are what their sources build.
+      - name: Point the forms at the staging database
+        if: github.ref == 'refs/heads/staging'
+        env:
+          FROM_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          FROM_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          TO_URL: ${{ vars.STAGING_SUPABASE_URL }}
+          TO_KEY: ${{ vars.STAGING_SUPABASE_ANON_KEY }}
+        run: node scripts/point-forms.mjs
       - run: pnpm --filter web exec opennextjs-cloudflare build
       # The site's own pages in a browser, English and Arabic, desktop and phone, with an
       # accessibility check (e2e/site). Runs on the build above, open whatever the real site's
@@ -86,3 +98,21 @@ jobs:
             [ "$code" = 200 ] || fail=1
           done
           exit $fail
+      # Staging: the `staging` branch deploys staging.micromobility.sa (wrangler.jsonc env
+      # "staging"), never production. It sits behind Cloudflare Access, so an outside request is
+      # answered with Access's sign-in (302/403); anything 5xx means the deploy needs a look.
+      - name: Deploy staging
+        if: github.ref == 'refs/heads/staging' && steps.secrets.outputs.present == 'true' && vars.STAGING_SUPABASE_URL != ''
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/web
+          command: deploy --env staging
+      - name: Staging answers
+        if: github.ref == 'refs/heads/staging' && steps.secrets.outputs.present == 'true' && vars.STAGING_SUPABASE_URL != ''
+        run: |
+          sleep 20
+          code=$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 10 --retry-all-errors https://staging.micromobility.sa/)
+          echo "staging / $code"
+          [ "$code" -lt 500 ]
