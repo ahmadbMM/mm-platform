@@ -89,7 +89,12 @@ psql "$STG_DB_URL" -v ON_ERROR_STOP=1 -q -f "$work/content.sql" > /dev/null
 psql "$STG_DB_URL" -v ON_ERROR_STOP=1 -qc "truncate public.site_content_history, public.audit_log;"
 
 say "5/6 made-up riders, rides, bookings and bikes"
-psql "$STG_DB_URL" -v ON_ERROR_STOP=1 -q -f "$work/seed.sql" > /dev/null
+# Each made-up customer fires the staff live-update trigger; a new project has no live-update
+# storage yet, so the database warns once per row (WarnSendingBroadcastMessage) and carries on.
+if ! psql "$STG_DB_URL" -v ON_ERROR_STOP=1 -q -f "$work/seed.sql" > /dev/null 2> "$work/seed.err"; then
+  grep -v 'WarnSendingBroadcastMessage' "$work/seed.err" | tail -20; die "the made-up data did not load (above)"
+fi
+grep -v 'WarnSendingBroadcastMessage' "$work/seed.err" | tail -20 || true
 
 say "6/6 checking staging"
 fail=0
