@@ -1422,5 +1422,15 @@
  "in {0} days": "{0} hari lagi",
  "optional": "opsional",
  "{0} more rides to {1}": "{0} gowes lagi menuju {1}",
- "{0} weeks in a row": "{0} minggu berturut-turut"
+ "{0} weeks in a row": "{0} minggu berturut-turut",
+ "Notifications": "Notifikasi",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "Dapatkan kabar begitu ada tempat kosong untuk Anda, meski halaman ini tertutup.",
+ "Turn on notifications": "Aktifkan notifikasi",
+ "Turn off notifications": "Nonaktifkan notifikasi",
+ "One moment…": "Sebentar…",
+ "Notifications are on.": "Notifikasi aktif.",
+ "Notifications are off.": "Notifikasi nonaktif.",
+ "Notifications are blocked for this site in your browser settings.": "Notifikasi untuk situs ini diblokir di pengaturan browser Anda.",
+ "Could not turn notifications on.": "Notifikasi tidak dapat diaktifkan.",
+ "Your session has ended. Sign in again to turn notifications on.": "Sesi Anda telah berakhir. Masuk lagi untuk mengaktifkan notifikasi."
 }

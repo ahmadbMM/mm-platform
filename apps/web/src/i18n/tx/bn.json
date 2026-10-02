@@ -1422,5 +1422,15 @@
  "in {0} days": "{0} দিনে",
  "optional": "ঐচ্ছিক",
  "{0} more rides to {1}": "{1} হতে আর {0}টি রাইড",
- "{0} weeks in a row": "টানা {0} সপ্তাহ"
+ "{0} weeks in a row": "টানা {0} সপ্তাহ",
+ "Notifications": "নোটিফিকেশন",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "এই পাতা বন্ধ থাকলেও আপনার জন্য জায়গা খালি হওয়ামাত্র জেনে যান।",
+ "Turn on notifications": "নোটিফিকেশন চালু করুন",
+ "Turn off notifications": "নোটিফিকেশন বন্ধ করুন",
+ "One moment…": "এক মুহূর্ত…",
+ "Notifications are on.": "নোটিফিকেশন চালু আছে।",
+ "Notifications are off.": "নোটিফিকেশন বন্ধ আছে।",
+ "Notifications are blocked for this site in your browser settings.": "আপনার ব্রাউজারের সেটিংসে এই সাইটের নোটিফিকেশন বন্ধ করা আছে।",
+ "Could not turn notifications on.": "নোটিফিকেশন চালু করা গেল না।",
+ "Your session has ended. Sign in again to turn notifications on.": "আপনার সেশন শেষ হয়ে গেছে। নোটিফিকেশন চালু করতে আবার সাইন ইন করুন।"
 }

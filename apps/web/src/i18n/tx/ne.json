@@ -1422,5 +1422,15 @@
  "in {0} days": "{0} दिनमा",
  "optional": "ऐच्छिक",
  "{0} more rides to {1}": "{1} पुग्न {0} राइड बाँकी",
- "{0} weeks in a row": "लगातार {0} हप्ता"
+ "{0} weeks in a row": "लगातार {0} हप्ता",
+ "Notifications": "सूचनाहरू",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "यो पृष्ठ बन्द भए पनि तपाईंका लागि ठाउँ खाली हुनेबित्तिकै थाहा पाउनुहोस्।",
+ "Turn on notifications": "सूचना खोल्नुहोस्",
+ "Turn off notifications": "सूचना बन्द गर्नुहोस्",
+ "One moment…": "एकछिन…",
+ "Notifications are on.": "सूचना खुला छ।",
+ "Notifications are off.": "सूचना बन्द छ।",
+ "Notifications are blocked for this site in your browser settings.": "तपाईंको ब्राउजर सेटिङमा यो साइटका लागि सूचना ब्लक छ।",
+ "Could not turn notifications on.": "सूचना खोल्न सकिएन।",
+ "Your session has ended. Sign in again to turn notifications on.": "तपाईंको सत्र सकियो। सूचना खोल्न फेरि साइन इन गर्नुहोस्।"
 }

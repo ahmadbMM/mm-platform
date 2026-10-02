@@ -1422,5 +1422,15 @@
  "in {0} days": "{0} دن میں",
  "optional": "اختیاری",
  "{0} more rides to {1}": "{1} تک {0} رائیڈز باقی",
- "{0} weeks in a row": "لگاتار {0} ہفتے"
+ "{0} weeks in a row": "لگاتار {0} ہفتے",
+ "Notifications": "اطلاعات",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "جیسے ہی آپ کے لیے جگہ خالی ہو، فوراً اطلاع پائیں، چاہے یہ صفحہ بند ہو۔",
+ "Turn on notifications": "اطلاعات آن کریں",
+ "Turn off notifications": "اطلاعات بند کریں",
+ "One moment…": "ایک لمحہ…",
+ "Notifications are on.": "اطلاعات آن ہیں۔",
+ "Notifications are off.": "اطلاعات بند ہیں۔",
+ "Notifications are blocked for this site in your browser settings.": "آپ کے براؤزر کی ترتیبات میں اس سائٹ کے لیے اطلاعات بلاک ہیں۔",
+ "Could not turn notifications on.": "اطلاعات آن نہیں ہو سکیں۔",
+ "Your session has ended. Sign in again to turn notifications on.": "آپ کا سیشن ختم ہو گیا ہے۔ اطلاعات آن کرنے کے لیے دوبارہ سائن ان کریں۔"
 }

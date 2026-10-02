@@ -1422,5 +1422,15 @@
  "in {0} days": "sa loob ng {0} araw",
  "optional": "opsyonal",
  "{0} more rides to {1}": "{0} ride na lang para maging {1}",
- "{0} weeks in a row": "{0} linggong sunod-sunod"
+ "{0} weeks in a row": "{0} linggong sunod-sunod",
+ "Notifications": "Mga Notification",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "Malaman agad kapag may nabakanteng puwesto para sa iyo, kahit sarado ang page na ito.",
+ "Turn on notifications": "I-on ang mga notification",
+ "Turn off notifications": "I-off ang mga notification",
+ "One moment…": "Sandali lang…",
+ "Notifications are on.": "Naka-on ang mga notification.",
+ "Notifications are off.": "Naka-off ang mga notification.",
+ "Notifications are blocked for this site in your browser settings.": "Naka-block ang mga notification para sa site na ito sa mga setting ng iyong browser.",
+ "Could not turn notifications on.": "Hindi ma-on ang mga notification.",
+ "Your session has ended. Sign in again to turn notifications on.": "Nag-expire na ang iyong session. Mag-sign in ulit para i-on ang mga notification."
 }

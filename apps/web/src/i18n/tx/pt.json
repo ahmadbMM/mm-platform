@@ -1422,5 +1422,15 @@
  "in {0} days": "em {0} dias",
  "optional": "opcional",
  "{0} more rides to {1}": "Faltam {0} passeios para {1}",
- "{0} weeks in a row": "{0} semanas seguidas"
+ "{0} weeks in a row": "{0} semanas seguidas",
+ "Notifications": "Notificações",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "Saiba na hora quando abrir uma vaga para você, mesmo com esta página fechada.",
+ "Turn on notifications": "Ativar notificações",
+ "Turn off notifications": "Desativar notificações",
+ "One moment…": "Um momento…",
+ "Notifications are on.": "As notificações estão ativadas.",
+ "Notifications are off.": "As notificações estão desativadas.",
+ "Notifications are blocked for this site in your browser settings.": "As notificações estão bloqueadas para este site nas configurações do seu navegador.",
+ "Could not turn notifications on.": "Não foi possível ativar as notificações.",
+ "Your session has ended. Sign in again to turn notifications on.": "Sua sessão expirou. Entre novamente para ativar as notificações."
 }

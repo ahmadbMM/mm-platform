@@ -13,3 +13,8 @@
 # The city lists the account form offers (the booking app's own data); they change only when refreshed.
 /cities/*
   Cache-Control: public, max-age=86400
+
+# The push service worker (public/sw.js) must be checked for a new version on every visit, or a
+# fix to it would wait for the browser's own 24-hour check.
+/sw.js
+  Cache-Control: no-cache

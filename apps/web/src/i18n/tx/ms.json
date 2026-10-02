@@ -1422,5 +1422,15 @@
  "in {0} days": "dalam {0} hari",
  "optional": "pilihan",
  "{0} more rides to {1}": "{0} kayuhan lagi untuk ke {1}",
- "{0} weeks in a row": "{0} minggu berturut-turut"
+ "{0} weeks in a row": "{0} minggu berturut-turut",
+ "Notifications": "Pemberitahuan",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "Dapatkan makluman sebaik sahaja ada tempat kosong untuk anda, walaupun halaman ini ditutup.",
+ "Turn on notifications": "Hidupkan pemberitahuan",
+ "Turn off notifications": "Matikan pemberitahuan",
+ "One moment…": "Sebentar…",
+ "Notifications are on.": "Pemberitahuan dihidupkan.",
+ "Notifications are off.": "Pemberitahuan dimatikan.",
+ "Notifications are blocked for this site in your browser settings.": "Pemberitahuan untuk laman ini disekat dalam tetapan pelayar anda.",
+ "Could not turn notifications on.": "Pemberitahuan tidak dapat dihidupkan.",
+ "Your session has ended. Sign in again to turn notifications on.": "Sesi anda telah tamat. Log masuk semula untuk menghidupkan pemberitahuan."
 }

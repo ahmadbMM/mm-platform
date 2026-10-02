@@ -84,6 +84,23 @@ ask for a Cloudflare Turnstile check, which is off until both of its keys exist:
 
 To turn it off again, delete the secret first, then the variable.
 
+## Notifications
+
+Web Push to riders, off until its public key is set. The website only subscribes: the Account
+page's Notifications switch (`components/account/PushToggle.tsx`, service worker `public/sw.js`)
+stores this browser in the booking app's `push_subscriptions` through `/api/account/push`. The
+sends come from the booking app's `/api/push-send`, signed with the same VAPID pair, so one key
+pair serves both sites and the website keeps no private key.
+
+1. The booking app's Cloudflare Pages project must hold the pair first (its `VAPID_PUBLIC_KEY`,
+   `VAPID_PRIVATE_KEY`, `SUPABASE_SERVICE_KEY`).
+2. GitHub > mm-platform > Settings > Secrets and variables > Actions > **Variables**: add
+   `NEXT_PUBLIC_VAPID_PUBLIC_KEY` = the same public key (base64url, 87 characters). Push anything
+   (or re-run the last run) so the site is built with it.
+
+To turn it off, delete the variable and rebuild: the switch disappears (existing subscriptions
+stay until the booking app's key changes).
+
 ## Monitoring
 
 - **Workers Logs** are on (`observability` in `apps/web/wrangler.jsonc`): dashboard > Workers & Pages >

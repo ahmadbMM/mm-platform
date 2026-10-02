@@ -1422,5 +1422,15 @@
  "in {0} days": "через {0} дн.",
  "optional": "необязательно",
  "{0} more rides to {1}": "Заездов до уровня «{1}»: {0}",
- "{0} weeks in a row": "Недель подряд: {0}"
+ "{0} weeks in a row": "Недель подряд: {0}",
+ "Notifications": "Уведомления",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "Узнавайте сразу, как только для вас освободится место, даже если эта страница закрыта.",
+ "Turn on notifications": "Включить уведомления",
+ "Turn off notifications": "Выключить уведомления",
+ "One moment…": "Минутку…",
+ "Notifications are on.": "Уведомления включены.",
+ "Notifications are off.": "Уведомления выключены.",
+ "Notifications are blocked for this site in your browser settings.": "Уведомления для этого сайта заблокированы в настройках вашего браузера.",
+ "Could not turn notifications on.": "Не удалось включить уведомления.",
+ "Your session has ended. Sign in again to turn notifications on.": "Ваша сессия истекла. Войдите снова, чтобы включить уведомления."
 }

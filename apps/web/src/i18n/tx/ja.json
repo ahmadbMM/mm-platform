@@ -1422,5 +1422,15 @@
  "in {0} days": "{0}日後",
  "optional": "任意",
  "{0} more rides to {1}": "あと{0}ライドで{1}",
- "{0} weeks in a row": "{0}週連続"
+ "{0} weeks in a row": "{0}週連続",
+ "Notifications": "通知",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "空きが出たらすぐにお知らせします。このページを閉じていても届きます。",
+ "Turn on notifications": "通知をオンにする",
+ "Turn off notifications": "通知をオフにする",
+ "One moment…": "少々お待ちください…",
+ "Notifications are on.": "通知はオンです。",
+ "Notifications are off.": "通知はオフです。",
+ "Notifications are blocked for this site in your browser settings.": "このサイトの通知はブラウザの設定でブロックされています。",
+ "Could not turn notifications on.": "通知をオンにできませんでした。",
+ "Your session has ended. Sign in again to turn notifications on.": "セッションの有効期限が切れました。通知をオンにするには、もう一度サインインしてください。"
 }

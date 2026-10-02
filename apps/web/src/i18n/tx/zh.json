@@ -1422,5 +1422,15 @@
  "in {0} days": "{0} 天后",
  "optional": "选填",
  "{0} more rides to {1}": "再骑 {0} 次即可升至{1}",
- "{0} weeks in a row": "连续 {0} 周"
+ "{0} weeks in a row": "连续 {0} 周",
+ "Notifications": "通知",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "一旦有名额空出，立即通知您，即使此页面已关闭。",
+ "Turn on notifications": "开启通知",
+ "Turn off notifications": "关闭通知",
+ "One moment…": "请稍候…",
+ "Notifications are on.": "通知已开启。",
+ "Notifications are off.": "通知已关闭。",
+ "Notifications are blocked for this site in your browser settings.": "您已在浏览器设置中屏蔽了本网站的通知。",
+ "Could not turn notifications on.": "无法开启通知。",
+ "Your session has ended. Sign in again to turn notifications on.": "您的登录已过期。请重新登录以开启通知。"
 }

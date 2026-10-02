@@ -1,0 +1,11 @@
+/* The Account page's Notifications card (PushToggle.tsx). */
+.pn-card { background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 18px; padding: 18px 20px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.pn-ic { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: rgba(7, 122, 75, .1); color: #077a4b; }
+.pn-ic.pn-on { background: #077a4b; color: #fbf9f4; }
+.pn-txt { flex: 1 1 220px; min-width: 0; }
+.pn-txt p { margin: 0; color: #57605a; font-size: 14.5px; line-height: 1.5; }
+.pn-btn { border: 0; border-radius: 999px; min-height: 44px; padding: 0 20px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 14.5px; cursor: pointer; }
+.pn-btn.pn-off { background: transparent; color: #1a1919; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .2); }
+.pn-btn:disabled { opacity: .6; cursor: default; }
+.pn-msg { flex-basis: 100%; margin: 0; font-size: 13.5px; font-weight: 600; color: #077a4b; }
+.pn-msg.pn-err { color: #b3261e; }

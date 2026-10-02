@@ -16,6 +16,9 @@ jobs:
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
       # Cloudflare Web Analytics site token (DEPLOY.md, "Monitoring"); empty = no beacon from the site.
       NEXT_PUBLIC_CF_BEACON_TOKEN: ${{ vars.NEXT_PUBLIC_CF_BEACON_TOKEN }}
+      # Web Push: the public half of the VAPID pair the booking app's /api/push-send signs with
+      # (DEPLOY.md, "Notifications"); empty = the Account page shows no Notifications switch.
+      NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ vars.NEXT_PUBLIC_VAPID_PUBLIC_KEY }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4          # version comes from "packageManager" in package.json

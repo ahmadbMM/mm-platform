@@ -1422,5 +1422,15 @@
  "in {0} days": "dans {0} jours",
  "optional": "facultatif",
  "{0} more rides to {1}": "Plus que {0} sorties avant {1}",
- "{0} weeks in a row": "{0} semaines d’affilée"
+ "{0} weeks in a row": "{0} semaines d’affilée",
+ "Notifications": "Notifications",
+ "Get told the moment a spot opens up for you, even when this page is closed.": "Soyez prévenu dès qu'une place se libère pour vous, même quand cette page est fermée.",
+ "Turn on notifications": "Activer les notifications",
+ "Turn off notifications": "Désactiver les notifications",
+ "One moment…": "Un instant…",
+ "Notifications are on.": "Les notifications sont activées.",
+ "Notifications are off.": "Les notifications sont désactivées.",
+ "Notifications are blocked for this site in your browser settings.": "Les notifications sont bloquées pour ce site dans les paramètres de votre navigateur.",
+ "Could not turn notifications on.": "Impossible d'activer les notifications.",
+ "Your session has ended. Sign in again to turn notifications on.": "Votre session a expiré. Reconnectez-vous pour activer les notifications."
 }
