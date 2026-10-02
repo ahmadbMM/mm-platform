@@ -15,7 +15,7 @@ test('the footer opens the notice: what is collected, who receives it, where it 
   await expect(d.locator('#pv-title')).toHaveText('Privacy Notice');
   await expect(d.locator('#pv-body')).toContainText('Badge number, company');
   await expect(d.locator('#pv-body')).toContainText('the names of the riders on its rides, and nothing else');
-  await expect(d.locator('#pv-body')).toContainText('Mumbai, India');
+  await expect(d.locator('#pv-body')).toContainText('Frankfurt, Germany');
   await expect(d.locator('#pv-note')).toBeHidden();
   await d.locator('#pv-close').click();
   await expect(d).toBeHidden();

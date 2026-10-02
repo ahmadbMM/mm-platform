@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-09-28";
+export const PRIVACY_VERSION = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
  "en": [
   {
@@ -174,7 +174,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "Supabase",
       "Hosts our database",
-      "Mumbai, India"
+      "Frankfurt, Germany (European Union)"
      ],
      [
       "Cloudflare",
@@ -205,7 +205,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    }
   },
   {
-   "p": "<strong>Our database is hosted in Mumbai, India.</strong> We transfer your data there only to provide our service to you, and only the data that service needs. <strong>We do not sell your data.</strong>"
+   "p": "<strong>Our database is hosted in Frankfurt, Germany, in the European Union.</strong> We transfer your data there only to provide our service to you, and only the data that service needs. <strong>We do not sell your data.</strong>"
   },
   {
    "h": "How we store and protect it"
@@ -434,7 +434,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "Supabase",
       "استضافة قاعدة بياناتنا",
-      "مومباي، الهند"
+      "فرانكفورت، ألمانيا (الاتحاد الأوروبي)"
      ],
      [
       "Cloudflare",
@@ -465,7 +465,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    }
   },
   {
-   "p": "<strong>تُستضاف قاعدة بياناتنا في مومباي بالهند.</strong> ولا ننقل بياناتك إليها إلا لتقديم خدمتنا لك، وبالقدر الذي تحتاجه تلك الخدمة فقط. <strong>لا نبيع بياناتك.</strong>"
+   "p": "<strong>تُستضاف قاعدة بياناتنا في فرانكفورت بألمانيا، في الاتحاد الأوروبي.</strong> ولا ننقل بياناتك إليها إلا لتقديم خدمتنا لك، وبالقدر الذي تحتاجه تلك الخدمة فقط. <strong>لا نبيع بياناتك.</strong>"
   },
   {
    "h": "كيف نحفظها ونحميها"

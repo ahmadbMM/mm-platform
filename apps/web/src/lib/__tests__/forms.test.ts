@@ -10,7 +10,7 @@ import petrominPage from "../../forms/petromin-page";
 // (forms/community, forms/petromin), with the headers their own Workers sent.
 const forms = resolve(__dirname, "../../../../../forms");
 // The database host the site is built for (headers.ts reads it the same way).
-const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://amyqxovbnlreassrqihr.supabase.co";
+const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
 
 describe("the registration forms", () => {
   it("are the pages the form builds wrote (run the form's build after changing it)", () => {

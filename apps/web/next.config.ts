@@ -13,7 +13,7 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // scripts, hence 'unsafe-inline' for scripts. No site may frame a page (the staff preview opens in
 // its own window). The two registration forms send their own headers (src/forms/headers.ts) and
 // are left out here.
-const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://amyqxovbnlreassrqihr.supabase.co";
+const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
 const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://cdn.jsdelivr.net",

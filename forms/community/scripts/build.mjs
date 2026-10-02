@@ -44,7 +44,7 @@ html = html.replace(/(src|href)="([^"]+\.(png|svg|webp))"/g, (m, attr, file, ext
   return `${attr}="data:${mime[ext]};base64,${readFileSync(p).toString('base64')}"`;
 });
 html = html.replace('<link rel="stylesheet" href="styles.css">',
-  () => '<meta name="robots" content="noindex">\n<link rel="preconnect" href="https://amyqxovbnlreassrqihr.supabase.co">\n<style>\n' + css + '\n</style>');
+  () => '<meta name="robots" content="noindex">\n<link rel="preconnect" href="https://qpffkzmsfyilicwcsszz.supabase.co">\n<style>\n' + css + '\n</style>');
 html = html.replace('<script src="shared.js"></script>\n<script src="i18n.js"></script>\n<script src="app.js"></script>',
   () => '<script>\n' + shared + '\n' + i18n + '\n</script>\n<script>\n' + js + '\n</script>');
 if (/href="styles\.css"|src="(app|i18n|shared)\.js"/.test(html)) { console.error('could not inline the styles or scripts'); process.exit(1); }

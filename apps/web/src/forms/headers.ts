@@ -5,7 +5,7 @@
 // injects its beacon, so both are allowed and nothing else is. The database's host is the one the
 // site is built for (NEXT_PUBLIC_SUPABASE_URL, as apps/web/next.config.ts reads it): the forms'
 // pages name the same project, and when the database moves (CLONE.md) they are repointed together.
-const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://amyqxovbnlreassrqihr.supabase.co";
+const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
 const COMMON = {
   "content-type": "text/html; charset=utf-8",
   "cache-control": "public, max-age=300",

@@ -50,7 +50,7 @@ html = html.replace(/(src|href)="([^"]+\.(png|avif|webp|jpe?g|svg))"/g, (m, attr
 // 4. Real WhatsApp number, noindex, inline CSS, supabase-js + inline JS.
 html = html.replace(/https:\/\/wa\.me\/\d+/g, 'https://wa.me/966566668818');
 html = html.replace('<link rel="stylesheet" href="styles.css">',
-  () => '<meta name="robots" content="noindex">\n<link rel="preconnect" href="https://amyqxovbnlreassrqihr.supabase.co">\n<style>\n' + css + '\n</style>');
+  () => '<meta name="robots" content="noindex">\n<link rel="preconnect" href="https://qpffkzmsfyilicwcsszz.supabase.co">\n<style>\n' + css + '\n</style>');
 // The QR generator is inlined (MIT, vendor/): the desk scans the code to open the booking.
 const qrlib = readFileSync(resolve(root, 'vendor/qrcode-generator-1.4.4.js'), 'utf8');
 // A function replacer: a plain string would have $& and $' inside the scripts read as patterns.

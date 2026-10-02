@@ -104,7 +104,7 @@ test('the account step asks what the sign-up page asks, with its rules and words
   await expect(page.locator('#f-name label')).toHaveText(['First Name', 'Last Name']);
   await expect(page.locator('#f-pwd label')).toHaveText('Password');
   await expect(page.locator('#f-pwd .hint')).toHaveText('At least 8 characters, with an uppercase letter and a number.');
-  await expect(page.locator('#f-pwd2 label')).toHaveText('Confirm Password');
+  await expect(page.locator('#f-pwd2 label')).toHaveText('Confirm password');
   for (const pwd of ['Short1', 'nouppercase1', 'NoDigitsHere']) {
     await accountStep(page, { pwd });
     await expect(page.locator('#f-pwd .err')).toHaveText('Password must be at least 8 characters and include an uppercase letter and a number.');
