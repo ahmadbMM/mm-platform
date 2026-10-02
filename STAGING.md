@@ -39,7 +39,11 @@ production from `staging`.
    production's structure and website content, plus 300 made-up riders over 10 weeks of rides. Every
    check at the end should say OK. Run it again any time to start staging over. More or fewer
    riders: `SEED_ARGS="--riders 500 --weeks 8" bash scripts/staging-database.sh`.
-3. **Your team's sign-in accounts:** staging starts with none. In the staging project, go to
+3. **The website's uploaded pictures** (gallery, catalogue photos; the `site` bucket):
+   `bash scripts/staging-photos.sh`. It asks for production's Session pooler string and the staging
+   project's service_role key, and copies them over. Riders' and staff photos are never copied. Run it
+   again whenever staff have uploaded new pictures on the live site.
+4. **Your team's sign-in accounts:** staging starts with none. In the staging project, go to
    Authentication > Users > Add user, enter each staffer's work email and a password, then in the SQL
    editor:
    ```sql
@@ -47,7 +51,7 @@ production from `staging`.
    select id, 'admin' from auth.users where email = 'name@micromobility.sa';
    ```
    (`admin` or `frontdesk`.) Riders sign up on staging like anyone; their accounts stay there.
-4. **Authentication > URL Configuration:** Site URL `https://staging.micromobility.sa`, and add
+5. **Authentication > URL Configuration:** Site URL `https://staging.micromobility.sa`, and add
    `https://staging.micromobility.sa/**` to the redirect URLs. Email sign-in works at once. Google
    and Apple need the staging project's callback
    (`https://<staging-ref>.supabase.co/auth/v1/callback`) added to the Google OAuth client and the

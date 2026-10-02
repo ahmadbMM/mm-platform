@@ -118,5 +118,5 @@ echo "  made up: $(psql "$STG_DB_URL" -qAtc "select (select count(*) from public
 real=$(psql "$STG_DB_URL" -qAtc "select count(*) from public.customers where email not like '%@example.%' and email is not null and email <> ''")
 [[ "$real" == "0" ]] && echo "  OK    no customer with a real-looking email" || { echo "  FAIL  $real customers with a real-looking email"; fail=1; }
 
-if [[ "$fail" == "0" ]]; then say "Staging is ready. Next: add the team's sign-in accounts (STAGING.md)."
+if [[ "$fail" == "0" ]]; then say "Staging is ready. Next: bash scripts/staging-photos.sh (the website's pictures), then the team's sign-in accounts (STAGING.md)."
 else say "Staging was built but some checks FAILED (above)."; exit 1; fi
