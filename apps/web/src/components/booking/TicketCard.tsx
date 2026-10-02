@@ -37,6 +37,9 @@ type Props = {
   now: number;
   /** The booking (and the party's rows) a Google Wallet pass is made for (WalletButton); null for none. */
   wallet?: { bookingId: string; groupIds: string[] } | null;
+  /** Edit, Reschedule and Cancel under the card (My Account); false on the booking's own
+   *  confirmation on Experiences, which is the booking app's renderOneTicket (none there). */
+  manage?: boolean;
 };
 
 const Bike = () => (
@@ -72,7 +75,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order
   const allWl = rows.every((r) => r.status === "waitlist");
@@ -145,7 +148,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         ) : past && allDone && onDay ? (
           <div className="tk-note go"><span className="dot" aria-hidden="true" /><span>{minutes >= 1 ? t.cueDone(dur(minutes)) : t.cueDoneNoDur}</span></div>
         ) : cue === "confirmed" ? (
-          <div className="tk-ok" role="status"><span className="tk-ok-tick" aria-hidden="true">✓</span><span><strong>{t.confirmed}</strong><small>{t.confirmedSub}</small></span></div>
+          <div className="tk-ok" role="status"><span className="tk-ok-tick" aria-hidden="true"><Tick /></span><span><strong>{t.confirmed}</strong><small>{t.confirmedSub}</small></span></div>
         ) : cue ? (
           <div className={`tk-note ${cue === "next" || cue === "onBike" ? "go" : cue === "inQueue" ? "" : "warn"}`}>
             {cue !== "next" && cue !== "inQueue" && <span className="dot" aria-hidden="true" />}
@@ -213,7 +216,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
       </div>}
       {/* A pass in the phone's wallet reads as a place held: none on a waitlist or before the code is out. */}
       {wallet && !past && !allWl && ready && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
-      {canEdit && (
+      {canEdit && manage && (
         <div className="tk-manage">
           {!noNum && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}
           {!noNum && s?.kind !== "snd96" && <a className="tk-btn" href={links.manage}><Again /> {t.reschedule}</a>}

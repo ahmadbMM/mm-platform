@@ -176,41 +176,45 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
   .tk-qr-hold { width: 116px; height: 116px; }
 }
 
-/* ── Session card (a date to book) ───────────────────────────────────────────── */
+/* ── Session card (a date to book) ─────────────────────────────────────────────
+   The booking app's sess-card under its customer system: the time is the headline, the date and
+   today above it, the kind's chip with its drawn mark on every ride that has a name. */
 .sc-list { display: flex; flex-direction: column; gap: 10px; }
 .sc-card { --ev: #077a4b; position: relative; width: 100%; display: flex; flex-direction: column; gap: 4px; text-align: start; cursor: pointer;
   padding: 14px 16px; padding-inline-start: 35px; min-height: 58px; font: inherit; color: #1a1919;
-  background: #fff; border: 1px solid rgba(26, 25, 25, .14); border-radius: 12px; transition: border-color .2s, box-shadow .2s; }
-.sc-card:hover { border-color: rgba(7, 122, 75, .4); box-shadow: 0 0 14px rgba(7, 122, 75, .12); }
+  background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; transition: border-color .2s, box-shadow .2s, background .2s; }
+.sc-card:hover { background: #f4f1ea; }
 .sc-card:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
-.sc-card.full { opacity: .72; }
+.sc-card.sel { border-color: #1a1919; box-shadow: inset 0 0 0 1px #1a1919; background: #fff; }
+.sc-card.rej { opacity: .6; }
 /* Not open to book yet (the booking window): greyed, not gone, with when it opens on the right. */
 .sc-card.closed { opacity: .62; cursor: default; }
-.sc-card.closed:hover { border-color: rgba(26, 25, 25, .14); box-shadow: none; }
+.sc-card.closed:hover { background: #fff; }
 .sc-spots.closed { color: #8a5c14; white-space: normal; text-align: end; max-width: 55%; }
 .sc-card.ev-jcc { --ev: #2f63ad; }
 .sc-card.ev-swim { --ev: #0d7d8f; }
-.sc-card.ev-workshop { --ev: #c2410c; }
+.sc-card.ev-workshop { --ev: #b4581e; }
 .sc-card.ev-snd96 { --ev: #00894a; }
-.sc-card.ev-event { --ev: #6d28d9; }
-/* A ticketed event's card says what it is and what a seat costs. */
-.sc-desc { font-size: 12.5px; color: #4f565c; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.sc-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; font-weight: 700; color: #06603b; }
-.sc-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; min-width: 0; }
-.sc-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--ev); }
-.sc-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-.sc-tag { padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700; background: rgba(26, 25, 25, .06); color: #4f565c; }
+.sc-card.ev-event { --ev: #8c3b6e; }
+/* A ticketed event's card says what it is. */
+.sc-desc { font-size: 13px; color: #4a4843; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.sc-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }
+.sc-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--ev); }
+.sc-partner { flex-basis: 100%; font-size: 12px; font-weight: 600; font-style: italic; color: #4a4843; }
+html:is([lang="ar"], [lang="ur"]) .sc-partner { font-style: normal; }
 .sc-head { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.sc-dot { width: 9px; height: 9px; flex: none; margin-inline-start: -19px; border-radius: 50%; border: 1.5px solid var(--ev); }
-.sc-date { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; letter-spacing: -.2px; }
-.sc-spots { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #06603b; white-space: nowrap; }
-.sc-spots::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.sc-dot { width: 9px; height: 9px; flex: none; margin-inline-start: -19px; border-radius: 50%; border: 1.5px solid #a7a399; box-sizing: border-box; }
+.sc-dot.on { background: #1a1919; border-color: #1a1919; }
+.sc-date { flex: 1; min-width: 0; font-size: 13px; font-weight: 600; color: #4a4843; }
+.sc-spots { flex: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; color: #06603b; white-space: nowrap; }
 .sc-spots.full { color: #a33b2e; }
-.sc-spots.low { color: #7a5a10; }
-.sc-time { font-size: 12px; color: #6f6d63; }
+.sc-spots.low { color: #8a5c14; }
+.sc-spots.rej { color: #4a4843; }
+.sc-time { font-size: 20px; font-weight: 700; color: #1a1919; letter-spacing: -.2px; font-variant-numeric: tabular-nums; }
 .sc-dw { color: #077a4b; font-weight: 700; }
-.sc-meta { font-size: 12px; color: #6f6d63; }
+.sc-meta { display: block; font-size: 13px; color: #6e6b63; }
 @media (max-width: 560px) {
   .sc-card { padding: 12px; padding-inline-start: 31px; }
-  .sc-spots { font-size: 11px; }
+  .sc-spots { font-size: 11.5px; }
+  .sc-time { font-size: 17px; }
 }

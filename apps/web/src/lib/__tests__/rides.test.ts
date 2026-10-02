@@ -36,7 +36,8 @@ describe("slotTimes", () => {
 
 describe("toSession", () => {
   it("shows a circuit night as open to all and paid", () => {
-    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null, collect: "20:15", approval: false, capacity: null, left: null });
+    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null, collect: "20:15", approval: false, capacity: null, left: null,
+      spots: null, addons: [], wlCap: null, km: { beg: 20, int: 40 }, meetUrl: null, location: null });
   });
   it("marks a community ride members-only and free, unless the session says otherwise", () => {
     const sat = toSession(row({ event_kind: "community", ride_kind: "saturday", title: "Saturday Social Ride", bike_slots: '{"_time":"05:45 - 06:15"}' }));
@@ -174,8 +175,8 @@ describe("sessionRows", () => {
     const f = vi.fn(async (url: string) => (url.includes("route_slug") ? json({ code: "42703", message: "column sessions.route_slug does not exist" }, 400) : json([{ id: "a" }])));
     expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", undefined, 1000)).toEqual([{ id: "a" }]);
     expect(f).toHaveBeenCalledTimes(2);
-    expect(f.mock.calls[0][0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug&id=eq.a");
-    expect(f.mock.calls[1][0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval&id=eq.a");
+    expect(f.mock.calls[0][0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons,meet_url,location,description,price,route_slug&id=eq.a");
+    expect(f.mock.calls[1][0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons,meet_url,location&id=eq.a");
     // for the next ten minutes the old columns are asked for straight away; then the new ones are tried again
     expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", undefined, 2000)).toEqual([{ id: "a" }]);
     expect(f).toHaveBeenCalledTimes(3);

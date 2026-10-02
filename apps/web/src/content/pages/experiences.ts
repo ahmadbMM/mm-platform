@@ -21,7 +21,7 @@ export const experiencesSchema = {
       fields: [
         txt("eyebrow", 40, "Small label", "العبارة الصغيرة", "Jeddah Corniche Circuit", "حلبة كورنيش جدة"),
         txt("title", 60, "Title", "العنوان", "Book your ride.", "احجز جولتك."),
-        long("text", 240, "Text", "النص", "Pick an event, pick a date, and book in the booking app. Pay at the circuit booth.", "اختر الفعالية ثم الموعد واحجز في تطبيق الحجز. الدفع عند الكشك في الحلبة."),
+        long("text", 240, "Text", "النص", "Pick an event and a date, add your riders and book. Pay at the circuit booth.", "اختر الفعالية والموعد، وأضف الركاب واحجز. الدفع عند الكشك في الحلبة."),
         { id: "image", type: "image", label: bi("Photo", "الصورة"), def: "/site/experiences/hero.jpg" },
         txt("bookBtn", 30, "Button", "الزر", "Start booking", "ابدأ الحجز"),
         { id: "bookHref", type: "link", label: bi("Booking app link", "رابط تطبيق الحجز"), hint: bi("Where the last step sends riders, with the event and date they picked.", "وجهة الخطوة الأخيرة، مع الفعالية والموعد المختارين."), def: BOOKING_URL },

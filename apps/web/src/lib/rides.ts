@@ -54,6 +54,15 @@ export type RideSession = {
   /** A community ride staff approve (needs_approval not false): no places-left count. */
   approval?: boolean;
   capacity?: number | null;
+  /** The booking wizard's extras (lib/booking.ts): the places an approval ride allocates
+   *  (sessions.spots), the add-ons it sells, the waitlist cap and the Saturday groups' distances
+   *  from its settings, and where it meets. */
+  spots?: number | null;
+  addons?: string[];
+  wlCap?: number | null;
+  km?: { beg: number; int: number };
+  meetUrl?: string | null;
+  location?: string | null;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -61,6 +70,7 @@ type Row = {
   id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; ride_kind?: unknown;
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
+  spots?: unknown; addons?: unknown; meet_url?: unknown; location?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -104,6 +114,35 @@ export function collectTime(slots: unknown): string | null {
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
 
+const slotsOf = (slots: unknown): Record<string, unknown> => {
+  let o: unknown = slots;
+  if (typeof o === "string") { try { o = JSON.parse(o); } catch { o = null; } }
+  return o && typeof o === "object" && !Array.isArray(o) ? (o as Record<string, unknown>) : {};
+};
+
+/** The waitlist's cap in riders (the booking app's waitlistCap): the settings' _wl, a count or a
+ *  percentage of the places (at least one); null for none. */
+export function waitlistCap(slots: unknown, places: number): number | null {
+  const w = slotsOf(slots)._wl as { m?: unknown; v?: unknown } | undefined;
+  const v = Number(w && typeof w === "object" ? w.v : NaN);
+  if (!w || !Number.isFinite(v) || v <= 0) return null;
+  return w.m === "pct" ? Math.max(1, Math.round((places || 0) * v / 100)) : Math.floor(v);
+}
+
+/** The Saturday ride's two distances (_rgKm): the settings' _km, else 20 and 40 km. */
+export function groupKm(slots: unknown): { beg: number; int: number } {
+  const k = slotsOf(slots)._km as Record<string, unknown> | undefined;
+  const one = (g: "beg" | "int", d: number) => { const v = Number(k && typeof k === "object" ? k[g] : NaN); return v > 0 && v <= 500 ? v : d; };
+  return { beg: one("beg", 20), int: one("int", 40) };
+}
+
+/** The add-on ids a session sells (sessions.addons: a JSON list, or one already parsed). */
+export function addonIds(v: unknown): string[] {
+  let a: unknown = v;
+  if (typeof a === "string") { try { a = JSON.parse(a); } catch { a = []; } }
+  return Array.isArray(a) ? [...new Set(a.filter((x): x is string => typeof x === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(x)))].slice(0, 40) : [];
+}
+
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
  *  booked through the company's own form (micromobility.sa/petromin), so they are left out. */
 export function toSession(r: Row, keepAll = false): RideSession | null {
@@ -132,6 +171,12 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     routeSlug: routeSlugOf(r.route_slug),
     approval: community && r.needs_approval !== false,
     capacity: seats,
+    spots: num(r.spots),
+    addons: addonIds(r.addons),
+    wlCap: waitlistCap(r.bike_slots, (community && r.needs_approval !== false ? num(r.spots) || seats : seats) || 0),
+    km: groupKm(r.bike_slots),
+    meetUrl: typeof r.meet_url === "string" && /^https:\/\//i.test(r.meet_url.trim()) ? r.meet_url.trim() : null,
+    location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null,
     left: null,
     collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" ? null : collectTime(r.bike_slots),
   };
@@ -166,7 +211,7 @@ export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Recor
 // (400, 42703 "column does not exist"), so a read that fails that way is asked again with the
 // columns that have always been there, and the new ones are left out for ten minutes before they
 // are tried again. A session read that way simply has no description, price or route.
-export const SESSION_COLS = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval";
+export const SESSION_COLS = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons,meet_url,location";
 export const SESSION_COLS_NEW = "description,price,route_slug";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.newColsMissingUntil");
