@@ -83,6 +83,18 @@ describe("the badges", () => {
     expect(L.find((x) => x.slug === "clean_sheet")!.p).toBe("1/10");
     expect(L.find((x) => x.slug === "fuel")!.on).toBe(true);
   });
+  it("count the Saturday social ride ladder: 1, 5, 10, 25, 50 and 100 ride days", () => {
+    const sat = new Map<string, RecordSession>(rows.map((r) => [r.sessionId, { kind: "saturday", freeRide: true }]));
+    const L = list(empty, rows, sat);
+    const at = (slug: string) => L.find((x) => x.slug === slug);
+    expect(at("rolling_start")).toMatchObject({ on: true, p: "1/1", color: "teal" });
+    expect(at("slipstream")).toMatchObject({ on: false, p: "4/5" });
+    expect(at("paceline")).toMatchObject({ on: false, p: "4/10" });
+    expect(at("peloton")).toMatchObject({ on: false, p: "4/25" });
+    expect(at("grand_tour")).toMatchObject({ on: false, p: "4/50", color: "purple" });
+    expect(at("hall_of_fame")).toMatchObject({ on: false, p: "4/100", color: "special" });
+    expect(list().find((x) => x.slug === "rolling_start")).toMatchObject({ on: false, p: "0/1" }); // circuit nights do not count
+  });
   it("give Front Row only where the number is shown", () => {
     const appr = new Map<string, RecordSession>(rows.map((r) => [r.sessionId, { kind: "saturday", freeRide: true, approval: true }]));
     expect(list(empty, rows, appr).find((x) => x.slug === "front_row")!.on).toBe(false);

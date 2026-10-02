@@ -24,6 +24,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   scrutineer: ["search", "teal"], champion: ["trophy", "gold"], spirit: ["heart", "red"], complete_profile: ["profile", "special"],
   national_day_96: ["n96", "national"], back_on_track: ["return", "teal"], safety_car: ["beacon", "orange"], endurance: ["clock", "purple"],
   triple_crown: ["crown", "gold"], slipstream: ["wind", "green"], paceline: ["wind", "blue"], peloton: ["wind", "gold"],
+  rolling_start: ["wind", "teal"], grand_tour: ["wind", "purple"], hall_of_fame: ["wind", "special"],
   clean_sheet: ["calcheck", "green"], works_team: ["briefcase", "teal"], perfect_week: ["calstar", "purple"], perfect_month: ["calcrown", "gold"],
   winter_series: ["snow", "blue"], ramadan_nights: ["lantern", "purple"], founding_day: ["fort", "orange"],
 };
@@ -196,7 +197,10 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
     { s: "squad", on: squad >= 3 }, { s: "fuel", on: fuel }, { s: "corniche25", on: rides >= 25, p: P(rides, 25) },
     { s: "safety_car", on: R.bestS >= 6, p: P(R.curS, 6) }, { s: "endurance", on: R.bestS >= 12, p: P(R.curS, 12) },
     { s: "triple_crown", on: kinds.size >= 3, p: P(kinds.size, 3) }, { s: "clean_sheet", on: cleanBest >= 10, p: P(clean, 10) },
-    { s: "slipstream", on: comm >= 5, p: P(comm, 5) }, { s: "paceline", on: comm >= 15, p: P(comm, 15) }, { s: "peloton", on: comm >= 30, p: P(comm, 30) },
+    // The Saturday social ride ladder (the owner, 2026-10-03): 1, 5, 10, 25, 50, 100 ride days, as the app.
+    { s: "rolling_start", on: comm >= 1, p: P(comm, 1) },
+    { s: "slipstream", on: comm >= 5, p: P(comm, 5) }, { s: "paceline", on: comm >= 10, p: P(comm, 10) }, { s: "peloton", on: comm >= 25, p: P(comm, 25) },
+    { s: "grand_tour", on: comm >= 50, p: P(comm, 50) }, { s: "hall_of_fame", on: comm >= 100, p: P(comm, 100) },
     { s: "works_team", on: corp >= 3, p: P(corp, 3) },
     { s: "perfect_week", on: PW.any, p: PW.cur ? P(PW.cur.n, PW.cur.of) : null },
     { s: "perfect_month", on: PW.best >= 4, p: PW.known ? P(PW.run, 4) : null },
