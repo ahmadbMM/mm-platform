@@ -416,3 +416,23 @@ test('the own-bike question reads in Arabic', async ({ page }) => {
   await expect(page.locator('#f-own .label')).toHaveText('هل لديك دراجة خاصة بك؟');
   await expect(page.locator('#owns .tile')).toHaveText(['نعم، لديّ دراجة', 'لا، ليس بعد']);
 });
+
+// The owner, 2026-10-02: "the bike owning question must put the bike type preference on bike owner on default and
+// make it changeable if the applicant was a bike owner".
+test('a yes to the own-bike question picks Bike owner, which can be changed; a no takes it back off', async ({ page }) => {
+  const { of } = await open(page);
+  await accountStep(page);
+  await expect(page.locator('#types .tile')).toHaveText(['Road', 'Hybrid', 'Mountain', 'Bike owner']);
+  await page.click('#owns .tile[data-v="yes"]');
+  await expect(page.locator('#types .tile[data-v="Own"]')).toHaveAttribute('aria-checked', 'true');
+  await page.click('#types .tile[data-v="Hybrid"]'); // their choice stands
+  await expect(page.locator('#types .tile[data-v="Own"]')).toHaveAttribute('aria-checked', 'false');
+  await page.click('#types .tile[data-v="Own"]');
+  await page.click('#owns .tile[data-v="no"]'); // no bike: Bike owner comes off, they choose a type
+  await expect(page.locator('#types .tile[aria-checked="true"]')).toHaveCount(0);
+  await page.click('#owns .tile[data-v="yes"]');
+  await communityStep(page, { own: '', type: 'Own' });
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('customer_community_apply')[0].p).toMatchObject({ own_bike: true, bike_type: 'Own' });
+});

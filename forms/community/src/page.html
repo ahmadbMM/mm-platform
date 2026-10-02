@@ -579,10 +579,11 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
         </div>
         <div id="f-type" class="field">
           <span class="label" id="type-label" data-t="Type of bike">Type of bike</span>
-          <div id="types" class="types" role="radiogroup" aria-labelledby="type-label">
+          <div id="types" class="types two" role="radiogroup" aria-labelledby="type-label">
             <button type="button" class="tile" data-v="Road" role="radio" aria-checked="false" data-t="Road">Road</button>
             <button type="button" class="tile" data-v="Hybrid" role="radio" aria-checked="false" data-t="Hybrid">Hybrid</button>
             <button type="button" class="tile" data-v="Mountain" role="radio" aria-checked="false" data-t="Mountain">Mountain</button>
+            <button type="button" class="tile" data-v="Own" role="radio" aria-checked="false" data-t="Bike owner">Bike owner</button>
           </div>
           <p class="err" aria-live="polite"></p>
         </div>
@@ -679,6 +680,7 @@ var FORM_T = {
   "Road": "طريق",
   "Hybrid": "هجين",
   "Mountain": "جبلي",
+  "Bike owner": "صاحب دراجة",
   "Send application": "إرسال الطلب",
   "Sending...": "جارٍ الإرسال...",
   "Application received": "تم استلام طلبك",
@@ -771,6 +773,7 @@ var FORM_T = {
   "Road": "Route",
   "Hybrid": "Hybride",
   "Mountain": "VTT",
+  "Bike owner": "Propriétaire de vélo",
   "Send application": "Envoyer la demande",
   "Sending...": "Envoi en cours...",
   "Application received": "Demande reçue",
@@ -863,6 +866,7 @@ var FORM_T = {
   "Road": "Carretera",
   "Hybrid": "Híbrida",
   "Mountain": "Montaña",
+  "Bike owner": "Bici propia",
   "Send application": "Enviar solicitud",
   "Sending...": "Enviando...",
   "Application received": "Solicitud recibida",
@@ -955,6 +959,7 @@ var FORM_T = {
   "Road": "Speed",
   "Hybrid": "Híbrida",
   "Mountain": "Mountain bike",
+  "Bike owner": "Bicicleta própria",
   "Send application": "Enviar solicitação",
   "Sending...": "Enviando...",
   "Application received": "Solicitação recebida",
@@ -1047,6 +1052,7 @@ var FORM_T = {
   "Road": "روڈ",
   "Hybrid": "ہائبرڈ",
   "Mountain": "ماؤنٹین",
+  "Bike owner": "اپنی سائیکل",
   "Send application": "درخواست بھیجیں",
   "Sending...": "بھیجی جا رہی ہے...",
   "Application received": "درخواست موصول ہو گئی",
@@ -1139,6 +1145,7 @@ var FORM_T = {
   "Road": "रोड",
   "Hybrid": "हाइब्रिड",
   "Mountain": "माउंटेन",
+  "Bike owner": "अपनी साइकिल",
   "Send application": "आवेदन भेजें",
   "Sending...": "भेजा जा रहा है...",
   "Application received": "आवेदन मिल गया",
@@ -1231,6 +1238,7 @@ var FORM_T = {
   "Road": "Road",
   "Hybrid": "Hybrid",
   "Mountain": "Mountain",
+  "Bike owner": "May sariling bisikleta",
   "Send application": "Ipadala ang aplikasyon",
   "Sending...": "Ipinapadala...",
   "Application received": "Natanggap ang aplikasyon",
@@ -1323,6 +1331,7 @@ var FORM_T = {
   "Road": "रोड",
   "Hybrid": "हाइब्रिड",
   "Mountain": "माउन्टेन",
+  "Bike owner": "आफ्नै साइकल",
   "Send application": "आवेदन पठाउनुहोस्",
   "Sending...": "पठाउँदै...",
   "Application received": "आवेदन प्राप्त भयो",
@@ -1415,6 +1424,7 @@ var FORM_T = {
   "Road": "রোড",
   "Hybrid": "হাইব্রিড",
   "Mountain": "মাউন্টেন",
+  "Bike owner": "নিজের সাইকেল",
   "Send application": "আবেদন পাঠান",
   "Sending...": "পাঠানো হচ্ছে...",
   "Application received": "আবেদনটি আমরা পেয়েছি",
@@ -1848,7 +1858,15 @@ var FORM_T = {
   tiles("#xgenders", "f-xgender", function (v) { xgender = v; });
   tiles("#types", "f-type", function (v) { bikeType = v; });
   // Their own bike, yes or no (the owner, 2026-09-30); sent as own_bike, true or false.
-  tiles("#owns", "f-own", function (v) { ownBike = v === "yes"; });
+  // A yes picks Bike owner as their bike type, which they may still change; a no takes Bike owner back off
+  // (the owner, 2026-10-02: "the bike owning question must put the bike type preference on bike owner on
+  // default and make it changeable if the applicant was a bike owner").
+  tiles("#owns", "f-own", function (v) {
+    ownBike = v === "yes";
+    var own = $('#types .tile[data-v="Own"]');
+    if (ownBike && own && bikeType !== "Own") own.click();
+    else if (!ownBike && bikeType === "Own") { $$("#types .tile").forEach(function (x) { x.setAttribute("aria-checked", "false"); }); bikeType = null; }
+  });
   function tick(id, get, set) {
     var el = document.getElementById(id);
     function toggle() { set(!get()); el.setAttribute("aria-checked", String(get())); if (id === "ack") clearMsg("f-ack"); }

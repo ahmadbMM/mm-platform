@@ -360,7 +360,15 @@
   tiles("#xgenders", "f-xgender", function (v) { xgender = v; });
   tiles("#types", "f-type", function (v) { bikeType = v; });
   // Their own bike, yes or no (the owner, 2026-09-30); sent as own_bike, true or false.
-  tiles("#owns", "f-own", function (v) { ownBike = v === "yes"; });
+  // A yes picks Bike owner as their bike type, which they may still change; a no takes Bike owner back off
+  // (the owner, 2026-10-02: "the bike owning question must put the bike type preference on bike owner on
+  // default and make it changeable if the applicant was a bike owner").
+  tiles("#owns", "f-own", function (v) {
+    ownBike = v === "yes";
+    var own = $('#types .tile[data-v="Own"]');
+    if (ownBike && own && bikeType !== "Own") own.click();
+    else if (!ownBike && bikeType === "Own") { $$("#types .tile").forEach(function (x) { x.setAttribute("aria-checked", "false"); }); bikeType = null; }
+  });
   function tick(id, get, set) {
     var el = document.getElementById(id);
     function toggle() { set(!get()); el.setAttribute("aria-checked", String(get())); if (id === "ack") clearMsg("f-ack"); }
