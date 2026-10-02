@@ -2,6 +2,9 @@ name: ci
 on:
   push: { branches: [main, staging] }
   pull_request:
+  # The staging-follow job below runs this on `staging` after bringing main's changes over (a push
+  # made with the workflow's own token starts no run by itself).
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -116,3 +119,33 @@ jobs:
           code=$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 10 --retry-all-errors https://staging.micromobility.sa/)
           echo "staging / $code"
           [ "$code" -lt 500 ]
+
+  # Live → staging, code: after main is green (and deployed), main's changes are merged into
+  # `staging`, staging's CI is started (it builds, tests and deploys staging.micromobility.sa), and
+  # the content copy runs (staging-sync.yml). Work already on staging and not yet on main is kept:
+  # this is a merge, never a reset. A conflict stops here, red, for a person to merge by hand.
+  # Staging → live is never automatic: a change tried on staging reaches main when it is merged there.
+  staging-follow:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions: { contents: write, actions: write }
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Merge main into staging
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --heads origin staging >/dev/null; then
+            git checkout -B staging origin/staging
+            git merge --no-edit origin/main || { echo "::error::main and staging conflict; merge them by hand"; exit 1; }
+          else
+            git checkout -B staging origin/main
+          fi
+          git push origin staging
+      - name: Deploy staging and copy the content
+        env: { GH_TOKEN: "${{ github.token }}" }
+        run: |
+          gh workflow run ci.yml --ref staging
+          gh workflow run staging-sync.yml --ref main

@@ -6,20 +6,30 @@ its **own database** with the real site's content (pages, bike catalogue, prices
 privacy notice is not involved, and anything done on staging (sign-ups, forms, bookings) never
 reaches production. Only the team can open it (Cloudflare Access).
 
-## How changes reach it
+## How the two stay alike
 
-| Branch    | Deploys to                 | Database            |
-|-----------|----------------------------|---------------------|
-| `staging` | staging.micromobility.sa   | the staging project |
-| `main`    | micromobility.sa           | production          |
+**Live → staging, automatic.**
+- *Code:* every green push to `main` is merged into `staging`, which then builds and deploys
+  (ci.yml, job `staging-follow`). Work on staging that is not on main yet is kept (a merge, never a
+  reset); a conflict turns that job red for someone to merge by hand.
+- *Content:* what the live site shows - page text and settings (site_content), the bike catalogue,
+  ride prices, and the uploaded pictures they use - is copied into the staging database every hour,
+  after every production deploy, and on demand (Actions > staging-sync > Run workflow).
+  `scripts/staging-sync.mjs` reads the live site with the public key (only what the public sees),
+  writes only rows that differ, removes rows the live site no longer has, and never touches
+  riders, rides or bookings (staging keeps its made-up ones). Staging stays **open**: Coming Soon
+  off and every page on, whatever the live site's switches say.
+- *Database structure:* a migration is applied to staging first, then production (the Supabase MCP
+  sees both projects).
 
-Try a change on staging first: push it to `staging`, look at it there, then merge it into `main`.
+**Staging → live, when approved.** Try a change on `staging`, look at it on staging.micromobility.sa,
+then merge it into `main`:
 
 ```bash
-git switch staging && git merge main     # bring staging up to date with the live site
+git switch staging && git pull                       # staging already follows main
 # ...commit the change...
-git push origin staging                  # tests, then deploys staging only
-git switch main && git merge staging && git push origin main   # when it looks right
+git push origin staging                              # tests, then deploys staging only
+git switch main && git merge staging && git push origin main   # when it is approved
 ```
 
 CI uses the same tests for both. On `staging` it builds against `STAGING_SUPABASE_URL` /
@@ -59,7 +69,8 @@ production from `staging`.
 
 ### 2. GitHub
 
-In the repository: Settings > Secrets and variables > Actions > **Variables**, add:
+In the repository: Settings > Secrets and variables > Actions. **Secrets:** `STAGING_SERVICE_KEY` =
+the staging project's legacy service_role key (the content copy writes with it). **Variables:**
 
 - `STAGING_SUPABASE_URL` = `https://<staging-ref>.supabase.co`
 - `STAGING_SUPABASE_ANON_KEY` = the staging project's **legacy anon** key (Settings > API Keys >

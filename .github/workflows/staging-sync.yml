@@ -1,0 +1,27 @@
+# Live → staging content: copies what micromobility.sa shows (page text and settings, the bike
+# catalogue, ride prices, and the pictures they use) into the staging database, so staging always
+# looks like the live site (scripts/staging-sync.mjs; staging stays open: Coming Soon off, every
+# page on). Every hour, after every production deploy (ci.yml dispatches it), and by hand from the
+# Actions tab ("Run workflow"). Needs the secret STAGING_SERVICE_KEY; without it, it says so and stops.
+name: staging-sync
+on:
+  schedule: [{ cron: "17 * * * *" }]
+  workflow_dispatch:
+concurrency: { group: staging-sync, cancel-in-progress: false }
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Copy the live site's content to staging
+        env:
+          PROD_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          PROD_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          STAGING_URL: ${{ vars.STAGING_SUPABASE_URL }}
+          STAGING_SERVICE_KEY: ${{ secrets.STAGING_SERVICE_KEY }}
+        run: |
+          if [ -z "$STAGING_SERVICE_KEY" ]; then echo "STAGING_SERVICE_KEY is not set; nothing copied."; exit 0; fi
+          node scripts/staging-sync.mjs
