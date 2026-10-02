@@ -8,7 +8,10 @@ export type Account = Session & { name: string; email: string; phone: string;
   /** The rest of customer_profile's row, for Race Ready (lib/ride-record.ts profilePct). */
   profile?: Record<string, unknown> };
 
-export async function rpcServer<T>(fn: string, args: Record<string, unknown>): Promise<{ status: number; data: T | null; message: string }> {
+/** A database call from the server with the public key. A refusal keeps its message (the
+ *  exception's name: phone_taken, RATE_LIMITED...) and, in `details`, its detail and hint (which
+ *  field a BAD_INPUT is about). */
+export async function rpcServer<T>(fn: string, args: Record<string, unknown>): Promise<{ status: number; data: T | null; message: string; details?: string }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return { status: 0, data: null, message: "" };
@@ -21,7 +24,10 @@ export async function rpcServer<T>(fn: string, args: Record<string, unknown>): P
       signal: AbortSignal.timeout(4000),
     });
     const body = (await res.json().catch(() => null)) as unknown;
-    if (!res.ok) return { status: res.status, data: null, message: String((body as { message?: unknown } | null)?.message ?? "") };
+    if (!res.ok) {
+      const b = (body ?? {}) as { message?: unknown; details?: unknown; hint?: unknown };
+      return { status: res.status, data: null, message: String(b.message ?? ""), details: [b.details, b.hint].filter((x) => typeof x === "string" && x).join(" ") };
+    }
     return { status: res.status, data: body as T, message: "" };
   } catch {
     return { status: 0, data: null, message: "" };

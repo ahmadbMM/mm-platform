@@ -26,12 +26,27 @@ import { routeItems } from "@/lib/route-names";
 import { isRated } from "@/lib/rating";
 import { doneToday, fmtDayDate, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
-import { badgeList, recordRows, rideStats } from "@/lib/ride-record";
+import { badgeList, recordRows, rideStats, type BadgeItem } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
 import { riyadhClock } from "@/lib/workshop-days";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
 import { isRtl } from "@/i18n/locales";
+import ProfileForm from "@/components/account/ProfileForm";
+import { ConsentPrompt, RideNews } from "@/components/account/Consents";
+import DeleteAccount from "@/components/account/DeleteAccount";
+import { ForcedPassword, PasswordCard } from "@/components/account/Password";
+import FixRequest from "@/components/account/FixRequest";
+import AmbassadorCard from "@/components/account/AmbassadorCard";
+import BadgeCelebrate, { type Cheer } from "@/components/account/BadgeCelebrate";
+import AccountSettings from "@/components/account/AccountSettings";
+import Season from "@/components/account/Season";
+import Purchases from "@/components/account/Purchases";
+import NoticeDialog from "@/components/privacy/NoticeDialog";
+import { T as ACCOUNT } from "@/components/account/Account.text";
+import { loadAccountExtras } from "@/lib/account-extras";
+import { profilePct, weekStreak } from "@/lib/ride-record";
+import { PRIVACY_VERSION } from "@/content/privacy-notice";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
 // the next rides as the booking app's own tickets (changing one opens the booking app), the Club
@@ -100,11 +115,12 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     .slice(0, 5);
   // every booked session, whatever its state now (a Petromin night, one staff closed since)
   const record = recordRows(rows);
-  const [sessions, recSessions, badges] = await Promise.all([
+  const [sessions, recSessions, badges, extras] = await Promise.all([
     loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => S(r.session_id))]),
     // every night booked, for Your rides and the badges (the kind of ride, whether it was free, whether staff approve it)
     loadRecordSessions(record.map((r) => r.sessionId)),
     loadBadgeData(acct),
+    loadAccountExtras(acct),
   ]);
   // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
   const past = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
@@ -121,8 +137,37 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   }));
   const ticketText = serverLocalize(TICKET, locale);
   const recordText = serverLocalize(RECORD, locale);
-  const drawn = new Date().getTime(); // the countdown's first line, before the browser takes over
   const typeName = (ty: string) => (TYPE_NAME[ty] ? tx(TYPE_NAME[ty].en, TYPE_NAME[ty].ar) : ty);
+  const at = serverLocalize(ACCOUNT, locale);
+  // The season (_seasonDashboard): the rides that count as ridden, the week streak and the next ride.
+  const completed = record.filter((r) => rideCompleted(r, !!recSessions.get(r.sessionId)?.freeRide));
+  const streak = weekStreak(completed.map((r) => r.date), today);
+  const prof = (acct.profile ?? {}) as Record<string, unknown>;
+  const pr = {
+    name: acct.name, email: acct.email, phone: acct.phone, height: typeof prof.height === "number" ? prof.height : null,
+    birth_date: S(prof.birth_date) || null, country: S(prof.country) || null, city: S(prof.city) || null, nationality: S(prof.nationality) || null,
+    type_preference: S(prof.type_preference) || null, socials: prof.socials ?? null, gender: S(prof.gender) || null, photo: S(prof.photo) || null,
+  };
+  // The privacy notice and ride news are asked once more when this version was never confirmed,
+  // or ride news never answered (_consentCheck).
+  const ask = extras.consents ? { ack: extras.consents.privacyVersion !== PRIVACY_VERSION, news: !extras.consents.rideNewsAt } : null;
+  // The current password is asked for unless the account has none (it signs in with Google or
+  // Apple only: the server then asks for one itself, in the corrections); not known for sure when
+  // it signs in with either but may have a password too.
+  const needCurrent = extras.fix.includes("password") ? false : extras.about?.sign_in ? null : true;
+  // A badge just earned, in the reader's words (RideRecord's own): the ones staff gave, Race Ready, National Day 96.
+  const cheerWords = (x: BadgeItem): [string, string, string] => {
+    const own = recordText.names[x.slug];
+    if (own && (!x.row || x.row.system !== false)) return own;
+    const r = x.row;
+    return [String((L === "ar" && r?.name_ar) || r?.name || x.slug), String((L === "ar" && r?.description_ar) || r?.description || ""), ""];
+  };
+  const cheers: Cheer[] = allBadges.filter((x) => x.on && (x.given?.at || (!x.given && (x.slug === "complete_profile" || x.slug === "national_day_96")))).map((x) => {
+    const [name, how, about] = cheerWords(x);
+    return { slug: x.slug, icon: x.icon, color: x.color, name, how, about, at: x.given?.at ?? null };
+  });
+  const typeNames = Object.fromEntries(["Road", "Hybrid", "Mountain", "Kids", "Road Carbon"].map((ty) => [ty, typeName(ty)]));
+  const drawn = new Date().getTime(); // the countdown's first line, before the browser takes over
   // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
   // Edit does; Reschedule and Cancel open its My Bookings.
   const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event" };
@@ -153,7 +198,17 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           <SignOut label={tx("Sign out", "تسجيل الخروج")} />
         </header>
 
-        <section className="ac-sec" aria-labelledby="ac-rides-h">
+        {/* What staff asked to correct, and what the server asks for itself, comes first. */}
+        {/* Always drawn (nothing shows when nothing is asked), so its thank-you outlives the page refresh after a save. */}
+        <FixRequest locale={locale} fields={extras.fix} was={{ name: acct.name, email: acct.email, phone: acct.phone, birth_date: pr.birth_date, gender: pr.gender, nationality: pr.nationality, country: pr.country, city: pr.city, height: pr.height }} />
+        {extras.ambassador && <div className="ac-sec"><AmbassadorCard locale={locale} a={extras.ambassador} /></div>}
+        <div className="ac-sec">
+          <Season locale={locale} t={at} rides={completed.length} streak={streak} pct={profilePct(pr)}
+            next={groups[0] ? { date: groups[0].date, today, href: "#ac-rides" } : null}
+            book={hidden.includes("experiences") ? book : localHref("/experiences", locale)} />
+        </div>
+
+        <section className="ac-sec" id="ac-rides" aria-labelledby="ac-rides-h">
           <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a></div>
           {groups.length === 0 && past.length === 0 ? (
             <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <span aria-hidden="true">{isRtl(locale) ? "←" : "→"}</span></a>}</p>
@@ -210,11 +265,26 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           </section>
         )}
 
+        {/* The account's details and settings: everything the booking app's My Account keeps. */}
+        <div className="ac-sec ac-stack" id="ac-details">
+          <ProfileForm locale={locale} profile={pr} about={extras.about} typeNames={typeNames} />
+          <PasswordCard needCurrent={needCurrent} />
+          {extras.consents && <RideNews on={extras.consents.rideNews} dialog="ac-privacy" />}
+          {/* Push notifications are built separately; their card belongs here, after Ride news. */}
+          {extras.purchases && extras.purchases.rows.length > 0 && <Purchases locale={locale} t={at} rows={extras.purchases.rows} total={extras.purchases.total} />}
+          {extras.deletion && <DeleteAccount locale={locale} requestedAt={extras.deletion.requestedAt} />}
+          <AccountSettings locale={locale} />
+        </div>
+
         {shortcuts.length > 0 && (
           <nav className="ac-links" aria-label={tx("Shortcuts", "اختصارات")}>
             {shortcuts.map(([k, label, href]) => <a key={k} href={localHref(href, locale)}>{label} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a>)}
           </nav>
         )}
+        <NoticeDialog id="ac-privacy" locale={locale} />
+        {ask && (ask.ack || ask.news) && <ConsentPrompt needAck={ask.ack} needNews={ask.news} dialog="ac-privacy" />}
+        {extras.mustChangePwd && <ForcedPassword />}
+        {cheers.length > 0 && !extras.mustChangePwd && !(ask && (ask.ack || ask.news)) && <BadgeCelebrate accountId={acct.id} items={cheers} />}
       </div>
     </PageShell>
   );
