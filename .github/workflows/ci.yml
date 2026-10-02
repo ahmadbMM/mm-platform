@@ -2,8 +2,7 @@ name: ci
 on:
   push: { branches: [main, staging] }
   pull_request:
-  # The staging-follow job below runs this on `staging` after bringing main's changes over (a push
-  # made with the workflow's own token starts no run by itself).
+  # By hand from the Actions tab (Run workflow), on any branch.
   workflow_dispatch:
 jobs:
   build:
@@ -125,8 +124,8 @@ jobs:
           [ "$code" -lt 500 ]
 
   # Live → staging, code: after main is green (and deployed), main's changes are merged into
-  # `staging`, staging's CI is started (it builds, tests and deploys staging.micromobility.sa), and
-  # the content copy runs (staging-sync.yml). Work already on staging and not yet on main is kept:
+  # `staging` and pushed with the deploy key, which starts staging's own run (it builds, tests and
+  # deploys staging.micromobility.sa); then the content copy runs (staging-sync.yml). Work already on staging and not yet on main is kept:
   # this is a merge, never a reset. A conflict stops here, red, for a person to merge by hand.
   # Staging → live is never automatic: a change tried on staging reaches main when it is merged there.
   staging-follow:
@@ -135,8 +134,11 @@ jobs:
     runs-on: ubuntu-latest
     permissions: { contents: write, actions: write }
     steps:
+      # The deploy key STAGING_PUSH_KEY (write, this repository only): the workflow's own token may
+      # not push a change to a workflow file, and a push made with it starts no run. One made with
+      # the key does both, so staging's CI starts by itself.
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with: { fetch-depth: 0, ssh-key: "${{ secrets.STAGING_PUSH_KEY }}" }
       - name: Merge main into staging
         run: |
           git config user.name "github-actions[bot]"
@@ -148,8 +150,6 @@ jobs:
             git checkout -B staging origin/main
           fi
           git push origin staging
-      - name: Deploy staging and copy the content
+      - name: Copy the live content to staging
         env: { GH_TOKEN: "${{ github.token }}" }
-        run: |
-          gh workflow run ci.yml --ref staging
-          gh workflow run staging-sync.yml --ref main
+        run: gh workflow run staging-sync.yml --ref main
