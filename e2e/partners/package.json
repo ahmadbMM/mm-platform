@@ -1,0 +1,12 @@
+{
+  "name": "mm-partners-e2e",
+  "private": true,
+  "description": "The F&B partner portal in a browser, on `wrangler dev`, against a stub database (stub-db.mjs): never a real one.",
+  "type": "module",
+  "scripts": {
+    "e2e": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}
