@@ -131,7 +131,17 @@ describe("POST /api/rpc/<name>", () => {
       expect(res.status).toBe(404);
     }
     expect(calls).toHaveLength(0);
-    expect([...RPCS].sort()).toEqual(["vendor_calendar", "vendor_cancel", "vendor_feedback_save", "vendor_me", "vendor_preview", "vendor_profile_save", "vendor_request", "vendor_set_password"]);
+    expect([...RPCS].sort()).toEqual(["vendor_calendar", "vendor_cancel", "vendor_feedback_save", "vendor_me", "vendor_preview", "vendor_profile_save", "vendor_request", "vendor_set_password", "vendor_shared_ratings_mine"]);
+  });
+
+  it("passes the shared rider ratings through with only the session's own uid and token", async () => {
+    const shared = [{ booking_id: 4, day: "2026-09-26", riders: 9, averages: { bf_food: 8.4 }, comments: [{ k: "bf_food", text: "Great eggs" }], shared_at: "2026-09-28T10:00:00Z" }];
+    answer = dbJson(shared);
+    const res = await worker.fetch(post("/api/rpc/vendor_shared_ratings_mine", { p_uid: 1, p_token: "b".repeat(48) }, { Cookie: COOKIE }), env());
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(shared);
+    expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/vendor_shared_ratings_mine");
+    expect(calls[0].body).toEqual({ p_uid: 7, p_token: TOKEN });
   });
 
   it("takes p_uid and p_token from the cookie, never from the body", async () => {

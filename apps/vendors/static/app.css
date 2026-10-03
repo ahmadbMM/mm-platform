@@ -258,3 +258,20 @@ html[dir="rtl"] .tier .eyebrow { letter-spacing: 0; text-transform: none; }
 .cal-item > .fb-marker { grid-column: 2; grid-row: 1 / span 2; }
 .d-feedback { display: inline-flex; align-items: center; gap: .3rem; font-size: .8rem; font-weight: 700; color: var(--mm-green-neon); }
 .cal-day:not(.st-confirmed) .d-feedback { color: var(--accent); }
+
+/* What riders said (shared by MicroMobility) ----------------------------------------------- */
+.said { border-top: 1px solid var(--line); margin-top: .75rem; padding-top: .6rem; }
+.said h4 { margin: 0 0 .25rem; font-size: 1rem; }
+.said h5 { margin: .75rem 0 .3rem; font-size: .9rem; font-weight: 500; color: var(--muted); }
+.said-scores { list-style: none; padding: 0; margin: .5rem 0 0; display: grid; gap: .45rem; }
+.said-score { display: grid; grid-template-columns: minmax(9rem, auto) 1fr; align-items: center; gap: .75rem; font-size: .9rem; }
+.said-bar { display: block; height: 8px; border-radius: 999px; background: var(--mm-n200); overflow: hidden; }
+/* The bar's width without an inline style: bw-N sets the whole part, bt-N the tenth (8.4 = bw-8 bt-4). */
+.said-fill { --bw: 0; --bt: 0; display: block; height: 100%; width: calc(var(--bw) * 10% + var(--bt) * 1%); border-radius: inherit; background: var(--accent); }
+.bw-1 { --bw: 1; } .bw-2 { --bw: 2; } .bw-3 { --bw: 3; } .bw-4 { --bw: 4; } .bw-5 { --bw: 5; }
+.bw-6 { --bw: 6; } .bw-7 { --bw: 7; } .bw-8 { --bw: 8; } .bw-9 { --bw: 9; } .bw-10 { --bw: 10; }
+.bt-1 { --bt: 1; } .bt-2 { --bt: 2; } .bt-3 { --bt: 3; } .bt-4 { --bt: 4; } .bt-5 { --bt: 5; }
+.bt-6 { --bt: 6; } .bt-7 { --bt: 7; } .bt-8 { --bt: 8; } .bt-9 { --bt: 9; }
+.said-quotes { list-style: none; padding: 0; margin: 0; display: grid; gap: .35rem; }
+.said-quotes blockquote { margin: 0; padding: .4rem .75rem; border-inline-start: 3px solid var(--line); font-size: .9rem; overflow-wrap: anywhere; }
+@media (max-width: 520px) { .said-score { grid-template-columns: 1fr; gap: .25rem; } }

@@ -31,6 +31,9 @@ test("sign-in refuses a wrong password and says why", async ({ page }) => {
 
 test("first sign-in: change the password, request a date, see it in My bookings", async ({ page }) => {
   const errors = watchCsp(page);
+  // The riders' shared ratings failing must not break My bookings: the section is just left out.
+  let sharedAsked = 0;
+  await page.route("**/api/rpc/vendor_shared_ratings_mine", (r) => { sharedAsked++; return r.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "SERVER" }) }); });
   await signIn(page);
   await expect(page.getByRole("heading", { name: "Choose your own password" })).toBeVisible();
   await page.getByLabel("New password", { exact: true }).fill("weak");
@@ -61,7 +64,10 @@ test("first sign-in: change the password, request a date, see it in My bookings"
   await page.getByRole("navigation").getByRole("link", { name: "My bookings" }).click();
   await expect(page.getByRole("heading", { name: "Upcoming" })).toBeVisible();
   await expect(page.locator(".booking").first()).toContainText("Requested");
-  expect(errors).toEqual([]);
+  expect(sharedAsked).toBeGreaterThan(0);
+  await expect(page.getByRole("alert")).toHaveCount(0);
+  await expect(page.locator(".said")).toHaveCount(0);
+  expect(errors.filter((e) => !/status of 500/.test(e))).toEqual([]);
 });
 
 test("Arabic turns the page right to left and keeps Western digits", async ({ page }) => {
@@ -87,9 +93,11 @@ test("the security headers and robots.txt", async ({ request }) => {
   expect(await robots.text()).toContain("Disallow: /");
 });
 
-test("after a breakfast: the calendar marks it, My bookings asks how it went, and the feedback is saved", async ({ page, request }) => {
+test("after a breakfast: the calendar marks it, My bookings asks how it went, the feedback is saved, and what riders said shows", async ({ page, request }) => {
   const errors = watchCsp(page);
   const past = await (await request.post(`http://127.0.0.1:${STUB}/__past`)).json() as { day: string };
+  // MicroMobility staff shared the riders' breakfast ratings of that breakfast.
+  await request.post(`http://127.0.0.1:${STUB}/__share`);
   await signIn(page);
   await page.getByLabel("New password", { exact: true }).fill("Breakfast2026");
   await page.getByLabel("Confirm new password").fill("Breakfast2026");
@@ -153,5 +161,25 @@ test("after a breakfast: the calendar marks it, My bookings asks how it went, an
   await expect(dlg.getByRole("radio", { name: "4 – Very good" })).toHaveAttribute("aria-checked", "true");
   await expect(dlg.getByLabel("How many riders came?")).toHaveValue("9");
   await expect(dlg.getByRole("button", { name: "Save changes" })).toBeVisible();
+  await dlg.getByRole("button", { name: "Close", exact: true }).first().click();
+  await expect(dlg).toBeHidden();
+
+  // What riders said: the averages present (no Restaurant or Atmosphere), a bar each, the comments by question.
+  const said = pastList.getByRole("region", { name: "What riders said" });
+  await expect(said.getByText("9 riders rated the breakfast")).toBeVisible();
+  await expect(said.getByText("Breakfast overall 8.6 / 10")).toBeVisible();
+  await expect(said.getByText("Food 8.4 / 10")).toBeVisible();
+  await expect(said.getByText("Service 7.0 / 10")).toBeVisible();
+  await expect(said.getByText(/^(Restaurant|Atmosphere)/)).toHaveCount(0);
+  // The bar is sized by classes alone (the CSP refuses inline styles): 8.4 of 10.
+  const track = await said.locator(".said-bar").nth(1).boundingBox();
+  const fill = await said.locator(".said-fill.bw-8.bt-4").boundingBox();
+  expect(fill!.width / track!.width).toBeCloseTo(0.84, 1);
+  await expect(said.getByRole("heading", { name: "Food" })).toBeVisible();
+  await expect(said.locator("blockquote")).toHaveText(["The shakshuka was great.", "Fresh bread.", "Coffee took a while."]);
+  await page.getByRole("button", { name: "Switch to Arabic" }).click();
+  await expect(page.getByRole("heading", { name: "ماذا قال الدرّاجون" })).toBeVisible();
+  await expect(page.getByText("الطعام 8.4 / 10")).toBeVisible();
   expect(errors).toEqual([]);
 });
+

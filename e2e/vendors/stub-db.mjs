@@ -23,6 +23,7 @@ dates.get(sats[2]).state = "closed"; dates.get(sats[2]).reason = "Ramadan";
 dates.get(sats[3]).taken = true;
 const bookings = [];
 const feedback = new Map(); // booking id -> row, as vendor_feedback_save answers it
+const shared = []; // the riders' breakfast ratings staff shared, as vendor_shared_ratings_mine answers
 let nextId = 1;
 // The breakfast window for feedback: from the day itself until 14 days after.
 const feedbackOpen = (b) => b.status === "confirmed" && today >= b.day && today <= add(b.day, 14);
@@ -49,6 +50,7 @@ createServer((req, res) => {
       Object.assign(user, { pwd: "Temp1234", token: "t".repeat(48), must_change: true });
       bookings.length = 0;
       feedback.clear();
+      shared.length = 0;
       return ok(res, { ok: true });
     }
     if (req.url === "/__past") {
@@ -56,6 +58,18 @@ createServer((req, res) => {
       const day = [...dates.keys()].filter((d) => d < today).at(-1);
       bookings.push({ id: nextId++, day, status: "confirmed", kind: "single", series_id: null, note: "", staff_note: "" });
       return ok(res, { day });
+    }
+    if (req.url === "/__share") {
+      // Staff share the riders' breakfast ratings of the latest past confirmed booking.
+      const b = bookings.filter((x) => x.status === "confirmed" && x.day < today).at(-1);
+      if (!b) return err(res, "no past booking", 404);
+      shared.push({
+        booking_id: b.id, day: b.day, riders: 9,
+        averages: { breakfast: 8.6, bf_food: 8.4, bf_service: 7 },
+        comments: [{ k: "bf_food", text: "The shakshuka was great." }, { k: "bf_service", text: "Coffee took a while." }, { k: "bf_food", text: "Fresh bread." }],
+        shared_at: new Date().toISOString(),
+      });
+      return ok(res, { booking_id: b.id });
     }
     const name = (req.url || "").split("/rpc/")[1];
     const a = body ? JSON.parse(body) : {};
@@ -116,6 +130,8 @@ createServer((req, res) => {
         feedback.set(b.id, row);
         return ok(res, row);
       }
+      case "vendor_shared_ratings_mine":
+        return ok(res, shared);
       case "vendor_profile_save":
         Object.assign(venue, a.p_data, { seats: a.p_data.seats ? Number(a.p_data.seats) : null });
         return ok(res, undefined);

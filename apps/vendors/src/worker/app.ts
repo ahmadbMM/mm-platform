@@ -32,6 +32,7 @@ export const RPCS = new Set([
   "vendor_cancel",
   "vendor_profile_save",
   "vendor_feedback_save",
+  "vendor_shared_ratings_mine",
 ]);
 
 /** Error codes the database raises on purpose, with the status each one is answered with. */

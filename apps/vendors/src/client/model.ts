@@ -193,6 +193,76 @@ export function turnoutValue(raw: string): { ok: true; value: number | null } | 
   return n <= 1000 ? { ok: true, value: n } : { ok: false };
 }
 
+/** The breakfast questions riders answer after a social ride, in the order the page shows them. */
+export const SHARED_KEYS = ["breakfast", "bf_restaurant", "bf_atmosphere", "bf_food", "bf_service"] as const;
+export type SharedKey = (typeof SHARED_KEYS)[number];
+export const SHARED_LABEL: Record<SharedKey, Key> = {
+  breakfast: "srBreakfast",
+  bf_restaurant: "srRestaurant",
+  bf_atmosphere: "srAtmosphere",
+  bf_food: "srFood",
+  bf_service: "srService",
+};
+
+/** The riders' breakfast ratings MicroMobility chose to share with the venue (vendor_shared_ratings_mine):
+ *  averages out of 10 and comments, never a name. */
+export type SharedRatings = {
+  booking_id: number;
+  day: Iso;
+  riders: number;
+  averages: Partial<Record<SharedKey, number>>;
+  comments: { k: string; text: string }[];
+  shared_at: string;
+};
+
+const isShared = (k: string): k is SharedKey => (SHARED_KEYS as readonly string[]).includes(k);
+
+/** The shared entries by booking id; anything malformed is left out. */
+export function sharedByBooking(list: unknown): Map<number, SharedRatings> {
+  const out = new Map<number, SharedRatings>();
+  if (!Array.isArray(list)) return out;
+  for (const s of list as SharedRatings[]) if (s && typeof s.booking_id === "number") out.set(s.booking_id, s);
+  return out;
+}
+
+/** The averages present, in question order, rounded to one decimal and kept inside 1-10. */
+export function sharedScores(s: SharedRatings): { key: SharedKey; label: Key; value: number }[] {
+  const a = s.averages && typeof s.averages === "object" ? s.averages : {};
+  const out: { key: SharedKey; label: Key; value: number }[] = [];
+  for (const key of SHARED_KEYS) {
+    const v = a[key];
+    if (typeof v !== "number" || !Number.isFinite(v)) continue;
+    out.push({ key, label: SHARED_LABEL[key], value: Math.min(10, Math.max(1, Math.round(v * 10) / 10)) });
+  }
+  return out;
+}
+
+/** The two classes that size a score's bar without an inline style (the CSP forbids those):
+ *  the whole part and the tenth, for example 8.4 -> ["bw-8", "bt-4"]. */
+export function barClasses(value: number): [string, string] {
+  const tenths = Math.min(100, Math.max(0, Math.round(value * 10)));
+  return [`bw-${Math.floor(tenths / 10)}`, `bt-${tenths % 10}`];
+}
+
+/** "8.4", always with one decimal. */
+export function scoreText(lang: Lang, value: number): string {
+  return new Intl.NumberFormat(lang === "ar" ? "ar-SA-u-nu-latn" : "en-GB", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
+}
+
+/** The comments grouped by question: the known questions in order, then any other keys as sent.
+ *  Empty texts are dropped. */
+export function commentGroups(s: SharedRatings): { k: string; label: Key; texts: string[] }[] {
+  const groups = new Map<string, string[]>();
+  for (const c of Array.isArray(s.comments) ? s.comments : []) {
+    const text = typeof c?.text === "string" ? c.text.trim() : "";
+    if (!text) continue;
+    const k = String(c.k ?? "");
+    groups.set(k, [...(groups.get(k) || []), text]);
+  }
+  const keys = [...SHARED_KEYS.filter((k) => groups.has(k)), ...[...groups.keys()].filter((k) => !isShared(k))];
+  return keys.map((k) => ({ k, label: isShared(k) ? SHARED_LABEL[k] : "srOther", texts: groups.get(k)! }));
+}
+
 /** The plan's name in the page's language. */
 export function tierName(lang: Lang, t: Tier): string {
   return (lang === "ar" ? t.name_ar : t.name_en) || t.name_en;

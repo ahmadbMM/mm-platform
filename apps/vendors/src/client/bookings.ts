@@ -7,9 +7,12 @@ import { openFeedback, starRow } from "./feedback";
 import { addDays, hijriLabel, longDate, num, type Iso } from "./dates";
 import { clear, h, uid } from "./dom";
 import { icon } from "./icons";
-import { awaitingFeedback, awaitsFeedback, BOOKING_KEY, cancellable, feedbackOf, feedbackOpen, KIND_KEY, lateCancel, ratingText, staffNoteText, type CalDay, type Mine } from "./model";
+import { awaitingFeedback, awaitsFeedback, barClasses, BOOKING_KEY, cancellable, commentGroups, feedbackOf, feedbackOpen, KIND_KEY, lateCancel, ratingText, scoreText, sharedByBooking, sharedScores, staffNoteText, type CalDay, type Mine, type SharedRatings } from "./model";
 
 type Row = { day: Iso; mine: Mine; riders: number | null };
+
+/** The riders' shared breakfast ratings by booking id, for the screen being drawn. */
+let shared = new Map<number, SharedRatings>();
 
 const BOOKING_ICON = { pending: STATUS_ICON.requested, confirmed: STATUS_ICON.confirmed, declined: STATUS_ICON.taken, cancelled: "dash" } as const;
 
@@ -18,10 +21,13 @@ export async function renderBookings(main: HTMLElement): Promise<void> {
   clear(main);
   main.append(h("h1", {}, t("bookingsTitle")), h("p", { class: "loading", role: "status" }, t("loading")));
   // The calendar call is the one place a venue's own requests come from; it takes 400 days at most.
-  const [up, past] = await Promise.all([
+  // The riders' shared ratings come alongside; if that call fails the section is simply left out.
+  const [up, past, said] = await Promise.all([
     rpc<CalDay[]>("vendor_calendar", { p_from: today, p_to: addDays(today, 400) }),
     rpc<CalDay[]>("vendor_calendar", { p_from: addDays(today, -365), p_to: addDays(today, -1) }),
+    rpc<SharedRatings[]>("vendor_shared_ratings_mine"),
   ]);
+  shared = said.ok ? sharedByBooking(said.data) : new Map();
   clear(main);
   main.append(h("h1", {}, t("bookingsTitle")));
   if (!up.ok || !past.ok) {
@@ -62,6 +68,7 @@ function card(main: HTMLElement, r: Row): HTMLElement {
     staff ? h("p", { class: "b-note" }, h("strong", {}, `${t("mmNote")}: `), staff) : null,
     m.note ? h("p", { class: "b-note" }, h("strong", {}, `${t("yourNote")}: `), m.note) : null,
     feedbackBlock(main, r),
+    ridersSaid(r),
     cancellable(r.day, m, today)
       ? h("div", { class: "actions" }, button(t("cancel"), { kind: "danger", small: true, onclick: () => cancelDialog(main, r) }))
       : null,
@@ -83,6 +90,30 @@ function feedbackBlock(main: HTMLElement, r: Row): HTMLElement | null {
     feedbackOpen(r.day, r.mine, today)
       ? h("div", { class: "actions" }, button(t("fbEdit"), { small: true, icon: "star", onclick: () => openFeedback(r, after) }))
       : null);
+}
+
+/** "What riders said": the averages out of 10 with a bar each, then the comments by question.
+ *  Only on a past confirmed breakfast that MicroMobility shared. */
+function ridersSaid(r: Row): HTMLElement | null {
+  const s = shared.get(r.mine.id);
+  if (!s || r.mine.status !== "confirmed" || r.day >= app.me!.today) return null;
+  const scores = sharedScores(s);
+  const groups = commentGroups(s);
+  if (!scores.length && !groups.length) return null;
+  const id = uid("said");
+  const n = Number(s.riders) || 0;
+  return h("section", { class: "said", "aria-labelledby": id },
+    h("h4", { id }, t("srTitle")),
+    n > 0 ? h("p", { class: "b-meta" }, icon("users"), h("span", {}, n === 1 ? t("srRidersOne") : t("srRiders", { n: num(n, app.lang) }))) : null,
+    scores.length
+      ? h("ul", { class: "said-scores" }, ...scores.map((sc) => h("li", { class: "said-score" },
+        h("span", { class: "said-label" }, t("srScore", { label: t(sc.label), score: scoreText(app.lang, sc.value) })),
+        h("span", { class: "said-bar", "aria-hidden": "true" }, h("span", { class: `said-fill ${barClasses(sc.value).join(" ")}` })))))
+      : null,
+    ...groups.map((g) => h("div", { class: "said-group" },
+      h("h5", {}, t(g.label)),
+      h("ul", { class: "said-quotes" }, ...g.texts.map((text) => h("li", {}, h("blockquote", {}, text)))))),
+    h("p", { class: "hint" }, t("srAnonymous")));
 }
 
 function cancelDialog(main: HTMLElement, r: Row): void {
