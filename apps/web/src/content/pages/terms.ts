@@ -21,7 +21,7 @@ export const termsSchema = {
       id: "intro",
       label: bi("Top of the page", "أعلى الصفحة"),
       fields: [
-        { id: "updated", type: "text", max: 10, mono: true, label: bi("Last updated (YYYY-MM-DD)", "آخر تحديث (YYYY-MM-DD)"), def: bi("2026-09-25", "2026-09-25") },
+        { id: "updated", type: "text", max: 10, mono: true, label: bi("Last updated (YYYY-MM-DD)", "آخر تحديث (YYYY-MM-DD)"), def: bi("2026-10-03", "2026-10-03") },
         para("text", 600, "Opening paragraph", "الفقرة الافتتاحية",
           "These terms apply when you use micromobility.sa, book a ride or a rental, request a workshop service or buy from our store. If anything here is unclear, contact us before you book or buy.",
           "تسري هذه الشروط عند استخدامك موقع micromobility.sa، أو حجزك رحلة أو استئجار دراجة، أو طلبك خدمة صيانة، أو شرائك من متجرنا. وإذا كان أي شيء هنا غير واضح، فتواصل معنا قبل الحجز أو الشراء."),
@@ -48,8 +48,8 @@ export const termsSchema = {
               "- تُحجز الرحلات والتأجير عبر تطبيق الحجز، للجلسة والتاريخ وعدد الراكبين الذي تختاره.\n- في حلبة الكورنيش، يتم الدفع عند الكشك عند وصولك. يرجى إحضار رقم طابورك.\n- يتم توزيع الدراجات على أساس الأول فالأول، فتعال مبكراً للحصول على نوع الدراجة الذي اخترته.\n- بعض الرحلات، مثل رحلات المجتمع، مخصصة للأعضاء، ويؤكد فريقنا الأماكن فيها.\n- يمكنك تعديل الحجز أو إلغاؤه من \"حجوزاتي\" في تطبيق الحجز.",
             ]),
             clause(["Riding safely", "الركوب الآمن"], [
-              "Every rider accepts our waiver before riding. Cycling is a physical activity that carries risk. You agree to wear a helmet and to follow the team's instructions and the circuit course. You are responsible for your own safety and for any damage to the rented bike caused by misuse, and the bike is returned in the condition it was received.",
-              "يوافق كل راكب على الإقرار قبل الركوب. ركوب الدراجة نشاط بدني ينطوي على مخاطر، وتتعهد بارتداء الخوذة والالتزام بتعليمات الفريق ومسار الحلبة. وتتحمل مسؤولية سلامتك الشخصية وأي ضرر يلحق بالدراجة المستأجرة نتيجة سوء الاستخدام، وتُعاد الدراجة بحالتها عند الاستلام.",
+              "Every rider must read and agree to our waiver before booking: you cannot book any ride or activity until you do. Cycling is a physical activity that carries risk; you take part entirely at your own risk and you alone are responsible for yourself, your safety and your personal belongings. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to you or your belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. You agree to wear a helmet and to follow the team's instructions and the route, and you are responsible for any damage to the rented bike caused by misuse; the bike is returned in the condition it was received.",
+              "يجب على كل راكب قراءة الإقرار والموافقة عليه قبل الحجز، ولا يمكنك حجز أي رحلة أو نشاط حتى تفعل ذلك. ركوب الدراجة نشاط بدني ينطوي على مخاطر، وتشارك فيه على مسؤوليتك الشخصية بالكامل، وتتحمل وحدك المسؤولية عن نفسك وسلامتك وممتلكاتك الشخصية. وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية عن أي شيء يحدث لك أو لممتلكاتك، بما في ذلك أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف، أيًّا كان سببه، أثناء النشاط أو بسببه. وتتعهد بارتداء الخوذة والالتزام بتعليمات الفريق والمسار، وتتحمل مسؤولية أي ضرر يلحق بالدراجة المستأجرة نتيجة سوء الاستخدام، وتُعاد الدراجة بحالتها عند الاستلام.",
             ]),
             clause(["Workshop services", "خدمات الورشة"], [
               "Workshop requests made on this site are confirmed by our team. Service prices are shown on the Workshop page, and parts are priced separately.",
