@@ -78,11 +78,17 @@ export type BookAccount = {
 
 // ── What a session involves (KIND_TRAITS) ────────────────────────────────────────────────────
 const NO_BIKE: RideKind[] = ["swim", "workshop", "event"];
-const NO_WAIVER: RideKind[] = ["workshop", "event"];
 export const needsBike = (s: Pick<BookSession, "kind">) => !NO_BIKE.includes(s.kind);
-export const needsWaiver = (s: Pick<BookSession, "kind">) => !NO_WAIVER.includes(s.kind);
-/** The wizard's path (_regSteps): the riders step only where there is a bike, the waiver only
- *  where the activity asks for one, then the review. */
+/** Which waiver a kind is agreed under (_waiverKind): the ride's where there is a bike, the swim's
+ *  for the swim, the activity waiver for everything else (workshop, event, any other kind). */
+export type WaiverKind = "bike" | "swim" | "activity";
+const BIKE_WAIVER: RideKind[] = ["jcc", "saturday", "petromin", "snd96"];
+export const waiverKind = (s: Pick<BookSession, "kind">): WaiverKind => (BIKE_WAIVER.includes(s.kind) ? "bike" : s.kind === "swim" ? "swim" : "activity");
+/** Every booking needs an agreed waiver (owner, 2026-10-03: "you can't book anything without
+ *  agreeing"; the database refuses one without: WAIVER_REQUIRED). */
+export const needsWaiver = (s: Pick<BookSession, "kind">) => Boolean(waiverKind(s));
+/** The wizard's path (_regSteps): the riders step only where there is a bike, then the waiver
+ *  (every booking), then the review. */
 export type Step = 1 | 2 | 2.5 | 3;
 export function regSteps(s: Pick<BookSession, "kind">): Step[] {
   const st: Step[] = [1];
@@ -307,6 +313,7 @@ export function refusalOf(err: { code?: string; message?: string; details?: stri
   if (/FIX_FIRST/.test(m)) return "fix_first";
   if (/PICK_TYPE/.test(m)) return "pick_type";
   if (/NOT_OPEN_YET/.test(m)) return "not_open";
+  if (/WAIVER_REQUIRED/.test(m)) return "waiver";
   if (d === "MEMBERS_ONLY" || /community members only/i.test(m)) return "members";
   if (d === "ONE_PER_SESSION" || /One place per person/i.test(m)) return "one_per_session";
   if (d === "GROUP_CAP" || /riders per booking/i.test(m)) return "group_cap";

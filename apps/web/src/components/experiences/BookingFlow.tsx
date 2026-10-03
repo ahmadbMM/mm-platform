@@ -9,7 +9,7 @@ import TicketCard from "@/components/booking/TicketCard";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import {
   addonCap, addonCatRank, addonsCost, fromPrice, hasRideGroups, maxRiders, needsBike, needsWaiver, nextStep, prevStep, promoDiscount,
-  regSteps, rentalTotal, riderPrices, RIDE_GROUPS, sessionAddons, typeOptions, validateRiders,
+  regSteps, rentalTotal, riderPrices, RIDE_GROUPS, sessionAddons, typeOptions, validateRiders, waiverKind,
   type AddonItem, type AddonPick, type BikeType, type BookAccount, type BookSession, type Prices, type Promo, type Refusal, type Rider, type RideGroup, type Step,
 } from "@/lib/booking";
 import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
@@ -20,8 +20,8 @@ import { T, type BookingText } from "./Booking.text";
 
 // Booking a ride on the website (the owner, 2026-10-03: "full booking on the website"), as the
 // booking app's own wizard books one (renderRegister): the event, then the Ride step (the date, as
-// its session cards), Riders (only where there is a bike), the waiver (not on the workshop or a
-// ticketed event), and Review & confirm, then one ticket per rider. Every gate the app has stands
+// its session cards), Riders (only where there is a bike), the waiver (every booking: the ride's,
+// the swim's, or the activity waiver for anything else), and Review & confirm, then one ticket per rider. Every gate the app has stands
 // in front of the same step: sign in, a member's ride, a ride the rider was turned down for, the
 // details staff asked for, the profile page. The booking itself is the server's
 // (app/api/booking): the price is the database's, never this page's.
@@ -151,7 +151,7 @@ export default function BookingFlow({ locale, events, prices, acct, items, start
 
   const steps = sel ? regSteps(sel) : ([1, 2, 2.5, 3] as Step[]);
   const stepLabel = (v: Step) => (v === 1 ? t.stepRide : v === 2 ? t.stepRiders : v === 2.5 ? waiverCopy(sel).title : t.stepConfirm);
-  function waiverCopy(s: BookSession | null) { return s && !needsBike(s) ? t.waiver.swim : t.waiver.bike; }
+  function waiverCopy(s: BookSession | null) { return t.waiver[s ? waiverKind(s) : "bike"]; }
   const free = !!sel?.free;
   const booked = sel && acctNow ? acctNow.live[sel.id] ?? 0 : 0;
   const cap = sel ? maxRiders(sel, booked) : 3;

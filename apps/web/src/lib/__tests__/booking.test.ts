@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   addonCap, addonCatRank, addonsCost, birthOk, fromPrice, heightToSize, maxRiders, nextStep, prevStep, priceMap, promoDiscount, promoRows, refusalOf,
-  regSteps, rentalTotal, riderPrices, sessionAddons, typeOptions, validateRiders, type AddonItem, type BookSession, type Rider,
+  needsWaiver, regSteps, rentalTotal, riderPrices, sessionAddons, typeOptions, validateRiders, waiverKind, type AddonItem, type BookSession, type Rider,
 } from "../booking";
 import { accountFrom, asksOf, bookingEntries, checkBooking, liveSession, readInput, waitlistRefused, waiverVersionFor } from "../booking-server";
-import { groupKm, waitlistCap, addonIds } from "../rides";
+import { groupKm, waitlistCap, addonIds, type RideKind } from "../rides";
 import { POST as book } from "../../app/api/booking/route";
 import { POST as promoRoute } from "../../app/api/booking/promo/route";
 import { POST as profileRoute } from "../../app/api/booking/profile/route";
@@ -21,13 +21,14 @@ const prices = priceMap([{ type: "Road", price: 75 }, { type: "Road Carbon", pri
 const r = (type: Rider["type"], height = "175", name = ""): Rider => ({ name, height, type });
 
 describe("the steps", () => {
-  it("walks Ride, Riders (a bike), the waiver (not the workshop or an event), Review", () => {
+  it("walks Ride, Riders (a bike), the waiver (every booking), Review", () => {
     expect(regSteps(base)).toEqual([1, 2, 2.5, 3]);
     expect(regSteps({ kind: "swim" })).toEqual([1, 2.5, 3]);
-    expect(regSteps({ kind: "workshop" })).toEqual([1, 3]);
-    expect(regSteps({ kind: "event" })).toEqual([1, 3]);
-    expect(nextStep({ kind: "workshop" }, 1)).toBe(3);
-    expect(prevStep({ kind: "workshop" }, 3)).toBe(1);
+    expect(regSteps({ kind: "workshop" })).toEqual([1, 2.5, 3]);
+    expect(regSteps({ kind: "event" })).toEqual([1, 2.5, 3]);
+    expect(nextStep({ kind: "workshop" }, 1)).toBe(2.5);
+    expect(prevStep({ kind: "workshop" }, 3)).toBe(2.5);
+    expect(prevStep({ kind: "event" }, 2.5)).toBe(1);
     expect(prevStep({ kind: "swim" }, 3)).toBe(2.5);
     expect(nextStep(base, 2)).toBe(2.5);
   });
@@ -141,6 +142,8 @@ describe("validation", () => {
     expect(refusalOf({ message: "One place per person on this session." })).toBe("one_per_session");
     expect(refusalOf({ message: "Up to 2 riders per booking on this ride.", details: "GROUP_CAP" })).toBe("group_cap");
     expect(refusalOf({ message: "NOT_OPEN_YET: booking for 2026-10-20 opens on 2026-10-13" })).toBe("not_open");
+    expect(refusalOf({ code: "P0001", message: "WAIVER_REQUIRED" })).toBe("waiver");
+    expect(refusalOf({ code: "22023", message: "WAIVER_REQUIRED" })).toBe("waiver");
     expect(refusalOf({ message: "boom" })).toBe("generic");
   });
 });
@@ -184,6 +187,8 @@ describe("the server's checks", () => {
     expect(checkBooking(input([r("")]), live, acct)).toEqual({ ok: false, error: "pick_type" });
     expect(checkBooking(input([r("Own")]), live, acct)).toEqual({ ok: false, error: "pick_type" });
     expect(checkBooking(input([r("Road")], false), live, acct)).toEqual({ ok: false, error: "waiver" });
+    expect(checkBooking(input([r("")], false), { ...live, kind: "workshop" }, acct)).toEqual({ ok: false, error: "waiver" });
+    expect(checkBooking(input([r("")], false), { ...live, kind: "event" }, acct)).toEqual({ ok: false, error: "waiver" });
     const satLive = liveSession({ ...row, event_kind: "community", ride_kind: "saturday" }, "2026-10-03")!;
     // a community ride is one rider; carbon there becomes Road; the group is required
     expect(checkBooking({ ...input([r("Road Carbon"), r("Road")]), group: "int" }, satLive, acct)).toEqual({ ok: true, riders: [r("Road")] });
@@ -361,5 +366,38 @@ describe("the waiver wording (the booking app's 2026-10-v2)", () => {
     expect(T.en.waiver.swim.body).toContain("stay within the supervised area");
     expect(T.ar.waiver.swim.body).toContain("قدرتي على السباحة دون مساعدة");
     expect(T.ar.waiver.swim.body).toContain("ضمن المنطقة الخاضعة للإشراف");
+  });
+
+  it("gives every other kind the activity waiver (activity-2026-10-v1), every clause in English and Arabic", async () => {
+    const { T } = await import("../../components/experiences/Booking.text");
+    for (const kind of ["workshop", "event"] as const) {
+      expect(needsWaiver({ kind })).toBe(true);
+      expect(waiverKind({ kind })).toBe("activity");
+      expect(waiverVersionFor({ kind })).toBe("activity-2026-10-v1");
+    }
+    expect(waiverVersionFor({ kind: "other" as RideKind })).toBe("activity-2026-10-v1");
+    expect(waiverKind({ kind: "swim" })).toBe("swim");
+    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-10-v2");
+    for (const kind of ["jcc", "saturday", "petromin", "snd96"] as const) expect(waiverVersionFor({ kind })).toBe("2026-10-v2");
+    const en = T.en.waiver.activity, ar = T.ar.waiver.activity;
+    expect(en.title).toBe("Activity waiver");
+    expect(ar.title).toBe("إقرار المشاركة");
+    expect(en.agree).toBe(T.en.waiver.swim.agree);
+    expect(ar.agree).toBe(T.ar.waiver.swim.agree);
+    for (const clause of [
+      "You cannot book any ride or activity with MicroMobility until you have read and agreed to this waiver.", "Every activity we run carries some risk.",
+      "I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings.",
+      "To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings",
+      "including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it.",
+      "I agree to follow the team’s and the venue’s instructions.",
+    ]) expect(en.body).toContain(clause);
+    for (const clause of [
+      "لا يمكنك حجز أي رحلة أو نشاط لدى مايكروموبيليتي إلا بعد قراءة هذا الإقرار والموافقة عليه.", "كل نشاط ننظّمه ينطوي على قدر من المخاطر",
+      "وأشارك فيه على مسؤوليتي الشخصية بالكامل، وأتحمل وحدي المسؤولية عن نفسي وسلامتي وممتلكاتي الشخصية.",
+      "وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية عن أي شيء يحدث لي أو لممتلكاتي",
+      "بما في ذلك أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف، أيًّا كان سببه، أثناء النشاط أو بسببه.",
+      "وأتعهد بالالتزام بتعليمات الفريق وإدارة الموقع.",
+    ]) expect(ar.body).toContain(clause);
+    expect(en.body).not.toMatch(/helmet|swim|bike/i);
   });
 });

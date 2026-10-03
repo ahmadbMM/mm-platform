@@ -4,7 +4,7 @@
 import type { Session } from "./account-core";
 import {
   addonCap, hasRideGroups, heightOk, heightToSize, isRiderType, maxRiders, needsBike, needsWaiver, noCarbon, ownOffered,
-  promoRows, refusalOf, rgOk, type BookAccount, type BookSession, type Refusal, type Rider, type RideGroup,
+  promoRows, refusalOf, rgOk, waiverKind, type BookAccount, type BookSession, type Refusal, type Rider, type RideGroup,
 } from "./booking";
 import { cleanName } from "./rpc-client";
 import { addonIds, placesTaken, rideKind, sessionRows, waitlistCap } from "./rides";
@@ -204,11 +204,13 @@ export function bookingEntries(input: BookInput, riders: Rider[], s: LiveSession
   });
 }
 
-/** The waiver text's version (WAIVER_VERSION / SWIM_WAIVER_VERSION): every rider row carries the
+/** The waiver text's version (WAIVER_VERSION / SWIM_WAIVER_VERSION / ACTIVITY_WAIVER_VERSION): every rider row carries the
  *  wording it was agreed under. Bump it with the app's whenever the text changes. */
 export const WAIVER_VERSION = "2026-10-v2";
 export const SWIM_WAIVER_VERSION = "swim-2026-10-v2";
-export const waiverVersionFor = (s: Pick<BookSession, "kind">) => (!needsWaiver(s) ? null : needsBike(s) ? WAIVER_VERSION : SWIM_WAIVER_VERSION);
+export const ACTIVITY_WAIVER_VERSION = "activity-2026-10-v1";
+const WAIVER_VERSIONS = { bike: WAIVER_VERSION, swim: SWIM_WAIVER_VERSION, activity: ACTIVITY_WAIVER_VERSION } as const;
+export const waiverVersionFor = (s: Pick<BookSession, "kind">): string | null => (needsWaiver(s) ? WAIVER_VERSIONS[waiverKind(s)] : null);
 
 /** How many places the session has left and how many are on its waitlist, by count (queue_public). */
 async function counts(sessionId: string, fetchImpl: typeof fetch): Promise<{ taken: number | null; waitlisted: number | null }> {
