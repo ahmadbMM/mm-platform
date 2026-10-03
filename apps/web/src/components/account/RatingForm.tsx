@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
-import { useTxLocale } from "@/i18n/TxProvider";
+import { useL, useTxLocale } from "@/i18n/TxProvider";
 import { fill } from "@/i18n/tx";
 import { NOTE_MAX, REASON_MAX, RG_FORMS, RG_LOW, questionKeys, questionTree, ratingErrors, type RatingForm as Form } from "@/lib/rating";
 import { ratingWords, type RatingWords } from "./RatingForm.words";
@@ -11,6 +11,9 @@ import { ratingWords, type RatingWords } from "./RatingForm.words";
 // box; a score of 8 or under opens a box asking why, which is then required. The breakfast box has
 // its own "I did not stay for breakfast". It goes to /api/account/rate with the account cookie.
 // RateRide (a card on My Account) and RatingGate (the pop-up a rider cannot skip) both use it.
+// Under the breakfast heading, one quiet line says those answers may reach the restaurant without
+// the rider's name (staff share them with the vendor, vendor_shared_ratings_mine): a site text, so
+// it is translated through src/i18n/tx like any other.
 type Props = {
   entryId: string; form: Form; noBike: boolean;
   /** Called once the rating has landed. */
@@ -21,6 +24,7 @@ type Props = {
 
 export default function RatingForm({ entryId, form, noBike, onRated, footer }: Props) {
   const t = ratingWords(useTxLocale());
+  const tx = useL();
   const [s, setS] = useState<Record<string, number>>({});
   const [why, setWhy] = useState<Record<string, string>>({});
   const [note, setNote] = useState("");
@@ -89,6 +93,9 @@ export default function RatingForm({ entryId, form, noBike, onRated, footer }: P
     return (
       <div key={k} id={id(k)} className={`rg-q${sub ? " rg-sub" : ""}${e ? " err" : ""}`}>
         <div className="rg-lbl" id={`${id(k)}-l`}>{t.q[k] ?? k}</div>
+        {k === "breakfast" && !sub && (
+          <p className="rg-share">{tx("Your breakfast answers may be shared with the restaurant, without your name.", "قد نشارك إجاباتك عن الإفطار مع المطعم، دون ذكر اسمك.")}</p>
+        )}
         <div className="rg-scale" role="group" aria-labelledby={`${id(k)}-l`}>
           {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
             <button key={n} type="button" className={v === n ? "on" : ""} aria-pressed={v === n} onClick={() => pick(k, n)}>{n}</button>

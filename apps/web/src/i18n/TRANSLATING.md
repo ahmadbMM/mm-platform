@@ -27,6 +27,8 @@ reviewer per language, under the rules below.
   rating form in all 16 languages, outside the dictionaries: its "Service" is the service a rider
   was given (the dictionaries' "Service" is a bike service), and the ten languages the booking app
   speaks use its wording word for word. Change a text there in every language at once.
+  The one line under its breakfast heading ("Your breakfast answers may be shared with the
+  restaurant, without your name.") is the site's own, not the booking app's: it is in `tx/`.
 - **The store's street in Devanagari and Bengali script.** "Thu Al-Nurayn" stays in Latin
   letters in Hindi, Nepali and Bengali, because "थू" / "থু" is the spitting sound there. Urdu
   uses the Arabic original (ذو النورین).

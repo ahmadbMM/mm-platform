@@ -3,6 +3,16 @@ import { bookingOrigin, cleanRating, formOf, isRated, pendingRating, questionKey
 import { POST as rate } from "../../app/api/account/rate/route";
 import { POST as wallet } from "../../app/api/google-wallet/route";
 import { resetSiteContent } from "../site";
+import { createElement, type FC, type ReactElement, type ReactNode } from "react";
+// The site has no @types/react-dom; this test needs one function of it.
+// @ts-expect-error -- react-dom/server ships without type declarations here
+import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
+import RatingForm from "../../components/account/RatingForm";
+import { TxProvider } from "../../i18n/TxProvider";
+import de from "../../i18n/tx/de.json";
+
+const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
+const Tx = TxProvider as FC<{ locale: string; dict: Record<string, string> | null; children?: ReactNode }>;
 
 // The post-ride rating and the Google Wallet pass, as the account page offers them: what the
 // browser sends is checked as the database checks rating_detail, the account cookie supplies the
@@ -156,5 +166,27 @@ describe("api/google-wallet", () => {
     expect((await post(wallet, "/api/google-wallet", { bookingId: "q1" }, { origin: HEADERS.origin })).status).toBe(401);
     expect((await post(wallet, "/api/google-wallet", { bookingId: "q 1" })).status).toBe(400);
     expect(f).not.toHaveBeenCalled();
+  });
+});
+
+describe("the breakfast box's sharing line", () => {
+  const SHARE = "Your breakfast answers may be shared with the restaurant, without your name.";
+  const draw = (form: "social" | "rental", locale = "en", dict: Record<string, string> | null = null) =>
+    renderToStaticMarkup(createElement(Tx, { locale, dict }, createElement(RatingForm, { entryId: "q1", form, noBike: false, onRated: () => {} })));
+
+  it("sits under the Breakfast heading of the social ride's form, once", () => {
+    const html = draw("social");
+    expect(html.split(SHARE)).toHaveLength(2);
+    // right after the breakfast question's own label, before its scale and its sub-questions
+    expect(html).toMatch(/id="rg-q1-breakfast-l">Breakfast<\/div><p class="rg-share">Your breakfast answers may be shared/);
+    expect(html.indexOf(SHARE)).toBeLessThan(html.indexOf("rg-q1-bf_restaurant"));
+  });
+  it("is not on a rental's form", () => {
+    expect(draw("rental")).not.toContain("rg-share");
+  });
+  it("speaks the page's language", () => {
+    expect(draw("social", "ar")).toContain("قد نشارك إجاباتك عن الإفطار مع المطعم، دون ذكر اسمك.");
+    expect(draw("social", "de", de)).toContain((de as Record<string, string>)[SHARE]);
+    expect((de as Record<string, string>)[SHARE]).toBeTruthy();
   });
 });
