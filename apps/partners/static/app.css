@@ -234,3 +234,27 @@ html[dir="rtl"] .tier .eyebrow { letter-spacing: 0; text-transform: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 .st-soon, .st-far { color: var(--muted); border-color: var(--line); background: #F4F3EE; }
+
+/* Feedback after a breakfast --------------------------------------------------------------- */
+.stars { display: inline-flex; gap: .1rem; }
+.stars .icon.star, .star-btn .icon.star { color: var(--mm-n600); }
+.stars .icon.star.on, .star-btn.on .icon.star { fill: #E0A100; color: #8A6100; }
+.booking .btn-secondary .icon { color: inherit; }
+.fb-ask { justify-content: flex-start; }
+.fb-given { border-top: 1px solid var(--line); margin-top: .75rem; padding-top: .6rem; }
+.fb-given .actions { justify-content: flex-start; margin-top: .5rem; }
+.fb-rating { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 0; font-weight: 500; }
+.fb-context { background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: .7rem .9rem; margin-bottom: 1.1rem; }
+.fb-date { margin: 0; }
+.fb-context .b-meta { margin: .25rem 0 0; }
+.label { display: block; font-weight: 500; margin: 0 0 .3rem; }
+.rating { display: flex; gap: .25rem; }
+.star-btn { display: inline-grid; place-items: center; width: 48px; height: 48px; border: 1.5px solid transparent; border-radius: 10px; background: transparent; cursor: pointer; padding: 0; }
+.star-btn .icon { width: 32px; height: 32px; }
+.star-btn:hover { border-color: var(--line); }
+.rating[aria-invalid="true"] .star-btn { border-color: #F1C4C1; }
+.rating-words { margin: .25rem 0 0; color: var(--muted); font-size: .9rem; }
+.fb-form textarea { resize: vertical; }
+.cal-item > .fb-marker { grid-column: 2; grid-row: 1 / span 2; }
+.d-feedback { display: inline-flex; align-items: center; gap: .3rem; font-size: .8rem; font-weight: 700; color: var(--mm-green-neon); }
+.cal-day:not(.st-confirmed) .d-feedback { color: var(--accent); }

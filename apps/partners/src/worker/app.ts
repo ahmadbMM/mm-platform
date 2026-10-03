@@ -31,6 +31,7 @@ export const RPCS = new Set([
   "fnb_request",
   "fnb_cancel",
   "fnb_profile_save",
+  "fnb_feedback_save",
 ]);
 
 /** Error codes the database raises on purpose, with the status each one is answered with. */
@@ -46,6 +47,10 @@ const KNOWN: Record<string, number> = {
   BAD_PATTERN: 400,
   ONE_DATE: 400,
   TOO_MANY: 400,
+  NOT_CONFIRMED: 400,
+  TOO_EARLY: 400,
+  TOO_LATE: 400,
+  BAD_RATING: 400,
   NOT_FOUND: 404,
 };
 

@@ -131,7 +131,7 @@ describe("POST /api/rpc/<name>", () => {
       expect(res.status).toBe(404);
     }
     expect(calls).toHaveLength(0);
-    expect([...RPCS].sort()).toEqual(["fnb_calendar", "fnb_cancel", "fnb_me", "fnb_preview", "fnb_profile_save", "fnb_request", "fnb_set_password"]);
+    expect([...RPCS].sort()).toEqual(["fnb_calendar", "fnb_cancel", "fnb_feedback_save", "fnb_me", "fnb_preview", "fnb_profile_save", "fnb_request", "fnb_set_password"]);
   });
 
   it("takes p_uid and p_token from the cookie, never from the body", async () => {
@@ -168,6 +168,28 @@ describe("POST /api/rpc/<name>", () => {
     res = await worker.fetch(post("/api/rpc/fnb_me", {}, { Cookie: COOKIE }), env());
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({ error: "SERVER" });
+  });
+
+  it("saves feedback with the session from the cookie and words its refusals", async () => {
+    const row = { booking_id: 5, venue_id: 3, day: "2026-09-26", rating: 4, turnout: 9, went_well: "Quick", improve: "", created_at: "x", updated_at: "x" };
+    answer = dbJson(row);
+    const args = { p_booking: 5, p_rating: 4, p_turnout: 9, p_went_well: "Quick", p_improve: "" };
+    let res = await worker.fetch(post("/api/rpc/fnb_feedback_save", { ...args, p_uid: 1 }, { Cookie: COOKIE }), env());
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual(row);
+    expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/fnb_feedback_save");
+    expect(calls[0].body).toEqual({ ...args, p_uid: 7, p_token: TOKEN });
+
+    for (const [message, code] of [["NOT_CONFIRMED", "P0001"], ["TOO_EARLY", "P0001"], ["TOO_LATE", "P0001"], ["BAD_RATING", "22023"]]) {
+      answer = dbError(message, code);
+      res = await worker.fetch(post("/api/rpc/fnb_feedback_save", args, { Cookie: COOKIE }), env());
+      expect(res.status, message).toBe(400);
+      expect(await res.json()).toEqual({ error: message });
+    }
+    answer = dbError("NOT_FOUND", "P0002");
+    res = await worker.fetch(post("/api/rpc/fnb_feedback_save", args, { Cookie: COOKIE }), env());
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: "NOT_FOUND" });
   });
 
   it("rewrites the cookie with the new token after a password change", async () => {
