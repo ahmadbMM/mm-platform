@@ -145,3 +145,19 @@ This Worker now serves the same pages at the same addresses, but a more specific
 To go back, add the routes again (or `npx wrangler deploy` in the old repos). Once it has run a
 week without trouble, the two old Workers can be deleted.
 
+
+## The F&B partner portal (apps/partners)
+
+Restaurants and cafes sign in here to reserve the Saturdays our riders come for breakfast
+(database: migration `20261003150000_fnb_partners.sql` in the rentals repo). A small Worker of its
+own, `micromobility-partners`, not part of the website: plain TypeScript, bundled by esbuild.
+
+- Run it locally: `pnpm --filter partners dev` (builds `dist/`, then `wrangler dev` on :8787,
+  against the production database named in `apps/partners/wrangler.jsonc`; use
+  `--env staging` for staging's). Tests: `pnpm --filter partners test` (unit) and
+  `cd e2e/partners && npm ci && npm run e2e` (a browser against a stub database).
+- Deploys: CI deploys it only while the repository variable `MM_PARTNERS` is `on` (main →
+  production, staging branch → `micromobility-partners-staging`). Until its subdomain is decided
+  it answers on workers.dev only; then add a `routes` entry in its `wrangler.jsonc`.
+- The venue's session token stays on the server: the Worker keeps it in an HttpOnly cookie
+  (`mm_fnb`, host-only) and forwards only the allowlisted `fnb_*` functions.
