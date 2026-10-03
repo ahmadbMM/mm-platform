@@ -23,6 +23,12 @@ The first 14 languages were translated on 2026-09-25 by a translator and then an
 reviewer per language, under the rules below.
 
 ## Decisions a reader might question
+- **The post-ride rating keeps its own words.** `components/account/RatingForm.words.ts` holds the
+  rating form in all 16 languages, outside the dictionaries: its "Service" is the service a rider
+  was given (the dictionaries' "Service" is a bike service), and the ten languages the booking app
+  speaks use its wording word for word. Change a text there in every language at once.
+  The one line under its breakfast heading ("Your breakfast answers may be shared with the
+  restaurant, without your name.") is the site's own, not the booking app's: it is in `tx/`.
 - **The store's street in Devanagari and Bengali script.** "Thu Al-Nurayn" stays in Latin
   letters in Hindi, Nepali and Bengali, because "थू" / "থু" is the spitting sound there. Urdu
   uses the Arabic original (ذو النورین).

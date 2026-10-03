@@ -1,0 +1,26 @@
+{
+  "name": "vendors",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/build.mjs && wrangler dev",
+    "lint": "eslint . --max-warnings 0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@mm/design-tokens": "workspace:*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@fontsource/ibm-plex-sans-arabic": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
+    "esbuild": "0.28.1",
+    "eslint": "9.39.5",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.1",
+    "vitest": "3.2.7",
+    "wrangler": "4.141.0"
+  }
+}
