@@ -58,7 +58,7 @@ html = html.replace('<script src="app.js"></script>',
   () => '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.min.js" integrity="sha384-DjOvX/sJLsmbMrw4wTvf6l3kiGBjdxyOO6X2MTFwOOXGkjN/mE08BoDzrpaaIjil" crossorigin="anonymous"></script>\n<script>\n' + qrlib + '\n</script>\n<script>\n' + js + '\n</script>');
 
 // 5. Sanity: the ids the live submit relies on must exist.
-for (const id of ['form', 'card', 'banner', 'edit', 'cancel-edit', 'qr', 'riders', 'add-rider', 'chip-riders', 'chip-riders-value', 'riders-note', 'ticket', 'tk-name', 'sessions', 'f-session', 'companies', 'f-company', 'badge', 'name', 'cc', 'phone', 'height', 'types', 'submit', 'next', 'back', 'success', 'result', 'chip-booking-value', 'chip-value', 'chip-company-value', 'chip-session-value', 'f-badge', 'f-name', 'f-phone', 'f-height', 'f-type']) {
+for (const id of ['form', 'card', 'banner', 'edit', 'cancel-edit', 'qr', 'riders', 'add-rider', 'chip-riders', 'chip-riders-value', 'riders-note', 'ticket', 'tk-name', 'sessions', 'f-session', 'companies', 'f-company', 'badge', 'name', 'cc', 'phone', 'height', 'types', 'submit', 'next', 'back', 'success', 'result', 'chip-booking-value', 'chip-value', 'chip-company-value', 'chip-session-value', 'f-badge', 'f-name', 'f-phone', 'f-height', 'f-type', 'f-waiver', 'waiver']) {
   if (!html.includes(`id="${id}"`)) { console.error(`design/index.html is missing id="${id}" (the live submit needs it)`); process.exit(1); }
 }
 if (html.includes('href="styles.css"') || html.includes('src="app.js"')) { console.error('could not replace the styles.css / app.js tags'); process.exit(1); }

@@ -31,6 +31,7 @@ test('a dash in a name becomes a space; digits and emoji go; what is sent has ne
   await companion.locator('.rider-height input').fill('160');
   await companion.locator('.tile[data-v="Mountain"]').click();
   await page.check('#privacy');
+  await page.check('#waiver'); // the ride waiver every registration needs
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(regs).toHaveLength(1);
@@ -79,6 +80,7 @@ test("the server's refusal of a name lands on the box it is about", async ({ pag
   await companion.locator('.rider-height input').fill('160');
   await companion.locator('.tile[data-v="Mountain"]').click();
   await page.check('#privacy');
+  await page.check('#waiver'); // the ride waiver every registration needs
 
   await page.click('#submit');
   await expect(page.locator('#f-name')).toBeVisible();
@@ -118,6 +120,7 @@ test('a period after a letter stays ("Md. Rahman"); a stray one goes without a w
   await companion.locator('.rider-height input').fill('160');
   await companion.locator('.tile[data-v="Mountain"]').click();
   await page.check('#privacy');
+  await page.check('#waiver'); // the ride waiver every registration needs
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(regs).toHaveLength(1);

@@ -18,6 +18,7 @@ test('register, then edit the booking in place, then the confirmation survives a
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.check('#privacy'); // the Privacy Notice confirmation a new registration needs
+  await page.check('#waiver'); // the ride waiver every registration needs
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   await expect(page.locator('#chip-booking-value')).toHaveText('P-001');
@@ -42,6 +43,8 @@ test('register, then edit the booking in place, then the confirmation survives a
   await page.click('#next'); await page.click('#next');
   await page.fill('#height', '180');
   await expect(page.locator('#submit .submit-label')).toHaveText('Save changes');
+  await expect(page.locator('#waiver')).not.toBeChecked(); // an edit asks for the waiver again
+  await page.check('#waiver');
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(edits).toHaveLength(1);
@@ -71,7 +74,7 @@ test('an edit the server refuses is explained: checked in, not found, duplicate 
   await page.goto('/petromin');
   await expect(page.locator('#success')).toBeVisible();
   await page.click('#edit');
-  await page.click('#next'); await page.click('#next'); await page.click('#submit');
+  await page.click('#next'); await page.click('#next'); await page.check('#waiver'); await page.click('#submit');
   await expect(page.locator('#banner')).toBeVisible();
   await expect(page.locator('#banner')).toContainText('already checked in');
 
@@ -102,6 +105,7 @@ test('an employee registers with companions, sees the party on the confirmation,
   await page.click('#next');
   await page.fill('#height', '170'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.check('#privacy'); // the Privacy Notice confirmation a new registration needs
+  await page.check('#waiver'); // the ride waiver every registration needs
   await expect(page.locator('#riders .rider')).toHaveCount(0);
   await page.click('#add-rider');
   await page.click('#add-rider');
@@ -133,6 +137,7 @@ test('an employee registers with companions, sees the party on the confirmation,
   await expect(page.locator('#riders .rider').nth(0).locator('.tile[data-v="Mountain"]')).toHaveAttribute('aria-checked', 'true');
   await page.locator('#riders .rider').nth(1).locator('.rider-remove').click();
   await expect(page.locator('#riders .rider')).toHaveCount(1);
+  await page.check('#waiver');
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(edits).toHaveLength(1);
