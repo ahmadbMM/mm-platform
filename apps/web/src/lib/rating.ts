@@ -116,11 +116,14 @@ export function bookingOrigin(content: SiteContent | null): string {
   try { return new URL(/^https:\/\//i.test(href) ? href : BOOKING_URL).origin; } catch { return new URL(BOOKING_URL).origin; }
 }
 
-/** A booking rated already, as my_bookings hands the row back. */
-export const isRated = (r: Record<string, unknown>) => r.rating_exp != null || r.rating_bike != null || r.rating_detail != null;
-
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const dayOf = (r: Record<string, unknown>) => (S(r.session_date) || S(r.session_id)).slice(0, 10);
+
+/** A booking rated already, as my_bookings hands the row back. A ride from RATE_FROM on counts only
+ *  with the full form (rating_detail): a quick score with tags, from the old form or a phone on an
+ *  older build, asks again, as the booking app's _rgRated does (the owner, 2026-10-03). */
+export const isRated = (r: Record<string, unknown>) =>
+  (r.rating_detail != null && typeof r.rating_detail === "object") || ((r.rating_exp != null || r.rating_bike != null) && dayOf(r) < RATE_FROM);
 
 export type UnratedRide = {
   /** The row the rating is written to: the lowest queue number (a party rates once). */
