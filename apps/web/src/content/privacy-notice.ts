@@ -2,7 +2,9 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-10-02";
+export const PRIVACY_VERSION = "2026-10-03";
+// The last version riders must confirm: an account that confirmed it or any later one is not asked again.
+export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
  "en": [
   {
@@ -169,6 +171,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "Petromin",
       "The names of riders on rides we run for Petromin, and nothing else",
+      "Saudi Arabia"
+     ],
+     [
+      "The restaurant or café hosting a Saturday ride breakfast",
+      "Your breakfast ratings and the reasons you gave for them, only when our staff choose to share them, and never your name or anything else about you",
       "Saudi Arabia"
      ],
      [
@@ -429,6 +436,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "بترومين",
       "أسماء الراكبين في الرحلات التي ننظّمها لبترومين فقط، ولا شيء غير ذلك",
+      "المملكة العربية السعودية"
+     ],
+     [
+      "المطعم أو المقهى الذي يستضيف إفطار جولة السبت",
+      "تقييماتك للإفطار والأسباب التي ذكرتها لها، فقط عندما يختار موظفونا مشاركتها، ودون اسمك أو أي شيء آخر عنك",
       "المملكة العربية السعودية"
      ],
      [
