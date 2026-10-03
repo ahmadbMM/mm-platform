@@ -83,12 +83,19 @@ export function pickable(entry: CalDay, today: Iso, tier: Tier): boolean {
   return dayStatus(entry.day, entry, today, tier) === "available";
 }
 
+/** A closed date's reason: the staff page saves its presets as codes, anything else as typed. */
+const REASON_KEY: Record<string, Key> = { ramadan: "rsRamadan", eid: "rsEid", weather: "rsWeather", holiday: "rsHoliday" };
+export function reasonText(lang: Lang, raw: string): string {
+  const k = REASON_KEY[raw.trim().toLowerCase()];
+  return k ? fmt(lang, k) : raw;
+}
+
 /** A preview verdict in words. */
 export function verdictText(lang: Lang, c: Checked, tier: Tier): string {
   switch (c.verdict) {
     case "ok": return fmt(lang, "vOk");
     case "taken": return fmt(lang, "vTaken");
-    case "closed": return c.reason ? fmt(lang, "vClosed", { reason: c.reason }) : fmt(lang, "vClosedNoReason");
+    case "closed": return c.reason ? fmt(lang, "vClosed", { reason: reasonText(lang, c.reason) }) : fmt(lang, "vClosedNoReason");
     case "not_open": return fmt(lang, "vNotOpen");
     case "too_soon": return fmt(lang, "vTooSoon", { n: tier.min_lead_days });
     case "too_far": return fmt(lang, "vTooFar");

@@ -6,7 +6,7 @@ import { openBooking } from "./book";
 import { addDays, addMonths, arrowStep, hijriLabel, hijriMonthTitle, longDate, monthGrid, monthRange, monthStart, num, shortDate, type Iso } from "./dates";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
-import { dayStatus, STATUS_KEY, type CalDay, type DayStatus } from "./model";
+import { dayStatus, reasonText, STATUS_KEY, type CalDay, type DayStatus } from "./model";
 
 export const STATUS_ICON: Record<DayStatus, IconName> = {
   available: "open",
@@ -38,7 +38,7 @@ function ridersText(n: number): string {
 }
 
 function statusWords(st: DayStatus, entry: CalDay | undefined): string {
-  if (st === "closed" && entry?.reason) return t("closedReason", { reason: entry.reason });
+  if (st === "closed" && entry?.reason) return t("closedReason", { reason: reasonText(app.lang, entry.reason) });
   if (st === "soon") return t("vTooSoon", { n: num(app.me!.tier.min_lead_days, app.lang) });
   return t(STATUS_KEY[st]);
 }

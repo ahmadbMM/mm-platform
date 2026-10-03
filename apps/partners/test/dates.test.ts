@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { addDays, addMonths, arrowStep, defaultUntil, hijriDay, hijriLabel, isIso, localeTag, longDate, monthGrid, patternArgs, patternDays, patternValid, weekday } from "../src/client/dates";
-import { dayStatus, lateCancel, pickable, staffNoteText, verdictText, type CalDay, type Tier } from "../src/client/model";
+import { dayStatus, lateCancel, pickable, reasonText, staffNoteText, verdictText, type CalDay, type Tier } from "../src/client/model";
 import { STRINGS } from "../src/client/strings";
 
 const tier: Tier = { id: "multi", name_en: "Multi", name_ar: "عدة أيام", modes: ["single", "multi"], max_per_month: 2, horizon_days: 120, min_lead_days: 7, cancel_cutoff_days: 5, benefits: [] };
@@ -127,5 +127,13 @@ describe("strings", () => {
         expect(/\p{Extended_Pictographic}/u.test(s), `${lang}.${k}`).toBe(false);
       }
     }
+  });
+});
+
+describe("closed-date reasons", () => {
+  it("translates the staff page's preset codes and keeps typed text", () => {
+    expect(reasonText("en", "ramadan")).toBe("Ramadan");
+    expect(reasonText("ar", "eid")).toBe("العيد");
+    expect(reasonText("en", "Venue renovation")).toBe("Venue renovation");
   });
 });
