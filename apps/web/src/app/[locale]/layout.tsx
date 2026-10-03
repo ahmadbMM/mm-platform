@@ -7,6 +7,7 @@ import { routing } from "@/i18n/routing";
 import { localeInfo } from "@/i18n/locales";
 import { clientDict } from "@/i18n/dicts";
 import { TxProvider } from "@/i18n/TxProvider";
+import RatingGateLoader from "@/components/account/RatingGateLoader";
 import "../globals.css";
 
 // Self-hosted at build time, like the bike pages: no third-party font request.
@@ -36,7 +37,7 @@ export default async function LocaleLayout({
     <html lang={info.html} dir={info.dir} className={`${grotesk.variable} ${plexAr.variable}`}>
       <body>
         <NextIntlClientProvider>
-          <TxProvider locale={locale} dict={clientDict(locale)}>{children}</TxProvider>
+          <TxProvider locale={locale} dict={clientDict(locale)}>{children}<RatingGateLoader locale={locale} /></TxProvider>
         </NextIntlClientProvider>
         {BEACON && <Script src="https://static.cloudflareinsights.com/beacon.min.js" strategy="afterInteractive" data-cf-beacon={JSON.stringify({ token: BEACON })} />}
       </body>

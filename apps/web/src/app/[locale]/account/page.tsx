@@ -8,7 +8,6 @@ import "@/components/account/account.css";
 import "@/components/booking/booking.css";
 import TicketCard from "@/components/booking/TicketCard";
 import RateRide from "@/components/account/RateRide";
-import RatingGate from "@/components/account/RatingGate";
 import RideRecord from "@/components/account/RideRecord";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
@@ -94,7 +93,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
   // Finished rides not rated yet, one per night (a party rates once, on its first rider): the
   // booking app's post-ride rating. The oldest from the day it went live on is the pop-up the
-  // rider cannot skip (RatingGate, the booking app's _pendingRatingId); older ones stay cards.
+  // rider cannot skip (RatingGateLoader, on every page; the booking app's _pendingRatingId); older ones stay cards.
   const gate = pendingRating(rows, today);
   const toRate = unratedRides(rows, today).filter((r) => r.entryId !== gate?.entryId).reverse().slice(0, 5);
   // every booked session, whatever its state now (a Petromin night, one staff closed since)
@@ -144,10 +143,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="ac ac-in">
-        {gate && (() => {
-          const s = sessions.get(gate.sessionId);
-          return <RatingGate key={gate.entryId} entryId={gate.entryId} name={rideName(s)} when={fmtDayDate(gate.date, locale)} form={formOf(s?.kind)} noBike={gate.ownBike || (s ? !s.bikes : false)} />;
-        })()}
+        {/* the ride to rate first is the pop-up every page shows (RatingGateLoader in the layout) */}
         <header className="ac-head">
           <div>
             <p className="ac-eyebrow">{S(c.signin.eyebrow)}</p>

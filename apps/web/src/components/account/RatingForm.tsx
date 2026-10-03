@@ -1,5 +1,6 @@
 "use client";
 
+import "./rating.css";
 import { useState, type ReactNode } from "react";
 import { useL, useTxLocale } from "@/i18n/TxProvider";
 import { fill } from "@/i18n/tx";
