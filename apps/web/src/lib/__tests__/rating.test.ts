@@ -85,12 +85,16 @@ describe("the ride to rate", () => {
     expect(isRated({ rating_bike: 3, rating_exp: null })).toBe(true);
     expect(isRated({ rating_detail: { form: "rental" } })).toBe(true);
     expect(isRated({ rating_exp: null, rating_bike: null, rating_detail: null })).toBe(false);
+    // from RATE_FROM on, a quick score with tags (the old form) is not a rating: the full form asks again
+    expect(isRated({ session_date: "2026-10-03", rating_exp: 10, rating_bike: 10, rating_tags: ["route", "fun"] })).toBe(false);
+    expect(isRated({ session_date: "2026-09-26", rating_exp: 10 })).toBe(true);
+    expect(isRated({ session_date: "2026-10-03", rating_exp: 10, rating_detail: { form: "social" } })).toBe(true);
   });
   it("forces the oldest unrated ride from the day it went live, one per night, on its first rider", () => {
     const rows = [
       row("old", "2026-09-26"),
       row("p2", "2026-10-04", { queue_num: 5, type_preference: "Own" }), row("p1", "2026-10-04", { queue_num: 4, type_preference: "Own" }),
-      row("r1", "2026-10-03", { rating_exp: 9 }), row("r2", "2026-10-03", { queue_num: 2 }),
+      row("r1", "2026-10-03", { rating_exp: 9, rating_detail: { form: "rental" } }), row("r2", "2026-10-03", { queue_num: 2 }),
       row("w", "2026-10-05", { status: "waiting" }),
       row("future", "2026-10-09"),
     ];
