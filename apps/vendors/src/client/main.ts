@@ -43,8 +43,41 @@ function langButton(): HTMLButtonElement {
   return b;
 }
 
+/** The website's header (SiteNav): the MicroMobility mark on a white bar, then the portal's name. */
 function brand(): HTMLElement {
-  return h("div", { class: "brand" }, h("span", { class: "brand-mark", "aria-hidden": "true" }, "MM"), h("span", { class: "brand-name" }, t("appName")));
+  return h("a", { class: "brand", href: "/", "aria-label": t("homeLink") },
+    h("img", { src: "/site/logo-mark-dark.png", alt: "", width: 40, height: 26 }),
+    h("span", { class: "brand-name", "aria-hidden": "true" }, t("portalName")));
+}
+
+/** The header: the mark on the start side; the venue, the language and sign-out on the end. */
+function header(opts: { venue?: string; signOut?: boolean }): HTMLElement {
+  return h("header", { class: "bar" }, brand(),
+    h("div", { class: "bar-tools" },
+      opts.venue ? h("p", { class: "venue-name" }, opts.venue) : null,
+      langButton(),
+      opts.signOut ? button(t("signOut"), { kind: "ghost", small: true, icon: "signout", onclick: () => void signOut() }) : null));
+}
+
+/** The website's footer (SiteFooter), kept to the mark, a contact line and the rights line. */
+function footer(): HTMLElement {
+  const year = (app.me?.today || new Date().toISOString()).slice(0, 4);
+  return h("footer", { class: "foot" },
+    h("div", { class: "foot-in" },
+      h("div", { class: "foot-brand" },
+        h("span", { class: "foot-mark", role: "img", "aria-label": "MicroMobility" }),
+        h("p", {}, t("appTagline"))),
+      h("ul", { class: "foot-links" },
+        h("li", {}, h("span", {}, `${t("footerEmail")}: `), h("a", { href: "mailto:info@micromobility.sa", dir: "ltr" }, icon("mail"), h("span", {}, "info@micromobility.sa"))),
+        h("li", {}, h("span", {}, `${t("footerWebsite")}: `), h("a", { href: "https://micromobility.sa", dir: "ltr", rel: "noopener" }, h("span", {}, "micromobility.sa"), icon("external"))))),
+    h("p", { class: "foot-bottom" }, `© ${year} ${app.lang === "ar" ? "مايكروموبيليتي" : "MicroMobility"}. ${t("footerRights")}`));
+}
+
+/** One screen: the header, the page and the footer, with the screen named for its background. */
+function frame(name: Screen, top: HTMLElement, ...rest: HTMLElement[]): void {
+  const r = root();
+  r.dataset.screen = name;
+  r.append(top, ...rest, footer());
 }
 
 async function signOut(): Promise<void> {
@@ -69,12 +102,16 @@ function renderSignIn(): void {
     eye.setAttribute("aria-label", show ? t("hidePassword") : t("showPassword"));
     eye.replaceChildren(icon(show ? "eyeOff" : "eye"));
   });
-  pw.input.after(eye);
-  pw.input.parentElement!.classList.add("has-reveal");
+  // The website's password row: the field, and the show button beside it.
+  const row = h("div", { class: "pwd" });
+  pw.input.replaceWith(row);
+  row.append(pw.input, eye);
   const msg = h("div", { class: "msg" });
   if (signedOutNote) msg.append(note("info", t("errSession")));
   const go = button(t("signInButton"), { kind: "primary", type: "submit" });
   const form = h("form", { class: "card signin", novalidate: true, "aria-labelledby": "signin-title" },
+    h("img", { class: "signin-logo", src: "/site/logo-dark.png", alt: "MicroMobility", width: 32, height: 34 }),
+    h("p", { class: "eyebrow" }, t("portalName")),
     h("h1", { id: "signin-title" }, t("signInTitle")),
     h("p", { class: "lede" }, t("signInIntro")),
     login.wrap, pw.wrap, msg, h("div", { class: "actions" }, go),
@@ -92,10 +129,7 @@ function renderSignIn(): void {
     screen = res.data.must_change || app.me!.user.must_change ? "force" : "app";
     app.render();
   });
-  r.append(
-    h("header", { class: "bar bar-simple" }, brand(), langButton()),
-    h("main", { id: "main", class: "narrow" }, form),
-  );
+  frame("signin", header({}), h("main", { id: "main", class: "narrow" }, form));
   login.input.focus();
 }
 
@@ -110,10 +144,7 @@ function renderForce(): void {
     location.hash = "#calendar";
     app.render();
   });
-  r.append(
-    h("header", { class: "bar bar-simple" }, brand(), h("div", { class: "bar-tools" }, langButton(), button(t("signOut"), { kind: "ghost", small: true, icon: "signout", onclick: () => void signOut() }))),
-    h("main", { id: "main", class: "narrow" }, form),
-  );
+  frame("force", header({ signOut: true }), h("main", { id: "main", class: "narrow" }, form));
   form.querySelector<HTMLInputElement>("input")?.focus();
 }
 
@@ -128,13 +159,7 @@ function renderApp(): void {
   const nav = h("nav", { class: "tabs", "aria-label": t("mainNav") },
     ...VIEWS.map((v) => h("a", { href: v.hash, class: "tab", "aria-current": v.hash === view ? "page" : null }, icon(v.icon), h("span", {}, t(v.key)))));
   const main = h("main", { id: "main", tabindex: "-1" });
-  r.append(
-    h("header", { class: "bar" },
-      h("div", { class: "bar-id" }, brand(), h("p", { class: "venue-name" }, name)),
-      h("div", { class: "bar-tools" }, langButton(), button(t("signOut"), { kind: "ghost", small: true, icon: "signout", onclick: () => void signOut() }))),
-    nav,
-    main,
-  );
+  frame("app", header({ venue: name, signOut: true }), nav, main);
   if (view === "#bookings") void renderBookings(main);
   else if (view === "#venue") renderVenue(main, loadMe);
   else void renderCalendar(main);
