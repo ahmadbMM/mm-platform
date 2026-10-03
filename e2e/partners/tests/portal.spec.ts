@@ -57,7 +57,8 @@ test("first sign-in: change the password, request a date, see it in My bookings"
   await dlg.getByRole("button", { name: "Done" }).click();
   await expect(dlg).toBeHidden();
 
-  await page.getByRole("link", { name: "My bookings" }).click();
+  // The main menu's link: on phones a requested date in the list carries its own "My bookings" link too.
+  await page.getByRole("navigation").getByRole("link", { name: "My bookings" }).click();
   await expect(page.getByRole("heading", { name: "Upcoming" })).toBeVisible();
   await expect(page.locator(".booking").first()).toContainText("Requested");
   expect(errors).toEqual([]);
