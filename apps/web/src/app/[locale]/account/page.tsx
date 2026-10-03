@@ -46,6 +46,7 @@ import NoticeDialog from "@/components/privacy/NoticeDialog";
 import { T as ACCOUNT } from "@/components/account/Account.text";
 import { loadAccountExtras } from "@/lib/account-extras";
 import { profilePct, weekStreak } from "@/lib/ride-record";
+import PushToggle from "@/components/account/PushToggle";
 import { PRIVACY_VERSION } from "@/content/privacy-notice";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
@@ -270,7 +271,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           <ProfileForm locale={locale} profile={pr} about={extras.about} typeNames={typeNames} />
           <PasswordCard needCurrent={needCurrent} />
           {extras.consents && <RideNews on={extras.consents.rideNews} dialog="ac-privacy" />}
-          {/* Push notifications are built separately; their card belongs here, after Ride news. */}
+          <PushToggle />
           {extras.purchases && extras.purchases.rows.length > 0 && <Purchases locale={locale} t={at} rows={extras.purchases.rows} total={extras.purchases.total} />}
           {extras.deletion && <DeleteAccount locale={locale} requestedAt={extras.deletion.requestedAt} />}
           <AccountSettings locale={locale} />
