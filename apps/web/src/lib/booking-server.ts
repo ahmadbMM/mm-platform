@@ -206,8 +206,8 @@ export function bookingEntries(input: BookInput, riders: Rider[], s: LiveSession
 
 /** The waiver text's version (WAIVER_VERSION / SWIM_WAIVER_VERSION): every rider row carries the
  *  wording it was agreed under. Bump it with the app's whenever the text changes. */
-export const WAIVER_VERSION = "2026-08-v1";
-export const SWIM_WAIVER_VERSION = "swim-2026-08-v1";
+export const WAIVER_VERSION = "2026-10-v2";
+export const SWIM_WAIVER_VERSION = "swim-2026-10-v2";
 export const waiverVersionFor = (s: Pick<BookSession, "kind">) => (!needsWaiver(s) ? null : needsBike(s) ? WAIVER_VERSION : SWIM_WAIVER_VERSION);
 
 /** How many places the session has left and how many are on its waitlist, by count (queue_public). */

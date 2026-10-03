@@ -1203,8 +1203,6 @@
  "Height": "身高",
  "Height in cm": "身高（cm）",
  "Helmet": "头盔",
- "I acknowledge that cycling is a physical activity that carries risk. I agree to wear a helmet, follow the team’s instructions and the circuit course, and I am responsible for my own safety and for any damage to the rented bike caused by misuse. The bike is returned in the condition it was received.": "我知悉骑行是一项存在风险的体育活动。我同意佩戴头盔，遵守团队指示和赛道路线，并对自身安全以及因使用不当对所租自行车造成的任何损坏负责。自行车须按领取时的状态归还。",
- "I acknowledge that swimming carries risk. I confirm that I am able to swim unaided, I agree to follow the team’s and the venue’s instructions and to stay within the supervised area, and I am responsible for my own safety and for any medical condition that affects my ability to swim.": "我知悉游泳存在风险。我确认自己能够独立游泳，同意遵守团队及场馆的指示并留在有人监护的区域内，并对自身安全以及任何影响游泳能力的身体状况负责。",
  "I have my own bike": "我有自己的自行车",
  "I have read the waiver and agree on behalf of every rider on this booking": "我已阅读免责声明，并代表本次预订中的每位骑行者表示同意",
  "I have read the waiver and agree on behalf of everyone on this booking": "我已阅读免责声明，并代表本次预订中的每一位参与者表示同意",
@@ -1416,5 +1414,7 @@
  "Notifications are off.": "通知已关闭。",
  "Notifications are blocked for this site in your browser settings.": "您已在浏览器设置中屏蔽了本网站的通知。",
  "Could not turn notifications on.": "无法开启通知。",
- "Your session has ended. Sign in again to turn notifications on.": "您的登录已过期。请重新登录以开启通知。"
+ "Your session has ended. Sign in again to turn notifications on.": "您的登录已过期。请重新登录以开启通知。",
+ "You cannot book any ride or activity with MicroMobility until you have read and agreed to this waiver. Cycling is a physical activity that carries risk. I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. I agree to wear a helmet and to follow the team’s instructions and the route, and I am responsible for any damage to the rented bike caused by misuse. The bike is returned in the condition it was received.": "在阅读并同意本免责声明之前，您无法在 MicroMobility 预订任何骑行或活动。骑行是一项存在风险的体育活动。我自愿参与，风险完全由本人承担，并由本人独自对自身、自身安全及个人物品负责。在法律允许的最大范围内，MicroMobility 及其员工和合作伙伴对我本人或我的物品发生的任何事情概不负责，包括任何受伤、骨折、疾病、遗失、被盗或损坏，无论因何原因造成，亦无论发生在活动期间还是与活动相关。我同意佩戴头盔，遵守团队指示和路线，并对因使用不当对所租自行车造成的任何损坏负责。自行车须按领取时的状态归还。",
+ "You cannot book any swim or activity with MicroMobility until you have read and agreed to this waiver. Swimming carries risk. I confirm that I can swim unaided, and I take part entirely at my own risk: I alone am responsible for myself, my safety, any medical condition that affects my ability to swim, and my personal belongings. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. I agree to follow the team’s and the venue’s instructions and to stay within the supervised area.": "在阅读并同意本免责声明之前，您无法在 MicroMobility 预订任何游泳课程或活动。游泳存在风险。我确认自己能够独立游泳，并自愿参与，风险完全由本人承担：本人独自对自身、自身安全、任何影响游泳能力的身体状况以及个人物品负责。在法律允许的最大范围内，MicroMobility 及其员工和合作伙伴对我本人或我的物品发生的任何事情概不负责，包括任何受伤、骨折、疾病、遗失、被盗或损坏，无论因何原因造成，亦无论发生在活动期间还是与活动相关。我同意遵守团队及场馆的指示并留在有人监护的区域内。"
 }

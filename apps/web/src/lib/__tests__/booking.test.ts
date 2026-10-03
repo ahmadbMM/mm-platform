@@ -192,13 +192,13 @@ describe("the server's checks", () => {
   it("builds the rows customer_create_booking takes, with no price and the code only where it discounts", () => {
     const input = { sessionId: live.id, riders: [r("Road", "180"), r("Own", "120", "Kid")], group: null, addons: [], promo: { code: "SARA10", appliesTo: null }, waiver: true };
     const rows = bookingEntries(input, input.riders, live, acct, waiverVersionFor(live));
-    expect(rows[0]).toMatchObject({ name: "Sara Ali", size: "L", height: 180, type_preference: "Road", status: "waiting", promo_code: "SARA10", waiver_version: "2026-08-v1", session_day: "Tuesday" });
+    expect(rows[0]).toMatchObject({ name: "Sara Ali", size: "L", height: 180, type_preference: "Road", status: "waiting", promo_code: "SARA10", waiver_version: "2026-10-v2", session_day: "Tuesday" });
     expect(rows[1]).toMatchObject({ name: "Kid", size: "", type_preference: "Own", promo_code: null });
     expect(rows[0]).not.toHaveProperty("price");
     expect(rows[0]).not.toHaveProperty("approval");
     const ws = liveSession({ ...row, event_kind: "community", ride_kind: "workshop", open_to_all: true }, "2026-10-03")!;
     expect(bookingEntries({ ...input, promo: null }, [r("")], ws, acct, waiverVersionFor(ws))[0]).toMatchObject({ type_preference: "None", height: null, approval: "pending" });
-    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-08-v1");
+    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-10-v2");
   });
   it("refuses a capped waitlist that is full, and only then", () => {
     const s = { full: false, approval: false, capacity: 10, wlCap: 2 };
@@ -276,7 +276,7 @@ describe("api/booking", () => {
     expect(made.body).toMatchObject({ p_id: "c1", p_token: TOKEN });
     const entries = made.body.p_entries as Record<string, unknown>[];
     expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ name: "Sara Ali", type_preference: "Road", size: "L", height: 180, waiver_version: "2026-08-v1" });
+    expect(entries[0]).toMatchObject({ name: "Sara Ali", type_preference: "Road", size: "L", height: 180, waiver_version: "2026-10-v2" });
     expect(entries[0]).not.toHaveProperty("price");
     expect(calls.find((c) => c.fn === "customer_booking_update")!.body).toMatchObject({ p_entry_id: "q1", p_patch: { addons: '[{"id":"g1","qty":2}]' } });
     expect(calls.find((c) => c.fn === "customer_addon_stock")!.body).toMatchObject({ p_items: [{ id: "g1", delta: -2 }] });
@@ -332,5 +332,34 @@ describe("api/booking/promo and /profile", () => {
     expect((await post(profileRoute, "/api/booking/profile", { birth: "1990-05-01", nationality: "Egypt", community: true })).status).toBe(200);
     expect(calls[0].fn).toBe("customer_fix_save");
     expect((await post(profileRoute, "/api/booking/profile", { birth: "2024-05-01", nationality: "Egypt" })).status).toBe(400);
+  });
+});
+
+describe("the waiver wording (the booking app's 2026-10-v2)", () => {
+  it("keeps every clause in English and Arabic, for the ride and the swim", async () => {
+    const { T } = await import("../../components/experiences/Booking.text");
+    expect(waiverVersionFor(base)).toBe("2026-10-v2");
+    for (const kind of ["bike", "swim"] as const) {
+      const en = T.en.waiver[kind].body;
+      for (const clause of [
+        "You cannot book any", "until you have read and agreed to this waiver", "entirely at my own risk", "I alone am responsible for myself, my safety",
+        "personal belongings", "To the fullest extent permitted by law", "MicroMobility, its staff and its partners are not responsible",
+        "including any injury, fracture, illness, loss, theft or damage", "however it is caused", "during the activity or in connection with it",
+      ]) expect(en).toContain(clause);
+      const ar = T.ar.waiver[kind].body;
+      for (const clause of [
+        "لا يمكنك حجز أي", "إلا بعد قراءة هذا الإقرار والموافقة عليه", "على مسؤوليتي الشخصية بالكامل", "وأتحمل وحدي المسؤولية عن نفسي وسلامتي",
+        "ممتلكاتي الشخصية", "وإلى أقصى حد يسمح به النظام", "لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية",
+        "أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف", "أيًّا كان سببه", "أثناء النشاط أو بسببه",
+      ]) expect(ar).toContain(clause);
+    }
+    expect(T.en.waiver.bike.body).toContain("I agree to wear a helmet");
+    expect(T.en.waiver.bike.body).toContain("any damage to the rented bike caused by misuse");
+    expect(T.ar.waiver.bike.body).toContain("وأتعهد بارتداء الخوذة");
+    expect(T.en.waiver.swim.body).toContain("I can swim unaided");
+    expect(T.en.waiver.swim.body).toContain("any medical condition that affects my ability to swim");
+    expect(T.en.waiver.swim.body).toContain("stay within the supervised area");
+    expect(T.ar.waiver.swim.body).toContain("قدرتي على السباحة دون مساعدة");
+    expect(T.ar.waiver.swim.body).toContain("ضمن المنطقة الخاضعة للإشراف");
   });
 });
