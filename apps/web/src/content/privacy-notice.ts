@@ -68,9 +68,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Totals of where our riders come from"
      ],
      [
-      "Social media handles",
+      "Social media handles, and the follower count of the Instagram account you give",
       "Optional; required on a community membership application, and asked on a learn-to-ride sign-up. Seen only by our staff.",
-      "So our staff can get to know riders who may be invited to join our riding community. We never post, tag or share them."
+      "So our staff can get to know riders who may be invited to join our riding community. The follower count is read from Instagram, or noted by our staff, from your public profile. We never post, tag or share them."
      ],
      [
       "Profession and company",
@@ -196,6 +196,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "WhatsApp",
       "When we message you there",
+      "Outside Saudi Arabia"
+     ],
+     [
+      "Instagram (Meta)",
+      "The Instagram handle you gave, to read that account’s public follower count, and nothing else about you",
       "Outside Saudi Arabia"
      ],
      [
@@ -333,9 +338,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "إحصاءات مجمّعة عن أماكن قدوم راكبينا"
      ],
      [
-      "حسابات التواصل الاجتماعي",
+      "حسابات التواصل الاجتماعي، وعدد متابعي حساب إنستغرام الذي تقدّمه",
       "اختياري؛ وإلزامي في طلب عضوية المجتمع، ونسأل عنها في التسجيل في دروس تعلّم الركوب. لا يطّلع عليها إلا موظفونا.",
-      "ليتعرّف موظفونا على الراكبين الذين قد تتم دعوتهم للانضمام إلى مجتمع الركوب لدينا. لا ننشرها ولا نشير إليها ولا نشاركها إطلاقًا."
+      "ليتعرّف موظفونا على الراكبين الذين قد تتم دعوتهم للانضمام إلى مجتمع الركوب لدينا. نأخذ عدد المتابعين من إنستغرام، أو يدوّنه موظفونا، من ملفك العام. لا ننشرها ولا نشير إليها ولا نشاركها إطلاقًا."
      ],
      [
       "المهنة والشركة",
@@ -461,6 +466,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "واتساب",
       "عند مراسلتك عبره",
+      "خارج المملكة العربية السعودية"
+     ],
+     [
+      "إنستغرام (Meta)",
+      "حساب إنستغرام الذي قدّمته، لقراءة عدد متابعيه العام، ولا شيء آخر عنك",
       "خارج المملكة العربية السعودية"
      ],
      [
