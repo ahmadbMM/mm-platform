@@ -9,9 +9,8 @@
   // Staging stays on its workers.dev address. Rollback = remove the route and redeploy.
   // The app works on any host: the cookie is host-only and every call is same-origin.
   //
-  // CI deploys this (production, the top level) only while the repository variable MM_PARTNERS
-  // is "on" and the Cloudflare secrets exist (.github/workflows/ci.yml). That variable keeps its
-  // old name on purpose: it lives in GitHub's settings, and renaming it here alone would stop deploys.
+  // CI deploys this (production, the top level) only while the repository variable MM_VENDORS
+  // is "on" and the Cloudflare secrets exist (.github/workflows/ci.yml).
   //
   // The Worker NAMES below stay "micromobility-partners" / "micromobility-partners-staging" on
   // purpose, although everything else here says vendors: Cloudflare treats a new name as a NEW

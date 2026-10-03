@@ -126,7 +126,7 @@ jobs:
   # The vendor portal (apps/vendors): a small Worker of its own, apart from the website.
   # Every push lints, typechecks, unit-tests and builds it, then drives it in a browser on
   # `wrangler dev` against a stub database (e2e/vendors; never a real one). It deploys only once
-  # the repository variable MM_PARTNERS is "on" and the Cloudflare secrets exist: production from
+  # the repository variable MM_VENDORS is "on" and the Cloudflare secrets exist: production from
   # main (Worker micromobility-partners), staging from the staging branch (env "staging"). Its
   # address is not decided yet, so a deploy answers on workers.dev only (apps/vendors/wrangler.jsonc).
   vendors:
@@ -148,7 +148,7 @@ jobs:
         name: Check for Cloudflare credentials
         run: echo "present=${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}" >> "$GITHUB_OUTPUT"
       - name: Deploy the vendor portal (production)
-        if: github.ref == 'refs/heads/main' && vars.MM_PARTNERS == 'on' && steps.secrets.outputs.present == 'true'
+        if: github.ref == 'refs/heads/main' && vars.MM_VENDORS == 'on' && steps.secrets.outputs.present == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -156,7 +156,7 @@ jobs:
           workingDirectory: apps/vendors
           command: deploy
       - name: Deploy the vendor portal (staging)
-        if: github.ref == 'refs/heads/staging' && vars.MM_PARTNERS == 'on' && steps.secrets.outputs.present == 'true'
+        if: github.ref == 'refs/heads/staging' && vars.MM_VENDORS == 'on' && steps.secrets.outputs.present == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

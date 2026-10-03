@@ -136,14 +136,13 @@ Restaurants and cafes sign in here to reserve the Saturdays our riders come for 
 `vendor_*` now). A small Worker of its own, `micromobility-partners`, not part of the website: plain
 TypeScript, bundled by esbuild. The Cloudflare Worker keeps that old name on purpose: a new name
 makes a NEW Worker, and the custom domain vendors.micromobility.sa is attached to the existing one.
-Renaming it means deleting the old Worker (and its domain) by hand first. The repository variable
-`MM_PARTNERS` also keeps its name (it lives in GitHub's settings).
+Renaming it means deleting the old Worker (and its domain) by hand first.
 
 - Run it locally: `pnpm --filter vendors dev` (builds `dist/`, then `wrangler dev` on :8787,
   against the production database named in `apps/vendors/wrangler.jsonc`; use
   `--env staging` for staging's). Tests: `pnpm --filter vendors test` (unit) and
   `cd e2e/vendors && npm ci && npm run e2e` (a browser against a stub database).
-- Deploys: CI deploys it only while the repository variable `MM_PARTNERS` is `on` (main →
+- Deploys: CI deploys it only while the repository variable `MM_VENDORS` is `on` (main →
   production, staging branch → `micromobility-partners-staging`). Production answers at
   **vendors.micromobility.sa** (a Workers custom domain in its `wrangler.jsonc`; Cloudflare made
   the DNS record), staging on its workers.dev address.
