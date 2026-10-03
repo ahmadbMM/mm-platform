@@ -61,6 +61,8 @@ test('a registration does not go through until the notice is confirmed', async (
   expect(regs).toHaveLength(0);
 
   await page.check('#privacy');
+
+  await page.check('#waiver'); // the ride waiver every registration needs
   await expect(page.locator('#f-privacy')).not.toHaveClass(/invalid/);
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();

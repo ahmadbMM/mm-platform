@@ -21,6 +21,7 @@ test('a phone and a badge typed in Arabic digits go through, and reach the serve
   await expect(page.locator('#f-phone')).not.toHaveClass(/invalid/);
   await page.fill('#height', '178'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.check('#privacy');
+  await page.check('#waiver'); // the ride waiver every registration needs
   await page.click('#submit');
   await expect(page.locator('#ticket')).toBeVisible();
   expect(sent[0]).toMatchObject({ p_badge: '104582', p_phone: '+966512345678' });

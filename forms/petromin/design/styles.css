@@ -340,3 +340,9 @@ input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px r
   .pv-body td:first-child { font-weight: 700; }
   .pv-body td:not(:first-child)::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
 }
+/* Ride waiver: the full text in a box that scrolls when long, then the required agree box. */
+.waiver-field { margin-top: 6px; }
+.waiver-text { max-height: 220px; overflow-y: auto; padding: 12px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--bg); font-size: 14px; line-height: 1.55; color: var(--ink); }
+.waiver-text p { margin: 0; text-wrap: pretty; }
+.waiver-text:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.field.invalid .waiver-text { border-color: rgba(179, 38, 30, 0.6); }
