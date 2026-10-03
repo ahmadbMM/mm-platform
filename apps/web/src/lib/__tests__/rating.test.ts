@@ -1,36 +1,93 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { bookingOrigin, cleanRating, isRated, tagsRefused, withoutTags } from "../rating";
+import { bookingOrigin, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, unratedRides } from "../rating";
 import { POST as rate } from "../../app/api/account/rate/route";
 import { POST as wallet } from "../../app/api/google-wallet/route";
 import { resetSiteContent } from "../site";
 
 // The post-ride rating and the Google Wallet pass, as the account page offers them: what the
-// browser sends is checked, the account cookie supplies the id and token, and a database from
-// before the rating_tags migration still takes the scores.
+// browser sends is checked as the database checks rating_detail, the account cookie supplies the
+// id and token, and the ride to rate is the one the booking app would force.
 const TOKEN = "a1b2c3d4e5f6a7b8c9d0";
 const HEADERS = { origin: "https://micromobility.sa", cookie: `mm_acct=c1~${TOKEN}`, "content-type": "application/json" };
 const post = (fn: (r: Request) => Promise<Response>, path: string, body: unknown, headers: Record<string, string> = HEADERS) =>
   fn(new Request(`https://micromobility.sa${path}`, { method: "POST", headers, body: JSON.stringify(body) }));
 const json = (v: unknown, status = 200) => new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
 
-describe("cleanRating", () => {
-  it("keeps a rating as the booking app writes one, and nothing else", () => {
-    expect(cleanRating({ entryId: "q1abcdef", exp: 9, bike: 7, tags: ["route", "fun", "route", "car"], note: " Great night \u0007 " })).toEqual({
-      entryId: "q1abcdef", patch: { rating_exp: 9, rating_bike: 7, feedback: "Great night", rating_tags: ["route", "fun"] },
-    });
-    // the pool has no bike, a note is optional, tags may be none
-    expect(cleanRating({ entryId: "q1", exp: 10 })).toEqual({ entryId: "q1", patch: { rating_exp: 10 } });
-    expect(cleanRating({ entryId: "q1", exp: 10, bike: 0, tags: [], note: "" })).toEqual({ entryId: "q1", patch: { rating_exp: 10 } });
-    for (const bad of [null, {}, { entryId: "q1" }, { entryId: "q1", exp: 11 }, { entryId: "q1", exp: 2.5 }, { entryId: "q;1", exp: 5 }, { entryId: "q1", exp: "5" }]) expect(cleanRating(bad)).toBeNull();
-    expect(cleanRating({ entryId: "q1", exp: 5, note: "x".repeat(600) })!.patch.feedback).toHaveLength(500);
+const SOCIAL = { ride: 9, ride_checkin: 10, ride_staff: 9, ride_bike: 7, ride_route: 10, breakfast: 6, bf_restaurant: 9, bf_atmosphere: 9, bf_food: 5, bf_service: 9, overall: 9 };
+
+describe("the questions", () => {
+  it("asks by the kind of ride, without the bike or the breakfast when they do not apply", () => {
+    expect(formOf("saturday")).toBe("social");
+    for (const k of ["jcc", "petromin", "swim", "workshop", "event", "snd96", null, undefined]) expect(formOf(k)).toBe("rental");
+    expect(questionKeys("rental")).toEqual(["service", "bike", "experience"]);
+    expect(questionKeys("rental", { noBike: true })).toEqual(["service", "experience"]);
+    expect(questionKeys("social")).toEqual(Object.keys(SOCIAL));
+    expect(questionKeys("social", { noBike: true, skipBf: true })).toEqual(["ride", "ride_checkin", "ride_staff", "ride_route", "overall"]);
   });
-  it("can drop the tags for an older database, and knows when it must", () => {
-    expect(withoutTags({ rating_exp: 8, rating_bike: 6, rating_tags: ["pace"] })).toEqual({ rating_exp: 8, rating_bike: 6 });
-    expect(tagsRefused('column "rating_tags" does not exist')).toBe(true);
-    expect(tagsRefused("token")).toBe(false);
+  it("wants every score, and a reason for 8 or under", () => {
+    expect(ratingErrors(["service", "experience"], { service: 9 }, {})).toEqual({ experience: "pick" });
+    expect(ratingErrors(["service", "experience"], { service: 8, experience: 10 }, { service: "  " })).toEqual({ service: "why" });
+    expect(ratingErrors(["service", "experience"], { service: 8, experience: 10 }, { service: "Slow desk" })).toEqual({});
+  });
+});
+
+describe("cleanRating", () => {
+  it("keeps a rental rating as the booking app writes one", () => {
+    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 9, bike: 7, experience: 10, extra: 3 }, why: { bike: " Brakes squeaked \u0007 ", service: "ignored: a 9 has no reason" }, note: " Great night " })).toEqual({
+      entryId: "q1abcdef",
+      patch: { rating_bike: 7, rating_exp: 10, feedback: "Great night", rating_detail: { form: "rental", s: { service: 9, bike: 7, experience: 10 }, why: { bike: "Brakes squeaked" } } },
+    });
+    // on their own bike, or a pool session: no bike question
+    expect(cleanRating({ entryId: "q1", form: "rental", s: { service: 10, experience: 10 }, why: {} })!.patch).toEqual({ rating_bike: null, rating_exp: 10, feedback: null, rating_detail: { form: "rental", s: { service: 10, experience: 10 }, why: {} } });
+  });
+  it("keeps a social ride's rating, the breakfast skipped or not", () => {
+    const why = { ride_bike: "Seat too low", breakfast: "Crowded", bf_food: "Cold" };
+    expect(cleanRating({ entryId: "q2", form: "social", s: SOCIAL, why })!.patch).toEqual({ rating_bike: 7, rating_exp: 9, feedback: null, rating_detail: { form: "social", s: SOCIAL, why } });
+    const skipped = cleanRating({ entryId: "q2", form: "social", s: { ...SOCIAL, breakfast: 2 }, why: { ride_bike: "Seat" }, skipBf: true })!.patch.rating_detail!;
+    expect(skipped.skip_bf).toBe(true);
+    expect(Object.keys(skipped.s)).toEqual(["ride", "ride_checkin", "ride_staff", "ride_bike", "ride_route", "overall"]);
+  });
+  it("refuses a rating that is not whole", () => {
+    const ok = { entryId: "q1", form: "rental", s: { service: 9, experience: 9 }, why: {} };
+    expect(cleanRating(ok)).not.toBeNull();
+    for (const bad of [
+      null, {}, { ...ok, entryId: "q;1" }, { ...ok, form: "party" },
+      { ...ok, s: { service: 9 } }, // no experience
+      { ...ok, s: { service: 11, experience: 9 } }, { ...ok, s: { service: 2.5, experience: 9 } }, { ...ok, s: { service: "9", experience: 9 } },
+      { ...ok, s: { service: 8, experience: 9 } }, // 8 or under with no reason
+      { ...ok, s: { service: 8, experience: 9 }, why: { service: "   " } },
+      { entryId: "q2", form: "social", s: { ...SOCIAL, breakfast: undefined }, why: { ride_bike: "a", bf_food: "b" } }, // breakfast not skipped, not scored
+    ]) expect(cleanRating(bad)).toBeNull();
+    const long = cleanRating({ ...ok, s: { service: 3, experience: 9 }, why: { service: "x".repeat(400) }, note: "y".repeat(1200) })!.patch;
+    expect(long.rating_detail!.why.service).toHaveLength(300);
+    expect(long.feedback).toHaveLength(1000);
+  });
+  it("still takes a rating from a page drawn before the detailed one", () => {
+    expect(cleanRating({ entryId: "q1abcdef", exp: 9, bike: 7, tags: ["route"], note: "Thanks" })).toEqual({ entryId: "q1abcdef", patch: { rating_exp: 9, rating_bike: 7, feedback: "Thanks" } });
+    expect(cleanRating({ entryId: "q1", exp: 0 })).toBeNull();
+  });
+});
+
+describe("the ride to rate", () => {
+  const row = (id: string, date: string, extra: Record<string, unknown> = {}) => ({ id, session_id: `s-${date}`, session_date: date, status: "done", queue_num: 1, type_preference: "Road", ...extra });
+  it("counts a night rated once any of its rows is", () => {
     expect(isRated({ rating_exp: 8 })).toBe(true);
     expect(isRated({ rating_bike: 3, rating_exp: null })).toBe(true);
-    expect(isRated({ rating_exp: null, rating_bike: null })).toBe(false);
+    expect(isRated({ rating_detail: { form: "rental" } })).toBe(true);
+    expect(isRated({ rating_exp: null, rating_bike: null, rating_detail: null })).toBe(false);
+  });
+  it("forces the oldest unrated ride from the day it went live, one per night, on its first rider", () => {
+    const rows = [
+      row("old", "2026-09-26"),
+      row("p2", "2026-10-04", { queue_num: 5, type_preference: "Own" }), row("p1", "2026-10-04", { queue_num: 4, type_preference: "Own" }),
+      row("r1", "2026-10-03", { rating_exp: 9 }), row("r2", "2026-10-03", { queue_num: 2 }),
+      row("w", "2026-10-05", { status: "waiting" }),
+      row("future", "2026-10-09"),
+    ];
+    expect(pendingRating(rows, "2026-10-08")).toEqual({ entryId: "p1", sessionId: "s-2026-10-04", date: "2026-10-04", ownBike: true });
+    expect(unratedRides(rows, "2026-10-08").map((r) => r.entryId)).toEqual(["old", "p1"]);
+    expect(pendingRating([row("old", "2026-09-26")], "2026-10-08")).toBeNull();
+    expect(pendingRating([row("a", "2026-10-04"), row("b", "2026-10-04", { type_preference: "Own", queue_num: 2 })], "2026-10-08")!.ownBike).toBe(false);
   });
 });
 
@@ -40,30 +97,27 @@ describe("api/account/rate", () => {
   it("writes the rating through customer_booking_update with the cookie's id and token", async () => {
     const f = vi.fn(async () => json(true));
     vi.stubGlobal("fetch", f);
-    const res = await post(rate, "/api/account/rate", { entryId: "q1abcdef", exp: 9, bike: 7, tags: ["staff"], note: "Thanks" });
+    const res = await post(rate, "/api/account/rate", { entryId: "q1abcdef", form: "rental", s: { service: 9, bike: 6, experience: 9 }, why: { bike: "Gears slipped" }, note: "Thanks" });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
     const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://example.supabase.co/rest/v1/rpc/customer_booking_update");
-    expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: TOKEN, p_entry_id: "q1abcdef", p_patch: { rating_exp: 9, rating_bike: 7, feedback: "Thanks", rating_tags: ["staff"] } });
-  });
-  it("writes again without the tags when the database does not know them yet", async () => {
-    const f = vi.fn(async (_url: string, init?: RequestInit) => (String(init?.body).includes("rating_tags") ? json({ code: "42703", message: 'column "rating_tags" of relation "queue_entries" does not exist' }, 400) : json(true)));
-    vi.stubGlobal("fetch", f);
-    const res = await post(rate, "/api/account/rate", { entryId: "q1abcdef", exp: 9, tags: ["fun"] });
-    expect(await res.json()).toEqual({ ok: true });
-    expect(f).toHaveBeenCalledTimes(2);
-    expect(JSON.parse(String((f.mock.calls[1] as unknown as [string, RequestInit])[1].body)).p_patch).toEqual({ rating_exp: 9 });
+    expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: TOKEN, p_entry_id: "q1abcdef", p_patch: {
+      rating_bike: 6, rating_exp: 9, feedback: "Thanks", rating_detail: { form: "rental", s: { service: 9, bike: 6, experience: 9 }, why: { bike: "Gears slipped" } },
+    } });
   });
   it("refuses another site, a missing cookie and a malformed rating without touching the database", async () => {
     const f = vi.fn(async () => json(true));
     vi.stubGlobal("fetch", f);
-    expect((await post(rate, "/api/account/rate", { entryId: "q1", exp: 5 }, { ...HEADERS, origin: "https://evil.example" })).status).toBe(403);
-    expect((await post(rate, "/api/account/rate", { entryId: "q1", exp: 5 }, { origin: HEADERS.origin })).status).toBe(401);
-    expect((await post(rate, "/api/account/rate", { entryId: "q1", exp: 0 })).status).toBe(400);
+    const ok = { entryId: "q1", form: "rental", s: { service: 9, experience: 9 } };
+    expect((await post(rate, "/api/account/rate", ok, { ...HEADERS, origin: "https://evil.example" })).status).toBe(403);
+    expect((await post(rate, "/api/account/rate", ok, { origin: HEADERS.origin })).status).toBe(401);
+    expect((await post(rate, "/api/account/rate", { ...ok, s: { service: 4, experience: 9 } })).status).toBe(400);
     expect(f).not.toHaveBeenCalled();
     vi.stubGlobal("fetch", vi.fn(async () => json(false)));
-    expect((await post(rate, "/api/account/rate", { entryId: "q1", exp: 5 })).status).toBe(409);
+    expect((await post(rate, "/api/account/rate", ok)).status).toBe(409);
+    vi.stubGlobal("fetch", vi.fn(async () => json({ message: "token mismatch" }, 400)));
+    expect(await (await post(rate, "/api/account/rate", ok)).json()).toEqual({ ok: false, error: "signin" });
   });
 });
 

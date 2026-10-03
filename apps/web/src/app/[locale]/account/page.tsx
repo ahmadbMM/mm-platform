@@ -8,6 +8,7 @@ import "@/components/account/account.css";
 import "@/components/booking/booking.css";
 import TicketCard from "@/components/booking/TicketCard";
 import RateRide from "@/components/account/RateRide";
+import RatingGate from "@/components/account/RatingGate";
 import RideRecord from "@/components/account/RideRecord";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
@@ -23,8 +24,8 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName } from "@/lib/rides";
 import { routeItems } from "@/lib/route-names";
-import { isRated } from "@/lib/rating";
-import { doneToday, fmtDayDate, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
+import { formOf, pendingRating, unratedRides } from "@/lib/rating";
+import { doneToday, fmtDayDate, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, recordRows, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
@@ -91,17 +92,15 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const d = resolvePage(experiencesSchema, content, L).dates;
   const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
-  // Completed bookings not rated yet, newest first, one per night: the booking app's post-ride
-  // rating (RateRide), the tags of the 2026-09-27 round included.
-  const toRate = rows
-    .filter((r) => r.status === "done" && typeof r.id === "string" && !isRated(r) && /^\d{4}-\d{2}-\d{2}$/.test(S(r.session_date)))
-    .sort((a, b) => S(b.session_date).localeCompare(S(a.session_date)))
-    .filter((r, i, all) => all.findIndex((x) => S(x.session_id) === S(r.session_id)) === i)
-    .slice(0, 5);
+  // Finished rides not rated yet, one per night (a party rates once, on its first rider): the
+  // booking app's post-ride rating. The oldest from the day it went live on is the pop-up the
+  // rider cannot skip (RatingGate, the booking app's _pendingRatingId); older ones stay cards.
+  const gate = pendingRating(rows, today);
+  const toRate = unratedRides(rows, today).filter((r) => r.entryId !== gate?.entryId).reverse().slice(0, 5);
   // every booked session, whatever its state now (a Petromin night, one staff closed since)
   const record = recordRows(rows);
   const [sessions, recSessions, badges] = await Promise.all([
-    loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => S(r.session_id))]),
+    loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])]),
     // every night booked, for Your rides and the badges (the kind of ride, whether it was free, whether staff approve it)
     loadRecordSessions(record.map((r) => r.sessionId)),
     loadBadgeData(acct),
@@ -119,6 +118,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const s = sessions.get(g.sessionId), first = g.rows.find((r) => r.status === "waiting" && r.queueNum != null);
     return s && !s.approval && first && g.date === now.slice(0, 10) ? anyoneAhead(g.sessionId, first.queueNum as number) : Promise.resolve(null);
   }));
+  const rideName = (s: TicketSession | undefined) => (s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة"));
   const ticketText = serverLocalize(TICKET, locale);
   const recordText = serverLocalize(RECORD, locale);
   const drawn = new Date().getTime(); // the countdown's first line, before the browser takes over
@@ -144,6 +144,10 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="ac ac-in">
+        {gate && (() => {
+          const s = sessions.get(gate.sessionId);
+          return <RatingGate key={gate.entryId} entryId={gate.entryId} name={rideName(s)} when={fmtDayDate(gate.date, locale)} form={formOf(s?.kind)} noBike={gate.ownBike || (s ? !s.bikes : false)} />;
+        })()}
         <header className="ac-head">
           <div>
             <p className="ac-eyebrow">{S(c.signin.eyebrow)}</p>
@@ -196,8 +200,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             <h2 id="ac-rate-h">{tx("Rate your rides", "قيّم جولاتك")}</h2>
             <div className="rr-grid">
               {toRate.map((r) => {
-                const s = sessions.get(S(r.session_id));
-                return <RateRide key={S(r.id)} entryId={S(r.id)} name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")} when={fmtDayDate(S(r.session_date), locale)} bikes={s ? s.bikes : true} />;
+                const s = sessions.get(r.sessionId);
+                return <RateRide key={r.entryId} entryId={r.entryId} name={rideName(s)} when={fmtDayDate(r.date, locale)} form={formOf(s?.kind)} noBike={r.ownBike || (s ? !s.bikes : false)} />;
               })}
             </div>
           </section>

@@ -21,3 +21,8 @@ export function useLocalize<T>(T: { en: T; ar: T }): T {
   const { locale, dict } = useContext(Ctx);
   return useMemo(() => localize(T, locale, dict), [T, locale, dict]);
 }
+
+/** The page's language code, for a component with its own words in every language. */
+export function useTxLocale(): string {
+  return useContext(Ctx).locale;
+}

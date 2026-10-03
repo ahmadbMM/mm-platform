@@ -44,29 +44,55 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 }
 .ac-check { min-height: 65px; margin: 4px 0 0; }
 
-/* Rate your ride (RateRide.tsx): the booking app's post-ride rating, on the account. */
-.rr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 420px)); gap: 16px; align-items: start; }
-.rr-card { background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+/* Rate your ride: the booking app's post-ride rating (RatingForm.tsx), as a card on the account
+   (RateRide.tsx) and as the pop-up a rider cannot skip (RatingGate.tsx). */
+.rr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 460px)); gap: 16px; align-items: start; }
+.rr-card { background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .rr-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
 .rr-head strong { font-size: 16px; }
 .rr-head span { color: #57605a; font-size: 13.5px; }
-.rr-form { display: flex; flex-direction: column; gap: 14px; }
-.rr-scale { border: 0; margin: 0; padding: 0; min-width: 0; }
-.rr-scale legend { font-size: 13px; font-weight: 700; color: #2e352f; padding: 0; margin-bottom: 8px; }
-.rr-scale-row { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px; }
-.rr-scale-row button, .rr-tags button { cursor: pointer; font: inherit; font-weight: 700; color: #2e352f; background: #fbf9f4; border: 1px solid rgba(0, 0, 0, .16); border-radius: 10px; min-height: 40px; }
-.rr-scale-row button { font-size: 13px; padding: 0; font-variant-numeric: tabular-nums; }
-.rr-scale-row button.on, .rr-tags button.on { background: #077a4b; border-color: #077a4b; color: #fbf9f4; }
-.rr-scale-ends { display: flex; justify-content: space-between; margin-top: 4px; font-size: 11px; color: #57605a; }
-.rr-tags p { margin: 0 0 8px; font-size: 13px; font-weight: 700; color: #2e352f; }
-.rr-tags div { display: flex; flex-wrap: wrap; gap: 6px; }
-.rr-tags button { border-radius: 999px; padding: 0 14px; font-size: 13px; }
 .rr-note { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 700; color: #2e352f; }
-.rr-note textarea { border: 1px solid rgba(0, 0, 0, .18); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 14px; font-weight: 400; resize: vertical; min-height: 44px; background: #fff; color: #1a1919; }
-.rr-note textarea:focus { outline: none; border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
+.rr-note textarea, .rg-why { border: 1px solid rgba(0, 0, 0, .18); border-radius: 12px; padding: 10px 12px; font: inherit; font-size: 16px; font-weight: 400; resize: vertical; min-height: 44px; background: #fff; color: #1a1919; box-sizing: border-box; width: 100%; }
+.rr-note textarea:focus, .rg-why:focus { outline: none; border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
 .rr-send { border: 0; border-radius: 999px; min-height: 46px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 14.5px; cursor: pointer; }
 .rr-send:disabled { opacity: .6; cursor: default; }
 .rr-thanks { margin: 0; background: rgba(7, 122, 75, .08); border: 1px solid rgba(7, 122, 75, .25); color: #077a4b; border-radius: 14px; padding: 14px 16px; font-weight: 600; font-size: 14px; line-height: 1.5; }
+.rg-form { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.rg-sub-text { margin: 0; color: #57605a; font-size: 14px; line-height: 1.5; }
+.rg-list { display: flex; flex-direction: column; gap: 12px; }
+/* a main question and its sub-questions, in one box */
+.rg-grp { border: 1px solid rgba(0, 0, 0, .12); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.rg-q { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.rg-q.rg-sub { padding-inline-start: 12px; border-inline-start: 2px solid rgba(7, 122, 75, .25); }
+.rg-lbl { font-size: 14px; font-weight: 700; color: #1a1919; }
+.rg-sub .rg-lbl { font-size: 13px; font-weight: 600; color: #2e352f; }
+.rg-scale { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 3px; }
+.rg-scale button { cursor: pointer; font: inherit; font-size: 13px; font-weight: 700; color: #2e352f; background: #fbf9f4; border: 1px solid rgba(0, 0, 0, .16); border-radius: 9px; min-height: 40px; padding: 0; min-width: 0; font-variant-numeric: tabular-nums; }
+.rg-scale button.on { background: #077a4b; border-color: #077a4b; color: #fbf9f4; }
+.rg-scale button:focus-visible, .rg-skip:focus-visible, .rg-out:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+.rg-q.err .rg-scale button:not(.on) { border-color: rgba(179, 38, 30, .55); }
+.rg-q.err .rg-why { border-color: #b3261e; }
+.rg-why-l { font-size: 13px; color: #2e352f; line-height: 1.4; }
+.rg-skip { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 600; color: #2e352f; background: #fbf9f4; border: 1px solid rgba(0, 0, 0, .16); border-radius: 999px; min-height: 40px; padding: 0 14px; text-align: start; }
+.rg-skip.on { border-color: #077a4b; color: #077a4b; background: rgba(7, 122, 75, .08); }
+.rg-skip svg { flex: none; }
+/* the pop-up: centred over the page on every screen, never a bottom sheet */
+html.rg-lock, html.rg-lock body { overflow: hidden; }
+.rg-gate { position: fixed; inset: 0; z-index: 200; background: rgba(13, 16, 13, .6); overflow-y: auto; overscroll-behavior: contain; display: flex; padding: 24px 16px; box-sizing: border-box; }
+.rg-box { margin: auto; width: 100%; max-width: 520px; box-sizing: border-box; background: #fff; color: #1a1919; border-radius: 22px; padding: 24px 20px 20px; box-shadow: 0 30px 80px rgba(0, 0, 0, .25); display: flex; flex-direction: column; gap: 10px; outline: none; }
+.rg-kicker { margin: 0; display: inline-flex; align-items: center; gap: 8px; color: #077a4b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
+html:is([lang="ar"], [lang="ur"]) .rg-kicker { letter-spacing: 0; font-size: 13px; }
+.rg-flag { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: rgba(7, 122, 75, .12); color: #077a4b; }
+.rg-title { margin: 0; font-size: 26px; letter-spacing: -.6px; line-height: 1.15; }
+.rg-meta { margin: 0 0 4px; color: #57605a; font-size: 13.5px; }
+.rg-out { border: 1px solid rgba(0, 0, 0, .2); background: #fff; border-radius: 999px; min-height: 44px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; color: #1a1919; }
+.rg-out:disabled { opacity: .6; cursor: default; }
+@media (max-width: 420px) {
+  .rg-box { padding: 20px 14px 16px; border-radius: 18px; }
+  .rg-grp { padding: 12px 10px; }
+  .rg-scale { gap: 2px; }
+  .rg-scale button { font-size: 12.5px; border-radius: 8px; }
+}
 
 /* Your rides and the closest badges (the booking app's .myr and .bd-next, 91816da). */
 .myr { margin: 0 0 8px; padding: 16px 20px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; color: #1a1919; }
