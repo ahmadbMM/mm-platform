@@ -48,7 +48,7 @@ function profileForm(main: HTMLElement, me: Me, reloadMe: () => Promise<boolean>
     if (seats && !(/^\d+$/.test(seats) && +seats >= 1 && +seats <= 2000)) { f.seats.setError(t("errSeats")); bad = true; }
     if (bad) { form.querySelector<HTMLElement>("[aria-invalid=true]")?.focus(); return; }
     busy(save, true, t("sending"));
-    const r = await rpc<null>("fnb_profile_save", {
+    const r = await rpc<null>("vendor_profile_save", {
       p_data: {
         map_url: map,
         seats,
@@ -128,7 +128,7 @@ export function passwordForm(forced: boolean, onDone?: () => void): HTMLElement 
     if (p !== cf.input.value) { cf.setError(t("pwMismatch")); cf.input.focus(); return; }
     if (cur && !cur.input.value) { cur.setError(t("errBadPassword")); cur.input.focus(); return; }
     busy(save, true, t("sending"));
-    const res = await rpc<{ ok: true }>("fnb_set_password", cur ? { p_new: p, p_old: cur.input.value } : { p_new: p });
+    const res = await rpc<{ ok: true }>("vendor_set_password", cur ? { p_new: p, p_old: cur.input.value } : { p_new: p });
     busy(save, false, t("pwSaveButton"));
     if (!res.ok) {
       if (res.code === "BAD_PASSWORD" && cur) { cur.setError(t("errBadPassword")); cur.input.focus(); return; }

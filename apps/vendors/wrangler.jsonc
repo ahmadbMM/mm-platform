@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  // The F&B partner portal: restaurants and cafes sign in and reserve the Saturdays our riders
+  // The vendor portal: restaurants and cafes sign in and reserve the Saturdays our riders
   // come to them for breakfast. A Worker of its own, apart from the website (apps/web), so it
   // stays small and never shares the website's bundle or cookies.
   //
@@ -10,7 +10,14 @@
   // The app works on any host: the cookie is host-only and every call is same-origin.
   //
   // CI deploys this (production, the top level) only while the repository variable MM_PARTNERS
-  // is "on" and the Cloudflare secrets exist (.github/workflows/ci.yml).
+  // is "on" and the Cloudflare secrets exist (.github/workflows/ci.yml). That variable keeps its
+  // old name on purpose: it lives in GitHub's settings, and renaming it here alone would stop deploys.
+  //
+  // The Worker NAMES below stay "micromobility-partners" / "micromobility-partners-staging" on
+  // purpose, although everything else here says vendors: Cloudflare treats a new name as a NEW
+  // Worker, and the custom domain vendors.micromobility.sa is attached to the existing one, so a
+  // rename would fail the deploy or leave that Worker orphaned with the domain. To rename it, first
+  // delete the old Worker (and its custom domain) by hand in the Cloudflare dashboard, then deploy.
   "name": "micromobility-partners",
   "main": "src/worker/index.ts",
   "compatibility_date": "2026-08-01",
@@ -25,7 +32,8 @@
   "observability": { "enabled": true },
   // The production database (Frankfurt). The anon key is public by design: it is the same key the
   // website and the registration forms ship to every browser. What protects the data is that the
-  // portal's functions check the venue's token (the migration 20261003150000_fnb_partners.sql).
+  // portal's functions check the venue's token (the migration 20261003150000_fnb_partners.sql in the rentals
+  // repo, which first named them fnb_*; they are vendor_* now).
   "vars": {
     "SUPABASE_URL": "https://qpffkzmsfyilicwcsszz.supabase.co",
     "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ"

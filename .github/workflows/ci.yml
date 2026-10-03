@@ -123,13 +123,13 @@ jobs:
           echo "staging / $code"
           [ "$code" -lt 500 ]
 
-  # The F&B partner portal (apps/partners): a small Worker of its own, apart from the website.
+  # The vendor portal (apps/vendors): a small Worker of its own, apart from the website.
   # Every push lints, typechecks, unit-tests and builds it, then drives it in a browser on
-  # `wrangler dev` against a stub database (e2e/partners; never a real one). It deploys only once
+  # `wrangler dev` against a stub database (e2e/vendors; never a real one). It deploys only once
   # the repository variable MM_PARTNERS is "on" and the Cloudflare secrets exist: production from
   # main (Worker micromobility-partners), staging from the staging branch (env "staging"). Its
-  # address is not decided yet, so a deploy answers on workers.dev only (apps/partners/wrangler.jsonc).
-  partners:
+  # address is not decided yet, so a deploy answers on workers.dev only (apps/vendors/wrangler.jsonc).
+  vendors:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -137,31 +137,31 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter partners lint && pnpm --filter partners typecheck
-      - run: pnpm --filter partners test
-      - run: pnpm --filter partners build
+      - run: pnpm --filter vendors lint && pnpm --filter vendors typecheck
+      - run: pnpm --filter vendors test
+      - run: pnpm --filter vendors build
       - name: Portal in a browser (stub database)
         run: |
-          npm ci --prefix e2e/partners --no-audit --no-fund
-          (cd e2e/partners && npx playwright install --with-deps chromium && npm run e2e)
+          npm ci --prefix e2e/vendors --no-audit --no-fund
+          (cd e2e/vendors && npx playwright install --with-deps chromium && npm run e2e)
       - id: secrets
         name: Check for Cloudflare credentials
         run: echo "present=${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}" >> "$GITHUB_OUTPUT"
-      - name: Deploy the partner portal (production)
+      - name: Deploy the vendor portal (production)
         if: github.ref == 'refs/heads/main' && vars.MM_PARTNERS == 'on' && steps.secrets.outputs.present == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/partners
+          workingDirectory: apps/vendors
           command: deploy
-      - name: Deploy the partner portal (staging)
+      - name: Deploy the vendor portal (staging)
         if: github.ref == 'refs/heads/staging' && vars.MM_PARTNERS == 'on' && steps.secrets.outputs.present == 'true'
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: apps/partners
+          workingDirectory: apps/vendors
           command: deploy --env staging
 
   # Live → staging, code: after main is green (and deployed), main's changes are merged into

@@ -57,7 +57,7 @@ export async function renderCalendar(main: HTMLElement): Promise<void> {
     clear(main);
     main.append(h("p", { class: "loading", role: "status" }, t("loading")));
     const { from, to } = monthRange(state.month);
-    const r = await rpc<CalDay[]>("fnb_calendar", { p_from: from, p_to: to });
+    const r = await rpc<CalDay[]>("vendor_calendar", { p_from: from, p_to: to });
     state.days = new Map();
     state.error = "";
     if (r.ok) {
@@ -224,6 +224,6 @@ function list(main: HTMLElement, today: Iso): HTMLElement {
 
 /** The available dates in a range (the booking dialog's pickers). */
 export async function loadRange(from: Iso, to: Iso): Promise<{ ok: true; days: CalDay[] } | { ok: false; code: string }> {
-  const r = await rpc<CalDay[]>("fnb_calendar", { p_from: from, p_to: to });
+  const r = await rpc<CalDay[]>("vendor_calendar", { p_from: from, p_to: to });
   return r.ok ? { ok: true, days: r.data || [] } : { ok: false, code: r.code };
 }

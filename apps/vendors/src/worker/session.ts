@@ -4,7 +4,7 @@
 // Host-only on purpose (no Domain attribute): the portal's address is not decided yet, and a
 // cookie scoped to the whole of micromobility.sa would also be sent to the main website.
 
-export const COOKIE = "mm_fnb";
+export const COOKIE = "mm_vendor";
 export const MAX_AGE = 30 * 24 * 3600;
 
 export type Session = { id: number; token: string };

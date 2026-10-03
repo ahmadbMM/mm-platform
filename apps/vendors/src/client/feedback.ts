@@ -124,7 +124,7 @@ export function openFeedback(target: FeedbackTarget, onSaved: () => void): void 
       return;
     }
     busy(send, true, t("sending"));
-    const res = await rpc<Feedback>("fnb_feedback_save", {
+    const res = await rpc<Feedback>("vendor_feedback_save", {
       p_booking: target.mine.id,
       p_rating: r,
       p_turnout: tv.ok ? tv.value : null,

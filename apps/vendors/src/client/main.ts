@@ -26,7 +26,7 @@ const VIEWS: { hash: string; key: Key; icon: IconName }[] = [
 const currentView = () => (VIEWS.some((v) => v.hash === location.hash) ? location.hash : "#calendar");
 
 async function loadMe(): Promise<boolean> {
-  const r = await rpc<Me>("fnb_me");
+  const r = await rpc<Me>("vendor_me");
   if (!r.ok) return false;
   app.me = r.data;
   return true;
@@ -169,7 +169,7 @@ window.addEventListener("hashchange", () => {
 async function boot(): Promise<void> {
   const nav = (navigator.language || "en").toLowerCase();
   setLang(savedLang() || (nav.startsWith("ar") ? "ar" : "en"));
-  const r = await rpc<Me>("fnb_me");
+  const r = await rpc<Me>("vendor_me");
   if (r.ok) {
     app.me = r.data;
     screen = r.data.user.must_change ? "force" : "app";

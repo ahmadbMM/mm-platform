@@ -8,7 +8,7 @@ importers:
 
   .: {}
 
-  apps/partners:
+  apps/vendors:
     dependencies:
       '@mm/design-tokens':
         specifier: workspace:*

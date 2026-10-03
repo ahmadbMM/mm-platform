@@ -1,7 +1,7 @@
-// The F&B partner portal's Worker: the page and its files, plus a small API in front of the
+// The vendor portal's Worker: the page and its files, plus a small API in front of the
 // database that keeps each venue's session token on the server side (session.ts).
 //
-//   POST /api/login       {login, password} -> fnb_login; sets the mm_fnb cookie
+//   POST /api/login       {login, password} -> vendor_login; sets the mm_vendor cookie
 //   POST /api/logout      clears the cookie
 //   POST /api/rpc/<name>  one of RPCS below, with p_uid / p_token taken from the cookie
 //
@@ -24,14 +24,14 @@ export type Env = {
 
 /** The only database functions the page may call through /api/rpc. */
 export const RPCS = new Set([
-  "fnb_set_password",
-  "fnb_me",
-  "fnb_calendar",
-  "fnb_preview",
-  "fnb_request",
-  "fnb_cancel",
-  "fnb_profile_save",
-  "fnb_feedback_save",
+  "vendor_set_password",
+  "vendor_me",
+  "vendor_calendar",
+  "vendor_preview",
+  "vendor_request",
+  "vendor_cancel",
+  "vendor_profile_save",
+  "vendor_feedback_save",
 ]);
 
 /** Error codes the database raises on purpose, with the status each one is answered with. */
@@ -92,7 +92,7 @@ async function readBody(req: Request, limit: number): Promise<{ body: Record<str
 export async function withinTries(req: Request, env: Env): Promise<boolean> {
   const ip = req.headers.get("cf-connecting-ip") || "";
   if (!env.LOGIN_LIMIT || !ip) return true;
-  try { return (await env.LOGIN_LIMIT.limit({ key: `fnb-sign-in:${ip}` })).success; } catch { return true; }
+  try { return (await env.LOGIN_LIMIT.limit({ key: `vendor-sign-in:${ip}` })).success; } catch { return true; }
 }
 
 type DbAnswer = { ok: true; data: unknown } | { ok: false; status: number; code: string };
@@ -142,7 +142,7 @@ async function login(req: Request, env: Env): Promise<Response> {
   if (typeof who !== "string" || typeof password !== "string" || !who.trim() || !password || who.length > 200 || password.length > 200) {
     return fail("BAD_LOGIN", 400);
   }
-  const r = await callDb(env, req, "fnb_login", { p_login: who.trim(), p_pwd: password });
+  const r = await callDb(env, req, "vendor_login", { p_login: who.trim(), p_pwd: password });
   if (!r.ok) return fail(r.code, r.status);
   const d = (r.data || {}) as { error?: string; id?: number; token?: string; must_change?: boolean };
   if (d.error) return fail(d.error in KNOWN ? d.error : "BAD_LOGIN", 401);
@@ -160,7 +160,7 @@ async function rpc(req: Request, env: Env, name: string): Promise<Response> {
   const args: Record<string, unknown> = { ...read.body, p_uid: s.id, p_token: s.token };
   const r = await callDb(env, req, name, args);
   if (!r.ok) return fail(r.code, r.status, r.code === "BAD_TOKEN" ? clearCookie() : undefined);
-  if (name === "fnb_set_password") {
+  if (name === "vendor_set_password") {
     // A new password signs every other device out and hands this one a new token.
     if (typeof r.data !== "string" || !r.data) return fail("SERVER", 502);
     return json({ ok: true }, 200, setCookie({ id: s.id, token: r.data }));

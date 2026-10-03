@@ -47,4 +47,4 @@ await build({
   logLevel: "warning",
 });
 
-console.log("partners: dist/ built");
+console.log("vendors: dist/ built");

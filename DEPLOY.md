@@ -129,19 +129,23 @@ To go back, add the routes again (or `npx wrangler deploy` in the old repos). On
 week without trouble, the two old Workers can be deleted.
 
 
-## The F&B partner portal (apps/partners)
+## The vendor portal (apps/vendors)
 
 Restaurants and cafes sign in here to reserve the Saturdays our riders come for breakfast
-(database: migration `20261003150000_fnb_partners.sql` in the rentals repo). A small Worker of its
-own, `micromobility-partners`, not part of the website: plain TypeScript, bundled by esbuild.
+(database: migration `20261003150000_fnb_partners.sql` in the rentals repo, whose `fnb_*` names are
+`vendor_*` now). A small Worker of its own, `micromobility-partners`, not part of the website: plain
+TypeScript, bundled by esbuild. The Cloudflare Worker keeps that old name on purpose: a new name
+makes a NEW Worker, and the custom domain vendors.micromobility.sa is attached to the existing one.
+Renaming it means deleting the old Worker (and its domain) by hand first. The repository variable
+`MM_PARTNERS` also keeps its name (it lives in GitHub's settings).
 
-- Run it locally: `pnpm --filter partners dev` (builds `dist/`, then `wrangler dev` on :8787,
-  against the production database named in `apps/partners/wrangler.jsonc`; use
-  `--env staging` for staging's). Tests: `pnpm --filter partners test` (unit) and
-  `cd e2e/partners && npm ci && npm run e2e` (a browser against a stub database).
+- Run it locally: `pnpm --filter vendors dev` (builds `dist/`, then `wrangler dev` on :8787,
+  against the production database named in `apps/vendors/wrangler.jsonc`; use
+  `--env staging` for staging's). Tests: `pnpm --filter vendors test` (unit) and
+  `cd e2e/vendors && npm ci && npm run e2e` (a browser against a stub database).
 - Deploys: CI deploys it only while the repository variable `MM_PARTNERS` is `on` (main →
   production, staging branch → `micromobility-partners-staging`). Production answers at
   **vendors.micromobility.sa** (a Workers custom domain in its `wrangler.jsonc`; Cloudflare made
   the DNS record), staging on its workers.dev address.
 - The venue's session token stays on the server: the Worker keeps it in an HttpOnly cookie
-  (`mm_fnb`, host-only) and forwards only the allowlisted `fnb_*` functions.
+  (`mm_vendor`, host-only) and forwards only the allowlisted `vendor_*` functions.

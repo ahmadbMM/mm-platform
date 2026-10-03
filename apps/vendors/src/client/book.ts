@@ -114,7 +114,7 @@ export function openBooking(preselect?: Iso): void {
       const problem = check();
       if (problem) { msg.append(note("error", problem)); return; }
       busy(go, true, t("checking"));
-      const r = await rpc<Checked[]>("fnb_preview", args());
+      const r = await rpc<Checked[]>("vendor_preview", args());
       busy(go, false, t("previewButton"));
       if (!r.ok) { msg.append(errorNote(r.code)); return; }
       previewStage(r.data || []);
@@ -214,7 +214,7 @@ export function openBooking(preselect?: Iso): void {
     send.addEventListener("click", async () => {
       clear(msg);
       busy(send, true, t("sending"));
-      const r = await rpc<{ requested: number; days: Checked[] }>("fnb_request", { ...args(), p_note: d.note });
+      const r = await rpc<{ requested: number; days: Checked[] }>("vendor_request", { ...args(), p_note: d.note });
       busy(send, false, t("sendButton"));
       if (!r.ok) { msg.append(errorNote(r.code)); return; }
       invalidateCalendar();

@@ -15,7 +15,7 @@ export const app = {
 export const t = (k: Key, vars?: Record<string, string | number>) => fmt(app.lang, k, vars);
 export const isRtl = () => app.lang === "ar";
 
-const LANG_KEY = "mm_fnb_lang";
+const LANG_KEY = "mm_vendor_lang";
 
 export function savedLang(): Lang | null {
   try {

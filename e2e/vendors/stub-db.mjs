@@ -22,7 +22,7 @@ const sats = [...dates.keys()].filter((d) => d > add(today, 7));
 dates.get(sats[2]).state = "closed"; dates.get(sats[2]).reason = "Ramadan";
 dates.get(sats[3]).taken = true;
 const bookings = [];
-const feedback = new Map(); // booking id -> row, as fnb_feedback_save answers it
+const feedback = new Map(); // booking id -> row, as vendor_feedback_save answers it
 let nextId = 1;
 // The breakfast window for feedback: from the day itself until 14 days after.
 const feedbackOpen = (b) => b.status === "confirmed" && today >= b.day && today <= add(b.day, 14);
@@ -60,21 +60,21 @@ createServer((req, res) => {
     const name = (req.url || "").split("/rpc/")[1];
     const a = body ? JSON.parse(body) : {};
     if (req.headers.apikey !== "test-anon") return err(res, "No API key", 401);
-    if (name === "fnb_login") {
+    if (name === "vendor_login") {
       if (a.p_login.toLowerCase() !== user.login || a.p_pwd !== user.pwd) return ok(res, { error: "BAD_LOGIN" });
       return ok(res, { id: user.id, token: user.token, must_change: user.must_change });
     }
     if (a.p_uid !== user.id || a.p_token !== user.token) return err(res, "BAD_TOKEN", 403);
     switch (name) {
-      case "fnb_set_password":
+      case "vendor_set_password":
         if (!user.must_change && a.p_old !== user.pwd) return err(res, "BAD_PASSWORD");
         if (a.p_new.length < 8 || !/[A-Z]/.test(a.p_new) || !/\d/.test(a.p_new)) return err(res, "WEAK_PASSWORD");
         if (a.p_new === user.pwd) return err(res, "SAME_PASSWORD");
         user.pwd = a.p_new; user.must_change = false; user.token = "n".repeat(48);
         return ok(res, user.token);
-      case "fnb_me":
+      case "vendor_me":
         return ok(res, { user: { id: 7, name: "Owner", login: user.login, role: "owner", must_change: user.must_change }, venue, tier, today, series: [] });
-      case "fnb_calendar": {
+      case "vendor_calendar": {
         const out = [];
         for (const [day, d] of [...dates].sort()) {
           if (day < a.p_from || day > a.p_to) continue;
@@ -84,21 +84,21 @@ createServer((req, res) => {
         }
         return ok(res, out);
       }
-      case "fnb_preview":
+      case "vendor_preview":
         return ok(res, (a.p_days || []).map((day) => ({ day, verdict: verdict(day), reason: dates.get(day)?.reason || "" })));
-      case "fnb_request": {
+      case "vendor_request": {
         const days = (a.p_days || []).map((day) => ({ day, verdict: verdict(day), reason: "" }));
         let n = 0;
         for (const d of days) if (d.verdict === "ok") { bookings.push({ id: nextId++, day: d.day, status: "pending", kind: a.p_mode, series_id: null, note: a.p_note || "", staff_note: "" }); n++; }
         return ok(res, { requested: n, series_id: null, days });
       }
-      case "fnb_cancel": {
+      case "vendor_cancel": {
         const b = bookings.find((x) => x.id === a.p_booking);
         if (!b) return err(res, "NOT_FOUND", 404);
         b.status = "cancelled";
         return ok(res, 1);
       }
-      case "fnb_feedback_save": {
+      case "vendor_feedback_save": {
         const b = bookings.find((x) => x.id === a.p_booking);
         if (!b) return err(res, "NOT_FOUND", 404);
         if (b.status !== "confirmed") return err(res, "NOT_CONFIRMED");
@@ -116,7 +116,7 @@ createServer((req, res) => {
         feedback.set(b.id, row);
         return ok(res, row);
       }
-      case "fnb_profile_save":
+      case "vendor_profile_save":
         Object.assign(venue, a.p_data, { seats: a.p_data.seats ? Number(a.p_data.seats) : null });
         return ok(res, undefined);
       default:

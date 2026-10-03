@@ -61,7 +61,7 @@ describe("grid keys", () => {
 });
 
 describe("pattern sentence", () => {
-  it("becomes fnb_preview / fnb_request arguments", () => {
+  it("becomes vendor_preview / vendor_request arguments", () => {
     expect(patternArgs({ ordinal: -1, interval: 2, from: "2026-10-10", until: "2027-03-31" })).toEqual({
       p_mode: "recurring", p_ordinal: -1, p_interval: 2, p_from: "2026-10-10", p_until: "2027-03-31",
     });

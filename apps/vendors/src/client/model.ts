@@ -41,7 +41,7 @@ export type Me = {
 
 export type BookingStatus = "pending" | "confirmed" | "declined" | "cancelled";
 
-/** The venue's feedback on one breakfast (fnb_feedback_save's answer, and mine.feedback). */
+/** The venue's feedback on one breakfast (vendor_feedback_save's answer, and mine.feedback). */
 export type Feedback = {
   booking_id: number;
   venue_id: number;
@@ -222,7 +222,7 @@ export function errorKey(code: string): Key {
   }
 }
 
-/** The password rules the database enforces (fnb_set_password), checked as the venue types. */
+/** The password rules the database enforces (vendor_set_password), checked as the venue types. */
 export function passwordRules(p: string): { length: boolean; capital: boolean; number: boolean } {
   return { length: p.length >= 8, capital: /[A-Z]/.test(p), number: /[0-9]/.test(p) };
 }

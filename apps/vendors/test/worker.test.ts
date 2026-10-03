@@ -4,9 +4,9 @@ import { RPCS, RPC_BODY_LIMIT, type Env } from "../src/worker/app";
 import { CSP } from "../src/worker/headers";
 import { decodeSession, encodeSession, readCookie } from "../src/worker/session";
 
-const ORIGIN = "https://partners.example.test";
+const ORIGIN = "https://vendors.example.test";
 const TOKEN = "a".repeat(48);
-const COOKIE = `mm_fnb=7~${TOKEN}`;
+const COOKIE = `mm_vendor=7~${TOKEN}`;
 
 type Call = { url: string; init: RequestInit; body: Record<string, unknown> };
 let calls: Call[] = [];
@@ -48,7 +48,7 @@ describe("session cookie values", () => {
     expect(decodeSession("7~short")).toBeNull();
     expect(decodeSession("x~" + TOKEN)).toBeNull();
     expect(decodeSession(`7~${TOKEN};evil`)).toBeNull();
-    expect(readCookie(`a=1; mm_fnb=7~${TOKEN}; b=2`, "mm_fnb")).toBe(`7~${TOKEN}`);
+    expect(readCookie(`a=1; mm_vendor=7~${TOKEN}; b=2`, "mm_vendor")).toBe(`7~${TOKEN}`);
   });
 });
 
@@ -61,10 +61,10 @@ describe("POST /api/login", () => {
     expect(body).toEqual({ must_change: true });
     expect(JSON.stringify(body)).not.toContain(TOKEN);
     const c = res.headers.get("set-cookie")!;
-    expect(c).toContain(`mm_fnb=7~${TOKEN}`);
+    expect(c).toContain(`mm_vendor=7~${TOKEN}`);
     for (const part of ["HttpOnly", "Secure", "SameSite=Strict", "Path=/", "Max-Age=2592000"]) expect(c).toContain(part);
     expect(c).not.toMatch(/Domain=/i);
-    expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/fnb_login");
+    expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/vendor_login");
     expect(calls[0].body).toEqual({ p_login: "Cafe@Example.com", p_pwd: "Secret123" });
     const h = calls[0].init.headers as Record<string, string>;
     expect(h.apikey).toBe("anon-key");
@@ -97,7 +97,7 @@ describe("POST /api/login", () => {
     const res = await worker.fetch(post("/api/login", { login: "a@b.c", password: "x" }, { "cf-connecting-ip": "203.0.113.9" }), env({ LOGIN_LIMIT: { limit } }));
     expect(res.status).toBe(429);
     expect(await res.json()).toEqual({ error: "RATE_LIMIT" });
-    expect(limit).toHaveBeenCalledWith({ key: "fnb-sign-in:203.0.113.9" });
+    expect(limit).toHaveBeenCalledWith({ key: "vendor-sign-in:203.0.113.9" });
     expect(calls).toHaveLength(0);
 
     const broken = { limit: vi.fn(async () => { throw new Error("down"); }) };
@@ -118,7 +118,7 @@ describe("POST /api/logout", () => {
     const res = await worker.fetch(post("/api/logout", {}, { Cookie: COOKIE }), env());
     expect(res.status).toBe(200);
     const c = res.headers.get("set-cookie")!;
-    expect(c).toMatch(/^mm_fnb=;/);
+    expect(c).toMatch(/^mm_vendor=;/);
     expect(c).toContain("Max-Age=0");
     expect(c).toContain("HttpOnly");
   });
@@ -126,24 +126,24 @@ describe("POST /api/logout", () => {
 
 describe("POST /api/rpc/<name>", () => {
   it("allows only the portal's functions", async () => {
-    for (const name of ["fnb_login", "staff_fnb_decide", "customer_login", "fnb_me2", "is_staff"]) {
+    for (const name of ["vendor_login", "staff_vendor_decide", "customer_login", "vendor_me2", "is_staff"]) {
       const res = await worker.fetch(post(`/api/rpc/${name}`, {}, { Cookie: COOKIE }), env());
       expect(res.status).toBe(404);
     }
     expect(calls).toHaveLength(0);
-    expect([...RPCS].sort()).toEqual(["fnb_calendar", "fnb_cancel", "fnb_feedback_save", "fnb_me", "fnb_preview", "fnb_profile_save", "fnb_request", "fnb_set_password"]);
+    expect([...RPCS].sort()).toEqual(["vendor_calendar", "vendor_cancel", "vendor_feedback_save", "vendor_me", "vendor_preview", "vendor_profile_save", "vendor_request", "vendor_set_password"]);
   });
 
   it("takes p_uid and p_token from the cookie, never from the body", async () => {
     answer = dbJson([]);
-    const res = await worker.fetch(post("/api/rpc/fnb_calendar", { p_from: "2026-10-01", p_to: "2026-10-31", p_uid: 1, p_token: "b".repeat(48) }, { Cookie: COOKIE }), env());
+    const res = await worker.fetch(post("/api/rpc/vendor_calendar", { p_from: "2026-10-01", p_to: "2026-10-31", p_uid: 1, p_token: "b".repeat(48) }, { Cookie: COOKIE }), env());
     expect(res.status).toBe(200);
-    expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/fnb_calendar");
+    expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/vendor_calendar");
     expect(calls[0].body).toEqual({ p_from: "2026-10-01", p_to: "2026-10-31", p_uid: 7, p_token: TOKEN });
   });
 
   it("answers 401 and clears the cookie without a session", async () => {
-    const res = await worker.fetch(post("/api/rpc/fnb_me", {}), env());
+    const res = await worker.fetch(post("/api/rpc/vendor_me", {}), env());
     expect(res.status).toBe(401);
     expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
     expect(calls).toHaveLength(0);
@@ -151,7 +151,7 @@ describe("POST /api/rpc/<name>", () => {
 
   it("maps BAD_TOKEN to 401 and clears the cookie", async () => {
     answer = dbError("BAD_TOKEN", "28000", 403);
-    const res = await worker.fetch(post("/api/rpc/fnb_me", {}, { Cookie: COOKIE }), env());
+    const res = await worker.fetch(post("/api/rpc/vendor_me", {}, { Cookie: COOKIE }), env());
     expect(res.status).toBe(401);
     expect(await res.json()).toEqual({ error: "BAD_TOKEN" });
     expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
@@ -159,13 +159,13 @@ describe("POST /api/rpc/<name>", () => {
 
   it("passes known errors through and hides unknown ones", async () => {
     answer = dbError("WEAK_PASSWORD", "22023");
-    let res = await worker.fetch(post("/api/rpc/fnb_set_password", { p_new: "weak" }, { Cookie: COOKIE }), env());
+    let res = await worker.fetch(post("/api/rpc/vendor_set_password", { p_new: "weak" }, { Cookie: COOKIE }), env());
     expect(res.status).toBe(400);
     expect(await res.json()).toEqual({ error: "WEAK_PASSWORD" });
     expect(res.headers.get("set-cookie")).toBeNull();
 
     answer = dbError("relation secret_table does not exist", "42P01", 500);
-    res = await worker.fetch(post("/api/rpc/fnb_me", {}, { Cookie: COOKIE }), env());
+    res = await worker.fetch(post("/api/rpc/vendor_me", {}, { Cookie: COOKIE }), env());
     expect(res.status).toBe(502);
     expect(await res.json()).toEqual({ error: "SERVER" });
   });
@@ -174,20 +174,20 @@ describe("POST /api/rpc/<name>", () => {
     const row = { booking_id: 5, venue_id: 3, day: "2026-09-26", rating: 4, turnout: 9, went_well: "Quick", improve: "", created_at: "x", updated_at: "x" };
     answer = dbJson(row);
     const args = { p_booking: 5, p_rating: 4, p_turnout: 9, p_went_well: "Quick", p_improve: "" };
-    let res = await worker.fetch(post("/api/rpc/fnb_feedback_save", { ...args, p_uid: 1 }, { Cookie: COOKIE }), env());
+    let res = await worker.fetch(post("/api/rpc/vendor_feedback_save", { ...args, p_uid: 1 }, { Cookie: COOKIE }), env());
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual(row);
-    expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/fnb_feedback_save");
+    expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/vendor_feedback_save");
     expect(calls[0].body).toEqual({ ...args, p_uid: 7, p_token: TOKEN });
 
     for (const [message, code] of [["NOT_CONFIRMED", "P0001"], ["TOO_EARLY", "P0001"], ["TOO_LATE", "P0001"], ["BAD_RATING", "22023"]]) {
       answer = dbError(message, code);
-      res = await worker.fetch(post("/api/rpc/fnb_feedback_save", args, { Cookie: COOKIE }), env());
+      res = await worker.fetch(post("/api/rpc/vendor_feedback_save", args, { Cookie: COOKIE }), env());
       expect(res.status, message).toBe(400);
       expect(await res.json()).toEqual({ error: message });
     }
     answer = dbError("NOT_FOUND", "P0002");
-    res = await worker.fetch(post("/api/rpc/fnb_feedback_save", args, { Cookie: COOKIE }), env());
+    res = await worker.fetch(post("/api/rpc/vendor_feedback_save", args, { Cookie: COOKIE }), env());
     expect(res.status).toBe(404);
     expect(await res.json()).toEqual({ error: "NOT_FOUND" });
   });
@@ -195,16 +195,16 @@ describe("POST /api/rpc/<name>", () => {
   it("rewrites the cookie with the new token after a password change", async () => {
     const fresh = "c".repeat(48);
     answer = dbJson(fresh);
-    const res = await worker.fetch(post("/api/rpc/fnb_set_password", { p_new: "NewPass123", p_old: "OldPass123" }, { Cookie: COOKIE }), env());
+    const res = await worker.fetch(post("/api/rpc/vendor_set_password", { p_new: "NewPass123", p_old: "OldPass123" }, { Cookie: COOKIE }), env());
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
-    expect(res.headers.get("set-cookie")).toContain(`mm_fnb=7~${fresh}`);
+    expect(res.headers.get("set-cookie")).toContain(`mm_vendor=7~${fresh}`);
     expect(calls[0].body).toEqual({ p_new: "NewPass123", p_old: "OldPass123", p_uid: 7, p_token: TOKEN });
   });
 
   it("answers a void function (204, empty body) as null", async () => {
     answer = () => new Response(null, { status: 204 });
-    const res = await worker.fetch(post("/api/rpc/fnb_profile_save", { p_data: { seats: "40" } }, { Cookie: COOKIE }), env());
+    const res = await worker.fetch(post("/api/rpc/vendor_profile_save", { p_data: { seats: "40" } }, { Cookie: COOKIE }), env());
     expect(res.status).toBe(200);
     expect(await res.json()).toBeNull();
   });
@@ -214,29 +214,29 @@ describe("every POST", () => {
   it("refuses another origin, or none", async () => {
     let res = await worker.fetch(post("/api/login", { login: "a", password: "b" }, { Origin: "https://evil.example" }), env());
     expect(res.status).toBe(403);
-    const noOrigin = new Request(`${ORIGIN}/api/rpc/fnb_me`, { method: "POST", headers: { "Content-Type": "application/json", Cookie: COOKIE }, body: "{}" });
+    const noOrigin = new Request(`${ORIGIN}/api/rpc/vendor_me`, { method: "POST", headers: { "Content-Type": "application/json", Cookie: COOKIE }, body: "{}" });
     res = await worker.fetch(noOrigin, env());
     expect(res.status).toBe(403);
     expect(calls).toHaveLength(0);
   });
 
   it("takes JSON only", async () => {
-    const res = await worker.fetch(post("/api/rpc/fnb_me", "p_uid=1", { Cookie: COOKIE, "Content-Type": "application/x-www-form-urlencoded" }), env());
+    const res = await worker.fetch(post("/api/rpc/vendor_me", "p_uid=1", { Cookie: COOKIE, "Content-Type": "application/x-www-form-urlencoded" }), env());
     expect(res.status).toBe(415);
   });
 
   it("refuses bodies that are not a JSON object, and big ones", async () => {
-    let res = await worker.fetch(post("/api/rpc/fnb_me", "[1,2]", { Cookie: COOKIE }), env());
+    let res = await worker.fetch(post("/api/rpc/vendor_me", "[1,2]", { Cookie: COOKIE }), env());
     expect(res.status).toBe(400);
-    res = await worker.fetch(post("/api/rpc/fnb_me", "{not json", { Cookie: COOKIE }), env());
+    res = await worker.fetch(post("/api/rpc/vendor_me", "{not json", { Cookie: COOKIE }), env());
     expect(res.status).toBe(400);
-    res = await worker.fetch(post("/api/rpc/fnb_request", { p_note: "x".repeat(RPC_BODY_LIMIT) }, { Cookie: COOKIE }), env());
+    res = await worker.fetch(post("/api/rpc/vendor_request", { p_note: "x".repeat(RPC_BODY_LIMIT) }, { Cookie: COOKIE }), env());
     expect(res.status).toBe(413);
     expect(calls).toHaveLength(0);
   });
 
   it("refuses other methods on /api", async () => {
-    const res = await worker.fetch(new Request(`${ORIGIN}/api/rpc/fnb_me`), env());
+    const res = await worker.fetch(new Request(`${ORIGIN}/api/rpc/vendor_me`), env());
     expect(res.status).toBe(405);
   });
 });

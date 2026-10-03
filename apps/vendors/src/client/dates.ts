@@ -138,7 +138,7 @@ export type Ordinal = 1 | 2 | 3 | 4 | -1;
 
 export type Pattern = { ordinal: Ordinal; interval: 1 | 2 | 3; from: Iso; until: Iso };
 
-/** The arguments fnb_preview / fnb_request take for the sentence "Every [n] Saturday...". */
+/** The arguments vendor_preview / vendor_request take for the sentence "Every [n] Saturday...". */
 export function patternArgs(p: Pattern): { p_mode: "recurring"; p_ordinal: number; p_interval: number; p_from: Iso; p_until: Iso } {
   return { p_mode: "recurring", p_ordinal: p.ordinal, p_interval: p.interval, p_from: p.from, p_until: p.until };
 }
@@ -153,7 +153,7 @@ export function defaultUntil(today: Iso, horizonDays: number): Iso {
   return addDays(today, horizonDays);
 }
 
-/** The Saturdays a pattern names (as the database's _fnb_pattern_days), for showing locally. */
+/** The Saturdays a pattern names (as the database's _vendor_pattern_days), for showing locally. */
 export function patternDays(p: Pattern): Iso[] {
   const out: Iso[] = [];
   for (let m = monthStart(p.from), i = 0; m <= p.until && i < 61; m = addMonths(m, p.interval), i++) {

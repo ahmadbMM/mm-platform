@@ -19,8 +19,8 @@ export async function renderBookings(main: HTMLElement): Promise<void> {
   main.append(h("h1", {}, t("bookingsTitle")), h("p", { class: "loading", role: "status" }, t("loading")));
   // The calendar call is the one place a venue's own requests come from; it takes 400 days at most.
   const [up, past] = await Promise.all([
-    rpc<CalDay[]>("fnb_calendar", { p_from: today, p_to: addDays(today, 400) }),
-    rpc<CalDay[]>("fnb_calendar", { p_from: addDays(today, -365), p_to: addDays(today, -1) }),
+    rpc<CalDay[]>("vendor_calendar", { p_from: today, p_to: addDays(today, 400) }),
+    rpc<CalDay[]>("vendor_calendar", { p_from: addDays(today, -365), p_to: addDays(today, -1) }),
   ]);
   clear(main);
   main.append(h("h1", {}, t("bookingsTitle")));
@@ -112,7 +112,7 @@ function cancelDialog(main: HTMLElement, r: Row): void {
   go.addEventListener("click", async () => {
     clear(msg);
     busy(go, true, t("sending"));
-    const res = await rpc<number>("fnb_cancel", { p_booking: m.id, p_reason: reason.value.slice(0, 300), p_series: series });
+    const res = await rpc<number>("vendor_cancel", { p_booking: m.id, p_reason: reason.value.slice(0, 300), p_series: series });
     busy(go, false, t("confirmCancel"));
     if (!res.ok) { msg.append(errorNote(res.code)); return; }
     const n = Number(res.data) || 0;
