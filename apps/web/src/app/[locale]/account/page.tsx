@@ -47,7 +47,7 @@ import { T as ACCOUNT } from "@/components/account/Account.text";
 import { loadAccountExtras } from "@/lib/account-extras";
 import { profilePct, weekStreak } from "@/lib/ride-record";
 import PushToggle from "@/components/account/PushToggle";
-import { PRIVACY_VERSION } from "@/content/privacy-notice";
+import { PRIVACY_ASK_FROM } from "@/content/privacy-notice";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
 // the next rides as the booking app's own tickets (changing one opens the booking app), the Club
@@ -150,7 +150,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   };
   // The privacy notice and ride news are asked once more when this version was never confirmed,
   // or ride news never answered (_consentCheck).
-  const ask = extras.consents ? { ack: extras.consents.privacyVersion !== PRIVACY_VERSION, news: !extras.consents.rideNewsAt } : null;
+  // Asked again only for a version older than the last one riders must confirm (PRIVACY_ASK_FROM, the
+  // booking app's rule): a notice change the owner decides needs no confirmation asks nobody.
+  const ask = extras.consents ? { ack: !extras.consents.privacyVersion || extras.consents.privacyVersion < PRIVACY_ASK_FROM, news: !extras.consents.rideNewsAt } : null;
   // The current password is asked for unless the account has none (it signs in with Google or
   // Apple only: the server then asks for one itself, in the corrections); not known for sure when
   // it signs in with either but may have a password too.
