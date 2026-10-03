@@ -3,8 +3,8 @@
 // (the numbers themselves are formatted elsewhere with -nu-latn).
 
 const en = {
-  appName: "MicroMobility Partners",
-  appTagline: "Breakfast partners for the Saturday social ride",
+  appName: "MicroMobility Vendors",
+  appTagline: "Breakfast vendors for the Saturday social ride",
   langSwitch: "العربية",
   langSwitchLabel: "Switch to Arabic",
   signOut: "Sign out",
@@ -233,8 +233,8 @@ const en = {
 export type Key = keyof typeof en;
 
 const ar: Record<Key, string> = {
-  appName: "شركاء مايكروموبيليتي",
-  appTagline: "شركاء الفطور لجولة السبت الاجتماعية",
+  appName: "موردو مايكروموبيليتي",
+  appTagline: "موردو الفطور لجولة السبت الاجتماعية",
   langSwitch: "English",
   langSwitchLabel: "التبديل إلى الإنجليزية",
   signOut: "تسجيل الخروج",
@@ -253,7 +253,7 @@ const ar: Record<Key, string> = {
   signingIn: "جارٍ الدخول…",
   showPassword: "إظهار كلمة المرور",
   hidePassword: "إخفاء كلمة المرور",
-  noAccount: "تنشئ مايكروموبيليتي حسابات الشركاء. للحصول على حساب، تواصل معنا.",
+  noAccount: "تنشئ مايكروموبيليتي حسابات الموردين. للحصول على حساب، تواصل معنا.",
   errBadLogin: "البريد الإلكتروني أو رقم الجوال أو كلمة المرور غير صحيحة.",
   errLocked: "محاولات كثيرة. أوقفنا الدخول مؤقتًا لحمايتك؛ حاول مرة أخرى بعد 15 دقيقة.",
   errRateLimit: "محاولات كثيرة من هذا الاتصال. انتظر دقيقة ثم حاول مرة أخرى.",
