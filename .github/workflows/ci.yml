@@ -127,7 +127,7 @@ jobs:
   # Every push lints, typechecks, unit-tests and builds it, then drives it in a browser on
   # `wrangler dev` against a stub database (e2e/vendors; never a real one). It deploys only once
   # the repository variable MM_VENDORS is "on" and the Cloudflare secrets exist: production from
-  # main (Worker micromobility-partners), staging from the staging branch (env "staging"). Its
+  # main (Worker micromobility-vendors), staging from the staging branch (env "staging"). Its
   # address is not decided yet, so a deploy answers on workers.dev only (apps/vendors/wrangler.jsonc).
   vendors:
     runs-on: ubuntu-latest
