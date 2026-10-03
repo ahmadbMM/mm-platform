@@ -3,10 +3,11 @@
 import { rpc } from "./api";
 import { announce, app, button, errorNote, isRtl, t } from "./app";
 import { openBooking } from "./book";
+import { openFeedback } from "./feedback";
 import { addDays, addMonths, arrowStep, hijriLabel, hijriMonthTitle, longDate, monthGrid, monthRange, monthStart, num, shortDate, type Iso } from "./dates";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
-import { dayStatus, reasonText, STATUS_KEY, type CalDay, type DayStatus } from "./model";
+import { awaitsFeedback, dayStatus, reasonText, STATUS_KEY, type CalDay, type DayStatus } from "./model";
 
 export const STATUS_ICON: Record<DayStatus, IconName> = {
   available: "open",
@@ -27,6 +28,11 @@ const state = {
   focus: "" as Iso,
   error: "",
 };
+
+/** Opens the feedback dialog for a day's own booking; the calendar reloads after a save. */
+function askFeedback(main: HTMLElement, entry: CalDay): void {
+  openFeedback({ day: entry.day, mine: entry.mine!, riders: entry.riders }, () => { state.loadedFor = ""; void renderCalendar(main); });
+}
 
 /** Forget the loaded month (after a booking or a cancel). */
 export function invalidateCalendar(): void {
@@ -109,7 +115,7 @@ function draw(main: HTMLElement): void {
     main.append(errorNote(state.error), button(t("retry"), { onclick: () => { state.loadedFor = ""; void renderCalendar(main); } }));
     return;
   }
-  main.append(grid(main, today), list(today), legend);
+  main.append(grid(main, today), list(main, today), legend);
 }
 
 function monthTitleText(): string {
@@ -133,7 +139,8 @@ function grid(main: HTMLElement, today: Iso): HTMLElement {
       const st = dayStatus(day, entry, today, app.me!.tier);
       const words = statusWords(st, entry);
       const riders = st === "confirmed" && entry?.riders != null ? ridersText(entry.riders) : "";
-      const label = [longDate(day, app.lang), words, riders, day === today ? t("today") : ""].filter(Boolean).join(", ");
+      const fb = !!entry && awaitsFeedback(day, entry.mine, today);
+      const label = [longDate(day, app.lang), words, riders, fb ? `${t("fbMarker")}: ${t("fbWaiting")}` : "", day === today ? t("today") : ""].filter(Boolean).join(", ");
       const btn = h(
         "button",
         {
@@ -142,12 +149,13 @@ function grid(main: HTMLElement, today: Iso): HTMLElement {
           "data-day": day,
           tabindex: day === state.focus ? 0 : -1,
           "aria-label": label,
-          onclick: () => activate(day, st),
+          onclick: () => (fb ? askFeedback(main, entry!) : activate(day, st)),
         },
         h("span", { class: "d-num" }, num(Number(day.slice(8)), app.lang)),
         h("span", { class: "d-hijri" }, hijriLabel(day, app.lang)),
         st === "not_open" ? null : h("span", { class: "d-status" }, icon(STATUS_ICON[st]), h("span", {}, t(STATUS_KEY[st]))),
         riders ? h("span", { class: "d-riders" }, icon("users"), h("span", {}, num(entry!.riders!, app.lang))) : null,
+        fb ? h("span", { class: "d-feedback" }, icon("star"), h("span", {}, t("fbMarker"))) : null,
       );
       row.append(h("div", { role: "gridcell", class: "cal-cell" }, btn));
     }
@@ -181,7 +189,7 @@ function activate(day: Iso, st: DayStatus): void {
   else announce(`${longDate(day, app.lang)}: ${t(STATUS_KEY[st])}`);
 }
 
-function list(today: Iso): HTMLElement {
+function list(main: HTMLElement, today: Iso): HTMLElement {
   const days = [...state.days.values()].filter((d) => d.day.slice(0, 7) === state.month.slice(0, 7)).sort((a, b) => a.day.localeCompare(b.day));
   const ol = h("ol", { class: "cal-list" });
   if (!days.length) {
@@ -191,6 +199,7 @@ function list(today: Iso): HTMLElement {
   for (const entry of days) {
     const st = dayStatus(entry.day, entry, today, app.me!.tier);
     const riders = st === "confirmed" && entry.riders != null ? ridersText(entry.riders) : "";
+    const fb = awaitsFeedback(entry.day, entry.mine, today);
     ol.append(
       h(
         "li",
@@ -199,7 +208,10 @@ function list(today: Iso): HTMLElement {
         h("div", { class: "ci-status" },
           h("span", { class: `chip st-${st}` }, icon(STATUS_ICON[st]), h("span", {}, statusWords(st, entry))),
           riders ? h("span", { class: "ci-riders" }, icon("users"), h("span", {}, riders)) : null),
-        st === "available"
+        fb
+          ? h("button", { type: "button", class: "btn btn-primary btn-small fb-marker", "aria-label": `${t("fbMarker")}: ${shortDate(entry.day, app.lang)}`, onclick: () => askFeedback(main, entry) },
+            icon("star"), h("span", {}, t("fbMarker")))
+          : st === "available"
           ? button(t("requestThis"), { small: true, kind: "primary", onclick: () => openBooking(entry.day) })
           : st === "requested" || st === "confirmed"
             ? h("a", { class: "btn btn-ghost btn-small", href: "#bookings" }, h("span", {}, t("navBookings")))

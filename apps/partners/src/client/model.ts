@@ -41,7 +41,30 @@ export type Me = {
 
 export type BookingStatus = "pending" | "confirmed" | "declined" | "cancelled";
 
-export type Mine = { id: number; status: BookingStatus; kind: Mode; series_id: number | null; note: string; staff_note: string };
+/** The venue's feedback on one breakfast (fnb_feedback_save's answer, and mine.feedback). */
+export type Feedback = {
+  booking_id: number;
+  venue_id: number;
+  day: Iso;
+  rating: number;
+  turnout: number | null;
+  went_well: string;
+  improve: string;
+  created_at: string;
+  updated_at: string;
+};
+
+/** feedback / feedback_open came with the feedback migration: an older database leaves both out. */
+export type Mine = {
+  id: number;
+  status: BookingStatus;
+  kind: Mode;
+  series_id: number | null;
+  note: string;
+  staff_note: string;
+  feedback?: Feedback | null;
+  feedback_open?: boolean;
+};
 
 export type CalDay = { day: Iso; state: "open" | "closed"; reason: string; mine: Mine | null; taken: boolean; riders: number | null };
 
@@ -130,6 +153,46 @@ export function lateCancel(day: Iso, m: Mine, today: Iso, tier: Tier): boolean {
   return m.status === "confirmed" && day < addDays(today, tier.cancel_cutoff_days);
 }
 
+/** The feedback given on this booking, or null (also when the database does not send it yet). */
+export function feedbackOf(m: Mine | null | undefined): Feedback | null {
+  const f = m?.feedback;
+  return f && typeof f === "object" && typeof f.rating === "number" ? f : null;
+}
+
+/** Feedback can be given or edited now: a confirmed breakfast whose window the database says is
+ *  open (from the day itself for 14 days). A missing flag reads as closed. */
+export function feedbackOpen(day: Iso, m: Mine | null | undefined, today: Iso): boolean {
+  return !!m && m.status === "confirmed" && m.feedback_open === true && day <= today;
+}
+
+/** A breakfast whose window is open and that has no feedback yet. */
+export function awaitsFeedback(day: Iso, m: Mine | null | undefined, today: Iso): boolean {
+  return feedbackOpen(day, m, today) && !feedbackOf(m);
+}
+
+/** The days in a calendar answer whose breakfast is waiting for the venue's feedback. */
+export function awaitingFeedback(days: CalDay[], today: Iso): CalDay[] {
+  return days.filter((d) => awaitsFeedback(d.day, d.mine, today));
+}
+
+export const RATINGS = [1, 2, 3, 4, 5] as const;
+const RATING_KEY: Record<number, Key> = { 1: "fbRate1", 2: "fbRate2", 3: "fbRate3", 4: "fbRate4", 5: "fbRate5" };
+
+/** "4 – Very good". */
+export function ratingText(lang: Lang, n: number): string {
+  const k = RATING_KEY[n];
+  return k ? fmt(lang, k) : String(n);
+}
+
+/** The "How many riders came?" box: empty is fine (null), otherwise a whole number 0-1000. */
+export function turnoutValue(raw: string): { ok: true; value: number | null } | { ok: false } {
+  const v = raw.trim();
+  if (!v) return { ok: true, value: null };
+  if (!/^\d{1,4}$/.test(v)) return { ok: false };
+  const n = Number(v);
+  return n <= 1000 ? { ok: true, value: n } : { ok: false };
+}
+
 /** The plan's name in the page's language. */
 export function tierName(lang: Lang, t: Tier): string {
   return (lang === "ar" ? t.name_ar : t.name_en) || t.name_en;
@@ -150,6 +213,11 @@ export function errorKey(code: string): Key {
     case "TOO_MANY": return "errTooMany";
     case "BAD_PATTERN": return "errPattern";
     case "BAD_INPUT": case "BAD_RANGE": case "BAD_MODE": return "errInput";
+    case "NOT_FOUND": return "errNotFound";
+    case "NOT_CONFIRMED": return "errNotConfirmed";
+    case "TOO_EARLY": return "errTooEarly";
+    case "TOO_LATE": return "errTooLate";
+    case "BAD_RATING": return "errRating";
     default: return "errServer";
   }
 }

@@ -22,7 +22,10 @@ const sats = [...dates.keys()].filter((d) => d > add(today, 7));
 dates.get(sats[2]).state = "closed"; dates.get(sats[2]).reason = "Ramadan";
 dates.get(sats[3]).taken = true;
 const bookings = [];
+const feedback = new Map(); // booking id -> row, as fnb_feedback_save answers it
 let nextId = 1;
+// The breakfast window for feedback: from the day itself until 14 days after.
+const feedbackOpen = (b) => b.status === "confirmed" && today >= b.day && today <= add(b.day, 14);
 
 const err = (res, message, status = 400) => { res.writeHead(status, { "Content-Type": "application/json" }); res.end(JSON.stringify({ code: "P0001", message })); };
 const ok = (res, data) => { if (data === undefined) { res.writeHead(204); res.end(); return; } res.writeHead(200, { "Content-Type": "application/json" }); res.end(JSON.stringify(data)); };
@@ -45,7 +48,14 @@ createServer((req, res) => {
     if (req.url === "/__reset") {
       Object.assign(user, { pwd: "Temp1234", token: "t".repeat(48), must_change: true });
       bookings.length = 0;
+      feedback.clear();
       return ok(res, { ok: true });
+    }
+    if (req.url === "/__past") {
+      // A confirmed breakfast on the last Saturday before today (inside the feedback window).
+      const day = [...dates.keys()].filter((d) => d < today).at(-1);
+      bookings.push({ id: nextId++, day, status: "confirmed", kind: "single", series_id: null, note: "", staff_note: "" });
+      return ok(res, { day });
     }
     const name = (req.url || "").split("/rpc/")[1];
     const a = body ? JSON.parse(body) : {};
@@ -68,7 +78,8 @@ createServer((req, res) => {
         const out = [];
         for (const [day, d] of [...dates].sort()) {
           if (day < a.p_from || day > a.p_to) continue;
-          const mine = bookings.filter((b) => b.day === day).at(-1) || null;
+          const b = bookings.filter((x) => x.day === day).at(-1);
+          const mine = b ? { ...b, feedback: feedback.get(b.id) || null, feedback_open: feedbackOpen(b) } : null;
           out.push({ day, state: d.state, reason: d.state === "closed" ? d.reason : "", mine, taken: d.taken, riders: mine?.status === "confirmed" ? 12 : null });
         }
         return ok(res, out);
@@ -86,6 +97,24 @@ createServer((req, res) => {
         if (!b) return err(res, "NOT_FOUND", 404);
         b.status = "cancelled";
         return ok(res, 1);
+      }
+      case "fnb_feedback_save": {
+        const b = bookings.find((x) => x.id === a.p_booking);
+        if (!b) return err(res, "NOT_FOUND", 404);
+        if (b.status !== "confirmed") return err(res, "NOT_CONFIRMED");
+        if (today < b.day) return err(res, "TOO_EARLY");
+        if (today > add(b.day, 14)) return err(res, "TOO_LATE");
+        if (!Number.isInteger(a.p_rating) || a.p_rating < 1 || a.p_rating > 5) return err(res, "BAD_RATING");
+        const t = a.p_turnout ?? null;
+        if (t !== null && (!Number.isInteger(t) || t < 0 || t > 1000)) return err(res, "BAD_INPUT");
+        const stamp = new Date().toISOString();
+        const row = {
+          booking_id: b.id, venue_id: venue.id, day: b.day, rating: a.p_rating, turnout: t,
+          went_well: String(a.p_went_well || "").slice(0, 1000), improve: String(a.p_improve || "").slice(0, 1000),
+          created_at: feedback.get(b.id)?.created_at || stamp, updated_at: stamp,
+        };
+        feedback.set(b.id, row);
+        return ok(res, row);
       }
       case "fnb_profile_save":
         Object.assign(venue, a.p_data, { seats: a.p_data.seats ? Number(a.p_data.seats) : null });

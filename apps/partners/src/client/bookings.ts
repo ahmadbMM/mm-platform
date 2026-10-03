@@ -3,10 +3,11 @@
 import { rpc } from "./api";
 import { announce, app, busy, button, dialog, errorNote, note, t } from "./app";
 import { invalidateCalendar, STATUS_ICON } from "./calendar";
+import { openFeedback, starRow } from "./feedback";
 import { addDays, hijriLabel, longDate, num, type Iso } from "./dates";
 import { clear, h, uid } from "./dom";
 import { icon } from "./icons";
-import { BOOKING_KEY, cancellable, KIND_KEY, lateCancel, staffNoteText, type CalDay, type Mine } from "./model";
+import { awaitingFeedback, awaitsFeedback, BOOKING_KEY, cancellable, feedbackOf, feedbackOpen, KIND_KEY, lateCancel, ratingText, staffNoteText, type CalDay, type Mine } from "./model";
 
 type Row = { day: Iso; mine: Mine; riders: number | null };
 
@@ -30,6 +31,9 @@ export async function renderBookings(main: HTMLElement): Promise<void> {
   const rows = (days: CalDay[]) => days.filter((d) => d.mine).map((d) => ({ day: d.day, mine: d.mine!, riders: d.riders }));
   const upcoming = rows(up.data || []);
   const before = rows(past.data || []).reverse();
+  // Today's breakfast sits under Upcoming, so both answers are counted.
+  const waiting = awaitingFeedback([...(up.data || []), ...(past.data || [])], today).length;
+  if (waiting) main.append(note("info", waiting === 1 ? t("fbBannerOne") : t("fbBanner", { n: num(waiting, app.lang) })));
   main.append(section(main, t("upcoming"), upcoming, t("noUpcoming")), section(main, t("past"), before, t("noPast")));
 }
 
@@ -57,10 +61,28 @@ function card(main: HTMLElement, r: Row): HTMLElement {
       : null,
     staff ? h("p", { class: "b-note" }, h("strong", {}, `${t("mmNote")}: `), staff) : null,
     m.note ? h("p", { class: "b-note" }, h("strong", {}, `${t("yourNote")}: `), m.note) : null,
+    feedbackBlock(main, r),
     cancellable(r.day, m, today)
       ? h("div", { class: "actions" }, button(t("cancel"), { kind: "danger", small: true, onclick: () => cancelDialog(main, r) }))
       : null,
   );
+}
+
+/** After the breakfast: the button asking for feedback, or the rating given (editable while open). */
+function feedbackBlock(main: HTMLElement, r: Row): HTMLElement | null {
+  const today = app.me!.today;
+  const after = () => { invalidateCalendar(); void renderBookings(main); };
+  if (awaitsFeedback(r.day, r.mine, today)) {
+    return h("div", { class: "actions fb-ask" }, button(t("fbHowDidItGo"), { kind: "primary", icon: "star", onclick: () => openFeedback(r, after) }));
+  }
+  const f = feedbackOf(r.mine);
+  if (!f) return null;
+  return h("div", { class: "fb-given" },
+    h("p", { class: "fb-rating" }, starRow(f.rating), h("span", {}, t("fbYourRating", { rating: ratingText(app.lang, f.rating) }))),
+    f.turnout != null ? h("p", { class: "b-meta" }, icon("users"), h("span", {}, t("fbRidersCame", { n: num(f.turnout, app.lang) }))) : null,
+    feedbackOpen(r.day, r.mine, today)
+      ? h("div", { class: "actions" }, button(t("fbEdit"), { small: true, icon: "star", onclick: () => openFeedback(r, after) }))
+      : null);
 }
 
 function cancelDialog(main: HTMLElement, r: Row): void {
