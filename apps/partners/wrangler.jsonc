@@ -4,10 +4,9 @@
   // come to them for breakfast. A Worker of its own, apart from the website (apps/web), so it
   // stays small and never shares the website's bundle or cookies.
   //
-  // NO ADDRESS YET: the subdomain (for example partners.micromobility.sa) is not decided. Until it
-  // is, a deploy answers on its workers.dev address only. When it is decided, add here (and in
-  // env.staging for staging's own name):
-  //   "routes": [{ "pattern": "partners.micromobility.sa", "custom_domain": true }]
+  // ADDRESS: vendors.micromobility.sa (the owner's choice, 2026-10-03), claimed as a Workers
+  // custom domain, so Cloudflare makes its DNS record on the first deploy (the name had none).
+  // Staging stays on its workers.dev address. Rollback = remove the route and redeploy.
   // The app works on any host: the cookie is host-only and every call is same-origin.
   //
   // CI deploys this (production, the top level) only while the repository variable MM_PARTNERS
@@ -19,6 +18,7 @@
   // run_worker_first: every answer, files included, goes through the Worker for its headers.
   "assets": { "directory": "dist", "binding": "ASSETS", "run_worker_first": true },
   "workers_dev": true,
+  "routes": [{ "pattern": "vendors.micromobility.sa", "custom_domain": true }],
   // Sign-in tries per connection: 10 a minute (src/worker/index.ts, withinTries). The website
   // uses namespaces 1001/1002; these are the portal's own. Bindings are not inherited by env.
   "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1101", "simple": { "limit": 10, "period": 60 } }],

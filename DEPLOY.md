@@ -140,7 +140,8 @@ own, `micromobility-partners`, not part of the website: plain TypeScript, bundle
   `--env staging` for staging's). Tests: `pnpm --filter partners test` (unit) and
   `cd e2e/partners && npm ci && npm run e2e` (a browser against a stub database).
 - Deploys: CI deploys it only while the repository variable `MM_PARTNERS` is `on` (main →
-  production, staging branch → `micromobility-partners-staging`). Until its subdomain is decided
-  it answers on workers.dev only; then add a `routes` entry in its `wrangler.jsonc`.
+  production, staging branch → `micromobility-partners-staging`). Production answers at
+  **vendors.micromobility.sa** (a Workers custom domain in its `wrangler.jsonc`; Cloudflare made
+  the DNS record), staging on its workers.dev address.
 - The venue's session token stays on the server: the Worker keeps it in an HttpOnly cookie
   (`mm_fnb`, host-only) and forwards only the allowlisted `fnb_*` functions.

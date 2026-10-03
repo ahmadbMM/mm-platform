@@ -17,7 +17,7 @@ export const CSP = [
 
 export const SECURITY_HEADERS: Record<string, string> = {
   "Content-Security-Policy": CSP,
-  // No includeSubDomains: this host's name is not decided, and it must not decide for others.
+  // No includeSubDomains: one host (vendors.micromobility.sa) must not decide for its siblings.
   "Strict-Transport-Security": "max-age=31536000",
   "X-Content-Type-Options": "nosniff",
   "X-Frame-Options": "DENY",
