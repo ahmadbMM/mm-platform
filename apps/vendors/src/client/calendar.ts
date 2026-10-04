@@ -56,13 +56,16 @@ export async function renderCalendar(main: HTMLElement): Promise<void> {
   if (state.loadedFor !== state.month) {
     clear(main);
     main.append(h("p", { class: "loading", role: "status" }, t("loading")));
-    const { from, to } = monthRange(state.month);
+    const month = state.month;
+    const { from, to } = monthRange(month);
     const r = await rpc<CalDay[]>("vendor_calendar", { p_from: from, p_to: to });
+    // Moved to another month while this one loaded: that month's own call draws the page.
+    if (month !== state.month) return;
     state.days = new Map();
     state.error = "";
     if (r.ok) {
       for (const d of r.data || []) state.days.set(d.day, d);
-      state.loadedFor = state.month;
+      state.loadedFor = month;
     } else {
       state.error = r.code;
     }

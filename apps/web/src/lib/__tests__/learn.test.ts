@@ -127,9 +127,9 @@ describe("learnPayload", () => {
     // a Me card whose person's details are wrong points at the details, not at the card
     expect(send({ birth: "" })).toEqual({ error: "birth_date" });
     expect(send({ height: "" })).toEqual({ error: "height" });
-    // the person may be a baby only if nobody is "Me": a child of theirs is fine at any age
-    expect(send({ birth: "2026-03-01" })).toEqual({ error: "birth_date" });
-    expect(error({ birth: "2026-03-01", learners: [kid] })).toBeNull();
+    // the person holds the account, so is 5 or older (the booking app's rule); a child of theirs is fine at any age
+    expect(send({ birth: "2026-03-01" })).toEqual({ error: "birth_young" });
+    expect(error({ birth: "2026-03-01", learners: [kid] })).toBe("birth_young");
   });
 
   it("takes a learner's height from 80 to 250 cm", () => {
@@ -139,7 +139,12 @@ describe("learnPayload", () => {
 
   it("needs the person's date of birth: a real day, not in the future, at most 99 years ago", () => {
     for (const b of ["", "1996-02-30", "1996-13-01", "2026-09-29", "1926-09-28", "96-02-10"]) expect(error({ birth: b, learners: [kid] }), b).toBe("birth_date");
-    for (const b of ["1926-09-29", "2026-09-28", "2000-02-29"]) expect(error({ birth: b, learners: [kid] }), b).toBeNull();
+    for (const b of ["1926-09-29", "2021-09-28", "2000-02-29"]) expect(error({ birth: b, learners: [kid] }), b).toBeNull();
+  });
+
+  it("needs the person signing up to be 5 or older, as every account is", () => {
+    for (const b of ["2021-09-29", "2026-09-28", "2024-01-01"]) expect(error({ birth: b, learners: [kid] }), b).toBe("birth_young");
+    expect(error({ birth: "2021-09-28", learners: [kid] })).toBeNull();
   });
 
   it("needs the person's gender, a nationality from the booking app's list and a height from 80 to 250 cm", () => {

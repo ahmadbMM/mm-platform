@@ -32,6 +32,15 @@ describe("/media", () => {
     expect((await call("home/logo.svg")).status).toBe(404);
   });
 
+  it("hands a route's GPX file over as a download, whatever type the storage gives it", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => answer("<gpx></gpx>", "application/octet-stream")));
+    const res = await call("routes/obhur.gpx");
+    expect(res.status).toBe(200);
+    expect(res.headers.get("content-type")).toBe("application/gpx+xml");
+    expect(res.headers.get("content-disposition")).toBe("attachment");
+    expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+  });
+
   it("answers a slow or unreachable bucket with a 504 that nothing keeps", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => { throw new DOMException("The operation was aborted", "TimeoutError"); }));
     const res = await call("home/abc.jpg");

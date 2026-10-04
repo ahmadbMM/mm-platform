@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { bookingRef, codeReady, countdownAt, countdownMoments, dayWord, doneToday, ticketRoute, ticketStages, fmtClock, fmtDayDate, icsFor, queueNumbers, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
+import { routeItems } from "../route-names";
+import { bookingRef, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, ticketRoute, ticketStages, fmtClock, fmtDayDate, icsFor, queueNumbers, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
 
 // My Account's tickets follow the booking app's own rules (renderBookingTicket, bookingRef,
 // downloadBookingICS): what the code says, when it is shown, and what the line under it says.
@@ -122,6 +123,13 @@ describe("the ride night", () => {
     expect(countdownMoments(sat, "2099-03-04").map((x) => x[1])).toEqual(["gather", "start"]);
     expect(countdownMoments(ticketSession({ ...satRow, ride_kind: "swim", needs_approval: false })!, "2099-03-04").map((x) => x[1])).toEqual(["start"]);
   });
+  it("writes the countdown's line outside the browser too (the ticket is drawn on the server)", () => {
+    const m = countdownMoments(jcc, "2099-03-01");
+    const t = { collect: "Bike collection in {0}", gather: "Gathering in {0}", start: "Starts in {0}", h: "{h} h", hm: "{h} h {m} min", m: "{m} min" };
+    expect(cdLine(m, Date.parse("2099-03-01T19:00:00+03:00"), t)).toBe("Bike collection in 1 h 15 min");
+    expect(cdLine(m, Date.parse("2099-03-01T20:30:00+03:00"), t)).toBe("Starts in 30 min");
+    expect(cdLine(m, Date.parse("2099-03-01T21:00:00+03:00"), t)).toBe("");
+  });
   it("shows where the rider is: booked, checked in, on the bike, done", () => {
     const at = (r: Partial<TicketRow>[], bikes = true, name: string | null = null) => ticketStages(r.map(row), bikes, name, "en");
     expect(at([{}]).cur).toBe(0);
@@ -153,6 +161,12 @@ describe("the ride night", () => {
     expect(ticketRoute({ ...jcc, location: "Obhur" }, routes)).toBeNull();
     expect(ticketRoute(sat, routes)).toBeNull(); // meets at a map link
     expect(ticketRoute({ ...jcc, bikes: false }, routes)).toBeNull();
+  });
+  it("keeps the map link of a route as the Routes page resolves it (routeItems)", () => {
+    const content = { "routes.routes.items": [{ slug: { en: "obhur", ar: "obhur" }, name: { en: "Obhur coast", ar: "شاطئ أبحر" }, km: 32.5, href: { href: "https://maps.app.goo.gl/o" } }] };
+    const routes = routeItems(content, "en");
+    expect(routes.get("obhur")?.href).toBe("https://maps.app.goo.gl/o");
+    expect(ticketRoute({ ...jcc, routeSlug: "obhur" }, routes)).toMatchObject({ name: "Obhur coast", href: "https://maps.app.goo.gl/o" });
   });
 });
 

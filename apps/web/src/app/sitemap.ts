@@ -23,12 +23,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (closed) return [];
   const paths = ["/", "/privacy", ...SWITCHED_PAGES.filter((p) => !PRIVATE.has(p) && pageOn(content, p)).map((p) => `/${p}`)];
   if (pageOn(content, "experiences") && resolvePage(experiencesSchema, content, "en").learn.on) paths.push("/experiences/learn");
+  // Addresses that exist in some languages only: an article staff wrote in English alone is not on
+  // the Arabic Journal (lib/journal.ts toPosts), so its Arabic address is neither listed nor named.
+  const missing = new Map<string, string[]>();
   if (pageOn(content, "journal")) {
-    // The articles' addresses, read in English only - the dictionary-free reader, so this route
-    // does not carry every language's text (lib/content-core.ts). Same rule as the Journal's pages.
-    const en = resolvePage(journalSchema, { ...(content ?? {}), ...((await loadJournalContent()) ?? {}) }, "en");
-    const items = (Array.isArray(en.posts.items) ? en.posts.items : []) as Record<string, unknown>[];
-    paths.push(...toPosts(items, items).map((p) => `/journal/${p.slug}`));
+    // The articles' addresses, read in English (and Arabic, to see which exist there) - the
+    // dictionary-free reader, so this route does not carry every language's text
+    // (lib/content-core.ts). Same rule as the Journal's pages.
+    const all = { ...(content ?? {}), ...((await loadJournalContent()) ?? {}) };
+    const list = (v: unknown) => (Array.isArray(v) ? v : []) as Record<string, unknown>[];
+    const items = list(resolvePage(journalSchema, all, "en").posts.items);
+    const inArabic = new Set(toPosts(list(resolvePage(journalSchema, all, "ar").posts.items), items).map((p) => p.slug));
+    for (const p of toPosts(items, items)) {
+      paths.push(`/journal/${p.slug}`);
+      if (!inArabic.has(p.slug)) missing.set(`/journal/${p.slug}`, ["ar"]);
+    }
   }
   if (pageOn(content, "bikes")) {
     // The catalogue's own pages; a fleet bike's tag page (/bikes/42) is never listed.
@@ -40,7 +49,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
   const abs = (p: string) => `${SITE_URL}${p}`;
   return paths.flatMap((path) => {
-    const languages = Object.fromEntries(Object.entries(languageAlternates(path)).map(([k, v]) => [k, abs(v)]));
-    return LOCALES.map((l) => ({ url: abs(langPath(path, l.code)), alternates: { languages } }));
+    const skip = missing.get(path) ?? [];
+    const languages = Object.fromEntries(Object.entries(languageAlternates(path, skip)).map(([k, v]) => [k, abs(v)]));
+    return LOCALES.filter((l) => !skip.includes(l.code)).map((l) => ({ url: abs(langPath(path, l.code)), alternates: { languages } }));
   });
 }

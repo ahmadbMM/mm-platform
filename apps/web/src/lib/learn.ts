@@ -22,7 +22,7 @@ import { NATIONALITIES } from "@/content/nationalities";
 //     suits them: staff pick the lesson's time).
 // And the person signing up, from step 2: what the community form asks (the owner, 2026-09-28): a
 // date of birth (never in the
-// future, at most 99 years ago), gender, nationality (the booking app's list), height (80 to 250),
+// future, at most 99 years ago, and 5 or older as every account is), gender, nationality (the booking app's list), height (80 to 250),
 // profession and workplace (the owner, 2026-09-29: the company they work for, labelled Company, 2 to
 // 120 characters, checked as profession is), and Instagram and LinkedIn, which may be left empty (the form does not say so);
 // how they heard of us (one of HEARD, required: asked here and on the community form, no longer at
@@ -43,6 +43,9 @@ export type Heard = (typeof HEARD)[number];
 
 /** The ages a learner may be, whoever they are (the owner, 2026-09-28: no minimum, 99 at most). */
 export const AGE = [1, 99] as const;
+/** The person signing up is an account holder, and an account's rider is 5 or older (the booking
+ *  app's _DOB_MIN_AGE): a younger date of birth is refused there, so it is refused here too. */
+export const ACCOUNT_MIN_AGE = 5;
 export const HEIGHT = [80, 250] as const;
 export const NOTES_MAX = 600;
 export const MAX_LEARNERS = 5;
@@ -78,7 +81,7 @@ export type LearnFields = {
  *  own, with their place in the list, and the sign-up's. "learners" is the list itself - none, more
  *  than five, "self" twice or the same learner twice (the form names the card for the last two). */
 export type LearnerError = "learner_who" | "learner_name" | "learner_age" | "learner_gender" | "learner_height" | "level";
-export type PersonError = "birth_date" | "gender" | "nationality" | "height" | "instagram" | "linkedin" | "profession" | "workplace" | "heard_from" | "notes";
+export type PersonError = "birth_date" | "birth_young" | "gender" | "nationality" | "height" | "instagram" | "linkedin" | "profession" | "workplace" | "heard_from" | "notes";
 export type LearnProblem = { error: LearnerError; index: number } | { error: "learners"; index?: number } | { error: PersonError; index?: undefined };
 
 /** One learner, as learn_apply() reads them. */
@@ -220,11 +223,11 @@ export function learnPayload(f: LearnFields, lang: string, today: string = riyad
   }
   const age = ageOn(f.birth, today);
   if (age === null || f.birth > today || age > AGE[1]) return { error: "birth_date" };
+  if (age < ACCOUNT_MIN_AGE) return { error: "birth_young" };
   if (!oneOf(GENDERS, f.gender)) return { error: "gender" };
   if (!NATIONALITY_NAMES.has(f.nationality)) return { error: "nationality" };
   const height = wholeNumber(f.height);
   if (height === null || height < HEIGHT[0] || height > HEIGHT[1]) return { error: "height" };
-  if (learners.some((l) => l.who === "self") && age < AGE[0]) return { error: "birth_date" };
   const instagram = igNorm(f.instagram), linkedin = liNorm(f.linkedin);
   if (!igOk(instagram)) return { error: "instagram" };
   if (!liOk(linkedin)) return { error: "linkedin" };

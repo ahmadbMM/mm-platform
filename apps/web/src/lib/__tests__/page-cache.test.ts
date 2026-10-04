@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { pageCacheKey, servePage } from "../page-cache";
+import { NO_PAGE_CACHE, pageCacheKey, servePage } from "../page-cache";
 
 // The edge page cache (lib/page-cache.ts): which requests may be answered from a copy, and how.
 const SITE = "https://micromobility.sa";
@@ -75,6 +75,14 @@ describe("servePage", () => {
     expect(cache.m.size).toBe(0);
     const handler = { fetch: vi.fn(async () => html()) };
     await servePage(get("/club?lang=ar"), { PAGE_CACHE: "off" }, ctx(), handler, cache);
+    expect(cache.m.size).toBe(0);
+  });
+  it("never keeps a page drawn without the site's state (the proxy marks it)", async () => {
+    const cache = fakeCache();
+    const handler = { fetch: vi.fn(async () => html("<html>coming soon</html>", { [NO_PAGE_CACHE]: "1" })) };
+    const c = ctx();
+    await servePage(get("/?lang=en"), {}, c, handler, cache);
+    await Promise.all(c.waits);
     expect(cache.m.size).toBe(0);
   });
 });

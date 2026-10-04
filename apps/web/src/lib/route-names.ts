@@ -20,8 +20,8 @@ export function routeItems(content: SiteContent | null, locale: Locale): Map<str
   const out = new Map<string, RouteItem>();
   for (const r of resolvePage(routesSchema, content, locale).routes.items) {
     if (!r.slug || !r.name || out.has(r.slug)) continue;
-    const href = (r.href as { href?: unknown } | undefined)?.href;
-    out.set(r.slug, { name: r.name, km: Number(r.km) || 0, level: String(r.level ?? ""), surface: String(r.surface ?? ""), href: typeof href === "string" ? href : "" });
+    // resolvePage hands a link field back as its address (a string), never as {href}
+    out.set(r.slug, { name: r.name, km: Number(r.km) || 0, level: String(r.level ?? ""), surface: String(r.surface ?? ""), href: typeof r.href === "string" ? r.href : "" });
   }
   return out;
 }

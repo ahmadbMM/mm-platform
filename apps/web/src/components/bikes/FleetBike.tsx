@@ -136,7 +136,7 @@ export default async function FleetBike({ code, locale }: { code: string; locale
                 {g.heading && <h2>{g.heading}</h2>}
                 <div className="bk-grid">
                   {g.fields.map((f) => (
-                    <div className="bk-field" key={f.label}>
+                    <div className="bk-spec" key={f.label}>
                       <p className="bk-label">{f.label}</p>
                       <p className="bk-value">{f.value}</p>
                     </div>

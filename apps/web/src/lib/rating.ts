@@ -116,6 +116,12 @@ export function bookingOrigin(content: SiteContent | null): string {
   try { return new URL(/^https:\/\//i.test(href) ? href : BOOKING_URL).origin; } catch { return new URL(BOOKING_URL).origin; }
 }
 
+/** The booking app's status as the Google Wallet route's own: a status that cannot carry a JSON
+ *  body (204, 205, 304) or is not a final answer made `new Response` throw, so it reads as a 502. */
+export function relayStatus(s: number): number {
+  return Number.isInteger(s) && s >= 200 && s <= 599 && s !== 204 && s !== 205 && s !== 304 ? s : 502;
+}
+
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const dayOf = (r: Record<string, unknown>) => (S(r.session_date) || S(r.session_id)).slice(0, 10);
 

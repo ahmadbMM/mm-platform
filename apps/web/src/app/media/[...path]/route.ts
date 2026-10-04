@@ -12,7 +12,10 @@
 // Only pictures and PDFs are served: raster images (a model's photos, a category's cover) and the
 // catalogue's spec sheets. Never SVG: an SVG is a document that can carry script, and served inline
 // from the site's own address it would run as the site. The type is the storage's own, never
-// guessed from the name (nosniff). Eight seconds per fetch: past that the answer is a 504 nobody
+// guessed from the name (nosniff). The one exception is a route's GPX file (Routes > GPX file,
+// "a file uploaded to the site"): the storage names it anything from application/gpx+xml to
+// application/octet-stream, so a .gpx is always handed over as a download, never opened as a page
+// (GPX is XML, which a browser would render - and an XHTML script in it would run as the site). Eight seconds per fetch: past that the answer is a 504 nobody
 // keeps, not a Worker hanging on a slow bucket.
 const WIDTHS = new Set(["640", "1280"]);
 const TIMEOUT_MS = 8000;
@@ -42,6 +45,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
   if (!res) return new Response("The photo could not be fetched", { status: 504, headers: { "cache-control": "no-store" } });
   if (!res.ok) return new Response("Not found", { status: 404, headers: { "cache-control": "public, max-age=60" } });
   const type = res.headers.get("content-type") || "application/octet-stream";
+  if (/\.gpx$/i.test(rel) && !small) {
+    return new Response(res.body, {
+      headers: { "content-type": "application/gpx+xml", "content-disposition": "attachment", "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff", "content-security-policy": "default-src 'none'; sandbox" },
+    });
+  }
   if (!SERVED.test(type)) return new Response("Not found", { status: 404 });
   return new Response(res.body, {
     // inline: a spec sheet opens in the browser's own viewer rather than downloading.

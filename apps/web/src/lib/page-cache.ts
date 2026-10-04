@@ -52,7 +52,11 @@ export function pageCacheKey(req: Request, version: string): string | null {
   return `https://page-cache.micromobility.sa${url.pathname}?lang=${lang}&v=${encodeURIComponent(version)}`;
 }
 
-const storable = (r: Response) => r.status === 200 && (r.headers.get("content-type") || "").startsWith("text/html");
+/** Set by the proxy on a page drawn without the site's state (the database unreachable and no copy
+ *  of it anywhere yet): such a page reads as Coming Soon, and must not be kept for everyone. */
+export const NO_PAGE_CACHE = "x-mm-no-page-cache";
+
+const storable = (r: Response) => r.status === 200 && (r.headers.get("content-type") || "").startsWith("text/html") && !r.headers.has(NO_PAGE_CACHE);
 
 function toStore(r: Response): Response {
   const h = new Headers(r.headers);

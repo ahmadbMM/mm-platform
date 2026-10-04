@@ -1,3 +1,4 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { memo } from "./memo";
 import { SITE_URL } from "./seo";
 
@@ -108,18 +109,37 @@ export function profilePaths(profile: number[], w = 320, h = 80): { line: string
   return { line, area: `${line}L${w} ${h}L0 ${h}Z`, min: Math.round(lo), max: Math.round(hi) };
 }
 
-/** Only an https address, or one of this site's own paths, is fetched. */
+/** Only an https address, or one of this site's own paths, is fetched. A file staff uploaded
+ *  (/media/...) is read from the storage itself, not through this site's address: a Worker asking
+ *  its own zone is sent to the origin (the old host), never to itself. */
 export function gpxUrl(href: string): string | null {
   if (/^https:\/\//i.test(href)) return href;
-  if (/^\/(?!\/)/.test(href)) return `${SITE_URL}${href}`;
+  const media = /^\/media\/([a-z0-9_-]+(?:\/[A-Za-z0-9_.-]+)+)$/.exec(href);
+  if (media && !media[1].includes("..")) {
+    const store = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    return store ? `${store}/storage/v1/object/public/site/${media[1]}` : null;
+  }
+  if (/^\/(?!\/)/.test(href) && !href.startsWith("/media/")) return `${SITE_URL}${href}`;
   return null;
+}
+
+/** The site's own files (public/, e.g. /site/...) through the Worker's assets, for the same reason;
+ *  null off Cloudflare (tests, `next start`), where the address is fetched as it is. */
+function assetFetch(href: string): typeof fetch | null {
+  if (!/^\/(?!\/|media\/)/.test(href)) return null;
+  try {
+    const assets = (getCloudflareContext().env as { ASSETS?: { fetch: typeof fetch } }).ASSETS;
+    return assets ? ((input, init) => assets.fetch(input, init)) as typeof fetch : null;
+  } catch {
+    return null;
+  }
 }
 
 async function readGpx(href: string, fetchImpl: typeof fetch): Promise<GpxTrack | null> {
   const url = gpxUrl(href);
   if (!url) return null;
   try {
-    const res = await fetchImpl(url, { signal: AbortSignal.timeout(4000), headers: { Accept: "application/gpx+xml, application/xml, text/xml, */*" } });
+    const res = await (assetFetch(href) ?? fetchImpl)(url, { signal: AbortSignal.timeout(4000), headers: { Accept: "application/gpx+xml, application/xml, text/xml, */*" } });
     if (!res.ok) return null;
     const len = Number(res.headers.get("content-length") || 0);
     if (len > MAX_BYTES) return null;

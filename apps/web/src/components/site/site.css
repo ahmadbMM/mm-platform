@@ -65,6 +65,10 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
 /* ── Announcement bar ── */
 .mm-ann { background: #1a1919; color: #d5dbd6; font-size: 13px; display: flex; justify-content: center; gap: 26px; flex-wrap: wrap; padding: 9px 16px; text-align: center; }
 .mm-ann a { color: #03ff89 !important; font-weight: 600; flex: none; }
+/* The pause button: a quiet round icon at the end of the line, a 24px target. */
+.mm-ann-pause { flex: none; display: inline-grid; place-items: center; width: 24px; height: 24px; margin: -3px 0; border: 0; border-radius: 50%; background: transparent; color: #d5dbd6; cursor: pointer; }
+.mm-ann-pause:hover, .mm-ann-pause[aria-pressed="true"] { color: #03ff89; }
+.mm-ann-pause:focus-visible { outline: 2px solid #03ff89; outline-offset: 1px; }
 @media (max-width: 760px) { .mm-ann { font-size: 11.5px; gap: 12px; padding: 6px 12px; flex-wrap: nowrap; white-space: nowrap; overflow: hidden; } .mm-ann span { overflow: hidden; text-overflow: ellipsis; min-width: 0; } }
 
 /* ── Staff preview bar ── */

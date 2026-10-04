@@ -69,7 +69,7 @@ export const helpSchema = {
           qa(["How is my money refunded?", "كيف يُعاد المبلغ؟"],
             ["Once we have received and checked the product, the refund goes back the way you paid.", "بعد استلامنا المنتج وفحصه، يُعاد المبلغ بطريقة الدفع نفسها التي استخدمتها."]),
           qa(["What if the product is faulty?", "ماذا لو كان في المنتج عيب؟"],
-            ["Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.", "العيوب المصنعية يشملها ضماننا لمدة سنتين: راجع تبويب الضمان، أو تواصل معنا وسنعالجها لك."]),
+            ["Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.", "العيوب المصنعية يشملها ضماننا، ويوضح تبويب الضمان ما يشمله. تواصل معنا وسنعالجها لك."]),
         ]),
         txt("warrantyTab", 30, "Tab 4: name", "التبويب ٤: الاسم", "Warranty", "الضمان"),
         answers("warranty", "Tab 4: questions", "التبويب ٤: الأسئلة", [

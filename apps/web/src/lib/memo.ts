@@ -106,9 +106,17 @@ const edgeCache = (): EdgeCache | null => {
   try { return ((globalThis as { caches?: { default?: EdgeCache } }).caches?.default) ?? null; } catch { return null; }
 };
 
+/** Which database the copies come from: its project ref (abcd from https://abcd.supabase.co). The
+ *  production and staging Workers answer in the same zone and so share one edge cache; without it
+ *  in the key each overwrote the other's copy, and a failed read could show staging's content on
+ *  the real site. */
+export function edgeScope(url: string | undefined = process.env.NEXT_PUBLIC_SUPABASE_URL): string {
+  try { return url ? new URL(url).hostname.split(".")[0].toLowerCase().replace(/[^a-z0-9-]/g, "") || "local" : "local"; } catch { return "local"; }
+}
+
 /** The copy kept at the edge under `kind` ("site", "journal", "catalog", "rides"). */
 export function edgeStore<T extends object>(kind: string): Keep<T> {
-  const key = `https://micromobility.sa/__site-content/${kind}/v1`;
+  const key = `https://micromobility.sa/__site-content/${edgeScope()}/${kind}/v1`;
   return {
     async read() {
       try {
