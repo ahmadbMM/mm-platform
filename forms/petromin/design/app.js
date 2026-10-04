@@ -506,7 +506,8 @@
   function syncPhone() {
     phoneOut.value = phoneE164();
     var err = document.querySelector("#f-phone .err");
-    err.setAttribute("data-t", cc.value === "966" ? "Enter a valid Saudi mobile number (05XXXXXXXX)" : "Enter a valid mobile number"); render(err);
+    var own = cc.value === "966" ? "Enter a valid Saudi mobile number (05XXXXXXXX)" : "Enter a valid mobile number";
+    err.setAttribute("data-t0", own); err.setAttribute("data-t", own); render(err);
     phoneIn.placeholder = cc.value === "966" ? "5X XXX XXXX" : "";
   }
   phoneIn.addEventListener("input", syncPhone);
@@ -533,10 +534,14 @@
   });
 
   /* Errors and banner */
+  // A message passed in (the server's "This badge is already registered...") is for this time only:
+  // the next error without one shows the box's own message again (kept in data-t0).
   function setError(fieldId, on, msg) {
     var f = document.getElementById(fieldId);
     f.classList.toggle("invalid", !!on);
-    if (msg) { var err = f.querySelector(".err"); err.setAttribute("data-t", msg); render(err); }
+    var err = f.querySelector(".err"); if (!err) return;
+    if (!err.hasAttribute("data-t0")) err.setAttribute("data-t0", err.getAttribute("data-t"));
+    if (msg || on) { err.setAttribute("data-t", msg || err.getAttribute("data-t0")); render(err); }
   }
   function showBanner(msg) {
     var b = $("#banner"), txt = b.querySelector(".banner-text");

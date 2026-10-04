@@ -31,7 +31,12 @@ type Handler = { fetch(req: Request, env: never, ctx: never): Promise<Response> 
 export function cookieOf(header: string | null, name: string): string | null {
   for (const part of (header || "").split(";")) {
     const i = part.indexOf("=");
-    if (i > 0 && part.slice(0, i).trim() === name) return decodeURIComponent(part.slice(i + 1).trim());
+    if (i > 0 && part.slice(0, i).trim() === name) {
+      const raw = part.slice(i + 1).trim();
+      // A malformed value (a lone "%" from a hand-edited or truncated cookie) threw here, outside
+      // servePage's try, and that browser got a 500 on every page; it is read as written instead.
+      try { return decodeURIComponent(raw); } catch { return raw; }
+    }
   }
   return null;
 }

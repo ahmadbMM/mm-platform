@@ -529,7 +529,7 @@
   var sent = null, busy = false;
 
   /* ── Step 1: the account ────────────────────────────────────────────────── */
-  $("#next").addEventListener("click", function () { hideBanner(); if (!busy && step === 1 && passStep(1)) createAccount(); });
+  $("#next").addEventListener("click", function () { hideBanner(); if (busy || step !== 1) return; if (consentsPending()) retryConsents(); else if (passStep(1)) createAccount(); });
   async function createAccount() {
     var email = clean($("#email").value).toLowerCase(), phone = e164(), name = fullName();
     setLoading("#next", true);
@@ -547,13 +547,24 @@
       if (r.error) { signupRefused(r.error); return; }
       var tok = r.data && r.data[0] && r.data[0].session_token;
       if (!tok) { showBanner("Could not reach the server. Please try again."); return; }
-      // The notice they confirmed and their ride-news answer, recorded the moment the account exists.
-      await rpc("customer_consents", { p_id: id, p_token: tok, p_privacy: SH.PRIVACY_VERSION, p_ride_news: news });
-      acct = { id: id, token: tok, name: name, email: email, phone: phone, made: true, needGender: false, needHeight: false };
+      acct = { id: id, token: tok, name: name, email: email, phone: phone, made: true, needGender: false, needHeight: false, consented: false, news: news };
       $("#pwd").value = ""; $("#pwd2").value = "";
-      enterStepTwo(null);
+      await saveConsents();
     } finally { setLoading("#next", false); }
   }
+  // The notice they confirmed and their ride-news answer, recorded the moment the account exists.
+  // Step 2 opens only once that is saved: a failure says so, and Continue tries the save again
+  // (the account is made by then, so it is never made twice).
+  async function saveConsents() {
+    var body = { p_id: acct.id, p_token: acct.token, p_privacy: SH.PRIVACY_VERSION, p_ride_news: acct.news };
+    var c = await rpc("customer_consents", body);
+    if (c.error) c = await rpc("customer_consents", body);
+    if (c.error) { showBanner("Could not reach the server. Please try again."); return; }
+    acct.consented = true;
+    enterStepTwo(null);
+  }
+  async function retryConsents() { setLoading("#next", true); try { await saveConsents(); } finally { setLoading("#next", false); } }
+  function consentsPending() { return !!(acct && acct.made && !acct.consented); }
   var SITE_TOO_MANY = "site:errTooManyTries"; // the sign-up page's own words
   function signupRefused(e) {
     var m = String((e.code || "") + " " + (e.message || "") + " " + (e.details || "") + " " + (e.hint || ""));
@@ -595,7 +606,7 @@
     e.preventDefault();
     if (busy) return;
     hideBanner();
-    if (step === 1) { if (passStep(1)) createAccount(); return; }
+    if (step === 1) { if (consentsPending()) retryConsents(); else if (passStep(1)) createAccount(); return; }
     if (!acct || !passStep(2)) return;
     var payload = {
       birth_date: birthValue(), nationality: $("#nat").value, bike_type: bikeType, own_bike: ownBike, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),

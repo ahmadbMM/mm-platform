@@ -436,3 +436,18 @@ test('a yes to the own-bike question picks Bike owner, which can be changed; a n
   await expect(page.locator('#success')).toBeVisible();
   expect(of('customer_community_apply')[0].p).toMatchObject({ own_bike: true, bike_type: 'Own' });
 });
+
+test('a consent save that fails keeps step 2 shut, says so, and Continue saves it without a second account', async ({ page }) => {
+  let n = 0; // the first two tries fail (the save is tried twice at once), the third lands
+  const { of, errs } = await open(page, '', { customer_consents: () => (++n <= 2 ? refuse({ message: 'upstream' }, 503) : json({ privacy_version: '2026-09-28', ride_news: false })) });
+  await accountStep(page);
+  await expect(page.locator('#banner')).toContainText('Could not reach the server');
+  await expect(step(page, 2)).toBeHidden();
+  expect(of('customer_signup')).toHaveLength(1);
+  expect(of('customer_consents')).toHaveLength(2);
+  await page.click('#next');
+  await expect(step(page, 2)).toBeVisible();
+  expect(of('customer_signup')).toHaveLength(1); // the account was made once
+  expect(of('customer_consents')).toHaveLength(3);
+  expect(errs).toEqual([]);
+});

@@ -2,7 +2,7 @@
 // database that keeps each venue's session token on the server side (session.ts).
 //
 //   POST /api/login       {login, password} -> vendor_login; sets the mm_vendor cookie
-//   POST /api/logout      clears the cookie
+//   POST /api/logout      ends the session on the server (vendor_logout) and clears the cookie
 //   POST /api/rpc/<name>  one of RPCS below, with p_uid / p_token taken from the cookie
 //
 // Every POST must come from this origin's own page, as JSON, and small. Sign-in tries are metered
@@ -169,13 +169,23 @@ async function rpc(req: Request, env: Env, name: string): Promise<Response> {
   return json(r.data ?? null);
 }
 
+// Sign out ends the token on the server too (vendor_logout, rentals 20261004100000): clearing the
+// cookie alone left a copied cookie working until the next password change. The cookie goes
+// whatever the database answers - a database without the function yet, or one out of reach, must
+// not keep a venue signed in on this device.
+async function logout(req: Request, env: Env): Promise<Response> {
+  const s = sessionOf(req);
+  if (s) await callDb(env, req, "vendor_logout", { p_uid: String(s.id), p_token: s.token });
+  return json({ ok: true }, 200, clearCookie());
+}
+
 async function route(req: Request, env: Env): Promise<Response> {
   const url = new URL(req.url);
   if (url.pathname === "/api" || url.pathname.startsWith("/api/")) {
     if (req.method !== "POST") return fail("METHOD", 405);
     if (!sameOrigin(req)) return fail("ORIGIN", 403);
     if (url.pathname === "/api/login") return login(req, env);
-    if (url.pathname === "/api/logout") return json({ ok: true }, 200, clearCookie());
+    if (url.pathname === "/api/logout") return logout(req, env);
     const m = /^\/api\/rpc\/([a-z_]{1,40})$/.exec(url.pathname);
     if (m) return rpc(req, env, m[1]);
     return fail("NOT_FOUND", 404);

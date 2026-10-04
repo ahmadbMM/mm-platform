@@ -34,6 +34,12 @@ describe("pageCacheKey", () => {
       expect(pageCacheKey(get(`${p}${p.includes("?") ? "&" : "?"}lang=en`), "v1"), p).toBeNull();
     }
   });
+  it("a malformed cookie is read as written, never a 500 on every page", () => {
+    expect(() => pageCacheKey(get("/club", "NEXT_LOCALE=%E0"), "v1")).not.toThrow();
+    expect(pageCacheKey(get("/club", "NEXT_LOCALE=%E0"), "v1")).toBeNull(); // not a language: rendered
+    expect(pageCacheKey(get("/club?lang=en", "mm_acct=%"), "v1")).toBeNull(); // still a signed-in visitor
+    expect(pageCacheKey(get("/club", "NEXT_LOCALE=de; x=%"), "v1")).toBe("https://page-cache.micromobility.sa/club?lang=de&v=v1");
+  });
   it("keeps the bike catalogue's pages, which only a staff edit changes", () => {
     for (const p of ["/bikes", "/bikes/road", "/bikes/road/carbon", "/bikes/road/carbon/alvas-da54"]) {
       expect(pageCacheKey(get(`${p}?lang=en`), "v1"), p).toBe(`https://page-cache.micromobility.sa${p}?lang=en&v=v1`);
