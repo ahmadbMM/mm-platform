@@ -39,6 +39,8 @@ export default function AmbassadorPortal(p: Props) {
   const [data, setData] = useState<Portal | null>(null);
   const [copied, setCopied] = useState(false);
   const [note, setNote] = useState("");
+  // A reward being asked for: every Redeem button waits, so a double tap never asks twice.
+  const [redeeming, setRedeeming] = useState(false);
   const N = (n: number) => fmtNum(n, p.locale);
 
   async function open(c = code, ph = phone) {
@@ -50,11 +52,13 @@ export default function AmbassadorPortal(p: Props) {
     setBusy(false);
   }
   async function redeem(i: number) {
-    setNote("");
+    if (redeeming) return;
+    setNote(""); setRedeeming(true);
     try {
       const r = await rpc<{ ok: boolean; error?: string }>("ambassador_redeem", { p_code: code.trim().toUpperCase(), p_phone: normalizePhone(phone), p_item: i });
       if (r.ok) { setNote(t.redeemed); await open(); } else setNote(r.error === "points" ? t.notEnough : t.errors[r.error || ""] || t.errors.generic);
     } catch { setNote(t.errors.generic); }
+    setRedeeming(false);
   }
 
   if (!data) {
@@ -128,7 +132,7 @@ export default function AmbassadorPortal(p: Props) {
                 <li key={i} className={balance >= r.cost && active ? "" : "off"}>
                   <span>{r.label}</span>
                   <small>{N(r.cost)}</small>
-                  <button type="button" onClick={() => redeem(r.idx)} disabled={!active || balance < r.cost}>{t.redeem}</button>
+                  <button type="button" onClick={() => redeem(r.idx)} disabled={redeeming || !active || balance < r.cost}>{t.redeem}</button>
                 </li>
               ))}
             </ul>

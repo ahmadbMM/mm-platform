@@ -37,6 +37,13 @@ describe("isBirthday", () => {
     expect(isBirthday(null, "2026-09-27")).toBe(false);
     expect(isBirthday("1990-09-27", "")).toBe(false);
   });
+  it("greets someone born on 29 February on the 28th when the year has no 29th", () => {
+    expect(isBirthday("2000-02-29", "2027-02-28")).toBe(true);
+    expect(isBirthday("2000-02-29", "2027-03-01")).toBe(false);
+    expect(isBirthday("2000-02-29", "2028-02-28")).toBe(false);
+    expect(isBirthday("2000-02-29", "2028-02-29")).toBe(true);
+    expect(isBirthday("1999-02-28", "2027-02-28")).toBe(true);
+  });
 });
 
 describe("announcementsOf", () => {

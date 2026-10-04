@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "Perawatan, perbaikan, dan rakitan custom, dengan suku cadang asli.",
  "Male": "Laki-laki",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "Cacat produksi, dengan dukungan purnajual penuh. Shifter dijamin selama dua tahun, termasuk suku cadangnya; penyalahgunaan dan roda tidak ditanggung. Syarat dan ketentuan berlaku.",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "Cacat produksi ditanggung garansi dua tahun kami: lihat tab Garansi, atau hubungi kami dan kami akan menyelesaikannya.",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "Cacat produksi ditanggung garansi kami: tab Garansi menjelaskan apa saja yang dicakup. Hubungi kami dan kami akan menyelesaikannya.",
  "Maroof verified": "Terverifikasi Maroof",
  "Mastercard": "Mastercard",
  "Me": "Saya",
@@ -1130,5 +1130,9 @@
  "not earned yet": "belum diraih",
  "Given by the MicroMobility team · {0}": "Diberikan oleh tim MicroMobility · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "Mahkota bagi yang suka variasi: tiga jenis gowes, seperti gowes reguler, gowes komunitas, dan acara.",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Balapan ketahanan menghargai mereka yang terus melaju: dua belas minggu bersepeda, boleh libur satu minggu dari setiap empat minggu."
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Balapan ketahanan menghargai mereka yang terus melaju: dua belas minggu bersepeda, boleh libur satu minggu dari setiap empat minggu.",
+ "Pause announcements": "Jeda pengumuman",
+ "Riders must be at least 5 years old. Check the birth date.": "Pesepeda harus berusia minimal 5 tahun. Periksa tanggal lahirnya.",
+ "Write each name in full: every name needs at least two letters.": "Tulis setiap nama dengan lengkap: setiap nama minimal terdiri dari dua huruf.",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "Akun Anda sudah dibuat, tetapi jawaban Anda untuk Pemberitahuan Privasi dan kabar gowes tidak dapat disimpan. Periksa koneksi lalu tekan Buat akun lagi."
 }

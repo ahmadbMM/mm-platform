@@ -1,28 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { fill } from "@/i18n/tx";
-import { fill as fillNamed } from "@/lib/fill";
-import { countdownAt, type CdKey } from "@/lib/tickets";
+import { cdLine, type CdKey, type CountdownText } from "@/lib/tickets";
 
 // The countdown on today's ticket (the booking app's _cdHtml / _cdTick): to bike collection (or the
 // gathering), then to the start, rewritten every 30 seconds and gone once the start has passed.
-// The server draws it at its own clock; the browser takes over with the rider's.
-export type CountdownText = { collect: string; gather: string; start: string; h: string; hm: string; m: string };
+// The server draws it at its own clock; the browser takes over with the rider's. Its line is
+// lib/tickets.ts cdLine, which the ticket (on the server) also reads.
 
 const Clock = () => (
   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
   </svg>
 );
-
-export function cdLine(moments: [number, CdKey][], now: number, t: CountdownText): string {
-  const c = countdownAt(moments, now);
-  if (!c) return "";
-  const h = Math.floor(c.min / 60), m = c.min % 60;
-  const d = h ? (m ? fillNamed(t.hm, { h, m }) : fillNamed(t.h, { h })) : fillNamed(t.m, { m });
-  return fill(t[c.key], d);
-}
 
 export default function Countdown({ moments, now: first, t }: { moments: [number, CdKey][]; now: number; t: CountdownText }) {
   const [now, setNow] = useState(first);

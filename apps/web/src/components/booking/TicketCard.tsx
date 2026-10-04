@@ -1,10 +1,10 @@
 import Qr from "./Qr";
-import Countdown, { cdLine } from "./Countdown";
+import Countdown from "./Countdown";
 import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
-import { bookingRef, codeReady, countdownMoments, dayWord, fmtClock, icsFor, kmText, queueNumbers, ticketLook, ticketStages, venueOf, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
+import { bookingRef, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, kmText, queueNumbers, ticketLook, ticketStages, venueOf, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site

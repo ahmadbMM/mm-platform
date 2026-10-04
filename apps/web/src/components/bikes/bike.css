@@ -215,7 +215,8 @@ html:is([lang="ar"], [lang="ur"]) .bk-root {
   grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
   gap: 16px 18px;
 }
-.bk-field { border-top: 1px solid rgba(251, 249, 244, .14); padding-top: 10px; }
+/* One specification. Never .bk-field: that is the watermark, absolute and nearly transparent. */
+.bk-spec { border-top: 1px solid rgba(251, 249, 244, .14); padding-top: 10px; }
 .bk-label {
   margin: 0 0 2px;
   font-size: 13px; font-weight: 500; text-transform: uppercase;

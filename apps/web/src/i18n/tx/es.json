@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "Mantenimiento, reparaciones y montajes a medida, con piezas de repuesto originales.",
  "Male": "Masculino",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "Los defectos de fabricación, con servicio posventa completo. Las palancas de cambio están cubiertas durante dos años, piezas de repuesto incluidas; el mal uso y las ruedas no están cubiertos. Sujeto a términos y condiciones.",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "Los defectos de fabricación están cubiertos por nuestra garantía de dos años: consulta la pestaña «Garantía» o ponte en contacto con nosotros y lo solucionaremos.",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "Los defectos de fabricación están cubiertos por nuestra garantía: la pestaña «Garantía» explica qué cubre. Ponte en contacto con nosotros y lo solucionaremos.",
  "Maroof verified": "Verificado en Maroof",
  "Mastercard": "Mastercard",
  "Me": "Yo",
@@ -1130,5 +1130,9 @@
  "not earned yet": "aún no conseguida",
  "Given by the MicroMobility team · {0}": "Otorgada por el equipo de MicroMobility · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "Una corona a la variedad: tres tipos de salida, como una salida normal, una de la comunidad y un evento.",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Las carreras de resistencia premian a quien sigue: doce semanas montando, con una semana tranquila de cada cuatro."
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Las carreras de resistencia premian a quien sigue: doce semanas montando, con una semana tranquila de cada cuatro.",
+ "Pause announcements": "Pausar anuncios",
+ "Riders must be at least 5 years old. Check the birth date.": "Los ciclistas deben tener al menos 5 años. Revisa la fecha de nacimiento.",
+ "Write each name in full: every name needs at least two letters.": "Escribe cada nombre completo: cada nombre necesita al menos dos letras.",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "Tu cuenta se ha creado, pero no se han podido guardar tus respuestas sobre el Aviso de privacidad y las noticias de rutas. Revisa la conexión y pulsa de nuevo «Crear cuenta»."
 }

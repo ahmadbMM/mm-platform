@@ -3,6 +3,8 @@
 // account's own my_bookings returns. Plain logic here, so it can be tested; the card is
 // components/booking/TicketCard.tsx.
 import { intlOf } from "@/i18n/locales";
+import { fill as fillAt } from "@/i18n/tx";
+import { fill as fillNamed } from "./fill";
 import { collectTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
@@ -195,6 +197,20 @@ export function countdownMoments(s: TicketSession | undefined, date: string): [n
 export function countdownAt(moments: [number, CdKey][], now: number): { key: CdKey; min: number } | null {
   for (const [at, key] of moments) if (at > now) return { key, min: Math.max(1, Math.ceil((at - now) / 6e4)) };
   return null;
+}
+
+/** The countdown's words: "Starts in {0}" and the like, and the hours and minutes ("{h} h {m} min"). */
+export type CountdownText = { collect: string; gather: string; start: string; h: string; hm: string; m: string };
+
+/** The countdown's line at `now` in the page's words, or "" once the start has passed. Plain logic:
+ *  the ticket (a server component) asks it whether to draw the countdown, the countdown (in the
+ *  browser) redraws it - so it lives here, not in the client component, which the server cannot call. */
+export function cdLine(moments: [number, CdKey][], now: number, t: CountdownText): string {
+  const c = countdownAt(moments, now);
+  if (!c) return "";
+  const h = Math.floor(c.min / 60), m = c.min % 60;
+  const d = h ? (m ? fillNamed(t.hm, { h, m }) : fillNamed(t.h, { h })) : fillNamed(t.m, { m });
+  return fillAt(t[c.key], d);
 }
 
 /** Where the rider is on the ride's day (_tkStages): Booked, Checked in, On the bike (only where

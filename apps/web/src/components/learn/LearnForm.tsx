@@ -75,6 +75,10 @@ export default function LearnForm(p: LearnFormProps) {
   const [acct, setAcct] = useState<Acct | null>(null);
   const [a, setA] = useState<AccountFields>(NO_ACCOUNT);
   const [si, setSi] = useState({ id: "", password: "" });
+  // An account made here whose Privacy Notice and ride-news answers could not be saved yet: the
+  // next press of Create account saves only those (the account exists - making it again would only
+  // say the email is taken).
+  const made = useRef<{ id: string; token: string; name: string; email: string; gender: Gender; height: number } | null>(null);
   // Asked on step 2 only when the account has none (older accounts).
   const [need, setNeed] = useState({ gender: false, height: false });
   const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], birth: "", gender: "", nationality: "", height: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "" });
@@ -203,6 +207,7 @@ export default function LearnForm(p: LearnFormProps) {
     if ("error" in r) return setErr({ text: t.errors[r.error] || t.errors.generic });
     setBusy(true);
     try {
+      if (made.current) return await consent(made.current);
       // Each on its own, so the message says which one is taken (as the sign-up page does).
       const ex = await rpcResult<boolean>("customer_exists", { p_email: r.args.p_email, p_phone: "" });
       if ("data" in ex && ex.data === true) return setErr({ text: t.errors.email_taken });
@@ -216,11 +221,21 @@ export default function LearnForm(p: LearnFormProps) {
       }
       const tok = Array.isArray(s.data) ? s.data[0]?.session_token : "";
       if (!tok) return setErr({ text: t.errors.generic });
-      // The notice they confirmed and their ride-news answer, recorded the moment the account exists.
-      await rpcResult("customer_consents", { p_id: newId, p_token: tok, p_privacy: p.privacyVersion, p_ride_news: a.news });
-      setA((x) => ({ ...x, password: "", password2: "" }));
-      toLesson({ id: newId, token: tok, name: r.args.p_name, email: r.args.p_email, made: true }, { gender: r.args.p_gender, height: r.args.p_height });
+      await consent({ id: newId, token: tok, name: r.args.p_name, email: r.args.p_email, gender: r.args.p_gender, height: r.args.p_height });
     } finally { setBusy(false); }
+  }
+
+  // The notice they confirmed and their ride-news answer, recorded the moment the account exists;
+  // the lesson waits until they are (customer_consents answers the record, with ride_news, once saved).
+  async function consent(acc: NonNullable<typeof made.current>) {
+    const c = await rpcResult<{ ride_news?: unknown }>("customer_consents", { p_id: acc.id, p_token: acc.token, p_privacy: p.privacyVersion, p_ride_news: a.news });
+    if (!("data" in c) || !c.data || typeof c.data.ride_news !== "boolean") {
+      made.current = acc;
+      return setErr({ text: t.errors.consents });
+    }
+    made.current = null;
+    setA((x) => ({ ...x, password: "", password2: "" }));
+    toLesson({ id: acc.id, token: acc.token, name: acc.name, email: acc.email, made: true }, { gender: acc.gender, height: acc.height });
   }
 
   // Step 1, known: sign in with the email or mobile and password.

@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "Maintenance, pagkukumpuni at custom build, gamit ang orihinal na piyesa.",
  "Male": "Lalaki",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "Mga depekto sa pagkakagawa, kasama ang kumpletong after-sales support. Sakop nang dalawang taon ang mga shift lever, kasama ang mga piyesa; hindi sakop ang maling paggamit at ang mga gulong. Nalalapat ang mga tuntunin at kondisyon.",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "Sakop ng aming dalawang-taong warranty ang mga depekto sa pagkakagawa: tingnan ang tab na Warranty, o kontakin kami at aayusin namin ito.",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "Sakop ng aming warranty ang mga depekto sa pagkakagawa: nakasaad sa tab na Warranty kung ano ang sakop nito. Kontakin kami at aayusin namin ito.",
  "Maroof verified": "Beripikado sa Maroof",
  "Mastercard": "Mastercard",
  "Me": "Ako",
@@ -1130,5 +1130,9 @@
  "not earned yet": "hindi pa nakukuha",
  "Given by the MicroMobility team · {0}": "Bigay ng MicroMobility team · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "Korona para sa pagkakaiba-iba: tatlong uri ng ride, gaya ng karaniwang ride, community ride at event.",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Ginagantimpalaan ng endurance race ang mga nagpapatuloy: labindalawang linggo ng ride, may isang tahimik na linggo sa bawat apat."
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Ginagantimpalaan ng endurance race ang mga nagpapatuloy: labindalawang linggo ng ride, may isang tahimik na linggo sa bawat apat.",
+ "Pause announcements": "I-pause ang mga anunsyo",
+ "Riders must be at least 5 years old. Check the birth date.": "Dapat hindi bababa sa 5 na taong gulang ang rider. Suriin ang petsa ng kapanganakan.",
+ "Write each name in full: every name needs at least two letters.": "Isulat nang buo ang bawat pangalan: kailangang may hindi bababa sa dalawang titik ang bawat pangalan.",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "Nagawa na ang iyong account, pero hindi nai-save ang mga sagot mo sa Abiso sa Privacy at sa balita ng mga ride. Suriin ang koneksyon at pindutin muli ang Gumawa ng account."
 }
