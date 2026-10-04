@@ -295,26 +295,23 @@ export function fmtDayDate(iso: string, locale: string): string {
  *  past midnight ends on the next day. */
 export function icsFor(s: TicketSession, summary: string, place: string, now: Date = new Date()): string {
   const date = s.date.replace(/-/g, "");
-  const pad = (n: number) => String(n).padStart(2, "0");
-  let st = "090000", en = "110000", enDate = date;
+  let sMin = 540, eMin = 660;
   if (s.times) {
     const [a, b] = s.times.map((t) => t.split(":").map(Number));
-    st = `${pad(a[0])}${pad(a[1])}00`;
-    const sMin = a[0] * 60 + a[1];
-    let eMin = (b[0] + (s.gathers ? 2 : 0)) * 60 + b[1];
+    sMin = a[0] * 60 + a[1];
+    eMin = (b[0] + (s.gathers ? 2 : 0)) * 60 + b[1];
     if (eMin <= sMin) eMin += 1440;
-    const dayOff = Math.floor(eMin / 1440);
-    eMin %= 1440;
-    en = `${pad(Math.floor(eMin / 60))}${pad(eMin % 60)}00`;
-    if (dayOff) enDate = new Date(Date.UTC(+date.slice(0, 4), +date.slice(4, 6) - 1, +date.slice(6, 8) + dayOff)).toISOString().slice(0, 10).replace(/-/g, "");
   }
+  // The ride's hour is Jeddah's: written without a zone, a calendar read it in the phone's own (a
+  // phone set to London put a 21:00 ride at 21:00 London). So the times go out in UTC, as the booking
+  // app's do since 2026-10-04 (KSA is UTC+3 all year); minutes past 1440 land on the next day.
+  const utc = (min: number) => new Date(Date.UTC(+date.slice(0, 4), +date.slice(4, 6) - 1, +date.slice(6, 8), 0, min - 180)).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const esc = (v: string) => v.replace(/[\\,;]/g, (x) => `\\${x}`).replace(/\n/g, "\\n");
   const stamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   return [
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//Corniche Circuit//EN", "CALSCALE:GREGORIAN", "BEGIN:VEVENT",
     `UID:${s.id}-${now.getTime()}@micromobility`, `DTSTAMP:${stamp}`,
-    // Floating local times, as the booking app writes them: the ride is at that hour in Jeddah.
-    `DTSTART:${date}T${st}`, `DTEND:${enDate}T${en}`,
+    `DTSTART:${utc(sMin)}`, `DTEND:${utc(eMin)}`,
     `SUMMARY:${esc(summary)}`, `LOCATION:${esc(place || "Jeddah Corniche Circuit")}`,
     `DESCRIPTION:${esc("Your MicroMobility bike rental booking. Arrive 10 minutes early and show your ticket at the desk.")}`,
     "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", "DESCRIPTION:MicroMobility ride reminder", "END:VALARM",

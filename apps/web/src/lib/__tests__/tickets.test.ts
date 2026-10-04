@@ -104,10 +104,11 @@ describe("times and dates", () => {
 
 describe("the calendar file", () => {
   it("runs the circuit's window, a gathering to two hours after the start, and past midnight into the next day", () => {
-    expect(icsFor(jcc, "Ride", "")).toContain("DTSTART:20990301T210000\r\nDTEND:20990301T230000");
-    expect(icsFor(sat, "Ride", "")).toContain("DTSTART:20990304T054500\r\nDTEND:20990304T081500");
+    // In UTC: Jeddah's hour less three, whatever zone the phone is in.
+    expect(icsFor(jcc, "Ride", "")).toContain("DTSTART:20990301T180000Z\r\nDTEND:20990301T200000Z");
+    expect(icsFor(sat, "Ride", "")).toContain("DTSTART:20990304T024500Z\r\nDTEND:20990304T051500Z");
     const late = ticketSession({ ...jccRow, bike_slots: '{"_time":"22:00 - 01:00"}' })!;
-    expect(icsFor(late, "Ride", "")).toContain("DTEND:20990302T010000");
+    expect(icsFor(late, "Ride", "")).toContain("DTSTART:20990301T190000Z\r\nDTEND:20990301T220000Z"); // 01:00 the next morning in Jeddah
     expect(icsFor(sat, "Saturday; ride", "")).toContain("SUMMARY:Saturday\\; ride");
   });
 });
