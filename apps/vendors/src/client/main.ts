@@ -1,15 +1,19 @@
 // The portal page: sign in, the forced password change, and the signed-in screens
-// (#calendar, #bookings, #venue).
+// (#calendar, #bookings, #insights, #venue, #team for owners), plus #privacy, open to everyone.
 
-import { post, rpc, whenSignedOut } from "./api";
+import { post, rpc, whenMustChange, whenSignedOut } from "./api";
 import { app, busy, button, errorNote, field, note, savedLang, setLang, t } from "./app";
 import { afterBooking } from "./book";
 import { renderBookings } from "./bookings";
 import { invalidateCalendar, renderCalendar } from "./calendar";
+import { mailLink, MM_EMAIL, waLink } from "./contact";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
+import { renderInsights } from "./insights";
 import type { Me } from "./model";
+import { renderPrivacy } from "./privacy";
 import type { Key } from "./strings";
+import { renderTeam } from "./team";
 import { passwordForm, renderVenue } from "./venue";
 
 type Screen = "loading" | "signin" | "force" | "app";
@@ -18,12 +22,18 @@ let signedOutNote = false;
 
 const root = () => document.getElementById("app")!;
 
-const VIEWS: { hash: string; key: Key; icon: IconName }[] = [
+const VIEWS: { hash: string; key: Key; icon: IconName; owner?: boolean }[] = [
   { hash: "#calendar", key: "navCalendar", icon: "calendar" },
   { hash: "#bookings", key: "navBookings", icon: "list" },
+  { hash: "#insights", key: "navInsights", icon: "chart" },
   { hash: "#venue", key: "navVenue", icon: "store" },
+  { hash: "#team", key: "navTeam", icon: "users", owner: true },
 ];
-const currentView = () => (VIEWS.some((v) => v.hash === location.hash) ? location.hash : "#calendar");
+const myViews = () => VIEWS.filter((v) => !v.owner || app.me?.user.role === "owner");
+const currentView = () => (location.hash === "#privacy" ? "#privacy" : myViews().some((v) => v.hash === location.hash) ? location.hash : "#calendar");
+
+/** What was typed on the sign-in form, kept while the page redraws (a language switch). */
+const draft = { login: "", password: "" };
 
 async function loadMe(): Promise<boolean> {
   const r = await rpc<Me>("vendor_me");
@@ -68,8 +78,9 @@ function footer(): HTMLElement {
         h("span", { class: "foot-mark", role: "img", "aria-label": "MicroMobility" }),
         h("p", {}, t("appTagline"))),
       h("ul", { class: "foot-links" },
-        h("li", {}, h("span", {}, `${t("footerEmail")}: `), h("a", { href: "mailto:info@micromobility.sa", dir: "ltr" }, icon("mail"), h("span", {}, "info@micromobility.sa"))),
-        h("li", {}, h("span", {}, `${t("footerWebsite")}: `), h("a", { href: "https://micromobility.sa", dir: "ltr", rel: "noopener" }, h("span", {}, "micromobility.sa"), icon("external"))))),
+        h("li", {}, h("span", {}, `${t("footerEmail")}: `), h("a", { href: `mailto:${MM_EMAIL}`, dir: "ltr" }, icon("mail"), h("span", {}, MM_EMAIL))),
+        h("li", {}, h("span", {}, `${t("footerWebsite")}: `), h("a", { href: "https://micromobility.sa", dir: "ltr", rel: "noopener" }, h("span", {}, "micromobility.sa"), icon("external"))),
+        h("li", {}, h("a", { href: "#privacy", class: "foot-privacy" }, h("span", {}, t("privacyLink")))))),
     h("p", { class: "foot-bottom" }, `© ${year} ${app.lang === "ar" ? "مايكروموبيليتي" : "MicroMobility"}. ${t("footerRights")}`));
 }
 
@@ -81,6 +92,7 @@ function frame(name: Screen, top: HTMLElement, ...rest: HTMLElement[]): void {
 }
 
 async function signOut(): Promise<void> {
+  // The Worker ends this session in the database (vendor_logout) and clears the cookie.
   await post("/api/logout");
   app.me = null;
   screen = "signin";
@@ -92,8 +104,16 @@ async function signOut(): Promise<void> {
 function renderSignIn(): void {
   const r = root();
   clear(r);
-  const login = field({ label: t("loginLabel"), name: "login", autocomplete: "username", required: true, maxlength: 200, dir: "ltr" });
-  const pw = field({ label: t("passwordLabel"), name: "password", type: "password", autocomplete: "current-password", required: true, maxlength: 200 });
+  if (location.hash === "#privacy") {
+    const main = h("main", { id: "main", class: "narrow" });
+    frame("signin", header({}), main);
+    renderPrivacy(main, true);
+    return;
+  }
+  const login = field({ label: t("loginLabel"), name: "login", autocomplete: "username", required: true, maxlength: 200, dir: "ltr", value: draft.login });
+  const pw = field({ label: t("passwordLabel"), name: "password", type: "password", autocomplete: "current-password", required: true, maxlength: 200, value: draft.password });
+  login.input.addEventListener("input", () => { draft.login = login.input.value; paintForgot(); });
+  pw.input.addEventListener("input", () => { draft.password = pw.input.value; });
   const eye = h("button", { type: "button", class: "icon-btn reveal", "aria-label": t("showPassword"), "aria-pressed": "false" }, icon("eye"));
   eye.addEventListener("click", () => {
     const show = pw.input.getAttribute("type") === "password";
@@ -109,12 +129,25 @@ function renderSignIn(): void {
   const msg = h("div", { class: "msg" });
   if (signedOutNote) msg.append(note("info", t("errSession")));
   const go = button(t("signInButton"), { kind: "primary", type: "submit" });
+  // Forgot your password: a WhatsApp or an email to MicroMobility, the login typed in for them.
+  const wa = h("a", { class: "btn btn-secondary btn-small", target: "_blank", rel: "noopener" }, h("span", {}, t("forgotWhatsApp")));
+  const mail = h("a", { class: "btn btn-secondary btn-small" }, icon("mail"), h("span", {}, t("forgotEmail")));
+  function paintForgot(): void {
+    const body = t("forgotBody", { login: login.input.value.trim() || "-" });
+    wa.setAttribute("href", waLink(body));
+    mail.setAttribute("href", mailLink(t("forgotSubject"), body));
+  }
+  paintForgot();
+  const forgot = h("details", { class: "forgot" },
+    h("summary", {}, t("forgotPassword")),
+    h("p", { class: "hint" }, t("forgotIntro")),
+    h("div", { class: "actions start" }, wa, mail));
   const form = h("form", { class: "card signin", novalidate: true, "aria-labelledby": "signin-title" },
     h("img", { class: "signin-logo", src: "/site/logo-dark.png", alt: "MicroMobility", width: 32, height: 34 }),
     h("p", { class: "eyebrow" }, t("portalName")),
     h("h1", { id: "signin-title" }, t("signInTitle")),
     h("p", { class: "lede" }, t("signInIntro")),
-    login.wrap, pw.wrap, msg, h("div", { class: "actions" }, go),
+    login.wrap, pw.wrap, msg, h("div", { class: "actions" }, go), forgot,
     h("p", { class: "hint contact" }, icon("info"), h("span", {}, t("noAccount"))));
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -123,14 +156,20 @@ function renderSignIn(): void {
     busy(go, true, t("signingIn"));
     const res = await post<{ must_change: boolean }>("/api/login", { login: login.input.value.trim(), password: pw.input.value });
     busy(go, false, t("signInButton"));
-    if (!res.ok) { msg.append(errorNote(res.code)); pw.input.select(); return; }
+    if (!res.ok) {
+      msg.append(errorNote(res.code));
+      if (res.code === "TEMP_EXPIRED") forgot.open = true;
+      pw.input.select();
+      return;
+    }
     signedOutNote = false;
+    draft.password = "";
     if (!(await loadMe())) { msg.append(errorNote("SERVER")); return; }
     screen = res.data.must_change || app.me!.user.must_change ? "force" : "app";
     app.render();
   });
   frame("signin", header({}), h("main", { id: "main", class: "narrow" }, form));
-  login.input.focus();
+  if (!draft.login) login.input.focus();
 }
 
 // --- Forced password change -------------------------------------------------------------------
@@ -157,11 +196,14 @@ function renderApp(): void {
   const name = app.lang === "ar" && me.venue.name_ar ? me.venue.name_ar : me.venue.name;
   const view = currentView();
   const nav = h("nav", { class: "tabs", "aria-label": t("mainNav") },
-    ...VIEWS.map((v) => h("a", { href: v.hash, class: "tab", "aria-current": v.hash === view ? "page" : null }, icon(v.icon), h("span", {}, t(v.key)))));
+    ...myViews().map((v) => h("a", { href: v.hash, class: "tab", "aria-current": v.hash === view ? "page" : null }, icon(v.icon), h("span", {}, t(v.key)))));
   const main = h("main", { id: "main", tabindex: "-1" });
   frame("app", header({ venue: name, signOut: true }), nav, main);
   if (view === "#bookings") void renderBookings(main);
+  else if (view === "#insights") void renderInsights(main);
   else if (view === "#venue") renderVenue(main, loadMe);
+  else if (view === "#team") void renderTeam(main);
+  else if (view === "#privacy") renderPrivacy(main, false);
   else void renderCalendar(main);
 }
 
@@ -180,12 +222,21 @@ whenSignedOut(() => {
   app.render();
 });
 
+// A call refused with MUST_CHANGE (the temporary password is still in use): the change comes first.
+whenMustChange(() => {
+  if (screen !== "app") return;
+  screen = "force";
+  document.querySelectorAll("dialog").forEach((d) => d.close());
+  app.render();
+});
+
 afterBooking(() => {
   invalidateCalendar();
   if (screen === "app") app.render();
 });
 
 window.addEventListener("hashchange", () => {
+  if (screen === "signin") { app.render(); return; }
   if (screen !== "app") return;
   app.render();
   document.getElementById("main")?.focus();

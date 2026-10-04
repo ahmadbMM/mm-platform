@@ -1136,5 +1136,7 @@
  "Pause announcements": "お知らせを一時停止",
  "Riders must be at least 5 years old. Check the birth date.": "ライダーは5歳以上である必要があります。生年月日をご確認ください。",
  "Write each name in full: every name needs at least two letters.": "名前はそれぞれ省略せずに入力してください。各名前は2文字以上必要です。",
- "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "アカウントは作成されましたが、プライバシー通知とライド情報についての回答を保存できませんでした。接続を確認して、もう一度「アカウントを作成」を押してください。"
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "アカウントは作成されましたが、プライバシー通知とライド情報についての回答を保存できませんでした。接続を確認して、もう一度「アカウントを作成」を押してください。",
+ "Breakfast spot": "朝食の場所",
+ "Offer for riders: {0}": "ライダー向け特典：{0}"
 }

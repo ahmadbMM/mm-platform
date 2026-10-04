@@ -89,7 +89,7 @@ describe("calendar statuses", () => {
     const mine = { id: 1, status: "pending" as const, kind: "single" as const, series_id: null, note: "", staff_note: "" };
     expect(dayStatus("2026-10-24", e({ mine }), today)).toBe("requested");
     expect(dayStatus("2026-10-24", e({ mine: { ...mine, status: "confirmed" } }), today)).toBe("confirmed");
-    expect(dayStatus("2026-10-24", e({ mine: { ...mine, status: "declined" }, taken: true }), today)).toBe("taken");
+    expect(dayStatus("2026-10-24", e({ mine: { ...mine, status: "declined" }, taken: true }), today)).toBe("declined"); // not chosen (2026-10-04)
     expect(dayStatus("2026-09-26", e({ day: "2026-09-26" }), today)).toBe("past");
     // With the plan: inside the notice period, or past the booking window, is not "Available".
     expect(dayStatus("2026-10-05", e({ day: "2026-10-05" }), today, tier)).toBe("soon");
@@ -108,7 +108,7 @@ describe("calendar statuses", () => {
   });
 
   it("words every verdict and the staff code", () => {
-    expect(verdictText("en", { day: "2026-10-10", verdict: "too_soon", reason: "" }, tier)).toBe("Needs 7 days' notice");
+    expect(verdictText("en", { day: "2026-10-10", verdict: "too_soon", reason: "" }, tier)).toBe("Notice needed: 7 days");
     expect(verdictText("en", { day: "2026-10-10", verdict: "over_quota", reason: "" }, tier)).toBe("Over your plan's monthly limit (2)");
     expect(verdictText("en", { day: "2026-10-10", verdict: "closed", reason: "Weather" }, tier)).toBe("Closed: Weather");
     expect(staffNoteText("en", "another_venue")).toBe("Another venue was chosen for this date");

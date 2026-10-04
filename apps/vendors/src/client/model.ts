@@ -1,6 +1,7 @@
 // What the database answers, and the plain rules the page draws from it. Pure (tested).
 
 import { addDays, type Iso } from "./dates";
+import { plural } from "./plurals";
 import { fmt, type Key, type Lang } from "./strings";
 
 export type Mode = "single" | "multi" | "recurring";
@@ -32,8 +33,11 @@ export type Venue = {
   status: string;
 };
 
+export type Role = "owner" | "manager" | "viewer";
+
 export type Me = {
-  user: { id: number; name: string; login: string; role: string; must_change: boolean };
+  /** sessions: this login's signed-in devices (20261004130000; an older database leaves it out). */
+  user: { id: number; name: string; login: string; role: Role | string; must_change: boolean; sessions?: number };
   venue: Venue;
   tier: Tier;
   today: Iso;
@@ -64,15 +68,26 @@ export type Mine = {
   staff_note: string;
   feedback?: Feedback | null;
   feedback_open?: boolean;
+  /** Who cancelled, why, and whether it counted as late (20261004130000). */
+  cancelled_by?: "venue" | "mm" | null;
+  cancel_reason?: string;
+  late_cancel?: boolean;
 };
 
-export type CalDay = { day: Iso; state: "open" | "closed"; reason: string; mine: Mine | null; taken: boolean; riders: number | null };
+/** One date of vendor_calendar. riders: the live bookings on that Saturday's social ride, on the
+ *  venue's pending and confirmed dates. ride_time: the ride's "gathering - start". decide_by: the date
+ *  MicroMobility answers a pending request by. others_pending: how many other venues wait on the
+ *  date (a number only). declined: the venue's own latest request was declined or cancelled. */
+export type CalDay = {
+  day: Iso; state: "open" | "closed"; reason: string; mine: Mine | null; taken: boolean; riders: number | null;
+  ride_time?: string | null; decide_by?: Iso | null; others_pending?: number | null; declined?: boolean;
+};
 
 export type Verdict = "ok" | "taken" | "closed" | "not_open" | "too_soon" | "too_far" | "mine" | "over_quota" | "not_allowed";
 
 export type Checked = { day: Iso; verdict: Verdict; reason: string };
 
-export type DayStatus = "available" | "requested" | "confirmed" | "taken" | "closed" | "not_open" | "past" | "soon" | "far";
+export type DayStatus = "available" | "requested" | "confirmed" | "declined" | "cancelled" | "taken" | "closed" | "not_open" | "past" | "soon" | "far";
 
 /** What a calendar cell shows for a day. With the plan, a free date inside the notice period
  *  reads "soon" and one past the booking window "far", so Available always means bookable. */
@@ -82,17 +97,21 @@ export function dayStatus(day: Iso, entry: CalDay | undefined, today: Iso, tier?
   if (day < today) return entry ? "past" : "not_open";
   if (live?.status === "pending") return "requested";
   if (!entry) return "not_open";
-  if (entry.state === "closed") return "closed";
-  if (entry.taken) return "taken";
-  if (tier && day < addDays(today, tier.min_lead_days)) return "soon";
-  if (tier && day > addDays(today, tier.horizon_days)) return "far";
-  return "available";
+  // The venue's own request that was not chosen reads so; one it cancelled reads Cancelled unless the
+  // date can be asked for again.
+  if (entry.mine?.status === "declined") return "declined";
+  const st: DayStatus = entry.state === "closed" ? "closed" : entry.taken ? "taken"
+    : tier && day < addDays(today, tier.min_lead_days) ? "soon" : tier && day > addDays(today, tier.horizon_days) ? "far" : "available";
+  if (entry.mine?.status === "cancelled" && st !== "available") return "cancelled";
+  return st;
 }
 
 export const STATUS_KEY: Record<DayStatus, Key> = {
   available: "stAvailable",
   requested: "stRequested",
   confirmed: "stConfirmed",
+  declined: "stDeclined",
+  cancelled: "stCancelled",
   taken: "stTaken",
   closed: "stClosed",
   not_open: "stNotOpen",
@@ -120,7 +139,7 @@ export function verdictText(lang: Lang, c: Checked, tier: Tier): string {
     case "taken": return fmt(lang, "vTaken");
     case "closed": return c.reason ? fmt(lang, "vClosed", { reason: reasonText(lang, c.reason) }) : fmt(lang, "vClosedNoReason");
     case "not_open": return fmt(lang, "vNotOpen");
-    case "too_soon": return fmt(lang, "vTooSoon", { n: tier.min_lead_days });
+    case "too_soon": return fmt(lang, "vTooSoon", { days: plural(lang, "days", tier.min_lead_days) });
     case "too_far": return fmt(lang, "vTooFar");
     case "mine": return fmt(lang, "vMine");
     case "over_quota": return fmt(lang, "vOverQuota", { n: tier.max_per_month ?? "" });
@@ -151,6 +170,44 @@ export function cancellable(day: Iso, m: Mine, today: Iso): boolean {
 /** Cancelling this confirmed date now counts as late (inside the plan's cutoff). */
 export function lateCancel(day: Iso, m: Mine, today: Iso, tier: Tier): boolean {
   return m.status === "confirmed" && day < addDays(today, tier.cancel_cutoff_days);
+}
+
+/** The policy's 48 hours: a confirmed breakfast whose day starts (Riyadh midnight) less than 48 hours
+ *  from now can only be cancelled with a reason, and counts as late (vendor_cancel, LATE_REASON). */
+export const LATE_HOURS = 48;
+export function within48h(day: Iso, m: Mine, now: number = Date.now()): boolean {
+  return m.status === "confirmed" && Date.parse(`${day}T00:00:00+03:00`) - now < LATE_HOURS * 3600_000;
+}
+
+/** What each role may do (the database checks the same, FORBIDDEN). */
+export const canRequest = (role: string) => role === "owner" || role === "manager";
+export const canEditVenue = (role: string) => role === "owner";
+export const canCancelSeries = (role: string) => role === "owner";
+
+/** The Saturday ride's times from its "gathering - start" (bike_slots _time), or null. */
+export function rideTimes(raw: string | null | undefined): { gather: string; start: string } | null {
+  const m = /^\s*(\d{1,2}):(\d{2})\s*[-–]\s*(\d{1,2}):(\d{2})\s*$/.exec(String(raw ?? ""));
+  if (!m) return null;
+  const two = (h: string, mm: string) => `${h.padStart(2, "0")}:${mm}`;
+  return { gather: two(m[1], m[2]), start: two(m[3], m[4]) };
+}
+
+/** When riders reach the breakfast: between these many minutes after the ride starts. A rough guide
+ *  for the venue (the 20 and 40 km loops ride about this long); the owner may adjust it. */
+export const ARRIVAL_AFTER_START: [number, number] = [90, 150];
+export function arrivalWindow(start: string): [string, string] | null {
+  const m = /^(\d{2}):(\d{2})$/.exec(start);
+  if (!m) return null;
+  const at = (add: number) => { const t = (Number(m[1]) * 60 + Number(m[2]) + add) % 1440; return `${String(Math.floor(t / 60)).padStart(2, "0")}:${String(t % 60).padStart(2, "0")}`; };
+  return [at(ARRIVAL_AFTER_START[0]), at(ARRIVAL_AFTER_START[1])];
+}
+
+/** "06:15" as the page's language writes a time: "6:15 AM" / "6:15 ص". */
+export function clockText(lang: Lang, hhmm: string): string {
+  const m = /^(\d{2}):(\d{2})$/.exec(hhmm);
+  if (!m) return hhmm;
+  return new Intl.DateTimeFormat(lang === "ar" ? "ar-SA-u-nu-latn" : "en-GB", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "UTC" })
+    .format(new Date(Date.UTC(2000, 0, 1, Number(m[1]), Number(m[2]))));
 }
 
 /** The feedback given on this booking, or null (also when the database does not send it yet). */
@@ -288,11 +345,103 @@ export function errorKey(code: string): Key {
     case "TOO_EARLY": return "errTooEarly";
     case "TOO_LATE": return "errTooLate";
     case "BAD_RATING": return "errRating";
+    case "MUST_CHANGE": return "errMustChange";
+    case "TEMP_EXPIRED": return "errTempExpired";
+    case "FORBIDDEN": return "errForbidden";
+    case "LATE_REASON": return "errLateReason";
+    case "COMMON_PASSWORD": return "errCommon";
+    case "PERSONAL_PASSWORD": return "errPersonal";
+    case "BAD_PHONE": return "errPhone";
+    case "BAD_EMAIL": return "errEmail";
+    case "TOO_LONG": return "errTooLong";
     default: return "errServer";
   }
 }
 
-/** The password rules the database enforces (vendor_set_password), checked as the venue types. */
-export function passwordRules(p: string): { length: boolean; capital: boolean; number: boolean } {
-  return { length: p.length >= 8, capital: /[A-Z]/.test(p), number: /[0-9]/.test(p) };
+/** The password policy the database enforces (vendor_set_password, NIST SP 800-63B): 10 to 200
+ *  characters, no composition rules, not a common password, nothing from the login or the venue's
+ *  name. The same list and checks as _vendor_pwd_problem in the rentals migration 20261004130000. */
+export const PW_MIN = 10;
+export const PW_MAX = 200;
+const COMMON = new Set([
+  "password", "password1", "password12", "password123", "password1234", "passw0rd", "p@ssw0rd",
+  "123456789", "1234567890", "12345678910", "0123456789", "0987654321", "1122334455", "1111111111",
+  "qwerty", "qwerty123", "qwertyuiop", "qwerty12345", "asdfghjkl", "1q2w3e4r5t", "zaq12wsx", "abc123456",
+  "iloveyou", "letmein", "welcome", "welcome123", "welcome2026", "admin", "admin12345", "administrator",
+  "micromobility", "micromobility1", "micromobility123", "micromobility2026", "vendors", "vendor123",
+  "breakfast", "breakfast123", "restaurant", "restaurant1", "cafe123456", "saudiarabia", "riyadh123",
+  "jeddah123", "dammam123", "khobar123", "changeme", "changeme123", "temppassword", "football",
+  "princess", "sunshine", "dragon", "monkey", "master", "superman", "trustno1",
+]);
+const bare = (x: string) => x.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+export type PwProblem = "" | "WEAK_PASSWORD" | "COMMON_PASSWORD" | "PERSONAL_PASSWORD";
+export function passwordProblem(p: string, ctx: { login?: string; venueNames?: string[] } = {}): PwProblem {
+  const len = [...p].length;
+  if (len < PW_MIN || len > PW_MAX) return "WEAK_PASSWORD";
+  const low = p.toLowerCase();
+  if (/^(.)\1*$/su.test(low) || COMMON.has(bare(p))) return "COMMON_PASSWORD";
+  const login = (ctx.login || "").toLowerCase();
+  if (login.includes("@")) {
+    const part = login.split("@")[0];
+    if (part.length >= 3 && low.includes(part)) return "PERSONAL_PASSWORD";
+  } else {
+    const digits = login.replace(/\D/g, "");
+    const mine = p.replace(/\D/g, "");
+    if (digits.length >= 7 && (mine.includes(digits) || mine.includes(digits.slice(-9)))) return "PERSONAL_PASSWORD";
+  }
+  for (const name of ctx.venueNames || []) {
+    for (const part of [name.trim().toLowerCase(), bare(name)]) {
+      if ([...part].length >= 3 && (low.includes(part) || bare(p).includes(part))) return "PERSONAL_PASSWORD";
+    }
+  }
+  return "";
+}
+
+/** A contact phone as the database keeps it (E.164: "+" and 8-15 digits; a Saudi 05xxxxxxxx or
+ *  5xxxxxxxx gets +966), "" for empty, or null when it is not a phone number (BAD_PHONE). */
+export function e164(raw: string): string | null {
+  const v = raw.trim();
+  if (!v) return "";
+  if (!/^[0-9+()\s.-]+$/.test(v)) return null;
+  let d = v.replace(/\D/g, "");
+  if (!v.startsWith("+")) {
+    if (d.startsWith("00")) d = d.slice(2);
+    else if (/^05\d{8}$/.test(d)) d = `966${d.slice(1)}`;
+    else if (/^5\d{8}$/.test(d)) d = `966${d}`;
+  }
+  return /^[1-9]\d{7,14}$/.test(d) ? `+${d}` : null;
+}
+
+/** An email the database accepts for the contact (BAD_EMAIL otherwise); "" is fine. */
+export function emailOk(raw: string): boolean {
+  const v = raw.trim();
+  return !v || (v.length <= 200 && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v));
+}
+
+/** The venue's insights, from the calendar's past and coming dates and the shared ratings. */
+export type Insights = {
+  hosted: number;
+  upcoming: number;
+  recent: { day: Iso; riders: number | null; turnout: number | null }[];
+  sharedAvg: number | null;
+  sharedCount: number;
+  ownAvg: number | null;
+  ownCount: number;
+};
+export function insights(days: CalDay[], shared: SharedRatings[], today: Iso): Insights {
+  const conf = days.filter((d) => d.mine?.status === "confirmed").sort((a, b) => a.day.localeCompare(b.day));
+  const past = conf.filter((d) => d.day < today);
+  const recent = past.slice(-6).reverse().map((d) => ({ day: d.day, riders: d.riders ?? null, turnout: feedbackOf(d.mine)?.turnout ?? null }));
+  const lastShared = [...shared].filter((s) => typeof s?.averages?.breakfast === "number").sort((a, b) => b.day.localeCompare(a.day)).slice(0, 6);
+  const own = past.map((d) => feedbackOf(d.mine)?.rating).filter((r): r is number => typeof r === "number");
+  const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null);
+  return {
+    hosted: past.length,
+    upcoming: conf.filter((d) => d.day >= today).length,
+    recent,
+    sharedAvg: avg(lastShared.map((s) => s.averages.breakfast as number)),
+    sharedCount: lastShared.length,
+    ownAvg: avg(own),
+    ownCount: own.length,
+  };
 }

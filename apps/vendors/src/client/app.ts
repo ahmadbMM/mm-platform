@@ -3,6 +3,7 @@
 import { h, uid, type Child } from "./dom";
 import { icon, type IconName } from "./icons";
 import { errorKey, type Me } from "./model";
+import { plural, type PluralKey } from "./plurals";
 import { fmt, type Key, type Lang } from "./strings";
 
 export const app = {
@@ -13,6 +14,8 @@ export const app = {
 };
 
 export const t = (k: Key, vars?: Record<string, string | number>) => fmt(app.lang, k, vars);
+/** A phrase with a count, in the plural form the page's language wants for n (plurals.ts). */
+export const tn = (k: PluralKey, n: number, vars?: Record<string, string | number>) => plural(app.lang, k, n, vars);
 export const isRtl = () => app.lang === "ar";
 
 const LANG_KEY = "mm_vendor_lang";
@@ -114,15 +117,29 @@ export function busy(btn: HTMLButtonElement, on: boolean, label: string): void {
   if (span) span.textContent = label;
 }
 
-/** A centred modal dialog (native <dialog>: focus kept inside, Escape closes). */
+/** A centred modal dialog (native <dialog>: focus kept inside, Escape closes). Closing it puts the
+ *  focus back on what opened it (the button), when that is still on the page. */
 export function dialog(title: string, ...body: Child[]): { el: HTMLDialogElement; body: HTMLElement; close: () => void } {
+  const opener = document.activeElement instanceof HTMLElement && document.activeElement !== document.body ? document.activeElement : null;
   const titleId = uid("dlg");
   const content = h("div", { class: "dialog-body" }, ...body);
   const el = h("dialog", { class: "dialog", "aria-labelledby": titleId });
   const close = () => { el.close(); };
   const x = h("button", { type: "button", class: "icon-btn", "aria-label": t("close"), onclick: close }, icon("close"));
   el.append(h("div", { class: "dialog-head" }, h("h2", { id: titleId }, title), x), content);
-  el.addEventListener("close", () => el.remove());
+  el.addEventListener("close", () => {
+    el.remove();
+    if (!opener) return;
+    // After the dialog's own close handlers (a save may redraw the page): the opener, or the same
+    // button in the redrawn page, found by its label.
+    const label = opener.getAttribute("aria-label") || opener.textContent || "";
+    window.setTimeout(() => {
+      if (document.querySelector("dialog[open]")) return; // another dialog took over
+      const back = opener.isConnected ? opener
+        : [...document.querySelectorAll<HTMLElement>("main button, main a")].find((b) => (b.getAttribute("aria-label") || b.textContent || "") === label);
+      back?.focus();
+    }, 0);
+  });
   document.body.appendChild(el);
   el.showModal();
   return { el, body: content, close };

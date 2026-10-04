@@ -37,6 +37,10 @@ export type TicketSession = {
   routeSlug: string | null;
   /** Where staff said the ride is (sessions.location): "JCC", a place's name, or null (the circuit). */
   location: string | null;
+  /** The Saturday ride's breakfast stop (sessions.breakfast_*): its name, in Arabic too when the venue
+   *  booked it on the vendor portal, its map link, and the venue's offer for riders in English and
+   *  Arabic (rentals migration 20261004130000). Null when the ride has none. */
+  breakfast: { name: string; nameAr: string | null; url: string | null; offerEn: string | null; offerAr: string | null } | null;
 };
 
 type Row = Record<string, unknown>;
@@ -112,7 +116,25 @@ export function ticketSession(r: Row): TicketSession | null {
     bikes: kind !== "swim" && kind !== "workshop" && kind !== "event",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
+    breakfast: S(r.breakfast_name).trim()
+      ? {
+        name: S(r.breakfast_name).trim(),
+        nameAr: S(r.breakfast_name_ar).trim() || null,
+        url: /^https:\/\//i.test(S(r.breakfast_url)) ? S(r.breakfast_url) : null,
+        offerEn: S(r.breakfast_offer_en).trim() || null,
+        offerAr: S(r.breakfast_offer_ar).trim() || null,
+      }
+      : null,
   };
+}
+
+/** The breakfast stop as a rider reads it: the Arabic name on the Arabic page, and the offer in
+ *  Arabic there and in English in every other language (the booking app's _commInfoHtml). */
+export function breakfastFor(s: TicketSession | undefined, locale: string): { name: string; url: string | null; offer: string | null } | null {
+  const b = s?.breakfast;
+  if (!b || s?.kind !== "saturday") return null;
+  const ar = locale === "ar";
+  return { name: (ar && b.nameAr) || b.name, url: b.url, offer: (ar ? b.offerAr || b.offerEn : b.offerEn || b.offerAr) || null };
 }
 
 /** What the ticket's code says: "MMC-<queue number>-<id>", or "MMC-<id>" on a ride staff approve

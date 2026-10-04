@@ -2,7 +2,7 @@
 // verdict first, then the request.
 
 import { rpc } from "./api";
-import { announce, app, busy, button, dialog, errorNote, note, t } from "./app";
+import { announce, app, busy, button, dialog, errorNote, note, t, tn } from "./app";
 import { invalidateCalendar, loadRange } from "./calendar";
 import { addDays, defaultUntil, hijriLabel, longDate, patternArgs, patternValid, shortDate, type Iso, type Ordinal, type Pattern } from "./dates";
 import { clear, h, uid } from "./dom";
@@ -46,6 +46,8 @@ export function openBooking(preselect?: Iso): void {
 
   const dlg = dialog(t("bookTitle"));
   let available: Iso[] = [];
+  /** The date the venue tapped, when it is no longer free by the time the dialog loads: said, not swapped silently. */
+  let gone: Iso | null = null;
 
   const loading = h("p", { class: "loading", role: "status" }, t("loading"));
   dlg.body.append(loading);
@@ -54,8 +56,12 @@ export function openBooking(preselect?: Iso): void {
     loading.remove();
     if (!r.ok) { dlg.body.append(errorNote(r.code)); return; }
     available = r.days.filter((x) => pickable(x, today, tier)).map((x) => x.day);
-    if (d.single && !available.includes(d.single)) d.single = available[0] || null;
-    if (!d.single) d.single = available[0] || null;
+    if (preselect && !available.includes(preselect)) {
+      gone = preselect;
+      d.single = null;
+      d.multi.delete(preselect);
+    }
+    if (!d.single && !gone) d.single = available[0] || null;
     editStage();
   });
 
@@ -93,6 +99,7 @@ export function openBooking(preselect?: Iso): void {
     dlg.body.append(modes);
 
     const part = h("div", { class: "mode-part" });
+    if (gone && d.mode !== "recurring") part.append(note("warn", t("preselectGone", { date: longDate(gone, app.lang) })));
     if (d.mode !== "recurring" && available.length === 0) part.append(note("info", t("noAvailable")));
     else if (d.mode === "single") part.append(singlePicker());
     else if (d.mode === "multi") part.append(multiPicker());
@@ -101,10 +108,10 @@ export function openBooking(preselect?: Iso): void {
 
     // Note
     const noteId = uid("note");
-    const left = h("p", { class: "hint", id: `${noteId}-left`, "aria-live": "polite" }, t("noteHint", { n: NOTE_MAX - d.note.length }));
+    const left = h("p", { class: "hint", id: `${noteId}-left`, "aria-live": "polite" }, tn("charsLeft", NOTE_MAX - d.note.length));
     const ta = h("textarea", { id: noteId, maxlength: NOTE_MAX, rows: 3, "aria-describedby": `${noteId}-left` });
     ta.value = d.note;
-    ta.addEventListener("input", () => { d.note = ta.value.slice(0, NOTE_MAX); left.textContent = t("noteHint", { n: NOTE_MAX - d.note.length }); });
+    ta.addEventListener("input", () => { d.note = ta.value.slice(0, NOTE_MAX); left.textContent = tn("charsLeft", NOTE_MAX - d.note.length); });
     dlg.body.append(h("div", { class: "field" }, h("label", { for: noteId }, t("noteLabel")), ta, left));
 
     const msg = h("div", { class: "msg" });
@@ -129,6 +136,8 @@ export function openBooking(preselect?: Iso): void {
   function singlePicker(): HTMLElement {
     const id = uid("day");
     const sel = h("select", { id });
+    // Nothing chosen yet (the tapped date went): the venue picks one, no date is chosen for it.
+    if (!d.single) sel.append(h("option", { value: "", selected: true, disabled: true }, t("pickDate")));
     for (const day of available) {
       const o = h("option", { value: day }, dateOption(day));
       if (day === d.single) o.selected = true;
@@ -207,7 +216,7 @@ export function openBooking(preselect?: Iso): void {
   function previewStage(rows: Checked[]): void {
     clear(dlg.body);
     const ok = rows.filter((r) => r.verdict === "ok").length;
-    const summary = !rows.length ? t("previewEmpty") : ok ? t("previewSummary", { ok, all: rows.length }) : t("previewNone");
+    const summary = !rows.length ? t("previewEmpty") : ok ? tn("previewSummary", rows.length, { ok }) : t("previewNone");
     const msg = h("div", { class: "msg" });
     const send = button(t("sendButton"), { kind: "primary", icon: "check" });
     send.disabled = ok === 0;
@@ -234,7 +243,7 @@ export function openBooking(preselect?: Iso): void {
   function resultStage(res: { requested: number; days: Checked[] }): void {
     clear(dlg.body);
     const n = res.requested || 0;
-    const text = n === 0 ? t("resultNone") : n === 1 ? t("resultBodyOne") : t("resultBody", { n });
+    const text = n === 0 ? t("resultNone") : `${tn("datesRequested", n)} ${t("resultAfter")}`;
     const done = button(t("done"), { kind: "primary", onclick: () => { dlg.close(); } });
     dlg.body.append(h("h3", {}, t("resultTitle")), note(n ? "ok" : "warn", text), verdictList(res.days || []), h("div", { class: "actions" }, done));
     announce(text);

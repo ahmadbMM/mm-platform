@@ -7,7 +7,10 @@ import { ticketSession, type TicketSession } from "./tickets";
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 // The route column rides along through sessionRows, which leaves it out while the database does not have it yet.
-const COLS = "id,session_date,day,title,ride_kind,event_kind,bike_slots,needs_approval,hide_queue,meet_url,paid_ride,open_to_all,status,location";
+const COLS = "id,session_date,day,title,ride_kind,event_kind,bike_slots,needs_approval,hide_queue,meet_url,paid_ride,open_to_all,status,location,breakfast_name,breakfast_url";
+// The breakfast stop's Arabic name and offer (rentals migration 20261004130000): asked for first, and
+// left out when the database does not have them yet.
+const BF_COLS = "breakfast_name_ar,breakfast_offer_en,breakfast_offer_ar";
 
 /** The booked sessions by id, whatever their state (a closed night still shows its ticket). */
 export async function loadTicketSessions(ids: string[], fetchImpl: typeof fetch = fetch): Promise<Map<string, TicketSession>> {
@@ -15,7 +18,8 @@ export async function loadTicketSessions(ids: string[], fetchImpl: typeof fetch 
   const clean = [...new Set(ids)].filter((x) => ID.test(x)).slice(0, 40);
   if (!url || !key || !clean.length) return new Map();
   try {
-    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`, COLS);
+    const filter = `id=in.(${clean.join(",")})`;
+    const rows = await sessionRows(fetchImpl, url, key, filter, `${COLS},${BF_COLS}`).catch(() => sessionRows(fetchImpl, url, key, filter, COLS));
     const list = Array.isArray(rows) ? rows.map((r) => ticketSession(r as Record<string, unknown>)).filter((x): x is TicketSession => x !== null) : [];
     return new Map(list.map((s) => [s.id, s]));
   } catch {

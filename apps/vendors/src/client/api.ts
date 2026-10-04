@@ -11,6 +11,12 @@ export function whenSignedOut(fn: () => void): void {
   onSignedOut = fn;
 }
 
+let onMustChange: () => void = () => {};
+/** What to do when the server says the temporary password must be changed first (MUST_CHANGE). */
+export function whenMustChange(fn: () => void): void {
+  onMustChange = fn;
+}
+
 export async function post<T>(path: string, body: unknown = {}): Promise<Result<T>> {
   let res: Response;
   try {
@@ -28,6 +34,7 @@ export async function post<T>(path: string, body: unknown = {}): Promise<Result<
   if (res.ok) return { ok: true, data: data as T };
   const code = data && typeof data === "object" && "error" in data ? String((data as { error: unknown }).error) : "SERVER";
   if (res.status === 401 && code === "BAD_TOKEN") onSignedOut();
+  if (code === "MUST_CHANGE") onMustChange();
   return { ok: false, code, status: res.status };
 }
 

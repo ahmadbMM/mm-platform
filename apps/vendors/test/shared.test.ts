@@ -56,7 +56,7 @@ describe("what riders said", () => {
   });
 
   it("has every label in both languages", () => {
-    for (const k of ["srTitle", "srRiders", "srRidersOne", "srBreakfast", "srRestaurant", "srAtmosphere", "srFood", "srService", "srOther", "srAnonymous"] as const) {
+    for (const k of ["srTitle", "srBreakfast", "srRestaurant", "srAtmosphere", "srFood", "srService", "srOther", "srAnonymous"] as const) {
       expect(STRINGS.en[k]).toBeTruthy();
       expect(STRINGS.ar[k]).toBeTruthy();
     }

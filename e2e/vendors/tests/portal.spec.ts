@@ -1,8 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
+import { signIn as signInAs } from "./sign-in";
 
 const STUB = Number(process.env.STUB_PORT || 8799);
 
-test.beforeEach(async ({ request }) => {
+test.beforeEach(async ({ request }, info) => {
+  info.setTimeout(150_000); // room for one wait on the sign-in meter (sign-in.ts)
   await request.post(`http://127.0.0.1:${STUB}/__reset`);
 });
 
@@ -13,12 +15,7 @@ function watchCsp(page: Page): string[] {
   return seen;
 }
 
-async function signIn(page: Page, pwd = "Temp1234") {
-  await page.goto("/");
-  await page.getByLabel("Email or mobile number").fill("cafe@example.com");
-  await page.getByLabel("Password", { exact: true }).fill(pwd);
-  await page.getByRole("button", { name: "Sign in" }).click();
-}
+const signIn = (page: Page, pwd = "Temp1234") => signInAs(page, pwd);
 
 test("sign-in refuses a wrong password and says why", async ({ page }) => {
   const errors = watchCsp(page);
@@ -39,7 +36,7 @@ test("first sign-in: change the password, request a date, see it in My bookings"
   await page.getByLabel("New password", { exact: true }).fill("weak");
   await page.getByLabel("Confirm new password").fill("weak");
   await page.getByRole("button", { name: "Save password" }).click();
-  await expect(page.getByText("This password is too weak")).toBeVisible();
+  await expect(page.getByText("This password is too short")).toBeVisible();
   await page.getByLabel("New password", { exact: true }).fill("Breakfast2026");
   await page.getByLabel("Confirm new password").fill("Breakfast2026");
   await page.getByRole("button", { name: "Save password" }).click();
@@ -53,7 +50,7 @@ test("first sign-in: change the password, request a date, see it in My bookings"
   await expect(dlg.getByRole("heading", { name: "Request breakfast dates" })).toBeVisible();
   await expect(dlg.getByText("Your plan does not include monthly repeats.")).toBeVisible();
   await dlg.getByRole("button", { name: "Check dates" }).click();
-  await expect(dlg.getByText("1 of 1 dates can be requested.")).toBeVisible();
+  await expect(dlg.getByText("1 of 1 date can be requested.")).toBeVisible();
   await expect(dlg.getByText("Free")).toBeVisible();
   await dlg.getByRole("button", { name: "Send request" }).click();
   await expect(dlg.getByText("Requested 1 date. MicroMobility will confirm")).toBeVisible();
@@ -85,12 +82,13 @@ test("Arabic turns the page right to left and keeps Western digits", async ({ pa
   await expect(page.locator("html")).toHaveAttribute("lang", "ar");
 });
 
-test("the security headers and robots.txt", async ({ request }) => {
+test("the security headers and robots.txt (crawlers may read the noindex header)", async ({ request }) => {
   const res = await request.get("/");
   expect(res.headers()["content-security-policy"]).toContain("script-src 'self'");
   expect(res.headers()["x-robots-tag"]).toContain("noindex");
   const robots = await request.get("/robots.txt");
-  expect(await robots.text()).toContain("Disallow: /");
+  expect(await robots.text()).toContain("Allow: /");
+  expect((await request.get("/")).headers()["x-robots-tag"]).toBe("noindex, nofollow");
 });
 
 test("after a breakfast: the calendar marks it, My bookings asks how it went, the feedback is saved, and what riders said shows", async ({ page, request }) => {
