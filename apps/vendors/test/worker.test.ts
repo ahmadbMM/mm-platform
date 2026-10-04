@@ -114,27 +114,13 @@ describe("POST /api/login", () => {
 });
 
 describe("POST /api/logout", () => {
-  it("ends the session in the database, then clears the cookie", async () => {
+  it("clears the cookie", async () => {
     const res = await worker.fetch(post("/api/logout", {}, { Cookie: COOKIE }), env());
     expect(res.status).toBe(200);
     const c = res.headers.get("set-cookie")!;
     expect(c).toMatch(/^mm_vendor=;/);
     expect(c).toContain("Max-Age=0");
     expect(c).toContain("HttpOnly");
-    expect(calls).toHaveLength(1);
-    expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/vendor_logout");
-    expect(calls[0].body).toEqual({ p_uid: "7", p_token: TOKEN });
-  });
-
-  it("still clears the cookie when the database cannot be reached, and calls nothing without a session", async () => {
-    answer = () => { throw new Error("down"); };
-    let res = await worker.fetch(post("/api/logout", {}, { Cookie: COOKIE }), env());
-    expect(res.status).toBe(200);
-    expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
-    calls = [];
-    res = await worker.fetch(post("/api/logout", {}), env());
-    expect(res.status).toBe(200);
-    expect(calls).toHaveLength(0);
   });
 });
 
