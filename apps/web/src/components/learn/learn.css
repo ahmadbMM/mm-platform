@@ -91,6 +91,9 @@ textarea.ln-input { resize: vertical; min-height: 84px; }
 .ln-done-mark { width: 56px; height: 56px; border-radius: 50%; background: #077a4b; color: #fbf9f4; display: inline-flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; margin-bottom: 6px; }
 .ln-done h2 { font-size: 26px; }
 .ln-done p { color: #57605a; font-size: 15px; line-height: 1.6; max-width: 380px; margin: 0 0 14px; }
+/* Not taking sign-ups (LearnClosed.tsx): the thank-you card's shape, in a quiet grey with a pause mark. */
+.ln-closed-mark { width: 56px; height: 56px; border-radius: 50%; background: #eceee9; color: #3d4540; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+.ln-closed p { margin-bottom: 0; }
 
 html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13px; }
 

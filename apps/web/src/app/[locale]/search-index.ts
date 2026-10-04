@@ -50,7 +50,7 @@ export async function searchIndex(locale: string): Promise<SearchItem[]> {
   if (on("club")) qa(list(resolvePage(clubSchema, content, L).faq.items), "/club");
   if (on("experiences")) {
     const l = resolvePage(experiencesSchema, content, L).learn;
-    if (l.on) items.push({ title: l.eyebrow || l.title, text: l.teaserText, href: "/experiences/learn", words: LEARN_WORDS });
+    if (l.on) items.push({ title: l.eyebrow || l.title, text: l.taking ? l.teaserText : l.closedText, href: "/experiences/learn", words: LEARN_WORDS });
   }
   if (on("journal")) {
     const { posts } = await journalState(L);
