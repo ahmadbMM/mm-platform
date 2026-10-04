@@ -15,12 +15,15 @@ Commit both files. The website serves the page from its next deploy (a merge to 
 refuses a push whose committed page is not what `npm run build` makes. There is no deploy of its
 own any more. Then open https://micromobility.sa/petromin. Arabic: https://micromobility.sa/petromin?lang=ar
 
-## Add another partner path
-The page reports the first path segment as the registration's `source`.
+## Another partner path
+The page reports the first path segment as the registration's `source`, but the database takes
+`petromin` only: `rider_register` answers any other source with `session` ("This session is no
+longer open") so the employees' fare cannot reach another ride. A second partner therefore needs a
+database change first (rentals repo: `rider_register`, `rider_sessions` and that partner's ride
+kind), and only then the website side:
 1. Add `apps/web/src/app/<slug>/route.ts` re-exporting `GET` and `HEAD` from `app/petromin/route.ts`.
 2. Add the slug to `FORM_ADDRESSES` and the matcher in `apps/web/src/proxy.ts`, so Coming Soon leaves it alone.
 3. Merge to main.
-Registrations from that path show `/slug` under the badge in the staff Riders tab and in the CSV.
 
 ## Tests
 

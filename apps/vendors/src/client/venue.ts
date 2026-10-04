@@ -45,7 +45,9 @@ function profileForm(main: HTMLElement, me: Me, reloadMe: () => Promise<boolean>
     const seats = f.seats.input.value.trim();
     let bad = false;
     if (map && !/^https:\/\/\S+$/i.test(map)) { f.map_url.setError(t("errMapUrl")); bad = true; }
-    if (seats && !(/^\d+$/.test(seats) && +seats >= 1 && +seats <= 2000)) { f.seats.setError(t("errSeats")); bad = true; }
+    // A number box holding something that is not a number reads as "" with badInput set: never a cleared count.
+    const seatsBad = (f.seats.input as HTMLInputElement).validity?.badInput;
+    if (seatsBad || (seats && !(/^\d+$/.test(seats) && +seats >= 1 && +seats <= 2000))) { f.seats.setError(t("errSeats")); bad = true; }
     if (bad) { form.querySelector<HTMLElement>("[aria-invalid=true]")?.focus(); return; }
     busy(save, true, t("sending"));
     const r = await rpc<null>("vendor_profile_save", {
