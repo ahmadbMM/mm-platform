@@ -18,10 +18,11 @@ export function langPath(path: string, lang?: string | null): string {
   return `${path}${path.includes("?") ? "&" : "?"}lang=${lang}`;
 }
 
-/** Every language of a page, as hreflang -> address, plus x-default. */
-export function languageAlternates(path: string): Record<string, string> {
+/** Every language of a page, as hreflang -> address, plus x-default; `missing` names the languages
+ *  the page does not exist in (a Journal article staff have not written in Arabic). */
+export function languageAlternates(path: string, missing: readonly string[] = []): Record<string, string> {
   return {
-    ...Object.fromEntries(LOCALES.map((l) => [l.html, langPath(path, l.code)])),
+    ...Object.fromEntries(LOCALES.filter((l) => !missing.includes(l.code)).map((l) => [l.html, langPath(path, l.code)])),
     "x-default": path,
   };
 }
@@ -45,18 +46,20 @@ export type PageMetaInput = {
   type?: "website" | "article";
   /** Never indexed, whatever the site's state (the account page). */
   noindex?: boolean;
+  /** Languages the page does not exist in, left out of its alternates. */
+  missing?: readonly string[];
 };
 
 /** The metadata every page returns: title, description, the page in every language, and how a
  *  shared link looks. */
-export function pageMeta({ path, locale, title, description, closed, image, type = "website", noindex }: PageMetaInput): Metadata {
+export function pageMeta({ path, locale, title, description, closed, image, type = "website", noindex, missing }: PageMetaInput): Metadata {
   const url = langPath(path, localeInfo(locale).code);
   const images = [image || DEFAULT_SHARE_IMAGE];
   return {
     title,
     description: description || undefined,
     robots: closed || noindex ? { index: false, follow: false } : undefined,
-    alternates: { canonical: url, languages: languageAlternates(path) },
+    alternates: { canonical: url, languages: languageAlternates(path, missing) },
     openGraph: {
       type,
       url,

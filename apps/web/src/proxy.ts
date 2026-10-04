@@ -6,6 +6,7 @@ import { comingSoonTarget } from "./lib/coming-soon-route";
 import { PREVIEW_COOKIE, isStaffToken } from "./lib/preview";
 import { askedLang } from "./lib/lang-url";
 import { STORE_URL } from "./lib/links";
+import { NO_PAGE_CACHE } from "./lib/page-cache";
 
 const intl = createMiddleware(routing);
 
@@ -88,7 +89,9 @@ export default async function proxy(req: NextRequest) {
   // the request is given it here; the answer (a page or a redirect) sets it for the next ones.
   const lang = askedLang(searchParams);
   if (lang) req.cookies.set(LANG_COOKIE.name, lang);
+  let unknownState = false;
   const keepLang = (res: NextResponse) => {
+    if (unknownState) res.headers.set(NO_PAGE_CACHE, "1");
     if (lang) res.cookies.set(LANG_COOKIE.name, lang, { path: "/", maxAge: LANG_COOKIE.maxAge, sameSite: "lax" });
     return res;
   };
@@ -102,8 +105,12 @@ export default async function proxy(req: NextRequest) {
   // address is redirected to /bikes/42 before this runs (next.config redirects).
   // Until Home exists the site is closed whatever staff have set, so nothing is read here yet.
   // Once it is open, a page staff have not switched on (Website > Pages) goes to Home the same way.
+  // The state is the last good copy read (lib/memo.ts: this instance's, else the edge's), so a
+  // database blip keeps the site as staff left it. Only with no copy anywhere is it read as Coming
+  // Soon - and then the page is marked so the edge never keeps it for everyone (lib/page-cache.ts).
   const content = siteCanOpen() ? await loadSiteContent() : null;
   const closed = siteCanOpen() ? isComingSoon(content) : true;
+  unknownState = siteCanOpen() && content === null;
   const soon = closed ? comingSoonTarget(pathname) : hiddenPageTarget(pathname, content);
   // A signed-in staff member previewing the site (lib/preview.ts) passes; the preview page itself
   // must always load, since it is how preview starts.

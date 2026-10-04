@@ -183,6 +183,13 @@ describe("once the site is open", () => {
       expect(redirectedTo(off), p).toBe("/");
     }
     expect(rewrittenTo(await call("/club"))).toBe("/en/club"); // the site is open: a page staff switched on opens
+    expect((await call("/club")).headers.get("x-mm-no-page-cache")).toBeNull(); // known state: the edge may keep it
+  });
+  it("marks a page drawn with no state ever read, so the edge never keeps that Coming Soon", async () => {
+    resetSiteContent();
+    vi.stubGlobal("fetch", vi.fn(async () => new Response("down", { status: 503 })));
+    const res = await call("/");
+    expect(res.headers.get("x-mm-no-page-cache")).toBe("1");
   });
 });
 

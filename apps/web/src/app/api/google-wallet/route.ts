@@ -1,6 +1,6 @@
 import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
 import { cookieValue } from "@/lib/live";
-import { ENTRY_ID, bookingOrigin } from "@/lib/rating";
+import { ENTRY_ID, bookingOrigin, relayStatus } from "@/lib/rating";
 import { loadSiteContent } from "@/lib/site";
 
 // POST /api/google-wallet {bookingId, groupIds?}: the booking app makes the Google Wallet pass
@@ -37,7 +37,7 @@ export async function POST(req: Request) {
     const body = (await up.json().catch(() => null)) as Record<string, unknown> | null;
     // only what the button needs travels back: the outcome and the save link
     const url = body && typeof body.url === "string" && /^https:\/\/pay\.google\.com\//.test(body.url) ? body.url : undefined;
-    return json({ ok: up.ok && body?.ok === true && !!url, ...(url ? { url } : {}), ...(body && typeof body.error === "string" ? { error: body.error } : {}) }, up.status);
+    return json({ ok: up.ok && body?.ok === true && !!url, ...(url ? { url } : {}), ...(body && typeof body.error === "string" ? { error: body.error } : {}) }, relayStatus(up.status));
   } catch {
     return json({ ok: false, error: "network" }, 502);
   }

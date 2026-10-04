@@ -74,11 +74,16 @@ describe("loadGpx", () => {
   beforeEach(() => resetMemo("gpx:"));
   afterEach(() => vi.unstubAllGlobals());
   const ok = (body: string, headers: Record<string, string> = {}) => vi.fn(async (url: string) => new Response(body, { status: 200, headers: { ...headers, "x-asked": url } }));
+  afterEach(() => vi.unstubAllEnvs());
   it("fetches an https file, or one of the site's own, and keeps it for an hour", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
     const f = ok(gpx(pt(21.5, 39.1, 5) + pt(21.51, 39.1, 8)));
     const a = await loadGpx("/media/routes/corniche.gpx", f as unknown as typeof fetch, 1000);
     expect(a?.points).toHaveLength(2);
-    expect(f.mock.calls[0][0]).toBe("https://micromobility.sa/media/routes/corniche.gpx");
+    // an uploaded file is read from the storage itself, never through the site's own address
+    expect(f.mock.calls[0][0]).toBe("https://example.supabase.co/storage/v1/object/public/site/routes/corniche.gpx");
+    expect(gpxUrl("/site/routes/obhur.gpx")).toBe("https://micromobility.sa/site/routes/obhur.gpx");
+    expect(gpxUrl("/media/../x.gpx")).toBeNull();
     expect(await loadGpx("/media/routes/corniche.gpx", f as unknown as typeof fetch, 30 * 60_000)).toBe(a);
     expect(f).toHaveBeenCalledTimes(1);
   });

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { bookingOrigin, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, unratedRides } from "../rating";
+import { bookingOrigin, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, relayStatus, unratedRides } from "../rating";
 import { POST as rate } from "../../app/api/account/rate/route";
 import { POST as wallet } from "../../app/api/google-wallet/route";
 import { resetSiteContent } from "../site";
@@ -162,6 +162,14 @@ describe("api/google-wallet", () => {
     expect(await nc.json()).toEqual({ ok: false, error: "not confirmed" });
     vi.stubGlobal("fetch", vi.fn(async (url: string) => (url.includes("site_content") ? json([]) : json({ ok: true, url: "https://evil.example/save" }))));
     expect(await (await post(wallet, "/api/google-wallet", { bookingId: "q1abcdef" })).json()).toEqual({ ok: false });
+  });
+  it("answers a booking-app status that cannot carry a body (204) as a 502, not a crash", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => (url.includes("site_content") ? json([]) : new Response(null, { status: 204 }))));
+    const res = await post(wallet, "/api/google-wallet", { bookingId: "q1abcdef" });
+    expect(res.status).toBe(502);
+    expect(await res.json()).toEqual({ ok: false });
+    expect([200, 409, 501, 599].map(relayStatus)).toEqual([200, 409, 501, 599]);
+    expect([204, 205, 304, 0, 101].map(relayStatus)).toEqual([502, 502, 502, 502, 502]);
   });
   it("refuses another site, a missing cookie and a bad id", async () => {
     const f = vi.fn(async () => json({}));

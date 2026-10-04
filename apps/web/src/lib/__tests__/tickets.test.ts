@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { routeItems } from "../route-names";
 import { bookingRef, codeReady, countdownAt, countdownMoments, dayWord, doneToday, ticketRoute, ticketStages, fmtClock, fmtDayDate, icsFor, queueNumbers, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
 
 // My Account's tickets follow the booking app's own rules (renderBookingTicket, bookingRef,
@@ -153,6 +154,12 @@ describe("the ride night", () => {
     expect(ticketRoute({ ...jcc, location: "Obhur" }, routes)).toBeNull();
     expect(ticketRoute(sat, routes)).toBeNull(); // meets at a map link
     expect(ticketRoute({ ...jcc, bikes: false }, routes)).toBeNull();
+  });
+  it("keeps the map link of a route as the Routes page resolves it (routeItems)", () => {
+    const content = { "routes.routes.items": [{ slug: { en: "obhur", ar: "obhur" }, name: { en: "Obhur coast", ar: "شاطئ أبحر" }, km: 32.5, href: { href: "https://maps.app.goo.gl/o" } }] };
+    const routes = routeItems(content, "en");
+    expect(routes.get("obhur")?.href).toBe("https://maps.app.goo.gl/o");
+    expect(ticketRoute({ ...jcc, routeSlug: "obhur" }, routes)).toMatchObject({ name: "Obhur coast", href: "https://maps.app.goo.gl/o" });
   });
 });
 

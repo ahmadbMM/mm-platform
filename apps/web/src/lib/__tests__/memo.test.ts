@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { edgeStore, memo, memoSettled, resetMemo } from "../memo";
+import { edgeScope, edgeStore, memo, memoSettled, resetMemo } from "../memo";
 
 // lib/memo.ts: one read shared by everyone who asks at once, a minute's copy, the copy served while
 // it is refreshed, the last good copy through a failed read, and the edge's copy for a cold start.
@@ -100,14 +100,24 @@ describe("edgeStore", () => {
   it("keeps a copy in Cloudflare's cache for a week and reads it back; without a cache, nothing", async () => {
     const put = new Map<string, Response>();
     vi.stubGlobal("caches", { default: { match: async (k: string) => put.get(k)?.clone(), put: async (k: string, r: Response) => { put.set(k, r); } } });
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://qpffkz.supabase.co");
     const keep = edgeStore<{ n: number }>("thing");
     expect(await keep.read()).toBeNull();
     await keep.write({ n: 1 });
     expect(await keep.read()).toEqual({ n: 1 });
     const [key, res] = [...put.entries()][0];
-    expect(key).toBe("https://micromobility.sa/__site-content/thing/v1");
+    expect(key).toBe("https://micromobility.sa/__site-content/qpffkz/thing/v1");
     expect(res.headers.get("cache-control")).toBe("public, max-age=604800");
+    // staging (its own database) shares the zone's cache but never this copy
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://jkfhis.supabase.co");
+    expect(await edgeStore("thing").read()).toBeNull();
+    vi.unstubAllEnvs();
     vi.unstubAllGlobals();
     expect(await edgeStore("thing").read()).toBeNull();
+  });
+  it("names the database by its project ref", () => {
+    expect(edgeScope("https://abcd.supabase.co")).toBe("abcd");
+    expect(edgeScope(undefined)).toBe("local");
+    expect(edgeScope("not a url")).toBe("local");
   });
 });

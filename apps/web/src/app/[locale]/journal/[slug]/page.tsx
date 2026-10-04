@@ -21,10 +21,12 @@ const S = (v: unknown) => (typeof v === "string" ? v : "");
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; slug: string }> }): Promise<Metadata> {
   const { locale, slug } = await params;
-  const { posts, closed } = await journalState(locale);
+  const [{ posts, closed }, ar] = await Promise.all([journalState(locale), journalState("ar")]);
   const p = posts.find((x) => x.slug === slug);
   if (!p) return { robots: { index: false, follow: false } };
-  return pageMeta({ path: `/journal/${slug}`, locale, title: `${p.title} · Micromobility`, description: p.excerpt, closed, image: p.cover || undefined, type: "article" });
+  // An article staff have not written in Arabic is not on the Arabic Journal: no Arabic address is named.
+  const missing = ar.posts.some((x) => x.slug === slug) ? [] : ["ar"];
+  return pageMeta({ path: `/journal/${slug}`, locale, title: `${p.title} · Micromobility`, description: p.excerpt, closed, image: p.cover || undefined, type: "article", missing });
 }
 
 export default async function ArticlePage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
