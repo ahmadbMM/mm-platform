@@ -10,7 +10,7 @@ import { openFeedback, starRow } from "./feedback";
 import { addDays, hijriLabel, longDate, num, type Iso } from "./dates";
 import { clear, h, uid } from "./dom";
 import { icon } from "./icons";
-import { arrivalWindow, awaitingFeedback, awaitsFeedback, barClasses, BOOKING_KEY, canCancelSeries, cancellable, canRequest, clockText, commentGroups, feedbackOf, feedbackOpen, KIND_KEY, lateCancel, ratingText, rideTimes, scoreText, sharedByBooking, sharedScores, staffNoteText, within48h, type CalDay, type Mine, type SharedRatings } from "./model";
+import { arrivalWindow, awaitingFeedback, awaitsFeedback, barClasses, BOOKING_KEY, canCancelSeries, cancellable, canRequest, clockText, commentGroups, feedbackOf, feedbackOpen, KIND_KEY, lateCancel, ratingText, reasonText, rideTimes, scoreText, sharedByBooking, sharedScores, staffNoteText, within48h, type CalDay, type Mine, type SharedRatings } from "./model";
 
 type Row = { day: Iso; mine: Mine; riders: number | null; ride_time?: string | null; decide_by?: Iso | null; others_pending?: number | null };
 
@@ -76,7 +76,9 @@ function card(main: HTMLElement, r: Row): HTMLElement {
     m.status === "pending" && r.day >= today ? pendingInfo(r) : null,
     m.status === "confirmed" && r.day >= today ? brief(r) : null,
     cancelNote ? h("p", { class: `b-meta${m.late_cancel ? " b-late" : ""}` }, icon("alert"), h("span", {}, cancelNote)) : null,
-    m.status === "cancelled" && m.cancel_reason ? h("p", { class: "b-note" }, h("strong", {}, `${t("cancelReason")}: `), m.cancel_reason) : null,
+    m.status === "cancelled" && m.cancel_reason
+      ? h("p", { class: "b-note" }, h("strong", {}, `${t("reasonShown")}: `), m.cancel_reason === "closed" ? t("stClosed") : reasonText(app.lang, m.cancel_reason))
+      : null,
     staff ? h("p", { class: "b-note" }, h("strong", {}, `${t("mmNote")}: `), staff) : null,
     m.note ? h("p", { class: "b-note" }, h("strong", {}, `${t("yourNote")}: `), m.note) : null,
     canRequest(role) ? feedbackBlock(main, r) : feedbackGiven(r),
