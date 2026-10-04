@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "Penyelenggaraan, pembaikan dan binaan tersuai, dengan alat ganti tulen.",
  "Male": "Lelaki",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "Kecacatan pembuatan, dengan sokongan selepas jualan sepenuhnya. Tuil penukar gear dilindungi selama dua tahun, termasuk alat ganti; salah guna dan roda tidak dilindungi. Tertakluk kepada terma dan syarat.",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "Kerosakan pembuatan dilindungi oleh waranti dua tahun kami: lihat tab Waranti, atau hubungi kami dan kami akan membetulkannya.",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "Kerosakan pembuatan dilindungi oleh waranti kami: tab Waranti menerangkan apa yang dilindungi. Hubungi kami dan kami akan membetulkannya.",
  "Maroof verified": "Disahkan Maroof",
  "Mastercard": "Mastercard",
  "Me": "Saya",
@@ -1130,5 +1130,9 @@
  "not earned yet": "belum dicapai",
  "Given by the MicroMobility team · {0}": "Diberikan oleh pasukan MicroMobility · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "Triple Crown untuk kepelbagaian: tiga jenis kayuhan, seperti kayuhan biasa, kayuhan komuniti dan acara.",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Perlumbaan ketahanan memberi ganjaran kepada mereka yang terus bertahan: dua belas minggu berkayuh, dengan satu minggu rehat dalam setiap empat minggu dibenarkan."
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Perlumbaan ketahanan memberi ganjaran kepada mereka yang terus bertahan: dua belas minggu berkayuh, dengan satu minggu rehat dalam setiap empat minggu dibenarkan.",
+ "Pause announcements": "Jeda pengumuman",
+ "Riders must be at least 5 years old. Check the birth date.": "Penunggang mesti berumur sekurang-kurangnya 5 tahun. Semak tarikh lahir.",
+ "Write each name in full: every name needs at least two letters.": "Tulis setiap nama dengan penuh: setiap nama mesti mempunyai sekurang-kurangnya dua huruf.",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "Akaun anda telah dicipta, tetapi jawapan anda bagi Notis Privasi dan berita tunggangan tidak dapat disimpan. Semak sambungan dan tekan Cipta akaun sekali lagi."
 }

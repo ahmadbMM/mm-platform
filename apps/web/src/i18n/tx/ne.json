@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "सक्कली पार्टपुर्जासहित मर्मतसम्भार, रिपेयर र कस्टम बिल्ड।",
  "Male": "पुरुष",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "उत्पादनसम्बन्धी त्रुटिहरू, बिक्रीपछिको पूर्ण सहयोगसहित। गियर फेर्ने लिभरमा पार्टपुर्जासहित दुई वर्षको वारेन्टी छ; दुरुपयोग र पाङ्ग्रा वारेन्टीमा पर्दैनन्। नियम र सर्तहरू लागू हुन्छन्।",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "उत्पादनसम्बन्धी त्रुटिहरू हाम्रो दुई वर्षे वारेन्टीमा पर्छन्: “वारेन्टी” ट्याब हेर्नुहोस्, वा हामीलाई सम्पर्क गर्नुहोस्, हामी ठीक गरिदिन्छौं।",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "उत्पादनसम्बन्धी त्रुटिहरू हाम्रो वारेन्टीमा पर्छन्: यसले के-के समेट्छ भन्ने “वारेन्टी” ट्याबमा छ। हामीलाई सम्पर्क गर्नुहोस्, हामी ठीक गरिदिन्छौं।",
  "Maroof verified": "Maroof प्रमाणित",
  "Mastercard": "Mastercard",
  "Me": "म",
@@ -1130,5 +1130,9 @@
  "not earned yet": "अझै प्राप्त भएको छैन",
  "Given by the MicroMobility team · {0}": "माइक्रोमोबिलिटी टोलीबाट · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "विविधताको मुकुट: तीन प्रकारका राइड, जस्तै सामान्य राइड, सामुदायिक राइड र कार्यक्रम।",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "इन्ड्युरेन्स दौडले निरन्तर लाग्नेलाई पुरस्कृत गर्छ: बाह्र हप्ताको राइड, हरेक चारमा एउटा खाली हप्ता माफ।"
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "इन्ड्युरेन्स दौडले निरन्तर लाग्नेलाई पुरस्कृत गर्छ: बाह्र हप्ताको राइड, हरेक चारमा एउटा खाली हप्ता माफ।",
+ "Pause announcements": "घोषणाहरू रोक्नुहोस्",
+ "Riders must be at least 5 years old. Check the birth date.": "राइडरको उमेर कम्तीमा 5 वर्ष हुनुपर्छ। जन्म मिति जाँच गर्नुहोस्।",
+ "Write each name in full: every name needs at least two letters.": "हरेक नाम पूरा लेख्नुहोस्: हरेक नाममा कम्तीमा दुई अक्षर हुनुपर्छ।",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "तपाईंको खाता बनेको छ, तर गोपनीयता सूचना र राइडका खबरबारे तपाईंका जवाफ सुरक्षित हुन सकेनन्। जडान जाँच गर्नुहोस् र “खाता बनाउनुहोस्” फेरि थिच्नुहोस्।"
 }

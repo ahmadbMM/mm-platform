@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookingRef, codeReady, countdownAt, countdownMoments, dayWord, doneToday, ticketRoute, ticketStages, fmtClock, fmtDayDate, icsFor, queueNumbers, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
+import { bookingRef, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, ticketRoute, ticketStages, fmtClock, fmtDayDate, icsFor, queueNumbers, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
 
 // My Account's tickets follow the booking app's own rules (renderBookingTicket, bookingRef,
 // downloadBookingICS): what the code says, when it is shown, and what the line under it says.
@@ -121,6 +121,13 @@ describe("the ride night", () => {
     expect(countdownAt(m, Date.parse("2099-03-01T21:00:00+03:00"))).toBeNull();
     expect(countdownMoments(sat, "2099-03-04").map((x) => x[1])).toEqual(["gather", "start"]);
     expect(countdownMoments(ticketSession({ ...satRow, ride_kind: "swim", needs_approval: false })!, "2099-03-04").map((x) => x[1])).toEqual(["start"]);
+  });
+  it("writes the countdown's line outside the browser too (the ticket is drawn on the server)", () => {
+    const m = countdownMoments(jcc, "2099-03-01");
+    const t = { collect: "Bike collection in {0}", gather: "Gathering in {0}", start: "Starts in {0}", h: "{h} h", hm: "{h} h {m} min", m: "{m} min" };
+    expect(cdLine(m, Date.parse("2099-03-01T19:00:00+03:00"), t)).toBe("Bike collection in 1 h 15 min");
+    expect(cdLine(m, Date.parse("2099-03-01T20:30:00+03:00"), t)).toBe("Starts in 30 min");
+    expect(cdLine(m, Date.parse("2099-03-01T21:00:00+03:00"), t)).toBe("");
   });
   it("shows where the rider is: booked, checked in, on the bike, done", () => {
     const at = (r: Partial<TicketRow>[], bikes = true, name: string | null = null) => ticketStages(r.map(row), bikes, name, "en");

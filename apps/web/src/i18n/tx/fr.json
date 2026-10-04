@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "Entretien, réparations et montages sur mesure, avec des pièces détachées d’origine.",
  "Male": "Masculin",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "Les défauts de fabrication, avec un service après-vente complet. Les manettes de vitesses sont couvertes pendant deux ans, pièces détachées comprises ; la mauvaise utilisation et les roues ne sont pas couvertes. Sous réserve des conditions générales.",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "Les défauts de fabrication sont couverts par notre garantie de deux ans : consultez l’onglet Garantie, ou contactez-nous et nous réglerons le problème.",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "Les défauts de fabrication sont couverts par notre garantie : l’onglet Garantie précise ce qu’elle couvre. Contactez-nous et nous réglerons le problème.",
  "Maroof verified": "Vérifié par Maroof",
  "Mastercard": "Mastercard",
  "Me": "Moi",
@@ -1130,5 +1130,9 @@
  "not earned yet": "pas encore obtenu",
  "Given by the MicroMobility team · {0}": "Offert par l'équipe MicroMobility · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "Une couronne pour la variété : trois types de sorties, comme une sortie classique, une sortie communautaire et un événement.",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Les courses d'endurance récompensent ceux qui tiennent : douze semaines de sorties, une semaine calme sur quatre permise."
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Les courses d'endurance récompensent ceux qui tiennent : douze semaines de sorties, une semaine calme sur quatre permise.",
+ "Pause announcements": "Mettre les annonces en pause",
+ "Riders must be at least 5 years old. Check the birth date.": "Les cyclistes doivent avoir au moins 5 ans. Vérifiez la date de naissance.",
+ "Write each name in full: every name needs at least two letters.": "Écrivez chaque nom en entier : chaque nom doit compter au moins deux lettres.",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "Votre compte a été créé, mais vos réponses concernant l’Avis de confidentialité et les actualités des sorties n’ont pas pu être enregistrées. Vérifiez la connexion et appuyez de nouveau sur « Créer un compte »."
 }

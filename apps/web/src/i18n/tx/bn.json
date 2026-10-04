@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "রক্ষণাবেক্ষণ, মেরামত ও কাস্টম বিল্ড — আসল খুচরা যন্ত্রাংশ দিয়ে।",
  "Male": "পুরুষ",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "উৎপাদনজনিত ত্রুটি, সঙ্গে পূর্ণাঙ্গ বিক্রয়োত্তর সেবা। গিয়ার বদলের লিভার খুচরা যন্ত্রাংশসহ দুই বছরের জন্য ওয়ারেন্টির আওতায় থাকে; অপব্যবহার ও চাকা এর আওতায় পড়ে না। শর্তাবলি প্রযোজ্য।",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "উৎপাদনজনিত ত্রুটি আমাদের দুই বছরের ওয়ারেন্টির আওতায় পড়ে: ওয়ারেন্টি ট্যাব দেখুন, অথবা যোগাযোগ করুন — আমরা ঠিক করে দেব।",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "উৎপাদনজনিত ত্রুটি আমাদের ওয়ারেন্টির আওতায় পড়ে: এতে কী কী আছে, তা ওয়ারেন্টি ট্যাবে লেখা আছে। যোগাযোগ করুন — আমরা ঠিক করে দেব।",
  "Maroof verified": "Maroof-এ যাচাইকৃত",
  "Mastercard": "Mastercard",
  "Me": "আমি",
@@ -1130,5 +1130,9 @@
  "not earned yet": "এখনও অর্জিত হয়নি",
  "Given by the MicroMobility team · {0}": "মাইক্রোমোবিলিটি টিমের পক্ষ থেকে · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "বৈচিত্র্যের মুকুট: তিন ধরনের রাইড, যেমন সাধারণ রাইড, কমিউনিটি রাইড ও ইভেন্ট।",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "এন্ডুরেন্স রেস তাদের পুরস্কৃত করে যারা চালিয়ে যান: বারো সপ্তাহ রাইড, প্রতি চারে একটি ফাঁকা সপ্তাহ মাফ।"
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "এন্ডুরেন্স রেস তাদের পুরস্কৃত করে যারা চালিয়ে যান: বারো সপ্তাহ রাইড, প্রতি চারে একটি ফাঁকা সপ্তাহ মাফ।",
+ "Pause announcements": "ঘোষণা থামান",
+ "Riders must be at least 5 years old. Check the birth date.": "রাইডারের বয়স কমপক্ষে 5 বছর হতে হবে। জন্মতারিখ দেখে নিন।",
+ "Write each name in full: every name needs at least two letters.": "প্রতিটি নাম পুরোটা লিখুন: প্রতিটি নামে অন্তত দুটি অক্ষর থাকতে হবে।",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "আপনার অ্যাকাউন্ট খোলা হয়েছে, কিন্তু গোপনীয়তা বিজ্ঞপ্তি ও রাইডের খবর নিয়ে আপনার উত্তর সংরক্ষণ করা যায়নি। সংযোগ দেখে নিয়ে আবার “অ্যাকাউন্ট খুলুন” চাপুন।"
 }

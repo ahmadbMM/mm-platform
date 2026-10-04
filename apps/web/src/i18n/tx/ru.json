@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "Обслуживание, ремонт и индивидуальная сборка — с оригинальными запчастями.",
  "Male": "Мужской",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "Заводские дефекты — с полной послепродажной поддержкой. Гарантия на шифтеры — два года, включая запчасти; ненадлежащее использование и колёса гарантией не покрываются. Действуют правила и условия.",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "Заводской брак покрывается нашей двухлетней гарантией: загляните во вкладку «Гарантия» или свяжитесь с нами — и мы всё исправим.",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "Заводской брак покрывается нашей гарантией: что именно она покрывает, указано во вкладке «Гарантия». Свяжитесь с нами — и мы всё исправим.",
  "Maroof verified": "Проверено Maroof",
  "Mastercard": "Mastercard",
  "Me": "Я",
@@ -1130,5 +1130,9 @@
  "not earned yet": "ещё не получен",
  "Given by the MicroMobility team · {0}": "Вручено командой MicroMobility · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "Корона за разнообразие: три вида заездов — например, обычный заезд, заезд сообщества и мероприятие.",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Гонки на выносливость награждают тех, кто не сдаётся: двенадцать недель заездов, допускается одна спокойная неделя из четырёх."
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "Гонки на выносливость награждают тех, кто не сдаётся: двенадцать недель заездов, допускается одна спокойная неделя из четырёх.",
+ "Pause announcements": "Приостановить объявления",
+ "Riders must be at least 5 years old. Check the birth date.": "Райдеру должно быть не меньше 5 лет. Проверьте дату рождения.",
+ "Write each name in full: every name needs at least two letters.": "Напишите каждое имя полностью: в каждом имени должно быть не меньше двух букв.",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "Аккаунт создан, но ваши ответы по Уведомлению о конфиденциальности и новостям о заездах сохранить не удалось. Проверьте подключение и снова нажмите «Создать аккаунт»."
 }

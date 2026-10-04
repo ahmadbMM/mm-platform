@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "保养、维修与定制组装，使用原厂零配件。",
  "Male": "男",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "涵盖制造缺陷，并提供全面售后支持。变速手柄享两年质保，含零配件；使用不当及轮组不在质保范围内。以相关条款与条件为准。",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "制造缺陷在我们的两年质保范围内：请查看“质保”标签页，或联系我们，我们会为您妥善处理。",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "制造缺陷在我们的质保范围内：具体范围请见“质保”标签页。联系我们，我们会为您妥善处理。",
  "Maroof verified": "Maroof 认证",
  "Mastercard": "Mastercard",
  "Me": "我自己",
@@ -1130,5 +1130,9 @@
  "not earned yet": "尚未获得",
  "Given by the MicroMobility team · {0}": "由 MicroMobility 团队授予 · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "一顶属于多面手的王冠：参加三种骑行，例如常规骑行、社区骑行和一场活动。",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "耐力赛奖励坚持到底的人：连续骑行 12 周，每 4 周允许有 1 周空档。"
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "耐力赛奖励坚持到底的人：连续骑行 12 周，每 4 周允许有 1 周空档。",
+ "Pause announcements": "暂停公告",
+ "Riders must be at least 5 years old. Check the birth date.": "骑行者须年满 5 岁。请检查出生日期。",
+ "Write each name in full: every name needs at least two letters.": "请完整填写每个名字：每个名字至少需要两个字母。",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "您的账户已创建，但您对隐私声明和骑行资讯的选择未能保存。请检查网络连接，然后再次点击“创建账户”。"
 }

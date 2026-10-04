@@ -41,6 +41,14 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
   const setMenu = useCallback((next: Menu | ((m: Menu) => Menu)) =>
     setOpened((o) => ({ menu: typeof next === "function" ? next(o.at === path ? o.menu : "") : next, at: path })), [path]);
   const bar = useRef<HTMLElement>(null);
+  // The address's query and hash, taken when the language menu opens: another language is the same
+  // page (/live?session=… keeps its ride), less any ?lang=, which would pick the old language again.
+  const [tail, setTail] = useState("");
+  const keepTail = () => {
+    const q = new URLSearchParams(window.location.search);
+    q.delete("lang");
+    setTail((q.size ? `?${q}` : "") + window.location.hash);
+  };
   // A mouse opens Community by hovering, and the click that naturally follows must not shut it
   // again; a tap or the keyboard (no hover) toggles it.
   const hovering = useRef(false);
@@ -100,7 +108,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
           </button>
           <div className={`mm-lang${menu === "lang" ? " open" : ""}`}>
             <button type="button" className="mm-nav-icon mm-nav-globe" aria-expanded={menu === "lang"} aria-controls="mm-lang-menu"
-              title={tx("Language", "اللغة")} aria-label={`${tx("Language", "اللغة")}: ${here.name}`} onClick={() => setMenu((m) => (m === "lang" ? "" : "lang"))}>
+              title={tx("Language", "اللغة")} aria-label={`${tx("Language", "اللغة")}: ${here.name}`} onClick={() => { keepTail(); setMenu((m) => (m === "lang" ? "" : "lang")); }}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" aria-hidden="true">
                 <circle cx="12" cy="12" r="9" /><path d="M3 12h18" />
                 <g className="mm-globe-spin"><path d="M12 3a14.5 14.5 0 0 1 0 18a14.5 14.5 0 0 1 0-18" /><path d="M12 3a14.5 14.5 0 0 0 0 18" /><ellipse cx="12" cy="12" rx="4.2" ry="9" /></g>
@@ -109,7 +117,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
             {menu === "lang" && (
               <div id="mm-lang-menu" className="mm-lang-menu" role="menu" aria-label={tx("Language", "اللغة")}>
                 {LOCALES.map((l) => (
-                  <Link key={l.code} href={path} locale={l.code} hrefLang={l.html} role="menuitemradio"
+                  <Link key={l.code} href={path + tail} locale={l.code} hrefLang={l.html} role="menuitemradio"
                     aria-checked={l.code === locale} className={l.code === locale ? "on" : undefined} onClick={() => setMenu("")}>
                     <bdi lang={l.html}>{l.name}</bdi>
                   </Link>

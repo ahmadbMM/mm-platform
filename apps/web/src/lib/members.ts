@@ -48,8 +48,14 @@ export function memberArea(r: { status: number; data: unknown; message: string }
   };
 }
 
-/** Whether the birthday falls today (both "YYYY-MM-DD"; today in Riyadh). */
-export const isBirthday = (birthDate: string | null, today: string) => !!birthDate && birthDate.slice(5, 10) === today.slice(5, 10) && /^\d{4}-\d{2}-\d{2}$/.test(today);
+/** Whether the birthday falls today (both "YYYY-MM-DD"; today in Riyadh). Someone born on 29
+ *  February is greeted on the 28th in a year that has no 29th. */
+export function isBirthday(birthDate: string | null, today: string): boolean {
+  if (!birthDate || !/^\d{4}-\d{2}-\d{2}$/.test(today)) return false;
+  const day = birthDate.slice(5, 10), y = Number(today.slice(0, 4));
+  const leap = (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0;
+  return (day === "02-29" && !leap ? "02-28" : day) === today.slice(5, 10);
+}
 
 /** The announcements as the announcement bar reads them (site.announce.messages, the raw list
  *  value), in the page's language: text, link text and link. */

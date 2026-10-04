@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "純正スペアパーツを使ったメンテナンス、修理、カスタムビルド。",
  "Male": "男性",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "製造上の欠陥が保証の対象で、充実したアフターサポートも受けられます。シフトレバーはスペアパーツを含めて2年間保証されます。誤った使用やホイールは保証の対象外です。諸条件が適用されます。",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "製造上の欠陥は当社の2年保証の対象です。「保証」タブをご覧いただくか、お問い合わせください。責任を持って対応いたします。",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "製造上の欠陥は当社の保証の対象です。保証の範囲は「保証」タブに記載しています。お問い合わせいただければ、責任を持って対応いたします。",
  "Maroof verified": "Maroof認証済み",
  "Mastercard": "Mastercard",
  "Me": "自分",
@@ -1130,5 +1130,9 @@
  "not earned yet": "未獲得",
  "Given by the MicroMobility team · {0}": "MicroMobilityチームより授与 · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "多彩なライドに贈るトリプルクラウン。通常のライド、コミュニティライド、イベントなど、3種類のライドに参加しましょう。",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "耐久レースは、走り続ける者に報います。12週間走り続けましょう。4週に1週は休んでもかまいません。"
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "耐久レースは、走り続ける者に報います。12週間走り続けましょう。4週に1週は休んでもかまいません。",
+ "Pause announcements": "お知らせを一時停止",
+ "Riders must be at least 5 years old. Check the birth date.": "ライダーは5歳以上である必要があります。生年月日をご確認ください。",
+ "Write each name in full: every name needs at least two letters.": "名前はそれぞれ省略せずに入力してください。各名前は2文字以上必要です。",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "アカウントは作成されましたが、プライバシー通知とライド情報についての回答を保存できませんでした。接続を確認して、もう一度「アカウントを作成」を押してください。"
 }

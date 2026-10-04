@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "रखरखाव, मरम्मत और कस्टम बिल्ड — असली स्पेयर पार्ट्स के साथ।",
  "Male": "पुरुष",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "मैन्युफ़ैक्चरिंग दोष, पूरे आफ़्टर-सेल्स सपोर्ट के साथ। गियर बदलने वाले लीवर दो साल तक कवर हैं, स्पेयर पार्ट्स सहित; गलत इस्तेमाल और व्हील कवर नहीं हैं। नियम और शर्तें लागू।",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "मैन्युफ़ैक्चरिंग की खराबियाँ हमारी दो साल की वारंटी में शामिल हैं: “वारंटी” टैब देखें, या हमसे संपर्क करें और हम इसे ठीक कर देंगे।",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "मैन्युफ़ैक्चरिंग की खराबियाँ हमारी वारंटी में शामिल हैं: इसमें क्या शामिल है, यह “वारंटी” टैब में लिखा है। हमसे संपर्क करें और हम इसे ठीक कर देंगे।",
  "Maroof verified": "Maroof पर सत्यापित",
  "Mastercard": "Mastercard",
  "Me": "मैं",
@@ -1130,5 +1130,9 @@
  "not earned yet": "अभी हासिल नहीं हुआ",
  "Given by the MicroMobility team · {0}": "माइक्रोमोबिलिटी टीम की ओर से · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "विविधता का ताज: तीन तरह की राइड, जैसे आम राइड, कम्युनिटी राइड और इवेंट।",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "एंड्योरेंस रेस उन्हें इनाम देती है जो चलते रहें: बारह हफ़्ते की राइड, हर चार में एक खाली हफ़्ता माफ़।"
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "एंड्योरेंस रेस उन्हें इनाम देती है जो चलते रहें: बारह हफ़्ते की राइड, हर चार में एक खाली हफ़्ता माफ़।",
+ "Pause announcements": "घोषणाएँ रोकें",
+ "Riders must be at least 5 years old. Check the birth date.": "राइडर की उम्र कम से कम 5 साल होनी चाहिए। जन्म तिथि जाँचें।",
+ "Write each name in full: every name needs at least two letters.": "हर नाम पूरा लिखें: हर नाम में कम से कम दो अक्षर होने चाहिए।",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "आपका खाता बन गया है, लेकिन गोपनीयता सूचना और राइड की खबरों के बारे में आपके जवाब सहेजे नहीं जा सके। कनेक्शन जाँचें और “खाता बनाएँ” फिर से दबाएँ।"
 }

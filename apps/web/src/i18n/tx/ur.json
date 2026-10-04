@@ -422,7 +422,7 @@
  "Maintenance, repairs and custom builds, with genuine spare parts.": "دیکھ بھال، مرمت اور کسٹم بلڈز، اصلی اسپیئر پارٹس کے ساتھ۔",
  "Male": "مذکر",
  "Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.": "مینوفیکچرنگ نقائص، فروخت کے بعد مکمل سپورٹ کے ساتھ۔ گیئر بدلنے والے لیور دو سال تک وارنٹی میں شامل ہیں، اسپیئر پارٹس سمیت؛ غلط استعمال اور پہیے اس میں شامل نہیں۔ شرائط و ضوابط لاگو ہیں۔",
- "Manufacturing faults are covered by our two-year warranty: see the Warranty tab, or contact us and we'll put it right.": "مینوفیکچرنگ خرابیاں ہماری دو سالہ وارنٹی میں شامل ہیں: «وارنٹی» ٹیب دیکھیں، یا ہم سے رابطہ کریں اور ہم اسے ٹھیک کر دیں گے۔",
+ "Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.": "مینوفیکچرنگ خرابیاں ہماری وارنٹی میں شامل ہیں: «وارنٹی» ٹیب میں لکھا ہے کہ اس میں کیا شامل ہے۔ ہم سے رابطہ کریں اور ہم اسے ٹھیک کر دیں گے۔",
  "Maroof verified": "Maroof سے تصدیق شدہ",
  "Mastercard": "Mastercard",
  "Me": "میں",
@@ -1130,5 +1130,9 @@
  "not earned yet": "ابھی حاصل نہیں ہوا",
  "Given by the MicroMobility team · {0}": "مائیکرو موبیلٹی ٹیم کی طرف سے · {0}",
  "A crown for variety: three kinds of ride, like a regular ride, a community ride and an event.": "تنوع کا تاج: تین قسم کی رائیڈز، جیسے عام رائیڈ، کمیونٹی رائیڈ اور ایونٹ۔",
- "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "برداشت کی ریسیں انہیں نوازتی ہیں جو جاری رکھیں: بارہ ہفتے کی رائیڈز، ہر چار میں ایک خاموش ہفتہ معاف۔"
+ "Endurance races reward those who keep going: twelve weeks of riding, one quiet week in four allowed.": "برداشت کی ریسیں انہیں نوازتی ہیں جو جاری رکھیں: بارہ ہفتے کی رائیڈز، ہر چار میں ایک خاموش ہفتہ معاف۔",
+ "Pause announcements": "اعلانات روکیں",
+ "Riders must be at least 5 years old. Check the birth date.": "رائیڈر کی عمر کم از کم 5 سال ہونی چاہیے۔ تاریخِ پیدائش چیک کریں۔",
+ "Write each name in full: every name needs at least two letters.": "ہر نام پورا لکھیں: ہر نام میں کم از کم دو حروف ہونے چاہییں۔",
+ "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.": "آپ کا اکاؤنٹ بن گیا ہے، لیکن پرائیویسی نوٹس اور رائیڈ کی خبروں کے بارے میں آپ کے جوابات محفوظ نہیں ہو سکے۔ کنکشن چیک کریں اور «اکاؤنٹ بنائیں» دوبارہ دبائیں۔"
 }

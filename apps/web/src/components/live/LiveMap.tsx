@@ -59,7 +59,12 @@ export default function LiveMap({ sessionId, locale }: Props) {
   const [answer, setAnswer] = useState<LiveAnswer | null>(null);
   const [mapState, setMapState] = useState<"loading" | "ready" | "failed">("loading");
   const [recenter, setRecenter] = useState(0);
+  const centred = useRef(0); // the last Recenter tap the view has followed
   const positions = useMemo(() => (answer?.ok ? answer.positions : []), [answer]);
+  // The map's box stays once a position has come: a failed ask (no positions for a moment) must not
+  // take away the element the map is drawn in - a new, empty one would never get the map back.
+  const [shown, setShown] = useState(false);
+  if (positions.length > 0 && !shown) setShown(true);
 
   // Ask every ten seconds while the page is open; a hidden tab waits for its return.
   useEffect(() => {
@@ -121,8 +126,10 @@ export default function LiveMap({ sessionId, locale }: Props) {
       }
     }
     for (const [role, mk] of markers.current) if (!seen.has(role)) { mk.remove(); markers.current.delete(role); }
-    if (positions.length && (!framed.current || recenter)) {
+    // Framed once, then again only when Recenter is tapped - never on every answer after it.
+    if (positions.length && (!framed.current || recenter !== centred.current)) {
       framed.current = true;
+      centred.current = recenter;
       const lats = positions.map((p) => p.lat), lngs = positions.map((p) => p.lng);
       if (positions.length > 1) m.fitBounds([[Math.min(...lngs), Math.min(...lats)], [Math.max(...lngs), Math.max(...lats)]], { padding: 60, maxZoom: 16, duration: 600 });
       else m.easeTo({ center: [positions[0].lng, positions[0].lat], zoom: Math.max(m.getZoom(), 15), duration: 600 });
@@ -140,23 +147,23 @@ export default function LiveMap({ sessionId, locale }: Props) {
   return (
     <div className="lv">
       {note && <p className={`lv-note${answer && !answer.ok ? " warn" : ""}`} role="status">{note}</p>}
+      {shown && (
+        <div className="lv-map-wrap">
+          <div ref={box} className="lv-map" aria-label={t.leader} />
+          {mapState !== "ready" && <p className="lv-map-note">{mapState === "failed" ? t.mapFailed : t.loading}</p>}
+        </div>
+      )}
       {positions.length > 0 && (
-        <>
-          <div className="lv-map-wrap">
-            <div ref={box} className="lv-map" aria-label={t.leader} />
-            {mapState !== "ready" && <p className="lv-map-note">{mapState === "failed" ? t.mapFailed : t.loading}</p>}
-          </div>
-          <div className="lv-legend">
-            {positions.map((p) => (
-              <span key={p.role} className="lv-chip" style={{ ["--c" as string]: COLOUR[p.role] }}>
-                <i aria-hidden="true" /><strong>{p.role === "leader" ? t.leader : t.sweeper}</strong>
-                {p.at && <span>{t.updated(clock(p.at))}</span>}
-                {p.speed !== null && p.speed > 0.5 && <span>{kmh(p.speed)}</span>}
-              </span>
-            ))}
-            {mapState === "ready" && <button type="button" className="lv-btn" onClick={() => setRecenter((n) => n + 1)}>{t.recenter}</button>}
-          </div>
-        </>
+        <div className="lv-legend">
+          {positions.map((p) => (
+            <span key={p.role} className="lv-chip" style={{ ["--c" as string]: COLOUR[p.role] }}>
+              <i aria-hidden="true" /><strong>{p.role === "leader" ? t.leader : t.sweeper}</strong>
+              {p.at && <span>{t.updated(clock(p.at))}</span>}
+              {p.speed !== null && p.speed > 0.5 && <span>{kmh(p.speed)}</span>}
+            </span>
+          ))}
+          {mapState === "ready" && <button type="button" className="lv-btn" onClick={() => setRecenter((n) => n + 1)}>{t.recenter}</button>}
+        </div>
       )}
     </div>
   );
