@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 // The ride waiver (owner, 2026-10-03): nobody registers, and no edit is saved, without ticking it.
-// The calls carry p_waiver '2026-10-v2'; a database still on the old functions (PGRST202 for the
+// The calls carry p_waiver '2026-10-v3'; a database still on the old functions (PGRST202 for the
 // unknown argument) gets the same call once more without it.
 const S1 = { id: '2099-02-08-pw', title: "Petromin's Wednesdays", start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' };
 const json = (body: unknown, status = 200) => ({ status, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'content-type': 'application/json' }, body: JSON.stringify(body) });
@@ -38,7 +38,7 @@ test('a registration without the waiver is refused and nothing is sent; ticked, 
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(regs).toHaveLength(1);
-  expect(regs[0].p_waiver).toBe('2026-10-v2');
+  expect(regs[0].p_waiver).toBe('2026-10-v3');
 });
 
 test('an edit needs the waiver too, and rider_edit gets p_waiver', async ({ page }) => {
@@ -57,7 +57,7 @@ test('an edit needs the waiver too, and rider_edit gets p_waiver', async ({ page
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(edits).toHaveLength(1);
-  expect(edits[0]).toMatchObject({ p_booking_no: 'P-001', p_waiver: '2026-10-v2' });
+  expect(edits[0]).toMatchObject({ p_booking_no: 'P-001', p_waiver: '2026-10-v3' });
 });
 
 test('a database without p_waiver yet (PGRST202): the same call goes once more without it', async ({ page }) => {
@@ -70,7 +70,7 @@ test('a database without p_waiver yet (PGRST202): the same call goes once more w
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(regs).toHaveLength(2);
-  expect(regs[0].p_waiver).toBe('2026-10-v2');
+  expect(regs[0].p_waiver).toBe('2026-10-v3');
   expect('p_waiver' in regs[1]).toBe(false);
   const { p_waiver: _w, ...rest } = regs[0];
   expect(regs[1]).toEqual(rest);
@@ -81,7 +81,7 @@ test('a database without p_waiver yet (PGRST202): the same call goes once more w
   await page.click('#submit');
   await expect(page.locator('.done-note')).toHaveText('Your booking was updated.');
   expect(edits).toHaveLength(2);
-  expect(edits[0].p_waiver).toBe('2026-10-v2');
+  expect(edits[0].p_waiver).toBe('2026-10-v3');
   expect('p_waiver' in edits[1]).toBe(false);
 });
 
