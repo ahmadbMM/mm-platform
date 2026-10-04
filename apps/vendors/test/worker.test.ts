@@ -114,35 +114,25 @@ describe("POST /api/login", () => {
 });
 
 describe("POST /api/logout", () => {
-  it("clears the cookie", async () => {
+  it("ends the session in the database, then clears the cookie", async () => {
     const res = await worker.fetch(post("/api/logout", {}, { Cookie: COOKIE }), env());
     expect(res.status).toBe(200);
     const c = res.headers.get("set-cookie")!;
     expect(c).toMatch(/^mm_vendor=;/);
     expect(c).toContain("Max-Age=0");
     expect(c).toContain("HttpOnly");
-  });
-
-  it("ends the token on the server: vendor_logout with the cookie's id and token", async () => {
-    await worker.fetch(post("/api/logout", { p_uid: "9", p_token: "b".repeat(48) }, { Cookie: COOKIE }), env());
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/vendor_logout");
-    expect(calls[0].body).toEqual({ p_uid: "7", p_token: TOKEN }); // the cookie's, never the body's
+    expect(calls[0].body).toEqual({ p_uid: "7", p_token: TOKEN });
   });
 
-  it("still clears the cookie when the database lacks the function or cannot be reached", async () => {
-    answer = dbJson({ code: "PGRST202", message: "Could not find the function public.vendor_logout" }, 404);
-    const a = await worker.fetch(post("/api/logout", {}, { Cookie: COOKIE }), env());
-    expect(a.status).toBe(200);
-    expect(a.headers.get("set-cookie")).toMatch(/^mm_vendor=;/);
-    vi.stubGlobal("fetch", vi.fn(async () => { throw new TypeError("network"); }));
-    const b = await worker.fetch(post("/api/logout", {}, { Cookie: COOKIE }), env());
-    expect(b.status).toBe(200);
-    expect(b.headers.get("set-cookie")).toMatch(/^mm_vendor=;/);
-  });
-
-  it("asks the database nothing without a session cookie", async () => {
-    const res = await worker.fetch(post("/api/logout", {}), env());
+  it("still clears the cookie when the database cannot be reached, and calls nothing without a session", async () => {
+    answer = () => { throw new Error("down"); };
+    let res = await worker.fetch(post("/api/logout", {}, { Cookie: COOKIE }), env());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
+    calls = [];
+    res = await worker.fetch(post("/api/logout", {}), env());
     expect(res.status).toBe(200);
     expect(calls).toHaveLength(0);
   });

@@ -2,7 +2,7 @@
 // database that keeps each venue's session token on the server side (session.ts).
 //
 //   POST /api/login       {login, password} -> vendor_login; sets the mm_vendor cookie
-//   POST /api/logout      ends the session on the server (vendor_logout) and clears the cookie
+//   POST /api/logout      ends the session in the database (vendor_logout), then clears the cookie
 //   POST /api/rpc/<name>  one of RPCS below, with p_uid / p_token taken from the cookie
 //
 // Every POST must come from this origin's own page, as JSON, and small. Sign-in tries are metered
@@ -151,6 +151,13 @@ async function login(req: Request, env: Env): Promise<Response> {
   return json({ must_change: d.must_change === true }, 200, setCookie({ id: d.id, token: d.token }));
 }
 
+/** Ends this device's session in the database (best effort: the cookie is cleared either way). */
+async function logout(req: Request, env: Env): Promise<Response> {
+  const s = sessionOf(req);
+  if (s) await callDb(env, req, "vendor_logout", { p_uid: String(s.id), p_token: s.token });
+  return json({ ok: true }, 200, clearCookie());
+}
+
 async function rpc(req: Request, env: Env, name: string): Promise<Response> {
   if (!RPCS.has(name)) return fail("NOT_FOUND", 404);
   const s = sessionOf(req);
@@ -167,16 +174,6 @@ async function rpc(req: Request, env: Env, name: string): Promise<Response> {
     return json({ ok: true }, 200, setCookie({ id: s.id, token: r.data }));
   }
   return json(r.data ?? null);
-}
-
-// Sign out ends the token on the server too (vendor_logout, rentals 20261004100000): clearing the
-// cookie alone left a copied cookie working until the next password change. The cookie goes
-// whatever the database answers - a database without the function yet, or one out of reach, must
-// not keep a venue signed in on this device.
-async function logout(req: Request, env: Env): Promise<Response> {
-  const s = sessionOf(req);
-  if (s) await callDb(env, req, "vendor_logout", { p_uid: String(s.id), p_token: s.token });
-  return json({ ok: true }, 200, clearCookie());
 }
 
 async function route(req: Request, env: Env): Promise<Response> {
