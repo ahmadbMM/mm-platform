@@ -8,6 +8,7 @@ import { createElement, type FC, type ReactElement, type ReactNode } from "react
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import RatingForm from "../../components/account/RatingForm";
+import { RATING_WORDS } from "../../components/account/RatingForm.words";
 import { TxProvider } from "../../i18n/TxProvider";
 import de from "../../i18n/tx/de.json";
 
@@ -133,6 +134,15 @@ describe("api/account/rate", () => {
     vi.stubGlobal("fetch", vi.fn(async () => json({ message: "token mismatch" }, 400)));
     expect(await (await post(rate, "/api/account/rate", ok)).json()).toEqual({ ok: false, error: "signin" });
   });
+  it("names the database's refusals of a booking change, each with its own words", async () => {
+    const ok = { entryId: "q1", form: "rental", s: { service: 9, experience: 9 } };
+    vi.stubGlobal("fetch", vi.fn(async () => json({ code: "P0001", message: "WAIVER_OUTDATED" }, 400)));
+    const old = await post(rate, "/api/account/rate", ok);
+    expect([old.status, await old.json()]).toEqual([409, { ok: false, error: "outdated" }]);
+    vi.stubGlobal("fetch", vi.fn(async () => json({ code: "P0001", message: "PAID_MOVE" }, 400)));
+    expect(await (await post(rate, "/api/account/rate", ok)).json()).toEqual({ ok: false, error: "paid_move" });
+    for (const w of Object.values(RATING_WORDS)) expect([w.errors.outdated, w.errors.paid_move].every((x) => x.trim().length > 10)).toBe(true);
+  });
 });
 
 describe("api/google-wallet", () => {
@@ -190,11 +200,18 @@ describe("the breakfast box's sharing line", () => {
     const html = draw("social");
     expect(html.split(SHARE)).toHaveLength(2);
     // right after the breakfast question's own label, before its scale and its sub-questions
-    expect(html).toMatch(/id="rg-q1-breakfast-l">Breakfast<\/div><p class="rg-share">Your breakfast answers may be shared/);
-    expect(html.indexOf(SHARE)).toBeLessThan(html.indexOf("rg-q1-bf_restaurant"));
+    expect(html).toMatch(/id="rg[^"]*-q1-breakfast-l">Breakfast<\/div><p class="rg-share">Your breakfast answers may be shared/);
+    expect(html.indexOf(SHARE)).toBeLessThan(html.indexOf("-q1-bf_restaurant"));
   });
   it("is not on a rental's form", () => {
     expect(draw("rental")).not.toContain("rg-share");
+  });
+  it("gives each form on the page its own ids, the same ride's twice included (the pop-up and a card)", () => {
+    const one = () => createElement(RatingForm, { entryId: "q1", form: "rental", noBike: false, onRated: () => {} });
+    const html = renderToStaticMarkup(createElement(Tx, { locale: "en", dict: null }, one(), one()));
+    const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+    expect(ids.length).toBeGreaterThan(2);
+    expect(new Set(ids).size).toBe(ids.length);
   });
   it("speaks the page's language", () => {
     expect(draw("social", "ar")).toContain("قد نشارك إجاباتك عن الإفطار مع المطعم، دون ذكر اسمك.");

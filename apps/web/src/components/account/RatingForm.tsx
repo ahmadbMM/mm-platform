@@ -1,7 +1,7 @@
 "use client";
 
 import "./rating.css";
-import { useState, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useL, useTxLocale } from "@/i18n/TxProvider";
 import { fill } from "@/i18n/tx";
 import { NOTE_MAX, REASON_MAX, RG_FORMS, RG_LOW, questionKeys, questionTree, ratingErrors, type RatingForm as Form } from "@/lib/rating";
@@ -33,7 +33,10 @@ export default function RatingForm({ entryId, form, noBike, onRated, footer }: P
   const [err, setErr] = useState<Record<string, "pick" | "why">>({});
   const [busy, setBusy] = useState(false);
   const [fail, setFail] = useState("");
-  const id = (k: string) => `rg-${entryId}-${k}`;
+  // Each form's own ids: the same ride's form can be on the page twice for a moment (the pop-up and
+  // a card), and an id must name one element only.
+  const inst = useId();
+  const id = (k: string) => `rg${inst}-${entryId}-${k}`;
   const opts = { noBike, skipBf };
   const tree = questionTree(form, opts);
 
