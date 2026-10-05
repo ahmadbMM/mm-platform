@@ -29,7 +29,13 @@
 .tk-num.small { font-size: 24px; letter-spacing: -1px; line-height: 1.1; }
 .tk-wl-note { max-width: 40ch; font-size: 13px; font-weight: 500; line-height: 1.45; color: #8a5c14; }
 .tk-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex: none; }
-.tk-qr { position: relative; display: inline-block; line-height: 0; border: 1px solid rgba(26, 25, 25, .14); border-radius: 3px; overflow: hidden; } /* the white tile is the svg's own (Qr.tsx) */
+.tk-qr { position: relative; display: inline-block; line-height: 0; border: 1px solid rgba(26, 25, 25, .14); border-radius: 3px; overflow: hidden; } /* the white tile is the code's own: the canvas's pixels, the svg's fill before (Qr.tsx) */
+/* The code painted on a canvas (QrCanvas.tsx), as a phone's dark mode leaves it: hidden until it is
+   painted, then lying exactly over the svg, which stays as the tile's size (132px, 116px on a phone)
+   but is hidden. Never a background here: the white is the canvas's own pixels. */
+.tk-qr .tk-qr-cv { position: absolute; inset: 0; width: 100%; height: 100%; visibility: hidden; image-rendering: pixelated; }
+.tk-qr.cv .tk-qr-cv { visibility: visible; }
+.tk-qr.cv > svg:not(.tk-qr-live) { visibility: hidden; }
 .tk-qr-hold { width: 132px; height: 132px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 12px; text-align: center;
   border: 1px dashed rgba(26, 25, 25, .16); border-radius: 10px; }
 .tk-qr-hold span { font-size: 10px; font-weight: 700; line-height: 1.5; color: #4f565c; }
@@ -119,7 +125,7 @@
 .tk-live .tk-btn.red { color: #ff9a8c !important; border-color: rgba(255, 154, 140, .4); }
 .tk-live .tk-wallet-msg { color: #f2c66d; }
 .tk-live :focus-visible { outline-color: #03ff89; }
-.tk-live .tk-qr svg { border-radius: 10px; }
+.tk-live .tk-qr :is(svg, canvas) { border-radius: 10px; }
 .tk-live .tk-qr { border-color: transparent; border-radius: 10px; }
 /* The ride's day: a neon line drawn across the top, once. */
 .tk-card.tk-today::after { content: ""; position: absolute; top: 0; inset-inline: 0; height: 3px; background: #03ff89; transform-origin: left; animation: tk-draw .7s cubic-bezier(.2, .8, .2, 1) .15s both; }
@@ -179,7 +185,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
   .tk-grid { grid-template-columns: 1fr; }
   .tk-head { padding: 16px 14px 14px; gap: 14px; }
   .tk-num.big { font-size: 56px; letter-spacing: -2px; }
-  .tk-qr svg { width: 116px; height: 116px; } /* 104 of code + the 6px tile each side */
+  .tk-qr svg { width: 116px; height: 116px; } /* 104 of code + the 6px tile each side; the canvas takes the svg's box */
   .tk-qr-hold { width: 116px; height: 116px; }
 }
 
