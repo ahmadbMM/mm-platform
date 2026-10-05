@@ -2,11 +2,13 @@
 // Riyadh when the page was made ("YYYY-MM-DDTHH:MM"), passed down from the server, so the server
 // and the browser draw the same list and tests can pin the time.
 
+// Made once: every page asks for the clock (the footer's opening hours), and a formatter costs
+// several times more to make than to use - CPU the Worker is short of (DEPLOY.md, "Limits").
+let riyadh: Intl.DateTimeFormat | null = null;
+
 export function riyadhClock(d: Date): string {
-  const p = Object.fromEntries(
-    new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
-      .formatToParts(d).map((x) => [x.type, x.value]),
-  );
+  riyadh ??= new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const p = Object.fromEntries(riyadh.formatToParts(d).map((x) => [x.type, x.value]));
   return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
 }
 
