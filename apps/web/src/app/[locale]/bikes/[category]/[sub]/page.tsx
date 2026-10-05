@@ -1,13 +1,12 @@
 import type { Metadata } from "next";
 import { notFound, permanentRedirect } from "next/navigation";
 import { pageMeta } from "@/lib/seo";
-import CategoryPage from "@/components/bikes/CategoryPage";
+import CategoryPage, { categoryDescription } from "@/components/bikes/CategoryPage";
 import ModelPage, { modelDescription, modelTitle } from "@/components/bikes/ModelPage";
 import { bikesState, catalogOrThrow } from "@/components/bikes/catalog-data";
-import { bikesSchema } from "@/content/pages/bikes";
 import { coverOf, findCategory, findModel, findSubtype, loadCatalog, modelPath, pick, type Catalog } from "@/lib/catalog";
-import { asLocale, resolvePage } from "@/lib/content";
 import { pageState } from "@/lib/page-state";
+import { serverL } from "@/i18n/dicts";
 
 // micromobility.sa/bikes/<category>/<x> - one of the category's sub-types (/bikes/road/carbon), or
 // a model of the category that has no sub-type (/bikes/road/alvas-da54). A model's slug is unique
@@ -25,13 +24,12 @@ function resolve(catalog: Catalog, category: string, sub: string) {
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
   const { locale, category, sub } = await params;
-  const [{ content, closed }, catalog] = await Promise.all([pageState("bikes"), loadCatalog()]);
+  const [{ closed }, catalog] = await Promise.all([pageState("bikes"), loadCatalog()]);
   const r = catalog ? resolve(catalog, category, sub) : null;
-  const c = resolvePage(bikesSchema, content, asLocale(locale));
   if (r?.cat && r.subtype) {
     return pageMeta({ path: `/bikes/${r.cat.slug}/${r.subtype.slug}`, locale, closed, image: r.subtype.cover || r.cat.cover || undefined,
       title: `${pick(locale, r.subtype.name_en, r.subtype.name_ar)} · ${pick(locale, r.cat.name_en, r.cat.name_ar)} · Micromobility`,
-      description: pick(locale, r.subtype.blurb_en, r.subtype.blurb_ar) || pick(locale, r.cat.blurb_en, r.cat.blurb_ar) || c.hero.text });
+      description: categoryDescription(r.subtype, locale, serverL(locale)) });
   }
   if (catalog && r?.model) {
     return pageMeta({ path: modelPath(r.model, catalog.categories), locale, closed, title: `${modelTitle(r.model)} · Micromobility`, description: modelDescription(r.model, locale), image: coverOf(r.model, catalog.photos)?.url });

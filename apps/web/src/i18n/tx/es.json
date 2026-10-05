@@ -1156,5 +1156,6 @@
  "Pick how the bike gets to us.": "Elige cómo llega tu bici hasta nosotros.",
  "Shorten your bike's name to 80 characters.": "Acorta el nombre de tu bici a 80 caracteres.",
  "Shorten your note to 600 characters.": "Acorta tu nota a 600 caracteres.",
- "That code is for bike rentals only.": "Ese código solo es válido para el alquiler de bicis."
+ "That code is for bike rentals only.": "Ese código solo es válido para el alquiler de bicis.",
+ "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Bicis de la categoría {category} en el catálogo de Micromobility: modelos, fotos y especificaciones."
 }

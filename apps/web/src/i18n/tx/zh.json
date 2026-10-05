@@ -1156,5 +1156,6 @@
  "Pick how the bike gets to us.": "请选择自行车送到我们这里的方式。",
  "Shorten your bike's name to 80 characters.": "请将自行车名称缩短至 80 个字符以内。",
  "Shorten your note to 600 characters.": "请将备注缩短至 600 个字符以内。",
- "That code is for bike rentals only.": "该优惠码仅适用于自行车租赁。"
+ "That code is for bike rentals only.": "该优惠码仅适用于自行车租赁。",
+ "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Micromobility 目录中的 {category} 类自行车：车型、照片与规格。"
 }
