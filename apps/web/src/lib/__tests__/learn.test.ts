@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { HEARD, accountArgs, ageOn, emailOk, igNorm, learnPayload, liNorm, passwordOk, phoneOk, signinIdentifier, wholeNumber, type AccountFields, type LearnFields, type LearnerFields } from "../learn";
+import { HEARD, accountArgs, accountNameOk, ageOn, emailOk, igNorm, learnPayload, liNorm, noticeDue, passwordOk, phoneOk, signinIdentifier, wholeNumber, type AccountFields, type LearnFields, type LearnerFields } from "../learn";
 import { learnFrame } from "../learn-page";
+import { natOptions } from "../nationality";
 import { namePartsOk } from "../rpc-client";
 
 // The Learn to ride sign-up (/experiences/learn), in two steps since 2026-09-30: the account (the
@@ -258,6 +259,41 @@ describe("signinIdentifier", () => {
     expect(signinIdentifier("  Sara@Example.com ")).toBe("sara@example.com");
     expect(signinIdentifier("055 123 4567")).toBe("+966551234567");
     expect(signinIdentifier("+44 7700 900123")).toBe("+447700900123");
+  });
+});
+
+describe("a signed-in account on step 2", () => {
+  it("is asked to confirm the Privacy Notice when it has none on record, or one older than the last riders must confirm", () => {
+    // customer_learn_apply takes the account's notice, else the one the form sends: an account with
+    // none (most made before the notice existed) could never send the sign-up without the tick
+    for (const v of [null, undefined, "", "  ", "v1", "2026-9-1"]) expect(noticeDue(v, "2026-10-02"), String(v)).toBe(true);
+    expect(noticeDue("2026-09-28", "2026-10-02")).toBe(true);
+    expect(noticeDue("2026-10-02", "2026-10-02")).toBe(false);
+    expect(noticeDue("2026-10-03", "2026-10-02")).toBe(false);
+  });
+  it("needs a first and a last name on the account, as learn_apply checks the person signing up", () => {
+    expect(accountNameOk("Sara Ali")).toBe(true);
+    expect(accountNameOk("  Md.  Rahman ")).toBe(true);
+    expect(accountNameOk("سارة علي")).toBe(true);
+    for (const n of ["Sara", "", "Sara A", "Sara 4li", "x".repeat(60) + " " + "y".repeat(60)]) expect(accountNameOk(n), n).toBe(false);
+  });
+});
+
+describe("the nationality list", () => {
+  const label = (locale: string, value: string, palestine?: string) => natOptions(locale, palestine).find((o) => o.value === value)?.label;
+  it("labels every country in English with the name the booking app stores", () => {
+    expect(label("en", "Palestine")).toBe("Palestine");
+    expect(label("en", "Congo (DRC)")).toBe("Congo (DRC)");
+    expect(natOptions("en")[0]).toEqual({ value: "Saudi Arabia", label: "Saudi Arabia" });
+  });
+  it("calls Palestine by its name in every language, never the browser's Palestinian Territories", () => {
+    expect(label("ar", "Palestine", "فلسطين")).toBe("فلسطين");
+    expect(label("de", "Palestine", "Palästina")).toBe("Palästina");
+    expect(label("fr", "France", "Palestine")).toBe(new Intl.DisplayNames(["fr"], { type: "region" }).of("FR"));
+    expect(natOptions("de", "Palästina").some((o) => /Paläst.*Gebiete|Territor/i.test(o.label))).toBe(false);
+  });
+  it("has no Israel, by the owner's rule", () => {
+    for (const l of ["en", "ar", "de"]) expect(natOptions(l, "x").some((o) => o.value === "Israel" || /isra/i.test(o.label))).toBe(false);
   });
 });
 

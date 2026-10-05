@@ -2,17 +2,23 @@ import { COUNTRY_AR, NATIONALITIES } from "@/content/nationalities";
 import { localeInfo } from "@/i18n/locales";
 
 // The nationality list as a picker shows it (the booking app's own, content/nationalities.ts):
-// each one stored as its English name, as the app stores it, and labelled with the browser's own
-// name for the region in the page's language - for Arabic the app's own where it has one - Saudi
-// Arabia first, then the rest in the language's alphabetical order. Built in the browser only
-// (Intl's names differ between the server and a phone), once the page has drawn.
+// each one stored as its English name, as the app stores it, and labelled in English with that
+// name, as the app labels it; in any other language with the browser's own name for the region -
+// for Arabic the app's own where it has one - Saudi Arabia first, then the rest in the language's
+// alphabetical order. Palestine is "Palestine" in every language (`palestine`, the page's word
+// for it): the browser's names call it "Palestinian Territories" in most. Israel is not on the
+// list (the owner's rule). Built in the browser only (Intl's names differ between the server and a
+// phone), once the page has drawn.
 export type NatOption = { value: string; label: string };
 
-export function natOptions(locale: string): NatOption[] {
+export function natOptions(locale: string, palestine?: string): NatOption[] {
   const intl = localeInfo(locale).intl;
   let names: Intl.DisplayNames | null = null;
-  try { names = new Intl.DisplayNames([intl], { type: "region" }); } catch { /* the English names stand */ }
-  const label = (code: string, name: string) => (locale === "ar" && COUNTRY_AR[name]) || names?.of(code) || name;
+  if (locale !== "en") {
+    try { names = new Intl.DisplayNames([intl], { type: "region" }); } catch { /* the English names stand */ }
+  }
+  const label = (code: string, name: string) =>
+    locale === "en" ? name : (locale === "ar" && COUNTRY_AR[name]) || (code === "PS" && palestine) || names?.of(code) || name;
   const all = NATIONALITIES.map(([code, name]) => ({ value: name, label: label(code, name) }));
   const saudi = all.filter((o) => o.value === "Saudi Arabia");
   const rest = all.filter((o) => o.value !== "Saudi Arabia").sort((a, b) => a.label.localeCompare(b.label, intl));

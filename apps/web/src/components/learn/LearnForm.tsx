@@ -1,15 +1,17 @@
 "use client";
 
-import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { rpcResult } from "@/lib/rpc-client";
-import { BOOKING_URL } from "@/lib/links";
+import { bookingLink } from "@/lib/links";
 import {
-  ACCOUNT_HEIGHT, AGE, HEARD, HEIGHT, LEVELS, MAX_LEARNERS, WHO, accountArgs, learnPayload, riyadhToday, signinIdentifier,
+  ACCOUNT_HEIGHT, AGE, HEARD, HEIGHT, LEVELS, MAX_LEARNERS, WHO, accountArgs, accountNameOk, learnPayload, noticeDue, riyadhToday, signinIdentifier,
   type AccountFields, type Gender, type Heard, type LearnFields, type LearnerFields, type LearnProblem,
 } from "@/lib/learn";
 import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
 import { useLocalize } from "@/i18n/TxProvider";
 import NoticeLink from "@/components/privacy/NoticeLink";
+import ChangePassword, { type PwdLook } from "@/components/account/ChangePassword";
+import Turnstile, { TURNSTILE_SITE_KEY } from "@/components/account/Turnstile";
 import LearnClosed from "./LearnClosed";
 import { T } from "./LearnForm.text";
 
@@ -19,9 +21,13 @@ import { T } from "./LearnForm.text";
 //   1. the account. "Do you already have a Micromobility account?" - No: the booking app's own
 //      sign-up (first and last name, gender, email, mobile, password twice, height, the Privacy
 //      Notice and ride news; customer_exists, customer_signup, customer_consents), after which the
-//      card says the account has been created. Yes: sign in with the email or mobile and password
-//      (customer_login); an account that signs in with Google or Apple does it on the booking site
-//      (?handoff=learn), which sends them back signed in with a one-time code (?code=).
+//      card says the account has been created. Yes: sign in with the email or mobile and password,
+//      through the site's own sign-in (api/account: its tries a minute and its Turnstile check,
+//      the session handed back to this page only, no cookie), which first has a temporary password
+//      staff issued replaced (ChangePassword); an account that signs in with Google or Apple does
+//      it on the booking site (?handoff=learn, at the booking app's address as staff set it), which
+//      sends them back signed in with a one-time code (?code=). A signed-in account with no Privacy
+//      Notice on record (or an older one than riders must confirm) confirms it on step 2.
 //   2. the lesson: who is learning - one card per learner, up to five (the owner, 2026-09-28: a
 //      family signs up together): the visitor, their child or another adult, each with their age,
 //      gender and height (the height picks the bike's size) and how much they have ridden - then
@@ -43,16 +49,22 @@ export type LearnFormProps = {
   closedTitle: string; closedText: string;
   /** The Privacy Notice the box confirms (content/privacy-notice.ts). */
   privacyVersion: string;
+  /** The last version riders must confirm (PRIVACY_ASK_FROM): a signed-in account with none on
+   *  record, or an older one, confirms the notice on step 2. */
+  privacyAskFrom: string;
   /** The id of the page's Privacy Notice dialog (NoticeDialog): the box's link opens it there, so
    *  reading the notice never leaves the form, whatever the site's state. */
   notice: string;
+  /** The booking app's address as staff set it (Website > Whole site > Other addresses): the
+   *  Google and Apple sign-in hands over there. */
+  bookingUrl: string;
 };
 
 // A learner's card: what was typed, and a key that stays with the card when one above it goes.
 type Card = LearnerFields & { key: number };
 type Form = Omit<LearnFields, "learners"> & { learners: Card[] };
 type Details = Omit<Form, "learners">;
-type Stage = "ask" | "signup" | "signin" | "loading" | "lesson";
+type Stage = "ask" | "signup" | "signin" | "pwd" | "loading" | "lesson";
 /** The signed-in person: the account step made it (`made`) or they signed in to it. */
 type Acct = { id: string; token: string; name: string; email: string; made: boolean };
 /** What customer_community_me() answers about the account, for step 2. */
@@ -70,6 +82,8 @@ const never = () => () => {};
 const dashless = (v: string) => v.replace(/[-‐-―]/g, " ");
 // The booking app's own account ids.
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+// Choosing their own password after a temporary one, in this card's look.
+const PWD_LOOK: PwdLook = { h: "h3", form: "ln-pc", title: "ln-step-title", sub: "ln-hint ln-pc-sub", field: "ln-field", input: "ln-input", hint: "ln-hint", err: "ln-err", btn: "ln-btn ln-btn-green", back: "ln-back" };
 
 export default function LearnForm(p: LearnFormProps) {
   const t = useLocalize(T);
@@ -79,19 +93,26 @@ export default function LearnForm(p: LearnFormProps) {
   const [acct, setAcct] = useState<Acct | null>(null);
   const [a, setA] = useState<AccountFields>(NO_ACCOUNT);
   const [si, setSi] = useState({ id: "", password: "" });
+  // The sign-in's Turnstile check (once its keys are set), one token a try.
+  const [check, setCheck] = useState("");
+  const [again, setAgain] = useState(0);
+  const onToken = useCallback((tok: string) => setCheck(tok), []);
   // An account made here whose Privacy Notice and ride-news answers could not be saved yet: the
   // next press of Create account saves only those (the account exists - making it again would only
   // say the email is taken).
   const made = useRef<{ id: string; token: string; name: string; email: string; gender: Gender; height: number } | null>(null);
-  // Asked on step 2 only when the account has none (older accounts).
-  const [need, setNeed] = useState({ gender: false, height: false });
+  // Asked on step 2 only when the account has none (older accounts): gender, height, and the
+  // Privacy Notice (none on record, or one older than riders must confirm), with its box's tick.
+  const [need, setNeed] = useState({ gender: false, height: false, privacy: false });
+  const [ack, setAck] = useState(false);
+  const ackBox = useRef<HTMLInputElement>(null);
   const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], birth: "", gender: "", nationality: "", height: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "" });
   // The date of birth as three pickers; the form holds it as YYYY-MM-DD once all three are chosen.
   const [bd, setBd] = useState({ d: "", m: "", y: "" });
   // The names of the months and the countries are the browser's (see lib/nationality.ts): drawn
   // once the page is up, so the server's first draw and the browser's agree.
   const onClient = useSyncExternalStore(never, () => true, () => false);
-  const names = useMemo<{ months: string[]; nats: NatOption[] } | null>(() => (onClient ? { months: monthNames(p.locale), nats: natOptions(p.locale) } : null), [onClient, p.locale]);
+  const names = useMemo<{ months: string[]; nats: NatOption[] } | null>(() => (onClient ? { months: monthNames(p.locale), nats: natOptions(p.locale, t.palestine) } : null), [onClient, p.locale, t.palestine]);
   const [busy, setBusy] = useState(false);
   // The one message on show; a learner's carries their card's place (from 0).
   const [err, setErr] = useState<{ text: string; index?: number } | null>(null);
@@ -111,6 +132,7 @@ export default function LearnForm(p: LearnFormProps) {
   useEffect(() => {
     if (!focus) return;
     if (focus.to === "add") { addBtn.current?.focus(); return; }
+    if (focus.to === "ack") { ackBox.current?.scrollIntoView({ block: "center" }); ackBox.current?.focus({ preventScroll: true }); return; }
     if (focus.to === "step") { stepTop.current?.scrollIntoView({ block: "start" }); stepTop.current?.focus({ preventScroll: true }); return; }
     const card = document.getElementById(focus.to);
     if (!card) return;
@@ -118,8 +140,10 @@ export default function LearnForm(p: LearnFormProps) {
     (focus.first ? card.querySelector<HTMLElement>(".ln-who button:not([disabled])") : card)?.focus({ preventScroll: true });
   }, [focus]);
 
-  // Step 2 for a signed-in account: what it holds fills the questions it answers already.
-  function toLesson(who: Acct, me: Me | null) {
+  // Step 2 for a signed-in account: what it holds fills the questions it answers already. `due`:
+  // the account still has to confirm the Privacy Notice (null: not known - the database says so if
+  // it does, and the box is shown then).
+  function toLesson(who: Acct, me: Me | null, due: boolean | null = false) {
     const g = me?.gender === "male" || me?.gender === "female" ? me.gender : "";
     const h = typeof me?.height === "number" && me.height > 0 ? String(me.height) : "";
     const heard = (HEARD as readonly string[]).includes(me?.heard_from || "") ? (me?.heard_from as Heard) : "";
@@ -127,11 +151,25 @@ export default function LearnForm(p: LearnFormProps) {
     if (birth) setBd({ y: birth.slice(0, 4), m: birth.slice(5, 7), d: birth.slice(8, 10) });
     setF((x) => ({ ...x, gender: g, height: h, birth: birth || x.birth, nationality: me?.nationality || x.nationality, instagram: me?.instagram || x.instagram,
       linkedin: me?.linkedin || x.linkedin, profession: me?.profession || x.profession, workplace: me?.workplace || x.workplace, heard: heard || x.heard }));
-    setNeed({ gender: !g, height: !h });
+    setNeed({ gender: !g, height: !h, privacy: due === true });
+    setAck(false);
     setAcct(who);
     setErr(null);
     setStage("lesson");
     setFocus({ to: "step", n: ++moves.current });
+  }
+
+  // A signed-in account (a sign-in, the booking app's hand-over, a temporary password replaced):
+  // what it holds (customer_community_me), and whether it has confirmed the Privacy Notice
+  // (customer_consents, asked only to read), then step 2.
+  async function enter(id: string, token: string, name: string, email: string) {
+    const [m, c] = await Promise.all([
+      rpcResult<Me>("customer_community_me", { p_id: id, p_token: token }),
+      rpcResult<{ privacy_version?: unknown } | null>("customer_consents", { p_id: id, p_token: token }),
+    ]);
+    const me = "data" in m && m.data && typeof m.data === "object" ? m.data : null;
+    const due = "data" in c && c.data && typeof c.data === "object" ? noticeDue(c.data.privacy_version, p.privacyAskFrom) : null;
+    toLesson({ id, token, name: me?.name || name, email: me?.email || email, made: false }, me, due);
   }
 
   // Arriving from the booking app signed in (?code=, a one-time code: two minutes, one use). It
@@ -147,9 +185,7 @@ export default function LearnForm(p: LearnFormProps) {
       const r = await rpcResult<{ id: string; name: string; session_token: string }[]>("customer_handoff_redeem", { p_code: code });
       const row = "data" in r && Array.isArray(r.data) ? r.data[0] : null;
       if (!row?.id || !row.session_token) { setErr({ text: "error" in r && r.error.network ? t.errors.generic : t.errors.expired }); setStage("signin"); return; }
-      const m = await rpcResult<Me>("customer_community_me", { p_id: row.id, p_token: row.session_token });
-      const me = "data" in m && m.data && typeof m.data === "object" ? m.data : null;
-      toLesson({ id: row.id, token: row.session_token, name: me?.name || row.name, email: me?.email || "", made: false }, me);
+      await enter(row.id, row.session_token, row.name || "", "");
     })();
     // Once, on arrival; t is the page's language, which does not change the code's meaning.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -243,23 +279,38 @@ export default function LearnForm(p: LearnFormProps) {
     toLesson({ id: acc.id, token: acc.token, name: acc.name, email: acc.email, made: true }, { gender: acc.gender, height: acc.height });
   }
 
-  // Step 1, known: sign in with the email or mobile and password.
+  // Step 1, known: sign in with the email or mobile and password, through the site's sign-in
+  // (api/account, its tries a minute and its Turnstile check), for this page only (page: true -
+  // the session comes back here and no cookie is set). A temporary password staff issued is
+  // replaced first (the "pwd" step).
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
     setErr(null);
     const ident = signinIdentifier(si.id);
     if (!ident || !si.password) return setErr({ text: t.errors.signin_empty });
+    if (TURNSTILE_SITE_KEY && !check) return setErr({ text: t.errors.check });
     setBusy(true);
     try {
-      const r = await rpcResult<{ id: string; name: string; email: string; session_token: string }[]>("customer_login", { p_identifier: ident, p_pwd: si.password });
-      if ("error" in r) return setErr({ text: r.error.network ? t.errors.generic : /LOCKED/.test(r.error.message || "") ? t.errors.signin_locked : t.errors.signin_bad });
-      const row = Array.isArray(r.data) ? r.data[0] : null;
-      if (!row?.id || !row.session_token) return setErr({ text: t.errors.signin_bad });
-      const m = await rpcResult<Me>("customer_community_me", { p_id: row.id, p_token: row.session_token });
-      const me = "data" in m && m.data && typeof m.data === "object" ? m.data : null;
+      let b: { ok?: boolean; error?: string; id?: unknown; token?: unknown; name?: unknown; email?: unknown } = {};
+      try {
+        const r = await fetch("/api/account", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier: ident, password: si.password, check, page: true }) });
+        b = (await r.json().catch(() => ({}))) as typeof b;
+      } catch { /* offline: the generic message below */ }
+      if (b.error === "must_change") {
+        setSi({ id: "", password: "" });
+        setCheck("");
+        setStage("pwd");
+        return;
+      }
+      if (!b.ok || typeof b.id !== "string" || typeof b.token !== "string") {
+        if (TURNSTILE_SITE_KEY) { setCheck(""); setAgain((n) => n + 1); } // a token is good for one try
+        const m = t.errors;
+        return setErr({ text: b.error === "wrong" ? m.signin_bad : b.error === "locked" ? m.signin_locked : b.error === "slow" ? m.slow
+          : b.error === "check" ? m.check : b.error === "missing" ? m.signin_empty : m.generic });
+      }
       setSi({ id: "", password: "" });
-      toLesson({ id: row.id, token: row.session_token, name: row.name, email: row.email || "", made: false }, me);
+      await enter(b.id, b.token, typeof b.name === "string" ? b.name : "", typeof b.email === "string" ? b.email : "");
     } finally { setBusy(false); }
   }
 
@@ -270,14 +321,30 @@ export default function LearnForm(p: LearnFormProps) {
     setErr(null);
     const r = learnPayload(f, p.locale);
     if ("error" in r) return show(r);
+    // An account that has not confirmed the Privacy Notice confirms it here, with the box above
+    // the button.
+    if (need.privacy && !ack) { setErr({ text: t.errors.privacy }); setFocus({ to: "ack", n: ++moves.current }); return; }
     setBusy(true);
     try {
-      const res = await rpcResult<{ ok: boolean; error?: string; index?: number }>("customer_learn_apply", { p_id: acct.id, p_token: acct.token, p: r.payload });
+      // The notice they confirmed goes on the account, as the booking app records it, and with the
+      // sign-up, which takes it when the account still has none (customer_learn_apply).
+      if (need.privacy) await rpcResult("customer_consents", { p_id: acct.id, p_token: acct.token, p_privacy: p.privacyVersion });
+      const payload = need.privacy ? { ...r.payload, privacy_version: p.privacyVersion } : r.payload;
+      const res = await rpcResult<{ ok: boolean; error?: string; index?: number }>("customer_learn_apply", { p_id: acct.id, p_token: acct.token, p: payload });
       if (!("data" in res) || !res.data) return setErr({ text: t.errors.generic });
       if (res.data.ok) return setDone(true);
-      if (res.data.error === "signed_out") { setAcct(null); setStage("signin"); return setErr({ text: t.errors.signed_out }); }
-      if (res.data.error === "closed") return setClosed(true);
-      show({ error: res.data.error || "", index: res.data.index });
+      const code = res.data.error || "";
+      if (code === "signed_out") { setAcct(null); setStage("signin"); return setErr({ text: t.errors.signed_out }); }
+      if (code === "closed") return setClosed(true);
+      // An account with no notice on record the form could not tell of: the box is shown now.
+      if (code === "privacy") { setNeed((x) => ({ ...x, privacy: true })); setErr({ text: t.errors.privacy }); setFocus({ to: "ack", n: ++moves.current }); return; }
+      // The account's own name, email or mobile, which learn_apply refuses: a one-word name is the
+      // usual one, and the message says which.
+      if (code === "account") return setErr({ text: accountNameOk(acct.name) ? t.errors.account : t.errors.account_name });
+      // The list itself passed here (1 to 5, each once): what is over is the total with the learners
+      // already signed up, which a second sign-up joins.
+      if (code === "learners" && typeof res.data.index !== "number") return setErr({ text: t.errors.learners_total });
+      show({ error: code, index: res.data.index });
     } finally { setBusy(false); }
   }
 
@@ -346,11 +413,23 @@ export default function LearnForm(p: LearnFormProps) {
           <span>{t.password}</span>
           <input className="ln-input" type="password" value={si.password} onChange={(e) => { setSi((x) => ({ ...x, password: e.target.value })); setErr(null); }} autoComplete="current-password" dir="ltr" maxLength={72} />
         </label>
+        <Turnstile locale={p.locale} onToken={onToken} resetKey={again} />
         {problem(undefined)}
         <button type="submit" className="ln-btn ln-btn-green" disabled={busy}>{busy ? t.signingIn : t.signin}</button>
-        <p className="ln-hint ln-oauth">{t.oauthAsk} <a href={`${BOOKING_URL}?handoff=learn&lang=${p.locale}`}>{t.oauthLink}</a></p>
+        <p className="ln-hint ln-oauth">{t.oauthAsk} <a href={bookingLink(`${p.bookingUrl.replace(/[?#].*$/, "")}?handoff=learn`, p.locale)}>{t.oauthLink}</a></p>
         {back}
       </form>
+    );
+  }
+
+  if (stage === "pwd") {
+    return (
+      <div className="ln-card">
+        {head}
+        <ChangePassword page look={PWD_LOOK}
+          onDone={(s) => { if (s) { setStage("loading"); void enter(s.id, s.token, "", ""); } }}
+          onBack={() => { setErr(null); setStage("signin"); }} />
+      </div>
     );
   }
 
@@ -420,7 +499,7 @@ export default function LearnForm(p: LearnFormProps) {
             <span className="ln-made-mark" aria-hidden="true">✓</span>
             <span><b>{t.madeTitle}</b><span>{t.madeText}</span></span>
           </div>
-        ) : acct ? <p className="ln-who-am">{t.signedAs(acct.name)}{acct.email ? ` · ⁦${acct.email}⁩` : ""}</p> : null}
+        ) : acct?.name ? <p className="ln-who-am">{t.signedAs(acct.name)}{acct.email ? ` · ⁦${acct.email}⁩` : ""}</p> : null}
       </div>
 
       <span className="ln-label">{t.who}</span>
@@ -554,6 +633,14 @@ export default function LearnForm(p: LearnFormProps) {
           <textarea className="ln-input" value={f.notes} onChange={(e) => setContact("notes", e.target.value)} rows={3} maxLength={600} />
         </label>
       </div>
+      {/* An account with no Privacy Notice on record (or an older one than riders must confirm)
+          confirms it here: the sign-up cannot go without it. */}
+      {need.privacy && (
+        <label className="ln-check ln-ack">
+          <input ref={ackBox} type="checkbox" checked={ack} onChange={(e) => { setAck(e.target.checked); setErr(null); }} />
+          <span>{before}<NoticeLink dialog={p.notice}>{t.privacyLink}</NoticeLink>{after}</span>
+        </label>
+      )}
       <p className="ln-use">{t.use}</p>
 
       {problem(undefined)}
