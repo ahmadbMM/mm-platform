@@ -251,7 +251,7 @@ export function dayWord(date: string, today: string): "today" | "tomorrow" | nul
  *  meeting point; a night on the circuit (no place, or "JCC") the Jeddah Corniche Circuit; "JYC" the
  *  Jeddah Yacht Club, where Run for Her meets (VENUE_KEY); any other place as staff wrote it. */
 export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "text"; text: string };
-export function venueOf(s: TicketSession | undefined): Venue {
+export function venueOf(s: Pick<TicketSession, "approval" | "meetUrl" | "location"> | undefined): Venue {
   if (s?.approval && s.meetUrl) return { kind: "meet" };
   const loc = s?.location ?? "";
   return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : { kind: "text", text: loc };

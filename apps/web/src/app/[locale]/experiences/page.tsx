@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import "@/components/experiences/experiences.css";
@@ -6,9 +7,12 @@ import "@/components/booking/booking.css";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
-import { fmtNum, fmtSar } from "@/lib/fill";
+import { fill, fmtNum, fmtSar } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
+import { rpcServer } from "@/lib/account";
+import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
+import { dateText, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
@@ -36,6 +40,17 @@ const TYPE_NAME: Record<string, { en: string; ar: string }> = {
   Kids: phrase("Kids", "أطفال"), Gravel: phrase("Gravel", "حصى"), Any: phrase("No preference", "بلا تفضيل"),
 };
 
+// Is the visitor a community member? The members-only cards and dates show their About and Details
+// links to members alone (the owner, 2026-10-05). Asked only when the request carries the account's
+// cookie, of the booking app's own members gate (community_member, which checks the token); any
+// failure reads as no. A signed-in visitor's page is never kept at the edge (lib/page-cache.ts).
+async function communityMember(): Promise<boolean> {
+  const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
+  if (!s) return false;
+  const r = await rpcServer<boolean>("community_member", { p_id: s.id, p_token: s.token });
+  return r.data === true;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { content, closed } = await pageState("experiences");
@@ -47,7 +62,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const { locale } = await params;
   const L = asLocale(locale);
   const tx = serverL(locale);
-  const [{ content, previewing, hidden }, rides] = await Promise.all([pageState("experiences"), loadRides()]);
+  const [{ content, previewing, hidden }, rides, member] = await Promise.all([pageState("experiences"), loadRides(), communityMember()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(experiencesSchema, content, L);
   const d = c.dates, e = c.events, st = c.steps;
@@ -72,59 +87,89 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   };
   // A route's distance on the booking summary (the booking app's reg-side row): the route's own,
   // or a lap of the circuit on a circuit night without one.
+  const kmWord = tx("{0} km", "{0} كم");
   const kmOf = (s: RideSession) => {
     const km = s.routeSlug ? routeKm.get(s.routeSlug)?.km ?? 0 : s.kind === "jcc" ? 6.174 : 0;
-    return km > 0 ? fillAt(s.routeSlug ? tx("{0} km", "{0} كم") : tx("{0} km a lap", "{0} كم للفة"), kmText(km)) : null;
+    return km > 0 ? fillAt(s.routeSlug ? kmWord : tx("{0} km a lap", "{0} كم للفة"), kmText(km)) : null;
   };
   const now = riyadhClock(new Date());
   const all = upcoming(rides?.sessions ?? [], now);
   // The booking window (site_content booking.window): a date not open yet is shown greyed, never hidden.
   const window = siteBookingWindow(content);
+  const directions = S(site.contact.jccHref);
+  const waitWord = tx("Waitlist", "قائمة الانتظار"), left1 = tx("{0} spot left", "{0} مقعد متبقي"), leftN = tx("{0} spots left", "{0} مقاعد متبقية");
+  // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
+  // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
+  const dateTexts: DateTexts = {
+    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun),
+    sndAbout: S(e.sndAbout), evAbout: S(e.evAbout),
+  };
+  const whoWords = { all: tx("Everyone", "الجميع"), members: tx("Community members", "أعضاء المجتمع"), members18: tx("Community members, 18 and over", "أعضاء المجتمع ممن أتموا 18 عامًا") };
+  const venueWords = { meetingPoint: tx("Meeting point", "نقطة التجمع"), venueCircuit: tx("Jeddah Corniche Circuit", "حلبة كورنيش جدة"), venueJyc: tx("Jeddah Yacht Club", "نادي جدة لليخوت") };
+  const clock = (hhmm: string) => fmtClock(hhmm, locale);
   // The booking app's events (_evMatch): the circuit, the community rides, and the National Day
   // ride and the T100 workshop, which have cards of their own while they have dates.
   // A ticketed event (ride_kind 'event') has a card of its own too, while one is on the books, and
   // so does Run for Her (ride_kind 'runher'), first on the page as on the booking app's landing.
   const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher" };
-  const toStep = (s: RideSession): StepSession => ({
-    // the booking app's session card: "Sunday · 26 Sept 2026", and its times in the rider's clock
-    id: s.id, kind: s.kind, day: fmtDayDate(s.date, locale),
-    // today or tomorrow said in words, as the booking app's session card does (_dayWord)
-    near: ((w) => (w === "today" ? tx("Today", "اليوم") : w === "tomorrow" ? tx("Tomorrow", "غداً") : null))(dayWord(s.date, now.slice(0, 10))),
-    name: sessionName(s, kindName, enName, L !== "en"),
-    when: s.times ? { gather: s.gather, a: fmtClock(s.times[0], locale), b: fmtClock(s.times[1], locale) } : null,
-    // a run has no bikes, so never the bike prices
-    members: s.members, free: s.free, full: s.full, paid: !s.free && s.kind !== "runher", noCarbon: s.noCarbon,
-    // a copy kept at the edge from before these fields existed reads as an event without them
-    event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
-    seatPrice: s.kind === "event" && s.price != null ? sar(s.price) : null, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
-    route: routeNameOf(routes, s.routeSlug),
-    routeKm: kmOf(s),
-    left: s.left ?? null,
+  const toStep = (s: RideSession): StepSession => {
+    const seatPrice = s.kind === "event" && s.price != null ? sar(s.price) : null;
     // when bikes go out and the price from, under the time, as the booking app's session card says them
-    meta: [s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), fmtClock(s.collect, locale)) : null,
-      s.kind !== "event" && !s.free && s.kind !== "swim" && s.kind !== "workshop" && s.kind !== "runher" ? fromPrice(s) : null].filter((x): x is string => !!x),
-    opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,
-  });
+    const collect = s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), clock(s.collect)) : null;
+    const from = !s.free && rentsBikes(s.kind) ? fromPrice(s) : null;
+    const place = infoPlace(s, venueWords, directions);
+    return {
+      // the booking app's session card: "Sunday · 26 Sept 2026", and its times in the rider's clock
+      id: s.id, kind: s.kind, day: fmtDayDate(s.date, locale),
+      // today or tomorrow said in words, as the booking app's session card does (_dayWord)
+      near: ((w) => (w === "today" ? tx("Today", "اليوم") : w === "tomorrow" ? tx("Tomorrow", "غداً") : null))(dayWord(s.date, now.slice(0, 10))),
+      name: sessionName(s, kindName, enName, L !== "en"),
+      when: s.times ? { gather: s.gather, a: clock(s.times[0]), b: clock(s.times[1]) } : null,
+      // a run has no bikes, so never the bike prices
+      members: s.members, free: s.free, full: s.full, paid: !s.free && s.kind !== "runher", noCarbon: s.noCarbon,
+      // a copy kept at the edge from before these fields existed reads as an event without them
+      event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
+      seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
+      route: routeNameOf(routes, s.routeSlug),
+      routeKm: kmOf(s),
+      left: s.left ?? null,
+      meta: [collect, from].filter((x): x is string => !!x),
+      opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,
+      // its Details: staff's own line for the date shows under the text, except on an event, whose
+      // description is the text
+      info: {
+        text: dateText(s, dateTexts, infoTimes(s, clock)), extra: s.kind === "event" ? null : s.description ?? null,
+        who: infoWho(s, whoWords), price: infoPrice(s, { free: S(d.free), seat: seatPrice && fill(S(d.perSeat), { price: seatPrice }), from }),
+        collect, place: place.name, map: place.map,
+        distance: infoDistance(s.kind, kmWord), places: infoPlaces(s, { waitlist: waitWord, left1, leftN }),
+      },
+    };
+  };
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count))).map(toStep);
   const card = (key: string, p: "rh" | "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): StepEvent | null => {
     const sessions = sessionsOf(key);
     if (!always && sessions.length === 0) return null;
-    return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: S(e[`${p}Note`]), sessions };
+    return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: S(e[`${p}Note`]), about: S(e[`${p}About`]), sessions };
   };
   const events = [card("runher", "rh", false), card("snd96", "snd", false), card("jcc", "jcc", true), card("community", "comm", true), card("workshop", "ws", false), card("event", "ev", false)].filter((x): x is StepEvent => !!x);
   const text: StepText = {
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),
     cont: S(st.continue), waitlist: S(d.waitlist), back: S(st.back), noDates: S(st.noDates), handoff: S(st.handoff),
     members: S(d.members), free: S(d.free), full: S(d.full), gather: S(d.gather), start: S(d.start), membersNote: S(d.membersNote), clubLink: S(d.clubLink),
-    available: tx("Available", "متاح"), waitlisted: tx("Waitlist", "قائمة الانتظار"),
-    left1: tx("{0} spot left", "{0} مقعد متبقي"), leftN: tx("{0} spots left", "{0} مقاعد متبقية"),
+    available: tx("Available", "متاح"), waitlisted: waitWord, left1, leftN,
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
     everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),
+    info: {
+      about: tx("About this event", "عن هذه الفعالية"), details: tx("Details", "التفاصيل"),
+      bookEvent: tx("Book this event", "احجز هذه الفعالية"), chooseDate: tx("Choose this date", "اختر هذا الموعد"),
+      who: tx("Who", "لمن"), price: tx("Price", "السعر"), when: tx("When", "الموعد"), next: tx("Next date", "الموعد القادم"),
+      where: tx("Where", "المكان"), map: tx("Map", "الخريطة"), distance: tx("Distance", "المسافة"), places: tx("Places", "الأماكن"),
+      whoMembers: whoWords.members, close: tx("Close", "إغلاق"),
+    },
   };
 
   const good = list(c.good.items).filter((g) => S(g.title));
   const learn = learnTeaser(c.learn); // Learn to ride: the lessons sign-up, while staff offer lessons
-  const directions = S(site.contact.jccHref);
   const whatsapp = S(site.social.whatsapp);
 
   return (
@@ -141,7 +186,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
 
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
-            <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} text={text}
+            <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} member={member} text={text}
               prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? (p.type === "Any" && anyTop > p.price ? `${sar(p.price)} – ${sar(anyTop)}` : sar(p.price)) : S(d.free) }))} />
           </section>
 

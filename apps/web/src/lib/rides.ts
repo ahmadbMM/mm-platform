@@ -60,6 +60,12 @@ export type RideSession = {
   /** A community ride staff approve (needs_approval not false): no places-left count. */
   approval?: boolean;
   capacity?: number | null;
+  /** Where the session is (sessions.location): "JCC" or nothing for the circuit, "JYC" for the
+   *  Jeddah Yacht Club, else a place as staff wrote it; and its meeting point's map link
+   *  (sessions.meet_url, https only). Only a read that asks for them has them (SESSION_COLS_PLACE):
+   *  a session read without them has neither, and reads as on the circuit. */
+  location?: string | null;
+  meetUrl?: string | null;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -67,6 +73,7 @@ type Row = {
   id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; ride_kind?: unknown;
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
+  location?: unknown; meet_url?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -110,6 +117,14 @@ export function collectTime(slots: unknown): string | null {
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
 
+/** Where a row says the session is, as the ticket reads it (lib/tickets.ts ticketSession): only when
+ *  the read asked for the columns (SESSION_COLS_PLACE), so a row without them gives neither field. */
+function placeOf(r: Row): Pick<RideSession, "location" | "meetUrl"> {
+  if (!("location" in r) && !("meet_url" in r)) return {};
+  const meet = typeof r.meet_url === "string" ? r.meet_url.trim() : "";
+  return { location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null, meetUrl: /^https:\/\//i.test(meet) ? meet : null };
+}
+
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
  *  booked through the company's own form (micromobility.sa/petromin), so they are left out. */
 export function toSession(r: Row, keepAll = false): RideSession | null {
@@ -140,6 +155,7 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     capacity: seats,
     left: null,
     collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" ? null : collectTime(r.bike_slots),
+    ...placeOf(r),
   };
 }
 
@@ -177,6 +193,9 @@ export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Recor
 // description and route from the whole site for ten minutes.
 export const SESSION_COLS = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval";
 export const SESSION_COLS_NEW = "description,price,route_slug";
+// Where a session is and its meeting point (2026-10-05): the Experiences dialogs say where each date
+// meets (lib/event-info.ts). A group of its own, so a database without them reads as before.
+export const SESSION_COLS_PLACE = "location,meet_url";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -326,7 +345,7 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=type,price`, key),
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now),
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [SESSION_COLS_PLACE] }),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) {
       prices = (p.value as { type?: unknown; price?: unknown }[])
