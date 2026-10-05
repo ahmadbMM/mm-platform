@@ -1149,5 +1149,12 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "J'ai lu la décharge et je l'accepte au nom de toutes les personnes de cette réservation",
  "Waiver needed": "Décharge requise",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Notre équipe vous a inscrit à cette sortie. Lisez sa décharge et acceptez-la pour continuer.",
- "Agree and continue": "Accepter et continuer"
+ "Agree and continue": "Accepter et continuer",
+ "That day can no longer be booked - pick another day.": "Ce jour n’est plus disponible – choisissez-en un autre.",
+ "That time can no longer be booked - pick another time.": "Cet horaire n’est plus disponible – choisissez-en un autre.",
+ "The parts could not be added - untick them and name them in the notes.": "Les pièces n’ont pas pu être ajoutées – décochez-les et indiquez-les dans vos remarques.",
+ "Pick how the bike gets to us.": "Choisissez comment votre vélo nous parvient.",
+ "Shorten your bike's name to 80 characters.": "Raccourcissez le nom de votre vélo à 80 caractères.",
+ "Shorten your note to 600 characters.": "Raccourcissez votre remarque à 600 caractères.",
+ "That code is for bike rentals only.": "Ce code est valable uniquement pour la location de vélos."
 }

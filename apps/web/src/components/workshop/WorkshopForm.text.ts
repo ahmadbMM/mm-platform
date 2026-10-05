@@ -11,6 +11,11 @@ export const T = {
     code: "Have a code?", apply: "Apply code", codeOn: (c: string, d: string) => `Code ${c}: ${d} off`, codeBad: "That code isn't valid.", codeRemove: "Remove",
     errors: { name_short: "Write each name in full: every name needs at least two letters.", name: "Enter your name - letters, spaces and periods only.", phone: "Check the mobile number, e.g. 05XXXXXXXX.", service: "Pick a service.",
       day: "Pick a day.", pickup_address: "Add the pickup address.", throttled: "Too many requests from this network - try again in a few minutes.",
+      // what workshop_request() refuses, by its error code; "code" also when a code is for rentals only
+      date: "That day can no longer be booked - pick another day.", time: "That time can no longer be booked - pick another time.",
+      parts: "The parts could not be added - untick them and name them in the notes.", lane: "Pick how the bike gets to us.",
+      bike: "Shorten your bike's name to 80 characters.", notes: "Shorten your note to 600 characters.", email: "Check the email address.",
+      code: "That code is for bike rentals only.",
       generic: "It could not be sent. Check the connection and try again." } as Record<string, string>,
   },
   ar: {
@@ -23,6 +28,10 @@ export const T = {
     code: "لديك كود؟", apply: "تطبيق", codeOn: (c: string, d: string) => `الكود ${c}: خصم ${d}`, codeBad: "هذا الكود غير صالح.", codeRemove: "إزالة",
     errors: { name_short: "اكتب كل اسم كاملًا: يجب أن يتكون كل اسم من حرفين على الأقل.", name: "أدخل اسمك - حروف ومسافات ونقاط فقط.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.", service: "اختر خدمة.",
       day: "اختر يوماً.", pickup_address: "أضف عنوان الاستلام.", throttled: "طلبات كثيرة من هذه الشبكة - حاول بعد دقائق.",
+      date: "لم يعد هذا اليوم متاحاً - اختر يوماً آخر.", time: "لم يعد هذا الوقت متاحاً - اختر وقتاً آخر.",
+      parts: "تعذّرت إضافة القطع - ألغِ تحديدها واذكرها في الملاحظات.", lane: "اختر طريقة وصول الدراجة إلينا.",
+      bike: "اختصر اسم دراجتك إلى 80 حرفاً.", notes: "اختصر ملاحظتك إلى 600 حرف.", email: "تحقق من البريد الإلكتروني.",
+      code: "هذا الكود لتأجير الدراجات فقط.",
       generic: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً." } as Record<string, string>,
   },
 };

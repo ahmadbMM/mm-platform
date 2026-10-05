@@ -1149,5 +1149,12 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "मैले छुट-पत्र पढें र यो बुकिङका सबैको तर्फबाट सहमत छु",
  "Waiver needed": "छुट-पत्र आवश्यक छ",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "हाम्रो टोलीले तपाईंलाई यो राइडमा बुक गरेको छ। यसको छुट-पत्र पढ्नुहोस् र जारी राख्न सहमत हुनुहोस्।",
- "Agree and continue": "सहमत हुनुहोस् र जारी राख्नुहोस्"
+ "Agree and continue": "सहमत हुनुहोस् र जारी राख्नुहोस्",
+ "That day can no longer be booked - pick another day.": "त्यो दिन अब बुक गर्न मिल्दैन — अर्को दिन छान्नुहोस्।",
+ "That time can no longer be booked - pick another time.": "त्यो समय अब बुक गर्न मिल्दैन — अर्को समय छान्नुहोस्।",
+ "The parts could not be added - untick them and name them in the notes.": "पार्टपुर्जा थप्न सकिएन — चिन्ह हटाएर तिनलाई नोटमा लेख्नुहोस्।",
+ "Pick how the bike gets to us.": "साइकल हामीकहाँ कसरी आइपुग्छ, छान्नुहोस्।",
+ "Shorten your bike's name to 80 characters.": "आफ्नो साइकलको नाम 80 अक्षरभित्र छोट्याउनुहोस्।",
+ "Shorten your note to 600 characters.": "आफ्नो नोट 600 अक्षरभित्र छोट्याउनुहोस्।",
+ "That code is for bike rentals only.": "यो कोड साइकल भाडाका लागि मात्र हो।"
 }

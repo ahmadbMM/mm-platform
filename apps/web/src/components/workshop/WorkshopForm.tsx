@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { cleanName, nameOk, namePartsOk, normalizePhone, rpc } from "@/lib/rpc-client";
-import { dayOptions, timesFor } from "@/lib/workshop-days";
+import { dayOptions, riyadhClock, timesFor } from "@/lib/workshop-days";
 import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
 import { fmtSar } from "@/lib/fill";
 import { useLocalize } from "@/i18n/TxProvider";
@@ -30,6 +30,8 @@ export type WorkshopFormProps = {
 
 
 type Lane = "dropoff" | "wait" | "pickup";
+// Two Riyadh clocks ("YYYY-MM-DDTHH:MM") compare as they read: the later of the two.
+const later = (a: string, b: string) => (a > b ? a : b);
 
 export default function WorkshopForm(p: WorkshopFormProps) {
   const t = useLocalize(T);
@@ -52,15 +54,28 @@ export default function WorkshopForm(p: WorkshopFormProps) {
   const [promo, setPromo] = useState<{ code: string; kind: string; value: number } | null>(null);
   const [codeErr, setCodeErr] = useState("");
 
+  // The clock the days and times count from: the page's, then Riyadh's as the browser reads it once
+  // the page has drawn, and again whenever the visitor comes back to the tab - a page kept in a cache
+  // or left open overnight would otherwise offer days that have passed. The later of the two, so a
+  // phone whose clock runs behind never brings a past day back.
+  const [now, setNow] = useState(p.now);
+  useEffect(() => {
+    const tick = () => setNow((n) => later(riyadhClock(new Date()), n));
+    const first = setTimeout(tick, 0);
+    const back = () => { if (document.visibilityState === "visible") tick(); };
+    document.addEventListener("visibilitychange", back);
+    return () => { clearTimeout(first); document.removeEventListener("visibilitychange", back); };
+  }, []);
+
   const money = (n: number) => (n === 0 ? t.free : fmtSar(n, p.locale));
   const dayList = useMemo(
-    () => dayOptions(p.now, p.days, p.fridayClosed, p.times, p.closeHour).map((iso) => ({ iso, label: fmtPattern(p.dayFmt, iso) })),
-    [p.dayFmt, p.now, p.days, p.fridayClosed, p.times, p.closeHour],
+    () => dayOptions(now, p.days, p.fridayClosed, p.times, p.closeHour).map((iso) => ({ iso, label: fmtPattern(p.dayFmt, iso) })),
+    [p.dayFmt, now, p.days, p.fridayClosed, p.times, p.closeHour],
   );
-  const timeList = day ? timesFor(day, p.now, p.times) : p.times;
+  const timeList = day ? timesFor(day, now, p.times) : p.times;
   function pickDay(iso: string) {
     setDay(iso);
-    if (time && !timesFor(iso, p.now, p.times).includes(time)) setTime("");
+    if (time && !timesFor(iso, now, p.times).includes(time)) setTime("");
   }
 
   const service = p.services[svc];
@@ -75,8 +90,10 @@ export default function WorkshopForm(p: WorkshopFormProps) {
     const v = codeIn.trim().replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c)));
     if (!v) return;
     try {
-      const r = await rpc<{ ok: boolean; code?: string; kind?: string; value?: number }>("promo_lookup", { p_code: v });
-      if (r.ok && r.code) setPromo({ code: r.code, kind: r.kind || "percent", value: Number(r.value) || 0 });
+      const r = await rpc<{ ok: boolean; code?: string; kind?: string; value?: number; applies_to?: string | null }>("promo_lookup", { p_code: v });
+      // A code limited to one rental bike type (applies_to) is for rentals, never a workshop job.
+      if (r.ok && r.code && r.applies_to) { setPromo(null); setCodeErr(t.errors.code); }
+      else if (r.ok && r.code) setPromo({ code: r.code, kind: r.kind || "percent", value: Number(r.value) || 0 });
       else { setPromo(null); setCodeErr(t.codeBad); }
     } catch { setCodeErr(t.codeBad); }
   }
@@ -94,6 +111,11 @@ export default function WorkshopForm(p: WorkshopFormProps) {
     if (!/^\+[1-9]\d{7,14}$/.test(ph) || (ph.startsWith("+966") && !/^\+9665\d{8}$/.test(ph))) return setErr(t.errors.phone);
     if (!service) return setErr(t.errors.service);
     if (!day) return setErr(t.errors.day);
+    // The day and time are checked against the clock now, not when the page was made.
+    const clock = later(riyadhClock(new Date()), now);
+    if (clock !== now) setNow(clock);
+    if (!dayOptions(clock, p.days, p.fridayClosed, p.times, p.closeHour).includes(day)) { setDay(""); setTime(""); return setErr(t.errors.date); }
+    if (time && !timesFor(day, clock, p.times).includes(time)) { setTime(""); return setErr(t.errors.time); }
     if (lane === "pickup" && !addr.trim()) return setErr(t.errors.pickup_address);
     setBusy(true);
     try {
@@ -106,7 +128,14 @@ export default function WorkshopForm(p: WorkshopFormProps) {
         },
       });
       if (r.ok && r.ref) setDone(r.ref);
-      else setErr(t.errors[r.error || ""] || t.errors.generic);
+      else {
+        // What the server refused is cleared, to be picked again: a day or time it no longer
+        // takes, a code it does not take for the workshop.
+        if (r.error === "date") { setDay(""); setTime(""); }
+        if (r.error === "time") setTime("");
+        if (r.error === "code") setPromo(null);
+        setErr(t.errors[r.error || ""] || t.errors.generic);
+      }
     } catch {
       setErr(t.errors.generic);
     }

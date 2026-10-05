@@ -1149,5 +1149,12 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "Nabasa ko ang waiver at sumasang-ayon ako para sa lahat sa booking na ito",
  "Waiver needed": "Kailangan ang waiver",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Ini-book ka ng aming team sa ride na ito. Basahin ang waiver nito at sumang-ayon para magpatuloy.",
- "Agree and continue": "Sumang-ayon at magpatuloy"
+ "Agree and continue": "Sumang-ayon at magpatuloy",
+ "That day can no longer be booked - pick another day.": "Hindi na mabu-book ang araw na iyan — pumili ng ibang araw.",
+ "That time can no longer be booked - pick another time.": "Hindi na mabu-book ang oras na iyan — pumili ng ibang oras.",
+ "The parts could not be added - untick them and name them in the notes.": "Hindi maidagdag ang mga piyesa — alisin ang tsek at isulat na lang ang mga ito sa notes.",
+ "Pick how the bike gets to us.": "Piliin kung paano makakarating sa amin ang bisikleta.",
+ "Shorten your bike's name to 80 characters.": "Paikliin sa 80 character ang pangalan ng iyong bisikleta.",
+ "Shorten your note to 600 characters.": "Paikliin sa 600 character ang iyong note.",
+ "That code is for bike rentals only.": "Para lang sa pagrenta ng bisikleta ang code na iyan."
 }

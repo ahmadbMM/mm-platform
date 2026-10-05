@@ -1149,5 +1149,12 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "免責同意書を読み、この予約の参加者全員を代表して同意します",
  "Waiver needed": "免責同意書への同意が必要です",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "当チームがこのライドにあなたを予約しました。免責同意書をお読みのうえ、同意して先へお進みください。",
- "Agree and continue": "同意して続ける"
+ "Agree and continue": "同意して続ける",
+ "That day can no longer be booked - pick another day.": "この日はもう予約できません。別の日を選んでください。",
+ "That time can no longer be booked - pick another time.": "この時間はもう予約できません。別の時間を選んでください。",
+ "The parts could not be added - untick them and name them in the notes.": "パーツを追加できませんでした。チェックを外し、備考欄にご記入ください。",
+ "Pick how the bike gets to us.": "自転車をどのようにお預かりするか選んでください。",
+ "Shorten your bike's name to 80 characters.": "自転車の名前を80文字以内にしてください。",
+ "Shorten your note to 600 characters.": "備考を600文字以内にしてください。",
+ "That code is for bike rentals only.": "このコードは自転車レンタル専用です。"
 }

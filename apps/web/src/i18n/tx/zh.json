@@ -1149,5 +1149,12 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "我已阅读免责声明，并代表本次预订中的每一位参与者表示同意",
  "Waiver needed": "需同意免责声明",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "我们的团队已为您预订此次骑行。请阅读其免责声明并表示同意，以便继续。",
- "Agree and continue": "同意并继续"
+ "Agree and continue": "同意并继续",
+ "That day can no longer be booked - pick another day.": "该日期已无法预约——请选择其他日期。",
+ "That time can no longer be booked - pick another time.": "该时间已无法预约——请选择其他时间。",
+ "The parts could not be added - untick them and name them in the notes.": "无法添加这些配件——请取消勾选，并在备注中写明。",
+ "Pick how the bike gets to us.": "请选择自行车送到我们这里的方式。",
+ "Shorten your bike's name to 80 characters.": "请将自行车名称缩短至 80 个字符以内。",
+ "Shorten your note to 600 characters.": "请将备注缩短至 600 个字符以内。",
+ "That code is for bike rentals only.": "该优惠码仅适用于自行车租赁。"
 }
