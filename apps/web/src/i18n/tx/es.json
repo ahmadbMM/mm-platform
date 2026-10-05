@@ -1171,5 +1171,10 @@
  "You can sign up at most 5 learners in all, including the ones you have already signed up.": "Puedes inscribir como máximo 5 participantes en total, incluidos los que ya inscribiste.",
  "You signed in with a temporary password from our team. Choose your own password to continue.": "Iniciaste sesión con una contraseña temporal de nuestro equipo. Elige tu propia contraseña para continuar.",
  "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "El nombre de tu cuenta debe incluir nombre y apellido. Actualízalo en la app de reservas antes de inscribirte aquí.",
- "Your sign-in has timed out. Please sign in again.": "Tu inicio de sesión ha caducado. Vuelve a iniciar sesión."
+ "Your sign-in has timed out. Please sign in again.": "Tu inicio de sesión ha caducado. Vuelve a iniciar sesión.",
+ "Switch account?": "¿Cambiar de cuenta?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "En este navegador has iniciado sesión como {current}. Acabas de iniciar sesión en la app de reservas como {next}. ¿Qué cuenta debe usar este sitio?",
+ "Switch to {name}": "Cambiar a {name}",
+ "Stay signed in as {name}": "Seguir como {name}",
+ "You are signed in as {who}. If this is not your account, sign out.": "Has iniciado sesión como {who}. Si esta no es tu cuenta, cierra sesión."
 }

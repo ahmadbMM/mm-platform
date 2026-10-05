@@ -7,10 +7,11 @@ import { accountBookings, rpcServer } from "@/lib/account";
 import { asLocale, resolvePage } from "@/lib/content";
 import { kindNames, sessionName } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
+import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
 import { fmtClock, fmtDayDate, venueOf } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
-import { SESSION_ID, acceptAnswer, pendingWaivers, waiverKind, waiverRiders, waiverVersion } from "@/lib/waiver";
+import { SESSION_ID, WAIVER_VERSION_SHAPE, acceptAnswer, pendingWaivers, waiverKind, waiverRiders, waiverVersion } from "@/lib/waiver";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // GET /api/account/pending-waiver?locale=xx[&skip=id,id]: the ride a signed-in rider must agree a
@@ -19,13 +20,19 @@ import { riyadhClock } from "@/lib/workshop-days";
 // place, who is on the booking, and its waiver in the page's language. Signed out it answers from
 // the cookie alone, without asking the database; signed in it reads the rider's own bookings once
 // (my_bookings) and the sessions of the rides still waiting, and names the soonest one it can see.
+// A connection asks 30 times a minute at most (lib/rate-limit.ts; past that, 429 and the pop-up waits
+// for the next page).
 //
 // POST /api/account/pending-waiver {sessionId, version}: the rider agrees, through
 // customer_accept_waiver with the account cookie's id and token. The version is the one the pop-up
 // showed, and it must still be that ride's own (its kind decides it, here, not in the browser): a
-// ride whose kind changed since answers "changed", and the pop-up asks again. A database without the
-// function answers ok with `absent`, and the pop-up lets the rider through. Only this site's pages
-// may call it.
+// ride whose kind changed since, or a version a deploy replaced while the pop-up stood open, answers
+// "changed", and the pop-up asks again. A database without the function answers ok with `absent`,
+// and the pop-up lets the rider through. Only this site's pages may call it.
+//
+// Both read the rides with the account's token (list_sessions, lib/rides.ts readSessions): a private
+// ride - one only its tag holders may see - is hidden from the public key, and a rider staff added to
+// one was never asked for its waiver.
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store, private" } });
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -33,6 +40,7 @@ const S = (v: unknown) => (typeof v === "string" ? v : "");
 export async function GET(req: Request) {
   const acct = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (!acct) return json({ signedIn: false });
+  if (!(await withinLimit(req, "account-check"))) return json({ error: "busy" }, 429);
   const q = new URL(req.url).searchParams;
   const locale = q.get("locale") || "en";
   const skip = (q.get("skip") || "").split(",").filter((x) => SESSION_ID.test(x)).slice(0, 20);
@@ -40,7 +48,7 @@ export async function GET(req: Request) {
   const list = pendingWaivers(rows, riyadhClock(new Date()).slice(0, 10), acct.id, skip);
   if (!list.length) return json({ signedIn: true, pending: null });
   const L = asLocale(locale), tx = serverL(locale);
-  const [sessions, content] = await Promise.all([loadTicketSessions(list.map((x) => x.sessionId)), loadSiteContent()]);
+  const [sessions, content] = await Promise.all([loadTicketSessions(list.map((x) => x.sessionId), acct), loadSiteContent()]);
   // a ride this site cannot see is not asked about, as the booking app asks only for a session it knows
   const first = list.find((x) => sessions.has(x.sessionId));
   const s = first && sessions.get(first.sessionId);
@@ -80,8 +88,8 @@ export async function POST(req: Request) {
   const b = body && typeof body === "object" ? (body as Record<string, unknown>) : {};
   const sessionId = typeof b.sessionId === "string" && SESSION_ID.test(b.sessionId) ? b.sessionId : "";
   const version = typeof b.version === "string" ? b.version : "";
-  if (!sessionId || !Object.values(WAIVER_VERSIONS).includes(version)) return json({ ok: false, error: "invalid" }, 400);
-  const s = (await loadTicketSessions([sessionId])).get(sessionId);
+  if (!sessionId || !WAIVER_VERSION_SHAPE.test(version)) return json({ ok: false, error: "invalid" }, 400);
+  const s = (await loadTicketSessions([sessionId], acct)).get(sessionId);
   if (!s) return json({ ok: false, error: "generic" }, 502);
   if (waiverVersion(s) !== version) return json({ ok: false, error: "changed" }, 409);
   const r = await rpcServer<unknown>("customer_accept_waiver", { p_id: acct.id, p_token: acct.token, p_session_id: sessionId, p_version: version });

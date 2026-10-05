@@ -1,16 +1,17 @@
 // What My Account's record reads besides the account's own rows (lib/ride-record.ts): the kind of
-// every session the rider booked, the badge catalogue, the weeks and the dated badges (the public
-// key, as the booking app reads them), the badges staff gave this account (its own token), and
-// the name of a bike handed over tonight.
+// every session the rider booked (as the account may see them: a private ride too, through its
+// token), the badge catalogue, the weeks and the dated badges (the public key, as the booking app
+// reads them), the badges staff gave this account (its own token), and the name of a bike handed
+// over tonight.
 import { rpcServer, type Account } from "./account";
-import { getJson, rideKind } from "./rides";
+import { getJson, readSessions, rideKind, type SessionReader } from "./rides";
 import type { BadgeData, BadgeRow, RecordSession } from "./ride-record";
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 const env = () => ({ url: process.env.NEXT_PUBLIC_SUPABASE_URL, key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY });
 
-/** Every session by id (any state, past ones too), 80 to a request. */
-export async function loadRecordSessions(ids: string[], fetchImpl: typeof fetch = fetch): Promise<Map<string, RecordSession>> {
+/** Every session by id (any state, past ones too), 80 to a request, as `account` may see them. */
+export async function loadRecordSessions(ids: string[], account: SessionReader | null = null, fetchImpl: typeof fetch = fetch): Promise<Map<string, RecordSession>> {
   const { url, key } = env();
   const clean = [...new Set(ids)].filter((x) => ID.test(x)).slice(0, 800);
   const out = new Map<string, RecordSession>();
@@ -19,7 +20,7 @@ export async function loadRecordSessions(ids: string[], fetchImpl: typeof fetch 
   for (let i = 0; i < clean.length; i += 80) chunks.push(clean.slice(i, i + 80));
   await Promise.all(chunks.map(async (c) => {
     try {
-      const rows = await getJson(fetchImpl, `${url}/rest/v1/sessions?select=id,ride_kind,event_kind,paid_ride,needs_approval&id=in.(${c.join(",")})`, key);
+      const rows = await readSessions(fetchImpl, url, key, `select=id,ride_kind,event_kind,paid_ride,needs_approval&id=in.(${c.join(",")})`, account);
       if (!Array.isArray(rows)) return;
       for (const r of rows as Record<string, unknown>[]) {
         if (typeof r.id === "string") out.set(r.id, { kind: rideKind(r), freeRide: r.event_kind === "community" && r.paid_ride !== true, approval: r.event_kind === "community" && r.needs_approval !== false });

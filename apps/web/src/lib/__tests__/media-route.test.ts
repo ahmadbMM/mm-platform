@@ -17,9 +17,11 @@ describe("/media", () => {
     const res = await call("home/abc.jpg?w=640");
     expect(res.status).toBe(200);
     expect(res.headers.get("content-type")).toBe("image/jpeg");
-    expect(res.headers.get("cache-control")).toBe("public, max-age=31536000, immutable");
+    // a deleted photo (PDPL) stops being served: a day at the edge, an hour in a browser, never a year
+    expect(res.headers.get("cache-control")).toBe("public, max-age=3600, stale-while-revalidate=86400");
     expect(f.mock.calls.map((c) => String(c[0]))).toEqual([`${STORE}home/abc.w640.webp`, `${STORE}home/abc.jpg`]);
     for (const c of f.mock.calls) expect(c[1]?.signal).toBeInstanceOf(AbortSignal); // eight seconds, then give up
+    for (const c of f.mock.calls) expect((c[1] as { cf?: unknown } | undefined)?.cf).toEqual({ cacheTtl: 86400, cacheEverything: true });
   });
 
   it("serves pictures and PDFs inline, never an SVG", async () => {
@@ -39,6 +41,7 @@ describe("/media", () => {
     expect(res.headers.get("content-type")).toBe("application/gpx+xml");
     expect(res.headers.get("content-disposition")).toBe("attachment");
     expect(res.headers.get("x-content-type-options")).toBe("nosniff");
+    expect(res.headers.get("cache-control")).toBe("public, max-age=3600, stale-while-revalidate=86400");
   });
 
   it("answers a slow or unreachable bucket with a 504 that nothing keeps", async () => {

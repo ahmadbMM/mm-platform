@@ -51,6 +51,24 @@ for (const lang of ["en", "ar"] as const) {
     expect(res?.status()).toBe(404);
     await expect(page.locator("html")).toHaveAttribute("lang", lang);
     await expect(page.locator(".pg-missing h1")).toBeVisible();
+    await expect(page.locator("title")).toHaveCount(1); // one title and one robots tag (Next adds the noindex)
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(1);
+  });
+  // An address the proxy never sees (one segment with a dot) is never given a language: the
+  // site-wide 404 (app/global-not-found.tsx), in the visitor's language, not Next's bare page.
+  test(`an address no page answers, with a dot, is the site's own 404 in ${lang}`, async ({ page }) => {
+    // the visitor's pick (the language cookie), as the page reads it first
+    await page.context().addCookies([{ name: "NEXT_LOCALE", value: lang, url: String(test.info().project.use.baseURL) }]);
+    for (const path of ["/privacy.html", "/wp-login.php"]) {
+      const { res } = await open(page, path);
+      expect(res?.status(), path).toBe(404);
+      await expect(page.locator("html")).toHaveAttribute("lang", lang);
+      await expect(page.locator("html")).toHaveAttribute("dir", lang === "ar" ? "rtl" : "ltr");
+      await expect(page.locator("h1")).toHaveText(lang === "ar" ? "الصفحة غير موجودة" : "Page not found");
+      await expect(page.locator("title")).toHaveCount(1);
+      await expect(page.locator('meta[name="robots"]')).toHaveCount(1);
+      expect(await axe(page), "serious accessibility problems").toEqual([]);
+    }
   });
 }
 
@@ -71,14 +89,52 @@ test("a tag's old address goes to its new one, permanently", async ({ request })
   expect(res.headers()["location"]).toMatch(/\/bikes\/42$/);
 });
 
-test("an unlinked tag gets the unrecognised-tag page", async ({ page }) => {
+test("an unlinked tag gets the unrecognised-tag page, as a 404", async ({ page }) => {
   const { res, errors } = await open(page, "/bikes/999999?lang=en");
-  expect(res?.status()).toBe(200);
+  expect(res?.status()).toBe(404);
+  await expect(page).toHaveTitle(/recognise this tag/);
+  await expect(page.locator("title")).toHaveCount(1);
+  await expect(page.locator('meta[name="robots"]')).toHaveCount(1);
   await expect(page.locator("html")).toHaveAttribute("lang", "en");
   await expect(page.locator("h1:visible")).toHaveCount(1);
   await expect(page.locator("h1")).toHaveText(/recognise this tag/);
   await expect(page.getByText("micromobility.sa/bikes/999999")).toBeVisible();
   expect(errors, "script errors").toEqual([]);
+});
+
+test("an unknown catalogue address under /bikes is still the site's own 404", async ({ page }) => {
+  const { res } = await open(page, "/bikes/no-such-category?lang=en");
+  expect(res?.status()).toBe(404);
+  await expect(page.locator(".pg-missing h1")).toBeVisible();
+});
+
+test("the staff preview's way in has a title and is never indexed", async ({ page }) => {
+  await page.route("**/api/preview", (r) => r.fulfill({ status: 401, body: "{}" }));
+  await open(page, "/preview?lang=en");
+  await expect(page).toHaveTitle("Staff preview · Micromobility");
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+});
+
+// The root layout only passes its children through (app/layout.tsx, for the 404 above the language
+// layout): switching language from the header must still redraw the whole document - its language,
+// its direction and its words - with no script errors.
+test("the header's language menu switches the page's language and direction", async ({ page }) => {
+  const { errors } = await open(page, "/about?lang=en");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await page.locator(".mm-nav-globe").click();
+  await page.locator('#mm-lang-menu [role="menuitemradio"][hreflang="ar"]').click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ar");
+  await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+  await expect(page.locator(".mm-nav-globe")).toHaveAttribute("aria-label", /العربية/);
+  await expect(page.locator("h1:visible")).toHaveCount(1);
+  await page.locator(".mm-nav-globe").click();
+  await page.locator('#mm-lang-menu [role="menuitemradio"][hreflang="de"]').click();
+  await expect(page.locator("html")).toHaveAttribute("lang", "de");
+  await expect(page.locator("html")).toHaveAttribute("dir", "ltr");
+  // The menu's links name the old /<lang>/ address, which the proxy redirects, so Next's router
+  // says it falls back to a whole page load - as it did before the root layout passed its children
+  // through. Any other error fails the test.
+  expect(errors.filter((e) => !/^Failed to fetch RSC payload for .*Falling back to browser navigation/.test(e)), "script errors").toEqual([]);
 });
 
 test("pages send the security headers", async ({ request }) => {

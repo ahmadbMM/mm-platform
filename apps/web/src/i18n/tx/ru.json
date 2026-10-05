@@ -1171,5 +1171,10 @@
  "You can sign up at most 5 learners in all, including the ones you have already signed up.": "Всего можно записать не более 5 участников, включая уже записанных.",
  "You signed in with a temporary password from our team. Choose your own password to continue.": "Вы вошли с временным паролем от нашей команды. Чтобы продолжить, придумайте свой пароль.",
  "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "В имени аккаунта должны быть имя и фамилия. Исправьте его в приложении для бронирования, прежде чем записываться здесь.",
- "Your sign-in has timed out. Please sign in again.": "Время входа истекло. Войдите ещё раз."
+ "Your sign-in has timed out. Please sign in again.": "Время входа истекло. Войдите ещё раз.",
+ "Switch account?": "Сменить аккаунт?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "В этом браузере выполнен вход в аккаунт {current}. Вы только что вошли в приложение для бронирования как {next}. Какой аккаунт должен использовать этот сайт?",
+ "Switch to {name}": "Перейти в аккаунт {name}",
+ "Stay signed in as {name}": "Остаться в аккаунте {name}",
+ "You are signed in as {who}. If this is not your account, sign out.": "Вы вошли как {who}. Если это не ваш аккаунт, выйдите."
 }

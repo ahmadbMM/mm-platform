@@ -1171,5 +1171,10 @@
  "You can sign up at most 5 learners in all, including the ones you have already signed up.": "तपाईं जम्मा बढीमा 5 जना सहभागीको साइन अप गर्न सक्नुहुन्छ, पहिले नै साइन अप गरिएकाहरू समेत।",
  "You signed in with a temporary password from our team. Choose your own password to continue.": "तपाईंले हाम्रो टोलीबाट पाएको अस्थायी पासवर्डबाट लग इन गर्नुभयो। जारी राख्न आफ्नै पासवर्ड छान्नुहोस्।",
  "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "तपाईंको खाताको नाममा नाम र थर दुवै हुनुपर्छ। यहाँ साइन अप गर्नुअघि बुकिङ एपमा यसलाई अद्यावधिक गर्नुहोस्।",
- "Your sign-in has timed out. Please sign in again.": "तपाईंको साइन इनको समय सकियो। कृपया फेरि साइन इन गर्नुहोस्।"
+ "Your sign-in has timed out. Please sign in again.": "तपाईंको साइन इनको समय सकियो। कृपया फेरि साइन इन गर्नुहोस्।",
+ "Switch account?": "खाता बदल्ने?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "यो ब्राउजरमा {current} को रूपमा साइन इन गरिएको छ। तपाईंले भर्खरै बुकिङ एपमा {next} को रूपमा साइन इन गर्नुभयो। यो साइटले कुन खाता प्रयोग गरोस्?",
+ "Switch to {name}": "{name} मा जानुहोस्",
+ "Stay signed in as {name}": "{name} को रूपमा साइन इन रहनुहोस्",
+ "You are signed in as {who}. If this is not your account, sign out.": "तपाईं {who} को रूपमा साइन इन हुनुहुन्छ। यो तपाईंको खाता होइन भने साइन आउट गर्नुहोस्।"
 }

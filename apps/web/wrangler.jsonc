@@ -11,9 +11,13 @@
   "compatibility_flags": ["nodejs_compat"],
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "workers_dev": true,
-  // Sign-in tries per connection (src/lib/sign-in-guard.ts): 10 a minute. Bindings are not
-  // inherited, so production repeats it.
-  "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
+  // Sign-in tries per connection (src/lib/sign-in-guard.ts): 10 a minute; page-error reports and the
+  // signed-in pop-ups' checks (src/lib/rate-limit.ts): 30 of each a minute. Bindings are not
+  // inherited, so production and staging repeat them.
+  "ratelimits": [
+    { "name": "LOGIN_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+    { "name": "API_LIMIT", "namespace_id": "1003", "simple": { "limit": 30, "period": 60 } }
+  ],
   // This deploy's id: the edge page cache keeps each deploy's pages apart (src/lib/page-cache.ts).
   "version_metadata": { "binding": "CF_VERSION_METADATA" },
   // Workers Logs: what the Worker writes (the page-error reports from /api/log-error, failures)
@@ -37,7 +41,10 @@
       "name": "micromobility-web",
       "workers_dev": false,
       "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
-      "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
+      "ratelimits": [
+        { "name": "LOGIN_LIMIT", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+        { "name": "API_LIMIT", "namespace_id": "1003", "simple": { "limit": 30, "period": 60 } }
+      ],
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "observability": { "enabled": true },
       // Everything on both hosts. /store forwards to the Salla store from inside the site
@@ -56,7 +63,10 @@
       "name": "micromobility-web-staging",
       "workers_dev": false,
       "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
-      "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } }],
+      "ratelimits": [
+        { "name": "LOGIN_LIMIT", "namespace_id": "1002", "simple": { "limit": 10, "period": 60 } },
+        { "name": "API_LIMIT", "namespace_id": "1004", "simple": { "limit": 30, "period": 60 } }
+      ],
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "observability": { "enabled": true },
       "vars": { "MM_ENV": "staging" },

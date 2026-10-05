@@ -1,6 +1,9 @@
 // Photos staff upload in the staff page live in Supabase Storage (bucket "site"). The site shows
 // them from here, so Cloudflare's edge keeps a copy and the database's egress is paid once per
-// photo per location, not once per visitor. Upload names are unique, so a year's cache is safe.
+// photo per location and day, not once per visitor. Upload names are unique, so a copy never goes
+// stale - but a photo staff delete (a rider asking to be taken off the gallery, PDPL) must stop
+// being served: the edge keeps a copy for a day and a browser for an hour (then uses it while it
+// asks again), where both once kept it for a year.
 //
 // ?w=640 or ?w=1280 asks for the smaller WebP copy the staff page saves beside a photo it uploads
 // (<name>.w640.webp); a photo uploaded before those copies existed is answered with itself. That
@@ -20,10 +23,14 @@
 const WIDTHS = new Set(["640", "1280"]);
 const TIMEOUT_MS = 8000;
 const SERVED = /^(?:image\/(?!svg)[a-z0-9.+-]+|application\/pdf)\b/i;
+/** How long Cloudflare's edge keeps a file fetched from the bucket: a day. */
+const EDGE_TTL_S = 86400;
+/** What a browser is told: an hour, then the copy it has while it asks again (up to a day). */
+const MEDIA_CACHE = "public, max-age=3600, stale-while-revalidate=86400";
 
-/** One fetch from the bucket, kept at the edge for a year; null when it was unreachable or slow. */
+/** One fetch from the bucket, kept at the edge for a day; null when it was unreachable or slow. */
 async function fromStorage(url: string): Promise<Response | null> {
-  const init: RequestInit & { cf?: Record<string, unknown> } = { cf: { cacheTtl: 31536000, cacheEverything: true }, signal: AbortSignal.timeout(TIMEOUT_MS) };
+  const init: RequestInit & { cf?: Record<string, unknown> } = { cf: { cacheTtl: EDGE_TTL_S, cacheEverything: true }, signal: AbortSignal.timeout(TIMEOUT_MS) };
   try {
     return await fetch(url, init as RequestInit);
   } catch {
@@ -47,12 +54,12 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
   const type = res.headers.get("content-type") || "application/octet-stream";
   if (/\.gpx$/i.test(rel) && !small) {
     return new Response(res.body, {
-      headers: { "content-type": "application/gpx+xml", "content-disposition": "attachment", "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff", "content-security-policy": "default-src 'none'; sandbox" },
+      headers: { "content-type": "application/gpx+xml", "content-disposition": "attachment", "cache-control": MEDIA_CACHE, "x-content-type-options": "nosniff", "content-security-policy": "default-src 'none'; sandbox" },
     });
   }
   if (!SERVED.test(type)) return new Response("Not found", { status: 404 });
   return new Response(res.body, {
     // inline: a spec sheet opens in the browser's own viewer rather than downloading.
-    headers: { "content-type": type, "content-disposition": "inline", "cache-control": "public, max-age=31536000, immutable", "x-content-type-options": "nosniff" },
+    headers: { "content-type": type, "content-disposition": "inline", "cache-control": MEDIA_CACHE, "x-content-type-options": "nosniff" },
   });
 }

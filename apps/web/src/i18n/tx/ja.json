@@ -1171,5 +1171,10 @@
  "You can sign up at most 5 learners in all, including the ones you have already signed up.": "お申し込みいただける受講者は、すでにお申し込み済みの方を含めて合計5名までです。",
  "You signed in with a temporary password from our team. Choose your own password to continue.": "当チームが発行した仮パスワードでログインしました。続行するには、ご自身のパスワードを設定してください。",
  "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "アカウントの氏名には姓と名の両方が必要です。ここでお申し込みいただく前に、予約アプリで更新してください。",
- "Your sign-in has timed out. Please sign in again.": "ログインの有効期限が切れました。もう一度ログインしてください。"
+ "Your sign-in has timed out. Please sign in again.": "ログインの有効期限が切れました。もう一度ログインしてください。",
+ "Switch account?": "アカウントを切り替えますか？",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "このブラウザーには{current}でログインしています。たった今、予約アプリに{next}でログインしました。このサイトではどちらのアカウントを使いますか？",
+ "Switch to {name}": "{name}に切り替える",
+ "Stay signed in as {name}": "{name}のままにする",
+ "You are signed in as {who}. If this is not your account, sign out.": "{who}としてログインしています。ご自身のアカウントでない場合は、ログアウトしてください。"
 }

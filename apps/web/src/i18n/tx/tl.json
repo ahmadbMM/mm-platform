@@ -1171,5 +1171,10 @@
  "You can sign up at most 5 learners in all, including the ones you have already signed up.": "Hanggang 5 mag-aaral lang ang maisa-sign up mo sa kabuuan, kasama ang mga na-sign up mo na.",
  "You signed in with a temporary password from our team. Choose your own password to continue.": "Nag-log in ka gamit ang pansamantalang password mula sa aming team. Pumili ng sarili mong password para magpatuloy.",
  "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "Kailangang may pangalan at apelyido ang pangalan ng account mo. I-update ito sa booking app bago ka mag-sign up dito.",
- "Your sign-in has timed out. Please sign in again.": "Nag-time out ang iyong sign-in. Mag-sign in ulit."
+ "Your sign-in has timed out. Please sign in again.": "Nag-time out ang iyong sign-in. Mag-sign in ulit.",
+ "Switch account?": "Magpalit ng account?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "Naka-sign in ang browser na ito bilang {current}. Kaka-sign in mo lang sa booking app bilang {next}. Aling account ang gagamitin ng site na ito?",
+ "Switch to {name}": "Lumipat sa {name}",
+ "Stay signed in as {name}": "Manatiling naka-sign in bilang {name}",
+ "You are signed in as {who}. If this is not your account, sign out.": "Naka-sign in ka bilang {who}. Kung hindi ito ang iyong account, mag-sign out."
 }

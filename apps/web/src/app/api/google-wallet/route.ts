@@ -1,14 +1,14 @@
 import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
 import { cookieValue } from "@/lib/live";
-import { ENTRY_ID, bookingOrigin, relayStatus } from "@/lib/rating";
-import { loadSiteContent } from "@/lib/site";
+import { ENTRY_ID, WALLET_ORIGIN, relayStatus } from "@/lib/rating";
 
 // POST /api/google-wallet {bookingId, groupIds?}: the booking app makes the Google Wallet pass
 // (its own /api/google-wallet, which reads the booking through the token-checked my_bookings and
 // signs a save link); this route adds the rider's id and session token from the HttpOnly account
 // cookie and hands the answer back as it came - 501 when the booking app is not set up for Google
 // Wallet (the button then hides), 409 while a ride staff approve has not confirmed the rider, the
-// save link otherwise. Only this site's pages may call it.
+// save link otherwise. Only this site's pages may call it, and it only ever calls the booking app's
+// own origin (WALLET_ORIGIN), never an address from the site's content: the token goes with it.
 export const dynamic = "force-dynamic";
 
 const json = (body: unknown, status = 200) =>
@@ -25,9 +25,8 @@ export async function POST(req: Request) {
     groupIds = Array.isArray(b.groupIds) ? b.groupIds.filter((x): x is string => typeof x === "string" && ENTRY_ID.test(x)).slice(0, 50) : [];
   } catch { /* empty body */ }
   if (!ENTRY_ID.test(bookingId)) return json({ ok: false, error: "invalid" }, 400);
-  const origin = bookingOrigin(await loadSiteContent());
   try {
-    const up = await fetch(`${origin}/api/google-wallet`, {
+    const up = await fetch(`${WALLET_ORIGIN}/api/google-wallet`, {
       method: "POST",
       headers: { "content-type": "application/json", accept: "application/json" },
       body: JSON.stringify({ customerId: acct.id, token: acct.token, bookingId, groupIds }),

@@ -1171,5 +1171,10 @@
  "You can sign up at most 5 learners in all, including the ones you have already signed up.": "آپ مجموعی طور پر زیادہ سے زیادہ 5 شرکت کنندگان کا سائن اپ کر سکتے ہیں، جن میں پہلے سائن اپ کیے گئے بھی شامل ہیں۔",
  "You signed in with a temporary password from our team. Choose your own password to continue.": "آپ نے ہماری ٹیم کے دیے گئے عارضی پاس ورڈ سے سائن اِن کیا ہے۔ جاری رکھنے کے لیے اپنا پاس ورڈ منتخب کریں۔",
  "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "آپ کے اکاؤنٹ کے نام میں پہلا اور آخری نام دونوں ہونے چاہییں۔ یہاں رجسٹر کرنے سے پہلے بکنگ ایپ میں اسے اپ ڈیٹ کریں۔",
- "Your sign-in has timed out. Please sign in again.": "آپ کے سائن اِن کا وقت ختم ہو گیا ہے۔ براہِ کرم دوبارہ سائن اِن کریں۔"
+ "Your sign-in has timed out. Please sign in again.": "آپ کے سائن اِن کا وقت ختم ہو گیا ہے۔ براہِ کرم دوبارہ سائن اِن کریں۔",
+ "Switch account?": "اکاؤنٹ بدلیں؟",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "اس براؤزر میں {current} کے طور پر سائن اِن ہے۔ آپ نے ابھی بکنگ ایپ میں {next} کے طور پر سائن اِن کیا ہے۔ یہ سائٹ کون سا اکاؤنٹ استعمال کرے؟",
+ "Switch to {name}": "{name} پر جائیں",
+ "Stay signed in as {name}": "{name} کے طور پر سائن اِن رہیں",
+ "You are signed in as {who}. If this is not your account, sign out.": "آپ {who} کے طور پر سائن اِن ہیں۔ اگر یہ آپ کا اکاؤنٹ نہیں ہے تو سائن آؤٹ کریں۔"
 }

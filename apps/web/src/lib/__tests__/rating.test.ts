@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { bookingOrigin, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, relayStatus, unratedRides } from "../rating";
+import { WALLET_ORIGIN, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, relayStatus, unratedRides } from "../rating";
 import { POST as rate } from "../../app/api/account/rate/route";
 import { POST as wallet } from "../../app/api/google-wallet/route";
 import { resetSiteContent } from "../site";
@@ -148,19 +148,16 @@ describe("api/account/rate", () => {
 describe("api/google-wallet", () => {
   beforeEach(() => { resetSiteContent(); vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
-  it("knows the booking app's origin, as staff set it", () => {
-    expect(bookingOrigin(null)).toBe("https://micromobilityrentals.pages.dev");
-    expect(bookingOrigin({ "site.links.booking": { href: "https://book.micromobility.sa/?x=1" } })).toBe("https://book.micromobility.sa");
-    expect(bookingOrigin({ "site.links.booking": { href: "javascript:alert(1)" } })).toBe("https://micromobilityrentals.pages.dev");
-  });
-  it("asks the booking app for the pass with the cookie's id and token and hands the save link back", async () => {
-    const f = vi.fn(async (url: string) => (url.includes("site_content") ? json([{ key: "site.links.booking", value: { href: "https://book.micromobility.sa/" } }]) : json({ ok: true, url: "https://pay.google.com/gp/v/save/eyJ" })));
+  it("asks the booking app's own origin for the pass, with the cookie's id and token, and hands the save link back", async () => {
+    expect(WALLET_ORIGIN).toBe("https://micromobilityrentals.pages.dev");
+    // an address staff set in the site's content never receives the token
+    const f = vi.fn(async (url: string) => (url.includes("site_content") ? json([{ key: "site.links.booking", value: { href: "https://elsewhere.example/" } }]) : json({ ok: true, url: "https://pay.google.com/gp/v/save/eyJ" })));
     vi.stubGlobal("fetch", f);
     const res = await post(wallet, "/api/google-wallet", { bookingId: "q1abcdef", groupIds: ["q1abcdef", "q2abcdef", "bad;id"] });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, url: "https://pay.google.com/gp/v/save/eyJ" });
-    const call = f.mock.calls.find((c) => String(c[0]).includes("/api/google-wallet")) as unknown as [string, RequestInit];
-    expect(call[0]).toBe("https://book.micromobility.sa/api/google-wallet");
+    expect(f.mock.calls.map((c) => String(c[0]))).toEqual(["https://micromobilityrentals.pages.dev/api/google-wallet"]);
+    const call = f.mock.calls[0] as unknown as [string, RequestInit];
     expect(JSON.parse(String(call[1].body))).toEqual({ customerId: "c1", token: TOKEN, bookingId: "q1abcdef", groupIds: ["q1abcdef", "q2abcdef"] });
   });
   it("passes a 501 (not set up) and a 409 (not confirmed) on, and never a link elsewhere", async () => {

@@ -10,6 +10,9 @@ Petromin registration page, changes.
   `www.micromobility.sa/*`. Routes, not custom domains, on purpose:
   - The DNS records stay exactly as they are. The root and `www` are already proxied A records
     (orange cloud) pointing at the old host; a Worker route answers before that host is asked.
+  - `www.micromobility.sa` is not a second copy of the site: the Worker moves every address on it
+    to the same path and query on `micromobility.sa` (301; 308 for a POST), before anything else
+    (`apps/web/worker.js`, `src/lib/canonical-host.ts`).
   - The two registration forms (`forms/petromin` at `/petromin`, `forms/community` at
     `/community/registration`) are served by this Worker too, outside Coming Soon. Until their
     old Workers' routes are removed (below), those more specific routes still win and the old
@@ -70,8 +73,11 @@ once.
 ## Sign-in protection
 
 The account sign-in (`/api/account`) allows each connection 10 tries a minute, with Cloudflare's
-rate limiter (`LOGIN_LIMIT` in `apps/web/wrangler.jsonc`; nothing to set up). On top of that it can
-ask for a Cloudflare Turnstile check, which is off until both of its keys exist:
+rate limiter (`LOGIN_LIMIT` in `apps/web/wrangler.jsonc`; nothing to set up). The page-error reports
+(`/api/log-error`) and the signed-in pop-ups' checks (`/api/account/pending-waiver`,
+`/api/account/pending-rating`) allow each connection 30 of each a minute the same way (`API_LIMIT`).
+On top of that the sign-in can ask for a Cloudflare Turnstile check, which is off until both of its
+keys exist:
 
 1. Cloudflare dashboard (the account that holds micromobility.sa) > Turnstile > Add widget:
    hostname `micromobility.sa` (and `www.micromobility.sa`), mode Managed.
@@ -83,6 +89,19 @@ ask for a Cloudflare Turnstile check, which is off until both of its keys exist:
    The order matters: with the secret set but no site key in the page, every sign-in is refused.
 
 To turn it off again, delete the secret first, then the variable.
+
+## Content Security Policy
+
+`apps/web/next.config.ts` sends it with every page. Scripts and styles from elsewhere are named one
+by one: Cloudflare's analytics beacon and Turnstile, and on the live ride map (`/live`) MapLibre's two
+files at the pinned version `components/live/LiveMap.tsx` loads (a unit test fails when the two
+differ, so a new MapLibre version changes both). The registration forms send their own policy
+(`apps/web/src/forms/headers.ts`), which allows the one supabase-js file the Petromin page loads.
+
+`script-src` keeps `'unsafe-inline'` on purpose: Next writes small inline scripts into every page,
+and a nonce - the usual way to allow them without it - must be new on every answer, while the
+pages are kept at Cloudflare's edge for a minute and answered to everyone (`src/lib/page-cache.ts`).
+A kept copy would carry a nonce that no longer matches. Revisit it only together with that cache.
 
 ## Monitoring
 

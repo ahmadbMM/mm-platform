@@ -6,6 +6,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { formOf, pendingRating } from "@/lib/rating";
 import { kindNames, sessionName } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
+import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
 import { fmtDayDate } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
@@ -16,18 +17,22 @@ import { riyadhClock } from "@/lib/workshop-days";
 // the owner 2026-10-03: "open whenever a customer opens the website or signs in"). Signed out it
 // answers from the cookie alone, without asking the database; signed in it reads the rider's own
 // bookings once (my_bookings) and, when one waits, that ride's session for its kind and its name.
+// A connection asks 30 times a minute at most (lib/rate-limit.ts; past that, 429 and the pop-up waits
+// for the next page).
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store, private" } });
 
 export async function GET(req: Request) {
   const acct = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (!acct) return json({ signedIn: false });
+  if (!(await withinLimit(req, "account-check"))) return json({ error: "busy" }, 429);
   const locale = new URL(req.url).searchParams.get("locale") || "en";
   const rows = await accountBookings(acct);
   const gate = pendingRating(rows, riyadhClock(new Date()).slice(0, 10));
   if (!gate) return json({ signedIn: true, pending: null });
   const L = asLocale(locale), tx = serverL(locale);
-  const [sessions, content] = await Promise.all([loadTicketSessions([gate.sessionId]), loadSiteContent()]);
+  // the session as the account sees it (its token): a private ride keeps its name and its kind's form
+  const [sessions, content] = await Promise.all([loadTicketSessions([gate.sessionId], acct), loadSiteContent()]);
   const s = sessions.get(gate.sessionId);
   const names = { ...kindNames(resolvePage(experiencesSchema, content, L).dates), petromin: tx("Petromin", "بترومين") };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);

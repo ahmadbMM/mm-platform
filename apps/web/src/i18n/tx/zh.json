@@ -1171,5 +1171,10 @@
  "You can sign up at most 5 learners in all, including the ones you have already signed up.": "您总共最多可为 5 位学员报名，包括已报名的学员。",
  "You signed in with a temporary password from our team. Choose your own password to continue.": "您使用了我们团队提供的临时密码登录。请设置您自己的密码以继续。",
  "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "您账户中的姓名需要同时包含名和姓。请先在预订 App 中更新，再在此报名。",
- "Your sign-in has timed out. Please sign in again.": "登录已超时，请重新登录。"
+ "Your sign-in has timed out. Please sign in again.": "登录已超时，请重新登录。",
+ "Switch account?": "切换账户？",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "此浏览器已登录 {current}。您刚刚在预订 App 中登录了 {next}。本网站应使用哪个账户？",
+ "Switch to {name}": "切换到 {name}",
+ "Stay signed in as {name}": "继续使用 {name}",
+ "You are signed in as {who}. If this is not your account, sign out.": "您已登录为 {who}。如果这不是您的账户，请退出登录。"
 }

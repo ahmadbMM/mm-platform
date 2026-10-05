@@ -1,0 +1,8 @@
+/* The booking app's hand-back (api/account/handoff) on the account page: the choice of account
+   when another one is signed in here, and the line naming whom a hand-back signed in. */
+.ac-ho { background: #fff; border: 1px solid rgba(0, 0, 0, .1); border-radius: 18px; padding: 20px 22px; }
+.ac-ho h2 { margin-bottom: 8px; }
+.ac-ho .ac-text { margin-bottom: 16px; overflow-wrap: anywhere; }
+.ac-ho-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+.ac-ho-btns .ac-go { margin-top: 0; min-height: 44px; padding: 0 22px; }
+.ac-ho-done { max-width: 980px; margin: 0 0 24px; padding: 12px 16px; border-radius: 14px; background: rgba(7, 122, 75, .08); color: #2e352f; font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }

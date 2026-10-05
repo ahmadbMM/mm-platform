@@ -1171,5 +1171,10 @@
  "You can sign up at most 5 learners in all, including the ones you have already signed up.": "Anda boleh mendaftarkan paling banyak 5 peserta secara keseluruhan, termasuk yang telah anda daftarkan.",
  "You signed in with a temporary password from our team. Choose your own password to continue.": "Anda log masuk dengan kata laluan sementara daripada pasukan kami. Pilih kata laluan anda sendiri untuk meneruskan.",
  "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "Nama akaun anda perlu mengandungi nama pertama dan nama akhir. Kemas kini dalam aplikasi tempahan sebelum anda mendaftar di sini.",
- "Your sign-in has timed out. Please sign in again.": "Log masuk anda telah tamat masa. Sila log masuk semula."
+ "Your sign-in has timed out. Please sign in again.": "Log masuk anda telah tamat masa. Sila log masuk semula.",
+ "Switch account?": "Tukar akaun?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "Pelayar ini telah log masuk sebagai {current}. Anda baru sahaja log masuk ke aplikasi tempahan sebagai {next}. Akaun mana yang patut digunakan oleh laman ini?",
+ "Switch to {name}": "Tukar kepada {name}",
+ "Stay signed in as {name}": "Kekal log masuk sebagai {name}",
+ "You are signed in as {who}. If this is not your account, sign out.": "Anda telah log masuk sebagai {who}. Jika ini bukan akaun anda, sila log keluar."
 }
