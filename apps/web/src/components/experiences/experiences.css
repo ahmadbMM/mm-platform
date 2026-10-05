@@ -74,11 +74,12 @@ html:is([lang="ar"], [lang="ur"]) .xp-eyebrow { font-size: 13px; }
 .xs { scroll-margin-top: 70px; }
 .xs-bar { list-style: none; margin: 0 0 30px; padding: 0; display: flex; align-items: center; }
 .xs-bar li { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
-.xs-bar li:last-child { flex: none; }
+.xs-bar li:last-child { flex: 0 1 auto; }
 .xs-bar li:not(:last-child)::after { content: ""; flex: 1; min-width: 12px; height: 1px; background: rgba(26, 25, 25, .14); margin: 0 8px; }
 .xs-dot { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; background: #fff; color: #57605a; border: 1.5px solid rgba(26, 25, 25, .25); flex: none; }
 .xs-bar li.cur .xs-dot, .xs-bar li.done .xs-dot { background: #077a4b; color: #fbf9f4; border-color: #077a4b; }
-.xs-lbl { font-size: 13.5px; font-weight: 600; color: #57605a; white-space: nowrap; }
+/* A long name (Russian, French, Nepali) is cut short rather than run into the next step. */
+.xs-lbl { font-size: 13.5px; font-weight: 600; color: #57605a; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .xs-bar li.cur .xs-lbl { color: #1a1919; }
 .xs-title { font-size: clamp(26px, 3vw, 36px); letter-spacing: -1.2px; margin: 0 0 20px; line-height: 1.05; }
 .xs-title:focus { outline: none; } /* focused when its step opens (ExperienceSteps), to read on from */
@@ -128,4 +129,9 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
   .xs-logo { height: 54px; }
   .xs .xs-go { width: 100%; }
   .xs-lbl { font-size: 12.5px; }
+}
+/* A phone names only the step it is on; the others keep their names for screen readers. */
+@media (max-width: 480px) {
+  .xs-bar li { flex: 1 1 auto; } /* the step with its name takes the room it needs, the lines the rest */
+  .xs-bar li:not(.cur) .xs-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }

@@ -43,6 +43,7 @@ export type StepText = {
   /** The word before a ride's route: "Route: Obhur coast". */
   route: string;
 };
+// clubHref: the Club page, "" while staff have it switched off (its address then leads Home), so no link is offered.
 type Props = { locale: string; events: StepEvent[]; prices: { type: string; label: string; price: string }[]; bookHref: string; clubHref: string; text: StepText };
 
 export default function ExperienceSteps({ locale, events, prices, bookHref, clubHref, text: t }: Props) {
@@ -155,7 +156,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
               ))}
             </div>
           )}
-          {ev.sessions.some((s) => s.members) && <p className="xs-note">{t.membersNote} <a href={clubHref}>{t.clubLink} {arrow}</a></p>}
+          {ev.sessions.some((s) => s.members) && <p className="xs-note">{t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
         </section>
       )}
 
@@ -180,7 +181,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                 {t.codeNote && <p className="xs-prices-t">{t.codeNote}</p>}
               </div>
             )}
-            {sess.members && <p className="xs-note">{t.membersNote} <a href={clubHref}>{t.clubLink} {arrow}</a></p>}
+            {sess.members && <p className="xs-note">{t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
           </div>
           <a className="xs-go" href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
           {t.handoff && <p className="xs-handoff">{t.handoff}</p>}
