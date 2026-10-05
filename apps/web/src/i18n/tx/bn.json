@@ -1149,5 +1149,18 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "আমি দায়মুক্তিপত্রটি পড়েছি এবং এই বুকিংয়ের প্রত্যেকের পক্ষে সম্মতি দিচ্ছি",
  "Waiver needed": "দায়মুক্তিপত্র প্রয়োজন",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "আমাদের দল আপনাকে এই রাইডে বুক করেছে। এর দায়মুক্তিপত্র পড়ুন এবং এগিয়ে যেতে সম্মতি দিন।",
- "Agree and continue": "সম্মতি দিন ও এগিয়ে যান"
+ "Agree and continue": "সম্মতি দিন ও এগিয়ে যান",
+ "Add-ons": "অ্যাড-অন",
+ "Choose a password different from the temporary one.": "অস্থায়ী পাসওয়ার্ড থেকে আলাদা একটি পাসওয়ার্ড বেছে নিন।",
+ "Choose your own password": "নিজের পাসওয়ার্ড বেছে নিন",
+ "Confirm new password": "নতুন পাসওয়ার্ড নিশ্চিত করুন",
+ "New password": "নতুন পাসওয়ার্ড",
+ "Palestine": "ফিলিস্তিন",
+ "Save password": "পাসওয়ার্ড সংরক্ষণ করুন",
+ "Saving…": "সংরক্ষণ করা হচ্ছে…",
+ "This ride is over. The live map is no longer updated.": "এই রাইডটি শেষ হয়েছে। লাইভ ম্যাপ আর আপডেট হয় না।",
+ "You can sign up at most 5 learners in all, including the ones you have already signed up.": "আপনি সব মিলিয়ে সর্বোচ্চ 5 জন অংশগ্রহণকারীর জন্য সাইন আপ করতে পারবেন, আগে সাইন আপ করা অংশগ্রহণকারীরাসহ।",
+ "You signed in with a temporary password from our team. Choose your own password to continue.": "আপনি আমাদের টিমের দেওয়া একটি অস্থায়ী পাসওয়ার্ড দিয়ে লগ ইন করেছেন। এগিয়ে যেতে নিজের পাসওয়ার্ড বেছে নিন।",
+ "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "আপনার অ্যাকাউন্টের নামে নামের প্রথম ও শেষ অংশ দুটোই থাকতে হবে। এখানে সাইন আপ করার আগে বুকিং অ্যাপে নামটি হালনাগাদ করুন।",
+ "Your sign-in has timed out. Please sign in again.": "আপনার সাইন ইনের সময় শেষ হয়ে গেছে। অনুগ্রহ করে আবার সাইন ইন করুন।"
 }

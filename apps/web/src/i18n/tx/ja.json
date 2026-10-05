@@ -1149,5 +1149,18 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "免責同意書を読み、この予約の参加者全員を代表して同意します",
  "Waiver needed": "免責同意書への同意が必要です",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "当チームがこのライドにあなたを予約しました。免責同意書をお読みのうえ、同意して先へお進みください。",
- "Agree and continue": "同意して続ける"
+ "Agree and continue": "同意して続ける",
+ "Add-ons": "オプション",
+ "Choose a password different from the temporary one.": "仮パスワードとは異なるパスワードを設定してください。",
+ "Choose your own password": "ご自身のパスワードを設定",
+ "Confirm new password": "新しいパスワード（確認）",
+ "New password": "新しいパスワード",
+ "Palestine": "パレスチナ",
+ "Save password": "パスワードを保存",
+ "Saving…": "保存中…",
+ "This ride is over. The live map is no longer updated.": "このライドは終了しました。ライブマップは更新されなくなりました。",
+ "You can sign up at most 5 learners in all, including the ones you have already signed up.": "お申し込みいただける受講者は、すでにお申し込み済みの方を含めて合計5名までです。",
+ "You signed in with a temporary password from our team. Choose your own password to continue.": "当チームが発行した仮パスワードでログインしました。続行するには、ご自身のパスワードを設定してください。",
+ "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "アカウントの氏名には姓と名の両方が必要です。ここでお申し込みいただく前に、予約アプリで更新してください。",
+ "Your sign-in has timed out. Please sign in again.": "ログインの有効期限が切れました。もう一度ログインしてください。"
 }

@@ -1149,5 +1149,18 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "Я прочитал(а) отказ от ответственности и соглашаюсь с ним от имени всех, кто указан в этом бронировании",
  "Waiver needed": "Нужен отказ от ответственности",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Наша команда записала вас на этот заезд. Прочитайте его отказ от ответственности и примите его, чтобы продолжить.",
- "Agree and continue": "Принять и продолжить"
+ "Agree and continue": "Принять и продолжить",
+ "Add-ons": "Дополнения",
+ "Choose a password different from the temporary one.": "Выберите пароль, отличный от временного.",
+ "Choose your own password": "Придумайте свой пароль",
+ "Confirm new password": "Повторите новый пароль",
+ "New password": "Новый пароль",
+ "Palestine": "Палестина",
+ "Save password": "Сохранить пароль",
+ "Saving…": "Сохранение…",
+ "This ride is over. The live map is no longer updated.": "Этот заезд завершён. Карта в реальном времени больше не обновляется.",
+ "You can sign up at most 5 learners in all, including the ones you have already signed up.": "Всего можно записать не более 5 участников, включая уже записанных.",
+ "You signed in with a temporary password from our team. Choose your own password to continue.": "Вы вошли с временным паролем от нашей команды. Чтобы продолжить, придумайте свой пароль.",
+ "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "В имени аккаунта должны быть имя и фамилия. Исправьте его в приложении для бронирования, прежде чем записываться здесь.",
+ "Your sign-in has timed out. Please sign in again.": "Время входа истекло. Войдите ещё раз."
 }

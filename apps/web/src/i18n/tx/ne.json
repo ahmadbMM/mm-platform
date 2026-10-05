@@ -1149,5 +1149,18 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "मैले छुट-पत्र पढें र यो बुकिङका सबैको तर्फबाट सहमत छु",
  "Waiver needed": "छुट-पत्र आवश्यक छ",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "हाम्रो टोलीले तपाईंलाई यो राइडमा बुक गरेको छ। यसको छुट-पत्र पढ्नुहोस् र जारी राख्न सहमत हुनुहोस्।",
- "Agree and continue": "सहमत हुनुहोस् र जारी राख्नुहोस्"
+ "Agree and continue": "सहमत हुनुहोस् र जारी राख्नुहोस्",
+ "Add-ons": "एड-अनहरू",
+ "Choose a password different from the temporary one.": "अस्थायी पासवर्डभन्दा फरक पासवर्ड छान्नुहोस्।",
+ "Choose your own password": "आफ्नै पासवर्ड छान्नुहोस्",
+ "Confirm new password": "नयाँ पासवर्ड पुष्टि गर्नुहोस्",
+ "New password": "नयाँ पासवर्ड",
+ "Palestine": "प्यालेस्टाइन",
+ "Save password": "पासवर्ड सेभ गर्नुहोस्",
+ "Saving…": "सेभ हुँदैछ…",
+ "This ride is over. The live map is no longer updated.": "यो राइड सकियो। लाइभ नक्सा अब अपडेट हुँदैन।",
+ "You can sign up at most 5 learners in all, including the ones you have already signed up.": "तपाईं जम्मा बढीमा 5 जना सहभागीको साइन अप गर्न सक्नुहुन्छ, पहिले नै साइन अप गरिएकाहरू समेत।",
+ "You signed in with a temporary password from our team. Choose your own password to continue.": "तपाईंले हाम्रो टोलीबाट पाएको अस्थायी पासवर्डबाट लग इन गर्नुभयो। जारी राख्न आफ्नै पासवर्ड छान्नुहोस्।",
+ "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "तपाईंको खाताको नाममा नाम र थर दुवै हुनुपर्छ। यहाँ साइन अप गर्नुअघि बुकिङ एपमा यसलाई अद्यावधिक गर्नुहोस्।",
+ "Your sign-in has timed out. Please sign in again.": "तपाईंको साइन इनको समय सकियो। कृपया फेरि साइन इन गर्नुहोस्।"
 }

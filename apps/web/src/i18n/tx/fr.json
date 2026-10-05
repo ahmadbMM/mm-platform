@@ -1149,5 +1149,18 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "J'ai lu la décharge et je l'accepte au nom de toutes les personnes de cette réservation",
  "Waiver needed": "Décharge requise",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Notre équipe vous a inscrit à cette sortie. Lisez sa décharge et acceptez-la pour continuer.",
- "Agree and continue": "Accepter et continuer"
+ "Agree and continue": "Accepter et continuer",
+ "Add-ons": "Extras",
+ "Choose a password different from the temporary one.": "Choisissez un mot de passe différent du mot de passe temporaire.",
+ "Choose your own password": "Choisissez votre propre mot de passe",
+ "Confirm new password": "Confirmer le nouveau mot de passe",
+ "New password": "Nouveau mot de passe",
+ "Palestine": "Palestine",
+ "Save password": "Enregistrer le mot de passe",
+ "Saving…": "Enregistrement en cours…",
+ "This ride is over. The live map is no longer updated.": "Cette sortie est terminée. La carte en direct n’est plus mise à jour.",
+ "You can sign up at most 5 learners in all, including the ones you have already signed up.": "Vous pouvez inscrire au maximum 5 personnes en tout, y compris celles déjà inscrites.",
+ "You signed in with a temporary password from our team. Choose your own password to continue.": "Vous utilisez un mot de passe temporaire fourni par notre équipe. Choisissez votre propre mot de passe pour continuer.",
+ "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "Le nom de votre compte doit comporter un prénom et un nom. Mettez-le à jour dans l’appli de réservation avant de vous inscrire ici.",
+ "Your sign-in has timed out. Please sign in again.": "Votre connexion a expiré. Veuillez vous reconnecter."
 }
