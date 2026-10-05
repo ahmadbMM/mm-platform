@@ -1157,5 +1157,6 @@
  "Shorten your bike's name to 80 characters.": "Сократите название велосипеда до 80 символов.",
  "Shorten your note to 600 characters.": "Сократите комментарий до 600 символов.",
  "That code is for bike rentals only.": "Этот код действует только на прокат велосипедов.",
- "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Велосипеды категории «{category}» в каталоге Micromobility: модели, фото и характеристики."
+ "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Велосипеды категории «{category}» в каталоге Micromobility: модели, фото и характеристики.",
+ "Show the map": "Показать карту"
 }

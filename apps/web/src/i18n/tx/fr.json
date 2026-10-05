@@ -1157,5 +1157,6 @@
  "Shorten your bike's name to 80 characters.": "Raccourcissez le nom de votre vélo à 80 caractères.",
  "Shorten your note to 600 characters.": "Raccourcissez votre remarque à 600 caractères.",
  "That code is for bike rentals only.": "Ce code est valable uniquement pour la location de vélos.",
- "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Vélos de la catégorie {category} dans le catalogue Micromobility : modèles, photos et caractéristiques."
+ "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Vélos de la catégorie {category} dans le catalogue Micromobility : modèles, photos et caractéristiques.",
+ "Show the map": "Afficher la carte"
 }

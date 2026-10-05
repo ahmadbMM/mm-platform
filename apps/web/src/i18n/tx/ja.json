@@ -1157,5 +1157,6 @@
  "Shorten your bike's name to 80 characters.": "自転車の名前を80文字以内にしてください。",
  "Shorten your note to 600 characters.": "備考を600文字以内にしてください。",
  "That code is for bike rentals only.": "このコードは自転車レンタル専用です。",
- "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Micromobilityカタログの{category}カテゴリーの自転車：モデル、写真、仕様。"
+ "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Micromobilityカタログの{category}カテゴリーの自転車：モデル、写真、仕様。",
+ "Show the map": "地図を表示"
 }

@@ -72,6 +72,11 @@ html:is([lang="ar"], [lang="ur"]) .ab-contact dt { letter-spacing: 0; font-size:
 .ab .ab-wa { background: #1a7f3c; color: #fff; }
 .ab .ab-line { background: #fff; color: #1a1919; border: 1px solid rgba(0, 0, 0, .2); }
 .ab-map { width: 100%; min-height: 460px; border: 0; border-radius: 34px; filter: grayscale(.3) contrast(1.05); background: #dfe5df; }
+/* Until the visitor asks for the map (MapEmbed): the same box, and a button in its middle. */
+.ab-map-off { display: grid; place-items: center; filter: none; }
+.ab-map-off button { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .2); background: #fff; color: #1a1919; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
+.ab-map-off button:hover { background: #f3f1ea; }
+.ab-map-off button:focus-visible { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
 
 .ab-company { padding: 0 7vw 60px; }
 .ab-company h2 { font-size: clamp(22px, 2.4vw, 30px); letter-spacing: -1px; margin: 0 0 14px; }
