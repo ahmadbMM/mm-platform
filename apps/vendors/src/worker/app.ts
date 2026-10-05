@@ -4,6 +4,7 @@
 //   POST /api/login       {login, password} -> vendor_login; sets the mm_vendor cookie
 //   POST /api/logout      ends the session in the database (vendor_logout), then clears the cookie
 //   POST /api/rpc/<name>  one of RPCS below, with p_uid / p_token taken from the cookie
+//                         (vendor_me without a session answers {signedIn: false}, not a 401)
 //
 // Every POST must come from this origin's own page, as JSON, and small. Sign-in tries are metered
 // per connection by Cloudflare's rate limiter (LOGIN_LIMIT, wrangler.jsonc) on top of the
@@ -184,7 +185,9 @@ async function logout(req: Request, env: Env): Promise<Response> {
 async function rpc(req: Request, env: Env, name: string): Promise<Response> {
   if (!RPCS.has(name)) return fail("NOT_FOUND", 404);
   const s = sessionOf(req);
-  if (!s) return fail("BAD_TOKEN", 401, clearCookie());
+  // Without a session, "who am I" is answered, not refused: the page asks it on every load, and the
+  // 401 was an error in the browser's console for everyone signed out. Any other call is refused.
+  if (!s) return name === "vendor_me" ? json({ signedIn: false }, 200, clearCookie()) : fail("BAD_TOKEN", 401, clearCookie());
   const read = await readBody(req, RPC_BODY_LIMIT);
   if ("error" in read) return read.error;
   // Who is asking comes from the cookie only, whatever the body says.
