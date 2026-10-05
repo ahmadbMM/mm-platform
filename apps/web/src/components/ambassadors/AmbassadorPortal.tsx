@@ -49,6 +49,20 @@ export default function AmbassadorPortal(p: Props) {
   // visitor's button (not the refresh after a reward is asked for).
   const portalBox = useRef<HTMLDivElement>(null);
   const codeBox = useRef<HTMLInputElement>(null);
+  // "Copied" only once the code is really on the clipboard; where the browser will not copy (an
+  // in-app browser, a page not on https), the code is selected for the visitor to copy themselves.
+  const codeText = useRef<HTMLElement>(null);
+  async function copyCode(v: string) {
+    try {
+      if (!navigator.clipboard) throw new Error("no clipboard");
+      await navigator.clipboard.writeText(v);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      const el = codeText.current, sel = window.getSelection();
+      if (el && sel) { const r = document.createRange(); r.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(r); }
+    }
+  }
   const follow = useRef(false);
   useEffect(() => {
     if (!follow.current) return;
@@ -110,8 +124,8 @@ export default function AmbassadorPortal(p: Props) {
         </div>
         <strong className="amb-card-name">{data.first_name}</strong>
         <div className="amb-card-code">
-          <strong className="mm-lat">{data.code}</strong>
-          <button type="button" onClick={() => { navigator.clipboard?.writeText(data.code || "").catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 2000); }}>{copied ? t.copied : t.copy}</button>
+          <strong ref={codeText} className="mm-lat">{data.code}</strong>
+          <button type="button" onClick={() => copyCode(data.code || "")}>{copied ? t.copied : t.copy}</button>
         </div>
         <div className="amb-card-nums">
           <div><span>{t.points}</span><strong>{N(balance)}</strong></div>
