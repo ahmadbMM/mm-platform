@@ -93,9 +93,12 @@ export function articleData(p: { title: string; excerpt: string; date: string; c
   };
 }
 
-/** One model of the bike catalogue (lib/catalog.ts). No offers: the catalogue states what a ride
- *  costs, not a sale price, and the store sells on its own site. */
-export function productData(model: CatalogModel, locale: string, x: { path: string; image: string; category: string; description: string }): object {
+/** One model of the bike catalogue (lib/catalog.ts), offered as what a ride on it costs: a rental
+ *  (LeaseOut), not a sale - the store sells on its own site. Search engines take a Product only with
+ *  an offer (or reviews, which the catalogue has none of), so a model with no ride price gets none:
+ *  null. */
+export function productData(model: CatalogModel, locale: string, x: { path: string; image: string; category: string; description: string; price: number | null; bookUrl: string }): object | null {
+  if (x.price === null || !(x.price > 0)) return null;
   return {
     "@context": "https://schema.org",
     "@type": "Product",
@@ -106,6 +109,10 @@ export function productData(model: CatalogModel, locale: string, x: { path: stri
     category: S(x.category) || undefined,
     url: langPath(SITE_URL + x.path, locale),
     manufacturer: S(model.brand) ? { "@type": "Organization", name: S(model.brand) } : undefined,
+    offers: {
+      "@type": "Offer", price: x.price, priceCurrency: "SAR", availability: "https://schema.org/InStock",
+      businessFunction: "http://purl.org/goodrelations/v1#LeaseOut", url: abs(x.bookUrl),
+    },
   };
 }
 
