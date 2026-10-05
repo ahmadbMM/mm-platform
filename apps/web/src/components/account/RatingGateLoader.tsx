@@ -14,7 +14,9 @@ import type { RatingForm as Form } from "@/lib/rating";
 // rider cannot skip. Once it is rated, the next waiting ride (or nothing) is asked for at once.
 // It waits for any waiver a desk-added booking still needs: WaiverGateLoader mounts it once none does.
 // The ten quiet minutes are the signed-in account's: every sign-in and sign-out forgets them (./quiet.ts).
-type Pending = { entryId: string; name: string; when: string; form: Form; noBike: boolean };
+// `restaurant` (2026-10-05): where a Saturday ride's breakfast was, by name in the page's language; an
+// answer from before it reads as none.
+type Pending = { entryId: string; name: string; when: string; form: Form; noBike: boolean; restaurant?: string | null };
 const KEY = RATE_QUIET;
 const QUIET_MS = 10 * 60_000;
 

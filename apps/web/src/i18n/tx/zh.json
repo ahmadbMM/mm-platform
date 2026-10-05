@@ -1208,5 +1208,7 @@
  "Petromin’s Wednesday evening on the circuit. Collect your bike from {collect}; circuit prices; bikes go first come, first served.": "Petromin 周三晚间赛道骑行。{collect} 起取车；按赛道价格收费；车辆先到先得。",
  "A triathlon swim session at the pool, {start} to {end}. No bike needed. Free; our team confirms the list.": "泳池铁人三项游泳训练，{start} 至 {end}。无需自行车。免费；名单由我们的团队确认。",
  "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.": "T100 铁人三项备赛，与沙特铁人三项联合会合作，{start} 至 {end}。面向所有人；免费；名单由我们的团队确认。",
- "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "{gather} 集合，{start} 起跑。预订时请选择 3 公里或 5 公里。免费；共 80 个名额，满额后开放候补。"
+ "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "{gather} 集合，{start} 起跑。预订时请选择 3 公里或 5 公里。免费；共 80 个名额，满额后开放候补。",
+ "After": "之后",
+ "Breakfast at {0}": "在 {0} 享用早餐"
 }

@@ -1208,5 +1208,7 @@
  "Petromin’s Wednesday evening on the circuit. Collect your bike from {collect}; circuit prices; bikes go first come, first served.": "সার্কিটে Petromin-এর বুধবারের সন্ধ্যা। {collect} থেকে আপনার সাইকেল নিন; সার্কিটের মূল্য; সাইকেল আগে এলে আগে পাবেন।",
  "A triathlon swim session at the pool, {start} to {end}. No bike needed. Free; our team confirms the list.": "পুলে ট্রায়াথলন সাঁতার সেশন, {start} থেকে {end} পর্যন্ত। সাইকেল লাগবে না। বিনামূল্যে; আমাদের টিম তালিকা অনুমোদন করে।",
  "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.": "T100 ট্রায়াথলন প্রেপ, সৌদি ট্রায়াথলন ফেডারেশনের অংশীদারিত্বে, {start} থেকে {end} পর্যন্ত। সবার জন্য খোলা; বিনামূল্যে; আমাদের টিম তালিকা অনুমোদন করে।",
- "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "{gather}-এ দেখা হবে; দৌড় শুরু হবে {start}-এ। বুকিংয়ের সময় 3 কিমি বা 5 কিমি বেছে নিন। বিনামূল্যে; 80টি জায়গা, তারপর ওয়েটিং লিস্ট।"
+ "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "{gather}-এ দেখা হবে; দৌড় শুরু হবে {start}-এ। বুকিংয়ের সময় 3 কিমি বা 5 কিমি বেছে নিন। বিনামূল্যে; 80টি জায়গা, তারপর ওয়েটিং লিস্ট।",
+ "After": "এরপর",
+ "Breakfast at {0}": "{0}-এ নাশতা"
 }

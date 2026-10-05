@@ -29,6 +29,8 @@ reviewer per language, under the rules below.
   speaks use its wording word for word. Change a text there in every language at once.
   The one line under its breakfast heading ("Your breakfast answers may be shared with the
   restaurant, without your name.") is the site's own, not the booking app's: it is in `tx/`.
+  Its heading with the restaurant's name, "Breakfast at {0}" (`bfAt`), is also Experiences' text
+  in `tx/`: the two say the same in every language, and a test checks that they do.
 - **The store's street in Devanagari and Bengali script.** "Thu Al-Nurayn" stays in Latin
   letters in Hindi, Nepali and Bengali, because "थू" / "থু" is the spitting sound there. Urdu
   uses the Arabic original (ذو النورین).

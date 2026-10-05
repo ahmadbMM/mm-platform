@@ -12,7 +12,7 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
-import { dateText, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
+import { dateText, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
@@ -132,6 +132,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
       route: routeNameOf(routes, s.routeSlug),
       routeKm: kmOf(s),
+      // the Saturday ride's breakfast stop, by its Arabic name on the Arabic page when it has one
+      breakfast: infoBreakfast(s, locale),
       left: s.left ?? null,
       meta: [collect, from].filter((x): x is string => !!x),
       opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,
@@ -159,12 +161,13 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     available: tx("Available", "متاح"), waitlisted: waitWord, left1, leftN,
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
     everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),
+    breakfastAt: tx("Breakfast at {0}", "الإفطار في {0}"),
     info: {
       about: tx("About this event", "عن هذه الفعالية"), details: tx("Details", "التفاصيل"),
       bookEvent: tx("Book this event", "احجز هذه الفعالية"), chooseDate: tx("Choose this date", "اختر هذا الموعد"),
       who: tx("Who", "لمن"), price: tx("Price", "السعر"), when: tx("When", "الموعد"), next: tx("Next date", "الموعد القادم"),
       where: tx("Where", "المكان"), map: tx("Map", "الخريطة"), distance: tx("Distance", "المسافة"), places: tx("Places", "الأماكن"),
-      whoMembers: whoWords.members, close: tx("Close", "إغلاق"),
+      after: tx("After", "بعدها"), whoMembers: whoWords.members, close: tx("Close", "إغلاق"),
     },
   };
 

@@ -8,7 +8,7 @@ import { kindNames, sessionName } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
-import { fmtDayDate } from "@/lib/tickets";
+import { breakfastFor, fmtDayDate } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
 import { riyadhClock } from "@/lib/workshop-days";
 
@@ -16,7 +16,9 @@ import { riyadhClock } from "@/lib/workshop-days";
 // else (the booking app's _pendingRatingId), for the pop-up every page shows (RatingGateLoader,
 // the owner 2026-10-03: "open whenever a customer opens the website or signs in"). Signed out it
 // answers from the cookie alone, without asking the database; signed in it reads the rider's own
-// bookings once (my_bookings) and, when one waits, that ride's session for its kind and its name.
+// bookings once (my_bookings) and, when one waits, that ride's session for its kind and its name,
+// and on the Saturday ride the restaurant its breakfast was at, which the form's breakfast box names
+// (the owner, 2026-10-05; the Arabic name on the Arabic page when it has one).
 // A connection asks 30 times a minute at most (lib/rate-limit.ts; past that, 429 and the pop-up waits
 // for the next page).
 const json = (body: unknown, status = 200) =>
@@ -44,6 +46,7 @@ export async function GET(req: Request) {
       when: fmtDayDate(gate.date, locale),
       form: formOf(s?.kind),
       noBike: gate.ownBike || (s ? !s.bikes : false),
+      restaurant: breakfastFor(s, L)?.name ?? null,
     },
   });
 }

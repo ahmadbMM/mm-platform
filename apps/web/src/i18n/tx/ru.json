@@ -1208,5 +1208,7 @@
  "Petromin’s Wednesday evening on the circuit. Collect your bike from {collect}; circuit prices; bikes go first come, first served.": "Вечер среды от Petromin на трассе. Велосипед можно забрать с {collect}; цены трассы; велосипеды выдаются в порядке живой очереди.",
  "A triathlon swim session at the pool, {start} to {end}. No bike needed. Free; our team confirms the list.": "Тренировка по плаванию для триатлона в бассейне, с {start} до {end}. Велосипед не нужен. Бесплатно; список утверждает наша команда.",
  "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.": "Подготовка к триатлону T100 в партнёрстве с Федерацией триатлона Саудовской Аравии, с {start} до {end}. Открыто для всех; бесплатно; список утверждает наша команда.",
- "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "Сбор в {gather}; забег стартует в {start}. При бронировании выберите 3 км или 5 км. Бесплатно; 80 мест, затем лист ожидания."
+ "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "Сбор в {gather}; забег стартует в {start}. При бронировании выберите 3 км или 5 км. Бесплатно; 80 мест, затем лист ожидания.",
+ "After": "Затем",
+ "Breakfast at {0}": "Завтрак в {0}"
 }

@@ -15,15 +15,21 @@ import { ratingWords, type RatingWords } from "./RatingForm.words";
 // Under the breakfast heading, one quiet line says those answers may reach the restaurant without
 // the rider's name (staff share them with the vendor, vendor_shared_ratings_mine): a site text, so
 // it is translated through src/i18n/tx like any other.
+// The breakfast heading names the restaurant once the ride's session has one (the owner, 2026-10-05:
+// "add the restaurant's name ... when asking the customers to rate"): "Breakfast at {name}".
 type Props = {
   entryId: string; form: Form; noBike: boolean;
+  /** The restaurant the ride's breakfast was at, by name in the page's language (lib/tickets.ts
+   *  breakfastFor: the Arabic name on the Arabic page when it has one); null or left out, the
+   *  heading stays "Breakfast". */
+  restaurant?: string | null;
   /** Called once the rating has landed. */
   onRated: (t: RatingWords) => void;
   /** Under the send button: the gate's sign-out. */
   footer?: ReactNode;
 };
 
-export default function RatingForm({ entryId, form, noBike, onRated, footer }: Props) {
+export default function RatingForm({ entryId, form, noBike, restaurant, onRated, footer }: Props) {
   const t = ratingWords(useTxLocale());
   const tx = useL();
   const [s, setS] = useState<Record<string, number>>({});
@@ -39,6 +45,14 @@ export default function RatingForm({ entryId, form, noBike, onRated, footer }: P
   const id = (k: string) => `rg${inst}-${entryId}-${k}`;
   const opts = { noBike, skipBf };
   const tree = questionTree(form, opts);
+  // A question's heading. The breakfast box's names the restaurant, the name where the language puts
+  // it and in its own direction (a <bdi>): a name in English reads right on an Arabic page, and an
+  // Arabic one on any other.
+  const label = (k: string): ReactNode => {
+    if (k !== "breakfast" || !restaurant) return t.q[k] ?? k;
+    const [a, b = ""] = t.bfAt.split("{0}");
+    return <>{a}<bdi>{restaurant}</bdi>{b}</>;
+  };
 
   const pick = (k: string, v: number) => {
     setS((cur) => ({ ...cur, [k]: v }));
@@ -96,7 +110,7 @@ export default function RatingForm({ entryId, form, noBike, onRated, footer }: P
     const v = s[k] || 0, e = err[k];
     return (
       <div key={k} id={id(k)} className={`rg-q${sub ? " rg-sub" : ""}${e ? " err" : ""}`}>
-        <div className="rg-lbl" id={`${id(k)}-l`}>{t.q[k] ?? k}</div>
+        <div className="rg-lbl" id={`${id(k)}-l`}>{label(k)}</div>
         {k === "breakfast" && !sub && (
           <p className="rg-share">{tx("Your breakfast answers may be shared with the restaurant, without your name.", "قد نشارك إجاباتك عن الإفطار مع المطعم، دون ذكر اسمك.")}</p>
         )}
@@ -128,7 +142,7 @@ export default function RatingForm({ entryId, form, noBike, onRated, footer }: P
               {t.skipBf}
             </button>
           ) : null;
-          if (!q) return skip ? <div key={k} className="rg-grp"><div className="rg-lbl">{t.q[k]}</div>{skip}</div> : null;
+          if (!q) return skip ? <div key={k} className="rg-grp"><div className="rg-lbl">{label(k)}</div>{skip}</div> : null;
           return <div key={k} className="rg-grp">{question(k, false)}{q[1].map((x) => question(x, true))}{skip}</div>;
         })}
       </div>

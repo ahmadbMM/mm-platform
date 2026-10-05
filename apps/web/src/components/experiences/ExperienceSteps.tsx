@@ -14,6 +14,8 @@ import { infoShown, membersOnlyEvent } from "@/lib/event-info";
 // as the booking app's picker has them): a link of its own beside the card, never inside it, that
 // opens one dialog saying what the event or the date is, with the date's facts. A members-only card
 // or date shows its link to community members alone (lib/event-info.ts).
+// A Saturday ride's date names its breakfast stop once staff set one (the owner, 2026-10-05): a line
+// on its card, the last of its Details, and its summary say "Breakfast at {name}".
 export type StepSession = {
   id: string; kind: string; day: string; name: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
@@ -31,6 +33,9 @@ export type StepSession = {
   event: boolean; description: string | null; seatPrice: string | null; seats: string | null;
   /** The route the ride follows, named after the Routes page's list; null when none. */
   route: string | null;
+  /** The Saturday ride's breakfast stop by name, in the page's language (lib/event-info.ts
+   *  infoBreakfast); null on any other ride or one with no stop yet. */
+  breakfast: string | null;
   /** Not open to book yet (the booking window): the words for when it opens; null when it may be booked. */
   opens: string | null;
   /** What its Details say, every word ready in the page's language. */
@@ -65,10 +70,12 @@ export type StepText = {
   everyone: string; perSeat: string; seats: string;
   /** The word before a ride's route: "Route: Obhur coast". */
   route: string;
-  /** The About and Details links, and their dialog's words. */
+  /** "Breakfast at {0}", {0} the stop's name (StepSession.breakfast). */
+  breakfastAt: string;
+  /** The About and Details links, and their dialog's words; `after` heads the breakfast stop, the last fact. */
   info: {
     about: string; details: string; bookEvent: string; chooseDate: string; who: string; price: string; when: string; next: string;
-    where: string; map: string; distance: string; places: string; whoMembers: string; close: string;
+    where: string; map: string; distance: string; places: string; after: string; whoMembers: string; close: string;
   };
 };
 // clubHref: the Club page, "" while staff have it switched off (its address then leads Home), so no link is offered.
@@ -127,6 +134,12 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
       {s.full && <em className="warn">{t.full}</em>}
     </span>
   );
+  // "Breakfast at {name}", the name where the language puts it and in its own direction (a <bdi>): a
+  // stop named in English reads right on an Arabic page, and an Arabic name on any other.
+  const breakfastAt = (name: string) => {
+    const [a, b = ""] = t.breakfastAt.split("{0}");
+    return <>{a}<bdi>{name}</bdi>{b}</>;
+  };
   // An event's seat price and seats, on its card and in the summary.
   const facts = (s: StepSession) => (s.event && (s.seatPrice || s.seats) ? (
     <span className="sc-facts">
@@ -145,6 +158,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
     out.push({ k: t.info.where, v: <>{i.place}{i.map && <> · <a href={i.map} target="_blank" rel="noopener">{t.info.map}</a></>}</> });
     if (i.distance) out.push({ k: t.info.distance, v: <bdi>{i.distance}</bdi> });
     if (i.places) out.push({ k: t.info.places, v: i.places });
+    if (s.breakfast) out.push({ k: t.info.after, v: breakfastAt(s.breakfast) });
     return out;
   };
   // An event's About lists its next date's facts; the community rides' card, which stands for several
@@ -246,6 +260,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                       {s.when && <span className="sc-time">{when(s)}</span>}
                       {s.meta && s.meta.length > 0 && <span className="sc-meta">{s.meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}
                       {s.route && <span className="sc-time">{t.route}: {s.route}</span>}
+                      {s.breakfast && <span className="sc-meta">{breakfastAt(s.breakfast)}</span>}
                       {s.event && s.description && <span className="sc-desc">{s.description}</span>}
                       {facts(s)}
                     </button>
@@ -266,7 +281,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           <div className="xs-summary">
             <div className="xs-sum-head">
               {ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
-              <div><strong>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}</span></div>
+              <div><strong>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span></div>
             </div>
             {tags(sess)}
             {sess.event && sess.description && <p className="xs-rules">{sess.description}</p>}

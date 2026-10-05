@@ -1,7 +1,10 @@
+import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WALLET_ORIGIN, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, relayStatus, unratedRides } from "../rating";
 import { ticketSession } from "../tickets";
+import { resetSessionColumns } from "../rides";
 import { POST as rate } from "../../app/api/account/rate/route";
+import { GET as pendingGet } from "../../app/api/account/pending-rating/route";
 import { POST as wallet } from "../../app/api/google-wallet/route";
 import { resetSiteContent } from "../site";
 import { createElement, type FC, type ReactElement, type ReactNode } from "react";
@@ -217,5 +220,67 @@ describe("the breakfast box's sharing line", () => {
     expect(draw("social", "ar")).toContain("قد نشارك إجاباتك عن الإفطار مع المطعم، دون ذكر اسمك.");
     expect(draw("social", "de", de)).toContain((de as Record<string, string>)[SHARE]);
     expect((de as Record<string, string>)[SHARE]).toBeTruthy();
+  });
+});
+
+describe("the breakfast box names the restaurant (2026-10-05)", () => {
+  const draw = (restaurant: string | null | undefined, locale = "en", form: "social" | "rental" = "social") =>
+    renderToStaticMarkup(createElement(Tx, { locale, dict: null }, createElement(RatingForm, { entryId: "q1", form, noBike: false, restaurant, onRated: () => {} })));
+  const heading = (html: string) => /id="rg[^"]*-q1-breakfast-l">(.*?)<\/div>/.exec(html)?.[1];
+
+  it("says where the ride's breakfast was, the name in its own direction and as text", () => {
+    expect(heading(draw("Bean Box"))).toBe("Breakfast at <bdi>Bean Box</bdi>");
+    expect(heading(draw("<b>Cafe & Co</b>"))).toBe("Breakfast at <bdi>&lt;b&gt;Cafe &amp; Co&lt;/b&gt;</bdi>");
+    // the question keeps its own sub-questions and sharing line
+    expect(draw("Bean Box")).toMatch(/<\/bdi><\/div><p class="rg-share">/);
+  });
+  it("stays Breakfast without one", () => {
+    for (const r of [undefined, null, ""]) expect(heading(draw(r))).toBe("Breakfast");
+  });
+  it("speaks the page's language, the name where the language puts it", () => {
+    expect(heading(draw("بين بوكس", "ar"))).toBe("الإفطار في <bdi>بين بوكس</bdi>");
+    expect(heading(draw("Bean Box", "ar"))).toBe("الإفطار في <bdi>Bean Box</bdi>");
+    expect(heading(draw("Bean Box", "ne"))).toBe("<bdi>Bean Box</bdi> मा बिहानको खाजा");
+    expect(heading(draw("Bean Box", "bn"))).toBe("<bdi>Bean Box</bdi>-এ নাশতা");
+    expect(heading(draw("Bean Box", "ja"))).toBe("<bdi>Bean Box</bdi>での朝食");
+  });
+  it("is not on a rental's form", () => {
+    expect(draw("Bean Box", "en", "rental")).not.toContain("Bean Box");
+  });
+  it("is the booking app's wording in its ten languages, and Experiences' own in every language", () => {
+    const APP = { en: "Breakfast at {0}", ar: "الإفطار في {0}", fr: "Petit-déjeuner chez {0}", es: "Desayuno en {0}", pt: "Café da manhã em {0}",
+      ur: "ناشتہ {0} میں", hi: "नाश्ता {0} में", tl: "Almusal sa {0}", ne: "{0} मा बिहानको खाजा", bn: "{0}-এ নাশতা" };
+    for (const [l, s] of Object.entries(APP)) expect(RATING_WORDS[l as keyof typeof RATING_WORDS].bfAt, l).toBe(s);
+    for (const [l, w] of Object.entries(RATING_WORDS)) {
+      expect(w.bfAt.split("{0}"), `${l}: one {0}`).toHaveLength(2);
+      if (l === "en" || l === "ar") continue; // written beside the English in the page (tx("Breakfast at {0}", "الإفطار في {0}"))
+      const dict = JSON.parse(readFileSync(new URL(`../../i18n/tx/${l}.json`, import.meta.url), "utf8")) as Record<string, string>;
+      expect(dict["Breakfast at {0}"], l).toBe(w.bfAt);
+    }
+  });
+});
+
+describe("api/account/pending-rating", () => {
+  beforeEach(() => { resetSiteContent(); resetSessionColumns(); vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+  const get = (locale: string) => pendingGet(new Request(`https://micromobility.sa/api/account/pending-rating?locale=${locale}`, { headers: HEADERS }));
+  // a Saturday ride on the day the forced rating went live, done and not rated; its session as the account reads it (list_sessions)
+  const done = { id: "q1", session_id: "s1", session_date: "2026-10-03", status: "done", queue_num: 1, type_preference: "Road", rating_exp: null, rating_bike: null, rating_detail: null };
+  const sat = { id: "s1", session_date: "2026-10-03", event_kind: "community", ride_kind: "saturday", needs_approval: true, hide_queue: false, bike_slots: '{"_time":"05:45 - 06:15"}',
+    meet_url: null, paid_ride: null, open_to_all: null, status: "closed", title: null, location: null, breakfast_name: "Bean Box", breakfast_url: null, breakfast_name_ar: "بين بوكس", breakfast_offer_en: null, breakfast_offer_ar: null };
+  const db = (session: Record<string, unknown>) => vi.fn(async (url: string) =>
+    url.includes("/rpc/my_bookings") ? json([done]) : url.includes("/rpc/list_sessions?") ? json([session]) : json([]));
+
+  it("hands the form the restaurant a Saturday ride's breakfast was at, by its Arabic name on the Arabic page (2026-10-05)", async () => {
+    vi.stubGlobal("fetch", db(sat));
+    expect((await (await get("en")).json()).pending).toMatchObject({ entryId: "q1", form: "social", restaurant: "Bean Box" });
+    expect((await (await get("ar")).json()).pending).toMatchObject({ entryId: "q1", form: "social", restaurant: "بين بوكس" });
+    expect((await (await get("fr")).json()).pending).toMatchObject({ restaurant: "Bean Box" });
+  });
+  it("hands none for a ride with no stop yet, or any other ride", async () => {
+    vi.stubGlobal("fetch", db({ ...sat, breakfast_name: null, breakfast_name_ar: null }));
+    expect((await (await get("en")).json()).pending).toMatchObject({ form: "social", restaurant: null });
+    vi.stubGlobal("fetch", db({ ...sat, event_kind: null, ride_kind: null, needs_approval: null }));
+    expect((await (await get("en")).json()).pending).toMatchObject({ form: "rental", restaurant: null });
   });
 });

@@ -14,10 +14,11 @@ import type { RatingForm as Form } from "@/lib/rating";
 // asks them to rate it and stays up until they do - no close, no backdrop, no Escape; signing out
 // is the only other way off. The rest of the page is made inert while it is up. Once the rating
 // lands it thanks the rider and the page is drawn again, which brings the next unrated ride (the
-// page keys this by its entry, so the next one starts empty), or nothing.
-type Props = { entryId: string; name: string; when: string; form: Form; noBike: boolean; onDone?: () => void };
+// page keys this by its entry, so the next one starts empty), or nothing. `restaurant`: where the
+// ride's breakfast was, which the form's breakfast box names (RatingForm).
+type Props = { entryId: string; name: string; when: string; form: Form; noBike: boolean; restaurant?: string | null; onDone?: () => void };
 
-export default function RatingGate({ entryId, name, when, form, noBike, onDone }: Props) {
+export default function RatingGate({ entryId, name, when, form, noBike, restaurant, onDone }: Props) {
   const t = ratingWords(useTxLocale());
   const router = useRouter();
   const box = useRef<HTMLDivElement>(null);
@@ -61,7 +62,7 @@ export default function RatingGate({ entryId, name, when, form, noBike, onDone }
         {thanks ? (
           <p className="rr-thanks" role="status">{thanks}</p>
         ) : (
-          <RatingForm entryId={entryId} form={form} noBike={noBike}
+          <RatingForm entryId={entryId} form={form} noBike={noBike} restaurant={restaurant}
             onRated={(w) => { setThanks(w.thanks); window.setTimeout(() => (onDone ? onDone() : router.refresh()), 1200); }}
             footer={<button type="button" className="rg-out" onClick={leave} disabled={out}>{t.signOut}</button>} />
         )}
