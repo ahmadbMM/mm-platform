@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-10-03";
+export const PRIVACY_VERSION = "2026-10-05";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -86,6 +86,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "How you heard about us",
       "Asked on a community membership application and a learn-to-ride sign-up; optional on your account page",
       "Knowing how riders find us, in totals only"
+     ],
+     [
+      "Emergency contact: the name, mobile number and relationship to you of someone we can call",
+      "Required to take part in some events, such as Run for Her; optional on your account page. Seen only by our staff. Please tell that person you gave us their details.",
+      "Calling someone for you if you need help during an event. We never contact them for anything else, and never share their details."
      ],
      [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
@@ -356,6 +361,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "كيف عرفت عنا",
       "يُسأل في طلب عضوية المجتمع وفي التسجيل في دروس تعلّم الركوب، وهو اختياري في صفحة حسابك",
       "معرفة كيف يصل إلينا الراكبون، في صورة أعداد إجمالية فقط"
+     ],
+     [
+      "جهة اتصال للطوارئ: اسم شخص يمكننا الاتصال به ورقم جواله وصلة قرابته بك",
+      "مطلوبة للمشاركة في بعض الفعاليات مثل سباق نركض لأجلها، واختيارية في صفحة حسابك. لا يراها إلا موظفونا. يُرجى إبلاغ ذلك الشخص بأنك أعطيتنا بياناته.",
+      "الاتصال بشخص نيابةً عنك إن احتجت إلى مساعدة أثناء إحدى الفعاليات. لا نتواصل معه لأي غرض آخر، ولا نشارك بياناته أبدًا."
      ],
      [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
