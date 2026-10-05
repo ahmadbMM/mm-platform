@@ -6,11 +6,14 @@
 // rateNoteLabel, rateSubmitBtn, rateThanks and rateRideBtn: English and Arabic in app.src.html,
 // the others in its i18n/<code>.json). Indonesian, Malay, German, Russian, Chinese and Japanese,
 // which the booking app does not speak, follow src/i18n/TRANSLATING.md. The sign-out, sending and
-// error words are the site's own (the same texts in src/i18n/tx). {0} is the score.
+// error words are the site's own (the same texts in src/i18n/tx). {0} is the score, except in bfAt
+// (2026-10-05): "Breakfast at {0}", the breakfast box's heading once the ride's session names the
+// restaurant, {0} its name - the same text, in every language, as Experiences' "Breakfast at {0}" in
+// src/i18n/tx (lib/__tests__/rating.test.ts holds the two together).
 import type { Locale } from "@/i18n/locales";
 
 export type RatingWords = {
-  kicker: string; title: string; sub: string; q: Record<string, string>; why: string; whyErr: string; pickErr: string;
+  kicker: string; title: string; sub: string; q: Record<string, string>; bfAt: string; why: string; whyErr: string; pickErr: string;
   skipBf: string; note: string; send: string; thanks: string; signOut: string; sending: string;
   errors: { signin: string; refused: string; generic: string; outdated: string; paid_move: string };
 };
@@ -21,6 +24,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "How was your ride?",
     sub: "Score each part from 1 to 10. For anything 8 or under, tell us why so we can fix it.",
     q: {service: "Service", bike: "Bike", experience: "Experience", ride: "The ride", ride_checkin: "Check-in and bike collection", ride_staff: "Staff", ride_bike: "Bike", ride_route: "Route", breakfast: "Breakfast", bf_restaurant: "Restaurant", bf_atmosphere: "Atmosphere", bf_food: "Food", bf_service: "Service", overall: "Overall experience"},
+    bfAt: "Breakfast at {0}",
     why: "You gave {0}. Why, and what could be better?",
     whyErr: "Please tell us why.",
     pickErr: "Pick a score from 1 to 10.",
@@ -37,6 +41,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "كيف كانت رحلتك؟",
     sub: "قيّم كل جزء من 1 إلى 10. وإذا كان التقييم 8 أو أقل، أخبرنا بالسبب لنحسّنه.",
     q: {service: "الخدمة", bike: "الدراجة", experience: "التجربة", ride: "الرحلة", ride_checkin: "تسجيل الحضور واستلام الدراجة", ride_staff: "الفريق", ride_bike: "الدراجة", ride_route: "المسار", breakfast: "الإفطار", bf_restaurant: "المطعم", bf_atmosphere: "الأجواء", bf_food: "الطعام", bf_service: "الخدمة", overall: "التجربة بشكل عام"},
+    bfAt: "الإفطار في {0}",
     why: "أعطيت {0}. ما السبب، وما الذي يمكن تحسينه؟",
     whyErr: "يرجى إخبارنا بالسبب.",
     pickErr: "اختر تقييماً من 1 إلى 10.",
@@ -53,6 +58,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "Bagaimana gowes Anda?",
     sub: "Beri nilai setiap bagian dari 1 sampai 10. Untuk nilai 8 ke bawah, beri tahu kami alasannya agar bisa kami perbaiki.",
     q: {service: "Layanan", bike: "Sepeda", experience: "Pengalaman", ride: "Sesi gowes", ride_checkin: "Check-in dan pengambilan sepeda", ride_staff: "Staf", ride_bike: "Sepeda", ride_route: "Rute", breakfast: "Sarapan", bf_restaurant: "Restoran", bf_atmosphere: "Suasana", bf_food: "Makanan", bf_service: "Layanan", overall: "Pengalaman keseluruhan"},
+    bfAt: "Sarapan di {0}",
     why: "Anda memberi nilai {0}. Mengapa, dan apa yang bisa lebih baik?",
     whyErr: "Mohon beri tahu kami alasannya.",
     pickErr: "Pilih nilai dari 1 sampai 10.",
@@ -69,6 +75,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "Bagaimana kayuhan anda?",
     sub: "Beri markah bagi setiap bahagian dari 1 hingga 10. Untuk markah 8 ke bawah, beritahu kami sebabnya supaya kami dapat memperbaikinya.",
     q: {service: "Perkhidmatan", bike: "Basikal", experience: "Pengalaman", ride: "Kayuhan", ride_checkin: "Daftar masuk dan pengambilan basikal", ride_staff: "Kakitangan", ride_bike: "Basikal", ride_route: "Laluan", breakfast: "Sarapan", bf_restaurant: "Restoran", bf_atmosphere: "Suasana", bf_food: "Makanan", bf_service: "Perkhidmatan", overall: "Pengalaman keseluruhan"},
+    bfAt: "Sarapan di {0}",
     why: "Anda memberi {0}. Mengapa, dan apa yang boleh diperbaiki?",
     whyErr: "Sila beritahu kami sebabnya.",
     pickErr: "Pilih markah dari 1 hingga 10.",
@@ -85,6 +92,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "Wie war deine Fahrt?",
     sub: "Bewerte jeden Teil von 1 bis 10. Bei 8 oder weniger sag uns bitte, warum – damit wir es besser machen können.",
     q: {service: "Service", bike: "Fahrrad", experience: "Erlebnis", ride: "Die Ausfahrt", ride_checkin: "Check-in und Radausgabe", ride_staff: "Team", ride_bike: "Fahrrad", ride_route: "Strecke", breakfast: "Frühstück", bf_restaurant: "Restaurant", bf_atmosphere: "Atmosphäre", bf_food: "Essen", bf_service: "Service", overall: "Gesamterlebnis"},
+    bfAt: "Frühstück bei {0}",
     why: "Du hast {0} gegeben. Warum, und was könnten wir besser machen?",
     whyErr: "Bitte sag uns, warum.",
     pickErr: "Wähle eine Bewertung von 1 bis 10.",
@@ -101,6 +109,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "¿Qué tal tu recorrido?",
     sub: "Puntúa cada parte del 1 al 10. Si das 8 o menos, dinos por qué para poder mejorarlo.",
     q: {service: "Servicio", bike: "Bici", experience: "Experiencia", ride: "La salida", ride_checkin: "Registro y recogida de la bici", ride_staff: "Personal", ride_bike: "Bici", ride_route: "Ruta", breakfast: "Desayuno", bf_restaurant: "Restaurante", bf_atmosphere: "Ambiente", bf_food: "Comida", bf_service: "Servicio", overall: "Experiencia general"},
+    bfAt: "Desayuno en {0}",
     why: "Has puesto {0}. ¿Por qué y qué podríamos mejorar?",
     whyErr: "Por favor, dinos por qué.",
     pickErr: "Elige una puntuación del 1 al 10.",
@@ -117,6 +126,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "Comment s'est passée votre sortie ?",
     sub: "Notez chaque partie de 1 à 10. Pour une note de 8 ou moins, dites-nous pourquoi afin que nous puissions nous améliorer.",
     q: {service: "Service", bike: "Vélo", experience: "Expérience", ride: "La sortie", ride_checkin: "Accueil et retrait du vélo", ride_staff: "Équipe", ride_bike: "Vélo", ride_route: "Parcours", breakfast: "Petit-déjeuner", bf_restaurant: "Restaurant", bf_atmosphere: "Ambiance", bf_food: "Nourriture", bf_service: "Service", overall: "Expérience globale"},
+    bfAt: "Petit-déjeuner chez {0}",
     why: "Vous avez donné {0}. Pourquoi, et que pourrions-nous améliorer ?",
     whyErr: "Merci de nous dire pourquoi.",
     pickErr: "Choisissez une note de 1 à 10.",
@@ -133,6 +143,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "Como foi seu passeio?",
     sub: "Avalie cada parte de 1 a 10. Se der 8 ou menos, diga-nos o porquê para podermos melhorar.",
     q: {service: "Atendimento", bike: "Bicicleta", experience: "Experiência", ride: "O passeio", ride_checkin: "Check-in e retirada da bicicleta", ride_staff: "Equipe", ride_bike: "Bicicleta", ride_route: "Percurso", breakfast: "Café da manhã", bf_restaurant: "Restaurante", bf_atmosphere: "Ambiente", bf_food: "Comida", bf_service: "Atendimento", overall: "Experiência geral"},
+    bfAt: "Café da manhã em {0}",
     why: "Você deu {0}. Por quê, e o que poderia ser melhor?",
     whyErr: "Por favor, diga-nos o motivo.",
     pickErr: "Escolha uma nota de 1 a 10.",
@@ -149,6 +160,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "Kumusta ang iyong ride?",
     sub: "I-rate ang bawat bahagi mula 1 hanggang 10. Kung 8 pababa, sabihin sa amin kung bakit para maayos namin.",
     q: {service: "Serbisyo", bike: "Bisikleta", experience: "Karanasan", ride: "Ang ride", ride_checkin: "Check-in at pagkuha ng bisikleta", ride_staff: "Staff", ride_bike: "Bisikleta", ride_route: "Ruta", breakfast: "Almusal", bf_restaurant: "Restawran", bf_atmosphere: "Kapaligiran", bf_food: "Pagkain", bf_service: "Serbisyo", overall: "Kabuuang karanasan"},
+    bfAt: "Almusal sa {0}",
     why: "Nagbigay ka ng {0}. Bakit, at ano ang puwedeng mapabuti?",
     whyErr: "Pakisabi sa amin kung bakit.",
     pickErr: "Pumili ng marka mula 1 hanggang 10.",
@@ -165,6 +177,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "Как прошёл заезд?",
     sub: "Оцените каждую часть от 1 до 10. Если ставите 8 или ниже, расскажите почему — так мы сможем это исправить.",
     q: {service: "Обслуживание", bike: "Велосипед", experience: "Впечатления", ride: "Заезд", ride_checkin: "Регистрация и выдача велосипеда", ride_staff: "Персонал", ride_bike: "Велосипед", ride_route: "Маршрут", breakfast: "Завтрак", bf_restaurant: "Ресторан", bf_atmosphere: "Атмосфера", bf_food: "Еда", bf_service: "Обслуживание", overall: "Общее впечатление"},
+    bfAt: "Завтрак в {0}",
     why: "Вы поставили {0}. Почему и что можно улучшить?",
     whyErr: "Пожалуйста, расскажите почему.",
     pickErr: "Выберите оценку от 1 до 10.",
@@ -181,6 +194,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "آپ کی رائیڈ کیسی رہی؟",
     sub: "ہر حصے کو 1 سے 10 تک ریٹ کریں۔ 8 یا اس سے کم دینے پر ہمیں وجہ بتائیں تاکہ ہم بہتری لا سکیں۔",
     q: {service: "سروس", bike: "سائیکل", experience: "تجربہ", ride: "رائیڈ", ride_checkin: "چیک اِن اور سائیکل کی وصولی", ride_staff: "عملہ", ride_bike: "سائیکل", ride_route: "روٹ", breakfast: "ناشتہ", bf_restaurant: "ریسٹورنٹ", bf_atmosphere: "ماحول", bf_food: "کھانا", bf_service: "سروس", overall: "مجموعی تجربہ"},
+    bfAt: "ناشتہ {0} میں",
     why: "آپ نے {0} دیا۔ کیوں، اور کیا بہتر ہو سکتا تھا؟",
     whyErr: "براہ کرم وجہ بتائیں۔",
     pickErr: "1 سے 10 تک کوئی اسکور منتخب کریں۔",
@@ -197,6 +211,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "आपकी राइड कैसी रही?",
     sub: "हर हिस्से को 1 से 10 तक रेट करें। 8 या उससे कम देने पर हमें वजह बताएं ताकि हम सुधार कर सकें।",
     q: {service: "सेवा", bike: "साइकिल", experience: "अनुभव", ride: "राइड", ride_checkin: "चेक-इन और साइकिल लेना", ride_staff: "स्टाफ़", ride_bike: "साइकिल", ride_route: "रूट", breakfast: "नाश्ता", bf_restaurant: "रेस्टोरेंट", bf_atmosphere: "माहौल", bf_food: "खाना", bf_service: "सेवा", overall: "कुल मिलाकर अनुभव"},
+    bfAt: "नाश्ता {0} में",
     why: "आपने {0} दिया। क्यों, और क्या बेहतर हो सकता था?",
     whyErr: "कृपया वजह बताएं।",
     pickErr: "1 से 10 तक कोई स्कोर चुनें।",
@@ -213,6 +228,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "तपाईंको राइड कस्तो रह्यो?",
     sub: "हरेक भागलाई 1 देखि 10 सम्म रेटिङ दिनुहोस्। 8 वा कम दिनुभयो भने कारण बताउनुहोस्, ताकि हामी सुधार गर्न सकौं।",
     q: {service: "सेवा", bike: "साइकल", experience: "अनुभव", ride: "राइड", ride_checkin: "चेक-इन र साइकल लिने", ride_staff: "स्टाफ", ride_bike: "साइकल", ride_route: "रुट", breakfast: "बिहानको खाजा", bf_restaurant: "रेस्टुरेन्ट", bf_atmosphere: "वातावरण", bf_food: "खाना", bf_service: "सेवा", overall: "समग्र अनुभव"},
+    bfAt: "{0} मा बिहानको खाजा",
     why: "तपाईंले {0} दिनुभयो। किन, र के राम्रो हुन सक्थ्यो?",
     whyErr: "कृपया कारण बताउनुहोस्।",
     pickErr: "1 देखि 10 सम्मको स्कोर छान्नुहोस्।",
@@ -229,6 +245,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "আপনার রাইড কেমন ছিল?",
     sub: "প্রতিটি অংশকে 1 থেকে 10 এর মধ্যে রেটিং দিন। 8 বা তার কম দিলে কারণটি জানান, যাতে আমরা উন্নতি করতে পারি।",
     q: {service: "সেবা", bike: "সাইকেল", experience: "অভিজ্ঞতা", ride: "রাইড", ride_checkin: "চেক-ইন ও সাইকেল সংগ্রহ", ride_staff: "স্টাফ", ride_bike: "সাইকেল", ride_route: "রুট", breakfast: "নাশতা", bf_restaurant: "রেস্টুরেন্ট", bf_atmosphere: "পরিবেশ", bf_food: "খাবার", bf_service: "সেবা", overall: "সামগ্রিক অভিজ্ঞতা"},
+    bfAt: "{0}-এ নাশতা",
     why: "আপনি {0} দিয়েছেন। কেন, আর কী আরও ভালো হতে পারত?",
     whyErr: "অনুগ্রহ করে কারণটি জানান।",
     pickErr: "1 থেকে 10 এর মধ্যে একটি স্কোর বেছে নিন।",
@@ -245,6 +262,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "这次骑行感觉如何？",
     sub: "请为每一项打 1 到 10 分。打 8 分及以下时，请告诉我们原因，以便我们改进。",
     q: {service: "服务", bike: "自行车", experience: "体验", ride: "骑行", ride_checkin: "签到与取车", ride_staff: "工作人员", ride_bike: "自行车", ride_route: "路线", breakfast: "早餐", bf_restaurant: "餐厅", bf_atmosphere: "氛围", bf_food: "餐食", bf_service: "服务", overall: "整体体验"},
+    bfAt: "在 {0} 享用早餐",
     why: "您打了 {0} 分。原因是什么？哪些地方可以做得更好？",
     whyErr: "请告诉我们原因。",
     pickErr: "请选择 1 到 10 分。",
@@ -261,6 +279,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     title: "ライドはいかがでしたか？",
     sub: "各項目を1〜10で評価してください。8以下の場合は、改善のために理由をお聞かせください。",
     q: {service: "サービス", bike: "自転車", experience: "体験", ride: "ライド", ride_checkin: "受付と自転車の受け取り", ride_staff: "スタッフ", ride_bike: "自転車", ride_route: "ルート", breakfast: "朝食", bf_restaurant: "レストラン", bf_atmosphere: "雰囲気", bf_food: "料理", bf_service: "サービス", overall: "総合的な体験"},
+    bfAt: "{0}での朝食",
     why: "{0}点をつけていただきました。理由と、改善できる点を教えてください。",
     whyErr: "理由をお聞かせください。",
     pickErr: "1〜10で点数を選んでください。",

@@ -29,7 +29,7 @@ import { kindNames, sessionName } from "@/lib/rides";
 import { routeItems } from "@/lib/route-names";
 import { RATE_FROM, formOf, pendingRating, unratedRides } from "@/lib/rating";
 import { loadAddonItems } from "@/lib/ticket-addons";
-import { doneToday, fmtDayDate, meetsAt, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
+import { breakfastFor, doneToday, fmtDayDate, meetsAt, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, recordRows, rideStats, type BadgeItem } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
@@ -292,7 +292,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             <div className="rr-grid">
               {toRate.map((r) => {
                 const s = sessions.get(r.sessionId);
-                return <RateRide key={r.entryId} entryId={r.entryId} name={rideName(s)} when={fmtDayDate(r.date, locale)} form={formOf(s?.kind)} noBike={r.ownBike || (s ? !s.bikes : false)} />;
+                // a Saturday ride's form names the restaurant its breakfast was at, as the pop-up's does
+                return <RateRide key={r.entryId} entryId={r.entryId} name={rideName(s)} when={fmtDayDate(r.date, locale)} form={formOf(s?.kind)} noBike={r.ownBike || (s ? !s.bikes : false)} restaurant={breakfastFor(s, locale)?.name ?? null} />;
               })}
             </div>
           </section>

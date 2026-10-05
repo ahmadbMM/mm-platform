@@ -7,7 +7,8 @@ import { meetsAt, RUN_KMS, venueOf, venueText } from "./tickets";
 // picker has them (_infoAboutBtn, _infoDetailsBtn, _infoFacts): under each event card a link opens
 // what the event is, and under each date's time another opens what that date is - a short text, then
 // the facts read off the date: who may book it, its price, when, where with its map, a run's
-// distances and the places left. The texts are Experiences' own fields (content/pages/experiences.ts,
+// distances, the places left, and what comes after the Saturday ride: breakfast at the stop staff set
+// (2026-10-05). The texts are Experiences' own fields (content/pages/experiences.ts,
 // events.*About and dates.about*), which the booking app reads too, so one edit in the Website editor
 // changes both. Plain logic, so it can be tested: the page puts the words together
 // (app/[locale]/experiences/page.tsx) and ExperienceSteps.tsx draws the links and the dialog.
@@ -96,4 +97,15 @@ export function infoPlaces(s: Pick<RideSession, "full" | "left" | "approval">, t
   if (typeof s.left !== "number") return null;
   if (s.left <= 0) return t.waitlist;
   return fillAt(s.left === 1 ? t.left1 : t.leftN, s.left);
+}
+
+/** The breakfast stop on a date, by name (the owner, 2026-10-05: "add the restaurant's name in the
+ *  session whenever it's added"): the Saturday ride's, as the page's language reads it - its Arabic
+ *  name on the Arabic page when the venue gave one, else its name, as its ticket says it (lib/tickets.ts
+ *  breakfastFor) - and null on any other ride, or one with no stop yet. The date's card and the
+ *  summary say "Breakfast at {name}", and its Details end with it after the places, under "After"
+ *  (the booking app's _infoFacts: infoAfter, infoBreakfastAt). */
+export function infoBreakfast(s: Pick<RideSession, "kind" | "breakfast" | "breakfastAr">, locale: string): string | null {
+  if (s.kind !== "saturday" || !s.breakfast) return null;
+  return (locale === "ar" && s.breakfastAr) || s.breakfast;
 }

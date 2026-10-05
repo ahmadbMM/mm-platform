@@ -213,6 +213,31 @@ test('phones: Saudi mobiles only on +966, the mobile rules elsewhere, and a past
   await expect(step(page, 2)).toBeVisible();
 });
 
+test('Saudi Arabia is first and again in its alphabetical place in both country lists, one value for both (the owner, 2026-10-05)', async ({ page }) => {
+  const { errs, of } = await open(page);
+  const cc = await page.locator('#cc option').evaluateAll((os) => os.map((o) => [(o as HTMLOptionElement).value, (o as HTMLOptionElement).selected] as [string, boolean]));
+  const ccSa = cc.flatMap(([v], i) => (v === 'SA+966' ? [i] : []));
+  expect(ccSa).toHaveLength(2);
+  expect(ccSa[0]).toBe(0);
+  expect(cc[ccSa[1] - 1][0]).toBe('ST+239'); // São Tomé, then Saudi Arabia, then Senegal
+  expect(cc[ccSa[1] + 1][0]).toBe('SN+221');
+  expect(cc.filter(([, on]) => on)).toHaveLength(1);
+  expect(cc[0][1]).toBe(true); // the top copy shows the pick
+  await accountStep(page);
+  await expect(step(page, 2)).toBeVisible();
+  const nat = await page.locator('#nat option').evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value));
+  const natSa = nat.flatMap((v, i) => (v === 'Saudi Arabia' ? [i] : []));
+  expect(natSa).toHaveLength(2);
+  expect(natSa[0]).toBe(1); // after the placeholder
+  expect(nat.slice(natSa[1] - 1, natSa[1] + 2)).toEqual(['Sao Tome and Principe', 'Saudi Arabia', 'Senegal']);
+  await communityStep(page);
+  await page.locator('#nat').selectOption({ index: natSa[1] }); // the lower copy: the same country goes in
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('customer_community_apply')[0].p).toMatchObject({ nationality: 'Saudi Arabia' });
+  expect(errs).toEqual([]);
+});
+
 test('emails: a misspelt provider is refused with a one-tap fix; throwaway and relay addresses are refused', async ({ page }) => {
   await open(page);
   const err = page.locator('#f-email .err');

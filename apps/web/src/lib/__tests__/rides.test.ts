@@ -78,6 +78,19 @@ describe("toSession", () => {
     // staging: SESSION_COLS always asks for them (its on-site booking reads them), so none is absent
     expect(toSession(row({}))).toMatchObject({ location: null, meetUrl: null });
   });
+  it("reads the breakfast stop only when the read asked for it: trimmed, at most 80 characters, null when blank (2026-10-05)", () => {
+    const sat = { event_kind: "community", ride_kind: "saturday" };
+    expect(toSession(row({ ...sat, breakfast_name: "  Bean Box ", breakfast_name_ar: " بين بوكس " }))).toMatchObject({ breakfast: "Bean Box", breakfastAr: "بين بوكس" });
+    expect(toSession(row({ ...sat, breakfast_name: "Bean Box", breakfast_name_ar: null }))).toMatchObject({ breakfast: "Bean Box", breakfastAr: null });
+    expect(toSession(row({ ...sat, breakfast_name: "   ", breakfast_name_ar: "" }))).toMatchObject({ breakfast: null, breakfastAr: null });
+    expect(toSession(row({ ...sat, breakfast_name: 42, breakfast_name_ar: ["x"] }))).toMatchObject({ breakfast: null, breakfastAr: null });
+    expect(toSession(row({ ...sat, breakfast_name: "y".repeat(120) }))).toMatchObject({ breakfast: "y".repeat(80), breakfastAr: null });
+    // cut at 80, with no space left at the end
+    expect(toSession(row({ ...sat, breakfast_name: `${"x".repeat(79)} and more` }))!.breakfast).toBe("x".repeat(79));
+    // a read without the columns (a database that does not have them yet) has neither field
+    const bare = toSession(row(sat))!;
+    expect("breakfast" in bare || "breakfastAr" in bare).toBe(false);
+  });
   it("carries the route a ride follows, when the slug is one the Routes page could hold", () => {
     expect(toSession(row({ route_slug: "obhur-coast" }))?.routeSlug).toBe("obhur-coast");
     for (const bad of ["Obhur Coast", "-x", "a--b", "", null, 42, "x".repeat(61)]) expect(routeSlugOf(bad), String(bad)).toBeNull();
@@ -182,8 +195,33 @@ describe("loadRides", () => {
     const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json(PRICES) : json([row({})])));
     await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/sessions?"));
-    expect(reads[0]).toContain("meet_url,location,description,price,route_slug&session_date=gte.2026-09-25");
+    expect(reads[0]).toContain("meet_url,location,description,price,route_slug,breakfast_name,breakfast_name_ar&session_date=gte.2026-09-25");
     expect(reads[0].match(/meet_url/g)?.length).toBe(1);
+    await memoSettled();
+  });
+
+  const SAT = row({ id: "sat", session_date: "2026-09-26", event_kind: "community", ride_kind: "saturday", bike_slots: '{"_time":"05:45 - 06:15"}', location: null, meet_url: null });
+  it("asks for the breakfast stop as a group of its own, and carries it on each session (2026-10-05)", async () => {
+    const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json(PRICES)
+      : json([{ ...SAT, breakfast_name: " Bean Box ", breakfast_name_ar: "بين بوكس" }, row({ location: null, meet_url: null, breakfast_name: null, breakfast_name_ar: null })])));
+    const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/sessions?"));
+    expect(reads).toHaveLength(1);
+    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar&");
+    expect(r?.sessions.map((x) => [x.id, x.breakfast, x.breakfastAr])).toEqual([["sat", "Bean Box", "بين بوكس"], ["2026-09-27", null, null]]);
+    await memoSettled();
+  });
+
+  it("reads on without the breakfast stop on a database that does not have it, keeping the place", async () => {
+    const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json(PRICES)
+      : url.includes("breakfast_name_ar") ? json({ code: "42703", message: "column sessions.breakfast_name_ar does not exist" }, 400) : json([SAT])));
+    const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/sessions?"));
+    expect(reads).toHaveLength(2);
+    expect(reads[1]).toContain("needs_approval,description,price,route_slug,location,meet_url&session_date=gte.2026-09-25");
+    const s = r!.sessions[0];
+    expect(s).toMatchObject({ id: "sat", kind: "saturday", location: null, meetUrl: null });
+    expect("breakfast" in s || "breakfastAr" in s).toBe(false);
     await memoSettled();
   });
 

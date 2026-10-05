@@ -1,6 +1,8 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { experiencesSchema } from "@/content/pages/experiences";
-import { dateText, fillTimes, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoWho, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
+import { makeL } from "@/i18n/tx";
+import { dateText, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoWho, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
 import { fmtClock } from "../tickets";
 
 // "About this event" and "Details" on Experiences (2026-10-05) say what the booking app's picker
@@ -114,6 +116,35 @@ describe("a date's facts", () => {
     expect(infoPlaces({ approval: false, full: false, left: 64 }, t)).toBe("64 spots left");
     expect(infoPlaces({ approval: false, full: false, left: null }, t)).toBeNull();
     expect(infoPlaces({ full: false }, t)).toBeNull();
+  });
+
+  it("end with the Saturday ride's breakfast stop, by its name in the page's language (2026-10-05)", () => {
+    const sat = { kind: "saturday" as const, breakfast: "Bean Box", breakfastAr: "بين بوكس" };
+    expect(infoBreakfast(sat, "en")).toBe("Bean Box");
+    expect(infoBreakfast(sat, "ar")).toBe("بين بوكس");
+    // every other language reads the name the stop was given, never the Arabic
+    for (const l of ["fr", "ur", "zh"]) expect(infoBreakfast(sat, l), l).toBe("Bean Box");
+    // no Arabic name: the name, on the Arabic page too
+    expect(infoBreakfast({ ...sat, breakfastAr: null }, "ar")).toBe("Bean Box");
+    // no stop yet, or a session read without the columns: nothing said
+    expect(infoBreakfast({ ...sat, breakfast: null }, "ar")).toBeNull();
+    expect(infoBreakfast({ kind: "saturday" }, "en")).toBeNull();
+    // the Saturday ride alone stops for breakfast
+    for (const kind of ["jcc", "swim", "workshop", "snd96", "event", "runher", "petromin"] as const) expect(infoBreakfast({ ...sat, kind }, "en"), kind).toBeNull();
+  });
+
+  // staging: its Experiences page (BookingFlow) does not show the stop yet, so its dictionaries do not carry these words
+  it.skip("say the stop under After, in the booking app's own words in the languages it speaks", () => {
+    // the booking app's infoAfter and infoBreakfastAt; the other six languages are the site's own
+    const APP: Record<string, [string, string]> = {
+      fr: ["Ensuite", "Petit-déjeuner chez {0}"], es: ["Después", "Desayuno en {0}"], pt: ["Depois", "Café da manhã em {0}"],
+      ur: ["اس کے بعد", "ناشتہ {0} میں"], hi: ["उसके बाद", "नाश्ता {0} में"], tl: ["Pagkatapos", "Almusal sa {0}"],
+      ne: ["त्यसपछि", "{0} मा बिहानको खाजा"], bn: ["এরপর", "{0}-এ নাশতা"],
+    };
+    for (const [l, words] of Object.entries(APP)) {
+      const tx = makeL(l, JSON.parse(readFileSync(new URL(`../../i18n/tx/${l}.json`, import.meta.url), "utf8")));
+      expect([tx("After", "بعدها"), tx("Breakfast at {0}", "الإفطار في {0}")], l).toEqual(words);
+    }
   });
 });
 

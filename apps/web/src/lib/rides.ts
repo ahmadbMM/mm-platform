@@ -69,6 +69,13 @@ export type RideSession = {
   km?: { beg: number; int: number };
   meetUrl?: string | null;
   location?: string | null;
+  /** The breakfast stop staff set on the session, or the venue whose booking was confirmed
+   *  (sessions.breakfast_name), and its Arabic name (breakfast_name_ar, which a venue booking through
+   *  the vendor portal gives; rentals migration 20261004130000): trimmed, at most 80 characters, null
+   *  when blank. Only a read that asks for them has them (SESSION_COLS_BREAKFAST), as with the place;
+   *  Experiences names the stop on the Saturday ride alone (lib/event-info.ts infoBreakfast). */
+  breakfast?: string | null;
+  breakfastAr?: string | null;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -76,7 +83,7 @@ type Row = {
   id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; ride_kind?: unknown;
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
-  spots?: unknown; addons?: unknown; meet_url?: unknown; location?: unknown;
+  spots?: unknown; addons?: unknown; meet_url?: unknown; location?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -149,6 +156,14 @@ export function addonIds(v: unknown): string[] {
   return Array.isArray(a) ? [...new Set(a.filter((x): x is string => typeof x === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(x)))].slice(0, 40) : [];
 }
 
+/** The breakfast stop a row names: only when the read asked for the columns (SESSION_COLS_BREAKFAST),
+ *  so a row without them gives neither field. */
+function breakfastOf(r: Row): Pick<RideSession, "breakfast" | "breakfastAr"> {
+  if (!("breakfast_name" in r) && !("breakfast_name_ar" in r)) return {};
+  const name = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim().slice(0, 80).trimEnd() : null);
+  return { breakfast: name(r.breakfast_name), breakfastAr: name(r.breakfast_name_ar) };
+}
+
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
  *  booked through the company's own form (micromobility.sa/petromin), so they are left out. */
 export function toSession(r: Row, keepAll = false): RideSession | null {
@@ -185,6 +200,7 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null,
     left: null,
     collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" ? null : collectTime(r.bike_slots),
+    ...breakfastOf(r),
   };
 }
 
@@ -225,6 +241,10 @@ export const SESSION_COLS_NEW = "description,price,route_slug";
 // Where a session is and its meeting point (2026-10-05): the Experiences dialogs say where each date
 // meets (lib/event-info.ts). A group of its own, so a database without them reads as before.
 export const SESSION_COLS_PLACE = "location,meet_url"; // staging: already in SESSION_COLS (its on-site booking reads them)
+// The breakfast stop by name, in Arabic too (the owner, 2026-10-05: "add the restaurant's name in the
+// session whenever it's added"): the Saturday ride's card, its Details and the summary on Experiences
+// name it. A group of its own as well, so a database without them reads as before.
+export const SESSION_COLS_BREAKFAST = "breakfast_name,breakfast_name_ar";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -374,7 +394,7 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=type,price`, key),
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now),
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [SESSION_COLS_BREAKFAST] }),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) {
       prices = (p.value as { type?: unknown; price?: unknown }[])
