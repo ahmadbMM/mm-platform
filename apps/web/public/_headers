@@ -9,3 +9,8 @@
 # The site's own photos and logos keep their names across builds; a day is safe.
 /site/*
   Cache-Control: public, max-age=86400
+
+# The registration forms' fonts (forms/*/design/styles.css): plain names that stay across builds,
+# so a week rather than a year.
+/fonts/forms/*
+  Cache-Control: public, max-age=604800
