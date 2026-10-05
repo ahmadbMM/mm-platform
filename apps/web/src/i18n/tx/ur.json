@@ -1149,5 +1149,10 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "میں نے ویور پڑھ لیا ہے اور اس بکنگ کے ہر فرد کی طرف سے اتفاق کرتا/کرتی ہوں",
  "Waiver needed": "ویور درکار ہے",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "ہماری ٹیم نے آپ کو اس رائیڈ پر بک کیا ہے۔ اس کا ویور پڑھیں اور جاری رکھنے کے لیے اتفاق کریں۔",
- "Agree and continue": "اتفاق کریں اور جاری رکھیں"
+ "Agree and continue": "اتفاق کریں اور جاری رکھیں",
+ "Switch account?": "اکاؤنٹ بدلیں؟",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "اس براؤزر میں {current} کے طور پر سائن اِن ہے۔ آپ نے ابھی بکنگ ایپ میں {next} کے طور پر سائن اِن کیا ہے۔ یہ سائٹ کون سا اکاؤنٹ استعمال کرے؟",
+ "Switch to {name}": "{name} پر جائیں",
+ "Stay signed in as {name}": "{name} کے طور پر سائن اِن رہیں",
+ "You are signed in as {who}. If this is not your account, sign out.": "آپ {who} کے طور پر سائن اِن ہیں۔ اگر یہ آپ کا اکاؤنٹ نہیں ہے تو سائن آؤٹ کریں۔"
 }

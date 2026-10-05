@@ -1149,5 +1149,10 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "मैले छुट-पत्र पढें र यो बुकिङका सबैको तर्फबाट सहमत छु",
  "Waiver needed": "छुट-पत्र आवश्यक छ",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "हाम्रो टोलीले तपाईंलाई यो राइडमा बुक गरेको छ। यसको छुट-पत्र पढ्नुहोस् र जारी राख्न सहमत हुनुहोस्।",
- "Agree and continue": "सहमत हुनुहोस् र जारी राख्नुहोस्"
+ "Agree and continue": "सहमत हुनुहोस् र जारी राख्नुहोस्",
+ "Switch account?": "खाता बदल्ने?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "यो ब्राउजरमा {current} को रूपमा साइन इन गरिएको छ। तपाईंले भर्खरै बुकिङ एपमा {next} को रूपमा साइन इन गर्नुभयो। यो साइटले कुन खाता प्रयोग गरोस्?",
+ "Switch to {name}": "{name} मा जानुहोस्",
+ "Stay signed in as {name}": "{name} को रूपमा साइन इन रहनुहोस्",
+ "You are signed in as {who}. If this is not your account, sign out.": "तपाईं {who} को रूपमा साइन इन हुनुहुन्छ। यो तपाईंको खाता होइन भने साइन आउट गर्नुहोस्।"
 }

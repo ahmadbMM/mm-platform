@@ -1149,5 +1149,10 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "Saya telah membaca penepian liabiliti dan bersetuju bagi pihak semua orang dalam tempahan ini",
  "Waiver needed": "Penepian liabiliti diperlukan",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Pasukan kami telah menempah kayuhan ini untuk anda. Baca penepian liabilitinya dan bersetuju dengannya untuk meneruskan.",
- "Agree and continue": "Setuju dan teruskan"
+ "Agree and continue": "Setuju dan teruskan",
+ "Switch account?": "Tukar akaun?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "Pelayar ini telah log masuk sebagai {current}. Anda baru sahaja log masuk ke aplikasi tempahan sebagai {next}. Akaun mana yang patut digunakan oleh laman ini?",
+ "Switch to {name}": "Tukar kepada {name}",
+ "Stay signed in as {name}": "Kekal log masuk sebagai {name}",
+ "You are signed in as {who}. If this is not your account, sign out.": "Anda telah log masuk sebagai {who}. Jika ini bukan akaun anda, sila log keluar."
 }

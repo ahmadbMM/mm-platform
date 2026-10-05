@@ -1149,5 +1149,10 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "Saya telah membaca pernyataan risiko dan menyetujuinya atas nama semua orang dalam pemesanan ini",
  "Waiver needed": "Pernyataan risiko diperlukan",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Tim kami telah mendaftarkan Anda untuk sesi bersepeda ini. Baca pernyataan risikonya dan setujui untuk melanjutkan.",
- "Agree and continue": "Setujui dan lanjutkan"
+ "Agree and continue": "Setujui dan lanjutkan",
+ "Switch account?": "Ganti akun?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "Browser ini masuk sebagai {current}. Anda baru saja masuk ke aplikasi pemesanan sebagai {next}. Akun mana yang harus digunakan situs ini?",
+ "Switch to {name}": "Ganti ke {name}",
+ "Stay signed in as {name}": "Tetap masuk sebagai {name}",
+ "You are signed in as {who}. If this is not your account, sign out.": "Anda masuk sebagai {who}. Jika ini bukan akun Anda, silakan keluar."
 }

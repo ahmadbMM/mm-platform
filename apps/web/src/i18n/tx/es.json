@@ -1149,5 +1149,10 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "He leído la exención y la acepto en nombre de todas las personas de esta reserva",
  "Waiver needed": "Exención requerida",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Nuestro equipo te reservó este recorrido. Lee su exención y acéptala para continuar.",
- "Agree and continue": "Aceptar y continuar"
+ "Agree and continue": "Aceptar y continuar",
+ "Switch account?": "¿Cambiar de cuenta?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "En este navegador has iniciado sesión como {current}. Acabas de iniciar sesión en la app de reservas como {next}. ¿Qué cuenta debe usar este sitio?",
+ "Switch to {name}": "Cambiar a {name}",
+ "Stay signed in as {name}": "Seguir como {name}",
+ "You are signed in as {who}. If this is not your account, sign out.": "Has iniciado sesión como {who}. Si esta no es tu cuenta, cierra sesión."
 }

@@ -1149,5 +1149,10 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "আমি দায়মুক্তিপত্রটি পড়েছি এবং এই বুকিংয়ের প্রত্যেকের পক্ষে সম্মতি দিচ্ছি",
  "Waiver needed": "দায়মুক্তিপত্র প্রয়োজন",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "আমাদের দল আপনাকে এই রাইডে বুক করেছে। এর দায়মুক্তিপত্র পড়ুন এবং এগিয়ে যেতে সম্মতি দিন।",
- "Agree and continue": "সম্মতি দিন ও এগিয়ে যান"
+ "Agree and continue": "সম্মতি দিন ও এগিয়ে যান",
+ "Switch account?": "অ্যাকাউন্ট বদলাবেন?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "এই ব্রাউজারে {current} হিসেবে সাইন ইন করা আছে। আপনি এইমাত্র বুকিং অ্যাপে {next} হিসেবে সাইন ইন করেছেন। এই সাইট কোন অ্যাকাউন্ট ব্যবহার করবে?",
+ "Switch to {name}": "{name}-এ যান",
+ "Stay signed in as {name}": "{name} হিসেবে সাইন ইন থাকুন",
+ "You are signed in as {who}. If this is not your account, sign out.": "আপনি {who} হিসেবে সাইন ইন করেছেন। এটি আপনার অ্যাকাউন্ট না হলে সাইন আউট করুন।"
 }

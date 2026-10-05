@@ -1149,5 +1149,10 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "Я прочитал(а) отказ от ответственности и соглашаюсь с ним от имени всех, кто указан в этом бронировании",
  "Waiver needed": "Нужен отказ от ответственности",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Наша команда записала вас на этот заезд. Прочитайте его отказ от ответственности и примите его, чтобы продолжить.",
- "Agree and continue": "Принять и продолжить"
+ "Agree and continue": "Принять и продолжить",
+ "Switch account?": "Сменить аккаунт?",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "В этом браузере выполнен вход в аккаунт {current}. Вы только что вошли в приложение для бронирования как {next}. Какой аккаунт должен использовать этот сайт?",
+ "Switch to {name}": "Перейти в аккаунт {name}",
+ "Stay signed in as {name}": "Остаться в аккаунте {name}",
+ "You are signed in as {who}. If this is not your account, sign out.": "Вы вошли как {who}. Если это не ваш аккаунт, выйдите."
 }

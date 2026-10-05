@@ -1149,5 +1149,10 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "我已阅读免责声明，并代表本次预订中的每一位参与者表示同意",
  "Waiver needed": "需同意免责声明",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "我们的团队已为您预订此次骑行。请阅读其免责声明并表示同意，以便继续。",
- "Agree and continue": "同意并继续"
+ "Agree and continue": "同意并继续",
+ "Switch account?": "切换账户？",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "此浏览器已登录 {current}。您刚刚在预订 App 中登录了 {next}。本网站应使用哪个账户？",
+ "Switch to {name}": "切换到 {name}",
+ "Stay signed in as {name}": "继续使用 {name}",
+ "You are signed in as {who}. If this is not your account, sign out.": "您已登录为 {who}。如果这不是您的账户，请退出登录。"
 }

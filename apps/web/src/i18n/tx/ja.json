@@ -1149,5 +1149,10 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "免責同意書を読み、この予約の参加者全員を代表して同意します",
  "Waiver needed": "免責同意書への同意が必要です",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "当チームがこのライドにあなたを予約しました。免責同意書をお読みのうえ、同意して先へお進みください。",
- "Agree and continue": "同意して続ける"
+ "Agree and continue": "同意して続ける",
+ "Switch account?": "アカウントを切り替えますか？",
+ "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "このブラウザーには{current}でログインしています。たった今、予約アプリに{next}でログインしました。このサイトではどちらのアカウントを使いますか？",
+ "Switch to {name}": "{name}に切り替える",
+ "Stay signed in as {name}": "{name}のままにする",
+ "You are signed in as {who}. If this is not your account, sign out.": "{who}としてログインしています。ご自身のアカウントでない場合は、ログアウトしてください。"
 }
