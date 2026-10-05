@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useTxLocale } from "@/i18n/TxProvider";
 import RatingForm from "./RatingForm";
 import { ratingWords } from "./RatingForm.words";
+import { signOut } from "./quiet";
 import type { RatingForm as Form } from "@/lib/rating";
 
 // The post-ride rating as a page the rider cannot skip, as the booking app shows it (2026-10-03):
@@ -41,9 +42,9 @@ export default function RatingGate({ entryId, name, when, form, noBike, onDone }
     };
   }, []);
 
-  const signOut = () => {
+  const leave = () => {
     setOut(true);
-    fetch("/api/account", { method: "DELETE" }).finally(() => window.location.reload());
+    signOut();
   };
 
   return (
@@ -62,7 +63,7 @@ export default function RatingGate({ entryId, name, when, form, noBike, onDone }
         ) : (
           <RatingForm entryId={entryId} form={form} noBike={noBike}
             onRated={(w) => { setThanks(w.thanks); window.setTimeout(() => (onDone ? onDone() : router.refresh()), 1200); }}
-            footer={<button type="button" className="rg-out" onClick={signOut} disabled={out}>{t.signOut}</button>} />
+            footer={<button type="button" className="rg-out" onClick={leave} disabled={out}>{t.signOut}</button>} />
         )}
       </div>
     </div>
