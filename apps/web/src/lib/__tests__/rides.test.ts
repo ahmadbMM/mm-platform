@@ -71,6 +71,13 @@ describe("toSession", () => {
     expect(toSession(row({ ...run, bike_slots: '{"_time":"06:00 - 06:30","_collect":"05:15"}' }))!.collect).toBeNull();
     expect(toSession(row({ ...run, status: "full" }))).toMatchObject({ kind: "runher", full: true });
   });
+  it("reads where a session meets: the place, and a map link only when it is https (2026-10-05)", () => {
+    expect(toSession(row({ event_kind: "community", ride_kind: "runher", location: " JYC ", meet_url: "https://maps.app.goo.gl/abc" }))).toMatchObject({ location: "JYC", meetUrl: "https://maps.app.goo.gl/abc" });
+    expect(toSession(row({ location: "", meet_url: "http://maps.example/x" }))).toMatchObject({ location: null, meetUrl: null });
+    expect(toSession(row({ location: null, meet_url: "javascript:alert(1)" }))).toMatchObject({ location: null, meetUrl: null });
+    // staging: SESSION_COLS always asks for them (its on-site booking reads them), so none is absent
+    expect(toSession(row({}))).toMatchObject({ location: null, meetUrl: null });
+  });
   it("carries the route a ride follows, when the slug is one the Routes page could hold", () => {
     expect(toSession(row({ route_slug: "obhur-coast" }))?.routeSlug).toBe("obhur-coast");
     for (const bad of ["Obhur Coast", "-x", "a--b", "", null, 42, "x".repeat(61)]) expect(routeSlugOf(bad), String(bad)).toBeNull();
@@ -169,6 +176,15 @@ describe("loadRides", () => {
     expect(await loadRides(down as unknown as typeof fetch, 140_000)).toBe(b);
     await memoSettled();
     expect((await loadRides(down as unknown as typeof fetch, 150_000))?.prices).toHaveLength(2);
+  });
+
+  it("asks where each session meets with every read: staging's SESSION_COLS names the columns (no group of their own)", async () => {
+    const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json(PRICES) : json([row({})])));
+    await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/sessions?"));
+    expect(reads[0]).toContain("meet_url,location,description,price,route_slug&session_date=gte.2026-09-25");
+    expect(reads[0].match(/meet_url/g)?.length).toBe(1);
+    await memoSettled();
   });
 
   it("answers null when it never read anything", async () => {

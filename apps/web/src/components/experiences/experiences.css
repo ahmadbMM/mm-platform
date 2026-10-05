@@ -287,3 +287,57 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
   .bk-title { font-size: 22px; }
   .bk-step-lbl { max-width: 110px; }
 }
+
+/* ── "About this event" and "Details" (the owner, 2026-10-05, as the booking app's picker) ──
+   Words under each event card and each date, each a button of its own beside its card (never inside
+   it), set into the card's own bottom padding so the card still opens the event or the date wherever
+   it is tapped. Logical insets keep them at the card's start edge in Arabic and Urdu too, and a word
+   too long for a narrow card is cut short rather than run out of it. */
+.xs-ev-wrap, .sc-wrap { position: relative; display: flex; min-width: 0; }
+.xs-ev-wrap > .xs-event, .sc-wrap > .sc-card { flex: 1 1 auto; width: 100%; min-width: 0; }
+.xs-ev-wrap.has-about > .xs-event { padding-bottom: 58px; }
+.sc-wrap.has-about > .sc-card { padding-bottom: 40px; }
+.xs-about, .sc-about { position: absolute; z-index: 1; margin: 0; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 700; line-height: 1.3;
+  text-align: start; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.xs-about { inset-inline-start: 28px; bottom: 18px; max-width: calc(100% - 56px); padding: 4px 0; color: #1a1919; }
+.xs-about.ab-runher { color: #c2416e; } /* Run for Her's pink, as on its date cards */
+.sc-about { inset-inline-start: 35px; bottom: 11px; max-width: calc(100% - 51px); padding: 3px 0; color: var(--ev, #077a4b); }
+.xs-about:focus-visible, .sc-about:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 2px; }
+
+/* The one dialog both open (a native <dialog>, shown modal): centred on every screen, a phone's too,
+   and scrolling inside when it is taller than the screen. Its top edge and kicker take the kind's
+   colour (booking.css). */
+.xs-info { --ev: #077a4b; width: min(440px, calc(100vw - 32px)); max-width: calc(100vw - 32px); max-height: calc(100vh - 48px); max-height: calc(100dvh - 48px);
+  margin: auto; padding: 0; border: 1px solid rgba(26, 25, 25, .12); border-top: 3px solid var(--ev); border-radius: 18px; background: #fff; color: #1a1919;
+  box-shadow: 0 30px 90px rgba(10, 13, 9, .3); overflow: auto; overscroll-behavior: contain; }
+.xs-info::backdrop { background: rgba(10, 13, 9, .55); }
+.xs-info-in { padding: 22px 24px 20px; }
+.xs-info-kick { margin: 0 0 6px; color: var(--ev); font-size: 12px; font-weight: 800; letter-spacing: 1.4px; text-transform: uppercase; }
+html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 13px; }
+.xs-info .xs-info-title { margin: 0; font-size: 22px; letter-spacing: -.4px; line-height: 1.2; }
+.xs-info-title:focus { outline: none; } /* focused as the dialog opens, to read on from */
+.xs-info-text { margin: 10px 0 0; color: #2e352f; font-size: 14.5px; line-height: 1.6; text-wrap: pretty; }
+.xs-info-extra { margin: 10px 0 0; color: #2e352f; font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+/* The facts as two columns, the labels' as wide as the widest label up to two fifths of the dialog. */
+.xs-info-facts { display: grid; grid-template-columns: fit-content(42%) minmax(0, 1fr); gap: 8px 14px; margin: 16px 0 0; padding: 14px 0 0;
+  border-top: 1px solid rgba(26, 25, 25, .1); font-size: 14px; line-height: 1.45; }
+.xs-info-facts > div { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; }
+.xs-info-facts dt { font-weight: 700; color: #57605a; }
+.xs-info-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.xs .xs-info-facts a { color: #077a4b; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+.xs-info-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.xs-info-btns button { flex: 1 1 auto; min-height: 46px; padding: 0 20px; border-radius: 999px; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.xs-info-close { background: #fff; color: #1a1919; border: 1.5px solid rgba(26, 25, 25, .25); }
+.xs-info-close:hover { background: #f3f1ea; }
+.xs-info-go { background: #077a4b; color: #fbf9f4; border: 1.5px solid #077a4b; }
+.xs-info-go:hover { background: #06603b; }
+.xs-info-btns button:focus-visible { outline: 3px solid rgba(7, 122, 75, .4); outline-offset: 2px; }
+@media (max-width: 767px) {
+  .xs-ev-wrap.has-about > .xs-event { padding-bottom: 50px; }
+  .xs-about { inset-inline-start: 20px; bottom: 14px; max-width: calc(100% - 40px); }
+}
+@media (max-width: 560px) {
+  .sc-wrap.has-about > .sc-card { padding-bottom: 36px; }
+  .sc-about { inset-inline-start: 31px; bottom: 9px; max-width: calc(100% - 43px); }
+  .xs-info-in { padding: 20px 20px 18px; }
+}

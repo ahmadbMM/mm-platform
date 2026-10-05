@@ -222,6 +222,9 @@ export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Recor
 // description and route from the whole site for ten minutes.
 export const SESSION_COLS = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons,meet_url,location";
 export const SESSION_COLS_NEW = "description,price,route_slug";
+// Where a session is and its meeting point (2026-10-05): the Experiences dialogs say where each date
+// meets (lib/event-info.ts). A group of its own, so a database without them reads as before.
+export const SESSION_COLS_PLACE = "location,meet_url"; // staging: already in SESSION_COLS (its on-site booking reads them)
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
