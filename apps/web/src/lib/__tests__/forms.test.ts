@@ -43,6 +43,18 @@ describe("the registration forms", () => {
     expect(c.get("permissions-policy")).toBe("camera=(), microphone=(), geolocation=(), payment=()");
   });
 
+  it("take their fonts from the website only, which has every file the pages name", () => {
+    for (const [route, page] of [[community, communityPage], [petromin, petrominPage]] as const) {
+      const csp = route.GET().headers.get("content-security-policy") || "";
+      expect(csp).toContain("font-src 'self'");
+      expect(csp).not.toMatch(/googleapis|gstatic/);
+      expect(page).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
+      const named = [...page.matchAll(/url\("\/fonts\/forms\/([a-z0-9-]+\.woff2)"\)/g)].map((m) => m[1]);
+      expect(named.length).toBeGreaterThanOrEqual(10);
+      for (const f of named) expect(existsSync(resolve(__dirname, "../../../public/fonts/forms", f)), f).toBe(true);
+    }
+  });
+
   it("have the community form's link-preview image where its page points", () => {
     expect(communityPage).toContain("https://micromobility.sa/community/registration/og-image.png");
     expect(existsSync(resolve(__dirname, "../../../public/community/registration/og-image.png"))).toBe(true);

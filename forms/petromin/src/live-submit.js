@@ -7,7 +7,8 @@
     pt: { "Name": "Nome", "Company": "Empresa", "riders": "ciclistas", "Riding with someone?": "Vem acompanhado?", "Add up to four companions. Each gets their own bike under your booking number.": "Adicione até quatro acompanhantes. Cada um recebe a sua bicicleta sob o seu número de reserva.", "Add another rider": "Adicionar outro ciclista", "Rider {n}": "Ciclista {n}", "Remove": "Remover", "Enter the rider's full name": "Introduza o nome completo do ciclista", "Enter the rider's height in cm (100 to 250)": "Introduza a altura do ciclista em cm (100 a 250)", "Riders": "Ciclistas", "Riding with: {names}": "Consigo: {names}", "Up to four companions": "Até quatro acompanhantes", "Scan this code at the desk": "Mostre este código no balcão para leitura", "Edit my booking": "Editar a minha reserva", "Edit your booking": "Editar a sua reserva", "Save changes": "Guardar alterações", "Saving...": "A guardar...", "Your booking was updated.": "A sua reserva foi atualizada.", "We could not find your booking. Please register again.": "Não encontrámos a sua reserva. Inscreva-se novamente.", "You have already checked in. Ask the desk to change your booking.": "Já fez o check-in. Peça ao balcão para alterar a sua reserva.", "This badge is already registered for that session": "Este crachá já está inscrito para essa sessão", "Cancel": "Cancelar", "Enter a valid mobile number": "Introduza um número de telemóvel válido", "This session is no longer open": "Esta sessão já não está aberta", "Your details were updated.": "Os seus dados foram atualizados." },
     es: { "Name": "Nombre", "Company": "Empresa", "riders": "ciclistas", "Riding with someone?": "¿Vienes acompañado?", "Add up to four companions. Each gets their own bike under your booking number.": "Añade hasta cuatro acompañantes. Cada uno recibe su bici con tu número de reserva.", "Add another rider": "Añadir otro ciclista", "Rider {n}": "Ciclista {n}", "Remove": "Quitar", "Enter the rider's full name": "Introduce el nombre completo del ciclista", "Enter the rider's height in cm (100 to 250)": "Introduce la altura del ciclista en cm (100 a 250)", "Riders": "Ciclistas", "Riding with: {names}": "Contigo: {names}", "Up to four companions": "Hasta cuatro acompañantes", "Scan this code at the desk": "Escanea este código en el mostrador", "Edit my booking": "Editar mi reserva", "Edit your booking": "Editar tu reserva", "Save changes": "Guardar cambios", "Saving...": "Guardando...", "Your booking was updated.": "Tu reserva se ha actualizado.", "We could not find your booking. Please register again.": "No encontramos tu reserva. Inscríbete de nuevo.", "You have already checked in. Ask the desk to change your booking.": "Ya has registrado tu llegada. Pide en el mostrador que cambien tu reserva.", "This badge is already registered for that session": "Esta acreditación ya está inscrita para esa sesión", "Cancel": "Cancelar", "Enter a valid mobile number": "Introduce un número de móvil válido", "This session is no longer open": "Esta sesión ya no está abierta", "Your details were updated.": "Tus datos se han actualizado." },
     tl: { "Name": "Pangalan", "Company": "Kumpanya", "riders": "mga rider", "Riding with someone?": "May kasama ka ba?", "Add up to four companions. Each gets their own bike under your booking number.": "Magdagdag ng hanggang apat na kasama. Bawat isa ay may sariling bisikleta sa ilalim ng iyong booking number.", "Add another rider": "Magdagdag ng isa pang rider", "Rider {n}": "Rider {n}", "Remove": "Alisin", "Enter the rider's full name": "Ilagay ang buong pangalan ng rider", "Enter the rider's height in cm (100 to 250)": "Ilagay ang taas ng rider sa cm (100 hanggang 250)", "Riders": "Mga rider", "Riding with: {names}": "Kasama mo: {names}", "Up to four companions": "Hanggang apat na kasama", "Scan this code at the desk": "Ipa-scan ang code na ito sa desk", "Edit my booking": "I-edit ang booking ko", "Edit your booking": "I-edit ang iyong booking", "Save changes": "I-save ang mga pagbabago", "Saving...": "Sine-save...", "Your booking was updated.": "Na-update ang iyong booking.", "We could not find your booking. Please register again.": "Hindi namin nahanap ang iyong booking. Magparehistro muli.", "You have already checked in. Ask the desk to change your booking.": "Naka-check in ka na. Hilingin sa desk na baguhin ang iyong booking.", "This badge is already registered for that session": "Nakarehistro na ang badge na ito para sa session na iyon", "Cancel": "Kanselahin", "Enter a valid mobile number": "Maglagay ng wastong mobile number", "This session is no longer open": "Hindi na bukas ang session na ito", "Your details were updated.": "Na-update ang iyong mga detalye." },
-    bn: { "Name": "নাম", "Company": "কোম্পানি", "riders": "রাইডার", "Riding with someone?": "কারও সঙ্গে রাইড করছেন?", "Add up to four companions. Each gets their own bike under your booking number.": "সর্বোচ্চ চারজন সঙ্গী যোগ করুন। আপনার বুকিং নম্বরের অধীনে প্রত্যেকে নিজের একটি সাইকেল পাবেন।", "Add another rider": "আরেকজন রাইডার যোগ করুন", "Rider {n}": "রাইডার {n}", "Remove": "সরান", "Enter the rider's full name": "রাইডারের পুরো নাম লিখুন", "Enter the rider's height in cm (100 to 250)": "সেন্টিমিটারে রাইডারের উচ্চতা লিখুন (100 থেকে 250)", "Riders": "রাইডার", "Riding with: {names}": "সঙ্গে রাইড করছেন: {names}", "Up to four companions": "সর্বোচ্চ চারজন সঙ্গী", "Scan this code at the desk": "ডেস্কে এই কোডটি স্ক্যান করান", "Edit my booking": "আমার বুকিং সম্পাদনা করুন", "Edit your booking": "আপনার বুকিং সম্পাদনা করুন", "Save changes": "পরিবর্তন সংরক্ষণ করুন", "Saving...": "সংরক্ষণ হচ্ছে...", "Your booking was updated.": "আপনার বুকিং হালনাগাদ হয়েছে।", "We could not find your booking. Please register again.": "আমরা আপনার বুকিংটি খুঁজে পাইনি। অনুগ্রহ করে আবার রেজিস্টার করুন।", "You have already checked in. Ask the desk to change your booking.": "আপনি আগেই চেক ইন করেছেন। বুকিং বদলাতে ডেস্কে বলুন।", "This badge is already registered for that session": "এই ব্যাজটি ওই সেশনের জন্য আগে থেকেই রেজিস্টার করা আছে", "Cancel": "বাতিল", "Enter a valid mobile number": "একটি সঠিক মোবাইল নম্বর লিখুন", "This session is no longer open": "এই সেশনটি আর খোলা নেই", "Your details were updated.": "আপনার তথ্য হালনাগাদ হয়েছে।" }
+    bn: { "Name": "নাম", "Company": "কোম্পানি", "riders": "রাইডার", "Riding with someone?": "কারও সঙ্গে রাইড করছেন?", "Add up to four companions. Each gets their own bike under your booking number.": "সর্বোচ্চ চারজন সঙ্গী যোগ করুন। আপনার বুকিং নম্বরের অধীনে প্রত্যেকে নিজের একটি সাইকেল পাবেন।", "Add another rider": "আরেকজন রাইডার যোগ করুন", "Rider {n}": "রাইডার {n}", "Remove": "সরান", "Enter the rider's full name": "রাইডারের পুরো নাম লিখুন", "Enter the rider's height in cm (100 to 250)": "সেন্টিমিটারে রাইডারের উচ্চতা লিখুন (100 থেকে 250)", "Riders": "রাইডার", "Riding with: {names}": "সঙ্গে রাইড করছেন: {names}", "Up to four companions": "সর্বোচ্চ চারজন সঙ্গী", "Scan this code at the desk": "ডেস্কে এই কোডটি স্ক্যান করান", "Edit my booking": "আমার বুকিং সম্পাদনা করুন", "Edit your booking": "আপনার বুকিং সম্পাদনা করুন", "Save changes": "পরিবর্তন সংরক্ষণ করুন", "Saving...": "সংরক্ষণ হচ্ছে...", "Your booking was updated.": "আপনার বুকিং হালনাগাদ হয়েছে।", "We could not find your booking. Please register again.": "আমরা আপনার বুকিংটি খুঁজে পাইনি। অনুগ্রহ করে আবার রেজিস্টার করুন।", "You have already checked in. Ask the desk to change your booking.": "আপনি আগেই চেক ইন করেছেন। বুকিং বদলাতে ডেস্কে বলুন।", "This badge is already registered for that session": "এই ব্যাজটি ওই সেশনের জন্য আগে থেকেই রেজিস্টার করা আছে", "Cancel": "বাতিল", "Enter a valid mobile number": "একটি সঠিক মোবাইল নম্বর লিখুন", "This session is no longer open": "এই সেশনটি আর খোলা নেই", "Your details were updated.": "আপনার তথ্য হালনাগাদ হয়েছে।" },
+    ur: { "Name": "نام", "Company": "کمپنی", "riders": "رائیڈرز", "Riding with someone?": "کسی کے ساتھ رائیڈ کر رہے ہیں؟", "Add up to four companions. Each gets their own bike under your booking number.": "زیادہ سے زیادہ چار ساتھی شامل کریں۔ ہر ایک کو آپ کے بکنگ نمبر کے تحت اپنی سائیکل ملے گی۔", "Add another rider": "ایک اور رائیڈر شامل کریں", "Rider {n}": "رائیڈر {n}", "Remove": "ہٹائیں", "Enter the rider's full name": "رائیڈر کا پورا نام درج کریں", "Enter the rider's height in cm (100 to 250)": "رائیڈر کا قد سینٹی میٹر میں درج کریں (100 سے 250 تک)", "Riders": "رائیڈرز", "Riding with: {names}": "ساتھ رائیڈ کر رہے ہیں: {names}", "Up to four companions": "زیادہ سے زیادہ چار ساتھی", "Scan this code at the desk": "ڈیسک پر یہ کوڈ اسکین کروائیں", "Edit my booking": "میری بکنگ میں ترمیم کریں", "Edit your booking": "اپنی بکنگ میں ترمیم کریں", "Save changes": "تبدیلیاں محفوظ کریں", "Saving...": "محفوظ ہو رہا ہے...", "Your booking was updated.": "آپ کی بکنگ اپ ڈیٹ ہو گئی۔", "We could not find your booking. Please register again.": "ہمیں آپ کی بکنگ نہیں ملی۔ براہِ کرم دوبارہ رجسٹر کریں۔", "You have already checked in. Ask the desk to change your booking.": "آپ پہلے ہی چیک اِن کر چکے ہیں۔ اپنی بکنگ بدلنے کے لیے ڈیسک سے کہیں۔", "This badge is already registered for that session": "یہ بیج اس سیشن کے لیے پہلے ہی رجسٹرڈ ہے", "Cancel": "منسوخ کریں", "Enter a valid mobile number": "درست موبائل نمبر درج کریں", "This session is no longer open": "یہ سیشن اب کھلا نہیں ہے", "Your details were updated.": "آپ کی تفصیلات اپ ڈیٹ ہو گئیں۔" }
   };
   Object.keys(EXTRA).forEach(function (l) { T[l] = T[l] || {}; Object.keys(EXTRA[l]).forEach(function (k) { if (!T[l][k]) T[l][k] = EXTRA[l][k]; }); });
 
@@ -23,7 +24,8 @@
     hi: ["मैंने गोपनीयता सूचना पढ़ ली है।", "गोपनीयता सूचना पढ़ें", "कृपया पुष्टि करें कि आपने गोपनीयता सूचना पढ़ ली है।", "गोपनीयता सूचना", "यह सूचना अंग्रेज़ी और अरबी में उपलब्ध है।", "बंद करें"],
     ne: ["मैले गोपनीयता सूचना पढेँ।", "गोपनीयता सूचना पढ्नुहोस्", "कृपया तपाईंले गोपनीयता सूचना पढ्नुभएको पुष्टि गर्नुहोस्।", "गोपनीयता सूचना", "यो सूचना अंग्रेजी र अरबीमा उपलब्ध छ।", "बन्द गर्नुहोस्"],
     tl: ["Nabasa ko ang Abiso sa Privacy.", "Basahin ang Abiso sa Privacy", "Pakikumpirma na nabasa mo ang Abiso sa Privacy.", "Abiso sa Privacy", "Ang abisong ito ay nasa English at Arabic.", "Isara"],
-    bn: ["আমি গোপনীয়তা বিজ্ঞপ্তি পড়েছি।", "গোপনীয়তা বিজ্ঞপ্তি পড়ুন", "অনুগ্রহ করে নিশ্চিত করুন যে আপনি গোপনীয়তা বিজ্ঞপ্তি পড়েছেন।", "গোপনীয়তা বিজ্ঞপ্তি", "এই বিজ্ঞপ্তি ইংরেজি ও আরবিতে পাওয়া যায়।", "বন্ধ করুন"]
+    bn: ["আমি গোপনীয়তা বিজ্ঞপ্তি পড়েছি।", "গোপনীয়তা বিজ্ঞপ্তি পড়ুন", "অনুগ্রহ করে নিশ্চিত করুন যে আপনি গোপনীয়তা বিজ্ঞপ্তি পড়েছেন।", "গোপনীয়তা বিজ্ঞপ্তি", "এই বিজ্ঞপ্তি ইংরেজি ও আরবিতে পাওয়া যায়।", "বন্ধ করুন"],
+    ur: ["میں نے پرائیویسی نوٹس پڑھ لیا ہے۔", "پرائیویسی نوٹس پڑھیں", "براہ کرم تصدیق کریں کہ آپ نے پرائیویسی نوٹس پڑھ لیا ہے۔", "پرائیویسی نوٹس", "یہ نوٹس انگریزی اور عربی میں دستیاب ہے۔", "بند کریں"]
   };
   var PV_KEYS = ["I have read the Privacy Notice.", "Read the Privacy Notice", "Please confirm you’ve read the Privacy Notice.", "Privacy Notice", "This notice is available in English and Arabic.", "Close"];
   Object.keys(PV_T).forEach(function (l) { T[l] = T[l] || {}; PV_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = PV_T[l][i]; }); });
@@ -37,7 +39,8 @@
     hi: "नाम में केवल अक्षर, रिक्त स्थान और बिंदु (.) हो सकते हैं।",
     ne: "नाममा अक्षर, खाली ठाउँ र बिन्दु (.) मात्र हुन सक्छन्।",
     tl: "Mga titik, espasyo at tuldok lamang ang puwede sa pangalan.",
-    bn: "নামে শুধু অক্ষর, ফাঁকা জায়গা ও বিন্দু (.) থাকতে পারে।"
+    bn: "নামে শুধু অক্ষর, ফাঁকা জায়গা ও বিন্দু (.) থাকতে পারে।",
+    ur: "نام میں صرف حروف، خالی جگہ اور نقطے (.) ہو سکتے ہیں۔"
   };
   Object.keys(NC_T).forEach(function (l) { T[l] = T[l] || {}; if (!T[l][NAME_CHARS]) T[l][NAME_CHARS] = NC_T[l]; });
   /* Every word of a name has at least two letters, as on the rentals site (since 2026-09-25):
@@ -52,7 +55,8 @@
     hi: ["अपना पहला और अंतिम नाम पूरा लिखें, सिर्फ़ आद्याक्षर नहीं", "सवार का नाम पूरा लिखें, सिर्फ़ आद्याक्षर नहीं"],
     ne: ["आफ्नो नाम र थर पूरा लेख्नुहोस्, छोटकरी अक्षर होइन", "सवारको नाम पूरा लेख्नुहोस्, छोटकरी अक्षर होइन"],
     tl: ["Isulat nang buo ang iyong pangalan at apelyido, hindi inisyal", "Isulat nang buo ang pangalan ng rider, hindi inisyal"],
-    bn: ["প্রথম ও শেষ নাম পুরোটা লিখুন, শুধু আদ্যক্ষর নয়", "রাইডারের নাম পুরোটা লিখুন, শুধু আদ্যক্ষর নয়"]
+    bn: ["প্রথম ও শেষ নাম পুরোটা লিখুন, শুধু আদ্যক্ষর নয়", "রাইডারের নাম পুরোটা লিখুন, শুধু আদ্যক্ষর নয়"],
+    ur: ["اپنا پہلا اور آخری نام پورا لکھیں، صرف ابتدائی حروف نہیں", "رائیڈر کا نام پورا لکھیں، صرف ابتدائی حروف نہیں"]
   };
   Object.keys(NS_T).forEach(function (l) { T[l] = T[l] || {}; if (!T[l][NAME_SHORT]) T[l][NAME_SHORT] = NS_T[l][0]; if (!T[l][RIDER_SHORT]) T[l][RIDER_SHORT] = NS_T[l][1]; });
   // A word with fewer than two letters (its marks count, as Hindi and Bengali vowel signs do). A
@@ -74,9 +78,29 @@
     hi: ["राइड छूट-पत्र","इस छूट-पत्र को पढ़कर उससे सहमत हुए बिना आप MicroMobility के साथ कोई भी राइड या गतिविधि बुक नहीं कर सकते। साइकिल चलाना एक शारीरिक गतिविधि है जिसमें जोखिम होता है। मैं पूरी तरह अपने जोखिम पर भाग लेता/लेती हूँ, और अपने, अपनी सुरक्षा और अपने निजी सामान के लिए केवल मैं ही ज़िम्मेदार हूँ। दूसरों को या उनकी संपत्ति को मेरे द्वारा पहुँचाए गए किसी भी नुकसान के लिए भी मैं ज़िम्मेदार हूँ। कानून द्वारा अनुमत अधिकतम सीमा तक, MicroMobility, उसके कर्मचारी और उसके साझेदार मेरे या मेरे सामान के साथ होने वाली किसी भी बात के लिए ज़िम्मेदार नहीं हैं, जिसमें कोई भी चोट, हड्डी टूटना, बीमारी, गुम होना, चोरी या नुकसान शामिल है, चाहे उसका कारण कुछ भी हो, गतिविधि के दौरान या उससे जुड़े किसी भी रूप में। मैं हेलमेट पहनने और टीम के निर्देशों और रास्ते का पालन करने के लिए सहमत हूँ, और गलत इस्तेमाल से किराए की साइकिल को हुए किसी भी नुकसान के लिए ज़िम्मेदार हूँ। साइकिल उसी हालत में लौटाई जाती है जिसमें वह मिली थी।","मैंने छूट-पत्र पढ़ लिया है और इस पंजीकरण के हर राइडर की ओर से इससे सहमत हूँ","जारी रखने के लिए कृपया छूट-पत्र स्वीकार करें।"],
     ne: ["राइड छुट-पत्र","यो छुटपत्र पढेर सहमति नजनाएसम्म तपाईं MicroMobility सँग कुनै पनि राइड वा गतिविधि बुक गर्न सक्नुहुन्न। साइकल चलाउनु जोखिम भएको शारीरिक गतिविधि हो। म पूर्ण रूपमा आफ्नै जोखिममा सहभागी हुन्छु, र आफू, आफ्नो सुरक्षा र आफ्ना व्यक्तिगत सामानका लागि म मात्र जिम्मेवार छु। मैले अरूलाई वा उनीहरूको सम्पत्तिलाई गरेको कुनै पनि क्षतिका लागि पनि म जिम्मेवार छु। कानूनले अनुमति दिएको अधिकतम हदसम्म, MicroMobility, यसका कर्मचारी र साझेदारहरू मलाई वा मेरा सामानलाई हुने कुनै पनि कुराका लागि जिम्मेवार हुँदैनन्, जसमा कुनै पनि चोटपटक, हड्डी भाँचिनु, बिरामी, हराउनु, चोरी वा क्षति पर्छ, जुनसुकै कारणले भए पनि, गतिविधिका क्रममा वा त्यससँग सम्बन्धित रूपमा। म हेलमेट लगाउन र टोलीका निर्देशन तथा बाटो पालना गर्न सहमत छु, र गलत प्रयोगले भाडाको साइकललाई हुने कुनै पनि क्षतिका लागि म जिम्मेवार छु। साइकल जुन अवस्थामा लिइएको हो सोही अवस्थामा फिर्ता गरिन्छ।","मैले छुट-पत्र पढें र यो दर्ताका हरेक राइडरको तर्फबाट यसमा सहमत छु","अगाडि बढ्न कृपया छुट-पत्र स्वीकार गर्नुहोस्।"],
     tl: ["Ride waiver","Hindi ka makakapag-book ng anumang ride o aktibidad sa MicroMobility hangga’t hindi mo nababasa at sinasang-ayunan ang waiver na ito. Ang pagbibisikleta ay pisikal na aktibidad na may kaakibat na panganib. Lumalahok ako nang buo sa sarili kong panganib, at ako lamang ang may pananagutan sa aking sarili, sa aking kaligtasan at sa aking mga personal na gamit. Ako rin ang mananagot sa anumang pinsalang maidudulot ko sa ibang tao o sa kanilang ari-arian. Hanggang sa pinakamalawak na pinapahintulutan ng batas, walang pananagutan ang MicroMobility, ang mga kawani nito at ang mga katuwang nito sa anumang mangyari sa akin o sa aking mga gamit, kabilang ang anumang pinsala sa katawan, bali, sakit, pagkawala, pagnanakaw o pagkasira, anuman ang sanhi, habang nasa aktibidad o may kaugnayan dito. Sumasang-ayon akong magsuot ng helmet at sumunod sa mga tagubilin ng team at sa ruta, at ako ang mananagot sa anumang pinsala sa inuupahang bisikleta dahil sa maling paggamit. Ibinabalik ang bisikleta sa kondisyong natanggap ito.","Nabasa ko ang waiver at sumasang-ayon ako rito para sa bawat rider sa rehistrasyong ito","Pakitanggap ang waiver para makapagpatuloy."],
-    bn: ["রাইড দায়মুক্তিপত্র","এই দায়মুক্তিপত্র পড়ে তাতে সম্মতি না দেওয়া পর্যন্ত আপনি MicroMobility-এর সাথে কোনো রাইড বা কার্যক্রম বুক করতে পারবেন না। সাইকেল চালানো একটি ঝুঁকিপূর্ণ শারীরিক কার্যক্রম। আমি সম্পূর্ণ নিজের ঝুঁকিতে অংশ নিচ্ছি, এবং নিজের, নিজের নিরাপত্তার ও নিজের ব্যক্তিগত জিনিসপত্রের জন্য শুধু আমিই দায়ী। অন্যদের বা তাদের সম্পত্তির যে ক্ষতি আমি করি, তার জন্যও আমি দায়ী। আইনে অনুমোদিত সর্বোচ্চ সীমা পর্যন্ত, MicroMobility, এর কর্মী ও অংশীদাররা আমার বা আমার জিনিসপত্রের সাথে যা-ই ঘটুক তার জন্য দায়ী নয়, যার মধ্যে যেকোনো আঘাত, হাড় ভাঙা, অসুস্থতা, হারানো, চুরি বা ক্ষতি অন্তর্ভুক্ত, কারণ যা-ই হোক, কার্যক্রম চলাকালে বা এর সাথে সম্পর্কিতভাবে। আমি হেলমেট পরতে এবং দলের নির্দেশনা ও পথ মেনে চলতে সম্মত, এবং ভুল ব্যবহারের কারণে ভাড়া করা সাইকেলের যেকোনো ক্ষতির জন্য আমি দায়ী। সাইকেলটি যে অবস্থায় নেওয়া হয়েছিল সেই অবস্থায় ফেরত দেওয়া হয়।","আমি দায়মুক্তিপত্রটি পড়েছি এবং এই নিবন্ধনের প্রত্যেক রাইডারের পক্ষে এতে সম্মতি দিচ্ছি","চালিয়ে যেতে অনুগ্রহ করে দায়মুক্তিপত্রে সম্মতি দিন।"]
+    bn: ["রাইড দায়মুক্তিপত্র","এই দায়মুক্তিপত্র পড়ে তাতে সম্মতি না দেওয়া পর্যন্ত আপনি MicroMobility-এর সাথে কোনো রাইড বা কার্যক্রম বুক করতে পারবেন না। সাইকেল চালানো একটি ঝুঁকিপূর্ণ শারীরিক কার্যক্রম। আমি সম্পূর্ণ নিজের ঝুঁকিতে অংশ নিচ্ছি, এবং নিজের, নিজের নিরাপত্তার ও নিজের ব্যক্তিগত জিনিসপত্রের জন্য শুধু আমিই দায়ী। অন্যদের বা তাদের সম্পত্তির যে ক্ষতি আমি করি, তার জন্যও আমি দায়ী। আইনে অনুমোদিত সর্বোচ্চ সীমা পর্যন্ত, MicroMobility, এর কর্মী ও অংশীদাররা আমার বা আমার জিনিসপত্রের সাথে যা-ই ঘটুক তার জন্য দায়ী নয়, যার মধ্যে যেকোনো আঘাত, হাড় ভাঙা, অসুস্থতা, হারানো, চুরি বা ক্ষতি অন্তর্ভুক্ত, কারণ যা-ই হোক, কার্যক্রম চলাকালে বা এর সাথে সম্পর্কিতভাবে। আমি হেলমেট পরতে এবং দলের নির্দেশনা ও পথ মেনে চলতে সম্মত, এবং ভুল ব্যবহারের কারণে ভাড়া করা সাইকেলের যেকোনো ক্ষতির জন্য আমি দায়ী। সাইকেলটি যে অবস্থায় নেওয়া হয়েছিল সেই অবস্থায় ফেরত দেওয়া হয়।","আমি দায়মুক্তিপত্রটি পড়েছি এবং এই নিবন্ধনের প্রত্যেক রাইডারের পক্ষে এতে সম্মতি দিচ্ছি","চালিয়ে যেতে অনুগ্রহ করে দায়মুক্তিপত্রে সম্মতি দিন।"],
+    ur: ["رائیڈ ویور","اس اقرار نامے کو پڑھ کر اس سے اتفاق کیے بغیر آپ MicroMobility کے ساتھ کوئی رائیڈ یا سرگرمی بک نہیں کر سکتے۔ سائیکل چلانا ایک جسمانی سرگرمی ہے جس میں خطرات ہوتے ہیں۔ میں مکمل طور پر اپنی ذمہ داری پر حصہ لیتا/لیتی ہوں، اور اپنی ذات، اپنی حفاظت اور اپنے ذاتی سامان کا ذمہ دار صرف میں ہوں۔ دوسروں کو یا ان کی املاک کو میری طرف سے پہنچنے والے کسی بھی نقصان کا ذمہ دار بھی میں ہوں۔ قانون کی اجازت کی آخری حد تک، MicroMobility، اس کا عملہ اور اس کے شراکت دار مجھے یا میرے سامان کو پیش آنے والی کسی بھی چیز کے ذمہ دار نہیں، بشمول کوئی بھی چوٹ، ہڈی ٹوٹنا، بیماری، گمشدگی، چوری یا نقصان، خواہ اس کی وجہ کچھ بھی ہو، سرگرمی کے دوران یا اس کے سلسلے میں۔ میں ہیلمٹ پہننے اور ٹیم کی ہدایات اور راستے پر عمل کرنے کا عہد کرتا/کرتی ہوں، اور غلط استعمال سے کرائے کی سائیکل کو پہنچنے والے کسی بھی نقصان کا ذمہ دار ہوں۔ سائیکل اسی حالت میں واپس کی جاتی ہے جس حالت میں وصول کی گئی تھی۔","میں نے ویور پڑھ لیا ہے اور اس رجسٹریشن کے ہر رائیڈر کی طرف سے اس سے اتفاق کرتا/کرتی ہوں","جاری رکھنے کے لیے براہِ کرم ویور قبول کریں۔"]
   };
   Object.keys(WV_T).forEach(function (l) { T[l] = T[l] || {}; WV_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = WV_T[l][i]; }); });
+  /* Register another (one phone, several people), the phone's other registrations, and two refusals
+     the database gives since the rentals migration of 2026-10-05: a waiver older than the current one
+     (WAIVER_OUTDATED, a page loaded before the waiver changed) and a paid booking moved to a session
+     with another price (PAID_MOVE). */
+  var WAIVER_OUTDATED = "The ride waiver has changed. Reload this page to read and accept the new one.";
+  var PAID_MOVE = "This booking is already paid, so it cannot move to a session with a different price. Ask the desk to change it.";
+  var MORE_KEYS = ["Register another", "Other registrations on this phone", WAIVER_OUTDATED, PAID_MOVE];
+  var MORE_T = {
+    ar: ["تسجيل شخص آخر", "تسجيلات أخرى على هذا الجوال", "تغيّر إقرار الركوب. أعد تحميل هذه الصفحة لقراءة الإقرار الجديد والموافقة عليه.", "هذا الحجز مدفوع، لذا لا يمكن نقله إلى جلسة بسعر مختلف. اطلب من المكتب تغييره."],
+    fr: ["Inscrire une autre personne", "Autres inscriptions sur ce téléphone", "La décharge de responsabilité a changé. Rechargez cette page pour lire et accepter la nouvelle.", "Cette réservation est déjà payée : elle ne peut pas passer à une séance d'un autre prix. Demandez au comptoir de la modifier."],
+    es: ["Inscribir a otra persona", "Otras inscripciones en este teléfono", "La exención de responsabilidad ha cambiado. Recarga esta página para leer y aceptar la nueva.", "Esta reserva ya está pagada, así que no puede pasar a una sesión con otro precio. Pide en el mostrador que la cambien."],
+    pt: ["Registar outra pessoa", "Outros registos neste telemóvel", "O termo de responsabilidade mudou. Recarregue esta página para ler e aceitar o novo.", "Esta reserva já está paga, por isso não pode passar para uma sessão com outro preço. Peça ao balcão para a alterar."],
+    hi: ["किसी और का पंजीकरण करें", "इस फ़ोन पर अन्य पंजीकरण", "राइड छूट-पत्र बदल गया है। नया छूट-पत्र पढ़ने और स्वीकार करने के लिए यह पेज फिर से लोड करें।", "इस बुकिंग का भुगतान हो चुका है, इसलिए इसे अलग कीमत वाले सत्र में नहीं ले जाया जा सकता। इसे बदलने के लिए डेस्क से कहें।"],
+    ne: ["अर्को व्यक्ति दर्ता गर्नुहोस्", "यो फोनमा अन्य दर्ताहरू", "राइड छुट-पत्र परिवर्तन भएको छ। नयाँ छुट-पत्र पढ्न र स्वीकार गर्न यो पेज फेरि लोड गर्नुहोस्।", "यो बुकिङको भुक्तानी भइसकेको छ, त्यसैले यसलाई फरक मूल्यको सत्रमा सार्न सकिँदैन। परिवर्तन गर्न डेस्कलाई भन्नुहोस्।"],
+    tl: ["Magparehistro ng ibang tao", "Iba pang rehistro sa phone na ito", "Nagbago ang ride waiver. I-reload ang page na ito para basahin at tanggapin ang bago.", "Bayad na ang booking na ito, kaya hindi ito mailipat sa session na iba ang presyo. Hilingin sa desk na baguhin ito."],
+    bn: ["আরেকজনকে রেজিস্টার করুন", "এই ফোনে অন্যান্য রেজিস্ট্রেশন", "রাইড দায়মুক্তিপত্র বদলেছে। নতুনটি পড়তে ও তাতে সম্মতি দিতে এই পেজটি আবার লোড করুন।", "এই বুকিংয়ের টাকা আগেই দেওয়া হয়েছে, তাই এটি অন্য দামের সেশনে সরানো যাবে না। বদলাতে ডেস্কে বলুন।"],
+    ur: ["کسی اور کو رجسٹر کریں", "اس فون پر دیگر رجسٹریشنز", "رائیڈ ویور بدل گیا ہے۔ نیا ویور پڑھنے اور قبول کرنے کے لیے یہ صفحہ دوبارہ لوڈ کریں۔", "اس بکنگ کی ادائیگی ہو چکی ہے، اس لیے اسے مختلف قیمت والے سیشن میں منتقل نہیں کیا جا سکتا۔ اسے بدلنے کے لیے ڈیسک سے کہیں۔"]
+  };
+  Object.keys(MORE_T).forEach(function (l) { T[l] = T[l] || {}; MORE_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = MORE_T[l][i]; }); });
   // The design paints every data-t element once, on load, before this file runs. Anything
   // added here (the companions block, the edit flow, the QR note) was therefore missing from
   // the dictionary at that moment and fell back to its English key, in every language.
@@ -148,11 +172,14 @@
     ridersEl.innerHTML = "";
     companions.forEach(function (c, i) {
       var row = document.createElement("div"); row.className = "rider"; row.setAttribute("data-i", String(i));
+      // Every box is named with its rider ("Rider 2, Full name"), and its message is a polite live
+      // region the box points at while it shows (describeError).
+      var id = "rider-" + i;
       row.innerHTML =
-        '<div class="rider-head"><b data-t="Rider {n}" data-args=\'{"n":' + (i + 2) + '}\'>Rider ' + (i + 2) + '</b><button type="button" class="rider-remove" data-t="Remove">Remove</button></div>' +
-        '<div class="field rider-name"><label data-t="Full name">Full name</label><input type="text" maxlength="120" autocomplete="off"><p class="err" data-t="Enter the rider\'s full name">Enter the rider\'s full name</p></div>' +
-        '<div class="field rider-height"><label data-t="Height in cm">Height in cm</label><input type="number" inputmode="numeric" min="100" max="250" placeholder="175"><p class="err" data-t="Enter the rider\'s height in cm (100 to 250)">Enter the rider\'s height in cm (100 to 250)</p></div>' +
-        '<div class="field rider-type"><span class="label" data-t="Bike type">Bike type</span><div class="types" role="radiogroup"><button type="button" class="tile" data-v="Hybrid" role="radio" aria-checked="false" data-t="Hybrid">Hybrid</button><button type="button" class="tile" data-v="Mountain" role="radio" aria-checked="false" data-t="Mountain">Mountain</button></div><p class="err" data-t="Choose a bike type">Choose a bike type</p></div>';
+        '<div class="rider-head"><b id="' + id + '-head" data-t="Rider {n}" data-args=\'{"n":' + (i + 2) + '}\'>Rider ' + (i + 2) + '</b><button type="button" class="rider-remove" id="' + id + '-remove" aria-labelledby="' + id + '-remove ' + id + '-head" data-t="Remove">Remove</button></div>' +
+        '<div class="field rider-name"><label id="' + id + '-name-label" for="' + id + '-name" data-t="Full name">Full name</label><input id="' + id + '-name" type="text" maxlength="120" autocomplete="off" aria-labelledby="' + id + '-head ' + id + '-name-label"><p class="err" id="' + id + '-name-err" aria-live="polite" data-t="Enter the rider\'s full name">Enter the rider\'s full name</p></div>' +
+        '<div class="field rider-height"><label id="' + id + '-height-label" for="' + id + '-height" data-t="Height in cm">Height in cm</label><input id="' + id + '-height" type="number" inputmode="numeric" min="100" max="250" placeholder="175" aria-labelledby="' + id + '-head ' + id + '-height-label"><p class="err" id="' + id + '-height-err" aria-live="polite" data-t="Enter the rider\'s height in cm (100 to 250)">Enter the rider\'s height in cm (100 to 250)</p></div>' +
+        '<div class="field rider-type"><span class="label" id="' + id + '-type-label" data-t="Bike type">Bike type</span><div class="types" role="radiogroup" aria-labelledby="' + id + '-head ' + id + '-type-label"><button type="button" class="tile" data-v="Hybrid" role="radio" aria-checked="false" data-t="Hybrid">Hybrid</button><button type="button" class="tile" data-v="Mountain" role="radio" aria-checked="false" data-t="Mountain">Mountain</button></div><p class="err" id="' + id + '-type-err" aria-live="polite" data-t="Choose a bike type">Choose a bike type</p></div>';
       row.querySelector(".rider-name input").value = c.name || "";
       row.querySelector(".rider-height input").value = c.height || "";
       row.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === c.type)); });
@@ -172,6 +199,7 @@
     var row = ridersEl.querySelector('.rider[data-i="' + i + '"]'); if (!row) return;
     var f = row.querySelector(".rider-" + field); if (f) f.classList.toggle("invalid", !!on);
     if (f && field === "name") nameMsg(f, on && msg);
+    if (f) describeError(f.querySelector("input, [role=radiogroup]"), f.querySelector(".err"), on);
     if (on) { var inp = f && f.querySelector("input, .tile"); if (inp) inp.focus(); }
   }
   function validateCompanions() {
@@ -218,7 +246,50 @@
     try { var q = qrcode(0, "M"); q.addData("MMP-" + String(d.bookingNo).toUpperCase()); q.make(); box.innerHTML = q.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); } catch (e) {}
   }
   var _showSuccessDesign = showSuccess;
-  showSuccess = function (d) { _showSuccessDesign(d); drawQr(current); showParty(current); var n = $("#tk-name"); if (n) n.textContent = (current && current.name) || ""; };
+  showSuccess = function (d) { _showSuccessDesign(d); drawQr(current); showParty(current); var n = $("#tk-name"); if (n) n.textContent = (current && current.name) || ""; drawOthers(); };
+  /* Register another: one phone, several people. Edit changes the booking on the screen (its
+     session, its people), so a second person needs a fresh form. The confirmation already on this
+     phone stays as it is until the new registration goes through (a reload or Cancel shows it
+     again), then joins the phone's other registrations, listed under the confirmation and shown
+     again with a tap. Each is kept until 6 hours after its session, as the confirmation is. */
+  var KEPT = "mm-petromin-kept", another = false;
+  function ended(d) { var end = d.session && (d.session.end || d.session.start); return !!end && new Date(end).getTime() + 6 * 3600000 < Date.now(); }
+  function keptList() {
+    var list = null; try { list = JSON.parse(localStorage.getItem(KEPT) || "[]"); } catch (e) {}
+    return (Array.isArray(list) ? list : []).filter(function (d) { return d && d.bookingNo && !ended(d); });
+  }
+  function saveKept(list) { try { if (list.length) localStorage.setItem(KEPT, JSON.stringify(list.slice(0, 10))); else localStorage.removeItem(KEPT); } catch (e) {} }
+  function keep(d) { if (d && d.bookingNo) saveKept([d].concat(keptList().filter(function (x) { return x.bookingNo !== d.bookingNo; }))); }
+  function drawOthers() {
+    var list = keptList().filter(function (x) { return !current || x.bookingNo !== current.bookingNo; }), box = $("#others"), el = $("#others-list");
+    el.innerHTML = "";
+    list.forEach(function (d) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "other";
+      b.setAttribute("data-no", d.bookingNo); b.textContent = d.bookingNo + " · " + (d.name || "");
+      el.appendChild(b);
+    });
+    box.hidden = !list.length;
+  }
+  $("#others-list").addEventListener("click", function (e) {
+    var b = e.target.closest(".other"); if (!b) return;
+    var no = b.getAttribute("data-no"), pick = keptList().filter(function (x) { return x.bookingNo === no; })[0];
+    if (!pick) { drawOthers(); return; }
+    saveKept(keptList().filter(function (x) { return x.bookingNo !== no; }));
+    keep(current);
+    showSuccess(pick); // the phone's confirmation now (saved as it), the one before it kept
+    setNote("Show this screen and your booking number at the desk to collect your bike.");
+    try { $("#card").scrollIntoView({ block: "start" }); } catch (err) {}
+  });
+  function startAnother() {
+    if (!current) return;
+    editing = null; another = true;
+    prefill({}); setSubmitLabels(false);
+    $("#privacy").checked = false; setError("f-privacy", false); // the next person confirms the notice for themselves
+    $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
+    hideBanner(); goStep(1);
+    loadSessions();
+  }
+  $("#another").addEventListener("click", startAnother);
   /* Edit: reopen the form filled with the saved registration and save through rider_edit, which
      updates the same row (booking number kept). The saved booking number and phone prove the row. */
   var editing = null;
@@ -227,7 +298,7 @@
     l.setAttribute("data-t", edit ? "Save changes" : "Register"); render(l);
     b.setAttribute("data-t", edit ? "Saving..." : "Registering..."); render(b);
     h.setAttribute("data-t", edit ? "Edit your booking" : "Employees Bike Registration Form"); render(h);
-    $("#cancel-edit").hidden = !edit;
+    $("#cancel-edit").hidden = !(edit || another); // Cancel goes back to the confirmation on the phone
     $("#f-privacy").hidden = !!edit; // confirmed when they registered; an edit does not ask again
     $("#waiver").checked = false; setError("f-waiver", false); // the waiver is asked again on every save, an edit too
   }
@@ -249,12 +320,12 @@
   }
   function startEdit() {
     if (!current) return;
-    editing = current; prefill(current); setSubmitLabels(true);
+    editing = current; another = false; prefill(current); setSubmitLabels(true);
     $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
     hideBanner(); goStep(1);
     loadSessions(); // a restored confirmation never fetched the calendar; the saved session stays selected if it is still offered
   }
-  function cancelEdit() { editing = null; setSubmitLabels(false); hideBanner(); if (current) showSuccess(current); }
+  function cancelEdit() { editing = null; another = false; setSubmitLabels(false); hideBanner(); if (current) showSuccess(current); }
   $("#edit").addEventListener("click", startEdit);
   $("#cancel-edit").addEventListener("click", cancelEdit);
   /* The notice's text. Tables carry each column's name on every cell, so a phone can show a row
@@ -266,6 +337,10 @@
   }
   var PV_MAIL = '<a href="mailto:info@micromobility.sa">info@micromobility.sa</a>';
   var PV_SITE = '<a href="https://micromobility.sa/?privacy" target="_blank" rel="noopener">micromobility.sa/?privacy</a>';
+  // The notice's version: the day it was last updated (its first line below), as 'YYYY-MM-DD', the
+  // shape the booking site records its own notice in. A new registration sends it as p_privacy, the
+  // box ticked. Change it together with the "Last updated" lines.
+  var PRIVACY_VERSION = "2026-09-22";
   var PV = {
     en: '<p class="pv-upd">Last updated: 22 September 2026</p>' +
       "<h3>Who we are</h3>" +
@@ -364,14 +439,27 @@
     };
     if (data.riders.length) args.p_riders = data.riders;
     args.p_waiver = WAIVER_VERSION; // only reached with the box ticked
+    if (!editing && $("#privacy").checked) args.p_privacy = PRIVACY_VERSION; // the notice this registration confirmed
     setLoading(true);
     var r;
     try {
       if (editing) {
         r = await sbClient().rpc("rider_edit", { p_booking_no: editing.bookingNo, p_proof_phone: editing.phone, p_badge: args.p_badge, p_name: args.p_name, p_height: args.p_height, p_type: args.p_type, p_session_id: args.p_session_id, p_company: args.p_company, p_phone: args.p_phone, p_riders: data.riders, p_waiver: args.p_waiver });
-      } else r = await sbClient().rpc("rider_register", args);
+      } else {
+        r = await sbClient().rpc("rider_register", args);
+        // A database that does not take p_privacy yet (until the rentals migration adding it is
+        // applied) does not know the call with it: 404, PGRST202. Once more without it, and only it.
+        if (r && r.error && args.p_privacy && (r.error.code === "PGRST202" || r.status === 404)) {
+          var older = {}; Object.keys(args).forEach(function (k) { if (k !== "p_privacy") older[k] = args[k]; });
+          r = await sbClient().rpc("rider_register", older);
+        }
+      }
     } catch (err) { r = { error: err }; }
     setLoading(false);
+    // Raised by the database (P0001) since rentals' 2026-10-05 migration: said in the page's language.
+    var refused = String((r && r.error && r.error.message) || (r && r.data && r.data.error) || "");
+    if (/WAIVER_OUTDATED/.test(refused)) { showBanner(WAIVER_OUTDATED); return; }
+    if (/PAID_MOVE/.test(refused)) { showBanner(PAID_MOVE); return; }
     if (!r || r.error || !r.data) { showBanner("Could not reach the server"); return; }
     var d = r.data;
     if (!d.ok) {
@@ -397,13 +485,20 @@
     }
     data.bookingNo = d.booking_no;
     if (d.session) data.session = d.session;
-    var wasEdit = !!editing; editing = null; setSubmitLabels(false);
+    var wasEdit = !!editing; editing = null;
+    if (another && current && current.bookingNo !== data.bookingNo) keep(current); // the confirmation before this one stays on the phone
+    another = false; setSubmitLabels(false);
     showSuccess(data);
     setNote(wasEdit ? "Your booking was updated." : d.resubmitted ? "Your details were updated." : "Show this screen and your booking number at the desk to collect your bike.");
   });
 
-  /* Boot: restore a saved confirmation on this device, otherwise start at step 1 with live sessions. */
+  /* Boot: restore a saved confirmation on this device (else the latest of its other registrations),
+     otherwise start at step 1 with live sessions. */
+  function restoreKept() {
+    var list = keptList(); if (!list.length) return false;
+    saveKept(list.slice(1)); showSuccess(list[0]); return true;
+  }
   renderCompanions();
   goStep(1);
-  if (!restore()) loadSessions();
+  if (!restore() && !restoreKept()) loadSessions();
 

@@ -57,9 +57,10 @@ test('an edit needs the waiver too, and rider_edit gets p_waiver', async ({ page
   await expect(page.locator('#success')).toBeVisible();
   expect(edits).toHaveLength(1);
   expect(edits[0]).toMatchObject({ p_booking_no: 'P-001', p_waiver: '2026-10-v3' });
+  expect(edits[0]).not.toHaveProperty('p_privacy'); // an edit does not ask for the notice again
 });
 
-test('a PGRST202 is never retried without p_waiver (the database takes it since 2026-10-03)', async ({ page }) => {
+test('a PGRST202 is never retried without p_waiver (the database takes it since 2026-10-03), only without p_privacy', async ({ page }) => {
   const regs: Record<string, unknown>[] = [];
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => { regs.push(r.request().postDataJSON()); return r.fulfill(json(PGRST202, 404)); });
@@ -68,8 +69,12 @@ test('a PGRST202 is never retried without p_waiver (the database takes it since 
   await page.click('#submit');
   await expect(page.locator('#banner')).toBeVisible();
   await expect(page.locator('#success')).toBeHidden();
-  expect(regs).toHaveLength(1);
-  expect(regs[0].p_waiver).toBe('2026-10-v3');
+  // The notice's version is the one argument a database before its migration does not know: one
+  // more try without it, never without the waiver.
+  expect(regs).toHaveLength(2);
+  expect(regs[0]).toMatchObject({ p_waiver: '2026-10-v3', p_privacy: '2026-09-22' });
+  expect(regs[1].p_waiver).toBe('2026-10-v3');
+  expect(regs[1]).not.toHaveProperty('p_privacy');
 });
 
 test('any other server error is not retried', async ({ page }) => {
@@ -112,7 +117,18 @@ test('the full waiver text reads in English and Arabic, Arabic right to left', a
   await expect(page.locator('#f-waiver .privacy-check')).toHaveText('قرأت الإقرار وأوافق عليه نيابةً عن كل راكب في هذا التسجيل');
 });
 
-for (const lang of ['ar', 'fr', 'es', 'pt', 'hi', 'ne', 'tl', 'bn']) {
+test('Urdu reads right to left, with the booking app\'s Urdu waiver', async ({ page }) => {
+  await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
+  await fillToLastStep(page, 'ur');
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await expect(page.locator('#lang')).toHaveValue('ur');
+  await expect(page.locator('#form .title')).toHaveText('ملازمین کے لیے سائیکل رجسٹریشن فارم');
+  await expect(page.locator('#f-waiver .label')).toHaveText('رائیڈ ویور');
+  await expect(page.locator('#waiver-text')).toContainText('اس اقرار نامے کو پڑھ کر اس سے اتفاق کیے بغیر');
+  await expect(page.locator('#waiver-text')).toContainText('دوسروں کو یا ان کی املاک کو');
+});
+
+for (const lang of ['ar', 'ur', 'fr', 'es', 'pt', 'hi', 'ne', 'tl', 'bn']) {
   test(`every waiver string has a ${lang} translation`, async ({ page }) => {
     await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
     await page.goto(`/petromin?lang=${lang}`, { waitUntil: 'networkidle' });

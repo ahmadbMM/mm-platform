@@ -1,14 +1,16 @@
-// The headers every answer carries. The page loads nothing from anywhere else: its script,
-// styles and fonts are the Worker's own files, and the database is reached through /api only.
-// No inline script or style anywhere, so the policy needs no 'unsafe-inline'.
+// The headers every answer carries. The page's script, styles and fonts are the Worker's own files,
+// and the database is reached through /api only. The one thing from elsewhere is Cloudflare Web
+// Analytics (named in the Privacy Notice): Cloudflare adds its beacon to the page on this zone, and
+// the policy refused it on every load, so its script and its reports are allowed. No inline script
+// or style anywhere, so the policy needs no 'unsafe-inline'.
 
 export const CSP = [
   "default-src 'self'",
-  "script-src 'self'",
+  "script-src 'self' https://static.cloudflareinsights.com",
   "style-src 'self'",
   "img-src 'self' data:",
   "font-src 'self'",
-  "connect-src 'self'",
+  "connect-src 'self' https://cloudflareinsights.com",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "base-uri 'none'",

@@ -37,10 +37,16 @@ The specs drive the real page in a browser against `serve.mjs` (the built page a
 with every Supabase call stubbed, so nothing is ever written to production. CI runs them (`npm run
 e2e`) before every deploy. They cover registering with companions,
 editing a booking afterwards, the ride waiver (required on every registration and edit, sent as `p_waiver`), the booking card, and that every string on the card and in the
-companions block has a translation in all seven non-English languages.
+companions block has a translation in every language but English (Arabic, Urdu, French, Spanish,
+Portuguese, Hindi, Nepali, Tagalog and Bengali).
+
+## One phone, several people
+Edit changes the booking on the screen. "Register another" opens a fresh form; the confirmation on
+the phone stays until the new registration goes through, then is listed under the new one
+(`mm-petromin-kept` in the phone's storage, each kept until 6 hours after its session).
 
 ## Update the design
 1. Export from Claude Design and copy the files into `design/` (index.html, styles.css, app.js, logo.png, petromin-logo.avif), overwriting the old ones.
-2. `npm run build` builds `src/page.html` and the website's copy (inlines CSS and logos, swaps the demo submit for `src/live-submit.js`).
+2. `npm run build` builds `src/page.html` and the website's copy (inlines CSS and logos without their metadata chunks, swaps the demo submit for `src/live-submit.js`). The fonts are the website's files (`apps/web/public/fonts/forms`), never Google Fonts.
 3. Commit and merge to main.
 The session list must never grey out or label a session by capacity: the capacity on a session limits website bookings only, partner registrations have no cap (the merge refuses an export that reads `spots`). The merge needs the export to keep the element ids and the two markers in app.js (`/* Submit: demo behaviour.` and `window.RiderRegistration`); it stops with a clear message if the design dropped one. Never edit `src/page.html` by hand, it is generated.

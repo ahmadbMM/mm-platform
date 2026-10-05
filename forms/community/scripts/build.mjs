@@ -36,12 +36,26 @@ for (const { code } of SHARED.LANGS) {
 }
 if (problems.length) { console.error(problems.slice(0, 40).join('\n')); process.exit(1); }
 
+// A PNG with only the chunks that draw it (IHDR, PLTE, tRNS, IDAT, IEND): a design export's metadata
+// (a C2PA block of ~5.7 KB a logo) or any other ancillary chunk never reaches the page.
+const PNG_KEEP = new Set(['IHDR', 'PLTE', 'tRNS', 'IDAT', 'IEND']);
+function pngBare(buf) {
+  if (buf.toString('latin1', 1, 4) !== 'PNG') return buf;
+  const parts = [buf.subarray(0, 8)];
+  for (let i = 8; i + 12 <= buf.length; ) {
+    const end = i + 12 + buf.readUInt32BE(i);
+    if (PNG_KEEP.has(buf.toString('latin1', i + 4, i + 8))) parts.push(buf.subarray(i, end));
+    i = end;
+  }
+  return Buffer.concat(parts);
+}
 const mime = { png: 'image/png', svg: 'image/svg+xml', webp: 'image/webp' };
 html = html.replace(/(src|href)="([^"]+\.(png|svg|webp))"/g, (m, attr, file, ext) => {
   if (/^(https?:)?\/\//.test(file)) return m;
   const p = d(file);
   if (!existsSync(p)) { console.error(`design/${file} not found`); process.exit(1); }
-  return `${attr}="data:${mime[ext]};base64,${readFileSync(p).toString('base64')}"`;
+  const bytes = ext === 'png' ? pngBare(readFileSync(p)) : readFileSync(p);
+  return `${attr}="data:${mime[ext]};base64,${bytes.toString('base64')}"`;
 });
 html = html.replace('<link rel="stylesheet" href="styles.css">',
   () => '<meta name="robots" content="noindex">\n<link rel="preconnect" href="https://qpffkzmsfyilicwcsszz.supabase.co">\n<style>\n' + css + '\n</style>');

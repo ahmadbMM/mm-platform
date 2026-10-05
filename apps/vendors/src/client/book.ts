@@ -51,7 +51,7 @@ export function openBooking(preselect?: Iso): void {
 
   const loading = h("p", { class: "loading", role: "status" }, t("loading"));
   dlg.body.append(loading);
-  const horizonEnd = addDays(today, Math.min(tier.horizon_days, 400));
+  const horizonEnd = addDays(today, tier.horizon_days); // read 400 days a call (loadRange)
   void loadRange(today, horizonEnd).then((r) => {
     loading.remove();
     if (!r.ok) { dlg.body.append(errorNote(r.code)); return; }

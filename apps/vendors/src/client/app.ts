@@ -35,6 +35,8 @@ export function setLang(l: Lang): void {
   document.documentElement.lang = l;
   document.documentElement.dir = l === "ar" ? "rtl" : "ltr";
   document.title = fmt(l, "appName");
+  const skip = document.querySelector("a.skip");
+  if (skip) skip.textContent = fmt(l, "skipToContent");
 }
 
 /** Says a result out loud to screen readers (the page's one polite live region). */

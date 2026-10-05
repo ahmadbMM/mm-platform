@@ -21,14 +21,18 @@ Someone who already has an account presses **Sign in**: the booking site (`?hand
 them in and sends them back with a one-time code (`?code=`, `customer_handoff_create` /
 `customer_handoff_redeem`), straight onto step 2 with their answers so far (`customer_community_me`).
 The booking site's members-only popup ("Apply for MicroMobility's Community Membership") does the
-same. The session lives in the page only, never in storage. Every field is checked the way the booking
+same. The application carries `privacy_version` and `privacy_ack: true` only when this form showed the
+Privacy Notice box and it was ticked: the account step's, or step 2's, which appears when the database
+answers `privacy` for a signed-in account it holds no confirmed notice for. The session lives in the page only, never in storage. Every field is checked the way the booking
 site's staff "Looks off" check reads accounts (misspelt email providers, throwaway domains, phone
 numbers against Google's libphonenumber mobile rules, initials-only names, and so on). Staff review
 the applications in the booking site: **Community > Applications**.
 
 ## Where things come from
 - `design/` — the page: `index.html`, `styles.css`, `app.js`, `i18n.js` (the form's own
-  strings in 9 languages, keyed by the English text), logos.
+  strings in 9 languages, keyed by the English text), logos. The build drops any metadata chunk from
+  the PNGs it inlines. The fonts are the website's files (`apps/web/public/fonts/forms`, named in
+  `styles.css`), never Google Fonts.
 - `shared/shared.js` — **generated** by `npm run sync` from the booking site's source
   (`~/micromobilityrentals`, or `RENTALS_DIR`): the Privacy Notice and its version, the language
   list, nationalities, calling codes, phone rules and the site's own strings for the consent

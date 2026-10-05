@@ -66,7 +66,11 @@ create trigger on_auth_user_created_mm after insert on auth.users
 alter table mm.profiles enable row level security;
 alter table mm.staff_roles enable row level security;
 
-grant select, update on mm.profiles to authenticated;
+grant select on mm.profiles to authenticated;
+-- A rider changes only what is theirs to change: not legacy_id (the link to their rentals account),
+-- phone or email (they come from sign-in, and phone is unique), nor the timestamps. Column grants,
+-- so the self-update policy below cannot be used to rewrite the rest.
+grant update (name, lang, height_cm, marketing_optin) on mm.profiles to authenticated;
 grant select on mm.staff_roles to authenticated;
 
 create policy profiles_read on mm.profiles for select to authenticated

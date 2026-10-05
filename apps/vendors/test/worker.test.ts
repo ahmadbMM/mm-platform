@@ -206,10 +206,29 @@ describe("POST /api/rpc/<name>", () => {
   });
 
   it("answers 401 and clears the cookie without a session", async () => {
-    const res = await worker.fetch(post("/api/rpc/vendor_me", {}), env());
+    const res = await worker.fetch(post("/api/rpc/vendor_calendar", { p_from: "2026-10-01", p_to: "2026-10-31" }), env());
     expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: "BAD_TOKEN" });
     expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
     expect(calls).toHaveLength(0);
+  });
+
+  it("answers vendor_me without a session as signed out, a 200 (the page asks it on every load)", async () => {
+    for (const headers of [{}, { Cookie: "mm_vendor=junk" }] as Record<string, string>[]) {
+      const res = await worker.fetch(post("/api/rpc/vendor_me", {}, headers), env());
+      expect(res.status).toBe(200);
+      expect(await res.json()).toEqual({ signedIn: false });
+      expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
+    }
+    expect(calls).toHaveLength(0);
+  });
+
+  it("still answers an ended session on vendor_me as BAD_TOKEN (401), clearing the cookie", async () => {
+    answer = dbError("BAD_TOKEN", "28000", 403);
+    const res = await worker.fetch(post("/api/rpc/vendor_me", {}, { Cookie: COOKIE }), env());
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: "BAD_TOKEN" });
+    expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
   });
 
   it("maps BAD_TOKEN to 401 and clears the cookie", async () => {
@@ -332,6 +351,9 @@ describe("headers", () => {
       expect(CSP).toContain(part);
     }
     expect(CSP).not.toContain("unsafe-inline");
+    // Cloudflare Web Analytics, which Cloudflare injects on this zone: its script and its reports only.
+    expect(CSP).toContain("script-src 'self' https://static.cloudflareinsights.com;");
+    expect(CSP).toContain("connect-src 'self' https://cloudflareinsights.com;");
     expect(api.headers.get("cache-control")).toBe("no-store");
   });
 });

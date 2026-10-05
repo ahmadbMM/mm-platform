@@ -5,6 +5,7 @@
 
 import { rpc } from "./api";
 import { app, button, errorNote, t } from "./app";
+import { aheadDays, calendarRange } from "./calendar";
 import { addDays, longDate, num } from "./dates";
 import { clear, h, uid } from "./dom";
 import { icon, type IconName } from "./icons";
@@ -16,7 +17,7 @@ export async function renderInsights(main: HTMLElement): Promise<void> {
   main.append(h("h1", {}, t("insightsTitle")), h("p", { class: "loading", role: "status" }, t("loading")));
   const [past, up, said] = await Promise.all([
     rpc<CalDay[]>("vendor_calendar", { p_from: addDays(today, -365), p_to: addDays(today, -1) }),
-    rpc<CalDay[]>("vendor_calendar", { p_from: today, p_to: addDays(today, 400) }),
+    calendarRange(today, addDays(today, aheadDays(app.me!.tier.horizon_days))),
     rpc<SharedRatings[]>("vendor_shared_ratings_mine"),
   ]);
   clear(main);

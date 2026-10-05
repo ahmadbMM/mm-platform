@@ -6,8 +6,6 @@
 <meta name="theme-color" content="#fbf9f4">
 <title>Employees Bike Registration Form | Micromobility for Petromin</title>
 <link rel="icon" type="image/png" href="favicon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -44,7 +42,7 @@
         <p class="lead" data-t="Pick the session you want to ride. Sessions come from the MicroMobility Rentals calendar.">Pick the session you want to ride. Sessions come from the MicroMobility Rentals calendar.</p>
         <div id="f-session" class="field">
           <div id="sessions" class="sessions" role="radiogroup" aria-label="Session"></div>
-          <p class="err" data-t="Choose a session">Choose a session</p>
+          <p class="err" aria-live="polite" data-t="Choose a session">Choose a session</p>
         </div>
       </fieldset>
 
@@ -57,18 +55,18 @@
             <button type="button" class="company" data-v="Petromin" role="radio" aria-checked="false" aria-label="Petromin"><img src="petromin-logo.png" alt="Petromin"></button>
             <button type="button" class="company" data-v="Petrolube" role="radio" aria-checked="false" aria-label="Petrolube"><img src="petrolube-logo.png" alt="Petrolube"></button>
           </div>
-          <p class="err" data-t="Choose your company">Choose your company</p>
+          <p class="err" aria-live="polite" data-t="Choose your company">Choose your company</p>
         </div>
         <div id="f-badge" class="field">
           <label for="badge" data-t="Badge number">Badge number</label>
           <input id="badge" name="badge" type="text" inputmode="numeric" autocomplete="off" placeholder="104582" data-t-placeholder="104582">
-          <p class="err" data-t="Enter your badge number">Enter your badge number</p>
+          <p class="err" aria-live="polite" data-t="Enter your badge number">Enter your badge number</p>
         </div>
         <div id="f-name" class="field">
           <label for="name" data-t="Full name">Full name</label>
           <input id="name" name="name" type="text" autocomplete="name" aria-describedby="name-hint">
           <p id="name-hint" class="hint" data-t="Use the same name you booked with so we can find your booking">Use the same name you booked with so we can find your booking</p>
-          <p class="err" data-t="Enter your full name">Enter your full name</p>
+          <p class="err" aria-live="polite" data-t="Enter your full name">Enter your full name</p>
         </div>
         <div id="f-phone" class="field">
           <label for="phone" data-t="Mobile number">Mobile number</label>
@@ -80,7 +78,7 @@
             <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="5X XXX XXXX" data-t-placeholder="5X XXX XXXX">
             <input id="phone-e164" name="phone_e164" type="hidden">
           </div>
-          <p class="err" data-t="Enter a valid Saudi mobile number (05XXXXXXXX)">Enter a valid Saudi mobile number (05XXXXXXXX)</p>
+          <p class="err" aria-live="polite" data-t="Enter a valid Saudi mobile number (05XXXXXXXX)">Enter a valid Saudi mobile number (05XXXXXXXX)</p>
         </div>
       </fieldset>
 
@@ -90,7 +88,7 @@
         <div id="f-height" class="field">
           <label for="height" data-t="Height in cm">Height in cm</label>
           <input id="height" name="height" type="number" inputmode="numeric" min="100" max="250" placeholder="175" data-t-placeholder="175">
-          <p class="err" data-t="Enter your height in cm (100 to 250)">Enter your height in cm (100 to 250)</p>
+          <p class="err" aria-live="polite" data-t="Enter your height in cm (100 to 250)">Enter your height in cm (100 to 250)</p>
         </div>
         <div id="f-type" class="field">
           <span class="label" id="type-label" data-t="Bike type">Bike type</span>
@@ -98,7 +96,7 @@
             <button type="button" class="tile" data-v="Hybrid" role="radio" aria-checked="false" data-t="Hybrid">Hybrid</button>
             <button type="button" class="tile" data-v="Mountain" role="radio" aria-checked="false" data-t="Mountain">Mountain</button>
           </div>
-          <p class="err" data-t="Choose a bike type">Choose a bike type</p>
+          <p class="err" aria-live="polite" data-t="Choose a bike type">Choose a bike type</p>
         </div>
         <div id="f-riders" class="field">
           <span class="label" data-t="Riding with someone?">Riding with someone?</span>
@@ -109,13 +107,13 @@
         <div id="f-privacy" class="field privacy-field">
           <label class="privacy-check"><input id="privacy" type="checkbox"> <span data-t="I have read the Privacy Notice.">I have read the Privacy Notice.</span></label>
           <button type="button" class="privacy-link" data-privacy-open data-t="Read the Privacy Notice">Read the Privacy Notice</button>
-          <p class="err" data-t="Please confirm you’ve read the Privacy Notice.">Please confirm you’ve read the Privacy Notice.</p>
+          <p class="err" aria-live="polite" data-t="Please confirm you’ve read the Privacy Notice.">Please confirm you’ve read the Privacy Notice.</p>
         </div>
         <div id="f-waiver" class="field waiver-field">
           <span class="label" id="waiver-title" data-t="Ride waiver">Ride waiver</span>
           <div id="waiver-text" class="waiver-text" role="region" aria-labelledby="waiver-title" tabindex="0"><p data-t="You cannot book any ride or activity with MicroMobility until you have read and agreed to this waiver. Cycling is a physical activity that carries risk. I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings. I am also responsible for any damage I cause to other people or their property. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. I agree to wear a helmet and to follow the team’s instructions and the route, and I am responsible for any damage to the rented bike caused by misuse. The bike is returned in the condition it was received.">You cannot book any ride or activity with MicroMobility until you have read and agreed to this waiver. Cycling is a physical activity that carries risk. I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings. I am also responsible for any damage I cause to other people or their property. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. I agree to wear a helmet and to follow the team’s instructions and the route, and I am responsible for any damage to the rented bike caused by misuse. The bike is returned in the condition it was received.</p></div>
           <label class="privacy-check"><input id="waiver" type="checkbox" required> <span data-t="I have read the waiver and agree to it on behalf of every rider on this registration">I have read the waiver and agree to it on behalf of every rider on this registration</span></label>
-          <p class="err" data-t="Please accept the waiver to continue.">Please accept the waiver to continue.</p>
+          <p class="err" aria-live="polite" data-t="Please accept the waiver to continue.">Please accept the waiver to continue.</p>
         </div>
       </fieldset>
 
@@ -162,6 +160,11 @@
       </div>
       <p class="done-note" data-t="Show this screen and your booking number at the desk to collect your bike.">Show this screen and your booking number at the desk to collect your bike.</p>
       <button id="edit" class="edit" type="button" data-t="Edit my booking">Edit my booking</button>
+      <button id="another" class="edit" type="button" data-t="Register another">Register another</button>
+      <div id="others" class="others" hidden>
+        <p class="others-title" id="others-title" data-t="Other registrations on this phone">Other registrations on this phone</p>
+        <div id="others-list" class="others-list" role="group" aria-labelledby="others-title"></div>
+      </div>
     </div>
   </section>
 </main>
