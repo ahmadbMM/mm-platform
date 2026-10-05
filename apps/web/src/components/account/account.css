@@ -87,6 +87,8 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .bdg-m g { fill: currentColor; }
 .bdg-m .o { opacity: .4; }
 .bdg-m .s { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* The pink ribbon's two bands (Run for Her), drawn thick as in the booking app. */
+.bdg-m .rb { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linejoin: round; }
 .bdc-green { --bc: #077a4b; } .bdc-gold { --bc: #e0a414; } .bdc-blue { --bc: #3d8bfd; } .bdc-red { --bc: #f0525f; }
 .bdc-purple { --bc: #9d6cff; } .bdc-orange { --bc: #f98a3c; } .bdc-teal { --bc: #17b4ac; } .bdc-silver { --bc: #98a2b3; }
 
@@ -104,6 +106,7 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .mr-badge-p { position: absolute; top: 3px; inset-inline-end: 4px; font-size: 9px; line-height: 1; color: #6e6b63; font-variant-numeric: tabular-nums; }
 .mr-badge.special { --sp1: #ffe58a; --sp2: #f0a500; --sp3: #00b86b; overflow: hidden; border: 1.5px solid transparent; background: linear-gradient(#fff, #fff) padding-box, linear-gradient(135deg, var(--sp1), var(--sp2) 45%, var(--sp3)) border-box; }
 .mr-badge.sp-national { --sp1: #5fd99a; --sp2: #159a57; --sp3: #0a5c33; }
+.mr-badge.sp-pink { --sp1: #ffc9da; --sp2: #f2789f; --sp3: #c2416e; } /* Run for Her */
 .mr-badge.special.locked { background: #fff; border: 1px solid rgba(26, 25, 25, .12); }
 .mr-badges-more { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; padding: 9px 12px; background: #fff; border: 1px dashed rgba(26, 25, 25, .24); border-radius: 10px; font: inherit; font-size: 13px; font-weight: 700; color: #1a1919; text-align: start; cursor: pointer; }
 .mr-bm-peek { display: flex; flex: none; }
@@ -112,6 +115,9 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .mr-bm-t { flex: 1; min-width: 0; display: flex; align-items: center; gap: 7px; }
 .mr-bm-n { font-size: 11px; line-height: 1; padding: 3px 7px; border-radius: 999px; background: #f4f1ea; color: #4a4843; font-variant-numeric: tabular-nums; }
 .mr-bm-a { flex: none; font-size: 12px; color: #077a4b; }
+/* A special medal's glyph is white, its strokes too (the booking app's .bdg-m.bdg-sp): the stroked
+   glyphs (National Day's 96, Race Ready's tick, Run for Her's ribbon) are drawn in currentColor. */
+.bdg-m.bdg-sp { color: #fff; }
 .bdg-sp .bdg-hexsp { stroke-width: 1.6; stroke-linejoin: round; }
 .bdg-sp .bdg-hexin { fill: none; stroke: #fff; stroke-opacity: .6; stroke-width: 1.1; stroke-linejoin: round; }
 .bdg-sp g { fill: #fff; }
@@ -121,6 +127,7 @@ dialog.badge-pop-box { width: min(92vw, 320px); max-height: 88dvh; overflow: aut
 dialog.badge-pop-box::backdrop { background: rgba(26, 25, 25, .5); }
 dialog.badge-pop-box.special { border-top-color: #f0a500; }
 dialog.badge-pop-box.sp-national { border-top-color: #159a57; }
+dialog.badge-pop-box.sp-pink { border-top-color: #f2789f; }
 .badge-pop-in p { margin: 0; }
 .badge-pop-ic { width: 84px !important; height: 84px !important; display: block !important; margin: 0 auto 12px; }
 .badge-pop-nm { font-size: 20px; font-weight: 800; margin-bottom: 10px !important; }

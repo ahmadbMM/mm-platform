@@ -1176,5 +1176,12 @@
  "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "このブラウザーには{current}でログインしています。たった今、予約アプリに{next}でログインしました。このサイトではどちらのアカウントを使いますか？",
  "Switch to {name}": "{name}に切り替える",
  "Stay signed in as {name}": "{name}のままにする",
- "You are signed in as {who}. If this is not your account, sign out.": "{who}としてログインしています。ご自身のアカウントでない場合は、ログアウトしてください。"
+ "You are signed in as {who}. If this is not your account, sign out.": "{who}としてログインしています。ご自身のアカウントでない場合は、ログアウトしてください。",
+ "Run for Her": "Run for Her",
+ "3 or 5 km · Jeddah Yacht Club": "3 kmまたは5 km · ジェッダ・ヨットクラブ",
+ "For Club members aged 18 and over on race day. One place per account, complimentary. Places go first come, first served, then the waitlist opens. Pick 3 km or 5 km when you book.": "レース当日に18歳以上のクラブメンバーが対象です。1アカウントにつき1枠、無料です。枠は先着順で、埋まり次第キャンセル待ちの受付となります。予約時に3 kmか5 kmをお選びください。",
+ "Jeddah Yacht Club": "ジェッダ・ヨットクラブ",
+ "Runner number": "ランナー番号",
+ "Finish the Run for Her.": "Run for Herを完走しましょう。",
+ "The pink ribbon, for everyone who ran and finished the Run for Her with the MicroMobility community.": "ピンクリボン。MicroMobilityのコミュニティと一緒にRun for Herを走り切ったすべての方へ。"
 }

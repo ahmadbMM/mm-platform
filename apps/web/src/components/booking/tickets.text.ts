@@ -8,10 +8,13 @@
 // wlPos/wlPosNoNum wlPos(NoNum)Msg · gatherAt ticketGatherAt · collectFrom ticketCollectAt ·
 // wlOnList/wlLinePos/wlRowPos · payDue payDueLabel · payAtBooth payAtBoothLine · helmetLine/helmetBring
 // tkHelmetLine/tkHelmetBring · venueCircuit evJccName · today/tomorrow mrToday/mrTomorrow ·
-// bikes2/bikesN · free freeLabel (as of the booking app's 2026-09-30 card, bb37ba1 and 9a03c12).
+// bikes2/bikesN · free freeLabel (as of the booking app's 2026-09-30 card, bb37ba1 and 9a03c12) ·
+// Run for Her (2026-10-05): runnerNumber runNumLabel · venueJyc venueJyc; a runner's distance is
+// rtKm, the booking app's runKm ("{0} km").
 export const T = {
   en: {
     queueNumber: "Queue number",
+    runnerNumber: "Runner number",
     waitlist: "Waitlist",
     wlOnList: "On the waitlist",
     wlLinePos: (n: string) => `number ${n} in line`,
@@ -38,6 +41,7 @@ export const T = {
     helmetLine: "Helmets are required. One comes with every bike.",
     helmetBring: "Helmets are required: bring your own.",
     venueCircuit: "Jeddah Corniche Circuit",
+    venueJyc: "Jeddah Yacht Club",
     today: "Today",
     tomorrow: "Tomorrow",
     calendar: "Add to calendar",
@@ -82,6 +86,7 @@ export const T = {
   },
   ar: {
     queueNumber: "رقم الدور",
+    runnerNumber: "رقم العدّاء",
     waitlist: "قائمة الانتظار",
     wlOnList: "على قائمة الانتظار",
     wlLinePos: (n: string) => `رقم ${n} في الانتظار`,
@@ -108,6 +113,7 @@ export const T = {
     helmetLine: "الخوذة إلزامية، وتأتي خوذة مع كل دراجة.",
     helmetBring: "الخوذة إلزامية: أحضر خوذتك.",
     venueCircuit: "حلبة كورنيش جدة",
+    venueJyc: "نادي جدة لليخوت",
     today: "اليوم",
     tomorrow: "غداً",
     calendar: "أضف إلى التقويم",

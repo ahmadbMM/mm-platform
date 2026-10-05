@@ -82,8 +82,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const window = siteBookingWindow(content);
   // The booking app's events (_evMatch): the circuit, the community rides, and the National Day
   // ride and the T100 workshop, which have cards of their own while they have dates.
-  // A ticketed event (ride_kind 'event') has a card of its own too, while one is on the books.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event" };
+  // A ticketed event (ride_kind 'event') has a card of its own too, while one is on the books, and
+  // so does Run for Her (ride_kind 'runher'), first on the page as on the booking app's landing.
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher" };
   const toStep = (s: RideSession): StepSession => ({
     // the booking app's session card: "Sunday · 26 Sept 2026", and its times in the rider's clock
     id: s.id, kind: s.kind, day: fmtDayDate(s.date, locale),
@@ -91,7 +92,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     near: ((w) => (w === "today" ? tx("Today", "اليوم") : w === "tomorrow" ? tx("Tomorrow", "غداً") : null))(dayWord(s.date, now.slice(0, 10))),
     name: sessionName(s, kindName, enName, L !== "en"),
     when: s.times ? { gather: s.gather, a: fmtClock(s.times[0], locale), b: fmtClock(s.times[1], locale) } : null,
-    members: s.members, free: s.free, full: s.full, paid: !s.free, noCarbon: s.noCarbon,
+    // a run has no bikes, so never the bike prices
+    members: s.members, free: s.free, full: s.full, paid: !s.free && s.kind !== "runher", noCarbon: s.noCarbon,
     // a copy kept at the edge from before these fields existed reads as an event without them
     event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
     seatPrice: s.kind === "event" && s.price != null ? sar(s.price) : null, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
@@ -100,16 +102,16 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     left: s.left ?? null,
     // when bikes go out and the price from, under the time, as the booking app's session card says them
     meta: [s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), fmtClock(s.collect, locale)) : null,
-      s.kind !== "event" && !s.free && s.kind !== "swim" && s.kind !== "workshop" ? fromPrice(s) : null].filter((x): x is string => !!x),
+      s.kind !== "event" && !s.free && s.kind !== "swim" && s.kind !== "workshop" && s.kind !== "runher" ? fromPrice(s) : null].filter((x): x is string => !!x),
     opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,
   });
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count))).map(toStep);
-  const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): StepEvent | null => {
+  const card = (key: string, p: "rh" | "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): StepEvent | null => {
     const sessions = sessionsOf(key);
     if (!always && sessions.length === 0) return null;
     return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: S(e[`${p}Note`]), sessions };
   };
-  const events = [card("snd96", "snd", false), card("jcc", "jcc", true), card("community", "comm", true), card("workshop", "ws", false), card("event", "ev", false)].filter((x): x is StepEvent => !!x);
+  const events = [card("runher", "rh", false), card("snd96", "snd", false), card("jcc", "jcc", true), card("community", "comm", true), card("workshop", "ws", false), card("event", "ev", false)].filter((x): x is StepEvent => !!x);
   const text: StepText = {
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),
     cont: S(st.continue), waitlist: S(d.waitlist), back: S(st.back), noDates: S(st.noDates), handoff: S(st.handoff),

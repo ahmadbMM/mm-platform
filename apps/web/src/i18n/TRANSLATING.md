@@ -125,9 +125,11 @@ Keep each term consistent everywhere it appears.
   - Jeddah Waterfront: translate or transliterate naturally.
   - King Abdulaziz University: its usual name in your language.
   - Saudi Triathlon Federation: its usual name in your language.
+  - Jeddah Yacht Club (where Run for Her meets): the languages in Latin script keep "Jeddah Yacht Club", as the booking app does; the others write it the way the booking app does, with their own Jeddah (ur جدہ یاٹ کلب, hi जेद्दाह यॉट क्लब, ne जेद्दा याट क्लब, bn জেদ্দা ইয়ট ক্লাব), ru Яхт-клуб Джидды, zh 吉达游艇俱乐部, ja ジェッダ・ヨットクラブ.
 - **Events**:
   - "Saudi National Day 96 Ride" is the ride for Saudi Arabia's 96th National Day.
   - "T100 Triathlon Prep" keeps "T100".
+  - "Run for Her" is a running event (a run, not a ride) for Club members aged 18 and over: 3 km or 5 km at the Jeddah Yacht Club, with a pink ribbon badge for those who finish it. Its name stays "Run for Her", in Latin letters, in every language; only the Arabic, written by hand, says نركض لأجلها. Its runners are runners, not riders: its ticket's "Runner number" (the booking app's runNumLabel) stands where a ride's "Queue number" does.
 - **Legal and official terms**:
   - VAT: your language's term for value-added tax.
   - CR: the Saudi Commercial Registration number.

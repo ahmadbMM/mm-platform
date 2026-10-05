@@ -2,13 +2,15 @@ import { useId } from "react";
 import { GLYPH } from "./badge-glyphs";
 
 // A badge drawn as the booking app draws it (_bdgMedal): its glyph on a hexagon in one of eight
-// colours; Race Ready ('special', gold into green) and National Day 96 ('national', the greens)
-// are drawn special, a gradient with an inner ring and a white glyph.
+// colours; Race Ready ('special', gold into green), National Day 96 ('national', the greens) and
+// Run for Her ('pink', the pinks) are drawn special (BDG_SPECIAL), a gradient with an inner ring
+// and a white glyph.
 const COLORS = ["green", "gold", "blue", "red", "purple", "orange", "teal", "silver"];
 const SPECIAL: Record<string, [[string, string, string], string]> = {
   special: [["#ffe58a", "#f0a500", "#00b86b"], "#b87d00"],
   national: [["#5fd99a", "#159a57", "#0a5c33"], "#08502c"],
-};
+  pink: [["#ffc9da", "#f2789f", "#c2416e"], "#a3325b"],
+}; // BadgeGrid's special() lists the same colours, to frame their tiles and pop-ups to match
 
 export default function Medal({ icon, color, className = "" }: { icon: string; color: string; className?: string }) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");

@@ -4,11 +4,13 @@ import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
-import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, queueNumbers, ticketLook, ticketStages, venueOf, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
+import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, queueNumbers, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
-// never changes a booking behind its back.
+// never changes a booking behind its back. A Run for Her ticket (2026-10-05) says "Runner number",
+// lists each runner's distance where a ride lists the bike type, and is never changed, only
+// cancelled ("A run booking is never modified").
 export type TicketText = (typeof T)["en"];
 type Props = {
   locale: string;
@@ -86,6 +88,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const venue = venueOf(s);
   const big = num.length <= 4 ? "big" : num.length <= 9 ? "mid" : "small";
   const bikes = s ? s.bikes : true;
+  const run = s?.kind === "runher"; // Run for Her: a runner's number, a distance, cancel only
+  const numLabel = run ? t.runnerNumber : t.queueNumber;
   // The add-ons bought with the booking, each rider's under their name, and in the total, as the
   // booking app lists them (none on a ride staff approve). A line whose price is not known (the
   // inventory could not be read) is listed without it, and the total is left out: never a wrong one.
@@ -127,21 +131,21 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>
           {!noNum && (allWl
             ? <p className="tk-label wl">{t.wlOnList}{wl ? <> · {t.wlLinePos(String(wl))}</> : ""}</p>
-            : <p className="tk-label">{rows.length > 1 ? (rows.length === 2 ? t.bikes2 : t.bikesN(String(rows.length))) : t.queueNumber}</p>)}
+            : <p className="tk-label">{rows.length > 1 ? (rows.length === 2 ? t.bikes2 : t.bikesN(String(rows.length))) : numLabel}</p>)}
           {/* a number reads left to right in every language: "#7 – #8" is never "#8 – #7" */}
           <p className={`tk-num ${big}`}>{noNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
           {allWl && !noNum && <p className="tk-wl-note">{wl ? t.wlPos(String(wl)) : t.wlPosNoNum}</p>}
         </div>
         <div className="tk-right">
           {past ? null : ready
-            ? <Qr payload={bookingRef(primary, s)} label={`${t.queueNumber} ${num}`} />
+            ? <Qr payload={bookingRef(primary, s)} label={`${numLabel} ${num}`} />
             : <div className="tk-qr-hold"><span>{t.qrHold}</span></div>}
           <p className="tk-when">
             {dw && <><strong className="tk-dw">{dw === "today" ? t.today : t.tomorrow}</strong><br /></>}
             {f({ weekday: "long" })}<br />{f({ day: "numeric", month: "short", year: "numeric" })}
             {when && <><br /><bdi>{when}</bdi></>}
             {green && !past && <><br /><span className="go">{green}</span></>}
-            {!past && <><br /><span className="tk-venue">{venue.kind === "meet" ? t.meetingPoint : venue.kind === "circuit" ? t.venueCircuit : venue.text}</span></>}
+            {!past && <><br /><span className="tk-venue">{venueText(venue, t)}</span></>}
           </p>
         </div>
       </div>
@@ -211,6 +215,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
                 : r.queueNum != null && <span className="tk-q" dir="ltr">#{r.queueNum}</span>)}
               <span className="tk-name">{r.name}</span>
               {bikes && r.type && r.type !== "None" && <span className={`tk-type t-${r.type.toLowerCase().replace(/\s+/g, "")}`}><Bike /> {typeName(r.type)}</span>}
+              {/* a runner's distance, where a ride shows the bike type (the booking app's run-km-chip) */}
+              {r.runKm != null && <span className="tk-type tk-km">{t.rtKm(String(r.runKm))}</span>}
             </div>
             {!noNum && (
               <div className="tk-rider-pay">
@@ -244,15 +250,16 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
 
       {!past && <div className="tk-actions">
         {ics && !allWl && <a className="tk-btn" href={`data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`} download={`micromobility-${primary.date.replace(/-/g, "")}.ics`}>{t.calendar}</a>}
-        {links.place && <a className="tk-btn" href={links.place} target="_blank" rel="noopener"><Pin />{s?.approval ? t.meetingPoint : t.directions}</a>}
+        {links.place && <a className="tk-btn" href={links.place} target="_blank" rel="noopener"><Pin />{meetsAt(s) ? t.meetingPoint : t.directions}</a>}
         {links.live && <a className="tk-btn solid" href={links.live}><Live />{t.liveMap}</a>}
       </div>}
       {/* A pass in the phone's wallet reads as a place held: none on a waitlist or before the code is out. */}
       {wallet && !past && !allWl && ready && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
       {canEdit && (
         <div className="tk-manage">
-          {!noNum && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}
-          {!noNum && s?.kind !== "snd96" && <a className="tk-btn" href={links.manage}><Again /> {t.reschedule}</a>}
+          {/* a run booking is never changed, only cancelled, as in the booking app */}
+          {!noNum && !run && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}
+          {!noNum && !run && s?.kind !== "snd96" && <a className="tk-btn" href={links.manage}><Again /> {t.reschedule}</a>}
           <a className="tk-btn red" href={links.manage}>{t.cancel}</a>
         </div>
       )}

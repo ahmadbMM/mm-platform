@@ -1,7 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import { routeItems } from "../route-names";
-import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, queueNumbers, rideEndsAt, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
+import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, queueNumbers, rideEndsAt, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, type TicketRow } from "../tickets";
+import { T as TICKET } from "@/components/booking/tickets.text";
+import TicketCard from "@/components/booking/TicketCard";
+import { createElement, type ReactElement } from "react";
+// The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
+// @ts-expect-error -- react-dom/server ships without type declarations here
+import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { loadAddonItems } from "../ticket-addons";
+
+const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 
 // My Account's tickets follow the booking app's own rules (renderBookingTicket, bookingRef,
 // downloadBookingICS): what the code says, when it is shown, and what the line under it says.
@@ -9,7 +17,7 @@ const jccRow = { id: "j1", session_date: "2099-03-01", event_kind: null, ride_ki
 const satRow = { id: "2099-03-04", session_date: "2099-03-04", event_kind: "community", ride_kind: "saturday", needs_approval: true, hide_queue: true, bike_slots: '{"_time":"05:45 - 06:15"}', meet_url: "https://maps.app.goo.gl/x", paid_ride: false, title: "Saturday Social Ride" };
 const jcc = ticketSession(jccRow)!;
 const sat = ticketSession(satRow)!;
-const row = (o: Partial<TicketRow>): TicketRow => ({ id: "q1abcdef", sessionId: "j1", date: "2099-03-01", day: "Sunday", queueNum: 4, status: "waiting", waitlistNum: null, approval: null, price: 75, paid: false, name: "Ann", type: "Road", checkedInAt: null, checkedOutAt: null, rideDuration: null, bikeId: null, addonLines: [], ...o });
+const row = (o: Partial<TicketRow>): TicketRow => ({ id: "q1abcdef", sessionId: "j1", date: "2099-03-01", day: "Sunday", queueNum: 4, status: "waiting", waitlistNum: null, approval: null, price: 75, paid: false, name: "Ann", type: "Road", checkedInAt: null, checkedOutAt: null, rideDuration: null, bikeId: null, addonLines: [], runKm: null, ...o });
 
 describe("a session as the ticket reads it", () => {
   it("knows the circuit's window and collect time, and a ride staff approve", () => {
@@ -250,3 +258,95 @@ describe("the ride night", () => {
   });
 });
 
+
+describe("a Run for Her ticket (ride_kind 'runher', 2026-10-05)", () => {
+  // As the booking app makes a run: members only, free, nobody approves it, gather - start, at the
+  // Jeddah Yacht Club with the meeting point's map link.
+  const runRow = { id: "2099-10-17-rh", session_date: "2099-10-17", event_kind: "community", ride_kind: "runher", needs_approval: false, hide_queue: true, open_to_all: false, paid_ride: false, bike_slots: '{"_time":"06:00 - 06:30"}', meet_url: "https://maps.app.goo.gl/run", location: "JYC", title: "Run for Her", capacity: 80 };
+  const run = ticketSession(runRow)!;
+  const t = TICKET.en;
+
+  it("has no bikes, gathers, is free, and shows its number (nobody approves it)", () => {
+    expect(run).toMatchObject({ kind: "runher", bikes: false, gathers: true, approval: false, free: true, freeRide: true, times: ["06:00", "06:30"], meetUrl: "https://maps.app.goo.gl/run", location: "JYC" });
+    expect(bookingRef(row({ sessionId: run.id, queueNum: 12 }), run)).toBe("MMC-12-q1abcd");
+    expect(codeReady([row({})], run)).toBe(true);
+  });
+  it("is at the Jeddah Yacht Club, and its button opens the meeting point", () => {
+    expect(venueOf(run)).toEqual({ kind: "jyc" });
+    expect(venueText(venueOf(run), t)).toBe("Jeddah Yacht Club");
+    expect(venueText(venueOf(run), TICKET.ar)).toBe("نادي جدة لليخوت");
+    expect(meetsAt(run)).toBe(true);
+    // the rides staff approve meet at their link too; a circuit night does not
+    expect(meetsAt(sat)).toBe(true);
+    expect(meetsAt(jcc)).toBe(false);
+    expect(meetsAt(undefined)).toBe(false);
+    // the other venues are as before
+    expect(venueText(venueOf(jcc), t)).toBe("Jeddah Corniche Circuit");
+    expect(venueText(venueOf(sat), t)).toBe("Meeting point");
+    expect(venueText(venueOf(ticketSession({ ...jccRow, location: "Obhur" })!), t)).toBe("Obhur");
+  });
+  it("counts down to the gathering, then the start, and has no bike step and no route", () => {
+    expect(countdownMoments(run, "2099-10-17").map((x) => x[1])).toEqual(["gather", "start"]);
+    expect(ticketStages([row({ status: "active" })], run.bikes, null, "en").stages.map((x) => x.key)).toEqual(["booked", "in", "done"]);
+    const routes = new Map([["obhur", { name: "Obhur coast", km: 32.5, level: "Easy", surface: "Road", href: "https://maps.app.goo.gl/o" }]]);
+    expect(ticketRoute(run, routes)).toBeNull();
+    expect(ticketRoute({ ...run, routeSlug: "obhur" }, routes)).toBeNull();
+  });
+  it("puts the meeting point, else the Jeddah Yacht Club, in the calendar, and never calls it a bike rental", () => {
+    expect(icsPlace(run)).toBe("https://maps.app.goo.gl/run");
+    const noLink = ticketSession({ ...runRow, meet_url: null })!;
+    expect(icsPlace(noLink)).toBe("Jeddah Yacht Club");
+    const ics = icsFor(noLink, "Run for Her - Saturday", icsPlace(noLink));
+    expect(ics).toContain("LOCATION:Jeddah Yacht Club");
+    // from the gathering (06:00 in Jeddah) to two hours after the 06:30 start, in UTC
+    expect(ics).toContain("DTSTART:20991017T030000Z\r\nDTEND:20991017T053000Z");
+    expect(ics).toContain("DESCRIPTION:Your MicroMobility booking. Be at the meeting point by the gathering time and show your ticket there.");
+    expect(ics).not.toMatch(/bike rental/i);
+    expect(ics).not.toMatch(/ride reminder/i);
+    // a circuit night is still a bike rental; the pool is a booking to turn up for
+    expect(icsFor(jcc, "Ride", "")).toContain("bike rental");
+    expect(icsFor(ticketSession({ ...satRow, ride_kind: "swim", needs_approval: false })!, "Swim", "")).toContain("DESCRIPTION:Your MicroMobility booking. Arrive 10 minutes early and show your ticket when you arrive.");
+  });
+  it("reads the distance each runner picked, 3 or 5 km only, and never as a bike type", () => {
+    const at = (run_km: unknown) => ticketRow({ id: "r1", session_id: run.id, session_date: "2099-10-17", status: "waiting", type_preference: "None", run_km });
+    expect(at(5)).toMatchObject({ runKm: 5, type: "None" });
+    expect(at("3")!.runKm).toBe(3);
+    for (const bad of [4, 0, null, undefined, "", "five"]) expect(at(bad)!.runKm, String(bad)).toBeNull();
+    // a ride's row has none
+    expect(ticketRow({ id: "j", session_id: "j1", session_date: "2099-03-01", status: "waiting", type_preference: "Road" })!.runKm).toBeNull();
+  });
+  it("says Runner number and the distance in the ticket's words", () => {
+    expect(t.runnerNumber).toBe("Runner number");
+    expect(TICKET.ar.runnerNumber).toBe("رقم العدّاء");
+    expect(t.rtKm("5")).toBe("5 km");
+    expect(TICKET.ar.rtKm("3")).toBe("3 كم");
+  });
+  it("draws the card: the runner's number and distance, the yacht club, the meeting point, no helmet line, cancel only", () => {
+    const card = (s: typeof run, r: Record<string, unknown>, place: string | null) => renderToStaticMarkup(createElement(TicketCard, {
+      locale: "en", today: "2099-10-10", rows: [ticketRow({ id: "rh1abcdef", session_id: s.id, session_date: s.date, session_day: "Saturday", status: "waiting", queue_num: 12, price: 0, paid: false, name: "Test Runner", ...r })!],
+      session: s, name: "Run for Her", cue: null, t, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+      links: { edit: "https://book.example.test/?ev=runher", manage: "https://book.example.test/?tab=bookings", place }, now: Date.parse("2099-10-10T09:00:00Z"),
+    }));
+    const html = card(run, { type_preference: "None", run_km: 5 }, run.meetUrl);
+    expect(html).toContain("Runner number");
+    expect(html).not.toContain("Queue number");
+    expect(html).toMatch(/class="tk-type tk-km">5 km</);
+    expect(html).toContain("Jeddah Yacht Club");
+    expect(html).toContain("Gathering at 6 AM");
+    expect(html).toMatch(/href="https:\/\/maps\.app\.goo\.gl\/run"[^>]*>.*?Meeting point/);
+    expect(html).not.toContain("Get directions");
+    expect(html).not.toContain("Helmets");
+    expect(html).toContain("Participants");
+    expect(html).not.toContain(">Edit<");
+    expect(html).not.toContain("Reschedule");
+    expect(html).toContain(">Cancel<");
+    // a circuit night keeps its own words: the queue number, the bike type, the helmet, Edit and Reschedule
+    const ride = card(jcc, { type_preference: "Road", price: 75 }, "https://maps.app.goo.gl/jcc");
+    expect(ride).toContain("Queue number");
+    expect(ride).not.toContain("tk-km");
+    expect(ride).toContain("Helmets");
+    expect(ride).toContain(">Edit<");
+    expect(ride).toContain("Reschedule");
+    expect(ride).toContain("Get directions");
+  });
+});

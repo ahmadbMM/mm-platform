@@ -46,4 +46,6 @@ export const GLYPH: Record<string, string> = {
   "fort": "<path class=\"o\" d=\"M9.5 3h5v5h-5z\"/><path d=\"M3.5 21.5V9.5h2.3v2h2.3v-2h2.3v2h3.2v-2h2.3v2h2.3v-2h2.3v12h-6.5v-4.3a2 2 0 0 0-4 0v4.3z\"/>",
   "calstar": "<rect class=\"o\" x=\"3\" y=\"4.5\" width=\"18\" height=\"16.5\" rx=\"2.2\"/><path d=\"M3 8.5h18v2H3z\"/><path class=\"s\" d=\"M8 2.5v4M16 2.5v4\"/><path d=\"M12 11.5 13.03 14.18 15.9 14.33 13.66 16.14 14.41 18.92 12 17.35 9.59 18.92 10.34 16.14 8.1 14.33 10.97 14.18Z\"/>",
   "calcrown": "<rect class=\"o\" x=\"3\" y=\"4.5\" width=\"18\" height=\"16.5\" rx=\"2.2\"/><path d=\"M3 8.5h18v2H3z\"/><path class=\"s\" d=\"M8 2.5v4M16 2.5v4\"/><path transform=\"translate(5.64 9.94) scale(.53)\" d=\"M3 7.5l4.6 4.2L12 4.5l4.4 7.2L21 7.5l-1.8 10.5H4.8z\"/>",
+  // Run for Her's pink awareness ribbon (2026-10-05): two bands, .rb a thick stroke (account.css), the far one lighter
+  "ribbon": "<path class=\"rb o\" d=\"M12 3.1A3.9 3.9 0 0 0 8.1 7c0 1.8 1.3 3.6 3.9 6.7L17.4 21\"/><path class=\"rb\" d=\"M6.6 21 12 13.7c2.6-3.1 3.9-4.9 3.9-6.7A3.9 3.9 0 0 0 12 3.1\"/>",
 };

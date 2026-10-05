@@ -1176,5 +1176,12 @@
  "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "In diesem Browser bist du als {current} angemeldet. In der Buchungs-App hast du dich gerade als {next} angemeldet. Welches Konto soll diese Website verwenden?",
  "Switch to {name}": "Zu {name} wechseln",
  "Stay signed in as {name}": "Als {name} angemeldet bleiben",
- "You are signed in as {who}. If this is not your account, sign out.": "Du bist als {who} angemeldet. Wenn das nicht dein Konto ist, melde dich ab."
+ "You are signed in as {who}. If this is not your account, sign out.": "Du bist als {who} angemeldet. Wenn das nicht dein Konto ist, melde dich ab.",
+ "Run for Her": "Run for Her",
+ "3 or 5 km · Jeddah Yacht Club": "3 oder 5 km · Jeddah Yacht Club",
+ "For Club members aged 18 and over on race day. One place per account, complimentary. Places go first come, first served, then the waitlist opens. Pick 3 km or 5 km when you book.": "Für Club-Mitglieder, die am Tag des Laufs mindestens 18 Jahre alt sind. Ein Platz pro Konto, kostenlos. Die Plätze werden in der Reihenfolge der Buchungen vergeben, danach öffnet die Warteliste. Wähle bei der Buchung 3 km oder 5 km.",
+ "Jeddah Yacht Club": "Jeddah Yacht Club",
+ "Runner number": "Startnummer",
+ "Finish the Run for Her.": "Lauf den Run for Her bis ins Ziel.",
+ "The pink ribbon, for everyone who ran and finished the Run for Her with the MicroMobility community.": "Die rosa Schleife – für alle, die den Run for Her mit der MicroMobility-Community gelaufen und ins Ziel gekommen sind."
 }

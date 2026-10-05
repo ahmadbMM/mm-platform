@@ -46,7 +46,7 @@ export const experiencesSchema = {
     {
       id: "events",
       label: bi("Event cards", "بطاقات الفعاليات"),
-      hint: bi("The same events as the booking app. The National Day and T100 cards show only while they have dates.", "الفعاليات نفسها كما في تطبيق الحجز. بطاقتا اليوم الوطني وT100 تظهران فقط عند وجود مواعيد."),
+      hint: bi("The same events as the booking app. The National Day, T100, Events and Run for Her cards show only while they have dates.", "الفعاليات نفسها كما في تطبيق الحجز. بطاقات اليوم الوطني وT100 والفعاليات ونركض لأجلها تظهر فقط عند وجود مواعيد."),
       fields: [
         txt("jccTitle", 40, "Circuit: title", "الحلبة: العنوان", "Open Sports Day", "يوم الرياضة المفتوح"),
         txt("jccMeta", 60, "Circuit: line", "الحلبة: السطر", "Sun & Tue · 9-11pm", "الأحد والثلاثاء · 9-11 مساءً"),
@@ -69,6 +69,12 @@ export const experiencesSchema = {
         txt("evMeta", 60, "Events: line", "الفعاليات: السطر", "Talks, classes and festivals", "محاضرات ودورات ومهرجانات"),
         { id: "evLogo", type: "image", label: bi("Events: logo", "الفعاليات: الشعار"), def: "/site/logo-dark.png" },
         long("evNote", 240, "Events: rules", "الفعاليات: القواعد", "Seats, not bikes. Each event says who may book - everyone, or Club members - and what a seat costs. Up to 5 seats per booking; first come, first seated.", "مقاعد لا دراجات. كل فعالية تحدد من يحجز - الجميع أو أعضاء النادي - وسعر المقعد. حتى 5 مقاعد لكل حجز، والأسبقية لمن يحجز أولاً."),
+        // Run for Her (ride_kind 'runher', 2026-10-05): a members' run at the Jeddah Yacht Club; the
+        // card shows while a run is on the books, as the booking app's does (_runHerLive).
+        txt("rhTitle", 40, "Run for Her: title", "نركض لأجلها: العنوان", "Run for Her", "نركض لأجلها"),
+        txt("rhMeta", 60, "Run for Her: line", "نركض لأجلها: السطر", "3 or 5 km · Jeddah Yacht Club", "3 أو 5 كم · نادي جدة لليخوت"),
+        { id: "rhLogo", type: "image", label: bi("Run for Her: logo", "نركض لأجلها: الشعار"), def: "/site/logo-dark.png" },
+        long("rhNote", 240, "Run for Her: rules", "نركض لأجلها: القواعد", "For Club members aged 18 and over on race day. One place per account, complimentary. Places go first come, first served, then the waitlist opens. Pick 3 km or 5 km when you book.", "لأعضاء النادي ممن أتموا 18 عاماً يوم السباق. مكان واحد لكل حساب، ومجاناً. الأماكن بأسبقية التسجيل، ثم تُفتح قائمة الانتظار. اختر 3 كم أو 5 كم عند الحجز."),
       ],
     },
     {
@@ -83,6 +89,7 @@ export const experiencesSchema = {
         txt("workshopName", 50, "Name: triathlon workshop", "الاسم: ورشة الترايثلون", "T100 Triathlon Prep", "T100 التحضير للترايثلون"),
         txt("snd96Name", 50, "Name: National Day ride", "الاسم: جولة اليوم الوطني", "Saudi National Day Ride", "جولة اليوم الوطني السعودي"),
         txt("eventName", 50, "Name: event without a title", "الاسم: فعالية بلا عنوان", "Event", "فعالية"),
+        txt("runHerName", 50, "Name: Run for Her", "الاسم: نركض لأجلها", "Run for Her", "نركض لأجلها"),
         txt("members", 30, "Tag: members only", "الوسم: للأعضاء فقط", "Members", "للأعضاء"),
         txt("everyone", 30, "Tag: open to everyone", "الوسم: للجميع", "Open to everyone", "للجميع"),
         txt("perSeat", 40, "Event: price per seat ({price})", "الفعالية: سعر المقعد ({price})", "{price} per seat", "{price} للمقعد"),

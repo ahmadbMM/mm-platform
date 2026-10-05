@@ -1176,5 +1176,12 @@
  "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "В этом браузере выполнен вход в аккаунт {current}. Вы только что вошли в приложение для бронирования как {next}. Какой аккаунт должен использовать этот сайт?",
  "Switch to {name}": "Перейти в аккаунт {name}",
  "Stay signed in as {name}": "Остаться в аккаунте {name}",
- "You are signed in as {who}. If this is not your account, sign out.": "Вы вошли как {who}. Если это не ваш аккаунт, выйдите."
+ "You are signed in as {who}. If this is not your account, sign out.": "Вы вошли как {who}. Если это не ваш аккаунт, выйдите.",
+ "Run for Her": "Run for Her",
+ "3 or 5 km · Jeddah Yacht Club": "3 или 5 км · Яхт-клуб Джидды",
+ "For Club members aged 18 and over on race day. One place per account, complimentary. Places go first come, first served, then the waitlist opens. Pick 3 km or 5 km when you book.": "Для членов клуба, которым ко дню забега исполнилось 18 лет. Одно место на аккаунт, бесплатно. Места распределяются в порядке бронирования, затем открывается лист ожидания. При бронировании выберите 3 км или 5 км.",
+ "Jeddah Yacht Club": "Яхт-клуб Джидды",
+ "Runner number": "Номер бегуна",
+ "Finish the Run for Her.": "Пробегите Run for Her до финиша.",
+ "The pink ribbon, for everyone who ran and finished the Run for Her with the MicroMobility community.": "Розовая лента — для всех, кто пробежал Run for Her до финиша вместе с сообществом MicroMobility."
 }

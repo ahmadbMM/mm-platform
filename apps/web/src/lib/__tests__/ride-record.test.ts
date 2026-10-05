@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { badgeList, closestBadges, perfectWeeks, profilePct, recordRows, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
+import Medal from "@/components/account/Medal";
+import { createElement, type ReactElement } from "react";
+// The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
+// @ts-expect-error -- react-dom/server ships without type declarations here
+import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
+
+const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 
 // My Account's record follows the booking app's account page (_myrStats, _mrBadges, bd-next).
 const today = "2026-10-01"; // a Thursday
@@ -86,6 +93,49 @@ describe("the badges", () => {
   it("give Front Row only where the number is shown", () => {
     const appr = new Map<string, RecordSession>(rows.map((r) => [r.sessionId, { kind: "saturday", freeRide: true, approval: true }]));
     expect(list(empty, rows, appr).find((x) => x.slug === "front_row")!.on).toBe(false);
+  });
+});
+
+describe("Run for Her's pink ribbon (run_for_her, 2026-10-05)", () => {
+  // A finished run is a done row on a session of kind 'runher' (event_kind 'community', ride_kind 'runher').
+  const DAYS = ["2026-08-08", "2026-08-15", "2026-08-22", "2026-08-29", "2026-09-05"];
+  const runRows = (status: string, n = 1) => recordRows(DAYS.slice(0, n).map((d) => row({ session_id: `${d}-rh`, session_date: d, status, paid: false, type_preference: "None", run_km: 5 })));
+  const runSes = (rows: { sessionId: string }[]) => new Map<string, RecordSession>(rows.map((r) => [r.sessionId, { kind: "runher", freeRide: true, approval: false }]));
+  const catalog = [{ slug: "run_for_her", icon: "ribbon", color: "red", system: true, auto: true }, { slug: "first_lap", system: true, auto: true }, { slug: "slipstream", system: true, auto: true }];
+  it("stays hidden until a run is finished (done), then shows as the pink ribbon", () => {
+    for (const status of ["waiting", "waitlist", "active", "noshow"]) {
+      const r = runRows(status);
+      expect(badgeList(r, runSes(r), empty, today, null).map((x) => x.slug), status).not.toContain("run_for_her");
+    }
+    const done = runRows("done");
+    const b = badgeList(done, runSes(done), empty, today, null).find((x) => x.slug === "run_for_her");
+    expect(b).toMatchObject({ on: true, icon: "ribbon", color: "pink" });
+  });
+  it("is drawn on the pink medal even though the badges table holds it as red", () => {
+    const done = runRows("done");
+    expect(badgeList(done, runSes(done), { ...empty, catalog }, today, null).find((x) => x.slug === "run_for_her")).toMatchObject({ on: true, icon: "ribbon", color: "pink" });
+    expect(badgeList(recordRows([row({ session_id: "2026-09-01" })]), new Map([["2026-09-01", { kind: "jcc", freeRide: false }]]), { ...empty, catalog }, today, null).map((x) => x.slug)).not.toContain("run_for_her");
+  });
+  it("is not earned on a ride of another kind, and a run never counts towards the Saturday ladder", () => {
+    const sat = recordRows([row({ session_id: "2026-09-05" })]);
+    expect(badgeList(sat, new Map([["2026-09-05", { kind: "saturday", freeRide: true }]]), empty, today, null).map((x) => x.slug)).not.toContain("run_for_her");
+    const runs = runRows("done", 5);
+    const L = badgeList(runs, runSes(runs), empty, today, null);
+    expect(L.find((x) => x.slug === "slipstream")).toMatchObject({ on: false, p: "0/5" });
+    expect(L.find((x) => x.slug === "paceline")).toMatchObject({ on: false, p: "0/15" });
+    // a finished run is still a ride finished, as in the booking app
+    expect(L.find((x) => x.slug === "first_lap")!.on).toBe(true);
+  });
+  it("is drawn as the booking app draws it: the ribbon on the pink special medal", () => {
+    const svg = renderToStaticMarkup(createElement(Medal, { icon: "ribbon", color: "pink" }));
+    expect(svg).toContain("bdg-sp");
+    for (const c of ["#ffc9da", "#f2789f", "#c2416e", "#a3325b"]) expect(svg).toContain(c);
+    expect(svg).toContain('class="rb o"');
+  });
+  it("does not make the distance a favourite bike", () => {
+    const runs = runRows("done", 2);
+    expect(rideStats(runs, runSes(runs), today)).toMatchObject({ fav: null });
+    expect(runs.map((r) => r.runKm)).toEqual([5, 5]);
   });
 });
 
