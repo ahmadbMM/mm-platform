@@ -41,6 +41,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
   const setMenu = useCallback((next: Menu | ((m: Menu) => Menu)) =>
     setOpened((o) => ({ menu: typeof next === "function" ? next(o.at === path ? o.menu : "") : next, at: path })), [path]);
   const bar = useRef<HTMLElement>(null);
+  const searchBtn = useRef<HTMLButtonElement>(null);
   // The address's query and hash, taken when the language menu opens: another language is the same
   // page (/live?session=… keeps its ride), less any ?lang=, which would pick the old language again.
   const [tail, setTail] = useState("");
@@ -103,7 +104,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
           })}
         </nav>
         <div className="mm-nav-end">
-          <button type="button" className="mm-nav-icon" title={tx("Search", "بحث")} aria-label={tx("Search", "بحث")} onClick={() => setSearch(true)}>
+          <button ref={searchBtn} type="button" className="mm-nav-icon" title={tx("Search", "بحث")} aria-label={tx("Search", "بحث")} onClick={() => setSearch(true)}>
             <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.8-3.8" /></svg>
           </button>
           <div className={`mm-lang${menu === "lang" ? " open" : ""}`}>
@@ -142,7 +143,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
           </button>
         </div>
       </header>
-      {search && <SiteSearch locale={locale} hidden={hidden} onClose={() => setSearch(false)} />}
+      {search && <SiteSearch locale={locale} hidden={hidden} onClose={() => setSearch(false)} back={searchBtn} />}
       {open && (
         <nav id="mm-nav-sheet" className="mm-nav-sheet" dir={here.dir} aria-label={tx("Sections", "الأقسام")}>
           {HEADER.map((k) => {

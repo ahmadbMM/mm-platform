@@ -50,9 +50,14 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   const [ev, setEv] = useState<StepEvent | null>(null);
   const [sess, setSess] = useState<StepSession | null>(null);
   const top = useRef<HTMLDivElement>(null);
+  // The button pressed is gone with its step, so the new step's heading takes the focus (a keyboard
+  // or screen reader carries on from there instead of from the top of the page).
   const go = (n: number) => {
     setStep(n);
-    requestAnimationFrame(() => top.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+    requestAnimationFrame(() => {
+      top.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      top.current?.querySelector<HTMLElement>(".xs-title")?.focus({ preventScroll: true });
+    });
   };
   const arrow = (isRtl(locale) ? "←" : "→");
   const back = (isRtl(locale) ? "→" : "←");
@@ -103,7 +108,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
 
       {step === 1 && (
         <section aria-labelledby="xs-h1">
-          <h2 id="xs-h1" className="xs-title">{t.eventTitle}</h2>
+          <h2 id="xs-h1" className="xs-title" tabIndex={-1}>{t.eventTitle}</h2>
           <div className="xs-events">
             {events.map((e) => (
               <button key={e.key} type="button" className={`xs-event ev-${e.key}`} onClick={() => { setEv(e); setSess(null); go(2); }}>
@@ -119,7 +124,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
         <section aria-labelledby="xs-h2">
           <button type="button" className="xs-back" onClick={() => go(1)}><span aria-hidden="true">{back}</span> {t.back}</button>
           <p className="xs-picked">{ev.title}</p>
-          <h2 id="xs-h2" className="xs-title">{t.dateTitle}</h2>
+          <h2 id="xs-h2" className="xs-title" tabIndex={-1}>{t.dateTitle}</h2>
           {ev.sessions.length === 0 ? (
             <p className="xs-empty">{t.noDates}</p>
           ) : (
@@ -157,7 +162,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
       {step === 3 && ev && sess && (
         <section aria-labelledby="xs-h3">
           <button type="button" className="xs-back" onClick={() => go(2)}><span aria-hidden="true">{back}</span> {t.back}</button>
-          <h2 id="xs-h3" className="xs-title">{t.bookTitle}</h2>
+          <h2 id="xs-h3" className="xs-title" tabIndex={-1}>{t.bookTitle}</h2>
           <div className="xs-summary">
             <div className="xs-sum-head">
               {ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}

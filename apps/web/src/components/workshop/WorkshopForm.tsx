@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { cleanName, nameOk, namePartsOk, normalizePhone, rpc } from "@/lib/rpc-client";
 import { dayOptions, riyadhClock, timesFor } from "@/lib/workshop-days";
 import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
@@ -53,6 +53,15 @@ export default function WorkshopForm(p: WorkshopFormProps) {
   const [codeIn, setCodeIn] = useState("");
   const [promo, setPromo] = useState<{ code: string; kind: string; value: number } | null>(null);
   const [codeErr, setCodeErr] = useState("");
+  // The form gives way to its reference (and back again): focus follows, so it is not lost with
+  // the button that was pressed.
+  const doneBox = useRef<HTMLDivElement>(null);
+  const formTitle = useRef<HTMLHeadingElement>(null);
+  const again = useRef(false);
+  useEffect(() => {
+    if (done) doneBox.current?.focus();
+    else if (again.current) { again.current = false; formTitle.current?.focus(); }
+  }, [done]);
 
   // The clock the days and times count from: the page's, then Riyadh's as the browser reads it once
   // the page has drawn, and again whenever the visitor comes back to the tab - a page kept in a cache
@@ -144,19 +153,19 @@ export default function WorkshopForm(p: WorkshopFormProps) {
 
   if (done) {
     return (
-      <div className="ws-card ws-done" role="status">
+      <div ref={doneBox} tabIndex={-1} className="ws-card ws-done" role="status">
         <span className="ws-eyebrow">{p.doneTitle}</span>
         <p className="ws-ref-label">{t.ref}</p>
         <strong className="ws-ref mm-lat">{done}</strong>
         <p className="ws-done-text">{p.doneText}</p>
-        <button type="button" className="ws-btn ws-btn-line" onClick={() => { setDone(""); setSymptom(-1); setParts({}); setNotes(""); }}>{t.another}</button>
+        <button type="button" className="ws-btn ws-btn-line" onClick={() => { again.current = true; setDone(""); setSymptom(-1); setParts({}); setNotes(""); }}>{t.another}</button>
       </div>
     );
   }
 
   return (
     <div className="ws-card">
-      <h2>{p.formTitle}</h2>
+      <h2 ref={formTitle} tabIndex={-1}>{p.formTitle}</h2>
       <p className="ws-sub">{p.formSub}</p>
 
       {lanes.length > 1 && (

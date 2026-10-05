@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { normalizePhone, rpc } from "@/lib/rpc-client";
 import { fill, fmtNum } from "@/lib/fill";
 import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
@@ -45,6 +45,16 @@ export default function AmbassadorPortal(p: Props) {
   // A reward being asked for: every Redeem button waits, so a double tap never asks twice.
   const [redeeming, setRedeeming] = useState(false);
   const N = (n: number) => fmtNum(n, p.locale);
+  // Opening the card replaces the form, and closing it brings the form back: focus follows the
+  // visitor's button (not the refresh after a reward is asked for).
+  const portalBox = useRef<HTMLDivElement>(null);
+  const codeBox = useRef<HTMLInputElement>(null);
+  const follow = useRef(false);
+  useEffect(() => {
+    if (!follow.current) return;
+    follow.current = false;
+    (data ? portalBox.current : codeBox.current)?.focus();
+  }, [data]);
 
   async function open(c = code, ph = phone) {
     setErr(""); setBusy(true);
@@ -70,9 +80,9 @@ export default function AmbassadorPortal(p: Props) {
         <h2>{p.title}</h2>
         <p>{p.text}</p>
         <div className="amb-lookup-row">
-          <input className="amb-input" value={code} onChange={(e) => setCode(e.target.value)} placeholder={t.code} aria-label={t.code} dir="ltr" maxLength={20} autoCapitalize="characters" />
+          <input ref={codeBox} className="amb-input" value={code} onChange={(e) => setCode(e.target.value)} placeholder={t.code} aria-label={t.code} dir="ltr" maxLength={20} autoCapitalize="characters" />
           <input className="amb-input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.phone} aria-label={t.phone} dir="ltr" inputMode="tel" maxLength={20} />
-          <button type="button" className="amb-btn amb-btn-green" onClick={() => open()} disabled={busy || !code.trim() || !phone.trim()}>{busy ? t.opening : t.open}</button>
+          <button type="button" className="amb-btn amb-btn-green" onClick={() => { follow.current = true; open(); }} disabled={busy || !code.trim() || !phone.trim()}>{busy ? t.opening : t.open}</button>
         </div>
         {err && <p className="amb-err" role="alert">{err}</p>}
       </div>
@@ -92,7 +102,7 @@ export default function AmbassadorPortal(p: Props) {
   const balance = data.balance ?? 0;
   const active = data.status === "active";
   return (
-    <div className="amb-portal" role="region" aria-label={t.card}>
+    <div className="amb-portal" role="region" aria-label={t.card} ref={portalBox} tabIndex={-1}>
       <div className="amb-card">
         <div className="amb-card-top">
           <span className="amb-card-brand"><img src="/site/logo-mark.png" alt="Micromobility" /><span>{t.card}</span></span>
@@ -142,7 +152,7 @@ export default function AmbassadorPortal(p: Props) {
             {note && <p className="amb-note" role="status">{note}</p>}
           </div>
         )}
-        <button type="button" className="amb-link" onClick={() => { setData(null); setNote(""); }}>{t.close}</button>
+        <button type="button" className="amb-link" onClick={() => { follow.current = true; setData(null); setNote(""); }}>{t.close}</button>
       </div>
     </div>
   );

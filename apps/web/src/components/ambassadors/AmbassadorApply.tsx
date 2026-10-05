@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cleanName, nameOk, namePartsOk, normalizePhone, rpc } from "@/lib/rpc-client";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./AmbassadorApply.text";
@@ -18,6 +18,9 @@ export default function AmbassadorApply(p: Props) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState<"" | "new" | "pending" | "active">("");
+  // The form gives way to "received": focus follows, so it is not lost with the button pressed.
+  const doneBox = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (done) doneBox.current?.focus(); }, [done]);
 
   async function send() {
     setErr("");
@@ -41,7 +44,7 @@ export default function AmbassadorApply(p: Props) {
       <h2>{p.title}</h2>
       <p className="amb-apply-text">{p.text}</p>
       {done ? (
-        <div className="amb-done" role="status">
+        <div ref={doneBox} tabIndex={-1} className="amb-done" role="status">
           {done === "new" ? <><strong>{p.doneTitle}</strong><span>{p.doneText}</span></> : <span>{done === "pending" ? t.already : t.active}</span>}
         </div>
       ) : (

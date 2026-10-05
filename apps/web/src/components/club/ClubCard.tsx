@@ -22,6 +22,17 @@ export default function ClubCard(p: Props) {
   const [err, setErr] = useState("");
   const [card, setCard] = useState<Card | null>(null);
   const N = (n: number) => fmtNum(n, p.locale);
+  // Opening the card replaces the form, and closing it brings the form back: focus follows when the
+  // visitor pressed the button (never when the card opens by itself as the page loads).
+  const cardBox = useRef<HTMLDivElement>(null);
+  const emailBox = useRef<HTMLInputElement>(null);
+  const follow = useRef(false);
+  useEffect(() => {
+    if (!follow.current) return;
+    follow.current = false;
+    if (card?.member) cardBox.current?.focus();
+    else if (!card) emailBox.current?.focus(); // closed; a "not a member" answer keeps the form, and its button
+  }, [card]);
 
   async function open() {
     setErr(""); setBusy(true);
@@ -46,7 +57,7 @@ export default function ClubCard(p: Props) {
     const pct = tier >= 2 || !next ? 100 : Math.min(100, Math.round((credits / next) * 100));
     const since = card.since ? fmtPattern(p.sinceFmt, card.since) : "";
     return (
-      <div className="club-mine">
+      <div className="club-mine" ref={cardBox} tabIndex={-1}>
         <div className={`club-cardviz tier-${tier}`}>
           <div className="club-cardviz-top">
             <span className="club-cardviz-brand"><img src={tier === 2 ? "/site/logo-mark-dark.png" : "/site/logo-mark.png"} alt="Micromobility" /><span>{t.label}</span></span>
@@ -60,7 +71,7 @@ export default function ClubCard(p: Props) {
         </div>
         <span className="club-bar"><span style={{ width: `${pct}%` }} /></span>
         <p className="club-mine-next">{tier >= 2 || !next ? t.top : t.toNext(N(Math.max(0, next - credits)), p.tierNames[tier + 1])} · {t.rides(N(card.rides ?? 0))}</p>
-        <button type="button" className="club-link" onClick={() => setCard(null)}>{t.close}</button>
+        <button type="button" className="club-link" onClick={() => { follow.current = true; setCard(null); }}>{t.close}</button>
       </div>
     );
   }
@@ -70,10 +81,10 @@ export default function ClubCard(p: Props) {
       {p.title && <h2>{p.title}</h2>}
       {p.text && <p>{p.text}</p>}
       <div className="club-lookup-row">
-        <input className="club-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.email} aria-label={t.email} type="email" autoComplete="email" dir="ltr" maxLength={254} />
+        <input ref={emailBox} className="club-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.email} aria-label={t.email} type="email" autoComplete="email" dir="ltr" maxLength={254} />
         <input className="club-input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.phone} aria-label={t.phone} inputMode="tel" autoComplete="tel" dir="ltr" maxLength={20} />
       </div>
-      <button type="button" className="club-btn" onClick={open} disabled={busy || !email.trim() || !phone.trim()}>{busy ? t.opening : t.open}</button>
+      <button type="button" className="club-btn" onClick={() => { follow.current = true; open(); }} disabled={busy || !email.trim() || !phone.trim()}>{busy ? t.opening : t.open}</button>
       {err && <p className="club-err" role="alert">{err}</p>}
       {card && !card.member && (
         <div className="club-notmember" role="status">
