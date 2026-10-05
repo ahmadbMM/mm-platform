@@ -37,7 +37,8 @@ The specs drive the real page in a browser against `serve.mjs` (the built page a
 with every Supabase call stubbed, so nothing is ever written to production. CI runs them (`npm run
 e2e`) before every deploy. They cover registering with companions,
 editing a booking afterwards, the ride waiver (required on every registration and edit, sent as `p_waiver`), the booking card, and that every string on the card and in the
-companions block has a translation in all seven non-English languages.
+companions block has a translation in every language but English (Arabic, Urdu, French, Spanish,
+Portuguese, Hindi, Nepali, Tagalog and Bengali).
 
 ## Update the design
 1. Export from Claude Design and copy the files into `design/` (index.html, styles.css, app.js, logo.png, petromin-logo.avif), overwriting the old ones.

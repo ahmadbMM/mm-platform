@@ -82,13 +82,16 @@
     $$("#signin-link, #banner-signin").forEach(function (a) { a.href = signInUrl(); });
     $("#member-go").href = BOOKING_URL + "?lang=" + lang;
     paintWho();
-    $("#ack-lbl").innerHTML = esc(site("privacyAckOpt")).replace("{0}", '<button type="button" class="pv-link" id="pv-open">' + esc(site("privacyNotice")) + "</button>") + ' <span class="req" aria-hidden="true">*</span>';
+    $("#ack-lbl").innerHTML = ackLabel("pv-open");
+    $("#xack-lbl").innerHTML = ackLabel("pv-open-x");
     buildNationalities(); buildDob(); buildCc(); buildHeard();
     $$(".field").forEach(function (f) { paintField(f.id); });
     if (!$("#pv").hidden) renderNotice();
     if (sent) showSuccess(sent);
     if (bannerKey) showBanner(bannerKey, bannerSignIn);
   }
+  // "I have read the {Privacy Notice}", the notice a button that opens it.
+  function ackLabel(id) { return esc(site("privacyAckOpt")).replace("{0}", '<button type="button" class="pv-link" id="' + id + '">' + esc(site("privacyNotice")) + "</button>") + ' <span class="req" aria-hidden="true">*</span>'; }
   (function buildLangs() {
     var sel = $("#lang");
     sel.innerHTML = SH.LANGS.map(function (l) { return '<option value="' + l.code + '">' + esc(l.label) + "</option>"; }).join("");
@@ -348,7 +351,7 @@
   $("#pwd2").addEventListener("input", function () { clearMsg("f-pwd2"); });
 
   /* ── Tiles and tick boxes ───────────────────────────────────────────────── */
-  var gender = null, xgender = null, bikeType = null, ownBike = null, ack = false, news = false;
+  var gender = null, xgender = null, bikeType = null, ownBike = null, ack = false, xack = false, news = false;
   function tiles(groupSel, fieldId, onPick) {
     $(groupSel).addEventListener("click", function (e) {
       var b = e.target.closest(".tile"); if (!b) return;
@@ -371,11 +374,12 @@
   });
   function tick(id, get, set) {
     var el = document.getElementById(id);
-    function toggle() { set(!get()); el.setAttribute("aria-checked", String(get())); if (id === "ack") clearMsg("f-ack"); }
+    function toggle() { set(!get()); el.setAttribute("aria-checked", String(get())); if (id === "ack" || id === "xack") clearMsg("f-" + id); }
     el.addEventListener("click", function (e) { if (e.target.closest(".pv-link")) return; toggle(); });
     el.addEventListener("keydown", function (e) { if (e.target.closest(".pv-link")) return; if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(); } });
   }
   tick("ack", function () { return ack; }, function (v) { ack = v; });
+  tick("xack", function () { return xack; }, function (v) { xack = v; });
   tick("news", function () { return news; }, function (v) { news = v; });
 
   /* ── Privacy Notice ─────────────────────────────────────────────────────── */
@@ -399,7 +403,7 @@
   }
   function openNotice() { pvReturn = document.activeElement; renderNotice(); $("#pv").hidden = false; document.body.style.overflow = "hidden"; $("#pv-x").focus(); }
   function closeNotice() { $("#pv").hidden = true; document.body.style.overflow = ""; if (pvReturn && pvReturn.focus) pvReturn.focus(); }
-  document.addEventListener("click", function (e) { if (e.target.closest("#pv-open, #pv-open-foot")) { e.preventDefault(); e.stopPropagation(); openNotice(); } });
+  document.addEventListener("click", function (e) { if (e.target.closest("#pv-open, #pv-open-x, #pv-open-foot")) { e.preventDefault(); e.stopPropagation(); openNotice(); } });
   $("#pv-x").addEventListener("click", closeNotice);
   $("#pv").addEventListener("click", function (e) { if (e.target === this) closeNotice(); });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#pv").hidden) closeNotice(); });
@@ -419,7 +423,7 @@
   /* ── Steps ──────────────────────────────────────────────────────────────── */
   // 1 makes the account; once it exists there is no way back to it (it would make a second one).
   var step = 1, acked = {}; // acked[step] = the soft warnings the rider has already seen there
-  var acct = null; // the signed-in applicant: {id, token, name, email, phone, made, needGender, needHeight}
+  var acct = null; // the signed-in applicant: {id, token, name, email, phone, made, needGender, needHeight, needAck}
   function goStep(n) {
     step = n;
     $$("fieldset.step").forEach(function (f) { f.hidden = +f.getAttribute("data-step") !== n; });
@@ -490,10 +494,11 @@
       if (ownBike === null) hard["f-own"] = ["Tell us whether you have your own bike"];
       if (!bikeType) hard["f-type"] = ["Choose a bike type"];
       if (!$("#heard").value) hard["f-heard"] = ["Please tell us how you heard about us."];
+      if (acct && acct.needAck && !xack) hard["f-xack"] = ["privacyAckRequired", null, true];
     }
     return { hard: hard, soft: soft };
   }
-  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-pwd", "f-pwd2", "f-height", "f-ack"], 2: ["f-xgender", "f-xheight", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-own", "f-type", "f-heard"] };
+  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-pwd", "f-pwd2", "f-height", "f-ack"], 2: ["f-xgender", "f-xheight", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-own", "f-type", "f-heard", "f-xack"] };
   // Shows the step's problems; true when the rider may go on.
   function passStep(n) {
     var r = check(n), hk = Object.keys(r.hard), sk = Object.keys(r.soft);
@@ -595,7 +600,7 @@
     if (me.heard_from && SH.HEARD_OPTS.indexOf(me.heard_from) >= 0) { $("#heard").value = me.heard_from; $("#heard").classList.remove("ph"); }
   }
   function enterStepTwo(me) {
-    $("#f-xgender").hidden = !acct.needGender; $("#f-xheight").hidden = !acct.needHeight;
+    $("#f-xgender").hidden = !acct.needGender; $("#f-xheight").hidden = !acct.needHeight; $("#f-xack").hidden = !acct.needAck;
     $("#acct-pending").hidden = !(me && me.pending);
     prefill(me); paintWho();
     goStep(2);
@@ -610,8 +615,12 @@
     if (!acct || !passStep(2)) return;
     var payload = {
       birth_date: birthValue(), nationality: $("#nat").value, bike_type: bikeType, own_bike: ownBike, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
-      profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang, privacy_version: SH.PRIVACY_VERSION
+      profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang
     };
+    // The notice is recorded as confirmed only when this form showed its box and the box was ticked:
+    // the account step's (an account made here), or step 2's for a signed-in account the database
+    // has none for. An account handed over signed in otherwise sends none: it never saw the box here.
+    if (acct.made ? ack : (acct.needAck && xack)) { payload.privacy_version = SH.PRIVACY_VERSION; payload.privacy_ack = true; }
     if (acct.needGender) payload.gender = xgender;
     if (acct.needHeight) payload.height = parseInt(toAscii($("#xheight").value), 10);
     setLoading("#submit", true);
@@ -624,6 +633,8 @@
       if (res.error === "member") { showMember(); return; }
       if (res.error === "signed_out") { showBanner("You were signed out. Sign in again to send your application.", true); return; }
       if (res.error === "account") { showBanner("Your account has no email or mobile number yet. Add them on the booking site, then apply."); return; }
+      // An account without a confirmed notice: its box, on this step, before the application goes.
+      if (res.error === "privacy") { acct.needAck = true; $("#f-xack").hidden = false; setErr("f-xack", "privacyAckRequired", null, true); focusField("f-xack"); return; }
       var f = FIELD_OF[res.error];
       if (f) { if (res.error === "gender" || res.error === "height") { $("#" + f[0]).hidden = false; acct["need" + (res.error === "gender" ? "Gender" : "Height")] = true; } setErr(f[0], f[1]); focusField(f[0]); return; }
       showBanner("Could not reach the server. Please try again."); return;

@@ -77,3 +77,47 @@ test('editing a booking does not ask again', async ({ page }) => {
   await page.click('#next'); await page.click('#next');
   await expect(page.locator('#f-privacy')).toBeHidden();
 });
+
+// The notice a registration confirmed reaches the database (p_privacy, its 'YYYY-MM-DD' version). A
+// database without that argument yet (before the rentals migration adding it) does not know the call
+// with it - 404, PGRST202 - and is asked once more without it, so registering never waits on it.
+async function toLastStep(page: import('@playwright/test').Page) {
+  await page.goto('/petromin?lang=en');
+  await page.locator('#sessions .session').first().click();
+  await page.click('#next');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
+  await page.click('#next');
+  await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.check('#privacy'); await page.check('#waiver');
+}
+const BOOKED = { ok: true, id: 1, match: 'none', resubmitted: false, booking_no: 'P-001', session: S1 };
+
+test('a registration sends the notice it confirmed as p_privacy', async ({ page }) => {
+  const regs: Record<string, unknown>[] = [];
+  await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
+  await page.route('**/rest/v1/rpc/rider_register', (r) => { regs.push(r.request().postDataJSON()); return r.fulfill(json(BOOKED)); });
+  await toLastStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(regs).toHaveLength(1);
+  expect(regs[0]).toMatchObject({ p_privacy: '2026-09-22', p_waiver: '2026-10-v3' });
+});
+
+test('a database without p_privacy yet takes the registration on the second try, without it', async ({ page }) => {
+  const regs: Record<string, unknown>[] = [];
+  await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
+  await page.route('**/rest/v1/rpc/rider_register', (r) => {
+    const body = r.request().postDataJSON() as Record<string, unknown>; regs.push(body);
+    if ('p_privacy' in body) return r.fulfill({ ...json({ code: 'PGRST202', details: null, hint: null, message: 'Could not find the function public.rider_register(...) in the schema cache' }), status: 404 });
+    return r.fulfill(json(BOOKED));
+  });
+  await toLastStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  await expect(page.locator('#banner')).toBeHidden();
+  expect(regs).toHaveLength(2);
+  expect(regs[0].p_privacy).toBe('2026-09-22');
+  expect(regs[1]).not.toHaveProperty('p_privacy');
+  expect({ ...regs[1], p_privacy: '2026-09-22' }).toEqual(regs[0]); // nothing else changed
+});
