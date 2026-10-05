@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { normalizePhone, rpc } from "@/lib/rpc-client";
 import { fmtNum } from "@/lib/fill";
-import { intlOf } from "@/i18n/locales";
+import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./ClubCard.text";
 
 // A member's card (club_card): the email and mobile of their Micromobility account open it.
 // Credits and the tier come from their real rides. A signed-in rider's email and mobile are
-// passed in (/account, /club), and the card opens by itself.
+// passed in (/account, /club), and the card opens by itself. sinceFmt: how the page's language
+// writes "October 2026", described by the server (lib/date-pattern, DATE_STYLES.memberSince).
 type Card = { ok: boolean; error?: string; member?: boolean; first_name?: string; since?: string | null; credits?: number; tier?: number; next?: number | null; rides?: number };
-type Props = { locale: string; title: string; text: string; notMember: string; applyBtn: string; applyHref: string; tierNames: [string, string, string]; email?: string; phone?: string };
+type Props = { locale: string; title: string; text: string; notMember: string; applyBtn: string; applyHref: string; tierNames: [string, string, string]; email?: string; phone?: string; sinceFmt: DatePattern };
 
 export default function ClubCard(p: Props) {
   const t = useLocalize(T);
@@ -43,7 +44,7 @@ export default function ClubCard(p: Props) {
   if (card && card.member) {
     const tier = card.tier ?? 0, credits = card.credits ?? 0, next = card.next ?? null;
     const pct = tier >= 2 || !next ? 100 : Math.min(100, Math.round((credits / next) * 100));
-    const since = card.since ? new Intl.DateTimeFormat(intlOf(p.locale), { month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date(card.since)) : "";
+    const since = card.since ? fmtPattern(p.sinceFmt, card.since) : "";
     return (
       <div className="club-mine">
         <div className={`club-cardviz tier-${tier}`}>

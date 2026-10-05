@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { cleanName, nameOk, namePartsOk, normalizePhone, rpc } from "@/lib/rpc-client";
 import { dayOptions, timesFor } from "@/lib/workshop-days";
-import { intlOf } from "@/i18n/locales";
+import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
 import { fmtSar } from "@/lib/fill";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./WorkshopForm.text";
@@ -23,6 +23,8 @@ export type WorkshopFormProps = {
   wait: boolean; pickup: boolean; pickupFee: number;
   /** Riyadh wall clock when the page was made, "YYYY-MM-DDTHH:MM" (see lib/workshop-days). */
   now: string; days: number; times: string[]; fridayClosed: boolean; closeHour: number;
+  /** How the page's language writes a day ("Mon 5 Oct"), described by the server (lib/date-pattern). */
+  dayFmt: DatePattern;
   doneTitle: string; doneText: string;
 };
 
@@ -51,10 +53,10 @@ export default function WorkshopForm(p: WorkshopFormProps) {
   const [codeErr, setCodeErr] = useState("");
 
   const money = (n: number) => (n === 0 ? t.free : fmtSar(n, p.locale));
-  const dayList = useMemo(() => {
-    const fmt = new Intl.DateTimeFormat(intlOf(p.locale), { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
-    return dayOptions(p.now, p.days, p.fridayClosed, p.times, p.closeHour).map((iso) => ({ iso, label: fmt.format(new Date(`${iso}T00:00:00Z`)) }));
-  }, [p.locale, p.now, p.days, p.fridayClosed, p.times, p.closeHour]);
+  const dayList = useMemo(
+    () => dayOptions(p.now, p.days, p.fridayClosed, p.times, p.closeHour).map((iso) => ({ iso, label: fmtPattern(p.dayFmt, iso) })),
+    [p.dayFmt, p.now, p.days, p.fridayClosed, p.times, p.closeHour],
+  );
   const timeList = day ? timesFor(day, p.now, p.times) : p.times;
   function pickDay(iso: string) {
     setDay(iso);

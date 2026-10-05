@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { normalizePhone, rpc } from "@/lib/rpc-client";
 import { fill, fmtNum } from "@/lib/fill";
-import { intlOf } from "@/i18n/locales";
+import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./AmbassadorPortal.text";
 
@@ -27,6 +27,9 @@ type Props = {
   // idx: the reward's place in the staff list, which ambassador_redeem counts by (rows without a
   // label in this language are left out here, so the place on screen is not it)
   rewards: { label: string; cost: number; idx: number }[];
+  /** How the page's language writes a ledger line's day ("5 Oct 2026"), described by the server
+   *  (lib/date-pattern), since a browser may not know the language. */
+  dayFmt: DatePattern;
 };
 
 
@@ -81,7 +84,7 @@ export default function AmbassadorPortal(p: Props) {
   const wa = `https://wa.me/?text=${encodeURIComponent(fill(p.share, { code: data.code || "", discount: p.discount }))}`;
   const ctx: Record<string, string> = { rental: p.labels.rental, workshop: p.labels.workshop, event: p.labels.event };
   const st: Record<string, string> = { confirmed: t.confirmed, pending: t.pendingSt, void: t.voided, requested: t.requested, given: t.given };
-  const day = (iso: string) => new Intl.DateTimeFormat(intlOf(p.locale), { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date(iso));
+  const day = (iso: string) => fmtPattern(p.dayFmt, iso);
   const ledger = [
     ...(data.events || []).map((e) => ({ at: e.at, label: ctx[e.context] || e.context, pts: e.points, status: e.status })),
     ...(data.redemptions || []).map((r) => ({ at: r.at, label: `${t.redemption} · ${r.item}`, pts: -r.points, status: r.status })),

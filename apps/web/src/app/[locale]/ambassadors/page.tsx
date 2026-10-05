@@ -12,6 +12,7 @@ import { fill, fmtNum } from "@/lib/fill";
 import { pageState } from "@/lib/page-state";
 import { serverL } from "@/i18n/dicts";
 import { riyadhClock } from "@/lib/workshop-days";
+import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 
 // micromobility.sa/ambassadors - the programme, an ambassador's card, and the application,
 // which lands in the staff page (Ambassadors).
@@ -78,6 +79,7 @@ export default async function AmbassadorsPage({ params }: { params: Promise<{ lo
             tierNames={tierNames} labels={{ rental: S(how.rentalLabel), workshop: S(how.workshopLabel), event: S(how.eventLabel) }}
             rewardsTitle={S(a.redeem.title)}
             rewards={list(a.redeem.items).map((x, idx) => ({ label: S(x.label), cost: N(x.cost), idx })).filter((x) => x.label && x.cost > 0)}
+            dayFmt={datePattern(locale, DATE_STYLES.ledgerDay)}
           />
         </div>
         <section className="amb-sec" id="how">
