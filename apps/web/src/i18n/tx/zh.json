@@ -1158,5 +1158,18 @@
  "Shorten your note to 600 characters.": "请将备注缩短至 600 个字符以内。",
  "That code is for bike rentals only.": "该优惠码仅适用于自行车租赁。",
  "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Micromobility 目录中的 {category} 类自行车：车型、照片与规格。",
- "Show the map": "显示地图"
+ "Show the map": "显示地图",
+ "Add-ons": "加购项目",
+ "Choose a password different from the temporary one.": "请选择一个与临时密码不同的密码。",
+ "Choose your own password": "设置您自己的密码",
+ "Confirm new password": "确认新密码",
+ "New password": "新密码",
+ "Palestine": "巴勒斯坦",
+ "Save password": "保存密码",
+ "Saving…": "正在保存…",
+ "This ride is over. The live map is no longer updated.": "本次骑行已结束，实时地图不再更新。",
+ "You can sign up at most 5 learners in all, including the ones you have already signed up.": "您总共最多可为 5 位学员报名，包括已报名的学员。",
+ "You signed in with a temporary password from our team. Choose your own password to continue.": "您使用了我们团队提供的临时密码登录。请设置您自己的密码以继续。",
+ "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "您账户中的姓名需要同时包含名和姓。请先在预订 App 中更新，再在此报名。",
+ "Your sign-in has timed out. Please sign in again.": "登录已超时，请重新登录。"
 }

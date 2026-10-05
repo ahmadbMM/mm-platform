@@ -4,7 +4,7 @@ import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
-import { bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, kmText, queueNumbers, ticketLook, ticketStages, venueOf, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
+import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, queueNumbers, ticketLook, ticketStages, venueOf, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -37,6 +37,9 @@ type Props = {
   now: number;
   /** The booking (and the party's rows) a Google Wallet pass is made for (WalletButton); null for none. */
   wallet?: { bookingId: string; groupIds: string[] } | null;
+  /** The add-ons' items by id, their names and today's prices (lib/ticket-addons.ts); null when the
+   *  inventory could not be read. */
+  addonItems?: Map<string, AddonItem> | null;
 };
 
 const Bike = () => (
@@ -72,7 +75,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order
   const allWl = rows.every((r) => r.status === "waitlist");
@@ -83,8 +86,13 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const venue = venueOf(s);
   const big = num.length <= 4 ? "big" : num.length <= 9 ? "mid" : "small";
   const bikes = s ? s.bikes : true;
-  const total = rows.reduce((sum, r) => sum + r.price, 0);
-  const free = !!s?.free || (noNum && total === 0);
+  // The add-ons bought with the booking, each rider's under their name, and in the total, as the
+  // booking app lists them (none on a ride staff approve). A line whose price is not known (the
+  // inventory could not be read) is listed without it, and the total is left out: never a wrong one.
+  const extras = s?.approval ? [] : addonLines(rows, addonItems);
+  const extrasCost = addonsCost(extras);
+  const total = rows.reduce((sum, r) => sum + r.price, 0) + (extrasCost ?? 0);
+  const free = (!!s?.free || (noNum && total === 0)) && extras.length === 0;
   const ready = codeReady(rows, s);
   const owes = !allWl && !s?.approval && rows.some((r) => !r.paid && r.price > 0);
   const canEdit = !past && rows.some((r) => r.status === "waiting" || r.status === "waitlist");
@@ -108,7 +116,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
     ? (s.gathers ? `${gather} ${clock(s.times[0])} · ${start} ${clock(s.times[1])}` : `${clock(s.times[0])} – ${clock(s.times[1])}`)
     : "";
   const green = s?.times && s.gathers ? t.gatherAt(clock(s.times[0])) : s?.collect && bikes ? t.collectFrom(clock(s.collect)) : "";
-  const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, s.approval ? s.meetUrl ?? "" : "") : "";
+  const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, icsPlace(s)) : "";
   const wl = primary.waitlistNum;
 
   return (
@@ -215,7 +223,21 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             )}
           </div>
         ))}
-        <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>
+        {extras.length > 0 && rows.map((r) => {
+          const mine = extras.filter((x) => x.rowId === r.id);
+          return mine.length > 0 && (
+            <div key={`ad-${r.id}`} className="tk-addons">
+              <p className="tk-addons-h">{rows.length > 1 && <><bdi>{r.name}</bdi> · </>}{t.addons}</p>
+              {mine.map((x, i) => (
+                <div key={i} className="tk-ad">
+                  <span className="tk-ad-n"><bdi>{x.name}</bdi>{x.qty > 1 && <> <bdi className="tk-ad-q" dir="ltr">×{x.qty}</bdi></>}</span>
+                  {x.amount !== null && <bdi className="tk-amt">{sar(x.amount)}</bdi>}
+                </div>
+              ))}
+            </div>
+          );
+        })}
+        {(free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>}
         {owes && !past && <p className="tk-line">{t.payAtBooth}</p>}
         {!allWl && !past && bikes && <p className="tk-line">{s?.approval ? t.helmetBring : t.helmetLine}</p>}
       </div>

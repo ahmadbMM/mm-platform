@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import RatingGate from "./RatingGate";
+import { RATE_QUIET } from "./quiet";
 import type { RatingForm as Form } from "@/lib/rating";
 
 // The post-ride rating on every page (the owner, 2026-10-03: "open whenever a customer opens the
@@ -12,8 +13,9 @@ import type { RatingForm as Form } from "@/lib/rating";
 // "nothing to rate" is kept for ten minutes in this tab, and a ride to rate puts up the pop-up the
 // rider cannot skip. Once it is rated, the next waiting ride (or nothing) is asked for at once.
 // It waits for any waiver a desk-added booking still needs: WaiverGateLoader mounts it once none does.
+// The ten quiet minutes are the signed-in account's: every sign-in and sign-out forgets them (./quiet.ts).
 type Pending = { entryId: string; name: string; when: string; form: Form; noBike: boolean };
-const KEY = "mm_rate_none";
+const KEY = RATE_QUIET;
 const QUIET_MS = 10 * 60_000;
 
 async function check(locale: string): Promise<Pending | null> {

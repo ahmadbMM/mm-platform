@@ -1158,5 +1158,18 @@
  "Shorten your note to 600 characters.": "अपना नोट 600 अक्षरों तक छोटा करें।",
  "That code is for bike rentals only.": "यह कोड सिर्फ़ साइकिल किराए के लिए है।",
  "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Micromobility कैटलॉग में {category} श्रेणी की साइकिलें: मॉडल, फ़ोटो और स्पेसिफ़िकेशन।",
- "Show the map": "नक्शा दिखाएँ"
+ "Show the map": "नक्शा दिखाएँ",
+ "Add-ons": "ऐड-ऑन",
+ "Choose a password different from the temporary one.": "अस्थायी पासवर्ड से अलग पासवर्ड चुनें।",
+ "Choose your own password": "अपना खुद का पासवर्ड चुनें",
+ "Confirm new password": "नए पासवर्ड की पुष्टि करें",
+ "New password": "नया पासवर्ड",
+ "Palestine": "फ़िलिस्तीन",
+ "Save password": "पासवर्ड सहेजें",
+ "Saving…": "सहेजा जा रहा है…",
+ "This ride is over. The live map is no longer updated.": "यह राइड समाप्त हो चुकी है। लाइव मैप अब अपडेट नहीं होता।",
+ "You can sign up at most 5 learners in all, including the ones you have already signed up.": "आप कुल मिलाकर अधिकतम 5 प्रतिभागियों का साइन अप कर सकते हैं, जिनमें पहले से साइन अप किए गए प्रतिभागी भी शामिल हैं।",
+ "You signed in with a temporary password from our team. Choose your own password to continue.": "आपने हमारी टीम से मिले अस्थायी पासवर्ड से लॉग इन किया है। जारी रखने के लिए अपना खुद का पासवर्ड चुनें।",
+ "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "आपके खाते के नाम में पहला और अंतिम नाम दोनों होने चाहिए। यहाँ साइन अप करने से पहले बुकिंग ऐप में इसे अपडेट करें।",
+ "Your sign-in has timed out. Please sign in again.": "आपके साइन इन का समय समाप्त हो गया है। कृपया फिर से साइन इन करें।"
 }

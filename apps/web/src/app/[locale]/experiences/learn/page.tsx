@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { pageMeta } from "@/lib/seo";
-import PageShell from "@/components/site/PageShell";
+import PageShell, { navFrom } from "@/components/site/PageShell";
 import LearnAlone from "@/components/learn/LearnAlone";
 import LearnClosed from "@/components/learn/LearnClosed";
 import LearnForm from "@/components/learn/LearnForm";
@@ -9,7 +9,7 @@ import NoticeDialog from "@/components/privacy/NoticeDialog";
 import "@/components/learn/learn.css";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
-import { PRIVACY_VERSION } from "@/content/privacy-notice";
+import { PRIVACY_ASK_FROM, PRIVACY_VERSION } from "@/content/privacy-notice";
 import { asLocale, resolvePage } from "@/lib/content";
 import { learnFrame } from "@/lib/learn-page";
 import { pageState } from "@/lib/page-state";
@@ -52,7 +52,8 @@ export default async function LearnPage({ params }: { params: Promise<{ locale: 
           <p className="ln-lead">{l.text}</p>
         </div>
         {l.taking
-          ? <LearnForm locale={locale} formTitle={l.formTitle} formSub={l.formSub} doneTitle={l.doneTitle} doneText={l.doneText} closedTitle={l.closedTitle} closedText={l.closedText} privacyVersion={PRIVACY_VERSION} notice={NOTICE} />
+          ? <LearnForm locale={locale} formTitle={l.formTitle} formSub={l.formSub} doneTitle={l.doneTitle} doneText={l.doneText} closedTitle={l.closedTitle} closedText={l.closedText}
+              privacyVersion={PRIVACY_VERSION} privacyAskFrom={PRIVACY_ASK_FROM} notice={NOTICE} bookingUrl={navFrom(site).booking} />
           : <LearnClosed title={l.closedTitle} text={l.closedText} />}
       </section>
       <NoticeDialog id={NOTICE} locale={locale} />

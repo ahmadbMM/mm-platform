@@ -23,7 +23,8 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName } from "@/lib/rides";
 import { routeItems } from "@/lib/route-names";
-import { formOf, pendingRating, unratedRides } from "@/lib/rating";
+import { RATE_FROM, formOf, pendingRating, unratedRides } from "@/lib/rating";
+import { loadAddonItems } from "@/lib/ticket-addons";
 import { doneToday, fmtDayDate, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, recordRows, rideStats } from "@/lib/ride-record";
@@ -94,9 +95,10 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
   // Finished rides not rated yet, one per night (a party rates once, on its first rider): the
   // booking app's post-ride rating. The oldest from the day it went live on is the pop-up the
-  // rider cannot skip (RatingGateLoader, on every page; the booking app's _pendingRatingId); older ones stay cards.
+  // rider cannot skip (RatingGateLoader, on every page; the booking app's _pendingRatingId), and
+  // every later one is that pop-up in its turn: only rides from before that day are cards here.
   const gate = pendingRating(rows, today);
-  const toRate = unratedRides(rows, today).filter((r) => r.entryId !== gate?.entryId).reverse().slice(0, 5);
+  const toRate = unratedRides(rows, today).filter((r) => r.date < RATE_FROM).reverse().slice(0, 5);
   // every booked session, whatever its state now (a Petromin night, one staff closed since)
   const record = recordRows(rows);
   const [sessions, recSessions, badges] = await Promise.all([
@@ -110,6 +112,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const routes = routeItems(content, L); // a ride that follows a route on the Routes page names it on its ticket
   // tonight's bike, by name, for the steps and the line under the header
   const bikeOf = new Map(await Promise.all([...groups, ...past].filter((g) => g.date === today).map(async (g) => [g.sessionId, await bikeName(g.rows.find((r) => r.bikeId)?.bikeId ?? null)] as const)));
+  // the add-ons the tickets list, by name and price
+  const addonItems = await loadAddonItems([...groups, ...past].flatMap((g) => g.rows.flatMap((r) => r.addonLines.map((a) => a.id))));
   const stats = rideStats(record, recSessions, today);
   const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
   // "You're next" on a numbered night: whether anyone still waiting holds a lower number. Said on
@@ -170,7 +174,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                     links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place: s?.approval ? s.meetUrl : S(site.contact.jccHref) || null,
                       live: g.date === now.slice(0, 10) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} />
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} />
                 );
               })}
               {past.map((g) => {
@@ -179,7 +183,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                   <TicketCard key={g.sessionId} past locale={locale} today={today} rows={g.rows} session={s}
                     name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
                     cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} />
+                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} />
                 );
               })}
             </div>

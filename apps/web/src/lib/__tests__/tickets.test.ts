@@ -1,6 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { routeItems } from "../route-names";
-import { bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, ticketRoute, ticketStages, fmtClock, fmtDayDate, icsFor, queueNumbers, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
+import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, queueNumbers, rideEndsAt, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
+import { loadAddonItems } from "../ticket-addons";
 
 // My Account's tickets follow the booking app's own rules (renderBookingTicket, bookingRef,
 // downloadBookingICS): what the code says, when it is shown, and what the line under it says.
@@ -8,7 +9,7 @@ const jccRow = { id: "j1", session_date: "2099-03-01", event_kind: null, ride_ki
 const satRow = { id: "2099-03-04", session_date: "2099-03-04", event_kind: "community", ride_kind: "saturday", needs_approval: true, hide_queue: true, bike_slots: '{"_time":"05:45 - 06:15"}', meet_url: "https://maps.app.goo.gl/x", paid_ride: false, title: "Saturday Social Ride" };
 const jcc = ticketSession(jccRow)!;
 const sat = ticketSession(satRow)!;
-const row = (o: Partial<TicketRow>): TicketRow => ({ id: "q1abcdef", sessionId: "j1", date: "2099-03-01", day: "Sunday", queueNum: 4, status: "waiting", waitlistNum: null, approval: null, price: 75, paid: false, name: "Ann", type: "Road", checkedInAt: null, checkedOutAt: null, rideDuration: null, bikeId: null, ...o });
+const row = (o: Partial<TicketRow>): TicketRow => ({ id: "q1abcdef", sessionId: "j1", date: "2099-03-01", day: "Sunday", queueNum: 4, status: "waiting", waitlistNum: null, approval: null, price: 75, paid: false, name: "Ann", type: "Road", checkedInAt: null, checkedOutAt: null, rideDuration: null, bikeId: null, addonLines: [], ...o });
 
 describe("a session as the ticket reads it", () => {
   it("knows the circuit's window and collect time, and a ride staff approve", () => {
@@ -127,6 +128,67 @@ describe("the calendar file", () => {
     const late = ticketSession({ ...jccRow, bike_slots: '{"_time":"22:00 - 01:00"}' })!;
     expect(icsFor(late, "Ride", "")).toContain("DTSTART:20990301T190000Z\r\nDTEND:20990301T220000Z"); // 01:00 the next morning in Jeddah
     expect(icsFor(sat, "Saturday; ride", "")).toContain("SUMMARY:Saturday\\; ride");
+  });
+  it("knows when the ride is over, for the live map: the calendar file's end, past midnight too, else the end of its day", () => {
+    expect(new Date(rideEndsAt(jcc)).toISOString()).toBe("2099-03-01T20:00:00.000Z"); // 23:00 in Jeddah
+    expect(new Date(rideEndsAt(sat)).toISOString()).toBe("2099-03-04T05:15:00.000Z"); // two hours after the 06:15 start
+    expect(new Date(rideEndsAt(ticketSession({ ...jccRow, bike_slots: '{"_time":"22:00 - 01:00"}' })!)).toISOString()).toBe("2099-03-01T22:00:00.000Z");
+    expect(new Date(rideEndsAt(ticketSession({ ...jccRow, bike_slots: null })!)).toISOString()).toBe("2099-03-01T21:00:00.000Z"); // midnight in Jeddah
+  });
+  it("says where the ride is as the booking app does: the meeting point's link, the place staff wrote, the circuit", () => {
+    const at = (location: string | null) => icsPlace(ticketSession({ ...jccRow, location })!);
+    expect(at(null)).toBe("");
+    expect(at("JCC")).toBe("Jeddah Corniche Circuit");
+    expect(at("Sharafeyah Branch")).toBe("Sharafeyah, Jeddah");
+    expect(at("Obhur beach")).toBe("Obhur beach");
+    expect(icsPlace(sat)).toBe("https://maps.app.goo.gl/x");
+    expect(icsFor(ticketSession({ ...jccRow, location: "Sharafeyah Branch" })!, "Ride", at("Sharafeyah Branch"))).toContain("LOCATION:Sharafeyah\\, Jeddah");
+    expect(icsFor(jcc, "Ride", icsPlace(jcc))).toContain("LOCATION:Jeddah Corniche Circuit");
+  });
+});
+
+describe("the add-ons on a ticket (the booking app's entryAddons, addonLineItems, addonsCost)", () => {
+  const items = new Map([["gel", { name: "Energy gel", price: 12 }], ["cap", { name: "Cycling cap", price: 45 }]]);
+  it("reads the stored list, its text, and the old list of bare ids, joining lines sold at the same price", () => {
+    expect(entryAddons('[{"id":"gel","qty":2},{"id":"cap","qty":1,"p":40}]')).toEqual([{ id: "gel", qty: 2, p: null }, { id: "cap", qty: 1, p: 40 }]);
+    expect(entryAddons([{ id: "gel", qty: 1, p: 10 }, { id: "gel", qty: 2, p: 10 }, { id: "gel", qty: 1, p: 12 }])).toEqual([{ id: "gel", qty: 3, p: 10 }, { id: "gel", qty: 1, p: 12 }]);
+    expect(entryAddons('["gel","gel"]')).toEqual([{ id: "gel", qty: 2, p: null }]);
+    expect(entryAddons([{ id: "gel", qty: 0 }, { id: "", qty: 3 }, null, 7])).toEqual([{ id: "gel", qty: 1, p: null }]);
+    for (const v of [null, undefined, "", "[]", "not json", "{}"]) expect(entryAddons(v)).toEqual([]);
+    expect(ticketRow({ id: "q1", session_id: "j1", session_date: "2099-03-01", status: "waiting", addons: '[{"id":"gel","qty":2}]' })!.addonLines).toEqual([{ id: "gel", qty: 2, p: null }]);
+  });
+  it("prices a line at what it was sold for, else today's price, and adds them up", () => {
+    const rows = [row({ id: "a", name: "Ann", addonLines: [{ id: "gel", qty: 2, p: null }, { id: "cap", qty: 1, p: 40 }] }), row({ id: "b", name: "Bea", addonLines: [] })];
+    const lines = addonLines(rows, items);
+    expect(lines).toEqual([
+      { rowId: "a", rider: "Ann", name: "Energy gel", qty: 2, amount: 24 },
+      { rowId: "a", rider: "Ann", name: "Cycling cap", qty: 1, amount: 40 },
+    ]);
+    expect(addonsCost(lines)).toBe(64);
+    expect(addonsCost([])).toBe(0);
+  });
+  it("lists a line it cannot price without an amount, and then says no total rather than a wrong one", () => {
+    const rows = [row({ addonLines: [{ id: "gel", qty: 1, p: null }, { id: "gone", qty: 1, p: null }, { id: "cap", qty: 1, p: 40 }] })];
+    expect(addonLines(rows, items).map((l) => [l.name, l.amount])).toEqual([["Energy gel", 12], ["gone", null], ["Cycling cap", 40]]);
+    expect(addonsCost(addonLines(rows, items))).toBeNull();
+    // the inventory could not be read: a stamped price still counts, the rest are unknown
+    expect(addonLines(rows, null).map((l) => l.amount)).toEqual([null, null, 40]);
+    expect(addonsCost(addonLines([row({ addonLines: [{ id: "cap", qty: 2, p: 40 }] })], null))).toBe(80);
+  });
+  it("asks the inventory only for the items the tickets hold, and says when it could not", async () => {
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
+    try {
+      const urls: string[] = [];
+      const ok = (async (u: string) => { urls.push(u); return new Response(JSON.stringify([{ id: "gel", name: " Energy gel ", price: "12.5" }])); }) as unknown as typeof fetch;
+      expect(await loadAddonItems(["gel", "gel", "bad id;"], ok)).toEqual(new Map([["gel", { name: "Energy gel", price: 12.5 }]]));
+      expect(urls).toEqual(["https://example.supabase.co/rest/v1/inventory?select=id,name,price&id=in.(gel)"]);
+      expect(await loadAddonItems([], ok)).toEqual(new Map());
+      const down = (async () => new Response("{}", { status: 503 })) as unknown as typeof fetch;
+      expect(await loadAddonItems(["gel"], down)).toBeNull();
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });
 

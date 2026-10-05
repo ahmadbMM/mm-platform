@@ -77,6 +77,8 @@ export const T = {
     // the breakfast stop (the booking app's breakfastSpotLbl, vndRiderOffer)
     breakfastSpot: "Breakfast spot",
     riderOffer: (n: string) => `Offer for riders: ${n}`,
+    // what was bought with the booking (addonsLabel)
+    addons: "Add-ons",
   },
   ar: {
     queueNumber: "رقم الدور",
@@ -143,5 +145,6 @@ export const T = {
     rtOsm: "الحلبة: © مساهمو OpenStreetMap",
     breakfastSpot: "موقع الفطور",
     riderOffer: (n: string) => `عرض للراكبين: ${n}`,
+    addons: "الإضافات",
   },
 };

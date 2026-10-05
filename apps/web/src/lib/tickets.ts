@@ -8,11 +8,16 @@ import { fill as fillNamed } from "./fill";
 import { collectTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
+/** An add-on line on a booking (the booking app's entryAddons): the inventory item, how many, and
+ *  `p`, the price each was sold at when the database stamped it (rentals 20261004120000), else null. */
+export type TicketAddon = { id: string; qty: number; p: number | null };
 export type TicketRow = {
   id: string; sessionId: string; date: string; day: string; queueNum: number | null; status: TicketStatus;
   waitlistNum: number | null; approval: string | null; price: number; paid: boolean; name: string; type: string;
   /** The desk's check-in and return (ISO), the minutes it timed on the bike, and the bike handed over. */
   checkedInAt: string | null; checkedOutAt: string | null; rideDuration: number | null; bikeId: string | null;
+  /** The add-ons bought with the booking. */
+  addonLines: TicketAddon[];
 };
 export type TicketSession = {
   id: string; date: string; kind: RideKind; title: string | null;
@@ -60,7 +65,54 @@ export function ticketRow(r: Row): TicketRow | null {
     waitlistNum: N(r.waitlist_num), approval: S(r.approval) || null, price: N(r.price) ?? 0, paid: r.paid === true,
     name: S(r.name), type: S(r.type_preference),
     checkedInAt: S(r.checked_in_at) || null, checkedOutAt: S(r.checked_out_at) || null, rideDuration: N(r.ride_duration), bikeId: bike || null,
+    addonLines: entryAddons(r.addons),
   };
+}
+
+/** A booking's add-ons, as the booking app reads them (entryAddons): a JSON list, or its text, of
+ *  {id, qty, p?} - or of bare ids, the old way - each line at least one; lines of the same item
+ *  sold at the same price are one line. */
+export function entryAddons(v: unknown): TicketAddon[] {
+  let raw: unknown = v;
+  if (typeof raw === "string") { try { raw = JSON.parse(raw); } catch { raw = null; } }
+  const out: TicketAddon[] = [];
+  for (const a of Array.isArray(raw) ? raw : []) {
+    const o = a && typeof a === "object" ? (a as Record<string, unknown>) : null;
+    const id = o ? S(o.id) : S(a);
+    if (!id) continue;
+    const qty = o ? Math.max(1, Number(o.qty) || 1) : 1;
+    const p = o && typeof o.p === "number" && Number.isFinite(o.p) ? o.p : null;
+    const same = out.find((x) => x.id === id && x.p === p);
+    if (same) same.qty += qty;
+    else out.push({ id, qty, p });
+  }
+  return out;
+}
+
+/** An inventory item as the ticket names an add-on: its name, and today's price (null when the
+ *  item could not be read). */
+export type AddonItem = { name: string; price: number | null };
+/** One add-on as the ticket lists it (the booking app's addonLineItems): whose it is, its name, how
+ *  many, and the line's amount - the price it was sold at, else the item's price today; null when
+ *  neither is known (the inventory could not be read), and then the ticket shows no total. */
+export type AddonLine = { rowId: string; rider: string; name: string; qty: number; amount: number | null };
+const r2 = (n: number) => Math.round(n * 100) / 100;
+export function addonLines(rows: Pick<TicketRow, "id" | "name" | "addonLines">[], items: Map<string, AddonItem> | null): AddonLine[] {
+  return rows.flatMap((r) => r.addonLines.map((a) => {
+    const it = items?.get(a.id);
+    const each = a.p ?? it?.price ?? null;
+    return { rowId: r.id, rider: r.name, name: it?.name || a.id, qty: a.qty, amount: each === null ? null : r2(each * a.qty) };
+  }));
+}
+
+/** What the add-ons come to, or null when a line's amount is not known: the total then cannot be said. */
+export function addonsCost(lines: AddonLine[]): number | null {
+  let sum = 0;
+  for (const l of lines) {
+    if (l.amount === null) return null;
+    sum += l.amount;
+  }
+  return r2(sum);
 }
 
 type Group = { sessionId: string; date: string; rows: TicketRow[] };
@@ -312,18 +364,41 @@ export function fmtDayDate(iso: string, locale: string): string {
   return `${f({ weekday: "long" })} · ${f({ day: "numeric", month: "short", year: "numeric" })}`;
 }
 
+/** Where the calendar file says the ride is (downloadBookingICS's LOCATION): a ride staff approve
+ *  that meets at a map link, that link; else the place staff wrote, with the two the booking app
+ *  spells out for a calendar ("JCC", "Sharafeyah Branch"); "" for none, which icsFor writes as the
+ *  circuit. */
+const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Branch", "Sharafeyah, Jeddah"]]);
+export function icsPlace(s: TicketSession): string {
+  if (s.approval && s.meetUrl) return s.meetUrl;
+  return s.location ? ICS_PLACES.get(s.location) ?? s.location : "";
+}
+
+/** The ride's start and end, in minutes from the start of its day (Riyadh), as the booking app's
+ *  calendar file has them: its window, or on a ride that gathers, from the gathering to two hours
+ *  after the start; an end past midnight is on the next day (over 1440). Null without times. */
+function rideWindow(s: Pick<TicketSession, "times" | "gathers">): [number, number] | null {
+  if (!s.times) return null;
+  const [a, b] = s.times.map((t) => t.split(":").map(Number));
+  const sMin = a[0] * 60 + a[1];
+  let eMin = (b[0] + (s.gathers ? 2 : 0)) * 60 + b[1];
+  if (eMin <= sMin) eMin += 1440;
+  return [sMin, eMin];
+}
+
+/** When the ride is over (epoch milliseconds): its end as the calendar file has it, or the end of
+ *  its day when it has no times. The live map stops asking a while after it. */
+export function rideEndsAt(s: Pick<TicketSession, "date" | "times" | "gathers">): number {
+  const w = rideWindow(s);
+  return Date.parse(`${s.date}T00:00:00+03:00`) + (w ? w[1] : 1440) * 6e4;
+}
+
 /** The calendar file the booking app's Add to Calendar gives (downloadBookingICS): a window, or
  *  on a ride that gathers, from the gathering to two hours after the start; a window that runs
  *  past midnight ends on the next day. */
 export function icsFor(s: TicketSession, summary: string, place: string, now: Date = new Date()): string {
   const date = s.date.replace(/-/g, "");
-  let sMin = 540, eMin = 660;
-  if (s.times) {
-    const [a, b] = s.times.map((t) => t.split(":").map(Number));
-    sMin = a[0] * 60 + a[1];
-    eMin = (b[0] + (s.gathers ? 2 : 0)) * 60 + b[1];
-    if (eMin <= sMin) eMin += 1440;
-  }
+  const [sMin, eMin] = rideWindow(s) ?? [540, 660];
   // The ride's hour is Jeddah's: written without a zone, a calendar read it in the phone's own (a
   // phone set to London put a 21:00 ride at 21:00 London). So the times go out in UTC, as the booking
   // app's do since 2026-10-04 (KSA is UTC+3 all year); minutes past 1440 land on the next day.

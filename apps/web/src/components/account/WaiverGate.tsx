@@ -5,6 +5,7 @@ import "./waiver.css";
 import { useEffect, useRef, useState } from "react";
 import { useL } from "@/i18n/TxProvider";
 import type { WaiverCopy, WaiverKind } from "@/content/waivers";
+import { signOut } from "./quiet";
 
 // A desk-added booking's waiver as a page the rider cannot skip, as the booking app shows it
 // (renderWaiverGate, the owner 2026-10-04): the ride - what, when, where and who - so the rider
@@ -75,9 +76,9 @@ export default function WaiverGate({ onDone, ...w }: PendingWaiver & { onDone: (
     setBusy(false);
   }
 
-  const signOut = () => {
+  const leave = () => {
     setOut(true);
-    fetch("/api/account", { method: "DELETE" }).finally(() => window.location.reload());
+    signOut();
   };
 
   return (
@@ -112,7 +113,7 @@ export default function WaiverGate({ onDone, ...w }: PendingWaiver & { onDone: (
         <button type="button" className="wg-btn" disabled={!ok || busy} onClick={agree}>
           {busy ? tx("Sending…", "جارٍ الإرسال…") : tx("Agree and continue", "أوافق وأتابع")}
         </button>
-        <button type="button" className="wg-out" onClick={signOut} disabled={out || busy}>{tx("Sign out", "تسجيل الخروج")}</button>
+        <button type="button" className="wg-out" onClick={leave} disabled={out || busy}>{tx("Sign out", "تسجيل الخروج")}</button>
       </div>
     </div>
   );

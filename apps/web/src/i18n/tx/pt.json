@@ -1158,5 +1158,18 @@
  "Shorten your note to 600 characters.": "Encurte sua observação para até 600 caracteres.",
  "That code is for bike rentals only.": "Esse código vale apenas para aluguel de bicicletas.",
  "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Bicicletas da categoria {category} no catálogo da Micromobility: modelos, fotos e especificações.",
- "Show the map": "Ver o mapa"
+ "Show the map": "Ver o mapa",
+ "Add-ons": "Extras",
+ "Choose a password different from the temporary one.": "Escolha uma senha diferente da temporária.",
+ "Choose your own password": "Escolha sua própria senha",
+ "Confirm new password": "Confirmar nova senha",
+ "New password": "Nova senha",
+ "Palestine": "Palestina",
+ "Save password": "Salvar senha",
+ "Saving…": "Salvando…",
+ "This ride is over. The live map is no longer updated.": "Este passeio terminou. O mapa ao vivo não é mais atualizado.",
+ "You can sign up at most 5 learners in all, including the ones you have already signed up.": "Você pode inscrever no máximo 5 participantes no total, incluindo os que já inscreveu.",
+ "You signed in with a temporary password from our team. Choose your own password to continue.": "Você entrou com uma senha temporária da nossa equipe. Escolha sua própria senha para continuar.",
+ "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.": "O nome da sua conta precisa ter nome e sobrenome. Atualize-o no app de reservas antes de se inscrever aqui.",
+ "Your sign-in has timed out. Please sign in again.": "Seu acesso expirou. Entre novamente."
 }

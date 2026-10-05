@@ -158,3 +158,8 @@ html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13
 .ln-made b { display: block; color: #077a4b; font-size: 16px; }
 .ln-made span span { display: block; margin-top: 2px; font-size: 13.5px; color: #5f6862; line-height: 1.5; }
 .ln-who-am { margin: 0 0 18px; padding: 10px 14px; border-radius: 12px; background: rgba(0, 0, 0, .05); font-size: 14px; font-weight: 600; color: #5f6862; }
+/* The sign-in's Turnstile check (once its keys are set); a temporary password replaced first
+   (ChangePassword, in this card's look); step 2's Privacy Notice box for an account with none. */
+.ln-card .ac-check { min-height: 65px; margin: 0 0 12px; }
+.ln-pc-sub { margin: 0 0 16px; }
+.ln-ack { margin: 18px 0 12px; }
