@@ -114,13 +114,66 @@ describe("POST /api/login", () => {
 });
 
 describe("POST /api/logout", () => {
-  it("clears the cookie", async () => {
+  it("ends the session in the database, then clears the cookie", async () => {
     const res = await worker.fetch(post("/api/logout", {}, { Cookie: COOKIE }), env());
     expect(res.status).toBe(200);
     const c = res.headers.get("set-cookie")!;
     expect(c).toMatch(/^mm_vendor=;/);
     expect(c).toContain("Max-Age=0");
     expect(c).toContain("HttpOnly");
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe("https://db.example.test/rest/v1/rpc/vendor_logout");
+    expect(calls[0].body).toEqual({ p_uid: "7", p_token: TOKEN });
+  });
+
+  it("still clears the cookie when the database cannot be reached, and calls nothing without a session", async () => {
+    answer = () => { throw new Error("down"); };
+    let res = await worker.fetch(post("/api/logout", {}, { Cookie: COOKIE }), env());
+    expect(res.status).toBe(200);
+    expect(res.headers.get("set-cookie")).toContain("Max-Age=0");
+    calls = [];
+    res = await worker.fetch(post("/api/logout", {}), env());
+    expect(res.status).toBe(200);
+    expect(calls).toHaveLength(0);
+  });
+});
+
+describe("the gate secret and the device's description", () => {
+  it("sends x-vendor-gate with sign-in only, when the secret is set", async () => {
+    answer = dbJson({ id: 7, token: TOKEN, must_change: false });
+    await worker.fetch(post("/api/login", { login: "a@b.co", password: "long quiet morning" }, { "User-Agent": "Phone/1.0" }), env({ VENDOR_GATE_SECRET: "s3cret" }));
+    let h = calls[0].init.headers as Record<string, string>;
+    expect(h["x-vendor-gate"]).toBe("s3cret");
+    expect(h["User-Agent"]).toBe("Phone/1.0");
+    calls = [];
+    answer = dbJson({ user: {} });
+    await worker.fetch(post("/api/rpc/vendor_me", {}, { Cookie: COOKIE }), env({ VENDOR_GATE_SECRET: "s3cret" }));
+    h = calls[0].init.headers as Record<string, string>;
+    expect(h["x-vendor-gate"]).toBeUndefined();
+    calls = [];
+    answer = dbJson({ id: 7, token: TOKEN, must_change: false });
+    await worker.fetch(post("/api/login", { login: "a@b.co", password: "long quiet morning" }), env());
+    expect((calls[0].init.headers as Record<string, string>)["x-vendor-gate"]).toBeUndefined();
+  });
+
+  it("answers the gate's refusal and an expired temporary password with their codes", async () => {
+    answer = dbError("FORBIDDEN", "42501", 403);
+    let res = await worker.fetch(post("/api/login", { login: "a@b.co", password: "x" }), env());
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: "FORBIDDEN" });
+    answer = dbJson({ error: "TEMP_EXPIRED" });
+    res = await worker.fetch(post("/api/login", { login: "a@b.co", password: "x" }), env());
+    expect(res.status).toBe(401);
+    expect(await res.json()).toEqual({ error: "TEMP_EXPIRED" });
+    expect(res.headers.get("set-cookie")).toBeNull();
+  });
+
+  it("passes MUST_CHANGE through as 403 and keeps the cookie", async () => {
+    answer = dbError("MUST_CHANGE", "P0001", 400);
+    const res = await worker.fetch(post("/api/rpc/vendor_calendar", { p_from: "2026-10-01", p_to: "2026-10-31" }, { Cookie: COOKIE }), env());
+    expect(res.status).toBe(403);
+    expect(await res.json()).toEqual({ error: "MUST_CHANGE" });
+    expect(res.headers.get("set-cookie")).toBeNull();
   });
 });
 
@@ -131,7 +184,7 @@ describe("POST /api/rpc/<name>", () => {
       expect(res.status).toBe(404);
     }
     expect(calls).toHaveLength(0);
-    expect([...RPCS].sort()).toEqual(["vendor_calendar", "vendor_cancel", "vendor_feedback_save", "vendor_me", "vendor_preview", "vendor_profile_save", "vendor_request", "vendor_set_password", "vendor_shared_ratings_mine"]);
+    expect([...RPCS].sort()).toEqual(["vendor_calendar", "vendor_cancel", "vendor_feedback_save", "vendor_logout_others", "vendor_me", "vendor_preview", "vendor_profile_save", "vendor_request", "vendor_set_password", "vendor_shared_ratings_mine", "vendor_team"]);
   });
 
   it("passes the shared rider ratings through with only the session's own uid and token", async () => {
@@ -202,14 +255,27 @@ describe("POST /api/rpc/<name>", () => {
     expect(await res.json()).toEqual({ error: "NOT_FOUND" });
   });
 
-  it("rewrites the cookie with the new token after a password change", async () => {
+  it("rewrites the cookie with the new token after a password change ({token}, or the bare token from an older database)", async () => {
     const fresh = "c".repeat(48);
+    answer = dbJson({ token: fresh });
+    const now = await worker.fetch(post("/api/rpc/vendor_set_password", { p_new: "a long quiet morning" }, { Cookie: COOKIE }), env());
+    expect(now.status).toBe(200);
+    expect(now.headers.get("set-cookie")).toContain(`mm_vendor=7~${fresh}`);
+    calls = [];
     answer = dbJson(fresh);
     const res = await worker.fetch(post("/api/rpc/vendor_set_password", { p_new: "NewPass123", p_old: "OldPass123" }, { Cookie: COOKIE }), env());
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
     expect(res.headers.get("set-cookie")).toContain(`mm_vendor=7~${fresh}`);
     expect(calls[0].body).toEqual({ p_new: "NewPass123", p_old: "OldPass123", p_uid: 7, p_token: TOKEN });
+  });
+
+  it("answers a wrong current password (answered, not raised, by the database) as BAD_PASSWORD without a cookie", async () => {
+    answer = dbJson({ error: "BAD_PASSWORD" });
+    const res = await worker.fetch(post("/api/rpc/vendor_set_password", { p_new: "a long quiet morning", p_old: "nope" }, { Cookie: COOKIE }), env());
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "BAD_PASSWORD" });
+    expect(res.headers.get("set-cookie")).toBeNull();
   });
 
   it("answers a void function (204, empty body) as null", async () => {

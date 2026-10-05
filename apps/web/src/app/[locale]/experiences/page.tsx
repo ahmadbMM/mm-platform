@@ -109,7 +109,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // The route on a booking's ticket (ticketRoute): the Routes page's, or the circuit drawn.
   const routeOf = (s: RideSession): TicketRoute | null => ticketRoute({
     id: s.id, date: s.date, kind: s.kind, title: s.title, approval: !!s.approval, published: false, times: s.times, gathers: s.gather, collect: s.collect,
-    meetUrl: s.meetUrl ?? null, free: s.free, freeRide: s.free, bikes: s.kind !== "swim" && s.kind !== "workshop" && s.kind !== "event", routeSlug: s.routeSlug, location: s.location ?? null,
+    meetUrl: s.meetUrl ?? null, free: s.free, freeRide: s.free, bikes: s.kind !== "swim" && s.kind !== "workshop" && s.kind !== "event", routeSlug: s.routeSlug, location: s.location ?? null, breakfast: null,
   }, routeKm);
   // The booking app's events (_evMatch) in its order: the National Day ride and the ticketed
   // events while they have dates, the circuit, the community rides, and the T100 workshop while

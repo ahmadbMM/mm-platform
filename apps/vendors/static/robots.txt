@@ -1,2 +1,4 @@
 User-agent: *
-Disallow: /
+Allow: /
+# Crawlers may fetch the portal so that they read its X-Robots-Tag: noindex, nofollow header;
+# blocking them here would keep them from ever seeing it. Nothing here goes into a search engine.

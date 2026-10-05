@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { routeItems } from "../route-names";
-import { bookingRef, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, ticketRoute, ticketStages, fmtClock, fmtDayDate, icsFor, queueNumbers, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
+import { bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, ticketRoute, ticketStages, fmtClock, fmtDayDate, icsFor, queueNumbers, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, type TicketRow } from "../tickets";
 
 // My Account's tickets follow the booking app's own rules (renderBookingTicket, bookingRef,
 // downloadBookingICS): what the code says, when it is shown, and what the line under it says.
@@ -20,6 +20,23 @@ describe("a session as the ticket reads it", () => {
     // a ticketed event: seats, no bikes, nobody approves, and the route a ride follows when one is set
     expect(ticketSession({ ...satRow, ride_kind: "event", needs_approval: false, route_slug: "al-balad-heritage-ride" })).toMatchObject({ kind: "event", bikes: false, approval: false, gathers: false, routeSlug: "al-balad-heritage-ride" });
     expect(jcc.routeSlug).toBeNull();
+  });
+});
+
+describe("the breakfast stop (the booking app's _commInfoHtml)", () => {
+  const bfRow = { ...satRow, breakfast_name: "Bean Box", breakfast_url: "https://maps.example.test/bean", breakfast_name_ar: "بين بوكس", breakfast_offer_en: "15% off breakfast", breakfast_offer_ar: "خصم ١٥٪" };
+  it("shows the Arabic name on the Arabic page and the offer in the rider's language", () => {
+    const s = ticketSession(bfRow)!;
+    expect(breakfastFor(s, "en")).toEqual({ name: "Bean Box", url: "https://maps.example.test/bean", offer: "15% off breakfast" });
+    expect(breakfastFor(s, "ar")).toEqual({ name: "بين بوكس", url: "https://maps.example.test/bean", offer: "خصم ١٥٪" });
+    expect(breakfastFor(s, "fr")).toEqual({ name: "Bean Box", url: "https://maps.example.test/bean", offer: "15% off breakfast" });
+  });
+  it("falls back to what there is, refuses a bad link, and is the Saturday ride's only", () => {
+    expect(breakfastFor(ticketSession({ ...bfRow, breakfast_name_ar: null, breakfast_offer_ar: null })!, "ar")).toEqual({ name: "Bean Box", url: "https://maps.example.test/bean", offer: "15% off breakfast" });
+    expect(breakfastFor(ticketSession({ ...bfRow, breakfast_url: "javascript:alert(1)", breakfast_offer_en: null, breakfast_offer_ar: null })!, "en")).toEqual({ name: "Bean Box", url: null, offer: null });
+    expect(breakfastFor(ticketSession({ ...bfRow, ride_kind: "event" })!, "en")).toBeNull();
+    expect(breakfastFor(sat, "en")).toBeNull();
+    expect(breakfastFor(undefined, "en")).toBeNull();
   });
 });
 
@@ -104,10 +121,11 @@ describe("times and dates", () => {
 
 describe("the calendar file", () => {
   it("runs the circuit's window, a gathering to two hours after the start, and past midnight into the next day", () => {
-    expect(icsFor(jcc, "Ride", "")).toContain("DTSTART:20990301T210000\r\nDTEND:20990301T230000");
-    expect(icsFor(sat, "Ride", "")).toContain("DTSTART:20990304T054500\r\nDTEND:20990304T081500");
+    // In UTC: Jeddah's hour less three, whatever zone the phone is in.
+    expect(icsFor(jcc, "Ride", "")).toContain("DTSTART:20990301T180000Z\r\nDTEND:20990301T200000Z");
+    expect(icsFor(sat, "Ride", "")).toContain("DTSTART:20990304T024500Z\r\nDTEND:20990304T051500Z");
     const late = ticketSession({ ...jccRow, bike_slots: '{"_time":"22:00 - 01:00"}' })!;
-    expect(icsFor(late, "Ride", "")).toContain("DTEND:20990302T010000");
+    expect(icsFor(late, "Ride", "")).toContain("DTSTART:20990301T190000Z\r\nDTEND:20990301T220000Z"); // 01:00 the next morning in Jeddah
     expect(icsFor(sat, "Saturday; ride", "")).toContain("SUMMARY:Saturday\\; ride");
   });
 });

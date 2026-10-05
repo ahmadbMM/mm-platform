@@ -131,12 +131,17 @@ export const experiencesSchema = {
       // the staff page through learn_apply(); the team contacts each person with a lesson time. The
       // question (the teaser* fields) also sits on Home and on this page. The sign-up belongs to
       // Experiences: its address is under /experiences, so switching Experiences off (Website >
-      // Pages) closes it too, and `on` closes just the lessons.
+      // Pages) closes it too, and `on` closes just the lessons. `taking` (owner, 2026-10-04: "an
+      // option to stop taking applications, show in the website that currently we are not taking
+      // any") keeps the page and the question up but says sign-ups are closed, with the closed*
+      // texts, in place of the form and of the question's button; customer_learn_apply refuses a
+      // sign-up meanwhile (rentals migration 20261004201500).
       id: "learn",
       label: bi("Learn to ride", "تعلّم ركوب الدراجة"),
       hint: bi("The lessons sign-up at micromobility.sa/experiences/learn. Its question (the first four texts) also shows on Home and on the Experiences page.", "صفحة التسجيل في الدروس على micromobility.sa/experiences/learn. يظهر سؤالها (النصوص الأربعة الأولى) أيضاً في الصفحة الرئيسية وصفحة التجارب."),
       fields: [
         { id: "on", type: "toggle", label: bi("Offer lessons", "إتاحة الدروس"), hint: bi("Off hides the question on Home and Experiences and closes the sign-up page.", "الإيقاف يخفي السؤال من الصفحة الرئيسية وصفحة التجارب ويغلق صفحة التسجيل."), def: true },
+        { id: "taking", type: "toggle", label: bi("Taking sign-ups", "استقبال طلبات التسجيل"), hint: bi("Off keeps the sign-up page and the question on Home and Experiences, but they say sign-ups are closed (the last two texts) instead of showing the form and the button, and nobody can sign up until it is on again.", "الإيقاف يُبقي صفحة التسجيل والسؤال في الصفحة الرئيسية وصفحة التجارب، لكنها تقول إن التسجيل مغلق (آخر نصّين) بدلاً من النموذج والزر، ولا يمكن لأحد التسجيل حتى يُعاد تشغيله."), def: true },
         txt("teaserEyebrow", 40, "Question: small label", "السؤال: العبارة الصغيرة", "Learn to ride", "تعلّم ركوب الدراجة"),
         txt("teaserTitle", 70, "Question: title", "السؤال: العنوان", "Never learned to ride? We'll teach you.", "لم تتعلّم ركوب الدراجة بعد؟ سنعلّمك."),
         long("teaserText", 200, "Question: text", "السؤال: النص", "Kids and adults welcome. Sign up, and we'll contact you with your lesson's date and time.", "للصغار والكبار. سجّل، وسنتواصل معك بموعد درسك ووقته."),
@@ -149,6 +154,8 @@ export const experiencesSchema = {
         long("formSub", 200, "Form: text under the title", "النموذج: النص تحت العنوان", "It takes a minute. We'll contact you with your lesson's date and time.", "لن يستغرق سوى دقيقة. سنتواصل معك بموعد درسك ووقته."),
         txt("doneTitle", 50, "After sending: title", "بعد الإرسال: العنوان", "You're signed up!", "تم تسجيلك!"),
         long("doneText", 240, "After sending: text", "بعد الإرسال: النص", "Thank you. We'll contact you soon with your lesson's date and time.", "شكراً لك. سنتواصل معك قريباً بموعد درسك ووقته."),
+        txt("closedTitle", 60, "Not taking sign-ups: title", "التسجيل مغلق: العنوان", "Sign-ups are closed for now", "التسجيل مغلق حالياً"),
+        long("closedText", 240, "Not taking sign-ups: text", "التسجيل مغلق: النص", "We're currently not taking any new sign-ups for lessons. Please check back soon.", "لا نستقبل حالياً أي طلبات جديدة للتسجيل في الدروس. يُرجى العودة لاحقاً."),
       ],
     },
   ],

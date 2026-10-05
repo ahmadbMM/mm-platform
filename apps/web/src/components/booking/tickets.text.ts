@@ -74,6 +74,9 @@ export const T = {
     rtRidden: "Ridden",
     rtMapLink: "Open the map",
     rtOsm: "Track: © OpenStreetMap contributors",
+    // the breakfast stop (the booking app's breakfastSpotLbl, vndRiderOffer)
+    breakfastSpot: "Breakfast spot",
+    riderOffer: (n: string) => `Offer for riders: ${n}`,
   },
   ar: {
     queueNumber: "رقم الدور",
@@ -138,5 +141,7 @@ export const T = {
     rtRidden: "أنجزته",
     rtMapLink: "افتح الخريطة",
     rtOsm: "الحلبة: © مساهمو OpenStreetMap",
+    breakfastSpot: "موقع الفطور",
+    riderOffer: (n: string) => `عرض للراكبين: ${n}`,
   },
 };

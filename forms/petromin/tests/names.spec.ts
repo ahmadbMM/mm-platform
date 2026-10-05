@@ -127,3 +127,72 @@ test('a period after a letter stays ("Md. Rahman"); a stray one goes without a w
   expect(regs[0].p_name).toBe('Md. Rahman');
   expect((regs[0].p_riders as { name: string }[])[0].name).toBe('Mohd. Ali');
 });
+
+test('every word of a name has two letters: an initial is refused, for the employee and a companion, in their language', async ({ page }) => {
+  const regs: Record<string, unknown>[] = [];
+  await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
+  await page.route('**/rest/v1/rpc/rider_register', (r) => { regs.push(r.request().postDataJSON()); return r.fulfill(json({ ok: true, id: 1, match: 'none', resubmitted: false, booking_no: 'P-001', riders: 2, session: S1 })); });
+  await page.goto('/petromin?lang=en');
+  await page.locator('#sessions .session').first().click();
+  await page.click('#next');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.fill('#badge', 'A-12');
+  await page.fill('#name', 'Faisal H');
+  await page.fill('#phone', '512345678');
+  await page.click('#next');
+  await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.click('#add-rider');
+  const companion = page.locator('#riders .rider').nth(0);
+  await companion.locator('.rider-name input').fill('S Ali');
+  await companion.locator('.rider-height input').fill('160');
+  await companion.locator('.tile[data-v="Mountain"]').click();
+  await page.check('#privacy');
+  await page.check('#waiver');
+  await page.click('#submit');
+  await expect(page.locator('#f-name .err')).toHaveText('Write your first and last name in full, not initials');
+  expect(regs).toHaveLength(0);
+  await page.fill('#name', 'Faisal Harbi');
+  // the box's own message comes back once the server's or the rule's one is gone
+  await page.fill('#name', '');
+  await page.click('#next');
+  await expect(page.locator('#f-name .err')).toHaveText('Enter your full name');
+  await page.fill('#name', 'Faisal Harbi');
+  await page.click('#next');
+  await page.click('#submit');
+  await expect(companion.locator('.rider-name .err')).toHaveText("Write the rider's name in full, not initials");
+  expect(regs).toHaveLength(0);
+  await page.selectOption('#lang', 'ar');
+  await page.click('#submit');
+  await expect(companion.locator('.rider-name .err')).toHaveText('اكتب اسم الراكب كاملًا، لا الأحرف الأولى فقط');
+  await companion.locator('.rider-name input').fill('Sara Ali');
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(regs).toHaveLength(1);
+});
+
+test("the server's short-name refusal (why: short) asks for the name in full, not for letters only", async ({ page }) => {
+  // rider_register answers a one-letter word with the character code and why:'short' (rentals
+  // 20261004100000); the form used to show "letters, spaces and periods" for it.
+  const answers = [{ ok: false, error: 'name_chars', why: 'short' }, { ok: false, error: 'rider_name_chars', rider: 2, why: 'short' }];
+  await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
+  await page.route('**/rest/v1/rpc/rider_register', (r) => r.fulfill(json(answers.shift())));
+  await page.goto('/petromin?lang=en');
+  await page.locator('#sessions .session').first().click();
+  await page.click('#next');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.fill('#badge', 'A-12'); await page.fill('#name', 'Faisal Harbi'); await page.fill('#phone', '512345678');
+  await page.click('#next');
+  await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.click('#add-rider');
+  const companion = page.locator('#riders .rider').nth(0);
+  await companion.locator('.rider-name input').fill('Sara Ali');
+  await companion.locator('.rider-height input').fill('160');
+  await companion.locator('.tile[data-v="Mountain"]').click();
+  await page.check('#privacy');
+  await page.check('#waiver');
+  await page.click('#submit');
+  await expect(page.locator('#f-name .err')).toHaveText('Write your first and last name in full, not initials');
+  await page.click('#next');
+  await page.click('#submit');
+  await expect(companion.locator('.rider-name .err')).toHaveText("Write the rider's name in full, not initials");
+});

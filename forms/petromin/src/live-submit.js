@@ -40,6 +40,26 @@
     bn: "নামে শুধু অক্ষর, ফাঁকা জায়গা ও বিন্দু (.) থাকতে পারে।"
   };
   Object.keys(NC_T).forEach(function (l) { T[l] = T[l] || {}; if (!T[l][NAME_CHARS]) T[l][NAME_CHARS] = NC_T[l]; });
+  /* Every word of a name has at least two letters, as on the rentals site (since 2026-09-25):
+     the employee's (the site's own words) and each companion's. */
+  var NAME_SHORT = "Write your first and last name in full, not initials";
+  var RIDER_SHORT = "Write the rider's name in full, not initials";
+  var NS_T = {
+    ar: ["اكتب اسمك الأول واسم العائلة كاملين، لا الأحرف الأولى فقط", "اكتب اسم الراكب كاملًا، لا الأحرف الأولى فقط"],
+    fr: ["Écrivez votre prénom et votre nom en entier, pas seulement les initiales", "Écrivez le nom du cycliste en entier, pas seulement les initiales"],
+    es: ["Escribe tu nombre y apellido completos, no solo las iniciales", "Escribe el nombre completo del ciclista, no solo las iniciales"],
+    pt: ["Escreva o seu nome e apelido por extenso, não apenas as iniciais", "Escreva o nome do ciclista por extenso, não apenas as iniciais"],
+    hi: ["अपना पहला और अंतिम नाम पूरा लिखें, सिर्फ़ आद्याक्षर नहीं", "सवार का नाम पूरा लिखें, सिर्फ़ आद्याक्षर नहीं"],
+    ne: ["आफ्नो नाम र थर पूरा लेख्नुहोस्, छोटकरी अक्षर होइन", "सवारको नाम पूरा लेख्नुहोस्, छोटकरी अक्षर होइन"],
+    tl: ["Isulat nang buo ang iyong pangalan at apelyido, hindi inisyal", "Isulat nang buo ang pangalan ng rider, hindi inisyal"],
+    bn: ["প্রথম ও শেষ নাম পুরোটা লিখুন, শুধু আদ্যক্ষর নয়", "রাইডারের নাম পুরোটা লিখুন, শুধু আদ্যক্ষর নয়"]
+  };
+  Object.keys(NS_T).forEach(function (l) { T[l] = T[l] || {}; if (!T[l][NAME_SHORT]) T[l][NAME_SHORT] = NS_T[l][0]; if (!T[l][RIDER_SHORT]) T[l][RIDER_SHORT] = NS_T[l][1]; });
+  // A word with fewer than two letters (its marks count, as Hindi and Bengali vowel signs do). A
+  // period ends a word as a space does: "Md. Rahman" is fine, "M. Rahman" is an initial.
+  function nameShort(v) {
+    return String(v || "").split(/[\s.]+/).some(function (w) { return w && Array.from(w).length < 2; });
+  }
   /* Ride waiver (owner, 2026-10-03): nobody registers or saves an edit without agreeing to it.
      Title and text are the booking app's (micromobilityrentals app.src.html waiverTitle/waiverBody and
      i18n/<code>.json), copied verbatim; only the agree line is reworded for a registration. Its
@@ -159,6 +179,7 @@
     for (var i = 0; i < companions.length; i++) {
       var c = companions[i], h = parseInt(toAscii(String(c.height || "")), 10);
       if (!c.name) { goStep(3); companionError(i, "name", true); return false; }
+      if (nameShort(c.name)) { goStep(3); companionError(i, "name", true, RIDER_SHORT); return false; }
       if (!(h >= 100 && h <= 250)) { goStep(3); companionError(i, "height", true); return false; }
       if (c.type !== "Hybrid" && c.type !== "Mountain") { goStep(3); companionError(i, "type", true); return false; }
     }
@@ -313,17 +334,6 @@
   $("#privacy").addEventListener("change", function () { setError("f-privacy", false); });
   $("#waiver").addEventListener("change", function () { setError("f-waiver", false); });
   function waiverRefused() { setError("f-waiver", true, "Please accept the waiver to continue."); goStep(STEPS); $("#waiver").focus(); }
-  // rider_register / rider_edit with p_waiver. TEMPORARY fallback: until the database migration that
-  // adds p_waiver is applied, PostgREST answers an unknown argument with PGRST202 ("Could not find
-  // the function"), so the same call goes once more without it. Remove after the migration is live.
-  async function rpcWithWaiver(fn, a) {
-    var r = await sbClient().rpc(fn, a);
-    if (r && r.error && r.error.code === "PGRST202" && a.p_waiver) {
-      var b = Object.assign({}, a); delete b.p_waiver;
-      r = await sbClient().rpc(fn, b);
-    }
-    return r;
-  }
   function setNote(key) { var note = $(".done-note"); if (note) { note.setAttribute("data-t", key); render(note); } }
 
   $("#form").addEventListener("submit", async function (e) {
@@ -334,11 +344,14 @@
     if (!editing && !$("#privacy").checked) { setError("f-privacy", true); goStep(STEPS); $("#privacy").focus(); return; }
     // The ride waiver: no registration and no edit goes through without it (owner, 2026-10-03).
     if (!$("#waiver").checked) { waiverRefused(); return; }
-    if (!validateCompanions()) return;
     var data = collect();
-    data.riders = companionArgs();
     var name = cleanName(data.name).trim().replace(/\s+/g, " ");
+    // The employee's own name first: it is on the step before the companions, so a short name there
+    // is the one to say even when a companion's is short too.
     if (!/\s/.test(name)) { setError("f-name", true, "Enter your full name"); goStep(2); $("#name").focus(); return; } // the server wants two words
+    if (nameShort(name)) { goStep(2); $("#name")._nameHintUntil = 0; setError("f-name", true, NAME_SHORT); $("#name").focus(); return; }
+    if (!validateCompanions()) return;
+    data.riders = companionArgs();
     var args = {
       p_badge: toAscii(data.badge),
       p_name: name,
@@ -355,8 +368,8 @@
     var r;
     try {
       if (editing) {
-        r = await rpcWithWaiver("rider_edit", { p_booking_no: editing.bookingNo, p_proof_phone: editing.phone, p_badge: args.p_badge, p_name: args.p_name, p_height: args.p_height, p_type: args.p_type, p_session_id: args.p_session_id, p_company: args.p_company, p_phone: args.p_phone, p_riders: data.riders, p_waiver: args.p_waiver });
-      } else r = await rpcWithWaiver("rider_register", args);
+        r = await sbClient().rpc("rider_edit", { p_booking_no: editing.bookingNo, p_proof_phone: editing.phone, p_badge: args.p_badge, p_name: args.p_name, p_height: args.p_height, p_type: args.p_type, p_session_id: args.p_session_id, p_company: args.p_company, p_phone: args.p_phone, p_riders: data.riders, p_waiver: args.p_waiver });
+      } else r = await sbClient().rpc("rider_register", args);
     } catch (err) { r = { error: err }; }
     setLoading(false);
     if (!r || r.error || !r.data) { showBanner("Could not reach the server"); return; }
@@ -367,8 +380,11 @@
       if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} showBanner("We could not find your booking. Please register again."); return; }
       if (d.error === "checked_in") { showBanner("You have already checked in. Ask the desk to change your booking."); return; }
       if (d.error === "riders") { goStep(3); showBanner("Up to four companions"); return; }
-      if (d.error === "name_chars") { goStep(2); $("#name")._nameHintUntil = 0; setError("f-name", true, NAME_CHARS); focusInvalid(); return; }
-      if (d.error === "rider_name_chars") { goStep(3); companionError((Number(d.rider) || 2) - 2, "name", true, NAME_CHARS); return; }
+      // The database refuses a one-letter word with the same code as a wrong character, saying why:
+      // "short" (rider_register, rentals 20261004100000). Each gets its own words.
+      var short = d.why === "short";
+      if (d.error === "name_chars" || d.error === "name_short") { goStep(2); $("#name")._nameHintUntil = 0; setError("f-name", true, (short || d.error === "name_short") ? NAME_SHORT : NAME_CHARS); focusInvalid(); return; }
+      if (d.error === "rider_name_chars" || d.error === "rider_name_short") { goStep(3); companionError((Number(d.rider) || 2) - 2, "name", true, (short || d.error === "rider_name_short") ? RIDER_SHORT : NAME_CHARS); return; }
       if (d.error === "rider_name" || d.error === "rider_height" || d.error === "rider_type") { goStep(3); companionError((Number(d.rider) || 2) - 2, d.error.slice(6), true); return; }
       if (d.error === "duplicate") { goStep(2); setError("f-badge", true, "This badge is already registered for that session"); focusInvalid(); return; }
       if (FIELD_ERR[d.error]) {

@@ -10,6 +10,7 @@ import {
 import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
 import { useLocalize } from "@/i18n/TxProvider";
 import NoticeLink from "@/components/privacy/NoticeLink";
+import LearnClosed from "./LearnClosed";
 import { T } from "./LearnForm.text";
 
 // The Learn to ride sign-up card (/experiences/learn, right column), in two steps (the owner,
@@ -37,6 +38,9 @@ export type LearnFormProps = {
   locale: string;
   formTitle: string; formSub: string;
   doneTitle: string; doneText: string;
+  /** What shows in place of the form when the database answers that sign-ups are closed (staff
+   *  switched "Taking sign-ups" off after the page was drawn). */
+  closedTitle: string; closedText: string;
   /** The Privacy Notice the box confirms (content/privacy-notice.ts). */
   privacyVersion: string;
   /** The id of the page's Privacy Notice dialog (NoticeDialog): the box's link opens it there, so
@@ -92,6 +96,7 @@ export default function LearnForm(p: LearnFormProps) {
   // The one message on show; a learner's carries their card's place (from 0).
   const [err, setErr] = useState<{ text: string; index?: number } | null>(null);
   const [done, setDone] = useState(false);
+  const [closed, setClosed] = useState(false);
   // Where the keyboard goes once the page has drawn: a new card's first choice, a card with a
   // problem (brought into view), or the add button after a card goes. `n` tells two moves apart.
   const [focus, setFocus] = useState<{ to: string; first?: boolean; n: number } | null>(null);
@@ -271,9 +276,12 @@ export default function LearnForm(p: LearnFormProps) {
       if (!("data" in res) || !res.data) return setErr({ text: t.errors.generic });
       if (res.data.ok) return setDone(true);
       if (res.data.error === "signed_out") { setAcct(null); setStage("signin"); return setErr({ text: t.errors.signed_out }); }
+      if (res.data.error === "closed") return setClosed(true);
       show({ error: res.data.error || "", index: res.data.index });
     } finally { setBusy(false); }
   }
+
+  if (closed) return <LearnClosed title={p.closedTitle} text={p.closedText} />;
 
   if (done) {
     return (

@@ -1,18 +1,20 @@
 // The breakfast calendar: a month grid on wide screens, a list of dates on phones.
 
 import { rpc } from "./api";
-import { announce, app, button, errorNote, isRtl, t } from "./app";
+import { announce, app, button, errorNote, isRtl, t, tn } from "./app";
 import { openBooking } from "./book";
 import { openFeedback } from "./feedback";
 import { addDays, addMonths, arrowStep, hijriLabel, hijriMonthTitle, longDate, monthGrid, monthRange, monthStart, num, shortDate, type Iso } from "./dates";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
-import { awaitsFeedback, dayStatus, reasonText, STATUS_KEY, type CalDay, type DayStatus } from "./model";
+import { awaitsFeedback, canRequest, dayStatus, reasonText, STATUS_KEY, type CalDay, type DayStatus } from "./model";
 
 export const STATUS_ICON: Record<DayStatus, IconName> = {
   available: "open",
   requested: "clock",
   confirmed: "check",
+  declined: "taken",
+  cancelled: "dash",
   taken: "taken",
   closed: "closed",
   not_open: "dash",
@@ -40,12 +42,20 @@ export function invalidateCalendar(): void {
 }
 
 function ridersText(n: number): string {
-  return n === 1 ? t("oneRiderBooked") : t("ridersBooked", { n: num(n, app.lang) });
+  return tn("ridersBooked", n);
 }
+
+/** The riders count shows on the venue's own live dates (confirmed and requested). */
+const showsRiders = (st: DayStatus, entry: CalDay | undefined) => (st === "confirmed" || st === "requested") && entry?.riders != null;
+
+/** How many open Saturdays of the coming months the phone list adds after the month's own dates. */
+const NEXT_OPEN = 4;
+/** The calendar reads this many days past the month's end, for that rolling list. */
+const AHEAD_DAYS = 70;
 
 function statusWords(st: DayStatus, entry: CalDay | undefined): string {
   if (st === "closed" && entry?.reason) return t("closedReason", { reason: reasonText(app.lang, entry.reason) });
-  if (st === "soon") return t("vTooSoon", { n: num(app.me!.tier.min_lead_days, app.lang) });
+  if (st === "soon") return t("vTooSoon", { days: tn("days", app.me!.tier.min_lead_days) });
   return t(STATUS_KEY[st]);
 }
 
@@ -58,7 +68,7 @@ export async function renderCalendar(main: HTMLElement): Promise<void> {
     main.append(h("p", { class: "loading", role: "status" }, t("loading")));
     const month = state.month;
     const { from, to } = monthRange(month);
-    const r = await rpc<CalDay[]>("vendor_calendar", { p_from: from, p_to: to });
+    const r = await rpc<CalDay[]>("vendor_calendar", { p_from: from, p_to: addDays(to, AHEAD_DAYS) });
     // Moved to another month while this one loaded: that month's own call draws the page.
     if (month !== state.month) return;
     state.days = new Map();
@@ -91,7 +101,7 @@ function draw(main: HTMLElement): void {
     "div",
     { class: "page-head" },
     h("div", {}, h("h1", {}, t("calendarTitle")), h("p", { class: "lede" }, t("calendarIntro"))),
-    button(t("bookButton"), { kind: "primary", icon: "calendar", onclick: () => openBooking() }),
+    canRequest(me.user.role) ? button(t("bookButton"), { kind: "primary", icon: "calendar", onclick: () => openBooking() }) : null,
   );
 
   const title = h("div", { class: "cal-title" },
@@ -109,7 +119,7 @@ function draw(main: HTMLElement): void {
   const legend = h(
     "ul",
     { class: "legend", "aria-label": t("legend") },
-    ...(["available", "requested", "confirmed", "taken", "closed", "not_open"] as DayStatus[]).map((s) =>
+    ...(["available", "requested", "confirmed", "declined", "taken", "closed", "not_open"] as DayStatus[]).map((s) =>
       h("li", { class: `chip st-${s}` }, icon(STATUS_ICON[s]), h("span", {}, t(STATUS_KEY[s])))),
   );
 
@@ -141,8 +151,8 @@ function grid(main: HTMLElement, today: Iso): HTMLElement {
       const entry = state.days.get(day);
       const st = dayStatus(day, entry, today, app.me!.tier);
       const words = statusWords(st, entry);
-      const riders = st === "confirmed" && entry?.riders != null ? ridersText(entry.riders) : "";
-      const fb = !!entry && awaitsFeedback(day, entry.mine, today);
+      const riders = showsRiders(st, entry) ? ridersText(entry!.riders!) : "";
+      const fb = !!entry && awaitsFeedback(day, entry.mine, today) && canRequest(app.me!.user.role);
       const label = [longDate(day, app.lang), words, riders, fb ? `${t("fbMarker")}: ${t("fbWaiting")}` : "", day === today ? t("today") : ""].filter(Boolean).join(", ");
       const btn = h(
         "button",
@@ -187,42 +197,46 @@ function grid(main: HTMLElement, today: Iso): HTMLElement {
 
 function activate(day: Iso, st: DayStatus): void {
   state.focus = day;
-  if (st === "available") openBooking(day);
-  else if (st === "requested" || st === "confirmed") location.hash = "#bookings";
+  if (st === "available" && canRequest(app.me!.user.role)) openBooking(day);
+  else if (st === "requested" || st === "confirmed" || st === "declined") location.hash = "#bookings";
   else announce(`${longDate(day, app.lang)}: ${t(STATUS_KEY[st])}`);
 }
 
 function list(main: HTMLElement, today: Iso): HTMLElement {
-  const days = [...state.days.values()].filter((d) => d.day.slice(0, 7) === state.month.slice(0, 7)).sort((a, b) => a.day.localeCompare(b.day));
+  const all = [...state.days.values()].sort((a, b) => a.day.localeCompare(b.day));
+  const days = all.filter((d) => d.day.slice(0, 7) === state.month.slice(0, 7));
+  // On a phone the list rolls on: the next open Saturdays of the coming months follow the month's own.
+  const later = all.filter((d) => d.day.slice(0, 7) > state.month.slice(0, 7) && d.day >= today && dayStatus(d.day, d, today, app.me!.tier) === "available").slice(0, NEXT_OPEN);
   const ol = h("ol", { class: "cal-list" });
-  if (!days.length) {
-    ol.append(h("li", { class: "empty-row" }, t("noDatesMonth")));
-    return ol;
-  }
-  for (const entry of days) {
-    const st = dayStatus(entry.day, entry, today, app.me!.tier);
-    const riders = st === "confirmed" && entry.riders != null ? ridersText(entry.riders) : "";
-    const fb = awaitsFeedback(entry.day, entry.mine, today);
-    ol.append(
-      h(
-        "li",
-        { class: `cal-item st-${st}${entry.day === today ? " is-today" : ""}` },
-        h("div", { class: "ci-date" }, h("strong", {}, shortDate(entry.day, app.lang)), h("span", { class: "hijri" }, hijriLabel(entry.day, app.lang))),
-        h("div", { class: "ci-status" },
-          h("span", { class: `chip st-${st}` }, icon(STATUS_ICON[st]), h("span", {}, statusWords(st, entry))),
-          riders ? h("span", { class: "ci-riders" }, icon("users"), h("span", {}, riders)) : null),
-        fb
-          ? h("button", { type: "button", class: "btn btn-primary btn-small fb-marker", "aria-label": `${t("fbMarker")}: ${shortDate(entry.day, app.lang)}`, onclick: () => askFeedback(main, entry) },
-            icon("star"), h("span", {}, t("fbMarker")))
-          : st === "available"
-          ? button(t("requestThis"), { small: true, kind: "primary", onclick: () => openBooking(entry.day) })
-          : st === "requested" || st === "confirmed"
-            ? h("a", { class: "btn btn-ghost btn-small", href: "#bookings" }, h("span", {}, t("navBookings")))
-            : null,
-      ),
-    );
-  }
-  return ol;
+  if (!days.length) ol.append(h("li", { class: "empty-row" }, t("noDatesMonth")));
+  for (const entry of days) ol.append(listItem(main, entry, today));
+  if (!later.length) return ol;
+  const id = "cal-next";
+  return h("div", { class: "cal-lists" }, ol,
+    h("h3", { class: "cal-next-h", id }, t("nextOpen")),
+    h("ol", { class: "cal-list cal-next", "aria-labelledby": id }, ...later.map((entry) => listItem(main, entry, today))));
+}
+
+function listItem(main: HTMLElement, entry: CalDay, today: Iso): HTMLElement {
+  const st = dayStatus(entry.day, entry, today, app.me!.tier);
+  const riders = showsRiders(st, entry) ? ridersText(entry.riders!) : "";
+  const fb = awaitsFeedback(entry.day, entry.mine, today) && canRequest(app.me!.user.role);
+  return h(
+    "li",
+    { class: `cal-item st-${st}${entry.day === today ? " is-today" : ""}` },
+    h("div", { class: "ci-date" }, h("strong", {}, shortDate(entry.day, app.lang)), h("span", { class: "hijri" }, hijriLabel(entry.day, app.lang))),
+    h("div", { class: "ci-status" },
+      h("span", { class: `chip st-${st}` }, icon(STATUS_ICON[st]), h("span", {}, statusWords(st, entry))),
+      riders ? h("span", { class: "ci-riders" }, icon("users"), h("span", {}, riders)) : null),
+    fb
+      ? h("button", { type: "button", class: "btn btn-primary btn-small fb-marker", "aria-label": `${t("fbMarker")}: ${shortDate(entry.day, app.lang)}`, onclick: () => askFeedback(main, entry) },
+        icon("star"), h("span", {}, t("fbMarker")))
+      : st === "available" && canRequest(app.me!.user.role)
+      ? button(t("requestThis"), { small: true, kind: "primary", onclick: () => openBooking(entry.day) })
+      : st === "requested" || st === "confirmed" || st === "declined"
+        ? h("a", { class: "btn btn-ghost btn-small", href: "#bookings" }, h("span", {}, t("navBookings")))
+        : null,
+  );
 }
 
 /** The available dates in a range (the booking dialog's pickers). */

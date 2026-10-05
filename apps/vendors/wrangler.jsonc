@@ -27,6 +27,12 @@
   // uses namespaces 1001/1002; these are the portal's own. Bindings are not inherited by env.
   "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1101", "simple": { "limit": 10, "period": 60 } }],
   "observability": { "enabled": true },
+  // SECRET (not a var, never written here): VENDOR_GATE_SECRET. When set, the sign-in call sends it as
+  // the x-vendor-gate header; the database refuses sign-in without it once the owner stores its sha256
+  // in public.vendor_gate (rentals migration 20261004130000 has the steps). Set it with
+  //   npx wrangler secret put VENDOR_GATE_SECRET               (production)
+  //   npx wrangler secret put VENDOR_GATE_SECRET --env staging (staging)
+  // Unset, the portal signs in as before. Secrets are per environment and survive deploys.
   // The production database (Frankfurt). The anon key is public by design: it is the same key the
   // website and the registration forms ship to every browser. What protects the data is that the
   // portal's functions check the venue's token (the migration 20261003150000_fnb_partners.sql in the rentals

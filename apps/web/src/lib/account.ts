@@ -9,9 +9,9 @@ export type Account = Session & { name: string; email: string; phone: string;
   profile?: Record<string, unknown> };
 
 /** A database call from the server with the public key. A refusal keeps its message (the
- *  exception's name: phone_taken, RATE_LIMITED...) and, in `details`, its detail and hint (which
- *  field a BAD_INPUT is about). */
-export async function rpcServer<T>(fn: string, args: Record<string, unknown>): Promise<{ status: number; data: T | null; message: string; details?: string }> {
+ *  exception's name: phone_taken, RATE_LIMITED...), PostgREST's code (PGRST202: no such function, a
+ *  migration not applied yet) and, in `details`, its detail and hint (which field a BAD_INPUT is about). */
+export async function rpcServer<T>(fn: string, args: Record<string, unknown>): Promise<{ status: number; data: T | null; message: string; code?: string; details?: string }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return { status: 0, data: null, message: "" };
@@ -25,8 +25,8 @@ export async function rpcServer<T>(fn: string, args: Record<string, unknown>): P
     });
     const body = (await res.json().catch(() => null)) as unknown;
     if (!res.ok) {
-      const b = (body ?? {}) as { message?: unknown; details?: unknown; hint?: unknown };
-      return { status: res.status, data: null, message: String(b.message ?? ""), details: [b.details, b.hint].filter((x) => typeof x === "string" && x).join(" ") };
+      const b = (body ?? {}) as { message?: unknown; code?: unknown; details?: unknown; hint?: unknown };
+      return { status: res.status, data: null, message: String(b.message ?? ""), code: String(b.code ?? ""), details: [b.details, b.hint].filter((x) => typeof x === "string" && x).join(" ") };
     }
     return { status: res.status, data: body as T, message: "" };
   } catch {

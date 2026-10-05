@@ -11,6 +11,7 @@ import type { RatingForm as Form } from "@/lib/rating";
 // alone. A signed-out answer is asked again on the next page (signing in lands on one), a signed-in
 // "nothing to rate" is kept for ten minutes in this tab, and a ride to rate puts up the pop-up the
 // rider cannot skip. Once it is rated, the next waiting ride (or nothing) is asked for at once.
+// It waits for any waiver a desk-added booking still needs: WaiverGateLoader mounts it once none does.
 type Pending = { entryId: string; name: string; when: string; form: Form; noBike: boolean };
 const KEY = "mm_rate_none";
 const QUIET_MS = 10 * 60_000;

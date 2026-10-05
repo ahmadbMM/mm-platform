@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import LearnAlone from "@/components/learn/LearnAlone";
+import LearnClosed from "@/components/learn/LearnClosed";
 import LearnForm from "@/components/learn/LearnForm";
 import NoticeDialog from "@/components/privacy/NoticeDialog";
 import "@/components/learn/learn.css";
@@ -21,7 +22,8 @@ import { pageState } from "@/lib/page-state";
 // site is open it has the header and footer of every page (lib/learn-page.ts). The Privacy Notice
 // opens in a dialog on the page in both. With the lessons switched off, the address goes to the
 // Experiences page - Coming Soon while the site is closed - and the question on Home and
-// Experiences that leads here is gone too. No photo on the page (owner, 2026-09-28): the intro is
+// Experiences that leads here is gone too. While staff are not taking sign-ups ("Taking sign-ups"
+// off; owner, 2026-10-04), the page stays and says so in place of the form (LearnClosed). No photo on the page (owner, 2026-09-28): the intro is
 // words alone beside the form; its photo setting is only the picture a shared link shows.
 const NOTICE = "ln-notice";
 
@@ -49,7 +51,9 @@ export default async function LearnPage({ params }: { params: Promise<{ locale: 
           <h1>{l.title}</h1>
           <p className="ln-lead">{l.text}</p>
         </div>
-        <LearnForm locale={locale} formTitle={l.formTitle} formSub={l.formSub} doneTitle={l.doneTitle} doneText={l.doneText} privacyVersion={PRIVACY_VERSION} notice={NOTICE} />
+        {l.taking
+          ? <LearnForm locale={locale} formTitle={l.formTitle} formSub={l.formSub} doneTitle={l.doneTitle} doneText={l.doneText} closedTitle={l.closedTitle} closedText={l.closedText} privacyVersion={PRIVACY_VERSION} notice={NOTICE} />
+          : <LearnClosed title={l.closedTitle} text={l.closedText} />}
       </section>
       <NoticeDialog id={NOTICE} locale={locale} />
     </>

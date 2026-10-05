@@ -4,7 +4,7 @@ import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
-import { bookingRef, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, kmText, queueNumbers, ticketLook, ticketStages, venueOf, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
+import { bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, kmText, queueNumbers, ticketLook, ticketStages, venueOf, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -164,6 +164,20 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             ))}
           </ol>
         )}
+        {(() => {
+          // The Saturday ride's breakfast stop, as the booking app's card shows it (_commInfoHtml).
+          const bf = past ? null : breakfastFor(s, locale);
+          return bf && (
+            <div className="tk-rt tk-bf">
+              <div className="tk-rt-txt">
+                <p className="tk-rt-k">{t.breakfastSpot}</p>
+                <p className="tk-rt-n"><bdi>{bf.name}</bdi></p>
+                {bf.offer && <p className="tk-rt-m"><bdi>{t.riderOffer(bf.offer)}</bdi></p>}
+                {bf.url && <a className="tk-rt-a" href={bf.url} target="_blank" rel="noopener">{t.rtMapLink}</a>}
+              </div>
+            </div>
+          );
+        })()}
         {route && (
           <div className={`tk-rt${route.track ? " has-map" : ""}`}>
             <div className="tk-rt-txt">

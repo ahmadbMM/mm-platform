@@ -1,8 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 // The ride waiver (owner, 2026-10-03): nobody registers, and no edit is saved, without ticking it.
-// The calls carry p_waiver '2026-10-v3'; a database still on the old functions (PGRST202 for the
-// unknown argument) gets the same call once more without it.
+// The calls carry p_waiver '2026-10-v3', and are never sent again without it.
 const S1 = { id: '2099-02-08-pw', title: "Petromin's Wednesdays", start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' };
 const json = (body: unknown, status = 200) => ({ status, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'content-type': 'application/json' }, body: JSON.stringify(body) });
 const PGRST202 = { code: 'PGRST202', details: 'Searched for the function public.rider_register with parameters ... p_waiver ...', hint: null, message: 'Could not find the function public.rider_register(...) in the schema cache' };
@@ -60,29 +59,17 @@ test('an edit needs the waiver too, and rider_edit gets p_waiver', async ({ page
   expect(edits[0]).toMatchObject({ p_booking_no: 'P-001', p_waiver: '2026-10-v3' });
 });
 
-test('a database without p_waiver yet (PGRST202): the same call goes once more without it', async ({ page }) => {
-  const regs: Record<string, unknown>[] = []; const edits: Record<string, unknown>[] = [];
+test('a PGRST202 is never retried without p_waiver (the database takes it since 2026-10-03)', async ({ page }) => {
+  const regs: Record<string, unknown>[] = [];
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
-  await page.route('**/rest/v1/rpc/rider_register', (r) => { const b = r.request().postDataJSON(); regs.push(b); return r.fulfill('p_waiver' in b ? json(PGRST202, 404) : json(OK)); });
-  await page.route('**/rest/v1/rpc/rider_edit', (r) => { const b = r.request().postDataJSON(); edits.push(b); return r.fulfill('p_waiver' in b ? json(PGRST202, 404) : json({ ...OK, resubmitted: true })); });
+  await page.route('**/rest/v1/rpc/rider_register', (r) => { regs.push(r.request().postDataJSON()); return r.fulfill(json(PGRST202, 404)); });
   await fillToLastStep(page);
   await page.check('#waiver');
   await page.click('#submit');
-  await expect(page.locator('#success')).toBeVisible();
-  expect(regs).toHaveLength(2);
+  await expect(page.locator('#banner')).toBeVisible();
+  await expect(page.locator('#success')).toBeHidden();
+  expect(regs).toHaveLength(1);
   expect(regs[0].p_waiver).toBe('2026-10-v3');
-  expect('p_waiver' in regs[1]).toBe(false);
-  const { p_waiver: _w, ...rest } = regs[0];
-  expect(regs[1]).toEqual(rest);
-
-  await page.click('#edit');
-  await page.click('#next'); await page.click('#next');
-  await page.check('#waiver');
-  await page.click('#submit');
-  await expect(page.locator('.done-note')).toHaveText('Your booking was updated.');
-  expect(edits).toHaveLength(2);
-  expect(edits[0].p_waiver).toBe('2026-10-v3');
-  expect('p_waiver' in edits[1]).toBe(false);
 });
 
 test('any other server error is not retried', async ({ page }) => {

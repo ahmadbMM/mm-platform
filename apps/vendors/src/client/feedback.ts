@@ -2,8 +2,8 @@
 // answers. Opened from My bookings and from the calendar; saving again within the window edits it.
 
 import { rpc } from "./api";
-import { announce, app, busy, button, dialog, errorNote, field, isRtl, note, t } from "./app";
-import { hijriLabel, longDate, num, type Iso } from "./dates";
+import { announce, app, busy, button, dialog, errorNote, field, isRtl, note, t, tn } from "./app";
+import { hijriLabel, longDate, type Iso } from "./dates";
 import { clear, h, uid } from "./dom";
 import { icon } from "./icons";
 import { feedbackOf, RATINGS, ratingText, turnoutValue, type Feedback, type Mine } from "./model";
@@ -86,7 +86,7 @@ export function openFeedback(target: FeedbackTarget, onSaved: () => void): void 
   const context = h("div", { class: "fb-context" },
     h("p", { class: "fb-date" }, h("strong", {}, longDate(target.day, app.lang)), " ", h("span", { class: "hijri" }, hijriLabel(target.day, app.lang))),
     target.riders != null
-      ? h("p", { class: "b-meta" }, icon("users"), h("span", {}, target.riders === 1 ? t("oneRiderBooked") : t("ridersBooked", { n: num(target.riders, app.lang) })))
+      ? h("p", { class: "b-meta" }, icon("users"), h("span", {}, tn("ridersBooked", target.riders)))
       : null);
 
   const ratingLabel = uid("rating");

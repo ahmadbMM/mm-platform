@@ -2,12 +2,15 @@
 // database that keeps each venue's session token on the server side (session.ts).
 //
 //   POST /api/login       {login, password} -> vendor_login; sets the mm_vendor cookie
-//   POST /api/logout      clears the cookie
+//   POST /api/logout      ends the session in the database (vendor_logout), then clears the cookie
 //   POST /api/rpc/<name>  one of RPCS below, with p_uid / p_token taken from the cookie
 //
 // Every POST must come from this origin's own page, as JSON, and small. Sign-in tries are metered
 // per connection by Cloudflare's rate limiter (LOGIN_LIMIT, wrangler.jsonc) on top of the
-// database's own lock on a login after repeated failures.
+// database's own lock on a login after repeated failures. When the secret VENDOR_GATE_SECRET is set
+// (wrangler secret put), the sign-in call carries it as the x-vendor-gate header: once the owner
+// stores its hash in the database (vendor_gate, rentals migration 20261004130000), sign-in works only
+// through this Worker. The browser's User-Agent goes along, so the venue's device list can name it.
 
 import { secure } from "./headers";
 import { clearCookie, sessionOf, setCookie } from "./session";
@@ -20,6 +23,8 @@ export type Env = {
   SUPABASE_URL: string;
   SUPABASE_ANON_KEY: string;
   LOGIN_LIMIT?: RateLimit;
+  /** A Worker secret (never in wrangler.jsonc): sent with vendor_login only, as x-vendor-gate. */
+  VENDOR_GATE_SECRET?: string;
 };
 
 /** The only database functions the page may call through /api/rpc. */
@@ -33,6 +38,8 @@ export const RPCS = new Set([
   "vendor_profile_save",
   "vendor_feedback_save",
   "vendor_shared_ratings_mine",
+  "vendor_logout_others",
+  "vendor_team",
 ]);
 
 /** Error codes the database raises on purpose, with the status each one is answered with. */
@@ -53,6 +60,17 @@ const KNOWN: Record<string, number> = {
   TOO_LATE: 400,
   BAD_RATING: 400,
   NOT_FOUND: 404,
+  // 20261004130000: the temporary password first, roles, the 48-hour reason, the password policy,
+  // the contact's checks, the gate.
+  MUST_CHANGE: 403,
+  TEMP_EXPIRED: 401,
+  FORBIDDEN: 403,
+  LATE_REASON: 400,
+  COMMON_PASSWORD: 400,
+  PERSONAL_PASSWORD: 400,
+  BAD_PHONE: 400,
+  BAD_EMAIL: 400,
+  TOO_LONG: 400,
 };
 
 export const LOGIN_BODY_LIMIT = 2 * 1024;
@@ -108,6 +126,11 @@ async function callDb(env: Env, req: Request, name: string, args: Record<string,
   // The venue's own address, for the database's per-network meter where it is honoured.
   const ip = req.headers.get("cf-connecting-ip");
   if (ip) headers["X-Forwarded-For"] = ip;
+  // The device's own description, for the venue's list of signed-in devices.
+  const ua = req.headers.get("user-agent");
+  if (ua) headers["User-Agent"] = ua.slice(0, 300);
+  // The gate secret goes with sign-in only (the one function that checks it).
+  if (name === "vendor_login" && env.VENDOR_GATE_SECRET) headers["x-vendor-gate"] = env.VENDOR_GATE_SECRET;
   let res: Response;
   try {
     res = await fetch(`${env.SUPABASE_URL.replace(/\/+$/, "")}/rest/v1/rpc/${name}`, {
@@ -151,6 +174,13 @@ async function login(req: Request, env: Env): Promise<Response> {
   return json({ must_change: d.must_change === true }, 200, setCookie({ id: d.id, token: d.token }));
 }
 
+/** Ends this device's session in the database (best effort: the cookie is cleared either way). */
+async function logout(req: Request, env: Env): Promise<Response> {
+  const s = sessionOf(req);
+  if (s) await callDb(env, req, "vendor_logout", { p_uid: String(s.id), p_token: s.token });
+  return json({ ok: true }, 200, clearCookie());
+}
+
 async function rpc(req: Request, env: Env, name: string): Promise<Response> {
   if (!RPCS.has(name)) return fail("NOT_FOUND", 404);
   const s = sessionOf(req);
@@ -162,9 +192,14 @@ async function rpc(req: Request, env: Env, name: string): Promise<Response> {
   const r = await callDb(env, req, name, args);
   if (!r.ok) return fail(r.code, r.status, r.code === "BAD_TOKEN" ? clearCookie() : undefined);
   if (name === "vendor_set_password") {
-    // A new password signs every other device out and hands this one a new token.
-    if (typeof r.data !== "string" || !r.data) return fail("SERVER", 502);
-    return json({ ok: true }, 200, setCookie({ id: s.id, token: r.data }));
+    // A new password signs every other device out and hands this one a new token: {token} (or, from a
+    // database before 20261004130000, the token itself). A wrong current password is ANSWERED as
+    // {error: "BAD_PASSWORD"}, so the database keeps its count of failed tries.
+    const d = r.data as { token?: unknown; error?: unknown } | string | null;
+    if (d && typeof d === "object" && typeof d.error === "string") return fail(d.error in KNOWN ? d.error : "BAD_PASSWORD", 400);
+    const token = typeof d === "string" ? d : d && typeof d === "object" && typeof d.token === "string" ? d.token : "";
+    if (!token) return fail("SERVER", 502);
+    return json({ ok: true }, 200, setCookie({ id: s.id, token }));
   }
   return json(r.data ?? null);
 }
@@ -175,7 +210,7 @@ async function route(req: Request, env: Env): Promise<Response> {
     if (req.method !== "POST") return fail("METHOD", 405);
     if (!sameOrigin(req)) return fail("ORIGIN", 403);
     if (url.pathname === "/api/login") return login(req, env);
-    if (url.pathname === "/api/logout") return json({ ok: true }, 200, clearCookie());
+    if (url.pathname === "/api/logout") return logout(req, env);
     const m = /^\/api\/rpc\/([a-z_]{1,40})$/.exec(url.pathname);
     if (m) return rpc(req, env, m[1]);
     return fail("NOT_FOUND", 404);

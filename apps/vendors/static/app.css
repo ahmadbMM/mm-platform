@@ -361,3 +361,40 @@ html[dir="rtl"] .foot-mark { -webkit-mask-position: right center; mask-position:
   .foot-in { flex-direction: column; align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* 2026-10-04 audit: declined/cancelled days, the phone's rolling list, the breakfast brief, late
+   cancels, forgot password, insights, team, the privacy notice -------------------------------- */
+.st-declined { color: var(--soft-ink); background: rgba(0, 0, 0, .07); }
+.st-cancelled { color: var(--muted); background: transparent; border-color: rgba(0, 0, 0, .14); border-style: dashed; }
+.cal-next-h { font-size: 15px; margin: 1.5rem 0 .6rem; color: var(--muted); }
+@media (min-width: 760px) {
+  .cal-next-h { display: none; }
+  .cal-day.st-declined { background: #f4f3ee; }
+}
+.actions.start { justify-content: flex-start; }
+.forgot { margin-top: 1rem; }
+.forgot summary { cursor: pointer; color: var(--accent); font-weight: 600; min-height: 44px; display: flex; align-items: center; }
+.forgot .actions { margin-top: .5rem; }
+main.narrow .forgot .actions .btn { flex: 0 1 auto; min-height: 44px; }
+.brief { margin-top: 12px; padding: 12px 14px; border-radius: 14px; background: var(--mm-offwhite); border: 1px solid var(--line); }
+.brief h4 { margin: 0 0 6px; font-size: 15px; }
+.brief-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+.brief-list li { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; overflow-wrap: anywhere; }
+.brief-list .icon { color: var(--accent); flex: none; margin-top: 2px; }
+.brief-list a { color: var(--accent); font-weight: 600; }
+.b-pending { margin-top: 4px; }
+.b-late, .b-late .icon { color: var(--red-ink); }
+.policy { margin-top: .75rem; }
+.stats { list-style: none; margin: 0 0 1.25rem; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
+.stat { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+.stat .icon { color: var(--accent); }
+.stat-label { margin: 6px 0 2px; color: var(--muted); font-size: 14px; }
+.stat-value { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.3px; }
+.ins-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+.ins-table th, .ins-table td { text-align: start; padding: 10px 8px; border-bottom: 1px solid var(--line); vertical-align: top; overflow-wrap: anywhere; }
+.ins-table thead th { color: var(--muted); font-size: 13px; font-weight: 700; }
+.ins-table tr.is-off { color: var(--muted); }
+.card:has(> .ins-table) { overflow-x: auto; }
+.privacy h2 { font-size: 18px; margin: 1.5rem 0 .5rem; }
+.privacy-list { margin: 0; padding-inline-start: 1.2rem; display: grid; gap: 6px; }
+.foot-privacy { font-weight: 600; }

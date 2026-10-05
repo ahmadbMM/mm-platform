@@ -1,15 +1,18 @@
-// My bookings: the venue's own requests, upcoming and past, with cancelling.
+// My bookings: the venue's own requests, upcoming and past, with cancelling. A confirmed breakfast
+// still ahead carries its brief (the ride's times, the riders booked now, who to call, the offer); a
+// pending one says when MicroMobility answers and how many other venues asked for the date.
 
 import { rpc } from "./api";
-import { announce, app, busy, button, dialog, errorNote, note, t } from "./app";
+import { announce, app, busy, button, dialog, errorNote, note, t, tn } from "./app";
 import { invalidateCalendar, STATUS_ICON } from "./calendar";
+import { MM_PHONE, MM_PHONE_TEXT, waLink } from "./contact";
 import { openFeedback, starRow } from "./feedback";
 import { addDays, hijriLabel, longDate, num, type Iso } from "./dates";
 import { clear, h, uid } from "./dom";
 import { icon } from "./icons";
-import { awaitingFeedback, awaitsFeedback, barClasses, BOOKING_KEY, cancellable, commentGroups, feedbackOf, feedbackOpen, KIND_KEY, lateCancel, ratingText, scoreText, sharedByBooking, sharedScores, staffNoteText, type CalDay, type Mine, type SharedRatings } from "./model";
+import { arrivalWindow, awaitingFeedback, awaitsFeedback, barClasses, BOOKING_KEY, canCancelSeries, cancellable, canRequest, clockText, commentGroups, feedbackOf, feedbackOpen, KIND_KEY, lateCancel, ratingText, reasonText, rideTimes, scoreText, sharedByBooking, sharedScores, staffNoteText, within48h, type CalDay, type Mine, type SharedRatings } from "./model";
 
-type Row = { day: Iso; mine: Mine; riders: number | null };
+type Row = { day: Iso; mine: Mine; riders: number | null; ride_time?: string | null; decide_by?: Iso | null; others_pending?: number | null };
 
 /** The riders' shared breakfast ratings by booking id, for the screen being drawn. */
 let shared = new Map<number, SharedRatings>();
@@ -34,12 +37,13 @@ export async function renderBookings(main: HTMLElement): Promise<void> {
     main.append(errorNote(!up.ok ? up.code : (past as { code: string }).code), button(t("retry"), { onclick: () => void renderBookings(main) }));
     return;
   }
-  const rows = (days: CalDay[]) => days.filter((d) => d.mine).map((d) => ({ day: d.day, mine: d.mine!, riders: d.riders }));
+  const rows = (days: CalDay[]): Row[] => days.filter((d) => d.mine).map((d) => ({ day: d.day, mine: d.mine!, riders: d.riders, ride_time: d.ride_time, decide_by: d.decide_by, others_pending: d.others_pending }));
   const upcoming = rows(up.data || []);
   const before = rows(past.data || []).reverse();
   // Today's breakfast sits under Upcoming, so both answers are counted.
-  const waiting = awaitingFeedback([...(up.data || []), ...(past.data || [])], today).length;
-  if (waiting) main.append(note("info", waiting === 1 ? t("fbBannerOne") : t("fbBanner", { n: num(waiting, app.lang) })));
+  const waiting = canRequest(app.me!.user.role) ? awaitingFeedback([...(up.data || []), ...(past.data || [])], today).length : 0;
+  if (waiting) main.append(note("info", tn("fbBanner", waiting)));
+  if (!canRequest(app.me!.user.role)) main.append(note("info", t("readOnlyNote")));
   main.append(section(main, t("upcoming"), upcoming, t("noUpcoming")), section(main, t("past"), before, t("noPast")));
 }
 
@@ -54,7 +58,11 @@ function section(main: HTMLElement, title: string, rows: Row[], empty: string): 
 function card(main: HTMLElement, r: Row): HTMLElement {
   const today = app.me!.today;
   const m = r.mine;
+  const role = app.me!.user.role;
   const staff = m.staff_note ? staffNoteText(app.lang, m.staff_note) : "";
+  const cancelNote = m.status === "cancelled"
+    ? [m.cancelled_by === "mm" ? t("cancelledByMm") : "", m.late_cancel ? t("lateMark") : ""].filter(Boolean).join(" · ")
+    : "";
   return h(
     "li",
     { class: `booking bs-${m.status}` },
@@ -62,17 +70,66 @@ function card(main: HTMLElement, r: Row): HTMLElement {
       h("div", {}, h("h3", {}, longDate(r.day, app.lang)), h("p", { class: "hijri" }, hijriLabel(r.day, app.lang))),
       h("span", { class: `chip bs-${m.status}` }, icon(BOOKING_ICON[m.status]), h("span", {}, t(BOOKING_KEY[m.status])))),
     h("p", { class: "b-meta" }, icon(m.kind === "recurring" ? "repeat" : "calendar"), h("span", {}, t(KIND_KEY[m.kind]))),
-    m.status === "confirmed" && r.riders != null
-      ? h("p", { class: "b-meta" }, icon("users"), h("span", {}, r.riders === 1 ? t("oneRiderBooked") : t("ridersBooked", { n: num(r.riders, app.lang) })))
+    (m.status === "confirmed" || m.status === "pending") && r.riders != null && !(m.status === "confirmed" && r.day >= today)
+      ? h("p", { class: "b-meta" }, icon("users"), h("span", {}, tn("ridersBooked", r.riders)))
+      : null,
+    m.status === "pending" && r.day >= today ? pendingInfo(r) : null,
+    m.status === "confirmed" && r.day >= today ? brief(r) : null,
+    cancelNote ? h("p", { class: `b-meta${m.late_cancel ? " b-late" : ""}` }, icon("alert"), h("span", {}, cancelNote)) : null,
+    m.status === "cancelled" && m.cancel_reason
+      ? h("p", { class: "b-note" }, h("strong", {}, `${t("reasonShown")}: `), m.cancel_reason === "closed" ? t("stClosed") : reasonText(app.lang, m.cancel_reason))
       : null,
     staff ? h("p", { class: "b-note" }, h("strong", {}, `${t("mmNote")}: `), staff) : null,
     m.note ? h("p", { class: "b-note" }, h("strong", {}, `${t("yourNote")}: `), m.note) : null,
-    feedbackBlock(main, r),
+    canRequest(role) ? feedbackBlock(main, r) : feedbackGiven(r),
     ridersSaid(r),
-    cancellable(r.day, m, today)
+    cancellable(r.day, m, today) && canRequest(role)
       ? h("div", { class: "actions" }, button(t("cancel"), { kind: "danger", small: true, onclick: () => cancelDialog(main, r) }))
       : null,
   );
+}
+
+/** A request still waiting: when MicroMobility answers, and how many other venues want the date. */
+function pendingInfo(r: Row): HTMLElement {
+  const n = Number(r.others_pending) || 0;
+  return h("div", { class: "b-pending" },
+    r.decide_by ? h("p", { class: "b-meta" }, icon("clock"), h("span", {}, t("decideBy", { date: longDate(r.decide_by, app.lang) }))) : null,
+    n > 0 ? h("p", { class: "b-meta" }, icon("users"), h("span", {}, tn("otherVenues", n))) : null);
+}
+
+/** The breakfast brief on a confirmed date still ahead: the ride's times and when riders arrive, the
+ *  riders booked now, MicroMobility's number for the day, and the offer riders were promised. */
+function brief(r: Row): HTMLElement {
+  const v = app.me!.venue;
+  const L = app.lang;
+  const times = rideTimes(r.ride_time);
+  const arrive = times ? arrivalWindow(times.start) : null;
+  const offer = ((L === "ar" ? v.offer_ar || v.offer_en : v.offer_en || v.offer_ar) || "").trim();
+  const id = uid("brief");
+  const waText = `${longDate(r.day, L)} - ${L === "ar" && v.name_ar ? v.name_ar : v.name}`;
+  return h("section", { class: "brief", "aria-labelledby": id },
+    h("h4", { id }, t("briefTitle")),
+    h("ul", { class: "brief-list" },
+      h("li", {}, icon("clock"), times
+        ? h("span", {}, t("briefTimes", { gather: clockText(L, times.gather), start: clockText(L, times.start) }),
+          arrive ? h("span", { class: "brief-arrive" }, ` ${t("briefArrive", { from: clockText(L, arrive[0]), to: clockText(L, arrive[1]) })}`) : null)
+        : h("span", {}, t("briefNoTime"))),
+      r.riders != null ? h("li", {}, icon("users"), h("span", {}, tn("ridersBooked", r.riders))) : null,
+      h("li", {}, icon("phone"), h("span", {}, `${t("briefContact")} `),
+        h("a", { href: `tel:${MM_PHONE}`, dir: "ltr" }, MM_PHONE_TEXT), " · ",
+        h("a", { href: waLink(waText), target: "_blank", rel: "noopener" }, t("forgotWhatsApp"))),
+      h("li", {}, icon("star"), offer
+        ? h("span", {}, h("strong", {}, `${t("briefOffer")} `), h("bdi", {}, offer))
+        : h("span", { class: "hint" }, t("briefNoOffer")))));
+}
+
+/** The feedback given, read only (a viewer's login). */
+function feedbackGiven(r: Row): HTMLElement | null {
+  const f = feedbackOf(r.mine);
+  if (!f) return null;
+  return h("div", { class: "fb-given" },
+    h("p", { class: "fb-rating" }, starRow(f.rating), h("span", {}, t("fbYourRating", { rating: ratingText(app.lang, f.rating) }))),
+    f.turnout != null ? h("p", { class: "b-meta" }, icon("users"), h("span", {}, t("fbRidersCame", { n: num(f.turnout, app.lang) }))) : null);
 }
 
 /** After the breakfast: the button asking for feedback, or the rating given (editable while open). */
@@ -104,7 +161,7 @@ function ridersSaid(r: Row): HTMLElement | null {
   const n = Number(s.riders) || 0;
   return h("section", { class: "said", "aria-labelledby": id },
     h("h4", { id }, t("srTitle")),
-    n > 0 ? h("p", { class: "b-meta" }, icon("users"), h("span", {}, n === 1 ? t("srRidersOne") : t("srRiders", { n: num(n, app.lang) }))) : null,
+    n > 0 ? h("p", { class: "b-meta" }, icon("users"), h("span", {}, tn("srRiders", n))) : null,
     scores.length
       ? h("ul", { class: "said-scores" }, ...scores.map((sc) => h("li", { class: "said-score" },
         h("span", { class: "said-label" }, t("srScore", { label: t(sc.label), score: scoreText(app.lang, sc.value) })),
@@ -123,7 +180,7 @@ function cancelDialog(main: HTMLElement, r: Row): void {
   let series = false;
   const body = dlg.body;
   body.append(h("p", { class: "lede" }, longDate(r.day, app.lang)));
-  if (m.series_id) {
+  if (m.series_id && canCancelSeries(app.me!.user.role)) {
     const name = uid("scope");
     const fs = h("fieldset", { class: "modes" }, h("legend", { class: "sr-only" }, t("cancelTitle")));
     for (const [val, key] of [[false, "cancelOne"], [true, "cancelSeries"]] as const) {
@@ -134,14 +191,28 @@ function cancelDialog(main: HTMLElement, r: Row): void {
     }
     body.append(fs);
   }
-  if (lateCancel(r.day, m, me.today, me.tier)) body.append(note("warn", t("lateWarning", { n: me.tier.cancel_cutoff_days })));
+  // Inside 48 hours a reason is required and the cancel counts as late (the policy says so here).
+  const late48 = within48h(r.day, m);
+  if (late48) body.append(note("warn", t("late48")));
+  else if (lateCancel(r.day, m, me.today, me.tier)) body.append(note("warn", t("lateWarning", { days: tn("days", me.tier.cancel_cutoff_days) })));
+  if (m.status === "confirmed") body.append(h("p", { class: "hint policy" }, t("cancelPolicy")));
   const rid = uid("reason");
-  const reason = h("textarea", { id: rid, maxlength: 300, rows: 2 });
-  body.append(h("div", { class: "field" }, h("label", { for: rid }, t("cancelReason")), reason));
+  const errId = `${rid}-err`;
+  const reason = h("textarea", { id: rid, maxlength: 300, rows: 2, required: late48, "aria-describedby": errId });
+  const reasonErr = h("p", { class: "field-error", id: errId });
+  body.append(h("div", { class: "field" }, h("label", { for: rid }, late48 ? t("cancelReasonRequired") : t("cancelReason")), reason, reasonErr));
   const msg = h("div", { class: "msg" });
   const go = button(t("confirmCancel"), { kind: "danger" });
   go.addEventListener("click", async () => {
     clear(msg);
+    reasonErr.textContent = "";
+    reason.removeAttribute("aria-invalid");
+    if (late48 && !reason.value.trim()) {
+      reasonErr.textContent = t("errLateReason");
+      reason.setAttribute("aria-invalid", "true");
+      reason.focus();
+      return;
+    }
     busy(go, true, t("sending"));
     const res = await rpc<number>("vendor_cancel", { p_booking: m.id, p_reason: reason.value.slice(0, 300), p_series: series });
     busy(go, false, t("confirmCancel"));
@@ -149,7 +220,7 @@ function cancelDialog(main: HTMLElement, r: Row): void {
     const n = Number(res.data) || 0;
     dlg.close();
     invalidateCalendar();
-    announce(n === 1 ? t("cancelledOne") : t("cancelled", { n }));
+    announce(tn("datesCancelled", n));
     void renderBookings(main);
   });
   body.append(msg, h("div", { class: "actions" }, button(t("keepIt"), { kind: "ghost", onclick: dlg.close }), go));

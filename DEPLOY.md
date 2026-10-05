@@ -163,3 +163,19 @@ TypeScript, bundled by esbuild.
   the DNS record), staging on its workers.dev address.
 - The venue's session token stays on the server: the Worker keeps it in an HttpOnly cookie
   (`mm_vendor`, host-only) and forwards only the allowlisted `vendor_*` functions.
+- Since rentals migration `20261004130000_vendor_portal_hardening.sql` (apply it BEFORE deploying the
+  portal that reads its answers): every sign-in is its own session in the database (`vendor_sessions`,
+  only the token's hash; 30 days, or 14 days unused), Sign out ends it there (`/api/logout` calls
+  `vendor_logout`), a temporary password lasts 72 hours and must be changed before anything else, and
+  logins are owner / manager / viewer.
+- Optional gate (off until switched on): with the Worker secret `VENDOR_GATE_SECRET` set, sign-in
+  sends it as the `x-vendor-gate` header, and once its sha256 is stored in `public.vendor_gate` the
+  database accepts sign-in only through this Worker. Switch it on in this order:
+  1. `openssl rand -hex 32` (keep it in the password manager);
+  2. `cd apps/vendors && npx wrangler secret put VENDOR_GATE_SECRET` (and `--env staging` for staging);
+  3. in the SQL editor of the same database:
+     `insert into public.vendor_gate (secret_hash) values (encode(sha256(convert_to('<secret>', 'UTF8')), 'hex'));`
+  Off again: `delete from public.vendor_gate;` (the secret may stay). The other way round (the row
+  before the secret) refuses every sign-in until the secret is in place.
+- The portal's privacy notice (`#privacy`, `src/client/privacy.ts`) is a DRAFT until the owner
+  approves it; nobody is asked to accept it.
