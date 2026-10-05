@@ -1,0 +1,6 @@
+/* The 404 for an address with no language (not-found.tsx): the site's fonts and the brand mark above the 404. */
+.mm-404 { font-family: var(--cs-font-en), var(--cs-font-ar), sans-serif; background: #fbf9f4; color: #1a1919; min-height: 100svh; }
+html:is([lang="ar"], [lang="ur"]) .mm-404 { font-family: var(--cs-font-ar), var(--cs-font-en), sans-serif; }
+.mm-404 .pg-missing { min-height: 100svh; }
+.mm-404-logo { display: block; height: 48px; width: auto; margin: 0 0 28px; }
+.mm-404 a.pg-btn { text-decoration: none; }

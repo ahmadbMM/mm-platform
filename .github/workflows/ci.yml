@@ -96,7 +96,9 @@ jobs:
           command: deploy --env production
       # The live site answers after the deploy: the site, its health check (which reads the
       # database), the two forms and a bike's tag page (at its new address; /b/1 answers a redirect
-      # to it). A red run here means production needs a look.
+      # to it). A tag no bike carries answers 404 with its own friendly page, so the tag page passes
+      # with 200 (bike 1 is in the fleet) or 404 (it is not), never anything else. A red run here
+      # means production needs a look.
       - name: The live site answers
         if: github.ref == 'refs/heads/main' && vars.MM_PRODUCTION == 'on' && steps.secrets.outputs.present == 'true'
         run: |
@@ -105,7 +107,7 @@ jobs:
           for u in / /api/health /petromin /community/registration /bikes/1 /robots.txt; do
             code=$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 10 --retry-all-errors "https://micromobility.sa$u")
             echo "$u $code"
-            [ "$code" = 200 ] || fail=1
+            if [ "$u" = /bikes/1 ]; then [ "$code" = 200 ] || [ "$code" = 404 ] || fail=1; else [ "$code" = 200 ] || fail=1; fi
           done
           exit $fail
       # Staging: the `staging` branch deploys staging.micromobility.sa (wrangler.jsonc env
