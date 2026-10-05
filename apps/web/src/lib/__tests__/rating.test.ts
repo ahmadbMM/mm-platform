@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { bookingOrigin, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, relayStatus, unratedRides } from "../rating";
+import { WALLET_ORIGIN, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, relayStatus, unratedRides } from "../rating";
 import { POST as rate } from "../../app/api/account/rate/route";
 import { POST as wallet } from "../../app/api/google-wallet/route";
 import { resetSiteContent } from "../site";
@@ -8,6 +8,7 @@ import { createElement, type FC, type ReactElement, type ReactNode } from "react
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import RatingForm from "../../components/account/RatingForm";
+import { RATING_WORDS } from "../../components/account/RatingForm.words";
 import { TxProvider } from "../../i18n/TxProvider";
 import de from "../../i18n/tx/de.json";
 
@@ -133,24 +134,30 @@ describe("api/account/rate", () => {
     vi.stubGlobal("fetch", vi.fn(async () => json({ message: "token mismatch" }, 400)));
     expect(await (await post(rate, "/api/account/rate", ok)).json()).toEqual({ ok: false, error: "signin" });
   });
+  it("names the database's refusals of a booking change, each with its own words", async () => {
+    const ok = { entryId: "q1", form: "rental", s: { service: 9, experience: 9 } };
+    vi.stubGlobal("fetch", vi.fn(async () => json({ code: "P0001", message: "WAIVER_OUTDATED" }, 400)));
+    const old = await post(rate, "/api/account/rate", ok);
+    expect([old.status, await old.json()]).toEqual([409, { ok: false, error: "outdated" }]);
+    vi.stubGlobal("fetch", vi.fn(async () => json({ code: "P0001", message: "PAID_MOVE" }, 400)));
+    expect(await (await post(rate, "/api/account/rate", ok)).json()).toEqual({ ok: false, error: "paid_move" });
+    for (const w of Object.values(RATING_WORDS)) expect([w.errors.outdated, w.errors.paid_move].every((x) => x.trim().length > 10)).toBe(true);
+  });
 });
 
 describe("api/google-wallet", () => {
   beforeEach(() => { resetSiteContent(); vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
-  it("knows the booking app's origin, as staff set it", () => {
-    expect(bookingOrigin(null)).toBe("https://micromobilityrentals.pages.dev");
-    expect(bookingOrigin({ "site.links.booking": { href: "https://book.micromobility.sa/?x=1" } })).toBe("https://book.micromobility.sa");
-    expect(bookingOrigin({ "site.links.booking": { href: "javascript:alert(1)" } })).toBe("https://micromobilityrentals.pages.dev");
-  });
-  it("asks the booking app for the pass with the cookie's id and token and hands the save link back", async () => {
-    const f = vi.fn(async (url: string) => (url.includes("site_content") ? json([{ key: "site.links.booking", value: { href: "https://book.micromobility.sa/" } }]) : json({ ok: true, url: "https://pay.google.com/gp/v/save/eyJ" })));
+  it("asks the booking app's own origin for the pass, with the cookie's id and token, and hands the save link back", async () => {
+    expect(WALLET_ORIGIN).toBe("https://micromobilityrentals.pages.dev");
+    // an address staff set in the site's content never receives the token
+    const f = vi.fn(async (url: string) => (url.includes("site_content") ? json([{ key: "site.links.booking", value: { href: "https://elsewhere.example/" } }]) : json({ ok: true, url: "https://pay.google.com/gp/v/save/eyJ" })));
     vi.stubGlobal("fetch", f);
     const res = await post(wallet, "/api/google-wallet", { bookingId: "q1abcdef", groupIds: ["q1abcdef", "q2abcdef", "bad;id"] });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, url: "https://pay.google.com/gp/v/save/eyJ" });
-    const call = f.mock.calls.find((c) => String(c[0]).includes("/api/google-wallet")) as unknown as [string, RequestInit];
-    expect(call[0]).toBe("https://book.micromobility.sa/api/google-wallet");
+    expect(f.mock.calls.map((c) => String(c[0]))).toEqual(["https://micromobilityrentals.pages.dev/api/google-wallet"]);
+    const call = f.mock.calls[0] as unknown as [string, RequestInit];
     expect(JSON.parse(String(call[1].body))).toEqual({ customerId: "c1", token: TOKEN, bookingId: "q1abcdef", groupIds: ["q1abcdef", "q2abcdef"] });
   });
   it("passes a 501 (not set up) and a 409 (not confirmed) on, and never a link elsewhere", async () => {
@@ -190,11 +197,18 @@ describe("the breakfast box's sharing line", () => {
     const html = draw("social");
     expect(html.split(SHARE)).toHaveLength(2);
     // right after the breakfast question's own label, before its scale and its sub-questions
-    expect(html).toMatch(/id="rg-q1-breakfast-l">Breakfast<\/div><p class="rg-share">Your breakfast answers may be shared/);
-    expect(html.indexOf(SHARE)).toBeLessThan(html.indexOf("rg-q1-bf_restaurant"));
+    expect(html).toMatch(/id="rg[^"]*-q1-breakfast-l">Breakfast<\/div><p class="rg-share">Your breakfast answers may be shared/);
+    expect(html.indexOf(SHARE)).toBeLessThan(html.indexOf("-q1-bf_restaurant"));
   });
   it("is not on a rental's form", () => {
     expect(draw("rental")).not.toContain("rg-share");
+  });
+  it("gives each form on the page its own ids, the same ride's twice included (the pop-up and a card)", () => {
+    const one = () => createElement(RatingForm, { entryId: "q1", form: "rental", noBike: false, onRated: () => {} });
+    const html = renderToStaticMarkup(createElement(Tx, { locale: "en", dict: null }, one(), one()));
+    const ids = [...html.matchAll(/\sid="([^"]+)"/g)].map((m) => m[1]);
+    expect(ids.length).toBeGreaterThan(2);
+    expect(new Set(ids).size).toBe(ids.length);
   });
   it("speaks the page's language", () => {
     expect(draw("social", "ar")).toContain("قد نشارك إجاباتك عن الإفطار مع المطعم، دون ذكر اسمك.");

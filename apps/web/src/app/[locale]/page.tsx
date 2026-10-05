@@ -13,6 +13,8 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { PREVIEW_COOKIE, isStaffToken } from "@/lib/preview";
 import { hiddenPages, isComingSoon, loadSiteContent, siteCanOpen, siteText } from "@/lib/site";
 import { serverL } from "@/i18n/dicts";
+import { routing } from "@/i18n/routing";
+import { hasLocale } from "next-intl";
 import { learnTeaser } from "@/components/learn/LearnTeaser";
 
 // micromobility.sa. While the site is closed (Coming Soon on in the staff page, or Home not
@@ -36,6 +38,9 @@ async function state(locale: string) {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
+  // /privacy.html, /x.png...: a single segment the proxy never sees is read as a language, which the
+  // language layout refuses (app/not-found.tsx answers, with its own title): no Home title beside it.
+  if (!hasLocale(routing.locales, locale)) return {};
   const s = await state(locale);
   const tx = serverL(locale);
   return s.showHome

@@ -81,6 +81,33 @@ describe("memo", () => {
     expect(kept.write).toHaveBeenCalledWith({ n: 1 });
   });
 
+  it("waits for a read that never settles only so long, then takes the edge's copy, for everyone after too", async () => {
+    // a read whose request was cut off on Cloudflare (the visitor left, error 1102) never settles
+    const read = vi.fn(() => new Promise<{ n: number }>(() => {}));
+    const kept = { read: vi.fn(async () => ({ n: 9 })), write: vi.fn(async () => {}) };
+    expect(await memo("k", { ttl: MIN, now: 0, wait: 5, read, keep: kept })).toEqual({ n: 9 });
+    expect(await memo("k", { ttl: MIN, now: 1, wait: 5, read, keep: kept })).toEqual({ n: 9 }); // at once
+    expect(read).toHaveBeenCalledTimes(1); // the read is still the one in flight...
+    expect(await memo("k", { ttl: MIN, now: 2, wait: 5, read })).toEqual({ n: 9 });
+  });
+
+  it("gives up a read still pending after 15 seconds; the next caller reads afresh", async () => {
+    let lateAnswer!: (v: { n: number }) => void;
+    const lost = vi.fn(() => new Promise<{ n: number }>((r) => { lateAnswer = r; }));
+    expect(await memo("k", { ttl: MIN, now: 0, wait: 5, read: lost })).toBeNull(); // nothing kept anywhere
+    expect(await memo("k", { ttl: MIN, now: 15_000, wait: 5, read: lost })).toBeNull(); // still the same read
+    expect(lost).toHaveBeenCalledTimes(1);
+    let answer!: (v: { n: number }) => void;
+    const fresh = vi.fn(() => new Promise<{ n: number }>((r) => { answer = r; }));
+    const asking = memo("k", { ttl: MIN, now: 15_001, wait: 1_000, read: fresh });
+    expect(fresh).toHaveBeenCalledTimes(1);
+    lateAnswer({ n: 1 }); // the lost read lands after all: it must not clear the one in flight
+    await new Promise((r) => setTimeout(r, 0));
+    answer({ n: 2 });
+    expect(await asking).toEqual({ n: 2 });
+    expect(await memo("k", { ttl: MIN, now: 15_002, read: fresh })).toEqual({ n: 2 });
+  });
+
   it("forgets copies by key prefix", async () => {
     await memo("a:1", { ttl: MIN, now: 0, read: reader([1]) });
     await memo("b:1", { ttl: MIN, now: 0, read: reader([2]) });

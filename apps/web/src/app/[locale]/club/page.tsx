@@ -17,6 +17,7 @@ import { memberArea } from "@/lib/members";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { kindNames, sessionName, type RideKind } from "@/lib/rides";
 import { riyadhClock } from "@/lib/workshop-days";
+import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { serverL } from "@/i18n/dicts";
 import { isRtl } from "@/i18n/locales";
 
@@ -119,7 +120,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
               <div className="club-notmember" role="status"><span>{S(c.card.notMember)}</span><a href={applyHref}>{S(c.hero.applyBtn)}</a></div>
             </div>
           ) : (
-            <ClubCard locale={locale} title={S(c.card.title)} text={S(c.card.text)} notMember={S(c.card.notMember)} applyBtn={S(c.hero.applyBtn)} applyHref={applyHref} tierNames={tierNames} email={acct?.email} phone={acct?.phone} />
+            <ClubCard locale={locale} title={S(c.card.title)} text={S(c.card.text)} notMember={S(c.card.notMember)} applyBtn={S(c.hero.applyBtn)} applyHref={applyHref} tierNames={tierNames} email={acct?.email} phone={acct?.phone} sinceFmt={datePattern(locale, DATE_STYLES.memberSince)} />
           )}
           {earn.length > 0 && (
             <div className="club-earn">
@@ -157,7 +158,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
             <div><p>{S(c.rides.eyebrow)}</p><h2>{S(c.rides.title)}</h2></div>
             <a href={bookingLink(S(c.rides.allHref), locale)}>{S(c.rides.allLabel)} {(isRtl(locale) ? "←" : "→")}</a>
           </div>
-          <ClubRides locale={locale} href={bookingLink(S(c.rides.allHref), locale)} empty={S(c.rides.empty)} />
+          <ClubRides locale={locale} href={bookingLink(S(c.rides.allHref), locale)} empty={S(c.rides.empty)} dayFmt={datePattern(locale, DATE_STYLES.rideDay)} />
         </section>
         <section className="club-sec">
           <h2 style={{ marginBottom: 22 }}>{S(c.faq.title)}</h2>

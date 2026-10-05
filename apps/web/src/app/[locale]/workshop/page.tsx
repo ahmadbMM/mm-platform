@@ -10,6 +10,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { pageState } from "@/lib/page-state";
 import { slugId } from "@/lib/slug";
 import { riyadhClock } from "@/lib/workshop-days";
+import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { bg } from "@/lib/img";
 
 // micromobility.sa/workshop - a service request, received by the staff page (Workshop section).
@@ -62,9 +63,10 @@ export default async function WorkshopPage({ params }: { params: Promise<{ local
           now={riyadhClock(new Date())} days={N(w.booking.days) || 7}
           times={list(w.booking.times).map((x) => S(x.time)).filter((x) => /^([01]\d|2[0-3]):[0-5]\d$/.test(x)).sort()}
           fridayClosed={site.contact.fridayClosed === true} closeHour={N(site.contact.closeHour) || 22}
+          dayFmt={datePattern(locale, DATE_STYLES.workshopDay)}
           doneTitle={S(w.booking.doneTitle)} doneText={S(w.booking.doneText)}
         />
-        <WorkshopTrack locale={locale} />
+        <WorkshopTrack locale={locale} whenFmt={datePattern(locale, DATE_STYLES.booked)} />
       </section>
     </PageShell>
   );

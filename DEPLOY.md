@@ -10,6 +10,9 @@ Petromin registration page, changes.
   `www.micromobility.sa/*`. Routes, not custom domains, on purpose:
   - The DNS records stay exactly as they are. The root and `www` are already proxied A records
     (orange cloud) pointing at the old host; a Worker route answers before that host is asked.
+  - `www.micromobility.sa` is not a second copy of the site: the Worker moves every address on it
+    to the same path and query on `micromobility.sa` (301; 308 for a POST), before anything else
+    (`apps/web/worker.js`, `src/lib/canonical-host.ts`).
   - The two registration forms (`forms/petromin` at `/petromin`, `forms/community` at
     `/community/registration`) are served by this Worker too, outside Coming Soon. Until their
     old Workers' routes are removed (below), those more specific routes still win and the old
@@ -70,8 +73,11 @@ once.
 ## Sign-in protection
 
 The account sign-in (`/api/account`) allows each connection 10 tries a minute, with Cloudflare's
-rate limiter (`LOGIN_LIMIT` in `apps/web/wrangler.jsonc`; nothing to set up). On top of that it can
-ask for a Cloudflare Turnstile check, which is off until both of its keys exist:
+rate limiter (`LOGIN_LIMIT` in `apps/web/wrangler.jsonc`; nothing to set up). The page-error reports
+(`/api/log-error`) and the signed-in pop-ups' checks (`/api/account/pending-waiver`,
+`/api/account/pending-rating`) allow each connection 30 of each a minute the same way (`API_LIMIT`).
+On top of that the sign-in can ask for a Cloudflare Turnstile check, which is off until both of its
+keys exist:
 
 1. Cloudflare dashboard (the account that holds micromobility.sa) > Turnstile > Add widget:
    hostname `micromobility.sa` (and `www.micromobility.sa`), mode Managed.
@@ -101,6 +107,19 @@ pair serves both sites and the website keeps no private key.
 To turn it off, delete the variable and rebuild: the switch disappears (existing subscriptions
 stay until the booking app's key changes).
 
+## Content Security Policy
+
+`apps/web/next.config.ts` sends it with every page. Scripts and styles from elsewhere are named one
+by one: Cloudflare's analytics beacon and Turnstile, and on the live ride map (`/live`) MapLibre's two
+files at the pinned version `components/live/LiveMap.tsx` loads (a unit test fails when the two
+differ, so a new MapLibre version changes both). The registration forms send their own policy
+(`apps/web/src/forms/headers.ts`), which allows the one supabase-js file the Petromin page loads.
+
+`script-src` keeps `'unsafe-inline'` on purpose: Next writes small inline scripts into every page,
+and a nonce - the usual way to allow them without it - must be new on every answer, while the
+pages are kept at Cloudflare's edge for a minute and answered to everyone (`src/lib/page-cache.ts`).
+A kept copy would carry a nonce that no longer matches. Revisit it only together with that cache.
+
 ## Monitoring
 
 - **Workers Logs** are on (`observability` in `apps/web/wrangler.jsonc`): dashboard > Workers & Pages >
@@ -126,6 +145,39 @@ stay until the booking app's key changes).
   2026-09-27; it was 2.2 MB when the site was a few pages). Cloudflare's free Workers plan allows
   3 MB, the paid plan 10 MB.
 - pnpm 11 only runs the build scripts listed under `allowBuilds` in `pnpm-workspace.yaml`.
+
+## Limits
+
+**CPU.** The Workers Free plan allows 10 ms of CPU per request. Each Worker instance tolerates an
+occasional request over that; one that runs over it consistently is stopped, and the visitor gets
+Cloudflare's "Error 1102: Worker exceeded resource limits" (a 503). Rendering any page of this site
+costs more than 10 ms. Measured on staging with `wrangler tail` on 2026-10-05: a page render took
+15-70 ms of CPU (median about 30 ms), a freshly started Worker instance 0.5-0.7 s for its first
+page, and 27 of 114 page requests were stopped at 10 ms (`"outcome": "exceededCpu"`). Production
+runs the same code, so it will do the same once Coming Soon is off. No change to the pages brings a
+Next.js render under 10 ms. The fix is the **Workers Paid plan** (US$5 a month at the time of
+writing; 30 s of CPU per request by default), on the Cloudflare account that holds the Workers. Until
+then the site keeps answering 1102 to some visitors.
+
+What the code does to keep the CPU down:
+- Links never prefetch (`src/i18n/navigation.ts`). Each prefetch is a page the Worker renders: a
+  desktop visit to Home was 17 Worker requests, 13 of them prefetches; now it is 3 (the page and the
+  two account checks), and a click on a link renders only the page it opens.
+- A page that cannot differ between visitors is answered from the edge's copy for a minute
+  (`src/lib/page-cache.ts`), and what the pages read from the database is kept for a minute per
+  Worker instance (`src/lib/memo.ts`).
+- Formatters and the like are made once, not on every request (`riyadhClock`, next-intl's time zone).
+
+**Time.** Every read from the database or storage has its own timeout: 2.5 s for the site's content,
+the catalogue, the rides and the staff check; 4 s for the account calls, GPX tracks and `/api/health`;
+5 s for the Turnstile check; 8 s for the bike pages, photos and the wallet pass. A read that several requests share
+(`src/lib/memo.ts`) is waited for 5 s at most by a request with nothing to show (it then takes the
+edge's copy), and one still pending after 15 s is replaced. That read can be lost for good when the
+request that started it is stopped (error 1102, or the visitor leaving), and before this every later
+request in that Worker instance waited on it.
+
+To look again: `cd apps/web && npx wrangler tail micromobility-web-staging --format json` (or
+`micromobility-web`) while opening pages; each request's line has `outcome` and `cpuTime`.
 
 ## Moving the two forms onto this Worker (once)
 

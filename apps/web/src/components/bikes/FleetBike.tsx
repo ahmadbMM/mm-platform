@@ -6,6 +6,10 @@ import { bikeState, getBikeByNumber, ridePrice } from "@/lib/bikes";
 import { filled } from "@/lib/filled";
 import { buildGroups } from "@/lib/bike-fields";
 import { bikeTitle, fmtPrice, isBikeLang, tFor, type BikeLang } from "@/lib/bike-i18n";
+import { siteSchema } from "@/content/pages/site";
+import { resolvePage } from "@/lib/content-core";
+import { BOOKING_URL, bookingLink } from "@/lib/links";
+import { loadSiteContent } from "@/lib/site";
 import "./bike.css";
 
 // A fleet bike's NFC tag page: micromobility.sa/bikes/42 (the stickers still hold /b/42, which
@@ -16,9 +20,8 @@ import "./bike.css";
 // Language: the route's, which next-intl reads from the site's language cookie (the globe here
 // writes it), the phone's languages, else English; the same rule as every other page.
 
-// Where a rider goes to book. The rentals app answers on its own origin today and moves to
-// micromobility.sa/experiences later; when it does, this one line changes and nothing else.
-const BOOKING_URL = "https://micromobilityrentals.pages.dev";
+// Where a rider goes to book: the booking app staff set for the whole site (Website > Whole site >
+// Other addresses, else lib/links.ts BOOKING_URL), in the page's language, as every Book link is.
 // The handoff keeps a secondary "See this bike in the store" button in the markup behind a
 // flag, hidden by default. It stays hidden here for a concrete reason: the shop is a hosted
 // Salla store on its own domain and the bikes table has no per-bike product id to link to.
@@ -43,7 +46,7 @@ export async function fleetBikeMeta(code: string, locale: string): Promise<Metad
 
 export default async function FleetBike({ code, locale }: { code: string; locale: string }) {
   const lang = langOf(locale);
-  const found = await lookup(code);
+  const [found, content] = await Promise.all([lookup(code), loadSiteContent()]);
   const t = tFor(lang);
 
   // A fleet we could not reach is a fault to retry, not a sticker to give up on. Saying
@@ -156,7 +159,7 @@ export default async function FleetBike({ code, locale }: { code: string; locale
           ) : (
             <>
               {state === "out" && <p className="bk-notice">{t("outNotice")}</p>}
-              <a className="bk-cta" href={BOOKING_URL} target="_blank" rel="noopener">
+              <a className="bk-cta" href={bookingLink(String(resolvePage(siteSchema, content, "en").links.booking || BOOKING_URL), lang)} target="_blank" rel="noopener">
                 {t("book")}
               </a>
               {SHOW_STORE_CTA && (

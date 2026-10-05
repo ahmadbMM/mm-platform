@@ -95,6 +95,7 @@ test('step 1 makes the account, says so, and step 2 sends the community answers 
   expect(of('customer_community_apply')).toEqual([{ p_id: su[0].p_id, p_token: 'tok-new', p: {
     birth_date: '1994-03-12', nationality: 'Egypt', bike_type: 'Road', own_bike: true, instagram: 'karim.rides', linkedin: 'karim-mansour-arch',
     profession: 'Architect', workplace: 'Saudi Aramco', heard_from: 'instagram', lang: 'en', privacy_version: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    privacy_ack: true, // the account step showed the notice's box, and it was ticked
   } }]);
   expect(errs).toEqual([]);
 });
@@ -346,6 +347,11 @@ test('arriving signed in starts on step 2: who is applying, their answers so far
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(of('customer_community_apply')).toEqual([{ p_id: 'c-karim', p_token: 'tok-handed', p: expect.objectContaining({ birth_date: '1994-03-12', bike_type: 'Hybrid', own_bike: false, profession: 'Architect', instagram: 'karim.rides' }) }]);
+  // This form never showed them the notice's box: nothing says they confirmed it here.
+  const sent = of('customer_community_apply')[0].p as Record<string, unknown>;
+  expect(sent).not.toHaveProperty('privacy_version');
+  expect(sent).not.toHaveProperty('privacy_ack');
+  await expect(page.locator('#f-xack')).toBeHidden();
   expect(of('customer_signup')).toEqual([]);
   expect(errs).toEqual([]);
 });
@@ -450,4 +456,47 @@ test('a consent save that fails keeps step 2 shut, says so, and Continue saves i
   expect(of('customer_signup')).toHaveLength(1); // the account was made once
   expect(of('customer_consents')).toHaveLength(3);
   expect(errs).toEqual([]);
+});
+
+// A signed-in account the database holds no confirmed notice for: the application is answered
+// 'privacy', and step 2 shows the notice's box; ticked, the application carries the notice's version
+// and privacy_ack. Nothing of the kind is sent for a box the form never showed.
+test('a signed-in account without a confirmed notice is asked for it on step 2, and only then sends it', async ({ page }) => {
+  const { errs, of } = await open(page, `?code=${CODE}&lang=en`, {
+    customer_community_apply: (b) => json((b.p as Record<string, unknown>).privacy_ack === true ? { ok: true, updated: false } : { ok: false, error: 'privacy' }),
+  });
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#f-xack')).toBeHidden();
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#f-xack')).toBeVisible();
+  await expect(page.locator('#f-xack .err')).toHaveText('Please confirm you’ve read the Privacy Notice.');
+  await expect(page.locator('#xack')).toBeFocused();
+  await expect(page.locator('#success')).toBeHidden();
+  expect(of('customer_community_apply')).toHaveLength(1);
+  expect(of('customer_community_apply')[0].p).not.toHaveProperty('privacy_ack');
+  // Not ticked: not sent again.
+  await page.click('#submit');
+  expect(of('customer_community_apply')).toHaveLength(1);
+  // The notice opens from the box's link without ticking it.
+  await page.click('#pv-open-x');
+  await expect(page.locator('#pv .pv-box')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#xack')).toHaveAttribute('aria-checked', 'false');
+  await page.click('#xack .tick-box');
+  await expect(page.locator('#f-xack .err')).toHaveText('');
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('customer_community_apply')).toHaveLength(2);
+  expect(of('customer_community_apply')[1].p).toMatchObject({ privacy_version: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), privacy_ack: true });
+  expect(errs).toEqual([]);
+});
+
+test('the step 2 notice box reads in Arabic', async ({ page }) => {
+  await open(page, `?code=${CODE}&lang=ar`, { customer_community_apply: () => json({ ok: false, error: 'privacy' }) });
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#xack-lbl')).toContainText('إشعار الخصوصية');
+  await expect(page.locator('#f-xack .err')).not.toHaveText('');
+  await expect(page.locator('#f-xack .err')).not.toContainText('Privacy Notice');
 });

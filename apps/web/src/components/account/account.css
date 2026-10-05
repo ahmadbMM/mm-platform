@@ -43,10 +43,18 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
   .ac-ride { grid-template-columns: 1fr; gap: 10px; }
 }
 .ac-check { min-height: 65px; margin: 4px 0 0; }
+/* A temporary password replaced before the account is used (ChangePassword.tsx), in the sign-in card. */
+.ac-pc-title { font-size: 20px; letter-spacing: -.4px; line-height: 1.2; margin: 0; }
+.ac-pc-sub { color: #57605a; font-size: 14.5px; line-height: 1.55; margin: 0; }
+.ac-hint { color: #5f6862; font-size: 12px; font-weight: 400; line-height: 1.45; }
+.ac-back { align-self: center; border: 0; background: none; padding: 6px 10px; color: #5f6862; font: inherit; font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ac-back:disabled { opacity: .6; cursor: default; }
 
 /* Rate your ride: the booking app's post-ride rating (RatingForm.tsx), as a card on the account
-   (RateRide.tsx) and as the pop-up a rider cannot skip (RatingGate.tsx). */
+   (RateRide.tsx) and as the pop-up a rider cannot skip (RatingGate.tsx). One column on a phone: the
+   cards' 290 px least width is wider than a 320 px screen's room. */
 .rr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 460px)); gap: 16px; align-items: start; }
+@media (max-width: 560px) { .rr-grid { grid-template-columns: minmax(0, 1fr); } }
 .rr-card { background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .rr-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; align-items: baseline; }
 .rr-head strong { font-size: 16px; }

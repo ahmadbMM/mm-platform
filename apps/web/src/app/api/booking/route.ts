@@ -52,7 +52,8 @@ export async function POST(req: Request) {
   // The tickets as My Account draws them: my_bookings' rows, and the session as the ticket reads it.
   const order = new Map(r.booked.map((b, i) => [b.id, i]));
   const tickets = r.rows.map(ticketRow).filter((x): x is TicketRow => !!x).sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
-  const sessions = await loadTicketSessions([input.sessionId]);
+  // read with the account's token (list_sessions), as My Account's tickets are: a private ride keeps its name
+  const sessions = await loadTicketSessions([input.sessionId], acct);
   return json({
     ok: true,
     tickets,

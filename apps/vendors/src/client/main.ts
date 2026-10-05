@@ -235,6 +235,16 @@ afterBooking(() => {
   if (screen === "app") app.render();
 });
 
+// "Skip to content" (static/index.html) goes to the page's main area. Not by its href: the hash is
+// this page's router, and "#main" drew the Calendar whatever was on the screen.
+document.querySelector("a.skip")?.addEventListener("click", (e) => {
+  e.preventDefault();
+  const main = document.getElementById("main");
+  if (!main) return;
+  if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+  main.focus();
+});
+
 window.addEventListener("hashchange", () => {
   if (screen === "signin") { app.render(); return; }
   if (screen !== "app") return;

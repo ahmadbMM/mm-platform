@@ -155,7 +155,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
               start={{ ev: one(q.ev), session: one(q.session) }}
               text={{ eventTitle: S(c.steps.eventTitle), noDates: S(c.steps.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}
               links={{
-                apply: localHref("/community/registration", locale), account: localHref("/account", locale), club: localHref("/club", locale),
+                apply: localHref("/community/registration", locale), account: localHref("/account", locale), club: hidden.includes("club") ? "" : localHref("/club", locale),
                 signup: bookingLink(`${appBase}?handoff=site&auth=signup`, locale), app: bookingLink(app, locale), place: directions || null,
               }}
               today={today} now={new Date().getTime()}

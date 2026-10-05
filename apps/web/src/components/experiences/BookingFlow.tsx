@@ -14,7 +14,7 @@ import {
 } from "@/lib/booking";
 import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
 import { rpcResult } from "@/lib/rpc-client";
-import { ticketCue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
+import { ticketCue, type AddonItem as TicketAddonItem, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 import { Ic, KindIc } from "./BookIcons";
 import { T, type BookingText } from "./Booking.text";
 
@@ -36,6 +36,7 @@ export type FlowLinks = {
   /** The booking app: sign-up there, and the corrections staff asked for. */
   signup: string;
   app: string;
+  /** The Club page, "" while staff have it switched off (its address then leads Home), so no link is offered. */
   club: string;
   /** Directions to the circuit. */
   place: string | null;
@@ -80,6 +81,8 @@ export default function BookingFlow({ locale, events, prices, acct, items, start
   const [evKey, setEvKey] = useState<string | null>(() => (start.ev && events.some((e) => e.key === start.ev) ? start.ev : null));
   const ev = events.find((e) => e.key === evKey) ?? null;
   const all = useMemo(() => events.flatMap((e) => e.sessions), [events]);
+  // The add-ons the tickets list on the confirmation, by name and price (TicketCard addonItems).
+  const ticketItems = useMemo(() => new Map<string, TicketAddonItem>(items.map((x) => [x.id, { name: x.name, price: x.price }])), [items]);
   // Back from signing in (or a link with ?ev=&session=): the ride picked before, through the gates.
   const resume = useMemo(() => {
     const s = start.session ? all.find((x) => x.id === start.session) : undefined;
@@ -412,7 +415,7 @@ export default function BookingFlow({ locale, events, prices, acct, items, start
             <TicketCard key={r.id} locale={locale} today={today} rows={[r]} session={done.session ?? undefined} name={name}
               cue={ticketCue([r], done.session ?? undefined, null)} t={tk} gather={text.gather} start={text.start} typeName={typeName}
               links={{ edit: null, manage: links.account, place: done.session?.approval ? done.session.meetUrl : links.place }} manage={false}
-              route={routes[r.sessionId] ?? null} now={now} wallet={{ bookingId: r.id, groupIds: [r.id] }} />
+              route={routes[r.sessionId] ?? null} now={now} wallet={{ bookingId: r.id, groupIds: [r.id] }} addonItems={ticketItems} />
           ))}
         </div>
         <div className="bk-foot">
@@ -449,7 +452,7 @@ export default function BookingFlow({ locale, events, prices, acct, items, start
           <div className="sc-list">{ev.sessions.map(card)}</div>
         )}
         {sel?.community && sel.full && <p className="bk-note bk-full"><span className="bk-full-dot" aria-hidden="true" />{t.fullNote}</p>}
-        {ev.sessions.some((s) => s.members) && text.membersNote && <p className="xs-note">{text.membersNote} <a href={links.club}>{text.clubLink}</a></p>}
+        {ev.sessions.some((s) => s.members) && text.membersNote && <p className="xs-note">{text.membersNote}{links.club && <> <a href={links.club}>{text.clubLink}</a></>}</p>}
         {ev.sessions.length > 0 && (
           <div className="bk-foot">
             {!sel && <p className="bk-why" id="bk-why1">{t.pickFirst}</p>}

@@ -1,5 +1,4 @@
 import { BOOKING_URL } from "./links";
-import type { SiteContent } from "./site";
 
 // The post-ride rating (app/api/account/rate, components/account/RateRide.tsx and RatingGate.tsx)
 // and the Google Wallet pass (app/api/google-wallet): the plain logic, so it can be tested.
@@ -108,13 +107,11 @@ export function cleanRating(body: unknown): { entryId: string; patch: RatingPatc
   return { entryId: b.entryId, patch: { rating_bike: s.bike ?? s.ride_bike ?? null, rating_exp: exp, feedback: note, rating_detail: detail } };
 }
 
-/** The booking app's origin, where the passes are made: the address staff set (Website > Whole
- *  site > Other addresses), else the site's own default. */
-export function bookingOrigin(content: SiteContent | null): string {
-  const set = content?.["site.links.booking"];
-  const href = set && typeof set === "object" ? String((set as { href?: unknown }).href ?? "") : "";
-  try { return new URL(/^https:\/\//i.test(href) ? href : BOOKING_URL).origin; } catch { return new URL(BOOKING_URL).origin; }
-}
+/** Where the Google Wallet passes are made, the rider's session token going with the request: the
+ *  booking app's own origin, fixed in the code (BOOKING_URL). Never the address staff can edit
+ *  (Website > Whole site > Other addresses, which the site's links follow): a token must only ever
+ *  go where the code says, and the booking app keeps that address whatever domain it adds. */
+export const WALLET_ORIGIN = new URL(BOOKING_URL).origin;
 
 /** The booking app's status as the Google Wallet route's own: a status that cannot carry a JSON
  *  body (204, 205, 304) or is not a final answer made `new Response` throw, so it reads as a 502. */

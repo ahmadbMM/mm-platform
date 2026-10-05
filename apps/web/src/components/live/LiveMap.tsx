@@ -12,6 +12,8 @@ import { T } from "./LiveMap.text";
 const MAPLIBRE = "https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl";
 const TILES = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const EVERY_MS = 10_000;
+// How long after the ride's end (lib/tickets.ts rideEndsAt) the map still asks: a ride runs late.
+const GRACE_MS = 60 * 60_000;
 const COLOUR: Record<LivePosition["role"], string> = { leader: "#077a4b", sweeper: "#c2410c" };
 
 type Marker = { setLngLat(p: [number, number]): Marker; addTo(m: MapApi): Marker; remove(): void; setPopup(p: Popup): Marker };
@@ -48,9 +50,10 @@ function loadMapLibre(): Promise<MapLibre> {
   return loading;
 }
 
-type Props = { sessionId: string; locale: string };
+/** `until`: when the ride is over (epoch ms, lib/tickets.ts rideEndsAt), null when not known. */
+type Props = { sessionId: string; locale: string; until?: number | null };
 
-export default function LiveMap({ sessionId, locale }: Props) {
+export default function LiveMap({ sessionId, locale, until = null }: Props) {
   const t = useLocalize(T);
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<MapApi | null>(null);
@@ -66,23 +69,30 @@ export default function LiveMap({ sessionId, locale }: Props) {
   const [shown, setShown] = useState(false);
   if (positions.length > 0 && !shown) setShown(true);
 
-  // Ask every ten seconds while the page is open; a hidden tab waits for its return.
+  // Ask every ten seconds while the page is open; a hidden tab waits for its return. The asking
+  // stops for good when there is nothing more this rider can see: no booking on the ride, a session
+  // that has ended (both say so), or the ride over (an hour after its end).
+  const [ended, setEnded] = useState(false);
   useEffect(() => {
     let live = true, timer: ReturnType<typeof setTimeout> | null = null;
+    const over = () => typeof until === "number" && Number.isFinite(until) && Date.now() > until + GRACE_MS;
     const ask = async () => {
+      if (over()) { if (live) setEnded(true); return; }
+      let a: LiveAnswer = { ok: false, error: "network" };
       try {
         const r = await fetch(`/api/live?session=${encodeURIComponent(sessionId)}`, { cache: "no-store" });
         const b = (await r.json().catch(() => null)) as LiveAnswer | null;
-        if (live) setAnswer(b && typeof b.ok === "boolean" ? b : { ok: false, error: "network" });
-      } catch {
-        if (live) setAnswer({ ok: false, error: "network" });
-      }
-      if (live) timer = setTimeout(() => (document.hidden ? waitForReturn() : ask()), EVERY_MS);
+        if (b && typeof b.ok === "boolean") a = b;
+      } catch { /* offline: say so, and ask again */ }
+      if (!live) return;
+      setAnswer(a);
+      if (!a.ok && (a.error === "not_booked" || a.error === "signin")) return;
+      timer = setTimeout(() => (document.hidden ? waitForReturn() : ask()), EVERY_MS);
     };
     const waitForReturn = () => document.addEventListener("visibilitychange", () => { if (live && !document.hidden) ask(); }, { once: true });
     ask();
     return () => { live = false; if (timer) clearTimeout(timer); };
-  }, [sessionId]);
+  }, [sessionId, until]);
 
   // The map itself, once the library is here and there is somewhere to centre it.
   const first = positions[0];
@@ -142,7 +152,7 @@ export default function LiveMap({ sessionId, locale }: Props) {
   };
   const kmh = (ms: number | null) => (ms === null ? "" : t.speed(String(Math.round(ms * 3.6))));
   const words = { signin: t.signin, not_booked: t.notBooked, unavailable: t.unavailable, network: t.network };
-  const note = !answer ? "" : answer.ok ? (answer.positions.length ? "" : t.noPosition) : words[answer.error];
+  const note = ended ? t.ended : !answer ? "" : answer.ok ? (answer.positions.length ? "" : t.noPosition) : words[answer.error];
 
   return (
     <div className="lv">

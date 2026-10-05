@@ -35,6 +35,9 @@ export const T = {
     // its words. Instagram and LinkedIn may be left empty, and the form does not say so.
     birth: "Date of birth", day: "Day", month: "Month", year: "Year",
     nationality: "Nationality", natPick: "Choose your nationality",
+    // Its name on the nationality list in every language (lib/nationality.ts): the browser's names
+    // say "Palestinian Territories" in most.
+    palestine: "Palestine",
     profession: "Profession", professionPh: "e.g. Engineer",
     // Their company (the owner, 2026-09-29; sent as workplace), in the community form's words.
     workplace: "Company", workplaceHint: "The company you work for",
@@ -60,6 +63,8 @@ export const T = {
       learner_who: "Choose who is learning.", learner_name: "Enter the child's name - letters only.", learner_name_other: "Enter their full name - letters only.",
       learner_age: "Enter an age up to 99.", learner_age_child: "Enter the child's age, up to 99.", learner_age_other: "Enter their age, up to 99.",
       learner_twice: "This learner is already on the list.", learners: "Check the list of learners: from 1 to 5, each one only once.",
+      // A second sign-up joins the first one still waiting: the two together hold 5 at most.
+      learners_total: "You can sign up at most 5 learners in all, including the ones you have already signed up.",
       learner_gender: "Choose male or female.", learner_height: "Enter a height between 80 and 250 cm.", level: "Choose how much riding so far.",
       first: "Enter your first name - letters, spaces and periods only.", last: "Enter your last name - letters, spaces and periods only.",
       phone: "Check the mobile number, e.g. 05XXXXXXXX.",
@@ -70,9 +75,12 @@ export const T = {
       signin_empty: "Enter your email or mobile number and your password.", signin_bad: "The email, mobile number or password is not right.",
       signin_locked: "Too many tries. Please wait a few minutes and try again.",
       rate_limited: "Too many tries from this network. Please wait a few minutes and try again.",
+      // The site's sign-in (api/account) and its check, in the sign-in card's words.
+      slow: "Too many tries from this connection - wait a minute and try again.", check: "Please complete the check below, then try again.",
       signed_out: "You were signed out. Sign in again to send the sign-up.",
       consents: "Your account was created, but your Privacy Notice and ride news answers could not be saved. Check the connection and press Create account again.",
       account: "Your account's email or mobile number needs updating in the booking app before you can sign up here.",
+      account_name: "Your account's name needs a first and a last name. Update it in the booking app before you sign up here.",
       expired: "That sign-in link has expired. Sign in again.",
       email: "Check the email address.", heard_from: "Please tell us how you heard about us.",
       birth_date: "Choose your date of birth.", birth_young: "Riders must be at least 5 years old. Check the birth date.", gender: "Choose your gender.", nationality: "Choose your nationality.",
@@ -110,6 +118,7 @@ export const T = {
     signedAs: (name: string) => `مسجّل الدخول باسم ${name}`,
     birth: "تاريخ الميلاد", day: "اليوم", month: "الشهر", year: "السنة",
     nationality: "الجنسية", natPick: "اختر جنسيتك",
+    palestine: "فلسطين",
     profession: "المهنة", professionPh: "مثال: مهندس",
     workplace: "الشركة", workplaceHint: "الشركة التي تعمل فيها",
     instagram: "Instagram", instagramHint: "اسم المستخدم في Instagram، أو رابط حسابك",
@@ -130,6 +139,7 @@ export const T = {
       learner_who: "اختر مَن سيتعلّم.", learner_name: "أدخل اسم الطفل - حروف فقط.", learner_name_other: "أدخل الاسم الكامل - حروف فقط.",
       learner_age: "أدخل عمراً حتى 99 عاماً.", learner_age_child: "أدخل عمر الطفل، حتى 99 عاماً.", learner_age_other: "أدخل العمر، حتى 99 عاماً.",
       learner_twice: "هذا المتعلّم مُضاف إلى القائمة من قبل.", learners: "راجع قائمة المتعلّمين: من 1 إلى 5، وكلٌّ منهم مرة واحدة فقط.",
+      learners_total: "يمكنك تسجيل 5 متعلّمين على الأكثر في المجموع، بمن فيهم من سجّلتهم من قبل.",
       learner_gender: "حدّد الجنس: ذكر أو أنثى.", learner_height: "أدخل طولاً بين 80 و250 سم.", level: "اختر مستوى الخبرة في الركوب.",
       first: "أدخل اسمك الأول - حروف ومسافات ونقاط فقط.", last: "أدخل اسم العائلة - حروف ومسافات ونقاط فقط.",
       phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.",
@@ -140,9 +150,11 @@ export const T = {
       signin_empty: "أدخل بريدك الإلكتروني أو رقم جوالك وكلمة المرور.", signin_bad: "البريد الإلكتروني أو رقم الجوال أو كلمة المرور غير صحيحة.",
       signin_locked: "محاولات كثيرة. انتظر بضع دقائق ثم حاول مجددًا.",
       rate_limited: "محاولات كثيرة من هذه الشبكة. انتظر بضع دقائق ثم حاول مجددًا.",
+      slow: "محاولات كثيرة من هذا الاتصال - انتظر دقيقة وحاول مجدداً.", check: "يرجى إكمال التحقق أدناه ثم المحاولة مجدداً.",
       signed_out: "تم تسجيل خروجك. سجّل الدخول مرة أخرى لإرسال التسجيل.",
       consents: "تم إنشاء حسابك، لكن تعذّر حفظ إقرارك بإشعار الخصوصية واختيارك لأخبار الرحلات. تحقق من الاتصال واضغط «إنشاء حساب» مرة أخرى.",
       account: "يحتاج البريد الإلكتروني أو رقم الجوال في حسابك إلى تحديث في تطبيق الحجز قبل التسجيل هنا.",
+      account_name: "يجب أن يتضمن اسم حسابك الاسم الأول واسم العائلة. حدّثه في تطبيق الحجز قبل التسجيل هنا.",
       expired: "انتهت صلاحية رابط تسجيل الدخول هذا. سجّل الدخول مرة أخرى.",
       email: "تحقق من البريد الإلكتروني.", heard_from: "أخبرنا من فضلك كيف عرفت عنا.",
       birth_date: "اختر تاريخ ميلادك.", birth_young: "يجب ألا يقل عمر الراكب عن 5 سنوات. تحقّق من تاريخ الميلاد.", gender: "اختر جنسك.", nationality: "اختر جنسيتك.",

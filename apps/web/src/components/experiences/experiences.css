@@ -109,7 +109,7 @@ html:is([lang="ar"], [lang="ur"]) .bk-title { letter-spacing: 0; line-height: 1.
 /* the stepper: numbered circles, a drawn tick on the steps done, only the current one named */
 .bk-stepper { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
 .bk-step-wrap { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
-.bk-step-wrap:last-child { flex: 0 0 auto; }
+.bk-step-wrap:last-child { flex: 0 1 auto; min-width: 28px; } /* its name is cut short too rather than run off a phone; its circle stays whole */
 .bk-step { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
 .bk-step-c { width: 28px; height: 28px; flex: none; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; background: #fff; color: #6e6b63; border: 1px solid rgba(26, 25, 25, .24); box-sizing: border-box; }
 .bk-step-c.on { background: #1a1919; color: #fbf9f4; border-color: #1a1919; }

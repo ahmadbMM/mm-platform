@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import RatingGateLoader from "./RatingGateLoader";
 import WaiverGate, { type PendingWaiver, type WaiverDone } from "./WaiverGate";
+import { WAIVER_QUIET } from "./quiet";
 
 // A desk-added booking's waiver on every page (the owner, 2026-10-04), before the post-ride rating:
 // the booking app asks for every waiver first and the rating after (_forceRatingPrompt), so this
@@ -13,7 +14,8 @@ import WaiverGate, { type PendingWaiver, type WaiverDone } from "./WaiverGate";
 // page, a signed-in "nothing to agree" is kept for two minutes in this tab (shorter than the
 // rating's ten: staff add a rider at the desk while they stand there), and a ride waiting puts up
 // the pop-up the rider cannot skip. Once it is agreed, the next ride (or nothing) is asked for at once.
-const KEY = "mm_waiver_none";
+// The two quiet minutes are the signed-in account's: every sign-in and sign-out forgets them (./quiet.ts).
+const KEY = WAIVER_QUIET;
 const QUIET_MS = 2 * 60_000;
 // For this page load: the rides agreed to (never asked again, even if the database did not stamp
 // them), and whether the database cannot record an answer yet (the function is missing until the

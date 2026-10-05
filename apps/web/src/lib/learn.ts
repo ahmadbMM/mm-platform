@@ -87,7 +87,9 @@ export type LearnProblem = { error: LearnerError; index: number } | { error: "le
 /** One learner, as learn_apply() reads them. */
 export type LearnerPayload = { who: Who; name: string; age: number; gender: Gender; height: number; level: Level };
 
-/** customer_learn_apply()'s argument, p: the rest is the account's. */
+/** customer_learn_apply()'s argument, p: the rest is the account's. `privacy_version` is the
+ *  Privacy Notice the visitor confirmed on step 2, sent only when they ticked it there (an account
+ *  with no notice on record); the database takes the account's own first. */
 export type LearnPayload = {
   birth_date: string;
   gender: Gender;
@@ -101,6 +103,7 @@ export type LearnPayload = {
   notes: string;
   lang: string;
   learners: LearnerPayload[];
+  privacy_version?: string;
 };
 
 /** Step 1, a new account: the booking app's sign-up, its questions and its rules. */
@@ -273,4 +276,21 @@ export function accountArgs(a: AccountFields): { error: AccountError } | { args:
 export function signinIdentifier(raw: string): string {
   const v = raw.trim();
   return v.includes("@") ? v.toLowerCase() : normalizePhone(v);
+}
+
+/** Whether a signed-in account still has to confirm the Privacy Notice, as the booking app asks
+ *  (_consentCheck): no notice on record (most accounts made before it existed), or one older than
+ *  the last version riders must confirm (`askFrom`, PRIVACY_ASK_FROM). `version` is
+ *  customer_consents()'s privacy_version. */
+export function noticeDue(version: unknown, askFrom: string): boolean {
+  const v = typeof version === "string" ? version.trim() : "";
+  return !/^\d{4}-\d{2}-\d{2}$/.test(v) || v < askFrom;
+}
+
+/** An account's name as learn_apply() takes the person signing up (customer_learn_apply answers
+ *  "account" when it does not): a first and a last name, the site's letters rule, every part at
+ *  least two letters, 120 at most. A one-word name is the usual reason. */
+export function accountNameOk(name: string): boolean {
+  const n = name.trim().replace(/\s+/g, " ");
+  return n !== "" && chars(n) <= 120 && /\s/.test(n) && nameOk(n) && namePartsOk(n);
 }

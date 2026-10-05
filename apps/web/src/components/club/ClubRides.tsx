@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { rpc } from "@/lib/rpc-client";
 import { useL } from "@/i18n/TxProvider";
-import { intlOf } from "@/i18n/locales";
 import { phrase } from "@/i18n/tx";
+import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
 
-// The next open community rides (club_rides), read in the visitor's browser.
+// The next open community rides (club_rides), read in the visitor's browser. dayFmt: how the
+// page's language writes a ride's day ("Saturday 10 October"), described by the server
+// (lib/date-pattern), since a browser may not know the language.
 type Ride = { title: string; date: string; time: string | null; kind: string | null };
-type Props = { locale: string; href: string; empty: string };
+type Props = { locale: string; href: string; empty: string; dayFmt: DatePattern };
 const KIND: Record<string, { en: string; ar: string }> = {
   saturday: phrase("Saturday Social Ride", "ركبة السبت الاجتماعية"),
   swim: phrase("Triathlon Pool Session", "جلسة سباحة للترياثلون"),
@@ -40,7 +42,7 @@ export default function ClubRides(p: Props) {
       : <bdi dir="ltr">{m[1]} – {m[2]}</bdi>;
   };
   if (!rides.length) return <p className="club-rides-empty">{p.empty}</p>;
-  const day = (d: string) => new Intl.DateTimeFormat(intlOf(p.locale), { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${d}T00:00:00Z`));
+  const day = (d: string) => fmtPattern(p.dayFmt, d);
   return (
     <div className="club-rides-grid">
       {rides.map((r, i) => {

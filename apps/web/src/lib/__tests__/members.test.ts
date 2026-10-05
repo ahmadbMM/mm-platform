@@ -56,3 +56,15 @@ describe("announcementsOf", () => {
     expect(announcementsOf([{ text: { en: "Bad link", ar: "" }, href: { href: "javascript:alert(1)" } }], "en")).toEqual([{ text: "Bad link", cta: "", href: "" }]);
   });
 });
+
+describe("the member area's counts", () => {
+  it("say 1 ride, 1 community ride and 1 credit in English, and give translators the plural template", async () => {
+    const { T } = await import("@/components/club/MembersArea.text");
+    const { englishOf, localize } = await import("@/i18n/tx");
+    expect([T.en.rides("1"), T.en.groupRides("1"), T.en.toNext("1", "Pro")]).toEqual(["1 ride", "1 community ride", "1 credit to reach Pro"]);
+    expect([T.en.rides("12"), T.en.groupRides("3"), T.en.toNext("40", "Pro")]).toEqual(["12 rides", "3 community rides", "40 credits to reach Pro"]);
+    expect(englishOf(T.en)).toEqual(expect.arrayContaining(["{0} rides", "{0} community rides", "{0} credits to reach {1}"]));
+    // a translated language reads its dictionary's template, whatever the number (its own forms)
+    expect(localize(T, "fr", { "{0} rides": "{0} sorties" }).rides("1")).toBe("1 sorties");
+  });
+});

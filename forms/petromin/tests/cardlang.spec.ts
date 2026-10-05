@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 const S1 = { id: '2026-09-21-pw', title: "Petromin's ND96 Session", start: '2026-09-21T19:00:00+03:00', end: '2026-09-21T21:00:00+03:00' };
 const json = (b: unknown) => ({ status: 200, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'content-type': 'application/json' }, body: JSON.stringify(b) });
-for (const lang of ['ar', 'fr', 'es', 'pt', 'hi', 'ne', 'tl', 'bn']) {
+for (const lang of ['ar', 'ur', 'fr', 'es', 'pt', 'hi', 'ne', 'tl', 'bn']) {
   test(`the booking card speaks ${lang}`, async ({ page }) => {
     await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
     await page.addInitScript(() => localStorage.setItem('mm-petromin-registration', JSON.stringify({

@@ -206,35 +206,89 @@ export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Recor
   return localized && s.title.toLowerCase() === enNames[s.kind].trim().toLowerCase() ? names[s.kind] : s.title;
 }
 
-// The columns a sessions read asks for. The last three (description, price, route_slug) arrive
-// with the 2026-09-28 migrations; until the owner applies them PostgREST refuses the whole read
-// (400, 42703 "column does not exist"), so a read that fails that way is asked again with the
-// columns that have always been there, and the new ones are left out for ten minutes before they
-// are tried again. A session read that way simply has no description, price or route.
+// The columns a sessions read asks for. Some arrive with later migrations: SESSION_COLS_NEW
+// (description, price, route_slug) with the 2026-09-28 ones, and a caller can name groups of its own
+// (the breakfast stop's Arabic name and offer, lib/tickets-data.ts). Until the owner applies one,
+// PostgREST refuses the whole read (400, 42703 "column sessions.<name> does not exist"), so a read
+// refused that way is asked again without the group that holds that column, and that group alone is
+// left out for ten minutes before it is tried again. A session read that way simply has none of its
+// columns. Any other refusal is passed on and leaves nothing out: any 400 once stripped every price,
+// description and route from the whole site for ten minutes.
 export const SESSION_COLS = "id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons,meet_url,location";
 export const SESSION_COLS_NEW = "description,price,route_slug";
 const RETRY_NEW_MS = 10 * 60_000;
-const MISSING: unique symbol = Symbol.for("mm.sessions.newColsMissingUntil");
-const missingUntil = (): number => (globalThis as { [MISSING]?: number })[MISSING] ?? 0;
+const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
+/** Each optional group of columns the database refused, and until when it is left out. */
+const missing = (): Record<string, number> => ((globalThis as { [MISSING]?: Record<string, number> })[MISSING] ??= {});
 
-/** Rows of `sessions` matching `filter` (a PostgREST query string), with `cols` and the new
- *  columns when the database has them. Throws when neither read answers. */
-export async function sessionRows(fetchImpl: typeof fetch, url: string, key: string, filter: string, cols: string = SESSION_COLS, now: number = Date.now()): Promise<unknown> {
-  const withNew = `${url}/rest/v1/sessions?select=${cols},${SESSION_COLS_NEW}&${filter}`;
-  const without = `${url}/rest/v1/sessions?select=${cols}&${filter}`;
-  if (now < missingUntil()) return getJson(fetchImpl, without, key);
-  try {
-    return await getJson(fetchImpl, withNew, key);
-  } catch (e) {
-    if (!(e instanceof Error) || e.message !== "400") throw e;
-    (globalThis as { [MISSING]?: number })[MISSING] = now + RETRY_NEW_MS;
-    return getJson(fetchImpl, without, key);
+/** A read PostgREST refused. The message is the HTTP status, as it always was; PostgREST's own code
+ *  ("42703", "PGRST202") and message ride along when it gave them. */
+export class ReadError extends Error {
+  constructor(status: number, readonly code: string = "", readonly detail: string = "") {
+    super(String(status));
   }
 }
 
-/** Tests only: try the new columns again at once. */
+/** The column a refusal says the database does not have (400, Postgres 42703: "column
+ *  sessions.route_slug does not exist", or another qualifier through list_sessions), or null for any
+ *  other refusal. */
+export function missingColumn(e: unknown): string | null {
+  if (!(e instanceof ReadError) || e.message !== "400" || e.code !== "42703") return null;
+  const m = /column\s+(?:"?[\w$]+"?\.)*"?([\w$]+)"?\s+does not exist/i.exec(e.detail);
+  return m ? m[1] : null;
+}
+
+/** The signed-in account a sessions read is made for: its id and the booking app's session token. */
+export type SessionReader = { id: string; token: string };
+
+/** list_sessions is not in this database (PostgREST's 404 / PGRST202, Postgres's 42883). */
+const noFunction = (e: unknown) => e instanceof ReadError && (e.message === "404" || e.code === "PGRST202" || e.code === "42883");
+
+/** `sessions` rows for a PostgREST query (select and filters). For an account, through
+ *  list_sessions(p_id, p_token), as the booking app's customers read them (_sessionsFetch): the only
+ *  read that returns a tag-gated (private) ride the account may see - the table hides those from the
+ *  public key - and, with a token it no longer accepts, the public sessions alone. Otherwise, or on a
+ *  database without the function, the table with the public key, which sees exactly the sessions
+ *  with no required tag. Never keep what is read for an account where another visitor could see it. */
+export async function readSessions(fetchImpl: typeof fetch, url: string, key: string, query: string, account?: SessionReader | null): Promise<unknown> {
+  if (account) {
+    try {
+      return await getJson(fetchImpl, `${url}/rest/v1/rpc/list_sessions?${query}`, key, { p_id: account.id, p_token: account.token });
+    } catch (e) {
+      if (!noFunction(e)) throw e;
+    }
+  }
+  return getJson(fetchImpl, `${url}/rest/v1/sessions?${query}`, key);
+}
+
+/** Rows of `sessions` matching `filter` (a PostgREST query string), with `cols` and every optional
+ *  group of columns (SESSION_COLS_NEW, then `opts.optional`) the database has; for `opts.account`
+ *  when one is given (readSessions). Throws when no read answers. */
+export async function sessionRows(fetchImpl: typeof fetch, url: string, key: string, filter: string, cols: string = SESSION_COLS, now: number = Date.now(),
+  opts: { optional?: string[]; account?: SessionReader | null } = {}): Promise<unknown> {
+  const left = missing();
+  const groups = [SESSION_COLS_NEW, ...(opts.optional ?? [])].filter((g) => !(now < (left[g] ?? 0)));
+  for (let bare = false; ;) {
+    try {
+      return await readSessions(fetchImpl, url, key, `select=${[cols, ...(bare ? [] : groups)].join(",")}&${filter}`, opts.account);
+    } catch (e) {
+      const col = missingColumn(e);
+      const g = col && !bare ? groups.find((x) => x.split(",").includes(col)) : undefined;
+      if (g) {
+        left[g] = now + RETRY_NEW_MS; // that group alone, for ten minutes
+        groups.splice(groups.indexOf(g), 1);
+      } else if (!col && !bare && groups.length && e instanceof ReadError && e.code === "42703") {
+        bare = true; // a missing column it does not name: once more without the optional groups, leaving none out after
+      } else {
+        throw e;
+      }
+    }
+  }
+}
+
+/** Tests only: try every optional column again at once. */
 export function resetSessionColumns(): void {
-  delete (globalThis as { [MISSING]?: number })[MISSING];
+  delete (globalThis as { [MISSING]?: Record<string, number> })[MISSING];
 }
 
 /** Booked sessions by id, whatever their state (a Petromin night, one staff have closed since):
@@ -255,13 +309,21 @@ export async function loadSessionsById(ids: string[], fetchImpl: typeof fetch = 
 const TTL_MS = 60_000;
 const KEY = "rides";
 
-export async function getJson(fetchImpl: typeof fetch, url: string, key: string): Promise<unknown> {
+/** A PostgREST read with the public key: a GET, or a POST of `body` (a function's arguments). A
+ *  refusal throws a ReadError. */
+export async function getJson(fetchImpl: typeof fetch, url: string, key: string, body?: Record<string, unknown>): Promise<unknown> {
+  const headers: Record<string, string> = { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" };
+  if (body) headers["Content-Type"] = "application/json";
   const res = await fetchImpl(url, {
-    headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" },
+    ...(body ? { method: "POST", body: JSON.stringify(body) } : {}),
+    headers,
     cache: "no-store",
     signal: AbortSignal.timeout(2500),
   });
-  if (!res.ok) throw new Error(String(res.status));
+  if (!res.ok) {
+    const b = (await res.json().catch(() => null)) as { code?: unknown; message?: unknown } | null;
+    throw new ReadError(res.status, typeof b?.code === "string" ? b.code : "", typeof b?.message === "string" ? b.message : "");
+  }
   return res.json();
 }
 

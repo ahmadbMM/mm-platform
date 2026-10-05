@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
+import MapEmbed from "@/components/about/MapEmbed";
 import MessageForm from "@/components/site/MessageForm";
 import OpenNow from "@/components/home/OpenNow";
 import "@/components/about/about.css";
@@ -166,7 +167,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
             </div>
           </div>
           {c.contact.showMap === true && mapQuery && (
-            <iframe className="ab-map" title={S(c.contact.title)} loading="lazy" referrerPolicy="no-referrer-when-downgrade"
+            <MapEmbed title={S(c.contact.title)} label={tx("Show the map", "اعرض الخريطة")}
               src={`https://www.google.com/maps?q=${encodeURIComponent(mapQuery)}&z=16&hl=${L}&output=embed`} />
           )}
         </section>

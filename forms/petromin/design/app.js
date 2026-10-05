@@ -1,8 +1,8 @@
 /* Employees Bike Registration Form: language switching, tile selection, inline validation, state helpers.
    Replace the submit handler with the real request; everything else can stay. */
 (function () {
-  var LANGS = { ar: "العربية", en: "English", fr: "Français", hi: "हिन्दी", ne: "नेपाली", pt: "Português", es: "Español", tl: "Tagalog", bn: "বাংলা" };
-  var RTL = { ar: true };
+  var LANGS = { ar: "العربية", en: "English", fr: "Français", hi: "हिन्दी", ur: "اردو", ne: "नेपाली", pt: "Português", es: "Español", tl: "Tagalog", bn: "বাংলা" };
+  var RTL = { ar: true, ur: true };
   var T = {
     ar: {
       "Your registration for {d} is confirmed.": "تم تأكيد تسجيلك لجلسة {d}.",
@@ -365,6 +365,51 @@
       "{n} spots left": "{n}টি জায়গা বাকি",
       "Full": "পূর্ণ",
       "No upcoming sessions": "আসন্ন কোনো সেশন নেই"
+    },
+    ur: {
+      "Your registration for {d} is confirmed.": "{d} کے لیے آپ کی رجسٹریشن کی تصدیق ہو گئی ہے۔",
+      "Booking": "بکنگ",
+      "Show this screen and your booking number at the desk to collect your bike.": "اپنی سائیکل لینے کے لیے ڈیسک پر یہ اسکرین اور اپنا بکنگ نمبر دکھائیں۔",
+      "Enter a valid mobile number": "درست موبائل نمبر درج کریں",
+      "Your company": "آپ کی کمپنی",
+      "Choose your company": "اپنی کمپنی منتخب کریں",
+      "Employees Bike Registration Form": "ملازمین کے لیے سائیکل رجسٹریشن فارم",
+      "Fill this in before you pick up your bike at the desk.": "ڈیسک سے اپنی سائیکل لینے سے پہلے یہ فارم پُر کریں۔",
+      "Badge number": "بیج نمبر",
+      "Full name": "پورا نام",
+      "Use the same name you booked with so we can find your booking": "وہی نام لکھیں جس سے آپ نے بکنگ کی تھی، تاکہ ہم آپ کی بکنگ تلاش کر سکیں",
+      "Mobile number": "موبائل نمبر",
+      "Enter a valid Saudi mobile number (05XXXXXXXX)": "درست سعودی موبائل نمبر درج کریں (05XXXXXXXX)",
+      "Height in cm": "قد (سینٹی میٹر میں)",
+      "Bike type": "سائیکل کی قسم",
+      "Road": "روڈ", "Hybrid": "ہائبرڈ", "Mountain": "ماؤنٹین",
+      "Register": "رجسٹر کریں",
+      "Registering...": "رجسٹریشن ہو رہی ہے...",
+      "Enter your badge number": "اپنا بیج نمبر درج کریں",
+      "Enter your full name": "اپنا پورا نام درج کریں",
+      "Enter your height in cm (100 to 250)": "اپنا قد سینٹی میٹر میں درج کریں (100 سے 250 تک)",
+      "Choose a bike type": "سائیکل کی قسم منتخب کریں",
+      "Could not reach the server": "سرور تک رسائی نہیں ہو سکی",
+      "Too many submissions from this network": "اس نیٹ ورک سے بہت زیادہ درخواستیں بھیجی گئی ہیں",
+      "Dismiss": "بند کریں",
+      "You are registered": "آپ کی رجسٹریشن ہو گئی ہے",
+      "Badge": "بیج",
+      "MicroMobility, Jeddah": "MicroMobility، جدہ",
+      "Need help? WhatsApp us": "مدد چاہیے؟ ہمیں WhatsApp کریں",
+      "Session": "سیشن",
+      "Your details": "آپ کی تفصیلات",
+      "Bike": "سائیکل",
+      "Choose your session": "اپنا سیشن منتخب کریں",
+      "Pick the session you want to ride. Sessions come from the MicroMobility Rentals calendar.": "وہ سیشن منتخب کریں جس میں آپ رائیڈ کرنا چاہتے ہیں۔ سیشن MicroMobility Rentals کے کیلنڈر سے آتے ہیں۔",
+      "Choose a session": "ایک سیشن منتخب کریں",
+      "We use these to find your booking and reach you at the desk.": "ان سے ہم آپ کی بکنگ تلاش کرتے ہیں اور ڈیسک پر آپ سے رابطہ کرتے ہیں۔",
+      "Height and bike": "قد اور سائیکل",
+      "We size the bike to your height.": "ہم سائیکل کا سائز آپ کے قد کے مطابق رکھتے ہیں۔",
+      "Back": "واپس",
+      "Continue": "جاری رکھیں",
+      "{n} spots left": "{n} جگہیں باقی",
+      "Full": "بھر گیا",
+      "No upcoming sessions": "کوئی آنے والا سیشن نہیں"
     }
   };
 
@@ -488,13 +533,26 @@
       return ch;
     });
   }
+  // A mobile number's length without its country code, for each code above. A number typed with its
+  // code but no + or 00 ("971501234567") loses the code when what is left has that length and the
+  // whole does not, as the community form's ccIncluded does with the phone rules; it was sent as
+  // "+971971501234567".
+  var NATIONAL_LEN = { "971": [9], "973": [8], "965": [8], "968": [8], "974": [8], "20": [10], "962": [9], "961": [7, 8], "963": [9], "967": [9], "249": [9], "212": [9], "216": [8],
+    "91": [10], "92": [10], "880": [10], "977": [10], "94": [9], "63": [10], "62": [9, 10, 11, 12], "34": [9], "33": [9], "351": [9], "55": [10, 11], "52": [10], "44": [10], "1": [10], "90": [10] };
+  function codeTyped(d, code) {
+    if (d.indexOf(code) !== 0) return false;
+    var lens = NATIONAL_LEN[code], rest = d.slice(code.length).replace(/^0+/, "");
+    if (!lens) return d.length >= 11 && rest.length >= 8;
+    return lens.indexOf(rest.length) >= 0 && lens.indexOf(d.replace(/^0+/, "").length) < 0;
+  }
   function nationalDigits() {
     var raw = asciiDigits(phoneIn.value).replace(/[^0-9+]/g, "");
     var code = cc.value;
     if (raw.indexOf("+" + code) === 0) raw = raw.slice(code.length + 1);
     else if (raw.indexOf("00" + code) === 0) raw = raw.slice(code.length + 2);
     raw = raw.replace(/\D/g, "");
-    if (code === "966" && raw.indexOf("966") === 0 && raw.length > 9) raw = raw.slice(3);
+    if (code === "966") { if (raw.indexOf("966") === 0 && raw.length > 9) raw = raw.slice(3); }
+    else if (codeTyped(raw, code)) raw = raw.slice(code.length);
     return raw.replace(/^0+/, "");
   }
   function phoneE164() { var n = nationalDigits(); return n ? "+" + cc.value + n : ""; }
@@ -542,6 +600,16 @@
     var err = f.querySelector(".err"); if (!err) return;
     if (!err.hasAttribute("data-t0")) err.setAttribute("data-t0", err.getAttribute("data-t"));
     if (msg || on) { err.setAttribute("data-t", msg || err.getAttribute("data-t0")); render(err); }
+    describeError(f.querySelector("input:not([type=hidden]), [role=radiogroup]"), err, on);
+  }
+  // A screen reader hears the message with the box it is about: aria-invalid on the box, and the
+  // message as its description while it shows (the message itself is a polite live region).
+  function describeError(box, err, on) {
+    if (!box) return;
+    if (!err.id) err.id = (err.closest(".field").id || "field") + "-err";
+    var ids = (box.getAttribute("aria-describedby") || "").split(/\s+/).filter(function (x) { return x && x !== err.id; });
+    if (on) { ids.push(err.id); box.setAttribute("aria-invalid", "true"); } else box.removeAttribute("aria-invalid");
+    if (ids.length) box.setAttribute("aria-describedby", ids.join(" ")); else box.removeAttribute("aria-describedby");
   }
   function showBanner(msg) {
     var b = $("#banner"), txt = b.querySelector(".banner-text");

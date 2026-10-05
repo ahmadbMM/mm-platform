@@ -37,10 +37,31 @@ describe("the registration forms", () => {
       expect(h.get("content-security-policy")).toContain(`connect-src 'self' ${SUPABASE} https://cloudflareinsights.com`);
       expect(h.get("content-security-policy")).toContain("frame-ancestors 'none'");
     }
-    expect(c.get("content-security-policy")).toContain("form-action 'none'");
     expect(c.get("content-security-policy")).not.toContain("cdn.jsdelivr.net");
-    expect(p.get("content-security-policy")).toContain("script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://static.cloudflareinsights.com");
-    expect(c.get("permissions-policy")).toBe("camera=(), microphone=(), geolocation=(), payment=()");
+    // of jsDelivr, only the one file the Petromin page loads (supabase-js, pinned with its integrity hash)
+    const js = petrominPage.match(/<script\b[^>]*\bsrc="(https:\/\/cdn\.jsdelivr\.net\/[^"]+)"/)?.[1];
+    expect(js).toMatch(/^https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[\d.]+\/dist\/umd\/supabase\.min\.js$/);
+    expect(p.get("content-security-policy")).toContain(`script-src 'self' 'unsafe-inline' ${js} https://static.cloudflareinsights.com;`);
+    for (const h of [c, p]) expect(h.get("content-security-policy")).not.toMatch(/https:\/\/cdn\.jsdelivr\.net(?:\/)?(?:[\s;]|$)/);
+    // both: HTTPS only, as the site's own pages say it; no device features; no form the browser posts itself
+    for (const h of [c, p]) {
+      expect(h.get("strict-transport-security")).toBe("max-age=31536000");
+      expect(h.get("x-frame-options")).toBe("DENY");
+      expect(h.get("permissions-policy")).toBe("camera=(), microphone=(), geolocation=(), payment=()");
+      expect(h.get("content-security-policy")).toContain("form-action 'none'");
+    }
+  });
+
+  it("take their fonts from the website only, which has every file the pages name", () => {
+    for (const [route, page] of [[community, communityPage], [petromin, petrominPage]] as const) {
+      const csp = route.GET().headers.get("content-security-policy") || "";
+      expect(csp).toContain("font-src 'self'");
+      expect(csp).not.toMatch(/googleapis|gstatic/);
+      expect(page).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
+      const named = [...page.matchAll(/url\("\/fonts\/forms\/([a-z0-9-]+\.woff2)"\)/g)].map((m) => m[1]);
+      expect(named.length).toBeGreaterThanOrEqual(10);
+      for (const f of named) expect(existsSync(resolve(__dirname, "../../../public/fonts/forms", f)), f).toBe(true);
+    }
   });
 
   it("have the community form's link-preview image where its page points", () => {

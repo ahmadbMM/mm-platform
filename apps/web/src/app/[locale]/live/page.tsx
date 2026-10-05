@@ -14,7 +14,7 @@ import { bookingLink, localHref } from "@/lib/links";
 import { SESSION_ID } from "@/lib/live";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName } from "@/lib/rides";
-import { fmtDayDate } from "@/lib/tickets";
+import { fmtDayDate, rideEndsAt } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
 import { serverL } from "@/i18n/dicts";
 import { isRtl } from "@/i18n/locales";
@@ -64,11 +64,12 @@ export default async function LivePage({ params, searchParams }: { params: Promi
     );
   }
 
-  // The ride's name and day, for the heading; a session that cannot be read still gets its map.
+  // The ride's name and day, for the heading (read with the account's token: a private ride too); a
+  // session that cannot be read still gets its map.
   const d = resolvePage(experiencesSchema, content, L).dates;
   const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
-  const s = sessionId ? (await loadTicketSessions([sessionId])).get(sessionId) : undefined;
+  const s = sessionId ? (await loadTicketSessions([sessionId], acct)).get(sessionId) : undefined;
 
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
@@ -84,7 +85,7 @@ export default async function LivePage({ params, searchParams }: { params: Promi
         {sessionId ? (
           <>
             <p className="ac-who">{tx("Where the ride leader is right now, updated every ten seconds. Only riders booked on this ride can see it.", "أين قائد الجولة الآن، ويُحدَّث كل عشر ثوانٍ. لا يراه إلا الركاب المحجوزون في هذه الجولة.")}</p>
-            <LiveMap sessionId={sessionId} locale={locale} />
+            <LiveMap sessionId={sessionId} locale={locale} until={s ? rideEndsAt(s) : null} />
           </>
         ) : (
           <p className="ac-empty">{tx("Open the live map from a ticket on your account on the day of the ride.", "افتح الخريطة الحية من تذكرتك في حسابك يوم الجولة.")} <a href={localHref("/account", locale)}>{tx("My account", "حسابي")} <span aria-hidden="true">{arrow}</span></a></p>

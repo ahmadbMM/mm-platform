@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
 import ClubCard from "@/components/club/ClubCard";
@@ -12,23 +13,28 @@ import RideRecord from "@/components/account/RideRecord";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import "@/components/club/club.css";
+import "./handoff.css";
 import { accountSchema } from "@/content/pages/account";
 import { clubSchema } from "@/content/pages/club";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { accountBookings, getAccount } from "@/lib/account";
+import { decodeSession } from "@/lib/account-core";
+import { HANDOFF_COOKIE, accountLabel, sessionProfile } from "@/lib/handoff";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName } from "@/lib/rides";
 import { routeItems } from "@/lib/route-names";
-import { formOf, pendingRating, unratedRides } from "@/lib/rating";
+import { RATE_FROM, formOf, pendingRating, unratedRides } from "@/lib/rating";
+import { loadAddonItems } from "@/lib/ticket-addons";
 import { doneToday, fmtDayDate, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, recordRows, rideStats, type BadgeItem } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
 import { riyadhClock } from "@/lib/workshop-days";
+import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
 import { isRtl } from "@/i18n/locales";
@@ -51,7 +57,9 @@ import { PRIVACY_ASK_FROM } from "@/content/privacy-notice";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
 // the next rides as the booking app's own tickets (changing one opens the booking app), the Club
-// card opened with the account's own email and mobile, and shortcuts.
+// card opened with the account's own email and mobile, and shortcuts. After the booking app hands a
+// rider back (api/account/handoff), it says whom they are signed in as (?handoff=done), or, when the
+// account handed back is not the one signed in here, asks which one this browser keeps.
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const TYPE_NAME: Record<string, { en: string; ar: string }> = {
   Road: phrase("Road", "طريق"), Hybrid: phrase("Hybrid", "هجين"), Mountain: phrase("Mountain", "جبلي"), "Road Carbon": phrase("Road Carbon", "طريق كربون"),
@@ -65,7 +73,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function AccountPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { locale } = await params;
-  const expired = (await searchParams).handoff === "expired";
+  const handoffState = (await searchParams).handoff;
+  const expired = handoffState === "expired";
   const L = asLocale(locale);
   const tx = serverL(locale);
   const [{ content, previewing, hidden }, acct] = await Promise.all([pageState("account"), getAccount()]);
@@ -99,6 +108,11 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     );
   }
 
+  // A session the booking app handed back while this account was signed in (lib/handoff.ts): named
+  // here, with the choice of account, until the rider answers or five minutes pass.
+  const kept = decodeSession((await cookies()).get(HANDOFF_COOKIE)?.value);
+  const handedP = kept && kept.id !== acct.id ? await sessionProfile(kept) : null;
+  const handed = handedP && handedP !== "none" ? handedP : null;
   const rows = await accountBookings(acct);
   const now = riyadhClock(new Date());
   const today = now.slice(0, 10);
@@ -109,15 +123,17 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
   // Finished rides not rated yet, one per night (a party rates once, on its first rider): the
   // booking app's post-ride rating. The oldest from the day it went live on is the pop-up the
-  // rider cannot skip (RatingGateLoader, on every page; the booking app's _pendingRatingId); older ones stay cards.
+  // rider cannot skip (RatingGateLoader, on every page; the booking app's _pendingRatingId), and
+  // every later one is that pop-up in its turn: only rides from before that day are cards here.
   const gate = pendingRating(rows, today);
-  const toRate = unratedRides(rows, today).filter((r) => r.entryId !== gate?.entryId).reverse().slice(0, 5);
-  // every booked session, whatever its state now (a Petromin night, one staff closed since)
+  const toRate = unratedRides(rows, today).filter((r) => r.date < RATE_FROM && r.entryId !== gate?.entryId).reverse().slice(0, 5);
+  // every booked session, whatever its state now (a Petromin night, one staff closed since), read
+  // with the account's token so a private ride (one its tag holders alone may see) keeps its name
   const record = recordRows(rows);
   const [sessions, recSessions, badges, extras] = await Promise.all([
-    loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])]),
+    loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
     // every night booked, for Your rides and the badges (the kind of ride, whether it was free, whether staff approve it)
-    loadRecordSessions(record.map((r) => r.sessionId)),
+    loadRecordSessions(record.map((r) => r.sessionId), acct),
     loadBadgeData(acct),
     loadAccountExtras(acct),
   ]);
@@ -126,6 +142,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const routes = routeItems(content, L); // a ride that follows a route on the Routes page names it on its ticket
   // tonight's bike, by name, for the steps and the line under the header
   const bikeOf = new Map(await Promise.all([...groups, ...past].filter((g) => g.date === today).map(async (g) => [g.sessionId, await bikeName(g.rows.find((r) => r.bikeId)?.bikeId ?? null)] as const)));
+  // the add-ons the tickets list, by name and price
+  const addonItems = await loadAddonItems([...groups, ...past].flatMap((g) => g.rows.flatMap((r) => r.addonLines.map((a) => a.id))));
   const stats = rideStats(record, recSessions, today);
   const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
   // "You're next" on a numbered night: whether anyone still waiting holds a lower number. Said on
@@ -191,6 +209,22 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="ac ac-in">
+        {handed ? (
+          <section className="ac-sec ac-ho" aria-labelledby="ac-ho-h">
+            <h2 id="ac-ho-h">{tx("Switch account?", "تبديل الحساب؟")}</h2>
+            <p className="ac-text">
+              {fill(tx("This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?",
+                "هذا المتصفح مسجّل الدخول باسم {current}، وقد سجّلت الدخول للتو في تطبيق الحجز باسم {next}. أي الحسابين تريد أن يستخدمه هذا الموقع؟"),
+              { current: accountLabel(acct), next: accountLabel(handed) })}
+            </p>
+            <form method="post" action="/api/account/handoff" className="ac-ho-btns">
+              <button type="submit" name="do" value="switch" className="ac-go">{fill(tx("Switch to {name}", "التبديل إلى {name}"), { name: handed.name || handed.email || handed.phone })}</button>
+              <button type="submit" name="do" value="stay" className="ac-out">{fill(tx("Stay signed in as {name}", "البقاء مسجّلاً باسم {name}"), { name: acct.name || acct.email || acct.phone })}</button>
+            </form>
+          </section>
+        ) : handoffState === "done" && (
+          <p className="ac-ho-done" role="status">{fill(tx("You are signed in as {who}. If this is not your account, sign out.", "أنت مسجّل الدخول باسم {who}. إن لم يكن هذا حسابك، فسجّل الخروج."), { who: accountLabel(acct) })}</p>
+        )}
         {/* the ride to rate first is the pop-up every page shows (RatingGateLoader in the layout) */}
         <header className="ac-head">
           <div>
@@ -227,7 +261,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                     links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place: s?.approval ? s.meetUrl : S(site.contact.jccHref) || null,
                       live: g.date === now.slice(0, 10) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} />
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} />
                 );
               })}
               {past.map((g) => {
@@ -236,7 +270,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                   <TicketCard key={g.sessionId} past locale={locale} today={today} rows={g.rows} session={s}
                     name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
                     cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} />
+                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} />
                 );
               })}
             </div>
@@ -264,7 +298,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         {!hidden.includes("club") && (
           <section className="ac-sec" aria-labelledby="ac-club-h">
             <h2 id="ac-club-h">{S(c.home.clubTitle)}</h2>
-            <ClubCard locale={locale} title="" text="" notMember={S(club.card.notMember)} applyBtn={S(club.hero.applyBtn)} applyHref={localHref(S(club.hero.applyHref), locale)} tierNames={tierNames} email={acct.email} phone={acct.phone} />
+            <ClubCard locale={locale} title="" text="" notMember={S(club.card.notMember)} applyBtn={S(club.hero.applyBtn)} applyHref={localHref(S(club.hero.applyHref), locale)} tierNames={tierNames} email={acct.email} phone={acct.phone} sinceFmt={datePattern(locale, DATE_STYLES.memberSince)} />
           </section>
         )}
 

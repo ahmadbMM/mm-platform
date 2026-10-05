@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { normalizePhone, rpc } from "@/lib/rpc-client";
-import { intlOf } from "@/i18n/locales";
+import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
 import { fmtSar } from "@/lib/fill";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./WorkshopTrack.text";
@@ -12,7 +12,9 @@ import { T } from "./WorkshopTrack.text";
 const STAGES = ["new", "confirmed", "in_workshop", "awaiting_parts", "ready", "completed"] as const;
 type Res = { ok: boolean; error?: string; ref?: string; status?: string; service?: string | null; scheduled_for?: string | null; preferred_date?: string | null; preferred_time?: string | null; price?: number | null };
 
-export default function WorkshopTrack({ locale }: { locale: string }) {
+// whenFmt: how the page's language writes the booked day and time ("Mon 5 Oct, 17:00"), described
+// by the server (lib/date-pattern), since a browser may not know the language.
+export default function WorkshopTrack({ locale, whenFmt }: { locale: string; whenFmt: DatePattern }) {
   const t = useLocalize(T);
   const [ref, setRef] = useState("");
   const [phone, setPhone] = useState("");
@@ -28,9 +30,7 @@ export default function WorkshopTrack({ locale }: { locale: string }) {
     setBusy(false);
   }
   const idx = res?.status ? STAGES.indexOf(res.status as (typeof STAGES)[number]) : -1;
-  const when = res?.scheduled_for
-    ? new Intl.DateTimeFormat(intlOf(locale), { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Riyadh" }).format(new Date(res.scheduled_for))
-    : "";
+  const when = res?.scheduled_for ? fmtPattern(whenFmt, res.scheduled_for) : "";
   return (
     <div className="ws-track">
       <strong className="ws-track-title">{t.title}</strong>

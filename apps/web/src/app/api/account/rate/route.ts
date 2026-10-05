@@ -21,6 +21,10 @@ export async function POST(req: Request) {
   if (!rating) return json({ ok: false, error: "invalid" }, 400);
   const r = await rpcServer<unknown>("customer_booking_update", { p_id: acct.id, p_token: acct.token, p_entry_id: rating.entryId, p_patch: rating.patch });
   if (r.status === 0 || r.status >= 500) return json({ ok: false, error: "generic" }, 502);
+  // The database's own refusals of a booking change (rentals, 2026-10-05), said as such: a waiver
+  // older than the ride's (the page is out of date) and a paid booking moved to another fare.
+  if (/WAIVER_OUTDATED/.test(r.message)) return json({ ok: false, error: "outdated" }, 409);
+  if (/PAID_MOVE/.test(r.message)) return json({ ok: false, error: "paid_move" }, 409);
   if (r.status >= 400) return json({ ok: false, error: /denied|token|FORBIDDEN/i.test(r.message) ? "signin" : "refused" }, r.status === 401 || r.status === 403 ? 401 : 400);
   if (r.data === false) return json({ ok: false, error: "refused" }, 409);
   return json({ ok: true });

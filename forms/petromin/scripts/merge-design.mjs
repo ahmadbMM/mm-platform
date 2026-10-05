@@ -39,12 +39,26 @@ html = html.replace(/<b id="(chip-value|chip-booking-value|chip-company-value|ch
 // 3. Inline images as data URIs (the Worker CSP allows img-src 'self' data: only).
 // href too, for the tab icon: the Worker serves one path and nothing else, so a linked
 // file would be fetched from the origin, which forwards everywhere but here.
+// A PNG with only the chunks that draw it (IHDR, PLTE, tRNS, IDAT, IEND): a design export's metadata
+// (a C2PA block of ~5.7 KB a logo) or any other ancillary chunk never reaches the page.
+const PNG_KEEP = new Set(['IHDR', 'PLTE', 'tRNS', 'IDAT', 'IEND']);
+function pngBare(buf) {
+  if (buf.toString('latin1', 1, 4) !== 'PNG') return buf;
+  const parts = [buf.subarray(0, 8)];
+  for (let i = 8; i + 12 <= buf.length; ) {
+    const end = i + 12 + buf.readUInt32BE(i);
+    if (PNG_KEEP.has(buf.toString('latin1', i + 4, i + 8))) parts.push(buf.subarray(i, end));
+    i = end;
+  }
+  return Buffer.concat(parts);
+}
 const mime = { png: 'image/png', avif: 'image/avif', webp: 'image/webp', jpg: 'image/jpeg', jpeg: 'image/jpeg', svg: 'image/svg+xml' };
 html = html.replace(/(src|href)="([^"]+\.(png|avif|webp|jpe?g|svg))"/g, (m, attr, file, ext) => {
   if (/^(https?:)?\/\//.test(file) || file.startsWith('data:')) return m; // somebody else's image
   const p = d(file);
   if (!existsSync(p)) { console.warn(`warning: design/${file} not found, left as is`); return m; }
-  return `${attr}="data:${mime[ext]};base64,${readFileSync(p).toString('base64')}"`;
+  const bytes = ext === 'png' ? pngBare(readFileSync(p)) : readFileSync(p);
+  return `${attr}="data:${mime[ext]};base64,${bytes.toString('base64')}"`;
 });
 
 // 4. Real WhatsApp number, noindex, inline CSS, supabase-js + inline JS.
@@ -58,7 +72,7 @@ html = html.replace('<script src="app.js"></script>',
   () => '<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.0/dist/umd/supabase.min.js" integrity="sha384-DjOvX/sJLsmbMrw4wTvf6l3kiGBjdxyOO6X2MTFwOOXGkjN/mE08BoDzrpaaIjil" crossorigin="anonymous"></script>\n<script>\n' + qrlib + '\n</script>\n<script>\n' + js + '\n</script>');
 
 // 5. Sanity: the ids the live submit relies on must exist.
-for (const id of ['form', 'card', 'banner', 'edit', 'cancel-edit', 'qr', 'riders', 'add-rider', 'chip-riders', 'chip-riders-value', 'riders-note', 'ticket', 'tk-name', 'sessions', 'f-session', 'companies', 'f-company', 'badge', 'name', 'cc', 'phone', 'height', 'types', 'submit', 'next', 'back', 'success', 'result', 'chip-booking-value', 'chip-value', 'chip-company-value', 'chip-session-value', 'f-badge', 'f-name', 'f-phone', 'f-height', 'f-type', 'f-waiver', 'waiver']) {
+for (const id of ['form', 'card', 'banner', 'edit', 'cancel-edit', 'qr', 'riders', 'add-rider', 'chip-riders', 'chip-riders-value', 'riders-note', 'ticket', 'tk-name', 'sessions', 'f-session', 'companies', 'f-company', 'badge', 'name', 'cc', 'phone', 'height', 'types', 'submit', 'next', 'back', 'success', 'result', 'chip-booking-value', 'chip-value', 'chip-company-value', 'chip-session-value', 'f-badge', 'f-name', 'f-phone', 'f-height', 'f-type', 'f-waiver', 'waiver', 'another', 'others', 'others-list']) {
   if (!html.includes(`id="${id}"`)) { console.error(`design/index.html is missing id="${id}" (the live submit needs it)`); process.exit(1); }
 }
 if (html.includes('href="styles.css"') || html.includes('src="app.js"')) { console.error('could not replace the styles.css / app.js tags'); process.exit(1); }

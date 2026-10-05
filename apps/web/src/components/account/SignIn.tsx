@@ -1,12 +1,16 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./SignIn.text";
+import ChangePassword from "./ChangePassword";
+import { forgetQuiet } from "./quiet";
 import Turnstile, { TURNSTILE_SITE_KEY } from "./Turnstile";
 
 // Sign in with a Micromobility account: email or mobile, and the password. The page reloads
-// signed in; the session stays in an HttpOnly cookie this script never sees.
+// signed in; the session stays in an HttpOnly cookie this script never sees. A password staff
+// issued (a temporary one) is replaced first: the sign-in answers must_change, and the form gives
+// way to ChangePassword until the rider has chosen their own.
 
 export default function SignIn({ locale }: { locale: string }) {
   const t = useLocalize(T);
@@ -18,6 +22,11 @@ export default function SignIn({ locale }: { locale: string }) {
   const [show, setShow] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [held, setHeld] = useState(false); // signed in with a temporary password: choose one first
+  // Only a visitor who is signed out sees this form: the pop-ups' quiet minutes were another
+  // account's (./quiet.ts).
+  useEffect(() => forgetQuiet(), []);
+  const signedIn = () => { forgetQuiet(); window.location.reload(); };
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr("");
@@ -27,7 +36,14 @@ export default function SignIn({ locale }: { locale: string }) {
     try {
       const r = await fetch("/api/account", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ identifier, password, check }) });
       const b = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (b.ok) { window.location.reload(); return; }
+      if (b.ok) { signedIn(); return; }
+      if (b.error === "must_change") {
+        setPassword("");
+        setCheck(""); // the check went with this try; the form draws a new one when it is back
+        setHeld(true);
+        setBusy(false);
+        return;
+      }
       setErr(t.errors[b.error || ""] || t.errors.generic);
       if (TURNSTILE_SITE_KEY) { setCheck(""); setAgain((n) => n + 1); } // a token is good for one try
     } catch {
@@ -35,6 +51,7 @@ export default function SignIn({ locale }: { locale: string }) {
     }
     setBusy(false);
   }
+  if (held) return <ChangePassword onDone={signedIn} onBack={() => setHeld(false)} />;
   return (
     <form className="ac-form" onSubmit={submit} noValidate>
       <label>{t.id}<input value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" inputMode="email" dir="ltr" maxLength={254} /></label>

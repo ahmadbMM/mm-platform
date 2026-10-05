@@ -12,6 +12,11 @@ import type { TicketSession } from "./tickets";
 // be tested.
 
 export const SESSION_ID = /^[A-Za-z0-9_-]{1,64}$/;
+/** A waiver version as the pop-up sends one back: every version the booking app has stamped has this
+ *  shape ("2026-10-v3", "swim-2026-10-v3"). One that is no longer the ride's own - a deploy bumped it
+ *  while the pop-up stood open - is answered "changed", so the pop-up asks again with the current
+ *  words; only a version of another shape is refused as invalid. */
+export const WAIVER_VERSION_SHAPE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,47}$/;
 const LIVE = new Set(["waiting", "waitlist", "active", "done"]);
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 type Row = Record<string, unknown>;

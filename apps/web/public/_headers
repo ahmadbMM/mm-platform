@@ -18,3 +18,8 @@
 # fix to it would wait for the browser's own 24-hour check.
 /sw.js
   Cache-Control: no-cache
+
+# The registration forms' fonts (forms/*/design/styles.css): plain names that stay across builds,
+# so a week rather than a year.
+/fonts/forms/*
+  Cache-Control: public, max-age=604800

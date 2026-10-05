@@ -15,6 +15,13 @@ export function modelCount(n: number, locale: string, tx: BikesState["tx"]): str
   return n === 1 ? tx("1 model", "موديل واحد") : fill(tx("{n} models", "{n} موديلات"), { n: fmtNum(n, locale) });
 }
 
+/** What search engines read for a category or a sub-type: its blurb, else a line naming it - never
+ *  the Bikes page's own text, which every category would then share. */
+export function categoryDescription(here: CatalogCategory, locale: string, tx: BikesState["tx"]): string {
+  return pick(locale, here.blurb_en, here.blurb_ar)
+    || fill(tx("{category} bikes in the Micromobility catalogue: models, photos and specifications.", "دراجات {category} في كتالوج مايكروموبيليتي: الموديلات والصور والمواصفات."), { category: pick(locale, here.name_en, here.name_ar) });
+}
+
 /** The sentence the catalogue shows where it has nothing to show yet. */
 export const emptyText = (tx: BikesState["tx"]) => tx("Our bikes are being added. Check back soon.", "دراجاتنا قيد الإضافة. عُد قريباً.");
 

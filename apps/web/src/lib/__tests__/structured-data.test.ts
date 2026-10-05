@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { breadcrumbData } from "../structured-data";
+import { breadcrumbData, productData } from "../structured-data";
+import type { CatalogModel } from "../catalog";
 
 // The breadcrumb trail search engines show under a catalogue page's result (lib/structured-data.ts).
 describe("breadcrumbData", () => {
@@ -13,5 +14,20 @@ describe("breadcrumbData", () => {
         { "@type": "ListItem", position: 3, name: "Alvas DA54", item: "https://micromobility.sa/bikes/road/carbon/da54?lang=ar" },
       ],
     });
+  });
+});
+
+// A catalogue model (lib/structured-data.ts productData): a Product only with what a ride costs.
+describe("productData", () => {
+  const model = { brand: "ALVAS", name: "DA54", ride_type: "Road" } as CatalogModel;
+  const x = { path: "/bikes/road/alvas-da54", image: "/site/x.jpg", category: "Road", description: "A road bike.", bookUrl: "https://micromobilityrentals.pages.dev/?lang=en" };
+  it("offers a ride on it at its price in riyals, as a rental", () => {
+    expect(productData(model, "en", { ...x, price: 75 })).toMatchObject({
+      "@type": "Product", name: "ALVAS DA54",
+      offers: { "@type": "Offer", price: 75, priceCurrency: "SAR", businessFunction: "http://purl.org/goodrelations/v1#LeaseOut", url: x.bookUrl },
+    });
+  });
+  it("is left out for a model with no ride price, which search engines would refuse", () => {
+    expect(productData(model, "en", { ...x, price: null })).toBeNull();
   });
 });
