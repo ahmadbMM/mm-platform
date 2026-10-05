@@ -64,11 +64,12 @@ export default async function LivePage({ params, searchParams }: { params: Promi
     );
   }
 
-  // The ride's name and day, for the heading; a session that cannot be read still gets its map.
+  // The ride's name and day, for the heading (read with the account's token: a private ride too); a
+  // session that cannot be read still gets its map.
   const d = resolvePage(experiencesSchema, content, L).dates;
   const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
-  const s = sessionId ? (await loadTicketSessions([sessionId])).get(sessionId) : undefined;
+  const s = sessionId ? (await loadTicketSessions([sessionId], acct)).get(sessionId) : undefined;
 
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>

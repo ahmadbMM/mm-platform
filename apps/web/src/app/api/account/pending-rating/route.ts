@@ -27,7 +27,8 @@ export async function GET(req: Request) {
   const gate = pendingRating(rows, riyadhClock(new Date()).slice(0, 10));
   if (!gate) return json({ signedIn: true, pending: null });
   const L = asLocale(locale), tx = serverL(locale);
-  const [sessions, content] = await Promise.all([loadTicketSessions([gate.sessionId]), loadSiteContent()]);
+  // the session as the account sees it (its token): a private ride keeps its name and its kind's form
+  const [sessions, content] = await Promise.all([loadTicketSessions([gate.sessionId], acct), loadSiteContent()]);
   const s = sessions.get(gate.sessionId);
   const names = { ...kindNames(resolvePage(experiencesSchema, content, L).dates), petromin: tx("Petromin", "بترومين") };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);

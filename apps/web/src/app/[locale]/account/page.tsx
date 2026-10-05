@@ -96,12 +96,13 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // rider cannot skip (RatingGateLoader, on every page; the booking app's _pendingRatingId); older ones stay cards.
   const gate = pendingRating(rows, today);
   const toRate = unratedRides(rows, today).filter((r) => r.entryId !== gate?.entryId).reverse().slice(0, 5);
-  // every booked session, whatever its state now (a Petromin night, one staff closed since)
+  // every booked session, whatever its state now (a Petromin night, one staff closed since), read
+  // with the account's token so a private ride (one its tag holders alone may see) keeps its name
   const record = recordRows(rows);
   const [sessions, recSessions, badges] = await Promise.all([
-    loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])]),
+    loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
     // every night booked, for Your rides and the badges (the kind of ride, whether it was free, whether staff approve it)
-    loadRecordSessions(record.map((r) => r.sessionId)),
+    loadRecordSessions(record.map((r) => r.sessionId), acct),
     loadBadgeData(acct),
   ]);
   // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)

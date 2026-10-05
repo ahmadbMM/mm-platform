@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { kindNames, loadRides, resetRides, rideKind, routeSlugOf, sessionName, sessionRows, slotTimes, toSession, upcoming, type RideSession, collectTime } from "../rides";
+import { kindNames, loadRides, readSessions, resetRides, rideKind, routeSlugOf, sessionName, sessionRows, slotTimes, toSession, upcoming, type RideSession, collectTime } from "../rides";
 import { memoSettled } from "../memo";
 
 // /experiences shows the booking system's own prices and sessions. The rules mirror the booking
@@ -189,6 +189,100 @@ describe("sessionRows", () => {
     expect(ok).toHaveBeenCalledTimes(1);
     const down = vi.fn(async () => json({ message: "down" }, 503));
     await expect(sessionRows(down as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a")).rejects.toThrow("503");
+    expect(down).toHaveBeenCalledTimes(1);
+  });
+
+  const BF = "breakfast_name_ar,breakfast_offer_en,breakfast_offer_ar";
+  const missingCol = (name: string) => json({ code: "42703", details: null, hint: null, message: `column sessions.${name} does not exist` }, 400);
+  const urls = (f: { mock: { calls: unknown[][] } }) => f.mock.calls.map((c) => String(c[0]));
+
+  it("leaves out only the group of columns the database does not have, and only that group for ten minutes", async () => {
+    // the breakfast stop's columns are not there yet; the 2026-09-28 ones are
+    const f = vi.fn(async (url: string) => (url.includes("breakfast_name_ar") ? missingCol("breakfast_name_ar") : json([{ id: "a" }])));
+    expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 1000, { optional: [BF] })).toEqual([{ id: "a" }]);
+    expect(urls(f)).toEqual([
+      `https://x.supabase.co/rest/v1/sessions?select=id,description,price,route_slug,${BF}&id=eq.a`,
+      "https://x.supabase.co/rest/v1/sessions?select=id,description,price,route_slug&id=eq.a",
+    ]);
+    // every other read keeps the prices, descriptions and routes (the Experiences page's among them)
+    await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "status=eq.open", undefined, 2000);
+    expect(urls(f)[2]).toContain("description,price,route_slug&status=eq.open");
+    // the breakfast columns are left out straight away for ten minutes, then asked for again
+    await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 3000, { optional: [BF] });
+    expect(urls(f)[3]).toBe("https://x.supabase.co/rest/v1/sessions?select=id,description,price,route_slug&id=eq.a");
+    await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 1000 + 11 * 60_000, { optional: [BF] });
+    expect(urls(f)[4]).toContain(BF);
+  });
+
+  it("leaves out one group after the other when neither is there", async () => {
+    const f = vi.fn(async (url: string) => (url.includes("description") ? missingCol("description") : url.includes("breakfast") ? missingCol("breakfast_offer_en") : json([])));
+    expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 1000, { optional: [BF] })).toEqual([]);
+    expect(urls(f)).toEqual([
+      `https://x.supabase.co/rest/v1/sessions?select=id,description,price,route_slug,${BF}&id=eq.a`,
+      `https://x.supabase.co/rest/v1/sessions?select=id,${BF}&id=eq.a`,
+      "https://x.supabase.co/rest/v1/sessions?select=id&id=eq.a",
+    ]);
+  });
+
+  it("never leaves a column out for any other refusal", async () => {
+    // a 400 that is not a missing column (a filter PostgREST cannot read) is passed on, and nothing is left out after it
+    const bad = vi.fn(async () => json({ code: "PGRST100", message: "failed to parse filter" }, 400));
+    await expect(sessionRows(bad as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", undefined, 1000)).rejects.toThrow("400");
+    expect(bad).toHaveBeenCalledTimes(1);
+    // a column missing from the columns that have always been asked for is passed on too
+    const base = vi.fn(async () => missingCol("hide_queue"));
+    await expect(sessionRows(base as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id,hide_queue", 1000)).rejects.toThrow("400");
+    expect(base).toHaveBeenCalledTimes(1);
+    const ok = vi.fn(async () => json([]));
+    await sessionRows(ok as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", undefined, 2000);
+    expect(urls(ok)[0]).toContain("route_slug");
+  });
+
+  it("asks once more without the optional columns when the refusal does not say which is missing, keeping nothing out after", async () => {
+    const f = vi.fn(async (url: string) => (url.includes("route_slug") ? json({ code: "42703", message: "undefined column" }, 400) : json([{ id: "a" }])));
+    expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 1000)).toEqual([{ id: "a" }]);
+    expect(urls(f)).toEqual(["https://x.supabase.co/rest/v1/sessions?select=id,description,price,route_slug&id=eq.a", "https://x.supabase.co/rest/v1/sessions?select=id&id=eq.a"]);
+    await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 2000);
+    expect(urls(f)[2]).toContain("route_slug");
+  });
+
+  it("reads for a signed-in account through list_sessions, the columns going the same way", async () => {
+    const f = vi.fn(async (url: string) => (url.includes("breakfast_name_ar") ? json({ code: "42703", message: "column list_sessions.breakfast_name_ar does not exist" }, 400) : json([{ id: "p" }])));
+    const rows = await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=in.(p)", "id", 1000, { optional: [BF], account: { id: "c1", token: "tok" } });
+    expect(rows).toEqual([{ id: "p" }]);
+    expect(urls(f)).toEqual([
+      `https://x.supabase.co/rest/v1/rpc/list_sessions?select=id,description,price,route_slug,${BF}&id=in.(p)`,
+      "https://x.supabase.co/rest/v1/rpc/list_sessions?select=id,description,price,route_slug&id=in.(p)",
+    ]);
+  });
+});
+
+describe("readSessions", () => {
+  const json = (v: unknown, status = 200) => new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
+  const read = (f: unknown, account?: { id: string; token: string } | null) => readSessions(f as typeof fetch, "https://x.supabase.co", "anon", "select=id&id=in.(a,b)", account);
+
+  it("reads a signed-in account's sessions through list_sessions with its id and token (a private ride too)", async () => {
+    const f = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async () => json([{ id: "a" }, { id: "b" }]));
+    expect(await read(f, { id: "c1", token: "tok" })).toEqual([{ id: "a" }, { id: "b" }]);
+    const [url, init] = f.mock.calls[0];
+    expect(url).toBe("https://x.supabase.co/rest/v1/rpc/list_sessions?select=id&id=in.(a,b)");
+    expect(init?.method).toBe("POST");
+    expect(JSON.parse(String(init?.body))).toEqual({ p_id: "c1", p_token: "tok" });
+    expect(new Headers(init?.headers).get("content-type")).toBe("application/json");
+  });
+
+  it("reads the table with the public key without an account, or on a database without the function", async () => {
+    const plain = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async () => json([{ id: "a" }]));
+    await read(plain, null);
+    expect(plain.mock.calls.map((c) => [c[0], c[1]?.method])).toEqual([["https://x.supabase.co/rest/v1/sessions?select=id&id=in.(a,b)", undefined]]);
+    const old = vi.fn(async (url: string) => (url.includes("/rpc/") ? json({ code: "PGRST202", message: "Could not find the function public.list_sessions(p_id, p_token)" }, 404) : json([{ id: "a" }])));
+    expect(await read(old, { id: "c1", token: "tok" })).toEqual([{ id: "a" }]);
+    expect(old).toHaveBeenCalledTimes(2);
+  });
+
+  it("passes any other failure on, never falling back to a read that cannot see a private ride", async () => {
+    const down = vi.fn(async () => json({ message: "down" }, 503));
+    await expect(read(down, { id: "c1", token: "tok" })).rejects.toThrow("503");
     expect(down).toHaveBeenCalledTimes(1);
   });
 });

@@ -100,8 +100,9 @@ describe("api/account/pending-waiver", () => {
   const get = (q: string, headers: Record<string, string> = HEADERS) => GET(new Request(`https://micromobility.sa/api/account/pending-waiver?${q}`, { headers }));
   const post = (body: unknown, headers: Record<string, string> = HEADERS) =>
     POST(new Request("https://micromobility.sa/api/account/pending-waiver", { method: "POST", headers, body: JSON.stringify(body) }));
+  // the account's sessions come through list_sessions with its token (a private ride too)
   const db = (rows: unknown[], sessions: unknown[], accept: Response = json(2)) => vi.fn(async (url: string) =>
-    url.includes("/rpc/my_bookings") ? json(rows) : url.includes("/rest/v1/sessions?") ? json(sessions) : url.includes("/rpc/customer_accept_waiver") ? accept : json([]));
+    url.includes("/rpc/my_bookings") ? json(rows) : url.includes("/rpc/list_sessions?") ? json(sessions) : url.includes("/rpc/customer_accept_waiver") ? accept : json([]));
 
   it("answers a signed-out visitor from the cookie alone", async () => {
     const f = vi.fn(async () => json([]));
@@ -143,7 +144,9 @@ describe("api/account/pending-waiver", () => {
     expect((await post({ sessionId: "j1", version: "2026-10-v3" }, { ...HEADERS, origin: "https://evil.example" })).status).toBe(403);
     expect((await post({ sessionId: "j1", version: "2026-10-v3" }, { origin: HEADERS.origin })).status).toBe(401);
     expect((await post({ sessionId: "j 1", version: "2026-10-v3" })).status).toBe(400);
-    expect((await post({ sessionId: "j1", version: "2026-09-v1" })).status).toBe(400);
+    expect((await post({ sessionId: "j1", version: "2026 10 v3" })).status).toBe(400);
+    expect((await post({ sessionId: "j1", version: "" })).status).toBe(400);
+    expect((await post({ sessionId: "j1", version: "v".repeat(49) })).status).toBe(400);
     expect(f).not.toHaveBeenCalled();
   });
   it("asks again when the ride's waiver is not the one the rider read", async () => {
@@ -152,7 +155,33 @@ describe("api/account/pending-waiver", () => {
     const res = await post({ sessionId: "j1", version: "swim-2026-10-v3" });
     expect(res.status).toBe(409);
     expect(await res.json()).toEqual({ ok: false, error: "changed" });
+    // a pop-up left open across a deploy that bumped the version: asked again, never refused as invalid
+    for (const old of ["2026-09-v1", "2026-10-v2", "swim-2026-08-v1", "workshop-2026-09-v1"]) {
+      const r = await post({ sessionId: "j1", version: old });
+      expect([r.status, await r.json()]).toEqual([409, { ok: false, error: "changed" }]);
+    }
     expect(f.mock.calls.some((c) => String(c[0]).includes("customer_accept_waiver"))).toBe(false);
+  });
+  it("reads the ride with the account's token, so a private ride (tag holders only) is asked about", async () => {
+    const f = db([row("q1", "s1", "2099-03-04")], [satRow]);
+    vi.stubGlobal("fetch", f);
+    expect((await (await get("locale=en")).json()).pending).toMatchObject({ sessionId: "s1", kind: "ride" });
+    expect(await (await post({ sessionId: "s1", version: "2026-10-v3" })).json()).toEqual({ ok: true });
+    const reads = f.mock.calls.filter((c) => String(c[0]).includes("/rpc/list_sessions?")) as unknown as [string, RequestInit][];
+    expect(reads).toHaveLength(2);
+    for (const [url, init] of reads) {
+      expect(url).toMatch(/^https:\/\/example\.supabase\.co\/rest\/v1\/rpc\/list_sessions\?select=id,session_date,.*&id=in\.\(s1\)$/);
+      expect(init.method).toBe("POST");
+      expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: TOKEN });
+    }
+    expect(f.mock.calls.some((c) => String(c[0]).includes("/rest/v1/sessions?"))).toBe(false);
+  });
+  it("reads the public table on a database without list_sessions", async () => {
+    const f = vi.fn(async (url: string) =>
+      url.includes("/rpc/my_bookings") ? json([row("q1", "j1", "2099-03-01")]) : url.includes("/rpc/list_sessions?") ? json({ code: "PGRST202", message: "Could not find the function public.list_sessions" }, 404)
+        : url.includes("/rest/v1/sessions?") ? json([jccRow]) : json([]));
+    vi.stubGlobal("fetch", f);
+    expect((await (await get("locale=en")).json()).pending).toMatchObject({ sessionId: "j1" });
   });
   it("lets the rider through while the database has no such function, and says when the session ended", async () => {
     vi.stubGlobal("fetch", db([], [jccRow], json({ code: "PGRST202", message: "Could not find the function public.customer_accept_waiver" }, 404)));
