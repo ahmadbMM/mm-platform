@@ -130,6 +130,15 @@ describe("while the site is Coming Soon", () => {
       expect(redirectedTo(res), p).toBe("/");
     }
   });
+  it("still opens the Privacy Notice, which the sign-up and the forms link to", async () => {
+    for (const p of ["/privacy", "/privacy/"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(200);
+      expect(rewrittenTo(res), p).toBe("/en/privacy");
+    }
+    expect(rewrittenTo(await call("/privacy?lang=ar"))).toBe("/ar/privacy");
+    for (const p of ["/privacy/more", "/privacy.html", "/privacyx"]) expect((await call(p)).status, p).not.toBe(200);
+  });
 });
 
 describe("a staff phone tapping a bike's chip", () => {

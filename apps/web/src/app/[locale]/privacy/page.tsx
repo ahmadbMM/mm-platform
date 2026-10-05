@@ -3,8 +3,11 @@ import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import "@/components/pages/pages.css";
 import { NoticeBody, noticeDate, noticeOwn } from "@/components/privacy/PrivacyNotice";
+import LearnAlone from "@/components/learn/LearnAlone";
+import "@/components/learn/learn.css";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
+import { learnFrame } from "@/lib/learn-page";
 import { pageState } from "@/lib/page-state";
 import { serverL } from "@/i18n/dicts";
 import { fill } from "@/lib/fill";
@@ -13,7 +16,9 @@ import { fill } from "@/lib/fill";
 // from the booking app by scripts/sync-privacy-notice.mjs), so the site and the app never differ.
 // Like the booking app, it is published in English and Arabic only: every other language reads
 // the English one, told so in its own language (components/privacy/PrivacyNotice.tsx, which the
-// forms' in-page notice shares).
+// forms' in-page notice shares). It opens whatever the site's state (proxy.ts, PRIVACY_PAGE): the
+// Learn to ride sign-up and the forms link to it. While the site is Coming Soon it stands alone, in
+// the sign-up's own frame (LearnAlone: the brand, the language, no way into the closed site).
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { closed } = await pageState();
@@ -30,15 +35,15 @@ export default async function PrivacyPage({ params }: { params: Promise<{ locale
   const { content, previewing, hidden } = await pageState();
   const site = resolvePage(siteSchema, content, L);
   const updated = noticeDate(locale);
-  return (
-    <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
-      <div className="pg pg-privacy">
-        <p className="pg-eyebrow">{tx("Privacy & data protection", "الخصوصية وحماية البيانات")}</p>
-        <h1>{tx("Privacy Notice", "إشعار الخصوصية")}</h1>
-        <p className="pg-updated">{fill(tx("Last updated: {date}", "آخر تحديث: {date}"), { date: updated })}</p>
-        {!own && <p className="pg-updated">{tx("This notice is available in English and Arabic.", "هذا الإشعار متاح بالإنجليزية والعربية.")}</p>}
-        <NoticeBody locale={locale} />
-      </div>
-    </PageShell>
+  const notice = (
+    <div className="pg pg-privacy">
+      <p className="pg-eyebrow">{tx("Privacy & data protection", "الخصوصية وحماية البيانات")}</p>
+      <h1>{tx("Privacy Notice", "إشعار الخصوصية")}</h1>
+      <p className="pg-updated">{fill(tx("Last updated: {date}", "آخر تحديث: {date}"), { date: updated })}</p>
+      {!own && <p className="pg-updated">{tx("This notice is available in English and Arabic.", "هذا الإشعار متاح بالإنجليزية والعربية.")}</p>}
+      <NoticeBody locale={locale} />
+    </div>
   );
+  if (learnFrame(content, previewing) === "alone") return <LearnAlone locale={locale} company={site.legal.company} notice="pg-notice">{notice}</LearnAlone>;
+  return <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>{notice}</PageShell>;
 }
