@@ -52,6 +52,14 @@ const config: NextConfig = {
     // that has tapped once keeps the new address.
     return [{ source: "/b/:code(\\d{1,6})", destination: "/bikes/:code", permanent: true }];
   },
+  async rewrites() {
+    // The home-screen icon is src/app/apple-icon.png (scripts/make-icons.mjs), which Next names in
+    // every page's head; iPhones and crawlers also ask for it at the old fixed addresses.
+    return [
+      { source: "/apple-touch-icon.png", destination: "/apple-icon.png" },
+      { source: "/apple-touch-icon-precomposed.png", destination: "/apple-icon.png" },
+    ];
+  },
   async headers() {
     // Every page and API answer except the two registration forms, which keep their own.
     return [{ source: "/((?!petromin$|community/registration$).*)", headers: SECURITY_HEADERS }];
