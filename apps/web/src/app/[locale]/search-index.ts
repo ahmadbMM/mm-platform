@@ -15,7 +15,9 @@ import { pageState } from "@/lib/page-state";
 // the Help answers, the About and Club questions, the Journal's articles and the Terms' clauses,
 // in the visitor's language, from pages the visitor can open, and the Learn to ride sign-up (a page
 // of Experiences' own, with no place in the menus). A server action, so it is read with the pages'
-// own dictionaries; kept a minute per language, as staff edits are.
+// own dictionaries; kept a minute per language, as staff edits are. While the site is Coming Soon a
+// visitor can open none of them, so it answers nothing (a server action can be called by anyone,
+// from anywhere); staff previewing the site search it as it will be.
 /** `words`: more words it is found by, never shown. */
 export type SearchItem = { title: string; text: string; href: string; words?: string };
 
@@ -30,7 +32,8 @@ const kept = new Map<string, { at: number; items: SearchItem[] }>();
 
 export async function searchIndex(locale: string): Promise<SearchItem[]> {
   const L = asLocale(locale);
-  const { content, hidden } = await pageState();
+  const { content, closed, previewing, hidden } = await pageState();
+  if (closed && !previewing) return [];
   const key = `${L}|${hidden.join(",")}`;
   const hit = kept.get(key);
   if (hit && Date.now() - hit.at < 60_000) return hit.items;
