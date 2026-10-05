@@ -65,7 +65,7 @@ describe("toSession", () => {
   });
   it("reads Run for Her: members only, free, first come first served (nobody approves it), gathering then the start, no bike collection", () => {
     const run = { id: "2026-10-17-rh", session_date: "2026-10-17", event_kind: "community", ride_kind: "runher", title: "Run for Her", open_to_all: false, paid_ride: false, needs_approval: false, capacity: 80, bike_slots: '{"_time":"06:00 - 06:30"}' };
-    expect(toSession(row(run))).toEqual({ id: "2026-10-17-rh", date: "2026-10-17", full: false, title: "Run for Her", kind: "runher", members: true, free: true, times: ["06:00", "06:30"], gather: true, noCarbon: true, description: null, price: null, seats: null, routeSlug: null, collect: null, approval: false, capacity: 80, left: null });
+    expect(toSession(row(run))).toMatchObject({ id: "2026-10-17-rh", date: "2026-10-17", full: false, title: "Run for Her", kind: "runher", members: true, free: true, times: ["06:00", "06:30"], gather: true, noCarbon: true, description: null, price: null, seats: null, routeSlug: null, collect: null, approval: false, capacity: 80, left: null });
     // a _collect on the session means nothing on a run, and a full run still shows (its waitlist)
     expect(toSession(row({ ...run, bike_slots: '{"_time":"06:00 - 06:30","_collect":"05:15"}' }))!.collect).toBeNull();
     expect(toSession(row({ ...run, status: "full" }))).toMatchObject({ kind: "runher", full: true });

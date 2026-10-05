@@ -121,8 +121,12 @@ describe("Run for Her's pink ribbon (run_for_her, 2026-10-05)", () => {
     expect(badgeList(sat, new Map([["2026-09-05", { kind: "saturday", freeRide: true }]]), empty, today, null).map((x) => x.slug)).not.toContain("run_for_her");
     const runs = runRows("done", 5);
     const L = badgeList(runs, runSes(runs), empty, today, null);
-    expect(L.find((x) => x.slug === "slipstream")).toMatchObject({ on: false, p: "0/5" });
-    expect(L.find((x) => x.slug === "paceline")).toMatchObject({ on: false, p: "0/15" });
+    // not earned, and nothing counted (the ladder's thresholds are the Saturday badges' own business)
+    for (const slug of ["slipstream", "paceline"]) {
+      const b = L.find((x) => x.slug === slug);
+      expect(b).toMatchObject({ on: false });
+      expect(String(b?.p)).toMatch(/^0\//);
+    }
     // a finished run is still a ride finished, as in the booking app
     expect(L.find((x) => x.slug === "first_lap")!.on).toBe(true);
   });
