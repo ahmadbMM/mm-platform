@@ -148,6 +148,19 @@ export function patternValid(p: Pattern): boolean {
   return [1, 2, 3, 4, -1].includes(p.ordinal) && [1, 2, 3].includes(p.interval) && isIso(p.from) && isIso(p.until) && p.until >= p.from;
 }
 
+/** [from, to] cut into consecutive pieces whose two ends are at most `max` days apart (vendor_calendar
+ *  answers BAD_RANGE past 400), in order; nothing when to is before from. */
+export function spans(from: Iso, to: Iso, max: number): [Iso, Iso][] {
+  const out: [Iso, Iso][] = [];
+  for (let a = from; a <= to; ) {
+    const end = addDays(a, Math.max(0, max));
+    const b = end < to ? end : to;
+    out.push([a, b]);
+    a = addDays(b, 1);
+  }
+  return out;
+}
+
 /** The default "until" of a new pattern: today plus the plan's horizon. */
 export function defaultUntil(today: Iso, horizonDays: number): Iso {
   return addDays(today, horizonDays);

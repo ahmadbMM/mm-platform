@@ -13,6 +13,7 @@ const iso = (d) => `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.ge
 const now = new Date();
 const today = iso(new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate())));
 const add = (s, n) => { const d = new Date(`${s}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return iso(d); };
+const daysApart = (a, b) => (Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86400000;
 
 const START_PWD = "Temp1234";
 const user = { id: 7, login: "cafe@example.com", pwd: START_PWD, must_change: true, role: "owner", expired: false };
@@ -104,6 +105,8 @@ createServer((req, res) => {
       shared.length = 0;
       locked = false;
       tier.modes = ["single", "multi"];
+      tier.horizon_days = 120;
+      for (const day of [...dates.keys()]) if (day > add(today, 200)) dates.delete(day);
       for (const d of dates.values()) d.others = 0;
       Object.assign(venue, { contact_name: "", contact_phone: "", contact_email: "", offer_en: "", offer_ar: "" });
       return ok(res, { ok: true });
@@ -113,6 +116,16 @@ createServer((req, res) => {
     if (req.url === "/__recurring") { tier.modes = ["single", "multi", "recurring"]; return ok(res, { ok: true }); }
     if (req.url === "/__lock") { locked = true; return ok(res, { ok: true }); }
     if (req.url === "/__expire") { user.expired = true; return ok(res, { ok: true }); }
+    if (req.url === "/__far") {
+      // A plan reaching 730 days, and two Saturdays some 500 and 600 days out: the first booked
+      // (confirmed), the second open. vendor_calendar answers 400 days a call at most, as the database.
+      tier.horizon_days = 730;
+      const sat = (n) => { let d = add(today, n); while (new Date(`${d}T00:00:00Z`).getUTCDay() !== 6) d = add(d, 1); return d; };
+      const booked = sat(500), open = sat(600);
+      for (const d of [booked, open]) dates.set(d, { state: "open", reason: "", taken: false, others: 0 });
+      bookings.push({ id: nextId++, day: booked, status: "confirmed", kind: "single", series_id: null, note: "", staff_note: "" });
+      return ok(res, { booked, open });
+    }
     if (req.url === "/__sessions") return ok(res, { n: sessions.size });
     if (req.url === "/__bookings") return ok(res, bookings);
     if (req.url === "/__past") {
@@ -184,6 +197,7 @@ createServer((req, res) => {
           { id: 8, name: "Sara", login: "0501234567", role: "viewer", active: true, last_login_at: null, me: false },
         ]);
       case "vendor_calendar": {
+        if (!(a.p_to >= a.p_from) || daysApart(a.p_from, a.p_to) > 400) return err(res, "BAD_RANGE");
         const out = [];
         for (const [day, d] of [...dates].sort()) {
           if (day < a.p_from || day > a.p_to) continue;

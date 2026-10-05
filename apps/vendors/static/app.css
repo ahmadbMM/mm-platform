@@ -398,3 +398,8 @@ main.narrow .forgot .actions .btn { flex: 0 1 auto; min-height: 44px; }
 .privacy h2 { font-size: 18px; margin: 1.5rem 0 .5rem; }
 .privacy-list { margin: 0; padding-inline-start: 1.2rem; display: grid; gap: 6px; }
 .foot-privacy { font-weight: 600; }
+
+/* The 404 page (static/404.html): English, then Arabic, on one card. */
+.notfound-ar { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--line); font-family: "IBM Plex Sans Arabic", "Space Grotesk", system-ui, sans-serif; line-height: 1.7; }
+.notfound-ar :is(h1, h2) { letter-spacing: 0; line-height: 1.3; }
+.notfound-ar .eyebrow { letter-spacing: 0; text-transform: none; font-size: 13px; }

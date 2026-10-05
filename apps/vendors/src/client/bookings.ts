@@ -4,7 +4,7 @@
 
 import { rpc } from "./api";
 import { announce, app, busy, button, dialog, errorNote, note, t, tn } from "./app";
-import { invalidateCalendar, STATUS_ICON } from "./calendar";
+import { aheadDays, calendarRange, invalidateCalendar, STATUS_ICON } from "./calendar";
 import { MM_PHONE, MM_PHONE_TEXT, waLink } from "./contact";
 import { openFeedback, starRow } from "./feedback";
 import { addDays, hijriLabel, longDate, num, type Iso } from "./dates";
@@ -23,10 +23,11 @@ export async function renderBookings(main: HTMLElement): Promise<void> {
   const today = app.me!.today;
   clear(main);
   main.append(h("h1", {}, t("bookingsTitle")), h("p", { class: "loading", role: "status" }, t("loading")));
-  // The calendar call is the one place a venue's own requests come from; it takes 400 days at most.
-  // The riders' shared ratings come alongside; if that call fails the section is simply left out.
+  // The calendar call is the one place a venue's own requests come from: read up to the plan's
+  // horizon, 400 days a call. The riders' shared ratings come alongside; if that call fails the
+  // section is simply left out.
   const [up, past, said] = await Promise.all([
-    rpc<CalDay[]>("vendor_calendar", { p_from: today, p_to: addDays(today, 400) }),
+    calendarRange(today, addDays(today, aheadDays(app.me!.tier.horizon_days))),
     rpc<CalDay[]>("vendor_calendar", { p_from: addDays(today, -365), p_to: addDays(today, -1) }),
     rpc<SharedRatings[]>("vendor_shared_ratings_mine"),
   ]);

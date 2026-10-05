@@ -1,10 +1,10 @@
 // The breakfast calendar: a month grid on wide screens, a list of dates on phones.
 
-import { rpc } from "./api";
+import { rpc, type Result } from "./api";
 import { announce, app, button, errorNote, isRtl, t, tn } from "./app";
 import { openBooking } from "./book";
 import { openFeedback } from "./feedback";
-import { addDays, addMonths, arrowStep, hijriLabel, hijriMonthTitle, longDate, monthGrid, monthRange, monthStart, num, shortDate, type Iso } from "./dates";
+import { addDays, addMonths, arrowStep, hijriLabel, hijriMonthTitle, longDate, monthGrid, monthRange, monthStart, num, shortDate, spans, type Iso } from "./dates";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
 import { awaitsFeedback, canRequest, dayStatus, reasonText, STATUS_KEY, type CalDay, type DayStatus } from "./model";
@@ -239,8 +239,24 @@ function listItem(main: HTMLElement, entry: CalDay, today: Iso): HTMLElement {
   );
 }
 
+/** The most days apart vendor_calendar's two dates may be (it answers BAD_RANGE past it). */
+export const CAL_SPAN = 400;
+
+/** How far ahead the venue's dates and bookings are read: the plan's horizon (up to 730 days), and
+ *  never less than the 400 days one call covers. Bookings past 400 days were not seen, so not
+ *  cancellable either. */
+export const aheadDays = (horizonDays: number) => Math.max(CAL_SPAN, horizonDays || 0);
+
+/** vendor_calendar over any range: one call per 400 days at most, answered as one list in order. */
+export async function calendarRange(from: Iso, to: Iso): Promise<Result<CalDay[]>> {
+  const parts = await Promise.all(spans(from, to, CAL_SPAN).map(([a, b]) => rpc<CalDay[]>("vendor_calendar", { p_from: a, p_to: b })));
+  const bad = parts.find((r) => !r.ok);
+  if (bad) return bad;
+  return { ok: true, data: parts.flatMap((r) => (r.ok && r.data) || []) };
+}
+
 /** The available dates in a range (the booking dialog's pickers). */
 export async function loadRange(from: Iso, to: Iso): Promise<{ ok: true; days: CalDay[] } | { ok: false; code: string }> {
-  const r = await rpc<CalDay[]>("vendor_calendar", { p_from: from, p_to: to });
-  return r.ok ? { ok: true, days: r.data || [] } : { ok: false, code: r.code };
+  const r = await calendarRange(from, to);
+  return r.ok ? { ok: true, days: r.data } : { ok: false, code: r.code };
 }
