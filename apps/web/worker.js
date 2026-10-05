@@ -4,6 +4,7 @@
 import handler from "./.open-next/worker.js";
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "./.open-next/worker.js";
 import { servePage } from "./src/lib/page-cache";
+import { apexTarget, movedStatus } from "./src/lib/canonical-host";
 
 // Staging (wrangler.jsonc env "staging", MM_ENV=staging): the same site on staging.micromobility.sa,
 // behind Cloudflare Access. Nothing on it is for search engines, and every page title starts with
@@ -12,6 +13,10 @@ const isStaging = (env) => env && env.MM_ENV === "staging";
 
 const worker = {
   fetch: async (request, env, ctx) => {
+    // www.micromobility.sa moves to micromobility.sa, path and query kept (src/lib/canonical-host.ts),
+    // before the edge's page copies are asked: they are kept without the host.
+    const apex = apexTarget(request.url);
+    if (apex) return Response.redirect(apex, movedStatus(request.method));
     if (!isStaging(env)) return servePage(request, env, ctx, handler);
     if (new URL(request.url).pathname === "/robots.txt") {
       return new Response("User-agent: *\nDisallow: /\n", { headers: { "content-type": "text/plain; charset=utf-8" } });

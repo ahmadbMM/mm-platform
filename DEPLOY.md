@@ -10,6 +10,9 @@ Petromin registration page, changes.
   `www.micromobility.sa/*`. Routes, not custom domains, on purpose:
   - The DNS records stay exactly as they are. The root and `www` are already proxied A records
     (orange cloud) pointing at the old host; a Worker route answers before that host is asked.
+  - `www.micromobility.sa` is not a second copy of the site: the Worker moves every address on it
+    to the same path and query on `micromobility.sa` (301; 308 for a POST), before anything else
+    (`apps/web/worker.js`, `src/lib/canonical-host.ts`).
   - The two registration forms (`forms/petromin` at `/petromin`, `forms/community` at
     `/community/registration`) are served by this Worker too, outside Coming Soon. Until their
     old Workers' routes are removed (below), those more specific routes still win and the old

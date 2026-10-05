@@ -7,6 +7,7 @@ import { PREVIEW_COOKIE, isStaffToken } from "./lib/preview";
 import { askedLang } from "./lib/lang-url";
 import { STORE_URL } from "./lib/links";
 import { NO_PAGE_CACHE } from "./lib/page-cache";
+import { apexTarget, movedStatus } from "./lib/canonical-host";
 
 const intl = createMiddleware(routing);
 
@@ -65,6 +66,10 @@ export default async function proxy(req: NextRequest) {
   // append the original query and would leave ?bike=42 sitting in the address bar. The code
   // belongs in the path or nowhere.
   const { pathname, searchParams } = req.nextUrl;
+  // www.micromobility.sa is the same site: every address moves to micromobility.sa, path and query
+  // kept (lib/canonical-host.ts; worker.js does it first in production, before the edge's copies).
+  const apex = apexTarget(req.url);
+  if (apex) return NextResponse.redirect(apex, movedStatus(req.method));
   // The forms answer at one lower-case address each; a link typed or printed another way
   // (/Petromin, /community/Registration/) is sent there, as their own Workers did.
   const form = formAddress(pathname);

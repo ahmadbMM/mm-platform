@@ -233,3 +233,18 @@ describe("/store", () => {
     expect(await to("/ar/store", { cookie: "NEXT_LOCALE=en" })).toBe("https://stepdragon.com.sa/ar");
   });
 });
+
+describe("www.micromobility.sa", () => {
+  it("moves every address to micromobility.sa for good, path and query kept", async () => {
+    for (const path of ["/", "/club?lang=ar", "/bikes/42", "/account?handoff=done", "/en/about"]) {
+      const res = await proxy(new NextRequest(`https://www.micromobility.sa${path}`));
+      expect(res.status, path).toBe(301);
+      expect(res.headers.get("location"), path).toBe(`https://micromobility.sa${path}`);
+    }
+    // anything but GET and HEAD keeps its method (a 301 would turn it into a GET)
+    expect((await proxy(new NextRequest("https://www.micromobility.sa/account", { method: "POST" }))).status).toBe(308);
+    // the site itself, and staging, are left alone
+    expect((await call("/")).status).toBe(200);
+    expect((await proxy(new NextRequest("https://staging.micromobility.sa/"))).headers.get("location")).toBeNull();
+  });
+});
