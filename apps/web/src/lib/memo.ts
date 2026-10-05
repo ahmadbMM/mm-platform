@@ -17,7 +17,18 @@
 // page off - a database outage would have closed the whole site.
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-type Slot<T> = { at: number; value: T | null; inflight: Promise<T | null> | null };
+// A shared read can be lost. On Cloudflare a read belongs to the request that started it, and when
+// that request is cut off (the visitor left, or the Worker ran out of CPU time: error 1102) its fetch
+// can be dropped with the promise never settling. Everyone else waiting on it then waited for good,
+// and with the read still "in flight" no fresh one was ever started in that Worker instance. So a
+// caller with nothing to show waits WAIT_MS at most, on a timer of its own, and then takes the edge's
+// copy (or nothing); and a read still pending after LOST_MS is given up, the next caller starting a
+// fresh one. Every read already has its own timeout (2.5 to 8 seconds), so neither limit is reached
+// while a read is merely slow.
+const WAIT_MS = 5_000;
+const LOST_MS = 15_000;
+
+type Slot<T> = { at: number; value: T | null; inflight: Promise<T | null> | null; since: number };
 type Store = Map<string, Slot<unknown>>;
 const STORE: unique symbol = Symbol.for("mm.cache");
 const store = (): Store => ((globalThis as { [STORE]?: Store })[STORE] ??= new Map());
@@ -35,6 +46,8 @@ export type MemoOptions<T> = {
   keep?: Keep<T>;
   /** The clock, for tests. */
   now?: number;
+  /** How long a caller with no copy waits for a read (WAIT_MS), for tests. */
+  wait?: number;
 };
 
 /**
@@ -42,16 +55,43 @@ export type MemoOptions<T> = {
  * the caller, once it is not; read - once, shared by everyone asking at once - when there is none.
  * Null only when nothing has ever been read and neither the read nor `keep` has it; that null is
  * held for the ttl too, so an unreachable database is asked again once a minute, not on every page.
+ * A caller with no copy waits for the read WAIT_MS at most (see LOST_MS above).
  */
 export async function memo<T>(key: string, o: MemoOptions<T>): Promise<T | null> {
   const now = o.now ?? Date.now();
   const s = store();
   let slot = s.get(key) as Slot<T> | undefined;
-  if (!slot) s.set(key, (slot = { at: -Infinity, value: null, inflight: null }));
+  if (!slot) s.set(key, (slot = { at: -Infinity, value: null, inflight: null, since: now }));
   if (now - slot.at < o.ttl) return slot.value;
-  const refresh = (slot.inflight ??= run(slot, o, now));
-  if (slot.value === null) return refresh;
+  if (slot.inflight && now - slot.since > LOST_MS) slot.inflight = null; // lost: read afresh
+  if (!slot.inflight) {
+    const own = slot;
+    const p: Promise<T | null> = run(own, o, now).finally(() => { if (own.inflight === p) own.inflight = null; });
+    own.inflight = p;
+    own.since = now;
+  }
+  const refresh = slot.inflight as Promise<T | null>;
+  if (slot.value === null) return waitFor(slot, refresh, o);
   background(refresh);
+  return slot.value;
+}
+
+const LATE: unique symbol = Symbol("late");
+
+/** The read, for a caller with nothing to show meanwhile: WAIT_MS at most, on this caller's own
+ *  timer, then the edge's copy (kept in the slot for everyone after) or null. */
+async function waitFor<T>(slot: Slot<T>, refresh: Promise<T | null>, o: MemoOptions<T>): Promise<T | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<typeof LATE>((r) => { timer = setTimeout(() => r(LATE), o.wait ?? WAIT_MS); });
+  try {
+    const got = await Promise.race([refresh, late]);
+    if (got !== LATE) return got;
+  } finally {
+    clearTimeout(timer);
+  }
+  if (slot.value === null && o.keep) {
+    try { slot.value = await o.keep.read(); } catch { /* nothing kept */ }
+  }
   return slot.value;
 }
 
@@ -70,8 +110,7 @@ async function run<T>(slot: Slot<T>, o: MemoOptions<T>, now: number): Promise<T 
   } catch {
     // a read that throws counts as failed
   } finally {
-    slot.at = now;
-    slot.inflight = null;
+    slot.at = now; // the read leaves `inflight` itself (memo), so a read given up never clears a newer one
   }
   return slot.value;
 }
