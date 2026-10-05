@@ -51,14 +51,20 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
     setTail((q.size ? `?${q}` : "") + window.location.hash);
   };
   // A mouse opens Community by hovering, and the click that naturally follows must not shut it
-  // again; a tap or the keyboard (no hover) toggles it.
+  // again; a tap or the keyboard (no hover) toggles it. A touch screen fires hover too, for the tap
+  // itself, so only a mouse's hover counts - else its own button could never close the menu.
   const hovering = useRef(false);
   useEffect(() => {
     if (!open) return;
     const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    // The sheet is the narrow screen's menu (site.css, 1180px): a screen that grows past it - an
+    // iPad turned on its side - closes the sheet and lets the page scroll again.
+    const narrow = window.matchMedia("(max-width: 1180px)");
+    const wide = () => { if (!narrow.matches) setOpen(false); };
     document.addEventListener("keydown", esc);
+    narrow.addEventListener("change", wide);
     document.body.style.overflow = "hidden";
-    return () => { document.removeEventListener("keydown", esc); document.body.style.overflow = ""; };
+    return () => { document.removeEventListener("keydown", esc); narrow.removeEventListener("change", wide); document.body.style.overflow = ""; };
   }, [open]);
   // A menu closes on Escape, on a click anywhere else, and when the page changes.
   useEffect(() => {
@@ -89,8 +95,8 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
             if (!community.length) return null;
             return (
               <div key={k} className={`mm-nav-drop${menu === "community" ? " open" : ""}`}
-                onMouseEnter={() => { hovering.current = true; setMenu("community"); }}
-                onMouseLeave={() => { hovering.current = false; setMenu((m) => (m === "community" ? "" : m)); }}>
+                onPointerEnter={(e) => { if (e.pointerType !== "mouse") return; hovering.current = true; setMenu("community"); }}
+                onPointerLeave={(e) => { if (e.pointerType !== "mouse") return; hovering.current = false; setMenu((m) => (m === "community" ? "" : m)); }}>
                 <button type="button" aria-expanded={menu === "community"} aria-controls="mm-nav-community" aria-current={inCommunity ? "page" : undefined}
                   onClick={() => setMenu((m) => (m === "community" && !hovering.current ? "" : "community"))}>
                   {name(COMMUNITY)}
