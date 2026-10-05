@@ -110,6 +110,39 @@ To turn it off again, delete the secret first, then the variable.
   3 MB, the paid plan 10 MB.
 - pnpm 11 only runs the build scripts listed under `allowBuilds` in `pnpm-workspace.yaml`.
 
+## Limits
+
+**CPU.** The Workers Free plan allows 10 ms of CPU per request. Each Worker instance tolerates an
+occasional request over that; one that runs over it consistently is stopped, and the visitor gets
+Cloudflare's "Error 1102: Worker exceeded resource limits" (a 503). Rendering any page of this site
+costs more than 10 ms. Measured on staging with `wrangler tail` on 2026-10-05: a page render took
+15-70 ms of CPU (median about 30 ms), a freshly started Worker instance 0.5-0.7 s for its first
+page, and 27 of 114 page requests were stopped at 10 ms (`"outcome": "exceededCpu"`). Production
+runs the same code, so it will do the same once Coming Soon is off. No change to the pages brings a
+Next.js render under 10 ms. The fix is the **Workers Paid plan** (US$5 a month at the time of
+writing; 30 s of CPU per request by default), on the Cloudflare account that holds the Workers. Until
+then the site keeps answering 1102 to some visitors.
+
+What the code does to keep the CPU down:
+- Links never prefetch (`src/i18n/navigation.ts`). Each prefetch is a page the Worker renders: a
+  desktop visit to Home was 17 Worker requests, 13 of them prefetches; now it is 3 (the page and the
+  two account checks), and a click on a link renders only the page it opens.
+- A page that cannot differ between visitors is answered from the edge's copy for a minute
+  (`src/lib/page-cache.ts`), and what the pages read from the database is kept for a minute per
+  Worker instance (`src/lib/memo.ts`).
+- Formatters and the like are made once, not on every request (`riyadhClock`, next-intl's time zone).
+
+**Time.** Every read from the database or storage has its own timeout: 2.5 s for the site's content,
+the catalogue, the rides and the staff check; 4 s for the account calls, GPX tracks and `/api/health`;
+5 s for the Turnstile check; 8 s for the bike pages, photos and the wallet pass. A read that several requests share
+(`src/lib/memo.ts`) is waited for 5 s at most by a request with nothing to show (it then takes the
+edge's copy), and one still pending after 15 s is replaced. That read can be lost for good when the
+request that started it is stopped (error 1102, or the visitor leaving), and before this every later
+request in that Worker instance waited on it.
+
+To look again: `cd apps/web && npx wrangler tail micromobility-web-staging --format json` (or
+`micromobility-web`) while opening pages; each request's line has `outcome` and `cpuTime`.
+
 ## Moving the two forms onto this Worker (once)
 
 The forms used to be Workers of their own: `mm-partner-register` (routes
