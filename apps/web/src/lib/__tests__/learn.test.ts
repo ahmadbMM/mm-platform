@@ -292,6 +292,17 @@ describe("the nationality list", () => {
     expect(label("fr", "France", "Palestine")).toBe(new Intl.DisplayNames(["fr"], { type: "region" }).of("FR"));
     expect(natOptions("de", "Palästina").some((o) => /Paläst.*Gebiete|Territor/i.test(o.label))).toBe(false);
   });
+  it("puts Saudi Arabia first and again in its alphabetical place, one value for both", () => {
+    for (const l of ["en", "ar", "de"]) {
+      const list = natOptions(l);
+      const at = list.flatMap((o, i) => (o.value === "Saudi Arabia" ? [i] : []));
+      expect(at[0]).toBe(0);
+      expect(at).toHaveLength(2);
+      const rest = list.slice(1).map((o) => o.label);
+      expect(rest).toEqual([...rest].sort((a, b) => a.localeCompare(b, l)));
+      expect(list[at[1]]).toEqual(list[0]);
+    }
+  });
   it("has no Israel, by the owner's rule", () => {
     for (const l of ["en", "ar", "de"]) expect(natOptions(l, "x").some((o) => o.value === "Israel" || /isra/i.test(o.label))).toBe(false);
   });

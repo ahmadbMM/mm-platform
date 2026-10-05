@@ -98,7 +98,10 @@
     sel.addEventListener("change", function () { setLang(sel.value, true); try { var u = new URL(location.href); u.searchParams.set("lang", sel.value); history.replaceState(null, "", u); } catch (e) {} });
   })();
 
-  /* ── Nationality: every country, labelled in the rider's language, Saudi Arabia first ── */
+  /* ── Nationality: every country, labelled in the rider's language, Saudi Arabia first and again in
+     its alphabetical place (the owner, 2026-10-05). Both copies carry the same value, so one
+     country is stored; only the first match is marked (with two, the browser shows the last). ── */
+  function selOnce(cur) { var done = false; return function (v) { if (done || v !== cur) return false; return (done = true); }; }
   var NAT_CODE = {}; SH.NATIONALITIES.forEach(function (x) { NAT_CODE[x[1]] = x[0]; });
   var dn = {};
   function natLabel(name) {
@@ -112,10 +115,10 @@
   function buildNationalities() {
     var sel = $("#nat"), cur = sel.value;
     var lab = {}; SH.NATIONALITIES.forEach(function (x) { lab[x[1]] = natLabel(x[1]); });
-    var rest = SH.NATIONALITIES.map(function (x) { return x[1]; }).filter(function (n) { return n !== "Saudi Arabia"; });
-    try { rest.sort(function (a, b) { return lab[a].localeCompare(lab[b], lang); }); } catch (e) { rest.sort(); }
+    var all = SH.NATIONALITIES.map(function (x) { return x[1]; }), on = selOnce(cur);
+    try { all.sort(function (a, b) { return lab[a].localeCompare(lab[b], lang); }); } catch (e) { all.sort(); }
     sel.innerHTML = '<option value="">' + esc(tr("Choose your nationality")) + "</option>" +
-      ["Saudi Arabia"].concat(rest).map(function (n) { return '<option value="' + esc(n) + '"' + (n === cur ? " selected" : "") + ">" + esc(lab[n]) + "</option>"; }).join("");
+      ["Saudi Arabia"].concat(all).map(function (n) { return '<option value="' + esc(n) + '"' + (on(n) ? " selected" : "") + ">" + esc(lab[n]) + "</option>"; }).join("");
     sel.classList.toggle("ph", !sel.value);
   }
   $("#nat").addEventListener("change", function () { this.classList.toggle("ph", !this.value); clearMsg("f-nat"); });
@@ -174,7 +177,8 @@
   var RULES = SH.PHONE_RULES, reCache = {};
   var CC_DIGITS = {}; SH.COUNTRY_CODES.forEach(function (x) { CC_DIGITS[x[0].slice(1)] = true; });
   // The picker reads as one: the closed box shows the flag and code (🇸🇦 +966) over a see-through
-  // native select, and the list names every country in the rider's language, the Gulf first.
+  // native select, and the list names every country in the rider's language, the Gulf first, Saudi
+  // Arabia again in its alphabetical place (the owner, 2026-10-05; the same "SA+966" value).
   function flagOf(iso) { return String.fromCodePoint.apply(null, iso.toUpperCase().split("").map(function (c) { return 0x1F1E6 + c.charCodeAt(0) - 65; })); }
   function regionName(iso, fallback) {
     try {
@@ -192,10 +196,10 @@
     // Each option is its country AND code ("PS+970", "PS+972"): Palestine answers on two codes,
     // and a value of the country alone made +972 land on +970.
     var sel = $("#cc"), cur = sel.value || "SA+966";
-    var gulf = SH.COUNTRY_CODES.slice(0, 6), rest = SH.COUNTRY_CODES.slice(6).map(function (x) { return { x: x, n: ccName(x) }; });
+    var gulf = SH.COUNTRY_CODES.slice(0, 6), rest = SH.COUNTRY_CODES.slice(6).concat(SH.COUNTRY_CODES.filter(function (x) { return x[1] === "SA"; })).map(function (x) { return { x: x, n: ccName(x) }; });
     try { rest.sort(function (a, b) { return a.n.localeCompare(b.n, lang); }); } catch (e) {}
-    var list = gulf.map(function (x) { return { x: x, n: ccName(x) }; }).concat(rest);
-    sel.innerHTML = list.map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (v === cur ? " selected" : "") + ">" + flagOf(o.x[1]) + " " + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
+    var list = gulf.map(function (x) { return { x: x, n: ccName(x) }; }).concat(rest), on = selOnce(cur);
+    sel.innerHTML = list.map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + flagOf(o.x[1]) + " " + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
     if (!sel.value) sel.value = "SA+966";
     ccFace();
   }

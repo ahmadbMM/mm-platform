@@ -4,8 +4,9 @@ import { localeInfo } from "@/i18n/locales";
 // The nationality list as a picker shows it (the booking app's own, content/nationalities.ts):
 // each one stored as its English name, as the app stores it, and labelled in English with that
 // name, as the app labels it; in any other language with the browser's own name for the region -
-// for Arabic the app's own where it has one - Saudi Arabia first, then the rest in the language's
-// alphabetical order. Palestine is "Palestine" in every language (`palestine`, the page's word
+// for Arabic the app's own where it has one - Saudi Arabia first, then every country in the language's
+// alphabetical order, Saudi Arabia again in its place (the owner, 2026-10-05). Both copies carry the
+// same value: one country stored, counted and shown; a select with that value shows the top one. Palestine is "Palestine" in every language (`palestine`, the page's word
 // for it): the browser's names call it "Palestinian Territories" in most. Israel is not on the
 // list (the owner's rule). Built in the browser only (Intl's names differ between the server and a
 // phone), once the page has drawn.
@@ -21,8 +22,7 @@ export function natOptions(locale: string, palestine?: string): NatOption[] {
     locale === "en" ? name : (locale === "ar" && COUNTRY_AR[name]) || (code === "PS" && palestine) || names?.of(code) || name;
   const all = NATIONALITIES.map(([code, name]) => ({ value: name, label: label(code, name) }));
   const saudi = all.filter((o) => o.value === "Saudi Arabia");
-  const rest = all.filter((o) => o.value !== "Saudi Arabia").sort((a, b) => a.label.localeCompare(b.label, intl));
-  return [...saudi, ...rest];
+  return [...saudi, ...all.sort((a, b) => a.label.localeCompare(b.label, intl))];
 }
 
 /** The twelve months' names in the page's language, January first. */

@@ -592,7 +592,7 @@ export default function LearnForm(p: LearnFormProps) {
           <span>{t.nationality}</span>
           <select className={`ln-input ln-select${f.nationality ? "" : " ln-ph"}`} value={f.nationality} onChange={(e) => setContact("nationality", e.target.value)}>
             <option value="">{t.natPick}</option>
-            {names?.nats.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+            {names?.nats.map((o, i) => <option key={`${i}-${o.value}`} value={o.value}>{o.label}</option>)}
           </select>
         </label>
         {need.height && (
