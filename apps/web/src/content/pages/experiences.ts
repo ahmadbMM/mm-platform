@@ -73,7 +73,8 @@ export const experiencesSchema = {
         // card shows while a run is on the books, as the booking app's does (_runHerLive).
         txt("rhTitle", 40, "Run for Her: title", "نركض لأجلها: العنوان", "Run for Her", "نركض لأجلها"),
         txt("rhMeta", 60, "Run for Her: line", "نركض لأجلها: السطر", "3 or 5 km · Jeddah Yacht Club", "3 أو 5 كم · نادي جدة لليخوت"),
-        { id: "rhLogo", type: "image", label: bi("Run for Her: logo", "نركض لأجلها: الشعار"), def: "/site/logo-dark.png" },
+        // the partners' marks as the poster sets them (the owner picked "C, Blush" for the booking app's card)
+        { id: "rhLogo", type: "image", label: bi("Run for Her: logo", "نركض لأجلها: الشعار"), def: "/site/runher-partners.webp" },
         long("rhNote", 240, "Run for Her: rules", "نركض لأجلها: القواعد", "For Club members aged 18 and over on race day. One place per account, complimentary. Places go first come, first served, then the waitlist opens. Pick 3 km or 5 km when you book.", "لأعضاء النادي ممن أتموا 18 عاماً يوم السباق. مكان واحد لكل حساب، ومجاناً. الأماكن بأسبقية التسجيل، ثم تُفتح قائمة الانتظار. اختر 3 كم أو 5 كم عند الحجز."),
       ],
     },
