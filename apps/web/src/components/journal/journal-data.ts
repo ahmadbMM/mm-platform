@@ -1,6 +1,6 @@
 import { journalSchema } from "@/content/pages/journal";
 import { asLocale, resolvePage } from "@/lib/content";
-import { toPosts, type Post } from "@/lib/journal";
+import { isoDay, toPosts, type Post } from "@/lib/journal";
 import { pageState } from "@/lib/page-state";
 import { loadJournalContent } from "@/lib/site";
 import { intlOf } from "@/i18n/locales";
@@ -18,5 +18,8 @@ export async function journalState(locale: string) {
   return { ...state, content, L, j, posts };
 }
 
-export const fmtDate = (iso: string, locale: string) =>
-  iso ? new Intl.DateTimeFormat(intlOf(locale), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`)) : "";
+/** An article's day in the page's language; "" for a day that is not a real one (lib/journal.ts isoDay). */
+export const fmtDate = (iso: string, locale: string) => {
+  const day = isoDay(iso);
+  return day ? new Intl.DateTimeFormat(intlOf(locale), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${day}T00:00:00Z`)) : "";
+};

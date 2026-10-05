@@ -6,7 +6,7 @@ import { siteSchema } from "@/content/pages/site";
 import { termsSchema } from "@/content/pages/terms";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill } from "@/lib/fill";
-import { parseBody } from "@/lib/journal";
+import { isoDay, parseBody } from "@/lib/journal";
 import { pageState } from "@/lib/page-state";
 import { serverL } from "@/i18n/dicts";
 import { intlOf } from "@/i18n/locales";
@@ -34,8 +34,8 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
   const { content, previewing, hidden } = await pageState("terms");
   const site = resolvePage(siteSchema, content, L);
   const t = resolvePage(termsSchema, content, L);
-  const day = S(t.intro.updated);
-  const updated = /^\d{4}-\d{2}-\d{2}$/.test(day)
+  const day = isoDay(S(t.intro.updated)); // a day that is not a real one is left out, never a broken page
+  const updated = day
     ? new Intl.DateTimeFormat(intlOf(locale), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${day}T00:00:00Z`))
     : "";
   const clauses = list(t.clauses.items).filter((c) => S(c.title) || S(c.body));
