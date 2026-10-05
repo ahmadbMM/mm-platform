@@ -1450,5 +1450,12 @@
  "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "यो ब्राउजरमा {current} को रूपमा साइन इन गरिएको छ। तपाईंले भर्खरै बुकिङ एपमा {next} को रूपमा साइन इन गर्नुभयो। यो साइटले कुन खाता प्रयोग गरोस्?",
  "Switch to {name}": "{name} मा जानुहोस्",
  "Stay signed in as {name}": "{name} को रूपमा साइन इन रहनुहोस्",
- "You are signed in as {who}. If this is not your account, sign out.": "तपाईं {who} को रूपमा साइन इन हुनुहुन्छ। यो तपाईंको खाता होइन भने साइन आउट गर्नुहोस्।"
+ "You are signed in as {who}. If this is not your account, sign out.": "तपाईं {who} को रूपमा साइन इन हुनुहुन्छ। यो तपाईंको खाता होइन भने साइन आउट गर्नुहोस्।",
+ "Run for Her": "Run for Her",
+ "3 or 5 km · Jeddah Yacht Club": "3 वा 5 किमी · जेद्दा याट क्लब",
+ "For Club members aged 18 and over on race day. One place per account, complimentary. Places go first come, first served, then the waitlist opens. Pick 3 km or 5 km when you book.": "दौडको दिन 18 वर्ष वा सोभन्दा माथिका क्लब सदस्यहरूका लागि। प्रति खाता एउटा ठाउँ, निःशुल्क। ठाउँहरू पहिले आउनेलाई पहिले दिइन्छ, त्यसपछि प्रतीक्षा सूची खुल्छ। बुक गर्दा 3 किमी वा 5 किमी छान्नुहोस्।",
+ "Jeddah Yacht Club": "जेद्दा याट क्लब",
+ "Runner number": "धावक नम्बर",
+ "Finish the Run for Her.": "Run for Her पूरा गर्नुहोस्।",
+ "The pink ribbon, for everyone who ran and finished the Run for Her with the MicroMobility community.": "गुलाबी रिबन, MicroMobility समुदायसँग Run for Her दौडेर पूरा गर्ने सबैका लागि।"
 }

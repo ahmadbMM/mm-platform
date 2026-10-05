@@ -31,7 +31,9 @@ const BIKE_KEYS = new Set(["bike", "ride_bike"]);
 const BREAKFAST_KEYS = new Set(["breakfast", "bf_restaurant", "bf_atmosphere", "bf_food", "bf_service"]);
 const KEY = /^[a-z_]{1,24}$/;
 
-/** The form a ride asks: the Saturday social ride's (a community ride of no other kind), else the rental's. */
+/** The form a ride asks (_rgForm): the Saturday social ride's (a community ride of no other kind),
+ *  else the rental's - Run for Her ('runher') included, which, having no bike (TicketSession.bikes),
+ *  is asked it without the bike question, as the pool, the workshop and an event are (noBike). */
 export const formOf = (kind: string | null | undefined): RatingForm => (kind === "saturday" ? "social" : "rental");
 
 /** The questions a ride asks, as [question, sub-questions]: no bike question for a rider on their

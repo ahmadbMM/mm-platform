@@ -19,6 +19,9 @@ describe("rideKind", () => {
     expect(rideKind({ event_kind: "community", ride_kind: null })).toBe("saturday");
     expect(rideKind({ event_kind: "community", ride_kind: "event" })).toBe("event"); // a ticketed event (2026-09-28)
     expect(rideKind({ event_kind: null, ride_kind: "event" })).toBe("jcc");
+    // Run for Her (2026-10-05) is a kind of its own, never read as the Saturday ride
+    expect(rideKind({ event_kind: "community", ride_kind: "runher" })).toBe("runher");
+    expect(rideKind({ event_kind: null, ride_kind: "runher" })).toBe("jcc");
     // a kind that is not a community event is a circuit night, whatever it says
     expect(rideKind({ event_kind: null, ride_kind: "swim" })).toBe("jcc");
   });
@@ -60,6 +63,13 @@ describe("toSession", () => {
     expect(toSession(row({ ...ev, capacity: null, description: "", price: "50" }))).toMatchObject({ seats: null, description: null, price: 50 });
     // seats and a price mean nothing on a ride
     expect(toSession(row({ capacity: 150, price: 75, paid_ride: true }))).toMatchObject({ kind: "jcc", price: null, seats: null });
+  });
+  it("reads Run for Her: members only, free, first come first served (nobody approves it), gathering then the start, no bike collection", () => {
+    const run = { id: "2026-10-17-rh", session_date: "2026-10-17", event_kind: "community", ride_kind: "runher", title: "Run for Her", open_to_all: false, paid_ride: false, needs_approval: false, capacity: 80, bike_slots: '{"_time":"06:00 - 06:30"}' };
+    expect(toSession(row(run))).toMatchObject({ id: "2026-10-17-rh", date: "2026-10-17", full: false, title: "Run for Her", kind: "runher", members: true, free: true, times: ["06:00", "06:30"], gather: true, noCarbon: true, description: null, price: null, seats: null, routeSlug: null, collect: null, approval: false, capacity: 80, left: null });
+    // a _collect on the session means nothing on a run, and a full run still shows (its waitlist)
+    expect(toSession(row({ ...run, bike_slots: '{"_time":"06:00 - 06:30","_collect":"05:15"}' }))!.collect).toBeNull();
+    expect(toSession(row({ ...run, status: "full" }))).toMatchObject({ kind: "runher", full: true });
   });
   it("carries the route a ride follows, when the slug is one the Routes page could hold", () => {
     expect(toSession(row({ route_slug: "obhur-coast" }))?.routeSlug).toBe("obhur-coast");
@@ -301,5 +311,12 @@ describe("sessionName", () => {
   it("reads a title that is just the kind's English name in Arabic on the Arabic page", () => {
     expect(sessionName({ kind: "saturday", title: "saturday social ride" }, ar, en, true)).toBe("جولة السبت الاجتماعية");
     expect(sessionName({ kind: "saturday", title: "Founders ride" }, ar, en, true)).toBe("Founders ride");
+  });
+  it("names Run for Her by its own name (Experiences > Dates: runHerName), in Arabic too", () => {
+    const enR = kindNames({ runHerName: "Run for Her" }), arR = kindNames({ runHerName: "نركض لأجلها" });
+    expect(enR.runher).toBe("Run for Her");
+    expect(sessionName({ kind: "runher", title: null }, enR, enR, false)).toBe("Run for Her");
+    expect(sessionName({ kind: "runher", title: "Run for Her" }, arR, enR, true)).toBe("نركض لأجلها");
+    expect(sessionName({ kind: "runher", title: "Run for Her 2026" }, arR, enR, true)).toBe("Run for Her 2026");
   });
 });

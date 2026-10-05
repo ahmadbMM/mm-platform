@@ -9,7 +9,7 @@ import { kindNames, sessionName } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
-import { fmtClock, fmtDayDate, venueOf } from "@/lib/tickets";
+import { fmtClock, fmtDayDate, venueOf, venueText } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
 import { SESSION_ID, WAIVER_VERSION_SHAPE, acceptAnswer, pendingWaivers, waiverKind, waiverRiders, waiverVersion } from "@/lib/waiver";
 import { riyadhClock } from "@/lib/workshop-days";
@@ -60,8 +60,7 @@ export async function GET(req: Request) {
   const clock = (x: string) => fmtClock(x, locale);
   // the time as the ticket writes it: "gathering - start" on a ride that gathers, else a window
   const time = s.times ? (s.gathers ? `${S(d.gather)} ${clock(s.times[0])} · ${S(d.start)} ${clock(s.times[1])}` : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "";
-  const venue = venueOf(s);
-  const kind = waiverKind(s);
+  const kind = waiverKind(s); // Run for Her, with no bike, is agreed under the activity waiver (_waiverKind)
   return json({
     signedIn: true,
     pending: {
@@ -72,7 +71,7 @@ export async function GET(req: Request) {
       name: sessionName(s, names, enNames, L !== "en"),
       when: fmtDayDate(first.date, locale),
       time,
-      venue: venue.kind === "meet" ? t.meetingPoint : venue.kind === "circuit" ? t.venueCircuit : venue.text,
+      venue: venueText(venueOf(s), t),
       ridersLabel: s.bikes ? t.riders : t.participants,
       riders: waiverRiders(rows, first.sessionId, acct.id, s.approval),
     },

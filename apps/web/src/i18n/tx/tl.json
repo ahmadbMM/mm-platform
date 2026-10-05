@@ -1450,5 +1450,12 @@
  "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "Naka-sign in ang browser na ito bilang {current}. Kaka-sign in mo lang sa booking app bilang {next}. Aling account ang gagamitin ng site na ito?",
  "Switch to {name}": "Lumipat sa {name}",
  "Stay signed in as {name}": "Manatiling naka-sign in bilang {name}",
- "You are signed in as {who}. If this is not your account, sign out.": "Naka-sign in ka bilang {who}. Kung hindi ito ang iyong account, mag-sign out."
+ "You are signed in as {who}. If this is not your account, sign out.": "Naka-sign in ka bilang {who}. Kung hindi ito ang iyong account, mag-sign out.",
+ "Run for Her": "Run for Her",
+ "3 or 5 km · Jeddah Yacht Club": "3 o 5 km · Jeddah Yacht Club",
+ "For Club members aged 18 and over on race day. One place per account, complimentary. Places go first come, first served, then the waitlist opens. Pick 3 km or 5 km when you book.": "Para sa mga miyembro ng Club na 18 taong gulang pataas sa araw ng takbuhan. Isang puwesto bawat account, libre. Kung sino ang mauna, siya ang may puwesto; pagkatapos, magbubukas ang waitlist. Pumili ng 3 km o 5 km kapag nag-book ka.",
+ "Jeddah Yacht Club": "Jeddah Yacht Club",
+ "Runner number": "Numero ng mananakbo",
+ "Finish the Run for Her.": "Tapusin ang Run for Her.",
+ "The pink ribbon, for everyone who ran and finished the Run for Her with the MicroMobility community.": "Ang pink na laso, para sa lahat ng tumakbo at tumapos sa Run for Her kasama ang MicroMobility community."
 }

@@ -18,7 +18,12 @@ export type TicketRow = {
   checkedInAt: string | null; checkedOutAt: string | null; rideDuration: number | null; bikeId: string | null;
   /** The add-ons bought with the booking. */
   addonLines: TicketAddon[];
+  /** The distance a Run for Her runner picked (queue_entries.run_km: 3 or 5 km), else null. Never
+   *  a bike type: `type` stays the row's own ('None' on a run). */
+  runKm: number | null;
 };
+/** The distances a Run for Her runner picks from (the booking app's RUN_KMS). */
+export const RUN_KMS: readonly number[] = [3, 5];
 export type TicketSession = {
   id: string; date: string; kind: RideKind; title: string | null;
   /** A ride staff approve (community, needs_approval not false): no queue number, and no code until the list is out. */
@@ -26,8 +31,8 @@ export type TicketSession = {
   /** Its rider list is published (hide_queue false). */
   published: boolean;
   times: [string, string] | null;
-  /** The two times are "gathering - start" (the rides that gather: Saturday, National Day), not a
-   *  window; the pool and the workshop are a plain start - end, as in the booking app. */
+  /** The two times are "gathering - start" (the rides that gather: Saturday, National Day, and Run
+   *  for Her), not a window; the pool and the workshop are a plain start - end, as in the booking app. */
   gathers: boolean;
   /** Bikes are handed out from this time (the circuit's _collect). */
   collect: string | null;
@@ -36,11 +41,13 @@ export type TicketSession = {
   /** Nothing to pay, as the booking app's _isFreeRide counts it for a ride ridden: any community
    *  ride not marked paid, National Day among them. */
   freeRide: boolean;
-  /** The ride has bikes to hand out (not the pool, not the workshop, not a ticketed event). */
+  /** The ride has bikes to hand out (not the pool, not the workshop, not a ticketed event, not Run
+   *  for Her: the booking app's KIND_TRAITS). */
   bikes: boolean;
   /** The route the ride follows (an item's slug on the Routes page), or null. */
   routeSlug: string | null;
-  /** Where staff said the ride is (sessions.location): "JCC", a place's name, or null (the circuit). */
+  /** Where staff said the ride is (sessions.location): "JCC", "JYC" (the Jeddah Yacht Club, where
+   *  Run for Her meets), a place's name, or null (the circuit). */
   location: string | null;
   /** The Saturday ride's breakfast stop (sessions.breakfast_*): its name, in Arabic too when the venue
    *  booked it on the vendor portal, its map link, and the venue's offer for riders in English and
@@ -60,12 +67,14 @@ export function ticketRow(r: Row): TicketRow | null {
   // assigned_bike_id holds one id, or a JSON list of them for a rider handed more than one
   let bike = S(r.assigned_bike_id).trim();
   if (bike.startsWith("[")) { try { const a = JSON.parse(bike) as unknown; bike = Array.isArray(a) && typeof a[0] === "string" ? a[0] : ""; } catch { bike = ""; } }
+  const km = N(r.run_km); // a distance the booking app would take (_runKmOk), else none
   return {
     id: S(r.id), sessionId: S(r.session_id) || date, date, day: S(r.session_day), queueNum: N(r.queue_num), status,
     waitlistNum: N(r.waitlist_num), approval: S(r.approval) || null, price: N(r.price) ?? 0, paid: r.paid === true,
     name: S(r.name), type: S(r.type_preference),
     checkedInAt: S(r.checked_in_at) || null, checkedOutAt: S(r.checked_out_at) || null, rideDuration: N(r.ride_duration), bikeId: bike || null,
     addonLines: entryAddons(r.addons),
+    runKm: km !== null && RUN_KMS.includes(km) ? km : null,
   };
 }
 
@@ -160,12 +169,12 @@ export function ticketSession(r: Row): TicketSession | null {
     approval: community && r.needs_approval !== false,
     published: community && r.hide_queue === false,
     times: slotTimes(r.bike_slots),
-    gathers: kind === "saturday" || kind === "snd96",
+    gathers: kind === "saturday" || kind === "snd96" || kind === "runher",
     collect,
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -239,13 +248,24 @@ export function dayWord(date: string, today: string): "today" | "tomorrow" | nul
 }
 
 /** Where the ride is, by name (_venueName): a ride staff approve that meets at a map link is its
- *  meeting point; a night on the circuit (no place, or "JCC") the Jeddah Corniche Circuit; any
- *  other place as staff wrote it. */
-export function venueOf(s: TicketSession | undefined): { kind: "meet" } | { kind: "circuit" } | { kind: "text"; text: string } {
+ *  meeting point; a night on the circuit (no place, or "JCC") the Jeddah Corniche Circuit; "JYC" the
+ *  Jeddah Yacht Club, where Run for Her meets (VENUE_KEY); any other place as staff wrote it. */
+export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "text"; text: string };
+export function venueOf(s: TicketSession | undefined): Venue {
   if (s?.approval && s.meetUrl) return { kind: "meet" };
   const loc = s?.location ?? "";
-  return !loc || loc === "JCC" ? { kind: "circuit" } : { kind: "text", text: loc };
+  return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : { kind: "text", text: loc };
 }
+
+/** The venue in the page's words (the ticket's meetingPoint, venueCircuit and venueJyc). */
+export function venueText(v: Venue, t: { meetingPoint: string; venueCircuit: string; venueJyc: string }): string {
+  return v.kind === "meet" ? t.meetingPoint : v.kind === "circuit" ? t.venueCircuit : v.kind === "jyc" ? t.venueJyc : v.text;
+}
+
+/** A ride that meets at a point staff set (sessions.meet_url) rather than at the circuit (_meetsAt):
+ *  the rides staff approve, and Run for Her. The ticket's place button opens that point and says
+ *  so ("Meeting point"), and the calendar file puts it as the place. */
+export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined): boolean => !!s && (s.approval || s.kind === "runher");
 
 // ── The ride night on the ticket (the booking app's 2026-10-01 round, 91816da) ─────────────
 
@@ -364,13 +384,13 @@ export function fmtDayDate(iso: string, locale: string): string {
   return `${f({ weekday: "long" })} · ${f({ day: "numeric", month: "short", year: "numeric" })}`;
 }
 
-/** Where the calendar file says the ride is (downloadBookingICS's LOCATION): a ride staff approve
- *  that meets at a map link, that link; else the place staff wrote, with the two the booking app
- *  spells out for a calendar ("JCC", "Sharafeyah Branch"); "" for none, which icsFor writes as the
- *  circuit. */
-const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Branch", "Sharafeyah, Jeddah"]]);
+/** Where the calendar file says the ride is (downloadBookingICS's LOCATION): a ride that meets at a
+ *  map link (meetsAt: one staff approve, or Run for Her), that link; else the place staff wrote, with
+ *  the three the booking app spells out for a calendar ("JCC", "Sharafeyah Branch", "JYC"); "" for
+ *  none, which icsFor writes as the circuit. */
+const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Branch", "Sharafeyah, Jeddah"], ["JYC", "Jeddah Yacht Club"]]);
 export function icsPlace(s: TicketSession): string {
-  if (s.approval && s.meetUrl) return s.meetUrl;
+  if (meetsAt(s) && s.meetUrl) return s.meetUrl;
   return s.location ? ICS_PLACES.get(s.location) ?? s.location : "";
 }
 
@@ -393,6 +413,20 @@ export function rideEndsAt(s: Pick<TicketSession, "date" | "times" | "gathers">)
   return Date.parse(`${s.date}T00:00:00+03:00`) + (w ? w[1] : 1440) * 6e4;
 }
 
+/** What the calendar file says the booking is: a bike rental only where bikes are handed out (the
+ *  booking app's icsDesc*, 2026-10-05: every entry said "bike rental", the swim and the workshop
+ *  included). Run for Her, which gathers and has no bike, is met at its meeting point; the pool, the
+ *  workshop and an event are a booking to turn up for. */
+function icsWords(s: Pick<TicketSession, "bikes" | "gathers">): { desc: string; alarm: string } {
+  if (s.bikes) return { desc: "Your MicroMobility bike rental booking. Arrive 10 minutes early and show your ticket at the desk.", alarm: "MicroMobility ride reminder" };
+  return {
+    desc: s.gathers
+      ? "Your MicroMobility booking. Be at the meeting point by the gathering time and show your ticket there."
+      : "Your MicroMobility booking. Arrive 10 minutes early and show your ticket when you arrive.",
+    alarm: "MicroMobility booking reminder",
+  };
+}
+
 /** The calendar file the booking app's Add to Calendar gives (downloadBookingICS): a window, or
  *  on a ride that gathers, from the gathering to two hours after the start; a window that runs
  *  past midnight ends on the next day. */
@@ -405,13 +439,14 @@ export function icsFor(s: TicketSession, summary: string, place: string, now: Da
   const utc = (min: number) => new Date(Date.UTC(+date.slice(0, 4), +date.slice(4, 6) - 1, +date.slice(6, 8), 0, min - 180)).toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const esc = (v: string) => v.replace(/[\\,;]/g, (x) => `\\${x}`).replace(/\n/g, "\\n");
   const stamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const words = icsWords(s);
   return [
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//Corniche Circuit//EN", "CALSCALE:GREGORIAN", "BEGIN:VEVENT",
     `UID:${s.id}-${now.getTime()}@micromobility`, `DTSTAMP:${stamp}`,
     `DTSTART:${utc(sMin)}`, `DTEND:${utc(eMin)}`,
     `SUMMARY:${esc(summary)}`, `LOCATION:${esc(place || "Jeddah Corniche Circuit")}`,
-    `DESCRIPTION:${esc("Your MicroMobility bike rental booking. Arrive 10 minutes early and show your ticket at the desk.")}`,
-    "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", "DESCRIPTION:MicroMobility ride reminder", "END:VALARM",
+    `DESCRIPTION:${esc(words.desc)}`,
+    "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", `DESCRIPTION:${esc(words.alarm)}`, "END:VALARM",
     "END:VEVENT", "END:VCALENDAR",
   ].join("\r\n");
 }

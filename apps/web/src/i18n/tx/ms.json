@@ -1450,5 +1450,12 @@
  "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "Pelayar ini telah log masuk sebagai {current}. Anda baru sahaja log masuk ke aplikasi tempahan sebagai {next}. Akaun mana yang patut digunakan oleh laman ini?",
  "Switch to {name}": "Tukar kepada {name}",
  "Stay signed in as {name}": "Kekal log masuk sebagai {name}",
- "You are signed in as {who}. If this is not your account, sign out.": "Anda telah log masuk sebagai {who}. Jika ini bukan akaun anda, sila log keluar."
+ "You are signed in as {who}. If this is not your account, sign out.": "Anda telah log masuk sebagai {who}. Jika ini bukan akaun anda, sila log keluar.",
+ "Run for Her": "Run for Her",
+ "3 or 5 km · Jeddah Yacht Club": "3 atau 5 km · Jeddah Yacht Club",
+ "For Club members aged 18 and over on race day. One place per account, complimentary. Places go first come, first served, then the waitlist opens. Pick 3 km or 5 km when you book.": "Untuk ahli Kelab berumur 18 tahun ke atas pada hari perlumbaan. Satu tempat bagi setiap akaun, percuma. Tempat diberikan mengikut siapa cepat dia dapat, kemudian senarai menunggu dibuka. Pilih 3 km atau 5 km semasa menempah.",
+ "Jeddah Yacht Club": "Jeddah Yacht Club",
+ "Runner number": "Nombor pelari",
+ "Finish the Run for Her.": "Tamatkan Run for Her.",
+ "The pink ribbon, for everyone who ran and finished the Run for Her with the MicroMobility community.": "Reben merah jambu, untuk semua yang berlari dan menamatkan Run for Her bersama komuniti MicroMobility."
 }

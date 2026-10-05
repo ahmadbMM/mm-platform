@@ -16,7 +16,8 @@ export type BadgeRow = {
 export type BadgeData = { catalog: BadgeRow[]; weeks: { w: string; ids: string[] }[] | null; seasons: BadgeRow[]; mine: BadgeRow[] };
 
 /** The app's own badges by slug: [glyph, colour] (the booking app's BD_SYS). Their words are in
- *  RideRecord.text.ts under the same slug. */
+ *  RideRecord.text.ts under the same slug. Run for Her's pink ribbon is drawn on the 'pink' special
+ *  medal, which the badges table cannot hold (it stores the badge as 'red'). */
 export const BADGE_SYS: Record<string, [string, string]> = {
   first_lap: ["flag", "green"], regular: ["wheel", "teal"], podium: ["podium", "purple"], front_row: ["one", "gold"], carbon: ["bike", "silver"],
   streak: ["flame", "orange"], squad: ["people", "blue"], fuel: ["bottle", "red"], corniche25: ["wave", "blue"],
@@ -26,6 +27,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   triple_crown: ["crown", "gold"], slipstream: ["wind", "green"], paceline: ["wind", "blue"], peloton: ["wind", "gold"],
   rolling_start: ["wind", "teal"], grand_tour: ["wind", "purple"], hall_of_fame: ["wind", "special"],
   clean_sheet: ["calcheck", "green"], works_team: ["briefcase", "teal"], perfect_week: ["calstar", "purple"], perfect_month: ["calcrown", "gold"],
+  run_for_her: ["ribbon", "pink"],
   winter_series: ["snow", "blue"], ramadan_nights: ["lantern", "purple"], founding_day: ["fort", "orange"],
 };
 /** The badges staff give by hand that the app knows itself (BDG_GIVEN_SYS): shown where the
@@ -181,17 +183,22 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
   const nights = [...night.entries()].sort((a, b) => a[1].d.localeCompare(b[1].d)), doneN = nights.filter(([, n]) => n.done);
   const dates = doneN.map(([, n]) => n.d), kinds = new Set<string>();
   let comm = 0, corp = 0, gap = false, clean = 0, cleanBest = 0;
+  // the Saturday ladder (Slipstream, Paceline, Peloton) counts Saturday rides alone: a run (kind
+  // 'runher') or any other community event is a kind of its own, never a Saturday ride
   for (const [id] of doneN) { const x = ses(id); if (!x) continue; kinds.add(x.kind); if (x.kind === "saturday") comm++; if (x.kind === "petromin") corp++; }
   for (let i = 1; i < dates.length; i++) if (Date.parse(dates[i]) - Date.parse(dates[i - 1]) >= 60 * 864e5) gap = true;
   for (const [, n] of nights) { if (n.done) cleanBest = Math.max(cleanBest, ++clean); else if (n.noshow) clean = 0; }
   const R = weekRuns(dates, today), streak = weekStreak(completed.map((r) => r.date), today);
   const PW = perfectWeeks(data.weeks, new Set(completed.map((r) => r.sessionId)), today);
   const nd96 = rows.some((r) => (r.status === "done" || r.status === "active") && ses(r.sessionId)?.kind === "snd96");
+  // Run for Her: finished, i.e. marked done at the end of the run (the owner, 2026-10-05: "who completes this event")
+  const rfh = rows.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "runher");
   const P = (n: number, of: number) => `${Math.min(n, of)}/${of}`, pct = profile ? profilePct(profile) : 0;
   type B = { s: string; on: boolean; p?: string | null; hide?: boolean; row?: BadgeRow; season?: BadgeItem["season"] };
   const list: B[] = [
     ...(profile ? [{ s: "complete_profile", on: pct >= 100, p: `${pct}%` }] : []),
     { s: "national_day_96", on: nd96, hide: true },
+    { s: "run_for_her", on: rfh, hide: true }, // the pink ribbon: shown to those who finished it
     { s: "first_lap", on: rides >= 1, p: `${rides}/1` }, { s: "regular", on: rides >= 5, p: P(rides, 5) }, { s: "podium", on: rides >= 10, p: P(rides, 10) },
     { s: "front_row", on: anyP1 }, { s: "carbon", on: carbon }, { s: "streak", on: streak >= 3 || R.best >= 3, p: P(streak, 3) },
     { s: "squad", on: squad >= 3 }, { s: "fuel", on: fuel }, { s: "corniche25", on: rides >= 25, p: P(rides, 25) },
@@ -214,9 +221,9 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
 }
 
 /** Every badge on the page, sorted as the booking app sorts them: earned first, then those a ride
- *  earns, the dated ones and the ones staff give, each group in its own order. National Day 96
- *  and Back on Track stay out until earned; a badge the catalogue no longer lists shows only to a
- *  rider who holds it. */
+ *  earns, the dated ones and the ones staff give, each group in its own order. National Day 96,
+ *  Run for Her and Back on Track stay out until earned; a badge the catalogue no longer lists shows
+ *  only to a rider who holds it. */
 export function badgeList(rows: RecordRow[], sessions: Map<string, RecordSession>, data: BadgeData, today: string, profile: ProfileFields | null): BadgeItem[] {
   const given = new Map(data.mine.map((g) => [g.slug, g]));
   const cat = data.catalog.length ? new Map(data.catalog.map((b) => [b.slug, b])) : null;

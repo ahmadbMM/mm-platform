@@ -20,7 +20,8 @@ export type BadgeView = {
 };
 export type BadgeGridText = { badges: string; toEarn: string; show: string; hide: string; notEarned: string; howTo: string; earned: string; close: string };
 
-const special = (c: string) => c === "special" || c === "national";
+// The colours Medal draws special (its SPECIAL): Race Ready, National Day 96 and Run for Her's pink.
+const special = (c: string) => c === "special" || c === "national" || c === "pink";
 
 export default function BadgeGrid({ items, t }: { items: BadgeView[]; t: BadgeGridText }) {
   const [more, setMore] = useState(false);

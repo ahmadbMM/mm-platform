@@ -10,17 +10,23 @@ import { riyadhClock } from "./workshop-days";
 //
 // The rules below mirror the booking app (app.src.html) and the database, never guess:
 //   kind     _rideKind: snd96 first, anything not 'community' is a circuit night (jcc), then
-//            petromin / swim / workshop / event, and every other community row is the Saturday ride.
+//            petromin / swim / workshop / event / runher, and every other community row is the
+//            Saturday ride.
 //   members  _community_booking_gate: event_kind 'community' without open_to_all is booked only
 //            by members (the Saturday tag, the Club).
 //   free     _isFreeRide: a community ride (not snd96) that is not a paid ride.
-//   gather   _gathersTime: the Saturday and National Day rides store "gather - start", the
-//            others "start - end".
+//   gather   _gathersTime: the Saturday ride, the National Day ride and Run for Her store
+//            "gather - start", the others "start - end".
 //   event    a ticketed event (ride_kind 'event', 2026-09-28): seats instead of bikes, its own
 //            price per seat (sessions.price; _fare_now charges it instead of a bike fare), open to
 //            everyone or to members (open_to_all), a description, no approval, no queue numbers.
+//   runher   Run for Her (ride_kind 'runher', 2026-10-05): a running event, not a ride - members
+//            only, free, no bikes and no breakfast, one place per account, first come first served
+//            to its places (80) and then the waitlist; nobody approves it. It meets at the Jeddah
+//            Yacht Club (sessions.location 'JYC', the meeting point in meet_url), and each runner
+//            picks 3 or 5 km (queue_entries.run_km).
 
-export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event";
+export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher";
 export type RidePrice = { type: string; price: number };
 export type RideSession = {
   id: string;
@@ -77,7 +83,7 @@ export function rideKind(r: Row): RideKind {
   const k = r.ride_kind;
   if (k === "snd96") return "snd96";
   if (r.event_kind !== "community") return "jcc";
-  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" ? k : "saturday";
+  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" ? k : "saturday";
 }
 
 /** A route's slug as the Routes page writes one (content/pages/routes.ts): lower-case letters,
@@ -162,7 +168,7 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     members: community && r.open_to_all !== true,
     free,
     times: slotTimes(r.bike_slots),
-    gather: kind === "saturday" || kind === "snd96",
+    gather: kind === "saturday" || kind === "snd96" || kind === "runher",
     noCarbon: community,
     description: typeof r.description === "string" && r.description.trim() ? r.description.trim().slice(0, 2000) : null,
     // the database charges an event's seat only when the event is a paid ride (_fare_now)
@@ -178,7 +184,7 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     meetUrl: typeof r.meet_url === "string" && /^https:\/\//i.test(r.meet_url.trim()) ? r.meet_url.trim() : null,
     location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null,
     left: null,
-    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" ? null : collectTime(r.bike_slots),
+    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" ? null : collectTime(r.bike_slots),
   };
 }
 
@@ -195,7 +201,7 @@ export function upcoming(sessions: RideSession[], now: string): RideSession[] {
 /** The names a page gives each kind of session (Experiences > Next dates). */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), petromin: "" };
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), petromin: "" };
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other

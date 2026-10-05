@@ -1450,5 +1450,12 @@
  "This browser is signed in as {current}. You have just signed in to the booking app as {next}. Which account should this site use?": "此浏览器已登录 {current}。您刚刚在预订 App 中登录了 {next}。本网站应使用哪个账户？",
  "Switch to {name}": "切换到 {name}",
  "Stay signed in as {name}": "继续使用 {name}",
- "You are signed in as {who}. If this is not your account, sign out.": "您已登录为 {who}。如果这不是您的账户，请退出登录。"
+ "You are signed in as {who}. If this is not your account, sign out.": "您已登录为 {who}。如果这不是您的账户，请退出登录。",
+ "Run for Her": "Run for Her",
+ "3 or 5 km · Jeddah Yacht Club": "3 或 5 公里 · 吉达游艇俱乐部",
+ "For Club members aged 18 and over on race day. One place per account, complimentary. Places go first come, first served, then the waitlist opens. Pick 3 km or 5 km when you book.": "面向比赛当天年满 18 岁的俱乐部会员。每个账户限一个名额，免费参加。名额先到先得，满额后开放候补。预订时请选择 3 公里或 5 公里。",
+ "Jeddah Yacht Club": "吉达游艇俱乐部",
+ "Runner number": "跑者编号",
+ "Finish the Run for Her.": "完成 Run for Her。",
+ "The pink ribbon, for everyone who ran and finished the Run for Her with the MicroMobility community.": "粉红丝带，献给每一位与 MicroMobility 社区一起跑完 Run for Her 的人。"
 }

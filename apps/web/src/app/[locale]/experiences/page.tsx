@@ -109,12 +109,14 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // The route on a booking's ticket (ticketRoute): the Routes page's, or the circuit drawn.
   const routeOf = (s: RideSession): TicketRoute | null => ticketRoute({
     id: s.id, date: s.date, kind: s.kind, title: s.title, approval: !!s.approval, published: false, times: s.times, gathers: s.gather, collect: s.collect,
-    meetUrl: s.meetUrl ?? null, free: s.free, freeRide: s.free, bikes: s.kind !== "swim" && s.kind !== "workshop" && s.kind !== "event", routeSlug: s.routeSlug, location: s.location ?? null, breakfast: null,
+    meetUrl: s.meetUrl ?? null, free: s.free, freeRide: s.free, bikes: s.kind !== "swim" && s.kind !== "workshop" && s.kind !== "event" && s.kind !== "runher", routeSlug: s.routeSlug, location: s.location ?? null, breakfast: null,
   }, routeKm);
   // The booking app's events (_evMatch) in its order: the National Day ride and the ticketed
   // events while they have dates, the circuit, the community rides, and the T100 workshop while
   // one is dated. Petromin nights are booked through the company's own form, never here.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event" };
+  // Run for Her (ride_kind 'runher') is not offered here yet: this booking has no runner step (the distance,
+  // the emergency contact, 18 and over), so a run is booked in the booking app, as main's page hands it over.
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "" };
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count)));
   const listed: RideSession[] = [];
   const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): FlowEvent | null => {

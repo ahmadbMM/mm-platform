@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WALLET_ORIGIN, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, relayStatus, unratedRides } from "../rating";
+import { ticketSession } from "../tickets";
 import { POST as rate } from "../../app/api/account/rate/route";
 import { POST as wallet } from "../../app/api/google-wallet/route";
 import { resetSiteContent } from "../site";
@@ -29,9 +30,11 @@ const SOCIAL = { ride: 9, ride_checkin: 10, ride_staff: 9, ride_bike: 7, ride_ro
 describe("the questions", () => {
   it("asks by the kind of ride, without the bike or the breakfast when they do not apply", () => {
     expect(formOf("saturday")).toBe("social");
-    for (const k of ["jcc", "petromin", "swim", "workshop", "event", "snd96", null, undefined]) expect(formOf(k)).toBe("rental");
+    for (const k of ["jcc", "petromin", "swim", "workshop", "event", "snd96", "runher", null, undefined]) expect(formOf(k)).toBe("rental");
     expect(questionKeys("rental")).toEqual(["service", "bike", "experience"]);
     expect(questionKeys("rental", { noBike: true })).toEqual(["service", "experience"]);
+    // Run for Her has no bike (its ticket session's bikes is false), so its form never asks about one
+    expect(questionKeys(formOf("runher"), { noBike: !ticketSession({ id: "r", session_date: "2099-10-17", event_kind: "community", ride_kind: "runher", needs_approval: false })!.bikes })).toEqual(["service", "experience"]);
     expect(questionKeys("social")).toEqual(Object.keys(SOCIAL));
     expect(questionKeys("social", { noBike: true, skipBf: true })).toEqual(["ride", "ride_checkin", "ride_staff", "ride_route", "overall"]);
   });
