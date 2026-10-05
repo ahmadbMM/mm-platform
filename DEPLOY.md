@@ -70,8 +70,11 @@ once.
 ## Sign-in protection
 
 The account sign-in (`/api/account`) allows each connection 10 tries a minute, with Cloudflare's
-rate limiter (`LOGIN_LIMIT` in `apps/web/wrangler.jsonc`; nothing to set up). On top of that it can
-ask for a Cloudflare Turnstile check, which is off until both of its keys exist:
+rate limiter (`LOGIN_LIMIT` in `apps/web/wrangler.jsonc`; nothing to set up). The page-error reports
+(`/api/log-error`) and the signed-in pop-ups' checks (`/api/account/pending-waiver`,
+`/api/account/pending-rating`) allow each connection 30 of each a minute the same way (`API_LIMIT`).
+On top of that the sign-in can ask for a Cloudflare Turnstile check, which is off until both of its
+keys exist:
 
 1. Cloudflare dashboard (the account that holds micromobility.sa) > Turnstile > Add widget:
    hostname `micromobility.sa` (and `www.micromobility.sa`), mode Managed.

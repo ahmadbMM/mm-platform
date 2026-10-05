@@ -7,6 +7,7 @@ import { accountBookings, rpcServer } from "@/lib/account";
 import { asLocale, resolvePage } from "@/lib/content";
 import { kindNames, sessionName } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
+import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
 import { fmtClock, fmtDayDate, venueOf } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
@@ -19,6 +20,8 @@ import { riyadhClock } from "@/lib/workshop-days";
 // place, who is on the booking, and its waiver in the page's language. Signed out it answers from
 // the cookie alone, without asking the database; signed in it reads the rider's own bookings once
 // (my_bookings) and the sessions of the rides still waiting, and names the soonest one it can see.
+// A connection asks 30 times a minute at most (lib/rate-limit.ts; past that, 429 and the pop-up waits
+// for the next page).
 //
 // POST /api/account/pending-waiver {sessionId, version}: the rider agrees, through
 // customer_accept_waiver with the account cookie's id and token. The version is the one the pop-up
@@ -37,6 +40,7 @@ const S = (v: unknown) => (typeof v === "string" ? v : "");
 export async function GET(req: Request) {
   const acct = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (!acct) return json({ signedIn: false });
+  if (!(await withinLimit(req, "account-check"))) return json({ error: "busy" }, 429);
   const q = new URL(req.url).searchParams;
   const locale = q.get("locale") || "en";
   const skip = (q.get("skip") || "").split(",").filter((x) => SESSION_ID.test(x)).slice(0, 20);
