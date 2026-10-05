@@ -1149,5 +1149,14 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "আমি দায়মুক্তিপত্রটি পড়েছি এবং এই বুকিংয়ের প্রত্যেকের পক্ষে সম্মতি দিচ্ছি",
  "Waiver needed": "দায়মুক্তিপত্র প্রয়োজন",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "আমাদের দল আপনাকে এই রাইডে বুক করেছে। এর দায়মুক্তিপত্র পড়ুন এবং এগিয়ে যেতে সম্মতি দিন।",
- "Agree and continue": "সম্মতি দিন ও এগিয়ে যান"
+ "Agree and continue": "সম্মতি দিন ও এগিয়ে যান",
+ "That day can no longer be booked - pick another day.": "ওই দিনটি আর বুক করা যাবে না — অন্য একটি দিন বেছে নিন।",
+ "That time can no longer be booked - pick another time.": "ওই সময়টি আর বুক করা যাবে না — অন্য একটি সময় বেছে নিন।",
+ "The parts could not be added - untick them and name them in the notes.": "যন্ত্রাংশ যোগ করা যায়নি — টিক তুলে দিন এবং নোটে সেগুলোর নাম লিখুন।",
+ "Pick how the bike gets to us.": "সাইকেলটি কীভাবে আমাদের কাছে পৌঁছাবে, তা বেছে নিন।",
+ "Shorten your bike's name to 80 characters.": "আপনার সাইকেলের নাম 80 অক্ষরের মধ্যে ছোট করুন।",
+ "Shorten your note to 600 characters.": "আপনার নোট 600 অক্ষরের মধ্যে ছোট করুন।",
+ "That code is for bike rentals only.": "এই কোডটি শুধু সাইকেল ভাড়ার জন্য।",
+ "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Micromobility ক্যাটালগে {category} শ্রেণির সাইকেল: মডেল, ছবি ও স্পেসিফিকেশন।",
+ "Show the map": "মানচিত্র দেখুন"
 }

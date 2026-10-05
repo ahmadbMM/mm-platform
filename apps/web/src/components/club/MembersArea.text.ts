@@ -3,8 +3,8 @@
 export const T = {
   en: {
     title: "Your membership", label: "Membership card", credits: "ride credits", since: "Member since", top: "Top tier - enjoy every perk",
-    toNext: (n: string, t: string) => `${n} credits to reach ${t}`,
-    attendance: "Your rides", rides: (n: string) => `${n} rides`, groupRides: (n: string) => `${n} community rides`,
+    toNext: (n: string, t: string) => `${n} ${n === "1" ? "credit" : "credits"} to reach ${t}`,
+    attendance: "Your rides", rides: (n: string) => `${n} ${n === "1" ? "ride" : "rides"}`, groupRides: (n: string) => `${n} ${n === "1" ? "community ride" : "community rides"}`,
     last: "Last rides", noLast: "No completed rides yet.", rated: "Rated", rate: "Rate it",
     upcoming: "Upcoming members' rides", booked: "Booked", book: "Book",
     birthday: (name: string) => `Happy birthday, ${name}!`, birthdayText: "Wishing you a great year of riding, from all of us at Micromobility.",

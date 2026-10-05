@@ -45,9 +45,9 @@ export default function ModelPage({ locale, model, catalog, s }: { locale: strin
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <JsonLd data={[
-        productData(model, locale, { path: modelPath(model, catalog.categories), image: cover?.url ?? "", category: catName, description: modelDescription(model, locale) }),
+        productData(model, locale, { path: modelPath(model, catalog.categories), image: cover?.url ?? "", category: catName, description: modelDescription(model, locale), price, bookUrl: bookingLink(navFrom(site).booking, locale) }),
         breadcrumbData([...crumbs.map((x) => ({ name: x.label, path: x.href })), { name: title, path: modelPath(model, catalog.categories) }], locale),
-      ]} />
+      ].filter((d): d is object => d !== null)} />
       <div className="pg ct">
         <Crumbs items={crumbs} current={title} label={tx("Breadcrumb", "مسار الصفحة")} />
         <div className={photos.length ? "ct-model" : "ct-model ct-model-text"}>

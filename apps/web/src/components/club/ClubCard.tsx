@@ -3,15 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import { normalizePhone, rpc } from "@/lib/rpc-client";
 import { fmtNum } from "@/lib/fill";
-import { intlOf } from "@/i18n/locales";
+import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./ClubCard.text";
 
 // A member's card (club_card): the email and mobile of their Micromobility account open it.
 // Credits and the tier come from their real rides. A signed-in rider's email and mobile are
-// passed in (/account, /club), and the card opens by itself.
+// passed in (/account, /club), and the card opens by itself. sinceFmt: how the page's language
+// writes "October 2026", described by the server (lib/date-pattern, DATE_STYLES.memberSince).
 type Card = { ok: boolean; error?: string; member?: boolean; first_name?: string; since?: string | null; credits?: number; tier?: number; next?: number | null; rides?: number };
-type Props = { locale: string; title: string; text: string; notMember: string; applyBtn: string; applyHref: string; tierNames: [string, string, string]; email?: string; phone?: string };
+type Props = { locale: string; title: string; text: string; notMember: string; applyBtn: string; applyHref: string; tierNames: [string, string, string]; email?: string; phone?: string; sinceFmt: DatePattern };
 
 export default function ClubCard(p: Props) {
   const t = useLocalize(T);
@@ -21,6 +22,17 @@ export default function ClubCard(p: Props) {
   const [err, setErr] = useState("");
   const [card, setCard] = useState<Card | null>(null);
   const N = (n: number) => fmtNum(n, p.locale);
+  // Opening the card replaces the form, and closing it brings the form back: focus follows when the
+  // visitor pressed the button (never when the card opens by itself as the page loads).
+  const cardBox = useRef<HTMLDivElement>(null);
+  const emailBox = useRef<HTMLInputElement>(null);
+  const follow = useRef(false);
+  useEffect(() => {
+    if (!follow.current) return;
+    follow.current = false;
+    if (card?.member) cardBox.current?.focus();
+    else if (!card) emailBox.current?.focus(); // closed; a "not a member" answer keeps the form, and its button
+  }, [card]);
 
   async function open() {
     setErr(""); setBusy(true);
@@ -43,9 +55,9 @@ export default function ClubCard(p: Props) {
   if (card && card.member) {
     const tier = card.tier ?? 0, credits = card.credits ?? 0, next = card.next ?? null;
     const pct = tier >= 2 || !next ? 100 : Math.min(100, Math.round((credits / next) * 100));
-    const since = card.since ? new Intl.DateTimeFormat(intlOf(p.locale), { month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date(card.since)) : "";
+    const since = card.since ? fmtPattern(p.sinceFmt, card.since) : "";
     return (
-      <div className="club-mine">
+      <div className="club-mine" ref={cardBox} tabIndex={-1}>
         <div className={`club-cardviz tier-${tier}`}>
           <div className="club-cardviz-top">
             <span className="club-cardviz-brand"><img src={tier === 2 ? "/site/logo-mark-dark.png" : "/site/logo-mark.png"} alt="Micromobility" /><span>{t.label}</span></span>
@@ -59,7 +71,7 @@ export default function ClubCard(p: Props) {
         </div>
         <span className="club-bar"><span style={{ width: `${pct}%` }} /></span>
         <p className="club-mine-next">{tier >= 2 || !next ? t.top : t.toNext(N(Math.max(0, next - credits)), p.tierNames[tier + 1])} · {t.rides(N(card.rides ?? 0))}</p>
-        <button type="button" className="club-link" onClick={() => setCard(null)}>{t.close}</button>
+        <button type="button" className="club-link" onClick={() => { follow.current = true; setCard(null); }}>{t.close}</button>
       </div>
     );
   }
@@ -69,10 +81,10 @@ export default function ClubCard(p: Props) {
       {p.title && <h2>{p.title}</h2>}
       {p.text && <p>{p.text}</p>}
       <div className="club-lookup-row">
-        <input className="club-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.email} aria-label={t.email} type="email" autoComplete="email" dir="ltr" maxLength={254} />
+        <input ref={emailBox} className="club-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.email} aria-label={t.email} type="email" autoComplete="email" dir="ltr" maxLength={254} />
         <input className="club-input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.phone} aria-label={t.phone} inputMode="tel" autoComplete="tel" dir="ltr" maxLength={20} />
       </div>
-      <button type="button" className="club-btn" onClick={open} disabled={busy || !email.trim() || !phone.trim()}>{busy ? t.opening : t.open}</button>
+      <button type="button" className="club-btn" onClick={() => { follow.current = true; open(); }} disabled={busy || !email.trim() || !phone.trim()}>{busy ? t.opening : t.open}</button>
       {err && <p className="club-err" role="alert">{err}</p>}
       {card && !card.member && (
         <div className="club-notmember" role="status">

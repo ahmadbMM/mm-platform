@@ -1149,5 +1149,14 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "Я прочитал(а) отказ от ответственности и соглашаюсь с ним от имени всех, кто указан в этом бронировании",
  "Waiver needed": "Нужен отказ от ответственности",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Наша команда записала вас на этот заезд. Прочитайте его отказ от ответственности и примите его, чтобы продолжить.",
- "Agree and continue": "Принять и продолжить"
+ "Agree and continue": "Принять и продолжить",
+ "That day can no longer be booked - pick another day.": "На этот день записаться уже нельзя — выберите другой день.",
+ "That time can no longer be booked - pick another time.": "На это время записаться уже нельзя — выберите другое время.",
+ "The parts could not be added - untick them and name them in the notes.": "Не удалось добавить запчасти — снимите отметки и укажите их в комментарии.",
+ "Pick how the bike gets to us.": "Выберите, как велосипед попадёт к нам.",
+ "Shorten your bike's name to 80 characters.": "Сократите название велосипеда до 80 символов.",
+ "Shorten your note to 600 characters.": "Сократите комментарий до 600 символов.",
+ "That code is for bike rentals only.": "Этот код действует только на прокат велосипедов.",
+ "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Велосипеды категории «{category}» в каталоге Micromobility: модели, фото и характеристики.",
+ "Show the map": "Показать карту"
 }

@@ -1,13 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { bg } from "@/lib/img";
+import { useDialogFocus } from "@/components/site/use-dialog-focus";
 
 // The community photo wall: six staggered columns (three on a phone); a photo opens large.
 const RATIOS = ["3 / 4", "2 / 3", "4 / 5", "3 / 5", "5 / 6"];
 
 export default function PhotoWall({ photos, label, closeLabel }: { photos: string[]; label: string; closeLabel: string }) {
   const [open, setOpen] = useState("");
+  // The photo opened takes the focus to its close button, keeps it inside, and gives it back to the
+  // photo the visitor opened when it closes.
+  const box = useRef<HTMLDivElement>(null);
+  const closeBtn = useRef<HTMLButtonElement>(null);
+  const opener = useRef<HTMLButtonElement | null>(null);
+  useDialogFocus(box, !!open, { first: closeBtn, back: opener });
   useEffect(() => {
     if (!open) return;
     const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen("");
@@ -21,16 +28,16 @@ export default function PhotoWall({ photos, label, closeLabel }: { photos: strin
         {cols.map((col, c) => (
           <div className="hm-wall-col" key={c}>
             {col.map(({ p, i }) => (
-              <button key={i} type="button" className="hm-tile" aria-label={`${label} ${i + 1}`} onClick={() => setOpen(p)}
+              <button key={i} type="button" className="hm-tile" aria-label={`${label} ${i + 1}`} onClick={(e) => { opener.current = e.currentTarget; setOpen(p); }}
                 style={{ aspectRatio: RATIOS[i % RATIOS.length], backgroundImage: `url('${bg(p, 640)}')` }} />
             ))}
           </div>
         ))}
       </div>
       {open && (
-        <div className="hm-lightbox" role="dialog" aria-modal="true" aria-label={label} onClick={() => setOpen("")}>
+        <div ref={box} className="hm-lightbox" role="dialog" aria-modal="true" aria-label={label} onClick={() => setOpen("")}>
           <div style={{ backgroundImage: `url('${bg(open)}')` }} />
-          <button type="button" aria-label={closeLabel} onClick={() => setOpen("")}>✕</button>
+          <button ref={closeBtn} type="button" aria-label={closeLabel} onClick={() => setOpen("")}>✕</button>
         </div>
       )}
     </>

@@ -73,7 +73,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
             <span className="hm-entry-copy">
               <span className="hm-entry-tick" />
               <span className="hm-entry-eyebrow">{S(e.riderEyebrow)}</span>
-              <h1 className="hm-entry-title">{S(e.riderTitle)}</h1>
+              <h2 className="hm-entry-title">{S(e.riderTitle)}</h2>
               <span className="hm-entry-text">{S(e.riderText)}</span>
               <span className="hm-btn hm-green hm-entry-btn">{S(e.riderBtn)} <span className="hm-arw">{arrow}</span></span>
             </span>
@@ -91,7 +91,8 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
           <div className="hm-entry-divider" aria-hidden="true" />
           <div className="hm-entry-phone" style={{ backgroundImage: `linear-gradient(to top,rgba(251,249,244,.95),rgba(251,249,244,.5) 40%,rgba(251,249,244,0) 70%),url('${riderBg}')` }}>
             <p className="hm-est mm-lat">EST. JEDDAH · 21°32′N</p>
-            {/* The page's heading on a phone: the desktop halves (and their h1) are not shown there. */}
+            {/* The page's one heading. A wider screen shows the two halves instead (each an h2), and keeps this
+                heading for screen readers alone (home.css). */}
             <h1>{S(e.phoneTitle)}</h1>
             <p>{S(e.phoneText)}</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

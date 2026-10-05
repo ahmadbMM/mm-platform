@@ -1149,5 +1149,14 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "Ich habe die Haftungserklärung gelesen und stimme im Namen aller Personen dieser Buchung zu",
  "Waiver needed": "Haftungserklärung erforderlich",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Unser Team hat dich für diese Fahrt angemeldet. Lies ihre Haftungserklärung und stimme ihr zu, um fortzufahren.",
- "Agree and continue": "Zustimmen und weiter"
+ "Agree and continue": "Zustimmen und weiter",
+ "That day can no longer be booked - pick another day.": "Dieser Tag ist nicht mehr buchbar – wähle einen anderen Tag.",
+ "That time can no longer be booked - pick another time.": "Diese Uhrzeit ist nicht mehr buchbar – wähle eine andere Uhrzeit.",
+ "The parts could not be added - untick them and name them in the notes.": "Die Teile konnten nicht hinzugefügt werden – entferne die Häkchen und nenne sie in deiner Notiz.",
+ "Pick how the bike gets to us.": "Wähle, wie dein Rad zu uns kommt.",
+ "Shorten your bike's name to 80 characters.": "Kürze die Angabe zu deinem Rad auf 80 Zeichen.",
+ "Shorten your note to 600 characters.": "Kürze deine Notiz auf 600 Zeichen.",
+ "That code is for bike rentals only.": "Dieser Code gilt nur für die Fahrradmiete.",
+ "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Kategorie {category} im Micromobility-Katalog: Modelle, Fotos und technische Daten.",
+ "Show the map": "Karte anzeigen"
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
+import { useDialogFocus } from "@/components/site/use-dialog-focus";
 import { NAV_LINKS } from "@/lib/links";
 import { useL } from "@/i18n/TxProvider";
 import { localeInfo } from "@/i18n/locales";
@@ -43,19 +44,21 @@ const snippet = (text: string, needle: string) => {
   return (start ? "…" : "") + s + (start + 120 < t.length ? "…" : "");
 };
 
-export default function SiteSearch({ locale, hidden, onClose }: { locale: string; hidden: string[]; onClose: () => void }) {
+// back: the button that opened the search, which takes the focus again when it closes.
+export default function SiteSearch({ locale, hidden, onClose, back }: { locale: string; hidden: string[]; onClose: () => void; back?: RefObject<HTMLElement | null> }) {
   const tx = useL();
   const info = localeInfo(locale);
   const [q, setQ] = useState("");
   const [items, setItems] = useState<SearchItem[]>([]);
   const input = useRef<HTMLInputElement>(null);
+  const box = useRef<HTMLDivElement>(null);
+  useDialogFocus(box, true, { first: input, back });
   useEffect(() => {
     let gone = false;
     searchIndex(locale).then((x) => { if (!gone) setItems(x); }).catch(() => {});
     return () => { gone = true; };
   }, [locale]);
   useEffect(() => {
-    input.current?.focus();
     const esc = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     document.addEventListener("keydown", esc);
     return () => document.removeEventListener("keydown", esc);
@@ -65,7 +68,7 @@ export default function SiteSearch({ locale, hidden, onClose }: { locale: string
   const found = needle ? pages.filter((p) => `${p.en} ${p.ar} ${tx(p.en, p.ar)} ${WORDS[p.key] ?? ""}`.toLowerCase().includes(needle)) : pages;
   const answers = needle.length > 1 ? items.filter((x) => `${x.title} ${x.text} ${x.words ?? ""}`.toLowerCase().includes(needle)).slice(0, MAX_ITEMS) : [];
   return (
-    <div className="mm-search" role="dialog" aria-modal="true" aria-label={tx("Search", "بحث")} dir={info.dir}>
+    <div ref={box} className="mm-search" role="dialog" aria-modal="true" aria-label={tx("Search", "بحث")} dir={info.dir}>
       <div className="mm-search-box">
         <div className="mm-search-row">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.8-3.8" /></svg>

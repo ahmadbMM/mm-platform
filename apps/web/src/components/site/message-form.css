@@ -8,6 +8,7 @@ textarea.mf-input { min-height: 110px; resize: vertical; }
 .mf-send { cursor: pointer; border: 0; border-radius: 999px; padding: 16px; min-height: 52px; background: #077a4b; color: #fbf9f4; font-weight: 700; font-size: 15px; font-family: inherit; }
 .mf-send:disabled { opacity: .6; cursor: default; }
 .mf-done { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; border: 1px solid rgba(7, 122, 75, .4); border-radius: 24px; background: rgba(7, 122, 75, .08); padding: 40px 24px; }
+.mf-done:focus { outline: none; } /* focused once sent (MessageForm), to read on from */
 .mf-done strong { color: #077a4b; font-size: 22px; }
 .mf-done span { color: #57605a; font-size: 15px; line-height: 1.6; }
 .mf-done small { color: #57605a; font-size: 13px; }

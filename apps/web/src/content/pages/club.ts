@@ -51,7 +51,7 @@ export const clubSchema = {
             { value: bi("3 tiers", "٣ مستويات"), label: bi("growing perks", "مزايا متصاعدة") },
           ],
         },
-        long("marquee", 400, "Moving strip (one per line)", "الشريط المتحرك (سطر لكل عبارة)", "BATTLE\nALVAS\nCAMP\nSTRAUSS\nEST. JEDDAH\nRIDE EVERY SATURDAY\nمجتمع الدراجات في جدة", "BATTLE\nALVAS\nCAMP\nSTRAUSS\nEST. JEDDAH\nRIDE EVERY SATURDAY\nمجتمع الدراجات في جدة"),
+        long("marquee", 400, "Moving strip (one per line)", "الشريط المتحرك (سطر لكل عبارة)", "BATTLE\nALVAS\nCAMP\nSTRAUSS\nEST. JEDDAH\nRIDE EVERY SATURDAY\nمجتمع الدراجات في جدة", "BATTLE\nALVAS\nCAMP\nSTRAUSS\nتأسسنا في جدة\nنركب كل سبت\nمجتمع الدراجات في جدة"),
       ],
     },
     {

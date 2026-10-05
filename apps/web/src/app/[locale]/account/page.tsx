@@ -29,6 +29,7 @@ import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, recordRows, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
 import { riyadhClock } from "@/lib/workshop-days";
+import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
 import { isRtl } from "@/i18n/locales";
@@ -206,7 +207,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         {!hidden.includes("club") && (
           <section className="ac-sec" aria-labelledby="ac-club-h">
             <h2 id="ac-club-h">{S(c.home.clubTitle)}</h2>
-            <ClubCard locale={locale} title="" text="" notMember={S(club.card.notMember)} applyBtn={S(club.hero.applyBtn)} applyHref={localHref(S(club.hero.applyHref), locale)} tierNames={tierNames} email={acct.email} phone={acct.phone} />
+            <ClubCard locale={locale} title="" text="" notMember={S(club.card.notMember)} applyBtn={S(club.hero.applyBtn)} applyHref={localHref(S(club.hero.applyHref), locale)} tierNames={tierNames} email={acct.email} phone={acct.phone} sinceFmt={datePattern(locale, DATE_STYLES.memberSince)} />
           </section>
         )}
 

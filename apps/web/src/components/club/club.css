@@ -58,6 +58,7 @@ html:is([lang="ar"], [lang="ur"]) .club-eyebrow { letter-spacing: 0; font-size: 
 .club-notmember { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; background: rgba(7, 122, 75, .07); border-radius: 16px; padding: 16px 18px; color: #2b332d; font-size: 14px; line-height: 1.55; }
 .club-notmember a { color: #077a4b; font-weight: 800; }
 .club-mine { display: flex; flex-direction: column; gap: 14px; }
+.club-mine:focus { outline: none; } /* focused when the visitor opens the card (ClubCard) */
 .club-bar { display: block; height: 6px; border-radius: 3px; background: rgba(0, 0, 0, .08); overflow: hidden; }
 .club-bar span { display: block; height: 100%; background: #077a4b; }
 .club-mine-next { color: #57605a; font-size: 13.5px; margin: 0; }

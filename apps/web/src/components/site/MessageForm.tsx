@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cleanName, nameOk, namePartsOk, normalizePhone, rpc } from "@/lib/rpc-client";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./MessageForm.text";
@@ -35,6 +35,15 @@ export default function MessageForm(p: Props) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState("");
+  // The form gives way to "sent" (and back again): focus follows, so it is not lost with the
+  // button that was pressed.
+  const doneBox = useRef<HTMLDivElement>(null);
+  const nameBox = useRef<HTMLInputElement>(null);
+  const again = useRef(false);
+  useEffect(() => {
+    if (done) doneBox.current?.focus();
+    else if (again.current) { again.current = false; nameBox.current?.focus(); }
+  }, [done]);
 
   async function send() {
     setErr("");
@@ -60,18 +69,18 @@ export default function MessageForm(p: Props) {
 
   if (done) {
     return (
-      <div className={`mf-done ${p.className || ""}`} role="status">
+      <div ref={doneBox} tabIndex={-1} className={`mf-done ${p.className || ""}`} role="status">
         <strong>{p.doneTitle}</strong>
         <span>{p.doneText}</span>
         <small>{t.ref}: <b className="mm-lat">{done}</b></small>
-        <button type="button" className="mf-again" onClick={() => { setDone(""); setMessage(""); }}>{t.another}</button>
+        <button type="button" className="mf-again" onClick={() => { again.current = true; setDone(""); setMessage(""); }}>{t.another}</button>
       </div>
     );
   }
 
   return (
     <div className={`mf-fields ${p.className || ""}`}>
-      <input className={`mf-input${p.withCompany ? "" : " mf-wide"}`} value={name} onChange={(e) => setName(e.target.value.replace(/[-‐-―]/g, " "))} placeholder={t.name} aria-label={t.name} autoComplete="name" maxLength={120} />
+      <input ref={nameBox} className={`mf-input${p.withCompany ? "" : " mf-wide"}`} value={name} onChange={(e) => setName(e.target.value.replace(/[-‐-―]/g, " "))} placeholder={t.name} aria-label={t.name} autoComplete="name" maxLength={120} />
       {p.withCompany && <input className="mf-input" value={company} onChange={(e) => setCompany(e.target.value)} placeholder={t.company} aria-label={t.company} autoComplete="organization" maxLength={120} />}
       <input className="mf-input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t.email} aria-label={t.email} type="email" autoComplete="email" dir="ltr" maxLength={254} />
       <input className="mf-input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.phone} aria-label={t.phone} inputMode="tel" autoComplete="tel" dir="ltr" maxLength={20} />

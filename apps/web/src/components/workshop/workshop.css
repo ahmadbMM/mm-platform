@@ -74,6 +74,7 @@ textarea.ws-input { resize: vertical; min-height: 76px; }
 .ws-btn-line { border: 1px solid rgba(0, 0, 0, .2); background: #fff; color: #1a1919; }
 .ws-done { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .ws-done .ws-eyebrow { margin: 0 0 8px; }
+.ws-done:focus, .ws-card h2:focus { outline: none; } /* focused when the form gives way to its reference and back (WorkshopForm) */
 .ws-ref-label { margin: 0; color: #5f6862; font-size: 13px; }
 .ws-ref { font-size: 40px; letter-spacing: -1px; }
 .ws-done-text { color: #57605a; font-size: 15px; line-height: 1.6; max-width: 360px; margin: 6px 0 16px; }

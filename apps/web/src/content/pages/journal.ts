@@ -4,7 +4,7 @@ import { bi, type PageSchema } from "@/content/types";
 // were examples full of made-up specifics (a Friday ride, a café, models, rental credit), so the
 // Journal starts with three short ones that say only what is true of the rides and the workshop.
 // An article is plain text: a blank line starts a paragraph, "## " a heading, "- " a list item
-// (lib/journal.ts). Its address is made from its English title.
+// (lib/journal.ts). Its address is the one staff give it (slug), else made from its English title.
 const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 
@@ -37,6 +37,11 @@ export const journalSchema = {
           id: "items", type: "list", maxItems: 30, label: bi("Articles", "المقالات"),
           item: [
             txt("title", 90, "Title", "العنوان", "", ""),
+            {
+              ...txt("slug", 60, "Link address (optional)", "عنوان الرابط (اختياري)", "", ""), mono: true,
+              hint: bi("The end of the article's link: chain-care gives micromobility.sa/journal/chain-care. Letters, numbers and hyphens. Set it before the article is shared, and editing the title never breaks its link. Left empty, the link is made from the English title.",
+                "نهاية رابط المقال: chain-care يعطي micromobility.sa/journal/chain-care. حروف إنجليزية وأرقام وشرطات. حدّده قبل مشاركة المقال، فلا ينكسر رابطه إذا عدّلت العنوان. إذا تُرك فارغاً يُصنع الرابط من العنوان الإنجليزي."),
+            },
             txt("tag", 24, "Tag", "الوسم", "", ""),
             { ...txt("date", 10, "Date (YYYY-MM-DD)", "التاريخ (YYYY-MM-DD)", "", ""), mono: true },
             { id: "cover", type: "image", label: bi("Cover photo", "صورة الغلاف"), def: "" },

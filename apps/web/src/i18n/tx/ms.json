@@ -1149,5 +1149,14 @@
  "I have read the waiver and agree on behalf of everyone on this booking": "Saya telah membaca penepian liabiliti dan bersetuju bagi pihak semua orang dalam tempahan ini",
  "Waiver needed": "Penepian liabiliti diperlukan",
  "Our team booked you on this ride. Read its waiver and agree to it to continue.": "Pasukan kami telah menempah kayuhan ini untuk anda. Baca penepian liabilitinya dan bersetuju dengannya untuk meneruskan.",
- "Agree and continue": "Setuju dan teruskan"
+ "Agree and continue": "Setuju dan teruskan",
+ "That day can no longer be booked - pick another day.": "Hari itu tidak boleh ditempah lagi – pilih hari lain.",
+ "That time can no longer be booked - pick another time.": "Masa itu tidak boleh ditempah lagi – pilih masa lain.",
+ "The parts could not be added - untick them and name them in the notes.": "Alat ganti tidak dapat ditambah – nyahtanda dan nyatakan dalam nota.",
+ "Pick how the bike gets to us.": "Pilih cara basikal anda sampai kepada kami.",
+ "Shorten your bike's name to 80 characters.": "Pendekkan nama basikal anda kepada 80 aksara.",
+ "Shorten your note to 600 characters.": "Pendekkan nota anda kepada 600 aksara.",
+ "That code is for bike rentals only.": "Kod itu hanya untuk sewaan basikal.",
+ "{category} bikes in the Micromobility catalogue: models, photos and specifications.": "Basikal kategori {category} dalam katalog Micromobility: model, foto dan spesifikasi.",
+ "Show the map": "Tunjukkan peta"
 }

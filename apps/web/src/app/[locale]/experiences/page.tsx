@@ -139,7 +139,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
 
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
-            <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={localHref("/club", locale)} text={text}
+            <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} text={text}
               prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? (p.type === "Any" && anyTop > p.price ? `${sar(p.price)} – ${sar(anyTop)}` : sar(p.price)) : S(d.free) }))} />
           </section>
 

@@ -50,6 +50,7 @@ html:is([lang="ar"], [lang="ur"]) .amb-eyebrow { letter-spacing: 0; font-size: 1
 .amb-board b { color: #077a4b; white-space: nowrap; }
 /* The card lookup and the card itself */
 .amb-portal-wrap { padding: 60px 7vw 20px; max-width: 1160px; margin: 0 auto; box-sizing: content-box; }
+.amb-portal:focus { outline: none; } /* focused when the visitor opens the card (AmbassadorPortal) */
 .amb-lookup { background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 24px; padding: 28px; }
 .amb-lookup h2 { font-size: 24px; margin: 0 0 6px; }
 .amb-lookup > p { color: #57605a; font-size: 14.5px; margin: 0 0 16px; }
@@ -110,6 +111,7 @@ html:is([lang="ar"], [lang="ur"]) .amb-panel-title { letter-spacing: 0; }
 textarea.amb-input { resize: vertical; min-height: 90px; }
 .amb-apply-note { color: #5f6862; font-size: 12px; text-align: center; margin: 14px 0 0; }
 .amb-done { display: flex; flex-direction: column; gap: 6px; align-items: center; text-align: center; border: 1px solid rgba(7, 122, 75, .4); border-radius: 20px; background: rgba(7, 122, 75, .08); padding: 28px; }
+.amb-done:focus { outline: none; } /* focused once sent (AmbassadorApply), to read on from */
 .amb-done strong { color: #077a4b; font-size: 20px; }
 .amb-done span { color: #57605a; font-size: 14.5px; line-height: 1.6; }
 @media (max-width: 900px) {

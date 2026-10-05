@@ -21,8 +21,10 @@ export default function BuildStory({ eyebrow, title, steps }: { eyebrow: string;
       if (total <= 0) return;
       const p = Math.min(1, Math.max(0, -el.getBoundingClientRect().top / total));
       const pos = p * n;
-      setIdx(Math.min(n - 1, Math.floor(pos)));
-      setFrac(pos - Math.floor(pos));
+      // at the very end (pos = n) the last chapter is the one shown, and its bar full
+      const i = Math.min(n - 1, Math.floor(pos));
+      setIdx(i);
+      setFrac(Math.min(1, pos - i));
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
