@@ -27,6 +27,24 @@ test('a phone and a badge typed in Arabic digits go through, and reach the serve
   expect(sent[0]).toMatchObject({ p_badge: '104582', p_phone: '+966512345678' });
 });
 
+test('the phone picker: the Gulf first, then A to Z with Saudi Arabia again in its place, one code for both (the owner, 2026-10-05)', async ({ page }) => {
+  await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
+  await page.goto('/petromin', { waitUntil: 'networkidle' });
+  const opts = await page.locator('#cc option').evaluateAll((os) => os.map((o) => [(o as HTMLOptionElement).textContent, (o as HTMLOptionElement).selected]));
+  const isos = opts.map(([t]) => String(t).split(' ')[0]);
+  expect(isos.slice(0, 6)).toEqual(['SA', 'AE', 'BH', 'KW', 'OM', 'QA']);
+  expect(isos.slice(6)).toEqual([...isos.slice(6)].sort());
+  expect(isos.filter((x) => x === 'SA')).toHaveLength(2);
+  expect(isos.slice(isos.lastIndexOf('SA') - 1, isos.lastIndexOf('SA') + 2)).toEqual(['PT', 'SA', 'SD']);
+  expect(opts.filter(([, on]) => on)).toEqual([['SA +966', true]]);
+  expect(opts[0][1]).toBe(true); // the top copy shows the pick
+  await page.locator('#sessions .session').first().click();
+  await page.click('#next');
+  await page.locator('#cc').selectOption({ index: 1 });
+  await page.locator('#cc').selectOption({ index: isos.lastIndexOf('SA') });
+  await expect(page.locator('#cc')).toHaveValue('966');
+});
+
 // A number typed with its country code but no + or 00 used to get the code twice ("+971971501234567"):
 // the code goes when what is left has the length of a mobile number there and the whole does not.
 test('a number typed with its country code but no + or 00 keeps the code once', async ({ page }) => {

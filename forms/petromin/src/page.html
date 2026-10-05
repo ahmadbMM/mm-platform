@@ -3385,10 +3385,14 @@ var qrcode = function() {
     ["IN", "91"], ["PK", "92"], ["BD", "880"], ["NP", "977"], ["LK", "94"], ["PH", "63"], ["ID", "62"],
     ["ES", "34"], ["FR", "33"], ["PT", "351"], ["BR", "55"], ["MX", "52"], ["GB", "44"], ["US", "1"], ["TR", "90"]
   ];
+  // The picker shows the Gulf first, then every other code in alphabetical order with Saudi Arabia
+  // again in its place (the owner, 2026-10-05). Both Saudi rows carry "966", so the same number is
+  // stored either way, and setting cc.value picks the top one. COUNTRIES stays one row per code.
+  var CC_SHOWN = COUNTRIES.slice(0, 6).concat(COUNTRIES.slice(6).concat([COUNTRIES[0]]).sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; }));
   var cc = $("#cc"), phoneIn = $("#phone"), phoneOut = $("#phone-e164");
   (function buildCC() {
     cc.innerHTML = "";
-    COUNTRIES.forEach(function (x) { var o = document.createElement("option"); o.value = x[1]; o.setAttribute("data-iso", x[0]); o.textContent = x[0] + " +" + x[1]; cc.appendChild(o); });
+    CC_SHOWN.forEach(function (x) { var o = document.createElement("option"); o.value = x[1]; o.setAttribute("data-iso", x[0]); o.textContent = x[0] + " +" + x[1]; cc.appendChild(o); });
     cc.value = "966";
   })();
   var DIGIT_ZEROS = [0x0660, 0x06F0, 0x0966, 0x09E6];
