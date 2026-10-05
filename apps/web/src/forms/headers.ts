@@ -1,3 +1,5 @@
+import petrominPage from "./petromin-page";
+
 // The two registration forms (forms/community, forms/petromin) are single
 // self-contained pages the website serves as they are; each build writes its page into this
 // folder. These are the headers their own Cloudflare Workers sent, kept word for word: the pages
@@ -9,6 +11,10 @@
 // forms send it themselves, with the same value (no includeSubDomains: company email lives on the
 // old host); and the old X-Frame-Options beside frame-ancestors, for browsers that only read that.
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
+// Of jsDelivr, only the files the Petromin page itself loads (supabase-js, pinned with its integrity
+// hash), read from the built page so a new version needs nothing here; never the whole host, which
+// serves any npm package or GitHub file.
+const JSDELIVR = [...new Set([...petrominPage.matchAll(/<script\b[^>]*\bsrc="(https:\/\/cdn\.jsdelivr\.net\/[^"\s;,']+)"/g)].map((m) => m[1]))];
 const COMMON = {
   "content-type": "text/html; charset=utf-8",
   "cache-control": "public, max-age=300",
@@ -44,7 +50,7 @@ export const FORM_HEADERS = {
   // runs) would put the rider's details in the address.
   petromin: {
     ...COMMON,
-    "content-security-policy": csp(" https://cdn.jsdelivr.net", ["form-action 'none'"]),
+    "content-security-policy": csp(JSDELIVR.map((u) => ` ${u}`).join(""), ["form-action 'none'"]),
   },
 } as const;
 

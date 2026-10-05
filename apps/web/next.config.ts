@@ -9,15 +9,18 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // staff uploads through /media, and https images staff paste), Cloudflare Web Analytics (named in
 // the Privacy Notice), Cloudflare Turnstile (the sign-in check, once its keys are set) and, on the
 // live ride map (/live), MapLibre GL from jsDelivr with OpenStreetMap's tiles - MapLibre runs its
-// tile work in a Worker it makes from a blob, hence worker-src. Next writes its own small inline
-// scripts, hence 'unsafe-inline' for scripts. No site may frame a page (the staff preview opens in
-// its own window). The two registration forms send their own headers (src/forms/headers.ts) and
-// are left out here.
+// tile work in a Worker it makes from a blob, hence worker-src. Of jsDelivr only MapLibre's two
+// pinned files are allowed, never the whole host (it serves any npm package or GitHub file): the
+// version is components/live/LiveMap.tsx's, and a test fails when the two differ. Next writes its own
+// small inline scripts, hence 'unsafe-inline' for scripts (DEPLOY.md: a nonce cannot be used while
+// pages are kept at the edge). No site may frame a page (the staff preview opens in its own window).
+// The two registration forms send their own headers (src/forms/headers.ts) and are left out here.
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
+const MAPLIBRE = "https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl";
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://cdn.jsdelivr.net",
-  "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net",
+  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com ${MAPLIBRE}.js`,
+  `style-src 'self' 'unsafe-inline' ${MAPLIBRE}.css`,
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   `connect-src 'self' ${SUPABASE} https://cloudflareinsights.com https://tile.openstreetmap.org`,
