@@ -5,10 +5,13 @@ import handler from "./.open-next/worker.js";
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "./.open-next/worker.js";
 import { servePage } from "./src/lib/page-cache";
 import { apexTarget, movedStatus } from "./src/lib/canonical-host";
+import { prefixTitles } from "./src/lib/staging";
 
 // Staging (wrangler.jsonc env "staging", MM_ENV=staging): the same site on staging.micromobility.sa,
 // behind Cloudflare Access. Nothing on it is for search engines, and every page title starts with
-// "[Staging]" so a tab is never mistaken for the real site.
+// "[Staging]" so a tab is never mistaken for the real site: the pages write it themselves
+// (src/lib/staging.ts), so it stays once their script runs, and this adds it to any title that has
+// not (the registration forms, a plain document) - never twice.
 const isStaging = (env) => env && env.MM_ENV === "staging";
 
 const worker = {
@@ -26,7 +29,7 @@ const worker = {
     out.headers.set("X-Robots-Tag", "noindex, nofollow");
     if (!(out.headers.get("content-type") || "").includes("text/html")) return out;
     return new HTMLRewriter()
-      .on("title", { element(el) { el.prepend("[Staging] "); } })
+      .on("title", prefixTitles())
       .transform(out);
   },
 };

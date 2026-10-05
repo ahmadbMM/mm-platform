@@ -12,6 +12,10 @@ jobs:
       # else against production's.
       NEXT_PUBLIC_SUPABASE_URL: ${{ github.ref == 'refs/heads/staging' && vars.STAGING_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ github.ref == 'refs/heads/staging' && vars.STAGING_SUPABASE_ANON_KEY || vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      # Staging's pages are built knowing they are staging, so the titles of pages drawn at build
+      # time start with "[Staging]" too (apps/web/src/lib/staging.ts; the Worker's own MM_ENV covers
+      # the rest). Empty everywhere else.
+      MM_ENV: ${{ github.ref == 'refs/heads/staging' && 'staging' || '' }}
       # Cloudflare Turnstile on the sign-in (DEPLOY.md, "Sign-in protection"); empty = off.
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${{ vars.NEXT_PUBLIC_TURNSTILE_SITE_KEY }}
       # Cloudflare Web Analytics site token (DEPLOY.md, "Monitoring"); empty = no beacon from the site.
@@ -27,7 +31,7 @@ jobs:
       # project's address set they read its content, and on staging - open, Coming Soon off - the
       # Coming Soon tests then failed. Blank it for this step only.
       - run: pnpm --filter web test
-        env: { NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_ANON_KEY: "" }
+        env: { NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_ANON_KEY: "", MM_ENV: "" }
       # The two registration forms (forms/community, forms/petromin; npm packages of their own,
       # outside the pnpm workspace): the pages the website serves must be what their sources
       # build, and the forms are driven in a browser. Here, before the deploy, so a broken form

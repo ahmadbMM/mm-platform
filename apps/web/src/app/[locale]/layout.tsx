@@ -8,6 +8,7 @@ import { localeInfo } from "@/i18n/locales";
 import { clientDict } from "@/i18n/dicts";
 import { TxProvider } from "@/i18n/TxProvider";
 import WaiverGateLoader from "@/components/account/WaiverGateLoader";
+import { layoutTitle } from "@/lib/staging";
 import "../globals.css";
 
 // Self-hosted at build time, like the bike pages: no third-party font request.
@@ -24,8 +25,11 @@ const plexAr = IBM_Plex_Sans_Arabic({
 const BEACON = process.env.NEXT_PUBLIC_CF_BEACON_TOKEN || "";
 
 // Relative share images (/site/..., /media/...) resolve against the site's own address; without
-// this Next falls back to http://localhost:3000 on Cloudflare and every WhatsApp preview breaks.
-export const metadata: Metadata = { metadataBase: new URL("https://micromobility.sa") };
+// this Next falls back to http://localhost:3000 on Cloudflare and every WhatsApp preview breaks. On
+// staging every page's title goes into the "[Staging] %s" template (lib/staging.ts).
+export function generateMetadata(): Metadata {
+  return { metadataBase: new URL("https://micromobility.sa"), ...layoutTitle() };
+}
 
 export default async function LocaleLayout({
   children, params,
