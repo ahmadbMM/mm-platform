@@ -206,9 +206,9 @@ export function bookingEntries(input: BookInput, riders: Rider[], s: LiveSession
 
 /** The waiver text's version (WAIVER_VERSION / SWIM_WAIVER_VERSION / ACTIVITY_WAIVER_VERSION): every rider row carries the
  *  wording it was agreed under. Bump it with the app's whenever the text changes. */
-export const WAIVER_VERSION = "2026-10-v2";
-export const SWIM_WAIVER_VERSION = "swim-2026-10-v2";
-export const ACTIVITY_WAIVER_VERSION = "activity-2026-10-v1";
+export const WAIVER_VERSION = "2026-10-v3";
+export const SWIM_WAIVER_VERSION = "swim-2026-10-v3";
+export const ACTIVITY_WAIVER_VERSION = "activity-2026-10-v2";
 const WAIVER_VERSIONS = { bike: WAIVER_VERSION, swim: SWIM_WAIVER_VERSION, activity: ACTIVITY_WAIVER_VERSION } as const;
 export const waiverVersionFor = (s: Pick<BookSession, "kind">): string | null => (needsWaiver(s) ? WAIVER_VERSIONS[waiverKind(s)] : null);
 

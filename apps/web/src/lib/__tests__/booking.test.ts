@@ -197,13 +197,13 @@ describe("the server's checks", () => {
   it("builds the rows customer_create_booking takes, with no price and the code only where it discounts", () => {
     const input = { sessionId: live.id, riders: [r("Road", "180"), r("Own", "120", "Kid")], group: null, addons: [], promo: { code: "SARA10", appliesTo: null }, waiver: true };
     const rows = bookingEntries(input, input.riders, live, acct, waiverVersionFor(live));
-    expect(rows[0]).toMatchObject({ name: "Sara Ali", size: "L", height: 180, type_preference: "Road", status: "waiting", promo_code: "SARA10", waiver_version: "2026-10-v2", session_day: "Tuesday" });
+    expect(rows[0]).toMatchObject({ name: "Sara Ali", size: "L", height: 180, type_preference: "Road", status: "waiting", promo_code: "SARA10", waiver_version: "2026-10-v3", session_day: "Tuesday" });
     expect(rows[1]).toMatchObject({ name: "Kid", size: "", type_preference: "Own", promo_code: null });
     expect(rows[0]).not.toHaveProperty("price");
     expect(rows[0]).not.toHaveProperty("approval");
     const ws = liveSession({ ...row, event_kind: "community", ride_kind: "workshop", open_to_all: true }, "2026-10-03")!;
     expect(bookingEntries({ ...input, promo: null }, [r("")], ws, acct, waiverVersionFor(ws))[0]).toMatchObject({ type_preference: "None", height: null, approval: "pending" });
-    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-10-v2");
+    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-10-v3");
   });
   it("refuses a capped waitlist that is full, and only then", () => {
     const s = { full: false, approval: false, capacity: 10, wlCap: 2 };
@@ -281,7 +281,7 @@ describe("api/booking", () => {
     expect(made.body).toMatchObject({ p_id: "c1", p_token: TOKEN });
     const entries = made.body.p_entries as Record<string, unknown>[];
     expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ name: "Sara Ali", type_preference: "Road", size: "L", height: 180, waiver_version: "2026-10-v2" });
+    expect(entries[0]).toMatchObject({ name: "Sara Ali", type_preference: "Road", size: "L", height: 180, waiver_version: "2026-10-v3" });
     expect(entries[0]).not.toHaveProperty("price");
     expect(calls.find((c) => c.fn === "customer_booking_update")!.body).toMatchObject({ p_entry_id: "q1", p_patch: { addons: '[{"id":"g1","qty":2}]' } });
     expect(calls.find((c) => c.fn === "customer_addon_stock")!.body).toMatchObject({ p_items: [{ id: "g1", delta: -2 }] });
@@ -340,22 +340,24 @@ describe("api/booking/promo and /profile", () => {
   });
 });
 
-describe("the waiver wording (the booking app's 2026-10-v2)", () => {
+describe("the waiver wording (the booking app's 2026-10-v3)", () => {
   it("keeps every clause in English and Arabic, for the ride and the swim", async () => {
     const { T } = await import("../../components/experiences/Booking.text");
-    expect(waiverVersionFor(base)).toBe("2026-10-v2");
+    expect(waiverVersionFor(base)).toBe("2026-10-v3");
     for (const kind of ["bike", "swim"] as const) {
       const en = T.en.waiver[kind].body;
       for (const clause of [
         "You cannot book any", "until you have read and agreed to this waiver", "entirely at my own risk", "I alone am responsible for myself, my safety",
         "personal belongings", "To the fullest extent permitted by law", "MicroMobility, its staff and its partners are not responsible",
         "including any injury, fracture, illness, loss, theft or damage", "however it is caused", "during the activity or in connection with it",
+        "I am also responsible for any damage I cause to other people or their property",
       ]) expect(en).toContain(clause);
       const ar = T.ar.waiver[kind].body;
       for (const clause of [
         "لا يمكنك حجز أي", "إلا بعد قراءة هذا الإقرار والموافقة عليه", "على مسؤوليتي الشخصية بالكامل", "وأتحمل وحدي المسؤولية عن نفسي وسلامتي",
         "ممتلكاتي الشخصية", "وإلى أقصى حد يسمح به النظام", "لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية",
         "أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف", "أيًّا كان سببه", "أثناء النشاط أو بسببه",
+        "وأنا مسؤول عن أي أضرار ألحقها بالآخرين أو بممتلكاتهم",
       ]) expect(ar).toContain(clause);
     }
     expect(T.en.waiver.bike.body).toContain("I agree to wear a helmet");
@@ -368,17 +370,17 @@ describe("the waiver wording (the booking app's 2026-10-v2)", () => {
     expect(T.ar.waiver.swim.body).toContain("ضمن المنطقة الخاضعة للإشراف");
   });
 
-  it("gives every other kind the activity waiver (activity-2026-10-v1), every clause in English and Arabic", async () => {
+  it("gives every other kind the activity waiver (activity-2026-10-v2), every clause in English and Arabic", async () => {
     const { T } = await import("../../components/experiences/Booking.text");
     for (const kind of ["workshop", "event"] as const) {
       expect(needsWaiver({ kind })).toBe(true);
       expect(waiverKind({ kind })).toBe("activity");
-      expect(waiverVersionFor({ kind })).toBe("activity-2026-10-v1");
+      expect(waiverVersionFor({ kind })).toBe("activity-2026-10-v2");
     }
-    expect(waiverVersionFor({ kind: "other" as RideKind })).toBe("activity-2026-10-v1");
+    expect(waiverVersionFor({ kind: "other" as RideKind })).toBe("activity-2026-10-v2");
     expect(waiverKind({ kind: "swim" })).toBe("swim");
-    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-10-v2");
-    for (const kind of ["jcc", "saturday", "petromin", "snd96"] as const) expect(waiverVersionFor({ kind })).toBe("2026-10-v2");
+    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-10-v3");
+    for (const kind of ["jcc", "saturday", "petromin", "snd96"] as const) expect(waiverVersionFor({ kind })).toBe("2026-10-v3");
     const en = T.en.waiver.activity, ar = T.ar.waiver.activity;
     expect(en.title).toBe("Activity waiver");
     expect(ar.title).toBe("إقرار المشاركة");
@@ -399,5 +401,16 @@ describe("the waiver wording (the booking app's 2026-10-v2)", () => {
       "وأتعهد بالالتزام بتعليمات الفريق وإدارة الموقع.",
     ]) expect(ar.body).toContain(clause);
     expect(en.body).not.toMatch(/helmet|swim|bike/i);
+  });
+
+  it("is word for word the waiver the forced pop-up shows (content/waivers.ts), and stamps the same versions", async () => {
+    const { T } = await import("../../components/experiences/Booking.text");
+    const { WAIVER_VERSIONS, waiverCopy } = await import("../../content/waivers");
+    const en = (a: string) => a, ar = (_: string, b: string) => b;
+    for (const [kind, w] of [["bike", "ride"], ["swim", "swim"], ["activity", "activity"]] as const) {
+      expect(T.en.waiver[kind]).toEqual(waiverCopy(w, en as never));
+      expect(T.ar.waiver[kind]).toEqual(waiverCopy(w, ar as never));
+    }
+    expect([waiverVersionFor(base), waiverVersionFor({ kind: "swim" }), waiverVersionFor({ kind: "event" })]).toEqual(Object.values(WAIVER_VERSIONS));
   });
 });
