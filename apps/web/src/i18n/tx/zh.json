@@ -1212,5 +1212,14 @@
  "After": "之后",
  "Breakfast at {0}": "在 {0} 享用早餐",
  "Announced {0}": "{0}公布",
- "Meeting point and breakfast spot: announced {0}": "集合地点和早餐地点：{0}公布"
+ "Meeting point and breakfast spot: announced {0}": "集合地点和早餐地点：{0}公布",
+ "Before the race": "比赛之前",
+ "Sharing your details for the race": "为比赛共享您的信息",
+ "To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):": "为让您参加比赛，我们将与 Sela 和吉达游艇俱乐部（JYC）共享您的以下信息：",
+ "Email address": "电子邮箱地址",
+ "Birth date": "出生日期",
+ "Distance chosen": "所选距离",
+ "Emergency contact": "紧急联系人",
+ "Nothing else about you is shared, and only for this race.": "除此之外，我们不会共享您的任何其他信息，且仅用于本次比赛。",
+ "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "我同意 MicroMobility 与 Sela 和吉达游艇俱乐部（JYC）共享上述信息，以便我参加比赛。"
 }

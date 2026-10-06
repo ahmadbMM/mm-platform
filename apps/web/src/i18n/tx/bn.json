@@ -1212,5 +1212,14 @@
  "After": "এরপর",
  "Breakfast at {0}": "{0}-এ নাশতা",
  "Announced {0}": "ঘোষণা: {0}",
- "Meeting point and breakfast spot: announced {0}": "মিলনস্থল ও নাশতার জায়গার ঘোষণা: {0}"
+ "Meeting point and breakfast spot: announced {0}": "মিলনস্থল ও নাশতার জায়গার ঘোষণা: {0}",
+ "Before the race": "রেসের আগে",
+ "Sharing your details for the race": "রেসের জন্য আপনার তথ্য শেয়ার করা",
+ "To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):": "রেসে অংশ নিতে, আমরা আপনার এই তথ্যগুলো Sela এবং জেদ্দা ইয়ট ক্লাব (JYC)-এর সঙ্গে শেয়ার করব:",
+ "Email address": "ইমেইল ঠিকানা",
+ "Birth date": "জন্মতারিখ",
+ "Distance chosen": "বেছে নেওয়া দূরত্ব",
+ "Emergency contact": "জরুরি যোগাযোগ",
+ "Nothing else about you is shared, and only for this race.": "আপনার সম্পর্কে এর বাইরে আর কিছুই শেয়ার করা হয় না, এবং শুধু এই রেসের জন্যই।",
+ "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "আমি সম্মত যে MicroMobility এই তথ্যগুলো Sela এবং জেদ্দা ইয়ট ক্লাব (JYC)-এর সঙ্গে শেয়ার করবে, যাতে আমি রেসে অংশ নিতে পারি।"
 }

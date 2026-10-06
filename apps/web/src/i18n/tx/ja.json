@@ -1212,5 +1212,14 @@
  "After": "その後",
  "Breakfast at {0}": "{0}での朝食",
  "Announced {0}": "{0}に発表",
- "Meeting point and breakfast spot: announced {0}": "集合場所と朝食の場所：{0}に発表"
+ "Meeting point and breakfast spot: announced {0}": "集合場所と朝食の場所：{0}に発表",
+ "Before the race": "レースの前に",
+ "Sharing your details for the race": "レースのための情報共有",
+ "To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):": "レースに参加していただくため、あなたの以下の情報をSelaおよびジェッダ・ヨットクラブ（JYC）と共有します：",
+ "Email address": "メールアドレス",
+ "Birth date": "生年月日",
+ "Distance chosen": "選択した距離",
+ "Emergency contact": "緊急連絡先",
+ "Nothing else about you is shared, and only for this race.": "これ以外の情報は共有されません。また、共有は本レースに限ります。",
+ "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "レースに参加するため、MicroMobilityがこれらの情報をSelaおよびジェッダ・ヨットクラブ（JYC）と共有することに同意します。"
 }

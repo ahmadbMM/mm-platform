@@ -1212,5 +1212,14 @@
  "After": "Setelahnya",
  "Breakfast at {0}": "Sarapan di {0}",
  "Announced {0}": "Diumumkan {0}",
- "Meeting point and breakfast spot: announced {0}": "Titik kumpul dan tempat sarapan: diumumkan {0}"
+ "Meeting point and breakfast spot: announced {0}": "Titik kumpul dan tempat sarapan: diumumkan {0}",
+ "Before the race": "Sebelum lomba",
+ "Sharing your details for the race": "Berbagi data Anda untuk lomba",
+ "To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):": "Agar Anda dapat ikut serta dalam lomba, kami akan membagikan data Anda berikut kepada Sela dan Jeddah Yacht Club (JYC):",
+ "Email address": "Alamat email",
+ "Birth date": "Tanggal lahir",
+ "Distance chosen": "Jarak yang dipilih",
+ "Emergency contact": "Kontak darurat",
+ "Nothing else about you is shared, and only for this race.": "Tidak ada data lain tentang Anda yang dibagikan, dan hanya untuk lomba ini.",
+ "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "Saya setuju MicroMobility membagikan data ini kepada Sela dan Jeddah Yacht Club (JYC) agar saya dapat ikut serta dalam lomba."
 }

@@ -1,7 +1,7 @@
-/* A desk-added booking's waiver pop-up (WaiverGate). Its frame is the rating gate's (rating.css:
-   .rg-gate centred over the page on every screen, never a bottom sheet; .rg-box, .rg-kicker,
-   .rg-flag, .rg-title); this is what it shows inside. Its own file because the pop-up shows on
-   every page (WaiverGateLoader in the layout). */
+/* A desk-added booking's waiver pop-up (WaiverGate), and Run for Her's agreement to share (ShareGate,
+   at the end). Its frame is the rating gate's (rating.css: .rg-gate centred over the page on every
+   screen, never a bottom sheet; .rg-box, .rg-kicker, .rg-flag, .rg-title); this is what it shows
+   inside. Its own file because the pop-up shows on every page (WaiverGateLoader in the layout). */
 html.wg-lock, html.wg-lock body { overflow: hidden; }
 .wg-kicker { color: #8a5c14; }
 .wg-kicker .rg-flag { background: rgba(138, 92, 20, .12); color: #8a5c14; }
@@ -34,4 +34,20 @@ html:is([lang="ar"], [lang="ur"]) .wg-sec { letter-spacing: 0; font-size: 12px; 
 @media (max-width: 420px) {
   .wg-sess { padding: 12px; }
   .wg-text { max-height: 180px; padding: 12px; }
+}
+/* A Run for Her runner's agreement to share their details with the race's hosts (ShareGate, the owner
+   2026-10-06): the same frame and look, with the run's pink on its kicker (#a3325b for the words, as on
+   the ticket's distance chip, so 12px stays readable), the list of what is shared, and a spinner on the
+   button while it is sent. */
+.sg-kicker { color: #a3325b; }
+.sg-kicker .rg-flag { background: rgba(194, 65, 110, .12); color: #c2416e; }
+.sg-list { list-style: none; margin: 0; border: 1px solid rgba(0, 0, 0, .12); border-radius: 12px; padding: 12px 14px; background: #fff; display: flex; flex-direction: column; gap: 8px; }
+.sg-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; line-height: 1.4; color: #1a1919; min-width: 0; overflow-wrap: anywhere; }
+.sg-list svg { flex: none; color: #077a4b; }
+.sg-note { margin: 0; color: #57605a; font-size: 13px; line-height: 1.5; }
+.sg-spin { display: inline-block; width: 14px; height: 14px; margin-inline-end: 8px; vertical-align: -2px; box-sizing: border-box; border: 2px solid currentColor; border-inline-end-color: transparent; border-radius: 50%; animation: sg-spin .8s linear infinite; }
+@keyframes sg-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .sg-spin { animation-duration: 2.4s; } }
+@media (max-width: 420px) {
+  .sg-list { padding: 10px 12px; }
 }

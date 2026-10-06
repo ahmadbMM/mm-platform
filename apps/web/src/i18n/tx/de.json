@@ -1212,5 +1212,14 @@
  "After": "Danach",
  "Breakfast at {0}": "Frühstück bei {0}",
  "Announced {0}": "Bekanntgabe {0}",
- "Meeting point and breakfast spot: announced {0}": "Treffpunkt und Frühstücksort: Bekanntgabe {0}"
+ "Meeting point and breakfast spot: announced {0}": "Treffpunkt und Frühstücksort: Bekanntgabe {0}",
+ "Before the race": "Vor dem Lauf",
+ "Sharing your details for the race": "Weitergabe deiner Daten für den Lauf",
+ "To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):": "Damit du am Lauf teilnehmen kannst, geben wir diese Daten über dich an Sela und den Jeddah Yacht Club (JYC) weiter:",
+ "Email address": "E-Mail-Adresse",
+ "Birth date": "Geburtsdatum",
+ "Distance chosen": "Gewählte Distanz",
+ "Emergency contact": "Notfallkontakt",
+ "Nothing else about you is shared, and only for this race.": "Sonst geben wir nichts über dich weiter – und nur für diesen Lauf.",
+ "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "Ich bin einverstanden, dass MicroMobility diese Daten an Sela und den Jeddah Yacht Club (JYC) weitergibt, damit ich am Lauf teilnehmen kann."
 }
