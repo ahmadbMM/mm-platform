@@ -194,18 +194,23 @@ export function ticketSession(r: Row): TicketSession | null {
   };
 }
 
-/** The Saturday ride's meeting point and breakfast spot, told at a time staff choose (the owner,
- *  2026-10-06; the booking app's _spotHeld): until sessions.reveal_at, list_sessions gives the session
- *  with its place, route and breakfast stop blank, so the site says when they are told instead of
- *  reading the blank as the circuit. A session that came with them has been told. One read before the
- *  time and drawn after it (a copy kept for a minute) still says when, for REVEAL_GRACE_MS at most. */
+/** The Saturday ride's breakfast spot, told at a time staff choose (the owner, 2026-10-06, then "show the
+ *  meeting point immediately only hide the breakfast spot and location"; the booking app's _spotHeld): until
+ *  sessions.reveal_at, list_sessions gives the session with its breakfast stop, place and route blank and its
+ *  meeting point as it is (rentals 20261006150000, 170000), so the site says when the breakfast spot is told. A
+ *  session that came with it has been told. One read before the time and drawn after it (a copy kept for a minute)
+ *  still says when, for REVEAL_GRACE_MS at most. */
 export const REVEAL_GRACE_MS = 6 * 3600e3;
-export function spotHeld(s: { revealAt?: string | null; meetUrl?: string | null; location?: string | null; breakfast?: unknown } | undefined, now: number = Date.now()): boolean {
+export function spotHeld(s: { revealAt?: string | null; location?: string | null; breakfast?: unknown } | undefined, now: number = Date.now()): boolean {
   const r = s?.revealAt ? Date.parse(s.revealAt) : NaN;
   if (!s || !Number.isFinite(r)) return false;
-  if (s.meetUrl || s.location || s.breakfast) return false;
+  if (s.location || s.breakfast) return false;
   return r > now || now - r < REVEAL_GRACE_MS;
 }
+/** Held, and the session came without its meeting point (a database before rentals 20261006170000, or none set
+ *  yet; the booking app's _meetHeld): it meets at a point, unnamed, never the circuit. */
+export const meetHeld = (s: { revealAt?: string | null; meetUrl?: string | null; location?: string | null; breakfast?: unknown } | undefined, now: number = Date.now()): boolean =>
+  spotHeld(s, now) && !s?.meetUrl;
 
 /** When they are told, in Riyadh time (the booking app's _revealWhen): "Tomorrow · 8 PM", "Friday · 9 Oct
  *  2026 · 8:30 PM", with the page's own words for today and tomorrow. "" without a time. */
@@ -366,7 +371,7 @@ export function ticketStages(rows: TicketRow[], bikes: boolean, bikeName: string
 export type RouteItem = { name: string; km: number; level: string; surface: string; href: string };
 export type TicketRoute = { name: string | null; km: number; lap: boolean; note: string | null; href: string | null; track: boolean };
 export function ticketRoute(s: TicketSession | undefined, routes: Map<string, RouteItem>, now: number = Date.now()): TicketRoute | null {
-  if (!s || !s.bikes || spotHeld(s, now)) return null; // where it goes is told with where it meets
+  if (!s || !s.bikes || spotHeld(s, now)) return null; // where it goes is told with the breakfast spot
   if (s.routeSlug) {
     const r = routes.get(s.routeSlug);
     if (!r) return null;
@@ -467,14 +472,14 @@ export function icsFor(s: TicketSession, summary: string, place: string, now: Da
   const esc = (v: string) => v.replace(/[\\,;]/g, (x) => `\\${x}`).replace(/\n/g, "\\n");
   const stamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const words = icsWords(s);
-  // a ride whose meeting point is told later has no place yet: the entry says when it is told
-  const held = spotHeld(s, now.getTime());
-  const told = held ? `\n\nMeeting point and breakfast spot: announced ${revealWhen(s.revealAt, "en", riyadhClock(now).slice(0, 10), { today: "Today", tomorrow: "Tomorrow" })}` : "";
+  // the breakfast spot told later: the entry says when; a held ride without its meeting point has no place rather than the circuit
+  const told = spotHeld(s, now.getTime()) ? `\n\nBreakfast spot: announced ${revealWhen(s.revealAt, "en", riyadhClock(now).slice(0, 10), { today: "Today", tomorrow: "Tomorrow" })}` : "";
+  const noPlace = meetHeld(s, now.getTime());
   return [
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//Corniche Circuit//EN", "CALSCALE:GREGORIAN", "BEGIN:VEVENT",
     `UID:${s.id}-${now.getTime()}@micromobility`, `DTSTAMP:${stamp}`,
     `DTSTART:${utc(sMin)}`, `DTEND:${utc(eMin)}`,
-    `SUMMARY:${esc(summary)}`, ...(held ? [] : [`LOCATION:${esc(place || "Jeddah Corniche Circuit")}`]),
+    `SUMMARY:${esc(summary)}`, ...(noPlace ? [] : [`LOCATION:${esc(place || "Jeddah Corniche Circuit")}`]),
     `DESCRIPTION:${esc(words.desc + told)}`,
     "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", `DESCRIPTION:${esc(words.alarm)}`, "END:VALARM",
     "END:VEVENT", "END:VCALENDAR",
