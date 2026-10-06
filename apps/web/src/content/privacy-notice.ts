@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-10-05";
+export const PRIVACY_VERSION = "2026-10-06";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -89,8 +89,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "Emergency contact: the name, mobile number and relationship to you of someone we can call",
-      "Required to take part in some events, such as Run for Her; optional on your account page. Seen only by our staff. Please tell that person you gave us their details.",
-      "Calling someone for you if you need help during an event. We never contact them for anything else, and never share their details."
+      "Required to take part in some events, such as Run for Her; optional on your account page. Seen only by our staff, and by the hosts of an event you agree to share it with. Please tell that person you gave us their details.",
+      "Calling someone for you if you need help during an event. We never contact them for anything else, and share their details only with the hosts of an event you agree to share them with."
      ],
      [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
@@ -126,7 +126,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>To provide the service you asked for</strong> (bookings, check-in, bike fitting, the ride waiver, contacting you about your rides): this is needed to carry out our agreement with you.",
     "<strong>To keep financial records:</strong> the law requires it.",
     "<strong>For anonymised totals and to improve our service:</strong> our legitimate interest. Totals never identify anyone.",
-    "<strong>For optional details and ride news:</strong> your consent. You give it by filling in those fields or choosing ride news, and you can withdraw it at any time."
+    "<strong>For optional details and ride news:</strong> your consent. You give it by filling in those fields or choosing ride news, and you can withdraw it at any time.",
+    "<strong>To share a runner’s details with the hosts of Run for Her:</strong> your consent, which we ask for before you can take part in the race."
    ]
   },
   {
@@ -176,6 +177,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "Petromin",
       "The names of riders on rides we run for Petromin, and nothing else",
+      "Saudi Arabia"
+     ],
+     [
+      "Sela and Jeddah Yacht Club (JYC)",
+      "For Run for Her, and only if you agree: your full name, email address, birth date, the distance you chose and your emergency contact, so you can take part in the race. Nothing else about you.",
       "Saudi Arabia"
      ],
      [
@@ -364,8 +370,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "جهة اتصال للطوارئ: اسم شخص يمكننا الاتصال به ورقم جواله وصلة قرابته بك",
-      "مطلوبة للمشاركة في بعض الفعاليات مثل سباق نركض لأجلها، واختيارية في صفحة حسابك. لا يراها إلا موظفونا. يُرجى إبلاغ ذلك الشخص بأنك أعطيتنا بياناته.",
-      "الاتصال بشخص نيابةً عنك إن احتجت إلى مساعدة أثناء إحدى الفعاليات. لا نتواصل معه لأي غرض آخر، ولا نشارك بياناته أبدًا."
+      "مطلوبة للمشاركة في بعض الفعاليات مثل سباق نركض لأجلها، واختيارية في صفحة حسابك. لا يراها إلا موظفونا، والجهات المنظِّمة لفعالية توافق على مشاركتها معها. يُرجى إبلاغ ذلك الشخص بأنك أعطيتنا بياناته.",
+      "الاتصال بشخص نيابةً عنك إن احتجت إلى مساعدة أثناء إحدى الفعاليات. لا نتواصل معه لأي غرض آخر، ولا نشارك بياناته إلا مع الجهات المنظِّمة لفعالية توافق على مشاركتها معها."
      ],
      [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
@@ -401,7 +407,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>لتقديم الخدمة التي طلبتها</strong> (الحجوزات، وتسجيل الوصول، واختيار مقاس الدراجة، وإقرار الركوب، والتواصل معك بشأن رحلاتك): وهذا لازم لتنفيذ الاتفاق بيننا وبينك.",
     "<strong>لحفظ السجلات المالية:</strong> لأن النظام يُلزمنا بذلك.",
     "<strong>للإحصاءات المجمّعة وتحسين خدماتنا:</strong> مصلحتنا المشروعة، ولا تحدد الإحصاءات هوية أحد.",
-    "<strong>للبيانات الاختيارية وأخبار الرحلات:</strong> موافقتك، وتمنحها بتعبئة تلك الحقول أو باختيار أخبار الرحلات، ويمكنك سحبها في أي وقت."
+    "<strong>للبيانات الاختيارية وأخبار الرحلات:</strong> موافقتك، وتمنحها بتعبئة تلك الحقول أو باختيار أخبار الرحلات، ويمكنك سحبها في أي وقت.",
+    "<strong>لمشاركة بيانات العدّاء مع الجهات المنظِّمة لسباق نركض لأجلها:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق."
    ]
   },
   {
@@ -451,6 +458,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "بترومين",
       "أسماء الراكبين في الرحلات التي ننظّمها لبترومين فقط، ولا شيء غير ذلك",
+      "المملكة العربية السعودية"
+     ],
+     [
+      "صلة ونادي جدة لليخوت (JYC)",
+      "لسباق نركض لأجلها، وفقط إذا وافقت: اسمك الكامل وبريدك الإلكتروني وتاريخ ميلادك والمسافة التي اخترتها وجهة اتصالك للطوارئ، لتتمكن من المشاركة في السباق. ولا شيء غير ذلك عنك.",
       "المملكة العربية السعودية"
      ],
      [

@@ -1469,5 +1469,12 @@
  "A triathlon swim session at the pool, {start} to {end}. No bike needed. Free; our team confirms the list.": "Una sesión de natación de triatlón en la piscina, de {start} a {end}. No hace falta bicicleta. Gratis; nuestro equipo confirma la lista.",
  "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.": "T100 Triathlon Prep, en colaboración con la Federación Saudí de Triatlón, de {start} a {end}. Abierto a todos; gratis; nuestro equipo confirma la lista.",
  "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "Reunión a las {gather}; la carrera empieza a las {start}. Elige 3 km o 5 km al reservar. Gratis; 80 plazas y después lista de espera.",
- "Meeting point and breakfast spot: announced {0}": "Punto de encuentro y lugar del desayuno: se anuncian {0}"
+ "Meeting point and breakfast spot: announced {0}": "Punto de encuentro y lugar del desayuno: se anuncian {0}",
+ "Before the race": "Antes de la carrera",
+ "Sharing your details for the race": "Compartir tus datos para la carrera",
+ "To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):": "Para participar en la carrera, compartiremos estos datos tuyos con Sela y el Jeddah Yacht Club (JYC):",
+ "Distance chosen": "Distancia elegida",
+ "Emergency contact": "Contacto de emergencia",
+ "Nothing else about you is shared, and only for this race.": "No compartimos nada más sobre ti, y solo para esta carrera.",
+ "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "Acepto que MicroMobility comparta estos datos con Sela y el Jeddah Yacht Club (JYC) para poder participar en la carrera."
 }

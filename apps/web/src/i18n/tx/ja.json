@@ -1469,5 +1469,12 @@
  "A triathlon swim session at the pool, {start} to {end}. No bike needed. Free; our team confirms the list.": "プールでのトライアスロン・スイムセッション、{start}〜{end}。自転車は不要です。無料。参加者リストはチームが確定します。",
  "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.": "サウジアラビア・トライアスロン連盟と提携したT100トライアスロン対策、{start}〜{end}。どなたでも参加でき、無料です。参加者リストはチームが確定します。",
  "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "{gather}に集合、{start}にスタートします。予約時に3 kmか5 kmをお選びください。無料。定員80名、その後はキャンセル待ちとなります。",
- "Meeting point and breakfast spot: announced {0}": "集合場所と朝食の場所：{0}に発表"
+ "Meeting point and breakfast spot: announced {0}": "集合場所と朝食の場所：{0}に発表",
+ "Before the race": "レースの前に",
+ "Sharing your details for the race": "レースのための情報共有",
+ "To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):": "レースに参加していただくため、あなたの以下の情報をSelaおよびジェッダ・ヨットクラブ（JYC）と共有します：",
+ "Distance chosen": "選択した距離",
+ "Emergency contact": "緊急連絡先",
+ "Nothing else about you is shared, and only for this race.": "これ以外の情報は共有されません。また、共有は本レースに限ります。",
+ "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "レースに参加するため、MicroMobilityがこれらの情報をSelaおよびジェッダ・ヨットクラブ（JYC）と共有することに同意します。"
 }

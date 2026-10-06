@@ -2,18 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import RatingGateLoader from "./RatingGateLoader";
+import ShareGateLoader from "./ShareGateLoader";
 import WaiverGate, { type PendingWaiver, type WaiverDone } from "./WaiverGate";
 import { WAIVER_QUIET } from "./quiet";
 
 // A desk-added booking's waiver on every page (the owner, 2026-10-04), before the post-ride rating:
 // the booking app asks for every waiver first and the rating after (_forceRatingPrompt), so this
-// loader holds the rating's (RatingGateLoader) until it has asked and nothing waits, and takes it
-// down again while a waiver is up. As the rating does, it asks /api/account/pending-waiver, which
-// answers a signed-out visitor from the cookie alone: a signed-out answer is asked again on the next
-// page, a signed-in "nothing to agree" is kept for two minutes in this tab (shorter than the
-// rating's ten: staff add a rider at the desk while they stand there), and a ride waiting puts up
-// the pop-up the rider cannot skip. Once it is agreed, the next ride (or nothing) is asked for at once.
+// loader holds the next pop-ups - a Run for Her runner's agreement to share their details
+// (ShareGateLoader, 2026-10-06), which holds the rating's (RatingGateLoader) in turn - until it has
+// asked and nothing waits, and takes them down again while a waiver is up. As the rating does, it
+// asks /api/account/pending-waiver, which answers a signed-out visitor from the cookie alone: a
+// signed-out answer is asked again on the next page, a signed-in "nothing to agree" is kept for two
+// minutes in this tab (shorter than the rating's ten: staff add a rider at the desk while they stand
+// there), and a ride waiting puts up the pop-up the rider cannot skip. Once it is agreed, the next
+// ride (or nothing) is asked for at once.
 // The two quiet minutes are the signed-in account's: every sign-in and sign-out forgets them (./quiet.ts).
 const KEY = WAIVER_QUIET;
 const QUIET_MS = 2 * 60_000;
@@ -42,7 +44,7 @@ async function check(locale: string): Promise<PendingWaiver | null> {
 export default function WaiverGateLoader({ locale }: { locale: string }) {
   const path = usePathname();
   const [pending, setPending] = useState<PendingWaiver | null>(null);
-  const [clear, setClear] = useState(false); // asked, and no waiver waits: the rating may ask now
+  const [clear, setClear] = useState(false); // asked, and no waiver waits: the next pop-ups may ask now
   const [round, setRound] = useState(0); // bumped once a waiver lands, to ask for the next ride
 
   useEffect(() => {
@@ -61,10 +63,10 @@ export default function WaiverGateLoader({ locale }: { locale: string }) {
     if (r === "absent") off = true;
     try { sessionStorage.removeItem(KEY); } catch { /* */ }
     setPending(null);
-    setClear(false); // the rating waits until the next ride's waiver has been asked for
+    setClear(false); // the next pop-ups wait until the next ride's waiver has been asked for
     setRound((n) => n + 1);
   };
 
   if (pending) return <WaiverGate key={`${pending.sessionId}-${round}`} {...pending} onDone={(r) => done(pending.sessionId, r)} />;
-  return clear ? <RatingGateLoader locale={locale} /> : null;
+  return clear ? <ShareGateLoader locale={locale} /> : null;
 }

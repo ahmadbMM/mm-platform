@@ -12,7 +12,9 @@ import type { RatingForm as Form } from "@/lib/rating";
 // alone. A signed-out answer is asked again on the next page (signing in lands on one), a signed-in
 // "nothing to rate" is kept for ten minutes in this tab, and a ride to rate puts up the pop-up the
 // rider cannot skip. Once it is rated, the next waiting ride (or nothing) is asked for at once.
-// It waits for any waiver a desk-added booking still needs: WaiverGateLoader mounts it once none does.
+// It waits for any waiver a desk-added booking still needs, and for a Run for Her runner's agreement
+// to share their details: WaiverGateLoader mounts ShareGateLoader once no waiver waits, and that
+// mounts this once no run waits either.
 // The ten quiet minutes are the signed-in account's: every sign-in and sign-out forgets them (./quiet.ts).
 // `restaurant` (2026-10-05): where a Saturday ride's breakfast was, by name in the page's language; an
 // answer from before it reads as none.
