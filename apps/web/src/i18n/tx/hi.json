@@ -1211,8 +1211,6 @@
  "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "{gather} पर मिलें; दौड़ {start} पर शुरू होती है। बुकिंग करते समय 3 किमी या 5 किमी चुनें। निःशुल्क; 80 जगहें, फिर प्रतीक्षा सूची।",
  "After": "उसके बाद",
  "Breakfast at {0}": "नाश्ता {0} में",
- "Announced {0}": "घोषणा: {0}",
- "Meeting point and breakfast spot: announced {0}": "मिलने की जगह और नाश्ते की जगह की घोषणा: {0}",
  "Before the race": "रेस से पहले",
  "Sharing your details for the race": "रेस के लिए आपकी जानकारी साझा करना",
  "To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):": "रेस में भाग लेने के लिए, हम आपकी ये जानकारी Sela और जेद्दाह यॉट क्लब (JYC) के साथ साझा करेंगे:",
@@ -1221,5 +1219,6 @@
  "Distance chosen": "चुनी गई दूरी",
  "Emergency contact": "आपातकालीन संपर्क",
  "Nothing else about you is shared, and only for this race.": "आपके बारे में इसके अलावा कुछ भी साझा नहीं किया जाता, और सिर्फ़ इसी रेस के लिए।",
- "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "मैं सहमत हूँ कि MicroMobility ये जानकारी Sela और जेद्दाह यॉट क्लब (JYC) के साथ साझा करे, ताकि मैं रेस में भाग ले सकूँ।"
+ "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "मैं सहमत हूँ कि MicroMobility ये जानकारी Sela और जेद्दाह यॉट क्लब (JYC) के साथ साझा करे, ताकि मैं रेस में भाग ले सकूँ।",
+ "Breakfast spot: announced {0}": "नाश्ते की जगह की घोषणा: {0}"
 }

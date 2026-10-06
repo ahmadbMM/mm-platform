@@ -36,7 +36,7 @@ export type StepSession = {
   /** The Saturday ride's breakfast stop by name, in the page's language (lib/event-info.ts
    *  infoBreakfast); null on any other ride or one with no stop yet. */
   breakfast: string | null;
-  /** The Saturday ride's meeting point and breakfast spot told later (lib/tickets.ts spotHeld): the line
+  /** The Saturday ride's breakfast spot told later (lib/tickets.ts spotHeld): the line
    *  that says when, ready in the page's language; null when nothing is held back. Optional, so a copy
    *  kept from before reads as none. */
   reveal?: string | null;
@@ -163,6 +163,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
     if (i.distance) out.push({ k: t.info.distance, v: <bdi>{i.distance}</bdi> });
     if (i.places) out.push({ k: t.info.places, v: i.places });
     if (s.breakfast) out.push({ k: t.info.after, v: breakfastAt(s.breakfast) });
+    else if (s.reveal) out.push({ k: t.info.after, v: s.reveal }); // the breakfast spot is told later: when
     return out;
   };
   // An event's About lists its next date's facts; the community rides' card, which stands for several

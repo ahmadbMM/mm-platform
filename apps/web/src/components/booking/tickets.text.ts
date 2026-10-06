@@ -10,7 +10,7 @@
 // tkHelmetLine/tkHelmetFree · venueCircuit evJccName · today/tomorrow mrToday/mrTomorrow ·
 // bikes2/bikesN · free freeLabel (as of the booking app's 2026-09-30 card, bb37ba1 and 9a03c12) ·
 // Run for Her (2026-10-05): runnerNumber runNumLabel · venueJyc venueJyc; a runner's distance is
-// rtKm, the booking app's runKm ("{0} km"). The meeting point told at staff's time (2026-10-06):
+// rtKm, the booking app's runKm ("{0} km"). The breakfast spot told at staff's time (2026-10-06):
 // revealSpotsAt, the booking app's own key.
 export const T = {
   en: {
@@ -82,7 +82,7 @@ export const T = {
     // the breakfast stop (the booking app's breakfastSpotLbl, vndRiderOffer)
     breakfastSpot: "Breakfast spot",
     riderOffer: (n: string) => `Offer for riders: ${n}`,
-    revealSpotsAt: (n: string) => `Meeting point and breakfast spot: announced ${n}`,
+    revealSpotsAt: (n: string) => `Breakfast spot: announced ${n}`,
     // what was bought with the booking (addonsLabel)
     addons: "Add-ons",
   },
@@ -153,7 +153,7 @@ export const T = {
     rtOsm: "الحلبة: © مساهمو OpenStreetMap",
     breakfastSpot: "موقع الفطور",
     riderOffer: (n: string) => `عرض للراكبين: ${n}`,
-    revealSpotsAt: (n: string) => `نقطة التجمع وموقع الفطور: يُعلَن عنهما ${n}`,
+    revealSpotsAt: (n: string) => `موقع الفطور: يُعلَن عنه ${n}`,
     addons: "الإضافات",
   },
 };
