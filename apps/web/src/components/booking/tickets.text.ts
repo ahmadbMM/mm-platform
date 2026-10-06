@@ -6,8 +6,8 @@
 // total reviewTotalLabel · calendar addToCalendarBtn · directions
 // ticketDirections · meetingPoint meetPointLbl · edit/reschedule/cancel · available availLabel ·
 // wlPos/wlPosNoNum wlPos(NoNum)Msg · gatherAt ticketGatherAt · collectFrom ticketCollectAt ·
-// wlOnList/wlLinePos/wlRowPos · payDue payDueLabel · payAtBooth payAtBoothLine · helmetLine/helmetBring
-// tkHelmetLine/tkHelmetBring · venueCircuit evJccName · today/tomorrow mrToday/mrTomorrow ·
+// wlOnList/wlLinePos/wlRowPos · payDue payDueLabel · payAtBooth payAtBoothLine · helmetLine/helmetFree
+// tkHelmetLine/tkHelmetFree · venueCircuit evJccName · today/tomorrow mrToday/mrTomorrow ·
 // bikes2/bikesN · free freeLabel (as of the booking app's 2026-09-30 card, bb37ba1 and 9a03c12) ·
 // Run for Her (2026-10-05): runnerNumber runNumLabel · venueJyc venueJyc; a runner's distance is
 // rtKm, the booking app's runKm ("{0} km"). The meeting point told at staff's time (2026-10-06):
@@ -40,7 +40,7 @@ export const T = {
     free: "Free",
     payAtBooth: "You pay at the booth when you arrive.",
     helmetLine: "Helmets are required. One comes with every bike.",
-    helmetBring: "Helmets are required: bring your own.",
+    helmetFree: "Helmets are required. We provide one for free.",
     venueCircuit: "Jeddah Corniche Circuit",
     venueJyc: "Jeddah Yacht Club",
     today: "Today",
@@ -113,7 +113,7 @@ export const T = {
     free: "مجاني",
     payAtBooth: "تدفع عند الكشك حين تصل.",
     helmetLine: "الخوذة إلزامية، وتأتي خوذة مع كل دراجة.",
-    helmetBring: "الخوذة إلزامية: أحضر خوذتك.",
+    helmetFree: "الخوذة إلزامية، ونوفّرها لك مجانًا.",
     venueCircuit: "حلبة كورنيش جدة",
     venueJyc: "نادي جدة لليخوت",
     today: "اليوم",

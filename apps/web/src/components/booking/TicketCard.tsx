@@ -255,7 +255,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         })}
         {(free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>}
         {owes && !past && <p className="tk-line">{t.payAtBooth}</p>}
-        {!allWl && !past && bikes && <p className="tk-line">{s?.approval ? t.helmetBring : t.helmetLine}</p>}
+        {!allWl && !past && bikes && <p className="tk-line">{s?.approval ? t.helmetFree : t.helmetLine}</p>}
       </div>
 
       {!past && <div className="tk-actions">
