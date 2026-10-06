@@ -6,6 +6,7 @@ import { intlOf } from "@/i18n/locales";
 import { fill as fillAt } from "@/i18n/tx";
 import { fill as fillNamed } from "./fill";
 import { collectTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
+import { riyadhClock } from "./workshop-days";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
 /** An add-on line on a booking (the booking app's entryAddons): the inventory item, how many, and
@@ -53,6 +54,9 @@ export type TicketSession = {
    *  booked it on the vendor portal, its map link, and the venue's offer for riders in English and
    *  Arabic (rentals migration 20261004130000). Null when the ride has none. */
   breakfast: { name: string; nameAr: string | null; url: string | null; offerEn: string | null; offerAr: string | null } | null;
+  /** When riders are told where the ride meets and has breakfast (sessions.reveal_at, ISO), or null
+   *  (spotHeld). */
+  revealAt: string | null;
 };
 
 type Row = Record<string, unknown>;
@@ -186,7 +190,30 @@ export function ticketSession(r: Row): TicketSession | null {
         offerAr: S(r.breakfast_offer_ar).trim() || null,
       }
       : null,
+    revealAt: Number.isFinite(Date.parse(S(r.reveal_at))) ? S(r.reveal_at) : null,
   };
+}
+
+/** The Saturday ride's meeting point and breakfast spot, told at a time staff choose (the owner,
+ *  2026-10-06; the booking app's _spotHeld): until sessions.reveal_at, list_sessions gives the session
+ *  with its place, route and breakfast stop blank, so the site says when they are told instead of
+ *  reading the blank as the circuit. A session that came with them has been told. One read before the
+ *  time and drawn after it (a copy kept for a minute) still says when, for REVEAL_GRACE_MS at most. */
+export const REVEAL_GRACE_MS = 6 * 3600e3;
+export function spotHeld(s: { revealAt?: string | null; meetUrl?: string | null; location?: string | null; breakfast?: unknown } | undefined, now: number = Date.now()): boolean {
+  const r = s?.revealAt ? Date.parse(s.revealAt) : NaN;
+  if (!s || !Number.isFinite(r)) return false;
+  if (s.meetUrl || s.location || s.breakfast) return false;
+  return r > now || now - r < REVEAL_GRACE_MS;
+}
+
+/** When they are told, in Riyadh time (the booking app's _revealWhen): "Tomorrow · 8 PM", "Friday · 9 Oct
+ *  2026 · 8:30 PM", with the page's own words for today and tomorrow. "" without a time. */
+export function revealWhen(iso: string | null | undefined, locale: string, today: string, words: { today: string; tomorrow: string }): string {
+  const ms = iso ? Date.parse(iso) : NaN;
+  if (!Number.isFinite(ms)) return "";
+  const k = riyadhClock(new Date(ms)), date = k.slice(0, 10), w = dayWord(date, today);
+  return `${w === "today" ? words.today : w === "tomorrow" ? words.tomorrow : fmtDayDate(date, locale)} · ${fmtClock(k.slice(11, 16), locale)}`;
 }
 
 /** The breakfast stop as a rider reads it: the Arabic name on the Arabic page, and the offer in
@@ -338,8 +365,8 @@ export function ticketStages(rows: TicketRow[], bikes: boolean, bikeName: string
  *  a map link without a route. */
 export type RouteItem = { name: string; km: number; level: string; surface: string; href: string };
 export type TicketRoute = { name: string | null; km: number; lap: boolean; note: string | null; href: string | null; track: boolean };
-export function ticketRoute(s: TicketSession | undefined, routes: Map<string, RouteItem>): TicketRoute | null {
-  if (!s || !s.bikes) return null;
+export function ticketRoute(s: TicketSession | undefined, routes: Map<string, RouteItem>, now: number = Date.now()): TicketRoute | null {
+  if (!s || !s.bikes || spotHeld(s, now)) return null; // where it goes is told with where it meets
   if (s.routeSlug) {
     const r = routes.get(s.routeSlug);
     if (!r) return null;
@@ -440,12 +467,15 @@ export function icsFor(s: TicketSession, summary: string, place: string, now: Da
   const esc = (v: string) => v.replace(/[\\,;]/g, (x) => `\\${x}`).replace(/\n/g, "\\n");
   const stamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const words = icsWords(s);
+  // a ride whose meeting point is told later has no place yet: the entry says when it is told
+  const held = spotHeld(s, now.getTime());
+  const told = held ? `\n\nMeeting point and breakfast spot: announced ${revealWhen(s.revealAt, "en", riyadhClock(now).slice(0, 10), { today: "Today", tomorrow: "Tomorrow" })}` : "";
   return [
     "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//Corniche Circuit//EN", "CALSCALE:GREGORIAN", "BEGIN:VEVENT",
     `UID:${s.id}-${now.getTime()}@micromobility`, `DTSTAMP:${stamp}`,
     `DTSTART:${utc(sMin)}`, `DTEND:${utc(eMin)}`,
-    `SUMMARY:${esc(summary)}`, `LOCATION:${esc(place || "Jeddah Corniche Circuit")}`,
-    `DESCRIPTION:${esc(words.desc)}`,
+    `SUMMARY:${esc(summary)}`, ...(held ? [] : [`LOCATION:${esc(place || "Jeddah Corniche Circuit")}`]),
+    `DESCRIPTION:${esc(words.desc + told)}`,
     "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", `DESCRIPTION:${esc(words.alarm)}`, "END:VALARM",
     "END:VEVENT", "END:VCALENDAR",
   ].join("\r\n");

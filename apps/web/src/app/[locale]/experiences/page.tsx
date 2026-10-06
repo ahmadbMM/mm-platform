@@ -19,7 +19,7 @@ import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
-import { dayWord, fmtClock, fmtDayDate, kmText } from "@/lib/tickets";
+import { dayWord, fmtClock, fmtDayDate, kmText, revealWhen, spotHeld } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt, phrase } from "@/i18n/tx";
 import { isRtl } from "@/i18n/locales";
@@ -107,6 +107,10 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const whoWords = { all: tx("Everyone", "الجميع"), members: tx("Community members", "أعضاء المجتمع"), members18: tx("Community members, 18 and over", "أعضاء المجتمع ممن أتموا 18 عامًا") };
   const venueWords = { meetingPoint: tx("Meeting point", "نقطة التجمع"), venueCircuit: tx("Jeddah Corniche Circuit", "حلبة كورنيش جدة"), venueJyc: tx("Jeddah Yacht Club", "نادي جدة لليخوت") };
   const clock = (hhmm: string) => fmtClock(hhmm, locale);
+  // The Saturday ride's meeting point and breakfast spot, told at a time staff choose (the owner,
+  // 2026-10-06; lib/tickets.ts spotHeld): until then its card and Details say when, never the circuit.
+  const nearWords = { today: tx("Today", "اليوم"), tomorrow: tx("Tomorrow", "غداً") };
+  const heldWhen = (s: RideSession) => (spotHeld(s) ? revealWhen(s.revealAt, locale, now.slice(0, 10), nearWords) : null);
   // The booking app's events (_evMatch): the circuit, the community rides, and the National Day
   // ride and the T100 workshop, which have cards of their own while they have dates.
   // A ticketed event (ride_kind 'event') has a card of its own too, while one is on the books, and
@@ -117,7 +121,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     // when bikes go out and the price from, under the time, as the booking app's session card says them
     const collect = s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), clock(s.collect)) : null;
     const from = !s.free && rentsBikes(s.kind) ? fromPrice(s) : null;
-    const place = infoPlace(s, venueWords, directions);
+    const held = heldWhen(s);
+    const place = held ? { name: fillAt(tx("Announced {0}", "يُعلَن {0}"), held), map: null } : infoPlace(s, venueWords, directions);
     return {
       // the booking app's session card: "Sunday · 26 Sept 2026", and its times in the rider's clock
       id: s.id, kind: s.kind, day: fmtDayDate(s.date, locale),
@@ -134,6 +139,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       routeKm: kmOf(s),
       // the Saturday ride's breakfast stop, by its Arabic name on the Arabic page when it has one
       breakfast: infoBreakfast(s, locale),
+      reveal: held ? fillAt(tx("Meeting point and breakfast spot: announced {0}", "نقطة التجمع وموقع الفطور: يُعلَن عنهما {0}"), held) : null,
       left: s.left ?? null,
       meta: [collect, from].filter((x): x is string => !!x),
       opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,

@@ -4,7 +4,7 @@
 // no names). The sessions are read for the signed-in account (list_sessions with its token,
 // lib/rides.ts readSessions): a private ride - one only riders with its tag may see - is hidden
 // from the public key, and its ticket, waiver and rating would lose their ride.
-import { getJson, sessionRows, type SessionReader } from "./rides";
+import { getJson, SESSION_COLS_REVEAL, sessionRows, type SessionReader } from "./rides";
 import { ticketSession, type TicketSession } from "./tickets";
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
@@ -21,7 +21,7 @@ export async function loadTicketSessions(ids: string[], account: SessionReader |
   const clean = [...new Set(ids)].filter((x) => ID.test(x)).slice(0, 40);
   if (!url || !key || !clean.length) return new Map();
   try {
-    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`, COLS, Date.now(), { optional: [BF_COLS], account });
+    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`, COLS, Date.now(), { optional: [BF_COLS, SESSION_COLS_REVEAL], account });
     const list = Array.isArray(rows) ? rows.map((r) => ticketSession(r as Record<string, unknown>)).filter((x): x is TicketSession => x !== null) : [];
     return new Map(list.map((s) => [s.id, s]));
   } catch {

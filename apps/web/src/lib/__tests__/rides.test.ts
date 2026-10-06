@@ -91,6 +91,12 @@ describe("toSession", () => {
     const bare = toSession(row(sat))!;
     expect("breakfast" in bare || "breakfastAr" in bare).toBe(false);
   });
+  it("reads when riders are told where the ride meets only when the read asked for it, and only a real time (2026-10-06)", () => {
+    expect("revealAt" in toSession(row({}))!).toBe(false);
+    expect(toSession(row({ reveal_at: "2026-10-09T17:00:00+00:00" }))!.revealAt).toBe("2026-10-09T17:00:00+00:00");
+    expect(toSession(row({ reveal_at: null }))!.revealAt).toBeNull();
+    expect(toSession(row({ reveal_at: "soon" }))!.revealAt).toBeNull();
+  });
   it("carries the route a ride follows, when the slug is one the Routes page could hold", () => {
     expect(toSession(row({ route_slug: "obhur-coast" }))?.routeSlug).toBe("obhur-coast");
     for (const bad of ["Obhur Coast", "-x", "a--b", "", null, 42, "x".repeat(61)]) expect(routeSlugOf(bad), String(bad)).toBeNull();
@@ -153,7 +159,7 @@ describe("loadRides", () => {
     expect(a?.sessions.map((x) => x.id)).toEqual(["2026-09-27"]);
     const urls = f.mock.calls.map((c) => c[0] as string);
     expect(urls).toContain("https://example.supabase.co/rest/v1/ride_prices?select=type,price");
-    expect(urls.find((u) => u.includes("/sessions?"))).toMatch(/session_date=gte\.2026-09-25&status=in\.\(open,full\)/);
+    expect(urls.find((u) => u.includes("/rpc/list_sessions?"))).toMatch(/session_date=gte\.2026-09-25&status=in\.\(open,full\)/);
     expect(await loadRides(f as unknown as typeof fetch, at + 30_000)).toBe(a);
     expect(f).toHaveBeenCalledTimes(3); // the prices, the sessions, and the open night's places
     expect(await loadRides(f as unknown as typeof fetch, at + 61_000)).toBe(a); // past the minute: served as it is, refreshed behind
@@ -195,10 +201,10 @@ describe("loadRides", () => {
     const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json(PRICES)
       : url.includes("meet_url") ? json({ code: "42703", message: "column sessions.meet_url does not exist" }, 400) : json([row({})])));
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
-    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/sessions?"));
-    expect(reads[0]).toContain("needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar&session_date=gte.2026-09-25");
-    // the place alone is left out: the breakfast stop is a group of its own
-    expect(reads[1]).toContain("needs_approval,description,price,route_slug,breakfast_name,breakfast_name_ar&session_date=gte.2026-09-25");
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
+    expect(reads[0]).toContain("needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at&session_date=gte.2026-09-25");
+    // the place alone is left out: the breakfast stop and the announce time are groups of their own
+    expect(reads[1]).toContain("needs_approval,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at&session_date=gte.2026-09-25");
     expect(r?.sessions.map((x) => x.id)).toEqual(["2026-09-27"]);
     await memoSettled();
   });
@@ -208,9 +214,9 @@ describe("loadRides", () => {
     const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json(PRICES)
       : json([{ ...SAT, breakfast_name: " Bean Box ", breakfast_name_ar: "بين بوكس" }, row({ location: null, meet_url: null, breakfast_name: null, breakfast_name_ar: null })])));
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
-    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/sessions?"));
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(1);
-    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar&");
+    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at&");
     expect(r?.sessions.map((x) => [x.id, x.breakfast, x.breakfastAr])).toEqual([["sat", "Bean Box", "بين بوكس"], ["2026-09-27", null, null]]);
     await memoSettled();
   });
@@ -219,9 +225,9 @@ describe("loadRides", () => {
     const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json(PRICES)
       : url.includes("breakfast_name_ar") ? json({ code: "42703", message: "column sessions.breakfast_name_ar does not exist" }, 400) : json([SAT])));
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
-    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/sessions?"));
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[1]).toContain("needs_approval,description,price,route_slug,location,meet_url&session_date=gte.2026-09-25");
+    expect(reads[1]).toContain("needs_approval,description,price,route_slug,location,meet_url,reveal_at&session_date=gte.2026-09-25");
     const s = r!.sessions[0];
     expect(s).toMatchObject({ id: "sat", kind: "saturday", location: null, meetUrl: null });
     expect("breakfast" in s || "breakfastAr" in s).toBe(false);
@@ -269,15 +275,15 @@ describe("sessionRows", () => {
     const f = vi.fn(async (url: string) => (url.includes("breakfast_name_ar") ? missingCol("breakfast_name_ar") : json([{ id: "a" }])));
     expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 1000, { optional: [BF] })).toEqual([{ id: "a" }]);
     expect(urls(f)).toEqual([
-      `https://x.supabase.co/rest/v1/sessions?select=id,description,price,route_slug,${BF}&id=eq.a`,
-      "https://x.supabase.co/rest/v1/sessions?select=id,description,price,route_slug&id=eq.a",
+      `https://x.supabase.co/rest/v1/rpc/list_sessions?select=id,description,price,route_slug,${BF}&id=eq.a`,
+      "https://x.supabase.co/rest/v1/rpc/list_sessions?select=id,description,price,route_slug&id=eq.a",
     ]);
     // every other read keeps the prices, descriptions and routes (the Experiences page's among them)
     await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "status=eq.open", undefined, 2000);
     expect(urls(f)[2]).toContain("description,price,route_slug&status=eq.open");
     // the breakfast columns are left out straight away for ten minutes, then asked for again
     await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 3000, { optional: [BF] });
-    expect(urls(f)[3]).toBe("https://x.supabase.co/rest/v1/sessions?select=id,description,price,route_slug&id=eq.a");
+    expect(urls(f)[3]).toBe("https://x.supabase.co/rest/v1/rpc/list_sessions?select=id,description,price,route_slug&id=eq.a");
     await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 1000 + 11 * 60_000, { optional: [BF] });
     expect(urls(f)[4]).toContain(BF);
   });
@@ -286,9 +292,9 @@ describe("sessionRows", () => {
     const f = vi.fn(async (url: string) => (url.includes("description") ? missingCol("description") : url.includes("breakfast") ? missingCol("breakfast_offer_en") : json([])));
     expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 1000, { optional: [BF] })).toEqual([]);
     expect(urls(f)).toEqual([
-      `https://x.supabase.co/rest/v1/sessions?select=id,description,price,route_slug,${BF}&id=eq.a`,
-      `https://x.supabase.co/rest/v1/sessions?select=id,${BF}&id=eq.a`,
-      "https://x.supabase.co/rest/v1/sessions?select=id&id=eq.a",
+      `https://x.supabase.co/rest/v1/rpc/list_sessions?select=id,description,price,route_slug,${BF}&id=eq.a`,
+      `https://x.supabase.co/rest/v1/rpc/list_sessions?select=id,${BF}&id=eq.a`,
+      "https://x.supabase.co/rest/v1/rpc/list_sessions?select=id&id=eq.a",
     ]);
   });
 
@@ -309,7 +315,7 @@ describe("sessionRows", () => {
   it("asks once more without the optional columns when the refusal does not say which is missing, keeping nothing out after", async () => {
     const f = vi.fn(async (url: string) => (url.includes("route_slug") ? json({ code: "42703", message: "undefined column" }, 400) : json([{ id: "a" }])));
     expect(await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 1000)).toEqual([{ id: "a" }]);
-    expect(urls(f)).toEqual(["https://x.supabase.co/rest/v1/sessions?select=id,description,price,route_slug&id=eq.a", "https://x.supabase.co/rest/v1/sessions?select=id&id=eq.a"]);
+    expect(urls(f)).toEqual(["https://x.supabase.co/rest/v1/rpc/list_sessions?select=id,description,price,route_slug&id=eq.a", "https://x.supabase.co/rest/v1/rpc/list_sessions?select=id&id=eq.a"]);
     await sessionRows(f as unknown as typeof fetch, "https://x.supabase.co", "anon", "id=eq.a", "id", 2000);
     expect(urls(f)[2]).toContain("route_slug");
   });
@@ -339,13 +345,18 @@ describe("readSessions", () => {
     expect(new Headers(init?.headers).get("content-type")).toBe("application/json");
   });
 
-  it("reads the table with the public key without an account, or on a database without the function", async () => {
+  it("reads through list_sessions(null, null) without an account (2026-10-06), and the table only on a database without the function", async () => {
+    // a Saturday ride whose meeting point is told later is hidden from the table's direct read until then
     const plain = vi.fn<(url: string, init?: RequestInit) => Promise<Response>>(async () => json([{ id: "a" }]));
     await read(plain, null);
-    expect(plain.mock.calls.map((c) => [c[0], c[1]?.method])).toEqual([["https://x.supabase.co/rest/v1/sessions?select=id&id=in.(a,b)", undefined]]);
+    expect(plain.mock.calls.map((c) => [c[0], c[1]?.method])).toEqual([["https://x.supabase.co/rest/v1/rpc/list_sessions?select=id&id=in.(a,b)", "POST"]]);
+    expect(JSON.parse(String(plain.mock.calls[0][1]?.body))).toEqual({ p_id: null, p_token: null });
     const old = vi.fn(async (url: string) => (url.includes("/rpc/") ? json({ code: "PGRST202", message: "Could not find the function public.list_sessions(p_id, p_token)" }, 404) : json([{ id: "a" }])));
     expect(await read(old, { id: "c1", token: "tok" })).toEqual([{ id: "a" }]);
     expect(old).toHaveBeenCalledTimes(2);
+    expect(String(old.mock.calls[1][0])).toBe("https://x.supabase.co/rest/v1/sessions?select=id&id=in.(a,b)");
+    const oldAnon = vi.fn(async (url: string) => (url.includes("/rpc/") ? json({ code: "PGRST202", message: "Could not find the function" }, 404) : json([{ id: "a" }])));
+    expect(await read(oldAnon, null)).toEqual([{ id: "a" }]);
   });
 
   it("passes any other failure on, never falling back to a read that cannot see a private ride", async () => {

@@ -73,6 +73,11 @@ export type RideSession = {
    *  Experiences names the stop on the Saturday ride alone (lib/event-info.ts infoBreakfast). */
   breakfast?: string | null;
   breakfastAr?: string | null;
+  /** When riders are told where the Saturday ride meets and has breakfast (sessions.reveal_at, ISO; the
+   *  owner, 2026-10-06; rentals migration 20261006150000): until then list_sessions gives the session
+   *  with its place, route and breakfast stop blank (lib/tickets.ts spotHeld). Null when nothing is held
+   *  back; only a read that asks for it has it (SESSION_COLS_REVEAL). */
+  revealAt?: string | null;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -80,7 +85,7 @@ type Row = {
   id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; ride_kind?: unknown;
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
-  location?: unknown; meet_url?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown;
+  location?: unknown; meet_url?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -140,6 +145,12 @@ function breakfastOf(r: Row): Pick<RideSession, "breakfast" | "breakfastAr"> {
   return { breakfast: name(r.breakfast_name), breakfastAr: name(r.breakfast_name_ar) };
 }
 
+/** When a row says riders are told where it meets (SESSION_COLS_REVEAL): only when the read asked. */
+function revealOf(r: Row): Pick<RideSession, "revealAt"> {
+  if (!("reveal_at" in r)) return {};
+  return { revealAt: typeof r.reveal_at === "string" && Number.isFinite(Date.parse(r.reveal_at)) ? r.reveal_at : null };
+}
+
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
  *  booked through the company's own form (micromobility.sa/petromin), so they are left out. */
 export function toSession(r: Row, keepAll = false): RideSession | null {
@@ -172,6 +183,7 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" ? null : collectTime(r.bike_slots),
     ...placeOf(r),
     ...breakfastOf(r),
+    ...revealOf(r),
   };
 }
 
@@ -216,6 +228,9 @@ export const SESSION_COLS_PLACE = "location,meet_url";
 // session whenever it's added"): the Saturday ride's card, its Details and the summary on Experiences
 // name it. A group of its own as well, so a database without them reads as before.
 export const SESSION_COLS_BREAKFAST = "breakfast_name,breakfast_name_ar";
+// When riders are told where the Saturday ride meets and has breakfast (the owner, 2026-10-06: rentals
+// migration 20261006150000). A group of its own, so a database without it reads as before.
+export const SESSION_COLS_REVEAL = "reveal_at";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -244,19 +259,20 @@ export type SessionReader = { id: string; token: string };
 /** list_sessions is not in this database (PostgREST's 404 / PGRST202, Postgres's 42883). */
 const noFunction = (e: unknown) => e instanceof ReadError && (e.message === "404" || e.code === "PGRST202" || e.code === "42883");
 
-/** `sessions` rows for a PostgREST query (select and filters). For an account, through
- *  list_sessions(p_id, p_token), as the booking app's customers read them (_sessionsFetch): the only
- *  read that returns a tag-gated (private) ride the account may see - the table hides those from the
- *  public key - and, with a token it no longer accepts, the public sessions alone. Otherwise, or on a
- *  database without the function, the table with the public key, which sees exactly the sessions
- *  with no required tag. Never keep what is read for an account where another visitor could see it. */
+/** `sessions` rows for a PostgREST query (select and filters), through list_sessions(p_id, p_token),
+ *  as the booking app's customers read them (_sessionsFetch). For an account it is the only read that
+ *  returns a tag-gated (private) ride the account may see - the table hides those from the public key -
+ *  and, with a token it no longer accepts, the public sessions alone; without one (null, null), the
+ *  public sessions. A visitor who is not signed in reads through it too since 2026-10-06: a Saturday
+ *  ride whose meeting point is told later (sessions.reveal_at) is hidden from the table's direct read
+ *  until then, and the function gives it with its place blank (rentals 20261006150000). Only a database
+ *  without the function falls back to the table with the public key. Never keep what is read for an
+ *  account where another visitor could see it. */
 export async function readSessions(fetchImpl: typeof fetch, url: string, key: string, query: string, account?: SessionReader | null): Promise<unknown> {
-  if (account) {
-    try {
-      return await getJson(fetchImpl, `${url}/rest/v1/rpc/list_sessions?${query}`, key, { p_id: account.id, p_token: account.token });
-    } catch (e) {
-      if (!noFunction(e)) throw e;
-    }
+  try {
+    return await getJson(fetchImpl, `${url}/rest/v1/rpc/list_sessions?${query}`, key, { p_id: account?.id ?? null, p_token: account?.token ?? null });
+  } catch (e) {
+    if (!noFunction(e)) throw e;
   }
   return getJson(fetchImpl, `${url}/rest/v1/sessions?${query}`, key);
 }
@@ -365,7 +381,7 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=type,price`, key),
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [SESSION_COLS_PLACE, SESSION_COLS_BREAKFAST] }),
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [SESSION_COLS_PLACE, SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL] }),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) {
       prices = (p.value as { type?: unknown; price?: unknown }[])

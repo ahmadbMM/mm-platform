@@ -1210,5 +1210,7 @@
  "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.": "T100 Triathlon Prep, en partenariat avec la Fédération saoudienne de triathlon, de {start} à {end}. Ouvert à tous ; gratuit ; notre équipe valide la liste.",
  "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "Rendez-vous à {gather} ; la course part à {start}. Choisissez 3 km ou 5 km en réservant. Gratuit ; 80 places, puis une liste d’attente.",
  "After": "Ensuite",
- "Breakfast at {0}": "Petit-déjeuner chez {0}"
+ "Breakfast at {0}": "Petit-déjeuner chez {0}",
+ "Announced {0}": "Annoncé {0}",
+ "Meeting point and breakfast spot: announced {0}": "Point de rendez-vous et lieu du petit-déjeuner : annoncés {0}"
 }

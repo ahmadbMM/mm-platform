@@ -1210,5 +1210,7 @@
  "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.": "サウジアラビア・トライアスロン連盟と提携したT100トライアスロン対策、{start}〜{end}。どなたでも参加でき、無料です。参加者リストはチームが確定します。",
  "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "{gather}に集合、{start}にスタートします。予約時に3 kmか5 kmをお選びください。無料。定員80名、その後はキャンセル待ちとなります。",
  "After": "その後",
- "Breakfast at {0}": "{0}での朝食"
+ "Breakfast at {0}": "{0}での朝食",
+ "Announced {0}": "{0}に発表",
+ "Meeting point and breakfast spot: announced {0}": "集合場所と朝食の場所：{0}に発表"
 }

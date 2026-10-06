@@ -1210,5 +1210,7 @@
  "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.": "T100 铁人三项备赛，与沙特铁人三项联合会合作，{start} 至 {end}。面向所有人；免费；名单由我们的团队确认。",
  "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "{gather} 集合，{start} 起跑。预订时请选择 3 公里或 5 公里。免费；共 80 个名额，满额后开放候补。",
  "After": "之后",
- "Breakfast at {0}": "在 {0} 享用早餐"
+ "Breakfast at {0}": "在 {0} 享用早餐",
+ "Announced {0}": "{0}公布",
+ "Meeting point and breakfast spot: announced {0}": "集合地点和早餐地点：{0}公布"
 }

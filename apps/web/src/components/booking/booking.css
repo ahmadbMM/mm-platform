@@ -171,6 +171,9 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-rt-map { flex: none; width: 30px; height: 118px; overflow: visible; }
 .tk-rt-map path { fill: none; stroke: #077a4b; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
 .tk-rt-map circle { fill: #fff; stroke: #1a1919; stroke-width: 1.6; }
+/* The Saturday ride's meeting point and breakfast spot, told at staff's time: when, in their place. */
+.tk-reveal { display: flex; align-items: flex-start; justify-content: center; gap: 6px; margin: 12px 0; font-size: 13px; line-height: 1.45; font-weight: 600; color: #4a4843; text-align: center; }
+.tk-reveal svg { flex: none; margin-top: 2px; }
 .tk-live .tk-cd { color: #03ff89; }
 .tk-live .tk-stages li { color: rgba(251, 249, 244, .66); }
 .tk-live .tk-stages li::before { background: rgba(251, 249, 244, .16); }
@@ -183,6 +186,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-live .tk-rt { border-color: rgba(251, 249, 244, .16); }
 .tk-live :is(.tk-rt-k, .tk-rt-m, .tk-rt-osm) { color: rgba(251, 249, 244, .66); }
 .tk-live .tk-rt-n { color: #fbf9f4; }
+.tk-live .tk-reveal { color: rgba(251, 249, 244, .66); }
 .tk-live .tk-rt-a { color: #03ff89; }
 .tk-live .tk-rt-map path { stroke: #03ff89; }
 .tk-live .tk-rt-map circle { fill: #1a1919; stroke: #fbf9f4; }

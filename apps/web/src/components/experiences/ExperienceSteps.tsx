@@ -36,6 +36,10 @@ export type StepSession = {
   /** The Saturday ride's breakfast stop by name, in the page's language (lib/event-info.ts
    *  infoBreakfast); null on any other ride or one with no stop yet. */
   breakfast: string | null;
+  /** The Saturday ride's meeting point and breakfast spot told later (lib/tickets.ts spotHeld): the line
+   *  that says when, ready in the page's language; null when nothing is held back. Optional, so a copy
+   *  kept from before reads as none. */
+  reveal?: string | null;
   /** Not open to book yet (the booking window): the words for when it opens; null when it may be booked. */
   opens: string | null;
   /** What its Details say, every word ready in the page's language. */
@@ -261,6 +265,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                       {s.meta && s.meta.length > 0 && <span className="sc-meta">{s.meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}
                       {s.route && <span className="sc-time">{t.route}: {s.route}</span>}
                       {s.breakfast && <span className="sc-meta">{breakfastAt(s.breakfast)}</span>}
+                      {s.reveal && <span className="sc-meta">{s.reveal}</span>}
                       {s.event && s.description && <span className="sc-desc">{s.description}</span>}
                       {facts(s)}
                     </button>

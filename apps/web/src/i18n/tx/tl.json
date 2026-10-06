@@ -1210,5 +1210,7 @@
  "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.": "T100 Triathlon Prep, kasama ang Saudi Triathlon Federation, {start} hanggang {end}. Bukas sa lahat; libre; kinukumpirma ng aming team ang listahan.",
  "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "Magkita sa {gather}; magsisimula ang takbo sa {start}. Pumili ng 3 km o 5 km sa pag-book. Libre; 80 puwesto, pagkatapos ay waitlist.",
  "After": "Pagkatapos",
- "Breakfast at {0}": "Almusal sa {0}"
+ "Breakfast at {0}": "Almusal sa {0}",
+ "Announced {0}": "Iaanunsyo {0}",
+ "Meeting point and breakfast spot: announced {0}": "Meeting point at lugar ng almusal: iaanunsyo {0}"
 }

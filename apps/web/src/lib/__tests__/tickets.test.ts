@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { routeItems } from "../route-names";
-import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, queueNumbers, rideEndsAt, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, type TicketRow } from "../tickets";
+import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, queueNumbers, revealWhen, rideEndsAt, spotHeld, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, type TicketRow } from "../tickets";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import TicketCard from "@/components/booking/TicketCard";
 import { createElement, type ReactElement } from "react";
@@ -348,5 +348,43 @@ describe("a Run for Her ticket (ride_kind 'runher', 2026-10-05)", () => {
     expect(ride).toContain(">Edit<");
     expect(ride).toContain("Reschedule");
     expect(ride).toContain("Get directions");
+  });
+});
+
+describe("the Saturday ride's meeting point told at staff's time (the owner, 2026-10-06)", () => {
+  const NOW = Date.parse("2099-03-02T09:00:00Z"); // noon on the 2nd in Riyadh
+  // what list_sessions gives a rider while the time is ahead: the time, and nothing about where
+  const held = ticketSession({ ...satRow, meet_url: null, reveal_at: "2099-03-03T17:00:00Z" })!;
+  it("holds the spot back while the time is ahead, and lets go once the row brings it", () => {
+    expect(held.revealAt).toBe("2099-03-03T17:00:00Z");
+    expect(spotHeld(held, NOW)).toBe(true);
+    expect(spotHeld({ ...held, meetUrl: "https://maps.app.goo.gl/x" }, NOW)).toBe(false);
+    // a copy read before the time and drawn after it still says when, for a few hours at most
+    expect(spotHeld(held, Date.parse("2099-03-03T17:01:00Z"))).toBe(true);
+    expect(spotHeld(held, Date.parse("2099-03-04T01:00:00Z"))).toBe(false);
+    expect(spotHeld(sat, NOW)).toBe(false);
+    expect(ticketSession({ ...satRow, reveal_at: "later" })!.revealAt).toBeNull();
+  });
+  it("says when in Riyadh time, with today and tomorrow in the page's words", () => {
+    const w = { today: "Today", tomorrow: "Tomorrow" };
+    expect(revealWhen("2099-03-03T17:00:00Z", "en", "2099-03-02", w)).toBe("Tomorrow · 8 PM");
+    expect(revealWhen("2099-03-03T17:30:00Z", "en", "2099-03-01", w)).toBe("Tuesday · 3 Mar 2099 · 8:30 PM");
+    expect(revealWhen(null, "en", "2099-03-01", w)).toBe("");
+  });
+  it("draws no route and puts no place in the calendar; the card says when, never the circuit", () => {
+    expect(ticketRoute(held, new Map(), NOW)).toBeNull();
+    const ics = icsFor(held, "Saturday Social Ride - Wednesday", icsPlace(held), new Date(NOW));
+    expect(ics).not.toContain("LOCATION:");
+    expect(ics).toContain("Meeting point and breakfast spot: announced Tomorrow · 8 PM");
+    expect(icsFor(sat, "x", icsPlace(sat), new Date(NOW))).toContain("LOCATION:https://maps.app.goo.gl/x");
+    const html = renderToStaticMarkup(createElement(TicketCard, {
+      locale: "en", today: "2099-03-02", rows: [ticketRow({ id: "s1abcdef", session_id: held.id, session_date: held.date, session_day: "Wednesday", status: "waiting", approval: "approved", queue_num: 3, price: 0, paid: false, name: "Ann", type_preference: "Road" })!],
+      session: held, name: "Saturday Social Ride", cue: null, t: TICKET.en, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+      links: { edit: null, manage: "https://book.example.test/?tab=bookings", place: null }, now: NOW,
+    }));
+    expect(html).toContain("Meeting point and breakfast spot: announced Tomorrow · 8 PM");
+    expect(html).toContain("tk-venue\">Meeting point<");
+    expect(html).not.toContain("Jeddah Corniche Circuit");
+    expect(TICKET.ar.revealSpotsAt("غداً · 8 م")).toBe("نقطة التجمع وموقع الفطور: يُعلَن عنهما غداً · 8 م");
   });
 });
