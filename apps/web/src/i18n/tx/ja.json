@@ -1468,5 +1468,6 @@
  "Petromin’s Wednesday evening on the circuit. Collect your bike from {collect}; circuit prices; bikes go first come, first served.": "サーキットで行うPetrominの水曜夜のライドです。自転車の受け取りは{collect}から。料金はサーキット料金で、自転車は先着順でお渡しします。",
  "A triathlon swim session at the pool, {start} to {end}. No bike needed. Free; our team confirms the list.": "プールでのトライアスロン・スイムセッション、{start}〜{end}。自転車は不要です。無料。参加者リストはチームが確定します。",
  "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.": "サウジアラビア・トライアスロン連盟と提携したT100トライアスロン対策、{start}〜{end}。どなたでも参加でき、無料です。参加者リストはチームが確定します。",
- "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "{gather}に集合、{start}にスタートします。予約時に3 kmか5 kmをお選びください。無料。定員80名、その後はキャンセル待ちとなります。"
+ "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.": "{gather}に集合、{start}にスタートします。予約時に3 kmか5 kmをお選びください。無料。定員80名、その後はキャンセル待ちとなります。",
+ "Meeting point and breakfast spot: announced {0}": "集合場所と朝食の場所：{0}に発表"
 }

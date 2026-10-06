@@ -240,7 +240,8 @@ function db(over: Record<string, (body: Record<string, unknown>) => Response> = 
   const calls: Call[] = [];
   const f = vi.fn(async (url: string, init?: RequestInit) => {
     const u = String(url);
-    if (u.includes("/rest/v1/sessions")) return json([session]);
+    // the session is read through list_sessions (lib/rides.ts readSessions, 2026-10-06), the table only without it
+    if (u.includes("/rest/v1/sessions") || u.includes("/rpc/list_sessions")) return json([session]);
     if (u.includes("/rest/v1/queue_public")) return new Response(null, { status: 200, headers: { "content-range": "0-0/3" } });
     if (u.includes("booking-confirm")) return json({ ok: false });
     const fn = /\/rpc\/([a-z_]+)/.exec(u)?.[1] ?? "";

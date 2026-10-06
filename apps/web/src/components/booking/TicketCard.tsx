@@ -4,7 +4,7 @@ import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
-import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, queueNumbers, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
+import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, queueNumbers, revealWhen, spotHeld, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -74,6 +74,10 @@ const Tick = () => (
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
 );
 
+const Clock = () => (
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6" /><path d="M12 7.4V12l3.2 2" /></svg>
+);
+
 const Again = () => (
   <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" />
@@ -88,7 +92,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const look = past ? "past" : ticketLook(rows, s); // dark when a place is held, paper otherwise (the booking app's tk-live)
   const onDay = primary.date === today;
   const dw = past ? null : dayWord(primary.date, today);
-  const venue = venueOf(s);
+  // a Saturday ride whose meeting point is told later meets at a point it names then (spotHeld)
+  const held = !past && spotHeld(s, now);
+  const venue = held ? ({ kind: "meet" } as const) : venueOf(s);
   const big = num.length <= 4 ? "big" : num.length <= 9 ? "mid" : "small";
   const bikes = s ? s.bikes : true;
   const run = s?.kind === "runher"; // Run for Her: a runner's number, a distance, cancel only
@@ -175,6 +181,10 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               </li>
             ))}
           </ol>
+        )}
+        {held && (
+          // where it meets and has breakfast are told at staff's time: when, in their place (_revealNoteHtml)
+          <p className="tk-reveal"><Clock /><bdi>{t.revealSpotsAt(revealWhen(s?.revealAt, locale, today, { today: t.today, tomorrow: t.tomorrow }))}</bdi></p>
         )}
         {(() => {
           // The Saturday ride's breakfast stop, as the booking app's card shows it (_commInfoHtml).
