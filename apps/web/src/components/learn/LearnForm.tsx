@@ -12,6 +12,8 @@ import { useLocalize } from "@/i18n/TxProvider";
 import NoticeLink from "@/components/privacy/NoticeLink";
 import ChangePassword, { type PwdLook } from "@/components/account/ChangePassword";
 import Turnstile, { TURNSTILE_SITE_KEY } from "@/components/account/Turnstile";
+import EmergencyFields, { type EmLook, type EmProblem } from "@/components/account/EmergencyFields";
+import { EM_EMPTY, emAbsent, emReadBoth, emRefusal, emState, type EmContact, type EmFields } from "@/lib/emergency";
 import LearnClosed from "./LearnClosed";
 import { T } from "./LearnForm.text";
 
@@ -40,6 +42,12 @@ import { T } from "./LearnForm.text";
 //      form checks what the database checks (lib/learn.ts) and shows one message at a time, about
 //      the first thing to fix; a learner's names their card and sits in it, and the card is
 //      brought into view with the keyboard on it. The session lives in the page only.
+// The person signing up gives an emergency contact (the owner, 2026-10-07: required on every sign-up
+// and form, a second one optional; lib/emergency.ts): the new account's step asks it with the
+// sign-up and saves it the moment the account exists (customer_set_emergency, then
+// customer_set_emergency2 for a second), and a signed-in account without one (customer_emergency)
+// gives it on step 2, saved before the lesson is sent. A contact the database refuses after the
+// account is made is asked again on step 2; a database without those functions asks nothing.
 export type LearnFormProps = {
   locale: string;
   formTitle: string; formSub: string;
@@ -66,7 +74,7 @@ type Form = Omit<LearnFields, "learners"> & { learners: Card[] };
 type Details = Omit<Form, "learners">;
 type Stage = "ask" | "signup" | "signin" | "pwd" | "loading" | "lesson";
 /** The signed-in person: the account step made it (`made`) or they signed in to it. */
-type Acct = { id: string; token: string; name: string; email: string; made: boolean };
+type Acct = { id: string; token: string; name: string; email: string; phone: string; made: boolean };
 /** What customer_community_me() answers about the account, for step 2. */
 type Me = { name?: string; email?: string; phone?: string | null; whatsapp_same?: boolean | null; whatsapp?: string | null; gender?: string | null; height?: number | null; birth_date?: string | null; nationality?: string | null;
   instagram?: string | null; linkedin?: string | null; profession?: string | null; workplace?: string | null; heard_from?: string | null };
@@ -82,6 +90,8 @@ const never = () => () => {};
 const dashless = (v: string) => v.replace(/[-‐-―]/g, " ");
 // The booking app's own account ids.
 const uid = () => Math.random().toString(36).slice(2, 9) + Date.now().toString(36);
+// The emergency contact's boxes, in this card's look.
+const EM_LOOK: EmLook = { block: "ln-em", head: "ln-em-h", sub: "ln-hint ln-em-sub", field: "ln-field", input: "ln-input", select: "ln-input ln-select", ph: "ln-ph", err: "ln-err", add: "ln-add ln-em-add", opt: "ln-em-opt" };
 // Choosing their own password after a temporary one, in this card's look.
 const PWD_LOOK: PwdLook = { h: "h3", form: "ln-pc", title: "ln-step-title", sub: "ln-hint ln-pc-sub", field: "ln-field", input: "ln-input", hint: "ln-hint", err: "ln-err", btn: "ln-btn ln-btn-green", back: "ln-back" };
 
@@ -100,7 +110,16 @@ export default function LearnForm(p: LearnFormProps) {
   // An account made here whose Privacy Notice and ride-news answers could not be saved yet: the
   // next press of Create account saves only those (the account exists - making it again would only
   // say the email is taken).
-  const made = useRef<{ id: string; token: string; name: string; email: string; gender: Gender; height: number } | null>(null);
+  const made = useRef<{ id: string; token: string; name: string; email: string; phone: string; gender: Gender; height: number } | null>(null);
+  // The emergency contact: the two contacts as typed, the problem on show (under its box), whether
+  // step 2 asks for it (a signed-in account without one, or one the account step could not save) and
+  // whether the database takes a second one.
+  const [em1, setEm1] = useState<EmFields>(EM_EMPTY);
+  const [em2, setEm2] = useState<EmFields>(EM_EMPTY);
+  const [emErr, setEmErr] = useState<EmProblem>(null);
+  const [emNeed, setEmNeed] = useState(false);
+  const [emTwo, setEmTwo] = useState(true);
+  const emBox = useRef<HTMLDivElement>(null);
   // Asked on step 2 only when the account has none (older accounts): gender, height, and the
   // Privacy Notice (none on record, or one older than riders must confirm), with its box's tick.
   const [need, setNeed] = useState({ gender: false, height: false, privacy: false });
@@ -133,6 +152,12 @@ export default function LearnForm(p: LearnFormProps) {
     if (!focus) return;
     if (focus.to === "add") { addBtn.current?.focus(); return; }
     if (focus.to === "ack") { ackBox.current?.scrollIntoView({ block: "center" }); ackBox.current?.focus({ preventScroll: true }); return; }
+    if (focus.to === "em") {
+      const box = emBox.current;
+      const el = box?.querySelector<HTMLElement>("[aria-invalid='true']") || box?.querySelector<HTMLElement>("input");
+      el?.scrollIntoView({ block: "center" }); el?.focus({ preventScroll: true });
+      return;
+    }
     if (focus.to === "step") { stepTop.current?.scrollIntoView({ block: "start" }); stepTop.current?.focus({ preventScroll: true }); return; }
     const card = document.getElementById(focus.to);
     if (!card) return;
@@ -145,7 +170,7 @@ export default function LearnForm(p: LearnFormProps) {
   // it does, and the box is shown then).
   // The account's mobile, which the WhatsApp question names.
   const [mobile, setMobile] = useState("");
-  function toLesson(who: Acct, me: Me | null, due: boolean | null = false) {
+  function toLesson(who: Acct, me: Me | null, due: boolean | null = false, em: { need: boolean; two: boolean } = { need: false, two: true }) {
     setMobile(me?.phone || (who.made ? normalizePhone(a.phone) : ""));
     const waSame = me?.whatsapp_same === true ? "yes" : me?.whatsapp_same === false ? "no" : "";
     const g = me?.gender === "male" || me?.gender === "female" ? me.gender : "";
@@ -157,6 +182,8 @@ export default function LearnForm(p: LearnFormProps) {
       linkedin: me?.linkedin || x.linkedin, profession: me?.profession || x.profession, workplace: me?.workplace || x.workplace, heard: heard || x.heard,
       waSame: waSame || x.waSame, whatsapp: me?.whatsapp || x.whatsapp }));
     setNeed({ gender: !g, height: !h, privacy: due === true });
+    setEmNeed(em.need);
+    setEmTwo(em.two);
     setAck(false);
     setAcct(who);
     setErr(null);
@@ -168,13 +195,37 @@ export default function LearnForm(p: LearnFormProps) {
   // what it holds (customer_community_me), and whether it has confirmed the Privacy Notice
   // (customer_consents, asked only to read), then step 2.
   async function enter(id: string, token: string, name: string, email: string) {
-    const [m, c] = await Promise.all([
+    const [m, c, e] = await Promise.all([
       rpcResult<Me>("customer_community_me", { p_id: id, p_token: token }),
       rpcResult<{ privacy_version?: unknown } | null>("customer_consents", { p_id: id, p_token: token }),
+      rpcResult<unknown[]>("customer_emergency", { p_id: id, p_token: token }),
     ]);
     const me = "data" in m && m.data && typeof m.data === "object" ? m.data : null;
     const due = "data" in c && c.data && typeof c.data === "object" ? noticeDue(c.data.privacy_version, p.privacyAskFrom) : null;
-    toLesson({ id, token, name: me?.name || name, email: me?.email || email, made: false }, me, due);
+    // The emergency contact on the account: asked on step 2 when there is none; a database without
+    // customer_emergency asks nothing, and one that cannot be read asks (saving it is harmless).
+    const st = "data" in e ? emState(Array.isArray(e.data) ? e.data[0] : null) : null;
+    const em = st ? { need: !st.has, two: st.two } : { need: !("error" in e && emAbsent(e.error)), two: true };
+    toLesson({ id, token, name: me?.name || name, email: me?.email || email, phone: me?.phone || "", made: false }, me, due, em);
+  }
+
+  // The emergency contact saved on the account: true, or what to show. A database without
+  // customer_set_emergency lets the rider through; without customer_set_emergency2, the second
+  // contact is left out.
+  async function saveEm(who: { id: string; token: string }, first: EmContact, second: EmContact | null): Promise<true | { problem: NonNullable<EmProblem> } | { text: string; signedOut?: boolean }> {
+    const calls: [string, EmContact, 1 | 2][] = [["customer_set_emergency", first, 1]];
+    if (second && emTwo) calls.push(["customer_set_emergency2", second, 2]);
+    for (const [fn, x, which] of calls) {
+      const r = await rpcResult<boolean>(fn, { p_id: who.id, p_token: who.token, p_name: x.name, p_phone: x.phone, p_relation: x.rel });
+      if ("error" in r) {
+        if (emAbsent(r.error)) { if (which === 1) return true; continue; }
+        const bad = emRefusal(r.error);
+        if (bad) return { problem: { error: bad, which } };
+        return { text: /RATE_LIMITED/.test(r.error.message || "") ? t.errors.rate_limited : t.errors.generic };
+      }
+      if (r.data === false) return { text: t.errors.signed_out, signedOut: true };
+    }
+    return true;
   }
 
   // Arriving from the booking app signed in (?code=, a one-time code: two minutes, one use). It
@@ -209,6 +260,9 @@ export default function LearnForm(p: LearnFormProps) {
     setF((x) => ({ ...x, learners: x.learners.map((c, j) => (j === i ? { ...c, ...patch } : c)) }));
     setErr(null);
   };
+  const onEm = (a: EmFields, b: EmFields) => { setEm1(a); setEm2(b); setEmErr(null); setErr(null); };
+  // The problem shown, and the box brought into view with the keyboard on it.
+  const emShow = (pr: NonNullable<EmProblem>) => { setEmErr(pr); setFocus({ to: "em", n: ++moves.current }); };
   function add() {
     if (f.learners.length >= MAX_LEARNERS) return;
     const key = next.current++;
@@ -251,6 +305,9 @@ export default function LearnForm(p: LearnFormProps) {
     setErr(null);
     const r = accountArgs(a);
     if ("error" in r) return setErr({ text: t.errors[r.error] || t.errors.generic });
+    // The emergency contact, before the account is made: required, the second when filled.
+    const ec = emReadBoth(em1, em2, r.args.p_phone);
+    if ("error" in ec) return emShow(ec);
     setBusy(true);
     try {
       if (made.current) return await consent(made.current);
@@ -267,7 +324,7 @@ export default function LearnForm(p: LearnFormProps) {
       }
       const tok = Array.isArray(s.data) ? s.data[0]?.session_token : "";
       if (!tok) return setErr({ text: t.errors.generic });
-      await consent({ id: newId, token: tok, name: r.args.p_name, email: r.args.p_email, gender: r.args.p_gender, height: r.args.p_height });
+      await consent({ id: newId, token: tok, name: r.args.p_name, email: r.args.p_email, phone: r.args.p_phone, gender: r.args.p_gender, height: r.args.p_height });
     } finally { setBusy(false); }
   }
 
@@ -281,7 +338,15 @@ export default function LearnForm(p: LearnFormProps) {
     }
     made.current = null;
     setA((x) => ({ ...x, password: "", password2: "" }));
-    toLesson({ id: acc.id, token: acc.token, name: acc.name, email: acc.email, made: true }, { gender: acc.gender, height: acc.height });
+    // Then the emergency contact typed with the sign-up. Should it not save, the account stays made:
+    // step 2 asks for it again, with what was typed and why, and saves it before the lesson is sent.
+    const ec = emReadBoth(em1, em2, acc.phone);
+    const saved = "error" in ec ? { problem: ec } : await saveEm(acc, ec.first, ec.second);
+    toLesson({ id: acc.id, token: acc.token, name: acc.name, email: acc.email, phone: acc.phone, made: true }, { gender: acc.gender, height: acc.height }, false, { need: saved !== true, two: true });
+    if (saved !== true) {
+      if ("problem" in saved) emShow(saved.problem);
+      else setErr({ text: saved.text });
+    }
   }
 
   // Step 1, known: sign in with the email or mobile and password, through the site's sign-in
@@ -328,9 +393,22 @@ export default function LearnForm(p: LearnFormProps) {
     if ("error" in r) return show(r);
     // An account that has not confirmed the Privacy Notice confirms it here, with the box above
     // the button.
+    // An account without an emergency contact gives it here (lib/emergency.ts).
+    const ec = emNeed ? emReadBoth(em1, emTwo ? em2 : null, acct.phone) : null;
+    if (ec && "error" in ec) return emShow(ec);
     if (need.privacy && !ack) { setErr({ text: t.errors.privacy }); setFocus({ to: "ack", n: ++moves.current }); return; }
     setBusy(true);
     try {
+      // The contact first: the lesson waits until the account has it.
+      if (ec) {
+        const saved = await saveEm(acct, ec.first, ec.second);
+        if (saved !== true) {
+          if ("problem" in saved) return emShow(saved.problem);
+          if (saved.signedOut) { setAcct(null); setStage("signin"); }
+          return setErr({ text: saved.text });
+        }
+        setEmNeed(false);
+      }
       // The notice they confirmed goes on the account, as the booking app records it, and with the
       // sign-up, which takes it when the account still has none (customer_learn_apply).
       if (need.privacy) await rpcResult("customer_consents", { p_id: acct.id, p_token: acct.token, p_privacy: p.privacyVersion });
@@ -481,6 +559,9 @@ export default function LearnForm(p: LearnFormProps) {
           <span>{t.height}</span>
           <input className="ln-input" value={a.height} onChange={(e) => setAcc("height", e.target.value)} inputMode="numeric" maxLength={3} placeholder={range(...ACCOUNT_HEIGHT)} />
         </label>
+        <div ref={emBox}>
+          <EmergencyFields one={em1} two={em2} onChange={onEm} offerTwo problem={emErr} look={EM_LOOK} />
+        </div>
         <label className="ln-check">
           <input type="checkbox" checked={a.privacy} onChange={(e) => setAcc("privacy", e.target.checked)} />
           <span>{before}<NoticeLink dialog={p.notice}>{t.privacyLink}</NoticeLink>{after}</span>
@@ -655,6 +736,12 @@ export default function LearnForm(p: LearnFormProps) {
           <textarea className="ln-input" value={f.notes} onChange={(e) => setContact("notes", e.target.value)} rows={3} maxLength={600} />
         </label>
       </div>
+      {/* An account without an emergency contact (or one the account step could not save) gives it here. */}
+      {emNeed && (
+        <div ref={emBox}>
+          <EmergencyFields one={em1} two={em2} onChange={onEm} offerTwo={emTwo} problem={emErr} look={EM_LOOK} />
+        </div>
+      )}
       {/* An account with no Privacy Notice on record (or an older one than riders must confirm)
           confirms it here: the sign-up cannot go without it. */}
       {need.privacy && (
