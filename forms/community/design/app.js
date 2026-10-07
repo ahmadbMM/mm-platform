@@ -64,6 +64,37 @@
     for (var i = 0; i < nav.length; i++) { var c = String(nav[i] || "").toLowerCase().split(/[-_]/)[0]; if (c === "fil") c = "tl"; if (codes.indexOf(c) >= 0) return c; }
     return "en";
   }
+  /* ── The questions, as the booking site's admins set them (2026-10-07) ─────────────────────────
+     site_content 'community.form' = {q:{<question>:{on, req, label:{<lang>:text}}}}: a question turned
+     off is not shown or sent, one made optional may be left empty (customer_community_apply reads the
+     same settings, 20261007230000), and its wording in the reader's language replaces ours. Read once
+     as the page opens; with nothing read the form asks what it always asked. */
+  var CF = {};
+  var CF_FIELD = { birth_date: "f-birth", nationality: "f-nat", profession: "f-prof", workplace: "f-work", own_bike: "f-own", bike_type: "f-type", heard_from: "f-heard", instagram: "f-ig", linkedin: "f-li" };
+  var CF_REQ = { birth_date: true, nationality: true, profession: true, workplace: true, own_bike: true, bike_type: true, heard_from: true, instagram: false, linkedin: false };
+  function qOn(k) { return !(CF[k] && CF[k].on === false); }
+  function qReq(k) { return qOn(k) && (CF[k] && typeof CF[k].req === "boolean" ? CF[k].req : CF_REQ[k]); }
+  function paintQuestions() {
+    Object.keys(CF_FIELD).forEach(function (k) {
+      var f = document.getElementById(CF_FIELD[k]); if (!f) return;
+      f.hidden = !qOn(k);
+      var lab = f.querySelector("label, .label"); if (!lab) return;
+      var own = CF[k] && CF[k].label && typeof CF[k].label[lang] === "string" ? CF[k].label[lang].trim() : "";
+      if (own) lab.textContent = own;
+      var opt = lab.querySelector(".opt");
+      if (!qReq(k) && qOn(k) && CF_REQ[k]) { /* marked only where the admins relaxed a required one */ if (!opt) { opt = document.createElement("span"); opt.className = "opt"; lab.appendChild(opt); } opt.textContent = " " + tr("(optional)"); }
+      else if (opt) opt.remove();
+    });
+  }
+  async function loadQuestions() {
+    try {
+      var resp = await fetch(SUPABASE_URL + "/rest/v1/site_content?select=value&key=eq.community.form", { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } });
+      var rows = resp.ok ? await resp.json() : null;
+      var v = rows && rows[0] && rows[0].value;
+      CF = v && v.q && typeof v.q === "object" && !Array.isArray(v.q) ? v.q : {};
+    } catch (e) { CF = {}; }
+    paintQuestions();
+  }
   function setLang(code, save) {
     lang = code;
     html.lang = code; html.dir = langInfo(code).rtl ? "rtl" : "ltr";
@@ -87,6 +118,7 @@
     buildNationalities(); buildDob(); buildCc(); buildHeard(); buildEm(); paintWa();
     $$(".field").forEach(function (f) { paintField(f.id); });
     if (!$("#pv").hidden) renderNotice();
+    paintQuestions();
     if (sent) showSuccess(sent);
     if (bannerKey) showBanner(bannerKey, bannerSignIn);
   }
@@ -637,24 +669,26 @@
       if (acct && acct.needGender && !xgender) hard["f-xgender"] = ["Choose your gender"];
       if (waStep === 2) waCheck(hard, soft);
       if (acct && acct.needHeight) { var xh = parseInt(toAscii($("#xheight").value), 10); if (!(xh >= 100 && xh <= 250)) hard["f-xheight"] = ["Enter your height in cm (100 to 250)"]; }
-      var b = birthValue();
-      if (!b) hard["f-birth"] = ["Choose your date of birth"];
+      var b = qOn("birth_date") ? birthValue() : "";
+      if (!b) { if (qReq("birth_date")) hard["f-birth"] = ["Choose your date of birth"]; }
       else if (b > todayKsa()) hard["f-birth"] = ["dobErrFuture", null, true];
       else if (b > dobMax()) hard["f-birth"] = ["dobErrYoung", null, true];
       else if (ageAt(b) > 85) soft["f-birth"] = ["Please check your date of birth."];
-      if (!$("#nat").value) hard["f-nat"] = ["Choose your nationality"];
+      if (!$("#nat").value && qReq("nationality")) hard["f-nat"] = ["Choose your nationality"];
       var ig = igNorm($("#ig").value);
-      if (ig && !/^[A-Za-z0-9._]{1,30}$/.test(ig)) hard["f-ig"] = ["An Instagram username has only letters, numbers, dots and underscores"];
+      if (!ig && qReq("instagram")) hard["f-ig"] = ["Your Instagram username, or a link to your profile"];
+      if (qOn("instagram") && ig && !/^[A-Za-z0-9._]{1,30}$/.test(ig)) hard["f-ig"] = ["An Instagram username has only letters, numbers, dots and underscores"];
       var li = liNorm($("#li").value);
-      if (li && (/\//.test(li) || !/^[A-Za-z0-9\-_.%]{3,100}$/.test(li))) hard["f-li"] = ["Paste the link to your own profile (linkedin.com/in/…)"];
+      if (!li && qReq("linkedin")) hard["f-li"] = ["Paste the link to your own profile (linkedin.com/in/…)"];
+      if (qOn("linkedin") && li && (/\//.test(li) || !/^[A-Za-z0-9\-_.%]{3,100}$/.test(li))) hard["f-li"] = ["Paste the link to your own profile (linkedin.com/in/…)"];
       var prof = clean($("#prof").value);
-      if (prof.length < 2 || prof.length > 80 || !/\p{L}/u.test(prof) || /[<>"`{}]/.test(prof)) hard["f-prof"] = ["Enter your profession"];
+      if (!prof ? qReq("profession") : qOn("profession") && (prof.length < 2 || prof.length > 80 || !/\p{L}/u.test(prof) || /[<>"`{}]/.test(prof))) hard["f-prof"] = ["Enter your profession"];
       // Their company (the owner, 2026-09-29; sent as workplace), checked as profession is, up to 120.
       var work = clean($("#work").value);
-      if (Array.from(work).length < 2 || Array.from(work).length > 120 || !/\p{L}/u.test(work) || /[<>"`{}]/.test(work)) hard["f-work"] = ["Enter your company"];
-      if (ownBike === null) hard["f-own"] = ["Tell us whether you have your own bike"];
-      if (!bikeType) hard["f-type"] = ["Choose a bike type"];
-      if (!$("#heard").value) hard["f-heard"] = ["Please tell us how you heard about us."];
+      if (!work ? qReq("workplace") : qOn("workplace") && (Array.from(work).length < 2 || Array.from(work).length > 120 || !/\p{L}/u.test(work) || /[<>"`{}]/.test(work))) hard["f-work"] = ["Enter your company"];
+      if (ownBike === null && qReq("own_bike")) hard["f-own"] = ["Tell us whether you have your own bike"];
+      if (!bikeType && qReq("bike_type")) hard["f-type"] = ["Choose a bike type"];
+      if (!$("#heard").value && qReq("heard_from")) hard["f-heard"] = ["Please tell us how you heard about us."];
       if (acct && acct.needEm) emCheck("xem", acct.phone, hard);
       if (acct && acct.needAck && !xack) hard["f-xack"] = ["privacyAckRequired", null, true];
     }
@@ -812,6 +846,10 @@
       profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang,
       whatsapp_same: waSame
     };
+    // A question turned off is sent empty; their own bike, unanswered, is left out (the server takes no null).
+    Object.keys(CF_FIELD).forEach(function (k) { if (!qOn(k) && k !== "own_bike") payload[k] = ""; });
+    if (!qOn("own_bike") || ownBike === null) delete payload.own_bike;
+    if (!qOn("birth_date")) payload.birth_date = "";
     if (waSame === false) payload.whatsapp = e164(WPK);
     // The notice is recorded as confirmed only when this form showed its box and the box was ticked:
     // the account step's (an account made here), or step 2's for a signed-in account the database
@@ -892,6 +930,7 @@
   window.CommunityForm = { e164: e164, checkEmail: checkEmail, checkName: checkName, liNorm: liNorm, igNorm: igNorm, emRead: emRead };
 
   setLang(pickLang(), false);
+  loadQuestions();
   goStep(1);
   arrive();
 })();

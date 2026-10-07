@@ -18,9 +18,11 @@ const ME = { name: 'Karim Mansour', email: 'karim.mansour@gmail.com', phone: '+9
 const EM_ROW = { emergency_name: 'Layla Mansour', emergency_phone: '+966551234567', emergency_relation: 'spouse', emergency2_name: null, emergency2_phone: null, emergency2_relation: null };
 const EM_NONE = { emergency_name: null, emergency_phone: null, emergency_relation: null, emergency2_name: null, emergency2_phone: null, emergency2_relation: null };
 
-async function open(page: Page, qs = '', answers: Answers = {}) {
+async function open(page: Page, qs = '', answers: Answers = {}, form: unknown = null) {
   const errs: string[] = [];
   page.on('pageerror', (e) => errs.push(e.message));
+  // the questions as the admins set them (site_content 'community.form'); none, the form as it always was
+  await page.route('**/rest/v1/site_content*', (r) => r.fulfill(json(form ? [{ value: form }] : [])));
   const calls: Call[] = [];
   const base: Answers = {
     customer_exists: () => json(false),
@@ -755,4 +757,32 @@ test('the emergency contact speaks the page’s language, Saudi Arabia first in 
   expect(codes[0]).toBe('SA+966');
   expect(codes.filter((c) => c.startsWith('IL'))).toEqual([]);
   expect(await page.locator('#em-block').innerHTML()).not.toMatch(/[\u{1F1E6}-\u{1F1FF}]/u);
+});
+
+test('the admins\' settings: a question turned off is not asked or sent, one made optional may be left empty, and their wording shows (2026-10-07)', async ({ page }) => {
+  const form = { q: { profession: { on: false }, workplace: { req: false }, nationality: { label: { en: 'Which passport do you hold?', ar: 'ما جواز سفرك؟' } } } };
+  const { errs, of } = await open(page, '', {}, form);
+  await accountStep(page);
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#f-prof')).toBeHidden();
+  await expect(page.locator('#f-work label')).toContainText('(optional)');
+  await expect(page.locator('#f-nat label')).toHaveText('Which passport do you hold?');
+  await expect(page.locator('#f-ig label .opt')).toHaveCount(0); // optional as it always was: nothing says so
+  await page.selectOption('#birth-y', '1994');
+  await page.selectOption('#birth-m', '3');
+  await page.selectOption('#birth-d', '12');
+  await page.selectOption('#nat', 'Egypt');
+  await page.click('#owns .tile[data-v="no"]');
+  await page.click('#types .tile[data-v="Road"]');
+  await page.selectOption('#heard', 'instagram');
+  await page.click('#submit');
+  await expect.poll(() => of('customer_community_apply').length).toBe(1);
+  const p = of('customer_community_apply')[0].p as Record<string, unknown>;
+  expect(p.profession).toBe('');
+  expect(p.workplace).toBe('');
+  expect(p.nationality).toBe('Egypt');
+  // in Arabic, their Arabic wording
+  await page.selectOption('#lang', 'ar');
+  await expect(page.locator('#f-nat label')).toHaveText('ما جواز سفرك؟');
+  expect(errs).toEqual([]);
 });

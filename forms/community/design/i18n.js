@@ -2,6 +2,7 @@
    form shares with the booking site (consent boxes, date picker, gender) come from shared/shared.js. */
 var FORM_T = {
  "ar": {
+  "(optional)": "(اختياري)",
   "Community": "المجتمع",
   "Language": "اللغة",
   "Dismiss": "إغلاق",
@@ -103,6 +104,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "انتهت صلاحية رابط تسجيل الدخول هذا. سجّل الدخول مرة أخرى للمتابعة."
  },
  "fr": {
+  "(optional)": "(facultatif)",
   "Community": "Communauté",
   "Language": "Langue",
   "Dismiss": "Fermer",
@@ -204,6 +206,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "Ce lien de connexion a expiré. Reconnectez-vous pour continuer."
  },
  "es": {
+  "(optional)": "(opcional)",
   "Community": "Comunidad",
   "Language": "Idioma",
   "Dismiss": "Cerrar",
@@ -305,6 +308,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "Este enlace de inicio de sesión ha caducado. Vuelve a iniciar sesión para continuar."
  },
  "pt": {
+  "(optional)": "(opcional)",
   "Community": "Comunidade",
   "Language": "Idioma",
   "Dismiss": "Fechar",
@@ -406,6 +410,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "Este link de acesso expirou. Entre de novo para continuar."
  },
  "ur": {
+  "(optional)": "(اختیاری)",
   "Community": "کمیونٹی",
   "Language": "زبان",
   "Dismiss": "بند کریں",
@@ -507,6 +512,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "سائن اِن کا یہ لنک ختم ہو چکا ہے۔ جاری رکھنے کے لیے دوبارہ سائن اِن کریں۔"
  },
  "hi": {
+  "(optional)": "(वैकल्पिक)",
   "Community": "समुदाय",
   "Language": "भाषा",
   "Dismiss": "बंद करें",
@@ -608,6 +614,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "साइन इन का यह लिंक खत्म हो गया है। जारी रखने के लिए फिर से साइन इन करें।"
  },
  "tl": {
+  "(optional)": "(opsyonal)",
   "Community": "Komunidad",
   "Language": "Wika",
   "Dismiss": "Isara",
@@ -709,6 +716,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "Nag-expire na ang sign-in link na ito. Mag-sign in ulit para magpatuloy."
  },
  "ne": {
+  "(optional)": "(वैकल्पिक)",
   "Community": "समुदाय",
   "Language": "भाषा",
   "Dismiss": "बन्द गर्नुहोस्",
@@ -810,6 +818,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "यो साइन इन लिङ्कको म्याद सकियो। जारी राख्न फेरि साइन इन गर्नुहोस्।"
  },
  "bn": {
+  "(optional)": "(ঐচ্ছিক)",
   "Community": "কমিউনিটি",
   "Language": "ভাষা",
   "Dismiss": "বন্ধ করুন",
