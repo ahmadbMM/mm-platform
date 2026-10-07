@@ -4,7 +4,7 @@
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
 export const PRIVACY_VERSION = "2026-10-07";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
-export const PRIVACY_ASK_FROM = "2026-10-02";
+export const PRIVACY_ASK_FROM = "2026-10-07";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
  "en": [
   {
