@@ -361,6 +361,7 @@ export default function LearnForm(p: LearnFormProps) {
         <span className="ln-done-mark" aria-hidden="true">✓</span>
         <h2>{p.doneTitle}</h2>
         <p>{p.doneText}</p>
+        <p>{t.surge}</p>
         {/* A new sign-up from the same person, still signed in: their details stay; the learners
             start again from one empty card. */}
         <button type="button" className="ln-btn ln-btn-line" onClick={() => { setF((x) => ({ ...x, learners: [{ key: next.current++, ...EMPTY }], notes: "" })); setDone(false); }}>{t.again}</button>

@@ -700,7 +700,7 @@
     sent = p;
     $("#card").setAttribute("data-state", "success");
     $("#form").hidden = true; $("#member").hidden = true; $("#success").hidden = false;
-    $("#result").textContent = tr("Thank you, {name}. Our team will review your application and reply to you shortly.", { name: String(p.name || "").split(" ")[0] });
+    $("#result").textContent = tr("{name}, your application has been received.", { name: String(p.name || "").split(" ")[0] });
     $("#result-contact").textContent = p.phone && p.email ? tr("We will reply on {phone} or {email}.", { phone: "⁦" + p.phone + "⁩", email: "⁦" + p.email + "⁩" }) : "";
     if (document.activeElement && document.activeElement.closest && document.activeElement.closest("#form")) $("#success").focus();
   }

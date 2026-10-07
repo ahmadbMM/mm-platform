@@ -93,7 +93,7 @@ test('step 1 makes the account, says so, and step 2 sends the community answers 
   await communityStep(page);
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
-  await expect(page.locator('#result')).toHaveText('Thank you, Karim. Our team will review your application and reply to you shortly.');
+  await expect(page.locator('#result')).toHaveText('Karim, your application has been received.');
   await expect(page.locator('#result-contact')).toContainText('+966552468013');
   expect(of('customer_community_apply')).toEqual([{ p_id: su[0].p_id, p_token: 'tok-new', p: {
     birth_date: '1994-03-12', nationality: 'Egypt', bike_type: 'Road', own_bike: true, instagram: 'karim.rides', linkedin: 'karim-mansour-arch',
