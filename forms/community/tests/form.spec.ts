@@ -38,12 +38,13 @@ async function open(page: Page, qs = '', answers: Answers = {}) {
   const of = (fn: string) => calls.filter((c) => c.fn === fn).map((c) => c.body);
   return { errs, calls, of };
 }
-async function accountStep(page: Page, o: { first?: string; last?: string; phone?: string; email?: string; pwd?: string; pwd2?: string; height?: string; ack?: boolean; news?: boolean } = {}) {
+async function accountStep(page: Page, o: { first?: string; last?: string; phone?: string; email?: string; pwd?: string; pwd2?: string; height?: string; ack?: boolean; news?: boolean; wa?: string } = {}) {
   await page.fill('#first', o.first ?? 'karim');
   await page.fill('#last', o.last ?? 'mansour');
   await page.click('#genders .tile[data-v="male"]');
   await page.fill('#email', o.email ?? 'Karim.Mansour@gmail.com');
   await page.fill('#phone', o.phone ?? '0552468013');
+  if (o.wa !== '') await page.click(`#was .tile[data-v="${o.wa ?? 'yes'}"]`); // is it their WhatsApp too (2026-10-07)
   await page.fill('#pwd', o.pwd ?? 'Ride2Work');
   await page.fill('#pwd2', o.pwd2 ?? o.pwd ?? 'Ride2Work');
   await page.fill('#height', o.height ?? '178');
@@ -52,6 +53,8 @@ async function accountStep(page: Page, o: { first?: string; last?: string; phone
   await page.click('#next');
 }
 async function communityStep(page: Page, o: { heard?: string; type?: string; work?: string; own?: string } = {}) {
+  // handed over signed in, the WhatsApp question is on this step
+  if (await page.locator('fieldset.step[data-step="2"] #f-wa').count() && (await page.locator('#was .tile[aria-checked="true"]').count()) === 0) await page.click('#was .tile[data-v="yes"]');
   await page.selectOption('#birth-y', '1994');
   await page.selectOption('#birth-m', '3');
   await page.selectOption('#birth-d', '12');
@@ -94,7 +97,7 @@ test('step 1 makes the account, says so, and step 2 sends the community answers 
   await expect(page.locator('#result-contact')).toContainText('+966552468013');
   expect(of('customer_community_apply')).toEqual([{ p_id: su[0].p_id, p_token: 'tok-new', p: {
     birth_date: '1994-03-12', nationality: 'Egypt', bike_type: 'Road', own_bike: true, instagram: 'karim.rides', linkedin: 'karim-mansour-arch',
-    profession: 'Architect', workplace: 'Saudi Aramco', heard_from: 'instagram', lang: 'en', privacy_version: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    profession: 'Architect', workplace: 'Saudi Aramco', heard_from: 'instagram', lang: 'en', whatsapp_same: true, privacy_version: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
     privacy_ack: true, // the account step showed the notice's box, and it was ticked
   } }]);
   expect(errs).toEqual([]);
@@ -351,7 +354,7 @@ test('a server answer about a community field goes back to that field', async ({
 // members-only popup, sends the rider back with a one-time code.
 test('arriving signed in starts on step 2: who is applying, their answers so far, and no account step', async ({ page }) => {
   const { errs, of } = await open(page, `?code=${CODE}&lang=en`, {
-    customer_community_me: () => json({ ...ME, pending: true, birth_date: '1994-03-12', nationality: 'Egypt', profession: 'Architect', workplace: 'Saudi Aramco', bike_type: 'Hybrid', own_bike: false, heard_from: 'friend', instagram: 'karim.rides' }),
+    customer_community_me: () => json({ ...ME, pending: true, birth_date: '1994-03-12', nationality: 'Egypt', profession: 'Architect', workplace: 'Saudi Aramco', bike_type: 'Hybrid', own_bike: false, heard_from: 'friend', instagram: 'karim.rides', whatsapp_same: true }),
   });
   await expect(step(page, 2)).toBeVisible();
   await expect(step(page, 1)).toBeHidden();
@@ -367,6 +370,7 @@ test('arriving signed in starts on step 2: who is applying, their answers so far
   await expect(page.locator('#types .tile[data-v="Hybrid"]')).toHaveAttribute('aria-checked', 'true');
   await expect(page.locator('#owns .tile[data-v="no"]')).toHaveAttribute('aria-checked', 'true'); // their earlier answer
   await expect(page.locator('#heard')).toHaveValue('friend');
+  await expect(page.locator('#was .tile[data-v="yes"]')).toHaveAttribute('aria-checked', 'true'); // WhatsApp, from the account
   await expect(page.locator('#f-xgender')).toBeHidden();
   await expect(page.locator('#f-xheight')).toBeHidden();
   await page.click('#submit');
@@ -524,4 +528,71 @@ test('the step 2 notice box reads in Arabic', async ({ page }) => {
   await expect(page.locator('#xack-lbl')).toContainText('إشعار الخصوصية');
   await expect(page.locator('#f-xack .err')).not.toHaveText('');
   await expect(page.locator('#f-xack .err')).not.toContainText('Privacy Notice');
+});
+
+// WhatsApp (the owner, 2026-10-07): "ask the users if the phone number typed in is their whatsapp phone number too that
+// contains yes and no buttons, if the answer is no open a new field called whatsapp number and let it contain the same
+// country codes and behavior as the phone number field".
+test('under the mobile: Yes / No, and No opens a WhatsApp number with the mobile\'s codes and rules', async ({ page }) => {
+  const { errs, of } = await open(page);
+  await expect(page.locator('#wa-label')).toHaveText('Is this mobile number your WhatsApp number too?');
+  await page.fill('#phone', '0552468013');
+  await expect(page.locator('#wa-label')).toHaveText('Is \u2066+966552468013\u2069 your WhatsApp number too?');
+  await expect(page.locator('#f-wanum')).toBeHidden();
+  // not answered: the account waits
+  await accountStep(page, { wa: '' });
+  await expect(page.locator('#f-wa .err')).toHaveText('Tell us whether this is your WhatsApp number');
+  expect(of('customer_signup')).toHaveLength(0);
+  await page.click('#was .tile[data-v="no"]');
+  await expect(page.locator('#f-wanum')).toBeVisible();
+  await expect(page.locator('#wa')).toBeFocused();
+  expect(await page.locator('#wacc option').count()).toBe(await page.locator('#cc option').count());
+  await expect(page.locator('#wacc')).toHaveValue('SA+966');
+  await page.click('#next');
+  await expect(page.locator('#f-wanum .err')).toHaveText('Enter your WhatsApp number');
+  await page.fill('#wa', '0512');
+  await page.click('#next');
+  await expect(page.locator('#f-wanum .err')).toHaveText('Enter a valid Saudi mobile number (5XXXXXXXX)');
+  // typed with its country code, the picker follows, as the mobile's does
+  await page.fill('#wa', '+971 50 482 9153');
+  await expect(page.locator('#wacc')).toHaveValue('AE+971');
+  await expect(page.locator('#wacc-code')).toHaveText('+971');
+  await expect(page.locator('#wa')).toHaveValue('504 829 153');
+  await page.click('#next');
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#f-wa')).toBeHidden(); // asked on step 1, not again
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('customer_community_apply')[0].p).toMatchObject({ whatsapp_same: false, whatsapp: '+971504829153' });
+  expect(errs).toEqual([]);
+});
+
+test('handed over signed in: the question names the account\'s mobile on step 2, filled from the account', async ({ page }) => {
+  const { errs, of } = await open(page, `?code=${CODE}&lang=en`, {
+    customer_community_me: () => json({ ...ME, whatsapp_same: false, whatsapp: '+201001234567' }),
+  });
+  await expect(step(page, 2)).toBeVisible();
+  const wa = step(page, 2).locator('#f-wa');
+  await expect(wa).toBeVisible();
+  await expect(page.locator('#wa-label')).toHaveText('Is \u2066+966552468013\u2069 your WhatsApp number too?');
+  await expect(page.locator('#was .tile[data-v="no"]')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#wacc')).toHaveValue('EG+20');
+  await page.click('#was .tile[data-v="yes"]');
+  await expect(page.locator('#f-wanum')).toBeHidden();
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  const p = of('customer_community_apply')[0].p as Record<string, unknown>;
+  expect(p.whatsapp_same).toBe(true);
+  expect(p).not.toHaveProperty('whatsapp');
+  expect(errs).toEqual([]);
+});
+
+test('the WhatsApp question in Arabic', async ({ page }) => {
+  await open(page, '?lang=ar');
+  await expect(page.locator('#wa-label')).toHaveText('هل رقم الجوال هذا هو رقمك على WhatsApp أيضًا؟');
+  await expect(page.locator('#was .tile')).toHaveText(['نعم', 'لا']);
+  await page.click('#was .tile[data-v="no"]');
+  await expect(page.locator('#f-wanum label[for="wa"]')).toHaveText('رقم WhatsApp');
 });

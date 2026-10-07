@@ -84,7 +84,7 @@
     paintWho();
     $("#ack-lbl").innerHTML = ackLabel("pv-open");
     $("#xack-lbl").innerHTML = ackLabel("pv-open-x");
-    buildNationalities(); buildDob(); buildCc(); buildHeard();
+    buildNationalities(); buildDob(); buildCc(); buildHeard(); paintWa();
     $$(".field").forEach(function (f) { paintField(f.id); });
     if (!$("#pv").hidden) renderNotice();
     if (sent) showSuccess(sent);
@@ -192,23 +192,28 @@
     if (lang === "ar" && SH.COUNTRY_AR[x[2]]) return SH.COUNTRY_AR[x[2]];
     return regionName(x[1], x[2]);
   }
-  function buildCc() {
+  // Two pickers work this way: the mobile's, and the WhatsApp number's (2026-10-07), the same list and rules.
+  var PK = { sel: "#cc", flag: "#cc-flag", code: "#cc-code", input: "#phone" };
+  var WPK = { sel: "#wacc", flag: "#wacc-flag", code: "#wacc-code", input: "#wa" };
+  function buildCc() { buildCcOne(PK); buildCcOne(WPK); }
+  function buildCcOne(pk) {
     // Each option is its country AND code ("PS+970", "PS+972"): Palestine answers on two codes,
     // and a value of the country alone made +972 land on +970.
-    var sel = $("#cc"), cur = sel.value || "SA+966";
+    var sel = $(pk.sel), cur = sel.value || "SA+966";
     var gulf = SH.COUNTRY_CODES.slice(0, 6), rest = SH.COUNTRY_CODES.slice(6).concat(SH.COUNTRY_CODES.filter(function (x) { return x[1] === "SA"; })).map(function (x) { return { x: x, n: ccName(x) }; });
     try { rest.sort(function (a, b) { return a.n.localeCompare(b.n, lang); }); } catch (e) {}
     var list = gulf.map(function (x) { return { x: x, n: ccName(x) }; }).concat(rest), on = selOnce(cur);
     sel.innerHTML = list.map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + flagOf(o.x[1]) + " " + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
     if (!sel.value) sel.value = "SA+966";
-    ccFace();
+    ccFace(pk);
   }
-  function ccFace() {
-    var o = $("#cc").selectedOptions[0]; if (!o) return;
-    $("#cc-flag").textContent = flagOf(o.getAttribute("data-iso")); $("#cc-code").textContent = o.getAttribute("data-cc");
+  function ccFace(pk) {
+    pk = pk || PK;
+    var o = $(pk.sel).selectedOptions[0]; if (!o) return;
+    $(pk.flag).textContent = flagOf(o.getAttribute("data-iso")); $(pk.code).textContent = o.getAttribute("data-cc");
   }
-  function ccDigits() { var o = $("#cc").selectedOptions[0]; return o ? o.getAttribute("data-cc").slice(1) : "966"; }
-  function setCcDigits(k) { var o = $$("#cc option").filter(function (x) { return x.getAttribute("data-cc") === "+" + k; })[0]; if (o) { $("#cc").value = o.value; ccFace(); } }
+  function ccDigits(pk) { var o = $((pk || PK).sel).selectedOptions[0]; return o ? o.getAttribute("data-cc").slice(1) : "966"; }
+  function setCcDigits(k, pk) { pk = pk || PK; var o = $$(pk.sel + " option").filter(function (x) { return x.getAttribute("data-cc") === "+" + k; })[0]; if (o) { $(pk.sel).value = o.value; ccFace(pk); } }
   function ccOf(d) { for (var n = 1; n <= 3 && n <= d.length; n++) if (CC_DIGITS[d.slice(0, n)]) return d.slice(0, n); return ""; }
   function mobileOk(cc, nat) {
     var list = RULES[cc]; if (!list) return true;
@@ -220,12 +225,13 @@
     if (RULES[ccd]) { if (mobileOk(ccd, d)) return false; if (mobileOk(ccd, nat)) return true; }
     return d.length >= 11 && nat.length >= 8;
   }
-  function onPhoneInput() {
-    var el = $("#phone"), raw = toAscii(el.value).trim(), d = raw.replace(/\D/g, "");
-    var ccd = ccDigits(), intl = raw[0] === "+" || d.slice(0, 2) === "00", cut = false, plus = false;
+  function onPhoneInput(pk) {
+    pk = pk || PK;
+    var el = $(pk.input), raw = toAscii(el.value).trim(), d = raw.replace(/\D/g, "");
+    var ccd = ccDigits(pk), intl = raw[0] === "+" || d.slice(0, 2) === "00", cut = false, plus = false;
     if (d.slice(0, 2) === "00") d = d.slice(2);
     if (intl) {
-      if (d.indexOf(ccd) !== 0) { var k = ccOf(d); if (k) { setCcDigits(k); ccd = k; } }
+      if (d.indexOf(ccd) !== 0) { var k = ccOf(d); if (k) { setCcDigits(k, pk); ccd = k; } }
       if (d.indexOf(ccd) === 0) { d = d.slice(ccd.length); cut = true; } else plus = true;
     } else if (ccIncluded(d, ccd)) { d = d.slice(ccd.length); cut = true; }
     d = d.slice(0, 15);
@@ -234,8 +240,9 @@
     var out = d.length > g[1] ? d.slice(0, g[0]) + " " + d.slice(g[0], g[1]) + " " + d.slice(g[1]) : d.length > g[0] ? d.slice(0, g[0]) + " " + d.slice(g[0]) : d;
     el.value = (plus ? "+" : "") + out;
   }
-  function e164() {
-    var ccd = ccDigits(), s = toAscii($("#phone").value).trim().replace(/[\s()\-]/g, "");
+  function e164(pk) {
+    pk = pk || PK;
+    var ccd = ccDigits(pk), s = toAscii($(pk.input).value).trim().replace(/[\s()\-]/g, "");
     if (!s) return "";
     if (s[0] === "+") { var x = s.slice(1).replace(/\D/g, ""); if (x.indexOf(ccd + "0") === 0) x = ccd + x.slice(ccd.length + 1); return "+" + x; }
     s = s.replace(/\D/g, ""); if (!s) return "";
@@ -246,7 +253,42 @@
   }
   function callingCode(d) { for (var n = 3; n >= 1; n--) if (RULES[d.slice(0, n)] || CC_DIGITS[d.slice(0, n)]) return d.slice(0, n); return ""; }
   $("#phone").addEventListener("input", function () { onPhoneInput(); clearMsg("f-phone"); acked[2] = null; });
-  $("#cc").addEventListener("change", function () { ccFace(); $("#phone").placeholder = ccDigits() === "966" ? "5X XXX XXXX" : ""; clearMsg("f-phone"); });
+  $("#cc").addEventListener("change", function () { ccFace(); $("#phone").placeholder = ccDigits() === "966" ? "5X XXX XXXX" : ""; clearMsg("f-phone"); paintWa(); });
+  $("#phone").addEventListener("input", paintWa);
+  // A mobile number's problems, for the mobile and the WhatsApp number alike: {hard} or {soft} or {}.
+  function checkMobile(raw, p, wa) {
+    var d = p.replace(/\D/g, "");
+    if (!raw) return wa ? { hard: ["Enter your WhatsApp number"] } : { hard: ["Enter your mobile number"] };
+    if (d.indexOf("966") === 0) {
+      var nat = d.slice(3);
+      if (!/^5\d{8}$/.test(nat) || !mobileOk("966", nat)) return { hard: ["Enter a valid Saudi mobile number (5XXXXXXXX)"] };
+    } else {
+      var cc = callingCode(d);
+      if (!cc || d.length < 8 || d.length > 15) return { hard: ["Enter a valid mobile number"] };
+      if (!mobileOk(cc, d.slice(cc.length))) return { hard: ["This is not a mobile number for +{c}. Please check it.", { c: cc }] };
+    }
+    var tail = d.slice(-9);
+    if (/(\d)\1{5,}/.test(tail) || /0123456|1234567|2345678|3456789|9876543|8765432/.test(tail)) return { soft: ["Please check this number: it does not look like a real one."] };
+    return {};
+  }
+
+  /* ── WhatsApp: is the mobile their WhatsApp number too, or which number is (the owner, 2026-10-07).
+     Asked under the mobile on step 1; an applicant handed over signed in skips step 1, so it moves to
+     the top of step 2 for them, naming the account's mobile. Sent as whatsapp_same (+ whatsapp). ── */
+  var waSame = null, waStep = 1;
+  function waPhone() { return waStep === 2 ? (acct && acct.phone) || "" : ($("#phone").value.replace(/\D/g, "") ? e164() : ""); }
+  function paintWa() {
+    var p = waPhone();
+    $("#wa-label").textContent = p ? tr("Is {phone} your WhatsApp number too?", { phone: "\u2066" + p + "\u2069" }) : tr("Is this mobile number your WhatsApp number too?");
+  }
+  function waCheck(hard, soft) {
+    if (waSame === null) { hard["f-wa"] = ["Tell us whether this is your WhatsApp number"]; return; }
+    if (waSame) return;
+    var r = checkMobile($("#wa").value.replace(/\D/g, ""), e164(WPK), true);
+    if (r.hard) hard["f-wanum"] = r.hard; else if (r.soft) soft["f-wanum"] = r.soft;
+  }
+  $("#wa").addEventListener("input", function () { onPhoneInput(WPK); clearMsg("f-wanum"); acked[waStep] = null; });
+  $("#wacc").addEventListener("change", function () { ccFace(WPK); $("#wa").placeholder = ccDigits(WPK) === "966" ? "5X XXX XXXX" : ""; clearMsg("f-wanum"); });
 
   /* ── Email: the staff check's rules (misspelt providers, fake and throwaway domains,
      endings that do not exist) ─────────────────────────────────────────────────────── */
@@ -366,6 +408,11 @@
   tiles("#genders", "f-gender", function (v) { gender = v; });
   tiles("#xgenders", "f-xgender", function (v) { xgender = v; });
   tiles("#types", "f-type", function (v) { bikeType = v; });
+  tiles("#was", "f-wa", function (v) {
+    waSame = v === "yes"; acked[waStep] = null;
+    $("#f-wanum").hidden = waSame;
+    if (waSame) clearMsg("f-wanum"); else $("#wa").focus({ preventScroll: true });
+  });
   // Their own bike, yes or no (the owner, 2026-09-30); sent as own_bike, true or false.
   // A yes picks Bike owner as their bike type, which they may still change; a no takes Bike owner back off
   // (the owner, 2026-10-02: "the bike owning question must put the bike type preference on bike owner on
@@ -454,21 +501,9 @@
       emailFix = null;
       if (!em) hard["f-email"] = ["Enter your email address"];
       else { r = checkEmail(em); if (r.hard) { hard["f-email"] = r.hard; emailFix = r.fix || null; } else if (r.soft) soft["f-email"] = r.soft; }
-      var raw = $("#phone").value.replace(/\D/g, "");
-      var p = e164(), d = p.replace(/\D/g, "");
-      if (!raw) hard["f-phone"] = ["Enter your mobile number"];
-      else if (d.indexOf("966") === 0) {
-        var nat = d.slice(3);
-        if (!/^5\d{8}$/.test(nat) || !mobileOk("966", nat)) hard["f-phone"] = ["Enter a valid Saudi mobile number (5XXXXXXXX)"];
-      } else {
-        var cc = callingCode(d);
-        if (!cc || d.length < 8 || d.length > 15) hard["f-phone"] = ["Enter a valid mobile number"];
-        else if (!mobileOk(cc, d.slice(cc.length))) hard["f-phone"] = ["This is not a mobile number for +{c}. Please check it.", { c: cc }];
-      }
-      if (!hard["f-phone"]) {
-        var tail = d.slice(-9);
-        if (/(\d)\1{5,}/.test(tail) || /0123456|1234567|2345678|3456789|9876543|8765432/.test(tail)) soft["f-phone"] = ["Please check this number: it does not look like a real one."];
-      }
+      r = checkMobile($("#phone").value.replace(/\D/g, ""), e164(), false);
+      if (r.hard) hard["f-phone"] = r.hard; else if (r.soft) soft["f-phone"] = r.soft;
+      if (waStep === 1) waCheck(hard, soft);
       // The sign-up's password rule: 8 characters, an upper-case letter and a digit, typed twice.
       var pw = $("#pwd").value;
       if (passwordErr(pw)) hard["f-pwd"] = ["errPasswordLen", null, true];
@@ -479,6 +514,7 @@
       if (!ack) hard["f-ack"] = ["privacyAckRequired", null, true];
     } else {
       if (acct && acct.needGender && !xgender) hard["f-xgender"] = ["Choose your gender"];
+      if (waStep === 2) waCheck(hard, soft);
       if (acct && acct.needHeight) { var xh = parseInt(toAscii($("#xheight").value), 10); if (!(xh >= 100 && xh <= 250)) hard["f-xheight"] = ["Enter your height in cm (100 to 250)"]; }
       var b = birthValue();
       if (!b) hard["f-birth"] = ["Choose your date of birth"];
@@ -502,7 +538,7 @@
     }
     return { hard: hard, soft: soft };
   }
-  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-pwd", "f-pwd2", "f-height", "f-ack"], 2: ["f-xgender", "f-xheight", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-own", "f-type", "f-heard", "f-xack"] };
+  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-wa", "f-wanum", "f-pwd", "f-pwd2", "f-height", "f-ack"], 2: ["f-xgender", "f-xheight", "f-wa", "f-wanum", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-own", "f-type", "f-heard", "f-xack"] };
   // Shows the step's problems; true when the rider may go on.
   function passStep(n) {
     var r = check(n), hk = Object.keys(r.hard), sk = Object.keys(r.soft);
@@ -601,9 +637,20 @@
     if (me.workplace) $("#work").value = me.workplace;
     if (typeof me.own_bike === "boolean") { var o = $('#owns .tile[data-v="' + (me.own_bike ? "yes" : "no") + '"]'); if (o) o.click(); }
     if (me.bike_type) { var t = $('#types .tile[data-v="' + me.bike_type + '"]'); if (t) t.click(); }
+    if (typeof me.whatsapp_same === "boolean") {
+      var w = $('#was .tile[data-v="' + (me.whatsapp_same ? "yes" : "no") + '"]'); if (w) w.click();
+      var wd = String(me.whatsapp || "").replace(/\D/g, ""), wk = ccOf(wd);
+      if (!me.whatsapp_same && wk) { setCcDigits(wk, WPK); $("#wa").value = wd.slice(wk.length); onPhoneInput(WPK); }
+    }
     if (me.heard_from && SH.HEARD_OPTS.indexOf(me.heard_from) >= 0) { $("#heard").value = me.heard_from; $("#heard").classList.remove("ph"); }
   }
   function enterStepTwo(me) {
+    // Step 1 skipped (handed over signed in): the WhatsApp question goes to the top of step 2.
+    if (!acct.made && waStep === 1) {
+      var at = $("#f-birth"); at.parentNode.insertBefore($("#f-wa"), at); at.parentNode.insertBefore($("#f-wanum"), at);
+      waStep = 2;
+    }
+    paintWa();
     $("#f-xgender").hidden = !acct.needGender; $("#f-xheight").hidden = !acct.needHeight; $("#f-xack").hidden = !acct.needAck;
     $("#acct-pending").hidden = !(me && me.pending);
     prefill(me); paintWho();
@@ -619,8 +666,10 @@
     if (!acct || !passStep(2)) return;
     var payload = {
       birth_date: birthValue(), nationality: $("#nat").value, bike_type: bikeType, own_bike: ownBike, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
-      profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang
+      profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang,
+      whatsapp_same: waSame
     };
+    if (waSame === false) payload.whatsapp = e164(WPK);
     // The notice is recorded as confirmed only when this form showed its box and the box was ticked:
     // the account step's (an account made here), or step 2's for a signed-in account the database
     // has none for. An account handed over signed in otherwise sends none: it never saw the box here.
@@ -639,6 +688,8 @@
       if (res.error === "account") { showBanner("Your account has no email or mobile number yet. Add them on the booking site, then apply."); return; }
       // An account without a confirmed notice: its box, on this step, before the application goes.
       if (res.error === "privacy") { acct.needAck = true; $("#f-xack").hidden = false; setErr("f-xack", "privacyAckRequired", null, true); focusField("f-xack"); return; }
+      // The WhatsApp answer refused: said on its own field while it is on this step.
+      if (res.error === "whatsapp" && waStep === 2) { var wf = waSame === false ? "f-wanum" : "f-wa"; setErr(wf, wf === "f-wa" ? "Tell us whether this is your WhatsApp number" : "Enter a valid mobile number"); focusField(wf); return; }
       var f = FIELD_OF[res.error];
       if (f) { if (res.error === "gender" || res.error === "height") { $("#" + f[0]).hidden = false; acct["need" + (res.error === "gender" ? "Gender" : "Height")] = true; } setErr(f[0], f[1]); focusField(f[0]); return; }
       showBanner("Could not reach the server. Please try again."); return;
