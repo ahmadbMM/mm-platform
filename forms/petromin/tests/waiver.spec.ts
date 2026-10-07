@@ -6,7 +6,7 @@ const S1 = { id: '2099-02-08-pw', title: "Petromin's Wednesdays", start: '2099-0
 const json = (body: unknown, status = 200) => ({ status, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'content-type': 'application/json' }, body: JSON.stringify(body) });
 const PGRST202 = { code: 'PGRST202', details: 'Searched for the function public.rider_register with parameters ... p_waiver ...', hint: null, message: 'Could not find the function public.rider_register(...) in the schema cache' };
 const OK = { ok: true, id: 1, match: 'none', resubmitted: false, booking_no: 'P-001', session: S1 };
-const SAVED = { badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Hybrid', session: { id: S1.id, start: S1.start, end: S1.end }, bookingNo: 'P-001', submittedAt: '2099-02-01T10:00:00Z' };
+const SAVED = { badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Hybrid', session: { id: S1.id, start: S1.start, end: S1.end }, bookingNo: 'P-001', emergency: { name: 'Huda Contact', phone: '+966551112222', relation: 'spouse' }, submittedAt: '2099-02-01T10:00:00Z' };
 
 async function fillToLastStep(page: Page, lang = 'en') {
   await page.goto(`/petromin?lang=${lang}`);
@@ -14,6 +14,7 @@ async function fillToLastStep(page: Page, lang = 'en') {
   await page.click('#next');
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
+  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.check('#privacy');
@@ -60,7 +61,7 @@ test('an edit needs the waiver too, and rider_edit gets p_waiver', async ({ page
   expect(edits[0]).not.toHaveProperty('p_privacy'); // an edit does not ask for the notice again
 });
 
-test('a PGRST202 is never retried without p_waiver (the database takes it since 2026-10-03), only without p_privacy', async ({ page }) => {
+test('a PGRST202 is never retried without p_waiver (the database takes it since 2026-10-03), only without p_emergency and p_privacy', async ({ page }) => {
   const regs: Record<string, unknown>[] = [];
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => { regs.push(r.request().postDataJSON()); return r.fulfill(json(PGRST202, 404)); });
@@ -71,10 +72,14 @@ test('a PGRST202 is never retried without p_waiver (the database takes it since 
   await expect(page.locator('#success')).toBeHidden();
   // The notice's version is the one argument a database before its migration does not know: one
   // more try without it, never without the waiver.
-  expect(regs).toHaveLength(2);
-  expect(regs[0]).toMatchObject({ p_waiver: '2026-10-v3', p_privacy: '2026-09-22' });
+  // p_emergency (2026-10-07) and the notice's version are the arguments a database before their
+  // migrations does not know: one try without the first, one without both, never without the waiver.
+  expect(regs).toHaveLength(3);
+  expect(regs[0]).toMatchObject({ p_waiver: '2026-10-v3', p_privacy: '2026-10-07' });
   expect(regs[1].p_waiver).toBe('2026-10-v3');
-  expect(regs[1]).not.toHaveProperty('p_privacy');
+  expect(regs[1]).not.toHaveProperty('p_emergency');
+  expect(regs[2].p_waiver).toBe('2026-10-v3');
+  expect(regs[2]).not.toHaveProperty('p_privacy');
 });
 
 test('any other server error is not retried', async ({ page }) => {

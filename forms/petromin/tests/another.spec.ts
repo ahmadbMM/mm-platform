@@ -7,7 +7,7 @@ import { test, expect } from '@playwright/test';
 const S1 = { id: '2099-02-08-pw', title: "Petromin's Wednesdays", start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' };
 const S2 = { id: '2099-02-15-pw', title: "Petromin's Wednesdays", start: '2099-02-15T19:00:00+03:00', end: '2099-02-15T21:00:00+03:00' };
 const json = (body: unknown, status = 200) => ({ status, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'content-type': 'application/json' }, body: JSON.stringify(body) });
-const SAVED = { badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Hybrid', session: { id: S1.id, start: S1.start, end: S1.end }, bookingNo: 'P-001', submittedAt: '2099-02-01T10:00:00Z' };
+const SAVED = { badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Hybrid', session: { id: S1.id, start: S1.start, end: S1.end }, bookingNo: 'P-001', emergency: { name: 'Huda Contact', phone: '+966551112222', relation: 'spouse' }, submittedAt: '2099-02-01T10:00:00Z' };
 
 test('Register another starts a fresh form and keeps the first confirmation; both stay on the phone', async ({ page }) => {
   const regs: Record<string, unknown>[] = []; const edits: unknown[] = [];
@@ -43,6 +43,7 @@ test('Register another starts a fresh form and keeps the first confirmation; bot
   await page.click('#next');
   await page.click('#companies .company[data-v="Petrolube"]');
   await page.fill('#badge', 'B-7'); await page.fill('#name', 'Basma Second'); await page.fill('#phone', '512345679');
+  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '165'); await page.click('#types .tile[data-v="Mountain"]');
   await expect(page.locator('#privacy')).not.toBeChecked(); // the next person confirms the notice for themselves
@@ -108,6 +109,7 @@ test('a waiver the database no longer takes, and a paid booking moved to another
   await page.click('#next');
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
+  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.check('#privacy'); await page.check('#waiver');

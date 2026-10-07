@@ -11,6 +11,7 @@ test('booking card, registering with two companions', async ({ page }) => {
   await page.click('#next');
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', '104582'); await page.fill('#name', 'Faisal Al Harbi'); await page.fill('#phone', '512345678');
+  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '178'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.check('#privacy'); // the Privacy Notice confirmation a new registration needs

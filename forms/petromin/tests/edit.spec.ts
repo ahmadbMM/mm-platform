@@ -15,6 +15,7 @@ test('register, then edit the booking in place, then the confirmation survives a
   await page.click('#next');
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
+  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.check('#privacy'); // the Privacy Notice confirmation a new registration needs
@@ -70,7 +71,7 @@ test('an edit the server refuses is explained: checked in, not found, duplicate 
   let answer: Record<string, unknown> = { ok: false, error: 'checked_in' };
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1, S2])));
   await page.route('**/rest/v1/rpc/rider_edit', (r) => r.fulfill(json(answer)));
-  await page.addInitScript(() => localStorage.setItem('mm-petromin-registration', JSON.stringify({ badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Road', session: { id: '2099-02-08-pw', start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' }, bookingNo: 'P-001', submittedAt: '2099-02-01T10:00:00Z' })));
+  await page.addInitScript(() => localStorage.setItem('mm-petromin-registration', JSON.stringify({ badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Road', session: { id: '2099-02-08-pw', start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' }, bookingNo: 'P-001', emergency: { name: 'Huda Contact', phone: '+966551112222', relation: 'spouse' }, submittedAt: '2099-02-01T10:00:00Z' })));
   await page.goto('/petromin');
   await expect(page.locator('#success')).toBeVisible();
   await page.click('#edit');
@@ -102,6 +103,7 @@ test('an employee registers with companions, sees the party on the confirmation,
   await page.click('#next');
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'B-1'); await page.fill('#name', 'Basma Lead'); await page.fill('#phone', '512345678');
+  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '170'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.check('#privacy'); // the Privacy Notice confirmation a new registration needs

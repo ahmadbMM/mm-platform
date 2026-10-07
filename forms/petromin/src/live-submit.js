@@ -151,6 +151,134 @@
   var FIELD_ERR = { badge: "Enter your badge number", name: "Enter your full name", phone: "Enter a valid mobile number", height: "Enter your height in cm (100 to 250)", type: "Choose a bike type", session: "This session is no longer open", company: "Choose your company" };
   var FIELD_STEP = { session: 1, company: 2, badge: 2, name: 2, phone: 2, height: 3, type: 3 };
 
+  /* Emergency contact (the owner, 2026-10-07: required for everyone, a second one optional). One pair
+     for the whole registration, the person registering and their companions; it goes to rider_register
+     and rider_edit as p_emergency = {name, phone, relation, name2, phone2, relation2}. The first contact
+     is required, its number may not be the employee's own (the last nine digits, as the database
+     compares them); the second is all three boxes or none, and neither the employee's number nor the
+     first contact's. Relations are the booking app's eight codes (EM_RELS). */
+  var EM_KEYS = ["Emergency contact", "Someone we can call if you or anyone on your booking needs help during the ride.", "Contact’s name", "Contact’s mobile number", "Relationship to you", "Choose",
+    "Spouse", "Parent", "Brother or sister", "Son or daughter", "Relative", "Friend", "Colleague", "Other",
+    "Enter your contact’s name.", "Enter your contact’s mobile number.", "Choose how they are related to you.", "Your contact’s number can’t be your own.",
+    "Write your contact’s first and last name in full, not initials", "Second emergency contact", "Add a second contact (optional)", "The second contact’s number must be different from the first."];
+  var EM_T = {
+    ar: ["جهة اتصال للطوارئ", "شخص نتصل به إن احتجت أنت أو أي شخص في حجزك إلى مساعدة أثناء الرحلة.", "اسم جهة الاتصال", "رقم جوال جهة الاتصال", "صلة القرابة بك", "اختر",
+      "الزوج أو الزوجة", "الأب أو الأم", "الأخ أو الأخت", "الابن أو الابنة", "قريب", "صديق", "زميل عمل", "أخرى",
+      "أدخل اسم جهة الاتصال.", "أدخل رقم جوال جهة الاتصال.", "اختر صلة القرابة.", "لا يمكن أن يكون رقم جهة الاتصال هو رقمك.",
+      "اكتب الاسم الأول واسم العائلة لجهة الاتصال كاملين، لا الأحرف الأولى فقط", "جهة اتصال ثانية للطوارئ", "إضافة جهة اتصال ثانية (اختياري)", "يجب أن يختلف رقم جهة الاتصال الثانية عن رقم الأولى."],
+    fr: ["Contact d’urgence", "Une personne à appeler si vous ou quelqu’un de votre réservation avez besoin d’aide pendant la sortie.", "Nom du contact", "Mobile du contact", "Lien avec vous", "Choisir",
+      "Époux ou épouse", "Parent", "Frère ou sœur", "Fils ou fille", "Membre de la famille", "Ami ou amie", "Collègue", "Autre",
+      "Indiquez le nom de votre contact.", "Indiquez le numéro de mobile de votre contact.", "Indiquez votre lien avec cette personne.", "Le numéro de votre contact ne peut pas être le vôtre.",
+      "Écrivez le prénom et le nom de votre contact en entier, pas seulement les initiales", "Second contact d’urgence", "Ajouter un second contact (facultatif)", "Le numéro du second contact doit être différent de celui du premier."],
+    es: ["Contacto de emergencia", "Alguien a quien podamos llamar si tú o alguien de tu reserva necesita ayuda durante la salida.", "Nombre del contacto", "Móvil del contacto", "Relación contigo", "Elegir",
+      "Cónyuge", "Padre o madre", "Hermano o hermana", "Hijo o hija", "Familiar", "Amigo o amiga", "Compañero de trabajo", "Otro",
+      "Escribe el nombre de tu contacto.", "Escribe el móvil de tu contacto.", "Elige tu relación con esa persona.", "El número de tu contacto no puede ser el tuyo.",
+      "Escribe el nombre y el apellido de tu contacto completos, no solo las iniciales", "Segundo contacto de emergencia", "Añadir un segundo contacto (opcional)", "El número del segundo contacto debe ser distinto del primero."],
+    pt: ["Contacto de emergência", "Alguém a quem possamos ligar se você ou alguém da sua reserva precisar de ajuda durante o passeio.", "Nome do contacto", "Telemóvel do contacto", "Relação consigo", "Escolher",
+      "Cônjuge", "Pai ou mãe", "Irmão ou irmã", "Filho ou filha", "Familiar", "Amigo ou amiga", "Colega de trabalho", "Outro",
+      "Introduza o nome do seu contacto.", "Introduza o telemóvel do seu contacto.", "Escolha a sua relação com essa pessoa.", "O número do contacto não pode ser o seu.",
+      "Escreva o nome e o apelido do seu contacto por extenso, não apenas as iniciais", "Segundo contacto de emergência", "Adicionar um segundo contacto (opcional)", "O número do segundo contacto tem de ser diferente do primeiro."],
+    hi: ["आपातकालीन संपर्क", "कोई ऐसा व्यक्ति जिसे हम कॉल कर सकें, अगर राइड के दौरान आपको या आपकी बुकिंग में किसी को मदद चाहिए।", "संपर्क का नाम", "संपर्क का मोबाइल नंबर", "आपसे संबंध", "चुनें",
+      "पति या पत्नी", "माता या पिता", "भाई या बहन", "बेटा या बेटी", "रिश्तेदार", "मित्र", "सहकर्मी", "अन्य",
+      "अपने संपर्क का नाम दर्ज करें।", "अपने संपर्क का मोबाइल नंबर दर्ज करें।", "चुनें कि वे आपके क्या लगते हैं।", "संपर्क का नंबर आपका अपना नंबर नहीं हो सकता।",
+      "संपर्क का पहला और अंतिम नाम पूरा लिखें, सिर्फ़ आद्याक्षर नहीं", "दूसरा आपातकालीन संपर्क", "दूसरा संपर्क जोड़ें (वैकल्पिक)", "दूसरे संपर्क का नंबर पहले संपर्क से अलग होना चाहिए।"],
+    ne: ["आपतकालीन सम्पर्क", "सवारीका बेला तपाईं वा तपाईंको बुकिङमा कसैलाई सहयोग चाहिएमा हामीले फोन गर्न सक्ने व्यक्ति।", "सम्पर्क व्यक्तिको नाम", "सम्पर्क व्यक्तिको मोबाइल नम्बर", "तपाईंसँगको नाता", "छान्नुहोस्",
+      "श्रीमान् वा श्रीमती", "बुबा वा आमा", "दाजुभाइ वा दिदीबहिनी", "छोरा वा छोरी", "आफन्त", "साथी", "सहकर्मी", "अन्य",
+      "आफ्नो सम्पर्क व्यक्तिको नाम लेख्नुहोस्।", "आफ्नो सम्पर्क व्यक्तिको मोबाइल नम्बर लेख्नुहोस्।", "उहाँ तपाईंको को हुनुहुन्छ, छान्नुहोस्।", "सम्पर्क व्यक्तिको नम्बर तपाईंको आफ्नै नम्बर हुन सक्दैन।",
+      "सम्पर्क व्यक्तिको नाम र थर पूरा लेख्नुहोस्, छोटकरी अक्षर होइन", "दोस्रो आपतकालीन सम्पर्क", "दोस्रो सम्पर्क थप्नुहोस् (ऐच्छिक)", "दोस्रो सम्पर्क व्यक्तिको नम्बर पहिलोको भन्दा फरक हुनुपर्छ।"],
+    tl: ["Emergency contact", "Isang taong matatawagan namin kung ikaw o sinuman sa iyong booking ay mangailangan ng tulong habang nasa ride.", "Pangalan ng contact", "Mobile number ng contact", "Kaugnayan sa iyo", "Pumili",
+      "Asawa", "Magulang", "Kapatid", "Anak", "Kamag-anak", "Kaibigan", "Katrabaho", "Iba pa",
+      "Ilagay ang pangalan ng contact mo.", "Ilagay ang mobile number ng contact mo.", "Piliin ang kaugnayan niya sa iyo.", "Hindi puwedeng sarili mong numero ang numero ng contact.",
+      "Isulat nang buo ang pangalan at apelyido ng contact mo, hindi inisyal", "Ikalawang emergency contact", "Magdagdag ng ikalawang contact (opsyonal)", "Dapat iba ang numero ng ikalawang contact sa numero ng una."],
+    bn: ["জরুরি যোগাযোগ", "রাইডের সময় আপনার বা আপনার বুকিংয়ের কারও সাহায্য দরকার হলে আমরা যাকে ফোন করতে পারি।", "যোগাযোগের ব্যক্তির নাম", "যোগাযোগের ব্যক্তির মোবাইল নম্বর", "আপনার সাথে সম্পর্ক", "বেছে নিন",
+      "স্বামী বা স্ত্রী", "বাবা বা মা", "ভাই বা বোন", "ছেলে বা মেয়ে", "আত্মীয়", "বন্ধু", "সহকর্মী", "অন্যান্য",
+      "আপনার যোগাযোগের ব্যক্তির নাম লিখুন।", "আপনার যোগাযোগের ব্যক্তির মোবাইল নম্বর লিখুন।", "তিনি আপনার কী হন, বেছে নিন।", "যোগাযোগের নম্বর আপনার নিজের নম্বর হতে পারে না।",
+      "যোগাযোগের ব্যক্তির প্রথম ও শেষ নাম পুরোটা লিখুন, শুধু আদ্যক্ষর নয়", "দ্বিতীয় জরুরি যোগাযোগ", "দ্বিতীয় যোগাযোগ যোগ করুন (ঐচ্ছিক)", "দ্বিতীয় যোগাযোগের নম্বর প্রথমটির থেকে আলাদা হতে হবে।"],
+    ur: ["ہنگامی رابطہ", "کوئی ایسا شخص جسے ہم کال کر سکیں اگر رائیڈ کے دوران آپ کو یا آپ کی بکنگ میں کسی کو مدد کی ضرورت ہو۔", "رابطے کا نام", "رابطے کا موبائل نمبر", "آپ سے رشتہ", "منتخب کریں",
+      "شریکِ حیات", "والد یا والدہ", "بھائی یا بہن", "بیٹا یا بیٹی", "رشتہ دار", "دوست", "ساتھی کارکن", "دیگر",
+      "اپنے رابطے کا نام درج کریں۔", "اپنے رابطے کا موبائل نمبر درج کریں۔", "منتخب کریں کہ وہ آپ کے کیا لگتے ہیں۔", "رابطے کا نمبر آپ کا اپنا نمبر نہیں ہو سکتا۔",
+      "رابطے کا پہلا اور آخری نام پورا لکھیں، صرف ابتدائی حروف نہیں", "دوسرا ہنگامی رابطہ", "دوسرا رابطہ شامل کریں (اختیاری)", "دوسرے رابطے کا نمبر پہلے رابطے سے مختلف ہونا چاہیے۔"]
+  };
+  Object.keys(EM_T).forEach(function (l) { T[l] = T[l] || {}; EM_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = EM_T[l][i]; }); });
+  try { applyLang(html.lang || "en"); } catch (e) {} // repaint: the boxes above were painted before these words were known
+  var EM_RELS = ["spouse", "parent", "sibling", "child", "relative", "friend", "colleague", "other"];
+  var EM_MSG = { name: "Enter your contact’s name.", phone: "Enter your contact’s mobile number.", rel: "Choose how they are related to you.",
+    self: "Your contact’s number can’t be your own.", short: "Write your contact’s first and last name in full, not initials", same: "The second contact’s number must be different from the first." };
+  // p is "em" (the first contact) or "em2" (the second); each has a name box, a dial code with a number, a relation.
+  function emBox(p) { return { name: $("#" + p + "-name"), cc: $("#" + p + "-cc"), phone: $("#" + p + "-phone"), rel: $("#" + p + "-rel") }; }
+  var em2Open = false;
+  function showEm2(on) { em2Open = !!on; $("#em2").hidden = !em2Open; $("#add-em2").hidden = em2Open; }
+  ["em", "em2"].forEach(function (p) {
+    var b = emBox(p);
+    fillCC(b.cc);
+    b.name.addEventListener("input", function () { setError("f-" + p + "-name", false); onNameInput(b.name); });
+    b.phone.addEventListener("input", function () { setError("f-" + p + "-phone", false); });
+    b.phone.addEventListener("blur", function () { var n = nationalDigits(b.cc, b.phone); if (n) b.phone.value = n; });
+    b.cc.addEventListener("change", function () { setError("f-" + p + "-phone", false); b.phone.placeholder = b.cc.value === "966" ? "5X XXX XXXX" : ""; });
+    b.rel.addEventListener("change", function () { setError("f-" + p + "-rel", false); });
+  });
+  $("#add-em2").addEventListener("click", function () { showEm2(true); $("#em2-name").focus(); });
+  $("#em2-remove").addEventListener("click", function () { emFill("em2", null); showEm2(false); $("#add-em2").focus(); });
+  function emFill(p, c) {
+    var b = emBox(p); c = c || {};
+    b.name.value = cleanName(c.name || "").trim();
+    var digits = String(c.phone || "").replace(/\D/g, ""), code = null;
+    COUNTRIES.forEach(function (x) { if (digits.indexOf(x[1]) === 0 && (!code || x[1].length > code.length)) code = x[1]; });
+    if (code) { b.cc.value = code; b.phone.value = digits.slice(code.length); } else { b.cc.value = "966"; b.phone.value = digits; }
+    b.phone.placeholder = b.cc.value === "966" ? "5X XXX XXXX" : "";
+    b.rel.value = EM_RELS.indexOf(c.relation) >= 0 ? c.relation : "";
+    ["name", "phone", "rel"].forEach(function (f) { setError("f-" + p + "-" + f, false); });
+  }
+  function emRead(p) {
+    var b = emBox(p);
+    return { name: cleanName(b.name.value).trim().replace(/\s+/g, " "), phone: phoneE164(b.cc, b.phone), relation: b.rel.value, ok: phoneValid(b.cc, b.phone) };
+  }
+  function last9(v) { return String(v || "").replace(/\D/g, "").slice(-9); }
+  function emFieldErr(p, f, msg) { setError("f-" + p + "-" + f, true, msg || EM_MSG[f]); }
+  // Marks every box of a contact that is wrong; true when the contact is fine.
+  function emCheck(p, own, first) {
+    var c = emRead(p), ok = true;
+    if (!c.name) { emFieldErr(p, "name"); ok = false; }
+    else if (!/\s/.test(c.name) || nameShort(c.name) || c.name.length < 2) { emFieldErr(p, "name", EM_MSG.short); ok = false; }
+    if (!c.phone || !c.ok) { emFieldErr(p, "phone"); ok = false; }
+    else if (own && last9(c.phone) === last9(own)) { emFieldErr(p, "phone", EM_MSG.self); ok = false; }
+    else if (first && last9(c.phone) === last9(first)) { emFieldErr(p, "phone", EM_MSG.same); ok = false; }
+    if (EM_RELS.indexOf(c.relation) < 0) { emFieldErr(p, "rel"); ok = false; }
+    return ok;
+  }
+  function em2Blank() { var b = emBox("em2"); return !b.name.value.trim() && !b.phone.value.trim() && !b.rel.value; }
+  function validateEmergency() {
+    var own = phoneE164(), ok = emCheck("em", own, null);
+    if (em2Open && !em2Blank()) ok = emCheck("em2", own, emRead("em").phone) && ok;
+    return ok;
+  }
+  // What the database is sent and the phone keeps: the second contact only when it is filled in.
+  function emValue() {
+    var a = emRead("em"), v = { name: a.name, phone: a.phone, relation: a.relation };
+    if (em2Open && !em2Blank()) { var b = emRead("em2"); v.name2 = b.name; v.phone2 = b.phone; v.relation2 = b.relation; }
+    return v;
+  }
+  function emPrefill(e) {
+    e = e || {};
+    emFill("em", { name: e.name, phone: e.phone, relation: e.relation });
+    emFill("em2", { name: e.name2, phone: e.phone2, relation: e.relation2 });
+    showEm2(!!(e.name2 || e.phone2));
+  }
+  // The step's own checks first, then the contact: Continue stays on "Your details" until both are right.
+  var _validateStepDesign = validateStep;
+  validateStep = function (n) { var ok = _validateStepDesign(n); if (n === 2 && !validateEmergency()) ok = false; return ok; };
+  var _collectDesign = collect;
+  collect = function () { var d = _collectDesign(); d.emergency = emValue(); return d; };
+  // The database's refusal (BAD_INPUT, 22023, rentals 20261007233000): its detail names the box, its
+  // hint says which contact ("second").
+  function emRefused(err) {
+    var det = String((err && err.details) || ""), p = /second/.test(String((err && err.hint) || "")) ? "em2" : "em";
+    var map = { em_required: ["em", "name", null], em_name: [p, "name", EM_MSG.short], em_phone: [p, "phone", null], em_relation: [p, "rel", null], em_self: [p, "phone", EM_MSG.self], em_same: ["em2", "phone", EM_MSG.same] };
+    var m = map[det]; if (!m) return false;
+    if (m[0] === "em2") showEm2(true);
+    goStep(2); emFieldErr(m[0], m[1], m[2]); focusInvalid(); return true;
+  }
+
   async function loadSessions() {
     try {
       var r = await sbClient().rpc("rider_sessions", { p_source: SOURCE });
@@ -315,6 +443,7 @@
     selectedType = d.type || null;
     types.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === selectedType)); });
     ["f-session", "f-company", "f-badge", "f-name", "f-phone", "f-height", "f-type"].forEach(function (id) { setError(id, false); });
+    emPrefill(d.emergency); // one contact pair for the whole booking; a booking saved before it had none and asks now
     companions = (d.riders || []).map(function (c) { return { name: cleanName(c.name).trim(), height: c.height != null ? String(c.height) : "", type: c.type || "" }; });
     renderCompanions();
   }
@@ -340,9 +469,9 @@
   // The notice's version: the day it was last updated (its first line below), as 'YYYY-MM-DD', the
   // shape the booking site records its own notice in. A new registration sends it as p_privacy, the
   // box ticked. Change it together with the "Last updated" lines.
-  var PRIVACY_VERSION = "2026-09-22";
+  var PRIVACY_VERSION = "2026-10-07";
   var PV = {
-    en: '<p class="pv-upd">Last updated: 22 September 2026</p>' +
+    en: '<p class="pv-upd">Last updated: 7 October 2026</p>' +
       "<h3>Who we are</h3>" +
       "<p><b>شركة التنقل الدقيق المحدودة</b> (Micromobility Company Ltd.), unified number 7041881512, Building 7933, Ibn Anuq Al Fedha Street, Al Mansurah District, Riyadh 12692. We run the bike rides your employer arranges. Contact: " + PV_MAIL + ".</p>" +
       "<h3>What this form collects, and why</h3>" +
@@ -351,11 +480,12 @@
         ["Full name, mobile number", "Required", "To find your booking and reach you at the desk"],
         ["Session", "Required", "To book your place on the ride"],
         ["Height, bike type", "Required", "To give you a bike that fits"],
+        ["Emergency contact: name, mobile number, relationship to you (and a second contact if you add one)", "Required (the second contact is optional)", "To call someone if you or a rider on your booking needs help during the ride. Only add people who are happy for you to."],
         ["Companions’ names, heights, bike types", "Optional", "So each companion gets a bike under your booking number. Only add people who are happy for you to."],
         ["Booking number, check-in and return times, price", "Created when you ride", "Running the ride and billing your employer"]
       ]) +
       "<h3>Legal basis</h3>" +
-      "<p>Running the ride your employer arranged for you, keeping the billing records the law requires, and, for companions’ details, our legitimate interest in giving each rider a bike. We use the data only for these purposes. Without the required details we cannot register you.</p>" +
+      "<p>Running the ride your employer arranged for you, keeping the billing records the law requires, for companions’ details, our legitimate interest in giving each rider a bike, and, for emergency contacts’ details, our legitimate interest in reaching someone if a rider needs help. We use the data only for these purposes. Without the required details we cannot register you.</p>" +
       "<h3>Who receives it, and where it is kept</h3>" +
       "<ul><li><b>Our staff</b>, who run the ride.</li>" +
       "<li><b>Your employer</b> (Petromin or Petrolube): the names of the riders on its rides, and nothing else.</li>" +
@@ -367,7 +497,7 @@
       "<h3>Your rights</h3>" +
       "<p>You can ask to see your data, get a copy, have it corrected or completed, or have it destroyed once it is no longer needed. Email " + PV_MAIL + "; we reply within 30 days. You can also complain to the Saudi Data &amp; AI Authority (SDAIA).</p>" +
       "<p>The full Privacy Notice for accounts and bookings on our website is at " + PV_SITE + ".</p>",
-    ar: '<p class="pv-upd">آخر تحديث: 22 سبتمبر 2026</p>' +
+    ar: '<p class="pv-upd">آخر تحديث: 7 أكتوبر 2026</p>' +
       "<h3>من نحن</h3>" +
       "<p><b>شركة التنقل الدقيق المحدودة</b>، الرقم الموحد 7041881512، مبنى 7933، شارع ابن عنق الفضة، حي المنصورة، الرياض 12692. ننظّم رحلات الدراجات التي يرتّبها صاحب عملك. للتواصل: " + PV_MAIL + ".</p>" +
       "<h3>ما يجمعه هذا النموذج ولماذا</h3>" +
@@ -376,11 +506,12 @@
         ["الاسم الكامل ورقم الجوال", "إلزامي", "للعثور على حجزك والتواصل معك عند المكتب"],
         ["الجلسة", "إلزامي", "لحجز مكانك في الرحلة"],
         ["الطول ونوع الدراجة", "إلزامي", "لتوفير دراجة بمقاس مناسب لك"],
+        ["جهة اتصال للطوارئ: الاسم ورقم الجوال وصلة القرابة بك (وجهة اتصال ثانية إن أضفتها)", "إلزامي (جهة الاتصال الثانية اختيارية)", "للاتصال بأحد إن احتجت أنت أو أحد الراكبين في حجزك إلى مساعدة أثناء الرحلة. لا تضف إلا من يوافق على ذلك."],
         ["أسماء المرافقين وأطوالهم وأنواع دراجاتهم", "اختياري", "ليحصل كل مرافق على دراجة ضمن رقم حجزك. لا تضف إلا من يوافق على ذلك."],
         ["رقم الحجز وأوقات تسجيل الوصول والإرجاع والسعر", "تُسجَّل عند الركوب", "تشغيل الرحلة وإصدار الفاتورة لصاحب عملك"]
       ]) +
       "<h3>المسوّغ النظامي</h3>" +
-      "<p>تنظيم الرحلة التي رتّبها لك صاحب عملك، وحفظ سجلات الفوترة التي يوجبها النظام، ومصلحتنا المشروعة في توفير دراجة لكل راكب فيما يخص بيانات المرافقين. لا نستخدم البيانات إلا لهذه الأغراض، ودون البيانات الإلزامية لا يمكننا تسجيلك.</p>" +
+      "<p>تنظيم الرحلة التي رتّبها لك صاحب عملك، وحفظ سجلات الفوترة التي يوجبها النظام، ومصلحتنا المشروعة في توفير دراجة لكل راكب فيما يخص بيانات المرافقين، وفي الوصول إلى من نتصل به إن احتاج أحد الراكبين إلى مساعدة فيما يخص بيانات جهات الاتصال للطوارئ. لا نستخدم البيانات إلا لهذه الأغراض، ودون البيانات الإلزامية لا يمكننا تسجيلك.</p>" +
       "<h3>من يتلقاها وأين تُحفظ</h3>" +
       "<ul><li><b>موظفونا</b> الذين يديرون الرحلة.</li>" +
       "<li><b>صاحب عملك</b> (بترومين أو بترولوب): أسماء الراكبين في رحلاته فقط، ولا شيء غير ذلك.</li>" +
@@ -411,6 +542,8 @@
   function waiverRefused() { setError("f-waiver", true, "Please accept the waiver to continue."); goStep(STEPS); $("#waiver").focus(); }
   function setNote(key) { var note = $(".done-note"); if (note) { note.setAttribute("data-t", key); render(note); } }
 
+  function missingFn(r) { return !!(r && r.error && (r.error.code === "PGRST202" || r.status === 404)); }
+  function without(o, keys) { var x = {}; Object.keys(o).forEach(function (k) { if (keys.indexOf(k) < 0) x[k] = o[k]; }); return x; }
   $("#form").addEventListener("submit", async function (e) {
     e.preventDefault();
     hideBanner();
@@ -439,25 +572,30 @@
     };
     if (data.riders.length) args.p_riders = data.riders;
     args.p_waiver = WAIVER_VERSION; // only reached with the box ticked
+    args.p_emergency = data.emergency; // required: validateStep(2) has checked it
     if (!editing && $("#privacy").checked) args.p_privacy = PRIVACY_VERSION; // the notice this registration confirmed
     setLoading(true);
     var r;
     try {
       if (editing) {
-        r = await sbClient().rpc("rider_edit", { p_booking_no: editing.bookingNo, p_proof_phone: editing.phone, p_badge: args.p_badge, p_name: args.p_name, p_height: args.p_height, p_type: args.p_type, p_session_id: args.p_session_id, p_company: args.p_company, p_phone: args.p_phone, p_riders: data.riders, p_waiver: args.p_waiver });
+        var eargs = { p_booking_no: editing.bookingNo, p_proof_phone: editing.phone, p_badge: args.p_badge, p_name: args.p_name, p_height: args.p_height, p_type: args.p_type, p_session_id: args.p_session_id, p_company: args.p_company, p_phone: args.p_phone, p_riders: data.riders, p_waiver: args.p_waiver, p_emergency: args.p_emergency };
+        r = await sbClient().rpc("rider_edit", eargs);
+        // A database before the emergency contact migration (rentals 20261007233000) does not know
+        // the call with p_emergency: once more without it, and only it.
+        if (missingFn(r)) r = await sbClient().rpc("rider_edit", without(eargs, ["p_emergency"]));
       } else {
         r = await sbClient().rpc("rider_register", args);
-        // A database that does not take p_privacy yet (until the rentals migration adding it is
-        // applied) does not know the call with it: 404, PGRST202. Once more without it, and only it.
-        if (r && r.error && args.p_privacy && (r.error.code === "PGRST202" || r.status === 404)) {
-          var older = {}; Object.keys(args).forEach(function (k) { if (k !== "p_privacy") older[k] = args[k]; });
-          r = await sbClient().rpc("rider_register", older);
-        }
+        // A database that does not take an argument yet does not know the call with it: 404, PGRST202.
+        // The newest first (p_emergency, rentals 20261007233000), then p_privacy (20261005210200);
+        // never the waiver.
+        if (missingFn(r)) r = await sbClient().rpc("rider_register", without(args, ["p_emergency"]));
+        if (missingFn(r) && args.p_privacy) r = await sbClient().rpc("rider_register", without(args, ["p_emergency", "p_privacy"]));
       }
     } catch (err) { r = { error: err }; }
     setLoading(false);
     // Raised by the database (P0001) since rentals' 2026-10-05 migration: said in the page's language.
     var refused = String((r && r.error && r.error.message) || (r && r.data && r.data.error) || "");
+    if (r && r.error && r.error.code === "22023" && emRefused(r.error)) return; // the emergency contact (BAD_INPUT)
     if (/WAIVER_OUTDATED/.test(refused)) { showBanner(WAIVER_OUTDATED); return; }
     if (/PAID_MOVE/.test(refused)) { showBanner(PAID_MOVE); return; }
     if (!r || r.error || !r.data) { showBanner("Could not reach the server"); return; }
@@ -484,6 +622,7 @@
       showBanner("Could not reach the server"); return;
     }
     data.bookingNo = d.booking_no;
+    if (d.emergency && d.emergency.name) data.emergency = d.emergency; // as the database stored it
     if (d.session) data.session = d.session;
     var wasEdit = !!editing; editing = null;
     if (another && current && current.bookingNo !== data.bookingNo) keep(current); // the confirmation before this one stays on the phone
