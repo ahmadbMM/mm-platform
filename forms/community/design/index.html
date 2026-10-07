@@ -94,6 +94,29 @@
           <p class="err" aria-live="polite"></p>
           <p class="warn" aria-live="polite"></p>
         </div>
+        <!-- Is the mobile their WhatsApp number too (the owner, 2026-10-07)? No opens a WhatsApp number box with
+             the mobile's country codes and rules. An applicant handed over signed in meets both on step 2. -->
+        <div id="f-wa" class="field">
+          <span class="label" id="wa-label">Is this mobile number your WhatsApp number too?</span>
+          <div id="was" class="types two" role="radiogroup" aria-labelledby="wa-label">
+            <button type="button" class="tile" data-v="yes" role="radio" aria-checked="false" data-t="Yes">Yes</button>
+            <button type="button" class="tile" data-v="no" role="radio" aria-checked="false" data-t="No">No</button>
+          </div>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-wanum" class="field" hidden>
+          <label for="wa" data-t="WhatsApp number">WhatsApp number</label>
+          <div class="phone-row" dir="ltr">
+            <label class="cc-wrap">
+              <span class="cc-face" aria-hidden="true"><span id="wacc-flag" class="cc-flag"></span><span id="wacc-code">+966</span></span>
+              <select id="wacc" class="cc" aria-label="Country code" data-t-aria="Country code"></select>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+            </label>
+            <input id="wa" name="whatsapp" type="tel" inputmode="tel" autocomplete="off" placeholder="5X XXX XXXX">
+          </div>
+          <p class="err" aria-live="polite"></p>
+          <p class="warn" aria-live="polite"></p>
+        </div>
         <div id="f-pwd" class="field">
           <label for="pwd" data-site="authPassword">Password</label>
           <input id="pwd" name="password" type="password" autocomplete="new-password" maxlength="72" dir="ltr">
