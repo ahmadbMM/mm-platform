@@ -395,3 +395,17 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 .member-go:hover { color: #fbf9f4; }
 .card[data-state="member"] .form, .card[data-state="member"] .banner { display: none; }
 .field[hidden] { display: none; }
+
+/* The emergency contact (2026-10-07): the first required, a second optional behind its button. */
+.em-block { margin: 6px 0 20px; padding-top: 20px; border-top: 1px solid rgba(0, 0, 0, 0.07); }
+.em-block[hidden], .em2[hidden], .em-add[hidden] { display: none; }
+.em-h { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 4px; font-size: 16px; font-weight: 700; }
+.em-h svg { flex: none; color: var(--green); }
+.em-opt { color: var(--faint); font-weight: 500; font-size: 14px; }
+.em-sub { margin-bottom: 14px; }
+.em2 { margin-top: 6px; padding-top: 16px; border-top: 1px dashed var(--line); }
+.em-add {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid var(--line); background: transparent; color: var(--green); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.em-add:hover { background: rgba(7, 122, 75, 0.08); }

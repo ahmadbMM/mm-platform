@@ -14,6 +14,10 @@ const CODE = 'ab'.repeat(24);
 const ME = { name: 'Karim Mansour', email: 'karim.mansour@gmail.com', phone: '+966552468013', member: false, pending: false, gender: 'male', height: 178,
   birth_date: null, nationality: null, instagram: null, linkedin: null, profession: null, workplace: null, bike_type: null, heard_from: null };
 
+// An account that has its emergency contact (customer_emergency's six columns).
+const EM_ROW = { emergency_name: 'Layla Mansour', emergency_phone: '+966551234567', emergency_relation: 'spouse', emergency2_name: null, emergency2_phone: null, emergency2_relation: null };
+const EM_NONE = { emergency_name: null, emergency_phone: null, emergency_relation: null, emergency2_name: null, emergency2_phone: null, emergency2_relation: null };
+
 async function open(page: Page, qs = '', answers: Answers = {}) {
   const errs: string[] = [];
   page.on('pageerror', (e) => errs.push(e.message));
@@ -25,6 +29,9 @@ async function open(page: Page, qs = '', answers: Answers = {}) {
     customer_community_apply: () => json({ ok: true, updated: false }),
     customer_handoff_redeem: () => json([{ id: 'c-karim', name: 'Karim Mansour', session_token: 'tok-handed' }]),
     customer_community_me: () => json(ME),
+    customer_emergency: () => json([EM_ROW]),
+    customer_set_emergency: () => json(true),
+    customer_set_emergency2: () => json(true),
   };
   await page.route('**/rest/v1/rpc/*', async (r) => {
     if (r.request().method() === 'OPTIONS') return r.fulfill(json({}));
@@ -38,7 +45,12 @@ async function open(page: Page, qs = '', answers: Answers = {}) {
   const of = (fn: string) => calls.filter((c) => c.fn === fn).map((c) => c.body);
   return { errs, calls, of };
 }
-async function accountStep(page: Page, o: { first?: string; last?: string; phone?: string; email?: string; pwd?: string; pwd2?: string; height?: string; ack?: boolean; news?: boolean; wa?: string } = {}) {
+async function emContact(page: Page, pre: string, o: { name?: string; phone?: string; rel?: string } = {}) {
+  await page.fill(`#${pre}-name`, o.name ?? 'Layla Mansour');
+  await page.fill(`#${pre}-phone`, o.phone ?? '0551234567');
+  await page.selectOption(`#${pre}-rel`, o.rel ?? 'spouse');
+}
+async function accountStep(page: Page, o: { first?: string; last?: string; phone?: string; email?: string; pwd?: string; pwd2?: string; height?: string; ack?: boolean; news?: boolean; em?: boolean; wa?: string } = {}) {
   await page.fill('#first', o.first ?? 'karim');
   await page.fill('#last', o.last ?? 'mansour');
   await page.click('#genders .tile[data-v="male"]');
@@ -48,11 +60,13 @@ async function accountStep(page: Page, o: { first?: string; last?: string; phone
   await page.fill('#pwd', o.pwd ?? 'Ride2Work');
   await page.fill('#pwd2', o.pwd2 ?? o.pwd ?? 'Ride2Work');
   await page.fill('#height', o.height ?? '178');
+  if (o.em !== false) await emContact(page, 'em');
   if (o.ack !== false && (await page.locator('#ack').getAttribute('aria-checked')) !== 'true') await page.click('#ack .tick-box');
   if (o.news && (await page.locator('#news').getAttribute('aria-checked')) !== 'true') await page.click('#news .tick-box');
   await page.click('#next');
 }
 async function communityStep(page: Page, o: { heard?: string; type?: string; work?: string; own?: string } = {}) {
+  await expect(page.locator('fieldset.step[data-step="2"]')).toBeVisible();
   // handed over signed in, the WhatsApp question is on this step
   if (await page.locator('fieldset.step[data-step="2"] #f-wa').count() && (await page.locator('#was .tile[aria-checked="true"]').count()) === 0) await page.click('#was .tile[data-v="yes"]');
   await page.selectOption('#birth-y', '1994');
@@ -269,7 +283,10 @@ test('a soft warning is said once; pressing the button again goes on', async ({ 
 test('LinkedIn must be a personal profile, Instagram a real username; both may be left empty, and nothing says so', async ({ page }) => {
   const { of } = await open(page);
   await accountStep(page);
-  await expect(page.locator('body')).not.toContainText(/optional/i);
+  // only the second emergency contact says it is optional (the booking site's own words), never these two
+  await expect(page.locator('#f-ig')).not.toContainText(/optional/i);
+  await expect(page.locator('#f-li')).not.toContainText(/optional/i);
+  await expect(page.locator('#form')).not.toContainText(/optional\b(?!\))/i);
   await communityStep(page);
   await page.fill('#ig', 'karim rides!');
   await page.fill('#li', 'https://www.linkedin.com/company/micromobility');
@@ -595,4 +612,147 @@ test('the WhatsApp question in Arabic', async ({ page }) => {
   await expect(page.locator('#was .tile')).toHaveText(['نعم', 'لا']);
   await page.click('#was .tile[data-v="no"]');
   await expect(page.locator('#f-wanum label[for="wa"]')).toHaveText('رقم WhatsApp');
+});
+
+// The emergency contact (the owner, 2026-10-07): the first required on the account step and, for an
+// account handed over without one, on step 2; a second optional, behind its button.
+test('the account step will not make the account without an emergency contact', async ({ page }) => {
+  const { errs, of } = await open(page);
+  await accountStep(page, { em: false });
+  await expect(step(page, 1)).toBeVisible();
+  await expect(page.locator('#f-em-name .err')).toHaveText('Enter your contact’s name.');
+  expect(of('customer_signup')).toHaveLength(0);
+  await page.fill('#em-name', 'Layla Mansour');
+  await page.click('#next');
+  await expect(page.locator('#f-em-phone .err')).toHaveText('Enter your contact’s mobile number.');
+  await page.fill('#em-phone', '0551234567');
+  await page.click('#next');
+  await expect(page.locator('#f-em-rel .err')).toHaveText('Choose how they are related to you.');
+  expect(of('customer_signup')).toHaveLength(0);
+  await page.selectOption('#em-rel', 'parent');
+  await page.click('#next');
+  await expect(step(page, 2)).toBeVisible();
+  expect(of('customer_set_emergency')).toEqual([{ p_id: of('customer_signup')[0].p_id, p_token: 'tok-new', p_name: 'Layla Mansour', p_phone: '+966551234567', p_relation: 'parent' }]);
+  expect(of('customer_set_emergency2')).toHaveLength(0);
+  expect(errs).toEqual([]);
+});
+
+test('the emergency contact cannot be the rider’s own number, and a dash in its name becomes a space', async ({ page }) => {
+  const { of } = await open(page);
+  await accountStep(page, { em: false });
+  await emContact(page, 'em', { name: 'Layla-Mansour', phone: '+966 55 246 8013' });
+  await expect(page.locator('#em-name')).toHaveValue('Layla Mansour');
+  await page.click('#next');
+  await expect(page.locator('#f-em-phone .err')).toHaveText('Your contact’s number can’t be your own.');
+  expect(of('customer_signup')).toHaveLength(0);
+  await page.fill('#em-name', 'L Mansour');
+  await page.fill('#em-phone', '0551234567');
+  await page.click('#next');
+  await expect(page.locator('#f-em-name .err')).toHaveText('Write each name in full: every name needs at least two letters.');
+});
+
+test('a second emergency contact is optional, needs all three boxes, and not the first one’s number', async ({ page }) => {
+  const { errs, of } = await open(page);
+  await expect(page.locator('#em2-box')).toBeHidden();
+  await page.click('#em2-add');
+  await expect(page.locator('#em2-box')).toBeVisible();
+  await expect(page.locator('#em2-box .em-h')).toHaveText('Second emergency contact (optional)');
+  await expect(page.locator('#em2-add')).toBeHidden();
+  await accountStep(page); // the second left empty: none, and the account is made
+  await expect(step(page, 2)).toBeVisible();
+  expect(of('customer_set_emergency2')).toHaveLength(0);
+  expect(errs).toEqual([]);
+
+  const p2 = await page.context().newPage();
+  const b = await open(p2);
+  await p2.click('#em2-add');
+  await emContact(p2, 'em2', { name: 'Omar Mansour', phone: '055 123 4567', rel: 'sibling' });
+  await accountStep(p2);
+  await expect(p2.locator('#f-em2-phone .err')).toHaveText('The two emergency contacts can’t have the same number.');
+  expect(b.of('customer_signup')).toHaveLength(0);
+  await p2.fill('#em2-phone', '0559876541');
+  await p2.selectOption('#em2-rel', '');
+  await p2.click('#next');
+  await expect(p2.locator('#f-em2-rel .err')).toHaveText('Choose how they are related to you.');
+  await p2.selectOption('#em2-rel', 'sibling');
+  await p2.click('#next');
+  await expect(step(p2, 2)).toBeVisible();
+  expect(b.of('customer_set_emergency2')).toEqual([{ p_id: b.of('customer_signup')[0].p_id, p_token: 'tok-new', p_name: 'Omar Mansour', p_phone: '+966559876541', p_relation: 'sibling' }]);
+});
+
+test('a contact the database refuses after the account is made is asked again on step 2, then saved before the application', async ({ page }) => {
+  let n = 0;
+  const { errs, of } = await open(page, '', {
+    customer_set_emergency: () => (++n === 1 ? refuse({ code: '22023', message: 'BAD_INPUT', details: 'em_self' }) : json(true)),
+  });
+  await accountStep(page);
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#acct-made')).toBeVisible();
+  await expect(page.locator('#xem-block')).toBeVisible();
+  await expect(page.locator('#xem-name')).toHaveValue('Layla Mansour');
+  await expect(page.locator('#f-xem-phone .err')).toHaveText('Your contact’s number can’t be your own.');
+  expect(of('customer_signup')).toHaveLength(1);
+  await page.fill('#xem-phone', '0559876541');
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('customer_set_emergency').at(-1)).toMatchObject({ p_phone: '+966559876541', p_relation: 'spouse' });
+  expect(of('customer_signup')).toHaveLength(1);
+  expect(errs).toEqual([]);
+});
+
+test('a database without the emergency functions lets the account through', async ({ page }) => {
+  const missing = () => refuse({ code: 'PGRST202', message: 'Could not find the function' }, 404);
+  const { of } = await open(page, '', { customer_set_emergency: missing, customer_set_emergency2: missing });
+  await accountStep(page);
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#xem-block')).toBeHidden();
+  expect(of('customer_set_emergency')).toHaveLength(1);
+});
+
+test('an account handed over without an emergency contact gives it on step 2 before the application goes', async ({ page }) => {
+  const { errs, of } = await open(page, '?code=' + CODE, { customer_emergency: () => json([EM_NONE]) });
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#xem-block')).toBeVisible();
+  await expect(page.locator('#xem-block .em-h').first()).toHaveText('Emergency contact');
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#f-xem-name .err')).toHaveText('Enter your contact’s name.');
+  expect(of('customer_community_apply')).toHaveLength(0);
+  await emContact(page, 'xem', { phone: '0552468013' }); // the account's own number (ME.phone)
+  await page.click('#submit');
+  await expect(page.locator('#f-xem-phone .err')).toHaveText('Your contact’s number can’t be your own.');
+  await page.fill('#xem-phone', '0551234567');
+  await page.click('#xem2-add');
+  await emContact(page, 'xem2', { name: 'Omar Mansour', phone: '0559876541', rel: 'friend' });
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('customer_set_emergency')).toEqual([{ p_id: 'c-karim', p_token: 'tok-handed', p_name: 'Layla Mansour', p_phone: '+966551234567', p_relation: 'spouse' }]);
+  expect(of('customer_set_emergency2')).toEqual([{ p_id: 'c-karim', p_token: 'tok-handed', p_name: 'Omar Mansour', p_phone: '+966559876541', p_relation: 'friend' }]);
+  expect(errs).toEqual([]);
+});
+
+test('an account handed over with its contact is not asked; an older database offers no second contact', async ({ page }) => {
+  const { of } = await open(page, '?code=' + CODE);
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#xem-block')).toBeHidden();
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('customer_set_emergency')).toHaveLength(0);
+
+  const p2 = await page.context().newPage();
+  await open(p2, '?code=' + CODE, { customer_emergency: () => json([{ emergency_name: null, emergency_phone: null, emergency_relation: null }]) });
+  await expect(p2.locator('#xem-block')).toBeVisible();
+  await expect(p2.locator('#xem2-add')).toBeHidden();
+});
+
+test('the emergency contact speaks the page’s language, Saudi Arabia first in its dial codes and no Israel', async ({ page }) => {
+  await open(page, '?lang=ar');
+  await expect(page.locator('#em-block .em-h').first()).toHaveText('جهة اتصال للطوارئ');
+  await expect(page.locator('#em-rel option').nth(1)).toHaveText('الزوج أو الزوجة');
+  const codes = await page.locator('#em-cc option').evaluateAll((os) => os.map((o) => (o as HTMLOptionElement).value));
+  expect(codes[0]).toBe('SA+966');
+  expect(codes.filter((c) => c.startsWith('IL'))).toEqual([]);
+  expect(await page.locator('#em-block').innerHTML()).not.toMatch(/[\u{1F1E6}-\u{1F1FF}]/u);
 });
