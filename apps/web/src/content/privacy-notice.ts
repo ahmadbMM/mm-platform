@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-10-06";
+export const PRIVACY_VERSION = "2026-10-07";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -88,9 +88,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Knowing how riders find us, in totals only"
      ],
      [
-      "Emergency contact: the name, mobile number and relationship to you of someone we can call",
-      "Required to take part in some events, such as Run for Her; optional on your account page. Seen only by our staff, and by the hosts of an event you agree to share it with. Please tell that person you gave us their details.",
-      "Calling someone for you if you need help during an event. We never contact them for anything else, and share their details only with the hosts of an event you agree to share them with."
+      "Emergency contacts: the name, mobile number and relationship to you of someone we can call, and of a second person if you add one",
+      "One is required to take part in some events, such as Run for Her; optional on your account page. A second is always optional. Seen only by our staff, and the first also by the hosts of an event you agree to share it with. Please tell each person you gave us their details.",
+      "Calling someone for you if you need help during an event, and the second person if we cannot reach the first. We never contact them for anything else. We share only your first contact’s details, and only with the hosts of an event you agree to share them with."
      ],
      [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
@@ -369,9 +369,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "معرفة كيف يصل إلينا الراكبون، في صورة أعداد إجمالية فقط"
      ],
      [
-      "جهة اتصال للطوارئ: اسم شخص يمكننا الاتصال به ورقم جواله وصلة قرابته بك",
-      "مطلوبة للمشاركة في بعض الفعاليات مثل سباق نركض لأجلها، واختيارية في صفحة حسابك. لا يراها إلا موظفونا، والجهات المنظِّمة لفعالية توافق على مشاركتها معها. يُرجى إبلاغ ذلك الشخص بأنك أعطيتنا بياناته.",
-      "الاتصال بشخص نيابةً عنك إن احتجت إلى مساعدة أثناء إحدى الفعاليات. لا نتواصل معه لأي غرض آخر، ولا نشارك بياناته إلا مع الجهات المنظِّمة لفعالية توافق على مشاركتها معها."
+      "جهات اتصال الطوارئ: اسم شخص يمكننا الاتصال به ورقم جواله وصلة قرابته بك، وكذلك لشخص ثانٍ إن أضفته",
+      "جهة واحدة مطلوبة للمشاركة في بعض الفعاليات مثل سباق نركض لأجلها، واختيارية في صفحة حسابك. والجهة الثانية اختيارية دائمًا. لا يراهما إلا موظفونا، والجهات المنظِّمة لفعالية توافق على مشاركة الأولى معها. يُرجى إبلاغ كل شخص منهما بأنك أعطيتنا بياناته.",
+      "الاتصال بشخص نيابةً عنك إن احتجت إلى مساعدة أثناء إحدى الفعاليات، وبالشخص الثاني إن تعذّر الوصول إلى الأول. لا نتواصل معهما لأي غرض آخر، ولا نشارك إلا بيانات جهة الاتصال الأولى، ومع الجهات المنظِّمة لفعالية توافق على مشاركتها معها فقط."
      ],
      [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
