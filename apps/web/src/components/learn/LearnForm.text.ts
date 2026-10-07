@@ -59,7 +59,10 @@ export const T = {
     send: "Sign up", sending: "Sending…", again: "Sign up more learners",
     // A learner's message names their card: "Learner 2: Enter the child's age, from 3 to 17."
     learnerError: (n: number, message: string) => `Learner ${n}: ${message}`,
+    // WhatsApp (the owner, 2026-10-07): is the account's mobile their WhatsApp too, or which number is.
+    waAsk: (phone: string) => `Is ${phone} your WhatsApp number too?`, waYes: "Yes", waNo: "No", waLabel: "WhatsApp number",
     errors: {
+      whatsapp: "Enter your WhatsApp number, or answer whether your mobile is it.",
       learner_who: "Choose who is learning.", learner_name: "Enter the child's name - letters only.", learner_name_other: "Enter their full name - letters only.",
       learner_age: "Enter an age up to 99.", learner_age_child: "Enter the child's age, up to 99.", learner_age_other: "Enter their age, up to 99.",
       learner_twice: "This learner is already on the list.", learners: "Check the list of learners: from 1 to 5, each one only once.",
@@ -135,7 +138,9 @@ export const T = {
     use: "نستخدم هذه البيانات لترتيب الدرس.",
     send: "سجّل الآن", sending: "جارٍ الإرسال…", again: "سجّل متعلّمين آخرين",
     learnerError: (n: number, message: string) => `المتعلّم ${n}: ${message}`,
+    waAsk: (phone: string) => `هل ${phone} هو رقمك على WhatsApp أيضًا؟`, waYes: "نعم", waNo: "لا", waLabel: "رقم WhatsApp",
     errors: {
+      whatsapp: "أدخل رقمك على WhatsApp، أو أجب إن كان جوالك هو رقمك عليه.",
       learner_who: "اختر مَن سيتعلّم.", learner_name: "أدخل اسم الطفل - حروف فقط.", learner_name_other: "أدخل الاسم الكامل - حروف فقط.",
       learner_age: "أدخل عمراً حتى 99 عاماً.", learner_age_child: "أدخل عمر الطفل، حتى 99 عاماً.", learner_age_other: "أدخل العمر، حتى 99 عاماً.",
       learner_twice: "هذا المتعلّم مُضاف إلى القائمة من قبل.", learners: "راجع قائمة المتعلّمين: من 1 إلى 5، وكلٌّ منهم مرة واحدة فقط.",

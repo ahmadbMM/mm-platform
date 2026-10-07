@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { rpcResult } from "@/lib/rpc-client";
+import { normalizePhone, rpcResult } from "@/lib/rpc-client";
 import { bookingLink } from "@/lib/links";
 import {
   ACCOUNT_HEIGHT, AGE, HEARD, HEIGHT, LEVELS, MAX_LEARNERS, WHO, accountArgs, accountNameOk, learnPayload, noticeDue, riyadhToday, signinIdentifier,
@@ -68,7 +68,7 @@ type Stage = "ask" | "signup" | "signin" | "pwd" | "loading" | "lesson";
 /** The signed-in person: the account step made it (`made`) or they signed in to it. */
 type Acct = { id: string; token: string; name: string; email: string; made: boolean };
 /** What customer_community_me() answers about the account, for step 2. */
-type Me = { name?: string; email?: string; gender?: string | null; height?: number | null; birth_date?: string | null; nationality?: string | null;
+type Me = { name?: string; email?: string; phone?: string | null; whatsapp_same?: boolean | null; whatsapp?: string | null; gender?: string | null; height?: number | null; birth_date?: string | null; nationality?: string | null;
   instagram?: string | null; linkedin?: string | null; profession?: string | null; workplace?: string | null; heard_from?: string | null };
 const EMPTY: LearnerFields = { who: "", name: "", age: "", gender: "", height: "", level: "" };
 const NO_ACCOUNT: AccountFields = { first: "", last: "", gender: "", email: "", phone: "", password: "", password2: "", height: "", privacy: false, news: false };
@@ -106,7 +106,7 @@ export default function LearnForm(p: LearnFormProps) {
   const [need, setNeed] = useState({ gender: false, height: false, privacy: false });
   const [ack, setAck] = useState(false);
   const ackBox = useRef<HTMLInputElement>(null);
-  const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], birth: "", gender: "", nationality: "", height: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "" });
+  const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], birth: "", gender: "", nationality: "", height: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "", waSame: "", whatsapp: "" });
   // The date of birth as three pickers; the form holds it as YYYY-MM-DD once all three are chosen.
   const [bd, setBd] = useState({ d: "", m: "", y: "" });
   // The names of the months and the countries are the browser's (see lib/nationality.ts): drawn
@@ -143,14 +143,19 @@ export default function LearnForm(p: LearnFormProps) {
   // Step 2 for a signed-in account: what it holds fills the questions it answers already. `due`:
   // the account still has to confirm the Privacy Notice (null: not known - the database says so if
   // it does, and the box is shown then).
+  // The account's mobile, which the WhatsApp question names.
+  const [mobile, setMobile] = useState("");
   function toLesson(who: Acct, me: Me | null, due: boolean | null = false) {
+    setMobile(me?.phone || (who.made ? normalizePhone(a.phone) : ""));
+    const waSame = me?.whatsapp_same === true ? "yes" : me?.whatsapp_same === false ? "no" : "";
     const g = me?.gender === "male" || me?.gender === "female" ? me.gender : "";
     const h = typeof me?.height === "number" && me.height > 0 ? String(me.height) : "";
     const heard = (HEARD as readonly string[]).includes(me?.heard_from || "") ? (me?.heard_from as Heard) : "";
     const birth = /^\d{4}-\d{2}-\d{2}$/.test(me?.birth_date || "") ? me!.birth_date! : "";
     if (birth) setBd({ y: birth.slice(0, 4), m: birth.slice(5, 7), d: birth.slice(8, 10) });
     setF((x) => ({ ...x, gender: g, height: h, birth: birth || x.birth, nationality: me?.nationality || x.nationality, instagram: me?.instagram || x.instagram,
-      linkedin: me?.linkedin || x.linkedin, profession: me?.profession || x.profession, workplace: me?.workplace || x.workplace, heard: heard || x.heard }));
+      linkedin: me?.linkedin || x.linkedin, profession: me?.profession || x.profession, workplace: me?.workplace || x.workplace, heard: heard || x.heard,
+      waSame: waSame || x.waSame, whatsapp: me?.whatsapp || x.whatsapp }));
     setNeed({ gender: !g, height: !h, privacy: due === true });
     setAck(false);
     setAcct(who);
@@ -563,6 +568,22 @@ export default function LearnForm(p: LearnFormProps) {
       <div className="ln-details">
         <span className="ln-label ln-label-h">{t.details}</span>
         {anyChild && <p className="ln-hint">{t.parentHint}</p>}
+        {/* WhatsApp (the owner, 2026-10-07): Yes - the mobile - or No and the number, typed as the mobile is. */}
+        {mobile && (
+          <>
+            <span className="ln-label" id={`${id}wa`}>{t.waAsk(`\u2066${mobile}\u2069`)}</span>
+            <div className="ln-pills" role="radiogroup" aria-labelledby={`${id}wa`}>
+              {(["yes", "no"] as const).map((v) => radio(f.waSame === v, () => setContact("waSame", v), v === "yes" ? t.waYes : t.waNo, "ln-pill"))}
+            </div>
+          </>
+        )}
+        {(f.waSame === "no" || !mobile) && (
+          <label className="ln-field">
+            <span>{t.waLabel}</span>
+            <input className="ln-input" value={f.whatsapp} onChange={(e) => { setF((x) => ({ ...x, waSame: "no", whatsapp: e.target.value })); setErr(null); }}
+              inputMode="tel" autoComplete="off" dir="ltr" maxLength={20} placeholder="05XXXXXXXX" />
+          </label>
+        )}
         <div className="ln-field">
           <span className="ln-label" id={`${id}b`}>{t.birth}</span>
           <div className="ln-dob" role="group" aria-labelledby={`${id}b`}>

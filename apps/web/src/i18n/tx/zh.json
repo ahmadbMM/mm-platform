@@ -1220,5 +1220,10 @@
  "Emergency contact": "紧急联系人",
  "Nothing else about you is shared, and only for this race.": "除此之外，我们不会共享您的任何其他信息，且仅用于本次比赛。",
  "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "我同意 MicroMobility 与 Sela 和吉达游艇俱乐部（JYC）共享上述信息，以便我参加比赛。",
- "Breakfast spot: announced {0}": "早餐地点：{0}公布"
+ "Breakfast spot: announced {0}": "早餐地点：{0}公布",
+ "Enter your WhatsApp number, or answer whether your mobile is it.": "请输入您的 WhatsApp 号码，或告诉我们它是否就是您的手机号码。",
+ "Is {0} your WhatsApp number too?": "{0} 也是您的 WhatsApp 号码吗？",
+ "No": "否",
+ "WhatsApp number": "WhatsApp 号码",
+ "Yes": "是"
 }

@@ -1220,5 +1220,10 @@
  "Emergency contact": "Contacto de emergencia",
  "Nothing else about you is shared, and only for this race.": "No compartimos nada más sobre ti, y solo para esta carrera.",
  "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "Acepto que MicroMobility comparta estos datos con Sela y el Jeddah Yacht Club (JYC) para poder participar en la carrera.",
- "Breakfast spot: announced {0}": "Lugar del desayuno: se anuncia {0}"
+ "Breakfast spot: announced {0}": "Lugar del desayuno: se anuncia {0}",
+ "Enter your WhatsApp number, or answer whether your mobile is it.": "Escribe tu número de WhatsApp o dinos si es tu número de móvil.",
+ "Is {0} your WhatsApp number too?": "¿{0} es también tu número de WhatsApp?",
+ "No": "No",
+ "WhatsApp number": "Número de WhatsApp",
+ "Yes": "Sí"
 }
