@@ -18,7 +18,7 @@ const friend: LearnerFields = { who: "other", name: "Lina Saleh", age: "34", gen
 const TODAY = "2026-09-28";
 const form: LearnFields = {
   learners: [me], birth: "1996-02-10", gender: "female", nationality: "Saudi Arabia", height: "165",
-  instagram: "", linkedin: "", profession: "Designer", workplace: "Saudi Aramco", heard: "instagram", notes: "",
+  instagram: "", linkedin: "", profession: "Designer", workplace: "Saudi Aramco", heard: "instagram", notes: "", waSame: "yes", whatsapp: "",
 };
 const send = (x: Partial<LearnFields>) => learnPayload({ ...form, ...x }, "en", TODAY);
 const error = (x: Partial<LearnFields>) => {
@@ -40,9 +40,10 @@ describe("learnPayload", () => {
         instagram: "", linkedin: "", profession: "Designer",
         workplace: "Saudi Aramco", heard_from: "instagram", notes: "A little nervous.", lang: "ar",
         learners: [{ who: "self", name: "", age: 30, gender: "female", height: 165, level: "never" }],
+        whatsapp_same: true,
       },
     });
-    expect(Object.keys("payload" in r ? r.payload : {})).toEqual(["birth_date", "gender", "nationality", "height", "instagram", "linkedin", "profession", "workplace", "heard_from", "notes", "lang", "learners"]);
+    expect(Object.keys("payload" in r ? r.payload : {})).toEqual(["birth_date", "gender", "nationality", "height", "instagram", "linkedin", "profession", "workplace", "heard_from", "notes", "lang", "learners", "whatsapp_same"]);
   });
 
   it("sends three learners in their order: the person signing up, their child and another adult", () => {
@@ -76,7 +77,7 @@ describe("learnPayload", () => {
 
   it("names the card of the first learner with a problem, and checks the person signing up only after every card", () => {
     const empty: LearnerFields = { who: "", name: "", age: "", gender: "", height: "", level: "" };
-    const blank: LearnFields = { learners: [kid, empty, { ...friend, age: "100" }], birth: "", gender: "", nationality: "", height: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "" };
+    const blank: LearnFields = { learners: [kid, empty, { ...friend, age: "100" }], birth: "", gender: "", nationality: "", height: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "", waSame: "", whatsapp: "" };
     const steps: [(f: LearnFields) => LearnFields, { error: string; index?: number } | null][] = [
       [(f) => f, { error: "learner_who", index: 1 }],
       [(f) => ({ ...f, learners: [f.learners[0], { ...empty, who: "child" }, f.learners[2]] }), { error: "learner_name", index: 1 }],
@@ -85,7 +86,9 @@ describe("learnPayload", () => {
       [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], gender: "female" }, f.learners[2]] }), { error: "learner_height", index: 1 }],
       [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], height: "115" }, f.learners[2]] }), { error: "level", index: 1 }],
       [(f) => ({ ...f, learners: [f.learners[0], { ...f.learners[1], level: "never" }, f.learners[2]] }), { error: "learner_age", index: 2 }],
-      [(f) => ({ ...f, learners: [f.learners[0], f.learners[1], { ...f.learners[2], age: "34" }] }), { error: "birth_date" }],
+      [(f) => ({ ...f, learners: [f.learners[0], f.learners[1], { ...f.learners[2], age: "34" }] }), { error: "whatsapp" }],
+      [(f) => ({ ...f, waSame: "no", whatsapp: "12345" }), { error: "whatsapp" }],
+      [(f) => ({ ...f, whatsapp: "050 482 9153" }), { error: "birth_date" }],
       [(f) => ({ ...f, birth: "1988-11-03" }), { error: "gender" }],
       [(f) => ({ ...f, gender: "female" }), { error: "nationality" }],
       [(f) => ({ ...f, nationality: "Jordan" }), { error: "height" }],
@@ -369,5 +372,17 @@ describe("the page's frame", () => {
   });
   it("shows staff previewing the closed site the page as it will be", () => {
     expect(learnFrame({ "site.coming_soon": true }, true)).toBe("site");
+  });
+});
+
+describe("learnPayload: WhatsApp (2026-10-07)", () => {
+  it("sends whether the mobile is their WhatsApp, and a number of its own as the mobile is typed", () => {
+    const yes = send({});
+    expect("payload" in yes && yes.payload.whatsapp_same).toBe(true);
+    expect("payload" in yes && "whatsapp" in yes.payload).toBe(false);
+    const no = send({ waSame: "no", whatsapp: "050 482 9153" });
+    expect("payload" in no && no.payload).toMatchObject({ whatsapp_same: false, whatsapp: "+966504829153" });
+    expect(error({ waSame: "" })).toBe("whatsapp");
+    expect(error({ waSame: "no", whatsapp: "" })).toBe("whatsapp");
   });
 });

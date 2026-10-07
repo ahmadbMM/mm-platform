@@ -1476,5 +1476,10 @@
  "Emergency contact": "Контакт для экстренной связи",
  "Nothing else about you is shared, and only for this race.": "Больше ничего о вас не передаётся — и только для этого забега.",
  "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "Я даю согласие на то, чтобы MicroMobility передала эти данные компании Sela и Яхт-клубу Джидды (JYC) для моего участия в забеге.",
- "Breakfast spot: announced {0}": "Место завтрака: объявим {0}"
+ "Breakfast spot: announced {0}": "Место завтрака: объявим {0}",
+ "Enter your WhatsApp number, or answer whether your mobile is it.": "Введите номер WhatsApp или ответьте, совпадает ли он с номером мобильного.",
+ "Is {0} your WhatsApp number too?": "{0} — это также ваш номер WhatsApp?",
+ "No": "Нет",
+ "WhatsApp number": "Номер WhatsApp",
+ "Yes": "Да"
 }

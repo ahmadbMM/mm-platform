@@ -1476,5 +1476,10 @@
  "Emergency contact": "आपतकालीन सम्पर्क",
  "Nothing else about you is shared, and only for this race.": "तपाईंबारे यसबाहेक केही पनि साझा गरिँदैन, र यो दौडका लागि मात्र।",
  "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "म सहमत छु कि MicroMobility ले यी विवरण Sela र जेद्दा याट क्लब (JYC) सँग साझा गरोस्, ताकि म दौडमा सहभागी हुन सकूँ।",
- "Breakfast spot: announced {0}": "बिहानको खाजाको ठाउँको घोषणा: {0}"
+ "Breakfast spot: announced {0}": "बिहानको खाजाको ठाउँको घोषणा: {0}",
+ "Enter your WhatsApp number, or answer whether your mobile is it.": "आफ्नो WhatsApp नम्बर लेख्नुहोस्, वा तपाईंको मोबाइल नम्बर नै हो कि होइन भन्नुहोस्।",
+ "Is {0} your WhatsApp number too?": "के {0} तपाईंको WhatsApp नम्बर पनि हो?",
+ "No": "होइन",
+ "WhatsApp number": "WhatsApp नम्बर",
+ "Yes": "हो"
 }

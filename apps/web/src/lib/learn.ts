@@ -75,13 +75,17 @@ export type LearnFields = {
   workplace: string;
   heard: Heard | "";
   notes: string;
+  /** Is the account's mobile their WhatsApp number too (the owner, 2026-10-07): "yes", "no" (then
+   *  `whatsapp`, typed as the mobile is), "" not answered yet. */
+  waSame: "yes" | "no" | "";
+  whatsapp: string;
 };
 
 /** learn_apply()'s error codes for what was filled in (it also answers "throttled"): a learner's
  *  own, with their place in the list, and the sign-up's. "learners" is the list itself - none, more
  *  than five, "self" twice or the same learner twice (the form names the card for the last two). */
 export type LearnerError = "learner_who" | "learner_name" | "learner_age" | "learner_gender" | "learner_height" | "level";
-export type PersonError = "birth_date" | "birth_young" | "gender" | "nationality" | "height" | "instagram" | "linkedin" | "profession" | "workplace" | "heard_from" | "notes";
+export type PersonError = "whatsapp" | "birth_date" | "birth_young" | "gender" | "nationality" | "height" | "instagram" | "linkedin" | "profession" | "workplace" | "heard_from" | "notes";
 export type LearnProblem = { error: LearnerError; index: number } | { error: "learners"; index?: number } | { error: PersonError; index?: undefined };
 
 /** One learner, as learn_apply() reads them. */
@@ -104,6 +108,9 @@ export type LearnPayload = {
   lang: string;
   learners: LearnerPayload[];
   privacy_version?: string;
+  /** customer_learn_apply keeps it on the sign-up and the account (20261007223000). */
+  whatsapp_same: boolean;
+  whatsapp?: string;
 };
 
 /** Step 1, a new account: the booking app's sign-up, its questions and its rules. */
@@ -224,6 +231,10 @@ export function learnPayload(f: LearnFields, lang: string, today: string = riyad
     if ("error" in r) return r;
     learners.push(r);
   }
+  // WhatsApp: the mobile, or a number of its own, which is checked as the mobile is.
+  if (f.waSame !== "yes" && f.waSame !== "no") return { error: "whatsapp" };
+  const whatsapp = f.waSame === "no" ? normalizePhone(f.whatsapp) : "";
+  if (f.waSame === "no" && !phoneOk(whatsapp)) return { error: "whatsapp" };
   const age = ageOn(f.birth, today);
   if (age === null || f.birth > today || age > AGE[1]) return { error: "birth_date" };
   if (age < ACCOUNT_MIN_AGE) return { error: "birth_young" };
@@ -244,7 +255,8 @@ export function learnPayload(f: LearnFields, lang: string, today: string = riyad
   // "Me" takes the person's own age, gender and height (the database does the same).
   const all = learners.map((l) => (l.who === "self" ? { ...l, age, gender: f.gender as Gender, height } : l));
   return { payload: { birth_date: f.birth, gender: f.gender, nationality: f.nationality, height, instagram, linkedin, profession, workplace,
-    heard_from: f.heard, notes, lang: /^[a-z]{2}$/.test(lang) ? lang : "en", learners: all } };
+    heard_from: f.heard, notes, lang: /^[a-z]{2}$/.test(lang) ? lang : "en", learners: all,
+    whatsapp_same: f.waSame === "yes", ...(f.waSame === "no" ? { whatsapp } : {}) } };
 }
 
 /**

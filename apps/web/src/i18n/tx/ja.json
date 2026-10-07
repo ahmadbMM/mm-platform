@@ -1476,5 +1476,10 @@
  "Emergency contact": "緊急連絡先",
  "Nothing else about you is shared, and only for this race.": "これ以外の情報は共有されません。また、共有は本レースに限ります。",
  "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "レースに参加するため、MicroMobilityがこれらの情報をSelaおよびジェッダ・ヨットクラブ（JYC）と共有することに同意します。",
- "Breakfast spot: announced {0}": "朝食の場所：{0}に発表"
+ "Breakfast spot: announced {0}": "朝食の場所：{0}に発表",
+ "Enter your WhatsApp number, or answer whether your mobile is it.": "WhatsAppの番号を入力するか、携帯電話番号と同じかどうかをお答えください。",
+ "Is {0} your WhatsApp number too?": "{0} はWhatsAppの番号でもありますか？",
+ "No": "いいえ",
+ "WhatsApp number": "WhatsApp番号",
+ "Yes": "はい"
 }

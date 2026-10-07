@@ -1476,5 +1476,10 @@
  "Emergency contact": "Kontak darurat",
  "Nothing else about you is shared, and only for this race.": "Tidak ada data lain tentang Anda yang dibagikan, dan hanya untuk lomba ini.",
  "I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.": "Saya setuju MicroMobility membagikan data ini kepada Sela dan Jeddah Yacht Club (JYC) agar saya dapat ikut serta dalam lomba.",
- "Breakfast spot: announced {0}": "Tempat sarapan: diumumkan {0}"
+ "Breakfast spot: announced {0}": "Tempat sarapan: diumumkan {0}",
+ "Enter your WhatsApp number, or answer whether your mobile is it.": "Masukkan nomor WhatsApp Anda, atau jawab apakah nomor ponsel Anda adalah nomor itu.",
+ "Is {0} your WhatsApp number too?": "Apakah {0} juga nomor WhatsApp Anda?",
+ "No": "Tidak",
+ "WhatsApp number": "Nomor WhatsApp",
+ "Yes": "Ya"
 }
