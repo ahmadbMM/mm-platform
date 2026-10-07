@@ -7,7 +7,7 @@ import { routing } from "@/i18n/routing";
 import { localeInfo } from "@/i18n/locales";
 import { clientDict } from "@/i18n/dicts";
 import { TxProvider } from "@/i18n/TxProvider";
-import WaiverGateLoader from "@/components/account/WaiverGateLoader";
+import EmergencyGateLoader from "@/components/account/EmergencyGateLoader";
 import { layoutTitle } from "@/lib/staging";
 import "../globals.css";
 
@@ -41,8 +41,8 @@ export default async function LocaleLayout({
     <html lang={info.html} dir={info.dir} className={`${grotesk.variable} ${plexAr.variable}`}>
       <body>
         <NextIntlClientProvider>
-          {/* the pop-ups a signed-in rider cannot skip: a desk-added booking's waiver, then a Run for Her runner's agreement to share their details, then the post-ride rating (WaiverGateLoader holds ShareGateLoader, which holds RatingGateLoader) */}
-          <TxProvider locale={locale} dict={clientDict(locale)}>{children}<WaiverGateLoader locale={locale} /></TxProvider>
+          {/* the pop-ups a signed-in rider cannot skip: the account's emergency contact, then a desk-added booking's waiver, then a Run for Her runner's agreement to share their details, then the post-ride rating (EmergencyGateLoader holds WaiverGateLoader, which holds ShareGateLoader, which holds RatingGateLoader) */}
+          <TxProvider locale={locale} dict={clientDict(locale)}>{children}<EmergencyGateLoader locale={locale} /></TxProvider>
         </NextIntlClientProvider>
         {BEACON && <Script src="https://static.cloudflareinsights.com/beacon.min.js" strategy="afterInteractive" data-cf-beacon={JSON.stringify({ token: BEACON })} />}
       </body>

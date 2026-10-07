@@ -64,6 +64,37 @@
     for (var i = 0; i < nav.length; i++) { var c = String(nav[i] || "").toLowerCase().split(/[-_]/)[0]; if (c === "fil") c = "tl"; if (codes.indexOf(c) >= 0) return c; }
     return "en";
   }
+  /* ── The questions, as the booking site's admins set them (2026-10-07) ─────────────────────────
+     site_content 'community.form' = {q:{<question>:{on, req, label:{<lang>:text}}}}: a question turned
+     off is not shown or sent, one made optional may be left empty (customer_community_apply reads the
+     same settings, 20261007230000), and its wording in the reader's language replaces ours. Read once
+     as the page opens; with nothing read the form asks what it always asked. */
+  var CF = {};
+  var CF_FIELD = { birth_date: "f-birth", nationality: "f-nat", profession: "f-prof", workplace: "f-work", own_bike: "f-own", bike_type: "f-type", heard_from: "f-heard", instagram: "f-ig", linkedin: "f-li" };
+  var CF_REQ = { birth_date: true, nationality: true, profession: true, workplace: true, own_bike: true, bike_type: true, heard_from: true, instagram: false, linkedin: false };
+  function qOn(k) { return !(CF[k] && CF[k].on === false); }
+  function qReq(k) { return qOn(k) && (CF[k] && typeof CF[k].req === "boolean" ? CF[k].req : CF_REQ[k]); }
+  function paintQuestions() {
+    Object.keys(CF_FIELD).forEach(function (k) {
+      var f = document.getElementById(CF_FIELD[k]); if (!f) return;
+      f.hidden = !qOn(k);
+      var lab = f.querySelector("label, .label"); if (!lab) return;
+      var own = CF[k] && CF[k].label && typeof CF[k].label[lang] === "string" ? CF[k].label[lang].trim() : "";
+      if (own) lab.textContent = own;
+      var opt = lab.querySelector(".opt");
+      if (!qReq(k) && qOn(k) && CF_REQ[k]) { /* marked only where the admins relaxed a required one */ if (!opt) { opt = document.createElement("span"); opt.className = "opt"; lab.appendChild(opt); } opt.textContent = " " + tr("(optional)"); }
+      else if (opt) opt.remove();
+    });
+  }
+  async function loadQuestions() {
+    try {
+      var resp = await fetch(SUPABASE_URL + "/rest/v1/site_content?select=value&key=eq.community.form", { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } });
+      var rows = resp.ok ? await resp.json() : null;
+      var v = rows && rows[0] && rows[0].value;
+      CF = v && v.q && typeof v.q === "object" && !Array.isArray(v.q) ? v.q : {};
+    } catch (e) { CF = {}; }
+    paintQuestions();
+  }
   function setLang(code, save) {
     lang = code;
     html.lang = code; html.dir = langInfo(code).rtl ? "rtl" : "ltr";
@@ -84,9 +115,10 @@
     paintWho();
     $("#ack-lbl").innerHTML = ackLabel("pv-open");
     $("#xack-lbl").innerHTML = ackLabel("pv-open-x");
-    buildNationalities(); buildDob(); buildCc(); buildHeard(); paintWa();
+    buildNationalities(); buildDob(); buildCc(); buildHeard(); buildEm(); paintWa();
     $$(".field").forEach(function (f) { paintField(f.id); });
     if (!$("#pv").hidden) renderNotice();
+    paintQuestions();
     if (sent) showSuccess(sent);
     if (bannerKey) showBanner(bannerKey, bannerSignIn);
   }
@@ -240,9 +272,11 @@
     var out = d.length > g[1] ? d.slice(0, g[0]) + " " + d.slice(g[0], g[1]) + " " + d.slice(g[1]) : d.length > g[0] ? d.slice(0, g[0]) + " " + d.slice(g[0]) : d;
     el.value = (plus ? "+" : "") + out;
   }
-  function e164(pk) {
-    pk = pk || PK;
-    var ccd = ccDigits(pk), s = toAscii($(pk.input).value).trim().replace(/[\s()\-]/g, "");
+  function e164(pk) { pk = pk || PK; return toE164(ccDigits(pk), $(pk.input).value); }
+  // A number typed under the dial code `ccd` (its digits), as the database stores it: the rider's
+  // mobile, their WhatsApp number and the emergency contacts alike.
+  function toE164(ccd, raw) {
+    var s = toAscii(raw).trim().replace(/[\s()\-]/g, "");
     if (!s) return "";
     if (s[0] === "+") { var x = s.slice(1).replace(/\D/g, ""); if (x.indexOf(ccd + "0") === 0) x = ccd + x.slice(ccd.length + 1); return "+" + x; }
     s = s.replace(/\D/g, ""); if (!s) return "";
@@ -289,6 +323,124 @@
   }
   $("#wa").addEventListener("input", function () { onPhoneInput(WPK); clearMsg("f-wanum"); acked[waStep] = null; });
   $("#wacc").addEventListener("change", function () { ccFace(WPK); $("#wa").placeholder = ccDigits(WPK) === "966" ? "5X XXX XXXX" : ""; clearMsg("f-wanum"); });
+
+  /* ── The emergency contact (the owner, 2026-10-07: "make the emergency contact obligatory only the
+     first one not the second and unskippable for all the customers"): someone to call if the rider
+     needs help at an event, as the booking site asks it (_emRead, _emFieldsHtml) and in its words.
+     The first is required on the account step (saved the moment the account exists) and, for an
+     account handed over without one, on step 2; a second is optional, behind "Add a second contact":
+     all three boxes or none. The database's rules (customer_set_emergency / customer_set_emergency2):
+     a name of 2 to 80 letters, spaces and periods, every part two letters or more; a number of 8 to
+     15 digits; one of the eight relations; never the rider's own number ('em_self', the last nine
+     digits) nor the other contact's ('em_same'). ─────────────────────────────────────────────── */
+  var EM_RELS = SH.EM_RELS || ["spouse", "parent", "sibling", "child", "relative", "friend", "colleague", "other"];
+  var CHEVRON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>';
+  function emFields(p) {
+    return '<div id="f-' + p + '-name" class="field"><label for="' + p + '-name" data-site="emName"></label>' +
+      '<input id="' + p + '-name" type="text" autocomplete="off" autocapitalize="words" maxlength="80"><p class="err" aria-live="polite"></p></div>' +
+      '<div id="f-' + p + '-phone" class="field"><label for="' + p + '-phone" data-site="emPhone"></label><div class="phone-row" dir="ltr">' +
+      '<label class="cc-wrap"><span class="cc-face" aria-hidden="true"><span id="' + p + '-cc-code">+966</span></span>' +
+      '<select id="' + p + '-cc" class="cc" aria-label="Country code" data-t-aria="Country code"></select>' + CHEVRON + '</label>' +
+      '<input id="' + p + '-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="5X XXX XXXX"></div><p class="err" aria-live="polite"></p></div>' +
+      '<div id="f-' + p + '-rel" class="field"><label for="' + p + '-rel" data-site="emRelation"></label>' +
+      '<span class="sel-wrap wide"><select id="' + p + '-rel"></select></span><p class="err" aria-live="polite"></p></div>';
+  }
+  // pre "em" (the account step) or "xem" (step 2); its second contact is pre + "2".
+  function emBlock(pre, hidden) {
+    return '<div id="' + pre + '-block" class="em-block"' + (hidden ? " hidden" : "") + '>' +
+      '<p class="em-h"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/></svg><span data-site="emTitle"></span></p>' +
+      '<p class="hint em-sub" data-site="emSubAcc"></p>' + emFields(pre) +
+      '<button type="button" id="' + pre + '2-add" class="em-add"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-site="em2Add"></span></button>' +
+      '<div id="' + pre + '2-box" class="em2" hidden><p class="em-h"><span data-site="em2Title"></span> <span class="em-opt">(<span data-site="optionalLabel"></span>)</span></p>' +
+      '<p class="hint em-sub" data-site="em2Sub"></p>' + emFields(pre + "2") + '</div></div>';
+  }
+  $("#em-slot").outerHTML = emBlock("em", false);
+  $("#xem-slot").outerHTML = emBlock("xem", true);
+  var EM_PRE = ["em", "em2", "xem", "xem2"];
+  function emCcDigits(p) { var o = $("#" + p + "-cc").selectedOptions[0]; return o ? o.getAttribute("data-cc").slice(1) : "966"; }
+  function emCcFace(p) { $("#" + p + "-cc-code").textContent = "+" + emCcDigits(p); $("#" + p + "-phone").placeholder = emCcDigits(p) === "966" ? "5X XXX XXXX" : ""; }
+  // The same list as the rider's own number (Saudi Arabia first, again in its place, no Israel), by
+  // country name and code: the box shows the code alone.
+  function buildEmCc(p) {
+    var sel = $("#" + p + "-cc"), cur = sel.value || "SA+966";
+    var gulf = SH.COUNTRY_CODES.slice(0, 6), rest = SH.COUNTRY_CODES.slice(6).concat(SH.COUNTRY_CODES.filter(function (x) { return x[1] === "SA"; })).map(function (x) { return { x: x, n: ccName(x) }; });
+    try { rest.sort(function (a, b) { return a.n.localeCompare(b.n, lang); }); } catch (e) {}
+    var on = selOnce(cur);
+    sel.innerHTML = gulf.map(function (x) { return { x: x, n: ccName(x) }; }).concat(rest).map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
+    if (!sel.value) sel.value = "SA+966";
+    emCcFace(p);
+  }
+  function buildEmRel(p) {
+    var sel = $("#" + p + "-rel"), cur = sel.value;
+    sel.innerHTML = '<option value="">' + esc(site("emPick")) + "</option>" + EM_RELS.map(function (c) { return '<option value="' + c + '"' + (c === cur ? " selected" : "") + ">" + esc(site("emRel_" + c)) + "</option>"; }).join("");
+    sel.classList.toggle("ph", !sel.value);
+  }
+  function buildEm() { EM_PRE.forEach(function (p) { buildEmCc(p); buildEmRel(p); }); }
+  EM_PRE.forEach(function (p) {
+    // a dash is not a name character: typed, it becomes a space (the booking site does the same)
+    $("#" + p + "-name").addEventListener("input", function () { var v = this.value.replace(DASHES, " "); if (v !== this.value) this.value = v; clearMsg("f-" + p + "-name"); });
+    $("#" + p + "-phone").addEventListener("input", function () { clearMsg("f-" + p + "-phone"); });
+    $("#" + p + "-cc").addEventListener("change", function () { emCcFace(p); clearMsg("f-" + p + "-phone"); });
+    $("#" + p + "-rel").addEventListener("change", function () { this.classList.toggle("ph", !this.value); clearMsg("f-" + p + "-rel"); });
+  });
+  ["em", "xem"].forEach(function (pre) {
+    $("#" + pre + "2-add").addEventListener("click", function () { emOpen2(pre, true); $("#" + pre + "2-name").focus(); });
+  });
+  function emOpen2(pre, on) { $("#" + pre + "2-box").hidden = !on; $("#" + pre + "2-add").hidden = on; }
+  var EM_FIELDS = function (pre) { return ["name", "phone", "rel"].map(function (k) { return "f-" + pre + "-" + k; }).concat(["name", "phone", "rel"].map(function (k) { return "f-" + pre + "2-" + k; })); };
+  function last9(v) { return String(v || "").replace(/\D/g, "").slice(-9); }
+  // One contact as typed: {name, phone, rel}; null for a second one left wholly empty; or
+  // {err: [field id, the site's message key]}.
+  function emRead(p, own, other, optional) {
+    var raw = $("#" + p + "-phone").value.replace(/[^\d+]/g, "");
+    var n = clean($("#" + p + "-name").value.replace(DASHES, " ")), rel = $("#" + p + "-rel").value;
+    if (optional && !n && !toAscii(raw) && !rel) return null;
+    var nm = nameDots(n);
+    if (Array.from(nm).length < 2 || Array.from(nm).length > 80) return { err: ["f-" + p + "-name", "errEmName"] };
+    if (NAME_BAD.test(n) || n !== nm || !/\p{L}/u.test(nm)) return { err: ["f-" + p + "-name", "errNameChars"] };
+    if (nm.split(/[\s.]+/).some(function (w) { return w && Array.from(w).length < 2; })) return { err: ["f-" + p + "-name", "errNameShort"] };
+    var ph = toAscii($("#" + p + "-phone").value).trim() ? toE164(emCcDigits(p), $("#" + p + "-phone").value) : "";
+    if (!/^\+?[0-9]{8,15}$/.test(ph)) return { err: ["f-" + p + "-phone", "errEmPhone"] };
+    if (last9(own).length === 9 && last9(ph) === last9(own)) return { err: ["f-" + p + "-phone", "errEmSelf"] };
+    if (last9(other).length === 9 && last9(ph) === last9(other)) return { err: ["f-" + p + "-phone", "errEmSame"] };
+    if (EM_RELS.indexOf(rel) < 0) return { err: ["f-" + p + "-rel", "errEmRelation"] };
+    return { name: nm, phone: ph, rel: rel };
+  }
+  // Both contacts of a block checked into `hard` (the step's problems); what to save, or null.
+  function emCheck(pre, own, hard) {
+    var one = emRead(pre, own, "", false);
+    if (one.err) { hard[one.err[0]] = [one.err[1], null, true]; return null; }
+    if ($("#" + pre + "2-box").hidden) return { one: one, two: null };
+    var two = emRead(pre + "2", own, one.phone, true);
+    if (two && two.err) { hard[two.err[0]] = [two.err[1], null, true]; return null; }
+    return { one: one, two: two };
+  }
+  function emAbsent(e) { return !!e && (e.code === "PGRST202" || /could not find the function/i.test(String(e.message || ""))); }
+  // The database's refusal of a contact, as the field and the site's message ("em_self" ...).
+  var EM_DETAIL = { em_name: ["name", "errEmName"], em_phone: ["phone", "errEmPhone"], em_relation: ["rel", "errEmRelation"], em_self: ["phone", "errEmSelf"], em_same: ["phone", "errEmSame"], em_required: ["name", "errEmName"] };
+  // Saves a block's contacts on the signed-in account: {ok:true}, or {field, key} for a refused box, or
+  // {banner, signIn} for the rest. A database without the functions lets the rider through (as the
+  // booking site does): customer_set_emergency missing skips both, customer_set_emergency2 missing the second.
+  async function emSave(pre) {
+    var c = emCheck(pre, acct.phone, {});
+    if (!c) { var h = {}; emCheck(pre, acct.phone, h); var k = Object.keys(h)[0]; return { field: k, key: h[k][0] }; }
+    var steps = [["customer_set_emergency", c.one, pre]];
+    if (c.two) steps.push(["customer_set_emergency2", c.two, pre + "2"]);
+    for (var i = 0; i < steps.length; i++) {
+      var x = steps[i][1];
+      var r = await rpc(steps[i][0], { p_id: acct.id, p_token: acct.token, p_name: x.name, p_phone: x.phone, p_relation: x.rel });
+      if (r.error) {
+        if (emAbsent(r.error)) { if (i === 0) return { ok: true }; continue; }
+        var d = EM_DETAIL[String(r.error.details || "")];
+        if (d) return { field: "f-" + steps[i][2] + "-" + d[0], key: d[1] };
+        if (/RATE_LIMITED/.test(String(r.error.message || ""))) return { banner: SITE_TOO_MANY };
+        return { banner: "Could not reach the server. Please try again." };
+      }
+      if (r.data === false) return { banner: "You were signed out. Sign in again to send your application.", signIn: true };
+    }
+    return { ok: true };
+  }
 
   /* ── Email: the staff check's rules (misspelt providers, fake and throwaway domains,
      endings that do not exist) ─────────────────────────────────────────────────────── */
@@ -511,34 +663,38 @@
       var h = parseInt(toAscii($("#height").value), 10);
       if (!(h >= 100 && h <= 250)) hard["f-height"] = ["Enter your height in cm (100 to 250)"];
       else if (h < 140 || h > 209) soft["f-height"] = ["Is {n} cm right?", { n: h }];
+      emCheck("em", e164(), hard); // the emergency contact: required before the account is made
       if (!ack) hard["f-ack"] = ["privacyAckRequired", null, true];
     } else {
       if (acct && acct.needGender && !xgender) hard["f-xgender"] = ["Choose your gender"];
       if (waStep === 2) waCheck(hard, soft);
       if (acct && acct.needHeight) { var xh = parseInt(toAscii($("#xheight").value), 10); if (!(xh >= 100 && xh <= 250)) hard["f-xheight"] = ["Enter your height in cm (100 to 250)"]; }
-      var b = birthValue();
-      if (!b) hard["f-birth"] = ["Choose your date of birth"];
+      var b = qOn("birth_date") ? birthValue() : "";
+      if (!b) { if (qReq("birth_date")) hard["f-birth"] = ["Choose your date of birth"]; }
       else if (b > todayKsa()) hard["f-birth"] = ["dobErrFuture", null, true];
       else if (b > dobMax()) hard["f-birth"] = ["dobErrYoung", null, true];
       else if (ageAt(b) > 85) soft["f-birth"] = ["Please check your date of birth."];
-      if (!$("#nat").value) hard["f-nat"] = ["Choose your nationality"];
+      if (!$("#nat").value && qReq("nationality")) hard["f-nat"] = ["Choose your nationality"];
       var ig = igNorm($("#ig").value);
-      if (ig && !/^[A-Za-z0-9._]{1,30}$/.test(ig)) hard["f-ig"] = ["An Instagram username has only letters, numbers, dots and underscores"];
+      if (!ig && qReq("instagram")) hard["f-ig"] = ["Your Instagram username, or a link to your profile"];
+      if (qOn("instagram") && ig && !/^[A-Za-z0-9._]{1,30}$/.test(ig)) hard["f-ig"] = ["An Instagram username has only letters, numbers, dots and underscores"];
       var li = liNorm($("#li").value);
-      if (li && (/\//.test(li) || !/^[A-Za-z0-9\-_.%]{3,100}$/.test(li))) hard["f-li"] = ["Paste the link to your own profile (linkedin.com/in/…)"];
+      if (!li && qReq("linkedin")) hard["f-li"] = ["Paste the link to your own profile (linkedin.com/in/…)"];
+      if (qOn("linkedin") && li && (/\//.test(li) || !/^[A-Za-z0-9\-_.%]{3,100}$/.test(li))) hard["f-li"] = ["Paste the link to your own profile (linkedin.com/in/…)"];
       var prof = clean($("#prof").value);
-      if (prof.length < 2 || prof.length > 80 || !/\p{L}/u.test(prof) || /[<>"`{}]/.test(prof)) hard["f-prof"] = ["Enter your profession"];
+      if (!prof ? qReq("profession") : qOn("profession") && (prof.length < 2 || prof.length > 80 || !/\p{L}/u.test(prof) || /[<>"`{}]/.test(prof))) hard["f-prof"] = ["Enter your profession"];
       // Their company (the owner, 2026-09-29; sent as workplace), checked as profession is, up to 120.
       var work = clean($("#work").value);
-      if (Array.from(work).length < 2 || Array.from(work).length > 120 || !/\p{L}/u.test(work) || /[<>"`{}]/.test(work)) hard["f-work"] = ["Enter your company"];
-      if (ownBike === null) hard["f-own"] = ["Tell us whether you have your own bike"];
-      if (!bikeType) hard["f-type"] = ["Choose a bike type"];
-      if (!$("#heard").value) hard["f-heard"] = ["Please tell us how you heard about us."];
+      if (!work ? qReq("workplace") : qOn("workplace") && (Array.from(work).length < 2 || Array.from(work).length > 120 || !/\p{L}/u.test(work) || /[<>"`{}]/.test(work))) hard["f-work"] = ["Enter your company"];
+      if (ownBike === null && qReq("own_bike")) hard["f-own"] = ["Tell us whether you have your own bike"];
+      if (!bikeType && qReq("bike_type")) hard["f-type"] = ["Choose a bike type"];
+      if (!$("#heard").value && qReq("heard_from")) hard["f-heard"] = ["Please tell us how you heard about us."];
+      if (acct && acct.needEm) emCheck("xem", acct.phone, hard);
       if (acct && acct.needAck && !xack) hard["f-xack"] = ["privacyAckRequired", null, true];
     }
     return { hard: hard, soft: soft };
   }
-  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-wa", "f-wanum", "f-pwd", "f-pwd2", "f-height", "f-ack"], 2: ["f-xgender", "f-xheight", "f-wa", "f-wanum", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-own", "f-type", "f-heard", "f-xack"] };
+  var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-wa", "f-wanum", "f-pwd", "f-pwd2", "f-height"].concat(EM_FIELDS("em"), ["f-ack"]), 2: ["f-xgender", "f-xheight", "f-wa", "f-wanum", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-own", "f-type", "f-heard"].concat(EM_FIELDS("xem"), ["f-xack"]) };
   // Shows the step's problems; true when the rider may go on.
   function passStep(n) {
     var r = check(n), hk = Object.keys(r.hard), sk = Object.keys(r.soft);
@@ -606,7 +762,19 @@
     if (c.error) c = await rpc("customer_consents", body);
     if (c.error) { showBanner("Could not reach the server. Please try again."); return; }
     acct.consented = true;
+    // Then the emergency contact typed on this step. Should it not save, the account stays made:
+    // step 2 asks for it again, with what was typed and why, and saves it before the application.
+    var e = await emSave("em");
+    if (!e.ok) emCarry();
     enterStepTwo(null);
+    if (!e.ok) { if (e.field) { setErr(e.field.replace("f-em", "f-xem"), e.key, null, true); focusField(e.field.replace("f-em", "f-xem")); } else showBanner(e.banner, e.signIn); }
+  }
+  // The account step's contacts, copied into step 2's boxes, which then ask for them.
+  function emCarry() {
+    acct.needEm = true; acct.emTwo = true;
+    ["name", "cc", "phone", "rel"].forEach(function (k) { ["", "2"].forEach(function (n) { $("#xem" + n + "-" + k).value = $("#em" + n + "-" + k).value; }); });
+    ["xem", "xem2"].forEach(function (p) { emCcFace(p); $("#" + p + "-rel").classList.toggle("ph", !$("#" + p + "-rel").value); });
+    emOpen2("xem", !$("#em2-box").hidden);
   }
   async function retryConsents() { setLoading("#next", true); try { await saveConsents(); } finally { setLoading("#next", false); } }
   function consentsPending() { return !!(acct && acct.made && !acct.consented); }
@@ -652,6 +820,7 @@
     }
     paintWa();
     $("#f-xgender").hidden = !acct.needGender; $("#f-xheight").hidden = !acct.needHeight; $("#f-xack").hidden = !acct.needAck;
+    $("#xem-block").hidden = !acct.needEm; $("#xem2-add").hidden = !acct.emTwo || !$("#xem2-box").hidden;
     $("#acct-pending").hidden = !(me && me.pending);
     prefill(me); paintWho();
     goStep(2);
@@ -664,11 +833,23 @@
     hideBanner();
     if (step === 1) { if (consentsPending()) retryConsents(); else if (passStep(1)) createAccount(); return; }
     if (!acct || !passStep(2)) return;
+    // An account without an emergency contact gives it here, saved before the application goes.
+    if (acct.needEm) {
+      setLoading("#submit", true);
+      var e = await emSave("xem");
+      setLoading("#submit", false);
+      if (!e.ok) { if (e.field) { setErr(e.field, e.key, null, true); focusField(e.field); } else showBanner(e.banner, e.signIn); return; }
+      acct.needEm = false; $("#xem-block").hidden = true;
+    }
     var payload = {
       birth_date: birthValue(), nationality: $("#nat").value, bike_type: bikeType, own_bike: ownBike, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
       profession: clean($("#prof").value), workplace: clean($("#work").value), heard_from: $("#heard").value, lang: lang,
       whatsapp_same: waSame
     };
+    // A question turned off is sent empty; their own bike, unanswered, is left out (the server takes no null).
+    Object.keys(CF_FIELD).forEach(function (k) { if (!qOn(k) && k !== "own_bike") payload[k] = ""; });
+    if (!qOn("own_bike") || ownBike === null) delete payload.own_bike;
+    if (!qOn("birth_date")) payload.birth_date = "";
     if (waSame === false) payload.whatsapp = e164(WPK);
     // The notice is recorded as confirmed only when this form showed its box and the box was ticked:
     // the account step's (an account made here), or step 2's for a signed-in account the database
@@ -700,7 +881,7 @@
     sent = p;
     $("#card").setAttribute("data-state", "success");
     $("#form").hidden = true; $("#member").hidden = true; $("#success").hidden = false;
-    $("#result").textContent = tr("Thank you, {name}. Our team will review your application and reply to you shortly.", { name: String(p.name || "").split(" ")[0] });
+    $("#result").textContent = tr("{name}, your application has been received.", { name: String(p.name || "").split(" ")[0] });
     $("#result-contact").textContent = p.phone && p.email ? tr("We will reply on {phone} or {email}.", { phone: "⁦" + p.phone + "⁩", email: "⁦" + p.email + "⁩" }) : "";
     if (document.activeElement && document.activeElement.closest && document.activeElement.closest("#form")) $("#success").focus();
   }
@@ -726,11 +907,18 @@
       var r = await rpc("customer_handoff_redeem", { p_code: code });
       var row = Array.isArray(r.data) ? r.data[0] : null;
       if (!row || !row.id || !row.session_token) { showBanner(r.error && r.error.message === "network" ? "Could not reach the server. Please try again." : "This sign-in link has expired. Sign in again to continue.", true); return; }
-      var m = await rpc("customer_community_me", { p_id: row.id, p_token: row.session_token });
+      // what the account holds and its emergency contact, asked together
+      var both = await Promise.all([rpc("customer_community_me", { p_id: row.id, p_token: row.session_token }), rpc("customer_emergency", { p_id: row.id, p_token: row.session_token })]);
+      var m = both[0], em = both[1];
       var me = m.data && typeof m.data === "object" ? m.data : null;
       if (!me) { showBanner("Could not reach the server. Please try again."); return; }
       acct = { id: row.id, token: row.session_token, name: me.name || row.name || "", email: me.email || "", phone: me.phone || "", made: false, needGender: !me.gender, needHeight: !me.height };
       if (me.member) { showMember(); return; }
+      // The emergency contact on the account: asked on this step when there is none. A database
+      // without customer_emergency asks nothing; one that answers three columns offers no second.
+      var er = !em.error && Array.isArray(em.data) ? em.data[0] || null : null;
+      acct.needEm = em.error ? !emAbsent(em.error) : !(er && er.emergency_name && er.emergency_phone && er.emergency_relation);
+      acct.emTwo = !er || "emergency2_name" in er;
       enterStepTwo(me);
     } finally {
       $("#loading").hidden = true;
@@ -739,9 +927,10 @@
   }
 
   // Test hook: the specs read the payload the form would send without a network.
-  window.CommunityForm = { e164: e164, checkEmail: checkEmail, checkName: checkName, liNorm: liNorm, igNorm: igNorm };
+  window.CommunityForm = { e164: e164, checkEmail: checkEmail, checkName: checkName, liNorm: liNorm, igNorm: igNorm, emRead: emRead };
 
   setLang(pickLang(), false);
+  loadQuestions();
   goStep(1);
   arrive();
 })();

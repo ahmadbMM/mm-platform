@@ -11,11 +11,16 @@ Two steps (the owner, 2026-09-30: the applicant makes their account first):
    password (8 characters, an upper-case letter and a digit, typed twice), height, the Privacy
    Notice (required) and ride news (optional). It calls `customer_exists` (email, then mobile, so the
    message says which is taken), `customer_signup` and `customer_consents`, and then says clearly
-   that the account has been created.
+   that the account has been created. It also asks the **emergency contact** (the owner, 2026-10-07:
+   required, a second one optional behind "Add a second contact"), checked before the account is made
+   and saved the moment it exists (`customer_set_emergency`, then `customer_set_emergency2` when the
+   second is filled). Should that save be refused, the account stays made and step 2 asks again.
 2. **Membership** asks what the sign-up does not: date of birth, nationality, Instagram and LinkedIn
    (may be left empty, silently), profession, company, bike type (Road, Hybrid or Mountain) and how
    they heard of us. It is sent from that account with `customer_community_apply(id, token, answers)`,
-   so the application carries the account (`community_applications.customer_id`).
+   so the application carries the account (`community_applications.customer_id`). An account handed
+   over without an emergency contact (`customer_emergency`) gives it here, saved before the application
+   goes; a database without those functions asks nothing, one that answers three columns offers no second.
 
 Someone who already has an account presses **Sign in**: the booking site (`?handoff=community`) signs
 them in and sends them back with a one-time code (`?code=`, `customer_handoff_create` /
@@ -36,7 +41,8 @@ the applications in the booking site: **Community > Applications**.
 - `shared/shared.js` — **generated** by `npm run sync` from the booking site's source
   (`~/micromobilityrentals`, or `RENTALS_DIR`): the Privacy Notice and its version, the language
   list, nationalities, calling codes, phone rules and the site's own strings for the consent
-  boxes, date picker, gender and the sign-up's labels and password messages. Re-sync whenever the site changes the notice.
+  boxes, date picker, gender, the sign-up's labels and password messages, and the emergency contact's
+  labels, relations (`EM_RELS`) and messages. Re-sync whenever the site changes the notice.
 - `src/page.html` — **generated** by `npm run build`. Never edit it by hand.
 - Database: `supabase/migrations/20260922200000_community_applications.sql` in the booking
   site repo (table `community_applications`, the staff approve/reject RPCs), and

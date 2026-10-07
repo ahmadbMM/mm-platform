@@ -178,7 +178,7 @@ export const experiencesSchema = {
         txt("formTitle", 50, "Form: title", "النموذج: العنوان", "Sign up", "سجّل الآن"),
         long("formSub", 200, "Form: text under the title", "النموذج: النص تحت العنوان", "It takes a minute. We'll contact you with your lesson's date and time.", "لن يستغرق سوى دقيقة. سنتواصل معك بموعد درسك ووقته."),
         txt("doneTitle", 50, "After sending: title", "بعد الإرسال: العنوان", "You're signed up!", "تم تسجيلك!"),
-        long("doneText", 240, "After sending: text", "بعد الإرسال: النص", "Thank you. We'll contact you soon with your lesson's date and time.", "شكراً لك. سنتواصل معك قريباً بموعد درسك ووقته."),
+        long("doneText", 240, "After sending: text", "بعد الإرسال: النص", "Thank you. We'll contact you with your lesson's date and time.", "شكراً لك. سنتواصل معك بموعد درسك ووقته."),
         txt("closedTitle", 60, "Not taking sign-ups: title", "التسجيل مغلق: العنوان", "Sign-ups are closed for now", "التسجيل مغلق حالياً"),
         long("closedText", 240, "Not taking sign-ups: text", "التسجيل مغلق: النص", "We're currently not taking any new sign-ups for lessons. Please check back soon.", "لا نستقبل حالياً أي طلبات جديدة للتسجيل في الدروس. يُرجى العودة لاحقاً."),
       ],

@@ -2,6 +2,7 @@
    form shares with the booking site (consent boxes, date picker, gender) come from shared/shared.js. */
 var FORM_T = {
  "ar": {
+  "(optional)": "(اختياري)",
   "Community": "المجتمع",
   "Language": "اللغة",
   "Dismiss": "إغلاق",
@@ -34,7 +35,8 @@ var FORM_T = {
   "Need help? WhatsApp us": "تحتاج مساعدة؟ راسلنا على WhatsApp",
   "Choose your nationality": "اختر جنسيتك",
   "Use {s}": "استخدم {s}",
-  "Thank you, {name}. Our team will review your application and reply to you shortly.": "شكرًا لك يا {name}. سيراجع فريقنا طلبك ويردّ عليك قريبًا.",
+  "{name}, your application has been received.": "تم استلام طلبك يا {name}.",
+  "We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.": "نستقبل حاليًا عددًا من الطلبات أكبر من المعتاد، لذا قد يستغرق ردّنا عليك بعض الوقت. شكرًا لصبرك، وسنتواصل معك فور مراجعة طلبك.",
   "We will reply on {phone} or {email}.": "سنردّ عليك عبر ‎{phone} أو {email}.",
   "Enter a valid email address": "أدخل بريدًا إلكترونيًا صحيحًا",
   "Please use your own email address, not an Apple hidden (relay) address": "يُرجى استخدام بريدك الإلكتروني الخاص، لا عنوان Apple المخفي (relay)",
@@ -102,6 +104,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "انتهت صلاحية رابط تسجيل الدخول هذا. سجّل الدخول مرة أخرى للمتابعة."
  },
  "fr": {
+  "(optional)": "(facultatif)",
   "Community": "Communauté",
   "Language": "Langue",
   "Dismiss": "Fermer",
@@ -134,7 +137,8 @@ var FORM_T = {
   "Need help? WhatsApp us": "Besoin d’aide ? Écrivez-nous sur WhatsApp",
   "Choose your nationality": "Choisissez votre nationalité",
   "Use {s}": "Utiliser {s}",
-  "Thank you, {name}. Our team will review your application and reply to you shortly.": "Merci, {name}. Notre équipe va examiner votre demande et vous répondra très bientôt.",
+  "{name}, your application has been received.": "{name}, votre demande a bien été reçue.",
+  "We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.": "Nous recevons actuellement plus de demandes que d'habitude, notre réponse pourrait donc prendre un certain temps. Merci de votre patience. Nous vous contacterons dès que nous aurons examiné la vôtre.",
   "We will reply on {phone} or {email}.": "Nous vous répondrons au {phone} ou à l’adresse {email}.",
   "Enter a valid email address": "Saisissez une adresse e-mail valide",
   "Please use your own email address, not an Apple hidden (relay) address": "Utilisez votre propre adresse e-mail, pas une adresse Apple masquée (relais)",
@@ -202,6 +206,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "Ce lien de connexion a expiré. Reconnectez-vous pour continuer."
  },
  "es": {
+  "(optional)": "(opcional)",
   "Community": "Comunidad",
   "Language": "Idioma",
   "Dismiss": "Cerrar",
@@ -234,7 +239,8 @@ var FORM_T = {
   "Need help? WhatsApp us": "¿Necesitas ayuda? Escríbenos por WhatsApp",
   "Choose your nationality": "Elige tu nacionalidad",
   "Use {s}": "Usar {s}",
-  "Thank you, {name}. Our team will review your application and reply to you shortly.": "Gracias, {name}. Nuestro equipo revisará tu solicitud y te responderá en breve.",
+  "{name}, your application has been received.": "{name}, hemos recibido tu solicitud.",
+  "We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.": "Ahora mismo estamos recibiendo más solicitudes de lo habitual, así que es posible que tardemos un tiempo en responderte. Gracias por tu paciencia. Te contactaremos en cuanto hayamos revisado la tuya.",
   "We will reply on {phone} or {email}.": "Te responderemos al {phone} o a {email}.",
   "Enter a valid email address": "Introduce un correo electrónico válido",
   "Please use your own email address, not an Apple hidden (relay) address": "Usa tu propio correo electrónico, no una dirección oculta de Apple (de retransmisión)",
@@ -302,6 +308,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "Este enlace de inicio de sesión ha caducado. Vuelve a iniciar sesión para continuar."
  },
  "pt": {
+  "(optional)": "(opcional)",
   "Community": "Comunidade",
   "Language": "Idioma",
   "Dismiss": "Fechar",
@@ -334,7 +341,8 @@ var FORM_T = {
   "Need help? WhatsApp us": "Precisa de ajuda? Fale com a gente no WhatsApp",
   "Choose your nationality": "Escolha sua nacionalidade",
   "Use {s}": "Usar {s}",
-  "Thank you, {name}. Our team will review your application and reply to you shortly.": "Obrigado, {name}. Nossa equipe vai analisar sua solicitação e responder em breve.",
+  "{name}, your application has been received.": "{name}, recebemos sua solicitação.",
+  "We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.": "Estamos recebendo mais solicitações do que o normal no momento, então nossa resposta pode levar algum tempo. Obrigado pela paciência. Entraremos em contato assim que analisarmos a sua.",
   "We will reply on {phone} or {email}.": "Vamos responder pelo {phone} ou pelo {email}.",
   "Enter a valid email address": "Informe um endereço de e-mail válido",
   "Please use your own email address, not an Apple hidden (relay) address": "Use seu próprio e-mail, não um endereço oculto da Apple (de retransmissão)",
@@ -402,6 +410,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "Este link de acesso expirou. Entre de novo para continuar."
  },
  "ur": {
+  "(optional)": "(اختیاری)",
   "Community": "کمیونٹی",
   "Language": "زبان",
   "Dismiss": "بند کریں",
@@ -434,7 +443,8 @@ var FORM_T = {
   "Need help? WhatsApp us": "مدد چاہیے؟ ہمیں WhatsApp کریں",
   "Choose your nationality": "اپنی قومیت منتخب کریں",
   "Use {s}": "{s} استعمال کریں",
-  "Thank you, {name}. Our team will review your application and reply to you shortly.": "شکریہ، {name}۔ ہماری ٹیم آپ کی درخواست کا جائزہ لے کر جلد ہی آپ کو جواب دے گی۔",
+  "{name}, your application has been received.": "{name}، آپ کی درخواست موصول ہو گئی ہے۔",
+  "We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.": "اس وقت ہمیں معمول سے زیادہ درخواستیں موصول ہو رہی ہیں، اس لیے آپ کو جواب دینے میں کچھ وقت لگ سکتا ہے۔ آپ کے صبر کا شکریہ۔ آپ کی درخواست کا جائزہ لیتے ہی ہم آپ سے رابطہ کریں گے۔",
   "We will reply on {phone} or {email}.": "ہم ‎{phone} یا {email} پر جواب دیں گے۔",
   "Enter a valid email address": "درست ای میل ایڈریس درج کریں",
   "Please use your own email address, not an Apple hidden (relay) address": "براہِ کرم اپنا ذاتی ای میل ایڈریس استعمال کریں، Apple کا پوشیدہ (relay) ایڈریس نہیں",
@@ -502,6 +512,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "سائن اِن کا یہ لنک ختم ہو چکا ہے۔ جاری رکھنے کے لیے دوبارہ سائن اِن کریں۔"
  },
  "hi": {
+  "(optional)": "(वैकल्पिक)",
   "Community": "समुदाय",
   "Language": "भाषा",
   "Dismiss": "बंद करें",
@@ -534,7 +545,8 @@ var FORM_T = {
   "Need help? WhatsApp us": "मदद चाहिए? हमें WhatsApp करें",
   "Choose your nationality": "अपनी राष्ट्रीयता चुनें",
   "Use {s}": "{s} इस्तेमाल करें",
-  "Thank you, {name}. Our team will review your application and reply to you shortly.": "धन्यवाद, {name}। हमारी टीम आपके आवेदन की समीक्षा करेगी और जल्द ही आपको जवाब देगी।",
+  "{name}, your application has been received.": "{name}, आपका आवेदन हमें मिल गया है।",
+  "We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.": "इस समय हमें सामान्य से अधिक आवेदन मिल रहे हैं, इसलिए आपको जवाब देने में हमें कुछ समय लग सकता है। धैर्य रखने के लिए धन्यवाद। आपके आवेदन की समीक्षा होते ही हम आपसे संपर्क करेंगे।",
   "We will reply on {phone} or {email}.": "हम {phone} या {email} पर जवाब देंगे।",
   "Enter a valid email address": "सही ईमेल पता दर्ज करें",
   "Please use your own email address, not an Apple hidden (relay) address": "कृपया अपना खुद का ईमेल पता दें, Apple का छिपा हुआ (relay) पता नहीं",
@@ -602,6 +614,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "साइन इन का यह लिंक खत्म हो गया है। जारी रखने के लिए फिर से साइन इन करें।"
  },
  "tl": {
+  "(optional)": "(opsyonal)",
   "Community": "Komunidad",
   "Language": "Wika",
   "Dismiss": "Isara",
@@ -634,7 +647,8 @@ var FORM_T = {
   "Need help? WhatsApp us": "Kailangan ng tulong? I-WhatsApp kami",
   "Choose your nationality": "Piliin ang iyong nasyonalidad",
   "Use {s}": "Gamitin ang {s}",
-  "Thank you, {name}. Our team will review your application and reply to you shortly.": "Salamat, {name}. Susuriin ng aming team ang iyong aplikasyon at sasagutin ka namin sa lalong madaling panahon.",
+  "{name}, your application has been received.": "{name}, natanggap na namin ang iyong aplikasyon.",
+  "We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.": "Mas marami kaysa karaniwan ang mga aplikasyong natatanggap namin ngayon, kaya maaaring matagalan bago ka namin masagot. Salamat sa iyong pasensya. Makikipag-ugnayan kami sa iyo sa sandaling masuri na namin ang iyong aplikasyon.",
   "We will reply on {phone} or {email}.": "Sasagot kami sa {phone} o {email}.",
   "Enter a valid email address": "Maglagay ng tamang email address",
   "Please use your own email address, not an Apple hidden (relay) address": "Pakigamit ang sarili mong email address, hindi ang nakatagong (relay) address ng Apple",
@@ -702,6 +716,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "Nag-expire na ang sign-in link na ito. Mag-sign in ulit para magpatuloy."
  },
  "ne": {
+  "(optional)": "(वैकल्पिक)",
   "Community": "समुदाय",
   "Language": "भाषा",
   "Dismiss": "बन्द गर्नुहोस्",
@@ -734,7 +749,8 @@ var FORM_T = {
   "Need help? WhatsApp us": "सहयोग चाहियो? हामीलाई WhatsApp गर्नुहोस्",
   "Choose your nationality": "आफ्नो राष्ट्रियता छान्नुहोस्",
   "Use {s}": "{s} प्रयोग गर्नुहोस्",
-  "Thank you, {name}. Our team will review your application and reply to you shortly.": "धन्यवाद, {name}। हाम्रो टोलीले तपाईंको आवेदन हेर्नेछ र छिट्टै जवाफ दिनेछ।",
+  "{name}, your application has been received.": "{name}, तपाईंको आवेदन हामीले प्राप्त गरेका छौं।",
+  "We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.": "अहिले हामीले सामान्यभन्दा धेरै आवेदनहरू पाइरहेका छौं, त्यसैले तपाईंलाई जवाफ दिन केही समय लाग्न सक्छ। धैर्य गर्नुभएकोमा धन्यवाद। तपाईंको आवेदन हेर्नेबित्तिकै हामी सम्पर्क गर्नेछौं।",
   "We will reply on {phone} or {email}.": "हामी {phone} वा {email} मा जवाफ दिनेछौं।",
   "Enter a valid email address": "मान्य इमेल ठेगाना लेख्नुहोस्",
   "Please use your own email address, not an Apple hidden (relay) address": "कृपया आफ्नै इमेल ठेगाना दिनुहोस्, Apple को लुकेको (relay) ठेगाना होइन",
@@ -802,6 +818,7 @@ var FORM_T = {
   "This sign-in link has expired. Sign in again to continue.": "यो साइन इन लिङ्कको म्याद सकियो। जारी राख्न फेरि साइन इन गर्नुहोस्।"
  },
  "bn": {
+  "(optional)": "(ঐচ্ছিক)",
   "Community": "কমিউনিটি",
   "Language": "ভাষা",
   "Dismiss": "বন্ধ করুন",
@@ -834,7 +851,8 @@ var FORM_T = {
   "Need help? WhatsApp us": "সাহায্য দরকার? আমাদের WhatsApp করুন",
   "Choose your nationality": "আপনার জাতীয়তা বেছে নিন",
   "Use {s}": "{s} ব্যবহার করুন",
-  "Thank you, {name}. Our team will review your application and reply to you shortly.": "ধন্যবাদ, {name}। আমাদের টিম আপনার আবেদনটি দেখে শিগগিরই আপনাকে উত্তর দেবে।",
+  "{name}, your application has been received.": "{name}, আপনার আবেদনটি আমরা পেয়েছি।",
+  "We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.": "এই মুহূর্তে আমরা স্বাভাবিকের চেয়ে বেশি আবেদন পাচ্ছি, তাই আপনাকে উত্তর দিতে আমাদের কিছুটা সময় লাগতে পারে। ধৈর্য ধরার জন্য ধন্যবাদ। আপনার আবেদনটি দেখা হলেই আমরা যোগাযোগ করব।",
   "We will reply on {phone} or {email}.": "আমরা {phone} অথবা {email}-এ উত্তর দেব।",
   "Enter a valid email address": "একটি সঠিক ইমেইল ঠিকানা লিখুন",
   "Please use your own email address, not an Apple hidden (relay) address": "অনুগ্রহ করে নিজের ইমেইল ঠিকানা দিন, Apple-এর লুকানো (relay) ঠিকানা নয়",

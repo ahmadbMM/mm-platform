@@ -134,6 +134,8 @@
           <p class="err" aria-live="polite"></p>
           <p class="warn" aria-live="polite"></p>
         </div>
+        <!-- The emergency contact (the owner, 2026-10-07): the first required, a second optional behind its button. Drawn by app.js (emBlock). -->
+        <div id="em-slot"></div>
         <div id="f-ack" class="field consent">
           <div id="ack" class="tick" role="checkbox" aria-checked="false" aria-required="true" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" id="ack-lbl"></span></div>
           <p class="err" aria-live="polite"></p>
@@ -228,6 +230,8 @@
           <span class="sel-wrap wide"><select id="heard" name="heard_from"></select></span>
           <p class="err" aria-live="polite"></p>
         </div>
+        <!-- Shown only to a signed-in account with no emergency contact yet (customer_emergency), or when step 1 could not save it. -->
+        <div id="xem-slot"></div>
         <!-- Shown only to a signed-in account the database has no confirmed notice for (error 'privacy'). -->
         <div id="f-xack" class="field consent" hidden>
           <div id="xack" class="tick" role="checkbox" aria-checked="false" aria-required="true" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" id="xack-lbl"></span></div>
@@ -265,6 +269,7 @@
       </div>
       <h1 class="title" data-t="Application received">Application received</h1>
       <p id="result" class="result"></p>
+      <p class="result" data-t="We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.">We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.</p>
       <p id="result-contact" class="done-note"></p>
     </div>
   </section>

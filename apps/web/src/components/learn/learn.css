@@ -163,3 +163,15 @@ html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13
 .ln-card .ac-check { min-height: 65px; margin: 0 0 12px; }
 .ln-pc-sub { margin: 0 0 16px; }
 .ln-ack { margin: 18px 0 12px; }
+
+/* The emergency contact (2026-10-07; components/account/EmergencyFields.tsx) */
+.ln-em { border-top: 1px solid rgba(0, 0, 0, .08); padding-top: 18px; margin: 4px 0 16px; }
+.ln-em-h { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 4px; color: #1a1919; font-size: 15px; font-weight: 700; }
+.ln-em-h svg { flex: none; color: #077a4b; }
+.ln-em-sub { margin: 0 0 12px; }
+.ln-em-opt { color: #8a938c; font-weight: 500; font-size: 13px; }
+.ln-em .ln-field > label { font-size: 13.5px; color: #57605a; font-weight: 600; }
+.ln-em .ln-err { margin: 0; }
+.ln-em-add { margin: 0 0 6px; }
+.ln-em-add span { font-size: inherit; line-height: inherit; }
+.ln-em [aria-invalid="true"] { border-color: #b3261e; }

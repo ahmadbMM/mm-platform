@@ -57,6 +57,8 @@ export const T = {
     privacy: (link: string) => `I have read the ${link}`, privacyLink: "Privacy Notice",
     use: "We use these details to arrange the lesson.",
     send: "Sign up", sending: "Sending…", again: "Sign up more learners",
+    // Under the thank-you (the owner, 2026-10-07): replies are slow while sign-ups are many.
+    surge: "We're getting more sign-ups than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.",
     // A learner's message names their card: "Learner 2: Enter the child's age, from 3 to 17."
     learnerError: (n: number, message: string) => `Learner ${n}: ${message}`,
     // WhatsApp (the owner, 2026-10-07): is the account's mobile their WhatsApp too, or which number is.
@@ -137,6 +139,7 @@ export const T = {
     privacy: (link: string) => `قرأت ${link}`, privacyLink: "إشعار الخصوصية",
     use: "نستخدم هذه البيانات لترتيب الدرس.",
     send: "سجّل الآن", sending: "جارٍ الإرسال…", again: "سجّل متعلّمين آخرين",
+    surge: "نستقبل حاليًا عددًا من طلبات التسجيل أكبر من المعتاد، لذا قد يستغرق ردّنا عليك بعض الوقت. شكرًا لصبرك، وسنتواصل معك فور مراجعة طلبك.",
     learnerError: (n: number, message: string) => `المتعلّم ${n}: ${message}`,
     waAsk: (phone: string) => `هل ${phone} هو رقمك على WhatsApp أيضًا؟`, waYes: "نعم", waNo: "لا", waLabel: "رقم WhatsApp",
     errors: {

@@ -10,7 +10,7 @@ export type Account = Session & { name: string; email: string; phone: string;
 
 /** A database call from the server with the public key. A refusal keeps its message (the
  *  exception's name: phone_taken, RATE_LIMITED...), PostgREST's code (PGRST202: no such function, a
- *  migration not applied yet) and, in `details`, its detail and hint (which field a BAD_INPUT is about). */
+ *  migration not applied yet) and, in `details`, its detail and hint (which field a BAD_INPUT is about: em_self ...). */
 export async function rpcServer<T>(fn: string, args: Record<string, unknown>): Promise<{ status: number; data: T | null; message: string; code?: string; details?: string }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;

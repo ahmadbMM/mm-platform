@@ -1,0 +1,28 @@
+/* The emergency contact's boxes (EmergencyFields.tsx), whatever look holds them: the dial code and
+   the number side by side, left to right in every language. */
+.em-phone { display: flex; gap: 8px; align-items: stretch; }
+.em-phone > input { flex: 1; min-width: 0; }
+.em-phone > .em-cc { flex: none; width: 112px; min-width: 0; text-overflow: ellipsis; }
+.em-two { margin-top: 4px; padding-top: 14px; border-top: 1px dashed rgba(0, 0, 0, .16); }
+/* The account's check-up (EmergencyGate.tsx, 2026-10-07): the rating gate's frame (rating.css) and the
+   waiver gate's buttons (waiver.css), with the boxes in this look. */
+.eg-block { display: flex; flex-direction: column; margin-top: 4px; }
+.eg-h { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 2px; font-size: 15px; font-weight: 700; color: #1a1919; }
+.eg-sub { margin: 0 0 10px; color: #57605a; font-size: 13px; line-height: 1.45; }
+.eg-field { display: flex; flex-direction: column; gap: 6px; margin: 0 0 12px; }
+.eg-field > span, .eg-field > label { font-size: 13.5px; font-weight: 600; color: #57605a; }
+.eg-input { box-sizing: border-box; width: 100%; min-height: 46px; border: 1px solid rgba(0, 0, 0, .16); border-radius: 12px; padding: 10px 14px; background: #fff; color: #1a1919; font: inherit; font-size: 15px; }
+.eg-input:focus { outline: none; border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .16); }
+.eg-input[aria-invalid="true"] { border-color: #b3261e; }
+select.eg-input { appearance: none; -webkit-appearance: none; cursor: pointer; padding-inline-end: 36px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235b635d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; }
+[dir="rtl"] select.eg-input { background-position: left 12px center; }
+.em-phone > select.eg-input { background-position: right 8px center; padding-inline-end: 26px; }
+select.eg-input.eg-ph { color: #8a938c; }
+select.eg-input option { color: #1a1919; }
+.eg-err { margin: 0; color: #b3261e; font-size: 13px; font-weight: 600; line-height: 1.45; }
+.eg-opt { color: #8a938c; font-weight: 500; font-size: 13px; }
+.eg-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; margin: 0 0 6px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .16); background: transparent; color: #077a4b; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.eg-add:hover { background: rgba(7, 122, 75, .08); }
+.eg-add:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+.eg-kicker { color: #b3261e; }
+.eg-kicker .rg-flag { background: rgba(179, 38, 30, .1); color: #b3261e; }
