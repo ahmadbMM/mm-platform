@@ -80,62 +80,6 @@
           </div>
           <p class="err" aria-live="polite" data-t="Enter a valid Saudi mobile number (05XXXXXXXX)">Enter a valid Saudi mobile number (05XXXXXXXX)</p>
         </div>
-        <div id="f-em" class="em" role="group" aria-labelledby="em-title">
-          <span class="label em-title" id="em-title" data-t="Emergency contact">Emergency contact</span>
-          <p class="lead" data-t="Someone we can call if you or anyone on your booking needs help during the ride.">Someone we can call if you or anyone on your booking needs help during the ride.</p>
-          <div id="f-em-name" class="field">
-            <label for="em-name" data-t="Contact’s name">Contact’s name</label>
-            <input id="em-name" type="text" maxlength="80" autocomplete="off">
-            <p class="err" aria-live="polite" data-t="Enter your contact’s name.">Enter your contact’s name.</p>
-          </div>
-          <div id="f-em-phone" class="field">
-            <label for="em-phone" data-t="Contact’s mobile number">Contact’s mobile number</label>
-            <div class="phone-row" dir="ltr">
-              <label class="cc-wrap" aria-label="Country code">
-                <select id="em-cc" class="cc"><option value="966" data-iso="SA" selected>SA +966</option></select>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
-              </label>
-              <input id="em-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="5X XXX XXXX" data-t-placeholder="5X XXX XXXX">
-            </div>
-            <p class="err" aria-live="polite" data-t="Enter your contact’s mobile number.">Enter your contact’s mobile number.</p>
-          </div>
-          <div id="f-em-rel" class="field">
-            <label for="em-rel" data-t="Relationship to you">Relationship to you</label>
-            <div class="cc-wrap rel-wrap">
-              <select id="em-rel" class="cc rel"><option value="" data-t="Choose">Choose</option><option value="spouse" data-t="Spouse">Spouse</option><option value="parent" data-t="Parent">Parent</option><option value="sibling" data-t="Brother or sister">Brother or sister</option><option value="child" data-t="Son or daughter">Son or daughter</option><option value="relative" data-t="Relative">Relative</option><option value="friend" data-t="Friend">Friend</option><option value="colleague" data-t="Colleague">Colleague</option><option value="other" data-t="Other">Other</option></select>
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
-            </div>
-            <p class="err" aria-live="polite" data-t="Choose how they are related to you.">Choose how they are related to you.</p>
-          </div>
-          <div id="em2" class="rider em2" role="group" aria-labelledby="em2-title" hidden>
-            <div class="rider-head"><b id="em2-title" data-t="Second emergency contact">Second emergency contact</b><button type="button" id="em2-remove" class="rider-remove" aria-labelledby="em2-remove em2-title" data-t="Remove">Remove</button></div>
-            <div id="f-em2-name" class="field">
-              <label for="em2-name" data-t="Contact’s name">Contact’s name</label>
-              <input id="em2-name" type="text" maxlength="80" autocomplete="off">
-              <p class="err" aria-live="polite" data-t="Enter your contact’s name.">Enter your contact’s name.</p>
-            </div>
-            <div id="f-em2-phone" class="field">
-              <label for="em2-phone" data-t="Contact’s mobile number">Contact’s mobile number</label>
-              <div class="phone-row" dir="ltr">
-                <label class="cc-wrap" aria-label="Country code">
-                  <select id="em2-cc" class="cc"><option value="966" data-iso="SA" selected>SA +966</option></select>
-                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
-                </label>
-                <input id="em2-phone" type="tel" inputmode="tel" autocomplete="off" placeholder="5X XXX XXXX" data-t-placeholder="5X XXX XXXX">
-              </div>
-              <p class="err" aria-live="polite" data-t="Enter your contact’s mobile number.">Enter your contact’s mobile number.</p>
-            </div>
-            <div id="f-em2-rel" class="field">
-              <label for="em2-rel" data-t="Relationship to you">Relationship to you</label>
-              <div class="cc-wrap rel-wrap">
-                <select id="em2-rel" class="cc rel"><option value="" data-t="Choose">Choose</option><option value="spouse" data-t="Spouse">Spouse</option><option value="parent" data-t="Parent">Parent</option><option value="sibling" data-t="Brother or sister">Brother or sister</option><option value="child" data-t="Son or daughter">Son or daughter</option><option value="relative" data-t="Relative">Relative</option><option value="friend" data-t="Friend">Friend</option><option value="colleague" data-t="Colleague">Colleague</option><option value="other" data-t="Other">Other</option></select>
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
-              </div>
-              <p class="err" aria-live="polite" data-t="Choose how they are related to you.">Choose how they are related to you.</p>
-            </div>
-          </div>
-          <button type="button" id="add-em2" class="back" data-t="Add a second contact (optional)">Add a second contact (optional)</button>
-        </div>
       </fieldset>
 
       <fieldset class="step" data-step="3" hidden>

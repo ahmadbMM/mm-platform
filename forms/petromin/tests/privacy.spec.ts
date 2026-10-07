@@ -47,7 +47,6 @@ test('a registration does not go through until the notice is confirmed', async (
   await page.click('#next');
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
-  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   // the notice link beside the box opens it without ticking the box
@@ -72,7 +71,7 @@ test('a registration does not go through until the notice is confirmed', async (
 
 test('editing a booking does not ask again', async ({ page }) => {
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
-  await page.addInitScript(() => localStorage.setItem('mm-petromin-registration', JSON.stringify({ badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Hybrid', session: { id: '2099-02-08-pw', start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' }, bookingNo: 'P-001', emergency: { name: 'Huda Contact', phone: '+966551112222', relation: 'spouse' }, submittedAt: '2099-02-01T10:00:00Z' })));
+  await page.addInitScript(() => localStorage.setItem('mm-petromin-registration', JSON.stringify({ badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Hybrid', session: { id: '2099-02-08-pw', start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' }, bookingNo: 'P-001', submittedAt: '2099-02-01T10:00:00Z' })));
   await page.goto('/petromin?lang=en');
   await page.click('#edit');
   await page.click('#next'); await page.click('#next');
@@ -88,7 +87,6 @@ async function toLastStep(page: import('@playwright/test').Page) {
   await page.click('#next');
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
-  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.check('#privacy'); await page.check('#waiver');
@@ -103,10 +101,10 @@ test('a registration sends the notice it confirmed as p_privacy', async ({ page 
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(regs).toHaveLength(1);
-  expect(regs[0]).toMatchObject({ p_privacy: '2026-10-07', p_waiver: '2026-10-v3' });
+  expect(regs[0]).toMatchObject({ p_privacy: '2026-09-22', p_waiver: '2026-10-v3' });
 });
 
-test('a database without p_privacy yet takes the registration on the third try, without it (and without the newer p_emergency)', async ({ page }) => {
+test('a database without p_privacy yet takes the registration on the second try, without it', async ({ page }) => {
   const regs: Record<string, unknown>[] = [];
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => {
@@ -118,12 +116,8 @@ test('a database without p_privacy yet takes the registration on the third try, 
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   await expect(page.locator('#banner')).toBeHidden();
-  // The newest argument goes first (p_emergency, 2026-10-07), then the notice's version.
-  expect(regs).toHaveLength(3);
-  expect(regs[0].p_privacy).toBe('2026-10-07');
-  expect(regs[0]).toHaveProperty('p_emergency');
-  expect(regs[1]).not.toHaveProperty('p_emergency');
-  expect(regs[1].p_privacy).toBe('2026-10-07');
-  expect(regs[2]).not.toHaveProperty('p_privacy');
-  expect({ ...regs[2], p_privacy: '2026-10-07', p_emergency: regs[0].p_emergency }).toEqual(regs[0]); // nothing else changed
+  expect(regs).toHaveLength(2);
+  expect(regs[0].p_privacy).toBe('2026-09-22');
+  expect(regs[1]).not.toHaveProperty('p_privacy');
+  expect({ ...regs[1], p_privacy: '2026-09-22' }).toEqual(regs[0]); // nothing else changed
 });

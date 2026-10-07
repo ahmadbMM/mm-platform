@@ -21,7 +21,6 @@ test('a dash in a name becomes a space; digits and emoji go; what is sent has ne
   await expect(page.locator('#f-name .err')).toHaveText('Names can only contain letters, spaces and periods.');
   await expect(page.locator('#f-name .err')).toBeHidden({ timeout: 6000 });
   await page.fill('#phone', '512345678');
-  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');
@@ -42,7 +41,7 @@ test('a dash in a name becomes a space; digits and emoji go; what is sent has ne
 
 test('a booking saved with a dashed name reopens without the dash', async ({ page }) => {
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
-  await page.addInitScript(() => localStorage.setItem('mm-petromin-registration', JSON.stringify({ badge: 'A-12', name: 'Amal Al-Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Hybrid', session: { id: '2099-02-08-pw', start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' }, bookingNo: 'P-001', riders: [{ name: 'Kerry-Ann', height: 160, type: 'Hybrid' }], emergency: { name: 'Huda Contact', phone: '+966551112222', relation: 'spouse' }, submittedAt: '2099-02-01T10:00:00Z' })));
+  await page.addInitScript(() => localStorage.setItem('mm-petromin-registration', JSON.stringify({ badge: 'A-12', name: 'Amal Al-Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Hybrid', session: { id: '2099-02-08-pw', start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' }, bookingNo: 'P-001', riders: [{ name: 'Kerry-Ann', height: 160, type: 'Hybrid' }], submittedAt: '2099-02-01T10:00:00Z' })));
   await page.goto('/petromin?lang=en');
   await page.click('#edit');
   await expect(page.locator('#name')).toHaveValue('Amal Al Booked');
@@ -73,7 +72,6 @@ test("the server's refusal of a name lands on the box it is about", async ({ pag
   await page.click('#next');
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Faisal Harbi'); await page.fill('#phone', '512345678');
-  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');
@@ -113,7 +111,6 @@ test('a period after a letter stays ("Md. Rahman"); a stray one goes without a w
   await expect(page.locator('#name')).toHaveValue('Md. Rahman');
   await expect(page.locator('#f-name')).not.toHaveClass(/invalid/);
   await page.fill('#phone', '512345678');
-  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');
@@ -142,7 +139,6 @@ test('every word of a name has two letters: an initial is refused, for the emplo
   await page.fill('#badge', 'A-12');
   await page.fill('#name', 'Faisal H');
   await page.fill('#phone', '512345678');
-  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');
@@ -185,7 +181,6 @@ test("the server's short-name refusal (why: short) asks for the name in full, no
   await page.click('#next');
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Faisal Harbi'); await page.fill('#phone', '512345678');
-  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');

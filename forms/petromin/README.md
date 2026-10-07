@@ -36,7 +36,7 @@ npm run e2e
 The specs drive the real page in a browser against `serve.mjs` (the built page at its address),
 with every Supabase call stubbed, so nothing is ever written to production. CI runs them (`npm run
 e2e`) before every deploy. They cover registering with companions,
-editing a booking afterwards, the ride waiver (required on every registration and edit, sent as `p_waiver`), the emergency contact (the first required on every registration and edit, a second optional, sent as `p_emergency`; retried without it on a database before rentals migration 20261007233000), the booking card, and that every string on the card and in the
+editing a booking afterwards, the ride waiver (required on every registration and edit, sent as `p_waiver`), the booking card, and that every string on the card and in the
 companions block has a translation in every language but English (Arabic, Urdu, French, Spanish,
 Portuguese, Hindi, Nepali, Tagalog and Bengali).
 

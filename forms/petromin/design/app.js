@@ -524,13 +524,11 @@
   // stored either way, and setting cc.value picks the top one. COUNTRIES stays one row per code.
   var CC_SHOWN = COUNTRIES.slice(0, 6).concat(COUNTRIES.slice(6).concat([COUNTRIES[0]]).sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; }));
   var cc = $("#cc"), phoneIn = $("#phone"), phoneOut = $("#phone-e164");
-  // Every dial-code picker on the form (the employee's, and each emergency contact's) lists the same codes.
-  function fillCC(sel) {
-    sel.innerHTML = "";
-    CC_SHOWN.forEach(function (x) { var o = document.createElement("option"); o.value = x[1]; o.setAttribute("data-iso", x[0]); o.textContent = x[0] + " +" + x[1]; sel.appendChild(o); });
-    sel.value = "966";
-  }
-  fillCC(cc);
+  (function buildCC() {
+    cc.innerHTML = "";
+    CC_SHOWN.forEach(function (x) { var o = document.createElement("option"); o.value = x[1]; o.setAttribute("data-iso", x[0]); o.textContent = x[0] + " +" + x[1]; cc.appendChild(o); });
+    cc.value = "966";
+  })();
   var DIGIT_ZEROS = [0x0660, 0x06F0, 0x0966, 0x09E6];
   function asciiDigits(v) {
     return String(v || "").replace(/[\u0660-\u0669\u06F0-\u06F9\u0966-\u096F\u09E6-\u09EF]/g, function (ch) {
@@ -551,11 +549,9 @@
     if (!lens) return d.length >= 11 && rest.length >= 8;
     return lens.indexOf(rest.length) >= 0 && lens.indexOf(d.replace(/^0+/, "").length) < 0;
   }
-  // The employee's number by default; an emergency contact's with its own picker and box.
-  function nationalDigits(c, inp) {
-    c = c || cc; inp = inp || phoneIn;
-    var raw = asciiDigits(inp.value).replace(/[^0-9+]/g, "");
-    var code = c.value;
+  function nationalDigits() {
+    var raw = asciiDigits(phoneIn.value).replace(/[^0-9+]/g, "");
+    var code = cc.value;
     if (raw.indexOf("+" + code) === 0) raw = raw.slice(code.length + 1);
     else if (raw.indexOf("00" + code) === 0) raw = raw.slice(code.length + 2);
     raw = raw.replace(/\D/g, "");
@@ -563,10 +559,10 @@
     else if (codeTyped(raw, code)) raw = raw.slice(code.length);
     return raw.replace(/^0+/, "");
   }
-  function phoneE164(c, inp) { var n = nationalDigits(c, inp); return n ? "+" + (c || cc).value + n : ""; }
-  function phoneValid(c, inp) {
-    var n = nationalDigits(c, inp);
-    if ((c || cc).value === "966") return /^5\d{8}$/.test(n);
+  function phoneE164() { var n = nationalDigits(); return n ? "+" + cc.value + n : ""; }
+  function phoneValid() {
+    var n = nationalDigits();
+    if (cc.value === "966") return /^5\d{8}$/.test(n);
     return /^\d{6,12}$/.test(n);
   }
   function syncPhone() {
@@ -608,7 +604,7 @@
     var err = f.querySelector(".err"); if (!err) return;
     if (!err.hasAttribute("data-t0")) err.setAttribute("data-t0", err.getAttribute("data-t"));
     if (msg || on) { err.setAttribute("data-t", msg || err.getAttribute("data-t0")); render(err); }
-    describeError(f.querySelector("input:not([type=hidden]), [role=radiogroup], select.rel"), err, on);
+    describeError(f.querySelector("input:not([type=hidden]), [role=radiogroup]"), err, on);
   }
   // A screen reader hears the message with the box it is about: aria-invalid on the box, and the
   // message as its description while it shows (the message itself is a polite live region).
@@ -649,7 +645,7 @@
     return ok;
   }
   function validate() { for (var i = 1; i <= STEPS; i++) { if (!validateStep(i)) { goStep(i); return false; } } return true; }
-  function focusInvalid() { var first = $(".field.invalid input, .field.invalid select.rel, .field.invalid [role=radio]"); first && first.focus(); }
+  function focusInvalid() { var first = $(".field.invalid input, .field.invalid [role=radio]"); first && first.focus(); }
 
   /* Loading and success */
   function setLoading(on) { $("#submit").classList.toggle("loading", !!on); $("#submit").disabled = !!on; }
@@ -737,5 +733,5 @@
     default: if (params.get("step") === "2" || params.get("step") === "3") pickSession();
   }
 
-  window.RiderRegistration = { languages: LANGS, translations: T, applyLang: applyLang, setSessions: setSessions, goStep: goStep, getSelection: function () { return { session: selectedSession, company: selectedCompany, type: selectedType, phone: phoneE164() }; }, getPhone: function () { return phoneE164(); }, setError: setError, showBanner: showBanner, hideBanner: hideBanner, setLoading: setLoading, showSuccess: showSuccess, reset: reset, validate: validate, collect: collect, restore: restore, getSaved: function () { return current; } };
+  window.RiderRegistration = { languages: LANGS, translations: T, applyLang: applyLang, setSessions: setSessions, goStep: goStep, getSelection: function () { return { session: selectedSession, company: selectedCompany, type: selectedType, phone: phoneE164() }; }, getPhone: phoneE164, setError: setError, showBanner: showBanner, hideBanner: hideBanner, setLoading: setLoading, showSuccess: showSuccess, reset: reset, validate: validate, collect: collect, restore: restore, getSaved: function () { return current; } };
 })();

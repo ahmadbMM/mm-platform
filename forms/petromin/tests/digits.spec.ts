@@ -17,7 +17,6 @@ test('a phone and a badge typed in Arabic digits go through, and reach the serve
   await page.click('#next');
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', '١٠٤٥٨٢'); await page.fill('#name', 'Faisal Al Harbi'); await page.fill('#phone', '٥١٢٣٤٥٦٧٨');
-  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await expect(page.locator('#f-phone')).not.toHaveClass(/invalid/);
   await page.fill('#height', '178'); await page.click('#types .tile[data-v="Hybrid"]');
@@ -83,7 +82,6 @@ test('a number typed with its country code but no + or 00 keeps the code once', 
   await page.fill('#badge', '104582'); await page.fill('#name', 'Faisal Al Harbi');
   await page.selectOption('#cc', '971');
   await page.fill('#phone', '971501234567');
-  await page.fill('#em-name', 'Huda Contact'); await page.fill('#em-phone', '551112222'); await page.selectOption('#em-rel', 'spouse');
   await page.click('#next');
   await expect(page.locator('#f-phone')).not.toHaveClass(/invalid/);
   await page.fill('#height', '178'); await page.click('#types .tile[data-v="Hybrid"]');
