@@ -22,7 +22,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   first_lap: ["flag", "green"], regular: ["wheel", "teal"], podium: ["podium", "purple"], front_row: ["one", "gold"], carbon: ["bike", "silver"],
   streak: ["flame", "orange"], squad: ["people", "blue"], fuel: ["bottle", "red"], corniche25: ["wave", "blue"],
   marshal: ["shield", "orange"], pit_crew: ["wrench", "silver"], green_flag: ["wflag", "green"], super_licence: ["card", "purple"],
-  scrutineer: ["search", "teal"], champion: ["trophy", "gold"], spirit: ["heart", "red"], complete_profile: ["profile", "special"],
+  scrutineer: ["search", "teal"], champion: ["trophy", "gold"], spirit: ["heart", "red"], t100: ["t100", "gold"], t50: ["t50", "silver"], t25: ["t25", "orange"], complete_profile: ["profile", "special"],
   national_day_96: ["n96", "national"], back_on_track: ["return", "teal"], safety_car: ["beacon", "orange"], endurance: ["clock", "purple"],
   triple_crown: ["crown", "gold"], slipstream: ["wind", "green"], paceline: ["wind", "blue"], peloton: ["wind", "gold"],
   rolling_start: ["wind", "teal"], grand_tour: ["wind", "purple"], hall_of_fame: ["wind", "special"],
@@ -32,7 +32,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
 };
 /** The badges staff give by hand that the app knows itself (BDG_GIVEN_SYS): shown where the
  *  database has no catalogue. */
-const GIVEN_SYS = ["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit"];
+const GIVEN_SYS = ["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t100", "t50", "t25"];
 
 /** Weeks since 1970 on the rides' calendar, Sunday first (_bdgWk), from a YYYY-MM-DD. */
 export const weekOf = (ds: string) => Math.floor((Date.parse(`${ds.slice(0, 10)}T00:00:00Z`) / 864e5 + 4) / 7);

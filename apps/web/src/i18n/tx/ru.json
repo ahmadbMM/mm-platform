@@ -1482,5 +1482,14 @@
  "Is {0} your WhatsApp number too?": "{0} — это также ваш номер WhatsApp?",
  "No": "Нет",
  "WhatsApp number": "Номер WhatsApp",
- "Yes": "Да"
+ "Yes": "Да",
+ "T100 Finisher": "Финишер T100",
+ "Finished the T100 race in Jeddah": "Финишировал(а) в гонке T100 в Джидде",
+ "For crossing the finish line of the T100 when the race came to Jeddah: the full distance. Given by our team.": "За пересечение финишной черты T100, когда гонка пришла в Джидду: полная дистанция. Вручает наша команда.",
+ "T50 Finisher": "Финишер T50",
+ "Finished the T50 race in Jeddah": "Финишировал(а) в гонке T50 в Джидде",
+ "For crossing the finish line of the T50 when the race came to Jeddah. Given by our team.": "За пересечение финишной черты T50, когда гонка пришла в Джидду. Вручает наша команда.",
+ "T25 Finisher": "Финишер T25",
+ "Finished the T25 race in Jeddah": "Финишировал(а) в гонке T25 в Джидде",
+ "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team.": "За пересечение финишной черты T25, когда гонка пришла в Джидду. Вручает наша команда."
 }

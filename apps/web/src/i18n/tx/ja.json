@@ -1482,5 +1482,14 @@
  "Is {0} your WhatsApp number too?": "{0} はWhatsAppの番号でもありますか？",
  "No": "いいえ",
  "WhatsApp number": "WhatsApp番号",
- "Yes": "はい"
+ "Yes": "はい",
+ "T100 Finisher": "T100完走",
+ "Finished the T100 race in Jeddah": "ジッダでT100レースを完走",
+ "For crossing the finish line of the T100 when the race came to Jeddah: the full distance. Given by our team.": "T100がジッダで開催された際にフィニッシュラインを越えた方へ（フルディスタンス）。私たちのチームから贈られます。",
+ "T50 Finisher": "T50完走",
+ "Finished the T50 race in Jeddah": "ジッダでT50レースを完走",
+ "For crossing the finish line of the T50 when the race came to Jeddah. Given by our team.": "T50がジッダで開催された際にフィニッシュラインを越えた方へ。私たちのチームから贈られます。",
+ "T25 Finisher": "T25完走",
+ "Finished the T25 race in Jeddah": "ジッダでT25レースを完走",
+ "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team.": "T25がジッダで開催された際にフィニッシュラインを越えた方へ。私たちのチームから贈られます。"
 }
