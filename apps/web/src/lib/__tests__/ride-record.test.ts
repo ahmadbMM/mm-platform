@@ -52,7 +52,7 @@ describe("the badges", () => {
     const slugs = list().map((x) => x.slug);
     expect(slugs).not.toContain("national_day_96");
     expect(slugs).not.toContain("back_on_track");
-    expect(slugs.slice(-7)).toEqual(["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit"]);
+    expect(slugs.slice(-10)).toEqual(["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t100", "t50", "t25"]);
   });
   it("put a badge staff gave first, with their note and the day", () => {
     const L = list({ ...empty, mine: [{ slug: "champion", note: "Won the hill climb", at: "2026-09-30T18:00:00Z" }] });
