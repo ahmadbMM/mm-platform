@@ -34,7 +34,7 @@ const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 
 // The booking app's bike types, in the order a rider meets them there.
-const TYPE_ORDER = ["Road", "Hybrid", "Mountain", "Road Carbon", "Kids", "Gravel", "Any"];
+const TYPE_ORDER = ["Road", "Hybrid", "Mountain", "Road Carbon", "Kids", "Gravel"];
 const TYPE_NAME: Record<string, { en: string; ar: string }> = {
   Road: phrase("Road", "طريق"), Hybrid: phrase("Hybrid", "هجين"), Mountain: phrase("Mountain", "جبلي"), "Road Carbon": phrase("Road Carbon", "طريق كربون"),
   Kids: phrase("Kids", "أطفال"), Gravel: phrase("Gravel", "حصى"), Any: phrase("No preference", "بلا تفضيل"),
@@ -68,13 +68,13 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const d = c.dates, e = c.events, st = c.steps;
   const book = bookingLink(S(c.hero.bookHref), locale);
 
-  const prices = (rides?.prices ?? []).slice().sort((a, b) => {
+  // "No preference" (Any) is staff's to give, never a rider's choice (the owner, 2026-10-09), so it is
+  // not priced here; the booking app does not offer it either.
+  const prices = (rides?.prices ?? []).filter((p) => p.type !== "Any").sort((a, b) => {
     const i = (t: string) => (TYPE_ORDER.indexOf(t) + 1 || 99);
     return i(a.type) - i(b.type) || a.type.localeCompare(b.type);
   });
   const sar = (n: number) => fmtSar(n, locale);
-  // "No preference" rides whatever bike is free: from its own price up to the dearest standard bike
-  const anyTop = Math.max(0, ...prices.filter((p) => ["Road", "Hybrid", "Mountain"].includes(p.type)).map((p) => p.price));
 
   const kindName = kindNames(d);
   const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
@@ -196,7 +196,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
             <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} member={member} text={text}
-              prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? (p.type === "Any" && anyTop > p.price ? `${sar(p.price)} – ${sar(anyTop)}` : sar(p.price)) : S(d.free) }))} />
+              prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? sar(p.price) : S(d.free) }))} />
           </section>
 
           {learn && <LearnTeaser locale={locale} t={learn} place="experiences" />}
