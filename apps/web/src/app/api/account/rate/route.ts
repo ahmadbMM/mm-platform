@@ -2,6 +2,8 @@ import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
 import { rpcServer } from "@/lib/account";
 import { cookieValue } from "@/lib/live";
 import { cleanRating } from "@/lib/rating";
+import { bizOf } from "@/lib/biz";
+import { loadSiteContent } from "@/lib/site";
 
 // POST /api/account/rate {entryId, form, s, why, skipBf?, note?}: a rider rates a completed booking,
 // as the booking app's own post-ride rating does (lib/rating.ts cleanRating), through
@@ -17,7 +19,11 @@ export async function POST(req: Request) {
   if (!acct) return json({ ok: false, error: "signin" }, 401);
   let body: unknown = null;
   try { body = await req.json(); } catch { /* empty body */ }
-  const rating = cleanRating(body);
+  // A rating at all (no reason asked of any score yet), before the site's content is read; then
+  // checked again with the booking app's rg_low: a score at or under it needs its reason (Settings >
+  // Business, lib/biz.ts).
+  if (!cleanRating(body, 0)) return json({ ok: false, error: "invalid" }, 400);
+  const rating = cleanRating(body, bizOf(await loadSiteContent()).rgLow);
   if (!rating) return json({ ok: false, error: "invalid" }, 400);
   const r = await rpcServer<unknown>("customer_booking_update", { p_id: acct.id, p_token: acct.token, p_entry_id: rating.entryId, p_patch: rating.patch });
   if (r.status === 0 || r.status >= 500) return json({ ok: false, error: "generic" }, 502);

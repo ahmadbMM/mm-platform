@@ -13,6 +13,7 @@ import { pageState } from "@/lib/page-state";
 import { rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { dateText, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
+import { bizOf, faresOf } from "@/lib/biz";
 import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
@@ -75,6 +76,19 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     return i(a.type) - i(b.type) || a.type.localeCompare(b.type);
   });
   const sar = (n: number) => fmtSar(n, locale);
+  // A type's highest fare (ride_prices max_price, the booking app's priceDisplay): "SAR 75 – SAR 90"
+  // when an admin set one above the fare, else the fare alone.
+  const fares = faresOf(rides?.prices);
+  const sarRange = (type: string, lo: number) => {
+    const hi = Math.max(lo, fares.max[type] ?? lo);
+    return hi > lo ? `\u2066${sar(lo)} – ${sar(hi)}\u2069` : sar(lo);
+  };
+  // The caps an admin sets in the booking app (Settings > Business, site_content biz.public), which
+  // the database's _group_ride_cap enforces: the cards' rules (jccNote, evNote) say them through
+  // {riders} and {seats}. The About texts are the booking app's too (it reads them for its own sheet
+  // and fills only the date's times), so they carry no such placeholder.
+  const biz = bizOf(content);
+  const caps = { riders: fmtNum(biz.jccAccountCap, locale), seats: fmtNum(biz.eventSeatMax, locale) };
 
   const kindName = kindNames(d);
   const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
@@ -157,7 +171,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const card = (key: string, p: "rh" | "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): StepEvent | null => {
     const sessions = sessionsOf(key);
     if (!always && sessions.length === 0) return null;
-    return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: S(e[`${p}Note`]), about: S(e[`${p}About`]), sessions };
+    return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: fill(S(e[`${p}Note`]), caps), about: S(e[`${p}About`]), sessions };
   };
   const events = [card("runher", "rh", false), card("snd96", "snd", false), card("jcc", "jcc", true), card("community", "comm", true), card("workshop", "ws", false), card("event", "ev", false)].filter((x): x is StepEvent => !!x);
   const text: StepText = {
@@ -196,7 +210,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
             <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} member={member} text={text}
-              prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? sar(p.price) : S(d.free) }))} />
+              prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? sarRange(p.type, p.price) : S(d.free) }))} />
           </section>
 
           {learn && <LearnTeaser locale={locale} t={learn} place="experiences" />}

@@ -2,14 +2,16 @@ import { bikesSchema } from "@/content/pages/bikes";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { loadCatalog, type Catalog } from "@/lib/catalog";
+import { loadFares } from "@/lib/biz";
 import { pageState } from "@/lib/page-state";
 import { serverL } from "@/i18n/dicts";
 
 // What every catalogue page needs: the page state (Bikes is a switched page), the site's settings
 // and the page's own words for this language (typed from the schema: c.hero.title is a string), and
-// the catalogue itself - null when it could not be read and nothing was read before.
+// the catalogue itself - null when it could not be read and nothing was read before - and the fares
+// a model's ride price is quoted at (lib/biz.ts loadFares: the booking app's Settings > Pricing).
 export async function bikesState(locale: string) {
-  const [state, catalog] = await Promise.all([pageState("bikes"), loadCatalog()]);
+  const [state, catalog, fares] = await Promise.all([pageState("bikes"), loadCatalog(), loadFares()]);
   const L = asLocale(locale);
   return {
     ...state,
@@ -18,6 +20,7 @@ export async function bikesState(locale: string) {
     site: resolvePage(siteSchema, state.content, L),
     c: resolvePage(bikesSchema, state.content, L),
     catalog,
+    fares,
   };
 }
 

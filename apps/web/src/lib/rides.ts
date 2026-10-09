@@ -1,5 +1,6 @@
 import { edgeStore, memo, resetMemo } from "./memo";
 import { riyadhClock } from "./workshop-days";
+import { priceRows, type PriceRow } from "./biz";
 
 // The rides a visitor can book, read from the booking system itself: the bike prices
 // (ride_prices) and the sessions still ahead (sessions). Both are tables the booking app reads
@@ -27,7 +28,8 @@ import { riyadhClock } from "./workshop-days";
 //            picks 3 or 5 km (queue_entries.run_km).
 
 export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher";
-export type RidePrice = { type: string; price: number };
+/** A ride_prices row: the fare, and (lib/biz.ts faresOf) the highest fare quoted and the employees' fare when the database has them. */
+export type RidePrice = PriceRow;
 export type RideSession = {
   id: string;
   date: string; // YYYY-MM-DD, Riyadh
@@ -380,14 +382,10 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
   if (url && key) {
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
-      getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=type,price`, key),
+      getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=*`, key), // every column: max_price and employee_price too (lib/biz.ts)
       sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [SESSION_COLS_PLACE, SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL] }),
     ]);
-    if (p.status === "fulfilled" && Array.isArray(p.value)) {
-      prices = (p.value as { type?: unknown; price?: unknown }[])
-        .filter((x) => typeof x.type === "string" && typeof x.price === "number" && Number.isFinite(x.price) && x.price >= 0)
-        .map((x) => ({ type: x.type as string, price: x.price as number }));
-    }
+    if (p.status === "fulfilled" && Array.isArray(p.value)) prices = priceRows(p.value);
     if (s.status === "fulfilled" && Array.isArray(s.value)) {
       sessions = await withPlacesLeft((s.value as Row[]).map((r) => toSession(r)).filter((x): x is RideSession => x !== null), fetchImpl, url, key);
     }

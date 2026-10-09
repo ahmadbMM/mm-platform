@@ -6,6 +6,7 @@
 // (serial_number, tag_uid, condition, notes, model_year, pedal_type) are blocked by
 // column-level grants in Postgres, so a mistake here cannot leak them.
 export { filled } from "./filled";
+import { faresOf, type Fares } from "./biz";
 import { filled } from "./filled";
 
 const PUBLIC_COLS = [
@@ -116,16 +117,17 @@ export async function getBikeByNumber(code: string): Promise<BikeLookup> {
  * raw column here would have quoted 95 SAR on a bike whose ride costs 75. rental_price only
  * decides the price for the other types.
  *
- * If the rates change in the rentals app, they change here too — this table is a copy, not a
- * source of truth, and the database has no column that holds the charged price.
+ * The rates are the booking app's own: ride_prices as admins set them in its Settings > Pricing
+ * (lib/biz.ts loadFares, the caller passes them in), over its built-in figures when there is no
+ * row or nothing could be read.
  */
-const RIDE_PRICES: Record<string, number> = {
-  Road: 75, Mountain: 57.5, Hybrid: 57.5, Kids: 57.5, Any: 57.5, "Road Carbon": 250, Own: 0,
-};
-// Petromin employees ride the same bikes at the older 50, but that is a property of the
-// SESSION they booked, and a bike page has no session: a rider tapping a tag has not chosen a
-// ride yet. So this page states the standard fare, which is what an ordinary rider pays. The
-// Petromin exception lives where it can be applied correctly - the booking price trigger.
+// Petromin employees ride the same bikes at their own fare (ride_prices employee_price), but that
+// is a property of the BOOKING (a form-registered employee's), and a bike page has no booking: a
+// rider tapping a tag has not chosen a ride yet. So this page states the standard fare, which is
+// what an ordinary rider pays. The employee fare lives where it can be applied correctly - the
+// booking price trigger.
+/** The booking app's built-in fares, when the caller has none read. */
+const APP_FARE_LIST: Fares = faresOf(null);
 const TYPE_RATED = new Set(["Road", "Mountain", "Hybrid"]);
 
 /**
@@ -133,8 +135,8 @@ const TYPE_RATED = new Set(["Road", "Mountain", "Hybrid"]);
  * not rented, and a type we do not know (Gravel, until it is listed) has no known rate. The
  * catalogue's model pages quote this by the model's ride_type; the fleet pages through ridePrice.
  */
-export function priceForType(type: string): number | null {
-  const price = RIDE_PRICES[type.trim()];
+export function priceForType(type: string, fares: Fares = APP_FARE_LIST): number | null {
+  const price = fares.price[type.trim()];
   return typeof price === "number" && price > 0 ? price : null;
 }
 
@@ -144,9 +146,9 @@ export function priceForType(type: string): number | null {
  * here, but it is quoting staff who can see the record; this page is quoting a rider standing at
  * a bike rack, and a number assembled from a default is a guess wearing a price tag.
  */
-export function ridePrice(row: BikeRow): number | null {
+export function ridePrice(row: BikeRow, fares: Fares = APP_FARE_LIST): number | null {
   const type = String(row.type ?? "").trim();
-  if (TYPE_RATED.has(type)) return priceForType(type);   // the app ignores rental_price for these
+  if (TYPE_RATED.has(type)) return priceForType(type, fares);   // the app ignores rental_price for these
   if (typeof row.rental_price === "number") return row.rental_price > 0 ? row.rental_price : null;
-  return priceForType(type);
+  return priceForType(type, fares);
 }

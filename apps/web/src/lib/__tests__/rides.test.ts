@@ -158,7 +158,7 @@ describe("loadRides", () => {
     expect(a?.prices).toEqual([{ type: "Road", price: 75 }, { type: "Hybrid", price: 57.5 }]);
     expect(a?.sessions.map((x) => x.id)).toEqual(["2026-09-27"]);
     const urls = f.mock.calls.map((c) => c[0] as string);
-    expect(urls).toContain("https://example.supabase.co/rest/v1/ride_prices?select=type,price");
+    expect(urls).toContain("https://example.supabase.co/rest/v1/ride_prices?select=*");
     expect(urls.find((u) => u.includes("/rpc/list_sessions?"))).toMatch(/session_date=gte\.2026-09-25&status=in\.\(open,full\)/);
     expect(await loadRides(f as unknown as typeof fetch, at + 30_000)).toBe(a);
     expect(f).toHaveBeenCalledTimes(3); // the prices, the sessions, and the open night's places

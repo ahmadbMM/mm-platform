@@ -38,6 +38,7 @@ import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
 import { isRtl } from "@/i18n/locales";
+import { bizOf } from "@/lib/biz";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
 // the next rides as the booking app's own tickets (changing one opens the booking app), the Club
@@ -235,7 +236,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
               {toRate.map((r) => {
                 const s = sessions.get(r.sessionId);
                 // a Saturday ride's form names the restaurant its breakfast was at, as the pop-up's does
-                return <RateRide key={r.entryId} entryId={r.entryId} name={rideName(s)} when={fmtDayDate(r.date, locale)} form={formOf(s?.kind)} noBike={r.ownBike || (s ? !s.bikes : false)} restaurant={breakfastFor(s, locale)?.name ?? null} />;
+                return <RateRide key={r.entryId} entryId={r.entryId} name={rideName(s)} when={fmtDayDate(r.date, locale)} form={formOf(s?.kind)} noBike={r.ownBike || (s ? !s.bikes : false)} restaurant={breakfastFor(s, locale)?.name ?? null} rgLow={bizOf(content).rgLow} />;
               })}
             </div>
           </section>

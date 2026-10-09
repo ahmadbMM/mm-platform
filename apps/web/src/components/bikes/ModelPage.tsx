@@ -26,13 +26,13 @@ export function modelDescription(m: CatalogModel, locale: string): string {
 }
 
 export default function ModelPage({ locale, model, catalog, s }: { locale: string; model: CatalogModel; catalog: Catalog; s: BikesState }) {
-  const { tx, site, c, previewing, hidden } = s;
+  const { tx, site, c, previewing, hidden, fares } = s;
   const cat = categoryOf(model, catalog.categories);
   const sub = subtypeOf(model, catalog.categories);
   const catName = cat ? pick(locale, cat.name_en, cat.name_ar) : "";
   const title = modelTitle(model);
   const tagline = pick(locale, model.tagline_en, model.tagline_ar);
-  const price = model.ride_type ? priceForType(model.ride_type) : null;
+  const price = model.ride_type ? priceForType(model.ride_type, fares) : null;
   const photos = photosOf(model, catalog.photos).map((p) => ({ url: p.url, alt: pick(locale, p.alt_en, p.alt_ar) || title, colorId: p.color_id }));
   const colors = colorsOf(model, catalog.colors).map((x) => ({ id: x.id, name: pick(locale, x.name_en, x.name_ar), hex: x.hex }));
   const groups = specGroups(model, catalog.fields, locale);
