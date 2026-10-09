@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-10-07";
+export const PRIVACY_VERSION = "2026-10-09";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -54,12 +54,12 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "Date of birth",
-      "Optional for your first eight bookings, then required. Community members: required before booking, and on a membership application. On a learn-to-ride sign-up: required from the person signing up",
+      "Optional for your first three bookings, then required. Community members: required before booking, and on a membership application. On a learn-to-ride sign-up: required from the person signing up",
       "Age rules and safety, including making sure under-18s are booked by a parent or guardian; age categories for events, races and leaderboards; age-group totals; a birthday greeting from our team"
      ],
      [
       "Nationality",
-      "Optional for your first eight bookings, then required. Community members: required before booking, and on a membership application. On a learn-to-ride sign-up: required from the person signing up",
+      "Required once you have made a booking. Community members: required before booking, and on a membership application. On a learn-to-ride sign-up: required from the person signing up",
       "Participation totals only, for example Saudi and non-Saudi riders. <strong>Never shared per person. Which nationality you give never decides who can book.</strong>"
      ],
      [
@@ -139,7 +139,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
   {
    "ul": [
     "<strong>Without the required details,</strong> we can’t create your account or give you a bike that fits.",
-    "<strong>Without your date of birth and nationality,</strong> you can make up to eight bookings. Community members can’t book until they add them.",
+    "<strong>Your nationality is asked after your first booking, and your date of birth after your fourth;</strong> a booking counts once it is made, ridden or not. Community members can’t book until they add both.",
     "<strong>Without the other optional details,</strong> nothing changes."
    ]
   },
@@ -335,12 +335,12 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "تاريخ الميلاد",
-      "اختياري في أول ثمانية حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية. في التسجيل في دروس تعلّم الركوب: إلزامي لمن يسجّل",
+      "اختياري في أول ثلاثة حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية. في التسجيل في دروس تعلّم الركوب: إلزامي لمن يسجّل",
       "تطبيق قواعد العمر والسلامة، ومنها التأكد من أن حجز من هم دون 18 عامًا يتم عبر أحد الوالدين أو الولي؛ وفئات الأعمار في الفعاليات والسباقات ولوحات الصدارة؛ وإحصاءات الفئات العمرية؛ وتهنئة بعيد ميلادك من فريقنا"
      ],
      [
       "الجنسية",
-      "اختياري في أول ثمانية حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية. في التسجيل في دروس تعلّم الركوب: إلزامي لمن يسجّل",
+      "إلزامي بعد أول حجز. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية. في التسجيل في دروس تعلّم الركوب: إلزامي لمن يسجّل",
       "إحصاءات مجمّعة للمشاركة فقط، مثل أعداد الراكبين السعوديين وغير السعوديين. <strong>لا تُشارك على مستوى الأفراد إطلاقًا، ولا تحدّد الجنسية التي تذكرها من يحق له الحجز.</strong>"
      ],
      [
@@ -420,7 +420,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
   {
    "ul": [
     "<strong>دون البيانات الإلزامية</strong> لا يمكننا إنشاء حسابك أو توفير دراجة بمقاس مناسب لك.",
-    "<strong>دون تاريخ الميلاد والجنسية</strong> يمكنك إجراء ثمانية حجوزات كحد أقصى، ولا يستطيع أعضاء المجتمع الحجز حتى يضيفوهما.",
+    "<strong>نطلب جنسيتك بعد أول حجز، وتاريخ ميلادك بعد الحجز الرابع،</strong> ويُحتسب الحجز بمجرد إجرائه، سواء ركبت أم لا. ولا يستطيع أعضاء المجتمع الحجز حتى يضيفوهما.",
     "<strong>دون البيانات الاختيارية الأخرى</strong> لا يتغيّر شيء."
    ]
   },

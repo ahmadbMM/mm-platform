@@ -87,6 +87,8 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .bdg-m g { fill: currentColor; }
 .bdg-m .o { opacity: .4; }
 .bdg-m .s { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* The T100 / T50 / T25 finisher medals (Medal's RACE): the race's name in a condensed bold face. */
+.bdg-race .bdg-rt { font-family: "Barlow Condensed", "Arial Narrow", sans-serif; font-weight: 800; }
 /* The pink ribbon's two bands (Run for Her), drawn thick as in the booking app. */
 .bdg-m .rb { fill: none; stroke: currentColor; stroke-width: 3.4; stroke-linejoin: round; }
 .bdc-green { --bc: #077a4b; } .bdc-gold { --bc: #e0a414; } .bdc-blue { --bc: #3d8bfd; } .bdc-red { --bc: #f0525f; }
