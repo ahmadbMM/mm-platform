@@ -63,6 +63,18 @@ export function staffTapTarget(pathname: string, searchParams: URLSearchParams, 
   return code && /^\d{1,6}$/.test(code) ? `${STAFF_APP}/?bike=${Number(code)}` : null;
 }
 
+// /claim/<token> (and /en|ar/claim/<token>): the waitlist claim link's other spelling, sent to
+// /?claim=<token>, any ?lang= kept. Null for anything else.
+const CLAIM_PATH = /^(?:\/(?:en|ar))?\/claim\/([0-9a-fA-F]{32})\/?$/;
+export function claimTarget(pathname: string, searchParams: URLSearchParams): string | null {
+  const m = pathname.match(CLAIM_PATH);
+  if (!m) return null;
+  const q = new URLSearchParams({ claim: m[1].toLowerCase() });
+  const lang = searchParams.get("lang");
+  if (lang && /^[a-z]{2}$/.test(lang)) q.set("lang", lang);
+  return `/?${q.toString()}`;
+}
+
 export default async function proxy(req: NextRequest) {
   // The handoff spec writes the tag URL as /?bike=42; the chips carry /b/42, and the page now
   // lives at /bikes/42 (next.config redirects the chips' address there). Anything still using
@@ -86,6 +98,10 @@ export default async function proxy(req: NextRequest) {
     res.headers.set("Cache-Control", "private, no-store");
     return res;
   }
+  // A waitlist claim link written as /claim/<token> goes to the address the booking app uses,
+  // /?claim=<token> (app/[locale]/page.tsx draws the card there, whatever the site's state).
+  const claim = claimTarget(pathname, searchParams);
+  if (claim) return NextResponse.redirect(new URL(claim, req.url), 307);
   if (pathname === "/") {
     const code = searchParams.get("bike");
     if (code && /^\d{1,6}$/.test(code)) {
