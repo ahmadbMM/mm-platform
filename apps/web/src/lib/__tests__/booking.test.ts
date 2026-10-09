@@ -40,6 +40,10 @@ describe("caps and types", () => {
     expect(maxRiders(base, 2)).toBe(1);
     expect(maxRiders(base, 5)).toBe(1);
     expect(maxRiders(sat, 0)).toBe(1);
+    // the riders per account admins set in the booking app (Settings > Business, jcc_account_cap)
+    expect(maxRiders(base, 0, 5)).toBe(5);
+    expect(maxRiders(base, 1, 5)).toBe(4);
+    expect(maxRiders(sat, 0, 5)).toBe(1);
   });
   it("offers the app's types: never Any or Gravel, own bike only on community and National Day, no carbon on community", () => {
     expect(typeOptions(base)).toEqual(["Road", "Hybrid", "Mountain", "Kids", "Road Carbon"]);
@@ -75,6 +79,13 @@ describe("prices", () => {
     expect(riderPrices(base, [r("Road", "175", "Omar")], prices, house)[0].kind).toBe("sar");
     expect(riderPrices(base, [r("Hybrid")], prices, { name: "Sara", house: ["Road"] })[0].kind).toBe("sar");
     expect(rentalTotal({ ...base, seat: 40 }, [r("")], prices, null)).toEqual([40, 40]);
+  });
+  it("quotes a type's highest fare as a range when an admin set one (ride_prices max_price, priceDisplay)", () => {
+    const max = { ...prices, Road: 90, Any: 80 };
+    expect(riderPrices(base, [r("Road")], prices, null, max)[0]).toEqual({ kind: "range", lo: 75, hi: 90 });
+    expect(riderPrices(base, [r("Hybrid")], prices, null, max)[0]).toEqual({ kind: "sar", n: 57.5 });
+    expect(riderPrices(base, [r("")], prices, null, max)[0]).toEqual({ kind: "range", lo: 57.5, hi: 80 });
+    expect(rentalTotal(base, [r("Road"), r("Hybrid")], prices, null, max)).toEqual([132.5, 147.5]);
   });
   it("takes a code off as _promoDiscount, and tags only the riders it discounts", () => {
     const pct = { code: "SARA10", kind: "pct", value: 10, appliesTo: null };
@@ -184,6 +195,8 @@ describe("the server's checks", () => {
     expect(checkBooking(input([r("Road")]), live, { ...acct, rejected: [live.id] })).toEqual({ ok: false, error: "rejected" });
     expect(checkBooking(input([r("Road")]), live, { ...acct, live: { [live.id]: 1 } })).toEqual({ ok: false, error: "already" });
     expect(checkBooking(input([r("Road", "170", "A"), r("Road", "170", "B"), r("Road", "170", "C"), r("Road", "170", "D")]), live, acct)).toEqual({ ok: false, error: "cap" });
+    expect(checkBooking(input([r("Road", "170", "A"), r("Road", "170", "B"), r("Road", "170", "C"), r("Road", "170", "D")]), live, acct, 4)).toMatchObject({ ok: true });
+    expect(checkBooking(input([r("Road", "170", "A"), r("Road", "170", "B")]), live, acct, 1)).toEqual({ ok: false, error: "cap" });
     expect(checkBooking(input([r("")]), live, acct)).toEqual({ ok: false, error: "pick_type" });
     expect(checkBooking(input([r("Own")]), live, acct)).toEqual({ ok: false, error: "pick_type" });
     expect(checkBooking(input([r("Road")], false), live, acct)).toEqual({ ok: false, error: "waiver" });

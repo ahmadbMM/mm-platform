@@ -118,11 +118,13 @@ export const RIDE_GROUPS: RideGroup[] = ["beg", "int"];
 export const rgOk = (g: unknown): g is RideGroup => g === "beg" || g === "int";
 
 /** One account books at most three riders on a circuit night (JCC_ACCOUNT_CAP), drawn from the
- *  rows it already holds there; one on a community ride. */
+ *  rows it already holds there; one on a community ride. Admins change the three in the booking
+ *  app (Settings > Business, jcc_account_cap; the database's _group_ride_cap reads it): the page
+ *  passes the setting in (lib/biz.ts bizOf), this is its default. */
 export const JCC_ACCOUNT_CAP = 3;
-export function maxRiders(s: Pick<BookSession, "community" | "kind">, booked: number): number {
+export function maxRiders(s: Pick<BookSession, "community" | "kind">, booked: number, cap: number = JCC_ACCOUNT_CAP): number {
   if (s.community) return 1; // the Petromin ride (two) is booked through its own form, never here
-  return Math.max(1, JCC_ACCOUNT_CAP - booked);
+  return Math.max(1, cap - booked);
 }
 
 // ── Bike types and prices ────────────────────────────────────────────────────────────────────
@@ -152,10 +154,11 @@ export function priceMap(rows: { type: string; price: number }[]): Prices {
 }
 /** What one rider's bike costs: the type's price (_booking_fare), or an event's seat. */
 export const priceFor = (prices: Prices, type: string) => prices[type] ?? prices.Any ?? APP_PRICES.Any;
-/** A type not chosen yet reads as Any: from the Any price to the dearest standard bike. */
-export function unpickedRange(prices: Prices): [number, number] {
+/** A type not chosen yet reads as Any: from the Any price to its highest fare (ride_prices
+ *  max_price, `max` from lib/biz.ts faresOf), else the dearest standard bike. */
+export function unpickedRange(prices: Prices, max?: Prices): [number, number] {
   const lo = priceFor(prices, "Any");
-  const hi = Math.max(lo, ...["Road", "Hybrid", "Mountain"].map((t) => priceFor(prices, t)));
+  const hi = Math.max(lo, ...(max?.Any != null ? [max.Any] : ["Road", "Hybrid", "Mountain"].map((t) => priceFor(prices, t))));
   return [lo, hi];
 }
 
@@ -184,21 +187,24 @@ export type Promo = { code: string; kind: "flat" | "pct" | string; value: number
 /** One rider's price on the review: free, on the house, an amount, or a range (no type yet). */
 export type PriceLine = { kind: "free" } | { kind: "house" } | { kind: "sar"; n: number } | { kind: "range"; lo: number; hi: number };
 /** Each rider's line price, as the review lists them. */
-export function riderPrices(s: Pick<BookSession, "free" | "seat">, riders: Rider[], prices: Prices, acct: Pick<BookAccount, "name" | "house"> | null): PriceLine[] {
+/** `max`: each type's highest fare (ride_prices max_price, lib/biz.ts faresOf): a type quoted above
+ *  its fare reads as a range, as the booking app's priceDisplay says it. */
+export function riderPrices(s: Pick<BookSession, "free" | "seat">, riders: Rider[], prices: Prices, acct: Pick<BookAccount, "name" | "house"> | null, max?: Prices): PriceLine[] {
   return riders.map((r, i): PriceLine => {
     if (s.free || r.type === "Own") return { kind: "free" as const };
     const hf = i === 0 && !!acct && houseSelf(acct.name, r.name) && houseCovers(acct.house, r.type || "Any");
     if (hf) return { kind: "house" as const };
     if (s.seat != null) return { kind: "sar" as const, n: s.seat };
-    if (!r.type) { const [lo, hi] = unpickedRange(prices); return { kind: "range" as const, lo, hi }; }
-    return { kind: "sar" as const, n: priceFor(prices, r.type) };
+    if (!r.type) { const [lo, hi] = unpickedRange(prices, max); return { kind: "range" as const, lo, hi }; }
+    const n = priceFor(prices, r.type), top = max?.[r.type];
+    return top != null && top > n ? { kind: "range" as const, lo: n, hi: top } : { kind: "sar" as const, n };
   });
 }
 
 /** The rental's total as a range (a type not picked yet counts as Any). */
-export function rentalTotal(s: Pick<BookSession, "free" | "seat">, riders: Rider[], prices: Prices, acct: Pick<BookAccount, "name" | "house"> | null): [number, number] {
+export function rentalTotal(s: Pick<BookSession, "free" | "seat">, riders: Rider[], prices: Prices, acct: Pick<BookAccount, "name" | "house"> | null, max?: Prices): [number, number] {
   let lo = 0, hi = 0;
-  for (const p of riderPrices(s, riders, prices, acct)) {
+  for (const p of riderPrices(s, riders, prices, acct, max)) {
     if (p.kind === "sar") { lo += p.n; hi += p.n; } else if (p.kind === "range") { lo += p.lo; hi += p.hi; }
   }
   return [round2(lo), round2(hi)];

@@ -14,7 +14,8 @@ import { BOOKING_URL } from "./links";
 // same way (migration 20261003150000_rating_detail.sql in the rentals repo).
 
 export const ENTRY_ID = /^[A-Za-z0-9_-]{1,64}$/;
-/** A score at or under this asks why. */
+/** A score at or under this asks why: the booking app's RG_LOW, which admins change in its Settings >
+ *  Business (rg_low, read from site_content 'biz.public' by lib/biz.ts bizOf); this is its default. */
 export const RG_LOW = 8;
 /** Only rides from the day the forced rating went live are asked about. */
 export const RATE_FROM = "2026-10-03";
@@ -48,12 +49,12 @@ export const questionKeys = (form: RatingForm, o: { noBike?: boolean; skipBf?: b
 
 /** What a rider must fix before the rating can be sent: per question, "pick" (no score) or "why"
  *  (8 or under with no reason). Empty when it is complete. */
-export function ratingErrors(keys: string[], s: Record<string, number>, why: Record<string, string>): Record<string, "pick" | "why"> {
+export function ratingErrors(keys: string[], s: Record<string, number>, why: Record<string, string>, low: number = RG_LOW): Record<string, "pick" | "why"> {
   const err: Record<string, "pick" | "why"> = {};
   for (const k of keys) {
     const v = s[k];
     if (!(Number.isInteger(v) && v >= 1 && v <= 10)) err[k] = "pick";
-    else if (v <= RG_LOW && !String(why[k] ?? "").trim()) err[k] = "why";
+    else if (v <= low && !String(why[k] ?? "").trim()) err[k] = "why";
   }
   return err;
 }
@@ -74,7 +75,7 @@ const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 
  *  the rider's own bike; the breakfast too, once skipped), and a score of 8 or under needs its
  *  reason. A body from before the detailed rating ({entryId, exp, bike?, note?}, a page open
  *  across a deploy) still lands its scores and note; its old quick tags are ignored. */
-export function cleanRating(body: unknown): { entryId: string; patch: RatingPatch } | null {
+export function cleanRating(body: unknown, low: number = RG_LOW): { entryId: string; patch: RatingPatch } | null {
   const b = isObj(body) ? body : null;
   if (!b || typeof b.entryId !== "string" || !ENTRY_ID.test(b.entryId)) return null;
   const note = cleanText(b.note, NOTE_MAX) || null;
@@ -97,11 +98,11 @@ export function cleanRating(body: unknown): { entryId: string; patch: RatingPatc
   }
   for (const [k, v] of Object.entries(whyIn).slice(0, 20)) {
     const w = cleanText(v, REASON_MAX);
-    if (KEY.test(k) && s[k] !== undefined && s[k] <= RG_LOW && w) why[k] = w;
+    if (KEY.test(k) && s[k] !== undefined && s[k] <= low && w) why[k] = w;
   }
   for (const k of asked) {
     if (s[k] === undefined && !BIKE_KEYS.has(k) && !(skipBf && BREAKFAST_KEYS.has(k))) return null;
-    if (s[k] !== undefined && s[k] <= RG_LOW && !why[k]) return null;
+    if (s[k] !== undefined && s[k] <= low && !why[k]) return null;
   }
   const exp = s.experience ?? s.overall;
   if (exp === undefined) return null;

@@ -9,7 +9,7 @@ import { ratingWords, type RatingWords } from "./RatingForm.words";
 
 // The post-ride rating's questions, as the booking app asks them (lib/rating.ts): each question a
 // 1-10 scale, a sub-question indented under its main one, each main question and its subs in one
-// box; a score of 8 or under opens a box asking why, which is then required. The breakfast box has
+// box; a score of 8 or under opens a box asking why, which is then required (8 is the booking app's default; admins change it there). The breakfast box has
 // its own "I did not stay for breakfast". It goes to /api/account/rate with the account cookie.
 // RateRide (a card on My Account) and RatingGate (the pop-up a rider cannot skip) both use it.
 // Under the breakfast heading, one quiet line says those answers may reach the restaurant without
@@ -23,13 +23,17 @@ type Props = {
    *  breakfastFor: the Arabic name on the Arabic page when it has one); null or left out, the
    *  heading stays "Breakfast". */
   restaurant?: string | null;
+  /** A score at or under this asks why: the booking app's rg_low (Settings > Business), read by the
+   *  server (lib/biz.ts bizOf); left out, its default. */
+  rgLow?: number;
   /** Called once the rating has landed. */
   onRated: (t: RatingWords) => void;
   /** Under the send button: the gate's sign-out. */
   footer?: ReactNode;
 };
 
-export default function RatingForm({ entryId, form, noBike, restaurant, onRated, footer }: Props) {
+export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, onRated, footer }: Props) {
+  const low = rgLow ?? RG_LOW;
   const t = ratingWords(useTxLocale());
   const tx = useL();
   const [s, setS] = useState<Record<string, number>>({});
@@ -57,7 +61,7 @@ export default function RatingForm({ entryId, form, noBike, restaurant, onRated,
   const pick = (k: string, v: number) => {
     setS((cur) => ({ ...cur, [k]: v }));
     setErr((cur) => {
-      if (!cur[k] || (cur[k] === "why" && v <= RG_LOW && !(why[k] ?? "").trim())) return cur;
+      if (!cur[k] || (cur[k] === "why" && v <= low && !(why[k] ?? "").trim())) return cur;
       const next = { ...cur };
       delete next[k];
       return next;
@@ -73,7 +77,7 @@ export default function RatingForm({ entryId, form, noBike, restaurant, onRated,
     if (busy) return;
     setFail("");
     const keys = questionKeys(form, opts);
-    const errs = ratingErrors(keys, s, why);
+    const errs = ratingErrors(keys, s, why, low);
     setErr(errs);
     const first = keys.find((k) => errs[k]);
     if (first) {
@@ -89,7 +93,7 @@ export default function RatingForm({ entryId, form, noBike, restaurant, onRated,
     for (const k of keys) {
       sent[k] = s[k];
       const w = (why[k] ?? "").trim();
-      if (s[k] <= RG_LOW && w) reasons[k] = w.slice(0, REASON_MAX);
+      if (s[k] <= low && w) reasons[k] = w.slice(0, REASON_MAX);
     }
     setBusy(true);
     try {
@@ -119,7 +123,7 @@ export default function RatingForm({ entryId, form, noBike, restaurant, onRated,
             <button key={n} type="button" className={v === n ? "on" : ""} aria-pressed={v === n} onClick={() => pick(k, n)}>{n}</button>
           ))}
         </div>
-        {v > 0 && v <= RG_LOW && (
+        {v > 0 && v <= low && (
           <>
             <label className="rg-why-l" htmlFor={`${id(k)}-w`}>{fill(t.why, v)}</label>
             <textarea id={`${id(k)}-w`} className="rg-why" rows={2} maxLength={REASON_MAX} value={why[k] ?? ""} onChange={(ev) => reason(k, ev.target.value)} aria-invalid={e === "why" || undefined} />
@@ -132,7 +136,7 @@ export default function RatingForm({ entryId, form, noBike, restaurant, onRated,
 
   return (
     <form className="rg-form" onSubmit={submit} noValidate>
-      <p className="rg-sub-text">{t.sub}</p>
+      <p className="rg-sub-text">{fill(t.sub, low)}</p>
       <div className="rg-list">
         {RG_FORMS[form].map(([k]) => {
           const q = tree.find((x) => x[0] === k);

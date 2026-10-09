@@ -120,7 +120,8 @@ describe("api/account/rate", () => {
     const res = await post(rate, "/api/account/rate", { entryId: "q1abcdef", form: "rental", s: { service: 9, bike: 6, experience: 9 }, why: { bike: "Gears slipped" }, note: "Thanks" });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
-    const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
+    // the site's content is read first (the booking app's rg_low, lib/biz.ts), then the rating written
+    const [url, init] = f.mock.calls.find((c) => String((c as unknown[])[0]).includes("/rpc/")) as unknown as [string, RequestInit];
     expect(url).toBe("https://example.supabase.co/rest/v1/rpc/customer_booking_update");
     expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: TOKEN, p_entry_id: "q1abcdef", p_patch: {
       rating_bike: 6, rating_exp: 9, feedback: "Thanks", rating_detail: { form: "rental", s: { service: 9, bike: 6, experience: 9 }, why: { bike: "Gears slipped" } },

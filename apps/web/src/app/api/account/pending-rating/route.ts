@@ -8,6 +8,7 @@ import { kindNames, sessionName } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
+import { bizOf } from "@/lib/biz";
 import { breakfastFor, fmtDayDate } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
 import { riyadhClock } from "@/lib/workshop-days";
@@ -47,6 +48,8 @@ export async function GET(req: Request) {
       form: formOf(s?.kind),
       noBike: gate.ownBike || (s ? !s.bikes : false),
       restaurant: breakfastFor(s, L)?.name ?? null,
+      // a score at or under this asks why (the booking app's rg_low, Settings > Business)
+      rgLow: bizOf(content).rgLow,
     },
   });
 }

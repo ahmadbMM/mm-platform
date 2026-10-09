@@ -3,6 +3,7 @@ import { cache } from "react";
 import BrandField from "./BrandField";
 import LangToggle from "./LangToggle";
 import { bikeState, getBikeByNumber, ridePrice } from "@/lib/bikes";
+import { loadFares } from "@/lib/biz";
 import { filled } from "@/lib/filled";
 import { buildGroups } from "@/lib/bike-fields";
 import { bikeTitle, fmtPrice, isBikeLang, tFor, type BikeLang } from "@/lib/bike-i18n";
@@ -46,7 +47,7 @@ export async function fleetBikeMeta(code: string, locale: string): Promise<Metad
 
 export default async function FleetBike({ code, locale }: { code: string; locale: string }) {
   const lang = langOf(locale);
-  const [found, content] = await Promise.all([lookup(code), loadSiteContent()]);
+  const [found, content, fares] = await Promise.all([lookup(code), loadSiteContent(), loadFares()]);
   const t = tFor(lang);
 
   // A fleet we could not reach is a fault to retry, not a sticker to give up on. Saying
@@ -81,7 +82,7 @@ export default async function FleetBike({ code, locale }: { code: string; locale
 
   const row = found.row;
   const state = bikeState(row);
-  const price = ridePrice(row);
+  const price = ridePrice(row, fares); // the fare as Settings > Pricing has it (lib/biz.ts)
   const heading = bikeTitle(row, t);
   const groups = buildGroups(row, lang, heading.fromBrandModel);
   const heroStyle = filled(row.photo)

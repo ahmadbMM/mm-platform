@@ -3,10 +3,12 @@
 // app's own token-checked functions with the id and token from the account cookie only.
 import type { Session } from "./account-core";
 import {
-  addonCap, hasRideGroups, heightOk, heightToSize, isRiderType, maxRiders, needsBike, needsWaiver, noCarbon, ownOffered,
+  JCC_ACCOUNT_CAP, addonCap, hasRideGroups, heightOk, heightToSize, isRiderType, maxRiders, needsBike, needsWaiver, noCarbon, ownOffered,
   promoRows, refusalOf, rgOk, waiverKind, type BookAccount, type BookSession, type Refusal, type Rider, type RideGroup,
 } from "./booking";
 import { cleanName } from "./rpc-client";
+import { bizOf } from "./biz";
+import { loadSiteContent } from "./site";
 import { addonIds, placesTaken, rideKind, sessionRows, waitlistCap } from "./rides";
 
 export type RpcAnswer<T> = { status: number; data: T | null; error: { code?: string; message?: string; details?: string } | null };
@@ -152,14 +154,14 @@ export type Checked = { ok: true; riders: Rider[] } | { ok: false; error: Refusa
 /** The booking app's checks before it books (submitReg), with the account's own rows: the ride
  *  is still on, the party fits, each rider is complete, the waiver is ticked, the account holds
  *  nothing on this ride yet and was not turned down for it. */
-export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAccount, "name" | "live" | "rejected">): Checked {
+export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAccount, "name" | "live" | "rejected">, cap: number = JCC_ACCOUNT_CAP): Checked {
   if (!s.open) return { ok: false, error: "closed" };
   if (acct.rejected.includes(s.id)) return { ok: false, error: "rejected" };
   if ((acct.live[s.id] ?? 0) > 0) return { ok: false, error: "already" };
   const booked = acct.live[s.id] ?? 0;
   let riders = input.riders;
   if (s.community) riders = riders.slice(0, 1); // one place per member: never a party
-  if (riders.length > maxRiders(s, booked)) return { ok: false, error: "cap" };
+  if (riders.length > maxRiders(s, booked, cap)) return { ok: false, error: "cap" };
   if (needsBike(s)) {
     if (hasRideGroups(s) && !rgOk(input.group)) return { ok: false, error: "invalid" };
     for (const [i, r] of riders.entries()) {
@@ -268,7 +270,8 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
   if (!s) return { ok: false, error: "closed" };
   const profile = acct.profile ?? {};
   const a = accountFrom(acct.name, profile, rowsNow, false, []);
-  const checked = checkBooking(input, s, a);
+  // the riders per account admins set in the booking app (Settings > Business), as _group_ride_cap reads it
+  const checked = checkBooking(input, s, a, bizOf(await loadSiteContent()).jccAccountCap);
   if (!checked.ok) return checked;
   if (s.members) {
     const m = await rpcCall<boolean>("community_member", args, fetchImpl);

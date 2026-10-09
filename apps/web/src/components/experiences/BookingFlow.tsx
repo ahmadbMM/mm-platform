@@ -8,7 +8,7 @@ import SignIn from "@/components/account/SignIn";
 import TicketCard from "@/components/booking/TicketCard";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import {
-  addonCap, addonCatRank, addonsCost, fromPrice, hasRideGroups, maxRiders, needsBike, needsWaiver, nextStep, prevStep, promoDiscount,
+  JCC_ACCOUNT_CAP, addonCap, addonCatRank, addonsCost, fromPrice, hasRideGroups, maxRiders, needsBike, needsWaiver, nextStep, prevStep, promoDiscount,
   regSteps, rentalTotal, riderPrices, RIDE_GROUPS, sessionAddons, typeOptions, validateRiders, waiverKind,
   type AddonItem, type AddonPick, type BikeType, type BookAccount, type BookSession, type Prices, type Promo, type Refusal, type Rider, type RideGroup, type Step,
 } from "@/lib/booking";
@@ -45,6 +45,10 @@ type Props = {
   locale: string;
   events: FlowEvent[];
   prices: Prices;
+  /** Each type's highest fare (ride_prices max_price, lib/biz.ts faresOf); a type quoted above its fare reads as a range. */
+  maxPrices?: Prices;
+  /** Riders per account on a circuit night: the booking app's Settings > Business (jcc_account_cap). */
+  jccCap?: number;
   acct: BookAccount | null;
   items: AddonItem[];
   start: { ev: string | null; session: string | null };
@@ -73,7 +77,7 @@ const BIKE_IMG: Record<string, { img: string; model: string; easy?: boolean }> =
 const GROUP_IMG: Record<RideGroup, string> = { beg: "group-jyc", int: "group-msr" };
 const imgOf = (name: string) => `/site/experiences/bikes/${name}.webp`;
 
-export default function BookingFlow({ locale, events, prices, acct, items, start, text, links, today, now, typeNames, routes }: Props) {
+export default function BookingFlow({ locale, events, prices, maxPrices, jccCap = JCC_ACCOUNT_CAP, acct, items, start, text, links, today, now, typeNames, routes }: Props) {
   const t = useLocalize(T);
   const tk = useLocalize(TICKET);
   const rtl = isRtl(locale);
@@ -136,7 +140,7 @@ export default function BookingFlow({ locale, events, prices, acct, items, start
     setCapNote(false);
     setSelId(s.id);
     // a party carried over from another night may be past this night's allowance
-    const cap = maxRiders(s, a.live[s.id] ?? 0);
+    const cap = maxRiders(s, a.live[s.id] ?? 0, jccCap);
     setRiders((rs) => (rs.length > cap ? rs.slice(0, cap) : rs).map((r) => ({
       ...r,
       // "my own bike" and carbon are not on every ride; a pick carried over is made again
@@ -157,7 +161,7 @@ export default function BookingFlow({ locale, events, prices, acct, items, start
   function waiverCopy(s: BookSession | null) { return t.waiver[s ? waiverKind(s) : "bike"]; }
   const free = !!sel?.free;
   const booked = sel && acctNow ? acctNow.live[sel.id] ?? 0 : 0;
-  const cap = sel ? maxRiders(sel, booked) : 3;
+  const cap = sel ? maxRiders(sel, booked, jccCap) : jccCap;
   const qty = riders.length;
   const typeName = (ty: string) => typeNames[ty] ?? ty;
   const pillName = (ty: string) => t.types[ty] ?? ty;
@@ -229,7 +233,7 @@ export default function BookingFlow({ locale, events, prices, acct, items, start
 
   // ── Totals ───────────────────────────────────────────────────────────────────────────────
   const acctLite = acctNow ? { name: acctNow.name, house: acctNow.house } : null;
-  const [lo, hi] = sel ? rentalTotal(sel, riders, prices, acctLite) : [0, 0];
+  const [lo, hi] = sel ? rentalTotal(sel, riders, prices, acctLite, maxPrices) : [0, 0];
   const disc = sel ? promoDiscount(promo, sel, riders, prices, acctLite) : 0;
   const addonTotal = free ? 0 : addonsCost(addons, items);
   const grand = free ? t.free : disc > 0 ? sar(Math.max(0, lo - disc) + addonTotal) : sarRange(lo + addonTotal, hi + addonTotal);
@@ -371,7 +375,7 @@ export default function BookingFlow({ locale, events, prices, acct, items, start
   const priceBox = () => {
     if (!sel || !needsBike(sel)) return null;
     if (free) return <div className="bk-price"><span className="bk-price-k">{t.pricePerBike}</span><span className="bk-price-v">{t.free}</span></div>;
-    const lines = riderPrices(sel, riders, prices, acctLite);
+    const lines = riderPrices(sel, riders, prices, acctLite, maxPrices);
     const word = (l: (typeof lines)[number]) => (l.kind === "free" ? t.free : l.kind === "house" ? t.onTheHouse : l.kind === "sar" ? sar(l.n) : sarRange(l.lo, l.hi));
     const own = riders.every((r) => r.type === "Own");
     return (
@@ -476,7 +480,7 @@ export default function BookingFlow({ locale, events, prices, acct, items, start
                   <span aria-live="polite">{qty}</span>
                   <button type="button" onClick={() => setQty(1)} aria-label={t.qtyInc}><Ic name="plus" size={18} /></button>
                 </div>
-                {capNote && <p className="bk-capnote" role="status">{fill(t.capNote, 3)}</p>}
+                {capNote && <p className="bk-capnote" role="status">{fill(t.capNote, jccCap)}</p>}
               </div>
             </div>
           )}
@@ -565,7 +569,7 @@ export default function BookingFlow({ locale, events, prices, acct, items, start
       </section>
     );
   } else {
-    const lines = riderPrices(sel, riders, prices, acctLite);
+    const lines = riderPrices(sel, riders, prices, acctLite, maxPrices);
     const picked = addons.map((a) => ({ a, it: items.find((x) => x.id === a.id) })).filter((x) => !!x.it);
     const cats = [...new Set(sellable.map((x) => x.category || "Other"))].sort((a, b) => addonCatRank(a, items) - addonCatRank(b, items) || (t.cats[a] ?? a).localeCompare(t.cats[b] ?? b));
     const row = (it: AddonItem) => {

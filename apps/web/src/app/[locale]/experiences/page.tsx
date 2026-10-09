@@ -18,6 +18,7 @@ import { riyadhClock } from "@/lib/workshop-days";
 import { dayWord, fmtClock, fmtDayDate, ticketRoute, type TicketRoute } from "@/lib/tickets";
 import { getAccount } from "@/lib/account";
 import { bookingAccount } from "@/lib/booking-server";
+import { bizOf, faresOf } from "@/lib/biz";
 import { priceMap, type AddonItem, type BookAccount, type BookSession } from "@/lib/booking";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt, phrase } from "@/i18n/tx";
@@ -78,6 +79,10 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   const c = resolvePage(experiencesSchema, content, L);
   const d = c.dates, e = c.events;
   const prices = priceMap(rides?.prices ?? []);
+  // The highest fares and the riders per account admins set in the booking app (Settings > Pricing
+  // and > Business; lib/biz.ts): the review's ranges and the party's cap, as the database applies them.
+  const maxPrices = faresOf(rides?.prices).max;
+  const jccCap = bizOf(content).jccAccountCap;
 
   const kindName = kindNames(d);
   const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
@@ -154,7 +159,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
 
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
-            <BookingFlow locale={locale} events={events} prices={prices} acct={acct} items={items}
+            <BookingFlow locale={locale} events={events} prices={prices} maxPrices={maxPrices} jccCap={jccCap} acct={acct} items={items}
               start={{ ev: one(q.ev), session: one(q.session) }}
               text={{ eventTitle: S(c.steps.eventTitle), noDates: S(c.steps.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}
               links={{
