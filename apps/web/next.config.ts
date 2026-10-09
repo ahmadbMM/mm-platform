@@ -13,7 +13,9 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // pinned files are allowed, never the whole host (it serves any npm package or GitHub file): the
 // version is components/live/LiveMap.tsx's, and a test fails when the two differ. Next writes its own
 // small inline scripts, hence 'unsafe-inline' for scripts (DEPLOY.md: a nonce cannot be used while
-// pages are kept at the edge). No site may frame a page (the staff preview opens in its own window).
+// pages are kept at the edge). No site may frame a page but the staff page, whose Website section
+// shows the preview inside an iPhone-sized frame (rentals _webPhonePreview); there is no
+// X-Frame-Options, as it cannot name another host and would refuse that frame in some browsers.
 // The two registration forms send their own headers (src/forms/headers.ts) and are left out here.
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
 const MAPLIBRE = "https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl";
@@ -27,7 +29,7 @@ const CSP = [
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
   "frame-src https://www.google.com https://challenges.cloudflare.com",
-  "frame-ancestors 'self'",
+  "frame-ancestors 'self' https://staff.micromobility.sa",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
@@ -38,7 +40,6 @@ const SECURITY_HEADERS = [
   // No includeSubDomains: company email and its webmail live on the old host (DEPLOY.md), and
   // this must not decide how those addresses are reached.
   { key: "Strict-Transport-Security", value: "max-age=31536000" },
-  { key: "X-Frame-Options", value: "SAMEORIGIN" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), payment=(), usb=(), geolocation=()" },

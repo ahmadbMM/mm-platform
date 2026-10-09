@@ -139,7 +139,8 @@ test("the header's language menu switches the page's language and direction", as
 
 test("pages send the security headers", async ({ request }) => {
   const h = (await request.get("/about?lang=en")).headers();
-  expect(h["content-security-policy"]).toContain("frame-ancestors 'self'");
-  expect(h["x-frame-options"]).toBe("SAMEORIGIN");
+  // only the site itself and the staff page (its iPhone preview) may frame a page
+  expect(h["content-security-policy"]).toContain("frame-ancestors 'self' https://staff.micromobility.sa;");
+  expect(h["x-frame-options"]).toBeUndefined();
   expect(h["x-powered-by"]).toBeUndefined();
 });
