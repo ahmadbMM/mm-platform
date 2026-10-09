@@ -9,7 +9,7 @@ import { intlOf } from "@/i18n/locales";
 // My Account's record, as the booking app's account page draws it (91816da and the badges before
 // it): Your rides - the last 26 weeks as a strip, rides this year, the favourite bike type, the
 // time on the bike staff timed, the first ride - then the two badges already begun with the least
-// left, each with its bar, then every badge (BadgeGrid).
+// left, each with its bar (a ladder's next level among them), then every badge (BadgeGrid).
 export type RecordText = (typeof T)["en"];
 type Props = {
   locale: string; stats: RideStats | null; badges: BadgeItem[]; t: RecordText;
@@ -41,6 +41,8 @@ export default function RideRecord({ locale, stats, badges, t, typeName, dur }: 
     const [name, how, about] = words(x);
     return {
       slug: x.slug, icon: x.icon, color: x.color, on: x.on, name, how, about, prog: x.p,
+      levels: x.lv ? x.lv.map((y) => { const [nm, hw] = words(y); return { slug: y.slug, icon: y.icon, color: y.color, on: y.on, name: nm, how: hw, prog: y.p }; }) : null,
+      lvN: x.lvN,
       given: x.given ? { line: fillAt(t.givenBy, day(x.given.at)), note: x.given.note || null } : null,
       season: x.season?.curTo ? fillAt(t.seasonOpen, day(x.season.curTo)) : x.season?.next ? fillAt(t.seasonSoon, day(x.season.next)) : null,
     };
@@ -62,11 +64,11 @@ export default function RideRecord({ locale, stats, badges, t, typeName, dur }: 
       {near.length > 0 && (
         <div className="bd-next">
           <p className="bd-next-h">{t.closest}</p>
-          {near.map(({ item, n, of }) => {
-            const [nm, how] = words(item);
+          {near.map(({ item, show, n, of }) => {
+            const [nm, how] = words(show);
             return (
               <div key={item.slug} className="bd-next-row">
-                <Medal icon={item.icon} color={item.color} className="bd-next-ic" />
+                <Medal icon={show.icon} color={show.color} className="bd-next-ic" />
                 <span className="bd-next-t">
                   <strong>{nm}</strong>{how && <small>{how}</small>}
                   <span className="bd-next-bar" role="progressbar" aria-label={nm} aria-valuemin={0} aria-valuemax={of} aria-valuenow={n}>
@@ -79,7 +81,7 @@ export default function RideRecord({ locale, stats, badges, t, typeName, dur }: 
           })}
         </div>
       )}
-      {views.length > 0 && <BadgeGrid items={views} t={{ badges: t.badges, toEarn: t.toEarn, show: t.show, hide: t.hide, notEarned: t.notEarned, howTo: t.howTo, earned: t.earned, close: t.close }} />}
+      {views.length > 0 && <BadgeGrid items={views} t={{ badges: t.badges, toEarn: t.toEarn, show: t.show, hide: t.hide, notEarned: t.notEarned, howTo: t.howTo, earned: t.earned, close: t.close, levelOf: t.levelOf, maxLevel: t.maxLevel, levels: t.levels }} />}
     </>
   );
 }

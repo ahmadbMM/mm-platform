@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { badgeList, closestBadges, perfectWeeks, profilePct, recordRows, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
+import { badgeList, climb, closestBadges, perfectWeeks, profilePct, recordRows, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
 import Medal from "@/components/account/Medal";
+import RideRecord from "@/components/account/RideRecord";
+import { T as RECORD } from "@/components/account/RideRecord.text";
 import { createElement, type ReactElement } from "react";
 // The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
 // @ts-expect-error -- react-dom/server ships without type declarations here
@@ -46,13 +48,15 @@ describe("the badges", () => {
   const on = (data?: BadgeData) => list(data).filter((x) => x.on).map((x) => x.slug);
   it("are earned by riding, as the booking app counts them", () => {
     expect(on()).toEqual(["first_lap", "front_row", "streak"]);
-    expect(list().find((x) => x.slug === "regular")).toMatchObject({ on: false, p: "4/5" });
+    // Grid Regular is First Lap's next level: the ladder's one tile counts towards it
+    expect(list().find((x) => x.slug === "first_lap")).toMatchObject({ on: true, lvN: 1, p: "4/5", nx: { slug: "regular", on: false, p: "4/5" } });
   });
   it("keep National Day 96 and Back on Track out until earned, and staff's own badges last", () => {
     const slugs = list().map((x) => x.slug);
     expect(slugs).not.toContain("national_day_96");
     expect(slugs).not.toContain("back_on_track");
-    expect(slugs.slice(-10)).toEqual(["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t100", "t50", "t25"]);
+    // the T100 races are one ladder, where its first level stood (T100, the list's order), shown as T25 until one is given
+    expect(slugs.slice(-8)).toEqual(["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t25"]);
   });
   it("put a badge staff gave first, with their note and the day", () => {
     const L = list({ ...empty, mine: [{ slug: "champion", note: "Won the hill climb", at: "2026-09-30T18:00:00Z" }] });
@@ -61,7 +65,8 @@ describe("the badges", () => {
   });
   it("leave out a badge the catalogue no longer lists, unless the rider holds it", () => {
     const cat = [{ slug: "first_lap" }, { slug: "regular" }];
-    expect(list({ ...empty, catalog: cat }).map((x) => x.slug)).toEqual(["first_lap", "front_row", "streak", "regular"]);
+    expect(list({ ...empty, catalog: cat }).map((x) => x.slug)).toEqual(["first_lap", "front_row", "streak"]);
+    expect(list({ ...empty, catalog: cat })[0].lv!.map((x) => x.slug)).toEqual(["first_lap", "regular"]);
   });
   it("count Race Ready from the profile", () => {
     const full = { name: "A", email: "a@b.c", phone: "+966500000000", height: 170, birth_date: "1990-01-01", country: "SA", city: "Jeddah", photo: "x", type_preference: "Road" };
@@ -74,8 +79,8 @@ describe("the badges", () => {
     expect(list({ ...empty, seasons: [season] }).find((x) => x.slug === "winter_series")).toMatchObject({ on: false, p: "0/6", season: { curTo: null, next: "2026-12-01" } });
   });
   it("bring the two begun with the least left forward", () => {
-    expect(closestBadges(list()).map((x) => [x.item.slug, x.n, x.of])).toEqual([["regular", 4, 5], ["safety_car", 4, 6]]);
-    expect(closestBadges(list({ ...empty, mine: [{ slug: "regular" }] })).map((x) => x.item.slug)).not.toContain("regular");
+    expect(closestBadges(list()).map((x) => [x.show.slug, x.n, x.of])).toEqual([["regular", 4, 5], ["safety_car", 4, 6]]);
+    expect(closestBadges(list({ ...empty, mine: [{ slug: "regular" }] })).map((x) => x.show.slug)).not.toContain("regular");
   });
   it("do not count an unpaid ride, unless the ride was free", () => {
     const unpaid = recordRows([row({ session_id: "s1", session_date: "2026-09-01", paid: false })]);
@@ -93,6 +98,60 @@ describe("the badges", () => {
   it("give Front Row only where the number is shown", () => {
     const appr = new Map<string, RecordSession>(rows.map((r) => [r.sessionId, { kind: "saturday", freeRide: true, approval: true }]));
     expect(list(empty, rows, appr).find((x) => x.slug === "front_row")!.on).toBe(false);
+  });
+});
+
+describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
+  const days = (n: number) => Array.from({ length: n }, (_, i) => new Date(Date.UTC(2026, 0, 3 + 7 * i)).toISOString().slice(0, 10));
+  const rides = (n: number, kind: RecordSession["kind"] = "jcc") => {
+    const r = recordRows(days(n).map((d) => row({ session_id: d })));
+    return { r, s: new Map<string, RecordSession>(r.map((x) => [x.sessionId, { kind, freeRide: kind === "saturday" }])) };
+  };
+  it("fold each ladder into one badge: the top level reached, its levels and the next one's progress", () => {
+    const { r, s } = rides(12);
+    const L = badgeList(r, s, empty, today, null), laps = L.find((x) => x.slug === "podium")!;
+    expect(L.filter((x) => ["first_lap", "regular", "podium", "corniche25"].includes(x.slug))).toHaveLength(1);
+    expect(laps).toMatchObject({ on: true, lvN: 3, p: "12/25", nx: { slug: "corniche25" } });
+    expect(laps.lv!.map((x) => [x.slug, x.on])).toEqual([["first_lap", true], ["regular", true], ["podium", true], ["corniche25", false]]);
+    // the count counts each ladder once
+    expect(L.map((x) => x.slug)).not.toContain("regular");
+  });
+  it("show a ladder not begun as its first level, with nothing reached", () => {
+    const L = badgeList([], new Map(), empty, today, null), t = L.find((x) => x.slug === "t25")!;
+    expect(t).toMatchObject({ on: false, lvN: 0, nx: { slug: "t25" }, manual: true });
+    expect(t.lv!.map((x) => x.slug)).toEqual(["t25", "t50", "t100"]);
+  });
+  it("give every level under one staff gave (T100 brings T50 and T25)", () => {
+    const L = badgeList([], new Map(), { ...empty, mine: [{ slug: "t100", note: "Sub 4 hours", at: "2026-10-09T10:00:00Z" }] }, today, null);
+    const t = L[0];
+    expect(t).toMatchObject({ slug: "t100", on: true, lvN: 3, nx: null, p: null, given: { note: "Sub 4 hours" } });
+    expect(t.lv!.map((x) => [x.slug, x.on])).toEqual([["t25", true], ["t50", true], ["t100", true]]);
+    expect(L.filter((x) => x.slug.startsWith("t") && /^t\d/.test(x.slug))).toHaveLength(1);
+    expect(closestBadges(L).map((x) => x.item.slug)).not.toContain("t100");
+  });
+  it("climb a ride ladder from a level staff gave, whatever was ridden", () => {
+    const L = badgeList([], new Map(), { ...empty, mine: [{ slug: "podium" }] }, today, null), laps = L.find((x) => x.slug === "podium")!;
+    expect(laps).toMatchObject({ on: true, lvN: 3, nx: { slug: "corniche25", p: "0/25" } });
+    expect(laps.lv!.slice(0, 2).every((x) => x.on)).toBe(true);
+  });
+  it("count Saturday rides up the community ladder: 1, 5, 10, 25, 50, 100", () => {
+    const { r, s } = rides(6, "saturday");
+    const c = badgeList(r, s, empty, today, null).find((x) => x.lv?.some((y) => y.slug === "rolling_start"))!;
+    expect(c.lv!.map((x) => x.slug)).toEqual(["rolling_start", "slipstream", "paceline", "peloton", "grand_tour", "hall_of_fame"]);
+    expect(c).toMatchObject({ slug: "slipstream", lvN: 2, p: "6/10", nx: { slug: "paceline" } });
+    expect(closestBadges([c])[0]).toMatchObject({ show: { slug: "paceline" }, n: 6, of: 10 });
+  });
+  it("draw a ladder as one tile with a dot per level, and its next level among the closest", () => {
+    const { r, s } = rides(9, "saturday");
+    const html = renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, badges: badgeList(r, s, empty, today, null), t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
+    expect(html).toContain('aria-label="Slipstream · Level 2 of 6: 5 community rides"');
+    expect(html).toMatch(/<span class="mr-badge-lv" aria-hidden="true">(<i class="on"><\/i>){2}(<i><\/i>){4}<\/span>/);
+    expect(html.match(/<strong>[^<]*<\/strong>/g)).toEqual(["<strong>Podium Pace</strong>", "<strong>Paceline</strong>"]);
+  });
+  it("climb a set of slugs held", () => {
+    expect([...climb(["t100", "marshal"])].sort()).toEqual(["marshal", "t100", "t25", "t50"]);
+    expect([...climb(["perfect_month"])].sort()).toEqual(["perfect_month", "perfect_week"]);
+    expect([...climb(["first_lap"])]).toEqual(["first_lap"]);
   });
 });
 
@@ -122,13 +181,13 @@ describe("Run for Her's pink ribbon (run_for_her, 2026-10-05)", () => {
     const runs = runRows("done", 5);
     const L = badgeList(runs, runSes(runs), empty, today, null);
     // not earned, and nothing counted (the ladder's thresholds are the Saturday badges' own business)
-    for (const slug of ["slipstream", "paceline"]) {
-      const b = L.find((x) => x.slug === slug);
+    for (const slug of ["rolling_start", "slipstream", "paceline"]) {
+      const b = L.flatMap((x) => x.lv ?? [x]).find((x) => x.slug === slug);
       expect(b).toMatchObject({ on: false });
       expect(String(b?.p)).toMatch(/^0\//);
     }
     // a finished run is still a ride finished, as in the booking app
-    expect(L.find((x) => x.slug === "first_lap")!.on).toBe(true);
+    expect(L.flatMap((x) => x.lv ?? [x]).find((x) => x.slug === "first_lap")!.on).toBe(true);
   });
   it("is drawn as the booking app draws it: the ribbon on the pink special medal", () => {
     const svg = renderToStaticMarkup(createElement(Medal, { icon: "ribbon", color: "pink" }));

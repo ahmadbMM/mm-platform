@@ -25,6 +25,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   scrutineer: ["search", "teal"], champion: ["trophy", "gold"], spirit: ["heart", "red"], t100: ["t100", "gold"], t50: ["t50", "silver"], t25: ["t25", "orange"], complete_profile: ["profile", "special"],
   national_day_96: ["n96", "national"], back_on_track: ["return", "teal"], safety_car: ["beacon", "orange"], endurance: ["clock", "purple"],
   triple_crown: ["crown", "gold"], slipstream: ["wind", "green"], paceline: ["wind", "blue"], peloton: ["wind", "gold"],
+  rolling_start: ["wind", "teal"], grand_tour: ["wind", "purple"], hall_of_fame: ["wind", "special"],
   clean_sheet: ["calcheck", "green"], works_team: ["briefcase", "teal"], perfect_week: ["calstar", "purple"], perfect_month: ["calcrown", "gold"],
   run_for_her: ["ribbon", "pink"],
   winter_series: ["snow", "blue"], ramadan_nights: ["lantern", "purple"], founding_day: ["fort", "orange"],
@@ -32,6 +33,22 @@ export const BADGE_SYS: Record<string, [string, string]> = {
 /** The badges staff give by hand that the app knows itself (BDG_GIVEN_SYS): shown where the
  *  database has no catalogue. */
 const GIVEN_SYS = ["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t100", "t50", "t25"];
+
+/** Badge ladders (the booking app's BDG_LADDERS, 2026-10-09: "the same way it's done in clash of clans
+ *  achievements"): badges that count the same thing to a higher number are the levels of one badge,
+ *  lowest first. A level reached brings every level under it, given by staff or earned by riding
+ *  ("getting the t100 automatically gives the ones before"). */
+export const LADDERS: string[][] = [
+  ["first_lap", "regular", "podium", "corniche25"], ["streak", "safety_car", "endurance"],
+  ["rolling_start", "slipstream", "paceline", "peloton", "grand_tour", "hall_of_fame"], ["perfect_week", "perfect_month"], ["t25", "t50", "t100"],
+];
+const LADDER_OF = new Map(LADDERS.flatMap((L) => L.map((s, i) => [s, [L, i]] as const)));
+/** A set of slugs held, with every level under each one (_bdgClimb). */
+export function climb(on: Iterable<string>): Set<string> {
+  const o = new Set(on);
+  for (const s of [...o]) { const l = LADDER_OF.get(s); if (l) for (const x of l[0].slice(0, l[1])) o.add(x); }
+  return o;
+}
 
 /** Weeks since 1970 on the rides' calendar, Sunday first (_bdgWk), from a YYYY-MM-DD. */
 export const weekOf = (ds: string) => Math.floor((Date.parse(`${ds.slice(0, 10)}T00:00:00Z`) / 864e5 + 4) / 7);
@@ -93,11 +110,13 @@ export function perfectWeeks(weeks: BadgeData["weeks"], rodeIds: Set<string>, to
 
 /** The two badges already begun with the least left (bd-next in _mrBadgesRow): a count n/of
  *  above zero and under its goal, fewest to go first, then the furthest along. */
-export function closestBadges(list: BadgeItem[]): { item: BadgeItem; n: number; of: number }[] {
-  return list.filter((x) => !x.on).map((item) => {
+/** A ladder's next level counts too, reached levels and all: it is the next badge that ladder gives
+ *  (show: the badge to draw, the next level or the badge itself). */
+export function closestBadges(list: BadgeItem[]): { item: BadgeItem; show: BadgeItem; n: number; of: number }[] {
+  return list.filter((x) => !x.on || x.nx).map((item) => {
     const m = /^(\d+)\/(\d+)$/.exec(item.p ?? "");
-    return m && +m[1] > 0 && +m[1] < +m[2] ? { item, n: +m[1], of: +m[2] } : null;
-  }).filter((x): x is { item: BadgeItem; n: number; of: number } => !!x)
+    return m && +m[1] > 0 && +m[1] < +m[2] ? { item, show: item.nx ?? item, n: +m[1], of: +m[2] } : null;
+  }).filter((x): x is { item: BadgeItem; show: BadgeItem; n: number; of: number } => !!x)
     .sort((x, y) => (x.of - x.n) - (y.of - y.n) || y.n / y.of - x.n / x.of)
     .slice(0, 2);
 }
@@ -152,12 +171,15 @@ export const profilePct = (c: ProfileFields) => {
 /** One badge on the page: its slug, how it is drawn, whether it is earned, the progress the
  *  booking app prints ("4/5", "78%"), who gave it (a badge staff gave: their note and the day),
  *  a dated badge's window, whether only staff give it, and its catalogue row for the words of a
- *  badge the app does not know itself. */
+ *  badge the app does not know itself. A ladder is one item: the top level reached (else the first),
+ *  with lv its levels, lowest first, lvN how many are reached, nx the next one, and p the next one's
+ *  progress (null at the top); every other badge has lv null. */
 export type BadgeItem = {
   slug: string; icon: string; color: string; on: boolean; p: string | null;
   given: { note: string | null; at: string | null } | null;
   season: { curTo: string | null; next: string | null } | null;
   manual: boolean; row: BadgeRow | null;
+  lv: BadgeItem[] | null; lvN: number; nx: BadgeItem | null;
 };
 
 type RecordRow = TicketRow & { addons?: boolean };
@@ -203,7 +225,9 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
     { s: "squad", on: squad >= 3 }, { s: "fuel", on: fuel }, { s: "corniche25", on: rides >= 25, p: P(rides, 25) },
     { s: "safety_car", on: R.bestS >= 6, p: P(R.curS, 6) }, { s: "endurance", on: R.bestS >= 12, p: P(R.curS, 12) },
     { s: "triple_crown", on: kinds.size >= 3, p: P(kinds.size, 3) }, { s: "clean_sheet", on: cleanBest >= 10, p: P(clean, 10) },
-    { s: "slipstream", on: comm >= 5, p: P(comm, 5) }, { s: "paceline", on: comm >= 15, p: P(comm, 15) }, { s: "peloton", on: comm >= 30, p: P(comm, 30) },
+    // the Saturday social ride ladder (the booking app, 2026-10-03): 1, 5, 10, 25, 50, 100 ride days
+    { s: "rolling_start", on: comm >= 1, p: P(comm, 1) }, { s: "slipstream", on: comm >= 5, p: P(comm, 5) }, { s: "paceline", on: comm >= 10, p: P(comm, 10) },
+    { s: "peloton", on: comm >= 25, p: P(comm, 25) }, { s: "grand_tour", on: comm >= 50, p: P(comm, 50) }, { s: "hall_of_fame", on: comm >= 100, p: P(comm, 100) },
     { s: "works_team", on: corp >= 3, p: P(corp, 3) },
     { s: "perfect_week", on: PW.any, p: PW.cur ? P(PW.cur.n, PW.cur.of) : null },
     { s: "perfect_month", on: PW.best >= 4, p: PW.known ? P(PW.run, 4) : null },
@@ -229,7 +253,7 @@ export function badgeList(rows: RecordRow[], sessions: Map<string, RecordSession
   };
   const item = (slug: string, on: boolean, o: Partial<BadgeItem> = {}): BadgeItem => {
     const row = o.row ?? cat?.get(slug) ?? null, [icon, color] = draw(slug, row);
-    return { slug, icon, color, on, p: null, given: null, season: null, manual: false, ...o, row };
+    return { slug, icon, color, on, p: null, given: null, season: null, manual: false, lv: null, lvN: 0, nx: null, ...o, row };
   };
   const ride = rideBadges(rows, sessions, data, today, profile).map((r) => {
     const g = given.get(r.s);
@@ -245,5 +269,25 @@ export function badgeList(rows: RecordRow[], sessions: Map<string, RecordSession
     out.push(x);
   }
   const rank = (x: BadgeItem) => (x.on ? 0 : x.manual ? 3 : x.season ? 2 : 1);
-  return out.map((x, i) => [x, i] as const).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map((a) => a[0]);
+  return foldLadders(out).map((x, i) => [x, i] as const).sort((a, b) => rank(a[0]) - rank(b[0]) || a[1] - b[1]).map((a) => a[0]);
+}
+
+/** The badge list with each ladder folded into one item, where its first level stood (_bdgFold):
+ *  the top level reached (else the first), lv its levels, lvN how many are reached, nx the next
+ *  one, p the next one's progress. Every level under the top one is reached too. A level the list
+ *  leaves out (one the catalogue no longer has) is left out of its ladder. */
+export function foldLadders(list: BadgeItem[]): BadgeItem[] {
+  const by = new Map(list.map((x) => [x.slug, x])), done = new Set<string[]>(), out: BadgeItem[] = [];
+  for (const x of list) {
+    const l = LADDER_OF.get(x.slug);
+    if (!l) { out.push(x); continue; }
+    if (done.has(l[0])) continue;
+    done.add(l[0]);
+    const found = l[0].map((s) => by.get(s)).filter((y): y is BadgeItem => !!y);
+    const top = found.reduce((t, y, i) => (y.on ? i : t), -1);
+    const lv = found.map((y, i) => (i < top && !y.on ? { ...y, on: true } : y));
+    const nx = lv[top + 1] ?? null;
+    out.push({ ...lv[Math.max(top, 0)], lv, lvN: top + 1, nx, p: nx ? nx.p : null });
+  }
+  return out;
 }
