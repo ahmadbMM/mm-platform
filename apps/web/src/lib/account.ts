@@ -34,11 +34,17 @@ export async function rpcServer<T>(fn: string, args: Record<string, unknown>): P
 }
 
 /** The signed-in account, or null: no cookie, a malformed one, or a session the booking app no
- *  longer accepts. Only a request that carries the cookie costs a database call. */
+ *  longer accepts. Only a request that carries the cookie costs a database call. Alongside it the
+ *  account is stamped as seen on the website (customer_seen, booking app 20261011120000: staff's
+ *  "last opened" in the account report); the database keeps one stamp every 5 minutes and ignores a
+ *  wrong token. The two calls go together, so a page waits only for the slower (4 s at most). */
 export async function getAccount(): Promise<Account | null> {
   const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
   if (!s) return null;
-  const r = await rpcServer<({ name?: string; email?: string; phone?: string } & Record<string, unknown>)[]>("customer_profile", { p_id: s.id, p_token: s.token });
+  const [r] = await Promise.all([
+    rpcServer<({ name?: string; email?: string; phone?: string } & Record<string, unknown>)[]>("customer_profile", { p_id: s.id, p_token: s.token }),
+    rpcServer<null>("customer_seen", { p_id: s.id, p_token: s.token, p_via: "web" }),
+  ]);
   const p = Array.isArray(r.data) ? r.data[0] : null;
   return p ? { ...s, name: p.name || "", email: p.email || "", phone: p.phone || "", profile: p } : null;
 }
