@@ -55,7 +55,7 @@ test("sign-in says why: an expired temporary password, a paused login, too many 
   const forgot = page.locator("details.forgot");
   await expect(forgot).toHaveAttribute("open", "");
   await expect(forgot.getByRole("link", { name: "Email" })).toHaveAttribute("href", /^mailto:info@micromobility\.sa\?subject=.+&body=.*cafe%40example\.com/);
-  await expect(forgot.getByRole("link", { name: "WhatsApp" })).toHaveAttribute("href", /^https:\/\/wa\.me\/966566668818\?text=.*cafe%40example\.com/);
+  await expect(forgot.getByRole("link", { name: "WhatsApp" })).toHaveAttribute("href", /^https:\/\/wa\.me\/966579543977\?text=.*cafe%40example\.com/);
 
   await stub(request, "/__lock");
   await page.getByRole("button", { name: "Sign in" }).click();
