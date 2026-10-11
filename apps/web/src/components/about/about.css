@@ -68,13 +68,13 @@ html:is([lang="ar"], [lang="ur"]) .ab-contact dt { letter-spacing: 0; font-size:
 .ab .ab-contact dd a:hover { color: #077a4b; }
 .ab-social { display: flex; flex-wrap: wrap; gap: 6px 14px; }
 .ab-contact-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: auto; }
-.ab .ab-wa, .ab .ab-line { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 24px; border-radius: 999px; font-weight: 700; font-size: 14px; }
+.ab .ab-wa, .ab .ab-line { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 24px; border-radius: 0; font-weight: 700; font-size: 14px; }
 .ab .ab-wa { background: #1a7f3c; color: #fff; }
 .ab .ab-line { background: #fff; color: #1a1919; border: 1px solid rgba(0, 0, 0, .2); }
 .ab-map { width: 100%; min-height: 460px; border: 0; border-radius: 34px; filter: grayscale(.3) contrast(1.05); background: #dfe5df; }
 /* Until the visitor asks for the map (MapEmbed): the same box, and a button in its middle. */
 .ab-map-off { display: grid; place-items: center; filter: none; }
-.ab-map-off button { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .2); background: #fff; color: #1a1919; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
+.ab-map-off button { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 22px; border-radius: 0; border: 1px solid rgba(0, 0, 0, .2); background: #fff; color: #1a1919; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
 .ab-map-off button:hover { background: #f3f1ea; }
 .ab-map-off button:focus-visible { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
 

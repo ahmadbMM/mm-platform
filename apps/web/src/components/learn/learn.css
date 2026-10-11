@@ -43,10 +43,10 @@ textarea.ln-input { resize: vertical; min-height: 84px; }
 .ln-learner .ln-err { margin: 14px 0 0; }
 .ln-learner-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 36px; margin: 0 0 12px; }
 .mm-site .ln-learner-head h3 { margin: 0; font-size: 15px; letter-spacing: -.2px; line-height: 1.2; }
-.ln-remove { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(0, 0, 0, .06); color: #57605a; cursor: pointer; display: grid; place-items: center; }
+.ln-remove { flex: none; width: 36px; height: 36px; border-radius: 0; border: 0; background: rgba(0, 0, 0, .06); color: #57605a; cursor: pointer; display: grid; place-items: center; }
 .ln-remove:hover { background: rgba(179, 38, 30, .1); color: #b3261e; }
 .ln-remove:focus-visible, .ln-add:focus-visible { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
-.ln-add { cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 50px; margin: 0 0 22px; border: 1.5px dashed rgba(7, 122, 75, .45); border-radius: 16px; background: rgba(7, 122, 75, .04);
+.ln-add { cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 50px; margin: 0 0 22px; border: 1.5px dashed rgba(7, 122, 75, .45); border-radius: 0; background: rgba(7, 122, 75, .04);
   color: #06603b; font: inherit; font-size: 14.5px; font-weight: 700; }
 .ln-add:hover { background: rgba(7, 122, 75, .08); }
 .ln-add span { font-size: 20px; line-height: 1; }
@@ -54,7 +54,7 @@ textarea.ln-input { resize: vertical; min-height: 84px; }
 /* Who is learning: three choices on each card, the mark above the words so a long name
    ("Someone else", "Jemand anderes") keeps to its third of the card. */
 .ln-who { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 16px; }
-.ln-who-opt { cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-height: 68px; padding: 10px 6px; border: 1px solid rgba(0, 0, 0, .14); border-radius: 16px;
+.ln-who-opt { cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-height: 68px; padding: 10px 6px; border: 1px solid rgba(0, 0, 0, .14); border-radius: 0;
   background: #fff; color: #1a1919; font: inherit; font-size: 14px; font-weight: 700; text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
 .ln-who-opt:disabled { cursor: not-allowed; opacity: .4; }
 /* The choices' own mark: a ring, filled when chosen. */
@@ -64,11 +64,11 @@ textarea.ln-input { resize: vertical; min-height: 84px; }
 
 /* Riding so far: one per line */
 .ln-levels { display: flex; flex-direction: column; gap: 8px; margin: 0 0 18px; }
-.ln-level { cursor: pointer; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 12px 16px; border: 1px solid rgba(0, 0, 0, .14); border-radius: 14px; background: #fff; color: #1a1919; font: inherit; font-size: 14.5px; font-weight: 600; text-align: start; }
+.ln-level { cursor: pointer; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 12px 16px; border: 1px solid rgba(0, 0, 0, .14); border-radius: 0; background: #fff; color: #1a1919; font: inherit; font-size: 14.5px; font-weight: 600; text-align: start; }
 
 /* Gender: pills (Workshop's day buttons) */
 .ln-pills { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 18px; }
-.ln-pill { cursor: pointer; min-height: 44px; padding: 8px 18px; border: 1px solid rgba(0, 0, 0, .14); border-radius: 999px; background: #fff; color: #1a1919; font: inherit; font-size: 13.5px; font-weight: 700; }
+.ln-pill { cursor: pointer; min-height: 44px; padding: 8px 18px; border: 1px solid rgba(0, 0, 0, .14); border-radius: 0; background: #fff; color: #1a1919; font: inherit; font-size: 13.5px; font-weight: 700; }
 .ln-pill:is([aria-checked="true"], [aria-pressed="true"]) { background: #1a1919; color: #03ff89; border-color: #1a1919; }
 :is(.ln-who-opt, .ln-level, .ln-pill):focus-visible { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
 
@@ -80,7 +80,7 @@ textarea.ln-input { resize: vertical; min-height: 84px; }
 .mm-site .ln-check a { color: #077a4b; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 .ln-use { color: #5f6862; font-size: 12.5px; line-height: 1.55; margin: 0 0 16px; }
 .ln-err { color: #b3261e; font-size: 13px; font-weight: 600; margin: 0 0 12px; }
-.ln-btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; font-weight: 700; font-size: 15px; font-family: inherit; cursor: pointer; min-height: 52px; padding: 0 24px; border: 0; }
+.ln-btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 0; font-weight: 700; font-size: 15px; font-family: inherit; cursor: pointer; min-height: 52px; padding: 0 24px; border: 0; }
 .ln-btn:disabled { opacity: .6; cursor: default; }
 .ln-btn-green { background: #077a4b; color: #fbf9f4; width: 100%; }
 .ln-btn-green:hover:not(:disabled) { background: #06603b; }
@@ -106,13 +106,13 @@ html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13
 .ln-top-mark { display: block; width: 76px; height: 38px; background: #077a4b; -webkit-mask: url("/site/brand-wordmark.png") left center / contain no-repeat; mask: url("/site/brand-wordmark.png") left center / contain no-repeat; }
 [dir="rtl"] .ln-top-mark { -webkit-mask-position: right center; mask-position: right center; }
 .ln-top .bk-lang { position: relative; flex: none; }
-.ln-top .bk-globe { width: 44px; height: 44px; border-radius: 50%; border: 0; padding: 0; background: transparent; color: #1a1919; cursor: pointer; display: grid; place-items: center; transition: background .2s ease; }
+.ln-top .bk-globe { width: 44px; height: 44px; border-radius: 0; border: 0; padding: 0; background: transparent; color: #1a1919; cursor: pointer; display: grid; place-items: center; transition: background .2s ease; }
 .ln-top .bk-globe:hover { background: rgba(0, 0, 0, .07); }
 .ln-top .bk-globe:focus-visible { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
 .ln-top .bk-globe svg { width: 21px; height: 21px; }
 .ln-top .bk-lang-menu { position: absolute; top: calc(100% + 6px); inset-inline-end: 0; z-index: 20; width: 210px; max-height: min(70vh, 520px); overflow-y: auto; padding: 6px;
   display: flex; flex-direction: column; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 14px; box-shadow: 0 18px 50px rgba(10, 13, 9, .16); }
-.ln-top .bk-lang-menu button { padding: 9px 12px; border: 0; border-radius: 9px; background: none; font: inherit; font-size: 14px; color: #1a1919; text-align: start; cursor: pointer;
+.ln-top .bk-lang-menu button { padding: 9px 12px; border: 0; border-radius: 0; background: none; font: inherit; font-size: 14px; color: #1a1919; text-align: start; cursor: pointer;
   display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ln-top .bk-lang-menu button:hover { background: rgba(0, 0, 0, .05); }
 .ln-top .bk-lang-menu button[aria-checked="true"] { color: #077a4b; font-weight: 700; }

@@ -1106,7 +1106,7 @@
  "The Grand Tours are cycling's three-week races. Fifty community rides make a grand tour of your own.": "گرینڈ ٹور سائیکلنگ کی تین ہفتوں کی ریسیں ہیں۔ پچاس کمیونٹی رائیڈز آپ کا اپنا گرینڈ ٹور ہیں۔",
  "Hall of Fame": "ہال آف فیم",
  "100 community rides": "100 کمیونٹی رائیڈز",
- "A hundred community rides: a place among MicroMobility's greats.": "سو کمیونٹی رائیڈز: MicroMobility کے بہترین لوگوں میں آپ کی جگہ۔",
+ "A hundred community rides: a place among MicroMobility's greats.": "سو کمیونٹی رائیڈز: مائیکرو موبیلٹی کے بہترین لوگوں میں آپ کی جگہ۔",
  "Held booking #1 in a session": "کسی سیشن میں بکنگ #1 حاصل کی",
  "Riding is better together: for bringing three or more riders to one ride.": "ساتھ رائیڈ کرنا زیادہ اچھا ہے: ایک رائیڈ پر تین یا زیادہ رائیڈرز لانے کے لیے۔",
  "A paceline is a group taking turns at the front. Ten community rides make you part of it.": "پیس لائن وہ گروپ ہے جو باری باری آگے چلتا ہے۔ دس کمیونٹی رائیڈز آپ کو اس کا حصہ بناتی ہیں۔",
@@ -1491,5 +1491,8 @@
  "For crossing the finish line of the T50 when the race came to Jeddah. Given by our team.": "جب ریس جدہ آئی تو T50 کی فنش لائن پار کرنے پر۔ ہماری ٹیم کی طرف سے۔",
  "T25 Finisher": "T25 فنشر",
  "Finished the T25 race in Jeddah": "جدہ میں T25 ریس مکمل کی",
- "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team.": "جب ریس جدہ آئی تو T25 کی فنش لائن پار کرنے پر۔ ہماری ٹیم کی طرف سے۔"
+ "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team.": "جب ریس جدہ آئی تو T25 کی فنش لائن پار کرنے پر۔ ہماری ٹیم کی طرف سے۔",
+ "Level {0} of {1}": "{1} میں سے لیول {0}",
+ "Levels": "لیولز",
+ "Top level reached": "سب سے اونچا لیول حاصل"
 }

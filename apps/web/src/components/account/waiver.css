@@ -24,7 +24,7 @@ html:is([lang="ar"], [lang="ur"]) .wg-sec { letter-spacing: 0; font-size: 12px; 
 .wg-agree input { flex: none; width: 18px; height: 18px; margin: 1px 0 0; accent-color: #077a4b; cursor: pointer; }
 .wg-agree input:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
 .wg-err { margin: 0; color: #b3261e; font-size: 13.5px; font-weight: 600; line-height: 1.45; }
-.wg-btn { border: 0; border-radius: 999px; min-height: 46px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 14.5px; cursor: pointer; }
+.wg-btn { border: 0; border-radius: 0; min-height: 46px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 14.5px; cursor: pointer; }
 .wg-btn:disabled { opacity: .5; cursor: default; }
 /* the only other way off */
 .wg-out { align-self: center; border: 0; background: none; padding: 8px 12px; font: inherit; font-weight: 600; font-size: 14px; color: #57605a; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }

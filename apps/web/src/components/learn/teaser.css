@@ -8,7 +8,7 @@
 .ln-tz-eyebrow { color: #03ff89; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 12px; }
 .mm-site .ln-tz h2 { font-size: clamp(28px, 3.4vw, 48px); line-height: 1; letter-spacing: -1.6px; margin: 0 0 12px; max-width: 18ch; text-wrap: balance; }
 .ln-tz-text { color: #cfd6cf; font-size: 16px; line-height: 1.6; margin: 0; max-width: 540px; text-wrap: pretty; }
-.mm-site .ln-tz-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 28px; border-radius: 999px; background: #077a4b; color: #fbf9f4;
+.mm-site .ln-tz-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 28px; border-radius: 0; background: #077a4b; color: #fbf9f4;
   font-weight: 700; font-size: 15px; white-space: nowrap; transition: background .2s ease; }
 .mm-site .ln-tz-btn:hover { background: #06603b; }
 .ln-tz-btn span { display: inline-block; transition: transform .3s ease; }

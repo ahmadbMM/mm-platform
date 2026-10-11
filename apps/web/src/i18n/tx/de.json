@@ -1103,10 +1103,10 @@
  "A rolling start is a race that begins already moving. Your first community ride gets you rolling.": "Ein fliegender Start ist ein Rennen, das schon in Bewegung beginnt. Deine erste Community-Ausfahrt bringt dich ins Rollen.",
  "Grand Tour": "Grand Tour",
  "50 community rides": "50 Community-Ausfahrten",
- "The Grand Tours are cycling's three-week races. Fifty community rides make a grand tour of your own.": "Die Grand Tours sind die dreiwöchigen Rundfahrten des Radsports. Fünfzig Community-Ausfahrten sind deine eigene Grand Tour.",
+ "The Grand Tours are cycling's three-week races. Fifty community rides make a grand tour of your own.": "Die Grand Tours sind die dreiwöchigen Rennen des Radsports. Fünfzig Community-Ausfahrten ergeben deine eigene Grand Tour.",
  "Hall of Fame": "Ruhmeshalle",
  "100 community rides": "100 Community-Ausfahrten",
- "A hundred community rides: a place among MicroMobility's greats.": "Hundert Community-Ausfahrten: ein Platz unter den Größen von MicroMobility.",
+ "A hundred community rides: a place among MicroMobility's greats.": "Hundert Community-Ausfahrten: ein Platz unter den Großen von MicroMobility.",
  "Held booking #1 in a session": "Buchung Nr. 1 einer Session ergattert",
  "Riding is better together: for bringing three or more riders to one ride.": "Zusammen fährt es sich besser: dafür, dass du drei oder mehr Leute zu einer Fahrt mitbringst.",
  "A paceline is a group taking turns at the front. Ten community rides make you part of it.": "Eine Paceline ist eine Gruppe, die sich an der Spitze abwechselt. Mit zehn Community-Ausfahrten gehörst du dazu.",
@@ -1491,5 +1491,8 @@
  "For crossing the finish line of the T50 when the race came to Jeddah. Given by our team.": "Für den Zieleinlauf beim T50, als das Rennen nach Dschidda kam. Von unserem Team verliehen.",
  "T25 Finisher": "T25-Finisher",
  "Finished the T25 race in Jeddah": "Das T25-Rennen in Dschidda beendet",
- "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team.": "Für den Zieleinlauf beim T25, als das Rennen nach Dschidda kam. Von unserem Team verliehen."
+ "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team.": "Für den Zieleinlauf beim T25, als das Rennen nach Dschidda kam. Von unserem Team verliehen.",
+ "Level {0} of {1}": "Stufe {0} von {1}",
+ "Levels": "Stufen",
+ "Top level reached": "Höchste Stufe erreicht"
 }

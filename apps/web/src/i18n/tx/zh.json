@@ -1099,14 +1099,14 @@
  "{0} spot left": "仅剩 {0} 个名额",
  "The peloton is the main pack of a race. Twenty-five community rides put you at its heart.": "大集团是比赛中的主车群。完成 25 次社区骑行，让您置身其核心。",
  "Rolling Start": "行进间起步",
- "Your first community ride": "您的首次社区骑行",
- "A rolling start is a race that begins already moving. Your first community ride gets you rolling.": "行进间起步是一种在行进中开始的比赛。完成首次社区骑行，您就上路了。",
+ "Your first community ride": "您的第一次社区骑行",
+ "A rolling start is a race that begins already moving. Your first community ride gets you rolling.": "行进间起步是指车手在行进中开始的比赛。完成第一次社区骑行，您就出发了。",
  "Grand Tour": "大环赛",
  "50 community rides": "50 次社区骑行",
  "The Grand Tours are cycling's three-week races. Fifty community rides make a grand tour of your own.": "大环赛是自行车运动中为期三周的赛事。完成 50 次社区骑行，就是属于您自己的大环赛。",
  "Hall of Fame": "名人堂",
  "100 community rides": "100 次社区骑行",
- "A hundred community rides: a place among MicroMobility's greats.": "完成 100 次社区骑行：在 MicroMobility 的传奇之中占有一席之地。",
+ "A hundred community rides: a place among MicroMobility's greats.": "完成 100 次社区骑行：在 MicroMobility 的传奇骑手中占有一席之地。",
  "Held booking #1 in a session": "在某个场次中拿到 1 号预订",
  "Riding is better together: for bringing three or more riders to one ride.": "一起骑更尽兴：献给一次带上 3 名或更多骑行者参加同一场骑行的您。",
  "A paceline is a group taking turns at the front. Ten community rides make you part of it.": "轮车队列是一群人轮流到最前面领骑。完成 10 次社区骑行，您就是其中一员。",
@@ -1491,5 +1491,8 @@
  "For crossing the finish line of the T50 when the race came to Jeddah. Given by our team.": "T50比赛在吉达举行时冲过终点线。由我们的团队颁发。",
  "T25 Finisher": "T25完赛",
  "Finished the T25 race in Jeddah": "在吉达完成T25比赛",
- "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team.": "T25比赛在吉达举行时冲过终点线。由我们的团队颁发。"
+ "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team.": "T25比赛在吉达举行时冲过终点线。由我们的团队颁发。",
+ "Level {0} of {1}": "第 {0} 级，共 {1} 级",
+ "Levels": "等级",
+ "Top level reached": "已达最高等级"
 }

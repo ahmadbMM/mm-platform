@@ -1106,7 +1106,7 @@
  "The Grand Tours are cycling's three-week races. Fifty community rides make a grand tour of your own.": "গ্র্যান্ড ট্যুর হলো সাইক্লিংয়ের তিন সপ্তাহের রেস। পঞ্চাশটি কমিউনিটি রাইড আপনার নিজের গ্র্যান্ড ট্যুর।",
  "Hall of Fame": "হল অফ ফেম",
  "100 community rides": "100টি কমিউনিটি রাইড",
- "A hundred community rides: a place among MicroMobility's greats.": "একশোটি কমিউনিটি রাইড: MicroMobility-র সেরাদের মাঝে আপনার জায়গা।",
+ "A hundred community rides: a place among MicroMobility's greats.": "একশোটি কমিউনিটি রাইড: মাইক্রোমোবিলিটির সেরাদের মাঝে আপনার জায়গা।",
  "Held booking #1 in a session": "কোনো সেশনে 1 নম্বর বুকিং পেয়েছেন",
  "Riding is better together: for bringing three or more riders to one ride.": "একসঙ্গে রাইড করা আরও ভালো: একটি রাইডে তিন বা তার বেশি রাইডার আনার জন্য।",
  "A paceline is a group taking turns at the front. Ten community rides make you part of it.": "পেসলাইন হলো এমন দল যারা পালা করে সামনে থাকে। দশটি কমিউনিটি রাইড আপনাকে এর অংশ করে।",
@@ -1491,5 +1491,8 @@
  "For crossing the finish line of the T50 when the race came to Jeddah. Given by our team.": "রেসটি জেদ্দায় এলে T50-এর ফিনিশ লাইন পার করার জন্য। আমাদের টিমের পক্ষ থেকে।",
  "T25 Finisher": "T25 ফিনিশার",
  "Finished the T25 race in Jeddah": "জেদ্দায় T25 রেস শেষ করেছেন",
- "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team.": "রেসটি জেদ্দায় এলে T25-এর ফিনিশ লাইন পার করার জন্য। আমাদের টিমের পক্ষ থেকে।"
+ "For crossing the finish line of the T25 when the race came to Jeddah. Given by our team.": "রেসটি জেদ্দায় এলে T25-এর ফিনিশ লাইন পার করার জন্য। আমাদের টিমের পক্ষ থেকে।",
+ "Level {0} of {1}": "লেভেল {0} / {1}",
+ "Levels": "লেভেল",
+ "Top level reached": "সর্বোচ্চ লেভেলে পৌঁছেছেন"
 }

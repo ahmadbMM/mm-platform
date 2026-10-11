@@ -7,7 +7,7 @@ html:is([lang="ar"], [lang="ur"]) .bz-eyebrow { letter-spacing: 0; font-size: 13
 .bz-hero h1 { font-size: clamp(44px, 6vw, 92px); line-height: .92; letter-spacing: -3px; margin: 0 0 18px; max-width: 960px; }
 .bz-hero p { color: #4e554f; font-size: 18px; line-height: 1.65; max-width: 640px; margin: 0; }
 .bz-tabs { display: flex; gap: 10px; flex-wrap: wrap; padding: 0 7vw 40px; }
-.bz-tabs button { cursor: pointer; border: 1px solid rgba(0, 0, 0, .25); background: transparent; color: #2e352f; border-radius: 999px; padding: 12px 24px; font-weight: 700; font-size: 14px; font-family: inherit; min-height: 44px; }
+.bz-tabs button { cursor: pointer; border: 1px solid rgba(0, 0, 0, .25); background: transparent; color: #2e352f; border-radius: 0; padding: 12px 24px; font-weight: 700; font-size: 14px; font-family: inherit; min-height: 44px; }
 .bz-tabs button[aria-selected="true"] { background: #1a1919; color: #fbf9f4; border-color: #1a1919; }
 .bz-svc { padding: 0 7vw 70px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
 .bz-svc-img { border-radius: 34px; min-height: 400px; background-size: cover; background-position: center; background-color: #dfe5df; }

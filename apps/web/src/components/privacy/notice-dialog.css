@@ -10,7 +10,7 @@
 [dir="rtl"] .pv-dialog-head { padding: 14px 24px 14px 16px; }
 .mm-site .pv-dialog-head h2 { margin: 0; font-size: 20px; letter-spacing: -.3px; line-height: 1.2; }
 .pv-dialog-head form { margin: 0; }
-.pv-dialog-x { width: 44px; height: 44px; border-radius: 50%; border: 0; background: rgba(0, 0, 0, .06); color: #1a1919; cursor: pointer; display: grid; place-items: center; }
+.pv-dialog-x { width: 44px; height: 44px; border-radius: 0; border: 0; background: rgba(0, 0, 0, .06); color: #1a1919; cursor: pointer; display: grid; place-items: center; }
 .pv-dialog-x:hover { background: rgba(0, 0, 0, .1); }
 .pv-dialog-x:focus-visible { outline: 3px solid rgba(7, 122, 75, .4); outline-offset: 2px; }
 .pv-dialog-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 18px 24px 28px; }

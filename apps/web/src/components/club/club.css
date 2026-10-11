@@ -8,7 +8,7 @@ html:is([lang="ar"], [lang="ur"]) .club-eyebrow { letter-spacing: 0; font-size: 
 .club-hero h1 { font-size: clamp(40px, 5.4vw, 78px); line-height: .92; letter-spacing: -2.5px; margin: 0 0 18px; }
 .club-hero-text { color: rgba(251, 249, 244, .72); font-size: 18px; line-height: 1.6; max-width: 520px; margin: 0 0 28px; }
 .club-hero-btns { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
-.club-hero-btns a { display: inline-flex; align-items: center; padding: 15px 30px; border-radius: 999px; font-weight: 800; font-size: 15px; min-height: 44px; box-sizing: border-box; }
+.club-hero-btns a { display: inline-flex; align-items: center; padding: 15px 30px; border-radius: 0; font-weight: 800; font-size: 15px; min-height: 44px; box-sizing: border-box; }
 .club-hero-btns a.primary { background: #077a4b; color: #fbf9f4; }
 .club-hero-btns a.line { border: 1px solid rgba(255, 255, 255, .3); color: #fbf9f4; font-weight: 700; }
 .club-stats { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 34px; }
@@ -50,9 +50,9 @@ html:is([lang="ar"], [lang="ur"]) .club-eyebrow { letter-spacing: 0; font-size: 
 .club-lookup h2 { font-size: clamp(24px, 2.6vw, 34px); letter-spacing: -1px; margin: 0 0 8px; }
 .club-lookup > p { color: #57605a; font-size: 14.5px; line-height: 1.6; margin: 0 0 18px; }
 .club-lookup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.club-input { box-sizing: border-box; width: 100%; background: #fbf9f4; border: 1px solid rgba(0, 0, 0, .16); border-radius: 14px; padding: 14px 16px; font-size: 14.5px; outline: none; font-family: inherit; color: #1a1919; }
+.club-input { box-sizing: border-box; width: 100%; background: #fbf9f4; border: 1px solid rgba(0, 0, 0, .16); border-radius: 0; padding: 14px 16px; font-size: 14.5px; outline: none; font-family: inherit; color: #1a1919; }
 .club-input:focus { border-color: #077a4b; }
-.club-btn { cursor: pointer; width: 100%; border: 0; border-radius: 999px; padding: 15px; margin-top: 12px; background: #077a4b; color: #fbf9f4; font-weight: 800; font-size: 15px; font-family: inherit; min-height: 48px; }
+.club-btn { cursor: pointer; width: 100%; border: 0; border-radius: 0; padding: 15px; margin-top: 12px; background: #077a4b; color: #fbf9f4; font-weight: 800; font-size: 15px; font-family: inherit; min-height: 48px; }
 .club-btn:disabled { opacity: .55; cursor: default; }
 .club-err { color: #b3261e; font-size: 13px; font-weight: 600; margin: 12px 0 0; }
 .club-notmember { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; background: rgba(7, 122, 75, .07); border-radius: 16px; padding: 16px 18px; color: #2b332d; font-size: 14px; line-height: 1.55; }

@@ -31,13 +31,13 @@ html:is([lang="ar"], [lang="ur"]) .ws-eyebrow { letter-spacing: 0; font-size: 13
 .ws-label { font-size: 13.5px; color: #57605a; font-weight: 600; display: block; margin: 0 0 8px; }
 .ws-hint { color: #5f6862; font-size: 12px; margin: -4px 0 10px; }
 .ws-lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 7px; margin-bottom: 16px; }
-.ws-lane { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); background: #fff; color: #1a1919; border-radius: 14px; padding: 12px 10px; font-family: inherit; text-align: start; min-height: 64px; display: flex; flex-direction: column; gap: 3px; }
+.ws-lane { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); background: #fff; color: #1a1919; border-radius: 0; padding: 12px 10px; font-family: inherit; text-align: start; min-height: 64px; display: flex; flex-direction: column; gap: 3px; }
 .ws-lane strong { font-size: 12.5px; line-height: 1.2; }
 .ws-lane span { font-size: 10.5px; color: #5f6862; line-height: 1.3; }
 .ws-lane[aria-checked="true"] { border-color: #077a4b; background: rgba(7, 122, 75, .06); }
 .ws-chips, .ws-days { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 16px; }
-.ws-chips button, .ws-days button { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); background: #fff; color: #1a1919; border-radius: 999px; padding: 8px 14px; font-size: 12.5px; font-weight: 700; font-family: inherit; min-height: 40px; }
-.ws-days button { border-radius: 12px; min-height: 44px; }
+.ws-chips button, .ws-days button { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); background: #fff; color: #1a1919; border-radius: 0; padding: 8px 14px; font-size: 12.5px; font-weight: 700; font-family: inherit; min-height: 40px; }
+.ws-days button { border-radius: 0; min-height: 44px; }
 .ws-chips button[aria-pressed="true"], .ws-days button[aria-pressed="true"] { background: #1a1919; color: #03ff89; border-color: #1a1919; }
 .ws-suggest { font-size: 12px; color: #06603b; font-weight: 700; margin: -8px 0 14px; }
 .ws-services { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
@@ -67,7 +67,7 @@ textarea.ws-input { resize: vertical; min-height: 76px; }
 .ws-total { display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid rgba(0, 0, 0, .08); padding-top: 14px; margin-bottom: 12px; }
 .ws-total strong { font-size: 20px; }
 .ws-err { color: #b3261e; font-size: 13px; font-weight: 600; margin: 0 0 12px; }
-.ws-btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; font-weight: 700; font-size: 15px; font-family: inherit; cursor: pointer; min-height: 52px; padding: 0 24px; border: 0; }
+.ws-btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 0; font-weight: 700; font-size: 15px; font-family: inherit; cursor: pointer; min-height: 52px; padding: 0 24px; border: 0; }
 .ws-btn:disabled { opacity: .6; cursor: default; }
 .ws-btn-green { background: #077a4b; color: #fbf9f4; width: 100%; }
 .ws-btn-dark { background: #1a1919; color: #fbf9f4; min-height: 46px; font-size: 14px; }
