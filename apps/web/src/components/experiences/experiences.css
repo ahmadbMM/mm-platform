@@ -6,7 +6,7 @@
 .xp-hero h1 { font-size: clamp(36px, 5.4vw, 66px); line-height: .96; letter-spacing: -2.2px; margin: 0 0 14px; max-width: 720px; }
 .xp-hero-text { color: #d5dbd6; font-size: clamp(15px, 1.5vw, 17px); line-height: 1.55; margin: 0 0 24px; max-width: 520px; text-wrap: pretty; }
 .xp-btns { display: flex; flex-wrap: wrap; gap: 10px; }
-.xp .xp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 52px; padding: 0 26px; border-radius: 999px; background: #077a4b; color: #fbf9f4;
+.xp .xp-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; height: 52px; padding: 0 26px; border-radius: 0; background: #077a4b; color: #fbf9f4;
   font-weight: 700; font-size: 15px; border: 1.5px solid #077a4b; transition: background .2s ease; }
 .xp .xp-btn:hover { background: #06603b; }
 .xp .xp-btn.ghost { background: transparent; border-color: rgba(251, 249, 244, .55); color: #fbf9f4; }
@@ -119,7 +119,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs-prices-t { margin: 0 0 10px; color: #57605a; font-size: 13.5px; }
 .xs-prices > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 18px; margin-bottom: 10px; }
 .xs-prices > div > span { display: flex; justify-content: space-between; gap: 10px; font-size: 14.5px; padding: 6px 0; border-bottom: 1px dashed rgba(26, 25, 25, .12); }
-.xs .xs-go { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 54px; padding: 0 30px; border-radius: 999px; background: #077a4b; color: #fbf9f4; font-weight: 700; font-size: 16px; }
+.xs .xs-go { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 54px; padding: 0 30px; border-radius: 0; background: #077a4b; color: #fbf9f4; font-weight: 700; font-size: 16px; }
 .xs .xs-go:hover { background: #06603b; }
 .xs-handoff { color: #57605a; font-size: 13px; margin: 10px 0 0; }
 @media (max-width: 767px) {
@@ -174,7 +174,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 
 .xs-info-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .xs .xs-info-facts a { color: #077a4b; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
 .xs-info-btns { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
-.xs-info-btns button { flex: 1 1 auto; min-height: 46px; padding: 0 20px; border-radius: 999px; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.xs-info-btns button { flex: 1 1 auto; min-height: 46px; padding: 0 20px; border-radius: 0; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
 .xs-info-close { background: #fff; color: #1a1919; border: 1.5px solid rgba(26, 25, 25, .25); }
 .xs-info-close:hover { background: #f3f1ea; }
 .xs-info-go { background: #077a4b; color: #fbf9f4; border: 1.5px solid #077a4b; }

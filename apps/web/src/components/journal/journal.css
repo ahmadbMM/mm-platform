@@ -5,7 +5,7 @@ html:is([lang="ar"], [lang="ur"]) .jr-eyebrow { letter-spacing: 0; font-size: 13
 .jr h1 { font-size: clamp(42px, 5.6vw, 80px); line-height: .94; letter-spacing: -2.6px; margin: 0 0 16px; max-width: 900px; }
 .jr-lead { color: #57605a; font-size: 18px; line-height: 1.65; margin: 0 0 30px; max-width: 680px; text-wrap: pretty; }
 .jr-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 28px; }
-.jr .jr-chips a { min-height: 40px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .2); display: inline-flex; align-items: center; color: #4a534c; font-size: 13.5px; font-weight: 700; }
+.jr .jr-chips a { min-height: 40px; padding: 0 18px; border-radius: 0; border: 1px solid rgba(0, 0, 0, .2); display: inline-flex; align-items: center; color: #4a534c; font-size: 13.5px; font-weight: 700; }
 .jr .jr-chips a[aria-current="page"] { background: #03ff89; border-color: #03ff89; color: #1a1919; }
 .jr-meta { display: block; color: #077a4b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px; }
 html:is([lang="ar"], [lang="ur"]) .jr-meta { letter-spacing: 0; }
@@ -32,7 +32,7 @@ html:is([lang="ar"], [lang="ur"]) .jr-meta { letter-spacing: 0; }
 .jr-body p, .jr-body li { color: #2e352f; font-size: 17px; line-height: 1.75; }
 .jr-body p { margin: 0 0 16px; }
 .jr-body ul { margin: 0 0 16px; padding-inline-start: 22px; }
-.jr .jr-cta { display: inline-flex; align-items: center; gap: 8px; min-height: 50px; padding: 0 26px; border-radius: 999px; background: #077a4b; color: #fbf9f4; font-weight: 700; font-size: 15px; margin-top: 10px; }
+.jr .jr-cta { display: inline-flex; align-items: center; gap: 8px; min-height: 50px; padding: 0 26px; border-radius: 0; background: #077a4b; color: #fbf9f4; font-weight: 700; font-size: 15px; margin-top: 10px; }
 .jr-more { padding-top: 0; }
 .jr-more h2 { font-size: clamp(24px, 2.6vw, 34px); letter-spacing: -1.2px; margin: 0 0 18px; }
 

@@ -9,7 +9,7 @@
 .wlc-ends { margin: 14px 0 18px; font-size: 15px; color: #3d4540; }
 .wlc-ends b { display: block; margin-top: 4px; color: #077a4b; font-size: 30px; font-variant-numeric: tabular-nums; }
 .wlc-err { margin: 0 0 12px; color: #b3261e; font-size: 14px; }
-.wlc-btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; margin-top: 18px; padding: 0 24px; border: 0; border-radius: 999px; background: #077a4b; color: #fbf9f4; font: inherit; font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer; }
+.wlc-btn { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; margin-top: 18px; padding: 0 24px; border: 0; border-radius: 0; background: #077a4b; color: #fbf9f4; font: inherit; font-size: 15px; font-weight: 700; text-decoration: none; cursor: pointer; }
 .wlc-ends + .wlc-btn, .wlc-err + .wlc-btn { margin-top: 0; }
 .wlc-btn:hover:not(:disabled) { background: #06603b; }
 .wlc-link { display: block; width: 100%; min-height: 44px; margin-top: 8px; border: 0; background: none; color: #3d4540; font: inherit; font-size: 15px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }

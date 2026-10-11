@@ -21,7 +21,7 @@ select.eg-input.eg-ph { color: #8a938c; }
 select.eg-input option { color: #1a1919; }
 .eg-err { margin: 0; color: #b3261e; font-size: 13px; font-weight: 600; line-height: 1.45; }
 .eg-opt { color: #8a938c; font-weight: 500; font-size: 13px; }
-.eg-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; margin: 0 0 6px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .16); background: transparent; color: #077a4b; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.eg-add { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; margin: 0 0 6px; border-radius: 0; border: 1px solid rgba(0, 0, 0, .16); background: transparent; color: #077a4b; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
 .eg-add:hover { background: rgba(7, 122, 75, .08); }
 .eg-add:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
 .eg-kicker { color: #b3261e; }

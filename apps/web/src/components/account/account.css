@@ -12,9 +12,9 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .ac-form input { border: 1px solid rgba(0, 0, 0, .18); border-radius: 12px; padding: 14px 14px; font: inherit; font-size: 16px; font-weight: 400; background: #fff; color: #1a1919; min-width: 0; width: 100%; box-sizing: border-box; }
 .ac-form input:focus { outline: none; border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
 .ac-pwd { display: flex; gap: 8px; }
-.ac-pwd button { flex: none; border: 1px solid rgba(0, 0, 0, .18); background: #fbf9f4; border-radius: 12px; padding: 0 14px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; color: #2e352f; }
+.ac-pwd button { flex: none; border: 1px solid rgba(0, 0, 0, .18); background: #fbf9f4; border-radius: 0; padding: 0 14px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; color: #2e352f; }
 .ac-err { color: #b3261e; font-size: 13.5px; font-weight: 600; margin: 0; }
-.ac-go { border: 0; border-radius: 999px; min-height: 52px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 4px; }
+.ac-go { border: 0; border-radius: 0; min-height: 52px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 4px; }
 .ac-go:disabled { opacity: .6; cursor: default; }
 .ac-notes { list-style: none; margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid rgba(0, 0, 0, .08); display: flex; flex-direction: column; gap: 10px; color: #57605a; font-size: 13.5px; line-height: 1.5; }
 .ac .ac-notes a { color: #077a4b; font-weight: 600; }
@@ -22,7 +22,7 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .ac-in { background: #fbf9f4; }
 .ac-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 34px; max-width: 980px; }
 .ac-who { color: #57605a; font-size: 14px; margin: 0; }
-.ac-out { border: 1px solid rgba(0, 0, 0, .2); background: #fff; border-radius: 999px; min-height: 44px; padding: 0 20px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; color: #1a1919; }
+.ac-out { border: 1px solid rgba(0, 0, 0, .2); background: #fff; border-radius: 0; min-height: 44px; padding: 0 20px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; color: #1a1919; }
 .ac-sec { max-width: 980px; margin-bottom: 40px; }
 .ac-sec h2 { font-size: clamp(22px, 2.4vw, 30px); letter-spacing: -1px; margin: 0 0 14px; }
 .ac-sec-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
@@ -37,7 +37,7 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .ac-ride em { font-style: normal; font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(7, 122, 75, .1); color: #077a4b; white-space: nowrap; }
 .ac-ride em.waitlist { background: rgba(122, 90, 16, .12); color: #7a5a10; }
 .ac-links { display: flex; flex-wrap: wrap; gap: 10px; max-width: 980px; }
-.ac .ac-links a { background: #fff; border: 1px solid rgba(0, 0, 0, .1); border-radius: 999px; min-height: 44px; padding: 0 18px; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
+.ac .ac-links a { background: #fff; border: 1px solid rgba(0, 0, 0, .1); border-radius: 0; min-height: 44px; padding: 0 18px; display: inline-flex; align-items: center; gap: 8px; font-weight: 700; font-size: 14px; }
 @media (max-width: 700px) {
   .ac { padding: 40px 16px 64px; }
   .ac-ride { grid-template-columns: 1fr; gap: 10px; }
@@ -99,7 +99,7 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .mr-badges-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0; font-size: 15px; font-weight: 700; color: #1a1919; }
 .mr-badges-n { font-size: 12px; font-weight: 600; color: #6e6b63; font-variant-numeric: tabular-nums; }
 .mr-badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); grid-auto-rows: 1fr; gap: 6px; margin-top: 10px; }
-.mr-badge { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 8px 3px 6px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 10px; font: inherit; font-size: 12px; font-weight: 700; line-height: 1.2; text-align: center; color: #1a1919; cursor: pointer; }
+.mr-badge { position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; padding: 8px 3px 6px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 0; font: inherit; font-size: 12px; font-weight: 700; line-height: 1.2; text-align: center; color: #1a1919; cursor: pointer; }
 .mr-badge:focus-visible, .mr-badges-more:focus-visible, .badge-pop-close:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
 .mr-badge .bdg-m { width: 30px; height: 30px; }
 .mr-badge-nm { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; max-width: 100%; height: 2.4em; overflow-wrap: break-word; }
@@ -110,7 +110,7 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .mr-badge.sp-national { --sp1: #5fd99a; --sp2: #159a57; --sp3: #0a5c33; }
 .mr-badge.sp-pink { --sp1: #ffc9da; --sp2: #f2789f; --sp3: #c2416e; } /* Run for Her */
 .mr-badge.special.locked { background: #fff; border: 1px solid rgba(26, 25, 25, .12); }
-.mr-badges-more { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; padding: 9px 12px; background: #fff; border: 1px dashed rgba(26, 25, 25, .24); border-radius: 10px; font: inherit; font-size: 13px; font-weight: 700; color: #1a1919; text-align: start; cursor: pointer; }
+.mr-badges-more { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; padding: 9px 12px; background: #fff; border: 1px dashed rgba(26, 25, 25, .24); border-radius: 0; font: inherit; font-size: 13px; font-weight: 700; color: #1a1919; text-align: start; cursor: pointer; }
 .mr-bm-peek { display: flex; flex: none; }
 .mr-bm-peek .bdg-m { width: 22px; height: 22px; filter: grayscale(1); opacity: .7; }
 .mr-bm-peek .bdg-m + .bdg-m { margin-inline-start: -7px; }
@@ -140,7 +140,7 @@ dialog.badge-pop-box.sp-pink { border-top-color: #f2789f; }
 .badge-pop-note { margin-top: 12px !important; padding: 9px 11px; border-radius: 8px; background: #f4f1ea; font-size: 13px; font-style: italic; overflow-wrap: anywhere; }
 .badge-pop-earned { margin-top: 12px !important; font-size: 13px; font-weight: 800; color: #077a4b; }
 .badge-pop-prog { margin-top: 12px !important; font-size: 15px; font-weight: 700; color: #077a4b; font-variant-numeric: tabular-nums; }
-.badge-pop-close { width: 100%; height: 44px; margin-top: 14px; border-radius: 10px; border: 1px solid rgba(26, 25, 25, .24); background: #fff; font: inherit; font-size: 13px; font-weight: 700; color: #1a1919; cursor: pointer; }
+.badge-pop-close { width: 100%; height: 44px; margin-top: 14px; border-radius: 0; border: 1px solid rgba(26, 25, 25, .24); background: #fff; font: inherit; font-size: 13px; font-weight: 700; color: #1a1919; cursor: pointer; }
 /* Badge ladders (the booking app's "Badge ladders", 2026-10-09): a tile's level dots under its name, out
    of the flow so a ladder tile is as tall as any other (every tile keeps the room under its name), and
    the popup's list of levels, the reached ones ticked. */

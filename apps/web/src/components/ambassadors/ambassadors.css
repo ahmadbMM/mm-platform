@@ -6,7 +6,7 @@ html:is([lang="ar"], [lang="ur"]) .amb-eyebrow { letter-spacing: 0; font-size: 1
 .amb-hero h1 { font-size: clamp(38px, 5.2vw, 74px); line-height: .94; letter-spacing: -2.5px; margin: 0 0 18px; }
 .amb-hero-text { color: rgba(251, 249, 244, .72); font-size: 18px; line-height: 1.6; max-width: 540px; margin: 0 0 28px; }
 .amb-hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
-.amb-hero-btns a { display: inline-flex; align-items: center; padding: 15px 30px; border-radius: 999px; font-weight: 800; font-size: 15px; min-height: 44px; box-sizing: border-box; }
+.amb-hero-btns a { display: inline-flex; align-items: center; padding: 15px 30px; border-radius: 0; font-weight: 800; font-size: 15px; min-height: 44px; box-sizing: border-box; }
 .amb-hero-btns a.primary { background: #077a4b; color: #fbf9f4; }
 .amb-hero-btns a.line { border: 1px solid rgba(255, 255, 255, .3); color: #fbf9f4; font-weight: 700; }
 .amb-stats { display: flex; gap: 26px; flex-wrap: wrap; margin-top: 34px; }
@@ -55,9 +55,9 @@ html:is([lang="ar"], [lang="ur"]) .amb-eyebrow { letter-spacing: 0; font-size: 1
 .amb-lookup h2 { font-size: 24px; margin: 0 0 6px; }
 .amb-lookup > p { color: #57605a; font-size: 14.5px; margin: 0 0 16px; }
 .amb-lookup-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; }
-.amb-input { box-sizing: border-box; width: 100%; background: #fbf9f4; border: 1px solid rgba(0, 0, 0, .16); border-radius: 14px; padding: 14px 16px; font-size: 14.5px; outline: none; font-family: inherit; color: #1a1919; }
+.amb-input { box-sizing: border-box; width: 100%; background: #fbf9f4; border: 1px solid rgba(0, 0, 0, .16); border-radius: 0; padding: 14px 16px; font-size: 14.5px; outline: none; font-family: inherit; color: #1a1919; }
 .amb-input:focus { border-color: #077a4b; }
-.amb-btn { cursor: pointer; border: 0; border-radius: 999px; padding: 0 24px; min-height: 48px; font-weight: 800; font-size: 15px; font-family: inherit; }
+.amb-btn { cursor: pointer; border: 0; border-radius: 0; padding: 0 24px; min-height: 48px; font-weight: 800; font-size: 15px; font-family: inherit; }
 .amb-btn:disabled { opacity: .55; cursor: default; }
 .amb-btn-green { background: #077a4b; color: #fbf9f4; }
 .amb-full { width: 100%; margin-top: 16px; }
@@ -72,7 +72,7 @@ html:is([lang="ar"], [lang="ur"]) .amb-eyebrow { letter-spacing: 0; font-size: 1
 .amb-card-name { font-size: 21px; }
 .amb-card-code { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: rgba(0, 0, 0, .3); border: 1px dashed rgba(3, 255, 137, .5); border-radius: 14px; padding: 13px 16px; }
 .amb-card-code strong { font-size: 21px; letter-spacing: 2px; }
-.amb-card-code button { cursor: pointer; border: 0; border-radius: 999px; padding: 9px 16px; background: #077a4b; color: #fbf9f4; font-weight: 800; font-size: 12px; font-family: inherit; min-height: 38px; }
+.amb-card-code button { cursor: pointer; border: 0; border-radius: 0; padding: 9px 16px; background: #077a4b; color: #fbf9f4; font-weight: 800; font-size: 12px; font-family: inherit; min-height: 38px; }
 .amb-card-nums { display: flex; gap: 20px; }
 .amb-card-nums span { display: block; color: rgba(251, 249, 244, .55); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
 .amb-card-nums strong { font-size: 30px; letter-spacing: -1.5px; }
@@ -80,7 +80,7 @@ html:is([lang="ar"], [lang="ur"]) .amb-eyebrow { letter-spacing: 0; font-size: 1
 .amb-bar { display: block; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .14); overflow: hidden; }
 .amb-bar span { display: block; height: 100%; background: #077a4b; }
 .amb-card-next { color: rgba(251, 249, 244, .7); font-size: 12.5px; }
-.amb-wa { display: inline-flex; align-items: center; justify-content: center; padding: 13px; border-radius: 999px; background: #25d366; color: #fff !important; font-weight: 700; font-size: 14px; min-height: 44px; }
+.amb-wa { display: inline-flex; align-items: center; justify-content: center; padding: 13px; border-radius: 0; background: #25d366; color: #fff !important; font-weight: 700; font-size: 14px; min-height: 44px; }
 .amb-side { display: flex; flex-direction: column; gap: 16px; }
 .amb-panel { background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 22px; padding: 24px; }
 .amb-panel-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: #4a534c; display: block; margin-bottom: 14px; }
@@ -97,7 +97,7 @@ html:is([lang="ar"], [lang="ur"]) .amb-panel-title { letter-spacing: 0; }
 .amb-rewards li span { flex: 1; font-size: 14px; color: #2b332d; font-weight: 600; }
 .amb-rewards li small { color: #5f6862; font-size: 12.5px; white-space: nowrap; }
 .amb-rewards li.off { opacity: .45; }
-.amb-rewards button { cursor: pointer; border: 1px solid rgba(7, 122, 75, .4); background: rgba(7, 122, 75, .06); color: #077a4b; border-radius: 999px; padding: 9px 16px; font-weight: 700; font-size: 12px; font-family: inherit; min-height: 38px; }
+.amb-rewards button { cursor: pointer; border: 1px solid rgba(7, 122, 75, .4); background: rgba(7, 122, 75, .06); color: #077a4b; border-radius: 0; padding: 9px 16px; font-weight: 700; font-size: 12px; font-family: inherit; min-height: 38px; }
 .amb-rewards button:disabled { cursor: default; }
 .amb-note { color: #077a4b; font-size: 13px; font-weight: 700; margin: 12px 0 0; }
 .amb-link { background: none; border: 0; color: #57605a; font-family: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; align-self: flex-start; padding: 4px 0; }

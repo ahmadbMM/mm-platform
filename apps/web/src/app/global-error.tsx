@@ -8,7 +8,7 @@ import { reportError } from "@/lib/report-error";
 // other failure (api/log-error).
 export default function GlobalError({ error, retry }: { error: Error & { digest?: string }; retry: () => void }) {
   useEffect(() => { reportError(error); }, [error]);
-  const btn = { font: "inherit", fontWeight: 700, padding: "12px 22px", borderRadius: 999, border: "1px solid #1A1919", cursor: "pointer" } as const;
+  const btn = { font: "inherit", fontWeight: 700, padding: "12px 22px", borderRadius: 0, border: "1px solid #1A1919", cursor: "pointer" } as const;
   return (
     <html lang="en">
       <body style={{ margin: 0, minHeight: "100vh", display: "grid", placeItems: "center", background: "#FBF9F4", color: "#1A1919", fontFamily: "system-ui, sans-serif", textAlign: "center", padding: 24 }}>

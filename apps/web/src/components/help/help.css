@@ -7,7 +7,7 @@ html:is([lang="ar"], [lang="ur"]) .hp-eyebrow { letter-spacing: 0; font-size: 13
 .hp h1 { font-size: clamp(38px, 5vw, 64px); line-height: .94; letter-spacing: -2px; margin: 0 0 10px; }
 .hp-lead { color: #57605a; font-size: 16px; line-height: 1.65; margin: 0 0 30px; max-width: 560px; }
 .hp-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 34px; }
-.hp-tabs button { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); border-radius: 999px; padding: 11px 22px; background: #fff; color: #1a1919; font-weight: 700; font-size: 14px; font-family: inherit; min-height: 44px; transition: all .25s ease; }
+.hp-tabs button { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); border-radius: 0; padding: 11px 22px; background: #fff; color: #1a1919; font-weight: 700; font-size: 14px; font-family: inherit; min-height: 44px; transition: all .25s ease; }
 .hp-tabs button[aria-selected="true"] { background: #1a1919; color: #fbf9f4; border-color: #1a1919; }
 .hp-list { display: flex; flex-direction: column; gap: 12px; max-width: 820px; }
 .hp-q { background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 18px; transition: border-color .25s ease; }
@@ -25,7 +25,7 @@ html:is([lang="ar"], [lang="ur"]) .hp-eyebrow { letter-spacing: 0; font-size: 13
 .hp-cta h3 { font-size: 22px; margin: 0 0 6px; color: #fbf9f4; }
 .hp-cta p { color: #b9c0ba; font-size: 14px; line-height: 1.6; margin: 0; }
 .hp-cta-btns { display: flex; gap: 10px; flex-wrap: wrap; }
-.hp-cta a { display: inline-flex; align-items: center; gap: 8px; padding: 13px 24px; border-radius: 999px; font-weight: 700; font-size: 14px; min-height: 44px; box-sizing: border-box; }
+.hp-cta a { display: inline-flex; align-items: center; gap: 8px; padding: 13px 24px; border-radius: 0; font-weight: 700; font-size: 14px; min-height: 44px; box-sizing: border-box; }
 .hp-cta a.wa { background: #077a4b; color: #fbf9f4; }
 .hp-cta a.call { border: 1px solid rgba(255, 255, 255, .3); color: #fbf9f4; }
 @media (max-width: 760px) {
