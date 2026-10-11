@@ -6,7 +6,7 @@ import { app, busy, button, errorNote, field, note, savedLang, setLang, t } from
 import { afterBooking } from "./book";
 import { renderBookings } from "./bookings";
 import { invalidateCalendar, renderCalendar } from "./calendar";
-import { mailLink, MM_EMAIL, waLink } from "./contact";
+import { mailLink, MM_EMAIL, pwWaLink } from "./contact";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
 import { renderInsights } from "./insights";
@@ -134,7 +134,7 @@ function renderSignIn(): void {
   const mail = h("a", { class: "btn btn-secondary btn-small" }, icon("mail"), h("span", {}, t("forgotEmail")));
   function paintForgot(): void {
     const body = t("forgotBody", { login: login.input.value.trim() || "-" });
-    wa.setAttribute("href", waLink(body));
+    wa.setAttribute("href", pwWaLink(body));
     mail.setAttribute("href", mailLink(t("forgotSubject"), body));
   }
   paintForgot();
