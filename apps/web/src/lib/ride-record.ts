@@ -28,19 +28,31 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   rolling_start: ["wind", "teal"], grand_tour: ["wind", "purple"], hall_of_fame: ["wind", "special"],
   clean_sheet: ["calcheck", "green"], works_team: ["briefcase", "teal"], perfect_week: ["calstar", "purple"], perfect_month: ["calcrown", "gold"],
   run_for_her: ["ribbon", "pink"],
+  // the staff ladders' higher levels and Front Row's (the booking app, 2026-10-12)
+  senior_marshal: ["shield", "blue"], chief_marshal: ["shield", "gold"], pit_boss: ["wrench", "teal"], crew_chief: ["wrench", "gold"],
+  clear_track: ["wflag", "teal"], track_guardian: ["wflag", "gold"], tech_inspector: ["search", "blue"], chief_scrutineer: ["search", "gold"],
+  hat_trick: ["trophy", "purple"], grand_champion: ["trophy", "special"], fair_play: ["heart", "purple"], heart_of_race: ["heart", "gold"],
+  bike_owner: ["bike", "green"], road_owner: ["bike", "blue"], carbon_owner: ["bike", "special"], pole_position: ["one", "purple"], pole_master: ["one", "red"],
   winter_series: ["snow", "blue"], ramadan_nights: ["lantern", "purple"], founding_day: ["fort", "orange"],
 };
 /** The badges staff give by hand that the app knows itself (BDG_GIVEN_SYS): shown where the
  *  database has no catalogue. */
-const GIVEN_SYS = ["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t100", "t50", "t25"];
+const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "pit_crew", "pit_boss", "crew_chief", "green_flag", "clear_track", "track_guardian", "super_licence",
+  "scrutineer", "tech_inspector", "chief_scrutineer", "champion", "hat_trick", "grand_champion", "spirit", "fair_play", "heart_of_race", "t100", "t50", "t25",
+  "bike_owner", "road_owner", "carbon_owner"];
 
 /** Badge ladders (the booking app's BDG_LADDERS, 2026-10-09: "the same way it's done in clash of clans
  *  achievements"): badges that count the same thing to a higher number are the levels of one badge,
  *  lowest first. A level reached brings every level under it, given by staff or earned by riding
- *  ("getting the t100 automatically gives the ones before"). */
+ *  ("getting the t100 automatically gives the ones before"). The badges staff give have levels too
+ *  (2026-10-12: "put levels and multiple badges in each one"), and so does Front Row; Bike Owner climbs
+ *  from any bike bought from us to a road bike, then a carbon road bike. */
 export const LADDERS: string[][] = [
   ["first_lap", "regular", "podium", "corniche25"], ["streak", "safety_car", "endurance"],
   ["rolling_start", "slipstream", "paceline", "peloton", "grand_tour", "hall_of_fame"], ["perfect_week", "perfect_month"], ["t25", "t50", "t100"],
+  ["marshal", "senior_marshal", "chief_marshal"], ["pit_crew", "pit_boss", "crew_chief"], ["green_flag", "clear_track", "track_guardian"],
+  ["scrutineer", "tech_inspector", "chief_scrutineer"], ["champion", "hat_trick", "grand_champion"], ["spirit", "fair_play", "heart_of_race"],
+  ["front_row", "pole_position", "pole_master"], ["bike_owner", "road_owner", "carbon_owner"],
 ];
 const LADDER_OF = new Map(LADDERS.flatMap((L) => L.map((s, i) => [s, [L, i]] as const)));
 /** A set of slugs held, with every level under each one (_bdgClimb). */
@@ -189,7 +201,11 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
   const ses = (id: string) => sessions.get(id);
   const done = (r: TicketRow) => rideCompleted(r, !!ses(r.sessionId)?.freeRide);
   const completed = rows.filter(done), rides = completed.length;
-  const anyP1 = rows.some((r) => r.queueNum === 1 && !ses(r.sessionId)?.approval);
+  // a ride that counts towards a badge (_bdgRode): done and paid, or free, or an own bike checked in
+  const rode = (r: TicketRow) => done(r) || (r.type === "Own" && (r.status === "done" || r.status === "active"));
+  // Front Row's levels (2026-10-12): nights first in the queue and ridden ("make sure all badges go for
+  // deserved holders"); a ride staff approve shows no number, so it never counts
+  const p1 = new Set(rows.filter((r) => r.queueNum === 1 && rode(r) && !ses(r.sessionId)?.approval).map((r) => r.sessionId)).size;
   const carbon = rows.some((r) => r.type === "Road Carbon" && (r.status === "done" || r.status === "active"));
   const per = new Map<string, number>();
   for (const r of rows) per.set(r.sessionId, (per.get(r.sessionId) ?? 0) + 1);
@@ -221,7 +237,8 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
     { s: "national_day_96", on: nd96, hide: true },
     { s: "run_for_her", on: rfh, hide: true }, // the pink ribbon: shown to those who finished it
     { s: "first_lap", on: rides >= 1, p: `${rides}/1` }, { s: "regular", on: rides >= 5, p: P(rides, 5) }, { s: "podium", on: rides >= 10, p: P(rides, 10) },
-    { s: "front_row", on: anyP1 }, { s: "carbon", on: carbon }, { s: "streak", on: streak >= 3 || R.best >= 3, p: P(streak, 3) },
+    { s: "front_row", on: p1 >= 1, p: P(p1, 1) }, { s: "pole_position", on: p1 >= 3, p: P(p1, 3) }, { s: "pole_master", on: p1 >= 5, p: P(p1, 5) },
+    { s: "carbon", on: carbon }, { s: "streak", on: streak >= 3 || R.best >= 3, p: P(streak, 3) },
     { s: "squad", on: squad >= 3 }, { s: "fuel", on: fuel }, { s: "corniche25", on: rides >= 25, p: P(rides, 25) },
     { s: "safety_car", on: R.bestS >= 6, p: P(R.curS, 6) }, { s: "endurance", on: R.bestS >= 12, p: P(R.curS, 12) },
     { s: "triple_crown", on: kinds.size >= 3, p: P(kinds.size, 3) }, { s: "clean_sheet", on: cleanBest >= 10, p: P(clean, 10) },
