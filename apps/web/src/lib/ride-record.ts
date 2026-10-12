@@ -31,14 +31,23 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   // the staff ladders' higher levels and Front Row's (the booking app, 2026-10-12)
   senior_marshal: ["shield", "blue"], chief_marshal: ["shield", "gold"], pit_boss: ["wrench", "teal"], crew_chief: ["wrench", "gold"],
   clear_track: ["wflag", "teal"], track_guardian: ["wflag", "gold"], tech_inspector: ["search", "blue"], chief_scrutineer: ["search", "gold"],
-  hat_trick: ["trophy", "purple"], grand_champion: ["trophy", "special"], fair_play: ["heart", "purple"], heart_of_race: ["heart", "gold"],
+  hat_trick: ["trophy", "purple"], grand_champion: ["trophy", "red"], fair_play: ["heart", "purple"], heart_of_race: ["heart", "gold"],
   bike_owner: ["bike", "green"], road_owner: ["bike", "blue"], carbon_owner: ["bike", "special"], pole_position: ["one", "purple"], pole_master: ["one", "red"],
+  // levels 4 and 5 of the seven ladders (2026-10-12: "1 5 10 are too low even if you need to increase the number of levels")
+  clerk_of_course: ["shield", "red"], race_director: ["shield", "special"], team_manager: ["wrench", "red"], team_principal: ["wrench", "special"],
+  flag_bearer: ["wflag", "red"], track_legend: ["wflag", "special"], tech_delegate: ["search", "red"], chief_engineer: ["search", "special"],
+  dynasty: ["trophy", "blue"], world_champion: ["trophy", "special"], ride_ambassador: ["heart", "red"], soul_of_ride: ["heart", "special"],
+  grid_leader: ["one", "blue"], pole_legend: ["one", "special"],
   winter_series: ["snow", "blue"], ramadan_nights: ["lantern", "purple"], founding_day: ["fort", "orange"],
 };
 /** The badges staff give by hand that the app knows itself (BDG_GIVEN_SYS): shown where the
  *  database has no catalogue. */
-const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "pit_crew", "pit_boss", "crew_chief", "green_flag", "clear_track", "track_guardian", "super_licence",
-  "scrutineer", "tech_inspector", "chief_scrutineer", "champion", "hat_trick", "grand_champion", "spirit", "fair_play", "heart_of_race", "t100", "t50", "t25",
+const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_course", "race_director",
+  "pit_crew", "pit_boss", "crew_chief", "team_manager", "team_principal",
+  "green_flag", "clear_track", "track_guardian", "flag_bearer", "track_legend", "super_licence",
+  "scrutineer", "tech_inspector", "chief_scrutineer", "tech_delegate", "chief_engineer",
+  "champion", "hat_trick", "grand_champion", "dynasty", "world_champion",
+  "spirit", "fair_play", "heart_of_race", "ride_ambassador", "soul_of_ride", "t100", "t50", "t25",
   "bike_owner", "road_owner", "carbon_owner"];
 
 /** Badge ladders (the booking app's BDG_LADDERS, 2026-10-09: "the same way it's done in clash of clans
@@ -50,9 +59,11 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "pit_crew", "pi
 export const LADDERS: string[][] = [
   ["first_lap", "regular", "podium", "corniche25"], ["streak", "safety_car", "endurance"],
   ["rolling_start", "slipstream", "paceline", "peloton", "grand_tour", "hall_of_fame"], ["perfect_week", "perfect_month"], ["t25", "t50", "t100"],
-  ["marshal", "senior_marshal", "chief_marshal"], ["pit_crew", "pit_boss", "crew_chief"], ["green_flag", "clear_track", "track_guardian"],
-  ["scrutineer", "tech_inspector", "chief_scrutineer"], ["champion", "hat_trick", "grand_champion"], ["spirit", "fair_play", "heart_of_race"],
-  ["front_row", "pole_position", "pole_master"], ["bike_owner", "road_owner", "carbon_owner"],
+  // five levels each since 2026-10-12: 1/10/25/50/100, Champion's and Front Row's 1/5/10/25/50
+  ["marshal", "senior_marshal", "chief_marshal", "clerk_of_course", "race_director"], ["pit_crew", "pit_boss", "crew_chief", "team_manager", "team_principal"],
+  ["green_flag", "clear_track", "track_guardian", "flag_bearer", "track_legend"], ["scrutineer", "tech_inspector", "chief_scrutineer", "tech_delegate", "chief_engineer"],
+  ["champion", "hat_trick", "grand_champion", "dynasty", "world_champion"], ["spirit", "fair_play", "heart_of_race", "ride_ambassador", "soul_of_ride"],
+  ["front_row", "pole_position", "pole_master", "grid_leader", "pole_legend"], ["bike_owner", "road_owner", "carbon_owner"],
 ];
 const LADDER_OF = new Map(LADDERS.flatMap((L) => L.map((s, i) => [s, [L, i]] as const)));
 /** A set of slugs held, with every level under each one (_bdgClimb). */
@@ -237,7 +248,8 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
     { s: "national_day_96", on: nd96, hide: true },
     { s: "run_for_her", on: rfh, hide: true }, // the pink ribbon: shown to those who finished it
     { s: "first_lap", on: rides >= 1, p: `${rides}/1` }, { s: "regular", on: rides >= 5, p: P(rides, 5) }, { s: "podium", on: rides >= 10, p: P(rides, 10) },
-    { s: "front_row", on: p1 >= 1, p: P(p1, 1) }, { s: "pole_position", on: p1 >= 3, p: P(p1, 3) }, { s: "pole_master", on: p1 >= 5, p: P(p1, 5) },
+    { s: "front_row", on: p1 >= 1, p: P(p1, 1) }, { s: "pole_position", on: p1 >= 5, p: P(p1, 5) }, { s: "pole_master", on: p1 >= 10, p: P(p1, 10) },
+    { s: "grid_leader", on: p1 >= 25, p: P(p1, 25) }, { s: "pole_legend", on: p1 >= 50, p: P(p1, 50) },
     { s: "carbon", on: carbon }, { s: "streak", on: streak >= 3 || R.best >= 3, p: P(streak, 3) },
     { s: "squad", on: squad >= 3 }, { s: "fuel", on: fuel }, { s: "corniche25", on: rides >= 25, p: P(rides, 25) },
     { s: "safety_car", on: R.bestS >= 6, p: P(R.curS, 6) }, { s: "endurance", on: R.bestS >= 12, p: P(R.curS, 12) },

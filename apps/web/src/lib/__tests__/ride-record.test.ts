@@ -47,8 +47,8 @@ describe("the badges", () => {
   const list = (data: BadgeData = empty, r = rows, s = ses, profile: Record<string, unknown> | null = null) => badgeList(r, s, data, today, profile);
   const on = (data?: BadgeData) => list(data).filter((x) => x.on).map((x) => x.slug);
   it("are earned by riding, as the booking app counts them", () => {
-    // four nights first in the queue, all ridden: Front Row's second level, Pole Position
-    expect(on()).toEqual(["first_lap", "pole_position", "streak"]);
+    // four nights first in the queue, all ridden: Front Row, one short of Pole Position (5 since 2026-10-12)
+    expect(on()).toEqual(["first_lap", "front_row", "streak"]);
     // Grid Regular is First Lap's next level: the ladder's one tile counts towards it
     expect(list().find((x) => x.slug === "first_lap")).toMatchObject({ on: true, lvN: 1, p: "4/5", nx: { slug: "regular", on: false, p: "4/5" } });
   });
@@ -67,7 +67,7 @@ describe("the badges", () => {
   });
   it("leave out a badge the catalogue no longer lists, unless the rider holds it", () => {
     const cat = [{ slug: "first_lap" }, { slug: "regular" }];
-    expect(list({ ...empty, catalog: cat }).map((x) => x.slug)).toEqual(["first_lap", "pole_position", "streak"]);
+    expect(list({ ...empty, catalog: cat }).map((x) => x.slug)).toEqual(["first_lap", "front_row", "streak"]);
     expect(list({ ...empty, catalog: cat })[0].lv!.map((x) => x.slug)).toEqual(["first_lap", "regular"]);
   });
   it("count Race Ready from the profile", () => {
@@ -81,7 +81,7 @@ describe("the badges", () => {
     expect(list({ ...empty, seasons: [season] }).find((x) => x.slug === "winter_series")).toMatchObject({ on: false, p: "0/6", season: { curTo: null, next: "2026-12-01" } });
   });
   it("bring the two begun with the least left forward", () => {
-    expect(closestBadges(list()).map((x) => [x.show.slug, x.n, x.of])).toEqual([["regular", 4, 5], ["pole_master", 4, 5]]);
+    expect(closestBadges(list()).map((x) => [x.show.slug, x.n, x.of])).toEqual([["regular", 4, 5], ["pole_position", 4, 5]]);
     expect(closestBadges(list({ ...empty, mine: [{ slug: "regular" }] })).map((x) => x.show.slug)).not.toContain("regular");
   });
   it("do not count an unpaid ride, unless the ride was free", () => {
@@ -148,25 +148,29 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
     const html = renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, badges: badgeList(r, s, empty, today, null), t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
     expect(html).toContain('aria-label="Slipstream · Level 2 of 6: 5 community rides"');
     expect(html).toMatch(/<span class="mr-badge-lv" aria-hidden="true">(<i class="on"><\/i>){2}(<i><\/i>){4}<\/span>/);
-    expect(html.match(/<strong>[^<]*<\/strong>/g)).toEqual(["<strong>Podium Pace</strong>", "<strong>Paceline</strong>"]);
+    // nine nights first in the queue, too: Pole Master (10 since 2026-10-12) is one away, as Paceline is, and comes first
+    expect(html.match(/<strong>[^<]*<\/strong>/g)).toEqual(["<strong>Podium Pace</strong>", "<strong>Pole Master</strong>"]);
   });
-  it("count Front Row's levels in nights first in the queue and ridden: 1, 3, 5", () => {
+  it("count Front Row's levels in nights first in the queue and ridden: 1, 5, 10, 25, 50", () => {
     const front = (r: ReturnType<typeof recordRows>, kind: RecordSession["kind"] = "jcc", freeRide = false) =>
       badgeList(r, new Map(r.map((x) => [x.sessionId, { kind, freeRide }])), empty, today, null).find((x) => x.lv?.some((y) => y.slug === "front_row"))!;
     const first = (n: number, o: Record<string, unknown> = {}) => recordRows(days(n).map((d) => row({ session_id: d, ...o })));
-    expect(front(first(1))).toMatchObject({ slug: "front_row", on: true, lvN: 1, p: "1/3", nx: { slug: "pole_position" } });
-    expect(front(first(3))).toMatchObject({ slug: "pole_position", lvN: 2, p: "3/5", nx: { slug: "pole_master" } });
-    expect(front(first(5))).toMatchObject({ slug: "pole_master", lvN: 3, nx: null, p: null });
-    expect(front(first(5)).lv!.map((x) => [x.slug, x.on])).toEqual([["front_row", true], ["pole_position", true], ["pole_master", true]]);
+    expect(front(first(1))).toMatchObject({ slug: "front_row", on: true, lvN: 1, p: "1/5", nx: { slug: "pole_position" } });
+    expect(front(first(4))).toMatchObject({ slug: "front_row", lvN: 1, p: "4/5" });
+    expect(front(first(5))).toMatchObject({ slug: "pole_position", lvN: 2, p: "5/10", nx: { slug: "pole_master" } });
+    expect(front(first(10))).toMatchObject({ slug: "pole_master", lvN: 3, p: "10/25", nx: { slug: "grid_leader" } });
+    expect(front(first(25))).toMatchObject({ slug: "grid_leader", lvN: 4, p: "25/50", nx: { slug: "pole_legend" } });
+    expect(front(first(50))).toMatchObject({ slug: "pole_legend", lvN: 5, nx: null, p: null, color: "special" });
+    expect(front(first(50)).lv!.map((x) => [x.slug, x.on])).toEqual([["front_row", true], ["pole_position", true], ["pole_master", true], ["grid_leader", true], ["pole_legend", true]]);
     // booking #1 alone is not enough: unpaid, not yet ridden or a no-show never count
-    for (const o of [{ paid: false }, { status: "waiting" }, { status: "active" }, { status: "noshow" }]) expect(front(first(3, o)), JSON.stringify(o)).toMatchObject({ on: false, lvN: 0, p: "0/1" });
+    for (const o of [{ paid: false }, { status: "waiting" }, { status: "active" }, { status: "noshow" }]) expect(front(first(5, o)), JSON.stringify(o)).toMatchObject({ on: false, lvN: 0, p: "0/1" });
     // a free ride counts unpaid, and an own bike counts once checked in
-    expect(front(first(3, { paid: false }), "saturday", true)).toMatchObject({ slug: "pole_position", lvN: 2 });
+    expect(front(first(5, { paid: false }), "saturday", true)).toMatchObject({ slug: "pole_position", lvN: 2 });
     expect(front(first(1, { paid: false, status: "active", type_preference: "Own" }))).toMatchObject({ slug: "front_row", on: true });
     // a later number on the night is not first in the queue, and a party's rows are one night
-    expect(front(first(3, { queue_num: 2 }))).toMatchObject({ on: false, p: "0/1" });
+    expect(front(first(5, { queue_num: 2 }))).toMatchObject({ on: false, p: "0/1" });
     const party = recordRows([row({ session_id: "2026-09-01" }), row({ id: "p2", session_id: "2026-09-01" })]);
-    expect(front(party)).toMatchObject({ slug: "front_row", lvN: 1, p: "1/3" });
+    expect(front(party)).toMatchObject({ slug: "front_row", lvN: 1, p: "1/5" });
   });
   it("give every level under one staff gave on a staff ladder (Carbon Owner brings Road Bike Owner and Bike Owner)", () => {
     const L = badgeList([], new Map(), { ...empty, mine: [{ slug: "carbon_owner", note: "Bought in October" }] }, today, null);
@@ -175,7 +179,13 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
     expect(L.filter((x) => ["bike_owner", "road_owner", "carbon_owner"].includes(x.slug))).toHaveLength(1);
     const m = badgeList([], new Map(), { ...empty, mine: [{ slug: "senior_marshal" }] }, today, null).find((x) => x.lv?.some((y) => y.slug === "marshal"))!;
     expect(m).toMatchObject({ slug: "senior_marshal", on: true, lvN: 2, nx: { slug: "chief_marshal", on: false } });
+    expect(m.lv!.map((x) => x.slug)).toEqual(["marshal", "senior_marshal", "chief_marshal", "clerk_of_course", "race_director"]);
     expect([...climb(["carbon_owner", "grand_champion"])].sort()).toEqual(["bike_owner", "carbon_owner", "champion", "grand_champion", "hat_trick", "road_owner"]);
+    // five levels on each of the seven ladders (2026-10-12): the top one brings all four under it
+    expect([...climb(["world_champion", "race_director"])].sort()).toEqual(["champion", "chief_marshal", "clerk_of_course", "dynasty", "grand_champion", "hat_trick", "marshal", "race_director", "senior_marshal", "world_champion"]);
+    const w = badgeList([], new Map(), { ...empty, mine: [{ slug: "world_champion" }] }, today, null)[0];
+    expect(w).toMatchObject({ slug: "world_champion", lvN: 5, nx: null, icon: "trophy", color: "special" });
+    expect(w.lv!.find((x) => x.slug === "grand_champion")).toMatchObject({ color: "red" });
   });
   it("climb a set of slugs held", () => {
     expect([...climb(["t100", "marshal"])].sort()).toEqual(["marshal", "t100", "t25", "t50"]);
