@@ -14,8 +14,14 @@ import { meetsAt, RUN_KMS, venueOf, venueText } from "./tickets";
 // (app/[locale]/experiences/page.tsx) and ExperienceSteps.tsx draws the links and the dialog.
 
 /** The event cards only community members may book: the community rides and Run for Her (the
- *  booking app's _infoMembersOnlyEv). */
-export const membersOnlyEvent = (key: string): boolean => key === "community" || key === "runher";
+ *  booking app's _infoMembersOnlyEv); and Petromin Days, which only Petromin tag holders book. */
+export const membersOnlyEvent = (key: string): boolean => key === "community" || key === "runher" || key === "petromin";
+
+/** Whether the visitor counts as a member on a card, for its links: on Petromin Days a Petromin tag
+ *  holder (the owner, 2026-10-12: its About and its dates' Details show to holders, as the booking
+ *  app's _infoShowSess), on every other card a community member. An account holds one of the two
+ *  tags, never both. */
+export const memberOn = (key: string, v: { member: boolean; petromin: boolean }): boolean => (key === "petromin" ? v.petromin : v.member);
 
 /** Whether a card or a date shows its link (the owner: "only show the i buttons in community events
  *  for community members only"): one anyone may book shows it to everyone, a members-only one to a
@@ -37,7 +43,7 @@ export const fillTimes = (text: string, t: InfoTimes): string => fill(text, t);
 
 /** The Experiences texts a date's Details start with: the dates section's about* fields, and the
  *  events section's own for the National Day ride and the ticketed events. */
-export type DateTexts = { aboutJcc: string; aboutSat: string; aboutSwim: string; aboutWs: string; aboutRun: string; sndAbout: string; evAbout: string };
+export type DateTexts = { aboutJcc: string; aboutSat: string; aboutPetro: string; aboutSwim: string; aboutWs: string; aboutRun: string; sndAbout: string; evAbout: string };
 
 /** Which text a date's Details say (the booking app's INFO_DT): its kind's own, filled with its
  *  times, and the circuit's for any kind without one; a ticketed event says its own description
@@ -45,16 +51,17 @@ export type DateTexts = { aboutJcc: string; aboutSat: string; aboutSwim: string;
 export function dateText(s: Pick<RideSession, "kind" | "description">, texts: DateTexts, times: InfoTimes): string {
   if (s.kind === "event" && s.description) return s.description;
   const of: Partial<Record<RideKind, string>> = {
-    jcc: texts.aboutJcc, saturday: texts.aboutSat, swim: texts.aboutSwim, workshop: texts.aboutWs,
+    jcc: texts.aboutJcc, saturday: texts.aboutSat, petromin: texts.aboutPetro, swim: texts.aboutSwim, workshop: texts.aboutWs,
     runher: texts.aboutRun, snd96: texts.sndAbout, event: texts.evAbout,
   };
   return fillTimes(of[s.kind] ?? texts.aboutJcc, times);
 }
 
-/** Who may book a date (_infoFacts): everyone, or community members - aged 18 and over on Run for Her. */
-export function infoWho(s: Pick<RideSession, "members" | "kind">, t: { all: string; members: string; members18: string }): string {
+/** Who may book a date (_infoFacts): everyone, or community members - aged 18 and over on Run for
+ *  Her, and with Petromin's team on a Petromin night (2026-10-12, infoWhoPetromin). */
+export function infoWho(s: Pick<RideSession, "members" | "kind">, t: { all: string; members: string; members18: string; petromin: string }): string {
   if (!s.members) return t.all;
-  return s.kind === "runher" ? t.members18 : t.members;
+  return s.kind === "runher" ? t.members18 : s.kind === "petromin" ? t.petromin : t.members;
 }
 
 /** A kind of ride that hands out bikes, priced by the bike (the booking app's _needsBike): not the
@@ -108,4 +115,45 @@ export function infoPlaces(s: Pick<RideSession, "full" | "left" | "approval">, t
 export function infoBreakfast(s: Pick<RideSession, "kind" | "breakfast" | "breakfastAr">, locale: string): string | null {
   if (s.kind !== "saturday" || !s.breakfast) return null;
   return (locale === "ar" && s.breakfastAr) || s.breakfast;
+}
+
+/** Which card each kind of date is booked under (the booking app's _evMatch): the circuit, the
+ *  community rides, and the National Day ride, the T100 workshop, the ticketed events and Run for Her,
+ *  which have cards of their own while they have dates. A Petromin night counts as a community ride
+ *  here; Petromin Days takes its own (eventCards). */
+export const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher" };
+
+/** The event cards in the order the page shows them, each with its texts' prefix in Experiences'
+ *  events section and whether it shows with no date. Petromin Days first (the owner, 2026-10-12), then
+ *  Run for Her, as on the booking app's landing. */
+export const EVENT_CARDS = [
+  { key: "petromin", p: "pm", always: false }, { key: "runher", p: "rh", always: false }, { key: "snd96", p: "snd", always: false },
+  { key: "jcc", p: "jcc", always: true }, { key: "community", p: "comm", always: true }, { key: "workshop", p: "ws", always: false }, { key: "event", p: "ev", always: false },
+] as const;
+export type EventCard = (typeof EVENT_CARDS)[number];
+
+/** The cards the visitor sees, in order, each with its dates (soonest first, as given). Petromin Days
+ *  lists the Petromin nights alone, to a Petromin tag holder alone (the owner, 2026-10-12: "a new
+ *  event card that has the name Petromin Days that only is visible for petromin tag holders"). The
+ *  website's community card lists no Petromin nights, as before (community members book them in the
+ *  booking app's MicroMobility Experiences), and nobody else sees them. */
+export function eventCards<T extends Pick<RideSession, "kind">>(all: T[], v: { member: boolean; petromin: boolean }): { card: EventCard; sessions: T[] }[] {
+  const of = (key: string) => (key === "petromin"
+    ? all.filter((s) => v.petromin && s.kind === "petromin")
+    : all.filter((s) => EVENT_OF[s.kind] === key && s.kind !== "petromin"));
+  return EVENT_CARDS.map((card) => ({ card, sessions: of(card.key) })).filter((c) => c.card.always || c.sessions.length > 0);
+}
+
+/** The booking app opened on a card and one of its dates (?ev=<card>&session=<id>): Petromin Days
+ *  hands over ev=petromin, which the booking app opens under its own Petromin Days. A link that is
+ *  not a full address is used as it is. */
+export function bookingAt(bookHref: string, ev: string, session: string): string {
+  try {
+    const u = new URL(bookHref);
+    u.searchParams.set("ev", ev);
+    u.searchParams.set("session", session);
+    return u.toString();
+  } catch {
+    return bookHref;
+  }
 }

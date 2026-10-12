@@ -42,7 +42,7 @@ export type RideSession = {
   times: [string, string] | null;
   gather: boolean;
   /** No Road Carbon bike on this ride: the booking app's _noCarbon, community rides except
-   *  Petromin (and Petromin nights are not on this site at all). */
+   *  Petromin. */
   noCarbon: boolean;
   /** What the session is, as staff described it (an event's blurb); null when none. */
   description: string | null;
@@ -154,12 +154,14 @@ function revealOf(r: Row): Pick<RideSession, "revealAt"> {
 }
 
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
- *  booked through the company's own form (micromobility.sa/petromin), so they are left out. */
-export function toSession(r: Row, keepAll = false): RideSession | null {
+ *  left out unless `petromin` (or `keepAll`): only Experiences lists them, under Petromin Days to a
+ *  Petromin tag holder and among the community rides to a community member (the owner, 2026-10-12);
+ *  every other page leaves them out as before. */
+export function toSession(r: Row, keepAll = false, petromin = false): RideSession | null {
   if (typeof r.id !== "string" || typeof r.session_date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(r.session_date)) return null;
   if (!keepAll && r.status !== "open" && r.status !== "full") return null;
   const kind = rideKind(r);
-  if (!keepAll && kind === "petromin") return null;
+  if (!keepAll && !petromin && kind === "petromin") return null;
   const community = r.event_kind === "community";
   const free = community && kind !== "snd96" && r.paid_ride !== true;
   const price = num(r.price), seats = num(r.capacity);
@@ -173,7 +175,7 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     free,
     times: slotTimes(r.bike_slots),
     gather: kind === "saturday" || kind === "snd96" || kind === "runher",
-    noCarbon: community,
+    noCarbon: community && kind !== "petromin", // Road Carbon goes out on a Petromin night
     description: typeof r.description === "string" && r.description.trim() ? r.description.trim().slice(0, 2000) : null,
     // the database charges an event's seat only when the event is a paid ride (_fare_now)
     price: kind === "event" && !free && price !== null && price > 0 ? price : null,
@@ -198,6 +200,10 @@ export function upcoming(sessions: RideSession[], now: string): RideSession[] {
     .filter((s) => s.date > today || (s.date === today && (!s.times || s.times[1] < s.times[0] || s.times[1] > hm)))
     .sort((a, b) => a.date.localeCompare(b.date) || (a.times?.[0] ?? "").localeCompare(b.times?.[0] ?? ""));
 }
+
+/** The sessions without the Petromin nights: every page but Experiences, which shows them only to a
+ *  Petromin tag holder or a community member (the owner, 2026-10-12), lists none. */
+export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessions.filter((s) => s.kind !== "petromin");
 
 /** The names a page gives each kind of session (Experiences > Next dates). */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
@@ -346,12 +352,14 @@ export async function getJson(fetchImpl: typeof fetch, url: string, key: string,
 }
 
 /** How many bookings hold a place on a session (_holdsSpot): every row but a cancelled, removed or
- *  no-show one, and not a rider on their own bike (who holds a place only on a Petromin night,
- *  which this site never lists). Asked as a count, so nothing but the number comes back. */
-export async function placesTaken(fetchImpl: typeof fetch, url: string, key: string, sessionId: string): Promise<number | null> {
+ *  no-show one, and not a rider on their own bike, who holds a place only on a Petromin night
+ *  (`ownTakesPlace`, the booking app's _ownTakesPlace). Asked as a count, so nothing but the number
+ *  comes back. */
+export async function placesTaken(fetchImpl: typeof fetch, url: string, key: string, sessionId: string, ownTakesPlace = false): Promise<number | null> {
   if (!/^[A-Za-z0-9_-]{1,64}$/.test(sessionId)) return null;
   try {
-    const res = await fetchImpl(`${url}/rest/v1/queue_public?select=id&session_id=eq.${sessionId}&status=not.in.(cancelled,removed,noshow)&or=(type_preference.is.null,type_preference.neq.Own)`, {
+    const own = ownTakesPlace ? "" : "&or=(type_preference.is.null,type_preference.neq.Own)";
+    const res = await fetchImpl(`${url}/rest/v1/queue_public?select=id&session_id=eq.${sessionId}&status=not.in.(cancelled,removed,noshow)${own}`, {
       method: "HEAD",
       headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: "count=exact" },
       cache: "no-store",
@@ -367,7 +375,7 @@ export async function placesTaken(fetchImpl: typeof fetch, url: string, key: str
 /** The places left on the soonest open sessions nobody approves (at most 12 counts a read). */
 async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, url: string, key: string): Promise<RideSession[]> {
   const ask = sessions.filter((s) => !s.full && !s.approval).slice(0, 12);
-  const counts = await Promise.all(ask.map((s) => placesTaken(fetchImpl, url, key, s.id)));
+  const counts = await Promise.all(ask.map((s) => placesTaken(fetchImpl, url, key, s.id, s.kind === "petromin")));
   const left = new Map(ask.map((s, i) => [s.id, counts[i] == null ? null : Math.max(0, (s.capacity || 12) - (counts[i] as number))]));
   return sessions.map((s) => (left.has(s.id) ? { ...s, left: left.get(s.id) ?? null } : s));
 }
@@ -387,7 +395,9 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) prices = priceRows(p.value);
     if (s.status === "fulfilled" && Array.isArray(s.value)) {
-      sessions = await withPlacesLeft((s.value as Row[]).map((r) => toSession(r)).filter((x): x is RideSession => x !== null), fetchImpl, url, key);
+      // the Petromin nights too: Experiences shows them to Petromin tag holders, under Petromin Days
+      // (2026-10-12), and the other pages leave them out (withoutPetromin)
+      sessions = await withPlacesLeft((s.value as Row[]).map((r) => toSession(r, false, true)).filter((x): x is RideSession => x !== null), fetchImpl, url, key);
     }
   }
   return prices || sessions ? { prices: prices ?? [], sessions: sessions ?? [] } : null;

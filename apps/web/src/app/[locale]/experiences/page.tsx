@@ -12,9 +12,9 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
-import { dateText, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
+import { dateText, eventCards, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { bizOf, faresOf } from "@/lib/biz";
-import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
+import { kindNames, loadRides, sessionName, upcoming, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
@@ -52,6 +52,19 @@ async function communityMember(): Promise<boolean> {
   return r.data === true;
 }
 
+// Does the visitor hold the Petromin tag? Petromin Days, the Petromin nights' own card, shows to
+// holders alone (the owner, 2026-10-12: "a new event card that has the name Petromin Days that only
+// is visible for petromin tag holders"). The booking app's own answer (petromin_member, a bare
+// boolean like community_member's, which checks the token); any failure reads as no, a database
+// without the function too.
+async function petrominMember(): Promise<boolean> {
+  const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
+  if (!s) return false;
+  // rpcServer never throws: a refusal, a missing function or no answer comes back without data
+  const r = await rpcServer<boolean>("petromin_member", { p_id: s.id, p_token: s.token });
+  return r.data === true;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { content, closed } = await pageState("experiences");
@@ -63,7 +76,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const { locale } = await params;
   const L = asLocale(locale);
   const tx = serverL(locale);
-  const [{ content, previewing, hidden }, rides, member] = await Promise.all([pageState("experiences"), loadRides(), communityMember()]);
+  const [{ content, previewing, hidden }, rides, member, petromin] = await Promise.all([pageState("experiences"), loadRides(), communityMember(), petrominMember()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(experiencesSchema, content, L);
   const d = c.dates, e = c.events, st = c.steps;
@@ -90,8 +103,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const biz = bizOf(content);
   const caps = { riders: fmtNum(biz.jccAccountCap, locale), seats: fmtNum(biz.eventSeatMax, locale) };
 
-  const kindName = kindNames(d);
-  const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
+  // a Petromin night without a title of its own is "Petromin", as the other pages name one
+  const kindName = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
+  const enName = L !== "en" ? { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), petromin: "Petromin" } : kindName;
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page is named after it
   const routeKm = routeItems(content, L);
   // What a ride costs before anything is picked (_sessFromPrice): the cheapest bike it offers.
@@ -115,21 +129,19 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
   const dateTexts: DateTexts = {
-    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun),
+    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun),
     sndAbout: S(e.sndAbout), evAbout: S(e.evAbout),
   };
-  const whoWords = { all: tx("Everyone", "الجميع"), members: tx("Community members", "أعضاء المجتمع"), members18: tx("Community members, 18 and over", "أعضاء المجتمع ممن أتموا 18 عامًا") };
+  const whoWords = {
+    all: tx("Everyone", "الجميع"), members: tx("Community members", "أعضاء المجتمع"), members18: tx("Community members, 18 and over", "أعضاء المجتمع ممن أتموا 18 عامًا"),
+    petromin: tx("Community members and Petromin's team", "أعضاء المجتمع وفريق بترومين"), // a Petromin night (the booking app's infoWhoPetromin, 2026-10-12)
+  };
   const venueWords = { meetingPoint: tx("Meeting point", "نقطة التجمع"), venueCircuit: tx("Jeddah Corniche Circuit", "حلبة كورنيش جدة"), venueJyc: tx("Jeddah Yacht Club", "نادي جدة لليخوت") };
   const clock = (hhmm: string) => fmtClock(hhmm, locale);
   // The Saturday ride's breakfast spot, told at a time staff choose (the owner, 2026-10-06; lib/tickets.ts
   // spotHeld): until then its card and Details say when; its meeting point shows (never the circuit, meetHeld).
   const nearWords = { today: tx("Today", "اليوم"), tomorrow: tx("Tomorrow", "غداً") };
   const heldWhen = (s: RideSession) => (spotHeld(s) ? revealWhen(s.revealAt, locale, now.slice(0, 10), nearWords) : null);
-  // The booking app's events (_evMatch): the circuit, the community rides, and the National Day
-  // ride and the T100 workshop, which have cards of their own while they have dates.
-  // A ticketed event (ride_kind 'event') has a card of its own too, while one is on the books, and
-  // so does Run for Her (ride_kind 'runher'), first on the page as on the booking app's landing.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher" };
   const toStep = (s: RideSession): StepSession => {
     const seatPrice = s.kind === "event" && s.price != null ? sar(s.price) : null;
     // when bikes go out and the price from, under the time, as the booking app's session card says them
@@ -167,13 +179,13 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       },
     };
   };
-  const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count))).map(toStep);
-  const card = (key: string, p: "rh" | "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): StepEvent | null => {
-    const sessions = sessionsOf(key);
-    if (!always && sessions.length === 0) return null;
-    return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: fill(S(e[`${p}Note`]), caps), about: S(e[`${p}About`]), sessions };
-  };
-  const events = [card("runher", "rh", false), card("snd96", "snd", false), card("jcc", "jcc", true), card("community", "comm", true), card("workshop", "ws", false), card("event", "ev", false)].filter((x): x is StepEvent => !!x);
+  // The booking app's events (lib/event-info.ts eventCards): the circuit and the community rides
+  // always, the others while they have dates - Petromin Days (the owner, 2026-10-12) first, and only
+  // to a Petromin tag holder, then Run for Her, as on the booking app's landing.
+  const events: StepEvent[] = eventCards(all, { member, petromin }).map(({ card: { key, p }, sessions }) => ({
+    key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: fill(S(e[`${p}Note`]), caps), about: S(e[`${p}About`]),
+    sessions: sessions.slice(0, Math.max(1, N(d.count))).map(toStep),
+  }));
   const text: StepText = {
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),
     cont: S(st.continue), waitlist: S(d.waitlist), back: S(st.back), noDates: S(st.noDates), handoff: S(st.handoff),
@@ -209,7 +221,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
 
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
-            <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} member={member} text={text}
+            <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} member={member} petromin={petromin} text={text}
               prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? sarRange(p.type, p.price) : S(d.free) }))} />
           </section>
 

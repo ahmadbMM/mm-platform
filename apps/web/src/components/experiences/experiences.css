@@ -149,6 +149,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
   text-align: start; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .xs-about { inset-inline-start: 28px; bottom: 18px; max-width: calc(100% - 56px); padding: 4px 0; color: #1a1919; }
 .xs-about.ab-runher { color: #c2416e; } /* Run for Her's pink, as on its date cards */
+.xs-about.ab-petromin { color: #d6202a; } /* Petromin Days: Petromin's red, as on its date cards (2026-10-12) */
 .sc-about { inset-inline-start: 35px; bottom: 11px; max-width: calc(100% - 51px); padding: 3px 0; color: var(--ev, #077a4b); }
 .xs-about:focus-visible, .sc-about:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 2px; }
 

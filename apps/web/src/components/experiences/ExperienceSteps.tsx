@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { isRtl } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
 import { fill as fillAt } from "@/i18n/tx";
-import { infoShown, membersOnlyEvent } from "@/lib/event-info";
+import { bookingAt, infoShown, memberOn, membersOnlyEvent } from "@/lib/event-info";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -84,11 +84,12 @@ export type StepText = {
 };
 // clubHref: the Club page, "" while staff have it switched off (its address then leads Home), so no link is offered.
 // member: the visitor is a signed-in community member (the page asks community_member), so the
-// members-only cards and dates show their links too.
-type Props = { locale: string; events: StepEvent[]; prices: { type: string; label: string; price: string }[]; bookHref: string; clubHref: string; member: boolean; text: StepText };
+// members-only cards and dates show their links too. petromin: the visitor holds the Petromin tag
+// (petromin_member), for whom Petromin Days and its dates show theirs (the owner, 2026-10-12).
+type Props = { locale: string; events: StepEvent[]; prices: { type: string; label: string; price: string }[]; bookHref: string; clubHref: string; member: boolean; petromin: boolean; text: StepText };
 type Fact = { k: string; v: ReactNode };
 
-export default function ExperienceSteps({ locale, events, prices, bookHref, clubHref, member, text: t }: Props) {
+export default function ExperienceSteps({ locale, events, prices, bookHref, clubHref, member, petromin, text: t }: Props) {
   const [step, setStep] = useState(1);
   const [ev, setEv] = useState<StepEvent | null>(null);
   const [sess, setSess] = useState<StepSession | null>(null);
@@ -130,9 +131,12 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   const when = (s: StepSession) => (s.when ? (s.when.gather
     ? <>{t.gather} <bdi>{s.when.a}</bdi> · {t.start} <bdi>{s.when.b}</bdi></>
     : <bdi>{s.when.a} – {s.when.b}</bdi>) : null);
+  // Petromin Days is Petromin's team's, who are not Club members (an account holds the Community tag or
+  // the Petromin tag, never both): its dates carry no Members tag and no word about joining the Club.
+  const clubOnly = (s: StepSession) => s.members && ev?.key !== "petromin";
   const tags = (s: StepSession) => (
     <span className="xs-tags">
-      {s.members && <em>{t.members}</em>}
+      {clubOnly(s) && <em>{t.members}</em>}
       {s.event && !s.members && <em>{t.everyone}</em>}
       {s.free && <em>{t.free}</em>}
       {s.full && <em className="warn">{t.full}</em>}
@@ -188,17 +192,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
     if (info.s) pickDate(info.s);
     else pickEvent(info.ev);
   };
-  const link = (() => {
-    if (!ev || !sess) return bookHref;
-    try {
-      const u = new URL(bookHref);
-      u.searchParams.set("ev", ev.key);
-      u.searchParams.set("session", sess.id);
-      return u.toString();
-    } catch {
-      return bookHref;
-    }
-  })();
+  // Petromin Days hands over ev=petromin, which the booking app opens under its own Petromin Days.
+  const link = ev && sess ? bookingAt(bookHref, ev.key, sess.id) : bookHref;
 
   return (
     <div className="xs" ref={top}>
@@ -218,7 +213,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           <h2 id="xs-h1" className="xs-title" tabIndex={-1}>{t.eventTitle}</h2>
           <div className="xs-events">
             {events.map((e) => {
-              const about = infoShown(membersOnlyEvent(e.key), member);
+              const about = infoShown(membersOnlyEvent(e.key), memberOn(e.key, { member, petromin }));
               return (
                 <div key={e.key} className={`xs-ev-wrap${about ? " has-about" : ""}`}>
                   <button type="button" className={`xs-event ev-${e.key}`} onClick={() => pickEvent(e)}>
@@ -243,14 +238,14 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           ) : (
             <div className="sc-list">
               {ev.sessions.map((s) => {
-                const details = infoShown(s.members, member);
+                const details = infoShown(s.members, memberOn(ev.key, { member, petromin }));
                 return (
                   <div key={s.id} className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
                     <button type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}${s.opens ? " closed" : ""}`} disabled={!!s.opens} aria-disabled={!!s.opens} onClick={() => pickDate(s)}>
-                      {(named(ev) || s.members || s.free) && (
+                      {(named(ev) || clubOnly(s) || s.free) && (
                         <span className="sc-kicker">
                           {named(ev) && <span className="sc-chip">{s.name}</span>}
-                          {s.members && <span className="sc-tag">{t.members}</span>}
+                          {clubOnly(s) && <span className="sc-tag">{t.members}</span>}
                           {s.event && !s.members && <span className="sc-tag">{t.everyone}</span>}
                           {s.free && <span className="sc-tag">{t.free}</span>}
                         </span>
@@ -276,7 +271,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
               })}
             </div>
           )}
-          {ev.sessions.some((s) => s.members) && <p className="xs-note">{t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
+          {ev.sessions.some(clubOnly) && <p className="xs-note">{t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
         </section>
       )}
 
@@ -301,7 +296,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                 {t.codeNote && <p className="xs-prices-t">{t.codeNote}</p>}
               </div>
             )}
-            {sess.members && <p className="xs-note">{t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
+            {clubOnly(sess) && <p className="xs-note">{t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
           </div>
           <a className="xs-go" href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
           {t.handoff && <p className="xs-handoff">{t.handoff}</p>}

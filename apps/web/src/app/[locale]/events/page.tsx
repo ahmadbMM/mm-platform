@@ -11,7 +11,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum, fmtSar } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
+import { kindNames, loadRides, sessionName, upcoming, withoutPetromin, type RideKind, type RideSession } from "@/lib/rides";
 import { routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { riyadhClock } from "@/lib/workshop-days";
@@ -53,7 +53,8 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it
   const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en");
   const now = riyadhClock(new Date());
-  const sessions = upcoming(rides?.sessions ?? [], now).slice(0, Math.max(1, N(c.hero.count)));
+  // never the Petromin nights, which only Experiences shows, to whom may book them (2026-10-12)
+  const sessions = upcoming(withoutPetromin(rides?.sessions ?? []), now).slice(0, Math.max(1, N(c.hero.count)));
   // The booking window (site_content booking.window): a date not open yet is greyed, with when it opens, never hidden.
   const window = siteBookingWindow(content);
   const opens = (s: RideSession) => (window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null);

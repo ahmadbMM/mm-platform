@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { makeL } from "@/i18n/tx";
-import { dateText, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoWho, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
+import { bookingAt, dateText, EVENT_CARDS, eventCards, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoWho, memberOn, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
+import type { RideKind } from "../rides";
 import { fmtClock } from "../tickets";
 
 // "About this event" and "Details" on Experiences (2026-10-05) say what the booking app's picker
@@ -10,7 +11,7 @@ import { fmtClock } from "../tickets";
 
 const clock = (t: string) => fmtClock(t, "en");
 const TEXTS: DateTexts = {
-  aboutJcc: "Circuit: bikes from {collect}, {start} to {end}.", aboutSat: "Gather {gather}, start {start}.", aboutSwim: "Pool {start} to {end}.",
+  aboutJcc: "Circuit: bikes from {collect}, {start} to {end}.", aboutSat: "Gather {gather}, start {start}.", aboutPetro: "Petromin: bikes from {collect}.", aboutSwim: "Pool {start} to {end}.",
   aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
 };
 const circuit = { kind: "jcc" as const, times: ["21:00", "23:00"] as [string, string], gather: false, collect: "20:15", description: null };
@@ -19,11 +20,52 @@ const saturday = { kind: "saturday" as const, times: ["05:45", "06:15"] as [stri
 describe("who sees the links", () => {
   it("shows a card anyone may book to everyone, and the community rides and Run for Her to members alone", () => {
     for (const key of ["jcc", "snd96", "workshop", "event"]) expect(membersOnlyEvent(key), key).toBe(false);
-    for (const key of ["community", "runher"]) expect(membersOnlyEvent(key), key).toBe(true);
+    for (const key of ["community", "runher", "petromin"]) expect(membersOnlyEvent(key), key).toBe(true);
     expect(infoShown(false, false)).toBe(true);
     expect(infoShown(false, true)).toBe(true);
     expect(infoShown(true, false)).toBe(false);
     expect(infoShown(true, true)).toBe(true);
+  });
+  it("shows Petromin Days' links to a Petromin tag holder, and every other card's to a community member (2026-10-12)", () => {
+    const holder = { member: false, petromin: true }, member = { member: true, petromin: false };
+    expect(infoShown(membersOnlyEvent("petromin"), memberOn("petromin", holder))).toBe(true);
+    expect(infoShown(membersOnlyEvent("petromin"), memberOn("petromin", member))).toBe(false);
+    expect(infoShown(membersOnlyEvent("community"), memberOn("community", holder))).toBe(false);
+    expect(infoShown(membersOnlyEvent("community"), memberOn("community", member))).toBe(true);
+    expect(infoShown(membersOnlyEvent("runher"), memberOn("runher", holder))).toBe(false);
+    expect(infoShown(membersOnlyEvent("jcc"), memberOn("jcc", { member: false, petromin: false }))).toBe(true);
+  });
+});
+
+describe("the event cards (Petromin Days, the owner, 2026-10-12)", () => {
+  const night = (id: string, kind: RideKind) => ({ id, kind });
+  const all = [night("pm1", "petromin"), night("jcc1", "jcc"), night("sat1", "saturday"), night("pm2", "petromin"), night("rh1", "runher")];
+  const keys = (v: { member: boolean; petromin: boolean }) => eventCards(all, v).map((c) => c.card.key);
+  const of = (v: { member: boolean; petromin: boolean }, key: string) => eventCards(all, v).find((c) => c.card.key === key)?.sessions.map((s) => s.id);
+  it("has no Petromin Days, and no Petromin night anywhere, for a visitor without either tag", () => {
+    const v = { member: false, petromin: false };
+    expect(keys(v)).toEqual(["runher", "jcc", "community"]);
+    expect(of(v, "community")).toEqual(["sat1"]);
+  });
+  it("puts Petromin Days first for a Petromin tag holder, with the Petromin nights alone", () => {
+    const v = { member: false, petromin: true };
+    expect(keys(v)).toEqual(["petromin", "runher", "jcc", "community"]);
+    expect(of(v, "petromin")).toEqual(["pm1", "pm2"]);
+    expect(of(v, "community")).toEqual(["sat1"]); // never twice
+    expect(EVENT_CARDS[0]).toEqual({ key: "petromin", p: "pm", always: false });
+  });
+  it("lists no Petromin night on the community card, as before, and no Petromin Days for a community member", () => {
+    const v = { member: true, petromin: false };
+    expect(keys(v)).toEqual(["runher", "jcc", "community"]);
+    expect(of(v, "community")).toEqual(["sat1"]);
+  });
+  it("shows no Petromin Days to a holder while no Petromin night is on the books", () => {
+    expect(eventCards([night("jcc1", "jcc")], { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["jcc", "community"]);
+  });
+  it("hands Petromin Days over to the booking app as ev=petromin, on the night picked", () => {
+    expect(bookingAt("https://book.example/?lang=ar", "petromin", "2026-10-14-pm")).toBe("https://book.example/?lang=ar&ev=petromin&session=2026-10-14-pm");
+    expect(bookingAt("https://book.example/?ev=community", "petromin", "x")).toBe("https://book.example/?ev=petromin&session=x");
+    expect(bookingAt("/experiences", "petromin", "x")).toBe("/experiences");
   });
 });
 
@@ -50,9 +92,9 @@ describe("a date's text", () => {
     expect(at({ ...circuit, kind: "workshop", collect: null })).toBe("T100 9 PM to 11 PM.");
     expect(at({ ...saturday, kind: "runher", description: null })).toBe("Meet 5:45 AM, run 6:15 AM.");
   });
-  it("is the card's own About for the National Day ride, and the circuit's for a kind without one", () => {
+  it("is the card's own About for the National Day ride, and a Petromin night's own", () => {
     expect(at({ ...saturday, kind: "snd96" })).toBe("National Day ride.");
-    expect(at({ ...circuit, kind: "petromin" })).toBe("Circuit: bikes from 8:15 PM, 9 PM to 11 PM.");
+    expect(at({ ...circuit, kind: "petromin" })).toBe("Petromin: bikes from 8:15 PM.");
   });
   it("is a ticketed event's own description, as staff wrote it, else the Events About", () => {
     expect(at({ ...circuit, kind: "event", collect: null, description: "Brakes and gears, {start} sharp." })).toBe("Brakes and gears, {start} sharp.");
@@ -61,12 +103,13 @@ describe("a date's text", () => {
 });
 
 describe("a date's facts", () => {
-  const who = { all: "Everyone", members: "Community members", members18: "Community members, 18 and over" };
+  const who = { all: "Everyone", members: "Community members", members18: "Community members, 18 and over", petromin: "Community members and Petromin's team" };
   it("say who may book it: everyone, members, or members of 18 and over on Run for Her", () => {
     expect(infoWho({ members: false, kind: "jcc" }, who)).toBe("Everyone");
     expect(infoWho({ members: true, kind: "saturday" }, who)).toBe("Community members");
     expect(infoWho({ members: true, kind: "runher" }, who)).toBe("Community members, 18 and over");
     expect(infoWho({ members: false, kind: "event" }, who)).toBe("Everyone");
+    expect(infoWho({ members: true, kind: "petromin" }, who)).toBe("Community members and Petromin's team");
   });
 
   it("say the price: free, an event's seat, or the cheapest bike on a paid ride with bikes - else nothing", () => {
@@ -165,5 +208,17 @@ describe("the texts staff edit", () => {
       expect(names(f!.def.en).every((n) => ["{gather}", "{start}", "{end}", "{collect}"].includes(n)), id).toBe(true);
       expect(names(f!.def.ar), id).toEqual(names(f!.def.en));
     }
+  });
+  it("give Petromin Days its own texts and Petromin's mark (2026-10-12)", () => {
+    for (const id of ["pmTitle", "pmMeta", "pmNote", "pmAbout"]) {
+      const f = field("events", id);
+      expect(f, id).not.toBeNull();
+      expect(f!.def.en.length, id).toBeLessThanOrEqual(f!.max);
+      expect(f!.def.ar.length, id).toBeLessThanOrEqual(f!.max);
+    }
+    expect(field("events", "pmTitle")!.def).toEqual({ en: "Petromin Days", ar: "أيام بترومين" });
+    const logo = experiencesSchema.sections.find((s) => s.id === "events")?.fields.find((x) => x.id === "pmLogo");
+    expect(logo && "def" in logo ? logo.def : null).toBe("/site/petromin-logo.png");
+    expect(readFileSync(new URL("../../../public/site/petromin-logo.png", import.meta.url)).length).toBeGreaterThan(0);
   });
 });

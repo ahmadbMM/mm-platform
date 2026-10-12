@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { kindNames, loadRides, readSessions, resetRides, rideKind, routeSlugOf, sessionName, sessionRows, slotTimes, toSession, upcoming, type RideSession, collectTime } from "../rides";
+import { kindNames, loadRides, readSessions, resetRides, rideKind, routeSlugOf, sessionName, sessionRows, slotTimes, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
 import { memoSettled } from "../memo";
 
 // /experiences shows the booking system's own prices and sessions. The rules mirror the booking
@@ -105,6 +105,9 @@ describe("toSession", () => {
     expect(toSession(row({ status: "full" }))?.full).toBe(true);
     for (const status of ["closed", "deleted", null]) expect(toSession(row({ status }))).toBeNull();
     expect(toSession(row({ event_kind: "community", ride_kind: "petromin" }))).toBeNull();
+    // unless asked for (Experiences' Petromin Days, 2026-10-12): members-only, with Road Carbon
+    expect(toSession(row({ event_kind: "community", ride_kind: "petromin", paid_ride: true }), false, true)).toMatchObject({ kind: "petromin", members: true, free: false, noCarbon: false });
+    expect(toSession(row({ event_kind: "community", ride_kind: "petromin", status: "closed" }), false, true)).toBeNull();
     expect(toSession(row({ session_date: "27/09/2026" }))).toBeNull();
   });
 });
@@ -156,7 +159,8 @@ describe("loadRides", () => {
     const at = Date.parse("2026-09-24T21:30:00Z"); // 00:30 on the 25th in Riyadh
     const a = await loadRides(f as unknown as typeof fetch, at);
     expect(a?.prices).toEqual([{ type: "Road", price: 75 }, { type: "Hybrid", price: 57.5 }]);
-    expect(a?.sessions.map((x) => x.id)).toEqual(["2026-09-27"]);
+    expect(a?.sessions.map((x) => x.id)).toEqual(["2026-09-27", "p"]); // the Petromin night too, for Experiences alone (withoutPetromin)
+    expect(withoutPetromin(a!.sessions).map((x) => x.id)).toEqual(["2026-09-27"]);
     const urls = f.mock.calls.map((c) => c[0] as string);
     expect(urls).toContain("https://example.supabase.co/rest/v1/ride_prices?select=*");
     expect(urls.find((u) => u.includes("/rpc/list_sessions?"))).toMatch(/session_date=gte\.2026-09-25&status=in\.\(open,full\)/);
@@ -180,6 +184,18 @@ describe("loadRides", () => {
     const head = f.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === "HEAD").map((c) => c[0] as string);
     expect(head).toHaveLength(2);
     expect(head[0]).toMatch(/queue_public\?select=id&session_id=eq\.2026-09-27&status=not\.in\.\(cancelled,removed,noshow\)&or=\(type_preference\.is\.null,type_preference\.neq\.Own\)/);
+    await memoSettled();
+  });
+
+  it("counts a rider on their own bike on a Petromin night, where they hold a place (_ownTakesPlace)", async () => {
+    const f = vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/10" } });
+      return json(url.includes("ride_prices") ? PRICES : [row({ id: "pm", event_kind: "community", ride_kind: "petromin", needs_approval: false, capacity: 40 })]);
+    });
+    const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
+    expect(r!.sessions.map((x) => [x.id, x.left])).toEqual([["pm", 30]]);
+    const head = f.mock.calls.find((c) => (c[1] as RequestInit | undefined)?.method === "HEAD")![0] as string;
+    expect(head).toBe("https://example.supabase.co/rest/v1/queue_public?select=id&session_id=eq.pm&status=not.in.(cancelled,removed,noshow)");
     await memoSettled();
   });
 

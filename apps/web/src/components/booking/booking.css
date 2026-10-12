@@ -223,6 +223,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 :is(.sc-card, .sc-wrap, .xs-info).ev-snd96 { --ev: #00894a; }
 :is(.sc-card, .sc-wrap, .xs-info).ev-event { --ev: #6d28d9; }
 :is(.sc-card, .sc-wrap, .xs-info).ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
+:is(.sc-card, .sc-wrap, .xs-info).ev-petromin { --ev: #d6202a; } /* a Petromin night: Petromin's red, as its tag in the booking app (2026-10-12) */
 /* A ticketed event's card says what it is and what a seat costs. */
 .sc-desc { font-size: 12.5px; color: #4f565c; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sc-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; font-weight: 700; color: #06603b; }
