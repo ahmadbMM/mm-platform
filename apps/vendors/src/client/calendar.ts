@@ -36,6 +36,16 @@ function askFeedback(main: HTMLElement, entry: CalDay): void {
   openFeedback({ day: entry.day, mine: entry.mine!, riders: entry.riders }, () => { state.loadedFor = ""; void renderCalendar(main); });
 }
 
+/** Forget everything the calendar holds (signed out): the next login, maybe another venue's, must
+ *  never be shown the dates and requests read for this one, and starts on its own current month. */
+export function resetCalendar(): void {
+  state.month = "";
+  state.days = new Map();
+  state.loadedFor = "";
+  state.focus = "";
+  state.error = "";
+}
+
 /** Forget the loaded month (after a booking or a cancel). */
 export function invalidateCalendar(): void {
   state.loadedFor = "";
