@@ -44,11 +44,12 @@ export default function ClubCard(p: Props) {
   }
 
   // Opened once for a signed-in rider; a card that is not theirs to open simply shows the form.
+  // Marked done only when it actually opens: a cleanup that cancels the timer before it fires (React's
+  // development double run) leaves it to the next run instead of never opening the card.
   const auto = useRef(!!(p.email && p.phone));
   useEffect(() => {
     if (!auto.current) return;
-    auto.current = false;
-    const id = setTimeout(open, 0);
+    const id = setTimeout(() => { auto.current = false; open(); }, 0);
     return () => clearTimeout(id);
   });
 
