@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { routeItems } from "../route-names";
-import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, meetHeld, queueNumbers, revealWhen, rideEndsAt, spotHeld, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, type TicketRow } from "../tickets";
+import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, meetHeld, queueNumbers, revealWhen, rideCompleted, rideEndsAt, spotHeld, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, type TicketRow } from "../tickets";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import TicketCard from "@/components/booking/TicketCard";
 import { createElement, type ReactElement } from "react";
@@ -78,11 +78,20 @@ describe("the tickets", () => {
     expect(ticketCue([row({})], jcc, true)).toBe("inQueue");
     expect(ticketCue([row({})], jcc, null)).toBeNull();
     expect(ticketCue([row({ status: "active" })], jcc, null)).toBe("onBike");
+    // checked in at the pool, the workshop or Run for Her: never "On the bike now"
+    expect(ticketCue([row({ status: "active", type: "None" })], { ...jcc, kind: "swim", bikes: false }, null)).toBeNull();
     expect(ticketCue([row({ approval: "approved" })], sat, null)).toBe("underReview");
     const pub = { ...sat, published: true };
     expect(ticketCue([row({ approval: "approved" })], pub, null)).toBe("confirmed");
     expect(ticketCue([row({ approval: "pending" })], pub, null)).toBe("pending");
     expect(ticketCue([row({ status: "waitlist" })], pub, null)).toBe("waitlist");
+  });
+  it("count a ride ridden as the booking app's _rideCompleted: done, and paid, free, or on the rider's own bike", () => {
+    expect(rideCompleted(row({ status: "done", paid: true }), false)).toBe(true);
+    expect(rideCompleted(row({ status: "done" }), true)).toBe(true);
+    expect(rideCompleted(row({ status: "done", type: "Own" }), false)).toBe(true);
+    expect(rideCompleted(row({ status: "done" }), false)).toBe(false);
+    expect(rideCompleted(row({ status: "active", type: "Own" }), false)).toBe(false);
   });
   it("are dark only while a place is held, as the booking app's night ticket (tk-live)", () => {
     expect(ticketLook([row({})], jcc)).toBe("live");

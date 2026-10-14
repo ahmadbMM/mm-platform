@@ -170,15 +170,18 @@ export function rideStats(rows: TicketRow[], sessions: Map<string, RecordSession
 }
 
 /** The account's rows as the record reads them (every status the ticket knows, plus no-shows,
- *  which break a Clean Sheet). */
+ *  which break a Clean Sheet). `addons`: the booking carries an add-on the rider paid for (Fuel Stop,
+ *  the booking app's 2026-10-07 rule): the booking paid, on a bike or done, a line sold above zero (a
+ *  line without its price counts as charged, as the booking app counts one it cannot price), and not
+ *  a booking on the house (marked paid at SAR 0 with no promo code, not an own bike). */
 export function recordRows(rows: Record<string, unknown>[]): (TicketRow & { addons: boolean })[] {
   return rows.map((r) => {
     const x = r.status === "noshow" ? ticketRow({ ...r, status: "waiting" }) : ticketRow(r);
     if (!x) return null;
-    // add-ons bought with the booking (Fuel Stop): a JSON list, or its text
-    let ad: unknown = r.addons;
-    if (typeof ad === "string") { try { ad = JSON.parse(ad); } catch { ad = null; } }
-    return { ...x, ...(r.status === "noshow" ? { status: "noshow" as unknown as TicketRow["status"] } : {}), addons: Array.isArray(ad) && ad.length > 0 };
+    const house = (typeof r.price === "number" || (typeof r.price === "string" && r.price.trim() !== "")) && Number(r.price) === 0
+      && !(typeof r.promo_code === "string" && r.promo_code.trim()) && x.type !== "Own";
+    const addons = x.paid && (x.status === "active" || x.status === "done") && !house && x.addonLines.some((a) => a.p === null || a.p > 0);
+    return { ...x, ...(r.status === "noshow" ? { status: "noshow" as unknown as TicketRow["status"] } : {}), addons };
   }).filter((r): r is TicketRow & { addons: boolean } => !!r);
 }
 
@@ -211,21 +214,30 @@ type RecordRow = TicketRow & { addons?: boolean };
 function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, data: BadgeData, today: string, profile: ProfileFields | null) {
   const ses = (id: string) => sessions.get(id);
   const done = (r: TicketRow) => rideCompleted(r, !!ses(r.sessionId)?.freeRide);
-  const completed = rows.filter(done), rides = completed.length;
-  // a ride that counts towards a badge (_bdgRode): done and paid, or free, or an own bike checked in
+  // a ride that counts towards a badge (_bdgRode): done and paid, or free, or an own bike checked in;
+  // the booking app counts every badge off these rows (_mrBadges(all, all.filter(_bdgRode)))
   const rode = (r: TicketRow) => done(r) || (r.type === "Own" && (r.status === "done" || r.status === "active"));
+  const completed = rows.filter(rode), rides = completed.length;
   // Front Row's levels (2026-10-12): nights first in the queue and ridden ("make sure all badges go for
   // deserved holders"); a ride staff approve shows no number, so it never counts
   const p1 = new Set(rows.filter((r) => r.queueNum === 1 && rode(r) && !ses(r.sessionId)?.approval).map((r) => r.sessionId)).size;
-  const carbon = rows.some((r) => r.type === "Road Carbon" && (r.status === "done" || r.status === "active"));
-  const per = new Map<string, number>();
-  for (const r of rows) per.set(r.sessionId, (per.get(r.sessionId) ?? 0) + 1);
-  const squad = Math.max(0, ...per.values());
+  const carbon = rows.some((r) => r.type === "Road Carbon" && (r.status === "done" || r.status === "active") && (r.paid || !!ses(r.sessionId)?.freeRide));
+  // Squad Captain (the booking app, 2026-10-07): three or more riders on one night, every one of them
+  // checked in (on the bike or done) and paid (free ride, own bike): a party with a no-show, a rider
+  // still waiting or one still owing earns nothing that night
+  const per = new Map<string, { n: number; ok: boolean }>();
+  for (const r of rows) {
+    const p = per.get(r.sessionId) ?? { n: 0, ok: true };
+    p.n++;
+    if (!((r.status === "active" || r.status === "done") && (r.paid || !!ses(r.sessionId)?.freeRide || r.type === "Own"))) p.ok = false;
+    per.set(r.sessionId, p);
+  }
+  const squad = [...per.values()].reduce((m, p) => (p.ok ? Math.max(m, p.n) : m), 0);
   const fuel = rows.some((r) => r.addons);
   const night = new Map<string, { d: string; done: boolean; noshow: boolean }>();
   for (const r of rows) {
     const n = night.get(r.sessionId) ?? { d: r.date, done: false, noshow: false };
-    if (done(r)) n.done = true; else if (String(r.status) === "noshow") n.noshow = true;
+    if (rode(r)) n.done = true; else if (String(r.status) === "noshow") n.noshow = true;
     night.set(r.sessionId, n);
   }
   const nights = [...night.entries()].sort((a, b) => a[1].d.localeCompare(b[1].d)), doneN = nights.filter(([, n]) => n.done);

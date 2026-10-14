@@ -254,3 +254,31 @@ describe("your rides", () => {
     expect(rideStats(recordRows([row({ session_id: "x", status: "waiting" })]), new Map(), today)).toBeNull();
   });
 });
+
+describe("the booking app's paid and checked-in rules (bh14)", () => {
+  const jcc = (r: { sessionId: string }[]) => new Map<string, RecordSession>(r.map((x) => [x.sessionId, { kind: "jcc", freeRide: false }]));
+  const on = (r: ReturnType<typeof recordRows>, slug: string) => badgeList(r, jcc(r), empty, today, null).flatMap((x) => x.lv ?? [x]).find((x) => x.slug === slug)!.on;
+  it("count a ride on the rider's own bike, never paid for, as ridden (_rideCompleted, _bdgRode)", () => {
+    const own = recordRows([row({ session_id: "2026-09-01", paid: false, type_preference: "Own" })]);
+    expect(on(own, "first_lap")).toBe(true);
+    expect(rideStats(own, jcc(own), today)).toMatchObject({ first: "2026-09-01", fav: null });
+    expect(on(recordRows([row({ session_id: "2026-09-01", paid: false })]), "first_lap")).toBe(false);
+  });
+  it("give Squad Captain only when every rider of the night is checked in and paid", () => {
+    const night = (o: Record<string, unknown> = {}) => recordRows([row({ session_id: "2026-09-02" }), row({ id: "n2", session_id: "2026-09-02" }), row({ id: "n3", session_id: "2026-09-02", ...o })]);
+    expect(on(night(), "squad")).toBe(true);
+    for (const o of [{ status: "waiting" }, { status: "noshow" }, { paid: false }]) expect(on(night(o), "squad"), JSON.stringify(o)).toBe(false);
+    expect(on(night({ paid: false, type_preference: "Own" }), "squad")).toBe(true);
+  });
+  it("give Fuel Stop only for add-ons paid for, Carbon only for a ride paid for", () => {
+    const fuel = (o: Record<string, unknown>) => on(recordRows([row({ session_id: "2026-09-03", addons: [{ id: "w", qty: 1, p: 10 }], ...o })]), "fuel");
+    expect(fuel({})).toBe(true);
+    expect(fuel({ paid: false })).toBe(false);
+    expect(fuel({ status: "waiting" })).toBe(false);
+    expect(fuel({ addons: [{ id: "w", qty: 1, p: 0 }] })).toBe(false); // an extra at no cost
+    expect(fuel({ price: 0 })).toBe(false); // on the house
+    expect(fuel({ price: 0, promo_code: "FREE10" })).toBe(true);
+    expect(on(recordRows([row({ session_id: "2026-09-04", type_preference: "Road Carbon", paid: false })]), "carbon")).toBe(false);
+    expect(on(recordRows([row({ session_id: "2026-09-04", type_preference: "Road Carbon" })]), "carbon")).toBe(true);
+  });
+});

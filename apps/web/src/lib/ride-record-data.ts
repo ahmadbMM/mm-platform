@@ -42,7 +42,7 @@ export async function loadBadgeData(a: Account): Promise<BadgeData> {
   const w = list<{ w: string; ids: string[] }>(weeks.data);
   return {
     catalog: list<BadgeRow>(cat.data).filter((b) => b && typeof b.slug === "string"),
-    weeks: w.length ? w : null,
+    weeks: Array.isArray(weeks.data) ? w : null, // an empty answer is known (no week of two sessions yet); only a failed call is not
     seasons: list<BadgeRow>(seasons.data).filter((b) => b && typeof b.slug === "string"),
     mine: list<BadgeRow>(mine.data).filter((b) => b && typeof b.slug === "string"),
   };

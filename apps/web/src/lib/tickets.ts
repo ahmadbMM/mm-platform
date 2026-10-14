@@ -155,9 +155,10 @@ export function doneToday(rows: Row[], today: string): Group[] {
   return grouped(all.filter((r) => r.status === "done" && !live.has(r.sessionId)));
 }
 
-/** A ride that counts as ridden (_rideCompleted): done, and paid or on a free community ride. */
-export function rideCompleted(r: Pick<TicketRow, "status" | "paid">, free: boolean): boolean {
-  return r.status === "done" && (r.paid || free);
+/** A ride that counts as ridden (_rideCompleted): done, and paid, on a free community ride, or on
+ *  the rider's own bike, which is never paid for (the booking app, 2026-10-05). */
+export function rideCompleted(r: Pick<TicketRow, "status" | "paid"> & { type?: string }, free: boolean): boolean {
+  return r.status === "done" && (r.paid || free || r.type === "Own");
 }
 
 /** A sessions row as the ticket reads it. */
@@ -255,7 +256,9 @@ export function ticketCue(rows: TicketRow[], s: TicketSession | undefined, ahead
     if (st === "waitlist") return "waitlist";
     return rows.every((r) => r.approval === "approved") ? "confirmed" : "pending";
   }
-  if (st === "active") return "onBike";
+  // checked in on a ride without bikes (the pool, the workshop, an event, Run for Her): never "On the
+  // bike now" (the booking app says tkStIn there)
+  if (st === "active") return s && !s.bikes ? null : "onBike";
   if (st === "waiting" && s && !s.approval && ahead !== null) return ahead ? "inQueue" : "next";
   return null;
 }
