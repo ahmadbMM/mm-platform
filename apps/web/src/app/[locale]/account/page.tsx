@@ -12,6 +12,8 @@ import RateRide from "@/components/account/RateRide";
 import RideRecord from "@/components/account/RideRecord";
 import BloodTypeCard from "@/components/account/BloodTypeCard";
 import { bloodTypeWords } from "@/components/account/BloodType.words";
+import NationalIdCard from "@/components/account/NationalIdCard";
+import { nationalIdWords } from "@/components/account/NationalId.words";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import "@/components/club/club.css";
@@ -22,6 +24,7 @@ import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { accountBookings, getAccount, rpcServer } from "@/lib/account";
 import { btOf } from "@/lib/blood-type";
+import { nidOf } from "@/lib/national-id";
 import { emAbsent } from "@/lib/emergency";
 import { decodeSession } from "@/lib/account-core";
 import { HANDOFF_COOKIE, accountLabel, sessionProfile } from "@/lib/handoff";
@@ -119,7 +122,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // every booked session, whatever its state now (a Petromin night, one staff closed since), read
   // with the account's token so a private ride (one its tag holders alone may see) keeps its name
   const record = recordRows(rows);
-  const [sessions, recSessions, badges, blood] = await Promise.all([
+  const [sessions, recSessions, badges, blood, nid] = await Promise.all([
     loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
     // every night booked, for Your rides and the badges (the kind of ride, whether it was free, whether staff approve it)
     loadRecordSessions(record.map((r) => r.sessionId), acct),
@@ -128,6 +131,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     // when it cannot be read just now (a card showing none would invite saving over the real one)
     rpcServer<unknown>("customer_blood_type", { p_id: acct.id, p_token: acct.token })
       .then((r) => (r.status === 0 || r.status >= 400 || emAbsent(r) ? null : { type: btOf(r.data) })),
+    // the ID or Iqama number (2026-10-14), left out the same way while customer_national_id is missing
+    rpcServer<unknown>("customer_national_id", { p_id: acct.id, p_token: acct.token })
+      .then((r) => (r.status === 0 || r.status >= 400 || emAbsent(r) ? null : { idNo: nidOf(r.data) })),
   ]);
   // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
   const past = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
@@ -262,6 +268,14 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             <h2 id="ac-bt-h">{bloodTypeWords(locale).title}</h2>
             <p id="ac-bt-sub" className="ac-text bt-sub">{bloodTypeWords(locale).sub}</p>
             <BloodTypeCard initial={blood.type} />
+          </section>
+        )}
+
+        {nid && (
+          <section className="ac-sec bt-sec" aria-labelledby="ac-nid-h">
+            <h2 id="ac-nid-h">{nationalIdWords(locale).title}</h2>
+            <p id="ac-nid-sub" className="ac-text bt-sub">{nationalIdWords(locale).sub}</p>
+            <NationalIdCard initial={nid.idNo} />
           </section>
         )}
 

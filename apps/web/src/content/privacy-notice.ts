@@ -94,8 +94,13 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "Blood type, if you give it (or that you don’t know it)",
-      "Always optional: given in My Account, or when you sign up for a blood donation event. Seen only by you and our staff; you can change or clear it in My Account at any time.",
-      "Letting our team plan a blood donation event. We never share your blood type outside MicroMobility, and we do not use it for anything else."
+      "Always optional: given in My Account, or when you sign up for a blood donation event. Seen only by you, our staff, and the hosts of a blood donation event you agree to share your details with; you can change or clear it in My Account at any time.",
+      "Letting our team plan a blood donation event. We share it only with the hosts of a blood donation event you agree to share your details with, and use it for nothing else."
+     ],
+     [
+      "Your ID or Iqama number, if you give it",
+      "Asked when you sign up for a blood donation event, and kept on your account so you give it once. Seen only by you, our staff, and the hosts of a blood donation event you agree to share your details with; you can change or clear it in My Account at any time.",
+      "Registering you as a donor. We share it only with the hosts of a blood donation event you agree to share your details with, and use it for nothing else."
      ],
      [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
@@ -380,8 +385,13 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "فصيلة الدم إن أعطيتنا إياها (أو أنك لا تعرفها)",
-      "اختيارية دائمًا: تُعطى في حسابي، أو عند التسجيل في فعالية للتبرع بالدم. لا يراها إلا أنت وموظفونا، ويمكنك تغييرها أو حذفها من حسابي في أي وقت.",
-      "مساعدة فريقنا في التخطيط لفعالية التبرع بالدم. لا نشارك فصيلة دمك خارج مايكروموبيليتي، ولا نستخدمها لأي غرض آخر."
+      "اختيارية دائمًا: تُعطى في حسابي، أو عند التسجيل في فعالية للتبرع بالدم. لا يراها إلا أنت وموظفونا والجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ويمكنك تغييرها أو حذفها من حسابي في أي وقت.",
+      "مساعدة فريقنا في التخطيط لفعالية التبرع بالدم. لا نشاركها إلا مع الجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ولا نستخدمها لأي غرض آخر."
+     ],
+     [
+      "رقم هويتك أو إقامتك إن أعطيتنا إياه",
+      "يُطلب عند التسجيل في فعالية للتبرع بالدم، ويُحفظ في حسابك فلا تُعطيه إلا مرة واحدة. لا يراه إلا أنت وموظفونا والجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ويمكنك تغييره أو حذفه من حسابي في أي وقت.",
+      "تسجيلك متبرعًا. لا نشاركه إلا مع الجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ولا نستخدمه لأي غرض آخر."
      ],
      [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
