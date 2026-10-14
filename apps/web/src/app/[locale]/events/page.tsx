@@ -15,6 +15,7 @@ import { kindNames, loadRides, sessionName, upcoming, withoutPetromin, type Ride
 import { routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { riyadhClock } from "@/lib/workshop-days";
+import { fmtClock } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { intlOf } from "@/i18n/locales";
 
@@ -53,6 +54,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it
   const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en");
   const now = riyadhClock(new Date());
+  const clock = (hhmm: string) => fmtClock(hhmm, locale);
   // never the Petromin nights, which only Experiences shows, to whom may book them (2026-10-12)
   const sessions = upcoming(withoutPetromin(rides?.sessions ?? []), now).slice(0, Math.max(1, N(c.hero.count)));
   // The booking window (site_content booking.window): a date not open yet is greyed, with when it opens, never hidden.
@@ -91,9 +93,10 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                       <strong>{name(s)}</strong>
                       {s.kind === "event" && s.description && <p className="pg-event-desc">{s.description}</p>}
                       <div className="pg-event-meta">
+                        {/* in the rider's clock, as Experiences and the tickets say them ("6 PM", "6:00 م"), each in its own direction */}
                         {s.times && (s.gather
-                          ? <span>{S(d.gather)} <bdi dir="ltr">{s.times[0]}</bdi> · {S(d.start)} <bdi dir="ltr">{s.times[1]}</bdi></span>
-                          : <span><bdi dir="ltr">{s.times[0]} – {s.times[1]}</bdi></span>)}
+                          ? <span>{S(d.gather)} <bdi>{clock(s.times[0])}</bdi> · {S(d.start)} <bdi>{clock(s.times[1])}</bdi></span>
+                          : <span><bdi>{clock(s.times[0])} – {clock(s.times[1])}</bdi></span>)}
                         {routeNameOf(routes, s.routeSlug) && <span>{tx("Route", "المسار")}: {routeNameOf(routes, s.routeSlug)}</span>}
                         {/* an event's seat price and seats; a copy kept at the edge from before these fields existed has none */}
                         {s.kind === "event" && s.price != null && <span>{fill(S(d.perSeat), { price: fmtSar(s.price, locale) })}</span>}
