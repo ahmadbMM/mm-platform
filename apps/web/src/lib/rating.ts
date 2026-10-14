@@ -17,6 +17,11 @@ export const ENTRY_ID = /^[A-Za-z0-9_-]{1,64}$/;
 /** A score at or under this asks why: the booking app's RG_LOW, which admins change in its Settings >
  *  Business (rg_low, read from site_content 'biz.public' by lib/biz.ts bizOf); this is its default. */
 export const RG_LOW = 8;
+/** Every ride but the Saturday ride asks why only for a 6 or under, never above the setting (the booking
+ *  app's RG_LOW_SHORT and _rgLow; the owner, 2026-10-11: "make a shorter ratings page but exclude
+ *  saturday ride"); the Saturday ride keeps the setting. */
+export const RG_LOW_SHORT = 6;
+export const rgLowFor = (form: RatingForm, low: number = RG_LOW): number => (form === "social" ? low : Math.min(low, RG_LOW_SHORT));
 /** Only rides from the day the forced rating went live are asked about. */
 export const RATE_FROM = "2026-10-03";
 export const REASON_MAX = 300;
@@ -86,6 +91,7 @@ export function cleanRating(body: unknown, low: number = RG_LOW): { entryId: str
   }
   if (b.form !== "rental" && b.form !== "social") return null;
   const form: RatingForm = b.form;
+  low = rgLowFor(form, low);
   const skipBf = form === "social" && b.skipBf === true;
   const asked = new Set(questionKeys(form, { skipBf }));
   const sIn = isObj(b.s) ? b.s : {}, whyIn = isObj(b.why) ? b.why : {};

@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { WALLET_ORIGIN, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, relayStatus, unratedRides } from "../rating";
+import { WALLET_ORIGIN, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, relayStatus, rgLowFor, unratedRides } from "../rating";
 import { ticketSession } from "../tickets";
 import { resetSessionColumns } from "../rides";
 import { POST as rate } from "../../app/api/account/rate/route";
@@ -50,9 +50,9 @@ describe("the questions", () => {
 
 describe("cleanRating", () => {
   it("keeps a rental rating as the booking app writes one", () => {
-    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 9, bike: 7, experience: 10, extra: 3 }, why: { bike: " Brakes squeaked \u0007 ", service: "ignored: a 9 has no reason" }, note: " Great night " })).toEqual({
+    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 9, bike: 5, experience: 10, extra: 3 }, why: { bike: " Brakes squeaked \u0007 ", service: "ignored: a 9 has no reason" }, note: " Great night " })).toEqual({
       entryId: "q1abcdef",
-      patch: { rating_bike: 7, rating_exp: 10, feedback: "Great night", rating_detail: { form: "rental", s: { service: 9, bike: 7, experience: 10 }, why: { bike: "Brakes squeaked" } } },
+      patch: { rating_bike: 5, rating_exp: 10, feedback: "Great night", rating_detail: { form: "rental", s: { service: 9, bike: 5, experience: 10 }, why: { bike: "Brakes squeaked" } } },
     });
     // on their own bike, or a pool session: no bike question
     expect(cleanRating({ entryId: "q1", form: "rental", s: { service: 10, experience: 10 }, why: {} })!.patch).toEqual({ rating_bike: null, rating_exp: 10, feedback: null, rating_detail: { form: "rental", s: { service: 10, experience: 10 }, why: {} } });
@@ -71,13 +71,20 @@ describe("cleanRating", () => {
       null, {}, { ...ok, entryId: "q;1" }, { ...ok, form: "party" },
       { ...ok, s: { service: 9 } }, // no experience
       { ...ok, s: { service: 11, experience: 9 } }, { ...ok, s: { service: 2.5, experience: 9 } }, { ...ok, s: { service: "9", experience: 9 } },
-      { ...ok, s: { service: 8, experience: 9 } }, // 8 or under with no reason
-      { ...ok, s: { service: 8, experience: 9 }, why: { service: "   " } },
+      { ...ok, s: { service: 6, experience: 9 } }, // 6 or under with no reason (a rental)
+      { ...ok, s: { service: 6, experience: 9 }, why: { service: "   " } },
       { entryId: "q2", form: "social", s: { ...SOCIAL, breakfast: undefined }, why: { ride_bike: "a", bf_food: "b" } }, // breakfast not skipped, not scored
     ]) expect(cleanRating(bad)).toBeNull();
     const long = cleanRating({ ...ok, s: { service: 3, experience: 9 }, why: { service: "x".repeat(400) }, note: "y".repeat(1200) })!.patch;
     expect(long.rating_detail!.why.service).toHaveLength(300);
     expect(long.feedback).toHaveLength(1000);
+  });
+  it("asks why of a rental only at 6 or under, of the Saturday ride at the setting (the booking app's _rgLow, 2026-10-11)", () => {
+    expect(rgLowFor("rental")).toBe(6);
+    expect(rgLowFor("rental", 4)).toBe(4);
+    expect(rgLowFor("social")).toBe(8);
+    expect(cleanRating({ entryId: "q1", form: "rental", s: { service: 7, bike: 8, experience: 8 }, why: { bike: "dropped: no box for an 8" } })!.patch.rating_detail!.why).toEqual({});
+    expect(cleanRating({ entryId: "q2", form: "social", s: { ...SOCIAL, ride_bike: 8 }, why: { breakfast: "Crowded", bf_food: "Cold" } })).toBeNull();
   });
   it("still takes a rating from a page drawn before the detailed one", () => {
     expect(cleanRating({ entryId: "q1abcdef", exp: 9, bike: 7, tags: ["route"], note: "Thanks" })).toEqual({ entryId: "q1abcdef", patch: { rating_exp: 9, rating_bike: 7, feedback: "Thanks" } });

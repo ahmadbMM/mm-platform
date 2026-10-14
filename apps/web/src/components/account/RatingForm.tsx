@@ -4,7 +4,7 @@ import "./rating.css";
 import { useId, useState, type ReactNode } from "react";
 import { useL, useTxLocale } from "@/i18n/TxProvider";
 import { fill } from "@/i18n/tx";
-import { NOTE_MAX, REASON_MAX, RG_FORMS, RG_LOW, questionKeys, questionTree, ratingErrors, type RatingForm as Form } from "@/lib/rating";
+import { NOTE_MAX, REASON_MAX, RG_FORMS, RG_LOW, questionKeys, questionTree, ratingErrors, rgLowFor, type RatingForm as Form } from "@/lib/rating";
 import { ratingWords, type RatingWords } from "./RatingForm.words";
 
 // The post-ride rating's questions, as the booking app asks them (lib/rating.ts): each question a
@@ -33,7 +33,7 @@ type Props = {
 };
 
 export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, onRated, footer }: Props) {
-  const low = rgLow ?? RG_LOW;
+  const low = rgLowFor(form, rgLow ?? RG_LOW);
   const t = ratingWords(useTxLocale());
   const tx = useL();
   const [s, setS] = useState<Record<string, number>>({});
