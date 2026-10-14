@@ -25,7 +25,8 @@ export function cleanPositions(v: unknown): LivePosition[] {
     if (!role || lat === null || lng === null || Math.abs(lat) > 90 || Math.abs(lng) > 180 || out.has(role)) continue;
     out.set(role, { role, lat, lng, heading: num(r.heading), speed: num(r.speed), at: typeof r.at === "string" ? r.at : "" });
   }
-  return [...out.values()].sort((a) => (a.role === "leader" ? -1 : 1));
+  const rank = (x: LivePosition) => (x.role === "leader" ? 0 : 1);
+  return [...out.values()].sort((a, b) => rank(a) - rank(b));
 }
 
 /** What the function's answer means (lib/account.ts rpcServer's shape). */
