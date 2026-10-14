@@ -10,6 +10,8 @@ import "@/components/booking/booking.css";
 import TicketCard from "@/components/booking/TicketCard";
 import RateRide from "@/components/account/RateRide";
 import RideRecord from "@/components/account/RideRecord";
+import BloodTypeCard from "@/components/account/BloodTypeCard";
+import { bloodTypeWords } from "@/components/account/BloodType.words";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import "@/components/club/club.css";
@@ -18,7 +20,9 @@ import { accountSchema } from "@/content/pages/account";
 import { clubSchema } from "@/content/pages/club";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
-import { accountBookings, getAccount } from "@/lib/account";
+import { accountBookings, getAccount, rpcServer } from "@/lib/account";
+import { btOf } from "@/lib/blood-type";
+import { emAbsent } from "@/lib/emergency";
 import { decodeSession } from "@/lib/account-core";
 import { HANDOFF_COOKIE, accountLabel, sessionProfile } from "@/lib/handoff";
 import { asLocale, resolvePage } from "@/lib/content";
@@ -115,11 +119,15 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // every booked session, whatever its state now (a Petromin night, one staff closed since), read
   // with the account's token so a private ride (one its tag holders alone may see) keeps its name
   const record = recordRows(rows);
-  const [sessions, recSessions, badges] = await Promise.all([
+  const [sessions, recSessions, badges, blood] = await Promise.all([
     loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
     // every night booked, for Your rides and the badges (the kind of ride, whether it was free, whether staff approve it)
     loadRecordSessions(record.map((r) => r.sessionId), acct),
     loadBadgeData(acct),
+    // the blood type (2026-10-14): no card while the database has no customer_blood_type yet, nor
+    // when it cannot be read just now (a card showing none would invite saving over the real one)
+    rpcServer<unknown>("customer_blood_type", { p_id: acct.id, p_token: acct.token })
+      .then((r) => (r.status === 0 || r.status >= 400 || emAbsent(r) ? null : { type: btOf(r.data) })),
   ]);
   // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
   const past = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
@@ -246,6 +254,14 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           <section className="ac-sec" aria-labelledby="ac-club-h">
             <h2 id="ac-club-h">{S(c.home.clubTitle)}</h2>
             <ClubCard locale={locale} title="" text="" notMember={S(club.card.notMember)} applyBtn={S(club.hero.applyBtn)} applyHref={localHref(S(club.hero.applyHref), locale)} tierNames={tierNames} email={acct.email} phone={acct.phone} sinceFmt={datePattern(locale, DATE_STYLES.memberSince)} />
+          </section>
+        )}
+
+        {blood && (
+          <section className="ac-sec bt-sec" aria-labelledby="ac-bt-h">
+            <h2 id="ac-bt-h">{bloodTypeWords(locale).title}</h2>
+            <p id="ac-bt-sub" className="ac-text bt-sub">{bloodTypeWords(locale).sub}</p>
+            <BloodTypeCard initial={blood.type} />
           </section>
         )}
 

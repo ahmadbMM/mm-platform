@@ -159,3 +159,9 @@ dialog.badge-pop-box.sp-pink { border-top-color: #f2789f; }
 .badge-lvl-n { flex: none; font-size: 11.5px; font-weight: 700; color: #6e6b63; font-variant-numeric: tabular-nums; }
 .badge-lvl.on .badge-lvl-n { color: #077a4b; }
 .badge-lvl-lock { display: block; }
+
+/* Blood type (BloodTypeCard.tsx, 2026-10-14): its own card, the list and Save under the line why it is asked. */
+.bt-sub { margin: -6px 0 14px; max-width: 620px; }
+.bt-card { max-width: 460px; background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
+.bt-ok { margin: 0; color: #077a4b; font-size: 13.5px; font-weight: 700; }
+.bt-save { margin-top: 2px; }

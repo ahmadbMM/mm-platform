@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-10-09";
+export const PRIVACY_VERSION = "2026-10-14";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -91,6 +91,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Emergency contacts: the name, mobile number and relationship to you of someone we can call, and of a second person if you add one",
       "One is required on every account: asked when you create your account, or before your next booking if your account has none. A second is always optional. Seen only by our staff, and the first also by the hosts of an event you agree to share it with. Please tell each person you gave us their details.",
       "Calling someone for you if you need help during an event, and the second person if we cannot reach the first. We never contact them for anything else. We share only your first contact’s details, and only with the hosts of an event you agree to share them with."
+     ],
+     [
+      "Blood type, if you give it (or that you don’t know it)",
+      "Always optional: given in My Account, or when you sign up for a blood donation event. Seen only by you and our staff; you can change or clear it in My Account at any time.",
+      "Letting our team plan a blood donation event. We never share your blood type outside MicroMobility, and we do not use it for anything else."
      ],
      [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
@@ -372,6 +377,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "جهات اتصال الطوارئ: اسم شخص يمكننا الاتصال به ورقم جواله وصلة قرابته بك، وكذلك لشخص ثانٍ إن أضفته",
       "جهة واحدة مطلوبة في كل حساب: تُطلب عند إنشاء حسابك، أو قبل حجزك التالي إن لم تكن في حسابك. والجهة الثانية اختيارية دائمًا. لا يراهما إلا موظفونا، والجهات المنظِّمة لفعالية توافق على مشاركة الأولى معها. يُرجى إبلاغ كل شخص منهما بأنك أعطيتنا بياناته.",
       "الاتصال بشخص نيابةً عنك إن احتجت إلى مساعدة أثناء إحدى الفعاليات، وبالشخص الثاني إن تعذّر الوصول إلى الأول. لا نتواصل معهما لأي غرض آخر، ولا نشارك إلا بيانات جهة الاتصال الأولى، ومع الجهات المنظِّمة لفعالية توافق على مشاركتها معها فقط."
+     ],
+     [
+      "فصيلة الدم إن أعطيتنا إياها (أو أنك لا تعرفها)",
+      "اختيارية دائمًا: تُعطى في حسابي، أو عند التسجيل في فعالية للتبرع بالدم. لا يراها إلا أنت وموظفونا، ويمكنك تغييرها أو حذفها من حسابي في أي وقت.",
+      "مساعدة فريقنا في التخطيط لفعالية التبرع بالدم. لا نشارك فصيلة دمك خارج مايكروموبيليتي، ولا نستخدمها لأي غرض آخر."
      ],
      [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
