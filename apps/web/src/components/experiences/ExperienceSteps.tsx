@@ -33,10 +33,10 @@ export type StepSession = {
   event: boolean; description: string | null; seatPrice: string | null; seats: string | null;
   /** The route the ride follows, named after the Routes page's list; null when none. */
   route: string | null;
-  /** The Saturday ride's breakfast stop by name, in the page's language (lib/event-info.ts
+  /** The Saturday ride's (or Run for Her's) breakfast stop by name, in the page's language (lib/event-info.ts
    *  infoBreakfast); null on any other ride or one with no stop yet. */
   breakfast: string | null;
-  /** The Saturday ride's breakfast spot told later (lib/tickets.ts spotHeld): the line
+  /** The Saturday ride's (or Run for Her's) breakfast spot told later (lib/tickets.ts spotHeld): the line
    *  that says when, ready in the page's language; null when nothing is held back. Optional, so a copy
    *  kept from before reads as none. */
   reveal?: string | null;

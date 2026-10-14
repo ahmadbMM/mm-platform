@@ -1,7 +1,7 @@
 import { fill as fillAt } from "@/i18n/tx";
 import { fill } from "./fill";
 import type { RideKind, RideSession } from "./rides";
-import { meetsAt, RUN_KMS, venueOf, venueText } from "./tickets";
+import { hasBreakfast, meetsAt, RUN_KMS, venueOf, venueText } from "./tickets";
 
 // "About this event" and "Details" on Experiences (the owner, 2026-10-05), as the booking app's event
 // picker has them (_infoAboutBtn, _infoDetailsBtn, _infoFacts): under each event card a link opens
@@ -84,7 +84,7 @@ export function infoPrice(s: Pick<RideSession, "kind" | "free">, t: { free: stri
  *  on the circuit, else none. A session read without its place reads as on the circuit. */
 export function infoPlace(s: Pick<RideSession, "kind" | "approval" | "location" | "meetUrl">, t: { meetingPoint: string; venueCircuit: string; venueJyc: string }, circuitMap: string): { name: string; map: string | null } {
   const approval = !!s.approval, meetUrl = s.meetUrl ?? null;
-  const v = venueOf({ approval, meetUrl, location: s.location ?? null });
+  const v = venueOf({ approval, meetUrl, location: s.location ?? null, kind: s.kind });
   let map: string | null = null;
   if (meetsAt({ approval, kind: s.kind }) && meetUrl) map = meetUrl;
   else if (v.kind === "circuit") map = circuitMap || null;
@@ -107,13 +107,13 @@ export function infoPlaces(s: Pick<RideSession, "full" | "left" | "approval">, t
 }
 
 /** The breakfast stop on a date, by name (the owner, 2026-10-05: "add the restaurant's name in the
- *  session whenever it's added"): the Saturday ride's, as the page's language reads it - its Arabic
+ *  session whenever it's added"): the Saturday ride's and Run for Her's (2026-10-14), as the page's language reads it - its Arabic
  *  name on the Arabic page when the venue gave one, else its name, as its ticket says it (lib/tickets.ts
  *  breakfastFor) - and null on any other ride, or one with no stop yet. The date's card and the
  *  summary say "Breakfast at {name}", and its Details end with it after the places, under "After"
  *  (the booking app's _infoFacts: infoAfter, infoBreakfastAt). */
 export function infoBreakfast(s: Pick<RideSession, "kind" | "breakfast" | "breakfastAr">, locale: string): string | null {
-  if (s.kind !== "saturday" || !s.breakfast) return null;
+  if (!hasBreakfast(s.kind) || !s.breakfast) return null;
   return (locale === "ar" && s.breakfastAr) || s.breakfast;
 }
 

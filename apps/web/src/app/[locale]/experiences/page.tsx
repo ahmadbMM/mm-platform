@@ -138,8 +138,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   };
   const venueWords = { meetingPoint: tx("Meeting point", "نقطة التجمع"), venueCircuit: tx("Jeddah Corniche Circuit", "حلبة كورنيش جدة"), venueJyc: tx("Jeddah Yacht Club", "نادي جدة لليخوت") };
   const clock = (hhmm: string) => fmtClock(hhmm, locale);
-  // The Saturday ride's breakfast spot, told at a time staff choose (the owner, 2026-10-06; lib/tickets.ts
-  // spotHeld): until then its card and Details say when; its meeting point shows (never the circuit, meetHeld).
+  // The Saturday ride's breakfast spot (and Run for Her's, 2026-10-14), told at a time staff choose (the owner,
+  // 2026-10-06; lib/tickets.ts spotHeld): until then its card and Details say when; its meeting point shows (never
+  // the circuit, meetHeld; Run for Her the Jeddah Yacht Club).
   const nearWords = { today: tx("Today", "اليوم"), tomorrow: tx("Tomorrow", "غداً") };
   const heldWhen = (s: RideSession) => (spotHeld(s) ? revealWhen(s.revealAt, locale, now.slice(0, 10), nearWords) : null);
   const toStep = (s: RideSession): StepSession => {
@@ -163,7 +164,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
       route: routeNameOf(routes, s.routeSlug),
       routeKm: kmOf(s),
-      // the Saturday ride's breakfast stop, by its Arabic name on the Arabic page when it has one
+      // the Saturday ride's (and Run for Her's) breakfast stop, by its Arabic name on the Arabic page when it has one
       breakfast: infoBreakfast(s, locale),
       reveal: held ? fillAt(tx("Breakfast spot: announced {0}", "موقع الفطور: يُعلَن عنه {0}"), held) : null,
       left: s.left ?? null,

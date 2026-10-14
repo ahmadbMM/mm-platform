@@ -47,6 +47,11 @@ describe("the breakfast stop (the booking app's _commInfoHtml)", () => {
     expect(breakfastFor(sat, "en")).toBeNull();
     expect(breakfastFor(undefined, "en")).toBeNull();
   });
+  it("is Run for Her's too (the owner, 2026-10-14)", () => {
+    const run = ticketSession({ ...bfRow, ride_kind: "runher", needs_approval: false, location: "JYC" })!;
+    expect(breakfastFor(run, "en")).toEqual({ name: "Bean Box", url: "https://maps.example.test/bean", offer: "15% off breakfast" });
+    expect(breakfastFor(run, "ar")).toEqual({ name: "بين بوكس", url: "https://maps.example.test/bean", offer: "خصم ١٥٪" });
+  });
 });
 
 describe("the tickets", () => {
@@ -407,5 +412,43 @@ describe("the Saturday ride's breakfast spot told at staff's time, the meeting p
     expect(html).toContain('href="https://maps.app.goo.gl/x"');
     expect(html).not.toContain("Jeddah Corniche Circuit");
     expect(TICKET.ar.revealSpotsAt("غداً · 8 م")).toBe("موقع الفطور: يُعلَن عنه غداً · 8 م");
+  });
+});
+
+describe("Run for Her's breakfast spot told at staff's time, at the Jeddah Yacht Club all along (the owner, 2026-10-14)", () => {
+  const NOW = Date.parse("2099-10-15T09:00:00Z");
+  // what list_sessions gives a runner while the time is ahead: location, route and breakfast blank, the meeting point kept
+  const runRow = { id: "2099-10-17-rh", session_date: "2099-10-17", event_kind: "community", ride_kind: "runher", needs_approval: false, hide_queue: true, paid_ride: false, bike_slots: '{"_time":"06:00 - 06:30"}', meet_url: "https://maps.app.goo.gl/run", location: null, reveal_at: "2099-10-16T17:00:00Z", title: "Run for Her" };
+  const held = ticketSession(runRow)!;
+  const bare = ticketSession({ ...runRow, meet_url: null })!;
+  it("is held, names the Jeddah Yacht Club, never the circuit", () => {
+    expect(spotHeld(held, NOW)).toBe(true);
+    expect(spotHeld(bare, NOW)).toBe(true);
+    expect(meetHeld(held, NOW)).toBe(false);
+    expect(meetHeld(bare, NOW)).toBe(false); // it always meets at the yacht club
+    expect(breakfastFor(held, "en")).toBeNull();
+    expect(venueOf(held)).toEqual({ kind: "jyc" });
+    expect(venueText(venueOf(bare), TICKET.en)).toBe("Jeddah Yacht Club");
+    expect(icsPlace(bare)).toBe("Jeddah Yacht Club");
+    const ics = icsFor(bare, "Run for Her - Saturday", icsPlace(bare), new Date(NOW));
+    expect(ics).toContain("LOCATION:Jeddah Yacht Club");
+    expect(ics).toContain("Breakfast spot: announced Tomorrow · 8 PM");
+    expect(ics).not.toContain("Jeddah Corniche Circuit");
+    expect(icsFor(held, "x", icsPlace(held), new Date(NOW))).toContain("LOCATION:https://maps.app.goo.gl/run");
+  });
+  it("its ticket says when the breakfast spot is told and where the run is", () => {
+    const html = renderToStaticMarkup(createElement(TicketCard, {
+      locale: "en", today: "2099-10-15", rows: [ticketRow({ id: "r1abcdef", session_id: bare.id, session_date: bare.date, session_day: "Saturday", status: "waiting", queue_num: 3, price: 0, paid: false, name: "Ann", type_preference: null })!],
+      session: bare, name: "Run for Her", cue: null, t: TICKET.en, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+      links: { edit: null, manage: "https://book.example.test/?tab=bookings", place: null }, now: NOW,
+    }));
+    expect(html).toContain("Breakfast spot: announced Tomorrow · 8 PM");
+    expect(html).toContain("tk-venue\">Jeddah Yacht Club<");
+    expect(html).not.toContain("Jeddah Corniche Circuit");
+  });
+  it("shows the stop once told", () => {
+    const told = ticketSession({ ...runRow, location: "JYC", breakfast_name: "Bean Box" })!;
+    expect(spotHeld(told, NOW)).toBe(false);
+    expect(breakfastFor(told, "en")?.name).toBe("Bean Box");
   });
 });

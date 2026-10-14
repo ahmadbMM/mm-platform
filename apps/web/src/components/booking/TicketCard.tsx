@@ -89,8 +89,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const look = past ? "past" : ticketLook(rows, s); // dark when a place is held, paper otherwise (the booking app's tk-live)
   const onDay = primary.date === today;
   const dw = past ? null : dayWord(primary.date, today);
-  // a Saturday ride whose breakfast spot is told later says when (spotHeld); held without its meeting point's
-  // link, it still meets at a point, never the circuit (meetHeld)
+  // a Saturday ride or Run for Her whose breakfast spot is told later says when (spotHeld); held without its
+  // meeting point's link, it still meets at a point, never the circuit (meetHeld); Run for Her at the Jeddah Yacht Club
   const held = !past && spotHeld(s, now);
   const venue = held && meetHeld(s, now) ? ({ kind: "meet" } as const) : venueOf(s);
   const big = num.length <= 4 ? "big" : num.length <= 9 ? "mid" : "small";
@@ -185,7 +185,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           <p className="tk-reveal"><Clock /><bdi>{t.revealSpotsAt(revealWhen(s?.revealAt, locale, today, { today: t.today, tomorrow: t.tomorrow }))}</bdi></p>
         )}
         {(() => {
-          // The Saturday ride's breakfast stop, as the booking app's card shows it (_commInfoHtml).
+          // The Saturday ride's (and Run for Her's) breakfast stop, as the booking app's card shows it (_commInfoHtml).
           const bf = past ? null : breakfastFor(s, locale);
           return bf && (
             <div className="tk-rt tk-bf">

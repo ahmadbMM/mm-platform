@@ -135,6 +135,9 @@ describe("a date's facts", () => {
     // Run for Her at the Jeddah Yacht Club: its meeting point's link, or none (never the circuit's)
     expect(infoPlace({ kind: "runher", approval: false, location: "JYC", meetUrl: MEET }, words, DIR)).toEqual({ name: "Jeddah Yacht Club", map: MEET });
     expect(infoPlace({ kind: "runher", approval: false, location: "JYC", meetUrl: null }, words, DIR)).toEqual({ name: "Jeddah Yacht Club", map: null });
+    // a run whose place is held back (reveal_at ahead: list_sessions blanks location) is still at the Jeddah Yacht Club
+    expect(infoPlace({ kind: "runher", approval: false, location: null, meetUrl: MEET }, words, DIR)).toEqual({ name: "Jeddah Yacht Club", map: MEET });
+    expect(infoPlace({ kind: "runher", approval: false, location: null, meetUrl: null }, words, DIR)).toEqual({ name: "Jeddah Yacht Club", map: null });
     // a ride staff approve that meets at a link (the Saturday ride), and one that does not
     expect(infoPlace({ kind: "saturday", approval: true, location: null, meetUrl: MEET }, words, DIR)).toEqual({ name: "Meeting point", map: MEET });
     expect(infoPlace({ kind: "saturday", approval: true, location: null, meetUrl: null }, words, DIR)).toEqual({ name: "Jeddah Corniche Circuit", map: DIR });
@@ -173,7 +176,10 @@ describe("a date's facts", () => {
     expect(infoBreakfast({ ...sat, breakfast: null }, "ar")).toBeNull();
     expect(infoBreakfast({ kind: "saturday" }, "en")).toBeNull();
     // the Saturday ride alone stops for breakfast
-    for (const kind of ["jcc", "swim", "workshop", "snd96", "event", "runher", "petromin"] as const) expect(infoBreakfast({ ...sat, kind }, "en"), kind).toBeNull();
+    for (const kind of ["jcc", "swim", "workshop", "snd96", "event", "petromin"] as const) expect(infoBreakfast({ ...sat, kind }, "en"), kind).toBeNull();
+    // Run for Her has a breakfast stop too (the owner, 2026-10-14)
+    expect(infoBreakfast({ ...sat, kind: "runher" }, "en")).toBe("Bean Box");
+    expect(infoBreakfast({ ...sat, kind: "runher" }, "ar")).toBe("بين بوكس");
   });
 
   it("say the stop under After, in the booking app's own words in the languages it speaks", () => {

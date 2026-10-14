@@ -72,7 +72,7 @@ export type RideSession = {
    *  (sessions.breakfast_name), and its Arabic name (breakfast_name_ar, which a venue booking through
    *  the vendor portal gives; rentals migration 20261004130000): trimmed, at most 80 characters, null
    *  when blank. Only a read that asks for them has them (SESSION_COLS_BREAKFAST), as with the place;
-   *  Experiences names the stop on the Saturday ride alone (lib/event-info.ts infoBreakfast). */
+   *  Experiences names the stop on the Saturday ride and Run for Her alone (lib/event-info.ts infoBreakfast). */
   breakfast?: string | null;
   breakfastAr?: string | null;
   /** When riders are told where the Saturday ride meets and has breakfast (sessions.reveal_at, ISO; the

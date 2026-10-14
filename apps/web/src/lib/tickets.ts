@@ -199,7 +199,7 @@ export function ticketSession(r: Row): TicketSession | null {
   };
 }
 
-/** The Saturday ride's breakfast spot, told at a time staff choose (the owner, 2026-10-06, then "show the
+/** The Saturday ride's breakfast spot, and Run for Her's (the owner, 2026-10-14), told at a time staff choose (the owner, 2026-10-06, then "show the
  *  meeting point immediately only hide the breakfast spot and location"; the booking app's _spotHeld): until
  *  sessions.reveal_at, list_sessions gives the session with its breakfast stop, place and route blank and its
  *  meeting point as it is (rentals 20261006150000, 170000), so the site says when the breakfast spot is told. A
@@ -213,9 +213,10 @@ export function spotHeld(s: { revealAt?: string | null; location?: string | null
   return r > now || now - r < REVEAL_GRACE_MS;
 }
 /** Held, and the session came without its meeting point (a database before rentals 20261006170000, or none set
- *  yet; the booking app's _meetHeld): it meets at a point, unnamed, never the circuit. */
-export const meetHeld = (s: { revealAt?: string | null; meetUrl?: string | null; location?: string | null; breakfast?: unknown } | undefined, now: number = Date.now()): boolean =>
-  spotHeld(s, now) && !s?.meetUrl;
+ *  yet; the booking app's _meetHeld): it meets at a point, unnamed, never the circuit. Not Run for Her, which
+ *  always meets at the Jeddah Yacht Club (venueOf). */
+export const meetHeld = (s: { kind?: string; revealAt?: string | null; meetUrl?: string | null; location?: string | null; breakfast?: unknown } | undefined, now: number = Date.now()): boolean =>
+  spotHeld(s, now) && !s?.meetUrl && s?.kind !== "runher";
 
 /** When they are told, in Riyadh time (the booking app's _revealWhen): "Tomorrow · 8 PM", "Friday · 9 Oct
  *  2026 · 8:30 PM", with the page's own words for today and tomorrow. "" without a time. */
@@ -226,11 +227,14 @@ export function revealWhen(iso: string | null | undefined, locale: string, today
   return `${w === "today" ? words.today : w === "tomorrow" ? words.tomorrow : fmtDayDate(date, locale)} · ${fmtClock(k.slice(11, 16), locale)}`;
 }
 
+/** The rides with a breakfast stop: the Saturday ride, and Run for Her (the owner, 2026-10-14). */
+export const hasBreakfast = (kind: string | null | undefined): boolean => kind === "saturday" || kind === "runher";
+
 /** The breakfast stop as a rider reads it: the Arabic name on the Arabic page, and the offer in
  *  Arabic there and in English in every other language (the booking app's _commInfoHtml). */
 export function breakfastFor(s: TicketSession | undefined, locale: string): { name: string; url: string | null; offer: string | null } | null {
   const b = s?.breakfast;
-  if (!b || s?.kind !== "saturday") return null;
+  if (!b || !hasBreakfast(s?.kind)) return null;
   const ar = locale === "ar";
   return { name: (ar && b.nameAr) || b.name, url: b.url, offer: (ar ? b.offerAr || b.offerEn : b.offerEn || b.offerAr) || null };
 }
@@ -288,11 +292,12 @@ export function dayWord(date: string, today: string): "today" | "tomorrow" | nul
 
 /** Where the ride is, by name (_venueName): a ride staff approve that meets at a map link is its
  *  meeting point; a night on the circuit (no place, or "JCC") the Jeddah Corniche Circuit; "JYC" the
- *  Jeddah Yacht Club, where Run for Her meets (VENUE_KEY); any other place as staff wrote it. */
+ *  Jeddah Yacht Club, where Run for Her meets (VENUE_KEY) - Run for Her always, its place held back or
+ *  not (the owner, 2026-10-14), never the circuit; any other place as staff wrote it. */
 export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "text"; text: string };
-export function venueOf(s: Pick<TicketSession, "approval" | "meetUrl" | "location"> | undefined): Venue {
+export function venueOf(s: (Pick<TicketSession, "approval" | "meetUrl" | "location"> & { kind?: string }) | undefined): Venue {
   if (s?.approval && s.meetUrl) return { kind: "meet" };
-  const loc = s?.location ?? "";
+  const loc = s?.location || (s?.kind === "runher" ? "JYC" : "");
   return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : { kind: "text", text: loc };
 }
 
@@ -426,11 +431,12 @@ export function fmtDayDate(iso: string, locale: string): string {
 /** Where the calendar file says the ride is (downloadBookingICS's LOCATION): a ride that meets at a
  *  map link (meetsAt: one staff approve, or Run for Her), that link; else the place staff wrote, with
  *  the three the booking app spells out for a calendar ("JCC", "Sharafeyah Branch", "JYC"); "" for
- *  none, which icsFor writes as the circuit. */
+ *  none, which icsFor writes as the circuit; Run for Her without its place (held back) the Jeddah Yacht Club. */
 const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Branch", "Sharafeyah, Jeddah"], ["JYC", "Jeddah Yacht Club"]]);
 export function icsPlace(s: TicketSession): string {
   if (meetsAt(s) && s.meetUrl) return s.meetUrl;
-  return s.location ? ICS_PLACES.get(s.location) ?? s.location : "";
+  const loc = s.location || (s.kind === "runher" ? "JYC" : "");
+  return loc ? ICS_PLACES.get(loc) ?? loc : "";
 }
 
 /** The ride's start and end, in minutes from the start of its day (Riyadh), as the booking app's
