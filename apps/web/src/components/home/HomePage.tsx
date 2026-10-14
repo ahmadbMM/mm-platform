@@ -205,7 +205,8 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
             <h2>{S(v.title)}</h2>
             <p className="lead">{S(v.text)}</p>
             <p className="meta">{S(contact.address)}<br />{S(contact.hoursText)}</p>
-            <p className="meta"><a href={S(contact.jccHref)} target="_blank" rel="noopener noreferrer">{S(contact.jccName)} {arrow}</a></p>
+            {/* A link staff cleared (Website > Whole site > Contact) is left out, not drawn as a link to this page. */}
+            {S(contact.jccHref) && S(contact.jccName) && <p className="meta"><a href={S(contact.jccHref)} target="_blank" rel="noopener noreferrer">{S(contact.jccName)} {arrow}</a></p>}
             <OpenNow openHour={N(contact.openHour)} closeHour={N(contact.closeHour)} fridayClosed={contact.fridayClosed === true} />
             <div className="hm-visit-btns">
               {rating > 0 && (
@@ -213,7 +214,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
                   <span className="stars" aria-hidden="true">★★★★★</span><span className="mm-lat">{rating.toFixed(1)}</span><small>{S(v.ratingLabel)}</small>
                 </a>
               )}
-              <a href={S(contact.mapsHref)} target="_blank" rel="noopener noreferrer" className="dark">{S(v.directions)}</a>
+              {S(contact.mapsHref) && <a href={S(contact.mapsHref)} target="_blank" rel="noopener noreferrer" className="dark">{S(v.directions)}</a>}
             </div>
           </div>
           <iframe title={S(v.title)} src="https://www.google.com/maps?q=Micromobility+Jeddah+Saudi+Arabia&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
