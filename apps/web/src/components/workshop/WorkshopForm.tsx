@@ -96,7 +96,7 @@ export default function WorkshopForm(p: WorkshopFormProps) {
   const total = Math.max(0, Math.round(gross - off)); // an estimate: whole riyals
   async function applyCode() {
     setCodeErr("");
-    const v = codeIn.trim().replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c)));
+    const v = codeIn.trim().replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)));
     if (!v) return;
     try {
       const r = await rpc<{ ok: boolean; code?: string; kind?: string; value?: number; applies_to?: string | null }>("promo_lookup", { p_code: v });
