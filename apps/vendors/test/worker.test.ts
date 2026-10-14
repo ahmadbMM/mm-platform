@@ -252,6 +252,40 @@ describe("POST /api/rpc/<name>", () => {
     expect(await res.json()).toEqual({ error: "SERVER" });
   });
 
+  it("answers BAD_INPUT raised by the profile and feedback saves as 400, not a server fault", async () => {
+    for (const [name, args] of [
+      ["vendor_profile_save", { p_data: { seats: "5000" } }],
+      ["vendor_feedback_save", { p_booking: 5, p_rating: 4, p_turnout: 5000 }],
+    ] as const) {
+      answer = dbError("BAD_INPUT", "P0001");
+      const res = await worker.fetch(post(`/api/rpc/${name}`, args, { Cookie: COOKIE }), env());
+      expect(res.status, name).toBe(400);
+      expect(await res.json()).toEqual({ error: "BAD_INPUT" });
+      expect(res.headers.get("set-cookie")).toBeNull();
+    }
+  });
+
+  it("never reads a database message as a code through the object's prototype", async () => {
+    for (const message of ["constructor", "toString", "__proto__", "hasOwnProperty"]) {
+      answer = dbError(message, "P0001");
+      const res = await worker.fetch(post("/api/rpc/vendor_me", {}, { Cookie: COOKIE }), env());
+      expect(res.status, message).toBe(502);
+      expect(await res.json()).toEqual({ error: "SERVER" });
+      answer = dbJson({ error: message });
+      const login = await worker.fetch(post("/api/login", { login: "a@b.co", password: "x" }), env());
+      expect(login.status, message).toBe(401);
+      expect(await login.json()).toEqual({ error: "BAD_LOGIN" });
+    }
+  });
+
+  it("answers a sign-in the database refuses with LOCKED (answered, not raised) as 429 too", async () => {
+    answer = dbJson({ error: "LOCKED" });
+    const res = await worker.fetch(post("/api/login", { login: "a@b.co", password: "x" }), env());
+    expect(res.status).toBe(429);
+    expect(await res.json()).toEqual({ error: "LOCKED" });
+    expect(res.headers.get("set-cookie")).toBeNull();
+  });
+
   it("saves feedback with the session from the cookie and words its refusals", async () => {
     const row = { booking_id: 5, venue_id: 3, day: "2026-09-26", rating: 4, turnout: 9, went_well: "Quick", improve: "", created_at: "x", updated_at: "x" };
     answer = dbJson(row);

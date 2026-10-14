@@ -116,6 +116,9 @@ function profileForm(main: HTMLElement, me: Me, reloadMe: () => Promise<boolean>
     if (!r.ok) {
       const at = r.code === "BAD_PHONE" ? f.contact_phone : r.code === "BAD_EMAIL" ? f.contact_email : null;
       if (at) { at.setError(t(errorKey(r.code))); at.input.focus(); return; }
+      // BAD_INPUT from vendor_profile_save is the seats count (outside 1-2000, or not a number): said
+      // on that field when one was typed; otherwise the general "not valid" note below.
+      if (r.code === "BAD_INPUT" && seats) { f.seats.setError(t("errSeats")); f.seats.input.focus(); return; }
       msg.append(errorNote(r.code));
       return;
     }

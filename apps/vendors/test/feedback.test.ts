@@ -68,5 +68,8 @@ describe("feedback words", () => {
     expect(errorKey("NOT_CONFIRMED")).toBe("errNotConfirmed");
     expect(errorKey("BAD_RATING")).toBe("errRating");
     expect(errorKey("NOT_FOUND")).toBe("errNotFound");
+    // vendor_feedback_save / vendor_profile_save raise BAD_INPUT for a count out of range.
+    expect(errorKey("BAD_INPUT")).toBe("errInput");
+    expect(STRINGS.ar[errorKey("BAD_INPUT")]).toBeTruthy();
   });
 });

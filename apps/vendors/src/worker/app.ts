@@ -72,7 +72,16 @@ const KNOWN: Record<string, number> = {
   BAD_PHONE: 400,
   BAD_EMAIL: 400,
   TOO_LONG: 400,
+  // vendor_profile_save / vendor_feedback_save: seats outside 1-2000, a turnout outside 0-1000, or a
+  // count that is not a number (raised as BAD_INPUT, which otherwise read as a server fault, 502).
+  BAD_INPUT: 400,
 };
+
+/** The status a code the database raises or answers on purpose takes, or null for any other text
+ *  (an own key only: a message such as "constructor" must not match the object's prototype). */
+export function knownStatus(code: string): number | null {
+  return Object.prototype.hasOwnProperty.call(KNOWN, code) ? KNOWN[code] : null;
+}
 
 export const LOGIN_BODY_LIMIT = 2 * 1024;
 export const RPC_BODY_LIMIT = 16 * 1024;
@@ -150,7 +159,8 @@ async function callDb(env: Env, req: Request, name: string, args: Record<string,
   if (res.ok) return { ok: true, data };
   const err = (data && typeof data === "object" ? data : {}) as { message?: string; code?: string };
   const msg = String(err.message || "");
-  if (msg in KNOWN) return { ok: false, status: KNOWN[msg], code: msg };
+  const known = knownStatus(msg);
+  if (known !== null) return { ok: false, status: known, code: msg };
   const pg = String(err.code || "");
   // Bad values (a malformed date, a check the venue's input failed, wrong arguments).
   if (pg.startsWith("22") || pg.startsWith("23") || pg.startsWith("PGRST1") || pg.startsWith("PGRST2")) {
@@ -170,7 +180,12 @@ async function login(req: Request, env: Env): Promise<Response> {
   const r = await callDb(env, req, "vendor_login", { p_login: who.trim(), p_pwd: password });
   if (!r.ok) return fail(r.code, r.status);
   const d = (r.data || {}) as { error?: string; id?: number; token?: string; must_change?: boolean };
-  if (d.error) return fail(d.error in KNOWN ? d.error : "BAD_LOGIN", 401);
+  // An answered refusal takes its own status, as a raised one does (LOCKED is a 429 either way).
+  if (d.error) {
+    const code = String(d.error);
+    const status = knownStatus(code);
+    return status === null ? fail("BAD_LOGIN", 401) : fail(code, status);
+  }
   if (typeof d.id !== "number" || typeof d.token !== "string") return fail("SERVER", 502);
   return json({ must_change: d.must_change === true }, 200, setCookie({ id: d.id, token: d.token }));
 }
@@ -199,7 +214,7 @@ async function rpc(req: Request, env: Env, name: string): Promise<Response> {
     // database before 20261004130000, the token itself). A wrong current password is ANSWERED as
     // {error: "BAD_PASSWORD"}, so the database keeps its count of failed tries.
     const d = r.data as { token?: unknown; error?: unknown } | string | null;
-    if (d && typeof d === "object" && typeof d.error === "string") return fail(d.error in KNOWN ? d.error : "BAD_PASSWORD", 400);
+    if (d && typeof d === "object" && typeof d.error === "string") return fail(knownStatus(d.error) !== null ? d.error : "BAD_PASSWORD", 400);
     const token = typeof d === "string" ? d : d && typeof d === "object" && typeof d.token === "string" ? d.token : "";
     if (!token) return fail("SERVER", 502);
     return json({ ok: true }, 200, setCookie({ id: s.id, token }));
