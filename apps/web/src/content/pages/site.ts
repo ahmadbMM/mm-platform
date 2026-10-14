@@ -21,7 +21,7 @@ export const siteSchema = {
         { id: "jccHref", type: "link", label: bi("Second branch directions link", "رابط اتجاهات الفرع الثاني"), def: "https://maps.app.goo.gl/RgRGuy6gDT4F6Lve8" },
         { id: "email", type: "text", max: 80, mono: true, label: bi("Email", "البريد"), def: bi("info@micromobility.sa", "info@micromobility.sa") },
         { id: "phone", type: "text", max: 24, mono: true, label: bi("Phone (with +966)", "الجوال (مع ‎+966)"), def: bi("+966566668818", "+966566668818") },
-        { id: "hoursText", type: "text", max: 80, label: bi("Opening hours, as shown", "ساعات العمل كما تظهر"), def: bi("Sat–Thu 2pm–10pm · Fri closed", "السبت–الخميس ٢م–١٠م · الجمعة مغلق") },
+        { id: "hoursText", type: "text", max: 80, label: bi("Opening hours, as shown", "ساعات العمل كما تظهر"), def: bi("Sat–Thu 2pm–10pm · Fri closed", "السبت–الخميس 2م–10م · الجمعة مغلق") },
         { id: "openHour", type: "number", min: 0, max: 23, step: 1, label: bi("Opens at (hour, 0–23)", "يفتح الساعة (٠–٢٣)"), hint: bi("Used for the live open / closed sign.", "يُستخدم لإشارة مفتوح / مغلق الحية."), def: 14 },
         { id: "closeHour", type: "number", min: 1, max: 24, step: 1, label: bi("Closes at (hour, 1–24)", "يغلق الساعة (١–٢٤)"), def: 22 },
         { id: "fridayClosed", type: "toggle", label: bi("Closed on Fridays", "مغلق يوم الجمعة"), def: true },

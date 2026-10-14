@@ -48,7 +48,7 @@ export const clubSchema = {
           def: [
             { value: bi("Apply", "بطلب"), label: bi("to join", "الانضمام") },
             { value: bi("Every Sat", "كل سبت"), label: bi("member ride", "ركبة جماعية") },
-            { value: bi("3 tiers", "٣ مستويات"), label: bi("growing perks", "مزايا متصاعدة") },
+            { value: bi("3 tiers", "3 مستويات"), label: bi("growing perks", "مزايا متصاعدة") },
           ],
         },
         long("marquee", 400, "Moving strip (one per line)", "الشريط المتحرك (سطر لكل عبارة)", "BATTLE\nALVAS\nCAMP\nSTRAUSS\nEST. JEDDAH\nRIDE EVERY SATURDAY\nمجتمع الدراجات في جدة", "BATTLE\nALVAS\nCAMP\nSTRAUSS\nتأسسنا في جدة\nنركب كل سبت\nمجتمع الدراجات في جدة"),
@@ -79,7 +79,7 @@ export const clubSchema = {
       label: bi("Tiers", "المستويات"),
       hint: bi("One perk per line. The credits for each tier are in Rules.", "سطر لكل ميزة. رصيد كل مستوى في القواعد."),
       fields: [
-        txt("eyebrow", 30, "Small label", "العبارة الصغيرة", "Three tiers", "ثلاث مستويات"),
+        txt("eyebrow", 30, "Small label", "العبارة الصغيرة", "Three tiers", "ثلاثة مستويات"),
         txt("title", 60, "Title", "العنوان", "The more you ride, the more you get", "كلما ركبت أكثر، حصلت على أكثر"),
         txt("t1Name", 20, "Tier 1: name", "المستوى ١: الاسم", "Rider", "راكب"),
         txt("t1Req", 30, "Tier 1: how to reach it", "المستوى ١: كيف تصل إليه", "By application", "بطلب انضمام"),

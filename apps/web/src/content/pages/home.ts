@@ -88,7 +88,7 @@ export const homeSchema = {
           id: "steps", type: "list", maxItems: 4, label: bi("Steps", "الخطوات"),
           item: [txt("title", 50, "Step title", "عنوان الخطوة", "", ""), long("text", 200, "Step text", "نص الخطوة", "", ""), img("image", "Step photo", "صورة الخطوة", "/site/home/story-1.jpg")],
           def: [
-            { title: bi("Pick the frame", "اختر الإطار"), text: bi("Carbon, alloy, trail or city — sized to your height and confirmed on the fitting jig.", "كربون أو ألمنيوم، طريق أو جبلية — بمقاسك ومؤكّد على جهاز القياس."), image: { url: "/site/home/story-1.jpg" } },
+            { title: bi("Pick the frame", "اختر الإطار"), text: bi("Carbon, alloy, trail or city — sized to your height and confirmed on the fitting jig.", "كربون أو ألمنيوم، للمسارات أو للمدينة — بمقاسك ومؤكّد على جهاز القياس."), image: { url: "/site/home/story-1.jpg" } },
             { title: bi("Paint and parts", "الطلاء والقطع"), text: bi("Colour, groupset, wheels and cockpit — choose them with our team in the store.", "اللون والمجموعة والعجلات والمقود — اخترها مع فريقنا في المتجر."), image: { url: "/site/home/story-2.jpg" } },
             { title: bi("Hand-built in Jeddah", "تُبنى يدوياً في جدة"), text: bi("Torqued, aligned and wheel-trued on the stand. Every fastener checked twice.", "عزم ومحاذاة وضبط عجلات على الحامل. كل مسمار يُفحص مرتين."), image: { url: "/site/home/story-3.jpg" } },
             { title: bi("First ride, together", "أول جولة، معاً"), text: bi("Get fitted, collect your bike, and roll onto the corniche.", "اضبط قياسك، استلم دراجتك، وانطلق إلى الكورنيش."), image: { url: "/site/home/story-4.jpg" } },
@@ -189,7 +189,7 @@ export const homeSchema = {
       label: bi("Find us", "موقعنا"),
       fields: [
         txt("title", 50, "Title", "العنوان", "Find us in Jeddah.", "موقعنا في جدة."),
-        long("text", 160, "Text", "النص", "Book a test ride, service your bike or join a ride.", "احجز تجربة قيادة، اصلح دراجتك أو انضم لرحلة."),
+        long("text", 160, "Text", "النص", "Book a test ride, service your bike or join a ride.", "احجز تجربة قيادة، أو أصلِح دراجتك، أو انضم لرحلة."),
         txt("directions", 30, "Directions button", "زر الاتجاهات", "Get directions", "احصل على الاتجاهات"),
         { id: "rating", type: "number", min: 0, max: 5, step: 0.1, label: bi("Google rating (0 hides it)", "تقييم قوقل (٠ يخفيه)"), hint: bi("Only your real current rating.", "تقييمك الحقيقي الحالي فقط."), def: 0 },
         txt("ratingLabel", 30, "Rating label", "عنوان التقييم", "on Google", "على قوقل"),
