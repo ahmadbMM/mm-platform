@@ -10,6 +10,11 @@ export const TURNSTILE_SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || 
 type TurnstileApi = { render(el: HTMLElement, o: Record<string, unknown>): string; reset(id?: string): void; remove(id: string): void };
 declare global { interface Window { turnstile?: TurnstileApi } }
 
+// The site's languages Turnstile speaks (its supported list; Chinese as zh-cn). Urdu, Nepali and
+// Bengali are not on it: those pages ask for "auto" (the browser's language), never a code the
+// widget may refuse to draw - with no widget there is no token, and the sign-in could never be sent.
+const TS_LANG: Record<string, string> = { en: "en", ar: "ar", id: "id", ms: "ms", de: "de", es: "es", fr: "fr", pt: "pt", tl: "tl", ru: "ru", hi: "hi", zh: "zh-cn", ja: "ja" };
+
 let loading: Promise<void> | null = null;
 function loadScript(): Promise<void> {
   if (window.turnstile) return Promise.resolve();
@@ -36,7 +41,7 @@ export default function Turnstile({ locale, onToken, resetKey }: { locale: strin
       if (gone || !box.current || !window.turnstile) return;
       id.current = window.turnstile.render(box.current, {
         sitekey: TURNSTILE_SITE_KEY,
-        language: locale === "zh" ? "zh-cn" : locale,
+        language: TS_LANG[locale] ?? "auto",
         callback: (t: string) => onToken(t),
         "expired-callback": () => onToken(""),
         "error-callback": () => onToken(""),
