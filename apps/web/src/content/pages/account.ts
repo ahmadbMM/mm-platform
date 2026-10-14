@@ -18,7 +18,7 @@ export const accountSchema = {
         txt("title", 40, "Title", "العنوان", "Welcome back", "أهلاً بعودتك"),
         long("text", 200, "Text", "النص", "Sign in with your Micromobility account - the one you book rides with.", "سجّل الدخول بحساب مايكروموبيليتي - الحساب نفسه الذي تحجز به جولاتك."),
         long("create", 160, "New here", "جديد هنا", "New here? Create your account in the booking app - it takes a minute, and you come back here signed in.", "جديد هنا؟ أنشئ حسابك في تطبيق الحجز خلال دقيقة، وستعود إلى هنا مسجّلاً دخولك."),
-        long("forgot", 200, "Forgot your password", "نسيت كلمة المرور", "Forgot your password? Reset it in the booking app with your email and mobile number, and you come back here signed in.", "نسيت كلمة المرور؟ أعد تعيينها في تطبيق الحجز ببريدك الإلكتروني ورقم جوالك، وستعود إلى هنا مسجّلاً دخولك."),
+        long("forgot", 200, "Forgot your password", "نسيت كلمة المرور", "Forgot your password? Message us on WhatsApp from the phone number on your account. We will send you a temporary password, and you choose your own when you sign in.", "نسيت كلمة المرور؟ راسلنا على واتساب من رقم الهاتف المسجّل في حسابك. سنرسل لك كلمة مرور مؤقتة، وتختار كلمة مرورك عند تسجيل الدخول."),
         long("oauth", 200, "Google or Apple accounts", "حسابات Google أو Apple", "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.", "سجّلت عبر Google أو Apple؟ تابع به في تطبيق الحجز، وستعود إلى هنا مسجّلاً دخولك."),
       ],
     },
