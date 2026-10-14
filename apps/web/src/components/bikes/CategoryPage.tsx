@@ -52,7 +52,7 @@ export default function CategoryPage({ locale, category, subtype, catalog, s }: 
             {subs.map((x) => {
               const n = modelsIn(catalog, x).length;
               return (
-                <a key={x.id} className="ct-tile" href={`/bikes/${category.slug}/${x.slug}`} style={x.cover ? { backgroundImage: `url('${bg(x.cover)}')` } : undefined}>
+                <a key={x.id} className="ct-tile" href={`/bikes/${category.slug}/${x.slug}`} style={x.cover ? { backgroundImage: `url(${JSON.stringify(bg(x.cover))})` } : undefined}>
                   <strong>{pick(locale, x.name_en, x.name_ar)}</strong>
                   {pick(locale, x.blurb_en, x.blurb_ar) && <p>{pick(locale, x.blurb_en, x.blurb_ar)}</p>}
                   {n > 0 && <em>{modelCount(n, locale, tx)}</em>}

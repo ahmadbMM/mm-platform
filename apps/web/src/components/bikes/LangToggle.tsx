@@ -24,9 +24,11 @@ export default function LangToggle({ lang, label }: { lang: string; label: strin
   const [pending, start] = useTransition();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
+  const globe = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     if (!open) return;
-    const esc = (e: KeyboardEvent) => e.key === "Escape" && setOpen(false);
+    // Escape closes the list and the keyboard goes back to the globe (it was on a language, now gone).
+    const esc = (e: KeyboardEvent) => { if (e.key === "Escape") { setOpen(false); globe.current?.focus(); } };
     const away = (e: MouseEvent) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
     document.addEventListener("keydown", esc);
     document.addEventListener("mousedown", away);
@@ -46,6 +48,7 @@ export default function LangToggle({ lang, label }: { lang: string; label: strin
   return (
     <div className="bk-lang" ref={box}>
       <button
+        ref={globe}
         type="button"
         className="bk-globe"
         onClick={() => setOpen((o) => !o)}

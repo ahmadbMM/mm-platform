@@ -24,6 +24,8 @@ export default function RatingGate({ entryId, name, when, form, noBike, restaura
   const box = useRef<HTMLDivElement>(null);
   const [thanks, setThanks] = useState("");
   const [out, setOut] = useState(false);
+  const later = useRef(0); // the thank-you's timer, cleared if the pop-up goes first
+  useEffect(() => () => window.clearTimeout(later.current), []);
 
   useEffect(() => {
     const el = box.current;
@@ -63,7 +65,7 @@ export default function RatingGate({ entryId, name, when, form, noBike, restaura
           <p className="rr-thanks" role="status">{thanks}</p>
         ) : (
           <RatingForm entryId={entryId} form={form} noBike={noBike} restaurant={restaurant} rgLow={rgLow}
-            onRated={(w) => { setThanks(w.thanks); window.setTimeout(() => (onDone ? onDone() : router.refresh()), 1200); }}
+            onRated={(w) => { setThanks(w.thanks); later.current = window.setTimeout(() => (onDone ? onDone() : router.refresh()), 1200); }}
             footer={<button type="button" className="rg-out" onClick={leave} disabled={out}>{t.signOut}</button>} />
         )}
       </div>

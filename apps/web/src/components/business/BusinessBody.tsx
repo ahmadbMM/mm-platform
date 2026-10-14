@@ -38,7 +38,7 @@ export default function BusinessBody(p: Props) {
       )}
       {svc && (
         <section className="bz-svc" id="bz-svc" role="tabpanel">
-          <div className="bz-svc-img" style={svc.image ? { backgroundImage: `url('${bg(svc.image)}')` } : undefined} role="img" aria-label={svc.title} />
+          <div className="bz-svc-img" style={svc.image ? { backgroundImage: `url(${JSON.stringify(bg(svc.image))})` } : undefined} role="img" aria-label={svc.title} />
           <div>
             <h2>{svc.title}</h2>
             <p>{svc.text}</p>
