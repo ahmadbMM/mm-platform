@@ -144,7 +144,7 @@ export default function AmbassadorPortal(p: Props) {
               {ledger.map((l, i) => (
                 <li key={i}>
                   <span className="amb-ledger-label">{l.label}<small>{day(l.at)}</small></span>
-                  <strong className={l.pts < 0 ? "neg" : ""}>{l.pts >= 0 ? "+" : "−"}{N(Math.abs(l.pts))}</strong>
+                  <strong className={l.pts < 0 ? "neg" : ""} dir="ltr">{l.pts >= 0 ? "+" : "−"}{N(Math.abs(l.pts))}</strong>
                   <span className={`amb-st ${l.status}`}>{st[l.status] || l.status}</span>
                 </li>
               ))}
