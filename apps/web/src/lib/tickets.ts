@@ -141,9 +141,13 @@ const grouped = (list: TicketRow[]): Group[] => {
 };
 
 /** The account's live bookings still ahead (today, Riyadh, and later), one list per session,
- *  soonest first - the booking app's Current & upcoming. */
+ *  soonest first - the booking app's Current & upcoming (_bookingAhead): a rider still on the bike
+ *  from yesterday's night (a ride past midnight, a bike not yet returned) keeps the ticket too. */
 export function ticketGroups(rows: Row[], today: string): Group[] {
-  return grouped(rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.status !== "done" && r.date >= today));
+  const t = new Date(`${today}T12:00:00Z`);
+  t.setUTCDate(t.getUTCDate() - 1);
+  const yesterday = Number.isNaN(t.getTime()) ? today : t.toISOString().slice(0, 10);
+  return grouped(rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.status !== "done" && r.date >= (r.status === "active" ? yesterday : today)));
 }
 
 /** Tonight's rides already over (every row of the night done, nothing still ahead on it): the

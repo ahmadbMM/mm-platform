@@ -60,6 +60,13 @@ describe("the tickets", () => {
     ], "2099-03-01");
     expect(g.map((x) => x.sessionId)).toEqual(["j1", "j2"]);
     expect(g[0].rows.map((r) => r.queueNum)).toEqual([5, 7]);
+    // still on the bike from last night (past midnight): the ticket stays, as _bookingAhead keeps it; a waiting row does not
+    const late = ticketGroups([
+      { id: "y1", session_id: "y", session_date: "2099-02-28", status: "active", queue_num: 1 },
+      { id: "y2", session_id: "y", session_date: "2099-02-28", status: "waiting", queue_num: 2 },
+      { id: "z", session_id: "z", session_date: "2099-02-27", status: "active", queue_num: 1 },
+    ], "2099-03-01");
+    expect(late.map((x) => [x.sessionId, x.rows.map((r) => r.id)])).toEqual([["y", ["y1"]]]);
   });
   it("carry the code the staff scanner reads, without a number on a ride staff approve", () => {
     expect(bookingRef(row({}), jcc)).toBe("MMC-4-q1abcd");
