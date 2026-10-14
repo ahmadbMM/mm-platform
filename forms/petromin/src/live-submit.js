@@ -101,6 +101,24 @@
     ur: ["کسی اور کو رجسٹر کریں", "اس فون پر دیگر رجسٹریشنز", "رائیڈ ویور بدل گیا ہے۔ نیا ویور پڑھنے اور قبول کرنے کے لیے یہ صفحہ دوبارہ لوڈ کریں۔", "اس بکنگ کی ادائیگی ہو چکی ہے، اس لیے اسے مختلف قیمت والے سیشن میں منتقل نہیں کیا جا سکتا۔ اسے بدلنے کے لیے ڈیسک سے کہیں۔"]
   };
   Object.keys(MORE_T).forEach(function (l) { T[l] = T[l] || {}; MORE_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = MORE_T[l][i]; }); });
+  /* Names a screen reader hears but nobody sees (aria-label): they were English in every language. */
+  var ARIA_KEYS = ["Language", "Country code", "Progress", "Booking QR code"];
+  var ARIA_T = {
+    ar: ["اللغة", "رمز الدولة", "التقدم", "رمز QR للحجز"],
+    fr: ["Langue", "Indicatif du pays", "Progression", "Code QR de la réservation"],
+    es: ["Idioma", "Prefijo del país", "Progreso", "Código QR de la reserva"],
+    pt: ["Idioma", "Indicativo do país", "Progresso", "Código QR da reserva"],
+    hi: ["भाषा", "देश कोड", "प्रगति", "बुकिंग QR कोड"],
+    ne: ["भाषा", "देश कोड", "प्रगति", "बुकिङ QR कोड"],
+    tl: ["Wika", "Country code", "Progreso", "QR code ng booking"],
+    bn: ["ভাষা", "দেশের কোড", "অগ্রগতি", "বুকিং QR কোড"],
+    ur: ["زبان", "ملک کا کوڈ", "پیش رفت", "بکنگ کا QR کوڈ"]
+  };
+  Object.keys(ARIA_T).forEach(function (l) { T[l] = T[l] || {}; ARIA_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = ARIA_T[l][i]; }); });
+  var ARIA_EL = [["#lang", "Language"], [".lang-wrap", "Language"], ["#cc", "Country code"], [".cc-wrap", "Country code"], ["#stepper", "Progress"], ["#sessions", "Session"], ["#qr", "Booking QR code"]];
+  function paintAria() { ARIA_EL.forEach(function (x) { var el = $(x[0]); if (el) el.setAttribute("aria-label", t(x[1])); }); }
+  var _applyLangDesign = applyLang;
+  applyLang = function (lang) { _applyLangDesign(lang); paintAria(); };
   // The design paints every data-t element once, on load, before this file runs. Anything
   // added here (the companions block, the edit flow, the QR note) was therefore missing from
   // the dictionary at that moment and fell back to its English key, in every language.
@@ -151,12 +169,58 @@
   var FIELD_ERR = { badge: "Enter your badge number", name: "Enter your full name", phone: "Enter a valid mobile number", height: "Enter your height in cm (100 to 250)", type: "Choose a bike type", session: "This session is no longer open", company: "Choose your company" };
   var FIELD_STEP = { session: 1, company: 2, badge: 2, name: 2, phone: 2, height: 3, type: 3 };
 
+  /* The second step checks what rider_register checks, so Continue says it there and then rather
+     than after the third step: a badge of the characters the database takes (letters, digits,
+     space . _ / # ’ -, at least one letter or digit), a name of two words, none of them an initial,
+     and a number of 8 to 15 digits with its country code (the database's +E.164 rule). */
+  var BADGE_OK = /^[A-Za-z0-9 ._\/#\u2019-]{1,40}$/;
+  var _phoneValidDesign = phoneValid;
+  phoneValid = function () {
+    if (!_phoneValidDesign()) return false;
+    var all = (cc.value + nationalDigits()).length;
+    return cc.value === "966" || (all >= 8 && all <= 15);
+  };
+  var _validateStepDesign = validateStep;
+  validateStep = function (n) {
+    var ok = _validateStepDesign(n);
+    if (n === 2) {
+      var badge = toAscii(asciiDigits($("#badge").value)).trim();
+      if (badge && (!BADGE_OK.test(badge) || !/[A-Za-z0-9]/.test(badge))) { setError("f-badge", true); ok = false; }
+      var nm = cleanName($("#name").value).trim().replace(/\s+/g, " ");
+      if (nm && !/\s/.test(nm)) { $("#name")._nameHintUntil = 0; setError("f-name", true, "Enter your full name"); ok = false; }
+      else if (nm && nameShort(nm)) { $("#name")._nameHintUntil = 0; setError("f-name", true, NAME_SHORT); ok = false; }
+    }
+    return ok;
+  };
+  // The box to focus is on the step on screen: a message left on another step is not jumped to.
+  focusInvalid = function () {
+    var first = $('.step:not([hidden]) .field.invalid input:not([type=hidden]), .step:not([hidden]) .field.invalid [role=radio]');
+    if (first) first.focus();
+  };
+  // While a registration is on its way, nothing that changes the form underneath it can be pressed.
+  var submitting = false;
+  var _setLoadingDesign = setLoading;
+  setLoading = function (on) {
+    submitting = !!on; _setLoadingDesign(on);
+    $("#back").disabled = !!on; $("#cancel-edit").disabled = !!on;
+  };
+  // Until the calendar answers, the list is empty and busy rather than saying "No upcoming sessions".
+  var sessionsLoading = 0, sessionsAsked = 0;
+  var _renderSessionsDesign = renderSessions;
+  renderSessions = function () {
+    sessionsEl.setAttribute("aria-busy", String(sessionsLoading > 0 && !sessions.length));
+    if (sessionsLoading > 0 && !sessions.length) { sessionsEl.innerHTML = ""; return; }
+    _renderSessionsDesign();
+  };
+  // Only the latest ask paints: an older, slower answer (boot, then Edit) never replaces a newer one.
   async function loadSessions() {
+    var mine = ++sessionsAsked;
+    sessionsLoading++; renderSessions();
     try {
       var r = await sbClient().rpc("rider_sessions", { p_source: SOURCE });
       if (r.error) throw r.error;
-      setSessions(Array.isArray(r.data) ? r.data : []);
-    } catch (err) { setSessions([]); showBanner("Could not reach the server"); }
+      if (mine === sessionsAsked) { sessionsLoading = 0; setSessions(Array.isArray(r.data) ? r.data : []); }
+    } catch (err) { if (mine === sessionsAsked) { sessionsLoading = 0; setSessions([]); showBanner("Could not reach the server"); } }
   }
   // Session labels are built with the active locale, so rebuild them on a language change.
   $("#lang").addEventListener("change", function () { renderSessions(); });
@@ -238,12 +302,29 @@
     if (n >= 2) { note.setAttribute("data-t", "Riding with: {names}"); note.setAttribute("data-args", JSON.stringify({ names: d.riders.map(function (c) { return c.name; }).join(", ") })); render(note); }
   }
   /* Booking QR: MMP-<booking number>, the same shape as the rentals tickets (MMC-...), so the
-     desk's scanner opens this booking with a Check in button. Drawn whenever the confirmation shows. */
+     desk's scanner opens this booking with a Check in button. Drawn whenever the confirmation shows.
+     On a canvas, white quiet zone included, as the rentals tickets since 2026-10-05: Samsung
+     Internet's dark mode recolours every SVG (the code came out light on dark and did not scan) and
+     leaves a canvas alone. The SVG stays as the fallback where a canvas cannot be drawn. */
   function drawQr(d) {
     var box = $("#qr"); if (!box) return;
     box.innerHTML = "";
     if (!d || !d.bookingNo || typeof qrcode !== "function") return;
-    try { var q = qrcode(0, "M"); q.addData("MMP-" + String(d.bookingNo).toUpperCase()); q.make(); box.innerHTML = q.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); } catch (e) {}
+    var q;
+    try { q = qrcode(0, "M"); q.addData("MMP-" + String(d.bookingNo).toUpperCase()); q.make(); } catch (e) { return; }
+    try {
+      var n = q.getModuleCount(), pad = 3, cell = 8, size = (n + pad * 2) * cell;
+      var cv = document.createElement("canvas"), ctx = cv.getContext("2d");
+      if (!ctx) throw new Error("no canvas");
+      cv.width = size; cv.height = size;
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, size, size);
+      ctx.fillStyle = "#000";
+      for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) ctx.fillRect((c + pad) * cell, (r + pad) * cell, cell, cell);
+      cv.setAttribute("aria-hidden", "true");
+      box.appendChild(cv);
+    } catch (e) {
+      try { box.innerHTML = q.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); } catch (e2) {}
+    }
   }
   var _showSuccessDesign = showSuccess;
   showSuccess = function (d) { _showSuccessDesign(d); drawQr(current); showParty(current); var n = $("#tk-name"); if (n) n.textContent = (current && current.name) || ""; drawOthers(); };
@@ -413,6 +494,10 @@
 
   $("#form").addEventListener("submit", async function (e) {
     e.preventDefault();
+    if (submitting) return; // one registration at a time
+    // Enter in a box on the first two steps submits the form (its Register button is only hidden):
+    // that is Continue, not a registration that jumps to the last step with its boxes all in red.
+    if (step < STEPS) { if (validateStep(step)) goStep(step + 1); else focusInvalid(); return; }
     hideBanner();
     if (!validate()) { focusInvalid(); return; }
     // The Privacy Notice confirmation: a new registration does not go through without it.
@@ -421,6 +506,7 @@
     if (!$("#waiver").checked) { waiverRefused(); return; }
     var data = collect();
     var name = cleanName(data.name).trim().replace(/\s+/g, " ");
+    data.name = name; // the ticket and the phone's list show the name as it was registered
     // The employee's own name first: it is on the step before the companions, so a short name there
     // is the one to say even when a companion's is short too.
     if (!/\s/.test(name)) { setError("f-name", true, "Enter your full name"); goStep(2); $("#name").focus(); return; } // the server wants two words

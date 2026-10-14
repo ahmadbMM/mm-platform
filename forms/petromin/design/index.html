@@ -25,7 +25,7 @@
   <section id="card" class="card" data-state="form" data-step="1">
     <div id="banner" class="banner" role="alert" hidden>
       <span class="banner-text" data-t="Could not reach the server">Could not reach the server</span>
-      <button class="banner-close" type="button" data-t="Dismiss" aria-label="Dismiss">Dismiss</button>
+      <button class="banner-close" type="button" data-t="Dismiss">Dismiss</button>
     </div>
 
     <form id="form" class="form" novalidate>
@@ -59,12 +59,12 @@
         </div>
         <div id="f-badge" class="field">
           <label for="badge" data-t="Badge number">Badge number</label>
-          <input id="badge" name="badge" type="text" inputmode="numeric" autocomplete="off" placeholder="104582" data-t-placeholder="104582">
+          <input id="badge" name="badge" type="text" inputmode="numeric" autocomplete="off" maxlength="40" placeholder="104582" data-t-placeholder="104582">
           <p class="err" aria-live="polite" data-t="Enter your badge number">Enter your badge number</p>
         </div>
         <div id="f-name" class="field">
           <label for="name" data-t="Full name">Full name</label>
-          <input id="name" name="name" type="text" autocomplete="name" aria-describedby="name-hint">
+          <input id="name" name="name" type="text" autocomplete="name" maxlength="120" aria-describedby="name-hint">
           <p id="name-hint" class="hint" data-t="Use the same name you booked with so we can find your booking">Use the same name you booked with so we can find your booking</p>
           <p class="err" aria-live="polite" data-t="Enter your full name">Enter your full name</p>
         </div>
