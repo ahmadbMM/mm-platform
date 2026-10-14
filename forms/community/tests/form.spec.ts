@@ -138,7 +138,7 @@ test('the account step asks what the sign-up page asks, with its rules and words
 test('the Privacy Notice is confirmed on the account step, and ride news is optional', async ({ page }) => {
   const { of } = await open(page);
   await accountStep(page, { ack: false });
-  await expect(page.locator('#f-ack .err')).toHaveText('Please confirm you’ve read the Privacy Notice.');
+  await expect(page.locator('#f-ack .err')).toHaveText('Tick to confirm you’ve read the Privacy Notice.');
   expect(of('customer_signup')).toEqual([]);
   await page.click('#ack .tick-box');
   await page.click('#next');
@@ -176,7 +176,7 @@ test('a sign-up the database refuses says why, on the field or in the banner', a
   await expect(page.locator('#f-name .err')).toHaveText('Write your first and last name in full, not initials');
   answer = refuse({ code: 'P0001', message: 'RATE_LIMITED' });
   await page.click('#next');
-  await expect(page.locator('#banner .banner-text')).toHaveText('Too many tries from this network. Please wait a few minutes and try again.');
+  await expect(page.locator('#banner .banner-text')).toHaveText('Too many tries from this network. Wait a few minutes and try again.');
   answer = refuse({ code: '23505', message: 'DUPLICATE' }, 409);
   await page.click('#next');
   await expect(page.locator('#f-email .err')).toHaveText('An account with this email already exists. Sign in to apply with it.');
@@ -518,7 +518,7 @@ test('a signed-in account without a confirmed notice is asked for it on step 2, 
   await communityStep(page);
   await page.click('#submit');
   await expect(page.locator('#f-xack')).toBeVisible();
-  await expect(page.locator('#f-xack .err')).toHaveText('Please confirm you’ve read the Privacy Notice.');
+  await expect(page.locator('#f-xack .err')).toHaveText('Tick to confirm you’ve read the Privacy Notice.');
   await expect(page.locator('#xack')).toBeFocused();
   await expect(page.locator('#success')).toBeHidden();
   expect(of('customer_community_apply')).toHaveLength(1);
