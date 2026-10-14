@@ -29,6 +29,7 @@ export default function SignIn({ locale }: { locale: string }) {
   const signedIn = () => { forgetQuiet(); window.location.reload(); };
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (busy) return;
     setErr("");
     if (!identifier.trim() || !password) return setErr(t.errors.missing);
     if (TURNSTILE_SITE_KEY && !check) return setErr(t.errors.check);
