@@ -37,7 +37,8 @@ describe("api/account", () => {
     const res = await post(signIn, "/api/account", { identifier: "Sara@Example.com", password: "Secret123" });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, name: "Sara Ali" });
-    expect(cookies(res)).toEqual([`mm_acct=c1~${OLD}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`]);
+    // and any session a hand-back kept aside for an earlier visitor is dropped
+    expect(cookies(res)).toEqual([`mm_acct=c1~${OLD}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`, "mm_acct_next=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax"]);
     expect(called(f, "customer_login")).toEqual([{ p_identifier: "sara@example.com", p_pwd: "Secret123" }]);
     expect(called(f, "customer_pwd_state")).toEqual([{ p_id: "c1", p_token: OLD }]);
   });
@@ -64,9 +65,9 @@ describe("api/account", () => {
     expect(res.status).toBe(502);
     expect(cookies(res)).toEqual([]);
   });
-  it("signs out of both cookies", async () => {
+  it("signs out of every cookie, the session a hand-back kept aside included", async () => {
     const res = await signOut(new Request(`${ORIGIN}/api/account`, { method: "DELETE", headers: { origin: ORIGIN } }));
-    expect(cookies(res)).toEqual(["mm_acct=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax", "mm_pwd=; Path=/api/account; Max-Age=0; HttpOnly; Secure; SameSite=Lax"]);
+    expect(cookies(res)).toEqual(["mm_acct=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax", "mm_pwd=; Path=/api/account; Max-Age=0; HttpOnly; Secure; SameSite=Lax", "mm_acct_next=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax"]);
   });
 });
 
