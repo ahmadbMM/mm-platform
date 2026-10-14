@@ -31,6 +31,11 @@ describe("api/log-error", () => {
     expect((await send({ digest: "d1", message: "boom", path: "/account?handoff=done&code=abc#x" })).status).toBe(204);
     expect(JSON.parse(String(log.mock.calls[0][0]))).toMatchObject({ kind: "page-error", digest: "d1", message: "boom", path: "/account" });
   });
+  it("answers 400, never a 500, to a body that is not a report", async () => {
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    for (const body of [null, 42, ["x"]]) expect((await send(body)).status).toBe(400);
+    expect(log).not.toHaveBeenCalled();
+  });
   it("takes reports from this site's own pages only", async () => {
     const log = vi.spyOn(console, "error").mockImplementation(() => {});
     expect((await send({ message: "x" }, "https://evil.example")).status).toBe(403);

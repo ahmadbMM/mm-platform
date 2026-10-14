@@ -14,6 +14,8 @@ export async function POST(req: Request) {
   if (!(await withinLimit(req, "log-error"))) return new Response(null, { status: 429, headers: { "cache-control": "no-store" } });
   let b: Record<string, unknown> = {};
   try { b = JSON.parse((await req.text()).slice(0, 4000)) as Record<string, unknown>; } catch { return new Response(null, { status: 400 }); }
+  // a body of null, a number or a list is not a report (null threw below, a 500)
+  if (!b || typeof b !== "object" || Array.isArray(b)) return new Response(null, { status: 400 });
   console.error(JSON.stringify({
     kind: "page-error",
     digest: clip(b.digest, 40),
