@@ -307,6 +307,12 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 .sel-wrap select option { color: var(--ink); }
 .field.invalid .sel-wrap select { border-color: var(--red); }
 .dob-row { display: grid; grid-template-columns: 0.8fr 1.4fr 1fr; gap: 8px; }
+/* On a phone the three boxes are narrow: less padding, so "Day" and a two-digit day are not cut. */
+@media (max-width: 480px) {
+  .dob-row .sel-wrap select { padding: 0 26px 0 10px; }
+  html[dir="rtl"] .dob-row .sel-wrap select { padding: 0 10px 0 26px; }
+  .dob-row .sel-wrap::after { inset-inline-end: 11px; }
+}
 
 /* A soft warning: the value may be right, so the rider can go on by pressing Continue again. */
 .warn { display: none; margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--amber-bg); color: var(--amber); font-size: 13.5px; font-weight: 600; }

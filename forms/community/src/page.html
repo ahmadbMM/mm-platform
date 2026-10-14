@@ -330,6 +330,12 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 .sel-wrap select option { color: var(--ink); }
 .field.invalid .sel-wrap select { border-color: var(--red); }
 .dob-row { display: grid; grid-template-columns: 0.8fr 1.4fr 1fr; gap: 8px; }
+/* On a phone the three boxes are narrow: less padding, so "Day" and a two-digit day are not cut. */
+@media (max-width: 480px) {
+  .dob-row .sel-wrap select { padding: 0 26px 0 10px; }
+  html[dir="rtl"] .dob-row .sel-wrap select { padding: 0 10px 0 26px; }
+  .dob-row .sel-wrap::after { inset-inline-end: 11px; }
+}
 
 /* A soft warning: the value may be right, so the rider can go on by pressing Continue again. */
 .warn { display: none; margin: 0; padding: 8px 12px; border-radius: 10px; background: var(--amber-bg); color: var(--amber); font-size: 13.5px; font-weight: 600; }
@@ -1692,6 +1698,12 @@ var FORM_T = {
     var e = $(".err", f), w = $(".warn", f);
     if (e) e.textContent = m.err ? (m.err.site ? fill(site(m.err.k), m.err.a) : tr(m.err.k, m.err.a)) : "";
     if (w) w.textContent = !m.err && m.warn ? tr(m.warn.k, m.warn.a) + " " + tr("If it is right, press the button again.") : "";
+    // a screen reader hears that the box is wrong and why, not only sees the red line
+    if (e && !e.id) e.id = id + "-err";
+    $$("input, select, [role=radiogroup], .tick", f).forEach(function (c) {
+      if (m.err) { c.setAttribute("aria-invalid", "true"); c.setAttribute("aria-describedby", e ? e.id : ""); }
+      else { c.removeAttribute("aria-invalid"); c.removeAttribute("aria-describedby"); }
+    });
     if (id === "f-email") paintEmailFix();
   }
 
@@ -1928,7 +1940,7 @@ var FORM_T = {
     return "+" + ccd + s;
   }
   function callingCode(d) { for (var n = 3; n >= 1; n--) if (RULES[d.slice(0, n)] || CC_DIGITS[d.slice(0, n)]) return d.slice(0, n); return ""; }
-  $("#phone").addEventListener("input", function () { onPhoneInput(); clearMsg("f-phone"); acked[2] = null; });
+  $("#phone").addEventListener("input", function () { onPhoneInput(); clearMsg("f-phone"); acked[1] = null; });
   $("#cc").addEventListener("change", function () { ccFace(); $("#phone").placeholder = ccDigits() === "966" ? "5X XXX XXXX" : ""; clearMsg("f-phone"); paintWa(); });
   $("#phone").addEventListener("input", paintWa);
   // A mobile number's problems, for the mobile and the WhatsApp number alike: {hard} or {soft} or {}.
@@ -2035,9 +2047,9 @@ var FORM_T = {
   // One contact as typed: {name, phone, rel}; null for a second one left wholly empty; or
   // {err: [field id, the site's message key]}.
   function emRead(p, own, other, optional) {
-    var raw = $("#" + p + "-phone").value.replace(/[^\d+]/g, "");
+    var raw = toAscii($("#" + p + "-phone").value).replace(/[^\d+]/g, ""); // Arabic or Hindi digits count as typed
     var n = clean($("#" + p + "-name").value.replace(DASHES, " ")), rel = $("#" + p + "-rel").value;
-    if (optional && !n && !toAscii(raw) && !rel) return null;
+    if (optional && !n && !raw && !rel) return null;
     var nm = nameDots(n);
     if (Array.from(nm).length < 2 || Array.from(nm).length > 80) return { err: ["f-" + p + "-name", "errEmName"] };
     if (NAME_BAD.test(n) || n !== nm || !/\p{L}/u.test(nm)) return { err: ["f-" + p + "-name", "errNameChars"] };
@@ -2128,7 +2140,7 @@ var FORM_T = {
     if (emailFix) b.textContent = tr("Use {s}", { s: emailFix });
   }
   $("#email-fix").addEventListener("click", function () { if (!emailFix) return; $("#email").value = emailFix; emailFix = null; clearMsg("f-email"); $("#email").focus(); });
-  $("#email").addEventListener("input", function () { emailFix = null; clearMsg("f-email"); acked[2] = null; });
+  $("#email").addEventListener("input", function () { emailFix = null; clearMsg("f-email"); acked[1] = null; });
 
   /* ── Name: the staff check's rules, as errors for the rider ─────────────────────────── */
   // Letters of any script and their marks, spaces and periods ("Md. Rahman"): the database's own
@@ -2205,7 +2217,8 @@ var FORM_T = {
   tiles("#was", "f-wa", function (v) {
     waSame = v === "yes"; acked[waStep] = null;
     $("#f-wanum").hidden = waSame;
-    if (waSame) clearMsg("f-wanum"); else $("#wa").focus({ preventScroll: true });
+    // the rider's own No opens the number box for typing; a saved answer put back on arrival does not
+    if (waSame) clearMsg("f-wanum"); else if (!prefilling) $("#wa").focus({ preventScroll: true });
   });
   // Their own bike, yes or no (the owner, 2026-09-30); sent as own_bike, true or false.
   // A yes picks Bike owner as their bike type, which they may still change; a no takes Bike owner back off
@@ -2251,7 +2264,18 @@ var FORM_T = {
   document.addEventListener("click", function (e) { if (e.target.closest("#pv-open, #pv-open-x, #pv-open-foot")) { e.preventDefault(); e.stopPropagation(); openNotice(); } });
   $("#pv-x").addEventListener("click", closeNotice);
   $("#pv").addEventListener("click", function (e) { if (e.target === this) closeNotice(); });
-  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !$("#pv").hidden) closeNotice(); });
+  document.addEventListener("keydown", function (e) {
+    if ($("#pv").hidden) return;
+    if (e.key === "Escape") { closeNotice(); return; }
+    // Tab stays inside the open notice (aria-modal): from the last link back to Close, and the other way
+    if (e.key === "Tab") {
+      var els = $$("button, a[href]", $("#pv .pv-box")), first = els[0], last = els[els.length - 1];
+      if (!first) return;
+      if (!$("#pv .pv-box").contains(document.activeElement)) { e.preventDefault(); first.focus(); }
+      else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+  });
 
   /* ── Banner ─────────────────────────────────────────────────────────────── */
   var bannerKey = null, bannerSignIn = false;
@@ -2427,6 +2451,7 @@ var FORM_T = {
     else if (/name_short/.test(m)) { setErr("f-name", "Write your first and last name in full, not initials"); focusField("f-name"); }
     else if (/23505|DUPLICATE/i.test(m)) { setErr("f-email", "An account with this email already exists. Sign in to apply with it."); showBanner("An account with this email already exists. Sign in to apply with it.", true); focusField("f-email"); }
     else if (/RATE_LIMITED/.test(m)) showBanner(SITE_TOO_MANY);
+    else if (/WEAK_PASSWORD/.test(m)) { setErr("f-pwd", "errPasswordLen", null, true); focusField("f-pwd"); }
     else if (/BAD_INPUT/.test(m) && /phone/.test(m)) { setErr("f-phone", "Enter a valid mobile number"); focusField("f-phone"); }
     else if (/BAD_INPUT/.test(m) && /height/.test(m)) { setErr("f-height", "Enter your height in cm (100 to 250)"); focusField("f-height"); }
     else showBanner("Could not reach the server. Please try again.");
@@ -2434,8 +2459,13 @@ var FORM_T = {
 
   /* ── Step 2: the community questions ────────────────────────────────────── */
   // The answers to start from: a waiting application's, else what the account already holds.
+  var prefilling = false;
   function prefill(me) {
     if (!me) return;
+    prefilling = true;
+    try { prefillAll(me); } finally { prefilling = false; }
+  }
+  function prefillAll(me) {
     if (me.birth_date && /^\d{4}-\d{2}-\d{2}$/.test(me.birth_date)) {
       var b = me.birth_date.split("-").map(Number);
       $("#birth-y").value = String(b[0]); buildDob(); $("#birth-m").value = String(b[1]); buildDob(); $("#birth-d").value = String(b[2]); buildDob();
@@ -2514,6 +2544,8 @@ var FORM_T = {
       // The WhatsApp answer refused: said on its own field while it is on this step.
       if (res.error === "whatsapp" && waStep === 2) { var wf = waSame === false ? "f-wanum" : "f-wa"; setErr(wf, wf === "f-wa" ? "Tell us whether this is your WhatsApp number" : "Enter a valid mobile number"); focusField(wf); return; }
       var f = FIELD_OF[res.error];
+      // a question the admins made required, left empty: the box's own ask, not the username rule
+      if (res.error === "instagram" && !igNorm($("#ig").value)) f = ["f-ig", "Your Instagram username, or a link to your profile"];
       if (f) { if (res.error === "gender" || res.error === "height") { $("#" + f[0]).hidden = false; acct["need" + (res.error === "gender" ? "Gender" : "Height")] = true; } setErr(f[0], f[1]); focusField(f[0]); return; }
       showBanner("Could not reach the server. Please try again."); return;
     }
