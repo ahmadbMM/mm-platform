@@ -22,6 +22,8 @@ export type TicketRow = {
   /** The distance a Run for Her runner picked (queue_entries.run_km: 3 or 5 km), else null. Never
    *  a bike type: `type` stays the row's own ('None' on a run). */
   runKm: number | null;
+  /** The Saturday ride's group (queue_entries.ride_group): 'beg' or 'int', else none. */
+  rideGroup?: "beg" | "int" | null;
 };
 /** The distances a Run for Her runner picks from (the booking app's RUN_KMS). */
 export const RUN_KMS: readonly number[] = [3, 5];
@@ -79,6 +81,7 @@ export function ticketRow(r: Row): TicketRow | null {
     checkedInAt: S(r.checked_in_at) || null, checkedOutAt: S(r.checked_out_at) || null, rideDuration: N(r.ride_duration), bikeId: bike || null,
     addonLines: entryAddons(r.addons),
     runKm: km !== null && RUN_KMS.includes(km) ? km : null,
+    rideGroup: r.ride_group === "beg" || r.ride_group === "int" ? r.ride_group : null,
   };
 }
 

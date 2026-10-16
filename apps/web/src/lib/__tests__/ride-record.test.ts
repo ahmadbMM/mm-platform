@@ -103,6 +103,26 @@ describe("the badges", () => {
   });
 });
 
+describe("the distance ladder (the booking app, 2026-10-16)", () => {
+  // every Saturday ride ridden adds its group's kilometres: 20 Beginners, 40 Intermediates, or the ride's own
+  const km = (spec: [string | null, string?, { beg: number; int: number }?][]) => {
+    const r = recordRows(spec.map(([g, status], i) => row({ session_id: `2026-09-${String(i + 1).padStart(2, "0")}`, ride_group: g, status: status ?? "done" })));
+    const s = new Map<string, RecordSession>(r.map((x, i) => [x.sessionId, { kind: "saturday", freeRide: true, groupKm: spec[i][2] }]));
+    const top = badgeList(r, s, empty, today, null).find((x) => x.slug.startsWith("km"))!;
+    return [top.lvN, top.p];
+  };
+  it("gives 20 km Club for a Beginners ride and 40 km Club for an Intermediates one", () => {
+    expect(km([["beg"]])).toEqual([1, "20/40"]);
+    expect(km([["int"]])).toEqual([2, "40/70"]);
+    expect(km([["beg", "waiting"]])).toEqual([0, "0/20"]);
+  });
+  it("adds the rides up: no group rides the Beginners' 20, a ride's own distance counts", () => {
+    expect(km([["int"], ["beg"], [null]])).toEqual([3, "80/100"]);
+    expect(km([["int"], ["int"], ["beg"]])).toEqual([4, null]);
+    expect(km([["int", "done", { beg: 20, int: 35 }], ["int", "done", { beg: 20, int: 35 }]])).toEqual([3, "70/100"]);
+  });
+});
+
 describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
   const days = (n: number) => Array.from({ length: n }, (_, i) => new Date(Date.UTC(2026, 0, 3 + 7 * i)).toISOString().slice(0, 10));
   const rides = (n: number, kind: RecordSession["kind"] = "jcc") => {

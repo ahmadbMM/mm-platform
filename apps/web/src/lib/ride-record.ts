@@ -6,7 +6,7 @@ import { rideCompleted, ticketRow, type TicketRow } from "./tickets";
 import type { RideKind } from "./rides";
 
 /** What the record needs of a session: its kind, and whether it costs nothing (_isFreeRide). */
-export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: boolean };
+export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: boolean; groupKm?: { beg: number; int: number } };
 /** A badge as badge_catalog / badge_seasons / customer_my_badges hand it back. */
 export type BadgeRow = {
   slug: string; note?: string | null; at?: string | null; icon?: string | null; color?: string | null; system?: boolean | null; auto?: boolean | null;
@@ -26,6 +26,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   national_day_96: ["n96", "national"], back_on_track: ["return", "teal"], safety_car: ["beacon", "orange"], endurance: ["clock", "purple"],
   triple_crown: ["crown", "gold"], slipstream: ["wind", "green"], paceline: ["wind", "blue"], peloton: ["wind", "gold"],
   rolling_start: ["wind", "teal"], grand_tour: ["wind", "purple"], hall_of_fame: ["wind", "special"],
+  km20: ["road", "green"], km40: ["road", "blue"], km70: ["road", "purple"], km100: ["road", "gold"], // the distance ladder (2026-10-16)
   clean_sheet: ["calcheck", "green"], works_team: ["briefcase", "teal"], perfect_week: ["calstar", "purple"], perfect_month: ["calcrown", "gold"],
   run_for_her: ["ribbon", "pink"],
   // the staff ladders' higher levels and Front Row's (the booking app, 2026-10-12)
@@ -59,6 +60,7 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_cours
 export const LADDERS: string[][] = [
   ["first_lap", "regular", "podium", "corniche25"], ["streak", "safety_car", "endurance"],
   ["rolling_start", "slipstream", "paceline", "peloton", "grand_tour", "hall_of_fame"], ["perfect_week", "perfect_month"], ["t25", "t50", "t100"],
+  ["km20", "km40", "km70", "km100"], // the distance ladder (the booking app, 2026-10-16)
   // five levels each since 2026-10-12: 1/10/25/50/100, Champion's and Front Row's 1/5/10/25/50
   ["marshal", "senior_marshal", "chief_marshal", "clerk_of_course", "race_director"], ["pit_crew", "pit_boss", "crew_chief", "team_manager", "team_principal"],
   ["green_flag", "clear_track", "track_guardian", "flag_bearer", "track_legend"], ["scrutineer", "tech_inspector", "chief_scrutineer", "tech_delegate", "chief_engineer"],
@@ -247,6 +249,16 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
   // 'runher') or any other community event is a kind of its own, never a Saturday ride
   for (const [id] of doneN) { const x = ses(id); if (!x) continue; kinds.add(x.kind); if (x.kind === "saturday") comm++; if (x.kind === "petromin") corp++; }
   for (let i = 1; i < dates.length; i++) if (Date.parse(dates[i]) - Date.parse(dates[i - 1]) >= 60 * 864e5) gap = true;
+  // the distance ladder (the booking app, 2026-10-16: "whenever a booking is completed consider the kilometers counted"):
+  // every Saturday ride ridden adds its group's distance - the ride's own, else 20 km Beginners, 40 km Intermediates
+  // (no group: the Beginners'); a night counts once, its longest group
+  const kmN = new Map<string, number>();
+  for (const r of completed) {
+    const x = ses(r.sessionId); if (!x || x.kind !== "saturday") continue;
+    const g = x.groupKm ?? { beg: 20, int: 40 };
+    kmN.set(r.sessionId, Math.max(kmN.get(r.sessionId) ?? 0, r.rideGroup === "int" ? g.int : g.beg));
+  }
+  const km = Math.round([...kmN.values()].reduce((a, b) => a + b, 0) * 10) / 10;
   for (const [, n] of nights) { if (n.done) cleanBest = Math.max(cleanBest, ++clean); else if (n.noshow) clean = 0; }
   const R = weekRuns(dates, today), streak = weekStreak(completed.map((r) => r.date), today);
   const PW = perfectWeeks(data.weeks, new Set(completed.map((r) => r.sessionId)), today);
@@ -269,6 +281,8 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
     // the Saturday social ride ladder (the booking app, 2026-10-03): 1, 5, 10, 25, 50, 100 ride days
     { s: "rolling_start", on: comm >= 1, p: P(comm, 1) }, { s: "slipstream", on: comm >= 5, p: P(comm, 5) }, { s: "paceline", on: comm >= 10, p: P(comm, 10) },
     { s: "peloton", on: comm >= 25, p: P(comm, 25) }, { s: "grand_tour", on: comm >= 50, p: P(comm, 50) }, { s: "hall_of_fame", on: comm >= 100, p: P(comm, 100) },
+    // kilometres ridden on Saturday social rides: 20 / 40 / 70 / 100 (2026-10-16)
+    ...[20, 40, 70, 100].map((n) => ({ s: `km${n}`, on: km >= n, p: P(km, n) })),
     { s: "works_team", on: corp >= 3, p: P(corp, 3) },
     { s: "perfect_week", on: PW.any, p: PW.cur ? P(PW.cur.n, PW.cur.of) : null },
     { s: "perfect_month", on: PW.best >= 4, p: PW.known ? P(PW.run, 4) : null },
