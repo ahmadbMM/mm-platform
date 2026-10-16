@@ -104,7 +104,7 @@ describe("the badges", () => {
 });
 
 describe("the distance ladder (the booking app, 2026-10-16)", () => {
-  // every Saturday ride ridden adds its group's kilometres: 20 Beginners, 40 Intermediates, or the ride's own
+  // the longest Saturday ride ridden: 20 Beginners, 40 Intermediates, or the ride's own - never the rides added up
   const km = (spec: [string | null, string?, { beg: number; int: number }?][]) => {
     const r = recordRows(spec.map(([g, status], i) => row({ session_id: `2026-09-${String(i + 1).padStart(2, "0")}`, ride_group: g, status: status ?? "done" })));
     const s = new Map<string, RecordSession>(r.map((x, i) => [x.sessionId, { kind: "saturday", freeRide: true, groupKm: spec[i][2] }]));
@@ -116,10 +116,11 @@ describe("the distance ladder (the booking app, 2026-10-16)", () => {
     expect(km([["int"]])).toEqual([2, "40/70"]);
     expect(km([["beg", "waiting"]])).toEqual([0, "0/20"]);
   });
-  it("adds the rides up: no group rides the Beginners' 20, a ride's own distance counts", () => {
-    expect(km([["int"], ["beg"], [null]])).toEqual([3, "80/100"]);
-    expect(km([["int"], ["int"], ["beg"]])).toEqual([4, null]);
-    expect(km([["int", "done", { beg: 20, int: 35 }], ["int", "done", { beg: 20, int: 35 }]])).toEqual([3, "70/100"]);
+  it("takes the longest one ride, never the total: no group rides the Beginners' 20, a ride's own distance counts", () => {
+    expect(km([["beg"], ["beg"], [null]])).toEqual([1, "20/40"]);
+    expect(km([["int"], ["int"], ["beg"]])).toEqual([2, "40/70"]);
+    expect(km([["int", "done", { beg: 20, int: 35 }]])).toEqual([1, "35/40"]);
+    expect(km([["int", "done", { beg: 20, int: 100 }]])).toEqual([4, null]);
   });
 });
 

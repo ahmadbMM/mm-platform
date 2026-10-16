@@ -249,16 +249,16 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
   // 'runher') or any other community event is a kind of its own, never a Saturday ride
   for (const [id] of doneN) { const x = ses(id); if (!x) continue; kinds.add(x.kind); if (x.kind === "saturday") comm++; if (x.kind === "petromin") corp++; }
   for (let i = 1; i < dates.length; i++) if (Date.parse(dates[i]) - Date.parse(dates[i - 1]) >= 60 * 864e5) gap = true;
-  // the distance ladder (the booking app, 2026-10-16: "whenever a booking is completed consider the kilometers counted"):
-  // every Saturday ride ridden adds its group's distance - the ride's own, else 20 km Beginners, 40 km Intermediates
-  // (no group: the Beginners'); a night counts once, its longest group
+  // the distance ladder (the booking app, 2026-10-16: "a badge for the distance in one ride not the total of kilometers"):
+  // the longest Saturday ride ridden - its group's distance, the ride's own, else 20 km Beginners, 40 km Intermediates
+  // (no group: the Beginners')
   const kmN = new Map<string, number>();
   for (const r of completed) {
     const x = ses(r.sessionId); if (!x || x.kind !== "saturday") continue;
     const g = x.groupKm ?? { beg: 20, int: 40 };
     kmN.set(r.sessionId, Math.max(kmN.get(r.sessionId) ?? 0, r.rideGroup === "int" ? g.int : g.beg));
   }
-  const km = Math.round([...kmN.values()].reduce((a, b) => a + b, 0) * 10) / 10;
+  const km = Math.max(0, ...kmN.values());
   for (const [, n] of nights) { if (n.done) cleanBest = Math.max(cleanBest, ++clean); else if (n.noshow) clean = 0; }
   const R = weekRuns(dates, today), streak = weekStreak(completed.map((r) => r.date), today);
   const PW = perfectWeeks(data.weeks, new Set(completed.map((r) => r.sessionId)), today);
@@ -281,7 +281,7 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
     // the Saturday social ride ladder (the booking app, 2026-10-03): 1, 5, 10, 25, 50, 100 ride days
     { s: "rolling_start", on: comm >= 1, p: P(comm, 1) }, { s: "slipstream", on: comm >= 5, p: P(comm, 5) }, { s: "paceline", on: comm >= 10, p: P(comm, 10) },
     { s: "peloton", on: comm >= 25, p: P(comm, 25) }, { s: "grand_tour", on: comm >= 50, p: P(comm, 50) }, { s: "hall_of_fame", on: comm >= 100, p: P(comm, 100) },
-    // kilometres ridden on Saturday social rides: 20 / 40 / 70 / 100 (2026-10-16)
+    // the longest Saturday social ride ridden: 20 / 40 / 70 / 100 km (2026-10-16)
     ...[20, 40, 70, 100].map((n) => ({ s: `km${n}`, on: km >= n, p: P(km, n) })),
     { s: "works_team", on: corp >= 3, p: P(corp, 3) },
     { s: "perfect_week", on: PW.any, p: PW.cur ? P(PW.cur.n, PW.cur.of) : null },
