@@ -26,8 +26,9 @@ test('landing-ar', async ({ browser }) => {
 test('steps', async ({ browser }) => {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await stub(page); await page.goto('/defe?lang=en'); await expect(page.locator('#go')).toBeEnabled();
-  await page.click('#go'); await snap(page, 'account');
-  await page.click('#tab-signin'); await page.fill('#ident', 'sara@gmail.com'); await page.fill('#spwd', 'x'); await page.click('#signin');
+  await page.click('#go'); await snap(page, 'ask');
+  await page.click('#ask-no'); await snap(page, 'account');
+  await page.click('#back-land'); await page.click('#ask-yes'); await page.fill('#ident', 'sara@gmail.com'); await page.fill('#spwd', 'x'); await page.click('#signin');
   await page.click('#d-next'); await expect(page.locator('#s-book')).toBeVisible();
   await page.click('#groups .opt[data-v="beg"]'); await page.fill('#code', 'DEFE24'); await snap(page, 'book');
 });

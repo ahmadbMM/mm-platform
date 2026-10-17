@@ -165,7 +165,7 @@
     if (ride === undefined && rideErr) { loadRide(); return; }
     if (!ride || !ride.open) return;
     if (acct) { enterDetails(); return; }
-    openAccount("create");
+    openAccount("ask");
   });
   $("#go-signin").addEventListener("click", function () { hideBanner(); openAccount("signin"); });
 
@@ -192,7 +192,11 @@
     $("#st-title").textContent = tr(STEP_TITLES[step]);
   }
   function backToLanding() { showView("landing"); paintLanding(); }
-  $("#back-land").addEventListener("click", backToLanding);
+  // On the sign-in or sign-up fields, Back goes to the account question; on the question, to the ride.
+  $("#back-land").addEventListener("click", function () {
+    if (step === 1 && accPanel !== "ask") { setTab("ask"); var h = $("#st-title"); if (h) h.focus({ preventScroll: true }); window.scrollTo(0, 0); return; }
+    backToLanding();
+  });
 
   /* ── Banner ─────────────────────────────────────────────────────────── */
   var bannerKey = null;
@@ -741,21 +745,20 @@
 
   /* ── Step 1: the account ───────────────────────────────────────────────── */
   var acct = null; // {id, token, name, email, phone, made}
+  // Step 1 opens on the question "Do you have a MicroMobility account?" (the owner, 2026-10-17); the
+  // answer shows the sign-in or the sign-up fields, and Back goes to the question again. A rider sent
+  // straight to signing in (signed out, the landing's "Sign in") skips the question.
+  var accPanel = "ask";
   function openAccount(t) { setTab(t); goStep(1); }
   function setTab(t) {
-    $("#tab-create").setAttribute("aria-selected", String(t === "create"));
-    $("#tab-signin").setAttribute("aria-selected", String(t === "signin"));
+    accPanel = t;
+    $("#p-ask").hidden = t !== "ask";
     $("#p-create").hidden = t !== "create"; $("#p-signin").hidden = t !== "signin";
   }
-  $("#tab-create").addEventListener("click", function () { setTab("create"); });
-  $("#tab-signin").addEventListener("click", function () { setTab("signin"); });
+  $("#ask-yes").addEventListener("click", function () { setTab("signin"); $("#ident").focus(); });
+  $("#ask-no").addEventListener("click", function () { setTab("create"); $("#first").focus(); });
   $$(".to-signin").forEach(function (b) { b.addEventListener("click", function () { setTab("signin"); $("#ident").focus(); }); });
   $$(".to-create").forEach(function (b) { b.addEventListener("click", function () { setTab("create"); $("#first").focus(); }); });
-  $(".tabs").addEventListener("keydown", function (e) {
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    var to = $("#tab-create").getAttribute("aria-selected") === "true" ? "signin" : "create";
-    setTab(to); $("#tab-" + to).focus();
-  });
 
   $("#p-create").addEventListener("submit", function (e) { e.preventDefault(); hideBanner(); if (busy) return; if (passStep("create")) createAccount(); });
   async function createAccount() {

@@ -172,9 +172,12 @@ html[lang="ar"] .st-title { font-family: var(--f-ar); font-weight: 700; font-siz
 .step { display: grid; gap: 14px; min-width: 0; }
 .panel { display: grid; gap: 14px; min-width: 0; }
 .lead { margin: 0; color: var(--mute); font-size: 14.5px; }
-.tabs { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); }
-.tabs button { min-height: 42px; padding: 8px 4px; border: 0; border-radius: 0; background: transparent; color: var(--mute); font-weight: 600; font-size: 14px; }
-.tabs button[aria-selected="true"] { background: var(--ink); color: var(--bg); }
+/* The account question: two answers, each a whole button that goes on (an arrow, not a radio dot). */
+.ask-q { margin: 0; font-weight: 700; font-size: 17px; }
+.opt.choice { cursor: pointer; }
+.opt.choice::after { border: 0; border-radius: 0; width: 10px; height: 10px; top: 50%; margin-top: -5px; border-top: 2px solid var(--berry); border-inline-end: 2px solid var(--berry); transform: rotate(45deg); }
+html[dir="rtl"] .opt.choice::after { transform: rotate(-45deg); }
+.opt.choice:hover, .opt.choice:focus-visible { border-color: var(--berry); background: var(--wash); }
 
 /* Fields */
 .field { display: grid; gap: 6px; min-width: 0; }
@@ -671,12 +674,17 @@ fill="#a22b63" stroke="none">
 
       <!-- Step 1: the account. Create one (the booking site's own sign-up) or sign in with one. -->
       <div id="s-account" class="step" data-step="1">
-        <div class="tabs" role="tablist" aria-label="Your account" data-t-aria="Your account">
-          <button type="button" role="tab" id="tab-create" aria-controls="p-create" aria-selected="true" data-site="authSignupBtn">Create account</button>
-          <button type="button" role="tab" id="tab-signin" aria-controls="p-signin" aria-selected="false" data-site="authLogin">Sign in</button>
+        <!-- First the question (the owner, 2026-10-17: "add a step that asks if they have an account or
+             not then show them account details fields"); the answer opens one of the two forms below. -->
+        <div id="p-ask" class="panel">
+          <p id="ask-q" class="ask-q" data-t="Do you have a MicroMobility account?">Do you have a MicroMobility account?</p>
+          <div class="opts" role="group" aria-labelledby="ask-q">
+            <button type="button" id="ask-yes" class="opt choice"><b data-t="Yes, I have an account">Yes, I have an account</b><span data-t="Sign in with your email or mobile number and your password.">Sign in with your email or mobile number and your password.</span></button>
+            <button type="button" id="ask-no" class="opt choice"><b data-t="No, I'm new to MicroMobility">No, I'm new to MicroMobility</b><span data-t="Create your account. It is the one you book every ride with.">Create your account. It is the one you book every ride with.</span></button>
+          </div>
         </div>
 
-        <form id="p-create" class="panel" role="tabpanel" aria-labelledby="tab-create" novalidate autocomplete="on">
+        <form id="p-create" class="panel" novalidate autocomplete="on" hidden>
           <p class="lead" data-t="This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.">This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.</p>
           <div id="f-name" class="field">
             <div class="name-row">
@@ -747,7 +755,7 @@ fill="#a22b63" stroke="none">
           <p class="small"><span data-t="Already have a MicroMobility account?">Already have a MicroMobility account?</span> <button type="button" class="d-link to-signin" data-site="authLogin">Sign in</button></p>
         </form>
 
-        <form id="p-signin" class="panel" role="tabpanel" aria-labelledby="tab-signin" novalidate autocomplete="on" hidden>
+        <form id="p-signin" class="panel" novalidate autocomplete="on" hidden>
           <p class="lead" data-t="Sign in with the account you use in the MicroMobility app.">Sign in with the account you use in the MicroMobility app.</p>
           <div id="f-ident" class="field">
             <label for="ident" data-site="authIdentifier">Email or phone</label>
@@ -952,6 +960,11 @@ var FORM_T = {
    "Already booked?": "حجزت من قبل؟",
    "Sign in to see your ticket": "سجّل الدخول لترى تذكرتك",
    "Your account": "حسابك",
+   "Do you have a MicroMobility account?": "هل لديك حساب في MicroMobility؟",
+   "Yes, I have an account": "نعم، لدي حساب",
+   "Sign in with your email or mobile number and your password.": "سجّل الدخول ببريدك الإلكتروني أو رقم جوالك وكلمة المرور.",
+   "No, I'm new to MicroMobility": "لا، أنا جديد في MicroMobility",
+   "Create your account. It is the one you book every ride with.": "أنشئ حسابك. هو الحساب الذي تحجز به كل رحلاتك.",
    "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "هذا هو الحساب الذي تحجز به الرحلات في تطبيق MicroMobility. تسجّل الدخول ببريدك الإلكتروني أو رقم جوالك وكلمة المرور.",
    "Gender": "الجنس",
    "Email address": "البريد الإلكتروني",
@@ -1260,7 +1273,7 @@ var FORM_T = {
     if (ride === undefined && rideErr) { loadRide(); return; }
     if (!ride || !ride.open) return;
     if (acct) { enterDetails(); return; }
-    openAccount("create");
+    openAccount("ask");
   });
   $("#go-signin").addEventListener("click", function () { hideBanner(); openAccount("signin"); });
 
@@ -1287,7 +1300,11 @@ var FORM_T = {
     $("#st-title").textContent = tr(STEP_TITLES[step]);
   }
   function backToLanding() { showView("landing"); paintLanding(); }
-  $("#back-land").addEventListener("click", backToLanding);
+  // On the sign-in or sign-up fields, Back goes to the account question; on the question, to the ride.
+  $("#back-land").addEventListener("click", function () {
+    if (step === 1 && accPanel !== "ask") { setTab("ask"); var h = $("#st-title"); if (h) h.focus({ preventScroll: true }); window.scrollTo(0, 0); return; }
+    backToLanding();
+  });
 
   /* ── Banner ─────────────────────────────────────────────────────────── */
   var bannerKey = null;
@@ -1836,21 +1853,20 @@ var FORM_T = {
 
   /* ── Step 1: the account ───────────────────────────────────────────────── */
   var acct = null; // {id, token, name, email, phone, made}
+  // Step 1 opens on the question "Do you have a MicroMobility account?" (the owner, 2026-10-17); the
+  // answer shows the sign-in or the sign-up fields, and Back goes to the question again. A rider sent
+  // straight to signing in (signed out, the landing's "Sign in") skips the question.
+  var accPanel = "ask";
   function openAccount(t) { setTab(t); goStep(1); }
   function setTab(t) {
-    $("#tab-create").setAttribute("aria-selected", String(t === "create"));
-    $("#tab-signin").setAttribute("aria-selected", String(t === "signin"));
+    accPanel = t;
+    $("#p-ask").hidden = t !== "ask";
     $("#p-create").hidden = t !== "create"; $("#p-signin").hidden = t !== "signin";
   }
-  $("#tab-create").addEventListener("click", function () { setTab("create"); });
-  $("#tab-signin").addEventListener("click", function () { setTab("signin"); });
+  $("#ask-yes").addEventListener("click", function () { setTab("signin"); $("#ident").focus(); });
+  $("#ask-no").addEventListener("click", function () { setTab("create"); $("#first").focus(); });
   $$(".to-signin").forEach(function (b) { b.addEventListener("click", function () { setTab("signin"); $("#ident").focus(); }); });
   $$(".to-create").forEach(function (b) { b.addEventListener("click", function () { setTab("create"); $("#first").focus(); }); });
-  $(".tabs").addEventListener("keydown", function (e) {
-    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
-    var to = $("#tab-create").getAttribute("aria-selected") === "true" ? "signin" : "create";
-    setTab(to); $("#tab-" + to).focus();
-  });
 
   $("#p-create").addEventListener("submit", function (e) { e.preventDefault(); hideBanner(); if (busy) return; if (passStep("create")) createAccount(); });
   async function createAccount() {

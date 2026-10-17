@@ -76,12 +76,17 @@
 
       <!-- Step 1: the account. Create one (the booking site's own sign-up) or sign in with one. -->
       <div id="s-account" class="step" data-step="1">
-        <div class="tabs" role="tablist" aria-label="Your account" data-t-aria="Your account">
-          <button type="button" role="tab" id="tab-create" aria-controls="p-create" aria-selected="true" data-site="authSignupBtn">Create account</button>
-          <button type="button" role="tab" id="tab-signin" aria-controls="p-signin" aria-selected="false" data-site="authLogin">Sign in</button>
+        <!-- First the question (the owner, 2026-10-17: "add a step that asks if they have an account or
+             not then show them account details fields"); the answer opens one of the two forms below. -->
+        <div id="p-ask" class="panel">
+          <p id="ask-q" class="ask-q" data-t="Do you have a MicroMobility account?">Do you have a MicroMobility account?</p>
+          <div class="opts" role="group" aria-labelledby="ask-q">
+            <button type="button" id="ask-yes" class="opt choice"><b data-t="Yes, I have an account">Yes, I have an account</b><span data-t="Sign in with your email or mobile number and your password.">Sign in with your email or mobile number and your password.</span></button>
+            <button type="button" id="ask-no" class="opt choice"><b data-t="No, I'm new to MicroMobility">No, I'm new to MicroMobility</b><span data-t="Create your account. It is the one you book every ride with.">Create your account. It is the one you book every ride with.</span></button>
+          </div>
         </div>
 
-        <form id="p-create" class="panel" role="tabpanel" aria-labelledby="tab-create" novalidate autocomplete="on">
+        <form id="p-create" class="panel" novalidate autocomplete="on" hidden>
           <p class="lead" data-t="This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.">This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.</p>
           <div id="f-name" class="field">
             <div class="name-row">
@@ -152,7 +157,7 @@
           <p class="small"><span data-t="Already have a MicroMobility account?">Already have a MicroMobility account?</span> <button type="button" class="d-link to-signin" data-site="authLogin">Sign in</button></p>
         </form>
 
-        <form id="p-signin" class="panel" role="tabpanel" aria-labelledby="tab-signin" novalidate autocomplete="on" hidden>
+        <form id="p-signin" class="panel" novalidate autocomplete="on" hidden>
           <p class="lead" data-t="Sign in with the account you use in the MicroMobility app.">Sign in with the account you use in the MicroMobility app.</p>
           <div id="f-ident" class="field">
             <label for="ident" data-site="authIdentifier">Email or phone</label>

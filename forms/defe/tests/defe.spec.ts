@@ -58,6 +58,11 @@ async function open(page: Page, qs = '', answers: Answers = {}) {
 }
 async function signUp(page: Page) {
   await page.click('#go');
+  // the account question first (the owner, 2026-10-17); no fields until it is answered
+  await expect(page.locator('#p-ask')).toBeVisible();
+  await expect(page.locator('#p-create')).toBeHidden();
+  await expect(page.locator('#p-signin')).toBeHidden();
+  await page.click('#ask-no');
   await expect(page.locator('#p-create')).toBeVisible();
   await page.fill('#first', 'sara');
   await page.fill('#last', 'al-harbi'); // a dash becomes a space
@@ -81,6 +86,28 @@ async function book(page: Page, o: { code?: string; group?: string; bike?: strin
   await page.click('#waiver .tick-box');
   await page.click('#book');
 }
+
+test('Register & book asks whether they have an account, and the answer opens its fields', async ({ page }) => {
+  const { errs } = await open(page);
+  await page.click('#go');
+  await expect(page.locator('#p-ask')).toBeVisible();
+  await expect(page.locator('#ask-q')).toHaveText('Do you have a MicroMobility account?');
+  await expect(page.locator('#p-create')).toBeHidden();
+  await expect(page.locator('#p-signin')).toBeHidden();
+  await page.click('#ask-yes');
+  await expect(page.locator('#p-signin')).toBeVisible();
+  await expect(page.locator('#p-ask')).toBeHidden();
+  // Back returns to the question, not to the ride
+  await page.click('#back-land');
+  await expect(page.locator('#p-ask')).toBeVisible();
+  await expect(page.locator('#p-signin')).toBeHidden();
+  await page.click('#ask-no');
+  await expect(page.locator('#p-create')).toBeVisible();
+  await page.click('#back-land');
+  await page.click('#back-land');
+  await expect(page.locator('#v-landing')).toBeVisible();
+  expect(errs).toEqual([]);
+});
 
 test('the landing shows the ride, whether places are open, and never a count', async ({ page }) => {
   const { errs } = await open(page);
