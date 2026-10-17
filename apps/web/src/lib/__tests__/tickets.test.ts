@@ -85,6 +85,17 @@ describe("the tickets", () => {
     expect(codeReady([row({ approval: "approved" })], pub)).toBe(true);
     expect(codeReady([row({ approval: "approved" }), row({ approval: "pending" })], pub)).toBe(false);
   });
+  it("show a partner's place (Defe) as confirmed, its code out, before the Saturday list is published", () => {
+    const defe = row({ approval: "approved", partner: "defe" });
+    expect(ticketRow({ id: "q", session_id: "s", session_date: "2026-10-24", status: "waiting", partner: "defe" })?.partner).toBe("defe");
+    expect(ticketRow({ id: "q", session_id: "s", session_date: "2026-10-24", status: "waiting", partner: "Not ok!" })?.partner).toBeNull();
+    expect(codeReady([defe], sat)).toBe(true);
+    expect(ticketCue([defe], sat, null)).toBe("confirmed");
+    expect(ticketLook([defe], sat)).toBe("live");
+    expect(bookingRef(defe, sat)).toBe("MMC-q1abcd");
+    // a member's row on the same ride still waits for the list
+    expect(ticketCue([row({ approval: "approved" })], sat, null)).toBe("underReview");
+  });
   it("say where the rider stands, as the booking app does", () => {
     expect(ticketCue([row({})], jcc, false)).toBe("next");
     expect(ticketCue([row({})], jcc, true)).toBe("inQueue");

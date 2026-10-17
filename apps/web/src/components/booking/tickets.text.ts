@@ -85,6 +85,8 @@ export const T = {
     revealSpotsAt: (n: string) => `Breakfast spot: announced ${n}`,
     // what was bought with the booking (addonsLabel)
     addons: "Add-ons",
+    // a partner's place (queue_entries.partner, 2026-10-17): the site's own line, under the ticket's status
+    withDefe: "With Defe",
   },
   ar: {
     queueNumber: "رقم الدور",
@@ -155,5 +157,6 @@ export const T = {
     riderOffer: (n: string) => `عرض للراكبين: ${n}`,
     revealSpotsAt: (n: string) => `موقع الفطور: يُعلَن عنه ${n}`,
     addons: "الإضافات",
+    withDefe: "مع دفء",
   },
 };

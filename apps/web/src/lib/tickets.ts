@@ -24,6 +24,9 @@ export type TicketRow = {
   runKm: number | null;
   /** The Saturday ride's group (queue_entries.ride_group): 'beg' or 'int', else none. */
   rideGroup?: "beg" | "int" | null;
+  /** A partner's place on the ride (queue_entries.partner, rentals 20261017120000: 'defe'), else none.
+   *  partner_book makes it approved at once: a confirmed place, its code out, whatever the list says. */
+  partner?: string | null;
 };
 /** The distances a Run for Her runner picks from (the booking app's RUN_KMS). */
 export const RUN_KMS: readonly number[] = [3, 5];
@@ -82,6 +85,7 @@ export function ticketRow(r: Row): TicketRow | null {
     addonLines: entryAddons(r.addons),
     runKm: km !== null && RUN_KMS.includes(km) ? km : null,
     rideGroup: r.ride_group === "beg" || r.ride_group === "int" ? r.ride_group : null,
+    partner: typeof r.partner === "string" && /^[a-z0-9]{2,20}$/.test(r.partner) ? r.partner : null,
   };
 }
 
@@ -251,10 +255,18 @@ export function bookingRef(r: Pick<TicketRow, "id" | "queueNum">, s: TicketSessi
 }
 
 /** A ride staff approve hands out no code until the rider is through: the list published, every
- *  rider on it approved. Every other ride's code is its ticket from the moment it is booked. */
+ *  rider on it approved. Every other ride's code is its ticket from the moment it is booked, and so
+ *  is a partner's place (Defe, 2026-10-17): confirmed when booked, before the list is out. */
 export function codeReady(rows: TicketRow[], s: TicketSession | undefined): boolean {
   if (!s || !s.approval) return true;
+  if (partnerPlace(rows)) return true;
   return s.published && rows.every((r) => r.approval === "approved");
+}
+
+/** The partner every row of a booking was booked with (partner_book: 'defe'), else null. */
+export function partnerPlace(rows: Pick<TicketRow, "partner" | "status">[]): string | null {
+  const p = rows[0]?.partner;
+  return p && rows.every((r) => r.partner === p && r.status !== "waitlist") ? p : null;
 }
 
 /** The line under the ticket's header, as the booking app words it. `ahead` is whether anyone
@@ -263,6 +275,7 @@ export type Cue = "confirmed" | "underReview" | "pending" | "waitlist" | "onBike
 export function ticketCue(rows: TicketRow[], s: TicketSession | undefined, ahead: boolean | null): Cue {
   const st = rows.some((r) => r.status === "active") ? "active" : rows[0]?.status;
   if (s?.approval && (st === "waiting" || st === "waitlist")) {
+    if (st === "waiting" && partnerPlace(rows)) return "confirmed"; // a partner's place: confirmed at once
     if (!s.published) return "underReview";
     if (st === "waitlist") return "waitlist";
     return rows.every((r) => r.approval === "approved") ? "confirmed" : "pending";

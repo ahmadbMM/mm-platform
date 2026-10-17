@@ -1,6 +1,6 @@
 import petrominPage from "./petromin-page";
 
-// The two registration forms (forms/community, forms/petromin) are single
+// The registration forms (forms/community, forms/petromin) and the Defe booking page (forms/defe) are single
 // self-contained pages the website serves as they are; each build writes its page into this
 // folder. These are the headers their own Cloudflare Workers sent: the pages talk to Supabase from
 // the browser and Cloudflare Web Analytics (named in the Privacy Notice) injects its beacon, so both
@@ -43,6 +43,12 @@ const csp = (extraScript: string, extra: string[] = []) => [
 export const FORM_HEADERS = {
   // The community form posts nothing itself: its script sends the answers.
   community: {
+    ...COMMON,
+    "content-security-policy": csp("", ["form-action 'none'"]),
+  },
+  // The Defe booking page (forms/defe) loads nothing from elsewhere either: its script talks to the
+  // database and its fonts are the site's own.
+  defe: {
     ...COMMON,
     "content-security-policy": csp("", ["form-action 'none'"]),
   },
