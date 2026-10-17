@@ -41,6 +41,10 @@ const KEY = /^[a-z_]{1,24}$/;
  *  else the rental's - Run for Her ('runher') included, which, having no bike (TicketSession.bikes),
  *  is asked it without the bike question, as the pool, the workshop and an event are (noBike). */
 export const formOf = (kind: string | null | undefined): RatingForm => (kind === "saturday" ? "social" : "rental");
+/** Run for Her is a run, not a ride (the owner, 2026-10-17; the booking app's _rgRun): never the bike question,
+ *  and the page says run. Its session id ('<date>-rh') answers when the session itself did not load. */
+export const isRun = (kind: string | null | undefined, sessionId?: string | null): boolean =>
+  kind === "runher" || /^\d{4}-\d\d-\d\d-rh(-|$)/.test(sessionId ?? "");
 
 /** The questions a ride asks, as [question, sub-questions]: no bike question for a rider on their
  *  own bike or an activity with none, no breakfast once the rider says they did not stay. */

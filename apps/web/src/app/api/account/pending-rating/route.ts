@@ -3,7 +3,7 @@ import { serverL } from "@/i18n/dicts";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { accountBookings } from "@/lib/account";
 import { asLocale, resolvePage } from "@/lib/content";
-import { formOf, pendingRating } from "@/lib/rating";
+import { formOf, isRun, pendingRating } from "@/lib/rating";
 import { kindNames, sessionName } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
@@ -46,7 +46,8 @@ export async function GET(req: Request) {
       name: s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة"),
       when: fmtDayDate(gate.date, locale),
       form: formOf(s?.kind),
-      noBike: gate.ownBike || (s ? !s.bikes : false),
+      noBike: gate.ownBike || (s ? !s.bikes : false) || isRun(s?.kind, gate.sessionId),
+      run: isRun(s?.kind, gate.sessionId),
       restaurant: breakfastFor(s, L)?.name ?? null,
       // a score at or under this asks why (the booking app's rg_low, Settings > Business)
       rgLow: bizOf(content).rgLow,

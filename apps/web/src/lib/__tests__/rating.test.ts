@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { WALLET_ORIGIN, cleanRating, formOf, isRated, pendingRating, questionKeys, ratingErrors, relayStatus, rgLowFor, unratedRides } from "../rating";
+import { WALLET_ORIGIN, cleanRating, formOf, isRated, isRun, pendingRating, questionKeys, ratingErrors, relayStatus, rgLowFor, unratedRides } from "../rating";
 import { ticketSession } from "../tickets";
 import { resetSessionColumns } from "../rides";
 import { POST as rate } from "../../app/api/account/rate/route";
@@ -290,5 +290,20 @@ describe("api/account/pending-rating", () => {
     expect((await (await get("en")).json()).pending).toMatchObject({ form: "social", restaurant: null });
     vi.stubGlobal("fetch", db({ ...sat, event_kind: null, ride_kind: null, needs_approval: null }));
     expect((await (await get("en")).json()).pending).toMatchObject({ form: "rental", restaurant: null });
+  });
+});
+
+// Run for Her is a run (the owner, 2026-10-17): no bike question, even when its session did not load.
+describe("Run for Her", () => {
+  it("is a run by its kind or its '<date>-rh' id, and asks no bike question", async () => {
+    expect(isRun("runher")).toBe(true);
+    expect(isRun(null, "2026-10-17-rh")).toBe(true);
+    expect(isRun(undefined, "2026-10-17-rh-2")).toBe(true);
+    expect(isRun("saturday", "2026-10-17")).toBe(false);
+    expect(isRun(null, "2026-10-17-pw")).toBe(false);
+    expect(questionKeys(formOf("runher"), { noBike: isRun("runher") })).toEqual(["service", "experience"]);
+    const { RATING_WORDS } = await import("../../components/account/RatingForm.words");
+    for (const w of Object.values(RATING_WORDS)) expect(w.run.kicker && w.run.title && w.run.thanks).toBeTruthy();
+    expect(RATING_WORDS.en.run.title).toBe("How was your run?");
   });
 });
