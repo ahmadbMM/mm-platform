@@ -157,6 +157,9 @@ describe("a date's facts", () => {
     const t = { waitlist: "Waitlist", left1: "{0} spot left", leftN: "{0} spots left" };
     expect(infoPlaces({ approval: true, full: true, left: 2 }, t)).toBeNull();
     expect(infoPlaces({ approval: false, full: true, left: null }, t)).toBe("Waitlist");
+    // Victory Lap: no count, only the waitlist once it is full (2026-10-17)
+    expect(infoPlaces({ approval: false, full: false, left: 3, kind: "vlap" }, t)).toBeNull();
+    expect(infoPlaces({ approval: false, full: false, left: 0, kind: "vlap" }, t)).toBe("Waitlist");
     expect(infoPlaces({ approval: false, full: false, left: 0 }, t)).toBe("Waitlist");
     expect(infoPlaces({ approval: false, full: false, left: 1 }, t)).toBe("1 spot left");
     expect(infoPlaces({ approval: false, full: false, left: 64 }, t)).toBe("64 spots left");

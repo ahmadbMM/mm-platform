@@ -280,7 +280,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                         <span className="sc-dot" aria-hidden="true" />
                         <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
                         {s.opens ? <span className="sc-spots closed">{s.opens}</span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
-                          : s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
+                          : s.kind !== "vlap" && s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
                           : <span className="sc-spots">{t.available}</span>}
                       </span>
                       {s.when && <span className="sc-time">{when(s)}</span>}

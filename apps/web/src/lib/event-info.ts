@@ -121,10 +121,12 @@ export const infoDistance = (kind: RideKind, km: string): string | null => (kind
 /** The places a date has (_infoFacts): never said on a ride staff approve (they choose who rides);
  *  the waitlist on a full date or one with none left; else how many are left, when they were counted
  *  (lib/rides.ts counts the soonest open dates), and nothing when they were not. */
-export function infoPlaces(s: Pick<RideSession, "full" | "left" | "approval">, t: { waitlist: string; left1: string; leftN: string }): string | null {
+export function infoPlaces(s: Pick<RideSession, "full" | "left" | "approval"> & { kind?: RideKind }, t: { waitlist: string; left1: string; leftN: string }): string | null {
   if (s.approval) return null;
   if (s.full) return t.waitlist;
   if (typeof s.left !== "number") return null;
+  // Victory Lap never says how many places are left, only the waitlist once it is full (the owner, 2026-10-17)
+  if (s.kind === "vlap") return s.left <= 0 ? t.waitlist : null;
   if (s.left <= 0) return t.waitlist;
   return fillAt(s.left === 1 ? t.left1 : t.leftN, s.left);
 }
