@@ -122,6 +122,18 @@ describe("the distance ladder (the booking app, 2026-10-16)", () => {
     expect(km([["int", "done", { beg: 20, int: 35 }]])).toEqual([1, "35/40"]);
     expect(km([["int", "done", { beg: 20, int: 100 }]])).toEqual([4, null]);
   });
+  it("counts any bike ride on any day by the distance staff gave it, and never a run (2026-10-17)", () => {
+    const one = (kind: RecordSession["kind"], dist?: number, status = "done") => {
+      const r = recordRows([row({ session_id: "2026-09-02", status })]);
+      const top = badgeList(r, new Map([[r[0].sessionId, { kind, freeRide: false, km: dist }]]), empty, today, null).find((x) => x.slug.startsWith("km"))!;
+      return [top.lvN, top.p];
+    };
+    expect(one("jcc")).toEqual([0, "0/20"]);
+    expect(one("jcc", 45)).toEqual([2, "45/70"]);
+    expect(one("petromin", 72)).toEqual([3, "72/100"]);
+    expect(one("jcc", 45, "noshow")).toEqual([0, "0/20"]);
+    expect(one("runher", 30)).toEqual([0, "0/20"]);
+  });
 });
 
 describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {

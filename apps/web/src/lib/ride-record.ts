@@ -6,7 +6,9 @@ import { rideCompleted, ticketRow, type TicketRow } from "./tickets";
 import type { RideKind } from "./rides";
 
 /** What the record needs of a session: its kind, and whether it costs nothing (_isFreeRide). */
-export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: boolean; groupKm?: { beg: number; int: number } };
+export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: boolean; groupKm?: { beg: number; int: number }; km?: number };
+/** The kinds ridden on a bike (the booking app's KIND_TRAITS): the only ones the distance ladder counts. */
+const BIKE_KINDS = new Set<RideKind>(["jcc", "saturday", "petromin", "snd96"]);
 /** A badge as badge_catalog / badge_seasons / customer_my_badges hand it back. */
 export type BadgeRow = {
   slug: string; note?: string | null; at?: string | null; icon?: string | null; color?: string | null; system?: boolean | null; auto?: boolean | null;
@@ -250,13 +252,16 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
   for (const [id] of doneN) { const x = ses(id); if (!x) continue; kinds.add(x.kind); if (x.kind === "saturday") comm++; if (x.kind === "petromin") corp++; }
   for (let i = 1; i < dates.length; i++) if (Date.parse(dates[i]) - Date.parse(dates[i - 1]) >= 60 * 864e5) gap = true;
   // the distance ladder (the booking app, 2026-10-16: "a badge for the distance in one ride not the total of kilometers"):
-  // the longest Saturday ride ridden - its group's distance, the ride's own, else 20 km Beginners, 40 km Intermediates
-  // (no group: the Beginners')
+  // the longest single bike ride ridden, any ride any day (the booking app's _rideKm, the owner 2026-10-17: "open for
+  // all sessions or anytime"). A Saturday ride is its group's distance, the ride's own, else 20 km Beginners, 40 km
+  // Intermediates (no group: the Beginners'); any other bike ride the one distance staff gave it, none if none was
+  // given. Runs, swims and other sessions without a bike never count.
   const kmN = new Map<string, number>();
   for (const r of completed) {
-    const x = ses(r.sessionId); if (!x || x.kind !== "saturday") continue;
+    const x = ses(r.sessionId); if (!x || !BIKE_KINDS.has(x.kind)) continue;
     const g = x.groupKm ?? { beg: 20, int: 40 };
-    kmN.set(r.sessionId, Math.max(kmN.get(r.sessionId) ?? 0, r.rideGroup === "int" ? g.int : g.beg));
+    const v = x.kind === "saturday" ? (r.rideGroup === "int" ? g.int : g.beg) : (x.km ?? 0);
+    if (v > 0) kmN.set(r.sessionId, Math.max(kmN.get(r.sessionId) ?? 0, v));
   }
   const km = Math.max(0, ...kmN.values());
   for (const [, n] of nights) { if (n.done) cleanBest = Math.max(cleanBest, ++clean); else if (n.noshow) clean = 0; }
