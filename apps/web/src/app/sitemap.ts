@@ -17,6 +17,9 @@ import { loadCatalog, modelPath, subtypesOf, topCategories } from "@/lib/catalog
 // while Experiences is on and staff offer lessons, the Journal's articles and the bike
 // catalogue's categories, sub-types and models (never the fleet's tag pages).
 const PRIVATE = new Set(["account"]);
+// Read on every request, as robots.ts is: a sitemap built once kept the build's pages, articles and
+// models (or the Coming Soon empty list) until the next deploy.
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { content, closed } = await pageState();

@@ -12,7 +12,7 @@ import { apexTarget, movedStatus } from "./lib/canonical-host";
 const intl = createMiddleware(routing);
 
 // The registration forms' addresses (see the matcher below).
-const FORM_ADDRESSES = ["/community/registration", "/petromin"];
+const FORM_ADDRESSES = ["/community/registration", "/petromin", "/defe"];
 export function formAddress(pathname: string): string | null {
   const p = pathname.toLowerCase().replace(/\/+$/, "");
   return FORM_ADDRESSES.includes(p) ? p : null;
@@ -151,7 +151,8 @@ export default async function proxy(req: NextRequest) {
 // handled as a site page, whatever else changes. /bikes/42 itself does come here (FLEET_PAGE).
 // Only /b and /api themselves and what is under them: a bare "b" also caught /business, which
 // was a 404 once its address lost the /en in front.
-// The two registration forms are excluded too (app/community/registration, app/petromin): they
+// The registration forms are excluded too (app/community/registration, app/petromin, and the Defe
+// booking page app/defe): they
 // are public whatever Coming Soon says, and they carry their own languages. Their exact
 // addresses only - /Petromin and the like still come here and are sent to the real one.
-export const config = { matcher: ["/((?!api/|api$|b/|b$|_next|community/registration$|petromin$|.*\\..*).*)"] };
+export const config = { matcher: ["/((?!api/|api$|b/|b$|_next|community/registration$|petromin$|defe$|.*\\..*).*)"] };

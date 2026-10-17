@@ -16,14 +16,16 @@ import type { RatingForm as Form } from "@/lib/rating";
 // lands it thanks the rider and the page is drawn again, which brings the next unrated ride (the
 // page keys this by its entry, so the next one starts empty), or nothing. `restaurant`: where the
 // ride's breakfast was, which the form's breakfast box names (RatingForm).
-type Props = { entryId: string; name: string; when: string; form: Form; noBike: boolean; restaurant?: string | null; rgLow?: number; onDone?: () => void };
+type Props = { entryId: string; name: string; when: string; form: Form; noBike: boolean; restaurant?: string | null; rgLow?: number; run?: boolean; onDone?: () => void };
 
-export default function RatingGate({ entryId, name, when, form, noBike, restaurant, rgLow, onDone }: Props) {
+export default function RatingGate({ entryId, name, when, form, noBike, restaurant, rgLow, run, onDone }: Props) {
   const t = ratingWords(useTxLocale());
   const router = useRouter();
   const box = useRef<HTMLDivElement>(null);
   const [thanks, setThanks] = useState("");
   const [out, setOut] = useState(false);
+  const later = useRef(0); // the thank-you's timer, cleared if the pop-up goes first
+  useEffect(() => () => window.clearTimeout(later.current), []);
 
   useEffect(() => {
     const el = box.current;
@@ -55,15 +57,15 @@ export default function RatingGate({ entryId, name, when, form, noBike, restaura
           <span className="rg-flag" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2.8l2.75 5.6 6.15.9-4.45 4.33 1.05 6.12L12 16.86l-5.5 2.9 1.05-6.13L3.1 9.3l6.15-.9z" fill="currentColor" /></svg>
           </span>
-          {t.kicker}
+          {run ? t.run.kicker : t.kicker}
         </p>
-        <h2 id={`rg-title-${entryId}`} className="rg-title">{t.title}</h2>
+        <h2 id={`rg-title-${entryId}`} className="rg-title">{run ? t.run.title : t.title}</h2>
         <p className="rg-meta"><bdi>{name}</bdi> · <bdi>{when}</bdi></p>
         {thanks ? (
           <p className="rr-thanks" role="status">{thanks}</p>
         ) : (
-          <RatingForm entryId={entryId} form={form} noBike={noBike} restaurant={restaurant} rgLow={rgLow}
-            onRated={(w) => { setThanks(w.thanks); window.setTimeout(() => (onDone ? onDone() : router.refresh()), 1200); }}
+          <RatingForm entryId={entryId} form={form} noBike={noBike} restaurant={restaurant} rgLow={rgLow} run={run}
+            onRated={(w) => { setThanks(w.thanks); later.current = window.setTimeout(() => (onDone ? onDone() : router.refresh()), 1200); }}
             footer={<button type="button" className="rg-out" onClick={leave} disabled={out}>{t.signOut}</button>} />
         )}
       </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { intlOf } from "@/i18n/locales";
 import type { LiveAnswer, LivePosition } from "@/lib/live";
@@ -63,7 +63,10 @@ export default function LiveMap({ sessionId, locale, until = null }: Props) {
   const [mapState, setMapState] = useState<"loading" | "ready" | "failed">("loading");
   const [recenter, setRecenter] = useState(0);
   const centred = useRef(0); // the last Recenter tap the view has followed
-  const positions = useMemo(() => (answer?.ok ? answer.positions : []), [answer]);
+  // The last positions the server gave: a failed ask (offline for a moment) keeps them - and the
+  // markers and legend with them, their "Updated" time saying how old they are - rather than
+  // emptying the map until the next answer; an answer that the rider can see nothing clears them.
+  const [positions, setPositions] = useState<LivePosition[]>([]);
   // The map's box stays once a position has come: a failed ask (no positions for a moment) must not
   // take away the element the map is drawn in - a new, empty one would never get the map back.
   const [shown, setShown] = useState(false);
@@ -74,7 +77,7 @@ export default function LiveMap({ sessionId, locale, until = null }: Props) {
   // that has ended (both say so), or the ride over (an hour after its end).
   const [ended, setEnded] = useState(false);
   useEffect(() => {
-    let live = true, timer: ReturnType<typeof setTimeout> | null = null;
+    let live = true, timer: ReturnType<typeof setTimeout> | null = null, back: (() => void) | null = null;
     const over = () => typeof until === "number" && Number.isFinite(until) && Date.now() > until + GRACE_MS;
     const ask = async () => {
       if (over()) { if (live) setEnded(true); return; }
@@ -86,12 +89,19 @@ export default function LiveMap({ sessionId, locale, until = null }: Props) {
       } catch { /* offline: say so, and ask again */ }
       if (!live) return;
       setAnswer(a);
+      if (a.ok) setPositions(a.positions);
+      else if (a.error !== "network") setPositions((x) => (x.length ? [] : x));
       if (!a.ok && (a.error === "not_booked" || a.error === "signin")) return;
       timer = setTimeout(() => (document.hidden ? waitForReturn() : ask()), EVERY_MS);
     };
-    const waitForReturn = () => document.addEventListener("visibilitychange", () => { if (live && !document.hidden) ask(); }, { once: true });
+    // Waits for the tab to show again (a hidden one may stay hidden for good: the listener goes
+    // when the page or the ride changes, and a second hide while waiting keeps waiting).
+    const waitForReturn = () => {
+      back = () => { if (!live || document.hidden) return; if (back) document.removeEventListener("visibilitychange", back); back = null; ask(); };
+      document.addEventListener("visibilitychange", back);
+    };
     ask();
-    return () => { live = false; if (timer) clearTimeout(timer); };
+    return () => { live = false; if (timer) clearTimeout(timer); if (back) document.removeEventListener("visibilitychange", back); };
   }, [sessionId, until]);
 
   // The map itself, once the library is here and there is somewhere to centre it.

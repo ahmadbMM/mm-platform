@@ -198,7 +198,7 @@ input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px r
 /* Company tiles */
 .companies { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .company {
-  display: grid; place-items: center; min-height: 84px; padding: 14px 18px; border-radius: 16px;
+  display: grid; place-items: center; min-height: 84px; padding: 14px 18px; border-radius: 0;
   border: 1px solid var(--line); background: #fff;
   transition: border-color 0.2s, box-shadow 0.2s, background 0.2s, transform 0.15s;
 }
@@ -297,6 +297,7 @@ input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px r
 /* Booking QR: the desk scans it to open the booking and check the rider in. */
 .qr { display: flex; justify-content: center; margin: 18px 0 6px; }
 .qr:empty { display: none; }
+.qr canvas { display: block; width: 188px; height: 188px; border-radius: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08); }
 .qr svg { width: 188px; height: 188px; padding: 10px; background: #fff; border-radius: 14px; box-shadow: 0 6px 24px rgba(0, 0, 0, 0.08); }
 .qr-note { margin: 0 0 4px; text-align: center; font-size: 13px; font-weight: 600; opacity: 0.8; }
 .qr:empty + .qr-note { display: none; }

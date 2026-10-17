@@ -3,7 +3,7 @@ import { createElement, type FC, type ReactElement, type ReactNode } from "react
 // The site has no @types/react-dom; this test needs one function of it.
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
-import { isRun, pendingShares, shareCandidates } from "../share";
+import { isRun, pendingShares, shareCandidates, sharesDetails } from "../share";
 import { fmtClock, ticketSession, type TicketSession } from "../tickets";
 import { resetSiteContent } from "../site";
 import { resetSessionColumns } from "../rides";
@@ -199,6 +199,88 @@ describe("the pop-up", () => {
   it("speaks the page's language", () => {
     const ar = draw("ar", null, { ...w, name: "نركض لأجلها", distance: "5 كم" });
     for (const s of ["قبل السباق", "مشاركة بياناتك للسباق", "للمشاركة في السباق، سنشارك بياناتك التالية مع صلة ونادي جدة لليخوت (JYC):", "الاسم الكامل", "البريد الإلكتروني", "تاريخ الميلاد", "المسافة المختارة · <bdi>5 كم</bdi>", "جهة اتصال للطوارئ", "لا نشارك أي شيء آخر عنك، وللسباق فقط.", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع صلة ونادي جدة لليخوت (JYC) لأتمكن من المشاركة في السباق.", "أوافق وأتابع", "تسجيل الخروج"]) expect(ar).toContain(s);
+    const d = de as Record<string, string>;
+    const html = draw("de", d);
+    for (const s of EN) {
+      expect(d[s], s).toBeTruthy();
+      expect(html).toContain(d[s].replace(/&/g, "&amp;"));
+    }
+  });
+});
+
+// Victory Lap (2026-10-17): its athletes agree the same way that their details go to Kamin Sports, who run
+// the race (customer_accept_share takes both kinds); staff's exact list once Kamin Sports gives it.
+describe("Victory Lap's agreement with Kamin Sports", () => {
+  const vlRow = { id: "v1", session_date: "2099-10-26", event_kind: "community", ride_kind: "vlap", needs_approval: false, hide_queue: true, open_to_all: false, paid_ride: true, bike_slots: '{"_time":"16:30 - 17:15"}', meet_url: null, location: "JCC", title: "Victory Lap" };
+  const vrow = (o: Record<string, unknown> = {}) => row("q9", "v1", "2099-10-26", { run_km: null, vl: { race: "ws", div: "so", shirt: "S" }, ...o });
+  beforeEach(() => { resetSiteContent(); resetSessionColumns(); vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+  const db = (rows: unknown[], sessions: unknown[], accept: Response = json(1)) => vi.fn(async (url: string) =>
+    url.includes("/rpc/my_bookings") ? json(rows) : url.includes("/rpc/list_sessions?") ? json(sessions) : url.includes("/rpc/customer_accept_share") ? accept : json([]));
+  const get = (q: string) => GET(new Request(`https://micromobility.sa/api/account/pending-share?${q}`, { headers: HEADERS }));
+  const post = (body: unknown) => POST(new Request("https://micromobility.sa/api/account/pending-share", { method: "POST", headers: HEADERS, body: JSON.stringify(body) }));
+
+  it("asks a Victory Lap athlete who has not agreed, and Run for Her's runner, but no ride", () => {
+    const S = sess(vlRow, runRow, jccRow);
+    expect(sharesDetails(S.get("v1"))).toBe(true);
+    expect(sharesDetails(S.get("r1"))).toBe(true);
+    expect(sharesDetails(S.get("j1"))).toBe(false);
+    expect(isRun(S.get("v1"))).toBe(false);
+    expect(pendingShares([vrow(), row("a", "r1", "2099-10-17"), row("b", "j1", "2099-10-12")], S, "2026-10-17", "c1").map((x) => x.sessionId)).toEqual(["r1", "v1"]);
+    expect(pendingShares([vrow({ data_share_at: "2026-10-17T09:00:00Z" })], S, "2026-10-17", "c1")).toEqual([]);
+  });
+  it("names the race at the circuit and says it is Victory Lap's, with Kamin Sports' own list once staff set it", async () => {
+    vi.stubGlobal("fetch", db([vrow()], [vlRow]));
+    expect(await (await get("locale=en")).json()).toEqual({ signedIn: true, pending: {
+      sessionId: "v1", name: "Victory Lap", when: "Monday · 26 Oct 2099", time: "Gathering 4:30 PM · Start 5:15 PM", venue: "Jeddah Corniche Circuit", distance: null, kind: "vlap", items: null,
+    } });
+    resetSessionColumns();
+    vi.stubGlobal("fetch", db([vrow()], [{ ...vlRow, vl: { share: { en: "- Full name\n- Email address\n\n• Race", ar: "الاسم الكامل\nالسباق" } } }]));
+    expect((await (await get("locale=en")).json()).pending).toMatchObject({ kind: "vlap", items: ["Full name", "Email address", "Race"] });
+    expect((await (await get("locale=ar")).json()).pending).toMatchObject({ kind: "vlap", items: ["الاسم الكامل", "السباق"], name: "فيكتوري لاب", venue: "حلبة كورنيش جدة" });
+    // a language staff did not write reads their English
+    expect((await (await get("locale=fr")).json()).pending).toMatchObject({ items: ["Full name", "Email address", "Race"] });
+  });
+  it("records the agreement for Victory Lap through customer_accept_share", async () => {
+    const f = db([], [vlRow]);
+    vi.stubGlobal("fetch", f);
+    expect(await (await post({ sessionId: "v1" })).json()).toEqual({ ok: true });
+    const call = f.mock.calls.find((c) => String(c[0]).includes("/rpc/customer_accept_share")) as unknown as [string, RequestInit];
+    expect(JSON.parse(String(call[1].body))).toEqual({ p_id: "c1", p_token: TOKEN, p_session_id: "v1" });
+  });
+
+  const w: PendingShare = { sessionId: "v1", name: "Victory Lap", when: "Monday · 26 Oct 2099", time: "Gathering 4:30 PM · Start 5:15 PM", venue: "Jeddah Corniche Circuit", distance: null, kind: "vlap", items: null };
+  const draw = (locale = "en", dict: Record<string, string> | null = null, p: PendingShare = w) =>
+    renderToStaticMarkup(createElement(Tx, { locale, dict }, createElement(ShareGate, { ...p, onDone: () => {} })));
+  const EN = [
+    "Before the race", "Sharing your details for the race",
+    "To take part in Victory Lap, we will share these details about you with Kamin Sports, who run the race:",
+    "Full name", "Email address", "Mobile number", "Gender", "Birth date", "Race, division and team", "T-shirt size", "Emergency contact",
+    "Kamin Sports will confirm exactly which details they need. We will show you the final list before the race, and nothing else about you is shared.",
+    "I agree to MicroMobility sharing these details with Kamin Sports so I can take part in Victory Lap.",
+    "Agree and continue", "Sign out",
+  ];
+  it("lists what the booking holds, says Kamin Sports' list is coming, in order, and never names Sela", () => {
+    const html = draw();
+    const at = EN.map((s) => html.indexOf(s));
+    for (const [i, s] of EN.entries()) expect(at[i], s).toBeGreaterThan(-1);
+    expect([...at].sort((a, b) => a - b)).toEqual(at);
+    expect(html.match(/<li>/g)).toHaveLength(8);
+    expect(html).not.toContain("Sela");
+    expect(html).not.toContain("Distance chosen");
+    expect(html.match(/<button/g)).toHaveLength(2);
+    expect(html).not.toMatch(/[\u{1F300}-\u{1FAFF}☀-➿]/u);
+  });
+  it("lists Kamin Sports' own list once staff set it, and says nothing else is shared", () => {
+    const html = draw("en", null, { ...w, items: ["Full name", "Race"] });
+    expect(html.match(/<li>/g)).toHaveLength(2);
+    expect(html).toContain("Nothing else about you is shared, and only for this race.");
+    expect(html).not.toContain("will confirm exactly");
+  });
+  it("speaks the page's language, Victory Lap and Kamin Sports in Arabic letters in Arabic", () => {
+    const ar = draw("ar", null, { ...w, name: "فيكتوري لاب" });
+    for (const s of ["للمشاركة في فيكتوري لاب، سنشارك بياناتك التالية مع كامن سبورتس، منظّمة السباق:", "رقم الجوال", "الجنس", "السباق والفئة والفريق", "مقاس القميص", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع كامن سبورتس لأتمكن من المشاركة في فيكتوري لاب."]) expect(ar).toContain(s);
+    expect(ar).not.toMatch(/Kamin|Victory/);
     const d = de as Record<string, string>;
     const html = draw("de", d);
     for (const s of EN) {

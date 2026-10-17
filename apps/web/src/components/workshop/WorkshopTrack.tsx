@@ -24,7 +24,11 @@ export default function WorkshopTrack({ locale, whenFmt }: { locale: string; whe
   async function check() {
     setMsg(""); setRes(null); setBusy(true);
     try {
-      const r = await rpc<Res>("workshop_track", { p_ref: ref.trim(), p_phone: normalizePhone(phone) });
+      // The reference as the database reads it ("W-0042"): Arabic and Persian digits and the
+      // direction marks a phone adds around a pasted reference would never match.
+      const at = ref.replace(/[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, "").trim()
+        .replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)));
+      const r = await rpc<Res>("workshop_track", { p_ref: at, p_phone: normalizePhone(phone) });
       if (r.ok) setRes(r); else setMsg(r.error === "throttled" ? t.throttled : t.notFound);
     } catch { setMsg(t.error); }
     setBusy(false);

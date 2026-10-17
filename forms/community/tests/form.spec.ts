@@ -138,7 +138,7 @@ test('the account step asks what the sign-up page asks, with its rules and words
 test('the Privacy Notice is confirmed on the account step, and ride news is optional', async ({ page }) => {
   const { of } = await open(page);
   await accountStep(page, { ack: false });
-  await expect(page.locator('#f-ack .err')).toHaveText('Please confirm you’ve read the Privacy Notice.');
+  await expect(page.locator('#f-ack .err')).toHaveText('Tick to confirm you’ve read the Privacy Notice.');
   expect(of('customer_signup')).toEqual([]);
   await page.click('#ack .tick-box');
   await page.click('#next');
@@ -176,7 +176,7 @@ test('a sign-up the database refuses says why, on the field or in the banner', a
   await expect(page.locator('#f-name .err')).toHaveText('Write your first and last name in full, not initials');
   answer = refuse({ code: 'P0001', message: 'RATE_LIMITED' });
   await page.click('#next');
-  await expect(page.locator('#banner .banner-text')).toHaveText('Too many tries from this network. Please wait a few minutes and try again.');
+  await expect(page.locator('#banner .banner-text')).toHaveText('Too many tries from this network. Wait a few minutes and try again.');
   answer = refuse({ code: '23505', message: 'DUPLICATE' }, 409);
   await page.click('#next');
   await expect(page.locator('#f-email .err')).toHaveText('An account with this email already exists. Sign in to apply with it.');
@@ -518,7 +518,7 @@ test('a signed-in account without a confirmed notice is asked for it on step 2, 
   await communityStep(page);
   await page.click('#submit');
   await expect(page.locator('#f-xack')).toBeVisible();
-  await expect(page.locator('#f-xack .err')).toHaveText('Please confirm you’ve read the Privacy Notice.');
+  await expect(page.locator('#f-xack .err')).toHaveText('Tick to confirm you’ve read the Privacy Notice.');
   await expect(page.locator('#xack')).toBeFocused();
   await expect(page.locator('#success')).toBeHidden();
   expect(of('customer_community_apply')).toHaveLength(1);
@@ -785,4 +785,54 @@ test('the admins\' settings: a question turned off is not asked or sent, one mad
   await page.selectOption('#lang', 'ar');
   await expect(page.locator('#f-nat label')).toHaveText('ما جواز سفرك؟');
   expect(errs).toEqual([]);
+});
+
+// Bug hunt 2026-10-14.
+test('a WhatsApp No put back on arrival does not jump the focus (and the keyboard) to its box', async ({ page }) => {
+  const { errs } = await open(page, `?code=${CODE}`, {
+    customer_community_me: () => json({ ...ME, whatsapp_same: false, whatsapp: '+971501234567' }),
+  });
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#was .tile[data-v="no"]')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#wacc-code')).toHaveText('+971');
+  expect(await page.evaluate(() => document.activeElement && document.activeElement.id)).not.toBe('wa');
+  // the rider's own No still opens the box for typing
+  await page.click('#was .tile[data-v="yes"]');
+  await page.click('#was .tile[data-v="no"]');
+  await expect(page.locator('#wa')).toBeFocused();
+  expect(errs).toEqual([]);
+});
+
+test('a refused box tells a screen reader it is wrong and why; a second contact typed in Arabic digits is not dropped', async ({ page }) => {
+  const { of } = await open(page);
+  await page.click('#next');
+  await expect(page.locator('#email')).toHaveAttribute('aria-invalid', 'true');
+  await expect(page.locator('#email')).toHaveAttribute('aria-describedby', 'f-email-err');
+  await expect(page.locator('#f-email-err')).toHaveText('Enter your email address');
+  await expect(page.locator('#genders')).toHaveAttribute('aria-invalid', 'true');
+  await page.fill('#email', 'karim.mansour@gmail.com');
+  await expect(page.locator('#email')).not.toHaveAttribute('aria-invalid', 'true');
+  // the second contact: only a number, in Arabic-Indic digits - asked for the rest, never silently dropped
+  await page.click('#em2-add');
+  await page.fill('#em2-phone', '٠٥٥٩٨٧٦٥٤١');
+  await accountStep(page);
+  await expect(page.locator('#f-em2-name .err')).not.toHaveText('');
+  expect(of('customer_signup')).toHaveLength(0);
+});
+
+test('a password the database calls weak is said on the password box, not as a lost connection', async ({ page }) => {
+  await open(page, '', { customer_signup: () => refuse({ code: '22023', message: 'WEAK_PASSWORD' }) });
+  await accountStep(page);
+  await expect(page.locator('#f-pwd .err')).toHaveText('Password must be at least 8 characters and include an uppercase letter and a number.');
+  await expect(page.locator('#banner')).toBeHidden();
+});
+
+test('Tab stays inside the open Privacy Notice', async ({ page }) => {
+  await open(page);
+  await page.click('#pv-open-foot');
+  await expect(page.locator('#pv-x')).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  expect(await page.evaluate(() => !!document.activeElement && !!document.activeElement.closest('#pv .pv-box'))).toBe(true);
+  for (let i = 0; i < 6; i++) await page.keyboard.press('Tab');
+  expect(await page.evaluate(() => !!document.activeElement && !!document.activeElement.closest('#pv .pv-box'))).toBe(true);
 });

@@ -11,7 +11,7 @@ import { priceRows, type PriceRow } from "./biz";
 //
 // The rules below mirror the booking app (app.src.html) and the database, never guess:
 //   kind     _rideKind: snd96 first, anything not 'community' is a circuit night (jcc), then
-//            petromin / swim / workshop / event / runher, and every other community row is the
+//            petromin / swim / workshop / event / runher / vlap, and every other community row is the
 //            Saturday ride.
 //   members  _community_booking_gate: event_kind 'community' without open_to_all is booked only
 //            by members (the Saturday tag, the Club).
@@ -26,8 +26,13 @@ import { priceRows, type PriceRow } from "./biz";
 //            to its places (80) and then the waitlist; nobody approves it. It meets at the Jeddah
 //            Yacht Club (sessions.location 'JYC', the meeting point in meet_url), and each runner
 //            picks 3 or 5 km (queue_entries.run_km).
+//   vlap     Victory Lap by Fitness Empire (ride_kind 'vlap', 2026-10-17; lib/vlap.ts): a hybrid fitness
+//            race at the circuit run by Kamin Sports - booked by Community members and Victory Lap tag
+//            holders, its card shown to everyone; no bikes, no breakfast; doors then the first heat
+//            ("16:30 - 17:15", read as gathering - start); a paid ride at the session's own price per
+//            athlete (sessions.price, 150 SAR VAT included), which only those who may book it are told.
 
-export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher";
+export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap";
 /** A ride_prices row: the fare, and (lib/biz.ts faresOf) the highest fare quoted and the employees' fare when the database has them. */
 export type RidePrice = PriceRow;
 export type RideSession = {
@@ -42,11 +47,12 @@ export type RideSession = {
   times: [string, string] | null;
   gather: boolean;
   /** No Road Carbon bike on this ride: the booking app's _noCarbon, community rides except
-   *  Petromin (and Petromin nights are not on this site at all). */
+   *  Petromin. */
   noCarbon: boolean;
   /** What the session is, as staff described it (an event's blurb); null when none. */
   description: string | null;
-  /** An event's price per seat in SAR, null on a free event and on every other kind. */
+  /** An event's price per seat in SAR (and Victory Lap's per athlete, said only to those who may book
+   *  it), null on a free event and on every other kind. */
   price: number | null;
   /** An event's seats (sessions.capacity); null on every other kind. */
   seats: number | null;
@@ -75,7 +81,7 @@ export type RideSession = {
    *  (sessions.breakfast_name), and its Arabic name (breakfast_name_ar, which a venue booking through
    *  the vendor portal gives; rentals migration 20261004130000): trimmed, at most 80 characters, null
    *  when blank. Only a read that asks for them has them (SESSION_COLS_BREAKFAST), as with the place;
-   *  Experiences names the stop on the Saturday ride alone (lib/event-info.ts infoBreakfast). */
+   *  Experiences names the stop on the Saturday ride and Run for Her alone (lib/event-info.ts infoBreakfast). */
   breakfast?: string | null;
   breakfastAr?: string | null;
   /** When riders are told where the Saturday ride meets and has breakfast (sessions.reveal_at, ISO; the
@@ -83,6 +89,9 @@ export type RideSession = {
    *  with its place, route and breakfast stop blank (lib/tickets.ts spotHeld). Null when nothing is held
    *  back; only a read that asks for it has it (SESSION_COLS_REVEAL). */
   revealAt?: string | null;
+  /** Victory Lap's settings (sessions.vl: the races and divisions open, how to pay; lib/vlap.ts), the
+   *  raw value; only a read that asks for it has it (SESSION_COLS_VL), and only on Victory Lap. */
+  vl?: unknown;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -90,14 +99,14 @@ type Row = {
   id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; ride_kind?: unknown;
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
-  spots?: unknown; addons?: unknown; meet_url?: unknown; location?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown;
+  spots?: unknown; addons?: unknown; meet_url?: unknown; location?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
   const k = r.ride_kind;
   if (k === "snd96") return "snd96";
   if (r.event_kind !== "community") return "jcc";
-  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" ? k : "saturday";
+  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" ? k : "saturday";
 }
 
 /** A route's slug as the Routes page writes one (content/pages/routes.ts): lower-case letters,
@@ -178,12 +187,14 @@ function revealOf(r: Row): Pick<RideSession, "revealAt"> {
 }
 
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
- *  booked through the company's own form (micromobility.sa/petromin), so they are left out. */
-export function toSession(r: Row, keepAll = false): RideSession | null {
+ *  left out unless `petromin` (or `keepAll`): only Experiences lists them, under Petromin Days to a
+ *  Petromin tag holder and among the community rides to a community member (the owner, 2026-10-12);
+ *  every other page leaves them out as before. */
+export function toSession(r: Row, keepAll = false, petromin = false): RideSession | null {
   if (typeof r.id !== "string" || typeof r.session_date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(r.session_date)) return null;
   if (!keepAll && r.status !== "open" && r.status !== "full") return null;
   const kind = rideKind(r);
-  if (!keepAll && kind === "petromin") return null;
+  if (!keepAll && !petromin && kind === "petromin") return null;
   const community = r.event_kind === "community";
   const free = community && kind !== "snd96" && r.paid_ride !== true;
   const price = num(r.price), seats = num(r.capacity);
@@ -196,11 +207,11 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     members: community && r.open_to_all !== true,
     free,
     times: slotTimes(r.bike_slots),
-    gather: kind === "saturday" || kind === "snd96" || kind === "runher",
-    noCarbon: community,
+    gather: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap",
+    noCarbon: community && kind !== "petromin", // Road Carbon goes out on a Petromin night
     description: typeof r.description === "string" && r.description.trim() ? r.description.trim().slice(0, 2000) : null,
     // the database charges an event's seat only when the event is a paid ride (_fare_now)
-    price: kind === "event" && !free && price !== null && price > 0 ? price : null,
+    price: (kind === "event" || kind === "vlap") && !free && price !== null && price > 0 ? price : null,
     seats: kind === "event" && seats !== null && Number.isInteger(seats) && seats > 0 ? seats : null,
     routeSlug: routeSlugOf(r.route_slug),
     approval: community && r.needs_approval !== false,
@@ -212,9 +223,10 @@ export function toSession(r: Row, keepAll = false): RideSession | null {
     meetUrl: typeof r.meet_url === "string" && /^https:\/\//i.test(r.meet_url.trim()) ? r.meet_url.trim() : null,
     location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null,
     left: null,
-    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" ? null : collectTime(r.bike_slots),
+    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" ? null : collectTime(r.bike_slots),
     ...breakfastOf(r),
     ...revealOf(r),
+    ...(kind === "vlap" && "vl" in r ? { vl: r.vl ?? null } : {}),
   };
 }
 
@@ -228,10 +240,14 @@ export function upcoming(sessions: RideSession[], now: string): RideSession[] {
     .sort((a, b) => a.date.localeCompare(b.date) || (a.times?.[0] ?? "").localeCompare(b.times?.[0] ?? ""));
 }
 
+/** The sessions without the Petromin nights: every page but Experiences, which shows them only to a
+ *  Petromin tag holder or a community member (the owner, 2026-10-12), lists none. */
+export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessions.filter((s) => s.kind !== "petromin");
+
 /** The names a page gives each kind of session (Experiences > Next dates). */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), petromin: "" };
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), petromin: "" };
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other
@@ -262,6 +278,9 @@ export const SESSION_COLS_BREAKFAST = "breakfast_name,breakfast_name_ar";
 // When riders are told where the Saturday ride meets and has breakfast (the owner, 2026-10-06: rentals
 // migration 20261006150000). A group of its own, so a database without it reads as before.
 export const SESSION_COLS_REVEAL = "reveal_at";
+// Victory Lap's settings (rentals migration 20261017210000): the races and divisions open to book and how
+// to pay. A group of its own, so a database without it reads as before (every race open, the default line).
+export const SESSION_COLS_VL = "vl";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -375,12 +394,14 @@ export async function getJson(fetchImpl: typeof fetch, url: string, key: string,
 }
 
 /** How many bookings hold a place on a session (_holdsSpot): every row but a cancelled, removed or
- *  no-show one, and not a rider on their own bike (who holds a place only on a Petromin night,
- *  which this site never lists). Asked as a count, so nothing but the number comes back. */
-export async function placesTaken(fetchImpl: typeof fetch, url: string, key: string, sessionId: string): Promise<number | null> {
+ *  no-show one, and not a rider on their own bike, who holds a place only on a Petromin night
+ *  (`ownTakesPlace`, the booking app's _ownTakesPlace). Asked as a count, so nothing but the number
+ *  comes back. */
+export async function placesTaken(fetchImpl: typeof fetch, url: string, key: string, sessionId: string, ownTakesPlace = false): Promise<number | null> {
   if (!/^[A-Za-z0-9_-]{1,64}$/.test(sessionId)) return null;
   try {
-    const res = await fetchImpl(`${url}/rest/v1/queue_public?select=id&session_id=eq.${sessionId}&status=not.in.(cancelled,removed,noshow)&or=(type_preference.is.null,type_preference.neq.Own)`, {
+    const own = ownTakesPlace ? "" : "&or=(type_preference.is.null,type_preference.neq.Own)";
+    const res = await fetchImpl(`${url}/rest/v1/queue_public?select=id&session_id=eq.${sessionId}&status=not.in.(cancelled,removed,noshow)${own}`, {
       method: "HEAD",
       headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: "count=exact" },
       cache: "no-store",
@@ -396,7 +417,7 @@ export async function placesTaken(fetchImpl: typeof fetch, url: string, key: str
 /** The places left on the soonest open sessions nobody approves (at most 12 counts a read). */
 async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, url: string, key: string): Promise<RideSession[]> {
   const ask = sessions.filter((s) => !s.full && !s.approval).slice(0, 12);
-  const counts = await Promise.all(ask.map((s) => placesTaken(fetchImpl, url, key, s.id)));
+  const counts = await Promise.all(ask.map((s) => placesTaken(fetchImpl, url, key, s.id, s.kind === "petromin")));
   const left = new Map(ask.map((s, i) => [s.id, counts[i] == null ? null : Math.max(0, (s.capacity || 12) - (counts[i] as number))]));
   return sessions.map((s) => (left.has(s.id) ? { ...s, left: left.get(s.id) ?? null } : s));
 }
@@ -412,11 +433,13 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=*`, key), // every column: max_price and employee_price too (lib/biz.ts)
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL] }),
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL] }),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) prices = priceRows(p.value);
     if (s.status === "fulfilled" && Array.isArray(s.value)) {
-      sessions = await withPlacesLeft((s.value as Row[]).map((r) => toSession(r)).filter((x): x is RideSession => x !== null), fetchImpl, url, key);
+      // the Petromin nights too: Experiences shows them to Petromin tag holders, under Petromin Days
+      // (2026-10-12), and the other pages leave them out (withoutPetromin)
+      sessions = await withPlacesLeft((s.value as Row[]).map((r) => toSession(r, false, true)).filter((x): x is RideSession => x !== null), fetchImpl, url, key);
     }
   }
   return prices || sessions ? { prices: prices ?? [], sessions: sessions ?? [] } : null;

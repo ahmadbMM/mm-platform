@@ -139,6 +139,15 @@ test('every word of a name has two letters: an initial is refused, for the emplo
   await page.fill('#badge', 'A-12');
   await page.fill('#name', 'Faisal H');
   await page.fill('#phone', '512345678');
+  // Continue says it on the second step itself (since 2026-10-14), not after the third
+  await page.click('#next');
+  await expect(page.locator('#f-name .err')).toHaveText('Write your first and last name in full, not initials');
+  await expect(page.locator('.step[data-step="2"]')).toBeVisible();
+  // the box's own message comes back once the rule's one is gone
+  await page.fill('#name', '');
+  await page.click('#next');
+  await expect(page.locator('#f-name .err')).toHaveText('Enter your full name');
+  await page.fill('#name', 'Faisal Harbi');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');
@@ -148,16 +157,6 @@ test('every word of a name has two letters: an initial is refused, for the emplo
   await companion.locator('.tile[data-v="Mountain"]').click();
   await page.check('#privacy');
   await page.check('#waiver');
-  await page.click('#submit');
-  await expect(page.locator('#f-name .err')).toHaveText('Write your first and last name in full, not initials');
-  expect(regs).toHaveLength(0);
-  await page.fill('#name', 'Faisal Harbi');
-  // the box's own message comes back once the server's or the rule's one is gone
-  await page.fill('#name', '');
-  await page.click('#next');
-  await expect(page.locator('#f-name .err')).toHaveText('Enter your full name');
-  await page.fill('#name', 'Faisal Harbi');
-  await page.click('#next');
   await page.click('#submit');
   await expect(companion.locator('.rider-name .err')).toHaveText("Write the rider's name in full, not initials");
   expect(regs).toHaveLength(0);

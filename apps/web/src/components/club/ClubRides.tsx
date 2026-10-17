@@ -17,6 +17,7 @@ const KIND: Record<string, { en: string; ar: string }> = {
   workshop: phrase("Club workshop", "ورشة النادي"),
   event: phrase("Event", "فعالية"),
   runher: phrase("Run for Her", "نركض لأجلها"),
+  vlap: phrase("Victory Lap", "فيكتوري لاب"),
 };
 
 export default function ClubRides(p: Props) {
@@ -38,7 +39,7 @@ export default function ClubRides(p: Props) {
   const whenOf = (r: Ride) => {
     const m = /^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})$/.exec(String(r.time || "").trim());
     if (!m) return r.time ? <bdi dir="ltr">{r.time}</bdi> : null;
-    return r.kind === "saturday" || r.kind === "snd96" || r.kind === "runher"
+    return r.kind === "saturday" || r.kind === "snd96" || r.kind === "runher" || r.kind === "vlap"
       ? <>{tx("Gathering", "التجمع")} <bdi dir="ltr">{m[1]}</bdi> · {tx("Start", "الانطلاق")} <bdi dir="ltr">{m[2]}</bdi></>
       : <bdi dir="ltr">{m[1]} – {m[2]}</bdi>;
   };

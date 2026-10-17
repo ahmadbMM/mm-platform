@@ -132,7 +132,12 @@ export function openFeedback(target: FeedbackTarget, onSaved: () => void): void 
       p_improve: better.input.value.slice(0, TEXT_MAX),
     });
     busy(send, false, sendLabel);
-    if (!res.ok) { msg.append(errorNote(res.code)); return; }
+    if (!res.ok) {
+      // BAD_INPUT from vendor_feedback_save is the turnout (outside 0-1000, or not a number).
+      if (res.code === "BAD_INPUT") { turnout.setError(t("errTurnout")); turnout.input.focus(); return; }
+      msg.append(errorNote(res.code));
+      return;
+    }
     saved = true;
     clear(body);
     const done = button(t("done"), { kind: "primary", onclick: dlg.close });

@@ -48,6 +48,8 @@ export const GLYPH: Record<string, string> = {
   "calcrown": "<rect class=\"o\" x=\"3\" y=\"4.5\" width=\"18\" height=\"16.5\" rx=\"2.2\"/><path d=\"M3 8.5h18v2H3z\"/><path class=\"s\" d=\"M8 2.5v4M16 2.5v4\"/><path transform=\"translate(5.64 9.94) scale(.53)\" d=\"M3 7.5l4.6 4.2L12 4.5l4.4 7.2L21 7.5l-1.8 10.5H4.8z\"/>",
   // Run for Her's pink awareness ribbon (2026-10-05): two bands, .rb a thick stroke (account.css), the far one lighter
   "ribbon": "<path class=\"rb o\" d=\"M12 3.1A3.9 3.9 0 0 0 8.1 7c0 1.8 1.3 3.6 3.9 6.7L17.4 21\"/><path class=\"rb\" d=\"M6.6 21 12 13.7c2.6-3.1 3.9-4.9 3.9-6.7A3.9 3.9 0 0 0 12 3.1\"/>",
+  // Victory Lap's lap ring (2026-10-17, the owner picked B3): a ring with the start line across it, round a checkered flag
+  "lapring": "<circle class=\"s\" cx=\"12\" cy=\"12.6\" r=\"8.4\"/><path class=\"s\" d=\"M12 2.2v4.4\"/><path class=\"o\" d=\"M8.2 10.1h7.6v5.4H8.2z\"/><path d=\"M8.2 10.1h2.53v2.7H8.2zm5.07 0h2.53v2.7h-2.53zM10.73 12.8h2.54v2.7h-2.54z\"/>",
   // The T100 races in Jeddah (2026-10-08): the distance drawn in figures over a swim wave
   "t100": "<path class=\"s\" d=\"M3.4 7.3 5.4 5.5v9M12.2 10a2.6 4.5 0 1 1-5.2 0 2.6 4.5 0 0 1 5.2 0ZM19.6 10a2.6 4.5 0 1 1-5.2 0 2.6 4.5 0 0 1 5.2 0Z\"/><path class=\"s o\" d=\"M3.5 19.5c1.4 0 1.4-1.3 2.8-1.3s1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3\"/>",
   "t50": "<path class=\"s\" d=\"M10.6 5.5h-4.6l-.5 4.1c.7-.6 1.5-.9 2.4-.9 1.6 0 2.9 1.2 2.9 2.9s-1.3 2.9-3 2.9c-1.2 0-2.2-.6-2.7-1.6M18.6 10a2.6 4.5 0 1 1-5.2 0 2.6 4.5 0 0 1 5.2 0Z\"/><path class=\"s o\" d=\"M3.5 19.5c1.4 0 1.4-1.3 2.8-1.3s1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3 1.4-1.3 2.8-1.3 1.4 1.3 2.8 1.3\"/>",

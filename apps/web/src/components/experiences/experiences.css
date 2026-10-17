@@ -286,6 +286,35 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
   .bk-card { padding: 16px 14px; }
   .bk-title { font-size: 22px; }
   .bk-step-lbl { max-width: 110px; }
+  .xs .xs-go { width: 100%; }
+  .xs-lbl { font-size: 12.5px; }
+}
+/* Victory Lap's card (the owner picked D for the booking app, 2026-10-17; its styles.css .landing-event-card.ev-vlap):
+   white, square, the race's logo, its line, the date, doors and place, a checkered flag down the end edge. Every
+   part stays inside the card at any width: the copy wraps, the logo scales down, the flag keeps its strip. */
+.xs-event.ev-vlap { --vl-ink: #0d0d0d; flex-direction: row; align-items: stretch; gap: 0; padding: 0; overflow: hidden; border-radius: 0; border-color: rgba(13, 13, 13, .22); box-shadow: 0 1px 3px rgba(26, 25, 25, .22); color: var(--vl-ink); }
+.xs-event.ev-vlap:hover { border-color: var(--vl-ink); box-shadow: 0 8px 24px rgba(13, 13, 13, .18); }
+.xs-vl-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; padding: 22px 20px 18px 24px; padding-inline: 24px 20px; }
+.xs-ev-wrap.has-about > .xs-event.ev-vlap { padding-bottom: 0; }
+.xs-ev-wrap.has-about > .xs-event.ev-vlap .xs-vl-main { padding-bottom: 58px; }
+.xs-vl-logo { height: 58px; }
+.xs-vl-title { font-size: 16px; font-weight: 700; line-height: 1.3; color: var(--vl-ink); overflow-wrap: anywhere; }
+.xs-vl-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 9px; margin-top: 6px; font-size: 13px; font-weight: 600; color: #4a4a46; max-width: 100%; }
+.xs-vl-meta > span { display: inline-flex; align-items: center; gap: 9px; }
+.xs-vl-meta i { width: 1px; height: 12px; background: rgba(13, 13, 13, .3); display: inline-block; flex: none; }
+.xs-vl-flag { flex: 0 0 44px; background-color: var(--vl-ink); background-image: linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%), linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%); background-size: 16px 16px; background-position: 0 0, 8px 8px; }
+.xs-vl-price { font-weight: 700; }
+@media (max-width: 767px) {
+  .xs-event.ev-vlap { padding: 0; }
+  .xs-ev-wrap.has-about > .xs-event.ev-vlap .xs-vl-main { padding-bottom: 50px; }
+  .xs-vl-logo { height: 50px; }
+  .xs-vl-flag { flex-basis: 36px; }
+}
+
+/* A phone names only the step it is on; the others keep their names for screen readers. */
+@media (max-width: 480px) {
+  .xs-bar li { flex: 1 1 auto; } /* the step with its name takes the room it needs, the lines the rest */
+  .xs-bar li:not(.cur) .xs-lbl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
 
 /* ── "About this event" and "Details" (the owner, 2026-10-05, as the booking app's picker) ──
@@ -301,6 +330,8 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
   text-align: start; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
 .xs-about { inset-inline-start: 28px; bottom: 18px; max-width: calc(100% - 56px); padding: 4px 0; color: #1a1919; }
 .xs-about.ab-runher { color: #c2416e; } /* Run for Her's pink, as on its date cards */
+.xs-about.ab-petromin { color: #d6202a; } /* Petromin Days: Petromin's red, as on its date cards (2026-10-12) */
+.xs-about.ab-vlap { color: #0d0d0d; max-width: calc(100% - 100px); } /* Victory Lap: clear of the flag */
 .sc-about { inset-inline-start: 35px; bottom: 11px; max-width: calc(100% - 51px); padding: 3px 0; color: var(--ev, #077a4b); }
 .xs-about:focus-visible, .sc-about:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 2px; }
 

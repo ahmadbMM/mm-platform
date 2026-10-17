@@ -1,4 +1,4 @@
-// Points the two registration forms the website serves at another Supabase project, for a
+// Points the registration forms (and the Defe page) the website serves at another Supabase project, for a
 // staging build only (CI runs it on the `staging` branch, after the check that the committed pages
 // are what their sources build). The forms carry their project's URL and anon key inside the built
 // pages (apps/web/src/forms/*-page.ts); this swaps production's for staging's in place, so a
@@ -13,7 +13,7 @@ for (const [k, v] of Object.entries({ FROM_URL, FROM_KEY, TO_URL, TO_KEY })) {
 }
 if (FROM_URL === TO_URL) throw new Error("FROM_URL and TO_URL are the same project");
 
-const files = ["apps/web/src/forms/petromin-page.ts", "apps/web/src/forms/community-page.ts"];
+const files = ["apps/web/src/forms/petromin-page.ts", "apps/web/src/forms/community-page.ts", "apps/web/src/forms/defe-page.ts"];
 for (const f of files) {
   const src = readFileSync(f, "utf8");
   const n = src.split(FROM_URL).length - 1;

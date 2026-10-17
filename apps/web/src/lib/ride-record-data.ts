@@ -20,14 +20,34 @@ export async function loadRecordSessions(ids: string[], account: SessionReader |
   for (let i = 0; i < clean.length; i += 80) chunks.push(clean.slice(i, i + 80));
   await Promise.all(chunks.map(async (c) => {
     try {
-      const rows = await readSessions(fetchImpl, url, key, `select=id,ride_kind,event_kind,paid_ride,needs_approval&id=in.(${c.join(",")})`, account);
+      const rows = await readSessions(fetchImpl, url, key, `select=id,ride_kind,event_kind,paid_ride,needs_approval,bike_slots&id=in.(${c.join(",")})`, account);
       if (!Array.isArray(rows)) return;
       for (const r of rows as Record<string, unknown>[]) {
-        if (typeof r.id === "string") out.set(r.id, { kind: rideKind(r), freeRide: r.event_kind === "community" && r.paid_ride !== true, approval: r.event_kind === "community" && r.needs_approval !== false });
+        if (typeof r.id === "string") out.set(r.id, { kind: rideKind(r), freeRide: r.event_kind === "community" && r.paid_ride !== true, approval: r.event_kind === "community" && r.needs_approval !== false, groupKm: groupKm(r.bike_slots), km: rideKm(r.bike_slots) });
       }
     } catch { /* that chunk counts as unknown sessions */ }
   }));
   return out;
+}
+
+/** The Saturday ride's two distances (the booking app's _rgKm): the ride's own, kept in its bike_slots as
+ *  _km {beg, int}, else the usual 20 and 40 km. */
+export function groupKm(slots: unknown): { beg: number; int: number } {
+  let o: unknown = slots;
+  if (typeof o === "string") { try { o = JSON.parse(o); } catch { o = null; } }
+  const k = o && typeof o === "object" ? (o as Record<string, unknown>)._km : null;
+  const v = (g: "beg" | "int", d: number) => { const n = k && typeof k === "object" ? Number((k as Record<string, unknown>)[g]) : NaN; return n > 0 && n <= 500 ? n : d; };
+  return { beg: v("beg", 20), int: v("int", 40) };
+}
+
+/** Any other bike ride's one distance (the booking app's _rideKm, 2026-10-17): _km {all} in its bike_slots, else
+ *  none - a ride without one adds no kilometres. */
+export function rideKm(slots: unknown): number {
+  let o: unknown = slots;
+  if (typeof o === "string") { try { o = JSON.parse(o); } catch { o = null; } }
+  const k = o && typeof o === "object" ? (o as Record<string, unknown>)._km : null;
+  const n = k && typeof k === "object" ? Number((k as Record<string, unknown>).all) : NaN;
+  return n > 0 && n <= 500 ? n : 0;
 }
 
 const list = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
@@ -42,7 +62,7 @@ export async function loadBadgeData(a: Account): Promise<BadgeData> {
   const w = list<{ w: string; ids: string[] }>(weeks.data);
   return {
     catalog: list<BadgeRow>(cat.data).filter((b) => b && typeof b.slug === "string"),
-    weeks: w.length ? w : null,
+    weeks: Array.isArray(weeks.data) ? w : null, // an empty answer is known (no week of two sessions yet); only a failed call is not
     seasons: list<BadgeRow>(seasons.data).filter((b) => b && typeof b.slug === "string"),
     mine: list<BadgeRow>(mine.data).filter((b) => b && typeof b.slug === "string"),
   };

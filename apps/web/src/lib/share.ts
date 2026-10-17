@@ -11,15 +11,20 @@ import { SESSION_ID } from "./waiver";
 // app/api/account/pending-share). Agreeing stamps every live row of the account on that run that has
 // none (customer_accept_share, migration 20261006180000 in the rentals repo; its answer reads as the
 // waiver's, lib/waiver.ts acceptAnswer). Only runs from today on, and only rows still to be run: a run
-// already over is not agreed to after the fact. The plain logic, so it can be tested.
+// already over is not agreed to after the fact. Victory Lap (2026-10-17, rentals 20261017210000) asks the
+// same of its athletes, for Kamin Sports, who run the race: customer_accept_share takes both kinds. The
+// plain logic, so it can be tested.
 
 const LIVE = new Set(["waiting", "waitlist", "active"]);
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 type Row = Record<string, unknown>;
 export type PendingShareRow = { sessionId: string; date: string; km: number | null };
 
-/** A session whose runners' details go to the race's hosts: Run for Her, by the session's kind. */
+/** Run for Her, by the session's kind. */
 export const isRun = (s: Pick<TicketSession, "kind"> | undefined): boolean => s?.kind === "runher";
+/** A session whose athletes' details go to the race's hosts: Run for Her (Sela and Jeddah Yacht Club)
+ *  and Victory Lap (Kamin Sports), by the session's kind (the booking app's _pendingShare). */
+export const sharesDetails = (s: Pick<TicketSession, "kind"> | undefined): boolean => s?.kind === "runher" || s?.kind === "vlap";
 
 /** The distance a runner picked (run_km), when it is one the booking app takes (3 or 5 km). */
 const kmOf = (r: Row): number | null => {
@@ -51,10 +56,10 @@ export function shareCandidates(rows: Row[], today: string, customerId: string, 
 
 /** The runs the account still has to agree for, soonest first, each with the distance its runner
  *  picked (null when none was): a session of the candidates that the account can see and that is
- *  Run for Her. A session the site cannot see, or any other kind, asks nothing. `skip` leaves out runs
+ *  Run for Her or Victory Lap. A session the site cannot see, or any other kind, asks nothing. `skip` leaves out runs
  *  agreed to on this page already, so a run the database did not stamp can never hold the runner in a loop. */
 export function pendingShares(rows: Row[], sessions: ReadonlyMap<string, Pick<TicketSession, "kind">>, today: string, customerId: string, skip: readonly string[] = []): PendingShareRow[] {
   return [...unagreed(rows, today, customerId, skip).values()]
-    .filter((x) => isRun(sessions.get(x.sessionId)))
+    .filter((x) => sharesDetails(sessions.get(x.sessionId)))
     .sort((a, b) => a.date.localeCompare(b.date) || a.sessionId.localeCompare(b.sessionId));
 }

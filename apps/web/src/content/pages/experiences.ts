@@ -46,7 +46,7 @@ export const experiencesSchema = {
     {
       id: "events",
       label: bi("Event cards", "بطاقات الفعاليات"),
-      hint: bi("The same events as the booking app. The National Day, T100, Events and Run for Her cards show only while they have dates. Their About texts also show in the booking app.", "الفعاليات نفسها كما في تطبيق الحجز. بطاقات اليوم الوطني وT100 والفعاليات ونركض لأجلها تظهر فقط عند وجود مواعيد. وتظهر نصوص «عن هذه الفعالية» في تطبيق الحجز أيضاً."),
+      hint: bi("The same events as the booking app. The National Day, T100, Events, Run for Her and Victory Lap cards show only while they have dates. Petromin Days shows only to accounts with the Petromin tag, while it has dates. Their About texts also show in the booking app.", "الفعاليات نفسها كما في تطبيق الحجز. بطاقات اليوم الوطني وT100 والفعاليات ونركض لأجلها وفيكتوري لاب تظهر فقط عند وجود مواعيد. وتظهر أيام بترومين لحاملي وسم بترومين فقط، عند وجود مواعيد. وتظهر نصوص «عن هذه الفعالية» في تطبيق الحجز أيضاً."),
       fields: [
         txt("jccTitle", 40, "Circuit: title", "الحلبة: العنوان", "Open Sports Day", "يوم الرياضة المفتوح"),
         txt("jccMeta", 60, "Circuit: line", "الحلبة: السطر", "Sun & Tue · 9-11pm", "الأحد والثلاثاء · 9-11 مساءً"),
@@ -84,12 +84,30 @@ export const experiencesSchema = {
         { id: "rhLogo", type: "image", label: bi("Run for Her: logo", "نركض لأجلها: الشعار"), def: "/site/runher-partners.webp" },
         long("rhNote", 240, "Run for Her: rules", "نركض لأجلها: القواعد", "For Club members aged 18 and over on race day. One place per account, complimentary. Places go first come, first served, then the waitlist opens. Pick 3 km or 5 km when you book.", "لأعضاء النادي ممن أتموا 18 عاماً يوم السباق. مكان واحد لكل حساب، ومجاناً. الأماكن بأسبقية التسجيل، ثم تُفتح قائمة الانتظار. اختر 3 كم أو 5 كم عند الحجز."),
         long("rhAbout", 420, "Run for Her: about this event", "نركض لأجلها: عن هذه الفعالية", "A morning run along the water at the Jeddah Yacht Club, in partnership with the Jeddah Yacht Club and Dr. Samir Abbas Hospital. Choose 3 km or 5 km when you book. For community members aged 18 and over; free, one place per account. 80 places, then a waitlist.", "جري صباحي على الواجهة البحرية في نادي جدة لليخوت، بالشراكة مع نادي جدة لليخوت ومستشفى الدكتور سمير عباس. اختر 3 كم أو 5 كم عند الحجز. لأعضاء المجتمع ممن أتموا 18 عامًا؛ مجانًا، ومكان واحد لكل حساب. 80 مكانًا، ثم قائمة انتظار."),
+        // Victory Lap by Fitness Empire (ride_kind 'vlap', 2026-10-17): a hybrid fitness race at the circuit
+        // run by Kamin Sports. Its card (the owner picked D for the booking app: white, the race's logo, the
+        // line, the date, the doors and JCC, a checkered flag down the end edge, never the price) shows to
+        // everyone while a race is on the books; the title names it on the next steps. vlAbout is the
+        // booking app's About too (it reads experiences.events.vlAbout).
+        txt("vlTitle", 40, "Victory Lap: title", "فيكتوري لاب: العنوان", "Victory Lap", "فيكتوري لاب"),
+        txt("vlMeta", 60, "Victory Lap: line", "فيكتوري لاب: السطر", "Hybrid fitness race · 16+", "سباق لياقة هجين · 16+"),
+        { id: "vlLogo", type: "image", label: bi("Victory Lap: logo", "فيكتوري لاب: الشعار"), def: "/site/victory-lap-dark.webp" },
+        long("vlNote", 240, "Victory Lap: rules", "فيكتوري لاب: القواعد", "For Community members and Victory Lap athletes aged 16 and over on race day. Pick your race and division when you book: on your own, or with a partner.", "لأعضاء المجتمع ورياضيي فيكتوري لاب ممن أتموا 16 عامًا يوم السباق. اختر سباقك وفئتك عند الحجز: وحدك أو مع شريك."),
+        long("vlAbout", 420, "Victory Lap: about this event", "فيكتوري لاب: عن هذه الفعالية", "Victory Lap by Fitness Empire: a hybrid fitness race at the Jeddah Corniche Circuit. Run 4 km with three exercise stations (Sprint) or the full 6.1 km with five, on your own or with a partner. Run by Kamin Sports, for Community members and Victory Lap athletes aged 16 and over.", "فيكتوري لاب من فيتنس إمباير: سباق لياقة هجين على حلبة كورنيش جدة. اركض 4 كم مع ثلاث محطات تمارين (سبرنت) أو المسار الكامل 6.1 كم مع خمس محطات، وحدك أو مع شريك. تنظّمه كامن سبورتس، لأعضاء المجتمع ورياضيي فيكتوري لاب ممن أتموا 16 عامًا فأكثر."),
+        // Petromin Days (the owner, 2026-10-12): the Petromin nights alone, for Petromin tag holders,
+        // whom the card shows to (petromin_member); community members still find the nights among the
+        // community rides. Shown while a Petromin night is on the books, first on the page.
+        txt("pmTitle", 40, "Petromin Days: title", "أيام بترومين: العنوان", "Petromin Days", "أيام بترومين"),
+        txt("pmMeta", 60, "Petromin Days: line", "أيام بترومين: السطر", "Petromin's evening rides", "جولات بترومين المسائية"),
+        { id: "pmLogo", type: "image", label: bi("Petromin Days: logo", "أيام بترومين: الشعار"), def: "/site/petromin-logo.png" },
+        long("pmNote", 240, "Petromin Days: rules", "أيام بترومين: القواعد", "For Petromin's team. Book your place on a Petromin night; the waitlist opens once the bikes run out.", "لفريق بترومين. احجز مكانك في إحدى ليالي بترومين؛ وتُفتح قائمة الانتظار عند نفاد الدراجات."),
+        long("pmAbout", 420, "Petromin Days: about this event", "أيام بترومين: عن هذه الفعالية", "Petromin's evening rides at the Jeddah Corniche Circuit, for Petromin's team. Pick a night, pick your bike, and ride with your colleagues.", "جولات بترومين المسائية على حلبة كورنيش جدة، لفريق بترومين. اختر الليلة والدراجة، وانطلق مع زملائك."),
       ],
     },
     {
       id: "dates",
       label: bi("Dates", "المواعيد"),
-      hint: bi("The dates come from the booking system: every open or full session from today on, except Petromin nights. A session with a name keeps it; the names below are for the rest. The Details texts also show in the booking app.", "المواعيد من نظام الحجز: كل جلسة مفتوحة أو ممتلئة من اليوم فصاعداً، عدا أمسيات بترومين. الجلسة التي لها اسم تحتفظ به، والأسماء أدناه لغيرها. وتظهر نصوص «التفاصيل» في تطبيق الحجز أيضاً."),
+      hint: bi("The dates come from the booking system: every open or full session from today on. Petromin nights show only to accounts with the Petromin tag, under Petromin Days. A session with a name keeps it; the names below are for the rest. The Details texts also show in the booking app.", "المواعيد من نظام الحجز: كل جلسة مفتوحة أو ممتلئة من اليوم فصاعداً. وتظهر أمسيات بترومين لحاملي وسم بترومين فقط، ضمن أيام بترومين. الجلسة التي لها اسم تحتفظ به، والأسماء أدناه لغيرها. وتظهر نصوص «التفاصيل» في تطبيق الحجز أيضاً."),
       fields: [
         { id: "count", type: "number", min: 3, max: 24, step: 1, label: bi("How many dates to show per event", "عدد المواعيد لكل فعالية"), def: 9 },
         txt("jccName", 50, "Name: circuit evening", "الاسم: أمسية الحلبة", "Evening Circuit Session", "جلسة الحلبة المسائية"),
@@ -99,15 +117,17 @@ export const experiencesSchema = {
         txt("snd96Name", 50, "Name: National Day ride", "الاسم: جولة اليوم الوطني", "Saudi National Day Ride", "جولة اليوم الوطني السعودي"),
         txt("eventName", 50, "Name: event without a title", "الاسم: فعالية بلا عنوان", "Event", "فعالية"),
         txt("runHerName", 50, "Name: Run for Her", "الاسم: نركض لأجلها", "Run for Her", "نركض لأجلها"),
+        txt("vlName", 50, "Name: Victory Lap", "الاسم: فيكتوري لاب", "Victory Lap", "فيكتوري لاب"),
         // What each kind of date is, in its Details on Experiences and in the booking app (2026-10-05,
-        // lib/event-info.ts): the National Day ride and the events say their card's About instead. This
-        // site never lists Petromin nights, so aboutPetro is the booking app's alone.
+        // lib/event-info.ts): the National Day ride and the events say their card's About instead.
+        // aboutPetro is a Petromin night's, which this site shows since 2026-10-12 (Petromin Days).
         { ...long("aboutJcc", 420, "Details: circuit evening", "التفاصيل: أمسية الحلبة", "An evening on the circuit. Collect your bike from {collect}; the session runs {start} to {end}. Pay at the booth.", "أمسية على الحلبة. استلم دراجتك من {collect}، والجلسة من {start} إلى {end}. الدفع عند الكشك."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         { ...long("aboutSat", 420, "Details: Saturday ride", "التفاصيل: جولة السبت", "We gather at {gather} and set off at {start}. Choose your group: Beginners, 20 km to the Jeddah Yacht Club and back, or Intermediates, 40 km to just before the Marine Sciences roundabout and back. Breakfast together after the ride. Free; our team confirms the list before the ride.", "نتجمع في {gather} وننطلق في {start}. اختر مجموعتك: المبتدئون، 20 كم إلى نادي جدة لليخوت والعودة، أو المتوسطون، 40 كم إلى ما قبل دوار العلوم البحرية والعودة. فطور معًا بعد الجولة. مجانًا، ويعتمد فريقنا القائمة قبل الجولة."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
-        { ...long("aboutPetro", 420, "Details: Petromin night (booking app)", "التفاصيل: أمسية بترومين (تطبيق الحجز)", "Petromin’s Wednesday evening on the circuit. Collect your bike from {collect}; circuit prices; bikes go first come, first served.", "أمسية أربعاء بترومين على الحلبة. استلم دراجتك من {collect}، بأسعار الحلبة، والدراجات بأسبقية الحضور."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
+        { ...long("aboutPetro", 420, "Details: Petromin night", "التفاصيل: أمسية بترومين", "Petromin’s Wednesday evening on the circuit. Collect your bike from {collect}; circuit prices; bikes go first come, first served.", "أمسية أربعاء بترومين على الحلبة. استلم دراجتك من {collect}، بأسعار الحلبة، والدراجات بأسبقية الحضور."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         { ...long("aboutSwim", 420, "Details: pool session", "التفاصيل: جلسة المسبح", "A triathlon swim session at the pool, {start} to {end}. No bike needed. Free; our team confirms the list.", "جلسة سباحة للترايثلون في المسبح، من {start} إلى {end}. لا حاجة إلى دراجة. مجانًا، ويعتمد فريقنا القائمة."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         { ...long("aboutWs", 420, "Details: T100", "التفاصيل: T100", "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.", "التحضير للترايثلون T100 بالشراكة مع الاتحاد السعودي للترايثلون، من {start} إلى {end}. متاحة للجميع، مجانًا، ويعتمد فريقنا القائمة."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         { ...long("aboutRun", 420, "Details: Run for Her", "التفاصيل: نركض لأجلها", "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.", "التجمع في {gather}، وينطلق الجري في {start}. اختر 3 كم أو 5 كم عند الحجز. مجانًا؛ 80 مكانًا، ثم قائمة انتظار."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
+        { ...long("aboutVl", 420, "Details: Victory Lap", "التفاصيل: فيكتوري لاب", "Doors open at {gather} and the first heat starts at {start}. Arrive at least 30 minutes before your heat to collect your race bib.", "تُفتح الأبواب الساعة {gather} وتنطلق أول دفعة الساعة {start}. احضر قبل دفعتك بثلاثين دقيقة على الأقل لاستلام رقم السباق."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         txt("members", 30, "Tag: members only", "الوسم: للأعضاء فقط", "Members", "للأعضاء"),
         txt("everyone", 30, "Tag: open to everyone", "الوسم: للجميع", "Open to everyone", "للجميع"),
         txt("perSeat", 40, "Event: price per seat ({price})", "الفعالية: سعر المقعد ({price})", "{price} per seat", "{price} للمقعد"),

@@ -17,6 +17,10 @@ Petromin registration page, changes.
     `/community/registration`) are served by this Worker too, outside Coming Soon. Until their
     old Workers' routes are removed (below), those more specific routes still win and the old
     Workers keep answering there.
+  - The Defe booking page (`forms/defe`, at `/defe`; the owner, 2026-10-17) is served the same way,
+    outside Coming Soon, with its own headers. It never had a Worker of its own. Its database side is
+    rentals migration `20261017120000_partner_places.sql`: apply it before the page goes live, or the
+    page says "Could not load the ride".
   - A Worker route runs before the old forward to the Salla store, so the forward stops
     applying the moment this Worker is deployed. Delete the forward afterwards to keep the
     zone tidy (Rules > Redirect Rules in the dashboard, or on the old host if it lives there).
@@ -65,7 +69,7 @@ switch: set to anything but `on`, a push still runs every check and deploys noth
 hand: `pnpm --filter web exec wrangler deploy --env production`.
 
 After a deploy, check in this order: `https://micromobility.sa/` (the site), `/api/health`,
-`https://micromobility.sa/petromin` (the registration form), and send a test email to an address on
+`https://micromobility.sa/petromin` (the registration form), `/defe` (the Defe page), and send a test email to an address on
 the domain (CI does the first four, "The live site answers"). Roll back by deleting the two routes in
 Workers & Pages > micromobility-web > Settings > Domains & Routes; the old forward takes over again at
 once.

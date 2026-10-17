@@ -11,13 +11,20 @@ import { signOut } from "./quiet";
 // and where - then what goes to Sela and Jeddah Yacht Club (JYC), a tick and "Agree and continue".
 // No close, no backdrop, no Escape, moving about keeps it; signing out is the only other way off. The
 // rest of the page is made inert while it is up. Its frame is the rating gate's (rating.css), its
-// look the waiver gate's (waiver.css).
+// look the waiver gate's (waiver.css). Victory Lap's athletes (2026-10-17) agree the same way that their
+// details go to Kamin Sports, who run the race: the details Kamin Sports' list names once staff set it
+// (`items`), else what the booking holds, with a note that the exact list is coming (the booking app's
+// vlShSub, _vlShareItems, vlShNoteTbc / vlShNoteSet, vlShAgree).
 export type PendingShare = {
   sessionId: string;
   /** The run's name, its day and date, its time ("" when it has none) and its place. */
   name: string; when: string; time: string; venue: string;
   /** The distance the runner picked, in the ticket's words ("5 km"), or null when the booking has none. */
   distance: string | null;
+  /** "vlap" on Victory Lap (Kamin Sports); absent on Run for Her. */
+  kind?: "vlap";
+  /** Victory Lap: Kamin Sports' exact list as staff set it, in the page's language; null until it is set. */
+  items?: string[] | null;
 };
 /** agreed: the database has it · absent: the database cannot record it yet (let through) ·
  *  stale: the session is no longer Run for Her (ask again). */
@@ -30,6 +37,7 @@ const CAL = "M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 
 const CLOCK = "M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z";
 const PIN = "M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21ZM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z";
 const CHECK = "M5 12.5 9.5 17 19 7.5";
+const FLAG = "M5 21V4M5 4h12l-2.5 4L17 12H5";
 
 export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r: ShareDone) => void }) {
   const tx = useL();
@@ -82,25 +90,44 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
     signOut();
   };
 
-  // what goes to the race's hosts, in the booking app's order
-  const items = [
-    tx("Full name", "الاسم الكامل"),
-    tx("Email address", "البريد الإلكتروني"),
-    tx("Birth date", "تاريخ الميلاد"),
-    tx("Distance chosen", "المسافة المختارة"),
-    tx("Emergency contact", "جهة اتصال للطوارئ"),
-  ];
+  // what goes to the race's hosts, in the booking app's order: Run for Her's to Sela and JYC; Victory
+  // Lap's to Kamin Sports, their own list once staff set it, else what the booking holds (_vlShareItems)
+  const vl = w.kind === "vlap";
+  const own = vl && w.items && w.items.length ? w.items : null;
+  const items = vl
+    ? own ?? [
+      tx("Full name", "الاسم الكامل"),
+      tx("Email address", "البريد الإلكتروني"),
+      tx("Mobile number", "رقم الجوال"),
+      tx("Gender", "الجنس"),
+      tx("Birth date", "تاريخ الميلاد"),
+      tx("Race, division and team", "السباق والفئة والفريق"),
+      tx("T-shirt size", "مقاس القميص"),
+      tx("Emergency contact", "جهة اتصال للطوارئ"),
+    ]
+    : [
+      tx("Full name", "الاسم الكامل"),
+      tx("Email address", "البريد الإلكتروني"),
+      tx("Birth date", "تاريخ الميلاد"),
+      tx("Distance chosen", "المسافة المختارة"),
+      tx("Emergency contact", "جهة اتصال للطوارئ"),
+    ];
 
   return (
     <div className="rg-gate sg-gate">
       <div ref={box} className="rg-box sg-box" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-sub`} tabIndex={-1}>
         <p className="rg-kicker sg-kicker">
           <span className="rg-flag" aria-hidden="true">
-            {/* Run for Her's pink ribbon (badge-glyphs.ts "ribbon"), its far band lighter */}
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinejoin="round">
-              <path d="M12 3.1A3.9 3.9 0 0 0 8.1 7c0 1.8 1.3 3.6 3.9 6.7L17.4 21" opacity=".55" />
-              <path d="M6.6 21 12 13.7c2.6-3.1 3.9-4.9 3.9-6.7A3.9 3.9 0 0 0 12 3.1" />
-            </svg>
+            {vl ? (
+              // Victory Lap: a flag, as the booking app's kicker has it
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d={FLAG} /></svg>
+            ) : (
+              // Run for Her's pink ribbon (badge-glyphs.ts "ribbon"), its far band lighter
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinejoin="round">
+                <path d="M12 3.1A3.9 3.9 0 0 0 8.1 7c0 1.8 1.3 3.6 3.9 6.7L17.4 21" opacity=".55" />
+                <path d="M6.6 21 12 13.7c2.6-3.1 3.9-4.9 3.9-6.7A3.9 3.9 0 0 0 12 3.1" />
+              </svg>
+            )}
           </span>
           {tx("Before the race", "قبل السباق")}
         </p>
@@ -111,19 +138,25 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
           {w.time && <p className="wg-ln"><Ic d={CLOCK} /><bdi>{w.time}</bdi></p>}
           <p className="wg-ln"><Ic d={PIN} /><span>{w.venue}</span></p>
         </div>
-        <p id={`${id}-sub`} className="wg-sub">{tx("To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):", "للمشاركة في السباق، سنشارك بياناتك التالية مع صلة ونادي جدة لليخوت (JYC):")}</p>
+        <p id={`${id}-sub`} className="wg-sub">{vl
+          ? tx("To take part in Victory Lap, we will share these details about you with Kamin Sports, who run the race:", "للمشاركة في فيكتوري لاب، سنشارك بياناتك التالية مع كامن سبورتس، منظّمة السباق:")
+          : tx("To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):", "للمشاركة في السباق، سنشارك بياناتك التالية مع صلة ونادي جدة لليخوت (JYC):")}</p>
         <ul className="sg-list">
           {items.map((label, i) => (
             <li key={i}>
               <Ic d={CHECK} />
-              <span>{label}{i === 3 && w.distance && <>{" · "}<bdi>{w.distance}</bdi></>}</span>
+              <span>{label}{!vl && i === 3 && w.distance && <>{" · "}<bdi>{w.distance}</bdi></>}</span>
             </li>
           ))}
         </ul>
-        <p className="sg-note">{tx("Nothing else about you is shared, and only for this race.", "لا نشارك أي شيء آخر عنك، وللسباق فقط.")}</p>
+        <p className="sg-note">{vl && !own
+          ? tx("Kamin Sports will confirm exactly which details they need. We will show you the final list before the race, and nothing else about you is shared.", "ستؤكد كامن سبورتس البيانات التي تحتاجها بالضبط. سنعرض عليك القائمة النهائية قبل السباق، ولا نشارك أي شيء آخر عنك.")
+          : tx("Nothing else about you is shared, and only for this race.", "لا نشارك أي شيء آخر عنك، وللسباق فقط.")}</p>
         <label className={`wg-agree${ok ? " on" : ""}`}>
           <input type="checkbox" checked={ok} disabled={busy} onChange={(e) => { setOk(e.target.checked); setFail(false); }} />
-          <span>{tx("I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع صلة ونادي جدة لليخوت (JYC) لأتمكن من المشاركة في السباق.")}</span>
+          <span>{vl
+            ? tx("I agree to MicroMobility sharing these details with Kamin Sports so I can take part in Victory Lap.", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع كامن سبورتس لأتمكن من المشاركة في فيكتوري لاب.")
+            : tx("I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع صلة ونادي جدة لليخوت (JYC) لأتمكن من المشاركة في السباق.")}</span>
         </label>
         {fail && <p className="wg-err" role="alert">{tx("It could not be sent. Check the connection and try again.", "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً.")}</p>}
         <button type="button" className="wg-btn" disabled={!ok || busy} onClick={agree}>

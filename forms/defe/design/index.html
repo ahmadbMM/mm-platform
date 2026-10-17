@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#FFF6F9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1E0A14" media="(prefers-color-scheme: dark)">
+<title>Defe x MicroMobility | Saturday Social Ride</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<meta name="description" content="One ride. One purpose. Ride with Defe and MicroMobility to spread breast-cancer awareness on the Saturday Social Ride in Jeddah.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="MicroMobility">
+<meta property="og:title" content="Defe x MicroMobility | Saturday Social Ride">
+<meta property="og:description" content="One ride. One purpose. Ride with Defe and MicroMobility to spread breast-cancer awareness on the Saturday Social Ride in Jeddah.">
+<meta property="og:url" content="https://micromobility.sa/defe">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- Icons drawn once and used by reference (no emoji anywhere: the owner's rule). -->
+<svg width="0" height="0" class="defs" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-rib" viewBox="0 0 100 140"><path d="M50 8c-15 0-24 12-24 26 0 13 7 24 15 36L14 128l17 6 24-46 24 46 17-6-27-58c8-12 15-23 15-36 0-14-9-26-24-26zm0 15c6 0 10 5 10 12 0 7-4 15-10 24-6-9-10-17-10-24 0-7 4-12 10-12z" fill="currentColor"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12.5l5 5L20 6.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="square"/></symbol>
+    <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12.5 12H22M18 12v4M21 12v3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+    <symbol id="i-open" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="currentColor"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="square"/></symbol>
+  </defs>
+</svg>
+
+<header class="top">
+  <div class="lockup">
+    <a class="mm" href="https://micromobility.sa" aria-label="MicroMobility"><!-- svg:mm-lockup.svg --></a>
+    <i class="x" aria-hidden="true"></i>
+    <span class="dbadge"><!-- svg:defe-logo.svg --></span>
+  </div>
+  <button id="lang" class="lang" type="button" lang="ar">العربية</button>
+</header>
+
+<main id="main" class="main">
+  <div id="banner" class="banner" role="alert" hidden>
+    <span class="banner-text"></span>
+    <button class="banner-close" type="button" data-t="Dismiss">Dismiss</button>
+  </div>
+
+  <!-- 1. The landing: what anyone opening the link sees first. -->
+  <section id="v-landing" class="view landing" aria-labelledby="title">
+    <div class="hero">
+      <svg class="ribbon" aria-hidden="true" focusable="false"><use href="#i-rib"/></svg>
+      <p id="eyebrow" class="eyebrow"></p>
+      <h1 id="title" class="title"><span data-t="One ride.">One ride.</span><br><em data-t="One purpose.">One purpose.</em></h1>
+      <p class="lede" data-t="Defe is an initiative born from hope. Ride with us to spread breast-cancer awareness and share the strength in every kilometre.">Defe is an initiative born from hope. Ride with us to spread breast-cancer awareness and share the strength in every kilometre.</p>
+    </div>
+    <div class="d-body">
+      <dl id="facts" class="facts"></dl>
+      <div class="chips">
+        <span id="state" class="chip state" role="status"></span>
+        <span id="code-chip" class="chip" hidden><svg aria-hidden="true"><use href="#i-key"/></svg><span data-t="Booking needs a Defe code for now">Booking needs a Defe code for now</span></span>
+      </div>
+      <div id="land-notice" class="notice" hidden><b class="notice-h"></b><span class="notice-p"></span></div>
+      <p id="land-who" class="who" hidden></p>
+      <button id="go" class="d-btn" type="button" disabled>Register &amp; book</button>
+      <p id="have-acct" class="small"><span data-t="Already have a MicroMobility account?">Already have a MicroMobility account?</span> <button type="button" id="go-signin" class="d-link" data-site="authLogin">Sign in</button></p>
+      <p id="see-ticket" class="small" hidden><span data-t="Already booked?">Already booked?</span> <a id="see-ticket-a" class="d-link" href="https://micromobilityrentals.pages.dev/?tab=bookings" data-t="Sign in to see your ticket">Sign in to see your ticket</a></p>
+    </div>
+  </section>
+
+  <!-- 2-4. The steps: the account, the details a Saturday ride asks for, the booking. -->
+  <section id="v-steps" class="view steps-view" hidden aria-labelledby="st-title">
+    <ol class="steps" aria-hidden="true"><li></li><li></li><li></li></ol>
+    <div class="st-head">
+      <small id="st-n"></small>
+      <h2 id="st-title" class="st-title" tabindex="-1"></h2>
+    </div>
+    <div class="d-body">
+
+      <!-- Step 1: the account. Create one (the booking site's own sign-up) or sign in with one. -->
+      <div id="s-account" class="step" data-step="1">
+        <!-- First the question (the owner, 2026-10-17: "add a step that asks if they have an account or
+             not then show them account details fields"); the answer opens one of the two forms below. -->
+        <div id="p-ask" class="panel">
+          <p id="ask-q" class="ask-q" data-t="Do you have a MicroMobility account?">Do you have a MicroMobility account?</p>
+          <div class="opts" role="group" aria-labelledby="ask-q">
+            <button type="button" id="ask-yes" class="opt choice"><b data-t="Yes, I have an account">Yes, I have an account</b><span data-t="Sign in with your email or mobile number and your password.">Sign in with your email or mobile number and your password.</span></button>
+            <button type="button" id="ask-no" class="opt choice"><b data-t="No, I'm new to MicroMobility">No, I'm new to MicroMobility</b><span data-t="Create your account. It is the one you book every ride with.">Create your account. It is the one you book every ride with.</span></button>
+          </div>
+        </div>
+
+        <form id="p-create" class="panel" novalidate autocomplete="on" hidden>
+          <p class="lead" data-t="This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.">This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.</p>
+          <div id="f-name" class="field">
+            <div class="name-row">
+              <span class="name-part"><label for="first" data-site="firstName">First Name</label><input id="first" name="first" type="text" autocomplete="given-name" autocapitalize="words" maxlength="60" data-site-placeholder="phFirstName"></span>
+              <span class="name-part"><label for="last" data-site="lastName">Last Name</label><input id="last" name="last" type="text" autocomplete="family-name" autocapitalize="words" maxlength="60" data-site-placeholder="phLastName"></span>
+            </div>
+            <p class="err" aria-live="polite"></p>
+            <p class="warn" aria-live="polite"></p>
+          </div>
+          <div id="f-gender" class="field">
+            <span class="label" id="gender-label" data-t="Gender">Gender</span>
+            <div id="genders" class="tiles two" role="radiogroup" aria-labelledby="gender-label">
+              <button type="button" class="tile" data-v="male" role="radio" aria-checked="false" data-site="genderMale">Male</button>
+              <button type="button" class="tile" data-v="female" role="radio" aria-checked="false" data-site="genderFemale">Female</button>
+            </div>
+            <p class="err" aria-live="polite"></p>
+          </div>
+          <div id="f-email" class="field">
+            <label for="email" data-t="Email address">Email address</label>
+            <input id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="254" placeholder="name@example.com">
+            <p class="err" aria-live="polite"></p>
+            <p class="warn" aria-live="polite"></p>
+            <button type="button" id="email-fix" class="fix" hidden></button>
+          </div>
+          <div id="f-phone" class="field">
+            <label for="phone" data-t="Mobile number">Mobile number</label>
+            <div class="phone-row" dir="ltr">
+              <label class="cc-wrap">
+                <span class="cc-face" aria-hidden="true"><span id="cc-flag" class="cc-flag"></span><span id="cc-code">+966</span></span>
+                <select id="cc" class="cc" aria-label="Country code" data-t-aria="Country code"></select>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+              </label>
+              <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="5X XXX XXXX">
+            </div>
+            <p class="err" aria-live="polite"></p>
+            <p class="warn" aria-live="polite"></p>
+          </div>
+          <div id="f-pwd" class="field">
+            <label for="pwd" data-site="authPassword">Password</label>
+            <input id="pwd" name="password" type="password" autocomplete="new-password" maxlength="72" dir="ltr">
+            <p class="hint" data-site="fixPwHint">At least 8 characters, with an uppercase letter and a number.</p>
+            <p class="err" aria-live="polite"></p>
+          </div>
+          <div id="f-pwd2" class="field">
+            <label for="pwd2" data-site="authConfirmPassword">Confirm Password</label>
+            <input id="pwd2" name="password2" type="password" autocomplete="new-password" maxlength="72" dir="ltr">
+            <p class="err" aria-live="polite"></p>
+          </div>
+          <div id="f-height" class="field">
+            <label for="height" data-t="Height in cm">Height in cm</label>
+            <input id="height" name="height" type="text" inputmode="numeric" maxlength="3" placeholder="175" autocomplete="off">
+            <p class="err" aria-live="polite"></p>
+            <p class="warn" aria-live="polite"></p>
+          </div>
+          <div id="em-slot"></div>
+          <div id="f-ack" class="field consent">
+            <div id="ack" class="tick" role="checkbox" aria-checked="false" aria-required="true" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" id="ack-lbl"></span></div>
+            <p class="err" aria-live="polite"></p>
+          </div>
+          <div id="f-news" class="field consent">
+            <div id="news" class="tick" role="checkbox" aria-checked="false" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" data-site="rideNewsOpt">Send me ride news and announcements by WhatsApp and email. I can stop at any time.</span></div>
+          </div>
+          <button id="create" class="d-btn" type="submit">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label" data-site="authSignupBtn">Create account</span>
+            <span class="btn-busy" data-t="Creating your account...">Creating your account...</span>
+          </button>
+          <p class="small"><span data-t="Already have a MicroMobility account?">Already have a MicroMobility account?</span> <button type="button" class="d-link to-signin" data-site="authLogin">Sign in</button></p>
+        </form>
+
+        <form id="p-signin" class="panel" novalidate autocomplete="on" hidden>
+          <p class="lead" data-t="Sign in with the account you use in the MicroMobility app.">Sign in with the account you use in the MicroMobility app.</p>
+          <div id="f-ident" class="field">
+            <label for="ident" data-site="authIdentifier">Email or phone</label>
+            <input id="ident" name="username" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="254">
+            <p class="err" aria-live="polite"></p>
+          </div>
+          <div id="f-spwd" class="field">
+            <label for="spwd" data-site="authPassword">Password</label>
+            <input id="spwd" name="current-password" type="password" autocomplete="current-password" maxlength="72" dir="ltr">
+            <p class="err" aria-live="polite"></p>
+          </div>
+          <div id="si-temp" class="notice" hidden>
+            <b data-t="Finish signing in on the booking site">Finish signing in on the booking site</b>
+            <span data-t="Your account has a temporary password. Choose your own on the booking site, then come back to this page.">Your account has a temporary password. Choose your own on the booking site, then come back to this page.</span>
+            <a id="si-temp-a" class="d-btn ghost" href="https://micromobilityrentals.pages.dev/?handoff=defe" data-t="Open the booking site">Open the booking site</a>
+          </div>
+          <button id="signin" class="d-btn" type="submit">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label" data-site="authLogin">Sign in</span>
+            <span class="btn-busy" data-t="Signing in...">Signing in...</span>
+          </button>
+          <p class="small"><a id="si-other" class="d-link" href="https://micromobilityrentals.pages.dev/?handoff=defe" data-t="Google / Apple, or forgot your password">Google / Apple, or forgot your password</a></p>
+          <p class="small"><span data-t="No account yet?">No account yet?</span> <button type="button" class="d-link to-create" data-site="authSignupBtn">Create account</button></p>
+        </form>
+        <button type="button" id="back-land" class="d-btn ghost" data-t="Back">Back</button>
+      </div>
+
+      <!-- Step 2: what a Saturday ride asks for, only what the account is missing (height always). -->
+      <form id="s-details" class="step" data-step="2" novalidate hidden>
+        <div id="acct-made" class="ok-note" role="status" tabindex="-1" hidden>
+          <span class="ok-mark" aria-hidden="true"><svg><use href="#i-check"/></svg></span>
+          <span><b data-t="Your account has been created">Your account has been created</b><span class="ok-sub" data-t="You can sign in to the MicroMobility app with it any time. Now a few details for the ride.">You can sign in to the MicroMobility app with it any time. Now a few details for the ride.</span></span>
+        </div>
+        <p id="d-who" class="who" hidden></p>
+        <p class="lead" data-t="The details every Saturday ride asks for.">The details every Saturday ride asks for.</p>
+        <div id="d-blocked" class="notice" hidden>
+          <b data-t="Your account needs a few more details">Your account needs a few more details</b>
+          <span data-t="Some of them can only be given on the booking site. Finish them there, then come back to this page to book.">Some of them can only be given on the booking site. Finish them there, then come back to this page to book.</span>
+          <a id="d-blocked-a" class="d-btn ghost" href="https://micromobilityrentals.pages.dev/?handoff=defe" data-t="Finish on the booking site">Finish on the booking site</a>
+        </div>
+        <div id="f-birth" class="field">
+          <span class="label" id="birth-label" data-t="Date of birth">Date of birth</span>
+          <div class="dob-row" role="group" aria-labelledby="birth-label">
+            <span class="sel-wrap"><select id="birth-d" class="dob-part" data-site-aria="dobDay"></select></span>
+            <span class="sel-wrap"><select id="birth-m" class="dob-part" data-site-aria="dobMonth"></select></span>
+            <span class="sel-wrap"><select id="birth-y" class="dob-part" data-site-aria="dobYear"></select></span>
+          </div>
+          <p class="err" aria-live="polite"></p>
+          <p class="warn" aria-live="polite"></p>
+        </div>
+        <div id="f-nat" class="field">
+          <label for="nat" data-t="Nationality">Nationality</label>
+          <span class="sel-wrap"><select id="nat" name="nationality"></select></span>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-wa" class="field">
+          <span class="label" id="wa-label">Is this mobile number your WhatsApp number too?</span>
+          <div id="was" class="tiles two" role="radiogroup" aria-labelledby="wa-label">
+            <button type="button" class="tile" data-v="yes" role="radio" aria-checked="false" data-t="Yes">Yes</button>
+            <button type="button" class="tile" data-v="no" role="radio" aria-checked="false" data-t="No">No</button>
+          </div>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-wanum" class="field" hidden>
+          <label for="wa" data-t="WhatsApp number">WhatsApp number</label>
+          <div class="phone-row" dir="ltr">
+            <label class="cc-wrap">
+              <span class="cc-face" aria-hidden="true"><span id="wacc-flag" class="cc-flag"></span><span id="wacc-code">+966</span></span>
+              <select id="wacc" class="cc" aria-label="Country code" data-t-aria="Country code"></select>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+            </label>
+            <input id="wa" name="whatsapp" type="tel" inputmode="tel" autocomplete="off" placeholder="5X XXX XXXX">
+          </div>
+          <p class="err" aria-live="polite"></p>
+          <p class="warn" aria-live="polite"></p>
+        </div>
+        <div id="f-ig" class="field">
+          <label for="ig" data-t="Instagram">Instagram</label>
+          <input id="ig" name="instagram" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="120" placeholder="@username">
+          <p class="hint" data-t="Your Instagram username, or a link to your profile">Your Instagram username, or a link to your profile</p>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-xheight" class="field">
+          <label for="xheight" data-t="Your height in cm">Your height in cm</label>
+          <input id="xheight" name="xheight" type="text" inputmode="numeric" maxlength="3" placeholder="175" autocomplete="off">
+          <p class="hint" data-t="We pick the bike size from it.">We pick the bike size from it.</p>
+          <p class="err" aria-live="polite"></p>
+          <p class="warn" aria-live="polite"></p>
+        </div>
+        <div id="xem-slot"></div>
+        <button id="d-next" class="d-btn" type="submit">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="btn-label" data-t="Continue">Continue</span>
+          <span class="btn-busy" data-t="Saving...">Saving...</span>
+        </button>
+      </form>
+
+      <!-- Step 3: the booking. The code (only while it is needed), the group, the bike, the review and the waiver. -->
+      <form id="s-book" class="step" data-step="3" novalidate hidden>
+        <p id="b-who" class="who" hidden></p>
+        <div id="f-code" class="field" hidden>
+          <label for="code" data-t="Defe code">Defe code</label>
+          <input id="code" name="code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" dir="ltr" maxlength="40">
+          <p class="hint" data-t="The code Defe sent you.">The code Defe sent you.</p>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="b-notice" class="notice" hidden><b class="notice-h"></b><span class="notice-p"></span><button type="button" id="b-open" class="d-btn ghost" hidden data-t="Open my booking">Open my booking</button></div>
+        <div id="f-group" class="field">
+          <span class="label" id="group-label" data-t="Ride group">Ride group</span>
+          <div id="groups" class="opts" role="radiogroup" aria-labelledby="group-label">
+            <button type="button" class="opt" role="radio" aria-checked="false" data-v="beg"><b data-t="Beginners' group · 20 km">Beginners' group · 20 km</b><span data-t="To the Jeddah Yacht Club and back, about 20 km/h.">To the Jeddah Yacht Club and back, about 20 km/h.</span></button>
+            <button type="button" class="opt" role="radio" aria-checked="false" data-v="int"><b data-t="Intermediates' group · 40 km">Intermediates' group · 40 km</b><span data-t="To just before the Marine Sciences roundabout and back.">To just before the Marine Sciences roundabout and back.</span></button>
+          </div>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-bike" class="field">
+          <span class="label" id="bike-label" data-t="Bike">Bike</span>
+          <div id="bikes" class="pills" role="radiogroup" aria-labelledby="bike-label">
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="Road" data-t="Road">Road</button>
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="Hybrid" data-t="Hybrid">Hybrid</button>
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="Mountain" data-t="Mountain">Mountain</button>
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="Own" data-t="My own bike">My own bike</button>
+          </div>
+          <p class="hint" data-t="A helmet comes with every bike.">A helmet comes with every bike.</p>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <dl id="review" class="review" aria-label="Your booking" data-t-aria="Your booking"></dl>
+        <div id="f-waiver" class="field consent">
+          <div id="waiver" class="tick" role="checkbox" aria-checked="false" aria-required="true" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" id="waiver-lbl"></span></div>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <button id="book" class="d-btn" type="submit">
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="btn-label" data-t="Book my place">Book my place</span>
+          <span class="btn-busy" data-t="Booking...">Booking...</span>
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- 5. Booked: a short summary, then the booking in the app (signed in there by a one-time code). -->
+  <section id="v-done" class="view done-view" hidden aria-labelledby="done-title">
+    <div class="d-body">
+      <div class="done-head">
+        <span class="done-mark" aria-hidden="true"><svg><use href="#i-check"/></svg></span>
+        <div><p class="eyebrow" data-t="Booked">Booked</p><h2 id="done-title" class="st-title" tabindex="-1" data-t="You're riding">You're riding</h2></div>
+      </div>
+      <dl id="done-sum" class="review"></dl>
+      <p class="small start" data-t="Your ticket is in My Bookings in the MicroMobility app. Show it at the bike desk on the morning of the ride.">Your ticket is in My Bookings in the MicroMobility app. Show it at the bike desk on the morning of the ride.</p>
+      <p id="done-going" class="small start" role="status" data-t="Opening your booking...">Opening your booking...</p>
+      <button type="button" id="done-open" class="d-btn" data-t="Open my booking">Open my booking</button>
+      <a id="done-fallback" class="d-btn ghost" href="https://micromobilityrentals.pages.dev/?tab=bookings" hidden data-t="Open the booking site">Open the booking site</a>
+    </div>
+  </section>
+</main>
+
+<footer class="d-foot">
+  <span><span data-t="In partnership with Defe">In partnership with Defe</span> · <a href="https://www.instagram.com/defebreastcancer/" target="_blank" rel="noopener" dir="ltr">@defebreastcancer</a></span>
+  <span class="foot-links">
+    <a href="https://micromobility.sa">micromobility.sa</a>
+    <button type="button" id="pv-open-foot" class="d-link plain" data-site="privacyNotice">Privacy Notice</button>
+    <a href="https://wa.me/966566668818" target="_blank" rel="noopener" data-t="Need help? WhatsApp us">Need help? WhatsApp us</a>
+  </span>
+</footer>
+
+<!-- The two pop-ups, centred: the Privacy Notice and the ride waiver. -->
+<div id="pv" class="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="pv-title">
+    <div class="modal-head">
+      <div><h2 class="modal-title" id="pv-title" data-site="privacyNotice">Privacy Notice</h2><div class="modal-sub" id="pv-upd"></div></div>
+      <button type="button" class="modal-x" data-site-aria="closeBtn" aria-label="Close"><svg aria-hidden="true"><use href="#i-stop"/></svg></button>
+    </div>
+    <div class="modal-body" id="pv-body"></div>
+  </div>
+</div>
+<div id="wv" class="modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="wv-title">
+    <div class="modal-head">
+      <div><h2 class="modal-title" id="wv-title" data-site="waiverTitle">Ride waiver</h2></div>
+      <button type="button" class="modal-x" data-site-aria="closeBtn" aria-label="Close"><svg aria-hidden="true"><use href="#i-stop"/></svg></button>
+    </div>
+    <div class="modal-body"><p id="wv-body" data-site="waiverBody"></p></div>
+  </div>
+</div>
+
+<script src="shared.js"></script>
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

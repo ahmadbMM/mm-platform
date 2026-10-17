@@ -17,6 +17,11 @@ export const ENTRY_ID = /^[A-Za-z0-9_-]{1,64}$/;
 /** A score at or under this asks why: the booking app's RG_LOW, which admins change in its Settings >
  *  Business (rg_low, read from site_content 'biz.public' by lib/biz.ts bizOf); this is its default. */
 export const RG_LOW = 8;
+/** Every ride but the Saturday ride asks why only for a 6 or under, never above the setting (the booking
+ *  app's RG_LOW_SHORT and _rgLow; the owner, 2026-10-11: "make a shorter ratings page but exclude
+ *  saturday ride"); the Saturday ride keeps the setting. */
+export const RG_LOW_SHORT = 6;
+export const rgLowFor = (form: RatingForm, low: number = RG_LOW): number => (form === "social" ? low : Math.min(low, RG_LOW_SHORT));
 /** Only rides from the day the forced rating went live are asked about. */
 export const RATE_FROM = "2026-10-03";
 export const REASON_MAX = 300;
@@ -36,6 +41,10 @@ const KEY = /^[a-z_]{1,24}$/;
  *  else the rental's - Run for Her ('runher') included, which, having no bike (TicketSession.bikes),
  *  is asked it without the bike question, as the pool, the workshop and an event are (noBike). */
 export const formOf = (kind: string | null | undefined): RatingForm => (kind === "saturday" ? "social" : "rental");
+/** Run for Her is a run, not a ride (the owner, 2026-10-17; the booking app's _rgRun): never the bike question,
+ *  and the page says run. Its session id ('<date>-rh') answers when the session itself did not load. */
+export const isRun = (kind: string | null | undefined, sessionId?: string | null): boolean =>
+  kind === "runher" || /^\d{4}-\d\d-\d\d-rh(-|$)/.test(sessionId ?? "");
 
 /** The questions a ride asks, as [question, sub-questions]: no bike question for a rider on their
  *  own bike or an activity with none, no breakfast once the rider says they did not stay. */
@@ -86,6 +95,7 @@ export function cleanRating(body: unknown, low: number = RG_LOW): { entryId: str
   }
   if (b.form !== "rental" && b.form !== "social") return null;
   const form: RatingForm = b.form;
+  low = rgLowFor(form, low);
   const skipBf = form === "social" && b.skipBf === true;
   const asked = new Set(questionKeys(form, { skipBf }));
   const sIn = isObj(b.s) ? b.s : {}, whyIn = isObj(b.why) ? b.why : {};

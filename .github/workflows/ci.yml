@@ -35,19 +35,21 @@ jobs:
       # Coming Soon tests then failed. Blank it for this step only.
       - run: pnpm --filter web test
         env: { NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_ANON_KEY: "", MM_ENV: "" }
-      # The two registration forms (forms/community, forms/petromin; npm packages of their own,
+      # The registration forms (forms/community, forms/petromin) and the Defe page (forms/defe; npm packages of their own,
       # outside the pnpm workspace): the pages the website serves must be what their sources
       # build, and the forms are driven in a browser. Here, before the deploy, so a broken form
       # never reaches micromobility.sa.
       - name: Forms are built from their sources
-        run: (cd forms/community && npm run build) && (cd forms/petromin && npm run build) && git diff --exit-code
+        run: (cd forms/community && npm run build) && (cd forms/petromin && npm run build) && (cd forms/defe && npm run build) && git diff --exit-code
       - name: Form specs
         run: |
           npm ci --prefix forms/community --no-audit --no-fund
           npm ci --prefix forms/petromin --no-audit --no-fund
+          npm ci --prefix forms/defe --no-audit --no-fund
           (cd forms/community && npx playwright install --with-deps chromium)
           (cd forms/community && npm run e2e)
           (cd forms/petromin && npm run e2e)
+          (cd forms/defe && npm run e2e)
       # Staging: the forms' built pages name production's project; point them at staging's, after
       # the check above that they are what their sources build.
       - name: Point the forms at the staging database
@@ -107,7 +109,7 @@ jobs:
         run: |
           sleep 20
           fail=0
-          for u in / /api/health /petromin /community/registration /bikes/1 /robots.txt; do
+          for u in / /api/health /petromin /community/registration /defe /bikes/1 /robots.txt; do
             code=$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 10 --retry-all-errors "https://micromobility.sa$u")
             echo "$u $code"
             if [ "$u" = /bikes/1 ]; then [ "$code" = 200 ] || [ "$code" = 404 ] || fail=1; else [ "$code" = 200 ] || fail=1; fi

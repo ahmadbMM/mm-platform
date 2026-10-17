@@ -265,6 +265,9 @@ createServer((req, res) => {
         const p = a.p_data || {};
         const phone = "contact_phone" in p ? e164(p.contact_phone) : venue.contact_phone;
         if (phone === null) return err(res, "BAD_PHONE");
+        // As the database (BAD_INPUT): seats empty, or a whole number from 1 to 2000.
+        const seats = p.seats == null ? "" : String(p.seats).trim();
+        if (seats && !(/^\d+$/.test(seats) && +seats >= 1 && +seats <= 2000)) return err(res, "BAD_INPUT");
         Object.assign(venue, p, { contact_phone: phone, seats: p.seats ? Number(p.seats) : null });
         return ok(res, undefined);
       }

@@ -5,7 +5,7 @@ import { post, rpc, whenMustChange, whenSignedOut } from "./api";
 import { app, busy, button, errorNote, field, note, savedLang, setLang, t } from "./app";
 import { afterBooking } from "./book";
 import { renderBookings } from "./bookings";
-import { invalidateCalendar, renderCalendar } from "./calendar";
+import { invalidateCalendar, renderCalendar, resetCalendar } from "./calendar";
 import { mailLink, MM_EMAIL, pwWaLink } from "./contact";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
@@ -66,7 +66,7 @@ function header(opts: { venue?: string; signOut?: boolean }): HTMLElement {
     h("div", { class: "bar-tools" },
       opts.venue ? h("p", { class: "venue-name" }, opts.venue) : null,
       langButton(),
-      opts.signOut ? button(t("signOut"), { kind: "ghost", small: true, icon: "signout", onclick: () => void signOut() }) : null));
+      opts.signOut ? button(t("signOut"), { kind: "ghost", small: true, icon: "signout", onclick: (e) => void signOut(e.currentTarget as HTMLButtonElement) }) : null));
 }
 
 /** The website's footer (SiteFooter), kept to the mark, a contact line and the rights line. */
@@ -91,9 +91,21 @@ function frame(name: Screen, top: HTMLElement, ...rest: HTMLElement[]): void {
   r.append(top, ...rest, footer());
 }
 
-async function signOut(): Promise<void> {
-  // The Worker ends this session in the database (vendor_logout) and clears the cookie.
-  await post("/api/logout");
+async function signOut(btn: HTMLButtonElement): Promise<void> {
+  // The Worker ends this session in the database (vendor_logout) and clears the cookie. When it
+  // cannot be reached the cookie is still there (a reload signed the venue straight back in, on a
+  // shared device too): say so and stay signed in, rather than look signed out.
+  document.getElementById("signout-err")?.remove();
+  busy(btn, true, t("signOut"));
+  const r = await post("/api/logout");
+  busy(btn, false, t("signOut"));
+  if (!r.ok) {
+    const err = errorNote(r.code);
+    err.id = "signout-err";
+    document.getElementById("main")?.prepend(err);
+    return;
+  }
+  resetCalendar();
   app.me = null;
   screen = "signin";
   app.render();
@@ -164,6 +176,7 @@ function renderSignIn(): void {
     }
     signedOutNote = false;
     draft.password = "";
+    resetCalendar();
     if (!(await loadMe())) { msg.append(errorNote("SERVER")); return; }
     screen = res.data.must_change || app.me!.user.must_change ? "force" : "app";
     app.render();
@@ -216,6 +229,7 @@ app.render = () => {
 whenSignedOut(() => {
   if (screen === "signin" || screen === "loading") return;
   app.me = null;
+  resetCalendar();
   screen = "signin";
   signedOutNote = true;
   document.querySelectorAll("dialog").forEach((d) => d.close());

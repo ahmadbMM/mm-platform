@@ -4,7 +4,7 @@ import "./rating.css";
 import { useId, useState, type ReactNode } from "react";
 import { useL, useTxLocale } from "@/i18n/TxProvider";
 import { fill } from "@/i18n/tx";
-import { NOTE_MAX, REASON_MAX, RG_FORMS, RG_LOW, questionKeys, questionTree, ratingErrors, type RatingForm as Form } from "@/lib/rating";
+import { NOTE_MAX, REASON_MAX, RG_FORMS, RG_LOW, questionKeys, questionTree, ratingErrors, rgLowFor, type RatingForm as Form } from "@/lib/rating";
 import { ratingWords, type RatingWords } from "./RatingForm.words";
 
 // The post-ride rating's questions, as the booking app asks them (lib/rating.ts): each question a
@@ -26,14 +26,16 @@ type Props = {
   /** A score at or under this asks why: the booking app's rg_low (Settings > Business), read by the
    *  server (lib/biz.ts bizOf); left out, its default. */
   rgLow?: number;
+  /** Run for Her (lib/rating.ts isRun): the thank-you says run. */
+  run?: boolean;
   /** Called once the rating has landed. */
   onRated: (t: RatingWords) => void;
   /** Under the send button: the gate's sign-out. */
   footer?: ReactNode;
 };
 
-export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, onRated, footer }: Props) {
-  const low = rgLow ?? RG_LOW;
+export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, run, onRated, footer }: Props) {
+  const low = rgLowFor(form, rgLow ?? RG_LOW);
   const t = ratingWords(useTxLocale());
   const tx = useL();
   const [s, setS] = useState<Record<string, number>>({});
@@ -102,7 +104,7 @@ export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, o
         body: JSON.stringify({ entryId, form, s: sent, why: reasons, skipBf: form === "social" && skipBf, note: note.trim() }),
       });
       const b = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (b.ok) { onRated(t); return; }
+      if (b.ok) { onRated(run ? { ...t, thanks: t.run.thanks } : t); return; }
       setFail(t.errors[(b.error || "") as keyof RatingWords["errors"]] || t.errors.generic);
     } catch {
       setFail(t.errors.generic);

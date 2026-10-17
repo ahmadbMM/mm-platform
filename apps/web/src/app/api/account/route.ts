@@ -2,6 +2,7 @@ import { ACCOUNT_COOKIE, ACCOUNT_MAX_AGE, PENDING_COOKIE, PENDING_MAX_AGE, PENDI
 import { rpcServer } from "@/lib/account";
 import { normalizePhone } from "@/lib/rpc-client";
 import { passesCheck, withinTries } from "@/lib/sign-in-guard";
+import { HANDOFF_COOKIE } from "@/lib/handoff";
 
 // Sign in (POST {identifier, password}) and out (DELETE) with a Micromobility account. The
 // password goes to the booking app's own customer_login (which meters failed tries per email /
@@ -48,10 +49,14 @@ export async function POST(req: Request) {
   if (must === null) return json({ ok: false, error: "generic" }, 502);
   if (must) return json({ ok: false, error: "must_change" }, 409, [cookie(PENDING_COOKIE, encodeSession(session), PENDING_MAX_AGE, PENDING_PATH)]);
   if (page) return json({ ok: true, id: session.id, token: session.token, name: row.name || "", email: row.email || "" });
-  return json({ ok: true, name: row.name || "" }, 200, [cookie(ACCOUNT_COOKIE, encodeSession(session), ACCOUNT_MAX_AGE)]);
+  // A session the booking app handed over for an earlier visitor (kept aside, lib/handoff.ts) is
+  // dropped: the account page would otherwise offer to switch this rider into that account.
+  return json({ ok: true, name: row.name || "" }, 200, [cookie(ACCOUNT_COOKIE, encodeSession(session), ACCOUNT_MAX_AGE), cookie(HANDOFF_COOKIE, "", 0)]);
 }
 
 export async function DELETE(req: Request) {
   if (!sameOrigin(req.headers.get("origin"), req.url)) return json({ ok: false, error: "origin" }, 403);
-  return json({ ok: true }, 200, [cookie(ACCOUNT_COOKIE, "", 0), cookie(PENDING_COOKIE, "", 0, PENDING_PATH)]);
+  // The session kept aside by a hand-back goes too: on a shared computer, the next person to sign in
+  // was offered "Switch to <the last rider>" for five minutes, and one tap signed them in as them.
+  return json({ ok: true }, 200, [cookie(ACCOUNT_COOKIE, "", 0), cookie(PENDING_COOKIE, "", 0, PENDING_PATH), cookie(HANDOFF_COOKIE, "", 0)]);
 }

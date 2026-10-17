@@ -4,14 +4,15 @@
 // no names). The sessions are read for the signed-in account (list_sessions with its token,
 // lib/rides.ts readSessions): a private ride - one only riders with its tag may see - is hidden
 // from the public key, and its ticket, waiver and rating would lose their ride.
-import { getJson, SESSION_COLS_REVEAL, sessionRows, type SessionReader } from "./rides";
+import { getJson, SESSION_COLS_REVEAL, SESSION_COLS_VL, sessionRows, type SessionReader } from "./rides";
 import { ticketSession, type TicketSession } from "./tickets";
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 // The route column rides along through sessionRows, which leaves it out while the database does not have it yet.
 const COLS = "id,session_date,day,title,ride_kind,event_kind,bike_slots,needs_approval,hide_queue,meet_url,paid_ride,open_to_all,status,location,breakfast_name,breakfast_url";
 // The breakfast stop's Arabic name and offer (rentals migration 20261004130000): a group of their own,
-// left out while the database does not have them yet, without taking the route along.
+// left out while the database does not have them yet, without taking the route along. Victory Lap's
+// settings (SESSION_COLS_VL: how to pay, what goes to Kamin Sports) the same way.
 const BF_COLS = "breakfast_name_ar,breakfast_offer_en,breakfast_offer_ar";
 
 /** The booked sessions by id, whatever their state (a closed night still shows its ticket), as
@@ -21,7 +22,7 @@ export async function loadTicketSessions(ids: string[], account: SessionReader |
   const clean = [...new Set(ids)].filter((x) => ID.test(x)).slice(0, 40);
   if (!url || !key || !clean.length) return new Map();
   try {
-    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`, COLS, Date.now(), { optional: [BF_COLS, SESSION_COLS_REVEAL], account });
+    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`, COLS, Date.now(), { optional: [BF_COLS, SESSION_COLS_REVEAL, SESSION_COLS_VL], account });
     const list = Array.isArray(rows) ? rows.map((r) => ticketSession(r as Record<string, unknown>)).filter((x): x is TicketSession => x !== null) : [];
     return new Map(list.map((s) => [s.id, s]));
   } catch {

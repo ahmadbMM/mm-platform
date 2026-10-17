@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { makeL } from "@/i18n/tx";
-import { dateText, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoWho, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
+import { bookingAt, dateText, EVENT_CARDS, eventCards, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoVl, infoWho, memberOn, membersOnlyDate, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
+import type { RideKind } from "../rides";
 import { fmtClock } from "../tickets";
 
 // "About this event" and "Details" on Experiences (2026-10-05) say what the booking app's picker
@@ -10,8 +11,8 @@ import { fmtClock } from "../tickets";
 
 const clock = (t: string) => fmtClock(t, "en");
 const TEXTS: DateTexts = {
-  aboutJcc: "Circuit: bikes from {collect}, {start} to {end}.", aboutSat: "Gather {gather}, start {start}.", aboutSwim: "Pool {start} to {end}.",
-  aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
+  aboutJcc: "Circuit: bikes from {collect}, {start} to {end}.", aboutSat: "Gather {gather}, start {start}.", aboutPetro: "Petromin: bikes from {collect}.", aboutSwim: "Pool {start} to {end}.",
+  aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", aboutVl: "Doors {gather}, first heat {start}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
 };
 const circuit = { kind: "jcc" as const, times: ["21:00", "23:00"] as [string, string], gather: false, collect: "20:15", description: null };
 const saturday = { kind: "saturday" as const, times: ["05:45", "06:15"] as [string, string], gather: true, collect: null, description: "Breakfast at the marina." };
@@ -19,11 +20,52 @@ const saturday = { kind: "saturday" as const, times: ["05:45", "06:15"] as [stri
 describe("who sees the links", () => {
   it("shows a card anyone may book to everyone, and the community rides and Run for Her to members alone", () => {
     for (const key of ["jcc", "snd96", "workshop", "event"]) expect(membersOnlyEvent(key), key).toBe(false);
-    for (const key of ["community", "runher"]) expect(membersOnlyEvent(key), key).toBe(true);
+    for (const key of ["community", "runher", "petromin"]) expect(membersOnlyEvent(key), key).toBe(true);
     expect(infoShown(false, false)).toBe(true);
     expect(infoShown(false, true)).toBe(true);
     expect(infoShown(true, false)).toBe(false);
     expect(infoShown(true, true)).toBe(true);
+  });
+  it("shows Petromin Days' links to a Petromin tag holder, and every other card's to a community member (2026-10-12)", () => {
+    const holder = { member: false, petromin: true }, member = { member: true, petromin: false };
+    expect(infoShown(membersOnlyEvent("petromin"), memberOn("petromin", holder))).toBe(true);
+    expect(infoShown(membersOnlyEvent("petromin"), memberOn("petromin", member))).toBe(false);
+    expect(infoShown(membersOnlyEvent("community"), memberOn("community", holder))).toBe(false);
+    expect(infoShown(membersOnlyEvent("community"), memberOn("community", member))).toBe(true);
+    expect(infoShown(membersOnlyEvent("runher"), memberOn("runher", holder))).toBe(false);
+    expect(infoShown(membersOnlyEvent("jcc"), memberOn("jcc", { member: false, petromin: false }))).toBe(true);
+  });
+});
+
+describe("the event cards (Petromin Days, the owner, 2026-10-12)", () => {
+  const night = (id: string, kind: RideKind) => ({ id, kind });
+  const all = [night("pm1", "petromin"), night("jcc1", "jcc"), night("sat1", "saturday"), night("pm2", "petromin"), night("rh1", "runher")];
+  const keys = (v: { member: boolean; petromin: boolean }) => eventCards(all, v).map((c) => c.card.key);
+  const of = (v: { member: boolean; petromin: boolean }, key: string) => eventCards(all, v).find((c) => c.card.key === key)?.sessions.map((s) => s.id);
+  it("has no Petromin Days, and no Petromin night anywhere, for a visitor without either tag", () => {
+    const v = { member: false, petromin: false };
+    expect(keys(v)).toEqual(["runher", "jcc", "community"]);
+    expect(of(v, "community")).toEqual(["sat1"]);
+  });
+  it("puts Petromin Days first for a Petromin tag holder, with the Petromin nights alone", () => {
+    const v = { member: false, petromin: true };
+    expect(keys(v)).toEqual(["petromin", "runher", "jcc", "community"]);
+    expect(of(v, "petromin")).toEqual(["pm1", "pm2"]);
+    expect(of(v, "community")).toEqual(["sat1"]); // never twice
+    expect(EVENT_CARDS[0]).toEqual({ key: "petromin", p: "pm", always: false });
+  });
+  it("lists no Petromin night on the community card, as before, and no Petromin Days for a community member", () => {
+    const v = { member: true, petromin: false };
+    expect(keys(v)).toEqual(["runher", "jcc", "community"]);
+    expect(of(v, "community")).toEqual(["sat1"]);
+  });
+  it("shows no Petromin Days to a holder while no Petromin night is on the books", () => {
+    expect(eventCards([night("jcc1", "jcc")], { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["jcc", "community"]);
+  });
+  it("hands Petromin Days over to the booking app as ev=petromin, on the night picked", () => {
+    expect(bookingAt("https://book.example/?lang=ar", "petromin", "2026-10-14-pm")).toBe("https://book.example/?lang=ar&ev=petromin&session=2026-10-14-pm");
+    expect(bookingAt("https://book.example/?ev=community", "petromin", "x")).toBe("https://book.example/?ev=petromin&session=x");
+    expect(bookingAt("/experiences", "petromin", "x")).toBe("/experiences");
   });
 });
 
@@ -50,9 +92,9 @@ describe("a date's text", () => {
     expect(at({ ...circuit, kind: "workshop", collect: null })).toBe("T100 9 PM to 11 PM.");
     expect(at({ ...saturday, kind: "runher", description: null })).toBe("Meet 5:45 AM, run 6:15 AM.");
   });
-  it("is the card's own About for the National Day ride, and the circuit's for a kind without one", () => {
+  it("is the card's own About for the National Day ride, and a Petromin night's own", () => {
     expect(at({ ...saturday, kind: "snd96" })).toBe("National Day ride.");
-    expect(at({ ...circuit, kind: "petromin" })).toBe("Circuit: bikes from 8:15 PM, 9 PM to 11 PM.");
+    expect(at({ ...circuit, kind: "petromin" })).toBe("Petromin: bikes from 8:15 PM.");
   });
   it("is a ticketed event's own description, as staff wrote it, else the Events About", () => {
     expect(at({ ...circuit, kind: "event", collect: null, description: "Brakes and gears, {start} sharp." })).toBe("Brakes and gears, {start} sharp.");
@@ -61,12 +103,13 @@ describe("a date's text", () => {
 });
 
 describe("a date's facts", () => {
-  const who = { all: "Everyone", members: "Community members", members18: "Community members, 18 and over" };
+  const who = { all: "Everyone", members: "Community members", members18: "Community members, 18 and over", petromin: "Community members and Petromin's team", vlap: "Community members and Victory Lap athletes, 16 and over" };
   it("say who may book it: everyone, members, or members of 18 and over on Run for Her", () => {
     expect(infoWho({ members: false, kind: "jcc" }, who)).toBe("Everyone");
     expect(infoWho({ members: true, kind: "saturday" }, who)).toBe("Community members");
     expect(infoWho({ members: true, kind: "runher" }, who)).toBe("Community members, 18 and over");
     expect(infoWho({ members: false, kind: "event" }, who)).toBe("Everyone");
+    expect(infoWho({ members: true, kind: "petromin" }, who)).toBe("Community members and Petromin's team");
   });
 
   it("say the price: free, an event's seat, or the cheapest bike on a paid ride with bikes - else nothing", () => {
@@ -92,6 +135,9 @@ describe("a date's facts", () => {
     // Run for Her at the Jeddah Yacht Club: its meeting point's link, or none (never the circuit's)
     expect(infoPlace({ kind: "runher", approval: false, location: "JYC", meetUrl: MEET }, words, DIR)).toEqual({ name: "Jeddah Yacht Club", map: MEET });
     expect(infoPlace({ kind: "runher", approval: false, location: "JYC", meetUrl: null }, words, DIR)).toEqual({ name: "Jeddah Yacht Club", map: null });
+    // a run whose place is held back (reveal_at ahead: list_sessions blanks location) is still at the Jeddah Yacht Club
+    expect(infoPlace({ kind: "runher", approval: false, location: null, meetUrl: MEET }, words, DIR)).toEqual({ name: "Jeddah Yacht Club", map: MEET });
+    expect(infoPlace({ kind: "runher", approval: false, location: null, meetUrl: null }, words, DIR)).toEqual({ name: "Jeddah Yacht Club", map: null });
     // a ride staff approve that meets at a link (the Saturday ride), and one that does not
     expect(infoPlace({ kind: "saturday", approval: true, location: null, meetUrl: MEET }, words, DIR)).toEqual({ name: "Meeting point", map: MEET });
     expect(infoPlace({ kind: "saturday", approval: true, location: null, meetUrl: null }, words, DIR)).toEqual({ name: "Jeddah Corniche Circuit", map: DIR });
@@ -130,7 +176,10 @@ describe("a date's facts", () => {
     expect(infoBreakfast({ ...sat, breakfast: null }, "ar")).toBeNull();
     expect(infoBreakfast({ kind: "saturday" }, "en")).toBeNull();
     // the Saturday ride alone stops for breakfast
-    for (const kind of ["jcc", "swim", "workshop", "snd96", "event", "runher", "petromin"] as const) expect(infoBreakfast({ ...sat, kind }, "en"), kind).toBeNull();
+    for (const kind of ["jcc", "swim", "workshop", "snd96", "event", "petromin"] as const) expect(infoBreakfast({ ...sat, kind }, "en"), kind).toBeNull();
+    // Run for Her has a breakfast stop too (the owner, 2026-10-14)
+    expect(infoBreakfast({ ...sat, kind: "runher" }, "en")).toBe("Bean Box");
+    expect(infoBreakfast({ ...sat, kind: "runher" }, "ar")).toBe("بين بوكس");
   });
 
   // staging: its Experiences page (BookingFlow) does not show the stop yet, so its dictionaries do not carry these words
@@ -166,5 +215,84 @@ describe("the texts staff edit", () => {
       expect(names(f!.def.en).every((n) => ["{gather}", "{start}", "{end}", "{collect}"].includes(n)), id).toBe(true);
       expect(names(f!.def.ar), id).toEqual(names(f!.def.en));
     }
+  });
+  it("give Petromin Days its own texts and Petromin's mark (2026-10-12)", () => {
+    for (const id of ["pmTitle", "pmMeta", "pmNote", "pmAbout"]) {
+      const f = field("events", id);
+      expect(f, id).not.toBeNull();
+      expect(f!.def.en.length, id).toBeLessThanOrEqual(f!.max);
+      expect(f!.def.ar.length, id).toBeLessThanOrEqual(f!.max);
+    }
+    expect(field("events", "pmTitle")!.def).toEqual({ en: "Petromin Days", ar: "أيام بترومين" });
+    const logo = experiencesSchema.sections.find((s) => s.id === "events")?.fields.find((x) => x.id === "pmLogo");
+    expect(logo && "def" in logo ? logo.def : null).toBe("/site/petromin-logo.png");
+    expect(readFileSync(new URL("../../../public/site/petromin-logo.png", import.meta.url)).length).toBeGreaterThan(0);
+  });
+});
+
+// Victory Lap by Fitness Empire (ride_kind 'vlap', 2026-10-17): booked by Community members and Victory Lap
+// tag holders, yet its card, About and Details are everyone's; its price only to those who may book it.
+describe("Victory Lap on Experiences", () => {
+  it("shows its card, its About and its dates' Details to everyone", () => {
+    expect(membersOnlyEvent("vlap")).toBe(false);
+    const nobody = { member: false, petromin: false };
+    expect(infoShown(membersOnlyEvent("vlap"), memberOn("vlap", nobody))).toBe(true);
+    expect(infoShown(membersOnlyDate({ members: true, kind: "vlap" }), memberOn("vlap", nobody))).toBe(true);
+    // any other members-only date still shows its Details to members alone
+    expect(infoShown(membersOnlyDate({ members: true, kind: "saturday" }), memberOn("community", nobody))).toBe(false);
+    expect(membersOnlyDate({ members: false, kind: "jcc" })).toBe(false);
+  });
+
+  it("has a card of its own while it has a date, after Petromin Days and before Run for Her, as on the booking app's landing", () => {
+    const all = [{ id: "rh", kind: "runher" as const }, { id: "vl", kind: "vlap" as const }, { id: "j", kind: "jcc" as const }, { id: "pm", kind: "petromin" as const }];
+    expect(eventCards(all, { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["petromin", "vlap", "runher", "jcc", "community"]);
+    expect(eventCards(all, { member: false, petromin: false }).find((c) => c.card.key === "vlap")?.sessions.map((x) => x.id)).toEqual(["vl"]);
+    expect(eventCards([{ id: "j", kind: "jcc" as const }], { member: true, petromin: false }).map((c) => c.card.key)).not.toContain("vlap");
+    expect(EVENT_CARDS[1]).toEqual({ key: "vlap", p: "vl", always: false });
+    expect(bookingAt("https://book.example/", "vlap", "2026-10-26-vl")).toBe("https://book.example/?ev=vlap&session=2026-10-26-vl");
+  });
+
+  it("says its doors and first heat, who may book it, and no bike price", () => {
+    const vl = { kind: "vlap" as const, times: ["16:30", "17:15"] as [string, string], gather: true, collect: null, description: null };
+    expect(dateText(vl, TEXTS, infoTimes(vl, clock))).toBe("Doors 4:30 PM, first heat 5:15 PM.");
+    const who = { all: "Everyone", members: "Community members", members18: "Community members, 18 and over", petromin: "Community members and Petromin's team", vlap: "Community members and Victory Lap athletes, 16 and over" };
+    expect(infoWho({ members: true, kind: "vlap" }, who)).toBe("Community members and Victory Lap athletes, 16 and over");
+    expect(infoWho({ members: true, kind: "saturday" }, who)).toBe("Community members");
+    expect(rentsBikes("vlap")).toBe(false);
+  });
+
+  it("says its price per athlete only when the page gives it (a visitor who may book it), never a bike's", () => {
+    const t = { free: "Complimentary", seat: "SAR 50 per seat", from: "from SAR 57.5" };
+    expect(infoPrice({ kind: "vlap", free: false }, t)).toBeNull();
+    expect(infoPrice({ kind: "vlap", free: false }, { ...t, athlete: null })).toBeNull();
+    expect(infoPrice({ kind: "vlap", free: false }, { ...t, athlete: "SAR 150 · per athlete, VAT included" })).toBe("SAR 150 · per athlete, VAT included");
+  });
+
+  it("lists the races and divisions open to book (sessions.vl), every one when unset", () => {
+    const t = {
+      races: { ws: "Women’s Singles", ms: "Men’s Singles", wd: "Women’s Doubles", md: "Men’s Doubles", xd: "Mixed Doubles" },
+      divs: { so: "Sprint Open", se: "Sprint Elite", op: "Open", el: "Elite" }, km: "{0} km",
+    };
+    expect(infoVl({ kind: "vlap", vl: null }, t)).toEqual({
+      races: "Women’s Singles · Men’s Singles · Women’s Doubles · Men’s Doubles · Mixed Doubles",
+      divs: "Sprint Open 4 km · Sprint Elite 4 km · Open 6.1 km · Elite 6.1 km",
+    });
+    expect(infoVl({ kind: "vlap", vl: { races: ["xd", "ws"], divs: ["el"] } }, t)).toEqual({ races: "Women’s Singles · Mixed Doubles", divs: "Elite 6.1 km" });
+    expect(infoVl({ kind: "vlap", vl: '{"divs":["so"]}' }, t)?.divs).toBe("Sprint Open 4 km");
+    expect(infoVl({ kind: "runher", vl: null }, t)).toBeNull();
+  });
+
+  it("has its About and Details texts in Experiences' fields, the booking app's own words", () => {
+    const f = (sec: string, id: string) => experiencesSchema.sections.find((x) => x.id === sec)?.fields.find((x) => x.id === id) as { def: { en: string; ar: string } } | undefined;
+    expect(f("events", "vlAbout")?.def.en).toMatch(/^Victory Lap by Fitness Empire: a hybrid fitness race at the Jeddah Corniche Circuit\./);
+    expect(f("events", "vlAbout")?.def.ar).toContain("فيكتوري لاب");
+    expect(f("dates", "aboutVl")?.def.en).toBe("Doors open at {gather} and the first heat starts at {start}. Arrive at least 30 minutes before your heat to collect your race bib.");
+    expect(f("dates", "vlName")?.def).toEqual({ en: "Victory Lap", ar: "فيكتوري لاب" });
+    // its card never says a price
+    for (const id of ["vlTitle", "vlMeta", "vlNote"]) expect(f("events", id)?.def.en, id).not.toMatch(/SAR|150|﷼/);
+    // the race's logo, white-background (dark) mark, is the site's own file
+    const logo = experiencesSchema.sections.find((x) => x.id === "events")?.fields.find((x) => x.id === "vlLogo") as { def: string } | undefined;
+    expect(logo?.def).toBe("/site/victory-lap-dark.webp");
+    expect(readFileSync(new URL("../../../public/site/victory-lap-dark.webp", import.meta.url)).length).toBeGreaterThan(0);
   });
 });

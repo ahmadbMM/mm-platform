@@ -62,8 +62,8 @@ const config: NextConfig = {
     ];
   },
   async headers() {
-    // Every page and API answer except the two registration forms, which keep their own.
-    return [{ source: "/((?!petromin$|community/registration$).*)", headers: SECURITY_HEADERS }];
+    // Every page and API answer except the registration forms and the Defe page, which keep their own.
+    return [{ source: "/((?!petromin$|community/registration$|defe$).*)", headers: SECURITY_HEADERS }];
   },
 };
 

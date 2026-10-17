@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-10-09";
+export const PRIVACY_VERSION = "2026-10-17";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -93,6 +93,21 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Calling someone for you if you need help during an event, and the second person if we cannot reach the first. We never contact them for anything else. We share only your first contact’s details, and only with the hosts of an event you agree to share them with."
      ],
      [
+      "Blood type, if you give it (or that you don’t know it)",
+      "Always optional: given in My Account, or when you sign up for a blood donation event. Seen only by you, our staff, and the hosts of a blood donation event you agree to share your details with; you can change or clear it in My Account at any time.",
+      "Letting our team plan a blood donation event. We share it only with the hosts of a blood donation event you agree to share your details with, and use it for nothing else."
+     ],
+     [
+      "Your ID or Iqama number, if you give it",
+      "Asked when you sign up for a blood donation event, and kept on your account so you give it once. Seen only by you, our staff, and the hosts of a blood donation event you agree to share your details with; you can change or clear it in My Account at any time.",
+      "Registering you as a donor. We share it only with the hosts of a blood donation event you agree to share your details with, and use it for nothing else."
+     ],
+     [
+      "Victory Lap race details: the race, division and team you choose, your T-shirt size and, if you give it, your 5 km run time",
+      "Asked only when you book Victory Lap. Seen by you, our staff and Kamin Sports; your team partner sees your first name.",
+      "Placing you in your race and heat, your race T-shirt, and making up Doubles teams"
+     ],
+     [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
       "Created as you use the service",
       "Running your rides, safety, payments and records"
@@ -127,7 +142,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>To keep financial records:</strong> the law requires it.",
     "<strong>For anonymised totals and to improve our service:</strong> our legitimate interest. Totals never identify anyone.",
     "<strong>For optional details and ride news:</strong> your consent. You give it by filling in those fields or choosing ride news, and you can withdraw it at any time.",
-    "<strong>To share a runner’s details with the hosts of Run for Her:</strong> your consent, which we ask for before you can take part in the race."
+    "<strong>To share a runner’s details with the hosts of Run for Her:</strong> your consent, which we ask for before you can take part in the race.",
+    "<strong>To share an athlete’s details with Kamin Sports for Victory Lap:</strong> your consent, which we ask for before you can take part in the race."
    ]
   },
   {
@@ -182,6 +198,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "Sela and Jeddah Yacht Club (JYC)",
       "For Run for Her, and only if you agree: your full name, email address, birth date, the distance you chose and your emergency contact, so you can take part in the race. Nothing else about you.",
+      "Saudi Arabia"
+     ],
+     [
+      "Kamin Sports",
+      "For Victory Lap, and only if you agree: the details listed on the page where you agree (until Kamin Sports confirms its exact list: your full name, email address, mobile number, gender, birth date, the race, division and team you chose, your T-shirt size and your emergency contact), so you can take part in the race. Nothing else about you.",
       "Saudi Arabia"
      ],
      [
@@ -374,6 +395,21 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "الاتصال بشخص نيابةً عنك إن احتجت إلى مساعدة أثناء إحدى الفعاليات، وبالشخص الثاني إن تعذّر الوصول إلى الأول. لا نتواصل معهما لأي غرض آخر، ولا نشارك إلا بيانات جهة الاتصال الأولى، ومع الجهات المنظِّمة لفعالية توافق على مشاركتها معها فقط."
      ],
      [
+      "فصيلة الدم إن أعطيتنا إياها (أو أنك لا تعرفها)",
+      "اختيارية دائمًا: تُعطى في حسابي، أو عند التسجيل في فعالية للتبرع بالدم. لا يراها إلا أنت وموظفونا والجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ويمكنك تغييرها أو حذفها من حسابي في أي وقت.",
+      "مساعدة فريقنا في التخطيط لفعالية التبرع بالدم. لا نشاركها إلا مع الجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ولا نستخدمها لأي غرض آخر."
+     ],
+     [
+      "رقم هويتك أو إقامتك إن أعطيتنا إياه",
+      "يُطلب عند التسجيل في فعالية للتبرع بالدم، ويُحفظ في حسابك فلا تُعطيه إلا مرة واحدة. لا يراه إلا أنت وموظفونا والجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ويمكنك تغييره أو حذفه من حسابي في أي وقت.",
+      "تسجيلك متبرعًا. لا نشاركه إلا مع الجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ولا نستخدمه لأي غرض آخر."
+     ],
+     [
+      "تفاصيل سباق فيكتوري لاب: السباق والفئة والفريق التي تختارها، ومقاس قميصك، وزمنك في جري 5 كم إن أعطيتنا إياه",
+      "تُطلب فقط عند حجز فيكتوري لاب. لا يراها إلا أنت وموظفونا وكامن سبورتس؛ ويرى شريكك في الفريق اسمك الأول.",
+      "وضعك في سباقك ودفعتك، وقميص السباق، وتكوين فرق الزوجي"
+     ],
+     [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
       "تُسجَّل أثناء استخدامك للخدمة",
       "تشغيل رحلاتك، والسلامة، والمدفوعات، والسجلات"
@@ -408,7 +444,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>لحفظ السجلات المالية:</strong> لأن النظام يُلزمنا بذلك.",
     "<strong>للإحصاءات المجمّعة وتحسين خدماتنا:</strong> مصلحتنا المشروعة، ولا تحدد الإحصاءات هوية أحد.",
     "<strong>للبيانات الاختيارية وأخبار الرحلات:</strong> موافقتك، وتمنحها بتعبئة تلك الحقول أو باختيار أخبار الرحلات، ويمكنك سحبها في أي وقت.",
-    "<strong>لمشاركة بيانات العدّاء مع الجهات المنظِّمة لسباق نركض لأجلها:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق."
+    "<strong>لمشاركة بيانات العدّاء مع الجهات المنظِّمة لسباق نركض لأجلها:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
+    "<strong>لمشاركة بيانات الرياضي مع كامن سبورتس لسباق فيكتوري لاب:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق."
    ]
   },
   {
@@ -463,6 +500,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "صلة ونادي جدة لليخوت (JYC)",
       "لسباق نركض لأجلها، وفقط إذا وافقت: اسمك الكامل وبريدك الإلكتروني وتاريخ ميلادك والمسافة التي اخترتها وجهة اتصالك للطوارئ، لتتمكن من المشاركة في السباق. ولا شيء غير ذلك عنك.",
+      "المملكة العربية السعودية"
+     ],
+     [
+      "كامن سبورتس",
+      "لسباق فيكتوري لاب، وفقط إذا وافقت: البيانات المذكورة في الصفحة التي توافق فيها (وإلى أن تؤكد كامن سبورتس قائمتها الدقيقة: اسمك الكامل وبريدك الإلكتروني ورقم جوالك وجنسك وتاريخ ميلادك والسباق والفئة والفريق التي اخترتها ومقاس قميصك وجهة اتصالك للطوارئ)، لتتمكن من المشاركة في السباق. ولا شيء غير ذلك عنك.",
       "المملكة العربية السعودية"
      ],
      [

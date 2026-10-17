@@ -23,6 +23,7 @@ export default function AmbassadorApply(p: Props) {
   useEffect(() => { if (done) doneBox.current?.focus(); }, [done]);
 
   async function send() {
+    if (busy) return;
     setErr("");
     const nm = cleanName(name), ph = normalizePhone(phone);
     if (!nameOk(nm)) return setErr(t.errors.name);
@@ -50,7 +51,7 @@ export default function AmbassadorApply(p: Props) {
       ) : (
         <>
           <div className="amb-fields">
-            <input className="amb-input" value={name} onChange={(e) => setName(e.target.value.replace(/[-‐-―]/g, " "))} placeholder={t.name} aria-label={t.name} autoComplete="name" maxLength={120} />
+            <input className="amb-input" value={name} onChange={(e) => setName(e.target.value.replace(/[-‐-―−]/g, " "))} placeholder={t.name} aria-label={t.name} autoComplete="name" maxLength={120} />
             <input className="amb-input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder={t.phone} aria-label={t.phone} inputMode="tel" autoComplete="tel" dir="ltr" maxLength={20} />
             <input className="amb-input amb-wide" value={insta} onChange={(e) => setInsta(e.target.value)} placeholder={t.insta} aria-label={t.insta} dir="ltr" maxLength={60} />
             <textarea className="amb-input amb-wide" value={why} onChange={(e) => setWhy(e.target.value)} placeholder={t.why} aria-label={t.why} rows={3} maxLength={1000} />

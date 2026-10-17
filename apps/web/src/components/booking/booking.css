@@ -195,6 +195,46 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-card.tk-wl { border: 1.5px dashed #b98a1a; }
 .tk-wl .tk-num { color: #6e6b63; }
 .tk-wl .tk-num.big { font-size: 48px; letter-spacing: -2px; }
+
+/* Victory Lap's ticket (the booking app's th-vlap, 2026-10-17): white in every state, the race's logo, a
+   checkered strip down the end edge as on its card; the night ticket's neon is the race's purple. The team's
+   code large, the partner, the division, T-shirt and 5 km time, and how to pay (TicketCard .tk-vl). */
+.tk-card.ev-vlap { --vl-ink: #0d0d0d; border: 1px solid rgba(13, 13, 13, .28); padding-inline-end: 20px; }
+.tk-card.ev-vlap::before { content: ""; position: absolute; top: 0; bottom: 0; inset-inline-end: 0; width: 20px; pointer-events: none;
+  background-color: var(--vl-ink); background-size: 10px 10px; background-position: 0 0, 5px 5px;
+  background-image: linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%), linear-gradient(45deg, #fff 25%, transparent 25%, transparent 75%, #fff 75%); }
+.tk-card.ev-vlap.tk-wl { border: 1.5px dashed #b98a1a; }
+.tk-logo.tk-logo-vl img { height: 34px; }
+.tk-card.ev-vlap.tk-today::after { background: #5b3fd6; }
+.tk-card.ev-vlap.tk-live { background: #fff; border-color: rgba(13, 13, 13, .28); color: #0d0d0d; }
+.tk-card.ev-vlap.tk-live :is(.tk-num, .tk-name, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l, .tk-rt-n) { color: #0d0d0d; }
+.tk-card.ev-vlap.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-ok small, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(13, 13, 13, .62); }
+.tk-card.ev-vlap.tk-live :is(.tk-dw, .tk-when .go, .tk-total strong, .tk-pay.paid, .tk-rider-pay > .tk-amt.paid, .tk-cd, .tk-note.go, .tk-ok, .tk-rt-a) { color: #5b3fd6; }
+.tk-card.ev-vlap.tk-live .tk-pay.due, .tk-card.ev-vlap.tk-live .tk-note.warn, .tk-card.ev-vlap.tk-live .tk-wallet-msg { color: #8a5300; }
+.tk-card.ev-vlap.tk-live :is(.tk-head, .tk-rider, .tk-addons, .tk-rt) { border-color: rgba(13, 13, 13, .14); }
+.tk-card.ev-vlap.tk-live :is(.tk-q, .tk-type) { background: #f4f4f1; color: #0d0d0d; border-color: rgba(13, 13, 13, .14); }
+.tk-card.ev-vlap.tk-live :is(.tk-note, .tk-ok) { background: #f4f4f1; border-color: rgba(13, 13, 13, .14); }
+.tk-card.ev-vlap.tk-live .tk-note:not(.go):not(.warn) { color: #0d0d0d; }
+.tk-card.ev-vlap.tk-live .tk-ok-tick { background: #5b3fd6; color: #fff; }
+.tk-card.ev-vlap.tk-live .tk-btn { background: transparent; color: #0d0d0d !important; border-color: rgba(13, 13, 13, .2); }
+.tk-card.ev-vlap.tk-live .tk-btn:hover { background: #f4f4f1; border-color: rgba(13, 13, 13, .62); }
+.tk-card.ev-vlap.tk-live .tk-btn.solid { background: #0d0d0d; border-color: #0d0d0d; color: #fff !important; }
+.tk-card.ev-vlap.tk-live .tk-btn.red { color: #b42318 !important; border-color: rgba(180, 35, 24, .35); }
+.tk-card.ev-vlap.tk-live :focus-visible { outline-color: #5b3fd6; }
+.tk-card.ev-vlap.tk-live .tk-qr { border-color: rgba(13, 13, 13, .14); }
+.tk-card.ev-vlap.tk-live .tk-stages li::before { background: rgba(13, 13, 13, .14); }
+.tk-card.ev-vlap.tk-live .tk-stages li.on::before, .tk-card.ev-vlap.tk-live .tk-stages li.on .tk-st-dot { background: #5b3fd6; border-color: #5b3fd6; }
+.tk-card.ev-vlap.tk-live .tk-st-dot { background: #fff; border-color: rgba(13, 13, 13, .4); }
+.tk-card.ev-vlap.tk-live .tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(91, 63, 214, .14); }
+.tk-type.tk-vl { background: #0d0d0d; color: #fff; border-color: #0d0d0d; white-space: normal; }
+.tk-card.ev-vlap.tk-live .tk-type.tk-vl { background: #0d0d0d; color: #fff; border-color: #0d0d0d; }
+.tk-vl-team { margin-top: 12px; padding: 12px 14px; border: 1px solid rgba(13, 13, 13, .18); background: #f6f6f3; }
+.tk-vl-code { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 12px; font-weight: 700; color: #4f565c; }
+.tk-vl-code strong { font-size: 22px; letter-spacing: 1.5px; color: #0d0d0d; }
+.tk-vl-p { margin-top: 4px !important; font-size: 14px; font-weight: 600; color: #0d0d0d; }
+.tk-vl-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px !important; font-size: 13px; color: #4f565c; }
+.tk-vl-pay { margin-top: 10px !important; padding: 10px 12px; font-size: 13px; line-height: 1.45; background: #f5f0fe; border: 1px solid rgba(91, 63, 214, .24); color: #2e1c80; }
+.tk-vl-pay strong { margin-inline-end: 4px; }
 @media (max-width: 560px) {
   .tk-grid { grid-template-columns: 1fr; }
   .tk-head { padding: 16px 14px 14px; gap: 14px; }
@@ -224,6 +264,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .sc-card.ev-snd96 { --ev: #00894a; }
 .sc-card.ev-event { --ev: #8c3b6e; }
 .sc-card.ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
+.sc-card.ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
 /* A ticketed event's card says what it is. */
 .sc-desc { font-size: 13px; color: #4a4843; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sc-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }

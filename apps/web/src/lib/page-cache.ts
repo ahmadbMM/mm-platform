@@ -15,7 +15,7 @@ import { LOCALE_CODES } from "../i18n/locales";
 
 export const PAGE_TTL = 60;
 const LANGS = new Set<string>(LOCALE_CODES);
-const SKIP = /^\/(?:api|_next|media|b|petromin|community|account|preview|login|en|ar|bikes\/\d{1,6})(?:\/|$)/;
+const SKIP = /^\/(?:api|_next|media|b|petromin|community|defe|account|preview|login|en|ar|bikes\/\d{1,6})(?:\/|$)/;
 const PRIVATE = ["mm_acct", "mm_preview"];
 const LANG_COOKIE = "NEXT_LOCALE";
 // Tracking parameters (utm_*, fbclid...) change nothing on the page: a link from Instagram or a

@@ -7,6 +7,7 @@ import { fill as fillAt } from "@/i18n/tx";
 import { fill as fillNamed } from "./fill";
 import { collectTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
 import { riyadhClock } from "./workshop-days";
+import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
 /** An add-on line on a booking (the booking app's entryAddons): the inventory item, how many, and
@@ -22,6 +23,14 @@ export type TicketRow = {
   /** The distance a Run for Her runner picked (queue_entries.run_km: 3 or 5 km), else null. Never
    *  a bike type: `type` stays the row's own ('None' on a run). */
   runKm: number | null;
+  /** The Saturday ride's group (queue_entries.ride_group): 'beg' or 'int', else none. */
+  rideGroup?: "beg" | "int" | null;
+  /** A partner's place on the ride (queue_entries.partner, rentals 20261017120000: 'defe'), else none.
+   *  partner_book makes it approved at once: a confirmed place, its code out, whatever the list says. */
+  partner?: string | null;
+  /** A Victory Lap athlete's place (queue_entries.vl, rentals 20261017210000; lib/vlap.ts): the race,
+   *  division, T-shirt, 5 km time and team; null on every other booking. */
+  vl?: VlEntry | null;
 };
 /** The distances a Run for Her runner picks from (the booking app's RUN_KMS). */
 export const RUN_KMS: readonly number[] = [3, 5];
@@ -57,6 +66,10 @@ export type TicketSession = {
   /** When riders are told where the ride meets and has breakfast (sessions.reveal_at, ISO), or null
    *  (spotHeld). */
   revealAt: string | null;
+  /** Victory Lap's settings (sessions.vl, lib/vlap.ts: the races open, how to pay, what goes to Kamin
+   *  Sports); null on every other kind. A read without the column has every race open and no words of
+   *  staff's own. */
+  vl?: VlConfig | null;
 };
 
 type Row = Record<string, unknown>;
@@ -79,6 +92,9 @@ export function ticketRow(r: Row): TicketRow | null {
     checkedInAt: S(r.checked_in_at) || null, checkedOutAt: S(r.checked_out_at) || null, rideDuration: N(r.ride_duration), bikeId: bike || null,
     addonLines: entryAddons(r.addons),
     runKm: km !== null && RUN_KMS.includes(km) ? km : null,
+    rideGroup: r.ride_group === "beg" || r.ride_group === "int" ? r.ride_group : null,
+    partner: typeof r.partner === "string" && /^[a-z0-9]{2,20}$/.test(r.partner) ? r.partner : null,
+    vl: vlEntry(r.vl),
   };
 }
 
@@ -128,22 +144,30 @@ export function addonsCost(lines: AddonLine[]): number | null {
   return r2(sum);
 }
 
-type Group = { sessionId: string; date: string; rows: TicketRow[] };
+/** One ticket: a session's rows, or on Victory Lap one of the account's two places there - its Singles
+ *  and its Doubles are two tickets (the booking app's key, sessionId|s or sessionId|d). `key` tells them apart. */
+type Group = { key: string; sessionId: string; date: string; rows: TicketRow[] };
+const groupKey = (r: Pick<TicketRow, "sessionId" | "vl">) => (r.vl ? `${r.sessionId}|${vlCat(r.vl)}` : r.sessionId);
 const grouped = (list: TicketRow[]): Group[] => {
   const by = new Map<string, Group>();
   for (const r of list) {
-    const g = by.get(r.sessionId) ?? { sessionId: r.sessionId, date: r.date, rows: [] };
+    const key = groupKey(r);
+    const g = by.get(key) ?? { key, sessionId: r.sessionId, date: r.date, rows: [] };
     g.rows.push(r);
-    by.set(r.sessionId, g);
+    by.set(key, g);
   }
   for (const g of by.values()) g.rows.sort((a, b) => (a.queueNum ?? 0) - (b.queueNum ?? 0));
-  return [...by.values()].sort((a, b) => a.date.localeCompare(b.date) || a.sessionId.localeCompare(b.sessionId));
+  return [...by.values()].sort((a, b) => a.date.localeCompare(b.date) || a.key.localeCompare(b.key));
 };
 
 /** The account's live bookings still ahead (today, Riyadh, and later), one list per session,
- *  soonest first - the booking app's Current & upcoming. */
+ *  soonest first - the booking app's Current & upcoming (_bookingAhead): a rider still on the bike
+ *  from yesterday's night (a ride past midnight, a bike not yet returned) keeps the ticket too. */
 export function ticketGroups(rows: Row[], today: string): Group[] {
-  return grouped(rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.status !== "done" && r.date >= today));
+  const t = new Date(`${today}T12:00:00Z`);
+  t.setUTCDate(t.getUTCDate() - 1);
+  const yesterday = Number.isNaN(t.getTime()) ? today : t.toISOString().slice(0, 10);
+  return grouped(rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.status !== "done" && r.date >= (r.status === "active" ? yesterday : today)));
 }
 
 /** Tonight's rides already over (every row of the night done, nothing still ahead on it): the
@@ -151,13 +175,14 @@ export function ticketGroups(rows: Row[], today: string): Group[] {
  *  steps, until the day ends. Whether each counts as ridden (rideCompleted) needs the session. */
 export function doneToday(rows: Row[], today: string): Group[] {
   const all = rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.date === today);
-  const live = new Set(all.filter((r) => r.status !== "done").map((r) => r.sessionId));
-  return grouped(all.filter((r) => r.status === "done" && !live.has(r.sessionId)));
+  const live = new Set(all.filter((r) => r.status !== "done").map(groupKey));
+  return grouped(all.filter((r) => r.status === "done" && !live.has(groupKey(r))));
 }
 
-/** A ride that counts as ridden (_rideCompleted): done, and paid or on a free community ride. */
-export function rideCompleted(r: Pick<TicketRow, "status" | "paid">, free: boolean): boolean {
-  return r.status === "done" && (r.paid || free);
+/** A ride that counts as ridden (_rideCompleted): done, and paid, on a free community ride, or on
+ *  the rider's own bike, which is never paid for (the booking app, 2026-10-05). */
+export function rideCompleted(r: Pick<TicketRow, "status" | "paid"> & { type?: string }, free: boolean): boolean {
+  return r.status === "done" && (r.paid || free || r.type === "Own");
 }
 
 /** A sessions row as the ticket reads it. */
@@ -173,12 +198,12 @@ export function ticketSession(r: Row): TicketSession | null {
     approval: community && r.needs_approval !== false,
     published: community && r.hide_queue === false,
     times: slotTimes(r.bike_slots),
-    gathers: kind === "saturday" || kind === "snd96" || kind === "runher",
+    gathers: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap",
     collect,
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -191,10 +216,11 @@ export function ticketSession(r: Row): TicketSession | null {
       }
       : null,
     revealAt: Number.isFinite(Date.parse(S(r.reveal_at))) ? S(r.reveal_at) : null,
+    vl: kind === "vlap" ? vlConfig(r.vl) : null,
   };
 }
 
-/** The Saturday ride's breakfast spot, told at a time staff choose (the owner, 2026-10-06, then "show the
+/** The Saturday ride's breakfast spot, and Run for Her's (the owner, 2026-10-14), told at a time staff choose (the owner, 2026-10-06, then "show the
  *  meeting point immediately only hide the breakfast spot and location"; the booking app's _spotHeld): until
  *  sessions.reveal_at, list_sessions gives the session with its breakfast stop, place and route blank and its
  *  meeting point as it is (rentals 20261006150000, 170000), so the site says when the breakfast spot is told. A
@@ -208,9 +234,10 @@ export function spotHeld(s: { revealAt?: string | null; location?: string | null
   return r > now || now - r < REVEAL_GRACE_MS;
 }
 /** Held, and the session came without its meeting point (a database before rentals 20261006170000, or none set
- *  yet; the booking app's _meetHeld): it meets at a point, unnamed, never the circuit. */
-export const meetHeld = (s: { revealAt?: string | null; meetUrl?: string | null; location?: string | null; breakfast?: unknown } | undefined, now: number = Date.now()): boolean =>
-  spotHeld(s, now) && !s?.meetUrl;
+ *  yet; the booking app's _meetHeld): it meets at a point, unnamed, never the circuit. Not Run for Her, which
+ *  always meets at the Jeddah Yacht Club (venueOf). */
+export const meetHeld = (s: { kind?: string; revealAt?: string | null; meetUrl?: string | null; location?: string | null; breakfast?: unknown } | undefined, now: number = Date.now()): boolean =>
+  spotHeld(s, now) && !s?.meetUrl && s?.kind !== "runher";
 
 /** When they are told, in Riyadh time (the booking app's _revealWhen): "Tomorrow · 8 PM", "Friday · 9 Oct
  *  2026 · 8:30 PM", with the page's own words for today and tomorrow. "" without a time. */
@@ -221,11 +248,14 @@ export function revealWhen(iso: string | null | undefined, locale: string, today
   return `${w === "today" ? words.today : w === "tomorrow" ? words.tomorrow : fmtDayDate(date, locale)} · ${fmtClock(k.slice(11, 16), locale)}`;
 }
 
+/** The rides with a breakfast stop: the Saturday ride, and Run for Her (the owner, 2026-10-14). */
+export const hasBreakfast = (kind: string | null | undefined): boolean => kind === "saturday" || kind === "runher";
+
 /** The breakfast stop as a rider reads it: the Arabic name on the Arabic page, and the offer in
  *  Arabic there and in English in every other language (the booking app's _commInfoHtml). */
 export function breakfastFor(s: TicketSession | undefined, locale: string): { name: string; url: string | null; offer: string | null } | null {
   const b = s?.breakfast;
-  if (!b || s?.kind !== "saturday") return null;
+  if (!b || !hasBreakfast(s?.kind)) return null;
   const ar = locale === "ar";
   return { name: (ar && b.nameAr) || b.name, url: b.url, offer: (ar ? b.offerAr || b.offerEn : b.offerEn || b.offerAr) || null };
 }
@@ -239,10 +269,18 @@ export function bookingRef(r: Pick<TicketRow, "id" | "queueNum">, s: TicketSessi
 }
 
 /** A ride staff approve hands out no code until the rider is through: the list published, every
- *  rider on it approved. Every other ride's code is its ticket from the moment it is booked. */
+ *  rider on it approved. Every other ride's code is its ticket from the moment it is booked, and so
+ *  is a partner's place (Defe, 2026-10-17): confirmed when booked, before the list is out. */
 export function codeReady(rows: TicketRow[], s: TicketSession | undefined): boolean {
   if (!s || !s.approval) return true;
+  if (partnerPlace(rows)) return true;
   return s.published && rows.every((r) => r.approval === "approved");
+}
+
+/** The partner every row of a booking was booked with (partner_book: 'defe'), else null. */
+export function partnerPlace(rows: Pick<TicketRow, "partner" | "status">[]): string | null {
+  const p = rows[0]?.partner;
+  return p && rows.every((r) => r.partner === p && r.status !== "waitlist") ? p : null;
 }
 
 /** The line under the ticket's header, as the booking app words it. `ahead` is whether anyone
@@ -251,11 +289,14 @@ export type Cue = "confirmed" | "underReview" | "pending" | "waitlist" | "onBike
 export function ticketCue(rows: TicketRow[], s: TicketSession | undefined, ahead: boolean | null): Cue {
   const st = rows.some((r) => r.status === "active") ? "active" : rows[0]?.status;
   if (s?.approval && (st === "waiting" || st === "waitlist")) {
+    if (st === "waiting" && partnerPlace(rows)) return "confirmed"; // a partner's place: confirmed at once
     if (!s.published) return "underReview";
     if (st === "waitlist") return "waitlist";
     return rows.every((r) => r.approval === "approved") ? "confirmed" : "pending";
   }
-  if (st === "active") return "onBike";
+  // checked in on a ride without bikes (the pool, the workshop, an event, Run for Her): never "On the
+  // bike now" (the booking app says tkStIn there)
+  if (st === "active") return s && !s.bikes ? null : "onBike";
   if (st === "waiting" && s && !s.approval && ahead !== null) return ahead ? "inQueue" : "next";
   return null;
 }
@@ -281,11 +322,12 @@ export function dayWord(date: string, today: string): "today" | "tomorrow" | nul
 
 /** Where the ride is, by name (_venueName): a ride staff approve that meets at a map link is its
  *  meeting point; a night on the circuit (no place, or "JCC") the Jeddah Corniche Circuit; "JYC" the
- *  Jeddah Yacht Club, where Run for Her meets (VENUE_KEY); any other place as staff wrote it. */
+ *  Jeddah Yacht Club, where Run for Her meets (VENUE_KEY) - Run for Her always, its place held back or
+ *  not (the owner, 2026-10-14), never the circuit; any other place as staff wrote it. */
 export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "text"; text: string };
-export function venueOf(s: Pick<TicketSession, "approval" | "meetUrl" | "location"> | undefined): Venue {
+export function venueOf(s: (Pick<TicketSession, "approval" | "meetUrl" | "location"> & { kind?: string }) | undefined): Venue {
   if (s?.approval && s.meetUrl) return { kind: "meet" };
-  const loc = s?.location ?? "";
+  const loc = s?.location || (s?.kind === "runher" ? "JYC" : "");
   return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : { kind: "text", text: loc };
 }
 
@@ -419,11 +461,12 @@ export function fmtDayDate(iso: string, locale: string): string {
 /** Where the calendar file says the ride is (downloadBookingICS's LOCATION): a ride that meets at a
  *  map link (meetsAt: one staff approve, or Run for Her), that link; else the place staff wrote, with
  *  the three the booking app spells out for a calendar ("JCC", "Sharafeyah Branch", "JYC"); "" for
- *  none, which icsFor writes as the circuit. */
+ *  none, which icsFor writes as the circuit; Run for Her without its place (held back) the Jeddah Yacht Club. */
 const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Branch", "Sharafeyah, Jeddah"], ["JYC", "Jeddah Yacht Club"]]);
 export function icsPlace(s: TicketSession): string {
   if (meetsAt(s) && s.meetUrl) return s.meetUrl;
-  return s.location ? ICS_PLACES.get(s.location) ?? s.location : "";
+  const loc = s.location || (s.kind === "runher" ? "JYC" : "");
+  return loc ? ICS_PLACES.get(loc) ?? loc : "";
 }
 
 /** The ride's start and end, in minutes from the start of its day (Riyadh), as the booking app's

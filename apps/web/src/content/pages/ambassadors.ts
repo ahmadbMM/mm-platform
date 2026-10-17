@@ -48,7 +48,7 @@ export const ambassadorsSchema = {
           def: [
             { value: bi("{discount}%", "{discount}٪"), label: bi("off for your friend, always", "خصم لصديقك، دائماً") },
             { value: bi("Rides + more", "رحلات والمزيد"), label: bi("rides · workshop · events", "رحلات · ورشة · فعاليات") },
-            { value: bi("3 tiers", "٣ مستويات"), label: bi("perks that grow", "مزايا تتصاعد") },
+            { value: bi("3 tiers", "3 مستويات"), label: bi("perks that grow", "مزايا تتصاعد") },
           ],
         },
         txt("demoTitle", 30, "Example card: label", "بطاقة المثال: العنوان", "Live example", "مثال حي"),

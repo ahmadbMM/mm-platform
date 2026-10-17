@@ -23,7 +23,7 @@ test('register, then edit the booking in place, then the confirmation survives a
   await expect(page.locator('#success')).toBeVisible();
   await expect(page.locator('#chip-booking-value')).toHaveText('P-001');
   await expect(page.locator('#edit')).toBeVisible();
-  await expect(page.locator('#qr svg')).toBeVisible();
+  await expect(page.locator('#qr canvas')).toBeVisible();
   await expect(page.locator('.qr-note')).toHaveText('Scan this code at the desk');
 
   // Edit: the form comes back filled in.
@@ -57,7 +57,7 @@ test('register, then edit the booking in place, then the confirmation survives a
   await page.reload();
   await expect(page.locator('#success')).toBeVisible();
   await expect(page.locator('#chip-booking-value')).toHaveText('P-001');
-  await expect(page.locator('#qr svg')).toBeVisible();
+  await expect(page.locator('#qr canvas')).toBeVisible();
   await page.click('#edit');
   await expect(page.locator('#form .title')).toHaveText('Edit your booking');
   await page.click('#cancel-edit');

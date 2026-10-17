@@ -143,9 +143,14 @@ describe("the rating's 'tell us why' follows rg_low", () => {
     expect(ratingErrors(["service"], { service: 7 }, {}, 6)).toEqual({});
     expect(ratingErrors(["service"], { service: 6 }, {}, 6)).toEqual({ service: "why" });
     expect(ratingErrors(["service"], { service: 8 }, {})).toEqual({ service: "why" }); // the default, 8
-    const body = { entryId: "q1abcdef", form: "rental", s: { service: 7, experience: 9 } };
+    // the Saturday ride keeps the setting; every other ride asks only at 6 or under, never above the setting (2026-10-11)
+    const SOC = { ride: 9, ride_checkin: 9, ride_staff: 9, ride_bike: 9, ride_route: 9, breakfast: 9, bf_restaurant: 9, bf_atmosphere: 9, bf_food: 9, bf_service: 7, overall: 9 };
+    const body = { entryId: "q1abcdef", form: "social", s: SOC };
     expect(cleanRating(body)).toBeNull();
     expect(cleanRating(body, 6)).not.toBeNull();
+    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 7, experience: 9 } })).not.toBeNull();
+    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 5, experience: 9 } }, 4)).not.toBeNull();
+    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 4, experience: 9 } }, 4)).toBeNull();
   });
   it("is the server's check too: /api/account/rate reads rg_low from the site's content", async () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
