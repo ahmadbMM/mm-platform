@@ -8,6 +8,7 @@ import { createElement, type ReactElement } from "react";
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { loadAddonItems } from "../ticket-addons";
+import { vlDivName } from "../vlap";
 
 const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 
@@ -461,5 +462,105 @@ describe("Run for Her's breakfast spot told at staff's time, at the Jeddah Yacht
     const told = ticketSession({ ...runRow, location: "JYC", breakfast_name: "Bean Box" })!;
     expect(spotHeld(told, NOW)).toBe(false);
     expect(breakfastFor(told, "en")?.name).toBe("Bean Box");
+  });
+});
+
+describe("a Victory Lap ticket (ride_kind 'vlap', 2026-10-17)", () => {
+  // As the booking app makes the race: Community members and Victory Lap tag holders, 150 SAR per athlete,
+  // nobody approves it, doors then the first heat, at the circuit.
+  const vlRow = { id: "2099-10-26-vl", session_date: "2099-10-26", event_kind: "community", ride_kind: "vlap", needs_approval: false, hide_queue: true, open_to_all: false, paid_ride: true, bike_slots: '{"_time":"16:30 - 17:15"}', meet_url: null, location: "JCC", title: "Victory Lap", capacity: 300 };
+  const vls = ticketSession(vlRow)!;
+  const t = TICKET.en;
+  const entry = (o: Record<string, unknown>) => ticketRow({ id: "vl1abcdef", session_id: vls.id, session_date: vls.date, session_day: "Monday", status: "waiting", queue_num: 7, price: 150, paid: false, name: "Sara Ahmed", type_preference: "None", ...o })!;
+
+  it("has no bikes, opens its doors then the first heat, is paid, at the circuit, and has no route", () => {
+    expect(vls).toMatchObject({ kind: "vlap", bikes: false, gathers: true, approval: false, free: false, freeRide: false, times: ["16:30", "17:15"] });
+    expect(vls.vl).toEqual({ races: ["ws", "ms", "wd", "md", "xd"], divs: ["so", "se", "op", "el"], pair: true, pay: {}, share: {} });
+    expect(venueText(venueOf(vls), t)).toBe("Jeddah Corniche Circuit");
+    expect(meetsAt(vls)).toBe(false);
+    expect(ticketRoute(vls, new Map())).toBeNull();
+    expect(countdownMoments(vls, vls.date).map((x) => x[1])).toEqual(["gather", "start"]);
+    expect(ticketStages([row({ status: "active" })], vls.bikes, null, "en").stages.map((x) => x.key)).toEqual(["booked", "in", "done"]);
+    expect(icsFor(vls, "Victory Lap - Monday", icsPlace(vls))).not.toMatch(/bike rental/i);
+    // a ride without the settings column reads every race open
+    expect(ticketSession({ ...vlRow, vl: { races: ["ws", "bad"], divs: "x", pair: false, pay: { en: "Pay by link" } } })!.vl).toEqual({ races: ["ws"], divs: ["so", "se", "op", "el"], pair: false, pay: { en: "Pay by link" }, share: {} });
+    expect(ticketSession(jccRow)!.vl).toBeNull();
+  });
+
+  it("reads an athlete's place: the race, division, T-shirt, 5 km time, and a team only on Doubles", () => {
+    expect(entry({ vl: { race: "wd", div: "op", shirt: "m", t5k: "u20", team: "vl-4k7q" } }).vl).toEqual({ race: "wd", div: "op", shirt: "M", t5k: "u20", team: "VL-4K7Q", pair: false });
+    expect(entry({ vl: '{"race":"ws","div":"so","shirt":"XL","team":"VL-ABCD"}' }).vl).toEqual({ race: "ws", div: "so", shirt: "XL", t5k: null, team: null, pair: false });
+    expect(entry({ vl: { race: "xd", div: "el", shirt: "S", pair: true } }).vl).toMatchObject({ team: null, pair: true });
+    expect(entry({ vl: { race: "zz", div: "zz", shirt: "XXXL", t5k: "fast" } }).vl).toEqual({ race: null, div: null, shirt: null, t5k: null, team: null, pair: false });
+    expect(entry({}).vl).toBeNull();
+    expect(entry({ vl: "not json" }).vl).toBeNull();
+  });
+
+  it("makes a Singles and a Doubles place on the same race two tickets, each with its own rows", () => {
+    const rows = [
+      { id: "s1", session_id: vls.id, session_date: "2099-10-26", status: "waiting", queue_num: 3, vl: { race: "ws", div: "so", shirt: "S" } },
+      { id: "d1", session_id: vls.id, session_date: "2099-10-26", status: "waiting", queue_num: 9, vl: { race: "xd", div: "op", shirt: "S", team: "VL-AB12" } },
+      { id: "j", session_id: "j1", session_date: "2099-10-25", status: "waiting", queue_num: 1 },
+    ];
+    const g = ticketGroups(rows, "2099-10-20");
+    expect(g.map((x) => [x.key, x.rows.map((r) => r.id)])).toEqual([["j1", ["j"]], [`${vls.id}|d`, ["d1"]], [`${vls.id}|s`, ["s1"]]]);
+    expect(new Set(g.map((x) => x.key)).size).toBe(3);
+    // tonight: a Singles place done stays a past card while the Doubles one is still to race
+    const tonight = doneToday([{ ...rows[0], status: "done" }, rows[1]], "2099-10-26");
+    expect(tonight.map((x) => x.key)).toEqual([`${vls.id}|s`]);
+  });
+
+  it("draws the card: Athlete number, the race and division, the team's code and partner, T-shirt, 5 km time and how to pay", () => {
+    const card = (r: Record<string, unknown>, o: { partners?: Map<string, string> | null; s?: typeof vls; past?: boolean } = {}) => renderToStaticMarkup(createElement(TicketCard, {
+      locale: "en", today: "2099-10-20", rows: [entry(r)], session: o.s ?? vls, name: "Victory Lap", cue: null, t, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+      links: { edit: "https://book.example.test/?ev=vlap", manage: "https://book.example.test/?tab=bookings", place: "https://maps.app.goo.gl/jcc" }, now: Date.parse("2099-10-20T09:00:00Z"),
+      vlPartners: o.partners ?? null, past: o.past ?? false,
+    }));
+    const dbl = card({ vl: { race: "xd", div: "op", shirt: "M", t5k: "m2030", team: "VL-4K7Q" } });
+    expect(dbl).toContain("Athlete number");
+    expect(dbl).not.toContain("Queue number");
+    expect(dbl).toMatch(/class="tk-type tk-vl">Mixed Doubles · Open</);
+    expect(dbl).toContain("Team code");
+    expect(dbl).toContain(">VL-4K7Q<");
+    expect(dbl).toContain("Waiting for your partner. Send them the code.");
+    expect(dbl).toContain("Open · 6.1 km");
+    expect(dbl).toContain("T-shirt size: M");
+    expect(dbl).toContain("5 km time: 20 to 30 min");
+    expect(dbl).toContain("Payment:");
+    expect(dbl).toContain("How to pay will be announced soon. Your place is held now.");
+    expect(dbl).toContain("/site/victory-lap-dark.webp");
+    expect(dbl).toContain("Jeddah Corniche Circuit");
+    // never the booth, a bike, a helmet, Edit or Reschedule; its details change in the booking app
+    expect(dbl).not.toContain("Pay at the booth");
+    expect(dbl).not.toContain("You pay at the booth");
+    expect(dbl).not.toContain("Helmets");
+    expect(dbl).not.toContain(">Edit<");
+    expect(dbl).not.toContain("Reschedule");
+    expect(dbl).toContain(">Change details<");
+    expect(dbl).toContain(">Cancel<");
+    // the partner by first name once they joined (customer_vl_teams)
+    expect(card({ vl: { race: "xd", div: "op", shirt: "M", team: "VL-4K7Q" } }, { partners: new Map([["vl1abcdef", "Omar"]]) })).toContain("With Omar");
+    // staff's own payment words, in the page's language, else English
+    const paySess = { ...vls, vl: { ...vls.vl!, pay: { en: "Pay at the race village from 15:00." } } };
+    expect(card({ vl: { race: "ws", div: "so", shirt: "S" } }, { s: paySess })).toContain("Pay at the race village from 15:00.");
+    // Singles: no team; paid: no payment line; asked for a partner: our team finds one
+    const solo = card({ vl: { race: "ws", div: "so", shirt: "S" }, paid: true });
+    expect(solo).not.toContain("Team code");
+    expect(solo).not.toContain("Payment:");
+    expect(solo).toContain("Sprint Open · 4 km");
+    expect(card({ vl: { race: "wd", div: "el", shirt: "S", pair: true } })).toContain("Looking for a partner: our team will pair you and let you know.");
+  });
+
+  it("has its words in Arabic, Victory Lap's name in Arabic letters", () => {
+    const a = TICKET.ar;
+    expect(a.athleteNumber).toBe("رقم الرياضي");
+    expect(a.vlRaces.xd).toBe("زوجي مختلط");
+    expect(a.vlWithPartner("عمر")).toBe("مع عمر");
+    expect(a.vlPayLater).toBe("سنعلن قريبًا طريقة الدفع. مكانك محجوز الآن.");
+    for (const v of [...Object.values(a.vlRaces), a.vlTeamCode, a.vlWaitPartner, a.vlPairWait, a.vlEdit]) expect(v).not.toMatch(/Victory|[A-Za-z]{3,}/);
+    // the divisions are Kamin Sports' names: in Arabic in Arabic, in English in every other language, as the booking app keeps them
+    expect(vlDivName("el", "ar")).toBe("النخبة");
+    expect(vlDivName("el", "fr")).toBe("Elite");
+    expect(vlDivName("so", "zh")).toBe("Sprint Open");
   });
 });

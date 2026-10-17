@@ -274,6 +274,39 @@ describe("Run for Her's pink ribbon (run_for_her, 2026-10-05)", () => {
   });
 });
 
+describe("Victory Lap's lap ring (victory_lap, 2026-10-17)", () => {
+  // A finished race is a done row on a session of kind 'vlap' (checked out, or the session closed out).
+  const vlRows = (status: string) => recordRows([row({ session_id: "2026-10-26-vl", session_date: "2026-10-26", status, paid: true, type_preference: "None", vl: { race: "ws", div: "so", shirt: "S" } })]);
+  const vlSes = (rows: { sessionId: string }[]) => new Map<string, RecordSession>(rows.map((r) => [r.sessionId, { kind: "vlap", freeRide: false, approval: false }]));
+  it("stays hidden until the race is finished (done), then shows as the lap ring", () => {
+    for (const status of ["waiting", "waitlist", "active", "noshow"]) {
+      const r = vlRows(status);
+      expect(badgeList(r, vlSes(r), empty, "2026-10-27", null).map((x) => x.slug), status).not.toContain("victory_lap");
+    }
+    const done = vlRows("done");
+    expect(badgeList(done, vlSes(done), empty, "2026-10-27", null).find((x) => x.slug === "victory_lap")).toMatchObject({ on: true, icon: "lapring", color: "vlap" });
+    // whatever colour the badges table holds it in
+    const catalog = [{ slug: "victory_lap", icon: "medal", color: "purple", system: true, auto: true }];
+    expect(badgeList(done, vlSes(done), { ...empty, catalog }, "2026-10-27", null).find((x) => x.slug === "victory_lap")).toMatchObject({ on: true, icon: "lapring", color: "vlap" });
+  });
+  it("is not earned on any other kind, and the race never counts towards the Saturday ladder or a distance badge", () => {
+    const sat = recordRows([row({ session_id: "2026-09-05" })]);
+    expect(badgeList(sat, new Map([["2026-09-05", { kind: "saturday", freeRide: true }]]), empty, today, null).map((x) => x.slug)).not.toContain("victory_lap");
+    const done = vlRows("done");
+    const L = badgeList(done, vlSes(done), empty, "2026-10-27", null).flatMap((x) => x.lv ?? [x]);
+    expect(L.find((x) => x.slug === "rolling_start")).toMatchObject({ on: false });
+    expect(L.find((x) => x.slug === "km20")).toMatchObject({ on: false });
+  });
+  it("is drawn as the booking app draws it: the lap ring on the purple-into-black special medal", () => {
+    const svg = renderToStaticMarkup(createElement(Medal, { icon: "lapring", color: "vlap" }));
+    expect(svg).toContain("bdg-sp");
+    for (const c of ["#b9a6ff", "#5b3fd6", "#1b1236", "#140c2e"]) expect(svg).toContain(c);
+    expect(svg).toContain('r="8.4"');
+    expect(RECORD.en.names.victory_lap[0]).toBe("Victory Lap");
+    expect(RECORD.ar.names.victory_lap[0]).toBe("فيكتوري لاب");
+  });
+});
+
 describe("your rides", () => {
   it("count nights, the favourite type, the time on the bike and the first ride", () => {
     const rows = recordRows([

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { isRtl } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
 import { fill as fillAt } from "@/i18n/tx";
-import { bookingAt, infoShown, memberOn, membersOnlyEvent } from "@/lib/event-info";
+import { bookingAt, infoShown, memberOn, membersOnlyDate, membersOnlyEvent } from "@/lib/event-info";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -59,9 +59,15 @@ export type StepInfo = {
   place: string; map: string | null;
   /** A run's distances ("3 km · 5 km") and the places it has (said when counted); null when not said. */
   distance: string | null; places: string | null;
+  /** Victory Lap's races and divisions open to book, in the page's words; absent on any other kind. */
+  races?: string; divs?: string;
 };
 /** `about`: what the event is, in its About (Experiences > Event cards, *About). */
-export type StepEvent = { key: string; title: string; meta: string; logo: string; note: string; about: string; sessions: StepSession[] };
+export type StepEvent = {
+  key: string; title: string; meta: string; logo: string; note: string; about: string; sessions: StepSession[];
+  /** Victory Lap's card (the booking app's _vlCardHtml): its soonest date, when the doors open and where, under its line. */
+  line?: string[];
+};
 export type StepText = {
   steps: [string, string, string]; eventTitle: string; dateTitle: string; bookTitle: string; cont: string; waitlist: string; back: string;
   noDates: string; handoff: string; members: string; free: string; full: string; gather: string; start: string; membersNote: string; clubLink: string;
@@ -80,6 +86,7 @@ export type StepText = {
   info: {
     about: string; details: string; bookEvent: string; chooseDate: string; who: string; price: string; when: string; next: string;
     where: string; map: string; distance: string; places: string; after: string; whoMembers: string; close: string;
+    races: string; divs: string;
   };
 };
 // clubHref: the Club page, "" while staff have it switched off (its address then leads Home), so no link is offered.
@@ -133,7 +140,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
     : <bdi>{s.when.a} – {s.when.b}</bdi>) : null);
   // Petromin Days is Petromin's team's, who are not Club members (an account holds the Community tag or
   // the Petromin tag, never both): its dates carry no Members tag and no word about joining the Club.
-  const clubOnly = (s: StepSession) => s.members && ev?.key !== "petromin";
+  // Nor do Victory Lap's, which its tag holders book too (its rules say who, vlNote).
+  const clubOnly = (s: StepSession) => s.members && ev?.key !== "petromin" && s.kind !== "vlap";
   const tags = (s: StepSession) => (
     <span className="xs-tags">
       {clubOnly(s) && <em>{t.members}</em>}
@@ -165,6 +173,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
     out.push({ k: next ? t.info.next : t.info.when, v: <>{s.day}{s.when && <><br />{when(s)}</>}{i.collect && <><br />{i.collect}</>}</> });
     out.push({ k: t.info.where, v: <>{i.place}{i.map && <> · <a href={i.map} target="_blank" rel="noopener">{t.info.map}</a></>}</> });
     if (i.distance) out.push({ k: t.info.distance, v: <bdi>{i.distance}</bdi> });
+    if (i.races) out.push({ k: t.info.races, v: i.races });
+    if (i.divs) out.push({ k: t.info.divs, v: <bdi>{i.divs}</bdi> });
     if (i.places) out.push({ k: t.info.places, v: i.places });
     if (s.breakfast) out.push({ k: t.info.after, v: breakfastAt(s.breakfast) });
     else if (s.reveal) out.push({ k: t.info.after, v: s.reveal }); // the breakfast spot is told later: when
@@ -216,10 +226,26 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
               const about = infoShown(membersOnlyEvent(e.key), memberOn(e.key, { member, petromin }));
               return (
                 <div key={e.key} className={`xs-ev-wrap${about ? " has-about" : ""}`}>
-                  <button type="button" className={`xs-event ev-${e.key}`} onClick={() => pickEvent(e)}>
-                    {e.logo && <span className="xs-logo"><img src={e.logo} alt="" /></span>}
-                    <span className="xs-copy"><span className="xs-ev-title">{e.title}</span>{e.meta && <span className="xs-ev-meta">{e.meta}</span>}</span>
-                  </button>
+                  {e.key === "vlap" ? (
+                    // Victory Lap (the owner picked D for the booking app, 2026-10-17): white, the race's logo
+                    // (named by its title), its line, its date, doors and place, a checkered flag down the end
+                    // edge - never the price
+                    <button type="button" className="xs-event ev-vlap" onClick={() => pickEvent(e)}>
+                      <span className="xs-vl-main">
+                        {e.logo ? <span className="xs-logo xs-vl-logo"><img src={e.logo} alt={e.title} /></span> : <span className="xs-ev-title">{e.title}</span>}
+                        <span className="xs-copy">
+                          {e.meta && <span className="xs-vl-title">{e.meta}</span>}
+                          {e.line && e.line.length > 0 && <span className="xs-vl-meta">{e.line.map((x, i) => <span key={i}>{i > 0 && <i aria-hidden="true" />}<bdi>{x}</bdi></span>)}</span>}
+                        </span>
+                      </span>
+                      <span className="xs-vl-flag" aria-hidden="true" />
+                    </button>
+                  ) : (
+                    <button type="button" className={`xs-event ev-${e.key}`} onClick={() => pickEvent(e)}>
+                      {e.logo && <span className="xs-logo"><img src={e.logo} alt="" /></span>}
+                      <span className="xs-copy"><span className="xs-ev-title">{e.title}</span>{e.meta && <span className="xs-ev-meta">{e.meta}</span>}</span>
+                    </button>
+                  )}
                   {about && <button type="button" className={`xs-about ab-${e.key}`} aria-label={`${t.info.about} · ${e.title}`} onClick={(x) => showInfo(e, null, x.currentTarget)}>{t.info.about}</button>}
                 </div>
               );
@@ -238,7 +264,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           ) : (
             <div className="sc-list">
               {ev.sessions.map((s) => {
-                const details = infoShown(s.members, memberOn(ev.key, { member, petromin }));
+                const details = infoShown(membersOnlyDate(s), memberOn(ev.key, { member, petromin }));
                 return (
                   <div key={s.id} className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
                     <button type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}${s.opens ? " closed" : ""}`} disabled={!!s.opens} aria-disabled={!!s.opens} onClick={() => pickDate(s)}>
@@ -287,6 +313,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             {tags(sess)}
             {sess.event && sess.description && <p className="xs-rules">{sess.description}</p>}
             {facts(sess)}
+            {/* Victory Lap's price per athlete, to a visitor who may book it alone (its Details' price) */}
+            {sess.kind === "vlap" && sess.info.price && <p className="xs-rules xs-vl-price"><bdi>{sess.info.price}</bdi></p>}
             {ev.note && <p className="xs-rules">{ev.note}</p>}
             {sess.paid && !sess.event && prices.some((p) => !(sess.noCarbon && p.type === "Road Carbon")) && (
               <div className="xs-prices">

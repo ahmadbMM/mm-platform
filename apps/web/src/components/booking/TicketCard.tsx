@@ -4,13 +4,17 @@ import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
+import { VL_DIV_KM, vlDivName, vlIsDbl, vlPayLine } from "@/lib/vlap";
 import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
 // never changes a booking behind its back. A Run for Her ticket (2026-10-05) says "Runner number",
 // lists each runner's distance where a ride lists the bike type, and is never changed, only
-// cancelled ("A run booking is never modified").
+// cancelled ("A run booking is never modified"). A Victory Lap ticket (2026-10-17) says "Athlete number",
+// the race and division where a ride shows the bike type, the team's code and the partner (Doubles), the
+// T-shirt and 5 km time, and how to pay while unpaid, on its own look (white, the race's logo, a
+// checkered strip down the end edge: the booking app's th-vlap); its details change in the booking app.
 export type TicketText = (typeof T)["en"];
 type Props = {
   locale: string;
@@ -42,6 +46,9 @@ type Props = {
   /** The add-ons' items by id, their names and today's prices (lib/ticket-addons.ts); null when the
    *  inventory could not be read. */
   addonItems?: Map<string, AddonItem> | null;
+  /** Victory Lap: each Doubles booking's partner by first name, by booking id (customer_vl_teams); a
+   *  booking without one has no partner yet. */
+  vlPartners?: Map<string, string> | null;
 };
 
 const Bike = () => (
@@ -81,7 +88,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, vlPartners = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order
   const allWl = rows.every((r) => r.status === "waitlist");
@@ -96,7 +103,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const big = num.length <= 4 ? "big" : num.length <= 9 ? "mid" : "small";
   const bikes = s ? s.bikes : true;
   const run = s?.kind === "runher"; // Run for Her: a runner's number, a distance, cancel only
-  const numLabel = run ? t.runnerNumber : t.queueNumber;
+  const vlap = s?.kind === "vlap"; // Victory Lap: an athlete's number, the race and team, how to pay
+  const numLabel = run ? t.runnerNumber : vlap ? t.athleteNumber : t.queueNumber;
   // The add-ons bought with the booking, each rider's under their name, and in the total, as the
   // booking app lists them (none on a ride staff approve). A line whose price is not known (the
   // inventory could not be read) is listed without it, and the total is left out: never a wrong one.
@@ -105,7 +113,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const total = rows.reduce((sum, r) => sum + r.price, 0) + (extrasCost ?? 0);
   const free = (!!s?.free || (noNum && total === 0)) && extras.length === 0;
   const ready = codeReady(rows, s);
-  const owes = !allWl && !s?.approval && rows.some((r) => !r.paid && r.price > 0);
+  // Victory Lap is not paid at the booth: its own line says how (vlPay, below)
+  const owes = !allWl && !s?.approval && !vlap && rows.some((r) => !r.paid && r.price > 0);
   const canEdit = !past && rows.some((r) => r.status === "waiting" || r.status === "waitlist");
   const active = rows.some((r) => r.status === "active");
   const allDone = rows.length > 0 && rows.every((r) => r.status === "done");
@@ -135,7 +144,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
       <div className="tk-head">
         <div className="tk-num-block">
           {/* The logo heads the number's column (the booking app's _tkLogo): white lettering on the dark card. */}
-          <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>
+          {vlap
+            ? <span className="tk-logo tk-logo-vl" aria-hidden="true"><img src="/site/victory-lap-dark.webp" alt="" decoding="async" /></span>
+            : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
           {!noNum && (allWl
             ? <p className="tk-label wl">{t.wlOnList}{wl ? <> · {t.wlLinePos(String(wl))}</> : ""}</p>
             : <p className="tk-label">{rows.length > 1 ? (rows.length === 2 ? t.bikes2 : t.bikesN(String(rows.length))) : numLabel}</p>)}
@@ -229,6 +240,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               {bikes && r.type && r.type !== "None" && <span className={`tk-type t-${r.type.toLowerCase().replace(/\s+/g, "")}`}><Bike /> {typeName(r.type)}</span>}
               {/* a runner's distance, where a ride shows the bike type (the booking app's run-km-chip) */}
               {r.runKm != null && <span className="tk-type tk-km">{t.rtKm(String(r.runKm))}</span>}
+              {/* an athlete's race and division (the booking app's vl-chip) */}
+              {vlap && r.vl?.race && <span className="tk-type tk-vl">{t.vlRaces[r.vl.race]}{r.vl.div && <> · {vlDivName(r.vl.div, locale)}</>}</span>}
             </div>
             {!noNum && (
               <div className="tk-rider-pay">
@@ -236,7 +249,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
                 {/* Unpaid says where it is paid; a waitlisted rider owes nothing until they have a place. */}
                 {r.paid
                   ? <span className="tk-pay paid"><span className="dot" aria-hidden="true" />{r.price === 0 ? t.onTheHouse : t.paid}</span>
-                  : r.status !== "waitlist" && r.price > 0 && <span className="tk-pay due"><span className="dot" aria-hidden="true" />{t.payDue}</span>}
+                  : r.status !== "waitlist" && r.price > 0 && !vlap && <span className="tk-pay due"><span className="dot" aria-hidden="true" />{t.payDue}</span>}
               </div>
             )}
           </div>
@@ -255,6 +268,33 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             </div>
           );
         })}
+        {vlap && (() => {
+          // The athlete's place (the booking app's _vlTkHtml): the team's code and the partner on a Doubles
+          // race (or that our team is finding one), the division with its distance, the T-shirt, the 5 km
+          // time, and how to pay while the place is unpaid (staff's words, sessions.vl.pay, else the default).
+          const v = primary.vl;
+          if (!v) return null;
+          const partner = vlPartners?.get(primary.id) ?? "";
+          const meta = [
+            v.div ? `${vlDivName(v.div, locale)} · ${t.rtKm(String(VL_DIV_KM[v.div]))}` : "",
+            v.shirt ? `${t.vlShirt}: ${v.shirt}` : "",
+            v.t5k ? `${t.vlT5Short}: ${t.vlT5[v.t5k]}` : "",
+          ].filter(Boolean);
+          const unpaid = !past && !rows.every((r) => r.paid) && !rows.every((r) => r.status === "waitlist");
+          return (
+            <div className="tk-vl">
+              {vlIsDbl(v.race) && v.team && (
+                <div className="tk-vl-team">
+                  <p className="tk-vl-code"><span>{t.vlTeamCode}</span><strong dir="ltr">{v.team}</strong></p>
+                  <p className="tk-vl-p">{partner ? t.vlWithPartner(partner) : past ? t.vlNoPartner : t.vlWaitPartner}</p>
+                </div>
+              )}
+              {vlIsDbl(v.race) && !v.team && v.pair && <div className="tk-vl-team"><p className="tk-vl-p">{t.vlPairWait}</p></div>}
+              {meta.length > 0 && <p className="tk-vl-meta">{meta.map((x, i) => <span key={i}>{x}</span>)}</p>}
+              {unpaid && <p className="tk-vl-pay"><strong>{t.vlPayTitle}</strong> <span>{vlPayLine(s?.vl, locale, t.vlPayLater)}</span></p>}
+            </div>
+          );
+        })()}
         {(free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>}
         {owes && !past && <p className="tk-line">{t.payAtBooth}</p>}
         {!allWl && !past && bikes && <p className="tk-line">{s?.approval ? t.helmetFree : t.helmetLine}</p>}
@@ -270,8 +310,10 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
       {canEdit && (
         <div className="tk-manage">
           {/* a run booking is never changed, only cancelled, as in the booking app */}
-          {!noNum && !run && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}
-          {!noNum && !run && s?.kind !== "snd96" && <a className="tk-btn" href={links.manage}><Again /> {t.reschedule}</a>}
+          {!noNum && !run && !vlap && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}
+          {!noNum && !run && !vlap && s?.kind !== "snd96" && <a className="tk-btn" href={links.manage}><Again /> {t.reschedule}</a>}
+          {/* Victory Lap: the division, T-shirt and 5 km time change in the booking app's My Bookings (_vlEditOpen) */}
+          {vlap && rows.length === 1 && primary.vl && <a className="tk-btn solid" href={links.manage}>{t.vlEdit}</a>}
           <a className="tk-btn red" href={links.manage}>{t.cancel}</a>
         </div>
       )}

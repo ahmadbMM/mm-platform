@@ -38,6 +38,10 @@ describe("the questions", () => {
     expect(questionKeys("rental", { noBike: true })).toEqual(["service", "experience"]);
     // Run for Her has no bike (its ticket session's bikes is false), so its form never asks about one
     expect(questionKeys(formOf("runher"), { noBike: !ticketSession({ id: "r", session_date: "2099-10-17", event_kind: "community", ride_kind: "runher", needs_approval: false })!.bikes })).toEqual(["service", "experience"]);
+    // Victory Lap (2026-10-17) has no bike either: the rental's form without the bike question, as the booking app asks it
+    expect(formOf("vlap")).toBe("rental");
+    expect(questionKeys(formOf("vlap"), { noBike: !ticketSession({ id: "v", session_date: "2099-10-26", event_kind: "community", ride_kind: "vlap", needs_approval: false, paid_ride: true })!.bikes })).toEqual(["service", "experience"]);
+    expect(isRun("vlap", "2099-10-26-vl")).toBe(false); // a race, not Run for Her's run
     expect(questionKeys("social")).toEqual(Object.keys(SOCIAL));
     expect(questionKeys("social", { noBike: true, skipBf: true })).toEqual(["ride", "ride_checkin", "ride_staff", "ride_route", "overall"]);
   });

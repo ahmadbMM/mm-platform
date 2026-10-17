@@ -12,7 +12,7 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
-import { dateText, eventCards, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
+import { dateText, eventCards, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { bizOf, faresOf } from "@/lib/biz";
 import { kindNames, loadRides, sessionName, upcoming, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
@@ -23,8 +23,9 @@ import { riyadhClock } from "@/lib/workshop-days";
 import { dayWord, fmtClock, fmtDayDate, kmText, meetHeld, revealWhen, spotHeld } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt, phrase } from "@/i18n/tx";
-import { isRtl } from "@/i18n/locales";
+import { intlOf, isRtl } from "@/i18n/locales";
 import { bg } from "@/lib/img";
+import { vlDivNames } from "@/lib/vlap";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
@@ -65,6 +66,17 @@ async function petrominMember(): Promise<boolean> {
   return r.data === true;
 }
 
+// May the visitor book Victory Lap (a Community member or a Victory Lap tag holder)? Only they are told
+// its price (the owner, 2026-10-17); its card and Details are everyone's. The booking app's own answer
+// (vlap_member, a bare boolean like community_member's, which checks the token; rentals 20261017210000);
+// any failure reads as no, a database without the function too.
+async function vlapMember(): Promise<boolean> {
+  const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
+  if (!s) return false;
+  const r = await rpcServer<boolean>("vlap_member", { p_id: s.id, p_token: s.token });
+  return r.data === true;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { content, closed } = await pageState("experiences");
@@ -77,6 +89,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const L = asLocale(locale);
   const tx = serverL(locale);
   const [{ content, previewing, hidden }, rides, member, petromin] = await Promise.all([pageState("experiences"), loadRides(), communityMember(), petrominMember()]);
+  // asked only while a Victory Lap date is on the books: its price is said to those who may book it
+  const vlBook = (rides?.sessions ?? []).some((s) => s.kind === "vlap") ? await vlapMember() : false;
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(experiencesSchema, content, L);
   const d = c.dates, e = c.events, st = c.steps;
@@ -129,13 +143,22 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
   const dateTexts: DateTexts = {
-    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun),
+    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl),
     sndAbout: S(e.sndAbout), evAbout: S(e.evAbout),
   };
   const whoWords = {
     all: tx("Everyone", "الجميع"), members: tx("Community members", "أعضاء المجتمع"), members18: tx("Community members, 18 and over", "أعضاء المجتمع ممن أتموا 18 عامًا"),
     petromin: tx("Community members and Petromin's team", "أعضاء المجتمع وفريق بترومين"), // a Petromin night (the booking app's infoWhoPetromin, 2026-10-12)
+    vlap: tx("Community members and Victory Lap athletes, 16 and over", "أعضاء المجتمع ورياضيو فيكتوري لاب، من 16 عامًا فأكثر"), // the booking app's infoWhoVlap (2026-10-17)
   };
+  // Victory Lap's races and divisions, in the booking app's words (vlRace_*, vlDiv_*)
+  const vlWords = {
+    races: { ws: tx("Women’s Singles", "فردي السيدات"), ms: tx("Men’s Singles", "فردي الرجال"), wd: tx("Women’s Doubles", "زوجي السيدات"), md: tx("Men’s Doubles", "زوجي الرجال"), xd: tx("Mixed Doubles", "زوجي مختلط") },
+    divs: vlDivNames(locale), // Kamin Sports' names, in English but in Arabic, as the booking app keeps them
+    km: kmWord,
+  };
+  // Victory Lap's price per athlete, to those who may book it alone (vlBook; the owner, 2026-10-17)
+  const athletePrice = (s: RideSession) => (s.kind === "vlap" && vlBook && s.price != null ? `${sar(s.price)} · ${tx("per athlete, VAT included", "لكل رياضي، شاملًا ضريبة القيمة المضافة")}` : null);
   const venueWords = { meetingPoint: tx("Meeting point", "نقطة التجمع"), venueCircuit: tx("Jeddah Corniche Circuit", "حلبة كورنيش جدة"), venueJyc: tx("Jeddah Yacht Club", "نادي جدة لليخوت") };
   const clock = (hhmm: string) => fmtClock(hhmm, locale);
   // The Saturday ride's breakfast spot (and Run for Her's, 2026-10-14), told at a time staff choose (the owner,
@@ -157,8 +180,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       near: ((w) => (w === "today" ? tx("Today", "اليوم") : w === "tomorrow" ? tx("Tomorrow", "غداً") : null))(dayWord(s.date, now.slice(0, 10))),
       name: sessionName(s, kindName, enName, L !== "en"),
       when: s.times ? { gather: s.gather, a: clock(s.times[0]), b: clock(s.times[1]) } : null,
-      // a run has no bikes, so never the bike prices
-      members: s.members, free: s.free, full: s.full, paid: !s.free && s.kind !== "runher", noCarbon: s.noCarbon,
+      // a run and Victory Lap have no bikes, so never the bike prices
+      members: s.members, free: s.free, full: s.full, paid: !s.free && s.kind !== "runher" && s.kind !== "vlap", noCarbon: s.noCarbon,
       // a copy kept at the edge from before these fields existed reads as an event without them
       event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
@@ -174,18 +197,28 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // description is the text
       info: {
         text: dateText(s, dateTexts, infoTimes(s, clock)), extra: s.kind === "event" ? null : s.description ?? null,
-        who: infoWho(s, whoWords), price: infoPrice(s, { free: S(d.free), seat: seatPrice && fill(S(d.perSeat), { price: seatPrice }), from }),
+        who: infoWho(s, whoWords), price: infoPrice(s, { free: S(d.free), seat: seatPrice && fill(S(d.perSeat), { price: seatPrice }), from, athlete: athletePrice(s) }),
         collect, place: place.name, map: place.map,
         distance: infoDistance(s.kind, kmWord), places: infoPlaces(s, { waitlist: waitWord, left1, leftN }),
+        ...((v) => (v ? { races: v.races, divs: v.divs } : {}))(infoVl(s, vlWords)),
       },
     };
   };
   // The booking app's events (lib/event-info.ts eventCards): the circuit and the community rides
   // always, the others while they have dates - Petromin Days (the owner, 2026-10-12) first, and only
   // to a Petromin tag holder, then Run for Her, as on the booking app's landing.
+  // Victory Lap's card (the owner picked D for the booking app, 2026-10-17): under its line, its soonest
+  // date ("26 Oct"), when the doors open and JCC, as the booking app's _vlCardHtml says them.
+  const vlLine = (s: RideSession | undefined): string[] => {
+    if (!s) return [];
+    let day = s.date;
+    try { day = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${s.date}T12:00:00Z`)); } catch { /* the date as stored */ }
+    return [day, s.times ? clock(s.times[0]) : "", tx("JCC", "حلبة الكورنيش")].filter(Boolean);
+  };
   const events: StepEvent[] = eventCards(all, { member, petromin }).map(({ card: { key, p }, sessions }) => ({
     key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: fill(S(e[`${p}Note`]), caps), about: S(e[`${p}About`]),
     sessions: sessions.slice(0, Math.max(1, N(d.count))).map(toStep),
+    ...(key === "vlap" ? { line: vlLine(sessions[0]) } : {}),
   }));
   const text: StepText = {
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),
@@ -200,6 +233,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       bookEvent: tx("Book this event", "احجز هذه الفعالية"), chooseDate: tx("Choose this date", "اختر هذا الموعد"),
       who: tx("Who", "لمن"), price: tx("Price", "السعر"), when: tx("When", "الموعد"), next: tx("Next date", "الموعد القادم"),
       where: tx("Where", "المكان"), map: tx("Map", "الخريطة"), distance: tx("Distance", "المسافة"), places: tx("Places", "الأماكن"),
+      races: tx("Races", "السباقات"), divs: tx("Divisions", "الفئات"),
       after: tx("After", "بعدها"), whoMembers: whoWords.members, close: tx("Close", "إغلاق"),
     },
   };

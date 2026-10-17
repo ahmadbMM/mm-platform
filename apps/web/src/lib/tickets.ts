@@ -7,6 +7,7 @@ import { fill as fillAt } from "@/i18n/tx";
 import { fill as fillNamed } from "./fill";
 import { collectTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
 import { riyadhClock } from "./workshop-days";
+import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
 /** An add-on line on a booking (the booking app's entryAddons): the inventory item, how many, and
@@ -27,6 +28,9 @@ export type TicketRow = {
   /** A partner's place on the ride (queue_entries.partner, rentals 20261017120000: 'defe'), else none.
    *  partner_book makes it approved at once: a confirmed place, its code out, whatever the list says. */
   partner?: string | null;
+  /** A Victory Lap athlete's place (queue_entries.vl, rentals 20261017210000; lib/vlap.ts): the race,
+   *  division, T-shirt, 5 km time and team; null on every other booking. */
+  vl?: VlEntry | null;
 };
 /** The distances a Run for Her runner picks from (the booking app's RUN_KMS). */
 export const RUN_KMS: readonly number[] = [3, 5];
@@ -62,6 +66,10 @@ export type TicketSession = {
   /** When riders are told where the ride meets and has breakfast (sessions.reveal_at, ISO), or null
    *  (spotHeld). */
   revealAt: string | null;
+  /** Victory Lap's settings (sessions.vl, lib/vlap.ts: the races open, how to pay, what goes to Kamin
+   *  Sports); null on every other kind. A read without the column has every race open and no words of
+   *  staff's own. */
+  vl?: VlConfig | null;
 };
 
 type Row = Record<string, unknown>;
@@ -86,6 +94,7 @@ export function ticketRow(r: Row): TicketRow | null {
     runKm: km !== null && RUN_KMS.includes(km) ? km : null,
     rideGroup: r.ride_group === "beg" || r.ride_group === "int" ? r.ride_group : null,
     partner: typeof r.partner === "string" && /^[a-z0-9]{2,20}$/.test(r.partner) ? r.partner : null,
+    vl: vlEntry(r.vl),
   };
 }
 
@@ -135,16 +144,20 @@ export function addonsCost(lines: AddonLine[]): number | null {
   return r2(sum);
 }
 
-type Group = { sessionId: string; date: string; rows: TicketRow[] };
+/** One ticket: a session's rows, or on Victory Lap one of the account's two places there - its Singles
+ *  and its Doubles are two tickets (the booking app's key, sessionId|s or sessionId|d). `key` tells them apart. */
+type Group = { key: string; sessionId: string; date: string; rows: TicketRow[] };
+const groupKey = (r: Pick<TicketRow, "sessionId" | "vl">) => (r.vl ? `${r.sessionId}|${vlCat(r.vl)}` : r.sessionId);
 const grouped = (list: TicketRow[]): Group[] => {
   const by = new Map<string, Group>();
   for (const r of list) {
-    const g = by.get(r.sessionId) ?? { sessionId: r.sessionId, date: r.date, rows: [] };
+    const key = groupKey(r);
+    const g = by.get(key) ?? { key, sessionId: r.sessionId, date: r.date, rows: [] };
     g.rows.push(r);
-    by.set(r.sessionId, g);
+    by.set(key, g);
   }
   for (const g of by.values()) g.rows.sort((a, b) => (a.queueNum ?? 0) - (b.queueNum ?? 0));
-  return [...by.values()].sort((a, b) => a.date.localeCompare(b.date) || a.sessionId.localeCompare(b.sessionId));
+  return [...by.values()].sort((a, b) => a.date.localeCompare(b.date) || a.key.localeCompare(b.key));
 };
 
 /** The account's live bookings still ahead (today, Riyadh, and later), one list per session,
@@ -162,8 +175,8 @@ export function ticketGroups(rows: Row[], today: string): Group[] {
  *  steps, until the day ends. Whether each counts as ridden (rideCompleted) needs the session. */
 export function doneToday(rows: Row[], today: string): Group[] {
   const all = rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.date === today);
-  const live = new Set(all.filter((r) => r.status !== "done").map((r) => r.sessionId));
-  return grouped(all.filter((r) => r.status === "done" && !live.has(r.sessionId)));
+  const live = new Set(all.filter((r) => r.status !== "done").map(groupKey));
+  return grouped(all.filter((r) => r.status === "done" && !live.has(groupKey(r))));
 }
 
 /** A ride that counts as ridden (_rideCompleted): done, and paid, on a free community ride, or on
@@ -185,12 +198,12 @@ export function ticketSession(r: Row): TicketSession | null {
     approval: community && r.needs_approval !== false,
     published: community && r.hide_queue === false,
     times: slotTimes(r.bike_slots),
-    gathers: kind === "saturday" || kind === "snd96" || kind === "runher",
+    gathers: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap",
     collect,
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -203,6 +216,7 @@ export function ticketSession(r: Row): TicketSession | null {
       }
       : null,
     revealAt: Number.isFinite(Date.parse(S(r.reveal_at))) ? S(r.reveal_at) : null,
+    vl: kind === "vlap" ? vlConfig(r.vl) : null,
   };
 }
 

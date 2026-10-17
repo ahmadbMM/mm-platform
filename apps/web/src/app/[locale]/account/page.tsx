@@ -142,6 +142,15 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const bikeOf = new Map(await Promise.all([...groups, ...past].filter((g) => g.date === today).map(async (g) => [g.sessionId, await bikeName(g.rows.find((r) => r.bikeId)?.bikeId ?? null)] as const)));
   // the add-ons the tickets list, by name and price
   const addonItems = await loadAddonItems([...groups, ...past].flatMap((g) => g.rows.flatMap((r) => r.addonLines.map((a) => a.id))));
+  // Victory Lap: each Doubles booking's partner by first name (customer_vl_teams, rentals 20261017210000:
+  // a rider never reads another account's booking), asked only when a ticket holds a team; a database
+  // without the function, or a failed read, names nobody (the ticket then says it waits for the partner).
+  const vlPartners = [...groups, ...past].some((g) => g.rows.some((r) => r.vl?.team))
+    ? await rpcServer<unknown>("customer_vl_teams", { p_id: acct.id, p_token: acct.token }).then((r) => new Map(
+      (Array.isArray(r.data) ? (r.data as Record<string, unknown>[]) : [])
+        .filter((x) => x && typeof x.entry_id === "string" && typeof x.partner === "string" && x.partner.trim())
+        .map((x) => [x.entry_id as string, (x.partner as string).trim()] as const)))
+    : null;
   const stats = rideStats(record, recSessions, today);
   const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
   // "You're next" on a numbered night: whether anyone still waiting holds a lower number. Said on
@@ -158,7 +167,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
   // Edit does; Reschedule and Cancel open its My Bookings. (A Run for Her place is only cancelled;
   // its event is still named, as the booking app's event link takes it.)
-  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher" };
+  // (Victory Lap's details change in My Bookings there: it is never edited or rescheduled.)
+  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap" };
   const appLink = (params: Record<string, string>) => {
     try { const u = new URL(app); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
     catch { return book; }
@@ -215,22 +225,22 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                 // a ride staff approve and Run for Her meet at the point staff set (meetsAt), the rest at the circuit
                 const place = s && meetsAt(s) ? s.meetUrl : S(site.contact.jccHref) || null;
                 return (
-                  <TicketCard key={g.sessionId} locale={locale} today={now.slice(0, 10)} rows={g.rows} session={s}
+                  <TicketCard key={g.key} locale={locale} today={now.slice(0, 10)} rows={g.rows} session={s}
                     name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
                     cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
                     links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place,
                       live: g.date === now.slice(0, 10) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} />
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} vlPartners={vlPartners} />
                 );
               })}
               {past.map((g) => {
                 const s = sessions.get(g.sessionId);
                 return (
-                  <TicketCard key={g.sessionId} past locale={locale} today={today} rows={g.rows} session={s}
+                  <TicketCard key={g.key} past locale={locale} today={today} rows={g.rows} session={s}
                     name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
                     cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} />
+                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} vlPartners={vlPartners} />
                 );
               })}
             </div>

@@ -7,12 +7,13 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { kindNames, sessionName } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
-import { isRun, pendingShares, shareCandidates } from "@/lib/share";
+import { pendingShares, shareCandidates, sharesDetails } from "@/lib/share";
 import { loadSiteContent } from "@/lib/site";
 import { fmtClock, fmtDayDate, venueOf, venueText } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
 import { SESSION_ID, acceptAnswer } from "@/lib/waiver";
 import { riyadhClock } from "@/lib/workshop-days";
+import { vlShareItems } from "@/lib/vlap";
 
 // GET /api/account/pending-share?locale=xx[&skip=id,id]: the Run for Her run a signed-in runner must
 // agree for before their details go to Sela and JYC (lib/share.ts; the booking app's _pendingShare),
@@ -32,6 +33,11 @@ import { riyadhClock } from "@/lib/workshop-days";
 //
 // Both read the sessions with the account's token (list_sessions, lib/rides.ts readSessions): Run for
 // Her is for members, and a private session is hidden from the public key.
+//
+// Victory Lap (2026-10-17) asks the same, for Kamin Sports: its pending answer says kind "vlap", and when
+// staff have set Kamin Sports' exact list (sessions.vl.share, one item a line) it comes as `items`, in the
+// page's language (else English); without one the pop-up lists what the booking holds and says the exact
+// list is coming (the booking app's _vlShareItems).
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store, private" } });
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -71,6 +77,7 @@ export async function GET(req: Request) {
       venue: venueText(venueOf(s), t),
       // the runner's distance in the ticket's words ("5 km"), or null when the row has none
       distance: first.km !== null ? t.rtKm(String(first.km)) : null,
+      ...(s.kind === "vlap" ? ((v) => ({ kind: "vlap" as const, items: v.set ? v.items : null }))(vlShareItems(s.vl, locale, [])) : {}),
     },
   });
 }
@@ -86,7 +93,7 @@ export async function POST(req: Request) {
   if (!sessionId) return json({ ok: false, error: "invalid" }, 400);
   const s = (await loadTicketSessions([sessionId], acct)).get(sessionId);
   if (!s) return json({ ok: false, error: "generic" }, 502);
-  if (!isRun(s)) return json({ ok: false, error: "changed" }, 409);
+  if (!sharesDetails(s)) return json({ ok: false, error: "changed" }, 409);
   const r = await rpcServer<unknown>("customer_accept_share", { p_id: acct.id, p_token: acct.token, p_session_id: sessionId });
   const a = acceptAnswer(r);
   if (a === "ok") return json({ ok: true });

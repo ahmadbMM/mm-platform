@@ -22,6 +22,9 @@ describe("rideKind", () => {
     // Run for Her (2026-10-05) is a kind of its own, never read as the Saturday ride
     expect(rideKind({ event_kind: "community", ride_kind: "runher" })).toBe("runher");
     expect(rideKind({ event_kind: null, ride_kind: "runher" })).toBe("jcc");
+    // Victory Lap (2026-10-17) too
+    expect(rideKind({ event_kind: "community", ride_kind: "vlap" })).toBe("vlap");
+    expect(rideKind({ event_kind: null, ride_kind: "vlap" })).toBe("jcc");
     // a kind that is not a community event is a circuit night, whatever it says
     expect(rideKind({ event_kind: null, ride_kind: "swim" })).toBe("jcc");
   });
@@ -69,6 +72,16 @@ describe("toSession", () => {
     // a _collect on the session means nothing on a run, and a full run still shows (its waitlist)
     expect(toSession(row({ ...run, bike_slots: '{"_time":"06:00 - 06:30","_collect":"05:15"}' }))!.collect).toBeNull();
     expect(toSession(row({ ...run, status: "full" }))).toMatchObject({ kind: "runher", full: true });
+  });
+  it("reads Victory Lap: members only (the database lets its tag holders in too), paid at its own price per athlete, doors then the first heat, no bikes", () => {
+    const vl = { id: "2026-10-26-vl", session_date: "2026-10-26", event_kind: "community", ride_kind: "vlap", title: "Victory Lap", open_to_all: false, paid_ride: true, needs_approval: false, capacity: 300, price: 150, bike_slots: '{"_time":"16:30 - 17:15"}' };
+    expect(toSession(row(vl))).toMatchObject({ id: "2026-10-26-vl", kind: "vlap", members: true, free: false, times: ["16:30", "17:15"], gather: true, price: 150, seats: null, collect: null, approval: false, capacity: 300 });
+    // its settings ride along only when the read asked for them (SESSION_COLS_VL)
+    expect("vl" in toSession(row(vl))!).toBe(false);
+    expect(toSession(row({ ...vl, vl: { races: ["ws"] } }))!.vl).toEqual({ races: ["ws"] });
+    expect("vl" in toSession(row({ ride_kind: "event", event_kind: "community", vl: { races: ["ws"] } }))!).toBe(false);
+    // a price set on a free one means nothing
+    expect(toSession(row({ ...vl, paid_ride: false }))).toMatchObject({ free: true, price: null });
   });
   it("reads where a session meets only when the read asked for it: the place, and a map link only when it is https (2026-10-05)", () => {
     expect(toSession(row({ event_kind: "community", ride_kind: "runher", location: " JYC ", meet_url: "https://maps.app.goo.gl/abc" }))).toMatchObject({ location: "JYC", meetUrl: "https://maps.app.goo.gl/abc" });
@@ -218,9 +231,9 @@ describe("loadRides", () => {
       : url.includes("meet_url") ? json({ code: "42703", message: "column sessions.meet_url does not exist" }, 400) : json([row({})])));
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
-    expect(reads[0]).toContain("needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at&session_date=gte.2026-09-25");
+    expect(reads[0]).toContain("needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,vl&session_date=gte.2026-09-25");
     // the place alone is left out: the breakfast stop and the announce time are groups of their own
-    expect(reads[1]).toContain("needs_approval,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at&session_date=gte.2026-09-25");
+    expect(reads[1]).toContain("needs_approval,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at,vl&session_date=gte.2026-09-25");
     expect(r?.sessions.map((x) => x.id)).toEqual(["2026-09-27"]);
     await memoSettled();
   });
@@ -232,8 +245,21 @@ describe("loadRides", () => {
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(1);
-    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at&");
+    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,vl&");
     expect(r?.sessions.map((x) => [x.id, x.breakfast, x.breakfastAr])).toEqual([["sat", "Bean Box", "بين بوكس"], ["2026-09-27", null, null]]);
+    await memoSettled();
+  });
+
+  it("reads on without Victory Lap's settings on a database that does not have them (rentals 20261017210000)", async () => {
+    const VL = row({ id: "2026-10-26-vl", session_date: "2026-10-26", event_kind: "community", ride_kind: "vlap", paid_ride: true, price: 150, bike_slots: '{"_time":"16:30 - 17:15"}' });
+    const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json(PRICES)
+      : url.includes(",vl&") ? json({ code: "42703", message: "column sessions.vl does not exist" }, 400) : json([VL])));
+    const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
+    expect(reads).toHaveLength(2);
+    expect(reads[1]).toContain("location,meet_url,breakfast_name,breakfast_name_ar,reveal_at&session_date=gte.2026-09-25");
+    expect(r!.sessions[0]).toMatchObject({ id: "2026-10-26-vl", kind: "vlap", price: 150 });
+    expect("vl" in r!.sessions[0]).toBe(false);
     await memoSettled();
   });
 
@@ -243,7 +269,7 @@ describe("loadRides", () => {
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[1]).toContain("needs_approval,description,price,route_slug,location,meet_url,reveal_at&session_date=gte.2026-09-25");
+    expect(reads[1]).toContain("needs_approval,description,price,route_slug,location,meet_url,reveal_at,vl&session_date=gte.2026-09-25");
     const s = r!.sessions[0];
     expect(s).toMatchObject({ id: "sat", kind: "saturday", location: null, meetUrl: null });
     expect("breakfast" in s || "breakfastAr" in s).toBe(false);
@@ -395,6 +421,11 @@ describe("sessionName", () => {
   it("reads a title that is just the kind's English name in Arabic on the Arabic page", () => {
     expect(sessionName({ kind: "saturday", title: "saturday social ride" }, ar, en, true)).toBe("جولة السبت الاجتماعية");
     expect(sessionName({ kind: "saturday", title: "Founders ride" }, ar, en, true)).toBe("Founders ride");
+  });
+  it("names Victory Lap by its own name (Experiences > Dates: vlName), in Arabic too", () => {
+    const enV = kindNames({ vlName: "Victory Lap" }), arV = kindNames({ vlName: "فيكتوري لاب" });
+    expect(sessionName({ kind: "vlap", title: null }, enV, enV, false)).toBe("Victory Lap");
+    expect(sessionName({ kind: "vlap", title: "Victory Lap" }, arV, enV, true)).toBe("فيكتوري لاب");
   });
   it("names Run for Her by its own name (Experiences > Dates: runHerName), in Arabic too", () => {
     const enR = kindNames({ runHerName: "Run for Her" }), arR = kindNames({ runHerName: "نركض لأجلها" });

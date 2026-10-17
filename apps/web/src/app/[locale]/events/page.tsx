@@ -25,7 +25,7 @@ type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e" };
+const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d" };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -46,7 +46,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
   // Book opens the booking app on that event and date (?ev=&session=), as the Experiences steps do.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher" };
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap" };
   const bookAt = (s: RideSession) => {
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
@@ -76,7 +76,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
         {/* The public rides, for search engines; members-only ones are not advertised. */}
         <JsonLd data={eventsData(sessions.filter((s) => !s.members).map((s) => ({
           name: name(s), date: s.date, times: s.times, gather: s.gather, full: s.full, url: book,
-          place: s.kind === "jcc" || s.kind === "snd96" ? "Jeddah Corniche Circuit" : s.kind === "runher" ? "Jeddah Yacht Club" : "Jeddah",
+          place: s.kind === "jcc" || s.kind === "snd96" || s.kind === "vlap" ? "Jeddah Corniche Circuit" : s.kind === "runher" ? "Jeddah Yacht Club" : "Jeddah",
         })))} />
         <p className="pg-eyebrow">{S(c.hero.eyebrow)}</p>
         <h1>{S(c.hero.title)}</h1>
@@ -103,6 +103,8 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {s.kind === "event" && s.seats != null && <span>{fill(S(d.seats), { n: fmtNum(s.seats, locale) })}</span>}
                         {/* Run for Her: its distances and where it meets, as its card on Experiences says them */}
                         {s.kind === "runher" && S(xp.events.rhMeta) && <span>{S(xp.events.rhMeta)}</span>}
+                        {/* Victory Lap: what it is, as its card on Experiences says it (never its price) */}
+                        {s.kind === "vlap" && S(xp.events.vlMeta) && <span>{S(xp.events.vlMeta)}</span>}
                         {/* Run for Her is a community event (members only, free), tagged as one */}
                         <em>{s.kind === "jcc" || s.kind === "snd96" ? S(c.hero.rideTag) : s.kind === "event" ? S(c.hero.eventTag) : S(c.hero.communityTag)}</em>
                         {s.members && <em>{S(d.members)}</em>}

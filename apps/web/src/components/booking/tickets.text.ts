@@ -11,7 +11,10 @@
 // bikes2/bikesN · free freeLabel (as of the booking app's 2026-09-30 card, bb37ba1 and 9a03c12) ·
 // Run for Her (2026-10-05): runnerNumber runNumLabel · venueJyc venueJyc; a runner's distance is
 // rtKm, the booking app's runKm ("{0} km"). The breakfast spot told at staff's time (2026-10-06):
-// revealSpotsAt, the booking app's own key.
+// revealSpotsAt, the booking app's own key. Victory Lap (2026-10-17): athleteNumber vlNumLabel, and the
+// athlete's place as the booking app's _vlTkHtml words it - vlRace_*, vlTeamCode, vlWithPartner,
+// vlWaitPartner, vlNoPartner, vlPairWait, vlShirtLabel, vlT5Short, vlT5_*, vlPayTitle, vlPayLater, vlEdBtn
+// (the divisions are Kamin Sports' names, lib/vlap.ts vlDivName).
 export const T = {
   en: {
     queueNumber: "Queue number",
@@ -87,6 +90,20 @@ export const T = {
     addons: "Add-ons",
     // a partner's place (queue_entries.partner, 2026-10-17): the site's own line, under the ticket's status
     withDefe: "With Defe",
+    // Victory Lap (2026-10-17)
+    athleteNumber: "Athlete number",
+    vlRaces: { ws: "Women’s Singles", ms: "Men’s Singles", wd: "Women’s Doubles", md: "Men’s Doubles", xd: "Mixed Doubles" },
+    vlTeamCode: "Team code",
+    vlWithPartner: (n: string) => `With ${n}`,
+    vlWaitPartner: "Waiting for your partner. Send them the code.",
+    vlNoPartner: "No partner joined.",
+    vlPairWait: "Looking for a partner: our team will pair you and let you know.",
+    vlShirt: "T-shirt size",
+    vlT5Short: "5 km time",
+    vlT5: { u20: "Under 20 min", m2030: "20 to 30 min", o30: "Over 30 min" },
+    vlPayTitle: "Payment:",
+    vlPayLater: "How to pay will be announced soon. Your place is held now.",
+    vlEdit: "Change details",
   },
   ar: {
     queueNumber: "رقم الدور",
@@ -158,5 +175,18 @@ export const T = {
     revealSpotsAt: (n: string) => `موقع الفطور: يُعلَن عنه ${n}`,
     addons: "الإضافات",
     withDefe: "مع دفء",
+    athleteNumber: "رقم الرياضي",
+    vlRaces: { ws: "فردي السيدات", ms: "فردي الرجال", wd: "زوجي السيدات", md: "زوجي الرجال", xd: "زوجي مختلط" },
+    vlTeamCode: "رمز الفريق",
+    vlWithPartner: (n: string) => `مع ${n}`,
+    vlWaitPartner: "بانتظار شريكك. أرسل له الرمز.",
+    vlNoPartner: "لم ينضم شريك.",
+    vlPairWait: "تبحث عن شريك: سيجمعك فريقنا بشريك ويخبرك.",
+    vlShirt: "مقاس القميص",
+    vlT5Short: "زمن 5 كم",
+    vlT5: { u20: "أقل من 20 دقيقة", m2030: "من 20 إلى 30 دقيقة", o30: "أكثر من 30 دقيقة" },
+    vlPayTitle: "الدفع:",
+    vlPayLater: "سنعلن قريبًا طريقة الدفع. مكانك محجوز الآن.",
+    vlEdit: "تغيير التفاصيل",
   },
 };

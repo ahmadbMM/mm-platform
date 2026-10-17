@@ -2,6 +2,7 @@ import { fill as fillAt } from "@/i18n/tx";
 import { fill } from "./fill";
 import type { RideKind, RideSession } from "./rides";
 import { hasBreakfast, meetsAt, RUN_KMS, venueOf, venueText } from "./tickets";
+import { VL_DIV_KM, vlConfig, type VlDiv, type VlRace } from "./vlap";
 
 // "About this event" and "Details" on Experiences (the owner, 2026-10-05), as the booking app's event
 // picker has them (_infoAboutBtn, _infoDetailsBtn, _infoFacts): under each event card a link opens
@@ -14,7 +15,9 @@ import { hasBreakfast, meetsAt, RUN_KMS, venueOf, venueText } from "./tickets";
 // (app/[locale]/experiences/page.tsx) and ExperienceSteps.tsx draws the links and the dialog.
 
 /** The event cards only community members may book: the community rides and Run for Her (the
- *  booking app's _infoMembersOnlyEv); and Petromin Days, which only Petromin tag holders book. */
+ *  booking app's _infoMembersOnlyEv); and Petromin Days, which only Petromin tag holders book. Victory
+ *  Lap is booked by Community members and Victory Lap tag holders alone, yet its card, its About and its
+ *  dates' Details are everyone's (the booking app's _infoShowSess, 2026-10-17). */
 export const membersOnlyEvent = (key: string): boolean => key === "community" || key === "runher" || key === "petromin";
 
 /** Whether the visitor counts as a member on a card, for its links: on Petromin Days a Petromin tag
@@ -27,6 +30,10 @@ export const memberOn = (key: string, v: { member: boolean; petromin: boolean })
  *  for community members only"): one anyone may book shows it to everyone, a members-only one to a
  *  signed-in community member alone. */
 export const infoShown = (membersOnly: boolean, member: boolean): boolean => !membersOnly || member;
+
+/** Whether a date's Details are for members alone: a members-only date, but never Victory Lap's, which
+ *  everyone may read (only its price is held back, lib/vlap.ts). */
+export const membersOnlyDate = (s: { members: boolean; kind: string }): boolean => s.members && s.kind !== "vlap";
 
 /** The times a date's text is filled with, in the page's clock: a ride that gathers has its gathering
  *  and its start, any other its start and its end, and {collect} is when bikes go out. A time that
@@ -43,7 +50,7 @@ export const fillTimes = (text: string, t: InfoTimes): string => fill(text, t);
 
 /** The Experiences texts a date's Details start with: the dates section's about* fields, and the
  *  events section's own for the National Day ride and the ticketed events. */
-export type DateTexts = { aboutJcc: string; aboutSat: string; aboutPetro: string; aboutSwim: string; aboutWs: string; aboutRun: string; sndAbout: string; evAbout: string };
+export type DateTexts = { aboutJcc: string; aboutSat: string; aboutPetro: string; aboutSwim: string; aboutWs: string; aboutRun: string; aboutVl: string; sndAbout: string; evAbout: string };
 
 /** Which text a date's Details say (the booking app's INFO_DT): its kind's own, filled with its
  *  times, and the circuit's for any kind without one; a ticketed event says its own description
@@ -52,29 +59,45 @@ export function dateText(s: Pick<RideSession, "kind" | "description">, texts: Da
   if (s.kind === "event" && s.description) return s.description;
   const of: Partial<Record<RideKind, string>> = {
     jcc: texts.aboutJcc, saturday: texts.aboutSat, petromin: texts.aboutPetro, swim: texts.aboutSwim, workshop: texts.aboutWs,
-    runher: texts.aboutRun, snd96: texts.sndAbout, event: texts.evAbout,
+    runher: texts.aboutRun, vlap: texts.aboutVl, snd96: texts.sndAbout, event: texts.evAbout,
   };
   return fillTimes(of[s.kind] ?? texts.aboutJcc, times);
 }
 
 /** Who may book a date (_infoFacts): everyone, or community members - aged 18 and over on Run for
- *  Her, and with Petromin's team on a Petromin night (2026-10-12, infoWhoPetromin). */
-export function infoWho(s: Pick<RideSession, "members" | "kind">, t: { all: string; members: string; members18: string; petromin: string }): string {
+ *  Her, with Petromin's team on a Petromin night (2026-10-12, infoWhoPetromin), and with the Victory Lap
+ *  athletes, 16 and over, on Victory Lap (infoWhoVlap). */
+export function infoWho(s: Pick<RideSession, "members" | "kind">, t: { all: string; members: string; members18: string; petromin: string; vlap: string }): string {
   if (!s.members) return t.all;
-  return s.kind === "runher" ? t.members18 : s.kind === "petromin" ? t.petromin : t.members;
+  return s.kind === "runher" ? t.members18 : s.kind === "petromin" ? t.petromin : s.kind === "vlap" ? t.vlap : t.members;
 }
 
 /** A kind of ride that hands out bikes, priced by the bike (the booking app's _needsBike): not the
- *  pool, the T100 day, a ticketed event or a run. */
-export const rentsBikes = (kind: RideKind): boolean => kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher";
+ *  pool, the T100 day, a ticketed event, a run or Victory Lap. */
+export const rentsBikes = (kind: RideKind): boolean => kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap";
 
 /** What a date costs (_sessFromPrice): the free word on a free ride, an event's price per seat, and
  *  on a paid ride with bikes the cheapest bike ("from SAR 57.5"); null when there is nothing to say.
- *  `seat` and `from` arrive in the page's words. */
-export function infoPrice(s: Pick<RideSession, "kind" | "free">, t: { free: string; seat: string | null; from: string | null }): string | null {
+ *  Victory Lap's price per athlete ("SAR 150 · per athlete, VAT included") is `athlete`, which the page
+ *  gives only to a visitor who may book it (vlap_member; the owner, 2026-10-17), else null: nothing is
+ *  said. `seat`, `from` and `athlete` arrive in the page's words. */
+export function infoPrice(s: Pick<RideSession, "kind" | "free">, t: { free: string; seat: string | null; from: string | null; athlete?: string | null }): string | null {
   if (s.free) return t.free || null;
   if (s.kind === "event") return t.seat;
+  if (s.kind === "vlap") return t.athlete ?? null;
   return rentsBikes(s.kind) ? t.from : null;
+}
+
+/** Victory Lap's races and divisions open to book (sessions.vl, all when unset), in the page's words:
+ *  "Women's Singles · Men's Singles · ..." and "Sprint Open 4 km · ... · Elite 6.1 km" (the booking app's
+ *  _infoFacts vlRacesLabel / vlDivsLabel rows); null on any other kind. */
+export function infoVl(s: Pick<RideSession, "kind" | "vl">, t: { races: Record<VlRace, string>; divs: Record<VlDiv, string>; km: string }): { races: string; divs: string } | null {
+  if (s.kind !== "vlap") return null;
+  const c = vlConfig(s.vl);
+  return {
+    races: c.races.map((r) => t.races[r]).join(" · "),
+    divs: c.divs.map((d) => `${t.divs[d]} ${fillAt(t.km, VL_DIV_KM[d])}`).join(" · "),
+  };
 }
 
 /** Where a date is, by name (lib/tickets.ts venueOf: the meeting point on a ride staff approve that
@@ -121,13 +144,13 @@ export function infoBreakfast(s: Pick<RideSession, "kind" | "breakfast" | "break
  *  community rides, and the National Day ride, the T100 workshop, the ticketed events and Run for Her,
  *  which have cards of their own while they have dates. A Petromin night counts as a community ride
  *  here; Petromin Days takes its own (eventCards). */
-export const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher" };
+export const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap" };
 
 /** The event cards in the order the page shows them, each with its texts' prefix in Experiences'
  *  events section and whether it shows with no date. Petromin Days first (the owner, 2026-10-12), then
- *  Run for Her, as on the booking app's landing. */
+ *  Victory Lap (2026-10-17) and Run for Her, as on the booking app's landing. */
 export const EVENT_CARDS = [
-  { key: "petromin", p: "pm", always: false }, { key: "runher", p: "rh", always: false }, { key: "snd96", p: "snd", always: false },
+  { key: "petromin", p: "pm", always: false }, { key: "vlap", p: "vl", always: false }, { key: "runher", p: "rh", always: false }, { key: "snd96", p: "snd", always: false },
   { key: "jcc", p: "jcc", always: true }, { key: "community", p: "comm", always: true }, { key: "workshop", p: "ws", always: false }, { key: "event", p: "ev", always: false },
 ] as const;
 export type EventCard = (typeof EVENT_CARDS)[number];

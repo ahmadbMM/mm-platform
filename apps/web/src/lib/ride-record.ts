@@ -31,6 +31,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   km20: ["road", "green"], km40: ["road", "blue"], km70: ["road", "purple"], km100: ["road", "gold"], // the distance ladder (2026-10-16)
   clean_sheet: ["calcheck", "green"], works_team: ["briefcase", "teal"], perfect_week: ["calstar", "purple"], perfect_month: ["calcrown", "gold"],
   run_for_her: ["ribbon", "pink"],
+  victory_lap: ["lapring", "vlap"], // Victory Lap's lap ring, on its own special medal, purple into black (2026-10-17)
   // the staff ladders' higher levels and Front Row's (the booking app, 2026-10-12)
   senior_marshal: ["shield", "blue"], chief_marshal: ["shield", "gold"], pit_boss: ["wrench", "teal"], crew_chief: ["wrench", "gold"],
   clear_track: ["wflag", "teal"], track_guardian: ["wflag", "gold"], tech_inspector: ["search", "blue"], chief_scrutineer: ["search", "gold"],
@@ -270,12 +271,15 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
   const nd96 = rows.some((r) => (r.status === "done" || r.status === "active") && ses(r.sessionId)?.kind === "snd96");
   // Run for Her: finished, i.e. marked done at the end of the run (the owner, 2026-10-05: "who completes this event")
   const rfh = rows.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "runher");
+  // Victory Lap: checked out, or the session closed out - both leave the booking done (the owner, 2026-10-17)
+  const vlp = rows.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "vlap");
   const P = (n: number, of: number) => `${Math.min(n, of)}/${of}`, pct = profile ? profilePct(profile) : 0;
   type B = { s: string; on: boolean; p?: string | null; hide?: boolean; row?: BadgeRow; season?: BadgeItem["season"] };
   const list: B[] = [
     ...(profile ? [{ s: "complete_profile", on: pct >= 100, p: `${pct}%` }] : []),
     { s: "national_day_96", on: nd96, hide: true },
     { s: "run_for_her", on: rfh, hide: true }, // the pink ribbon: shown to those who finished it
+    { s: "victory_lap", on: vlp, hide: true }, // the lap ring: shown to those who finished it
     { s: "first_lap", on: rides >= 1, p: `${rides}/1` }, { s: "regular", on: rides >= 5, p: P(rides, 5) }, { s: "podium", on: rides >= 10, p: P(rides, 10) },
     { s: "front_row", on: p1 >= 1, p: P(p1, 1) }, { s: "pole_position", on: p1 >= 5, p: P(p1, 5) }, { s: "pole_master", on: p1 >= 10, p: P(p1, 10) },
     { s: "grid_leader", on: p1 >= 25, p: P(p1, 25) }, { s: "pole_legend", on: p1 >= 50, p: P(p1, 50) },
