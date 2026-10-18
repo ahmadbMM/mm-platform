@@ -1020,7 +1020,7 @@
  "Helmets are required. We provide one for free.": "ヘルメットの着用は必須です。無料でお貸しします。",
  "In line: {0}": "待ち番号：{0}",
  "On the waitlist": "キャンセル待ち中",
- "On the waitlist. If a place opens and staff pick you, this card turns into your ticket.": "キャンセル待ち中です。空きが出てスタッフに選ばれると、このカードがチケットになります。",
+ "On the waitlist. If a place opens for you, this card turns into your ticket.": "キャンセル待ち中です。空きが出ると、このカードがチケットになります。",
  "Queue number": "順番待ち番号",
  "Reserved. Waiting for staff to confirm.": "予約済み。スタッフの確認をお待ちください。",
  "Today": "今日",

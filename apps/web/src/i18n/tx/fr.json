@@ -1020,7 +1020,7 @@
  "Helmets are required. We provide one for free.": "Le casque est obligatoire. Nous vous en fournissons un gratuitement.",
  "In line: {0}": "File : {0}",
  "On the waitlist": "Sur liste d’attente",
- "On the waitlist. If a place opens and staff pick you, this card turns into your ticket.": "Sur liste d’attente. Si une place se libère et que l’équipe vous choisit, cette carte devient votre billet.",
+ "On the waitlist. If a place opens for you, this card turns into your ticket.": "Sur liste d’attente. Si une place se libère pour vous, cette carte devient votre billet.",
  "Queue number": "Numéro dans la file",
  "Reserved. Waiting for staff to confirm.": "Réservé. En attente de confirmation par l’équipe.",
  "Today": "Aujourd'hui",
