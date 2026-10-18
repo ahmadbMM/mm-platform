@@ -348,3 +348,22 @@ describe("the booking app's paid and checked-in rules (bh14)", () => {
     expect(on(recordRows([row({ session_id: "2026-09-04", type_preference: "Road Carbon" })]), "carbon")).toBe(true);
   });
 });
+
+describe("Rode with Defe (defe_ride, 2026-10-18)", () => {
+  // Checked in (active or done) on the Saturday ride with Defe, session 2026-10-24: members and Defe riders alike.
+  const sat = new Map<string, RecordSession>([["2026-10-24", { kind: "saturday", freeRide: true, approval: true }], ["2026-10-17", { kind: "saturday", freeRide: true, approval: true }]]);
+  const on = (sid: string, status: string) => badgeList(recordRows([row({ session_id: sid, status, paid: false })]), sat, empty, today, null).find((x) => x.slug === "defe_ride");
+  it("comes with a check-in on the Defe ride and is drawn as the ribbon wheel", () => {
+    expect(on("2026-10-24", "active")).toMatchObject({ on: true, icon: "defewheel", color: "defe" });
+    expect(on("2026-10-24", "done")).toMatchObject({ on: true });
+  });
+  it("stays hidden without a check-in, and on any other ride", () => {
+    for (const status of ["waiting", "noshow", "cancelled"]) expect(on("2026-10-24", status)?.on ?? false, status).toBe(false);
+    expect(on("2026-10-17", "done")?.on ?? false).toBe(false);
+  });
+  it("is drawn on its own rose-into-berry medal", () => {
+    const html = renderToStaticMarkup(createElement(Medal, { icon: "defewheel", color: "defe" }));
+    expect(html).toContain("#f6c3d6");
+    expect(html).toContain("#a22b63");
+  });
+});

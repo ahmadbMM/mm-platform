@@ -33,7 +33,7 @@ export type BadgeGridText = {
 
 // The colours Medal draws special (its SPECIAL): Race Ready, National Day 96, Run for Her's pink and
 // Victory Lap's purple into black.
-const special = (c: string) => c === "special" || c === "national" || c === "pink" || c === "vlap";
+const special = (c: string) => c === "special" || c === "national" || c === "pink" || c === "vlap" || c === "defe";
 // A level not begun yet in a ladder's popup (the booking app's lock icon).
 const Lock = () => (
   <svg className="badge-lvl-lock" viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">

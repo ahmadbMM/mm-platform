@@ -110,6 +110,7 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .mr-badge.sp-national { --sp1: #5fd99a; --sp2: #159a57; --sp3: #0a5c33; }
 .mr-badge.sp-pink { --sp1: #ffc9da; --sp2: #f2789f; --sp3: #c2416e; } /* Run for Her */
 .mr-badge.sp-vlap { --sp1: #b9a6ff; --sp2: #5b3fd6; --sp3: #1b1236; } /* Victory Lap */
+.mr-badge.sp-defe { --sp1: #f6c3d6; --sp2: #d782a0; --sp3: #a22b63; } /* Rode with Defe */
 .mr-badge.special.locked { background: #fff; border: 1px solid rgba(26, 25, 25, .12); }
 .mr-badges-more { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; padding: 9px 12px; background: #fff; border: 1px dashed rgba(26, 25, 25, .24); border-radius: 0; font: inherit; font-size: 13px; font-weight: 700; color: #1a1919; text-align: start; cursor: pointer; }
 .mr-bm-peek { display: flex; flex: none; }
@@ -132,6 +133,7 @@ dialog.badge-pop-box.special { border-top-color: #f0a500; }
 dialog.badge-pop-box.sp-national { border-top-color: #159a57; }
 dialog.badge-pop-box.sp-pink { border-top-color: #f2789f; }
 dialog.badge-pop-box.sp-vlap { border-top-color: #5b3fd6; }
+dialog.badge-pop-box.sp-defe { border-top-color: #d782a0; }
 .badge-pop-in p { margin: 0; }
 .badge-pop-ic { width: 84px !important; height: 84px !important; display: block !important; margin: 0 auto 12px; }
 .badge-pop-nm { font-size: 20px; font-weight: 800; margin-bottom: 10px !important; }

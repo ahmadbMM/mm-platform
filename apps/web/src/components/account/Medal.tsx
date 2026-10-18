@@ -11,6 +11,7 @@ const SPECIAL: Record<string, [[string, string, string], string]> = {
   national: [["#5fd99a", "#159a57", "#0a5c33"], "#08502c"],
   pink: [["#ffc9da", "#f2789f", "#c2416e"], "#a3325b"],
   vlap: [["#b9a6ff", "#5b3fd6", "#1b1236"], "#140c2e"],
+  defe: [["#f6c3d6", "#d782a0", "#a22b63"], "#7a1d4a"], // Rode with Defe (2026-10-18)
 }; // BadgeGrid's special() lists the same colours, to frame their tiles and pop-ups to match
 // The T100 races in Jeddah (redrawn 2026-10-09 as the booking app's _bdgRace): a finisher's medal on a ribbon,
 // the race's name struck on it, gold / silver / bronze whatever the badge's colour. [text, [gradient], rim, ink]
