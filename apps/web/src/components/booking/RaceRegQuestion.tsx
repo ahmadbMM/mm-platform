@@ -7,7 +7,7 @@ import { DEFE_RACE_CODE } from "@/lib/tickets";
 // "Have you registered for the race?" on a booked DEFE 5KM Run place (the owner, 2026-10-18), as the
 // ticket keeps it once answered (unanswered, the unskippable pop-up asks: RaceGate), as the
 // booking app's ticket asks it (_defeRegHtml): Yes, or No, the members' discount code and the way to
-// Defe's registration page, where the race itself is entered. Yes leaves "You told us you are registered for the race." with Change. The answer
+// Defe's registration page, where the race itself is entered. Yes leaves "You told us you are registered for the race through Defe website." with Change. The answer
 // is saved on the booking through /api/account/race-reg (customer_set_race_reg) and shows at once; a
 // save that fails puts the last answer back and says so. The place is booked whatever the answer.
 // Its words come ready in the page's language from the ticket (tickets.text.ts).

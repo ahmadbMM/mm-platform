@@ -640,7 +640,7 @@ describe("a DEFE 5KM Run ticket (ride_kind 'defe5k', 2026-10-18)", () => {
     expect(no).toMatch(/target="_blank" rel="noopener"[^>]*>Register for the race</);
     expect(no).toMatch(/aria-pressed="true"[^>]*>No</);
     const yes = card([at({ race_reg: "yes" })]);
-    expect(yes).toContain("You told us you are registered for the race.");
+    expect(yes).toContain("You told us you are registered for the race through Defe website.");
     expect(yes).toContain(">Change<");
     expect(yes).not.toContain("Have you registered for the race?");
   });
@@ -653,7 +653,7 @@ describe("a DEFE 5KM Run ticket (ride_kind 'defe5k', 2026-10-18)", () => {
   });
   it("has the booking app's words in Arabic", () => {
     expect(TICKET.ar.defeRegQ).toBe("هل سجّلت في السباق؟");
-    expect(TICKET.ar.defeRegYesNote).toBe("أخبرتنا أنك مسجّل في السباق.");
+    expect(TICKET.ar.defeRegYesNote).toBe("أخبرتنا أنك مسجّل في السباق عبر موقع دفء.");
     expect(TICKET.ar.defeKitTxt).toBe("جدة بارك · الأربعاء 21 أكتوبر · 4–10 م");
     expect(DEFE_RACE_URL).toBe("https://in.njuko.com/defe5k?utm_id=97760_v0_s00_e0_tv5");
     expect(DEFE_RACE_CODE).toBe("MICRO50");
