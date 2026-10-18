@@ -20,7 +20,8 @@ describe("the race pop-up's place", () => {
     expect(pendingRaceRegs([row({ session_id: "2099-10-20-sat", session_date: "2099-10-20" })], df, "2099-10-18", "c1")).toEqual([]);
   });
   it("asks nothing from a read without the column", () => {
-    const { race_reg: _, ...old } = row();
+    const old: Record<string, unknown> = row();
+    delete old.race_reg;
     expect(raceRegCandidates([old], "2099-10-18", "c1")).toEqual([]);
   });
 });
