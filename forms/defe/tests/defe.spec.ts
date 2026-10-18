@@ -78,11 +78,15 @@ async function signUp(page: Page) {
   await page.click('#ack .tick-box');
   await page.click('#create');
 }
-async function book(page: Page, o: { code?: string; group?: string; bike?: string } = {}) {
+async function book(page: Page, o: { code?: string; group?: string; bike?: string; shirt?: string } = {}) {
   await expect(page.locator('#s-book')).toBeVisible();
   if (o.code !== '') await page.fill('#code', o.code ?? 'DEFE24');
   await page.click(`#groups .opt[data-v="${o.group ?? 'beg'}"]`);
   await page.click(`#bikes .pill[data-v="${o.bike ?? 'Hybrid'}"]`);
+  // The Defe shirt: 'yes', or the size wanted (no shirt on 22 October); '' answers nothing.
+  const sh = o.shirt ?? 'M';
+  if (sh === 'yes') await page.click('#shirtgot .pill[data-v="yes"]');
+  else if (sh) { await page.click('#shirtgot .pill[data-v="no"]'); await page.click(`#shirtsizes .pill[data-v="${sh}"]`); }
   await page.click('#waiver .tick-box');
   await page.click('#book');
 }
@@ -183,9 +187,11 @@ test('a new rider makes the account, gives the ride details, books, and is hande
   await expect(page.locator('#done-title')).toHaveText("You're riding");
   await expect(page.locator('#done-sum')).toContainText('Beginners · 20 km');
   await expect(page.locator('#done-sum')).toContainText('Hybrid + helmet');
+  await expect(page.locator('#done-sum')).toContainText('To get one · M');
   const pb = of('partner_book');
   expect(pb).toEqual([{ p_id: su.p_id, p_token: 'tok-new', p_partner: 'defe', p_code: 'DEFE24',
-    p_entry: { id: expect.stringMatching(/^df[0-9a-f]{24}$/), type_preference: 'Hybrid', height: 165, size: 'S', ride_group: 'beg', waiver_version: '2026-10-v3' } }]);
+    p_entry: { id: expect.stringMatching(/^df[0-9a-f]{24}$/), type_preference: 'Hybrid', height: 165, size: 'S', ride_group: 'beg', waiver_version: '2026-10-v3',
+      ask: { shirt_got: false, shirt: 'M' } } }]);
   // About two seconds later: the booking app, signed in by a one-time code, on My Bookings.
   await page.waitForURL(BOOKING + '**', { timeout: 6000 });
   expect(page.url()).toBe(`${BOOKING}?signin=${HANDOFF}&tab=bookings&lang=en`);
@@ -300,6 +306,28 @@ async function toBook(page: Page) {
   await page.click('#d-next');
   await expect(page.locator('#s-book')).toBeVisible();
 }
+
+test('the booking asks whether the rider got a Defe shirt on 22 October, and the size when not', async ({ page }) => {
+  const { errs, of } = await open(page);
+  await toBook(page);
+  await expect(page.locator('#f-shirtsize')).toBeHidden();
+  await book(page, { shirt: '' });
+  await expect(page.locator('#f-shirt .err')).toHaveText('Tell us whether you received a Defe shirt');
+  await page.click('#shirtgot .pill[data-v="no"]');
+  await expect(page.locator('#f-shirtsize')).toBeVisible();
+  await page.click('#book');
+  await expect(page.locator('#f-shirtsize .err')).toHaveText('Choose your T-shirt size');
+  expect(of('partner_book')).toEqual([]);
+  // Yes: no size asked, and the booking says they have one.
+  await page.click('#shirtgot .pill[data-v="yes"]');
+  await expect(page.locator('#f-shirtsize')).toBeHidden();
+  await expect(page.locator('#review')).toContainText('Already have one');
+  await page.click('#book');
+  await expect(page.locator('#v-done')).toBeVisible();
+  expect((of('partner_book')[0].p_entry as Body).ask).toEqual({ shirt_got: true });
+  await expect(page.locator('#done-sum')).toContainText('Already have one');
+  expect(errs).toEqual([]);
+});
 
 test('the booking says when the code is wrong or its places are used up', async ({ page }) => {
   let answer = refuse('BAD_CODE');

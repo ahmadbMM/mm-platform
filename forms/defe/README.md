@@ -30,7 +30,9 @@ light and dark as the device is set.
    `customer_fix_fields` still owes something this page cannot ask (an email, a password, a field staff
    flagged), the rider is sent to the booking site to finish it.
 4. **Book**: the Defe code (only while it is needed), the group (Beginners 20 km / Intermediates 40 km),
-   the bike (Road, Hybrid, Mountain, their own), the review (free), and the ride waiver in a centred
+   the bike (Road, Hybrid, Mountain, their own), whether they received a Defe shirt on 22 October and, if
+   not, their T-shirt size XS-XXL (the owner, 2026-10-18: shirts go to riders who have none; sent as
+   `entry.ask` {shirt_got, shirt}, kept on `queue_entries.partner_ask`, `SHIRT_SIZE` when no size), the review (free), and the ride waiver in a centred
    pop-up with its required tick. `partner_book(id, token, 'defe', code, entry)`; the entry carries
    the frame size from the height (the booking app's chart, by bike type) and the waiver's version.
    Its refusals each have their words: `PARTNER_FULL`, `PARTNER_CLOSED`, `BAD_CODE`, `CODE_USED_UP`,
