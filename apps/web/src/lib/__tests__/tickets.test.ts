@@ -607,7 +607,7 @@ describe("a DEFE 5KM Run ticket (ride_kind 'defe5k', 2026-10-18)", () => {
     expect(raceRegAsked(at({}), jcc, "2099-10-10")).toBe(false);
     expect(raceRegAsked(undefined, df, "2099-10-10")).toBe(false);
   });
-  it("draws Defe's ticket: runner number, 5 km, 7 PM at the circuit, the kit and race lines, the question, cancel only, no wallet pass", () => {
+  it("draws Defe's ticket: runner number, 5 km, 7 PM at the circuit, the kit and race lines, no inline question, cancel only, no wallet pass", () => {
     const html = card([at({})]);
     expect(html).toContain("tk-card ev-defe5k");
     expect(html).toContain("/site/defe-logo.svg");
@@ -619,9 +619,9 @@ describe("a DEFE 5KM Run ticket (ride_kind 'defe5k', 2026-10-18)", () => {
     expect(html).toContain("Kit collection");
     expect(html).toContain("Jeddah Park · Wed 21 Oct · 4–10 PM");
     expect(html).toContain("Jeddah Corniche Circuit · Thu 22 Oct · 7 PM");
-    expect(html).toContain("Have you registered for the race?");
-    expect(html).toContain("Your place with MicroMobility is booked. The race itself is entered on Defe’s registration page.");
-    expect(html).not.toContain("Register for the race<"); // the link waits for No
+    // unanswered, the unskippable pop-up asks it (RaceGate, 2026-10-18), not the ticket
+    expect(html).not.toContain("Have you registered for the race?");
+    expect(html).not.toContain("Register for the race<");
     expect(html).toMatch(/href="https:\/\/maps\.app\.goo\.gl\/defe"[^>]*>.*?Meeting point/);
     expect(html).not.toContain("Helmets");
     expect(html).not.toContain(">Edit<");

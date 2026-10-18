@@ -1,0 +1,17 @@
+/* The DEFE 5KM Run's "Have you registered for the race?" as a pop-up the runner cannot skip (RaceGate,
+   2026-10-18): the rating gate's frame (rating.css), the waiver gate's run box (waiver.css), and the
+   ticket's Yes / No, code and link in Defe's berry (booking.css .tk-rr). */
+.rr-gate .rg-title { color: #a22b63; }
+.rr-gate .rr-yn { display: flex; gap: 8px; margin-top: 14px; }
+.rr-gate .rr-yn button { flex: 1 1 0; min-height: 46px; border-radius: 0; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1.5px solid rgba(162, 43, 99, .4); }
+.rr-gate .rr-yn button:hover { border-color: #a22b63; }
+.rr-gate .rr-yn button[aria-pressed="true"] { background: #a22b63; border-color: #a22b63; color: #fff; }
+.rr-gate .rr-yn button:disabled { opacity: .6; cursor: default; }
+.rr-gate .rr-no { display: grid; gap: 8px; margin-top: 12px; }
+.rr-gate .rr-note { font-size: 13px; line-height: 1.45; color: #5b3a4a; }
+.rr-gate .rr-code { padding: 8px 10px; background: #fdf1f6; border: 1px dashed rgba(162, 43, 99, .5); font-size: 13.5px; font-weight: 600; line-height: 1.45; color: #3b1328; }
+.rr-gate .rr-code strong { font-size: 15px; font-weight: 800; letter-spacing: 1px; color: #a22b63; unicode-bidi: isolate; }
+.rr-gate .rr-link { display: flex; align-items: center; justify-content: center; min-height: 46px; padding: 0 16px; border-radius: 0; text-decoration: none; background: #fff; border: 1.5px solid #a22b63; color: #a22b63; font-size: 14px; font-weight: 700; text-align: center; }
+.rr-gate .rr-link:hover { background: #fdf1f6; }
+.rr-gate .wg-btn { margin-top: 14px; background: #a22b63; }
+.rr-gate :focus-visible { outline: 2px solid #a22b63; outline-offset: 2px; }

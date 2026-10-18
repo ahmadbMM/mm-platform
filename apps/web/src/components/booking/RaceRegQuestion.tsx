@@ -5,6 +5,7 @@ import { raceRegView, type RaceRegAnswer } from "@/lib/race-reg";
 import { DEFE_RACE_CODE } from "@/lib/tickets";
 
 // "Have you registered for the race?" on a booked DEFE 5KM Run place (the owner, 2026-10-18), as the
+// ticket keeps it once answered (unanswered, the unskippable pop-up asks: RaceGate), as the
 // booking app's ticket asks it (_defeRegHtml): Yes, or No, the members' discount code and the way to
 // Defe's registration page, where the race itself is entered. Yes leaves "You told us you are registered for the race." with Change. The answer
 // is saved on the booking through /api/account/race-reg (customer_set_race_reg) and shows at once; a
@@ -45,6 +46,8 @@ export default function RaceRegQuestion({ entryId, initial, url, t }: { entryId:
   }
 
   const view = raceRegView(answer, asking);
+  // not answered yet: the pop-up every page shows asks it (RaceGateLoader, the owner 2026-10-18), not the ticket
+  if (answer === null && !asking) return null;
   if (view === "done") {
     return (
       <div className="tk-rr tk-rr-done" role="status">
