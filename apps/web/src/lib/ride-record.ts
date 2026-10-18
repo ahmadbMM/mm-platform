@@ -36,6 +36,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   run_for_her: ["ribbon", "pink"],
   victory_lap: ["lapring", "vlap"], // Victory Lap's lap ring, on its own special medal, purple into black (2026-10-17)
   defe_ride: ["defewheel", "defe"], // Rode with Defe: the ribbon wheel, rose into berry (2026-10-18)
+  defe_5k: ["defe", "defe"], // the DEFE 5KM Run: Defe's ribbon inside the finisher's ring, rose into berry (2026-10-18)
   // the staff ladders' higher levels and Front Row's (the booking app, 2026-10-12)
   senior_marshal: ["shield", "blue"], chief_marshal: ["shield", "gold"], pit_boss: ["wrench", "teal"], crew_chief: ["wrench", "gold"],
   clear_track: ["wflag", "teal"], track_guardian: ["wflag", "gold"], tech_inspector: ["search", "blue"], chief_scrutineer: ["search", "gold"],
@@ -277,6 +278,8 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
   const rfh = rows.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "runher");
   // Victory Lap: checked out, or the session closed out - both leave the booking done (the owner, 2026-10-17)
   const vlp = rows.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "vlap");
+  // the DEFE 5KM Run: finished, i.e. a done row on a Defe run (the booking app, 2026-10-18), as Run for Her
+  const dfe = rows.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "defe5k");
   // Rode with Defe: checked in (on the bike or done) on the Saturday ride with Defe, members and Defe's riders alike
   const dfr = rows.some((r) => (r.status === "done" || r.status === "active") && DEFE_RIDE_IDS.includes(r.sessionId));
   const P = (n: number, of: number) => `${Math.min(n, of)}/${of}`, pct = profile ? profilePct(profile) : 0;
@@ -285,6 +288,7 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
     ...(profile ? [{ s: "complete_profile", on: pct >= 100, p: `${pct}%` }] : []),
     { s: "national_day_96", on: nd96, hide: true },
     { s: "run_for_her", on: rfh, hide: true }, // the pink ribbon: shown to those who finished it
+    { s: "defe_5k", on: dfe, hide: true }, // Defe's ribbon medal: shown to those who finished the Defe run
     { s: "victory_lap", on: vlp, hide: true }, // the lap ring: shown to those who finished it
     { s: "defe_ride", on: dfr, hide: true }, // the ribbon wheel: shown to those who rode it
     { s: "first_lap", on: rides >= 1, p: `${rides}/1` }, { s: "regular", on: rides >= 5, p: P(rides, 5) }, { s: "podium", on: rides >= 10, p: P(rides, 10) },

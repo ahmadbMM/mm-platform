@@ -1,6 +1,6 @@
 import { fill as fillAt } from "@/i18n/tx";
 import { fill } from "./fill";
-import type { RideKind, RideSession } from "./rides";
+import { oneTime, type RideKind, type RideSession } from "./rides";
 import { hasBreakfast, meetsAt, RUN_KMS, venueOf, venueText } from "./tickets";
 import { VL_DIV_KM, vlConfig, type VlDiv, type VlRace } from "./vlap";
 
@@ -42,6 +42,8 @@ export type InfoTimes = { gather: string; start: string; end: string; collect: s
 export function infoTimes(s: Pick<RideSession, "times" | "gather" | "collect">, clock: (hhmm: string) => string): InfoTimes {
   const at = (v: string | null | undefined) => (v ? clock(v) : "");
   const [a, b] = s.times ?? [null, null];
+  // a session with a start time alone (the DEFE 5KM Run's "19:00") has no end, as the booking app's _infoFill reads it
+  if (oneTime(s.times)) return { gather: "", start: at(a), end: "", collect: at(s.collect) };
   return s.gather ? { gather: at(a), start: at(b), end: "", collect: at(s.collect) } : { gather: "", start: at(a), end: at(b), collect: at(s.collect) };
 }
 
@@ -50,7 +52,7 @@ export const fillTimes = (text: string, t: InfoTimes): string => fill(text, t);
 
 /** The Experiences texts a date's Details start with: the dates section's about* fields, and the
  *  events section's own for the National Day ride and the ticketed events. */
-export type DateTexts = { aboutJcc: string; aboutSat: string; aboutPetro: string; aboutSwim: string; aboutWs: string; aboutRun: string; aboutVl: string; sndAbout: string; evAbout: string };
+export type DateTexts = { aboutJcc: string; aboutSat: string; aboutPetro: string; aboutSwim: string; aboutWs: string; aboutRun: string; aboutVl: string; aboutDefe: string; sndAbout: string; evAbout: string };
 
 /** Which text a date's Details say (the booking app's INFO_DT): its kind's own, filled with its
  *  times, and the circuit's for any kind without one; a ticketed event says its own description
@@ -59,7 +61,7 @@ export function dateText(s: Pick<RideSession, "kind" | "description">, texts: Da
   if (s.kind === "event" && s.description) return s.description;
   const of: Partial<Record<RideKind, string>> = {
     jcc: texts.aboutJcc, saturday: texts.aboutSat, petromin: texts.aboutPetro, swim: texts.aboutSwim, workshop: texts.aboutWs,
-    runher: texts.aboutRun, vlap: texts.aboutVl, snd96: texts.sndAbout, event: texts.evAbout,
+    runher: texts.aboutRun, vlap: texts.aboutVl, defe5k: texts.aboutDefe, snd96: texts.sndAbout, event: texts.evAbout,
   };
   return fillTimes(of[s.kind] ?? texts.aboutJcc, times);
 }
@@ -73,8 +75,8 @@ export function infoWho(s: Pick<RideSession, "members" | "kind">, t: { all: stri
 }
 
 /** A kind of ride that hands out bikes, priced by the bike (the booking app's _needsBike): not the
- *  pool, the T100 day, a ticketed event, a run or Victory Lap. */
-export const rentsBikes = (kind: RideKind): boolean => kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap";
+ *  pool, the T100 day, a ticketed event, a run (Run for Her, the DEFE 5KM Run) or Victory Lap. */
+export const rentsBikes = (kind: RideKind): boolean => kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k";
 
 /** What a date costs (_sessFromPrice): the free word on a free ride, an event's price per seat, and
  *  on a paid ride with bikes the cheapest bike ("from SAR 57.5"); null when there is nothing to say.
@@ -114,9 +116,10 @@ export function infoPlace(s: Pick<RideSession, "kind" | "approval" | "location" 
   return { name: venueText(v, t), map };
 }
 
-/** A run's distances, "3 km · 5 km" from the template "{0} km" (the booking app's RUN_KMS); null on
- *  anything but Run for Her. */
-export const infoDistance = (kind: RideKind, km: string): string | null => (kind === "runher" ? RUN_KMS.map((n) => fillAt(km, n)).join(" · ") : null);
+/** A run's distances, "3 km · 5 km" from the template "{0} km" (the booking app's RUN_KMS); the DEFE
+ *  5KM Run's one, "5 km" (2026-10-18); null on anything else. */
+export const infoDistance = (kind: RideKind, km: string): string | null =>
+  (kind === "runher" ? RUN_KMS.map((n) => fillAt(km, n)).join(" · ") : kind === "defe5k" ? fillAt(km, 5) : null);
 
 /** The places a date has (_infoFacts): never said on a ride staff approve (they choose who rides);
  *  the waitlist on a full date or one with none left; else how many are left, when they were counted
@@ -145,8 +148,9 @@ export function infoBreakfast(s: Pick<RideSession, "kind" | "breakfast" | "break
 /** Which card each kind of date is booked under (the booking app's _evMatch): the circuit, the
  *  community rides, and the National Day ride, the T100 workshop, the ticketed events and Run for Her,
  *  which have cards of their own while they have dates. A Petromin night counts as a community ride
- *  here; Petromin Days takes its own (eventCards). */
-export const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap" };
+ *  here; Petromin Days takes its own (eventCards). The DEFE 5KM Run (2026-10-18) is a date inside
+ *  MicroMobility Experiences, the community card, never a card of its own. */
+export const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community" };
 
 /** The event cards in the order the page shows them, each with its texts' prefix in Experiences'
  *  events section and whether it shows with no date. Petromin Days first (the owner, 2026-10-12), then

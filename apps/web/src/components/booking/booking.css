@@ -226,6 +226,60 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-card.ev-vlap.tk-live .tk-stages li.on::before, .tk-card.ev-vlap.tk-live .tk-stages li.on .tk-st-dot { background: #5b3fd6; border-color: #5b3fd6; }
 .tk-card.ev-vlap.tk-live .tk-st-dot { background: #fff; border-color: rgba(13, 13, 13, .4); }
 .tk-card.ev-vlap.tk-live .tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(91, 63, 214, .14); }
+/* The DEFE 5KM Run's ticket (the booking app's th-defe5k, 2026-10-18): white in every state with Defe's blush
+   washed in from the far corner (mirrored right to left), Defe's logo, berry where the night ticket is neon; when
+   the kits go out and the race starts, and "Have you registered for the race?" (TicketCard, RaceRegQuestion). */
+.tk-card.ev-defe5k, .tk-card.ev-defe5k.tk-live { --df-berry: #a22b63; border: 1px solid rgba(162, 43, 99, .32); color: #3b1328;
+  background: radial-gradient(120% 60% at 100% 100%, rgba(215, 130, 160, .28) 0%, rgba(215, 130, 160, .1) 38%, rgba(255, 255, 255, 0) 66%) #fff; }
+[dir="rtl"] .tk-card.ev-defe5k, [dir="rtl"] .tk-card.ev-defe5k.tk-live { background: radial-gradient(120% 60% at 0% 100%, rgba(215, 130, 160, .28) 0%, rgba(215, 130, 160, .1) 38%, rgba(255, 255, 255, 0) 66%) #fff; }
+.tk-card.ev-defe5k.tk-wl { border: 1.5px dashed #b98a1a; }
+.tk-logo.tk-logo-defe img { height: 34px; }
+.tk-card.ev-defe5k.tk-today::after { background: #a22b63; }
+.tk-card.ev-defe5k.tk-live { color: #3b1328; }
+.tk-card.ev-defe5k.tk-live :is(.tk-num, .tk-name, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l, .tk-rt-n) { color: #3b1328; }
+.tk-card.ev-defe5k.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-ok small, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(59, 19, 40, .66); }
+.tk-card.ev-defe5k.tk-live :is(.tk-dw, .tk-when .go, .tk-total strong, .tk-pay.paid, .tk-rider-pay > .tk-amt.paid, .tk-cd, .tk-note.go, .tk-ok, .tk-rt-a) { color: #a22b63; }
+.tk-card.ev-defe5k.tk-live .tk-pay.due, .tk-card.ev-defe5k.tk-live .tk-note.warn, .tk-card.ev-defe5k.tk-live .tk-wallet-msg { color: #8a5300; }
+.tk-card.ev-defe5k.tk-live :is(.tk-head, .tk-rider, .tk-addons, .tk-rt) { border-color: rgba(162, 43, 99, .2); }
+.tk-card.ev-defe5k.tk-live :is(.tk-q, .tk-type) { background: #fdf0f5; color: #3b1328; border-color: rgba(162, 43, 99, .2); }
+.tk-card.ev-defe5k :is(.tk-type.tk-km) { background: rgba(162, 43, 99, .1); color: #a22b63; border-color: rgba(162, 43, 99, .35); }
+.tk-card.ev-defe5k.tk-live :is(.tk-note, .tk-ok) { background: #fdf0f5; border-color: rgba(162, 43, 99, .2); }
+.tk-card.ev-defe5k.tk-live .tk-note:not(.go):not(.warn) { color: #3b1328; }
+.tk-card.ev-defe5k.tk-live .tk-ok-tick { background: #a22b63; color: #fff; }
+.tk-card.ev-defe5k.tk-live .tk-btn { background: transparent; color: #3b1328 !important; border-color: rgba(162, 43, 99, .3); }
+.tk-card.ev-defe5k.tk-live .tk-btn:hover { background: #fdf0f5; border-color: rgba(162, 43, 99, .62); }
+.tk-card.ev-defe5k.tk-live .tk-btn.solid { background: #a22b63; border-color: #a22b63; color: #fff !important; }
+.tk-card.ev-defe5k.tk-live .tk-btn.red { color: #b42318 !important; border-color: rgba(180, 35, 24, .35); }
+.tk-card.ev-defe5k.tk-live :focus-visible { outline-color: #a22b63; }
+.tk-card.ev-defe5k.tk-live .tk-qr { border-color: rgba(162, 43, 99, .2); }
+.tk-card.ev-defe5k.tk-live .tk-stages li::before { background: rgba(162, 43, 99, .16); }
+.tk-card.ev-defe5k.tk-live .tk-stages li.on::before, .tk-card.ev-defe5k.tk-live .tk-stages li.on .tk-st-dot { background: #a22b63; border-color: #a22b63; }
+.tk-card.ev-defe5k.tk-live .tk-st-dot { background: #fff; border-color: rgba(59, 19, 40, .4); }
+.tk-card.ev-defe5k.tk-live .tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(162, 43, 99, .14); }
+/* when the kits go out and when the race starts */
+.tk-defe-when { display: grid; gap: 6px; margin: 12px 0; padding: 10px 12px; background: #fdf1f6; border: 1px solid rgba(162, 43, 99, .22); color: #3b1328; }
+.tk-defe-when p { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 13px; line-height: 1.4; min-width: 0; }
+.tk-defe-k { font-weight: 800; color: #a22b63; min-width: 110px; }
+.tk-defe-v { min-width: 0; overflow-wrap: anywhere; }
+/* "Have you registered for the race?" (the booking app's _defeRegHtml): Yes / No; No shows the way to Race Arabia */
+.tk-rr { display: grid; gap: 8px; margin: 12px 0; padding: 14px 16px; background: #fff; border: 1.5px solid #a22b63; color: #3b1328; }
+.tk-rr-q { font-size: 16px; font-weight: 800; color: #a22b63; }
+.tk-rr-sub { font-size: 13px; line-height: 1.45; color: #5b3a4a; }
+.tk-rr-yn { display: flex; gap: 8px; }
+.tk-rr-yn button { flex: 1 1 0; min-height: 44px; border-radius: 0; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1.5px solid rgba(162, 43, 99, .4); }
+.tk-rr-yn button:hover { border-color: #a22b63; }
+.tk-rr-yn button[aria-pressed="true"] { background: #a22b63; border-color: #a22b63; color: #fff; }
+.tk-rr-yn button:disabled { opacity: .6; cursor: default; }
+.tk-rr-no { display: grid; gap: 8px; }
+.tk-rr .tk-rr-link { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 0; text-decoration: none; background: #a22b63; border: 1.5px solid #a22b63; color: #fff; font-size: 14px; font-weight: 700; text-align: center; }
+.tk-rr .tk-rr-link:hover { background: #861f50; border-color: #861f50; }
+.tk-rr :focus-visible { outline: 2px solid #a22b63; outline-offset: 2px; }
+.tk-rr.tk-rr-done { display: flex; align-items: center; gap: 10px; border-width: 1px; border-color: rgba(162, 43, 99, .3); background: #fdf1f6; font-size: 13.5px; font-weight: 600; }
+.tk-rr-done > svg { color: #a22b63; flex: none; }
+.tk-rr-done > span { flex: 1 1 auto; min-width: 0; }
+.tk-rr-done button { flex: none; min-height: 36px; padding: 0 14px; border-radius: 0; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1px solid rgba(162, 43, 99, .4); }
+.tk-rr-err { font-size: 13px; font-weight: 600; color: #b42318; }
+@media (max-width: 400px) { .tk-defe-k { min-width: 0; width: 100%; } }
 .tk-type.tk-vl { background: #0d0d0d; color: #fff; border-color: #0d0d0d; white-space: normal; }
 .tk-card.ev-vlap.tk-live .tk-type.tk-vl { background: #0d0d0d; color: #fff; border-color: #0d0d0d; }
 .tk-vl-team { margin-top: 12px; padding: 12px 14px; border: 1px solid rgba(13, 13, 13, .18); background: #f6f6f3; }
@@ -265,6 +319,30 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 :is(.sc-card, .sc-wrap, .xs-info).ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
 :is(.sc-card, .sc-wrap, .xs-info).ev-petromin { --ev: #d6202a; } /* a Petromin night: Petromin's red, as its tag in the booking app (2026-10-12) */
 :is(.sc-card, .sc-wrap, .xs-info).ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
+:is(.sc-card, .sc-wrap, .xs-info).ev-defe5k { --ev: #a22b63; } /* the DEFE 5KM Run: Defe's berry (2026-10-18) */
+/* The DEFE 5KM Run's date card (the booking app's _defeSessCard, 2026-10-18): white with Defe's blush washed in
+   from the far corner (mirrored right to left), the logo (the ribbon woven into دفء, rose), the race's name in
+   berry, when / how far / where, and the cause with its ribbon along the foot. */
+.sc-card.sc-defe { gap: 6px; padding-top: 14px; color: #3b1328; border-radius: 0;
+  background-color: #fff; background-image: radial-gradient(120% 140% at 100% 100%, rgba(215, 130, 160, .3) 0%, rgba(215, 130, 160, .12) 40%, rgba(255, 255, 255, 0) 68%);
+  border: 1px solid rgba(162, 43, 99, .3); border-inline-start: 3px solid #a22b63; }
+[dir="rtl"] .sc-card.sc-defe { background-image: radial-gradient(120% 140% at 0% 100%, rgba(215, 130, 160, .3) 0%, rgba(215, 130, 160, .12) 40%, rgba(255, 255, 255, 0) 68%); }
+.sc-card.sc-defe:hover { background-color: #fff7fa; border-color: rgba(162, 43, 99, .6); box-shadow: 0 0 14px rgba(162, 43, 99, .12); }
+.sc-card.sc-defe:focus-visible { outline-color: #a22b63; }
+.sc-defe-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sc-defe-logo { height: 38px; width: auto; max-width: 100%; object-fit: contain; display: block; }
+.sc-defe-title { font-size: 19px; font-weight: 800; letter-spacing: .6px; text-transform: uppercase; line-height: 1.15; color: #a22b63; overflow-wrap: anywhere; }
+html:is([lang="ar"], [lang="ur"]) .sc-defe-title { letter-spacing: 0; text-transform: none; }
+.sc-card.sc-defe .sc-date { flex: none; font-size: 14px; }
+.sc-card.sc-defe .sc-dw { color: #a22b63; }
+.sc-defe-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 9px; font-size: 13px; font-weight: 600; color: #5b3a4a; min-width: 0; }
+.sc-defe-meta > span { display: inline-flex; align-items: center; gap: 9px; }
+.sc-defe-meta i { width: 1px; height: 12px; background: rgba(162, 43, 99, .35); display: inline-block; flex: none; }
+.sc-defe-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.sc-defe-cause { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: #a22b63; min-width: 0; }
+.xs-rb { color: #d782a0; flex: none; }
+.sc-card.sc-defe .sc-spots:not(.full):not(.low):not(.closed) { color: #a22b63; }
+@media (max-width: 400px) { .sc-defe-title { font-size: 17px; } .sc-defe-logo { height: 32px; } }
 /* A ticketed event's card says what it is and what a seat costs. */
 .sc-desc { font-size: 12.5px; color: #4f565c; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sc-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; font-weight: 700; color: #06603b; }

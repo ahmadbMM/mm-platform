@@ -57,7 +57,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const ridesHref = bookingLink(S(c.hero.ridesHref), locale);
   // The members' rides are named as Experiences names them, and booked in the booking app on that ride
   // (the kind is the session's ride_kind: Run for Her, 'runher', opens on its own event, ev=runher, and
-  // Victory Lap, 'vlap', on its own, ev=vlap).
+  // Victory Lap, 'vlap', on its own, ev=vlap; the DEFE 5KM Run, 'defe5k', is a community date, ev=community).
   const d = resolvePage(experiencesSchema, content, L).dates;
   const kindName = kindNames(d), enName = kindNames(resolvePage(experiencesSchema, content, "en").dates);
   const asKind = (k: string | null): RideKind => (k && k in kindName ? (k as RideKind) : "saturday");

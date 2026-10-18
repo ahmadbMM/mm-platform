@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { kindNames, loadRides, readSessions, resetRides, rideKind, routeSlugOf, sessionName, sessionRows, slotTimes, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
+import { kindNames, loadRides, oneTime, readSessions, resetRides, rideKind, routeSlugOf, sessionName, sessionRows, slotTimes, timesText, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
 import { memoSettled } from "../memo";
 
 // /experiences shows the booking system's own prices and sessions. The rules mirror the booking
@@ -433,5 +433,40 @@ describe("sessionName", () => {
     expect(sessionName({ kind: "runher", title: null }, enR, enR, false)).toBe("Run for Her");
     expect(sessionName({ kind: "runher", title: "Run for Her" }, arR, enR, true)).toBe("نركض لأجلها");
     expect(sessionName({ kind: "runher", title: "Run for Her 2026" }, arR, enR, true)).toBe("Run for Her 2026");
+  });
+});
+
+describe("the DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18)", () => {
+  const df = { id: "2026-10-22-df", session_date: "2026-10-22", event_kind: "community", ride_kind: "defe5k", title: "DEFE 5KM Run", open_to_all: false, paid_ride: false, needs_approval: false, capacity: 300, bike_slots: '{"_time":"19:00"}', location: "JCC", meet_url: "https://maps.app.goo.gl/aWjWgoxHX1W28JB26" };
+  it("is a kind of its own on a community session only", () => {
+    expect(rideKind({ event_kind: "community", ride_kind: "defe5k" })).toBe("defe5k");
+    expect(rideKind({ event_kind: null, ride_kind: "defe5k" })).toBe("jcc");
+  });
+  it("reads members only, free, nobody approving it, one start time and no gathering, no bike collection", () => {
+    expect(toSession(row(df))).toMatchObject({ id: "2026-10-22-df", kind: "defe5k", members: true, free: true, times: ["19:00", "19:00"], gather: false, price: null, seats: null, collect: null, approval: false, capacity: 300, location: "JCC" });
+    expect(toSession(row({ ...df, status: "full" }))).toMatchObject({ kind: "defe5k", full: true });
+  });
+  it("reads a session's one start time, and says it once", () => {
+    expect(slotTimes('{"_time":"19:00"}')).toEqual(["19:00", "19:00"]);
+    expect(slotTimes({ _time: " 7:30 " })).toEqual(["07:30", "07:30"]);
+    expect(oneTime(["19:00", "19:00"])).toBe(true);
+    expect(oneTime(["21:00", "23:00"])).toBe(false);
+    expect(oneTime(null)).toBe(false);
+    const clock = (x: string) => `<${x}>`, w = { gather: "Gathering", start: "Start" };
+    expect(timesText(["19:00", "19:00"], false, clock, w)).toBe("<19:00>");
+    expect(timesText(["19:00", "19:00"], true, clock, w)).toBe("<19:00>");
+    expect(timesText(["21:00", "23:00"], false, clock, w)).toBe("<21:00> – <23:00>");
+    expect(timesText(["05:45", "06:15"], true, clock, w)).toBe("Gathering <05:45> · Start <06:15>");
+    expect(timesText(null, false, clock, w)).toBe("");
+  });
+  it("stays on the list until its start has passed", () => {
+    const s = toSession(row(df))!;
+    expect(upcoming([s], "2026-10-22T18:30").map((x) => x.id)).toEqual(["2026-10-22-df"]);
+    expect(upcoming([s], "2026-10-22T19:00")).toEqual([]);
+  });
+  it("is named by its own name (Experiences > Dates: defeName), in Arabic too", () => {
+    const en = kindNames({ defeName: "DEFE 5KM Run" }), ar = kindNames({ defeName: "سباق دفء 5 كم" });
+    expect(sessionName({ kind: "defe5k", title: null }, en, en, false)).toBe("DEFE 5KM Run");
+    expect(sessionName({ kind: "defe5k", title: "DEFE 5KM Run" }, ar, en, true)).toBe("سباق دفء 5 كم");
   });
 });

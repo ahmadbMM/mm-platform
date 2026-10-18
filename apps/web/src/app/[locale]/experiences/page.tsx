@@ -14,13 +14,13 @@ import { rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { dateText, eventCards, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { bizOf, faresOf } from "@/lib/biz";
-import { kindNames, loadRides, sessionName, upcoming, type RideSession } from "@/lib/rides";
+import { kindNames, loadRides, oneTime, sessionName, upcoming, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
-import { dayWord, fmtClock, fmtDayDate, kmText, meetHeld, revealWhen, spotHeld } from "@/lib/tickets";
+import { DEFE_RACE_URL, dayWord, fmtClock, fmtDayDate, kmText, meetHeld, revealWhen, spotHeld } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt, phrase } from "@/i18n/tx";
 import { intlOf, isRtl } from "@/i18n/locales";
@@ -143,7 +143,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
   const dateTexts: DateTexts = {
-    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl),
+    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe),
     sndAbout: S(e.sndAbout), evAbout: S(e.evAbout),
   };
   const whoWords = {
@@ -166,6 +166,14 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   // the circuit, meetHeld; Run for Her the Jeddah Yacht Club).
   const nearWords = { today: tx("Today", "اليوم"), tomorrow: tx("Tomorrow", "غداً") };
   const heldWhen = (s: RideSession) => (spotHeld(s) ? revealWhen(s.revealAt, locale, now.slice(0, 10), nearWords) : null);
+  // The DEFE 5KM Run (2026-10-18), in the booking app's words (defeCause, defeKitLabel, defeKitTxt,
+  // defeRegLabel, defeRegLinkShort, defeLogoAlt): its date card's cause line, and its Details' kit
+  // collection and the way to register for the race itself (Race Arabia).
+  const defeWords = {
+    cause: tx("Breast cancer awareness run", "جري للتوعية بسرطان الثدي"),
+    kitLabel: tx("Kit collection", "استلام عُدّة السباق"), kit: tx("Jeddah Park · Wed 21 Oct · 4–10 PM", "جدة بارك · الأربعاء 21 أكتوبر · 4–10 م"),
+    regLabel: tx("Race registration", "التسجيل في السباق"),
+  };
   const toStep = (s: RideSession): StepSession => {
     const seatPrice = s.kind === "event" && s.price != null ? sar(s.price) : null;
     // when bikes go out and the price from, under the time, as the booking app's session card says them
@@ -179,9 +187,13 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // today or tomorrow said in words, as the booking app's session card does (_dayWord)
       near: ((w) => (w === "today" ? tx("Today", "اليوم") : w === "tomorrow" ? tx("Tomorrow", "غداً") : null))(dayWord(s.date, now.slice(0, 10))),
       name: sessionName(s, kindName, enName, L !== "en"),
-      when: s.times ? { gather: s.gather, a: clock(s.times[0]), b: clock(s.times[1]) } : null,
+      // a session with a start time alone (the DEFE 5KM Run) says it once: b is ""
+      when: s.times ? { gather: s.gather && !oneTime(s.times), a: clock(s.times[0]), b: oneTime(s.times) ? "" : clock(s.times[1]) } : null,
       // a run and Victory Lap have no bikes, so never the bike prices
-      members: s.members, free: s.free, full: s.full, paid: !s.free && s.kind !== "runher" && s.kind !== "vlap", noCarbon: s.noCarbon,
+      members: s.members, free: s.free, full: s.full, paid: !s.free && s.kind !== "runher" && s.kind !== "vlap" && s.kind !== "defe5k", noCarbon: s.noCarbon,
+      // the DEFE 5KM Run's own card (the booking app's _defeSessCard): the logo, its name, when, how far and
+      // where, and the cause along the foot
+      ...(s.kind === "defe5k" ? { defe: { meta: [s.times ? clock(s.times[0]) : "", fillAt(kmWord, 5), place.name].filter(Boolean), cause: defeWords.cause } } : {}),
       // a copy kept at the edge from before these fields existed reads as an event without them
       event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
@@ -201,6 +213,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         collect, place: place.name, map: place.map,
         distance: infoDistance(s.kind, kmWord), places: infoPlaces(s, { waitlist: waitWord, left1, leftN }),
         ...((v) => (v ? { races: v.races, divs: v.divs } : {}))(infoVl(s, vlWords)),
+        // the DEFE 5KM Run: when the kits go out, and where the race itself is entered (the booking app's _infoFacts)
+        ...(s.kind === "defe5k" ? { kit: { label: defeWords.kitLabel, text: defeWords.kit }, race: { label: defeWords.regLabel, link: "Race Arabia", url: DEFE_RACE_URL } } : {}),
       },
     };
   };

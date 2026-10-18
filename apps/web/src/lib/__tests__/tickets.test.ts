@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { routeItems } from "../route-names";
-import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, meetHeld, queueNumbers, revealWhen, rideCompleted, rideEndsAt, spotHeld, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, type TicketRow } from "../tickets";
+import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, meetHeld, queueNumbers, revealWhen, rideCompleted, rideEndsAt, spotHeld, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, DEFE_RACE_URL, isDefe, raceRegAsked, type TicketRow } from "../tickets";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import TicketCard from "@/components/booking/TicketCard";
 import { createElement, type ReactElement } from "react";
@@ -562,5 +562,95 @@ describe("a Victory Lap ticket (ride_kind 'vlap', 2026-10-17)", () => {
     expect(vlDivName("el", "ar")).toBe("النخبة");
     expect(vlDivName("el", "fr")).toBe("Elite");
     expect(vlDivName("so", "zh")).toBe("Sprint Open");
+  });
+});
+
+describe("a DEFE 5KM Run ticket (ride_kind 'defe5k', 2026-10-18)", () => {
+  // As the booking app makes the run: members only, free, nobody approves it, one start time (7 PM), at the
+  // circuit (location JCC) with the meeting point's map link; everyone runs 5 km.
+  const dfRow = { id: "2099-10-22-df", session_date: "2099-10-22", event_kind: "community", ride_kind: "defe5k", needs_approval: false, hide_queue: true, open_to_all: false, paid_ride: false, bike_slots: '{"_time":"19:00"}', meet_url: "https://maps.app.goo.gl/defe", location: "JCC", title: "DEFE 5KM Run", capacity: 300 };
+  const df = ticketSession(dfRow)!;
+  const t = TICKET.en;
+  const at = (o: Record<string, unknown>) => ticketRow({ id: "df1abcdef", session_id: df.id, session_date: df.date, session_day: "Thursday", status: "waiting", queue_num: 7, price: 0, paid: false, name: "Test Runner", type_preference: "None", run_km: 5, ...o })!;
+  const card = (rows: TicketRow[], o: { today?: string; past?: boolean } = {}) => renderToStaticMarkup(createElement(TicketCard, {
+    locale: "en", today: o.today ?? "2099-10-10", rows, session: df, name: "DEFE 5KM Run", cue: null, t, gather: "Gathering", start: "Start", typeName: (x: string) => x, past: o.past,
+    links: { edit: "https://book.example.test/?ev=community", manage: "https://book.example.test/?tab=bookings", place: df.meetUrl }, now: Date.parse("2099-10-10T09:00:00Z"),
+    wallet: { bookingId: "df1abcdef", groupIds: ["df1abcdef"] },
+  }));
+
+  it("has no bikes, no gathering, one start time, is free, and shows its number", () => {
+    expect(df).toMatchObject({ kind: "defe5k", bikes: false, gathers: false, approval: false, free: true, times: ["19:00", "19:00"], location: "JCC" });
+    expect(isDefe(df)).toBe(true);
+    expect(codeReady([row({})], df)).toBe(true);
+    expect(bookingRef(row({ sessionId: df.id, queueNum: 7 }), df)).toBe("MMC-7-q1abcd");
+    expect(venueText(venueOf(df), t)).toBe("Jeddah Corniche Circuit");
+    expect(meetsAt(df)).toBe(true);
+    expect(icsPlace(df)).toBe("https://maps.app.goo.gl/defe");
+    // the calendar runs two hours from the start, never a whole day
+    const ics = icsFor(df, "DEFE 5KM Run", icsPlace(df), new Date("2099-10-01T00:00:00Z"));
+    expect(ics).toContain("DTSTART:20991022T160000Z");
+    expect(ics).toContain("DTEND:20991022T180000Z");
+    expect(countdownMoments(df, df.date)).toEqual([[Date.parse("2099-10-22T19:00:00+03:00"), "start"]]);
+  });
+  it("reads the runner's answer to the race question: yes, no, or none yet", () => {
+    expect(at({ race_reg: "yes" }).raceReg).toBe("yes");
+    expect(at({ race_reg: "no" }).raceReg).toBe("no");
+    for (const v of [null, undefined, "", "maybe", true]) expect(at({ race_reg: v }).raceReg, String(v)).toBeNull();
+    expect(at({}).runKm).toBe(5);
+  });
+  it("asks the race question on a place still to run, never once done or past, never on another kind", () => {
+    expect(raceRegAsked(at({}), df, "2099-10-10")).toBe(true);
+    expect(raceRegAsked(at({ status: "waitlist" }), df, "2099-10-22")).toBe(true);
+    expect(raceRegAsked(at({ status: "active" }), df, "2099-10-22")).toBe(true);
+    expect(raceRegAsked(at({ status: "done" }), df, "2099-10-22")).toBe(false);
+    expect(raceRegAsked(at({}), df, "2099-10-23")).toBe(false);
+    expect(raceRegAsked(at({}), jcc, "2099-10-10")).toBe(false);
+    expect(raceRegAsked(undefined, df, "2099-10-10")).toBe(false);
+  });
+  it("draws Defe's ticket: runner number, 5 km, 7 PM at the circuit, the kit and race lines, the question, cancel only, no wallet pass", () => {
+    const html = card([at({})]);
+    expect(html).toContain("tk-card ev-defe5k");
+    expect(html).toContain("/site/defe-logo.svg");
+    expect(html).toContain("Runner number");
+    expect(html).toMatch(/class="tk-type tk-km">5 km</);
+    expect(html).toMatch(/<bdi>7 PM<\/bdi>/);
+    expect(html).not.toContain("7 PM – 7 PM");
+    expect(html).toContain("Jeddah Corniche Circuit");
+    expect(html).toContain("Kit collection");
+    expect(html).toContain("Jeddah Park · Wed 21 Oct · 4–10 PM");
+    expect(html).toContain("Jeddah Corniche Circuit · Thu 22 Oct · 7 PM");
+    expect(html).toContain("Have you registered for the race?");
+    expect(html).toContain("Your place with MicroMobility is booked. The race itself is entered on Race Arabia.");
+    expect(html).not.toContain("Register for the race<"); // the link waits for No
+    expect(html).toMatch(/href="https:\/\/maps\.app\.goo\.gl\/defe"[^>]*>.*?Meeting point/);
+    expect(html).not.toContain("Helmets");
+    expect(html).not.toContain(">Edit<");
+    expect(html).not.toContain("Reschedule");
+    expect(html).toContain(">Cancel<");
+    expect(html).not.toContain("tk-wallet");
+  });
+  it("shows the way to Race Arabia after No, and the note with Change after Yes", () => {
+    const no = card([at({ race_reg: "no" })]);
+    expect(no).toContain("Register on Race Arabia to take part in the race.");
+    expect(no).toContain(`href="${DEFE_RACE_URL.replace(/&/g, "&amp;")}"`);
+    expect(no).toMatch(/target="_blank" rel="noopener"[^>]*>Register for the race</);
+    expect(no).toMatch(/aria-pressed="true"[^>]*>No</);
+    const yes = card([at({ race_reg: "yes" })]);
+    expect(yes).toContain("You told us you are registered for the race.");
+    expect(yes).toContain(">Change<");
+    expect(yes).not.toContain("Have you registered for the race?");
+  });
+  it("leaves the question and the race lines off a done place and a past card", () => {
+    const done = card([at({ status: "done" })], { today: "2099-10-22" });
+    expect(done).not.toContain("Have you registered for the race?");
+    const past = card([at({ status: "done" })], { today: "2099-10-22", past: true });
+    expect(past).not.toContain("Kit collection");
+    expect(past).not.toContain("Have you registered for the race?");
+  });
+  it("has the booking app's words in Arabic", () => {
+    expect(TICKET.ar.defeRegQ).toBe("هل سجّلت في السباق؟");
+    expect(TICKET.ar.defeRegYesNote).toBe("أخبرتنا أنك مسجّل في السباق.");
+    expect(TICKET.ar.defeKitTxt).toBe("جدة بارك · الأربعاء 21 أكتوبر · 4–10 م");
+    expect(DEFE_RACE_URL).toMatch(/^https:\/\/in\.racearabia\.sa\/defe5k\?utm_source=ig&.*currentPage=select-competition$/);
   });
 });

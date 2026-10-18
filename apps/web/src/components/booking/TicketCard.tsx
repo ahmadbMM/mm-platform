@@ -1,11 +1,13 @@
 import Qr from "./Qr";
 import Countdown from "./Countdown";
+import RaceRegQuestion from "./RaceRegQuestion";
 import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
 import { VL_DIV_KM, vlDivName, vlIsDbl, vlPayLine } from "@/lib/vlap";
-import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
+import { timesText } from "@/lib/rides";
+import { DEFE_RACE_URL, raceRegAsked, addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -15,6 +17,9 @@ import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, co
 // the race and division where a ride shows the bike type, the team's code and the partner (Doubles), the
 // T-shirt and 5 km time, and how to pay while unpaid, on its own look (white, the race's logo, a
 // checkered strip down the end edge: the booking app's th-vlap); its details change in the booking app.
+// A DEFE 5KM Run ticket (2026-10-18) is a run's too - "Runner number", 5 km, cancel only - on Defe's own
+// look (white with Defe's blush, its logo: the booking app's th-defe5k), with when the kits go out and the
+// race starts, and "Have you registered for the race?" (RaceRegQuestion) while the place is still to run.
 export type TicketText = (typeof T)["en"];
 type Props = {
   locale: string;
@@ -102,7 +107,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const venue = held && meetHeld(s, now) ? ({ kind: "meet" } as const) : venueOf(s);
   const big = num.length <= 4 ? "big" : num.length <= 9 ? "mid" : "small";
   const bikes = s ? s.bikes : true;
-  const run = s?.kind === "runher"; // Run for Her: a runner's number, a distance, cancel only
+  const run = s?.kind === "runher" || s?.kind === "defe5k"; // Run for Her, the DEFE 5KM Run: a runner's number, a distance, cancel only
+  const defe = s?.kind === "defe5k";
   const vlap = s?.kind === "vlap"; // Victory Lap: an athlete's number, the race and team, how to pay
   const numLabel = run ? t.runnerNumber : vlap ? t.athleteNumber : t.queueNumber;
   // The add-ons bought with the booking, each rider's under their name, and in the total, as the
@@ -132,9 +138,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const d = new Date(`${primary.date}T00:00:00Z`);
   const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { ...o, timeZone: "UTC" }).format(d);
   const clock = (x: string) => fmtClock(x, locale);
-  const when = s?.times
-    ? (s.gathers ? `${gather} ${clock(s.times[0])} · ${start} ${clock(s.times[1])}` : `${clock(s.times[0])} – ${clock(s.times[1])}`)
-    : "";
+  // a session with a start time alone (the DEFE 5KM Run's 7 PM) says it once
+  const when = timesText(s?.times, !!s?.gathers, clock, { gather, start });
   const green = s?.times && s.gathers ? t.gatherAt(clock(s.times[0])) : s?.collect && bikes ? t.collectFrom(clock(s.collect)) : "";
   const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, icsPlace(s)) : "";
   const wl = primary.waitlistNum;
@@ -146,6 +151,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           {/* The logo heads the number's column (the booking app's _tkLogo): white lettering on the dark card. */}
           {vlap
             ? <span className="tk-logo tk-logo-vl" aria-hidden="true"><img src="/site/victory-lap-dark.webp" alt="" decoding="async" /></span>
+            : defe ? <span className="tk-logo tk-logo-defe" aria-hidden="true"><img src="/site/defe-logo.svg" alt="" decoding="async" /></span>
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
           {!noNum && (allWl
             ? <p className="tk-label wl">{t.wlOnList}{wl ? <> · {t.wlLinePos(String(wl))}</> : ""}</p>
@@ -295,6 +301,19 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             </div>
           );
         })()}
+        {defe && !past && (
+          // when the kits go out and the race starts, then the race question (the booking app's _defeKitHtml, _defeRegHtml)
+          <>
+            <div className="tk-defe-when">
+              <p><span className="tk-defe-k">{t.defeKitLabel}</span><span className="tk-defe-v">{t.defeKitTxt}</span></p>
+              <p><span className="tk-defe-k">{t.defeRaceLabel}</span><span className="tk-defe-v">{t.defeRaceTxt}</span></p>
+            </div>
+            {raceRegAsked(primary, s, today) && (
+              <RaceRegQuestion entryId={primary.id} initial={primary.raceReg ?? null} url={DEFE_RACE_URL}
+                t={{ q: t.defeRegQ, sub: t.defeRegSub, noNote: t.defeRegNoNote, link: t.defeRegLink, yesNote: t.defeRegYesNote, yes: t.yes, no: t.no, change: t.change, failed: t.rrFailed }} />
+            )}
+          </>
+        )}
         {(free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>}
         {owes && !past && <p className="tk-line">{t.payAtBooth}</p>}
         {!allWl && !past && bikes && <p className="tk-line">{s?.approval ? t.helmetFree : t.helmetLine}</p>}
@@ -305,8 +324,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         {links.place && <a className="tk-btn" href={links.place} target="_blank" rel="noopener"><Pin />{meetsAt(s) ? t.meetingPoint : t.directions}</a>}
         {links.live && <a className="tk-btn solid" href={links.live}><Live />{t.liveMap}</a>}
       </div>}
-      {/* A pass in the phone's wallet reads as a place held: none on a waitlist or before the code is out. */}
-      {wallet && !past && !allWl && ready && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
+      {/* A pass in the phone's wallet reads as a place held: none on a waitlist or before the code is out, and
+          none on the DEFE 5KM Run, which the passes do not know (the booking app's _walletOk). */}
+      {wallet && !past && !allWl && ready && !defe && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
       {canEdit && (
         <div className="tk-manage">
           {/* a run booking is never changed, only cancelled, as in the booking app */}

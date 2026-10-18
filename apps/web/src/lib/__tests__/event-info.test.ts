@@ -12,7 +12,7 @@ import { fmtClock } from "../tickets";
 const clock = (t: string) => fmtClock(t, "en");
 const TEXTS: DateTexts = {
   aboutJcc: "Circuit: bikes from {collect}, {start} to {end}.", aboutSat: "Gather {gather}, start {start}.", aboutPetro: "Petromin: bikes from {collect}.", aboutSwim: "Pool {start} to {end}.",
-  aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", aboutVl: "Doors {gather}, first heat {start}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
+  aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", aboutVl: "Doors {gather}, first heat {start}.", aboutDefe: "Defe run at {start}{end}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
 };
 const circuit = { kind: "jcc" as const, times: ["21:00", "23:00"] as [string, string], gather: false, collect: "20:15", description: null };
 const saturday = { kind: "saturday" as const, times: ["05:45", "06:15"] as [string, string], gather: true, collect: null, description: "Breakfast at the marina." };
@@ -296,5 +296,40 @@ describe("Victory Lap on Experiences", () => {
     const logo = experiencesSchema.sections.find((x) => x.id === "events")?.fields.find((x) => x.id === "vlLogo") as { def: string } | undefined;
     expect(logo?.def).toBe("/site/victory-lap-dark.webp");
     expect(readFileSync(new URL("../../../public/site/victory-lap-dark.webp", import.meta.url)).length).toBeGreaterThan(0);
+  });
+});
+
+describe("the DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18)", () => {
+  const defe = { kind: "defe5k" as const, times: ["19:00", "19:00"] as [string, string], gather: false, collect: null, description: null };
+  it("is a date among the community rides, never a card of its own", () => {
+    const all = [{ id: "2026-10-22-df", kind: "defe5k" as const }, { id: "2026-10-24", kind: "saturday" as const }, { id: "j", kind: "jcc" as const }];
+    const cards = eventCards(all, { member: true, petromin: false });
+    expect(cards.map((c) => c.card.key)).toEqual(["jcc", "community"]);
+    expect(cards.find((c) => c.card.key === "community")?.sessions.map((x) => x.id)).toEqual(["2026-10-22-df", "2026-10-24"]);
+    expect(EVENT_CARDS.map((c) => c.key)).not.toContain("defe5k");
+    expect(bookingAt("https://book.example/", "community", "2026-10-22-df")).toBe("https://book.example/?ev=community&session=2026-10-22-df");
+  });
+  it("says its one start time and its own text, for members, with no bike price", () => {
+    expect(infoTimes(defe, clock)).toEqual({ gather: "", start: "7 PM", end: "", collect: "" });
+    expect(dateText(defe, TEXTS, infoTimes(defe, clock))).toBe("Defe run at 7 PM.");
+    const who = { all: "Everyone", members: "Community members", members18: "Community members, 18 and over", petromin: "x", vlap: "y" };
+    expect(infoWho({ members: true, kind: "defe5k" }, who)).toBe("Community members");
+    expect(rentsBikes("defe5k")).toBe(false);
+    expect(infoPrice({ kind: "defe5k", free: true }, { free: "Complimentary", seat: null, from: "from SAR 57.5" })).toBe("Complimentary");
+    expect(infoPrice({ kind: "defe5k", free: false }, { free: "Complimentary", seat: null, from: "from SAR 57.5" })).toBeNull();
+  });
+  it("runs 5 km, at the circuit, its map the meeting point staff set", () => {
+    expect(infoDistance("defe5k", "{0} km")).toBe("5 km");
+    expect(infoDistance("defe5k", "{0} كم")).toBe("5 كم");
+    const words = { meetingPoint: "Meeting point", venueCircuit: "Jeddah Corniche Circuit", venueJyc: "Jeddah Yacht Club" };
+    expect(infoPlace({ kind: "defe5k", approval: false, location: "JCC", meetUrl: "https://maps.app.goo.gl/x" }, words, "https://dir")).toEqual({ name: "Jeddah Corniche Circuit", map: "https://maps.app.goo.gl/x" });
+    expect(infoPlace({ kind: "defe5k", approval: false, location: "JCC", meetUrl: null }, words, "https://dir")).toEqual({ name: "Jeddah Corniche Circuit", map: "https://dir" });
+  });
+  it("has its name and Details text in Experiences' fields, the booking app's own words", () => {
+    const f = (id: string) => experiencesSchema.sections.find((x) => x.id === "dates")?.fields.find((x) => x.id === id) as { def: { en: string; ar: string } } | undefined;
+    expect(f("defeName")?.def).toEqual({ en: "DEFE 5KM Run", ar: "سباق دفء 5 كم" });
+    expect(f("aboutDefe")?.def.en).toBe("Run 5 km with Defe for breast cancer awareness, together with the MicroMobility community, at the Jeddah Corniche Circuit. Collect your race kit at Jeddah Park on 21 October, 4–10 PM. The race starts on 22 October at 7 PM.");
+    expect(f("aboutDefe")?.def.ar).toContain("دفء");
+    expect(readFileSync(new URL("../../../public/site/defe-logo.svg", import.meta.url), "utf8")).toMatch(/^<svg[^>]*viewBox="112 203 977 660"/);
   });
 });

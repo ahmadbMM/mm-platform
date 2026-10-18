@@ -367,3 +367,30 @@ describe("Rode with Defe (defe_ride, 2026-10-18)", () => {
     expect(html).toContain("#a22b63");
   });
 });
+
+describe("the DEFE 5KM Run's finisher badge (defe_5k, 2026-10-18)", () => {
+  // A finished run is a done row on a session of kind 'defe5k'; shown only to those who earned it, as Run for Her's.
+  const dfRows = (status: string) => recordRows([row({ session_id: "2026-09-24-df", session_date: "2026-09-24", status, paid: false, type_preference: "None", run_km: 5 })]);
+  const dfSes = new Map<string, RecordSession>([["2026-09-24-df", { kind: "defe5k", freeRide: true, approval: false }]]);
+  it("stays hidden until the run is finished (done), then shows as Defe's ribbon on its medal", () => {
+    for (const status of ["waiting", "waitlist", "active", "noshow"]) expect(badgeList(dfRows(status), dfSes, empty, today, null).map((x) => x.slug), status).not.toContain("defe_5k");
+    expect(badgeList(dfRows("done"), dfSes, empty, today, null).find((x) => x.slug === "defe_5k")).toMatchObject({ on: true, icon: "defe", color: "defe" });
+    // the badges table holds it as red: still Defe's medal
+    const catalog = [{ slug: "defe_5k", icon: "defe", color: "red", system: true, auto: true }];
+    expect(badgeList(dfRows("done"), dfSes, { ...empty, catalog }, today, null).find((x) => x.slug === "defe_5k")).toMatchObject({ on: true, icon: "defe", color: "defe" });
+  });
+  it("is not earned on Run for Her or a ride", () => {
+    const rh = new Map<string, RecordSession>([["2026-09-24-df", { kind: "runher", freeRide: true, approval: false }]]);
+    expect(badgeList(dfRows("done"), rh, empty, today, null).map((x) => x.slug)).not.toContain("defe_5k");
+    expect(badgeList(dfRows("done"), dfSes, empty, today, null).map((x) => x.slug)).not.toContain("run_for_her");
+  });
+  it("is drawn rose into berry, the ribbon inside the ring, with its words in English and Arabic", () => {
+    const html = renderToStaticMarkup(createElement(Medal, { icon: "defe", color: "defe" }));
+    expect(html).toContain("#d782a0");
+    expect(html).toContain("#a22b63");
+    expect(html).toContain('r="9.6"');
+    expect(html).toContain("scale(.7)");
+    expect(RECORD.en.names.defe_5k[0]).toBe("DEFE 5K");
+    expect(RECORD.ar.names.defe_5k[1]).toBe("أكمل سباق دفء 5 كم.");
+  });
+});

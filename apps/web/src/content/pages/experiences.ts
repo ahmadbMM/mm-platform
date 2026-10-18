@@ -118,6 +118,8 @@ export const experiencesSchema = {
         txt("eventName", 50, "Name: event without a title", "الاسم: فعالية بلا عنوان", "Event", "فعالية"),
         txt("runHerName", 50, "Name: Run for Her", "الاسم: نركض لأجلها", "Run for Her", "نركض لأجلها"),
         txt("vlName", 50, "Name: Victory Lap", "الاسم: فيكتوري لاب", "Victory Lap", "فيكتوري لاب"),
+        // The DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18): a date among the community rides, in Defe's pink
+        txt("defeName", 50, "Name: DEFE 5KM Run", "الاسم: سباق دفء 5 كم", "DEFE 5KM Run", "سباق دفء 5 كم"),
         // What each kind of date is, in its Details on Experiences and in the booking app (2026-10-05,
         // lib/event-info.ts): the National Day ride and the events say their card's About instead.
         // aboutPetro is a Petromin night's, which this site shows since 2026-10-12 (Petromin Days).
@@ -128,6 +130,8 @@ export const experiencesSchema = {
         { ...long("aboutWs", 420, "Details: T100", "التفاصيل: T100", "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.", "التحضير للترايثلون T100 بالشراكة مع الاتحاد السعودي للترايثلون، من {start} إلى {end}. متاحة للجميع، مجانًا، ويعتمد فريقنا القائمة."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         { ...long("aboutRun", 420, "Details: Run for Her", "التفاصيل: نركض لأجلها", "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.", "التجمع في {gather}، وينطلق الجري في {start}. اختر 3 كم أو 5 كم عند الحجز. مجانًا؛ 80 مكانًا، ثم قائمة انتظار."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         { ...long("aboutVl", 420, "Details: Victory Lap", "التفاصيل: فيكتوري لاب", "Doors open at {gather} and the first heat starts at {start}. Arrive at least 30 minutes before your heat to collect your race bib.", "تُفتح الأبواب الساعة {gather} وتنطلق أول دفعة الساعة {start}. احضر قبل دفعتك بثلاثين دقيقة على الأقل لاستلام رقم السباق."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
+        // the DEFE 5KM Run's (the booking app's infoDtDefe, which it reads from here as experiences.dates.aboutDefe)
+        long("aboutDefe", 420, "Details: DEFE 5KM Run", "التفاصيل: سباق دفء 5 كم", "Run 5 km with Defe for breast cancer awareness, together with the MicroMobility community, at the Jeddah Corniche Circuit. Collect your race kit at Jeddah Park on 21 October, 4–10 PM. The race starts on 22 October at 7 PM.", "اركض 5 كم مع دفء للتوعية بسرطان الثدي، مع مجتمع مايكروموبيليتي على حلبة كورنيش جدة. استلم عُدّة السباق من جدة بارك يوم 21 أكتوبر من 4 إلى 10 مساءً. ينطلق السباق يوم 22 أكتوبر الساعة 7 مساءً."),
         txt("members", 30, "Tag: members only", "الوسم: للأعضاء فقط", "Members", "للأعضاء"),
         txt("everyone", 30, "Tag: open to everyone", "الوسم: للجميع", "Open to everyone", "للجميع"),
         txt("perSeat", 40, "Event: price per seat ({price})", "الفعالية: سعر المقعد ({price})", "{price} per seat", "{price} للمقعد"),

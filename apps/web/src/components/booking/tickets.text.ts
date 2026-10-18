@@ -14,7 +14,8 @@
 // revealSpotsAt, the booking app's own key. Victory Lap (2026-10-17): athleteNumber vlNumLabel, and the
 // athlete's place as the booking app's _vlTkHtml words it - vlRace_*, vlTeamCode, vlWithPartner,
 // vlWaitPartner, vlNoPartner, vlPairWait, vlShirtLabel, vlT5Short, vlT5_*, vlPayTitle, vlPayLater, vlEdBtn
-// (the divisions are Kamin Sports' names, lib/vlap.ts vlDivName).
+// (the divisions are Kamin Sports' names, lib/vlap.ts vlDivName). The DEFE 5KM Run (2026-10-18): runnerNumber,
+// and defeKit*, defeRace*, defeReg*, the booking app's own keys.
 export const T = {
   en: {
     queueNumber: "Queue number",
@@ -90,6 +91,22 @@ export const T = {
     addons: "Add-ons",
     // a partner's place (queue_entries.partner, 2026-10-17): the site's own line, under the ticket's status
     withDefe: "With Defe",
+    // the DEFE 5KM Run (2026-10-18): when the kits go out and the race starts, and "Have you registered for
+    // the race?" (the booking app's defeKitLabel, defeKitTxt, defeRaceLabel, defeRaceTxt, defeRegQ, defeRegSub,
+    // defeRegNoNote, defeRegLink, defeRegYesNote, waYes, waNo, emChange); rrFailed is the site's own
+    defeKitLabel: "Kit collection",
+    defeKitTxt: "Jeddah Park · Wed 21 Oct · 4–10 PM",
+    defeRaceLabel: "Race",
+    defeRaceTxt: "Jeddah Corniche Circuit · Thu 22 Oct · 7 PM",
+    defeRegQ: "Have you registered for the race?",
+    defeRegSub: "Your place with MicroMobility is booked. The race itself is entered on Race Arabia.",
+    defeRegNoNote: "Register on Race Arabia to take part in the race.",
+    defeRegLink: "Register for the race",
+    defeRegYesNote: "You told us you are registered for the race.",
+    yes: "Yes",
+    no: "No",
+    change: "Change",
+    rrFailed: "It could not be sent. Check the connection and try again.",
     // Victory Lap (2026-10-17)
     athleteNumber: "Athlete number",
     vlRaces: { ws: "Women’s Singles", ms: "Men’s Singles", wd: "Women’s Doubles", md: "Men’s Doubles", xd: "Mixed Doubles" },
@@ -175,6 +192,19 @@ export const T = {
     revealSpotsAt: (n: string) => `موقع الفطور: يُعلَن عنه ${n}`,
     addons: "الإضافات",
     withDefe: "مع دفء",
+    defeKitLabel: "استلام عُدّة السباق",
+    defeKitTxt: "جدة بارك · الأربعاء 21 أكتوبر · 4–10 م",
+    defeRaceLabel: "السباق",
+    defeRaceTxt: "حلبة كورنيش جدة · الخميس 22 أكتوبر · 7 م",
+    defeRegQ: "هل سجّلت في السباق؟",
+    defeRegSub: "تم حجز مكانك مع مايكروموبيليتي. أما التسجيل في السباق نفسه فيكون عبر Race Arabia.",
+    defeRegNoNote: "سجّل في Race Arabia لتشارك في السباق.",
+    defeRegLink: "سجّل في السباق",
+    defeRegYesNote: "أخبرتنا أنك مسجّل في السباق.",
+    yes: "نعم",
+    no: "لا",
+    change: "تغيير",
+    rrFailed: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً.",
     athleteNumber: "رقم الرياضي",
     vlRaces: { ws: "فردي السيدات", ms: "فردي الرجال", wd: "زوجي السيدات", md: "زوجي الرجال", xd: "زوجي مختلط" },
     vlTeamCode: "رمز الفريق",

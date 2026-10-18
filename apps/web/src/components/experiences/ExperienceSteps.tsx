@@ -44,6 +44,9 @@ export type StepSession = {
   opens: string | null;
   /** What its Details say, every word ready in the page's language. */
   info: StepInfo;
+  /** The DEFE 5KM Run's own date card (the booking app's _defeSessCard, 2026-10-18): when, how far and
+   *  where ("7 PM · 5 km · Jeddah Corniche Circuit") and the cause along its foot; absent on any other date. */
+  defe?: { meta: string[]; cause: string };
 };
 /** A date's Details (lib/event-info.ts): its text, staff's own line, and its facts. */
 export type StepInfo = {
@@ -61,6 +64,10 @@ export type StepInfo = {
   distance: string | null; places: string | null;
   /** Victory Lap's races and divisions open to book, in the page's words; absent on any other kind. */
   races?: string; divs?: string;
+  /** The DEFE 5KM Run: when the race kits are handed out, and where the race itself is entered (Race
+   *  Arabia, a link of its own); absent on any other kind. */
+  kit?: { label: string; text: string };
+  race?: { label: string; link: string; url: string };
 };
 /** `about`: what the event is, in its About (Experiences > Event cards, *About). */
 export type StepEvent = {
@@ -95,6 +102,15 @@ export type StepText = {
 // (petromin_member), for whom Petromin Days and its dates show theirs (the owner, 2026-10-12).
 type Props = { locale: string; events: StepEvent[]; prices: { type: string; label: string; price: string }[]; bookHref: string; clubHref: string; member: boolean; petromin: boolean; text: StepText };
 type Fact = { k: string; v: ReactNode };
+
+/** The DEFE 5KM Run's logo: the ribbon woven into دفء, in Defe's rose (assets/defe-logo.svg in the booking app). */
+const DEFE_LOGO = "/site/defe-logo.svg";
+/** The awareness ribbon (the booking app's _PTN_RIBBON), drawn in the text's colour. */
+const Ribbon = () => (
+  <svg className="xs-rb" aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M7 21L14.7 9.2c.9-1.5 1-2.7.6-3.8a3.5 3.5 0 0 0-6.6 0c-.4 1.1-.3 2.3.6 3.8l1.4 2.2" /><path d="M13.1 13.6L17 21" />
+  </svg>
+);
 
 export default function ExperienceSteps({ locale, events, prices, bookHref, clubHref, member, petromin, text: t }: Props) {
   const [step, setStep] = useState(1);
@@ -135,9 +151,10 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   // The times in their own direction (a <bdi> with none forced): an Arabic clock ("9:00 م") read right
   // to left, a Latin one ("9:00 PM") left to right. Forcing ltr turned an Arabic range into
   // "م – 11:00 م 9:00" (2026-10-05).
+  // A date with a start time alone (the DEFE 5KM Run) says that time once.
   const when = (s: StepSession) => (s.when ? (s.when.gather
     ? <>{t.gather} <bdi>{s.when.a}</bdi> · {t.start} <bdi>{s.when.b}</bdi></>
-    : <bdi>{s.when.a} – {s.when.b}</bdi>) : null);
+    : <bdi>{s.when.b ? `${s.when.a} – ${s.when.b}` : s.when.a}</bdi>) : null);
   // Petromin Days is Petromin's team's, who are not Club members (an account holds the Community tag or
   // the Petromin tag, never both): its dates carry no Members tag and no word about joining the Club.
   // Nor do Victory Lap's, which its tag holders book too (its rules say who, vlNote).
@@ -175,6 +192,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
     if (i.distance) out.push({ k: t.info.distance, v: <bdi>{i.distance}</bdi> });
     if (i.races) out.push({ k: t.info.races, v: i.races });
     if (i.divs) out.push({ k: t.info.divs, v: <bdi>{i.divs}</bdi> });
+    if (i.kit) out.push({ k: i.kit.label, v: <bdi>{i.kit.text}</bdi> });
+    if (i.race) out.push({ k: i.race.label, v: <a href={i.race.url} target="_blank" rel="noopener">{i.race.link}</a> });
     if (i.places) out.push({ k: t.info.places, v: i.places });
     if (s.breakfast) out.push({ k: t.info.after, v: breakfastAt(s.breakfast) });
     else if (s.reveal) out.push({ k: t.info.after, v: s.reveal }); // the breakfast spot is told later: when
@@ -265,6 +284,25 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             <div className="sc-list">
               {ev.sessions.map((s) => {
                 const details = infoShown(membersOnlyDate(s), memberOn(ev.key, { member, petromin }));
+                const spots = s.opens ? <span className="sc-spots closed">{s.opens}</span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
+                  : s.kind !== "vlap" && s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
+                  : <span className="sc-spots">{t.available}</span>;
+                const about = details && <button type="button" className="sc-about" aria-label={`${t.info.details} · ${s.name} · ${s.day}`} onClick={(x) => showInfo(ev, s, x.currentTarget)}>{t.info.details}</button>;
+                // The DEFE 5KM Run's own card (the booking app's _defeSessCard, 2026-10-18): white with Defe's
+                // pink washed in from the far corner, the logo, the race's name, when, how far and where, the
+                // cause along the foot with its state
+                if (s.defe) return (
+                  <div key={s.id} className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
+                    <button type="button" className={`sc-card sc-defe ev-${s.kind}${s.full ? " full" : ""}${s.opens ? " closed" : ""}`} disabled={!!s.opens} aria-disabled={!!s.opens} onClick={() => pickDate(s)}>
+                      <span className="sc-defe-top"><span className="sc-dot" aria-hidden="true" /><img className="sc-defe-logo" src={DEFE_LOGO} alt="" width={977} height={660} decoding="async" /></span>
+                      <span className="sc-defe-title">{s.name}</span>
+                      <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
+                      <span className="sc-defe-meta">{s.defe.meta.map((x, i) => <span key={i}>{i > 0 && <i aria-hidden="true" />}<bdi>{x}</bdi></span>)}</span>
+                      <span className="sc-defe-foot"><span className="sc-defe-cause"><Ribbon /><span>{s.defe.cause}</span></span>{spots}</span>
+                    </button>
+                    {about}
+                  </div>
+                );
                 return (
                   <div key={s.id} className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
                     <button type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}${s.opens ? " closed" : ""}`} disabled={!!s.opens} aria-disabled={!!s.opens} onClick={() => pickDate(s)}>
@@ -279,9 +317,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                       <span className="sc-head">
                         <span className="sc-dot" aria-hidden="true" />
                         <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
-                        {s.opens ? <span className="sc-spots closed">{s.opens}</span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
-                          : s.kind !== "vlap" && s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
-                          : <span className="sc-spots">{t.available}</span>}
+                        {spots}
                       </span>
                       {s.when && <span className="sc-time">{when(s)}</span>}
                       {s.meta && s.meta.length > 0 && <span className="sc-meta">{s.meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}
@@ -291,7 +327,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                       {s.event && s.description && <span className="sc-desc">{s.description}</span>}
                       {facts(s)}
                     </button>
-                    {details && <button type="button" className="sc-about" aria-label={`${t.info.details} · ${s.name} · ${s.day}`} onClick={(x) => showInfo(ev, s, x.currentTarget)}>{t.info.details}</button>}
+                    {about}
                   </div>
                 );
               })}
@@ -307,10 +343,11 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           <h2 id="xs-h3" className="xs-title" tabIndex={-1}>{t.bookTitle}</h2>
           <div className="xs-summary">
             <div className="xs-sum-head">
-              {ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
+              {sess.defe ? <span className="xs-logo small xs-defe-logo"><img src={DEFE_LOGO} alt="" /></span> : ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
               <div><strong>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span></div>
             </div>
             {tags(sess)}
+            {sess.defe && <p className="xs-defe-cause"><Ribbon /><span>{sess.defe.cause}</span></p>}
             {sess.event && sess.description && <p className="xs-rules">{sess.description}</p>}
             {facts(sess)}
             {/* Victory Lap's price per athlete, to a visitor who may book it alone (its Details' price) */}
