@@ -12,7 +12,7 @@ describe("the race question's answer", () => {
     for (const b of [null, "yes", {}, { entryId: "q1" }, { entryId: "q1", answer: "maybe" }, { entryId: "a b", answer: "yes" }, { entryId: "x".repeat(65), answer: "no" }, { entryId: 5, answer: "yes" }])
       expect(raceRegBody(b), JSON.stringify(b)).toBeNull();
   });
-  it("shows the note after Yes, the question until then, and the way to Race Arabia after No", () => {
+  it("shows the note after Yes, the question until then, and the way to Defe's registration page after No", () => {
     expect(raceRegView(null, false)).toBe("ask");
     expect(raceRegView("no", false)).toBe("askNo");
     expect(raceRegView("yes", false)).toBe("done");

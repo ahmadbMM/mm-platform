@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { routeItems } from "../route-names";
-import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, meetHeld, queueNumbers, revealWhen, rideCompleted, rideEndsAt, spotHeld, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, DEFE_RACE_URL, isDefe, raceRegAsked, type TicketRow } from "../tickets";
+import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, meetHeld, queueNumbers, revealWhen, rideCompleted, rideEndsAt, spotHeld, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, DEFE_RACE_CODE, DEFE_RACE_URL, isDefe, raceRegAsked, type TicketRow } from "../tickets";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import TicketCard from "@/components/booking/TicketCard";
 import { createElement, type ReactElement } from "react";
@@ -620,7 +620,7 @@ describe("a DEFE 5KM Run ticket (ride_kind 'defe5k', 2026-10-18)", () => {
     expect(html).toContain("Jeddah Park · Wed 21 Oct · 4–10 PM");
     expect(html).toContain("Jeddah Corniche Circuit · Thu 22 Oct · 7 PM");
     expect(html).toContain("Have you registered for the race?");
-    expect(html).toContain("Your place with MicroMobility is booked. The race itself is entered on Race Arabia.");
+    expect(html).toContain("Your place with MicroMobility is booked. The race itself is entered on Defe’s registration page.");
     expect(html).not.toContain("Register for the race<"); // the link waits for No
     expect(html).toMatch(/href="https:\/\/maps\.app\.goo\.gl\/defe"[^>]*>.*?Meeting point/);
     expect(html).not.toContain("Helmets");
@@ -629,9 +629,13 @@ describe("a DEFE 5KM Run ticket (ride_kind 'defe5k', 2026-10-18)", () => {
     expect(html).toContain(">Cancel<");
     expect(html).not.toContain("tk-wallet");
   });
-  it("shows the way to Race Arabia after No, and the note with Change after Yes", () => {
+  it("shows the members' code and the way to Defe's registration page after No, and the note with Change after Yes", () => {
     const no = card([at({ race_reg: "no" })]);
-    expect(no).toContain("Register on Race Arabia to take part in the race.");
+    expect(no).toContain("Register through Defe to take part in the race.");
+    // the discount code, above the Register button, bold and left to right
+    expect(no).toContain('<p class="tk-rr-code">Use discount code <strong dir="ltr">MICRO50</strong> for 50% off, for the first 50 members.</p>');
+    expect(no.indexOf("tk-rr-code")).toBeLessThan(no.indexOf("tk-rr-link"));
+    expect(card([at({})])).not.toContain("MICRO50"); // not before the answer is No
     expect(no).toContain(`href="${DEFE_RACE_URL.replace(/&/g, "&amp;")}"`);
     expect(no).toMatch(/target="_blank" rel="noopener"[^>]*>Register for the race</);
     expect(no).toMatch(/aria-pressed="true"[^>]*>No</);
@@ -651,6 +655,9 @@ describe("a DEFE 5KM Run ticket (ride_kind 'defe5k', 2026-10-18)", () => {
     expect(TICKET.ar.defeRegQ).toBe("هل سجّلت في السباق؟");
     expect(TICKET.ar.defeRegYesNote).toBe("أخبرتنا أنك مسجّل في السباق.");
     expect(TICKET.ar.defeKitTxt).toBe("جدة بارك · الأربعاء 21 أكتوبر · 4–10 م");
-    expect(DEFE_RACE_URL).toMatch(/^https:\/\/in\.racearabia\.sa\/defe5k\?utm_source=ig&.*currentPage=select-competition$/);
+    expect(DEFE_RACE_URL).toBe("https://in.njuko.com/defe5k?utm_id=97760_v0_s00_e0_tv5");
+    expect(DEFE_RACE_CODE).toBe("MICRO50");
+    expect(TICKET.ar.defeRegNoNote).toBe("سجّل عبر دفء لتشارك في السباق.");
+    expect(TICKET.ar.defeRegCode).toBe("استخدم كود الخصم {0} لخصم 50%، لأول 50 عضوًا.");
   });
 });

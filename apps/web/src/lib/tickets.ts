@@ -31,7 +31,7 @@ export type TicketRow = {
   /** A Victory Lap athlete's place (queue_entries.vl, rentals 20261017210000; lib/vlap.ts): the race,
    *  division, T-shirt, 5 km time and team; null on every other booking. */
   vl?: VlEntry | null;
-  /** The DEFE 5KM Run (2026-10-18): whether the runner told us they registered for the race on Race Arabia
+  /** The DEFE 5KM Run (2026-10-18): whether the runner told us they registered for the race on Defe's registration page
    *  (queue_entries.race_reg, rentals 20261018150000): 'yes', 'no', or null before they answer (and on
    *  every other booking, and on a database without the column). */
   raceReg?: "yes" | "no" | null;
@@ -348,8 +348,11 @@ export function venueText(v: Venue, t: { meetingPoint: string; venueCircuit: str
 export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined): boolean => !!s && (s.approval || s.kind === "runher" || s.kind === "defe5k");
 
 // ── The DEFE 5KM Run (the owner, 2026-10-18; the booking app's _defeRegHtml) ─────────────────────
-/** Where the race itself is entered: Race Arabia (the booking app's DEFE_RACE_URL, word for word). */
-export const DEFE_RACE_URL = "https://in.racearabia.sa/defe5k?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAdGRleAVBYKBleHRuA2FlbQIxMQBwZG9mAmZkaWQWUQj8faJBVBXkKd-9UHBjIQv5Vi5PuXNydGMGYXBwX2lkDzEyNDAyNDU3NDI4NzQxNAABpyUrMMxAWrT3Xtx1aBX64crLNvJEtA8Xj04Ay63pDBuCKqJneknhUnno6_au_aem_TKb-wffvPDVUZxnvBAIhqg&utm_id=97760_v0_s00_e0_tv3&currentPage=select-competition";
+/** Where the race itself is entered: Defe's own registration page (the booking app's DEFE_RACE_URL, word for word;
+ *  the owner, 2026-10-18). */
+export const DEFE_RACE_URL = "https://in.njuko.com/defe5k?utm_id=97760_v0_s00_e0_tv5";
+/** The discount code members use there: 50% off, for the first 50 members (the booking app's DEFE_RACE_CODE). */
+export const DEFE_RACE_CODE = "MICRO50";
 /** The DEFE 5KM Run, by the session's kind. */
 export const isDefe = (s: Pick<TicketSession, "kind"> | undefined): boolean => s?.kind === "defe5k";
 /** Whether a booked Defe place still asks "Have you registered for the race?": a live row (waiting, on the

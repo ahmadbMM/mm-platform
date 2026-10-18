@@ -310,7 +310,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             </div>
             {raceRegAsked(primary, s, today) && (
               <RaceRegQuestion entryId={primary.id} initial={primary.raceReg ?? null} url={DEFE_RACE_URL}
-                t={{ q: t.defeRegQ, sub: t.defeRegSub, noNote: t.defeRegNoNote, link: t.defeRegLink, yesNote: t.defeRegYesNote, yes: t.yes, no: t.no, change: t.change, failed: t.rrFailed }} />
+                t={{ q: t.defeRegQ, sub: t.defeRegSub, noNote: t.defeRegNoNote, code: t.defeRegCode, link: t.defeRegLink, yesNote: t.defeRegYesNote, yes: t.yes, no: t.no, change: t.change, failed: t.rrFailed }} />
             )}
           </>
         )}

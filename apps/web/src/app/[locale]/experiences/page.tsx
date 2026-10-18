@@ -168,11 +168,11 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const heldWhen = (s: RideSession) => (spotHeld(s) ? revealWhen(s.revealAt, locale, now.slice(0, 10), nearWords) : null);
   // The DEFE 5KM Run (2026-10-18), in the booking app's words (defeCause, defeKitLabel, defeKitTxt,
   // defeRegLabel, defeRegLinkShort, defeLogoAlt): its date card's cause line, and its Details' kit
-  // collection and the way to register for the race itself (Race Arabia).
+  // collection and the way to register for the race itself (Defe's registration page).
   const defeWords = {
     cause: tx("Breast cancer awareness run", "جري للتوعية بسرطان الثدي"),
     kitLabel: tx("Kit collection", "استلام عُدّة السباق"), kit: tx("Jeddah Park · Wed 21 Oct · 4–10 PM", "جدة بارك · الأربعاء 21 أكتوبر · 4–10 م"),
-    regLabel: tx("Race registration", "التسجيل في السباق"),
+    regLabel: tx("Race registration", "التسجيل في السباق"), regLink: tx("Defe registration", "تسجيل دفء"),
   };
   const toStep = (s: RideSession): StepSession => {
     const seatPrice = s.kind === "event" && s.price != null ? sar(s.price) : null;
@@ -214,7 +214,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         distance: infoDistance(s.kind, kmWord), places: infoPlaces(s, { waitlist: waitWord, left1, leftN }),
         ...((v) => (v ? { races: v.races, divs: v.divs } : {}))(infoVl(s, vlWords)),
         // the DEFE 5KM Run: when the kits go out, and where the race itself is entered (the booking app's _infoFacts)
-        ...(s.kind === "defe5k" ? { kit: { label: defeWords.kitLabel, text: defeWords.kit }, race: { label: defeWords.regLabel, link: "Race Arabia", url: DEFE_RACE_URL } } : {}),
+        ...(s.kind === "defe5k" ? { kit: { label: defeWords.kitLabel, text: defeWords.kit }, race: { label: defeWords.regLabel, link: defeWords.regLink, url: DEFE_RACE_URL } } : {}),
       },
     };
   };
