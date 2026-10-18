@@ -5,6 +5,7 @@ import { isRtl } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
 import { fill as fillAt } from "@/i18n/tx";
 import { bookingAt, infoShown, memberOn, membersOnlyDate, membersOnlyEvent } from "@/lib/event-info";
+import { isNonBike } from "@/lib/bike-kinds";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -78,6 +79,10 @@ export type StepEvent = {
 export type StepText = {
   steps: [string, string, string]; eventTitle: string; dateTitle: string; bookTitle: string; cont: string; waitlist: string; back: string;
   noDates: string; handoff: string; members: string; free: string; full: string; gather: string; start: string; membersNote: string; clubLink: string;
+  /** A date without a bike (the pool, the workshop, an event, a run, Victory Lap; the owner, 2026-10-18: nothing
+   *  about cycling there): the last step's title, the line under its button and the members' note, in words
+   *  that say booking, participants and sessions, never ride or riders. */
+  bookTitleNb: string; handoffNb: string; membersNoteNb: string;
   /** The booking app's session card says Available or Waitlist on the right. */
   available: string; waitlisted: string;
   /** "{0} spot left" / "{0} spots left": a ride with three places or fewer (spotsLeftLabel). */
@@ -159,6 +164,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   // the Petromin tag, never both): its dates carry no Members tag and no word about joining the Club.
   // Nor do Victory Lap's, which its tag holders book too (its rules say who, vlNote).
   const clubOnly = (s: StepSession) => s.members && ev?.key !== "petromin" && s.kind !== "vlap";
+  const noBike = (s: StepSession) => isNonBike(s.kind, s.id);
   const tags = (s: StepSession) => (
     <span className="xs-tags">
       {clubOnly(s) && <em>{t.members}</em>}
@@ -333,14 +339,14 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
               })}
             </div>
           )}
-          {ev.sessions.some(clubOnly) && <p className="xs-note">{t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
+          {ev.sessions.some(clubOnly) && <p className="xs-note">{ev.sessions.some((s) => clubOnly(s) && noBike(s)) ? t.membersNoteNb : t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
         </section>
       )}
 
       {step === 3 && ev && sess && (
         <section aria-labelledby="xs-h3">
           <button type="button" className="xs-back" onClick={() => go(2)}><span aria-hidden="true">{back}</span> {t.back}</button>
-          <h2 id="xs-h3" className="xs-title" tabIndex={-1}>{t.bookTitle}</h2>
+          <h2 id="xs-h3" className="xs-title" tabIndex={-1}>{noBike(sess) ? t.bookTitleNb : t.bookTitle}</h2>
           <div className="xs-summary">
             <div className="xs-sum-head">
               {sess.defe ? <span className="xs-logo small xs-defe-logo"><img src={DEFE_LOGO} alt="" /></span> : ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
@@ -352,7 +358,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             {facts(sess)}
             {/* Victory Lap's price per athlete, to a visitor who may book it alone (its Details' price) */}
             {sess.kind === "vlap" && sess.info.price && <p className="xs-rules xs-vl-price"><bdi>{sess.info.price}</bdi></p>}
-            {ev.note && <p className="xs-rules">{ev.note}</p>}
+            {/* the community card's rules speak of riders and the ride: not on its pool session or the DEFE run */}
+            {ev.note && !(ev.key === "community" && noBike(sess)) && <p className="xs-rules">{ev.note}</p>}
             {sess.paid && !sess.event && prices.some((p) => !(sess.noCarbon && p.type === "Road Carbon")) && (
               <div className="xs-prices">
                 <p className="xs-prices-h">{t.pricesTitle}</p>
@@ -361,10 +368,10 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                 {t.codeNote && <p className="xs-prices-t">{t.codeNote}</p>}
               </div>
             )}
-            {clubOnly(sess) && <p className="xs-note">{t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
+            {clubOnly(sess) && <p className="xs-note">{noBike(sess) ? t.membersNoteNb : t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
           </div>
           <a className="xs-go" href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
-          {t.handoff && <p className="xs-handoff">{t.handoff}</p>}
+          {(noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
         </section>
       )}
 

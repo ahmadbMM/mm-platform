@@ -3,7 +3,7 @@ import { serverL } from "@/i18n/dicts";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { accountBookings } from "@/lib/account";
 import { asLocale, resolvePage } from "@/lib/content";
-import { formOf, isRun, pendingRating } from "@/lib/rating";
+import { formOf, pendingRating, ratingNoBike, rideWord } from "@/lib/rating";
 import { kindNames, sessionName } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
@@ -39,15 +39,18 @@ export async function GET(req: Request) {
   const s = sessions.get(gate.sessionId);
   const names = { ...kindNames(resolvePage(experiencesSchema, content, L).dates), petromin: tx("Petromin", "بترومين") };
   const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
+  // a run says run, the pool, the workshop, an event and Victory Lap say session, never ride (2026-10-18)
+  const word = rideWord(s?.kind, gate.sessionId);
   return json({
     signedIn: true,
     pending: {
       entryId: gate.entryId,
-      name: s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة"),
+      name: s ? sessionName(s, names, enNames, L !== "en") : word === "ride" ? tx("Ride", "جولة") : tx("Session", "الفعالية"),
       when: fmtDayDate(gate.date, locale),
       form: formOf(s?.kind),
-      noBike: gate.ownBike || (s ? !s.bikes : false) || isRun(s?.kind, gate.sessionId),
-      run: isRun(s?.kind, gate.sessionId),
+      noBike: ratingNoBike(gate.ownBike, s, gate.sessionId),
+      run: word === "run",
+      session: word === "session",
       restaurant: breakfastFor(s, L)?.name ?? null,
       // a score at or under this asks why (the booking app's rg_low, Settings > Business)
       rgLow: bizOf(content).rgLow,

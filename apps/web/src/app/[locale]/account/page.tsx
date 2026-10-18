@@ -34,7 +34,8 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName } from "@/lib/rides";
 import { routeItems } from "@/lib/route-names";
-import { RATE_FROM, formOf, isRun, pendingRating, unratedRides } from "@/lib/rating";
+import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
+import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
 import { breakfastFor, doneToday, fmtDayDate, meetsAt, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
@@ -159,7 +160,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const s = sessions.get(g.sessionId), first = g.rows.find((r) => r.status === "waiting" && r.queueNum != null);
     return s && !s.approval && first && g.date === now.slice(0, 10) ? anyoneAhead(g.sessionId, first.queueNum as number) : Promise.resolve(null);
   }));
-  const rideName = (s: TicketSession | undefined) => (s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة"));
+  // a session that did not load is named by what it is: never "Ride" on one without a bike (2026-10-18)
+  const rideName = (s: TicketSession | undefined, sessionId: string) =>
+    (s ? sessionName(s, names, enNames, L !== "en") : isNonBike(null, sessionId) ? tx("Session", "الفعالية") : tx("Ride", "جولة"));
   const ticketText = serverLocalize(TICKET, locale);
   const recordText = serverLocalize(RECORD, locale);
   const drawn = new Date().getTime(); // the countdown's first line, before the browser takes over
@@ -226,10 +229,11 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                 const place = s && meetsAt(s) ? s.meetUrl : S(site.contact.jccHref) || null;
                 return (
                   <TicketCard key={g.key} locale={locale} today={now.slice(0, 10)} rows={g.rows} session={s}
-                    name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
+                    name={rideName(s, g.sessionId)}
                     cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
                     links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place,
-                      live: g.date === now.slice(0, 10) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
+                      // the live map follows the ride leader: a bike session's only (2026-10-18)
+                      live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
                     wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} vlPartners={vlPartners} />
                 );
@@ -238,7 +242,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                 const s = sessions.get(g.sessionId);
                 return (
                   <TicketCard key={g.key} past locale={locale} today={today} rows={g.rows} session={s}
-                    name={s ? sessionName(s, names, enNames, L !== "en") : tx("Ride", "جولة")}
+                    name={rideName(s, g.sessionId)}
                     cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
                     links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} vlPartners={vlPartners} />
                 );
@@ -255,12 +259,13 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
         {toRate.length > 0 && (
           <section className="ac-sec" aria-labelledby="ac-rate-h">
-            <h2 id="ac-rate-h">{tx("Rate your rides", "قيّم جولاتك")}</h2>
+            <h2 id="ac-rate-h">{toRate.some((r) => rideWord(sessions.get(r.sessionId)?.kind, r.sessionId) !== "ride") ? tx("Rate your sessions", "قيّم فعالياتك") : tx("Rate your rides", "قيّم جولاتك")}</h2>
             <div className="rr-grid">
               {toRate.map((r) => {
                 const s = sessions.get(r.sessionId);
                 // a Saturday ride's form names the restaurant its breakfast was at, as the pop-up's does
-                return <RateRide key={r.entryId} entryId={r.entryId} name={rideName(s)} when={fmtDayDate(r.date, locale)} form={formOf(s?.kind)} noBike={r.ownBike || (s ? !s.bikes : false) || isRun(s?.kind, r.sessionId)} run={isRun(s?.kind, r.sessionId)} restaurant={breakfastFor(s, locale)?.name ?? null} rgLow={bizOf(content).rgLow} />;
+                const word = rideWord(s?.kind, r.sessionId);
+                return <RateRide key={r.entryId} entryId={r.entryId} name={rideName(s, r.sessionId)} when={fmtDayDate(r.date, locale)} form={formOf(s?.kind)} noBike={ratingNoBike(r.ownBike, s, r.sessionId)} run={word === "run"} session={word === "session"} restaurant={breakfastFor(s, locale)?.name ?? null} rgLow={bizOf(content).rgLow} />;
               })}
             </div>
           </section>

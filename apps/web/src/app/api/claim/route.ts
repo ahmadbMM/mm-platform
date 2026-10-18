@@ -5,6 +5,7 @@ import { claimToken, claimView, stateOfSpot, type ClaimGet, type ClaimSpot } fro
 import { asLocale, resolvePage } from "@/lib/content";
 import { withinLimit } from "@/lib/rate-limit";
 import { kindNames, rideKind, sessionName } from "@/lib/rides";
+import { isNonBike } from "@/lib/bike-kinds";
 import { loadSiteContent } from "@/lib/site";
 
 // The waitlist claim page's two calls (components/claim/ClaimCard.tsx, lib/claim.ts), with the
@@ -39,6 +40,7 @@ export async function GET(req: Request) {
     const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
     const kind = rideKind({ ride_kind: got.session.ride_kind, event_kind: got.session.event_kind });
     view.title = sessionName({ kind, title: view.title }, names, enNames, L !== "en") || view.title || "Micromobility";
+    view.bikes = !isNonBike(kind);
   }
   return json(view);
 }

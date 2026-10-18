@@ -17,6 +17,9 @@ export type RatingWords = {
   skipBf: string; note: string; send: string; thanks: string; signOut: string; sending: string;
   /** Run for Her (the owner, 2026-10-17: a run, not a ride): the pop-up's kicker and title and the thank-you. */
   run: { kicker: string; title: string; thanks: string };
+  /** A session without a bike that is not a run - the pool, the workshop, an event, Victory Lap (the owner,
+   *  2026-10-18: nothing about cycling there; lib/rating.ts rideWord): the same three, in session words. */
+  session: { kicker: string; title: string; thanks: string };
   errors: { signin: string; refused: string; generic: string; outdated: string; paid_move: string };
 };
 
@@ -35,9 +38,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "Submit rating",
     thanks: "Thanks for rating your ride.",
     run: {kicker: "Rate your run", title: "How was your run?", thanks: "Thanks for rating your run."},
+    session: {kicker: "Rate your session", title: "How was your session?", thanks: "Thanks for rating your session."},
     signOut: "Sign out",
     sending: "Sending…",
-    errors: {signin: "Your session has ended - sign in again to rate the ride.", refused: "This booking cannot be rated.", generic: "It could not be sent. Check the connection and try again.", outdated: "This page is out of date. Reload it and try again.", paid_move: "A paid booking can't be moved to a ride with a different fare. Please ask our team at the booth."},
+    errors: {signin: "Your session has ended - sign in again to send your rating.", refused: "This booking cannot be rated.", generic: "It could not be sent. Check the connection and try again.", outdated: "This page is out of date. Reload it and try again.", paid_move: "A paid booking can't be moved to a ride with a different fare. Please ask our team at the booth."},
   },
   ar: {
     kicker: "قيّم رحلتك",
@@ -53,9 +57,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "إرسال التقييم",
     thanks: "شكراً على تقييمك.",
     run: {kicker: "قيّم الجري", title: "كيف كان الجري؟", thanks: "شكراً على تقييم الجري."},
+    session: {kicker: "قيّم الفعالية", title: "كيف كانت الفعالية؟", thanks: "شكراً على تقييم الفعالية."},
     signOut: "تسجيل الخروج",
     sending: "جارٍ الإرسال…",
-    errors: {signin: "انتهت جلستك - سجّل الدخول مجدداً لتقييم الجولة.", refused: "لا يمكن تقييم هذا الحجز.", generic: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً.", outdated: "هذه الصفحة لم تعد محدّثة. أعد تحميلها وحاول مجدداً.", paid_move: "لا يمكن نقل حجز مدفوع إلى رحلة بسعر مختلف. يرجى مراجعة فريقنا عند الكشك."},
+    errors: {signin: "انتهت جلستك - سجّل الدخول مجدداً لإرسال تقييمك.", refused: "لا يمكن تقييم هذا الحجز.", generic: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً.", outdated: "هذه الصفحة لم تعد محدّثة. أعد تحميلها وحاول مجدداً.", paid_move: "لا يمكن نقل حجز مدفوع إلى رحلة بسعر مختلف. يرجى مراجعة فريقنا عند الكشك."},
   },
   id: {
     kicker: "Nilai gowes Anda",
@@ -71,9 +76,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "Kirim penilaian",
     thanks: "Terima kasih telah menilai gowes Anda.",
     run: {kicker: "Nilai lari Anda", title: "Bagaimana lari Anda?", thanks: "Terima kasih telah menilai lari Anda."},
+    session: {kicker: "Nilai sesi Anda", title: "Bagaimana sesi Anda?", thanks: "Terima kasih telah menilai sesi Anda."},
     signOut: "Keluar",
     sending: "Mengirim…",
-    errors: {signin: "Sesi Anda telah berakhir - masuk lagi untuk menilai gowes.", refused: "Pemesanan ini tidak dapat dinilai.", generic: "Tidak dapat dikirim. Periksa koneksi, lalu coba lagi.", outdated: "Halaman ini sudah tidak terbaru. Muat ulang, lalu coba lagi.", paid_move: "Pemesanan yang sudah dibayar tidak dapat dipindahkan ke gowes dengan tarif berbeda. Silakan tanyakan kepada tim kami di booth."},
+    errors: {signin: "Sesi Anda telah berakhir - masuk lagi untuk mengirim penilaian Anda.", refused: "Pemesanan ini tidak dapat dinilai.", generic: "Tidak dapat dikirim. Periksa koneksi, lalu coba lagi.", outdated: "Halaman ini sudah tidak terbaru. Muat ulang, lalu coba lagi.", paid_move: "Pemesanan yang sudah dibayar tidak dapat dipindahkan ke gowes dengan tarif berbeda. Silakan tanyakan kepada tim kami di booth."},
   },
   ms: {
     kicker: "Nilai kayuhan anda",
@@ -89,9 +95,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "Hantar penilaian",
     thanks: "Terima kasih kerana menilai kayuhan anda.",
     run: {kicker: "Nilai larian anda", title: "Bagaimana larian anda?", thanks: "Terima kasih kerana menilai larian anda."},
+    session: {kicker: "Nilai sesi anda", title: "Bagaimana sesi anda?", thanks: "Terima kasih kerana menilai sesi anda."},
     signOut: "Log keluar",
     sending: "Menghantar…",
-    errors: {signin: "Sesi anda telah tamat - log masuk semula untuk menilai kayuhan.", refused: "Tempahan ini tidak boleh dinilai.", generic: "Tidak dapat dihantar. Semak sambungan dan cuba lagi.", outdated: "Halaman ini sudah lapuk. Muat semula dan cuba lagi.", paid_move: "Tempahan yang telah dibayar tidak boleh dipindahkan ke kayuhan dengan harga berbeza. Sila tanya pasukan kami di gerai."},
+    errors: {signin: "Sesi anda telah tamat - log masuk semula untuk menghantar penilaian anda.", refused: "Tempahan ini tidak boleh dinilai.", generic: "Tidak dapat dihantar. Semak sambungan dan cuba lagi.", outdated: "Halaman ini sudah lapuk. Muat semula dan cuba lagi.", paid_move: "Tempahan yang telah dibayar tidak boleh dipindahkan ke kayuhan dengan harga berbeza. Sila tanya pasukan kami di gerai."},
   },
   de: {
     kicker: "Bewerte deine Fahrt",
@@ -107,9 +114,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "Bewertung senden",
     thanks: "Danke, dass du deine Fahrt bewertet hast.",
     run: {kicker: "Bewerte deinen Lauf", title: "Wie war dein Lauf?", thanks: "Danke, dass du deinen Lauf bewertet hast."},
+    session: {kicker: "Bewerte die Veranstaltung", title: "Wie war die Veranstaltung?", thanks: "Danke, dass du die Veranstaltung bewertet hast."},
     signOut: "Abmelden",
     sending: "Wird gesendet …",
-    errors: {signin: "Deine Sitzung ist abgelaufen – melde dich erneut an, um die Ausfahrt zu bewerten.", refused: "Diese Buchung kann nicht bewertet werden.", generic: "Das Senden ist fehlgeschlagen. Prüfe die Verbindung und versuche es erneut.", outdated: "Diese Seite ist nicht mehr aktuell. Lade sie neu und versuche es erneut.", paid_move: "Eine bezahlte Buchung kann nicht auf eine Fahrt mit einem anderen Preis verschoben werden. Wende dich bitte an unser Team am Stand."},
+    errors: {signin: "Deine Sitzung ist abgelaufen – melde dich erneut an, um deine Bewertung zu senden.", refused: "Diese Buchung kann nicht bewertet werden.", generic: "Das Senden ist fehlgeschlagen. Prüfe die Verbindung und versuche es erneut.", outdated: "Diese Seite ist nicht mehr aktuell. Lade sie neu und versuche es erneut.", paid_move: "Eine bezahlte Buchung kann nicht auf eine Fahrt mit einem anderen Preis verschoben werden. Wende dich bitte an unser Team am Stand."},
   },
   es: {
     kicker: "Valora tu recorrido",
@@ -125,9 +133,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "Enviar valoración",
     thanks: "Gracias por valorar tu recorrido.",
     run: {kicker: "Valora tu carrera", title: "¿Qué tal tu carrera?", thanks: "Gracias por valorar tu carrera."},
+    session: {kicker: "Valora tu sesión", title: "¿Qué tal tu sesión?", thanks: "Gracias por valorar tu sesión."},
     signOut: "Cerrar sesión",
     sending: "Enviando…",
-    errors: {signin: "Tu sesión ha terminado: inicia sesión de nuevo para valorar el recorrido.", refused: "Esta reserva no se puede valorar.", generic: "No se pudo enviar. Comprueba la conexión e inténtalo de nuevo.", outdated: "Esta página está desactualizada. Vuelve a cargarla e inténtalo de nuevo.", paid_move: "Una reserva pagada no se puede cambiar a un recorrido con otra tarifa. Pregunta a nuestro equipo en el puesto."},
+    errors: {signin: "Tu sesión ha terminado: inicia sesión de nuevo para enviar tu valoración.", refused: "Esta reserva no se puede valorar.", generic: "No se pudo enviar. Comprueba la conexión e inténtalo de nuevo.", outdated: "Esta página está desactualizada. Vuelve a cargarla e inténtalo de nuevo.", paid_move: "Una reserva pagada no se puede cambiar a un recorrido con otra tarifa. Pregunta a nuestro equipo en el puesto."},
   },
   fr: {
     kicker: "Notez votre sortie",
@@ -143,9 +152,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "Envoyer la note",
     thanks: "Merci d’avoir noté votre sortie.",
     run: {kicker: "Notez votre course", title: "Comment s’est passée votre course ?", thanks: "Merci d’avoir noté votre course."},
+    session: {kicker: "Notez votre séance", title: "Comment s’est passée votre séance ?", thanks: "Merci d’avoir noté votre séance."},
     signOut: "Se déconnecter",
     sending: "Envoi en cours…",
-    errors: {signin: "Votre session a expiré : reconnectez-vous pour noter la sortie.", refused: "Cette réservation ne peut pas être notée.", generic: "Envoi impossible. Vérifiez la connexion et réessayez.", outdated: "Cette page n’est plus à jour. Rechargez-la et réessayez.", paid_move: "Une réservation payée ne peut pas être déplacée vers une sortie à un autre tarif. Adressez-vous à notre équipe au stand."},
+    errors: {signin: "Votre session a expiré : reconnectez-vous pour envoyer votre note.", refused: "Cette réservation ne peut pas être notée.", generic: "Envoi impossible. Vérifiez la connexion et réessayez.", outdated: "Cette page n’est plus à jour. Rechargez-la et réessayez.", paid_move: "Une réservation payée ne peut pas être déplacée vers une sortie à un autre tarif. Adressez-vous à notre équipe au stand."},
   },
   pt: {
     kicker: "Avalie seu passeio",
@@ -161,9 +171,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "Enviar avaliação",
     thanks: "Obrigado por avaliar seu passeio.",
     run: {kicker: "Avalie sua corrida", title: "Como foi sua corrida?", thanks: "Obrigado por avaliar sua corrida."},
+    session: {kicker: "Avalie sua sessão", title: "Como foi sua sessão?", thanks: "Obrigado por avaliar sua sessão."},
     signOut: "Sair",
     sending: "Enviando…",
-    errors: {signin: "Sua sessão terminou: entre novamente para avaliar o passeio.", refused: "Esta reserva não pode ser avaliada.", generic: "Não foi possível enviar. Verifique a conexão e tente novamente.", outdated: "Esta página está desatualizada. Recarregue-a e tente novamente.", paid_move: "Uma reserva paga não pode ser transferida para um passeio com outro preço. Fale com a nossa equipe no estande."},
+    errors: {signin: "Sua sessão terminou: entre novamente para enviar sua avaliação.", refused: "Esta reserva não pode ser avaliada.", generic: "Não foi possível enviar. Verifique a conexão e tente novamente.", outdated: "Esta página está desatualizada. Recarregue-a e tente novamente.", paid_move: "Uma reserva paga não pode ser transferida para um passeio com outro preço. Fale com a nossa equipe no estande."},
   },
   tl: {
     kicker: "I-rate ang iyong ride",
@@ -179,9 +190,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "Isumite ang rating",
     thanks: "Salamat sa pag-rate ng ride mo.",
     run: {kicker: "I-rate ang iyong takbo", title: "Kumusta ang iyong takbo?", thanks: "Salamat sa pag-rate ng takbo mo."},
+    session: {kicker: "I-rate ang iyong session", title: "Kumusta ang iyong session?", thanks: "Salamat sa pag-rate ng session mo."},
     signOut: "Mag-sign out",
     sending: "Ipinapadala…",
-    errors: {signin: "Natapos na ang iyong session - mag-sign in muli para i-rate ang ride.", refused: "Hindi ma-rate ang booking na ito.", generic: "Hindi ito maipadala. Suriin ang koneksyon at subukan ulit.", outdated: "Luma na ang page na ito. I-reload ito at subukan ulit.", paid_move: "Hindi maililipat ang booking na bayad na sa ride na iba ang presyo. Magtanong sa aming team sa booth."},
+    errors: {signin: "Natapos na ang iyong session - mag-sign in muli para maipadala ang iyong rating.", refused: "Hindi ma-rate ang booking na ito.", generic: "Hindi ito maipadala. Suriin ang koneksyon at subukan ulit.", outdated: "Luma na ang page na ito. I-reload ito at subukan ulit.", paid_move: "Hindi maililipat ang booking na bayad na sa ride na iba ang presyo. Magtanong sa aming team sa booth."},
   },
   ru: {
     kicker: "Оцените заезд",
@@ -197,9 +209,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "Отправить оценку",
     thanks: "Спасибо за оценку заезда.",
     run: {kicker: "Оцените забег", title: "Как прошёл забег?", thanks: "Спасибо за оценку забега."},
+    session: {kicker: "Оцените занятие", title: "Как прошло занятие?", thanks: "Спасибо за оценку занятия."},
     signOut: "Выйти",
     sending: "Отправка…",
-    errors: {signin: "Ваша сессия завершена — войдите снова, чтобы оценить заезд.", refused: "Это бронирование нельзя оценить.", generic: "Не удалось отправить. Проверьте подключение и попробуйте ещё раз.", outdated: "Эта страница устарела. Обновите её и попробуйте ещё раз.", paid_move: "Оплаченное бронирование нельзя перенести на заезд с другой ценой. Обратитесь к нашей команде у стойки."},
+    errors: {signin: "Ваша сессия завершена — войдите снова, чтобы отправить оценку.", refused: "Это бронирование нельзя оценить.", generic: "Не удалось отправить. Проверьте подключение и попробуйте ещё раз.", outdated: "Эта страница устарела. Обновите её и попробуйте ещё раз.", paid_move: "Оплаченное бронирование нельзя перенести на заезд с другой ценой. Обратитесь к нашей команде у стойки."},
   },
   ur: {
     kicker: "اپنی رائیڈ ریٹ کریں",
@@ -215,9 +228,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "ریٹنگ جمع کرائیں",
     thanks: "اپنی رائیڈ کی ریٹنگ کا شکریہ۔",
     run: {kicker: "اپنی دوڑ ریٹ کریں", title: "آپ کی دوڑ کیسی رہی؟", thanks: "اپنی دوڑ کی ریٹنگ کا شکریہ۔"},
+    session: {kicker: "اپنا سیشن ریٹ کریں", title: "آپ کا سیشن کیسا رہا؟", thanks: "اپنے سیشن کی ریٹنگ کا شکریہ۔"},
     signOut: "سائن آؤٹ",
     sending: "بھیجا جا رہا ہے…",
-    errors: {signin: "آپ کا سیشن ختم ہو گیا ہے - رائیڈ کی درجہ بندی کے لیے دوبارہ سائن اِن کریں۔", refused: "اس بکنگ کی درجہ بندی نہیں کی جا سکتی۔", generic: "بھیجا نہیں جا سکا۔ کنکشن چیک کریں اور دوبارہ کوشش کریں۔", outdated: "یہ صفحہ پرانا ہو چکا ہے۔ اسے دوبارہ لوڈ کریں اور پھر کوشش کریں۔", paid_move: "ادا شدہ بکنگ کو مختلف قیمت والی رائیڈ پر منتقل نہیں کیا جا سکتا۔ براہِ کرم بوتھ پر ہماری ٹیم سے رابطہ کریں۔"},
+    errors: {signin: "آپ کا سیشن ختم ہو گیا ہے - اپنی ریٹنگ بھیجنے کے لیے دوبارہ سائن اِن کریں۔", refused: "اس بکنگ کی درجہ بندی نہیں کی جا سکتی۔", generic: "بھیجا نہیں جا سکا۔ کنکشن چیک کریں اور دوبارہ کوشش کریں۔", outdated: "یہ صفحہ پرانا ہو چکا ہے۔ اسے دوبارہ لوڈ کریں اور پھر کوشش کریں۔", paid_move: "ادا شدہ بکنگ کو مختلف قیمت والی رائیڈ پر منتقل نہیں کیا جا سکتا۔ براہِ کرم بوتھ پر ہماری ٹیم سے رابطہ کریں۔"},
   },
   hi: {
     kicker: "अपनी राइड रेट करें",
@@ -233,9 +247,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "रेटिंग सबमिट करें",
     thanks: "अपनी राइड को रेट करने के लिए धन्यवाद।",
     run: {kicker: "अपनी दौड़ रेट करें", title: "आपकी दौड़ कैसी रही?", thanks: "अपनी दौड़ को रेट करने के लिए धन्यवाद।"},
+    session: {kicker: "अपना सत्र रेट करें", title: "आपका सत्र कैसा रहा?", thanks: "अपने सत्र को रेट करने के लिए धन्यवाद।"},
     signOut: "साइन आउट करें",
     sending: "भेजा जा रहा है…",
-    errors: {signin: "आपका सेशन समाप्त हो गया है - राइड रेट करने के लिए फिर से साइन इन करें।", refused: "इस बुकिंग को रेट नहीं किया जा सकता।", generic: "यह भेजा नहीं जा सका। कनेक्शन जाँचें और फिर कोशिश करें।", outdated: "यह पेज पुराना हो गया है। इसे दोबारा लोड करें और फिर से कोशिश करें।", paid_move: "भुगतान की गई बुकिंग को अलग कीमत वाली राइड पर नहीं बदला जा सकता। कृपया बूथ पर हमारी टीम से संपर्क करें।"},
+    errors: {signin: "आपका सेशन समाप्त हो गया है - अपनी रेटिंग भेजने के लिए फिर से साइन इन करें।", refused: "इस बुकिंग को रेट नहीं किया जा सकता।", generic: "यह भेजा नहीं जा सका। कनेक्शन जाँचें और फिर कोशिश करें।", outdated: "यह पेज पुराना हो गया है। इसे दोबारा लोड करें और फिर से कोशिश करें।", paid_move: "भुगतान की गई बुकिंग को अलग कीमत वाली राइड पर नहीं बदला जा सकता। कृपया बूथ पर हमारी टीम से संपर्क करें।"},
   },
   ne: {
     kicker: "आफ्नो राइड रेट गर्नुहोस्",
@@ -251,9 +266,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "रेटिङ पेश गर्नुहोस्",
     thanks: "राइडलाई रेटिङ दिनुभएकोमा धन्यवाद।",
     run: {kicker: "आफ्नो दौड रेट गर्नुहोस्", title: "तपाईंको दौड कस्तो रह्यो?", thanks: "दौडलाई रेटिङ दिनुभएकोमा धन्यवाद।"},
+    session: {kicker: "आफ्नो सत्र रेट गर्नुहोस्", title: "तपाईंको सत्र कस्तो रह्यो?", thanks: "सत्रलाई रेटिङ दिनुभएकोमा धन्यवाद।"},
     signOut: "साइन आउट",
     sending: "पठाइँदैछ…",
-    errors: {signin: "तपाईंको सेसन समाप्त भयो - राइड मूल्याङ्कन गर्न पुनः साइन इन गर्नुहोस्।", refused: "यो बुकिङ मूल्याङ्कन गर्न सकिँदैन।", generic: "पठाउन सकिएन। जडान जाँचेर फेरि प्रयास गर्नुहोस्।", outdated: "यो पेज पुरानो भइसकेको छ। यसलाई फेरि लोड गरेर पुनः प्रयास गर्नुहोस्।", paid_move: "भुक्तानी भइसकेको बुकिङलाई फरक मूल्यको राइडमा सार्न सकिँदैन। कृपया बुथमा हाम्रो टोलीलाई सोध्नुहोस्।"},
+    errors: {signin: "तपाईंको सेसन समाप्त भयो - आफ्नो रेटिङ पठाउन पुनः साइन इन गर्नुहोस्।", refused: "यो बुकिङ मूल्याङ्कन गर्न सकिँदैन।", generic: "पठाउन सकिएन। जडान जाँचेर फेरि प्रयास गर्नुहोस्।", outdated: "यो पेज पुरानो भइसकेको छ। यसलाई फेरि लोड गरेर पुनः प्रयास गर्नुहोस्।", paid_move: "भुक्तानी भइसकेको बुकिङलाई फरक मूल्यको राइडमा सार्न सकिँदैन। कृपया बुथमा हाम्रो टोलीलाई सोध्नुहोस्।"},
   },
   bn: {
     kicker: "আপনার রাইডে রেটিং দিন",
@@ -269,9 +285,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "রেটিং জমা দিন",
     thanks: "রাইড রেট করার জন্য ধন্যবাদ।",
     run: {kicker: "আপনার দৌড়ে রেটিং দিন", title: "আপনার দৌড় কেমন ছিল?", thanks: "দৌড় রেট করার জন্য ধন্যবাদ।"},
+    session: {kicker: "আপনার সেশনে রেটিং দিন", title: "আপনার সেশন কেমন ছিল?", thanks: "সেশন রেট করার জন্য ধন্যবাদ।"},
     signOut: "সাইন আউট",
     sending: "পাঠানো হচ্ছে…",
-    errors: {signin: "আপনার সেশন শেষ হয়েছে - রাইড রেট করতে আবার সাইন ইন করুন।", refused: "এই বুকিং রেট করা যাবে না।", generic: "পাঠানো যায়নি। সংযোগ দেখে আবার চেষ্টা করুন।", outdated: "এই পেজটি পুরোনো হয়ে গেছে। পেজটি রিলোড করে আবার চেষ্টা করুন।", paid_move: "পরিশোধিত বুকিং ভিন্ন দামের রাইডে সরানো যায় না। অনুগ্রহ করে বুথে আমাদের টিমের সাথে কথা বলুন।"},
+    errors: {signin: "আপনার সেশন শেষ হয়েছে - আপনার রেটিং পাঠাতে আবার সাইন ইন করুন।", refused: "এই বুকিং রেট করা যাবে না।", generic: "পাঠানো যায়নি। সংযোগ দেখে আবার চেষ্টা করুন।", outdated: "এই পেজটি পুরোনো হয়ে গেছে। পেজটি রিলোড করে আবার চেষ্টা করুন।", paid_move: "পরিশোধিত বুকিং ভিন্ন দামের রাইডে সরানো যায় না। অনুগ্রহ করে বুথে আমাদের টিমের সাথে কথা বলুন।"},
   },
   zh: {
     kicker: "为骑行评分",
@@ -287,6 +304,7 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "提交评分",
     thanks: "感谢您为本次骑行评分。",
     run: {kicker: "为跑步评分", title: "这次跑步感觉如何？", thanks: "感谢您为本次跑步评分。"},
+    session: {kicker: "为本次活动评分", title: "这次活动感觉如何？", thanks: "感谢您为本次活动评分。"},
     signOut: "退出登录",
     sending: "正在发送…",
     errors: {signin: "您的登录已过期，请重新登录以评分。", refused: "无法为此预订评分。", generic: "发送失败。请检查网络连接后重试。", outdated: "此页面已过期。请刷新后重试。", paid_move: "已付款的预订无法改到价格不同的骑行。请向现场服务台的工作人员咨询。"},
@@ -305,9 +323,10 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
     send: "評価を送信",
     thanks: "ライドを評価していただき、ありがとうございます。",
     run: {kicker: "ランを評価", title: "ランはいかがでしたか？", thanks: "ランを評価していただき、ありがとうございます。"},
+    session: {kicker: "セッションを評価", title: "セッションはいかがでしたか？", thanks: "セッションを評価していただき、ありがとうございます。"},
     signOut: "ログアウト",
     sending: "送信中…",
-    errors: {signin: "セッションが終了しました。ライドを評価するには再度ログインしてください。", refused: "この予約は評価できません。", generic: "送信できませんでした。接続を確認して、もう一度お試しください。", outdated: "このページは最新ではありません。再読み込みして、もう一度お試しください。", paid_move: "支払い済みの予約は、料金の異なるライドに変更できません。ブースのスタッフにお問い合わせください。"},
+    errors: {signin: "セッションが終了しました。評価を送信するには再度ログインしてください。", refused: "この予約は評価できません。", generic: "送信できませんでした。接続を確認して、もう一度お試しください。", outdated: "このページは最新ではありません。再読み込みして、もう一度お試しください。", paid_move: "支払い済みの予約は、料金の異なるライドに変更できません。ブースのスタッフにお問い合わせください。"},
   },
 };
 

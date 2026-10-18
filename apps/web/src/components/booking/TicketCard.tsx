@@ -7,6 +7,7 @@ import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
 import { VL_DIV_KM, vlDivName, vlIsDbl, vlPayLine } from "@/lib/vlap";
 import { timesText } from "@/lib/rides";
+import { isNonBike } from "@/lib/bike-kinds";
 import { DEFE_RACE_URL, raceRegAsked, addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
@@ -106,7 +107,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const held = !past && spotHeld(s, now);
   const venue = held && meetHeld(s, now) ? ({ kind: "meet" } as const) : venueOf(s);
   const big = num.length <= 4 ? "big" : num.length <= 9 ? "mid" : "small";
-  const bikes = s ? s.bikes : true;
+  // a session that did not load reads by its id: a kind without a bike never shows bike words (2026-10-18)
+  const bikes = s ? s.bikes : !isNonBike(null, primary.sessionId);
   const run = s?.kind === "runher" || s?.kind === "defe5k"; // Run for Her, the DEFE 5KM Run: a runner's number, a distance, cancel only
   const defe = s?.kind === "defe5k";
   const vlap = s?.kind === "vlap"; // Victory Lap: an athlete's number, the race and team, how to pay
@@ -155,7 +157,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
           {!noNum && (allWl
             ? <p className="tk-label wl">{t.wlOnList}{wl ? <> · {t.wlLinePos(String(wl))}</> : ""}</p>
-            : <p className="tk-label">{rows.length > 1 ? (rows.length === 2 ? t.bikes2 : t.bikesN(String(rows.length))) : numLabel}</p>)}
+            : <p className="tk-label">{rows.length > 1 ? (rows.length === 2 ? (bikes ? t.bikes2 : t.party2) : (bikes ? t.bikesN : t.partyN)(String(rows.length))) : numLabel}</p>)}
           {/* a number reads left to right in every language: "#7 – #8" is never "#8 – #7" */}
           <p className={`tk-num ${big}`}>{noNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
           {allWl && !noNum && <p className="tk-wl-note">{wl ? t.wlPos(String(wl)) : t.wlPosNoNum}</p>}
@@ -179,13 +181,13 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         {active ? (
           <div className="tk-note go"><span className="dot" aria-hidden="true" /><span>{activeText}</span></div>
         ) : past && allDone && onDay ? (
-          <div className="tk-note go"><span className="dot" aria-hidden="true" /><span>{minutes >= 1 ? t.cueDone(dur(minutes)) : t.cueDoneNoDur}</span></div>
+          <div className="tk-note go"><span className="dot" aria-hidden="true" /><span>{minutes >= 1 ? (bikes ? t.cueDone : t.cueDoneNb)(dur(minutes)) : bikes ? t.cueDoneNoDur : t.cueDoneNoDurNb}</span></div>
         ) : cue === "confirmed" ? (
           <div className="tk-ok" role="status"><span className="tk-ok-tick" aria-hidden="true">✓</span><span><strong>{t.confirmed}</strong><small>{t.confirmedSub}</small></span></div>
         ) : cue ? (
           <div className={`tk-note ${cue === "next" || cue === "onBike" ? "go" : cue === "inQueue" ? "" : "warn"}`}>
             {cue !== "next" && cue !== "inQueue" && <span className="dot" aria-hidden="true" />}
-            <span>{{ underReview: t.underReview, pending: t.pending, waitlist: t.waitlistCue, onBike: t.onBike, next: t.next, inQueue: t.inQueue }[cue]}</span>
+            <span>{{ underReview: bikes ? t.underReview : t.underReviewNb, pending: t.pending, waitlist: t.waitlistCue, onBike: t.onBike, next: t.next, inQueue: t.inQueue }[cue]}</span>
           </div>
         ) : null}
         {partnerPlace(rows) === "defe" && !past && <p className="tk-line tk-partner">{t.withDefe}</p>}
@@ -210,7 +212,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               <div className="tk-rt-txt">
                 <p className="tk-rt-k">{t.breakfastSpot}</p>
                 <p className="tk-rt-n"><bdi>{bf.name}</bdi></p>
-                {bf.offer && <p className="tk-rt-m"><bdi>{t.riderOffer(bf.offer)}</bdi></p>}
+                {bf.offer && <p className="tk-rt-m"><bdi>{(bikes ? t.riderOffer : t.participantOffer)(bf.offer)}</bdi></p>}
                 {bf.url && <a className="tk-rt-a" href={bf.url} target="_blank" rel="noopener">{t.rtMapLink}</a>}
               </div>
             </div>

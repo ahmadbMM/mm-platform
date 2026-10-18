@@ -85,7 +85,9 @@ export function claimWhen(session: ClaimSession | null | undefined, locale: stri
 }
 
 /** What the page is given about the offer: never the raw answer (no first name, no queue number). */
-export type ClaimView = { state: ClaimState; title: string | null; when: string; expiresAt: string | null; now: string | null };
+/** `bikes`: false on a session without a bike (lib/bike-kinds.ts; the route sets it from the session's kind),
+ *  whose card says person and there, never rider and ride (the owner, 2026-10-18). Left out, a ride. */
+export type ClaimView = { state: ClaimState; title: string | null; when: string; expiresAt: string | null; now: string | null; bikes?: boolean };
 
 export function claimView(r: ClaimGet | null, locale: string): ClaimView {
   const state = stateOfGet(r);

@@ -19,7 +19,7 @@ import type { RatingForm as Form } from "@/lib/rating";
 // `restaurant` (2026-10-05): where a Saturday ride's breakfast was, by name in the page's language; an
 // answer from before it reads as none. `rgLow` (2026-10-09): the booking app's rg_low, the score at or
 // under which the form asks why; an answer without it reads as the default.
-type Pending = { entryId: string; name: string; when: string; form: Form; noBike: boolean; restaurant?: string | null; rgLow?: number; run?: boolean };
+type Pending = { entryId: string; name: string; when: string; form: Form; noBike: boolean; restaurant?: string | null; rgLow?: number; run?: boolean; session?: boolean };
 const KEY = RATE_QUIET;
 const QUIET_MS = 10 * 60_000;
 

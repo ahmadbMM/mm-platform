@@ -28,13 +28,15 @@ type Props = {
   rgLow?: number;
   /** Run for Her (lib/rating.ts isRun): the thank-you says run. */
   run?: boolean;
+  /** A session without a bike that is not a run (lib/rating.ts rideWord "session"): the thank-you says session. */
+  session?: boolean;
   /** Called once the rating has landed. */
   onRated: (t: RatingWords) => void;
   /** Under the send button: the gate's sign-out. */
   footer?: ReactNode;
 };
 
-export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, run, onRated, footer }: Props) {
+export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, run, session, onRated, footer }: Props) {
   const low = rgLowFor(form, rgLow ?? RG_LOW);
   const t = ratingWords(useTxLocale());
   const tx = useL();
@@ -104,7 +106,7 @@ export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, r
         body: JSON.stringify({ entryId, form, s: sent, why: reasons, skipBf: form === "social" && skipBf, note: note.trim() }),
       });
       const b = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (b.ok) { onRated(run ? { ...t, thanks: t.run.thanks } : t); return; }
+      if (b.ok) { onRated(run ? { ...t, thanks: t.run.thanks } : session ? { ...t, thanks: t.session.thanks } : t); return; }
       setFail(t.errors[(b.error || "") as keyof RatingWords["errors"]] || t.errors.generic);
     } catch {
       setFail(t.errors.generic);

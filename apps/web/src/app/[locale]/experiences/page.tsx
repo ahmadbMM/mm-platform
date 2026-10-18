@@ -190,7 +190,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // a session with a start time alone (the DEFE 5KM Run) says it once: b is ""
       when: s.times ? { gather: s.gather && !oneTime(s.times), a: clock(s.times[0]), b: oneTime(s.times) ? "" : clock(s.times[1]) } : null,
       // a run and Victory Lap have no bikes, so never the bike prices
-      members: s.members, free: s.free, full: s.full, paid: !s.free && s.kind !== "runher" && s.kind !== "vlap" && s.kind !== "defe5k", noCarbon: s.noCarbon,
+      // (nor the pool, the workshop or an event: "Per bike" prices only where bikes are rented, 2026-10-18)
+      members: s.members, free: s.free, full: s.full, paid: !s.free && rentsBikes(s.kind), noCarbon: s.noCarbon,
       // the DEFE 5KM Run's own card (the booking app's _defeSessCard): the logo, its name, when, how far and
       // where, and the cause along the foot
       ...(s.kind === "defe5k" ? { defe: { meta: [s.times ? clock(s.times[0]) : "", fillAt(kmWord, 5), place.name].filter(Boolean), cause: defeWords.cause } } : {}),
@@ -238,6 +239,10 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),
     cont: S(st.continue), waitlist: S(d.waitlist), back: S(st.back), noDates: S(st.noDates), handoff: S(st.handoff),
     members: S(d.members), free: S(d.free), full: S(d.full), gather: S(d.gather), start: S(d.start), membersNote: S(d.membersNote), clubLink: S(d.clubLink),
+    // a date without a bike says booking, participants and sessions (2026-10-18)
+    bookTitleNb: tx("Your booking", "حجزك"),
+    handoffNb: S(st.handoff) ? tx("The booking app opens on this date: sign in, add the participants and confirm.", "يفتح تطبيق الحجز على هذا الموعد: سجّل الدخول وأضف المشاركين وأكّد.") : "",
+    membersNoteNb: tx("Sessions marked Members are for Club members.", "الفعاليات المعلَّمة «للأعضاء» مخصصة لأعضاء النادي."),
     available: tx("Available", "متاح"), waitlisted: waitWord, left1, leftN,
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
     everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),

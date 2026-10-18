@@ -258,8 +258,8 @@ describe("Run for Her's pink ribbon (run_for_her, 2026-10-05)", () => {
       expect(b).toMatchObject({ on: false });
       expect(String(b?.p)).toMatch(/^0\//);
     }
-    // a finished run is still a ride finished, as in the booking app
-    expect(L.flatMap((x) => x.lv ?? [x]).find((x) => x.slug === "first_lap")!.on).toBe(true);
+    // a run is not a ride (the owner, 2026-10-18: no cycling on a session without a bike): no First Lap
+    expect(L.flatMap((x) => x.lv ?? [x]).find((x) => x.slug === "first_lap")!.on).toBe(false);
   });
   it("is drawn as the booking app draws it: the ribbon on the pink special medal", () => {
     const svg = renderToStaticMarkup(createElement(Medal, { icon: "ribbon", color: "pink" }));
@@ -267,9 +267,9 @@ describe("Run for Her's pink ribbon (run_for_her, 2026-10-05)", () => {
     for (const c of ["#ffc9da", "#f2789f", "#c2416e", "#a3325b"]) expect(svg).toContain(c);
     expect(svg).toContain('class="rb o"');
   });
-  it("does not make the distance a favourite bike", () => {
+  it("does not make the distance a favourite bike, nor a run a ride (2026-10-18)", () => {
     const runs = runRows("done", 2);
-    expect(rideStats(runs, runSes(runs), today)).toMatchObject({ fav: null });
+    expect(rideStats(runs, runSes(runs), today)).toBeNull();
     expect(runs.map((r) => r.runKm)).toEqual([5, 5]);
   });
 });

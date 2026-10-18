@@ -83,7 +83,9 @@ export default function ClaimCard({ token, locale, mine }: Props) {
   }
 
   const title = state === "done" ? w.doneTitle : state === "no" ? w.noTitle : state === "ask" || state === "net" ? w.title : w.lateTitle;
-  const sub = state === "done" ? w.doneSub : state === "late" ? w.lateSub : state === "full" ? w.fullSub : state === "no" ? w.noSub : state === "net" ? w.net : w.goneSub;
+  // a session without a bike says person and there, never rider and ride (2026-10-18)
+  const nb = view?.bikes === false;
+  const sub = state === "done" ? (nb ? w.doneSubNb : w.doneSub) : state === "late" ? (nb ? w.lateSubNb : w.lateSub) : state === "full" ? w.fullSub : state === "no" ? (nb ? w.noSubNb : w.noSub) : state === "net" ? w.net : w.goneSub;
   return (
     <div className="wlc-wrap">
       <div className="wlc-card" ref={box} tabIndex={-1} role="region" aria-labelledby="wlc-title" aria-busy={state === "load" || undefined}>

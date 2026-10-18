@@ -4,11 +4,17 @@
 // _bdgPerfect, _mrStreak). Plain logic, so it can be tested; the data comes from lib/ride-record-data.ts.
 import { rideCompleted, ticketRow, type TicketRow } from "./tickets";
 import type { RideKind } from "./rides";
+import { BIKE_KINDS, isNonBike } from "./bike-kinds";
 
 /** What the record needs of a session: its kind, and whether it costs nothing (_isFreeRide). */
 export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: boolean; groupKm?: { beg: number; int: number }; km?: number };
-/** The kinds ridden on a bike (the booking app's KIND_TRAITS): the only ones the distance ladder counts. */
-const BIKE_KINDS = new Set<RideKind>(["jcc", "saturday", "petromin", "snd96"]);
+/** A night on a bike (lib/bike-kinds.ts BIKE_KINDS): the only nights Your rides and the ride badges count
+ *  (the owner, 2026-10-18: the pool, the workshop, an event, a run and Victory Lap are not rides). A session
+ *  that did not load counts unless its id names a kind without a bike. */
+const onBike = (sessionId: string, sessions: Map<string, RecordSession>): boolean => {
+  const x = sessions.get(sessionId);
+  return x ? BIKE_KINDS.has(x.kind) : !isNonBike(null, sessionId);
+};
 /** A badge as badge_catalog / badge_seasons / customer_my_badges hand it back. */
 export type BadgeRow = {
   slug: string; note?: string | null; at?: string | null; icon?: string | null; color?: string | null; system?: boolean | null; auto?: boolean | null;
@@ -155,12 +161,12 @@ export function closestBadges(list: BadgeItem[]): { item: BadgeItem; show: Badge
 }
 
 /** Your rides (_myrStats): counted in ride nights (a party is one night, read off the rider's own
- *  row, the lowest number). Null with no ride yet. */
+ *  row, the lowest number), bike nights only (onBike). Null with no ride yet. */
 export type RideStats = { weeks: boolean[]; nWeeks: number; year: number; fav: string | null; minutes: number; first: string | null };
 export function rideStats(rows: TicketRow[], sessions: Map<string, RecordSession>, today: string): RideStats | null {
   const nights = new Map<string, TicketRow>();
   for (const r of rows) {
-    if (!rideCompleted(r, !!sessions.get(r.sessionId)?.freeRide)) continue;
+    if (!onBike(r.sessionId, sessions) || !rideCompleted(r, !!sessions.get(r.sessionId)?.freeRide)) continue;
     const c = nights.get(r.sessionId);
     if (!c || (r.queueNum ?? 0) < (c.queueNum ?? 0)) nights.set(r.sessionId, r);
   }
@@ -221,8 +227,13 @@ export type BadgeItem = {
 type RecordRow = TicketRow & { addons?: boolean };
 
 /** The ride badges, earned or not, with the booking app's progress (_mrBadges). */
-function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, data: BadgeData, today: string, profile: ProfileFields | null) {
+function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data: BadgeData, today: string, profile: ProfileFields | null) {
   const ses = (id: string) => sessions.get(id);
+  // The ride badges count bike nights alone (onBike; the owner, 2026-10-18): First Lap, Regular, Podium,
+  // Corniche 25, Front Row's ladder, Hot Streak, Safety Car, Endurance, Squad Captain, Fuel Stop, Triple Crown,
+  // Clean Sheet, Back on Track and the dated ones. A session's own badge (Run for Her, Victory Lap, the DEFE
+  // 5KM Run, National Day) and the Perfect Week, which counts every session the week held, read every row.
+  const rows = all.filter((r) => onBike(r.sessionId, sessions));
   const done = (r: TicketRow) => rideCompleted(r, !!ses(r.sessionId)?.freeRide);
   // a ride that counts towards a badge (_bdgRode): done and paid, or free, or an own bike checked in;
   // the booking app counts every badge off these rows (_mrBadges(all, all.filter(_bdgRode)))
@@ -272,14 +283,14 @@ function rideBadges(rows: RecordRow[], sessions: Map<string, RecordSession>, dat
   const km = Math.max(0, ...kmN.values());
   for (const [, n] of nights) { if (n.done) cleanBest = Math.max(cleanBest, ++clean); else if (n.noshow) clean = 0; }
   const R = weekRuns(dates, today), streak = weekStreak(completed.map((r) => r.date), today);
-  const PW = perfectWeeks(data.weeks, new Set(completed.map((r) => r.sessionId)), today);
+  const PW = perfectWeeks(data.weeks, new Set(all.filter(rode).map((r) => r.sessionId)), today);
   const nd96 = rows.some((r) => (r.status === "done" || r.status === "active") && ses(r.sessionId)?.kind === "snd96");
   // Run for Her: finished, i.e. marked done at the end of the run (the owner, 2026-10-05: "who completes this event")
-  const rfh = rows.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "runher");
+  const rfh = all.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "runher");
   // Victory Lap: checked out, or the session closed out - both leave the booking done (the owner, 2026-10-17)
-  const vlp = rows.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "vlap");
+  const vlp = all.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "vlap");
   // the DEFE 5KM Run: finished, i.e. a done row on a Defe run (the booking app, 2026-10-18), as Run for Her
-  const dfe = rows.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "defe5k");
+  const dfe = all.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "defe5k");
   // Rode with Defe: checked in (on the bike or done) on the Saturday ride with Defe, members and Defe's riders alike
   const dfr = rows.some((r) => (r.status === "done" || r.status === "active") && DEFE_RIDE_IDS.includes(r.sessionId));
   const P = (n: number, of: number) => `${Math.min(n, of)}/${of}`, pct = profile ? profilePct(profile) : 0;
