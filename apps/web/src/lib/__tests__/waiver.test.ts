@@ -36,7 +36,7 @@ describe("which waiver a ride is agreed under", () => {
       expect(waiverVersion(ticketSession(r)!)).toBe("2026-10-v3");
     }
     expect(waiverVersion(ticketSession({ ...satRow, ride_kind: "swim" })!)).toBe("swim-2026-10-v3");
-    for (const k of ["workshop", "event"]) expect(waiverVersion(ticketSession({ ...satRow, ride_kind: k })!)).toBe("activity-2026-10-v2");
+    for (const k of ["workshop", "event"]) expect(waiverVersion(ticketSession({ ...satRow, ride_kind: k })!)).toBe("activity-2026-10-v3");
   });
   it("carries the booking app's words, every clause in English and Arabic", () => {
     for (const kind of ["ride", "swim", "activity"] as const) {
@@ -49,7 +49,7 @@ describe("which waiver a ride is agreed under", () => {
     expect(waiverCopy("ride", makeL("en", null)).agree).toBe("I have read the waiver and agree on behalf of every rider on this booking");
     expect(waiverCopy("swim", makeL("en", null)).title).toBe("Swim waiver");
     expect(waiverCopy("activity", makeL("de", de)).title).toBe((de as Record<string, string>)["Activity waiver"]);
-    expect(Object.values(WAIVER_VERSIONS)).toEqual(["2026-10-v3", "swim-2026-10-v3", "activity-2026-10-v2"]);
+    expect(Object.values(WAIVER_VERSIONS)).toEqual(["2026-10-v3", "swim-2026-10-v3", "activity-2026-10-v3"]);
   });
 });
 
