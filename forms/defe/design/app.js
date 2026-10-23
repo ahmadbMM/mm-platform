@@ -1073,7 +1073,9 @@
     if (/PARTNER_FULL/.test(m)) { if (ride) ride.open = false; bookState = "full"; paintBookState(); paintLanding(); $("#b-notice").scrollIntoView({ block: "center" }); }
     else if (/PARTNER_CLOSED/.test(m)) { ride = null; bookState = "closed"; paintBookState(); paintLanding(); }
     else if (/BAD_CODE/.test(m)) { setErr("f-code", "That code doesn't work. Check the code Defe sent you."); focusField("f-code"); }
-    else if (/CODE_USED_UP/.test(m)) { if (ride) ride.code_open = false; bookState = "codeUsed"; paintBookState(); paintLanding(); $("#b-notice").scrollIntoView({ block: "center" }); }
+    // One code used up (2026-10-23: a ride takes several codes, each with its own places): that code
+    // is refused, the others still book, so it is the code field's error, not the page's state.
+    else if (/CODE_USED_UP/.test(m)) { setErr("f-code", "That code's places are all booked. Check with Defe for another code."); focusField("f-code"); }
     else if (/ONE_PER_SESSION/.test(m)) { bookState = "already"; paintBookState(); $("#b-notice").scrollIntoView({ block: "center" }); }
     else if (/FIX_FIRST/.test(m)) { showBanner("Your account still needs a few details before it can book."); enterDetails(); }
     else if (/WAIVER_OUTDATED/.test(m)) showBanner("The ride waiver has changed. Reload this page to read the new one.");

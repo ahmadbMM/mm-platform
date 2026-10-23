@@ -44,6 +44,9 @@ light and dark as the device is set.
 
 Database: `20261017120000_partner_places.sql` in the booking site repo (`session_partners`,
 `queue_entries.partner`, `partner_status`, `partner_book`).
+Since `20261023120000_partner_codes.sql` the ride takes several codes, each with its own places
+(`session_partner_codes`, set by staff on Bookings); `CODE_USED_UP` is that one code's field error, the
+other codes still book; the page closes ("Code places are all booked") only when every code is used up.
 
 ## Where things come from
 - `design/` — the page: `index.html`, `styles.css`, `app.js`, `i18n.js` (its own strings in Arabic,

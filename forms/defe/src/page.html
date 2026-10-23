@@ -1084,6 +1084,7 @@ var FORM_T = {
    "Please check your date of birth.": "يُرجى التحقق من تاريخ ميلادك.",
    "An Instagram username has only letters, numbers, dots and underscores": "يتكوّن اسم المستخدم في Instagram من حروف وأرقام ونقاط وشرطات سفلية فقط",
    "That code doesn't work. Check the code Defe sent you.": "هذا الرمز غير صحيح. تحقّق من الرمز الذي أرسلته لك دفء.",
+   "That code's places are all booked. Check with Defe for another code.": "اكتمل حجز أماكن هذا الرمز. تواصل مع دفء للحصول على رمز آخر.",
    "Tick the box to accept the ride waiver": "ضع علامة في المربع للموافقة على إقرار الركوب",
    "Choose a bike": "اختر دراجة",
    "Did you receive a Defe shirt on 22 October?": "هل استلمت قميص دفء يوم 22 أكتوبر؟",
@@ -2214,7 +2215,9 @@ var FORM_T = {
     if (/PARTNER_FULL/.test(m)) { if (ride) ride.open = false; bookState = "full"; paintBookState(); paintLanding(); $("#b-notice").scrollIntoView({ block: "center" }); }
     else if (/PARTNER_CLOSED/.test(m)) { ride = null; bookState = "closed"; paintBookState(); paintLanding(); }
     else if (/BAD_CODE/.test(m)) { setErr("f-code", "That code doesn't work. Check the code Defe sent you."); focusField("f-code"); }
-    else if (/CODE_USED_UP/.test(m)) { if (ride) ride.code_open = false; bookState = "codeUsed"; paintBookState(); paintLanding(); $("#b-notice").scrollIntoView({ block: "center" }); }
+    // One code used up (2026-10-23: a ride takes several codes, each with its own places): that code
+    // is refused, the others still book, so it is the code field's error, not the page's state.
+    else if (/CODE_USED_UP/.test(m)) { setErr("f-code", "That code's places are all booked. Check with Defe for another code."); focusField("f-code"); }
     else if (/ONE_PER_SESSION/.test(m)) { bookState = "already"; paintBookState(); $("#b-notice").scrollIntoView({ block: "center" }); }
     else if (/FIX_FIRST/.test(m)) { showBanner("Your account still needs a few details before it can book."); enterDetails(); }
     else if (/WAIVER_OUTDATED/.test(m)) showBanner("The ride waiver has changed. Reload this page to read the new one.");

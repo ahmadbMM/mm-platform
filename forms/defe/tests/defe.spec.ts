@@ -339,9 +339,10 @@ test('the booking says when the code is wrong or its places are used up', async 
   answer = refuse('CODE_USED_UP');
   await page.fill('#code', 'DEFE24');
   await page.click('#book');
-  await expect(page.locator('#b-notice')).toContainText('Code places are all booked.');
-  await expect(page.locator('#b-notice')).toContainText('More places open to everyone soon on this page.');
-  await expect(page.locator('#book')).toBeDisabled();
+  // one code used up: that code's error, the other codes still book (2026-10-23, several codes)
+  await expect(page.locator('#f-code .err')).toHaveText("That code's places are all booked. Check with Defe for another code.");
+  await expect(page.locator('#b-notice')).not.toContainText('Code places are all booked.');
+  await expect(page.locator('#book')).toBeEnabled();
   const text = await page.locator('body').innerText();
   expect(text).not.toMatch(/\d+\s*\/\s*\d+/);
 });

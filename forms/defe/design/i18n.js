@@ -113,6 +113,7 @@ var FORM_T = {
    "Please check your date of birth.": "يُرجى التحقق من تاريخ ميلادك.",
    "An Instagram username has only letters, numbers, dots and underscores": "يتكوّن اسم المستخدم في Instagram من حروف وأرقام ونقاط وشرطات سفلية فقط",
    "That code doesn't work. Check the code Defe sent you.": "هذا الرمز غير صحيح. تحقّق من الرمز الذي أرسلته لك دفء.",
+   "That code's places are all booked. Check with Defe for another code.": "اكتمل حجز أماكن هذا الرمز. تواصل مع دفء للحصول على رمز آخر.",
    "Tick the box to accept the ride waiver": "ضع علامة في المربع للموافقة على إقرار الركوب",
    "Choose a bike": "اختر دراجة",
    "Did you receive a Defe shirt on 22 October?": "هل استلمت قميص دفء يوم 22 أكتوبر؟",
