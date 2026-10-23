@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import RatingGateLoader from "./RatingGateLoader";
+import RaceGateLoader from "./RaceGateLoader";
 import ShareGate, { type PendingShare, type ShareDone } from "./ShareGate";
 import { SHARE_QUIET } from "./quiet";
 
 // A Run for Her runner's agreement to share their details with Sela and JYC on every page (the owner,
 // 2026-10-06; the booking app's _pendingShare), between the waivers and the post-ride rating:
-// WaiverGateLoader mounts this once no waiver waits, and this holds the rating's (RatingGateLoader)
+// WaiverGateLoader mounts this once no waiver waits, and this holds the Defe race question's and the rating's (RaceGateLoader, then RatingGateLoader)
 // until it has asked and no run waits, and takes it down again while the pop-up is up. As the waiver
 // does, it asks /api/account/pending-share, which answers a signed-out visitor from the cookie alone:
 // a signed-out answer is asked again on the next page, a signed-in "nothing to agree" is kept for two
@@ -67,5 +67,5 @@ export default function ShareGateLoader({ locale }: { locale: string }) {
   };
 
   if (pending) return <ShareGate key={`${pending.sessionId}-${round}`} {...pending} onDone={(r) => done(pending.sessionId, r)} />;
-  return clear ? <RatingGateLoader locale={locale} /> : null;
+  return clear ? <RaceGateLoader locale={locale} /> : null;
 }

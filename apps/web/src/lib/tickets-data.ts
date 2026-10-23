@@ -9,7 +9,7 @@ import { ticketSession, type TicketSession } from "./tickets";
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 // The route column rides along through sessionRows, which leaves it out while the database does not have it yet.
-const COLS = "id,session_date,day,title,ride_kind,event_kind,bike_slots,needs_approval,hide_queue,meet_url,paid_ride,open_to_all,status,location,breakfast_name,breakfast_url";
+const COLS = "id,session_date,day,title,ride_kind,event_kind,bike_slots,needs_approval,hide_queue,meet_url,paid_ride,open_to_all,status,location,breakfast_name,breakfast_url,price";
 // The breakfast stop's Arabic name and offer (rentals migration 20261004130000): a group of their own,
 // left out while the database does not have them yet, without taking the route along. Victory Lap's
 // settings (SESSION_COLS_VL: how to pay, what goes to Kamin Sports) the same way.

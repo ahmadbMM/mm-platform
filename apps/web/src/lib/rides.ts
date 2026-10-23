@@ -31,8 +31,12 @@ import { priceRows, type PriceRow } from "./biz";
 //            holders, its card shown to everyone; no bikes, no breakfast; doors then the first heat
 //            ("16:30 - 17:15", read as gathering - start); a paid ride at the session's own price per
 //            athlete (sessions.price, 150 SAR VAT included), which only those who may book it are told.
+//   defe5k   The DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18): Defe's breast-cancer awareness 5 km race at
+//            the circuit, a date inside the community rides (MicroMobility Experiences), not a card of its
+//            own - members only, free, no bikes and no breakfast, one place per account, everyone runs
+//            5 km (queue_entries.run_km, set by the database); one start time ("19:00"), no gathering.
 
-export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap";
+export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k";
 /** A ride_prices row: the fare, and (lib/biz.ts faresOf) the highest fare quoted and the employees' fare when the database has them. */
 export type RidePrice = PriceRow;
 export type RideSession = {
@@ -106,7 +110,7 @@ export function rideKind(r: Row): RideKind {
   const k = r.ride_kind;
   if (k === "snd96") return "snd96";
   if (r.event_kind !== "community") return "jcc";
-  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" ? k : "saturday";
+  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" ? k : "saturday";
 }
 
 /** A route's slug as the Routes page writes one (content/pages/routes.ts): lower-case letters,
@@ -117,7 +121,9 @@ export const routeSlugOf = (v: unknown): string | null => (typeof v === "string"
 const num = (v: unknown): number | null =>
   typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && v.trim() && Number.isFinite(Number(v)) ? Number(v) : null;
 
-/** "21:00 - 23:00" from the session's settings (stored as JSON text, or an object). */
+/** "21:00 - 23:00" from the session's settings (stored as JSON text, or an object). A session with one
+ *  time only (the DEFE 5KM Run's "19:00", 2026-10-18: the booking app's sessionTime says "7 PM") gives that
+ *  time twice: oneTime tells it apart, and a page says it once. */
 export function slotTimes(slots: unknown): [string, string] | null {
   let o: unknown = slots;
   if (typeof o === "string") {
@@ -125,7 +131,20 @@ export function slotTimes(slots: unknown): [string, string] | null {
   }
   const t = o && typeof o === "object" ? (o as Record<string, unknown>)._time : null;
   const m = typeof t === "string" ? /^\s*(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})\s*$/.exec(t) : null;
-  return m ? [m[1].padStart(5, "0"), m[2].padStart(5, "0")] : null;
+  if (m) return [m[1].padStart(5, "0"), m[2].padStart(5, "0")];
+  const one = typeof t === "string" ? /^\s*(\d{1,2}:\d{2})\s*$/.exec(t) : null;
+  return one ? [one[1].padStart(5, "0"), one[1].padStart(5, "0")] : null;
+}
+
+/** A session with a start time alone (slotTimes gave the one time twice): "7 PM", never "7 PM – 7 PM". */
+export const oneTime = (t: readonly [string, string] | null | undefined): boolean => !!t && t[0] === t[1];
+
+/** A session's times as a page writes them: "gathering a · start b" on a ride that gathers, the start
+ *  alone on a session with one time, else the window "a – b". `clock` writes a time in the page's clock. */
+export function timesText(t: readonly [string, string] | null | undefined, gathers: boolean, clock: (hhmm: string) => string, w: { gather: string; start: string }): string {
+  if (!t) return "";
+  if (gathers && !oneTime(t)) return `${w.gather} ${clock(t[0])} · ${w.start} ${clock(t[1])}`;
+  return oneTime(t) ? clock(t[0]) : `${clock(t[0])} – ${clock(t[1])}`;
 }
 
 /** When bikes go out, as the booking app's sessionCollectTime: the session's own _collect, or 45
@@ -223,7 +242,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     meetUrl: typeof r.meet_url === "string" && /^https:\/\//i.test(r.meet_url.trim()) ? r.meet_url.trim() : null,
     location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null,
     left: null,
-    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" ? null : collectTime(r.bike_slots),
+    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" ? null : collectTime(r.bike_slots),
     ...breakfastOf(r),
     ...revealOf(r),
     ...(kind === "vlap" && "vl" in r ? { vl: r.vl ?? null } : {}),
@@ -247,7 +266,7 @@ export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessi
 /** The names a page gives each kind of session (Experiences > Next dates). */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), petromin: "" };
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), petromin: "" };
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other

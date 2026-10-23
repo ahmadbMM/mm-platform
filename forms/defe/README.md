@@ -21,7 +21,8 @@ light and dark as the device is set.
    Apple and a forgotten password go through the booking app (`?handoff=defe&lang=`), which sends the
    rider back to `/defe?code=<one-time code>` (`customer_handoff_redeem`; the code leaves the address
    at once). The session lives in the page only, never in storage.
-3. **Your details**, what every Saturday ride asks for, only what the account lacks (read with
+3. **Your details**: date of birth, nationality and Instagram every time, new account or old, filled in
+   with what the account holds (the owner, 2026-10-23); the rest of what every Saturday ride asks for, only what the account lacks (read with
    `customer_profile`, `customer_emergency`, `customer_whatsapp`, `customer_fix_fields`), the height
    always: date of birth, nationality, whether the mobile is their WhatsApp too, Instagram, the
    emergency contact. Saved with `customer_set_emergency(2)`, `customer_set_birth_nat` (both values;
@@ -30,7 +31,9 @@ light and dark as the device is set.
    `customer_fix_fields` still owes something this page cannot ask (an email, a password, a field staff
    flagged), the rider is sent to the booking site to finish it.
 4. **Book**: the Defe code (only while it is needed), the group (Beginners 20 km / Intermediates 40 km),
-   the bike (Road, Hybrid, Mountain, their own), the review (free), and the ride waiver in a centred
+   the bike (Road, Hybrid, Mountain, their own), whether they received a Defe shirt on 22 October and, if
+   not, their T-shirt size XS-XXL (the owner, 2026-10-18: shirts go to riders who have none; sent as
+   `entry.ask` {shirt_got, shirt}, kept on `queue_entries.partner_ask`, `SHIRT_SIZE` when no size), the review (free), and the ride waiver in a centred
    pop-up with its required tick. `partner_book(id, token, 'defe', code, entry)`; the entry carries
    the frame size from the height (the booking app's chart, by bike type) and the waiver's version.
    Its refusals each have their words: `PARTNER_FULL`, `PARTNER_CLOSED`, `BAD_CODE`, `CODE_USED_UP`,
@@ -42,6 +45,9 @@ light and dark as the device is set.
 
 Database: `20261017120000_partner_places.sql` in the booking site repo (`session_partners`,
 `queue_entries.partner`, `partner_status`, `partner_book`).
+Since `20261023120000_partner_codes.sql` the ride takes several codes, each with its own places
+(`session_partner_codes`, set by staff on Bookings); `CODE_USED_UP` is that one code's field error, the
+other codes still book; the page closes ("Code places are all booked") only when every code is used up.
 
 ## Where things come from
 - `design/` — the page: `index.html`, `styles.css`, `app.js`, `i18n.js` (its own strings in Arabic,

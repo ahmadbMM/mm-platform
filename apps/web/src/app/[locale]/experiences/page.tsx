@@ -124,7 +124,9 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // the emergency contact, 18 and over), so a run is booked in the booking app, as main's page hands it over.
   // Victory Lap (ride_kind 'vlap') neither: no athlete step here (race, division, team, T-shirt, 16 and over,
   // Kamin Sports' agreement); main's page hands it to the booking app (?ev=vlap).
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "" };
+  // The DEFE 5KM Run (ride_kind 'defe5k') neither: no runner step or race question here; main's page hands it
+  // to the booking app.
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "" };
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count)));
   const listed: RideSession[] = [];
   const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): FlowEvent | null => {

@@ -284,6 +284,29 @@
           <p class="hint" data-t="A helmet comes with every bike.">A helmet comes with every bike.</p>
           <p class="err" aria-live="polite"></p>
         </div>
+        <!-- The Defe shirt (the owner, 2026-10-18): shirts go to riders who did not get one on 22 October. -->
+        <div id="f-shirt" class="field">
+          <span class="label" id="shirt-label" data-t="Did you receive a Defe shirt on 22 October?">Did you receive a Defe shirt on 22 October?</span>
+          <div id="shirtgot" class="pills" role="radiogroup" aria-labelledby="shirt-label">
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="yes" data-t="Yes, I have one">Yes, I have one</button>
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="no" data-t="No">No</button>
+          </div>
+          <p class="hint" data-t="We give the shirts to riders who don't have one yet.">We give the shirts to riders who don't have one yet.</p>
+          <p class="err" aria-live="polite"></p>
+        </div>
+        <div id="f-shirtsize" class="field" hidden>
+          <span class="label" id="shirtsize-label" data-t="Your T-shirt size">Your T-shirt size</span>
+          <div id="shirtsizes" class="pills" role="radiogroup" aria-labelledby="shirtsize-label">
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="XS">XS</button>
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="S">S</button>
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="M">M</button>
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="L">L</button>
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="XL">XL</button>
+            <button type="button" class="pill" role="radio" aria-checked="false" data-v="XXL">XXL</button>
+          </div>
+          <p class="hint" data-t="We'll try to have one in your size.">We'll try to have one in your size.</p>
+          <p class="err" aria-live="polite"></p>
+        </div>
         <dl id="review" class="review" aria-label="Your booking" data-t-aria="Your booking"></dl>
         <div id="f-waiver" class="field consent">
           <div id="waiver" class="tick" role="checkbox" aria-checked="false" aria-required="true" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" id="waiver-lbl"></span></div>

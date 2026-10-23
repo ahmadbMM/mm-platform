@@ -384,14 +384,14 @@ describe("the waiver wording (the booking app's 2026-10-v3)", () => {
     expect(T.ar.waiver.swim.body).toContain("ضمن المنطقة الخاضعة للإشراف");
   });
 
-  it("gives every other kind the activity waiver (activity-2026-10-v2), every clause in English and Arabic", async () => {
+  it("gives every other kind the activity waiver (activity-2026-10-v3), every clause in English and Arabic", async () => {
     const { T } = await import("../../components/experiences/Booking.text");
     for (const kind of ["workshop", "event"] as const) {
       expect(needsWaiver({ kind })).toBe(true);
       expect(waiverKind({ kind })).toBe("activity");
-      expect(waiverVersionFor({ kind })).toBe("activity-2026-10-v2");
+      expect(waiverVersionFor({ kind })).toBe("activity-2026-10-v3");
     }
-    expect(waiverVersionFor({ kind: "other" as RideKind })).toBe("activity-2026-10-v2");
+    expect(waiverVersionFor({ kind: "other" as RideKind })).toBe("activity-2026-10-v3");
     expect(waiverKind({ kind: "swim" })).toBe("swim");
     expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-10-v3");
     for (const kind of ["jcc", "saturday", "petromin", "snd96"] as const) expect(waiverVersionFor({ kind })).toBe("2026-10-v3");
@@ -401,14 +401,14 @@ describe("the waiver wording (the booking app's 2026-10-v3)", () => {
     expect(en.agree).toBe(T.en.waiver.swim.agree);
     expect(ar.agree).toBe(T.ar.waiver.swim.agree);
     for (const clause of [
-      "You cannot book any ride or activity with MicroMobility until you have read and agreed to this waiver.", "Every activity we run carries some risk.",
+      "You cannot book any activity with MicroMobility until you have read and agreed to this waiver.", "Every activity we run carries some risk.",
       "I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings.",
       "To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings",
       "including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it.",
       "I agree to follow the team’s and the venue’s instructions.",
     ]) expect(en.body).toContain(clause);
     for (const clause of [
-      "لا يمكنك حجز أي رحلة أو نشاط لدى مايكروموبيليتي إلا بعد قراءة هذا الإقرار والموافقة عليه.", "كل نشاط ننظّمه ينطوي على قدر من المخاطر",
+      "لا يمكنك حجز أي نشاط لدى مايكروموبيليتي إلا بعد قراءة هذا الإقرار والموافقة عليه.", "كل نشاط ننظّمه ينطوي على قدر من المخاطر",
       "وأشارك فيه على مسؤوليتي الشخصية بالكامل، وأتحمل وحدي المسؤولية عن نفسي وسلامتي وممتلكاتي الشخصية.",
       "وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية عن أي شيء يحدث لي أو لممتلكاتي",
       "بما في ذلك أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف، أيًّا كان سببه، أثناء النشاط أو بسببه.",

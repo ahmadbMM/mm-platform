@@ -91,7 +91,9 @@ export default function WaiverGate({ onDone, ...w }: PendingWaiver & { onDone: (
           {tx("Waiver needed", "إقرار مطلوب")}
         </p>
         <h2 id={`${id}-title`} className="rg-title">{w.copy.title}</h2>
-        <p id={`${id}-sub`} className="wg-sub">{tx("Our team booked you on this ride. Read its waiver and agree to it to continue.", "سجّلك فريقنا في هذه الرحلة. اقرأ إقرارها ووافق عليه للمتابعة.")}</p>
+        <p id={`${id}-sub`} className="wg-sub">{w.kind === "ride"
+          ? tx("Our team booked you on this ride. Read its waiver and agree to it to continue.", "سجّلك فريقنا في هذه الرحلة. اقرأ إقرارها ووافق عليه للمتابعة.")
+          : tx("Our team booked you on this session. Read its waiver and agree to it to continue.", "سجّلك فريقنا في هذه الفعالية. اقرأ إقرارها ووافق عليه للمتابعة.")}</p>
         <div className="wg-sess">
           <p className="wg-ev"><bdi>{w.name}</bdi></p>
           <p className="wg-ln"><Ic d={CAL} /><span>{w.when}</span></p>

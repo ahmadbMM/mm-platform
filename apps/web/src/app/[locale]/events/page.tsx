@@ -11,12 +11,13 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum, fmtSar } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { kindNames, loadRides, sessionName, upcoming, withoutPetromin, type RideKind, type RideSession } from "@/lib/rides";
+import { kindNames, loadRides, oneTime, sessionName, timesText, upcoming, withoutPetromin, type RideKind, type RideSession } from "@/lib/rides";
 import { routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { riyadhClock } from "@/lib/workshop-days";
 import { fmtClock } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
+import { fill as fillAt } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
 
 // micromobility.sa/events - every upcoming session in the booking system, month by month, each
@@ -25,7 +26,7 @@ type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d" };
+const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63" };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -46,7 +47,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
   // Book opens the booking app on that event and date (?ev=&session=), as the Experiences steps do.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap" };
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community" };
   const bookAt = (s: RideSession) => {
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
@@ -76,7 +77,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
         {/* The public rides, for search engines; members-only ones are not advertised. */}
         <JsonLd data={eventsData(sessions.filter((s) => !s.members).map((s) => ({
           name: name(s), date: s.date, times: s.times, gather: s.gather, full: s.full, url: book,
-          place: s.kind === "jcc" || s.kind === "snd96" || s.kind === "vlap" ? "Jeddah Corniche Circuit" : s.kind === "runher" ? "Jeddah Yacht Club" : "Jeddah",
+          place: s.kind === "jcc" || s.kind === "snd96" || s.kind === "vlap" || s.kind === "defe5k" ? "Jeddah Corniche Circuit" : s.kind === "runher" ? "Jeddah Yacht Club" : "Jeddah",
         })))} />
         <p className="pg-eyebrow">{S(c.hero.eyebrow)}</p>
         <h1>{S(c.hero.title)}</h1>
@@ -94,15 +95,17 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                       {s.kind === "event" && s.description && <p className="pg-event-desc">{s.description}</p>}
                       <div className="pg-event-meta">
                         {/* in the rider's clock, as Experiences and the tickets say them ("6 PM", "6:00 م"), each in its own direction */}
-                        {s.times && (s.gather
+                        {s.times && (s.gather && !oneTime(s.times)
                           ? <span>{S(d.gather)} <bdi>{clock(s.times[0])}</bdi> · {S(d.start)} <bdi>{clock(s.times[1])}</bdi></span>
-                          : <span><bdi>{clock(s.times[0])} – {clock(s.times[1])}</bdi></span>)}
+                          : <span><bdi>{timesText(s.times, false, clock, { gather: "", start: "" })}</bdi></span>)}
                         {routeNameOf(routes, s.routeSlug) && <span>{tx("Route", "المسار")}: {routeNameOf(routes, s.routeSlug)}</span>}
                         {/* an event's seat price and seats; a copy kept at the edge from before these fields existed has none */}
                         {s.kind === "event" && s.price != null && <span>{fill(S(d.perSeat), { price: fmtSar(s.price, locale) })}</span>}
                         {s.kind === "event" && s.seats != null && <span>{fill(S(d.seats), { n: fmtNum(s.seats, locale) })}</span>}
                         {/* Run for Her: its distances and where it meets, as its card on Experiences says them */}
                         {s.kind === "runher" && S(xp.events.rhMeta) && <span>{S(xp.events.rhMeta)}</span>}
+                        {/* the DEFE 5KM Run: its one distance, as its date card on Experiences says it */}
+                        {s.kind === "defe5k" && <span>{fillAt(tx("{0} km", "{0} كم"), 5)}</span>}
                         {/* Victory Lap: what it is, as its card on Experiences says it (never its price) */}
                         {s.kind === "vlap" && S(xp.events.vlMeta) && <span>{S(xp.events.vlMeta)}</span>}
                         {/* Run for Her is a community event (members only, free), tagged as one */}

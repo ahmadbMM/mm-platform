@@ -90,8 +90,9 @@ export function vlWords(o: VlWords | null | undefined, locale: string): string {
   return typeof v === "string" ? v.trim() : "";
 }
 
-/** How to pay, as the ticket says it while the place is unpaid (_vlPayLine): staff's words, else the
- *  page's own `fallback` ("How to pay will be announced soon. Your place is held now."). */
+/** How to pay, as the booking step says it under the price (_vlPayLine): staff's words, else the page's
+ *  own `fallback` ("Once booked, tell us whether you already have a ticket or buy one by bank transfer.";
+ *  the ticket itself asks the question since 2026-10-23: lib/vl-ticket.ts). */
 export const vlPayLine = (cfg: VlConfig | null | undefined, locale: string, fallback: string): string => vlWords(cfg?.pay, locale) || fallback;
 
 /** What the share pop-up lists for Victory Lap (_vlShareItems): staff's exact list (sessions.vl.share,

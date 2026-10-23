@@ -78,11 +78,15 @@ async function signUp(page: Page) {
   await page.click('#ack .tick-box');
   await page.click('#create');
 }
-async function book(page: Page, o: { code?: string; group?: string; bike?: string } = {}) {
+async function book(page: Page, o: { code?: string; group?: string; bike?: string; shirt?: string } = {}) {
   await expect(page.locator('#s-book')).toBeVisible();
   if (o.code !== '') await page.fill('#code', o.code ?? 'DEFE24');
   await page.click(`#groups .opt[data-v="${o.group ?? 'beg'}"]`);
   await page.click(`#bikes .pill[data-v="${o.bike ?? 'Hybrid'}"]`);
+  // The Defe shirt: 'yes', or the size wanted (no shirt on 22 October); '' answers nothing.
+  const sh = o.shirt ?? 'M';
+  if (sh === 'yes') await page.click('#shirtgot .pill[data-v="yes"]');
+  else if (sh) { await page.click('#shirtgot .pill[data-v="no"]'); await page.click(`#shirtsizes .pill[data-v="${sh}"]`); }
   await page.click('#waiver .tick-box');
   await page.click('#book');
 }
@@ -183,9 +187,11 @@ test('a new rider makes the account, gives the ride details, books, and is hande
   await expect(page.locator('#done-title')).toHaveText("You're riding");
   await expect(page.locator('#done-sum')).toContainText('Beginners · 20 km');
   await expect(page.locator('#done-sum')).toContainText('Hybrid + helmet');
+  await expect(page.locator('#done-sum')).toContainText('To get one · M');
   const pb = of('partner_book');
   expect(pb).toEqual([{ p_id: su.p_id, p_token: 'tok-new', p_partner: 'defe', p_code: 'DEFE24',
-    p_entry: { id: expect.stringMatching(/^df[0-9a-f]{24}$/), type_preference: 'Hybrid', height: 165, size: 'S', ride_group: 'beg', waiver_version: '2026-10-v3' } }]);
+    p_entry: { id: expect.stringMatching(/^df[0-9a-f]{24}$/), type_preference: 'Hybrid', height: 165, size: 'S', ride_group: 'beg', waiver_version: '2026-10-v3',
+      ask: { shirt_got: false, shirt: 'M' } } }]);
   // About two seconds later: the booking app, signed in by a one-time code, on My Bookings.
   await page.waitForURL(BOOKING + '**', { timeout: 6000 });
   expect(page.url()).toBe(`${BOOKING}?signin=${HANDOFF}&tab=bookings&lang=en`);
@@ -204,15 +210,20 @@ test('an existing rider signs in with their mobile, confirms the height and book
   await expect(page.locator('#s-details')).toBeVisible();
   expect(of('customer_login')).toEqual([{ p_identifier: '+966552468013', p_pwd: 'Ride2Work' }]);
   expect(of('customer_pwd_state')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in' }]);
-  // Only what is missing - nothing here - and the height, always.
-  for (const f of ['#f-birth', '#f-nat', '#f-wa', '#f-ig', '#xem-block']) await expect(page.locator(f)).toBeHidden();
+  // Date of birth, nationality and Instagram every time, filled in from the account (the owner, 2026-10-23);
+  // the rest only when missing - nothing here - and the height, always.
+  for (const f of ['#f-birth', '#f-nat', '#f-ig']) await expect(page.locator(f)).toBeVisible();
+  await expect(page.locator('#nat')).toHaveValue('Saudi Arabia');
+  await expect(page.locator('#ig')).toHaveValue('sara.rides');
+  for (const f of ['#f-wa', '#xem-block']) await expect(page.locator(f)).toBeHidden();
   await expect(page.locator('#xheight')).toHaveValue('165');
   await expect(page.locator('#d-who')).toContainText('Booking as Sara Alharbi');
   await page.fill('#xheight', '168');
   await page.click('#d-next');
   await expect(page.locator('#s-book')).toBeVisible();
   expect(of('customer_set_height')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in', p_height: 168 }]);
-  expect(of('customer_set_birth_nat')).toEqual([]);
+  expect(of('customer_set_birth_nat')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in', p_birth_date: '1994-03-12', p_nationality: 'Saudi Arabia' }]);
+  expect(of('customer_set_socials')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in', p_socials: { instagram: 'sara.rides', x: 'sararides' } }]);
   // The bike the account prefers is picked already.
   await expect(page.locator('#bikes .pill[data-v="Hybrid"]')).toHaveAttribute('aria-checked', 'true');
   await book(page, { group: 'int', bike: 'Own' });
@@ -249,7 +260,7 @@ test('handed back from the booking app with ?code=, the rider goes straight to t
   expect(errs).toEqual([]);
 });
 
-test('the details ask only what the account is missing, and keep the other handles', async ({ page }) => {
+test('the details fill in what the account holds, ask what it misses, and keep the other handles', async ({ page }) => {
   const { of } = await open(page, '', {
     customer_profile: () => json([{ ...SARA, nationality: null, socials: { x: 'sararides', tiktok: 'sara.tt' } }]),
     customer_emergency: () => json([{ ...EM_ROW, emergency_name: null, emergency_phone: null, emergency_relation: null }]),
@@ -260,7 +271,7 @@ test('the details ask only what the account is missing, and keep the other handl
   await page.fill('#spwd', 'Ride2Work');
   await page.click('#signin');
   await expect(page.locator('#s-details')).toBeVisible();
-  await expect(page.locator('#f-birth')).toBeHidden();
+  await expect(page.locator('#f-birth')).toBeVisible(); // asked every time, filled in from the account
   await expect(page.locator('#f-wa')).toBeHidden();
   await expect(page.locator('#f-nat')).toBeVisible();
   await expect(page.locator('#f-ig')).toBeVisible();
@@ -301,6 +312,28 @@ async function toBook(page: Page) {
   await expect(page.locator('#s-book')).toBeVisible();
 }
 
+test('the booking asks whether the rider got a Defe shirt on 22 October, and the size when not', async ({ page }) => {
+  const { errs, of } = await open(page);
+  await toBook(page);
+  await expect(page.locator('#f-shirtsize')).toBeHidden();
+  await book(page, { shirt: '' });
+  await expect(page.locator('#f-shirt .err')).toHaveText('Tell us whether you received a Defe shirt');
+  await page.click('#shirtgot .pill[data-v="no"]');
+  await expect(page.locator('#f-shirtsize')).toBeVisible();
+  await page.click('#book');
+  await expect(page.locator('#f-shirtsize .err')).toHaveText('Choose your T-shirt size');
+  expect(of('partner_book')).toEqual([]);
+  // Yes: no size asked, and the booking says they have one.
+  await page.click('#shirtgot .pill[data-v="yes"]');
+  await expect(page.locator('#f-shirtsize')).toBeHidden();
+  await expect(page.locator('#review')).toContainText('Already have one');
+  await page.click('#book');
+  await expect(page.locator('#v-done')).toBeVisible();
+  expect((of('partner_book')[0].p_entry as Body).ask).toEqual({ shirt_got: true });
+  await expect(page.locator('#done-sum')).toContainText('Already have one');
+  expect(errs).toEqual([]);
+});
+
 test('the booking says when the code is wrong or its places are used up', async ({ page }) => {
   let answer = refuse('BAD_CODE');
   await open(page, '', { partner_book: () => answer });
@@ -311,9 +344,10 @@ test('the booking says when the code is wrong or its places are used up', async 
   answer = refuse('CODE_USED_UP');
   await page.fill('#code', 'DEFE24');
   await page.click('#book');
-  await expect(page.locator('#b-notice')).toContainText('Code places are all booked.');
-  await expect(page.locator('#b-notice')).toContainText('More places open to everyone soon on this page.');
-  await expect(page.locator('#book')).toBeDisabled();
+  // one code used up: that code's error, the other codes still book (2026-10-23, several codes)
+  await expect(page.locator('#f-code .err')).toHaveText("That code's places are all booked. Check with Defe for another code.");
+  await expect(page.locator('#b-notice')).not.toContainText('Code places are all booked.');
+  await expect(page.locator('#book')).toBeEnabled();
   const text = await page.locator('body').innerText();
   expect(text).not.toMatch(/\d+\s*\/\s*\d+/);
 });

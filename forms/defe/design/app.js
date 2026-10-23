@@ -597,7 +597,7 @@
   $("#code").addEventListener("input", function () { clearMsg("f-code"); });
 
   /* ── Tiles and tick boxes ───────────────────────────────────────────────── */
-  var gender = null, ack = false, news = false, waiverOk = false, group = null, bike = null;
+  var gender = null, ack = false, news = false, waiverOk = false, group = null, bike = null, shirtGot = null, shirtSize = null;
   function radios(groupSel, fieldId, onPick) {
     $(groupSel).addEventListener("click", function (e) {
       var b = e.target.closest("[role=radio]"); if (!b) return;
@@ -608,6 +608,8 @@
   radios("#genders", "f-gender", function (v) { gender = v; });
   radios("#groups", "f-group", function (v) { group = v; paintReview(); });
   radios("#bikes", "f-bike", function (v) { bike = v; paintReview(); });
+  radios("#shirtgot", "f-shirt", function (v) { shirtGot = v === "yes"; $("#f-shirtsize").hidden = shirtGot; if (shirtGot) clearMsg("f-shirtsize"); paintReview(); });
+  radios("#shirtsizes", "f-shirtsize", function (v) { shirtSize = v; paintReview(); });
   function tick(id, get, set, field) {
     var el = document.getElementById(id);
     function toggle() { set(!get()); el.setAttribute("aria-checked", String(get())); if (field) clearMsg(field); }
@@ -669,7 +671,7 @@
     create: ["f-name", "f-gender", "f-email", "f-phone", "f-pwd", "f-pwd2", "f-height"].concat(emFieldIds("em"), ["f-ack"]),
     signin: ["f-ident", "f-spwd"],
     details: ["f-birth", "f-nat", "f-wa", "f-wanum", "f-ig", "f-xheight"].concat(emFieldIds("xem")),
-    book: ["f-code", "f-group", "f-bike", "f-waiver"]
+    book: ["f-code", "f-group", "f-bike", "f-shirt", "f-shirtsize", "f-waiver"]
   };
   function passwordErr(pw) { return pw.length < 8 || !/[A-Z]/.test(pw) || !/[0-9]/.test(pw); }
   function heightCheck(id, val, hard, soft) {
@@ -723,6 +725,8 @@
       if (ride && ride.code_needed && !clean($("#code").value)) hard["f-code"] = ["Enter the code Defe sent you"];
       if (!group) hard["f-group"] = ["Choose your ride group"];
       if (!bike) hard["f-bike"] = ["Choose a bike"];
+      if (shirtGot === null) hard["f-shirt"] = ["Tell us whether you received a Defe shirt"];
+      else if (!shirtGot && !shirtSize) hard["f-shirtsize"] = ["Choose your T-shirt size"];
       if (!waiverOk) hard["f-waiver"] = ["Tick the box to accept the ride waiver"];
     }
     return { hard: hard, soft: soft };
@@ -903,11 +907,14 @@
     var hasEm = a.em === "absent" || !!(a.em && a.em.emergency_name && a.em.emergency_phone && a.em.emergency_relation);
     var waKnown = a.wa === "absent" || !!(a.wa && (a.wa.whatsapp_same === true || a.wa.whatsapp_same === false));
     var socials = prof.socials && typeof prof.socials === "object" && !Array.isArray(prof.socials) ? prof.socials : {};
+    // Date of birth, nationality and Instagram are asked of every rider, new account or old, filled in
+    // with what the account holds (the owner, 2026-10-23: "ask them for their instagram accounts and
+    // dob and nationalities").
     need = {
-      birth: !prof.birth_date || flag("birth_date"),
-      nat: !prof.nationality || flag("nationality"),
+      birth: true,
+      nat: true,
       wa: !waKnown || flag("whatsapp"),
-      ig: !clean(socials.instagram) || flag("instagram"),
+      ig: true,
       em: !hasEm || flag("emergency") || flag("emergency2"),
       em2: flag("emergency2")
     };
@@ -1033,9 +1040,10 @@
     var p = pickup(), d = rideDate({ weekday: "short", day: "numeric", month: "short" });
     return d ? esc(d) + (p ? ' · <bdi dir="ltr">' + esc(p[0]) + "</bdi>" : "") : "—";
   }
+  function shirtName(got, size) { return got === null ? "—" : got ? tr("Already have one") : size ? tr("To get one · {size}", { size: size }) : "—"; }
   function row(k, v) { return "<div><dt>" + esc(k) + "</dt><dd>" + v + "</dd></div>"; }
   function paintReview() {
-    $("#review").innerHTML = row(tr("Ride"), rideWhen()) + row(tr("Group"), esc(groupName(group))) + row(tr("Bike"), esc(bikeName(bike))) + row(tr("Price"), esc(tr("Free")));
+    $("#review").innerHTML = row(tr("Ride"), rideWhen()) + row(tr("Group"), esc(groupName(group))) + row(tr("Bike"), esc(bikeName(bike))) + row(tr("Defe shirt"), esc(shirtName(shirtGot, shirtSize))) + row(tr("Price"), esc(tr("Free")));
   }
   // The frame size that suits the rider (the booking app's SIZE_CHART, the owner's 2026-09-29 chart):
   // Road XS -159, S -172, M -179, L -189, XL 190+; Hybrid and Mountain XS -159, S -170, M -185, L 186+;
@@ -1051,7 +1059,8 @@
     e.preventDefault(); hideBanner(); if (busy || !acct || bookState) return;
     if (!passStep("book")) return;
     var h = Number(prof && prof.height) || parseInt(toAscii($("#xheight").value), 10);
-    var entry = { id: entryId(), type_preference: bike, height: h, size: sizeFor(h, bike), ride_group: group, waiver_version: SH.WAIVER_VERSION };
+    var entry = { id: entryId(), type_preference: bike, height: h, size: sizeFor(h, bike), ride_group: group, waiver_version: SH.WAIVER_VERSION,
+      ask: shirtGot ? { shirt_got: true } : { shirt_got: false, shirt: shirtSize } };
     setLoading("#book", true);
     var r;
     try { r = await rpc("partner_book", { p_id: acct.id, p_token: acct.token, p_partner: PARTNER, p_code: ride && ride.code_needed ? clean($("#code").value) : null, p_entry: entry }); }
@@ -1059,7 +1068,7 @@
     if (r.error) { bookRefused(r.error); return; }
     var b = Array.isArray(r.data) ? r.data[0] : null;
     if (!b || !b.id) { showBanner(NET); return; }
-    booked = { id: b.id, group: group, bike: bike };
+    booked = { id: b.id, group: group, bike: bike, shirtGot: shirtGot, shirtSize: shirtSize };
     showDone();
   });
   function bookRefused(e) {
@@ -1067,11 +1076,14 @@
     if (/PARTNER_FULL/.test(m)) { if (ride) ride.open = false; bookState = "full"; paintBookState(); paintLanding(); $("#b-notice").scrollIntoView({ block: "center" }); }
     else if (/PARTNER_CLOSED/.test(m)) { ride = null; bookState = "closed"; paintBookState(); paintLanding(); }
     else if (/BAD_CODE/.test(m)) { setErr("f-code", "That code doesn't work. Check the code Defe sent you."); focusField("f-code"); }
-    else if (/CODE_USED_UP/.test(m)) { if (ride) ride.code_open = false; bookState = "codeUsed"; paintBookState(); paintLanding(); $("#b-notice").scrollIntoView({ block: "center" }); }
+    // One code used up (2026-10-23: a ride takes several codes, each with its own places): that code
+    // is refused, the others still book, so it is the code field's error, not the page's state.
+    else if (/CODE_USED_UP/.test(m)) { setErr("f-code", "That code's places are all booked. Check with Defe for another code."); focusField("f-code"); }
     else if (/ONE_PER_SESSION/.test(m)) { bookState = "already"; paintBookState(); $("#b-notice").scrollIntoView({ block: "center" }); }
     else if (/FIX_FIRST/.test(m)) { showBanner("Your account still needs a few details before it can book."); enterDetails(); }
     else if (/WAIVER_OUTDATED/.test(m)) showBanner("The ride waiver has changed. Reload this page to read the new one.");
     else if (/WAIVER_REQUIRED/.test(m)) { waiverOk = false; $("#waiver").setAttribute("aria-checked", "false"); setErr("f-waiver", "Tick the box to accept the ride waiver"); focusField("f-waiver"); }
+    else if (/SHIRT_SIZE/.test(m)) { setErr("f-shirtsize", "Choose your T-shirt size"); focusField("f-shirtsize"); }
     else if (/PICK_TYPE/.test(m)) { setErr("f-bike", "Choose a bike"); focusField("f-bike"); }
     else if (/STALE_SESSION/.test(m)) signedOut();
     else if (/RATE_LIMITED/.test(m)) showBanner(SITE_TOO_MANY);
@@ -1086,7 +1098,7 @@
     var p = pickup();
     $("#done-sum").innerHTML = row(tr("Date"), esc(rideDate({ weekday: "long", day: "numeric", month: "long" }) || "—")) +
       (p ? row(tr("Bike pickup"), '<bdi dir="ltr">' + esc(p.join(" – ")) + "</bdi>") : "") +
-      row(tr("Group"), esc(groupName(booked.group))) + row(tr("Bike"), esc(bikeName(booked.bike))) + row(tr("Price"), esc(tr("Free")));
+      row(tr("Group"), esc(groupName(booked.group))) + row(tr("Bike"), esc(bikeName(booked.bike))) + row(tr("Defe shirt"), esc(shirtName(booked.shirtGot, booked.shirtSize))) + row(tr("Price"), esc(tr("Free")));
   }
   function showDone() {
     showView("done"); paintDone();

@@ -8,7 +8,7 @@ import type { L } from "@/i18n/tx";
 // under it (WAIVER_VERSION, SWIM_WAIVER_VERSION, ACTIVITY_WAIVER_VERSION): change a text only with
 // the booking app's, and its version with it, so a row's waiver_version names the words the rider read.
 export type WaiverKind = "ride" | "swim" | "activity";
-export const WAIVER_VERSIONS: Readonly<Record<WaiverKind, string>> = { ride: "2026-10-v3", swim: "swim-2026-10-v3", activity: "activity-2026-10-v2" };
+export const WAIVER_VERSIONS: Readonly<Record<WaiverKind, string>> = { ride: "2026-10-v3", swim: "swim-2026-10-v3", activity: "activity-2026-10-v3" };
 
 export type WaiverCopy = { title: string; body: string; agree: string };
 
@@ -26,8 +26,8 @@ export function waiverCopy(kind: WaiverKind, tx: L): WaiverCopy {
   if (kind === "activity") return {
     title: tx("Activity waiver", "إقرار المشاركة"),
     body: tx(
-      "You cannot book any ride or activity with MicroMobility until you have read and agreed to this waiver. Every activity we run carries some risk. I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings. I am also responsible for any damage I cause to other people or their property. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. I agree to follow the team’s and the venue’s instructions.",
-      "لا يمكنك حجز أي رحلة أو نشاط لدى مايكروموبيليتي إلا بعد قراءة هذا الإقرار والموافقة عليه. كل نشاط ننظّمه ينطوي على قدر من المخاطر، وأشارك فيه على مسؤوليتي الشخصية بالكامل، وأتحمل وحدي المسؤولية عن نفسي وسلامتي وممتلكاتي الشخصية. وأنا مسؤول عن أي أضرار ألحقها بالآخرين أو بممتلكاتهم. وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية عن أي شيء يحدث لي أو لممتلكاتي، بما في ذلك أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف، أيًّا كان سببه، أثناء النشاط أو بسببه. وأتعهد بالالتزام بتعليمات الفريق وإدارة الموقع.",
+      "You cannot book any activity with MicroMobility until you have read and agreed to this waiver. Every activity we run carries some risk. I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings. I am also responsible for any damage I cause to other people or their property. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. I agree to follow the team’s and the venue’s instructions.",
+      "لا يمكنك حجز أي نشاط لدى مايكروموبيليتي إلا بعد قراءة هذا الإقرار والموافقة عليه. كل نشاط ننظّمه ينطوي على قدر من المخاطر، وأشارك فيه على مسؤوليتي الشخصية بالكامل، وأتحمل وحدي المسؤولية عن نفسي وسلامتي وممتلكاتي الشخصية. وأنا مسؤول عن أي أضرار ألحقها بالآخرين أو بممتلكاتهم. وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية عن أي شيء يحدث لي أو لممتلكاتي، بما في ذلك أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف، أيًّا كان سببه، أثناء النشاط أو بسببه. وأتعهد بالالتزام بتعليمات الفريق وإدارة الموقع.",
     ),
     agree: tx("I have read the waiver and agree on behalf of everyone on this booking", "قرأت الإقرار وأوافق نيابةً عن كل شخص في هذا الحجز"),
   };

@@ -5,7 +5,7 @@
 import { intlOf } from "@/i18n/locales";
 import { fill as fillAt } from "@/i18n/tx";
 import { fill as fillNamed } from "./fill";
-import { collectTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
+import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
 import { riyadhClock } from "./workshop-days";
 import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
 
@@ -31,6 +31,16 @@ export type TicketRow = {
   /** A Victory Lap athlete's place (queue_entries.vl, rentals 20261017210000; lib/vlap.ts): the race,
    *  division, T-shirt, 5 km time and team; null on every other booking. */
   vl?: VlEntry | null;
+  /** The DEFE 5KM Run (2026-10-18): whether the runner told us they registered for the race on Defe's registration page
+   *  (queue_entries.race_reg, rentals 20261018150000): 'yes', 'no', or null before they answer (and on
+   *  every other booking, and on a database without the column). */
+  raceReg?: "yes" | "no" | null;
+  /** Victory Lap (2026-10-23, rentals 20261023160000; lib/vl-ticket.ts): whether the athlete already has a
+   *  ticket ('have') or buys one by bank transfer ('buy'), null before they answer; undefined when the
+   *  database has no such column yet (the question then steps aside). */
+  vlTicket?: "have" | "buy" | null;
+  /** When the transfer receipt came in (queue_entries.vl_receipt_at, ISO), else null. */
+  vlReceiptAt?: string | null;
 };
 /** The distances a Run for Her runner picks from (the booking app's RUN_KMS). */
 export const RUN_KMS: readonly number[] = [3, 5];
@@ -70,6 +80,9 @@ export type TicketSession = {
    *  Sports); null on every other kind. A read without the column has every race open and no words of
    *  staff's own. */
   vl?: VlConfig | null;
+  /** The session's own price in SAR (sessions.price: Victory Lap's per athlete, the amount its ticket
+   *  asks to transfer), else null. */
+  price?: number | null;
 };
 
 type Row = Record<string, unknown>;
@@ -95,6 +108,8 @@ export function ticketRow(r: Row): TicketRow | null {
     rideGroup: r.ride_group === "beg" || r.ride_group === "int" ? r.ride_group : null,
     partner: typeof r.partner === "string" && /^[a-z0-9]{2,20}$/.test(r.partner) ? r.partner : null,
     vl: vlEntry(r.vl),
+    raceReg: r.race_reg === "yes" || r.race_reg === "no" ? r.race_reg : null,
+    ...("vl_ticket" in r ? { vlTicket: r.vl_ticket === "have" || r.vl_ticket === "buy" ? r.vl_ticket : null, vlReceiptAt: S(r.vl_receipt_at) || null } : {}),
   };
 }
 
@@ -203,7 +218,7 @@ export function ticketSession(r: Row): TicketSession | null {
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -217,6 +232,7 @@ export function ticketSession(r: Row): TicketSession | null {
       : null,
     revealAt: Number.isFinite(Date.parse(S(r.reveal_at))) ? S(r.reveal_at) : null,
     vl: kind === "vlap" ? vlConfig(r.vl) : null,
+    price: N(r.price),
   };
 }
 
@@ -337,9 +353,24 @@ export function venueText(v: Venue, t: { meetingPoint: string; venueCircuit: str
 }
 
 /** A ride that meets at a point staff set (sessions.meet_url) rather than at the circuit (_meetsAt):
- *  the rides staff approve, and Run for Her. The ticket's place button opens that point and says
- *  so ("Meeting point"), and the calendar file puts it as the place. */
-export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined): boolean => !!s && (s.approval || s.kind === "runher");
+ *  the rides staff approve, and the runs (Run for Her, the DEFE 5KM Run: the booking app's _isRun). The
+ *  ticket's place button opens that point and says so ("Meeting point"), and the calendar file puts it
+ *  as the place. */
+export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined): boolean => !!s && (s.approval || s.kind === "runher" || s.kind === "defe5k");
+
+// ── The DEFE 5KM Run (the owner, 2026-10-18; the booking app's _defeRegHtml) ─────────────────────
+/** Where the race itself is entered: Defe's own registration page (the booking app's DEFE_RACE_URL, word for word;
+ *  the owner, 2026-10-18). */
+export const DEFE_RACE_URL = "https://in.njuko.com/defe5k?utm_id=97760_v0_s00_e0_tv5";
+/** The discount code members use there: 50% off, for the first 50 members (the booking app's DEFE_RACE_CODE). */
+export const DEFE_RACE_CODE = "MICRO50";
+/** The DEFE 5KM Run, by the session's kind. */
+export const isDefe = (s: Pick<TicketSession, "kind"> | undefined): boolean => s?.kind === "defe5k";
+/** Whether a booked Defe place still asks "Have you registered for the race?": a live row (waiting, on the
+ *  waitlist or checked in, never done; cancelled and no-show rows are never on a ticket) on the DEFE 5KM
+ *  Run whose day has not passed (Riyadh). The place is booked whatever the answer. */
+export const raceRegAsked = (r: Pick<TicketRow, "status" | "date"> | undefined, s: Pick<TicketSession, "kind"> | undefined, today: string): boolean =>
+  !!r && isDefe(s) && r.status !== "done" && r.date >= today;
 
 // ── The ride night on the ticket (the booking app's 2026-10-01 round, 91816da) ─────────────
 
@@ -471,12 +502,13 @@ export function icsPlace(s: TicketSession): string {
 
 /** The ride's start and end, in minutes from the start of its day (Riyadh), as the booking app's
  *  calendar file has them: its window, or on a ride that gathers, from the gathering to two hours
- *  after the start; an end past midnight is on the next day (over 1440). Null without times. */
+ *  after the start; an end past midnight is on the next day (over 1440). A session with a start time
+ *  alone (the DEFE 5KM Run) runs two hours from it. Null without times. */
 function rideWindow(s: Pick<TicketSession, "times" | "gathers">): [number, number] | null {
   if (!s.times) return null;
   const [a, b] = s.times.map((t) => t.split(":").map(Number));
   const sMin = a[0] * 60 + a[1];
-  let eMin = (b[0] + (s.gathers ? 2 : 0)) * 60 + b[1];
+  let eMin = (b[0] + (s.gathers || oneTime(s.times) ? 2 : 0)) * 60 + b[1];
   if (eMin <= sMin) eMin += 1440;
   return [sMin, eMin];
 }

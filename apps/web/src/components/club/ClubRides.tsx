@@ -18,6 +18,7 @@ const KIND: Record<string, { en: string; ar: string }> = {
   event: phrase("Event", "فعالية"),
   runher: phrase("Run for Her", "نركض لأجلها"),
   vlap: phrase("Victory Lap", "فيكتوري لاب"),
+  defe5k: phrase("DEFE 5KM Run", "سباق دفء 5 كم"), // the DEFE 5KM Run (2026-10-18): one start time, said as it is
 };
 
 export default function ClubRides(p: Props) {

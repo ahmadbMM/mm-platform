@@ -5,7 +5,7 @@ import { serverL, serverLocalize } from "@/i18n/dicts";
 import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
 import { accountBookings, rpcServer } from "@/lib/account";
 import { asLocale, resolvePage } from "@/lib/content";
-import { kindNames, sessionName } from "@/lib/rides";
+import { kindNames, sessionName, timesText } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
@@ -59,7 +59,7 @@ export async function GET(req: Request) {
   const t = serverLocalize(TICKET, locale);
   const clock = (x: string) => fmtClock(x, locale);
   // the time as the ticket writes it: "gathering - start" on a ride that gathers, else a window
-  const time = s.times ? (s.gathers ? `${S(d.gather)} ${clock(s.times[0])} · ${S(d.start)} ${clock(s.times[1])}` : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "";
+  const time = timesText(s.times, s.gathers, clock, { gather: S(d.gather), start: S(d.start) });
   const kind = waiverKind(s); // Run for Her, with no bike, is agreed under the activity waiver (_waiverKind)
   return json({
     signedIn: true,

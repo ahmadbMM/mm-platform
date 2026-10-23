@@ -308,3 +308,14 @@ describe("Run for Her", () => {
     expect(RATING_WORDS.en.run.title).toBe("How was your run?");
   });
 });
+
+describe("the DEFE 5KM Run (2026-10-18)", () => {
+  it("is a run by its kind or its '<date>-df' id, and asks no bike question", () => {
+    expect(isRun("defe5k")).toBe(true);
+    expect(isRun(null, "2026-10-22-df")).toBe(true);
+    expect(isRun(undefined, "2026-10-22-df-2")).toBe(true);
+    expect(isRun(null, "2026-10-22-dfx")).toBe(false);
+    expect(formOf("defe5k")).toBe("rental");
+    expect(questionKeys(formOf("defe5k"), { noBike: isRun("defe5k") })).toEqual(["service", "experience"]);
+  });
+});

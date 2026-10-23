@@ -269,8 +269,8 @@ describe("Run for Her's pink ribbon (run_for_her, 2026-10-05)", () => {
       expect(b).toMatchObject({ on: false });
       expect(String(b?.p)).toMatch(/^0\//);
     }
-    // a finished run is still a ride finished, as in the booking app
-    expect(L.flatMap((x) => x.lv ?? [x]).find((x) => x.slug === "first_lap")!.on).toBe(true);
+    // a run is not a ride (the owner, 2026-10-18: no cycling on a session without a bike): no First Lap
+    expect(L.flatMap((x) => x.lv ?? [x]).find((x) => x.slug === "first_lap")!.on).toBe(false);
   });
   it("is drawn as the booking app draws it: the ribbon on the pink special medal", () => {
     const svg = renderToStaticMarkup(createElement(Medal, { icon: "ribbon", color: "pink" }));
@@ -278,9 +278,9 @@ describe("Run for Her's pink ribbon (run_for_her, 2026-10-05)", () => {
     for (const c of ["#ffc9da", "#f2789f", "#c2416e", "#a3325b"]) expect(svg).toContain(c);
     expect(svg).toContain('class="rb o"');
   });
-  it("does not make the distance a favourite bike", () => {
+  it("does not make the distance a favourite bike, nor a run a ride (2026-10-18)", () => {
     const runs = runRows("done", 2);
-    expect(rideStats(runs, runSes(runs), today)).toMatchObject({ fav: null });
+    expect(rideStats(runs, runSes(runs), today)).toBeNull();
     expect(runs.map((r) => r.runKm)).toEqual([5, 5]);
   });
 });
@@ -357,5 +357,51 @@ describe("the booking app's paid and checked-in rules (bh14)", () => {
     expect(fuel({ price: 0, promo_code: "FREE10" })).toBe(true);
     expect(on(recordRows([row({ session_id: "2026-09-04", type_preference: "Road Carbon", paid: false })]), "carbon")).toBe(false);
     expect(on(recordRows([row({ session_id: "2026-09-04", type_preference: "Road Carbon" })]), "carbon")).toBe(true);
+  });
+});
+
+describe("Rode with Defe (defe_ride, 2026-10-18)", () => {
+  // Checked in (active or done) on the Saturday ride with Defe, session 2026-10-24: members and Defe riders alike.
+  const sat = new Map<string, RecordSession>([["2026-10-24", { kind: "saturday", freeRide: true, approval: true }], ["2026-10-17", { kind: "saturday", freeRide: true, approval: true }]]);
+  const on = (sid: string, status: string) => badgeList(recordRows([row({ session_id: sid, status, paid: false })]), sat, empty, today, null).find((x) => x.slug === "defe_ride");
+  it("comes with a check-in on the Defe ride and is drawn as the ribbon wheel", () => {
+    expect(on("2026-10-24", "active")).toMatchObject({ on: true, icon: "defewheel", color: "defe" });
+    expect(on("2026-10-24", "done")).toMatchObject({ on: true });
+  });
+  it("stays hidden without a check-in, and on any other ride", () => {
+    for (const status of ["waiting", "noshow", "cancelled"]) expect(on("2026-10-24", status)?.on ?? false, status).toBe(false);
+    expect(on("2026-10-17", "done")?.on ?? false).toBe(false);
+  });
+  it("is drawn on its own rose-into-berry medal", () => {
+    const html = renderToStaticMarkup(createElement(Medal, { icon: "defewheel", color: "defe" }));
+    expect(html).toContain("#f6c3d6");
+    expect(html).toContain("#a22b63");
+  });
+});
+
+describe("the DEFE 5KM Run's finisher badge (defe_5k, 2026-10-18)", () => {
+  // A finished run is a done row on a session of kind 'defe5k'; shown only to those who earned it, as Run for Her's.
+  const dfRows = (status: string) => recordRows([row({ session_id: "2026-09-24-df", session_date: "2026-09-24", status, paid: false, type_preference: "None", run_km: 5 })]);
+  const dfSes = new Map<string, RecordSession>([["2026-09-24-df", { kind: "defe5k", freeRide: true, approval: false }]]);
+  it("stays hidden until the run is finished (done), then shows as Defe's ribbon on its medal", () => {
+    for (const status of ["waiting", "waitlist", "active", "noshow"]) expect(badgeList(dfRows(status), dfSes, empty, today, null).map((x) => x.slug), status).not.toContain("defe_5k");
+    expect(badgeList(dfRows("done"), dfSes, empty, today, null).find((x) => x.slug === "defe_5k")).toMatchObject({ on: true, icon: "defe", color: "defe" });
+    // the badges table holds it as red: still Defe's medal
+    const catalog = [{ slug: "defe_5k", icon: "defe", color: "red", system: true, auto: true }];
+    expect(badgeList(dfRows("done"), dfSes, { ...empty, catalog }, today, null).find((x) => x.slug === "defe_5k")).toMatchObject({ on: true, icon: "defe", color: "defe" });
+  });
+  it("is not earned on Run for Her or a ride", () => {
+    const rh = new Map<string, RecordSession>([["2026-09-24-df", { kind: "runher", freeRide: true, approval: false }]]);
+    expect(badgeList(dfRows("done"), rh, empty, today, null).map((x) => x.slug)).not.toContain("defe_5k");
+    expect(badgeList(dfRows("done"), dfSes, empty, today, null).map((x) => x.slug)).not.toContain("run_for_her");
+  });
+  it("is drawn rose into berry, the ribbon inside the ring, with its words in English and Arabic", () => {
+    const html = renderToStaticMarkup(createElement(Medal, { icon: "defe", color: "defe" }));
+    expect(html).toContain("#d782a0");
+    expect(html).toContain("#a22b63");
+    expect(html).toContain('r="9.6"');
+    expect(html).toContain("scale(.7)");
+    expect(RECORD.en.names.defe_5k[0]).toBe("DEFE 5K");
+    expect(RECORD.ar.names.defe_5k[1]).toBe("أكمل سباق دفء 5 كم.");
   });
 });

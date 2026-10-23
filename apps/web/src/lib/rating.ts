@@ -1,3 +1,4 @@
+import { isNonBike } from "./bike-kinds";
 import { BOOKING_URL } from "./links";
 
 // The post-ride rating (app/api/account/rate, components/account/RateRide.tsx and RatingGate.tsx)
@@ -41,10 +42,21 @@ const KEY = /^[a-z_]{1,24}$/;
  *  else the rental's - Run for Her ('runher') included, which, having no bike (TicketSession.bikes),
  *  is asked it without the bike question, as the pool, the workshop and an event are (noBike). */
 export const formOf = (kind: string | null | undefined): RatingForm => (kind === "saturday" ? "social" : "rental");
-/** Run for Her is a run, not a ride (the owner, 2026-10-17; the booking app's _rgRun): never the bike question,
- *  and the page says run. Its session id ('<date>-rh') answers when the session itself did not load. */
+/** Run for Her is a run, not a ride (the owner, 2026-10-17; the booking app's _rgRun), and so is the DEFE 5KM
+ *  Run (2026-10-18, its _isRun): never the bike question, and the page says run. Its session id ('<date>-rh',
+ *  '<date>-df') answers when the session itself did not load. */
 export const isRun = (kind: string | null | undefined, sessionId?: string | null): boolean =>
-  kind === "runher" || /^\d{4}-\d\d-\d\d-rh(-|$)/.test(sessionId ?? "");
+  kind === "runher" || kind === "defe5k" || /^\d{4}-\d\d-\d\d-(rh|df)(-|$)/.test(sessionId ?? "");
+/** What the rating calls the night (the owner, 2026-10-18: nothing about cycling on a session without a
+ *  bike): a run is a run (isRun), the pool, the workshop, an event and Victory Lap a session (lib/bike-kinds.ts
+ *  isNonBike, by the session's kind or else its id), every bike kind a ride. */
+export type RideWord = "ride" | "run" | "session";
+export const rideWord = (kind: string | null | undefined, sessionId?: string | null): RideWord =>
+  isRun(kind, sessionId) ? "run" : isNonBike(kind, sessionId) ? "session" : "ride";
+/** The rating asks no bike question: the rider's own bike on every row, a session that hands out none
+ *  (TicketSession.bikes), or, when the session did not load, a kind without a bike by its id. */
+export const ratingNoBike = (ownBike: boolean, s: { kind?: string; bikes?: boolean } | null | undefined, sessionId: string): boolean =>
+  ownBike || (s ? s.bikes === false || isNonBike(s.kind, sessionId) : isNonBike(null, sessionId));
 
 /** The questions a ride asks, as [question, sub-questions]: no bike question for a rider on their
  *  own bike or an activity with none, no breakfast once the rider says they did not stay. */

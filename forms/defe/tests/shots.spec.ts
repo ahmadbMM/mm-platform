@@ -30,7 +30,7 @@ test('steps', async ({ browser }) => {
   await page.click('#ask-no'); await snap(page, 'account');
   await page.click('#back-land'); await page.click('#ask-yes'); await page.fill('#ident', 'sara@gmail.com'); await page.fill('#spwd', 'x'); await page.click('#signin');
   await page.click('#d-next'); await expect(page.locator('#s-book')).toBeVisible();
-  await page.click('#groups .opt[data-v="beg"]'); await page.fill('#code', 'DEFE24'); await snap(page, 'book');
+  await page.click('#groups .opt[data-v="beg"]'); await page.fill('#code', 'DEFE24'); await page.click('#shirtgot .pill[data-v="no"]'); await page.click('#shirtsizes .pill[data-v="M"]'); await snap(page, 'book');
 });
 for (const w of [320, 1440]) {
   test(`header-${w}`, async ({ browser }) => {
