@@ -510,7 +510,7 @@ describe("a Victory Lap ticket (ride_kind 'vlap', 2026-10-17)", () => {
     expect(tonight.map((x) => x.key)).toEqual([`${vls.id}|s`]);
   });
 
-  it("draws the card: Athlete number, the race and division, the team's code and partner, T-shirt, 5 km time and how to pay", () => {
+  it("draws the card: Athlete number, the race and division, the team's code and partner, T-shirt, 5 km time and the ticket question", () => {
     const card = (r: Record<string, unknown>, o: { partners?: Map<string, string> | null; s?: typeof vls; past?: boolean } = {}) => renderToStaticMarkup(createElement(TicketCard, {
       locale: "en", today: "2099-10-20", rows: [entry(r)], session: o.s ?? vls, name: "Victory Lap", cue: null, t, gather: "Gathering", start: "Start", typeName: (x: string) => x,
       links: { edit: "https://book.example.test/?ev=vlap", manage: "https://book.example.test/?tab=bookings", place: "https://maps.app.goo.gl/jcc" }, now: Date.parse("2099-10-20T09:00:00Z"),
@@ -526,8 +526,9 @@ describe("a Victory Lap ticket (ride_kind 'vlap', 2026-10-17)", () => {
     expect(dbl).toContain("Open · 6.1 km");
     expect(dbl).toContain("T-shirt size: M");
     expect(dbl).toContain("5 km time: 20 to 30 min");
-    expect(dbl).toContain("Payment:");
-    expect(dbl).toContain("How to pay will be announced soon. Your place is held now.");
+    // a database without the ticket question yet (no vl_ticket column) asks nothing
+    expect(dbl).not.toContain("Do you already have a ticket");
+    expect(dbl).not.toContain("Payment:");
     expect(dbl).toContain("/site/victory-lap-dark.webp");
     expect(dbl).toContain("Jeddah Corniche Circuit");
     // never the booth, a bike, a helmet, Edit or Reschedule; its details change in the booking app
@@ -540,13 +541,24 @@ describe("a Victory Lap ticket (ride_kind 'vlap', 2026-10-17)", () => {
     expect(dbl).toContain(">Cancel<");
     // the partner by first name once they joined (customer_vl_teams)
     expect(card({ vl: { race: "xd", div: "op", shirt: "M", team: "VL-4K7Q" } }, { partners: new Map([["vl1abcdef", "Omar"]]) })).toContain("With Omar");
-    // staff's own payment words, in the page's language, else English
-    const paySess = { ...vls, vl: { ...vls.vl!, pay: { en: "Pay at the race village from 15:00." } } };
-    expect(card({ vl: { race: "ws", div: "so", shirt: "S" } }, { s: paySess })).toContain("Pay at the race village from 15:00.");
-    // Singles: no team; paid: no payment line; asked for a partner: our team finds one
+    // "Do you already have a ticket, or would you like to buy one?" (2026-10-23): unanswered, both answers
+    const ask = card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: null });
+    expect(ask).toContain("Do you already have a ticket, or would you like to buy one?");
+    expect(ask).toContain(">I already have a ticket<");
+    expect(ask).toContain(">I’d like to buy one<");
+    expect(card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: "have" })).toContain("You have a ticket for the race.");
+    const buy = card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: "buy" });
+    expect(buy).toContain("Transfer the ticket price and upload the receipt to complete your ticket.");
+    expect(buy).toContain(">Upload receipt<");
+    expect(buy).toContain(">Change<");
+    expect(card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: "buy", vl_receipt_at: "2099-10-21T10:00:00Z", paid: true })).toContain("Receipt received. Your ticket is paid.");
+    // nothing on the waitlist, on a past card, or on a place staff marked paid with no answer
+    expect(card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: null, status: "waitlist" })).not.toContain("Do you already have a ticket");
+    expect(card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: null }, { past: true })).not.toContain("Do you already have a ticket");
+    expect(card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: null, paid: true })).not.toMatch(/ticket for the race|Do you already have a ticket|upload the receipt/);
+    // Singles: no team; asked for a partner: our team finds one
     const solo = card({ vl: { race: "ws", div: "so", shirt: "S" }, paid: true });
     expect(solo).not.toContain("Team code");
-    expect(solo).not.toContain("Payment:");
     expect(solo).toContain("Sprint Open · 4 km");
     expect(card({ vl: { race: "wd", div: "el", shirt: "S", pair: true } })).toContain("Looking for a partner: our team will pair you and let you know.");
   });
@@ -556,7 +568,7 @@ describe("a Victory Lap ticket (ride_kind 'vlap', 2026-10-17)", () => {
     expect(a.athleteNumber).toBe("رقم الرياضي");
     expect(a.vlRaces.xd).toBe("زوجي مختلط");
     expect(a.vlWithPartner("عمر")).toBe("مع عمر");
-    expect(a.vlPayLater).toBe("سنعلن قريبًا طريقة الدفع. مكانك محجوز الآن.");
+    expect(a.vtQ).toBe("هل لديك تذكرة بالفعل، أم تودّ شراء واحدة؟");
     for (const v of [...Object.values(a.vlRaces), a.vlTeamCode, a.vlWaitPartner, a.vlPairWait, a.vlEdit]) expect(v).not.toMatch(/Victory|[A-Za-z]{3,}/);
     // the divisions are Kamin Sports' names: in Arabic in Arabic, in English in every other language, as the booking app keeps them
     expect(vlDivName("el", "ar")).toBe("النخبة");

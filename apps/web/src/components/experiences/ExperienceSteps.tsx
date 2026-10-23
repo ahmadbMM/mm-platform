@@ -48,6 +48,9 @@ export type StepSession = {
   /** The DEFE 5KM Run's own date card (the booking app's _defeSessCard, 2026-10-18): when, how far and
    *  where ("7 PM · 5 km · Jeddah Corniche Circuit") and the cause along its foot; absent on any other date. */
   defe?: { meta: string[]; cause: string };
+  /** Victory Lap, to those who may book it: how the ticket is paid once booked (the booking app's vlPayLater,
+   *  or staff's own words, sessions.vl.pay), under the price; absent on any other date. */
+  payNote?: string;
 };
 /** A date's Details (lib/event-info.ts): its text, staff's own line, and its facts. */
 export type StepInfo = {
@@ -358,6 +361,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             {facts(sess)}
             {/* Victory Lap's price per athlete, to a visitor who may book it alone (its Details' price) */}
             {sess.kind === "vlap" && sess.info.price && <p className="xs-rules xs-vl-price"><bdi>{sess.info.price}</bdi></p>}
+            {sess.payNote && <p className="xs-rules">{sess.payNote}</p>}
             {/* the community card's rules speak of riders and the ride: not on its pool session or the DEFE run */}
             {ev.note && !(ev.key === "community" && noBike(sess)) && <p className="xs-rules">{ev.note}</p>}
             {sess.paid && !sess.event && prices.some((p) => !(sess.noCarbon && p.type === "Road Carbon")) && (

@@ -25,7 +25,7 @@ import { serverL } from "@/i18n/dicts";
 import { fill as fillAt, phrase } from "@/i18n/tx";
 import { intlOf, isRtl } from "@/i18n/locales";
 import { bg } from "@/lib/img";
-import { vlDivNames } from "@/lib/vlap";
+import { vlConfig, vlDivNames, vlPayLine } from "@/lib/vlap";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
@@ -198,6 +198,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // a copy kept at the edge from before these fields existed reads as an event without them
       event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
+      // Victory Lap's payment, as the booking app's review step says it under the price (2026-10-23)
+      ...(athletePrice(s) ? { payNote: vlPayLine(vlConfig(s.vl), locale, tx("Once booked, tell us whether you already have a ticket or buy one by bank transfer.", "بعد الحجز، أخبرنا إن كانت لديك تذكرة بالفعل أو اشترِ واحدة بتحويل بنكي.")) } : {}),
       route: routeNameOf(routes, s.routeSlug),
       routeKm: kmOf(s),
       // the Saturday ride's (and Run for Her's) breakfast stop, by its Arabic name on the Arabic page when it has one

@@ -1,11 +1,13 @@
 import Qr from "./Qr";
 import Countdown from "./Countdown";
 import RaceRegQuestion from "./RaceRegQuestion";
+import VlTicket from "./VlTicket";
 import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
-import { VL_DIV_KM, vlDivName, vlIsDbl, vlPayLine } from "@/lib/vlap";
+import { VL_DIV_KM, vlDivName, vlIsDbl } from "@/lib/vlap";
+import { vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-ticket";
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { DEFE_RACE_URL, raceRegAsked, addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
@@ -16,7 +18,7 @@ import { DEFE_RACE_URL, raceRegAsked, addonLines, addonsCost, bookingRef, breakf
 // lists each runner's distance where a ride lists the bike type, and is never changed, only
 // cancelled ("A run booking is never modified"). A Victory Lap ticket (2026-10-17) says "Athlete number",
 // the race and division where a ride shows the bike type, the team's code and the partner (Doubles), the
-// T-shirt and 5 km time, and how to pay while unpaid, on its own look (white, the race's logo, a
+// T-shirt and 5 km time, and "Do you already have a ticket, or would you like to buy one?" (VlTicket), on its own look (white, the race's logo, a
 // checkered strip down the end edge: the booking app's th-vlap); its details change in the booking app.
 // A DEFE 5KM Run ticket (2026-10-18) is a run's too - "Runner number", 5 km, cancel only - on Defe's own
 // look (white with Defe's blush, its logo: the booking app's th-defe5k), with when the kits go out and the
@@ -279,7 +281,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         {vlap && (() => {
           // The athlete's place (the booking app's _vlTkHtml): the team's code and the partner on a Doubles
           // race (or that our team is finding one), the division with its distance, the T-shirt, the 5 km
-          // time, and how to pay while the place is unpaid (staff's words, sessions.vl.pay, else the default).
+          // time; the ticket question follows (VlTicket).
           const v = primary.vl;
           if (!v) return null;
           const partner = vlPartners?.get(primary.id) ?? "";
@@ -288,7 +290,6 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             v.shirt ? `${t.vlShirt}: ${v.shirt}` : "",
             v.t5k ? `${t.vlT5Short}: ${t.vlT5[v.t5k]}` : "",
           ].filter(Boolean);
-          const unpaid = !past && !rows.every((r) => r.paid) && !rows.every((r) => r.status === "waitlist");
           return (
             <div className="tk-vl">
               {vlIsDbl(v.race) && v.team && (
@@ -299,8 +300,24 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               )}
               {vlIsDbl(v.race) && !v.team && v.pair && <div className="tk-vl-team"><p className="tk-vl-p">{t.vlPairWait}</p></div>}
               {meta.length > 0 && <p className="tk-vl-meta">{meta.map((x, i) => <span key={i}>{x}</span>)}</p>}
-              {unpaid && <p className="tk-vl-pay"><strong>{t.vlPayTitle}</strong> <span>{vlPayLine(s?.vl, locale, t.vlPayLater)}</span></p>}
             </div>
+          );
+        })()}
+        {vlap && vlTicketView(primary, past) !== "none" && (() => {
+          // "Do you already have a ticket, or would you like to buy one?" (the owner, 2026-10-23; the booking
+          // app's _vtTkHtml): nothing on a past, done or waitlisted place, nor on one staff marked paid with no answer
+          const bank = vlBankWords(locale);
+          return (
+            <VlTicket entryId={primary.id} answer={primary.vlTicket ?? null} receipt={!!primary.vlReceiptAt} paid={primary.paid}
+              name={name} when={`${f({ weekday: "long" })} · ${f({ day: "numeric", month: "short", year: "numeric" })}`}
+              amount={sar(vlTicketAmount(s?.price, primary.price)).replace(/[\u2066\u2069]/g, "")} bankName={bank.name} bankBank={bank.bank}
+              t={{
+                title: t.vtTitle, q: t.vtQ, have: t.vtHave, buy: t.vtBuy, buyTitle: t.vtBuyTitle, buySub: t.vtBuySub, amount: t.vtAmount, benef: t.vtBenef,
+                bank: t.vtBank, iban: t.vtIban, acct: t.vtAcct, copy: t.vtCopy, copied: t.vtCopied, letter: t.vtLetter, rcptLabel: t.vtRcptLabel,
+                rcptPick: t.vtRcptPick, rcptChange: t.vtRcptChange, rcptBad: t.vtRcptBad, send: t.vtSend, later: t.vtLater, back: t.vtBack,
+                haveNote: t.vtHaveNote, paidNote: t.vtPaidNote, needRcpt: t.vtNeedRcpt, upload: t.vtUpload, change: t.change, saving: t.vtSaving,
+                close: t.vtClose, failed: t.rrFailed,
+              }} />
           );
         })()}
         {defe && !past && (

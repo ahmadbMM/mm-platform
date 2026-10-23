@@ -10,7 +10,7 @@ export type Account = Session & { name: string; email: string; phone: string;
 
 /** A database call from the server. A refusal keeps PostgREST's message, its code (PGRST202: no
  *  such function, a migration not applied yet) and its details (BAD_INPUT's em_self ...). */
-export async function rpcServer<T>(fn: string, args: Record<string, unknown>): Promise<{ status: number; data: T | null; message: string; code?: string; details?: string }> {
+export async function rpcServer<T>(fn: string, args: Record<string, unknown>, timeoutMs = 4000): Promise<{ status: number; data: T | null; message: string; code?: string; details?: string }> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return { status: 0, data: null, message: "" };
@@ -20,7 +20,7 @@ export async function rpcServer<T>(fn: string, args: Record<string, unknown>): P
       headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(args),
       cache: "no-store",
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     const body = (await res.json().catch(() => null)) as unknown;
     if (!res.ok) {

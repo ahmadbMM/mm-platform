@@ -35,6 +35,12 @@ export type TicketRow = {
    *  (queue_entries.race_reg, rentals 20261018150000): 'yes', 'no', or null before they answer (and on
    *  every other booking, and on a database without the column). */
   raceReg?: "yes" | "no" | null;
+  /** Victory Lap (2026-10-23, rentals 20261023160000; lib/vl-ticket.ts): whether the athlete already has a
+   *  ticket ('have') or buys one by bank transfer ('buy'), null before they answer; undefined when the
+   *  database has no such column yet (the question then steps aside). */
+  vlTicket?: "have" | "buy" | null;
+  /** When the transfer receipt came in (queue_entries.vl_receipt_at, ISO), else null. */
+  vlReceiptAt?: string | null;
 };
 /** The distances a Run for Her runner picks from (the booking app's RUN_KMS). */
 export const RUN_KMS: readonly number[] = [3, 5];
@@ -74,6 +80,9 @@ export type TicketSession = {
    *  Sports); null on every other kind. A read without the column has every race open and no words of
    *  staff's own. */
   vl?: VlConfig | null;
+  /** The session's own price in SAR (sessions.price: Victory Lap's per athlete, the amount its ticket
+   *  asks to transfer), else null. */
+  price?: number | null;
 };
 
 type Row = Record<string, unknown>;
@@ -100,6 +109,7 @@ export function ticketRow(r: Row): TicketRow | null {
     partner: typeof r.partner === "string" && /^[a-z0-9]{2,20}$/.test(r.partner) ? r.partner : null,
     vl: vlEntry(r.vl),
     raceReg: r.race_reg === "yes" || r.race_reg === "no" ? r.race_reg : null,
+    ...("vl_ticket" in r ? { vlTicket: r.vl_ticket === "have" || r.vl_ticket === "buy" ? r.vl_ticket : null, vlReceiptAt: S(r.vl_receipt_at) || null } : {}),
   };
 }
 
@@ -222,6 +232,7 @@ export function ticketSession(r: Row): TicketSession | null {
       : null,
     revealAt: Number.isFinite(Date.parse(S(r.reveal_at))) ? S(r.reveal_at) : null,
     vl: kind === "vlap" ? vlConfig(r.vl) : null,
+    price: N(r.price),
   };
 }
 
