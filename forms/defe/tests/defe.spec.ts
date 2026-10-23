@@ -210,15 +210,20 @@ test('an existing rider signs in with their mobile, confirms the height and book
   await expect(page.locator('#s-details')).toBeVisible();
   expect(of('customer_login')).toEqual([{ p_identifier: '+966552468013', p_pwd: 'Ride2Work' }]);
   expect(of('customer_pwd_state')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in' }]);
-  // Only what is missing - nothing here - and the height, always.
-  for (const f of ['#f-birth', '#f-nat', '#f-wa', '#f-ig', '#xem-block']) await expect(page.locator(f)).toBeHidden();
+  // Date of birth, nationality and Instagram every time, filled in from the account (the owner, 2026-10-23);
+  // the rest only when missing - nothing here - and the height, always.
+  for (const f of ['#f-birth', '#f-nat', '#f-ig']) await expect(page.locator(f)).toBeVisible();
+  await expect(page.locator('#nat')).toHaveValue('Saudi Arabia');
+  await expect(page.locator('#ig')).toHaveValue('sara.rides');
+  for (const f of ['#f-wa', '#xem-block']) await expect(page.locator(f)).toBeHidden();
   await expect(page.locator('#xheight')).toHaveValue('165');
   await expect(page.locator('#d-who')).toContainText('Booking as Sara Alharbi');
   await page.fill('#xheight', '168');
   await page.click('#d-next');
   await expect(page.locator('#s-book')).toBeVisible();
   expect(of('customer_set_height')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in', p_height: 168 }]);
-  expect(of('customer_set_birth_nat')).toEqual([]);
+  expect(of('customer_set_birth_nat')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in', p_birth_date: '1994-03-12', p_nationality: 'Saudi Arabia' }]);
+  expect(of('customer_set_socials')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in', p_socials: { instagram: 'sara.rides', x: 'sararides' } }]);
   // The bike the account prefers is picked already.
   await expect(page.locator('#bikes .pill[data-v="Hybrid"]')).toHaveAttribute('aria-checked', 'true');
   await book(page, { group: 'int', bike: 'Own' });
@@ -255,7 +260,7 @@ test('handed back from the booking app with ?code=, the rider goes straight to t
   expect(errs).toEqual([]);
 });
 
-test('the details ask only what the account is missing, and keep the other handles', async ({ page }) => {
+test('the details fill in what the account holds, ask what it misses, and keep the other handles', async ({ page }) => {
   const { of } = await open(page, '', {
     customer_profile: () => json([{ ...SARA, nationality: null, socials: { x: 'sararides', tiktok: 'sara.tt' } }]),
     customer_emergency: () => json([{ ...EM_ROW, emergency_name: null, emergency_phone: null, emergency_relation: null }]),
@@ -266,7 +271,7 @@ test('the details ask only what the account is missing, and keep the other handl
   await page.fill('#spwd', 'Ride2Work');
   await page.click('#signin');
   await expect(page.locator('#s-details')).toBeVisible();
-  await expect(page.locator('#f-birth')).toBeHidden();
+  await expect(page.locator('#f-birth')).toBeVisible(); // asked every time, filled in from the account
   await expect(page.locator('#f-wa')).toBeHidden();
   await expect(page.locator('#f-nat')).toBeVisible();
   await expect(page.locator('#f-ig')).toBeVisible();

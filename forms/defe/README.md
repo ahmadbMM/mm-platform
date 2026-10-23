@@ -21,7 +21,8 @@ light and dark as the device is set.
    Apple and a forgotten password go through the booking app (`?handoff=defe&lang=`), which sends the
    rider back to `/defe?code=<one-time code>` (`customer_handoff_redeem`; the code leaves the address
    at once). The session lives in the page only, never in storage.
-3. **Your details**, what every Saturday ride asks for, only what the account lacks (read with
+3. **Your details**: date of birth, nationality and Instagram every time, new account or old, filled in
+   with what the account holds (the owner, 2026-10-23); the rest of what every Saturday ride asks for, only what the account lacks (read with
    `customer_profile`, `customer_emergency`, `customer_whatsapp`, `customer_fix_fields`), the height
    always: date of birth, nationality, whether the mobile is their WhatsApp too, Instagram, the
    emergency contact. Saved with `customer_set_emergency(2)`, `customer_set_birth_nat` (both values;

@@ -907,11 +907,14 @@
     var hasEm = a.em === "absent" || !!(a.em && a.em.emergency_name && a.em.emergency_phone && a.em.emergency_relation);
     var waKnown = a.wa === "absent" || !!(a.wa && (a.wa.whatsapp_same === true || a.wa.whatsapp_same === false));
     var socials = prof.socials && typeof prof.socials === "object" && !Array.isArray(prof.socials) ? prof.socials : {};
+    // Date of birth, nationality and Instagram are asked of every rider, new account or old, filled in
+    // with what the account holds (the owner, 2026-10-23: "ask them for their instagram accounts and
+    // dob and nationalities").
     need = {
-      birth: !prof.birth_date || flag("birth_date"),
-      nat: !prof.nationality || flag("nationality"),
+      birth: true,
+      nat: true,
       wa: !waKnown || flag("whatsapp"),
-      ig: !clean(socials.instagram) || flag("instagram"),
+      ig: true,
       em: !hasEm || flag("emergency") || flag("emergency2"),
       em2: flag("emergency2")
     };
