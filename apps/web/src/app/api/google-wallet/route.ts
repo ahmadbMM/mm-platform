@@ -41,3 +41,15 @@ export async function POST(req: Request) {
     return json({ ok: false, error: "network" }, 502);
   }
 }
+
+// GET /api/google-wallet?ready: whether the booking app can make a pass at all (2026-10-24). The button
+// asks it once per page and is drawn only on yes. Nothing personal travels, so no cookie or origin check.
+export async function GET(req: Request) {
+  if (!new URL(req.url).searchParams.has("ready")) return json({ ok: false, error: "POST a booking" }, 405);
+  try {
+    const up = await fetch(`${WALLET_ORIGIN}/api/google-wallet?ready`, { headers: { accept: "application/json" }, cache: "no-store", signal: AbortSignal.timeout(8000) });
+    return json({ ok: up.ok }, up.ok ? 200 : up.status === 501 ? 501 : 502);
+  } catch {
+    return json({ ok: false, error: "network" }, 502);
+  }
+}
