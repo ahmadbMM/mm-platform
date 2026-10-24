@@ -1446,7 +1446,8 @@
  "Send receipt": "Ipadala ang resibo",
  "I’ll send it later": "Ipapadala ko mamaya",
  "You have a ticket for the race.": "May ticket ka para sa karera.",
- "Receipt received. Your ticket is paid.": "Natanggap ang resibo. Bayad na ang ticket mo.",
+ "Receipt confirmed. Your ticket is paid.": "Nakumpirma ang resibo. Bayad na ang ticket mo.",
+ "Receipt sent. Our team will check it and confirm your ticket.": "Naipadala ang resibo. Titingnan ito ng aming team at kukumpirmahin ang ticket mo.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "I-transfer ang presyo ng ticket at i-upload ang resibo para makumpleto ang ticket mo.",
  "Upload receipt": "I-upload ang resibo",
  "Once booked, tell us whether you already have a ticket or buy one by bank transfer.": "Pagka-book, sabihin sa amin kung may ticket ka na o bumili ng isa sa bank transfer."

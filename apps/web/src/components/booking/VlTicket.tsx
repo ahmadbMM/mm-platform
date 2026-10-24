@@ -18,14 +18,14 @@ export type VlTicketText = {
   title: string; q: string; have: string; buy: string; buyTitle: string; buySub: string;
   amount: string; benef: string; bank: string; iban: string; acct: string; copy: string; copied: string;
   letter: string; rcptLabel: string; rcptPick: string; rcptChange: string; rcptBad: string; send: string;
-  later: string; back: string; haveNote: string; paidNote: string; needRcpt: string; upload: string;
+  later: string; back: string; haveNote: string; paidNote: string; sentNote: string; needRcpt: string; upload: string;
   change: string; saving: string; close: string; failed: string;
 };
 type Props = {
   entryId: string;
   /** The answer so far, and whether the receipt came in. */
   answer: VlTicketAnswer | null; receipt: boolean;
-  /** Marked paid (staff, or a receipt): with no answer the line asks nothing. */
+  /** Marked paid (staff confirmed the receipt, or the desk took the payment): with no answer the line asks nothing. */
   paid: boolean;
   /** The race's name and day, for the pop-up's head. */
   name: string; when: string;
@@ -41,6 +41,7 @@ const Ic = ({ d, size = 16 }: { d: string; size?: number }) => (
   <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={d} /></svg>
 );
 const TICK = "m5 12.5 4.5 4.5L19 7.5";
+const CLOCK = "M12 7.5V12l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z";
 const DOC = "M14 3H7a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V7l-4-4ZM14 3v4h4M12 11v6M9.5 14.5 12 17l2.5-2.5";
 const PLUS = "M12 5v14M5 12h14";
 const CAL = "M7 3v3M17 3v3M4 9h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z";
@@ -75,6 +76,7 @@ function shrink(file: File): Promise<string> {
 export default function VlTicket({ entryId, answer: initial, receipt: hadReceipt, paid, name, when, amount, bankName, bankBank, t }: Props) {
   const [answer, setAnswer] = useState<VlTicketAnswer | null>(initial);
   const [receipt, setReceipt] = useState(hadReceipt);
+  const [isPaid, setPaid] = useState(paid); // a new picture waits for staff again (2026-10-24)
   const [off, setOff] = useState(false);
   const [step, setStep] = useState<Step | null>(null);
   const [busy, setBusy] = useState(false);
@@ -94,7 +96,7 @@ export default function VlTicket({ entryId, answer: initial, receipt: hadReceipt
   }, [step]);
 
   if (off) return null;
-  const view = vlTicketView({ status: "waiting", paid: paid || receipt, vlTicket: answer, vlReceiptAt: receipt ? "1" : null }, false);
+  const view = vlTicketView({ status: "waiting", paid: isPaid, vlTicket: answer, vlReceiptAt: receipt ? "1" : null }, false);
   if (view === "none") return null;
 
   const open = (s: Step, el: HTMLElement) => { opener.current = el; setErr(""); setImg(""); setStep(s); };
@@ -115,7 +117,7 @@ export default function VlTicket({ entryId, answer: initial, receipt: hadReceipt
       const b = (await r.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
       if (b?.ok) {
         setAnswer(v);
-        if (picture) setReceipt(true);
+        if (picture) { setReceipt(true); setPaid(false); }
         return true;
       }
       // a database without the question yet: it steps aside
@@ -157,6 +159,11 @@ export default function VlTicket({ entryId, answer: initial, receipt: hadReceipt
   const line =
     view === "paid" ? (
       <div className="vt-tk vt-tk-done" role="status"><Ic d={TICK} /><span>{t.paidNote}</span></div>
+    ) : view === "sent" ? (
+      <div className="vt-tk vt-tk-sent" role="status">
+        <Ic d={CLOCK} /><span>{t.sentNote}</span>
+        <button type="button" className="vt-b" onClick={(e) => open("buy", e.currentTarget)}>{t.change}</button>
+      </div>
     ) : view === "have" ? (
       <div className="vt-tk vt-tk-done" role="status">
         <Ic d={TICK} /><span>{t.haveNote}</span>
@@ -217,7 +224,7 @@ export default function VlTicket({ entryId, answer: initial, receipt: hadReceipt
                 <a className="vt-pdf" href={VL_BANK.pdf} download="Sports Fitness Unit bank details.pdf" target="_blank" rel="noopener"><Ic d={DOC} /><span>{t.letter}</span></a>
                 <div className="vt-rc">
                   <p className="vt-rc-l">{t.rcptLabel}</p>
-                  {receipt && !img && <p className="vt-done" role="status"><Ic d={TICK} /><span>{t.paidNote}</span></p>}
+                  {receipt && !img && <p className="vt-done" role="status"><Ic d={isPaid ? TICK : CLOCK} /><span>{isPaid ? t.paidNote : t.sentNote}</span></p>}
                   {img && <img className="vt-prev" src={img} alt={t.rcptLabel} />}
                   <label className="vt-pick">
                     <input type="file" accept="image/*" className="vt-file" disabled={busy} onChange={(e) => pick(e.currentTarget)} />

@@ -1446,7 +1446,8 @@
  "Send receipt": "明細を送信",
  "I’ll send it later": "後で送ります",
  "You have a ticket for the race.": "このレースのチケットをお持ちです。",
- "Receipt received. Your ticket is paid.": "明細を受け取りました。チケットは支払い済みです。",
+ "Receipt confirmed. Your ticket is paid.": "明細を確認しました。チケットは支払い済みです。",
+ "Receipt sent. Our team will check it and confirm your ticket.": "明細を送信しました。スタッフが確認してチケットを確定します。",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "チケット代金をお振り込みのうえ、明細をアップロードしてチケットを完了してください。",
  "Upload receipt": "明細をアップロード",
  "Once booked, tell us whether you already have a ticket or buy one by bank transfer.": "予約後、チケットをすでにお持ちか、銀行振込で購入するかをお知らせください。"

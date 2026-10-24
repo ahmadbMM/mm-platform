@@ -5,7 +5,8 @@ import type { TicketRow } from "./tickets";
 // rentals migration 20261023160000). A booked Victory Lap place asks "Do you already have a ticket, or
 // would you like to buy one?". Have one: saved, nothing more is asked. Buy one: the organiser's bank
 // details and their bank letter (PDF), then a picture of the transfer receipt, which the database keeps
-// (vl_receipts) and which marks the booking paid by transfer. The booking app asks it in a pop-up right
+// (vl_receipts) for staff to confirm (the owner, 2026-10-24; staff_vl_receipt, rentals 20261024150000):
+// only their Confirm marks the booking paid by transfer. The booking app asks it in a pop-up right
 // after the place is booked; the site, which books nothing, asks it on the ticket (VlTicket), whose
 // buttons open the same pop-up. The answer goes through customer_vl_ticket (app/api/account/vl-ticket).
 
@@ -53,11 +54,11 @@ export function vlTicketBody(body: unknown): { entryId: string; answer: VlTicket
 
 /** What the ticket's line shows (_vtTkHtml): nothing (a past, done or waitlisted place; a database
  *  without the question yet; a place staff marked paid with no answer), the question, "You have a
- *  ticket", the receipt still to send, or the receipt received. */
-export type VlTicketView = "none" | "ask" | "have" | "buy" | "paid";
+ *  ticket", the receipt still to send, the receipt sent and waiting for staff, or the receipt confirmed. */
+export type VlTicketView = "none" | "ask" | "have" | "buy" | "sent" | "paid";
 export function vlTicketView(r: Pick<TicketRow, "status" | "paid" | "vlTicket" | "vlReceiptAt"> | undefined, past: boolean): VlTicketView {
   if (!r || past || r.vlTicket === undefined || r.status === "done" || r.status === "waitlist") return "none";
-  if (r.vlReceiptAt) return "paid";
+  if (r.vlReceiptAt) return r.paid ? "paid" : "sent";
   if (r.vlTicket === "have") return "have";
   if (r.vlTicket === "buy") return "buy";
   return r.paid ? "none" : "ask";

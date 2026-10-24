@@ -1446,7 +1446,8 @@
  "Send receipt": "Отправить квитанцию",
  "I’ll send it later": "Отправлю позже",
  "You have a ticket for the race.": "У вас есть билет на гонку.",
- "Receipt received. Your ticket is paid.": "Квитанция получена. Ваш билет оплачен.",
+ "Receipt confirmed. Your ticket is paid.": "Квитанция подтверждена. Ваш билет оплачен.",
+ "Receipt sent. Our team will check it and confirm your ticket.": "Квитанция отправлена. Наша команда проверит её и подтвердит ваш билет.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Переведите стоимость билета и загрузите квитанцию, чтобы оформить билет.",
  "Upload receipt": "Загрузить квитанцию",
  "Once booked, tell us whether you already have a ticket or buy one by bank transfer.": "После бронирования сообщите нам, есть ли у вас билет, или купите его банковским переводом."

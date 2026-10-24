@@ -1446,7 +1446,8 @@
  "Send receipt": "Enviar comprovativo",
  "I’ll send it later": "Envio mais tarde",
  "You have a ticket for the race.": "Tem um bilhete para a corrida.",
- "Receipt received. Your ticket is paid.": "Comprovativo recebido. O seu bilhete está pago.",
+ "Receipt confirmed. Your ticket is paid.": "Comprovativo confirmado. O seu bilhete está pago.",
+ "Receipt sent. Our team will check it and confirm your ticket.": "Comprovativo enviado. A nossa equipa vai verificá-lo e confirmar o seu bilhete.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Transfira o preço do bilhete e envie o comprovativo para completar o seu bilhete.",
  "Upload receipt": "Enviar comprovativo",
  "Once booked, tell us whether you already have a ticket or buy one by bank transfer.": "Depois de reservar, diga-nos se já tem um bilhete ou compre um por transferência bancária."

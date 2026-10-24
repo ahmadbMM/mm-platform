@@ -1446,7 +1446,8 @@
  "Send receipt": "Beleg senden",
  "I’ll send it later": "Ich sende ihn später",
  "You have a ticket for the race.": "Du hast ein Ticket für das Rennen.",
- "Receipt received. Your ticket is paid.": "Beleg erhalten. Dein Ticket ist bezahlt.",
+ "Receipt confirmed. Your ticket is paid.": "Beleg bestätigt. Dein Ticket ist bezahlt.",
+ "Receipt sent. Our team will check it and confirm your ticket.": "Beleg gesendet. Unser Team prüft ihn und bestätigt dein Ticket.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Überweise den Ticketpreis und lade den Beleg hoch, um dein Ticket abzuschließen.",
  "Upload receipt": "Beleg hochladen",
  "Once booked, tell us whether you already have a ticket or buy one by bank transfer.": "Sag uns nach der Buchung, ob du schon ein Ticket hast, oder kauf eins per Banküberweisung."

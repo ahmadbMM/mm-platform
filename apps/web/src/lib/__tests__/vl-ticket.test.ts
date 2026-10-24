@@ -22,6 +22,8 @@ describe("Victory Lap ticket question", () => {
     expect(vlTicketView(row({ vl_ticket: "have" }), false)).toBe("have");
     expect(vlTicketView(row({ vl_ticket: "buy" }), false)).toBe("buy");
     expect(vlTicketView(row({ vl_ticket: "buy", vl_receipt_at: "2099-10-21T10:00:00Z", paid: true }), false)).toBe("paid");
+    // staff confirm each receipt (2026-10-24): until they do, it is sent, not paid
+    expect(vlTicketView(row({ vl_ticket: "buy", vl_receipt_at: "2099-10-21T10:00:00Z" }), false)).toBe("sent");
     // staff marked it paid with no answer: nothing asked; with an answer, the answer stays
     expect(vlTicketView(row({ vl_ticket: null, paid: true }), false)).toBe("none");
     expect(vlTicketView(row({ vl_ticket: "buy", paid: true }), false)).toBe("buy");
@@ -65,7 +67,7 @@ describe("Victory Lap ticket question", () => {
 
   it("has its words in every language, never about cycling", () => {
     const keys = Object.keys(TICKET.en).filter((k) => k.startsWith("vt")) as (keyof typeof TICKET.en)[];
-    expect(keys.length).toBe(27);
+    expect(keys.length).toBe(28); // vtSentNote (2026-10-24): a receipt waits for staff
     expect(Object.keys(TICKET.ar).filter((k) => k.startsWith("vt")).sort()).toEqual([...keys].sort());
     for (const l of LOCALE_CODES) {
       const t = serverLocalize(TICKET, l);
