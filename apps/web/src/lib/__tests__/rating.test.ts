@@ -4,7 +4,7 @@ import { ticketSession } from "../tickets";
 import { resetSessionColumns } from "../rides";
 import { POST as rate } from "../../app/api/account/rate/route";
 import { GET as pendingGet } from "../../app/api/account/pending-rating/route";
-import { POST as wallet } from "../../app/api/google-wallet/route";
+import { GET as walletReady, POST as wallet } from "../../app/api/google-wallet/route";
 import { resetSiteContent } from "../site";
 import { createElement, type FC, type ReactElement, type ReactNode } from "react";
 // The site has no @types/react-dom; this test needs one function of it.
@@ -165,6 +165,17 @@ describe("api/account/rate", () => {
 describe("api/google-wallet", () => {
   beforeEach(() => { resetSiteContent(); vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+  it("GET ?ready asks the booking app whether a pass can be made, and sends nothing personal", async () => {
+    const off = vi.fn(async (url: string) => json(url.endsWith("?ready") ? { ok: false, skipped: "google wallet not configured" } : {}, 501));
+    vi.stubGlobal("fetch", off);
+    const no = await walletReady(new Request("https://micromobility.sa/api/google-wallet?ready"));
+    expect([no.status, await no.json()]).toEqual([501, { ok: false }]);
+    expect(off.mock.calls.map((c) => String(c[0]))).toEqual(["https://micromobilityrentals.pages.dev/api/google-wallet?ready"]);
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => json({ ok: url.endsWith("?ready") })));
+    const yes = await walletReady(new Request("https://micromobility.sa/api/google-wallet?ready"));
+    expect([yes.status, await yes.json()]).toEqual([200, { ok: true }]);
+    expect((await walletReady(new Request("https://micromobility.sa/api/google-wallet"))).status).toBe(405);
+  });
   it("asks the booking app's own origin for the pass, with the cookie's id and token, and hands the save link back", async () => {
     expect(WALLET_ORIGIN).toBe("https://micromobilityrentals.pages.dev");
     // an address staff set in the site's content never receives the token
