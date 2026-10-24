@@ -10,7 +10,7 @@ import { vlTicketBody } from "@/lib/vl-ticket";
 // picture once they have it (a JPEG data: URL the page made small: VlTicket), through the booking app's
 // customer_vl_ticket (rentals migration 20261023160000) with the account cookie's id and token, as the
 // booking app's own pop-up does (_vtSave). The database checks the rest: the row is the account's, live,
-// on Victory Lap; a receipt is kept (vl_receipts, staff read it) and marks the booking paid by transfer.
+// on Victory Lap; a receipt is kept (vl_receipts) and waits for staff to confirm it (staff_vl_receipt).
 // Answers {ok: true}, or {ok: false, error}: "invalid" for a body it cannot read, "absent" when the
 // database has no such function yet (the ticket then puts the question aside), "signin" when the account
 // is signed out, "refused" when the database answered false (a token that is no longer the account's, or

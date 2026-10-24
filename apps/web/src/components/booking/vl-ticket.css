@@ -6,6 +6,9 @@
 .vt-tk-done { display: flex; align-items: center; gap: 8px; background: #f1f8f4; border-color: rgba(0, 113, 63, .35); color: #06603b; font-weight: 600; }
 .vt-tk-done > svg { flex: none; }
 .vt-tk-done > span { flex: 1 1 auto; min-width: 0; }
+.vt-tk-sent { display: flex; align-items: center; gap: 8px; font-weight: 600; }
+.vt-tk-sent > svg { flex: none; }
+.vt-tk-sent > span { flex: 1 1 auto; min-width: 0; }
 .vt-b { flex: 0 1 auto; min-height: 38px; padding: 0 14px; border-radius: 0; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; background: #fff; color: #2e1c80; border: 1px solid rgba(91, 63, 214, .4); }
 .vt-b:hover { border-color: #5b3fd6; }
 .vt-b.solid { background: #5b3fd6; border-color: #5b3fd6; color: #fff; }

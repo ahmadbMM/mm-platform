@@ -1685,7 +1685,8 @@
  "Send receipt": "Envoyer le reçu",
  "I’ll send it later": "Je l'enverrai plus tard",
  "You have a ticket for the race.": "Vous avez un billet pour la course.",
- "Receipt received. Your ticket is paid.": "Reçu bien reçu. Votre billet est payé.",
+ "Receipt confirmed. Your ticket is paid.": "Reçu confirmé. Votre billet est payé.",
+ "Receipt sent. Our team will check it and confirm your ticket.": "Reçu envoyé. Notre équipe va le vérifier et confirmer votre billet.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Virez le prix du billet et téléversez le reçu pour compléter votre billet.",
  "Upload receipt": "Téléverser le reçu"
 }

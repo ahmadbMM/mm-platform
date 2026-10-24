@@ -1686,7 +1686,8 @@
  "Send receipt": "রসিদ পাঠান",
  "I’ll send it later": "পরে পাঠাব",
  "You have a ticket for the race.": "আপনার রেসের টিকিট আছে।",
- "Receipt received. Your ticket is paid.": "রসিদ পেয়েছি। আপনার টিকিটের টাকা পরিশোধ হয়েছে।",
+ "Receipt confirmed. Your ticket is paid.": "রসিদ নিশ্চিত হয়েছে। আপনার টিকিটের টাকা পরিশোধ হয়েছে।",
+ "Receipt sent. Our team will check it and confirm your ticket.": "রসিদ পাঠানো হয়েছে। আমাদের টিম এটি যাচাই করে আপনার টিকিট নিশ্চিত করবে।",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "টিকিটের দাম ট্রান্সফার করুন এবং টিকিট সম্পূর্ণ করতে রসিদ আপলোড করুন।",
  "Upload receipt": "রসিদ আপলোড করুন"
 }

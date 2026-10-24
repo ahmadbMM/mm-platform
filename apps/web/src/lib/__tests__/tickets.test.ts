@@ -551,7 +551,10 @@ describe("a Victory Lap ticket (ride_kind 'vlap', 2026-10-17)", () => {
     expect(buy).toContain("Transfer the ticket price and upload the receipt to complete your ticket.");
     expect(buy).toContain(">Upload receipt<");
     expect(buy).toContain(">Change<");
-    expect(card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: "buy", vl_receipt_at: "2099-10-21T10:00:00Z", paid: true })).toContain("Receipt received. Your ticket is paid.");
+    expect(card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: "buy", vl_receipt_at: "2099-10-21T10:00:00Z", paid: true })).toContain("Receipt confirmed. Your ticket is paid.");
+    const sent = card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: "buy", vl_receipt_at: "2099-10-21T10:00:00Z" });
+    expect(sent).toContain("Receipt sent. Our team will check it and confirm your ticket.");
+    expect(sent).not.toContain("Your ticket is paid");
     // nothing on the waitlist, on a past card, or on a place staff marked paid with no answer
     expect(card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: null, status: "waitlist" })).not.toContain("Do you already have a ticket");
     expect(card({ vl: { race: "ws", div: "so", shirt: "S" }, vl_ticket: null }, { past: true })).not.toContain("Do you already have a ticket");

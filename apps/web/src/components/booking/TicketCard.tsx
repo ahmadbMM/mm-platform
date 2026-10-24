@@ -318,7 +318,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
                 title: t.vtTitle, q: t.vtQ, have: t.vtHave, buy: t.vtBuy, buyTitle: t.vtBuyTitle, buySub: t.vtBuySub, amount: t.vtAmount, benef: t.vtBenef,
                 bank: t.vtBank, iban: t.vtIban, acct: t.vtAcct, copy: t.vtCopy, copied: t.vtCopied, letter: t.vtLetter, rcptLabel: t.vtRcptLabel,
                 rcptPick: t.vtRcptPick, rcptChange: t.vtRcptChange, rcptBad: t.vtRcptBad, send: t.vtSend, later: t.vtLater, back: t.vtBack,
-                haveNote: t.vtHaveNote, paidNote: t.vtPaidNote, needRcpt: t.vtNeedRcpt, upload: t.vtUpload, change: t.change, saving: t.vtSaving,
+                haveNote: t.vtHaveNote, paidNote: t.vtPaidNote, sentNote: t.vtSentNote, needRcpt: t.vtNeedRcpt, upload: t.vtUpload, change: t.change, saving: t.vtSaving,
                 close: t.vtClose, failed: t.rrFailed,
               }} />
           );

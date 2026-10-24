@@ -1684,7 +1684,8 @@
  "Send receipt": "Enviar comprobante",
  "I’ll send it later": "Lo enviaré más tarde",
  "You have a ticket for the race.": "Tienes una entrada para la carrera.",
- "Receipt received. Your ticket is paid.": "Comprobante recibido. Tu entrada está pagada.",
+ "Receipt confirmed. Your ticket is paid.": "Comprobante confirmado. Tu entrada está pagada.",
+ "Receipt sent. Our team will check it and confirm your ticket.": "Comprobante enviado. Nuestro equipo lo revisará y confirmará tu entrada.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Transfiere el precio de la entrada y sube el comprobante para completar tu entrada.",
  "Upload receipt": "Subir comprobante"
 }
