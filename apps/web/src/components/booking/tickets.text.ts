@@ -117,6 +117,7 @@ export const T = {
     rrFailed: "It could not be sent. Check the connection and try again.",
     // Victory Lap (2026-10-17)
     athleteNumber: "Athlete number",
+    bookingNumber: "Booking number", // satNumLabel: a Saturday ride's number once its list is out (2026-10-25)
     vlRaces: { ws: "Women’s Singles", ms: "Men’s Singles", wd: "Women’s Doubles", md: "Men’s Doubles", xd: "Mixed Doubles" },
     vlTeamCode: "Team code",
     vlWithPartner: (n: string) => `With ${n}`,
@@ -249,6 +250,7 @@ export const T = {
     change: "تغيير",
     rrFailed: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً.",
     athleteNumber: "رقم الرياضي",
+    bookingNumber: "رقم الحجز",
     vlRaces: { ws: "فردي السيدات", ms: "فردي الرجال", wd: "زوجي السيدات", md: "زوجي الرجال", xd: "زوجي مختلط" },
     vlTeamCode: "رمز الفريق",
     vlWithPartner: (n: string) => `مع ${n}`,

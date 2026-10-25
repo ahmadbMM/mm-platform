@@ -10,7 +10,7 @@ import { VL_DIV_KM, vlDivName, vlIsDbl } from "@/lib/vlap";
 import { vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-ticket";
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
-import { DEFE_RACE_URL, raceRegAsked, addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
+import { DEFE_RACE_URL, raceRegAsked, addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -98,9 +98,12 @@ const Again = () => (
 
 export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, vlPartners = null }: Props) {
   const primary = rows[0];
-  const noNum = !s || s.approval; // a ride staff approve never shows its order
+  const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
+  // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
+  const satNum = satNumOk(rows, s);
+  const hideNum = noNum && !satNum;
   const allWl = rows.every((r) => r.status === "waitlist");
-  const num = noNum ? name : queueNumbers(rows);
+  const num = hideNum ? name : queueNumbers(rows);
   const look = past ? "past" : ticketLook(rows, s); // dark when a place is held, paper otherwise (the booking app's tk-live)
   const onDay = primary.date === today;
   const dw = past ? null : dayWord(primary.date, today);
@@ -114,7 +117,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const run = s?.kind === "runher" || s?.kind === "defe5k"; // Run for Her, the DEFE 5KM Run: a runner's number, a distance, cancel only
   const defe = s?.kind === "defe5k";
   const vlap = s?.kind === "vlap"; // Victory Lap: an athlete's number, the race and team, how to pay
-  const numLabel = run ? t.runnerNumber : vlap ? t.athleteNumber : t.queueNumber;
+  const numLabel = run ? t.runnerNumber : vlap ? t.athleteNumber : satNum ? t.bookingNumber : t.queueNumber;
   // The add-ons bought with the booking, each rider's under their name, and in the total, as the
   // booking app lists them (none on a ride staff approve). A line whose price is not known (the
   // inventory could not be read) is listed without it, and the total is left out: never a wrong one.
@@ -157,12 +160,12 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             ? <span className="tk-logo tk-logo-vl" aria-hidden="true"><img src="/site/victory-lap-dark.webp" alt="" decoding="async" /></span>
             : defe ? <span className="tk-logo tk-logo-defe" aria-hidden="true"><img src="/site/defe-logo.svg" alt="" decoding="async" /></span>
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
-          {!noNum && (allWl
+          {!hideNum && (allWl
             ? <p className="tk-label wl">{t.wlOnList}{wl ? <> · {t.wlLinePos(String(wl))}</> : ""}</p>
             : <p className="tk-label">{rows.length > 1 ? (rows.length === 2 ? (bikes ? t.bikes2 : t.party2) : (bikes ? t.bikesN : t.partyN)(String(rows.length))) : numLabel}</p>)}
           {/* a number reads left to right in every language: "#7 – #8" is never "#8 – #7" */}
-          <p className={`tk-num ${big}`}>{noNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
-          {allWl && !noNum && <p className="tk-wl-note">{wl ? t.wlPos(String(wl)) : t.wlPosNoNum}</p>}
+          <p className={`tk-num ${big}`}>{hideNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
+          {allWl && !hideNum && <p className="tk-wl-note">{wl ? t.wlPos(String(wl)) : t.wlPosNoNum}</p>}
         </div>
         <div className="tk-right">
           {past ? null : ready
@@ -239,11 +242,11 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             {route.track && <svg className="tk-rt-map" viewBox="0 0 40 158" aria-hidden="true" focusable="false"><path d={JCC_TRACK} /><circle cx="12.9" cy="71.4" r="3.2" /></svg>}
           </div>
         )}
-        <p className="tk-riders-h">{bikes ? t.riders : t.participants} · {noNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
+        <p className="tk-riders-h">{bikes ? t.riders : t.participants} · {hideNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
         {rows.map((r) => (
           <div key={r.id} className="tk-rider">
             <div className="tk-rider-top">
-              {!noNum && (r.status === "waitlist"
+              {!hideNum && (r.status === "waitlist"
                 ? <span className="tk-w"><span className="dot" aria-hidden="true" />{r.waitlistNum ? t.wlRowPos(String(r.waitlistNum)) : t.waitlist}</span>
                 : r.queueNum != null && <span className="tk-q" dir="ltr">#{r.queueNum}</span>)}
               <span className="tk-name">{r.name}</span>

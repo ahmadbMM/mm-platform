@@ -284,6 +284,15 @@ export function bookingRef(r: Pick<TicketRow, "id" | "queueNum">, s: TicketSessi
   return ["MMC", r.queueNum != null ? String(r.queueNum) : "", ref].filter(Boolean).join("-");
 }
 
+/** The Saturday Social Ride's booking number (the owner, 2026-10-25; the booking app's _satNumOk): once
+ *  staff publish the list, riders on it (approved, not waitlisted, not a partner's place) see the number
+ *  staff see at the desk. Before Publish, to anyone not on the list, and on every other ride staff
+ *  approve, it stays hidden. The code keeps carrying the ref alone (bookingRef). */
+export function satNumOk(rows: TicketRow[], s: TicketSession | undefined): boolean {
+  return !!s && s.kind === "saturday" && s.approval && s.published && rows.length > 0
+    && rows.every((r) => r.approval === "approved" && !r.partner && r.status !== "waitlist");
+}
+
 /** A ride staff approve hands out no code until the rider is through: the list published, every
  *  rider on it approved. Every other ride's code is its ticket from the moment it is booked, and so
  *  is a partner's place (Defe, 2026-10-17): confirmed when booked, before the list is out. */
