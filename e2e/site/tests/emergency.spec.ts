@@ -161,3 +161,49 @@ test("the learn form will not make the account without an emergency contact, and
   // saved: step 2 does not ask again
   await expect(card.locator("[data-em='1-name']")).toHaveCount(0);
 });
+
+// The account step every account form shares (the owner, 2026-10-25): a signed-in account is not asked again what it
+// holds, unless staff flagged it; what is left out is named, with Show them; a flagged contact is asked again, and
+// the sign-up says it was saved (customer_learn_apply clears the flag).
+test("signed in on the learn form: the account's answers are not asked again unless staff flagged them", async ({ page }) => {
+  const calls: { fn: string; body: Record<string, unknown> }[] = [];
+  await blockOutside(page);
+  await page.route("**/api/account/emergency", (r) => json(r, { signedIn: false }));
+  await page.route("**/api/account", (r) => (r.request().method() === "POST" ? json(r, { ok: true, id: "c-karim", token: "tok-in", name: "Karim Mansour", email: "karim.mansour@gmail.com" }) : r.continue()));
+  await page.route(/supabase\.co\/rest\/v1\/rpc\//, (r) => {
+    const fn = r.request().url().split("/rpc/")[1].split("?")[0];
+    calls.push({ fn, body: JSON.parse(r.request().postData() || "{}") });
+    const a: Record<string, unknown> = {
+      customer_community_me: { name: "Karim Mansour", email: "karim.mansour@gmail.com", phone: "+966552468013", gender: "male", height: 178,
+        birth_date: "1994-03-12", nationality: "Egypt", instagram: "karim.rides", linkedin: null, profession: "Architect", workplace: "Saudi Aramco",
+        heard_from: "friend", whatsapp_same: true, flags: ["instagram", "emergency"] },
+      customer_consents: { privacy_version: "2026-10-23", ride_news: false },
+      customer_emergency: [{ emergency_name: "Layla Mansour", emergency_phone: "+966551234567", emergency_relation: "spouse", emergency2_name: null, emergency2_phone: null, emergency2_relation: null }],
+      customer_set_emergency: true,
+      customer_learn_apply: { ok: true },
+    };
+    return fn in a ? json(r, a[fn]) : json(r, { code: "PGRST202", message: "Could not find the function" }, 404);
+  });
+  await page.route(/supabase\.co(?!\/rest\/v1\/rpc\/)/, (r) => r.abort());
+  await page.goto("/experiences/learn");
+  const card = page.locator(".ln-card").first();
+  test.skip(!(await card.getByRole("radio", { name: "Yes, I have an account" }).count()), "sign-ups are switched off on this database");
+  await card.getByRole("radio", { name: "Yes, I have an account" }).click();
+  await card.getByLabel("Email or mobile number").fill("0552468013");
+  await card.getByLabel("Password", { exact: true }).fill("Ride2Work");
+  await card.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(card.locator(".ln-skip")).toBeVisible();
+  await expect(card.locator(".ln-skip")).toContainText("Already on your account, so we do not ask again:");
+  await expect(card.locator(".ln-skip")).toContainText("Nationality");
+  await expect(card.getByLabel("Profession")).toHaveCount(0);
+  await expect(card.getByLabel("Nationality")).toHaveCount(0);
+  // flagged: asked again, with the account's answer in the box, and the contact too
+  await expect(card.getByLabel("Instagram")).toHaveValue("karim.rides");
+  await expect(card.locator(".ln-flag")).toHaveText("Our team asked you to check this.");
+  await expect(card.locator("[data-em='1-name']")).toBeVisible();
+  // LinkedIn is not on the account: asked
+  await expect(card.getByLabel("LinkedIn")).toBeVisible();
+  await card.locator(".ln-skip button").click();
+  await expect(card.getByLabel("Profession")).toHaveValue("Architect");
+  await expect(card.locator(".ln-skip")).toHaveCount(0);
+});

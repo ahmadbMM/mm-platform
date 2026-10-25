@@ -22,6 +22,25 @@ Two steps (the owner, 2026-09-30: the applicant makes their account first):
    over without an emergency contact (`customer_emergency`) gives it here, saved before the application
    goes; a database without those functions asks nothing, one that answers three columns offers no second.
 
+**Kept on this device** (the owner, 2026-10-25: "save progress"): what the applicant typed or picked is kept in
+localStorage `mm-community-draft` for three days (`MMAccount.draft`, forms/shared/account.js): never a password, a
+session or a tick of the notice. Opening the page again puts the account step's answers back and returns to that step;
+an account made here (or a signed-in one) signs in again, its email filled in, and finds its membership answers there.
+Sending, being a member already, or **Start over** removes it.
+
+**Where the application is** (the owner, 2026-10-25: "track your application"): the thank-you card links to
+`/community/registration?track=<token>` (`community_applications.track_token`, `community_track`, migration
+20261025210000 in the rentals repo), which shows the application instead of the form: received, the changes staff
+asked for with a button to make them (the booking site's `?appfix=` page), the changes sent, and the decision (with our
+team / approved / invited to a ride, its day and time / not approved this time). The link is kept on the device
+(`mm-community-track`), so the first question names an application sent before, and a signed-in account with one
+waiting gets its link too (`customer_community_me` gives `track`).
+
+**The sign-in, the hand-over and which questions are asked** are the account step every account form shares:
+forms/shared/account.js (see its README). A temporary password goes to the booking site first (`customer_pwd_state`),
+in the booking site's own words (synced: authIdentifier, errEmailOrPhone, errPasswordRequired, errInvalidCredentials,
+errLoginLocked, errLoginPhoneCc).
+
 **First question** (the owner, 2026-10-25): "Do you already have a Micromobility account?". No goes on to step 1.
 Yes signs in right here (email or mobile and password, `customer_login`; a Saudi 05X number is sent as +9665X), or on the
 booking site for a forgotten password or a Google/Apple account. A signed-in account is asked on step 2 only what it does

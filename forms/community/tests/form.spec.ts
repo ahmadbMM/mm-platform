@@ -186,7 +186,7 @@ test('first question: No makes an account; Yes signs in and asks only what is mi
   await expect(page.locator('#next')).toBeHidden();
   await page.click('#haves .tile[data-v="yes"]');
   await page.click('#login');
-  await expect(page.locator('#f-lid .err')).toHaveText('Enter your email or mobile number');
+  await expect(page.locator('#f-lid .err')).toHaveText('Enter an email or a phone number.'); // the booking site's own words
   await page.fill('#lid', '0552468013');
   await page.fill('#lpw', 'Secret123');
   await page.click('#login');
@@ -225,7 +225,7 @@ test('first question: a wrong password is said on the box; Show them brings the 
   await page.fill('#lid', 'karim.mansour@gmail.com');
   await page.fill('#lpw', 'wrong');
   await page.click('#login');
-  await expect(page.locator('#f-lpw .err')).toHaveText('The email, mobile number or password is not right.');
+  await expect(page.locator('#f-lpw .err')).toHaveText('Those sign-in details aren’t right. Try again.');
   ok = true;
   await page.fill('#lpw', 'Secret123');
   await page.press('#lpw', 'Enter');
@@ -734,7 +734,9 @@ test('a second emergency contact is optional, needs all three boxes, and not the
   expect(of('customer_set_emergency2')).toHaveLength(0);
   expect(errs).toEqual([]);
 
+  // a second visitor on a device of their own: the first one's answers kept on this one (mm-community-draft) are not theirs
   const p2 = await page.context().newPage();
+  await p2.addInitScript(() => { try { localStorage.removeItem('mm-community-draft'); } catch (e) { /* none */ } });
   const b = await open(p2);
   await p2.click('#em2-add');
   await emContact(p2, 'em2', { name: 'Omar Mansour', phone: '055 123 4567', rel: 'sibling' });
@@ -905,4 +907,158 @@ test('Tab stays inside the open Privacy Notice', async ({ page }) => {
   expect(await page.evaluate(() => !!document.activeElement && !!document.activeElement.closest('#pv .pv-box'))).toBe(true);
   for (let i = 0; i < 6; i++) await page.keyboard.press('Tab');
   expect(await page.evaluate(() => !!document.activeElement && !!document.activeElement.closest('#pv .pv-box'))).toBe(true);
+});
+
+// One sign-in for every account form (forms/shared/account.js, the owner, 2026-10-25): a temporary password is
+// changed on the booking site first, and a number typed without its code that is not a Saudi mobile says so.
+test('the shared sign-in: a temporary password goes to the booking site first; a foreign number without its code is said', async ({ page }) => {
+  let temp = true;
+  const { of } = await open(page, '?lang=en', {
+    customer_login: (b) => json(String(b.p_identifier).startsWith('+966') && String(b.p_identifier).length > 13 ? [] : [{ id: 'c-karim', name: 'Karim Mansour', session_token: 'tok-in' }]),
+    customer_pwd_state: () => json(temp),
+  }, null, true);
+  await page.click('#haves .tile[data-v="yes"]');
+  await expect(page.locator('#f-lid label')).toHaveText('Email or phone');
+  await page.fill('#lid', 'Karim.Mansour@Gmail.com');
+  await page.click('#login');
+  await expect(page.locator('#f-lpw .err')).toHaveText('Enter your password.');
+  await page.fill('#lpw', 'Temp12345');
+  await page.click('#login');
+  await expect(page.locator('#si-temp')).toBeVisible();
+  await expect(page.locator('#si-temp-a')).toHaveAttribute('href', 'https://micromobilityrentals.pages.dev/?handoff=community&lang=en');
+  await expect(step(page, 2)).toBeHidden();
+  expect(of('customer_login')[0]).toEqual({ p_identifier: 'karim.mansour@gmail.com', p_pwd: 'Temp12345' });
+  expect(of('customer_pwd_state')).toEqual([{ p_id: 'c-karim', p_token: 'tok-in' }]);
+  // a number from abroad typed without its code: not found as a Saudi number, and the message says so
+  await page.fill('#lid', '1001234567');
+  await page.fill('#lpw', 'Secret123');
+  await page.click('#login');
+  await expect(page.locator('#f-lpw .err')).toContainText('No account has that number as a Saudi number');
+  // a password of their own: in
+  temp = false;
+  await page.fill('#lid', '0552468013');
+  await page.click('#login');
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#si-temp')).toBeHidden();
+});
+
+// What was typed stays on this device for three days (the owner, 2026-10-25): a reload puts it back, an account made
+// here signs in again and finds its membership answers, Start over and sending take it away.
+test('answers kept on this device: a reload puts them back, an account made here signs in again to finish, Start over clears them', async ({ page }) => {
+  await open(page, '?lang=en');
+  await page.fill('#first', 'karim');
+  await page.fill('#last', 'mansour');
+  await page.click('#genders .tile[data-v="male"]');
+  await page.fill('#email', 'Karim.Mansour@gmail.com');
+  await page.fill('#pwd', 'Secret123');
+  await page.waitForTimeout(500);
+  const kept = await page.evaluate(() => JSON.parse(localStorage.getItem('mm-community-draft') || 'null'));
+  expect(kept.data.v.first).toBe('karim');
+  expect(kept.data.v).not.toHaveProperty('pwd'); // never a password
+  await page.reload();
+  await expect(step(page, 1)).toBeVisible();
+  await expect(page.locator('#draft-note')).toBeVisible();
+  await expect(page.locator('#first')).toHaveValue('karim');
+  await expect(page.locator('#genders .tile[data-v="male"]')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#pwd')).toHaveValue('');
+  await page.click('#draft-clear');
+  await expect(step(page, 0)).toBeVisible();
+  await expect(page.locator('#first')).toHaveValue('');
+  expect(await page.evaluate(() => localStorage.getItem('mm-community-draft'))).toBeNull();
+});
+
+test('an account made here, the tab closed on the membership step: signing in again brings the answers back', async ({ page }) => {
+  const { of } = await open(page, '?lang=en', {
+    customer_login: () => json([{ id: 'c-new', name: 'Karim Mansour', session_token: 'tok-again' }]),
+    customer_pwd_state: () => json(false),
+    customer_community_me: () => json({ ...ME, flags: [] }),
+  });
+  await accountStep(page);
+  await expect(step(page, 2)).toBeVisible();
+  await page.selectOption('#nat', 'Egypt');
+  await page.fill('#prof', 'Architect');
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  await page.reload();
+  await expect(step(page, 0)).toBeVisible();
+  await expect(page.locator('#login-box')).toBeVisible();
+  await expect(page.locator('#draft-made')).toBeVisible();
+  await expect(page.locator('#lid')).toHaveValue('karim.mansour@gmail.com');
+  await page.fill('#lpw', 'Secret123');
+  await page.click('#login');
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#nat')).toHaveValue('Egypt');
+  await expect(page.locator('#prof')).toHaveValue('Architect');
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('mm-community-draft'))).toBeNull(); // sent: gone
+  expect(of('customer_signup')).toHaveLength(1); // the account made once, never twice
+});
+
+// Where an application is (the owner, 2026-10-25): the thank-you card's link, community_track, the steps.
+const TRACK = 'cd'.repeat(24);
+test('the thank-you card links to the status page, which says where the application is and what was asked', async ({ page }) => {
+  const { of } = await open(page, '?lang=en', {
+    customer_community_apply: () => json({ ok: true, updated: false, track: TRACK }),
+  });
+  await accountStep(page);
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  await expect(page.locator('#track-link')).toHaveAttribute('href', new RegExp(`/community/registration\\?track=${TRACK}&lang=en$`));
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('mm-community-track') || '{}').t)).toBe(TRACK);
+  expect(of('customer_community_apply')).toHaveLength(1);
+
+  // the status page: changes asked, with the link to make them
+  const t2 = await page.context().newPage();
+  const tr = await open(t2, `?track=${TRACK}&lang=en`, {
+    community_track: () => json({ ok: true, first: 'Karim', lang: 'en', status: 'pending', sent_at: '2026-10-20T08:00:00Z', updated_at: null, decided_at: null,
+      fix: { asked_at: '2026-10-21T08:00:00Z', fields: ['instagram', 'workplace'], note: 'Your handle has a typo', token: 'ef'.repeat(18) }, fix_done_at: null, ride: null }),
+  }, null, true);
+  await expect(t2.locator('#track')).toBeVisible();
+  await expect(t2.locator('#form')).toBeHidden();
+  await expect(t2.locator('#track-title')).toHaveText('Karim, your application');
+  await expect(t2.locator('#track-sent')).toContainText('Sent on');
+  await expect(t2.locator('.tk-step b')).toHaveText(['Received', 'Changes asked', 'With our team']);
+  await expect(t2.locator('.tk-now')).toContainText('Instagram, Company');
+  await expect(t2.locator('.tk-note')).toHaveText('Your handle has a typo');
+  await expect(t2.locator('#track-acts a')).toHaveAttribute('href', `https://micromobilityrentals.pages.dev/?appfix=${'ef'.repeat(18)}&lang=en`);
+  expect(tr.of('community_track')).toEqual([{ p_token: TRACK }]);
+  expect(tr.errs).toEqual([]);
+});
+
+test('the status page: invited to a ride, not approved, a link that leads nowhere, and Arabic', async ({ page }) => {
+  let answer: unknown = { ok: true, first: 'Karim', lang: 'en', status: 'invited', sent_at: '2026-10-20T08:00:00Z', updated_at: '2026-10-22T08:00:00Z', decided_at: '2026-10-23T08:00:00Z',
+    fix: null, fix_done_at: '2026-10-22T08:00:00Z', ride: { date: '2026-10-31', day: 'Saturday', title: null, time: '05:45 - 06:15', cancelled: false } };
+  await open(page, `?track=${TRACK}&lang=en`, { community_track: () => json(answer) }, null, true);
+  await expect(page.locator('.tk-step b')).toHaveText(['Received', 'Changes sent', 'Invited to a ride']);
+  await expect(page.locator('.tk-step').last()).toContainText('Saturday, 31 October 2026');
+  await expect(page.locator('.tk-step').last()).toContainText('05:45 - 06:15');
+  await expect(page.locator('.tk-step').last()).toContainText('Your place is in My Bookings on the booking site.');
+  await expect(page.locator('#track-acts a')).toHaveText('Open the booking site');
+  answer = { ok: true, first: 'Karim', lang: 'en', status: 'rejected', sent_at: '2026-10-20T08:00:00Z', updated_at: null, decided_at: '2026-10-23T08:00:00Z', fix: null, fix_done_at: null, ride: null };
+  await page.reload();
+  await expect(page.locator('.tk-end b')).toHaveText('Not approved this time');
+  await expect(page.locator('#track-acts a')).toHaveCount(0);
+  answer = { ok: false, error: 'gone' };
+  await page.reload();
+  await expect(page.locator('#track-err')).toHaveText('We could not find this application. The link may be incomplete.');
+  answer = { ok: true, first: 'كريم', lang: 'ar', status: 'approved', sent_at: '2026-10-20T08:00:00Z', updated_at: null, decided_at: '2026-10-23T08:00:00Z', fix: null, fix_done_at: null, ride: null };
+  await page.goto(`/community/registration?track=${TRACK}&lang=ar`);
+  await expect(page.locator('#track-title')).toHaveText('كريم، هذا طلبك');
+  await expect(page.locator('.tk-done b').last()).toHaveText('تمت الموافقة');
+});
+
+test('a signed-in account with a waiting application is given its status page; this device names one sent before', async ({ page }) => {
+  await open(page, `?code=${CODE}&lang=en`, { customer_community_me: () => json({ ...ME, pending: true, track: TRACK }) });
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#acct-pending-a')).toBeVisible();
+  await expect(page.locator('#acct-pending-a')).toHaveAttribute('href', new RegExp(`\\?track=${TRACK}&lang=en$`));
+  const p2 = await page.context().newPage();
+  await p2.addInitScript((tok) => { try { localStorage.setItem('mm-community-track', JSON.stringify({ t: tok, at: Date.parse('2026-10-20T08:00:00Z') })); } catch (e) { /* none */ } }, TRACK);
+  await open(p2, '?lang=en', {}, null, true);
+  await expect(p2.locator('#track-seen')).toBeVisible();
+  await expect(p2.locator('#track-seen-txt')).toHaveText('You sent an application on 20 October 2026.');
+  await p2.click('#haves .tile[data-v="no"]');
+  await expect(p2.locator('#track-seen')).toBeHidden();
 });

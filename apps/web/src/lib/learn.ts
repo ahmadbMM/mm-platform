@@ -1,4 +1,5 @@
 import { cleanName, nameOk, namePartsOk, normalizePhone } from "./rpc-client";
+import { signinIdent } from "./account-step";
 import { NATIONALITIES } from "@/content/nationalities";
 
 // The Learn to ride sign-up (components/learn/LearnForm.tsx, at /experiences/learn): what the form
@@ -286,8 +287,7 @@ export function accountArgs(a: AccountFields): { error: AccountError } | { args:
 /** What customer_login() takes as the email or mobile typed to sign in: a lower-cased email, or a
  *  mobile as the database stores it (a Saudi one as +9665XXXXXXXX). */
 export function signinIdentifier(raw: string): string {
-  const v = raw.trim();
-  return v.includes("@") ? v.toLowerCase() : normalizePhone(v);
+  return signinIdent(raw); // the rule every account form shares (forms/shared/account.js)
 }
 
 /** Whether a signed-in account still has to confirm the Privacy Notice, as the booking app asks

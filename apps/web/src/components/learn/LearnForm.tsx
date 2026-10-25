@@ -14,6 +14,7 @@ import ChangePassword, { type PwdLook } from "@/components/account/ChangePasswor
 import Turnstile, { TURNSTILE_SITE_KEY } from "@/components/account/Turnstile";
 import EmergencyFields, { type EmLook, type EmProblem } from "@/components/account/EmergencyFields";
 import { EM_EMPTY, emAbsent, emReadBoth, emRefusal, emState, type EmContact, type EmFields } from "@/lib/emergency";
+import { accountPlan } from "@/lib/account-step";
 import LearnClosed from "./LearnClosed";
 import { T } from "./LearnForm.text";
 
@@ -77,7 +78,15 @@ type Stage = "ask" | "signup" | "signin" | "pwd" | "loading" | "lesson";
 type Acct = { id: string; token: string; name: string; email: string; phone: string; made: boolean };
 /** What customer_community_me() answers about the account, for step 2. */
 type Me = { name?: string; email?: string; phone?: string | null; whatsapp_same?: boolean | null; whatsapp?: string | null; gender?: string | null; height?: number | null; birth_date?: string | null; nationality?: string | null;
-  instagram?: string | null; linkedin?: string | null; profession?: string | null; workplace?: string | null; heard_from?: string | null };
+  instagram?: string | null; linkedin?: string | null; profession?: string | null; workplace?: string | null; heard_from?: string | null;
+  flags?: string[] | null };
+// The questions a signed-in account is not asked again when it answers them already, unless staff flagged them
+// (the owner, 2026-10-25: the same rule as the community form, lib/account-step.ts): customer_community_me's names.
+const KNOWN = ["whatsapp", "birth_date", "nationality", "instagram", "linkedin", "profession", "workplace", "heard_from"] as const;
+type Known = (typeof KNOWN)[number];
+// A problem on step 2 that names one of them brings it back into view.
+const KNOWN_OF: Record<string, Known> = { whatsapp: "whatsapp", birth_date: "birth_date", birth_young: "birth_date", nationality: "nationality",
+  instagram: "instagram", linkedin: "linkedin", profession: "profession", workplace: "workplace", heard_from: "heard_from" };
 const EMPTY: LearnerFields = { who: "", name: "", age: "", gender: "", height: "", level: "" };
 const NO_ACCOUNT: AccountFields = { first: "", last: "", gender: "", email: "", phone: "", password: "", password2: "", height: "", privacy: false, news: false };
 // Where the Privacy Notice's name goes in the translated sentence (LearnForm.text.ts, privacy).
@@ -120,9 +129,14 @@ export default function LearnForm(p: LearnFormProps) {
   const [emNeed, setEmNeed] = useState(false);
   const [emTwo, setEmTwo] = useState(true);
   const emBox = useRef<HTMLDivElement>(null);
+  // The contact was saved on step 2 this time: the sign-up says so, and the flag staff put on it goes (customer_learn_apply).
+  const emSaved = useRef(false);
   // Asked on step 2 only when the account has none (older accounts): gender, height, and the
   // Privacy Notice (none on record, or one older than riders must confirm), with its box's tick.
   const [need, setNeed] = useState({ gender: false, height: false, privacy: false });
+  // What step 2 leaves out for a signed-in account (it holds the answer), and what staff flagged on it.
+  const [skip, setSkip] = useState<Known[]>([]);
+  const [flagged, setFlagged] = useState<string[]>([]);
   const [ack, setAck] = useState(false);
   const ackBox = useRef<HTMLInputElement>(null);
   const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], birth: "", gender: "", nationality: "", height: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "", waSame: "", whatsapp: "" });
@@ -181,8 +195,14 @@ export default function LearnForm(p: LearnFormProps) {
     setF((x) => ({ ...x, gender: g, height: h, birth: birth || x.birth, nationality: me?.nationality || x.nationality, instagram: me?.instagram || x.instagram,
       linkedin: me?.linkedin || x.linkedin, profession: me?.profession || x.profession, workplace: me?.workplace || x.workplace, heard: heard || x.heard,
       waSame: waSame || x.waSame, whatsapp: me?.whatsapp || x.whatsapp }));
-    setNeed({ gender: !g, height: !h, privacy: due === true });
-    setEmNeed(em.need);
+    // Signed in (not made here): what the account holds is not asked again, unless staff flagged it.
+    const plan = who.made ? null : accountPlan(me, [...KNOWN]);
+    const fl = me && Array.isArray(me.flags) ? me.flags.map(String) : [];
+    setSkip(plan ? (plan.skip as Known[]) : []);
+    setFlagged(plan ? plan.flagged : []);
+    setNeed({ gender: !g, height: !h || (!who.made && fl.includes("height")), privacy: due === true });
+    setEmNeed(em.need || (!who.made && fl.includes("emergency")));
+    emSaved.current = false;
     setEmTwo(em.two);
     setAck(false);
     setAcct(who);
@@ -283,6 +303,8 @@ export default function LearnForm(p: LearnFormProps) {
   // A problem as the visitor reads it. The database answers learner_age and learner_name for every
   // kind of learner, and "learners" for the list; the words follow the kind of learner on the card.
   function show(r: LearnProblem | { error: string; index?: number }) {
+    const k = KNOWN_OF[r.error];
+    if (k && skip.includes(k)) setSkip((x) => x.filter((y) => y !== k)); // a saved answer that no longer passes: asked again
     const i = typeof r.index === "number" && Number.isInteger(r.index) && r.index >= 0 && r.index < f.learners.length ? r.index : undefined;
     const who = i === undefined ? "" : f.learners[i].who;
     const e = t.errors;
@@ -408,11 +430,12 @@ export default function LearnForm(p: LearnFormProps) {
           return setErr({ text: saved.text });
         }
         setEmNeed(false);
+        emSaved.current = true;
       }
       // The notice they confirmed goes on the account, as the booking app records it, and with the
       // sign-up, which takes it when the account still has none (customer_learn_apply).
       if (need.privacy) await rpcResult("customer_consents", { p_id: acct.id, p_token: acct.token, p_privacy: p.privacyVersion });
-      const payload = need.privacy ? { ...r.payload, privacy_version: p.privacyVersion } : r.payload;
+      const payload = { ...r.payload, ...(need.privacy ? { privacy_version: p.privacyVersion } : {}), ...(emSaved.current ? { emergency_saved: true } : {}) };
       const res = await rpcResult<{ ok: boolean; error?: string; index?: number }>("customer_learn_apply", { p_id: acct.id, p_token: acct.token, p: payload });
       if (!("data" in res) || !res.data) return setErr({ text: t.errors.generic });
       if (res.data.ok) return setDone(true);
@@ -447,6 +470,10 @@ export default function LearnForm(p: LearnFormProps) {
     );
   }
 
+  // A question staff flagged on the account: said under it (the account's answer is in the box, to be checked).
+  const flagNote = (k: string) => flagged.includes(k) && <small className="ln-hint ln-flag">{t.flagged}</small>;
+  const knownLabel = (k: Known) => ({ whatsapp: t.waLabel, birth_date: t.birth, nationality: t.nationality, instagram: t.instagram, linkedin: t.linkedin,
+    profession: t.profession, workplace: t.workplace, heard_from: t.heard })[k];
   const radio = (on: boolean, pick: () => void, label: string, cls: string, disabled = false) => (
     <button key={label} type="button" role="radio" aria-checked={on} className={cls} onClick={pick} disabled={disabled}>{label}</button>
   );
@@ -650,23 +677,28 @@ export default function LearnForm(p: LearnFormProps) {
       <div className="ln-details">
         <span className="ln-label ln-label-h">{t.details}</span>
         {anyChild && <p className="ln-hint">{t.parentHint}</p>}
+        {/* A signed-in account is not asked again what it holds (the owner, 2026-10-25): named here, a tap away. */}
+        {skip.length > 0 && (
+          <p className="ln-hint ln-skip">{t.skipped(skip.map(knownLabel).join(", "))} <button type="button" className="ln-link" onClick={() => setSkip([])}>{t.showThem}</button></p>
+        )}
         {/* WhatsApp (the owner, 2026-10-07): Yes - the mobile - or No and the number, typed as the mobile is. */}
-        {mobile && (
+        {!skip.includes("whatsapp") && mobile && (
           <>
             <span className="ln-label" id={`${id}wa`}>{t.waAsk(`\u2066${mobile}\u2069`)}</span>
+            {flagNote("whatsapp")}
             <div className="ln-pills" role="radiogroup" aria-labelledby={`${id}wa`}>
               {(["yes", "no"] as const).map((v) => radio(f.waSame === v, () => setContact("waSame", v), v === "yes" ? t.waYes : t.waNo, "ln-pill"))}
             </div>
           </>
         )}
-        {(f.waSame === "no" || !mobile) && (
+        {!skip.includes("whatsapp") && (f.waSame === "no" || !mobile) && (
           <label className="ln-field">
             <span>{t.waLabel}</span>
             <input className="ln-input" value={f.whatsapp} onChange={(e) => { setF((x) => ({ ...x, waSame: "no", whatsapp: e.target.value })); setErr(null); }}
               inputMode="tel" autoComplete="off" dir="ltr" maxLength={20} placeholder="05XXXXXXXX" />
           </label>
         )}
-        <div className="ln-field">
+        {!skip.includes("birth_date") && <div className="ln-field">
           <span className="ln-label" id={`${id}b`}>{t.birth}</span>
           <div className="ln-dob" role="group" aria-labelledby={`${id}b`}>
             <select className={`ln-input ln-select${bd.d ? "" : " ln-ph"}`} aria-label={t.day} value={bd.d} onChange={(e) => setBirth("d", e.target.value)}>
@@ -682,7 +714,8 @@ export default function LearnForm(p: LearnFormProps) {
               {Array.from({ length: AGE[1] + 1 }, (_, k) => <option key={k} value={String(thisYear - k)}>{thisYear - k}</option>)}
             </select>
           </div>
-        </div>
+          {flagNote("birth_date")}
+        </div>}
         {need.gender && (
           <>
             <span className="ln-label" id={`${id}g`}>{t.gender}</span>
@@ -691,13 +724,14 @@ export default function LearnForm(p: LearnFormProps) {
             </div>
           </>
         )}
-        <label className="ln-field">
+        {!skip.includes("nationality") && <label className="ln-field">
           <span>{t.nationality}</span>
           <select className={`ln-input ln-select${f.nationality ? "" : " ln-ph"}`} value={f.nationality} onChange={(e) => setContact("nationality", e.target.value)}>
             <option value="">{t.natPick}</option>
             {names?.nats.map((o, i) => <option key={`${i}-${o.value}`} value={o.value}>{o.label}</option>)}
           </select>
-        </label>
+          {flagNote("nationality")}
+        </label>}
         {need.height && (
           <label className="ln-field">
             <span>{t.height}</span>
@@ -705,32 +739,36 @@ export default function LearnForm(p: LearnFormProps) {
             {rowAt < 0 && <small className="ln-hint">{t.heightHint}</small>}
           </label>
         )}
-        <label className="ln-field">
+        {!skip.includes("instagram") && <label className="ln-field">
           <span>{t.instagram}</span>
           <input className="ln-input" value={f.instagram} onChange={(e) => setContact("instagram", e.target.value)} autoComplete="off" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={120} placeholder="@username" />
           <small className="ln-hint">{t.instagramHint}</small>
-        </label>
-        <label className="ln-field">
+          {flagNote("instagram")}
+        </label>}
+        {!skip.includes("linkedin") && <label className="ln-field">
           <span>{t.linkedin}</span>
           <input className="ln-input" value={f.linkedin} onChange={(e) => setContact("linkedin", e.target.value)} autoComplete="off" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={200} placeholder="linkedin.com/in/your-name" />
           <small className="ln-hint">{t.linkedinHint}</small>
-        </label>
-        <label className="ln-field">
+          {flagNote("linkedin")}
+        </label>}
+        {!skip.includes("profession") && <label className="ln-field">
           <span>{t.profession}</span>
           <input className="ln-input" value={f.profession} onChange={(e) => setContact("profession", e.target.value)} autoComplete="organization-title" maxLength={80} placeholder={t.professionPh} />
-        </label>
-        <label className="ln-field">
+          {flagNote("profession")}
+        </label>}
+        {!skip.includes("workplace") && <label className="ln-field">
           <span>{t.workplace}</span>
           <input className="ln-input" value={f.workplace} onChange={(e) => setContact("workplace", e.target.value)} autoComplete="organization" maxLength={120} />
           <small className="ln-hint">{t.workplaceHint}</small>
-        </label>
-        <label className="ln-field">
+          {flagNote("workplace")}
+        </label>}
+        {!skip.includes("heard_from") && <label className="ln-field">
           <span>{t.heard}</span>
           <select className={`ln-input ln-select${f.heard ? "" : " ln-ph"}`} value={f.heard} onChange={(e) => setContact("heard", e.target.value as Heard | "")}>
             <option value="">{t.heardPick}</option>
             {HEARD.map((h) => <option key={h} value={h}>{t.heardOpts[h]}</option>)}
           </select>
-        </label>
+        </label>}
         <label className="ln-field">
           <span>{t.notes}</span>
           <textarea className="ln-input" value={f.notes} onChange={(e) => setContact("notes", e.target.value)} rows={3} maxLength={600} />

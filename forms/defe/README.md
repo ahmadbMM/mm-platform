@@ -16,7 +16,8 @@ light and dark as the device is set.
    asks it (name, gender, email, mobile, password twice, height, the emergency contact with an
    optional second, the Privacy Notice, ride news): `customer_exists` (email, then mobile),
    `customer_signup`, `customer_consents`, `customer_set_emergency` (and `..._emergency2`). *Sign in*
-   is `customer_login` (an email in lower case, a number in E.164, +966 when typed without a code),
+   is the sign-in every account form shares (forms/shared/account.js, inlined by the build): `customer_login`
+   (an email in lower case, a number in E.164, +966 when typed without a code),
    then `customer_pwd_state` (a temporary password is changed on the booking site first). Google,
    Apple and a forgotten password go through the booking app (`?handoff=defe&lang=`), which sends the
    rider back to `/defe?code=<one-time code>` (`customer_handoff_redeem`; the code leaves the address

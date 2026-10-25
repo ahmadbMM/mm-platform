@@ -175,3 +175,8 @@ html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13
 .ln-em-add { margin: 0 0 6px; }
 .ln-em-add span { font-size: inherit; line-height: inherit; }
 .ln-em [aria-invalid="true"] { border-color: #b3261e; }
+/* A signed-in account's answers already on file (2026-10-25): named in one line, with Show them; a question staff
+   flagged says so under it. */
+.ln-skip { font-size: 13px; }
+.ln-link { padding: 0; border: 0; background: none; color: #077a4b; font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ln-flag { color: #8a5c14; font-weight: 700; margin-top: 4px; }
