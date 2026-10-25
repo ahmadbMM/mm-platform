@@ -1062,3 +1062,12 @@ test('a signed-in account with a waiting application is given its status page; t
   await p2.click('#haves .tile[data-v="no"]');
   await expect(p2.locator('#track-seen')).toBeHidden();
 });
+
+test('a refused Send application says why under the button, naming the questions', async ({ page }) => {
+  await open(page);
+  await accountStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#why')).toBeVisible();
+  await expect(page.locator('#why')).toContainText('Please check:');
+  await expect(page.locator('#why')).toContainText('Nationality');
+});

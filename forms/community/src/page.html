@@ -467,6 +467,10 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 .track-acts { width: 100%; display: flex; flex-direction: column; gap: 10px; }
 .track-acts:empty { display: none; }
 
+/* why a refused press did nothing, under the button */
+.why { margin: 12px 0 0; text-align: center; }
+.why:not([hidden]) { display: block; }
+
 </style>
 </head>
 <body>
@@ -740,6 +744,8 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
           <span class="submit-busy" data-t="Sending...">Sending...</span>
         </button>
       </div>
+      <!-- why the button did nothing, beside it: the field's own message may be far up the page -->
+      <p id="why" class="err why" role="alert" hidden></p>
     </form>
 
     <!-- A member already: nothing to apply for. -->
@@ -810,6 +816,7 @@ var FORM_T = {
   "Forgot your password, or signed up with Google or Apple? Sign in on the booking site": "نسيت كلمة المرور، أو سجّلت عبر Google أو Apple؟ سجّل الدخول من موقع الحجز",
   "Show them": "اعرضها",
   "Our team asked you to check this.": "طلب منك فريقنا مراجعة هذا.",
+  "Please check: {list}": "يرجى مراجعة: {list}",
   "Already on your account, so we do not ask again: {list}.": "موجودة في حسابك، فلن نسألك عنها مجددًا: {list}.",
   "(optional)": "(اختياري)",
   "Community": "المجتمع",
@@ -949,6 +956,7 @@ var FORM_T = {
   "Forgot your password, or signed up with Google or Apple? Sign in on the booking site": "Mot de passe oublié, ou inscrit avec Google ou Apple ? Connectez-vous sur le site de réservation",
   "Show them": "Les afficher",
   "Our team asked you to check this.": "Notre équipe vous demande de vérifier ceci.",
+  "Please check: {list}": "Veuillez vérifier : {list}",
   "Already on your account, so we do not ask again: {list}.": "Déjà sur votre compte, nous ne le redemandons pas : {list}.",
   "(optional)": "(facultatif)",
   "Community": "Communauté",
@@ -1088,6 +1096,7 @@ var FORM_T = {
   "Forgot your password, or signed up with Google or Apple? Sign in on the booking site": "¿Olvidaste tu contraseña o te registraste con Google o Apple? Inicia sesión en el sitio de reservas",
   "Show them": "Mostrarlos",
   "Our team asked you to check this.": "Nuestro equipo te pidió revisar esto.",
+  "Please check: {list}": "Revisa: {list}",
   "Already on your account, so we do not ask again: {list}.": "Ya está en tu cuenta, así que no lo volvemos a preguntar: {list}.",
   "(optional)": "(opcional)",
   "Community": "Comunidad",
@@ -1227,6 +1236,7 @@ var FORM_T = {
   "Forgot your password, or signed up with Google or Apple? Sign in on the booking site": "Esqueceu a senha ou se cadastrou com Google ou Apple? Entre no site de reservas",
   "Show them": "Mostrar",
   "Our team asked you to check this.": "Nossa equipe pediu que você confira isto.",
+  "Please check: {list}": "Verifique: {list}",
   "Already on your account, so we do not ask again: {list}.": "Já está na sua conta, então não perguntamos de novo: {list}.",
   "(optional)": "(opcional)",
   "Community": "Comunidade",
@@ -1366,6 +1376,7 @@ var FORM_T = {
   "Forgot your password, or signed up with Google or Apple? Sign in on the booking site": "پاس ورڈ بھول گئے، یا Google یا Apple سے سائن اپ کیا تھا؟ بکنگ سائٹ پر سائن ان کریں",
   "Show them": "دکھائیں",
   "Our team asked you to check this.": "ہماری ٹیم نے آپ سے یہ چیک کرنے کو کہا ہے۔",
+  "Please check: {list}": "براہ کرم چیک کریں: {list}",
   "Already on your account, so we do not ask again: {list}.": "پہلے سے آپ کے اکاؤنٹ میں ہے، اس لیے دوبارہ نہیں پوچھتے: {list}۔",
   "(optional)": "(اختیاری)",
   "Community": "کمیونٹی",
@@ -1505,6 +1516,7 @@ var FORM_T = {
   "Forgot your password, or signed up with Google or Apple? Sign in on the booking site": "पासवर्ड भूल गए, या Google या Apple से साइन अप किया था? बुकिंग साइट पर साइन इन करें",
   "Show them": "उन्हें दिखाएँ",
   "Our team asked you to check this.": "हमारी टीम ने आपसे इसे जाँचने को कहा है।",
+  "Please check: {list}": "कृपया जाँचें: {list}",
   "Already on your account, so we do not ask again: {list}.": "पहले से आपके खाते में है, इसलिए दोबारा नहीं पूछते: {list}।",
   "(optional)": "(वैकल्पिक)",
   "Community": "समुदाय",
@@ -1644,6 +1656,7 @@ var FORM_T = {
   "Forgot your password, or signed up with Google or Apple? Sign in on the booking site": "Nakalimutan ang password, o nag-sign up gamit ang Google o Apple? Mag-sign in sa booking site",
   "Show them": "Ipakita",
   "Our team asked you to check this.": "Hiniling ng aming team na suriin mo ito.",
+  "Please check: {list}": "Pakisuri: {list}",
   "Already on your account, so we do not ask again: {list}.": "Nasa account mo na, kaya hindi na namin itatanong ulit: {list}.",
   "(optional)": "(opsyonal)",
   "Community": "Komunidad",
@@ -1783,6 +1796,7 @@ var FORM_T = {
   "Forgot your password, or signed up with Google or Apple? Sign in on the booking site": "पासवर्ड बिर्सनुभयो, वा Google वा Apple बाट साइन अप गर्नुभएको थियो? बुकिङ साइटमा साइन इन गर्नुहोस्",
   "Show them": "देखाउनुहोस्",
   "Our team asked you to check this.": "हाम्रो टिमले तपाईंलाई यो जाँच्न भनेको छ।",
+  "Please check: {list}": "कृपया जाँच गर्नुहोस्: {list}",
   "Already on your account, so we do not ask again: {list}.": "पहिल्यै तपाईंको खातामा छ, त्यसैले फेरि सोध्दैनौं: {list}।",
   "(optional)": "(वैकल्पिक)",
   "Community": "समुदाय",
@@ -1922,6 +1936,7 @@ var FORM_T = {
   "Forgot your password, or signed up with Google or Apple? Sign in on the booking site": "পাসওয়ার্ড ভুলে গেছেন, বা Google বা Apple দিয়ে সাইন আপ করেছিলেন? বুকিং সাইটে সাইন ইন করুন",
   "Show them": "দেখান",
   "Our team asked you to check this.": "আমাদের দল আপনাকে এটি যাচাই করতে বলেছে।",
+  "Please check: {list}": "অনুগ্রহ করে দেখুন: {list}",
   "Already on your account, so we do not ask again: {list}.": "আগেই আপনার অ্যাকাউন্টে আছে, তাই আবার জিজ্ঞেস করছি না: {list}।",
   "(optional)": "(ঐচ্ছিক)",
   "Community": "কমিউনিটি",
@@ -2918,10 +2933,21 @@ var MMAccount = (function () {
     sk.forEach(function (id) { (msgs[id] = msgs[id] || {}).warn = { k: r.soft[id][0], a: r.soft[id][1] }; });
     hk.concat(sk).forEach(function (id) { var el = document.getElementById(id); if (el && el.hasAttribute("data-skipped")) { el.hidden = false; el.removeAttribute("data-skipped"); } });
     STEP_FIELDS[n].forEach(paintField);
-    if (hk.length) { focusField(hk[0]); return false; }
+    if (hk.length) { whyPaint(hk, false); focusField(hk[0]); return false; }
     var sig = JSON.stringify(r.soft);
-    if (sk.length && acked[n] !== sig) { acked[n] = sig; focusField(sk[0]); return false; }
+    if (sk.length && acked[n] !== sig) { acked[n] = sig; whyPaint(sk, true); focusField(sk[0]); return false; }
+    whyPaint([]);
     return true;
+  }
+  // A press the checks refused says so under the button too, naming the questions (2026-10-25: riders on
+  // iPhones pressed Send application and saw nothing happen, the refused question being far up the page).
+  function whyPaint(ids, soft) {
+    var w = $("#why"), names = [];
+    ids.forEach(function (id) { var l = fieldLabel(id); if (l && names.indexOf(l) < 0) names.push(l); });
+    w.hidden = !ids.length;
+    w.textContent = !ids.length ? "" : soft ? tr("If it is right, press the button again.") + (names.length ? " " + tr("Please check: {list}", { list: names.join(", ") }) : "")
+      : names.length ? tr("Please check: {list}", { list: names.join(", ") }) : "";
+    if (!w.textContent) w.hidden = true;
   }
   function focusField(id) {
     var f = document.getElementById(id); if (!f) return;

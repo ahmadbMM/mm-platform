@@ -443,3 +443,7 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 .tk-wait { display: flex; align-items: center; gap: 10px; color: var(--muted); }
 .track-acts { width: 100%; display: flex; flex-direction: column; gap: 10px; }
 .track-acts:empty { display: none; }
+
+/* why a refused press did nothing, under the button */
+.why { margin: 12px 0 0; text-align: center; }
+.why:not([hidden]) { display: block; }
