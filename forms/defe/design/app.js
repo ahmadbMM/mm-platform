@@ -813,52 +813,38 @@
     else showBanner(NET);
   }
 
-  // Sign in as the booking site does: an email in lower case, a number in E.164 (+966 when it has no code).
-  function loginIdent(raw) {
-    var v = String(raw || "").replace(/[​-‏‪-‮⁦-⁩﻿ ]/g, "").trim();
-    var low = v.toLowerCase();
-    return low.indexOf("@") >= 0 ? low : (toE164("966", v) || low);
-  }
+  // Sign in as the booking site does (the sign-in every account form shares, forms/shared/account.js): an email in
+  // lower case, a number in E.164 (+966 when it has no code); a temporary password is changed on the booking site first.
+  function loginIdent(raw) { return MMAccount.ident(raw); }
   $("#p-signin").addEventListener("submit", async function (e) {
     e.preventDefault(); hideBanner(); if (busy || !passStep("signin")) return;
     $("#si-temp").hidden = true;
-    var raw = $("#ident").value, ident = loginIdent(raw);
     setLoading("#signin", true);
     try {
-      var r = await rpc("customer_login", { p_identifier: ident, p_pwd: $("#spwd").value });
-      if (r.error) {
-        var m = errText(r.error);
-        if (/LOCKED/.test(m)) setErr("f-spwd", "errLoginLocked", null, true);
-        else if (/RATE_LIMITED/.test(m)) showBanner(SITE_TOO_MANY);
-        else if (r.error.message === "network" || /^HTTP 5|PGRST/.test(r.error.message || "")) showBanner(NET);
-        else setErr("f-spwd", "errInvalidCredentials", null, true);
+      var r = await MMAccount.signIn(rpc, $("#ident").value, $("#spwd").value);
+      if (r.row) {
+        acct = { id: r.row.id, token: r.row.session_token, name: r.row.name || "", email: r.row.email || "", phone: r.row.phone || "", made: false };
+        $("#spwd").value = "";
+        await enterDetails();
         return;
       }
-      var row = Array.isArray(r.data) ? r.data[0] : null;
-      if (!row || !row.id || !row.session_token) {
-        var ccHint = ident.indexOf("@") < 0 && !/^\s*(\+|00)/.test(raw) && !/^\+9665\d{8}$/.test(ident);
-        setErr("f-spwd", ccHint ? "errLoginPhoneCc" : "errInvalidCredentials", null, true); return;
-      }
-      // A temporary password is changed on the booking site first (customer_pwd_state).
-      var ps = await rpc("customer_pwd_state", { p_id: row.id, p_token: row.session_token });
-      if (ps.data === true) { $("#si-temp").hidden = false; $("#si-temp").scrollIntoView({ block: "center" }); return; }
-      acct = { id: row.id, token: row.session_token, name: row.name || "", email: row.email || "", phone: row.phone || "", made: false };
-      $("#spwd").value = "";
-      await enterDetails();
+      if (r.error === "locked") setErr("f-spwd", "errLoginLocked", null, true);
+      else if (r.error === "busy") showBanner(SITE_TOO_MANY);
+      else if (r.error === "network") showBanner(NET);
+      else if (r.error === "temp") { $("#si-temp").hidden = false; $("#si-temp").scrollIntoView({ block: "center" }); }
+      else if (r.error === "id") setErr("f-ident", "errEmailOrPhone", null, true);
+      else if (r.error === "pwd") setErr("f-spwd", "errPasswordRequired", null, true);
+      else setErr("f-spwd", r.cc ? "errLoginPhoneCc" : "errInvalidCredentials", null, true);
     } finally { setLoading("#signin", false); }
   });
 
   /* ── Arriving signed in from the booking app (?code=, one use, two minutes) ── */
   async function arrive() {
-    var q = new URLSearchParams(location.search), code = q.get("code");
+    var code = MMAccount.takeCode();
     if (code == null) return false;
-    q.delete("code");
-    try { history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q.toString() : "") + location.hash); } catch (e) {}
-    if (!/^[0-9a-f]{48}$/.test(code)) { showBanner("This sign-in link has expired. Sign in again to continue."); return false; }
-    var r = await rpc("customer_handoff_redeem", { p_code: code });
-    var row = Array.isArray(r.data) ? r.data[0] : null;
-    if (!row || !row.id || !row.session_token) { showBanner(r.error && r.error.message === "network" ? NET : "This sign-in link has expired. Sign in again to continue."); return false; }
-    acct = { id: row.id, token: row.session_token, name: row.name || "", email: "", phone: "", made: false };
+    var r = await MMAccount.redeem(rpc, code);
+    if (!r.row) { if (r.error === "network") showBanner(NET); else showBanner("This sign-in link has expired. Sign in again to continue."); return false; }
+    acct = { id: r.row.id, token: r.row.session_token, name: r.row.name || "", email: "", phone: "", made: false };
     return true;
   }
 

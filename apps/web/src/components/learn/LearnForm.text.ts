@@ -63,6 +63,9 @@ export const T = {
     learnerError: (n: number, message: string) => `Learner ${n}: ${message}`,
     // WhatsApp (the owner, 2026-10-07): is the account's mobile their WhatsApp too, or which number is.
     waAsk: (phone: string) => `Is ${phone} your WhatsApp number too?`, waYes: "Yes", waNo: "No", waLabel: "WhatsApp number",
+    // A signed-in account is not asked again what it holds (the owner, 2026-10-25), unless staff flagged it.
+    skipped: (list: string) => `Already on your account, so we do not ask again: ${list}.`, showThem: "Show them",
+    flagged: "Our team asked you to check this.",
     errors: {
       whatsapp: "Enter your WhatsApp number, or answer whether your mobile is it.",
       learner_who: "Choose who is learning.", learner_name: "Enter the child's name - letters only.", learner_name_other: "Enter their full name - letters only.",
@@ -142,6 +145,8 @@ export const T = {
     surge: "نستقبل حاليًا عددًا من طلبات التسجيل أكبر من المعتاد، لذا قد يستغرق ردّنا عليك بعض الوقت. شكرًا لصبرك، وسنتواصل معك فور مراجعة طلبك.",
     learnerError: (n: number, message: string) => `المتعلّم ${n}: ${message}`,
     waAsk: (phone: string) => `هل ${phone} هو رقمك على WhatsApp أيضًا؟`, waYes: "نعم", waNo: "لا", waLabel: "رقم WhatsApp",
+    skipped: (list: string) => `موجودة في حسابك، فلن نسألك عنها مجددًا: ${list}.`, showThem: "اعرضها",
+    flagged: "طلب منك فريقنا مراجعة هذا.",
     errors: {
       whatsapp: "أدخل رقمك على WhatsApp، أو أجب إن كان جوالك هو رقمك عليه.",
       learner_who: "اختر مَن سيتعلّم.", learner_name: "أدخل اسم الطفل - حروف فقط.", learner_name_other: "أدخل الاسم الكامل - حروف فقط.",

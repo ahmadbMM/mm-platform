@@ -705,6 +705,9 @@
  "Sign up for a lesson": "Daftar kelas",
  "Sign up more learners": "Daftarkan peserta lain",
  "Signed in as {0}": "Log masuk sebagai {0}",
+ "Already on your account, so we do not ask again: {0}.": "Sudah ada dalam akaun anda, jadi kami tidak bertanya lagi: {0}.",
+ "Show them": "Tunjukkan",
+ "Our team asked you to check this.": "Pasukan kami meminta anda menyemak ini.",
  "Signed up with Google or Apple?": "Mendaftar dengan Google atau Apple?",
  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Mendaftar melalui Google atau Apple? Teruskan dengannya dalam aplikasi tempahan, dan anda kembali ke sini dalam keadaan sudah log masuk.",
  "Signing in…": "Sedang log masuk…",
@@ -1688,5 +1691,6 @@
  "Receipt confirmed. Your ticket is paid.": "Resit disahkan. Tiket anda sudah dibayar.",
  "Receipt sent. Our team will check it and confirm your ticket.": "Resit dihantar. Pasukan kami akan menyemaknya dan mengesahkan tiket anda.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Pindahkan harga tiket dan muat naik resit untuk melengkapkan tiket anda.",
- "Upload receipt": "Muat naik resit"
+ "Upload receipt": "Muat naik resit",
+ "Booking number": "Nombor tempahan"
 }

@@ -9,6 +9,7 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { loadAddonItems } from "../ticket-addons";
 import { vlDivName } from "../vlap";
+import { satNumOk, type TicketSession } from "../tickets";
 
 const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 
@@ -674,5 +675,38 @@ describe("a DEFE 5KM Run ticket (ride_kind 'defe5k', 2026-10-18)", () => {
     expect(DEFE_RACE_CODE).toBe("MICRO50");
     expect(TICKET.ar.defeRegNoNote).toBe("سجّل عبر دفء لتشارك في السباق.");
     expect(TICKET.ar.defeRegCode).toBe("استخدم كود الخصم {0} لخصم 50%، لأول 50 عضوًا.");
+  });
+});
+
+// The Saturday Social Ride's booking number (the owner, 2026-10-25): shown once the list is out, to a rider on it.
+describe("satNumOk", () => {
+  const sat = (over: Partial<TicketSession> = {}) => ({ kind: "saturday", approval: true, published: true, ...over }) as TicketSession;
+  const r = (over: Partial<TicketRow> = {}) => ({ approval: "approved", status: "waiting", partner: null, ...over }) as TicketRow;
+  it("shows it on a published Saturday ride to an approved rider", () => expect(satNumOk([r()], sat())).toBe(true));
+  it("hides it before Publish", () => expect(satNumOk([r()], sat({ published: false }))).toBe(false));
+  it("hides it from a rider not on the list", () => {
+    expect(satNumOk([r({ approval: "pending" })], sat())).toBe(false);
+    expect(satNumOk([r({ approval: "rejected" })], sat())).toBe(false);
+    expect(satNumOk([r({ status: "waitlist" })], sat())).toBe(false);
+    expect(satNumOk([r({ partner: "defe" })], sat())).toBe(false);
+  });
+  it("hides it on every other ride staff approve", () => expect(satNumOk([r()], sat({ kind: "swim" }))).toBe(false));
+});
+
+describe("the Saturday ride's card", () => {
+  const t = TICKET.en;
+  const satRow = (o: Record<string, unknown>) => ticketSession({ id: "2099-01-10", session_date: "2099-01-10", event_kind: "community", ride_kind: "saturday", needs_approval: true, hide_queue: true, bike_slots: '{"_time":"06:30 - 07:00"}', ...o })!;
+  const card = (s: TicketSession, r: Record<string, unknown> = {}) => renderToStaticMarkup(createElement(TicketCard, {
+    locale: "en", today: "2099-01-05", rows: [ticketRow({ id: "bk1abcdef", session_id: s.id, session_date: s.date, session_day: "Saturday", status: "waiting", queue_num: 12, price: 0, paid: false, name: "Spec Rider", type_preference: "Road", approval: "approved", ...r })!],
+    session: s, name: "Saturday Social Ride", cue: null, t, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+    links: { edit: "https://book.example.test/", manage: "https://book.example.test/?tab=bookings", place: "https://maps.app.goo.gl/x" }, now: Date.parse("2099-01-05T09:00:00Z"),
+  }));
+  it("shows the booking number only once the list is published, to a rider on it", () => {
+    expect(card(satRow({}))).not.toContain("#12");
+    const out = card(satRow({ hide_queue: false }));
+    expect(out).toContain("Booking number");
+    expect(out).toContain("#12");
+    expect(out).not.toContain("Edit");
+    expect(card(satRow({ hide_queue: false }), { approval: "pending" })).not.toContain("#12");
   });
 });

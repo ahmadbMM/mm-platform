@@ -705,6 +705,9 @@
  "Sign up for a lesson": "कक्षाका लागि साइन अप गर्नुहोस्",
  "Sign up more learners": "थप सहभागीहरूको साइन अप गर्नुहोस्",
  "Signed in as {0}": "{0} को रूपमा साइन इन छ",
+ "Already on your account, so we do not ask again: {0}.": "पहिल्यै तपाईंको खातामा छ, त्यसैले फेरि सोध्दैनौं: {0}।",
+ "Show them": "देखाउनुहोस्",
+ "Our team asked you to check this.": "हाम्रो टिमले तपाईंलाई यो जाँच्न भनेको छ।",
  "Signed up with Google or Apple?": "Google वा Apple बाट साइन अप गर्नुभएको थियो?",
  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Google वा Apple बाट साइन अप गर्नुभएको हो? बुकिङ एपमा त्यसैबाट अगाडि बढ्नुहोस्, अनि तपाईं साइन इन भएरै यहाँ फर्कनुहुन्छ।",
  "Signing in…": "साइन इन हुँदैछ…",
@@ -1688,5 +1691,6 @@
  "Receipt confirmed. Your ticket is paid.": "रसिद पुष्टि भयो। तपाईंको टिकटको भुक्तानी भयो।",
  "Receipt sent. Our team will check it and confirm your ticket.": "रसिद पठाइयो। हाम्रो टोलीले यसलाई जाँचेर तपाईंको टिकट पुष्टि गर्नेछ।",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "टिकटको मूल्य ट्रान्सफर गर्नुहोस् र आफ्नो टिकट पूरा गर्न रसिद अपलोड गर्नुहोस्।",
- "Upload receipt": "रसिद अपलोड गर्नुहोस्"
+ "Upload receipt": "रसिद अपलोड गर्नुहोस्",
+ "Booking number": "बुकिङ नम्बर"
 }

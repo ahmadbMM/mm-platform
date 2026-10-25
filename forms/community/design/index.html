@@ -51,6 +51,9 @@
         <li class="stepper-item" data-step="2"><span class="stepper-bar"></span><span class="stepper-label" data-t="Membership">Membership</span></li>
       </ol>
 
+      <p id="draft-note" class="acct-who draft-note" hidden><span data-t="We kept the answers you started on this device for 3 days.">We kept the answers you started on this device for 3 days.</span> <button type="button" id="draft-clear" class="pv-link" data-t="Start over">Start over</button></p>
+      <p id="track-seen" class="acct-who" hidden><span id="track-seen-txt"></span> <a id="track-seen-a" class="pv-link" href="#" data-t="See where it is">See where it is</a></p>
+
       <div id="loading" class="loading-note" role="status" hidden><span class="spinner-dark" aria-hidden="true"></span><span data-t="Loading...">Loading...</span></div>
 
       <!-- Step 0 (the owner, 2026-10-25): an account already, or not? Yes signs in here (customer_login), or on the
@@ -65,8 +68,9 @@
         </div>
         <div id="login-box" hidden>
           <p class="lead" data-t="Sign in, and we only ask what your account does not have yet.">Sign in, and we only ask what your account does not have yet.</p>
+          <p id="draft-made" class="acct-who" data-t="Your account is made. Sign in to finish your application." hidden>Your account is made. Sign in to finish your application.</p>
           <div id="f-lid" class="field">
-            <label for="lid" data-t="Email or mobile number">Email or mobile number</label>
+            <label for="lid" data-site="authIdentifier">Email or phone</label>
             <input id="lid" name="username" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="254">
             <p class="err" aria-live="polite"></p>
           </div>
@@ -74,6 +78,10 @@
             <label for="lpw" data-site="authPassword">Password</label>
             <input id="lpw" name="password" type="password" autocomplete="current-password" dir="ltr" maxlength="128">
             <p class="err" aria-live="polite"></p>
+          </div>
+          <div id="si-temp" class="acct-note si-temp" role="status" hidden>
+            <span><b class="acct-title" data-t="Finish signing in on the booking site">Finish signing in on the booking site</b><span class="acct-sub" data-t="Your account has a temporary password. Choose your own on the booking site, then come back to this page.">Your account has a temporary password. Choose your own on the booking site, then come back to this page.</span>
+              <a id="si-temp-a" class="pv-link" href="https://micromobilityrentals.pages.dev/?handoff=community" data-t="Open the booking site">Open the booking site</a></span>
           </div>
           <button id="login" class="submit" type="button">
             <span class="spinner" aria-hidden="true"></span>
@@ -182,7 +190,7 @@
       </div>
       <p id="acct-who" class="acct-who" hidden></p>
       <p id="acct-skip" class="acct-who" hidden><span id="acct-skip-txt"></span> <button type="button" id="acct-skip-show" class="pv-link" data-t="Show them">Show them</button></p>
-      <p id="acct-pending" class="acct-who" data-t="You have already sent an application. Sending it again updates it." hidden>You have already sent an application. Sending it again updates it.</p>
+      <p id="acct-pending" class="acct-who" hidden><span data-t="You have already sent an application. Sending it again updates it.">You have already sent an application. Sending it again updates it.</span> <a id="acct-pending-a" class="pv-link" href="#" data-t="See where it is" hidden>See where it is</a></p>
 
       <!-- Step 2: the community questions the sign-up does not ask, sent from the signed-in account. -->
       <fieldset class="step" data-step="2" hidden>
@@ -303,6 +311,19 @@
       <p id="result" class="result"></p>
       <p class="result" data-t="We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.">We're getting more applications than usual right now, so it may take us a while to get back to you. Thank you for your patience. We'll be in touch as soon as we've reviewed yours.</p>
       <p id="result-contact" class="done-note"></p>
+      <div id="track-box" class="track-cta" hidden>
+        <a id="track-link" class="submit track-btn" href="#" data-t="Track your application">Track your application</a>
+        <p class="result" data-t="Keep this link to see where your application is.">Keep this link to see where your application is.</p>
+      </div>
+    </div>
+
+    <!-- Where an application is (?track=<token>, community_track): received, the changes asked, the decision. -->
+    <div id="track" class="success track" hidden tabindex="-1">
+      <h1 class="title" id="track-title" data-t="Your application">Your application</h1>
+      <p id="track-sent" class="result"></p>
+      <ol id="track-steps" class="track-steps"></ol>
+      <div id="track-acts" class="track-acts"></div>
+      <p id="track-err" class="result" hidden></p>
     </div>
   </section>
 </main>

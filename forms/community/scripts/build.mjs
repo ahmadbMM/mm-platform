@@ -3,6 +3,7 @@
 // Usage: npm run build (in forms/community). Never edit src/page.html (or the website's copy) by hand.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { ACCOUNT_JS, writeAccountForWeb } from '../../shared/emit.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const d = (f) => resolve(root, 'design', f);
@@ -11,6 +12,9 @@ const css = readFileSync(d('styles.css'), 'utf8');
 const js = readFileSync(d('app.js'), 'utf8');
 const i18n = readFileSync(d('i18n.js'), 'utf8');
 const shared = readFileSync(resolve(root, 'shared/shared.js'), 'utf8');
+// The account step every account form shares (forms/shared/account.js), inlined before the page's script;
+// the website's Learn to ride form gets the same file as apps/web/src/lib/account-shared.ts.
+writeAccountForWeb();
 
 // Every translation carries every string the page shows, with the same {placeholders}.
 const FORM_T = new Function(i18n + ';return FORM_T;')();
@@ -61,7 +65,7 @@ html = html.replace(/(src|href)="([^"]+\.(png|svg|webp))"/g, (m, attr, file, ext
 html = html.replace('<link rel="stylesheet" href="styles.css">',
   () => '<meta name="robots" content="noindex">\n<link rel="preconnect" href="https://qpffkzmsfyilicwcsszz.supabase.co">\n<style>\n' + css + '\n</style>');
 html = html.replace('<script src="shared.js"></script>\n<script src="i18n.js"></script>\n<script src="app.js"></script>',
-  () => '<script>\n' + shared + '\n' + i18n + '\n</script>\n<script>\n' + js + '\n</script>');
+  () => '<script>\n' + shared + '\n' + i18n + '\n' + ACCOUNT_JS + '\n</script>\n<script>\n' + js + '\n</script>');
 if (/href="styles\.css"|src="(app|i18n|shared)\.js"/.test(html)) { console.error('could not inline the styles or scripts'); process.exit(1); }
 new Function(js); new Function(i18n); // syntax
 writeFileSync(resolve(root, 'src/page.html'), html);

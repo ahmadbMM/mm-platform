@@ -705,6 +705,9 @@
  "Sign up for a lesson": "レッスンを申し込む",
  "Sign up more learners": "他の受講者も申し込む",
  "Signed in as {0}": "{0}としてログイン中",
+ "Already on your account, so we do not ask again: {0}.": "アカウントに登録済みのため、もう一度はお聞きしません：{0}。",
+ "Show them": "表示する",
+ "Our team asked you to check this.": "こちらを確認するよう、スタッフからお願いしています。",
  "Signed up with Google or Apple?": "GoogleまたはAppleで登録しましたか？",
  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "GoogleまたはAppleで登録された方は、予約アプリでそのまま続けてください。ログインした状態でこちらに戻ります。",
  "Signing in…": "ログイン中…",
@@ -1690,5 +1693,6 @@
  "Receipt confirmed. Your ticket is paid.": "明細を確認しました。チケットは支払い済みです。",
  "Receipt sent. Our team will check it and confirm your ticket.": "明細を送信しました。スタッフが確認してチケットを確定します。",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "チケット代金をお振り込みのうえ、明細をアップロードしてチケットを完了してください。",
- "Upload receipt": "明細をアップロード"
+ "Upload receipt": "明細をアップロード",
+ "Booking number": "予約番号"
 }

@@ -705,6 +705,9 @@
  "Sign up for a lesson": "سبق کے لیے سائن اپ کریں",
  "Sign up more learners": "مزید شرکت کنندگان کا سائن اپ کریں",
  "Signed in as {0}": "{0} کے طور پر سائن اِن ہیں",
+ "Already on your account, so we do not ask again: {0}.": "پہلے سے آپ کے اکاؤنٹ میں ہے، اس لیے دوبارہ نہیں پوچھتے: {0}۔",
+ "Show them": "دکھائیں",
+ "Our team asked you to check this.": "ہماری ٹیم نے آپ سے یہ چیک کرنے کو کہا ہے۔",
  "Signed up with Google or Apple?": "Google یا Apple سے سائن اپ کیا تھا؟",
  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Google یا Apple سے سائن اپ کیا تھا؟ بکنگ ایپ میں اسی کے ساتھ جاری رکھیں، اور آپ سائن اِن ہو کر یہاں واپس آ جائیں گے۔",
  "Signing in…": "سائن اِن ہو رہا ہے…",
@@ -1688,5 +1691,6 @@
  "Receipt confirmed. Your ticket is paid.": "رسید کی تصدیق ہو گئی۔ آپ کے ٹکٹ کی ادائیگی ہو گئی۔",
  "Receipt sent. Our team will check it and confirm your ticket.": "رسید بھیج دی گئی۔ ہماری ٹیم اسے چیک کر کے آپ کے ٹکٹ کی تصدیق کرے گی۔",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "ٹکٹ کی قیمت ٹرانسفر کریں اور اپنا ٹکٹ مکمل کرنے کے لیے رسید اپ لوڈ کریں۔",
- "Upload receipt": "رسید اپ لوڈ کریں"
+ "Upload receipt": "رسید اپ لوڈ کریں",
+ "Booking number": "بکنگ نمبر"
 }

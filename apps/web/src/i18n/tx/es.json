@@ -705,6 +705,9 @@
  "Sign up for a lesson": "Inscríbete en una clase",
  "Sign up more learners": "Inscribir a más participantes",
  "Signed in as {0}": "Sesión iniciada como {0}",
+ "Already on your account, so we do not ask again: {0}.": "Ya está en tu cuenta, así que no lo volvemos a preguntar: {0}.",
+ "Show them": "Mostrarlos",
+ "Our team asked you to check this.": "Nuestro equipo te pidió revisar esto.",
  "Signed up with Google or Apple?": "¿Te registraste con Google o Apple?",
  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "¿Te registraste con Google o Apple? Continúa con esa cuenta en la app de reservas y vuelves aquí con la sesión iniciada.",
  "Signing in…": "Iniciando sesión…",
@@ -1687,5 +1690,6 @@
  "Receipt confirmed. Your ticket is paid.": "Comprobante confirmado. Tu entrada está pagada.",
  "Receipt sent. Our team will check it and confirm your ticket.": "Comprobante enviado. Nuestro equipo lo revisará y confirmará tu entrada.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Transfiere el precio de la entrada y sube el comprobante para completar tu entrada.",
- "Upload receipt": "Subir comprobante"
+ "Upload receipt": "Subir comprobante",
+ "Booking number": "Número de reserva"
 }

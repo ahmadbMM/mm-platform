@@ -705,6 +705,9 @@
  "Sign up for a lesson": "Записаться на занятие",
  "Sign up more learners": "Записать ещё участников",
  "Signed in as {0}": "Вы вошли как {0}",
+ "Already on your account, so we do not ask again: {0}.": "Это уже есть в вашем аккаунте, поэтому мы не спрашиваем снова: {0}.",
+ "Show them": "Показать",
+ "Our team asked you to check this.": "Наша команда просит вас проверить это.",
  "Signed up with Google or Apple?": "Регистрировались через Google или Apple?",
  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Регистрировались через Google или Apple? Продолжите с ним в приложении для бронирования — и вы вернётесь сюда уже с выполненным входом.",
  "Signing in…": "Входим…",
@@ -1689,5 +1692,6 @@
  "Receipt confirmed. Your ticket is paid.": "Квитанция подтверждена. Ваш билет оплачен.",
  "Receipt sent. Our team will check it and confirm your ticket.": "Квитанция отправлена. Наша команда проверит её и подтвердит ваш билет.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Переведите стоимость билета и загрузите квитанцию, чтобы оформить билет.",
- "Upload receipt": "Загрузить квитанцию"
+ "Upload receipt": "Загрузить квитанцию",
+ "Booking number": "Номер бронирования"
 }

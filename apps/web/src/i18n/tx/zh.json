@@ -705,6 +705,9 @@
  "Sign up for a lesson": "报名课程",
  "Sign up more learners": "为更多学员报名",
  "Signed in as {0}": "已登录：{0}",
+ "Already on your account, so we do not ask again: {0}.": "您的账户中已有这些信息，因此不再询问：{0}。",
+ "Show them": "显示",
+ "Our team asked you to check this.": "我们的团队请您核对此项。",
  "Signed up with Google or Apple?": "用 Google 或 Apple 注册过？",
  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "使用 Google 或 Apple 注册？请在预订 App 中继续使用该账户，完成后将以登录状态返回此处。",
  "Signing in…": "正在登录…",
@@ -1689,5 +1692,6 @@
  "Receipt confirmed. Your ticket is paid.": "凭证已确认。您的门票已付款。",
  "Receipt sent. Our team will check it and confirm your ticket.": "凭证已发送。我们的团队会核对后确认您的门票。",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "请转账门票费用并上传凭证，以完成您的门票。",
- "Upload receipt": "上传凭证"
+ "Upload receipt": "上传凭证",
+ "Booking number": "预订编号"
 }

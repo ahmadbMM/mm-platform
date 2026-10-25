@@ -418,3 +418,28 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 /* "(optional)" after a question the admins made optional (2026-10-07) */
 .field .opt { font-weight: 500; opacity: .7; }
 .stepper[hidden], #login-box[hidden] { display: none; }
+
+/* ── Where an application is, and what this device kept (2026-10-25) ─────────── */
+.draft-note { margin: 0 0 14px; }
+.si-temp { margin: 6px 0 12px; }
+.si-temp .pv-link { display: inline-block; margin-top: 8px; font-weight: 700; }
+.track-cta { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+.track-btn, .track-acts .submit { text-decoration: none; }
+.submit-line { background: transparent; color: var(--ink); border: 1px solid rgba(0, 0, 0, 0.3); }
+.submit-line:hover { color: var(--green); border-color: var(--green); box-shadow: none; }
+.card[data-state="track"] .form, .card[data-state="track"] .banner { display: none; }
+.track-steps { list-style: none; margin: 8px 0 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 0; }
+.tk-step { position: relative; display: grid; grid-template-columns: 22px 1fr; gap: 12px; padding: 0 0 18px; }
+.tk-step::before { content: ""; position: absolute; inset-inline-start: 10px; top: 22px; bottom: 0; width: 2px; background: var(--line); }
+.tk-step:last-child::before { display: none; }
+.tk-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); background: #fff; box-sizing: border-box; }
+.tk-done .tk-dot { background: var(--green); border-color: var(--green); }
+.tk-now .tk-dot { border-color: var(--green); box-shadow: inset 0 0 0 4px #fff, inset 0 0 0 11px var(--green); }
+.tk-end .tk-dot { background: var(--muted); border-color: var(--muted); }
+.tk-step b { display: block; font-size: 16px; }
+.tk-step p { margin: 4px 0 0; color: var(--muted); font-size: 14.5px; }
+.tk-next b { color: var(--muted); }
+.tk-note { display: block; margin-top: 6px; padding: 8px 12px; border-inline-start: 3px solid var(--green); background: rgba(7, 122, 75, 0.06); color: var(--ink); font-style: italic; }
+.tk-wait { display: flex; align-items: center; gap: 10px; color: var(--muted); }
+.track-acts { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.track-acts:empty { display: none; }

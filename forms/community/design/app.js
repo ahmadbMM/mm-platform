@@ -116,7 +116,9 @@
     $$("[data-site]").forEach(function (el) { el.textContent = site(el.getAttribute("data-site")); });
     $$("[data-site-aria]").forEach(function (el) { el.setAttribute("aria-label", site(el.getAttribute("data-site-aria"))); });
     $$("[data-site-placeholder]").forEach(function (el) { el.placeholder = site(el.getAttribute("data-site-placeholder")); });
-    $$("#signin-link2, #banner-signin").forEach(function (a) { a.href = signInUrl(); });
+    $$("#signin-link2, #banner-signin, #si-temp-a").forEach(function (a) { a.href = signInUrl(); });
+    if (TRACK_D) trackPaint(); else if (!$("#track-seen").hidden) paintSeen();
+    if (sent && /^[0-9a-f]{48}$/.test(sent.track || "")) $("#track-link").href = trackUrl(sent.track);
     $("#member-go").href = BOOKING_URL + "?lang=" + lang;
     paintWho();
     $("#ack-lbl").innerHTML = ackLabel("pv-open");
@@ -651,6 +653,7 @@
     $$(".stepper-item").forEach(function (li) { var s = +li.getAttribute("data-step"); li.classList.toggle("active", s === n); li.classList.toggle("done", s < n); });
     $("#next").hidden = n !== 1; $("#submit").hidden = n !== 2;
     $("#stepper").hidden = n === 0;
+    if (n !== 0) $("#track-seen").hidden = true;
     $("#acct-made").hidden = !(n === 2 && acct && acct.made);
     $("#acct-who").hidden = !(n === 2 && acct && !acct.made);
     var card = $("#card"); if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -848,7 +851,10 @@
     $("#f-xgender").hidden = !acct.needGender; $("#f-xheight").hidden = !acct.needHeight; $("#f-xack").hidden = !acct.needAck;
     $("#xem-block").hidden = !acct.needEm; $("#xem2-add").hidden = !acct.emTwo || !$("#xem2-box").hidden;
     $("#acct-pending").hidden = !(me && me.pending);
+    $("#acct-pending-a").hidden = !(me && me.pending && /^[0-9a-f]{48}$/.test(me.track || ""));
+    if (me && me.track) $("#acct-pending-a").href = trackUrl(me.track);
     prefill(me); paintWho(); skipKnown(me);
+    if (DR) draftPut(DR, 2); // what was typed here before wins over the account's answers, in the questions still asked
     goStep(2);
     if (acct.made) $("#acct-made").focus({ preventScroll: true });
   }
@@ -856,20 +862,20 @@
   // on it (customers.fix_fields, customer_community_me's 'flags'; the owner, 2026-10-25). What is skipped is
   // still sent from the prefilled boxes, named in one line with a way to show them, and comes back into
   // view by itself when its saved value does not pass the checks.
-  var SKIP = [["f-wa", "whatsapp", function (me) { return typeof me.whatsapp_same === "boolean"; }], ["f-birth", "birth_date", "birth_date"], ["f-nat", "nationality", "nationality"],
-    ["f-ig", "instagram", "instagram"], ["f-li", "linkedin", "linkedin"], ["f-prof", "profession", "profession"], ["f-work", "workplace", "workplace"],
-    ["f-own", "own_bike", function (me) { return typeof me.own_bike === "boolean"; }], ["f-type", "bike_type", "bike_type"], ["f-heard", "heard_from", "heard_from"]];
+  // Which questions: MMAccount.plan (forms/shared/account.js), the rule every account form shares.
+  var SKIP = [["f-wa", "whatsapp"], ["f-birth", "birth_date"], ["f-nat", "nationality"], ["f-ig", "instagram"], ["f-li", "linkedin"],
+    ["f-prof", "profession"], ["f-work", "workplace"], ["f-own", "own_bike"], ["f-type", "bike_type"], ["f-heard", "heard_from"]];
   function fieldLabel(id) { var l = $("#" + id + " label, #" + id + " .label"); return l ? clean(l.textContent) : ""; }
   function skipKnown(me) {
-    var flags = me && Array.isArray(me.flags) ? me.flags : [], skipped = [];
+    var skipped = [];
     $$("[data-skipped]").forEach(function (el) { el.removeAttribute("data-skipped"); el.hidden = false; });
     $$(".flag-note").forEach(function (el) { el.remove(); });
     if (!acct || acct.made || !me) { $("#acct-skip").hidden = true; return; }
+    var pl = MMAccount.plan(me, SKIP.map(function (x) { return x[1]; }));
     SKIP.forEach(function (x) {
       var el = $("#" + x[0]); if (!el || el.hidden) return;
-      var has = typeof x[2] === "function" ? x[2](me) : !!me[x[2]];
-      if (flags.indexOf(x[1]) >= 0) { var n = document.createElement("p"); n.className = "hint flag-note"; n.textContent = tr("Our team asked you to check this."); el.insertBefore(n, $(".err", el)); return; }
-      if (!has) return;
+      if (pl.flagged.indexOf(x[1]) >= 0) { var n = document.createElement("p"); n.className = "hint flag-note"; n.textContent = tr("Our team asked you to check this."); el.insertBefore(n, $(".err", el)); return; }
+      if (pl.skip.indexOf(x[1]) < 0) return;
       el.hidden = true; el.setAttribute("data-skipped", ""); skipped.push(fieldLabel(x[0]));
       if (x[0] === "f-wa") { $("#f-wanum").hidden = true; $("#f-wanum").setAttribute("data-skipped", ""); }
     });
@@ -932,10 +938,13 @@
       if (f) { if (res.error === "gender" || res.error === "height") { $("#" + f[0]).hidden = false; acct["need" + (res.error === "gender" ? "Gender" : "Height")] = true; } setErr(f[0], f[1]); focusField(f[0]); return; }
       showBanner("Could not reach the server. Please try again."); return;
     }
-    showSuccess({ name: acct.name, phone: acct.phone, email: acct.email });
+    showSuccess({ name: acct.name, phone: acct.phone, email: acct.email, track: res.track });
   });
   function showSuccess(p) {
-    sent = p;
+    sent = p; DRAFT.clear(); DR = null; $("#draft-note").hidden = true;
+    var tok = /^[0-9a-f]{48}$/.test(p.track || "") ? p.track : "";
+    $("#track-box").hidden = !tok;
+    if (tok) { $("#track-link").href = trackUrl(tok); rememberTrack(tok); }
     $("#card").setAttribute("data-state", "success");
     $("#form").hidden = true; $("#member").hidden = true; $("#success").hidden = false;
     $("#result").textContent = tr("{name}, your application has been received.", { name: String(p.name || "").split(" ")[0] });
@@ -943,7 +952,7 @@
     if (document.activeElement && document.activeElement.closest && document.activeElement.closest("#form")) $("#success").focus();
   }
   function showMember() {
-    hideBanner();
+    hideBanner(); DRAFT.clear(); DR = null; $("#draft-note").hidden = true;
     $("#card").setAttribute("data-state", "member");
     $("#form").hidden = true; $("#member").hidden = false;
     $("#member").focus({ preventScroll: true });
@@ -954,17 +963,13 @@
   // their "Sign in" from here, or the Apply button of its members-only popup. It leaves the
   // address at once; the session it trades for is kept in this page only, never stored.
   async function arrive() {
-    var q = new URLSearchParams(location.search), code = q.get("code");
+    var code = MMAccount.takeCode();
     if (code == null) return;
-    q.delete("code");
-    try { history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q.toString() : "") + location.hash); } catch (e) {}
-    if (!/^[0-9a-f]{48}$/.test(code)) { showBanner("This sign-in link has expired. Sign in again to continue.", true); return; }
     $("#card").setAttribute("data-state", "loading"); $("#loading").hidden = false;
     try {
-      var r = await rpc("customer_handoff_redeem", { p_code: code });
-      var row = Array.isArray(r.data) ? r.data[0] : null;
-      if (!row || !row.id || !row.session_token) { showBanner(r.error && r.error.message === "network" ? "Could not reach the server. Please try again." : "This sign-in link has expired. Sign in again to continue.", true); return; }
-      await signedIn(row);
+      var r = await MMAccount.redeem(rpc, code);
+      if (!r.row) { if (r.error === "network") showBanner("Could not reach the server. Please try again.", true); else showBanner("This sign-in link has expired. Sign in again to continue.", true); return; }
+      await signedIn(r.row);
     } finally {
       $("#loading").hidden = true;
       if ($("#card").getAttribute("data-state") === "loading") $("#card").setAttribute("data-state", "form");
@@ -1003,38 +1008,200 @@
   $("#lpw").addEventListener("input", function () { clearMsg("f-lpw"); });
   $("#lpw").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doLogin(); } });
   $("#login").addEventListener("click", function () { doLogin(); });
-  // What customer_login takes: a lower-cased email, or the mobile's digits with its country code (a Saudi
-  // 05X / 5X number as 9665X), as the database keeps it.
-  function loginIdent(raw) {
-    var v = clean(toAscii(raw));
-    if (v.indexOf("@") >= 0) return v.toLowerCase();
-    var d = v.replace(/\D/g, "");
-    if (/^00/.test(d)) d = d.slice(2);
-    if (/^05\d{8}$/.test(d)) d = "966" + d.slice(1); else if (/^5\d{8}$/.test(d)) d = "966" + d;
-    return d ? "+" + d : "";
-  }
+  // The sign-in every account form shares (MMAccount.signIn: customer_login, then customer_pwd_state), said in
+  // the booking site's own words. A temporary password is changed on the booking site first.
   async function doLogin() {
     if (busy) return;
-    hideBanner();
-    var id = loginIdent($("#lid").value), pw = $("#lpw").value;
-    if (!id) { setErr("f-lid", "Enter your email or mobile number"); focusField("f-lid"); return; }
-    if (!pw) { setErr("f-lpw", "Enter your password"); focusField("f-lpw"); return; }
+    hideBanner(); $("#si-temp").hidden = true;
     setLoading("#login", true);
     try {
-      var r = await rpc("customer_login", { p_identifier: id, p_pwd: pw });
-      if (r.error) { showBanner(/LOCKED/.test(String(r.error.message || "")) ? "site:errTooManyTries" : "Could not reach the server. Please try again."); return; }
-      var row = Array.isArray(r.data) ? r.data[0] : null;
-      if (!row || !row.id || !row.session_token) { setErr("f-lpw", "The email, mobile number or password is not right."); focusField("f-lpw"); return; }
-      $("#lpw").value = "";
-      await signedIn(row);
+      var r = await MMAccount.signIn(rpc, $("#lid").value, $("#lpw").value);
+      if (r.row) { $("#lpw").value = ""; await signedIn(r.row); return; }
+      if (r.error === "id") { setErr("f-lid", "errEmailOrPhone", null, true); focusField("f-lid"); }
+      else if (r.error === "pwd") { setErr("f-lpw", "errPasswordRequired", null, true); focusField("f-lpw"); }
+      else if (r.error === "locked") { setErr("f-lpw", "errLoginLocked", null, true); focusField("f-lpw"); }
+      else if (r.error === "wrong") { setErr("f-lpw", r.cc ? "errLoginPhoneCc" : "errInvalidCredentials", null, true); focusField("f-lpw"); }
+      else if (r.error === "temp") { $("#si-temp").hidden = false; $("#si-temp").scrollIntoView({ block: "center" }); }
+      else if (r.error === "busy") showBanner(SITE_TOO_MANY);
+      else showBanner("Could not reach the server. Please try again.");
     } finally { setLoading("#login", false); }
+  }
+
+  /* ── Answers kept on this device (the owner, 2026-10-25: "save progress") ─── */
+  // MMAccount.draft: three days, never a password or a session. What is typed is put back when the page opens
+  // again: the account step's boxes at once, the membership step's once the account is signed in again (an
+  // account made here is signed in with what was typed for it). Sent, or Start over, and it is gone.
+  var DRAFT = MMAccount.draft("mm-community-draft", 3), DR = null;
+  var NO_KEEP = { pwd: 1, pwd2: 1, lpw: 1 };
+  var TILE_GROUPS = ["#genders", "#xgenders", "#was", "#owns", "#types", "#haves"];
+  // Only what the visitor typed or picked is kept (a country code left as it came is not an answer).
+  var touched = {};
+  // A draft's answers not put back yet (the membership step's, until the account is signed in again): every save
+  // keeps them, or typing the password to sign in again would write a draft without them.
+  var pend = null;
+  function draftData() {
+    var v = pend ? Object.assign({}, pend.v) : {}, tl = pend ? Object.assign({}, pend.tiles) : {};
+    $$("#form input, #form select").forEach(function (el) {
+      if (!el.id || !touched[el.id] || NO_KEEP[el.id] || el.type === "password" || el.type === "checkbox" || el.type === "hidden") return;
+      if (el.value) v[el.id] = el.value;
+    });
+    TILE_GROUPS.forEach(function (g) { var on = $(g + ' .tile[aria-checked="true"]'); if (on && touched[g]) tl[g] = on.getAttribute("data-v"); });
+    return { v: v, tiles: tl, news: news, step: step, made: !!(acct && acct.made) || !!(pend && pend.made),
+      email: acct && acct.email ? acct.email : (pend && pend.email) || clean($("#email").value).toLowerCase(),
+      em2: !$("#em2-box").hidden, xem2: !$("#xem2-box").hidden };
+  }
+  var draftT = 0;
+  function draftWrite() {
+    clearTimeout(draftT); draftT = 0;
+    if (sent || TRACK != null) return;
+    var d = draftData();
+    if (!Object.keys(d.v).length && !Object.keys(d.tiles).some(function (g) { return g !== "#haves"; }) && !d.made) return; // nothing answered yet
+    DRAFT.save(d); DR = DRAFT.load();
+  }
+  function draftSave(e) {
+    if (sent || TRACK != null || prefilling) return;
+    var t = e && e.target;
+    if (t && t.id) touched[t.id] = 1;
+    var g = t && t.closest && t.closest(".types, [role=radiogroup]");
+    if (g && g.id) touched["#" + g.id] = 1;
+    clearTimeout(draftT);
+    draftT = setTimeout(draftWrite, 300);
+  }
+  ["input", "change"].forEach(function (ev) { $("#form").addEventListener(ev, draftSave); });
+  $("#form").addEventListener("click", function (e) { if (e.target.closest(".tile, .tick")) draftSave(e); });
+  // A tab closed (or a phone putting the page away) keeps what was typed in the last moment too.
+  window.addEventListener("pagehide", function () { if (draftT) draftWrite(); });
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden" && draftT) draftWrite(); });
+  // The step a box belongs to, as the draft puts it back: the membership step's (and WhatsApp's, which moves
+  // there for a signed-in account) wait for the account.
+  function stepOf(el) { var f = el.closest("fieldset.step"); var n = f ? +f.getAttribute("data-step") : 0; return el.closest("#f-wa, #f-wanum") ? waStep : n; }
+  function draftPut(d, which) {
+    if (!d) return;
+    prefilling = true;
+    try {
+      var v = d.v || {};
+      Object.keys(v).forEach(function (id) {
+        var el = document.getElementById(id); if (!el || stepOf(el) !== which && !(which === 1 && stepOf(el) === 0)) return;
+        if (which === 2 && el.closest("[data-skipped]")) return; // the account's answer stands for a question not asked
+        touched[id] = 1; if (pend) delete pend.v[id];
+        if (/^birth-[dmy]$/.test(id)) return;
+        el.value = v[id];
+        if (el.tagName === "SELECT") el.classList.toggle("ph", !el.value);
+      });
+      if (which === 2 && v["birth-y"] && !$("#f-birth").hasAttribute("data-skipped")) {
+        ["birth-y", "birth-m", "birth-d"].forEach(function (k) { touched[k] = 1; if (pend) delete pend.v[k]; });
+        $("#birth-y").value = v["birth-y"]; buildDob(); if (v["birth-m"]) { $("#birth-m").value = v["birth-m"]; buildDob(); } if (v["birth-d"]) { $("#birth-d").value = v["birth-d"]; buildDob(); }
+      }
+      TILE_GROUPS.forEach(function (g) {
+        var val = (d.tiles || {})[g]; if (!val || g === "#haves") return;
+        var b = $(g + ' .tile[data-v="' + val + '"]'); if (!b || stepOf(b) !== which || (which === 2 && b.closest("[data-skipped]"))) return;
+        touched[g] = 1; if (pend) delete pend.tiles[g];
+        if (b.getAttribute("aria-checked") !== "true") b.click();
+      });
+      if (which === 1) {
+        ccFace(PK); $("#phone").placeholder = ccDigits() === "966" ? "5X XXX XXXX" : "";
+        if (typeof d.news === "boolean") { news = d.news; $("#news").setAttribute("aria-checked", String(news)); }
+        if (d.em2) emOpen2("em", true);
+      } else {
+        ccFace(WPK); if ($("#wa").value) onPhoneInput(WPK);
+        if (d.xem2) emOpen2("xem", true);
+      }
+      EM_PRE.forEach(function (p) { emCcFace(p); $("#" + p + "-rel").classList.toggle("ph", !$("#" + p + "-rel").value); });
+    } finally { prefilling = false; }
+  }
+  $("#draft-clear").addEventListener("click", function () { DRAFT.clear(); location.href = location.pathname + "?lang=" + lang; });
+  // Opening with a draft: the account step's boxes filled, and the step it was on (an account made here, or a
+  // signed-in one, signs in again first: the session is never kept).
+  function draftOpen() {
+    DR = DRAFT.load();
+    if (DR && !Object.keys(DR.v || {}).length && !DR.made && !Object.keys(DR.tiles || {}).some(function (g) { return g !== "#haves"; })) { DRAFT.clear(); DR = null; }
+    if (!DR) return false;
+    if ((DR.tiles || {})["#haves"]) touched["#haves"] = 1;
+    pend = { v: Object.assign({}, DR.v || {}), tiles: Object.assign({}, DR.tiles || {}), made: !!DR.made, email: DR.email || "" };
+    draftPut(DR, 1);
+    $("#draft-note").hidden = false;
+    var have = (DR.tiles || {})["#haves"];
+    if (DR.made || have === "yes") {
+      goStep(0);
+      $$("#haves .tile").forEach(function (x) { x.setAttribute("aria-checked", String(x.getAttribute("data-v") === "yes")); });
+      $("#login-box").hidden = false;
+      if (DR.made) { $("#draft-made").hidden = false; if (DR.email) $("#lid").value = DR.email; }
+      return true;
+    }
+    if (have === "no" || DR.step === 1) { goStep(1); return true; }
+    return false;
+  }
+
+  /* ── Where an application is (the owner, 2026-10-25: "track your application") ─── */
+  // ?track=<token> (community_applications.track_token, community_track): the page shows the application
+  // instead of the form - received, the changes staff asked for, the decision - in the page's language. The
+  // link is on the thank-you card and kept on this device, so the form names it the next time it opens.
+  var TRACK = new URLSearchParams(location.search).get("track"), TRACK_KEY = "mm-community-track";
+  function trackUrl(tok) { return location.origin + location.pathname + "?track=" + tok + "&lang=" + lang; }
+  function rememberTrack(tok) { try { localStorage.setItem(TRACK_KEY, JSON.stringify({ t: tok, at: Date.now() })); } catch (e) {} }
+  function knownTrack() { try { var v = JSON.parse(localStorage.getItem(TRACK_KEY) || "null"); return v && /^[0-9a-f]{48}$/.test(v.t || "") ? v : null; } catch (e) { return null; } }
+  function dayText(v, weekday) {
+    var d = /^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? new Date(v + "T12:00:00Z") : new Date(v);
+    if (isNaN(d)) return "";
+    var o = { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Riyadh" }; if (weekday) o.weekday = "long";
+    try { return d.toLocaleDateString(locale(), o); } catch (e) { return d.toISOString().slice(0, 10); } // the page's locale: Gregorian, Latin digits where the site uses them
+  }
+  function fixLabel(k) { return k === "name" ? tr("Name") : tr(FIX_LABEL[k] || k); }
+  var FIX_LABEL = { email: "Email address", phone: "Mobile number", whatsapp: "WhatsApp number", birth_date: "Date of birth", gender: "Gender", nationality: "Nationality",
+    height: "Height in cm", bike_type: "Type of bike", profession: "Profession", workplace: "Company", instagram: "Instagram", linkedin: "LinkedIn" };
+  var TRACK_D = null;
+  function trackPaint() {
+    var d = TRACK_D; if (!d) return;
+    $("#track-title").textContent = d.first ? tr("{name}, your application", { name: d.first }) : tr("Your application");
+    $("#track-sent").textContent = tr("Sent on {date}", { date: dayText(d.sent_at) }) + (d.updated_at ? " · " + tr("Updated on {date}", { date: dayText(d.updated_at) }) : "");
+    var steps = [], acts = [];
+    var add = function (state, title, body) { steps.push('<li class="tk-step tk-' + state + '"><span class="tk-dot" aria-hidden="true"></span><div><b>' + esc(title) + "</b>" + (body ? "<p>" + body + "</p>" : "") + "</div></li>"); };
+    add("done", tr("Received"), esc(dayText(d.sent_at)));
+    if (d.fix) {
+      var fs = (Array.isArray(d.fix.fields) ? d.fix.fields : []).map(fixLabel);
+      add("now", tr("Changes asked"), esc(tr("Our team asked you to change:")) + " " + esc(fs.join(", ")) + (d.fix.note ? '<span class="tk-note">' + esc(d.fix.note) + "</span>" : ""));
+      if (/^[0-9a-f]{36}$/.test(d.fix.token || "")) acts.push('<a class="submit" href="' + esc(BOOKING_URL + "?appfix=" + d.fix.token + "&lang=" + lang) + '">' + esc(tr("Make the changes")) + "</a>");
+    } else if (d.fix_done_at) add("done", tr("Changes sent"), esc(dayText(d.fix_done_at)));
+    if (d.status === "pending") add(d.fix ? "next" : "now", tr("With our team"), esc(tr("Our team reviews every application and replies by WhatsApp or email.")));
+    else if (d.status === "approved") { add("done", tr("Approved"), esc(dayText(d.decided_at)) + ". " + esc(tr("Welcome to the community. You can now book the community rides on the booking site."))); acts.push(openSite()); }
+    else if (d.status === "invited") {
+      var rd = d.ride || {}, when = [dayText(rd.date, true), rd.time ? "⁦" + rd.time + "⁩" : "", rd.title || ""].filter(Boolean).join(" · ");
+      add("done", tr("Invited to a ride"), (when ? esc(when) + ". " : "") + esc(rd.cancelled ? tr("That ride was cancelled. Our team will be in touch.") : tr("Your place is in {tab} on the booking site.", { tab: site("tabMyRides") })));
+      acts.push(openSite());
+    } else if (d.status === "rejected") add("end", tr("Not approved this time"), esc(tr("Thank you for applying. We could not approve your application this time.")));
+    $("#track-steps").innerHTML = steps.join("");
+    $("#track-acts").innerHTML = acts.join("");
+  }
+  function openSite() { return '<a class="submit submit-line" href="' + esc(BOOKING_URL + "?lang=" + lang) + '">' + esc(tr("Open the booking site")) + "</a>"; }
+  async function showTrack(tok) {
+    $("#card").setAttribute("data-state", "track");
+    $("#form").hidden = true; $("#track").hidden = false; $("#track-err").hidden = true;
+    $("#track-steps").innerHTML = '<li class="tk-wait"><span class="spinner-dark" aria-hidden="true"></span> ' + esc(tr("Loading...")) + "</li>";
+    var r = /^[0-9a-f]{48}$/.test(tok) ? await rpc("community_track", { p_token: tok }) : { data: { ok: false, error: "gone" } };
+    var d = r.data && typeof r.data === "object" ? r.data : null;
+    if (!d || !d.ok) {
+      $("#track-steps").innerHTML = ""; $("#track-err").hidden = false;
+      $("#track-err").textContent = d && d.error === "gone" ? tr("We could not find this application. The link may be incomplete.") : d && d.error === "throttled" ? tr("Too many tries from this network. Please try again in a few minutes.") : tr("Could not reach the server. Please try again.");
+      return;
+    }
+    TRACK_D = d; rememberTrack(tok); trackPaint();
+  }
+  // An application sent from this device before: named under the first question, a tap from its page.
+  function paintSeen() {
+    var k = knownTrack(), on = !!k && step === 0 && !DR;
+    $("#track-seen").hidden = !on;
+    if (on) { $("#track-seen-txt").textContent = tr("You sent an application on {date}.", { date: dayText(k.at) }); $("#track-seen-a").href = trackUrl(k.t); }
   }
 
   // Test hook: the specs read the payload the form would send without a network.
   window.CommunityForm = { e164: e164, checkEmail: checkEmail, checkName: checkName, liNorm: liNorm, igNorm: igNorm, emRead: emRead };
 
   setLang(pickLang(), false);
-  loadQuestions();
-  goStep(new URLSearchParams(location.search).get("code") != null ? 1 : 0);
-  arrive();
+  if (TRACK != null) showTrack(TRACK);
+  else {
+    loadQuestions();
+    var handed = new URLSearchParams(location.search).get("code") != null;
+    goStep(handed ? 1 : 0);
+    if (handed) { DR = DRAFT.load(); arrive(); } else if (!draftOpen()) paintSeen();
+  }
 })();
