@@ -22,6 +22,15 @@ Two steps (the owner, 2026-09-30: the applicant makes their account first):
    over without an emergency contact (`customer_emergency`) gives it here, saved before the application
    goes; a database without those functions asks nothing, one that answers three columns offers no second.
 
+**First question** (the owner, 2026-10-25): "Do you already have a Micromobility account?". No goes on to step 1.
+Yes signs in right here (email or mobile and password, `customer_login`; a Saudi 05X number is sent as +9665X), or on the
+booking site for a forgotten password or a Google/Apple account. A signed-in account is asked on step 2 only what it does
+not hold yet, or what staff flagged on it (`customer_community_me`'s `flags` = `customers.fix_fields`, migration
+20261025180000 in the rentals repo): a filled, unflagged question is hidden but still sent from its prefilled box, named in
+one line with **Show them**, and comes back by itself if its saved value fails the checks; a flagged one says "Our team asked
+you to check this." A flagged height or emergency contact is asked too; `customer_community_apply` clears the flags it
+answered (`emergency_saved` when the contact was saved on this step). A `?code=` hand-over skips the question.
+
 Someone who already has an account presses **Sign in**: the booking site (`?handoff=community`) signs
 them in and sends them back with a one-time code (`?code=`, `customer_handoff_create` /
 `customer_handoff_redeem`), straight onto step 2 with their answers so far (`customer_community_me`).

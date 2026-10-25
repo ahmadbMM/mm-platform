@@ -53,11 +53,42 @@
 
       <div id="loading" class="loading-note" role="status" hidden><span class="spinner-dark" aria-hidden="true"></span><span data-t="Loading...">Loading...</span></div>
 
+      <!-- Step 0 (the owner, 2026-10-25): an account already, or not? Yes signs in here (customer_login), or on the
+           booking site for Google/Apple or a forgotten password; No goes on to make one (step 1). -->
+      <fieldset class="step" data-step="0">
+        <legend class="step-title" data-t="Do you already have a Micromobility account?">Do you already have a Micromobility account?</legend>
+        <div id="f-have" class="field">
+          <div id="haves" class="types two" role="radiogroup" aria-label="Do you already have a Micromobility account?" data-t-aria="Do you already have a Micromobility account?">
+            <button type="button" class="tile" data-v="yes" role="radio" aria-checked="false" data-t="Yes, I have one">Yes, I have one</button>
+            <button type="button" class="tile" data-v="no" role="radio" aria-checked="false" data-t="No, not yet">No, not yet</button>
+          </div>
+        </div>
+        <div id="login-box" hidden>
+          <p class="lead" data-t="Sign in, and we only ask what your account does not have yet.">Sign in, and we only ask what your account does not have yet.</p>
+          <div id="f-lid" class="field">
+            <label for="lid" data-t="Email or mobile number">Email or mobile number</label>
+            <input id="lid" name="username" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="254">
+            <p class="err" aria-live="polite"></p>
+          </div>
+          <div id="f-lpw" class="field">
+            <label for="lpw" data-site="authPassword">Password</label>
+            <input id="lpw" name="password" type="password" autocomplete="current-password" dir="ltr" maxlength="128">
+            <p class="err" aria-live="polite"></p>
+          </div>
+          <button id="login" class="submit" type="button">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="submit-label" data-site="authLogin">Sign in</span>
+            <span class="submit-busy" data-t="Signing in...">Signing in...</span>
+          </button>
+          <p class="have-acct"><a id="signin-link2" class="pv-link" href="https://micromobilityrentals.pages.dev/?handoff=community" data-t="Forgot your password, or signed up with Google or Apple? Sign in on the booking site">Forgot your password, or signed up with Google or Apple? Sign in on the booking site</a></p>
+        </div>
+      </fieldset>
+
       <!-- Step 1: the booking site's own sign-up (the same questions, the same rules), which makes the account. -->
       <fieldset class="step" data-step="1">
         <legend class="step-title" data-t="Create your account">Create your account</legend>
         <p class="lead" data-t="This is the account you book rides with. You sign in with your email or mobile number and your password.">This is the account you book rides with. You sign in with your email or mobile number and your password.</p>
-        <p class="have-acct"><span data-site="authHaveTitle">Already have an account?</span> <a id="signin-link" class="pv-link" href="https://micromobilityrentals.pages.dev/?handoff=community" data-site="authLogin">Sign in</a></p>
+        <p class="have-acct"><span data-site="authHaveTitle">Already have an account?</span> <button type="button" id="to-login" class="pv-link" data-site="authLogin">Sign in</button></p>
         <div id="f-name" class="field">
           <div class="name-row">
             <span class="name-part"><label for="first" data-site="firstName">First Name</label><input id="first" name="first" type="text" autocomplete="given-name" autocapitalize="words" maxlength="60" data-site-placeholder="phFirstName"></span>
@@ -150,6 +181,7 @@
         <span><b class="acct-title" data-t="Your account has been created">Your account has been created</b><span class="acct-sub" data-t="You can now sign in and book rides with your email or mobile number and your password. Next, tell us a little more about yourself for your membership.">You can now sign in and book rides with your email or mobile number and your password. Next, tell us a little more about yourself for your membership.</span></span>
       </div>
       <p id="acct-who" class="acct-who" hidden></p>
+      <p id="acct-skip" class="acct-who" hidden><span id="acct-skip-txt"></span> <button type="button" id="acct-skip-show" class="pv-link" data-t="Show them">Show them</button></p>
       <p id="acct-pending" class="acct-who" data-t="You have already sent an application. Sending it again updates it." hidden>You have already sent an application. Sending it again updates it.</p>
 
       <!-- Step 2: the community questions the sign-up does not ask, sent from the signed-in account. -->
