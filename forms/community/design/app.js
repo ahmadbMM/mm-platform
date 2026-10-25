@@ -725,10 +725,21 @@
     sk.forEach(function (id) { (msgs[id] = msgs[id] || {}).warn = { k: r.soft[id][0], a: r.soft[id][1] }; });
     hk.concat(sk).forEach(function (id) { var el = document.getElementById(id); if (el && el.hasAttribute("data-skipped")) { el.hidden = false; el.removeAttribute("data-skipped"); } });
     STEP_FIELDS[n].forEach(paintField);
-    if (hk.length) { focusField(hk[0]); return false; }
+    if (hk.length) { whyPaint(hk, false); focusField(hk[0]); return false; }
     var sig = JSON.stringify(r.soft);
-    if (sk.length && acked[n] !== sig) { acked[n] = sig; focusField(sk[0]); return false; }
+    if (sk.length && acked[n] !== sig) { acked[n] = sig; whyPaint(sk, true); focusField(sk[0]); return false; }
+    whyPaint([]);
     return true;
+  }
+  // A press the checks refused says so under the button too, naming the questions (2026-10-25: riders on
+  // iPhones pressed Send application and saw nothing happen, the refused question being far up the page).
+  function whyPaint(ids, soft) {
+    var w = $("#why"), names = [];
+    ids.forEach(function (id) { var l = fieldLabel(id); if (l && names.indexOf(l) < 0) names.push(l); });
+    w.hidden = !ids.length;
+    w.textContent = !ids.length ? "" : soft ? tr("If it is right, press the button again.") + (names.length ? " " + tr("Please check: {list}", { list: names.join(", ") }) : "")
+      : names.length ? tr("Please check: {list}", { list: names.join(", ") }) : "";
+    if (!w.textContent) w.hidden = true;
   }
   function focusField(id) {
     var f = document.getElementById(id); if (!f) return;
