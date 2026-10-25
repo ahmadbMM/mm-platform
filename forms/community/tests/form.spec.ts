@@ -18,7 +18,7 @@ const ME = { name: 'Karim Mansour', email: 'karim.mansour@gmail.com', phone: '+9
 const EM_ROW = { emergency_name: 'Layla Mansour', emergency_phone: '+966551234567', emergency_relation: 'spouse', emergency2_name: null, emergency2_phone: null, emergency2_relation: null };
 const EM_NONE = { emergency_name: null, emergency_phone: null, emergency_relation: null, emergency2_name: null, emergency2_phone: null, emergency2_relation: null };
 
-async function open(page: Page, qs = '', answers: Answers = {}, form: unknown = null) {
+async function open(page: Page, qs = '', answers: Answers = {}, form: unknown = null, stay = false) {
   const errs: string[] = [];
   page.on('pageerror', (e) => errs.push(e.message));
   // the questions as the admins set them (site_content 'community.form'); none, the form as it always was
@@ -44,6 +44,8 @@ async function open(page: Page, qs = '', answers: Answers = {}, form: unknown = 
     return r.fulfill(a ? a(body) : refuse({ code: 'PGRST202', message: 'not found' }, 404));
   });
   await page.goto('/community/registration' + qs);
+  // the first question (2026-10-25): no account yet goes on to make one, unless the spec stays to answer it
+  if (!stay && !/code=/.test(qs)) await page.click('#haves .tile[data-v="no"]');
   const of = (fn: string) => calls.filter((c) => c.fn === fn).map((c) => c.body);
   return { errs, calls, of };
 }
@@ -160,13 +162,78 @@ test('an email or mobile that already has an account: said on the field, with Si
   await expect(step(page, 1)).toBeVisible();
 });
 
-test('"Already have an account? Sign in" goes to the booking site, which hands the rider back here', async ({ page }) => {
+test('"Already have an account? Sign in" goes back to the first question, signed in here', async ({ page }) => {
   await open(page, '?lang=ar');
-  await expect(page.locator('.have-acct')).toContainText('لديك حساب بالفعل؟');
-  await expect(page.locator('#signin-link')).toHaveText('تسجيل الدخول');
-  await expect(page.locator('#signin-link')).toHaveAttribute('href', 'https://micromobilityrentals.pages.dev/?handoff=community&lang=ar');
+  await expect(step(page, 1).locator('.have-acct')).toContainText('لديك حساب بالفعل؟');
+  await expect(page.locator('#to-login')).toHaveText('تسجيل الدخول');
+  await page.click('#to-login');
+  await expect(step(page, 0)).toBeVisible();
+  await expect(page.locator('#login-box')).toBeVisible();
+  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://micromobilityrentals.pages.dev/?handoff=community&lang=ar');
   await page.selectOption('#lang', 'fr');
-  await expect(page.locator('#signin-link')).toHaveAttribute('href', 'https://micromobilityrentals.pages.dev/?handoff=community&lang=fr');
+  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://micromobilityrentals.pages.dev/?handoff=community&lang=fr');
+});
+
+// The first question (the owner, 2026-10-25): an account already signs in here and is asked only what the
+// account lacks, or what staff flagged on it; no account goes on to make one.
+test('first question: No makes an account; Yes signs in and asks only what is missing or flagged', async ({ page }) => {
+  const { errs, of } = await open(page, '?lang=en', {
+    customer_login: () => json([{ id: 'c-karim', name: 'Karim Mansour', session_token: 'tok-in' }]),
+    customer_community_me: () => json({ ...ME, birth_date: '1994-03-12', nationality: 'Egypt', profession: 'Architect', workplace: 'Saudi Aramco', bike_type: 'Hybrid', own_bike: false, heard_from: 'friend', instagram: 'karim.rides', whatsapp_same: true, flags: ['instagram', 'height', 'emergency'] }),
+  }, null, true);
+  await expect(step(page, 0)).toBeVisible();
+  await expect(page.locator('#stepper')).toBeHidden();
+  await expect(page.locator('#next')).toBeHidden();
+  await page.click('#haves .tile[data-v="yes"]');
+  await page.click('#login');
+  await expect(page.locator('#f-lid .err')).toHaveText('Enter your email or mobile number');
+  await page.fill('#lid', '0552468013');
+  await page.fill('#lpw', 'Secret123');
+  await page.click('#login');
+  await expect(step(page, 2)).toBeVisible();
+  expect(of('customer_login')).toEqual([{ p_identifier: '+966552468013', p_pwd: 'Secret123' }]);
+  // filled and not flagged: not asked, but named
+  for (const id of ['#f-birth', '#f-nat', '#f-prof', '#f-work', '#f-own', '#f-type', '#f-heard', '#f-wa', '#f-li']) {
+    if (id === '#f-li') await expect(page.locator(id)).toBeVisible(); // empty on the account: asked
+    else await expect(page.locator(id)).toBeHidden();
+  }
+  await expect(page.locator('#acct-skip')).toContainText('Already on your account, so we do not ask again: ');
+  await expect(page.locator('#acct-skip')).toContainText('Nationality');
+  // flagged: asked again even though filled
+  await expect(page.locator('#f-ig')).toBeVisible();
+  await expect(page.locator('#f-ig .flag-note')).toHaveText('Our team asked you to check this.');
+  await expect(page.locator('#ig')).toHaveValue('karim.rides');
+  await expect(page.locator('#f-xheight')).toBeVisible();
+  await expect(page.locator('#xem-block')).toBeVisible();
+  await page.fill('#xheight', '180');
+  await emContact(page, 'xem');
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  const sent = of('customer_community_apply')[0].p as Record<string, unknown>;
+  expect(sent).toMatchObject({ birth_date: '1994-03-12', nationality: 'Egypt', profession: 'Architect', workplace: 'Saudi Aramco', bike_type: 'Hybrid', heard_from: 'friend', instagram: 'karim.rides', height: 180, emergency_saved: true, whatsapp_same: true });
+  expect(of('customer_signup')).toEqual([]);
+  expect(errs).toEqual([]);
+});
+
+test('first question: a wrong password is said on the box; Show them brings the skipped questions back', async ({ page }) => {
+  let ok = false;
+  await open(page, '?lang=en', {
+    customer_login: () => json(ok ? [{ id: 'c-karim', name: 'Karim Mansour', session_token: 'tok-in' }] : []),
+    customer_community_me: () => json({ ...ME, birth_date: '1994-03-12', nationality: 'Egypt' }),
+  }, null, true);
+  await page.click('#haves .tile[data-v="yes"]');
+  await page.fill('#lid', 'karim.mansour@gmail.com');
+  await page.fill('#lpw', 'wrong');
+  await page.click('#login');
+  await expect(page.locator('#f-lpw .err')).toHaveText('The email, mobile number or password is not right.');
+  ok = true;
+  await page.fill('#lpw', 'Secret123');
+  await page.press('#lpw', 'Enter');
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#f-nat')).toBeHidden();
+  await page.click('#acct-skip-show');
+  await expect(page.locator('#f-nat')).toBeVisible();
+  await expect(page.locator('#acct-skip')).toBeHidden();
 });
 
 test('a sign-up the database refuses says why, on the field or in the banner', async ({ page }) => {
@@ -593,6 +660,8 @@ test('handed over signed in: the question names the account\'s mobile on step 2,
   });
   await expect(step(page, 2)).toBeVisible();
   const wa = step(page, 2).locator('#f-wa');
+  await expect(wa).toBeHidden(); // already on the account: not asked (2026-10-25) until Show them
+  await page.click('#acct-skip-show');
   await expect(wa).toBeVisible();
   await expect(page.locator('#wa-label')).toHaveText('Is \u2066+966552468013\u2069 your WhatsApp number too?');
   await expect(page.locator('#was .tile[data-v="no"]')).toHaveAttribute('aria-checked', 'true');
@@ -797,6 +866,7 @@ test('a WhatsApp No put back on arrival does not jump the focus (and the keyboar
   await expect(page.locator('#wacc-code')).toHaveText('+971');
   expect(await page.evaluate(() => document.activeElement && document.activeElement.id)).not.toBe('wa');
   // the rider's own No still opens the box for typing
+  await page.click('#acct-skip-show');
   await page.click('#was .tile[data-v="yes"]');
   await page.click('#was .tile[data-v="no"]');
   await expect(page.locator('#wa')).toBeFocused();

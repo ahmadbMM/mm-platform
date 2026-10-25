@@ -116,7 +116,7 @@
     $$("[data-site]").forEach(function (el) { el.textContent = site(el.getAttribute("data-site")); });
     $$("[data-site-aria]").forEach(function (el) { el.setAttribute("aria-label", site(el.getAttribute("data-site-aria"))); });
     $$("[data-site-placeholder]").forEach(function (el) { el.placeholder = site(el.getAttribute("data-site-placeholder")); });
-    $$("#signin-link, #banner-signin").forEach(function (a) { a.href = signInUrl(); });
+    $$("#signin-link2, #banner-signin").forEach(function (a) { a.href = signInUrl(); });
     $("#member-go").href = BOOKING_URL + "?lang=" + lang;
     paintWho();
     $("#ack-lbl").innerHTML = ackLabel("pv-open");
@@ -650,6 +650,7 @@
     $$("fieldset.step").forEach(function (f) { f.hidden = +f.getAttribute("data-step") !== n; });
     $$(".stepper-item").forEach(function (li) { var s = +li.getAttribute("data-step"); li.classList.toggle("active", s === n); li.classList.toggle("done", s < n); });
     $("#next").hidden = n !== 1; $("#submit").hidden = n !== 2;
+    $("#stepper").hidden = n === 0;
     $("#acct-made").hidden = !(n === 2 && acct && acct.made);
     $("#acct-who").hidden = !(n === 2 && acct && !acct.made);
     var card = $("#card"); if (card.getBoundingClientRect().top < 0) card.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -719,6 +720,7 @@
     STEP_FIELDS[n].forEach(function (id) { delete msgs[id]; });
     hk.forEach(function (id) { var h = r.hard[id]; (msgs[id] = msgs[id] || {}).err = { k: h[0], a: h[1], site: !!h[2] }; });
     sk.forEach(function (id) { (msgs[id] = msgs[id] || {}).warn = { k: r.soft[id][0], a: r.soft[id][1] }; });
+    hk.concat(sk).forEach(function (id) { var el = document.getElementById(id); if (el && el.hasAttribute("data-skipped")) { el.hidden = false; el.removeAttribute("data-skipped"); } });
     STEP_FIELDS[n].forEach(paintField);
     if (hk.length) { focusField(hk[0]); return false; }
     var sig = JSON.stringify(r.soft);
@@ -846,10 +848,38 @@
     $("#f-xgender").hidden = !acct.needGender; $("#f-xheight").hidden = !acct.needHeight; $("#f-xack").hidden = !acct.needAck;
     $("#xem-block").hidden = !acct.needEm; $("#xem2-add").hidden = !acct.emTwo || !$("#xem2-box").hidden;
     $("#acct-pending").hidden = !(me && me.pending);
-    prefill(me); paintWho();
+    prefill(me); paintWho(); skipKnown(me);
     goStep(2);
     if (acct.made) $("#acct-made").focus({ preventScroll: true });
   }
+  // An account signed in (not one made here) is asked only what it does not hold yet, or what staff flagged
+  // on it (customers.fix_fields, customer_community_me's 'flags'; the owner, 2026-10-25). What is skipped is
+  // still sent from the prefilled boxes, named in one line with a way to show them, and comes back into
+  // view by itself when its saved value does not pass the checks.
+  var SKIP = [["f-wa", "whatsapp", function (me) { return typeof me.whatsapp_same === "boolean"; }], ["f-birth", "birth_date", "birth_date"], ["f-nat", "nationality", "nationality"],
+    ["f-ig", "instagram", "instagram"], ["f-li", "linkedin", "linkedin"], ["f-prof", "profession", "profession"], ["f-work", "workplace", "workplace"],
+    ["f-own", "own_bike", function (me) { return typeof me.own_bike === "boolean"; }], ["f-type", "bike_type", "bike_type"], ["f-heard", "heard_from", "heard_from"]];
+  function fieldLabel(id) { var l = $("#" + id + " label, #" + id + " .label"); return l ? clean(l.textContent) : ""; }
+  function skipKnown(me) {
+    var flags = me && Array.isArray(me.flags) ? me.flags : [], skipped = [];
+    $$("[data-skipped]").forEach(function (el) { el.removeAttribute("data-skipped"); el.hidden = false; });
+    $$(".flag-note").forEach(function (el) { el.remove(); });
+    if (!acct || acct.made || !me) { $("#acct-skip").hidden = true; return; }
+    SKIP.forEach(function (x) {
+      var el = $("#" + x[0]); if (!el || el.hidden) return;
+      var has = typeof x[2] === "function" ? x[2](me) : !!me[x[2]];
+      if (flags.indexOf(x[1]) >= 0) { var n = document.createElement("p"); n.className = "hint flag-note"; n.textContent = tr("Our team asked you to check this."); el.insertBefore(n, $(".err", el)); return; }
+      if (!has) return;
+      el.hidden = true; el.setAttribute("data-skipped", ""); skipped.push(fieldLabel(x[0]));
+      if (x[0] === "f-wa") { $("#f-wanum").hidden = true; $("#f-wanum").setAttribute("data-skipped", ""); }
+    });
+    $("#acct-skip").hidden = !skipped.length;
+    $("#acct-skip-txt").textContent = skipped.length ? tr("Already on your account, so we do not ask again: {list}.", { list: skipped.filter(Boolean).join(", ") }) : "";
+  }
+  $("#acct-skip-show").addEventListener("click", function () {
+    $$("[data-skipped]").forEach(function (el) { el.removeAttribute("data-skipped"); if (el.id !== "f-wanum" || waSame === false) el.hidden = false; });
+    $("#acct-skip").hidden = true;
+  });
   var FIELD_OF = { gender: ["f-xgender", "Choose your gender"], height: ["f-xheight", "Enter your height in cm (100 to 250)"], birth_date: ["f-birth", "Choose your date of birth"], nationality: ["f-nat", "Choose your nationality"], instagram: ["f-ig", "An Instagram username has only letters, numbers, dots and underscores"], linkedin: ["f-li", "Paste the link to your own profile (linkedin.com/in/…)"], profession: ["f-prof", "Enter your profession"], workplace: ["f-work", "Enter your company"], own_bike: ["f-own", "Tell us whether you have your own bike"], bike_type: ["f-type", "Choose a bike type"], heard_from: ["f-heard", "Please tell us how you heard about us."] };
   $("#form").addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -863,7 +893,7 @@
       var e = await emSave("xem");
       setLoading("#submit", false);
       if (!e.ok) { if (e.field) { setErr(e.field, e.key, null, true); focusField(e.field); } else showBanner(e.banner, e.signIn); return; }
-      acct.needEm = false; $("#xem-block").hidden = true;
+      acct.needEm = false; acct.emSaved = true; $("#xem-block").hidden = true;
     }
     var payload = {
       birth_date: birthValue(), nationality: $("#nat").value, bike_type: bikeType, own_bike: ownBike, instagram: igNorm($("#ig").value), linkedin: liNorm($("#li").value),
@@ -879,6 +909,7 @@
     // the account step's (an account made here), or step 2's for a signed-in account the database
     // has none for. An account handed over signed in otherwise sends none: it never saw the box here.
     if (acct.made ? ack : (acct.needAck && xack)) { payload.privacy_version = SH.PRIVACY_VERSION; payload.privacy_ack = true; }
+    if (acct.emSaved) payload.emergency_saved = true;
     if (acct.needGender) payload.gender = xgender;
     if (acct.needHeight) payload.height = parseInt(toAscii($("#xheight").value), 10);
     setLoading("#submit", true);
@@ -933,23 +964,70 @@
       var r = await rpc("customer_handoff_redeem", { p_code: code });
       var row = Array.isArray(r.data) ? r.data[0] : null;
       if (!row || !row.id || !row.session_token) { showBanner(r.error && r.error.message === "network" ? "Could not reach the server. Please try again." : "This sign-in link has expired. Sign in again to continue.", true); return; }
+      await signedIn(row);
+    } finally {
+      $("#loading").hidden = true;
+      if ($("#card").getAttribute("data-state") === "loading") $("#card").setAttribute("data-state", "form");
+    }
+  }
+  // A signed-in account (handed over, or signed in on step 0): what it holds, its emergency contact, then step 2.
+  async function signedIn(row) {
       // what the account holds and its emergency contact, asked together
       var both = await Promise.all([rpc("customer_community_me", { p_id: row.id, p_token: row.session_token }), rpc("customer_emergency", { p_id: row.id, p_token: row.session_token })]);
       var m = both[0], em = both[1];
       var me = m.data && typeof m.data === "object" ? m.data : null;
       if (!me) { showBanner("Could not reach the server. Please try again."); return; }
-      acct = { id: row.id, token: row.session_token, name: me.name || row.name || "", email: me.email || "", phone: me.phone || "", made: false, needGender: !me.gender, needHeight: !me.height };
+      var fl = Array.isArray(me.flags) ? me.flags : [];
+      acct = { id: row.id, token: row.session_token, name: me.name || row.name || "", email: me.email || "", phone: me.phone || "", made: false, needGender: !me.gender, needHeight: !me.height || fl.indexOf("height") >= 0 };
       if (me.member) { showMember(); return; }
       // The emergency contact on the account: asked on this step when there is none. A database
       // without customer_emergency asks nothing; one that answers three columns offers no second.
       var er = !em.error && Array.isArray(em.data) ? em.data[0] || null : null;
-      acct.needEm = em.error ? !emAbsent(em.error) : !(er && er.emergency_name && er.emergency_phone && er.emergency_relation);
+      acct.needEm = em.error ? !emAbsent(em.error) : !(er && er.emergency_name && er.emergency_phone && er.emergency_relation) || fl.indexOf("emergency") >= 0;
       acct.emTwo = !er || "emergency2_name" in er;
       enterStepTwo(me);
-    } finally {
-      $("#loading").hidden = true;
-      if ($("#card").getAttribute("data-state") === "loading") $("#card").setAttribute("data-state", "form");
-    }
+      return true;
+  }
+
+  /* ── Step 0: an account already? ────────────────────────────────────────── */
+  tiles("#haves", "f-have", function (v) {
+    if (v === "no") { goStep(1); $("#first").focus({ preventScroll: true }); return; }
+    $("#login-box").hidden = false; $("#lid").focus();
+  });
+  $("#to-login").addEventListener("click", function () {
+    hideBanner(); goStep(0);
+    $$("#haves .tile").forEach(function (x) { x.setAttribute("aria-checked", String(x.getAttribute("data-v") === "yes")); });
+    $("#login-box").hidden = false; $("#lid").focus();
+  });
+  $("#lid").addEventListener("input", function () { clearMsg("f-lid"); });
+  $("#lpw").addEventListener("input", function () { clearMsg("f-lpw"); });
+  $("#lpw").addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); doLogin(); } });
+  $("#login").addEventListener("click", function () { doLogin(); });
+  // What customer_login takes: a lower-cased email, or the mobile's digits with its country code (a Saudi
+  // 05X / 5X number as 9665X), as the database keeps it.
+  function loginIdent(raw) {
+    var v = clean(toAscii(raw));
+    if (v.indexOf("@") >= 0) return v.toLowerCase();
+    var d = v.replace(/\D/g, "");
+    if (/^00/.test(d)) d = d.slice(2);
+    if (/^05\d{8}$/.test(d)) d = "966" + d.slice(1); else if (/^5\d{8}$/.test(d)) d = "966" + d;
+    return d ? "+" + d : "";
+  }
+  async function doLogin() {
+    if (busy) return;
+    hideBanner();
+    var id = loginIdent($("#lid").value), pw = $("#lpw").value;
+    if (!id) { setErr("f-lid", "Enter your email or mobile number"); focusField("f-lid"); return; }
+    if (!pw) { setErr("f-lpw", "Enter your password"); focusField("f-lpw"); return; }
+    setLoading("#login", true);
+    try {
+      var r = await rpc("customer_login", { p_identifier: id, p_pwd: pw });
+      if (r.error) { showBanner(/LOCKED/.test(String(r.error.message || "")) ? "site:errTooManyTries" : "Could not reach the server. Please try again."); return; }
+      var row = Array.isArray(r.data) ? r.data[0] : null;
+      if (!row || !row.id || !row.session_token) { setErr("f-lpw", "The email, mobile number or password is not right."); focusField("f-lpw"); return; }
+      $("#lpw").value = "";
+      await signedIn(row);
+    } finally { setLoading("#login", false); }
   }
 
   // Test hook: the specs read the payload the form would send without a network.
@@ -957,6 +1035,6 @@
 
   setLang(pickLang(), false);
   loadQuestions();
-  goStep(1);
+  goStep(new URLSearchParams(location.search).get("code") != null ? 1 : 0);
   arrive();
 })();

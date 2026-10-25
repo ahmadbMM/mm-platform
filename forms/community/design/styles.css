@@ -417,3 +417,4 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 .em-add:hover { background: rgba(7, 122, 75, 0.08); }
 /* "(optional)" after a question the admins made optional (2026-10-07) */
 .field .opt { font-weight: 500; opacity: .7; }
+.stepper[hidden], #login-box[hidden] { display: none; }
