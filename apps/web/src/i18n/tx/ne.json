@@ -1692,5 +1692,10 @@
  "Receipt sent. Our team will check it and confirm your ticket.": "रसिद पठाइयो। हाम्रो टोलीले यसलाई जाँचेर तपाईंको टिकट पुष्टि गर्नेछ।",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "टिकटको मूल्य ट्रान्सफर गर्नुहोस् र आफ्नो टिकट पूरा गर्न रसिद अपलोड गर्नुहोस्।",
  "Upload receipt": "रसिद अपलोड गर्नुहोस्",
- "Booking number": "बुकिङ नम्बर"
+ "Booking number": "बुकिङ नम्बर",
+ "Men only": "पुरुष मात्र",
+ "Women only": "महिला मात्र",
+ "Mixed": "मिश्रित",
+ "This session is for men only.": "यो सेसन पुरुषहरूका लागि मात्र हो।",
+ "This session is for women only.": "यो सेसन महिलाहरूका लागि मात्र हो।"
 }

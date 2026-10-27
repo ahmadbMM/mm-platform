@@ -15,7 +15,8 @@
 // athlete's place as the booking app's _vlTkHtml words it - vlRace_*, vlTeamCode, vlWithPartner,
 // vlWaitPartner, vlNoPartner, vlPairWait, vlShirtLabel, vlT5Short, vlT5_*, vlEdBtn, and the ticket question vt*
 // (the divisions are Kamin Sports' names, lib/vlap.ts vlDivName). The DEFE 5KM Run (2026-10-18): runnerNumber,
-// and defeKit*, defeRace*, defeReg*, the booking app's own keys.
+// and defeKit*, defeRace*, defeReg*, the booking app's own keys. Men only, women only or mixed (2026-10-27):
+// sgMale, sgFemale, sgMixed, the booking app's own keys.
 export const T = {
   en: {
     queueNumber: "Queue number",
@@ -118,6 +119,10 @@ export const T = {
     // Victory Lap (2026-10-17)
     athleteNumber: "Athlete number",
     bookingNumber: "Booking number", // satNumLabel: a Saturday ride's number once its list is out (2026-10-25)
+    // men only, women only or mixed (the owner, 2026-10-27): the chip a session for one gender, or a pool session, wears (sgMale, sgFemale, sgMixed)
+    sgMale: "Men only",
+    sgFemale: "Women only",
+    sgMixed: "Mixed",
     vlRaces: { ws: "Women’s Singles", ms: "Men’s Singles", wd: "Women’s Doubles", md: "Men’s Doubles", xd: "Mixed Doubles" },
     vlTeamCode: "Team code",
     vlWithPartner: (n: string) => `With ${n}`,
@@ -251,6 +256,9 @@ export const T = {
     rrFailed: "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً.",
     athleteNumber: "رقم الرياضي",
     bookingNumber: "رقم الحجز",
+    sgMale: "للرجال فقط",
+    sgFemale: "للنساء فقط",
+    sgMixed: "مختلط",
     vlRaces: { ws: "فردي السيدات", ms: "فردي الرجال", wd: "زوجي السيدات", md: "زوجي الرجال", xd: "زوجي مختلط" },
     vlTeamCode: "رمز الفريق",
     vlWithPartner: (n: string) => `مع ${n}`,

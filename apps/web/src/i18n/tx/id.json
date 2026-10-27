@@ -1693,5 +1693,10 @@
  "Receipt sent. Our team will check it and confirm your ticket.": "Bukti terkirim. Tim kami akan memeriksanya dan mengonfirmasi tiket Anda.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Transfer harga tiket dan unggah buktinya untuk melengkapi tiket Anda.",
  "Upload receipt": "Unggah bukti",
- "Booking number": "Nomor pemesanan"
+ "Booking number": "Nomor pemesanan",
+ "Men only": "Khusus pria",
+ "Women only": "Khusus wanita",
+ "Mixed": "Campuran",
+ "This session is for men only.": "Sesi ini khusus untuk pria.",
+ "This session is for women only.": "Sesi ini khusus untuk wanita."
 }

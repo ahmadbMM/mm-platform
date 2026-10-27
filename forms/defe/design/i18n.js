@@ -130,6 +130,8 @@ var FORM_T = {
    "You were signed out. Sign in again to book.": "تم تسجيل خروجك. سجّل الدخول مجددًا لتحجز.",
    "Your account still needs a few details before it can book.": "حسابك يحتاج بعض التفاصيل قبل أن تتمكن من الحجز.",
    "The ride waiver has changed. Reload this page to read the new one.": "تغيّر إقرار الركوب. أعد تحميل هذه الصفحة لقراءة الإقرار الجديد.",
+   "This session is for men only.": "هذه الفعالية للرجال فقط.",
+   "This session is for women only.": "هذه الفعالية للنساء فقط.",
    "All Defe places are taken.": "اكتمل عدد أماكن دفء.",
    "Booking for this ride is closed.": "الحجز لهذه الرحلة مغلق.",
    "Could not reach the server. Please try again.": "تعذّر الوصول إلى الخادم. يُرجى المحاولة مرة أخرى.",

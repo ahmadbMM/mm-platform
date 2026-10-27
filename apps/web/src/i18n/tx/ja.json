@@ -1694,5 +1694,10 @@
  "Receipt sent. Our team will check it and confirm your ticket.": "明細を送信しました。スタッフが確認してチケットを確定します。",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "チケット代金をお振り込みのうえ、明細をアップロードしてチケットを完了してください。",
  "Upload receipt": "明細をアップロード",
- "Booking number": "予約番号"
+ "Booking number": "予約番号",
+ "Men only": "男性限定",
+ "Women only": "女性限定",
+ "Mixed": "男女混合",
+ "This session is for men only.": "このセッションは男性限定です。",
+ "This session is for women only.": "このセッションは女性限定です。"
 }

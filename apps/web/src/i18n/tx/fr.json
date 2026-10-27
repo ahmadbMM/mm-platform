@@ -1692,5 +1692,10 @@
  "Receipt sent. Our team will check it and confirm your ticket.": "Reçu envoyé. Notre équipe va le vérifier et confirmer votre billet.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Virez le prix du billet et téléversez le reçu pour compléter votre billet.",
  "Upload receipt": "Téléverser le reçu",
- "Booking number": "Numéro de réservation"
+ "Booking number": "Numéro de réservation",
+ "Men only": "Hommes uniquement",
+ "Women only": "Femmes uniquement",
+ "Mixed": "Mixte",
+ "This session is for men only.": "Cette séance est réservée aux hommes.",
+ "This session is for women only.": "Cette séance est réservée aux femmes."
 }

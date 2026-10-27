@@ -1693,5 +1693,10 @@
  "Receipt sent. Our team will check it and confirm your ticket.": "Квитанция отправлена. Наша команда проверит её и подтвердит ваш билет.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Переведите стоимость билета и загрузите квитанцию, чтобы оформить билет.",
  "Upload receipt": "Загрузить квитанцию",
- "Booking number": "Номер бронирования"
+ "Booking number": "Номер бронирования",
+ "Men only": "Только для мужчин",
+ "Women only": "Только для женщин",
+ "Mixed": "Смешанная группа",
+ "This session is for men only.": "Это занятие только для мужчин.",
+ "This session is for women only.": "Это занятие только для женщин."
 }

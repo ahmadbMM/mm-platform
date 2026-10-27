@@ -8,12 +8,13 @@ import SignIn from "@/components/account/SignIn";
 import TicketCard from "@/components/booking/TicketCard";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import {
-  JCC_ACCOUNT_CAP, addonCap, addonCatRank, addonsCost, fromPrice, hasRideGroups, maxRiders, needsBike, needsWaiver, nextStep, prevStep, promoDiscount,
+  JCC_ACCOUNT_CAP, addonCap, addonCatRank, addonsCost, fromPrice, genderRefused, hasRideGroups, maxRiders, needsBike, needsWaiver, nextStep, prevStep, promoDiscount,
   regSteps, rentalTotal, riderPrices, RIDE_GROUPS, sessionAddons, typeOptions, validateRiders, waiverKind,
   type AddonItem, type AddonPick, type BikeType, type BookAccount, type BookSession, type Prices, type Promo, type Refusal, type Rider, type RideGroup, type Step,
 } from "@/lib/booking";
 import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
 import { rpcResult } from "@/lib/rpc-client";
+import { genderChip } from "@/lib/session-gender";
 import { ticketCue, type AddonItem as TicketAddonItem, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 import { Ic, KindIc } from "./BookIcons";
 import { T, type BookingText } from "./Booking.text";
@@ -25,6 +26,10 @@ import { T, type BookingText } from "./Booking.text";
 // in front of the same step: sign in, a member's ride, a ride the rider was turned down for, the
 // details staff asked for, the profile page. The booking itself is the server's
 // (app/api/booking): the price is the database's, never this page's.
+// A session for men only or women only (the owner, 2026-10-27; lib/session-gender.ts) wears its chip on its card,
+// the summary and the review (a pool session open to both says Mixed), and an account of the other gender, or with
+// none on file, is told "This session is for women only." when it picks the date, before anything is sent; the
+// server checks it again, and the database's GENDER_ONLY reads the same.
 
 export type FlowEvent = { key: string; title: string; meta: string; logo: string; note: string; sessions: BookSession[] };
 export type FlowText = { eventTitle: string; noDates: string; membersNote: string; clubLink: string; gather: string; start: string };
@@ -62,6 +67,7 @@ type Props = {
 
 type Modal =
   | { kind: "signin" } | { kind: "members" } | { kind: "rejected"; s: BookSession } | { kind: "fix" }
+  | { kind: "gender"; s: BookSession; refusal: Refusal }
   | { kind: "profile"; community: boolean; next: string | null }
   | { kind: "bike"; type: BikeType; slot: number } | { kind: "group"; g: RideGroup } | null;
 type Done = { tickets: TicketRow[]; session: TicketSession | null; addonsSaved: boolean };
@@ -165,6 +171,11 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const qty = riders.length;
   const typeName = (ty: string) => typeNames[ty] ?? ty;
   const pillName = (ty: string) => t.types[ty] ?? ty;
+  // men only, women only or mixed: the booking app's .sg-chip (components/site/site.css)
+  const chip = (s: BookSession) => {
+    const c = genderChip(s, { male: t.sgMale, female: t.sgFemale, mixed: t.sgMixed });
+    return c ? <span className={`sg-chip sg-${c.cls}`}>{c.label}</span> : null;
+  };
 
   // ── Riders ───────────────────────────────────────────────────────────────────────────────
   const setQty = (d: number) => {
@@ -257,6 +268,9 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     if (!acctNow) { setModal({ kind: "signin" }); return; }
     if (needsBike(sel) && !ridersOk()) { go(2); return; }
     if (needsWaiver(sel) && waiverOk !== sel.id) { go(2.5); return; }
+    // a session for the other gender is refused here, before anything is sent (the server and the database refuse it too)
+    const sg = genderRefused(sel, acctNow.gender);
+    if (sg) { setErr(t.err[sg]); return; }
     setBusy(true); setErr("");
     try {
       const res = await fetch("/api/booking", {
@@ -324,9 +338,11 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   };
   const card = (s: BookSession) => {
     const named = s.kind !== "jcc";
-    const kicker = named ? (
+    const sg = chip(s);
+    const kicker = named || sg ? (
       <span className="sc-kicker">
-        <span className="sc-chip has-ic"><KindIc kind={s.kind} />{s.name}</span>
+        {named && <span className="sc-chip has-ic"><KindIc kind={s.kind} />{s.name}</span>}
+        {sg}
         {s.kind === "workshop" && <span className="sc-partner">{t.partner}</span>}
       </span>
     ) : null;
@@ -393,6 +409,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     <aside className="bk-side" aria-label={t.summary}>
       <p className="bk-side-h">{t.summary}</p>
       {sel.kind !== "jcc" && <p className="bk-side-k">{sel.name}</p>}
+      {chip(sel) && <p className="bk-side-sg">{chip(sel)}</p>}
       <p className="bk-side-when">{sel.near && <><strong>{sel.near}</strong> · </>}{sel.day}</p>
       <p className="bk-side-time"><bdi>{sel.time}</bdi></p>
       {needsBike(sel) && <p className="bk-side-row"><span>{t.numBikes}</span><span>{qty}</span></p>}
@@ -609,6 +626,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
               <p className="bk-k">{t.rideLabel}</p>
               <p className="bk-rv-date">{sel.kind !== "jcc" && <>{sel.name}<br /></>}{sel.day}</p>
               <p className="bk-rv-time"><bdi>{sel.time}</bdi></p>
+              {chip(sel) && <p className="bk-rv-sg">{chip(sel)}</p>}
             </div>
             {acctNow && <div className="bk-rv-by"><p className="bk-k">{t.bookedBy}</p><p className="bk-rv-name">{acctNow.name}</p></div>}
           </div>
@@ -695,6 +713,9 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
 function gateFor(s: BookSession, a: BookAccount): Modal {
   if (a.asks.length) return { kind: "fix" };
   if (a.profileGate !== "none") return { kind: "profile", community: a.profileGate === "community", next: s.id };
+  // a session for men only or women only, to an account of the other gender or with none on file (2026-10-27)
+  const sg = genderRefused(s, a.gender);
+  if (sg) return { kind: "gender", s, refusal: sg };
   if (a.rejected.includes(s.id)) return { kind: "rejected", s };
   if (s.members && !a.member) return { kind: "members" };
   return null;
@@ -738,6 +759,16 @@ function Pop({ modal, close, t, links, locale, sel, acct, onPickBike, onPickGrou
         <div className="bk-pop-head"><div><h2 id={label} className="bk-pop-title">{t.rejTitle}</h2>{modal.s.kind !== "jcc" && <p className={`bk-pop-kind ev-${modal.s.kind}`}>{modal.s.name}</p>}</div>{x}</div>
         <p className="bk-pop-msg">{t.rejMsg}</p>
         <p className="bk-pop-msg">{t.rejNext}</p>
+        <div className="bk-pop-foot"><button type="button" className="bk-btn" onClick={close}>{t.rejOk}</button></div>
+      </div>
+    );
+  } else if (modal.kind === "gender") {
+    // a session for the other gender: its name and chip, and why it cannot be booked
+    const c = genderChip(modal.s, { male: t.sgMale, female: t.sgFemale, mixed: t.sgMixed });
+    inner = (
+      <div className="bk-pop-body">
+        <div className="bk-pop-head"><div><h2 id={label} className="bk-pop-title">{t.err[modal.refusal]}</h2>{modal.s.kind !== "jcc" && <p className={`bk-pop-kind ev-${modal.s.kind}`}>{modal.s.name}</p>}</div>{x}</div>
+        {c && <p className="bk-pop-msg"><span className={`sg-chip sg-${c.cls}`}>{c.label}</span></p>}
         <div className="bk-pop-foot"><button type="button" className="bk-btn" onClick={close}>{t.rejOk}</button></div>
       </div>
     );

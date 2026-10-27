@@ -1,6 +1,7 @@
 import { edgeStore, memo, resetMemo } from "./memo";
 import { riyadhClock } from "./workshop-days";
 import { priceRows, type PriceRow } from "./biz";
+import { sessionGender, type SessionGender } from "./session-gender";
 
 // The rides a visitor can book, read from the booking system itself: the bike prices
 // (ride_prices) and the sessions still ahead (sessions). Both are tables the booking app reads
@@ -96,6 +97,10 @@ export type RideSession = {
   /** Victory Lap's settings (sessions.vl: the races and divisions open, how to pay; lib/vlap.ts), the
    *  raw value; only a read that asks for it has it (SESSION_COLS_VL), and only on Victory Lap. */
   vl?: unknown;
+  /** Men only ('male'), women only ('female') or mixed (null): sessions.gender_only (the owner, 2026-10-27; rentals
+   *  20261027150000; lib/session-gender.ts). toSession always sets it, null when the read did not ask for it
+   *  (SESSION_COLS_GENDER); a copy kept at the edge from before has none, and reads as mixed. */
+  gender?: SessionGender | null;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -104,6 +109,7 @@ type Row = {
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
   spots?: unknown; addons?: unknown; meet_url?: unknown; location?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
+  gender_only?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -246,6 +252,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...breakfastOf(r),
     ...revealOf(r),
     ...(kind === "vlap" && "vl" in r ? { vl: r.vl ?? null } : {}),
+    gender: sessionGender(r.gender_only),
   };
 }
 
@@ -300,6 +307,9 @@ export const SESSION_COLS_REVEAL = "reveal_at";
 // Victory Lap's settings (rentals migration 20261017210000): the races and divisions open to book and how
 // to pay. A group of its own, so a database without it reads as before (every race open, the default line).
 export const SESSION_COLS_VL = "vl";
+// Men only, women only or mixed (the owner, 2026-10-27; rentals migration 20261027150000; lib/session-gender.ts). A
+// group of its own, so a database without it reads as before: every session mixed.
+export const SESSION_COLS_GENDER = "gender_only";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -376,15 +386,16 @@ export function resetSessionColumns(): void {
   delete (globalThis as { [MISSING]?: Record<string, number> })[MISSING];
 }
 
-/** Booked sessions by id, whatever their state (a Petromin night, one staff have closed since):
- *  the Account page names a rider's bookings with them. Ids are checked before they reach the
- *  query string. */
-export async function loadSessionsById(ids: string[], fetchImpl: typeof fetch = fetch): Promise<RideSession[]> {
+/** Booked sessions by id, whatever their state (a Petromin night, one staff have closed since), as
+ *  `account` may see them: read for the signed-in account, a men-only or women-only session it holds a
+ *  booking on still comes back (the owner, 2026-10-27), as does a private ride. Ids are checked before
+ *  they reach the query string. (My Account's tickets read through lib/tickets-data.ts loadTicketSessions.) */
+export async function loadSessionsById(ids: string[], fetchImpl: typeof fetch = fetch, account: SessionReader | null = null): Promise<RideSession[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const clean = [...new Set(ids)].filter((x) => /^[A-Za-z0-9_-]{1,64}$/.test(x)).slice(0, 40);
   if (!url || !key || !clean.length) return [];
   try {
-    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`);
+    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`, SESSION_COLS, Date.now(), { optional: [SESSION_COLS_GENDER], account });
     return Array.isArray(rows) ? (rows as Row[]).map((r) => toSession(r, true)).filter((x): x is RideSession => x !== null) : [];
   } catch {
     return [];
@@ -441,6 +452,46 @@ async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, 
   return sessions.map((s) => (left.has(s.id) ? { ...s, left: left.get(s.id) ?? null } : s));
 }
 
+/** The optional groups of columns every list of the sessions ahead asks for (staging: not the place, which
+ *  SESSION_COLS already holds for its on-site booking). */
+const SESSION_GROUPS = [SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER];
+
+/** The men-only and women-only sessions from today (Riyadh) on that list_sessions gives this signed-in account (the
+ *  owner, 2026-10-27; rentals 20261027150000): its own gender's, and any it holds a booking on. The public read
+ *  (loadRides: list_sessions(null, null)) never has them, so a page that lists the sessions adds these for a
+ *  signed-in visitor (lib/session-gender.ts sessionsFor). Read afresh for each request and never kept: they are
+ *  this account's alone. None while the database has no such column (its group left out, sessionRows), and none
+ *  on any failure. */
+export async function loadGenderSessions(account: SessionReader, fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<RideSession[]> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key || now < (missing()[SESSION_COLS_GENDER] ?? 0)) return [];
+  const today = riyadhClock(new Date(now)).slice(0, 10);
+  try {
+    const rows = await sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&gender_only=not.is.null&order=session_date.asc&limit=20`, SESSION_COLS, now, { optional: SESSION_GROUPS, account });
+    const list = Array.isArray(rows) ? (rows as Row[]).map((r) => toSession(r, false, true)).filter((x): x is RideSession => !!x?.gender) : [];
+    return list.length ? await withPlacesLeft(list, fetchImpl, url, key) : [];
+  } catch {
+    return [];
+  }
+}
+
+/** Which of these sessions the signed-in account may see, each with its rule (men only, women only, or null: mixed),
+ *  as list_sessions gives them to it (the owner, 2026-10-27): the Club's members' area lists the next members' rides
+ *  from member_area, and shows only these. Null when they could not be read. */
+export async function sessionsSeen(ids: string[], account: SessionReader, fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<Map<string, SessionGender | null> | null> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const clean = [...new Set(ids)].filter((x) => /^[A-Za-z0-9_-]{1,64}$/.test(x)).slice(0, 40);
+  if (!url || !key) return null;
+  if (!clean.length) return new Map();
+  try {
+    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`, "id", now, { optional: [SESSION_COLS_GENDER], account });
+    if (!Array.isArray(rows)) return null;
+    return new Map((rows as Row[]).filter((r) => typeof r.id === "string").map((r) => [r.id as string, sessionGender(r.gender_only)]));
+  } catch {
+    return null;
+  }
+}
+
 /** One read of both: the prices and the sessions from today (Riyadh) on. Each keeps the copy it
  *  replaces when its own read fails; null when neither has ever been read. */
 async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: number): Promise<RideData | null> {
@@ -452,7 +503,7 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=*`, key), // every column: max_price and employee_price too (lib/biz.ts)
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL] }),
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: SESSION_GROUPS }),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) prices = priceRows(p.value);
     if (s.status === "fulfilled" && Array.isArray(s.value)) {

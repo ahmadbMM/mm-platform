@@ -279,6 +279,10 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
   .bk-layout { grid-template-columns: 1fr; }
   .bk-side { display: none; }
 }
+/* A session for the other gender (the owner, 2026-10-27): why it cannot be booked, in place of the button. */
+.xs-refuse { margin: 0; padding: 14px 16px; border-inline-start: 4px solid #7a5a10; background: rgba(122, 90, 16, .08); color: #1a1919; font-weight: 700; font-size: 15px; line-height: 1.5; }
+/* The chip of a session for one gender, or of a pool session (the owner, 2026-10-27), in the summary and on the review. */
+.bk-side .bk-side-sg, .bk-rv-head .bk-rv-sg { margin: 6px 0 0; }
 @media (max-width: 767px) {
   .xs-event { padding: 20px; gap: 14px; min-height: 104px; }
   .xs-ev-title { font-size: 20px; }

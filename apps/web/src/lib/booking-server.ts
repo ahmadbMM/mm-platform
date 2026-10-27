@@ -3,13 +3,14 @@
 // app's own token-checked functions with the id and token from the account cookie only.
 import type { Session } from "./account-core";
 import {
-  JCC_ACCOUNT_CAP, addonCap, hasRideGroups, heightOk, heightToSize, isRiderType, maxRiders, needsBike, needsWaiver, noCarbon, ownOffered,
+  JCC_ACCOUNT_CAP, addonCap, genderRefused, hasRideGroups, heightOk, heightToSize, isRiderType, maxRiders, needsBike, needsWaiver, noCarbon, ownOffered,
   promoRows, refusalOf, rgOk, waiverKind, type BookAccount, type BookSession, type Refusal, type Rider, type RideGroup,
 } from "./booking";
 import { cleanName } from "./rpc-client";
 import { bizOf } from "./biz";
 import { loadSiteContent } from "./site";
-import { addonIds, placesTaken, rideKind, sessionRows, waitlistCap } from "./rides";
+import { addonIds, placesTaken, rideKind, SESSION_COLS_GENDER, sessionRows, waitlistCap } from "./rides";
+import { sessionGender } from "./session-gender";
 
 export type RpcAnswer<T> = { status: number; data: T | null; error: { code?: string; message?: string; details?: string } | null };
 
@@ -71,6 +72,7 @@ export function accountFrom(name: string, profile: Row, rows: Row[], member: boo
     // The profile page after the eighth booking (PROFILE_GATE_AFTER) while either is missing.
     profileGate: communityOnly ? "community" : count >= 8 && (!birth || !nationality) ? "profile" : "none",
     birth, nationality,
+    gender: sessionGender(profile.gender), // a session for one gender is booked by that gender alone (2026-10-27)
   };
 }
 
@@ -132,7 +134,7 @@ export function readInput(b: unknown): BookInput | null {
 }
 
 /** The session the booking is for, read fresh (never the page's cached copy). */
-export type LiveSession = Pick<BookSession, "id" | "date" | "kind" | "community" | "members" | "free" | "approval" | "seat" | "capacity" | "wlCap" | "addons"> & { full: boolean; open: boolean; day: string };
+export type LiveSession = Pick<BookSession, "id" | "date" | "kind" | "community" | "members" | "free" | "approval" | "seat" | "capacity" | "wlCap" | "addons" | "gender"> & { full: boolean; open: boolean; day: string };
 export function liveSession(r: Row, today: string): LiveSession | null {
   if (!ID.test(S(r.id)) || !/^\d{4}-\d{2}-\d{2}$/.test(S(r.session_date))) return null;
   const kind = rideKind(r);
@@ -147,15 +149,19 @@ export function liveSession(r: Row, today: string): LiveSession | null {
     seat: kind === "event" ? (free ? 0 : Number.isFinite(price) && price > 0 ? price : 0) : null,
     capacity: places, wlCap: waitlistCap(r.bike_slots, places), addons: addonIds(r.addons),
     full: r.status === "full", open: (r.status === "open" || r.status === "full") && S(r.session_date) >= today && kind !== "petromin", day: S(r.day),
+    gender: sessionGender(r.gender_only), // men only, women only or mixed (null; the owner, 2026-10-27)
   };
 }
 
 export type Checked = { ok: true; riders: Rider[] } | { ok: false; error: Refusal };
 /** The booking app's checks before it books (submitReg), with the account's own rows: the ride
- *  is still on, the party fits, each rider is complete, the waiver is ticked, the account holds
+ *  is still on, it is for the account's gender (a session for men only or women only, the owner,
+ *  2026-10-27), the party fits, each rider is complete, the waiver is ticked, the account holds
  *  nothing on this ride yet and was not turned down for it. */
-export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAccount, "name" | "live" | "rejected">, cap: number = JCC_ACCOUNT_CAP): Checked {
+export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAccount, "name" | "live" | "rejected" | "gender">, cap: number = JCC_ACCOUNT_CAP): Checked {
   if (!s.open) return { ok: false, error: "closed" };
+  const sg = genderRefused(s, acct.gender);
+  if (sg) return { ok: false, error: sg };
   if (acct.rejected.includes(s.id)) return { ok: false, error: "rejected" };
   if ((acct.live[s.id] ?? 0) > 0) return { ok: false, error: "already" };
   const booked = acct.live[s.id] ?? 0;
@@ -257,7 +263,10 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
   try {
     const [rows, sess] = await Promise.all([
       rpcCall<Row[]>("my_bookings", args, fetchImpl),
-      sessionRows(fetchImpl, url, key, `id=eq.${input.sessionId}`, "id,session_date,day,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons"),
+      // read for the account (list_sessions with its token): a session for men only or women only is the
+      // database's to hand out, to that gender alone or an account holding a booking on it (2026-10-27)
+      sessionRows(fetchImpl, url, key, `id=eq.${input.sessionId}`, "id,session_date,day,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons", Date.now(),
+        { optional: [SESSION_COLS_GENDER], account: acct }),
     ]);
     if (rows.status === 0) return { ok: false, error: "generic" };
     if (!Array.isArray(rows.data)) return { ok: false, error: "signin" }; // a token my_bookings no longer takes

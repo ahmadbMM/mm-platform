@@ -7,6 +7,7 @@
 // rides and coerce a booking past capacity onto the waitlist; nothing here can make a booking
 // cheaper or let one through that the database would refuse.
 import type { RideKind } from "./rides";
+import { genderOk, type SessionGender } from "./session-gender";
 
 /** A session as the wizard reads it: what lib/rides.ts reads for the cards, and the rest of the
  *  row the booking needs. Display strings (the day, the clock) are made on the server, so the
@@ -51,6 +52,9 @@ export type BookSession = {
   /** Not open to book yet: the words for when it opens; null when it may be booked. */
   opens: string | null;
   description: string | null;
+  /** Men only ('male'), women only ('female') or mixed (null): sessions.gender_only (the owner, 2026-10-27;
+   *  lib/session-gender.ts). Only an account of that gender books one for a single gender (genderRefused). */
+  gender?: SessionGender | null;
 };
 
 /** The signed-in account, as the wizard needs it (lib/booking-server.ts bookingAccount). */
@@ -74,6 +78,9 @@ export type BookAccount = {
   profileGate: "none" | "profile" | "community";
   birth: string;
   nationality: string;
+  /** The account's gender (customers.gender, from customer_profile), null when none is on file: a session for one
+   *  gender is booked by that gender alone (the owner, 2026-10-27). */
+  gender?: SessionGender | null;
 };
 
 // ── What a session involves (KIND_TRAITS) ────────────────────────────────────────────────────
@@ -304,10 +311,17 @@ export function birthOk(v: string, today: string): boolean {
 
 
 // ── The answer the booking route gives ───────────────────────────────────────────────────────
-/** Every refusal the wizard words (the app's _bookRefused and its own checks). */
+/** Every refusal the wizard words (the app's _bookRefused and its own checks). men_only and women_only: a session
+ *  for the other gender (the owner, 2026-10-27; the database's GENDER_ONLY). */
 export const REFUSALS = ["signin", "closed", "members", "rejected", "already", "one_per_session", "group_cap", "cap", "fix_first", "pick_type",
-  "waitlist_full", "not_open", "waiver", "invalid", "generic", "offline", "origin", "slow"] as const;
+  "waitlist_full", "not_open", "waiver", "invalid", "generic", "offline", "origin", "slow", "men_only", "women_only"] as const;
 export type Refusal = (typeof REFUSALS)[number];
+
+/** A session for one gender that this account may not book (lib/session-gender.ts genderOk; the booking app's _sgOk):
+ *  the refusal that words it ("This session is for women only."), else null. An account with no gender on file books
+ *  mixed sessions alone, as the database's guard (_gender_entry_guard) refuses it the others. */
+export const genderRefused = (s: Pick<BookSession, "gender">, gender: SessionGender | null | undefined): Refusal | null =>
+  s.gender && !genderOk(s, gender ?? null) ? (s.gender === "male" ? "men_only" : "women_only") : null;
 
 /** A database refusal, read the way the booking app reads it (_bookRefused, _rideRuleRefusal):
  *  the code first, the detail next, the English sentence last. */
@@ -315,6 +329,8 @@ export function refusalOf(err: { code?: string; message?: string; details?: stri
   const m = `${err?.code ?? ""} ${err?.message ?? ""}`;
   const d = String(err?.details ?? "").trim();
   if (/STALE_SESSION/.test(m)) return "signin";
+  // a session for one gender (GENDER_ONLY from _gender_entry_guard, its detail the gender it is for; \bmale\b never matches "female")
+  if (/GENDER_ONLY/.test(m)) return /\bmale\b/.test(d) ? "men_only" : "women_only";
   if (/SESSION_CLOSED/.test(m)) return "closed";
   if (/FIX_FIRST/.test(m)) return "fix_first";
   if (/PICK_TYPE/.test(m)) return "pick_type";

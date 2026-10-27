@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  addonCap, addonCatRank, addonsCost, birthOk, fromPrice, heightToSize, maxRiders, nextStep, prevStep, priceMap, promoDiscount, promoRows, refusalOf,
+  addonCap, addonCatRank, addonsCost, birthOk, fromPrice, genderRefused, heightToSize, maxRiders, nextStep, prevStep, priceMap, promoDiscount, promoRows, refusalOf,
   needsWaiver, regSteps, rentalTotal, riderPrices, sessionAddons, typeOptions, validateRiders, waiverKind, type AddonItem, type BookSession, type Rider,
 } from "../booking";
 import { accountFrom, asksOf, bookingEntries, checkBooking, liveSession, readInput, waitlistRefused, waiverVersionFor } from "../booking-server";
@@ -329,6 +329,55 @@ describe("api/booking", () => {
     await post(book, "/api/booking", body);
     expect(calls.some((c) => c.fn === "customer_booking_update")).toBe(true);
     expect(calls.some((c) => c.fn === "customer_addon_stock")).toBe(false);
+  });
+});
+
+describe("men only, women only or mixed (the owner, 2026-10-27)", () => {
+  beforeEach(() => { vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+  const pool: BookSession = { ...base, id: "2026-10-29-sw", kind: "swim", community: true, free: true, approval: true, gender: "female" };
+  const body = { sessionId: future, riders: [{ name: "", height: "180", type: "Road" }], group: null, addons: [], promo: null, waiver: true };
+
+  it("refuses a session for one gender to anyone else, and to an account with none on file", () => {
+    expect(genderRefused(pool, "female")).toBeNull();
+    expect(genderRefused(pool, "male")).toBe("women_only");
+    expect(genderRefused(pool, null)).toBe("women_only");
+    expect(genderRefused({ ...pool, gender: "male" }, "female")).toBe("men_only");
+    expect(genderRefused({ ...pool, gender: null }, "male")).toBeNull();
+    expect(genderRefused(base, undefined)).toBeNull(); // a session read from before the column: mixed
+  });
+  it("reads the database's GENDER_ONLY as the same refusal", () => {
+    expect(refusalOf({ code: "P0001", message: "GENDER_ONLY", details: "female" })).toBe("women_only");
+    expect(refusalOf({ code: "P0001", message: "GENDER_ONLY", details: "male" })).toBe("men_only");
+    expect(refusalOf({ code: "P0001", message: "SESSION_CLOSED", details: "male" })).toBe("closed");
+  });
+  it("checks it on the server before booking: the session read fresh, the account's gender from its profile", () => {
+    const row = { id: "2026-10-29-sw", session_date: "2026-10-29", day: "Thursday", status: "open", event_kind: "community", ride_kind: "swim", needs_approval: true, bike_slots: '{"_time":"18:00 - 19:30"}', gender_only: "female" };
+    const live = liveSession(row, "2026-10-27")!;
+    expect(live.gender).toBe("female");
+    expect(liveSession({ ...row, gender_only: null }, "2026-10-27")!.gender).toBeNull();
+    const input = { sessionId: live.id, riders: [r("")], group: null, addons: [], promo: null, waiver: true };
+    const her = accountFrom("Sara", { gender: "female" }, [], true, []);
+    expect(her.gender).toBe("female");
+    expect(checkBooking(input, live, her)).toMatchObject({ ok: true });
+    expect(checkBooking(input, live, accountFrom("Omar", { gender: "male" }, [], true, []))).toEqual({ ok: false, error: "women_only" });
+    expect(checkBooking(input, live, accountFrom("Sam", {}, [], true, []))).toEqual({ ok: false, error: "women_only" });
+  });
+  it("refuses an account of the other gender before anything is booked, the session read with the cookie's id and token", async () => {
+    const calls = db({ customer_profile: () => json([{ id: "c1", name: "Omar Ali", gender: "male" }]) }, { ...SESSION, gender_only: "female" });
+    expect(await (await post(book, "/api/booking", body)).json()).toEqual({ ok: false, error: "women_only" });
+    expect(calls.some((c) => c.fn === "customer_create_booking")).toBe(false);
+    const f = globalThis.fetch as unknown as { mock: { calls: [string, RequestInit | undefined][] } };
+    const read = f.mock.calls.find(([u]) => String(u).includes("/rpc/list_sessions"))!;
+    expect(String(read[0])).toContain(",gender_only&id=eq.");
+    expect(JSON.parse(String(read[1]?.body))).toEqual({ p_id: "c1", p_token: TOKEN });
+  });
+  it("books a session for the account's own gender, and says the database's refusal in the same words", async () => {
+    let calls = db({ customer_profile: () => json([{ id: "c1", name: "Sara Ali", gender: "female" }]) }, { ...SESSION, gender_only: "female" });
+    expect((await (await post(book, "/api/booking", body)).json()).ok).toBe(true);
+    expect(calls.some((c) => c.fn === "customer_create_booking")).toBe(true);
+    calls = db({ customer_create_booking: () => json({ code: "P0001", message: "GENDER_ONLY", details: "male" }, 400) });
+    expect(await (await post(book, "/api/booking", body)).json()).toEqual({ ok: false, error: "men_only" });
   });
 });
 

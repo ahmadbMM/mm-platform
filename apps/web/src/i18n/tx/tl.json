@@ -1693,5 +1693,10 @@
  "Receipt sent. Our team will check it and confirm your ticket.": "Naipadala ang resibo. Titingnan ito ng aming team at kukumpirmahin ang ticket mo.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "I-transfer ang presyo ng ticket at i-upload ang resibo para makumpleto ang ticket mo.",
  "Upload receipt": "I-upload ang resibo",
- "Booking number": "Numero ng booking"
+ "Booking number": "Numero ng booking",
+ "Men only": "Lalaki lamang",
+ "Women only": "Babae lamang",
+ "Mixed": "Halo",
+ "This session is for men only.": "Para sa mga lalaki lamang ang session na ito.",
+ "This session is for women only.": "Para sa mga babae lamang ang session na ito."
 }

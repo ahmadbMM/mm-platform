@@ -1692,5 +1692,10 @@
  "Receipt sent. Our team will check it and confirm your ticket.": "Resit dihantar. Pasukan kami akan menyemaknya dan mengesahkan tiket anda.",
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Pindahkan harga tiket dan muat naik resit untuk melengkapkan tiket anda.",
  "Upload receipt": "Muat naik resit",
- "Booking number": "Nombor tempahan"
+ "Booking number": "Nombor tempahan",
+ "Men only": "Lelaki sahaja",
+ "Women only": "Wanita sahaja",
+ "Mixed": "Campuran",
+ "This session is for men only.": "Sesi ini untuk lelaki sahaja.",
+ "This session is for women only.": "Sesi ini untuk wanita sahaja."
 }
