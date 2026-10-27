@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HEARD, accountArgs, accountNameOk, ageOn, emailOk, igNorm, learnPayload, liNorm, noticeDue, passwordOk, phoneOk, signinIdentifier, wholeNumber, type AccountFields, type LearnFields, type LearnerFields } from "../learn";
+import { HEARD, accountArgs, accountNameOk, ageOn, emailOk, igNorm, learnPayload, liNorm, noticeDue, passwordOk, phoneOk, riyadhToday, signinIdentifier, wholeNumber, type AccountFields, type LearnFields, type LearnerFields } from "../learn";
 import { learnFrame } from "../learn-page";
 import { natOptions } from "../nationality";
 import { namePartsOk } from "../rpc-client";
@@ -317,6 +317,12 @@ describe("the pieces", () => {
     expect(ageOn("1996-02-10", "2026-02-10")).toBe(30);
     expect(ageOn("2000-02-29", "2026-02-28")).toBe(25);
     expect(ageOn("1996-02-30", "2026-09-28")).toBeNull();
+  });
+
+  it("riyadhToday is Riyadh's day as YYYY-MM-DD, whatever the phone's date layout (an iOS 17.2 iPhone gave 10/27/2026)", () => {
+    expect(riyadhToday(new Date("2026-10-27T20:59:00Z"))).toBe("2026-10-27");
+    expect(riyadhToday(new Date("2026-10-27T21:00:00Z"))).toBe("2026-10-28");
+    expect(riyadhToday(new Date("2026-12-31T21:30:00Z"))).toBe("2027-01-01");
   });
 
   it("igNorm and liNorm leave the bare handle, as the community form does", () => {

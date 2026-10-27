@@ -1071,3 +1071,26 @@ test('a refused Send application says why under the button, naming the questions
   await expect(page.locator('#why')).toContainText('Please check:');
   await expect(page.locator('#why')).toContainText('Nationality');
 });
+
+test('a phone that lays out en-CA dates as 10/27/2026 still lists birth years and sends (an iOS 17.2 iPhone, 2026-10-27)', async ({ page }) => {
+  // That iPhone's Intl ignored en-CA's year-first layout: the Year list came out empty and every
+  // Send application was refused on a date of birth the rider could not pick.
+  await page.addInitScript(() => {
+    const Real = Intl.DateTimeFormat, us = (l: unknown) => (l === 'en-CA' ? 'en-US' : l) as string;
+    const Fake = function (l?: string, o?: Intl.DateTimeFormatOptions) { return new Real(us(l), o); } as unknown as typeof Intl.DateTimeFormat;
+    Object.assign(Fake, { supportedLocalesOf: Real.supportedLocalesOf, prototype: Real.prototype });
+    Intl.DateTimeFormat = Fake;
+    const tl = Date.prototype.toLocaleDateString;
+    Date.prototype.toLocaleDateString = function (l?: string | string[], o?: Intl.DateTimeFormatOptions) { return tl.call(this, us(l), o); };
+  });
+  const { errs, of } = await open(page, `?code=${CODE}&lang=en`);
+  expect(await page.evaluate(() => new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(2026, 9, 27)))).toBe('10/27/2026');
+  await expect(step(page, 2)).toBeVisible();
+  const newest = Number(new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 4)) - 5;
+  await expect(page.locator('#birth-y option').nth(1)).toHaveAttribute('value', String(newest));
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('customer_community_apply')).toEqual([{ p_id: 'c-karim', p_token: 'tok-handed', p: expect.objectContaining({ birth_date: '1994-03-12' }) }]);
+  expect(errs).toEqual([]);
+});
