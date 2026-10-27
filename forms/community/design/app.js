@@ -174,10 +174,9 @@
 
   /* ── Date of birth: day / month / year, the site's rule (never in the future, nobody five
      or younger), in Riyadh's calendar day. ───────────────────────────────────────────── */
-  function todayKsa() {
-    try { return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date()); }
-    catch (e) { return new Date().toISOString().slice(0, 10); }
-  }
+  // Riyadh is UTC+3 all year, so its day is plain arithmetic, not Intl's "en-CA" layout: an iPhone on
+  // iOS 17.2 laid that out as 10/27/2026, which left the Year list empty and refused every send (2026-10-27).
+  function todayKsa() { return new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10); }
   function dobMax() { var p = todayKsa().split("-"); return (+p[0] - 5) + "-" + p[1] + "-" + p[2]; }
   function monthNames() {
     try { var f = new Intl.DateTimeFormat(locale(), { month: "long" }); var out = []; for (var i = 0; i < 12; i++) out.push(f.format(new Date(2000, i, 1))); return out; }

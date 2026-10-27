@@ -168,8 +168,9 @@ export function liNorm(raw: string): string {
 const igOk = (v: string) => v === "" || /^[A-Za-z0-9._]{1,30}$/.test(v);
 const liOk = (v: string) => v === "" || /^[A-Za-z0-9._%-]{3,100}$/.test(v);
 const NATIONALITY_NAMES = new Set(NATIONALITIES.map((n) => n[1]));
-/** Today in Riyadh, as YYYY-MM-DD: the day the database checks a date of birth against. */
-export const riyadhToday = (now = new Date()) => now.toLocaleDateString("en-CA", { timeZone: "Asia/Riyadh" });
+/** Today in Riyadh, as YYYY-MM-DD: the day the database checks a date of birth against. Riyadh is UTC+3 all
+ *  year, so it is plain arithmetic, not Intl's "en-CA" layout (an iPhone on iOS 17.2 gave 10/27/2026). */
+export const riyadhToday = (now = new Date()) => new Date(now.getTime() + 3 * 3600e3).toISOString().slice(0, 10);
 /** A person's age in whole years on `today` (both YYYY-MM-DD), or null for a date that is not one. */
 export function ageOn(birth: string, today: string): number | null {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(birth), t = /^(\d{4})-(\d{2})-(\d{2})$/.exec(today);
