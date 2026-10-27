@@ -4,13 +4,13 @@ import { GLYPH } from "./badge-glyphs";
 // A badge drawn as the booking app draws it (_bdgMedal): its glyph on a hexagon in one of eight
 // colours; Race Ready ('special', gold into green), National Day 96 ('national', the greens) and
 // Run for Her ('pink', the pinks) are drawn special (BDG_SPECIAL), a gradient with an inner ring
-// and a white glyph; Victory Lap's lap ring ('vlap', purple into black, 2026-10-17) too.
+// and a white glyph; Victory Lap's lap ring ('vlap', 2026-10-17; black and white since 2026-10-27) too.
 const COLORS = ["green", "gold", "blue", "red", "purple", "orange", "teal", "silver"];
 const SPECIAL: Record<string, [[string, string, string], string]> = {
   special: [["#ffe58a", "#f0a500", "#00b86b"], "#b87d00"],
   national: [["#5fd99a", "#159a57", "#0a5c33"], "#08502c"],
   pink: [["#ffc9da", "#f2789f", "#c2416e"], "#a3325b"],
-  vlap: [["#b9a6ff", "#5b3fd6", "#1b1236"], "#140c2e"],
+  vlap: [["#bdbdbd", "#333333", "#000000"], "#000000"], // black and white (the owner, 2026-10-27)
   defe: [["#f6c3d6", "#d782a0", "#a22b63"], "#7a1d4a"], // Rode with Defe (2026-10-18)
 }; // BadgeGrid's special() lists the same colours, to frame their tiles and pop-ups to match
 // The T100 races in Jeddah (redrawn 2026-10-09 as the booking app's _bdgRace): a finisher's medal on a ribbon,

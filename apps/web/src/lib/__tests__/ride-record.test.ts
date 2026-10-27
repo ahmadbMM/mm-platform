@@ -297,10 +297,11 @@ describe("Victory Lap's lap ring (victory_lap, 2026-10-17)", () => {
     expect(L.find((x) => x.slug === "rolling_start")).toMatchObject({ on: false });
     expect(L.find((x) => x.slug === "km20")).toMatchObject({ on: false });
   });
-  it("is drawn as the booking app draws it: the lap ring on the purple-into-black special medal", () => {
+  it("is drawn as the booking app draws it: the lap ring on the black-and-white special medal (2026-10-27)", () => {
     const svg = renderToStaticMarkup(createElement(Medal, { icon: "lapring", color: "vlap" }));
     expect(svg).toContain("bdg-sp");
-    for (const c of ["#b9a6ff", "#5b3fd6", "#1b1236", "#140c2e"]) expect(svg).toContain(c);
+    for (const c of ["#bdbdbd", "#333333", "#000000"]) expect(svg).toContain(c);
+    expect(svg).not.toMatch(/#b9a6ff|#5b3fd6|#1b1236|#140c2e/);
     expect(svg).toContain('r="8.4"');
     expect(RECORD.en.names.victory_lap[0]).toBe("Victory Lap");
     expect(RECORD.ar.names.victory_lap[0]).toBe("فيكتوري لاب");
