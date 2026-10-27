@@ -1454,5 +1454,10 @@
  "Transfer the ticket price and upload the receipt to complete your ticket.": "请转账门票费用并上传凭证，以完成您的门票。",
  "Upload receipt": "上传凭证",
  "Once booked, tell us whether you already have a ticket or buy one by bank transfer.": "预订后，请告诉我们您是否已有门票，或通过银行转账购买一张。",
- "Booking number": "预订编号"
+ "Booking number": "预订编号",
+ "Men only": "仅限男性",
+ "Women only": "仅限女性",
+ "Mixed": "男女混合",
+ "This session is for men only.": "本活动仅限男性参加。",
+ "This session is for women only.": "本活动仅限女性参加。"
 }

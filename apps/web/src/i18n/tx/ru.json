@@ -1454,5 +1454,10 @@
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Переведите стоимость билета и загрузите квитанцию, чтобы оформить билет.",
  "Upload receipt": "Загрузить квитанцию",
  "Once booked, tell us whether you already have a ticket or buy one by bank transfer.": "После бронирования сообщите нам, есть ли у вас билет, или купите его банковским переводом.",
- "Booking number": "Номер бронирования"
+ "Booking number": "Номер бронирования",
+ "Men only": "Только для мужчин",
+ "Women only": "Только для женщин",
+ "Mixed": "Смешанная группа",
+ "This session is for men only.": "Это занятие только для мужчин.",
+ "This session is for women only.": "Это занятие только для женщин."
 }

@@ -1454,5 +1454,10 @@
  "Transfer the ticket price and upload the receipt to complete your ticket.": "Transfiere el precio de la entrada y sube el comprobante para completar tu entrada.",
  "Upload receipt": "Subir comprobante",
  "Once booked, tell us whether you already have a ticket or buy one by bank transfer.": "Después de reservar, dinos si ya tienes una entrada o compra una por transferencia bancaria.",
- "Booking number": "Número de reserva"
+ "Booking number": "Número de reserva",
+ "Men only": "Solo hombres",
+ "Women only": "Solo mujeres",
+ "Mixed": "Mixta",
+ "This session is for men only.": "Esta sesión es solo para hombres.",
+ "This session is for women only.": "Esta sesión es solo para mujeres."
 }

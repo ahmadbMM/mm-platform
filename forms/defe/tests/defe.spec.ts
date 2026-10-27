@@ -371,6 +371,27 @@ test('a rider booked on the ride already is told so and offered their booking', 
   expect(page.url()).toBe(`${BOOKING}?signin=${HANDOFF}&tab=bookings&lang=en`);
 });
 
+test('a session for men only or women only refuses anyone else, in the booking site\'s words (the owner, 2026-10-27)', async ({ page }) => {
+  // GENDER_ONLY from the database's guard, its detail the gender the session is for
+  let answer = refuse('GENDER_ONLY', 'female');
+  const { errs } = await open(page, '', { partner_book: () => answer });
+  await toBook(page);
+  await book(page);
+  await expect(page.locator('#banner .banner-text')).toHaveText('This session is for women only.');
+  await expect(page.locator('#v-done')).toBeHidden();
+  answer = refuse('GENDER_ONLY', 'male');
+  await page.click('#book');
+  await expect(page.locator('#banner .banner-text')).toHaveText('This session is for men only.');
+  expect(errs).toEqual([]);
+});
+
+test('Arabic says a session for one gender refuses anyone else in its own words', async ({ page }) => {
+  await open(page, '?lang=ar', { partner_book: () => refuse('GENDER_ONLY', 'male') });
+  await toBook(page);
+  await book(page);
+  await expect(page.locator('#banner .banner-text')).toHaveText('هذه الفعالية للرجال فقط.');
+});
+
 test('no Defe ride open: booking is closed', async ({ page }) => {
   await open(page, '', { partner_status: () => json([]) });
   await expect(page.locator('#state')).toHaveText('Booking is closed');

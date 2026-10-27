@@ -1,6 +1,7 @@
 import { siteSchema } from "@/content/pages/site";
 import type { ItemField } from "@/content/types";
 import { fieldValue, type Locale } from "./content";
+import type { SessionGender } from "./session-gender";
 
 // The members' area on /club (components/club/MembersArea.tsx): what member_area hands a signed-in
 // community member - membership and since when, credits and tier, rides done and the last five,
@@ -8,7 +9,10 @@ import { fieldValue, type Locale } from "./content";
 // other here: nothing in the answer names another person. The plain logic, so it can be tested.
 
 export type MemberRide = { date: string; title: string; kind: string | null; rated: boolean };
-export type MemberUpcoming = { id: string; date: string; title: string; kind: string | null; time: string | null; booked: boolean };
+export type MemberUpcoming = { id: string; date: string; title: string; kind: string | null; time: string | null; booked: boolean;
+  /** Men only, women only or mixed (null), as list_sessions gives the session to the account (the owner, 2026-10-27;
+   *  app/[locale]/club/page.tsx); absent when that was not read. */
+  gender?: SessionGender | null };
 export type MemberArea =
   | { ok: true; member: false; firstName: string }
   | { ok: true; member: true; firstName: string; since: string | null; credits: number; tier: 0 | 1 | 2; next: number | null; rides: number; groupRides: number; last: MemberRide[]; upcoming: MemberUpcoming[]; birthDate: string | null; announcements: unknown }

@@ -10,6 +10,7 @@ import { VL_DIV_KM, vlDivName, vlIsDbl } from "@/lib/vlap";
 import { vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-ticket";
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
+import { genderChip } from "@/lib/session-gender";
 import { DEFE_RACE_URL, raceRegAsked, addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
@@ -23,6 +24,8 @@ import { DEFE_RACE_URL, raceRegAsked, addonLines, addonsCost, bookingRef, breakf
 // A DEFE 5KM Run ticket (2026-10-18) is a run's too - "Runner number", 5 km, cancel only - on Defe's own
 // look (white with Defe's blush, its logo: the booking app's th-defe5k), with when the kits go out and the
 // race starts, and "Have you registered for the race?" (RaceRegQuestion) while the place is still to run.
+// A session for men only or women only, and a pool session open to both, says so on a chip under its time and
+// place (the owner, 2026-10-27; lib/session-gender.ts).
 export type TicketText = (typeof T)["en"];
 type Props = {
   locale: string;
@@ -149,6 +152,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const when = timesText(s?.times, !!s?.gathers, clock, { gather, start });
   const green = s?.times && s.gathers ? t.gatherAt(clock(s.times[0])) : s?.collect && bikes ? t.collectFrom(clock(s.collect)) : "";
   const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, icsPlace(s)) : "";
+  // men only, women only or mixed (the booking app's _sgChip): none on a session that did not load
+  const sg = s ? genderChip(s, { male: t.sgMale, female: t.sgFemale, mixed: t.sgMixed }) : null;
   const wl = primary.waitlistNum;
 
   return (
@@ -177,6 +182,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             {when && <><br /><bdi>{when}</bdi></>}
             {green && !past && <><br /><span className="go">{green}</span></>}
             {!past && <><br /><span className="tk-venue">{venueText(venue, t)}</span></>}
+            {sg && <><br /><span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span></>}
           </p>
         </div>
       </div>

@@ -209,6 +209,10 @@
   $("#banner .banner-close").addEventListener("click", hideBanner);
   var SITE_TOO_MANY = "site:errTooManyTries";
   var NET = "Could not reach the server. Please try again.";
+  // A session for men only or women only (the owner, 2026-10-27): the server refuses anyone else's booking with
+  // GENDER_ONLY, its detail the gender the session is for, and the page says so in the booking site's words.
+  var SG_MEN = "This session is for men only.";
+  var SG_WOMEN = "This session is for women only.";
 
   /* ── The database ───────────────────────────────────────────────────── */
   // One RPC with the public key: {data} when it answered, {error} when it refused or never answered.
@@ -1072,6 +1076,7 @@
     else if (/PICK_TYPE/.test(m)) { setErr("f-bike", "Choose a bike"); focusField("f-bike"); }
     else if (/STALE_SESSION/.test(m)) signedOut();
     else if (/RATE_LIMITED/.test(m)) showBanner(SITE_TOO_MANY);
+    else if (/GENDER_ONLY/.test(m)) showBanner(/\bmale\b/.test(String((e && (e.details || e.detail)) || "")) ? SG_MEN : SG_WOMEN);
     else showBanner(NET);
   }
   $("#b-open").addEventListener("click", function () { openBooking(); });

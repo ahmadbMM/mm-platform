@@ -17,6 +17,9 @@ import { isNonBike } from "@/lib/bike-kinds";
 // or date shows its link to community members alone (lib/event-info.ts).
 // A Saturday ride's date names its breakfast stop once staff set one (the owner, 2026-10-05): a line
 // on its card, the last of its Details, and its summary say "Breakfast at {name}".
+// A session for men only or women only, and a pool session open to both (the owner, 2026-10-27), wears its
+// chip on its card, in its Details and in the summary; an account the session is not for reads why in place
+// of the button (the page decides, lib/session-gender.ts).
 export type StepSession = {
   id: string; kind: string; day: string; name: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
@@ -51,6 +54,12 @@ export type StepSession = {
   /** Victory Lap, to those who may book it: how the ticket is paid once booked (the booking app's vlPayLater,
    *  or staff's own words, sessions.vl.pay), under the price; absent on any other date. */
   payNote?: string;
+  /** Men only, women only or mixed (lib/session-gender.ts genderChip): the chip's class and words; null on a
+   *  session that wears none. Optional, so a copy kept from before reads as none. */
+  sg?: { cls: string; label: string } | null;
+  /** "This session is for women only.": the signed-in account may not book it (genderOk), so the summary says
+   *  this in place of its button; null when it may. */
+  refusal?: string | null;
 };
 /** A date's Details (lib/event-info.ts): its text, staff's own line, and its facts. */
 export type StepInfo = {
@@ -168,8 +177,11 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   // Nor do Victory Lap's, which its tag holders book too (its rules say who, vlNote).
   const clubOnly = (s: StepSession) => s.members && ev?.key !== "petromin" && s.kind !== "vlap";
   const noBike = (s: StepSession) => isNonBike(s.kind, s.id);
+  // men only, women only or mixed: the booking app's .sg-chip
+  const chip = (s: StepSession) => (s.sg ? <span className={`sg-chip sg-${s.sg.cls}`}>{s.sg.label}</span> : null);
   const tags = (s: StepSession) => (
     <span className="xs-tags">
+      {chip(s)}
       {clubOnly(s) && <em>{t.members}</em>}
       {s.event && !s.members && <em>{t.everyone}</em>}
       {s.free && <em>{t.free}</em>}
@@ -194,7 +206,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   // A date's facts in the dialog (the booking app's _infoFacts); `next` says it as its event's next date.
   const infoFacts = (s: StepSession, next: boolean): Fact[] => {
     const i = s.info;
-    const out: Fact[] = [{ k: t.info.who, v: i.who }];
+    const out: Fact[] = [{ k: t.info.who, v: <>{i.who}{s.sg && <>{i.who && " "}{chip(s)}</>}</> }];
     if (i.price) out.push({ k: t.info.price, v: <bdi>{i.price}</bdi> });
     out.push({ k: next ? t.info.next : t.info.when, v: <>{s.day}{s.when && <><br />{when(s)}</>}{i.collect && <><br />{i.collect}</>}</> });
     out.push({ k: t.info.where, v: <>{i.place}{i.map && <> · <a href={i.map} target="_blank" rel="noopener">{t.info.map}</a></>}</> });
@@ -213,7 +225,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   const eventFacts = (e: StepEvent): Fact[] => {
     const s = e.sessions[0];
     if (!s) return [];
-    if (e.key === "community") return [{ k: t.info.who, v: t.info.whoMembers }, { k: t.info.next, v: <>{s.name} · {s.day}{s.when && <><br />{when(s)}</>}</> }];
+    if (e.key === "community") return [{ k: t.info.who, v: t.info.whoMembers }, { k: t.info.next, v: <>{s.name}{s.sg && <> {chip(s)}</>} · {s.day}{s.when && <><br />{when(s)}</>}</> }];
     return infoFacts(s, true);
   };
   // What the dialog says, and its button's words: the card's own step, which a date not open to book
@@ -305,6 +317,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                     <button type="button" className={`sc-card sc-defe ev-${s.kind}${s.full ? " full" : ""}${s.opens ? " closed" : ""}`} disabled={!!s.opens} aria-disabled={!!s.opens} onClick={() => pickDate(s)}>
                       <span className="sc-defe-top"><span className="sc-dot" aria-hidden="true" /><img className="sc-defe-logo" src={DEFE_LOGO} alt="" width={977} height={660} decoding="async" /></span>
                       <span className="sc-defe-title">{s.name}</span>
+                      {s.sg && <span className="sc-kicker">{chip(s)}</span>}
                       <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
                       <span className="sc-defe-meta">{s.defe.meta.map((x, i) => <span key={i}>{i > 0 && <i aria-hidden="true" />}<bdi>{x}</bdi></span>)}</span>
                       <span className="sc-defe-foot"><span className="sc-defe-cause"><Ribbon /><span>{s.defe.cause}</span></span>{spots}</span>
@@ -315,9 +328,10 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                 return (
                   <div key={s.id} className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
                     <button type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}${s.opens ? " closed" : ""}`} disabled={!!s.opens} aria-disabled={!!s.opens} onClick={() => pickDate(s)}>
-                      {(named(ev) || clubOnly(s) || s.free) && (
+                      {(named(ev) || clubOnly(s) || s.free || s.sg) && (
                         <span className="sc-kicker">
                           {named(ev) && <span className="sc-chip">{s.name}</span>}
+                          {chip(s)}
                           {clubOnly(s) && <span className="sc-tag">{t.members}</span>}
                           {s.event && !s.members && <span className="sc-tag">{t.everyone}</span>}
                           {s.free && <span className="sc-tag">{t.free}</span>}
@@ -374,8 +388,15 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             )}
             {clubOnly(sess) && <p className="xs-note">{noBike(sess) ? t.membersNoteNb : t.membersNote}{clubHref && <> <a href={clubHref}>{t.clubLink} {arrow}</a></>}</p>}
           </div>
-          <a className="xs-go" href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
-          {(noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
+          {sess.refusal ? (
+            // a session for the other gender (the owner, 2026-10-27): no hand-over, as the booking app refuses it too
+            <p className="xs-refuse" role="alert">{sess.refusal}</p>
+          ) : (
+            <>
+              <a className="xs-go" href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
+              {(noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
+            </>
+          )}
         </section>
       )}
 

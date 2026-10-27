@@ -710,3 +710,29 @@ describe("the Saturday ride's card", () => {
     expect(card(satRow({ hide_queue: false }), { approval: "pending" })).not.toContain("#12");
   });
 });
+
+describe("men only, women only or mixed on the ticket (the owner, 2026-10-27)", () => {
+  const t = TICKET.en;
+  const pool = (o: Record<string, unknown> = {}) => ticketSession({ id: "2099-01-12-sw", session_date: "2099-01-12", event_kind: "community", ride_kind: "swim", needs_approval: true, hide_queue: false, bike_slots: '{"_time":"18:00 - 19:30"}', ...o })!;
+  const card = (s: TicketSession, past = false, words = t) => renderToStaticMarkup(createElement(TicketCard, {
+    locale: "en", today: "2099-01-05", past, rows: [ticketRow({ id: "bk2abcdef", session_id: s.id, session_date: s.date, session_day: "Tuesday", status: "waiting", price: 0, paid: false, name: "Spec Swimmer", type_preference: "None", approval: "approved" })!],
+    session: s, name: "Triathlon Pool Session", cue: null, t: words, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+    links: { edit: null, manage: "https://book.example.test/?tab=bookings", place: null }, now: Date.parse("2099-01-05T09:00:00Z"),
+  }));
+  it("reads the session's rule, and a read without the column as mixed", () => {
+    expect(pool({ gender_only: "female" }).gender).toBe("female");
+    expect(pool({ gender_only: "male" }).gender).toBe("male");
+    expect(pool().gender).toBeNull();
+  });
+  it("names it on a chip: Women only, Men only, or Mixed on a pool session open to both", () => {
+    expect(card(pool({ gender_only: "female" }))).toContain('<span class="sg-chip sg-female">Women only</span>');
+    expect(card(pool({ gender_only: "male" }))).toContain('<span class="sg-chip sg-male">Men only</span>');
+    expect(card(pool())).toContain('<span class="sg-chip sg-mixed">Mixed</span>');
+    expect(card(pool({ gender_only: "female" }), true)).toContain("Women only"); // tonight's past card too
+    expect(card(pool({ gender_only: "female" }), false, TICKET.ar)).toContain('<span class="sg-chip sg-female">للنساء فقط</span>');
+  });
+  it("puts no chip on a session of another kind open to both", () => {
+    expect(card(pool({ ride_kind: "saturday" }))).not.toContain("sg-chip");
+    expect(card(pool({ ride_kind: "saturday", gender_only: "female" }))).toContain("Women only"); // one for a single gender says so, of any kind
+  });
+});

@@ -19,9 +19,13 @@ import { fmtClock } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
+import { genderView } from "@/lib/account";
+import { genderChip, genderOk, genderRefusal, genderText, sessionsFor } from "@/lib/session-gender";
 
 // micromobility.sa/events - every upcoming session in the booking system, month by month, each
-// booked in the booking app; sessions are named the way /experiences names them.
+// booked in the booking app; sessions are named the way /experiences names them. A session for men only
+// or women only (the owner, 2026-10-27; lib/session-gender.ts) is listed to a signed-in account of that
+// gender alone (or one holding a booking on it), and it and every pool session wear their chip.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -39,7 +43,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const { locale } = await params;
   const L = asLocale(locale);
   const tx = serverL(locale);
-  const [{ content, previewing, hidden }, rides] = await Promise.all([pageState("events"), loadRides()]);
+  const [{ content, previewing, hidden }, rides, gv] = await Promise.all([pageState("events"), loadRides(), genderView()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(eventsSchema, content, L);
   const xp = resolvePage(experiencesSchema, content, L);
@@ -56,8 +60,12 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en");
   const now = riyadhClock(new Date());
   const clock = (hhmm: string) => fmtClock(hhmm, locale);
-  // never the Petromin nights, which only Experiences shows, to whom may book them (2026-10-12)
-  const sessions = upcoming(withoutPetromin(rides?.sessions ?? []), now).slice(0, Math.max(1, N(c.hero.count)));
+  // never the Petromin nights, which only Experiences shows, to whom may book them (2026-10-12); a signed-in
+  // account's own men-only or women-only sessions too (never anyone else's)
+  const sessions = upcoming(withoutPetromin(sessionsFor(rides?.sessions ?? [], gv)), now).slice(0, Math.max(1, N(c.hero.count)));
+  const sgWords = genderText(tx);
+  // a session for the other gender (one the account holds a booking on) says so in place of Book
+  const refusal = (s: RideSession) => (s.gender && !genderOk(s, gv?.gender ?? null) ? genderRefusal(s.gender, sgWords) : null);
   // The booking window (site_content booking.window): a date not open yet is greyed, with when it opens, never hidden.
   const window = siteBookingWindow(content);
   const opens = (s: RideSession) => (window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null);
@@ -74,8 +82,8 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="pg">
-        {/* The public rides, for search engines; members-only ones are not advertised. */}
-        <JsonLd data={eventsData(sessions.filter((s) => !s.members).map((s) => ({
+        {/* The public rides, for search engines; members-only ones are not advertised, nor one for a single gender. */}
+        <JsonLd data={eventsData(sessions.filter((s) => !s.members && !s.gender).map((s) => ({
           name: name(s), date: s.date, times: s.times, gather: s.gather, full: s.full, url: book,
           place: s.kind === "jcc" || s.kind === "snd96" || s.kind === "vlap" || s.kind === "defe5k" ? "Jeddah Corniche Circuit" : s.kind === "runher" ? "Jeddah Yacht Club" : "Jeddah",
         })))} />
@@ -114,9 +122,10 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {s.kind === "event" && !s.members && <em>{S(d.everyone)}</em>}
                         {s.free && <em>{S(d.free)}</em>}
                         {s.full && <em className="warn">{S(d.full)}</em>}
+                        {((g) => g && <span className={`sg-chip sg-${g.cls}`}>{g.label}</span>)(genderChip(s, sgWords))}
                       </div>
                     </div>
-                    {opens(s) ? <span className="pg-opens">{opens(s)}</span> : <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>}
+                    {refusal(s) ? <span className="pg-opens">{refusal(s)}</span> : opens(s) ? <span className="pg-opens">{opens(s)}</span> : <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>}
                   </div>
                 ))}
               </div>

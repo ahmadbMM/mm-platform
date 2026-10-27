@@ -8,6 +8,7 @@ import { fill as fillNamed } from "./fill";
 import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
 import { riyadhClock } from "./workshop-days";
 import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
+import { sessionGender, type SessionGender } from "./session-gender";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
 /** An add-on line on a booking (the booking app's entryAddons): the inventory item, how many, and
@@ -83,6 +84,9 @@ export type TicketSession = {
   /** The session's own price in SAR (sessions.price: Victory Lap's per athlete, the amount its ticket
    *  asks to transfer), else null. */
   price?: number | null;
+  /** Men only, women only or mixed (null): sessions.gender_only (the owner, 2026-10-27; lib/session-gender.ts),
+   *  which the ticket's chip names. A read without the column reads as mixed. */
+  gender?: SessionGender | null;
 };
 
 type Row = Record<string, unknown>;
@@ -233,6 +237,7 @@ export function ticketSession(r: Row): TicketSession | null {
     revealAt: Number.isFinite(Date.parse(S(r.reveal_at))) ? S(r.reveal_at) : null,
     vl: kind === "vlap" ? vlConfig(r.vl) : null,
     price: N(r.price),
+    gender: sessionGender(r.gender_only),
   };
 }
 

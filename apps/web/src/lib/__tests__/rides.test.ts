@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { kindNames, loadRides, oneTime, readSessions, resetRides, rideKind, routeSlugOf, sessionName, sessionRows, slotTimes, timesText, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
+import { kindNames, loadGenderSessions, loadRides, loadSessionsById, oneTime, readSessions, resetRides, rideKind, routeSlugOf, sessionName, sessionRows, sessionsSeen, slotTimes, timesText, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
 import { memoSettled } from "../memo";
 
 // /experiences shows the booking system's own prices and sessions. The rules mirror the booking
@@ -42,7 +42,7 @@ describe("slotTimes", () => {
 
 describe("toSession", () => {
   it("shows a circuit night as open to all and paid", () => {
-    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null, collect: "20:15", approval: false, capacity: null, left: null });
+    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null, collect: "20:15", approval: false, capacity: null, left: null, gender: null });
   });
   it("marks a community ride members-only and free, unless the session says otherwise", () => {
     const sat = toSession(row({ event_kind: "community", ride_kind: "saturday", title: "Saturday Social Ride", bike_slots: '{"_time":"05:45 - 06:15"}' }));
@@ -231,9 +231,9 @@ describe("loadRides", () => {
       : url.includes("meet_url") ? json({ code: "42703", message: "column sessions.meet_url does not exist" }, 400) : json([row({})])));
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
-    expect(reads[0]).toContain("needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,vl&session_date=gte.2026-09-25");
+    expect(reads[0]).toContain("needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only&session_date=gte.2026-09-25");
     // the place alone is left out: the breakfast stop and the announce time are groups of their own
-    expect(reads[1]).toContain("needs_approval,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at,vl&session_date=gte.2026-09-25");
+    expect(reads[1]).toContain("needs_approval,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only&session_date=gte.2026-09-25");
     expect(r?.sessions.map((x) => x.id)).toEqual(["2026-09-27"]);
     await memoSettled();
   });
@@ -245,7 +245,7 @@ describe("loadRides", () => {
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(1);
-    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,vl&");
+    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only&");
     expect(r?.sessions.map((x) => [x.id, x.breakfast, x.breakfastAr])).toEqual([["sat", "Bean Box", "بين بوكس"], ["2026-09-27", null, null]]);
     await memoSettled();
   });
@@ -253,11 +253,11 @@ describe("loadRides", () => {
   it("reads on without Victory Lap's settings on a database that does not have them (rentals 20261017210000)", async () => {
     const VL = row({ id: "2026-10-26-vl", session_date: "2026-10-26", event_kind: "community", ride_kind: "vlap", paid_ride: true, price: 150, bike_slots: '{"_time":"16:30 - 17:15"}' });
     const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json(PRICES)
-      : url.includes(",vl&") ? json({ code: "42703", message: "column sessions.vl does not exist" }, 400) : json([VL])));
+      : url.includes(",vl,") ? json({ code: "42703", message: "column sessions.vl does not exist" }, 400) : json([VL])));
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[1]).toContain("location,meet_url,breakfast_name,breakfast_name_ar,reveal_at&session_date=gte.2026-09-25");
+    expect(reads[1]).toContain("location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,gender_only&session_date=gte.2026-09-25");
     expect(r!.sessions[0]).toMatchObject({ id: "2026-10-26-vl", kind: "vlap", price: 150 });
     expect("vl" in r!.sessions[0]).toBe(false);
     await memoSettled();
@@ -269,7 +269,7 @@ describe("loadRides", () => {
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[1]).toContain("needs_approval,description,price,route_slug,location,meet_url,reveal_at,vl&session_date=gte.2026-09-25");
+    expect(reads[1]).toContain("needs_approval,description,price,route_slug,location,meet_url,reveal_at,vl,gender_only&session_date=gte.2026-09-25");
     const s = r!.sessions[0];
     expect(s).toMatchObject({ id: "sat", kind: "saturday", location: null, meetUrl: null });
     expect("breakfast" in s || "breakfastAr" in s).toBe(false);
@@ -468,5 +468,79 @@ describe("the DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18)", () => {
     const en = kindNames({ defeName: "DEFE 5KM Run" }), ar = kindNames({ defeName: "سباق دفء 5 كم" });
     expect(sessionName({ kind: "defe5k", title: null }, en, en, false)).toBe("DEFE 5KM Run");
     expect(sessionName({ kind: "defe5k", title: "DEFE 5KM Run" }, ar, en, true)).toBe("سباق دفء 5 كم");
+  });
+});
+
+describe("men only, women only or mixed (the owner, 2026-10-27; rentals 20261027150000)", () => {
+  const json = (v: unknown, status = 200) => new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
+  const POOL = { id: "2026-10-29-sw", session_date: "2026-10-29", event_kind: "community", ride_kind: "swim", needs_approval: true, bike_slots: '{"_time":"18:00 - 19:30"}' };
+  const ACCT = { id: "c1", token: "tok" };
+  const AT = Date.parse("2026-10-27T12:00:00Z"); // 15:00 in Riyadh
+  beforeEach(() => {
+    resetRides();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
+  });
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("reads sessions.gender_only as 'male' or 'female', and anything else as mixed", () => {
+    expect(toSession(row({ ...POOL, gender_only: "female" }))!.gender).toBe("female");
+    expect(toSession(row({ ...POOL, gender_only: "male" }))!.gender).toBe("male");
+    for (const v of [null, undefined, "", "Female", "both", 1]) expect(toSession(row({ ...POOL, gender_only: v }))!.gender).toBeNull();
+    expect(toSession(row(POOL))!.gender).toBeNull(); // a read that did not ask for the column
+  });
+
+  it("asks the public read for the column as a group of its own, and reads on without it on a database that does not have it", async () => {
+    const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json([])
+      : url.includes("gender_only") ? json({ code: "42703", message: "column list_sessions.gender_only does not exist" }, 400) : json([row(POOL)])));
+    const r = await loadRides(f as unknown as typeof fetch, AT);
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
+    expect(reads).toHaveLength(2);
+    expect(reads[0]).toContain(",vl,gender_only&session_date=gte.2026-10-27");
+    expect(reads[1]).toContain(",reveal_at,vl&session_date=gte.2026-10-27");
+    expect(r!.sessions.map((s) => [s.id, s.gender])).toEqual([["2026-10-29-sw", null]]);
+    await memoSettled();
+  });
+
+  it("reads a signed-in account's men-only and women-only sessions through list_sessions with its token, and only those", async () => {
+    const f = vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/4" } });
+      return json([row({ ...POOL, gender_only: "female" }), row({ ...POOL, id: "2026-10-30-sw", session_date: "2026-10-30", needs_approval: false, capacity: 10, gender_only: "female" }), row({ ...POOL, id: "mixed", gender_only: null })]);
+    });
+    const got = await loadGenderSessions(ACCT, f as unknown as typeof fetch, AT);
+    expect(got.map((s) => [s.id, s.kind, s.gender, s.left])).toEqual([["2026-10-29-sw", "swim", "female", null], ["2026-10-30-sw", "swim", "female", 6]]);
+    const [url, init] = f.mock.calls[0] as [string, RequestInit];
+    expect(url).toMatch(/^https:\/\/example\.supabase\.co\/rest\/v1\/rpc\/list_sessions\?select=.*,gender_only&session_date=gte\.2026-10-27&status=in\.\(open,full\)&gender_only=not\.is\.null&order=session_date\.asc&limit=20$/);
+    expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: "tok" });
+  });
+
+  it("reads none on a failure, and none without asking while the database has no such column", async () => {
+    const down = vi.fn(async () => json({ message: "down" }, 503));
+    expect(await loadGenderSessions(ACCT, down as unknown as typeof fetch, AT)).toEqual([]);
+    const old = vi.fn(async () => json({ code: "42703", message: "column list_sessions.gender_only does not exist" }, 400));
+    expect(await loadGenderSessions(ACCT, old as unknown as typeof fetch, AT)).toEqual([]);
+    expect(old).toHaveBeenCalledTimes(2); // with the column, then without it (the filter still names it)
+    expect(await loadGenderSessions(ACCT, old as unknown as typeof fetch, AT + 60_000)).toEqual([]);
+    expect(old).toHaveBeenCalledTimes(2); // left out for ten minutes
+  });
+
+  it("tells which members' rides the account may see, each with its rule, and nothing when it cannot be read", async () => {
+    const f = vi.fn(async () => json([{ id: "a", gender_only: "female" }, { id: "b", gender_only: null }]));
+    const seen = await sessionsSeen(["a", "b", "c", "bad id"], ACCT, f as unknown as typeof fetch, AT);
+    expect(seen && [...seen]).toEqual([["a", "female"], ["b", null]]);
+    const [url, init] = (f.mock.calls as unknown as [string, RequestInit][])[0];
+    expect(url).toBe("https://example.supabase.co/rest/v1/rpc/list_sessions?select=id,description,price,route_slug,gender_only&id=in.(a,b,c)");
+    expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: "tok" });
+    expect(await sessionsSeen(["a"], ACCT, vi.fn(async () => json({ message: "down" }, 503)) as unknown as typeof fetch, AT)).toBeNull();
+    expect(await sessionsSeen([], ACCT, f as unknown as typeof fetch, AT)).toEqual(new Map());
+  });
+
+  it("reads booked sessions by id for the signed-in account, so a session for one gender it holds a booking on still comes back", async () => {
+    const f = vi.fn(async () => json([row({ ...POOL, gender_only: "female", status: "closed" })]));
+    const got = await loadSessionsById(["2026-10-29-sw"], f as unknown as typeof fetch, ACCT);
+    expect(got.map((s) => [s.id, s.gender])).toEqual([["2026-10-29-sw", "female"]]);
+    const [url, init] = (f.mock.calls as unknown as [string, RequestInit][])[0];
+    expect(url).toContain(",gender_only&id=in.(2026-10-29-sw)");
+    expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: "tok" });
   });
 });

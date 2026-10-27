@@ -1454,5 +1454,10 @@
  "Transfer the ticket price and upload the receipt to complete your ticket.": "টিকিটের দাম ট্রান্সফার করুন এবং টিকিট সম্পূর্ণ করতে রসিদ আপলোড করুন।",
  "Upload receipt": "রসিদ আপলোড করুন",
  "Once booked, tell us whether you already have a ticket or buy one by bank transfer.": "বুকিংয়ের পর আমাদের জানান আপনার আগে থেকেই টিকিট আছে কিনা, অথবা ব্যাংক ট্রান্সফারে একটি কিনুন।",
- "Booking number": "বুকিং নম্বর"
+ "Booking number": "বুকিং নম্বর",
+ "Men only": "শুধু পুরুষ",
+ "Women only": "শুধু নারী",
+ "Mixed": "মিশ্র",
+ "This session is for men only.": "এই সেশনটি শুধু পুরুষদের জন্য।",
+ "This session is for women only.": "এই সেশনটি শুধু নারীদের জন্য।"
 }

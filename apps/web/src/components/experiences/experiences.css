@@ -122,6 +122,8 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs .xs-go { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 54px; padding: 0 30px; border-radius: 0; background: #077a4b; color: #fbf9f4; font-weight: 700; font-size: 16px; }
 .xs .xs-go:hover { background: #06603b; }
 .xs-handoff { color: #57605a; font-size: 13px; margin: 10px 0 0; }
+/* A session for the other gender (the owner, 2026-10-27): why it cannot be booked, in place of the button. */
+.xs-refuse { margin: 0; padding: 14px 16px; border-inline-start: 4px solid #7a5a10; background: rgba(122, 90, 16, .08); color: #1a1919; font-weight: 700; font-size: 15px; line-height: 1.5; }
 @media (max-width: 767px) {
   .xs-prices > div { grid-template-columns: 1fr; }
   .xs-event { padding: 20px; gap: 14px; min-height: 104px; }

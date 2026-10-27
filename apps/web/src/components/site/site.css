@@ -167,3 +167,11 @@ html:is([lang="ar"], [lang="ur"]) .mm-search-list p.mm-search-h { letter-spacing
 .mm-search-item { gap: 12px; }
 .mm-search-item > span:first-child { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .mm-search-item small { color: #57605a; font-size: 13px; font-weight: 400; line-height: 1.45; }
+
+/* ── Men only, women only or mixed (the owner, 2026-10-27; lib/session-gender.ts) ── */
+/* The chip a session wears wherever a page shows it - Experiences' dates, their Details and the booking summary,
+   Events, the Club's members' rides and My Account's tickets - as the booking app's .sg-chip draws it: square, white
+   on the rule's colour. */
+.sg-chip { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 0; font-size: 12px; font-weight: 700; font-style: normal; line-height: 1.5; letter-spacing: 0; text-transform: none; color: #fff; background: #56616b; white-space: nowrap; vertical-align: middle; }
+.sg-chip.sg-male { background: #1f6fb8; }
+.sg-chip.sg-female { background: #c2185b; }

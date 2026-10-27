@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
 import { ACCOUNT_COOKIE, decodeSession, type BookingRow, type Session } from "./account-core";
+import { loadGenderSessions, type RideSession } from "./rides";
+import { sessionGender, type SessionGender } from "./session-gender";
 
 // The signed-in account on the server: the cookie set by /api/account, checked against the
 // booking app's own session (customer_profile), and the account's bookings (my_bookings).
@@ -52,4 +54,20 @@ export async function getAccount(): Promise<Account | null> {
 export async function accountBookings(a: Session): Promise<BookingRow[]> {
   const r = await rpcServer<BookingRow[]>("my_bookings", { p_id: a.id, p_token: a.token });
   return Array.isArray(r.data) ? r.data : [];
+}
+
+/** A signed-in visitor's view of the sessions for one gender (the owner, 2026-10-27; lib/session-gender.ts): the
+ *  account's gender (customer_profile, which checks the token; null when none is on file or it could not be read)
+ *  and the men-only and women-only sessions ahead the database gives it (lib/rides.ts loadGenderSessions). Null when
+ *  the request carries no account, which then sees no such session. Only a request with the cookie costs a call, and
+ *  a signed-in visitor's page is never kept at the edge (lib/page-cache.ts). */
+export type GenderView = { gender: SessionGender | null; mine: RideSession[] };
+export async function genderView(now: number = Date.now()): Promise<GenderView | null> {
+  const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
+  if (!s) return null;
+  const [p, mine] = await Promise.all([
+    rpcServer<{ gender?: unknown }[]>("customer_profile", { p_id: s.id, p_token: s.token }),
+    loadGenderSessions(s, fetch, now),
+  ]);
+  return { gender: sessionGender(Array.isArray(p.data) ? p.data[0]?.gender : null), mine };
 }
