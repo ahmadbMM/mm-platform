@@ -21,6 +21,8 @@ import { isNonBike } from "@/lib/bike-kinds";
 // chip on its card, in its Details and in the summary; every visitor sees it (the owner, 2026-10-28), and a
 // signed-in account the session is not for reads why in place of the button (the page decides,
 // lib/session-gender.ts genderBlock).
+// Arena Heros (the owner, 2026-10-28) has a card of its own with no logo: a black-and-red wordmark from its
+// title, its line, its soonest date, hours and venue; its dates never say how many places are left.
 export type StepSession = {
   id: string; kind: string; day: string; name: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
@@ -53,7 +55,8 @@ export type StepSession = {
    *  where ("7 PM · 5 km · Jeddah Corniche Circuit") and the cause along its foot; absent on any other date. */
   defe?: { meta: string[]; cause: string };
   /** Victory Lap, to those who may book it: how the ticket is paid once booked (the booking app's vlPayLater,
-   *  or staff's own words, sessions.vl.pay), under the price; absent on any other date. */
+   *  or staff's own words, sessions.vl.pay), under the price; Arena Heros, to a community member: that how to
+   *  pay will be announced (or staff's words); absent on any other date. */
   payNote?: string;
   /** Men only, women only or mixed (lib/session-gender.ts genderChip): the chip's class and words; null on a
    *  session that wears none. Optional, so a copy kept from before reads as none. */
@@ -76,8 +79,13 @@ export type StepInfo = {
   place: string; map: string | null;
   /** A run's distances ("3 km · 5 km") and the places it has (said when counted); null when not said. */
   distance: string | null; places: string | null;
-  /** Victory Lap's races and divisions open to book, in the page's words; absent on any other kind. */
+  /** Victory Lap's and Arena Heros' races and divisions open to book, in the page's words; absent on any other kind. */
   races?: string; divs?: string;
+  /** Arena Heros: each division's level and what it asks; the race's format (teams, stations, medals); and the line
+   *  under its window (the prayer break). Absent on any other kind. */
+  guide?: { name: string; level: string; text: string }[]; format?: string; whenNote?: string;
+  /** Arena Heros: the organisers' race details, a link of its own (its label, its text, its address). */
+  link?: { label: string; text: string; url: string };
   /** The DEFE 5KM Run: when the race kits are handed out, and where the race itself is entered (Race
    *  Arabia, a link of its own); absent on any other kind. */
   kit?: { label: string; text: string };
@@ -86,7 +94,8 @@ export type StepInfo = {
 /** `about`: what the event is, in its About (Experiences > Event cards, *About). */
 export type StepEvent = {
   key: string; title: string; meta: string; logo: string; note: string; about: string; sessions: StepSession[];
-  /** Victory Lap's card (the booking app's _vlCardHtml): its soonest date, when the doors open and where, under its line. */
+  /** Victory Lap's card (the booking app's _vlCardHtml): its soonest date, when the doors open and where, under its
+   *  line; Arena Heros' its soonest date, its hours and its venue. */
   line?: string[];
 };
 export type StepText = {
@@ -111,7 +120,7 @@ export type StepText = {
   info: {
     about: string; details: string; bookEvent: string; chooseDate: string; who: string; price: string; when: string; next: string;
     where: string; map: string; distance: string; places: string; after: string; whoMembers: string; close: string;
-    races: string; divs: string;
+    races: string; divs: string; format: string;
   };
 };
 // clubHref: the Club page, "" while staff have it switched off (its address then leads Home), so no link is offered.
@@ -209,13 +218,15 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
     const i = s.info;
     const out: Fact[] = [{ k: t.info.who, v: <>{i.who}{s.sg && <>{i.who && " "}{chip(s)}</>}</> }];
     if (i.price) out.push({ k: t.info.price, v: <bdi>{i.price}</bdi> });
-    out.push({ k: next ? t.info.next : t.info.when, v: <>{s.day}{s.when && <><br />{when(s)}</>}{i.collect && <><br />{i.collect}</>}</> });
+    out.push({ k: next ? t.info.next : t.info.when, v: <>{s.day}{s.when && <><br />{when(s)}</>}{i.collect && <><br />{i.collect}</>}{i.whenNote && <><br />{i.whenNote}</>}</> });
     out.push({ k: t.info.where, v: <>{i.place}{i.map && <> · <a href={i.map} target="_blank" rel="noopener">{t.info.map}</a></>}</> });
     if (i.distance) out.push({ k: t.info.distance, v: <bdi>{i.distance}</bdi> });
+    if (i.format) out.push({ k: t.info.format, v: i.format });
     if (i.races) out.push({ k: t.info.races, v: i.races });
-    if (i.divs) out.push({ k: t.info.divs, v: <bdi>{i.divs}</bdi> });
+    if (i.divs) out.push({ k: t.info.divs, v: <><bdi>{i.divs}</bdi>{i.guide?.map((g, n) => <span key={n} className="xs-ah-div"><strong><bdi>{g.name}</bdi> · {g.level}</strong>{g.text}</span>)}</> });
     if (i.kit) out.push({ k: i.kit.label, v: <bdi>{i.kit.text}</bdi> });
     if (i.race) out.push({ k: i.race.label, v: <a href={i.race.url} target="_blank" rel="noopener">{i.race.link}</a> });
+    if (i.link) out.push({ k: i.link.label, v: <a href={i.link.url} target="_blank" rel="noopener">{i.link.text}</a> });
     if (i.places) out.push({ k: t.info.places, v: i.places });
     if (s.breakfast) out.push({ k: t.info.after, v: breakfastAt(s.breakfast) });
     else if (s.reveal) out.push({ k: t.info.after, v: s.reveal }); // the breakfast spot is told later: when
@@ -281,6 +292,19 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                       </span>
                       <span className="xs-vl-flag" aria-hidden="true" />
                     </button>
+                  ) : e.key === "arena" ? (
+                    // Arena Heros (2026-10-28): black, the organisers' wordmark "ARENA HEROS Competition" as the booking
+                    // app draws it (no logo file exists; named by its title), its line, its date, hours and venue, a
+                    // red edge at the start - never the price
+                    <button type="button" className="xs-event ev-arena" onClick={() => pickEvent(e)}>
+                      <span className="xs-ah-main">
+                        {e.logo ? <span className="xs-logo xs-ah-logo"><img src={e.logo} alt={e.title} /></span> : <span className="xs-ah-mark" role="img" aria-label={e.title}><b>Arena Heros</b><i>Competition</i></span>}
+                        <span className="xs-copy">
+                          {e.meta && <span className="xs-ah-title">{e.meta}</span>}
+                          {e.line && e.line.length > 0 && <span className="xs-ah-meta">{e.line.map((x, i) => <span key={i}>{i > 0 && <i aria-hidden="true" />}<bdi>{x}</bdi></span>)}</span>}
+                        </span>
+                      </span>
+                    </button>
                   ) : (
                     <button type="button" className={`xs-event ev-${e.key}`} onClick={() => pickEvent(e)}>
                       {e.logo && <span className="xs-logo"><img src={e.logo} alt="" /></span>}
@@ -307,7 +331,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
               {ev.sessions.map((s) => {
                 const details = infoShown(membersOnlyDate(s), memberOn(ev.key, { member, petromin }));
                 const spots = s.opens ? <span className="sc-spots closed">{s.opens}</span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
-                  : s.kind !== "vlap" && s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
+                  : s.kind !== "vlap" && s.kind !== "arena" && s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
                   : <span className="sc-spots">{t.available}</span>;
                 const about = details && <button type="button" className="sc-about" aria-label={`${t.info.details} · ${s.name} · ${s.day}`} onClick={(x) => showInfo(ev, s, x.currentTarget)}>{t.info.details}</button>;
                 // The DEFE 5KM Run's own card (the booking app's _defeSessCard, 2026-10-18): white with Defe's
@@ -374,8 +398,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             {sess.defe && <p className="xs-defe-cause"><Ribbon /><span>{sess.defe.cause}</span></p>}
             {sess.event && sess.description && <p className="xs-rules">{sess.description}</p>}
             {facts(sess)}
-            {/* Victory Lap's price per athlete, to a visitor who may book it alone (its Details' price) */}
-            {sess.kind === "vlap" && sess.info.price && <p className="xs-rules xs-vl-price"><bdi>{sess.info.price}</bdi></p>}
+            {/* Victory Lap's and Arena Heros' price per athlete, to a visitor who may book it alone (its Details' price) */}
+            {(sess.kind === "vlap" || sess.kind === "arena") && sess.info.price && <p className="xs-rules xs-vl-price"><bdi>{sess.info.price}</bdi></p>}
             {sess.payNote && <p className="xs-rules">{sess.payNote}</p>}
             {/* the community card's rules speak of riders and the ride: not on its pool session or the DEFE run */}
             {ev.note && !(ev.key === "community" && noBike(sess)) && <p className="xs-rules">{ev.note}</p>}

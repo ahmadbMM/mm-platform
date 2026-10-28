@@ -12,7 +12,7 @@ import { fmtClock } from "../tickets";
 const clock = (t: string) => fmtClock(t, "en");
 const TEXTS: DateTexts = {
   aboutJcc: "Circuit: bikes from {collect}, {start} to {end}.", aboutSat: "Gather {gather}, start {start}.", aboutPetro: "Petromin: bikes from {collect}.", aboutSwim: "Pool {start} to {end}.",
-  aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", aboutVl: "Doors {gather}, first heat {start}.", aboutDefe: "Defe run at {start}{end}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
+  aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", aboutVl: "Doors {gather}, first heat {start}.", aboutDefe: "Defe run at {start}{end}.", aboutAr: "Heats {start} to {end}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
 };
 const circuit = { kind: "jcc" as const, times: ["21:00", "23:00"] as [string, string], gather: false, collect: "20:15", description: null };
 const saturday = { kind: "saturday" as const, times: ["05:45", "06:15"] as [string, string], gather: true, collect: null, description: "Breakfast at the marina." };

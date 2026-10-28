@@ -16,7 +16,8 @@
 // vlWaitPartner, vlNoPartner, vlPairWait, vlShirtLabel, vlT5Short, vlT5_*, vlEdBtn, and the ticket question vt*
 // (the divisions are Kamin Sports' names, lib/vlap.ts vlDivName). The DEFE 5KM Run (2026-10-18): runnerNumber,
 // and defeKit*, defeRace*, defeReg*, the booking app's own keys. Men only, women only or mixed (2026-10-27):
-// sgMale, sgFemale, sgMixed, the booking app's own keys.
+// sgMale, sgFemale, sgMixed, the booking app's own keys. Arena Heros (2026-10-28): athleteNumber, vlRaces wd/md,
+// vlTeamCode, vlWithPartner and vlPairWait as on Victory Lap, and the site's own ahTeamCode, ahHeat and ahPay.
 export const T = {
   en: {
     queueNumber: "Queue number",
@@ -163,6 +164,12 @@ export const T = {
     vtUpload: "Upload receipt",
     vtSaving: "Saving…",
     vtClose: "Close",
+    // Arena Heros (the owner, 2026-10-28): each partner books their own place with the team's code; the organisers
+    // give the heat times; how to pay is announced later (the booking app's arPayLater); the venue (venueGymnation)
+    ahTeamCode: "Your partner books their own place with this code.",
+    ahHeat: "The organisers give your team its heat time before race day.",
+    ahPay: "How to pay will be announced.",
+    venueGymnation: "Gymnation, Tahlia Street", // the booking app's venueGymnation
   },
   ar: {
     queueNumber: "رقم الدور",
@@ -297,5 +304,9 @@ export const T = {
     vtUpload: "رفع الإيصال",
     vtSaving: "جارٍ الحفظ…",
     vtClose: "إغلاق",
+    ahTeamCode: "يحجز شريكك مكانه بنفسه بهذا الرمز.",
+    ahHeat: "يُبلغ المنظمون فريقك بموعد دفعته قبل يوم السباق.",
+    ahPay: "سيُعلن عن طريقة الدفع لاحقًا.",
+    venueGymnation: "Gymnation، شارع التحلية",
   },
 };

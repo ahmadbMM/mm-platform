@@ -46,7 +46,7 @@ export const experiencesSchema = {
     {
       id: "events",
       label: bi("Event cards", "بطاقات الفعاليات"),
-      hint: bi("The same events as the booking app. The National Day, T100, Events, Run for Her and Victory Lap cards show only while they have dates. Petromin Days shows only to accounts with the Petromin tag, while it has dates. Their About texts also show in the booking app.", "الفعاليات نفسها كما في تطبيق الحجز. بطاقات اليوم الوطني وT100 والفعاليات ونركض لأجلها وفيكتوري لاب تظهر فقط عند وجود مواعيد. وتظهر أيام بترومين لحاملي وسم بترومين فقط، عند وجود مواعيد. وتظهر نصوص «عن هذه الفعالية» في تطبيق الحجز أيضاً."),
+      hint: bi("The same events as the booking app. The National Day, T100, Events, Run for Her, Victory Lap and Arena Heros cards show only while they have dates. Petromin Days shows only to accounts with the Petromin tag, while it has dates. Their About texts also show in the booking app.", "الفعاليات نفسها كما في تطبيق الحجز. بطاقات اليوم الوطني وT100 والفعاليات ونركض لأجلها وفيكتوري لاب وأرينا هيروز تظهر فقط عند وجود مواعيد. وتظهر أيام بترومين لحاملي وسم بترومين فقط، عند وجود مواعيد. وتظهر نصوص «عن هذه الفعالية» في تطبيق الحجز أيضاً."),
       fields: [
         txt("jccTitle", 40, "Circuit: title", "الحلبة: العنوان", "Open Sports Day", "يوم الرياضة المفتوح"),
         txt("jccMeta", 60, "Circuit: line", "الحلبة: السطر", "Sun & Tue · 9-11pm", "الأحد والثلاثاء · 9-11 مساءً"),
@@ -94,6 +94,17 @@ export const experiencesSchema = {
         { id: "vlLogo", type: "image", label: bi("Victory Lap: logo", "فيكتوري لاب: الشعار"), def: "/site/victory-lap-dark.webp" },
         long("vlNote", 240, "Victory Lap: rules", "فيكتوري لاب: القواعد", "For Community members and Victory Lap athletes aged 16 and over on race day. Pick your race and division when you book: on your own, or with a partner.", "لأعضاء المجتمع ورياضيي فيكتوري لاب ممن أتموا 16 عامًا يوم السباق. اختر سباقك وفئتك عند الحجز: وحدك أو مع شريك."),
         long("vlAbout", 420, "Victory Lap: about this event", "فيكتوري لاب: عن هذه الفعالية", "Victory Lap by Fitness Empire: a hybrid fitness race at the Jeddah Corniche Circuit. Run 4 km with three exercise stations (Sprint) or the full 6.1 km with five, on your own or with a partner. Run by Kamin Sports, for Community members and Victory Lap athletes aged 16 and over.", "فيكتوري لاب من فيتنس إمباير: سباق لياقة هجين على حلبة كورنيش جدة. اركض 4 كم مع ثلاث محطات تمارين (سبرنت) أو المسار الكامل 6.1 كم مع خمس محطات، وحدك أو مع شريك. تنظّمه كامن سبورتس، لأعضاء المجتمع ورياضيي فيكتوري لاب ممن أتموا 16 عامًا فأكثر."),
+        // Arena Heros Hybrid Race (ride_kind 'arena', 2026-10-28; lib/arena.ts): a hybrid fitness race in teams of 2
+        // at Gymnation, Tahlia Street, for Community members alone. No logo exists: its card is black and red with
+        // the organisers' wordmark, as the booking app's. Shown while a race is on the books; its card and rules never say the price,
+        // which its Details tell members alone. Its prefix "ar" is Arena's (not Arabic): the booking app reads its
+        // About and Details from here as experiences.events.arAbout and experiences.dates.aboutAr.
+        txt("arTitle", 40, "Arena Heros: title", "أرينا هيروز: العنوان", "Arena Heros", "أرينا هيروز"),
+        txt("arMeta", 60, "Arena Heros: line", "أرينا هيروز: السطر", "Teams of 2 · Open or Elite · 7 stations", "فرق من شخصين · مفتوح أو النخبة · 7 محطات"),
+        { id: "arLogo", type: "image", label: bi("Arena Heros: logo", "أرينا هيروز: الشعار"), hint: bi("Empty: the card shows the race's wordmark, ARENA HEROS Competition.", "فارغ: تعرض البطاقة شعار السباق المكتوب ARENA HEROS Competition."), def: "" },
+        // the booking app's own words (arCardSub, arTeamsNote, infoEvArena, infoDtAr): it shows its own until staff edit these
+        long("arNote", 240, "Arena Heros: rules", "أرينا هيروز: القواعد", "Teams of two only: two men or two women. Each partner books their own place from their own account.", "الفرق من شخصين فقط: رجلان أو امرأتان. يحجز كل شريك مكانه من حسابه."),
+        long("arAbout", 420, "Arena Heros: about this event", "أرينا هيروز: عن هذه الفعالية", "The Arena Heros Hybrid Race by WeSportify, Mile and Gymnation: a hybrid fitness race over 7 stations for teams of two, two men or two women, in the Open or Elite division. For Community members, medals included.", "سباق أرينا هيروز الهجين من WeSportify وMile وGymnation: سباق لياقة هجين من 7 محطات لفرق من شخصين، رجلين أو امرأتين، في فئة مفتوح أو النخبة. لأعضاء المجتمع، والميداليات مشمولة."),
         // Petromin Days (the owner, 2026-10-12): the Petromin nights alone, for Petromin tag holders,
         // whom the card shows to (petromin_member); community members still find the nights among the
         // community rides. Shown while a Petromin night is on the books, first on the page.
@@ -120,6 +131,8 @@ export const experiencesSchema = {
         txt("vlName", 50, "Name: Victory Lap", "الاسم: فيكتوري لاب", "Victory Lap", "فيكتوري لاب"),
         // The DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18): a date among the community rides, in Defe's pink
         txt("defeName", 50, "Name: DEFE 5KM Run", "الاسم: سباق دفء 5 كم", "DEFE 5KM Run", "سباق دفء 5 كم"),
+        // Arena Heros (ride_kind 'arena', 2026-10-28): the race's own name, in Latin letters in every language but Arabic
+        txt("arName", 50, "Name: Arena Heros", "الاسم: أرينا هيروز", "Arena Heros Hybrid Race", "سباق أرينا هيروز الهجين"),
         // What each kind of date is, in its Details on Experiences and in the booking app (2026-10-05,
         // lib/event-info.ts): the National Day ride and the events say their card's About instead.
         // aboutPetro is a Petromin night's, which this site shows since 2026-10-12 (Petromin Days).
@@ -130,6 +143,8 @@ export const experiencesSchema = {
         { ...long("aboutWs", 420, "Details: T100", "التفاصيل: T100", "T100 Triathlon Prep, in partnership with the Saudi Triathlon Federation, {start} to {end}. Open to everyone; free; our team confirms the list.", "التحضير للترايثلون T100 بالشراكة مع الاتحاد السعودي للترايثلون، من {start} إلى {end}. متاحة للجميع، مجانًا، ويعتمد فريقنا القائمة."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         { ...long("aboutRun", 420, "Details: Run for Her", "التفاصيل: نركض لأجلها", "Meet at {gather}; the run starts at {start}. Choose 3 km or 5 km when you book. Free; 80 places, then a waitlist.", "التجمع في {gather}، وينطلق الجري في {start}. اختر 3 كم أو 5 كم عند الحجز. مجانًا؛ 80 مكانًا، ثم قائمة انتظار."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         { ...long("aboutVl", 420, "Details: Victory Lap", "التفاصيل: فيكتوري لاب", "Doors open at {gather} and the first heat starts at {start}. Arrive at least 30 minutes before your heat to collect your race bib.", "تُفتح الأبواب الساعة {gather} وتنطلق أول دفعة الساعة {start}. احضر قبل دفعتك بثلاثين دقيقة على الأقل لاستلام رقم السباق."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
+        // Arena Heros' (2026-10-28; the booking app's infoDtAr): its window, with the prayer break, and who sets the heat times
+        { ...long("aboutAr", 420, "Details: Arena Heros", "التفاصيل: أرينا هيروز", "The race runs from {start} to {end}, with a break for prayer. The organisers give each team its heat time before race day.", "يُقام السباق من {start} إلى {end}، مع استراحة للصلاة. ويُبلغ المنظمون كل فريق بموعد دفعته قبل يوم السباق."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         // the DEFE 5KM Run's (the booking app's infoDtDefe, which it reads from here as experiences.dates.aboutDefe)
         long("aboutDefe", 420, "Details: DEFE 5KM Run", "التفاصيل: سباق دفء 5 كم", "Run 5 km with Defe for breast cancer awareness, together with the MicroMobility community, at the Jeddah Corniche Circuit. Collect your race kit at Jeddah Park on 21 October, 4–10 PM. The race starts on 22 October at 7 PM.", "اركض 5 كم مع دفء للتوعية بسرطان الثدي، مع مجتمع مايكروموبيليتي على حلبة كورنيش جدة. استلم عُدّة السباق من جدة بارك يوم 21 أكتوبر من 4 إلى 10 مساءً. ينطلق السباق يوم 22 أكتوبر الساعة 7 مساءً."),
         txt("members", 30, "Tag: members only", "الوسم: للأعضاء فقط", "Members", "للأعضاء"),

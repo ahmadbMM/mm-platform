@@ -14,16 +14,20 @@ import { signOut } from "./quiet";
 // look the waiver gate's (waiver.css). Victory Lap's athletes (2026-10-17) agree the same way that their
 // details go to Kamin Sports, who run the race: the details Kamin Sports' list names once staff set it
 // (`items`), else what the booking holds, with a note that the exact list is coming (the booking app's
-// vlShSub, _vlShareItems, vlShNoteTbc / vlShNoteSet, vlShAgree).
+// vlShSub, _vlShareItems, vlShNoteTbc / vlShNoteSet, vlShAgree). Arena Heros' athletes (2026-10-28) agree that
+// their details go to the race's organisers, WeSportify, Mile and Gymnation: the owner's list (first and last
+// name, email, mobile, gender, division and team, as the booking app's _vlShareItems lists them), or staff's own
+// once they set one; in the booking app's words (arShSub, arShTeam, arShAgree).
 export type PendingShare = {
   sessionId: string;
   /** The run's name, its day and date, its time ("" when it has none) and its place. */
   name: string; when: string; time: string; venue: string;
   /** The distance the runner picked, in the ticket's words ("5 km"), or null when the booking has none. */
   distance: string | null;
-  /** "vlap" on Victory Lap (Kamin Sports); absent on Run for Her. */
-  kind?: "vlap";
-  /** Victory Lap: Kamin Sports' exact list as staff set it, in the page's language; null until it is set. */
+  /** "vlap" on Victory Lap (Kamin Sports), "arena" on Arena Heros (WeSportify, Mile and Gymnation); absent on Run for Her. */
+  kind?: "vlap" | "arena";
+  /** Victory Lap: Kamin Sports' exact list as staff set it, in the page's language; null until it is set. Arena
+   *  Heros: staff's own list, when they set one. */
   items?: string[] | null;
 };
 /** agreed: the database has it · absent: the database cannot record it yet (let through) ·
@@ -91,10 +95,22 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
   };
 
   // what goes to the race's hosts, in the booking app's order: Run for Her's to Sela and JYC; Victory
-  // Lap's to Kamin Sports, their own list once staff set it, else what the booking holds (_vlShareItems)
+  // Lap's to Kamin Sports, their own list once staff set it, else what the booking holds (_vlShareItems);
+  // Arena Heros' to its three organisers, staff's list or the owner's
   const vl = w.kind === "vlap";
-  const own = vl && w.items && w.items.length ? w.items : null;
-  const items = vl
+  const ah = w.kind === "arena";
+  const own = (vl || ah) && w.items && w.items.length ? w.items : null;
+  const items = ah
+    ? own ?? [
+      tx("First name", "الاسم الأول"),
+      tx("Last name", "اسم العائلة"),
+      tx("Email address", "البريد الإلكتروني"),
+      tx("Mobile number", "رقم الجوال"),
+      tx("Gender", "الجنس"),
+      tx("Division", "الفئة"),
+      tx("Your team and its code", "فريقك ورمزه"),
+    ]
+    : vl
     ? own ?? [
       tx("Full name", "الاسم الكامل"),
       tx("Email address", "البريد الإلكتروني"),
@@ -118,8 +134,8 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
       <div ref={box} className="rg-box sg-box" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-sub`} tabIndex={-1}>
         <p className="rg-kicker sg-kicker">
           <span className="rg-flag" aria-hidden="true">
-            {vl ? (
-              // Victory Lap: a flag, as the booking app's kicker has it
+            {vl || ah ? (
+              // Victory Lap and Arena Heros: a flag, as the booking app's kicker has it
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d={FLAG} /></svg>
             ) : (
               // Run for Her's pink ribbon (badge-glyphs.ts "ribbon"), its far band lighter
@@ -138,7 +154,9 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
           {w.time && <p className="wg-ln"><Ic d={CLOCK} /><bdi>{w.time}</bdi></p>}
           <p className="wg-ln"><Ic d={PIN} /><span>{w.venue}</span></p>
         </div>
-        <p id={`${id}-sub`} className="wg-sub">{vl
+        <p id={`${id}-sub`} className="wg-sub">{ah
+          ? tx("To take part in the Arena Heros Hybrid Race, we will share these details about you with its organisers, WeSportify, Mile and Gymnation:", "للمشاركة في سباق أرينا هيروز الهجين، سنشارك بياناتك التالية مع منظميه، WeSportify وMile وGymnation:")
+          : vl
           ? tx("To take part in Victory Lap, we will share these details about you with Kamin Sports, who run the race:", "للمشاركة في فيكتوري لاب، سنشارك بياناتك التالية مع كامن سبورتس، منظّمة السباق:")
           : tx("To take part in the race, we will share these details about you with Sela and Jeddah Yacht Club (JYC):", "للمشاركة في السباق، سنشارك بياناتك التالية مع صلة ونادي جدة لليخوت (JYC):")}</p>
         <ul className="sg-list">
@@ -154,7 +172,9 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
           : tx("Nothing else about you is shared, and only for this race.", "لا نشارك أي شيء آخر عنك، وللسباق فقط.")}</p>
         <label className={`wg-agree${ok ? " on" : ""}`}>
           <input type="checkbox" checked={ok} disabled={busy} onChange={(e) => { setOk(e.target.checked); setFail(false); }} />
-          <span>{vl
+          <span>{ah
+            ? tx("I agree to MicroMobility sharing these details with WeSportify, Mile and Gymnation so I can take part in the Arena Heros Hybrid Race.", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع WeSportify وMile وGymnation لأتمكن من المشاركة في سباق أرينا هيروز الهجين.")
+            : vl
             ? tx("I agree to MicroMobility sharing these details with Kamin Sports so I can take part in Victory Lap.", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع كامن سبورتس لأتمكن من المشاركة في فيكتوري لاب.")
             : tx("I agree to MicroMobility sharing these details with Sela and Jeddah Yacht Club (JYC) so I can take part in the race.", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع صلة ونادي جدة لليخوت (JYC) لأتمكن من المشاركة في السباق.")}</span>
         </label>

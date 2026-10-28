@@ -37,7 +37,9 @@ import { vlShareItems } from "@/lib/vlap";
 // Victory Lap (2026-10-17) asks the same, for Kamin Sports: its pending answer says kind "vlap", and when
 // staff have set Kamin Sports' exact list (sessions.vl.share, one item a line) it comes as `items`, in the
 // page's language (else English); without one the pop-up lists what the booking holds and says the exact
-// list is coming (the booking app's _vlShareItems).
+// list is coming (the booking app's _vlShareItems). Arena Heros (2026-10-28) asks it too, for its organisers,
+// WeSportify, Mile and Gymnation: kind "arena", with staff's own list when they set one (sessions.vl.share),
+// else the pop-up lists what the owner named (first and last name, email, mobile, gender, division and team).
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store, private" } });
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -78,6 +80,7 @@ export async function GET(req: Request) {
       // the runner's distance in the ticket's words ("5 km"), or null when the row has none
       distance: first.km !== null ? t.rtKm(String(first.km)) : null,
       ...(s.kind === "vlap" ? ((v) => ({ kind: "vlap" as const, items: v.set ? v.items : null }))(vlShareItems(s.vl, locale, [])) : {}),
+      ...(s.kind === "arena" ? ((v) => ({ kind: "arena" as const, items: v.set ? v.items : null }))(vlShareItems(s.ah, locale, [])) : {}),
     },
   });
 }

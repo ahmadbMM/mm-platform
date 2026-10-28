@@ -30,14 +30,14 @@ describe("which sessions have no bike", () => {
     for (const s of [TICKET.en.underReview, CLAIM_WORDS.id.lateSub, CLAIM_WORDS.ms.doneSub, CLAIM_WORDS.zh.noSub, TICKET.ar.cueDone("1"), RATING_WORDS.ja.kicker, "Wie war die Fahrt?"]) expect(s).toMatch(CYCLING);
   });
   it("knows them by kind, the same list as rentsBikes, and every other kind is a bike kind", () => {
-    const all: RideKind[] = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k"];
+    const all: RideKind[] = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k", "arena"];
     for (const k of all) {
       expect(isNonBike(k), k).toBe(!rentsBikes(k));
       expect(BIKE_KINDS.has(k) !== NON_BIKE_KINDS.has(k), k).toBe(true);
     }
   });
   it("knows them by the booking app's session id when the session did not load", () => {
-    for (const id of ["2026-10-20-tw", "2026-10-05-ev", "2026-10-17-rh", "2026-10-26-vl", "2026-10-22-df", "2026-10-22-df-2"]) expect(isNonBike(null, id), id).toBe(true);
+    for (const id of ["2026-10-20-tw", "2026-10-05-ev", "2026-10-17-rh", "2026-10-26-vl", "2026-10-22-df", "2026-10-22-df-2", "2026-11-06-ah"]) expect(isNonBike(null, id), id).toBe(true);
     for (const id of ["2026-10-20", "2026-09-30-pw", "2026-09-23-nd", "2026-10-22-dfx", "j1", ""]) expect(isNonBike(undefined, id), id).toBe(false);
     expect(isNonBike("saturday", "2026-10-24")).toBe(false);
   });
@@ -47,7 +47,7 @@ describe("the rating on a session without a bike", () => {
   it("says run on a run, session on the pool, the workshop, an event and Victory Lap, ride on a bike", () => {
     expect(rideWord("runher")).toBe("run");
     expect(rideWord(null, "2026-10-22-df")).toBe("run");
-    for (const k of ["swim", "workshop", "event", "vlap"]) expect(rideWord(k), k).toBe("session");
+    for (const k of ["swim", "workshop", "event", "vlap", "arena"]) expect(rideWord(k), k).toBe("session");
     expect(rideWord(undefined, "2026-10-26-vl")).toBe("session");
     expect(rideWord(undefined, "2026-10-20-tw")).toBe("session");
     for (const k of ["jcc", "saturday", "petromin", "snd96"]) expect(rideWord(k), k).toBe("ride");
@@ -120,8 +120,30 @@ describe("the ticket on a session without a bike", () => {
     for (const l of LOCALE_CODES) {
       const t = serverLocalize(TICKET, l);
       for (const s of [t.party2, t.partyN("3"), t.underReviewNb, t.cueDoneNb("1 h"), t.cueDoneNoDurNb, t.participantOffer("10%")]) expect(s, l).not.toMatch(CYCLING);
+      // Arena Heros' own lines (2026-10-28)
+      for (const s of [t.ahTeamCode, t.ahHeat, t.ahPay, t.venueGymnation]) expect(s, l).not.toMatch(CYCLING);
       if (["id", "ms", "de", "ru", "zh", "ja"].includes(l)) expect(t.partyN("3"), l).not.toBe("3 participants");
     }
+  });
+});
+
+describe("Arena Heros' words (2026-10-28)", () => {
+  it("say race, team and athlete in every language, never ride or bike", async () => {
+    const { serverL } = await import("@/i18n/dicts");
+    const { experiencesSchema } = await import("@/content/pages/experiences");
+    const field = (sec: string, id: string) => (experiencesSchema.sections.find((x) => x.id === sec)?.fields.find((x) => x.id === id) as { def: { en: string; ar: string } }).def;
+    const pairs: [string, string][] = [
+      ...[["events", "arTitle"], ["events", "arMeta"], ["events", "arNote"], ["events", "arAbout"], ["dates", "arName"], ["dates", "aboutAr"]].map(([sec, id]) => [field(sec, id).en, field(sec, id).ar] as [string, string]),
+      ["Teams of two (two men or two women) · 7 stations · medals included", "فرق من شخصين (رجلان أو امرأتان) · 7 محطات · الميداليات مشمولة"],
+      ["With a break for prayer", "مع استراحة للصلاة"], ["per athlete, medals included", "لكل رياضي، شاملًا الميدالية"],
+      ["Community members, in teams of two", "أعضاء المجتمع، في فرق من شخصين"],
+      ["Reduced loads, distances or volume. For athletes with a solid base in functional fitness who are not yet ready for Elite loads or volume: the same competitive spirit, with more accessible distances, repetitions and loads.", "أوزان أو مسافات أو أحجام تمرين مخففة. للرياضيين الذين يملكون أساسًا جيدًا في اللياقة الوظيفية ولم يصلوا بعد إلى أوزان النخبة أو حجمها: الروح التنافسية نفسها، بمسافات وتكرارات وأوزان أيسر."],
+      ["Full prescribed loads, distances and volume. For highly trained athletes who regularly do high-intensity functional and hybrid training, with strong movement quality under fatigue and a competitive pace, with little or no scaling.", "الأوزان والمسافات وأحجام التمرين المقررة كاملة. للرياضيين المتمرسين الذين يمارسون التدريب الوظيفي والهجين عالي الشدة بانتظام، مع جودة حركة عالية تحت الإجهاد وإيقاع تنافسي، بلا تخفيف أو بقليل منه."],
+      ["The workout and standards, from the organisers", "التمارين والمعايير من المنظمين"],
+      ["To take part in the Arena Heros Hybrid Race, we will share these details about you with its organisers, WeSportify, Mile and Gymnation:", "للمشاركة في سباق أرينا هيروز الهجين، سنشارك بياناتك التالية مع منظميه، WeSportify وMile وGymnation:"],
+      ["I agree to MicroMobility sharing these details with WeSportify, Mile and Gymnation so I can take part in the Arena Heros Hybrid Race.", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع WeSportify وMile وGymnation لأتمكن من المشاركة في سباق أرينا هيروز الهجين."],
+    ];
+    for (const l of LOCALE_CODES) for (const [en, ar] of pairs) expect(serverL(l)(en, ar), `${l}: ${en.slice(0, 40)}`).not.toMatch(CYCLING);
   });
 });
 

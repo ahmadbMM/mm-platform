@@ -66,13 +66,14 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const ridesHref = bookingLink(S(c.hero.ridesHref), locale);
   // The members' rides are named as Experiences names them, and booked in the booking app on that ride
   // (the kind is the session's ride_kind: Run for Her, 'runher', opens on its own event, ev=runher, and
-  // Victory Lap, 'vlap', on its own, ev=vlap; the DEFE 5KM Run, 'defe5k', is a community date, ev=community).
+  // Victory Lap, 'vlap', on its own, ev=vlap, and Arena Heros, 'arena', on its own, ev=arena; the DEFE 5KM Run,
+  // 'defe5k', is a community date, ev=community).
   const d = resolvePage(experiencesSchema, content, L).dates;
   const kindName = kindNames(d), enName = kindNames(resolvePage(experiencesSchema, content, "en").dates);
   const asKind = (k: string | null): RideKind => (k && k in kindName ? (k as RideKind) : "saturday");
   const nameOf = (kind: string | null, title: string) => sessionName({ kind: asKind(kind), title: title || null }, kindName, enName, L !== "en");
   const bookAt = (id: string, kind: string | null) => {
-    const ev = kind === "event" || kind === "workshop" || kind === "snd96" || kind === "runher" || kind === "vlap" ? kind : "community";
+    const ev = kind === "event" || kind === "workshop" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "arena" ? kind : "community";
     try { const u = new URL(bookingLink(S(c.rides.allHref), locale)); u.searchParams.set("ev", ev); u.searchParams.set("session", id); return u.toString(); } catch { return ridesHref; }
   };
   const now = riyadhClock(new Date()), today = now.slice(0, 10);

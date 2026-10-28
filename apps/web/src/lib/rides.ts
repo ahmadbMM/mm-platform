@@ -12,8 +12,8 @@ import { sessionGender, type SessionGender } from "./session-gender";
 //
 // The rules below mirror the booking app (app.src.html) and the database, never guess:
 //   kind     _rideKind: snd96 first, anything not 'community' is a circuit night (jcc), then
-//            petromin / swim / workshop / event / runher / vlap, and every other community row is the
-//            Saturday ride.
+//            petromin / swim / workshop / event / runher / vlap / defe5k / arena, and every other community
+//            row is the Saturday ride.
 //   members  _community_booking_gate: event_kind 'community' without open_to_all is booked only
 //            by members (the Saturday tag, the Club).
 //   free     _isFreeRide: a community ride (not snd96) that is not a paid ride.
@@ -36,8 +36,13 @@ import { sessionGender, type SessionGender } from "./session-gender";
 //            the circuit, a date inside the community rides (MicroMobility Experiences), not a card of its
 //            own - members only, free, no bikes and no breakfast, one place per account, everyone runs
 //            5 km (queue_entries.run_km, set by the database); one start time ("19:00"), no gathering.
+//   arena    Arena Heros Hybrid Race (ride_kind 'arena', 2026-10-28; lib/arena.ts): a hybrid fitness race at Gymnation,
+//            Tahlia Street, for Community members alone (the members' check, not Victory Lap's); teams of 2 women or
+//            2 men, each partner booking their own place; no bikes, no breakfast; a window ("06:00 - 20:00", with a
+//            prayer break), never a gathering; a paid ride at the session's own price per athlete (sessions.price,
+//            140 SAR, medals included), which only members are told; a card of its own while it has a date.
 
-export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k";
+export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena";
 /** A ride_prices row: the fare, and (lib/biz.ts faresOf) the highest fare quoted and the employees' fare when the database has them. */
 export type RidePrice = PriceRow;
 export type RideSession = {
@@ -56,8 +61,8 @@ export type RideSession = {
   noCarbon: boolean;
   /** What the session is, as staff described it (an event's blurb); null when none. */
   description: string | null;
-  /** An event's price per seat in SAR (and Victory Lap's per athlete, said only to those who may book
-   *  it), null on a free event and on every other kind. */
+  /** An event's price per seat in SAR (and Victory Lap's and Arena Heros' per athlete, said only to those
+   *  who may book it), null on a free event and on every other kind. */
   price: number | null;
   /** An event's seats (sessions.capacity); null on every other kind. */
   seats: number | null;
@@ -92,7 +97,8 @@ export type RideSession = {
    *  back; only a read that asks for it has it (SESSION_COLS_REVEAL). */
   revealAt?: string | null;
   /** Victory Lap's settings (sessions.vl: the races and divisions open, how to pay; lib/vlap.ts), the
-   *  raw value; only a read that asks for it has it (SESSION_COLS_VL), and only on Victory Lap. */
+   *  raw value; only a read that asks for it has it (SESSION_COLS_VL), and only on Victory Lap and on Arena
+   *  Heros, whose settings have the same shape (lib/arena.ts). */
   vl?: unknown;
   /** Men only ('male'), women only ('female') or mixed (null): sessions.gender_only (the owner, 2026-10-27; rentals
    *  20261027150000; lib/session-gender.ts). toSession always sets it, null when the read did not ask for it
@@ -113,7 +119,9 @@ export function rideKind(r: Row): RideKind {
   const k = r.ride_kind;
   if (k === "snd96") return "snd96";
   if (r.event_kind !== "community") return "jcc";
-  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" ? k : "saturday";
+  // a kind this list does not know reads as the Saturday ride, as the booking app's _rideKind does: every kind
+  // the booking app makes is named here (Arena Heros since 2026-10-28, which read as a Saturday ride before)
+  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" || k === "arena" ? k : "saturday";
 }
 
 /** A route's slug as the Routes page writes one (content/pages/routes.ts): lower-case letters,
@@ -211,18 +219,19 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     gather: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap",
     noCarbon: community && kind !== "petromin", // Road Carbon goes out on a Petromin night
     description: typeof r.description === "string" && r.description.trim() ? r.description.trim().slice(0, 2000) : null,
-    // the database charges an event's seat only when the event is a paid ride (_fare_now)
-    price: (kind === "event" || kind === "vlap") && !free && price !== null && price > 0 ? price : null,
+    // the database charges an event's seat only when the event is a paid ride (_fare_now); Victory Lap's and
+    // Arena Heros' price is per athlete
+    price: (kind === "event" || kind === "vlap" || kind === "arena") && !free && price !== null && price > 0 ? price : null,
     seats: kind === "event" && seats !== null && Number.isInteger(seats) && seats > 0 ? seats : null,
     routeSlug: routeSlugOf(r.route_slug),
     approval: community && r.needs_approval !== false,
     capacity: seats,
     left: null,
-    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" ? null : collectTime(r.bike_slots),
+    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" ? null : collectTime(r.bike_slots),
     ...placeOf(r),
     ...breakfastOf(r),
     ...revealOf(r),
-    ...(kind === "vlap" && "vl" in r ? { vl: r.vl ?? null } : {}),
+    ...((kind === "vlap" || kind === "arena") && "vl" in r ? { vl: r.vl ?? null } : {}),
     gender: sessionGender(r.gender_only),
   };
 }
@@ -244,7 +253,7 @@ export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessi
 /** The names a page gives each kind of session (Experiences > Next dates). */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), petromin: "" };
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), petromin: "" };
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other
@@ -276,7 +285,8 @@ export const SESSION_COLS_BREAKFAST = "breakfast_name,breakfast_name_ar";
 // migration 20261006150000). A group of its own, so a database without it reads as before.
 export const SESSION_COLS_REVEAL = "reveal_at";
 // Victory Lap's settings (rentals migration 20261017210000): the races and divisions open to book and how
-// to pay. A group of its own, so a database without it reads as before (every race open, the default line).
+// to pay; Arena Heros' too (20261028200000). A group of its own, so a database without it reads as before
+// (every race open, the default line).
 export const SESSION_COLS_VL = "vl";
 // Men only, women only or mixed (the owner, 2026-10-27; rentals migration 20261027150000; lib/session-gender.ts). A
 // group of its own, so a database without it reads as before: every session mixed.
