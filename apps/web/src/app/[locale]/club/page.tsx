@@ -15,8 +15,8 @@ import { pageState } from "@/lib/page-state";
 import { getAccount, rpcServer } from "@/lib/account";
 import { memberArea } from "@/lib/members";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
-import { kindNames, sessionName, sessionsSeen, type RideKind } from "@/lib/rides";
-import { genderChip, genderText } from "@/lib/session-gender";
+import { kindNames, sessionName, sessionGenders, type RideKind } from "@/lib/rides";
+import { genderBlock, genderChip, genderText, sessionGender } from "@/lib/session-gender";
 import { riyadhClock } from "@/lib/workshop-days";
 import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { serverL } from "@/i18n/dicts";
@@ -27,9 +27,10 @@ import { isRtl } from "@/i18n/locales";
 // page (Community > Applications). A signed-in member sees the members' area in the card's place
 // (member_area; components/club/MembersArea.tsx) - their own membership, never another member's -
 // and a signed-in visitor who is not a member a line saying so; while the database does not have
-// the function yet, the card opens as before. Its members' rides keep only those the database shows the
-// account (list_sessions: a session for men only or women only to that gender alone, the owner,
-// 2026-10-27), each such ride and each pool session with its chip.
+// the function yet, the card opens as before. Its members' rides list every ride member_area gives, one for
+// men only or women only too (the owner, 2026-10-28: "make all pool sessions visible to all genders but only
+// male can book male sessions and female can book female sessions"), each such ride and each pool session
+// with its chip, and a member of the other gender reads "This session is for women only." in place of Book.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -49,10 +50,12 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const tx = serverL(locale);
   const [{ content, previewing, hidden }, acct] = await Promise.all([pageState("club"), getAccount()]);
   const area = acct ? memberArea(await rpcServer<unknown>("member_area", { p_id: acct.id, p_token: acct.token })) : null;
-  // member_area lists every upcoming members' ride: only those list_sessions gives this account stay (its own
-  // gender's, or one it holds a booking on), each with its rule; when that cannot be read, the list stays as it came
-  const seen = acct && area?.ok && area.member && area.upcoming.length ? await sessionsSeen(area.upcoming.map((r) => r.id), acct) : null;
-  const members = area?.ok ? (area.member && seen ? { ...area, upcoming: area.upcoming.filter((r) => seen.has(r.id)).map((r) => ({ ...r, gender: seen.get(r.id) ?? null })) } : area) : null;
+  // member_area lists every upcoming members' ride, whatever its rule, and does not say it: each ride's is read
+  // through list_sessions for the account; when that cannot be read, the rides wear no chip and keep their Book
+  const genders = acct && area?.ok && area.member && area.upcoming.length ? await sessionGenders(area.upcoming.map((r) => r.id), acct) : null;
+  const members = area?.ok ? (area.member && genders ? { ...area, upcoming: area.upcoming.map((r) => ({ ...r, gender: genders.get(r.id) ?? null })) } : area) : null;
+  // who is looking, for the refusal: the account's gender (customer_profile, which getAccount read; null when none is on file)
+  const viewer = acct ? { gender: sessionGender(acct.profile?.gender) } : null;
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(clubSchema, content, L);
   const r = c.rules;
@@ -75,7 +78,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const now = riyadhClock(new Date()), today = now.slice(0, 10);
   const window = siteBookingWindow(content); // a members' ride not open to book yet says when it opens
   const opens = (date: string) => (window && notOpenYet(date, window, now) ? opensText(date, window, locale, tx) : null);
-  const sgWords = genderText(tx); // a members' ride's chip: men only, women only, or mixed on a pool session
+  const sgWords = genderText(tx); // a members' ride's chip (men only, women only, or mixed on a pool session) and refusal
   const words = lines(S(c.hero.marquee));
   const earn = [
     { label: S(c.earn.paidLabel), value: fill(tx("{n} / SAR 10", "{n} لكل 10 ر.س"), { n: shown.perTen }), on: N(r.perTen) > 0 },
@@ -123,7 +126,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         <section className="club-join" id="card">
           {members?.member ? (
             <MembersArea locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens}
-              sgOf={(r) => genderChip(r, sgWords)} />
+              sgOf={(r) => (r.gender === undefined ? null : genderChip(r, sgWords))} refusalOf={(r) => genderBlock(r, viewer, sgWords)} />
           ) : members ? (
             <div className="club-lookup">
               <h2>{S(c.card.title)}</h2>

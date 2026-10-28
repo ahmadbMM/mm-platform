@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { makeL } from "@/i18n/tx";
 import { dictOf } from "@/i18n/dicts";
-import { genderChip, genderErrorOf, genderOk, genderRefusal, genderShown, genderText, sessionGender, sessionsFor, type SessionGender } from "../session-gender";
+import { genderBlock, genderChip, genderErrorOf, genderOk, genderRefusal, genderText, sessionGender, type SessionGender } from "../session-gender";
 
 // Men only, women only or mixed (the owner, 2026-10-27: "i want the triathlon pool sessions to be for male only or
 // female only or mixed and to be mentioned on the card and event everywhere and only allow the gender selected to
 // book it and make it visible only for the gender it is for"), as the booking app's _sessGender, _sgTxt, _sgOk,
-// _sgErr and _sgErrOf have it.
+// _sgErr and _sgErrOf have it. Its visibility half was taken back the next day: every visitor sees such a session,
+// and only booking it is held to that gender (the owner, 2026-10-28: "make all pool sessions visible to all genders
+// but only male can book male sessions and female can book female sessions").
 const en = genderText(makeL("en", null));
 const s = (id: string, gender: SessionGender | null, kind = "swim") => ({ id, kind, gender });
 
@@ -68,30 +70,25 @@ describe("who books it", () => {
   });
 });
 
-describe("who sees it", () => {
-  const pub = [s("mixed", null), s("leak", "female")]; // the public read never holds one for a single gender: a second layer all the same
-  it("shows a visitor who is not signed in no session for one gender", () => {
-    expect(genderShown(s("a", null), null)).toBe(true);
-    expect(genderShown(s("a", "female"), null)).toBe(false);
-    expect(genderShown(s("a", "male"), null)).toBe(false);
-    expect(sessionsFor(pub, null).map((x) => x.id)).toEqual(["mixed"]);
+// every visitor sees every session (lib/rides.ts loadRides lists them all, __tests__/rides.test.ts); this is only who
+// reads the refusal in place of the button that hands the booking over
+describe("who reads the refusal in place of the button (the owner, 2026-10-28)", () => {
+  const women = s("w", "female"), men = s("m", "male"), mixed = s("x", null);
+  it("keeps the button for a visitor who is not signed in, on every session: the booking app signs them in and judges the booking", () => {
+    for (const x of [women, men, mixed]) expect(genderBlock(x, null, en)).toBeNull();
   });
-  it("shows a signed-in account its own gender's and the mixed ones, never the other gender's", () => {
-    expect(genderShown(s("a", "female"), { gender: "female" })).toBe(true);
-    expect(genderShown(s("a", "male"), { gender: "female" })).toBe(false);
-    expect(genderShown(s("a", "female"), { gender: "male" })).toBe(false);
-    expect(genderShown(s("a", "female"), { gender: null })).toBe(false);
-    const women = [s("w1", "female"), s("w2", "female")];
-    expect(sessionsFor(pub, { gender: "female", mine: women }).map((x) => x.id)).toEqual(["mixed", "leak", "w1", "w2"]);
-    expect(sessionsFor(pub, { gender: "male", mine: [] }).map((x) => x.id)).toEqual(["mixed"]);
+  it("keeps the button for an account of the session's gender, and on a mixed session for anyone", () => {
+    expect(genderBlock(women, { gender: "female" }, en)).toBeNull();
+    expect(genderBlock(men, { gender: "male" }, en)).toBeNull();
+    for (const g of ["male", "female", null] as const) expect(genderBlock(mixed, { gender: g }, en)).toBeNull();
+    const before: { kind: string; gender?: SessionGender | null } = { kind: "swim" };
+    expect(genderBlock(before, { gender: "male" }, en)).toBeNull(); // a copy kept from before the column: mixed
   });
-  it("keeps a session the database gave the account for the other gender: one it holds a booking on", () => {
-    expect(genderShown(s("held", "female"), { gender: "male", mine: new Set(["held"]) })).toBe(true);
-    expect(sessionsFor([s("mixed", null)], { gender: "male", mine: [s("held", "female")] }).map((x) => x.id)).toEqual(["mixed", "held"]);
-  });
-  it("lists a session once, the account's copy in place of the public one", () => {
-    const mine = { ...s("w1", "female"), from: "account" };
-    const out = sessionsFor([{ ...s("w1", null), from: "public" }, { ...s("m", null), from: "public" }], { gender: "female", mine: [mine] });
-    expect(out.map((x) => [x.id, x.from])).toEqual([["m", "public"], ["w1", "account"]]);
+  it("tells a signed-in account of the other gender, or with none on file, why in its place", () => {
+    expect(genderBlock(women, { gender: "male" }, en)).toBe("This session is for women only.");
+    expect(genderBlock(men, { gender: "female" }, en)).toBe("This session is for men only.");
+    expect(genderBlock(women, { gender: null }, en)).toBe("This session is for women only.");
+    expect(genderBlock(men, { gender: null }, en)).toBe("This session is for men only.");
+    expect(genderBlock(women, { gender: "male" }, genderText(makeL("ar", null)))).toBe("هذه الفعالية للنساء فقط.");
   });
 });

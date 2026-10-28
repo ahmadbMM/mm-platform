@@ -13,8 +13,8 @@ const COLS = "id,session_date,day,title,ride_kind,event_kind,bike_slots,needs_ap
 // The breakfast stop's Arabic name and offer (rentals migration 20261004130000): a group of their own,
 // left out while the database does not have them yet, without taking the route along. Victory Lap's
 // settings (SESSION_COLS_VL: how to pay, what goes to Kamin Sports) the same way, and whether the session is
-// for men only or women only (SESSION_COLS_GENDER, the owner, 2026-10-27): read for the account, a session for
-// one gender that it holds a booking on keeps its ticket, and the ticket names the rule.
+// for men only or women only (SESSION_COLS_GENDER, the owner, 2026-10-27), which the ticket names on its chip;
+// every visitor sees such a session (the owner, 2026-10-28), so a booked one keeps its ticket like any other.
 const BF_COLS = "breakfast_name_ar,breakfast_offer_en,breakfast_offer_ar";
 
 /** The booked sessions by id, whatever their state (a closed night still shows its ticket), as

@@ -387,9 +387,10 @@ export function resetSessionColumns(): void {
 }
 
 /** Booked sessions by id, whatever their state (a Petromin night, one staff have closed since), as
- *  `account` may see them: read for the signed-in account, a men-only or women-only session it holds a
- *  booking on still comes back (the owner, 2026-10-27), as does a private ride. Ids are checked before
- *  they reach the query string. (My Account's tickets read through lib/tickets-data.ts loadTicketSessions.) */
+ *  `account` may see them: read for the signed-in account, a private ride it holds a booking on comes back
+ *  too. Each says whether it is for men only or women only (SESSION_COLS_GENDER), which every visitor may
+ *  see (the owner, 2026-10-28). Ids are checked before they reach the query string. (My Account's tickets
+ *  read through lib/tickets-data.ts loadTicketSessions.) */
 export async function loadSessionsById(ids: string[], fetchImpl: typeof fetch = fetch, account: SessionReader | null = null): Promise<RideSession[]> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const clean = [...new Set(ids)].filter((x) => /^[A-Za-z0-9_-]{1,64}$/.test(x)).slice(0, 40);
@@ -456,29 +457,12 @@ async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, 
  *  SESSION_COLS already holds for its on-site booking). */
 const SESSION_GROUPS = [SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER];
 
-/** The men-only and women-only sessions from today (Riyadh) on that list_sessions gives this signed-in account (the
- *  owner, 2026-10-27; rentals 20261027150000): its own gender's, and any it holds a booking on. The public read
- *  (loadRides: list_sessions(null, null)) never has them, so a page that lists the sessions adds these for a
- *  signed-in visitor (lib/session-gender.ts sessionsFor). Read afresh for each request and never kept: they are
- *  this account's alone. None while the database has no such column (its group left out, sessionRows), and none
- *  on any failure. */
-export async function loadGenderSessions(account: SessionReader, fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<RideSession[]> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key || now < (missing()[SESSION_COLS_GENDER] ?? 0)) return [];
-  const today = riyadhClock(new Date(now)).slice(0, 10);
-  try {
-    const rows = await sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&gender_only=not.is.null&order=session_date.asc&limit=20`, SESSION_COLS, now, { optional: SESSION_GROUPS, account });
-    const list = Array.isArray(rows) ? (rows as Row[]).map((r) => toSession(r, false, true)).filter((x): x is RideSession => !!x?.gender) : [];
-    return list.length ? await withPlacesLeft(list, fetchImpl, url, key) : [];
-  } catch {
-    return [];
-  }
-}
-
-/** Which of these sessions the signed-in account may see, each with its rule (men only, women only, or null: mixed),
- *  as list_sessions gives them to it (the owner, 2026-10-27): the Club's members' area lists the next members' rides
- *  from member_area, and shows only these. Null when they could not be read. */
-export async function sessionsSeen(ids: string[], account: SessionReader, fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<Map<string, SessionGender | null> | null> {
+/** Each of these sessions' rule, men only, women only or null (mixed; the owner, 2026-10-27), read through
+ *  list_sessions for the signed-in account: the Club's members' area lists the next members' rides from
+ *  member_area, which does not say it, and names it on each ride's chip. Every ride member_area gives is
+ *  listed whatever its rule (the owner, 2026-10-28); one missing here reads as mixed, as every session does
+ *  on a database without the column. Null when they could not be read. */
+export async function sessionGenders(ids: string[], account: SessionReader, fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<Map<string, SessionGender | null> | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL, key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const clean = [...new Set(ids)].filter((x) => /^[A-Za-z0-9_-]{1,64}$/.test(x)).slice(0, 40);
   if (!url || !key) return null;

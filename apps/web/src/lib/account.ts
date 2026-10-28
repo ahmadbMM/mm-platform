@@ -1,7 +1,6 @@
 import { cookies } from "next/headers";
 import { ACCOUNT_COOKIE, decodeSession, type BookingRow, type Session } from "./account-core";
-import { loadGenderSessions, type RideSession } from "./rides";
-import { sessionGender, type SessionGender } from "./session-gender";
+import { sessionGender, type GenderViewer } from "./session-gender";
 
 // The signed-in account on the server: the cookie set by /api/account, checked against the
 // booking app's own session (customer_profile), and the account's bookings (my_bookings).
@@ -57,18 +56,18 @@ export async function accountBookings(a: Session): Promise<BookingRow[]> {
   return Array.isArray(r.data) ? r.data : [];
 }
 
-/** A signed-in visitor's view of the sessions for one gender (the owner, 2026-10-27; lib/session-gender.ts): the
- *  account's gender (customer_profile, which checks the token; null when none is on file or it could not be read)
- *  and the men-only and women-only sessions ahead the database gives it (lib/rides.ts loadGenderSessions). Null when
- *  the request carries no account, which then sees no such session. Only a request with the cookie costs a call, and
- *  a signed-in visitor's page is never kept at the edge (lib/page-cache.ts). */
-export type GenderView = { gender: SessionGender | null; mine: RideSession[] };
-export async function genderView(now: number = Date.now()): Promise<GenderView | null> {
+/** Who is looking at a men-only or women-only session (lib/session-gender.ts): the signed-in account's gender
+ *  (customer_profile, which checks the token; null when none is on file), so a page says "This session is for
+ *  women only." to an account of the other gender in place of the button that hands the booking over. Every
+ *  visitor sees every such session (the owner, 2026-10-28); this only decides who reads the refusal. Null when
+ *  the request carries no account, or one whose profile could not be read (a token the booking app no longer
+ *  accepts, a failed call): the button then stays, and the booking app signs the visitor in and judges the
+ *  booking. Only a request with the cookie costs a call, and a signed-in visitor's page is never kept at the
+ *  edge (lib/page-cache.ts). */
+export async function genderViewer(): Promise<GenderViewer> {
   const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
   if (!s) return null;
-  const [p, mine] = await Promise.all([
-    rpcServer<{ gender?: unknown }[]>("customer_profile", { p_id: s.id, p_token: s.token }),
-    loadGenderSessions(s, fetch, now),
-  ]);
-  return { gender: sessionGender(Array.isArray(p.data) ? p.data[0]?.gender : null), mine };
+  const p = await rpcServer<{ gender?: unknown }[]>("customer_profile", { p_id: s.id, p_token: s.token });
+  const row = Array.isArray(p.data) ? p.data[0] : null;
+  return row ? { gender: sessionGender(row.gender) } : null;
 }

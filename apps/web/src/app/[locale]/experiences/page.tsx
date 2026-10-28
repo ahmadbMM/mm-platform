@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
 import "@/components/experiences/experiences.css";
@@ -10,7 +9,7 @@ import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { kindNames, loadGenderSessions, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
+import { kindNames, loadRides, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { routeItems } from "@/lib/route-names";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import BookingFlow, { type FlowEvent } from "@/components/experiences/BookingFlow";
@@ -18,8 +17,6 @@ import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
 import { dayWord, fmtClock, fmtDayDate, ticketRoute, type TicketRoute } from "@/lib/tickets";
 import { getAccount } from "@/lib/account";
-import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
-import { sessionGender, sessionsFor } from "@/lib/session-gender";
 import { bookingAccount } from "@/lib/booking-server";
 import { bizOf, faresOf } from "@/lib/biz";
 import { priceMap, type AddonItem, type BookAccount, type BookSession } from "@/lib/booking";
@@ -33,8 +30,10 @@ import { bg } from "@/lib/img";
 // its dates as the app's session cards, the riders, the waiver, the review, and the tickets. The
 // events, dates and prices are read live from the booking system; the booking goes through the
 // app's own customer_create_booking (app/api/booking), which prices every row itself. A session for men
-// only or women only (the owner, 2026-10-27; lib/session-gender.ts) is listed to a signed-in account of
-// that gender alone (or one holding a booking on it), and the booking refuses anyone else (BookingFlow).
+// only or women only (the owner, 2026-10-27; lib/session-gender.ts) is listed to every visitor, signed in or not,
+// of either gender, as a mixed one is (the owner, 2026-10-28: "make all pool sessions visible to all genders but
+// only male can book male sessions and female can book female sessions"), and the booking refuses anyone else
+// (BookingFlow).
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -67,13 +66,6 @@ async function loadAddonItems(ids: string[]): Promise<AddonItem[]> {
   }
 }
 
-// The signed-in account's men-only or women-only sessions ahead (lib/rides.ts loadGenderSessions): the public read
-// never has them, so they are read for the account beside it, and kept for nobody else.
-async function myGenderSessions(): Promise<RideSession[]> {
-  const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
-  return s ? loadGenderSessions(s) : [];
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { content, closed } = await pageState("experiences");
@@ -86,7 +78,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   const q = await searchParams;
   const L = asLocale(locale);
   const tx = serverL(locale);
-  const [{ content, previewing, hidden }, rides, signed, mine] = await Promise.all([pageState("experiences"), loadRides(), getAccount(), myGenderSessions()]);
+  const [{ content, previewing, hidden }, rides, signed] = await Promise.all([pageState("experiences"), loadRides(), getAccount()]);
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(experiencesSchema, content, L);
   const d = c.dates, e = c.events;
@@ -101,9 +93,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   const routeKm = routeItems(content, L);
   const now = riyadhClock(new Date());
   const today = now.slice(0, 10);
-  // the public dates, with the signed-in account's own men-only or women-only sessions (never anyone else's): its
-  // gender from the profile getAccount read (customer_profile)
-  const all = upcoming(sessionsFor(rides?.sessions ?? [], signed ? { gender: sessionGender(signed.profile?.gender), mine } : null), now);
+  // every date ahead, men-only and women-only ones too, to every visitor (the owner, 2026-10-28)
+  const all = upcoming(rides?.sessions ?? [], now);
   // The booking window (site_content booking.window): a date not open yet is shown greyed, never hidden.
   const window = siteBookingWindow(content);
   const clock = (x: string) => fmtClock(x, locale);
