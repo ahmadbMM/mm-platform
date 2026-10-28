@@ -10,7 +10,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum, fmtSar } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { genderView, rpcServer } from "@/lib/account";
+import { genderViewer, rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { dateText, eventCards, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { bizOf, faresOf } from "@/lib/biz";
@@ -26,14 +26,16 @@ import { fill as fillAt, phrase } from "@/i18n/tx";
 import { intlOf, isRtl } from "@/i18n/locales";
 import { bg } from "@/lib/img";
 import { vlConfig, vlDivNames, vlPayLine } from "@/lib/vlap";
-import { genderChip, genderOk, genderRefusal, genderText, sessionsFor } from "@/lib/session-gender";
+import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
 // dates and prices are read live from the booking system. A session for men only or women only (the
-// owner, 2026-10-27; lib/session-gender.ts) is listed to a signed-in account of that gender alone (or one
-// holding a booking on it), every date of one and every pool date wears its chip, and an account of the
-// other gender is told so in place of the button that hands the booking over.
+// owner, 2026-10-27; lib/session-gender.ts) is listed to every visitor, signed in or not, of either gender,
+// as a mixed one is (the owner, 2026-10-28: "make all pool sessions visible to all genders but only male can
+// book male sessions and female can book female sessions"); every date of one and every pool date wears its
+// chip, and a signed-in account of the other gender is told so in place of the button that hands the booking
+// over.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -92,7 +94,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const { locale } = await params;
   const L = asLocale(locale);
   const tx = serverL(locale);
-  const [{ content, previewing, hidden }, rides, member, petromin, gv] = await Promise.all([pageState("experiences"), loadRides(), communityMember(), petrominMember(), genderView()]);
+  const [{ content, previewing, hidden }, rides, member, petromin, gv] = await Promise.all([pageState("experiences"), loadRides(), communityMember(), petrominMember(), genderViewer()]);
   // asked only while a Victory Lap date is on the books: its price is said to those who may book it
   const vlBook = (rides?.sessions ?? []).some((s) => s.kind === "vlap") ? await vlapMember() : false;
   const site = resolvePage(siteSchema, content, L);
@@ -139,8 +141,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     return km > 0 ? fillAt(s.routeSlug ? kmWord : tx("{0} km a lap", "{0} كم للفة"), kmText(km)) : null;
   };
   const now = riyadhClock(new Date());
-  // the public dates, with the signed-in account's own men-only or women-only sessions (never anyone else's)
-  const all = upcoming(sessionsFor(rides?.sessions ?? [], gv), now);
+  // every date ahead, men-only and women-only ones too, to every visitor (the owner, 2026-10-28)
+  const all = upcoming(rides?.sessions ?? [], now);
   const sgWords = genderText(tx);
   // The booking window (site_content booking.window): a date not open yet is shown greyed, never hidden.
   const window = siteBookingWindow(content);
@@ -208,10 +210,11 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       ...(athletePrice(s) ? { payNote: vlPayLine(vlConfig(s.vl), locale, tx("Once booked, tell us whether you already have a ticket or buy one by bank transfer.", "بعد الحجز، أخبرنا إن كانت لديك تذكرة بالفعل أو اشترِ واحدة بتحويل بنكي.")) } : {}),
       route: routeNameOf(routes, s.routeSlug),
       routeKm: kmOf(s),
-      // men only, women only or mixed (the owner, 2026-10-27): its chip, and the refusal an account of the other
-      // gender (or with none on file) reads in place of the button
+      // men only, women only or mixed (the owner, 2026-10-27): its chip, and the refusal a signed-in account of the
+      // other gender (or with none on file) reads in place of the button; a visitor who is not signed in keeps the
+      // button, and the booking app signs them in and judges the booking (the owner, 2026-10-28)
       sg: genderChip(s, sgWords),
-      refusal: s.gender && !genderOk(s, gv?.gender ?? null) ? genderRefusal(s.gender, sgWords) : null,
+      refusal: genderBlock(s, gv, sgWords),
       // the Saturday ride's (and Run for Her's) breakfast stop, by its Arabic name on the Arabic page when it has one
       breakfast: infoBreakfast(s, locale),
       reveal: held ? fillAt(tx("Breakfast spot: announced {0}", "موقع الفطور: يُعلَن عنه {0}"), held) : null,

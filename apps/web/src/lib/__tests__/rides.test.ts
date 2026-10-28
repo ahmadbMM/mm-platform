@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { kindNames, loadGenderSessions, loadRides, loadSessionsById, oneTime, readSessions, resetRides, rideKind, routeSlugOf, sessionName, sessionRows, sessionsSeen, slotTimes, timesText, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
+import { kindNames, loadRides, loadSessionsById, oneTime, readSessions, resetRides, rideKind, routeSlugOf, sessionGenders, sessionName, sessionRows, slotTimes, timesText, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
 import { memoSettled } from "../memo";
 
 // /experiences shows the booking system's own prices and sessions. The rules mirror the booking
@@ -502,40 +502,40 @@ describe("men only, women only or mixed (the owner, 2026-10-27; rentals 20261027
     await memoSettled();
   });
 
-  it("reads a signed-in account's men-only and women-only sessions through list_sessions with its token, and only those", async () => {
+  it("lists the men-only and women-only sessions to every visitor, as the mixed ones: the public read has them, each with its rule (the owner, 2026-10-28)", async () => {
     const f = vi.fn(async (url: string, init?: RequestInit) => {
       if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/4" } });
-      return json([row({ ...POOL, gender_only: "female" }), row({ ...POOL, id: "2026-10-30-sw", session_date: "2026-10-30", needs_approval: false, capacity: 10, gender_only: "female" }), row({ ...POOL, id: "mixed", gender_only: null })]);
+      if (url.includes("ride_prices")) return json([]);
+      return json([row({ ...POOL, gender_only: "female" }), row({ ...POOL, id: "2026-10-30-sw", session_date: "2026-10-30", gender_only: "male" }), row({ ...POOL, id: "2026-10-31-sw", session_date: "2026-10-31", gender_only: null })]);
     });
-    const got = await loadGenderSessions(ACCT, f as unknown as typeof fetch, AT);
-    expect(got.map((s) => [s.id, s.kind, s.gender, s.left])).toEqual([["2026-10-29-sw", "swim", "female", null], ["2026-10-30-sw", "swim", "female", 6]]);
-    const [url, init] = f.mock.calls[0] as [string, RequestInit];
-    expect(url).toMatch(/^https:\/\/example\.supabase\.co\/rest\/v1\/rpc\/list_sessions\?select=.*,gender_only&session_date=gte\.2026-10-27&status=in\.\(open,full\)&gender_only=not\.is\.null&order=session_date\.asc&limit=20$/);
-    expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: "tok" });
+    const r = await loadRides(f as unknown as typeof fetch, AT);
+    const all = upcoming(r!.sessions, "2026-10-27T15:00"); // what Experiences and Events list, signed in or not
+    expect(all.map((s) => [s.id, s.kind, s.gender])).toEqual([["2026-10-29-sw", "swim", "female"], ["2026-10-30-sw", "swim", "male"], ["2026-10-31-sw", "swim", null]]);
+    const reads = (f.mock.calls as unknown as [string, RequestInit][]).filter(([u]) => u.includes("/rpc/list_sessions?"));
+    expect(reads).toHaveLength(1); // one read, for everyone: none of its own for a signed-in account
+    expect(JSON.parse(String(reads[0][1].body))).toEqual({ p_id: null, p_token: null });
+    expect(reads[0][0]).not.toContain("gender_only=");
+    await memoSettled();
   });
 
-  it("reads none on a failure, and none without asking while the database has no such column", async () => {
-    const down = vi.fn(async () => json({ message: "down" }, 503));
-    expect(await loadGenderSessions(ACCT, down as unknown as typeof fetch, AT)).toEqual([]);
-    const old = vi.fn(async () => json({ code: "42703", message: "column list_sessions.gender_only does not exist" }, 400));
-    expect(await loadGenderSessions(ACCT, old as unknown as typeof fetch, AT)).toEqual([]);
-    expect(old).toHaveBeenCalledTimes(2); // with the column, then without it (the filter still names it)
-    expect(await loadGenderSessions(ACCT, old as unknown as typeof fetch, AT + 60_000)).toEqual([]);
-    expect(old).toHaveBeenCalledTimes(2); // left out for ten minutes
-  });
-
-  it("tells which members' rides the account may see, each with its rule, and nothing when it cannot be read", async () => {
-    const f = vi.fn(async () => json([{ id: "a", gender_only: "female" }, { id: "b", gender_only: null }]));
-    const seen = await sessionsSeen(["a", "b", "c", "bad id"], ACCT, f as unknown as typeof fetch, AT);
-    expect(seen && [...seen]).toEqual([["a", "female"], ["b", null]]);
+  it("names each members' ride's rule, read through list_sessions for the account, and nothing when it cannot be read", async () => {
+    const f = vi.fn(async () => json([{ id: "a", gender_only: "female" }, { id: "b", gender_only: null }, { id: "c", gender_only: "male" }]));
+    const got = await sessionGenders(["a", "b", "c", "bad id"], ACCT, f as unknown as typeof fetch, AT);
+    expect(got && [...got]).toEqual([["a", "female"], ["b", null], ["c", "male"]]);
     const [url, init] = (f.mock.calls as unknown as [string, RequestInit][])[0];
     expect(url).toBe("https://example.supabase.co/rest/v1/rpc/list_sessions?select=id,description,price,route_slug,gender_only&id=in.(a,b,c)");
     expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: "tok" });
-    expect(await sessionsSeen(["a"], ACCT, vi.fn(async () => json({ message: "down" }, 503)) as unknown as typeof fetch, AT)).toBeNull();
-    expect(await sessionsSeen([], ACCT, f as unknown as typeof fetch, AT)).toEqual(new Map());
+    expect(await sessionGenders(["a"], ACCT, vi.fn(async () => json({ message: "down" }, 503)) as unknown as typeof fetch, AT)).toBeNull();
+    expect(await sessionGenders([], ACCT, f as unknown as typeof fetch, AT)).toEqual(new Map());
   });
 
-  it("reads booked sessions by id for the signed-in account, so a session for one gender it holds a booking on still comes back", async () => {
+  it("reads every members' ride as mixed on a database without the column", async () => {
+    const old = vi.fn(async (url: string) => (url.includes("gender_only") ? json({ code: "42703", message: "column list_sessions.gender_only does not exist" }, 400) : json([{ id: "a" }])));
+    const got = await sessionGenders(["a"], ACCT, old as unknown as typeof fetch, AT);
+    expect(got && [...got]).toEqual([["a", null]]);
+  });
+
+  it("reads booked sessions by id with their rule, for the signed-in account when one is given", async () => {
     const f = vi.fn(async () => json([row({ ...POOL, gender_only: "female", status: "closed" })]));
     const got = await loadSessionsById(["2026-10-29-sw"], f as unknown as typeof fetch, ACCT);
     expect(got.map((s) => [s.id, s.gender])).toEqual([["2026-10-29-sw", "female"]]);

@@ -10,8 +10,9 @@ import type { SessionGender } from "./session-gender";
 
 export type MemberRide = { date: string; title: string; kind: string | null; rated: boolean };
 export type MemberUpcoming = { id: string; date: string; title: string; kind: string | null; time: string | null; booked: boolean;
-  /** Men only, women only or mixed (null), as list_sessions gives the session to the account (the owner, 2026-10-27;
-   *  app/[locale]/club/page.tsx); absent when that was not read. */
+  /** Men only, women only or mixed (null; the owner, 2026-10-27), which member_area does not say: read through
+   *  list_sessions for the account (lib/rides.ts sessionGenders, app/[locale]/club/page.tsx); absent when that was
+   *  not read, and the ride then wears no chip. */
   gender?: SessionGender | null };
 export type MemberArea =
   | { ok: true; member: false; firstName: string }

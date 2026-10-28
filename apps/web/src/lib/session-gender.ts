@@ -4,10 +4,14 @@ import type { L } from "@/i18n/tx";
 // female only or mixed and to be mentioned on the card and event everywhere and only allow the gender selected to
 // book it and make it visible only for the gender it is for"), as the booking app's _sessGender, _sgTxt, _sgOk,
 // _sgErr and _sgErrOf have it. sessions.gender_only is 'male', 'female' or null (mixed; rentals migration
-// 20261027150000). The database gives a men-only or women-only session only to a signed-in account of that gender,
-// or one holding a booking on it (list_sessions; the table's own read hides it), and refuses anyone else's booking
-// with GENDER_ONLY (its detail: the gender the session is for). The site says the rule wherever it shows the
-// session, with the chip the booking app's .sg-chip draws (components/site/site.css). Plain logic, so it can be tested.
+// 20261027150000). The visibility half was taken back the next day: every visitor sees every such session, signed
+// in or not, of either gender, as they see a mixed one (the owner, 2026-10-28: "make all pool sessions visible to
+// all genders but only male can book male sessions and female can book female sessions"; rentals 20261028100000:
+// list_sessions and the table's own read give it to everyone). Only booking it is held to that gender: the database
+// refuses anyone else's booking with GENDER_ONLY (its detail: the gender the session is for). The site says the rule
+// wherever it shows the session, with the chip the booking app's .sg-chip draws (components/site/site.css), and
+// tells a signed-in account of the other gender (or with none on file) so in place of the button that hands the
+// booking over. Plain logic, so it can be tested.
 
 export type SessionGender = "male" | "female";
 
@@ -58,25 +62,14 @@ export function genderErrorOf(err: unknown, w: Pick<GenderText, "noMale" | "noFe
   return genderRefusal(/\bmale\b/.test(detail) ? "male" : "female", w);
 }
 
-/** Who is looking: the signed-in account's gender (customer_profile; null when none is on file), and the sessions
- *  list_sessions gave it that are for one gender (its own, or one it holds a booking on). Null: not signed in. */
-export type GenderViewer = { gender: SessionGender | null; mine?: ReadonlySet<string> } | null;
+/** Who is looking: the signed-in account's gender (customer_profile; null when none is on file). Null: not signed in. */
+export type GenderViewer = { gender: SessionGender | null } | null;
 
-/** Whether a visitor is shown a session, a second layer to the database's own rule: a mixed session always; one for
- *  a single gender only to a signed-in account of that gender, or one the database gave this account (a session it
- *  holds a booking on stays, as in the booking app). Never to a visitor who is not signed in. */
-export function genderShown(s: { id: string; gender?: SessionGender | null }, viewer: GenderViewer): boolean {
-  if (!s.gender) return true;
-  if (!viewer) return false;
-  return s.gender === viewer.gender || !!viewer.mine?.has(s.id);
-}
-
-/** The sessions a visitor is shown: the public ones (read for everyone, which never hold a session for one gender),
- *  with the men-only and women-only sessions the database gave the signed-in account added (`view.mine`, read for
- *  it alone: lib/rides.ts loadGenderSessions), each once; then genderShown. */
-export function sessionsFor<T extends { id: string; gender?: SessionGender | null }>(pub: readonly T[], view: { gender: SessionGender | null; mine: readonly T[] } | null): T[] {
-  const mine = view?.mine ?? [];
-  const ids = new Set(mine.map((s) => s.id));
-  const viewer: GenderViewer = view ? { gender: view.gender, mine: ids } : null;
-  return [...pub.filter((s) => !ids.has(s.id)), ...mine].filter((s) => genderShown(s, viewer));
+/** What a visitor reads in place of the button that hands the booking over (the owner, 2026-10-28): "This session is
+ *  for women only." to a signed-in account of the other gender, or with none on file; null when the button stays: on
+ *  a mixed session, to an account of the session's gender, and to a visitor who is not signed in, whom the button
+ *  takes to sign in first, the database judging the booking then (GENDER_ONLY, which the booking app says the same
+ *  way). */
+export function genderBlock(s: { gender?: SessionGender | null }, viewer: GenderViewer, w: Pick<GenderText, "noMale" | "noFemale">): string | null {
+  return s.gender && viewer && !genderOk(s, viewer.gender) ? genderRefusal(s.gender, w) : null;
 }

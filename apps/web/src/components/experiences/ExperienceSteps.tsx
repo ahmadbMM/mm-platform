@@ -18,8 +18,9 @@ import { isNonBike } from "@/lib/bike-kinds";
 // A Saturday ride's date names its breakfast stop once staff set one (the owner, 2026-10-05): a line
 // on its card, the last of its Details, and its summary say "Breakfast at {name}".
 // A session for men only or women only, and a pool session open to both (the owner, 2026-10-27), wears its
-// chip on its card, in its Details and in the summary; an account the session is not for reads why in place
-// of the button (the page decides, lib/session-gender.ts).
+// chip on its card, in its Details and in the summary; every visitor sees it (the owner, 2026-10-28), and a
+// signed-in account the session is not for reads why in place of the button (the page decides,
+// lib/session-gender.ts genderBlock).
 export type StepSession = {
   id: string; kind: string; day: string; name: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
@@ -58,7 +59,7 @@ export type StepSession = {
    *  session that wears none. Optional, so a copy kept from before reads as none. */
   sg?: { cls: string; label: string } | null;
   /** "This session is for women only.": the signed-in account may not book it (genderOk), so the summary says
-   *  this in place of its button; null when it may. */
+   *  this in place of its button; null when it may, and for a visitor who is not signed in (genderBlock). */
   refusal?: string | null;
 };
 /** A date's Details (lib/event-info.ts): its text, staff's own line, and its facts. */

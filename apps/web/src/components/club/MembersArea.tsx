@@ -31,9 +31,12 @@ type Props = {
   /** An upcoming ride's chip: men only, women only, or mixed on a pool session (the owner, 2026-10-27;
    *  lib/session-gender.ts genderChip); null for none. */
   sgOf?: (r: MemberUpcoming) => GenderChip | null;
+  /** "This session is for women only." in place of Book on a ride for the other gender (the owner, 2026-10-28:
+   *  every member sees it, only that gender books it; lib/session-gender.ts genderBlock); null when Book stays. */
+  refusalOf?: (r: MemberUpcoming) => string | null;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, sgOf }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, sgOf, refusalOf }: Props) {
   const t = serverLocalize(T, locale);
   const N = (n: number) => fmtNum(n, locale);
   const arrow = isRtl(locale) ? "←" : "→";
@@ -85,11 +88,12 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
             {a.upcoming.map((r) => {
               const closed = opens ? opens(r.date) : null;
               const sg = sgOf ? sgOf(r) : null;
+              const refusal = refusalOf ? refusalOf(r) : null;
               return (
                 <li key={r.id} className={closed ? "closed" : ""}>
                   <span className="club-up-when">{day(r.date)}{r.time ? <> · {when(r.time)}</> : null}</span>
                   <strong>{nameOf(r.kind, r.title)}{sg && <> <span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span></>}</strong>
-                  {r.booked ? <em>{t.booked}</em> : closed ? <small>{closed}</small> : <a href={bookAt(r.id, r.kind)}>{t.book} {arrow}</a>}
+                  {r.booked ? <em>{t.booked}</em> : refusal ? <small>{refusal}</small> : closed ? <small>{closed}</small> : <a href={bookAt(r.id, r.kind)}>{t.book} {arrow}</a>}
                 </li>
               );
             })}
