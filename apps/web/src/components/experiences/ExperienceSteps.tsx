@@ -21,8 +21,9 @@ import { isNonBike } from "@/lib/bike-kinds";
 // chip on its card, in its Details and in the summary; every visitor sees it (the owner, 2026-10-28), and a
 // signed-in account the session is not for reads why in place of the button (the page decides,
 // lib/session-gender.ts genderBlock).
-// Arena Heros (the owner, 2026-10-28) has a card of its own with no logo: a black-and-red wordmark from its
-// title, its line, its soonest date, hours and venue; its dates never say how many places are left.
+// Arena Heros (the owner, 2026-10-28) has a card of its own: since 2026-10-29 the organisers' poster ("add the image
+// to the card dont keep it plain"): their logo over the red-lit hall, its name in the poster's heavy italic capitals,
+// its soonest date, hours and venue, its line; its dates never say how many places are left.
 export type StepSession = {
   id: string; kind: string; day: string; name: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
@@ -97,6 +98,8 @@ export type StepEvent = {
   /** Victory Lap's card (the booking app's _vlCardHtml): its soonest date, when the doors open and where, under its
    *  line; Arena Heros' its soonest date, its hours and its venue. */
   line?: string[];
+  /** Arena Heros' name under its logo (Experiences > Dates: arName), as the booking app's card says it. */
+  name?: string;
 };
 export type StepText = {
   steps: [string, string, string]; eventTitle: string; dateTitle: string; bookTitle: string; cont: string; waitlist: string; back: string;
@@ -293,15 +296,17 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                       <span className="xs-vl-flag" aria-hidden="true" />
                     </button>
                   ) : e.key === "arena" ? (
-                    // Arena Heros (2026-10-28): black, the organisers' wordmark "ARENA HEROS Competition" as the booking
-                    // app draws it (no logo file exists; named by its title), its line, its date, hours and venue, a
-                    // red edge at the start - never the price
+                    // Arena Heros (2026-10-29, the booking app's card): the organisers' logo over the red-lit hall (their
+                    // wordmark "ARENA HEROS Competition" if staff empty the logo), its name in the poster's capitals, its
+                    // date, hours and venue (a rule between two, none starting a line when the venue wraps), its line in
+                    // red - never the price
                     <button type="button" className="xs-event ev-arena" onClick={() => pickEvent(e)}>
                       <span className="xs-ah-main">
                         {e.logo ? <span className="xs-logo xs-ah-logo"><img src={e.logo} alt={e.title} /></span> : <span className="xs-ah-mark" role="img" aria-label={e.title}><b>Arena Heros</b><i>Competition</i></span>}
                         <span className="xs-copy">
+                          {e.name && <span className="xs-ah-name">{e.name}</span>}
+                          {e.line && e.line.length > 0 && <span className="xs-ah-meta"><span className="xs-ah-mi">{e.line.map((x, i) => <span key={i}><bdi>{x}</bdi></span>)}</span></span>}
                           {e.meta && <span className="xs-ah-title">{e.meta}</span>}
-                          {e.line && e.line.length > 0 && <span className="xs-ah-meta">{e.line.map((x, i) => <span key={i}>{i > 0 && <i aria-hidden="true" />}<bdi>{x}</bdi></span>)}</span>}
                         </span>
                       </span>
                     </button>

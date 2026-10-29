@@ -269,8 +269,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     try { day = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${s.date}T12:00:00Z`)); } catch { /* the date as stored */ }
     return [day, s.times ? clock(s.times[0]) : "", tx("JCC", "حلبة الكورنيش")].filter(Boolean);
   };
-  // Arena Heros' card (2026-10-28; no logo exists, so a wordmark): under its line, its soonest date, its hours and
-  // where, never the price.
+  // Arena Heros' card (2026-10-28; the organisers' poster on it since 2026-10-29, as the booking app's): its name
+  // under the logo, then its soonest date, its hours and where, then its line - never the price.
   const ahLine = (s: RideSession | undefined): string[] => {
     if (!s) return [];
     const [day] = vlLine(s);
@@ -280,7 +280,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const events: StepEvent[] = eventCards(all, { member, petromin }).map(({ card: { key, p }, sessions }) => ({
     key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: fill(S(e[`${p}Note`]), caps), about: S(e[`${p}About`]),
     sessions: sessions.slice(0, Math.max(1, N(d.count))).map(toStep),
-    ...(key === "vlap" ? { line: vlLine(sessions[0]) } : key === "arena" ? { line: ahLine(sessions[0]) } : {}),
+    ...(key === "vlap" ? { line: vlLine(sessions[0]) } : key === "arena" ? { line: ahLine(sessions[0]), name: kindName.arena } : {}),
   }));
   const text: StepText = {
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),

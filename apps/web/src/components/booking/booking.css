@@ -291,18 +291,20 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-vl-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px !important; font-size: 13px; color: #4f565c; }
 .tk-vl-pay { margin-top: 10px !important; padding: 10px 12px; font-size: 13px; line-height: 1.45; background: #f5f0fe; border: 1px solid rgba(91, 63, 214, .24); color: #2e1c80; }
 .tk-vl-pay strong { margin-inline-end: 4px; }
-/* Arena Heros' ticket (2026-10-28): black and red. No logo exists, so the organisers' wordmark ("ARENA HEROS
-   Competition", as the booking app's ticket has it) heads the number's column, a red rule under it; on the night
-   ticket red stands where the neon is. The team's code large, the partner, when the
-   heat times come and that how to pay will be announced (TicketCard .tk-ah). */
-.tk-logo.tk-logo-ah { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; align-self: flex-start; line-height: 1; padding-bottom: 5px; border-bottom: 3px solid #e3262f; direction: ltr; }
-.tk-logo-ah b { font-size: 17px; font-weight: 900; font-style: italic; letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; color: #0d0d0d; }
-.tk-logo-ah i { font-size: 8px; font-weight: 700; font-style: normal; letter-spacing: 2.5px; text-transform: uppercase; color: #c81e27; }
+/* Arena Heros' ticket (2026-10-28): black and red, and since 2026-10-29 the organisers' poster, as the booking app's
+   ticket: their logo (cut from the poster) heads the number's column, and a held place's ticket has the hall's red
+   lamps across its top and a neon red edge; red stands where the night ticket's neon is. On a paper ticket (the
+   waitlist, a past race) the logo sits on its own black, as the poster has it. The team's code large, the partner,
+   when the heat times come and that how to pay will be announced (TicketCard .tk-ah). */
+.tk-logo.tk-logo-ah { align-self: flex-start; }
+.tk-logo.tk-logo-ah img { height: 56px; }
+.tk-card.ev-arena:not(.tk-live) .tk-logo-ah img { padding: 4px 6px; background: #0b0b0b; }
 .tk-card.ev-arena { border-inline-start: 6px solid #e3262f; } /* a red edge at the start, as the booking app's th-arena */
 .tk-card.ev-arena.tk-today::after { background: #e3262f; }
-.tk-card.ev-arena.tk-live { background: #0b0b0b; border-color: #0b0b0b; border-inline-start-color: #e3262f; }
-.tk-card.ev-arena.tk-live .tk-logo-ah b { color: #fff; }
-.tk-card.ev-arena.tk-live .tk-logo-ah i { color: #ff5a61; }
+.tk-card.ev-arena.tk-live {
+  background: linear-gradient(180deg, rgba(11, 11, 11, .45) 0, rgba(11, 11, 11, .88) 150px, #0b0b0b 230px), url(/site/arena-heros-band.webp) center top / auto 230px no-repeat, #0b0b0b;
+  border: 1px solid rgba(255, 90, 97, .6); box-shadow: 0 0 0 1px rgba(227, 38, 47, .22), 0 0 22px rgba(227, 38, 47, .3);
+}
 .tk-card.ev-arena.tk-live .tk-num { color: #ff5a61; }
 .tk-card.ev-arena.tk-live :is(.tk-dw, .tk-when .go, .tk-total strong, .tk-pay.paid, .tk-rider-pay > .tk-amt.paid, .tk-cd, .tk-note.go, .tk-ok, .tk-rt-a) { color: #ff5a61; }
 .tk-card.ev-arena.tk-live :is(.tk-q, .tk-type, .tk-note, .tk-ok) { background: #1c1c1c; }

@@ -161,8 +161,8 @@ describe("on Experiences (lib/event-info.ts)", () => {
     expect(about.en).toBe("The race runs from {start} to {end}, with a break for prayer. The organisers give each team its heat time before race day.");
     expect((about.ar.match(/\{[a-z]+\}/g) ?? []).sort()).toEqual(["{end}", "{start}"]);
     for (const id of ["arTitle", "arMeta", "arNote", "arAbout"]) expect((f("events", id)!.def as { en: string }).en, id).not.toMatch(/SAR|140|﷼/);
-    // no logo file exists: the card draws the organisers' wordmark unless staff add one
-    expect(f("events", "arLogo")?.def).toBe("");
+    // the organisers' logo, cut from their poster (2026-10-29); emptied by staff, the card draws their wordmark
+    expect(f("events", "arLogo")?.def).toBe("/site/arena-heros-logo.webp");
     expect(AH_INFO_URL).toBe("https://www.instagram.com/p/Dd1Lc87CJrq/");
   });
 });
@@ -204,12 +204,12 @@ describe("its ticket on My Account", () => {
     const g = ticketGroups([{ id: "a", session_id: AR.id, session_date: AR.session_date, status: "waiting", vl: { race: "md", div: "el" } }], "2099-11-01");
     expect(g.map((x) => x.key)).toEqual([AR.id]);
   });
-  it("draws the card: Athlete number, its wordmark, the race and division, the team's code, the heat times, how to pay", () => {
+  it("draws the card: Athlete number, its logo, the race and division, the team's code, the heat times, how to pay", () => {
     const html = card([entry()]);
     expect(html).toContain("Athlete number");
     expect(html).not.toContain("Queue number");
     expect(html).toContain("ev-arena");
-    expect(html).toMatch(/class="tk-logo tk-logo-ah" aria-hidden="true"><b>Arena Heros<\/b><i>Competition<\/i>/);
+    expect(html).toMatch(/class="tk-logo tk-logo-ah" aria-hidden="true"><img src="\/site\/arena-heros-logo\.webp"/);
     expect(html).toMatch(/class="tk-type tk-ah">Women’s Doubles · Open</);
     expect(html).toContain("Team code");
     expect(html).toContain(">AH-4K7Q<");

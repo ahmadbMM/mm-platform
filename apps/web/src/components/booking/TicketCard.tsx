@@ -29,8 +29,9 @@ import { DEFE_RACE_URL, raceRegAsked, addonLines, addonsCost, bookingRef, breakf
 // place (the owner, 2026-10-27; lib/session-gender.ts).
 // An Arena Heros ticket (2026-10-28; lib/arena.ts) says "Athlete number", the race (a team of 2 women or 2 men)
 // and the division where a ride shows the bike type, the team's code and the partner, when the organiser's heat
-// times come, and that how to pay will be announced; black with red where the night ticket is neon, a wordmark
-// for its logo (none exists). No wallet pass, no ticket question, never the booth; its details change in the booking
+// times come, and that how to pay will be announced; black with red where the night ticket is neon, the hall's lamps
+// across its top and the organisers' logo, cut from their poster (2026-10-29, as the booking app's ticket). No wallet
+// pass, no ticket question, never the booth; its details change in the booking
 // app (Change details) and it is never edited or rescheduled here.
 export type TicketText = (typeof T)["en"];
 type Props = {
@@ -170,7 +171,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           {/* The logo heads the number's column (the booking app's _tkLogo): white lettering on the dark card. */}
           {vlap
             ? <span className="tk-logo tk-logo-vl" aria-hidden="true"><img src="/site/victory-lap-dark.webp" alt="" decoding="async" /></span>
-            : arena ? <span className="tk-logo tk-logo-ah" aria-hidden="true"><b>Arena Heros</b><i>Competition</i></span>
+            : arena ? <span className="tk-logo tk-logo-ah" aria-hidden="true"><img src="/site/arena-heros-logo.webp" alt="" decoding="async" /></span>
             : defe ? <span className="tk-logo tk-logo-defe" aria-hidden="true"><img src="/site/defe-logo.svg" alt="" decoding="async" /></span>
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
           {!hideNum && (allWl

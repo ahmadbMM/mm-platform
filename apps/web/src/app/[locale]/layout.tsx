@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { notFound } from "next/navigation";
 import Script from "next/script";
-import { Space_Grotesk, IBM_Plex_Sans_Arabic } from "next/font/google";
+import { Space_Grotesk, IBM_Plex_Sans_Arabic, Barlow_Condensed } from "next/font/google";
 import { routing } from "@/i18n/routing";
 import { localeInfo } from "@/i18n/locales";
 import { clientDict } from "@/i18n/dicts";
@@ -18,6 +18,9 @@ const grotesk = Space_Grotesk({ subsets: ["latin"], display: "swap", variable: "
 const plexAr = IBM_Plex_Sans_Arabic({
   subsets: ["arabic"], weight: ["400", "500", "600", "700"], display: "swap", variable: "--cs-font-ar", preload: false,
 });
+// The Arena Heros poster's heavy italic capitals (2026-10-29; the booking app's Barlow Condensed 800 italic): one
+// face, not preloaded, fetched only by a page that draws the race's card or ticket.
+const arFace = Barlow_Condensed({ subsets: ["latin"], weight: "800", style: "italic", display: "swap", variable: "--cs-font-ah", preload: false });
 
 // Cloudflare Web Analytics, which the Privacy Notice names: cookie-free page counts. Its beacon is
 // added here when the site token is set (NEXT_PUBLIC_CF_BEACON_TOKEN at build; DEPLOY.md
@@ -38,7 +41,7 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
   const info = localeInfo(locale);
   return (
-    <html lang={info.html} dir={info.dir} className={`${grotesk.variable} ${plexAr.variable}`}>
+    <html lang={info.html} dir={info.dir} className={`${grotesk.variable} ${plexAr.variable} ${arFace.variable}`}>
       <body>
         <NextIntlClientProvider>
           {/* the pop-ups a signed-in rider cannot skip: the account's emergency contact, then a desk-added booking's waiver, then a Run for Her runner's agreement to share their details, then a Defe runner's "Have you registered for the race?", then the post-ride rating (EmergencyGateLoader holds WaiverGateLoader, which holds ShareGateLoader, which holds RaceGateLoader, which holds RatingGateLoader) */}

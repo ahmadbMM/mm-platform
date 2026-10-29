@@ -154,25 +154,36 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
   .xs-vl-flag { flex-basis: 36px; }
 }
 
-/* Arena Heros' card (2026-10-28; the booking app's .landing-event-card.ev-arena): no logo exists, so the organisers'
-   wordmark ("ARENA HEROS Competition", as the booking app draws it, in Latin letters on every page like a logo) on
-   black with a red rule under it, its line, the date, hours and venue, a red edge at the start; square like every
-   card that stands for one race. Every part stays inside the card at any width: the copy wraps, the wordmark breaks. */
-.xs-event.ev-arena { --ah-red: #e3262f; flex-direction: row; align-items: stretch; gap: 0; padding: 0; overflow: hidden; border-radius: 0; background: #0b0b0b; border-color: #0b0b0b; border-inline-start: 6px solid var(--ah-red); box-shadow: 0 1px 3px rgba(0, 0, 0, .3); color: #fff; }
-.xs-event.ev-arena:hover { border-color: var(--ah-red); box-shadow: 0 8px 24px rgba(11, 11, 11, .3); }
+/* Arena Heros' card (2026-10-28; the booking app's .landing-event-card.ev-arena): since 2026-10-29 the organisers'
+   poster - their gorilla logo over the red-lit hall (public/site/arena-heros-*.webp), darkening down to the words,
+   the race's name in the poster's heavy italic capitals (Barlow Condensed 800 italic; the scripts it has no letters
+   for keep their own face, upright), the date, hours and venue, its line in red, a neon red edge; square like every
+   card that stands for one race. Every part stays inside the card at any width. With the logo emptied by staff,
+   the organisers' wordmark ("ARENA HEROS Competition") stands in. */
+.xs-event.ev-arena { --ah-red: #e3262f; flex-direction: row; align-items: stretch; gap: 0; padding: 0; overflow: hidden; border-radius: 0; color: #fff;
+  background: linear-gradient(180deg, rgba(8, 8, 10, .1) 0%, rgba(8, 8, 10, .5) 40%, rgba(8, 8, 10, .92) 76%), url(/site/arena-heros-hall.webp) center 40% / cover no-repeat, #0b0b0b;
+  border: 1px solid rgba(255, 90, 97, .72); box-shadow: 0 0 0 1px rgba(227, 38, 47, .22), 0 0 22px rgba(227, 38, 47, .3); }
+.xs-event.ev-arena:hover { border-color: #ff5a61; box-shadow: 0 0 0 1px rgba(255, 90, 97, .5), 0 0 30px rgba(227, 38, 47, .45); }
 .xs-event.ev-arena:focus-visible { outline: 3px solid rgba(227, 38, 47, .55); }
-.xs-ah-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; gap: 16px; padding: 22px 20px 18px 24px; padding-inline: 24px 20px; }
+.xs-ah-main { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: flex-start; gap: 12px; padding: 20px 22px 18px; }
 .xs-ev-wrap.has-about > .xs-event.ev-arena { padding-bottom: 0; }
 .xs-ev-wrap.has-about > .xs-event.ev-arena .xs-ah-main { padding-bottom: 58px; }
 .xs-ah-mark { align-self: flex-start; max-width: 100%; display: inline-flex; flex-direction: column; align-items: flex-start; gap: 5px; padding-bottom: 8px; border-bottom: 4px solid var(--ah-red); direction: ltr; }
 .xs-ah-mark b { font-size: 30px; font-weight: 900; font-style: italic; line-height: 1; letter-spacing: .5px; text-transform: uppercase; overflow-wrap: anywhere; color: #fff; }
 .xs-ah-mark i { font-size: 12px; font-weight: 700; font-style: normal; line-height: 1; letter-spacing: 3px; text-transform: uppercase; color: #ff5a61; }
-.xs-ah-logo { height: 58px; }
-.xs-ah-title { font-size: 16px; font-weight: 700; line-height: 1.3; color: #fff; overflow-wrap: anywhere; }
-.xs-ah-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 9px; margin-top: 6px; font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .84); max-width: 100%; }
-.xs-ah-meta > span { display: inline-flex; align-items: center; gap: 9px; }
-.xs-ah-meta i { width: 1px; height: 12px; background: rgba(255, 255, 255, .34); display: inline-block; flex: none; }
-.xs-about.ab-arena { color: #fff; } /* Arena Heros: white on its black */
+.xs-ah-logo { height: 84px; }
+.xs-ah-logo img { object-position: 0 50%; }
+[dir="rtl"] .xs-ah-logo img { object-position: 100% 50%; }
+.xs-ah-name { display: block; font-family: var(--cs-font-ah), var(--cs-font-en), sans-serif; font-size: 27px; font-weight: 800; font-style: italic; text-transform: uppercase; letter-spacing: .3px; line-height: 1; color: #fff; overflow-wrap: anywhere; text-shadow: 0 2px 12px rgba(0, 0, 0, .6); }
+:is(:lang(ar), :lang(ur), :lang(hi), :lang(ne), :lang(bn), :lang(zh), :lang(ja), :lang(ru)) .xs-ah-name { font-family: inherit; font-size: 21px; font-weight: 700; font-style: normal; text-transform: none; letter-spacing: 0; line-height: 1.3; }
+/* the date, the hours and the venue: a rule between two, none starting a line when the row wraps (the row reaches
+   10px past its box at the start, where .xs-ah-meta clips the rule each line's first item carries) */
+.xs-ah-meta { display: block; margin-top: 8px; overflow: hidden; font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .88); max-width: 100%; }
+.xs-ah-mi { display: flex; flex-wrap: wrap; align-items: center; row-gap: 3px; margin-inline-start: -10px; }
+.xs-ah-mi > span { position: relative; padding-inline-start: 10px; margin-inline-end: 9px; }
+.xs-ah-mi > span::before { content: ""; position: absolute; inset-inline-start: 0; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: currentColor; opacity: .4; }
+.xs-ah-title { display: block; margin-top: 6px; font-size: 13px; font-weight: 700; line-height: 1.4; color: #ff5a61; overflow-wrap: anywhere; }
+.xs-about.ab-arena { color: #fff; inset-inline-start: 23px; } /* Arena Heros: white on its black, under its words */
 /* Arena Heros' divisions in its Details: each with its level, then what it asks (the booking app's arGuide_*) */
 .xs-ah-div { display: block; margin-top: 8px; font-size: 13px; line-height: 1.5; color: #4a4843; }
 .xs-ah-div strong { display: block; color: #1a1919; }
@@ -180,6 +191,8 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
   .xs-event.ev-arena { padding: 0; }
   .xs-ev-wrap.has-about > .xs-event.ev-arena .xs-ah-main { padding-bottom: 50px; }
   .xs-ah-mark b { font-size: 22px; }
+  .xs-ah-logo { height: 76px; }
+  .xs-ah-name { font-size: 25px; }
 }
 
 /* A phone names only the step it is on; the others keep their names for screen readers. */
@@ -206,7 +219,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs-defe-cause { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 700; color: #a22b63; }
 .xs .xs-info.ev-defe5k .xs-info-facts a { color: #a22b63; }
 .xs-about.ab-petromin { color: #d6202a; } /* Petromin Days: Petromin's red, as on its date cards (2026-10-12) */
-.xs-about.ab-vlap { color: #0d0d0d; max-width: calc(100% - 100px); } /* Victory Lap: clear of the flag */
+.xs-about.ab-vlap { color: #0d0d0d; max-width: calc(100% - 100px); inset-inline-start: 25px; } /* Victory Lap: clear of the flag, under its words (the card's edge and .xs-vl-main's padding) */
 .sc-about { inset-inline-start: 35px; bottom: 11px; max-width: calc(100% - 51px); padding: 3px 0; color: var(--ev, #077a4b); }
 .xs-about:focus-visible, .sc-about:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 2px; }
 
