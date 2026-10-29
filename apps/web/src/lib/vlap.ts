@@ -96,8 +96,9 @@ export function vlWords(o: VlWords | null | undefined, locale: string): string {
 export const vlPayLine = (cfg: VlConfig | null | undefined, locale: string, fallback: string): string => vlWords(cfg?.pay, locale) || fallback;
 
 /** What the share pop-up lists for Victory Lap (_vlShareItems): staff's exact list (sessions.vl.share,
- *  one item a line) once Kamin Sports gives it (`set`), else `fallback`, what the booking holds. */
-export function vlShareItems(cfg: VlConfig | null | undefined, locale: string, fallback: string[]): { items: string[]; set: boolean } {
+ *  one item a line) once Kamin Sports gives it (`set`), else `fallback`, what the booking holds. Arena Heros'
+ *  settings (lib/arena.ts) hold the same list the same way. */
+export function vlShareItems(cfg: Pick<VlConfig, "share"> | null | undefined, locale: string, fallback: string[]): { items: string[]; set: boolean } {
   const own = vlWords(cfg?.share, locale);
   if (own) {
     const items = own.split(/\n+/).map((x) => x.replace(/^[\s\-•·*]+/, "").trim()).filter(Boolean);

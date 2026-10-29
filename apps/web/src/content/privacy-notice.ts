@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-10-23";
+export const PRIVACY_VERSION = "2026-10-28";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -103,6 +103,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Placing you in your race and heat, your race T-shirt, and making up Doubles teams"
      ],
      [
+      "Arena Heros Hybrid Race details: the first and last name, email address and mobile number you enter for the race, your division and your team",
+      "Asked only when you book the Arena Heros Hybrid Race. Seen by you, our staff and the race’s organisers (WeSportify, Mile and Gymnation); your team partner sees your first name.",
+      "Entering you and your team in the race, and making up teams"
+     ],
+     [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
       "Created as you use the service",
       "Running your rides, safety, payments and records"
@@ -138,7 +143,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>For anonymised totals and to improve our service:</strong> our legitimate interest. Totals never identify anyone.",
     "<strong>For optional details and ride news:</strong> your consent. You give it by filling in those fields or choosing ride news, and you can withdraw it at any time.",
     "<strong>To share a runner’s details with the hosts of Run for Her:</strong> your consent, which we ask for before you can take part in the race.",
-    "<strong>To share an athlete’s details with Kamin Sports for Victory Lap:</strong> your consent, which we ask for before you can take part in the race."
+    "<strong>To share an athlete’s details with Kamin Sports for Victory Lap:</strong> your consent, which we ask for before you can take part in the race.",
+    "<strong>To share an athlete’s details with WeSportify, Mile and Gymnation for the Arena Heros Hybrid Race:</strong> your consent, which we ask for before you can take part in the race."
    ]
   },
   {
@@ -198,6 +204,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "Kamin Sports",
       "For Victory Lap, and only if you agree: the details listed on the page where you agree (until Kamin Sports confirms its exact list: your full name, email address, mobile number, gender, birth date, the race, division and team you chose, your T-shirt size and your emergency contact), so you can take part in the race. Nothing else about you.",
+      "Saudi Arabia"
+     ],
+     [
+      "WeSportify, Mile and Gymnation",
+      "For the Arena Heros Hybrid Race, and only if you agree: the first and last name, email address and mobile number you entered for the race, your gender, your division and your team (its code and your partner), so you can take part in the race. Nothing else about you.",
       "Saudi Arabia"
      ],
      [
@@ -400,6 +411,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "وضعك في سباقك ودفعتك، وقميص السباق، وتكوين فرق الزوجي"
      ],
      [
+      "تفاصيل سباق أرينا هيروز الهجين: الاسم الأول والأخير والبريد الإلكتروني ورقم الجوال التي تُدخلها للسباق، وفئتك، وفريقك",
+      "تُطلب فقط عند حجز سباق أرينا هيروز الهجين. لا يراها إلا أنت وموظفونا ومنظمو السباق (WeSportify وMile وGymnation)؛ ويرى شريكك في الفريق اسمك الأول.",
+      "تسجيلك أنت وفريقك في السباق، وتكوين الفرق"
+     ],
+     [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
       "تُسجَّل أثناء استخدامك للخدمة",
       "تشغيل رحلاتك، والسلامة، والمدفوعات، والسجلات"
@@ -435,7 +451,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>للإحصاءات المجمّعة وتحسين خدماتنا:</strong> مصلحتنا المشروعة، ولا تحدد الإحصاءات هوية أحد.",
     "<strong>للبيانات الاختيارية وأخبار الرحلات:</strong> موافقتك، وتمنحها بتعبئة تلك الحقول أو باختيار أخبار الرحلات، ويمكنك سحبها في أي وقت.",
     "<strong>لمشاركة بيانات العدّاء مع الجهات المنظِّمة لسباق نركض لأجلها:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
-    "<strong>لمشاركة بيانات الرياضي مع كامن سبورتس لسباق فيكتوري لاب:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق."
+    "<strong>لمشاركة بيانات الرياضي مع كامن سبورتس لسباق فيكتوري لاب:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
+    "<strong>لمشاركة بيانات الرياضي مع WeSportify وMile وGymnation لسباق أرينا هيروز الهجين:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق."
    ]
   },
   {
@@ -495,6 +512,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "كامن سبورتس",
       "لسباق فيكتوري لاب، وفقط إذا وافقت: البيانات المذكورة في الصفحة التي توافق فيها (وإلى أن تؤكد كامن سبورتس قائمتها الدقيقة: اسمك الكامل وبريدك الإلكتروني ورقم جوالك وجنسك وتاريخ ميلادك والسباق والفئة والفريق التي اخترتها ومقاس قميصك وجهة اتصالك للطوارئ)، لتتمكن من المشاركة في السباق. ولا شيء غير ذلك عنك.",
+      "المملكة العربية السعودية"
+     ],
+     [
+      "WeSportify وMile وGymnation",
+      "لسباق أرينا هيروز الهجين، وفقط إذا وافقت: الاسم الأول والأخير والبريد الإلكتروني ورقم الجوال التي أدخلتها للسباق، وجنسك، وفئتك، وفريقك (رمزه وشريكك)، لتتمكن من المشاركة في السباق. ولا شيء غير ذلك عنك.",
       "المملكة العربية السعودية"
      ],
      [

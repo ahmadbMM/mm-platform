@@ -291,6 +291,43 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-vl-meta { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 10px !important; font-size: 13px; color: #4f565c; }
 .tk-vl-pay { margin-top: 10px !important; padding: 10px 12px; font-size: 13px; line-height: 1.45; background: #f5f0fe; border: 1px solid rgba(91, 63, 214, .24); color: #2e1c80; }
 .tk-vl-pay strong { margin-inline-end: 4px; }
+/* Arena Heros' ticket (2026-10-28): black and red. No logo exists, so the organisers' wordmark ("ARENA HEROS
+   Competition", as the booking app's ticket has it) heads the number's column, a red rule under it; on the night
+   ticket red stands where the neon is. The team's code large, the partner, when the
+   heat times come and that how to pay will be announced (TicketCard .tk-ah). */
+.tk-logo.tk-logo-ah { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 4px; align-self: flex-start; line-height: 1; padding-bottom: 5px; border-bottom: 3px solid #e3262f; direction: ltr; }
+.tk-logo-ah b { font-size: 17px; font-weight: 900; font-style: italic; letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; color: #0d0d0d; }
+.tk-logo-ah i { font-size: 8px; font-weight: 700; font-style: normal; letter-spacing: 2.5px; text-transform: uppercase; color: #c81e27; }
+.tk-card.ev-arena { border-inline-start: 6px solid #e3262f; } /* a red edge at the start, as the booking app's th-arena */
+.tk-card.ev-arena.tk-today::after { background: #e3262f; }
+.tk-card.ev-arena.tk-live { background: #0b0b0b; border-color: #0b0b0b; border-inline-start-color: #e3262f; }
+.tk-card.ev-arena.tk-live .tk-logo-ah b { color: #fff; }
+.tk-card.ev-arena.tk-live .tk-logo-ah i { color: #ff5a61; }
+.tk-card.ev-arena.tk-live .tk-num { color: #ff5a61; }
+.tk-card.ev-arena.tk-live :is(.tk-dw, .tk-when .go, .tk-total strong, .tk-pay.paid, .tk-rider-pay > .tk-amt.paid, .tk-cd, .tk-note.go, .tk-ok, .tk-rt-a) { color: #ff5a61; }
+.tk-card.ev-arena.tk-live :is(.tk-q, .tk-type, .tk-note, .tk-ok) { background: #1c1c1c; }
+.tk-card.ev-arena.tk-live .tk-ok-tick { background: #ff5a61; color: #0d0d0d; }
+.tk-card.ev-arena.tk-live .tk-btn.solid { background: #e3262f; border-color: #e3262f; color: #fff !important; }
+.tk-card.ev-arena.tk-live :focus-visible { outline-color: #ff5a61; }
+.tk-card.ev-arena.tk-live .tk-stages li.on::before, .tk-card.ev-arena.tk-live .tk-stages li.on .tk-st-dot { background: #ff5a61; border-color: #ff5a61; }
+.tk-card.ev-arena.tk-live .tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(255, 90, 97, .18); }
+.tk-type.tk-ah { background: #e3262f; color: #fff; border-color: #e3262f; white-space: normal; }
+.tk-card.ev-arena.tk-live .tk-type.tk-ah { background: #e3262f; color: #fff; border-color: #e3262f; }
+.tk-ah-team { border-inline-start: 3px solid #e3262f; }
+.tk-card.ev-arena.tk-live .tk-ah-team { background: #1c1c1c; border-color: rgba(251, 249, 244, .16); border-inline-start-color: #e3262f; }
+.tk-card.ev-arena.tk-live .tk-ah-team :is(.tk-vl-code strong, .tk-vl-p) { color: #fbf9f4; }
+.tk-card.ev-arena.tk-live .tk-ah-team .tk-vl-code { color: rgba(251, 249, 244, .66); }
+.tk-ah-heat { margin-top: 10px !important; font-size: 13px; line-height: 1.45; color: #4f565c; }
+.tk-ah-pay { margin-top: 10px !important; padding: 10px 12px; font-size: 13px; font-weight: 600; line-height: 1.45; background: rgba(227, 38, 47, .07); border-inline-start: 3px solid #e3262f; color: #1a1919; }
+.tk-card.ev-arena.tk-live .tk-ah-heat { color: rgba(251, 249, 244, .66); }
+.tk-card.ev-arena.tk-live .tk-ah-pay { background: #1c1c1c; color: #fbf9f4; }
+/* its red in every state: the code's live line, the total and the solid button on the paper card too */
+.tk-card.ev-arena .tk-qr .tk-qr-live rect { stroke: #e3262f; }
+.tk-card.ev-arena .tk-total strong { color: #c81e27; }
+.tk-card.ev-arena.tk-live .tk-total strong { color: #ff5a61; }
+.tk-card.ev-arena .tk-btn.solid { background: #0d0d0d; border-color: #0d0d0d; }
+.tk-card.ev-arena .tk-btn.solid:hover { background: #262626; }
+.tk-card.ev-arena.tk-live .tk-btn.solid:hover { background: #c41d25; border-color: #c41d25; }
 @media (max-width: 560px) {
   .tk-grid { grid-template-columns: 1fr; }
   .tk-head { padding: 16px 14px 14px; gap: 14px; }
@@ -322,6 +359,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .sc-card.ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
 .sc-card.ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
 .sc-card.ev-defe5k { --ev: #a22b63; } /* the DEFE 5KM Run: Defe's berry (2026-10-18) */
+.sc-card.ev-arena { --ev: #c81e27; } /* Arena Heros: its red, as the booking app's .ev-arena (2026-10-28) */
 /* A ticketed event's card says what it is. */
 .sc-desc { font-size: 13px; color: #4a4843; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sc-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }

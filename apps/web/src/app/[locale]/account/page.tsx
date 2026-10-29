@@ -34,7 +34,7 @@ import { routeItems } from "@/lib/route-names";
 import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
 import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
-import { breakfastFor, doneToday, fmtDayDate, meetsAt, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
+import { breakfastFor, doneToday, fmtDayDate, placeLink, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, recordRows, rideStats, type BadgeItem } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
@@ -157,7 +157,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // Victory Lap: each Doubles booking's partner by first name (customer_vl_teams, rentals 20261017210000:
   // a rider never reads another account's booking), asked only when a ticket holds a team; a database
   // without the function, or a failed read, names nobody (the ticket then says it waits for the partner).
-  const vlPartners = [...groups, ...past].some((g) => g.rows.some((r) => r.vl?.team))
+  // Arena Heros' teams (2026-10-28) too, when the function names them; when it does not, the ticket says the
+  // partner books with the code.
+  const vlPartners = [...groups, ...past].some((g) => g.rows.some((r) => r.vl?.team || r.ah?.team))
     ? await rpcServer<unknown>("customer_vl_teams", { p_id: acct.id, p_token: acct.token }).then((r) => new Map(
       (Array.isArray(r.data) ? (r.data as Record<string, unknown>[]) : [])
         .filter((x) => x && typeof x.entry_id === "string" && typeof x.partner === "string" && x.partner.trim())
@@ -212,8 +214,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
   // Edit does; Reschedule and Cancel open its My Bookings. (A Run for Her place is only cancelled;
   // its event is still named, as the booking app's event link takes it.)
-  // (Victory Lap's details change in My Bookings there: it is never edited or rescheduled.)
-  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community" };
+  // (Victory Lap's details change in My Bookings there: it is never edited or rescheduled; nor Arena Heros'.)
+  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena" };
   const appLink = (params: Record<string, string>) => {
     try { const u = new URL(app); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
     catch { return book; }
@@ -277,8 +279,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
               {groups.map((g, i) => {
                 const s = sessions.get(g.sessionId);
                 const ev = s ? EV[s.kind] : undefined;
-                // a ride staff approve and Run for Her meet at the point staff set (meetsAt), the rest at the circuit
-                const place = s && meetsAt(s) ? s.meetUrl : S(site.contact.jccHref) || null;
+                // a ride staff approve and Run for Her meet at the point staff set (meetsAt), Arena Heros is at its
+                // venue's map, the rest at the circuit
+                const place = placeLink(s, S(site.contact.jccHref) || null);
                 return (
                   <TicketCard key={g.key} locale={locale} today={now.slice(0, 10)} rows={g.rows} session={s}
                     name={rideName(s, g.sessionId)}

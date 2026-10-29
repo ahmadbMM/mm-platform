@@ -21,18 +21,20 @@ import { fill as fillAt } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
 import { genderViewer } from "@/lib/account";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
+import { AH_VENUE } from "@/lib/arena";
 
 // micromobility.sa/events - every upcoming session in the booking system, month by month, each
 // booked in the booking app; sessions are named the way /experiences names them. A session for men only
 // or women only (the owner, 2026-10-27; lib/session-gender.ts) is listed to every visitor, signed in or not,
 // of either gender (the owner, 2026-10-28: "make all pool sessions visible to all genders but only male can
 // book male sessions and female can book female sessions"); it and every pool session wear their chip, and a
-// signed-in account of the other gender reads the refusal in place of Book.
+// signed-in account of the other gender reads the refusal in place of Book. Arena Heros (2026-10-28) is listed in its
+// own red, named as Experiences names it, with its line, and booked in the booking app on its own event (ev=arena).
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63" };
+const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27" };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -53,7 +55,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
   // Book opens the booking app on that event and date (?ev=&session=), as the Experiences steps do.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community" };
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena" };
   const bookAt = (s: RideSession) => {
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
@@ -89,7 +91,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
             every visitor sees both, but not everyone may book them. */}
         <JsonLd data={eventsData(sessions.filter((s) => !s.members && !s.gender).map((s) => ({
           name: name(s), date: s.date, times: s.times, gather: s.gather, full: s.full, url: book,
-          place: s.kind === "jcc" || s.kind === "snd96" || s.kind === "vlap" || s.kind === "defe5k" ? "Jeddah Corniche Circuit" : s.kind === "runher" ? "Jeddah Yacht Club" : "Jeddah",
+          place: s.kind === "jcc" || s.kind === "snd96" || s.kind === "vlap" || s.kind === "defe5k" ? "Jeddah Corniche Circuit" : s.kind === "runher" ? "Jeddah Yacht Club" : s.kind === "arena" ? s.location || AH_VENUE : "Jeddah",
         })))} />
         <p className="pg-eyebrow">{S(c.hero.eyebrow)}</p>
         <h1>{S(c.hero.title)}</h1>
@@ -120,6 +122,9 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {s.kind === "defe5k" && <span>{fillAt(tx("{0} km", "{0} كم"), 5)}</span>}
                         {/* Victory Lap: what it is, as its card on Experiences says it (never its price) */}
                         {s.kind === "vlap" && S(xp.events.vlMeta) && <span>{S(xp.events.vlMeta)}</span>}
+                        {/* Arena Heros: what it is and where, as its card on Experiences says them (never its price) */}
+                        {s.kind === "arena" && S(xp.events.arMeta) && <span>{S(xp.events.arMeta)}</span>}
+                        {s.kind === "arena" && <span>{s.location || AH_VENUE}</span>}
                         {/* Run for Her is a community event (members only, free), tagged as one */}
                         <em>{s.kind === "jcc" || s.kind === "snd96" ? S(c.hero.rideTag) : s.kind === "event" ? S(c.hero.eventTag) : S(c.hero.communityTag)}</em>
                         {s.members && <em>{S(d.members)}</em>}

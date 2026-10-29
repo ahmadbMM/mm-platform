@@ -120,7 +120,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // The route on a booking's ticket (ticketRoute): the Routes page's, or the circuit drawn.
   const routeOf = (s: RideSession): TicketRoute | null => ticketRoute({
     id: s.id, date: s.date, kind: s.kind, title: s.title, approval: !!s.approval, published: false, times: s.times, gathers: s.gather, collect: s.collect,
-    meetUrl: s.meetUrl ?? null, free: s.free, freeRide: s.free, bikes: s.kind !== "swim" && s.kind !== "workshop" && s.kind !== "event" && s.kind !== "runher" && s.kind !== "vlap", routeSlug: s.routeSlug, location: s.location ?? null, breakfast: null,
+    meetUrl: s.meetUrl ?? null, free: s.free, freeRide: s.free, bikes: s.kind !== "swim" && s.kind !== "workshop" && s.kind !== "event" && s.kind !== "runher" && s.kind !== "vlap" && s.kind !== "arena", routeSlug: s.routeSlug, location: s.location ?? null, breakfast: null,
     revealAt: s.revealAt ?? null, // a Saturday ride whose meeting point is told later draws no route yet (spotHeld)
   }, routeKm);
   // The booking app's events (_evMatch) in its order: the National Day ride and the ticketed
@@ -130,9 +130,12 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // the emergency contact, 18 and over), so a run is booked in the booking app, as main's page hands it over.
   // Victory Lap (ride_kind 'vlap') neither: no athlete step here (race, division, team, T-shirt, 16 and over,
   // Kamin Sports' agreement); main's page hands it to the booking app (?ev=vlap).
+  // The Arena Heros Hybrid Race (ride_kind 'arena', 2026-10-28) neither: no athlete step here (the race, the division,
+  // the team code, the organisers' agreement); main's page hands it to the booking app (?ev=arena). Listed nowhere
+  // here, so it is never read as a Saturday ride.
   // The DEFE 5KM Run (ride_kind 'defe5k') neither: no runner step or race question here; main's page hands it
   // to the booking app.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "" };
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "", arena: "" };
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count)));
   const listed: RideSession[] = [];
   const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): FlowEvent | null => {

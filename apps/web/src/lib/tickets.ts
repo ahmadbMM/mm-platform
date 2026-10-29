@@ -8,6 +8,7 @@ import { fill as fillNamed } from "./fill";
 import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
 import { riyadhClock } from "./workshop-days";
 import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
+import { AH_VENUE, ahConfig, ahEntry, isArenaId, type AhConfig, type AhEntry } from "./arena";
 import { sessionGender, type SessionGender } from "./session-gender";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
@@ -30,8 +31,11 @@ export type TicketRow = {
    *  partner_book makes it approved at once: a confirmed place, its code out, whatever the list says. */
   partner?: string | null;
   /** A Victory Lap athlete's place (queue_entries.vl, rentals 20261017210000; lib/vlap.ts): the race,
-   *  division, T-shirt, 5 km time and team; null on every other booking. */
+   *  division, T-shirt, 5 km time and team; null on every other booking (Arena Heros' too). */
   vl?: VlEntry | null;
+  /** An Arena Heros athlete's place (queue_entries.vl on a session '<date>-ah', rentals 20261028200000;
+   *  lib/arena.ts): the race, the division and the team's code (AH-XXXX); absent on every other booking. */
+  ah?: AhEntry | null;
   /** The DEFE 5KM Run (2026-10-18): whether the runner told us they registered for the race on Defe's registration page
    *  (queue_entries.race_reg, rentals 20261018150000): 'yes', 'no', or null before they answer (and on
    *  every other booking, and on a database without the column). */
@@ -81,6 +85,9 @@ export type TicketSession = {
    *  Sports); null on every other kind. A read without the column has every race open and no words of
    *  staff's own. */
   vl?: VlConfig | null;
+  /** Arena Heros' settings (sessions.vl, lib/arena.ts: the races and divisions open, staff's words for how to
+   *  pay and for what goes to the organisers); null on every other kind. */
+  ah?: AhConfig | null;
   /** The session's own price in SAR (sessions.price: Victory Lap's per athlete, the amount its ticket
    *  asks to transfer), else null. */
   price?: number | null;
@@ -102,6 +109,9 @@ export function ticketRow(r: Row): TicketRow | null {
   let bike = S(r.assigned_bike_id).trim();
   if (bike.startsWith("[")) { try { const a = JSON.parse(bike) as unknown; bike = Array.isArray(a) && typeof a[0] === "string" ? a[0] : ""; } catch { bike = ""; } }
   const km = N(r.run_km); // a distance the booking app would take (_runKmOk), else none
+  // an Arena Heros place keeps its race, division and team in the same column as Victory Lap's: told apart by
+  // its session's id ('<date>-ah'), as my_bookings gives the row without its session's kind
+  const ah = isArenaId(S(r.session_id)) ? ahEntry(r.vl) : undefined;
   return {
     id: S(r.id), sessionId: S(r.session_id) || date, date, day: S(r.session_day), queueNum: N(r.queue_num), status,
     waitlistNum: N(r.waitlist_num), approval: S(r.approval) || null, price: N(r.price) ?? 0, paid: r.paid === true,
@@ -111,7 +121,8 @@ export function ticketRow(r: Row): TicketRow | null {
     runKm: km !== null && RUN_KMS.includes(km) ? km : null,
     rideGroup: r.ride_group === "beg" || r.ride_group === "int" ? r.ride_group : null,
     partner: typeof r.partner === "string" && /^[a-z0-9]{2,20}$/.test(r.partner) ? r.partner : null,
-    vl: vlEntry(r.vl),
+    vl: ah === undefined ? vlEntry(r.vl) : null,
+    ...(ah !== undefined ? { ah } : {}),
     raceReg: r.race_reg === "yes" || r.race_reg === "no" ? r.race_reg : null,
     ...("vl_ticket" in r ? { vlTicket: r.vl_ticket === "have" || r.vl_ticket === "buy" ? r.vl_ticket : null, vlReceiptAt: S(r.vl_receipt_at) || null } : {}),
   };
@@ -222,7 +233,7 @@ export function ticketSession(r: Row): TicketSession | null {
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -236,6 +247,7 @@ export function ticketSession(r: Row): TicketSession | null {
       : null,
     revealAt: Number.isFinite(Date.parse(S(r.reveal_at))) ? S(r.reveal_at) : null,
     vl: kind === "vlap" ? vlConfig(r.vl) : null,
+    ah: kind === "arena" ? ahConfig(r.vl) : null,
     price: N(r.price),
     gender: sessionGender(r.gender_only),
   };
@@ -353,17 +365,19 @@ export function dayWord(date: string, today: string): "today" | "tomorrow" | nul
 /** Where the ride is, by name (_venueName): a ride staff approve that meets at a map link is its
  *  meeting point; a night on the circuit (no place, or "JCC") the Jeddah Corniche Circuit; "JYC" the
  *  Jeddah Yacht Club, where Run for Her meets (VENUE_KEY) - Run for Her always, its place held back or
- *  not (the owner, 2026-10-14), never the circuit; any other place as staff wrote it. */
-export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "text"; text: string };
+ *  not (the owner, 2026-10-14), never the circuit; any other place as staff wrote it. Arena Heros is at
+ *  its venue (Gymnation, Tahlia Street) when staff named no place, never the circuit (2026-10-28). */
+export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "gym" } | { kind: "text"; text: string };
 export function venueOf(s: (Pick<TicketSession, "approval" | "meetUrl" | "location"> & { kind?: string }) | undefined): Venue {
   if (s?.approval && s.meetUrl) return { kind: "meet" };
-  const loc = s?.location || (s?.kind === "runher" ? "JYC" : "");
-  return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : { kind: "text", text: loc };
+  const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : "");
+  return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : loc === AH_VENUE ? { kind: "gym" } : { kind: "text", text: loc };
 }
 
-/** The venue in the page's words (the ticket's meetingPoint, venueCircuit and venueJyc). */
-export function venueText(v: Venue, t: { meetingPoint: string; venueCircuit: string; venueJyc: string }): string {
-  return v.kind === "meet" ? t.meetingPoint : v.kind === "circuit" ? t.venueCircuit : v.kind === "jyc" ? t.venueJyc : v.text;
+/** The venue in the page's words (the ticket's meetingPoint, venueCircuit, venueJyc and venueGymnation; Gymnation,
+ *  Tahlia Street as staff wrote it when the page has no words for it). */
+export function venueText(v: Venue, t: { meetingPoint: string; venueCircuit: string; venueJyc: string; venueGymnation?: string }): string {
+  return v.kind === "meet" ? t.meetingPoint : v.kind === "circuit" ? t.venueCircuit : v.kind === "jyc" ? t.venueJyc : v.kind === "gym" ? t.venueGymnation || AH_VENUE : v.text;
 }
 
 /** A ride that meets at a point staff set (sessions.meet_url) rather than at the circuit (_meetsAt):
@@ -371,6 +385,16 @@ export function venueText(v: Venue, t: { meetingPoint: string; venueCircuit: str
  *  ticket's place button opens that point and says so ("Meeting point"), and the calendar file puts it
  *  as the place. */
 export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined): boolean => !!s && (s.approval || s.kind === "runher" || s.kind === "defe5k");
+
+/** The map a ticket's place button opens (My Account): a ride that meets at a point (meetsAt) opens that point;
+ *  Arena Heros (2026-10-28), at a venue of its own, opens the venue's map staff set (sessions.meet_url), or none
+ *  without one, never the circuit; every other ride, and a session that did not load, the circuit's directions
+ *  (`circuit`). On Arena Heros the button says "Get directions": it is the venue, not a meeting point. */
+export function placeLink(s: Pick<TicketSession, "approval" | "kind" | "meetUrl"> | undefined, circuit: string | null): string | null {
+  if (s && meetsAt(s)) return s.meetUrl;
+  if (s?.kind === "arena") return s.meetUrl;
+  return circuit;
+}
 
 // ── The DEFE 5KM Run (the owner, 2026-10-18; the booking app's _defeRegHtml) ─────────────────────
 /** Where the race itself is entered: Defe's own registration page (the booking app's DEFE_RACE_URL, word for word;
@@ -510,7 +534,7 @@ export function fmtDayDate(iso: string, locale: string): string {
 const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Branch", "Sharafeyah, Jeddah"], ["JYC", "Jeddah Yacht Club"]]);
 export function icsPlace(s: TicketSession): string {
   if (meetsAt(s) && s.meetUrl) return s.meetUrl;
-  const loc = s.location || (s.kind === "runher" ? "JYC" : "");
+  const loc = s.location || (s.kind === "runher" ? "JYC" : s.kind === "arena" ? AH_VENUE : "");
   return loc ? ICS_PLACES.get(loc) ?? loc : "";
 }
 

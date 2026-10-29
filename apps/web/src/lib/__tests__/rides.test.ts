@@ -25,6 +25,9 @@ describe("rideKind", () => {
     // Victory Lap (2026-10-17) too
     expect(rideKind({ event_kind: "community", ride_kind: "vlap" })).toBe("vlap");
     expect(rideKind({ event_kind: null, ride_kind: "vlap" })).toBe("jcc");
+    // and Arena Heros (2026-10-28), which read as the Saturday ride before the site knew it
+    expect(rideKind({ event_kind: "community", ride_kind: "arena" })).toBe("arena");
+    expect(rideKind({ event_kind: null, ride_kind: "arena" })).toBe("jcc");
     // a kind that is not a community event is a circuit night, whatever it says
     expect(rideKind({ event_kind: null, ride_kind: "swim" })).toBe("jcc");
   });
