@@ -1,4 +1,4 @@
-// The pop-ups' quiet windows (EmergencyGateLoader, WaiverGateLoader, ShareGateLoader, RaceGateLoader, RatingGateLoader): a signed-in
+// The pop-ups' quiet windows (EmergencyGateLoader, WaiverGateLoader, ShareGateLoader, RaceGateLoader, QuestionGateLoader, RatingGateLoader): a signed-in
 // "nothing to agree" or "nothing to rate" is kept a few minutes in this tab, so every page does not
 // ask again. It is the signed-in account's answer, and the cookie that says which account that is
 // cannot be read here (HttpOnly) - so a sign-in or a sign-out forgets all three, and so does the
@@ -9,6 +9,7 @@ export const EM_QUIET = "mm_em_none";
 export const WAIVER_QUIET = "mm_waiver_none";
 export const SHARE_QUIET = "mm_share_none";
 export const RACE_QUIET = "mm_race_none";
+export const QUESTION_QUIET = "mm_question_none";
 export const RATE_QUIET = "mm_rate_none";
 
 export function forgetQuiet(): void {
@@ -17,6 +18,7 @@ export function forgetQuiet(): void {
     sessionStorage.removeItem(WAIVER_QUIET);
     sessionStorage.removeItem(SHARE_QUIET);
     sessionStorage.removeItem(RACE_QUIET);
+    sessionStorage.removeItem(QUESTION_QUIET);
     sessionStorage.removeItem(RATE_QUIET);
   } catch { /* storage off: nothing kept */ }
 }
