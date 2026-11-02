@@ -121,6 +121,28 @@ test('step 1 makes the account, says so, and step 2 sends the community answers 
   expect(errs).toEqual([]);
 });
 
+test('a friend who came by a member\'s link: the application is sent, then says who invited them, and the code is used once', async ({ page }) => {
+  const { errs, of, calls } = await open(page, '?inv=abcdef0123456789');
+  await accountStep(page);
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('community_app_invited')).toEqual([{ p_id: expect.any(String), p_token: 'tok-new', p_code: 'abcdef0123456789' }]);
+  const names = calls.map((c) => c.fn);
+  expect(names.indexOf('customer_community_apply')).toBeLessThan(names.indexOf('community_app_invited'));
+  expect(await page.evaluate(() => localStorage.getItem('mm-community-inv'))).toBeNull();
+  expect(errs).toEqual([]);
+});
+
+test('no link, or a code that is not one: nothing is said about an invitation', async ({ page }) => {
+  const { of } = await open(page, '?inv=<script>');
+  await accountStep(page);
+  await communityStep(page);
+  await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(of('community_app_invited')).toEqual([]);
+});
+
 test('the account step asks what the sign-up page asks, with its rules and words', async ({ page }) => {
   const { of } = await open(page);
   await expect(page.locator('#f-name label')).toHaveText(['First Name', 'Last Name']);

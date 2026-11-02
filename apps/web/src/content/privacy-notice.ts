@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-02";
+export const PRIVACY_VERSION = "2026-11-03";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -128,6 +128,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>From you,</strong> when you sign up, edit your profile, book or give feedback.",
     "<strong>From the person who booked you,</strong> if someone booked you as part of their party. They give us your name and height.",
     "<strong>From our community membership application</strong> at micromobility.sa/community/registration, if you apply to join our riding community. Our staff read it and reply. If you are accepted and have no account yet, we create one from those details with a temporary password, which you must change the first time you sign in.",
+    "<strong>From a community member who invites you,</strong> if you apply through their link: the application records who invited you, and our staff see it. We hold nothing about you until you apply yourself.",
     "<strong>From our learn-to-ride sign-up</strong> at micromobility.sa/experiences/learn, if you sign up for a riding lesson for yourself, your children or other adults. Our staff contact you to arrange the lesson. If you have no account yet, we create one from your details with a temporary password, which you must change the first time you sign in. If you sign up another adult, tell them first and make sure they agree.",
     "<strong>From Apple or Google,</strong> if you sign in with them. They give us your name and email address, or an Apple relay address.",
     "<strong>From your device:</strong> a short technical report if the website hits an error (the error, the page and your browser type), and anonymous visit counts through Cloudflare Web Analytics, which uses no cookies."
@@ -441,6 +442,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>منك مباشرة،</strong> عند التسجيل أو تعديل ملفك الشخصي أو الحجز أو تقديم ملاحظاتك.",
     "<strong>من الشخص الذي حجز لك،</strong> إذا حجز لك أحدهم ضمن مجموعته، فيزوّدنا باسمك وطولك.",
     "<strong>من طلب عضوية المجتمع</strong> عبر micromobility.sa/community/registration، إذا تقدّمت للانضمام إلى مجتمع الركوب لدينا. يطّلع موظفونا على طلبك ويردّون عليك. وإذا قُبلت ولم يكن لديك حساب، ننشئ لك حسابًا من تلك البيانات بكلمة مرور مؤقتة، يجب عليك تغييرها عند أول تسجيل دخول.",
+    "<strong>من عضو في المجتمع يدعوك،</strong> إذا تقدّمت عبر رابطه: يسجّل الطلب من دعاك ويطّلع على ذلك موظفونا. ولا نحتفظ بأي شيء عنك حتى تتقدّم بنفسك.",
     "<strong>من التسجيل في دروس تعلّم الركوب</strong> عبر micromobility.sa/experiences/learn، إذا سجّلت في درس ركوب لنفسك أو لأطفالك أو لبالغين آخرين. يتواصل معك موظفونا لترتيب الدرس. وإذا لم يكن لديك حساب، ننشئ لك حسابًا من بياناتك بكلمة مرور مؤقتة يجب تغييرها عند أول تسجيل دخول. وإذا سجّلت شخصًا بالغًا آخر، فأبلغه أولًا وتأكد من موافقته.",
     "<strong>من Apple أو Google،</strong> إذا سجّلت الدخول عبرهما، فيزوّداننا باسمك وبريدك الإلكتروني أو عنوان بريد Apple البديل.",
     "<strong>من جهازك:</strong> تقرير تقني مختصر إذا واجه الموقع خطأً (الخطأ والصفحة ونوع المتصفح)، وأعداد زيارات مجهولة الهوية عبر Cloudflare Web Analytics الذي لا يستخدم ملفات تعريف الارتباط."
