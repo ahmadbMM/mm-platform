@@ -13,7 +13,7 @@ import { riyadhClock } from "@/lib/workshop-days";
 // the booking app until the site's own account page is on.
 export type FooterLink = { label: string; href: string };
 export type FooterContent = {
-  contact: { address: string; mapsHref: string; jccName: string; jccAddress: string; jccHref: string; email: string; phone: string; hoursText: string };
+  contact: { address: string; mapsHref: string; jccName: string; jccAddress: string; jccHref: string; email: string; phone: string; supportPhone: string; hoursText: string };
   social: Record<string, string>;
   legal: { company: string; vat: string; cr: string; legalName: string; unified: string; address: string };
   payments: { name: string; logo: string }[];
@@ -65,6 +65,7 @@ export default function SiteFooter({ locale, c, hidden = [], booking = BOOKING_U
             {c.contact.jccAddress && <p><span>{c.contact.jccName || tx("Micromobility JCC Pop-up", "متجر JCC المؤقت")}:</span> {c.contact.jccAddress}</p>}
             {c.contact.email && <p><span>{tx("Email", "البريد")}:</span> <a href={`mailto:${c.contact.email}`}>{c.contact.email}</a></p>}
             {c.contact.phone && <p><span>{tx("Phone", "الجوال")}:</span> <a href={`tel:${c.contact.phone.replace(/\s/g, "")}`} className="mm-lat">{showPhone(c.contact.phone)}</a></p>}
+            {c.contact.supportPhone && <p><span>{tx("Tech support", "الدعم الفني")}:</span> <a href={`https://wa.me/${c.contact.supportPhone.replace(/\D/g, "")}`} target="_blank" rel="noopener noreferrer" className="mm-lat">{showPhone(c.contact.supportPhone)}</a></p>}
             {c.contact.hoursText && <p className="mm-foot-hours"><span>{tx("Store Hours", "ساعات العمل")}:</span> {c.contact.hoursText}</p>}
             <div className="mm-foot-dirs">
               {c.contact.mapsHref && <a href={c.contact.mapsHref} target="_blank" rel="noopener noreferrer">{tx("Store directions", "اتجاهات المتجر")}<Arrow /></a>}

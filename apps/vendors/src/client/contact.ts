@@ -10,9 +10,9 @@ const MM_WA = "966566668818";
 /** A WhatsApp chat with MicroMobility, the message typed in. */
 export const waLink = (text: string) => `https://wa.me/${MM_WA}?text=${encodeURIComponent(text)}`;
 
-/** Forgotten passwords go to their own WhatsApp number, not the business line (the owner, 2026-10-11:
- *  "all messages and redirects regarding the forget password must go to +966579543977"). */
-const PW_WA = "966579543977";
+/** Forgotten passwords go to their own WhatsApp number, not the business line (the owner, 2026-10-11;
+ *  the number corrected 2026-11-02). */
+const PW_WA = "966579543997";
 export const pwWaLink = (text: string) => `https://wa.me/${PW_WA}?text=${encodeURIComponent(text)}`;
 
 /** An email to MicroMobility with its subject and body filled in. */
