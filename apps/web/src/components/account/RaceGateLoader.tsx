@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import QuestionGateLoader from "./QuestionGateLoader";
+import RatingGateLoader from "./RatingGateLoader";
 import RaceGate, { type PendingRaceReg, type RaceRegDone } from "./RaceGate";
 import { RACE_QUIET } from "./quiet";
 
 // A DEFE 5KM Run runner's "Have you registered for the race?" on every page (the owner, 2026-10-18; the
-// booking app's _forceRaceRegPrompt), between the run agreement and a question staff put on the account:
-// ShareGateLoader mounts this once no run waits for agreement, and this holds the question's
-// (QuestionGateLoader, which then holds the rating's) until it has asked and no place waits. It asks /api/account/pending-race-reg, which answers a signed-out visitor
+// booking app's _forceRaceRegPrompt), between the run agreement and the post-ride rating: ShareGateLoader
+// mounts this once no run waits for agreement, and this holds the rating's (RatingGateLoader) until it
+// has asked and no place waits. It asks /api/account/pending-race-reg, which answers a signed-out visitor
 // from the cookie alone; a signed-in "nothing to answer" is kept two minutes in this tab (./quiet.ts), and
 // a place waiting puts up the pop-up the runner cannot skip. Yes, or Done after No, asks for the next
 // place (or nothing) at once; a place passed with Done is not asked again until the page is loaded again.
@@ -58,5 +58,5 @@ export default function RaceGateLoader({ locale }: { locale: string }) {
   };
 
   if (pending) return <RaceGate key={`${pending.entryId}-${round}`} {...pending} onDone={(r) => done(pending.entryId, r)} />;
-  return clear ? <QuestionGateLoader locale={locale} /> : null;
+  return clear ? <RatingGateLoader locale={locale} /> : null;
 }
