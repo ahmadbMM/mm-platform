@@ -182,6 +182,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs-ah-mi { display: flex; flex-wrap: wrap; align-items: center; row-gap: 3px; margin-inline-start: -10px; }
 .xs-ah-mi > span { position: relative; padding-inline-start: 10px; margin-inline-end: 9px; }
 .xs-ah-mi > span::before { content: ""; position: absolute; inset-inline-start: 0; top: 50%; width: 1px; height: 12px; margin-top: -6px; background: currentColor; opacity: .4; }
+.xs-ah-must { display: block; margin-top: 8px; padding: 6px 8px; border: 2px solid #e3262f; background: rgba(227, 38, 47, .14); font-size: 13px; font-weight: 800; line-height: 1.4; color: #fff; overflow-wrap: anywhere; }
 .xs-ah-title { display: block; margin-top: 6px; font-size: 13px; font-weight: 700; line-height: 1.4; color: #ff5a61; overflow-wrap: anywhere; }
 .xs-about.ab-arena { color: #fff; inset-inline-start: 23px; } /* Arena Heros: white on its black, under its words */
 /* Arena Heros' divisions in its Details: each with its level, then what it asks (the booking app's arGuide_*) */

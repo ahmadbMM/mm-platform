@@ -320,6 +320,8 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-card.ev-arena.tk-live .tk-ah-team :is(.tk-vl-code strong, .tk-vl-p) { color: #fbf9f4; }
 .tk-card.ev-arena.tk-live .tk-ah-team .tk-vl-code { color: rgba(251, 249, 244, .66); }
 .tk-ah-heat { margin-top: 10px !important; font-size: 13px; line-height: 1.45; color: #4f565c; }
+.tk-card.ev-arena .vt-tk { background: #1c1c1c; border-color: rgba(227, 38, 47, .55); color: #fff; }
+.tk-card.ev-arena .vt-tk-q { color: #fff; }
 .tk-ah-pay { margin-top: 10px !important; padding: 10px 12px; font-size: 13px; font-weight: 600; line-height: 1.45; background: rgba(227, 38, 47, .07); border-inline-start: 3px solid #e3262f; color: #1a1919; }
 .tk-card.ev-arena.tk-live .tk-ah-heat { color: rgba(251, 249, 244, .66); }
 .tk-card.ev-arena.tk-live .tk-ah-pay { background: #1c1c1c; color: #fbf9f4; }

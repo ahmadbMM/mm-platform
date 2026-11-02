@@ -1,3 +1,4 @@
+import { AH_BANK, vlTicketView } from "@/lib/vl-ticket";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement, type FC, type ReactElement, type ReactNode } from "react";
 // The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
@@ -91,13 +92,11 @@ describe("an athlete's place and the race's settings (lib/arena.ts)", () => {
 
 describe("on Experiences (lib/event-info.ts)", () => {
   const nobody = { member: false, petromin: false }, member = { member: true, petromin: false };
-  it("is for community members: its card is everyone's, its About and its dates' Details members' alone", () => {
-    expect(membersOnlyEvent("arena")).toBe(true);
-    expect(infoShown(membersOnlyEvent("arena"), memberOn("arena", nobody))).toBe(false);
-    expect(infoShown(membersOnlyEvent("arena"), memberOn("arena", member))).toBe(true);
+  it("is open to everyone since 2026-11-02: its card, its About; a date staff close to members shows its Details to members alone", () => {
+    expect(membersOnlyEvent("arena")).toBe(false);
+    expect(infoShown(membersOnlyEvent("arena"), memberOn("arena", nobody))).toBe(true);
+    expect(infoShown(membersOnlyDate({ members: false, kind: "arena" }), memberOn("arena", nobody))).toBe(true);
     expect(infoShown(membersOnlyDate({ members: true, kind: "arena" }), memberOn("arena", nobody))).toBe(false);
-    // the members' own check, not Victory Lap's tag holders: a Petromin tag holder is not let in
-    expect(infoShown(membersOnlyEvent("arena"), memberOn("arena", { member: false, petromin: true }))).toBe(false);
   });
   it("has a card of its own while it has a date, after Victory Lap and before Run for Her, booked on its own event", () => {
     const all = [{ id: "rh", kind: "runher" as const }, { id: "2099-11-06-ah", kind: "arena" as const }, { id: "vl", kind: "vlap" as const }, { id: "s", kind: "saturday" as const }];
@@ -152,11 +151,11 @@ describe("on Experiences (lib/event-info.ts)", () => {
     expect((f("events", "arTitle")!.def as { en: string }).en).toBe("Arena Heros");
     // the booking app's infoEvArena, arCardSub, arTeamsNote and infoDtAr, word for word
     expect(f("events", "arAbout")!.def).toEqual({
-      en: "The Arena Heros Hybrid Race by WeSportify, Mile and Gymnation: a hybrid fitness race over 7 stations for teams of two, two men or two women, in the Open or Elite division. For Community members, medals included.",
-      ar: "سباق أرينا هيروز الهجين من WeSportify وMile وGymnation: سباق لياقة هجين من 7 محطات لفرق من شخصين، رجلين أو امرأتين، في فئة مفتوح أو النخبة. لأعضاء المجتمع، والميداليات مشمولة.",
+      en: "The Arena Heros Hybrid Race by WeSportify, Mile and Gymnation: a hybrid fitness race over 7 stations for teams of two, two men or two women, in the Open or Elite division. Open to everyone, medals included. You must have a partner to take part.",
+      ar: "سباق أرينا هيروز الهجين من WeSportify وMile وGymnation: سباق لياقة هجين من 7 محطات لفرق من شخصين، رجلين أو امرأتين، في فئة مفتوح أو النخبة. مفتوح للجميع، والميداليات مشمولة. يجب أن يكون لديك شريك للمشاركة.",
     });
     expect((f("events", "arMeta")!.def as { en: string }).en).toBe("Teams of 2 · Open or Elite · 7 stations");
-    expect((f("events", "arNote")!.def as { en: string }).en).toBe("Teams of two only: two men or two women. Each partner books their own place from their own account.");
+    expect((f("events", "arNote")!.def as { en: string }).en).toBe("You must have a partner to take part: teams of two only, two men or two women, no individual entries. Each partner books and pays for their own place from their own account.");
     const about = f("dates", "aboutAr")!.def as { en: string; ar: string };
     expect(about.en).toBe("The race runs from {start} to {end}, with a break for prayer. The organisers give each team its heat time before race day.");
     expect((about.ar.match(/\{[a-z]+\}/g) ?? []).sort()).toEqual(["{end}", "{start}"]);
@@ -192,7 +191,9 @@ describe("its ticket on My Account", () => {
     expect(ticketRoute(s, new Map())).toBeNull();
     expect(countdownMoments(s, s.date).map((x) => x[1])).toEqual(["start"]);
     expect(ticketStages([entry({ status: "active" })], s.bikes, null, "en").stages.map((x) => x.key)).toEqual(["booked", "in", "done"]);
-    expect(codeReady([entry()], s)).toBe(true);
+    expect(codeReady([entry({ paid: true })], s)).toBe(true);
+    expect(codeReady([entry()], s)).toBe(false); // no code until it is paid (2026-11-02)
+    expect(codeReady([entry({ vl_ticket: "buy", vl_receipt_at: "2099-01-01" })], s)).toBe(false); // a receipt sent is not paid yet
   });
   it("reads an athlete's place off the row by its session's id, never as Victory Lap's, one ticket a session", () => {
     expect(entry().ah).toEqual({ race: "wd", div: "op", team: "AH-4K7Q", pair: false });
@@ -204,8 +205,30 @@ describe("its ticket on My Account", () => {
     const g = ticketGroups([{ id: "a", session_id: AR.id, session_date: AR.session_date, status: "waiting", vl: { race: "md", div: "el" } }], "2099-11-01");
     expect(g.map((x) => x.key)).toEqual([AR.id]);
   });
-  it("draws the card: Athlete number, its logo, the race and division, the team's code, the heat times, how to pay", () => {
-    const html = card([entry()]);
+  it("holds the number and the QR code until the place is paid, and asks for the transfer, never \"I have a ticket\" (2026-11-02)", () => {
+    const html = card([entry({ vl_ticket: null, vl_receipt_at: null })]);
+    expect(html).toContain("Payment needed");
+    expect(html).toContain("Your QR code and number appear here once your payment is confirmed.");
+    expect(html).not.toContain("Athlete number");
+    expect(html).not.toMatch(/tk-q"[^>]*>#|>#\d/);
+    expect(html).not.toContain("<canvas");
+    expect(html).toContain(">AH-4K7Q<"); // the partner books with it
+    expect(html).toContain("Your team is not complete");
+    expect(html).toContain("Transfer the amount and upload the receipt to confirm your place.");
+    expect(html).not.toContain("Do you already have a ticket");
+    const sent = card([entry({ vl_ticket: "buy", vl_receipt_at: "2099-01-01T00:00:00Z" })]);
+    expect(sent).toContain("Your QR code and number appear here");
+    const paid = card([entry({ paid: true, vl_ticket: "buy", vl_receipt_at: "2099-01-01T00:00:00Z" })]);
+    expect(paid).toContain("Athlete number");
+    expect(paid).not.toContain("Payment needed");
+    // the account's words
+    expect(AH_BANK).toMatchObject({ iban: "SA6115000615128816720008", acct: "615128816720008", bank: "Bank Albilad", name: "شركة قاف فاء لتقنية المعلومات" });
+    expect(vlTicketView({ status: "waiting", paid: false, vlTicket: null, vlReceiptAt: null }, false, true)).toBe("buy");
+    expect(vlTicketView({ status: "waiting", paid: false, vlTicket: "have", vlReceiptAt: null }, false, true)).toBe("buy");
+    expect(vlTicketView({ status: "waiting", paid: true, vlTicket: null, vlReceiptAt: null }, false, true)).toBe("none");
+  });
+  it("draws the card: Athlete number, its logo, the race and division, the team's code, the heat times", () => {
+    const html = card([entry({ paid: true })]);
     expect(html).toContain("Athlete number");
     expect(html).not.toContain("Queue number");
     expect(html).toContain("ev-arena");
@@ -213,9 +236,8 @@ describe("its ticket on My Account", () => {
     expect(html).toMatch(/class="tk-type tk-ah">Women’s Doubles · Open</);
     expect(html).toContain("Team code");
     expect(html).toContain(">AH-4K7Q<");
-    expect(html).toContain("Your partner books their own place with this code.");
+    expect(html).toContain("Your team is not complete");
     expect(html).toContain("The organisers give your team its heat time before race day.");
-    expect(html).toContain("How to pay will be announced.");
     expect(html).toContain("Gymnation, Tahlia Street");
     expect(html).toContain(`href="${AR.meet_url.replace(/&/g, "&amp;")}"`);
     expect(html).toContain("Get directions");
@@ -231,18 +253,13 @@ describe("its ticket on My Account", () => {
     expect(card([entry()], { partners: new Map([["ah1abcdef", "Huda"]]) })).toContain("With Huda");
     // asked our team for a partner, no code yet
     expect(card([entry({ vl: { race: "md", div: "el", pair: true } })])).toContain("Looking for a partner: our team will pair you and let you know.");
-    // paid: no payment line; staff's own words when they set them
-    expect(card([entry({ paid: true })])).not.toContain("How to pay will be announced.");
-    const own = ticketSession({ ...AR, vl: { ...AR.vl, pay: { en: "Pay at Gymnation's desk on race day" } } })!;
-    expect(renderToStaticMarkup(createElement(TicketCard, { locale: "en", today: "2099-11-01", rows: [entry()], session: own, name: "x", cue: null, t, gather: "", start: "", typeName: (x: string) => x, links: { edit: null, manage: "m", place: null }, now: 0 })))
-      .toContain("Pay at Gymnation&#x27;s desk on race day");
   });
   it("speaks Arabic and the translated languages: the venue, the race and the division in the page's words", () => {
-    const ar = card([entry()], { locale: "ar" });
-    for (const w of ["رقم الرياضي", "زوجي السيدات · مفتوح", "رمز الفريق", "يحجز شريكك مكانه بنفسه بهذا الرمز.", "سيُعلن عن طريقة الدفع لاحقًا.", "Gymnation، شارع التحلية"]) expect(ar, w).toContain(w);
+    const ar = card([entry({ paid: true })], { locale: "ar" });
+    for (const w of ["رقم الرياضي", "زوجي السيدات · مفتوح", "رمز الفريق", "فريقك غير مكتمل.", "Gymnation، شارع التحلية"]) expect(ar, w).toContain(w);
     const html = card([entry()], { locale: "de" });
     const d = de as Record<string, string>;
-    for (const w of ["Your partner books their own place with this code.", "How to pay will be announced.", "The organisers give your team its heat time before race day.", "Gymnation, Tahlia Street"]) expect(html, w).toContain(d[w].replace(/&/g, "&amp;"));
+    for (const w of ["Your team is not complete. You cannot take part without a partner: send them this code.", "The organisers give your team its heat time before race day.", "Gymnation, Tahlia Street"]) expect(html, w).toContain(d[w].replace(/&/g, "&amp;"));
     expect(html).toContain("Damen-Doppel · Open"); // the organiser's division name stays in English
   });
 });

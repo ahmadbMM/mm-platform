@@ -7,8 +7,8 @@ import type { T } from "./tickets.text";
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
 import { VL_DIV_KM, vlDivName, vlIsDbl } from "@/lib/vlap";
-import { ahDivName, ahPayLine } from "@/lib/arena";
-import { vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-ticket";
+import { ahDivName, ahHold } from "@/lib/arena";
+import { AH_BANK, vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-ticket";
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { genderChip } from "@/lib/session-gender";
@@ -111,7 +111,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
   const satNum = satNumOk(rows, s);
-  const hideNum = noNum && !satNum;
+  const ahHeld = s?.kind === "arena" && ahHold(rows); // Arena Heros: no number and no code until the place is paid (2026-11-02)
+  const hideNum = (noNum && !satNum) || ahHeld;
   const allWl = rows.every((r) => r.status === "waitlist");
   const num = hideNum ? name : queueNumbers(rows);
   const look = past ? "past" : ticketLook(rows, s); // dark when a place is held, paper otherwise (the booking app's tk-live)
@@ -174,6 +175,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             : arena ? <span className="tk-logo tk-logo-ah" aria-hidden="true"><img src="/site/arena-heros-logo.webp" alt="" decoding="async" /></span>
             : defe ? <span className="tk-logo tk-logo-defe" aria-hidden="true"><img src="/site/defe-logo.svg" alt="" decoding="async" /></span>
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
+          {ahHeld && !allWl && <p className="tk-label">{t.ahHoldTitle}</p>}
           {!hideNum && (allWl
             ? <p className="tk-label wl">{t.wlOnList}{wl ? <> · {t.wlLinePos(String(wl))}</> : ""}</p>
             : <p className="tk-label">{rows.length > 1 ? (rows.length === 2 ? (bikes ? t.bikes2 : t.party2) : (bikes ? t.bikesN : t.partyN)(String(rows.length))) : numLabel}</p>)}
@@ -184,7 +186,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         <div className="tk-right">
           {past ? null : ready
             ? <Qr payload={bookingRef(primary, s)} label={`${numLabel} ${num}`} />
-            : <div className="tk-qr-hold"><span>{t.qrHold}</span></div>}
+            : <div className="tk-qr-hold"><span>{ahHeld ? t.ahHoldNote : t.qrHold}</span></div>}
           <p className="tk-when">
             {dw && <><strong className="tk-dw">{dw === "today" ? t.today : t.tomorrow}</strong><br /></>}
             {f({ weekday: "long" })}<br />{f({ day: "numeric", month: "short", year: "numeric" })}
@@ -323,26 +325,26 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             </div>
           );
         })()}
-        {vlap && vlTicketView(primary, past) !== "none" && (() => {
+        {(vlap || arena) && vlTicketView(primary, past, arena) !== "none" && (() => {
           // "Do you already have a ticket, or would you like to buy one?" (the owner, 2026-10-23; the booking
           // app's _vtTkHtml): nothing on a past, done or waitlisted place, nor on one staff marked paid with no answer
-          const bank = vlBankWords(locale);
+          const bank = arena ? vlBankWords(locale, AH_BANK) : vlBankWords(locale);
           return (
-            <VlTicket entryId={primary.id} answer={primary.vlTicket ?? null} receipt={!!primary.vlReceiptAt} paid={primary.paid}
+            <VlTicket arena={arena} entryId={primary.id} answer={primary.vlTicket ?? null} receipt={!!primary.vlReceiptAt} paid={primary.paid}
               name={name} when={`${f({ weekday: "long" })} · ${f({ day: "numeric", month: "short", year: "numeric" })}`}
               amount={sar(vlTicketAmount(s?.price, primary.price)).replace(/[\u2066\u2069]/g, "")} bankName={bank.name} bankBank={bank.bank}
               t={{
-                title: t.vtTitle, q: t.vtQ, have: t.vtHave, buy: t.vtBuy, buyTitle: t.vtBuyTitle, buySub: t.vtBuySub, amount: t.vtAmount, benef: t.vtBenef,
+                title: t.vtTitle, q: t.vtQ, have: t.vtHave, buy: t.vtBuy, buyTitle: arena ? t.ahBuyTitle : t.vtBuyTitle, buySub: arena ? t.ahBuySub : t.vtBuySub, amount: t.vtAmount, benef: t.vtBenef,
                 bank: t.vtBank, iban: t.vtIban, acct: t.vtAcct, copy: t.vtCopy, copied: t.vtCopied, letter: t.vtLetter, rcptLabel: t.vtRcptLabel,
                 rcptPick: t.vtRcptPick, rcptChange: t.vtRcptChange, rcptBad: t.vtRcptBad, send: t.vtSend, later: t.vtLater, back: t.vtBack,
-                haveNote: t.vtHaveNote, paidNote: t.vtPaidNote, sentNote: t.vtSentNote, needRcpt: t.vtNeedRcpt, upload: t.vtUpload, change: t.change, saving: t.vtSaving,
+                haveNote: t.vtHaveNote, paidNote: t.vtPaidNote, sentNote: t.vtSentNote, needRcpt: arena ? t.ahNeedPay : t.vtNeedRcpt, upload: t.vtUpload, change: t.change, saving: t.vtSaving,
                 close: t.vtClose, failed: t.rrFailed,
               }} />
           );
         })()}
         {arena && (() => {
           // The athlete's place: the team's code and the partner once named (or that our team is finding one),
-          // when the heat times come, and how to pay - announced later (the owner, 2026-10-28), or staff's words
+          // and when the heat times come; how to pay is the transfer's line above (2026-11-02)
           const v = primary.ah;
           const partner = vlPartners?.get(primary.id) ?? "";
           return (
@@ -350,12 +352,11 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               {v?.team && (
                 <div className="tk-vl-team tk-ah-team">
                   <p className="tk-vl-code"><span>{t.vlTeamCode}</span><strong dir="ltr">{v.team}</strong></p>
-                  <p className="tk-vl-p">{partner ? t.vlWithPartner(partner) : t.ahTeamCode}</p>
+                  <p className="tk-vl-p">{partner ? t.vlWithPartner(partner) : past ? t.ahTeamCode : t.ahWait}</p>
                 </div>
               )}
               {v && !v.team && v.pair && <div className="tk-vl-team tk-ah-team"><p className="tk-vl-p">{t.vlPairWait}</p></div>}
               {!past && <p className="tk-ah-heat">{t.ahHeat}</p>}
-              {!past && !allWl && !rows.every((r) => r.paid) && <p className="tk-ah-pay">{ahPayLine(s?.ah, locale, t.ahPay)}</p>}
             </div>
           );
         })()}

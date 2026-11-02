@@ -24,9 +24,20 @@ export const VL_BANK = {
   pdf: "/site/victory-lap-bank-letter.pdf",
 } as const;
 
+/** Arena Heros' account (the owner, 2026-11-02; the booking app's AR_BANK): the beneficiary's name as the owner gave
+ *  it, in Arabic, in every language. No bank letter. */
+export const AH_BANK = {
+  name: "شركة قاف فاء لتقنية المعلومات",
+  nameAr: "شركة قاف فاء لتقنية المعلومات",
+  bank: "Bank Albilad",
+  bankAr: "بنك البلاد",
+  iban: "SA6115000615128816720008",
+  acct: "615128816720008",
+} as const;
+
 /** The account's name and bank in the reader's language: Arabic on the Arabic and Urdu pages, as the booking app does. */
-export const vlBankWords = (locale: string): { name: string; bank: string } =>
-  locale === "ar" || locale === "ur" ? { name: VL_BANK.nameAr, bank: VL_BANK.bankAr } : { name: VL_BANK.name, bank: VL_BANK.bank };
+export const vlBankWords = (locale: string, b: { name: string; nameAr: string; bank: string; bankAr: string } = VL_BANK): { name: string; bank: string } =>
+  locale === "ar" || locale === "ur" ? { name: b.nameAr, bank: b.bankAr } : { name: b.name, bank: b.bank };
 
 /** An IBAN as it is read out, in groups of four (_vtIbanFmt). */
 export const ibanGroups = (v: string): string => v.replace(/(.{4})/g, "$1 ").trim();
@@ -56,9 +67,10 @@ export function vlTicketBody(body: unknown): { entryId: string; answer: VlTicket
  *  without the question yet; a place staff marked paid with no answer), the question, "You have a
  *  ticket", the receipt still to send, the receipt sent and waiting for staff, or the receipt confirmed. */
 export type VlTicketView = "none" | "ask" | "have" | "buy" | "sent" | "paid";
-export function vlTicketView(r: Pick<TicketRow, "status" | "paid" | "vlTicket" | "vlReceiptAt"> | undefined, past: boolean): VlTicketView {
+export function vlTicketView(r: Pick<TicketRow, "status" | "paid" | "vlTicket" | "vlReceiptAt"> | undefined, past: boolean, arena = false): VlTicketView {
   if (!r || past || r.vlTicket === undefined || r.status === "done" || r.status === "waitlist") return "none";
   if (r.vlReceiptAt) return r.paid ? "paid" : "sent";
+  if (arena) return r.paid ? "none" : "buy"; // Arena Heros: no question and no "I have a ticket" (2026-11-02)
   if (r.vlTicket === "have") return "have";
   if (r.vlTicket === "buy") return "buy";
   return r.paid ? "none" : "ask";

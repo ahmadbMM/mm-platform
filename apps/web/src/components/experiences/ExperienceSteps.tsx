@@ -98,6 +98,8 @@ export type StepEvent = {
   /** Victory Lap's card (the booking app's _vlCardHtml): its soonest date, when the doors open and where, under its
    *  line; Arena Heros' its soonest date, its hours and its venue. */
   line?: string[];
+  /** Arena Heros: you must have a partner, said loud on its card (2026-11-02). */
+  must?: string;
   /** Arena Heros' name under its logo (Experiences > Dates: arName), as the booking app's card says it. */
   name?: string;
 };
@@ -307,6 +309,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                           {e.name && <span className="xs-ah-name">{e.name}</span>}
                           {e.line && e.line.length > 0 && <span className="xs-ah-meta"><span className="xs-ah-mi">{e.line.map((x, i) => <span key={i}><bdi>{x}</bdi></span>)}</span></span>}
                           {e.meta && <span className="xs-ah-title">{e.meta}</span>}
+                          {e.must && <span className="xs-ah-must">{e.must}</span>}
                         </span>
                       </span>
                     </button>

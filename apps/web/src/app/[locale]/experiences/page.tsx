@@ -36,7 +36,7 @@ import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 // as a mixed one is (the owner, 2026-10-28: "make all pool sessions visible to all genders but only male can
 // book male sessions and female can book female sessions"); every date of one and every pool date wears its
 // chip, and a signed-in account of the other gender is told so in place of the button that hands the booking
-// over. Arena Heros (the owner, 2026-10-28) is for community members alone: its card is everyone's, its About,
+// over. Arena Heros (the owner, 2026-10-28; everyone's since 2026-11-02, session open_to_all): its About,
 // its dates' Details and its price are members' (community_member), and its last step hands over to the booking
 // app (?ev=arena), which has the athlete step.
 type Sec = Record<string, unknown>;
@@ -162,6 +162,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     petromin: tx("Community members and Petromin's team", "أعضاء المجتمع وفريق بترومين"), // a Petromin night (the booking app's infoWhoPetromin, 2026-10-12)
     vlap: tx("Community members and Victory Lap athletes, 16 and over", "أعضاء المجتمع ورياضيو فيكتوري لاب، من 16 عامًا فأكثر"), // the booking app's infoWhoVlap (2026-10-17)
     arena: tx("Community members, in teams of two", "أعضاء المجتمع، في فرق من شخصين"), // the booking app's infoWhoArena (2026-10-28)
+    arenaAll: tx("Everyone, in teams of two. You must have a partner.", "الجميع، في فرق من شخصين. يجب أن يكون لديك شريك."), // infoWhoArenaAll (2026-11-02)
   };
   // Victory Lap's races and divisions, in the booking app's words (vlRace_*, vlDiv_*)
   const vlWords = {
@@ -172,7 +173,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   // Victory Lap's price per athlete, to those who may book it alone (vlBook; the owner, 2026-10-17); Arena Heros', to
   // a community member alone, who may book it (2026-10-28)
   const athletePrice = (s: RideSession) => (s.kind === "vlap" && vlBook && s.price != null ? `${sar(s.price)} · ${tx("per athlete, VAT included", "لكل رياضي، شاملًا ضريبة القيمة المضافة")}`
-    : s.kind === "arena" && member && s.price != null ? `${sar(s.price)} · ${tx("per athlete, medals included", "لكل رياضي، شاملًا الميدالية")}` : null);
+    : s.kind === "arena" && (member || !s.members) && s.price != null ? `${sar(s.price)} · ${tx("per athlete, medals included", "لكل رياضي، شاملًا الميدالية")}` : null);
   // Arena Heros' facts (lib/arena.ts), in the booking app's words (arFormatTxt, arLvl_*, arGuide_*, arRulesLink): its
   // two races in Victory Lap's words, the organisers' two divisions (their names kept as the booking app keeps
   // Victory Lap's), each with its level and what it asks, the race's format, the prayer break under its window,
@@ -228,7 +229,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // Victory Lap's payment, as the booking app's review step says it under the price (2026-10-23); Arena Heros':
       // announced later (the owner, 2026-10-28), unless staff wrote how (sessions.vl.pay)
       ...(athletePrice(s) ? { payNote: s.kind === "arena"
-        ? ahPayLine(ahConfig(s.vl), locale, tx("How to pay will be announced.", "سيُعلن عن طريقة الدفع لاحقًا."))
+        ? ahPayLine(ahConfig(s.vl), locale, tx("Pay by bank transfer after booking and upload the receipt. Your QR code and number appear once your payment is confirmed.", "ادفع بتحويل بنكي بعد الحجز وارفع الإيصال. يظهر رمز QR ورقمك بعد تأكيد الدفع."))
         : vlPayLine(vlConfig(s.vl), locale, tx("Once booked, tell us whether you already have a ticket or buy one by bank transfer.", "بعد الحجز، أخبرنا إن كانت لديك تذكرة بالفعل أو اشترِ واحدة بتحويل بنكي.")) } : {}),
       route: routeNameOf(routes, s.routeSlug),
       routeKm: kmOf(s),
@@ -280,7 +281,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const events: StepEvent[] = eventCards(all, { member, petromin }).map(({ card: { key, p }, sessions }) => ({
     key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: fill(S(e[`${p}Note`]), caps), about: S(e[`${p}About`]),
     sessions: sessions.slice(0, Math.max(1, N(d.count))).map(toStep),
-    ...(key === "vlap" ? { line: vlLine(sessions[0]) } : key === "arena" ? { line: ahLine(sessions[0]), name: kindName.arena } : {}),
+    ...(key === "vlap" ? { line: vlLine(sessions[0]) } : key === "arena" ? { line: ahLine(sessions[0]), name: kindName.arena, must: tx("You must have a partner to take part. There are no individual entries.", "يجب أن يكون لديك شريك للمشاركة. لا يوجد تسجيل فردي.") } : {}),
   }));
   const text: StepText = {
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),

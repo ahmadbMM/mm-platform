@@ -2,7 +2,7 @@
 
 import "./vl-ticket.css";
 import { useEffect, useRef, useState } from "react";
-import { ibanGroups, VL_BANK, vlTicketView, type VlTicketAnswer } from "@/lib/vl-ticket";
+import { AH_BANK, ibanGroups, VL_BANK, vlTicketView, type VlTicketAnswer } from "@/lib/vl-ticket";
 
 // Victory Lap: "Do you already have a ticket, or would you like to buy one?" on the ticket (the owner,
 // 2026-10-23; the booking app's _vtTkHtml and renderVtGate, lib/vl-ticket.ts). The ticket's line asks it
@@ -22,6 +22,8 @@ export type VlTicketText = {
   change: string; saving: string; close: string; failed: string;
 };
 type Props = {
+  /** Arena Heros (2026-11-02): its own account, no bank letter, no question and no "I have a ticket". */
+  arena?: boolean;
   entryId: string;
   /** The answer so far, and whether the receipt came in. */
   answer: VlTicketAnswer | null; receipt: boolean;
@@ -73,7 +75,7 @@ function shrink(file: File): Promise<string> {
   });
 }
 
-export default function VlTicket({ entryId, answer: initial, receipt: hadReceipt, paid, name, when, amount, bankName, bankBank, t }: Props) {
+export default function VlTicket({ arena = false, entryId, answer: initial, receipt: hadReceipt, paid, name, when, amount, bankName, bankBank, t }: Props) {
   const [answer, setAnswer] = useState<VlTicketAnswer | null>(initial);
   const [receipt, setReceipt] = useState(hadReceipt);
   const [isPaid, setPaid] = useState(paid); // a new picture waits for staff again (2026-10-24)
@@ -96,7 +98,8 @@ export default function VlTicket({ entryId, answer: initial, receipt: hadReceipt
   }, [step]);
 
   if (off) return null;
-  const view = vlTicketView({ status: "waiting", paid: isPaid, vlTicket: answer, vlReceiptAt: receipt ? "1" : null }, false);
+  const view = vlTicketView({ status: "waiting", paid: isPaid, vlTicket: answer, vlReceiptAt: receipt ? "1" : null }, false, arena);
+  const B: { iban: string; acct: string; pdf?: string } = arena ? AH_BANK : VL_BANK;
   if (view === "none") return null;
 
   const open = (s: Step, el: HTMLElement) => { opener.current = el; setErr(""); setImg(""); setStep(s); };
@@ -174,7 +177,7 @@ export default function VlTicket({ entryId, answer: initial, receipt: hadReceipt
         <p className="vt-tk-q">{t.needRcpt}</p>
         <div className="vt-tk-btns">
           <button type="button" className="vt-b solid" onClick={(e) => open("buy", e.currentTarget)}>{t.upload}</button>
-          <button type="button" className="vt-b" onClick={(e) => open("ask", e.currentTarget)}>{t.change}</button>
+          {!arena && <button type="button" className="vt-b" onClick={(e) => open("ask", e.currentTarget)}>{t.change}</button>}
         </div>
       </div>
     ) : (
@@ -218,10 +221,10 @@ export default function VlTicket({ entryId, answer: initial, receipt: hadReceipt
                   {row("amount", t.amount, amount, { ltr: true, amt: true })}
                   {row("name", t.benef, bankName, { cp: bankName })}
                   {row("bank", t.bank, bankBank)}
-                  {row("iban", t.iban, ibanGroups(VL_BANK.iban), { cp: VL_BANK.iban, ltr: true })}
-                  {row("acct", t.acct, VL_BANK.acct, { cp: VL_BANK.acct, ltr: true })}
+                  {row("iban", t.iban, ibanGroups(B.iban), { cp: B.iban, ltr: true })}
+                  {row("acct", t.acct, B.acct, { cp: B.acct, ltr: true })}
                 </div>
-                <a className="vt-pdf" href={VL_BANK.pdf} download="Sports Fitness Unit bank details.pdf" target="_blank" rel="noopener"><Ic d={DOC} /><span>{t.letter}</span></a>
+                {B.pdf && <a className="vt-pdf" href={B.pdf} download="Sports Fitness Unit bank details.pdf" target="_blank" rel="noopener"><Ic d={DOC} /><span>{t.letter}</span></a>}
                 <div className="vt-rc">
                   <p className="vt-rc-l">{t.rcptLabel}</p>
                   {receipt && !img && <p className="vt-done" role="status"><Ic d={isPaid ? TICK : CLOCK} /><span>{isPaid ? t.paidNote : t.sentNote}</span></p>}
@@ -234,7 +237,7 @@ export default function VlTicket({ entryId, answer: initial, receipt: hadReceipt
                 {err && <p className="vt-err" role="alert">{err}</p>}
                 <button type="button" className="vt-send" disabled={busy || !img} onClick={send}>{busy ? t.saving : t.send}</button>
                 <div className="vt-foot">
-                  <button type="button" className="vt-link" disabled={busy} onClick={() => { setErr(""); setStep("ask"); }}>{t.back}</button>
+                  {!arena && <button type="button" className="vt-link" disabled={busy} onClick={() => { setErr(""); setStep("ask"); }}>{t.back}</button>}
                   {!receipt && <button type="button" className="vt-link" disabled={busy} onClick={later}>{t.later}</button>}
                 </div>
               </>

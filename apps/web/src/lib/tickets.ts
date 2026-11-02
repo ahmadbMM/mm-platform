@@ -8,7 +8,7 @@ import { fill as fillNamed } from "./fill";
 import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
 import { riyadhClock } from "./workshop-days";
 import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
-import { AH_VENUE, ahConfig, ahEntry, isArenaId, type AhConfig, type AhEntry } from "./arena";
+import { AH_VENUE, ahConfig, ahEntry, ahHold, isArenaId, type AhConfig, type AhEntry } from "./arena";
 import { sessionGender, type SessionGender } from "./session-gender";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
@@ -314,6 +314,7 @@ export function satNumOk(rows: TicketRow[], s: TicketSession | undefined): boole
  *  rider on it approved. Every other ride's code is its ticket from the moment it is booked, and so
  *  is a partner's place (Defe, 2026-10-17): confirmed when booked, before the list is out. */
 export function codeReady(rows: TicketRow[], s: TicketSession | undefined): boolean {
+  if (s?.kind === "arena" && ahHold(rows)) return false; // no code until the place is paid (2026-11-02)
   if (!s || !s.approval) return true;
   if (partnerPlace(rows)) return true;
   return s.published && rows.every((r) => r.approval === "approved");
