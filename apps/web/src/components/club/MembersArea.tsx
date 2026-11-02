@@ -3,7 +3,7 @@ import { intlOf, isRtl } from "@/i18n/locales";
 import type { Locale } from "@/lib/content";
 import { fmtNum } from "@/lib/fill";
 import { localHref } from "@/lib/links";
-import { announcementsOf, isBirthday, type MemberArea, type MemberUpcoming } from "@/lib/members";
+import { announcementsOf, isBirthday, type MemberArea, type MemberTitle, type MemberUpcoming } from "@/lib/members";
 import type { GenderChip } from "@/lib/session-gender";
 import { T } from "./MembersArea.text";
 
@@ -34,9 +34,14 @@ type Props = {
   /** "This session is for women only." in place of Book on a ride for the other gender (the owner, 2026-10-28:
    *  every member sees it, only that gender books it; lib/session-gender.ts genderBlock); null when Book stays. */
   refusalOf?: (r: MemberUpcoming) => string | null;
+  /** The member's title (customer_my_titles), with the booking app's Community page and My Account, where it is
+   *  chosen; absent on a database without it. The list of members itself lives in the booking app. */
+  title?: MemberTitle | null;
+  communityHref?: string;
+  accountHref?: string;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, sgOf, refusalOf }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, sgOf, refusalOf, title, communityHref, accountHref }: Props) {
   const t = serverLocalize(T, locale);
   const N = (n: number) => fmtNum(n, locale);
   const arrow = isRtl(locale) ? "←" : "→";
@@ -67,6 +72,16 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
       </div>
       <span className="club-bar"><span style={{ width: `${pct}%` }} /></span>
       <p className="club-mine-next">{a.tier >= 2 || !a.next ? t.top : t.toNext(N(Math.max(0, a.next - a.credits)), tierNames[a.tier + 1])}</p>
+
+      {title && (
+        <section className="club-comm" aria-labelledby="club-comm-h">
+          <h3 id="club-comm-h">{t.community}</h3>
+          {title.title
+            ? <p><span>{t.yourTitle}: </span><strong className="club-title"><bdi>{(locale === "ar" && title.title.nameAr) || title.title.name}</bdi></strong></p>
+            : <p className="club-att-empty">{t.noTitle}</p>}
+          <p className="club-comm-links"><a href={communityHref}>{t.seeMembers} {arrow}</a> <a href={accountHref}>{t.manageTitle} {arrow}</a></p>
+        </section>
+      )}
 
       <section className="club-att" aria-labelledby="club-att-h">
         <h3 id="club-att-h">{t.attendance}</h3>

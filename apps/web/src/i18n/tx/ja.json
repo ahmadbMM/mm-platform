@@ -1491,5 +1491,9 @@
  "You must have a partner to take part. There are no individual entries.": "参加にはパートナーが必要です。個人でのエントリーはできません。",
  "You must have a partner to take part: teams of two only, two men or two women, no individual entries. Each partner books and pays for their own place from their own account.": "参加にはパートナーが必要です。男性2名または女性2名の2人1組のチームのみで、個人でのエントリーはできません。パートナーはそれぞれ自分のアカウントから枠を予約し、料金を支払います。",
  "Your QR code and number appear here once your payment is confirmed.": "お支払いが確認されると、QRコードと番号がここに表示されます。",
- "Your team is not complete. You cannot take part without a partner: send them this code.": "チームがそろっていません。パートナーなしでは参加できません。このコードをパートナーに送ってください。"
+ "Your team is not complete. You cannot take part without a partner: send them this code.": "チームがそろっていません。パートナーなしでは参加できません。このコードをパートナーに送ってください。",
+ "Your title": "あなたの称号",
+ "You do not have a title yet.": "まだ称号はありません。",
+ "See community members": "コミュニティのメンバーを見る",
+ "Choose your title or hide from the list": "称号を選ぶ、またはリストに表示しない"
 }

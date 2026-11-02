@@ -142,3 +142,9 @@ html:is([lang="ar"], [lang="ur"]) .club-members h3 { letter-spacing: 0; }
 .club-up li.closed strong, .club-up li.closed .club-up-when { color: #8a8f8a; }
 .club-up li small { font-size: 12px; font-weight: 700; color: #8a5c14; text-align: end; max-width: 160px; }
 .club-ann li { font-size: 14px; color: #2b332d; line-height: 1.55; }
+
+/* The member's title (the owner, 2026-11-02). */
+.club-comm { margin-top: 28px; }
+.club-comm p { margin: 6px 0; }
+.club-title { font-weight: 700; }
+.club-comm-links { display: flex; flex-wrap: wrap; gap: 8px 22px; }

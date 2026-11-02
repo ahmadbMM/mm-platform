@@ -1491,5 +1491,9 @@
  "You must have a partner to take part. There are no individual entries.": "भाग लेने के लिए आपके पास पार्टनर होना ज़रूरी है। अकेले प्रवेश नहीं है।",
  "You must have a partner to take part: teams of two only, two men or two women, no individual entries. Each partner books and pays for their own place from their own account.": "भाग लेने के लिए आपके पास पार्टनर होना ज़रूरी है: केवल दो की टीमें, दो पुरुष या दो महिलाएँ, अकेले प्रवेश नहीं। हर पार्टनर अपने खाते से अपनी जगह बुक करता है और उसका भुगतान करता है।",
  "Your QR code and number appear here once your payment is confirmed.": "भुगतान की पुष्टि होने पर आपका QR कोड और नंबर यहाँ दिखेगा।",
- "Your team is not complete. You cannot take part without a partner: send them this code.": "आपकी टीम पूरी नहीं है। आप पार्टनर के बिना भाग नहीं ले सकते: उन्हें यह कोड भेजें।"
+ "Your team is not complete. You cannot take part without a partner: send them this code.": "आपकी टीम पूरी नहीं है। आप पार्टनर के बिना भाग नहीं ले सकते: उन्हें यह कोड भेजें।",
+ "Your title": "आपका खिताब",
+ "You do not have a title yet.": "आपके पास अभी कोई खिताब नहीं है।",
+ "See community members": "समुदाय के सदस्य देखें",
+ "Choose your title or hide from the list": "अपना खिताब चुनें या खुद को सूची से छिपाएँ"
 }

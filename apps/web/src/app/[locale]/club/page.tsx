@@ -13,7 +13,7 @@ import { fill, fmtNum } from "@/lib/fill";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { getAccount, rpcServer } from "@/lib/account";
-import { memberArea } from "@/lib/members";
+import { memberArea, memberTitle } from "@/lib/members";
 import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { kindNames, sessionName, sessionGenders, type RideKind } from "@/lib/rides";
 import { genderBlock, genderChip, genderText, sessionGender } from "@/lib/session-gender";
@@ -53,6 +53,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   // member_area lists every upcoming members' ride, whatever its rule, and does not say it: each ride's is read
   // through list_sessions for the account; when that cannot be read, the rides wear no chip and keep their Book
   const genders = acct && area?.ok && area.member && area.upcoming.length ? await sessionGenders(area.upcoming.map((r) => r.id), acct) : null;
+  const title = acct && area?.ok && area.member ? memberTitle(await rpcServer<unknown>("customer_my_titles", { p_id: acct.id, p_token: acct.token })) : null;
   const members = area?.ok ? (area.member && genders ? { ...area, upcoming: area.upcoming.map((r) => ({ ...r, gender: genders.get(r.id) ?? null })) } : area) : null;
   // who is looking, for the refusal: the account's gender (customer_profile, which getAccount read; null when none is on file)
   const viewer = acct ? { gender: sessionGender(acct.profile?.gender) } : null;
@@ -126,7 +127,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         )}
         <section className="club-join" id="card">
           {members?.member ? (
-            <MembersArea locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens}
+            <MembersArea title={title} communityHref={bookingLink("/members", locale)} accountHref={bookingLink("/account", locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens}
               sgOf={(r) => (r.gender === undefined ? null : genderChip(r, sgWords))} refusalOf={(r) => genderBlock(r, viewer, sgWords)} />
           ) : members ? (
             <div className="club-lookup">
