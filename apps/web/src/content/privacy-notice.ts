@@ -53,6 +53,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Suggesting the right bike"
      ],
      [
+      "Photos you post on the community wall",
+      "Always optional. Community members only: our staff check each one first, it is not public, and a rejected one is deleted. You can delete yours, and any member can ask for one to be taken down.",
+      "Sharing moments with the community"
+     ],
+     [
       "Date of birth",
       "Optional for your first three bookings, then required. Community members: required before booking, and on a membership application. On a learn-to-ride sign-up: required from the person signing up",
       "Age rules and safety, including making sure under-18s are booked by a parent or guardian; age categories for events, races and leaderboards; age-group totals; a birthday greeting from our team"
@@ -199,7 +204,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "Other community members",
-      "If you are a community member: your full name, your title, the badges our staff gave you and how many rides you have done, so members can know each other. Switch on Hide me from the members list in Account and they see none of it.",
+      "If you are a community member: your full name, your title, the badges our staff gave you, how many rides you have done, the kudos you received and whether you are new; your squad, to those in it; and your name on a photo you post, once our staff approve it. So members can know each other. Switch on Hide me from the members list in Account and they see none of it.",
       "Saudi Arabia"
      ],
      [
@@ -367,6 +372,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "اقتراح الدراجة المناسبة"
      ],
      [
+      "الصور التي تنشرها على حائط المجتمع",
+      "اختيارية دائمًا. لأعضاء المجتمع فقط: يراجع موظفونا كل صورة أولًا، وهي غير عامة، وتُحذف المرفوضة. يمكنك حذف صورك، ويمكن لأي عضو طلب إزالة صورة.",
+      "مشاركة اللحظات مع المجتمع"
+     ],
+     [
       "تاريخ الميلاد",
       "اختياري في أول ثلاثة حجوزات، ثم إلزامي. أعضاء المجتمع: إلزامي قبل الحجز وفي طلب العضوية. في التسجيل في دروس تعلّم الركوب: إلزامي لمن يسجّل",
       "تطبيق قواعد العمر والسلامة، ومنها التأكد من أن حجز من هم دون 18 عامًا يتم عبر أحد الوالدين أو الولي؛ وفئات الأعمار في الفعاليات والسباقات ولوحات الصدارة؛ وإحصاءات الفئات العمرية؛ وتهنئة بعيد ميلادك من فريقنا"
@@ -513,7 +523,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "أعضاء المجتمع الآخرون",
-      "إذا كنت عضوًا في المجتمع: اسمك الكامل ولقبك والشارات التي منحك إياها فريقنا وعدد رحلاتك، ليتعرّف الأعضاء بعضهم على بعض. فعّل خيار إخفائي من قائمة الأعضاء في الحساب ولن يروا شيئًا من ذلك.",
+      "إذا كنت عضوًا في المجتمع: اسمك الكامل ولقبك والشارات التي منحك إياها فريقنا وعدد رحلاتك والتقدير الذي تلقيته وما إذا كنت عضوًا جديدًا؛ وفريقك لمن فيه؛ واسمك على الصورة التي تنشرها بعد اعتماد فريقنا لها. ليتعرّف الأعضاء بعضهم على بعض. فعّل خيار إخفائي من قائمة الأعضاء في الحساب ولن يروا شيئًا من ذلك.",
       "المملكة العربية السعودية"
      ],
      [
