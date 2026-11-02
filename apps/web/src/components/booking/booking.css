@@ -408,3 +408,8 @@ html:is([lang="ar"], [lang="ur"]) .sc-defe-title { letter-spacing: 0; text-trans
   .sc-card { padding: 12px; padding-inline-start: 31px; }
   .sc-spots { font-size: 11px; }
 }
+
+/* pay from the wallet (2026-11-02); square, as every button on the site */
+.tk-wallet-pay { display: block; width: 100%; min-height: 44px; margin-top: 10px; }
+.tk-wallet-acts { display: flex; gap: 8px; margin-top: 8px; }
+.tk-wallet-acts .tk-btn { flex: 1; margin-top: 0; }

@@ -10,6 +10,8 @@ import "@/components/booking/booking.css";
 import TicketCard from "@/components/booking/TicketCard";
 import RateRide from "@/components/account/RateRide";
 import RideRecord from "@/components/account/RideRecord";
+import WalletCard from "@/components/account/WalletCard";
+import { walletOf } from "@/lib/wallet";
 import BloodTypeCard from "@/components/account/BloodTypeCard";
 import { bloodTypeWords } from "@/components/account/BloodType.words";
 import { T as RECORD } from "@/components/account/RideRecord.text";
@@ -120,7 +122,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // every booked session, whatever its state now (a Petromin night, one staff closed since), read
   // with the account's token so a private ride (one its tag holders alone may see) keeps its name
   const record = recordRows(rows);
-  const [sessions, recSessions, badges, blood] = await Promise.all([
+  const [sessions, recSessions, badges, blood, walletRead] = await Promise.all([
     loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
     // every night booked, for Your rides and the badges (the kind of ride, whether it was free, whether staff approve it)
     loadRecordSessions(record.map((r) => r.sessionId), acct),
@@ -129,6 +131,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     // when it cannot be read just now (a card showing none would invite saving over the real one)
     rpcServer<unknown>("customer_blood_type", { p_id: acct.id, p_token: acct.token })
       .then((r) => (r.status === 0 || r.status >= 400 || emAbsent(r) ? null : { type: btOf(r.data) })),
+    // the wallet (rentals 20261102210000): no card and no pay button while the database has none or cannot be read
+    rpcServer<unknown>("customer_wallet", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? walletOf(r.data) : null)),
   ]);
   // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
   const past = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
@@ -232,7 +236,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                       // the live map follows the ride leader: a bike session's only (2026-10-18)
                       live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} vlPartners={vlPartners} />
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} vlPartners={vlPartners} balance={walletRead?.balance ?? null} />
                 );
               })}
               {past.map((g) => {
@@ -274,6 +278,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             <ClubCard locale={locale} title="" text="" notMember={S(club.card.notMember)} applyBtn={S(club.hero.applyBtn)} applyHref={localHref(S(club.hero.applyHref), locale)} tierNames={tierNames} email={acct.email} phone={acct.phone} sinceFmt={datePattern(locale, DATE_STYLES.memberSince)} />
           </section>
         )}
+
+        {walletRead && <WalletCard wallet={walletRead} locale={locale} />}
 
         {blood && (
           <section className="ac-sec bt-sec" aria-labelledby="ac-bt-h">

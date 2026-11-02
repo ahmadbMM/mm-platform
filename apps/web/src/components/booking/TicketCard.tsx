@@ -1,6 +1,9 @@
 import Qr from "./Qr";
 import Countdown from "./Countdown";
 import RaceRegQuestion from "./RaceRegQuestion";
+import WalletPay from "./WalletPay";
+import { walletWords } from "@/components/account/Wallet.words";
+import { walletDue } from "@/lib/wallet";
 import VlTicket from "./VlTicket";
 import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
@@ -67,6 +70,8 @@ type Props = {
   /** Victory Lap (and Arena Heros): each team booking's partner by first name, by booking id (customer_vl_teams);
    *  a booking without one has no partner named. */
   vlPartners?: Map<string, string> | null;
+  /** The rider's wallet balance when it was read, else null: no wallet line on the ticket (2026-11-02). */
+  balance?: number | null;
 };
 
 const Bike = () => (
@@ -106,7 +111,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, vlPartners = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, vlPartners = null, balance = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -138,6 +143,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const total = rows.reduce((sum, r) => sum + r.price, 0) + (extrasCost ?? 0);
   const free = (!!s?.free || (noNum && total === 0)) && extras.length === 0;
   const ready = codeReady(rows, s);
+  // the wallet's button (the booking app's _cwPaySlot, 2026-11-02): only with a balance read, on what is owed
+  const due = !past && !allWl && balance !== null && balance > 0 ? walletDue(rows, s?.kind, !!s?.approval, extrasCost) : null;
+  const wWords = walletWords(locale);
   // Victory Lap and Arena Heros are not paid at the booth: their own lines say how (below)
   const owes = !allWl && !s?.approval && !vlap && !arena && rows.some((r) => !r.paid && r.price > 0);
   const canEdit = !past && rows.some((r) => r.status === "waiting" || r.status === "waitlist");
@@ -375,6 +383,11 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         )}
         {(free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>}
         {owes && !past && <p className="tk-line">{t.payAtBooth}</p>}
+        {due && balance !== null && balance >= due.amount && (
+          <WalletPay ids={due.ids} label={wWords.pay.replace("{0}", sar(due.amount))} t={wWords}
+            ask={wWords.ask.replace("{0}", sar(due.amount)).replace("{1}", sar(balance - due.amount))} />
+        )}
+        {due && balance !== null && balance > 0 && balance < due.amount && <p className="tk-line">{wWords.short.replace("{0}", sar(balance))}</p>}
         {!allWl && !past && bikes && <p className="tk-line">{s?.approval ? t.helmetFree : t.helmetLine}</p>}
       </div>
 
