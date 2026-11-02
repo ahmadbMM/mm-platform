@@ -143,8 +143,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const total = rows.reduce((sum, r) => sum + r.price, 0) + (extrasCost ?? 0);
   const free = (!!s?.free || (noNum && total === 0)) && extras.length === 0;
   const ready = codeReady(rows, s);
-  // the wallet's button (the booking app's _cwPaySlot, 2026-11-02): only with a balance read, on what is owed
-  const due = !past && !allWl && balance !== null && balance > 0 ? walletDue(rows, s?.kind, !!s?.approval, extrasCost) : null;
+  // the Wallet switch (the booking app's _cwPaySlot, 2026-11-03): only with a balance read
+  const due = !past && !allWl && balance !== null ? walletDue(rows, s?.kind, !!s?.approval, extrasCost) : null;
   const wWords = walletWords(locale);
   // Victory Lap and Arena Heros are not paid at the booth: their own lines say how (below)
   const owes = !allWl && !s?.approval && !vlap && !arena && rows.some((r) => !r.paid && r.price > 0);
@@ -383,11 +383,12 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         )}
         {(free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>}
         {owes && !past && <p className="tk-line">{t.payAtBooth}</p>}
-        {due && balance !== null && balance >= due.amount && (
-          <WalletPay ids={due.ids} label={wWords.pay.replace("{0}", sar(due.amount))} t={wWords}
-            ask={wWords.ask.replace("{0}", sar(due.amount)).replace("{1}", sar(balance - due.amount))} />
+        {due && (due.used > 0 || (due.left > 0 && (balance ?? 0) > 0)) && (
+          <WalletPay ids={due.ids} on={due.used > 0} title={wWords.title} failed={wWords.failed}
+            sub={due.used <= 0 ? wWords.have.replace("{0}", sar(balance ?? 0))
+              : due.left > 0 ? wWords.usingLeft.replace("{0}", sar(due.used)).replace("{1}", sar(due.left))
+              : wWords.usingAll.replace("{0}", sar(due.used))} />
         )}
-        {due && balance !== null && balance > 0 && balance < due.amount && <p className="tk-line">{wWords.short.replace("{0}", sar(balance))}</p>}
         {!allWl && !past && bikes && <p className="tk-line">{s?.approval ? t.helmetFree : t.helmetLine}</p>}
       </div>
 

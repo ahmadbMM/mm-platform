@@ -25,23 +25,30 @@ export function walletKindWord(kind: string): "topup" | "adjust" | "takeout" | "
   return kind === "merge_in" || kind === "merge_out" || kind === "unmerge" ? "moved" : "adjust";
 }
 
-type DueRow = { id: string; paid: boolean; status: string; price: number };
+type DueRow = { id: string; paid: boolean; status: string; price: number; payMethod?: string | null; walletPaid?: number };
 
-/** What a ticket can pay from the wallet (the booking app's _cwPaySlot): its seated, unpaid rows, not on a ride staff
- *  approve, a race or a company's night. extras: the add-ons' cost, null when the inventory could not be read
- *  (then no sum is offered: never a wrong one). A card part paid with add-ons cannot say whose they are: no sum either. */
-export function walletDue(rows: DueRow[], kind: string | undefined, approval: boolean, extras: number | null): { ids: string[]; amount: number } | null {
+/** What the Wallet switch on a ticket works on (the booking app's _cwPaySlot): its seated rows the desk has not been
+ *  paid for, not on a ride staff approve, a race or a company's night. left: what is still to pay; used: what the
+ *  wallet holds now. extras: the add-ons' cost, null when the inventory could not be read (no sum is offered: never a
+ *  wrong one). A card part paid with add-ons cannot say whose they are: no sum either. */
+export function walletDue(rows: DueRow[], kind: string | undefined, approval: boolean, extras: number | null): { ids: string[]; left: number; used: number } | null {
   if (approval || kind === "vlap" || kind === "arena" || kind === "petromin" || extras === null) return null;
-  const due = rows.filter((r) => !r.paid && (r.status === "waiting" || r.status === "active"));
-  if (!due.length || (extras > 0 && due.length !== rows.length)) return null;
-  const amount = Math.round((due.reduce((n, r) => n + r.price, 0) + extras) * 100) / 100;
-  return amount > 0 ? { ids: due.map((r) => r.id), amount } : null;
+  const open = rows.filter((r) => (r.status === "waiting" || r.status === "active") && (!r.paid || r.payMethod === "wallet"));
+  if (!open.length || (extras > 0 && open.length !== rows.length)) return null;
+  const cost = open.reduce((n, r) => n + r.price, 0) + extras;
+  // a row the wallet paid whole may carry add-ons in its price's total: what it holds is on the row
+  const used = open.reduce((n, r) => n + (r.walletPaid ?? 0), 0);
+  const round = (n: number) => Math.round(n * 100) / 100;
+  if (cost <= 0) return null;
+  return { ids: open.map((r) => r.id), left: Math.max(0, round(cost - used)), used: round(used) };
 }
 
 const ID = /^[A-Za-z0-9_.:-]{1,64}$/;
-/** The body of POST /api/account/wallet-pay. */
-export function walletPayBody(b: unknown): string[] | null {
-  const ids = b && typeof b === "object" ? (b as { ids?: unknown }).ids : null;
+/** The body of POST /api/account/wallet-pay: the switch's new state, and the bookings. */
+export function walletPayBody(b: unknown): { ids: string[]; on: boolean } | null {
+  const o = b && typeof b === "object" ? (b as { ids?: unknown; on?: unknown }) : null;
+  const ids = o?.ids;
   if (!Array.isArray(ids) || !ids.length || ids.length > 20 || !ids.every((x) => typeof x === "string" && ID.test(x))) return null;
-  return ids as string[];
+  if (typeof o?.on !== "boolean") return null;
+  return { ids: ids as string[], on: o.on };
 }

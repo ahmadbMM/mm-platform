@@ -15,28 +15,31 @@ describe("the wallet", () => {
     expect(["topup", "takeout", "refund", "spend", "return", "merge_in", "merge_out", "unmerge", "adjust"].map(walletKindWord))
       .toEqual(["topup", "takeout", "refund", "spend", "back", "moved", "moved", "moved", "adjust"]);
   });
-  it("offers what the rider owes, on seated unpaid rows only", () => {
-    expect(walletDue([row("a"), row("b", { paid: true }), row("c", { status: "waitlist" })], "jcc", false, 0)).toEqual({ ids: ["a"], amount: 50 });
-    expect(walletDue([row("a"), row("b")], "jcc", false, 20)).toEqual({ ids: ["a", "b"], amount: 120 });
+  it("works on the seated rows the desk has not been paid for, and says what is left", () => {
+    expect(walletDue([row("a"), row("b", { paid: true, payMethod: "card" } as never), row("c", { status: "waitlist" })], "jcc", false, 0)).toEqual({ ids: ["a"], left: 50, used: 0 });
+    expect(walletDue([row("a"), row("b")], "jcc", false, 20)).toEqual({ ids: ["a", "b"], left: 120, used: 0 });
+    expect(walletDue([row("a", { price: 80, walletPaid: 50 } as never)], "jcc", false, 0)).toEqual({ ids: ["a"], left: 30, used: 50 });
+    expect(walletDue([row("a", { price: 80, paid: true, payMethod: "wallet", walletPaid: 80 } as never)], "jcc", false, 0)).toEqual({ ids: ["a"], left: 0, used: 80 });
   });
   it("offers nothing where it would be refused or the sum is not known", () => {
     for (const k of ["vlap", "arena", "petromin"]) expect(walletDue([row("a")], k, false, 0)).toBeNull();
     expect(walletDue([row("a")], "saturday", true, 0)).toBeNull();
     expect(walletDue([row("a")], "jcc", false, null)).toBeNull();
-    expect(walletDue([row("a"), row("b", { paid: true })], "jcc", false, 20)).toBeNull();
+    expect(walletDue([row("a"), row("b", { paid: true, payMethod: "card" } as never)], "jcc", false, 20)).toBeNull();
     expect(walletDue([row("a", { price: 0 })], "jcc", false, 0)).toBeNull();
   });
-  it("takes a list of booking ids and nothing else", () => {
-    expect(walletPayBody({ ids: ["q1", "q-2"] })).toEqual(["q1", "q-2"]);
-    for (const b of [null, {}, { ids: [] }, { ids: "q1" }, { ids: ["a b"] }, { ids: Array(21).fill("q") }]) expect(walletPayBody(b)).toBeNull();
+  it("takes the switch's state and a list of booking ids, and nothing else", () => {
+    expect(walletPayBody({ ids: ["q1", "q-2"], on: true })).toEqual({ ids: ["q1", "q-2"], on: true });
+    expect(walletPayBody({ ids: ["q1"], on: false })).toEqual({ ids: ["q1"], on: false });
+    for (const b of [null, {}, { ids: [] , on: true }, { ids: "q1", on: true }, { ids: ["q1"] }, { ids: ["a b"], on: true }, { ids: Array(21).fill("q"), on: true }]) expect(walletPayBody(b)).toBeNull();
   });
   it("has every word in every language, and the placeholders kept", () => {
     const en = WALLET_WORDS.en;
     for (const w of Object.values(WALLET_WORDS)) {
       expect(Object.keys(w)).toEqual(Object.keys(en));
       for (const v of Object.values(w)) expect(v.trim()).not.toBe("");
-      expect(w.pay).toContain("{0}"); expect(w.short).toContain("{0}");
-      expect(w.ask).toContain("{0}"); expect(w.ask).toContain("{1}");
+      expect(w.have).toContain("{0}"); expect(w.usingAll).toContain("{0}");
+      expect(w.usingLeft).toContain("{0}"); expect(w.usingLeft).toContain("{1}");
     }
   });
 });
