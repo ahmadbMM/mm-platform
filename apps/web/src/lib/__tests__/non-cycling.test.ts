@@ -85,7 +85,7 @@ describe("the waitlist claim card on a session without a bike", () => {
     for (const [l, w] of Object.entries(CLAIM_WORDS)) {
       for (const k of ["doneSubNb", "lateSubNb", "noSubNb"] as const) expect(w[k], `${l}.${k}`).not.toMatch(CYCLING);
     }
-    expect(CLAIM_WORDS.en.doneSubNb).toBe("See you there. Your ticket is in My Bookings.");
+    expect(CLAIM_WORDS.en.doneSubNb).toBe("See you there. Your ticket is in Bookings.");
     expect(CLAIM_WORDS.en.noSub).toContain("next rider"); // a ride keeps the booking app's words
   });
 });

@@ -36,7 +36,7 @@ reviewer per language, under the rules below.
   uses the Arabic original (ذو النورین).
 - **The booking app's labels.** The app does not speak Indonesian, Malay, German, Russian,
   Chinese or Japanese. Where a text names one of its labels, those languages give the
-  English label, on its own or in brackets after a translation, e.g. "«Мои бронирования» (My Bookings)".
+  English label, on its own or in brackets after a translation, e.g. "«Бронирования» (Bookings)".
 - **Unit templates.** "{h} h", "{m} min", "{n} uses" and the like use forms that are right for
   any number. Russian, for example, writes "Баллы: {n}". English alone says "1 ride" / "1 use"
   (in the code).

@@ -80,7 +80,7 @@ export default async function LivePage({ params, searchParams }: { params: Promi
             <h1>{s ? sessionName(s, names, enNames, L !== "en") : title}</h1>
             {s && <p>{fmtDayDate(s.date, locale)}</p>}
           </div>
-          <a className="ac-out" href={localHref("/account", locale)}>{tx("My account", "حسابي")} <span aria-hidden="true">{arrow}</span></a>
+          <a className="ac-out" href={localHref("/account", locale)}>{tx("Account", "الحساب")} <span aria-hidden="true">{arrow}</span></a>
         </header>
         {sessionId ? (
           <>
@@ -88,7 +88,7 @@ export default async function LivePage({ params, searchParams }: { params: Promi
             <LiveMap sessionId={sessionId} locale={locale} until={s ? rideEndsAt(s) : null} />
           </>
         ) : (
-          <p className="ac-empty">{tx("Open the live map from a ticket on your account on the day of the ride.", "افتح الخريطة الحية من تذكرتك في حسابك يوم الجولة.")} <a href={localHref("/account", locale)}>{tx("My account", "حسابي")} <span aria-hidden="true">{arrow}</span></a></p>
+          <p className="ac-empty">{tx("Open the live map from a ticket on your account on the day of the ride.", "افتح الخريطة الحية من تذكرتك في حسابك يوم الجولة.")} <a href={localHref("/account", locale)}>{tx("Account", "الحساب")} <span aria-hidden="true">{arrow}</span></a></p>
         )}
       </div>
     </PageShell>

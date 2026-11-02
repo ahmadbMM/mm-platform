@@ -14,7 +14,7 @@ import { searchIndex, type SearchItem } from "@/app/[locale]/search-index";
 // Pages staff have switched off are not offered.
 const EXTRA = [
   { key: "privacy", href: "/privacy", ...phrase("Privacy Notice", "إشعار الخصوصية") },
-  { key: "account", href: "/account", ...phrase("My Account", "حسابي") },
+  { key: "account", href: "/account", ...phrase("Account", "الحساب") },
   { key: "terms", href: "/terms", ...phrase("Terms & Conditions", "الشروط والأحكام") },
 ];
 const WORDS: Record<string, string> = {

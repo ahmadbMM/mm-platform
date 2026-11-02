@@ -244,7 +244,7 @@ describe("its ticket on My Account", () => {
     expect(html).not.toContain("Meeting point");
     // never the booth, a bike, a helmet, a wallet pass, Victory Lap's ticket question, Edit or Reschedule
     for (const no of ["Pay at the booth", "You pay at the booth", "Helmets", "tk-wallet", "Do you already have a ticket", ">Edit<", "Reschedule", "T-shirt", "5 km time", "victory-lap"]) expect(html, no).not.toContain(no);
-    // its details change in the booking app's My Bookings, as Victory Lap's do
+    // its details change in the booking app's Bookings, as Victory Lap's do
     expect(html).toContain(">Change details<");
     expect(html).toContain(">Cancel<");
     // what the card says (not its class names): never a ride or a bike

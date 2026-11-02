@@ -132,7 +132,7 @@ export const siteSchema = {
           id: "company", type: "list", maxItems: 10, label: bi("Column 3: links", "العمود ٣: الروابط"),
           item: [{ id: "label", type: "text", max: 40, label: bi("Text", "النص"), def: bi("", "") }, { id: "href", type: "link", label: bi("Link", "الرابط"), def: "" }],
           def: [
-            [["About Us", "من نحن"], "/about"], [["My Account", "حسابي"], "/account"], [["Help Center", "مركز المساعدة"], "/help"],
+            [["About Us", "من نحن"], "/about"], [["Account", "الحساب"], "/account"], [["Help Center", "مركز المساعدة"], "/help"],
             [["Returns + Exchanges", "الإرجاع والاستبدال"], "/help#returns"], [["Shipping", "الشحن"], "/help#delivery"],
             [["Privacy Policy", "سياسة الخصوصية"], "/privacy"], [["Terms & Conditions", "الشروط والأحكام"], "/terms"],
           ].map(([[e, a], h]) => ({ label: bi(e as string, a as string), href: { href: h as string } })),

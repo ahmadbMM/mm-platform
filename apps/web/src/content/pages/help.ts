@@ -45,7 +45,7 @@ export const helpSchema = {
           qa(["How do I book a bike service?", "كيف أحجز صيانة لدراجتي؟"],
             ["Request it on the Workshop page: pick the service and a day, and the team calls to confirm. Your reference number lets you follow your bike until it is ready.", "اطلبها من صفحة الورشة: اختر الخدمة واليوم، وسيتصل بك الفريق للتأكيد. وبرقم طلبك تتابع دراجتك حتى تجهز."]),
           qa(["How do I book a ride?", "كيف أحجز رحلة؟"],
-            ["Choose a ride on the Experiences page and book your place online; you'll find it under My Bookings.", "اختر رحلة من صفحة التجارب واحجز مكانك أونلاين، وستجدها في «حجوزاتي»."]),
+            ["Choose a ride on the Experiences page and book your place online; you'll find it under Bookings.", "اختر رحلة من صفحة التجارب واحجز مكانك أونلاين، وستجدها في «الحجوزات»."]),
         ]),
         txt("deliveryTab", 30, "Tab 2: name", "التبويب ٢: الاسم", "Shipping & delivery", "الشحن والتوصيل"),
         answers("delivery", "Tab 2: questions", "التبويب ٢: الأسئلة", [
