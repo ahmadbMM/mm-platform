@@ -354,6 +354,14 @@ export function ticketCue(rows: TicketRow[], s: TicketSession | undefined, ahead
   return null;
 }
 
+/** A waitlisted rider's collection time on a circuit night: a quarter of an hour after the start, after the
+ *  riders holding a place (the booking app's _wlCollectTime; the owner, 2026-11-03). Null on every other ride. */
+export function wlCollectTime(s: TicketSession | undefined): string | null {
+  if (s?.kind !== "jcc" || !s.times) return null;
+  const m = Number(s.times[0].slice(0, 2)) * 60 + Number(s.times[0].slice(3)) + 15;
+  return `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+}
+
 /** How the card is drawn (the booking app's tk-live / tk-wl): a place held - booked or checked in,
  *  its code out - is the night ticket, dark with neon; a waitlist place stays paper with a dashed
  *  edge; a reservation staff have not confirmed stays paper. The National Day card keeps its own. */

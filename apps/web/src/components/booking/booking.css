@@ -28,6 +28,10 @@
 .tk-num.mid { font-size: 40px; letter-spacing: -1px; }
 .tk-num.small { font-size: 24px; letter-spacing: -1px; line-height: 1.1; }
 .tk-wl-note { max-width: 40ch; font-size: 13px; font-weight: 500; line-height: 1.45; color: #8a5c14; }
+/* A circuit night's waitlist says so in a solid band, its own collection time under it (the booking app, 2026-11-03). */
+.tk-label.wl.solid { width: fit-content; padding: 7px 12px; border-radius: 6px; background: #f2c66d; color: #1a1919; font-weight: 800; }
+.tk-wl-collect { font-size: 15px; font-weight: 700; line-height: 1.35; color: #8a5c14; }
+.tk-card .tk-wl-collect.row { margin-top: 4px; font-size: 13px; }
 .tk-right { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; flex: none; }
 .tk-qr { position: relative; display: inline-block; line-height: 0; border: 1px solid rgba(26, 25, 25, .14); border-radius: 3px; overflow: hidden; } /* the white tile is the code's own: the canvas's pixels, the svg's fill before (Qr.tsx) */
 /* The code painted on a canvas (QrCanvas.tsx), as a phone's dark mode leaves it: hidden until it is
