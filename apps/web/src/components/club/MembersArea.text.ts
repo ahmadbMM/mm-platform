@@ -9,6 +9,7 @@ export const T = {
     upcoming: "Upcoming members' rides", booked: "Booked", book: "Book",
     birthday: (name: string) => `Happy birthday, ${name}!`, birthdayText: "Wishing you a great year of riding, from all of us at Micromobility.",
     announcements: "Announcements",
+    community: "Community", yourTitle: "Your title", noTitle: "You do not have a title yet.", seeMembers: "See community members", manageTitle: "Choose your title or hide from the list",
   },
   ar: {
     title: "عضويتك", label: "بطاقة العضوية", credits: "رصيد ركوب", since: "عضو منذ", top: "أعلى مستوى - استمتع بكل المزايا",
@@ -18,5 +19,6 @@ export const T = {
     upcoming: "ركبات الأعضاء القادمة", booked: "محجوزة", book: "احجز",
     birthday: (name: string) => `كل عام وأنت بخير يا ${name}!`, birthdayText: "نتمنى لك سنة رائعة على الدراجة، من كل فريق مايكروموبيليتي.",
     announcements: "الإعلانات",
+    community: "المجتمع", yourTitle: "لقبك", noTitle: "ليس لديك لقب بعد.", seeMembers: "عرض أعضاء المجتمع", manageTitle: "اختر لقبك أو أخفِ نفسك من القائمة",
   },
 };

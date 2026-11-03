@@ -17,7 +17,7 @@
 // (the divisions are Kamin Sports' names, lib/vlap.ts vlDivName). The DEFE 5KM Run (2026-10-18): runnerNumber,
 // and defeKit*, defeRace*, defeReg*, the booking app's own keys. Men only, women only or mixed (2026-10-27):
 // sgMale, sgFemale, sgMixed, the booking app's own keys. Arena Heros (2026-10-28): athleteNumber, vlRaces wd/md,
-// vlTeamCode, vlWithPartner and vlPairWait as on Victory Lap, and the site's own ahTeamCode, ahHeat and ahPay.
+// vlTeamCode, vlWithPartner and vlPairWait as on Victory Lap, and the site's own ahTeamCode and ahHeat.
 export const T = {
   en: {
     queueNumber: "Queue number",
@@ -165,10 +165,15 @@ export const T = {
     vtSaving: "Saving…",
     vtClose: "Close",
     // Arena Heros (the owner, 2026-10-28): each partner books their own place with the team's code; the organisers
-    // give the heat times; how to pay is announced later (the booking app's arPayLater); the venue (venueGymnation)
+    // give the heat times; the transfer and the hold on the code (2026-11-02; arWaitPartner, arHold*, arBuy*, arNeedPay); the venue (venueGymnation)
     ahTeamCode: "Your partner books their own place with this code.",
     ahHeat: "The organisers give your team its heat time before race day.",
-    ahPay: "How to pay will be announced.",
+    ahWait: "Your team is not complete. You cannot take part without a partner: send them this code.",
+    ahHoldTitle: "Payment needed",
+    ahHoldNote: "Your QR code and number appear here once your payment is confirmed.",
+    ahBuyTitle: "Pay by bank transfer",
+    ahBuySub: "Transfer the amount below to the organiser’s account, then upload a picture of the receipt. Each partner pays for their own place. Your QR code and number appear once our team confirms your payment.",
+    ahNeedPay: "Transfer the amount and upload the receipt to confirm your place. Each partner pays for their own place.",
     venueGymnation: "Gymnation, Tahlia Street", // the booking app's venueGymnation
   },
   ar: {
@@ -306,7 +311,12 @@ export const T = {
     vtClose: "إغلاق",
     ahTeamCode: "يحجز شريكك مكانه بنفسه بهذا الرمز.",
     ahHeat: "يُبلغ المنظمون فريقك بموعد دفعته قبل يوم السباق.",
-    ahPay: "سيُعلن عن طريقة الدفع لاحقًا.",
+    ahWait: "فريقك غير مكتمل. لا يمكنك المشاركة بدون شريك: أرسل له هذا الرمز.",
+    ahHoldTitle: "الدفع مطلوب",
+    ahHoldNote: "يظهر رمز QR ورقمك هنا بعد تأكيد الدفع.",
+    ahBuyTitle: "ادفع بتحويل بنكي",
+    ahBuySub: "حوّل المبلغ أدناه إلى حساب المنظم، ثم ارفع صورة إيصال التحويل. يدفع كل شريك عن مكانه. يظهر رمز QR ورقمك بعد أن يؤكد فريقنا الدفع.",
+    ahNeedPay: "حوّل المبلغ وارفع الإيصال لتأكيد مكانك. يدفع كل شريك عن مكانه.",
     venueGymnation: "Gymnation، شارع التحلية",
   },
 };

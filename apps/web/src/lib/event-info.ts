@@ -15,12 +15,12 @@ import { ahConfig, type AhDiv, type AhRace } from "./arena";
 // changes both. Plain logic, so it can be tested: the page puts the words together
 // (app/[locale]/experiences/page.tsx) and ExperienceSteps.tsx draws the links and the dialog.
 
-/** The event cards only community members may book: the community rides, Run for Her and Arena Heros (the
- *  booking app's _infoMembersOnlyEv; the owner, 2026-10-28: "make it exclusive for community members"); and
+/** The event cards only community members may book: the community rides and Run for Her (the booking app's
+ *  _infoMembersOnlyEv; Arena Heros is everyone's since 2026-11-02); and
  *  Petromin Days, which only Petromin tag holders book. Victory Lap is booked by Community members and Victory
  *  Lap tag holders alone, yet its card, its About and its dates' Details are everyone's (the booking app's
  *  _infoShowSess, 2026-10-17). */
-export const membersOnlyEvent = (key: string): boolean => key === "community" || key === "runher" || key === "arena" || key === "petromin";
+export const membersOnlyEvent = (key: string): boolean => key === "community" || key === "runher" || key === "petromin";
 
 /** Whether the visitor counts as a member on a card, for its links: on Petromin Days a Petromin tag
  *  holder (the owner, 2026-10-12: its About and its dates' Details show to holders, as the booking
@@ -71,8 +71,8 @@ export function dateText(s: Pick<RideSession, "kind" | "description">, texts: Da
 /** Who may book a date (_infoFacts): everyone, or community members - aged 18 and over on Run for
  *  Her, with Petromin's team on a Petromin night (2026-10-12, infoWhoPetromin), with the Victory Lap
  *  athletes, 16 and over, on Victory Lap (infoWhoVlap), and in teams of two on Arena Heros (infoWhoArena). */
-export function infoWho(s: Pick<RideSession, "members" | "kind">, t: { all: string; members: string; members18: string; petromin: string; vlap: string; arena?: string }): string {
-  if (!s.members) return t.all;
+export function infoWho(s: Pick<RideSession, "members" | "kind">, t: { all: string; members: string; members18: string; petromin: string; vlap: string; arena?: string; arenaAll?: string }): string {
+  if (!s.members) return s.kind === "arena" && t.arenaAll ? t.arenaAll : t.all;
   return s.kind === "runher" ? t.members18 : s.kind === "petromin" ? t.petromin : s.kind === "vlap" ? t.vlap : s.kind === "arena" ? t.arena || t.members : t.members;
 }
 

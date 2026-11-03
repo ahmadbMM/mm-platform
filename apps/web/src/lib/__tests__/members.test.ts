@@ -3,7 +3,7 @@ import { createElement, type ReactElement } from "react";
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { makeL } from "@/i18n/tx";
-import { announcementsOf, isBirthday, memberArea } from "../members";
+import { announcementsOf, isBirthday, memberArea, memberTitle } from "../members";
 import { genderBlock, genderChip, genderText, type SessionGender } from "../session-gender";
 
 // The members' area reads member_area's answer and shows a member their own membership only.
@@ -127,5 +127,18 @@ describe("the members' rides for one gender (the owner, 2026-10-28: \"make all p
     expect(html).not.toContain("sg-chip");
     expect(html).not.toContain("This session is for");
     expect(rows(html).filter((x) => x.includes("?session="))).toHaveLength(3);
+  });
+});
+
+describe("memberTitle", () => {
+  const titles = [{ id: "a", name: "Captain", name_ar: "قائد", color: "gold" }, { id: "b", name: "Legend", name_ar: "أسطورة", color: "purple" }];
+  it("reads the title the member picked, else the first held", () => {
+    expect(memberTitle({ status: 200, data: { ok: true, member: true, hidden: true, shown: "b", titles } })).toEqual({ hidden: true, title: { name: "Legend", nameAr: "أسطورة", color: "purple" } });
+    expect(memberTitle({ status: 200, data: { ok: true, member: true, shown: "gone", titles } })?.title?.name).toBe("Captain");
+  });
+  it("gives a member holding none an empty title, and no card to anyone else or without the function", () => {
+    expect(memberTitle({ status: 200, data: { ok: true, member: true, titles: [] } })).toEqual({ hidden: false, title: null });
+    expect(memberTitle({ status: 200, data: { ok: true, member: false } })).toBeNull();
+    expect(memberTitle({ status: 404, data: null })).toBeNull();
   });
 });

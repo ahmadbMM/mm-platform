@@ -85,7 +85,7 @@ describe("the waitlist claim card on a session without a bike", () => {
     for (const [l, w] of Object.entries(CLAIM_WORDS)) {
       for (const k of ["doneSubNb", "lateSubNb", "noSubNb"] as const) expect(w[k], `${l}.${k}`).not.toMatch(CYCLING);
     }
-    expect(CLAIM_WORDS.en.doneSubNb).toBe("See you there. Your ticket is in My Bookings.");
+    expect(CLAIM_WORDS.en.doneSubNb).toBe("See you there. Your ticket is in Bookings.");
     expect(CLAIM_WORDS.en.noSub).toContain("next rider"); // a ride keeps the booking app's words
   });
 });
@@ -121,7 +121,7 @@ describe("the ticket on a session without a bike", () => {
       const t = serverLocalize(TICKET, l);
       for (const s of [t.party2, t.partyN("3"), t.underReviewNb, t.cueDoneNb("1 h"), t.cueDoneNoDurNb, t.participantOffer("10%")]) expect(s, l).not.toMatch(CYCLING);
       // Arena Heros' own lines (2026-10-28)
-      for (const s of [t.ahTeamCode, t.ahHeat, t.ahPay, t.venueGymnation]) expect(s, l).not.toMatch(CYCLING);
+      for (const s of [t.ahTeamCode, t.ahHeat, t.ahWait, t.ahHoldNote, t.ahBuySub, t.ahNeedPay, t.venueGymnation]) expect(s, l).not.toMatch(CYCLING);
       if (["id", "ms", "de", "ru", "zh", "ja"].includes(l)) expect(t.partyN("3"), l).not.toBe("3 participants");
     }
   });

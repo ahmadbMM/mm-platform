@@ -312,3 +312,12 @@ dialog.ac-dlg::backdrop { background: rgba(26, 25, 25, .55); }
 .bt-card { max-width: 460px; background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
 .bt-ok { margin: 0; color: #077a4b; font-size: 13.5px; font-weight: 700; }
 .bt-save { margin-top: 2px; }
+
+/* the wallet (2026-11-02) */
+.ac-wal-top { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.ac-wal-n { font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ac-wal-rows { list-style: none; margin: 12px 0 0; padding: 0; max-width: 620px; }
+.ac-wal-rows li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid rgba(0, 0, 0, .1); font-size: 13px; }
+.ac-wal-rows small { display: block; font-size: 12px; color: #6e6b63; }
+.ac-wal-rows strong { flex: none; font-variant-numeric: tabular-nums; }
+.ac-wal-rows .in { color: #077a4b; }

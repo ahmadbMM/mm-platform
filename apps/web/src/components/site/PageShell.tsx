@@ -15,7 +15,7 @@ export function footerFrom(site: Record<string, Sec>): FooterContent {
   const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
   const links = (v: unknown) => list(v).map((l) => ({ label: S(l.label), href: S(l.href) }));
   return {
-    contact: { address: S(c.address), mapsHref: S(c.mapsHref), jccName: S(c.jccName), jccAddress: S(c.jccAddress), jccHref: S(c.jccHref), email: S(c.email), phone: S(c.phone), hoursText: S(c.hoursText) },
+    contact: { address: S(c.address), mapsHref: S(c.mapsHref), jccName: S(c.jccName), jccAddress: S(c.jccAddress), jccHref: S(c.jccHref), email: S(c.email), phone: S(c.phone), supportPhone: S(c.supportPhone), hoursText: S(c.hoursText) },
     social: Object.fromEntries(Object.entries(site.social).map(([k, x]) => [k, S(x)])),
     legal: { company: S(site.legal.company), vat: S(site.legal.vat), cr: S(site.legal.cr), legalName: S(site.legal.legalName), unified: S(site.legal.unified), address: S(site.legal.address) },
     payments: list(f.payments).map((p) => ({ name: S(p.name), logo: S(p.logo) })),

@@ -948,6 +948,10 @@
       if (f) { if (res.error === "gender" || res.error === "height") { $("#" + f[0]).hidden = false; acct["need" + (res.error === "gender" ? "Gender" : "Height")] = true; } setErr(f[0], f[1]); focusField(f[0]); return; }
       showBanner("Could not reach the server. Please try again."); return;
     }
+    // Who invited them, when they came by a member's link (member_invite_code in the booking app). A separate call:
+    // the application is already in, so a failure here costs only the "Invited by" line.
+    var inv = knownInvite();
+    if (inv) { try { await rpc("community_app_invited", { p_id: acct.id, p_token: acct.token, p_code: inv }); } catch (e) {} try { localStorage.removeItem(INV_KEY); } catch (e) {} }
     showSuccess({ name: acct.name, phone: acct.phone, email: acct.email, track: res.track });
   });
   function showSuccess(p) {
@@ -1147,6 +1151,11 @@
   // instead of the form - received, the changes staff asked for, the decision - in the page's language. The
   // link is on the thank-you card and kept on this device, so the form names it the next time it opens.
   var TRACK = new URLSearchParams(location.search).get("track"), TRACK_KEY = "mm-community-track";
+  // A friend's invitation (?inv=, the owner 2026-11-02): kept on this device, because signing in on the booking site
+  // brings them back here without it; thirty days, then it is forgotten.
+  var INV_KEY = "mm-community-inv";
+  (function () { var c = new URLSearchParams(location.search).get("inv"); if (/^[0-9a-f]{16}$/.test(c || "")) { try { localStorage.setItem(INV_KEY, JSON.stringify({ c: c, at: Date.now() })); } catch (e) {} } })();
+  function knownInvite() { try { var v = JSON.parse(localStorage.getItem(INV_KEY) || "null"); return v && /^[0-9a-f]{16}$/.test(v.c) && Date.now() - v.at < 2592e6 ? v.c : ""; } catch (e) { return ""; } }
   function trackUrl(tok) { return location.origin + location.pathname + "?track=" + tok + "&lang=" + lang; }
   function rememberTrack(tok) { try { localStorage.setItem(TRACK_KEY, JSON.stringify({ t: tok, at: Date.now() })); } catch (e) {} }
   function knownTrack() { try { var v = JSON.parse(localStorage.getItem(TRACK_KEY) || "null"); return v && /^[0-9a-f]{48}$/.test(v.t || "") ? v : null; } catch (e) { return null; } }

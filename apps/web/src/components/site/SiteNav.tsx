@@ -134,7 +134,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
           </div>
           {(() => {
             const icon = <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M5 20c1.4-3.6 4.4-5.4 7-5.4s5.6 1.8 7 5.4" /></svg>;
-            const label = tx("My Account", "حسابي");
+            const label = tx("Account", "الحساب");
             return accountHref
               ? <a href={accountHref} className="mm-nav-icon" title={label} aria-label={label}>{icon}</a>
               : <Link href="/account" className="mm-nav-icon" title={label} aria-label={label}>{icon}</Link>;
@@ -165,8 +165,8 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
             );
           })}
           {accountHref
-            ? <a href={accountHref}>{tx("My Account", "حسابي")}<span aria-hidden="true">{arrow}</span></a>
-            : <Link href="/account" onClick={() => setOpen(false)}>{tx("My Account", "حسابي")}<span aria-hidden="true">{arrow}</span></Link>}
+            ? <a href={accountHref}>{tx("Account", "الحساب")}<span aria-hidden="true">{arrow}</span></a>
+            : <Link href="/account" onClick={() => setOpen(false)}>{tx("Account", "الحساب")}<span aria-hidden="true">{arrow}</span></Link>}
         </nav>
       )}
     </>

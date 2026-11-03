@@ -9,7 +9,10 @@ import { vlDivName, vlWords, type VlWords } from "./vlap";
 // 2 men: each partner books their own place and the two are joined by a team code (AH-XXXX), as Victory Lap's
 // Doubles are. Two divisions, Open and Elite; 7 stations; the organiser assigns each team its heat time. Every
 // athlete agrees that their details go to the race's organisers, WeSportify, Mile and Gymnation (lib/share.ts).
-// No badge, no wallet pass and no ticket question. The plain rules, so they can be tested; the database holds
+// No badge and no wallet pass.
+// The owner, 2026-11-02: open to everyone (sessions.open_to_all), a partner required (vl.pair false), paid by Victory
+// Lap's bank transfer and receipt that staff confirm, with no "I have a ticket" (lib/vl-ticket.ts AH_BANK), and no QR code
+// or number until the place is paid (ahHold; the booking app's _arHold; rentals 20261102190000). The plain rules, so they can be tested; the database holds
 // every rule that matters.
 
 /** The two races: a team of 2 women ('wd') or of 2 men ('md'), Victory Lap's Doubles codes, named in its words. */
@@ -31,6 +34,9 @@ export const isArenaId = (id: string | null | undefined): boolean => /^\d{4}-\d\
 /** A division's name: the organiser's own, kept in English in every language but Arabic, as Victory Lap's
  *  Open and Elite are (lib/vlap.ts vlDivName). */
 export const ahDivName = (d: AhDiv, locale: string): string => vlDivName(d, locale);
+
+/** A place not paid yet: no QR code and no number (the booking app's _arHold). A receipt sent is not yet paid. */
+export const ahHold = (rows: { paid: boolean; price: number }[]): boolean => rows.some((r) => !r.paid && r.price > 0);
 
 const has = <T extends string>(all: readonly T[], v: unknown): v is T => typeof v === "string" && (all as readonly string[]).includes(v);
 const obj = (v: unknown): Record<string, unknown> | null => {
