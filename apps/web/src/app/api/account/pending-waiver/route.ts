@@ -1,4 +1,5 @@
 import { T as TICKET } from "@/components/booking/tickets.text";
+import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { WAIVER_VERSIONS, waiverCopy } from "@/content/waivers";
 import { serverL, serverLocalize } from "@/i18n/dicts";
@@ -33,6 +34,9 @@ import { riyadhClock } from "@/lib/workshop-days";
 // Both read the rides with the account's token (list_sessions, lib/rides.ts readSessions): a private
 // ride - one only its tag holders may see - is hidden from the public key, and a rider staff added to
 // one was never asked for its waiver.
+//
+// The Blood Donation event (2026-11-03) is agreed under its own agreement, its version blood-2026-11-v1 (lib/waiver.ts
+// waiverKind), and the pop-up's kicker and line come with it, so no word of the event sits in the browser's code.
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store, private" } });
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -54,13 +58,14 @@ export async function GET(req: Request) {
   const s = first && sessions.get(first.sessionId);
   if (!first || !s) return json({ signedIn: true, pending: null });
   const d = resolvePage(experiencesSchema, content, L).dates;
-  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
-  const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
+  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
+  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
   const t = serverLocalize(TICKET, locale);
   const clock = (x: string) => fmtClock(x, locale);
   // the time as the ticket writes it: "gathering - start" on a ride that gathers, else a window
   const time = timesText(s.times, s.gathers, clock, { gather: S(d.gather), start: S(d.start) });
   const kind = waiverKind(s); // Run for Her, with no bike, is agreed under the activity waiver (_waiverKind)
+  const bw = kind === "blood" ? bloodWords(tx) : null;
   return json({
     signedIn: true,
     pending: {
@@ -72,8 +77,9 @@ export async function GET(req: Request) {
       when: fmtDayDate(first.date, locale),
       time,
       venue: venueText(venueOf(s), t),
-      ridersLabel: s.bikes ? t.riders : t.participants,
+      ridersLabel: bw ? bw.donor : s.bikes ? t.riders : t.participants,
       riders: waiverRiders(rows, first.sessionId, acct.id, s.approval),
+      ...(bw ? { kicker: bw.gate.kicker, sub: bw.gate.sub } : {}),
     },
   });
 }

@@ -103,6 +103,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Letting our team plan a blood donation event. We share it only with the hosts of a blood donation event you agree to share your details with, and use it for nothing else."
      ],
      [
+      "A blood donation event’s registration: your name, mobile number, email address, blood type, birth date and nationality, and whether you donated",
+      "Asked only when you register for a blood donation event. Seen by you, our staff and that event’s hosts once you agree to share them; the hosts are named when you agree. We never ask for or keep your ID or Iqama number.",
+      "Registering you as a donor, and giving confirmed donors any reward the event offers"
+     ],
+     [
       "Victory Lap race details: the race, division and team you choose, your T-shirt size and, if you give it, your 5 km run time",
       "Asked only when you book Victory Lap. Seen by you, our staff and Kamin Sports; your team partner sees your first name.",
       "Placing you in your race and heat, your race T-shirt, and making up Doubles teams"
@@ -420,6 +425,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "فصيلة الدم إن أعطيتنا إياها (أو أنك لا تعرفها)",
       "اختيارية دائمًا: تُعطى في الحساب، أو عند التسجيل في فعالية للتبرع بالدم. لا يراها إلا أنت وموظفونا والجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ويمكنك تغييرها أو حذفها من الحساب في أي وقت.",
       "مساعدة فريقنا في التخطيط لفعالية التبرع بالدم. لا نشاركها إلا مع الجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ولا نستخدمها لأي غرض آخر."
+     ],
+     [
+      "التسجيل في فعالية للتبرع بالدم: اسمك ورقم جوالك وبريدك الإلكتروني وفصيلة دمك وتاريخ ميلادك وجنسيتك، وما إذا كنت قد تبرعت",
+      "تُطلب فقط عند التسجيل في فعالية للتبرع بالدم. يطّلع عليها أنت وموظفونا والجهات المنظمة لتلك الفعالية بعد موافقتك على مشاركتها، ونذكر أسماء هذه الجهات عند طلب موافقتك. لا نطلب رقم هويتك أو إقامتك ولا نحتفظ به.",
+      "تسجيلك متبرعًا، ومنح المتبرعين المؤكَّدين أي مكافأة تقدمها الفعالية"
      ],
      [
       "تفاصيل سباق فيكتوري لاب: السباق والفئة والفريق التي تختارها، ومقاس قميصك، وزمنك في جري 5 كم إن أعطيتنا إياه",

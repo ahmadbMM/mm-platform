@@ -4,11 +4,13 @@ import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
 import "@/components/experiences/experiences.css";
 import "@/components/booking/booking.css";
+import bloodPoster from "@/content/blood-info.json";
+import { BLOOD_NAME, BLOOD_PLATE_SIZE, bloodName, bloodPlate, bloodWords } from "@/content/blood-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum, fmtSar } from "@/lib/fill";
-import { bookingLink, localHref } from "@/lib/links";
+import { BOOKING_URL, bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { genderViewer, rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
@@ -38,7 +40,10 @@ import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 // chip, and a signed-in account of the other gender is told so in place of the button that hands the booking
 // over. Arena Heros (the owner, 2026-10-28; everyone's since 2026-11-02, session open_to_all): its About,
 // its dates' Details and its price are members' (community_member), and its last step hands over to the booking
-// app (?ev=arena), which has the athlete step.
+// app (?ev=arena), which has the athlete step. The Blood Donation event (2026-11-03; lib/blood.ts) has a card of its own
+// while a session is on the books, and nothing names it before that: its words and its poster are this server's
+// (content/blood-words.ts, blood-info.json) and go into the page only with that card; its last step hands over to the
+// booking app (?ev=blood), which has the donor step.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -127,8 +132,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const caps = { riders: fmtNum(biz.jccAccountCap, locale), seats: fmtNum(biz.eventSeatMax, locale) };
 
   // a Petromin night without a title of its own is "Petromin", as the other pages name one
-  const kindName = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
-  const enName = L !== "en" ? { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), petromin: "Petromin" } : kindName;
+  const kindName = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
+  const enName = L !== "en" ? { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), petromin: "Petromin", blood: BLOOD_NAME } : kindName;
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page is named after it
   const routeKm = routeItems(content, L);
   // What a ride costs before anything is picked (_sessFromPrice): the cheapest bike it offers.
@@ -219,7 +224,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       when: s.times ? { gather: s.gather && !oneTime(s.times), a: clock(s.times[0]), b: oneTime(s.times) ? "" : clock(s.times[1]) } : null,
       // a run and Victory Lap have no bikes, so never the bike prices
       // (nor the pool, the workshop or an event: "Per bike" prices only where bikes are rented, 2026-10-18)
-      members: s.members, free: s.free, full: s.full, paid: !s.free && rentsBikes(s.kind), noCarbon: s.noCarbon,
+      // (the Blood Donation event, free as it is, never says so: no price and no free word, as the booking app)
+      members: s.members, free: s.free && s.kind !== "blood", full: s.full, paid: !s.free && rentsBikes(s.kind), noCarbon: s.noCarbon,
       // the DEFE 5KM Run's own card (the booking app's _defeSessCard): the logo, its name, when, how far and
       // where, and the cause along the foot
       ...(s.kind === "defe5k" ? { defe: { meta: [s.times ? clock(s.times[0]) : "", fillAt(kmWord, 5), place.name].filter(Boolean), cause: defeWords.cause } } : {}),
@@ -278,10 +284,27 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     const place = infoPlace(s, venueWords, directions).name;
     return [day, s.times ? (oneTime(s.times) ? clock(s.times[0]) : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "", place].filter(Boolean);
   };
+  // The Blood Donation event's card (2026-11-03, the booking app's _bldCardWrap, _bldWhenTxt): the hosts' plate, its name, its
+  // day, hours and venue, its tagline and the four short rules, and what its About opens, the hospital's poster in Arabic
+  // and English with the PDF the booking app holds. Asked for only when it has a date, so a page without one holds none of it.
+  const bloodCard = (s: RideSession | undefined): Partial<StepEvent> => {
+    const b = bloodWords(tx);
+    let day = s?.date ?? "";
+    try { day = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${s?.date}T12:00:00Z`)); } catch { /* the date as stored */ }
+    return {
+      title: b.name,
+      line: s ? [day, s.times ? (oneTime(s.times) ? clock(s.times[0]) : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "", infoPlace(s, venueWords, directions).name].filter(Boolean) : [],
+      blood: {
+        plate: { src: bloodPlate(locale), alt: b.plateAlt, ...BLOOD_PLATE_SIZE }, cause: b.cause, rules: b.rules,
+        info: { title: b.infoTitle, language: b.language, pdf: { label: b.infoPdf, url: `${new URL(BOOKING_URL).origin}/assets/blood-donation-poster.pdf` }, poster: bloodPoster },
+      },
+    };
+  };
+  const ev: Sec = e; // the cards' texts by prefix: the Blood Donation event has no fields here, and its card brings its own
   const events: StepEvent[] = eventCards(all, { member, petromin }).map(({ card: { key, p }, sessions }) => ({
-    key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: fill(S(e[`${p}Note`]), caps), about: S(e[`${p}About`]),
+    key, title: S(ev[`${p}Title`]), meta: S(ev[`${p}Meta`]), logo: S(ev[`${p}Logo`]), note: fill(S(ev[`${p}Note`]), caps), about: S(ev[`${p}About`]),
     sessions: sessions.slice(0, Math.max(1, N(d.count))).map(toStep),
-    ...(key === "vlap" ? { line: vlLine(sessions[0]) } : key === "arena" ? { line: ahLine(sessions[0]), name: kindName.arena, must: tx("You must have a partner to take part. There are no individual entries.", "يجب أن يكون لديك شريك للمشاركة. لا يوجد تسجيل فردي.") } : {}),
+    ...(key === "vlap" ? { line: vlLine(sessions[0]) } : key === "arena" ? { line: ahLine(sessions[0]), name: kindName.arena, must: tx("You must have a partner to take part. There are no individual entries.", "يجب أن يكون لديك شريك للمشاركة. لا يوجد تسجيل فردي.") } : key === "blood" ? bloodCard(sessions[0]) : {}),
   }));
   const text: StepText = {
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),

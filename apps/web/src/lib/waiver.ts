@@ -21,9 +21,10 @@ const LIVE = new Set(["waiting", "waitlist", "active", "done"]);
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 type Row = Record<string, unknown>;
 
-/** The waiver a session is agreed under (_waiverKind): the ride's where bikes are handed out, the
- *  swim's for the pool, the activity waiver for anything else (the workshop, an event). */
-export const waiverKind = (s: Pick<TicketSession, "kind" | "bikes">): WaiverKind => (s.bikes ? "ride" : s.kind === "swim" ? "swim" : "activity");
+/** The waiver a session is agreed under (_waiverKind): the Blood Donation event's own agreement ("there is no
+ *  activity involved", the owner, 2026-11-03), the ride's where bikes are handed out, the swim's for the pool, the
+ *  activity waiver for anything else (the workshop, an event). */
+export const waiverKind = (s: Pick<TicketSession, "kind" | "bikes">): WaiverKind => (s.kind === "blood" ? "blood" : s.bikes ? "ride" : s.kind === "swim" ? "swim" : "activity");
 export const waiverVersion = (s: Pick<TicketSession, "kind" | "bikes">): string => WAIVER_VERSIONS[waiverKind(s)];
 
 /** One of the account's own live rows (the row's customer, when my_bookings names it, is the account). */

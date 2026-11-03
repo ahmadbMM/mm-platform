@@ -9,6 +9,7 @@ import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, type RideKind }
 import { riyadhClock } from "./workshop-days";
 import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
 import { AH_VENUE, ahConfig, ahEntry, ahHold, isArenaId, type AhConfig, type AhEntry } from "./arena";
+import { isBloodId } from "./blood";
 import { sessionGender, type SessionGender } from "./session-gender";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
@@ -202,6 +203,13 @@ export function ticketGroups(rows: Row[], today: string): Group[] {
   return grouped(rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.status !== "done" && r.date >= (r.status === "active" ? yesterday : today)));
 }
 
+/** The account's finished bookings on the Blood Donation event from before today, one list per session (a session's
+ *  id says it, lib/blood.ts). The website lists no past bookings, but a donor's free ride stays good for a month after
+ *  the event and its code is on the ticket: My Account keeps such a ticket as a past card while the code is good. */
+export function bloodDone(rows: Row[], today: string): Group[] {
+  return grouped(rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.status === "done" && r.date < today && isBloodId(r.sessionId)));
+}
+
 /** Tonight's rides already over (every row of the night done, nothing still ahead on it): the
  *  booking app keeps them on the page as a past card that says the ride is done, with the night's
  *  steps, until the day ends. Whether each counts as ridden (rideCompleted) needs the session. */
@@ -235,7 +243,7 @@ export function ticketSession(r: Row): TicketSession | null {
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -369,11 +377,12 @@ export function dayWord(date: string, today: string): "today" | "tomorrow" | nul
  *  meeting point; a night on the circuit (no place, or "JCC") the Jeddah Corniche Circuit; "JYC" the
  *  Jeddah Yacht Club, where Run for Her meets (VENUE_KEY) - Run for Her always, its place held back or
  *  not (the owner, 2026-10-14), never the circuit; any other place as staff wrote it. Arena Heros is at
- *  its venue (Gymnation, Tahlia Street) when staff named no place, never the circuit (2026-10-28). */
+ *  its venue (Gymnation, Tahlia Street) when staff named no place, never the circuit (2026-10-28), and the Blood
+ *  Donation event at the circuit (the booking app's _sessLoc, 2026-11-03). */
 export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "gym" } | { kind: "text"; text: string };
 export function venueOf(s: (Pick<TicketSession, "approval" | "meetUrl" | "location"> & { kind?: string }) | undefined): Venue {
   if (s?.approval && s.meetUrl) return { kind: "meet" };
-  const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : "");
+  const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : s?.kind === "blood" ? "JCC" : "");
   return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : loc === AH_VENUE ? { kind: "gym" } : { kind: "text", text: loc };
 }
 
@@ -392,10 +401,13 @@ export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined)
 /** The map a ticket's place button opens (My Account): a ride that meets at a point (meetsAt) opens that point;
  *  Arena Heros (2026-10-28), at a venue of its own, opens the venue's map staff set (sessions.meet_url), or none
  *  without one, never the circuit; every other ride, and a session that did not load, the circuit's directions
- *  (`circuit`). On Arena Heros the button says "Get directions": it is the venue, not a meeting point. */
+ *  (`circuit`). On Arena Heros the button says "Get directions": it is the venue, not a meeting point. The Blood
+ *  Donation event (2026-11-03) opens the map on its row (sessions.meet_url), else the circuit's directions: it is at
+ *  the circuit whichever, so never "Meeting point". */
 export function placeLink(s: Pick<TicketSession, "approval" | "kind" | "meetUrl"> | undefined, circuit: string | null): string | null {
   if (s && meetsAt(s)) return s.meetUrl;
   if (s?.kind === "arena") return s.meetUrl;
+  if (s?.kind === "blood") return s.meetUrl ?? circuit;
   return circuit;
 }
 
@@ -537,7 +549,7 @@ export function fmtDayDate(iso: string, locale: string): string {
 const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Branch", "Sharafeyah, Jeddah"], ["JYC", "Jeddah Yacht Club"]]);
 export function icsPlace(s: TicketSession): string {
   if (meetsAt(s) && s.meetUrl) return s.meetUrl;
-  const loc = s.location || (s.kind === "runher" ? "JYC" : s.kind === "arena" ? AH_VENUE : "");
+  const loc = s.location || (s.kind === "runher" ? "JYC" : s.kind === "arena" ? AH_VENUE : s.kind === "blood" ? "JCC" : "");
   return loc ? ICS_PLACES.get(loc) ?? loc : "";
 }
 

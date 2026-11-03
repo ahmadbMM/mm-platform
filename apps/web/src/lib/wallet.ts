@@ -29,11 +29,11 @@ export function walletKindWord(kind: string): "topup" | "adjust" | "takeout" | "
 type DueRow = { id: string; paid: boolean; status: string; price: number; payMethod?: string | null; walletPaid?: number };
 
 /** What the Wallet switch on a ticket works on (the booking app's _cwPaySlot): its seated rows the desk has not been
- *  paid for, not on a ride staff approve, a race or a company's night. left: what is still to pay; used: what the
+ *  paid for, not on a ride staff approve, a race, a company's night or the Blood Donation event, which has no price. left: what is still to pay; used: what the
  *  wallet holds now. extras: the add-ons' cost, null when the inventory could not be read (no sum is offered: never a
  *  wrong one). A card part paid with add-ons cannot say whose they are: no sum either. */
 export function walletDue(rows: DueRow[], kind: string | undefined, approval: boolean, extras: number | null): { ids: string[]; left: number; used: number } | null {
-  if (approval || kind === "vlap" || kind === "arena" || kind === "petromin" || extras === null) return null;
+  if (approval || kind === "vlap" || kind === "arena" || kind === "petromin" || kind === "blood" || extras === null) return null;
   const open = rows.filter((r) => (r.status === "waiting" || r.status === "active") && (!r.paid || r.payMethod === "wallet"));
   if (!open.length || (extras > 0 && open.length !== rows.length)) return null;
   const cost = open.reduce((n, r) => n + r.price, 0) + extras;

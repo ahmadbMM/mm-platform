@@ -7,10 +7,12 @@ import { walletDue } from "@/lib/wallet";
 import VlTicket from "./VlTicket";
 import WalletButton from "@/components/account/WalletButton";
 import type { T } from "./tickets.text";
+import { BLOOD_PLATE_SIZE, bloodPlate, type BloodWords } from "@/content/blood-words";
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
 import { VL_DIV_KM, vlDivName, vlIsDbl } from "@/lib/vlap";
 import { ahDivName, ahHold } from "@/lib/arena";
+import { isBloodId, type BloodReward } from "@/lib/blood";
 import { AH_BANK, vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-ticket";
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
@@ -36,6 +38,10 @@ import { DEFE_RACE_URL, raceRegAsked, addonLines, addonsCost, bookingRef, breakf
 // across its top and the organisers' logo, cut from their poster (2026-10-29, as the booking app's ticket). No wallet
 // pass, no ticket question, never the booth; its details change in the booking
 // app (Change details) and it is never edited or rescheduled here.
+// A Blood Donation ticket (2026-11-03; lib/blood.ts) says "Donor number" under the hosts' plate, on its own look (white
+// and crimson: the booking app's th-blood), with the short rules, what confirmed donors get, and their free ride's code
+// once staff have confirmed the donation. Never a price, a total or a pay line, no wallet pass, no Edit or Reschedule;
+// Cancel stays. Its words come from the page (`blood`), not from T: that dictionary goes to every page's browser.
 export type TicketText = (typeof T)["en"];
 type Props = {
   locale: string;
@@ -72,6 +78,9 @@ type Props = {
   vlPartners?: Map<string, string> | null;
   /** The rider's wallet balance when it was read, else null: no wallet line on the ticket (2026-11-02). */
   balance?: number | null;
+  /** The Blood Donation event: its words (content/blood-words.ts), and each booking's free ride by booking id
+   *  (customer_blood_rewards), null or missing where there is none. */
+  blood?: { words: BloodWords; rewards: Map<string, BloodReward> | null } | null;
 };
 
 const Bike = () => (
@@ -111,7 +120,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, vlPartners = null, balance = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, vlPartners = null, balance = null, blood = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -134,11 +143,14 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const defe = s?.kind === "defe5k";
   const vlap = s?.kind === "vlap"; // Victory Lap: an athlete's number, the race and team, how to pay
   const arena = s?.kind === "arena"; // Arena Heros: an athlete's number, the race, division and team, payment announced later
-  const numLabel = run ? t.runnerNumber : vlap || arena ? t.athleteNumber : satNum ? t.bookingNumber : t.queueNumber;
+  // The Blood Donation event, by its id on a session that did not load: a donor's number, no price anywhere (2026-11-03)
+  const donor = s ? s.kind === "blood" : isBloodId(primary.sessionId);
+  const bw = donor ? blood?.words ?? null : null;
+  const numLabel = bw ? bw.numLabel : run ? t.runnerNumber : vlap || arena ? t.athleteNumber : satNum ? t.bookingNumber : t.queueNumber;
   // The add-ons bought with the booking, each rider's under their name, and in the total, as the
   // booking app lists them (none on a ride staff approve). A line whose price is not known (the
   // inventory could not be read) is listed without it, and the total is left out: never a wrong one.
-  const extras = s?.approval ? [] : addonLines(rows, addonItems);
+  const extras = s?.approval || donor ? [] : addonLines(rows, addonItems);
   const extrasCost = addonsCost(extras);
   const total = rows.reduce((sum, r) => sum + r.price, 0) + (extrasCost ?? 0);
   const free = (!!s?.free || (noNum && total === 0)) && extras.length === 0;
@@ -147,7 +159,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const due = !past && !allWl && balance !== null ? walletDue(rows, s?.kind, !!s?.approval, extrasCost) : null;
   const wWords = walletWords(locale);
   // Victory Lap and Arena Heros are not paid at the booth: their own lines say how (below)
-  const owes = !allWl && !s?.approval && !vlap && !arena && rows.some((r) => !r.paid && r.price > 0);
+  const owes = !allWl && !s?.approval && !vlap && !arena && !donor && rows.some((r) => !r.paid && r.price > 0);
   const canEdit = !past && rows.some((r) => r.status === "waiting" || r.status === "waitlist");
   const active = rows.some((r) => r.status === "active");
   const allDone = rows.length > 0 && rows.every((r) => r.status === "done");
@@ -164,6 +176,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const activeText = !bikes ? t.stIn : bikeName ? t.cueBike(bikeName) : handed ? t.stBike : t.cueNoBike;
   const d = new Date(`${primary.date}T00:00:00Z`);
   const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { ...o, timeZone: "UTC" }).format(d);
+  const fmtShort = (iso: string) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const clock = (x: string) => fmtClock(x, locale);
   // a session with a start time alone (the DEFE 5KM Run's 7 PM) says it once
   const when = timesText(s?.times, !!s?.gathers, clock, { gather, start });
@@ -172,13 +185,16 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   // men only, women only or mixed (the booking app's _sgChip): none on a session that did not load
   const sg = s ? genderChip(s, { male: t.sgMale, female: t.sgFemale, mixed: t.sgMixed }) : null;
   const wl = primary.waitlistNum;
+  const reward = donor ? blood?.rewards?.get(primary.id) ?? null : null;
 
   return (
-    <article className={`tk-card ev-${s?.kind ?? "jcc"}${look ? ` tk-${look}` : ""}${look === "live" && onDay ? " tk-today" : ""}`}>
+    <article className={`tk-card ev-${donor ? "blood" : s?.kind ?? "jcc"}${look ? ` tk-${look}` : ""}${look === "live" && onDay ? " tk-today" : ""}`}>
+      {/* The hosts' marks on their white plate, across the top of the ticket (the booking app's _bldPlateHtml). */}
+      {bw && <div className="bld-plate tk-bld-plate"><img src={bloodPlate(locale)} alt={bw.plateAlt} width={BLOOD_PLATE_SIZE.width} height={BLOOD_PLATE_SIZE.height} decoding="async" /></div>}
       <div className="tk-head">
         <div className="tk-num-block">
           {/* The logo heads the number's column (the booking app's _tkLogo): white lettering on the dark card. */}
-          {vlap
+          {donor ? null : vlap
             ? <span className="tk-logo tk-logo-vl" aria-hidden="true"><img src="/site/victory-lap-dark.webp" alt="" decoding="async" /></span>
             : arena ? <span className="tk-logo tk-logo-ah" aria-hidden="true"><img src="/site/arena-heros-logo.webp" alt="" decoding="async" /></span>
             : defe ? <span className="tk-logo tk-logo-defe" aria-hidden="true"><img src="/site/defe-logo.svg" alt="" decoding="async" /></span>
@@ -267,7 +283,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             {route.track && <svg className="tk-rt-map" viewBox="0 0 40 158" aria-hidden="true" focusable="false"><path d={JCC_TRACK} /><circle cx="12.9" cy="71.4" r="3.2" /></svg>}
           </div>
         )}
-        <p className="tk-riders-h">{bikes ? t.riders : t.participants} · {hideNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
+        <p className="tk-riders-h">{bw ? bw.donor : bikes ? t.riders : t.participants} · {hideNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
         {rows.map((r) => (
           <div key={r.id} className="tk-rider">
             <div className="tk-rider-top">
@@ -283,7 +299,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               {/* Arena Heros: the team's race (2 women or 2 men) and the division */}
               {arena && r.ah && (r.ah.race || r.ah.div) && <span className="tk-type tk-ah">{[r.ah.race ? t.vlRaces[r.ah.race] : "", r.ah.div ? ahDivName(r.ah.div, locale) : ""].filter(Boolean).join(" · ")}</span>}
             </div>
-            {!noNum && (
+            {!noNum && !donor && (
               <div className="tk-rider-pay">
                 <bdi className={`tk-amt${r.paid ? " paid" : ""}`}>{sar(r.price)}</bdi>
                 {/* Unpaid says where it is paid; a waitlisted rider owes nothing until they have a place. */}
@@ -381,7 +397,23 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             )}
           </>
         )}
-        {(free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>}
+        {bw && (
+          // the short rules, what confirmed donors get, and the free ride once staff confirmed the donation (the booking
+          // app's _bldTkHtml, _bldRwHtml); a code that has been used says so, as there
+          <div className="tk-bld">
+            {!past && <ul className="bld-sum">{bw.rules.map((x, i) => <li key={i}><Tick /><span>{x}</span></li>)}</ul>}
+            <p className="tk-bld-note">{bw.rewardNote}</p>
+            {reward && (
+              <div className="tk-bld-rw">
+                <p className="tk-bld-rw-t">{bw.rewardTitle}</p>
+                {reward.used
+                  ? <p>{bw.rewardUsed}</p>
+                  : <><p className="tk-bld-rw-c" dir="ltr">{reward.code}</p>{reward.expiresAt && <p>{bw.rewardTxt.replace("{0}", fmtShort(reward.expiresAt))}</p>}</>}
+              </div>
+            )}
+          </div>
+        )}
+        {!donor && (free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>}
         {owes && !past && <p className="tk-line">{t.payAtBooth}</p>}
         {due && (due.used > 0 || (due.left > 0 && (balance ?? 0) > 0)) && (
           <WalletPay ids={due.ids} on={due.used > 0} title={wWords.title} failed={wWords.failed}
@@ -399,12 +431,12 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
       </div>}
       {/* A pass in the phone's wallet reads as a place held: none on a waitlist or before the code is out, and
           none on the DEFE 5KM Run or Arena Heros, which the passes do not know (the booking app's _walletOk). */}
-      {wallet && !past && !allWl && ready && !defe && !arena && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
+      {wallet && !past && !allWl && ready && !defe && !arena && !donor && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
       {canEdit && (
         <div className="tk-manage">
           {/* a run booking is never changed, only cancelled, as in the booking app */}
-          {!noNum && !run && !vlap && !arena && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}
-          {!noNum && !run && !vlap && !arena && s?.kind !== "snd96" && <a className="tk-btn" href={links.manage}><Again /> {t.reschedule}</a>}
+          {!noNum && !run && !vlap && !arena && !donor && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}
+          {!noNum && !run && !vlap && !arena && !donor && s?.kind !== "snd96" && <a className="tk-btn" href={links.manage}><Again /> {t.reschedule}</a>}
           {/* Victory Lap: the division, T-shirt and 5 km time change in the booking app's My Bookings (_vlEditOpen) */}
           {vlap && rows.length === 1 && primary.vl && <a className="tk-btn solid" href={links.manage}>{t.vlEdit}</a>}
           {/* Arena Heros: the athlete's details and division change there too (the booking app's _vlEditOpen) */}

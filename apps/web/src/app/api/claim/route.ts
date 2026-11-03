@@ -1,4 +1,6 @@
+import { BLOOD_NAME, bloodName } from "@/content/blood-words";
 import { experiencesSchema } from "@/content/pages/experiences";
+import { serverL } from "@/i18n/dicts";
 import { sameOrigin } from "@/lib/account-core";
 import { rpcServer } from "@/lib/account";
 import { claimToken, claimView, stateOfSpot, type ClaimGet, type ClaimSpot } from "@/lib/claim";
@@ -36,8 +38,8 @@ export async function GET(req: Request) {
     // the ride by name, as every page of the site names it (lib/rides.ts sessionName)
     const content = await loadSiteContent();
     const L = asLocale(locale);
-    const names = kindNames(resolvePage(experiencesSchema, content, L).dates);
-    const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
+    const names = { ...kindNames(resolvePage(experiencesSchema, content, L).dates), blood: bloodName(serverL(locale)) };
+    const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
     const kind = rideKind({ ride_kind: got.session.ride_kind, event_kind: got.session.event_kind });
     view.title = sessionName({ kind, title: view.title }, names, enNames, L !== "en") || view.title || "Micromobility";
     view.bikes = !isNonBike(kind);

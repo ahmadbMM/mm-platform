@@ -24,6 +24,9 @@ import { isNonBike } from "@/lib/bike-kinds";
 // Arena Heros (the owner, 2026-10-28) has a card of its own: since 2026-10-29 the organisers' poster ("add the image
 // to the card dont keep it plain"): their logo over the red-lit hall, its name in the poster's heavy italic capitals,
 // its soonest date, hours and venue, its line; its dates never say how many places are left.
+// The Blood Donation event (2026-11-03) has a card of its own while it has a date, its words in its StepEvent alone, from
+// the server, so none of them sits in this code: the hosts' plate, its name, when and where, its tagline and four short
+// rules, in crimson on white, never a price. Its About and its dates' Details open the poster in Arabic or English.
 export type StepSession = {
   id: string; kind: string; day: string; name: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
@@ -102,6 +105,18 @@ export type StepEvent = {
   must?: string;
   /** Arena Heros' name under its logo (Experiences > Dates: arName), as the booking app's card says it. */
   name?: string;
+  /** The Blood Donation event's card; absent on any other. */
+  blood?: StepBlood;
+};
+/** What the Blood Donation event's card, its summary and its poster say, every word ready in the page's language: the
+ *  hosts' plate, the tagline, the four short rules, and the poster retyped from the hospital's PDF (blood-info.json). */
+export type StepBlood = {
+  plate: { src: string; alt: string; width: number; height: number };
+  cause: string; rules: string[];
+  info: {
+    title: string; language: string; pdf: { label: string; url: string };
+    poster: Record<"ar" | "en", { sections: { h: string; p?: string; i?: string[] }[]; source: string }>;
+  };
 };
 export type StepText = {
   steps: [string, string, string]; eventTitle: string; dateTitle: string; bookTitle: string; cont: string; waitlist: string; back: string;
@@ -143,6 +158,14 @@ const Ribbon = () => (
     <path d="M7 21L14.7 9.2c.9-1.5 1-2.7.6-3.8a3.5 3.5 0 0 0-6.6 0c-.4 1.1-.3 2.3.6 3.8l1.4 2.2" /><path d="M13.1 13.6L17 21" />
   </svg>
 );
+/** A short rule's tick (the booking app's _cuIc tick). */
+const Tick = () => (
+  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+);
+/** The hosts' marks on their white plate: a span, as it also stands inside the card's button. */
+const Plate = ({ b }: { b: StepBlood }) => (
+  <span className="bld-plate"><img src={b.plate.src} alt={b.plate.alt} width={b.plate.width} height={b.plate.height} decoding="async" /></span>
+);
 
 export default function ExperienceSteps({ locale, events, prices, bookHref, clubHref, member, petromin, text: t }: Props) {
   const [step, setStep] = useState(1);
@@ -156,6 +179,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   const dlg = useRef<HTMLDialogElement>(null);
   const head = useRef<HTMLHeadingElement>(null);
   const opener = useRef<HTMLElement | null>(null);
+  const [posterLang, setPosterLang] = useState<"ar" | "en">(isRtl(locale) ? "ar" : "en"); // the poster is in these two; every other language reads the English
   useEffect(() => {
     const d = dlg.current;
     if (!info || !d) return;
@@ -247,7 +271,11 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   };
   // What the dialog says, and its button's words: the card's own step, which a date not open to book
   // yet does not offer ("").
-  const sheet = info && (info.s
+  const poster = info?.ev.blood ?? null;
+  const sheet = info && (poster
+    // the Blood Donation event's About and Details are its poster (the booking app's _bldInfoView), its facts on the card
+    ? { kind: "blood", kick: info.s ? info.s.day : t.info.about, title: poster.info.title, text: "", extra: null, facts: [], act: info.s ? (info.s.opens ? "" : t.info.chooseDate) : t.info.bookEvent }
+    : info.s
     ? { kind: info.s.kind, kick: info.s.name, title: info.s.day, text: info.s.info.text, extra: info.s.info.extra, facts: infoFacts(info.s, false), act: info.s.opens ? "" : t.info.chooseDate }
     : { kind: info.ev.sessions[0]?.kind ?? info.ev.key, kick: t.info.about, title: info.ev.title, text: info.ev.about, extra: null, facts: eventFacts(info.ev), act: t.info.bookEvent });
   // The dialog's button does what the card does. The link that opened the dialog goes with its step,
@@ -312,6 +340,18 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                           {e.must && <span className="xs-ah-must">{e.must}</span>}
                         </span>
                       </span>
+                    </button>
+                  ) : e.blood ? (
+                    // The Blood Donation event (2026-11-03, the booking app's _bldCardWrap): an ordinary card's padding, so its
+                    // height and About link line up with its neighbours; a button holds phrasing content alone, hence the spans
+                    <button type="button" className="xs-event ev-blood" onClick={() => pickEvent(e)}>
+                      <Plate b={e.blood} />
+                      <span className="xs-copy">
+                        <span className="xs-ev-title">{e.title}</span>
+                        {e.line && e.line.length > 0 && <span className="xs-ev-meta">{e.line.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}
+                      </span>
+                      <span className="xs-bld-cause">{e.blood.cause}</span>
+                      <span className="bld-sum">{e.blood.rules.map((x, i) => <span key={i}><Tick /><span>{x}</span></span>)}</span>
                     </button>
                   ) : (
                     <button type="button" className={`xs-event ev-${e.key}`} onClick={() => pickEvent(e)}>
@@ -398,12 +438,15 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           <button type="button" className="xs-back" onClick={() => go(2)}><span aria-hidden="true">{back}</span> {t.back}</button>
           <h2 id="xs-h3" className="xs-title" tabIndex={-1}>{noBike(sess) ? t.bookTitleNb : t.bookTitle}</h2>
           <div className="xs-summary">
+            {ev.blood && <Plate b={ev.blood} />}
             <div className="xs-sum-head">
               {sess.defe ? <span className="xs-logo small xs-defe-logo"><img src={DEFE_LOGO} alt="" /></span> : ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
               <div><strong>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span></div>
             </div>
             {tags(sess)}
             {sess.defe && <p className="xs-defe-cause"><Ribbon /><span>{sess.defe.cause}</span></p>}
+            {ev.blood && <p className="xs-bld-cause">{ev.blood.cause}</p>}
+            {ev.blood && <ul className="bld-sum">{ev.blood.rules.map((x, i) => <li key={i}><Tick /><span>{x}</span></li>)}</ul>}
             {sess.event && sess.description && <p className="xs-rules">{sess.description}</p>}
             {facts(sess)}
             {/* Victory Lap's and Arena Heros' price per athlete, to a visitor who may book it alone (its Details' price) */}
@@ -426,8 +469,9 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             <p className="xs-refuse" role="alert">{sess.refusal}</p>
           ) : (
             <>
-              <a className="xs-go" href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
-              {(noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
+              <a className={`xs-go${ev.blood ? " ev-blood" : ""}`} href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
+              {/* one place per account, so never "add the participants" on the Blood Donation event */}
+              {!ev.blood && (noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
             </>
           )}
         </section>
@@ -443,6 +487,25 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             {sheet.text && <p className="xs-info-text">{sheet.text}</p>}
             {sheet.extra && <p className="xs-info-extra" dir="auto">{sheet.extra}</p>}
             {sheet.facts.length > 0 && <dl className="xs-info-facts">{sheet.facts.map((f) => <div key={f.k}><dt>{f.k}</dt><dd>{f.v}</dd></div>)}</dl>}
+            {poster && (
+              <>
+                <Plate b={poster} />
+                <div className="xs-bld-lang" role="group" aria-label={poster.info.language}>
+                  {(["ar", "en"] as const).map((l) => <button key={l} type="button" lang={l} aria-pressed={posterLang === l} onClick={() => setPosterLang(l)}>{l === "ar" ? "العربية" : "English"}</button>)}
+                </div>
+                <div className="xs-bld-poster" dir={posterLang === "ar" ? "rtl" : "ltr"} lang={posterLang}>
+                  {poster.info.poster[posterLang].sections.map((x, i) => (
+                    <details key={`${posterLang}-${i}`} className="xs-bld-sec" open={i < 3}>
+                      <summary>{x.h}</summary>
+                      {x.p && <p>{x.p}</p>}
+                      {x.i && <ol>{x.i.map((y, j) => <li key={j}>{y}</li>)}</ol>}
+                    </details>
+                  ))}
+                  <p className="xs-bld-src">{poster.info.poster[posterLang].source}</p>
+                </div>
+                <a className="xs-bld-pdf" href={poster.info.pdf.url} target="_blank" rel="noopener">{poster.info.pdf.label}</a>
+              </>
+            )}
             <div className="xs-info-btns">
               <button type="button" className="xs-info-close" onClick={() => dlg.current?.close()}>{t.info.close}</button>
               {sheet.act && <button type="button" className="xs-info-go" onClick={take}>{sheet.act}</button>}

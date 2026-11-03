@@ -19,10 +19,12 @@ import { T as TICKET } from "@/components/booking/tickets.text";
 import "@/components/club/club.css";
 import "./handoff.css";
 import { accountSchema } from "@/content/pages/account";
+import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
 import { clubSchema } from "@/content/pages/club";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { accountBookings, getAccount, rpcServer } from "@/lib/account";
+import { bloodRewards, isBloodId, rewardGood } from "@/lib/blood";
 import { btOf } from "@/lib/blood-type";
 import { emAbsent } from "@/lib/emergency";
 import { decodeSession } from "@/lib/account-core";
@@ -36,7 +38,7 @@ import { routeItems } from "@/lib/route-names";
 import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
 import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
-import { breakfastFor, doneToday, fmtDayDate, placeLink, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
+import { bloodDone, breakfastFor, doneToday, fmtDayDate, placeLink, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, recordRows, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
@@ -110,9 +112,10 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const today = now.slice(0, 10);
   const groups = ticketGroups(rows, today);
   const doneTonight = doneToday(rows, today);
+  const donorEarlier = bloodDone(rows, today); // the Blood Donation event, over: kept below while its free ride is good
   const d = resolvePage(experiencesSchema, content, L).dates;
-  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
-  const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
+  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
+  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
   // Finished rides not rated yet, one per night (a party rates once, on its first rider): the
   // booking app's post-ride rating. The oldest from the day it went live on is the pop-up the
   // rider cannot skip (RatingGateLoader, on every page; the booking app's _pendingRatingId), and
@@ -123,7 +126,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // with the account's token so a private ride (one its tag holders alone may see) keeps its name
   const record = recordRows(rows);
   const [sessions, recSessions, badges, blood, walletRead] = await Promise.all([
-    loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
+    loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
     // every night booked, for Your rides and the badges (the kind of ride, whether it was free, whether staff approve it)
     loadRecordSessions(record.map((r) => r.sessionId), acct),
     loadBadgeData(acct),
@@ -135,7 +138,16 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     rpcServer<unknown>("customer_wallet", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? walletOf(r.data) : null)),
   ]);
   // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
-  const past = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
+  const pastTonight = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
+  // The Blood Donation event (2026-11-03): a donor's free ride, asked only when a ticket is on the event; a database
+  // without customer_blood_rewards, or a failed read, gives none and the ticket shows no code. The event over, its ticket
+  // stays as a past card while the code on it is still good: it is good for a month, and this page lists no past bookings.
+  const isDonation = (id: string) => sessions.get(id)?.kind === "blood" || isBloodId(id);
+  const donorRewards = [...groups, ...pastTonight, ...donorEarlier].some((g) => isDonation(g.sessionId))
+    ? await rpcServer<unknown>("customer_blood_rewards", { p_id: acct.id, p_token: acct.token }).then((r) => bloodRewards(r.data))
+    : null;
+  const past = [...pastTonight, ...donorEarlier.filter((g) => g.rows.some((r) => rewardGood(donorRewards?.get(r.id), today)))];
+  const donor = donorRewards ? { words: bloodWords(tx), rewards: donorRewards } : null;
   const routes = routeItems(content, L); // a ride that follows a route on the Routes page names it on its ticket
   // tonight's bike, by name, for the steps and the line under the header
   const bikeOf = new Map(await Promise.all([...groups, ...past].filter((g) => g.date === today).map(async (g) => [g.sessionId, await bikeName(g.rows.find((r) => r.bikeId)?.bikeId ?? null)] as const)));
@@ -171,7 +183,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // Edit does; Reschedule and Cancel open its My Bookings. (A Run for Her place is only cancelled;
   // its event is still named, as the booking app's event link takes it.)
   // (Victory Lap's details change in My Bookings there: it is never edited or rescheduled; nor Arena Heros'.)
-  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena" };
+  const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood" };
   const appLink = (params: Record<string, string>) => {
     try { const u = new URL(app); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
     catch { return book; }
@@ -225,8 +237,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
               {groups.map((g, i) => {
                 const s = sessions.get(g.sessionId);
                 const ev = s ? EV[s.kind] : undefined;
-                // a ride staff approve and Run for Her meet at the point staff set (meetsAt), Arena Heros is at its
-                // venue's map, the rest at the circuit
+                // a ride staff approve and Run for Her meet at the point staff set (meetsAt), Arena Heros and the Blood
+                // Donation event are at their venue's map, the rest at the circuit
                 const place = placeLink(s, S(site.contact.jccHref) || null);
                 return (
                   <TicketCard key={g.key} locale={locale} today={now.slice(0, 10)} rows={g.rows} session={s}
@@ -236,7 +248,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                       // the live map follows the ride leader: a bike session's only (2026-10-18)
                       live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} vlPartners={vlPartners} balance={walletRead?.balance ?? null} />
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} />
                 );
               })}
               {past.map((g) => {
@@ -245,7 +257,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                   <TicketCard key={g.key} past locale={locale} today={today} rows={g.rows} session={s}
                     name={rideName(s, g.sessionId)}
                     cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} vlPartners={vlPartners} />
+                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} vlPartners={vlPartners} blood={donor} />
                 );
               })}
             </div>

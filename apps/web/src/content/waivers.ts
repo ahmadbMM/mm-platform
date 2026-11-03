@@ -6,15 +6,26 @@ import type { L } from "@/i18n/tx";
 // other language translates the English (src/i18n/tx); the ten languages the booking app speaks
 // take its own wording. Each waiver carries the version the booking app stamps on a row agreed
 // under it (WAIVER_VERSION, SWIM_WAIVER_VERSION, ACTIVITY_WAIVER_VERSION): change a text only with
-// the booking app's, and its version with it, so a row's waiver_version names the words the rider read.
-export type WaiverKind = "ride" | "swim" | "activity";
-export const WAIVER_VERSIONS: Readonly<Record<WaiverKind, string>> = { ride: "2026-10-v3", swim: "swim-2026-10-v3", activity: "activity-2026-10-v3" };
+// the booking app's, and its version with it, so a row's waiver_version names the words the rider read. The Blood
+// Donation event (2026-11-03) is agreed under its own agreement (bldWaiverTitle, bldWaiverBody, bldWaiverAgree;
+// BLD_WAIVER_VERSION; the owner: "there is no activity involved"), never the activity waiver's words: the hosts' medical
+// team does the donation, so it releases MicroMobility and its staff only.
+export type WaiverKind = "ride" | "swim" | "activity" | "blood";
+export const WAIVER_VERSIONS: Readonly<Record<WaiverKind, string>> = { ride: "2026-10-v3", swim: "swim-2026-10-v3", activity: "activity-2026-10-v3", blood: "blood-2026-11-v1" };
 
 export type WaiverCopy = { title: string; body: string; agree: string };
 
 /** A waiver's words in the page's language (the booking app's _waiverCopy): it names its own
  *  activity, so a swimmer never agrees to a "Ride waiver" on behalf of every "rider". */
 export function waiverCopy(kind: WaiverKind, tx: L): WaiverCopy {
+  if (kind === "blood") return {
+    title: tx("Donor agreement", "إقرار المتبرع"),
+    body: tx(
+      "You cannot register for this event until you have read and agreed to this. Giving blood is voluntary, and I can withdraw at any time without giving a reason. The donation is a medical procedure carried out by the event’s medical team, not by MicroMobility. Only the medical team decides whether I can donate, so registering does not guarantee that I will. I will answer their health questions truthfully and follow their instructions and the venue’s, including resting after I donate and avoiding hard exercise for 5 hours. MicroMobility’s part is only to register me and to give confirmed donors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for the medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.",
+      "لا يمكنك التسجيل في هذه الفعالية إلا بعد قراءة هذا الإقرار والموافقة عليه. التبرع بالدم عمل تطوعي، ويمكنني الانسحاب في أي وقت دون إبداء أي سبب. والتبرع إجراء طبي يقوم به الفريق الطبي للفعالية، وليس مايكروموبيليتي. والفريق الطبي وحده هو من يقرر ما إذا كان بإمكاني التبرع، ولذلك فإن التسجيل لا يضمن قبول تبرعي. وأتعهد بالإجابة بصدق عن أسئلته الصحية وباتباع تعليماته وتعليمات إدارة الموقع، بما في ذلك أخذ قسط من الراحة بعد التبرع وتجنب النشاط البدني الشاق لمدة 5 ساعات. ويقتصر دور مايكروموبيليتي على تسجيلي ومنح المتبرعين المؤكَّدين ركوبتهم المجانية. وأنا مسؤول عن ممتلكاتي الشخصية. وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها أي مسؤولية عن الإجراء الطبي أو آثاره، أو عن أي إصابة أو مرض أو فقدان أو سرقة أو تلف في الفعالية.",
+    ),
+    agree: tx("I have read this and I agree", "قرأت هذا الإقرار وأوافق عليه"),
+  };
   if (kind === "swim") return {
     title: tx("Swim waiver", "إقرار السباحة"),
     body: tx(
