@@ -61,7 +61,7 @@ describe("the rating on a session without a bike", () => {
     expect(ratingNoBike(false, { kind: "jcc", bikes: true }, "j1")).toBe(false);
     expect(ratingNoBike(false, null, "2026-10-24")).toBe(false);
     expect(ratingNoBike(true, { kind: "jcc", bikes: true }, "j1")).toBe(true);
-    expect(questionKeys(formOf("vlap"), { noBike: ratingNoBike(false, null, "2026-10-26-vl") })).toEqual(["service", "experience"]);
+    expect(questionKeys(formOf("vlap"), { noBike: ratingNoBike(false, null, "2026-10-26-vl") })).toEqual(["service"]);
   });
   it("has the session words in all 16 languages, none of them about cycling", () => {
     expect(Object.keys(RATING_WORDS).sort()).toEqual([...LOCALE_CODES].sort());

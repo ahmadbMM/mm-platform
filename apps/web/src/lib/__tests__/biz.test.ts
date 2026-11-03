@@ -148,9 +148,9 @@ describe("the rating's 'tell us why' follows rg_low", () => {
     const body = { entryId: "q1abcdef", form: "social", s: SOC };
     expect(cleanRating(body)).toBeNull();
     expect(cleanRating(body, 6)).not.toBeNull();
-    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 7, experience: 9 } })).not.toBeNull();
-    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 5, experience: 9 } }, 4)).not.toBeNull();
-    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 4, experience: 9 } }, 4)).toBeNull();
+    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 7 } })).not.toBeNull();
+    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 5 } }, 4)).not.toBeNull();
+    expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 4 } }, 4)).toBeNull();
   });
   it("is the server's check too: /api/account/rate reads rg_low from the site's content", async () => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
@@ -159,7 +159,7 @@ describe("the rating's 'tell us why' follows rg_low", () => {
     vi.stubGlobal("fetch", f);
     const res = await rate(new Request("https://micromobility.sa/api/account/rate", {
       method: "POST", headers: { origin: "https://micromobility.sa", cookie: "mm_acct=c1~a1b2c3d4e5f6a7b8c9d0", "content-type": "application/json" },
-      body: JSON.stringify({ entryId: "q1abcdef", form: "rental", s: { service: 7, bike: 9, experience: 9 } }),
+      body: JSON.stringify({ entryId: "q1abcdef", form: "rental", s: { service: 7, bike: 9 } }),
     }));
     expect(res.status).toBe(200);
     expect(f.mock.calls.some((c) => String(c[0]).includes("/rpc/customer_booking_update"))).toBe(true);
