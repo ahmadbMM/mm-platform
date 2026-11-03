@@ -234,7 +234,7 @@ describe("no bikes, no wallet, no ride counted", () => {
     expect(rideWord("blood")).toBe("session");
     expect(rideWord(undefined, "2026-11-05-bd")).toBe("session");
     expect(ratingNoBike(false, null, "2026-11-05-bd")).toBe(true);
-    expect(questionKeys(formOf("blood"), { noBike: ratingNoBike(false, { kind: "blood", bikes: false }, "x") })).toEqual(["service", "experience"]);
+    expect(questionKeys(formOf("blood"), { noBike: ratingNoBike(false, { kind: "blood", bikes: false }, "x") })).toEqual(["service"]);
   });
   it("is never a ride on Your rides and earns no badge", () => {
     const empty: BadgeData = { catalog: [], weeks: null, seasons: [], mine: [] };
