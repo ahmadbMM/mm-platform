@@ -14,6 +14,7 @@ import { BOOKING_URL, bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { genderViewer, rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
+import { typeOffered } from "@/lib/bike-kinds";
 import { dateText, eventCards, infoArena, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { bizOf, faresOf } from "@/lib/biz";
 import { kindNames, loadRides, oneTime, sessionName, upcoming, type RideSession } from "@/lib/rides";
@@ -138,7 +139,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const routeKm = routeItems(content, L);
   // What a ride costs before anything is picked (_sessFromPrice): the cheapest bike it offers.
   const fromPrice = (s: RideSession) => {
-    const ps = prices.filter((p) => p.type !== "Any" && p.type !== "Own" && !(s.noCarbon && p.type === "Road Carbon")).map((p) => p.price);
+    const ps = prices.filter((p) => p.type !== "Any" && p.type !== "Own" && typeOffered(s, p.type)).map((p) => p.price);
     return ps.length ? fillAt(tx("from {0}", "من {0}"), sar(Math.min(...ps))) : null;
   };
   // A route's distance on the booking summary (the booking app's reg-side row): the route's own,
@@ -225,7 +226,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // a run and Victory Lap have no bikes, so never the bike prices
       // (nor the pool, the workshop or an event: "Per bike" prices only where bikes are rented, 2026-10-18)
       // (the Blood Donation event, free as it is, never says so: no price and no free word, as the booking app)
-      members: s.members, free: s.free && s.kind !== "blood", full: s.full, paid: !s.free && rentsBikes(s.kind), noCarbon: s.noCarbon,
+      members: s.members, free: s.free && s.kind !== "blood", full: s.full, paid: !s.free && rentsBikes(s.kind), noCarbon: s.noCarbon, closedTypes: s.closedTypes ?? [],
       // the DEFE 5KM Run's own card (the booking app's _defeSessCard): the logo, its name, when, how far and
       // where, and the cause along the foot
       ...(s.kind === "defe5k" ? { defe: { meta: [s.times ? clock(s.times[0]) : "", fillAt(kmWord, 5), place.name].filter(Boolean), cause: defeWords.cause } } : {}),

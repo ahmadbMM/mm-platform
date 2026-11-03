@@ -5,7 +5,7 @@ import { isRtl } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
 import { fill as fillAt } from "@/i18n/tx";
 import { bookingAt, infoShown, memberOn, membersOnlyDate, membersOnlyEvent } from "@/lib/event-info";
-import { isNonBike } from "@/lib/bike-kinds";
+import { isNonBike, typeOffered } from "@/lib/bike-kinds";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -39,6 +39,7 @@ export type StepSession = {
   left?: number | null; when: { gather: boolean; a: string; b: string } | null;
   members: boolean; free: boolean; full: boolean; paid: boolean;
   noCarbon: boolean; // the ride offers no Road Carbon bike, so its price is not shown
+  closedTypes?: string[]; // nor the price of a type staff closed on this session (typeOffered)
   /** A ticketed event: seats instead of bikes, so no bike prices - its own blurb, the seat price
    *  as the page writes it (null when free) and its seats as a number the page has formatted. */
   event: boolean; description: string | null; seatPrice: string | null; seats: string | null;
@@ -454,11 +455,11 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             {sess.payNote && <p className="xs-rules">{sess.payNote}</p>}
             {/* the community card's rules speak of riders and the ride: not on its pool session or the DEFE run */}
             {ev.note && !(ev.key === "community" && noBike(sess)) && <p className="xs-rules">{ev.note}</p>}
-            {sess.paid && !sess.event && prices.some((p) => !(sess.noCarbon && p.type === "Road Carbon")) && (
+            {sess.paid && !sess.event && prices.some((p) => typeOffered(sess, p.type)) && (
               <div className="xs-prices">
                 <p className="xs-prices-h">{t.pricesTitle}</p>
                 {t.pricesText && <p className="xs-prices-t">{t.pricesText}</p>}
-                <div>{prices.filter((p) => !(sess.noCarbon && p.type === "Road Carbon")).map((p) => <span key={p.label}><span>{p.label}</span><strong>{p.price}</strong></span>)}</div>
+                <div>{prices.filter((p) => typeOffered(sess, p.type)).map((p) => <span key={p.label}><span>{p.label}</span><strong>{p.price}</strong></span>)}</div>
                 {t.codeNote && <p className="xs-prices-t">{t.codeNote}</p>}
               </div>
             )}

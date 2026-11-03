@@ -17,6 +17,11 @@ export const NON_BIKE_KINDS: ReadonlySet<string> = new Set<RideKind>(["swim", "w
  *  only their kind tells. */
 const NON_BIKE_ID = /^\d{4}-\d\d-\d\d-(tw|ev|rh|vl|df|ah|bd)(-|$)/;
 
+/** Whether a session still offers a bike type: no Road Carbon on a no-carbon ride, and no type staff closed on it (the
+ *  booking app's bikeTypeOpts and _typeClosed; the owner, 2026-11-03). What is not offered is not priced. */
+export const typeOffered = (s: { noCarbon?: boolean; closedTypes?: string[] }, type: string): boolean =>
+  !(s.noCarbon && type === "Road Carbon") && !s.closedTypes?.includes(type);
+
 /** A session without a bike: by its kind, or by its id when the session did not load. */
 export const isNonBike = (kind: string | null | undefined, sessionId?: string | null): boolean =>
   (!!kind && NON_BIKE_KINDS.has(kind)) || NON_BIKE_ID.test(sessionId ?? "");

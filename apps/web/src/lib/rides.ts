@@ -107,6 +107,10 @@ export type RideSession = {
    *  20261027150000; lib/session-gender.ts). toSession always sets it, null when the read did not ask for it
    *  (SESSION_COLS_GENDER); a copy kept at the edge from before has none, and reads as mixed. */
   gender?: SessionGender | null;
+  /** The bike types staff closed on this session: sessions.closed_types (the owner, 2026-11-03; rentals 20261103210000).
+   *  Riders cannot book them, so they are not priced (bike-kinds.ts typeOffered). toSession always sets it, empty when
+   *  the read did not ask for it (SESSION_COLS_CLOSED); a copy kept at the edge from before has none, and reads as open. */
+  closedTypes?: string[];
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -115,7 +119,7 @@ type Row = {
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
   location?: unknown; meet_url?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
-  gender_only?: unknown;
+  gender_only?: unknown; closed_types?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -236,6 +240,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...revealOf(r),
     ...((kind === "vlap" || kind === "arena") && "vl" in r ? { vl: r.vl ?? null } : {}),
     gender: sessionGender(r.gender_only),
+    closedTypes: Array.isArray(r.closed_types) ? r.closed_types.filter((x): x is string => typeof x === "string") : [],
   };
 }
 
@@ -296,6 +301,9 @@ export const SESSION_COLS_VL = "vl";
 // Men only, women only or mixed (the owner, 2026-10-27; rentals migration 20261027150000; lib/session-gender.ts). A
 // group of its own, so a database without it reads as before: every session mixed.
 export const SESSION_COLS_GENDER = "gender_only";
+// The bike types closed on a session (the owner, 2026-11-03; rentals migration 20261103210000). A group of its own, so
+// a database without it reads as before: every type open.
+export const SESSION_COLS_CLOSED = "closed_types";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -440,7 +448,7 @@ async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, 
 }
 
 /** The optional groups of columns every list of the sessions ahead asks for. */
-const SESSION_GROUPS = [SESSION_COLS_PLACE, SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER];
+const SESSION_GROUPS = [SESSION_COLS_PLACE, SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER, SESSION_COLS_CLOSED];
 
 /** Each of these sessions' rule, men only, women only or null (mixed; the owner, 2026-10-27), read through
  *  list_sessions for the signed-in account: the Club's members' area lists the next members' rides from
