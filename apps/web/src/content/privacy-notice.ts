@@ -209,11 +209,6 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Saudi Arabia"
      ],
      [
-      "Other community members",
-      "If you are a community member: your full name, your title, the badges our staff gave you, how many rides you have done, the kudos you received and whether you are new; your squad, to those in it; and your name on a photo you post, once our staff approve it. So members can know each other. Switch on Hide me from the members list in Account and they see none of it.",
-      "Saudi Arabia"
-     ],
-     [
       "Sela and Jeddah Yacht Club (JYC)",
       "For Run for Her, and only if you agree: your full name, email address, birth date, the distance you chose and your emergency contact, so you can take part in the race. Nothing else about you.",
       "Saudi Arabia"
@@ -536,11 +531,6 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "بترومين",
       "أسماء الراكبين في الرحلات التي ننظّمها لبترومين فقط، ولا شيء غير ذلك",
-      "المملكة العربية السعودية"
-     ],
-     [
-      "أعضاء المجتمع الآخرون",
-      "إذا كنت عضوًا في المجتمع: اسمك الكامل ولقبك والشارات التي منحك إياها فريقنا وعدد رحلاتك والتقدير الذي تلقيته وما إذا كنت عضوًا جديدًا؛ وفريقك لمن فيه؛ واسمك على الصورة التي تنشرها بعد اعتماد فريقنا لها. ليتعرّف الأعضاء بعضهم على بعض. فعّل خيار إخفائي من قائمة الأعضاء في الحساب ولن يروا شيئًا من ذلك.",
       "المملكة العربية السعودية"
      ],
      [
