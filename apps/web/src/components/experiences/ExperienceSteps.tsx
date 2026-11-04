@@ -356,7 +356,6 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                       </span>
                       <span className="xs-bld-tiles" aria-hidden="true">{e.blood.types.map((x, i) => <span key={x} className={`xs-bld-ti${(i + (i > 3 ? 1 : 0)) % 2 === 0 ? " on" : ""}`}>{x}</span>)}</span>
                       <span className="xs-bld-cause">{e.blood.line} {e.blood.cause}</span>
-                      <span className="bld-sum">{e.blood.rules.map((x, i) => <span key={i}><Tick /><span>{x}</span></span>)}</span>
                     </button>
                   ) : (
                     <button type="button" className={`xs-event ev-${e.key}`} onClick={() => pickEvent(e)}>

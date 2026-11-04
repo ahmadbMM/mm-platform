@@ -268,16 +268,17 @@ describe("on Experiences, once a session exists", () => {
     expect(membersOnlyEvent("blood")).toBe(false);
     expect(membersOnlyDate({ members: false, kind: "blood" })).toBe(false);
   });
-  it("draws the plate, its name, when and where, its tagline, the four rules and its About link, and no price", async () => {
+  it("draws the plate, its name, when and where, its tagline and its About link, and no price, and leaves the rules for About", async () => {
     const { steps, html } = await experiences([BD, JCC]);
     expect(steps.props.events.map((e) => e.key)).toEqual(["blood", "jcc", "community"]);
     expect(html).toMatch(/Thu,? 5 Nov/); // as this machine's Intl writes the short day
-    for (const w of ["xs-event ev-blood", "/site/blood-partners.webp", 'width="1503"', 'height="433"', "Micromobility Blood Donation", "5 PM – 11 PM", "Jeddah Corniche Circuit", "Give blood. Ride free.", "Age 18 or over", "Weight 50 kg or more", "Bring your national ID or Iqama", "Sleep well and eat a healthy meal two hours before", "xs-about ab-blood"]) expect(html, w).toContain(w);
+    for (const w of ["xs-event ev-blood", "/site/blood-partners.webp", 'width="1503"', 'height="433"', "Micromobility Blood Donation", "5 PM – 11 PM", "Jeddah Corniche Circuit", "Give blood. Ride free.", "xs-about ab-blood"]) expect(html, w).toContain(w);
     expect(html).toContain('alt="MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport"');
     // the owner's picture is the card, before anything on it
     expect(html).toMatch(/xs-event ev-blood"[^>]*><img class="xs-bld-pic" src="\/site\/blood-card\.webp" alt=""/);
     const card = html.slice(html.indexOf("xs-event ev-blood"), html.indexOf("xs-about ab-blood"));
-    for (const no of ["SAR", "Complimentary", "Free", "﷼", "⃁"]) expect(card, no).not.toContain(no);
+    for (const no of ["SAR", "Complimentary", "Free", "﷼", "⃁", "Age 18 or over"]) expect(card, no).not.toContain(no);
+    expect(card).toContain("Different types. One purpose.");
     // a button holds phrasing content alone
     expect(card).not.toMatch(/<(p|div|ul|li)\b/);
   });
@@ -303,7 +304,7 @@ describe("on Experiences, once a session exists", () => {
   });
   it("reads from the right: its plate and its words in Arabic and Urdu", async () => {
     const ar = (await experiences([BD], "ar")).html;
-    for (const w of ["/site/blood-partners-rtl.webp", "مايكروموبيليتي التبرع بالدم", "تبرّع بدمك واركب مجانًا.", "العمر 18 سنة فأكثر", "حلبة كورنيش جدة"]) expect(ar, w).toContain(w);
+    for (const w of ["/site/blood-partners-rtl.webp", "مايكروموبيليتي التبرع بالدم", "تبرّع بدمك واركب مجانًا.", "حلبة كورنيش جدة"]) expect(ar, w).toContain(w);
     expect(ar).not.toContain("/site/blood-partners.webp");
     resetRides();
     expect((await experiences([BD], "ur")).html).toContain("/site/blood-partners-rtl.webp");
@@ -315,8 +316,8 @@ describe("on Experiences, once a session exists", () => {
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => /\.(xs-event\.ev-blood|xs-about\.ab-blood)/.test(m[1])).map((m) => m[2]);
     expect(rules.length).toBeGreaterThan(0);
     // the picture's room at the bottom, and the link's white backing, which its margin cancels, move nothing that lines up
-    for (const r of rules) expect(r.replace(/padding-bottom: 47%;|padding-inline: 4px; margin-inline-start: -4px;|padding: 0;/g, "")).not.toMatch(/padding|inset|(^|[\s;])bottom:|min-height|(^|[\s;])height:/);
-    expect(css).toMatch(/\.xs-events\s*\{[^}]*grid-auto-rows:\s*1fr/); // equal rows
+    for (const r of rules) expect(r.replace(/padding-inline-end: 48%;|padding-inline: 4px; margin-inline-start: -4px;|padding: 0;/g, "")).not.toMatch(/padding|inset|(^|[\s;])bottom:|min-height|(^|[\s;])height:/);
+    expect(css).not.toMatch(/\.xs-events\s*\{[^}]*grid-auto-rows/); // each card at its own height: a forced row stretched every card to the tallest
   });
   it("its facts come from the plain rules", () => {
     const s = toSession(BD)!;
