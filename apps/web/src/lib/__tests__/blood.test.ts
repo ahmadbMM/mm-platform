@@ -272,8 +272,8 @@ describe("on Experiences, once a session exists", () => {
     const { steps, html } = await experiences([BD, JCC]);
     expect(steps.props.events.map((e) => e.key)).toEqual(["blood", "jcc", "community"]);
     expect(html).toMatch(/Thu,? 5 Nov/); // as this machine's Intl writes the short day
-    for (const w of ["xs-event ev-blood", "/site/blood-partners.webp", 'width="1503"', "Blood Donation", "5 PM – 11 PM", "Jeddah Corniche Circuit", "Give blood. Ride free.", "Age 18 or over", "Weight 50 kg or more", "Bring your national ID or Iqama", "Sleep well and eat a healthy meal two hours before", "xs-about ab-blood"]) expect(html, w).toContain(w);
-    expect(html).toContain('alt="Health Services at the Ministry of Defense, Ministry of Sport, Jeddah Corniche Circuit"');
+    for (const w of ["xs-event ev-blood", "/site/blood-partners.webp", 'width="1503"', 'height="456"', "Blood Donation", "5 PM – 11 PM", "Jeddah Corniche Circuit", "Give blood. Ride free.", "Age 18 or over", "Weight 50 kg or more", "Bring your national ID or Iqama", "Sleep well and eat a healthy meal two hours before", "xs-about ab-blood"]) expect(html, w).toContain(w);
+    expect(html).toContain('alt="MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport"');
     // the owner's picture is the card, before anything on it
     expect(html).toMatch(/xs-event ev-blood"[^>]*><img class="xs-bld-pic" src="\/site\/blood-card\.webp" alt=""/);
     const card = html.slice(html.indexOf("xs-event ev-blood"), html.indexOf("xs-about ab-blood"));
@@ -307,8 +307,8 @@ describe("on Experiences, once a session exists", () => {
     expect(ar).not.toContain("/site/blood-partners.webp");
     resetRides();
     expect((await experiences([BD], "ur")).html).toContain("/site/blood-partners-rtl.webp");
-    expect(bloodPlate("en")).toBe("/site/blood-partners.webp");
-    expect(bloodPlate("de")).toBe("/site/blood-partners.webp");
+    expect(bloodPlate("en")).toBe("/site/blood-partners.webp?v=2");
+    expect(bloodPlate("de")).toBe("/site/blood-partners.webp?v=2");
   });
   it("lines up with its neighbours: an ordinary card's padding, its About link where every plain card has it", () => {
     const css = readFileSync(join(SRC, "components/experiences/experiences.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
@@ -381,7 +381,7 @@ describe("its ticket on My Account", () => {
     expect(html).toContain("tk-card ev-blood");
     expect(html.indexOf("/site/blood-partners.webp")).toBeGreaterThan(-1);
     expect(html.indexOf("bld-plate")).toBeLessThan(html.indexOf("tk-head"));
-    expect(html).toContain('alt="Health Services at the Ministry of Defense');
+    expect(html).toContain('alt="MicroMobility, Health Services at the Ministry of Defense');
     for (const w of ["Donor number", "Donor · ", "#12", "Test Donor", ...bw.rules, bw.rewardNote]) expect(html, w).toContain(w);
     expect(html).not.toContain("Queue number");
     expect(html).not.toContain("tk-logo");
@@ -560,10 +560,10 @@ describe("sharing the donor's details with the hosts", () => {
   const WORDS = {
     kicker: "Before you register", title: "Sharing your details",
     sub: "To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):",
-    note: "Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense and the Ministry of Sport.",
+    note: "Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense, the Ministry of Sport and Saudi Motorsport Company (SMC).",
     agree: "I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).",
   };
-  const PLATE = { src: "/site/blood-partners.webp", alt: "Health Services at the Ministry of Defense, Ministry of Sport, Jeddah Corniche Circuit", width: 1503, height: 272 };
+  const PLATE = { src: "/site/blood-partners.webp?v=2", alt: "MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport", width: 1503, height: 456 };
   const row = (o: Record<string, unknown> = {}) => ({ id: "q9", session_id: BD.id, session_date: BD.session_date, status: "waiting", customer_id: "c1", queue_num: 7, name: "Test Donor", data_share_at: null, ...o });
   const db2 = (rows: unknown[], accept: Response = json(1)) => db([BD], (url) => (url.includes("/rpc/my_bookings") ? json(rows) : url.includes("/rpc/customer_accept_share") ? accept : null));
   const get = (q: string) => shareGet(new Request(`https://micromobility.sa/api/account/pending-share?${q}`, { headers: HEADERS }));
@@ -582,9 +582,9 @@ describe("sharing the donor's details with the hosts", () => {
     } });
     const ar = (await (await get("locale=ar")).json()).pending;
     expect(ar.items).toEqual(["الاسم الكامل", "رقم الجوال", "البريد الإلكتروني", "فصيلة الدم", "تاريخ الميلاد", "الجنسية"]);
-    expect(ar.words.note).toBe("شركاؤنا في هذه الفعالية: مستشفى الملك فهد للقوات المسلحة بجدة، والخدمات الصحية بوزارة الدفاع، ووزارة الرياضة.");
+    expect(ar.words.note).toBe("شركاؤنا في هذه الفعالية: مستشفى الملك فهد للقوات المسلحة بجدة، والخدمات الصحية بوزارة الدفاع، ووزارة الرياضة، وشركة رياضة المحركات السعودية (SMC).");
     expect(ar.words.agree).toBe("أوافق على أن تشارك مايكروموبيليتي بياناتي مع هؤلاء الشركاء ومع حلبة كورنيش جدة (JCC).");
-    expect(ar.words.plate.src).toBe("/site/blood-partners-rtl.webp");
+    expect(ar.words.plate.src).toBe("/site/blood-partners-rtl.webp?v=2");
   });
   it("records the agreement through customer_accept_share", async () => {
     const f = db2([]);
@@ -608,7 +608,7 @@ describe("sharing the donor's details with the hosts", () => {
   it("the logos come with the words, and the agreement names the JCC", () => {
     const html = draw({ ...w, words: { ...WORDS, plate: PLATE } });
     expect(html).toContain('class="sg-plate"');
-    expect(html).toContain('src="/site/blood-partners.webp"');
+    expect(html).toContain('src="/site/blood-partners.webp?v=2"');
     expect(html.indexOf("sg-plate")).toBeLessThan(html.indexOf(WORDS.sub));
     for (const s of [WORDS.sub, WORDS.agree]) expect(s).toContain("Jeddah Corniche Circuit (JCC)");
     expect(draw()).not.toContain("sg-plate");

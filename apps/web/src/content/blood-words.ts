@@ -14,10 +14,10 @@ export const BLOOD_NAME = "Blood Donation";
 /** The kind's name in the page's language (evBloodName), for lib/rides.ts kindNames' readers. */
 export const bloodName = (tx: L): string => tx("Blood Donation", "التبرع بالدم");
 
-/** The hosts' marks on their white plate, one image with the hosts first as the page reads (the booking app's _bldLogosImg). */
-export const bloodPlate = (locale: string): string => (isRtl(locale) ? "/site/blood-partners-rtl.webp" : "/site/blood-partners.webp");
+/** All five marks on their white plate, one image in the campaign poster's order as the page reads, two rows (the booking app's _bldLogosImg). */
+export const bloodPlate = (locale: string): string => (isRtl(locale) ? "/site/blood-partners-rtl.webp?v=2" : "/site/blood-partners.webp?v=2");
 /** The plate's own size, so a page keeps its room before it loads. */
-export const BLOOD_PLATE_SIZE = { width: 1503, height: 272 };
+export const BLOOD_PLATE_SIZE = { width: 1503, height: 456 };
 /** The owner's picture of a donor's arm that fills the card (2026-11-04; the booking app's .bld-card-img). */
 export const BLOOD_CARD = { src: "/site/blood-card.webp", width: 1200, height: 862 };
 
@@ -25,7 +25,7 @@ export function bloodWords(tx: L) {
   return {
     name: bloodName(tx),
     cause: tx("Give blood. Ride free.", "تبرّع بدمك واركب مجانًا."), // bldCause
-    plateAlt: tx("Health Services at the Ministry of Defense, Ministry of Sport, Jeddah Corniche Circuit", "الخدمات الصحية بوزارة الدفاع، وزارة الرياضة، حلبة كورنيش جدة"), // bldPartnersAlt
+    plateAlt: tx("MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport", "مايكروموبيليتي، الخدمات الصحية بوزارة الدفاع، حلبة كورنيش جدة، شركة رياضة المحركات السعودية، وزارة الرياضة"), // bldPartnersAlt
     // the four short rules (bldSumAge, bldSumWeight, bldSumId, bldSumTips)
     rules: [
       tx("Age 18 or over", "العمر 18 سنة فأكثر"),
@@ -54,7 +54,7 @@ export function bloodWords(tx: L) {
       kicker: tx("Before you register", "قبل التسجيل"),
       title: tx("Sharing your details", "مشاركة بياناتك"),
       sub: tx("To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):", "للتسجيل، وافق على مشاركة هذه البيانات مع شركائنا في الفعالية ومع حلبة كورنيش جدة (JCC):"),
-      note: tx("Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense and the Ministry of Sport.", "شركاؤنا في هذه الفعالية: مستشفى الملك فهد للقوات المسلحة بجدة، والخدمات الصحية بوزارة الدفاع، ووزارة الرياضة."),
+      note: tx("Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense, the Ministry of Sport and Saudi Motorsport Company (SMC).", "شركاؤنا في هذه الفعالية: مستشفى الملك فهد للقوات المسلحة بجدة، والخدمات الصحية بوزارة الدفاع، ووزارة الرياضة، وشركة رياضة المحركات السعودية (SMC)."),
       agree: tx("I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).", "أوافق على أن تشارك مايكروموبيليتي بياناتي مع هؤلاء الشركاء ومع حلبة كورنيش جدة (JCC)."),
       items: [
         tx("Full name", "الاسم الكامل"),
