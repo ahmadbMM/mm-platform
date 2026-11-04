@@ -46,14 +46,14 @@ export function bloodWords(tx: L) {
       kicker: tx("Agreement needed", "إقرار مطلوب"),
       sub: tx("You’re registered for this event. Read this agreement and agree to it to continue.", "أنت مسجّل في هذه الفعالية. اقرأ هذا الإقرار ووافق عليه للمتابعة."),
     },
-    // the pop-up that asks to share the donor's details with the hosts (bldShKicker, bldShTitle, bldShSub, bldShNote,
+    // the pop-up that asks to share the donor's details with our partners and the JCC, the owner, 2026-11-04 (bldShKicker, bldShTitle, bldShSub, bldShNote,
     // bldShAgree; the items are the booking app's: rshName, vlShPhone, authEmail, btTitle, birthDateLabel, nationalityLabel)
     share: {
       kicker: tx("Before you register", "قبل التسجيل"),
       title: tx("Sharing your details", "مشاركة بياناتك"),
-      sub: tx("To register, agree that we share these details with the event’s hosts:", "للتسجيل، وافق على مشاركة هذه البيانات مع الجهات المنظمة للفعالية:"),
-      note: tx("King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense and the Ministry of Sport.", "مستشفى الملك فهد للقوات المسلحة بجدة، والخدمات الصحية بوزارة الدفاع، ووزارة الرياضة."),
-      agree: tx("I agree to share my details with them.", "أوافق على مشاركة بياناتي معهم."),
+      sub: tx("To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):", "للتسجيل، وافق على مشاركة هذه البيانات مع شركائنا في الفعالية ومع حلبة كورنيش جدة (JCC):"),
+      note: tx("Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense and the Ministry of Sport.", "شركاؤنا في هذه الفعالية: مستشفى الملك فهد للقوات المسلحة بجدة، والخدمات الصحية بوزارة الدفاع، ووزارة الرياضة."),
+      agree: tx("I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).", "أوافق على أن تشارك مايكروموبيليتي بياناتي مع هؤلاء الشركاء ومع حلبة كورنيش جدة (JCC)."),
       items: [
         tx("Full name", "الاسم الكامل"),
         tx("Mobile number", "رقم الجوال"),

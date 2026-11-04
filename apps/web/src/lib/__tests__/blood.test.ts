@@ -556,10 +556,11 @@ describe("sharing the donor's details with the hosts", () => {
   const ITEMS = ["Full name", "Mobile number", "Email address", "Blood type", "Birth date", "Nationality"];
   const WORDS = {
     kicker: "Before you register", title: "Sharing your details",
-    sub: "To register, agree that we share these details with the event’s hosts:",
-    note: "King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense and the Ministry of Sport.",
-    agree: "I agree to share my details with them.",
+    sub: "To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):",
+    note: "Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense and the Ministry of Sport.",
+    agree: "I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).",
   };
+  const PLATE = { src: "/site/blood-partners.webp", alt: "Health Services at the Ministry of Defense, Ministry of Sport, Jeddah Corniche Circuit", width: 1503, height: 272 };
   const row = (o: Record<string, unknown> = {}) => ({ id: "q9", session_id: BD.id, session_date: BD.session_date, status: "waiting", customer_id: "c1", queue_num: 7, name: "Test Donor", data_share_at: null, ...o });
   const db2 = (rows: unknown[], accept: Response = json(1)) => db([BD], (url) => (url.includes("/rpc/my_bookings") ? json(rows) : url.includes("/rpc/customer_accept_share") ? accept : null));
   const get = (q: string) => shareGet(new Request(`https://micromobility.sa/api/account/pending-share?${q}`, { headers: HEADERS }));
@@ -574,11 +575,13 @@ describe("sharing the donor's details with the hosts", () => {
   it("the route names the items and the hosts: the pop-up's code does not", async () => {
     vi.stubGlobal("fetch", db2([row()]));
     expect(await (await get("locale=en")).json()).toEqual({ signedIn: true, pending: {
-      sessionId: BD.id, name: "Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit", distance: null, kind: "blood", items: ITEMS, words: WORDS,
+      sessionId: BD.id, name: "Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit", distance: null, kind: "blood", items: ITEMS, words: { ...WORDS, plate: PLATE },
     } });
     const ar = (await (await get("locale=ar")).json()).pending;
     expect(ar.items).toEqual(["الاسم الكامل", "رقم الجوال", "البريد الإلكتروني", "فصيلة الدم", "تاريخ الميلاد", "الجنسية"]);
-    expect(ar.words.note).toBe("مستشفى الملك فهد للقوات المسلحة بجدة، والخدمات الصحية بوزارة الدفاع، ووزارة الرياضة.");
+    expect(ar.words.note).toBe("شركاؤنا في هذه الفعالية: مستشفى الملك فهد للقوات المسلحة بجدة، والخدمات الصحية بوزارة الدفاع، ووزارة الرياضة.");
+    expect(ar.words.agree).toBe("أوافق على أن تشارك مايكروموبيليتي بياناتي مع هؤلاء الشركاء ومع حلبة كورنيش جدة (JCC).");
+    expect(ar.words.plate.src).toBe("/site/blood-partners-rtl.webp");
   });
   it("records the agreement through customer_accept_share", async () => {
     const f = db2([]);
@@ -598,6 +601,14 @@ describe("sharing the donor's details with the hosts", () => {
     expect(html.match(/<li>/g)).toHaveLength(6);
     expect(html).toContain("ev-blood");
     for (const no of ["race", "Kamin", "Sela", "Arena", "Distance chosen", "Emergency contact", "Nothing else about you"]) expect(html, no).not.toContain(no);
+  });
+  it("the logos come with the words, and the agreement names the JCC", () => {
+    const html = draw({ ...w, words: { ...WORDS, plate: PLATE } });
+    expect(html).toContain('class="sg-plate"');
+    expect(html).toContain('src="/site/blood-partners.webp"');
+    expect(html.indexOf("sg-plate")).toBeLessThan(html.indexOf(WORDS.sub));
+    for (const s of [WORDS.sub, WORDS.agree]) expect(s).toContain("Jeddah Corniche Circuit (JCC)");
+    expect(draw()).not.toContain("sg-plate");
   });
   it("another kind's pop-up is as it was", () => {
     const html = draw({ ...w, kind: undefined, items: undefined, words: undefined });

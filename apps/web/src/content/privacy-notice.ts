@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-03";
+export const PRIVACY_VERSION = "2026-11-04";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -99,12 +99,12 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "Blood type, if you give it (or that you don’t know it)",
-      "Always optional: given in Account, or when you sign up for a blood donation event. Seen only by you, our staff, and the hosts of a blood donation event you agree to share your details with; you can change or clear it in Account at any time.",
-      "Letting our team plan a blood donation event. We share it only with the hosts of a blood donation event you agree to share your details with, and use it for nothing else."
+      "Always optional: given in Account, or when you sign up for a blood donation event. Seen only by you, our staff, and the hosts and partners of a blood donation event you agree to share your details with; you can change or clear it in Account at any time.",
+      "Letting our team plan a blood donation event. We share it only with the hosts and partners of a blood donation event you agree to share your details with, and use it for nothing else."
      ],
      [
       "A blood donation event’s registration: your name, mobile number, email address, blood type, birth date and nationality, and whether you donated",
-      "Asked only when you register for a blood donation event. Seen by you, our staff and that event’s hosts once you agree to share them; the hosts are named when you agree. We never ask for or keep your ID or Iqama number.",
+      "Asked only when you register for a blood donation event. Seen by you, our staff and that event’s hosts and partners once you agree to share them; they are named when you agree. We never ask for or keep your ID or Iqama number.",
       "Registering you as a donor, and giving confirmed donors any reward the event offers"
      ],
      [
@@ -155,7 +155,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>For optional details and ride news:</strong> your consent. You give it by filling in those fields or choosing ride news, and you can withdraw it at any time.",
     "<strong>To share a runner’s details with the hosts of Run for Her:</strong> your consent, which we ask for before you can take part in the race.",
     "<strong>To share an athlete’s details with Kamin Sports for Victory Lap:</strong> your consent, which we ask for before you can take part in the race.",
-    "<strong>To share an athlete’s details with WeSportify, Mile and Gymnation for the Arena Heros Hybrid Race:</strong> your consent, which we ask for before you can take part in the race."
+    "<strong>To share an athlete’s details with WeSportify, Mile and Gymnation for the Arena Heros Hybrid Race:</strong> your consent, which we ask for before you can take part in the race.",
+    "<strong>To share a donor’s details with the hosts and partners of a blood donation event:</strong> your consent, which we ask for before you can register."
    ]
   },
   {
@@ -225,6 +226,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "WeSportify, Mile and Gymnation",
       "For the Arena Heros Hybrid Race, and only if you agree: the first and last name, email address and mobile number you entered for the race, your gender, your division and your team (its code and your partner), so you can take part in the race. Nothing else about you.",
+      "Saudi Arabia"
+     ],
+     [
+      "The hosts and partners of a blood donation event",
+      "Only if you agree: the details listed on the page where you agree, which also names them, so you can register as a donor. Nothing else about you.",
       "Saudi Arabia"
      ],
      [
@@ -423,12 +429,12 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "فصيلة الدم إن أعطيتنا إياها (أو أنك لا تعرفها)",
-      "اختيارية دائمًا: تُعطى في الحساب، أو عند التسجيل في فعالية للتبرع بالدم. لا يراها إلا أنت وموظفونا والجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ويمكنك تغييرها أو حذفها من الحساب في أي وقت.",
-      "مساعدة فريقنا في التخطيط لفعالية التبرع بالدم. لا نشاركها إلا مع الجهات المنظِّمة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ولا نستخدمها لأي غرض آخر."
+      "اختيارية دائمًا: تُعطى في الحساب، أو عند التسجيل في فعالية للتبرع بالدم. لا يراها إلا أنت وموظفونا والجهات المنظِّمة والشريكة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ويمكنك تغييرها أو حذفها من الحساب في أي وقت.",
+      "مساعدة فريقنا في التخطيط لفعالية التبرع بالدم. لا نشاركها إلا مع الجهات المنظِّمة والشريكة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ولا نستخدمها لأي غرض آخر."
      ],
      [
       "التسجيل في فعالية للتبرع بالدم: اسمك ورقم جوالك وبريدك الإلكتروني وفصيلة دمك وتاريخ ميلادك وجنسيتك، وما إذا كنت قد تبرعت",
-      "تُطلب فقط عند التسجيل في فعالية للتبرع بالدم. يطّلع عليها أنت وموظفونا والجهات المنظمة لتلك الفعالية بعد موافقتك على مشاركتها، ونذكر أسماء هذه الجهات عند طلب موافقتك. لا نطلب رقم هويتك أو إقامتك ولا نحتفظ به.",
+      "تُطلب فقط عند التسجيل في فعالية للتبرع بالدم. يطّلع عليها أنت وموظفونا والجهات المنظمة والشريكة لتلك الفعالية بعد موافقتك على مشاركتها، ونذكر أسماء هذه الجهات عند طلب موافقتك. لا نطلب رقم هويتك أو إقامتك ولا نحتفظ به.",
       "تسجيلك متبرعًا، ومنح المتبرعين المؤكَّدين أي مكافأة تقدمها الفعالية"
      ],
      [
@@ -479,7 +485,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>للبيانات الاختيارية وأخبار الرحلات:</strong> موافقتك، وتمنحها بتعبئة تلك الحقول أو باختيار أخبار الرحلات، ويمكنك سحبها في أي وقت.",
     "<strong>لمشاركة بيانات العدّاء مع الجهات المنظِّمة لسباق نركض لأجلها:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
     "<strong>لمشاركة بيانات الرياضي مع كامن سبورتس لسباق فيكتوري لاب:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
-    "<strong>لمشاركة بيانات الرياضي مع WeSportify وMile وGymnation لسباق أرينا هيروز الهجين:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق."
+    "<strong>لمشاركة بيانات الرياضي مع WeSportify وMile وGymnation لسباق أرينا هيروز الهجين:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
+    "<strong>لمشاركة بيانات المتبرع مع الجهات المنظِّمة والشريكة لفعالية تبرع بالدم:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من التسجيل."
    ]
   },
   {
@@ -549,6 +556,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "WeSportify وMile وGymnation",
       "لسباق أرينا هيروز الهجين، وفقط إذا وافقت: الاسم الأول والأخير والبريد الإلكتروني ورقم الجوال التي أدخلتها للسباق، وجنسك، وفئتك، وفريقك (رمزه وشريكك)، لتتمكن من المشاركة في السباق. ولا شيء غير ذلك عنك.",
+      "المملكة العربية السعودية"
+     ],
+     [
+      "الجهات المنظِّمة والشريكة لفعالية تبرع بالدم",
+      "فقط إذا وافقت: البيانات المذكورة في الصفحة التي توافق فيها، والتي تذكر أسماء هذه الجهات أيضًا، لتتمكن من التسجيل متبرعًا. ولا شيء غير ذلك عنك.",
       "المملكة العربية السعودية"
      ],
      [
