@@ -1497,7 +1497,7 @@
   "You do not have a title yet.": "Anda belum memiliki gelar.",
   "Open Community": "Buka Komunitas",
   "Choose your title": "Pilih gelar Anda",
-  "Blood Donation": "Donor Darah",
+  "Micromobility Blood Donation": "Donor Darah Micromobility",
   "Give blood. Ride free.": "Donorkan darah. Bersepeda gratis.",
   "MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport": "MicroMobility, Layanan Kesehatan Kementerian Pertahanan, Sirkuit Jeddah Corniche, Saudi Motorsport Company, Kementerian Olahraga",
   "Age 18 or over": "Usia minimal 18 tahun",
@@ -1516,11 +1516,12 @@
   "You’re registered for this event. Read this agreement and agree to it to continue.": "Anda terdaftar di acara ini. Baca persetujuan ini dan setujui untuk melanjutkan.",
   "Before you register": "Sebelum mendaftar",
   "Sharing your details": "Berbagi data Anda",
-  "To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):": "Untuk mendaftar, setujui bahwa kami membagikan data ini kepada mitra acara kami dan kepada Sirkuit Jeddah Corniche (JCC):",
-  "Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense, the Ministry of Sport and Saudi Motorsport Company (SMC).": "Mitra kami dalam acara ini: Rumah Sakit Angkatan Bersenjata King Fahd di Jeddah, Layanan Kesehatan Kementerian Pertahanan, Kementerian Olahraga, dan Saudi Motorsport Company (SMC).",
-  "I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).": "Saya setuju MicroMobility membagikan data saya kepada mitra-mitra ini dan kepada Sirkuit Jeddah Corniche (JCC).",
+  "To register, agree that we share these details with our event partners and third parties:": "Untuk mendaftar, setujui bahwa kami membagikan data ini kepada mitra acara kami dan pihak ketiga:",
+  "We share them only with our partners and third parties for this event, and nothing else about you.": "Kami hanya membagikannya kepada mitra kami dan pihak ketiga untuk acara ini, dan tidak ada hal lain tentang Anda.",
+  "I agree that MicroMobility shares my details with its partners and third parties for this event.": "Saya setuju MicroMobility membagikan data saya kepada mitranya dan pihak ketiga untuk acara ini.",
   "Donor agreement": "Persetujuan pendonor",
   "You cannot register for this event until you have read and agreed to this. Giving blood is voluntary, and I can withdraw at any time without giving a reason. The donation is a medical procedure carried out by the event’s medical team, not by MicroMobility. Only the medical team decides whether I can donate, so registering does not guarantee that I will. I will answer their health questions truthfully and follow their instructions and the venue’s, including resting after I donate and avoiding hard exercise for 5 hours. MicroMobility’s part is only to register me and to give confirmed donors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for the medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "Anda tidak dapat mendaftar ke acara ini sebelum membaca dan menyetujui ini. Donor darah bersifat sukarela, dan saya dapat mengundurkan diri kapan saja tanpa memberikan alasan. Donor darah adalah prosedur medis yang dilakukan oleh tim medis acara, bukan oleh MicroMobility. Hanya tim medis yang memutuskan apakah saya dapat mendonor, sehingga pendaftaran tidak menjamin saya akan mendonor. Saya akan menjawab pertanyaan kesehatan mereka dengan jujur serta mengikuti arahan mereka dan pengelola lokasi, termasuk beristirahat setelah mendonor dan menghindari olahraga berat selama 5 jam. Peran MicroMobility hanya mendaftarkan saya dan memberikan sesi bersepeda gratis kepada pendonor yang telah dikonfirmasi. Saya bertanggung jawab atas barang-barang pribadi saya. Sejauh diizinkan oleh hukum hingga batas maksimal, MicroMobility dan stafnya tidak bertanggung jawab atas prosedur medis atau dampaknya, atau atas cedera, penyakit, kehilangan, pencurian, atau kerusakan apa pun di acara tersebut.",
   "I have read this and I agree": "Saya telah membaca ini dan saya setuju",
-  "Blood type": "Golongan darah"
+  "Blood type": "Golongan darah",
+  "Different types. One purpose.": "Golongan berbeda. Satu tujuan."
 }

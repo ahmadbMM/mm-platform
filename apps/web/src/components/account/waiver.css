@@ -45,8 +45,6 @@ html:is([lang="ar"], [lang="ur"]) .wg-sec { letter-spacing: 0; font-size: 12px; 
 .sg-list li { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 600; line-height: 1.4; color: #1a1919; min-width: 0; overflow-wrap: anywhere; }
 .sg-list svg { flex: none; color: #077a4b; }
 .sg-note { margin: 0; color: #57605a; font-size: 13px; line-height: 1.5; }
-.sg-plate { box-sizing: border-box; padding: 8px 12px; background: #fff; border: 1px solid rgba(28, 23, 24, .1); border-radius: 3px; }
-.sg-plate img { display: block; width: 100%; height: auto; }
 .sg-spin { display: inline-block; width: 14px; height: 14px; margin-inline-end: 8px; vertical-align: -2px; box-sizing: border-box; border: 2px solid currentColor; border-inline-end-color: transparent; border-radius: 50%; animation: sg-spin .8s linear infinite; }
 @keyframes sg-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .sg-spin { animation-duration: 2.4s; } }
@@ -55,10 +53,10 @@ html:is([lang="ar"], [lang="ur"]) .wg-sec { letter-spacing: 0; font-size: 12px; 
 }
 /* The donation event's two pop-ups (2026-11-03): its crimson where the waiver and the agreement to share have their
    own colours. The frame, the words and the square buttons are as above. */
-.ev-blood :is(.wg-kicker, .sg-kicker) { color: #b3122a; }
-.ev-blood :is(.wg-kicker, .sg-kicker) .rg-flag { background: rgba(179, 18, 42, .1); color: #b3122a; }
-.ev-blood :is(.wg-ln svg, .wg-num, .sg-list svg) { color: #b3122a; }
-.ev-blood .wg-text:focus-visible, .ev-blood .wg-agree input:focus-visible, .ev-blood .wg-btn:focus-visible, .ev-blood .wg-out:focus-visible { outline-color: #b3122a; }
-.ev-blood .wg-agree.on { border-color: #b3122a; background: rgba(179, 18, 42, .06); }
-.ev-blood .wg-agree input { accent-color: #b3122a; }
-.ev-blood .wg-btn { background: #b3122a; color: #fff; }
+.ev-blood :is(.wg-kicker, .sg-kicker) { color: #0b1f16; }
+.ev-blood :is(.wg-kicker, .sg-kicker) .rg-flag { background: rgba(11, 31, 22, .1); color: #0b1f16; }
+.ev-blood :is(.wg-ln svg, .wg-num, .sg-list svg) { color: #0b1f16; }
+.ev-blood .wg-text:focus-visible, .ev-blood .wg-agree input:focus-visible, .ev-blood .wg-btn:focus-visible, .ev-blood .wg-out:focus-visible { outline-color: #0b1f16; }
+.ev-blood .wg-agree.on { border-color: #0b1f16; background: rgba(11, 31, 22, .06); }
+.ev-blood .wg-agree input { accent-color: #0b1f16; }
+.ev-blood .wg-btn { background: #0b1f16; color: #fff; }

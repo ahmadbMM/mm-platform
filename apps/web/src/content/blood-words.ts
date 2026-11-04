@@ -10,14 +10,14 @@ import type { L } from "@/i18n/tx";
 // except in the free ride's own words (bldCause, bldReward*).
 
 /** The kind's name in English: a session staff titled just this reads in the page's language (lib/rides.ts sessionName). */
-export const BLOOD_NAME = "Blood Donation";
+export const BLOOD_NAME = "Micromobility Blood Donation";
 /** The kind's name in the page's language (evBloodName), for lib/rides.ts kindNames' readers. */
-export const bloodName = (tx: L): string => tx("Blood Donation", "التبرع بالدم");
+export const bloodName = (tx: L): string => tx("Micromobility Blood Donation", "مايكروموبيليتي للتبرع بالدم");
 
-/** All five marks on their white plate, one image in the campaign poster's order as the page reads, two rows (the booking app's _bldLogosImg). */
-export const bloodPlate = (locale: string): string => (isRtl(locale) ? "/site/blood-partners-rtl.webp?v=2" : "/site/blood-partners.webp?v=2");
+/** All five marks on their white plate, one image: MicroMobility above a hairline, the four partners in one row (the booking app's _bldLogosImg). */
+export const bloodPlate = (locale: string): string => (isRtl(locale) ? "/site/blood-partners-rtl.webp?v=3" : "/site/blood-partners.webp?v=3");
 /** The plate's own size, so a page keeps its room before it loads. */
-export const BLOOD_PLATE_SIZE = { width: 1503, height: 456 };
+export const BLOOD_PLATE_SIZE = { width: 1503, height: 433 };
 /** The owner's picture of a donor's arm that fills the card (2026-11-04; the booking app's .bld-card-img). */
 export const BLOOD_CARD = { src: "/site/blood-card.webp", width: 1200, height: 862 };
 
@@ -25,6 +25,8 @@ export function bloodWords(tx: L) {
   return {
     name: bloodName(tx),
     cause: tx("Give blood. Ride free.", "تبرّع بدمك واركب مجانًا."), // bldCause
+    typesLine: tx("Different types. One purpose.", "فصائل مختلفة. هدف واحد."), // bldTypesLine
+    types: ["A+", "A−", "B+", "B−", "AB+", "AB−", "O+", "O−"], // the card's tiles (BLOOD_TYPES, _btLabel)
     plateAlt: tx("MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport", "مايكروموبيليتي، الخدمات الصحية بوزارة الدفاع، حلبة كورنيش جدة، شركة رياضة المحركات السعودية، وزارة الرياضة"), // bldPartnersAlt
     // the four short rules (bldSumAge, bldSumWeight, bldSumId, bldSumTips)
     rules: [
@@ -48,14 +50,14 @@ export function bloodWords(tx: L) {
       kicker: tx("Agreement needed", "إقرار مطلوب"),
       sub: tx("You’re registered for this event. Read this agreement and agree to it to continue.", "أنت مسجّل في هذه الفعالية. اقرأ هذا الإقرار ووافق عليه للمتابعة."),
     },
-    // the pop-up that asks to share the donor's details with our partners and the JCC, the owner, 2026-11-04 (bldShKicker, bldShTitle, bldShSub, bldShNote,
+    // the pop-up that asks to share the donor's details with partners and third parties, naming nobody, the owner, 2026-11-04 (bldShKicker, bldShTitle, bldShSub, bldShNote,
     // bldShAgree; the items are the booking app's: rshName, vlShPhone, authEmail, btTitle, birthDateLabel, nationalityLabel)
     share: {
       kicker: tx("Before you register", "قبل التسجيل"),
       title: tx("Sharing your details", "مشاركة بياناتك"),
-      sub: tx("To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):", "للتسجيل، وافق على مشاركة هذه البيانات مع شركائنا في الفعالية ومع حلبة كورنيش جدة (JCC):"),
-      note: tx("Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense, the Ministry of Sport and Saudi Motorsport Company (SMC).", "شركاؤنا في هذه الفعالية: مستشفى الملك فهد للقوات المسلحة بجدة، والخدمات الصحية بوزارة الدفاع، ووزارة الرياضة، وشركة رياضة المحركات السعودية (SMC)."),
-      agree: tx("I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).", "أوافق على أن تشارك مايكروموبيليتي بياناتي مع هؤلاء الشركاء ومع حلبة كورنيش جدة (JCC)."),
+      sub: tx("To register, agree that we share these details with our event partners and third parties:", "للتسجيل، وافق على مشاركة هذه البيانات مع شركائنا في الفعالية وأطراف ثالثة:"),
+      note: tx("We share them only with our partners and third parties for this event, and nothing else about you.", "نشاركها فقط مع شركائنا وأطراف ثالثة لهذه الفعالية، ولا نشارك أي شيء آخر عنك."),
+      agree: tx("I agree that MicroMobility shares my details with its partners and third parties for this event.", "أوافق على أن تشارك مايكروموبيليتي بياناتي مع شركائها وأطراف ثالثة لهذه الفعالية."),
       items: [
         tx("Full name", "الاسم الكامل"),
         tx("Mobile number", "رقم الجوال"),

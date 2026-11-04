@@ -296,7 +296,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       title: b.name,
       line: s ? [day, s.times ? (oneTime(s.times) ? clock(s.times[0]) : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "", infoPlace(s, venueWords, directions).name].filter(Boolean) : [],
       blood: {
-        plate: { src: bloodPlate(locale), alt: b.plateAlt, ...BLOOD_PLATE_SIZE }, picture: BLOOD_CARD, cause: b.cause, rules: b.rules,
+        plate: { src: bloodPlate(locale), alt: b.plateAlt, ...BLOOD_PLATE_SIZE }, picture: BLOOD_CARD, types: b.types, line: b.typesLine, cause: b.cause, rules: b.rules,
         info: { title: b.infoTitle, language: b.language, pdf: { label: b.infoPdf, url: `${new URL(BOOKING_URL).origin}/assets/blood-donation-poster.pdf` }, poster: bloodPoster },
       },
     };

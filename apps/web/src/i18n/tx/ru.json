@@ -1497,7 +1497,7 @@
   "You do not have a title yet.": "У вас пока нет титула.",
   "Open Community": "Открыть сообщество",
   "Choose your title": "Выберите свой титул",
-  "Blood Donation": "Донорство крови",
+  "Micromobility Blood Donation": "Донорство крови Micromobility",
   "Give blood. Ride free.": "Сдайте кровь. Катайтесь бесплатно.",
   "MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport": "MicroMobility, Медицинская служба Министерства обороны, трасса Джидда-Корниш, Saudi Motorsport Company, Министерство спорта",
   "Age 18 or over": "Возраст от 18 лет",
@@ -1516,11 +1516,12 @@
   "You’re registered for this event. Read this agreement and agree to it to continue.": "Вы зарегистрированы на это мероприятие. Прочитайте это соглашение и примите его, чтобы продолжить.",
   "Before you register": "Перед регистрацией",
   "Sharing your details": "Передача ваших данных",
-  "To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):": "Для регистрации согласитесь на передачу этих данных нашим партнёрам по мероприятию и трассе Джидда-Корниш (JCC):",
-  "Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense, the Ministry of Sport and Saudi Motorsport Company (SMC).": "Наши партнёры по этому мероприятию: госпиталь вооружённых сил имени короля Фахда в Джидде, Медицинская служба Министерства обороны, Министерство спорта и Saudi Motorsport Company (SMC).",
-  "I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).": "Я согласен(на), что MicroMobility передаст мои данные этим партнёрам и трассе Джидда-Корниш (JCC).",
+  "To register, agree that we share these details with our event partners and third parties:": "Для регистрации согласитесь на передачу этих данных нашим партнёрам по мероприятию и третьим лицам:",
+  "We share them only with our partners and third parties for this event, and nothing else about you.": "Мы передаём их только нашим партнёрам и третьим лицам для этого мероприятия, и ничего другого о вас.",
+  "I agree that MicroMobility shares my details with its partners and third parties for this event.": "Я согласен(на), что MicroMobility передаст мои данные своим партнёрам и третьим лицам для этого мероприятия.",
   "Donor agreement": "Соглашение донора",
   "You cannot register for this event until you have read and agreed to this. Giving blood is voluntary, and I can withdraw at any time without giving a reason. The donation is a medical procedure carried out by the event’s medical team, not by MicroMobility. Only the medical team decides whether I can donate, so registering does not guarantee that I will. I will answer their health questions truthfully and follow their instructions and the venue’s, including resting after I donate and avoiding hard exercise for 5 hours. MicroMobility’s part is only to register me and to give confirmed donors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for the medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "Вы не можете зарегистрироваться на это мероприятие, пока не прочитаете это соглашение и не примете его. Сдача крови добровольна, и я могу отказаться в любой момент без объяснения причин. Сдача крови — это медицинская процедура, которую проводит медицинская команда мероприятия, а не MicroMobility. Только медицинская команда решает, могу ли я сдать кровь, поэтому регистрация не гарантирует, что я её сдам. Я обязуюсь правдиво отвечать на её вопросы о здоровье и следовать её указаниям и указаниям площадки, в том числе отдыхать после сдачи и избегать тяжёлых нагрузок в течение 5 часов. Роль MicroMobility ограничивается моей регистрацией и предоставлением подтверждённым донорам их бесплатного заезда. Я отвечаю за свои личные вещи. В максимальной степени, допускаемой законом, MicroMobility и её сотрудники не несут ответственности за медицинскую процедуру или её последствия, а также за любые травмы, заболевания, утрату, кражу или повреждение на мероприятии.",
   "I have read this and I agree": "Я прочитал(а) это и соглашаюсь",
-  "Blood type": "Группа крови"
+  "Blood type": "Группа крови",
+  "Different types. One purpose.": "Разные группы. Одна цель."
 }

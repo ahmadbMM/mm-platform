@@ -343,35 +343,35 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .bld-plate img { display: block; width: 100%; height: auto; }
 .bld-sum { display: grid; gap: 5px; margin: 0; padding: 0; list-style: none; font-size: 13px; font-weight: 500; line-height: 1.35; }
 .bld-sum > * { display: flex; align-items: flex-start; gap: 7px; min-width: 0; }
-.bld-sum svg { flex: none; margin-top: 2px; color: #b3122a; }
-.tk-card.ev-blood, .tk-card.ev-blood.tk-live { background: #fff; color: #1c1718; border: 1px solid rgba(179, 18, 42, .4); border-top: 4px solid #b3122a; border-radius: 6px; }
+.bld-sum svg { flex: none; margin-top: 2px; color: #0b1f16; }
+.tk-card.ev-blood, .tk-card.ev-blood.tk-live { background: #fff; color: #0b1f16; border: 1px solid rgba(11, 31, 22, .4); border-top: 4px solid #03fe8a; border-radius: 6px; }
 .tk-card.ev-blood.tk-wl { border: 1.5px dashed #b98a1a; }
-.tk-bld-plate { border-bottom: 1px solid rgba(28, 23, 24, .12); }
-.tk-card.ev-blood.tk-today::after { background: #b3122a; }
-.tk-card.ev-blood.tk-live :is(.tk-name, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l) { color: #1c1718; }
-.tk-card.ev-blood.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-qr-hold span, .tk-ok small, .tk-stages li, .tk-st-s, .tk-reveal) { color: rgba(28, 23, 24, .68); }
-.tk-card.ev-blood.tk-live :is(.tk-num, .tk-dw, .tk-when .go, .tk-cd, .tk-note.go, .tk-ok) { color: #b3122a; }
+.tk-bld-plate { border-bottom: 1px solid rgba(11, 31, 22, .12); }
+.tk-card.ev-blood.tk-today::after { background: #0b1f16; }
+.tk-card.ev-blood.tk-live :is(.tk-name, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l) { color: #0b1f16; }
+.tk-card.ev-blood.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-qr-hold span, .tk-ok small, .tk-stages li, .tk-st-s, .tk-reveal) { color: rgba(11, 31, 22, .68); }
+.tk-card.ev-blood.tk-live :is(.tk-num, .tk-dw, .tk-when .go, .tk-cd, .tk-note.go, .tk-ok) { color: #0b1f16; }
 .tk-card.ev-blood.tk-live .tk-note.warn { color: #8a5300; }
-.tk-card.ev-blood.tk-live :is(.tk-head, .tk-rider) { border-color: rgba(28, 23, 24, .12); }
-.tk-card.ev-blood.tk-live :is(.tk-q, .tk-type) { background: #f7f2f3; color: #1c1718; border-color: rgba(28, 23, 24, .12); }
-.tk-card.ev-blood.tk-live :is(.tk-note, .tk-ok) { background: #f7f2f3; border-color: rgba(28, 23, 24, .12); }
-.tk-card.ev-blood.tk-live .tk-note:not(.go):not(.warn) { color: #1c1718; }
-.tk-card.ev-blood.tk-live .tk-ok-tick { background: #b3122a; color: #fff; }
-.tk-card.ev-blood.tk-live .tk-btn { background: transparent; color: #1c1718 !important; border-color: rgba(28, 23, 24, .28); }
-.tk-card.ev-blood.tk-live .tk-btn:hover { background: #f7f2f3; border-color: rgba(28, 23, 24, .62); }
-.tk-card.ev-blood.tk-live .tk-btn.red { color: #b3122a !important; border-color: rgba(179, 18, 42, .4); }
-.tk-card.ev-blood.tk-live :focus-visible { outline-color: #b3122a; }
-.tk-card.ev-blood.tk-live .tk-qr { border-color: rgba(28, 23, 24, .12); }
-.tk-card.ev-blood .tk-qr .tk-qr-live rect { stroke: #b3122a; }
-.tk-card.ev-blood.tk-live .tk-stages li::before { background: rgba(28, 23, 24, .14); }
-.tk-card.ev-blood.tk-live .tk-stages li.on::before, .tk-card.ev-blood.tk-live .tk-stages li.on .tk-st-dot { background: #b3122a; border-color: #b3122a; }
-.tk-card.ev-blood.tk-live .tk-st-dot { background: #fff; border-color: rgba(28, 23, 24, .4); }
-.tk-card.ev-blood.tk-live .tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(179, 18, 42, .14); }
+.tk-card.ev-blood.tk-live :is(.tk-head, .tk-rider) { border-color: rgba(11, 31, 22, .12); }
+.tk-card.ev-blood.tk-live :is(.tk-q, .tk-type) { background: #e6f2ec; color: #0b1f16; border-color: rgba(11, 31, 22, .12); }
+.tk-card.ev-blood.tk-live :is(.tk-note, .tk-ok) { background: #e6f2ec; border-color: rgba(11, 31, 22, .12); }
+.tk-card.ev-blood.tk-live .tk-note:not(.go):not(.warn) { color: #0b1f16; }
+.tk-card.ev-blood.tk-live .tk-ok-tick { background: #0b1f16; color: #fff; }
+.tk-card.ev-blood.tk-live .tk-btn { background: transparent; color: #0b1f16 !important; border-color: rgba(11, 31, 22, .28); }
+.tk-card.ev-blood.tk-live .tk-btn:hover { background: #e6f2ec; border-color: rgba(11, 31, 22, .62); }
+.tk-card.ev-blood.tk-live .tk-btn.red { color: #0b1f16 !important; border-color: rgba(11, 31, 22, .4); }
+.tk-card.ev-blood.tk-live :focus-visible { outline-color: #0b1f16; }
+.tk-card.ev-blood.tk-live .tk-qr { border-color: rgba(11, 31, 22, .12); }
+.tk-card.ev-blood .tk-qr .tk-qr-live rect { stroke: #0b1f16; }
+.tk-card.ev-blood.tk-live .tk-stages li::before { background: rgba(11, 31, 22, .14); }
+.tk-card.ev-blood.tk-live .tk-stages li.on::before, .tk-card.ev-blood.tk-live .tk-stages li.on .tk-st-dot { background: #0b1f16; border-color: #0b1f16; }
+.tk-card.ev-blood.tk-live .tk-st-dot { background: #fff; border-color: rgba(11, 31, 22, .4); }
+.tk-card.ev-blood.tk-live .tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(11, 31, 22, .14); }
 /* under the donor: the short rules, what confirmed donors get, and the free ride's code */
 .tk-bld { margin: 12px 0 16px; padding-top: 12px; }
-.tk-bld-note { margin-top: 10px !important; font-size: 12.5px; line-height: 1.45; color: rgba(28, 23, 24, .68); }
-.tk-bld-rw { margin-top: 12px; padding: 12px; border: 1px solid #b3122a; border-radius: 3px; font-size: 13px; line-height: 1.4; }
-.tk-bld-rw-t { font-weight: 800; color: #b3122a; }
+.tk-bld-note { margin-top: 10px !important; font-size: 12.5px; line-height: 1.45; color: rgba(11, 31, 22, .68); }
+.tk-bld-rw { margin-top: 12px; padding: 12px; border: 1px solid #0b1f16; border-radius: 3px; font-size: 13px; line-height: 1.4; }
+.tk-bld-rw-t { font-weight: 800; color: #0b1f16; }
 .tk-bld-rw-c { margin: 4px 0 !important; font-size: 20px; font-weight: 800; letter-spacing: .04em; text-align: start; overflow-wrap: anywhere; -webkit-user-select: all; user-select: all; }
 @media (max-width: 560px) {
   .tk-grid { grid-template-columns: 1fr; }
@@ -405,10 +405,10 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 :is(.sc-card, .sc-wrap, .xs-info).ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
 :is(.sc-card, .sc-wrap, .xs-info).ev-defe5k { --ev: #a22b63; } /* the DEFE 5KM Run: Defe's berry (2026-10-18) */
 :is(.sc-card, .sc-wrap, .xs-info).ev-arena { --ev: #c81e27; } /* Arena Heros: its red, as the booking app's .ev-arena (2026-10-28) */
-:is(.sc-card, .sc-wrap, .xs-info).ev-blood { --ev: #b3122a; } /* the donation event: its crimson (2026-11-03) */
-.sc-card.ev-blood:hover { border-color: rgba(179, 18, 42, .4); box-shadow: 0 0 14px rgba(179, 18, 42, .12); }
-.sc-card.ev-blood:focus-visible { outline-color: #b3122a; }
-.sc-card.ev-blood .sc-dw, .sc-card.ev-blood .sc-spots:not(.full):not(.low):not(.closed) { color: #b3122a; }
+:is(.sc-card, .sc-wrap, .xs-info).ev-blood { --ev: #0b1f16; } /* the donation event: its crimson (2026-11-03) */
+.sc-card.ev-blood:hover { border-color: rgba(11, 31, 22, .4); box-shadow: 0 0 14px rgba(11, 31, 22, .12); }
+.sc-card.ev-blood:focus-visible { outline-color: #0b1f16; }
+.sc-card.ev-blood .sc-dw, .sc-card.ev-blood .sc-spots:not(.full):not(.low):not(.closed) { color: #0b1f16; }
 /* The DEFE 5KM Run's date card (the booking app's _defeSessCard, 2026-10-18): white with Defe's blush washed in
    from the far corner (mirrored right to left), the logo (the ribbon woven into دفء, rose), the race's name in
    berry, when / how far / where, and the cause with its ribbon along the foot. */

@@ -1497,7 +1497,7 @@
   "You do not have a title yet.": "آپ کے پاس ابھی کوئی خطاب نہیں ہے۔",
   "Open Community": "کمیونٹی کھولیں",
   "Choose your title": "اپنا خطاب چنیں",
-  "Blood Donation": "خون کا عطیہ",
+  "Micromobility Blood Donation": "Micromobility خون کا عطیہ",
   "Give blood. Ride free.": "خون کا عطیہ دیں۔ مفت سواری پائیں۔",
   "MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport": "MicroMobility، وزارت دفاع کی صحت خدمات، جدہ کورنیش سرکٹ، سعودی موٹر اسپورٹ کمپنی، وزارت کھیل",
   "Age 18 or over": "عمر 18 سال یا زیادہ",
@@ -1516,11 +1516,12 @@
   "You’re registered for this event. Read this agreement and agree to it to continue.": "آپ اس تقریب کے لیے رجسٹرڈ ہیں۔ جاری رکھنے کے لیے یہ معاہدہ پڑھیں اور اس سے اتفاق کریں۔",
   "Before you register": "رجسٹر کرنے سے پہلے",
   "Sharing your details": "آپ کی تفصیلات شیئر کرنا",
-  "To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):": "رجسٹر کرنے کے لیے اتفاق کریں کہ ہم یہ تفصیلات تقریب کے اپنے شراکت داروں اور جدہ کورنیش سرکٹ (JCC) کے ساتھ شیئر کریں:",
-  "Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense, the Ministry of Sport and Saudi Motorsport Company (SMC).": "اس تقریب میں ہمارے شراکت دار: جدہ کا کنگ فہد آرمڈ فورسز ہسپتال، وزارت دفاع کی صحت خدمات، وزارت کھیل اور سعودی موٹر اسپورٹ کمپنی (SMC)۔",
-  "I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).": "میں متفق ہوں کہ MicroMobility میری تفصیلات ان شراکت داروں اور جدہ کورنیش سرکٹ (JCC) کے ساتھ شیئر کرے۔",
+  "To register, agree that we share these details with our event partners and third parties:": "رجسٹر کرنے کے لیے اتفاق کریں کہ ہم یہ تفصیلات تقریب کے اپنے شراکت داروں اور تیسرے فریقوں کے ساتھ شیئر کریں:",
+  "We share them only with our partners and third parties for this event, and nothing else about you.": "ہم یہ صرف اس تقریب کے لیے اپنے شراکت داروں اور تیسرے فریقوں کے ساتھ شیئر کرتے ہیں، آپ کے بارے میں اور کچھ نہیں۔",
+  "I agree that MicroMobility shares my details with its partners and third parties for this event.": "میں متفق ہوں کہ MicroMobility اس تقریب کے لیے میری تفصیلات اپنے شراکت داروں اور تیسرے فریقوں کے ساتھ شیئر کرے۔",
   "Donor agreement": "عطیہ دہندہ کا معاہدہ",
   "You cannot register for this event until you have read and agreed to this. Giving blood is voluntary, and I can withdraw at any time without giving a reason. The donation is a medical procedure carried out by the event’s medical team, not by MicroMobility. Only the medical team decides whether I can donate, so registering does not guarantee that I will. I will answer their health questions truthfully and follow their instructions and the venue’s, including resting after I donate and avoiding hard exercise for 5 hours. MicroMobility’s part is only to register me and to give confirmed donors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for the medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "اسے پڑھ کر اس سے اتفاق کیے بغیر آپ اس تقریب کے لیے رجسٹر نہیں ہو سکتے۔ خون کا عطیہ رضاکارانہ ہے، اور کوئی وجہ بتائے بغیر کسی بھی وقت اس سے الگ ہوا جا سکتا ہے۔ عطیہ ایک طبی عمل ہے جو تقریب کی طبی ٹیم انجام دیتی ہے، MicroMobility نہیں۔ عطیہ دینے کی اجازت کا فیصلہ صرف طبی ٹیم کرتی ہے، اس لیے رجسٹریشن عطیہ کی ضمانت نہیں ہے۔ ان کے صحت سے متعلق سوالات کے سچے جواب دینا اور ان کی اور مقام کی ہدایات پر عمل کرنا میری ذمہ داری ہے، جس میں عطیہ کے بعد آرام کرنا اور 5 گھنٹے تک سخت ورزش سے پرہیز شامل ہے۔ MicroMobility کا کام صرف میری رجسٹریشن کرنا اور تصدیق شدہ عطیہ دہندگان کو مفت سواری دینا ہے۔ اپنے ذاتی سامان کی ذمہ داری میری ہے۔ قانون کی اجازت کی حد تک، MicroMobility اور اس کا عملہ طبی عمل یا اس کے اثرات، یا تقریب میں کسی بھی چوٹ، بیماری، نقصان، چوری یا خرابی کے ذمہ دار نہیں ہیں۔",
   "I have read this and I agree": "میں نے اسے پڑھ لیا ہے اور میں متفق ہوں",
-  "Blood type": "بلڈ گروپ"
+  "Blood type": "بلڈ گروپ",
+  "Different types. One purpose.": "مختلف گروپ۔ ایک مقصد۔"
 }

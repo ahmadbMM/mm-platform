@@ -1,5 +1,5 @@
 import { T as TICKET } from "@/components/booking/tickets.text";
-import { BLOOD_NAME, BLOOD_PLATE_SIZE, bloodName, bloodPlate, bloodWords } from "@/content/blood-words";
+import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
@@ -84,7 +84,7 @@ export async function GET(req: Request) {
       distance: first.km !== null ? t.rtKm(String(first.km)) : null,
       ...(s.kind === "vlap" ? ((v) => ({ kind: "vlap" as const, items: v.set ? v.items : null }))(vlShareItems(s.vl, locale, [])) : {}),
       ...(s.kind === "arena" ? ((v) => ({ kind: "arena" as const, items: v.set ? v.items : null }))(vlShareItems(s.ah, locale, [])) : {}),
-      ...(s.kind === "blood" ? ((b) => (({ items, ...words }) => ({ kind: "blood" as const, items, words: { ...words, plate: { src: bloodPlate(locale), alt: b.plateAlt, ...BLOOD_PLATE_SIZE } } }))(b.share))(bloodWords(tx)) : {}),
+      ...(s.kind === "blood" ? (({ items, ...words }) => ({ kind: "blood" as const, items, words }))(bloodWords(tx).share) : {}),
     },
   });
 }

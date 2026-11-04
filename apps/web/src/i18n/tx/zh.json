@@ -1497,7 +1497,7 @@
   "You do not have a title yet.": "您还没有头衔。",
   "Open Community": "打开社区",
   "Choose your title": "选择你的头衔",
-  "Blood Donation": "献血",
+  "Micromobility Blood Donation": "Micromobility 献血",
   "Give blood. Ride free.": "献血，免费骑行。",
   "MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport": "MicroMobility、国防部卫生服务局、吉达滨海赛道、沙特赛车运动公司、体育部",
   "Age 18 or over": "年满 18 周岁",
@@ -1516,11 +1516,12 @@
   "You’re registered for this event. Read this agreement and agree to it to continue.": "您已报名参加此活动。请阅读本协议并表示同意，以便继续。",
   "Before you register": "报名之前",
   "Sharing your details": "共享您的信息",
-  "To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):": "如需报名，请同意我们与活动合作伙伴以及吉达滨海赛道（JCC）共享以下信息：",
-  "Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense, the Ministry of Sport and Saudi Motorsport Company (SMC).": "本次活动的合作伙伴：吉达法赫德国王武装部队医院、国防部卫生服务局、体育部和沙特赛车运动公司（SMC）。",
-  "I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).": "我同意 MicroMobility 与这些合作伙伴以及吉达滨海赛道（JCC）共享我的信息。",
+  "To register, agree that we share these details with our event partners and third parties:": "如需报名，请同意我们与活动合作伙伴及第三方共享以下信息：",
+  "We share them only with our partners and third parties for this event, and nothing else about you.": "我们仅为本次活动与合作伙伴及第三方共享这些信息，不会共享您的其他信息。",
+  "I agree that MicroMobility shares my details with its partners and third parties for this event.": "我同意 MicroMobility 为本次活动与其合作伙伴及第三方共享我的信息。",
   "Donor agreement": "献血者协议",
   "You cannot register for this event until you have read and agreed to this. Giving blood is voluntary, and I can withdraw at any time without giving a reason. The donation is a medical procedure carried out by the event’s medical team, not by MicroMobility. Only the medical team decides whether I can donate, so registering does not guarantee that I will. I will answer their health questions truthfully and follow their instructions and the venue’s, including resting after I donate and avoiding hard exercise for 5 hours. MicroMobility’s part is only to register me and to give confirmed donors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for the medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "在阅读并同意本协议之前，您无法报名参加此活动。献血是自愿行为，我可以随时退出，无需说明任何理由。献血是由活动医疗团队而非 MicroMobility 实施的医疗程序。只有医疗团队才能决定我是否可以献血，因此报名并不保证我能够献血。我将如实回答他们的健康问题，并遵守他们和场馆的指示，包括献血后休息以及 5 小时内避免剧烈运动。MicroMobility 的职责仅限于为我登记并向已确认的献血者提供免费骑行。我对自己的个人物品负责。在法律允许的最大范围内，MicroMobility 及其员工对医疗程序或其影响，以及活动中的任何受伤、疾病、遗失、被盗或损坏概不负责。",
   "I have read this and I agree": "我已阅读并同意",
-  "Blood type": "血型"
+  "Blood type": "血型",
+  "Different types. One purpose.": "血型不同，目标一致。"
 }

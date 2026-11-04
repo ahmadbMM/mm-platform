@@ -1497,7 +1497,7 @@
   "You do not have a title yet.": "Aún no tienes un título.",
   "Open Community": "Abrir Comunidad",
   "Choose your title": "Elige tu título",
-  "Blood Donation": "Donación de sangre",
+  "Micromobility Blood Donation": "Donación de sangre Micromobility",
   "Give blood. Ride free.": "Dona sangre. Monta gratis.",
   "MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport": "MicroMobility, Servicios de Salud del Ministerio de Defensa, Circuito de la Corniche de Yeda, Saudi Motorsport Company, Ministerio del Deporte",
   "Age 18 or over": "18 años o más",
@@ -1516,11 +1516,12 @@
   "You’re registered for this event. Read this agreement and agree to it to continue.": "Estás registrado en este evento. Lee este acuerdo y acéptalo para continuar.",
   "Before you register": "Antes de registrarte",
   "Sharing your details": "Compartir tus datos",
-  "To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):": "Para registrarte, acepta que compartamos estos datos con nuestros socios del evento y con el Circuito de la Corniche de Yeda (JCC):",
-  "Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense, the Ministry of Sport and Saudi Motorsport Company (SMC).": "Nuestros socios en este evento: Hospital de las Fuerzas Armadas Rey Fahd de Yeda, Servicios de Salud del Ministerio de Defensa, Ministerio del Deporte y Saudi Motorsport Company (SMC).",
-  "I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).": "Acepto que MicroMobility comparta mis datos con estos socios y con el Circuito de la Corniche de Yeda (JCC).",
+  "To register, agree that we share these details with our event partners and third parties:": "Para registrarte, acepta que compartamos estos datos con nuestros socios del evento y con terceros:",
+  "We share them only with our partners and third parties for this event, and nothing else about you.": "Los compartimos solo con nuestros socios y terceros para este evento, y nada más sobre ti.",
+  "I agree that MicroMobility shares my details with its partners and third parties for this event.": "Acepto que MicroMobility comparta mis datos con sus socios y terceros para este evento.",
   "Donor agreement": "Acuerdo del donante",
   "You cannot register for this event until you have read and agreed to this. Giving blood is voluntary, and I can withdraw at any time without giving a reason. The donation is a medical procedure carried out by the event’s medical team, not by MicroMobility. Only the medical team decides whether I can donate, so registering does not guarantee that I will. I will answer their health questions truthfully and follow their instructions and the venue’s, including resting after I donate and avoiding hard exercise for 5 hours. MicroMobility’s part is only to register me and to give confirmed donors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for the medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "No puedes registrarte en este evento hasta haber leído y aceptado este acuerdo. Donar sangre es voluntario y puedo retirarme en cualquier momento sin dar ningún motivo. La donación es un procedimiento médico que realiza el equipo médico del evento, no MicroMobility. Solo el equipo médico decide si puedo donar, por lo que registrarme no garantiza que vaya a hacerlo. Responderé con sinceridad a sus preguntas de salud y seguiré sus instrucciones y las del lugar, incluido descansar después de donar y evitar el ejercicio intenso durante 5 horas. MicroMobility solo se encarga de registrarme y de dar a los donantes confirmados su paseo gratis. Soy responsable de mis pertenencias personales. En la máxima medida permitida por la ley, MicroMobility y su personal no son responsables del procedimiento médico ni de sus efectos, ni de ninguna lesión, enfermedad, pérdida, robo o daño durante el evento.",
   "I have read this and I agree": "He leído esto y lo acepto",
-  "Blood type": "Grupo sanguíneo"
+  "Blood type": "Grupo sanguíneo",
+  "Different types. One purpose.": "Distintos tipos. Un solo propósito."
 }

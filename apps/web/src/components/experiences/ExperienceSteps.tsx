@@ -114,6 +114,7 @@ export type StepEvent = {
 export type StepBlood = {
   plate: { src: string; alt: string; width: number; height: number };
   picture: { src: string; width: number; height: number };
+  types: string[]; line: string;
   cause: string; rules: string[];
   info: {
     title: string; language: string; pdf: { label: string; url: string };
@@ -353,7 +354,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                         <span className="xs-ev-title">{e.title}</span>
                         {e.line && e.line.length > 0 && <span className="xs-ev-meta">{e.line.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}
                       </span>
-                      <span className="xs-bld-cause">{e.blood.cause}</span>
+                      <span className="xs-bld-tiles" aria-hidden="true">{e.blood.types.map((x, i) => <span key={x} className={`xs-bld-ti${(i + (i > 3 ? 1 : 0)) % 2 === 0 ? " on" : ""}`}>{x}</span>)}</span>
+                      <span className="xs-bld-cause">{e.blood.line} {e.blood.cause}</span>
                       <span className="bld-sum">{e.blood.rules.map((x, i) => <span key={i}><Tick /><span>{x}</span></span>)}</span>
                     </button>
                   ) : (

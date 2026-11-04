@@ -206,10 +206,10 @@ describe("the kind (lib/rides.ts)", () => {
   it("is named by the server's words, in the page's language, a title of the English name too", () => {
     const en = { ...kindNames({}), blood: bloodName(EN) }, ar = { ...kindNames({}), blood: bloodName(AR) };
     expect(kindNames({ bldName: "x" }).blood).toBe(""); // no field of the Website editor
-    expect(BLOOD_NAME).toBe("Blood Donation");
-    expect(sessionName({ kind: "blood", title: null }, en, en, false)).toBe("Blood Donation");
-    expect(sessionName({ kind: "blood", title: null }, ar, en, true)).toBe("التبرع بالدم");
-    expect(sessionName({ kind: "blood", title: "Blood Donation" }, ar, en, true)).toBe("التبرع بالدم");
+    expect(BLOOD_NAME).toBe("Micromobility Blood Donation");
+    expect(sessionName({ kind: "blood", title: null }, en, en, false)).toBe("Micromobility Blood Donation");
+    expect(sessionName({ kind: "blood", title: null }, ar, en, true)).toBe("مايكروموبيليتي للتبرع بالدم");
+    expect(sessionName({ kind: "blood", title: "Micromobility Blood Donation" }, ar, en, true)).toBe("مايكروموبيليتي للتبرع بالدم");
     expect(sessionName({ kind: "blood", title: "Our own title" }, ar, en, true)).toBe("Our own title");
   });
   it("knows a session by its id", () => {
@@ -272,7 +272,7 @@ describe("on Experiences, once a session exists", () => {
     const { steps, html } = await experiences([BD, JCC]);
     expect(steps.props.events.map((e) => e.key)).toEqual(["blood", "jcc", "community"]);
     expect(html).toMatch(/Thu,? 5 Nov/); // as this machine's Intl writes the short day
-    for (const w of ["xs-event ev-blood", "/site/blood-partners.webp", 'width="1503"', 'height="456"', "Blood Donation", "5 PM – 11 PM", "Jeddah Corniche Circuit", "Give blood. Ride free.", "Age 18 or over", "Weight 50 kg or more", "Bring your national ID or Iqama", "Sleep well and eat a healthy meal two hours before", "xs-about ab-blood"]) expect(html, w).toContain(w);
+    for (const w of ["xs-event ev-blood", "/site/blood-partners.webp", 'width="1503"', 'height="433"', "Micromobility Blood Donation", "5 PM – 11 PM", "Jeddah Corniche Circuit", "Give blood. Ride free.", "Age 18 or over", "Weight 50 kg or more", "Bring your national ID or Iqama", "Sleep well and eat a healthy meal two hours before", "xs-about ab-blood"]) expect(html, w).toContain(w);
     expect(html).toContain('alt="MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport"');
     // the owner's picture is the card, before anything on it
     expect(html).toMatch(/xs-event ev-blood"[^>]*><img class="xs-bld-pic" src="\/site\/blood-card\.webp" alt=""/);
@@ -285,8 +285,8 @@ describe("on Experiences, once a session exists", () => {
     const { steps } = await experiences([{ ...BD, capacity: 3 }]);
     const e = steps.props.events.find((x) => x.key === "blood")!;
     expect(bookingAt("https://book.example/", e.key, e.sessions[0].id)).toBe("https://book.example/?ev=blood&session=2099-11-05-bd");
-    expect(e).toMatchObject({ title: "Blood Donation", meta: "", logo: "", note: "", about: "" });
-    expect(e.sessions[0]).toMatchObject({ kind: "blood", name: "Blood Donation", free: false, paid: false, members: false, event: false, seatPrice: null, meta: [], route: null, breakfast: null });
+    expect(e).toMatchObject({ title: "Micromobility Blood Donation", meta: "", logo: "", note: "", about: "" });
+    expect(e.sessions[0]).toMatchObject({ kind: "blood", name: "Micromobility Blood Donation", free: false, paid: false, members: false, event: false, seatPrice: null, meta: [], route: null, breakfast: null });
     expect(e.sessions[0].info).toMatchObject({ text: "", who: "Everyone", price: null, places: null, collect: null, place: "Jeddah Corniche Circuit", map: BD.meet_url, distance: null });
   });
   it("gives its About the hospital's poster in Arabic and English, whatever the page's language", async () => {
@@ -303,19 +303,19 @@ describe("on Experiences, once a session exists", () => {
   });
   it("reads from the right: its plate and its words in Arabic and Urdu", async () => {
     const ar = (await experiences([BD], "ar")).html;
-    for (const w of ["/site/blood-partners-rtl.webp", "التبرع بالدم", "تبرّع بدمك واركب مجانًا.", "العمر 18 سنة فأكثر", "حلبة كورنيش جدة"]) expect(ar, w).toContain(w);
+    for (const w of ["/site/blood-partners-rtl.webp", "مايكروموبيليتي للتبرع بالدم", "تبرّع بدمك واركب مجانًا.", "العمر 18 سنة فأكثر", "حلبة كورنيش جدة"]) expect(ar, w).toContain(w);
     expect(ar).not.toContain("/site/blood-partners.webp");
     resetRides();
     expect((await experiences([BD], "ur")).html).toContain("/site/blood-partners-rtl.webp");
-    expect(bloodPlate("en")).toBe("/site/blood-partners.webp?v=2");
-    expect(bloodPlate("de")).toBe("/site/blood-partners.webp?v=2");
+    expect(bloodPlate("en")).toBe("/site/blood-partners.webp?v=3");
+    expect(bloodPlate("de")).toBe("/site/blood-partners.webp?v=3");
   });
   it("lines up with its neighbours: an ordinary card's padding, its About link where every plain card has it", () => {
     const css = readFileSync(join(SRC, "components/experiences/experiences.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => /\.(xs-event\.ev-blood|xs-about\.ab-blood)/.test(m[1])).map((m) => m[2]);
     expect(rules.length).toBeGreaterThan(0);
     // the picture's room at the bottom, and the link's white backing, which its margin cancels, move nothing that lines up
-    for (const r of rules) expect(r.replace(/padding-bottom: 47%;|padding-inline: 4px; margin-inline-start: -4px;/g, "")).not.toMatch(/padding|inset|(^|[\s;])bottom:|min-height|(^|[\s;])height:/);
+    for (const r of rules) expect(r.replace(/padding-bottom: 47%;|padding-inline: 4px; margin-inline-start: -4px;|padding: 0;/g, "")).not.toMatch(/padding|inset|(^|[\s;])bottom:|min-height|(^|[\s;])height:/);
     expect(css).toMatch(/\.xs-events\s*\{[^}]*grid-auto-rows:\s*1fr/); // equal rows
   });
   it("its facts come from the plain rules", () => {
@@ -334,11 +334,11 @@ describe("on Experiences, once a session exists", () => {
 describe("on Events, once a session exists", () => {
   it("is listed in its crimson with its line and venue, booked on its own event, never a price or the free word", async () => {
     const { html } = await eventsPage([BD]);
-    for (const w of ["Blood Donation", "--kind:#b3122a", "Give blood. Ride free.", "Jeddah Corniche Circuit", "Open to everyone", "ev=blood&amp;session=2099-11-05-bd", "5 PM – 11 PM"]) expect(html, w).toContain(w);
+    for (const w of ["Micromobility Blood Donation", "--kind:#0b1f16", "Give blood. Ride free.", "Jeddah Corniche Circuit", "Open to everyone", "ev=blood&amp;session=2099-11-05-bd", "5 PM – 11 PM"]) expect(html, w).toContain(w);
     for (const no of ["Complimentary", "Community event", "SAR"]) expect(html, no).not.toContain(no);
     // for search engines too: at the circuit, no price
     const ld = /<script[^>]*ld\+json[^>]*>(.*?)<\/script>/s.exec(html)?.[1] ?? "";
-    expect(ld).toContain("Blood Donation");
+    expect(ld).toContain("Micromobility Blood Donation");
     expect(ld).toContain("Jeddah Corniche Circuit");
     expect(ld).not.toMatch(/"price"/);
   });
@@ -468,7 +468,7 @@ describe("its ticket on My Account", () => {
       expect(cards).toHaveLength(1);
       const html = renderToStaticMarkup(cards[0]);
       for (const w of ["Donor number", "BD-ABC123", `href="${BD.meet_url}"`]) expect(html, w).toContain(w);
-      expect((cards[0].props as { name: string }).name).toBe("Blood Donation"); // as its calendar file calls it
+      expect((cards[0].props as { name: string }).name).toBe("Micromobility Blood Donation"); // as its calendar file calls it
     });
     it("draws the ticket without a code, and no error, on a database without the function", async () => {
       const { asked, cards } = await account([row()], absent);
@@ -526,11 +526,11 @@ describe("its agreement, never the activity waiver", () => {
   it("the pop-up's route brings its version, its words, its kicker and line, and calls the person a donor", async () => {
     vi.stubGlobal("fetch", db2([row()]));
     expect(await (await get("locale=en")).json()).toEqual({ signedIn: true, pending: {
-      sessionId: BD.id, version: "blood-2026-11-v1", kind: "blood", copy: waiverCopy("blood", EN), name: "Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit",
+      sessionId: BD.id, version: "blood-2026-11-v1", kind: "blood", copy: waiverCopy("blood", EN), name: "Micromobility Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit",
       ridersLabel: "Donor", riders: [{ name: "Test Donor", num: 7 }],
       kicker: "Agreement needed", sub: "You’re registered for this event. Read this agreement and agree to it to continue.",
     } });
-    expect((await (await get("locale=ar")).json()).pending).toMatchObject({ kind: "blood", name: "التبرع بالدم", kicker: "إقرار مطلوب", sub: "أنت مسجّل في هذه الفعالية. اقرأ هذا الإقرار ووافق عليه للمتابعة.", ridersLabel: "المتبرع" });
+    expect((await (await get("locale=ar")).json()).pending).toMatchObject({ kind: "blood", name: "مايكروموبيليتي للتبرع بالدم", kicker: "إقرار مطلوب", sub: "أنت مسجّل في هذه الفعالية. اقرأ هذا الإقرار ووافق عليه للمتابعة.", ridersLabel: "المتبرع" });
   });
   it("records that version, and refuses any other", async () => {
     const f = db2([]);
@@ -542,7 +542,7 @@ describe("its agreement, never the activity waiver", () => {
     expect(JSON.parse(String(call[1].body))).toEqual({ p_id: "c1", p_token: TOKEN, p_session_id: BD.id, p_version: "blood-2026-11-v1" });
   });
   it("the pop-up says what the route brings, none of the waiver's own lines", () => {
-    const w: PendingWaiver = { sessionId: BD.id, version: "blood-2026-11-v1", kind: "blood", copy: waiverCopy("blood", EN), name: "Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit", ridersLabel: "Donor", riders: [{ name: "Test Donor", num: 7 }], kicker: "Agreement needed", sub: bw.gate.sub };
+    const w: PendingWaiver = { sessionId: BD.id, version: "blood-2026-11-v1", kind: "blood", copy: waiverCopy("blood", EN), name: "Micromobility Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit", ridersLabel: "Donor", riders: [{ name: "Test Donor", num: 7 }], kicker: "Agreement needed", sub: bw.gate.sub };
     const html = renderToStaticMarkup(createElement(Tx, { locale: "en", dict: null }, createElement(WaiverGate, { ...w, onDone: () => {} })));
     for (const s of ["Agreement needed", "Donor agreement", bw.gate.sub, "I have read this and I agree", "Donor", "ev-blood"]) expect(html, s).toContain(s.replace(/&/g, "&amp;"));
     for (const no of ["Waiver needed", "Our team booked you", "Riders", "Participants"]) expect(html, no).not.toContain(no);
@@ -559,11 +559,10 @@ describe("sharing the donor's details with the hosts", () => {
   const ITEMS = ["Full name", "Mobile number", "Email address", "Blood type", "Birth date", "Nationality"];
   const WORDS = {
     kicker: "Before you register", title: "Sharing your details",
-    sub: "To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):",
-    note: "Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense, the Ministry of Sport and Saudi Motorsport Company (SMC).",
-    agree: "I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).",
+    sub: "To register, agree that we share these details with our event partners and third parties:",
+    note: "We share them only with our partners and third parties for this event, and nothing else about you.",
+    agree: "I agree that MicroMobility shares my details with its partners and third parties for this event.",
   };
-  const PLATE = { src: "/site/blood-partners.webp?v=2", alt: "MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport", width: 1503, height: 456 };
   const row = (o: Record<string, unknown> = {}) => ({ id: "q9", session_id: BD.id, session_date: BD.session_date, status: "waiting", customer_id: "c1", queue_num: 7, name: "Test Donor", data_share_at: null, ...o });
   const db2 = (rows: unknown[], accept: Response = json(1)) => db([BD], (url) => (url.includes("/rpc/my_bookings") ? json(rows) : url.includes("/rpc/customer_accept_share") ? accept : null));
   const get = (q: string) => shareGet(new Request(`https://micromobility.sa/api/account/pending-share?${q}`, { headers: HEADERS }));
@@ -578,13 +577,12 @@ describe("sharing the donor's details with the hosts", () => {
   it("the route names the items and the hosts: the pop-up's code does not", async () => {
     vi.stubGlobal("fetch", db2([row()]));
     expect(await (await get("locale=en")).json()).toEqual({ signedIn: true, pending: {
-      sessionId: BD.id, name: "Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit", distance: null, kind: "blood", items: ITEMS, words: { ...WORDS, plate: PLATE },
+      sessionId: BD.id, name: "Micromobility Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit", distance: null, kind: "blood", items: ITEMS, words: WORDS,
     } });
     const ar = (await (await get("locale=ar")).json()).pending;
     expect(ar.items).toEqual(["الاسم الكامل", "رقم الجوال", "البريد الإلكتروني", "فصيلة الدم", "تاريخ الميلاد", "الجنسية"]);
-    expect(ar.words.note).toBe("شركاؤنا في هذه الفعالية: مستشفى الملك فهد للقوات المسلحة بجدة، والخدمات الصحية بوزارة الدفاع، ووزارة الرياضة، وشركة رياضة المحركات السعودية (SMC).");
-    expect(ar.words.agree).toBe("أوافق على أن تشارك مايكروموبيليتي بياناتي مع هؤلاء الشركاء ومع حلبة كورنيش جدة (JCC).");
-    expect(ar.words.plate.src).toBe("/site/blood-partners-rtl.webp?v=2");
+    expect(ar.words.note).toBe("نشاركها فقط مع شركائنا وأطراف ثالثة لهذه الفعالية، ولا نشارك أي شيء آخر عنك.");
+    expect(ar.words.agree).toBe("أوافق على أن تشارك مايكروموبيليتي بياناتي مع شركائها وأطراف ثالثة لهذه الفعالية.");
   });
   it("records the agreement through customer_accept_share", async () => {
     const f = db2([]);
@@ -593,11 +591,11 @@ describe("sharing the donor's details with the hosts", () => {
     const call = f.mock.calls.find((c) => String(c[0]).includes("/rpc/customer_accept_share")) as unknown as [string, RequestInit];
     expect(JSON.parse(String(call[1].body))).toEqual({ p_id: "c1", p_token: TOKEN, p_session_id: BD.id });
   });
-  const w: PendingShare = { sessionId: BD.id, name: "Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit", distance: null, kind: "blood", items: ITEMS, words: WORDS };
+  const w: PendingShare = { sessionId: BD.id, name: "Micromobility Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit", distance: null, kind: "blood", items: ITEMS, words: WORDS };
   const draw = (p: PendingShare = w) => renderToStaticMarkup(createElement(Tx, { locale: "en", dict: null }, createElement(ShareGate, { ...p, onDone: () => {} })));
   it("the pop-up lists them in order, and never says a race, Kamin Sports or Sela", () => {
     const html = draw();
-    const order = [WORDS.kicker, WORDS.title, "Blood Donation", WORDS.sub, ...ITEMS, WORDS.note, WORDS.agree, "Agree and continue", "Sign out"];
+    const order = [WORDS.kicker, WORDS.title, "Micromobility Blood Donation", WORDS.sub, ...ITEMS, WORDS.note, WORDS.agree, "Agree and continue", "Sign out"];
     const at = order.map((s) => html.indexOf(s));
     for (const [i, s] of order.entries()) expect(at[i], s).toBeGreaterThan(-1);
     expect([...at].sort((a, b) => a - b)).toEqual(at);
@@ -605,13 +603,11 @@ describe("sharing the donor's details with the hosts", () => {
     expect(html).toContain("ev-blood");
     for (const no of ["race", "Kamin", "Sela", "Arena", "Distance chosen", "Emergency contact", "Nothing else about you"]) expect(html, no).not.toContain(no);
   });
-  it("the logos come with the words, and the agreement names the JCC", () => {
-    const html = draw({ ...w, words: { ...WORDS, plate: PLATE } });
-    expect(html).toContain('class="sg-plate"');
-    expect(html).toContain('src="/site/blood-partners.webp?v=2"');
-    expect(html.indexOf("sg-plate")).toBeLessThan(html.indexOf(WORDS.sub));
-    for (const s of [WORDS.sub, WORDS.agree]) expect(s).toContain("Jeddah Corniche Circuit (JCC)");
-    expect(draw()).not.toContain("sg-plate");
+  it("names nobody: no party, no logo, no venue on the pop-up", () => {
+    const html = draw();
+    for (const no of ["King Fahd", "Ministry", "Motorsport", "SMC", "JCC", "Jeddah", "blood-partners"]) expect(html, no).not.toContain(no);
+    expect(WORDS.sub).toContain("partners and third parties");
+    expect(WORDS.agree).toContain("partners and third parties");
   });
   it("another kind's pop-up is as it was", () => {
     const html = draw({ ...w, kind: undefined, items: undefined, words: undefined });
@@ -631,7 +627,7 @@ describe("its words in every language", () => {
   });
   it("are the booking app's own where it speaks the language", () => {
     const es = serverL("es"), ur = serverL("ur"), tl = serverL("tl");
-    expect(es("Blood Donation")).toBe("Donación de sangre");
+    expect(es("Micromobility Blood Donation")).toBe("Donación de sangre Micromobility");
     expect(es("Give blood. Ride free.")).toBe("Dona sangre. Monta gratis.");
     expect(ur("Donor agreement")).toBe("عطیہ دہندہ کا معاہدہ");
     expect(tl("Blood type")).toBe("Uri ng dugo");
@@ -639,7 +635,7 @@ describe("its words in every language", () => {
   it("are written by hand in the six it does not, with the free ride's date kept", () => {
     for (const l of ["de", "id", "ja", "ms", "ru", "zh"]) {
       const tx = serverL(l);
-      for (const en of ["Blood Donation", "Donor number", "I have read this and I agree", "Before you register"]) expect(tx(en), `${l}: ${en}`).not.toBe(en);
+      for (const en of ["Micromobility Blood Donation", "Donor number", "I have read this and I agree", "Before you register"]) expect(tx(en), `${l}: ${en}`).not.toBe(en);
       expect(tx("Thank you for donating. Enter this code when you book. Valid until {0}."), l).toContain("{0}");
     }
   });

@@ -32,9 +32,8 @@ export type PendingShare = {
   /** Victory Lap: Kamin Sports' exact list as staff set it, in the page's language; null until it is set. Arena
    *  Heros: staff's own list, when they set one. The Blood Donation event: what goes to its hosts. */
   items?: string[] | null;
-  /** The Blood Donation event: the pop-up's own words (bldShKicker, bldShTitle, bldShSub, bldShNote, bldShAgree), and
-   *  the logos of those it names, on their white plate. */
-  words?: { kicker: string; title: string; sub: string; note: string; agree: string; plate?: { src: string; alt: string; width: number; height: number } };
+  /** The Blood Donation event: the pop-up's own words (bldShKicker, bldShTitle, bldShSub, bldShNote, bldShAgree). */
+  words?: { kicker: string; title: string; sub: string; note: string; agree: string };
 };
 /** agreed: the database has it · absent: the database cannot record it yet (let through) ·
  *  stale: the session is no longer Run for Her (ask again). */
@@ -161,12 +160,11 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
           {d ? d.kicker : tx("Before the race", "قبل السباق")}
         </p>
         <h2 id={`${id}-title`} className="rg-title">{d ? d.title : tx("Sharing your details for the race", "مشاركة بياناتك للسباق")}</h2>
-        {d?.plate && <div className="sg-plate"><img src={d.plate.src} alt={d.plate.alt} width={d.plate.width} height={d.plate.height} decoding="async" /></div>}
         <div className="wg-sess">
           <p className="wg-ev"><bdi>{w.name}</bdi></p>
           <p className="wg-ln"><Ic d={CAL} /><span>{w.when}</span></p>
           {w.time && <p className="wg-ln"><Ic d={CLOCK} /><bdi>{w.time}</bdi></p>}
-          <p className="wg-ln"><Ic d={PIN} /><span>{w.venue}</span></p>
+          {!d && <p className="wg-ln"><Ic d={PIN} /><span>{w.venue}</span></p>}
         </div>
         <p id={`${id}-sub`} className="wg-sub">{d ? d.sub : ah
           ? tx("To take part in the Arena Heros Hybrid Race, we will share these details about you with its organisers, WeSportify, Mile and Gymnation:", "للمشاركة في سباق أرينا هيروز الهجين، سنشارك بياناتك التالية مع منظميه، WeSportify وMile وGymnation:")

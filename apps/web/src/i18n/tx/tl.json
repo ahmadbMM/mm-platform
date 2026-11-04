@@ -1497,7 +1497,7 @@
   "You do not have a title yet.": "Wala ka pang titulo.",
   "Open Community": "Buksan ang Community",
   "Choose your title": "Piliin ang titulo mo",
-  "Blood Donation": "Pagbibigay ng dugo",
+  "Micromobility Blood Donation": "Micromobility Pagbibigay ng Dugo",
   "Give blood. Ride free.": "Magbigay ng dugo. Sumakay nang libre.",
   "MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport": "MicroMobility, Health Services ng Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport",
   "Age 18 or over": "Edad 18 pataas",
@@ -1516,11 +1516,12 @@
   "You’re registered for this event. Read this agreement and agree to it to continue.": "Nakarehistro ka sa event na ito. Basahin ang kasunduang ito at sumang-ayon para magpatuloy.",
   "Before you register": "Bago magparehistro",
   "Sharing your details": "Pagbabahagi ng iyong mga detalye",
-  "To register, agree that we share these details with our event partners and with Jeddah Corniche Circuit (JCC):": "Para magparehistro, sumang-ayon na ibahagi namin ang mga detalyeng ito sa aming mga partner sa event at sa Jeddah Corniche Circuit (JCC):",
-  "Our partners on this event: King Fahd Armed Forces Hospital in Jeddah, Health Services at the Ministry of Defense, the Ministry of Sport and Saudi Motorsport Company (SMC).": "Ang aming mga partner sa event na ito: King Fahd Armed Forces Hospital sa Jeddah, Health Services ng Ministry of Defense, Ministry of Sport at Saudi Motorsport Company (SMC).",
-  "I agree that MicroMobility shares my details with these partners and with Jeddah Corniche Circuit (JCC).": "Sumasang-ayon ako na ibahagi ng MicroMobility ang aking mga detalye sa mga partner na ito at sa Jeddah Corniche Circuit (JCC).",
+  "To register, agree that we share these details with our event partners and third parties:": "Para magparehistro, sumang-ayon na ibahagi namin ang mga detalyeng ito sa aming mga partner sa event at sa mga third party:",
+  "We share them only with our partners and third parties for this event, and nothing else about you.": "Ibinabahagi lang namin ang mga ito sa aming mga partner at mga third party para sa event na ito, at wala nang iba tungkol sa iyo.",
+  "I agree that MicroMobility shares my details with its partners and third parties for this event.": "Sumasang-ayon ako na ibahagi ng MicroMobility ang aking mga detalye sa mga partner nito at mga third party para sa event na ito.",
   "Donor agreement": "Kasunduan ng donor",
   "You cannot register for this event until you have read and agreed to this. Giving blood is voluntary, and I can withdraw at any time without giving a reason. The donation is a medical procedure carried out by the event’s medical team, not by MicroMobility. Only the medical team decides whether I can donate, so registering does not guarantee that I will. I will answer their health questions truthfully and follow their instructions and the venue’s, including resting after I donate and avoiding hard exercise for 5 hours. MicroMobility’s part is only to register me and to give confirmed donors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for the medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "Hindi ka makakapagparehistro sa event na ito hangga’t hindi mo nababasa at sinasang-ayunan ito. Kusang-loob ang pagbibigay ng dugo, at maaari akong umatras anumang oras nang hindi nagbibigay ng dahilan. Ang donasyon ay isang medikal na proseso na ginagawa ng medical team ng event, hindi ng MicroMobility. Ang medical team lang ang magpapasya kung maaari akong mag-donate, kaya hindi garantiya ang pagpaparehistro na makakapag-donate ako. Sasagutin ko nang totoo ang kanilang mga tanong tungkol sa kalusugan at susundin ang mga tagubilin nila at ng pasilidad, kasama ang pagpapahinga pagkatapos mag-donate at pag-iwas sa mabigat na ehersisyo sa loob ng 5 oras. Ang tanging bahagi ng MicroMobility ay iparehistro ako at ibigay sa mga kumpirmadong donor ang kanilang libreng sakay. Ako ang responsable sa aking mga personal na gamit. Hanggang sa pinakamalawak na pinapayagan ng batas, ang MicroMobility at ang mga staff nito ay hindi mananagot sa medikal na proseso o sa mga epekto nito, o sa anumang pinsala sa katawan, sakit, pagkawala, pagnanakaw o sira sa event.",
   "I have read this and I agree": "Nabasa ko ito at sumasang-ayon ako",
-  "Blood type": "Uri ng dugo"
+  "Blood type": "Uri ng dugo",
+  "Different types. One purpose.": "Iba-ibang uri. Iisang layunin."
 }
