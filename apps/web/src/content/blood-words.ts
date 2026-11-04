@@ -12,7 +12,7 @@ import type { L } from "@/i18n/tx";
 /** The kind's name in English: a session staff titled just this reads in the page's language (lib/rides.ts sessionName). */
 export const BLOOD_NAME = "Micromobility Blood Donation";
 /** The kind's name in the page's language (evBloodName), for lib/rides.ts kindNames' readers. */
-export const bloodName = (tx: L): string => tx("Micromobility Blood Donation", "مايكروموبيليتي للتبرع بالدم");
+export const bloodName = (tx: L): string => tx("Micromobility Blood Donation", "مايكروموبيليتي التبرع بالدم");
 
 /** All five marks on their white plate, one image: MicroMobility above a hairline, the four partners in one row (the booking app's _bldLogosImg). */
 export const bloodPlate = (locale: string): string => (isRtl(locale) ? "/site/blood-partners-rtl.webp?v=3" : "/site/blood-partners.webp?v=3");

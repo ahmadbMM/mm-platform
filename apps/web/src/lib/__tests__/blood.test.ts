@@ -208,8 +208,8 @@ describe("the kind (lib/rides.ts)", () => {
     expect(kindNames({ bldName: "x" }).blood).toBe(""); // no field of the Website editor
     expect(BLOOD_NAME).toBe("Micromobility Blood Donation");
     expect(sessionName({ kind: "blood", title: null }, en, en, false)).toBe("Micromobility Blood Donation");
-    expect(sessionName({ kind: "blood", title: null }, ar, en, true)).toBe("مايكروموبيليتي للتبرع بالدم");
-    expect(sessionName({ kind: "blood", title: "Micromobility Blood Donation" }, ar, en, true)).toBe("مايكروموبيليتي للتبرع بالدم");
+    expect(sessionName({ kind: "blood", title: null }, ar, en, true)).toBe("مايكروموبيليتي التبرع بالدم");
+    expect(sessionName({ kind: "blood", title: "Micromobility Blood Donation" }, ar, en, true)).toBe("مايكروموبيليتي التبرع بالدم");
     expect(sessionName({ kind: "blood", title: "Our own title" }, ar, en, true)).toBe("Our own title");
   });
   it("knows a session by its id", () => {
@@ -303,7 +303,7 @@ describe("on Experiences, once a session exists", () => {
   });
   it("reads from the right: its plate and its words in Arabic and Urdu", async () => {
     const ar = (await experiences([BD], "ar")).html;
-    for (const w of ["/site/blood-partners-rtl.webp", "مايكروموبيليتي للتبرع بالدم", "تبرّع بدمك واركب مجانًا.", "العمر 18 سنة فأكثر", "حلبة كورنيش جدة"]) expect(ar, w).toContain(w);
+    for (const w of ["/site/blood-partners-rtl.webp", "مايكروموبيليتي التبرع بالدم", "تبرّع بدمك واركب مجانًا.", "العمر 18 سنة فأكثر", "حلبة كورنيش جدة"]) expect(ar, w).toContain(w);
     expect(ar).not.toContain("/site/blood-partners.webp");
     resetRides();
     expect((await experiences([BD], "ur")).html).toContain("/site/blood-partners-rtl.webp");
@@ -530,7 +530,7 @@ describe("its agreement, never the activity waiver", () => {
       ridersLabel: "Donor", riders: [{ name: "Test Donor", num: 7 }],
       kicker: "Agreement needed", sub: "You’re registered for this event. Read this agreement and agree to it to continue.",
     } });
-    expect((await (await get("locale=ar")).json()).pending).toMatchObject({ kind: "blood", name: "مايكروموبيليتي للتبرع بالدم", kicker: "إقرار مطلوب", sub: "أنت مسجّل في هذه الفعالية. اقرأ هذا الإقرار ووافق عليه للمتابعة.", ridersLabel: "المتبرع" });
+    expect((await (await get("locale=ar")).json()).pending).toMatchObject({ kind: "blood", name: "مايكروموبيليتي التبرع بالدم", kicker: "إقرار مطلوب", sub: "أنت مسجّل في هذه الفعالية. اقرأ هذا الإقرار ووافق عليه للمتابعة.", ridersLabel: "المتبرع" });
   });
   it("records that version, and refuses any other", async () => {
     const f = db2([]);
@@ -627,7 +627,7 @@ describe("its words in every language", () => {
   });
   it("are the booking app's own where it speaks the language", () => {
     const es = serverL("es"), ur = serverL("ur"), tl = serverL("tl");
-    expect(es("Micromobility Blood Donation")).toBe("Donación de sangre Micromobility");
+    expect(es("Micromobility Blood Donation")).toBe("Micromobility Donación de sangre");
     expect(es("Give blood. Ride free.")).toBe("Dona sangre. Monta gratis.");
     expect(ur("Donor agreement")).toBe("عطیہ دہندہ کا معاہدہ");
     expect(tl("Blood type")).toBe("Uri ng dugo");
