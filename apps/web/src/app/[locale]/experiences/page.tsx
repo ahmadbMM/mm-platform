@@ -5,7 +5,7 @@ import PageShell from "@/components/site/PageShell";
 import "@/components/experiences/experiences.css";
 import "@/components/booking/booking.css";
 import bloodPoster from "@/content/blood-info.json";
-import { BLOOD_NAME, BLOOD_PLATE_SIZE, bloodName, bloodPlate, bloodWords } from "@/content/blood-words";
+import { BLOOD_CARD, BLOOD_NAME, BLOOD_PLATE_SIZE, bloodName, bloodPlate, bloodWords } from "@/content/blood-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
@@ -296,7 +296,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       title: b.name,
       line: s ? [day, s.times ? (oneTime(s.times) ? clock(s.times[0]) : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "", infoPlace(s, venueWords, directions).name].filter(Boolean) : [],
       blood: {
-        plate: { src: bloodPlate(locale), alt: b.plateAlt, ...BLOOD_PLATE_SIZE }, cause: b.cause, rules: b.rules,
+        plate: { src: bloodPlate(locale), alt: b.plateAlt, ...BLOOD_PLATE_SIZE }, picture: BLOOD_CARD, cause: b.cause, rules: b.rules,
         info: { title: b.infoTitle, language: b.language, pdf: { label: b.infoPdf, url: `${new URL(BOOKING_URL).origin}/assets/blood-donation-poster.pdf` }, poster: bloodPoster },
       },
     };

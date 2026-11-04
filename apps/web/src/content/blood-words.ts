@@ -18,6 +18,8 @@ export const bloodName = (tx: L): string => tx("Blood Donation", "التبرع �
 export const bloodPlate = (locale: string): string => (isRtl(locale) ? "/site/blood-partners-rtl.webp" : "/site/blood-partners.webp");
 /** The plate's own size, so a page keeps its room before it loads. */
 export const BLOOD_PLATE_SIZE = { width: 1503, height: 272 };
+/** The owner's picture of a donor's arm that fills the card (2026-11-04; the booking app's .bld-card-img). */
+export const BLOOD_CARD = { src: "/site/blood-card.webp", width: 1200, height: 862 };
 
 export function bloodWords(tx: L) {
   return {

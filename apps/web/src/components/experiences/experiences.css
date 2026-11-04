@@ -199,7 +199,12 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 /* The donation event's card (2026-11-03; the booking app's .bld-card): the hosts' plate, its name in crimson, when and
    where, its tagline and the short rules on white, a crimson edge across the top. An ordinary card's padding, so its
    height and its About link line up with its neighbours (.xs-events' equal rows, .xs-about). */
-.xs-event.ev-blood { gap: 12px; background: #fff; color: #1c1718; border: 1px solid rgba(179, 18, 42, .4); border-top: 4px solid #b3122a; }
+.xs-event.ev-blood { position: relative; overflow: hidden; gap: 12px; padding-bottom: 47%; background: #fff; color: #1c1718; border: 1px solid rgba(179, 18, 42, .4); border-top: 4px solid #b3122a; }
+/* the owner's picture of a donor's arm is the card (2026-11-04): white as the card is, it runs off the bottom and the far side, the words in its empty part, mirrored where the page reads from the right */
+.xs-bld-pic { position: absolute; inset-inline: 0; bottom: 0; z-index: 0; width: 100%; height: auto; pointer-events: none; }
+[dir="rtl"] .xs-bld-pic { transform: scaleX(-1); }
+.xs-event.ev-blood > :not(.xs-bld-pic) { position: relative; z-index: 1; }
+.xs-about.ab-blood { background: #fff; padding-inline: 4px; margin-inline-start: -4px; } /* a long translation reaches the picture */
 .xs-event.ev-blood:hover { border-color: #b3122a; }
 .xs-event.ev-blood:focus-visible { outline-color: rgba(179, 18, 42, .45); }
 .xs-event.ev-blood .bld-plate, .xs-summary > .bld-plate, .xs-info .bld-plate { width: 100%; border: 1px solid rgba(28, 23, 24, .1); border-radius: 3px; }

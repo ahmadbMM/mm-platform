@@ -113,7 +113,7 @@ const named = (l: string) => {
   const tx = serverL(l), b = bloodWords(tx), w = waiverCopy("blood", tx);
   return [b.name, b.cause, b.plateAlt, ...b.rules, b.infoTitle, b.infoPdf, b.numLabel, b.rewardNote, b.rewardTitle, b.rewardUsed, b.gate.kicker, b.gate.sub, b.share.kicker, b.share.title, b.share.sub, b.share.note, b.share.agree, w.title, w.body, w.agree];
 };
-const MARKS = ["blood-partners", "ev-blood", "ab-blood", "xs-bld", "bld-plate", "bld-sum", "blood-info", "blood-donation-poster", "ev=blood", "AABB"];
+const MARKS = ["blood-partners", "blood-card", "ev-blood", "ab-blood", "xs-bld", "bld-plate", "bld-sum", "blood-info", "blood-donation-poster", "ev=blood", "AABB"];
 
 describe("with no session of the kind, nothing names the event", () => {
   for (const l of ["en", "ar", "de", "ur"]) {
@@ -274,6 +274,8 @@ describe("on Experiences, once a session exists", () => {
     expect(html).toMatch(/Thu,? 5 Nov/); // as this machine's Intl writes the short day
     for (const w of ["xs-event ev-blood", "/site/blood-partners.webp", 'width="1503"', "Blood Donation", "5 PM – 11 PM", "Jeddah Corniche Circuit", "Give blood. Ride free.", "Age 18 or over", "Weight 50 kg or more", "Bring your national ID or Iqama", "Sleep well and eat a healthy meal two hours before", "xs-about ab-blood"]) expect(html, w).toContain(w);
     expect(html).toContain('alt="Health Services at the Ministry of Defense, Ministry of Sport, Jeddah Corniche Circuit"');
+    // the owner's picture is the card, before anything on it
+    expect(html).toMatch(/xs-event ev-blood"[^>]*><img class="xs-bld-pic" src="\/site\/blood-card\.webp" alt=""/);
     const card = html.slice(html.indexOf("xs-event ev-blood"), html.indexOf("xs-about ab-blood"));
     for (const no of ["SAR", "Complimentary", "Free", "﷼", "⃁"]) expect(card, no).not.toContain(no);
     // a button holds phrasing content alone
@@ -312,7 +314,8 @@ describe("on Experiences, once a session exists", () => {
     const css = readFileSync(join(SRC, "components/experiences/experiences.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
     const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter((m) => /\.(xs-event\.ev-blood|xs-about\.ab-blood)/.test(m[1])).map((m) => m[2]);
     expect(rules.length).toBeGreaterThan(0);
-    for (const r of rules) expect(r).not.toMatch(/padding|inset|(^|[\s;])bottom:|min-height|(^|[\s;])height:/);
+    // the picture's room at the bottom, and the link's white backing, which its margin cancels, move nothing that lines up
+    for (const r of rules) expect(r.replace(/padding-bottom: 47%;|padding-inline: 4px; margin-inline-start: -4px;/g, "")).not.toMatch(/padding|inset|(^|[\s;])bottom:|min-height|(^|[\s;])height:/);
     expect(css).toMatch(/\.xs-events\s*\{[^}]*grid-auto-rows:\s*1fr/); // equal rows
   });
   it("its facts come from the plain rules", () => {

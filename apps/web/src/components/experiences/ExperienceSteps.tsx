@@ -113,6 +113,7 @@ export type StepEvent = {
  *  hosts' plate, the tagline, the four short rules, and the poster retyped from the hospital's PDF (blood-info.json). */
 export type StepBlood = {
   plate: { src: string; alt: string; width: number; height: number };
+  picture: { src: string; width: number; height: number };
   cause: string; rules: string[];
   info: {
     title: string; language: string; pdf: { label: string; url: string };
@@ -346,6 +347,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                     // The Blood Donation event (2026-11-03, the booking app's _bldCardWrap): an ordinary card's padding, so its
                     // height and About link line up with its neighbours; a button holds phrasing content alone, hence the spans
                     <button type="button" className="xs-event ev-blood" onClick={() => pickEvent(e)}>
+                      <img className="xs-bld-pic" src={e.blood.picture.src} alt="" width={e.blood.picture.width} height={e.blood.picture.height} loading="lazy" decoding="async" />
                       <Plate b={e.blood} />
                       <span className="xs-copy">
                         <span className="xs-ev-title">{e.title}</span>
