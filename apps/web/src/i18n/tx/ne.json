@@ -1523,5 +1523,11 @@
   "You cannot register for this event until you have read and agreed to this. Giving blood is voluntary, and I can withdraw at any time without giving a reason. The donation is a medical procedure carried out by the event’s medical team, not by MicroMobility. Only the medical team decides whether I can donate, so registering does not guarantee that I will. I will answer their health questions truthfully and follow their instructions and the venue’s, including resting after I donate and avoiding hard exercise for 5 hours. MicroMobility’s part is only to register me and to give confirmed donors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for the medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "यो पढेर सहमत नभएसम्म तपाईं यो कार्यक्रममा दर्ता गर्न सक्नुहुन्न। रक्तदान स्वैच्छिक हो, र कुनै कारण नदिई जुनसुकै बेला यसबाट हट्न सकिन्छ। रक्तदान कार्यक्रमको चिकित्सा टोलीले गर्ने चिकित्सा प्रक्रिया हो, MicroMobility ले होइन। रक्तदान गर्न पाउने वा नपाउने निर्णय चिकित्सा टोलीले मात्र गर्छ, त्यसैले दर्ताले रक्तदानको ग्यारेन्टी गर्दैन। उनीहरूका स्वास्थ्य प्रश्नहरूको सत्य उत्तर दिने र उनीहरू तथा स्थलका निर्देशनहरू पालना गर्ने मेरो जिम्मेवारी हो, जसमा रक्तदानपछि आराम गर्ने र 5 घण्टासम्म कडा व्यायाम नगर्ने कुरा पर्छ। MicroMobility को काम मेरो दर्ता गर्ने र पुष्टि भएका दाताहरूलाई निःशुल्क सवारी दिने मात्र हो। मेरा व्यक्तिगत सामानको जिम्मेवारी मेरो हो। कानूनले अनुमति दिएको अधिकतम हदसम्म, MicroMobility र यसका कर्मचारीहरू चिकित्सा प्रक्रिया वा त्यसका प्रभावहरू, वा कार्यक्रममा हुने कुनै पनि चोट, बिरामी, हानि, चोरी वा क्षतिका लागि जिम्मेवार छैनन्।",
   "I have read this and I agree": "मैले यो पढेँ र म सहमत छु",
   "Blood type": "रक्त समूह",
-  "Different types. One purpose.": "फरक प्रकार। एउटै उद्देश्य।"
+  "Different types. One purpose.": "फरक प्रकार। एउटै उद्देश्य।",
+  "Blood Donor": "रक्तदाता",
+  "Donate blood at one of our events.": "हाम्रो कुनै कार्यक्रममा रक्तदान गर्नुहोस्।",
+  "For giving blood at a MicroMobility event. Our team confirms it on the night.": "MicroMobility को कार्यक्रममा रक्तदान गरेकोमा। हाम्रो टोलीले त्यही रात यसको पुष्टि गर्छ।",
+  "Volunteer": "स्वयंसेवक",
+  "Volunteer at one of our events.": "हाम्रो कुनै कार्यक्रममा स्वयंसेवा गर्नुहोस्।",
+  "For giving your time to help run a MicroMobility event. Given by our team.": "MicroMobility को कार्यक्रम सञ्चालन गर्न मद्दत गर्न समय दिएकोमा। यो हाम्रो टोलीले दिन्छ।"
 }
