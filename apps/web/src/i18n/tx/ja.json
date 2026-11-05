@@ -1542,5 +1542,7 @@
   "Club or community name": "クラブまたはコミュニティの名前",
   "Enter your club or community, or tap I don’t have one.": "クラブまたはコミュニティを入力するか、「所属していません」をタップしてください。",
   "You’re registered for this event. We just need to know this.": "このイベントに登録されています。これだけお聞かせください。",
-  "Continue": "続ける"
+  "Continue": "続ける",
+  "Visitor agreement": "来場者同意書",
+  "You cannot register for this event until you have read and agreed to this. I am coming to this event as a visitor and will not give blood. I will follow the instructions of the event’s team and the venue’s. If I decide to donate at the event, I will tell the team first: the donation is then a medical procedure carried out by the event’s medical team, not by MicroMobility, and only that team decides whether I can donate. MicroMobility’s part is only to register me and to give checked-in visitors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for any medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "この同意書を読んで同意するまで、このイベントには登録できません。私は来場者としてこのイベントに参加し、献血は行いません。イベントチームおよび会場の指示に従います。イベントで献血を決めた場合は、先にチームに伝えます。その場合の献血はイベントの医療チームが行う医療行為であり、MicroMobilityが行うものではなく、私が献血できるかどうかはそのチームのみが判断します。MicroMobilityの役割は、私を登録し、チェックイン済みの来場者に無料ライドを提供することのみです。私物については私が責任を負います。法律で認められる最大限の範囲において、MicroMobilityおよびそのスタッフは、いかなる医療行為またはその影響、ならびにイベントでのいかなるけが、病気、紛失、盗難または損傷についても責任を負いません。"
 }

@@ -8,7 +8,7 @@ import { createElement, isValidElement, type FC, type ReactElement, type ReactNo
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { PAGES } from "@/content";
 import { BLOOD_NAME, bloodName, bloodPlate, bloodWords } from "@/content/blood-words";
-import { WAIVER_VERSIONS, waiverCopy } from "@/content/waivers";
+import { BLOOD_VISITOR_VERSION, WAIVER_VERSIONS, bloodVisitorCopy, waiverCopy } from "@/content/waivers";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import TicketCard from "@/components/booking/TicketCard";
 import ExperienceSteps from "@/components/experiences/ExperienceSteps";
@@ -670,6 +670,12 @@ describe("donors, visitors and their club", () => {
     const w = bloodWords((en: string) => en);
     expect(w.share.itemsVisitor).toEqual(["Full name", "Mobile number", "Gender", "Birth date", "Nationality"]);
     expect(w.club.none).toBe("I don’t have one");
+    // a visitor's own agreement, in the booking app's version; no ID or Iqama in it, and only MicroMobility and its staff released
+    const c = bloodVisitorCopy(makeL("en", null));
+    expect(BLOOD_VISITOR_VERSION).toBe("blood-2026-11-v2");
+    expect(c.title).toBe("Visitor agreement");
+    expect(c.body).toContain("as a visitor and will not give blood");
+    expect(c.body).not.toMatch(/Iqama|partners|resting after/);
     expect(readFileSync("src/components/account/ClubGate.tsx", "utf8")).not.toMatch(/Give blood|Blood Donation"|I don’t have one/);
   });
 });

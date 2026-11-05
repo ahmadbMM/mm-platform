@@ -15,6 +15,20 @@ export const WAIVER_VERSIONS: Readonly<Record<WaiverKind, string>> = { ride: "20
 
 export type WaiverCopy = { title: string; body: string; agree: string };
 
+/** A visitor's own agreement on the Blood Donation event, and the version a row agreed under it carries (the booking app's
+ *  bldVisWaiver*, BLD_VIS_WAIVER_VERSION; the owner, 2026-11-05: "make them their own wording"). */
+export const BLOOD_VISITOR_VERSION = "blood-2026-11-v2";
+export function bloodVisitorCopy(tx: L): WaiverCopy {
+  return {
+    title: tx("Visitor agreement", "إقرار الزائر"),
+    body: tx(
+      "You cannot register for this event until you have read and agreed to this. I am coming to this event as a visitor and will not give blood. I will follow the instructions of the event’s team and the venue’s. If I decide to donate at the event, I will tell the team first: the donation is then a medical procedure carried out by the event’s medical team, not by MicroMobility, and only that team decides whether I can donate. MicroMobility’s part is only to register me and to give checked-in visitors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for any medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.",
+      "لا يمكنك التسجيل في هذه الفعالية إلا بعد قراءة هذا الإقرار والموافقة عليه. سأحضر هذه الفعالية كزائر ولن أتبرع بالدم. وأتعهد باتباع تعليمات فريق الفعالية وتعليمات إدارة الموقع. وإذا قررت التبرع في الفعالية فسأُبلغ الفريق أولًا، ويكون التبرع عندئذٍ إجراءً طبيًا يقوم به الفريق الطبي للفعالية، وليس مايكروموبيليتي، والفريق الطبي وحده هو من يقرر ما إذا كان بإمكاني التبرع. ويقتصر دور مايكروموبيليتي على تسجيلي ومنح الزوار الذين سجّلوا حضورهم ركوبتهم المجانية. وأنا مسؤول عن ممتلكاتي الشخصية. وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها أي مسؤولية عن أي إجراء طبي أو آثاره، أو عن أي إصابة أو مرض أو فقدان أو سرقة أو تلف في الفعالية.",
+    ),
+    agree: tx("I have read this and I agree", "قرأت هذا الإقرار وأوافق عليه"),
+  };
+}
+
 /** A waiver's words in the page's language (the booking app's _waiverCopy): it names its own
  *  activity, so a swimmer never agrees to a "Ride waiver" on behalf of every "rider". */
 export function waiverCopy(kind: WaiverKind, tx: L): WaiverCopy {

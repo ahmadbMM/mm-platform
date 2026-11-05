@@ -1,7 +1,7 @@
 import { T as TICKET } from "@/components/booking/tickets.text";
 import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
 import { experiencesSchema } from "@/content/pages/experiences";
-import { WAIVER_VERSIONS, waiverCopy } from "@/content/waivers";
+import { BLOOD_VISITOR_VERSION, WAIVER_VERSIONS, bloodVisitorCopy, waiverCopy } from "@/content/waivers";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
 import { accountBookings, rpcServer } from "@/lib/account";
@@ -66,18 +66,20 @@ export async function GET(req: Request) {
   const time = timesText(s.times, s.gathers, clock, { gather: S(d.gather), start: S(d.start) });
   const kind = waiverKind(s); // Run for Her, with no bike, is agreed under the activity waiver (_waiverKind)
   const bw = kind === "blood" ? bloodWords(tx) : null;
+  // a visitor has an agreement of their own (blood_role, rentals 20261105140000)
+  const vis = !!bw && rows.some((r) => r.session_id === first.sessionId && r.blood_role === "visitor");
   return json({
     signedIn: true,
     pending: {
       sessionId: first.sessionId,
-      version: WAIVER_VERSIONS[kind],
+      version: vis ? BLOOD_VISITOR_VERSION : WAIVER_VERSIONS[kind],
       kind,
-      copy: waiverCopy(kind, tx),
+      copy: vis ? bloodVisitorCopy(tx) : waiverCopy(kind, tx),
       name: sessionName(s, names, enNames, L !== "en"),
       when: fmtDayDate(first.date, locale),
       time,
       venue: venueText(venueOf(s), t),
-      ridersLabel: bw ? bw.donor : s.bikes ? t.riders : t.participants,
+      ridersLabel: bw ? (vis ? bw.visitor : bw.donor) : s.bikes ? t.riders : t.participants,
       riders: waiverRiders(rows, first.sessionId, acct.id, s.approval),
       ...(bw ? { kicker: bw.gate.kicker, sub: bw.gate.sub } : {}),
     },
@@ -96,7 +98,7 @@ export async function POST(req: Request) {
   if (!sessionId || !WAIVER_VERSION_SHAPE.test(version)) return json({ ok: false, error: "invalid" }, 400);
   const s = (await loadTicketSessions([sessionId], acct)).get(sessionId);
   if (!s) return json({ ok: false, error: "generic" }, 502);
-  if (waiverVersion(s) !== version) return json({ ok: false, error: "changed" }, 409);
+  if (waiverVersion(s) !== version && !(s.kind === "blood" && version === BLOOD_VISITOR_VERSION)) return json({ ok: false, error: "changed" }, 409);
   const r = await rpcServer<unknown>("customer_accept_waiver", { p_id: acct.id, p_token: acct.token, p_session_id: sessionId, p_version: version });
   const a = acceptAnswer(r);
   if (a === "ok") return json({ ok: true });
