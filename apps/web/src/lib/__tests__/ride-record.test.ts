@@ -58,7 +58,7 @@ describe("the badges", () => {
     expect(slugs).not.toContain("back_on_track");
     // the T100 races are one ladder, where its first level stood (T100, the list's order), shown as T25 until one is given
     // and so is each badge staff give with its levels (2026-10-12), shown as its first level until one is given
-    expect(slugs.slice(-9)).toEqual(["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t25", "bike_owner"]);
+    expect(slugs.slice(-10)).toEqual(["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t25", "bike_owner", "volunteer"]);
   });
   it("put a badge staff gave first, with their note and the day", () => {
     const L = list({ ...empty, mine: [{ slug: "champion", note: "Won the hill climb", at: "2026-09-30T18:00:00Z" }] });
@@ -377,6 +377,29 @@ describe("Rode with Defe (defe_ride, 2026-10-18)", () => {
     const html = renderToStaticMarkup(createElement(Medal, { icon: "defewheel", color: "defe" }));
     expect(html).toContain("#f6c3d6");
     expect(html).toContain("#a22b63");
+  });
+});
+
+describe("the Blood Donor and Volunteer badges (2026-11-05)", () => {
+  const BD = "2026-11-05-bd";
+  const bdRows = (donated: string | null) => recordRows([row({ id: "q1", session_id: BD, session_date: "2026-11-05", status: "done", donated_at: donated })]);
+  const bdSes = new Map([[BD, { kind: "blood" as const, freeRide: true }]]);
+
+  it("Blood Donor follows staff's Donated mark, and stays out of sight without it", () => {
+    expect(badgeList(bdRows("2026-11-05T16:00:00Z"), bdSes, empty, today, null).find((x) => x.slug === "blood_donor")).toMatchObject({ on: true, icon: "drop", color: "red" });
+    expect(badgeList(bdRows(null), bdSes, empty, today, null).map((x) => x.slug)).not.toContain("blood_donor");
+  });
+
+  it("a donation is not a ride", () => {
+    expect(badgeList(bdRows("2026-11-05T16:00:00Z"), bdSes, empty, today, null).find((x) => x.slug === "first_lap")?.on).toBe(false);
+  });
+
+  it("Volunteer is given by staff, on its own special medal, and worded in English and Arabic", () => {
+    const L = badgeList([], new Map(), { ...empty, mine: [{ slug: "volunteer", note: "Blood Donation night", at: "2026-11-05T18:00:00Z" }] }, today, null);
+    expect(L.find((x) => x.slug === "volunteer")).toMatchObject({ on: true, icon: "hand", color: "volunteer", given: { note: "Blood Donation night" } });
+    expect(badgeList([], new Map(), empty, today, null).find((x) => x.slug === "volunteer")).toMatchObject({ on: false });
+    expect(RECORD.en.names.blood_donor[0]).toBe("Blood Donor");
+    expect(RECORD.ar.names.volunteer[0]).toBe("متطوع");
   });
 });
 

@@ -6,11 +6,12 @@ import { BOOKING_URL } from "./links";
 //
 // The rating is the booking app's own (app.src.html, "Post-ride rating: an unskippable page",
 // 2026-10-03). What it asks depends on the ride: a circuit or Petromin ride (and any other kind)
-// scores service, the bike and the experience; a Saturday social ride scores the ride (check-in
-// and collection, staff, bike, route), the breakfast (restaurant, atmosphere, food, service) and
-// the whole experience. Every score is 1-10, and one of 8 or under carries the rider's reason. It
-// goes to customer_booking_update as the booking app sends it: rating_bike and rating_exp (the
-// bike, and the experience or overall score), feedback, and rating_detail
+// scores service and the bike (the owner, 2026-11-03: the experience question went); a Saturday
+// social ride scores the ride (check-in and collection, staff, bike, route), the breakfast
+// (restaurant, atmosphere, food, service) and the whole experience. Every score is 1-10, and one of
+// 8 or under carries the rider's reason. It goes to customer_booking_update as the booking app
+// sends it: rating_bike and rating_exp (the bike, and the ride's headline score: a Saturday's
+// overall, any other ride's service), feedback, and rating_detail
 // {form, s: {question: score}, why: {question: reason}, skip_bf?}, which the database cleans the
 // same way (migration 20261003150000_rating_detail.sql in the rentals repo).
 
@@ -31,7 +32,7 @@ export const NOTE_MAX = 1000;
 export type RatingForm = "rental" | "social";
 /** [question, sub-questions], in the order the form asks them. */
 export const RG_FORMS: Record<RatingForm, ReadonlyArray<readonly [string, readonly string[]]>> = {
-  rental: [["service", []], ["bike", []], ["experience", []]],
+  rental: [["service", []], ["bike", []]],
   social: [["ride", ["ride_checkin", "ride_staff", "ride_bike", "ride_route"]], ["breakfast", ["bf_restaurant", "bf_atmosphere", "bf_food", "bf_service"]], ["overall", []]],
 };
 const BIKE_KEYS = new Set(["bike", "ride_bike"]);
@@ -95,7 +96,8 @@ const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 
  *  dropped, every question it asks must be scored (the bike may be left out: only the page knows
  *  the rider's own bike; the breakfast too, once skipped), and a score of 8 or under needs its
  *  reason. A body from before the detailed rating ({entryId, exp, bike?, note?}, a page open
- *  across a deploy) still lands its scores and note; its old quick tags are ignored. */
+ *  across a deploy) still lands its scores and note; its old quick tags are ignored. A page from
+ *  before 2026-11-03 still sends the experience it asked: not a question now, so it is dropped. */
 export function cleanRating(body: unknown, low: number = RG_LOW): { entryId: string; patch: RatingPatch } | null {
   const b = isObj(body) ? body : null;
   if (!b || typeof b.entryId !== "string" || !ENTRY_ID.test(b.entryId)) return null;
@@ -126,7 +128,7 @@ export function cleanRating(body: unknown, low: number = RG_LOW): { entryId: str
     if (s[k] === undefined && !BIKE_KEYS.has(k) && !(skipBf && BREAKFAST_KEYS.has(k))) return null;
     if (s[k] !== undefined && s[k] <= low && !why[k]) return null;
   }
-  const exp = s.experience ?? s.overall;
+  const exp = s.overall ?? s.service;
   if (exp === undefined) return null;
   const detail: RatingDetail = { form, s, why, ...(skipBf ? { skip_bf: true as const } : {}) };
   return { entryId: b.entryId, patch: { rating_bike: s.bike ?? s.ride_bike ?? null, rating_exp: exp, feedback: note, rating_detail: detail } };

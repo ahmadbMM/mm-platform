@@ -33,32 +33,32 @@ describe("the questions", () => {
   it("asks by the kind of ride, without the bike or the breakfast when they do not apply", () => {
     expect(formOf("saturday")).toBe("social");
     for (const k of ["jcc", "petromin", "swim", "workshop", "event", "snd96", "runher", null, undefined]) expect(formOf(k)).toBe("rental");
-    expect(questionKeys("rental")).toEqual(["service", "bike", "experience"]);
-    expect(questionKeys("rental", { noBike: true })).toEqual(["service", "experience"]);
+    expect(questionKeys("rental")).toEqual(["service", "bike"]);
+    expect(questionKeys("rental", { noBike: true })).toEqual(["service"]);
     // Run for Her has no bike (its ticket session's bikes is false), so its form never asks about one
-    expect(questionKeys(formOf("runher"), { noBike: !ticketSession({ id: "r", session_date: "2099-10-17", event_kind: "community", ride_kind: "runher", needs_approval: false })!.bikes })).toEqual(["service", "experience"]);
+    expect(questionKeys(formOf("runher"), { noBike: !ticketSession({ id: "r", session_date: "2099-10-17", event_kind: "community", ride_kind: "runher", needs_approval: false })!.bikes })).toEqual(["service"]);
     // Victory Lap (2026-10-17) has no bike either: the rental's form without the bike question, as the booking app asks it
     expect(formOf("vlap")).toBe("rental");
-    expect(questionKeys(formOf("vlap"), { noBike: !ticketSession({ id: "v", session_date: "2099-10-26", event_kind: "community", ride_kind: "vlap", needs_approval: false, paid_ride: true })!.bikes })).toEqual(["service", "experience"]);
+    expect(questionKeys(formOf("vlap"), { noBike: !ticketSession({ id: "v", session_date: "2099-10-26", event_kind: "community", ride_kind: "vlap", needs_approval: false, paid_ride: true })!.bikes })).toEqual(["service"]);
     expect(isRun("vlap", "2099-10-26-vl")).toBe(false); // a race, not Run for Her's run
     expect(questionKeys("social")).toEqual(Object.keys(SOCIAL));
     expect(questionKeys("social", { noBike: true, skipBf: true })).toEqual(["ride", "ride_checkin", "ride_staff", "ride_route", "overall"]);
   });
   it("wants every score, and a reason for 8 or under", () => {
-    expect(ratingErrors(["service", "experience"], { service: 9 }, {})).toEqual({ experience: "pick" });
-    expect(ratingErrors(["service", "experience"], { service: 8, experience: 10 }, { service: "  " })).toEqual({ service: "why" });
-    expect(ratingErrors(["service", "experience"], { service: 8, experience: 10 }, { service: "Slow desk" })).toEqual({});
+    expect(ratingErrors(["service", "bike"], { service: 9 }, {})).toEqual({ bike: "pick" });
+    expect(ratingErrors(["service", "bike"], { service: 8, bike: 10 }, { service: "  " })).toEqual({ service: "why" });
+    expect(ratingErrors(["service", "bike"], { service: 8, bike: 10 }, { service: "Slow desk" })).toEqual({});
   });
 });
 
 describe("cleanRating", () => {
-  it("keeps a rental rating as the booking app writes one", () => {
+  it("keeps a rental rating as the booking app writes one: service and bike, rating_exp its service; a stale page's experience drops", () => {
     expect(cleanRating({ entryId: "q1abcdef", form: "rental", s: { service: 9, bike: 5, experience: 10, extra: 3 }, why: { bike: " Brakes squeaked \u0007 ", service: "ignored: a 9 has no reason" }, note: " Great night " })).toEqual({
       entryId: "q1abcdef",
-      patch: { rating_bike: 5, rating_exp: 10, feedback: "Great night", rating_detail: { form: "rental", s: { service: 9, bike: 5, experience: 10 }, why: { bike: "Brakes squeaked" } } },
+      patch: { rating_bike: 5, rating_exp: 9, feedback: "Great night", rating_detail: { form: "rental", s: { service: 9, bike: 5 }, why: { bike: "Brakes squeaked" } } },
     });
     // on their own bike, or a pool session: no bike question
-    expect(cleanRating({ entryId: "q1", form: "rental", s: { service: 10, experience: 10 }, why: {} })!.patch).toEqual({ rating_bike: null, rating_exp: 10, feedback: null, rating_detail: { form: "rental", s: { service: 10, experience: 10 }, why: {} } });
+    expect(cleanRating({ entryId: "q1", form: "rental", s: { service: 10 }, why: {} })!.patch).toEqual({ rating_bike: null, rating_exp: 10, feedback: null, rating_detail: { form: "rental", s: { service: 10 }, why: {} } });
   });
   it("keeps a social ride's rating, the breakfast skipped or not", () => {
     const why = { ride_bike: "Seat too low", breakfast: "Crowded", bf_food: "Cold" };
@@ -68,17 +68,17 @@ describe("cleanRating", () => {
     expect(Object.keys(skipped.s)).toEqual(["ride", "ride_checkin", "ride_staff", "ride_bike", "ride_route", "overall"]);
   });
   it("refuses a rating that is not whole", () => {
-    const ok = { entryId: "q1", form: "rental", s: { service: 9, experience: 9 }, why: {} };
+    const ok = { entryId: "q1", form: "rental", s: { service: 9 }, why: {} };
     expect(cleanRating(ok)).not.toBeNull();
     for (const bad of [
       null, {}, { ...ok, entryId: "q;1" }, { ...ok, form: "party" },
-      { ...ok, s: { service: 9 } }, // no experience
-      { ...ok, s: { service: 11, experience: 9 } }, { ...ok, s: { service: 2.5, experience: 9 } }, { ...ok, s: { service: "9", experience: 9 } },
-      { ...ok, s: { service: 6, experience: 9 } }, // 6 or under with no reason (a rental)
-      { ...ok, s: { service: 6, experience: 9 }, why: { service: "   " } },
+      { ...ok, s: { bike: 9 } }, // no service
+      { ...ok, s: { service: 11 } }, { ...ok, s: { service: 2.5 } }, { ...ok, s: { service: "9" } },
+      { ...ok, s: { service: 6 } }, // 6 or under with no reason (a rental)
+      { ...ok, s: { service: 6 }, why: { service: "   " } },
       { entryId: "q2", form: "social", s: { ...SOCIAL, breakfast: undefined }, why: { ride_bike: "a", bf_food: "b" } }, // breakfast not skipped, not scored
     ]) expect(cleanRating(bad)).toBeNull();
-    const long = cleanRating({ ...ok, s: { service: 3, experience: 9 }, why: { service: "x".repeat(400) }, note: "y".repeat(1200) })!.patch;
+    const long = cleanRating({ ...ok, s: { service: 3 }, why: { service: "x".repeat(400) }, note: "y".repeat(1200) })!.patch;
     expect(long.rating_detail!.why.service).toHaveLength(300);
     expect(long.feedback).toHaveLength(1000);
   });
@@ -86,7 +86,7 @@ describe("cleanRating", () => {
     expect(rgLowFor("rental")).toBe(6);
     expect(rgLowFor("rental", 4)).toBe(4);
     expect(rgLowFor("social")).toBe(8);
-    expect(cleanRating({ entryId: "q1", form: "rental", s: { service: 7, bike: 8, experience: 8 }, why: { bike: "dropped: no box for an 8" } })!.patch.rating_detail!.why).toEqual({});
+    expect(cleanRating({ entryId: "q1", form: "rental", s: { service: 7, bike: 8 }, why: { bike: "dropped: no box for an 8" } })!.patch.rating_detail!.why).toEqual({});
     expect(cleanRating({ entryId: "q2", form: "social", s: { ...SOCIAL, ride_bike: 8 }, why: { breakfast: "Crowded", bf_food: "Cold" } })).toBeNull();
   });
   it("still takes a rating from a page drawn before the detailed one", () => {
@@ -128,23 +128,23 @@ describe("api/account/rate", () => {
   it("writes the rating through customer_booking_update with the cookie's id and token", async () => {
     const f = vi.fn(async () => json(true));
     vi.stubGlobal("fetch", f);
-    const res = await post(rate, "/api/account/rate", { entryId: "q1abcdef", form: "rental", s: { service: 9, bike: 6, experience: 9 }, why: { bike: "Gears slipped" }, note: "Thanks" });
+    const res = await post(rate, "/api/account/rate", { entryId: "q1abcdef", form: "rental", s: { service: 9, bike: 6 }, why: { bike: "Gears slipped" }, note: "Thanks" });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
     // the site's content is read first (the booking app's rg_low, lib/biz.ts), then the rating written
     const [url, init] = f.mock.calls.find((c) => String((c as unknown[])[0]).includes("/rpc/")) as unknown as [string, RequestInit];
     expect(url).toBe("https://example.supabase.co/rest/v1/rpc/customer_booking_update");
     expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: TOKEN, p_entry_id: "q1abcdef", p_patch: {
-      rating_bike: 6, rating_exp: 9, feedback: "Thanks", rating_detail: { form: "rental", s: { service: 9, bike: 6, experience: 9 }, why: { bike: "Gears slipped" } },
+      rating_bike: 6, rating_exp: 9, feedback: "Thanks", rating_detail: { form: "rental", s: { service: 9, bike: 6 }, why: { bike: "Gears slipped" } },
     } });
   });
   it("refuses another site, a missing cookie and a malformed rating without touching the database", async () => {
     const f = vi.fn(async () => json(true));
     vi.stubGlobal("fetch", f);
-    const ok = { entryId: "q1", form: "rental", s: { service: 9, experience: 9 } };
+    const ok = { entryId: "q1", form: "rental", s: { service: 9 } };
     expect((await post(rate, "/api/account/rate", ok, { ...HEADERS, origin: "https://evil.example" })).status).toBe(403);
     expect((await post(rate, "/api/account/rate", ok, { origin: HEADERS.origin })).status).toBe(401);
-    expect((await post(rate, "/api/account/rate", { ...ok, s: { service: 4, experience: 9 } })).status).toBe(400);
+    expect((await post(rate, "/api/account/rate", { ...ok, s: { service: 4 } })).status).toBe(400);
     expect(f).not.toHaveBeenCalled();
     vi.stubGlobal("fetch", vi.fn(async () => json(false)));
     expect((await post(rate, "/api/account/rate", ok)).status).toBe(409);
@@ -152,7 +152,7 @@ describe("api/account/rate", () => {
     expect(await (await post(rate, "/api/account/rate", ok)).json()).toEqual({ ok: false, error: "signin" });
   });
   it("names the database's refusals of a booking change, each with its own words", async () => {
-    const ok = { entryId: "q1", form: "rental", s: { service: 9, experience: 9 } };
+    const ok = { entryId: "q1", form: "rental", s: { service: 9 } };
     vi.stubGlobal("fetch", vi.fn(async () => json({ code: "P0001", message: "WAIVER_OUTDATED" }, 400)));
     const old = await post(rate, "/api/account/rate", ok);
     expect([old.status, await old.json()]).toEqual([409, { ok: false, error: "outdated" }]);
@@ -313,7 +313,7 @@ describe("Run for Her", () => {
     expect(isRun(undefined, "2026-10-17-rh-2")).toBe(true);
     expect(isRun("saturday", "2026-10-17")).toBe(false);
     expect(isRun(null, "2026-10-17-pw")).toBe(false);
-    expect(questionKeys(formOf("runher"), { noBike: isRun("runher") })).toEqual(["service", "experience"]);
+    expect(questionKeys(formOf("runher"), { noBike: isRun("runher") })).toEqual(["service"]);
     const { RATING_WORDS } = await import("../../components/account/RatingForm.words");
     for (const w of Object.values(RATING_WORDS)) expect(w.run.kicker && w.run.title && w.run.thanks).toBeTruthy();
     expect(RATING_WORDS.en.run.title).toBe("How was your run?");
@@ -327,6 +327,6 @@ describe("the DEFE 5KM Run (2026-10-18)", () => {
     expect(isRun(undefined, "2026-10-22-df-2")).toBe(true);
     expect(isRun(null, "2026-10-22-dfx")).toBe(false);
     expect(formOf("defe5k")).toBe("rental");
-    expect(questionKeys(formOf("defe5k"), { noBike: isRun("defe5k") })).toEqual(["service", "experience"]);
+    expect(questionKeys(formOf("defe5k"), { noBike: isRun("defe5k") })).toEqual(["service"]);
   });
 });

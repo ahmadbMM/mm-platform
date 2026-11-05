@@ -115,6 +115,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
       opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,
       description: s.kind === "event" ? s.description ?? null : null,
       gender: s.gender ?? null, // men only, women only or mixed (2026-10-27): its chip, and who may book it
+      closedTypes: s.closedTypes ?? [], // the bike types staff closed on it (2026-11-03): neither picked nor priced
     };
   };
   // The route on a booking's ticket (ticketRoute): the Routes page's, or the circuit drawn.
@@ -135,7 +136,9 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // here, so it is never read as a Saturday ride.
   // The DEFE 5KM Run (ride_kind 'defe5k') neither: no runner step or race question here; main's page hands it
   // to the booking app.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "", arena: "" };
+  // The Blood Donation event (ride_kind 'blood', 2026-11-03) neither: no donor step here; main's page hands it to the
+  // booking app (?ev=blood). Listed nowhere here, so its words and its poster never reach this page.
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "", arena: "", blood: "" };
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count)));
   const listed: RideSession[] = [];
   const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): FlowEvent | null => {

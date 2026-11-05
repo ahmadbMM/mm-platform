@@ -16,6 +16,7 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .ac-err { color: #b3261e; font-size: 13.5px; font-weight: 600; margin: 0; }
 .ac-go { border: 0; border-radius: 0; min-height: 52px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 4px; }
 .ac-go:disabled { opacity: .6; cursor: default; }
+.ac-vol-go { display: inline-flex; align-items: center; justify-content: center; padding: 0 18px; margin: 8px 0; text-decoration: none; }
 .ac-notes { list-style: none; margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid rgba(0, 0, 0, .08); display: flex; flex-direction: column; gap: 10px; color: #57605a; font-size: 13.5px; line-height: 1.5; }
 .ac .ac-notes a { color: #077a4b; font-weight: 600; }
 
@@ -111,6 +112,7 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .mr-badge.sp-pink { --sp1: #ffc9da; --sp2: #f2789f; --sp3: #c2416e; } /* Run for Her */
 .mr-badge.sp-vlap { --sp1: #bdbdbd; --sp2: #333333; --sp3: #000000; } /* Victory Lap: black and white (2026-10-27) */
 .mr-badge.sp-defe { --sp1: #f6c3d6; --sp2: #d782a0; --sp3: #a22b63; } /* Rode with Defe */
+.mr-badge.sp-volunteer { --sp1: #8fd0ff; --sp2: #1f7ae0; --sp3: #0b3b82; } /* the Volunteer badge */
 .mr-badge.special.locked { background: #fff; border: 1px solid rgba(26, 25, 25, .12); }
 .mr-badges-more { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; padding: 9px 12px; background: #fff; border: 1px dashed rgba(26, 25, 25, .24); border-radius: 0; font: inherit; font-size: 13px; font-weight: 700; color: #1a1919; text-align: start; cursor: pointer; }
 .mr-bm-peek { display: flex; flex: none; }
@@ -134,6 +136,7 @@ dialog.badge-pop-box.sp-national { border-top-color: #159a57; }
 dialog.badge-pop-box.sp-pink { border-top-color: #f2789f; }
 dialog.badge-pop-box.sp-vlap { border-top-color: #333333; }
 dialog.badge-pop-box.sp-defe { border-top-color: #d782a0; }
+dialog.badge-pop-box.sp-volunteer { border-top-color: #1f7ae0; }
 .badge-pop-in p { margin: 0; }
 .badge-pop-ic { width: 84px !important; height: 84px !important; display: block !important; margin: 0 auto 12px; }
 .badge-pop-nm { font-size: 20px; font-weight: 800; margin-bottom: 10px !important; }

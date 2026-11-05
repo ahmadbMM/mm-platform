@@ -6,7 +6,8 @@ import type { SessionGender } from "./session-gender";
 // The members' area on /club (components/club/MembersArea.tsx): what member_area hands a signed-in
 // community member - membership and since when, credits and tier, rides done and the last five,
 // the upcoming members' rides, their own birthday, the announcements. Members never see each
-// other here: nothing in the answer names another person. The plain logic, so it can be tested.
+// other here: nothing in the answer names another person. The Blood Donation event is no ride: member_area
+// gives it as it gives any community session, and neither list says it. The plain logic, so it can be tested.
 
 export type MemberRide = { date: string; title: string; kind: string | null; rated: boolean };
 export type MemberUpcoming = { id: string; date: string; title: string; kind: string | null; time: string | null; booked: boolean;
@@ -45,11 +46,11 @@ export function memberArea(r: { status: number; data: unknown; message: string }
   if (d.member !== true) return { ok: true, member: false, firstName };
   const tier = d.tier === 1 || d.tier === 2 ? d.tier : 0;
   const last: MemberRide[] = (Array.isArray(d.last) ? d.last : [])
-    .filter((x): x is Record<string, unknown> => !!x && typeof x === "object" && DATE.test(S(x.date)))
+    .filter((x): x is Record<string, unknown> => !!x && typeof x === "object" && DATE.test(S(x.date)) && x.kind !== "blood")
     .map((x) => ({ date: S(x.date).slice(0, 10), title: S(x.title).trim(), kind: S(x.kind) || null, rated: x.rated === true }))
     .slice(0, 5);
   const upcoming: MemberUpcoming[] = (Array.isArray(d.upcoming) ? d.upcoming : [])
-    .filter((x): x is Record<string, unknown> => !!x && typeof x === "object" && ID.test(S(x.id)) && DATE.test(S(x.date)))
+    .filter((x): x is Record<string, unknown> => !!x && typeof x === "object" && ID.test(S(x.id)) && DATE.test(S(x.date)) && x.kind !== "blood")
     .map((x) => ({ id: S(x.id), date: S(x.date).slice(0, 10), title: S(x.title).trim(), kind: S(x.kind) || null, time: S(x.time).trim() || null, booked: x.booked === true }))
     .slice(0, 8);
   return {

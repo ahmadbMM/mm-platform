@@ -6,7 +6,7 @@
 // total reviewTotalLabel · calendar addToCalendarBtn · directions
 // ticketDirections · meetingPoint meetPointLbl · edit/reschedule/cancel · available availLabel ·
 // wlPos/wlPosNoNum wlPos(NoNum)Msg · gatherAt ticketGatherAt · collectFrom ticketCollectAt ·
-// wlOnList/wlLinePos/wlRowPos · payDue payDueLabel · payAtBooth payAtBoothLine · helmetLine/helmetFree
+// wlOnList/wlLinePos/wlRowPos · wlCollectFrom wlCollectAt · payDue payDueLabel · payAtBooth payAtBoothLine · helmetLine/helmetFree
 // tkHelmetLine/tkHelmetFree · venueCircuit evJccName · today/tomorrow mrToday/mrTomorrow ·
 // bikes2/bikesN · free freeLabel (as of the booking app's 2026-09-30 card, bb37ba1 and 9a03c12) ·
 // Run for Her (2026-10-05): runnerNumber runNumLabel · venueJyc venueJyc; a runner's distance is
@@ -66,6 +66,7 @@ export const T = {
     wlPos: (n: string) => `You’re number ${n} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.`,
     gatherAt: (n: string) => `Gathering at ${n}`,
     collectFrom: (n: string) => `Collect bikes from ${n}`,
+    wlCollectFrom: (n: string) => `Waitlisted riders collect bikes from ${n}`,
     route: "Route",
     liveMap: "Live map",
     // the ride night (91816da): tkSt*, tkCue*, tkCd*, rt*
@@ -222,6 +223,7 @@ export const T = {
     wlPos: (n: string) => `أنت رقم ${n} في قائمة الانتظار. لم يُحجز لك مقعد بعد: إذا توفر مقعد يسجّل الفريق دخولك بهذا الرمز عند الكشك، وقد يراسلك عبر واتساب قبل ذلك.`,
     gatherAt: (n: string) => `التجمع في ${n}`,
     collectFrom: (n: string) => `استلام الدراجات من ${n}`,
+    wlCollectFrom: (n: string) => `استلام الدراجات لقائمة الانتظار من ${n}`,
     route: "المسار",
     liveMap: "الخريطة الحية",
     stBooked: "محجوز",

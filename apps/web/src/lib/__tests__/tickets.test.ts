@@ -9,7 +9,7 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { loadAddonItems } from "../ticket-addons";
 import { vlDivName } from "../vlap";
-import { satNumOk, type TicketSession } from "../tickets";
+import { satNumOk, wlCollectTime, type TicketSession } from "../tickets";
 
 const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 
@@ -734,5 +734,47 @@ describe("men only, women only or mixed on the ticket (the owner, 2026-10-27)", 
   it("puts no chip on a session of another kind open to both", () => {
     expect(card(pool({ ride_kind: "saturday" }))).not.toContain("sg-chip");
     expect(card(pool({ ride_kind: "saturday", gender_only: "female" }))).toContain("Women only"); // one for a single gender says so, of any kind
+  });
+});
+
+// The owner, 2026-11-03: a circuit night's waitlist collects from 9:15 PM, and the ticket says it is waitlisted.
+describe("a circuit night's waitlist", () => {
+  const jccS = ticketSession(jccRow)!;
+  const row = (id: string, status: "waiting" | "waitlist", q: number, w: number | null) => ({
+    id, sessionId: "j1", date: "2099-03-01", day: "Sunday", queueNum: q, status, waitlistNum: w, approval: null, price: 75, paid: false,
+    name: "Rider " + q, type: "Road", checkedInAt: null, checkedOutAt: null, rideDuration: null, bikeId: null, addonLines: [], runKm: null,
+  });
+  const card = (rows: ReturnType<typeof row>[], s = jccS) => renderToStaticMarkup(createElement(TicketCard, {
+    locale: "en", today: "2099-02-01", rows, session: s, name: "Open Sports Day", cue: null, t: TICKET.en, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+    links: { edit: null, manage: "https://book.example.test/?tab=bookings", place: null }, now: Date.parse("2099-02-01T09:00:00Z"),
+  }));
+
+  it("is a quarter of an hour after the start, and only on the circuit", () => {
+    expect(wlCollectTime(jccS)).toBe("21:15");
+    expect(wlCollectTime({ ...jccS, kind: "petromin" })).toBeNull();
+    expect(wlCollectTime({ ...jccS, times: null })).toBeNull();
+    expect(wlCollectTime(undefined)).toBeNull();
+  });
+  it("says 9:15 PM under a solid band, and not the riders' 8:15 PM", () => {
+    const html = card([row("w", "waitlist", 12, 3)]);
+    expect(html).toContain("tk-label wl solid");
+    expect(html).toContain("Waitlisted riders collect bikes from 9:15 PM");
+    expect(html).not.toContain("8:15");
+  });
+  it("keeps 8:15 PM for a rider with a place", () => {
+    const html = card([row("a", "waiting", 2, null)]);
+    expect(html).toContain("Collect bikes from 8:15 PM");
+    expect(html).not.toContain("tk-wl-collect");
+  });
+  it("says 9:15 PM on the waitlisted rider's own row in a mixed party", () => {
+    const html = card([row("a", "waiting", 2, null), row("w", "waitlist", 12, 3)]);
+    expect(html).toContain("Collect bikes from 8:15 PM");
+    expect(html.match(/tk-wl-collect row/g)).toHaveLength(1);
+  });
+  it("leaves another ride's waitlist as it was", () => {
+    const html = card([row("w", "waitlist", 12, 3)], { ...jccS, kind: "petromin" });
+    expect(html).toContain("tk-label wl");
+    expect(html).not.toContain("solid");
+    expect(html).not.toContain("tk-wl-collect");
   });
 });

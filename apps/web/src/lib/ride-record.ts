@@ -43,6 +43,8 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   victory_lap: ["lapring", "vlap"], // Victory Lap's lap ring, on its own special medal, purple into black (2026-10-17)
   defe_ride: ["defewheel", "defe"], // Rode with Defe: the ribbon wheel, rose into berry (2026-10-18)
   defe_5k: ["defe", "defe"], // the DEFE 5KM Run: Defe's ribbon inside the finisher's ring, rose into berry (2026-10-18)
+  blood_donor: ["drop", "red"], // Blood Donor: a drop with a heart, on the ordinary red medal (2026-11-05)
+  volunteer: ["hand", "volunteer"], // Volunteer: a raised hand on its own blue special medal, given by staff (2026-11-05)
   // the staff ladders' higher levels and Front Row's (the booking app, 2026-10-12)
   senior_marshal: ["shield", "blue"], chief_marshal: ["shield", "gold"], pit_boss: ["wrench", "teal"], crew_chief: ["wrench", "gold"],
   clear_track: ["wflag", "teal"], track_guardian: ["wflag", "gold"], tech_inspector: ["search", "blue"], chief_scrutineer: ["search", "gold"],
@@ -63,7 +65,7 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_cours
   "scrutineer", "tech_inspector", "chief_scrutineer", "tech_delegate", "chief_engineer",
   "champion", "hat_trick", "grand_champion", "dynasty", "world_champion",
   "spirit", "fair_play", "heart_of_race", "ride_ambassador", "soul_of_ride", "t100", "t50", "t25",
-  "bike_owner", "road_owner", "carbon_owner"];
+  "bike_owner", "road_owner", "carbon_owner", "volunteer"];
 
 /** Badge ladders (the booking app's BDG_LADDERS, 2026-10-09: "the same way it's done in clash of clans
  *  achievements"): badges that count the same thing to a higher number are the levels of one badge,
@@ -190,15 +192,15 @@ export function rideStats(rows: TicketRow[], sessions: Map<string, RecordSession
  *  the booking app's 2026-10-07 rule): the booking paid, on a bike or done, a line sold above zero (a
  *  line without its price counts as charged, as the booking app counts one it cannot price), and not
  *  a booking on the house (marked paid at SAR 0 with no promo code, not an own bike). */
-export function recordRows(rows: Record<string, unknown>[]): (TicketRow & { addons: boolean })[] {
+export function recordRows(rows: Record<string, unknown>[]): (TicketRow & { addons: boolean; donated: boolean })[] {
   return rows.map((r) => {
     const x = r.status === "noshow" ? ticketRow({ ...r, status: "waiting" }) : ticketRow(r);
     if (!x) return null;
     const house = (typeof r.price === "number" || (typeof r.price === "string" && r.price.trim() !== "")) && Number(r.price) === 0
       && !(typeof r.promo_code === "string" && r.promo_code.trim()) && x.type !== "Own";
     const addons = x.paid && (x.status === "active" || x.status === "done") && !house && x.addonLines.some((a) => a.p === null || a.p > 0);
-    return { ...x, ...(r.status === "noshow" ? { status: "noshow" as unknown as TicketRow["status"] } : {}), addons };
-  }).filter((r): r is TicketRow & { addons: boolean } => !!r);
+    return { ...x, ...(r.status === "noshow" ? { status: "noshow" as unknown as TicketRow["status"] } : {}), addons, donated: !!r.donated_at };
+  }).filter((r): r is TicketRow & { addons: boolean; donated: boolean } => !!r);
 }
 
 // ── Every badge, as the account page lists them (_mrBadges, _mrBadgeList) ─────────────────────
@@ -224,7 +226,7 @@ export type BadgeItem = {
   lv: BadgeItem[] | null; lvN: number; nx: BadgeItem | null;
 };
 
-type RecordRow = TicketRow & { addons?: boolean };
+type RecordRow = TicketRow & { addons?: boolean; donated?: boolean };
 
 /** The ride badges, earned or not, with the booking app's progress (_mrBadges). */
 function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data: BadgeData, today: string, profile: ProfileFields | null) {
@@ -293,6 +295,8 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
   const dfe = all.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "defe5k");
   // Rode with Defe: checked in (on the bike or done) on the Saturday ride with Defe, members and Defe's riders alike
   const dfr = rows.some((r) => (r.status === "done" || r.status === "active") && DEFE_RIDE_IDS.includes(r.sessionId));
+  // Blood Donor: staff's Donated mark (the booking app, 2026-11-05), so taking the mark back takes the badge back with it
+  const bld = all.some((r) => r.donated);
   const P = (n: number, of: number) => `${Math.min(n, of)}/${of}`, pct = profile ? profilePct(profile) : 0;
   type B = { s: string; on: boolean; p?: string | null; hide?: boolean; row?: BadgeRow; season?: BadgeItem["season"] };
   const list: B[] = [
@@ -302,6 +306,7 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
     { s: "defe_5k", on: dfe, hide: true }, // Defe's ribbon medal: shown to those who finished the Defe run
     { s: "victory_lap", on: vlp, hide: true }, // the lap ring: shown to those who finished it
     { s: "defe_ride", on: dfr, hide: true }, // the ribbon wheel: shown to those who rode it
+    { s: "blood_donor", on: bld, hide: true }, // the drop: shown to those who gave blood
     { s: "first_lap", on: rides >= 1, p: `${rides}/1` }, { s: "regular", on: rides >= 5, p: P(rides, 5) }, { s: "podium", on: rides >= 10, p: P(rides, 10) },
     { s: "front_row", on: p1 >= 1, p: P(p1, 1) }, { s: "pole_position", on: p1 >= 5, p: P(p1, 5) }, { s: "pole_master", on: p1 >= 10, p: P(p1, 10) },
     { s: "grid_leader", on: p1 >= 25, p: P(p1, 25) }, { s: "pole_legend", on: p1 >= 50, p: P(p1, 50) },

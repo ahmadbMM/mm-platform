@@ -42,6 +42,40 @@ importers:
         specifier: 4.141.0
         version: 4.141.0(@types/node@26.6.2)
 
+  apps/volunteers:
+    dependencies:
+      '@mm/design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/design-tokens
+    devDependencies:
+      '@eslint/js':
+        specifier: ^9.39.4
+        version: 9.39.5
+      '@fontsource/ibm-plex-sans-arabic':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/space-grotesk':
+        specifier: ^5.3.0
+        version: 5.3.0
+      esbuild:
+        specifier: 0.28.1
+        version: 0.28.1
+      eslint:
+        specifier: 9.39.5
+        version: 9.39.5(supports-color@10.2.2)
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      typescript-eslint:
+        specifier: 8.70.1
+        version: 8.70.1(eslint@9.39.5(supports-color@10.2.2))(supports-color@10.2.2)(typescript@6.0.3)
+      vitest:
+        specifier: 3.2.7
+        version: 3.2.7(@types/node@26.6.2)(supports-color@10.2.2)(terser@5.16.9)(yaml@2.9.0)
+      wrangler:
+        specifier: 4.141.0
+        version: 4.141.0(@types/node@26.6.2)
+
   apps/web:
     dependencies:
       '@mm/design-tokens':
@@ -1438,6 +1472,7 @@ packages:
   '@smithy/core@3.33.2':
     resolution: {integrity: sha512-CUGXpnPkVdjUCbix+83sWLW9VFgQOm44MDOx/ihITJMAnOZKvL8YYIc7DR9pP/tZ8CIRvMiON/TucvygqbHO3w==}
     engines: {node: '>=18.0.0'}
+    deprecated: Deprecated due to a bug in custom logger data redaction. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/credential-provider-imds@4.5.2':
     resolution: {integrity: sha512-A9uSdn72ozbRUSit0eib0TW7nXuNPlaeM0zcGkJ+nE6tFcSDbnmtwoxbTCFBukVQcszDAyvsd7+rTduPTXpygg==}

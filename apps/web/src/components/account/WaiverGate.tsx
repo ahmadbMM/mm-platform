@@ -18,6 +18,9 @@ export type PendingWaiver = {
   name: string; when: string; time: string; venue: string;
   /** "Riders", or "Participants" where there are no bikes, and who is on the booking (no number on a ride staff approve). */
   ridersLabel: string; riders: Array<{ name: string; num: number | null }>;
+  /** The Blood Donation event's kicker and line in place of the waiver's (bldWgKicker, bldWgSub), from the route, so no
+   *  word of the event sits in this code; absent on every other kind. */
+  kicker?: string; sub?: string;
 };
 /** agreed: the database has it · absent: the database cannot record it yet (let through) ·
  *  stale: the ride's waiver changed since the pop-up was drawn (ask again). */
@@ -82,18 +85,18 @@ export default function WaiverGate({ onDone, ...w }: PendingWaiver & { onDone: (
   };
 
   return (
-    <div className="rg-gate wg-gate">
+    <div className={`rg-gate wg-gate${w.kind === "blood" ? " ev-blood" : ""}`}>
       <div ref={box} className="rg-box wg-box" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-sub`} tabIndex={-1}>
         <p className="rg-kicker wg-kicker">
           <span className="rg-flag" aria-hidden="true">
             <svg viewBox="0 0 24 24" width="12" height="12"><path d="M12 2.5 4 5.6v5.9c0 5 3.4 8.9 8 10 4.6-1.1 8-5 8-10V5.6Zm-1.2 13.3-3.6-3.6 1.6-1.6 2 2 4.6-4.6 1.6 1.6Z" fill="currentColor" fillRule="evenodd" /></svg>
           </span>
-          {tx("Waiver needed", "إقرار مطلوب")}
+          {w.kicker ?? tx("Waiver needed", "إقرار مطلوب")}
         </p>
         <h2 id={`${id}-title`} className="rg-title">{w.copy.title}</h2>
-        <p id={`${id}-sub`} className="wg-sub">{w.kind === "ride"
+        <p id={`${id}-sub`} className="wg-sub">{w.sub ?? (w.kind === "ride"
           ? tx("Our team booked you on this ride. Read its waiver and agree to it to continue.", "سجّلك فريقنا في هذه الرحلة. اقرأ إقرارها ووافق عليه للمتابعة.")
-          : tx("Our team booked you on this session. Read its waiver and agree to it to continue.", "سجّلك فريقنا في هذه الفعالية. اقرأ إقرارها ووافق عليه للمتابعة.")}</p>
+          : tx("Our team booked you on this session. Read its waiver and agree to it to continue.", "سجّلك فريقنا في هذه الفعالية. اقرأ إقرارها ووافق عليه للمتابعة."))}</p>
         <div className="wg-sess">
           <p className="wg-ev"><bdi>{w.name}</bdi></p>
           <p className="wg-ln"><Ic d={CAL} /><span>{w.when}</span></p>

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { kindNames, loadRides, loadSessionsById, oneTime, readSessions, resetRides, rideKind, routeSlugOf, sessionGenders, sessionName, sessionRows, slotTimes, timesText, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
 import { memoSettled } from "../memo";
+import { typeOffered } from "../bike-kinds";
 
 // /experiences shows the booking system's own prices and sessions. The rules mirror the booking
 // app and the database, so the page never promises a ride someone cannot book.
@@ -46,7 +47,7 @@ describe("slotTimes", () => {
 describe("toSession", () => {
   it("shows a circuit night as open to all and paid", () => {
     expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null, collect: "20:15", approval: false, capacity: null, left: null,
-      spots: null, addons: [], wlCap: null, km: { beg: 20, int: 40 }, meetUrl: null, location: null, gender: null });
+      spots: null, addons: [], wlCap: null, km: { beg: 20, int: 40 }, meetUrl: null, location: null, gender: null, closedTypes: [] });
   });
   it("marks a community ride members-only and free, unless the session says otherwise", () => {
     const sat = toSession(row({ event_kind: "community", ride_kind: "saturday", title: "Saturday Social Ride", bike_slots: '{"_time":"05:45 - 06:15"}' }));
@@ -233,7 +234,7 @@ describe("loadRides", () => {
     const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json(PRICES) : json([row({})])));
     await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
-    expect(reads[0]).toContain("meet_url,location,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only&session_date=gte.2026-09-25");
+    expect(reads[0]).toContain("meet_url,location,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only,closed_types&session_date=gte.2026-09-25");
     expect(reads[0].match(/meet_url/g)?.length).toBe(1);
     await memoSettled();
   });
@@ -245,7 +246,7 @@ describe("loadRides", () => {
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(1);
-    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons,meet_url,location,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only&"); // staging: the place is in SESSION_COLS
+    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons,meet_url,location,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only,closed_types&"); // staging: the place is in SESSION_COLS
     expect(r?.sessions.map((x) => [x.id, x.breakfast, x.breakfastAr])).toEqual([["sat", "Bean Box", "بين بوكس"], ["2026-09-27", null, null]]);
     await memoSettled();
   });
@@ -257,7 +258,7 @@ describe("loadRides", () => {
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[1]).toContain("route_slug,breakfast_name,breakfast_name_ar,reveal_at,gender_only&session_date=gte.2026-09-25");
+    expect(reads[1]).toContain("route_slug,breakfast_name,breakfast_name_ar,reveal_at,gender_only,closed_types&session_date=gte.2026-09-25");
     expect(r!.sessions[0]).toMatchObject({ id: "2026-10-26-vl", kind: "vlap", price: 150 });
     expect("vl" in r!.sessions[0]).toBe(false);
     await memoSettled();
@@ -269,7 +270,7 @@ describe("loadRides", () => {
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[1]).toContain("needs_approval,spots,addons,meet_url,location,description,price,route_slug,reveal_at,vl,gender_only&session_date=gte.2026-09-25"); // staging: the place is in SESSION_COLS
+    expect(reads[1]).toContain("needs_approval,spots,addons,meet_url,location,description,price,route_slug,reveal_at,vl,gender_only,closed_types&session_date=gte.2026-09-25"); // staging: the place is in SESSION_COLS
     const s = r!.sessions[0];
     expect(s).toMatchObject({ id: "sat", kind: "saturday", location: null, meetUrl: null });
     expect("breakfast" in s || "breakfastAr" in s).toBe(false);
@@ -483,6 +484,21 @@ describe("men only, women only or mixed (the owner, 2026-10-27; rentals 20261027
   });
   afterEach(() => vi.unstubAllEnvs());
 
+  it("reads sessions.closed_types as a list of types, and anything else as nothing closed", () => {
+    expect(toSession(row({ ...POOL, closed_types: ["Road", "Kids"] }))!.closedTypes).toEqual(["Road", "Kids"]);
+    expect(toSession(row({ ...POOL, closed_types: ["Road", 3, null] }))!.closedTypes).toEqual(["Road"]);
+    for (const v of [null, undefined, "", "Road", 1, {}]) expect(toSession(row({ ...POOL, closed_types: v }))!.closedTypes).toEqual([]);
+    expect(toSession(row(POOL))!.closedTypes).toEqual([]); // a read that did not ask for the column
+  });
+
+  it("does not offer a closed type, nor Road Carbon on a no-carbon ride, and an old copy with no list offers them all", () => {
+    expect(typeOffered({ closedTypes: ["Road"] }, "Road")).toBe(false);
+    expect(typeOffered({ closedTypes: ["Road"] }, "Hybrid")).toBe(true);
+    expect(typeOffered({ noCarbon: true, closedTypes: [] }, "Road Carbon")).toBe(false);
+    expect(typeOffered({ noCarbon: false, closedTypes: [] }, "Road Carbon")).toBe(true);
+    expect(typeOffered({}, "Road")).toBe(true);
+  });
+
   it("reads sessions.gender_only as 'male' or 'female', and anything else as mixed", () => {
     expect(toSession(row({ ...POOL, gender_only: "female" }))!.gender).toBe("female");
     expect(toSession(row({ ...POOL, gender_only: "male" }))!.gender).toBe("male");
@@ -496,9 +512,21 @@ describe("men only, women only or mixed (the owner, 2026-10-27; rentals 20261027
     const r = await loadRides(f as unknown as typeof fetch, AT);
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[0]).toContain(",vl,gender_only&session_date=gte.2026-10-27");
-    expect(reads[1]).toContain(",reveal_at,vl&session_date=gte.2026-10-27");
+    expect(reads[0]).toContain(",vl,gender_only,closed_types&session_date=gte.2026-10-27");
+    expect(reads[1]).toContain(",reveal_at,vl,closed_types&session_date=gte.2026-10-27");
     expect(r!.sessions.map((s) => [s.id, s.gender])).toEqual([["2026-10-29-sw", null]]);
+    await memoSettled();
+  });
+
+  it("asks for the closed bike types as a group of its own, and reads on with every type open on a database that does not have them", async () => {
+    const f = vi.fn(async (url: string) => (url.includes("ride_prices") ? json([])
+      : url.includes("closed_types") ? json({ code: "42703", message: "column list_sessions.closed_types does not exist" }, 400) : json([row(POOL)])));
+    const r = await loadRides(f as unknown as typeof fetch, AT);
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
+    expect(reads).toHaveLength(2);
+    expect(reads[0]).toContain(",gender_only,closed_types&session_date=gte.2026-10-27");
+    expect(reads[1]).toContain(",vl,gender_only&session_date=gte.2026-10-27");
+    expect(r!.sessions.map((s) => [s.id, s.closedTypes])).toEqual([["2026-10-29-sw", []]]);
     await memoSettled();
   });
 

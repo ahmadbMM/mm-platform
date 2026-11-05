@@ -17,18 +17,23 @@ import { signOut } from "./quiet";
 // vlShSub, _vlShareItems, vlShNoteTbc / vlShNoteSet, vlShAgree). Arena Heros' athletes (2026-10-28) agree that
 // their details go to the race's organisers, WeSportify, Mile and Gymnation: the owner's list (first and last
 // name, email, mobile, gender, division and team, as the booking app's _vlShareItems lists them), or staff's own
-// once they set one; in the booking app's words (arShSub, arShTeam, arShAgree).
+// once they set one; in the booking app's words (arShSub, arShTeam, arShAgree). The Blood Donation event's donors
+// (2026-11-03) agree that their details go to its hosts: the route brings the list and every word (`words`), so none of
+// them sits in this code.
 export type PendingShare = {
   sessionId: string;
   /** The run's name, its day and date, its time ("" when it has none) and its place. */
   name: string; when: string; time: string; venue: string;
   /** The distance the runner picked, in the ticket's words ("5 km"), or null when the booking has none. */
   distance: string | null;
-  /** "vlap" on Victory Lap (Kamin Sports), "arena" on Arena Heros (WeSportify, Mile and Gymnation); absent on Run for Her. */
-  kind?: "vlap" | "arena";
+  /** "vlap" on Victory Lap (Kamin Sports), "arena" on Arena Heros (WeSportify, Mile and Gymnation), "blood" on the Blood
+   *  Donation event (its hosts); absent on Run for Her. */
+  kind?: "vlap" | "arena" | "blood";
   /** Victory Lap: Kamin Sports' exact list as staff set it, in the page's language; null until it is set. Arena
-   *  Heros: staff's own list, when they set one. */
+   *  Heros: staff's own list, when they set one. The Blood Donation event: what goes to its hosts. */
   items?: string[] | null;
+  /** The Blood Donation event: the pop-up's own words (bldShKicker, bldShTitle, bldShSub, bldShNote, bldShAgree). */
+  words?: { kicker: string; title: string; sub: string; note: string; agree: string };
 };
 /** agreed: the database has it · absent: the database cannot record it yet (let through) ·
  *  stale: the session is no longer Run for Her (ask again). */
@@ -42,6 +47,7 @@ const CLOCK = "M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z";
 const PIN = "M12 21s-7-6.1-7-11.5a7 7 0 0 1 14 0C19 14.9 12 21 12 21ZM12 12a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z";
 const CHECK = "M5 12.5 9.5 17 19 7.5";
 const FLAG = "M5 21V4M5 4h12l-2.5 4L17 12H5";
+const TICKET = "M2.6 7.4h18.8a1 1 0 0 1 1 1v2.1a2.4 2.4 0 0 0 0 4.7v2.1a1 1 0 0 1-1 1H2.6a1 1 0 0 1-1-1v-2.1a2.4 2.4 0 0 0 0-4.7V8.4a1 1 0 0 1 1-1ZM15.8 7.4v2.2m0 1.3v2.2m0 1.3v2.2";
 
 export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r: ShareDone) => void }) {
   const tx = useL();
@@ -96,11 +102,14 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
 
   // what goes to the race's hosts, in the booking app's order: Run for Her's to Sela and JYC; Victory
   // Lap's to Kamin Sports, their own list once staff set it, else what the booking holds (_vlShareItems);
-  // Arena Heros' to its three organisers, staff's list or the owner's
+  // Arena Heros' to its three organisers, staff's list or the owner's; the Blood Donation event's as the route says
   const vl = w.kind === "vlap";
   const ah = w.kind === "arena";
   const own = (vl || ah) && w.items && w.items.length ? w.items : null;
-  const items = ah
+  const d = w.kind === "blood" ? w.words ?? null : null;
+  const items = d
+    ? w.items ?? []
+    : ah
     ? own ?? [
       tx("First name", "الاسم الأول"),
       tx("Last name", "اسم العائلة"),
@@ -130,11 +139,14 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
     ];
 
   return (
-    <div className="rg-gate sg-gate">
+    <div className={`rg-gate sg-gate${d ? " ev-blood" : ""}`}>
       <div ref={box} className="rg-box sg-box" role="dialog" aria-modal="true" aria-labelledby={`${id}-title`} aria-describedby={`${id}-sub`} tabIndex={-1}>
         <p className="rg-kicker sg-kicker">
           <span className="rg-flag" aria-hidden="true">
-            {vl || ah ? (
+            {d ? (
+              // the Blood Donation event: a ticket, as the booking app's kicker has it
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d={TICKET} /></svg>
+            ) : vl || ah ? (
               // Victory Lap and Arena Heros: a flag, as the booking app's kicker has it
               <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d={FLAG} /></svg>
             ) : (
@@ -145,16 +157,16 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
               </svg>
             )}
           </span>
-          {tx("Before the race", "قبل السباق")}
+          {d ? d.kicker : tx("Before the race", "قبل السباق")}
         </p>
-        <h2 id={`${id}-title`} className="rg-title">{tx("Sharing your details for the race", "مشاركة بياناتك للسباق")}</h2>
+        <h2 id={`${id}-title`} className="rg-title">{d ? d.title : tx("Sharing your details for the race", "مشاركة بياناتك للسباق")}</h2>
         <div className="wg-sess">
           <p className="wg-ev"><bdi>{w.name}</bdi></p>
           <p className="wg-ln"><Ic d={CAL} /><span>{w.when}</span></p>
           {w.time && <p className="wg-ln"><Ic d={CLOCK} /><bdi>{w.time}</bdi></p>}
-          <p className="wg-ln"><Ic d={PIN} /><span>{w.venue}</span></p>
+          {!d && <p className="wg-ln"><Ic d={PIN} /><span>{w.venue}</span></p>}
         </div>
-        <p id={`${id}-sub`} className="wg-sub">{ah
+        <p id={`${id}-sub`} className="wg-sub">{d ? d.sub : ah
           ? tx("To take part in the Arena Heros Hybrid Race, we will share these details about you with its organisers, WeSportify, Mile and Gymnation:", "للمشاركة في سباق أرينا هيروز الهجين، سنشارك بياناتك التالية مع منظميه، WeSportify وMile وGymnation:")
           : vl
           ? tx("To take part in Victory Lap, we will share these details about you with Kamin Sports, who run the race:", "للمشاركة في فيكتوري لاب، سنشارك بياناتك التالية مع كامن سبورتس، منظّمة السباق:")
@@ -163,16 +175,16 @@ export default function ShareGate({ onDone, ...w }: PendingShare & { onDone: (r:
           {items.map((label, i) => (
             <li key={i}>
               <Ic d={CHECK} />
-              <span>{label}{!vl && i === 3 && w.distance && <>{" · "}<bdi>{w.distance}</bdi></>}</span>
+              <span>{label}{!vl && !d && i === 3 && w.distance && <>{" · "}<bdi>{w.distance}</bdi></>}</span>
             </li>
           ))}
         </ul>
-        <p className="sg-note">{vl && !own
+        <p className="sg-note">{d ? d.note : vl && !own
           ? tx("Kamin Sports will confirm exactly which details they need. We will show you the final list before the race, and nothing else about you is shared.", "ستؤكد كامن سبورتس البيانات التي تحتاجها بالضبط. سنعرض عليك القائمة النهائية قبل السباق، ولا نشارك أي شيء آخر عنك.")
           : tx("Nothing else about you is shared, and only for this race.", "لا نشارك أي شيء آخر عنك، وللسباق فقط.")}</p>
         <label className={`wg-agree${ok ? " on" : ""}`}>
           <input type="checkbox" checked={ok} disabled={busy} onChange={(e) => { setOk(e.target.checked); setFail(false); }} />
-          <span>{ah
+          <span>{d ? d.agree : ah
             ? tx("I agree to MicroMobility sharing these details with WeSportify, Mile and Gymnation so I can take part in the Arena Heros Hybrid Race.", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع WeSportify وMile وGymnation لأتمكن من المشاركة في سباق أرينا هيروز الهجين.")
             : vl
             ? tx("I agree to MicroMobility sharing these details with Kamin Sports so I can take part in Victory Lap.", "أوافق على أن تشارك مايكروموبيليتي هذه البيانات مع كامن سبورتس لأتمكن من المشاركة في فيكتوري لاب.")

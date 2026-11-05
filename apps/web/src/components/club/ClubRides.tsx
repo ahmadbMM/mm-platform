@@ -8,7 +8,8 @@ import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
 
 // The next open community rides (club_rides), read in the visitor's browser. dayFmt: how the
 // page's language writes a ride's day ("Saturday 10 October"), described by the server
-// (lib/date-pattern), since a browser may not know the language.
+// (lib/date-pattern), since a browser may not know the language. The Blood Donation event is no ride: club_rides gives
+// it as it gives any open community session, and this list leaves it out.
 type Ride = { title: string; date: string; time: string | null; kind: string | null };
 type Props = { locale: string; href: string; empty: string; dayFmt: DatePattern };
 const KIND: Record<string, { en: string; ar: string }> = {
@@ -27,7 +28,7 @@ export default function ClubRides(p: Props) {
   const [rides, setRides] = useState<Ride[] | null>(null);
   useEffect(() => {
     let live = true;
-    rpc<Ride[]>("club_rides", {}).then((r) => { if (live) setRides(Array.isArray(r) ? r : []); }).catch(() => { if (live) setRides([]); });
+    rpc<Ride[]>("club_rides", {}).then((r) => { if (live) setRides(Array.isArray(r) ? r.filter((x) => x.kind !== "blood") : []); }).catch(() => { if (live) setRides([]); });
     return () => { live = false; };
   }, []);
   if (rides === null) return <div className="club-rides-grid" aria-busy="true" />;

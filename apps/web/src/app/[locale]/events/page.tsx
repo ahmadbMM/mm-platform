@@ -4,6 +4,7 @@ import PageShell from "@/components/site/PageShell";
 import JsonLd from "@/components/site/JsonLd";
 import { eventsData } from "@/lib/structured-data";
 import "@/components/pages/pages.css";
+import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
 import { eventsSchema } from "@/content/pages/events";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
@@ -29,12 +30,14 @@ import { AH_VENUE } from "@/lib/arena";
 // of either gender (the owner, 2026-10-28: "make all pool sessions visible to all genders but only male can
 // book male sessions and female can book female sessions"); it and every pool session wear their chip, and a
 // signed-in account of the other gender reads the refusal in place of Book. Arena Heros (2026-10-28) is listed in its
-// own red, named as Experiences names it, with its line, and booked in the booking app on its own event (ev=arena).
+// own red, named as Experiences names it, with its line, and booked in the booking app on its own event (ev=arena). The
+// Blood Donation event (2026-11-03) is listed in its crimson while it has a date, with its line and venue and never a
+// price or the free word, and booked on its own event (ev=blood).
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27" };
+const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16" };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -55,11 +58,11 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
   // Book opens the booking app on that event and date (?ev=&session=), as the Experiences steps do.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena" };
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood" };
   const bookAt = (s: RideSession) => {
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
-  const kindName = kindNames(d), enName = kindNames(dEn);
+  const kindName = { ...kindNames(d), blood: bloodName(tx) }, enName = { ...kindNames(dEn), blood: BLOOD_NAME };
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it
   const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en");
   const now = riyadhClock(new Date());
@@ -91,7 +94,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
             every visitor sees both, but not everyone may book them. */}
         <JsonLd data={eventsData(sessions.filter((s) => !s.members && !s.gender).map((s) => ({
           name: name(s), date: s.date, times: s.times, gather: s.gather, full: s.full, url: book,
-          place: s.kind === "jcc" || s.kind === "snd96" || s.kind === "vlap" || s.kind === "defe5k" ? "Jeddah Corniche Circuit" : s.kind === "runher" ? "Jeddah Yacht Club" : s.kind === "arena" ? s.location || AH_VENUE : "Jeddah",
+          place: s.kind === "jcc" || s.kind === "snd96" || s.kind === "vlap" || s.kind === "defe5k" || s.kind === "blood" ? "Jeddah Corniche Circuit" : s.kind === "runher" ? "Jeddah Yacht Club" : s.kind === "arena" ? s.location || AH_VENUE : "Jeddah",
         })))} />
         <p className="pg-eyebrow">{S(c.hero.eyebrow)}</p>
         <h1>{S(c.hero.title)}</h1>
@@ -125,11 +128,14 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {/* Arena Heros: what it is and where, as its card on Experiences says them (never its price) */}
                         {s.kind === "arena" && S(xp.events.arMeta) && <span>{S(xp.events.arMeta)}</span>}
                         {s.kind === "arena" && <span>{s.location || AH_VENUE}</span>}
+                        {/* the Blood Donation event: its line and where, as its card on Experiences says them (never a price) */}
+                        {s.kind === "blood" && <span>{bloodWords(tx).cause}</span>}
+                        {s.kind === "blood" && <span>{tx("Jeddah Corniche Circuit", "حلبة كورنيش جدة")}</span>}
                         {/* Run for Her is a community event (members only, free), tagged as one */}
-                        <em>{s.kind === "jcc" || s.kind === "snd96" ? S(c.hero.rideTag) : s.kind === "event" ? S(c.hero.eventTag) : S(c.hero.communityTag)}</em>
+                        <em>{s.kind === "jcc" || s.kind === "snd96" ? S(c.hero.rideTag) : s.kind === "event" || s.kind === "blood" ? S(c.hero.eventTag) : S(c.hero.communityTag)}</em>
                         {s.members && <em>{S(d.members)}</em>}
-                        {s.kind === "event" && !s.members && <em>{S(d.everyone)}</em>}
-                        {s.free && <em>{S(d.free)}</em>}
+                        {(s.kind === "event" || s.kind === "blood") && !s.members && <em>{S(d.everyone)}</em>}
+                        {s.free && s.kind !== "blood" && <em>{S(d.free)}</em>}
                         {s.full && <em className="warn">{S(d.full)}</em>}
                         {((g) => g && <span className={`sg-chip sg-${g.cls}`}>{g.label}</span>)(genderChip(s, sgWords))}
                       </div>

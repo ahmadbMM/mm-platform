@@ -51,3 +51,12 @@ html:is([lang="ar"], [lang="ur"]) .wg-sec { letter-spacing: 0; font-size: 12px; 
 @media (max-width: 420px) {
   .sg-list { padding: 10px 12px; }
 }
+/* The donation event's two pop-ups (2026-11-03): its crimson where the waiver and the agreement to share have their
+   own colours. The frame, the words and the square buttons are as above. */
+.ev-blood :is(.wg-kicker, .sg-kicker) { color: #0b1f16; }
+.ev-blood :is(.wg-kicker, .sg-kicker) .rg-flag { background: rgba(11, 31, 22, .1); color: #0b1f16; }
+.ev-blood :is(.wg-ln svg, .wg-num, .sg-list svg) { color: #0b1f16; }
+.ev-blood .wg-text:focus-visible, .ev-blood .wg-agree input:focus-visible, .ev-blood .wg-btn:focus-visible, .ev-blood .wg-out:focus-visible { outline-color: #0b1f16; }
+.ev-blood .wg-agree.on { border-color: #0b1f16; background: rgba(11, 31, 22, .06); }
+.ev-blood .wg-agree input { accent-color: #0b1f16; }
+.ev-blood .wg-btn { background: #0b1f16; color: #fff; }

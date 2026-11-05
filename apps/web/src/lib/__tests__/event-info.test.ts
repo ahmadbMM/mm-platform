@@ -251,7 +251,7 @@ describe("Victory Lap on Experiences", () => {
     expect(eventCards(all, { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["petromin", "vlap", "runher", "jcc", "community"]);
     expect(eventCards(all, { member: false, petromin: false }).find((c) => c.card.key === "vlap")?.sessions.map((x) => x.id)).toEqual(["vl"]);
     expect(eventCards([{ id: "j", kind: "jcc" as const }], { member: true, petromin: false }).map((c) => c.card.key)).not.toContain("vlap");
-    expect(EVENT_CARDS[1]).toEqual({ key: "vlap", p: "vl", always: false });
+    expect(EVENT_CARDS[2]).toEqual({ key: "vlap", p: "vl", always: false }); // the Blood Donation event's card sits between them while it has a date (blood.test.ts)
     expect(bookingAt("https://book.example/", "vlap", "2026-10-26-vl")).toBe("https://book.example/?ev=vlap&session=2026-10-26-vl");
   });
 

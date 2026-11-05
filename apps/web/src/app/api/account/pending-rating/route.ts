@@ -1,3 +1,4 @@
+import { BLOOD_NAME, bloodName } from "@/content/blood-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { serverL } from "@/i18n/dicts";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
@@ -37,8 +38,8 @@ export async function GET(req: Request) {
   // the session as the account sees it (its token): a private ride keeps its name and its kind's form
   const [sessions, content] = await Promise.all([loadTicketSessions([gate.sessionId], acct), loadSiteContent()]);
   const s = sessions.get(gate.sessionId);
-  const names = { ...kindNames(resolvePage(experiencesSchema, content, L).dates), petromin: tx("Petromin", "بترومين") };
-  const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
+  const names = { ...kindNames(resolvePage(experiencesSchema, content, L).dates), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
+  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
   // a run says run, the pool, the workshop, an event and Victory Lap say session, never ride (2026-10-18)
   const word = rideWord(s?.kind, gate.sessionId);
   return json({

@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "micromobility-volunteers",
+  "main": "src/worker/index.ts",
+  "compatibility_date": "2026-08-01",
+  "assets": { "directory": "dist", "binding": "ASSETS", "run_worker_first": true, "not_found_handling": "404-page" },
+  "workers_dev": true,
+  // Cloudflare makes the DNS record itself, as it did for vendors.micromobility.sa.
+  "routes": [{ "pattern": "volunteer.micromobility.sa", "custom_domain": true }],
+  // Per connection, on top of the database's own lock on an account. Volunteers at an event share one network.
+  "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1103", "simple": { "limit": 20, "period": 60 } }],
+  "observability": { "enabled": true },
+  "vars": {
+    "SUPABASE_URL": "https://qpffkzmsfyilicwcsszz.supabase.co",
+    "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ"
+  },
+  "env": {
+    "staging": {
+      "name": "micromobility-volunteers-staging",
+      "workers_dev": true,
+      "assets": { "directory": "dist", "binding": "ASSETS", "run_worker_first": true, "not_found_handling": "404-page" },
+      "ratelimits": [{ "name": "LOGIN_LIMIT", "namespace_id": "1104", "simple": { "limit": 20, "period": 60 } }],
+      "observability": { "enabled": true },
+      "vars": {
+        "SUPABASE_URL": "https://jkfhiszcnuvoftvkzaye.supabase.co",
+        "SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImprZmhpc3pjbnV2b2Z0dmt6YXllIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA5NjEyNjIsImV4cCI6MjEwNjUzNzI2Mn0.2FIh9SWxZXutONZQfPruTR95GJ5nGXosZVArnsys_bw"
+      }
+    }
+  }
+}

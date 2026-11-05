@@ -53,6 +53,10 @@ describe("caps and types", () => {
     // what staff hid drops out, unless that would leave nothing
     expect(typeOptions(base, ["Road Carbon"])).not.toContain("Road Carbon");
     expect(typeOptions(base, ["Road", "Hybrid", "Mountain", "Kids", "Road Carbon"])).toHaveLength(5);
+    // a type staff closed on the session (2026-11-03) is not offered, whatever the account may see
+    expect(typeOptions({ ...base, closedTypes: ["Road", "Kids"] })).toEqual(["Hybrid", "Mountain", "Road Carbon"]);
+    expect(typeOptions({ ...sat, closedTypes: ["Own"] })).not.toContain("Own");
+    expect(typeOptions({ ...base, closedTypes: ["Hybrid"] }, ["Road", "Mountain", "Kids", "Road Carbon"])).not.toContain("Hybrid");
   });
 });
 
@@ -63,6 +67,8 @@ describe("prices", () => {
   });
   it("says the from-price on a card as _sessFromPrice", () => {
     expect(fromPrice(base, prices)).toEqual({ kind: "from", n: 57.5 });
+    // a type staff closed is not its cheapest (2026-11-03)
+    expect(fromPrice({ ...base, closedTypes: ["Hybrid", "Mountain", "Kids"] }, prices)).toEqual({ kind: "from", n: 75 });
     expect(fromPrice(sat, prices)).toEqual({ kind: "free" });
     expect(fromPrice({ ...base, kind: "event", community: true, seat: 40 }, prices)).toEqual({ kind: "seat", n: 40 });
     expect(fromPrice({ ...base, kind: "event", community: true, seat: 0 }, prices)).toEqual({ kind: "free" });
@@ -149,6 +155,7 @@ describe("validation", () => {
     expect(refusalOf({ code: "P0001", message: "SESSION_CLOSED" })).toBe("closed");
     expect(refusalOf({ message: "FIX_FIRST" })).toBe("fix_first");
     expect(refusalOf({ code: "22023", message: "PICK_TYPE" })).toBe("pick_type");
+    expect(refusalOf({ code: "P0001", message: "TYPE_CLOSED", details: "Road" })).toBe("pick_type");
     expect(refusalOf({ message: "x", details: "MEMBERS_ONLY" })).toBe("members");
     expect(refusalOf({ message: "One place per person on this session." })).toBe("one_per_session");
     expect(refusalOf({ message: "Up to 2 riders per booking on this ride.", details: "GROUP_CAP" })).toBe("group_cap");
@@ -474,6 +481,6 @@ describe("the waiver wording (the booking app's 2026-10-v3)", () => {
       expect(T.en.waiver[kind]).toEqual(waiverCopy(w, en as never));
       expect(T.ar.waiver[kind]).toEqual(waiverCopy(w, ar as never));
     }
-    expect([waiverVersionFor(base), waiverVersionFor({ kind: "swim" }), waiverVersionFor({ kind: "event" })]).toEqual(Object.values(WAIVER_VERSIONS));
+    expect([waiverVersionFor(base), waiverVersionFor({ kind: "swim" }), waiverVersionFor({ kind: "event" })]).toEqual([WAIVER_VERSIONS.ride, WAIVER_VERSIONS.swim, WAIVER_VERSIONS.activity]);
   });
 });

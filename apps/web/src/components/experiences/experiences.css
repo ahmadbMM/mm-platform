@@ -80,7 +80,7 @@ html:is([lang="ar"], [lang="ur"]) .xp-eyebrow { font-size: 13px; }
 .xs-back { display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0; margin: 0 0 14px; min-height: 44px; color: #4a4843; font: inherit; font-weight: 600; font-size: 15px; cursor: pointer; }
 .xs-back:hover { color: #077a4b; }
 /* The booking app's event cards (styles.css .landing-event-card.lec2): a poster - the mark in a band across the top, the name and line under it. */
-.xs-events { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); grid-auto-rows: 1fr; gap: 14px; }
+.xs-events { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
 .xs-event { display: flex; flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 16px; text-align: start; background: #fff; border: 1px solid rgba(26, 25, 25, .14); border-radius: 12px; padding: 26px 28px; min-height: 132px; cursor: pointer; font: inherit; color: #1a1919; transition: border-color .2s ease, box-shadow .2s ease; }
 .xs-event:hover { border-color: rgba(26, 25, 25, .25); box-shadow: 0 1px 3px rgba(26, 25, 25, .06); }
 .xs-event:focus-visible { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
@@ -357,6 +357,42 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
   .xs-ah-name { font-size: 25px; }
 }
 
+/* The donation event's card (2026-11-03; the booking app's .bld-card): the hosts' plate, its name in crimson, when and
+   where, its tagline and the short rules on white, a crimson edge across the top. An ordinary card's padding, so its
+   height and its About link line up with its neighbours (.xs-events' equal rows, .xs-about). */
+.xs-event.ev-blood { position: relative; overflow: hidden; gap: 12px; background: #fff; color: #0b1f16; border: 1px solid rgba(11, 31, 22, .4); border-top: 4px solid #03fe8a; }
+/* the owner's picture of a donor's arm is the card (2026-11-04): white as the card is, it runs off the bottom and the far side, the words in its empty part, mirrored where the page reads from the right */
+.xs-event.ev-blood { border-radius: 0; }
+/* "Different types": the eight blood types on the card, the owner's pick of the looks (2026-11-04; the booking app's .bld-ti); the neon is a fill, never text on white */
+.xs-bld-tiles { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 3px; width: 100%; max-width: 420px; direction: ltr; }
+.xs-bld-ti { display: flex; align-items: center; justify-content: center; height: 36px; font-size: 13px; font-weight: 700; letter-spacing: -.02em; background: #e6f2ec; color: #0b1f16; }
+.xs-bld-ti.on { background: #03fe8a; }
+.xs-bld-pic { position: absolute; inset-inline-end: 0; bottom: 0; z-index: 0; width: 74%; max-width: 280px; height: auto; pointer-events: none; }
+[dir="rtl"] .xs-bld-pic { transform: scaleX(-1); }
+.xs-event.ev-blood > :not(.xs-bld-pic) { position: relative; z-index: 1; }
+.xs-about.ab-blood { background: #fff; padding-inline: 4px; margin-inline-start: -4px; } /* a long translation reaches the picture */
+.xs-event.ev-blood:hover { border-color: #0b1f16; }
+.xs-event.ev-blood:focus-visible { outline-color: rgba(11, 31, 22, .45); }
+.xs-event.ev-blood .bld-plate, .xs-summary > .bld-plate, .xs-info .bld-plate { width: 100%; padding: 0; }
+.xs-summary > .bld-plate { max-width: 440px; } /* no wider than the booking app's band has it */
+.xs-event.ev-blood .xs-copy { width: 100%; }
+.xs-event.ev-blood .xs-ev-title { color: #0b1f16; }
+.xs-event.ev-blood .xs-ev-meta { margin-top: 6px; font-weight: 600; line-height: 1.45; color: rgba(11, 31, 22, .72); }
+.xs-event.ev-blood .bld-plate { max-width: 280px; }
+/* a card is a short teaser with the details one tap away; on a wide screen it takes the row, words beside the picture (the owner, 2026-11-04) */
+@media (min-width: 600px) {
+  .xs-events:has(.xs-event.ev-blood) { display: flex; flex-wrap: wrap; }
+  .xs-events:has(.xs-event.ev-blood) > * { flex: 1 1 260px; }
+  .xs-events > :has(> .xs-event.ev-blood) { flex: 1 1 100%; }
+  .xs-event.ev-blood { padding-inline-end: 48%; }
+  .xs-event.ev-blood .bld-plate { max-width: 340px; }
+  .xs-bld-pic { width: 46%; max-width: none; }
+  .xs-bld-cause { max-width: none; min-height: 0; }
+}
+.xs-bld-cause { max-width: 54%; min-height: 72px; margin: 0; font-size: 13px; font-weight: 800; line-height: 1.3; color: #0b1f16; }
+.xs .xs-go.ev-blood { background: #0b1f16; color: #fff; }
+.xs .xs-go.ev-blood:hover { background: #173a2a; }
+
 /* A phone names only the step it is on; the others keep their names for screen readers. */
 @media (max-width: 480px) {
   .xs-bar li { flex: 1 1 auto; } /* the step with its name takes the room it needs, the lines the rest */
@@ -381,6 +417,7 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
 .xs-defe-cause { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 700; color: #a22b63; }
 .xs .xs-info.ev-defe5k .xs-info-facts a { color: #a22b63; }
 .xs-about.ab-petromin { color: #d6202a; } /* Petromin Days: Petromin's red, as on its date cards (2026-10-12) */
+.xs-about.ab-blood { color: #0b1f16; } /* the donation event: its crimson, where every plain card has its link (2026-11-03) */
 .xs-about.ab-vlap { color: #0d0d0d; max-width: calc(100% - 100px); inset-inline-start: 25px; } /* Victory Lap: clear of the flag, under its words (the card's edge and .xs-vl-main's padding) */
 .sc-about { inset-inline-start: 35px; bottom: 11px; max-width: calc(100% - 51px); padding: 3px 0; color: var(--ev, #077a4b); }
 .xs-about:focus-visible, .sc-about:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 2px; }
@@ -413,6 +450,23 @@ html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 
 .xs-info-go { background: #077a4b; color: #fbf9f4; border: 1.5px solid #077a4b; }
 .xs-info-go:hover { background: #06603b; }
 .xs-info-btns button:focus-visible { outline: 3px solid rgba(7, 122, 75, .4); outline-offset: 2px; }
+/* The donation event's poster, in the same dialog (2026-11-03): the plate, Arabic or English, its sections, the PDF. */
+.xs-info.ev-blood .xs-info-go { background: #0b1f16; border-color: #0b1f16; color: #fff; }
+.xs-info.ev-blood .xs-info-go:hover { background: #173a2a; border-color: #173a2a; }
+.xs-info.ev-blood .xs-info-btns button:focus-visible { outline-color: rgba(11, 31, 22, .45); }
+.xs-info .bld-plate { margin-top: 12px; }
+.xs-bld-lang { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.xs-bld-lang button { min-height: 40px; padding: 0 12px; border-radius: 0; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; background: #fff; color: #0b1f16; border: 1px solid rgba(11, 31, 22, .28); }
+.xs-bld-lang button[aria-pressed="true"] { background: #0b1f16; border-color: #0b1f16; color: #fff; }
+.xs-bld-lang button:focus-visible { outline: 3px solid rgba(11, 31, 22, .45); outline-offset: 2px; }
+.xs-bld-poster { margin-top: 8px; font-size: 14px; line-height: 1.6; text-align: start; overflow-wrap: anywhere; }
+.xs-bld-sec { padding: 10px 0; border-top: 1px solid rgba(11, 31, 22, .12); }
+.xs-bld-sec:first-child { border-top: 0; }
+.xs-bld-sec summary { font-weight: 800; color: #0b1f16; cursor: pointer; }
+.xs-bld-sec p { margin: 6px 0 0; }
+.xs-bld-sec ol { margin: 6px 0 0; padding-inline-start: 22px; }
+.xs-bld-src { margin: 8px 0 0; font-size: 12px; opacity: .75; }
+.xs .xs-bld-pdf { display: block; margin-top: 10px; font-size: 13px; font-weight: 700; color: #0b1f16; text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 767px) {
   .xs-ev-wrap.has-about > .xs-event { padding-bottom: 50px; }
   .xs-about { inset-inline-start: 20px; bottom: 14px; max-width: calc(100% - 40px); }

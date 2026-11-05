@@ -236,3 +236,24 @@ TypeScript, bundled by esbuild.
   before the secret) refuses every sign-in until the secret is in place.
 - The portal's privacy notice (`#privacy`, `src/client/privacy.ts`) is a DRAFT until the owner
   approves it; nobody is asked to accept it.
+
+### The volunteer portal (apps/volunteers)
+
+A small Worker of its own, on the vendor portal's pattern: `volunteer.micromobility.sa`, where anyone reads the
+opportunities (a session with the volunteer switch on), anyone with a MicroMobility account registers interest, and those
+staff accept work (rentals migration `20261105120000_volunteers.sql`; apply it BEFORE the first deploy).
+
+- A volunteer is a customer account: sign-in is the booking app's `customer_login`, the same email or mobile and password.
+  Creating an account, a forgotten password and Google or Apple sign-in happen on the booking app
+  (`?handoff=volunteer`), which hands the rider back with a one-time code (`?signin=<code>`, `customer_handoff_redeem`),
+  as My Account's button does.
+- The token stays on the server: the Worker keeps it in an HttpOnly, host-only cookie (`mm_volunteer`) and forwards only the
+  allowlisted `volunteer_*` functions (`RPCS` in `src/worker/app.ts`), with `p_id` and `p_token` from the cookie. Signing out
+  clears the cookie and leaves the token, which is the account's: ending it would sign the rider out of the booking app.
+- Run it locally: `pnpm --filter volunteers dev`. Tests: `pnpm --filter volunteers test` (unit) and
+  `cd e2e/volunteers && npm ci && npm run e2e` (a browser against a stub database).
+- Deploys: CI deploys it only while the repository variable `MM_VOLUNTEERS` is `on` (main → production, staging branch →
+  `micromobility-volunteers-staging`). The address is a Workers custom domain in its `wrangler.jsonc`; Cloudflare makes the
+  DNS record on the first deploy.
+- Words: `src/lang/<code>.json`, the booking app's ten languages; English rides in the bundle, the others are fetched when
+  chosen. `test/words.test.ts` fails when a language misses a word.

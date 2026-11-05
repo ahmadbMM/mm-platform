@@ -1,4 +1,5 @@
 import { T as TICKET } from "@/components/booking/tickets.text";
+import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
@@ -40,6 +41,8 @@ import { vlShareItems } from "@/lib/vlap";
 // list is coming (the booking app's _vlShareItems). Arena Heros (2026-10-28) asks it too, for its organisers,
 // WeSportify, Mile and Gymnation: kind "arena", with staff's own list when they set one (sessions.vl.share),
 // else the pop-up lists what the owner named (first and last name, email, mobile, gender, division and team).
+// The Blood Donation event (2026-11-03) asks it for its hosts: kind "blood", with the list and every word of the pop-up
+// (content/blood-words.ts) in the answer, so the hosts are named nowhere in the browser's code.
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store, private" } });
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -63,8 +66,8 @@ export async function GET(req: Request) {
   const L = asLocale(locale), tx = serverL(locale);
   const content = await loadSiteContent();
   const d = resolvePage(experiencesSchema, content, L).dates;
-  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين") };
-  const enNames = kindNames(resolvePage(experiencesSchema, content, "en").dates);
+  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
+  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
   const t = serverLocalize(TICKET, locale);
   const clock = (x: string) => fmtClock(x, locale);
   // the time as the ticket writes it: "gathering - start" (Run for Her gathers), else a window
@@ -81,6 +84,7 @@ export async function GET(req: Request) {
       distance: first.km !== null ? t.rtKm(String(first.km)) : null,
       ...(s.kind === "vlap" ? ((v) => ({ kind: "vlap" as const, items: v.set ? v.items : null }))(vlShareItems(s.vl, locale, [])) : {}),
       ...(s.kind === "arena" ? ((v) => ({ kind: "arena" as const, items: v.set ? v.items : null }))(vlShareItems(s.ah, locale, [])) : {}),
+      ...(s.kind === "blood" ? (({ items, ...words }) => ({ kind: "blood" as const, items, words }))(bloodWords(tx).share) : {}),
     },
   });
 }

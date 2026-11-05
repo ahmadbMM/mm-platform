@@ -30,14 +30,14 @@ describe("which sessions have no bike", () => {
     for (const s of [TICKET.en.underReview, CLAIM_WORDS.id.lateSub, CLAIM_WORDS.ms.doneSub, CLAIM_WORDS.zh.noSub, TICKET.ar.cueDone("1"), RATING_WORDS.ja.kicker, "Wie war die Fahrt?"]) expect(s).toMatch(CYCLING);
   });
   it("knows them by kind, the same list as rentsBikes, and every other kind is a bike kind", () => {
-    const all: RideKind[] = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k", "arena"];
+    const all: RideKind[] = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k", "arena", "blood"];
     for (const k of all) {
       expect(isNonBike(k), k).toBe(!rentsBikes(k));
       expect(BIKE_KINDS.has(k) !== NON_BIKE_KINDS.has(k), k).toBe(true);
     }
   });
   it("knows them by the booking app's session id when the session did not load", () => {
-    for (const id of ["2026-10-20-tw", "2026-10-05-ev", "2026-10-17-rh", "2026-10-26-vl", "2026-10-22-df", "2026-10-22-df-2", "2026-11-06-ah"]) expect(isNonBike(null, id), id).toBe(true);
+    for (const id of ["2026-10-20-tw", "2026-10-05-ev", "2026-10-17-rh", "2026-10-26-vl", "2026-10-22-df", "2026-10-22-df-2", "2026-11-06-ah", "2026-11-05-bd"]) expect(isNonBike(null, id), id).toBe(true);
     for (const id of ["2026-10-20", "2026-09-30-pw", "2026-09-23-nd", "2026-10-22-dfx", "j1", ""]) expect(isNonBike(undefined, id), id).toBe(false);
     expect(isNonBike("saturday", "2026-10-24")).toBe(false);
   });
@@ -47,7 +47,7 @@ describe("the rating on a session without a bike", () => {
   it("says run on a run, session on the pool, the workshop, an event and Victory Lap, ride on a bike", () => {
     expect(rideWord("runher")).toBe("run");
     expect(rideWord(null, "2026-10-22-df")).toBe("run");
-    for (const k of ["swim", "workshop", "event", "vlap", "arena"]) expect(rideWord(k), k).toBe("session");
+    for (const k of ["swim", "workshop", "event", "vlap", "arena", "blood"]) expect(rideWord(k), k).toBe("session");
     expect(rideWord(undefined, "2026-10-26-vl")).toBe("session");
     expect(rideWord(undefined, "2026-10-20-tw")).toBe("session");
     for (const k of ["jcc", "saturday", "petromin", "snd96"]) expect(rideWord(k), k).toBe("ride");
@@ -61,7 +61,7 @@ describe("the rating on a session without a bike", () => {
     expect(ratingNoBike(false, { kind: "jcc", bikes: true }, "j1")).toBe(false);
     expect(ratingNoBike(false, null, "2026-10-24")).toBe(false);
     expect(ratingNoBike(true, { kind: "jcc", bikes: true }, "j1")).toBe(true);
-    expect(questionKeys(formOf("vlap"), { noBike: ratingNoBike(false, null, "2026-10-26-vl") })).toEqual(["service", "experience"]);
+    expect(questionKeys(formOf("vlap"), { noBike: ratingNoBike(false, null, "2026-10-26-vl") })).toEqual(["service"]);
   });
   it("has the session words in all 16 languages, none of them about cycling", () => {
     expect(Object.keys(RATING_WORDS).sort()).toEqual([...LOCALE_CODES].sort());

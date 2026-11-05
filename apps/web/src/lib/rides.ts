@@ -12,8 +12,8 @@ import { sessionGender, type SessionGender } from "./session-gender";
 //
 // The rules below mirror the booking app (app.src.html) and the database, never guess:
 //   kind     _rideKind: snd96 first, anything not 'community' is a circuit night (jcc), then
-//            petromin / swim / workshop / event / runher / vlap / defe5k / arena, and every other community
-//            row is the Saturday ride.
+//            petromin / swim / workshop / event / runher / vlap / defe5k / arena / blood, and every other
+//            community row is the Saturday ride.
 //   members  _community_booking_gate: event_kind 'community' without open_to_all is booked only
 //            by members (the Saturday tag, the Club).
 //   free     _isFreeRide: a community ride (not snd96) that is not a paid ride.
@@ -41,8 +41,11 @@ import { sessionGender, type SessionGender } from "./session-gender";
 //            2 men, each partner booking their own place; no bikes, no breakfast; a window ("06:00 - 20:00", with a
 //            prayer break), never a gathering; a paid ride at the session's own price per athlete (sessions.price,
 //            140 SAR, medals included), which only members are told; a card of its own while it has a date.
+//   blood    The Blood Donation event (ride_kind 'blood', 2026-11-03; lib/blood.ts): at the circuit, open to everyone,
+//            free, no bikes, one place per account, a window, no price anywhere; a card of its own while it has a date,
+//            and nothing names it before that (its words are the server's, content/blood-words.ts).
 
-export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena";
+export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena" | "blood";
 /** A ride_prices row: the fare, and (lib/biz.ts faresOf) the highest fare quoted and the employees' fare when the database has them. */
 export type RidePrice = PriceRow;
 export type RideSession = {
@@ -107,6 +110,10 @@ export type RideSession = {
    *  20261027150000; lib/session-gender.ts). toSession always sets it, null when the read did not ask for it
    *  (SESSION_COLS_GENDER); a copy kept at the edge from before has none, and reads as mixed. */
   gender?: SessionGender | null;
+  /** The bike types staff closed on this session: sessions.closed_types (the owner, 2026-11-03; rentals 20261103210000).
+   *  Riders cannot book them, so they are not priced (bike-kinds.ts typeOffered). toSession always sets it, empty when
+   *  the read did not ask for it (SESSION_COLS_CLOSED); a copy kept at the edge from before has none, and reads as open. */
+  closedTypes?: string[];
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -115,7 +122,7 @@ type Row = {
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
   spots?: unknown; addons?: unknown; meet_url?: unknown; location?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
-  gender_only?: unknown;
+  gender_only?: unknown; closed_types?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -124,7 +131,7 @@ export function rideKind(r: Row): RideKind {
   if (r.event_kind !== "community") return "jcc";
   // a kind this list does not know reads as the Saturday ride, as the booking app's _rideKind does: every kind
   // the booking app makes is named here (Arena Heros since 2026-10-28, which read as a Saturday ride before)
-  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" || k === "arena" ? k : "saturday";
+  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" || k === "arena" || k === "blood" ? k : "saturday";
 }
 
 /** A route's slug as the Routes page writes one (content/pages/routes.ts): lower-case letters,
@@ -257,11 +264,12 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     meetUrl: typeof r.meet_url === "string" && /^https:\/\//i.test(r.meet_url.trim()) ? r.meet_url.trim() : null,
     location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null,
     left: null,
-    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" ? null : collectTime(r.bike_slots),
+    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" || kind === "blood" ? null : collectTime(r.bike_slots),
     ...breakfastOf(r),
     ...revealOf(r),
     ...((kind === "vlap" || kind === "arena") && "vl" in r ? { vl: r.vl ?? null } : {}),
     gender: sessionGender(r.gender_only),
+    closedTypes: Array.isArray(r.closed_types) ? r.closed_types.filter((x): x is string => typeof x === "string") : [],
   };
 }
 
@@ -279,10 +287,12 @@ export function upcoming(sessions: RideSession[], now: string): RideSession[] {
  *  Petromin tag holder or a community member (the owner, 2026-10-12), lists none. */
 export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessions.filter((s) => s.kind !== "petromin");
 
-/** The names a page gives each kind of session (Experiences > Next dates). */
+/** The names a page gives each kind of session (Experiences > Next dates). The Blood Donation event's is no field of
+ *  the Website editor, whose schema anyone may read (api/site-schema): a page that may show one adds its name
+ *  (content/blood-words.ts bloodName), as it adds Petromin's. */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), petromin: "" };
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), petromin: "", blood: "" };
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other
@@ -320,6 +330,9 @@ export const SESSION_COLS_VL = "vl";
 // Men only, women only or mixed (the owner, 2026-10-27; rentals migration 20261027150000; lib/session-gender.ts). A
 // group of its own, so a database without it reads as before: every session mixed.
 export const SESSION_COLS_GENDER = "gender_only";
+// The bike types closed on a session (the owner, 2026-11-03; rentals migration 20261103210000). A group of its own, so
+// a database without it reads as before: every type open.
+export const SESSION_COLS_CLOSED = "closed_types";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -465,7 +478,7 @@ async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, 
 
 /** The optional groups of columns every list of the sessions ahead asks for (staging: not the place, which
  *  SESSION_COLS already holds for its on-site booking). */
-const SESSION_GROUPS = [SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER];
+const SESSION_GROUPS = [SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER, SESSION_COLS_CLOSED];
 
 /** Each of these sessions' rule, men only, women only or null (mixed; the owner, 2026-10-27), read through
  *  list_sessions for the signed-in account: the Club's members' area lists the next members' rides from

@@ -272,7 +272,7 @@ describe("no bikes anywhere", () => {
     expect(rideWord("arena")).toBe("session");
     expect(rideWord(undefined, "2026-11-06-ah")).toBe("session");
     expect(ratingNoBike(false, null, "2026-11-06-ah")).toBe(true);
-    expect(questionKeys(formOf("arena"), { noBike: ratingNoBike(false, { kind: "arena", bikes: false }, "x") })).toEqual(["service", "experience"]);
+    expect(questionKeys(formOf("arena"), { noBike: ratingNoBike(false, { kind: "arena", bikes: false }, "x") })).toEqual(["service"]);
   });
   it("is never a ride on Your rides and earns no badge of its own", () => {
     const empty: BadgeData = { catalog: [], weeks: null, seasons: [], mine: [] };

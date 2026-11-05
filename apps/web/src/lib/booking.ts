@@ -6,6 +6,7 @@
 // row (_enforce_booking_price, _fare_now), gate the members' rides, cap the parties and the solo
 // rides and coerce a booking past capacity onto the waitlist; nothing here can make a booking
 // cheaper or let one through that the database would refuse.
+import { typeOffered } from "./bike-kinds";
 import type { RideKind } from "./rides";
 import { genderOk, type SessionGender } from "./session-gender";
 
@@ -55,6 +56,9 @@ export type BookSession = {
   /** Men only ('male'), women only ('female') or mixed (null): sessions.gender_only (the owner, 2026-10-27;
    *  lib/session-gender.ts). Only an account of that gender books one for a single gender (genderRefused). */
   gender?: SessionGender | null;
+  /** The bike types staff closed on this session (sessions.closed_types; the owner, 2026-11-03): a rider picks none of
+   *  them, and none is priced (lib/bike-kinds.ts typeOffered). The database refuses one anyway (TYPE_CLOSED). */
+  closedTypes?: string[];
 };
 
 /** The signed-in account, as the wizard needs it (lib/booking-server.ts bookingAccount). */
@@ -141,9 +145,10 @@ export const RIDER_TYPES = ["Road", "Hybrid", "Mountain", "Kids", "Road Carbon",
 export type BikeType = (typeof RIDER_TYPES)[number];
 export const isRiderType = (v: unknown): v is BikeType => typeof v === "string" && (RIDER_TYPES as readonly string[]).includes(v);
 
-/** The picker's types for this session and account (bikeTypeOpts, less what staff hid). */
-export function typeOptions(s: Pick<BookSession, "community" | "kind">, hidden: string[] = []): BikeType[] {
-  const all = RIDER_TYPES.filter((t) => (t !== "Own" || ownOffered(s)) && (t !== "Road Carbon" || !noCarbon(s)));
+/** The picker's types for this session and account (bikeTypeOpts, less what staff hid on the account and what they
+ *  closed on the session). */
+export function typeOptions(s: Pick<BookSession, "community" | "kind" | "closedTypes">, hidden: string[] = []): BikeType[] {
+  const all = RIDER_TYPES.filter((t) => (t !== "Own" || ownOffered(s)) && typeOffered({ noCarbon: noCarbon(s), closedTypes: s.closedTypes }, t));
   const shown = all.filter((t) => !hidden.includes(t));
   return shown.length ? shown : all;
 }
@@ -171,11 +176,11 @@ export function unpickedRange(prices: Prices, max?: Prices): [number, number] {
 
 /** What a ride costs before anything is picked (_sessFromPrice): Free, a seat, or the cheapest
  *  bike it offers. "" for a day with nothing to rent (the pool, the workshop). */
-export function fromPrice(s: Pick<BookSession, "free" | "seat" | "kind" | "community">, prices: Prices): { kind: "free" } | { kind: "from"; n: number } | { kind: "seat"; n: number } | null {
+export function fromPrice(s: Pick<BookSession, "free" | "seat" | "kind" | "community" | "closedTypes">, prices: Prices): { kind: "free" } | { kind: "from"; n: number } | { kind: "seat"; n: number } | null {
   if (s.free) return { kind: "free" };
   if (s.seat != null) return s.seat ? { kind: "seat", n: s.seat } : { kind: "free" };
   if (!needsBike(s)) return null;
-  const ps = RIDER_TYPES.filter((t) => t !== "Own" && (t !== "Road Carbon" || !noCarbon(s))).map((t) => priceFor(prices, t));
+  const ps = RIDER_TYPES.filter((t) => t !== "Own" && typeOffered({ noCarbon: noCarbon(s), closedTypes: s.closedTypes }, t)).map((t) => priceFor(prices, t));
   return ps.length ? { kind: "from", n: Math.min(...ps) } : null;
 }
 
@@ -333,7 +338,7 @@ export function refusalOf(err: { code?: string; message?: string; details?: stri
   if (/GENDER_ONLY/.test(m)) return /\bmale\b/.test(d) ? "men_only" : "women_only";
   if (/SESSION_CLOSED/.test(m)) return "closed";
   if (/FIX_FIRST/.test(m)) return "fix_first";
-  if (/PICK_TYPE/.test(m)) return "pick_type";
+  if (/PICK_TYPE|TYPE_CLOSED/.test(m)) return "pick_type"; // TYPE_CLOSED: closed since this page was read (_type_closed_guard)
   if (/NOT_OPEN_YET/.test(m)) return "not_open";
   if (/WAIVER_REQUIRED/.test(m)) return "waiver";
   if (d === "MEMBERS_ONLY" || /community members only/i.test(m)) return "members";
