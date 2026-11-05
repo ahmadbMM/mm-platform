@@ -127,7 +127,15 @@ test("accepted: the agreement once, then work: find, check in, mark donated, und
   await row.getByRole("button", { name: "Check in" }).click();
   await expect(page.locator('.row[data-id="q1111111"]')).toContainText("Checked in");
   await expect(page.locator("#vol-counts")).toContainText("1 / 3");
+  // Checking in and donating are two steps: the tap only asks, naming the person, and Not yet marks nothing.
+  const ask = page.locator("dialog.ask");
   await page.locator('.row[data-id="q1111111"]').getByRole("button", { name: "Mark donated" }).click();
+  await expect(ask).toContainText("Has Dana Donor donated?");
+  await ask.getByRole("button", { name: "Not yet" }).click();
+  await expect(ask).toHaveCount(0);
+  await expect(page.locator('.row[data-id="q1111111"]').getByRole("button", { name: "Mark donated" })).toBeVisible();
+  await page.locator('.row[data-id="q1111111"]').getByRole("button", { name: "Mark donated" }).click();
+  await ask.getByRole("button", { name: "Mark donated" }).click();
   await expect(page.locator('.row[data-id="q1111111"]')).toContainText("Donated");
   await page.locator('.row[data-id="q1111111"]').getByRole("button", { name: "Undo donated" }).click();
   await page.locator('.row[data-id="q1111111"]').getByRole("button", { name: "Undo check-in" }).click();
@@ -163,6 +171,7 @@ test("donor or visitor: a chip on every row, one tap to switch, Mark donated for
   await expect(row().locator(".chip-donor")).toHaveText("Donor");
   await expect(page.locator("#vol-counts")).toContainText("0 Visitors");
   await row().getByRole("button", { name: "Mark donated" }).click();
+  await page.locator("dialog.ask").getByRole("button", { name: "Mark donated" }).click();
   await expect(row().getByRole("button", { name: "Make visitor" })).toHaveCount(0);
 });
 
