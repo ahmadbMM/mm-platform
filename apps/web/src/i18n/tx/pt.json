@@ -1529,5 +1529,18 @@
   "For giving blood at a MicroMobility event. Our team confirms it on the night.": "Por doar sangue em um evento da MicroMobility. Nossa equipe confirma na mesma noite.",
   "Volunteer": "Voluntário",
   "Volunteer at one of our events.": "Seja voluntário em um dos nossos eventos.",
-  "For giving your time to help run a MicroMobility event. Given by our team.": "Por dedicar seu tempo para ajudar a organizar um evento da MicroMobility. Concedido pela nossa equipe."
+  "For giving your time to help run a MicroMobility event. Given by our team.": "Por dedicar seu tempo para ajudar a organizar um evento da MicroMobility. Concedido pela nossa equipe.",
+  "Visitor": "Visitante",
+  "Visitor number": "Número do visitante",
+  "Checked-in visitors get one free ride on any bike except Carbon, valid for one month, on circuit rides (Petromin nights for Community and Petromin accounts). Decided to donate? Tell our team at the event.": "Visitantes com presença registrada ganham um passeio grátis em qualquer bicicleta, exceto Carbon, válido por um mês, nas sessões do circuito (noites Petromin para contas Community e Petromin). Decidiu doar? Avise nossa equipe no evento.",
+  "Thank you for coming. Enter this code when you book. Valid until {0}.": "Obrigado por vir. Digite este código ao reservar. Válido até {0}.",
+  "Your free ride has been used. Thank you for coming.": "Seu passeio grátis já foi usado. Obrigado por vir.",
+  "Club or community": "Clube ou comunidade",
+  "One more question": "Mais uma pergunta",
+  "Which club or community are you from?": "De qual clube ou comunidade você é?",
+  "I don’t have one": "Não tenho",
+  "Club or community name": "Nome do clube ou comunidade",
+  "Enter your club or community, or tap I don’t have one.": "Escreva seu clube ou comunidade, ou toque em Não tenho.",
+  "You’re registered for this event. We just need to know this.": "Você está inscrito neste evento. Só precisamos saber isto.",
+  "Continue": "Continuar"
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-import RaceGateLoader from "./RaceGateLoader";
+import ClubGateLoader from "./ClubGateLoader";
 import ShareGate, { type PendingShare, type ShareDone } from "./ShareGate";
 import { SHARE_QUIET } from "./quiet";
 
@@ -67,5 +67,5 @@ export default function ShareGateLoader({ locale }: { locale: string }) {
   };
 
   if (pending) return <ShareGate key={`${pending.sessionId}-${round}`} {...pending} onDone={(r) => done(pending.sessionId, r)} />;
-  return clear ? <RaceGateLoader locale={locale} /> : null;
+  return clear ? <ClubGateLoader locale={locale} /> : null; // the club or community question, then the Defe race question's and the rating's
 }

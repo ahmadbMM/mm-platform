@@ -1529,5 +1529,18 @@
   "For giving blood at a MicroMobility event. Our team confirms it on the night.": "За сдачу крови на мероприятии MicroMobility. Наша команда подтверждает это в тот же вечер.",
   "Volunteer": "Волонтёр",
   "Volunteer at one of our events.": "Станьте волонтёром на одном из наших мероприятий.",
-  "For giving your time to help run a MicroMobility event. Given by our team.": "За время, которое вы отдали, помогая проводить мероприятие MicroMobility. Вручается нашей командой."
+  "For giving your time to help run a MicroMobility event. Given by our team.": "За время, которое вы отдали, помогая проводить мероприятие MicroMobility. Вручается нашей командой.",
+  "Visitor": "Посетитель",
+  "Visitor number": "Номер посетителя",
+  "Checked-in visitors get one free ride on any bike except Carbon, valid for one month, on circuit rides (Petromin nights for Community and Petromin accounts). Decided to donate? Tell our team at the event.": "Отмеченные на месте посетители получают один бесплатный заезд на любом велосипеде, кроме карбонового, на один месяц, на заездах по трассе (вечера Petromin для аккаунтов сообщества и Petromin). Решили сдать кровь? Скажите нашей команде на месте.",
+  "Thank you for coming. Enter this code when you book. Valid until {0}.": "Спасибо, что пришли. Введите этот код при бронировании. Действует до {0}.",
+  "Your free ride has been used. Thank you for coming.": "Ваш бесплатный заезд уже использован. Спасибо, что пришли.",
+  "Club or community": "Клуб или сообщество",
+  "One more question": "Ещё один вопрос",
+  "Which club or community are you from?": "Из какого вы клуба или сообщества?",
+  "I don’t have one": "У меня нет",
+  "Club or community name": "Название клуба или сообщества",
+  "Enter your club or community, or tap I don’t have one.": "Укажите свой клуб или сообщество либо нажмите «У меня нет».",
+  "You’re registered for this event. We just need to know this.": "Вы зарегистрированы на это мероприятие. Нам нужно узнать только это.",
+  "Continue": "Продолжить"
 }

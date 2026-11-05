@@ -20,7 +20,7 @@ import { LOCALE_CODES } from "@/i18n/locales";
 import source from "@/i18n/source.json";
 import { makeL } from "@/i18n/tx";
 import de from "@/i18n/tx/de.json";
-import { bloodRewards, isBloodId, rewardGood, type BloodReward } from "../blood";
+import { bloodRewards, isBloodId, pendingClub, rewardGood, type BloodReward } from "../blood";
 import { isNonBike, NON_BIKE_KINDS } from "../bike-kinds";
 import { EVENT_CARDS, EVENT_OF, bookingAt, dateText, eventCards, infoPlace, infoPlaces, infoPrice, infoTimes, membersOnlyDate, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
 import { memberArea } from "../members";
@@ -639,5 +639,36 @@ describe("its words in every language", () => {
       for (const en of ["Micromobility Blood Donation", "Donor number", "I have read this and I agree", "Before you register"]) expect(tx(en), `${l}: ${en}`).not.toBe(en);
       expect(tx("Thank you for donating. Enter this code when you book. Valid until {0}."), l).toContain("{0}");
     }
+  });
+});
+
+// The club or community question (rentals 20261105150000), and a visitor on the ticket (20261105140000).
+describe("donors, visitors and their club", () => {
+  const row = (x: Record<string, unknown> = {}) => ({ id: "q1", session_id: "2026-11-05-bd", session_date: "2026-11-05", status: "waiting", customer_id: "c1", blood_club: null, ...x });
+  it("asks only a live booking from today on that says it has not answered", () => {
+    expect(pendingClub([row()], "2026-11-05", "c1")).toEqual({ sessionId: "2026-11-05-bd", date: "2026-11-05" });
+    // answered, with a name or with I don't have one
+    expect(pendingClub([row({ blood_club: "Jeddah Riders" })], "2026-11-05", "c1")).toBeNull();
+    expect(pendingClub([row({ blood_club: "" })], "2026-11-05", "c1")).toBeNull();
+    // a read without the column asks nothing
+    const { blood_club: _, ...without } = row();
+    expect(pendingClub([without], "2026-11-05", "c1")).toBeNull();
+    expect(pendingClub([row({ status: "cancelled" })], "2026-11-05", "c1")).toBeNull();
+    expect(pendingClub([row()], "2026-11-06", "c1")).toBeNull();
+    expect(pendingClub([row({ session_id: "2026-11-05" })], "2026-11-05", "c1")).toBeNull();
+    expect(pendingClub([row({ customer_id: "c2" })], "2026-11-05", "c1")).toBeNull();
+    expect(pendingClub([row()], "2026-11-05", "c1", ["2026-11-05-bd"])).toBeNull();
+  });
+  it("a ticket row knows a visitor and their club, and a donor's row stays as it was", () => {
+    const r = { id: "q1", session_id: "2026-11-05-bd", session_date: "2026-11-05", session_day: "Thursday", status: "waiting", name: "Sara Haddad", type_preference: "None" };
+    expect(ticketRow({ ...r, blood_role: "visitor", blood_club: "Jeddah Riders" })).toMatchObject({ bloodVisitor: true, bloodClub: "Jeddah Riders" });
+    const donor = ticketRow({ ...r, blood_role: null, blood_club: "" })!;
+    expect("bloodVisitor" in donor || "bloodClub" in donor).toBe(false);
+  });
+  it("every word of the pop-up, and the visitor's share list, come from the server's words: no email, no blood type", () => {
+    const w = bloodWords((en: string) => en);
+    expect(w.share.itemsVisitor).toEqual(["Full name", "Mobile number", "Gender", "Birth date", "Nationality"]);
+    expect(w.club.none).toBe("I don’t have one");
+    expect(readFileSync("src/components/account/ClubGate.tsx", "utf8")).not.toMatch(/Give blood|Blood Donation"|I don’t have one/);
   });
 });

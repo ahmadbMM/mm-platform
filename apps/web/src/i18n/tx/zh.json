@@ -1529,5 +1529,18 @@
   "For giving blood at a MicroMobility event. Our team confirms it on the night.": "表彰在 MicroMobility 活动中献血。我们的团队会在当晚确认。",
   "Volunteer": "志愿者",
   "Volunteer at one of our events.": "在我们的活动中担任志愿者。",
-  "For giving your time to help run a MicroMobility event. Given by our team.": "表彰您抽出时间协助举办 MicroMobility 活动。由我们的团队颁发。"
+  "For giving your time to help run a MicroMobility event. Given by our team.": "表彰您抽出时间协助举办 MicroMobility 活动。由我们的团队颁发。",
+  "Visitor": "访客",
+  "Visitor number": "访客编号",
+  "Checked-in visitors get one free ride on any bike except Carbon, valid for one month, on circuit rides (Petromin nights for Community and Petromin accounts). Decided to donate? Tell our team at the event.": "已签到的访客可获得一次免费骑行，可选除碳纤维车型外的任意车型，有效期一个月，适用于赛道骑行（社区和 Petromin 账户也可用于 Petromin 之夜）。决定献血了？请在现场告诉我们的团队。",
+  "Thank you for coming. Enter this code when you book. Valid until {0}.": "感谢您的到来。预订时请输入此代码。有效期至 {0}。",
+  "Your free ride has been used. Thank you for coming.": "您的免费骑行已使用。感谢您的到来。",
+  "Club or community": "俱乐部或社区",
+  "One more question": "还有一个问题",
+  "Which club or community are you from?": "您来自哪个俱乐部或社区？",
+  "I don’t have one": "我没有",
+  "Club or community name": "俱乐部或社区名称",
+  "Enter your club or community, or tap I don’t have one.": "请输入您的俱乐部或社区，或点按“我没有”。",
+  "You’re registered for this event. We just need to know this.": "您已报名参加此活动。我们只需要了解这一点。",
+  "Continue": "继续"
 }
