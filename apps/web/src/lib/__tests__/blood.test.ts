@@ -651,7 +651,8 @@ describe("donors, visitors and their club", () => {
     expect(pendingClub([row({ blood_club: "Jeddah Riders" })], "2026-11-05", "c1")).toBeNull();
     expect(pendingClub([row({ blood_club: "" })], "2026-11-05", "c1")).toBeNull();
     // a read without the column asks nothing
-    const { blood_club: _, ...without } = row();
+    const without: Record<string, unknown> = row();
+    delete without.blood_club;
     expect(pendingClub([without], "2026-11-05", "c1")).toBeNull();
     expect(pendingClub([row({ status: "cancelled" })], "2026-11-05", "c1")).toBeNull();
     expect(pendingClub([row()], "2026-11-06", "c1")).toBeNull();
