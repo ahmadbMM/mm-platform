@@ -90,7 +90,7 @@ const server = createServer((req, res) => {
         if (sh?.status !== "accepted") return raise(res, "VOL_NOT_ACCEPTED");
         sh.clock_in = sh.clock_in ?? new Date().toISOString(); sh.clock_out = null;
         return send(res, { ok: true, closes_at: o.closes_at, caps: o.caps, briefing: o.briefing, hours_mode: o.hours_mode, clock_in: sh.clock_in, role: sh.role ?? null, mine: 0,
-          counts: o.caps.counts ? { booked: db.bookings.length, in: db.bookings.filter((b) => b.checked_in).length, donated: db.bookings.filter((b) => b.donated).length } : null });
+          counts: o.caps.counts ? { booked: db.bookings.length, in: db.bookings.filter((b) => b.checked_in).length, donated: db.bookings.filter((b) => b.donated).length, visitors: db.bookings.filter((b) => b.visitor).length } : null });
       }
       case "volunteer_clock_out": db.shifts.get(body.p_session).clock_out = new Date().toISOString(); return send(res, { ok: true });
       case "volunteer_find": {
@@ -109,8 +109,17 @@ const server = createServer((req, res) => {
       case "volunteer_donated": {
         if (!open) return raise(res, "VOL_CLOSED");
         const b = db.bookings.find((x) => x.id === body.p_entry_id);
+        if (body.p_on && b.visitor) return raise(res, "BLOOD_VISITOR");
         b.donated = body.p_on; b.mine_donated = body.p_on;
         return send(res, { ok: true });
+      }
+      case "volunteer_blood_role": {
+        if (!open) return raise(res, "VOL_CLOSED");
+        const b = db.bookings.find((x) => x.id === body.p_entry_id);
+        if (b.own) return raise(res, "VOL_OWN_BOOKING");
+        if (body.p_role === "visitor" && b.donated) return raise(res, "BLOOD_DONATED");
+        b.visitor = body.p_role === "visitor";
+        return send(res, { ok: true, role: body.p_role });
       }
     }
     return raise(res, `unknown ${name}`);

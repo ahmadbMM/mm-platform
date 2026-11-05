@@ -127,5 +127,12 @@
   "evVlapName": "فيكتوري لاب",
   "evArenaName": "سباق أرينا هيروز الهجين",
   "evDefeName": "سباق دفء 5 كم",
-  "evBloodName": "مايكروموبيليتي التبرع بالدم"
+  "evBloodName": "مايكروموبيليتي التبرع بالدم",
+  "roleDonor": "متبرع",
+  "roleVisitor": "زائر",
+  "visitors": "الزوار",
+  "makeVisitor": "اجعله زائرًا",
+  "makeDonor": "اجعله متبرعًا",
+  "errVisitor": "هذا الشخص زائر. اجعله متبرعًا أولًا.",
+  "errDonatedFirst": "تم تسجيل تبرعه، ألغِ ذلك أولًا."
 }

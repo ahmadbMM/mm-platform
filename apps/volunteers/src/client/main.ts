@@ -20,8 +20,8 @@ type Mine = { id: string; title: string | null; ride_kind: string | null; date: 
 type RecordRow = { id: number; hours: number; on: string; note: string | null; session_id: string | null; title: string | null; ride_kind: string | null };
 type Me = { signedIn?: false; id: string; name: string; hours: number; account: string | null; status: string | null; agreed: boolean; mine: Mine[]; record: RecordRow[];
   first_on: string | null; last_on: string | null; sessions: number; cert_signer: string | null; cert_title: string | null };
-type Booking = { id: string; name: string; number: number | null; checked_in: boolean; donated: boolean; own: boolean; desk: string | null; mine_in: boolean; mine_donated: boolean };
-type Entered = { closes_at: string; caps: Record<string, boolean>; briefing: string | null; hours_mode: string; role: string | null; counts: { booked: number; in: number; donated: number } | null };
+type Booking = { id: string; name: string; number: number | null; checked_in: boolean; donated: boolean; visitor?: boolean; own: boolean; desk: string | null; mine_in: boolean; mine_donated: boolean };
+type Entered = { closes_at: string; caps: Record<string, boolean>; briefing: string | null; hours_mode: string; role: string | null; counts: { booked: number; in: number; donated: number; visitors?: number } | null };
 
 const app = document.getElementById("app")!;
 const S: {
@@ -41,7 +41,7 @@ const say = (e: { code: string; detail?: string }): string => {
   const map: Record<string, Key> = {
     VOL_CLOSED: "volClosed", VOL_SIGNUP_CLOSED: "vdSignupClosed", VOL_DOB: "errDob", VOL_AGE: "vdTooYoung", VOL_DECLINED: "errDeclined", VOL_NOT_VOLUNTEER: "vdNotVolunteer",
     VOL_NOT_ACCEPTED: "vdNotAccepted", VOL_ACCOUNT: "vdAccountPwd", VOL_ALREADY_IN: "vdAlreadyIn", VOL_CAP: "vdNotAllowed", VOL_OWN_BOOKING: "vdOwn", VOL_NOT_YOURS: "volNotYours",
-    VOL_DONATED_FIRST: "volDonatedFirst", VOL_SLOW: "volSlow", VOL_BAD_SEARCH: "volSearchHint", BOOKING_NOT_FOUND: "volNotFound", BAD_BOOKING_STATE: "volNotFound", VOL_AGREE: "vdAgreeTitle",
+    BLOOD_VISITOR: "errVisitor", BLOOD_DONATED: "errDonatedFirst", VOL_DONATED_FIRST: "volDonatedFirst", VOL_SLOW: "volSlow", VOL_BAD_SEARCH: "volSearchHint", BOOKING_NOT_FOUND: "volNotFound", BAD_BOOKING_STATE: "volNotFound", VOL_AGREE: "vdAgreeTitle",
     BAD_LOGIN: "errBadLogin", LOCKED: "errLocked", RATE_LIMIT: "errRate", VOL_TOKEN: "vdSessionEnded",
   };
   if (e.code === "VOL_ASK_DESK") {
@@ -343,7 +343,7 @@ function deskHtml(main: HTMLElement, sh: Mine | null): void {
     onkeydown: ((ev: KeyboardEvent) => { if (ev.key === "Enter") { ev.preventDefault(); void search(q.value); } }) as unknown as EventListener });
   append(main, h("h1", {}, sh ? sessionName(sh) : ""),
     h("p", { class: "when" }, `${t("vdOpenUntil", whenLabel(e.closes_at))}${e.role ? ` · ${e.role}` : ""}`));
-  if (e.counts) main.appendChild(h("p", { class: "counts", id: "vol-counts" }, h("span", {}, h("b", {}, String(e.counts.in)), ` / ${e.counts.booked} ${t("volStIn")}`), blood ? h("span", {}, h("b", {}, String(e.counts.donated)), ` ${t("donated")}`) : null));
+  if (e.counts) main.appendChild(h("p", { class: "counts", id: "vol-counts" }, h("span", {}, h("b", {}, String(e.counts.in)), ` / ${e.counts.booked} ${t("volStIn")}`), blood ? h("span", {}, h("b", {}, String(e.counts.donated)), ` ${t("donated")}`) : null, blood && e.counts.visitors != null ? h("span", {}, h("b", {}, String(e.counts.visitors)), ` ${t("visitors")}`) : null));
   if (e.briefing) main.appendChild(h("details", { class: "brief", open: true }, h("summary", {}, t("vdBriefing")), h("p", {}, e.briefing)));
   append(main,
     w.scanning ? scanPanel() : button(t("volScanBtn"), () => { w.scanning = true; render(); }, "primary", { id: "vol-scan" }),
@@ -366,17 +366,22 @@ function deskHtml(main: HTMLElement, sh: Mine | null): void {
 function bookingRow(r: Booking, e: Entered, blood: boolean): HTMLElement {
   const deskKey: Record<string, Key> = { bike: "vdDeskBike", approval: "vdDeskApproval", share: "vdDeskShare", waiver: "vdDeskWaiver", waitlist: "vdDeskWaitlist" };
   const acts: HTMLElement[] = [];
+  // Donor or visitor (the booking app's blood_role, 20261105140000; the owner, 2026-11-05): told apart on every row, in the
+  // booking card's two colours. A visitor has nothing to mark, so the free ride stays with donors; one tap switches
+  // them, until the donation is marked (the database refuses it then too).
+  const vis = blood && r.visitor === true;
   if (!r.own) {
     if (!r.checked_in) { if (!r.desk && e.caps.checkin) acts.push(button(t("checkIn"), () => void mark("volunteer_checkin", r.id, true), "primary")); }
     else if (blood && r.donated) { if (r.mine_donated && e.caps.undo) acts.push(button(t("volUndoDonated"), () => void mark("volunteer_donated", r.id, false))); }
     else {
-      if (blood && e.caps.donated) acts.push(button(t("markDonated"), () => void mark("volunteer_donated", r.id, true), "primary"));
+      if (blood && !vis && e.caps.donated) acts.push(button(t("markDonated"), () => void mark("volunteer_donated", r.id, true), "primary"));
       if (r.mine_in && e.caps.undo) acts.push(button(t("undoCheckIn"), () => void mark("volunteer_checkin", r.id, false)));
     }
+    if (blood && !r.donated && e.caps.checkin && (r.checked_in || !r.desk)) acts.push(button(t(vis ? "makeDonor" : "makeVisitor"), () => void setRole(r.id, vis ? "donor" : "visitor")));
   }
   return h("div", { class: "card row", "data-id": r.id },
     h("p", { class: "name" }, r.name, r.number != null ? h("span", { class: "num" }, ` #${r.number}`) : null),
-    h("div", { class: "chips" }, chip(t(r.checked_in ? "volStIn" : "volStOut"), r.checked_in), r.donated ? chip(t("donated"), true) : null),
+    h("div", { class: "chips" }, blood ? h("span", { class: `chip ${vis ? "chip-visitor" : "chip-donor"}` }, t(vis ? "roleVisitor" : "roleDonor")) : null, chip(t(r.checked_in ? "volStIn" : "volStOut"), r.checked_in), r.donated ? chip(t("donated"), true) : null),
     r.own ? h("p", { class: "warn" }, t("vdOwn")) : !r.checked_in && r.desk ? h("p", { class: "warn" }, t(deskKey[r.desk] ?? "vdDeskAsk")) : null,
     acts.length ? h("div", { class: "row-acts" }, ...acts) : null);
 }
@@ -447,6 +452,21 @@ async function mark(fn: "volunteer_checkin" | "volunteer_donated", id: string, o
       else { if (c && !counted) c.donated += on ? 1 : -1; x.donated = on; x.mine_donated = on; }
       counted = true;
     }
+  }
+  w.msg = "";
+  render();
+}
+async function setRole(id: string, role: "donor" | "visitor"): Promise<void> {
+  const w = S.work; if (!w) return;
+  const r = await rpc<{ ok: boolean }>("volunteer_blood_role", { p_session: w.id, p_entry_id: id, p_role: role });
+  if (!r.ok) { if (lost(r.code)) { await load(); leaveWork(say(r)); return; } w.msg = say(r); render(); return; }
+  const c = w.ent.counts, to = role === "visitor";
+  let counted = false;
+  for (const x of [...(w.rows ?? []), ...(w.list ?? [])]) {
+    if (x.id !== id) continue;
+    if (c && c.visitors != null && !counted && !!x.visitor !== to) c.visitors += to ? 1 : -1;
+    x.visitor = to;
+    counted = true;
   }
   w.msg = "";
   render();

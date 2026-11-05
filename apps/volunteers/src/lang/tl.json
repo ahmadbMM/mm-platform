@@ -127,5 +127,12 @@
   "evVlapName": "Victory Lap",
   "evArenaName": "Arena Heros Hybrid Race",
   "evDefeName": "DEFE 5KM Run",
-  "evBloodName": "Micromobility Pagbibigay ng Dugo"
+  "evBloodName": "Micromobility Pagbibigay ng Dugo",
+  "roleDonor": "Donor",
+  "roleVisitor": "Bisita",
+  "visitors": "Mga bisita",
+  "makeVisitor": "Gawing bisita",
+  "makeDonor": "Gawing donor",
+  "errVisitor": "Bisita ang taong ito. Gawin muna siyang donor.",
+  "errDonatedFirst": "Minarkahan na ang donasyon, kaya bawiin muna ito."
 }

@@ -127,5 +127,12 @@
   "evVlapName": "Victory Lap",
   "evArenaName": "Arena Heros Hybrid Race",
   "evDefeName": "DEFE 5KM Run",
-  "evBloodName": "Micromobility Donación de sangre"
+  "evBloodName": "Micromobility Donación de sangre",
+  "roleDonor": "Donante",
+  "roleVisitor": "Visitante",
+  "visitors": "Visitantes",
+  "makeVisitor": "Hacer visitante",
+  "makeDonor": "Hacer donante",
+  "errVisitor": "Esta persona es visitante. Hazla donante primero.",
+  "errDonatedFirst": "Su donación está marcada, así que retírala primero."
 }
