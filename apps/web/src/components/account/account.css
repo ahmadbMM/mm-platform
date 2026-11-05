@@ -16,6 +16,7 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .ac-err { color: #b3261e; font-size: 13.5px; font-weight: 600; margin: 0; }
 .ac-go { border: 0; border-radius: 0; min-height: 52px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 4px; }
 .ac-go:disabled { opacity: .6; cursor: default; }
+.ac-vol-go { display: inline-flex; align-items: center; justify-content: center; padding: 0 18px; margin: 8px 0; text-decoration: none; }
 .ac-notes { list-style: none; margin: 22px 0 0; padding: 18px 0 0; border-top: 1px solid rgba(0, 0, 0, .08); display: flex; flex-direction: column; gap: 10px; color: #57605a; font-size: 13.5px; line-height: 1.5; }
 .ac .ac-notes a { color: #077a4b; font-weight: 600; }
 

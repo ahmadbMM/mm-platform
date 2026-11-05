@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-04";
+export const PRIVACY_VERSION = "2026-11-05";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -106,6 +106,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "A blood donation event’s registration: your name, mobile number, email address, blood type, birth date and nationality, and whether you donated",
       "Asked only when you register for a blood donation event. Seen by you, our staff and that event’s partners and third parties once you agree to share them. We never ask for or keep your ID or Iqama number.",
       "Registering you as a donor, and giving confirmed donors any reward the event offers"
+     ],
+     [
+      "Volunteering: the opportunities you register for, your message and preferred role, whether you are accepted, your role, when you start and finish, your volunteering hours, that you accepted the volunteer agreement, what you do on the volunteer portal, and notes our team keeps",
+      "Only if you register to volunteer, or our team adds volunteering hours to your account. Seen by you and our staff, except our team’s notes.",
+      "Running volunteering at our events, your record of hours and your certificate"
      ],
      [
       "Victory Lap race details: the race, division and team you choose, your T-shirt size and, if you give it, your 5 km run time",
@@ -226,6 +231,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "Partners and third parties of a blood donation event",
       "Only if you agree: the details listed on the page where you agree, so you can register as a donor. Nothing else about you.",
+      "Saudi Arabia"
+     ],
+     [
+      "Volunteers working at one of our events, under our direction",
+      "To check you in at that event: your name, your booking number and whether you have checked in. Never your contact details or payments. They agree to keep it confidential, and every search and mark is recorded.",
       "Saudi Arabia"
      ],
      [
@@ -433,6 +443,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "تسجيلك متبرعًا، ومنح المتبرعين المؤكَّدين أي مكافأة تقدمها الفعالية"
      ],
      [
+      "التطوع: الفرص التي تسجل فيها، ورسالتك ودورك المفضل، وقبولك من عدمه، ودورك، ووقت بدئك وانتهائك، وساعات تطوعك، وموافقتك على إقرار المتطوع، وما تقوم به في بوابة المتطوعين، وملاحظات يحتفظ بها فريقنا",
+      "فقط إذا سجلت للتطوع، أو أضاف فريقنا ساعات تطوع إلى حسابك. يراها أنت وموظفونا، باستثناء ملاحظات فريقنا.",
+      "إدارة التطوع في فعالياتنا، وسجل ساعاتك وشهادتك"
+     ],
+     [
       "تفاصيل سباق فيكتوري لاب: السباق والفئة والفريق التي تختارها، ومقاس قميصك، وزمنك في جري 5 كم إن أعطيتنا إياه",
       "تُطلب فقط عند حجز فيكتوري لاب. لا يراها إلا أنت وموظفونا وكامن سبورتس؛ ويرى شريكك في الفريق اسمك الأول.",
       "وضعك في سباقك ودفعتك، وقميص السباق، وتكوين فرق الزوجي"
@@ -551,6 +566,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "الشركاء والأطراف الثالثة لفعالية تبرع بالدم",
       "فقط إذا وافقت: البيانات المذكورة في الصفحة التي توافق فيها، لتتمكن من التسجيل متبرعًا. ولا شيء غير ذلك عنك.",
+      "المملكة العربية السعودية"
+     ],
+     [
+      "المتطوعون الذين يعملون في إحدى فعالياتنا تحت إشرافنا",
+      "لتسجيل حضورك في تلك الفعالية: اسمك ورقم حجزك وما إذا كنت قد سجلت حضورك. ولا يطلعون أبدًا على بيانات التواصل معك أو مدفوعاتك. ويوافقون على الحفاظ على سريتها، وتُسجَّل كل عملية بحث وتأشير.",
       "المملكة العربية السعودية"
      ],
      [

@@ -1,0 +1,39 @@
+// The headers every answer carries. The page's script, styles and fonts are the Worker's own files,
+// and the database is reached through /api only. The one thing from elsewhere is Cloudflare Web
+// Analytics (named in the Privacy Notice): Cloudflare adds its beacon to the page on this zone. No
+// inline script or style anywhere, so the policy needs no 'unsafe-inline'. The camera is for
+// scanning tickets, and only this page may ask for it.
+
+export const CSP = [
+  "default-src 'self'",
+  "script-src 'self' https://static.cloudflareinsights.com",
+  "style-src 'self'",
+  "img-src 'self' data:",
+  "font-src 'self'",
+  "connect-src 'self' https://cloudflareinsights.com",
+  "media-src 'self' blob:",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "base-uri 'none'",
+  "form-action 'self'",
+].join("; ");
+
+export const SECURITY_HEADERS: Record<string, string> = {
+  "Content-Security-Policy": CSP,
+  // No includeSubDomains: one host must not decide for its siblings.
+  "Strict-Transport-Security": "max-age=31536000",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "no-referrer",
+  "Permissions-Policy": "camera=(self), microphone=(), geolocation=(), payment=(), usb=()",
+  "Cross-Origin-Opener-Policy": "same-origin",
+  // Opportunities are shared by link for now; sessions can be listed here before they open to the public.
+  "X-Robots-Tag": "noindex, nofollow",
+};
+
+/** A copy of the response with the security headers on it. */
+export function secure(res: Response): Response {
+  const out = new Response(res.body, res);
+  for (const [k, v] of Object.entries(SECURITY_HEADERS)) out.headers.set(k, v);
+  return out;
+}

@@ -172,6 +172,46 @@ jobs:
           workingDirectory: apps/vendors
           command: deploy --env staging
 
+  # The volunteer portal (apps/volunteers): a small Worker of its own, apart from the website, as the volunteer portal is.
+  # Every push lints, typechecks, unit-tests and builds it, then drives it in a browser on
+  # `wrangler dev` against a stub database (e2e/volunteers; never a real one). It deploys only once
+  # the repository variable MM_VOLUNTEERS is "on" and the Cloudflare secrets exist: production from
+  # main (Worker micromobility-volunteers, volunteer.micromobility.sa), staging from the staging branch (env "staging").
+  volunteers:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter volunteers lint && pnpm --filter volunteers typecheck
+      - run: pnpm --filter volunteers test
+      - run: pnpm --filter volunteers build
+      - name: Portal in a browser (stub database)
+        run: |
+          npm ci --prefix e2e/volunteers --no-audit --no-fund
+          (cd e2e/volunteers && npx playwright install --with-deps chromium && npm run e2e)
+      - id: secrets
+        name: Check for Cloudflare credentials
+        run: echo "present=${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}" >> "$GITHUB_OUTPUT"
+      - name: Deploy the volunteer portal (production)
+        if: github.ref == 'refs/heads/main' && vars.MM_VOLUNTEERS == 'on' && steps.secrets.outputs.present == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/volunteers
+          command: deploy
+      - name: Deploy the volunteer portal (staging)
+        if: github.ref == 'refs/heads/staging' && vars.MM_VOLUNTEERS == 'on' && steps.secrets.outputs.present == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/volunteers
+          command: deploy --env staging
+
   # Live → staging, code: after main is green (and deployed), main's changes are merged into
   # `staging` and pushed with the deploy key, which starts staging's own run (it builds, tests and
   # deploys staging.micromobility.sa); then the content copy runs (staging-sync.yml). Work already on staging and not yet on main is kept:

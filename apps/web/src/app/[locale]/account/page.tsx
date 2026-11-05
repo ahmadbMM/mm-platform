@@ -11,6 +11,7 @@ import TicketCard from "@/components/booking/TicketCard";
 import RateRide from "@/components/account/RateRide";
 import RideRecord from "@/components/account/RideRecord";
 import WalletCard from "@/components/account/WalletCard";
+import VolunteerCard, { volunteerCardShows, type VolunteerMe } from "@/components/account/VolunteerCard";
 import { walletOf } from "@/lib/wallet";
 import BloodTypeCard from "@/components/account/BloodTypeCard";
 import { bloodTypeWords } from "@/components/account/BloodType.words";
@@ -166,6 +167,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     : null;
   const stats = rideStats(record, recSessions, today);
   const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
+  // Volunteering (rentals 20261105120000): a database without it, or a failed read, shows no card.
+  const volunteer = await rpcServer<VolunteerMe>("volunteer_me", { p_id: acct.id, p_token: acct.token }).then((r) => r.data).catch(() => null);
   // "You're next" on a numbered night: whether anyone still waiting holds a lower number. Said on
   // the ride's day only, as the booking app does: a week ahead it counts a queue nobody stands in.
   const ahead = await Promise.all(groups.map((g) => {
@@ -263,6 +266,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             </div>
           )}
         </section>
+
+        {volunteerCardShows(volunteer) && <VolunteerCard me={volunteer} locale={locale} />}
 
         {(stats || allBadges.length > 0) && (
           <section className="ac-sec" aria-label={recordText.yourRides}>
