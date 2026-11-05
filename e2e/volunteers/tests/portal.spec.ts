@@ -4,7 +4,7 @@ const STUB = Number(process.env.STUB_PORT || 8801);
 const BD = "2099-11-05-bd";
 
 test.beforeEach(async ({ request }, info) => {
-  info.setTimeout(150_000); // room for one wait on the sign-in meter
+  info.setTimeout(210_000); // room for two waits on the sign-in meter
   await request.post(`http://127.0.0.1:${STUB}/__reset`);
 });
 
@@ -33,15 +33,25 @@ const accept = (page: Page, id = BD) => page.request.post(`http://127.0.0.1:${ST
 
 async function registerAndAccept(page: Page): Promise<void> {
   await page.goto(`/#o/${BD}`);
-  await page.getByRole("button", { name: "I want to help" }).click();
   await submit(page, "sara@example.com", "Pass1234");
   await page.getByRole("button", { name: "I want to help" }).click();
   await expect(page.getByText("Your interest is sent.")).toBeVisible();
   await accept(page);
 }
 
-test("anyone can read the opportunities, with no sign-in and no names", async ({ page }) => {
+test("nobody enters signed out: every address is the sign-in, the server refuses the list, and it all comes after signing in", async ({ page }) => {
   const errors = watchCsp(page);
+  for (const path of ["/", `/#o/${BD}`, "/#me", `/#work/${BD}`, "/#cert"]) {
+    await page.goto(path);
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "Volunteer sign-in" }), path).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Micromobility Blood Donation" })).toHaveCount(0);
+    await expect(page.locator("nav.tabs")).toHaveCount(0);
+  }
+  expect(await page.evaluate(async () => (await fetch("/api/rpc/volunteer_opportunities", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" })).status)).toBe(401);
+  await page.goto("/");
+  await submit(page, "sara@example.com", "Pass1234");
+  await expect(page.locator("nav.tabs")).toBeVisible();
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "Volunteer with MicroMobility" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Micromobility Blood Donation" })).toBeVisible();
@@ -51,7 +61,6 @@ test("anyone can read the opportunities, with no sign-in and no names", async ({
   await page.getByRole("heading", { name: "Micromobility Blood Donation" }).click();
   await expect(page).toHaveURL(new RegExp(`#o/${BD}`));
   await expect(page.getByText("Help donors at the door.")).toBeVisible();
-  await expect(page.getByText("Sign in with your MicroMobility account to register your interest.")).toBeVisible();
   await expect(page.getByText("Meet at gate 3.")).toHaveCount(0); // the briefing is for those accepted
   expect(errors).toEqual([]);
 });
@@ -73,10 +82,9 @@ test("a wrong password is said, and the other ways in go to the booking app", as
 test("registering interest: back to the opportunity after signing in, and nobody works until accepted", async ({ page }) => {
   const errors = watchCsp(page);
   await page.goto(`/#o/${BD}`);
-  await page.getByRole("button", { name: "I want to help" }).click();
-  await expect(page).toHaveURL(/#signin/);
   await submit(page, "sara@example.com", "Pass1234");
   await expect(page).toHaveURL(new RegExp(`#o/${BD}`));
+  await expect(page.getByRole("button", { name: "I want to help" })).toBeVisible();
   await page.getByLabel("Which role would you like?").selectOption("Guide");
   await page.getByLabel("Anything we should know? (optional)").fill("I speak Arabic");
   await page.getByRole("button", { name: "I want to help" }).click();

@@ -7,8 +7,9 @@
 //                         the booking app after creating an account or signing in with Google or Apple
 //   POST /api/logout      clears the cookie. The token stays: it is the account's, and ending it would
 //                         also sign the rider out of the booking app.
-//   POST /api/rpc/<name>  one of RPCS below, with p_id / p_token taken from the cookie
-//                         (volunteer_opportunities needs neither: anyone may read them)
+//   POST /api/rpc/<name>  one of RPCS below, with p_id / p_token taken from the cookie. Nobody reads the
+//                         portal signed out (the owner, 2026-11-05): volunteer_opportunities takes no
+//                         arguments, so its session is checked here first
 //
 // Every POST must come from this origin's own page, as JSON, and small.
 
@@ -210,13 +211,17 @@ async function handoff(req: Request, env: Env): Promise<Response> {
 
 async function rpc(req: Request, env: Env, name: string): Promise<Response> {
   if (!RPCS.has(name)) return fail("NOT_FOUND", 404);
-  if (name === "volunteer_opportunities") {
-    const r = await callDb(env, req, name, {});
-    return r.ok ? json(r.data ?? []) : fail(r.code, r.status);
-  }
   const s = sessionOf(req);
   // Without a session, "who am I" is answered, not refused: the page asks it on every load.
   if (!s) return name === "volunteer_me" ? json({ signedIn: false }) : fail("VOL_TOKEN", 401, clearCookie());
+  if (name === "volunteer_opportunities") {
+    // A cookie is not yet a sign-in: the token has to open an account.
+    const who = await callDb(env, req, "volunteer_me", { p_id: s.id, p_token: s.token });
+    if (!who.ok) return fail(who.code, who.status);
+    if (who.data === null || who.data === undefined) return fail("VOL_TOKEN", 401, clearCookie());
+    const r = await callDb(env, req, name, {});
+    return r.ok ? json(r.data ?? []) : fail(r.code, r.status);
+  }
   const read = await readBody(req, RPC_BODY_LIMIT);
   if ("error" in read) return read.error;
   // Who is asking comes from the cookie only, whatever the body says.

@@ -100,11 +100,21 @@ describe("the database functions", () => {
     expect(calls).toHaveLength(0);
     expect([...RPCS].every((n) => n.startsWith("volunteer_"))).toBe(true);
   });
-  it("anyone may read the opportunities, with no session", async () => {
+  it("nobody reads the opportunities signed out, and a cookie is not a sign-in until its token opens an account", async () => {
     const calls = db(() => ({ body: [{ id: "s1" }] }));
-    const r = await handle(post("/api/rpc/volunteer_opportunities"), env);
+    expect((await handle(post("/api/rpc/volunteer_opportunities"), env)).status).toBe(401);
+    expect(calls).toHaveLength(0);
+    // signed in: who they are is checked first, then the list, which takes no arguments
+    const r = await handle(post("/api/rpc/volunteer_opportunities", {}, { cookie: COOKIE }), env);
     expect(await r.json()).toEqual([{ id: "s1" }]);
-    expect(calls[0].args).toEqual({});
+    expect(calls.map((c) => c.args)).toEqual([{ p_id: "c123", p_token: "tokentokentokentoken" }, {}]);
+  });
+  it("a token that opens no account reads no opportunities, and its cookie goes", async () => {
+    const calls = db(() => ({ body: null }));
+    const r = await handle(post("/api/rpc/volunteer_opportunities", {}, { cookie: COOKIE }), env);
+    expect(r.status).toBe(401);
+    expect(r.headers.get("set-cookie")).toContain("Max-Age=0");
+    expect(calls).toHaveLength(1);
   });
   it("without a session, who am I is answered and anything else refused", async () => {
     const calls = db(() => ({ body: {} }));

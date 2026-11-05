@@ -59,10 +59,13 @@ const noteBox = (text: string, role = "status") => h("p", { class: "note", role 
 const chip = (text: string, on = false) => h("span", { class: `chip${on ? " on" : ""}` }, text);
 
 async function load(): Promise<void> {
-  const [o, m] = await Promise.all([rpc<Opp[]>("volunteer_opportunities"), rpc<Me>("volunteer_me")]);
+  const m = await rpc<Me>("volunteer_me");
+  if (m.ok) S.me = m.data && m.data.signedIn !== false ? m.data : null;
+  // Signed out there is nothing to read: the server refuses the list too.
+  if (!S.me) { S.opps = null; S.err = m.ok ? "" : t("errConnection"); return; }
+  const o = await rpc<Opp[]>("volunteer_opportunities");
   S.err = o.ok ? "" : t("errConnection");
   if (o.ok) S.opps = Array.isArray(o.data) ? o.data : [];
-  if (m.ok) S.me = m.data && m.data.signedIn !== false ? m.data : null;
 }
 const reloadMe = async () => {
   const m = await rpc<Me>("volunteer_me");
@@ -78,11 +81,11 @@ function header(): HTMLElement {
     h("a", { class: "brand", href: "#", "aria-label": t("appName") },
       h("img", { src: "/site/logo-mark-dark.png", alt: "", width: 40, height: 26 }),
       h("span", { class: "brand-name" }, t("portalName"))),
-    h("nav", { class: "tabs" },
+    S.me ? h("nav", { class: "tabs" },
       h("a", { href: "#", "aria-current": r === "list" || r === "o" ? "page" : null }, t("navOpps")),
-      S.me ? h("a", { href: "#me", "aria-current": r === "me" || r === "work" || r === "cert" ? "page" : null }, t("navMine")) : null),
+      h("a", { href: "#me", "aria-current": r === "me" || r === "work" || r === "cert" ? "page" : null }, t("navMine"))) : null,
     h("div", { class: "bar-tools" }, lang,
-      S.me ? button(t("signOut"), () => void signOut(), "ghost") : link(t("signIn"), "#signin", "ghost")));
+      S.me ? button(t("signOut"), () => void signOut(), "ghost") : null));
 }
 function footer(): HTMLElement {
   return h("footer", { class: "foot" },
@@ -97,7 +100,12 @@ function render(): void {
   const main = h("main", { id: "main", class: "page" });
   // A note outlives a redraw (leaving a page draws twice: the leaver, then the address changing), for as long as it takes to read.
   if (S.note && Date.now() - S.noteAt < 12000) main.appendChild(noteBox(S.note)); else S.note = "";
-  if (r.name === "signin") viewSignIn(main);
+  // Nobody enters signed out (the owner, 2026-11-05: "dont allow anyone to enter the website unless they are signed in"):
+  // every address is the sign-in, and the opportunity it named is where they land after it.
+  if (!S.me) {
+    if ((r.name === "o" || r.name === "work") && r.id) { try { localStorage.setItem(AFTER_KEY, r.id); } catch { /* blocked storage: they find it again */ } }
+    viewSignIn(main);
+  } else if (r.name === "signin") viewSignIn(main);
   else if (r.name === "me") viewMe(main);
   else if (r.name === "o") viewOpp(main, r.id);
   else if (r.name === "work") viewWork(main, r.id);
@@ -230,7 +238,7 @@ function afterSignIn(): void {
 
 async function signOut(): Promise<void> {
   await post("/api/logout");
-  S.me = null; S.work = null;
+  S.me = null; S.work = null; S.opps = null;
   go("#");
 }
 
