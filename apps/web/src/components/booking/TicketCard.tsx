@@ -413,7 +413,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           // app's _bldTkHtml, _bldRwHtml); a code that has been used says so, as there
           <div className="tk-bld">
             {primary.bloodClub && <p className="tk-bld-club">{bw.clubLabel}: <b><bdi>{primary.bloodClub}</bdi></b></p>}
-            {!past && <ul className="bld-sum">{(vis ? [bw.rules[0], bw.rules[2]] : bw.rules).map((x, i) => <li key={i}><Tick /><span>{x}</span></li>)}</ul>}
+            {!past && <ul className="bld-sum">{(vis ? [bw.rules[0]] : bw.rules).map((x, i) => <li key={i}><Tick /><span>{x}</span></li>)}</ul>}
             {!(vis && past) && <p className="tk-bld-note">{vis ? bw.visitorNote : bw.rewardNote}</p>}
             {reward && (
               <div className="tk-bld-rw">
