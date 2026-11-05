@@ -435,7 +435,7 @@ function bookingRow(r: Booking, e: Entered, blood: boolean): HTMLElement {
     if (!r.checked_in) { if (!r.desk && e.caps.checkin) acts.push(button(t("checkIn"), () => void mark("volunteer_checkin", r.id, true), "primary")); }
     else if (blood && r.donated) { if (r.mine_donated && e.caps.undo) acts.push(button(t("volUndoDonated"), () => void mark("volunteer_donated", r.id, false))); }
     else {
-      if (blood && !vis && e.caps.donated) acts.push(button(t("markDonated"), () => void mark("volunteer_donated", r.id, true), "primary"));
+      if (blood && !vis && e.caps.donated) acts.push(button(t("markDonated"), () => askDonated(r), "primary"));
       if (r.mine_in && e.caps.undo) acts.push(button(t("undoCheckIn"), () => void mark("volunteer_checkin", r.id, false)));
     }
     if (blood && !r.donated && e.caps.checkin && (r.checked_in || !r.desk)) acts.push(button(t(vis ? "makeDonor" : "makeVisitor"), () => void setRole(r.id, vis ? "donor" : "visitor")));
@@ -531,6 +531,19 @@ async function mark(fn: "volunteer_checkin" | "volunteer_donated", id: string, o
   }
   w.msg = "";
   render();
+}
+// Check-in and the donation are two steps (the owner, 2026-11-05): Mark donated takes Check in's place under the finger, so a
+// double tap marked people with no blood given. It always asks first, naming the person. Outside #app: a refresh leaves it open.
+function askDonated(r: Booking): void {
+  const box = h("dialog", { class: "ask" },
+    h("p", { class: "ask-q" }, t("donatedQ", r.name)),
+    h("p", {}, t("donatedBody")),
+    h("div", { class: "ask-acts" },
+      button(t("donatedNotYet"), () => box.close()),
+      button(t("markDonated"), () => { box.close(); void mark("volunteer_donated", r.id, true); }, "primary")));
+  box.addEventListener("close", () => box.remove());
+  document.body.append(box);
+  box.showModal();
 }
 async function setRole(id: string, role: "donor" | "visitor"): Promise<void> {
   const w = S.work; if (!w) return;

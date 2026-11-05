@@ -113,6 +113,11 @@ select.lang { width: auto; }
 .name { margin: 0; font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
 .num { color: var(--muted); font-weight: 500; }
 .row-acts { display: grid; gap: 8px; margin-top: 8px; }
+.ask { margin: auto; width: min(420px, calc(100vw - 32px)); padding: 20px; border: 1px solid var(--line-strong); background: var(--card); color: var(--ink); }
+.ask::backdrop { background: rgba(0, 0, 0, .5); }
+.ask p { margin: 0 0 8px; }
+.ask-q { font-size: 18px; font-weight: 700; }
+.ask-acts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
 .row-acts .btn { width: 100%; }
 .panel { margin-top: 22px; }
 .panel-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
