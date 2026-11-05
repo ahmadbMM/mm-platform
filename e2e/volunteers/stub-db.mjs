@@ -15,7 +15,7 @@ const fresh = () => ({
   ],
   shifts: new Map(),
   bookings: [
-    { id: "q1111111", name: "Dana Donor", number: 2, checked_in: false, donated: false, own: false, desk: null, mine_in: false, mine_donated: false, phone: "500000003" },
+    { id: "q1111111", blood_type: "O+", club: "Runners", status: "waiting", name: "Dana Donor", number: 2, checked_in: false, donated: false, own: false, desk: null, mine_in: false, mine_donated: false, phone: "500000003" },
     { id: "q2222222", name: "Ali Owes", number: 3, checked_in: false, donated: false, own: false, desk: "desk", mine_in: false, mine_donated: false, phone: "500000004" },
     { id: "q3333333", name: "Sara Haddad", number: 4, checked_in: false, donated: false, own: true, desk: null, mine_in: false, mine_donated: false, phone: "500000005" },
   ],
@@ -48,6 +48,7 @@ const server = createServer((req, res) => {
     if (url.pathname === "/__reset") { db = fresh(); return send(res, { ok: true }); }
     if (url.pathname === "/__accept") { db.shifts.get(body.id).status = "accepted"; db.rider.status = "active"; return send(res, { ok: true }); }
     if (url.pathname === "/__cutoff") { db.opps.find((o) => o.id === body.id).closes_at = soon(-1); return send(res, { ok: true }); }
+    if (url.pathname === "/__caps") { Object.assign(db.opps.find((o) => o.id === body.id).caps, body.caps); return send(res, { ok: true }); }
     if (url.pathname === "/__hours") { db.rider.hours = body.hours; return send(res, { ok: true }); }
     const name = url.pathname.split("/rpc/")[1];
     const authed = body.p_id === db.rider.id && body.p_token === db.rider.session_token;
@@ -97,6 +98,17 @@ const server = createServer((req, res) => {
         if (!open) return raise(res, "VOL_CLOSED");
         const hit = db.bookings.filter((b) => (body.p_number != null && b.number === body.p_number) || (body.p_mobile && b.phone === body.p_mobile.replace(/^0/, "")) || (body.p_ref && b.id.startsWith(body.p_ref)));
         return send(res, hit.map((b) => { const c = { ...b }; delete c.phone; return c; }));
+      }
+      case "volunteer_list": {
+        if (!open) return raise(res, "VOL_CLOSED");
+        const caps = db.opps.find((o) => o.id === body.p_session).caps;
+        if (!caps.list) return raise(res, "VOL_CAP");
+        return send(res, db.bookings.map((b) => {
+          const c = { ...b };
+          if (!caps.phone) delete c.phone;
+          if (!caps.details) { delete c.blood_type; delete c.club; delete c.status; }
+          return c;
+        }));
       }
       case "volunteer_checkin": {
         if (!open) return raise(res, "VOL_CLOSED");

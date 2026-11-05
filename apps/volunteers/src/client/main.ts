@@ -20,13 +20,14 @@ type Mine = { id: string; title: string | null; ride_kind: string | null; date: 
 type RecordRow = { id: number; hours: number; on: string; note: string | null; session_id: string | null; title: string | null; ride_kind: string | null };
 type Me = { signedIn?: false; id: string; name: string; hours: number; account: string | null; status: string | null; agreed: boolean; mine: Mine[]; record: RecordRow[];
   first_on: string | null; last_on: string | null; sessions: number; cert_signer: string | null; cert_title: string | null };
-type Booking = { id: string; name: string; number: number | null; checked_in: boolean; donated: boolean; visitor?: boolean; own: boolean; desk: string | null; mine_in: boolean; mine_donated: boolean };
+type Booking = { id: string; name: string; number: number | null; checked_in: boolean; donated: boolean; visitor?: boolean; own: boolean; desk: string | null; mine_in: boolean; mine_donated: boolean;
+  phone?: string | null; status?: string; bike?: string | null; size?: string | null; height?: string | null; blood_type?: string | null; club?: string | null };
 type Entered = { closes_at: string; caps: Record<string, boolean>; briefing: string | null; hours_mode: string; role: string | null; counts: { booked: number; in: number; donated: number; visitors?: number } | null };
 
 const app = document.getElementById("app")!;
 const S: {
   opps: Opp[] | null; me: Me | null; err: string; note: string; noteAt: number; signErr: string; loginDraft: string; agreeTick: boolean;
-  work: { id: string; ent: Entered; rows: Booking[] | null; list: Booking[] | null; listQ: string; msg: string; scanning: boolean } | null;
+  work: { id: string; ent: Entered; rows: Booking[] | null; list: Booking[] | null; listQ: string; listShow: string; listSort: string; msg: string; scanning: boolean } | null;
 } = { opps: null, me: null, err: "", note: "", noteAt: 0, signErr: "", loginDraft: "", agreeTick: false, work: null };
 let scanner: Scanner | null = null;
 const setNote = (text: string) => { S.note = text; S.noteAt = Date.now(); };
@@ -97,7 +98,7 @@ function render(): void {
   document.title = t("appName");
   const r = route();
   clear(app);
-  const main = h("main", { id: "main", class: "page" });
+  const main = h("main", { id: "main", class: `page${r.name === "work" && S.work?.ent.caps.list ? " page-wide" : ""}` });
   // A note outlives a redraw (leaving a page draws twice: the leaver, then the address changing), for as long as it takes to read.
   if (S.note && Date.now() - S.noteAt < 12000) main.appendChild(noteBox(S.note)); else S.note = "";
   // Nobody enters signed out (the owner, 2026-11-05: "dont allow anyone to enter the website unless they are signed in"):
@@ -317,9 +318,10 @@ async function agree(): Promise<void> {
 async function enterWork(id: string): Promise<void> {
   const r = await rpc<Entered>("volunteer_enter", { p_session: id });
   if (!r.ok) { setNote(say(r)); await reloadMe(); go("#me"); return; }
-  S.work = { id, ent: r.data, rows: null, list: null, listQ: "", msg: "", scanning: false };
+  S.work = { id, ent: r.data, rows: null, list: null, listQ: "", listShow: "all", listSort: "number", msg: "", scanning: false };
   armTimer();
   render();
+  if (r.data.caps.list) void loadList();
 }
 
 // The cut-off ends the page by itself. The server refuses every call after it whatever this page shows.
@@ -335,6 +337,7 @@ async function heartbeat(): Promise<void> {
   await load();
   if (!myShift(id)?.can_work) { leaveWork(t("volClosed")); return; }
   armTimer();
+  if (S.work?.list && !S.work.scanning) void loadList();
 }
 function leaveWork(note: string): void {
   window.clearTimeout(timer);
@@ -351,24 +354,74 @@ function deskHtml(main: HTMLElement, sh: Mine | null): void {
     onkeydown: ((ev: KeyboardEvent) => { if (ev.key === "Enter") { ev.preventDefault(); void search(q.value); } }) as unknown as EventListener });
   append(main, h("h1", {}, sh ? sessionName(sh) : ""),
     h("p", { class: "when" }, `${t("vdOpenUntil", whenLabel(e.closes_at))}${e.role ? ` · ${e.role}` : ""}`));
-  if (e.counts) main.appendChild(h("p", { class: "counts", id: "vol-counts" }, h("span", {}, h("b", {}, String(e.counts.in)), ` / ${e.counts.booked} ${t("volStIn")}`), blood ? h("span", {}, h("b", {}, String(e.counts.donated)), ` ${t("donated")}`) : null, blood && e.counts.visitors != null ? h("span", {}, h("b", {}, String(e.counts.visitors)), ` ${t("visitors")}`) : null));
+  if (e.counts) main.appendChild(countsBox(e, blood));
   if (e.briefing) main.appendChild(h("details", { class: "brief", open: true }, h("summary", {}, t("vdBriefing")), h("p", {}, e.briefing)));
   append(main,
     w.scanning ? scanPanel() : button(t("volScanBtn"), () => { w.scanning = true; render(); }, "primary", { id: "vol-scan" }),
     h("div", { class: "find" }, q, button(t("volFindBtn"), () => void search(q.value), "secondary", { id: "vol-find" })),
     h("p", { class: "msg", id: "vol-msg", role: "status" }, w.msg),
     h("div", { id: "vol-rows" }, ...(w.rows ?? []).map((r) => bookingRow(r, e, blood))));
-  if (e.caps.list) {
-    if (w.list) {
-      const lq = w.listQ.trim().toLowerCase();
-      const rows = w.list.filter((r) => !lq || r.name.toLowerCase().includes(lq) || String(r.number) === lq);
-      const inp = h("input", { type: "text", autocomplete: "off", placeholder: t("vdListSearch"), "aria-label": t("vdListSearch"), value: w.listQ,
-        oninput: ((ev: Event) => { w.listQ = (ev.target as HTMLInputElement).value; const b = document.getElementById("vol-list"); if (b) { clear(b); const q2 = w.listQ.trim().toLowerCase(); append(b, ...w.list!.filter((r) => !q2 || r.name.toLowerCase().includes(q2) || String(r.number) === q2).map((r) => bookingRow(r, e, blood))); } }) as EventListener });
-      append(main, h("div", { class: "find" }, inp, button(t("close"), () => { w.list = null; render(); })),
-        h("div", { id: "vol-list" }, ...rows.map((r) => bookingRow(r, e, blood))));
-    } else main.appendChild(button(t("vdListOpen"), () => void loadList()));
-  }
+  if (e.caps.list) main.appendChild(panel(e, blood));
   if (e.hours_mode !== "none") main.appendChild(h("div", { class: "foot-acts" }, button(t("vdFinish"), () => void finish())));
+}
+
+function countsBox(e: Entered, blood: boolean): HTMLElement {
+  const c = e.counts!;
+  return h("p", { class: "counts", id: "vol-counts" }, h("span", {}, h("b", {}, String(c.in)), ` / ${c.booked} ${t("volStIn")}`), blood ? h("span", {}, h("b", {}, String(c.donated)), ` ${t("donated")}`) : null, blood && c.visitors != null ? h("span", {}, h("b", {}, String(c.visitors)), ` ${t("visitors")}`) : null);
+}
+
+// ── the panel: the session's bookings in the staff list's shape. volunteer_list decides who sees it and which columns ──
+const latin = (v: string) => v.replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x660)).replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x6f0));
+function panelRows(w: NonNullable<typeof S.work>): Booking[] {
+  const raw = latin(w.listQ.trim()).toLowerCase(), digits = raw.replace(/[\s()+-]/g, "");
+  const shown = (w.list ?? []).filter((r) => {
+    if (raw && !(r.name.toLowerCase().includes(raw) || String(r.number) === raw || (/^\d{3,}$/.test(digits) && (r.phone ?? "").replace(/\D/g, "").includes(digits)))) return false;
+    switch (w.listShow) {
+      case "out": return !r.checked_in;
+      case "in": return r.checked_in;
+      case "desk": return !r.checked_in && !!r.desk;
+      case "donated": return r.donated;
+      case "donors": return !r.visitor;
+      case "visitors": return !!r.visitor;
+      default: return true;
+    }
+  });
+  const num = (r: Booking) => r.number ?? Number.MAX_SAFE_INTEGER;
+  if (w.listSort === "name") shown.sort((a, b) => a.name.localeCompare(b.name, currentLang()));
+  else if (w.listSort === "out") shown.sort((a, b) => Number(a.checked_in) - Number(b.checked_in) || num(a) - num(b));
+  else shown.sort((a, b) => num(a) - num(b));
+  return shown;
+}
+function paintPanel(): void {
+  const w = S.work, b = document.getElementById("vol-list");
+  if (!w || !b || !w.list) return;
+  const e = w.ent, blood = myShift(w.id)?.ride_kind === "blood", rows = panelRows(w);
+  clear(b);
+  if (rows.length) append(b, ...rows.map((r) => bookingRow(r, e, blood))); else b.appendChild(noteBox(t("volNotFound")));
+  const n = document.getElementById("vol-list-n");
+  if (n) n.textContent = `${rows.length} / ${w.list.length}`;
+}
+function panel(e: Entered, blood: boolean): HTMLElement {
+  const w = S.work!;
+  const opt = (value: string, label: string, cur: string) => h("option", { value, selected: value === cur }, label);
+  const pick = (label: string, onchange: (v: string) => void, ...opts: HTMLElement[]) =>
+    h("label", { class: "panel-pick" }, h("span", {}, label), h("select", { onchange: ((ev: Event) => { onchange((ev.target as HTMLSelectElement).value); paintPanel(); }) as EventListener }, ...opts));
+  const q = h("input", { id: "vol-list-q", type: "text", autocomplete: "off", placeholder: t("vdPanelSearch"), "aria-label": t("vdPanelSearch"), value: w.listQ,
+    oninput: ((ev: Event) => { w.listQ = (ev.target as HTMLInputElement).value; paintPanel(); }) as EventListener });
+  const body = h("div", { id: "vol-list" });
+  const box = h("section", { class: "panel", "aria-labelledby": "vol-panel-h" },
+    h("div", { class: "panel-head" }, h("h2", { id: "vol-panel-h", class: "sec" }, t("vdPanelTitle")), h("span", { class: "num", id: "vol-list-n" }), button(t("vdRefresh"), () => void loadList(), "secondary", { id: "vol-refresh" })),
+    h("div", { class: "panel-tools" }, q,
+      pick(t("vdFilter"), (v) => { w.listShow = v; },
+        opt("all", t("vdFilterAll"), w.listShow), opt("out", t("volStOut"), w.listShow), opt("in", t("volStIn"), w.listShow), opt("desk", t("vdFilterDesk"), w.listShow),
+        ...(blood ? [opt("donated", t("donated"), w.listShow), opt("donors", t("roleDonor"), w.listShow), opt("visitors", t("roleVisitor"), w.listShow)] : [])),
+      pick(t("vdSort"), (v) => { w.listSort = v; },
+        opt("number", t("vdSortNumber"), w.listSort), opt("name", t("vdSortName"), w.listSort), opt("out", t("vdSortOut"), w.listSort))),
+    h("div", { class: `panel-cols${e.caps.phone ? " has-phone" : ""}`, "aria-hidden": "true" }, h("span", {}, t("vdColName")), e.caps.phone ? h("span", {}, t("vdColPhone")) : null, h("span", {}, t("vdColStatus")), h("span", {}, t("vdColActions"))),
+    body);
+  if (!w.list) body.appendChild(noteBox(t("loading")));
+  else { const rows = panelRows(w); if (rows.length) append(body, ...rows.map((r) => bookingRow(r, e, blood))); else body.appendChild(noteBox(t("volNotFound"))); }
+  return box;
 }
 
 function bookingRow(r: Booking, e: Entered, blood: boolean): HTMLElement {
@@ -387,10 +440,13 @@ function bookingRow(r: Booking, e: Entered, blood: boolean): HTMLElement {
     }
     if (blood && !r.donated && e.caps.checkin && (r.checked_in || !r.desk)) acts.push(button(t(vis ? "makeDonor" : "makeVisitor"), () => void setRole(r.id, vis ? "donor" : "visitor")));
   }
-  return h("div", { class: "card row", "data-id": r.id },
-    h("p", { class: "name" }, r.name, r.number != null ? h("span", { class: "num" }, ` #${r.number}`) : null),
-    h("div", { class: "chips" }, blood ? h("span", { class: `chip ${vis ? "chip-visitor" : "chip-donor"}` }, t(vis ? "roleVisitor" : "roleDonor")) : null, chip(t(r.checked_in ? "volStIn" : "volStOut"), r.checked_in), r.donated ? chip(t("donated"), true) : null),
-    r.own ? h("p", { class: "warn" }, t("vdOwn")) : !r.checked_in && r.desk ? h("p", { class: "warn" }, t(deskKey[r.desk] ?? "vdDeskAsk")) : null,
+  const details = [r.bike ? t("vdBike", r.bike) : "", r.size ? t("vdSize", r.size) : "", r.height ? t("vdHeight", r.height) : "", r.blood_type ? t("vdBlood", r.blood_type) : "", r.club ? t("vdClub", r.club) : ""].filter(Boolean);
+  return h("div", { class: `card row${e.caps.phone ? " has-phone" : ""}`, "data-id": r.id },
+    h("div", { class: "row-who" }, h("p", { class: "name" }, r.name, r.number != null ? h("span", { class: "num" }, ` #${r.number}`) : null),
+      details.length ? h("p", { class: "when row-details" }, details.join(" · ")) : null),
+    e.caps.phone ? h("div", { class: "row-phone" }, r.phone ? h("a", { class: "tel", dir: "ltr", href: `tel:${r.phone.replace(/[^\d+]/g, "")}`, "aria-label": t("vdCall", r.name) }, r.phone) : null) : null,
+    h("div", { class: "row-state" }, h("div", { class: "chips" }, blood ? h("span", { class: `chip ${vis ? "chip-visitor" : "chip-donor"}` }, t(vis ? "roleVisitor" : "roleDonor")) : null, chip(t(r.checked_in ? "volStIn" : "volStOut"), r.checked_in), r.status === "waitlist" && !blood ? chip(t("vdWaitlist")) : null, r.donated ? chip(t("donated"), true) : null),
+      r.own ? h("p", { class: "warn" }, t("vdOwn")) : !r.checked_in && r.desk ? h("p", { class: "warn" }, t(deskKey[r.desk] ?? "vdDeskAsk")) : null),
     acts.length ? h("div", { class: "row-acts" }, ...acts) : null);
 }
 
@@ -442,10 +498,22 @@ async function find(args: Record<string, unknown>): Promise<void> {
 async function loadList(): Promise<void> {
   const w = S.work; if (!w) return;
   const r = await rpc<Booking[]>("volunteer_list", { p_session: w.id });
-  if (!r.ok) { w.msg = say(r); render(); return; }
+  if (!r.ok) { if (lost(r.code)) { await load(); leaveWork(say(r)); return; } w.msg = say(r); paintMsg(); return; }
   w.list = Array.isArray(r.data) ? r.data : [];
   w.msg = "";
-  render();
+  listCounts(w);
+  // Only the list and the figures: the search box keeps its text and its place.
+  paintMsg();
+  paintPanel();
+  const c = document.getElementById("vol-counts");
+  if (c && w.ent.counts) c.replaceWith(countsBox(w.ent, myShift(w.id)?.ride_kind === "blood"));
+}
+// The list is newer than the figures from entering, and other people are marking too.
+function listCounts(w: NonNullable<typeof S.work>): void {
+  const c = w.ent.counts, l = w.list;
+  if (!c || !l) return;
+  c.booked = l.length; c.in = l.filter((x) => x.checked_in).length; c.donated = l.filter((x) => x.donated).length;
+  if (c.visitors != null) c.visitors = l.filter((x) => x.visitor).length;
 }
 async function mark(fn: "volunteer_checkin" | "volunteer_donated", id: string, on: boolean): Promise<void> {
   const w = S.work; if (!w) return;

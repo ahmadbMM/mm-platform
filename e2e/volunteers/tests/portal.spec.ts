@@ -166,6 +166,73 @@ test("donor or visitor: a chip on every row, one tap to switch, Mark donated for
   await expect(row().getByRole("button", { name: "Make visitor" })).toHaveCount(0);
 });
 
+test("the panel: the whole list once accepted, phones and details only where staff allow them, search, filter and sort", async ({ page }) => {
+  const errors = watchCsp(page);
+  const caps = (c: Record<string, boolean>) => page.request.post(`http://127.0.0.1:${STUB}/__caps`, { data: { id: BD, caps: c } });
+  await registerAndAccept(page);
+  await caps({ list: true, phone: false, details: false });
+  await page.goto("/#me");
+  await page.reload();
+  await page.getByRole("link", { name: "Start work" }).click();
+  await page.getByLabel("I have read this and I agree").check();
+  await page.getByRole("button", { name: "Continue" }).click();
+
+  // The list opens by itself, without the two extras.
+  const rows = page.locator("#vol-list .row");
+  await expect(rows).toHaveCount(3);
+  await expect(page.locator("#vol-list-n")).toHaveText("3 / 3");
+  await expect(page.locator("#vol-list a.tel")).toHaveCount(0);
+  await expect(page.locator("#vol-list")).not.toContainText("Blood type");
+
+  // Staff tick them: a reload stays on the panel and shows them, and the search box keeps its text through a refresh.
+  await caps({ phone: true, details: true });
+  await page.reload();
+  await expect(rows).toHaveCount(3);
+  await expect(page.locator('#vol-list a.tel[href="tel:500000003"]')).toBeVisible();
+  await expect(page.locator("#vol-list")).toContainText("Blood type: O+");
+  await page.locator("#vol-list-q").fill("dana");
+  await expect(rows).toHaveCount(1);
+  await page.getByRole("button", { name: "Refresh" }).click();
+  await expect(page.locator("#vol-list-n")).toHaveText("1 / 3");
+  await expect(page.locator("#vol-list-q")).toHaveValue("dana");
+  await page.locator("#vol-list-q").fill("");
+  await expect(rows).toHaveCount(3);
+
+  // A mobile number finds them too, in Arabic digits as well.
+  await page.locator("#vol-list-q").fill("٥٠٠٠٠٠٠٠٣");
+  await expect(rows).toHaveCount(1);
+  await page.locator("#vol-list-q").fill("");
+
+  // Marking from the panel moves the figures, and the filters follow.
+  await rows.filter({ hasText: "Dana Donor" }).getByRole("button", { name: "Check in" }).click();
+  await expect(page.locator("#vol-counts")).toContainText("1 / 3");
+  await expect(rows.filter({ hasText: "Dana Donor" })).toContainText("Checked in");
+  await page.locator(".panel-pick select").first().selectOption("in");
+  await expect(rows).toHaveCount(1);
+  await page.locator(".panel-pick select").first().selectOption("all");
+  await page.locator(".panel-pick select").nth(1).selectOption("name");
+  await expect(rows.first()).toContainText("Ali Owes");
+  await page.locator(".panel-pick select").nth(1).selectOption("out");
+  await expect(rows.last()).toContainText("Dana Donor");
+
+  // Their own booking stays out of their hands, and nothing runs off the side.
+  await expect(rows.filter({ hasText: "Sara Haddad" }).getByRole("button", { name: "Check in" })).toHaveCount(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test("no list for staff to switch off: find and scan still work, and no panel", async ({ page }) => {
+  await registerAndAccept(page);
+  await page.request.post(`http://127.0.0.1:${STUB}/__caps`, { data: { id: BD, caps: { list: false } } });
+  await page.goto("/#me");
+  await page.reload();
+  await page.getByRole("link", { name: "Start work" }).click();
+  await page.getByLabel("I have read this and I agree").check();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.locator("#vol-q")).toBeVisible();
+  await expect(page.locator(".panel")).toHaveCount(0);
+});
+
 test("what a volunteer may not do: their own booking, money, nonsense", async ({ page }) => {
   await registerAndAccept(page);
   await page.goto(`/#work/${BD}`);
