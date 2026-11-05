@@ -369,6 +369,8 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-card.ev-blood.tk-live .tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(11, 31, 22, .14); }
 /* under the donor: the short rules, what confirmed donors get, and the free ride's code */
 .tk-bld { margin: 12px 0 16px; padding-top: 12px; }
+.tk-bld-vis { padding: 10px 20px; background: #0b1f16; color: #fff; font-size: 30px; font-weight: 700; line-height: 1; text-align: center; }
+.tk-bld-club { margin: 0 0 10px !important; font-size: 13px; line-height: 1.4; }
 .tk-bld-note { margin-top: 10px !important; font-size: 12.5px; line-height: 1.45; color: rgba(11, 31, 22, .68); }
 .tk-bld-rw { margin-top: 12px; padding: 12px; border: 1px solid #0b1f16; border-radius: 3px; font-size: 13px; line-height: 1.4; }
 .tk-bld-rw-t { font-weight: 800; color: #0b1f16; }

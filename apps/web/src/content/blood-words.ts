@@ -41,6 +41,23 @@ export function bloodWords(tx: L) {
     rewardTitle: tx("Your free ride", "ركوبتك المجانية"),
     rewardTxt: tx("Thank you for donating. Enter this code when you book. Valid until {0}.", "شكرًا لتبرعك. أدخل هذا الرمز عند الحجز. صالح حتى {0}."),
     rewardUsed: tx("Your free ride has been used. Thank you for donating.", "تم استخدام ركوبتك المجانية. شكرًا لتبرعك."),
+    // donor or visitor (the owner, 2026-11-05; bldColVisitor, bldVisNumLabel, bldVisNote, bldRewardTxtVis, bldRewardUsedVis), and the club or community (bldClubCol)
+    visitor: tx("Visitor", "زائر"),
+    visitorNumLabel: tx("Visitor number", "رقم الزائر"),
+    visitorNote: tx("Checked-in visitors get one free ride on any bike except Carbon, valid for one month, on circuit rides (Petromin nights for Community and Petromin accounts). Decided to donate? Tell our team at the event.", "يحصل الزوار الذين سجّلوا حضورهم على ركوبة مجانية واحدة بأي دراجة عدا Carbon، صالحة لمدة شهر، في جولات الحلبة (ليالي Petromin لحسابات Community وPetromin). قررت التبرع؟ أخبر فريقنا في الفعالية."),
+    rewardTxtVis: tx("Thank you for coming. Enter this code when you book. Valid until {0}.", "شكرًا لحضورك. أدخل هذا الرمز عند الحجز. صالح حتى {0}."),
+    rewardUsedVis: tx("Your free ride has been used. Thank you for coming.", "تم استخدام ركوبتك المجانية. شكرًا لحضورك."),
+    clubLabel: tx("Club or community", "النادي أو المجتمع"),
+    // the pop-up for everyone who registered before the question (bldClubKicker, bldClubQ, bldClubSub, bldClubPh, bldClubNone, errBloodClub)
+    club: {
+      kicker: tx("One more question", "سؤال إضافي"),
+      q: tx("Which club or community are you from?", "من أي نادٍ أو مجتمع أنت؟"),
+      sub: tx("You’re registered for this event. We just need to know this.", "أنت مسجَّل في هذه الفعالية. نحتاج فقط إلى معرفة هذا."),
+      ph: tx("Club or community name", "اسم النادي أو المجتمع"),
+      none: tx("I don’t have one", "ليس لدي نادٍ أو مجتمع"),
+      err: tx("Enter your club or community, or tap I don’t have one.", "اكتب اسم النادي أو المجتمع، أو اضغط «ليس لدي نادٍ أو مجتمع»."),
+      save: tx("Continue", "متابعة"),
+    },
     // the pop-up that asks for its agreement (bldWgKicker, bldWgSub; the agreement's own words are content/waivers.ts)
     gate: {
       kicker: tx("Agreement needed", "إقرار مطلوب"),
@@ -59,6 +76,14 @@ export function bloodWords(tx: L) {
         tx("Mobile number", "رقم الجوال"),
         tx("Email address", "البريد الإلكتروني"),
         tx("Blood type", "فصيلة الدم"),
+        tx("Birth date", "تاريخ الميلاد"),
+        tx("Nationality", "الجنسية"),
+      ],
+      // what a visitor gives instead: no email and no blood type, their gender (the booking app's renderShareGate)
+      itemsVisitor: [
+        tx("Full name", "الاسم الكامل"),
+        tx("Mobile number", "رقم الجوال"),
+        tx("Gender", "الجنس"),
         tx("Birth date", "تاريخ الميلاد"),
         tx("Nationality", "الجنسية"),
       ],

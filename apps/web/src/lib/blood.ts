@@ -11,7 +11,20 @@
  *  its session did not load. */
 export const isBloodId = (id: string | null | undefined): boolean => /^\d{4}-\d\d-\d\d-bd(-|$)/.test(id ?? "");
 
-/** A donor's free ride: its code, the last day it is good on ("YYYY-MM-DD"), and whether it has been used. */
+/** The club or community question (rentals 20261105150000; the owner, 2026-11-05): the account's first live booking on this
+ *  event, from today on, that says it has not answered: the column is there and null. A read without it asks nothing, and
+ *  an empty answer is "I don't have one". `skip` leaves out sessions answered on this page already. */
+export function pendingClub(rows: Record<string, unknown>[], today: string, customerId: string, skip: readonly string[] = []): { sessionId: string; date: string } | null {
+  const out = rows.flatMap((r) => {
+    const sid = typeof r.session_id === "string" ? r.session_id : "", date = typeof r.session_date === "string" ? r.session_date.slice(0, 10) : "";
+    if (!("blood_club" in r) || r.blood_club !== null || !isBloodId(sid) || skip.includes(sid)) return [];
+    if (!["waiting", "waitlist", "active"].includes(String(r.status)) || (typeof r.customer_id === "string" && r.customer_id !== customerId)) return [];
+    return /^\d{4}-\d{2}-\d{2}$/.test(date) && date >= today ? [{ sessionId: sid, date }] : [];
+  });
+  return out.sort((a, b) => a.date.localeCompare(b.date))[0] ?? null;
+}
+
+/** A donor's free ride, or a checked-in visitor's: its code, the last day it is good on ("YYYY-MM-DD"), and whether it has been used. */
 export type BloodReward = { code: string; expiresAt: string | null; used: boolean };
 
 /** customer_blood_rewards' answer by booking id: its rows of entry_id, code, expires_at and used. Anything else, a

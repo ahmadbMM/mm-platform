@@ -18,6 +18,8 @@ export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
 export type TicketAddon = { id: string; qty: number; p: number | null };
 export type TicketRow = {
   id: string; sessionId: string; date: string; day: string; queueNum: number | null; status: TicketStatus;
+  /** The Blood Donation event: a visitor, and their club or community (lib/blood.ts). */
+  bloodVisitor?: boolean; bloodClub?: string;
   waitlistNum: number | null; approval: string | null; price: number; paid: boolean; name: string; type: string;
   /** How the desk or the wallet took it, and how much of it the wallet holds (rentals 20261103140000). */
   payMethod?: string | null; walletPaid?: number;
@@ -119,6 +121,8 @@ export function ticketRow(r: Row): TicketRow | null {
     id: S(r.id), sessionId: S(r.session_id) || date, date, day: S(r.session_day), queueNum: N(r.queue_num), status,
     waitlistNum: N(r.waitlist_num), approval: S(r.approval) || null, price: N(r.price) ?? 0, paid: r.paid === true, payMethod: S(r.pay_method) || null, walletPaid: N(r.wallet_paid) ?? 0,
     name: S(r.name), type: S(r.type_preference),
+    // the Blood Donation event: a visitor, and the club or community they gave (rentals 20261105140000, 20261105150000)
+    ...(r.blood_role === "visitor" ? { bloodVisitor: true } : {}), ...(S(r.blood_club) ? { bloodClub: S(r.blood_club) } : {}),
     checkedInAt: S(r.checked_in_at) || null, checkedOutAt: S(r.checked_out_at) || null, rideDuration: N(r.ride_duration), bikeId: bike || null,
     addonLines: entryAddons(r.addons),
     runKm: km !== null && RUN_KMS.includes(km) ? km : null,

@@ -8,6 +8,7 @@
 export const EM_QUIET = "mm_em_none";
 export const WAIVER_QUIET = "mm_waiver_none";
 export const SHARE_QUIET = "mm_share_none";
+export const CLUB_QUIET = "mm_club_none";
 export const RACE_QUIET = "mm_race_none";
 export const RATE_QUIET = "mm_rate_none";
 
@@ -16,6 +17,7 @@ export function forgetQuiet(): void {
     sessionStorage.removeItem(EM_QUIET);
     sessionStorage.removeItem(WAIVER_QUIET);
     sessionStorage.removeItem(SHARE_QUIET);
+    sessionStorage.removeItem(CLUB_QUIET);
     sessionStorage.removeItem(RACE_QUIET);
     sessionStorage.removeItem(RATE_QUIET);
   } catch { /* storage off: nothing kept */ }

@@ -1749,5 +1749,18 @@
   "For giving blood at a MicroMobility event. Our team confirms it on the night.": "MicroMobility-র ইভেন্টে রক্ত দেওয়ার জন্য। আমাদের টিম সেই রাতেই এটি নিশ্চিত করে।",
   "Volunteer": "স্বেচ্ছাসেবক",
   "Volunteer at one of our events.": "আমাদের কোনো ইভেন্টে স্বেচ্ছাসেবক হন।",
-  "For giving your time to help run a MicroMobility event. Given by our team.": "MicroMobility-র ইভেন্ট পরিচালনায় সাহায্য করতে সময় দেওয়ার জন্য। এটি আমাদের টিম দেয়।"
+  "For giving your time to help run a MicroMobility event. Given by our team.": "MicroMobility-র ইভেন্ট পরিচালনায় সাহায্য করতে সময় দেওয়ার জন্য। এটি আমাদের টিম দেয়।",
+  "Visitor": "দর্শনার্থী",
+  "Visitor number": "দর্শনার্থী নম্বর",
+  "Checked-in visitors get one free ride on any bike except Carbon, valid for one month, on circuit rides (Petromin nights for Community and Petromin accounts). Decided to donate? Tell our team at the event.": "চেক-ইন করা দর্শনার্থীরা কার্বন ছাড়া যেকোনো বাইকে একটি বিনামূল্যে রাইড পান, এক মাসের জন্য বৈধ, সার্কিট রাইডে (Community ও Petromin অ্যাকাউন্টের জন্য Petromin রাত)। রক্ত দেওয়ার সিদ্ধান্ত নিলেন? অনুষ্ঠানে আমাদের টিমকে জানান।",
+  "Thank you for coming. Enter this code when you book. Valid until {0}.": "আসার জন্য ধন্যবাদ। বুকিংয়ের সময় এই কোডটি দিন। {0} পর্যন্ত বৈধ।",
+  "Your free ride has been used. Thank you for coming.": "আপনার বিনামূল্যে রাইড ব্যবহার হয়ে গেছে। আসার জন্য ধন্যবাদ।",
+  "Club or community": "ক্লাব বা কমিউনিটি",
+  "One more question": "আরেকটি প্রশ্ন",
+  "Which club or community are you from?": "আপনি কোন ক্লাব বা কমিউনিটি থেকে এসেছেন?",
+  "I don’t have one": "আমার কোনো নেই",
+  "Club or community name": "ক্লাব বা কমিউনিটির নাম",
+  "Enter your club or community, or tap I don’t have one.": "আপনার ক্লাব বা কমিউনিটি লিখুন, অথবা \"আমার কোনো নেই\" চাপুন।",
+  "You’re registered for this event. We just need to know this.": "আপনি এই অনুষ্ঠানে নিবন্ধিত। আমাদের শুধু এটুকু জানা দরকার।",
+  "Continue": "চালিয়ে যান"
 }

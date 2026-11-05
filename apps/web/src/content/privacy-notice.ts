@@ -103,9 +103,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Letting our team plan a blood donation event. We share it only with the partners and third parties of a blood donation event you agree to share your details with, and use it for nothing else."
      ],
      [
-      "A blood donation event’s registration: your name, mobile number, email address, blood type, birth date and nationality, and whether you donated",
+      "A blood donation event’s registration: your name, mobile number, birth date and nationality, whether you come as a donor or a visitor, which club or community you are from, your email address and blood type if you come as a donor, your gender if you come as a visitor, and whether you donated",
       "Asked only when you register for a blood donation event. Seen by you, our staff and that event’s partners and third parties once you agree to share them. We never ask for or keep your ID or Iqama number.",
-      "Registering you as a donor, and giving confirmed donors any reward the event offers"
+      "Registering you for the event, and giving confirmed donors and checked-in visitors any reward the event offers"
      ],
      [
       "Volunteering: the opportunities you register for, your message and preferred role, whether you are accepted, your role, when you start and finish, your volunteering hours, that you accepted the volunteer agreement, what you do on the volunteer portal, and notes our team keeps",
@@ -438,9 +438,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "مساعدة فريقنا في التخطيط لفعالية التبرع بالدم. لا نشاركها إلا مع الشركاء والأطراف الثالثة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ولا نستخدمها لأي غرض آخر."
      ],
      [
-      "التسجيل في فعالية للتبرع بالدم: اسمك ورقم جوالك وبريدك الإلكتروني وفصيلة دمك وتاريخ ميلادك وجنسيتك، وما إذا كنت قد تبرعت",
+      "التسجيل في فعالية للتبرع بالدم: اسمك ورقم جوالك وتاريخ ميلادك وجنسيتك، وما إذا كنت ستحضر كمتبرع أم كزائر، والنادي أو المجتمع الذي تنتمي إليه، وبريدك الإلكتروني وفصيلة دمك إن حضرت كمتبرع، وجنسك إن حضرت كزائر، وما إذا كنت قد تبرعت",
       "تُطلب فقط عند التسجيل في فعالية للتبرع بالدم. يطّلع عليها أنت وموظفونا والشركاء والأطراف الثالثة لتلك الفعالية بعد موافقتك على مشاركتها. لا نطلب رقم هويتك أو إقامتك ولا نحتفظ به.",
-      "تسجيلك متبرعًا، ومنح المتبرعين المؤكَّدين أي مكافأة تقدمها الفعالية"
+      "تسجيلك في الفعالية، ومنح المتبرعين المؤكَّدين والزوار الذين سجّلوا حضورهم أي مكافأة تقدمها الفعالية"
      ],
      [
       "التطوع: الفرص التي تسجل فيها، ورسالتك ودورك المفضل، وقبولك من عدمه، ودورك، ووقت بدئك وانتهائك، وساعات تطوعك، وموافقتك على إقرار المتطوع، وما تقوم به في بوابة المتطوعين، وملاحظات يحتفظ بها فريقنا",

@@ -20,7 +20,7 @@ import { SESSION_ID } from "./waiver";
 const LIVE = new Set(["waiting", "waitlist", "active"]);
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 type Row = Record<string, unknown>;
-export type PendingShareRow = { sessionId: string; date: string; km: number | null };
+export type PendingShareRow = { sessionId: string; date: string; km: number | null; visitor?: boolean };
 
 /** Run for Her, by the session's kind. */
 export const isRun = (s: Pick<TicketSession, "kind"> | undefined): boolean => s?.kind === "runher";
@@ -45,7 +45,7 @@ function unagreed(rows: Row[], today: string, customerId: string, skip: readonly
     const date = S(r.session_date).slice(0, 10), sid = S(r.session_id);
     if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today || !SESSION_ID.test(sid) || skip.includes(sid)) continue;
     const had = by.get(sid);
-    if (!had) by.set(sid, { sessionId: sid, date, km: kmOf(r) });
+    if (!had) by.set(sid, { sessionId: sid, date, km: kmOf(r), ...(r.blood_role === "visitor" ? { visitor: true } : {}) });
     else if (had.km === null) had.km = kmOf(r);
   }
   return by;

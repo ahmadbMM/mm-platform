@@ -150,7 +150,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   // The Blood Donation event, by its id on a session that did not load: a donor's number, no price anywhere (2026-11-03)
   const donor = s ? s.kind === "blood" : isBloodId(primary.sessionId);
   const bw = donor ? blood?.words ?? null : null;
-  const numLabel = bw ? bw.numLabel : run ? t.runnerNumber : vlap || arena ? t.athleteNumber : satNum ? t.bookingNumber : t.queueNumber;
+  const vis = !!primary.bloodVisitor; // a visitor, not a donor (rentals 20261105140000)
+  const numLabel = bw ? (vis ? bw.visitorNumLabel : bw.numLabel) : run ? t.runnerNumber : vlap || arena ? t.athleteNumber : satNum ? t.bookingNumber : t.queueNumber;
   // The add-ons bought with the booking, each rider's under their name, and in the total, as the
   // booking app lists them (none on a ride staff approve). A line whose price is not known (the
   // inventory could not be read) is listed without it, and the total is left out: never a wrong one.
@@ -198,6 +199,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
     <article className={`tk-card ev-${donor ? "blood" : s?.kind ?? "jcc"}${look ? ` tk-${look}` : ""}${look === "live" && onDay ? " tk-today" : ""}`}>
       {/* The hosts' marks on their white plate, across the top of the ticket (the booking app's _bldPlateHtml). */}
       {bw && <div className="bld-plate tk-bld-plate"><img src={bloodPlate(locale)} alt={bw.plateAlt} width={BLOOD_PLATE_SIZE.width} height={BLOOD_PLATE_SIZE.height} decoding="async" /></div>}
+      {/* A visitor's stripe, in the booking app's words and colours (_bldTkType, the owner, 2026-11-05). */}
+      {bw && vis && <div className="tk-bld-vis">{bw.visitor.toUpperCase()}</div>}
       <div className="tk-head">
         <div className="tk-num-block">
           {/* The logo heads the number's column (the booking app's _tkLogo): white lettering on the dark card. */}
@@ -290,7 +293,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             {route.track && <svg className="tk-rt-map" viewBox="0 0 40 158" aria-hidden="true" focusable="false"><path d={JCC_TRACK} /><circle cx="12.9" cy="71.4" r="3.2" /></svg>}
           </div>
         )}
-        <p className="tk-riders-h">{bw ? bw.donor : bikes ? t.riders : t.participants} · {hideNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
+        <p className="tk-riders-h">{bw ? (vis ? bw.visitor : bw.donor) : bikes ? t.riders : t.participants} · {hideNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
         {rows.map((r) => (
           <div key={r.id} className="tk-rider">
             <div className="tk-rider-top">
@@ -409,14 +412,15 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           // the short rules, what confirmed donors get, and the free ride once staff confirmed the donation (the booking
           // app's _bldTkHtml, _bldRwHtml); a code that has been used says so, as there
           <div className="tk-bld">
-            {!past && <ul className="bld-sum">{bw.rules.map((x, i) => <li key={i}><Tick /><span>{x}</span></li>)}</ul>}
-            <p className="tk-bld-note">{bw.rewardNote}</p>
+            {primary.bloodClub && <p className="tk-bld-club">{bw.clubLabel}: <b><bdi>{primary.bloodClub}</bdi></b></p>}
+            {!past && <ul className="bld-sum">{(vis ? [bw.rules[0], bw.rules[2]] : bw.rules).map((x, i) => <li key={i}><Tick /><span>{x}</span></li>)}</ul>}
+            {!(vis && past) && <p className="tk-bld-note">{vis ? bw.visitorNote : bw.rewardNote}</p>}
             {reward && (
               <div className="tk-bld-rw">
                 <p className="tk-bld-rw-t">{bw.rewardTitle}</p>
                 {reward.used
-                  ? <p>{bw.rewardUsed}</p>
-                  : <><p className="tk-bld-rw-c" dir="ltr">{reward.code}</p>{reward.expiresAt && <p>{bw.rewardTxt.replace("{0}", fmtShort(reward.expiresAt))}</p>}</>}
+                  ? <p>{vis ? bw.rewardUsedVis : bw.rewardUsed}</p>
+                  : <><p className="tk-bld-rw-c" dir="ltr">{reward.code}</p>{reward.expiresAt && <p>{(vis ? bw.rewardTxtVis : bw.rewardTxt).replace("{0}", fmtShort(reward.expiresAt))}</p>}</>}
               </div>
             )}
           </div>

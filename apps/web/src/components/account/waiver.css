@@ -60,3 +60,8 @@ html:is([lang="ar"], [lang="ur"]) .wg-sec { letter-spacing: 0; font-size: 12px; 
 .ev-blood .wg-agree.on { border-color: #0b1f16; background: rgba(11, 31, 22, .06); }
 .ev-blood .wg-agree input { accent-color: #0b1f16; }
 .ev-blood .wg-btn { background: #0b1f16; color: #fff; }
+
+/* The Blood Donation event's club or community pop-up (ClubGate.tsx, the owner, 2026-11-05). */
+.cg-in { display: block; width: 100%; min-height: 48px; margin-top: 12px; padding: 0 12px; border: 1.5px solid rgba(11, 31, 22, .35); background: #fff; color: #0b1f16; font: inherit; font-size: 16px; }
+.cg-none { display: block; width: 100%; min-height: 48px; margin-top: 8px; border: 1.5px solid rgba(11, 31, 22, .35); background: #fff; color: #0b1f16; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.cg-none:disabled { opacity: .5; cursor: default; }

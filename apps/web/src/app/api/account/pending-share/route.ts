@@ -84,7 +84,7 @@ export async function GET(req: Request) {
       distance: first.km !== null ? t.rtKm(String(first.km)) : null,
       ...(s.kind === "vlap" ? ((v) => ({ kind: "vlap" as const, items: v.set ? v.items : null }))(vlShareItems(s.vl, locale, [])) : {}),
       ...(s.kind === "arena" ? ((v) => ({ kind: "arena" as const, items: v.set ? v.items : null }))(vlShareItems(s.ah, locale, [])) : {}),
-      ...(s.kind === "blood" ? (({ items, ...words }) => ({ kind: "blood" as const, items, words }))(bloodWords(tx).share) : {}),
+      ...(s.kind === "blood" ? (({ items, itemsVisitor, ...words }) => ({ kind: "blood" as const, items: first.visitor ? itemsVisitor : items, words }))(bloodWords(tx).share) : {}),
     },
   });
 }
