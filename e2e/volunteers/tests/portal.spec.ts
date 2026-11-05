@@ -132,6 +132,32 @@ test("accepted: the agreement once, then work: find, check in, mark donated, und
   expect(errors).toEqual([]);
 });
 
+test("donor or visitor: a chip on every row, one tap to switch, Mark donated for donors only", async ({ page }) => {
+  await registerAndAccept(page);
+  await page.goto(`/#work/${BD}`);
+  await page.reload();
+  await page.getByLabel("I have read this and I agree").check();
+  await page.getByRole("button", { name: "Continue" }).click();
+  await expect(page.locator("#vol-counts")).toContainText("0 Visitors");
+  await page.locator("#vol-q").fill("2");
+  await page.locator("#vol-find").click();
+  const row = () => page.locator('.row[data-id="q1111111"]');
+  await expect(row().locator(".chip-donor")).toHaveText("Donor");
+  await row().getByRole("button", { name: "Check in" }).click();
+  await expect(row().getByRole("button", { name: "Mark donated" })).toBeVisible();
+  // a visitor has nothing to mark
+  await row().getByRole("button", { name: "Make visitor" }).click();
+  await expect(row().locator(".chip-visitor")).toHaveText("Visitor");
+  await expect(row().getByRole("button", { name: "Mark donated" })).toHaveCount(0);
+  await expect(page.locator("#vol-counts")).toContainText("1 Visitors");
+  // and back; once the donation is marked, the switch is gone until it is taken back
+  await row().getByRole("button", { name: "Make donor" }).click();
+  await expect(row().locator(".chip-donor")).toHaveText("Donor");
+  await expect(page.locator("#vol-counts")).toContainText("0 Visitors");
+  await row().getByRole("button", { name: "Mark donated" }).click();
+  await expect(row().getByRole("button", { name: "Make visitor" })).toHaveCount(0);
+});
+
 test("what a volunteer may not do: their own booking, money, nonsense", async ({ page }) => {
   await registerAndAccept(page);
   await page.goto(`/#work/${BD}`);

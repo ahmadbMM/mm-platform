@@ -37,6 +37,7 @@ export const RPCS = new Set([
   "volunteer_list",
   "volunteer_checkin",
   "volunteer_donated",
+  "volunteer_blood_role",
 ]);
 
 /** Error codes the database raises on purpose, with the status each one is answered with. */
@@ -65,6 +66,8 @@ const KNOWN: Record<string, number> = {
   BLOOD_NOT_CHECKED_IN: 409,
   BLOOD_CODE_USED: 409,
   BLOOD_NO_ACCOUNT: 409,
+  BLOOD_VISITOR: 409,
+  BLOOD_DONATED: 409,
 };
 
 /** The status a code the database raises on purpose takes, or null for any other text
