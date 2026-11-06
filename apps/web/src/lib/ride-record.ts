@@ -188,6 +188,13 @@ export function rideStats(rows: TicketRow[], sessions: Map<string, RecordSession
   };
 }
 
+/** Rides led (the booking app's _ledN, 2026-11-06): the bike nights staff marked the rider as the ride's
+ *  lead (led_at) and the rider was checked in, on the bike or done; a no-show, or a lead still waiting,
+ *  never counts. One night counts once. */
+export function ledRides(rows: TicketRow[], sessions: Map<string, RecordSession>): number {
+  return new Set(rows.filter((r) => r.ledAt && (r.status === "done" || r.status === "active") && onBike(r.sessionId, sessions)).map((r) => r.sessionId)).size;
+}
+
 /** The account's rows as the record reads them (every status the ticket knows, plus no-shows,
  *  which break a Clean Sheet). `addons`: the booking carries an add-on the rider paid for (Fuel Stop,
  *  the booking app's 2026-10-07 rule): the booking paid, on a bike or done, a line sold above zero (a
@@ -301,8 +308,10 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
   // Blood Donation Visitor (the booking app, 2026-11-06): a visitor's booking on a Blood Donation session that staff checked
   // out, which leaves it done, so undoing the check-out takes the badge back
   const bvs = all.some((r) => r.status === "done" && r.bloodVisitor && ses(r.sessionId)?.kind === "blood");
+  // the Marshal ladder is earned by leading rides too (the booking app, 2026-11-06); staff still give it by hand
+  const led = ledRides(all, sessions);
   const P = (n: number, of: number) => `${Math.min(n, of)}/${of}`, pct = profile ? profilePct(profile) : 0;
-  type B = { s: string; on: boolean; p?: string | null; hide?: boolean; row?: BadgeRow; season?: BadgeItem["season"] };
+  type B = { s: string; on: boolean; p?: string | null; hide?: boolean; row?: BadgeRow; season?: BadgeItem["season"]; gv?: boolean };
   const list: B[] = [
     ...(profile ? [{ s: "complete_profile", on: pct >= 100, p: `${pct}%` }] : []),
     { s: "national_day_96", on: nd96, hide: true },
@@ -325,6 +334,9 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
     // the longest Saturday social ride ridden: 20 / 40 / 70 / 100 km (2026-10-16)
     ...[20, 40, 70, 100].map((n) => ({ s: `km${n}`, on: km >= n, p: P(km, n) })),
     { s: "works_team", on: corp >= 3, p: P(corp, 3) },
+    // gv: a level staff gave stays among the given ones
+    ...([["marshal", 1], ["senior_marshal", 10], ["chief_marshal", 25], ["clerk_of_course", 50], ["race_director", 100]] as const)
+      .map(([s, n]) => ({ s, on: led >= n, p: P(led, n), gv: true })),
     { s: "perfect_week", on: PW.any, p: PW.cur ? P(PW.cur.n, PW.cur.of) : null },
     { s: "perfect_month", on: PW.best >= 4, p: PW.known ? P(PW.run, 4) : null },
     { s: "back_on_track", on: gap, hide: true },
@@ -353,7 +365,7 @@ export function badgeList(rows: RecordRow[], sessions: Map<string, RecordSession
   };
   const ride = rideBadges(rows, sessions, data, today, profile).map((r) => {
     const g = given.get(r.s);
-    given.delete(r.s);
+    if (!(r.gv && g)) given.delete(r.s); // a Marshal level staff gave stays among the given ones, sorted first
     return { x: item(r.s, r.on || !!g, { p: r.p ?? null, given: g ? { note: g.note ?? null, at: g.at ?? null } : null, season: r.season ?? null, row: g ?? r.row ?? null }), hide: !!r.hide && !r.on && !g };
   });
   const manual = (cat ? [...cat.values()].filter((b) => !b.auto).map((b) => b.slug) : GIVEN_SYS).map((s) => ({ x: item(s, false, { manual: true }), hide: false }));

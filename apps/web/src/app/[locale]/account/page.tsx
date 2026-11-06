@@ -41,7 +41,7 @@ import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
 import { bloodDone, breakfastFor, doneToday, fmtDayDate, placeLink, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
-import { badgeList, recordRows, rideStats } from "@/lib/ride-record";
+import { badgeList, ledRides, recordRows, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
 import { riyadhClock } from "@/lib/workshop-days";
 import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
@@ -166,6 +166,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         .map((x) => [x.entry_id as string, (x.partner as string).trim()] as const)))
     : null;
   const stats = rideStats(record, recSessions, today);
+  const led = ledRides(record, recSessions); // Rides led under Your rides (the booking app, 2026-11-06)
   const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
   // Volunteering (rentals 20261105120000): a database without it, or a failed read, shows no card.
   const volunteer = await rpcServer<VolunteerMe>("volunteer_me", { p_id: acct.id, p_token: acct.token }).then((r) => r.data).catch(() => null);
@@ -274,7 +275,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
         {(stats || allBadges.length > 0) && (
           <section className="ac-sec" aria-label={recordText.yourRides}>
-            <RideRecord locale={locale} stats={stats} badges={allBadges} t={recordText} typeName={typeName} dur={{ h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM }} />
+            <RideRecord locale={locale} stats={stats} led={led} badges={allBadges} t={recordText} typeName={typeName} dur={{ h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM }} />
           </section>
         )}
 

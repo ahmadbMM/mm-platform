@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { badgeList, climb, closestBadges, perfectWeeks, profilePct, recordRows, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
+import { badgeList, climb, closestBadges, ledRides, perfectWeeks, profilePct, recordRows, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
 import Medal from "@/components/account/Medal";
 import RideRecord from "@/components/account/RideRecord";
 import { T as RECORD } from "@/components/account/RideRecord.text";
@@ -61,7 +61,8 @@ describe("the badges", () => {
     expect(slugs).not.toContain("back_on_track");
     // the T100 races are one ladder, where its first level stood (T100, the list's order), shown as T25 until one is given
     // and so is each badge staff give with its levels (2026-10-12), shown as its first level until one is given
-    expect(slugs.slice(-10)).toEqual(["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t25", "bike_owner", "volunteer"]);
+    // (the Marshal ladder is earned by leading rides since 2026-11-06, so it sits with the ride badges, not here)
+    expect(slugs.slice(-9)).toEqual(["pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t25", "bike_owner", "volunteer"]);
   });
   it("put a badge staff gave first, with their note and the day", () => {
     const L = list({ ...empty, mine: [{ slug: "champion", note: "Won the hill climb", at: "2026-09-30T18:00:00Z" }] });
@@ -181,7 +182,7 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
   });
   it("draw a ladder as one tile with a dot per level, and its next level among the closest", () => {
     const { r, s } = rides(9, "saturday");
-    const html = renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, badges: badgeList(r, s, empty, today, null), t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
+    const html = renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, led: 0, badges: badgeList(r, s, empty, today, null), t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
     expect(html).toContain('aria-label="Slipstream · Level 2 of 6: 5 community rides"');
     expect(html).toMatch(/<span class="mr-badge-lv" aria-hidden="true">(<i class="on"><\/i>){2}(<i><\/i>){4}<\/span>/);
     // nine nights first in the queue, too: Pole Master (10 since 2026-10-12) is one away, as Paceline is, and comes first
@@ -451,5 +452,43 @@ describe("the DEFE 5KM Run's finisher badge (defe_5k, 2026-10-18)", () => {
     expect(html).toContain("scale(.7)");
     expect(RECORD.en.names.defe_5k[0]).toBe("DEFE 5K");
     expect(RECORD.ar.names.defe_5k[1]).toBe("أكمل سباق دفء 5 كم.");
+  });
+});
+
+describe("Rides led and the Marshal ladder (led_at, 2026-11-06)", () => {
+  const ses = new Map<string, RecordSession>([["2026-09-01", { kind: "jcc", freeRide: false }], ["2026-09-08", { kind: "jcc", freeRide: false }], ["2026-09-09", { kind: "swim", freeRide: false }]]);
+  const LED = "2026-09-01T18:00:00Z";
+  const led = (o: Record<string, unknown>[]) => recordRows(o.map((x) => row(x)));
+  const marshal = (rows: ReturnType<typeof led>, data: BadgeData = empty) => badgeList(rows, ses, data, today, null).find((x) => x.lv?.some((y) => y.slug === "marshal"))!;
+  it("count a night led once the rider is checked in, on a bike", () => {
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED }]), ses)).toBe(1); // done
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED, status: "active" }]), ses)).toBe(1); // on the bike
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED, paid: false }]), ses)).toBe(1); // led counts even unpaid, as the app's _ledN
+    // two rows of one night (a party) count one night
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED }, { session_id: "2026-09-01", id: "b", led_at: LED }, { session_id: "2026-09-08", led_at: LED }]), ses)).toBe(2);
+  });
+  it("never count a no-show, a lead still waiting, a night not led or one without a bike", () => {
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED, status: "noshow" }]), ses)).toBe(0);
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED, status: "waiting" }]), ses)).toBe(0);
+    expect(ledRides(led([{ session_id: "2026-09-01" }, { session_id: "2026-09-08", led_at: null }]), ses)).toBe(0);
+    expect(ledRides(led([{ session_id: "2026-09-09", led_at: LED }]), ses)).toBe(0); // the pool
+  });
+  it("earn Marshal at the first night led, its next level at ten", () => {
+    expect(marshal(led([{ session_id: "2026-09-01", led_at: LED }]))).toMatchObject({ slug: "marshal", on: true, given: null, lvN: 1, p: "1/10", nx: { slug: "senior_marshal", on: false, p: "1/10" } });
+    expect(marshal(led([{ session_id: "2026-09-01", led_at: LED, status: "noshow" }]))).toMatchObject({ slug: "marshal", on: false, lvN: 0, p: "0/1" });
+    expect(marshal(led([{ session_id: "2026-09-01" }]))).toMatchObject({ on: false, lvN: 0 });
+  });
+  it("keep a Marshal level staff gave among the given ones, first, with their note", () => {
+    const data = { ...empty, mine: [{ slug: "marshal", note: "Swept the ride", at: "2026-09-30T18:00:00Z" }] };
+    const L = badgeList(led([{ session_id: "2026-09-01" }]), ses, data, today, null);
+    expect(L[0]).toMatchObject({ slug: "marshal", on: true, given: { note: "Swept the ride", at: "2026-09-30T18:00:00Z" } });
+    expect(L.filter((x) => x.lv?.some((y) => y.slug === "marshal"))).toHaveLength(1);
+    // given and led alike: still the given one, first
+    expect(badgeList(led([{ session_id: "2026-09-01", led_at: LED }]), ses, data, today, null)[0]).toMatchObject({ slug: "marshal", given: { note: "Swept the ride" } });
+  });
+  it("show Rides led under Your rides only once there is one", () => {
+    const html = (n: number) => renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, led: n, badges: [], t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
+    expect(html(3)).toContain("Rides led: 3");
+    expect(html(0)).toBe("");
   });
 });
