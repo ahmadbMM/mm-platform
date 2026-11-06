@@ -407,10 +407,16 @@ describe("the Blood Donation Visitor badge (blood_visitor, 2026-11-06)", () => {
     expect(GLYPH.dropo).toContain("evenodd");
   });
 
-  it("stays out of sight until then: not checked out, a donor's booking, another kind of session, or one that did not load", () => {
+  it("goes to donors as well (the owner, 2026-11-06): a donor checked out, or marked Donated while still checked in", () => {
+    expect(slugs(bvRows({ blood_role: null }))).toContain("blood_visitor");
+    expect(slugs(bvRows({ blood_role: "donor" }))).not.toContain("blood_donor"); // Blood Donor only with the Donated mark
+    expect(slugs(bvRows({ blood_role: "donor", status: "active", donated_at: "2026-11-05T18:00:00Z" }))).toEqual(expect.arrayContaining(["blood_visitor", "blood_donor"]));
+  });
+
+  it("stays out of sight until then: not checked out, another kind of session, or one that did not load", () => {
     expect(slugs(bvRows({ status: "active" }))).not.toContain("blood_visitor");
     expect(slugs(bvRows({ status: "waiting" }))).not.toContain("blood_visitor");
-    expect(slugs(bvRows({ blood_role: null }))).not.toContain("blood_visitor");
+    expect(slugs(bvRows({ blood_role: null, status: "waiting" }))).not.toContain("blood_visitor");
     expect(slugs(bvRows({}), new Map([[BD, { kind: "event" as const, freeRide: true }]]))).not.toContain("blood_visitor");
     expect(slugs(bvRows({}), new Map())).not.toContain("blood_visitor");
   });

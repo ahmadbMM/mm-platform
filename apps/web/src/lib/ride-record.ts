@@ -305,9 +305,9 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
   const dfr = rows.some((r) => (r.status === "done" || r.status === "active") && DEFE_RIDE_IDS.includes(r.sessionId));
   // Blood Donor: staff's Donated mark (the booking app, 2026-11-05), so taking the mark back takes the badge back with it
   const bld = all.some((r) => r.donated);
-  // Blood Donation Visitor (the booking app, 2026-11-06): a visitor's booking on a Blood Donation session that staff checked
-  // out, which leaves it done, so undoing the check-out takes the badge back
-  const bvs = all.some((r) => r.status === "done" && r.bloodVisitor && ses(r.sessionId)?.kind === "blood");
+  // Blood Donation Visitor (the booking app, 2026-11-06): everyone who came, donors and visitors alike: a booking on a Blood
+  // Donation session that staff checked out (done), or one marked Donated. Blood Donor stays with those who donated.
+  const bvs = bld || all.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "blood");
   // the Marshal ladder is earned by leading rides too (the booking app, 2026-11-06); staff still give it by hand
   const led = ledRides(all, sessions);
   const P = (n: number, of: number) => `${Math.min(n, of)}/${of}`, pct = profile ? profilePct(profile) : 0;
@@ -320,7 +320,7 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
     { s: "victory_lap", on: vlp, hide: true }, // the lap ring: shown to those who finished it
     { s: "defe_ride", on: dfr, hide: true }, // the ribbon wheel: shown to those who rode it
     { s: "blood_donor", on: bld, hide: true }, // the drop: shown to those who gave blood
-    { s: "blood_visitor", on: bvs, hide: true }, // the drop's outline: shown to the visitors who were checked out
+    { s: "blood_visitor", on: bvs, hide: true }, // the drop's outline: shown to everyone who came, donors and visitors
     { s: "first_lap", on: rides >= 1, p: `${rides}/1` }, { s: "regular", on: rides >= 5, p: P(rides, 5) }, { s: "podium", on: rides >= 10, p: P(rides, 10) },
     { s: "front_row", on: p1 >= 1, p: P(p1, 1) }, { s: "pole_position", on: p1 >= 5, p: P(p1, 5) }, { s: "pole_master", on: p1 >= 10, p: P(p1, 10) },
     { s: "grid_leader", on: p1 >= 25, p: P(p1, 25) }, { s: "pole_legend", on: p1 >= 50, p: P(p1, 50) },
