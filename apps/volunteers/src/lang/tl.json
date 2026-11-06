@@ -158,5 +158,9 @@
   "vdSize": "Sukat: {0}",
   "vdHeight": "Taas: {0}",
   "vdBlood": "Blood type: {0}",
-  "vdClub": "Club: {0}"
+  "vdClub": "Club: {0}",
+  "vdArrive": "Nandito na ako",
+  "vdArriveHint": "I-tap ito pagdating mo: dito magsisimula ang iyong oras.",
+  "vdArrivedAt": "Dumating ka {0}",
+  "vdCheckedOut": "Chineck out ka na ng team sa shift na ito. Tanungin sila kung nagtatrabaho ka pa."
 }

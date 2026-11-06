@@ -14,7 +14,7 @@ const AFTER_KEY = "mm_vol_after"; // the opportunity to come back to, across a s
 
 type Opp = { id: string; title: string | null; ride_kind: string | null; date: string; time: string | null; location: string | null; about: string | null;
   needed: number | null; roles: string[] | null; min_age: number | null; hours_mode: string; fixed_hours: number | null; signup_open: boolean;
-  opens_at: string | null; closes_at: string; accepted: number };
+  opens_at: string | null; closes_at: string; accepted: number; role_needs?: { name: string; needed: number; filled: number }[] };
 type Mine = { id: string; title: string | null; ride_kind: string | null; date: string; time: string | null; location: string | null; status: string; role: string | null;
   clock_in: string | null; clock_out: string | null; opens_at: string | null; closes_at: string; briefing: string | null; can_work: boolean };
 type RecordRow = { id: number; hours: number; on: string; note: string | null; session_id: string | null; title: string | null; ride_kind: string | null };
@@ -22,7 +22,8 @@ type Me = { signedIn?: false; id: string; name: string; hours: number; account: 
   first_on: string | null; last_on: string | null; sessions: number; cert_signer: string | null; cert_title: string | null };
 type Booking = { id: string; name: string; number: number | null; checked_in: boolean; donated: boolean; visitor?: boolean; own: boolean; desk: string | null; mine_in: boolean; mine_donated: boolean;
   phone?: string | null; status?: string; bike?: string | null; size?: string | null; height?: string | null; blood_type?: string | null; club?: string | null };
-type Entered = { closes_at: string; caps: Record<string, boolean>; briefing: string | null; hours_mode: string; role: string | null; counts: { booked: number; in: number; donated: number; visitors?: number } | null };
+type Entered = { closes_at: string; caps: Record<string, boolean>; briefing: string | null; hours_mode: string; role: string | null;
+  clock_in?: string | null; clock_out?: string | null; clock_out_by?: string | null; counts: { booked: number; in: number; donated: number; visitors?: number } | null };
 
 const app = document.getElementById("app")!;
 const S: {
@@ -43,7 +44,7 @@ const say = (e: { code: string; detail?: string }): string => {
     VOL_CLOSED: "volClosed", VOL_SIGNUP_CLOSED: "vdSignupClosed", VOL_DOB: "errDob", VOL_AGE: "vdTooYoung", VOL_DECLINED: "errDeclined", VOL_NOT_VOLUNTEER: "vdNotVolunteer",
     VOL_NOT_ACCEPTED: "vdNotAccepted", VOL_ACCOUNT: "vdAccountPwd", VOL_ALREADY_IN: "vdAlreadyIn", VOL_CAP: "vdNotAllowed", VOL_OWN_BOOKING: "vdOwn", VOL_NOT_YOURS: "volNotYours",
     BLOOD_VISITOR: "errVisitor", BLOOD_DONATED: "errDonatedFirst", VOL_DONATED_FIRST: "volDonatedFirst", VOL_SLOW: "volSlow", VOL_BAD_SEARCH: "volSearchHint", BOOKING_NOT_FOUND: "volNotFound", BAD_BOOKING_STATE: "volNotFound", VOL_AGREE: "vdAgreeTitle",
-    BAD_LOGIN: "errBadLogin", LOCKED: "errLocked", RATE_LIMIT: "errRate", VOL_TOKEN: "vdSessionEnded",
+    VOL_CHECKED_OUT: "vdCheckedOut", BAD_LOGIN: "errBadLogin", LOCKED: "errLocked", RATE_LIMIT: "errRate", VOL_TOKEN: "vdSessionEnded",
   };
   if (e.code === "VOL_ASK_DESK") {
     const desk: Record<string, Key> = { bike: "vdDeskBike", approval: "vdDeskApproval", share: "vdDeskShare", waiver: "vdDeskWaiver", waitlist: "vdDeskWaitlist" };
@@ -154,6 +155,8 @@ function viewOpp(main: HTMLElement, id: string): void {
   append(main, h("h1", {}, sessionName(o)), h("p", { class: "when" }, whereWhen(o)), oppMeta(o));
   if (o.about) main.appendChild(h("p", { class: "about-long" }, o.about));
   if (o.roles?.length) main.appendChild(h("p", { class: "when" }, `${t("oppRoles")}: ${o.roles.join(" · ")}`));
+  // How many each role needs and how many are on it (rentals 20261107130000; the staff review, 2026-11-06).
+  if (o.role_needs?.length) main.appendChild(h("div", { class: "chips" }, ...o.role_needs.map((n) => chip(`${n.name} ${n.filled}/${n.needed}`, n.filled >= n.needed))));
   main.appendChild(h("p", { class: "when" }, t("oppRegisterBy", whenLabel(o.closes_at))));
   main.appendChild(interestBlock(o, sh));
 }
@@ -283,7 +286,7 @@ function viewCert(main: HTMLElement): void {
         h("div", { dir: "ltr", lang: "en" }, h("h1", {}, "Certificate of Volunteering"), h("p", {}, en)),
         h("div", { dir: "rtl", lang: "ar" }, h("h1", {}, "شهادة تطوع"), h("p", {}, ar))),
       h("div", { class: "cert-hours" }, h("b", {}, hours), h("span", {}, "Hours · ساعة")),
-      h("div", { class: "cert-foot" }, h("span", {}, on(m.last_on, "en-GB")), h("span", { class: "cert-sign" }, m.cert_signer ?? "", m.cert_title ? h("br") : null, m.cert_title ?? ""))));
+      h("div", { class: "cert-foot" }, h("span", {}, on(new Date(Date.now() + 108e5).toISOString().slice(0, 10), "en-GB")), h("span", { class: "cert-sign" }, m.cert_signer ?? "", m.cert_title ? h("br") : null, m.cert_title ?? ""))));
 }
 
 // ── the work page ──
@@ -354,6 +357,7 @@ function deskHtml(main: HTMLElement, sh: Mine | null): void {
     onkeydown: ((ev: KeyboardEvent) => { if (ev.key === "Enter") { ev.preventDefault(); void search(q.value); } }) as unknown as EventListener });
   append(main, h("h1", {}, sh ? sessionName(sh) : ""),
     h("p", { class: "when" }, `${t("vdOpenUntil", whenLabel(e.closes_at))}${e.role ? ` · ${e.role}` : ""}`));
+  main.appendChild(arrivalBox(e));
   if (e.counts) main.appendChild(countsBox(e, blood));
   if (e.briefing) main.appendChild(h("details", { class: "brief", open: true }, h("summary", {}, t("vdBriefing")), h("p", {}, e.briefing)));
   append(main,
@@ -363,6 +367,23 @@ function deskHtml(main: HTMLElement, sh: Mine | null): void {
     h("div", { id: "vol-rows" }, ...(w.rows ?? []).map((r) => bookingRow(r, e, blood))));
   if (e.caps.list) main.appendChild(panel(e, blood));
   if (e.hours_mode !== "none") main.appendChild(h("div", { class: "foot-acts" }, button(t("vdFinish"), () => void finish())));
+}
+
+// Opening this page no longer starts the clock hours early, and never undoes a check-out the team made (rentals
+// 20261107130000, VL01): the volunteer says when they are there. Someone who finished by themselves can come back.
+function arrivalBox(e: Entered): HTMLElement {
+  if (e.clock_out && e.clock_out_by !== "self") return noteBox(t("vdCheckedOut"));
+  if (e.clock_in && !e.clock_out) return h("p", { class: "when", id: "vol-arrived" }, t("vdArrivedAt", whenLabel(e.clock_in)));
+  return h("div", { class: "card action", id: "vol-arrive" }, h("p", {}, t("vdArriveHint")), button(t("vdArrive"), () => void arrive(), "primary", { id: "vol-arrive-btn" }));
+}
+async function arrive(): Promise<void> {
+  const w = S.work; if (!w) return;
+  const r = await rpc<{ clock_in: string | null; clock_out?: string | null }>("volunteer_arrive", { p_session: w.id });
+  if (!r.ok) { if (lost(r.code)) { await load(); leaveWork(say(r)); return; } w.msg = say(r); render(); return; }
+  w.ent.clock_in = r.data.clock_in ?? w.ent.clock_in ?? new Date().toISOString();
+  w.ent.clock_out = null; w.ent.clock_out_by = null;
+  w.msg = "";
+  render();
 }
 
 function countsBox(e: Entered, blood: boolean): HTMLElement {
