@@ -158,5 +158,9 @@
   "vdSize": "Tamanho: {0}",
   "vdHeight": "Altura: {0}",
   "vdBlood": "Tipo sanguíneo: {0}",
-  "vdClub": "Clube: {0}"
+  "vdClub": "Clube: {0}",
+  "vdArrive": "Já cheguei",
+  "vdArriveHint": "Toque aqui quando chegar: o seu tempo começa a contar a partir daí.",
+  "vdArrivedAt": "Chegou {0}",
+  "vdCheckedOut": "A equipa marcou a sua saída deste turno. Pergunte-lhes se ainda está a trabalhar."
 }

@@ -33,6 +33,7 @@ export const RPCS = new Set([
   "volunteer_agree",
   "volunteer_interest",
   "volunteer_enter",
+  "volunteer_arrive",
   "volunteer_clock_out",
   "volunteer_find",
   "volunteer_list",

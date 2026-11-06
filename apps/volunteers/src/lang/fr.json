@@ -158,5 +158,9 @@
   "vdSize": "Gabarit : {0}",
   "vdHeight": "Taille : {0}",
   "vdBlood": "Groupe sanguin : {0}",
-  "vdClub": "Club : {0}"
+  "vdClub": "Club : {0}",
+  "vdArrive": "Je suis arrivé",
+  "vdArriveHint": "Touchez ici à votre arrivée : votre temps commence à partir de là.",
+  "vdArrivedAt": "Arrivé {0}",
+  "vdCheckedOut": "L’équipe a pointé votre sortie de ce service. Demandez-lui si vous travaillez encore."
 }

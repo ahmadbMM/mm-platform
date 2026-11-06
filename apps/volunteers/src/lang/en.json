@@ -158,5 +158,9 @@
   "vdSize": "Size: {0}",
   "vdHeight": "Height: {0}",
   "vdBlood": "Blood type: {0}",
-  "vdClub": "Club: {0}"
+  "vdClub": "Club: {0}",
+  "vdArrive": "I have arrived",
+  "vdArriveHint": "Tap this when you get there: your time starts from it.",
+  "vdArrivedAt": "You arrived {0}",
+  "vdCheckedOut": "The team has checked you out of this shift. Ask them if you are still working."
 }
