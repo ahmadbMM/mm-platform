@@ -52,6 +52,13 @@ export function bloodWords(tx: L) {
     rewardTxtVis: tx("Thank you for coming. Enter this code when you book. Valid until {0}.", "شكرًا لحضورك. أدخل هذا الرمز عند الحجز. صالح حتى {0}."),
     rewardUsedVis: tx("Your free ride has been used. Thank you for coming.", "تم استخدام ركوبتك المجانية. شكرًا لحضورك."),
     clubLabel: tx("Club or community", "النادي أو المجتمع"),
+    // the Blood Donation Visitor badge on My Account (the booking app's bdgBloodVisitor, D and A, 2026-11-06): its name, how it is
+    // earned and what it means, here because the name says the event; the account page hands them on only to a visitor who holds it
+    visitorBadge: [
+      tx("Blood Donation Visitor", "زائر حملة التبرع بالدم"),
+      tx("Visit one of our blood donation events.", "زُر إحدى فعالياتنا للتبرع بالدم."),
+      tx("For coming to a MicroMobility blood donation event as a visitor. Given once our team checks you out.", "لمن حضر فعالية مايكروموبيليتي للتبرع بالدم زائرًا. يُمنح بعد أن يسجّل فريقنا خروجك."),
+    ] as [string, string, string],
     // the pop-up for everyone who registered before the question (bldClubKicker, bldClubQ, bldClubSub, bldClubPh, bldClubNone, errBloodClub)
     club: {
       kicker: tx("One more question", "سؤال إضافي"),

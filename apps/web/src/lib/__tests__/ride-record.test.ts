@@ -3,6 +3,9 @@ import { badgeList, climb, closestBadges, perfectWeeks, profilePct, recordRows, 
 import Medal from "@/components/account/Medal";
 import RideRecord from "@/components/account/RideRecord";
 import { T as RECORD } from "@/components/account/RideRecord.text";
+import { GLYPH } from "@/components/account/badge-glyphs";
+import { bloodWords } from "@/content/blood-words";
+import { serverL } from "@/i18n/dicts";
 import { createElement, type ReactElement } from "react";
 // The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
 // @ts-expect-error -- react-dom/server ships without type declarations here
@@ -389,6 +392,38 @@ describe("the Blood Donor and Volunteer badges (2026-11-05)", () => {
     expect(badgeList([], new Map(), empty, today, null).find((x) => x.slug === "volunteer")).toMatchObject({ on: false });
     expect(RECORD.en.names.blood_donor[0]).toBe("Blood Donor");
     expect(RECORD.ar.names.volunteer[0]).toBe("متطوع");
+  });
+});
+
+describe("the Blood Donation Visitor badge (blood_visitor, 2026-11-06)", () => {
+  const BD = "2026-11-05-bd";
+  const bvRows = (o: Record<string, unknown>) => recordRows([row({ id: "q1", session_id: BD, session_date: "2026-11-05", status: "done", blood_role: "visitor", ...o })]);
+  const bdSes = new Map([[BD, { kind: "blood" as const, freeRide: true }]]);
+  const slugs = (rows: ReturnType<typeof bvRows>, s: Map<string, RecordSession> = bdSes) => badgeList(rows, s, empty, today, null).map((x) => x.slug);
+
+  it("is earned by a visitor's booking on a Blood Donation session that staff checked out, on the teal medal with the drop's outline", () => {
+    expect(badgeList(bvRows({}), bdSes, empty, today, null).find((x) => x.slug === "blood_visitor")).toMatchObject({ on: true, icon: "dropo", color: "teal" });
+    expect(GLYPH.dropo).toContain("evenodd");
+  });
+
+  it("stays out of sight until then: not checked out, a donor's booking, another kind of session, or one that did not load", () => {
+    expect(slugs(bvRows({ status: "active" }))).not.toContain("blood_visitor");
+    expect(slugs(bvRows({ status: "waiting" }))).not.toContain("blood_visitor");
+    expect(slugs(bvRows({ blood_role: null }))).not.toContain("blood_visitor");
+    expect(slugs(bvRows({}), new Map([[BD, { kind: "event" as const, freeRide: true }]]))).not.toContain("blood_visitor");
+    expect(slugs(bvRows({}), new Map())).not.toContain("blood_visitor");
+  });
+
+  it("is not Blood Donor, and a visit is not a ride", () => {
+    const L = badgeList(bvRows({}), bdSes, empty, today, null);
+    expect(L.map((x) => x.slug)).not.toContain("blood_donor");
+    expect(L.find((x) => x.slug === "first_lap")?.on).toBe(false);
+  });
+
+  it("is worded by the event's own words, never the browser's dictionary", () => {
+    expect(bloodWords(serverL("en")).visitorBadge[0]).toBe("Blood Donation Visitor");
+    expect(bloodWords(serverL("ar")).visitorBadge[0]).toBe("زائر حملة التبرع بالدم");
+    expect(RECORD.en.names.blood_visitor).toBeUndefined();
   });
 });
 

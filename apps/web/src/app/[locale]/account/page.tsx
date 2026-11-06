@@ -179,7 +179,10 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const rideName = (s: TicketSession | undefined, sessionId: string) =>
     (s ? sessionName(s, names, enNames, L !== "en") : isNonBike(null, sessionId) ? tx("Session", "الفعالية") : tx("Ride", "جولة"));
   const ticketText = serverLocalize(TICKET, locale);
-  const recordText = serverLocalize(RECORD, locale);
+  // the Blood Donation Visitor badge is worded by the event's own words (content/blood-words.ts), handed on only to one who holds it
+  const recordBase = serverLocalize(RECORD, locale);
+  const recordText = allBadges.some((x) => x.slug === "blood_visitor")
+    ? { ...recordBase, names: { ...recordBase.names, blood_visitor: bloodWords(tx).visitorBadge } } : recordBase;
   const drawn = new Date().getTime(); // the countdown's first line, before the browser takes over
   const typeName = (ty: string) => (TYPE_NAME[ty] ? tx(TYPE_NAME[ty].en, TYPE_NAME[ty].ar) : ty);
   // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
