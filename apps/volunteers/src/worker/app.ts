@@ -9,7 +9,9 @@
 //                         also sign the rider out of the booking app.
 //   POST /api/rpc/<name>  one of RPCS below, with p_id / p_token taken from the cookie. Nobody reads the
 //                         portal signed out (the owner, 2026-11-05): volunteer_opportunities takes no
-//                         arguments, so its session is checked here first
+//                         arguments, so its session is checked here first. The one exception is
+//                         volunteer_cert_check {p_code}: an employer or a university checks a certificate
+//                         with the code printed on it (the staff review, 2026-11-06), metered like a sign-in
 //
 // Every POST must come from this origin's own page, as JSON, and small.
 
@@ -40,6 +42,12 @@ export const RPCS = new Set([
   "volunteer_checkin",
   "volunteer_donated",
   "volunteer_blood_role",
+  // the staff review of 2026-11-06 (rentals migration 20261107131000)
+  "volunteer_profile",
+  "volunteer_apply",
+  "volunteer_brief_ack",
+  "volunteer_cert_issue",
+  "volunteer_cert_check",
 ]);
 
 /** Error codes the database raises on purpose, with the status each one is answered with. */
@@ -70,6 +78,8 @@ const KNOWN: Record<string, number> = {
   BLOOD_NO_ACCOUNT: 409,
   BLOOD_VISITOR: 409,
   BLOOD_DONATED: 409,
+  VOL_CERT_EMPTY: 400,
+  BAD_DATE: 400,
 };
 
 /** The status a code the database raises on purpose takes, or null for any other text
@@ -210,8 +220,20 @@ async function handoff(req: Request, env: Env): Promise<Response> {
   return json({ ok: true }, 200, setCookie({ id: row.id, token: row.session_token as string }));
 }
 
+/** A certificate's check: anyone holding the code, signed in or not; only the code goes to the database. */
+async function certCheck(req: Request, env: Env): Promise<Response> {
+  if (!(await withinTries(req, env))) return fail("RATE_LIMIT", 429);
+  const read = await readBody(req, LOGIN_BODY_LIMIT);
+  if ("error" in read) return read.error;
+  const code = read.body.p_code;
+  if (typeof code !== "string" || !/^[A-Za-z0-9]{12}$/.test(code.trim())) return json({ ok: false });
+  const r = await callDb(env, req, "volunteer_cert_check", { p_code: code.trim().toUpperCase() });
+  return r.ok ? json(r.data ?? { ok: false }) : fail(r.code, r.status);
+}
+
 async function rpc(req: Request, env: Env, name: string): Promise<Response> {
   if (!RPCS.has(name)) return fail("NOT_FOUND", 404);
+  if (name === "volunteer_cert_check") return certCheck(req, env);
   const s = sessionOf(req);
   // Without a session, "who am I" is answered, not refused: the page asks it on every load.
   if (!s) return name === "volunteer_me" ? json({ signedIn: false }) : fail("VOL_TOKEN", 401, clearCookie());
