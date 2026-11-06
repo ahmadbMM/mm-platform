@@ -12,8 +12,8 @@ describe("the wallet", () => {
     expect(walletOf({ code: "PGRST202" })).toBeNull();
   });
   it("names every line the database writes", () => {
-    expect(["topup", "takeout", "refund", "spend", "return", "merge_in", "merge_out", "unmerge", "adjust", "sale", "sale_back"].map(walletKindWord))
-      .toEqual(["topup", "takeout", "refund", "spend", "back", "moved", "moved", "moved", "adjust", "sale", "saleBack"]);
+    expect(["topup", "takeout", "refund", "spend", "return", "merge_in", "merge_out", "unmerge", "adjust", "sale", "sale_back", "fee", "fee_back"].map(walletKindWord))
+      .toEqual(["topup", "takeout", "refund", "spend", "back", "moved", "moved", "moved", "adjust", "sale", "saleBack", "fee", "feeBack"]);
   });
   it("works on the seated rows the desk has not been paid for, and says what is left", () => {
     expect(walletDue([row("a"), row("b", { paid: true, payMethod: "card" } as never), row("c", { status: "waitlist" })], "jcc", false, 0)).toEqual({ ids: ["a"], left: 50, used: 0 });

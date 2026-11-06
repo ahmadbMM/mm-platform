@@ -1530,6 +1530,18 @@
   "For giving blood at a MicroMobility event. Our team confirms it on the night.": "MicroMobility के कार्यक्रम में रक्तदान करने के लिए। हमारी टीम उसी रात इसकी पुष्टि करती है।",
   "Volunteer": "स्वयंसेवक",
   "Volunteer at one of our events.": "हमारे किसी कार्यक्रम में स्वयंसेवा करें।",
+  "Volunteer 10": "स्वयंसेवक 10",
+  "Give 10 hours as a volunteer.": "स्वयंसेवक के रूप में 10 घंटे दें।",
+  "The Volunteer badge's next level, for 10 hours given to MicroMobility events. It comes with the hours.": "स्वयंसेवक बैज का अगला स्तर, MicroMobility के आयोजनों में 10 घंटों के लिए। घंटों के साथ मिलता है।",
+  "Volunteer 25": "स्वयंसेवक 25",
+  "Give 25 hours as a volunteer.": "स्वयंसेवक के रूप में 25 घंटे दें।",
+  "For 25 hours given to MicroMobility events. It comes with the hours.": "MicroMobility के आयोजनों में 25 घंटों के लिए। घंटों के साथ मिलता है।",
+  "Volunteer 50": "स्वयंसेवक 50",
+  "Give 50 hours as a volunteer.": "स्वयंसेवक के रूप में 50 घंटे दें।",
+  "For 50 hours given to MicroMobility events. It comes with the hours.": "MicroMobility के आयोजनों में 50 घंटों के लिए। घंटों के साथ मिलता है।",
+  "Volunteer 100": "स्वयंसेवक 100",
+  "Give 100 hours as a volunteer.": "स्वयंसेवक के रूप में 100 घंटे दें।",
+  "The top level, for 100 hours given to MicroMobility events. It comes with the hours.": "सबसे ऊँचा स्तर, MicroMobility के आयोजनों में 100 घंटों के लिए। घंटों के साथ मिलता है।",
   "For giving your time to help run a MicroMobility event. Given by our team.": "MicroMobility के कार्यक्रम के आयोजन में मदद के लिए अपना समय देने पर। यह हमारी टीम देती है।",
   "Visitor": "आगंतुक",
   "Visitor number": "आगंतुक संख्या",
@@ -1548,5 +1560,5 @@
   "You cannot register for this event until you have read and agreed to this. I am coming to this event as a visitor and will not give blood. I will follow the instructions of the event’s team and the venue’s. If I decide to donate at the event, I will tell the team first: the donation is then a medical procedure carried out by the event’s medical team, not by MicroMobility, and only that team decides whether I can donate. MicroMobility’s part is only to register me and to give checked-in visitors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for any medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "इसे पढ़कर इससे सहमत हुए बिना आप इस कार्यक्रम के लिए पंजीकरण नहीं कर सकते। इस कार्यक्रम में मेरी उपस्थिति आगंतुक के रूप में है और रक्तदान इसमें शामिल नहीं है। कार्यक्रम की टीम और स्थल के निर्देशों का पालन करना मेरी ज़िम्मेदारी है। यदि कार्यक्रम में रक्तदान का निर्णय हो, तो पहले टीम को बताना मेरी ज़िम्मेदारी है: तब रक्तदान एक चिकित्सा प्रक्रिया है जिसे कार्यक्रम की चिकित्सा टीम करती है, MicroMobility नहीं, और रक्तदान की अनुमति का निर्णय केवल वही टीम करती है। MicroMobility का काम केवल मेरा पंजीकरण करना और चेक-इन किए आगंतुकों को उनकी मुफ़्त राइड देना है। अपने निजी सामान की ज़िम्मेदारी मेरी है। कानून द्वारा अनुमत अधिकतम सीमा तक, MicroMobility और उसके कर्मचारी किसी भी चिकित्सा प्रक्रिया या उसके प्रभावों, या कार्यक्रम में किसी भी चोट, बीमारी, नुकसान, चोरी या क्षति के लिए ज़िम्मेदार नहीं हैं।",
   "Blood Donation Visitor": "रक्तदान कार्यक्रम आगंतुक",
   "Visit one of our blood donation events.": "हमारे किसी रक्तदान कार्यक्रम में आएँ।",
-  "For coming to a MicroMobility blood donation event as a visitor. Given once our team checks you out.": "MicroMobility के रक्तदान कार्यक्रम में आगंतुक के रूप में आने के लिए। हमारी टीम के आपको चेक आउट करने के बाद मिलता है।"
+  "For coming to a MicroMobility blood donation event, as a donor or a visitor. Given once our team checks you out, or marks your donation.": "MicroMobility के रक्तदान कार्यक्रम में रक्तदाता या आगंतुक के रूप में आने के लिए। हमारी टीम के आपको चेक आउट करने या आपका रक्तदान दर्ज करने के बाद मिलता है।"
 }

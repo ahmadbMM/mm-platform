@@ -217,6 +217,10 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
     const m = badgeList([], new Map(), { ...empty, mine: [{ slug: "senior_marshal" }] }, today, null).find((x) => x.lv?.some((y) => y.slug === "marshal"))!;
     expect(m).toMatchObject({ slug: "senior_marshal", on: true, lvN: 2, nx: { slug: "chief_marshal", on: false } });
     expect(m.lv!.map((x) => x.slug)).toEqual(["marshal", "senior_marshal", "chief_marshal", "clerk_of_course", "race_director"]);
+    // the Volunteer hours ladder (the booking app, VL14): the database gives Volunteer 25, the tile folds the five levels
+    const v = badgeList([], new Map(), { ...empty, mine: [{ slug: "volunteer_25" }] }, today, null).find((x) => x.lv?.some((y) => y.slug === "volunteer"))!;
+    expect(v).toMatchObject({ slug: "volunteer_25", on: true, lvN: 3, icon: "hand", color: "purple", nx: { slug: "volunteer_50", on: false } });
+    expect(v.lv!.map((x) => [x.slug, x.on])).toEqual([["volunteer", true], ["volunteer_10", true], ["volunteer_25", true], ["volunteer_50", false], ["volunteer_100", false]]);
     expect([...climb(["carbon_owner", "grand_champion"])].sort()).toEqual(["bike_owner", "carbon_owner", "champion", "grand_champion", "hat_trick", "road_owner"]);
     // five levels on each of the seven ladders (2026-10-12): the top one brings all four under it
     expect([...climb(["world_champion", "race_director"])].sort()).toEqual(["champion", "chief_marshal", "clerk_of_course", "dynasty", "grand_champion", "hat_trick", "marshal", "race_director", "senior_marshal", "world_champion"]);

@@ -1530,6 +1530,18 @@
   "For giving blood at a MicroMobility event. Our team confirms it on the night.": "表彰在 MicroMobility 活动中献血。我们的团队会在当晚确认。",
   "Volunteer": "志愿者",
   "Volunteer at one of our events.": "在我们的活动中担任志愿者。",
+  "Volunteer 10": "志愿者 10",
+  "Give 10 hours as a volunteer.": "担任志愿者 10 小时。",
+  "The Volunteer badge's next level, for 10 hours given to MicroMobility events. It comes with the hours.": "志愿者徽章的下一级，表彰在 MicroMobility 活动中服务 10 小时。随服务时长自动获得。",
+  "Volunteer 25": "志愿者 25",
+  "Give 25 hours as a volunteer.": "担任志愿者 25 小时。",
+  "For 25 hours given to MicroMobility events. It comes with the hours.": "表彰在 MicroMobility 活动中服务 25 小时。随服务时长自动获得。",
+  "Volunteer 50": "志愿者 50",
+  "Give 50 hours as a volunteer.": "担任志愿者 50 小时。",
+  "For 50 hours given to MicroMobility events. It comes with the hours.": "表彰在 MicroMobility 活动中服务 50 小时。随服务时长自动获得。",
+  "Volunteer 100": "志愿者 100",
+  "Give 100 hours as a volunteer.": "担任志愿者 100 小时。",
+  "The top level, for 100 hours given to MicroMobility events. It comes with the hours.": "最高级别，表彰在 MicroMobility 活动中服务 100 小时。随服务时长自动获得。",
   "For giving your time to help run a MicroMobility event. Given by our team.": "表彰您抽出时间协助举办 MicroMobility 活动。由我们的团队颁发。",
   "Visitor": "访客",
   "Visitor number": "访客编号",
@@ -1548,5 +1560,5 @@
   "You cannot register for this event until you have read and agreed to this. I am coming to this event as a visitor and will not give blood. I will follow the instructions of the event’s team and the venue’s. If I decide to donate at the event, I will tell the team first: the donation is then a medical procedure carried out by the event’s medical team, not by MicroMobility, and only that team decides whether I can donate. MicroMobility’s part is only to register me and to give checked-in visitors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for any medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "在阅读并同意本协议之前，您无法报名参加此活动。我以访客身份参加此活动，不会献血。我将遵守活动团队和场馆的指示。如果我在活动中决定献血，我会先告知团队：此时献血是由活动医疗团队而非 MicroMobility 实施的医疗程序，且只有该团队才能决定我是否可以献血。MicroMobility 的职责仅限于为我登记并向已签到的访客提供免费骑行。我对自己的个人物品负责。在法律允许的最大范围内，MicroMobility 及其员工对任何医疗程序或其影响，以及活动中的任何受伤、疾病、遗失、被盗或损坏概不负责。",
   "Blood Donation Visitor": "献血活动访客",
   "Visit one of our blood donation events.": "参加我们的一场献血活动。",
-  "For coming to a MicroMobility blood donation event as a visitor. Given once our team checks you out.": "以访客身份参加 MicroMobility 献血活动。我们的团队为你办理签出后颁发。"
+  "For coming to a MicroMobility blood donation event, as a donor or a visitor. Given once our team checks you out, or marks your donation.": "以献血者或访客身份参加 MicroMobility 献血活动。我们的团队为你办理签出或登记献血后颁发。"
 }

@@ -1530,6 +1530,18 @@
   "For giving blood at a MicroMobility event. Our team confirms it on the night.": "Para sa pag-donate ng dugo sa isang event ng MicroMobility. Kinukumpirma ito ng aming team sa mismong gabi.",
   "Volunteer": "Boluntaryo",
   "Volunteer at one of our events.": "Magboluntaryo sa isa sa aming mga event.",
+  "Volunteer 10": "Volunteer 10",
+  "Give 10 hours as a volunteer.": "Magbigay ng 10 oras bilang volunteer.",
+  "The Volunteer badge's next level, for 10 hours given to MicroMobility events. It comes with the hours.": "Ang susunod na antas ng badge na Volunteer, para sa 10 oras sa mga event ng MicroMobility. Kasama ito ng mga oras.",
+  "Volunteer 25": "Volunteer 25",
+  "Give 25 hours as a volunteer.": "Magbigay ng 25 oras bilang volunteer.",
+  "For 25 hours given to MicroMobility events. It comes with the hours.": "Para sa 25 oras sa mga event ng MicroMobility. Kasama ito ng mga oras.",
+  "Volunteer 50": "Volunteer 50",
+  "Give 50 hours as a volunteer.": "Magbigay ng 50 oras bilang volunteer.",
+  "For 50 hours given to MicroMobility events. It comes with the hours.": "Para sa 50 oras sa mga event ng MicroMobility. Kasama ito ng mga oras.",
+  "Volunteer 100": "Volunteer 100",
+  "Give 100 hours as a volunteer.": "Magbigay ng 100 oras bilang volunteer.",
+  "The top level, for 100 hours given to MicroMobility events. It comes with the hours.": "Ang pinakamataas na antas, para sa 100 oras sa mga event ng MicroMobility. Kasama ito ng mga oras.",
   "For giving your time to help run a MicroMobility event. Given by our team.": "Para sa pagbibigay ng iyong oras upang tumulong sa pagpapatakbo ng isang event ng MicroMobility. Ibinibigay ng aming team.",
   "Visitor": "Bisita",
   "Visitor number": "Numero ng bisita",
@@ -1548,5 +1560,5 @@
   "You cannot register for this event until you have read and agreed to this. I am coming to this event as a visitor and will not give blood. I will follow the instructions of the event’s team and the venue’s. If I decide to donate at the event, I will tell the team first: the donation is then a medical procedure carried out by the event’s medical team, not by MicroMobility, and only that team decides whether I can donate. MicroMobility’s part is only to register me and to give checked-in visitors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for any medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "Hindi ka makakapagparehistro sa event na ito hangga’t hindi mo nababasa at sinasang-ayunan ito. Pupunta ako sa event na ito bilang bisita at hindi ako magdo-donate ng dugo. Susundin ko ang mga tagubilin ng team ng event at ng pasilidad. Kung magpasya akong mag-donate sa event, sasabihin ko muna sa team: ang donasyon ay isa nang medikal na proseso na ginagawa ng medical team ng event, hindi ng MicroMobility, at ang team na iyon lang ang magpapasya kung maaari akong mag-donate. Ang tanging bahagi ng MicroMobility ay iparehistro ako at ibigay sa mga bisitang naka-check in ang kanilang libreng sakay. Ako ang responsable sa aking mga personal na gamit. Hanggang sa pinakamalawak na pinapayagan ng batas, ang MicroMobility at ang mga staff nito ay hindi mananagot sa anumang medikal na proseso o sa mga epekto nito, o sa anumang pinsala sa katawan, sakit, pagkawala, pagnanakaw o sira sa event.",
   "Blood Donation Visitor": "Bisita sa Blood Donation",
   "Visit one of our blood donation events.": "Bumisita sa isa sa aming mga blood donation event.",
-  "For coming to a MicroMobility blood donation event as a visitor. Given once our team checks you out.": "Para sa pagpunta bilang bisita sa isang blood donation event ng MicroMobility. Ibinibigay kapag na-check out ka na ng aming team."
+  "For coming to a MicroMobility blood donation event, as a donor or a visitor. Given once our team checks you out, or marks your donation.": "Para sa pagpunta sa isang blood donation event ng MicroMobility, bilang donor o bisita. Ibinibigay kapag na-check out ka na ng aming team o naitala ang iyong donasyon."
 }

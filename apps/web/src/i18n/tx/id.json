@@ -1530,6 +1530,18 @@
   "For giving blood at a MicroMobility event. Our team confirms it on the night.": "Karena mendonorkan darah di acara MicroMobility. Tim kami mengonfirmasinya pada malam itu juga.",
   "Volunteer": "Relawan",
   "Volunteer at one of our events.": "Jadilah relawan di salah satu acara kami.",
+  "Volunteer 10": "Relawan 10",
+  "Give 10 hours as a volunteer.": "Berikan 10 jam sebagai relawan.",
+  "The Volunteer badge's next level, for 10 hours given to MicroMobility events. It comes with the hours.": "Level berikutnya dari lencana Relawan, untuk 10 jam di acara MicroMobility. Didapat bersama jam-jamnya.",
+  "Volunteer 25": "Relawan 25",
+  "Give 25 hours as a volunteer.": "Berikan 25 jam sebagai relawan.",
+  "For 25 hours given to MicroMobility events. It comes with the hours.": "Untuk 25 jam di acara MicroMobility. Didapat bersama jam-jamnya.",
+  "Volunteer 50": "Relawan 50",
+  "Give 50 hours as a volunteer.": "Berikan 50 jam sebagai relawan.",
+  "For 50 hours given to MicroMobility events. It comes with the hours.": "Untuk 50 jam di acara MicroMobility. Didapat bersama jam-jamnya.",
+  "Volunteer 100": "Relawan 100",
+  "Give 100 hours as a volunteer.": "Berikan 100 jam sebagai relawan.",
+  "The top level, for 100 hours given to MicroMobility events. It comes with the hours.": "Level tertinggi, untuk 100 jam di acara MicroMobility. Didapat bersama jam-jamnya.",
   "For giving your time to help run a MicroMobility event. Given by our team.": "Karena meluangkan waktu untuk membantu menjalankan acara MicroMobility. Diberikan oleh tim kami.",
   "Visitor": "Pengunjung",
   "Visitor number": "Nomor pengunjung",
@@ -1548,5 +1560,5 @@
   "You cannot register for this event until you have read and agreed to this. I am coming to this event as a visitor and will not give blood. I will follow the instructions of the event’s team and the venue’s. If I decide to donate at the event, I will tell the team first: the donation is then a medical procedure carried out by the event’s medical team, not by MicroMobility, and only that team decides whether I can donate. MicroMobility’s part is only to register me and to give checked-in visitors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for any medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "Anda tidak dapat mendaftar ke acara ini sebelum membaca dan menyetujui ini. Saya datang ke acara ini sebagai pengunjung dan tidak akan mendonorkan darah. Saya akan mengikuti arahan tim acara dan pengelola lokasi. Jika saya memutuskan untuk mendonor di acara, saya akan memberi tahu tim terlebih dahulu: donor darah kemudian adalah prosedur medis yang dilakukan oleh tim medis acara, bukan oleh MicroMobility, dan hanya tim tersebut yang memutuskan apakah saya dapat mendonor. Peran MicroMobility hanya mendaftarkan saya dan memberikan sesi bersepeda gratis kepada pengunjung yang sudah check-in. Saya bertanggung jawab atas barang-barang pribadi saya. Sejauh diizinkan oleh hukum hingga batas maksimal, MicroMobility dan stafnya tidak bertanggung jawab atas prosedur medis apa pun atau dampaknya, atau atas cedera, penyakit, kehilangan, pencurian, atau kerusakan apa pun di acara tersebut.",
   "Blood Donation Visitor": "Pengunjung Donor Darah",
   "Visit one of our blood donation events.": "Kunjungi salah satu acara donor darah kami.",
-  "For coming to a MicroMobility blood donation event as a visitor. Given once our team checks you out.": "Untuk datang sebagai pengunjung ke acara donor darah MicroMobility. Diberikan setelah tim kami melakukan check-out untukmu."
+  "For coming to a MicroMobility blood donation event, as a donor or a visitor. Given once our team checks you out, or marks your donation.": "Untuk datang ke acara donor darah MicroMobility, sebagai pendonor atau pengunjung. Diberikan setelah tim kami melakukan check-out untukmu atau mencatat donasimu."
 }

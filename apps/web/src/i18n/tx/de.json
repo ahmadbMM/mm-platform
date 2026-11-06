@@ -1530,6 +1530,18 @@
   "For giving blood at a MicroMobility event. Our team confirms it on the night.": "Für eine Blutspende bei einer MicroMobility-Veranstaltung. Unser Team bestätigt sie noch am selben Abend.",
   "Volunteer": "Freiwilliger",
   "Volunteer at one of our events.": "Hilf freiwillig bei einer unserer Veranstaltungen.",
+  "Volunteer 10": "Freiwilliger 10",
+  "Give 10 hours as a volunteer.": "Leiste 10 Stunden als Freiwilliger.",
+  "The Volunteer badge's next level, for 10 hours given to MicroMobility events. It comes with the hours.": "Die nächste Stufe des Freiwilligen-Abzeichens, für 10 Stunden bei Veranstaltungen von MicroMobility. Es kommt mit den Stunden.",
+  "Volunteer 25": "Freiwilliger 25",
+  "Give 25 hours as a volunteer.": "Leiste 25 Stunden als Freiwilliger.",
+  "For 25 hours given to MicroMobility events. It comes with the hours.": "Für 25 Stunden bei Veranstaltungen von MicroMobility. Es kommt mit den Stunden.",
+  "Volunteer 50": "Freiwilliger 50",
+  "Give 50 hours as a volunteer.": "Leiste 50 Stunden als Freiwilliger.",
+  "For 50 hours given to MicroMobility events. It comes with the hours.": "Für 50 Stunden bei Veranstaltungen von MicroMobility. Es kommt mit den Stunden.",
+  "Volunteer 100": "Freiwilliger 100",
+  "Give 100 hours as a volunteer.": "Leiste 100 Stunden als Freiwilliger.",
+  "The top level, for 100 hours given to MicroMobility events. It comes with the hours.": "Die höchste Stufe, für 100 Stunden bei Veranstaltungen von MicroMobility. Es kommt mit den Stunden.",
   "For giving your time to help run a MicroMobility event. Given by our team.": "Dafür, dass du deine Zeit gegeben hast, um bei der Durchführung einer MicroMobility-Veranstaltung zu helfen. Von unserem Team verliehen.",
   "Visitor": "Besucher",
   "Visitor number": "Besuchernummer",
@@ -1548,5 +1560,5 @@
   "You cannot register for this event until you have read and agreed to this. I am coming to this event as a visitor and will not give blood. I will follow the instructions of the event’s team and the venue’s. If I decide to donate at the event, I will tell the team first: the donation is then a medical procedure carried out by the event’s medical team, not by MicroMobility, and only that team decides whether I can donate. MicroMobility’s part is only to register me and to give checked-in visitors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for any medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "Du kannst dich für dieses Event erst anmelden, wenn du dies gelesen und ihm zugestimmt hast. Ich komme als Besucher zu diesem Event und werde kein Blut spenden. Ich befolge die Anweisungen des Event-Teams und des Veranstaltungsorts. Wenn ich mich beim Event zum Spenden entscheide, sage ich zuerst dem Team Bescheid: Die Spende ist dann ein medizinischer Eingriff, den das medizinische Team des Events durchführt, nicht MicroMobility, und nur dieses Team entscheidet, ob ich spenden kann. Die Rolle von MicroMobility beschränkt sich darauf, mich anzumelden und eingecheckten Besuchern ihre Gratisfahrt zu geben. Ich bin für meine persönlichen Sachen verantwortlich. Im größtmöglichen gesetzlich zulässigen Umfang sind MicroMobility und seine Mitarbeitenden nicht verantwortlich für medizinische Eingriffe oder deren Folgen oder für Verletzungen, Erkrankungen, Verlust, Diebstahl oder Beschädigung bei dem Event.",
   "Blood Donation Visitor": "Besucher der Blutspende",
   "Visit one of our blood donation events.": "Besuche eine unserer Blutspende-Veranstaltungen.",
-  "For coming to a MicroMobility blood donation event as a visitor. Given once our team checks you out.": "Für den Besuch einer Blutspende-Veranstaltung von MicroMobility als Besucher. Vergeben, sobald unser Team dich auscheckt."
+  "For coming to a MicroMobility blood donation event, as a donor or a visitor. Given once our team checks you out, or marks your donation.": "Für den Besuch einer Blutspende-Veranstaltung von MicroMobility, als Spender oder Besucher. Vergeben, sobald unser Team dich auscheckt oder deine Spende einträgt."
 }

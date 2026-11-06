@@ -1530,6 +1530,18 @@
   "For giving blood at a MicroMobility event. Our team confirms it on the night.": "Por donar sangre en un evento de MicroMobility. Nuestro equipo lo confirma esa misma noche.",
   "Volunteer": "Voluntario",
   "Volunteer at one of our events.": "Sé voluntario en uno de nuestros eventos.",
+  "Volunteer 10": "Voluntario 10",
+  "Give 10 hours as a volunteer.": "Dedica 10 horas como voluntario.",
+  "The Volunteer badge's next level, for 10 hours given to MicroMobility events. It comes with the hours.": "El siguiente nivel de la insignia Voluntario, por 10 horas en eventos de MicroMobility. Llega con las horas.",
+  "Volunteer 25": "Voluntario 25",
+  "Give 25 hours as a volunteer.": "Dedica 25 horas como voluntario.",
+  "For 25 hours given to MicroMobility events. It comes with the hours.": "Por 25 horas en eventos de MicroMobility. Llega con las horas.",
+  "Volunteer 50": "Voluntario 50",
+  "Give 50 hours as a volunteer.": "Dedica 50 horas como voluntario.",
+  "For 50 hours given to MicroMobility events. It comes with the hours.": "Por 50 horas en eventos de MicroMobility. Llega con las horas.",
+  "Volunteer 100": "Voluntario 100",
+  "Give 100 hours as a volunteer.": "Dedica 100 horas como voluntario.",
+  "The top level, for 100 hours given to MicroMobility events. It comes with the hours.": "El nivel más alto, por 100 horas en eventos de MicroMobility. Llega con las horas.",
   "For giving your time to help run a MicroMobility event. Given by our team.": "Por dedicar tu tiempo a ayudar a organizar un evento de MicroMobility. Lo otorga nuestro equipo.",
   "Visitor": "Visitante",
   "Visitor number": "Número de visitante",
@@ -1548,5 +1560,5 @@
   "You cannot register for this event until you have read and agreed to this. I am coming to this event as a visitor and will not give blood. I will follow the instructions of the event’s team and the venue’s. If I decide to donate at the event, I will tell the team first: the donation is then a medical procedure carried out by the event’s medical team, not by MicroMobility, and only that team decides whether I can donate. MicroMobility’s part is only to register me and to give checked-in visitors their free ride. I am responsible for my personal belongings. To the fullest extent permitted by law, MicroMobility and its staff are not responsible for any medical procedure or its effects, or for any injury, illness, loss, theft or damage at the event.": "No puedes registrarte en este evento hasta haber leído y aceptado este acuerdo. Vengo a este evento como visitante y no voy a donar sangre. Seguiré las instrucciones del equipo del evento y las del lugar. Si decido donar en el evento, avisaré primero al equipo: la donación es entonces un procedimiento médico que realiza el equipo médico del evento, no MicroMobility, y solo ese equipo decide si puedo donar. MicroMobility solo se encarga de registrarme y de dar a los visitantes registrados su paseo gratis. Soy responsable de mis pertenencias personales. En la máxima medida permitida por la ley, MicroMobility y su personal no son responsables de ningún procedimiento médico ni de sus efectos, ni de ninguna lesión, enfermedad, pérdida, robo o daño durante el evento.",
   "Blood Donation Visitor": "Visitante de la donación de sangre",
   "Visit one of our blood donation events.": "Visita uno de nuestros eventos de donación de sangre.",
-  "For coming to a MicroMobility blood donation event as a visitor. Given once our team checks you out.": "Por asistir como visitante a un evento de donación de sangre de MicroMobility. Se otorga cuando nuestro equipo registra tu salida."
+  "For coming to a MicroMobility blood donation event, as a donor or a visitor. Given once our team checks you out, or marks your donation.": "Por asistir a un evento de donación de sangre de MicroMobility, como donante o visitante. Se otorga cuando nuestro equipo registra tu salida o tu donación."
 }

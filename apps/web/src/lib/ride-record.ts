@@ -46,6 +46,8 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   blood_donor: ["drop", "red"], // Blood Donor: a drop with a heart, on the ordinary red medal (2026-11-05)
   blood_visitor: ["dropo", "teal"], // Blood Donation Visitor: the drop's outline with a heart inside, on the teal medal (2026-11-06)
   volunteer: ["hand", "volunteer"], // Volunteer: a raised hand on its own blue special medal, given by staff (2026-11-05)
+  // the hours ladder's levels: the database gives each with the volunteer's hours (the booking app, 2026-11-06 review, VL14)
+  volunteer_10: ["hand", "teal"], volunteer_25: ["hand", "purple"], volunteer_50: ["hand", "gold"], volunteer_100: ["hand", "blue"],
   // the staff ladders' higher levels and Front Row's (the booking app, 2026-10-12)
   senior_marshal: ["shield", "blue"], chief_marshal: ["shield", "gold"], pit_boss: ["wrench", "teal"], crew_chief: ["wrench", "gold"],
   clear_track: ["wflag", "teal"], track_guardian: ["wflag", "gold"], tech_inspector: ["search", "blue"], chief_scrutineer: ["search", "gold"],
@@ -66,7 +68,7 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_cours
   "scrutineer", "tech_inspector", "chief_scrutineer", "tech_delegate", "chief_engineer",
   "champion", "hat_trick", "grand_champion", "dynasty", "world_champion",
   "spirit", "fair_play", "heart_of_race", "ride_ambassador", "soul_of_ride", "t100", "t50", "t25",
-  "bike_owner", "road_owner", "carbon_owner", "volunteer"];
+  "bike_owner", "road_owner", "carbon_owner", "volunteer", "volunteer_10", "volunteer_25", "volunteer_50", "volunteer_100"];
 
 /** Badge ladders (the booking app's BDG_LADDERS, 2026-10-09: "the same way it's done in clash of clans
  *  achievements"): badges that count the same thing to a higher number are the levels of one badge,
@@ -83,6 +85,8 @@ export const LADDERS: string[][] = [
   ["green_flag", "clear_track", "track_guardian", "flag_bearer", "track_legend"], ["scrutineer", "tech_inspector", "chief_scrutineer", "tech_delegate", "chief_engineer"],
   ["champion", "hat_trick", "grand_champion", "dynasty", "world_champion"], ["spirit", "fair_play", "heart_of_race", "ride_ambassador", "soul_of_ride"],
   ["front_row", "pole_position", "pole_master", "grid_leader", "pole_legend"], ["bike_owner", "road_owner", "carbon_owner"],
+  // the hours ladder (the booking app, 2026-11-06 review, VL14): Volunteer, then 10 / 25 / 50 / 100 hours
+  ["volunteer", "volunteer_10", "volunteer_25", "volunteer_50", "volunteer_100"],
 ];
 const LADDER_OF = new Map(LADDERS.flatMap((L) => L.map((s, i) => [s, [L, i]] as const)));
 /** A set of slugs held, with every level under each one (_bdgClimb). */

@@ -19,9 +19,10 @@ export function walletOf(data: unknown): Wallet | null {
 }
 
 /** The line's name among the words, as the booking app's CW_RIDER_KIND. */
-export function walletKindWord(kind: string): "topup" | "adjust" | "takeout" | "refund" | "spend" | "back" | "moved" | "sale" | "saleBack" {
-  if (kind === "topup" || kind === "takeout" || kind === "refund" || kind === "spend" || kind === "sale") return kind;
+export function walletKindWord(kind: string): "topup" | "adjust" | "takeout" | "refund" | "spend" | "back" | "moved" | "sale" | "saleBack" | "fee" | "feeBack" {
+  if (kind === "topup" || kind === "takeout" || kind === "refund" || kind === "spend" || kind === "sale" || kind === "fee") return kind;
   if (kind === "sale_back") return "saleBack";
+  if (kind === "fee_back") return "feeBack";
   if (kind === "return") return "back";
   return kind === "merge_in" || kind === "merge_out" || kind === "unmerge" ? "moved" : "adjust";
 }
