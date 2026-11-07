@@ -9,14 +9,15 @@ import { intlOf } from "@/i18n/locales";
 // My Account's record, as the booking app's account page draws it (91816da and the badges before
 // it): Your rides - the last 26 weeks as a strip, rides this year, the favourite bike type, the
 // time on the bike staff timed, the first ride - then the two badges already begun with the least
-// left, each with its bar (a ladder's next level among them), then every badge (BadgeGrid).
+// left, each with its bar (a ladder's next level among them), then every badge (BadgeGrid). Rides led
+// (2026-11-06, the app's season line with its flag) closes Your rides, shown once there is one.
 export type RecordText = (typeof T)["en"];
 type Props = {
-  locale: string; stats: RideStats | null; badges: BadgeItem[]; t: RecordText;
+  locale: string; stats: RideStats | null; led: number; badges: BadgeItem[]; t: RecordText;
   typeName: (type: string) => string; dur: { h: string; hm: string; m: string };
 };
 
-export default function RideRecord({ locale, stats, badges, t, typeName, dur }: Props) {
+export default function RideRecord({ locale, stats, led, badges, t, typeName, dur }: Props) {
   const day = (iso: string | null | undefined) => {
     const d = iso ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T12:00:00Z` : iso) : null;
     if (!d || Number.isNaN(d.getTime())) return "";
@@ -48,17 +49,27 @@ export default function RideRecord({ locale, stats, badges, t, typeName, dur }: 
     };
   });
   const near = closestBadges(badges);
-  if (!stats && !badges.length) return null;
+  if (!stats && !led && !badges.length) return null;
   return (
     <>
-      {stats && (
+      {(stats || led > 0) && (
         <div className="myr">
           <p className="myr-h">{t.yourRides}</p>
-          <div className="myr-weeks" role="img" aria-label={t.weeks(String(stats.nWeeks))}>
-            {stats.weeks.map((on, i) => <i key={i} className={on ? "on" : undefined} />)}
-          </div>
-          <p className="myr-wl">{t.weeks(String(stats.nWeeks))}</p>
-          <dl className="myr-f">{facts.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+          {stats && (
+            <>
+              <div className="myr-weeks" role="img" aria-label={t.weeks(String(stats.nWeeks))}>
+                {stats.weeks.map((on, i) => <i key={i} className={on ? "on" : undefined} />)}
+              </div>
+              <p className="myr-wl">{t.weeks(String(stats.nWeeks))}</p>
+              <dl className="myr-f">{facts.map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{v}</dd></div>)}</dl>
+            </>
+          )}
+          {led > 0 && (
+            <p className="myr-led">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V3.5M5 4.5h12.5l-2.6 4 2.6 4H5" /></svg>
+              <span>{fillAt(t.led, String(led))}</span>
+            </p>
+          )}
         </div>
       )}
       {near.length > 0 && (

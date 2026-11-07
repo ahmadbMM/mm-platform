@@ -168,3 +168,12 @@ select.lang { width: auto; }
   .page { max-width: none; padding: 0; }
   .cert-cols { grid-template-columns: 1fr 1fr; }
 }
+/* the staff review of 2026-11-06: a certificate for a period, its check, the application form */
+.cert-period { margin-bottom: 14px; }
+.cert-sess { list-style: none; margin: 0 0 20px; padding: 0; font-size: 13px; }
+.cert-sess li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid #e3e7e4; }
+.cert-check { margin-top: 16px; font-size: 12px; color: var(--muted); word-break: break-all; }
+.check-state { font-weight: 700; color: #123019; }
+.check-bad .check-state { color: #b42318; }
+.apply .days { border: 0; margin: 0 0 12px; padding: 0; }
+.apply .days legend { font-weight: 500; margin-bottom: 6px; }

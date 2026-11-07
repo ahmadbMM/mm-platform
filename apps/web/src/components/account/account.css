@@ -72,6 +72,8 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .myr-f { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px 16px; margin: 14px 0 0; }
 .myr-f dt { font-size: 12px; color: #6e6b63; }
 .myr-f dd { margin: 2px 0 0; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.myr-led { display: flex; align-items: center; gap: 8px; margin-top: 14px !important; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.myr-led svg { flex: none; width: 18px; height: 18px; fill: none; stroke: #077a4b; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .bd-next { display: grid; gap: 8px; margin: 10px 0 12px; }
 .bd-next-h { margin: 0; font-size: 13px; color: #6e6b63; }
 .bd-next-row { display: flex; align-items: center; gap: 12px; width: 100%; box-sizing: border-box; padding: 10px 12px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 10px; color: #1a1919; }

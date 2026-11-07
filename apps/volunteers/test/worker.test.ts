@@ -151,6 +151,44 @@ describe("the database functions", () => {
   });
 });
 
+describe("a certificate's check (the staff review, 2026-11-06)", () => {
+  it("anyone with the code may check it, signed in or not; only the code goes to the database", async () => {
+    const calls = db(() => ({ body: { ok: true, serial: "MMV-2026-00001", name: "Sara", hours: 3.5 } }));
+    const r = await handle(post("/api/rpc/volunteer_cert_check", { p_code: " abcdef123456 ", p_id: "x", p_token: "y" }), env);
+    expect(r.status).toBe(200);
+    expect(await r.json()).toMatchObject({ ok: true, serial: "MMV-2026-00001" });
+    expect(calls).toEqual([{ name: "volunteer_cert_check", args: { p_code: "ABCDEF123456" } }]);
+  });
+  it("a code of the wrong shape never reaches the database", async () => {
+    const calls = db(() => ({ body: { ok: true } }));
+    for (const p_code of ["short", "ABCDEF12345!", 42, ""]) {
+      expect(await (await handle(post("/api/rpc/volunteer_cert_check", { p_code }), env)).json()).toEqual({ ok: false });
+    }
+    expect(calls).toHaveLength(0);
+  });
+  it("is metered like a sign-in", async () => {
+    db(() => ({ body: { ok: true } }));
+    const limited: Env = { ...env, LOGIN_LIMIT: { limit: async () => ({ success: false }) } };
+    const r = await handle(post("/api/rpc/volunteer_cert_check", { p_code: "ABCDEF123456" }, { "cf-connecting-ip": "1.2.3.4" }), limited);
+    expect(r.status).toBe(429);
+  });
+  it("the application, the briefing and a period's certificate need the session, from the cookie", async () => {
+    const calls = db(() => ({ body: { ok: true } }));
+    for (const name of ["volunteer_apply", "volunteer_brief_ack", "volunteer_cert_issue", "volunteer_profile"]) {
+      expect((await handle(post(`/api/rpc/${name}`, {}), env)).status, name).toBe(401);
+    }
+    expect(calls).toHaveLength(0);
+    await handle(post("/api/rpc/volunteer_cert_issue", { p_from: "2026-10-01", p_to: "2026-10-31" }, { cookie: COOKIE }), env);
+    expect(calls[0].args).toEqual({ p_from: "2026-10-01", p_to: "2026-10-31", p_id: "c123", p_token: "tokentokentokentoken" });
+  });
+  it("no hours in the period is said as such", async () => {
+    db(() => ({ status: 400, body: { message: "VOL_CERT_EMPTY", code: "P0001" } }));
+    const r = await handle(post("/api/rpc/volunteer_cert_issue", { p_from: "2026-10-01", p_to: "2026-10-31" }, { cookie: COOKIE }), env);
+    expect(r.status).toBe(400);
+    expect(await r.json()).toEqual({ error: "VOL_CERT_EMPTY" });
+  });
+});
+
 describe("a ticket", () => {
   it("reads the booking app's ticket, with or without its number", () => {
     expect(parseTicket("MMC-12-abc123")).toEqual({ ref: "abc123", num: 12 });

@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { badgeList, climb, closestBadges, perfectWeeks, profilePct, recordRows, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
+import { badgeList, climb, closestBadges, ledRides, perfectWeeks, profilePct, recordRows, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
 import Medal from "@/components/account/Medal";
 import RideRecord from "@/components/account/RideRecord";
 import { T as RECORD } from "@/components/account/RideRecord.text";
+import { GLYPH } from "@/components/account/badge-glyphs";
+import { bloodWords } from "@/content/blood-words";
+import { serverL } from "@/i18n/dicts";
 import { createElement, type ReactElement } from "react";
 // The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
 // @ts-expect-error -- react-dom/server ships without type declarations here
@@ -58,7 +61,8 @@ describe("the badges", () => {
     expect(slugs).not.toContain("back_on_track");
     // the T100 races are one ladder, where its first level stood (T100, the list's order), shown as T25 until one is given
     // and so is each badge staff give with its levels (2026-10-12), shown as its first level until one is given
-    expect(slugs.slice(-10)).toEqual(["marshal", "pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t25", "bike_owner", "volunteer"]);
+    // (the Marshal ladder is earned by leading rides since 2026-11-06, so it sits with the ride badges, not here)
+    expect(slugs.slice(-9)).toEqual(["pit_crew", "green_flag", "super_licence", "scrutineer", "champion", "spirit", "t25", "bike_owner", "volunteer"]);
   });
   it("put a badge staff gave first, with their note and the day", () => {
     const L = list({ ...empty, mine: [{ slug: "champion", note: "Won the hill climb", at: "2026-09-30T18:00:00Z" }] });
@@ -189,7 +193,7 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
   });
   it("draw a ladder as one tile with a dot per level, and its next level among the closest", () => {
     const { r, s } = rides(9, "saturday");
-    const html = renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, badges: badgeList(r, s, empty, today, null), t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
+    const html = renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, led: 0, badges: badgeList(r, s, empty, today, null), t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
     expect(html).toContain('aria-label="Slipstream · Level 2 of 6: 5 community rides"');
     expect(html).toMatch(/<span class="mr-badge-lv" aria-hidden="true">(<i class="on"><\/i>){2}(<i><\/i>){4}<\/span>/);
     // nine nights first in the queue, too: Pole Master (10 since 2026-10-12) is one away, as Paceline is, and comes first
@@ -224,6 +228,10 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
     const m = badgeList([], new Map(), { ...empty, mine: [{ slug: "senior_marshal" }] }, today, null).find((x) => x.lv?.some((y) => y.slug === "marshal"))!;
     expect(m).toMatchObject({ slug: "senior_marshal", on: true, lvN: 2, nx: { slug: "chief_marshal", on: false } });
     expect(m.lv!.map((x) => x.slug)).toEqual(["marshal", "senior_marshal", "chief_marshal", "clerk_of_course", "race_director"]);
+    // the Volunteer hours ladder (the booking app, VL14): the database gives Volunteer 25, the tile folds the five levels
+    const v = badgeList([], new Map(), { ...empty, mine: [{ slug: "volunteer_25" }] }, today, null).find((x) => x.lv?.some((y) => y.slug === "volunteer"))!;
+    expect(v).toMatchObject({ slug: "volunteer_25", on: true, lvN: 3, icon: "hand", color: "purple", nx: { slug: "volunteer_50", on: false } });
+    expect(v.lv!.map((x) => [x.slug, x.on])).toEqual([["volunteer", true], ["volunteer_10", true], ["volunteer_25", true], ["volunteer_50", false], ["volunteer_100", false]]);
     expect([...climb(["carbon_owner", "grand_champion"])].sort()).toEqual(["bike_owner", "carbon_owner", "champion", "grand_champion", "hat_trick", "road_owner"]);
     // five levels on each of the seven ladders (2026-10-12): the top one brings all four under it
     expect([...climb(["world_champion", "race_director"])].sort()).toEqual(["champion", "chief_marshal", "clerk_of_course", "dynasty", "grand_champion", "hat_trick", "marshal", "race_director", "senior_marshal", "world_champion"]);
@@ -403,6 +411,44 @@ describe("the Blood Donor and Volunteer badges (2026-11-05)", () => {
   });
 });
 
+describe("the Blood Donation Visitor badge (blood_visitor, 2026-11-06)", () => {
+  const BD = "2026-11-05-bd";
+  const bvRows = (o: Record<string, unknown>) => recordRows([row({ id: "q1", session_id: BD, session_date: "2026-11-05", status: "done", blood_role: "visitor", ...o })]);
+  const bdSes = new Map([[BD, { kind: "blood" as const, freeRide: true }]]);
+  const slugs = (rows: ReturnType<typeof bvRows>, s: Map<string, RecordSession> = bdSes) => badgeList(rows, s, empty, today, null).map((x) => x.slug);
+
+  it("is earned by a visitor's booking on a Blood Donation session that staff checked out, on the teal medal with the drop's outline", () => {
+    expect(badgeList(bvRows({}), bdSes, empty, today, null).find((x) => x.slug === "blood_visitor")).toMatchObject({ on: true, icon: "dropo", color: "teal" });
+    expect(GLYPH.dropo).toContain("evenodd");
+  });
+
+  it("goes to donors as well (the owner, 2026-11-06): a donor checked out, or marked Donated while still checked in", () => {
+    expect(slugs(bvRows({ blood_role: null }))).toContain("blood_visitor");
+    expect(slugs(bvRows({ blood_role: "donor" }))).not.toContain("blood_donor"); // Blood Donor only with the Donated mark
+    expect(slugs(bvRows({ blood_role: "donor", status: "active", donated_at: "2026-11-05T18:00:00Z" }))).toEqual(expect.arrayContaining(["blood_visitor", "blood_donor"]));
+  });
+
+  it("stays out of sight until then: not checked out, another kind of session, or one that did not load", () => {
+    expect(slugs(bvRows({ status: "active" }))).not.toContain("blood_visitor");
+    expect(slugs(bvRows({ status: "waiting" }))).not.toContain("blood_visitor");
+    expect(slugs(bvRows({ blood_role: null, status: "waiting" }))).not.toContain("blood_visitor");
+    expect(slugs(bvRows({}), new Map([[BD, { kind: "event" as const, freeRide: true }]]))).not.toContain("blood_visitor");
+    expect(slugs(bvRows({}), new Map())).not.toContain("blood_visitor");
+  });
+
+  it("is not Blood Donor, and a visit is not a ride", () => {
+    const L = badgeList(bvRows({}), bdSes, empty, today, null);
+    expect(L.map((x) => x.slug)).not.toContain("blood_donor");
+    expect(L.find((x) => x.slug === "first_lap")?.on).toBe(false);
+  });
+
+  it("is worded by the event's own words, never the browser's dictionary", () => {
+    expect(bloodWords(serverL("en")).visitorBadge[0]).toBe("Blood Donation Visitor");
+    expect(bloodWords(serverL("ar")).visitorBadge[0]).toBe("زائر حملة التبرع بالدم");
+    expect(RECORD.en.names.blood_visitor).toBeUndefined();
+  });
+});
+
 describe("the DEFE 5KM Run's finisher badge (defe_5k, 2026-10-18)", () => {
   // A finished run is a done row on a session of kind 'defe5k'; shown only to those who earned it, as Run for Her's.
   const dfRows = (status: string) => recordRows([row({ session_id: "2026-09-24-df", session_date: "2026-09-24", status, paid: false, type_preference: "None", run_km: 5 })]);
@@ -427,5 +473,43 @@ describe("the DEFE 5KM Run's finisher badge (defe_5k, 2026-10-18)", () => {
     expect(html).toContain("scale(.7)");
     expect(RECORD.en.names.defe_5k[0]).toBe("DEFE 5K");
     expect(RECORD.ar.names.defe_5k[1]).toBe("أكمل سباق دفء 5 كم.");
+  });
+});
+
+describe("Rides led and the Marshal ladder (led_at, 2026-11-06)", () => {
+  const ses = new Map<string, RecordSession>([["2026-09-01", { kind: "jcc", freeRide: false }], ["2026-09-08", { kind: "jcc", freeRide: false }], ["2026-09-09", { kind: "swim", freeRide: false }]]);
+  const LED = "2026-09-01T18:00:00Z";
+  const led = (o: Record<string, unknown>[]) => recordRows(o.map((x) => row(x)));
+  const marshal = (rows: ReturnType<typeof led>, data: BadgeData = empty) => badgeList(rows, ses, data, today, null).find((x) => x.lv?.some((y) => y.slug === "marshal"))!;
+  it("count a night led once the rider is checked in, on a bike", () => {
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED }]), ses)).toBe(1); // done
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED, status: "active" }]), ses)).toBe(1); // on the bike
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED, paid: false }]), ses)).toBe(1); // led counts even unpaid, as the app's _ledN
+    // two rows of one night (a party) count one night
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED }, { session_id: "2026-09-01", id: "b", led_at: LED }, { session_id: "2026-09-08", led_at: LED }]), ses)).toBe(2);
+  });
+  it("never count a no-show, a lead still waiting, a night not led or one without a bike", () => {
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED, status: "noshow" }]), ses)).toBe(0);
+    expect(ledRides(led([{ session_id: "2026-09-01", led_at: LED, status: "waiting" }]), ses)).toBe(0);
+    expect(ledRides(led([{ session_id: "2026-09-01" }, { session_id: "2026-09-08", led_at: null }]), ses)).toBe(0);
+    expect(ledRides(led([{ session_id: "2026-09-09", led_at: LED }]), ses)).toBe(0); // the pool
+  });
+  it("earn Marshal at the first night led, its next level at ten", () => {
+    expect(marshal(led([{ session_id: "2026-09-01", led_at: LED }]))).toMatchObject({ slug: "marshal", on: true, given: null, lvN: 1, p: "1/10", nx: { slug: "senior_marshal", on: false, p: "1/10" } });
+    expect(marshal(led([{ session_id: "2026-09-01", led_at: LED, status: "noshow" }]))).toMatchObject({ slug: "marshal", on: false, lvN: 0, p: "0/1" });
+    expect(marshal(led([{ session_id: "2026-09-01" }]))).toMatchObject({ on: false, lvN: 0 });
+  });
+  it("keep a Marshal level staff gave among the given ones, first, with their note", () => {
+    const data = { ...empty, mine: [{ slug: "marshal", note: "Swept the ride", at: "2026-09-30T18:00:00Z" }] };
+    const L = badgeList(led([{ session_id: "2026-09-01" }]), ses, data, today, null);
+    expect(L[0]).toMatchObject({ slug: "marshal", on: true, given: { note: "Swept the ride", at: "2026-09-30T18:00:00Z" } });
+    expect(L.filter((x) => x.lv?.some((y) => y.slug === "marshal"))).toHaveLength(1);
+    // given and led alike: still the given one, first
+    expect(badgeList(led([{ session_id: "2026-09-01", led_at: LED }]), ses, data, today, null)[0]).toMatchObject({ slug: "marshal", given: { note: "Swept the ride" } });
+  });
+  it("show Rides led under Your rides only once there is one", () => {
+    const html = (n: number) => renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, led: n, badges: [], t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
+    expect(html(3)).toContain("Rides led: 3");
+    expect(html(0)).toBe("");
   });
 });

@@ -33,6 +33,7 @@ import { bloodDone, countdownMoments, fmtClock, icsFor, icsPlace, meetsAt, place
 import { waiverKind, waiverVersion } from "../waiver";
 import { walletDue } from "../wallet";
 import AccountPage from "../../app/[locale]/account/page";
+import RideRecord from "@/components/account/RideRecord";
 import EventsPage from "../../app/[locale]/events/page";
 import ExperiencesPage from "../../app/[locale]/experiences/page";
 import { GET as shareGet, POST as sharePost } from "../../app/api/account/pending-share/route";
@@ -238,12 +239,12 @@ describe("no bikes, no wallet, no ride counted", () => {
     expect(ratingNoBike(false, null, "2026-11-05-bd")).toBe(true);
     expect(questionKeys(formOf("blood"), { noBike: ratingNoBike(false, { kind: "blood", bikes: false }, "x") })).toEqual(["service"]);
   });
-  it("is never a ride on Your rides and earns no badge", () => {
+  it("is never a ride on Your rides, and a checked-out donor earns only the Blood Donation Visitor badge", () => {
     const empty: BadgeData = { catalog: [], weeks: null, seasons: [], mine: [] };
     const rows = recordRows([{ id: "a", session_id: BD.id, session_date: BD.session_date, status: "done", paid: false, queue_num: 1, type_preference: "None" }]);
     const ses = new Map<string, RecordSession>([[BD.id, { kind: "blood" as RideKind, freeRide: true, approval: false }]]);
     expect(rideStats(rows, ses, "2099-11-07")).toBeNull();
-    expect(badgeList(rows, ses, empty, "2099-11-07", null).flatMap((x) => x.lv ?? [x]).filter((x) => x.on).map((x) => x.slug)).toEqual([]);
+    expect(badgeList(rows, ses, empty, "2099-11-07", null).flatMap((x) => x.lv ?? [x]).filter((x) => x.on).map((x) => x.slug)).toEqual(["blood_visitor"]);
   });
   it("is left out of the Club's lists of rides", () => {
     const a = memberArea({ status: 200, message: "", data: { ok: true, member: true, first_name: "T",
@@ -431,7 +432,7 @@ describe("its ticket on My Account", () => {
         : url.includes("/rpc/my_bookings") ? json(rows) : url.includes("/rpc/customer_blood_rewards") ? rewards() : null));
       vi.stubGlobal("fetch", f);
       const page = await AccountPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) });
-      return { asked: f.mock.calls.some((c) => String(c[0]).includes("/rpc/customer_blood_rewards")), cards: findAll(page, TicketCard) };
+      return { asked: f.mock.calls.some((c) => String(c[0]).includes("/rpc/customer_blood_rewards")), cards: findAll(page, TicketCard), page };
     };
     const row = (o: Record<string, unknown> = {}) => ({ id: "bd1abcdef", session_id: BD.id, session_date: BD.session_date, session_day: "Thursday", status: "waiting", queue_num: 12, price: 0, paid: false, name: "Test Donor", type_preference: "None", ...o });
     const good = () => json([{ entry_id: "bd1abcdef", code: "BD-ABC123", expires_at: "2099-12-05", used: false }]);
@@ -455,6 +456,16 @@ describe("its ticket on My Account", () => {
       const html = renderToStaticMarkup(cards[0]);
       expect(html).toContain("Donor number");
       expect(html).not.toContain("tk-bld-rw");
+    });
+    it("names the Blood Donation Visitor badge to a donor or visitor who holds it, and to nobody else", async () => {
+      const names = async (rows: unknown[]) => {
+        const rec = findAll((await account(rows, absent)).page, RideRecord)[0];
+        return rec ? (rec.props as { t: { names: Record<string, [string, string, string]> } }).t.names : {};
+      };
+      expect((await names([row({ status: "done", blood_role: "visitor" })])).blood_visitor?.[0]).toBe("Blood Donation Visitor");
+      expect((await names([row({ status: "active", blood_role: "visitor" })])).blood_visitor).toBeUndefined();
+      expect((await names([row({ status: "done" })])).blood_visitor?.[0]).toBe("Blood Donation Visitor"); // a donor checked out
+      expect((await names([row({ status: "waiting" })])).blood_visitor).toBeUndefined();
     });
     it("keeps a finished donor's ticket while the free ride is good: it is good for a month, and this page lists no past bookings", async () => {
       const done = row({ status: "done", session_id: "2001-11-05-bd", session_date: "2001-11-05" });

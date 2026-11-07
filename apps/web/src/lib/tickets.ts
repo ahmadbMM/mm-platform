@@ -20,6 +20,8 @@ export type TicketRow = {
   id: string; sessionId: string; date: string; day: string; queueNum: number | null; status: TicketStatus;
   /** The Blood Donation event: a visitor, and their club or community (lib/blood.ts). */
   bloodVisitor?: boolean; bloodClub?: string;
+  /** When staff marked the rider as the ride's lead (queue_entries.led_at, rentals 20261106130000), else none. */
+  ledAt?: string;
   waitlistNum: number | null; approval: string | null; price: number; paid: boolean; name: string; type: string;
   /** How the desk or the wallet took it, and how much of it the wallet holds (rentals 20261103140000). */
   payMethod?: string | null; walletPaid?: number;
@@ -123,6 +125,7 @@ export function ticketRow(r: Row): TicketRow | null {
     name: S(r.name), type: S(r.type_preference),
     // the Blood Donation event: a visitor, and the club or community they gave (rentals 20261105140000, 20261105150000)
     ...(r.blood_role === "visitor" ? { bloodVisitor: true } : {}), ...(S(r.blood_club) ? { bloodClub: S(r.blood_club) } : {}),
+    ...(S(r.led_at) ? { ledAt: S(r.led_at) } : {}), // the ride's lead, as staff marked it on Bookings (2026-11-06)
     checkedInAt: S(r.checked_in_at) || null, checkedOutAt: S(r.checked_out_at) || null, rideDuration: N(r.ride_duration), bikeId: bike || null,
     addonLines: entryAddons(r.addons),
     runKm: km !== null && RUN_KMS.includes(km) ? km : null,
