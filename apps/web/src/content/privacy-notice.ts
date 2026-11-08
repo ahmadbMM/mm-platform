@@ -123,9 +123,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Entering you and your team in the race, and making up teams"
      ],
      [
-      "Referrals: who referred you (if you make your account with a friend’s link or code), your own referral code, and the rewards referrals earn you",
-      "Only if you use a friend’s link or code, or share your own. Our staff see who referred whom; a friend who referred you sees only how many friends joined and rode, never your name.",
-      "Giving the reward a referral earns, and stopping misuse"
+      "Referrals: who referred you (if you make your account with a friend’s link or code), your own referral code, the rewards referrals earn you, and a scrambled code for the browser a friend’s code was used in",
+      "Only if you use a friend’s link or code, or share your own. Our staff see who referred whom; a friend who referred you sees only how many friends joined and rode, never your name. The browser code cannot be turned back into anything about you.",
+      "Giving the reward a referral earns, and stopping misuse (one phone making many accounts)"
      ],
      [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
@@ -464,9 +464,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "تسجيلك أنت وفريقك في السباق، وتكوين الفرق"
      ],
      [
-      "الإحالات: من أحالك (إذا أنشأت حسابك عبر رابط صديق أو رمزه)، ورمز الإحالة الخاص بك، والمكافآت التي تكسبها الإحالات",
-      "فقط إذا استخدمت رابط صديق أو رمزه، أو شاركت رمزك. يرى موظفونا من أحال من؛ ولا يرى الصديق الذي أحالك إلا عدد الأصدقاء الذين انضموا وركبوا، ولا يرى اسمك أبدًا.",
-      "منح المكافأة التي تكسبها الإحالة، ومنع إساءة الاستخدام"
+      "الإحالات: من أحالك (إذا أنشأت حسابك عبر رابط صديق أو رمزه)، ورمز الإحالة الخاص بك، والمكافآت التي تكسبها الإحالات، ورمز مشفّر للمتصفح الذي استُخدم فيه رمز الصديق",
+      "فقط إذا استخدمت رابط صديق أو رمزه، أو شاركت رمزك. يرى موظفونا من أحال من؛ ولا يرى الصديق الذي أحالك إلا عدد الأصدقاء الذين انضموا وركبوا، ولا يرى اسمك أبدًا. ولا يمكن تحويل رمز المتصفح إلى أي معلومة عنك.",
+      "منح المكافأة التي تكسبها الإحالة، ومنع إساءة الاستخدام (هاتف واحد ينشئ حسابات كثيرة)"
      ],
      [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",

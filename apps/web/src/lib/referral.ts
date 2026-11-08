@@ -20,6 +20,14 @@ export function referralOf(data: unknown, today: string): Referral | null {
   return { code: d.code, joined: n(d.joined), rode: n(d.rode), earned: n(d.earned), open, referred: d.referred === true, canEnter: d.can_enter === true };
 }
 
+/** The friends who rode with the account's invite, for the Recruiter badge (whether or not referrals are switched on);
+ *  null for anything else. */
+export function referralRodeOf(data: unknown): number | null {
+  const d = data && typeof data === "object" && !Array.isArray(data) ? (data as Record<string, unknown>) : null;
+  const n = d && d.ok === true ? Number(d.rode) : NaN;
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : null;
+}
+
 /** The link a rider shares: the booking app's Create account page carrying their code, in their language. */
 export function referralLink(code: string, locale: string): string {
   return `${BOOKING_URL}signup?ref=${encodeURIComponent(code)}&lang=${encodeURIComponent(locale)}`;
