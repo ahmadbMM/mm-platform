@@ -29,8 +29,12 @@ That writes `static/certificate.html` and `static/certificate.css`, both committ
 the portal keeps printing the old one while staff print the new one.
 
 `src/client/main.ts` fetches `certificate.html`, fills its `{{placeholders}}`, opens a window and
-prints it. Two things it must keep doing, because the page's own policy allows no script and no
-inline style in that window:
+prints it. Three things it must keep doing, because the page's own policy allows no script and no
+inline style in that window, and because Cloudflare may add a script of its own to HTML it serves:
+
+- run the template through `stripScripts` (`src/client/cert.ts`) before writing it. On the booking
+  site the same file comes back from Cloudflare with its Web Analytics beacon in it; nothing in that
+  window should load beside a volunteer's name and report the print;
 
 - hand the template `/certificate-fonts.css` as `{{fonts}}` — **never `/app.css`**, which has a
   `.page` of its own that would fight the certificate's 1123x794 one. `scripts/build.mjs` writes
