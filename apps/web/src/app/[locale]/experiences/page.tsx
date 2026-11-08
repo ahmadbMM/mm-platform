@@ -92,6 +92,14 @@ async function vlapMember(): Promise<boolean> {
   return r.data === true;
 }
 
+// Are Saturday rides booked at micromobility.sa/saturday, with a ride code (the owner, 2026-11-08)? Staff switch it on in
+// the booking app (saturday_link_only, rentals 20261108120000); then a Saturday date's button goes to that page, for
+// anyone with a code, member or not. Any failure, or a database without the function, reads as no: the booking app.
+async function saturdayLinkOnly(): Promise<boolean> {
+  const r = await rpcServer<boolean>("saturday_link_only", {});
+  return r.data === true;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { content, closed } = await pageState("experiences");
@@ -106,6 +114,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const [{ content, previewing, hidden }, rides, member, petromin, gv] = await Promise.all([pageState("experiences"), loadRides(), communityMember(), petrominMember(), genderViewer()]);
   // asked only while a Victory Lap date is on the books: its price is said to those who may book it
   const vlBook = (rides?.sessions ?? []).some((s) => s.kind === "vlap") ? await vlapMember() : false;
+  // and while a Saturday date is: whether it is booked at micromobility.sa/saturday with a code
+  const satLink = (rides?.sessions ?? []).some((s) => s.kind === "saturday") ? await saturdayLinkOnly() : false;
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(experiencesSchema, content, L);
   const d = c.dates, e = c.events, st = c.steps;
@@ -227,6 +237,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // (nor the pool, the workshop or an event: "Per bike" prices only where bikes are rented, 2026-10-18)
       // (the Blood Donation event, free as it is, never says so: no price and no free word, as the booking app)
       members: s.members, free: s.free && s.kind !== "blood", full: s.full, paid: !s.free && rentsBikes(s.kind), noCarbon: s.noCarbon, closedTypes: s.closedTypes ?? [],
+      // a Saturday ride booked with a ride code: anyone with a code, member or not, books it on its own page
+      ...(satLink && s.kind === "saturday" ? { members: false, satLink: `/saturday?lang=${locale}` } : {}),
       // the DEFE 5KM Run's own card (the booking app's _defeSessCard): the logo, its name, when, how far and
       // where, and the cause along the foot
       ...(s.kind === "defe5k" ? { defe: { meta: [s.times ? clock(s.times[0]) : "", fillAt(kmWord, 5), place.name].filter(Boolean), cause: defeWords.cause } } : {}),
