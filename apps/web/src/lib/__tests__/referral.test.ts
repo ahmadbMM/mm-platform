@@ -12,7 +12,24 @@ describe("referrals", () => {
       { code: "RF-USED0001", expires_at: "2099-12-05", used: true },
       { code: "RF-OLD00001", expires_at: "2026-01-01", used: false },
     ] }), "2026-11-08");
-    expect(r).toEqual({ code: "K7MQ2X", joined: 3, rode: 1, earned: 1, open: 1, referred: false, canEnter: false });
+    expect(r).toEqual({ code: "K7MQ2X", joined: 3, rode: 1, earned: 1, open: 1, referred: false, canEnter: false, pct: 50, welcome: null });
+  });
+
+  it("reads the friend's own code (rentals 20261108200000) while it can be used, and the percent", () => {
+    const w = { code: "RW-K7MQ2X-4FZ", expires_at: "2099-12-05", used: false, pct: 40 };
+    expect(referralOf(ans({ pct: 40, referred: true, welcome: w }), "2026-11-08")).toMatchObject({ pct: 40, welcome: { code: "RW-K7MQ2X-4FZ", expiresAt: "2099-12-05", pct: 40 } });
+    expect(referralOf(ans({ welcome: { ...w, used: true } }), "2026-11-08")!.welcome).toBeNull();
+    expect(referralOf(ans({ welcome: { ...w, expires_at: "2026-11-07" } }), "2026-11-08")!.welcome).toBeNull();
+    expect(referralOf(ans({ welcome: { ...w, code: "<b>" } }), "2026-11-08")!.welcome).toBeNull();
+    expect(referralOf(ans({ pct: 900 }), "2026-11-08")!.pct).toBe(50); // a figure the database never gives reads as its default
+  });
+
+  it("says the percent, the friend's code and the share message in every language", () => {
+    for (const [l, w] of Object.entries(REFERRAL_WORDS)) {
+      expect(w.how, l).toContain("{0}");
+      expect(w.enterOk, l).toContain("{0}");
+      for (const ph of ["{0}", "{1}", "{2}"]) { expect(w.msg, l).toContain(ph); expect(w.welcome, l).toContain(ph); }
+    }
   });
 
   it("draws no card when switched off, refused, without a code, or for anything else", () => {

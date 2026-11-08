@@ -1,10 +1,17 @@
 // Referrals on My Account (the booking app's Invite friends card, 2026-11-08, rentals migration 20261108160000): the
 // rider's own code and how many friends joined, rode and earned them a free ride (customer_referral), never a friend's
 // name. A friend who makes an account with the link and completes a paid ride at the circuit earns the rider a free
-// ride; the free rides are redeemed in the booking app, beside its other free ride codes.
+// ride; the free rides are redeemed in the booking app, beside its other free ride codes. Since rentals 20261108200000 the
+// friend gets their own code too: pct off their own bike on their first ride (welcome), also used in the booking app.
 import { BOOKING_URL } from "./links";
 
-export type Referral = { code: string; joined: number; rode: number; earned: number; open: number; referred: boolean; canEnter: boolean };
+/** The friend's own code (customer_referral's welcome, rentals 20261108200000): RW-..., pct off their own bike, until its last day. */
+export type ReferralWelcome = { code: string; expiresAt: string; pct: number };
+export type Referral = { code: string; joined: number; rode: number; earned: number; open: number; referred: boolean; canEnter: boolean;
+  /** the friend's discount in percent (Settings, 50 when the database does not say) */
+  pct: number;
+  /** the account's own friend's code while it can be used: not used, not past its last day (KSA); else null */
+  welcome: ReferralWelcome | null };
 
 /** customer_referral's answer, or null when no card is drawn: a database without it, referrals switched off, no code. */
 export function referralOf(data: unknown, today: string): Referral | null {
@@ -17,7 +24,12 @@ export function referralOf(data: unknown, today: string): Referral | null {
     const x = (r ?? {}) as Record<string, unknown>;
     return x.used !== true && typeof x.code === "string" && String(x.expires_at ?? "") >= today;
   }).length;
-  return { code: d.code, joined: n(d.joined), rode: n(d.rode), earned: n(d.earned), open, referred: d.referred === true, canEnter: d.can_enter === true };
+  const pct = Number(d.pct) >= 5 && Number(d.pct) <= 100 ? Math.round(Number(d.pct)) : 50;
+  const w = d.welcome && typeof d.welcome === "object" && !Array.isArray(d.welcome) ? (d.welcome as Record<string, unknown>) : null;
+  const wDay = String(w?.expires_at ?? "").slice(0, 10);
+  const welcome = w && typeof w.code === "string" && /^RW-[A-Z0-9-]{4,40}$/.test(w.code) && w.used !== true && /^\d{4}-\d{2}-\d{2}$/.test(wDay) && wDay >= today
+    ? { code: w.code, expiresAt: wDay, pct: Number(w.pct) >= 5 && Number(w.pct) <= 100 ? Math.round(Number(w.pct)) : pct } : null;
+  return { code: d.code, joined: n(d.joined), rode: n(d.rode), earned: n(d.earned), open, referred: d.referred === true, canEnter: d.can_enter === true, pct, welcome };
 }
 
 /** The friends who rode with the account's invite, for the Recruiter badge (whether or not referrals are switched on);

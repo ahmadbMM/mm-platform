@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { routeItems } from "../route-names";
-import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, meetHeld, queueNumbers, revealWhen, rideCompleted, rideEndsAt, spotHeld, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, DEFE_RACE_CODE, DEFE_RACE_URL, isDefe, raceRegAsked, type TicketRow } from "../tickets";
+import { addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownAt, countdownMoments, dayWord, doneToday, entryAddons, meetsAt, ticketRoute, ticketRow, ticketStages, fmtClock, fmtDayDate, icsFor, icsPlace, meetHeld, queueNumbers, revealWhen, rideCompleted, rideEndsAt, spotHeld, ticketCue, ticketGroups, ticketLook, ticketSession, venueOf, venueText, codeKindOf, DEFE_RACE_CODE, DEFE_RACE_URL, isDefe, raceRegAsked, type TicketRow } from "../tickets";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import TicketCard from "@/components/booking/TicketCard";
 import { createElement, type ReactElement } from "react";
@@ -778,3 +778,32 @@ describe("a circuit night's waitlist", () => {
     expect(html).not.toContain("tk-wl-collect");
   });
 });
+
+// The owner, 2026-11-08: "when a code is used show it besides the booking and what type of code it is with a logo" (the
+// booking app's _codeRowHtml): the row that used a code says its kind, with the kind's mark, and the code.
+describe("the code a booking used", () => {
+  const jccS = ticketSession(jccRow)!;
+  const at = (o: Record<string, unknown>) => ticketRow({ id: "c1abcdef", session_id: "j1", session_date: "2099-03-01", session_day: "Sunday", status: "waiting", queue_num: 4, price: 28.75, paid: false, name: "Ann", type_preference: "Hybrid", ...o })!;
+  const card = (rows: TicketRow[], locale = "en") => renderToStaticMarkup(createElement(TicketCard, {
+    locale, today: "2099-02-01", rows, session: jccS, name: "Open Sports Day", cue: null, t: locale === "ar" ? TICKET.ar : TICKET.en, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+    links: { edit: null, manage: "https://book.example.test/?tab=bookings", place: null }, now: Date.parse("2099-02-01T09:00:00Z"),
+  }));
+
+  it("reads the codes off the row, and their kind off the code", () => {
+    expect(at({ promo_code: "RW-K7MQ2X-4FZ" }).promoCode).toBe("RW-K7MQ2X-4FZ");
+    expect(at({ promo_code: "<x>" }).promoCode).toBeNull();
+    expect(at({ ride_code: "IMC" }).rideCode).toBe("IMC");
+    expect(["RW-A", "rf-b", "RB-C", "BD-D", "SUMMER10"].map(codeKindOf)).toEqual(["rw", "rf", "rb", "bd", "promo"]);
+  });
+
+  it("names the kind beside its mark on the row that used it, and nothing on a row without one", () => {
+    const html = card([at({ promo_code: "RW-K7MQ2X-4FZ" }), at({ id: "c2abcdef", queue_num: 5, name: "Ben", price: 57.5 })]);
+    expect(html).toContain("tk-code-tag ck-rw");
+    expect(html).toContain("Referral discount");
+    expect(html).toContain("RW-K7MQ2X-4FZ");
+    expect(html.match(/class="tk-code"/g)).toHaveLength(1);
+    expect(card([at({ promo_code: "BD-1A2B3C4D", price: 0 })], "ar")).toContain("ركوبة مجانية للتبرع بالدم");
+    expect(card([at({ ride_code: "IMC", price: 0 })])).toContain("Ride code");
+  });
+});
+

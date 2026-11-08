@@ -53,7 +53,24 @@ export type TicketRow = {
   vlTicket?: "have" | "buy" | null;
   /** When the transfer receipt came in (queue_entries.vl_receipt_at, ISO), else null. */
   vlReceiptAt?: string | null;
+  /** The promo code the row was booked with (queue_entries.promo_code) and the Saturday ride code (ride_code, rentals
+   *  20261108120000), else null: the ticket names each with its kind (codeKindOf; the booking app's _codeRowHtml, 2026-11-08). */
+  promoCode?: string | null; rideCode?: string | null;
 };
+/** The kinds of code a booking used (the booking app's _codeKindOf): the friend's referral discount (RW-), the referrer's
+ *  free ride (RF-) and bonus (RB-), the blood donation free ride (BD-), a code staff made, and a Saturday ride code. */
+export type CodeKind = "promo" | "rw" | "rf" | "rb" | "bd" | "sat";
+export function codeKindOf(code: string): Exclude<CodeKind, "sat"> {
+  const p = code.slice(0, 3).toUpperCase();
+  return p === "RW-" ? "rw" : p === "RF-" ? "rf" : p === "RB-" ? "rb" : p === "BD-" ? "bd" : "promo";
+}
+/** A row's codes, as the ticket shows them: [kind, code]. */
+export function rowCodes(r: Pick<TicketRow, "promoCode" | "rideCode">): [CodeKind, string][] {
+  const out: [CodeKind, string][] = [];
+  if (r.promoCode) out.push([codeKindOf(r.promoCode), r.promoCode]);
+  if (r.rideCode) out.push(["sat", r.rideCode]);
+  return out;
+}
 /** The distances a Run for Her runner picks from (the booking app's RUN_KMS). */
 export const RUN_KMS: readonly number[] = [3, 5];
 export type TicketSession = {
@@ -135,6 +152,9 @@ export function ticketRow(r: Row): TicketRow | null {
     ...(ah !== undefined ? { ah } : {}),
     raceReg: r.race_reg === "yes" || r.race_reg === "no" ? r.race_reg : null,
     ...("vl_ticket" in r ? { vlTicket: r.vl_ticket === "have" || r.vl_ticket === "buy" ? r.vl_ticket : null, vlReceiptAt: S(r.vl_receipt_at) || null } : {}),
+    // the codes it was booked with (2026-11-08): letters, digits and dashes as the database keeps them, else none
+    promoCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.promo_code)) ? S(r.promo_code) : null,
+    rideCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.ride_code)) ? S(r.ride_code) : null,
   };
 }
 
