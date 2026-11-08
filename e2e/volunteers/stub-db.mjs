@@ -6,7 +6,7 @@ import { createServer } from "node:http";
 const PORT = Number(process.env.STUB_PORT || 8801);
 const soon = (h) => new Date(Date.now() + h * 3600000).toISOString();
 const fresh = () => ({
-  rider: { id: "c1", name: "Sara Haddad", session_token: "tok-sara-0123456789", hours: 0, status: null, agreed: false, account: null },
+  rider: { id: "c1", name: "Sara Haddad", name_ar: "سارة حداد", session_token: "tok-sara-0123456789", hours: 0, status: null, agreed: false, account: null },
   opps: [
     { id: "2099-11-05-bd", title: null, ride_kind: "blood", event_kind: "community", date: "2099-11-05", time: "17:00 - 23:00", location: "JCC", about: "Help donors at the door.", needed: 5,
       roles: ["Check-in", "Guide"], min_age: 18, hours_mode: "clock", fixed_hours: null, signup_open: true, opens_at: null, closes_at: soon(4), accepted: 0, briefing: "Meet at gate 3.", caps: { checkin: true, undo: true, donated: true, list: false, counts: true } },
@@ -26,6 +26,10 @@ let db = fresh();
 const raise = (res, message, details) => {
   res.writeHead(400, { "content-type": "application/json" });
   res.end(JSON.stringify({ message, code: "P0001", details }));
+};
+// The three lines the database stamps on a certificate (_vol_cert_words, rentals 20261108220000).
+const WORDS = {
+  female: { lead: "This certificate is proudly presented to", recognition: "in recognition of her time, energy and commitment as a volunteer in", arabic_line: "تقديرًا لعطائها ومشاركتها التطوعية في المبادرة" },
 };
 const send = (res, data) => {
   res.writeHead(200, { "content-type": "application/json" });
@@ -68,6 +72,29 @@ const server = createServer((req, res) => {
         if (!authed) return send(res, null);
         return send(res, { id: "c1", name: db.rider.name, hours: db.rider.hours, account: db.rider.account, status: db.rider.status, agreed: db.rider.agreed, promote: false, open_count: 1, mine: mine(),
           record: db.rider.hours ? [{ id: 1, hours: db.rider.hours, on: "2099-11-05", note: null, session_id: "2099-11-05-bd", title: null, ride_kind: "blood" }] : [], first_on: db.rider.hours ? "2099-11-05" : null, last_on: db.rider.hours ? "2099-11-05" : null, sessions: db.rider.hours ? 1 : 0, cert_signer: "The Team", cert_title: null });
+      // the certificate on the approved design (rentals migration 20261108220000)
+      case "volunteer_profile":
+        if (!authed) return send(res, null);
+        return send(res, { status: db.rider.status, applied_at: null, skills: null, days: [], shirt: null, whatsapp: null, briefed: {},
+          name_ar: db.rider.name_ar ?? null, gender: "female" });
+      case "volunteer_name_ar_save": {
+        if (!authed) return raise(res, "VOL_TOKEN");
+        const v = String(body.p_name_ar ?? "").trim();
+        if (/[A-Za-z0-9]/.test(v)) return raise(res, "BAD_INPUT");
+        db.rider.name_ar = v || null;
+        return send(res, { ok: true, name_ar: db.rider.name_ar });
+      }
+      case "volunteer_cert_issue":
+        if (!authed) return raise(res, "VOL_TOKEN");
+        if (!db.rider.hours) return raise(res, "VOL_CERT_EMPTY");
+        return send(res, { ok: true, id: 1, kind: "period", serial: "MMV-2026-00001", code: "ABCDEF123456", name: db.rider.name, name_ar: db.rider.name_ar ?? null,
+          gender: "female", words: WORDS.female, from: body.p_from, to: body.p_to, hours: db.rider.hours, sessions: [], issued_at: "2026-11-08T10:00:00Z" });
+      case "volunteer_cert_issue_session":
+        if (!authed) return raise(res, "VOL_TOKEN");
+        if (!db.rider.hours) return raise(res, "VOL_CERT_EMPTY");
+        return send(res, { ok: true, id: 2, kind: "session", serial: "MMV-2026-00002", code: "ZZZZ11112222", name: db.rider.name, name_ar: db.rider.name_ar ?? null,
+          gender: "female", words: WORDS.female, session_id: body.p_session, initiative: body.p_initiative || "Blood Donation", event_date: "2099-11-05",
+          from: "2099-11-05", to: "2099-11-05", hours: db.rider.hours, sessions: [], issued_at: "2026-11-08T10:00:00Z" });
     }
     if (!authed) return raise(res, "VOL_TOKEN");
     const o = db.opps.find((x) => x.id === body.p_session);

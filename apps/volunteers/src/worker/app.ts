@@ -48,6 +48,9 @@ export const RPCS = new Set([
   "volunteer_brief_ack",
   "volunteer_cert_issue",
   "volunteer_cert_check",
+  // the certificate on the approved design (rentals migration 20261108220000)
+  "volunteer_cert_issue_session",
+  "volunteer_name_ar_save",
 ]);
 
 /** Error codes the database raises on purpose, with the status each one is answered with. */

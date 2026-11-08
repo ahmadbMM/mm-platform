@@ -4,6 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "node scripts/build.mjs",
+    "sync:cert": "node scripts/sync-cert.mjs",
     "dev": "node scripts/build.mjs && wrangler dev",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
