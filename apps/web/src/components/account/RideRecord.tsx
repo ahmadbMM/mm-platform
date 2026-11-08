@@ -1,23 +1,26 @@
 import BadgeGrid, { type BadgeView } from "./BadgeGrid";
+import { askChoices, askTarget, canAsk, type AskChoice, type BadgeReq } from "@/lib/badge-request";
 import Medal from "./Medal";
 import type { T } from "./RideRecord.text";
 import { fill } from "@/lib/fill";
 import { fill as fillAt } from "@/i18n/tx";
-import { closestBadges, type BadgeItem, type RideStats } from "@/lib/ride-record";
+import { closestBadges, ladderLevel, type BadgeItem, type RideStats } from "@/lib/ride-record";
 import { intlOf } from "@/i18n/locales";
 
 // My Account's record, as the booking app's account page draws it (91816da and the badges before
 // it): Your rides - the last 26 weeks as a strip, rides this year, the favourite bike type, the
 // time on the bike staff timed, the first ride - then the two badges already begun with the least
 // left, each with its bar (a ladder's next level among them), then every badge (BadgeGrid). Rides led
-// (2026-11-06, the app's season line with its flag) closes Your rides, shown once there is one.
+// (2026-11-06, the app's season line with its flag) closes Your rides, shown once there is one. With the
+// account's badge requests (reqs; null when the database has none) the grid offers to ask for a badge staff give.
 export type RecordText = (typeof T)["en"];
 type Props = {
   locale: string; stats: RideStats | null; led: number; badges: BadgeItem[]; t: RecordText;
   typeName: (type: string) => string; dur: { h: string; hm: string; m: string };
+  reqs?: BadgeReq[] | null;
 };
 
-export default function RideRecord({ locale, stats, led, badges, t, typeName, dur }: Props) {
+export default function RideRecord({ locale, stats, led, badges, t, typeName, dur, reqs = null }: Props) {
   const day = (iso: string | null | undefined) => {
     const d = iso ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T12:00:00Z` : iso) : null;
     if (!d || Number.isNaN(d.getTime())) return "";
@@ -46,8 +49,11 @@ export default function RideRecord({ locale, stats, led, badges, t, typeName, du
       lvN: x.lvN,
       given: x.given ? { line: fillAt(t.givenBy, day(x.given.at)), note: x.given.note || null } : null,
       season: x.season?.curTo ? fillAt(t.seasonOpen, day(x.season.curTo)) : x.season?.next ? fillAt(t.seasonSoon, day(x.season.next)) : null,
+      ask: reqs ? askTarget(x)?.slug ?? null : null,
+      askSlugs: reqs ? (x.lv ?? [x]).filter(canAsk).map((y) => y.slug) : [],
     };
   });
+  const choices: AskChoice[] = reqs ? askChoices(badges).map((y) => { const [name, how] = words(y); return { slug: y.slug, name, how, icon: y.icon, color: y.color, level: ladderLevel(y.slug) }; }) : [];
   const near = closestBadges(badges);
   if (!stats && !led && !badges.length) return null;
   return (
@@ -92,7 +98,8 @@ export default function RideRecord({ locale, stats, led, badges, t, typeName, du
           })}
         </div>
       )}
-      {views.length > 0 && <BadgeGrid items={views} t={{ badges: t.badges, toEarn: t.toEarn, show: t.show, hide: t.hide, notEarned: t.notEarned, howTo: t.howTo, earned: t.earned, close: t.close, levelOf: t.levelOf, maxLevel: t.maxLevel, levels: t.levels }} />}
+      {views.length > 0 && <BadgeGrid items={views} t={{ badges: t.badges, toEarn: t.toEarn, show: t.show, hide: t.hide, notEarned: t.notEarned, howTo: t.howTo, earned: t.earned, close: t.close, levelOf: t.levelOf, maxLevel: t.maxLevel, levels: t.levels }}
+        ask={reqs ? { reqs, choices, locale } : null} />}
     </>
   );
 }

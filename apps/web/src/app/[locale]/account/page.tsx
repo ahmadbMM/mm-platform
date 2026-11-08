@@ -282,7 +282,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
         {(stats || allBadges.length > 0) && (
           <section className="ac-sec" aria-label={recordText.yourRides}>
-            <RideRecord locale={locale} stats={stats} led={led} badges={allBadges} t={recordText} typeName={typeName} dur={{ h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM }} />
+            <RideRecord locale={locale} stats={stats} led={led} badges={allBadges} t={recordText} typeName={typeName} dur={{ h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM }} reqs={badges.requests ?? null} />
           </section>
         )}
 

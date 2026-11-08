@@ -1,11 +1,12 @@
 // What My Account's record reads besides the account's own rows (lib/ride-record.ts): the kind of
 // every session the rider booked (as the account may see them: a private ride too, through its
 // token), the badge catalogue, the weeks and the dated badges (the public key, as the booking app
-// reads them), the badges staff gave this account (its own token), and the name of a bike handed
-// over tonight.
+// reads them), the badges staff gave this account and the badges it asked for (its own token), and
+// the name of a bike handed over tonight.
 import { rpcServer, type Account } from "./account";
 import { getJson, readSessions, rideKind, type SessionReader } from "./rides";
 import type { BadgeData, BadgeRow, RecordSession } from "./ride-record";
+import { badgeReqs } from "./badge-request";
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 const env = () => ({ url: process.env.NEXT_PUBLIC_SUPABASE_URL, key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY });
@@ -53,11 +54,13 @@ export function rideKm(slots: unknown): number {
 const list = <T,>(v: unknown): T[] => (Array.isArray(v) ? (v as T[]) : []);
 
 /** The badge data: a function the database does not have, or a failed call, is an empty answer
- *  (no weeks: Perfect Week and Perfect Month cannot be told, as in the booking app). */
+ *  (no weeks: Perfect Week and Perfect Month cannot be told, as in the booking app). The badge
+ *  requests (rentals 20261108210000) are null then: the page offers none. */
 export async function loadBadgeData(a: Account): Promise<BadgeData> {
-  const [cat, weeks, seasons, mine] = await Promise.all([
+  const [cat, weeks, seasons, mine, reqs] = await Promise.all([
     rpcServer<unknown>("badge_catalog", {}), rpcServer<unknown>("badge_weeks", {}), rpcServer<unknown>("badge_seasons", {}),
     rpcServer<unknown>("customer_my_badges", { p_id: a.id, p_token: a.token }),
+    rpcServer<unknown>("customer_my_badge_requests", { p_id: a.id, p_token: a.token }),
   ]);
   const w = list<{ w: string; ids: string[] }>(weeks.data);
   return {
@@ -65,6 +68,7 @@ export async function loadBadgeData(a: Account): Promise<BadgeData> {
     weeks: Array.isArray(weeks.data) ? w : null, // an empty answer is known (no week of two sessions yet); only a failed call is not
     seasons: list<BadgeRow>(seasons.data).filter((b) => b && typeof b.slug === "string"),
     mine: list<BadgeRow>(mine.data).filter((b) => b && typeof b.slug === "string"),
+    requests: reqs.status === 0 || reqs.status >= 400 ? null : badgeReqs(reqs.data),
   };
 }
 
