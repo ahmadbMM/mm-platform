@@ -11,8 +11,10 @@ import TicketCard from "@/components/booking/TicketCard";
 import RateRide from "@/components/account/RateRide";
 import RideRecord from "@/components/account/RideRecord";
 import WalletCard from "@/components/account/WalletCard";
+import ReferralCard from "@/components/account/ReferralCard";
 import VolunteerCard, { volunteerCardShows, type VolunteerMe } from "@/components/account/VolunteerCard";
 import { walletOf } from "@/lib/wallet";
+import { referralOf } from "@/lib/referral";
 import BloodTypeCard from "@/components/account/BloodTypeCard";
 import { bloodTypeWords } from "@/components/account/BloodType.words";
 import { T as RECORD } from "@/components/account/RideRecord.text";
@@ -126,7 +128,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // every booked session, whatever its state now (a Petromin night, one staff closed since), read
   // with the account's token so a private ride (one its tag holders alone may see) keeps its name
   const record = recordRows(rows);
-  const [sessions, recSessions, badges, blood, walletRead] = await Promise.all([
+  const [sessions, recSessions, badges, blood, walletRead, referral] = await Promise.all([
     loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
     // every night booked, for Your rides and the badges (the kind of ride, whether it was free, whether staff approve it)
     loadRecordSessions(record.map((r) => r.sessionId), acct),
@@ -137,6 +139,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       .then((r) => (r.status === 0 || r.status >= 400 || emAbsent(r) ? null : { type: btOf(r.data) })),
     // the wallet (rentals 20261102210000): no card and no pay button while the database has none or cannot be read
     rpcServer<unknown>("customer_wallet", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? walletOf(r.data) : null)),
+    // Invite friends (rentals 20261108160000): the account's code is made the first time it is asked for; no card while
+    // the database has none, referrals are switched off, or it cannot be read
+    rpcServer<unknown>("customer_referral", { p_id: acct.id, p_token: acct.token, p_make: true }).then((r) => (r.status === 200 ? referralOf(r.data, today) : null)),
   ]);
   // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
   const pastTonight = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
@@ -301,6 +306,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         )}
 
         {walletRead && <WalletCard wallet={walletRead} locale={locale} />}
+
+        {referral && <ReferralCard r={referral} locale={locale} />}
 
         {blood && (
           <section className="ac-sec bt-sec" aria-labelledby="ac-bt-h">
