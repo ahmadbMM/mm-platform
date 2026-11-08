@@ -159,8 +159,6 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   // the Wallet switch (the booking app's _cwPaySlot, 2026-11-03): only with a balance read
   const due = !past && !allWl && balance !== null ? walletDue(rows, s?.kind, !!s?.approval, extrasCost) : null;
   const wWords = walletWords(locale);
-  // Victory Lap and Arena Heros are not paid at the booth: their own lines say how (below)
-  const owes = !allWl && !s?.approval && !vlap && !arena && !donor && rows.some((r) => !r.paid && r.price > 0);
   const canEdit = !past && rows.some((r) => r.status === "waiting" || r.status === "waitlist");
   const active = rows.some((r) => r.status === "active");
   const allDone = rows.length > 0 && rows.every((r) => r.status === "done");
@@ -422,7 +420,6 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           </div>
         )}
         {!donor && (free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>}
-        {owes && !past && <p className="tk-line">{t.payAtBooth}</p>}
         {due && (due.used > 0 || (due.left > 0 && (balance ?? 0) > 0)) && (
           <WalletPay ids={due.ids} on={due.used > 0} title={wWords.title} failed={wWords.failed}
             sub={due.used <= 0 ? wWords.have.replace("{0}", sar(balance ?? 0))
