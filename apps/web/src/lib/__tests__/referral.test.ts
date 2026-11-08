@@ -12,7 +12,10 @@ describe("referrals", () => {
       { code: "RF-USED0001", expires_at: "2099-12-05", used: true },
       { code: "RF-OLD00001", expires_at: "2026-01-01", used: false },
     ] }), "2026-11-08");
-    expect(r).toEqual({ code: "K7MQ2X", joined: 3, rode: 1, earned: 1, open: 1, referred: false, canEnter: false, pct: 50, welcome: null });
+    expect(r).toEqual({ code: "K7MQ2X", joined: 3, rode: 1, earned: 1, open: 1, referred: false, canEnter: false, pct: 50, days: 60, welcome: null });
+    // how long a free ride lasts: Settings' number, 30 (the default since rentals 20261108235000) when missing or out of range
+    expect(referralOf(ans({ days: undefined }), "2026-11-08")?.days).toBe(30);
+    expect(referralOf(ans({ days: 3 }), "2026-11-08")?.days).toBe(30);
   });
 
   it("reads the friend's own code (rentals 20261108200000) while it can be used, and the percent", () => {
@@ -26,7 +29,7 @@ describe("referrals", () => {
 
   it("says the percent, the friend's code and the share message in every language", () => {
     for (const [l, w] of Object.entries(REFERRAL_WORDS)) {
-      expect(w.how, l).toContain("{0}");
+      expect(w.how, l).toContain("{0}"); expect(w.how, l).toContain("{1}");
       expect(w.enterOk, l).toContain("{0}");
       for (const ph of ["{0}", "{1}", "{2}"]) { expect(w.msg, l).toContain(ph); expect(w.welcome, l).toContain(ph); }
     }

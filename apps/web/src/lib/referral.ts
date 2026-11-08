@@ -10,6 +10,8 @@ export type ReferralWelcome = { code: string; expiresAt: string; pct: number };
 export type Referral = { code: string; joined: number; rode: number; earned: number; open: number; referred: boolean; canEnter: boolean;
   /** the friend's discount in percent (Settings, 50 when the database does not say) */
   pct: number;
+  /** how long a free ride lasts, in days (Settings ref_days, 30 when the database does not say) */
+  days: number;
   /** the account's own friend's code while it can be used: not used, not past its last day (KSA); else null */
   welcome: ReferralWelcome | null };
 
@@ -25,11 +27,12 @@ export function referralOf(data: unknown, today: string): Referral | null {
     return x.used !== true && typeof x.code === "string" && String(x.expires_at ?? "") >= today;
   }).length;
   const pct = Number(d.pct) >= 5 && Number(d.pct) <= 100 ? Math.round(Number(d.pct)) : 50;
+  const days = Number(d.days) >= 7 && Number(d.days) <= 365 ? Math.round(Number(d.days)) : 30;
   const w = d.welcome && typeof d.welcome === "object" && !Array.isArray(d.welcome) ? (d.welcome as Record<string, unknown>) : null;
   const wDay = String(w?.expires_at ?? "").slice(0, 10);
   const welcome = w && typeof w.code === "string" && /^RW-[A-Z0-9-]{4,40}$/.test(w.code) && w.used !== true && /^\d{4}-\d{2}-\d{2}$/.test(wDay) && wDay >= today
     ? { code: w.code, expiresAt: wDay, pct: Number(w.pct) >= 5 && Number(w.pct) <= 100 ? Math.round(Number(w.pct)) : pct } : null;
-  return { code: d.code, joined: n(d.joined), rode: n(d.rode), earned: n(d.earned), open, referred: d.referred === true, canEnter: d.can_enter === true, pct, welcome };
+  return { code: d.code, joined: n(d.joined), rode: n(d.rode), earned: n(d.earned), open, referred: d.referred === true, canEnter: d.can_enter === true, pct, days, welcome };
 }
 
 /** The friends who rode with the account's invite, for the Recruiter badge (whether or not referrals are switched on);

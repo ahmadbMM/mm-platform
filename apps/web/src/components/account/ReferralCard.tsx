@@ -59,7 +59,7 @@ export default function ReferralCard({ r, locale }: { r: Referral; locale: strin
   return (
     <section className="ac-sec ac-ref" aria-labelledby="ac-ref-h">
       <h2 id="ac-ref-h">{w.title}</h2>
-      <p className="ac-text">{w.how.replace("{0}", pct)}</p>
+      <p className="ac-text">{w.how.replace("{0}", pct).replace("{1}", String(r.days))}</p>
       {r.welcome && <p className="ac-ref-has ac-ref-w">{w.welcome.replace("{0}", String(r.welcome.pct)).replace("{1}", until(r.welcome.expiresAt)).replace("{2}", r.welcome.code)} <a href={BOOKING_URL}>{w.book}</a></p>}
       <div className="ac-ref-code"><span>{w.yourCode}</span><strong dir="ltr">{r.code}</strong></div>
       <div className="ac-ref-btns">
