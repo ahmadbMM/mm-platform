@@ -2,11 +2,13 @@ import type { BadgeItem } from "./ride-record";
 
 // Badge requests (the owner, 2026-11-08: "add a button on badges for customers to request a badge and adding a proof
 // either a pdf or an image as optional and a comment too optional"; rentals migration 20261108210000, the booking
-// app's _bdr*). A rider asks for a badge the catalogue says staff give (not one earned by riding alone), every ladder
-// level not reached yet, with an optional comment and an optional proof: a picture the page makes small (a JPEG) or a
-// PDF of 2 MB at most, sent as a data: URL through customer_badge_request (app/api/account/badge-request). One request
-// waits per badge; sending again replaces it. Staff answer in the booking app's People > Badges, and
-// customer_my_badge_requests tells the rider: waiting, or answered in the last 60 days with staff's note.
+// app's _bdr*). A rider asks for any badge they do not hold, earned by riding or given by staff (the owner's second round
+// the same day, rentals 20261108230000: "each badge when clicking on it to have its details and request button if the
+// customer didnt have it"), every ladder level not reached yet, with an optional comment and an optional proof: a picture
+// the page makes small (a JPEG) or a PDF of 2 MB at most, sent as a data: URL through customer_badge_request
+// (app/api/account/badge-request). One request waits per badge; sending again replaces it. Staff answer in the booking
+// app's Badge requests section, and the answer deletes the proof; customer_my_badge_requests tells the rider: waiting, or
+// answered in the last 60 days with staff's note.
 
 export type BadgeReq = { id: number; slug: string; status: "pending" | "given" | "declined"; at: string; decidedAt: string | null; reply: string | null };
 /** A badge the dialog offers: its slug, its words, its medal and its level on a ladder ("Level 2 of 5" filled by the page). */
@@ -31,9 +33,9 @@ export function badgeReqs(v: unknown): BadgeReq[] | null {
     .sort((a, b) => b.at.localeCompare(a.at));
 }
 
-/** Whether a rider may ask for a badge: the catalogue says staff give it, and it is not reached. Without the
- *  catalogue (a row from it), never: it is what the database checks a request against. */
-export const canAsk = (x: BadgeItem): boolean => !x.on && x.row?.auto === false;
+/** Whether a rider may ask for a badge: it is in the catalogue and not reached. Without the catalogue (a row from it),
+ *  never: it is what the database checks a request against. A badge hidden until held is not in the list at all. */
+export const canAsk = (x: BadgeItem): boolean => !x.on && !!x.row; // the catalogue lists no retired badge
 /** Every badge the dialog offers, ladder levels each on their own, in the list's order. */
 export const askChoices = (items: BadgeItem[]): BadgeItem[] => items.flatMap((x) => (x.lv ?? [x]).filter(canAsk));
 /** What a tile's popup offers to ask for: its ladder's next level, or the badge itself. */

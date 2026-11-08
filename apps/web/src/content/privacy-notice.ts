@@ -130,7 +130,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "Badge requests: the badge you ask for, your comment and the proof you attach (a picture or a PDF), and our team’s answer",
       "Always optional: only if you ask for a badge from your account page. Seen by you (except the proof, once sent) and our staff.",
-      "Deciding whether to give you the badge. The proof is deleted 30 days after our team answers."
+      "Deciding whether to give you the badge. The proof is deleted as soon as our team answers."
      ],
      [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
@@ -309,7 +309,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>Account and profile:</strong> kept while you have an account, and destroyed within 30 days of your request to close it.",
     "<strong>Booking and payment records:</strong> kept for 10 years, because the law requires financial records. Then destroyed.",
     "<strong>Technical error reports:</strong> deleted after 90 days.",
-    "<strong>The proof you attach to a badge request:</strong> deleted 30 days after our team answers the request."
+    "<strong>The proof you attach to a badge request:</strong> deleted as soon as our team answers the request."
    ]
   },
   {
@@ -477,7 +477,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      [
       "طلبات الأوسمة: الوسام الذي تطلبه، وتعليقك، والإثبات الذي ترفقه (صورة أو ملف PDF)، وردّ فريقنا",
       "اختيارية دائمًا: فقط إذا طلبت وسامًا من صفحة حسابك. يراها أنت (عدا الإثبات بعد إرساله) وموظفونا.",
-      "تحديد ما إذا كنا سنمنحك الوسام. ويُحذف الإثبات بعد 30 يومًا من ردّ فريقنا."
+      "تحديد ما إذا كنا سنمنحك الوسام. ويُحذف الإثبات فور ردّ فريقنا."
      ],
      [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
@@ -656,7 +656,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>الحساب والملف الشخصي:</strong> نحتفظ بهما ما دام حسابك قائمًا، ونتلفهما خلال 30 يومًا من طلبك إغلاق الحساب.",
     "<strong>سجلات الحجز والدفع:</strong> نحتفظ بها 10 سنوات لأن النظام يُلزم بحفظ السجلات المالية، ثم نتلفها.",
     "<strong>تقارير الأخطاء التقنية:</strong> تُحذف بعد 90 يومًا.",
-    "<strong>الإثبات الذي ترفقه بطلب وسام:</strong> يُحذف بعد 30 يومًا من ردّ فريقنا على الطلب."
+    "<strong>الإثبات الذي ترفقه بطلب وسام:</strong> يُحذف فور ردّ فريقنا على الطلب."
    ]
   },
   {

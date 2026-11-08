@@ -11,13 +11,17 @@ describe("badge requests", () => {
   const PDF = "data:application/pdf;base64," + Buffer.from("%PDF-1.4\n%%EOF").toString("base64");
   const JPG = "data:image/jpeg;base64,/9j/4AAQ";
 
-  it("offers the badges the catalogue says staff give, every ladder level not reached, and none without a catalogue", () => {
-    const cat = [sys("marshal"), sys("senior_marshal"), sys("first_lap", true), sys("t25"), sys("t50"), sys("t100"), { slug: "bd_owl", icon: "moon", color: "purple", name: "Night Owl", system: false, auto: false }];
+  it("offers every badge not held, earned by riding or given by staff, every ladder level not reached, and none without a catalogue", () => {
+    const cat = [sys("marshal"), sys("senior_marshal"), sys("first_lap", true), sys("national_day_96", true), sys("t25"), sys("t50"), sys("t100"), { slug: "bd_owl", icon: "moon", color: "purple", name: "Night Owl", system: false, auto: false }];
     const list = badgeList([], new Map(), data(cat, [{ slug: "t25", at: "2026-11-01T10:00:00Z" }]), "2026-11-08", null);
-    expect(askChoices(list).map((x) => x.slug)).toEqual(["t50", "t100", "marshal", "senior_marshal", "bd_owl"]); // the list's order: a ladder begun first
+    // the list's order: a ladder begun first, then a ride badge (rentals 20261108230000), then the ones staff give;
+    // National Day 96 stays hidden until held, so it is never offered
+    expect(askChoices(list).map((x) => x.slug)).toEqual(["t50", "t100", "first_lap", "marshal", "senior_marshal", "bd_owl"]);
     const t = list.find((x) => x.lv?.some((y) => y.slug === "t100"))!;
     expect(askTarget(t)?.slug).toBe("t50"); // the ladder's next level
-    expect(canAsk(list.find((x) => x.slug === "first_lap")!)).toBe(false); // earned by riding
+    expect(askTarget(list.find((x) => x.slug === "first_lap")!)?.slug).toBe("first_lap"); // earned by riding, not yet
+    const rode = badgeList([], new Map(), data(cat, [{ slug: "first_lap", at: "2026-11-01T10:00:00Z" }]), "2026-11-08", null);
+    expect(canAsk(rode.find((x) => x.slug === "first_lap")!)).toBe(false); // held
     expect(askChoices(badgeList([], new Map(), data([]), "2026-11-08", null))).toEqual([]);
     expect(ladderLevel("senior_marshal")).toEqual([2, 5]);
     expect(ladderLevel("bd_owl")).toBeNull();
