@@ -3,24 +3,19 @@
 // (src/i18n/tx). {0} and {1} are filled in by the wizard.
 export const T = {
   en: {
-    // regProg1-3 regStepOf regStep1Title regStep1Msg(Join) regStep2Title/Msg regStep3Title/Msg
+    // regProg1-3 regStepOf regStep1Title regStep2Title regStep3Title (their subtitles went 2026-11-08)
     stepRide: "Ride",
     stepRiders: "Riders",
     stepConfirm: "Confirm",
     stepOf: "Step {0} of {1}",
     rideTitle: "Choose your ride",
-    rideMsg: "Pick the day you want to ride.",
-    rideMsgJoin: "Pick the day you would like to join.",
     ridersTitle: "Rider details",
-    ridersMsg: "Tell us who is riding and their bike preference.",
     reviewTitle: "Review and confirm",
-    reviewMsg: "Check everything below, then confirm your booking.",
-    // regContinueBtn regBackBtn regReviewBtn regConfirmBtn pickRideFirst
+    // regContinueBtn regBackBtn regReviewBtn regConfirmBtn
     cont: "Continue",
     back: "Back",
     toReview: "Review booking",
     confirm: "Confirm booking",
-    pickFirst: "Choose a ride above to continue.",
     allEvents: "All events",
     // the session card: availLabel waitlistLabel spotsLeft1/N rejCardNote ticketCollectAt priceFrom freeLabel partnerStf
     available: "Available",
@@ -77,11 +72,9 @@ export const T = {
     km: "{0} km",
     kmLap: "{0} km a lap",
     route: "Route",
-    // pricePerBike onTheHouseLabel payAtBoothLine payAtBoothFCFS bike
+    // pricePerBike onTheHouseLabel bike
     pricePerBike: "Price per bike",
     onTheHouse: "On the house",
-    payAtBooth: "You pay at the booth when you arrive.",
-    fcfs: "Your bike type is a preference: bikes go out first come, first served, so come early for the best choice.",
     bike: "Bike",
     // promo*: the button says "Apply code" (TRANSLATING.md: "Apply" is applying to join)
     promo: "Promo code",
@@ -95,17 +88,14 @@ export const T = {
       not_yours: "That code belongs to another account.",
     } as Record<string, string>,
     promoTypeOnly: "This code applies only to {0} bookings.",
-    // waiverTitle/Body/Agree swimWaiver* activityWaiver* waiverSub tickWaiverFirst waiverRequired
+    // waiverTitle/Body/Agree swimWaiver* activityWaiver* waiverRequired
     waiver: {
       bike: { title: "Ride waiver", body: "You cannot book any ride or activity with MicroMobility until you have read and agreed to this waiver. Cycling is a physical activity that carries risk. I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings. I am also responsible for any damage I cause to other people or their property. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. I agree to wear a helmet and to follow the team’s instructions and the route, and I am responsible for any damage to the rented bike caused by misuse. The bike is returned in the condition it was received.", agree: "I have read the waiver and agree on behalf of every rider on this booking" },
       swim: { title: "Swim waiver", body: "You cannot book any swim or activity with MicroMobility until you have read and agreed to this waiver. Swimming carries risk. I confirm that I can swim unaided, and I take part entirely at my own risk: I alone am responsible for myself, my safety, any medical condition that affects my ability to swim, and my personal belongings. I am also responsible for any damage I cause to other people or their property. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. I agree to follow the team’s and the venue’s instructions and to stay within the supervised area.", agree: "I have read the waiver and agree on behalf of everyone on this booking" },
       activity: { title: "Activity waiver", body: "You cannot book any activity with MicroMobility until you have read and agreed to this waiver. Every activity we run carries some risk. I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings. I am also responsible for any damage I cause to other people or their property. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. I agree to follow the team’s and the venue’s instructions.", agree: "I have read the waiver and agree on behalf of everyone on this booking" },
     },
-    waiverSub: "Read this and agree to continue.",
-    tickFirst: "Tick the box above to continue.",
-    // addonStepTitle addonStepSub addonsLabel nuButton invFree cat*
+    // addonStepTitle addonsLabel nuButton invFree cat*
     addonsTitle: "Add on your booking",
-    addonsSub: "Optional extras for this ride.",
     addons: "Add-ons",
     cats: { Helmet: "Helmet", Accessory: "Accessory", ProteinSnacks: "Protein Snacks", ElectrolyteSachets: "Electrolytes", EnergyGels: "Energy Gels", SparePart: "Spare part", Apparel: "Apparel", Other: "Other" } as Record<string, string>,
     // reviewSessionLabel bookedByLabel reviewRidersLabel reviewPartLabel reviewRentalLabel reviewTotalLabel regSummary
@@ -200,17 +190,12 @@ export const T = {
     stepConfirm: "التأكيد",
     stepOf: "الخطوة {0} من {1}",
     rideTitle: "اختر رحلتك",
-    rideMsg: "اختر اليوم الذي تريد الركوب فيه.",
-    rideMsgJoin: "اختر اليوم الذي ترغب بالانضمام فيه.",
     ridersTitle: "بيانات الراكب",
-    ridersMsg: "أخبرنا من سيركب وتفضيل الدراجة.",
     reviewTitle: "المراجعة والتأكيد",
-    reviewMsg: "تحقق من التفاصيل أدناه ثم أكّد حجزك.",
     cont: "متابعة",
     back: "رجوع",
     toReview: "مراجعة الحجز",
     confirm: "تأكيد الحجز",
-    pickFirst: "اختر رحلة من الأعلى للمتابعة.",
     allEvents: "كل الفعاليات",
     available: "متاح",
     waitlist: "قائمة الانتظار",
@@ -263,8 +248,6 @@ export const T = {
     route: "المسار",
     pricePerBike: "السعر للدراجة",
     onTheHouse: "على حساب المحل",
-    payAtBooth: "تدفع عند الكشك حين تصل.",
-    fcfs: "نوع الدراجة تفضيل وليس ضماناً: تُسلَّم الدراجات حسب أسبقية الوصول، فاحضر مبكراً لتحظى بما اخترت.",
     bike: "دراجة",
     promo: "رمز الخصم",
     promoApply: "تطبيق الرمز",
@@ -282,10 +265,7 @@ export const T = {
       swim: { title: "إقرار السباحة", body: "لا يمكنك حجز أي جلسة سباحة أو نشاط لدى مايكروموبيليتي إلا بعد قراءة هذا الإقرار والموافقة عليه. السباحة تنطوي على مخاطر، وأؤكد قدرتي على السباحة دون مساعدة، وأشارك على مسؤوليتي الشخصية بالكامل، وأتحمل وحدي المسؤولية عن نفسي وسلامتي وأي حالة صحية تؤثر على قدرتي على السباحة وعن ممتلكاتي الشخصية. وأنا مسؤول عن أي أضرار ألحقها بالآخرين أو بممتلكاتهم. وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية عن أي شيء يحدث لي أو لممتلكاتي، بما في ذلك أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف، أيًّا كان سببه، أثناء النشاط أو بسببه. وأتعهد بالالتزام بتعليمات الفريق وإدارة الموقع والبقاء ضمن المنطقة الخاضعة للإشراف.", agree: "قرأت الإقرار وأوافق نيابةً عن كل شخص في هذا الحجز" },
       activity: { title: "إقرار المشاركة", body: "لا يمكنك حجز أي نشاط لدى مايكروموبيليتي إلا بعد قراءة هذا الإقرار والموافقة عليه. كل نشاط ننظّمه ينطوي على قدر من المخاطر، وأشارك فيه على مسؤوليتي الشخصية بالكامل، وأتحمل وحدي المسؤولية عن نفسي وسلامتي وممتلكاتي الشخصية. وأنا مسؤول عن أي أضرار ألحقها بالآخرين أو بممتلكاتهم. وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية عن أي شيء يحدث لي أو لممتلكاتي، بما في ذلك أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف، أيًّا كان سببه، أثناء النشاط أو بسببه. وأتعهد بالالتزام بتعليمات الفريق وإدارة الموقع.", agree: "قرأت الإقرار وأوافق نيابةً عن كل شخص في هذا الحجز" },
     },
-    waiverSub: "اقرأ الإقرار ووافق عليه للمتابعة.",
-    tickFirst: "ضع علامة في المربع أعلاه للمتابعة.",
     addonsTitle: "أضف إلى حجزك",
-    addonsSub: "إضافات اختيارية لهذه الرحلة.",
     addons: "الإضافات",
     cats: { Helmet: "خوذة", Accessory: "إكسسوار", ProteinSnacks: "سناك بروتين", ElectrolyteSachets: "إلكتروليت", EnergyGels: "جل طاقة", SparePart: "قطعة غيار", Apparel: "ملابس", Other: "أخرى" } as Record<string, string>,
     rideLabel: "الرحلة",

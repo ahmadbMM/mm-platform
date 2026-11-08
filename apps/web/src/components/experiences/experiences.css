@@ -120,7 +120,6 @@ html:is([lang="ar"], [lang="ur"]) .bk-title { letter-spacing: 0; line-height: 1.
 .bk-card { background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
 .bk-h3 { font-size: 17px; font-weight: 700; margin: 0 0 2px; }
 .bk-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
-.bk-why { flex-basis: 100%; margin: 0; font-size: 13px; color: #6e6b63; text-align: center; }
 .bk-btn, .bk-btn2 { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; font: inherit; font-size: 15px; cursor: pointer; text-decoration: none; box-sizing: border-box; }
 .bk-btn { border: 0; border-radius: 0; background: #077a4b; color: #fbf9f4 !important; font-weight: 700; }
 .bk-btn:hover { background: #06603b; }

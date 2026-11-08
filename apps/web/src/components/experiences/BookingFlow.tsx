@@ -326,7 +326,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       </div>
     );
   };
-  const head = (title: string, msg: string) => (
+  const head = (title: string, msg?: string) => (
     <div className="bk-head">
       {stepper()}
       <h2 className="bk-title" tabIndex={-1} data-step-title>{title}</h2>
@@ -402,15 +402,12 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     if (free) return <div className="bk-price"><span className="bk-price-k">{t.pricePerBike}</span><span className="bk-price-v">{t.free}</span></div>;
     const lines = riderPrices(sel, riders, prices, acctLite, maxPrices);
     const word = (l: (typeof lines)[number]) => (l.kind === "free" ? t.free : l.kind === "house" ? t.onTheHouse : l.kind === "sar" ? sar(l.n) : sarRange(l.lo, l.hi));
-    const own = riders.every((r) => r.type === "Own");
     return (
       <>
         <div className="bk-price">
           <span className="bk-price-k">{qty > 1 ? lines.map((l, i) => <span key={i}>{i > 0 && " · "}{t.bike} {i + 1}: <Amt>{word(l)}</Amt></span>) : t.pricePerBike}</span>
           <span className="bk-price-v"><Amt>{sarRange(lo, hi)}</Amt></span>
         </div>
-        {hi > 0 && <p className="bk-note">{t.payAtBooth}</p>}
-        {!own && !sel.approval && <p className="bk-note">{t.fcfs}</p>}
       </>
     );
   };
@@ -423,7 +420,6 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       <p className="bk-side-time"><bdi>{sel.time}</bdi></p>
       {needsBike(sel) && <p className="bk-side-row"><span>{t.numBikes}</span><span>{qty}</span></p>}
       <p className="bk-side-total"><span>{t.total}</span><Amt>{grand}</Amt></p>
-      {!free && needsBike(sel) && <p className="bk-note">{t.payAtBooth}</p>}
     </aside>
   );
 
@@ -469,11 +465,10 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       </section>
     );
   } else if (step === 1 || !sel) {
-    const join = ev.key === "community" || ev.key === "workshop";
     body = (
       <section>
         <button type="button" className="xs-back" onClick={() => { setEvKey(null); setSelId(null); focusTop(); }}><Ic name="back" flip /> {t.allEvents}</button>
-        {head(t.rideTitle, join ? t.rideMsgJoin : t.rideMsg)}
+        {head(t.rideTitle)}
         <p className="xs-picked">{ev.title}</p>
         {ev.note && <p className="bk-evnote">{ev.note}</p>}
         {ev.sessions.length === 0 ? (
@@ -485,8 +480,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         {ev.sessions.some((s) => s.members) && text.membersNote && <p className="xs-note">{text.membersNote}{links.club && <> <a href={links.club}>{text.clubLink}</a></>}</p>}
         {ev.sessions.length > 0 && (
           <div className="bk-foot">
-            {!sel && <p className="bk-why" id="bk-why1">{t.pickFirst}</p>}
-            <button type="button" className="bk-btn wide" disabled={!sel} aria-describedby={sel ? undefined : "bk-why1"} onClick={() => sel && go(nextStep(sel, 1))}>{t.cont}</button>
+            <button type="button" className="bk-btn wide" disabled={!sel} onClick={() => sel && go(nextStep(sel, 1))}>{t.cont}</button>
           </div>
         )}
       </section>
@@ -495,7 +489,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const opts = typeOptions(sel, acctNow?.hidden ?? []);
     body = (
       <section>
-        {head(t.ridersTitle, t.ridersMsg)}
+        {head(t.ridersTitle)}
         <div className="bk-card">
           {!sel.community && (
             <div className="bk-qty-row">
@@ -579,7 +573,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const w = waiverCopy(sel), ok = waiverOk === sel.id;
     body = (
       <section>
-        {head(w.title, t.waiverSub)}
+        {head(w.title)}
         <div className="bk-card">
           <div className="bk-waiver" tabIndex={0} role="region" aria-label={w.title}>{w.body}</div>
           <label className={`bk-agree${ok ? " on" : ""}`}>
@@ -588,9 +582,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           </label>
         </div>
         <div className="bk-foot">
-          {!ok && <p className="bk-why" id="bk-why2">{t.tickFirst}</p>}
           <button type="button" className="bk-btn2" onClick={() => go(prevStep(sel, 2.5))}>{t.back}</button>
-          <button type="button" className="bk-btn grow" disabled={!ok} aria-describedby={ok ? undefined : "bk-why2"} onClick={() => go(nextStep(sel, 2.5))}>{t.cont}</button>
+          <button type="button" className="bk-btn grow" disabled={!ok} onClick={() => go(nextStep(sel, 2.5))}>{t.cont}</button>
         </div>
       </section>
     );
@@ -619,11 +612,10 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const isAlready = already || booked > 0;
     body = (
       <section>
-        {head(t.reviewTitle, t.reviewMsg)}
+        {head(t.reviewTitle)}
         {sellable.length > 0 && (
           <div className="bk-card">
             <h3 className="bk-h3">{t.addonsTitle}</h3>
-            <p className="bk-sub sm">{t.addonsSub}</p>
             {cats.length > 1 ? cats.map((c) => (
               <div key={c} className="bk-addon-cat"><p className="bk-cat">{t.cats[c] ?? c}</p>{sellable.filter((x) => (x.category || "Other") === c).map(row)}</div>
             )) : sellable.map(row)}
@@ -681,7 +673,6 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
             </>
           )}
           <p className={`bk-sum-tot${addonTotal > 0 ? " sep" : ""}`}><span>{t.total}</span><Amt>{grand}</Amt></p>
-          {!free && needsBike(sel) && hi + addonTotal > 0 && <p className="bk-note">{t.payAtBooth}</p>}
         </div>
         {isAlready ? (
           <div className="bk-already" role="status">
