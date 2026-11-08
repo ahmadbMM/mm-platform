@@ -38,6 +38,8 @@ export type StepSession = {
   /** Places left when counted (lib/rides.ts); said on the card at 3 or fewer. */
   left?: number | null; when: { gather: boolean; a: string; b: string } | null;
   members: boolean; free: boolean; full: boolean; paid: boolean;
+  /** A Saturday ride while it is booked at micromobility.sa/saturday with a ride code (rentals 20261108120000): where its button goes. */
+  satLink?: string | null;
   noCarbon: boolean; // the ride offers no Road Carbon bike, so its price is not shown
   closedTypes?: string[]; // nor the price of a type staff closed on this session (typeOffered)
   /** A ticketed event: seats instead of bikes, so no bike prices - its own blurb, the seat price
@@ -290,8 +292,9 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
     if (info.s) pickDate(info.s);
     else pickEvent(info.ev);
   };
-  // Petromin Days hands over ev=petromin, which the booking app opens under its own Petromin Days.
-  const link = ev && sess ? bookingAt(bookHref, ev.key, sess.id) : bookHref;
+  // Petromin Days hands over ev=petromin, which the booking app opens under its own Petromin Days. A Saturday ride
+  // booked with a ride code goes to its own page (micromobility.sa/saturday) instead.
+  const link = ev && sess ? sess.satLink || bookingAt(bookHref, ev.key, sess.id) : bookHref;
 
   return (
     <div className="xs" ref={top}>

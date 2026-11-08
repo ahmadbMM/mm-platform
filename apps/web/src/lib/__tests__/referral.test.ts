@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { REFERRAL_WORDS } from "@/components/account/Referral.words";
-import { referralLink, referralOf, referrerBody, referrerReason } from "@/lib/referral";
+import { referralLink, referralOf, referralRodeOf, referrerBody, referrerReason } from "@/lib/referral";
+import { badgeList } from "@/lib/ride-record";
 
 const ans = (x: Record<string, unknown> = {}) => ({ ok: true, on: true, code: "K7MQ2X", days: 60, cap: 10, joined: 3, rode: 1, earned: 1, referred: false, can_enter: false, rewards: [], ...x });
 
@@ -49,5 +50,21 @@ describe("referrals", () => {
       expect(w.hasFree, l).toContain("{0}");
       expect(w.msg, l).toContain("{0}"); expect(w.msg, l).toContain("{1}");
     }
+  });
+
+  it("counts the friends who rode for the Recruiter badge, switched on or not", () => {
+    expect(referralRodeOf(ans({ rode: 3 }))).toBe(3);
+    expect(referralRodeOf(ans({ on: false, rode: 2 }))).toBe(2);
+    expect(referralRodeOf({ ok: false })).toBeNull();
+    expect(referralRodeOf(null)).toBeNull();
+  });
+
+  it("puts Recruiter on the badge list as one ladder, levels at 1, 3, 5 and 10", () => {
+    const data = { catalog: [], weeks: null, seasons: [], mine: [], referralRode: 3 };
+    const r = badgeList([], new Map(), data, "2026-11-08", null).find((x) => x.lv?.some((y) => y.slug === "recruiter"));
+    expect(r?.lv?.map((y) => y.slug)).toEqual(["recruiter", "recruiter_3", "recruiter_5", "recruiter_10"]);
+    expect(r?.lvN).toBe(2);
+    const none = badgeList([], new Map(), { ...data, referralRode: null }, "2026-11-08", null);
+    expect(none.some((x) => x.slug === "recruiter" || x.lv?.some((y) => y.slug === "recruiter"))).toBe(false);
   });
 });

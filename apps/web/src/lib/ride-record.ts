@@ -21,7 +21,9 @@ export type BadgeRow = {
   name?: string | null; name_ar?: string | null; description?: string | null; description_ar?: string | null;
   rule?: { rides?: number; windows?: { from?: string; to?: string }[] } | null;
 };
-export type BadgeData = { catalog: BadgeRow[]; weeks: { w: string; ids: string[] }[] | null; seasons: BadgeRow[]; mine: BadgeRow[] };
+export type BadgeData = { catalog: BadgeRow[]; weeks: { w: string; ids: string[] }[] | null; seasons: BadgeRow[]; mine: BadgeRow[];
+  /** friends who rode with the account's invite (customer_referral's rode), for Recruiter; null or absent while unknown */
+  referralRode?: number | null };
 
 /** The app's own badges by slug: [glyph, colour] (the booking app's BD_SYS). Their words are in
  *  RideRecord.text.ts under the same slug. Run for Her's pink ribbon is drawn on the 'pink' special
@@ -48,6 +50,8 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   volunteer: ["hand", "volunteer"], // Volunteer: a raised hand on its own blue special medal, given by staff (2026-11-05)
   // the hours ladder's levels: the database gives each with the volunteer's hours (the booking app, 2026-11-06 review, VL14)
   volunteer_10: ["hand", "teal"], volunteer_25: ["hand", "purple"], volunteer_50: ["hand", "gold"], volunteer_100: ["hand", "blue"],
+  // Recruiter (the booking app, 2026-11-08): friends who made an account with the rider's invite and finished a paid ride
+  recruiter: ["people", "green"], recruiter_3: ["people", "teal"], recruiter_5: ["people", "purple"], recruiter_10: ["people", "gold"],
   // the staff ladders' higher levels and Front Row's (the booking app, 2026-10-12)
   senior_marshal: ["shield", "blue"], chief_marshal: ["shield", "gold"], pit_boss: ["wrench", "teal"], crew_chief: ["wrench", "gold"],
   clear_track: ["wflag", "teal"], track_guardian: ["wflag", "gold"], tech_inspector: ["search", "blue"], chief_scrutineer: ["search", "gold"],
@@ -87,6 +91,8 @@ export const LADDERS: string[][] = [
   ["front_row", "pole_position", "pole_master", "grid_leader", "pole_legend"], ["bike_owner", "road_owner", "carbon_owner"],
   // the hours ladder (the booking app, 2026-11-06 review, VL14): Volunteer, then 10 / 25 / 50 / 100 hours
   ["volunteer", "volunteer_10", "volunteer_25", "volunteer_50", "volunteer_100"],
+  // friends who rode with the rider's invite (the booking app, 2026-11-08): 1 / 3 / 5 / 10
+  ["recruiter", "recruiter_3", "recruiter_5", "recruiter_10"],
 ];
 const LADDER_OF = new Map(LADDERS.flatMap((L) => L.map((s, i) => [s, [L, i]] as const)));
 /** A set of slugs held, with every level under each one (_bdgClimb). */
@@ -344,6 +350,9 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
     { s: "perfect_week", on: PW.any, p: PW.cur ? P(PW.cur.n, PW.cur.of) : null },
     { s: "perfect_month", on: PW.best >= 4, p: PW.known ? P(PW.run, 4) : null },
     { s: "back_on_track", on: gap, hide: true },
+    // Recruiter (the booking app's _mrBadges, 2026-11-08): only while the page knows the friends who rode
+    ...(data.referralRode == null ? [] : ([[1, "recruiter"], [3, "recruiter_3"], [5, "recruiter_5"], [10, "recruiter_10"]] as const)
+      .map(([k, s]) => ({ s, on: (data.referralRode as number) >= k, p: P(data.referralRode as number, k) }))),
     ...data.seasons.filter((b) => b && b.slug && b.rule).map((b) => {
       const r = seasonProgress(b.rule, dates, today);
       return { s: b.slug, on: r.on, p: P(r.cur ?? 0, r.rides), row: b, season: { curTo: r.cur != null ? r.curTo : null, next: r.next } };

@@ -16,7 +16,7 @@ import BookingFlow, { type FlowEvent } from "@/components/experiences/BookingFlo
 import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
 import { dayWord, fmtClock, fmtDayDate, ticketRoute, type TicketRoute } from "@/lib/tickets";
-import { getAccount } from "@/lib/account";
+import { getAccount, rpcServer } from "@/lib/account";
 import { bookingAccount } from "@/lib/booking-server";
 import { bizOf, faresOf } from "@/lib/biz";
 import { priceMap, type AddonItem, type BookAccount, type BookSession } from "@/lib/booking";
@@ -66,6 +66,14 @@ async function loadAddonItems(ids: string[]): Promise<AddonItem[]> {
   }
 }
 
+// Are Saturday rides booked at micromobility.sa/saturday, with a ride code (the owner, 2026-11-08)? Staff switch it on in
+// the booking app (saturday_link_only, rentals 20261108120000); then a Saturday date's button goes to that page, for
+// anyone with a code, member or not. Any failure, or a database without the function, reads as no: the booking app.
+async function saturdayLinkOnly(): Promise<boolean> {
+  const r = await rpcServer<boolean>("saturday_link_only", {});
+  return r.data === true;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { content, closed } = await pageState("experiences");
@@ -79,6 +87,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   const L = asLocale(locale);
   const tx = serverL(locale);
   const [{ content, previewing, hidden }, rides, signed] = await Promise.all([pageState("experiences"), loadRides(), getAccount()]);
+  // asked only while a Saturday date is on the books: whether it is booked at micromobility.sa/saturday with a code
+  const satLink = (rides?.sessions ?? []).some((s) => s.kind === "saturday") ? await saturdayLinkOnly() : false;
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(experiencesSchema, content, L);
   const d = c.dates, e = c.events;
@@ -112,6 +122,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
       near: ((w) => (w === "today" ? tx("Today", "اليوم") : w === "tomorrow" ? tx("Tomorrow", "غداً") : null))(dayWord(s.date, today)),
       time: s.times ? (s.gather ? `${S(d.gather)} ${clock(s.times[0])} · ${S(d.start)} ${clock(s.times[1])}` : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "",
       collect: s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), clock(s.collect)) : null,
+      // a Saturday ride booked with a ride code (2026-11-08): anyone with a code, member or not, books it on its own page
+      ...(satLink && s.kind === "saturday" ? { members: false, satLink: `/saturday?lang=${locale}` } : {}),
       opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,
       description: s.kind === "event" ? s.description ?? null : null,
       gender: s.gender ?? null, // men only, women only or mixed (2026-10-27): its chip, and who may book it

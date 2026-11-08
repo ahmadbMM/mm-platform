@@ -96,7 +96,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   // Back from signing in (or a link with ?ev=&session=): the ride picked before, through the gates.
   const resume = useMemo(() => {
     const s = start.session ? all.find((x) => x.id === start.session) : undefined;
-    return s && acct ? { s, gate: gateFor(s, acct) } : null;
+    // a Saturday ride booked at micromobility.sa/saturday is never picked here, even from an old address
+    return s && acct && !s.satLink ? { s, gate: gateFor(s, acct) } : null;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- the address is read once, as the page drew it
   const [selId, setSelId] = useState<string | null>(() => (resume && !resume.gate ? resume.s.id : null));
   const sel = all.find((s) => s.id === selId) ?? null;
@@ -129,7 +130,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
 
   // ── Picking a date, behind the app's gates (selectSessCard) ───────────────────────────────
   const pick = (s: BookSession, a: BookAccount | null = acctNow) => {
-    if (s.opens) return;
+    if (s.opens || s.satLink) return;
     if (!a) {
       // Sign in first, then back to this very ride: the address carries it across the reload.
       try {
@@ -359,8 +360,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const rej = !!acctNow?.rejected.includes(s.id);
     const low = !s.full && !s.approval && s.left != null && s.left > 0 && s.left <= 3;
     const meta = [s.collect, fromLine(s)].filter((x): x is string => !!x);
-    return (
-      <button key={s.id} type="button" className={`sc-card ev-${s.kind}${on ? " sel" : ""}${rej ? " rej" : ""}`} aria-pressed={on} onClick={() => pick(s)}>
+    const body = (
+      <>
         {kicker}
         <span className="sc-head">
           <span className={`sc-dot${on ? " on" : ""}`} aria-hidden="true" />
@@ -370,6 +371,14 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         <span className="sc-time"><bdi>{s.time}</bdi></span>
         {meta.length > 0 && <span className="sc-meta">{meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}
         {s.kind === "event" && s.description && <span className="sc-desc">{s.description}</span>}
+      </>
+    );
+    // a Saturday ride while staff take its bookings at micromobility.sa/saturday with a ride code (2026-11-08): its card
+    // goes there, for anyone with a code, member or not, as main's Experiences sends it
+    if (s.satLink) return <a key={s.id} href={s.satLink} className={`sc-card ev-${s.kind}${rej ? " rej" : ""}`}>{body}</a>;
+    return (
+      <button key={s.id} type="button" className={`sc-card ev-${s.kind}${on ? " sel" : ""}${rej ? " rej" : ""}`} aria-pressed={on} onClick={() => pick(s)}>
+        {body}
       </button>
     );
   };

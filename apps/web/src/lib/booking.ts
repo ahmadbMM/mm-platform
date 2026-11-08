@@ -59,6 +59,9 @@ export type BookSession = {
   /** The bike types staff closed on this session (sessions.closed_types; the owner, 2026-11-03): a rider picks none of
    *  them, and none is priced (lib/bike-kinds.ts typeOffered). The database refuses one anyway (TYPE_CLOSED). */
   closedTypes?: string[];
+  /** A Saturday ride while staff take its bookings at micromobility.sa/saturday with a ride code (rentals 20261108120000,
+   *  saturday_link_only; the owner, 2026-11-08): where its card goes. The database refuses a rider's booking made here. */
+  satLink?: string | null;
 };
 
 /** The signed-in account, as the wizard needs it (lib/booking-server.ts bookingAccount). */
