@@ -324,5 +324,26 @@ dialog.ac-dlg::backdrop { background: rgba(26, 25, 25, .55); }
 .ac-wal-rows { list-style: none; margin: 12px 0 0; padding: 0; max-width: 620px; }
 .ac-wal-rows li { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid rgba(0, 0, 0, .1); font-size: 13px; }
 .ac-wal-rows small { display: block; font-size: 12px; color: #6e6b63; }
+/* Invite friends (the booking app's #ref-mine, 2026-11-08): the code large enough to read out, Share and Copy, three counts */
+.ac-ref-code { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; max-width: 620px; margin: 0 0 12px; padding: 12px 14px; border: 1px dashed rgba(0, 0, 0, .25); }
+.ac-ref-code span { font-size: 13px; color: #6e6b63; }
+.ac-ref-code strong { font-size: 26px; font-weight: 800; letter-spacing: .08em; font-variant-numeric: tabular-nums; }
+.ac-ref-btns { display: flex; gap: 10px; max-width: 620px; }
+.ac-ref-btns .ac-go, .ac-ref-btns .ac-ref-copy { flex: 1 1 0; margin-top: 0; }
+.ac-ref-copy { border: 1px solid #077a4b; border-radius: 0; min-height: 52px; padding: 0 16px; background: transparent; color: #077a4b; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
+.ac-ref-copy:disabled { opacity: .6; cursor: default; }
+.ac-ref-note { font-size: 13px; color: #57605a; margin: 8px 0 0; overflow-wrap: anywhere; }
+.ac-ref-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; max-width: 620px; margin: 14px 0 0; }
+.ac-ref-stats div { display: flex; flex-direction: column-reverse; gap: 2px; padding: 10px; background: rgba(7, 122, 75, .08); }
+.ac-ref-stats dt { font-size: 12px; color: #6e6b63; }
+.ac-ref-stats dd { margin: 0; font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ac-ref-has { font-size: 14px; font-weight: 600; color: #077a4b; margin: 12px 0 0; }
+.ac-ref-has a { color: #077a4b; }
+.ac-ref-was { margin: 12px 0 0; }
+.ac-ref-enter { max-width: 620px; margin: 16px 0 0; padding-top: 14px; border-top: 1px solid rgba(0, 0, 0, .1); }
+.ac-ref-enter label { display: block; font-size: 14px; font-weight: 600; margin: 0 0 6px; }
+.ac-ref-row { display: flex; gap: 8px; }
+.ac-ref-row input { flex: 1; min-width: 0; min-height: 52px; padding: 0 12px; border: 1px solid rgba(0, 0, 0, .25); border-radius: 0; font: inherit; text-transform: uppercase; }
+.ac-ref-err { color: #a33b2e; font-size: 13px; margin: 6px 0 0; }
 .ac-wal-rows strong { flex: none; font-variant-numeric: tabular-nums; }
 .ac-wal-rows .in { color: #077a4b; }

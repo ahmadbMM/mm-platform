@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-05";
+export const PRIVACY_VERSION = "2026-11-08";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -123,6 +123,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Entering you and your team in the race, and making up teams"
      ],
      [
+      "Referrals: who referred you (if you make your account with a friend’s link or code), your own referral code, and the rewards referrals earn you",
+      "Only if you use a friend’s link or code, or share your own. Our staff see who referred whom; a friend who referred you sees only how many friends joined and rode, never your name.",
+      "Giving the reward a referral earns, and stopping misuse"
+     ],
+     [
       "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
       "Created as you use the service",
       "Running your rides, safety, payments and records"
@@ -144,6 +149,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>From the person who booked you,</strong> if someone booked you as part of their party. They give us your name and height.",
     "<strong>From our community membership application</strong> at micromobility.sa/community/registration, if you apply to join our riding community. Our staff read it and reply. If you are accepted and have no account yet, we create one from those details with a temporary password, which you must change the first time you sign in.",
     "<strong>From a community member who invites you,</strong> if you apply through their link: the application records who invited you, and our staff see it. We hold nothing about you until you apply yourself.",
+    "<strong>From a friend who refers you,</strong> if you make your account with their link or code: we record who referred you, and our staff see it. Your friend sees only how many friends joined and rode, never your name.",
     "<strong>From our learn-to-ride sign-up</strong> at micromobility.sa/experiences/learn, if you sign up for a riding lesson for yourself, your children or other adults. Our staff contact you to arrange the lesson. If you have no account yet, we create one from your details with a temporary password, which you must change the first time you sign in. If you sign up another adult, tell them first and make sure they agree.",
     "<strong>From Apple or Google,</strong> if you sign in with them. They give us your name and email address, or an Apple relay address.",
     "<strong>From your device:</strong> a short technical report if the website hits an error (the error, the page and your browser type), and anonymous visit counts through Cloudflare Web Analytics, which uses no cookies."
@@ -235,7 +241,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "Volunteers working at one of our events, under our direction",
-      "To check you in at that event: your name, your booking number and whether you have checked in. Never your contact details or payments. They agree to keep it confidential, and every search and mark is recorded.",
+      "To check you in at that event: your name, your booking number and whether you have checked in. Where our staff allow it for that session, also your mobile number and your booking details (bike type, height and size; at a blood donation event, your blood type, whether you are a donor or a visitor, and your club). Never your email or payments. They agree to keep it confidential, and every search and mark is recorded.",
       "Saudi Arabia"
      ],
      [
@@ -458,6 +464,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "تسجيلك أنت وفريقك في السباق، وتكوين الفرق"
      ],
      [
+      "الإحالات: من أحالك (إذا أنشأت حسابك عبر رابط صديق أو رمزه)، ورمز الإحالة الخاص بك، والمكافآت التي تكسبها الإحالات",
+      "فقط إذا استخدمت رابط صديق أو رمزه، أو شاركت رمزك. يرى موظفونا من أحال من؛ ولا يرى الصديق الذي أحالك إلا عدد الأصدقاء الذين انضموا وركبوا، ولا يرى اسمك أبدًا.",
+      "منح المكافأة التي تكسبها الإحالة، ومنع إساءة الاستخدام"
+     ],
+     [
       "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
       "تُسجَّل أثناء استخدامك للخدمة",
       "تشغيل رحلاتك، والسلامة، والمدفوعات، والسجلات"
@@ -479,6 +490,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>من الشخص الذي حجز لك،</strong> إذا حجز لك أحدهم ضمن مجموعته، فيزوّدنا باسمك وطولك.",
     "<strong>من طلب عضوية المجتمع</strong> عبر micromobility.sa/community/registration، إذا تقدّمت للانضمام إلى مجتمع الركوب لدينا. يطّلع موظفونا على طلبك ويردّون عليك. وإذا قُبلت ولم يكن لديك حساب، ننشئ لك حسابًا من تلك البيانات بكلمة مرور مؤقتة، يجب عليك تغييرها عند أول تسجيل دخول.",
     "<strong>من عضو في المجتمع يدعوك،</strong> إذا تقدّمت عبر رابطه: يسجّل الطلب من دعاك ويطّلع على ذلك موظفونا. ولا نحتفظ بأي شيء عنك حتى تتقدّم بنفسك.",
+    "<strong>من صديق يحيلك،</strong> إذا أنشأت حسابك عبر رابطه أو رمزه: نسجّل من أحالك ويطّلع على ذلك موظفونا. ولا يرى صديقك إلا عدد الأصدقاء الذين انضموا وركبوا، ولا يرى اسمك أبدًا.",
     "<strong>من التسجيل في دروس تعلّم الركوب</strong> عبر micromobility.sa/experiences/learn، إذا سجّلت في درس ركوب لنفسك أو لأطفالك أو لبالغين آخرين. يتواصل معك موظفونا لترتيب الدرس. وإذا لم يكن لديك حساب، ننشئ لك حسابًا من بياناتك بكلمة مرور مؤقتة يجب تغييرها عند أول تسجيل دخول. وإذا سجّلت شخصًا بالغًا آخر، فأبلغه أولًا وتأكد من موافقته.",
     "<strong>من Apple أو Google،</strong> إذا سجّلت الدخول عبرهما، فيزوّداننا باسمك وبريدك الإلكتروني أو عنوان بريد Apple البديل.",
     "<strong>من جهازك:</strong> تقرير تقني مختصر إذا واجه الموقع خطأً (الخطأ والصفحة ونوع المتصفح)، وأعداد زيارات مجهولة الهوية عبر Cloudflare Web Analytics الذي لا يستخدم ملفات تعريف الارتباط."
@@ -570,7 +582,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "المتطوعون الذين يعملون في إحدى فعالياتنا تحت إشرافنا",
-      "لتسجيل حضورك في تلك الفعالية: اسمك ورقم حجزك وما إذا كنت قد سجلت حضورك. ولا يطلعون أبدًا على بيانات التواصل معك أو مدفوعاتك. ويوافقون على الحفاظ على سريتها، وتُسجَّل كل عملية بحث وتأشير.",
+      "لتسجيل حضورك في تلك الفعالية: اسمك ورقم حجزك وما إذا كنت قد سجلت حضورك. وحيث يسمح موظفونا بذلك في تلك الجلسة، أيضًا رقم جوالك وتفاصيل حجزك (نوع الدراجة والطول والمقاس؛ وفي فعاليات التبرع بالدم، فصيلة دمك وما إذا كنت متبرعًا أو زائرًا وناديك). ولا يطلعون أبدًا على بريدك الإلكتروني أو مدفوعاتك. ويوافقون على الحفاظ على سريتها، وتُسجَّل كل عملية بحث وتأشير.",
       "المملكة العربية السعودية"
      ],
      [
