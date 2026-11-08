@@ -28,7 +28,8 @@ export default function Qr({ payload, size = 120, label }: { payload: string; si
   const m = n / 20; // 6px of a 120px code, in modules
   // A line runs round the tile without stopping, so staff can tell a live ticket from a screenshot
   // at a glance (the owner, 2026-10-04: "a constantly moving line around the qr code ... that its
-  // live and not a screenshot"; the booking app's .qr-live): a green quarter of the edge, one lap
+  // live and not a screenshot"; the booking app's .qr-live): a quarter of the edge in the action green
+  // (#077a4b, as the booking app since 2026-11-08; it was a brighter third green, #00b467), one lap
   // every 2.4 s (booking.css). It is an svg's own stroke, over the canvas as over the svg, and it
   // runs in the tile's white margin, about 2px in from the edge, never over the code. Its width is
   // 3px in the tile's 0-100 units: vector-effect="non-scaling-stroke" would keep it 3px by itself,
@@ -42,7 +43,7 @@ export default function Qr({ payload, size = 120, label }: { payload: string; si
       </svg>
       <QrCanvas n={n} bits={bits} label={label} />
       <svg className="tk-qr-live" aria-hidden="true" focusable="false" viewBox="0 0 100 100" preserveAspectRatio="none">
-        <rect x="1.5" y="1.5" width="97" height="97" rx="6" pathLength={100} fill="none" stroke="#00b467" strokeWidth={Math.round(30000 / (size + 12)) / 100} strokeLinecap="round" />
+        <rect x="1.5" y="1.5" width="97" height="97" rx="6" pathLength={100} fill="none" stroke="#077a4b" strokeWidth={Math.round(30000 / (size + 12)) / 100} strokeLinecap="round" />
       </svg>
     </span>
   );

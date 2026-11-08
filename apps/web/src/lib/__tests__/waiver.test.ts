@@ -232,7 +232,7 @@ describe("the ticket's code", () => {
     expect(live).not.toBeNull();
     expect(live![1]).toContain('x="1.5" y="1.5" width="97" height="97"');
     expect(live![1]).toContain('pathLength="100"');
-    expect(live![1]).toContain('stroke="#00b467"');
+    expect(live![1]).toContain('stroke="#077a4b"'); // the action green, as the booking app's
     expect(live![1]).toContain('stroke-width="2.27"'); // 3px of the 132px tile
     expect(live![1]).toContain('fill="none"');
   });
