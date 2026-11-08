@@ -3,6 +3,7 @@
    (2026-10-11). Brand colours and fonts come from @mm/design-tokens (tokens.css, placed before this file
    by scripts/build.mjs). No inline styles: the CSP refuses them. Phones first: volunteers work from one. */
 
+@font-face { font-family: "Space Grotesk"; font-weight: 300; font-display: swap; src: url("/fonts/space-grotesk-latin-300.woff2") format("woff2"); }
 @font-face { font-family: "Space Grotesk"; font-weight: 400; font-display: swap; src: url("/fonts/space-grotesk-latin-400.woff2") format("woff2"); }
 @font-face { font-family: "Space Grotesk"; font-weight: 500; font-display: swap; src: url("/fonts/space-grotesk-latin-500.woff2") format("woff2"); }
 @font-face { font-family: "Space Grotesk"; font-weight: 700; font-display: swap; src: url("/fonts/space-grotesk-latin-700.woff2") format("woff2"); }
@@ -150,29 +151,16 @@ select.lang { width: auto; }
 .foot a { display: inline-flex; align-items: center; min-height: 44px; color: var(--mm-offwhite); font-size: 14px; }
 
 .cert-tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-bottom: 14px; }
-.cert { padding: clamp(18px, 5vw, 36px); background: var(--mm-white); border: 3px solid #123019; }
-.cert-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; font-size: 18px; font-weight: 700; color: #123019; }
-.cert-brand img { height: 26px; width: auto; }
-.cert-cols { display: grid; gap: 22px; }
-.cert-cols h1 { font-size: 22px; color: #123019; }
-.cert-cols p { margin: 0; line-height: 1.6; }
-.cert-hours { display: flex; flex-direction: column; align-items: center; margin: 24px 0; }
-.cert-hours b { font-size: 52px; line-height: 1; color: #123019; }
-.cert-hours span { margin-top: 4px; color: var(--muted); font-size: 13px; }
-.cert-foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; font-size: 13px; color: var(--muted); }
-.cert-sign { text-align: end; font-weight: 500; color: var(--ink); }
-@media (min-width: 620px) { .cert-cols { grid-template-columns: 1fr 1fr; } }
+/* The certificate itself was drawn here until 2026-11-08. It is one design now, printed from
+   its own window: static/certificate.html + certificate.css, synced from the booking site by
+   scripts/sync-cert.mjs. Only the page that makes one is styled here. */
 @media print {
   .bar, .foot, .cert-tools, .skip, .note { display: none !important; }
   body { background: #fff; }
   .page { max-width: none; padding: 0; }
-  .cert-cols { grid-template-columns: 1fr 1fr; }
 }
 /* the staff review of 2026-11-06: a certificate for a period, its check, the application form */
 .cert-period { margin-bottom: 14px; }
-.cert-sess { list-style: none; margin: 0 0 20px; padding: 0; font-size: 13px; }
-.cert-sess li { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; border-bottom: 1px solid #e3e7e4; }
-.cert-check { margin-top: 16px; font-size: 12px; color: var(--muted); word-break: break-all; }
 .check-state { font-weight: 700; color: #123019; }
 .check-bad .check-state { color: #b42318; }
 .apply .days { border: 0; margin: 0 0 12px; padding: 0; }
