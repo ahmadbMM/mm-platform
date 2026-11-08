@@ -7,6 +7,6 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ["scripts/**/*.mjs"],
-    languageOptions: { globals: { console: "readonly" } },
+    languageOptions: { globals: { console: "readonly", process: "readonly" } }, // sync-cert.mjs reads argv and RENTALS_DIR
   },
 );
