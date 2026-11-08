@@ -4,6 +4,7 @@
 // (rentals migration 20261105120000); this page only asks and says what it was told.
 
 import { post, rpc } from "./api";
+import { stripScripts } from "./cert";
 import { append, clear, h, uid } from "./dom";
 import { currentLang, dayLabel, LANGS, sessionName, setLang, startLang, t, timesLabel, whenLabel, type Key } from "./i18n";
 import { parseTicket, startScanner, type Scanner } from "./scan";
@@ -318,7 +319,7 @@ async function certTemplate(): Promise<string> {
   if (certTpl) return certTpl;
   const res = await fetch("/certificate.html", { credentials: "same-origin" });
   if (!res.ok) throw new Error(`certificate ${res.status}`);
-  certTpl = await res.text();
+  certTpl = stripScripts(await res.text()); // whatever the host added to it (cert.ts)
   return certTpl;
 }
 const certEsc = (v: unknown) => String(v ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
