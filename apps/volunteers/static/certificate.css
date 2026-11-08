@@ -59,7 +59,10 @@ html, body { margin: 0; padding: 0; background: var(--mm-offwhite); }
 .thanks-ar { margin-top: 12px; font-size: 17px; font-weight: 400; line-height: 1.7; text-align: left; }
 
 .footer { margin-top: auto; display: flex; gap: 48px; align-items: flex-end; }
-.signature-block { width: 270px; display: flex; flex-direction: column; }
+/* 270px in the kit. The signature is 250px wide and hangs 8px left, so the block never needed more
+   than 252; the 18px that frees goes to the meta columns, which were ending 8px short of the corner
+   graphic on this machine and under it on CI, where the Arabic in the labels measures differently. */
+.signature-block { width: 252px; display: flex; flex-direction: column; }
 .signature { width: 250px; height: auto; margin-left: -8px; margin-bottom: 6px; }
 .signer-name { border-top: 1.5px solid var(--mm-black); padding-top: 8px; font-size: 16px; font-weight: 700; }
 .signer-role { display: flex; justify-content: space-between; font-size: 13px; margin-top: 2px; }
