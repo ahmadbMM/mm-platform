@@ -5,6 +5,7 @@
 import { rideCompleted, ticketRow, type TicketRow } from "./tickets";
 import type { RideKind } from "./rides";
 import { BIKE_KINDS, isNonBike } from "./bike-kinds";
+import type { BadgeReq } from "./badge-request";
 
 /** What the record needs of a session: its kind, and whether it costs nothing (_isFreeRide). */
 export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: boolean; groupKm?: { beg: number; int: number }; km?: number };
@@ -23,7 +24,9 @@ export type BadgeRow = {
 };
 export type BadgeData = { catalog: BadgeRow[]; weeks: { w: string; ids: string[] }[] | null; seasons: BadgeRow[]; mine: BadgeRow[];
   /** friends who rode with the account's invite (customer_referral's rode), for Recruiter; null or absent while unknown */
-  referralRode?: number | null };
+  referralRode?: number | null;
+  /** the badges the account asked for (customer_my_badge_requests, lib/badge-request.ts); null or absent: none offered */
+  requests?: BadgeReq[] | null };
 
 /** The app's own badges by slug: [glyph, colour] (the booking app's BD_SYS). Their words are in
  *  RideRecord.text.ts under the same slug. Run for Her's pink ribbon is drawn on the 'pink' special
@@ -96,6 +99,11 @@ export const LADDERS: string[][] = [
 ];
 const LADDER_OF = new Map(LADDERS.flatMap((L) => L.map((s, i) => [s, [L, i]] as const)));
 /** A set of slugs held, with every level under each one (_bdgClimb). */
+/** A slug's place on its ladder, [level, levels]; null off any ladder (a badge request's "Level 2 of 5"). */
+export function ladderLevel(slug: string): [number, number] | null {
+  const l = LADDERS.find((L) => L.includes(slug));
+  return l ? [l.indexOf(slug) + 1, l.length] : null;
+}
 export function climb(on: Iterable<string>): Set<string> {
   const o = new Set(on);
   for (const s of [...o]) { const l = LADDER_OF.get(s); if (l) for (const x of l[0].slice(0, l[1])) o.add(x); }
