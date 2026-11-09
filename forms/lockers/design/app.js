@@ -12,22 +12,34 @@
       customer_handoff_redeem), the lockers picked kept for the tab meanwhile;
    3. the review and how to pay: from the wallet now (customer_wallet; never on a Petromin night) or at the desk
       when the key is collected (customer_locker_book);
-   4. reserved: what was reserved, then the rider's lockers (customer_lockers), each one not yet collected with a
-      Remove (customer_locker_drop; a wallet payment comes back).
+   4. reserved: the rider's lockers (customer_lockers), one card per evening to show at the desk (each locker's
+      number and name, the time, how it is paid, and a code the desk scans: micromobility.sa/lockers/r/<rental>);
+      each one not yet collected can be changed (another locker or time that evening, customer_locker_change) and,
+      with no booking behind it, removed (customer_locker_drop; a wallet payment comes back).
    A locker's own tag (micromobility.sa/lockers/7, older tags /lockers/L7) arrives as ?locker=7, picked already on
-   the first evening and time it is free. The session lives in this page only, never in storage. */
+   the first evening and time it is free; ?change=<rental> (the booking app's Change) opens that locker's change once
+   signed in. The account stays signed in on this device (localStorage mm-lockers-acct) until the rider signs out or
+   the database no longer knows the session. */
 (function () {
   "use strict";
   // The public anon key (the same one the booking site ships): every call is a SECURITY DEFINER
   // function that checks the session token and throttles on the server.
-  var SUPABASE_URL = "https://qpffkzmsfyilicwcsszz.supabase.co";
-  var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
+  // On the website's page for it (apps/web/src/components/forms/SiteForm.tsx) the page speaks the language the site's
+  // globe picked and talks to the database the website does (staging's on staging): window.MM_SITE_FORM =
+  // {lang, db: {url, key}}. The page built on its own (?classic=1) uses these.
+  var SITE_FORM = window.MM_SITE_FORM || null;
+  var SUPABASE_URL = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.url) || "https://qpffkzmsfyilicwcsszz.supabase.co";
+  var SUPABASE_KEY = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.key) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
   var LANG_KEY = "mm-lockers-lang";
   // The evening, the time and the lockers picked, kept for this tab: across the account step, a reload, and the
   // booking app signing the rider in (a forgotten password).
   var PICK_KEY = "mm-lockers-pick";
   // The booking app: where a forgotten password is handled.
   var BOOKING_URL = "https://experiences.micromobility.sa/";
+  // The account kept on this device (the owner, 2026-11-09: stay signed in): {id, token, name, email}.
+  var ACCT_KEY = "mm-lockers-acct";
+  // What the desk scans: a rental's own address, which sends a staff phone to the staff app with that rider's lockers.
+  var DESK_URL = "https://micromobility.sa/lockers/r/";
   // Up to three lockers per account for each time (customer_locker_book's LOCKER_LIMIT counts the ones held too).
   var MAX_EACH = 3;
   // The cabinet is read again this often while the page is in view (a locker reserved is nobody else's: the owner, 2026-11-09).
@@ -75,25 +87,33 @@
   }
 
   /* ── Language: English and Arabic ────────────────────────────────────── */
+  /* Language: the website's sixteen. On the website's page, the one its globe picked; on the page built on its own,
+     ?lang=, then the one last picked here, then the phone's. */
+  function hasLang(c) { for (var i = 0; i < SH.LANGS.length; i++) if (SH.LANGS[i].code === c) return true; return false; }
   function pickLang() {
+    if (SITE_FORM && hasLang(SITE_FORM.lang)) return SITE_FORM.lang;
     var q = (new URLSearchParams(location.search).get("lang") || "").toLowerCase();
-    if (q === "en" || q === "ar") return q;
-    try { var s = localStorage.getItem(LANG_KEY); if (s === "en" || s === "ar") return s; } catch (e) {}
+    if (hasLang(q)) return q;
+    try { var s = localStorage.getItem(LANG_KEY); if (hasLang(s)) return s; } catch (e) {}
     var nav = navigator.languages || [navigator.language || "en"];
-    for (var i = 0; i < nav.length; i++) { var c = String(nav[i] || "").toLowerCase().split(/[-_]/)[0]; if (c === "ar" || c === "en") return c; }
+    for (var i = 0; i < nav.length; i++) { var c = String(nav[i] || "").toLowerCase().split(/[-_]/)[0]; if (c === "fil") c = "tl"; if (hasLang(c)) return c; }
     return "en";
   }
   function setLang(code, save) {
     lang = code;
     html.lang = code; html.dir = langInfo(code).rtl ? "rtl" : "ltr";
     if (save) { try { localStorage.setItem(LANG_KEY, code); } catch (e) {} }
-    var other = code === "ar" ? "en" : "ar", b = $("#lang");
-    b.textContent = langInfo(other).label; b.lang = other;
-    b.setAttribute("aria-label", other === "ar" ? "اقرأ الصفحة بالعربية" : "Read this page in English");
+    var b = $("#lang"); if (b) { b.value = code; b.lang = code; }
     paint();
   }
-  $("#lang").addEventListener("click", function () {
-    var next = lang === "ar" ? "en" : "ar";
+  // The page on its own: the picker, every language named in its own words; the choice is kept and put in the address.
+  (function buildLangs() {
+    var sel = $("#lang"); if (!sel) return;
+    sel.innerHTML = "";
+    SH.LANGS.forEach(function (l) { var o = document.createElement("option"); o.value = l.code; o.textContent = l.label; o.lang = l.code; sel.appendChild(o); });
+  })();
+  if ($("#lang")) $("#lang").addEventListener("change", function () {
+    var next = $("#lang").value;
     setLang(next, true);
     try { var u = new URL(location.href); u.searchParams.set("lang", next); history.replaceState(null, "", u); } catch (e) {}
   });
@@ -228,9 +248,16 @@
   function ended(b, p) { return !!(b && b.ended && b.ended[p] === true); }
   function leftOf(b, p) { var v = b && b.left ? Number(b.left[p]) : NaN; return isNaN(v) ? null : v; }
   function unitsOf(b) { return (b && Array.isArray(b.units) ? b.units : []).filter(function (u) { return u && u.code != null && String(u.code) !== ""; }); }
+  // The doors taken for a time. While a locker is being changed, its own door is not taken for the times it holds.
   function takenOf(b, p) {
-    var out = {}, t = b && b.taken || {};
-    (SLOTS[p] || []).forEach(function (s) { (Array.isArray(t[s]) ? t[s] : []).forEach(function (c) { out[String(c)] = true; }); });
+    var out = {}, t = b && b.taken || {}, own = changing && changing.code && b && b.day === changing.day ? changing : null;
+    (SLOTS[p] || []).forEach(function (s) {
+      (Array.isArray(t[s]) ? t[s] : []).forEach(function (c) {
+        c = String(c);
+        if (own && c === own.code && (SLOTS[own.period] || []).indexOf(s) >= 0) return;
+        out[c] = true;
+      });
+    });
     return out;
   }
   function freeFor(b, p, code) {
@@ -244,10 +271,11 @@
     return mine.filter(function (r) { return !r.booking_id && r.day === day && (r.status === "reserved" || r.status === "in_use") && overlap(r.period, period); }).length;
   }
   function roomEach() { return Math.max(0, MAX_EACH - (acct ? heldNow() : 0)); }
-  function room() { var l = leftOf(board, period); return Math.min(roomEach(), l == null ? MAX_EACH : l); }
+  function room() { if (changing) return 1; var l = leftOf(board, period); return Math.min(roomEach(), l == null ? MAX_EACH : l); }
   function total() { var p = priceOf(period); return p == null ? null : p * picked.length; }
 
   function savePick() {
+    if (changing) return; // a change is not a pick to keep
     try {
       if (day && picked.length) sessionStorage.setItem(PICK_KEY, JSON.stringify({ day: day, period: period, codes: picked }));
       else sessionStorage.removeItem(PICK_KEY);
@@ -297,7 +325,7 @@
   function settle(tell) {
     var kind = kindNow(), open = openPeriods(board, kind);
     if (period && open.indexOf(period) < 0) period = null;
-    if (!period) period = open.filter(function (p) { return leftOf(board, p) !== 0; })[0] || open[0] || null;
+    if (!period) period = open.filter(function (p) { return changing || leftOf(board, p) !== 0; })[0] || open[0] || null;
     var gone = picked.filter(function (c) { return !period || !freeFor(board, period, c); });
     if (gone.length) {
       picked = picked.filter(function (c) { return gone.indexOf(c) < 0; });
@@ -317,7 +345,7 @@
     clearMsg("f-cab"); savePick(); paintPick(); loadBoard();
   }
   function pickPeriod(p) {
-    if (p === period || ended(board, p) || leftOf(board, p) === 0) return;
+    if (p === period || ended(board, p) || (!changing && leftOf(board, p) === 0)) return;
     period = p; clearMsg("f-cab");
     var gone = picked.filter(function (c) { return !freeFor(board, p, c); });
     picked = picked.filter(function (c) { return gone.indexOf(c) < 0; }).slice(0, room());
@@ -327,7 +355,11 @@
   function toggle(c) {
     var i = picked.indexOf(c);
     if (i >= 0) picked.splice(i, 1);
-    else {
+    else if (changing) {
+      // one door at a time: another door takes the place of the one picked
+      if (!period || !freeFor(board, period, c)) return;
+      picked = [c];
+    } else {
       if (!period || !freeFor(board, period, c)) return;
       if (picked.length >= room()) {
         if (picked.length >= roomEach()) setErr("f-cab", "Up to 3 lockers per account for each time.");
@@ -345,6 +377,7 @@
   $("#go").addEventListener("click", async function () {
     hideBanner();
     if (!picked.length) { setErr("f-cab", "Pick a locker"); return; }
+    if (changing) { doChange(); return; }
     // The cabinet read again first: a locker someone reserved meanwhile is dropped and said here, on the cabinet,
     // not after the account step (the owner, 2026-11-09: "whenever a locker is reserved dont allow other customers to
     // choose it"). Reserve is refused by the database all the same.
@@ -400,8 +433,13 @@
     notice.hidden = !n;
     if (n) $(".notice-h", notice).textContent = n;
     $("#pick-retry").hidden = !retry;
-    var some = !!(evenings && evenings.length);
-    $("#f-day").hidden = !some;
+    var some = !!(evenings && evenings.length) || !!changing;
+    $("#f-day").hidden = !some || !!changing;
+    $("#chg-head").hidden = !changing;
+    if (changing) {
+      $("#chg-title").textContent = changing.code ? tr("Change locker {n}", { n: changing.code }) : tr("Change your locker");
+      $("#chg-when").textContent = dayLong(changing.day);
+    }
     $("#days").innerHTML = (evenings || []).map(function (e) {
       var on = e.day === day;
       return '<button type="button" class="pill" role="radio" aria-checked="' + on + '" data-v="' + esc(e.day) + '">' + esc(e.kind === "pm" ? tr("{day} · Petromin", { day: dayShort(e.day) }) : dayShort(e.day)) + "</button>";
@@ -410,7 +448,7 @@
     var list = hasBoard ? openPeriods(board, kind) : (PERIODS[kind] || []);
     $("#f-period").hidden = !some || !day || !kind || (hasBoard && !list.length);
     $("#periods").innerHTML = list.map(function (p) {
-      var full = hasBoard && leftOf(board, p) === 0, on = p === period, pr = priceOf(p);
+      var full = !changing && hasBoard && leftOf(board, p) === 0, on = p === period, pr = priceOf(p);
       return '<button type="button" class="opt" role="radio" aria-checked="' + on + '" data-v="' + p + '"' + (full ? " disabled" : "") + ">" +
         "<b>" + esc(spanOf(p)) + "</b><span>" + (full ? esc(tr("Full")) : pr != null ? amt(pr) : "") + "</span></button>";
     }).join("");
@@ -423,7 +461,9 @@
       var codes = picked.slice().sort(byNumber).join(lang === "ar" ? "، " : ", ");
       sum.innerHTML = esc(picked.length > 1 ? tr("Lockers {list}", { list: codes }) : tr("Locker {n}", { n: codes })) + (t != null ? " · " + amt(t) : "");
     }
-    $("#go").disabled = !picked.length || !hasBoard;
+    var same = changing && picked[0] === changing.code && period === changing.period;
+    $("#go").disabled = !picked.length || !hasBoard || !!same;
+    $("#go-label").textContent = changing ? tr("Change locker") : tr("Continue");
     paintMine();
   }
 
@@ -739,6 +779,7 @@
   }
   document.addEventListener("click", function (e) {
     if (e.target.closest("#pv-open, #pv-open-foot")) { e.preventDefault(); e.stopPropagation(); showModal("#pv"); }
+    if (e.target.closest("#lt-open")) { e.preventDefault(); e.stopPropagation(); showModal("#lt"); }
   });
   $$(".modal-x").forEach(function (b) { b.addEventListener("click", closeModal); });
   $$(".modal").forEach(function (m) { m.addEventListener("click", function (e) { if (e.target === m && !busy) closeModal(); }); });
@@ -892,33 +933,65 @@
     var r = await MMAccount.redeem(rpc, hc);
     if (!r.row) { if (r.error === "network") showBanner(NET); else showBanner("This sign-in link has expired. Sign in again to continue."); return false; }
     acct = { id: r.row.id, token: r.row.session_token, name: r.row.name || "", email: "", phone: "", made: false };
+    keepAcct();
     return true;
   }
+
+  /* ── The account kept on this device (the owner, 2026-11-09: stay signed in) ── */
+  function keepAcct() {
+    try { if (acct) localStorage.setItem(ACCT_KEY, JSON.stringify({ id: acct.id, token: acct.token, name: acct.name || "", email: acct.email || "" })); } catch (e) {}
+  }
+  function forgetAcct() { try { localStorage.removeItem(ACCT_KEY); } catch (e) {} }
+  function keptAcct() {
+    try {
+      var v = JSON.parse(localStorage.getItem(ACCT_KEY) || "null");
+      if (v && typeof v.id === "string" && v.id && typeof v.token === "string" && v.token) return { id: v.id, token: v.token, name: String(v.name || ""), email: String(v.email || ""), phone: "", made: false };
+    } catch (e) {}
+    return null;
+  }
+  // The session the database no longer knows: forgotten here, and the page as for anyone.
+  function quietOut() {
+    acct = null; wallet = undefined; mine = []; pay = null; pendingChange = null;
+    forgetAcct();
+    if (changing) leaveChange();
+    paintWho(); paintMine(); paintPick();
+  }
+  $$(".who-out").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (busy) return;
+      quietOut(); hideBanner();
+      if (view !== "landing") backToPick();
+    });
+  });
 
   // Signed in (a new account, a sign-in, or handed back): the wallet, the rider's lockers, and the evenings again (a
   // Petromin night they are booked on appears), then on to the review with the lockers picked.
   async function signedIn() {
-    paintWho();
+    keepAcct(); paintWho();
     await Promise.all([loadWallet(), loadMine(), loadEvenings()]);
+    if (pendingChange) { openChange(pendingChange); return; }
     if (day) await loadBoard();
     if (picked.length && board && board.day === day && board.kind) enterReview();
     else backToPick();
   }
   function signedOut() {
     acct = null; wallet = undefined; mine = []; pay = null;
+    forgetAcct();
+    if (changing) leaveChange();
     showBanner("You were signed out. Sign in again to reserve.");
     paintWho(); paintMine(); openAccount("signin");
   }
   function paintWho() {
     var t = acct ? tr("Signed in as {name}", { name: acct.name || "" }) + (acct.email ? " · " + isolate(acct.email) : "") : "";
-    ["#land-who", "#r-who"].forEach(function (s) { $(s).textContent = t; $(s).hidden = !acct || (s === "#r-who" && acct.made); });
+    ["#land-who", "#r-who"].forEach(function (s) { $(".who-t", $(s)).textContent = t; $(s).hidden = !acct || (s === "#r-who" && acct.made); });
   }
 
   /* ── The wallet and the rider's lockers ───────────────────────────────── */
   var wallet = undefined; // undefined: not read yet; null: none to show (signed out, or a database without it); else {balance}
   async function loadWallet() {
     if (!acct) { wallet = undefined; return; }
-    var r = await rpc("customer_wallet", { p_id: acct.id, p_token: acct.token });
+    var who = acct, r = await rpc("customer_wallet", { p_id: acct.id, p_token: acct.token });
+    if (r.error && /NOT_AUTHORIZED/.test(errText(r.error))) { if (acct === who) quietOut(); return; }
     var b = !r.error && r.data && typeof r.data === "object" ? Number(r.data.balance) : NaN;
     wallet = isFinite(b) ? { balance: b } : null;
     paintReview();
@@ -926,11 +999,15 @@
   var mine = []; // customer_lockers: the rider's rentals from yesterday on
   async function loadMine() {
     if (!acct) { mine = []; return; }
-    var r = await rpc("customer_lockers", { p_id: acct.id, p_token: acct.token });
-    if (r.error) { if (/NOT_AUTHORIZED/.test(errText(r.error))) mine = []; paintMine(); return; }
-    mine = (Array.isArray(r.data) ? r.data : []).filter(function (x) { return x && typeof x === "object" && x.id && isDay(x.day) && SPANS[x.period]; })
-      .map(function (x) { return { id: String(x.id), booking_id: x.booking_id || null, day: x.day, period: x.period, status: String(x.status || ""), pay: x.pay || null, paid: x.paid === true, code: x.code != null && String(x.code) ? String(x.code) : null }; });
+    var who = acct, r = await rpc("customer_lockers", { p_id: acct.id, p_token: acct.token });
+    if (r.error) { if (/NOT_AUTHORIZED/.test(errText(r.error))) { if (acct === who) quietOut(); return false; } paintMine(); return true; }
+    mine = (Array.isArray(r.data) ? r.data : []).filter(function (x) { return x && typeof x === "object" && x.id && isDay(x.day) && SPANS[x.period]; }).map(mineOf);
     paintMine();
+    return true;
+  }
+  function mineOf(x) {
+    return { id: String(x.id), booking_id: x.booking_id || null, day: x.day, period: x.period, status: String(x.status || ""), pay: x.pay || null, paid: x.paid === true,
+      code: x.code != null && String(x.code) ? String(x.code) : null, name: clean(x.name) };
   }
   var P_ORDER = { early: 0, pm: 1, both: 2, late: 3 };
   // From today on, still reserved or with the rider: the number (once known), the evening and the time.
@@ -939,23 +1016,133 @@
     return mine.filter(function (r) { return r.day >= t && (r.status === "reserved" || r.status === "in_use"); })
       .sort(function (a, b) { return a.day < b.day ? -1 : a.day > b.day ? 1 : (P_ORDER[a.period] - P_ORDER[b.period]) || byNumber(a.code || "", b.code || ""); });
   }
-  function mineRow(r) {
-    var drop = !r.booking_id && r.status === "reserved";
-    return '<li class="mine-row"><span class="mine-n" aria-hidden="true">' + (r.code ? esc(r.code) : '<svg><use href="#i-lock"/></svg>') + "</span>" +
-      '<span class="mine-t"><b>' + esc(r.code ? tr("Locker {n}", { n: r.code }) : tr("Locker")) + "</b><small>" + esc(dayShort(r.day)) + " · " + esc(spanOf(r.period)) +
-      (r.pay === "wallet" && r.paid ? " · " + esc(tr("Paid")) : "") + "</small></span>" +
-      '<span class="chip sm st-' + (r.status === "in_use" ? "use" : "res") + '">' + esc(r.status === "in_use" ? tr("In use") : tr("Reserved")) + "</span>" +
-      (drop ? '<button type="button" class="mine-x" data-id="' + esc(r.id) + '">' + esc(tr("Remove")) + "</button>" : "") + "</li>";
+  // How a locker is paid, in the booking app's words (lkPaidWallet, lkPayDesk); one on a booking is on its bill.
+  function payText(r) { return r.booking_id ? tr("On your booking") : r.pay === "wallet" && r.paid ? tr("Paid from your wallet") : tr("Pay at the desk"); }
+  function deskRow(r) {
+    var mayChange = r.status === "reserved", mayDrop = mayChange && !r.booking_id;
+    return '<li class="desk-row"><span class="desk-n" aria-hidden="true">' + (r.code ? esc(r.code) : '<svg><use href="#i-lock"/></svg>') + "</span>" +
+      '<span class="desk-t"><b>' + esc(r.code ? tr("Locker {n}", { n: r.code }) : tr("Locker")) + (r.name ? ' · <bdi>' + esc(r.name) + "</bdi>" : "") + "</b>" +
+      "<small>" + esc(spanOf(r.period)) + " · " + esc(payText(r)) + "</small>" + (r.status === "in_use" ? '<span class="chip sm st-use">' + esc(tr("In use")) + "</span>" : "") + "</span>" +
+      (mayChange ? '<span class="desk-acts"><button type="button" class="mine-chg" data-id="' + esc(r.id) + '">' + esc(tr("Change")) + "</button>" +
+        (mayDrop ? '<button type="button" class="mine-x" data-id="' + esc(r.id) + '">' + esc(tr("Remove")) + "</button>" : "") + "</span>" : "") + "</li>";
+  }
+  // One card per evening to show at the desk: the code the desk scans names the evening's first locker (the staff app
+  // finds the rider's others that evening), then each locker.
+  function deskCards(rows) {
+    var days = [], by = {};
+    rows.forEach(function (r) { if (!by[r.day]) { by[r.day] = []; days.push(r.day); } by[r.day].push(r); });
+    return days.map(function (d) {
+      var first = mine.filter(function (x) { return x.day === d && by[d].indexOf(x) >= 0; })[0] || by[d][0];
+      return '<article class="desk"><div class="desk-top"><div class="desk-head"><p class="desk-h">' + esc(tr("Show this at the desk")) + '</p><p class="desk-when">' + esc(dayLong(d)) + "</p></div>" +
+        '<span class="desk-qr"><canvas class="qr" width="1" height="1" data-qr="' + esc(DESK_URL + first.id) + '" role="img" aria-label="' + esc(tr("Code for the desk")) + '"></canvas></span></div>' +
+        '<ul class="desk-list">' + by[d].map(deskRow).join("") + "</ul></article>";
+    }).join("");
   }
   function paintMine() {
-    var rows = acct ? mineNow() : [], h = rows.map(mineRow).join("");
-    ["#mine-pick", "#mine-done"].forEach(function (s) { var box = $(s); box.hidden = !rows.length; $(".mine-list", box).innerHTML = h; });
+    var rows = acct ? mineNow() : [], h = deskCards(rows);
+    ["#mine-pick", "#mine-done"].forEach(function (s) {
+      var box = $(s), list = $(".mine-list", box);
+      box.hidden = !rows.length || (s === "#mine-pick" && !!changing);
+      if (list.getAttribute("data-h") !== h) { list.innerHTML = h; list.setAttribute("data-h", h); } // drawn again only when it changed
+    });
+    drawCodes();
   }
   document.addEventListener("click", function (e) {
-    var b = e.target.closest(".mine-x"); if (!b || busy) return;
+    var b = e.target.closest(".mine-x, .mine-chg"); if (!b || busy) return;
     var r = mine.filter(function (x) { return x.id === b.getAttribute("data-id"); })[0]; if (!r) return;
+    if (b.classList.contains("mine-chg")) { enterChange(r); return; }
     dropping = r; paintRemove(); showModal("#rm", "#rm-keep");
   });
+
+  /* ── The code the desk scans, drawn on a canvas as the website's tickets draw theirs (components/booking/QrCanvas.tsx,
+     lib/qr-paint.ts): a phone's dark mode recolours an svg's shapes, never a canvas's pixels. qrcode-generator is the
+     website's own encoder, inlined by the build. ── */
+  var QR_CSS = 148;
+  function drawCodes() { $$("canvas.qr[data-qr]").forEach(function (c) { paintCode(c, c.getAttribute("data-qr")); }); }
+  function paintCode(canvas, text) {
+    // qrcode by its name: on its own the encoder is a global; on the website's page every script runs inside one function
+    // (forms/shared/site-form.mjs), where its var is that function's, not window's.
+    var enc = typeof qrcode === "function" ? qrcode : window.qrcode;
+    if (typeof enc !== "function" || canvas.getAttribute("data-drawn") === text) return;
+    var q; try { q = enc(0, "M"); q.addData(text); q.make(); } catch (e) { return; }
+    var pen = canvas.getContext && canvas.getContext("2d"); if (!pen) return;
+    var n = q.getModuleCount(), px = Math.round(QR_CSS * Math.min(window.devicePixelRatio || 1, 3)), edge = [];
+    // module edge k on a tile px wide with a margin of n/20 modules each side, in whole pixels (lib/qr-paint.ts qrEdge)
+    for (var k = 0; k <= n; k++) edge.push(Math.round(((n + 20 * k) * px) / (22 * n)));
+    canvas.width = px; canvas.height = px;
+    pen.fillStyle = "#fff"; pen.fillRect(0, 0, px, px);
+    pen.fillStyle = "#1a1919";
+    for (var r = 0; r < n; r++) {
+      for (var c = 0; c < n; ) {
+        if (!q.isDark(r, c)) { c++; continue; }
+        var end = c + 1; while (end < n && q.isDark(r, end)) end++;
+        pen.fillRect(edge[c], edge[r], edge[end] - edge[c], edge[r + 1] - edge[r]);
+        c = end;
+      }
+    }
+    canvas.setAttribute("data-drawn", text);
+  }
+
+  /* ── Changing a locker before its key is handed: another door, another time of the same evening, one door at a
+     time; the locker's own door is free to keep (customer_locker_change). ── */
+  var changing = null, beforeChange = null, pendingChange = null;
+  function enterChange(r) {
+    if (!r || r.status !== "reserved" || !acct) return;
+    hideBanner(); clearMsg("f-cab");
+    if (!changing) beforeChange = { day: day, period: period, picked: picked.slice() };
+    changing = r;
+    day = r.day; period = r.period; picked = r.code ? [r.code] : [];
+    board = null; boardErr = false;
+    backToPick(); loadBoard();
+    var h = $("#chg-title"); if (h) h.focus({ preventScroll: true });
+  }
+  // ?change=<rental>: the locker named, once the account's lockers are read.
+  function openChange(id) {
+    pendingChange = null;
+    var r = mine.filter(function (x) { return x.id === id; })[0];
+    if (r && r.status === "reserved") { enterChange(r); return; }
+    backToPick(); showBanner("This locker can't be changed now. Ask at the desk.");
+  }
+  function leaveChange() {
+    changing = null;
+    if (beforeChange) { day = beforeChange.day; period = beforeChange.period; picked = beforeChange.picked; beforeChange = null; }
+    board = null; boardErr = false; clearMsg("f-cab");
+    paintPick(); if (day) loadBoard();
+  }
+  $("#chg-cancel").addEventListener("click", function () { if (!busy) leaveChange(); });
+  async function doChange() {
+    if (!acct || !changing || busy) return;
+    var r0 = changing, c = picked[0], p = period;
+    setLoading("#go", true);
+    var r;
+    try { r = await rpc("customer_locker_change", { p_id: acct.id, p_token: acct.token, p_rental: r0.id, p_period: p, p_code: c }); }
+    finally { setLoading("#go", false); }
+    if (r.error) { changeRefused(r.error); return; }
+    var o = r.data && typeof r.data === "object" ? r.data : {};
+    var code = o.code != null ? String(o.code) : c;
+    mine.forEach(function (x) { if (x.id === r0.id) { x.code = code; x.period = SPANS[o.period] ? o.period : p; if (typeof o.paid === "boolean") x.paid = o.paid; } });
+    if (o.left && board && board.day === r0.day) board.left = o.left;
+    leaveChange();
+    say("Locker changed");
+    var box = $("#mine-pick"); if (box && !box.hidden) box.scrollIntoView({ block: "start" });
+    loadMine(); if (r0.pay === "wallet") loadWallet();
+  }
+  function changeRefused(e) {
+    var m = errText(e), n = codeIn(m);
+    if (/NOT_AUTHORIZED/.test(m)) { signedOut(); return; }
+    if (/NOT_FOUND|LOCKER_NOT_OPEN/.test(m)) { leaveChange(); showBanner("This locker can't be changed now. Ask at the desk."); loadMine(); return; }
+    if (/LOCKER_TAKEN|LOCKER_OUT|LOCKER_UNKNOWN/.test(m)) {
+      if (n) picked = picked.filter(function (x) { return x !== n; });
+      if (/LOCKER_TAKEN/.test(m)) setErr("f-cab", "Locker {n} was just taken. Pick another.", { n: n });
+      else if (/LOCKER_OUT/.test(m)) setErr("f-cab", "Locker {n} is out of service", { n: n });
+      else setErr("f-cab", "No locker {n}", { n: n });
+      paintPick(); loadBoard(); return;
+    }
+    if (/LOCKERS_FULL/.test(m)) { setErr("f-cab", "The lockers for that time are all taken."); loadBoard(); return; }
+    if (/WALLET_SHORT/.test(m)) { setErr("f-cab", "Not enough in the wallet."); loadWallet(); return; }
+    if (/RATE_LIMITED/.test(m)) { showBanner(SITE_TOO_MANY); return; }
+    showBanner(NET);
+  }
 
   /* ── Taking a locker back (before its key is collected), in a pop-up centred on the screen ── */
   var dropping = null;
@@ -995,7 +1182,7 @@
     return !!wallet && kindNow() !== "pm" && !walletOff && t != null && wallet.balance >= t;
   }
   function enterReview() {
-    clearMsg("f-pay"); walletOff = false;
+    clearMsg("f-pay"); walletOff = false; namesKey = "";
     if (pay === "wallet" && !walletUsable()) pay = null;
     paintReview(); paintWho(); goStep(2);
     if (acct && acct.made) $("#acct-made").focus({ preventScroll: true });
@@ -1017,6 +1204,41 @@
     if (!pay && wallet !== undefined && !useW) pay = "desk";
     pickRadio("#pays", pay);
     if (!$("#book").classList.contains("loading")) $("#book").disabled = !picked.length;
+    paintNames();
+    $("#terms-line").innerHTML = esc(tr("By reserving you accept the {terms}.")).replace("{terms}",
+      '<button type="button" class="d-link" id="lt-open">' + esc(tr("locker terms")) + "</button>"); // a pop-up: the website's Terms page is not open yet
+  }
+  // A name on each locker when more than one is reserved (the desk knows whose key it is): the first the account's,
+  // each one required, letters and spaces only (the owner's rule for names), 60 at most. One locker is the account's.
+  var names = {}, namesKey = "";
+  function nameClean(v) { return String(v || "").replace(DASHES, " ").replace(/[^\p{L}\p{M}\s]/gu, "").replace(/\s{2,}/g, " ").slice(0, 60); }
+  function namedCodes() { return picked.slice().sort(byNumber); }
+  function paintNames() {
+    var box = $("#names"), codes = namedCodes(), key = codes.join(",") + "|" + lang;
+    box.hidden = codes.length < 2;
+    if (codes.length < 2 || key === namesKey) return;
+    namesKey = key;
+    codes.forEach(function (c, i) { if (names[c] == null) names[c] = i === 0 && acct ? nameClean(acct.name).trim() : ""; });
+    box.innerHTML = codes.map(function (c) {
+      return '<div id="f-nm-' + esc(c) + '" class="field"><label for="nm-' + esc(c) + '">' + esc(tr("Name on locker {n}", { n: c })) + "</label>" +
+        '<input id="nm-' + esc(c) + '" class="nm" data-code="' + esc(c) + '" type="text" autocomplete="off" autocapitalize="words" maxlength="60" value="' + esc(names[c]) + '">' +
+        '<p class="err" aria-live="polite"></p></div>';
+    }).join("");
+    codes.forEach(function (c) { paintField("f-nm-" + c); });
+  }
+  $("#names").addEventListener("input", function (e) {
+    var el = e.target.closest("input.nm"); if (!el) return;
+    var c = el.getAttribute("data-code"), v = nameClean(el.value);
+    if (v !== el.value) { var at = Math.max(0, (el.selectionStart == null ? v.length : el.selectionStart) - (el.value.length - v.length)); el.value = v; try { el.setSelectionRange(at, at); } catch (x) {} }
+    names[c] = v; clearMsg("f-nm-" + c);
+  });
+  // The names to send beside the lockers, or null for one locker (the database takes the account's); false when one is missing.
+  function namesFor(codes) {
+    if (codes.length < 2) return null;
+    var out = codes.map(function (c) { return clean(names[c]); }), bad = codes.filter(function (c, i) { return !/\p{L}/u.test(out[i]); });
+    bad.forEach(function (c) { setErr("f-nm-" + c, "Enter a name for locker {n}", { n: c }); });
+    if (bad.length) { focusField("f-nm-" + bad[0]); return false; }
+    return out;
   }
   // Card payments, only where the website takes them (apps/web /api/pay/status)
   fetch("/api/pay/status").then(function (r) { return r.json(); }).then(function (b) { if (b && b.open) $("#pay-card").hidden = false; }, function () {});
@@ -1027,8 +1249,12 @@
   $("#s-review").addEventListener("submit", async function (e) {
     e.preventDefault(); hideBanner(); if (busy || !acct) return;
     if (!picked.length) { backToPick(); setErr("f-cab", "Pick a locker"); return; }
+    var codes = namedCodes(), nm = namesFor(codes);
+    if (nm === false) return;
     if (!pay) { setErr("f-pay", "Choose how to pay"); focusField("f-pay"); return; }
-    var codes = picked.slice(), d = day, p = period, k = kindNow(), price = priceOf(p), how = pay;
+    var d = day, p = period, k = kindNow(), price = priceOf(p), how = pay;
+    var body = { p_id: acct.id, p_token: acct.token, p_day: d, p_period: p, p_codes: codes, p_pay: how };
+    if (nm) body.p_names = nm;
     setLoading("#book", true);
     if (how === "card") {
       // Paying by card (2026-11-10): the website's server reserves the lockers for card payment and opens the
@@ -1046,15 +1272,21 @@
       showBanner(NET); return;
     }
     var r;
-    try { r = await rpc("customer_locker_book", { p_id: acct.id, p_token: acct.token, p_day: d, p_period: p, p_codes: codes, p_pay: how }); }
+    try { r = await rpc("customer_locker_book", body); }
     finally { setLoading("#book", false); }
     if (r.error) { bookRefused(r.error); return; }
     var out = r.data && typeof r.data === "object" ? r.data : null;
     if (!out || !out.ok) { showBanner(NET); return; }
-    var got = (Array.isArray(out.rentals) ? out.rentals : []).map(function (x) { return x && x.code != null ? String(x.code) : ""; }).filter(Boolean);
+    var rentals = (Array.isArray(out.rentals) ? out.rentals : []).filter(function (x) { return x && x.id && x.code != null; });
+    var got = rentals.map(function (x) { return String(x.code); });
     booked = { codes: got.length ? got : codes, day: d, period: p, kind: k, pay: how, total: price != null ? price * (got.length || codes.length) : null };
+    // the cards to show at the desk at once, before the lockers are read again
+    rentals.forEach(function (x, i) {
+      if (!mine.some(function (y) { return y.id === String(x.id); }))
+        mine.push(mineOf({ id: x.id, booking_id: null, day: d, period: p, status: "reserved", pay: how, paid: how === "wallet", code: x.code, name: x.name || (nm ? nm[i] : acct.name) }));
+    });
     if (out.left && board && board.day === d) board.left = out.left;
-    clearPick(); pay = null;
+    clearPick(); pay = null; names = {}; namesKey = "";
     showDone();
     loadMine(); if (how === "wallet") loadWallet();
   });
@@ -1085,18 +1317,22 @@
   var booked = null;
   function paintDone() {
     if (!booked) return;
-    var many = booked.codes.length > 1;
-    $("#done-title").textContent = many ? tr("Your lockers are reserved") : tr("Your locker is reserved");
-    $("#done-sum").innerHTML = row(many ? tr("Lockers") : tr("Locker"), "<bdi>" + esc(codesText(booked.codes)) + "</bdi>") +
-      row(tr("Evening"), esc(dayLong(booked.day))) + row(tr("Time"), esc(spanOf(booked.period))) +
-      (booked.total != null ? row(tr("Total"), amt(booked.total)) : "") +
-      row(tr("Payment"), esc(booked.pay === "wallet" ? tr("Paid from your wallet") : tr("Pay at the desk when you collect the key")));
+    $("#done-title").textContent = booked.codes.length > 1 ? tr("Your lockers are reserved") : tr("Your locker is reserved");
   }
   function showDone() {
     showView("done"); paintDone(); paintMine();
     $("#done-title").focus({ preventScroll: true });
   }
   $("#again").addEventListener("click", function () { booked = null; clearMsg("f-cab"); backToPick(); loadBoard(); });
+
+  // ?change=<rental id>: the booking app's Change on a locker, opened once signed in.
+  function takeChange() {
+    var q = new URLSearchParams(location.search), v = q.get("change");
+    if (v == null) return null;
+    q.delete("change");
+    try { history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q.toString() : "") + location.hash); } catch (e) {}
+    return /^[0-9a-fA-F-]{36}$/.test(v) ? v.toLowerCase() : null;
+  }
 
   /* ── The cabinet read again while the page is seen ────────────────────── */
   function live() { return document.visibilityState === "visible" && !busy && !!day && (view === "landing" || (view === "steps" && step === 2)); }
@@ -1131,11 +1367,12 @@
   }
 
   // Test hook: the specs read what the page works out without a network.
-  window.LockersForm = { tagCode: tagCode, spanOf: spanOf, cells: function (units) { return cabinetCells({ units: units }).map(function (u) { return u ? String(u.code) : null; }); } };
+  window.LockersForm = { setLang: setLang, tagCode: tagCode, spanOf: spanOf, nameClean: nameClean, cells: function (units) { return cabinetCells({ units: units }).map(function (u) { return u ? String(u.code) : null; }); } };
 
   setLang(pickLang(), false);
   showView("landing");
   var kept = readPick(), tag = takeTag();
+  pendingChange = takeChange();
   // The evenings and the cabinet; a tag picks its locker, else the lockers this tab picked before come back.
   async function start2() {
     evenings = undefined; evErr = false; paintPick();
@@ -1150,8 +1387,15 @@
   }
   (async function start() {
     var handed = await arrive();
+    // else the account kept on this device; one the database no longer knows is forgotten (loadMine, quietOut)
+    if (!acct) acct = keptAcct();
     if (acct) { paintWho(); await Promise.all([loadWallet(), loadMine()]); }
     await start2();
+    if (pendingChange) {
+      if (acct) openChange(pendingChange);
+      else openAccount("ask"); // signed in, the change opens (signedIn)
+      return;
+    }
     // Handed back signed in with lockers picked before: on to the review.
     if (handed && acct && picked.length && board && board.kind) enterReview();
   })();

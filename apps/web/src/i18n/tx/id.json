@@ -1136,7 +1136,6 @@
   "Add {0} more for free delivery": "Tambah {0} lagi untuk gratis ongkir",
   "Helmets are required. One comes with every bike.": "Helm wajib dipakai. Setiap sepeda sudah termasuk helm.",
   "Helmets are required. We provide one for free.": "Helm wajib dipakai. Kami menyediakan helm gratis.",
-  "In line: {0}": "Antrean: {0}",
   "On the waitlist": "Dalam daftar tunggu",
   "On the waitlist.": "Dalam daftar tunggu.",
   "Queue number": "Nomor antrean",
@@ -1149,8 +1148,6 @@
   "Your place is held until {0}. Unpaid, it is let go.": "Tempat Anda ditahan hingga {0}. Jika belum dibayar, tempat itu akan dilepas.",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Anda sedang mengantre untuk mendapat tempat. Belum ada tempat yang disimpan untuk Anda: jika ada tempat kosong, staf akan melakukan check-in untuk Anda di loket dengan kode ini, dan mungkin menghubungi Anda lebih dulu lewat WhatsApp.",
   "You’re next": "Giliran Anda berikutnya",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Anda nomor {0} dalam antrean. Belum ada tempat yang disimpan untuk Anda: jika ada tempat kosong, staf akan melakukan check-in untuk Anda di loket dengan kode ini, dan mungkin menghubungi Anda lebih dulu lewat WhatsApp.",
-  "number {0} in line": "nomor {0} dalam antrean",
   "{0} bikes": "{0} sepeda",
   "{0} colours": "{0} warna",
   "10 rides in a row with no missed booking": "10 gowes berturut-turut tanpa melewatkan satu pun pemesanan",
@@ -2008,6 +2005,11 @@
   "Find your order": "Cari pesanan Anda",
   "Community Membership Application": "Pendaftaran Keanggotaan Komunitas",
   "Employees Bike Registration Form": "Formulir Pendaftaran Sepeda Karyawan",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | Gowes Santai Sabtu",
-  "Saturday Social Ride | MicroMobility": "Gowes Santai Sabtu | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "Gowes Santai Sabtu | MicroMobility",
+  "Lockers | MicroMobility": "Loker | MicroMobility",
+  "Manage": "Kelola",
+  "Paid from your wallet": "Dibayar dari dompet Anda",
+  "Pay at the desk": "Bayar di meja",
+  "Show this at the desk": "Tunjukkan ini di meja",
+  "Your lockers": "Loker Anda"
 }

@@ -31,7 +31,7 @@
   <div class="lockup">
     <a class="mm" href="https://micromobility.sa" aria-label="MicroMobility"><!-- svg:mm-lockup.svg --></a>
   </div>
-  <button id="lang" class="lang" type="button" lang="ar">العربية</button>
+  <label class="lang-pick"><select id="lang" class="lang" data-t-aria="Language" aria-label="Language"><option value="en">English</option></select><svg class="lang-chev" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></label>
 </header>
 
 <main id="main" class="main">
@@ -49,7 +49,12 @@
       <p class="lede" data-t="Pick your locker for the evening, then collect the key at the desk.">Pick your locker for the evening, then collect the key at the desk.</p>
     </div>
     <div id="pick" class="d-body">
-      <p id="land-who" class="who" hidden></p>
+      <p id="land-who" class="who" hidden><span class="who-t"></span> <button type="button" class="d-link who-out" data-t="Sign out">Sign out</button></p>
+      <!-- Changing a locker: the evening stays, the time and the door may change. -->
+      <div id="chg-head" class="chg-head" hidden>
+        <div><p id="chg-when" class="eyebrow"></p><h2 id="chg-title" class="chg-title" tabindex="-1"></h2></div>
+        <button type="button" id="chg-cancel" class="d-btn ghost sm" data-t="Cancel">Cancel</button>
+      </div>
       <div id="mine-pick" class="mine" hidden>
         <h2 class="sec-h" data-t="Your lockers">Your lockers</h2>
         <ul class="mine-list"></ul>
@@ -83,7 +88,9 @@
       </div>
       <p id="pick-sum" class="pick-sum" hidden></p>
       <button id="go" class="d-btn" type="button" disabled>
-        <span class="btn-label" data-t="Continue">Continue</span>
+        <span class="spinner" aria-hidden="true"></span>
+        <span class="btn-label" id="go-label">Continue</span>
+        <span class="btn-busy" data-t="Loading...">Loading...</span>
       </button>
     </div>
   </section>
@@ -212,8 +219,9 @@
           <span class="ok-mark" aria-hidden="true"><svg><use href="#i-check"/></svg></span>
           <span><b data-t="Your account has been created">Your account has been created</b><span class="ok-sub" data-t="You can sign in to the MicroMobility app with it any time.">You can sign in to the MicroMobility app with it any time.</span></span>
         </div>
-        <p id="r-who" class="who" hidden></p>
+        <p id="r-who" class="who" hidden><span class="who-t"></span> <button type="button" class="d-link who-out" data-t="Sign out">Sign out</button></p>
         <dl id="review" class="review"></dl>
+        <div id="names" class="names" hidden></div>
         <div id="f-pay" class="field">
           <span class="label" id="pay-label" data-t="How to pay">How to pay</span>
           <div id="pays" class="opts" role="radiogroup" aria-labelledby="pay-label">
@@ -223,6 +231,7 @@
           </div>
           <p class="err" aria-live="polite"></p>
         </div>
+        <p id="terms-line" class="small start terms-line"></p>
         <button id="book" class="d-btn" type="submit">
           <span class="spinner" aria-hidden="true"></span>
           <span class="btn-label" data-t="Reserve">Reserve</span>
@@ -233,14 +242,13 @@
     </div>
   </section>
 
-  <!-- 4. Reserved: what was reserved and how it is paid, then the rider's lockers. -->
+  <!-- 4. Reserved: the rider's lockers, one card per evening to show at the desk. -->
   <section id="v-done" class="view done-view" hidden aria-labelledby="done-title">
     <div class="d-body">
       <div class="done-head">
         <span class="done-mark" aria-hidden="true"><svg><use href="#i-check"/></svg></span>
         <div><p class="eyebrow" data-t="Reserved">Reserved</p><h2 id="done-title" class="st-title" tabindex="-1"></h2></div>
       </div>
-      <dl id="done-sum" class="review"></dl>
       <div id="mine-done" class="mine" hidden>
         <h2 class="sec-h" data-t="Your lockers">Your lockers</h2>
         <ul class="mine-list"></ul>
@@ -260,7 +268,23 @@
   </span>
 </footer>
 
-<!-- The pop-ups, centred: the Privacy Notice, and taking a locker back. -->
+<!-- The pop-ups, centred: the Privacy Notice, the locker terms, and taking a locker back. -->
+<div id="lt" class="modal" hidden>
+  <div class="modal-box sm" role="dialog" aria-modal="true" aria-labelledby="lt-title">
+    <div class="modal-head">
+      <h2 class="modal-title" id="lt-title" data-t="Locker terms">Locker terms</h2>
+      <button type="button" class="modal-x" data-site-aria="closeBtn" aria-label="Close"><svg aria-hidden="true"><use href="#i-stop"/></svg></button>
+    </div>
+    <ul class="modal-body lt-list">
+      <li data-t="A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.">A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.</li>
+      <li data-t="Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.">Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.</li>
+      <li data-t="Nothing may be left overnight: collect everything the same evening.">Nothing may be left overnight: collect everything the same evening.</li>
+      <li data-t="Things left behind are kept for 14 days, then donated or disposed of.">Things left behind are kept for 14 days, then donated or disposed of.</li>
+      <li data-t="MicroMobility is not responsible for loss of or damage to anything kept in a locker.">MicroMobility is not responsible for loss of or damage to anything kept in a locker.</li>
+      <li data-t="A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.">A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.</li>
+    </ul>
+  </div>
+</div>
 <div id="pv" class="modal" hidden>
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="pv-title">
     <div class="modal-head">

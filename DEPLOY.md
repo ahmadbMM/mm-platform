@@ -12,15 +12,21 @@ Petromin registration page, changes.
     (orange cloud) pointing at the old host; a Worker route answers before that host is asked.
   - `www.micromobility.sa` is not a second copy of the site: the Worker moves every address on it
     to the same path and query on `micromobility.sa` (301; 308 for a POST), before anything else
-    (`apps/web/worker.js`, `src/lib/canonical-host.ts`).
+    (`apps/web/edge/front.js`, `src/lib/canonical-host.ts`).
+  - Two Workers since 2026-11-10 (the first visit after a quiet spell took up to 2.5 s, most of it the 23 MB site
+    starting on a cold machine even to send a kept page): `micromobility-web`, the front (`apps/web/edge.js`,
+    `wrangler.edge.jsonc`, about 11 KB), holds the routes, moves `www`, and answers from the edge's page copies
+    (`src/lib/page-cache.ts`); `micromobility-web-site`, the site as OpenNext builds it (`apps/web/site.js`,
+    `wrangler.jsonc` env `production`), has no address of its own and is asked through the front's `SITE` service
+    binding. CI deploys the site, then the front. The site's logs (page errors, failures) are under
+    `micromobility-web-site` in Workers Logs.
   - The two registration forms (`forms/petromin` at `/petromin`, `forms/community` at
     `/community/registration`) are served by this Worker too, outside Coming Soon. Until their
     old Workers' routes are removed (below), those more specific routes still win and the old
     Workers keep answering there.
-  - The Defe booking page (`forms/defe`, at `/defe`; the owner, 2026-10-17) is served the same way,
-    outside Coming Soon, with its own headers. It never had a Worker of its own. Its database side is
-    rentals migration `20261017120000_partner_places.sql`: apply it before the page goes live, or the
-    page says "Could not load the ride".
+  - The Defe booking page (`forms/defe`, at `/defe`; the owner, 2026-10-17) was served the same way until the user
+    turned it off on 2026-11-09; `/defe` now opens the Saturday ride's page (`proxy.ts` defeTarget). Its source is in
+    the git history; its database side (rentals `20261017120000_partner_places.sql`) is still in place.
   - A Worker route runs before the old forward to the Salla store, so the forward stops
     applying the moment this Worker is deployed. Delete the forward afterwards to keep the
     zone tidy (Rules > Redirect Rules in the dashboard, or on the old host if it lives there).
@@ -66,10 +72,11 @@ nothing into the Cloudflare account unasked. To look at a build first, run it lo
 The routes claim the root and `www` since 2026-09-24 (before that, `production` listed only the tag
 pages' `/b/*`). `MM_PRODUCTION` (Settings > Secrets and variables > Actions > Variables) is the
 switch: set to anything but `on`, a push still runs every check and deploys nothing. To deploy by
-hand: `pnpm --filter web exec wrangler deploy --env production`.
+hand, from `apps/web`: `npx wrangler deploy --env production`, then `npx wrangler deploy -c wrangler.edge.jsonc --env
+production`.
 
 After a deploy, check in this order: `https://micromobility.sa/` (the site), `/api/health`,
-`https://micromobility.sa/petromin` (the registration form), `/defe` (the Defe page), and send a test email to an address on
+`https://micromobility.sa/petromin` (the registration form), `/saturday` (the Saturday ride's page), and send a test email to an address on
 the domain (CI does the first four, "The live site answers"). Roll back by deleting the two routes in
 Workers & Pages > micromobility-web > Settings > Domains & Routes; the old forward takes over again at
 once.
@@ -146,9 +153,9 @@ A kept copy would carry a nonce that no longer matches. Revisit it only together
   supports that from 1.20.3, marked experimental. If that ever bites, the fallback is Next 15
   with an edge `middleware.ts`.
 - ESLint stays on 9.x: the React plugin inside `eslint-config-next` does not load on ESLint 10.
-- The Worker bundle is about 3.3 MB compressed as wrangler measures it (`wrangler deploy --dry-run`,
-  2026-09-27; it was 2.2 MB when the site was a few pages). Cloudflare's free Workers plan allows
-  3 MB, the paid plan 10 MB.
+- The site's Worker bundle is about 5.8 MB compressed as wrangler measures it (`wrangler deploy --dry-run`,
+  2026-11-10; 3.3 MB on 2026-09-27, 2.2 MB when the site was a few pages); the front's is 3.7 KB. Cloudflare's paid
+  Workers plan allows 10 MB.
 - pnpm 11 only runs the build scripts listed under `allowBuilds` in `pnpm-workspace.yaml`.
 
 ## Limits

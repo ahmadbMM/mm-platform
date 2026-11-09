@@ -1136,7 +1136,6 @@
   "Add {0} more for free delivery": "Ajoutez {0} pour profiter de la livraison gratuite",
   "Helmets are required. One comes with every bike.": "Le casque est obligatoire. Un casque est fourni avec chaque vélo.",
   "Helmets are required. We provide one for free.": "Le casque est obligatoire. Nous vous en fournissons un gratuitement.",
-  "In line: {0}": "File : {0}",
   "On the waitlist": "Sur liste d’attente",
   "On the waitlist.": "Sur liste d’attente.",
   "Queue number": "Numéro dans la file",
@@ -1149,8 +1148,6 @@
   "Your place is held until {0}. Unpaid, it is let go.": "Votre place est réservée jusqu’à {0}. Sans paiement, elle sera libérée.",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Vous êtes dans la file pour une place. Rien n’est encore réservé pour vous : si une place se libère, l’équipe vous enregistre au stand avec ce code, et peut vous écrire sur WhatsApp avant.",
   "You’re next": "Vous passez ensuite",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Vous êtes n° {0} dans la file. Rien n’est encore réservé pour vous : si une place se libère, l’équipe vous enregistre au stand avec ce code, et peut vous écrire sur WhatsApp avant.",
-  "number {0} in line": "n° {0} dans la file",
   "{0} bikes": "{0} vélos",
   "{0} colours": "{0} couleurs",
   "10 rides in a row with no missed booking": "10 sorties d'affilée sans réservation manquée",
@@ -2007,6 +2004,11 @@
   "Find your order": "Retrouvez votre commande",
   "Community Membership Application": "Demande d’adhésion à la communauté",
   "Employees Bike Registration Form": "Formulaire d'inscription vélo pour les employés",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | Sortie sociale du samedi",
-  "Saturday Social Ride | MicroMobility": "Sortie sociale du samedi | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "Sortie sociale du samedi | MicroMobility",
+  "Lockers | MicroMobility": "Casiers | MicroMobility",
+  "Manage": "Gérer",
+  "Paid from your wallet": "Payé avec votre portefeuille",
+  "Pay at the desk": "Paiement à l’accueil",
+  "Show this at the desk": "Montrez ceci à l’accueil",
+  "Your lockers": "Vos casiers"
 }

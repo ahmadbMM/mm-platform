@@ -5,7 +5,8 @@
   // never deploys it - the automatic preview went on 2026-09-20 (DEPLOY.md, "Deploys") - and
   // deploys `production` below instead.
   "name": "micromobility-web-preview",
-  // worker.js wraps the site OpenNext builds (.open-next/worker.js) with the edge page cache.
+  // worker.js: the front (edge/front.js) and the site OpenNext builds (.open-next/worker.js) in one Worker, for the
+  // preview; production and staging run them apart (below).
   "main": "worker.js",
   "compatibility_date": "2026-08-01",
   "compatibility_flags": ["nodejs_compat"],
@@ -24,21 +25,23 @@
   // is kept and searchable in the dashboard (Workers & Pages > micromobility-web > Logs).
   "observability": { "enabled": true },
   "env": {
-    // `wrangler deploy --env production` = the real site, micromobility-web, which answers the
-    // whole domain - both hosts, everything under them, since 2026-09-24 - by ROUTE, not custom
-    // domain, on purpose: the DNS records stay as they are (proxied A records at the old host,
-    // where company email lives), and a Worker route answers before the old forward to the Salla
-    // store did. The two registration forms are served by this Worker too (/petromin,
-    // /community/registration); while their retired Workers' more specific routes still exist,
-    // those win for their paths (DEPLOY.md, "Moving the two forms onto this Worker"). The fleet's
-    // NFC tag pages are ordinary paths of the site now (/bikes/<n>; the stickers' /b/<n> redirects
-    // there, next.config.ts), nothing separate to route. Rollback = delete the two routes in the
-    // dashboard (Workers & Pages > micromobility-web > Settings > Domains & Routes): the old
-    // forward answers everything again at once.
+    // Production and staging run the site in two Workers (the user, 2026-11-09: the first visit after a quiet spell took
+    // up to 2.5 s, most of it this 23 MB Worker starting on a cold machine even to send a kept page):
+    //   - the front (edge.js, wrangler.edge.jsonc): micromobility-web / micromobility-web-staging, which hold the
+    //     addresses and answer from the edge's page copies at once;
+    //   - the site (site.js, this file): micromobility-web-site / micromobility-web-staging-site, with no address of
+    //     its own, asked by the front through a service binding.
+    // CI deploys the site first, then the front (`wrangler deploy --env production`, then
+    // `wrangler deploy -c wrangler.edge.jsonc --env production`). Rollback: deploy a commit from before 2026-11-10, whose
+    // micromobility-web was both in one; the site Worker is then left unused.
     //
-    // CI only runs this while the repository variable MM_PRODUCTION is "on".
+    // `--env production` = the site of micromobility.sa. CI only runs this while the repository variable MM_PRODUCTION
+    // is "on". The routes that answer the whole domain (both hosts, by ROUTE, not custom domain: the DNS records stay at
+    // the old host, where company email lives) are the front's (wrangler.edge.jsonc). The registration forms and the
+    // fleet's NFC tag pages are ordinary paths of the site.
     "production": {
-      "name": "micromobility-web",
+      "name": "micromobility-web-site",
+      "main": "site.js",
       "workers_dev": false,
       "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
       "ratelimits": [
@@ -46,21 +49,14 @@
         { "name": "API_LIMIT", "namespace_id": "1003", "simple": { "limit": 30, "period": 60 } }
       ],
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
-      "observability": { "enabled": true },
-      // Everything on both hosts. /store forwards to the Salla store from inside the site
-      // (src/proxy.ts); Next's own CSS, JavaScript and fonts are under /_next/ and come with it.
-      "routes": [
-        { "pattern": "micromobility.sa/*",     "zone_name": "micromobility.sa" },
-        { "pattern": "www.micromobility.sa/*", "zone_name": "micromobility.sa" }
-      ]
+      "observability": { "enabled": true }
     },
-    // `wrangler deploy --env staging` = staging.micromobility.sa, deployed by CI from the `staging`
-    // branch. A custom domain (Cloudflare makes its DNS record), behind Cloudflare Access so only
-    // the team opens it. Built against the staging database (repository variables
-    // STAGING_SUPABASE_URL / STAGING_SUPABASE_ANON_KEY), never production's. worker.js reads
-    // MM_ENV: noindex on everything, robots.txt shuts crawlers out, titles start with [Staging].
+    // `--env staging` = the site of staging.micromobility.sa, deployed by CI from the `staging` branch, built against
+    // the staging database (repository variables STAGING_SUPABASE_URL / STAGING_SUPABASE_ANON_KEY), never production's.
+    // Its front (wrangler.edge.jsonc) holds the custom domain, behind Cloudflare Access.
     "staging": {
-      "name": "micromobility-web-staging",
+      "name": "micromobility-web-staging-site",
+      "main": "site.js",
       "workers_dev": false,
       "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
       "ratelimits": [
@@ -70,10 +66,9 @@
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "observability": { "enabled": true },
       "vars": { "MM_ENV": "staging" },
-      // Online payments' reconcile run (worker.js scheduled; src/app/api/pay/reconcile). Production gets the
-      // same line when payments open there. The keys are Worker secrets (src/lib/pay/config.ts).
-      "triggers": { "crons": ["*/5 * * * *"] },
-      "routes": [{ "pattern": "staging.micromobility.sa", "custom_domain": true }]
+      // Online payments' reconcile run (site.js scheduled; src/app/api/pay/reconcile). Production gets the same line
+      // when payments open there. The keys are this Worker's secrets (src/lib/pay/config.ts).
+      "triggers": { "crons": ["*/5 * * * *"] }
     }
   }
   // Later: NEXT_INC_CACHE_R2_BUCKET binding for ISR caching (see OpenNext caching docs)

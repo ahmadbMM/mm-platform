@@ -5,8 +5,11 @@ qr code of ... micromobility.sa/lockers to reserve a locker ... choose the locke
 distribution that simulates how it look in real life it has 3 columns and 6 rows total of 18 lockers"). A rider picks
 an evening, a time and up to three lockers on a drawing of the cabinet, signs in or makes an account, and pays from the
 wallet now or at the desk when the key is collected. One self-contained page that the website (`apps/web`) serves at
-that address, outside Coming Soon, built the way `forms/saturday` is. English and Arabic (`?lang=ar`, right to left),
-light and dark as the device is set.
+that address, outside Coming Soon, built the way `forms/saturday` is.
+In the website's sixteen languages (`?lang=`; Arabic and Urdu right to left), light and dark as the device is set. The
+website draws it as one of its own pages (`apps/web/src/app/[locale]/<address>`: the site's header, footer and language
+menu around it, its scripts run by the page; `forms/shared/site-form.mjs`); `?classic=1` answers with the page built on
+its own, whose header has a menu of the sixteen languages (the user, 2026-11-09).
 
 ## What it does, in order
 

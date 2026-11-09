@@ -21,7 +21,7 @@ import { AH_BANK, vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-tic
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { genderChip } from "@/lib/session-gender";
-import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
+import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, type OwnLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
 import { TickIcon } from "@/components/site/Icons";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
@@ -85,6 +85,8 @@ type Props = {
   addonItems?: Map<string, AddonItem> | null;
   /** the account's lockers by booking (customer_lockers): a locker line says its period and number */
   lockers?: Map<string, TicketLocker> | null;
+  /** the rider's own lockers that evening with no booking behind them (ownLockersOf): named on the ticket too */
+  ownLockers?: OwnLocker[] | null;
   /** Victory Lap (and Arena Heros): each team booking's partner by first name, by booking id (customer_vl_teams);
    *  a booking without one has no partner named. */
   vlPartners?: Map<string, string> | null;
@@ -148,7 +150,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true, addonItems = null, lockers = null, vlPartners = null, balance = null, blood = null, online = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, online = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -215,14 +217,14 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const clock = (x: string) => fmtClock(x, locale);
   // a session with a start time alone (the DEFE 5KM Run's 7 PM) says it once
   const when = timesText(s?.times, !!s?.gathers, clock, { gather, start });
-  // a circuit night's waitlist collects later (wlCollectTime): said under the band, or on the rider's row in a mixed party
+  // the waitlist collects later (wlCollectTime: the session's own time, or a circuit night's 15 minutes after the
+  // start): said under the band, or on the rider's row in a mixed party
   const wlc = wlCollectTime(s);
   const wlLine = wlc && !past ? t.wlCollectFrom(clock(wlc)) : "";
   const green = s?.times && s.gathers ? t.gatherAt(clock(s.times[0])) : allWl && wlLine ? "" : s?.collect && bikes ? t.collectFrom(clock(s.collect)) : "";
   const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, icsPlace(s)) : "";
   // men only, women only or mixed (the booking app's _sgChip): none on a session that did not load
   const sg = s ? genderChip(s, { male: t.sgMale, female: t.sgFemale, mixed: t.sgMixed }) : null;
-  const wl = primary.waitlistNum;
   const reward = donor ? blood?.rewards?.get(primary.id) ?? null : null;
 
   return (
@@ -241,11 +243,12 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
           {ahHeld && !allWl && <p className="tk-label">{t.ahHoldTitle}</p>}
           {!hideNum && (allWl
-            ? <><p className={`tk-label wl${wlc ? " solid" : ""}`}>{t.wlOnList}{wl ? <> · {t.wlLinePos(String(wl))}</> : ""}</p>{wlLine && <p className="tk-wl-collect">{wlLine}</p>}</>
+            ? <><p className={`tk-label wl${wlc ? " solid" : ""}`}>{t.wlOnList}</p>{wlLine && <p className="tk-wl-collect">{wlLine}</p>}</>
             : <p className="tk-label">{rows.length > 1 ? (rows.length === 2 ? (bikes ? t.bikes2 : t.party2) : (bikes ? t.bikesN : t.partyN)(String(rows.length))) : numLabel}</p>)}
           {/* a number reads left to right in every language: "#7 – #8" is never "#8 – #7" */}
           <p className={`tk-num ${big}`}>{hideNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
-          {allWl && !hideNum && <p className="tk-wl-note">{wl ? t.wlPos(String(wl)) : t.wlPosNoNum}</p>}
+          {/* in line for a place, never which number in the line (the booking app, the owner 2026-11-10) */}
+          {allWl && !hideNum && <p className="tk-wl-note">{t.wlPosNoNum}</p>}
         </div>
         <div className="tk-right">
           {past ? null : ready
@@ -328,7 +331,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           <div key={r.id} className="tk-rider">
             <div className="tk-rider-top">
               {!hideNum && (r.status === "waitlist"
-                ? <span className="tk-w"><span className="dot" aria-hidden="true" />{r.waitlistNum ? t.wlRowPos(String(r.waitlistNum)) : t.waitlist}</span>
+                ? <span className="tk-w"><span className="dot" aria-hidden="true" />{t.waitlist}</span>
                 : r.queueNum != null && <span className="tk-q" dir="ltr">#{r.queueNum}</span>)}
               <span className="tk-name">{r.name}</span>
               {bikes && r.type && r.type !== "None" && <span className={`tk-type t-${r.type.toLowerCase().replace(/\s+/g, "")}`}><Bike /> {typeName(r.type)}</span>}
@@ -373,6 +376,17 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             </div>
           );
         })}
+        {!!ownLockers?.length && (
+          <div className="tk-addons">
+            <p className="tk-addons-h">{t.locker}</p>
+            {ownLockers.map((l) => (
+              <div key={l.id} className="tk-ad">
+                <span className="tk-ad-n"><bdi>{lockerText("", { period: l.period, code: l.code, status: l.status }, locale)}</bdi></span>
+                {l.paid && <span className="tk-amt">{t.lockerPaid}</span>}
+              </div>
+            ))}
+          </div>
+        )}
         {vlap && (() => {
           // The athlete's place (the booking app's _vlTkHtml): the team's code and the partner on a Doubles
           // race (or that our team is finding one), the division with its distance, the T-shirt, the 5 km

@@ -1136,7 +1136,6 @@
   "Add {0} more for free delivery": "मुफ़्त डिलीवरी के लिए {0} का सामान और जोड़ें",
   "Helmets are required. One comes with every bike.": "हेलमेट ज़रूरी है। हर साइकिल के साथ एक हेलमेट मिलता है।",
   "Helmets are required. We provide one for free.": "हेलमेट ज़रूरी है। हम एक हेलमेट मुफ़्त देते हैं।",
-  "In line: {0}": "कतार: {0}",
   "On the waitlist": "प्रतीक्षा सूची में",
   "On the waitlist.": "प्रतीक्षा सूची में।",
   "Queue number": "कतार नंबर",
@@ -1149,8 +1148,6 @@
   "Your place is held until {0}. Unpaid, it is let go.": "आपकी जगह {0} तक रोकी गई है। भुगतान न होने पर यह छोड़ दी जाएगी।",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "आप जगह के लिए कतार में हैं। अभी आपके लिए कुछ पक्का नहीं है: जगह खाली होने पर स्टाफ़ इसी कोड से बूथ पर आपका चेक-इन करेगा, और पहले WhatsApp पर संदेश भी भेज सकता है।",
   "You’re next": "अगली बारी आपकी है",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "आप कतार में नंबर {0} पर हैं। अभी आपके लिए कुछ पक्का नहीं है: जगह खाली होने पर स्टाफ़ इसी कोड से बूथ पर आपका चेक-इन करेगा, और पहले WhatsApp पर संदेश भी भेज सकता है।",
-  "number {0} in line": "कतार में नंबर {0}",
   "{0} bikes": "{0} बाइक",
   "{0} colours": "{0} रंग",
   "10 rides in a row with no missed booking": "लगातार 10 राइड, कोई बुकिंग नहीं छूटी",
@@ -2007,6 +2004,11 @@
   "Find your order": "अपना ऑर्डर खोजें",
   "Community Membership Application": "समुदाय सदस्यता आवेदन",
   "Employees Bike Registration Form": "कर्मचारी साइकिल पंजीकरण फ़ॉर्म",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | शनिवार सोशल राइड",
-  "Saturday Social Ride | MicroMobility": "शनिवार सोशल राइड | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "शनिवार सोशल राइड | MicroMobility",
+  "Lockers | MicroMobility": "लॉकर | MicroMobility",
+  "Manage": "प्रबंधित करें",
+  "Paid from your wallet": "आपके वॉलेट से भुगतान",
+  "Pay at the desk": "डेस्क पर भुगतान",
+  "Show this at the desk": "यह डेस्क पर दिखाएँ",
+  "Your lockers": "आपके लॉकर"
 }

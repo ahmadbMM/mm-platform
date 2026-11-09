@@ -5,7 +5,7 @@
 import { intlOf } from "@/i18n/locales";
 import { fill as fillAt } from "@/i18n/tx";
 import { fill as fillNamed } from "./fill";
-import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
+import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, wlCollectSlot, type RideKind } from "./rides";
 import { riyadhClock } from "./workshop-days";
 import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
 import { AH_VENUE, ahConfig, ahEntry, ahHold, isArenaId, type AhConfig, type AhEntry } from "./arena";
@@ -89,6 +89,8 @@ export type TicketSession = {
   gathers: boolean;
   /** Bikes are handed out from this time (the circuit's _collect). */
   collect: string | null;
+  /** The waitlist's own collection time staff set (rides.ts wlCollectSlot): "HH:MM", "" for none, absent when unset. */
+  wlCollect?: string;
   meetUrl: string | null;
   free: boolean;
   /** Nothing to pay, as the booking app's _isFreeRide counts it for a ride ridden: any community
@@ -218,6 +220,24 @@ export function lockersOf(data: unknown): Map<string, TicketLocker> {
   }
   return out;
 }
+/** The rider's own lockers with no booking behind them (customer_lockers; the lockers page, or staff renting one to the
+ *  account), today on, reserved or in use, soonest first: on that evening's ride ticket and in My Account's Your lockers,
+ *  as the booking app's My bookings (_lkOwnHtml) and ticket (_lkTkHtml) show them (2026-11-09). */
+export type OwnLocker = { id: string; day: string; period: string; code: string | null; name: string; status: string; pay: string | null; paid: boolean };
+export function ownLockersOf(data: unknown, today: string): OwnLocker[] {
+  if (!Array.isArray(data)) return [];
+  const out: OwnLocker[] = [];
+  for (const x of data) {
+    if (!x || typeof x !== "object") continue;
+    const o = x as Record<string, unknown>;
+    if (o.booking_id != null || typeof o.id !== "string" || typeof o.period !== "string") continue;
+    const day = String(o.day ?? "").slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day < today || (o.status !== "reserved" && o.status !== "in_use")) continue;
+    out.push({ id: o.id, day, period: o.period, code: typeof o.code === "string" && o.code ? o.code : null, name: typeof o.name === "string" ? o.name : "",
+      status: String(o.status), pay: typeof o.pay === "string" ? o.pay : null, paid: o.paid === true });
+  }
+  return out.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
+}
 /** "Locker · 9 PM - 11 PM · P7", as the booking app's ticket says it: the word, the period once known, the number once given. */
 export function lockerText(word: string, lk: TicketLocker | undefined, locale: string): string {
   if (!lk) return word;
@@ -290,6 +310,7 @@ export function ticketSession(r: Row): TicketSession | null {
   const community = r.event_kind === "community";
   // the session's own time, or 45 minutes before the start (sessionCollectTime)
   const collect = collectTime(r.bike_slots);
+  const wlCollect = wlCollectSlot(r.bike_slots);
   const meet = S(r.meet_url);
   return {
     id: r.id, date: r.session_date, kind, title: S(r.title).trim() || null,
@@ -298,6 +319,7 @@ export function ticketSession(r: Row): TicketSession | null {
     times: slotTimes(r.bike_slots),
     gathers: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap",
     collect,
+    ...(wlCollect !== undefined ? { wlCollect } : {}),
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
@@ -412,10 +434,13 @@ export function ticketCue(rows: TicketRow[], s: TicketSession | undefined, ahead
   return null;
 }
 
-/** A waitlisted rider's collection time on a circuit night: a quarter of an hour after the start, after the
- *  riders holding a place (the booking app's _wlCollectTime; the owner, 2026-11-03). Null on every other ride. */
+/** A waitlisted rider's collection time, after the riders holding a place (the booking app's _wlCollectTime): the
+ *  time staff set on the session (the owner, 2026-11-10), else on a circuit night a quarter of an hour after the start
+ *  (the owner, 2026-11-03). Null on every other ride, and on a circuit night whose box staff emptied. */
 export function wlCollectTime(s: TicketSession | undefined): string | null {
-  if (s?.kind !== "jcc" || !s.times) return null;
+  if (s?.kind !== "jcc" && s?.kind !== "petromin") return null; // the rides with a bike collection time
+  if (s.wlCollect !== undefined) return s.wlCollect || null;
+  if (s.kind !== "jcc" || !s.times) return null;
   const m = Number(s.times[0].slice(0, 2)) * 60 + Number(s.times[0].slice(3)) + 15;
   return `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }

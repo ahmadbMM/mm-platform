@@ -1,9 +1,9 @@
 /* eslint-disable */
 // @ts-nocheck
-// GENERATED from forms/shared/account.js by `npm run build` in forms/community or forms/defe. Do not edit here:
+// GENERATED from forms/shared/account.js by `npm run build` in forms/community, forms/saturday or forms/lockers. Do not edit here:
 // change forms/shared/account.js, then rebuild both forms. Typed for the website in lib/account-step.ts.
 /* The account step the account forms share (the owner, 2026-10-25: "one shared sign-in and account step", so a
-   fix lands on every form at once). forms/community and forms/defe inline this file (their builds read it), and
+   fix lands on every form at once). forms/community, forms/saturday and forms/lockers inline this file (their builds read it), and
    the website's Learn to ride form imports apps/web/src/lib/account-shared.ts, which those builds write from it
    (CI rebuilds the forms and refuses a stale copy). There is no page here: each form draws its own boxes in its
    own words; this file decides what a sign-in, a hand-over and a signed-in account's questions come to.

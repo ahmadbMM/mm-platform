@@ -1136,7 +1136,6 @@
   "Add {0} more for free delivery": "あと{0}で送料無料",
   "Helmets are required. One comes with every bike.": "ヘルメットの着用は必須です。自転車1台につき1つお貸しします。",
   "Helmets are required. We provide one for free.": "ヘルメットの着用は必須です。無料でお貸しします。",
-  "In line: {0}": "待ち番号：{0}",
   "On the waitlist": "キャンセル待ち中",
   "On the waitlist.": "キャンセル待ち中です。",
   "Queue number": "順番待ち番号",
@@ -1149,8 +1148,6 @@
   "Your place is held until {0}. Unpaid, it is let go.": "参加枠は{0}まで確保されます。お支払いがない場合は解除されます。",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "参加枠の空き待ちです。まだ枠は確保されていません。空きが出たら、ブースでスタッフがこのコードでチェックインを行います。その前にWhatsAppでご連絡する場合もあります。",
   "You’re next": "次はあなたの番です",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "待ち番号は{0}番です。まだ枠は確保されていません。空きが出たら、ブースでスタッフがこのコードでチェックインを行います。その前にWhatsAppでご連絡する場合もあります。",
-  "number {0} in line": "待ち番号{0}番",
   "{0} bikes": "自転車{0}台",
   "{0} colours": "全{0}色",
   "10 rides in a row with no missed booking": "無断欠席なしで10回連続ライド",
@@ -2008,6 +2005,11 @@
   "Find your order": "ご注文を探す",
   "Community Membership Application": "コミュニティメンバーシップ申し込み",
   "Employees Bike Registration Form": "社員用自転車登録フォーム",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | 土曜ソーシャルライド",
-  "Saturday Social Ride | MicroMobility": "土曜ソーシャルライド | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "土曜ソーシャルライド | MicroMobility",
+  "Lockers | MicroMobility": "ロッカー | MicroMobility",
+  "Manage": "管理",
+  "Paid from your wallet": "ウォレットから支払い済み",
+  "Pay at the desk": "受付で支払い",
+  "Show this at the desk": "これを受付で見せてください",
+  "Your lockers": "あなたのロッカー"
 }

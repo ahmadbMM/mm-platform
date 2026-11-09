@@ -777,6 +777,27 @@ describe("a circuit night's waitlist", () => {
     expect(html).not.toContain("solid");
     expect(html).not.toContain("tk-wl-collect");
   });
+  // The owner, 2026-11-10: staff set the waitlist's time on the session (bike_slots._wlCollect).
+  it("takes the time staff set on the session, and none when they emptied the box", () => {
+    const at = (slots: Record<string, unknown>, ride_kind: string | null = null) => ticketSession({ ...jccRow, ride_kind, event_kind: ride_kind ? "community" : null, bike_slots: JSON.stringify({ _time: "21:00 - 23:00", _collect: "20:15", ...slots }) })!;
+    expect(wlCollectTime(at({ _wlCollect: "21:40" }))).toBe("21:40");
+    expect(wlCollectTime(at({ _wlCollect: "9:30" }))).toBe("09:30");
+    expect(wlCollectTime(at({ _wlCollect: "" }))).toBeNull();
+    expect(wlCollectTime(at({ _wlCollect: "<x>" }))).toBeNull();
+    expect(wlCollectTime(at({}))).toBe("21:15");
+    const html = card([row("w", "waitlist", 12, 3)], at({ _wlCollect: "21:40" }));
+    expect(html).toContain("Waitlisted riders collect bikes from 9:40 PM");
+    expect(html).not.toContain("9:15");
+  });
+  // The owner, 2026-11-10: "don't tell customers how much is their number in line in waiting list or anywhere else".
+  it("never says which number in the line a waitlisted rider is", () => {
+    for (const rows of [[row("w", "waitlist", 12, 3)], [row("a", "waiting", 2, null), row("w", "waitlist", 12, 3)]]) {
+      const html = card(rows);
+      expect(html).not.toMatch(/in line:|number \d+ in line|number 3/i);
+      expect(html).not.toContain("In line");
+    }
+    expect(card([row("w", "waitlist", 12, 3)])).toContain("You’re in line for a place.");
+  });
 });
 
 // The owner, 2026-11-08: "when a code is used show it besides the booking and what type of code it is with a logo" (the

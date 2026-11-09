@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { flipLang } from './lang';
 
 // micromobility.sa/lockers end to end in a browser, every database call stubbed: the evenings (locker_evenings), the
 // cabinet (locker_board), the account (sign-up, sign-in, or handed back signed in with ?code=), the wallet
@@ -25,6 +26,8 @@ async function open(page: Page, qs = '', answers: Answers = {}) {
   page.on('pageerror', (e) => errs.push(e.message));
   await page.clock.setFixedTime(NOW);
   const calls: { fn: string; body: Body }[] = [];
+  // the account's lockers: what customer_locker_book reserved (a test may answer customer_lockers itself)
+  let held: Body[] = [];
   const base: Answers = {
     locker_evenings: () => json(EVENINGS),
     locker_board: (b) => json(board(String(b.p_day))),
@@ -37,8 +40,13 @@ async function open(page: Page, qs = '', answers: Answers = {}) {
     customer_pwd_state: () => json(false),
     customer_handoff_redeem: () => json([{ id: SARA.id, name: SARA.name, session_token: 'tok-handed' }]),
     customer_wallet: () => json({ balance: 0, rows: [] }),
-    customer_lockers: () => json([]),
-    customer_locker_book: (b) => json({ ok: true, rentals: (b.p_codes as string[]).map((c, i) => ({ id: `r-${i}`, code: c })), left: LEFT }),
+    customer_lockers: () => json(held),
+    customer_locker_book: (b) => {
+      const names = b.p_names as string[] | undefined;
+      const rs = (b.p_codes as string[]).map((c, i) => ({ id: `r-${held.length + i}`, code: c, name: names?.[i] || 'Sara Alharbi' }));
+      held = [...held, ...rs.map((x) => ({ id: x.id, booking_id: null, day: b.p_day, period: b.p_period, status: 'reserved', price: 10, on_bill: false, pay: b.p_pay, paid: b.p_pay === 'wallet', code: x.code, name: x.name }))];
+      return json({ ok: true, rentals: rs, left: LEFT });
+    },
     customer_locker_drop: () => json({ ok: true, left: LEFT }),
   };
   await page.route('**/rest/v1/rpc/*', async (r) => {
@@ -204,10 +212,35 @@ test('a new rider: the lockers, the account, the review with the desk chosen (th
   expect(of('customer_set_emergency')[0]).toMatchObject({ p_name: 'Layla Alharbi', p_phone: '+966551234567', p_relation: 'sibling', p_token: 'tok-new' });
   // the evenings again with the session, so a Petromin night the rider is booked on can appear
   expect(of('locker_evenings')[1]).toEqual({ p_id: su.p_id, p_token: 'tok-new' });
+  // a name on each locker: the first the account's, each one required, letters and spaces only
+  await expect(page.locator('#names input')).toHaveCount(2);
+  await expect(page.locator('label[for="nm-1"]')).toHaveText('Name on locker 1');
+  await expect(page.locator('#nm-1')).toHaveValue('Sara Al Harbi');
+  await expect(page.locator('#nm-2')).toHaveValue('');
+  await page.click('#book');
+  await expect(page.locator('#f-nm-2 .err')).toHaveText('Enter a name for locker 2');
+  expect(of('customer_locker_book')).toEqual([]);
+  await page.locator('#nm-2').pressSequentially('Omar-Ali9!');
+  await expect(page.locator('#nm-2')).toHaveValue('Omar Ali');
+  // the terms, in the page's language, in a tab of their own
+  await expect(page.locator('#terms-line')).toHaveText('By reserving you accept the locker terms.');
+  // the website's Terms page is not open yet: the locker terms open here, centred
+  await page.click('#lt-open');
+  await expect(page.locator('#lt')).toBeVisible();
+  await expect(page.locator('#lt')).toContainText('kept for 14 days');
+  await expect(page.locator('#lt')).toContainText('Do not put food or open drinks');
+  await page.locator('#lt .modal-x').click();
+  await expect(page.locator('#lt')).toBeHidden();
   await page.click('#book');
   await expect(page.locator('#done-title')).toHaveText('Your lockers are reserved');
-  await expect(page.locator('#done-sum')).toContainText('Pay at the desk when you collect the key');
-  expect(of('customer_locker_book')[0]).toEqual({ p_id: su.p_id, p_token: 'tok-new', p_day: D1, p_period: 'early', p_codes: ['1', '2'], p_pay: 'desk' });
+  expect(of('customer_locker_book')[0]).toEqual({ p_id: su.p_id, p_token: 'tok-new', p_day: D1, p_period: 'early', p_codes: ['1', '2'], p_pay: 'desk', p_names: ['Sara Al Harbi', 'Omar Ali'] });
+  // one card to show at the desk, each locker with its name and how it is paid
+  const card = page.locator('#mine-done .desk');
+  await expect(card).toHaveCount(1);
+  await expect(card.locator('.desk-h')).toHaveText('Show this at the desk');
+  await expect(card.locator('.desk-row')).toHaveText([/Locker 1 · Sara Al Harbi6 PM – 8 PM · Pay at the desk/, /Locker 2 · Omar Ali6 PM – 8 PM · Pay at the desk/]);
+  // kept on this device: still signed in after a reload
+  expect(JSON.parse(await page.evaluate(() => localStorage.getItem('mm-lockers-acct') || 'null'))).toEqual({ id: su.p_id, token: 'tok-new', name: 'Sara Al Harbi', email: 'sara.alharbi@gmail.com' });
   expect(errs).toEqual([]);
 });
 
@@ -269,22 +302,34 @@ test('paid from the wallet: reserved, then the lockers held, the one picked amon
   await page.click('#pays [data-v="wallet"]');
   await page.click('#book');
   await expect(page.locator('#done-title')).toHaveText('Your locker is reserved');
-  await expect(page.locator('#done-sum')).toContainText('Locker5');
-  await expect(page.locator('#done-sum')).toContainText('Paid from your wallet');
-  expect(of('customer_locker_book')[0]).toEqual({ p_id: SARA.id, p_token: 'tok-in', p_day: D1, p_period: 'early', p_codes: ['5'], p_pay: 'wallet' });
-  const rows = page.locator('#mine-done .mine-row');
-  await expect(rows).toHaveCount(2); // a locker handed back is not listed
-  await expect(rows.nth(0)).toContainText('Locker 5');
-  await expect(rows.nth(0)).toContainText('Tonight · 6 PM – 8 PM · Paid');
-  await expect(rows.nth(0).locator('.mine-x')).toHaveText('Remove');
-  await expect(rows.nth(1)).toContainText('Tue 17 Nov · 9 PM – 11 PM');
-  await expect(rows.nth(1).locator('.mine-x')).toHaveCount(0); // on a booking: taken back from the booking, not here
+  expect(of('customer_locker_book')[0]).toEqual({ p_id: SARA.id, p_token: 'tok-in', p_day: D1, p_period: 'early', p_codes: ['5'], p_pay: 'wallet' }); // one locker: no names sent
+  // one card per evening to show at the desk (a locker handed back is not listed)
+  const cards = page.locator('#mine-done .desk');
+  await expect(cards).toHaveCount(2);
+  await expect(cards.nth(0).locator('.desk-when')).toHaveText('Tonight · Saturday 14 November');
+  await expect(cards.nth(0).locator('.desk-n')).toHaveText('5');
+  await expect(cards.nth(0).locator('.desk-row small')).toHaveText('6 PM – 8 PM · Paid from your wallet');
+  await expect(cards.nth(0).locator('.mine-chg')).toHaveText('Change');
+  await expect(cards.nth(0).locator('.mine-x')).toHaveText('Remove');
+  await expect(cards.nth(1).locator('.desk-when')).toHaveText('Tuesday 17 November');
+  await expect(cards.nth(1).locator('.desk-row small')).toHaveText('9 PM – 11 PM · On your booking');
+  await expect(cards.nth(1).locator('.mine-chg')).toHaveCount(1);
+  await expect(cards.nth(1).locator('.mine-x')).toHaveCount(0); // on a booking: taken back from the booking, not here
+  // the code the desk scans: the evening's first locker's own address, drawn on a canvas (white tile, dark modules)
+  const qr = cards.nth(0).locator('canvas.qr');
+  await expect(qr).toHaveAttribute('data-qr', 'https://micromobility.sa/lockers/r/r-1');
+  await expect(qr).toHaveAttribute('data-drawn', 'https://micromobility.sa/lockers/r/r-1');
+  expect(await qr.evaluate((c: HTMLCanvasElement) => {
+    const p = c.getContext('2d')!, w = c.width, at = (x: number, y: number) => p.getImageData(Math.round(x * w), Math.round(y * w), 1, 1).data[0];
+    return [w > 148, at(0.01, 0.01), at(0.055, 0.055)]; // the margin is white, the finder pattern's corner dark
+  })).toEqual([true, 255, 26]);
+  await expect(cards.nth(1).locator('canvas.qr')).toHaveAttribute('data-qr', 'https://micromobility.sa/lockers/r/r-0');
   expect(await page.evaluate(() => sessionStorage.getItem('mm-lockers-pick'))).toBeNull();
-  // Reserve another: the cabinet again, nothing picked
+  // Reserve another: the cabinet again, nothing picked, the cards above it
   await page.click('#again');
   await ready(page);
   await expect(page.locator('#cab-grid .door[aria-pressed="true"]')).toHaveCount(0);
-  await expect(page.locator('#mine-pick .mine-row')).toHaveCount(2);
+  await expect(page.locator('#mine-pick .desk')).toHaveCount(2);
   expect(errs).toEqual([]);
 });
 
@@ -299,6 +344,7 @@ test('a locker taken meanwhile: back to the cabinet, said, the cabinet read agai
   await door(page, 2).click();
   await page.click('#go');
   await signIn(page);
+  await page.fill('#nm-2', 'Omar Ali');
   await page.click('#book');
   await expect(page.locator('#v-landing')).toBeVisible();
   await expect(page.locator('#f-cab .err')).toHaveText('Locker 2 was just taken. Pick another.');
@@ -357,13 +403,13 @@ test('Remove: a locker not collected and with no booking, after a centred questi
     customer_locker_drop: (b) => { held = held.filter((x) => x.id !== b.p_rental); return json({ ok: true, left: LEFT }); },
   });
   await ready(page);
-  const rows = page.locator('#mine-pick .mine-row');
+  const rows = page.locator('#mine-pick .desk-row');
+  await expect(page.locator('#mine-pick .desk')).toHaveCount(1); // one evening, one card
   await expect(rows).toHaveCount(2);
   await expect(rows.nth(0)).toContainText('Locker 8'); // 6-8 PM before 6-11 PM
   await expect(rows.nth(0)).toContainText('In use');
-  await expect(rows.nth(0).locator('.mine-x')).toHaveCount(0); // the key is with the rider
+  await expect(rows.nth(0).locator('.mine-x, .mine-chg')).toHaveCount(0); // the key is with the rider
   await expect(rows.nth(1)).toContainText('Locker 5');
-  await expect(rows.nth(1)).toContainText('Reserved');
   await rows.nth(1).locator('.mine-x').click();
   const dlg = page.locator('#rm .modal-box');
   await expect(dlg).toBeVisible();
@@ -458,21 +504,161 @@ test('Arabic: right to left, the cabinet as it stands (1 on the left), prices an
   await door(page, 1).click();
   await door(page, 2).click();
   await expect(page.locator('#pick-sum')).toHaveText('الخزائن 1، 2 · \u2066⃁ 20\u2069');
-  await page.click('#lang');
+  await flipLang(page);
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
   await expect(page.locator('#pick-sum')).toHaveText('Lockers 1, 2 · \u2066⃁ 20\u2069');
   expect(errs).toEqual([]);
 });
 
+// The page's own text (on the website's page, inside the form's box: the site's header and footer are the site's).
+const own = async (page: Page) => ((await page.locator('.mmf-lockers').count()) ? '.mmf-lockers' : 'body');
+
 test('no emoji on the page, and no Google or Apple sign-in', async ({ page }) => {
   await open(page);
   await ready(page);
-  const landing = await page.locator('body').innerText();
+  const landing = await page.locator(await own(page)).innerText();
   await door(page, 1).click();
   await page.click('#go');
   await page.click('#ask-no');
-  const signup = await page.locator('body').innerText();
+  const signup = await page.locator(await own(page)).innerText();
   const options = await page.locator('#cc option, #em-cc option').allInnerTexts();
   for (const t of [landing, signup, ...options]) expect(t).not.toMatch(/\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]/u);
   expect(signup).not.toMatch(/Google|Apple/);
+});
+
+// Round two (the owner, 2026-11-09): staying signed in, changing a locker, the terms.
+const U1 = '0b6a3c3e-1d2f-4c5b-9a8e-7f6d5c4b3a21', U2 = '1c7b4d4f-2e3a-4d6c-8b9f-8a7e6d5c4b32';
+const heldRow = (o: Body = {}) => ({ id: U1, booking_id: null, day: D1, period: 'early', status: 'reserved', price: 10, on_bill: false, pay: 'desk', paid: false, code: '4', name: 'Sara Alharbi', ...o });
+
+test('stays signed in on this device, until Sign out', async ({ page }) => {
+  const { of } = await open(page);
+  await ready(page);
+  await door(page, 1).click();
+  await page.click('#go');
+  await signIn(page);
+  await expect(page.locator('#s-review')).toBeVisible();
+  expect(JSON.parse(await page.evaluate(() => localStorage.getItem('mm-lockers-acct') || 'null'))).toEqual({ id: SARA.id, token: 'tok-in', name: SARA.name, email: SARA.email });
+  await page.reload();
+  await ready(page);
+  await expect(page.locator('#land-who .who-t')).toHaveText(`Signed in as ${SARA.name} · ⁦${SARA.email}⁩`);
+  expect(of('customer_lockers').at(-1)).toEqual({ p_id: SARA.id, p_token: 'tok-in' });
+  // signed in, Continue goes straight to the review
+  await door(page, 2).click();
+  await page.click('#go');
+  await expect(page.locator('#s-review')).toBeVisible();
+  await page.locator('#r-who .who-out').click();
+  await expect(page.locator('#v-landing')).toBeVisible();
+  await expect(page.locator('#land-who')).toBeHidden();
+  expect(await page.evaluate(() => localStorage.getItem('mm-lockers-acct'))).toBeNull();
+  await page.click('#go');
+  await expect(page.locator('#p-ask')).toBeVisible(); // signed out: the account step again
+});
+
+test('a kept session the database no longer knows is forgotten, quietly', async ({ page }) => {
+  await page.addInitScript(() => { try { localStorage.setItem('mm-lockers-acct', JSON.stringify({ id: 'c-old', token: 'gone', name: 'Old Name', email: '' })); } catch { /* none */ } });
+  await open(page, '', { customer_lockers: () => refuse('NOT_AUTHORIZED', '42501', 401), customer_wallet: () => refuse('NOT_AUTHORIZED', '42501', 401) });
+  await ready(page);
+  await expect(page.locator('#land-who')).toBeHidden();
+  await expect(page.locator('#banner')).toBeHidden();
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('mm-lockers-acct'))).toBeNull();
+});
+
+test("Change: the locker's own door is free to keep, one door at a time, another time of the same evening; then the cards say the new number", async ({ page }) => {
+  let held: Body[] = [heldRow()];
+  const { errs, of } = await open(page, HANDED, {
+    customer_lockers: () => json(held),
+    customer_locker_change: (b) => { held = [heldRow({ code: b.p_code, period: b.p_period })]; return json({ ok: true, id: U1, code: b.p_code, period: b.p_period, price: 10, paid: false, left: LEFT }); },
+  });
+  await ready(page);
+  await expect(page.locator('#mine-pick .desk-n')).toHaveText('4');
+  await page.locator('#mine-pick .mine-chg').click();
+  await expect(page.locator('#chg-head')).toBeVisible();
+  await expect(page.locator('#chg-title')).toHaveText('Change locker 4');
+  await expect(page.locator('#chg-when')).toHaveText('Tonight · Saturday 14 November');
+  await expect(page.locator('#f-day')).toBeHidden(); // the evening stays
+  await expect(page.locator('#mine-pick')).toBeHidden();
+  // 4 is in the board's taken list (it is this locker): picked, not shut; 7 is someone else's
+  await expect(door(page, 4)).toBeEnabled();
+  await expect(door(page, 4)).toHaveAttribute('aria-pressed', 'true');
+  await expect(door(page, 7)).toBeDisabled();
+  await expect(page.locator('#go')).toBeDisabled(); // nothing changed yet
+  await expect(page.locator('#go-label')).toHaveText('Change locker');
+  await door(page, 5).click();
+  await expect(door(page, 5)).toHaveAttribute('aria-pressed', 'true');
+  await expect(door(page, 4)).toHaveAttribute('aria-pressed', 'false');
+  await door(page, 6).click();
+  await expect(page.locator('#cab-grid .door[aria-pressed="true"]')).toHaveCount(1);
+  await page.click('#periods .opt[data-v="late"]');
+  await expect(door(page, 6)).toHaveAttribute('aria-pressed', 'true');
+  await page.click('#go');
+  await expect(page.locator('#chg-head')).toBeHidden();
+  expect(of('customer_locker_change')).toEqual([{ p_id: SARA.id, p_token: 'tok-handed', p_rental: U1, p_period: 'late', p_code: '6' }]);
+  await expect(page.locator('#mine-pick .desk-n')).toHaveText('6');
+  await expect(page.locator('#mine-pick .desk-row small')).toHaveText('9 PM – 11 PM · Pay at the desk');
+  await expect(page.locator('#said')).toHaveText('Locker changed');
+  expect(errs).toEqual([]);
+});
+
+test('Change: Cancel keeps the locker; its refusals each have their words', async ({ page }) => {
+  let answer = refuse('LOCKER_TAKEN: 5');
+  const { of } = await open(page, HANDED, { customer_lockers: () => json([heldRow({ pay: 'wallet', paid: true })]), customer_locker_change: () => answer });
+  await ready(page);
+  await page.locator('#mine-pick .mine-chg').click();
+  await page.click('#chg-cancel');
+  await expect(page.locator('#chg-head')).toBeHidden();
+  await expect(page.locator('#f-day')).toBeVisible();
+  await expect(page.locator('#cab-grid .door[aria-pressed="true"]')).toHaveCount(0);
+  expect(of('customer_locker_change')).toEqual([]);
+  await page.locator('#mine-pick .mine-chg').click();
+  await door(page, 5).click();
+  await page.click('#go');
+  await expect(page.locator('#f-cab .err')).toHaveText('Locker 5 was just taken. Pick another.');
+  await expect(door(page, 5)).toHaveAttribute('aria-pressed', 'false');
+  answer = refuse('WALLET_SHORT');
+  await page.click('#periods .opt[data-v="both"]');
+  await door(page, 6).click();
+  await page.click('#go');
+  await expect(page.locator('#f-cab .err')).toHaveText('Not enough in the wallet.');
+  await expect(page.locator('#chg-head')).toBeVisible();
+  answer = refuse('LOCKER_NOT_OPEN');
+  await page.click('#go');
+  await expect(page.locator('#banner')).toContainText("This locker can't be changed now. Ask at the desk.");
+  await expect(page.locator('#chg-head')).toBeHidden();
+});
+
+test("the booking app's Change (?change=) opens that locker's change once signed in", async ({ page }) => {
+  await open(page, `${HANDED}&change=${U2}&lang=en`, { customer_lockers: () => json([heldRow(), heldRow({ id: U2, booking_id: 'q-1', code: null, period: 'late', pay: null })]) });
+  await expect(page.locator('#chg-head')).toBeVisible();
+  await expect(page.locator('#chg-title')).toHaveText('Change your locker');
+  await expect(page.locator('#periods .opt[data-v="late"]')).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('#cab-grid .door[aria-pressed="true"]')).toHaveCount(0);
+  expect(page.url()).not.toContain('change=');
+  const p2 = await page.context().newPage();
+  await open(p2, `${HANDED}&change=${U2}`, { customer_lockers: () => json([heldRow()]) });
+  await expect(p2.locator('#banner')).toContainText("This locker can't be changed now. Ask at the desk.");
+  await expect(p2.locator('#chg-head')).toBeHidden();
+});
+
+test('signed out, ?change= asks for the account first, then opens the change', async ({ page }) => {
+  await open(page, `?change=${U1}`, { customer_lockers: () => json([heldRow()]) });
+  await expect(page.locator('#p-ask')).toBeVisible();
+  await signIn(page);
+  await expect(page.locator('#chg-head')).toBeVisible();
+  await expect(page.locator('#chg-title')).toHaveText('Change locker 4');
+});
+
+test('Arabic: the locker terms open in Arabic, the change and the desk card in Arabic', async ({ page }) => {
+  await open(page, HANDED + '&lang=ar', { customer_lockers: () => json([heldRow({ pay: 'wallet', paid: true })]) });
+  await ready(page);
+  const card = page.locator('#mine-pick .desk');
+  await expect(card.locator('.desk-h')).toHaveText('اعرض هذا في المكتب');
+  await expect(card.locator('.desk-row small')).toContainText('مدفوعة من محفظتك');
+  await expect(card.locator('.mine-chg')).toHaveText('تغيير');
+  await expect(page.locator('#land-who .who-out')).toHaveText('تسجيل الخروج');
+  await door(page, 1).click();
+  await page.click('#go');
+  await expect(page.locator('#terms-line')).toHaveText('بإتمام الحجز فإنك توافق على شروط الخزائن.');
+  await page.click('#lt-open');
+  await expect(page.locator('#lt-title')).toHaveText('شروط الخزائن');
+  await expect(page.locator('#lt')).toContainText('تُحفظ الأغراض المتروكة 14 يوماً');
 });

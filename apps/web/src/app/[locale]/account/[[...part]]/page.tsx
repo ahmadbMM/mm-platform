@@ -46,7 +46,7 @@ import { routeItems } from "@/lib/route-names";
 import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
 import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
-import { bloodDone, breakfastFor, doneToday, fmtDayDate, lockersOf, placeLink, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
+import { bloodDone, breakfastFor, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, ledRides, profilePct, recordRows, rideMore, rideStats, weekStreak, type BadgeItem } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
@@ -75,6 +75,7 @@ import PushToggle from "@/components/account/PushToggle";
 import { PRIVACY_ASK_FROM } from "@/content/privacy-notice";
 import { bizOf } from "@/lib/biz";
 import { ArrowIcon } from "@/components/site/Icons";
+import Qr from "@/components/booking/Qr";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
 // the next rides as the booking app's own tickets (changing one opens the booking app), the Club
@@ -192,7 +193,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const toRate = unratedRides(rows, today).filter((r) => r.date < RATE_FROM && r.entryId !== gate?.entryId).reverse().slice(0, 5);
     // every booked session, whatever its state now (a Petromin night, one staff closed since), read
     // with the account's token so a private ride (one its tag holders alone may see) keeps its name
-    const [sessions, blood, walletRead, referralRaw, lockers, orders] = await Promise.all([
+    const [sessions, blood, walletRead, referralRaw, lockersRaw, orders] = await Promise.all([
       loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
       // the blood type (2026-10-14): no card while the database has no customer_blood_type yet, nor
       // when it cannot be read just now (a card showing none would invite saving over the real one)
@@ -202,11 +203,15 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       rpcServer<unknown>("customer_wallet", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? walletOf(r.data) : null)),
       referralP,
       // the lockers (rentals 20261109120000): the period and number on a ticket's locker line; none read, the line says Locker
-      rpcServer<unknown>("customer_lockers", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? lockersOf(r.data) : null)),
+      rpcServer<unknown>("customer_lockers", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? r.data : null)),
       // the online store's orders (rentals 20261110150000): none listed while the database has none or cannot be read
       rpcServer<unknown>("customer_orders", { p_id: acct.id, p_token: acct.token })
         .then((r) => (r.status === 200 && Array.isArray(r.data) ? r.data.map((x) => orderOf(x)).filter((x): x is Order => !!x && !!x.key) : [])),
     ]);
+    const lockers = lockersRaw == null ? null : lockersOf(lockersRaw);
+    // the rider's own lockers with no booking behind them (the lockers page; 2026-11-09): on that evening's ride ticket,
+    // and as Your lockers below the rides, each evening with the QR the desk scans to hand the keys
+    const own = ownLockersOf(lockersRaw, today);
     const referral = referralOf(referralRaw, today);
     // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
     const pastTonight = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
@@ -288,7 +293,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                       // the live map follows the ride leader: a bike session's only (2026-10-18)
                       live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor}
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor}
                     online={payOnline ? { open: payCfg.bookings !== "off", refundDays: payCfg.refundDays, today } : null} />
                 );
               })}
@@ -304,6 +309,38 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             </div>
           )}
         </section>
+
+        {own.length > 0 && (
+          <section className="ac-sec" aria-labelledby="ac-lk-h">
+            <div className="ac-sec-head"><h2 id="ac-lk-h">{tx("Your lockers", "خزائنك")}</h2><a href={`/api/account/lockers-link?lang=${L === "ar" ? "ar" : "en"}`}>{tx("Manage", "إدارة")} <ArrowIcon size={15} /></a></div>
+            <div className="lk-acc">
+              {[...new Set(own.map((l) => l.day))].map((d) => {
+                const ls = own.filter((l) => l.day === d), due = ls.find((l) => l.status === "reserved");
+                return (
+                  <div key={d} className="lk-acc-ev">
+                    <p className="lk-acc-h"><bdi>{fmtDayDate(d, locale)}</bdi></p>
+                    {ls.map((l) => (
+                      <div key={l.id} className="lk-acc-row">
+                        <b className="lk-acc-n"><bdi>{l.code ?? ""}</bdi></b>
+                        <span className="lk-acc-t">
+                          <bdi>{lockerText("", { period: l.period, code: null, status: l.status }, locale)}</bdi>
+                          {l.name && l.name.trim() !== acct.name.trim() && <> · <bdi>{l.name}</bdi></>}
+                          {(l.paid || l.pay === "desk") && <small>{l.paid ? tx("Paid from your wallet", "مدفوعة من محفظتك") : tx("Pay at the desk", "الدفع في المكتب")}</small>}
+                        </span>
+                      </div>
+                    ))}
+                    {due && (
+                      <div className="lk-acc-qr">
+                        <p>{tx("Show this at the desk", "اعرض هذا في المكتب")}</p>
+                        <Qr payload={`https://micromobility.sa/lockers/r/${due.id}`} label={tx("Show this at the desk", "اعرض هذا في المكتب")} />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {volunteerCardShows(volunteer) && <VolunteerCard me={volunteer} locale={locale} />}
 

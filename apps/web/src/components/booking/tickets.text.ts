@@ -5,8 +5,8 @@
 // commCue* · riders/participants reviewRidersLabel/reviewPartLabel · paid/pendingPay/onTheHouse ·
 // total reviewTotalLabel · calendar addToCalendarBtn · directions
 // ticketDirections · meetingPoint meetPointLbl · edit/reschedule/cancel · available availLabel ·
-// wlPos/wlPosNoNum wlPos(NoNum)Msg · gatherAt ticketGatherAt · collectFrom ticketCollectAt ·
-// wlOnList/wlLinePos/wlRowPos · wlCollectFrom wlCollectAt · payDue payDueLabel · helmetLine/helmetFree
+// wlPosNoNum wlPosNoNumMsg (never the place in line: the owner, 2026-11-10) · gatherAt ticketGatherAt · collectFrom ticketCollectAt ·
+// wlOnList · wlCollectFrom wlCollectAt · payDue payDueLabel · helmetLine/helmetFree
 // tkHelmetLine/tkHelmetFree · venueCircuit evJccName · today/tomorrow mrToday/mrTomorrow ·
 // bikes2/bikesN · free freeLabel (as of the booking app's 2026-09-30 card, bb37ba1 and 9a03c12) ·
 // Run for Her (2026-10-05): runnerNumber runNumLabel · venueJyc venueJyc; a runner's distance is
@@ -24,8 +24,6 @@ export const T = {
     runnerNumber: "Runner number",
     waitlist: "Waitlist",
     wlOnList: "On the waitlist",
-    wlLinePos: (n: string) => `number ${n} in line`,
-    wlRowPos: (n: string) => `In line: ${n}`,
     bikes2: "2 bikes",
     bikesN: (n: string) => `${n} bikes`,
     // a party on a session without a bike (the owner, 2026-10-18: nothing about cycling there): people, not bikes
@@ -62,7 +60,6 @@ export const T = {
     paidOnline: "Paid online",
     available: "Available",
     wlPosNoNum: "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.",
-    wlPos: (n: string) => `You’re number ${n} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.`,
     gatherAt: (n: string) => `Gathering at ${n}`,
     collectFrom: (n: string) => `Collect bikes from ${n}`,
     wlCollectFrom: (n: string) => `Waitlisted riders collect bikes from ${n}`,
@@ -100,6 +97,7 @@ export const T = {
     addons: "Add-ons",
     // a locker on the booking (lkTitle, 2026-11-09)
     locker: "Locker",
+    lockerPaid: "Paid from your wallet",
     // a partner's place (queue_entries.partner, 2026-10-17): the site's own line, under the ticket's status
     withDefe: "With Defe",
     // the DEFE 5KM Run (2026-10-18): when the kits go out and the race starts, and "Have you registered for
@@ -183,8 +181,6 @@ export const T = {
     runnerNumber: "رقم العدّاء",
     waitlist: "قائمة الانتظار",
     wlOnList: "على قائمة الانتظار",
-    wlLinePos: (n: string) => `رقم ${n} في الانتظار`,
-    wlRowPos: (n: string) => `في الانتظار: ${n}`,
     bikes2: "دراجتان",
     bikesN: (n: string) => `${n} دراجات`,
     party2: "مشاركان",
@@ -220,7 +216,6 @@ export const T = {
     paidOnline: "مدفوع إلكترونياً",
     available: "متاح",
     wlPosNoNum: "أنت في قائمة الانتظار. لم يُحجز لك مقعد بعد: إذا توفر مقعد يسجّل الفريق دخولك بهذا الرمز عند الكشك، وقد يراسلك عبر واتساب قبل ذلك.",
-    wlPos: (n: string) => `أنت رقم ${n} في قائمة الانتظار. لم يُحجز لك مقعد بعد: إذا توفر مقعد يسجّل الفريق دخولك بهذا الرمز عند الكشك، وقد يراسلك عبر واتساب قبل ذلك.`,
     gatherAt: (n: string) => `التجمع في ${n}`,
     collectFrom: (n: string) => `استلام الدراجات من ${n}`,
     wlCollectFrom: (n: string) => `استلام الدراجات لقائمة الانتظار من ${n}`,
@@ -254,6 +249,7 @@ export const T = {
     revealSpotsAt: (n: string) => `موقع الفطور: يُعلَن عنه ${n}`,
     addons: "الإضافات",
     locker: "خزانة",
+    lockerPaid: "مدفوعة من محفظتك",
     withDefe: "مع دفء",
     defeKitLabel: "استلام عُدّة السباق",
     defeKitTxt: "جدة بارك · الأربعاء 21 أكتوبر · 4–10 م",

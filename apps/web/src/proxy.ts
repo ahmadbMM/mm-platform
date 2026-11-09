@@ -9,22 +9,32 @@ import { STORE_URL } from "./lib/links";
 import { storeOpen } from "./lib/store-core";
 import { NO_PAGE_CACHE } from "./lib/page-cache";
 import { apexTarget, movedStatus } from "./lib/canonical-host";
+import { SECURITY_HEADERS } from "./lib/security-headers";
 
 const intl = createMiddleware(routing);
 
 // The registration forms' addresses (see the matcher below).
-const FORM_ADDRESSES = ["/community/registration", "/petromin", "/defe", "/saturday", "/lockers"];
+const FORM_ADDRESSES = ["/community/registration", "/petromin", "/saturday", "/lockers"];
 export function formAddress(pathname: string): string | null {
   const p = pathname.toLowerCase().replace(/\/+$/, "");
   return FORM_ADDRESSES.includes(p) ? p : null;
 }
 // The forms that are pages of the website now (app/[locale]/<address>: the site's header, footer and languages around
-// the form; the user, 2026-11-09: all four). Each still answers with the page its build writes (app/<address>/route.ts)
-// with ?classic=1, kept while the website's pages settle in; the lockers page (forms/lockers) is that page alone. Either
-// way a form opens whatever
+// the form; the user, 2026-11-09). Each still answers with the page its build writes (app/<address>/route.ts)
+// with ?classic=1, kept while the website's pages settle in. Either way a form opens whatever
 // Coming Soon says (the page itself answers with the form's own while the site is closed: components/forms/FormPage.tsx).
-export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/defe", "/saturday"];
+export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/saturday", "/lockers"];
 export const formOnSite = (form: string, params: URLSearchParams) => SITE_FORMS.includes(form) && !params.has("classic");
+
+// micromobility.sa/defe was the Defe x MicroMobility booking page for the Saturday Social Ride (2026-10-17); the user
+// turned it off on 2026-11-09 ("we don't need it anymore"). A link to it still around (Defe's posts, a shared message)
+// opens the Saturday ride's page, in the language it asked for; its other questions (a Defe code) mean nothing there.
+// Temporary (307), so no browser keeps it should the page come back.
+export function defeTarget(pathname: string, params: URLSearchParams): string | null {
+  if (!/^\/defe\/?$/i.test(pathname)) return null;
+  const lang = askedLang(params);
+  return "/saturday" + (lang ? `?lang=${lang}` : "");
+}
 
 // micromobility.sa/store opens the online store (a hosted Salla shop, on its own domain), at the
 // address staff set (Website > Whole site > Other addresses), in English when the visitor reads
@@ -77,10 +87,15 @@ const STAFF_APP = "https://staff.micromobility.sa";
 // (that locker's sheet, or into the check-in open on the phone); a rider's phone to the lockers page with that locker
 // picked, /lockers?locker=7 (lockerRiderTarget). /lockers itself is the page (app/lockers, outside the proxy).
 const LOCKER_PAGE = /^\/lockers\/([A-Za-z]{0,3}\d{1,4})\/?$/;
+// A rider's show-at-desk QR (2026-11-09): micromobility.sa/lockers/r/<rental id>. A staff phone goes on to
+// staff.micromobility.sa/?lkr=<id> (that rider's lockers that evening, keys handed in a tap); a rider's phone to /lockers.
+const LOCKER_RENTAL = /^\/lockers\/r\/([0-9a-fA-F-]{36})\/?$/;
 export function staffTapTarget(pathname: string, searchParams: URLSearchParams, cookie: string | undefined): string | null {
   if (cookie !== "1") return null;
   const lk = LOCKER_PAGE.exec(pathname);
   if (lk) return `${STAFF_APP}/?locker=${lk[1].toUpperCase()}`;
+  const lr = LOCKER_RENTAL.exec(pathname);
+  if (lr) return `${STAFF_APP}/?lkr=${lr[1].toLowerCase()}`;
   const code = FLEET_PAGE.test(pathname) ? pathname.split("/")[2] : pathname === "/" ? searchParams.get("bike") : null;
   return code && /^\d{1,6}$/.test(code) ? `${STAFF_APP}/?bike=${Number(code)}` : null;
 }
@@ -88,6 +103,10 @@ export function staffTapTarget(pathname: string, searchParams: URLSearchParams, 
 /** A rider tapping a locker's tag: the lockers page with that locker picked (the page reads 7, 07 and L7 alike),
  *  any ?lang= kept. Null for anything else. */
 export function lockerRiderTarget(pathname: string, searchParams?: URLSearchParams): string | null {
+  if (LOCKER_RENTAL.test(pathname)) {
+    const lang = searchParams?.get("lang");
+    return lang === "en" || lang === "ar" ? `/lockers?lang=${lang}` : "/lockers";
+  }
   const m = LOCKER_PAGE.exec(pathname);
   if (!m) return null;
   const q = new URLSearchParams({ locker: m[1].toUpperCase() });
@@ -121,6 +140,8 @@ export default async function proxy(req: NextRequest) {
   if (apex) return NextResponse.redirect(apex, movedStatus(req.method));
   // The forms answer at one lower-case address each; a link typed or printed another way
   // (/Petromin, /community/Registration/) is sent there, as their own Workers did.
+  const defe = defeTarget(pathname, searchParams);
+  if (defe) return NextResponse.redirect(new URL(defe, req.url), 307);
   const form = formAddress(pathname);
   if (form && form !== pathname) return NextResponse.redirect(new URL(form + req.nextUrl.search, req.url), 301);
   // A form's own page: nothing here applies to it (the route answers it as it is).
@@ -166,7 +187,14 @@ export default async function proxy(req: NextRequest) {
   // state - Coming Soon on, or the Bikes page not switched on. It is never a catalogue page: a
   // category's address starts with a letter (the database insists), so digits can only be a tag.
   // The Learn to ride sign-up and the Privacy Notice open the same way (LEARN_PAGE, PRIVACY_PAGE).
-  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname) || form) return keepLang(intl(req));
+  // A form's page of the website (SITE_FORMS) carries the site's security headers from here: next.config.ts leaves its
+  // address to the form's own page (?classic=1), which sends its own.
+  if (form) {
+    const res = keepLang(intl(req));
+    for (const { key, value } of SECURITY_HEADERS) res.headers.set(key, value);
+    return res;
+  }
+  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname)) return keepLang(intl(req));
   // While the site is Coming Soon, it is the only page: /login, /about and anything else go
   // back to it. /store forwards to the shop before this runs (above), and the old /b/42 tag
   // address is redirected to /bikes/42 before this runs (next.config redirects).

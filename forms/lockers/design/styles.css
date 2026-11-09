@@ -71,13 +71,18 @@ svg { flex: none; }
   flex: none; min-height: 36px; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent;
   color: var(--accent); font-family: var(--f-ar); font-weight: 600; font-size: 13px;
 }
-.lang[lang="en"] { font-family: var(--f-body); }
+/* The page on its own: the website's sixteen languages, each named in its own words, in the pill the English/Arabic
+   button was (the user, 2026-11-09). The page of the website leaves this to the site's own menu. */
+.lang-pick { position: relative; flex: none; display: inline-flex; align-items: center; }
+select.lang { appearance: none; -webkit-appearance: none; font-family: inherit; padding-inline: 12px 28px; cursor: pointer; }
 .lang:hover { border-color: var(--accent); }
+.lang-chev { position: absolute; inset-inline-end: 10px; width: 12px; height: 12px; fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 @media (max-width: 359px) {
   .top { padding-inline: 12px; }
   .lockup { gap: 8px; }
   .mm svg { height: 26px; }
-  .lang { padding: 4px 8px; }
+  select.lang { padding-inline: 8px 24px; }
+  .lang-chev { inset-inline-end: 7px; }
 }
 @media (min-width: 860px) {
   .top { padding: 18px 28px 14px; }
@@ -340,22 +345,54 @@ html[dir="rtl"] .opt { padding: 11px 12px 11px 40px; }
 .pick-sum { margin: 0; text-align: center; font-weight: 700; font-size: 15px; }
 #f-cab.invalid .err { text-align: center; }
 
-/* The rider's lockers: the number on its own small door, the evening and the time, and Remove while not collected. */
-.mine { display: grid; gap: 8px; }
+/* The rider's lockers: one card per evening to show at the desk. The code the desk scans sits on its own white tile
+   (drawn on a canvas, its pixels never recoloured by a phone's dark mode), each locker's number big beside its name,
+   the time and how it is paid; Change and Remove while the key is not handed. */
+.mine { display: grid; gap: 10px; }
 .sec-h { margin: 0; font: 800 12px var(--f-display); letter-spacing: .09em; text-transform: uppercase; color: var(--mute); }
 html[lang="ar"] .sec-h { font-family: var(--f-ar); letter-spacing: 0; font-size: 13.5px; }
-.mine-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.mine-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: var(--surface); }
-.mine-n { flex: none; display: grid; place-items: center; width: 44px; height: 40px; border: 1px solid var(--door-edge); border-radius: 6px; background: linear-gradient(165deg, var(--door-hi), var(--door)); font: 900 19px var(--f-display); font-stretch: 112%; }
-.mine-n svg { width: 16px; height: 16px; color: var(--mute); }
-.mine-t { flex: 1; display: grid; min-width: 0; }
-.mine-t b { font-size: 14.5px; }
-.mine-t small { color: var(--mute); font-size: 13px; overflow-wrap: anywhere; }
+.mine-list { display: grid; gap: 12px; }
+.desk { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); box-shadow: 0 10px 24px -20px rgba(0, 0, 0, .5); }
+.desk-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.desk-head { display: grid; gap: 2px; min-width: 0; }
+.desk-h { margin: 0; font: 900 19px var(--f-display); font-stretch: 112%; text-transform: uppercase; line-height: 1.1; }
+html[lang="ar"] .desk-h { font-family: var(--f-ar); font-weight: 700; font-size: 19px; text-transform: none; }
+.desk-when { margin: 0; color: var(--accent); font-weight: 700; font-size: 14px; }
+.desk-qr { flex: none; display: block; width: 148px; height: 148px; padding: 0; border-radius: 10px; overflow: hidden; border: 1px solid rgba(26, 25, 25, .14); background: #fff; line-height: 0; }
+.desk-qr canvas { display: block; width: 148px; height: 148px; image-rendering: pixelated; }
+.desk-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.desk-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.desk-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.desk-n { flex: none; display: grid; place-items: center; min-width: 58px; height: 54px; padding: 0 8px; border: 1px solid var(--door-edge); border-radius: 8px; background: linear-gradient(165deg, var(--door-hi), var(--door)); font: 900 30px var(--f-display); font-stretch: 112%; font-variant-numeric: tabular-nums; direction: ltr; }
+.desk-n svg { width: 20px; height: 20px; color: var(--mute); }
+.desk-t { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.desk-t b { font-size: 14.5px; overflow-wrap: anywhere; }
+.desk-t small { color: var(--mute); font-size: 13px; overflow-wrap: anywhere; }
+.desk-t .chip { justify-self: start; }
+.desk-acts { flex: none; display: grid; gap: 6px; }
 .chip.sm { flex: none; padding: 3px 8px; font-size: 12px; }
 .chip.st-use { color: var(--ok); border-color: currentColor; background: var(--surface); }
-.mine-x { flex: none; min-height: 36px; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; color: var(--err); font-size: 13px; font-weight: 700; }
+.mine-x, .mine-chg { min-height: 34px; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; font-size: 13px; font-weight: 700; }
+.mine-chg { color: var(--accent); }
+.mine-chg:hover { border-color: var(--accent); }
+.mine-x { color: var(--err); }
 .mine-x:hover { border-color: var(--err); }
-@media (max-width: 380px) { .mine-row { flex-wrap: wrap; } .mine-t { flex-basis: calc(100% - 60px); } .chip.sm { margin-inline-start: 54px; } }
+@media (max-width: 400px) {
+  .desk-top { flex-direction: column; align-items: stretch; }
+  .desk-qr { align-self: center; }
+  .desk-row { flex-wrap: wrap; }
+  .desk-acts { display: flex; width: 100%; margin-inline-start: 70px; }
+}
+
+/* Changing a locker: its evening above the cabinet, with Cancel. */
+.chg-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--brand); border-radius: var(--r-ctl); background: var(--wash); }
+.chg-title { margin: 2px 0 0; font: 900 21px var(--f-display); font-stretch: 112%; text-transform: uppercase; line-height: 1.1; }
+.chg-title:focus { outline: none; }
+html[lang="ar"] .chg-title { font-family: var(--f-ar); font-weight: 700; text-transform: none; }
+.d-btn.ghost.sm { width: auto; min-height: 38px; padding: 4px 16px; flex: none; }
+.who .who-out { margin-inline-start: 6px; font-size: 13.5px; }
+.names { display: grid; gap: 12px; }
+.terms-line { font-size: 13.5px; }
 
 /* Reviewing and paying */
 .amt { white-space: nowrap; }
@@ -364,3 +401,4 @@ html[lang="ar"] .sec-h { font-family: var(--f-ar); letter-spacing: 0; font-size:
 .d-btn.danger { background: var(--err); color: var(--surface); }
 .vh { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .done-view .d-body { gap: 16px; }
+.lt-list { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 8px; line-height: 1.5; }

@@ -1136,7 +1136,6 @@
   "Add {0} more for free delivery": "Tambah {0} lagi untuk penghantaran percuma",
   "Helmets are required. One comes with every bike.": "Topi keledar wajib dipakai. Satu disediakan bersama setiap basikal.",
   "Helmets are required. We provide one for free.": "Topi keledar wajib dipakai. Kami menyediakan satu secara percuma.",
-  "In line: {0}": "Giliran: {0}",
   "On the waitlist": "Dalam senarai menunggu",
   "On the waitlist.": "Dalam senarai menunggu.",
   "Queue number": "Nombor giliran",
@@ -1149,8 +1148,6 @@
   "Your place is held until {0}. Unpaid, it is let go.": "Tempat anda ditahan sehingga {0}. Jika tidak dibayar, ia akan dilepaskan.",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Anda sedang menunggu giliran untuk satu tempat. Belum ada tempat yang disimpan untuk anda: jika ada tempat kosong, kakitangan akan mendaftarkan anda di kaunter menggunakan kod ini, dan mungkin menghubungi anda melalui WhatsApp terlebih dahulu.",
   "You’re next": "Anda yang seterusnya",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Anda nombor {0} dalam giliran. Belum ada tempat yang disimpan untuk anda: jika ada tempat kosong, kakitangan akan mendaftarkan anda di kaunter menggunakan kod ini, dan mungkin menghubungi anda melalui WhatsApp terlebih dahulu.",
-  "number {0} in line": "nombor {0} dalam giliran",
   "{0} bikes": "{0} basikal",
   "{0} colours": "{0} warna",
   "10 rides in a row with no missed booking": "10 kayuhan berturut-turut tanpa terlepas tempahan",
@@ -2008,6 +2005,11 @@
   "Find your order": "Cari pesanan anda",
   "Community Membership Application": "Permohonan Keahlian Komuniti",
   "Employees Bike Registration Form": "Borang Pendaftaran Basikal Pekerja",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | Kayuhan Sosial Sabtu",
-  "Saturday Social Ride | MicroMobility": "Kayuhan Sosial Sabtu | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "Kayuhan Sosial Sabtu | MicroMobility",
+  "Lockers | MicroMobility": "Loker | MicroMobility",
+  "Manage": "Urus",
+  "Paid from your wallet": "Dibayar daripada dompet anda",
+  "Pay at the desk": "Bayar di kaunter",
+  "Show this at the desk": "Tunjukkan ini di kaunter",
+  "Your lockers": "Loker anda"
 }

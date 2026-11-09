@@ -62,13 +62,18 @@ svg { flex: none; }
   flex: none; min-height: 36px; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent;
   color: var(--accent); font-family: var(--f-ar); font-weight: 600; font-size: 13px;
 }
-.lang[lang="en"] { font-family: var(--f-body); }
+/* The page on its own: the website's sixteen languages, each named in its own words, in the pill the English/Arabic
+   button was (the user, 2026-11-09). The page of the website leaves this to the site's own menu. */
+.lang-pick { position: relative; flex: none; display: inline-flex; align-items: center; }
+select.lang { appearance: none; -webkit-appearance: none; font-family: inherit; padding-inline: 12px 28px; cursor: pointer; }
 .lang:hover { border-color: var(--accent); }
+.lang-chev { position: absolute; inset-inline-end: 10px; width: 12px; height: 12px; fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 @media (max-width: 359px) {
   .top { padding-inline: 12px; }
   .lockup { gap: 8px; }
   .mm svg { height: 26px; }
-  .lang { padding: 4px 8px; }
+  select.lang { padding-inline: 8px 24px; }
+  .lang-chev { inset-inline-end: 7px; }
 }
 @media (min-width: 860px) {
   .top { padding: 18px 28px 14px; }
