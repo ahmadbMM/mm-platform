@@ -63,6 +63,17 @@ async function atWork(page: Page, first = true): Promise<void> {
   }
   await expect(page.locator("#w-q")).toBeVisible();
 }
+/** A certificate's check, metered like a sign-in: a run that checks more often than that waits for the next minute. */
+async function checkCert(page: Page, code: string): Promise<void> {
+  for (let i = 0; i < 3; i++) {
+    await page.goto(`/#check/${code}`);
+    await page.reload();
+    const said = page.locator("#check-res, main .note[role=alert]").first();
+    await expect(said).toBeVisible();
+    if (!/Too many tries/.test(await said.innerText())) return;
+    await page.waitForTimeout(61_000);
+  }
+}
 const row = (page: Page, id: string) => page.locator(`#w-found .row[data-id="${id}"]`);
 const noSideways = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth);
 
@@ -464,7 +475,8 @@ test("certificates: one per event worked, the one already made comes back, other
   await expect(sheet.locator(".thanks-ar")).toHaveText("تقديرًا لعطائها ومشاركتها التطوعية في المبادرة");
   await expect(sheet.locator(".recognition")).toHaveText("in recognition of her time, energy and commitment as a volunteer in");
   await expect(sheet.locator(".signer-name")).toHaveText("Ahmad Babalghoum");
-  expect(await sheet.locator(".page").evaluate((el: HTMLElement) => [el.offsetWidth, el.offsetHeight])).toEqual([1123, 794]);
+  // once its stylesheet is in (the window is written, then fetches it)
+  await expect.poll(() => sheet.locator(".page").evaluate((el: HTMLElement) => [el.offsetWidth, el.offsetHeight])).toEqual([1123, 794]);
   // its own two faces, never the portal's
   expect(await sheet.evaluate(() => [...document.styleSheets].map((s) => s.href ?? "").filter(Boolean).map((h) => new URL(h).pathname).sort())).toEqual(["/certificate-fonts.css", "/certificate.css"]);
   await sheet.close();
@@ -474,10 +486,11 @@ test("certificates: one per event worked, the one already made comes back, other
   // an employer checks it with the code printed on it, signed in or not
   await tab(page, "Profile").click();
   await page.getByRole("button", { name: "Sign out" }).click();
-  await page.goto("/#check/ZZZZ11112222");
+  await expect(page.getByRole("heading", { name: "Volunteer sign-in" })).toBeVisible();
+  await checkCert(page, "ZZZZ11112222");
   await expect(page.locator("#check-res")).toContainText("This certificate is valid.");
   await expect(page.locator("#check-res")).toContainText("Sara Haddad");
-  await page.goto("/#check/AAAA00000000");
+  await checkCert(page, "AAAA00000000");
   await expect(page.getByText("No certificate has this code.")).toBeVisible();
   expect(errors).toEqual([]);
 });

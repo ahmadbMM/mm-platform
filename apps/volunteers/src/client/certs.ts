@@ -185,21 +185,24 @@ async function makeCert(from: string, to: string): Promise<void> {
 }
 
 // ── a certificate's check (#check/<code>): anyone, signed in or not ──
-let check: { code: string; res: Cert | null; busy: boolean } | null = null;
+let check: { code: string; res: Cert | null; err: string; busy: boolean } | null = null;
 export function viewCheck(main: HTMLElement, code: string): void {
-  const C = check && check.code === code ? check : (check = { code, res: null, busy: false });
+  const C = check && check.code === code ? check : (check = { code, res: null, err: "", busy: false });
   const id = uid("code");
   const box = h("input", { id, type: "text", autocomplete: "off", autocapitalize: "characters", spellcheck: "false", maxlength: 12, dir: "ltr", value: code });
   append(main, h("h1", {}, t("checkTitle")),
     h("form", { class: "card form", onsubmit: ((e: Event) => { e.preventDefault(); go(`#check/${encodeURIComponent(box.value.trim().toUpperCase())}`); }) as EventListener },
       h("div", { class: "field" }, h("label", { for: id }, t("checkCode")), box), h("button", { type: "submit", class: "btn btn-primary" }, h("span", {}, t("checkBtn")))));
   if (!code) return;
+  if (C.err) { main.appendChild(note(C.err, "alert", "bad")); C.err = ""; check = null; return; } // asked again on the next visit
   if (!C.res) {
     main.appendChild(note(t("loading")));
     if (!C.busy) {
       C.busy = true;
       void rpc<Cert>("volunteer_cert_check", { p_code: code }).then((r) => {
-        C.busy = false; C.res = r.ok && r.data ? r.data : { ok: false };
+        C.busy = false;
+        // too many checks from this network, or no connection, is said as such: it is not "no certificate"
+        if (r.ok) C.res = r.data ?? { ok: false }; else C.err = say(r);
         if (route().name === "check") render();
       });
     }
