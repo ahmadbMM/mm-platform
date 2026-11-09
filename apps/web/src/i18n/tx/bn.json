@@ -690,7 +690,6 @@
   "Shortcuts": "শর্টকাট",
   "Show": "দেখান",
   "Sign in": "সাইন ইন",
-  "Sign in through the booking app": "বুকিং অ্যাপ দিয়ে সাইন ইন করুন",
   "Sign in to your account": "আপনার অ্যাকাউন্টে সাইন ইন করুন",
   "Sign in with your Micromobility account - the one you book rides with.": "আপনার Micromobility অ্যাকাউন্ট দিয়ে সাইন ইন করুন — যেটি দিয়ে আপনি রাইড বুক করেন।",
   "Sign in with your Micromobility account to see where your ride is.": "আপনার রাইড কোথায় আছে দেখতে আপনার Micromobility অ্যাকাউন্টে সাইন ইন করুন।",
@@ -704,8 +703,6 @@
   "Show them": "দেখান",
   "Our team asked you to check this.": "আমাদের দল আপনাকে এটি যাচাই করতে বলেছে।",
   "{0}: This is the same as what is on your account. Please correct it.": "{0}: এটি আপনার অ্যাকাউন্টে যা আছে তার মতোই। অনুগ্রহ করে এটি সংশোধন করুন।",
-  "Signed up with Google or Apple?": "Google বা Apple দিয়ে সাইন আপ করেছিলেন?",
-  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Google বা Apple দিয়ে সাইন আপ করেছেন? বুকিং অ্যাপে সেটি দিয়েই এগিয়ে যান, তারপর সাইন ইন অবস্থায় এখানে ফিরে আসবেন।",
   "Signing in…": "সাইন ইন হচ্ছে…",
   "Signing up your child? The account is yours.": "আপনার সন্তানকে সাইন আপ করাচ্ছেন? অ্যাকাউন্টটি আপনার নিজের।",
   "Since 2016, Micromobility has been a Saudi company specialising in bicycles and modern mobility. Today we're a store, a workshop, a rental fleet and a riding community - building cycling culture on the Red Sea coast, one ride at a time.": "2016 সাল থেকে Micromobility সাইকেল ও আধুনিক যাতায়াত ব্যবস্থায় বিশেষায়িত একটি সৌদি কোম্পানি। আজ আমরা একাধারে স্টোর, ওয়ার্কশপ, ভাড়ার ফ্লিট ও রাইডিং কমিউনিটি — লোহিত সাগরের উপকূলে প্রতিটি রাইডে একটু একটু করে গড়ে তুলছি সাইক্লিং সংস্কৃতি।",
@@ -1785,5 +1782,9 @@
   "EST. JEDDAH": "জেদ্দায় প্রতিষ্ঠিত",
   "Photo {n} of {total}": "{total}টির মধ্যে ছবি {n}",
   "What's on.": "সামনে যা আছে।",
-  "Find your bike": "আপনার সাইকেল খুঁজুন"
+  "Find your bike": "আপনার সাইকেল খুঁজুন",
+  "Community Membership Application": "কমিউনিটি সদস্যপদের আবেদন",
+  "Employees Bike Registration Form": "কর্মীদের সাইকেল রেজিস্ট্রেশন ফর্ম",
+  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | শনিবারের সোশ্যাল রাইড",
+  "Saturday Social Ride | MicroMobility": "শনিবারের সোশ্যাল রাইড | MicroMobility"
 }

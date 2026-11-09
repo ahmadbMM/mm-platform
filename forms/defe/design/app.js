@@ -3,8 +3,8 @@
    1. the landing: the ride (partner_status: which session, places open or full, whether a code is
       needed) - never a count of places or bookings, only open or full;
    2. the account: the booking site's own sign-up (customer_exists, customer_signup, customer_consents,
-      customer_set_emergency/2) or its sign-in (customer_login, customer_pwd_state); Google, Apple and a
-      forgotten password go through the booking app, which hands the rider back here signed in
+      customer_set_emergency/2) or its sign-in (customer_login, customer_pwd_state); a
+      forgotten password goes through the booking app, which hands the rider back here signed in
       (?code=, customer_handoff_redeem);
    3. the details a Saturday ride asks for, only what the account is missing, the height always
       (customer_profile, customer_emergency, customer_whatsapp, customer_fix_fields; saved with
@@ -17,11 +17,15 @@
   "use strict";
   // The public anon key (the same one the booking site ships): every call is a SECURITY DEFINER
   // function that checks the session token and throttles on the server.
-  var SUPABASE_URL = "https://qpffkzmsfyilicwcsszz.supabase.co";
-  var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
+  // On the website's page for the form (apps/web/src/components/forms/SiteForm.tsx) the page speaks the language the
+  // site's globe picked and talks to the database the website does (staging's on staging): window.MM_SITE_FORM =
+  // {lang, db: {url, key}}. The page built on its own (?classic=1) uses these.
+  var SITE_FORM = window.MM_SITE_FORM || null;
+  var SUPABASE_URL = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.url) || "https://qpffkzmsfyilicwcsszz.supabase.co";
+  var SUPABASE_KEY = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.key) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
   var PARTNER = "defe";
   var LANG_KEY = "mm-defe-lang";
-  // The booking app: where Google, Apple and a forgotten password are handled, and where the ticket lives.
+  // The booking app: where a forgotten password is handled, and where the ticket lives.
   var BOOKING_URL = "https://experiences.micromobility.sa/";
 
   var SH = window.SHARED, T = window.FORM_T || {};
@@ -61,13 +65,17 @@
     if (id === "f-email") paintEmailFix();
   }
 
-  /* ── Language: English and Arabic ────────────────────────────────────── */
+  /* ── Language: the website's sixteen ────────────────────────────────────
+     On the website's page, the one its globe picked. On the page built on its own, ?lang=, then the one last
+     picked here, then the phone's; its button switches between English and Arabic. */
+  function hasLang(c) { for (var i = 0; i < SH.LANGS.length; i++) if (SH.LANGS[i].code === c) return true; return false; }
   function pickLang() {
+    if (SITE_FORM && hasLang(SITE_FORM.lang)) return SITE_FORM.lang;
     var q = (new URLSearchParams(location.search).get("lang") || "").toLowerCase();
-    if (q === "en" || q === "ar") return q;
-    try { var s = localStorage.getItem(LANG_KEY); if (s === "en" || s === "ar") return s; } catch (e) {}
+    if (hasLang(q)) return q;
+    try { var s = localStorage.getItem(LANG_KEY); if (hasLang(s)) return s; } catch (e) {}
     var nav = navigator.languages || [navigator.language || "en"];
-    for (var i = 0; i < nav.length; i++) { var c = String(nav[i] || "").toLowerCase().split(/[-_]/)[0]; if (c === "ar" || c === "en") return c; }
+    for (var i = 0; i < nav.length; i++) { var c = String(nav[i] || "").toLowerCase().split(/[-_]/)[0]; if (c === "fil") c = "tl"; if (hasLang(c)) return c; }
     return "en";
   }
   function setLang(code, save) {
@@ -75,11 +83,13 @@
     html.lang = code; html.dir = langInfo(code).rtl ? "rtl" : "ltr";
     if (save) { try { localStorage.setItem(LANG_KEY, code); } catch (e) {} }
     var other = code === "ar" ? "en" : "ar", b = $("#lang");
-    b.textContent = langInfo(other).label; b.lang = other;
-    b.setAttribute("aria-label", other === "ar" ? "اقرأ الصفحة بالعربية" : "Read this page in English");
+    if (b) {
+      b.textContent = langInfo(other).label; b.lang = other;
+      b.setAttribute("aria-label", other === "ar" ? "اقرأ الصفحة بالعربية" : "Read this page in English");
+    }
     paint();
   }
-  $("#lang").addEventListener("click", function () {
+  if ($("#lang")) $("#lang").addEventListener("click", function () {
     var next = lang === "ar" ? "en" : "ar";
     setLang(next, true);
     try { var u = new URL(location.href); u.searchParams.set("lang", next); history.replaceState(null, "", u); } catch (e) {}
@@ -91,7 +101,7 @@
     $$("[data-site]").forEach(function (el) { el.textContent = site(el.getAttribute("data-site")); });
     $$("[data-site-aria]").forEach(function (el) { el.setAttribute("aria-label", site(el.getAttribute("data-site-aria"))); });
     $$("[data-site-placeholder]").forEach(function (el) { el.placeholder = site(el.getAttribute("data-site-placeholder")); });
-    $$("#si-other, #si-temp-a, #d-blocked-a").forEach(function (a) { a.href = handoffUrl(); });
+    $$("#si-other, #si-temp-a, #d-blocked-a").forEach(function (a) { a.href = handoffUrl() + (a.id === "si-other" ? "&auth=forgot" : ""); }); // si-other is Forgot password (no Google or Apple sign-in, 2026-11-09)
     $("#see-ticket-a").href = bookingsUrl(); $("#done-fallback").href = bookingsUrl();
     $("#ack-lbl").innerHTML = ackLabel();
     $("#waiver-lbl").innerHTML = esc(tr("I have read and accept the {waiver}.")).replace("{waiver}", '<button type="button" class="d-link" id="wv-open">' + esc(tr("ride waiver")) + "</button>") + ' <span class="req" aria-hidden="true">*</span>';
@@ -1154,7 +1164,7 @@
   $("#done-open").addEventListener("click", function () { openBooking(); });
 
   // Test hook: the specs read what the page would send without a network.
-  window.DefeForm = { e164: function () { return e164(PK); }, igNorm: igNorm, sizeFor: sizeFor, loginIdent: loginIdent, checkName: checkName };
+  window.DefeForm = { setLang: setLang, e164: function () { return e164(PK); }, igNorm: igNorm, sizeFor: sizeFor, loginIdent: loginIdent, checkName: checkName };
 
   setLang(pickLang(), false);
   showView("landing");

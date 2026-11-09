@@ -49,6 +49,12 @@ async function open(page: Page, qs = '', answers: Answers = {}, form: unknown = 
   const of = (fn: string) => calls.filter((c) => c.fn === fn).map((c) => c.body);
   return { errs, calls, of };
 }
+// The page's language: the form's own picker on its own page; on the website the site's globe reloads the page in the
+// language chosen, so the spec switches it in place, the way the picker does.
+async function setLang(page: Page, code: string) {
+  if (await page.locator('#lang').count()) await page.selectOption('#lang', code);
+  else await page.evaluate((c) => (window as unknown as { CommunityForm: { setLang(c: string, s: boolean): void } }).CommunityForm.setLang(c, true), code);
+}
 async function emContact(page: Page, pre: string, o: { name?: string; phone?: string; rel?: string } = {}) {
   await page.fill(`#${pre}-name`, o.name ?? 'Layla Mansour');
   await page.fill(`#${pre}-phone`, o.phone ?? '0551234567');
@@ -191,9 +197,10 @@ test('"Already have an account? Sign in" goes back to the first question, signed
   await page.click('#to-login');
   await expect(step(page, 0)).toBeVisible();
   await expect(page.locator('#login-box')).toBeVisible();
-  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=ar');
-  await page.selectOption('#lang', 'fr');
-  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=fr');
+  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=ar&auth=forgot');
+  await expect(page.locator('#signin-link2')).toHaveText('نسيت كلمة المرور؟'); // no Google or Apple sign-in (2026-11-09)
+  await setLang(page, 'fr');
+  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=fr&auth=forgot');
 });
 
 // The first question (the owner, 2026-10-25): an account already signs in here and is asked only what the
@@ -235,9 +242,9 @@ test('first question: No makes an account; Yes signs in and asks only what is mi
   await emContact(page, 'xem');
   await page.click('#submit');
   for (const f of ['#f-ig', '#f-xheight', '#f-xem-name']) await expect(page.locator(`${f} .err`)).toHaveText(SAME);
-  await page.selectOption('#lang', 'ar');
+  await setLang(page, 'ar');
   await expect(page.locator('#f-ig .err')).toHaveText('هذا مطابق لما هو مسجل في حسابك. يرجى تصحيحه.');
-  await page.selectOption('#lang', 'en');
+  await setLang(page, 'en');
   expect(of('customer_set_emergency')).toEqual([]);
   expect(of('customer_community_apply')).toEqual([]);
   await page.fill('#xheight', '180');
@@ -430,7 +437,7 @@ test('company: required, beside the profession, and in the page language', async
     await expect(page.locator('#f-work .err')).toHaveText('Enter your company');
   }
   expect(of('customer_community_apply')).toEqual([]);
-  await page.selectOption('#lang', 'ar');
+  await setLang(page, 'ar');
   await expect(page.locator('#f-work label')).toHaveText('الشركة');
   await expect(page.locator('#f-work .err')).toHaveText('أدخل اسم شركتك');
   await page.fill('#work', 'جامعة الملك عبدالعزيز');
@@ -450,7 +457,7 @@ test('how they heard of us: every answer the booking site knows, required, in th
   await expect(page.locator('#f-heard .err')).toHaveText('Please tell us how you heard about us.');
   await expect(page.locator('#heard option[value="invited"]')).toHaveText('Invited by MicroMobility');
   await page.selectOption('#heard', 'passed_by');
-  await page.selectOption('#lang', 'ar');
+  await setLang(page, 'ar');
   await expect(page.locator('#f-heard label')).toHaveText('كيف عرفت عنا؟');
   await expect(page.locator('#heard')).toHaveValue('passed_by');
   expect(errs).toEqual([]);
@@ -770,7 +777,10 @@ test('a second emergency contact is optional, needs all three boxes, and not the
   expect(of('customer_set_emergency2')).toHaveLength(0);
   expect(errs).toEqual([]);
 
-  // a second visitor on a device of their own: the first one's answers kept on this one (mm-community-draft) are not theirs
+  // a second visitor on a device of their own: the first one's answers kept on this one (mm-community-draft) are not theirs.
+  // The first page is closed first: it writes its draft as it is hidden or closed, which on the website's page (whose
+  // scripts run once the page is drawn) could land after the second page has cleared it and before its form reads it.
+  await page.close();
   const p2 = await page.context().newPage();
   await p2.addInitScript(() => { try { localStorage.removeItem('mm-community-draft'); } catch (e) { /* none */ } });
   const b = await open(p2);
@@ -889,7 +899,7 @@ test('the admins\' settings: a question turned off is not asked or sent, one mad
   expect(p.workplace).toBe('');
   expect(p.nationality).toBe('Egypt');
   // in Arabic, their Arabic wording
-  await page.selectOption('#lang', 'ar');
+  await setLang(page, 'ar');
   await expect(page.locator('#f-nat label')).toHaveText('ما جواز سفرك؟');
   expect(errs).toEqual([]);
 });

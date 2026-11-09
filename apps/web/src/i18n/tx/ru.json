@@ -690,7 +690,6 @@
   "Shortcuts": "Быстрые ссылки",
   "Show": "Показать",
   "Sign in": "Войти",
-  "Sign in through the booking app": "Войти через приложение для бронирования",
   "Sign in to your account": "Войдите в аккаунт",
   "Sign in with your Micromobility account - the one you book rides with.": "Войдите в аккаунт Micromobility — тот же, через который вы бронируете заезды.",
   "Sign in with your Micromobility account to see where your ride is.": "Войдите в аккаунт Micromobility, чтобы увидеть, где сейчас ваш заезд.",
@@ -704,8 +703,6 @@
   "Show them": "Показать",
   "Our team asked you to check this.": "Наша команда просит вас проверить это.",
   "{0}: This is the same as what is on your account. Please correct it.": "{0}: Это совпадает с тем, что указано в вашем аккаунте. Исправьте, пожалуйста.",
-  "Signed up with Google or Apple?": "Регистрировались через Google или Apple?",
-  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Регистрировались через Google или Apple? Продолжите с ним в приложении для бронирования — и вы вернётесь сюда уже с выполненным входом.",
   "Signing in…": "Входим…",
   "Signing up your child? The account is yours.": "Записываете ребёнка? Аккаунт будет на ваше имя.",
   "Since 2016, Micromobility has been a Saudi company specialising in bicycles and modern mobility. Today we're a store, a workshop, a rental fleet and a riding community - building cycling culture on the Red Sea coast, one ride at a time.": "С 2016 года Micromobility — саудовская компания, специализирующаяся на велосипедах и современной мобильности. Сегодня мы — магазин, мастерская, прокатный велопарк и велосообщество: заезд за заездом развиваем велокультуру на побережье Красного моря.",
@@ -1785,5 +1782,9 @@
   "EST. JEDDAH": "ОСНОВАНО В ДЖИДДЕ",
   "Photo {n} of {total}": "Фото {n} из {total}",
   "What's on.": "Что впереди.",
-  "Find your bike": "Подберите велосипед"
+  "Find your bike": "Подберите велосипед",
+  "Community Membership Application": "Заявка на членство в сообществе",
+  "Employees Bike Registration Form": "Регистрационная форма: велосипеды для сотрудников",
+  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | Субботний дружеский заезд",
+  "Saturday Social Ride | MicroMobility": "Субботний дружеский заезд | MicroMobility"
 }

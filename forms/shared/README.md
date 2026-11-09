@@ -20,7 +20,8 @@ lands on every form at once). It has no page of its own; each form draws its box
 - `MMAccount.draft(key, days)`: a half-filled form kept on the device (`load`, `save`, `clear`).
 
 Who uses it:
-- `forms/community` and `forms/defe` inline it (their `scripts/build.mjs`, through `emit.mjs`).
+- `forms/community`, `forms/defe`, `forms/saturday` and `forms/lockers` inline it (their `scripts/build.mjs`, through
+  `emit.mjs`).
 - The website's Learn to ride form imports `apps/web/src/lib/account-shared.ts`, which both builds write from this
   file (typed in `apps/web/src/lib/account-step.ts`). Learn to ride signs in through `/api/account` (its Turnstile
   check and the temporary-password step), and takes `ident` and `plan` from here.

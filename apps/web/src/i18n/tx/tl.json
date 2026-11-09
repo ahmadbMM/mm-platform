@@ -690,7 +690,6 @@
   "Shortcuts": "Mga shortcut",
   "Show": "Ipakita",
   "Sign in": "Mag-sign in",
-  "Sign in through the booking app": "Mag-sign in sa booking app",
   "Sign in to your account": "Mag-sign in sa iyong account",
   "Sign in with your Micromobility account - the one you book rides with.": "Mag-sign in gamit ang iyong Micromobility account — ang ginagamit mo sa pag-book ng mga ride.",
   "Sign in with your Micromobility account to see where your ride is.": "Mag-sign in gamit ang iyong Micromobility account para makita kung nasaan ang iyong ride.",
@@ -704,8 +703,6 @@
   "Show them": "Ipakita",
   "Our team asked you to check this.": "Hiniling ng aming team na suriin mo ito.",
   "{0}: This is the same as what is on your account. Please correct it.": "{0}: Pareho ito sa nasa account mo. Pakiwasto ito.",
-  "Signed up with Google or Apple?": "Nag-sign up gamit ang Google o Apple?",
-  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Nag-sign up gamit ang Google o Apple? Ituloy ito sa booking app, at babalik ka rito na naka-sign in na.",
   "Signing in…": "Nagsa-sign in…",
   "Signing up your child? The account is yours.": "Ang anak mo ang ipapa-sign up? Sa iyo ang account.",
   "Since 2016, Micromobility has been a Saudi company specialising in bicycles and modern mobility. Today we're a store, a workshop, a rental fleet and a riding community - building cycling culture on the Red Sea coast, one ride at a time.": "Mula pa noong 2016, ang Micromobility ay isang kumpanyang Saudi na dalubhasa sa mga bisikleta at makabagong transportasyon. Ngayon, kami ay isang tindahan, workshop, rental fleet at komunidad ng mga rider — bumubuo ng kultura ng pagbibisikleta sa baybayin ng Dagat na Pula, paisa-isang ride.",
@@ -1785,5 +1782,9 @@
   "EST. JEDDAH": "ITINATAG SA JEDDAH",
   "Photo {n} of {total}": "Larawan {n} sa {total}",
   "What's on.": "Mga paparating.",
-  "Find your bike": "Hanapin ang bisikleta mo"
+  "Find your bike": "Hanapin ang bisikleta mo",
+  "Community Membership Application": "Aplikasyon para sa Membership sa Komunidad",
+  "Employees Bike Registration Form": "Form ng Pagpaparehistro ng Bisikleta para sa mga Empleyado",
+  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | Saturday Social Ride",
+  "Saturday Social Ride | MicroMobility": "Saturday Social Ride | MicroMobility"
 }

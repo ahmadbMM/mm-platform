@@ -12,11 +12,12 @@ for (const [lang, family] of [['en', 'Space Grotesk'], ['ar', 'IBM Plex Sans Ara
     page.on('response', (r) => { if (r.url().includes('/fonts/') && r.status() !== 200) failed.push(`${r.status()} ${r.url()}`); });
     await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
     await page.goto(`/petromin?lang=${lang}`);
-    const loaded = await page.evaluate(async (f) => {
+    // Polled: the website's page draws the form's text once its scripts run, after the page is on screen, so the fonts
+    // can still be settling when the first check looks.
+    await expect.poll(() => page.evaluate(async (f) => {
       await document.fonts.ready;
       return [...document.fonts].filter((x) => x.family.replace(/"/g, '') === f && x.status === 'loaded').length;
-    }, family);
-    expect(loaded, `${family} faces loaded`).toBeGreaterThan(0);
+    }, family), { message: `${family} faces loaded` }).toBeGreaterThan(0);
     expect(asked.filter((u) => /fonts\.(googleapis|gstatic)\.com/.test(u))).toEqual([]);
     expect(asked.some((u) => new URL(u).pathname.startsWith('/fonts/forms/'))).toBe(true);
     expect(failed).toEqual([]);

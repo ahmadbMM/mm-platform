@@ -244,7 +244,7 @@ opportunities (a session with the volunteer switch on), anyone with a MicroMobil
 staff accept work (rentals migration `20261105120000_volunteers.sql`; apply it BEFORE the first deploy).
 
 - A volunteer is a customer account: sign-in is the booking app's `customer_login`, the same email or mobile and password.
-  Creating an account, a forgotten password and Google or Apple sign-in happen on the booking app
+  Creating an account and a forgotten password happen on the booking app
   (`?handoff=volunteer`), which hands the rider back with a one-time code (`?signin=<code>`, `customer_handoff_redeem`),
   as My Account's button does.
 - The token stays on the server: the Worker keeps it in an HttpOnly, host-only cookie (`mm_volunteer`) and forwards only the

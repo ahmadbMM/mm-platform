@@ -45,7 +45,6 @@
   "vdSignBtn": "Iniciar sesión",
   "signForgot": "¿Olvidaste tu contraseña?",
   "signCreate": "Crear una cuenta",
-  "signOther": "Iniciar sesión con Google o Apple",
   "errBadLogin": "Correo, número de móvil o contraseña incorrectos.",
   "errLocked": "Demasiados intentos. Espera 15 minutos.",
   "errRate": "Demasiados intentos desde esta red. Espera un minuto.",

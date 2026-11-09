@@ -109,8 +109,10 @@ test("a wrong password is said, and the other ways in go to the booking app", as
   await expect(page.getByRole("alert")).toContainText("Wrong email, mobile number or password");
   await expect(page.getByLabel("Email or mobile number")).toHaveValue("sara@example.com");
   await expect(page.getByRole("link", { name: "Create an account" })).toHaveAttribute("href", /\/signup\?handoff=volunteer$/);
-  await expect(page.getByRole("link", { name: "Sign in with Google or Apple" })).toHaveAttribute("href", /\?handoff=volunteer$/);
   await expect(page.getByRole("link", { name: "Forgot your password?" })).toHaveAttribute("href", /handoff=volunteer&auth=forgot$/);
+  // No Google or Apple sign-in (the owner, 2026-11-09): only these two ways in, nothing else.
+  await expect(page.locator("form .alt a")).toHaveCount(2);
+  await expect(page.getByText(/Google|Apple/)).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 

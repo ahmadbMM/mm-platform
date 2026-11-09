@@ -127,11 +127,25 @@
 
   /* Live wiring: sessions and submit go through the rentals Supabase project. The anon key is
      public by design; both RPCs are SECURITY DEFINER and validate/throttle on the server. */
-  var SUPABASE_URL = "https://qpffkzmsfyilicwcsszz.supabase.co";
-  var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
+  var SUPABASE_URL = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.url) || "https://qpffkzmsfyilicwcsszz.supabase.co";
+  var SUPABASE_KEY = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.key) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
   var SOURCE = (location.pathname.split("/").filter(Boolean)[0] || "petromin").toLowerCase(); // 'petromin' on micromobility.sa/petromin
   var _sb = null;
-  function sbClient() { if (!_sb) _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); return _sb; }
+  /* The website's page loads no supabase-js (its address is not one the site's scripts may come from): the three calls
+     the form makes are plain POSTs to the database's /rest/v1/rpc, answered as supabase-js answers them ({data, error},
+     a refusal's code and message as PostgREST sends them, a network failure as an error, never thrown). */
+  function rpcFetch(fn, args) {
+    return fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, { method: "POST", headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" }, body: JSON.stringify(args || {}) })
+      .then(function (res) {
+        return res.text().then(function (txt) {
+          var body = null; try { body = txt ? JSON.parse(txt) : null; } catch (e) { body = txt; }
+          if (res.ok) return { data: body, error: null, status: res.status };
+          var err = body && typeof body === "object" ? body : { message: String(body || res.statusText) };
+          return { data: null, error: { message: err.message || res.statusText, code: err.code || String(res.status), details: err.details || null, hint: err.hint || null }, status: res.status };
+        });
+      }, function (e) { return { data: null, error: { message: "TypeError: " + (e && e.message || "Failed to fetch"), code: "", details: String(e), hint: "" }, status: 0 }; });
+  }
+  function sbClient() { if (!_sb) _sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : { rpc: rpcFetch }; return _sb; }
   function toAscii(s) { return String(s).replace(/[\u0660-\u0669]/g, function (c) { return String(c.charCodeAt(0) - 0x0660); }).replace(/[\u06F0-\u06F9]/g, function (c) { return String(c.charCodeAt(0) - 0x06F0); }); }
   /* Names hold letters, spaces and periods, as on the rentals site: a dash becomes a space
      ("Al-Harbi" is "Al Harbi", not "AlHarbi"), and digits, emoji and other signs are dropped as they
@@ -223,7 +237,7 @@
     } catch (err) { if (mine === sessionsAsked) { sessionsLoading = 0; setSessions([]); showBanner("Could not reach the server"); } }
   }
   // Session labels are built with the active locale, so rebuild them on a language change.
-  $("#lang").addEventListener("change", function () { renderSessions(); });
+  if ($("#lang")) $("#lang").addEventListener("change", function () { renderSessions(); });
 
 
 

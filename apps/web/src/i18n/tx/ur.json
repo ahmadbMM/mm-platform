@@ -690,7 +690,6 @@
   "Shortcuts": "شارٹ کٹس",
   "Show": "دکھائیں",
   "Sign in": "سائن اِن کریں",
-  "Sign in through the booking app": "بکنگ ایپ کے ذریعے سائن اِن کریں",
   "Sign in to your account": "اپنے اکاؤنٹ میں سائن اِن کریں",
   "Sign in with your Micromobility account - the one you book rides with.": "اپنے Micromobility اکاؤنٹ سے سائن اِن کریں — وہی جس سے آپ رائیڈز بُک کرتے ہیں۔",
   "Sign in with your Micromobility account to see where your ride is.": "اپنی رائیڈ کہاں ہے دیکھنے کے لیے اپنے Micromobility اکاؤنٹ سے سائن اِن کریں۔",
@@ -704,8 +703,6 @@
   "Show them": "دکھائیں",
   "Our team asked you to check this.": "ہماری ٹیم نے آپ سے یہ چیک کرنے کو کہا ہے۔",
   "{0}: This is the same as what is on your account. Please correct it.": "{0}: یہ وہی ہے جو آپ کے اکاؤنٹ میں درج ہے۔ براہِ کرم اسے درست کریں۔",
-  "Signed up with Google or Apple?": "Google یا Apple سے سائن اپ کیا تھا؟",
-  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Google یا Apple سے سائن اپ کیا تھا؟ بکنگ ایپ میں اسی کے ساتھ جاری رکھیں، اور آپ سائن اِن ہو کر یہاں واپس آ جائیں گے۔",
   "Signing in…": "سائن اِن ہو رہا ہے…",
   "Signing up your child? The account is yours.": "اپنے بچے کو رجسٹر کر رہے ہیں؟ اکاؤنٹ آپ کا ہوگا۔",
   "Since 2016, Micromobility has been a Saudi company specialising in bicycles and modern mobility. Today we're a store, a workshop, a rental fleet and a riding community - building cycling culture on the Red Sea coast, one ride at a time.": "2016 سے Micromobility سائیکلوں اور جدید نقل و حرکت میں مہارت رکھنے والی ایک سعودی کمپنی ہے۔ آج ہم ایک اسٹور، ایک ورکشاپ، کرائے کی سائیکلوں کا بیڑا اور رائیڈرز کی ایک کمیونٹی ہیں — بحیرہ احمر کے ساحل پر ایک ایک رائیڈ کر کے سائیکلنگ کی ثقافت پروان چڑھا رہے ہیں۔",
@@ -1785,5 +1782,9 @@
   "EST. JEDDAH": "جدہ میں قائم",
   "Photo {n} of {total}": "{total} میں سے تصویر {n}",
   "What's on.": "آنے والی سرگرمیاں۔",
-  "Find your bike": "اپنی سائیکل تلاش کریں"
+  "Find your bike": "اپنی سائیکل تلاش کریں",
+  "Community Membership Application": "کمیونٹی ممبرشپ کی درخواست",
+  "Employees Bike Registration Form": "ملازمین کے لیے سائیکل رجسٹریشن فارم",
+  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | ہفتے کی سوشل رائیڈ",
+  "Saturday Social Ride | MicroMobility": "ہفتے کی سوشل رائیڈ | MicroMobility"
 }

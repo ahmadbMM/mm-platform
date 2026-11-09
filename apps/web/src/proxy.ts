@@ -12,11 +12,18 @@ import { apexTarget, movedStatus } from "./lib/canonical-host";
 const intl = createMiddleware(routing);
 
 // The registration forms' addresses (see the matcher below).
-const FORM_ADDRESSES = ["/community/registration", "/petromin", "/defe", "/saturday"];
+const FORM_ADDRESSES = ["/community/registration", "/petromin", "/defe", "/saturday", "/lockers"];
 export function formAddress(pathname: string): string | null {
   const p = pathname.toLowerCase().replace(/\/+$/, "");
   return FORM_ADDRESSES.includes(p) ? p : null;
 }
+// The forms that are pages of the website now (app/[locale]/<address>: the site's header, footer and languages around
+// the form; the user, 2026-11-09: all four). Each still answers with the page its build writes (app/<address>/route.ts)
+// with ?classic=1, kept while the website's pages settle in; the lockers page (forms/lockers) is that page alone. Either
+// way a form opens whatever
+// Coming Soon says (the page itself answers with the form's own while the site is closed: components/forms/FormPage.tsx).
+export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/defe", "/saturday"];
+export const formOnSite = (form: string, params: URLSearchParams) => SITE_FORMS.includes(form) && !params.has("classic");
 
 // micromobility.sa/store opens the online store (a hosted Salla shop, on its own domain), at the
 // address staff set (Website > Whole site > Other addresses), in English when the visitor reads
@@ -57,10 +64,11 @@ const PRIVACY_PAGE = /^(?:\/(?:en|ar))?\/privacy\/?$/;
 // two ways. /bikes/42 and the chips' older /?bike=42 (/b/42 reaches /bikes/42 first, next.config).
 export const STAFF_TAP_COOKIE = "mm_staff_tap";
 const STAFF_APP = "https://staff.micromobility.sa";
-// A locker's tag (the booking app's lockers, 2026-11-09): micromobility.sa/lockers/P7. A staff phone goes on to
-// staff.micromobility.sa/?locker=P7 (that locker's sheet, or into the check-in open on the phone); a rider's phone
-// to their account, whose ticket says their locker and its number (lockerRiderTarget).
-const LOCKER_PAGE = /^\/lockers\/([A-Za-z]{1,3}\d{1,4})\/?$/;
+// A locker's tag (the booking app's lockers, 2026-11-09): micromobility.sa/lockers/7 (the lockers are plain numbers since
+// the lockers page; a tag written before reads /lockers/L7). A staff phone goes on to staff.micromobility.sa/?locker=7
+// (that locker's sheet, or into the check-in open on the phone); a rider's phone to the lockers page with that locker
+// picked, /lockers?locker=7 (lockerRiderTarget). /lockers itself is the page (app/lockers, outside the proxy).
+const LOCKER_PAGE = /^\/lockers\/([A-Za-z]{0,3}\d{1,4})\/?$/;
 export function staffTapTarget(pathname: string, searchParams: URLSearchParams, cookie: string | undefined): string | null {
   if (cookie !== "1") return null;
   const lk = LOCKER_PAGE.exec(pathname);
@@ -69,9 +77,15 @@ export function staffTapTarget(pathname: string, searchParams: URLSearchParams, 
   return code && /^\d{1,6}$/.test(code) ? `${STAFF_APP}/?bike=${Number(code)}` : null;
 }
 
-/** A rider tapping a locker's tag: their account (its tickets name the locker). Null for anything else. */
-export function lockerRiderTarget(pathname: string): string | null {
-  return LOCKER_PAGE.test(pathname) ? "/account" : null;
+/** A rider tapping a locker's tag: the lockers page with that locker picked (the page reads 7, 07 and L7 alike),
+ *  any ?lang= kept. Null for anything else. */
+export function lockerRiderTarget(pathname: string, searchParams?: URLSearchParams): string | null {
+  const m = LOCKER_PAGE.exec(pathname);
+  if (!m) return null;
+  const q = new URLSearchParams({ locker: m[1].toUpperCase() });
+  const lang = searchParams?.get("lang");
+  if (lang === "en" || lang === "ar") q.set("lang", lang);
+  return `/lockers?${q.toString()}`;
 }
 
 // /claim/<token> (and /en|ar/claim/<token>): the waitlist claim link's other spelling, sent to
@@ -101,6 +115,8 @@ export default async function proxy(req: NextRequest) {
   // (/Petromin, /community/Registration/) is sent there, as their own Workers did.
   const form = formAddress(pathname);
   if (form && form !== pathname) return NextResponse.redirect(new URL(form + req.nextUrl.search, req.url), 301);
+  // A form's own page: nothing here applies to it (the route answers it as it is).
+  if (form && !formOnSite(form, searchParams)) return NextResponse.next();
   const store = await storeTarget(pathname, req);
   if (store) return NextResponse.redirect(store, 307);
   const staffTap = staffTapTarget(pathname, searchParams, req.cookies.get(STAFF_TAP_COOKIE)?.value);
@@ -110,7 +126,7 @@ export default async function proxy(req: NextRequest) {
     return res;
   }
   // The same address answers a staff phone and a rider's two ways, so neither answer is kept.
-  const lockerTo = lockerRiderTarget(pathname);
+  const lockerTo = lockerRiderTarget(pathname, searchParams);
   if (lockerTo) {
     const res = NextResponse.redirect(new URL(lockerTo, req.url), 307);
     res.headers.set("Cache-Control", "private, no-store");
@@ -142,7 +158,7 @@ export default async function proxy(req: NextRequest) {
   // state - Coming Soon on, or the Bikes page not switched on. It is never a catalogue page: a
   // category's address starts with a letter (the database insists), so digits can only be a tag.
   // The Learn to ride sign-up and the Privacy Notice open the same way (LEARN_PAGE, PRIVACY_PAGE).
-  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname)) return keepLang(intl(req));
+  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname) || form) return keepLang(intl(req));
   // While the site is Coming Soon, it is the only page: /login, /about and anything else go
   // back to it. /store forwards to the shop before this runs (above), and the old /b/42 tag
   // address is redirected to /bikes/42 before this runs (next.config redirects).
@@ -169,8 +185,6 @@ export default async function proxy(req: NextRequest) {
 // handled as a site page, whatever else changes. /bikes/42 itself does come here (FLEET_PAGE).
 // Only /b and /api themselves and what is under them: a bare "b" also caught /business, which
 // was a 404 once its address lost the /en in front.
-// The registration forms are excluded too (app/community/registration, app/petromin, the Defe
-// booking page app/defe and the Saturday ride's app/saturday): they
-// are public whatever Coming Soon says, and they carry their own languages. Their exact
-// addresses only - /Petromin and the like still come here and are sent to the real one.
-export const config = { matcher: ["/((?!api/|api$|b/|b$|_next|community/registration$|petromin$|defe$|saturday$|.*\\..*).*)"] };
+// The registration forms come here too: a form that is a page of the website is drawn through next-intl like any page
+// (whatever Coming Soon says), and one that is not - or any with ?classic=1 - is let through untouched to its own route.
+export const config = { matcher: ["/((?!api/|api$|b/|b$|_next|.*\\..*).*)"] };

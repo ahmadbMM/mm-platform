@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { flipLang } from './lang';
 
 // micromobility.sa/defe end to end in a browser, every database call stubbed (and the booking app it
 // hands the rider on to): the landing (partner_status), the account (sign-up, sign-in, or handed back
@@ -203,7 +204,8 @@ test('an existing rider signs in with their mobile, confirms the height and book
   const { errs, of } = await open(page);
   await page.click('#go-signin');
   await expect(page.locator('#p-signin')).toBeVisible();
-  await expect(page.locator('#si-other')).toHaveAttribute('href', `${BOOKING}?handoff=defe&lang=en`);
+  await expect(page.locator('#si-other')).toHaveAttribute('href', `${BOOKING}?handoff=defe&lang=en&auth=forgot`);
+  await expect(page.locator('#si-other')).toHaveText('Forgot password?'); // no Google or Apple sign-in (2026-11-09)
   await page.fill('#ident', '055 246 8013');
   await page.fill('#spwd', 'Ride2Work');
   await page.click('#signin');
@@ -329,9 +331,9 @@ test('a question staff flagged refuses what the account already holds, and a new
   await expect(page.locator('#f-ig .err')).toHaveText(SAME);
   await expect(page.locator('#f-xem-name .err')).toHaveText(SAME);
   // in Arabic too
-  await page.click('#lang');
+  await flipLang(page);
   await expect(page.locator('#f-ig .err')).toHaveText('هذا مطابق لما هو مسجل في حسابك. يرجى تصحيحه.');
-  await page.click('#lang');
+  await flipLang(page);
   expect(of('customer_fix_save')).toEqual([]);
   expect(of('customer_set_birth_nat')).toEqual([]);
   // other answers: through customer_fix_save first (it clears the flags), then the saves every rider makes
@@ -491,11 +493,12 @@ test('Arabic reads right to left, with its own words', async ({ page }) => {
   await expect(page.locator('#title')).toHaveText(/رحلة واحدة\.\s*هدف واحد\./);
   await expect(page.locator('#state')).toHaveText('الأماكن متاحة');
   await expect(page.locator('#go')).toHaveText('سجّل واحجز');
-  await expect(page.locator('#lang')).toHaveText('English');
-  await page.click('#lang');
+  const own = (await page.locator('#lang').count()) > 0; // the page on its own: its button, and the address follows
+  if (own) await expect(page.locator('#lang')).toHaveText('English');
+  await flipLang(page);
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
   await expect(page.locator('#state')).toHaveText('Places open');
-  expect(page.url()).toContain('lang=en');
+  if (own) expect(page.url()).toContain('lang=en');
   expect(errs).toEqual([]);
 });
 
@@ -504,14 +507,18 @@ test('Arabic full state says اكتمل العدد', async ({ page }) => {
   await expect(page.locator('#state')).toHaveText('اكتمل العدد');
 });
 
+// The page's own (on the website's page, inside the form's box: the site's header and footer are the site's).
+const own = async (page: Page) => ((await page.locator('.mmf-defe').count()) ? '.mmf-defe' : 'body');
+
 test('every button is rectangular', async ({ page }) => {
   await open(page);
-  const round = await page.locator('button, .d-btn').evaluateAll((els) => els.filter((e) => parseFloat(getComputedStyle(e).borderTopLeftRadius) > 0).map((e) => e.id || e.className));
+  const box = await own(page);
+  const round = await page.locator(`${box} button, ${box} .d-btn`).evaluateAll((els) => els.filter((e) => parseFloat(getComputedStyle(e).borderTopLeftRadius) > 0).map((e) => e.id || e.className));
   expect(round).toEqual([]);
 });
 
 test('the page never shows an emoji (the flags of the phone picker aside)', async ({ page }) => {
   await open(page);
-  const text = await page.evaluate(() => document.body.innerText);
+  const text = await page.locator(await own(page)).innerText();
   expect(text).not.toMatch(/\p{Extended_Pictographic}/u);
 });

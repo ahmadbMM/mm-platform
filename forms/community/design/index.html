@@ -57,12 +57,12 @@
       <div id="loading" class="loading-note" role="status" hidden><span class="spinner-dark" aria-hidden="true"></span><span data-t="Loading...">Loading...</span></div>
 
       <!-- Step 0 (the owner, 2026-10-25): an account already, or not? Yes signs in here (customer_login), or on the
-           booking site for Google/Apple or a forgotten password; No goes on to make one (step 1). -->
+           booking site for a forgotten password; No goes on to make one (step 1). -->
       <fieldset class="step" data-step="0">
         <legend class="step-title" data-t="Do you already have a Micromobility account?">Do you already have a Micromobility account?</legend>
         <div id="f-have" class="field">
           <div id="haves" class="types two" role="radiogroup" aria-label="Do you already have a Micromobility account?" data-t-aria="Do you already have a Micromobility account?">
-            <button type="button" class="tile" data-v="yes" role="radio" aria-checked="false" data-t="Yes, I have one">Yes, I have one</button>
+            <button type="button" class="tile" data-v="yes" role="radio" aria-checked="false" data-t="Yes, I have an account">Yes, I have an account</button>
             <button type="button" class="tile" data-v="no" role="radio" aria-checked="false" data-t="No, not yet">No, not yet</button>
           </div>
         </div>
@@ -88,7 +88,7 @@
             <span class="submit-label" data-site="authLogin">Sign in</span>
             <span class="submit-busy" data-t="Signing in...">Signing in...</span>
           </button>
-          <p class="have-acct"><a id="signin-link2" class="pv-link" href="https://experiences.micromobility.sa/?handoff=community" data-t="Forgot your password, or signed up with Google or Apple? Sign in on the booking site">Forgot your password, or signed up with Google or Apple? Sign in on the booking site</a></p>
+          <p class="have-acct"><a id="signin-link2" class="pv-link" href="https://experiences.micromobility.sa/?handoff=community" data-t="Forgot password?">Forgot password?</a></p>
         </div>
       </fieldset>
 
@@ -341,7 +341,7 @@
   <div class="pv-box" role="dialog" aria-modal="true" aria-labelledby="pv-title">
     <div class="pv-head">
       <div><h2 class="pv-title" id="pv-title" data-site="privacyNotice">Privacy Notice</h2><div class="pv-upd" id="pv-upd"></div></div>
-      <button type="button" class="pv-x" id="pv-x" data-site-aria="closeBtn" aria-label="Close">&times;</button>
+      <button type="button" class="pv-x" id="pv-x" data-site-aria="closeBtn" aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
     </div>
     <div class="pv-note" id="pv-note" data-site="privacyEnArOnly" hidden></div>
     <div class="pv-body" id="pv-body"></div>

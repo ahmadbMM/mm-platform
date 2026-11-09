@@ -690,7 +690,6 @@
   "Shortcuts": "Accesos directos",
   "Show": "Mostrar",
   "Sign in": "Iniciar sesión",
-  "Sign in through the booking app": "Inicia sesión en la app de reservas",
   "Sign in to your account": "Inicia sesión en tu cuenta",
   "Sign in with your Micromobility account - the one you book rides with.": "Inicia sesión con tu cuenta Micromobility, la misma con la que reservas tus recorridos.",
   "Sign in with your Micromobility account to see where your ride is.": "Inicia sesión con tu cuenta de Micromobility para ver dónde está tu recorrido.",
@@ -704,8 +703,6 @@
   "Show them": "Mostrarlos",
   "Our team asked you to check this.": "Nuestro equipo te pidió revisar esto.",
   "{0}: This is the same as what is on your account. Please correct it.": "{0}: Es lo mismo que figura en tu cuenta. Corrígelo, por favor.",
-  "Signed up with Google or Apple?": "¿Te registraste con Google o Apple?",
-  "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "¿Te registraste con Google o Apple? Continúa con esa cuenta en la app de reservas y vuelves aquí con la sesión iniciada.",
   "Signing in…": "Iniciando sesión…",
   "Signing up your child? The account is yours.": "¿Inscribes a tu hijo o hija? La cuenta es tuya.",
   "Since 2016, Micromobility has been a Saudi company specialising in bicycles and modern mobility. Today we're a store, a workshop, a rental fleet and a riding community - building cycling culture on the Red Sea coast, one ride at a time.": "Desde 2016, Micromobility es una empresa saudí especializada en bicicletas y movilidad moderna. Hoy somos una tienda, un taller, una flota de alquiler y una comunidad de ciclistas, y estamos construyendo la cultura del ciclismo en la costa del mar Rojo, pedalada a pedalada.",
@@ -1785,5 +1782,9 @@
   "EST. JEDDAH": "FUNDADOS EN YEDA",
   "Photo {n} of {total}": "Foto {n} de {total}",
   "What's on.": "Lo que viene.",
-  "Find your bike": "Encuentra tu bici"
+  "Find your bike": "Encuentra tu bici",
+  "Community Membership Application": "Solicitud de membresía de la comunidad",
+  "Employees Bike Registration Form": "Formulario de registro de bicicletas para empleados",
+  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | Recorrido social del sábado",
+  "Saturday Social Ride | MicroMobility": "Recorrido social del sábado | MicroMobility"
 }
