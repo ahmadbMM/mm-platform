@@ -34,23 +34,39 @@ export async function payView(id: string, env?: PayEnv): Promise<PayView | null>
   return r.status === 200 && r.data && typeof r.data === "object" ? r.data : null;
 }
 
-/** Sends a refund the database wrote 'pending' to Moyasar and records the answer. Safe to repeat:
- *  pay_refund_done ignores a refund no longer pending. */
+/** Sends a refund the database wrote 'pending' to Moyasar and records the answer. Moyasar documents no
+ *  idempotency key for refunds, so the payment's refunded total is read first: an answer lost on the way (a
+ *  timeout) is judged by whether that total grew by this refund, never by sending it again. */
 export async function sendRefund(rf: Refund, env: PayEnv = payEnv()): Promise<boolean> {
   if (!rf.provider_id || !env.MOYASAR_SECRET_KEY) return false;
-  const r = await refundPayment(env.MOYASAR_SECRET_KEY, rf.provider_id, toHalalas(rf.amount));
-  if (!r.ok) {
-    // already refunded that much (a retry after a lost answer): Moyasar refuses; read what it holds
-    const now = await fetchPayment(env.MOYASAR_SECRET_KEY, rf.provider_id);
-    if (now.ok && (now.data.refunded ?? 0) >= toHalalas(rf.amount) && ["refunded", "paid"].includes(now.data.status)) {
-      await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: true, p_refunded_halalas: now.data.refunded ?? 0, p_error: null }, env);
-      return true;
-    }
-    await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: false, p_refunded_halalas: 0, p_error: `${r.status} ${r.message}`.slice(0, 300) }, env);
-    return false;
+  const sk = env.MOYASAR_SECRET_KEY, want = toHalalas(rf.amount);
+  const done = (total: number) => payRpc("pay_refund_done", { p_refund: rf.id, p_ok: true, p_refunded_halalas: total, p_error: null }, env);
+  const fail = (why: string) => payRpc("pay_refund_done", { p_refund: rf.id, p_ok: false, p_refunded_halalas: 0, p_error: why.slice(0, 300) }, env);
+  const before = await fetchPayment(sk, rf.provider_id);
+  if (!before.ok) { await fail(`gateway ${before.status} ${before.message}`); return false; }
+  const r0 = before.data.refunded ?? 0;
+  const r = await refundPayment(sk, rf.provider_id, want);
+  if (r.ok) { await done(r.data.refunded ?? r0 + want); return true; }
+  const after = await fetchPayment(sk, rf.provider_id);
+  if (after.ok && (after.data.refunded ?? 0) >= r0 + want) { await done(after.data.refunded ?? r0 + want); return true; }
+  await fail(`${r.status} ${r.message}`);
+  return false;
+}
+
+/** A refund left 'pending' minutes ago (the server stopped between Moyasar and the database): never sent again.
+ *  Moyasar's refunded total says whether it went through (more than what the database already counted for that
+ *  payment); if not, it is marked failed for staff to check and retry. */
+export async function confirmRefund(rf: Refund & { already?: number }, env: PayEnv = payEnv()): Promise<boolean> {
+  if (!rf.provider_id || !env.MOYASAR_SECRET_KEY) return false;
+  const f = await fetchPayment(env.MOYASAR_SECRET_KEY, rf.provider_id);
+  if (!f.ok) return false; // asked again on the next run
+  const total = f.data.refunded ?? 0;
+  if (total >= toHalalas((rf.already ?? 0) + rf.amount)) {
+    await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: true, p_refunded_halalas: total, p_error: null }, env);
+    return true;
   }
-  await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: true, p_refunded_halalas: r.data.refunded ?? toHalalas(rf.amount), p_error: null }, env);
-  return true;
+  await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: false, p_refunded_halalas: 0, p_error: "not confirmed by Moyasar: check its dashboard, then retry" }, env);
+  return false;
 }
 
 export type Settled = { ok: boolean; status: string; error?: string };
@@ -82,11 +98,12 @@ export async function settleById(moyasarId: string, source: "return" | "webhook"
 
 /** The reconcile run: every unpaid payment Moyasar may hold money for, asked by its metadata, and card
  *  refunds that never reached Moyasar. Webhooks and the return page settle nearly everything; this
- *  catches a rider who closed the tab after 3-D Secure while a webhook was lost. */
+ *  catches a rider who closed the tab after 3-D Secure while a webhook was lost. A refund left pending is
+ *  confirmed against Moyasar, never sent twice. */
 export async function reconcile(env: PayEnv = payEnv()): Promise<{ checked: number; settled: number; refunds: number }> {
   const out = { checked: 0, settled: 0, refunds: 0 };
   if (!env.MOYASAR_SECRET_KEY) return out;
-  const list = await payRpc<{ payments: string[]; refunds: Refund[] }>("pay_reconcile_list", {}, env);
+  const list = await payRpc<{ payments: string[]; refunds: (Refund & { already?: number })[] }>("pay_reconcile_list", {}, env);
   if (list.status !== 200 || !list.data) return out;
   for (const id of list.data.payments ?? []) {
     out.checked++;
@@ -97,6 +114,6 @@ export async function reconcile(env: PayEnv = payEnv()): Promise<{ checked: numb
     }
   }
   if ((list.data.payments ?? []).length) await payRpc("pay_checked", { p_pays: list.data.payments }, env);
-  for (const rf of list.data.refunds ?? []) if (await sendRefund(rf, env)) out.refunds++;
+  for (const rf of list.data.refunds ?? []) if (await confirmRefund(rf, env)) out.refunds++;
   return out;
 }

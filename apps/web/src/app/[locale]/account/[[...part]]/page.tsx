@@ -283,7 +283,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                       live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
                     wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor}
-                    online={payOnline ? { open: true, refundDays: payCfg.refundDays, today } : null} />
+                    online={payOnline ? { open: payCfg.bookings !== "off", refundDays: payCfg.refundDays, today } : null} />
                 );
               })}
               {past.map((g) => {
