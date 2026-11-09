@@ -6,7 +6,7 @@ import { post, rpc } from "./api";
 import { append, clear, h, uid } from "./dom";
 import { currentLang, LANGS, longDate, setLang, t } from "./i18n";
 import { icon } from "./icons";
-import { pushIsOn, pushOff, pushOn, pushSupport } from "./push";
+import { PUSH_SWITCH, pushIsOn, pushOff, pushOn, pushSupport } from "./push";
 import { BOOKING, go, load, reloadMe, render, S, say, setNote, standing, SUPPORT } from "./state";
 import { button, chip, note, toggle } from "./ui";
 
@@ -112,8 +112,9 @@ async function saveNameAr(value: string): Promise<void> {
 
 function settings(): HTMLElement {
   const box = h("section", { class: "card settings", "aria-labelledby": "set-h" }, h("h2", { class: "sec-in", id: "set-h" }, t("profSettings")));
-  // Notifications: a switch where the browser can take a push; on an iPhone, the Home Screen first.
-  const sup = pushSupport();
+  // Notifications: a switch where the browser can take a push; on an iPhone, the Home Screen first. Hidden while
+  // PUSH_SWITCH is off.
+  const sup = PUSH_SWITCH ? pushSupport() : "no";
   if (sup === "home") box.appendChild(h("div", { class: "set-row", id: "push-row" }, h("span", { class: "set-k" }, icon("bell", 18), h("span", {}, t("pushTitle"))), h("p", { class: "set-v" }, t("pushIos"))));
   else if (sup === "ok") {
     const host = h("div", { id: "push-row" });

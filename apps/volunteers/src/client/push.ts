@@ -6,8 +6,12 @@
 
 import { rpc } from "./api";
 
+// The Notifications switch on Profile. Off (the user, 2026-11-09: "no notifications for now"): nothing is sent until the
+// push keys are set, so a switch would promise what never comes. The worker and the subscribing stay, ready to turn on.
+export const PUSH_SWITCH = false;
+
 // The public half of the VAPID pair: the browser is meant to see it.
-export const VAPID_PUBLIC_KEY = "BJSyC1Qe8jYlIWBzYCbDminoCcbRJG0XYbKlz_yhuqyyKuEx-yYjFLsfJDu5K2O27fu1N9SOi2x3KVfzS0SpA2g";
+export const VAPID_PUBLIC_KEY ="BJSyC1Qe8jYlIWBzYCbDminoCcbRJG0XYbKlz_yhuqyyKuEx-yYjFLsfJDu5K2O27fu1N9SOi2x3KVfzS0SpA2g";
 
 const ios = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const standalone = () => {

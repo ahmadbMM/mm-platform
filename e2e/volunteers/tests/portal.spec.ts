@@ -557,12 +557,13 @@ test("handed over from the booking app with a one-time code, once; signing out i
   expect(errors).toEqual([]);
 });
 
-test("phone notifications: a switch where the browser takes a push, and the page has a manifest and a worker that only notifies", async ({ page }) => {
+test("phone notifications: no switch for now (the user, 2026-11-09), and the page has a manifest and a worker that only notifies", async ({ page }) => {
   const errors = watchCsp(page);
   await page.goto("/");
   await signIn(page);
   await tab(page, "Profile").click();
-  await expect(page.getByRole("switch", { name: "Notifications" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
+  await expect(page.getByRole("switch", { name: "Notifications" })).toHaveCount(0);
   const manifest = await (await page.request.get("/manifest.webmanifest")).json() as { start_url: string; icons: { src: string }[] };
   expect(manifest.start_url).toBe("/#me");
   expect(manifest.icons.map((i) => i.src)).toContain("/icon-512.png");
