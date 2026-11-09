@@ -4,6 +4,7 @@
 // (rentals migration 20261105120000); this page only asks and says what it was told.
 
 import { post, rpc } from "./api";
+import { stripScripts } from "./cert";
 import { append, clear, h, uid } from "./dom";
 import { currentLang, dayLabel, LANGS, sessionName, setLang, startLang, t, timesLabel, whenLabel, type Key } from "./i18n";
 import { parseTicket, startScanner, type Scanner } from "./scan";
@@ -22,8 +23,12 @@ type Me = { signedIn?: false; id: string; name: string; hours: number; account: 
   first_on: string | null; last_on: string | null; sessions: number; cert_signer: string | null; cert_title: string | null };
 type Booking = { id: string; name: string; number: number | null; checked_in: boolean; donated: boolean; visitor?: boolean; own: boolean; desk: string | null; mine_in: boolean; mine_donated: boolean;
   phone?: string | null; status?: string; bike?: string | null; size?: string | null; height?: string | null; blood_type?: string | null; club?: string | null };
-type Prof = { status: string | null; applied_at: string | null; skills: string | null; days: number[]; shirt: string | null; whatsapp: string | null; briefed: Record<string, string> };
-type Cert = { ok: boolean; serial?: string; code?: string; name?: string; from?: string; to?: string; hours?: number; sessions?: { title: string | null; ride_kind?: string | null; date: string; hours: number }[]; issued_at?: string; revoked?: boolean };
+type Prof = { status: string | null; applied_at: string | null; skills: string | null; days: number[]; shirt: string | null; whatsapp: string | null; briefed: Record<string, string>;
+  name_ar?: string | null; gender?: string | null };
+type CertWords = { lead?: string | null; recognition?: string | null; arabic_line?: string | null };
+type Cert = { ok: boolean; kind?: string; serial?: string; code?: string; name?: string; name_ar?: string | null; gender?: string | null; words?: CertWords | null;
+  initiative?: string | null; event_date?: string | null; from?: string; to?: string; hours?: number;
+  sessions?: { title: string | null; ride_kind?: string | null; date: string; hours: number }[]; issued_at?: string; revoked?: boolean };
 type Entered = { closes_at: string; caps: Record<string, boolean>; briefing: string | null; hours_mode: string; role: string | null;
   clock_in?: string | null; clock_out?: string | null; clock_out_by?: string | null; counts: { booked: number; in: number; donated: number; visitors?: number } | null };
 
@@ -285,40 +290,173 @@ function viewMe(main: HTMLElement): void {
   if (+m.hours > 0) main.appendChild(link(t("certBtn"), "#cert"));
 }
 
-// ── the certificate: both languages on one page ──
+// ── the certificate ──
+// One design for the whole company: certificate/ in the booking site's repo builds the markup and
+// the stylesheet, scripts/sync-cert.mjs copies them here, and this fills and prints them. Staff
+// print the very same file. Never restyle a certificate here (certificate/SPEC.md).
+// The three lines the certificate prints, by gender. The database stamps them onto every
+// certificate it issues (_vol_cert_words, rentals migration 20261108220000) and the row is what a
+// reprint uses; this copy is for the hours as they stand, before any certificate was made, and for
+// a row issued before that migration. It must say what the booking site's VC_WORDS says.
+const CERT_WORDS: Record<string, { lead: string; recognition: string; arabic_line: string }> = {
+  male: { lead: "This certificate is proudly presented to", recognition: "in recognition of his time, energy and commitment as a volunteer in", arabic_line: "تقديرًا لعطائه ومشاركته التطوعية في المبادرة" },
+  female: { lead: "This certificate is proudly presented to", recognition: "in recognition of her time, energy and commitment as a volunteer in", arabic_line: "تقديرًا لعطائها ومشاركتها التطوعية في المبادرة" },
+  "": { lead: "This certificate is proudly presented to", recognition: "in recognition of their time, energy and commitment as a volunteer in", arabic_line: "تقديرًا للعطاء والمشاركة التطوعية في المبادرة" },
+};
+const certWords = (gender: string | null | undefined) => CERT_WORDS[gender === "male" || gender === "female" ? gender : ""];
+const onDay = (ymd: string | null | undefined, lang = "en-GB"): string => {
+  if (!ymd) return "";
+  try { return new Date(`${ymd.slice(0, 10)}T12:00:00+03:00`).toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { timeZone: "Asia/Riyadh", day: "numeric", month: "long", year: "numeric" }); } catch { return ymd; }
+};
+const ksaToday = (): string => new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10);
+const certPeriod = (from: string | null | undefined, to: string | null | undefined): string => {
+  const a = onDay(from), b = onDay(to);
+  return !a ? b : !b || a === b ? a : `${a} – ${b}`;
+};
+
+let certTpl: string | null = null;
+async function certTemplate(): Promise<string> {
+  if (certTpl) return certTpl;
+  const res = await fetch("/certificate.html", { credentials: "same-origin" });
+  if (!res.ok) throw new Error(`certificate ${res.status}`);
+  certTpl = stripScripts(await res.text()); // whatever the host added to it (cert.ts)
+  return certTpl;
+}
+const certEsc = (v: unknown) => String(v ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// The template's Mustache subset: {{key}} escaped, {{#key}}…{{/key}} kept while the key is truthy.
+const fillCert = (tpl: string, v: Record<string, string>): string =>
+  tpl.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_m, k: string, body: string) => (v[k] ? body : ""))
+     .replace(/\{\{(\w+)\}\}/g, (_m, k: string) => certEsc(v[k]));
+
+// SPEC.md, "Name size": a size from the name's length, then 1px at a time down to 32 until the name
+// is on one line, and only then may it wrap. Done here and not by a script in the page, which the
+// portal's policy would refuse; it also scales the sheet on a phone, which the stylesheet reads as
+// --fit. Measuring only means something once the window's fonts are in (certReady).
+function fitCert(doc: Document): void {
+  const el = doc.querySelector<HTMLElement>(".name");
+  if (el) {
+    const n = String(el.textContent ?? "").trim().length;
+    let px = n <= 16 ? 66 : n <= 22 ? 56 : n <= 28 ? 48 : 40;
+    el.style.fontSize = `${px}px`;
+    while (el.scrollWidth > el.clientWidth && px > 32) { px -= 1; el.style.fontSize = `${px}px`; }
+    if (el.scrollWidth > el.clientWidth) el.classList.add("wrap");
+  }
+  const w = doc.documentElement.clientWidth || 1123;
+  doc.documentElement.style.setProperty("--fit", w < 1123 ? String(Math.max(0.25, Math.round((w / 1123) * 1000) / 1000)) : "1");
+}
+// The window's stylesheet, then the fonts and pictures it calls for; never longer than 4 seconds,
+// after which it prints with whatever arrived, as a browser would anyway.
+function certReady(win: Window): Promise<void> {
+  const d = win.document;
+  const done = (el: Element) => new Promise<void>((r) => { el.addEventListener("load", () => r(), { once: true }); el.addEventListener("error", () => r(), { once: true }); });
+  const sheets = [...d.querySelectorAll('link[rel="stylesheet"]')].filter((l) => !(l as HTMLLinkElement).sheet).map(done);
+  const all = Promise.all(sheets)
+    .then(() => { void d.body.offsetHeight; return Promise.all([d.fonts.ready, ...[...d.images].filter((i) => !i.complete).map(done)]); })
+    .then(() => undefined);
+  return Promise.race([all, new Promise<void>((r) => setTimeout(r, 4000))]).catch(() => undefined);
+}
+
+// What the page prints: the certificate that was made, or - before any was - the hours as they
+// stand, with no serial and nothing to check against.
+function certView(): Record<string, string> {
+  const m = S.me!;
+  const c = S.cert && S.cert.ok ? S.cert : null;
+  const sess = c?.kind === "session" || c?.kind === "custom";
+  const hours = Number(c ? c.hours : m.hours) || 0;
+  // What the certificate was issued with, never what this page says today.
+  const d = certWords(c ? c.gender : S.prof?.gender), cw = c?.words ?? {};
+  const w = { lead: cw.lead || d.lead, recognition: cw.recognition || d.recognition, arabic_line: cw.arabic_line || d.arabic_line };
+  return {
+    css: "/certificate.css",
+    fonts: "/certificate-fonts.css", // the two families alone: app.css has a .page of its own, which would fight the certificate's
+    doc_title: `Certificate of Volunteering${c?.serial ? ` ${c.serial}` : ""}`,
+    print_label: t("certPrint"),
+    volunteer_name: c?.name ?? m.name,
+    volunteer_name_ar: (c ? c.name_ar : S.prof?.name_ar) ?? "",
+    lead: w.lead,
+    recognition: w.recognition,
+    arabic_line: w.arabic_line,
+    initiative_name: sess ? (c?.initiative ?? "") : certPeriod(c ? c.from : m.first_on, c ? c.to : m.last_on),
+    event_date: onDay(sess ? c?.event_date : c ? String(c.issued_at ?? "").slice(0, 10) : ksaToday()),
+    hours: hours > 0 ? String(hours) : "",
+    certificate_no: c?.serial ?? "",
+    check_code: c?.code ?? "",
+  };
+}
+async function printCert(): Promise<void> {
+  let tpl: string;
+  try { tpl = await certTemplate(); } catch { setNote(t("certOpenErr")); render(); return; }
+  const win = window.open("", "_blank", "width=1180,height=880");
+  if (!win) { setNote(t("certOpenErr")); render(); return; }
+  win.document.write(fillCert(tpl, certView()));
+  win.document.close();
+  win.focus();
+  // The page's own Print button, wired from here: no script runs in that window.
+  for (const b of win.document.querySelectorAll(".rep-print")) b.addEventListener("click", () => { try { win.print(); } catch { /* the viewer prints it */ } });
+  void certReady(win).then(() => { fitCert(win.document); try { win.print(); } catch { /* the viewer prints it */ } });
+}
+
+// The sessions this volunteer has hours on: one certificate each, which is the shape the design is
+// drawn for (one event, one day). The database refuses a session with no hours, so does this list.
+function certSessions(): { id: string; label: string; hours: number; on: string }[] {
+  const by = new Map<string, { label: string; hours: number; on: string }>();
+  for (const r of S.me?.record ?? []) {
+    if (!r.session_id || !(Number(r.hours) > 0)) continue;
+    const cur = by.get(r.session_id) ?? { label: sessionName(r), hours: 0, on: r.on };
+    cur.hours += Number(r.hours) || 0;
+    if (r.on < cur.on) cur.on = r.on;
+    by.set(r.session_id, cur);
+  }
+  return [...by.entries()].filter(([, v]) => v.hours > 0).map(([id, v]) => ({ id, ...v })).sort((a, b) => b.on.localeCompare(a.on));
+}
+
 function viewCert(main: HTMLElement): void {
   if (!S.me) { go("#signin"); return; }
   const m = S.me;
-  const on = (ymd: string | null | undefined, lang: string) => {
-    if (!ymd) return "";
-    try { return new Date(`${ymd.slice(0, 10)}T12:00:00+03:00`).toLocaleDateString(`${lang}-u-ca-gregory-nu-latn`, { timeZone: "Asia/Riyadh", day: "numeric", month: "long", year: "numeric" }); } catch { return ymd; }
-  };
-  // The whole record, or a certificate made for a period, with its serial and check code (20261107131000).
   const c = S.cert && S.cert.ok ? S.cert : null;
-  const name = c?.name ?? m.name, hours = String(+((c ? c.hours : m.hours) || 0)), n = c ? (c.sessions?.length ?? 0) : (m.sessions || 0);
-  const first = c ? c.from : m.first_on, last = c ? c.to : m.last_on;
-  const en = `MicroMobility thanks ${name} for giving ${hours} hours as a volunteer${first ? ` between ${on(first, "en-GB")} and ${on(last, "en-GB")}` : ""}${n ? ` across ${n} ${n === 1 ? "session" : "sessions"}` : ""}.`;
-  const ar = `تشكر مايكروموبيليتي ${name} على التطوع لمدة ${hours} ساعة${first ? ` في الفترة من ${on(first, "ar")} إلى ${on(last, "ar")}` : ""}${n ? ` في ${n} من الفعاليات` : ""}.`;
-  const today = new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10);
-  const fromId = uid("from"), toId = uid("to");
+  const today = ksaToday();
+  const fromId = uid("from"), toId = uid("to"), arId = uid("ar"), spanId = uid("span");
   const from = h("input", { id: fromId, type: "date", max: today, value: c?.from ?? m.first_on ?? today });
   const to = h("input", { id: toId, type: "date", max: today, value: c?.to ?? today });
-  const checkUrl = c?.code ? `${location.origin}/#check/${c.code}` : "";
-  append(main, h("div", { class: "cert-tools" }, link(t("back"), "#me"), button(t("certPrint"), () => window.print(), "primary")),
-    // a database without 20261107131000 answers no profile: no period form there
-    !S.prof ? null : h("section", { class: "card action cert-tools cert-period" }, h("h2", { class: "sec" }, t("certPeriod")),
-      h("label", { for: fromId }, t("certFrom")), from, h("label", { for: toId }, t("certTo")), to,
-      button(t("certMake"), () => void makeCert(from.value, to.value), "secondary")),
-    h("section", { class: "cert" },
-      h("div", { class: "cert-brand" }, h("img", { src: "/site/logo-mark-dark.png", alt: "", width: 40, height: 26 }), "MicroMobility"),
-      h("div", { class: "cert-cols" },
-        h("div", { dir: "ltr", lang: "en" }, h("h1", {}, "Certificate of Volunteering"), h("p", {}, en)),
-        h("div", { dir: "rtl", lang: "ar" }, h("h1", {}, "شهادة تطوع"), h("p", {}, ar))),
-      h("div", { class: "cert-hours" }, h("b", {}, hours), h("span", {}, "Hours · ساعة")),
-      c?.sessions?.length ? h("ul", { class: "cert-sess" }, ...c.sessions.map((x) => h("li", {}, h("span", {}, sessionName(x)), h("span", { dir: "ltr" }, `${on(x.date, "en-GB")} · ${+x.hours} h`)))) : null,
-      h("div", { class: "cert-foot" }, h("span", {}, on(c ? (c.issued_at ?? "").slice(0, 10) : new Date(Date.now() + 108e5).toISOString().slice(0, 10), "en-GB"), c?.serial ? h("br") : null, c?.serial ? h("b", { dir: "ltr" }, c.serial) : null),
-        h("span", { class: "cert-sign" }, m.cert_signer ?? "", m.cert_title ? h("br") : null, m.cert_title ?? "")),
-      checkUrl ? h("p", { class: "cert-check", dir: "ltr" }, `Check this certificate · تحقق من الشهادة: ${checkUrl}`) : null));
+  // One day or a stretch of them (the owner, 2026-11-08): one day is the same certificate with the
+  // two dates the same, and the page prints that day where it would print a period.
+  const fromLabel = h("label", { for: fromId }, t("certFrom"));
+  const toLabel = h("label", { for: toId }, t("certTo"));
+  const span = h("select", { id: spanId, onchange: () => {
+    const day = span.value === "day";
+    // display, not the hidden attribute: app.css styles labels and inputs by element, which wins.
+    fromLabel.style.display = day ? "none" : "";
+    from.style.display = day ? "none" : "";
+    toLabel.textContent = day ? t("certDayOne") : t("certTo");
+  } }, h("option", { value: "period" }, t("certSpanPeriod")), h("option", { value: "day" }, t("certSpanDay")));
+  const ar = h("input", { id: arId, type: "text", dir: "rtl", lang: "ar", maxlength: 120, autocomplete: "off", value: S.prof?.name_ar ?? "" });
+  const sessions = certSessions();
+
+  append(main,
+    h("div", { class: "cert-tools" }, link(t("back"), "#me"), button(t("certPrint"), () => void printCert(), "primary")),
+    c?.serial ? h("p", { class: "sub", dir: "ltr" }, c.serial) : null,
+    // a database without 20261107131000 answers no profile: nothing below can be made there
+    !S.prof ? null : h("section", { class: "card action" },
+      h("h2", { class: "sec" }, t("certNameAr")), h("p", { class: "sub" }, t("certNameArHint")),
+      h("label", { for: arId }, t("certNameAr")), ar,
+      button(t("applySave"), () => void saveNameAr(ar.value), "secondary")),
+    !S.prof ? null : h("section", { class: "card action cert-period" }, h("h2", { class: "sec" }, t("certPeriod")),
+      h("label", { for: spanId }, t("certSpan")), span,
+      fromLabel, from, toLabel, to,
+      button(t("certMake"), () => void makeCert(span.value === "day" ? to.value : from.value, to.value), "secondary")),
+    !S.prof ? null : h("section", { class: "card" }, h("h2", { class: "sec" }, t("certEvent")), h("p", { class: "sub" }, t("certEventHint")),
+      sessions.length
+        ? h("ul", { class: "rec" }, ...sessions.map((x) => h("li", {},
+            h("b", {}, x.label), ` · ${dayLabel(x.on)} · ${t("oppHours", String(x.hours))}`,
+            button(t("certMake"), () => void makeCertSession(x.id, x.label), "secondary"))))
+        : noteBox(t("certNoEvents"))));
+}
+async function saveNameAr(value: string): Promise<void> {
+  const r = await rpc<{ ok: boolean; name_ar: string | null }>("volunteer_name_ar_save", { p_name_ar: value.trim() });
+  if (!r.ok) { setNote(say(r)); render(); return; }
+  if (S.prof) S.prof.name_ar = r.data?.name_ar ?? null;
+  setNote(t("applySaved"));
+  render();
 }
 async function makeCert(from: string, to: string): Promise<void> {
   if (!from || !to || to < from) { setNote(t("errBadDates")); render(); return; }
@@ -326,6 +464,14 @@ async function makeCert(from: string, to: string): Promise<void> {
   if (!r.ok) { setNote(r.status === 400 && r.code === "BAD_INPUT" ? t("errBadDates") : say(r)); render(); return; }
   S.cert = r.data && r.data.ok ? r.data : null;
   render();
+  if (S.cert) void printCert();
+}
+async function makeCertSession(session: string, label: string): Promise<void> {
+  const r = await rpc<Cert>("volunteer_cert_issue_session", { p_session: session, p_initiative: label });
+  if (!r.ok) { setNote(say(r)); render(); return; }
+  S.cert = r.data && r.data.ok ? r.data : null;
+  render();
+  if (S.cert) void printCert();
 }
 
 // ── a certificate's check (#check/<code>): anyone, signed in or not ──
@@ -354,7 +500,8 @@ function viewCheck(main: HTMLElement, code: string): void {
     h("p", { class: "check-state" }, t(c.revoked ? "checkRevoked" : "checkValid")),
     h("h2", {}, c.name ?? ""),
     h("p", { class: "hours" }, h("b", {}, String(+(c.hours ?? 0))), ` ${t("meHours")}`),
-    h("p", { class: "when" }, t("checkPeriod", dayLabel(c.from), dayLabel(c.to))),
+    // A certificate for one event names it and the day it was held; one for a period, its period.
+    h("p", { class: "when" }, c.kind === "session" ? `${c.initiative ?? ""} · ${dayLabel(c.event_date ?? c.from)}` : t("checkPeriod", dayLabel(c.from), dayLabel(c.to))),
     c.sessions?.length ? h("ul", { class: "rec" }, ...c.sessions.map((x) => h("li", {}, `${sessionName(x)} · ${dayLabel(x.date)} · `, h("b", { dir: "ltr" }, String(+x.hours))))) : null,
     h("p", { class: "when" }, h("b", { dir: "ltr" }, c.serial ?? ""), ` · ${t("checkIssued", dayLabel((c.issued_at ?? "").slice(0, 10)))}`)));
 }

@@ -309,9 +309,21 @@ test("hours and the certificate; Arabic reads right to left", async ({ page }) =
   await page.reload();
   await expect(page.locator(".hours")).toContainText("12.5");
   await page.getByRole("link", { name: "Certificate" }).click();
-  await expect(page.getByRole("heading", { name: "Certificate of Volunteering" })).toBeVisible();
-  await expect(page.locator(".cert")).toContainText("Sara Haddad");
-  await expect(page.locator(".cert-hours")).toContainText("12.5");
+  // The certificate is not drawn in the page any more: it is the company's one design, printed from
+  // its own window (certificate/ in the booking site's repo, synced by npm run sync:cert).
+  await expect(page.getByRole("heading", { name: "A certificate for one event" })).toBeVisible();
+  const popup = page.waitForEvent("popup");
+  await page.getByRole("button", { name: "Print or save" }).click();
+  const sheet = await popup;
+  await expect(sheet.locator(".name")).toHaveText("Sara Haddad");
+  await expect(sheet.locator(".name-ar")).toHaveText("سارة حداد"); // what volunteer_profile holds
+  // Both languages are worded for her, not for a they (the owner, 2026-11-08).
+  await expect(sheet.locator(".thanks-ar")).toHaveText("تقديرًا لعطائها ومشاركتها التطوعية في المبادرة");
+  await expect(sheet.locator(".recognition")).toHaveText("in recognition of her time, energy and commitment as a volunteer in");
+  await expect(sheet.locator(".meta-sub").first()).toContainText("12.5");
+  await expect(sheet.locator(".signer-name")).toHaveText("Ahmad Babalghoum");
+  expect(await sheet.locator(".page").evaluate((el: HTMLElement) => [el.offsetWidth, el.offsetHeight])).toEqual([1123, 794]);
+  await sheet.close();
   await page.getByLabel("Language").selectOption("ar");
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page.locator("html")).toHaveAttribute("lang", "ar");
