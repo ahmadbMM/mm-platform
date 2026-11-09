@@ -1,14 +1,8 @@
 // The Worker's entry point (wrangler.jsonc "main"): the site as OpenNext builds it, answered from
 // Cloudflare's edge for a minute when a page cannot differ between visitors (src/lib/page-cache.ts).
 // .open-next/worker.js is written by `opennextjs-cloudflare build`, before wrangler bundles this.
-// Loaded on the first request a page copy cannot answer, not when the Worker starts: a copy served at
-// the edge (src/lib/page-cache.ts) no longer waits for the site's router (~3 MB) to be read in first.
-// The renderer itself (~16 MB) was already loaded that way, by OpenNext.
-let site = null;
-const handler = { fetch: (request, env, ctx) => (site ??= import("./.open-next/worker.js")).then((m) => m.default.fetch(request, env, ctx)) };
-export { DOQueueHandler } from "./.open-next/.build/durable-objects/queue.js";
-export { DOShardedTagCache } from "./.open-next/.build/durable-objects/sharded-tag-cache.js";
-export { BucketCachePurge } from "./.open-next/.build/durable-objects/bucket-cache-purge.js";
+import handler from "./.open-next/worker.js";
+export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "./.open-next/worker.js";
 import { plainCanonical, servePage } from "./src/lib/page-cache";
 import { apexTarget, movedStatus } from "./src/lib/canonical-host";
 import { prefixTitles } from "./src/lib/staging";
