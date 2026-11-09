@@ -26,3 +26,13 @@ export function accountPlan(me: AccountAnswers | null, keys?: string[]): Account
 export function signinIdent(raw: string): string {
   return MMAccount.ident(raw) as string;
 }
+
+/** Whether the answer to a question staff flagged is what the account already holds (the owner, 2026-11-09: "don't
+ *  allow a flagged account field to type in the same info in the field again"), by the booking app's rule: words with
+ *  their spaces tidied, an email in any case, a number by its last nine digits, a handle in any case and without its
+ *  @, the rest exactly; an empty answer never. `key` is customers.fix_fields' name; `answer` a string, {same, phone}
+ *  for whatsapp, {name, phone, relation} for an emergency contact; `held` customer_community_me's names, the
+ *  emergency contacts as {name, phone, relation}. */
+export function sameAsHeld(key: string, answer: unknown, held: Record<string, unknown> | null): boolean {
+  return MMAccount.same(key, answer, held) as boolean;
+}

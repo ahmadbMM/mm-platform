@@ -6,6 +6,7 @@ import { fill } from "@/lib/fill";
 import { fill as fillAt } from "@/i18n/tx";
 import { bookingAt, infoShown, memberOn, membersOnlyDate, membersOnlyEvent } from "@/lib/event-info";
 import { isNonBike, typeOffered } from "@/lib/bike-kinds";
+import { ArrowIcon, BackIcon, TickIcon } from "@/components/site/Icons";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -207,8 +208,8 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   // What a card does, and what its dialog's button does too.
   const pickEvent = (e: StepEvent) => { setEv(e); setSess(null); go(2); };
   const pickDate = (s: StepSession) => { setSess(s); go(3); };
-  const arrow = (isRtl(locale) ? "←" : "→");
-  const back = (isRtl(locale) ? "→" : "←");
+  const arrow = <ArrowIcon size={15} />;
+  const back = <BackIcon size={15} />;
   // The times in their own direction (a <bdi> with none forced): an Arabic clock ("9:00 م") read right
   // to left, a Latin one ("9:00 PM") left to right. Forcing ltr turned an Arabic range into
   // "م – 11:00 م 9:00" (2026-10-05).
@@ -303,7 +304,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           const n = i + 1, done = step > n, cur = step === n;
           return (
             <li key={n} className={done ? "done" : cur ? "cur" : ""} aria-current={cur ? "step" : undefined}>
-              <span className="xs-dot">{done ? "✓" : n}</span><span className="xs-lbl">{label}</span>
+              <span className="xs-dot">{done ? <TickIcon size={14} /> : n}</span><span className="xs-lbl">{label}</span>
             </li>
           );
         })}

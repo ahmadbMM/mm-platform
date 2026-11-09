@@ -61,7 +61,8 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
 .mm-lang-menu a { padding: 9px 12px; border-radius: 9px; font-size: 14px; color: #1a1919; display: flex; align-items: center; justify-content: space-between; text-align: start; }
 .mm-lang-menu a:hover { background: rgba(0, 0, 0, .05); }
 .mm-lang-menu a.on { color: #077a4b; font-weight: 700; }
-.mm-lang-menu a.on::after { content: "✓"; }
+/* The language being read: a drawn tick (the icon set's), never a text glyph. */
+.mm-lang-menu a.on::after { content: ""; flex: none; width: 15px; height: 15px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; }
 .mm-nav-sheet-group { display: flex; flex-direction: column; }
 .mm-nav-sheet-group > p { margin: 18px 0 2px; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(251, 249, 244, .5); }
 .mm-nav-sheet-group a { font-size: 19px; padding-inline-start: 14px; }

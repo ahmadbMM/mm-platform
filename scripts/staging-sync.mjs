@@ -100,6 +100,13 @@ const text = JSON.stringify(live);
 const paths = new Set();
 for (const m of text.matchAll(/\/media\/([a-z0-9_-]+(?:\/[A-Za-z0-9_.-]+)+)/g)) paths.add(m[1]);
 for (const m of text.matchAll(/\/storage\/v1\/object\/public\/site\/([A-Za-z0-9_./-]+)/g)) paths.add(m[1]);
+// A photo's smaller copies too (<name>.w640.webp, .w1280.webp, which the staff page saves beside it): the
+// pages ask for them (lib/img.ts, ?w=), and without them staging sent every photo whole - a 21 MB Home.
+const SIZES = new Set();
+for (const p of [...paths]) {
+  if (!/\.(jpe?g|png|webp)$/i.test(p) || /\.w\d+\.webp$/i.test(p)) continue;
+  for (const w of [640, 1280]) { const c = p.replace(/\.(jpe?g|png|webp)$/i, `.w${w}.webp`); paths.add(c); SIZES.add(c); }
+}
 let copied = 0, present = 0;
 for (const p of paths) {
   if (p.includes("..")) continue;
@@ -107,7 +114,11 @@ for (const p of paths) {
   const there = await fetch(`${STAGING_URL}/storage/v1/object/public/site/${enc}`, { method: "HEAD" });
   if (there.ok) { present++; continue; }
   const src = await fetch(`${PROD_URL}/storage/v1/object/public/site/${enc}`);
-  if (!src.ok) { summary.push(`picture ${p}: not on live storage (${src.status}), skipped`); continue; }
+  if (!src.ok) {
+    // a photo smaller than a copy's width has no copy of that width: nothing to say
+    if (!SIZES.has(p)) summary.push(`picture ${p}: not on live storage (${src.status}), skipped`);
+    continue;
+  }
   if (!DRY) {
     const up = await fetch(`${STAGING_URL}/storage/v1/object/site/${enc}`, {
       method: "POST",

@@ -1,11 +1,12 @@
 import { serverLocalize } from "@/i18n/dicts";
-import { intlOf, isRtl } from "@/i18n/locales";
+import { intlOf } from "@/i18n/locales";
 import type { Locale } from "@/lib/content";
 import { fmtNum } from "@/lib/fill";
 import { localHref } from "@/lib/links";
 import { announcementsOf, isBirthday, type MemberArea, type MemberTitle, type MemberUpcoming } from "@/lib/members";
 import type { GenderChip } from "@/lib/session-gender";
 import { T } from "./MembersArea.text";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
 // their card - name, since when, credits, tier and what is left to the next - their attendance
@@ -44,7 +45,7 @@ type Props = {
 export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, sgOf, refusalOf, title, communityHref, accountHref }: Props) {
   const t = serverLocalize(T, locale);
   const N = (n: number) => fmtNum(n, locale);
-  const arrow = isRtl(locale) ? "←" : "→";
+  const arrow = <ArrowIcon size={15} />;
   const day = (d: string, o: Intl.DateTimeFormatOptions = { weekday: "long", day: "numeric", month: "long" }) => new Intl.DateTimeFormat(intlOf(locale), { ...o, timeZone: "UTC" }).format(new Date(`${d}T00:00:00Z`));
   const since = a.since ? new Intl.DateTimeFormat(intlOf(locale), { month: "long", year: "numeric", timeZone: "Asia/Riyadh" }).format(new Date(a.since)) : "";
   const pct = a.tier >= 2 || !a.next ? 100 : Math.min(100, Math.round((a.credits / a.next) * 100));

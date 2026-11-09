@@ -30,7 +30,10 @@ light and dark as the device is set.
    the one not asked goes back as held), `customer_set_whatsapp`, `customer_set_socials` (merged with
    the handles the account has: the function replaces the whole object), `customer_set_height`. When
    `customer_fix_fields` still owes something this page cannot ask (an email, a password, a field staff
-   flagged), the rider is sent to the booking site to finish it.
+   flagged), the rider is sent to the booking site to finish it. A question staff flagged that this page asks
+   takes another answer than the one the account holds (`MMAccount.same`; "This is the same as what is on your
+   account. Please correct it.", the owner, 2026-11-09), and its answer goes first through `customer_fix_save`,
+   which clears the flag (one that came back unchanged stays asked, 20261109200000 in the booking site repo).
 4. **Book**: the Defe code (only while it is needed), the group (Beginners 20 km / Intermediates 40 km),
    the bike (Road, Hybrid, Mountain, their own), whether they received a Defe shirt on 22 October and, if
    not, their T-shirt size XS-XXL (the owner, 2026-10-18: shirts go to riders who have none; sent as

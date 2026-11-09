@@ -227,12 +227,26 @@ test('first question: No makes an account; Yes signs in and asks only what is mi
   await expect(page.locator('#ig')).toHaveValue('karim.rides');
   await expect(page.locator('#f-xheight')).toBeVisible();
   await expect(page.locator('#xem-block')).toBeVisible();
-  await page.fill('#xheight', '180');
+  // A flagged question answered as the account holds it is refused (the owner, 2026-11-09: "don't allow a flagged
+  // account field to type in the same info in the field again"): the handle in any case, the contact as it is.
+  const SAME = 'This is the same as what is on your account. Please correct it.';
+  await page.fill('#xheight', '178');
+  await page.fill('#ig', '@Karim.Rides');
   await emContact(page, 'xem');
+  await page.click('#submit');
+  for (const f of ['#f-ig', '#f-xheight', '#f-xem-name']) await expect(page.locator(`${f} .err`)).toHaveText(SAME);
+  await page.selectOption('#lang', 'ar');
+  await expect(page.locator('#f-ig .err')).toHaveText('هذا مطابق لما هو مسجل في حسابك. يرجى تصحيحه.');
+  await page.selectOption('#lang', 'en');
+  expect(of('customer_set_emergency')).toEqual([]);
+  expect(of('customer_community_apply')).toEqual([]);
+  await page.fill('#xheight', '180');
+  await page.fill('#ig', 'karim.rides.jed');
+  await emContact(page, 'xem', { phone: '0551234568' });
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   const sent = of('customer_community_apply')[0].p as Record<string, unknown>;
-  expect(sent).toMatchObject({ birth_date: '1994-03-12', nationality: 'Egypt', profession: 'Architect', workplace: 'Saudi Aramco', bike_type: 'Hybrid', heard_from: 'friend', instagram: 'karim.rides', height: 180, emergency_saved: true, whatsapp_same: true });
+  expect(sent).toMatchObject({ birth_date: '1994-03-12', nationality: 'Egypt', profession: 'Architect', workplace: 'Saudi Aramco', bike_type: 'Hybrid', heard_from: 'friend', instagram: 'karim.rides.jed', height: 180, emergency_saved: true, whatsapp_same: true });
   expect(of('customer_signup')).toEqual([]);
   expect(errs).toEqual([]);
 });

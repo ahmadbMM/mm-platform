@@ -52,7 +52,7 @@ import { riyadhClock } from "@/lib/workshop-days";
 import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
-import { intlOf, isRtl } from "@/i18n/locales";
+import { intlOf } from "@/i18n/locales";
 import ProfileForm from "@/components/account/ProfileForm";
 import { ConsentPrompt, RideNews } from "@/components/account/Consents";
 import DeleteAccount from "@/components/account/DeleteAccount";
@@ -69,6 +69,7 @@ import { loadAccountExtras } from "@/lib/account-extras";
 import PushToggle from "@/components/account/PushToggle";
 import { PRIVACY_ASK_FROM } from "@/content/privacy-notice";
 import { bizOf } from "@/lib/biz";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
 // the next rides as the booking app's own tickets (changing one opens the booking app), the Club
@@ -258,9 +259,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       <>
         {extras.ambassador && <div className="ac-sec"><AmbassadorCard locale={locale} a={extras.ambassador} /></div>}
         <section className="ac-sec" id="ac-rides" aria-labelledby="ac-rides-h">
-          <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a></div>
+          <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <ArrowIcon size={15} /></a></div>
           {groups.length === 0 && past.length === 0 ? (
-            <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <span aria-hidden="true">{isRtl(locale) ? "←" : "→"}</span></a>}</p>
+            <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <ArrowIcon size={15} /></a>}</p>
           ) : (
             <div className="tk-grid">
               {groups.map((g, i) => {
@@ -341,7 +342,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
         {shortcuts.length > 0 && (
           <nav className="ac-links" aria-label={tx("Shortcuts", "اختصارات")}>
-            {shortcuts.map(([k, label, href]) => <a key={k} href={localHref(href, locale)}>{label} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a>)}
+            {shortcuts.map(([k, label, href]) => <a key={k} href={localHref(href, locale)}>{label} <ArrowIcon size={15} /></a>)}
           </nav>
         )}
       </>

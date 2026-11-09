@@ -66,6 +66,8 @@ export const T = {
     // A signed-in account is not asked again what it holds (the owner, 2026-10-25), unless staff flagged it.
     skipped: (list: string) => `Already on your account, so we do not ask again: ${list}.`, showThem: "Show them",
     flagged: "Our team asked you to check this.",
+    // A flagged question answered with what the account already holds (the owner, 2026-11-09), named by its label.
+    sameAsAccount: (label: string) => `${label}: This is the same as what is on your account. Please correct it.`,
     errors: {
       whatsapp: "Enter your WhatsApp number, or answer whether your mobile is it.",
       learner_who: "Choose who is learning.", learner_name: "Enter the child's name - letters only.", learner_name_other: "Enter their full name - letters only.",
@@ -147,6 +149,7 @@ export const T = {
     waAsk: (phone: string) => `هل ${phone} هو رقمك على WhatsApp أيضًا؟`, waYes: "نعم", waNo: "لا", waLabel: "رقم WhatsApp",
     skipped: (list: string) => `موجودة في حسابك، فلن نسألك عنها مجددًا: ${list}.`, showThem: "اعرضها",
     flagged: "طلب منك فريقنا مراجعة هذا.",
+    sameAsAccount: (label: string) => `${label}: هذا مطابق لما هو مسجل في حسابك. يرجى تصحيحه.`,
     errors: {
       whatsapp: "أدخل رقمك على WhatsApp، أو أجب إن كان جوالك هو رقمك عليه.",
       learner_who: "اختر مَن سيتعلّم.", learner_name: "أدخل اسم الطفل - حروف فقط.", learner_name_other: "أدخل الاسم الكامل - حروف فقط.",

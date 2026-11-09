@@ -22,7 +22,7 @@ import { bizOf, faresOf } from "@/lib/biz";
 import { priceMap, type AddonItem, type BookAccount, type BookSession } from "@/lib/booking";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt, phrase } from "@/i18n/tx";
-import { isRtl } from "@/i18n/locales";
+import { ArrowIcon } from "@/components/site/Icons";
 import { bg } from "@/lib/img";
 
 // micromobility.sa/experiences - booking a ride on the website (the owner, 2026-10-03: "full
@@ -181,7 +181,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
           <h1>{S(c.hero.title)}</h1>
           <p className="xp-hero-text">{S(c.hero.text)}</p>
           <div className="xp-btns">
-            <a className="xp-btn" href="#book">{S(c.hero.bookBtn)} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a>
+            <a className="xp-btn" href="#book">{S(c.hero.bookBtn)} <ArrowIcon size={15} /></a>
           </div>
         </section>
 

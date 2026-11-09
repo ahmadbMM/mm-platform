@@ -262,6 +262,36 @@ test('handed back signed in by the booking app, the code typed before is checked
   expect(page.url()).not.toContain('code=');
 });
 
+// The owner, 2026-11-09: "don't allow a flagged account field to type in the same info in the field again".
+test('a question staff flagged refuses what the account already holds; a new answer goes through customer_fix_save, then on to book', async ({ page }) => {
+  const SAME = 'This is the same as what is on your account. Please correct it.';
+  let flags = ['nationality', 'instagram', 'emergency2'];
+  const { errs, of } = await open(page, '', {
+    customer_emergency: () => json([{ ...EM_ROW, emergency2_name: 'Omar Alharbi', emergency2_phone: '+966559876543', emergency2_relation: 'parent' }]),
+    customer_fix_fields: () => json(flags),
+    customer_fix_save: () => { flags = []; return json([]); },
+  });
+  await code(page);
+  await signIn(page);
+  await expect(page.locator('#s-details')).toBeVisible();
+  await expect(page.locator('#xem2-box')).toBeVisible();
+  await page.click('#d-next');
+  for (const f of ['#f-nat', '#f-ig', '#f-xem2-name']) await expect(page.locator(`${f} .err`)).toHaveText(SAME);
+  await expect(page.locator('#f-xem-name .err')).toHaveText(''); // the first contact is not flagged
+  await page.click('#lang');
+  await expect(page.locator('#f-nat .err')).toHaveText('هذا مطابق لما هو مسجل في حسابك. يرجى تصحيحه.');
+  await page.click('#lang');
+  expect(of('customer_fix_save')).toEqual([]);
+  await page.selectOption('#nat', 'Egypt');
+  await page.fill('#ig', 'sara.on.bikes');
+  await page.fill('#xem2-phone', '0559876544');
+  await page.click('#d-next');
+  await expect(page.locator('#s-book')).toBeVisible();
+  expect(of('customer_fix_save')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in', p_values: {
+    nationality: 'Egypt', instagram: 'sara.on.bikes', emergency2: { name: 'Omar Alharbi', phone: '+966559876544', relation: 'parent' } } }]);
+  expect(errs).toEqual([]);
+});
+
 test('Google, Apple or a forgotten password goes through the booking app and keeps the code for the way back', async ({ page }) => {
   await open(page);
   await code(page);

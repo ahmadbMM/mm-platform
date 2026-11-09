@@ -95,6 +95,7 @@ var FORM_T = {
   "Enter a valid mobile number": "أدخل رقم جوال صحيحًا",
   "Enter your height in cm (100 to 250)": "أدخل طولك بالسنتيمتر (من 100 إلى 250)",
   "Please check your date of birth.": "يُرجى التحقق من تاريخ ميلادك.",
+  "This is the same as what is on your account. Please correct it.": "هذا مطابق لما هو مسجل في حسابك. يرجى تصحيحه.",
   "An Instagram username has only letters, numbers, dots and underscores": "يتكوّن اسم المستخدم في Instagram من حروف وأرقام ونقاط وشرطات سفلية فقط",
   "Tick the box to accept the ride waiver": "ضع علامة في المربع للموافقة على إقرار الركوب",
   "Choose a bike": "اختر دراجة",

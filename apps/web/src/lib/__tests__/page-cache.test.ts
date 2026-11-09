@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { NO_PAGE_CACHE, pageCacheKey, servePage } from "../page-cache";
+import { BROWSER_CACHE, NO_PAGE_CACHE, pageCacheKey, plainCanonical, servePage } from "../page-cache";
 
 // The edge page cache (lib/page-cache.ts): which requests may be answered from a copy, and how.
 const SITE = "https://micromobility.sa";
@@ -56,11 +56,14 @@ describe("servePage", () => {
   };
   const ctx = () => { const waits: Promise<unknown>[] = []; return { waits, waitUntil: (p: Promise<unknown>) => { waits.push(p); } }; };
 
-  it("renders once, then answers from the copy - without anyone's cookies, uncached by the browser", async () => {
+  it("renders once, then answers from the copy - without anyone's cookies, asked again by the browser but kept for Back", async () => {
     const cache = fakeCache();
     const handler = { fetch: vi.fn(async () => html()) };
     const c1 = ctx();
     const first = await servePage(get("/club?lang=ar"), { CF_VERSION_METADATA: { id: "v1" } }, c1, handler, cache);
+    expect(first.headers.get("cache-control")).toBe(BROWSER_CACHE);
+    expect(BROWSER_CACHE).not.toContain("no-store"); // no-store kept every page out of the back/forward cache
+    expect(first.headers.get("set-cookie")).toContain("NEXT_LOCALE=ar"); // the visitor's own answer keeps its cookie
     expect(await first.text()).toBe("<html>page</html>");
     await Promise.all(c1.waits);
     const stored = [...cache.m.values()][0];
@@ -69,7 +72,7 @@ describe("servePage", () => {
     const again = await servePage(get("/club?lang=ar"), { CF_VERSION_METADATA: { id: "v1" } }, ctx(), handler, cache);
     expect(handler.fetch).toHaveBeenCalledTimes(1);
     expect(again.headers.get("x-mm-page-cache")).toBe("hit");
-    expect(again.headers.get("cache-control")).toBe("private, no-store");
+    expect(again.headers.get("cache-control")).toBe(BROWSER_CACHE);
     expect(again.headers.get("set-cookie")).toContain("NEXT_LOCALE=ar"); // ?lang= still becomes the visitor's language
   });
   it("keeps nothing but a whole HTML page, and is off with PAGE_CACHE=off", async () => {
@@ -83,6 +86,11 @@ describe("servePage", () => {
     await servePage(get("/club?lang=ar"), { PAGE_CACHE: "off" }, ctx(), handler, cache);
     expect(cache.m.size).toBe(0);
   });
+  it("leaves a page it may not keep as it was drawn: a signed-in visitor's keeps no-store", async () => {
+    const handler = { fetch: vi.fn(async () => html()) };
+    const res = await servePage(get("/club?lang=ar", "mm_acct=a~b"), {}, ctx(), handler, fakeCache());
+    expect(res.headers.get("cache-control")).toBe("private, no-store");
+  });
   it("never keeps a page drawn without the site's state (the proxy marks it)", async () => {
     const cache = fakeCache();
     const handler = { fetch: vi.fn(async () => html("<html>coming soon</html>", { [NO_PAGE_CACHE]: "1" })) };
@@ -90,5 +98,19 @@ describe("servePage", () => {
     await servePage(get("/?lang=en"), {}, c, handler, cache);
     await Promise.all(c.waits);
     expect(cache.m.size).toBe(0);
+  });
+});
+
+describe("plainCanonical", () => {
+  it("names a page's plain address as its canonical one when no language is asked for", () => {
+    expect(plainCanonical(get("/"))).toBe("https://micromobility.sa/");
+    expect(plainCanonical(get("/business"))).toBe("https://micromobility.sa/business");
+    expect(plainCanonical(get("/business/"))).toBe("https://micromobility.sa/business");
+    expect(plainCanonical(get("/club?utm_source=instagram"))).toBe("https://micromobility.sa/club");
+  });
+  it("leaves a language's address, the account, the API and files as the page wrote them", () => {
+    for (const p of ["/?lang=ar", "/club?lang=en", "/account", "/account/stats", "/api/health", "/media/home/x.jpg", "/robots.txt", "/preview"]) {
+      expect(plainCanonical(get(p)), p).toBeNull();
+    }
   });
 });

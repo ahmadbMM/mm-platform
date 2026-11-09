@@ -211,7 +211,6 @@
   "Day": "Jour",
   "Deore 1×11 and fast-rolling rubber for quick desert gravel.": "Deore 1×11 et pneus roulants pour filer sur les pistes gravel du désert.",
   "Directions": "Itinéraire",
-  "Directions →": "Itinéraire →",
   "Disc + 3-spoke carbon": "Lenticulaire + 3 bâtons carbone",
   "Distance": "Distance",
   "Do you already have a Micromobility account?": "Avez-vous déjà un compte Micromobility ?",
@@ -278,7 +277,6 @@
   "Fast road rides": "Sorties route rapides",
   "Female": "Féminin",
   "Find us in Jeddah.": "Retrouvez-nous à Djeddah.",
-  "Find your size": "Trouver ma taille",
   "Finish Victory Lap by Fitness Empire.": "Terminer la Victory Lap by Fitness Empire.",
   "First name": "Prénom",
   "First name is enough.": "Le prénom suffit.",
@@ -705,6 +703,7 @@
   "Already on your account, so we do not ask again: {0}.": "Déjà sur votre compte, nous ne le redemandons pas : {0}.",
   "Show them": "Les afficher",
   "Our team asked you to check this.": "Notre équipe vous demande de vérifier ceci.",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0} : C’est identique à ce qui figure sur votre compte. Veuillez le corriger.",
   "Signed up with Google or Apple?": "Inscrit avec Google ou Apple ?",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Compte créé avec Google ou Apple ? Continuez avec lui dans l’appli de réservation, et vous revenez ici connecté.",
   "Signing in…": "Connexion en cours…",
@@ -1784,5 +1783,7 @@
   "Premium bikes, expert servicing, rides at the Corniche and a community that rides every week.": "Des vélos haut de gamme, un entretien expert, des sorties sur la Corniche et une communauté qui roule chaque semaine.",
   "Fleets, wellness, events": "Flottes, bien-être, événements",
   "EST. JEDDAH": "FONDÉ À DJEDDAH",
-  "Photo {n} of {total}": "Photo {n} sur {total}"
+  "Photo {n} of {total}": "Photo {n} sur {total}",
+  "What's on.": "Au programme.",
+  "Find your bike": "Trouvez votre vélo"
 }

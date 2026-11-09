@@ -211,7 +211,6 @@
   "Day": "Araw",
   "Deore 1×11 and fast-rolling rubber for quick desert gravel.": "Deore 1×11 at mga gulong na mabilis gumulong, para sa mabilis na takbo sa gravel ng disyerto.",
   "Directions": "Mga direksyon",
-  "Directions →": "Mga direksyon →",
   "Disc + 3-spoke carbon": "Disc + 3-spoke na carbon",
   "Distance": "Layo",
   "Do you already have a Micromobility account?": "May Micromobility account ka na ba?",
@@ -278,7 +277,6 @@
   "Fast road rides": "Mabibilis na road ride",
   "Female": "Babae",
   "Find us in Jeddah.": "Hanapin kami sa Jeddah.",
-  "Find your size": "Alamin ang iyong laki",
   "Finish Victory Lap by Fitness Empire.": "Tapusin ang Victory Lap by Fitness Empire.",
   "First name": "Pangalan",
   "First name is enough.": "Sapat na ang unang pangalan.",
@@ -705,6 +703,7 @@
   "Already on your account, so we do not ask again: {0}.": "Nasa account mo na, kaya hindi na namin itatanong ulit: {0}.",
   "Show them": "Ipakita",
   "Our team asked you to check this.": "Hiniling ng aming team na suriin mo ito.",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0}: Pareho ito sa nasa account mo. Pakiwasto ito.",
   "Signed up with Google or Apple?": "Nag-sign up gamit ang Google o Apple?",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Nag-sign up gamit ang Google o Apple? Ituloy ito sa booking app, at babalik ka rito na naka-sign in na.",
   "Signing in…": "Nagsa-sign in…",
@@ -1784,5 +1783,7 @@
   "Premium bikes, expert servicing, rides at the Corniche and a community that rides every week.": "Mga premium na bisikleta, dalubhasang service, mga ride sa Corniche at isang komunidad na nagbibisikleta linggo-linggo.",
   "Fleets, wellness, events": "Fleet, wellness, event",
   "EST. JEDDAH": "ITINATAG SA JEDDAH",
-  "Photo {n} of {total}": "Larawan {n} sa {total}"
+  "Photo {n} of {total}": "Larawan {n} sa {total}",
+  "What's on.": "Mga paparating.",
+  "Find your bike": "Hanapin ang bisikleta mo"
 }

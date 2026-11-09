@@ -20,7 +20,7 @@ import { genderBlock, genderChip, genderText, sessionGender } from "@/lib/sessio
 import { riyadhClock } from "@/lib/workshop-days";
 import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { serverL } from "@/i18n/dicts";
-import { isRtl } from "@/i18n/locales";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/club - the Community membership as the Club: how it works, a member's card,
 // the upcoming community rides. Joining is the community application, received by the staff
@@ -171,7 +171,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         <section className="club-rides">
           <div className="club-rides-head">
             <div><p>{S(c.rides.eyebrow)}</p><h2>{S(c.rides.title)}</h2></div>
-            <a href={bookingLink(S(c.rides.allHref), locale)}>{S(c.rides.allLabel)} {(isRtl(locale) ? "←" : "→")}</a>
+            <a href={bookingLink(S(c.rides.allHref), locale)}>{S(c.rides.allLabel)} <ArrowIcon size={15} /></a>
           </div>
           <ClubRides locale={locale} href={bookingLink(S(c.rides.allHref), locale)} empty={S(c.rides.empty)} dayFmt={datePattern(locale, DATE_STYLES.rideDay)} />
         </section>

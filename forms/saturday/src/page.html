@@ -916,6 +916,7 @@ var FORM_T = {
   "Enter a valid mobile number": "أدخل رقم جوال صحيحًا",
   "Enter your height in cm (100 to 250)": "أدخل طولك بالسنتيمتر (من 100 إلى 250)",
   "Please check your date of birth.": "يُرجى التحقق من تاريخ ميلادك.",
+  "This is the same as what is on your account. Please correct it.": "هذا مطابق لما هو مسجل في حسابك. يرجى تصحيحه.",
   "An Instagram username has only letters, numbers, dots and underscores": "يتكوّن اسم المستخدم في Instagram من حروف وأرقام ونقاط وشرطات سفلية فقط",
   "Tick the box to accept the ride waiver": "ضع علامة في المربع للموافقة على إقرار الركوب",
   "Choose a bike": "اختر دراجة",
@@ -1007,7 +1008,10 @@ var FORM_T = {
      plan(me, keys)           a signed-in account's questions (the owner, 2026-10-25: "don't ask for the fields
                               he already has filled, only if flagged"): skip what the account holds unless
                               staff flagged it (me.flags = customers.fix_fields); {skip, ask, flagged}
-     draft(key, days)         a half-filled form kept on this device for a few days: {load, save, clear}
+     same(k, answer, held)    whether the answer to a flagged question is what the account already holds (the
+                              owner, 2026-11-09: "don't allow a flagged account field to type in the same info in
+                              the field again"): the form refuses it on that question
+     draft(key, days)        a half-filled form kept on this device for a few days: {load, save, clear}
 
    rpc(fn, body) is the form's own: it answers {data} or {error: {message, code}} and never throws. */
 var MMAccount = (function () {
@@ -1103,6 +1107,47 @@ var MMAccount = (function () {
     return out;
   }
 
+  // A flagged question answered with what the account already holds is no answer (the owner, 2026-11-09). The booking
+  // app's rule (_fixSame), which customer_fix_save keeps too (20261109200000): a name, profession or company with its
+  // spaces tidied, in the same case; an email in any case; a mobile, WhatsApp or emergency number by its last nine
+  // digits; a handle in any case and without its @; the rest exactly. An empty answer ("I don't have one", nothing
+  // typed) is never the same, and a password is never compared.
+  //   k       the account's field, as customers.fix_fields names it
+  //   a       the answer: a string (a number for the height); {same, phone} for whatsapp; {country, city} for
+  //           residence; {name, phone, relation} for emergency and emergency2
+  //   held    what the account holds, in customer_community_me's names: name, email, phone (the mobile),
+  //           whatsapp_same, whatsapp, birth_date, gender, nationality, country, city, height, photo,
+  //           type_preference, heard_from, profession, workplace, instagram, x, tiktok, linkedin, and emergency and
+  //           emergency2 as {name, phone, relation}
+  var SAME_EXACT = ["birth_date", "gender", "nationality", "photo", "type_preference", "heard_from"];
+  var SAME_HANDLE = ["instagram", "x", "tiktok", "linkedin"];
+  function same(k, a, held) {
+    var h = held || {};
+    var sp = function (x) { return String(x == null ? "" : x).replace(/\s+/g, " ").trim(); };
+    var lo = function (x) { return sp(x).toLowerCase(); };
+    var n9 = function (x) { return ascii(x).replace(/\D/g, "").slice(-9); };
+    var at = function (x) { return lo(x).replace(/^@/, ""); };
+    if (k === "name" || k === "profession" || k === "workplace") return !!sp(a) && sp(a) === sp(h[k]);
+    if (k === "email") return !!sp(a) && lo(a) === lo(h.email);
+    if (k === "phone") return !!n9(a) && n9(a) === n9(h.phone);
+    if (k === "whatsapp") {
+      if (!a || (a.same !== true && a.same !== false)) return false;
+      // a "No" with the mobile's own number is "the same as my mobile" (customer_set_whatsapp, customer_fix_save)
+      var asSame = a.same === true || (!!n9(a.phone) && n9(a.phone) === n9(h.phone));
+      return asSame ? h.whatsapp_same === true : h.whatsapp_same === false && !!n9(h.whatsapp) && n9(a.phone) === n9(h.whatsapp);
+    }
+    if (k === "residence") return !!a && !!sp(a.country) && sp(a.country) === sp(h.country) && sp(a.city) === sp(h.city);
+    if (k === "height") return Number(a) > 0 && Number(a) === Number(h.height);
+    if (SAME_HANDLE.indexOf(k) >= 0) return !!at(a) && at(a) === at(h[k]);
+    if (k === "emergency" || k === "emergency2") {
+      var o = h[k];
+      return !!a && !!o && typeof o === "object" && !!sp(a.name) && sp(a.name) === sp(o.name) &&
+        !!n9(o.phone) && n9(a.phone) === n9(o.phone) && lo(a.relation) === lo(o.relation);
+    }
+    if (SAME_EXACT.indexOf(k) >= 0) return !!a && a === (h[k] || "");
+    return false; // the password: there is nothing to compare it with
+  }
+
   // A form's answers kept on this device so a closed tab or a reload does not lose them. Never a password or a
   // session (the form leaves those out); gone after `days`, and the moment the form is sent or started over.
   function draft(key, days) {
@@ -1119,7 +1164,7 @@ var MMAccount = (function () {
     return { load: load, save: save, clear: clear };
   }
 
-  return { ident: ident, signIn: signIn, takeCode: takeCode, redeem: redeem, plan: plan, has: function (me, k) { return !!me && !!HAS[k] && HAS[k](me); }, draft: draft };
+  return { ident: ident, signIn: signIn, takeCode: takeCode, redeem: redeem, plan: plan, has: function (me, k) { return !!me && !!HAS[k] && HAS[k](me); }, same: same, draft: draft };
 })();
 
 </script>
@@ -1889,7 +1934,7 @@ var MMAccount = (function () {
         else if (!/^[A-Za-z0-9._]{1,30}$/.test(ig)) hard["f-ig"] = ["An Instagram username has only letters, numbers, dots and underscores"];
       }
       heightCheck("f-xheight", $("#xheight").value, hard, soft);
-      if (need.em) emCheck("xem", acct.phone, hard, need.em2);
+      sameAgain(hard, need.em ? emCheck("xem", acct.phone, hard, need.em2) : null);
     } else if (n === "book") {
       if (!ride) hard["f-ride"] = ["Choose the Saturday you want to ride"];
       if (!group) hard["f-group"] = ["Choose your ride group"];
@@ -1897,6 +1942,32 @@ var MMAccount = (function () {
       if (!waiverOk) hard["f-waiver"] = ["Tick the box to accept the ride waiver"];
     }
     return { hard: hard, soft: soft };
+  }
+  // The answers this step gives to the questions staff flagged (fixed), in customer_fix_save's names; ec: emCheck's
+  // contacts.
+  function flaggedAnswers(ec) {
+    var out = {}, put = function (k, a) { if (fixed.indexOf(k) >= 0) out[k] = a; };
+    var em = function (x) { return { name: x.name, phone: x.phone, relation: x.rel }; };
+    if (need.birth) put("birth_date", birthValue());
+    if (need.nat) put("nationality", $("#nat").value);
+    if (need.wa && waSame !== null) put("whatsapp", waSame ? { same: true } : { same: false, phone: e164(WPK) });
+    if (need.ig) put("instagram", igNorm($("#ig").value));
+    put("height", String(parseInt(toAscii($("#xheight").value), 10)));
+    if (ec && ec.one) put("emergency", em(ec.one));
+    if (ec && ec.two) put("emergency2", em(ec.two));
+    return out;
+  }
+  // A flagged question takes another answer than the one the account holds (the owner, 2026-11-09: "don't allow a
+  // flagged account field to type in the same info in the field again"), as the booking app's check-up refuses it;
+  // MMAccount.same is the rule. Said on the question once its answer passes the other checks.
+  var SAME_AGAIN = "This is the same as what is on your account. Please correct it.";
+  var SAME_FIELD = { birth_date: "f-birth", nationality: "f-nat", instagram: "f-ig", height: "f-xheight", emergency: "f-xem-name", emergency2: "f-xem2-name" };
+  function sameAgain(hard, ec) {
+    var ans = flaggedAnswers(ec);
+    Object.keys(ans).forEach(function (k) {
+      var id = k === "whatsapp" ? (ans[k].same ? "f-wa" : "f-wanum") : SAME_FIELD[k];
+      if (!hard[id] && MMAccount.same(k, ans[k], held)) hard[id] = [SAME_AGAIN];
+    });
   }
   function passStep(n) {
     var r = check(n), hk = Object.keys(r.hard), sk = Object.keys(r.soft);
@@ -2029,7 +2100,9 @@ var MMAccount = (function () {
   // What the details step can ask. Anything else the account still owes (customer_fix_fields: an
   // email, a password, a field staff flagged) is answered on the booking site.
   var ASKABLE = ["birth_date", "nationality", "whatsapp", "instagram", "height", "emergency", "emergency2"];
-  var prof = null, need = {}, blocked = false;
+  // fixed: what staff flagged on the account (customer_fix_fields); held: what it holds for those questions, in
+  // MMAccount.same's names.
+  var prof = null, need = {}, blocked = false, fixed = [], held = {};
   async function readAccount() {
     var all = await Promise.all([
       rpc("customer_profile", { p_id: acct.id, p_token: acct.token }),
@@ -2072,6 +2145,13 @@ var MMAccount = (function () {
       em2: flag("emergency2")
     };
     blocked = fix.some(function (k) { return ASKABLE.indexOf(k) < 0; });
+    var emOf = function (n) { return a.em && a.em !== "absent" ? { name: a.em[n + "_name"], phone: a.em[n + "_phone"], relation: a.em[n + "_relation"] } : null; };
+    fixed = fix;
+    held = {
+      phone: acct.phone, whatsapp_same: a.wa && a.wa !== "absent" ? a.wa.whatsapp_same : null, whatsapp: a.wa && a.wa !== "absent" ? a.wa.whatsapp : null,
+      birth_date: prof.birth_date, nationality: prof.nationality, instagram: socials.instagram, height: prof.height,
+      emergency: emOf("emergency"), emergency2: emOf("emergency2")
+    };
     // What the account holds goes into the boxes it asks again.
     if (prof.birth_date) setBirth(prof.birth_date);
     if (prof.nationality && $$("#nat option").some(function (o) { return o.value === prof.nationality; })) { $("#nat").value = prof.nationality; $("#nat").classList.remove("ph"); }
@@ -2117,6 +2197,14 @@ var MMAccount = (function () {
   async function saveDetails() {
     var saved = [], r;
     var gone = function (x) { return x && x.data === false; };
+    // The questions staff flagged are answered first, through customer_fix_save (the booking app's check-up): it
+    // clears each flag whose field the answer changed, and keeps asked one that came back as it was (20261109200000).
+    // The saves below then write the same values again, as for any rider.
+    var fv = flaggedAnswers(need.em ? emCheck("xem", acct.phone, {}, need.em2) : null);
+    if (Object.keys(fv).length) {
+      r = await rpc("customer_fix_save", { p_id: acct.id, p_token: acct.token, p_values: fv });
+      if (r.error && !absent(r.error)) { showBanner(/RATE_LIMITED/.test(errText(r.error)) ? SITE_TOO_MANY : NET); return; }
+    }
     if (need.em) {
       var em = await emSave("xem", need.em2);
       if (em.signedOut) { signedOut(); return; }

@@ -211,7 +211,6 @@
   "Day": "日",
   "Deore 1×11 and fast-rolling rubber for quick desert gravel.": "Deore 1×11 套件搭配低滚阻轮胎，在沙漠砾石路上轻快驰骋。",
   "Directions": "导航",
-  "Directions →": "导航 →",
   "Disc + 3-spoke carbon": "碳纤维封闭轮 + 三刀轮",
   "Distance": "距离",
   "Do you already have a Micromobility account?": "您已经有 Micromobility 账户了吗？",
@@ -278,7 +277,6 @@
   "Fast road rides": "公路快骑",
   "Female": "女",
   "Find us in Jeddah.": "来吉达找我们。",
-  "Find your size": "尺码查询",
   "Finish Victory Lap by Fitness Empire.": "完成 Victory Lap by Fitness Empire。",
   "First name": "名",
   "First name is enough.": "填写名字即可。",
@@ -705,6 +703,7 @@
   "Already on your account, so we do not ask again: {0}.": "您的账户中已有这些信息，因此不再询问：{0}。",
   "Show them": "显示",
   "Our team asked you to check this.": "我们的团队请您核对此项。",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0}：与您账户中的信息相同，请更正。",
   "Signed up with Google or Apple?": "用 Google 或 Apple 注册过？",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "使用 Google 或 Apple 注册？请在预订 App 中继续使用该账户，完成后将以登录状态返回此处。",
   "Signing in…": "正在登录…",
@@ -1784,5 +1783,7 @@
   "Premium bikes, expert servicing, rides at the Corniche and a community that rides every week.": "高端自行车、专业保养、滨海大道骑行，以及每周都一起骑车的社区。",
   "Fleets, wellness, events": "车队、健康、活动",
   "EST. JEDDAH": "创立于吉达",
-  "Photo {n} of {total}": "第 {n} 张，共 {total} 张"
+  "Photo {n} of {total}": "第 {n} 张，共 {total} 张",
+  "What's on.": "近期活动。",
+  "Find your bike": "找到适合你的自行车"
 }

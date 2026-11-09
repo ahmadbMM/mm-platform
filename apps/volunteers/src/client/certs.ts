@@ -10,7 +10,7 @@
 import { rpc } from "./api";
 import { stripScripts } from "./cert";
 import { append, h, uid } from "./dom";
-import { dayLabel, ksaToday, sessionName, t } from "./i18n";
+import { dayLabel, hoursN, ksaToday, sessionName, t } from "./i18n";
 import { icon } from "./icons";
 import { go, render, route, S, say, setNote, type Reward } from "./state";
 import { button, card, chip, note } from "./ui";
@@ -154,7 +154,7 @@ export function viewCert(main: HTMLElement): void {
   append(main, h("h1", {}, t("certTitle")));
   main.appendChild(list.length
     ? h("div", { class: "list" }, ...list.map((x) => h("div", { class: "card ev-row" },
-        h("div", { class: "ev-main" }, h("p", { class: "ev-name" }, x.label), h("p", { class: "meta" }, `${dayLabel(x.on)} · ${t("oppHours", String(x.hours))}`)),
+        h("div", { class: "ev-main" }, h("p", { class: "ev-name" }, x.label), h("p", { class: "meta" }, `${dayLabel(x.on)} · ${hoursN(x.hours)}`)),
         button(t("certGet"), () => void getCert(x.id, x.label), "secondary", {}, "doc"))))
     : note(t("certNoEvents")));
   if (!S.prof) return; // a database without the profile (20261107131000) makes no certificate for other dates
@@ -216,6 +216,7 @@ export function viewCheck(main: HTMLElement, code: string): void {
     h("p", { class: "big-n" }, h("b", {}, String(+(c.hours ?? 0))), h("span", {}, t("homeHours"))),
     // A certificate for one event names it and the day it was held; one for a period, its period.
     h("p", { class: "meta" }, c.kind === "session" ? `${c.initiative ?? ""} · ${dayLabel(c.event_date ?? c.from)}` : t("checkPeriod", dayLabel(c.from), dayLabel(c.to))),
-    c.sessions?.length ? h("ul", { class: "rec" }, ...c.sessions.map((x) => h("li", {}, `${sessionName(x)} · ${dayLabel(x.date)} · `, h("b", { dir: "ltr" }, String(+x.hours))))) : null,
+    // each event, its day, then the hours with their word: a bare number read as anything but hours (the owner, 2026-11-09)
+    c.sessions?.length ? h("ul", { class: "rec" }, ...c.sessions.map((x) => h("li", {}, `${sessionName(x)} · ${dayLabel(x.date)} · `, h("b", {}, hoursN(x.hours))))) : null,
     h("div", { class: "chips" }, chip(h("span", { dir: "ltr" }, c.serial ?? "")), chip(t("checkIssued", dayLabel((c.issued_at ?? "").slice(0, 10)))))));
 }

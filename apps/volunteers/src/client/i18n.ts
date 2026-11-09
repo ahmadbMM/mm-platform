@@ -31,6 +31,15 @@ export function t(key: Key, ...args: (string | number)[]): string {
   return s;
 }
 
+/** Hours with their word, by the language's plural (the booking app's _tn('accVolHrs'), 2026-11-09): "1 hour",
+ *  "6 hours", "2.5 hours"; Arabic "ساعة واحدة", "ساعتان", "3 ساعات", "11 ساعة". Two decimals at most. */
+export function hoursN(hours: number | string | null | undefined): string {
+  const n = Math.round((Number(hours) || 0) * 100) / 100;
+  let c: Intl.LDMLPluralRule = "other";
+  try { c = new Intl.PluralRules(lang).select(n); } catch { /* an engine without the language: "other" */ }
+  return t(`hours_${c}` as Key, String(n));
+}
+
 export async function setLang(code: string): Promise<void> {
   const L = LANGS.find((x) => x.code === code) ?? LANGS[0];
   if (L.code !== "en") {

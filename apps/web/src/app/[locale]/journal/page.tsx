@@ -6,10 +6,10 @@ import { fmtDate, journalState } from "@/components/journal/journal-data";
 import { siteSchema } from "@/content/pages/site";
 import { resolvePage } from "@/lib/content";
 import { readMinutes } from "@/lib/journal";
-import { isRtl } from "@/i18n/locales";
 import { serverL } from "@/i18n/dicts";
 import { fill } from "@/lib/fill";
 import { bg } from "@/lib/img";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/journal - the articles staff write, newest first, with their tags as filters.
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -54,7 +54,7 @@ export default async function JournalPage({ params, searchParams }: { params: Pr
                 <span className="jr-meta">{meta(feature)}</span>
                 <h2>{feature.title}</h2>
                 {feature.excerpt && <p>{feature.excerpt}</p>}
-                <span className="jr-go">{S(j.hero.readMore)} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></span>
+                <span className="jr-go">{S(j.hero.readMore)} <ArrowIcon size={15} /></span>
               </div>
             </a>
             {rest.length > 0 && (

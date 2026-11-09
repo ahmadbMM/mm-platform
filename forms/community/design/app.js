@@ -646,6 +646,9 @@
   // 1 makes the account; once it exists there is no way back to it (it would make a second one).
   var step = 1, acked = {}; // acked[step] = the soft warnings the rider has already seen there
   var acct = null; // the signed-in applicant: {id, token, name, email, phone, made, needGender, needHeight, needAck}
+  // A signed-in account's flagged questions (customer_community_me's flags) and what it holds for them, in
+  // MMAccount.same's names (customer_community_me's, the emergency contacts as {name, phone, relation}).
+  var fixed = [], held = {};
   function goStep(n) {
     step = n;
     $$("fieldset.step").forEach(function (f) { f.hidden = +f.getAttribute("data-step") !== n; });
@@ -710,10 +713,35 @@
       if (ownBike === null && qReq("own_bike")) hard["f-own"] = ["Tell us whether you have your own bike"];
       if (!bikeType && qReq("bike_type")) hard["f-type"] = ["Choose a bike type"];
       if (!$("#heard").value && qReq("heard_from")) hard["f-heard"] = ["Please tell us how you heard about us."];
-      if (acct && acct.needEm) emCheck("xem", acct.phone, hard);
+      var ec = acct && acct.needEm ? emCheck("xem", acct.phone, hard) : null;
       if (acct && acct.needAck && !xack) hard["f-xack"] = ["privacyAckRequired", null, true];
+      if (acct && !acct.made) sameAgain(hard, ec);
     }
     return { hard: hard, soft: soft };
+  }
+  // A question staff flagged takes another answer than the one the account holds (the owner, 2026-11-09: "don't allow
+  // a flagged account field to type in the same info in the field again"), as the booking app's check-up refuses it;
+  // MMAccount.same is the rule. Said on the question once its answer passes the other checks; ec: emCheck's contacts.
+  var SAME_FIELD = { birth_date: "f-birth", nationality: "f-nat", instagram: "f-ig", linkedin: "f-li", profession: "f-prof", workplace: "f-work",
+    heard_from: "f-heard", height: "f-xheight", emergency: "f-xem-name", emergency2: "f-xem2-name" };
+  function sameAgain(hard, ec) {
+    var ans = {}, em = function (x) { return { name: x.name, phone: x.phone, relation: x.rel }; };
+    ans.birth_date = qOn("birth_date") ? birthValue() : "";
+    ans.nationality = qOn("nationality") ? $("#nat").value : "";
+    ans.instagram = qOn("instagram") ? igNorm($("#ig").value) : "";
+    ans.linkedin = qOn("linkedin") ? liNorm($("#li").value) : "";
+    ans.profession = qOn("profession") ? clean($("#prof").value) : "";
+    ans.workplace = qOn("workplace") ? clean($("#work").value) : "";
+    ans.heard_from = qOn("heard_from") ? $("#heard").value : "";
+    if (acct.needHeight) ans.height = String(parseInt(toAscii($("#xheight").value), 10));
+    if (waStep === 2 && waSame !== null) ans.whatsapp = waSame ? { same: true } : { same: false, phone: e164(WPK) };
+    if (ec && ec.one) ans.emergency = em(ec.one);
+    if (ec && ec.two) ans.emergency2 = em(ec.two);
+    Object.keys(ans).forEach(function (k) {
+      if (fixed.indexOf(k) < 0) return;
+      var id = k === "whatsapp" ? (ans[k].same ? "f-wa" : "f-wanum") : SAME_FIELD[k];
+      if (!hard[id] && MMAccount.same(k, ans[k], held)) hard[id] = ["This is the same as what is on your account. Please correct it."];
+    });
   }
   var STEP_FIELDS = { 1: ["f-name", "f-gender", "f-email", "f-phone", "f-wa", "f-wanum", "f-pwd", "f-pwd2", "f-height"].concat(EM_FIELDS("em"), ["f-ack"]), 2: ["f-xgender", "f-xheight", "f-wa", "f-wanum", "f-birth", "f-nat", "f-ig", "f-li", "f-prof", "f-work", "f-own", "f-type", "f-heard"].concat(EM_FIELDS("xem"), ["f-xack"]) };
   // Shows the step's problems; true when the rider may go on.
@@ -1004,6 +1032,9 @@
       var er = !em.error && Array.isArray(em.data) ? em.data[0] || null : null;
       acct.needEm = em.error ? !emAbsent(em.error) : !(er && er.emergency_name && er.emergency_phone && er.emergency_relation) || fl.indexOf("emergency") >= 0;
       acct.emTwo = !er || "emergency2_name" in er;
+      var emOf = function (n) { return er ? { name: er[n + "_name"], phone: er[n + "_phone"], relation: er[n + "_relation"] } : null; };
+      fixed = fl.map(String);
+      held = Object.assign({}, me, { emergency: emOf("emergency"), emergency2: emOf("emergency2") });
       enterStepTwo(me);
       return true;
   }

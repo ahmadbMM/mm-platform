@@ -211,7 +211,6 @@
   "Day": "Hari",
   "Deore 1×11 and fast-rolling rubber for quick desert gravel.": "Deore 1×11 dan tayar yang bergolek laju untuk meluncur pantas di kelikir gurun.",
   "Directions": "Arah ke lokasi",
-  "Directions →": "Arah ke lokasi →",
   "Disc + 3-spoke carbon": "Roda cakera + karbon 3 jejari",
   "Distance": "Jarak",
   "Do you already have a Micromobility account?": "Adakah anda sudah mempunyai akaun Micromobility?",
@@ -278,7 +277,6 @@
   "Fast road rides": "Kayuhan laju di jalan raya",
   "Female": "Perempuan",
   "Find us in Jeddah.": "Temui kami di Jeddah.",
-  "Find your size": "Cari saiz anda",
   "Finish Victory Lap by Fitness Empire.": "Tamatkan Victory Lap by Fitness Empire.",
   "First name": "Nama pertama",
   "First name is enough.": "Nama pertama sudah memadai.",
@@ -705,6 +703,7 @@
   "Already on your account, so we do not ask again: {0}.": "Sudah ada dalam akaun anda, jadi kami tidak bertanya lagi: {0}.",
   "Show them": "Tunjukkan",
   "Our team asked you to check this.": "Pasukan kami meminta anda menyemak ini.",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0}: Ini sama dengan yang ada dalam akaun anda. Sila betulkan.",
   "Signed up with Google or Apple?": "Mendaftar dengan Google atau Apple?",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Mendaftar melalui Google atau Apple? Teruskan dengannya dalam aplikasi tempahan, dan anda kembali ke sini dalam keadaan sudah log masuk.",
   "Signing in…": "Sedang log masuk…",
@@ -1784,5 +1783,7 @@
   "Premium bikes, expert servicing, rides at the Corniche and a community that rides every week.": "Basikal premium, servis pakar, kayuhan di Corniche dan komuniti yang berbasikal setiap minggu.",
   "Fleets, wellness, events": "Armada, kesejahteraan, acara",
   "EST. JEDDAH": "DITUBUHKAN DI JEDDAH",
-  "Photo {n} of {total}": "Foto {n} daripada {total}"
+  "Photo {n} of {total}": "Foto {n} daripada {total}",
+  "What's on.": "Akan datang.",
+  "Find your bike": "Cari basikal anda"
 }

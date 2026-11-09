@@ -6,6 +6,7 @@ import { fmtPattern, type DatePattern } from "@/lib/date-pattern";
 import { fmtSar } from "@/lib/fill";
 import { useLocalize } from "@/i18n/TxProvider";
 import { T } from "./WorkshopTrack.text";
+import { TickIcon } from "@/components/site/Icons";
 
 // "Where's my bike?": the reference from the request plus the phone it was sent with
 // (workshop_track). Shows the stage the staff page has set.
@@ -51,7 +52,7 @@ export default function WorkshopTrack({ locale, whenFmt }: { locale: string; whe
           {res.status === "cancelled" ? <p>{t.cancelled}</p> : (
             <ol className="ws-stages">
               {STAGES.map((s, i) => (
-                <li key={s} className={i < idx ? "done" : i === idx ? "now" : ""}><span aria-hidden="true">{i < idx ? "✓" : i + 1}</span>{t.stages[s]}</li>
+                <li key={s} className={i < idx ? "done" : i === idx ? "now" : ""}><span aria-hidden="true">{i < idx ? <TickIcon size={14} /> : i + 1}</span>{t.stages[s]}</li>
               ))}
             </ol>
           )}

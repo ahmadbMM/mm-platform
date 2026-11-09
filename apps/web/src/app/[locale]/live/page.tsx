@@ -18,7 +18,7 @@ import { kindNames, sessionName } from "@/lib/rides";
 import { fmtDayDate, rideEndsAt } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
 import { serverL } from "@/i18n/dicts";
-import { isRtl } from "@/i18n/locales";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/live?session=<id> - where the ride leader is during a ride, for a rider with a
 // booking on it (the account's ticket links here on the day). The map itself is
@@ -39,7 +39,7 @@ export default async function LivePage({ params, searchParams }: { params: Promi
   const [{ content, previewing, hidden }, acct] = await Promise.all([pageState(), getAccount()]);
   const site = resolvePage(siteSchema, content, L);
   const title = tx("Live map", "الخريطة الحية");
-  const arrow = isRtl(locale) ? "←" : "→";
+  const arrow = <ArrowIcon size={15} />;
 
   if (!acct) {
     const c = resolvePage(accountSchema, content, L);

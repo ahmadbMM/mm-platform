@@ -3,10 +3,15 @@
 import { useEffect, useRef, useState } from "react";
 import { sized, srcSet } from "@/lib/img";
 import { useDialogFocus } from "@/components/site/use-dialog-focus";
+import { CloseIcon } from "@/components/site/Icons";
 
 // The gallery grid: tag filters (once there are two tags), photos in columns, and a photo opens
 // large with its caption. Escape or a tap closes it.
 type Photo = { src: string; caption: string; tag: string };
+// Each photo is drawn in a box of known shape (the Home photo wall's staggered ratios), filled and cropped
+// to fit: a photo's own size is not known until it arrives, and the columns used to jump as each one did
+// (layout shift 0.16 on a computer, 0.24 on a phone). The photo opened large is never cropped.
+const RATIOS = ["4 / 5", "3 / 4", "1 / 1", "2 / 3", "5 / 6"];
 
 export default function GalleryGrid({ photos, allLabel, closeLabel }: { photos: Photo[]; allLabel: string; closeLabel: string }) {
   const tags = [...new Set(photos.map((p) => p.tag).filter(Boolean))];
@@ -37,7 +42,7 @@ export default function GalleryGrid({ photos, allLabel, closeLabel }: { photos: 
       <div className="pg-grid">
         {shown.map((p, i) => (
           <figure key={p.src + i}>
-            <button type="button" onClick={(e) => { opener.current = e.currentTarget; setOpen(p); }} aria-label={p.caption || `${i + 1}`}>
+            <button type="button" style={{ aspectRatio: RATIOS[i % RATIOS.length] }} onClick={(e) => { opener.current = e.currentTarget; setOpen(p); }} aria-label={p.caption || `${i + 1}`}>
               <img src={sized(p.src, 640)} srcSet={srcSet(p.src)} sizes="(max-width: 700px) 50vw, 33vw" alt={p.caption} loading="lazy" />
             </button>
             {(p.caption || p.tag) && <figcaption>{p.tag && <span>{p.tag}</span>}{p.caption}</figcaption>}
@@ -46,7 +51,7 @@ export default function GalleryGrid({ photos, allLabel, closeLabel }: { photos: 
       </div>
       {open && (
         <div ref={box} className="pg-lightbox" role="dialog" aria-modal="true" aria-label={open.caption || allLabel} onClick={() => setOpen(null)}>
-          <button ref={closeBtn} type="button" className="pg-close" aria-label={closeLabel} onClick={() => setOpen(null)}>×</button>
+          <button ref={closeBtn} type="button" className="pg-close" aria-label={closeLabel} onClick={() => setOpen(null)}><CloseIcon size={20} /></button>
           <img src={sized(open.src, 1280)} alt={open.caption} />
           {open.caption && <p>{open.caption}</p>}
         </div>

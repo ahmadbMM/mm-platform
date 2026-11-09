@@ -211,7 +211,6 @@
   "Day": "Día",
   "Deore 1×11 and fast-rolling rubber for quick desert gravel.": "Deore 1×11 y neumáticos de rodadura rápida para ir veloz por la grava del desierto.",
   "Directions": "Cómo llegar",
-  "Directions →": "Cómo llegar →",
   "Disc + 3-spoke carbon": "Lenticular + 3 radios de carbono",
   "Distance": "Distancia",
   "Do you already have a Micromobility account?": "¿Ya tienes una cuenta Micromobility?",
@@ -278,7 +277,6 @@
   "Fast road rides": "Carretera y velocidad",
   "Female": "Femenino",
   "Find us in Jeddah.": "Encuéntranos en Yeda.",
-  "Find your size": "Encuentra tu talla",
   "Finish Victory Lap by Fitness Empire.": "Termina la Victory Lap by Fitness Empire.",
   "First name": "Nombre",
   "First name is enough.": "Con el nombre basta.",
@@ -705,6 +703,7 @@
   "Already on your account, so we do not ask again: {0}.": "Ya está en tu cuenta, así que no lo volvemos a preguntar: {0}.",
   "Show them": "Mostrarlos",
   "Our team asked you to check this.": "Nuestro equipo te pidió revisar esto.",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0}: Es lo mismo que figura en tu cuenta. Corrígelo, por favor.",
   "Signed up with Google or Apple?": "¿Te registraste con Google o Apple?",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "¿Te registraste con Google o Apple? Continúa con esa cuenta en la app de reservas y vuelves aquí con la sesión iniciada.",
   "Signing in…": "Iniciando sesión…",
@@ -1784,5 +1783,7 @@
   "Premium bikes, expert servicing, rides at the Corniche and a community that rides every week.": "Bicis premium, mantenimiento experto, rutas por la Corniche y una comunidad que pedalea cada semana.",
   "Fleets, wellness, events": "Flotas, bienestar, eventos",
   "EST. JEDDAH": "FUNDADOS EN YEDA",
-  "Photo {n} of {total}": "Foto {n} de {total}"
+  "Photo {n} of {total}": "Foto {n} de {total}",
+  "What's on.": "Lo que viene.",
+  "Find your bike": "Encuentra tu bici"
 }

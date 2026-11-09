@@ -10,7 +10,7 @@ import { elevationProfile, loadGpx, profilePaths, type GpxTrack } from "@/lib/gp
 import { localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { serverL } from "@/i18n/dicts";
-import { isRtl } from "@/i18n/locales";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/routes - places to ride in and around Jeddah, each with a map link and, when
 // staff link a GPX file, its elevation profile (drawn here, no library), a distance and climb read
@@ -42,7 +42,7 @@ export default async function RoutesPage({ params }: { params: Promise<{ locale:
     if (m < 60) return fill(tx("{m} min", "{m} د"), { m: n(m) });
     return rest ? fill(tx("{h} h {m} min", "{h} س {m} د"), { h: n(h), m: n(rest) }) : fill(tx("{h} h", "{h} س"), { h: n(h) });
   };
-  const arrow = isRtl(locale) ? "←" : "→";
+  const arrow = <ArrowIcon size={15} />;
   const ctaHref = c.cta.href;
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>

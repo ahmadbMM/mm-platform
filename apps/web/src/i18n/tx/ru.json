@@ -211,7 +211,6 @@
   "Day": "День",
   "Deore 1×11 and fast-rolling rubber for quick desert gravel.": "Deore 1×11 и накатистые покрышки для быстрой езды по пустынному гравию.",
   "Directions": "Как добраться",
-  "Directions →": "Как добраться →",
   "Disc + 3-spoke carbon": "Карбон: диск + трёхспицевое",
   "Distance": "Дистанция",
   "Do you already have a Micromobility account?": "У вас уже есть аккаунт Micromobility?",
@@ -278,7 +277,6 @@
   "Fast road rides": "Быстрая езда по шоссе",
   "Female": "Женский",
   "Find us in Jeddah.": "Найдите нас в Джидде.",
-  "Find your size": "Подобрать размер",
   "Finish Victory Lap by Fitness Empire.": "Финишируйте в Victory Lap by Fitness Empire.",
   "First name": "Имя",
   "First name is enough.": "Достаточно имени.",
@@ -705,6 +703,7 @@
   "Already on your account, so we do not ask again: {0}.": "Это уже есть в вашем аккаунте, поэтому мы не спрашиваем снова: {0}.",
   "Show them": "Показать",
   "Our team asked you to check this.": "Наша команда просит вас проверить это.",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0}: Это совпадает с тем, что указано в вашем аккаунте. Исправьте, пожалуйста.",
   "Signed up with Google or Apple?": "Регистрировались через Google или Apple?",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Регистрировались через Google или Apple? Продолжите с ним в приложении для бронирования — и вы вернётесь сюда уже с выполненным входом.",
   "Signing in…": "Входим…",
@@ -1784,5 +1783,7 @@
   "Premium bikes, expert servicing, rides at the Corniche and a community that rides every week.": "Премиальные велосипеды, профессиональное обслуживание, заезды по Корнишу и сообщество, которое катается каждую неделю.",
   "Fleets, wellness, events": "Велопарки, велнес, мероприятия",
   "EST. JEDDAH": "ОСНОВАНО В ДЖИДДЕ",
-  "Photo {n} of {total}": "Фото {n} из {total}"
+  "Photo {n} of {total}": "Фото {n} из {total}",
+  "What's on.": "Что впереди.",
+  "Find your bike": "Подберите велосипед"
 }

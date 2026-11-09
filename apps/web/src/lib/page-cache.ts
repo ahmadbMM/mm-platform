@@ -61,6 +61,12 @@ export function pageCacheKey(req: Request, version: string): string | null {
  *  of it anywhere yet): such a page reads as Coming Soon, and must not be kept for everyone. */
 export const NO_PAGE_CACHE = "x-mm-no-page-cache";
 
+/** What a browser is told about a page anyone may see: ask again every time (no-cache), but keep it
+ *  for the Back button. "no-store" - Next's default for a page drawn on request - kept every page out of
+ *  the browser's back/forward cache, so Back drew it again from the network. Signed-in pages (the
+ *  account, a staff preview) never come through here and keep no-store. */
+export const BROWSER_CACHE = "private, no-cache, max-age=0, must-revalidate";
+
 const storable = (r: Response) => r.status === 200 && (r.headers.get("content-type") || "").startsWith("text/html") && !r.headers.has(NO_PAGE_CACHE);
 
 function toStore(r: Response): Response {
@@ -72,7 +78,7 @@ function toStore(r: Response): Response {
 
 function fromStore(r: Response, req: Request): Response {
   const h = new Headers(r.headers);
-  h.set("cache-control", "private, no-store"); // browsers ask again; the edge answers
+  h.set("cache-control", BROWSER_CACHE); // browsers ask again; the edge answers
   h.set("x-mm-page-cache", "hit");
   // ?lang= also makes that language the visitor's (proxy.ts sets the cookie on a rendered page).
   const asked = new URL(req.url).searchParams.get("lang");
@@ -89,8 +95,26 @@ export async function servePage(req: Request, env: Env, ctx: Ctx, handler: Handl
     if (hit) return fromStore(hit, req);
   } catch { /* the edge's copy is a convenience: render */ }
   const res = await handler.fetch(req, env as never, ctx as never);
-  if (storable(res)) ctx.waitUntil(cache.put(key, toStore(res.clone())).catch(() => {}));
-  return res;
+  if (!storable(res)) return res;
+  ctx.waitUntil(cache.put(key, toStore(res.clone())).catch(() => {}));
+  const h = new Headers(res.headers);
+  h.set("cache-control", BROWSER_CACHE);
+  return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+}
+
+const SITE = "https://micromobility.sa";
+
+/** The canonical address of a page asked for at its plain address (no ?lang=): the plain address
+ *  itself, the "x-default" its language links name (lib/seo.ts). The page names the address of the
+ *  language it was drawn in, which is right for /club?lang=ar - but at /club it pointed search engines
+ *  from the x-default to one of its own alternates (Lighthouse: "points to another hreflang location").
+ *  worker.js rewrites it on the way out, after the edge's copy (kept per language) is stored or read.
+ *  Null when the address names a language, or is not a site page (the account, the API, a file). */
+export function plainCanonical(req: Request): string | null {
+  if (req.method !== "GET") return null;
+  const url = new URL(req.url);
+  if (url.searchParams.has("lang") || SKIP.test(url.pathname) || /\.[a-z0-9]+$/i.test(url.pathname)) return null;
+  return SITE + (url.pathname === "/" ? "/" : url.pathname.replace(/\/+$/, ""));
 }
 
 function edgeCache(): Cache | null {
