@@ -45,7 +45,6 @@
   "vdSignBtn": "Mag-sign in",
   "signForgot": "Nakalimutan ang password?",
   "signCreate": "Gumawa ng account",
-  "signOther": "Mag-sign in gamit ang Google o Apple",
   "errBadLogin": "Maling email, mobile number o password.",
   "errLocked": "Masyadong maraming subok. Maghintay ng 15 minuto.",
   "errRate": "Masyadong maraming subok mula sa network na ito. Maghintay ng isang minuto.",

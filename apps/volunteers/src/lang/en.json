@@ -45,7 +45,6 @@
   "vdSignBtn": "Sign in",
   "signForgot": "Forgot your password?",
   "signCreate": "Create an account",
-  "signOther": "Sign in with Google or Apple",
   "errBadLogin": "Wrong email, mobile number or password.",
   "errLocked": "Too many tries. Please wait 15 minutes.",
   "errRate": "Too many tries from this network. Please wait a minute.",

@@ -45,7 +45,6 @@
   "vdSignBtn": "Entrar",
   "signForgot": "Esqueceu sua senha?",
   "signCreate": "Criar uma conta",
-  "signOther": "Entrar com Google ou Apple",
   "errBadLogin": "E-mail, celular ou senha incorretos.",
   "errLocked": "Tentativas demais. Aguarde 15 minutos.",
   "errRate": "Tentativas demais desta rede. Aguarde um minuto.",

@@ -102,12 +102,11 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             <p className="ac-text">{S(c.signin.text)}</p>
             {expired && <p className="ac-err" role="status">{tx("That sign-in link has expired. Please sign in again.", "انتهت صلاحية رابط تسجيل الدخول. يرجى تسجيل الدخول مجدداً.")}</p>}
             <SignIn locale={locale} />
-            {/* Sign-up, a password reset and Google or Apple happen in the booking app, which hands
-                the rider back here signed in (?handoff=site; api/account/handoff). */}
+            {/* Sign-up and a password reset happen in the booking app, which hands the rider back
+                here signed in (?handoff=site; api/account/handoff). */}
             <ul className="ac-notes">
               <li><a href={handoff("signup")}>{S(c.signin.create)}</a></li>
               <li><a href={handoff("forgot")}>{S(c.signin.forgot)}</a></li>
-              <li><a href={handoff()}>{S(c.signin.oauth)}</a></li>
             </ul>
           </section>
         </div>

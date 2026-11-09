@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { normalizePhone, rpcResult } from "@/lib/rpc-client";
-import { bookingLink } from "@/lib/links";
 import {
   ACCOUNT_HEIGHT, AGE, HEARD, HEIGHT, LEVELS, MAX_LEARNERS, WHO, accountArgs, accountNameOk, learnPayload, noticeDue, riyadhToday, signinIdentifier,
   type AccountFields, type Gender, type Heard, type LearnFields, type LearnerFields, type LearnPayload, type LearnProblem,
@@ -29,10 +28,10 @@ import { TickIcon } from "@/components/site/Icons";
 //      card says the account has been created. Yes: sign in with the email or mobile and password,
 //      through the site's own sign-in (api/account: its tries a minute and its Turnstile check,
 //      the session handed back to this page only, no cookie), which first has a temporary password
-//      staff issued replaced (ChangePassword); an account that signs in with Google or Apple does
-//      it on the booking site (?handoff=learn, at the booking app's address as staff set it), which
-//      sends them back signed in with a one-time code (?code=). A signed-in account with no Privacy
-//      Notice on record (or an older one than riders must confirm) confirms it on step 2.
+//      staff issued replaced (ChangePassword). No Google or Apple sign-in (the owner, 2026-11-09);
+//      a one-time code from the booking app (?code=) still signs the page in. A signed-in account
+//      with no Privacy Notice on record (or an older one than riders must confirm) confirms it on
+//      step 2.
 //   2. the lesson: who is learning - one card per learner, up to five (the owner, 2026-09-28: a
 //      family signs up together): the visitor, their child or another adult, each with their age,
 //      gender and height (the height picks the bike's size) and how much they have ridden - then
@@ -66,9 +65,6 @@ export type LearnFormProps = {
   /** The id of the page's Privacy Notice dialog (NoticeDialog): the box's link opens it there, so
    *  reading the notice never leaves the form, whatever the site's state. */
   notice: string;
-  /** The booking app's address as staff set it (Website > Whole site > Other addresses): the
-   *  Google and Apple sign-in hands over there. */
-  bookingUrl: string;
 };
 
 // A learner's card: what was typed, and a key that stays with the card when one above it goes.
@@ -557,7 +553,6 @@ export default function LearnForm(p: LearnFormProps) {
         <Turnstile locale={p.locale} onToken={onToken} resetKey={again} />
         {problem(undefined)}
         <button type="submit" className="ln-btn ln-btn-green" disabled={busy}>{busy ? t.signingIn : t.signin}</button>
-        <p className="ln-hint ln-oauth">{t.oauthAsk} <a href={bookingLink(`${p.bookingUrl.replace(/[?#].*$/, "")}?handoff=learn`, p.locale)}>{t.oauthLink}</a></p>
         {back}
       </form>
     );

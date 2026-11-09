@@ -3,9 +3,9 @@ import { rpcServer } from "@/lib/account";
 import { HANDOFF_COOKIE, HANDOFF_MAX_AGE, cookieLine, sessionProfile } from "@/lib/handoff";
 import { cookieValue } from "@/lib/live";
 
-// The booking app hands a rider back here signed in: after they sign up, reset a password or
-// sign in with Google or Apple there (it was opened with ?handoff=site from the account page), it
-// sends them to /api/account/handoff?code=<one-time code>. The code (48 hex characters, two
+// The booking app hands a rider back here signed in: after they sign up or reset a password
+// there (it was opened with ?handoff=site from the account page), it sends them to
+// /api/account/handoff?code=<one-time code>. The code (48 hex characters, two
 // minutes, one use; customer_handoff_redeem) is traded for the session, kept in the same HttpOnly
 // cookie a sign-in here sets, and the rider lands on their account, which says whom they are signed
 // in as (?handoff=done). A code that is used, unknown or late lands them on the sign-in instead.

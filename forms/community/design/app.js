@@ -116,7 +116,7 @@
     $$("[data-site]").forEach(function (el) { el.textContent = site(el.getAttribute("data-site")); });
     $$("[data-site-aria]").forEach(function (el) { el.setAttribute("aria-label", site(el.getAttribute("data-site-aria"))); });
     $$("[data-site-placeholder]").forEach(function (el) { el.placeholder = site(el.getAttribute("data-site-placeholder")); });
-    $$("#signin-link2, #banner-signin, #si-temp-a").forEach(function (a) { a.href = signInUrl(); });
+    $$("#signin-link2, #banner-signin, #si-temp-a").forEach(function (a) { a.href = signInUrl() + (a.id === "signin-link2" ? "&auth=forgot" : ""); }); // signin-link2 is Forgot password (no Google or Apple sign-in, 2026-11-09)
     if (TRACK_D) trackPaint(); else if (!$("#track-seen").hidden) paintSeen();
     if (sent && /^[0-9a-f]{48}$/.test(sent.track || "")) $("#track-link").href = trackUrl(sent.track);
     $("#member-go").href = BOOKING_URL + "?lang=" + lang;

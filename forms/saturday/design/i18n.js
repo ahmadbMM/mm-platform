@@ -23,7 +23,7 @@ var FORM_T = {
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "لحسابك كلمة مرور مؤقتة. اختر كلمة مرورك في موقع الحجز، ثم عد إلى هذه الصفحة.",
   "Open the booking site": "افتح موقع الحجز",
   "Signing in...": "جارٍ تسجيل الدخول...",
-  "Google / Apple, or forgot your password": "Google أو Apple، أو نسيت كلمة المرور",
+  "Forgot password?": "نسيت كلمة المرور؟",
   "No account yet?": "ليس لديك حساب بعد؟",
   "Back": "رجوع",
   "Your account has been created": "تم إنشاء حسابك",

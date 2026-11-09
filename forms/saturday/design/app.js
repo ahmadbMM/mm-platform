@@ -5,8 +5,8 @@
    1. the landing: the next Saturday ride (saturday_rides: open, full or opening at a set time; never a count) and
       the ride code, checked before anything else (saturday_rides(code): good on which rides, with places left);
    2. the account: the booking site's own sign-up (customer_exists, customer_signup, customer_consents,
-      customer_set_emergency/2) or its sign-in (customer_login, customer_pwd_state); Google, Apple and a
-      forgotten password go through the booking app, which hands the rider back here signed in
+      customer_set_emergency/2) or its sign-in (customer_login, customer_pwd_state); a
+      forgotten password goes through the booking app, which hands the rider back here signed in
       (?code=, customer_handoff_redeem), the ride code kept for the tab meanwhile;
    3. the details a Saturday ride asks for: date of birth, nationality and Instagram every time, the rest only
       what the account is missing, the height always (customer_profile, customer_emergency, customer_whatsapp,
@@ -23,9 +23,9 @@
   var SUPABASE_URL = "https://qpffkzmsfyilicwcsszz.supabase.co";
   var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
   var LANG_KEY = "mm-saturday-lang";
-  // The ride code typed here, kept for this tab while the booking app signs the rider in (Google, Apple, a password).
+  // The ride code typed here, kept for this tab while the booking app signs the rider in (a forgotten password).
   var CODE_KEY = "mm-saturday-code";
-  // The booking app: where Google, Apple and a forgotten password are handled, and where the ticket lives.
+  // The booking app: where a forgotten password is handled, and where the ticket lives.
   var BOOKING_URL = "https://experiences.micromobility.sa/";
 
   var SH = window.SHARED, T = window.FORM_T || {};
@@ -95,7 +95,7 @@
     $$("[data-site]").forEach(function (el) { el.textContent = site(el.getAttribute("data-site")); });
     $$("[data-site-aria]").forEach(function (el) { el.setAttribute("aria-label", site(el.getAttribute("data-site-aria"))); });
     $$("[data-site-placeholder]").forEach(function (el) { el.placeholder = site(el.getAttribute("data-site-placeholder")); });
-    $$("#si-other, #si-temp-a, #d-blocked-a").forEach(function (a) { a.href = handoffUrl(); });
+    $$("#si-other, #si-temp-a, #d-blocked-a").forEach(function (a) { a.href = handoffUrl() + (a.id === "si-other" ? "&auth=forgot" : ""); }); // si-other is Forgot password (no Google or Apple sign-in, 2026-11-09)
     $("#see-ticket-a").href = bookingsUrl(); $("#done-fallback").href = bookingsUrl();
     $("#ack-lbl").innerHTML = ackLabel();
     $("#waiver-lbl").innerHTML = esc(tr("I have read and accept the {waiver}.")).replace("{waiver}", '<button type="button" class="d-link" id="wv-open">' + esc(tr("ride waiver")) + "</button>") + ' <span class="req" aria-hidden="true">*</span>';

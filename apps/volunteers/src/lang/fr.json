@@ -45,7 +45,6 @@
   "vdSignBtn": "Se connecter",
   "signForgot": "Mot de passe oublié ?",
   "signCreate": "Créer un compte",
-  "signOther": "Se connecter avec Google ou Apple",
   "errBadLogin": "E-mail, numéro de mobile ou mot de passe incorrect.",
   "errLocked": "Trop d'essais. Veuillez patienter 15 minutes.",
   "errRate": "Trop d'essais depuis ce réseau. Veuillez patienter une minute.",

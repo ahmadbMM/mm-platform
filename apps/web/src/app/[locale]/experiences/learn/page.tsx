@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { pageMeta } from "@/lib/seo";
-import PageShell, { navFrom } from "@/components/site/PageShell";
+import PageShell from "@/components/site/PageShell";
 import LearnAlone from "@/components/learn/LearnAlone";
 import LearnClosed from "@/components/learn/LearnClosed";
 import LearnForm from "@/components/learn/LearnForm";
@@ -53,7 +53,7 @@ export default async function LearnPage({ params }: { params: Promise<{ locale: 
         </div>
         {l.taking
           ? <LearnForm locale={locale} formTitle={l.formTitle} formSub={l.formSub} doneTitle={l.doneTitle} doneText={l.doneText} closedTitle={l.closedTitle} closedText={l.closedText}
-              privacyVersion={PRIVACY_VERSION} privacyAskFrom={PRIVACY_ASK_FROM} notice={NOTICE} bookingUrl={navFrom(site).booking} />
+              privacyVersion={PRIVACY_VERSION} privacyAskFrom={PRIVACY_ASK_FROM} notice={NOTICE} />
           : <LearnClosed title={l.closedTitle} text={l.closedText} />}
       </section>
       <NoticeDialog id={NOTICE} locale={locale} />

@@ -4,7 +4,7 @@
 //
 //   POST /api/login       {login, password} -> customer_login; sets the mm_volunteer cookie
 //   POST /api/handoff     {code} -> customer_handoff_redeem: My Account's button, and the way back from
-//                         the booking app after creating an account or signing in with Google or Apple
+//                         the booking app after creating an account or a forgotten password
 //   POST /api/logout      clears the cookie. The token stays: it is the account's, and ending it would
 //                         also sign the rider out of the booking app.
 //   POST /api/rpc/<name>  one of RPCS below, with p_id / p_token taken from the cookie. Nobody reads the

@@ -57,7 +57,6 @@ export default async function LivePage({ params, searchParams }: { params: Promi
             <ul className="ac-notes">
               <li><a href={handoff("signup")}>{S(c.signin.create)}</a></li>
               <li><a href={handoff("forgot")}>{S(c.signin.forgot)}</a></li>
-              <li><a href={handoff()}>{S(c.signin.oauth)}</a></li>
             </ul>
           </section>
         </div>

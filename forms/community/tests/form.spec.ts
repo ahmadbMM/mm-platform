@@ -191,9 +191,10 @@ test('"Already have an account? Sign in" goes back to the first question, signed
   await page.click('#to-login');
   await expect(step(page, 0)).toBeVisible();
   await expect(page.locator('#login-box')).toBeVisible();
-  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=ar');
+  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=ar&auth=forgot');
+  await expect(page.locator('#signin-link2')).toHaveText('نسيت كلمة المرور؟'); // no Google or Apple sign-in (2026-11-09)
   await page.selectOption('#lang', 'fr');
-  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=fr');
+  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=fr&auth=forgot');
 });
 
 // The first question (the owner, 2026-10-25): an account already signs in here and is asked only what the

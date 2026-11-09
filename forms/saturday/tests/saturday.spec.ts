@@ -292,11 +292,12 @@ test('a question staff flagged refuses what the account already holds; a new ans
   expect(errs).toEqual([]);
 });
 
-test('Google, Apple or a forgotten password goes through the booking app and keeps the code for the way back', async ({ page }) => {
+test('a forgotten password goes through the booking app and keeps the code for the way back', async ({ page }) => {
   await open(page);
   await code(page);
   await page.click('#ask-yes');
-  await expect(page.locator('#si-other')).toHaveAttribute('href', `${BOOKING}?handoff=saturday&lang=en`);
+  await expect(page.locator('#si-other')).toHaveAttribute('href', `${BOOKING}?handoff=saturday&lang=en&auth=forgot`);
+  await expect(page.locator('#si-other')).toHaveText('Forgot password?');
   await page.click('#si-other');
   await page.waitForURL(BOOKING + '**');
   // back in this tab (as the booking app sends the rider): the code is in its box again, and taken out of storage

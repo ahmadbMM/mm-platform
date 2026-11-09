@@ -203,7 +203,8 @@ test('an existing rider signs in with their mobile, confirms the height and book
   const { errs, of } = await open(page);
   await page.click('#go-signin');
   await expect(page.locator('#p-signin')).toBeVisible();
-  await expect(page.locator('#si-other')).toHaveAttribute('href', `${BOOKING}?handoff=defe&lang=en`);
+  await expect(page.locator('#si-other')).toHaveAttribute('href', `${BOOKING}?handoff=defe&lang=en&auth=forgot`);
+  await expect(page.locator('#si-other')).toHaveText('Forgot password?'); // no Google or Apple sign-in (2026-11-09)
   await page.fill('#ident', '055 246 8013');
   await page.fill('#spwd', 'Ride2Work');
   await page.click('#signin');
