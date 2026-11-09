@@ -297,7 +297,7 @@ describe("on Experiences, once a session exists", () => {
     const { steps } = await experiences([BD], "de");
     const b = steps.props.events.find((x) => x.key === "blood")!.blood!;
     expect(b.info.title).toBe((de as Record<string, string>)["Before you donate"]);
-    expect(b.info.pdf.url).toBe("https://micromobilityrentals.pages.dev/assets/blood-donation-poster.pdf");
+    expect(b.info.pdf.url).toBe("https://experiences.micromobility.sa/assets/blood-donation-poster.pdf");
     for (const l of ["ar", "en"] as const) {
       expect(b.info.poster[l].sections).toHaveLength(15);
       expect(b.info.poster[l].source).toBe("*AABB");

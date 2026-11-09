@@ -158,7 +158,7 @@ test("a missing emergency contact is added in the booking app, and the profile s
   await signIn(page);
   await page.goto("/#profile");
   await expect(page.locator("#fact-em")).toContainText("Missing");
-  await expect(page.locator("#fact-em").getByRole("link", { name: "Add it in the booking app" })).toHaveAttribute("href", "https://micromobilityrentals.pages.dev/account");
+  await expect(page.locator("#fact-em").getByRole("link", { name: "Add it in the booking app" })).toHaveAttribute("href", "https://experiences.micromobility.sa/account");
   await page.getByRole("button", { name: "Sunday" }).click();
   await page.getByRole("button", { name: "Send my profile" }).click();
   await expect(page.getByText("Add an emergency contact to your account first, then come back.")).toBeVisible();

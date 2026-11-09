@@ -26,7 +26,7 @@
   // The ride code typed here, kept for this tab while the booking app signs the rider in (Google, Apple, a password).
   var CODE_KEY = "mm-saturday-code";
   // The booking app: where Google, Apple and a forgotten password are handled, and where the ticket lives.
-  var BOOKING_URL = "https://micromobilityrentals.pages.dev/";
+  var BOOKING_URL = "https://experiences.micromobility.sa/";
 
   var SH = window.SHARED, T = window.FORM_T || {};
   var html = document.documentElement;

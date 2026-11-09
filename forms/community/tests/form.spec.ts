@@ -176,7 +176,7 @@ test('an email or mobile that already has an account: said on the field, with Si
   await accountStep(page);
   await expect(page.locator('#f-email .err')).toHaveText('An account with this email already exists. Sign in to apply with it.');
   await expect(page.locator('#banner-signin')).toBeVisible();
-  await expect(page.locator('#banner-signin')).toHaveAttribute('href', 'https://micromobilityrentals.pages.dev/?handoff=community&lang=en');
+  await expect(page.locator('#banner-signin')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=en');
   taken = 'phone';
   await page.click('#next');
   await expect(page.locator('#f-phone .err')).toHaveText('An account with this mobile number already exists. Sign in to apply with it.');
@@ -191,9 +191,9 @@ test('"Already have an account? Sign in" goes back to the first question, signed
   await page.click('#to-login');
   await expect(step(page, 0)).toBeVisible();
   await expect(page.locator('#login-box')).toBeVisible();
-  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://micromobilityrentals.pages.dev/?handoff=community&lang=ar');
+  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=ar');
   await page.selectOption('#lang', 'fr');
-  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://micromobilityrentals.pages.dev/?handoff=community&lang=fr');
+  await expect(page.locator('#signin-link2')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=fr');
 });
 
 // The first question (the owner, 2026-10-25): an account already signs in here and is asked only what the
@@ -512,7 +512,7 @@ test('a member already is told so, and a used or late code asks to sign in again
   await open(page, `?code=${CODE}`, { customer_community_me: () => json({ ...ME, member: true }) });
   await expect(page.locator('#member')).toBeVisible();
   await expect(page.locator('#member .title')).toHaveText('You are already a community member');
-  await expect(page.locator('#member-go')).toHaveAttribute('href', 'https://micromobilityrentals.pages.dev/?lang=en');
+  await expect(page.locator('#member-go')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?lang=en');
   await expect(page.locator('#form')).toBeHidden();
 
   const late = await page.context().newPage();
@@ -947,7 +947,7 @@ test('the shared sign-in: a temporary password goes to the booking site first; a
   await page.fill('#lpw', 'Temp12345');
   await page.click('#login');
   await expect(page.locator('#si-temp')).toBeVisible();
-  await expect(page.locator('#si-temp-a')).toHaveAttribute('href', 'https://micromobilityrentals.pages.dev/?handoff=community&lang=en');
+  await expect(page.locator('#si-temp-a')).toHaveAttribute('href', 'https://experiences.micromobility.sa/?handoff=community&lang=en');
   await expect(step(page, 2)).toBeHidden();
   expect(of('customer_login')[0]).toEqual({ p_identifier: 'karim.mansour@gmail.com', p_pwd: 'Temp12345' });
   expect(of('customer_pwd_state')).toEqual([{ p_id: 'c-karim', p_token: 'tok-in' }]);
@@ -1044,7 +1044,7 @@ test('the thank-you card links to the status page, which says where the applicat
   await expect(t2.locator('.tk-step b')).toHaveText(['Received', 'Changes asked', 'With our team']);
   await expect(t2.locator('.tk-now')).toContainText('Instagram, Company');
   await expect(t2.locator('.tk-note')).toHaveText('Your handle has a typo');
-  await expect(t2.locator('#track-acts a')).toHaveAttribute('href', `https://micromobilityrentals.pages.dev/?appfix=${'ef'.repeat(18)}&lang=en`);
+  await expect(t2.locator('#track-acts a')).toHaveAttribute('href', `https://experiences.micromobility.sa/?appfix=${'ef'.repeat(18)}&lang=en`);
   expect(tr.of('community_track')).toEqual([{ p_token: TRACK }]);
   expect(tr.errs).toEqual([]);
 });

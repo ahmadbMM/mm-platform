@@ -8,7 +8,7 @@ const json = (b: unknown, status = 200) => ({ status, headers: { 'access-control
 const refuse = (message: string, details: string | null = null) => json({ code: 'P0001', message, details, hint: null }, 400);
 type Body = Record<string, unknown>;
 type Answers = Partial<Record<string, (body: Body) => ReturnType<typeof json>>>;
-const BOOKING = 'https://micromobilityrentals.pages.dev/';
+const BOOKING = 'https://experiences.micromobility.sa/';
 const RIDE = { session_id: '2099-11-14', session_date: '2099-11-14', day: 'Saturday', bike_slots: '{"_time":"05:45 - 06:15","Road":10}', meet_url: 'https://maps.app.goo.gl/pdcMn1mGcCdabia7A', title: null, status: 'open', opens_at: null, code_ok: null, code_open: null };
 const RIDE2 = { ...RIDE, session_id: '2099-11-21', session_date: '2099-11-21' };
 const SARA = { id: 'c-sara', name: 'Sara Alharbi', email: 'sara.alharbi@gmail.com', phone: '+966552468013', height: 165, type_preference: 'Hybrid', birth_date: '1994-03-12', nationality: 'Saudi Arabia', gender: 'female', socials: { instagram: 'sara.rides', x: 'sararides' } };

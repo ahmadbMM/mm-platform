@@ -21,7 +21,7 @@ export type Prof = { status: string | null; applied_at: string | null; profile_a
 export type Update = { id: number; kind: string; session_id: string | null; title: string | null; ride_kind: string | null; date: string | null;
   data: Record<string, unknown> | null; at: string; read: boolean };
 
-export const BOOKING = "https://micromobilityrentals.pages.dev";
+export const BOOKING = "https://experiences.micromobility.sa";
 export const SUPPORT = "https://wa.me/966579543997";
 export const AFTER_KEY = "mm_vol_after"; // the opportunity to come back to, across a sign-in on the booking app
 

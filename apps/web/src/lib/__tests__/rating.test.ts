@@ -171,21 +171,21 @@ describe("api/google-wallet", () => {
     vi.stubGlobal("fetch", off);
     const no = await walletReady(new Request("https://micromobility.sa/api/google-wallet?ready"));
     expect([no.status, await no.json()]).toEqual([501, { ok: false }]);
-    expect(off.mock.calls.map((c) => String(c[0]))).toEqual(["https://micromobilityrentals.pages.dev/api/google-wallet?ready"]);
+    expect(off.mock.calls.map((c) => String(c[0]))).toEqual(["https://experiences.micromobility.sa/api/google-wallet?ready"]);
     vi.stubGlobal("fetch", vi.fn(async (url: string) => json({ ok: url.endsWith("?ready") })));
     const yes = await walletReady(new Request("https://micromobility.sa/api/google-wallet?ready"));
     expect([yes.status, await yes.json()]).toEqual([200, { ok: true }]);
     expect((await walletReady(new Request("https://micromobility.sa/api/google-wallet"))).status).toBe(405);
   });
   it("asks the booking app's own origin for the pass, with the cookie's id and token, and hands the save link back", async () => {
-    expect(WALLET_ORIGIN).toBe("https://micromobilityrentals.pages.dev");
+    expect(WALLET_ORIGIN).toBe("https://experiences.micromobility.sa");
     // an address staff set in the site's content never receives the token
     const f = vi.fn(async (url: string) => (url.includes("site_content") ? json([{ key: "site.links.booking", value: { href: "https://elsewhere.example/" } }]) : json({ ok: true, url: "https://pay.google.com/gp/v/save/eyJ" })));
     vi.stubGlobal("fetch", f);
     const res = await post(wallet, "/api/google-wallet", { bookingId: "q1abcdef", groupIds: ["q1abcdef", "q2abcdef", "bad;id"] });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true, url: "https://pay.google.com/gp/v/save/eyJ" });
-    expect(f.mock.calls.map((c) => String(c[0]))).toEqual(["https://micromobilityrentals.pages.dev/api/google-wallet"]);
+    expect(f.mock.calls.map((c) => String(c[0]))).toEqual(["https://experiences.micromobility.sa/api/google-wallet"]);
     const call = f.mock.calls[0] as unknown as [string, RequestInit];
     expect(JSON.parse(String(call[1].body))).toEqual({ customerId: "c1", token: TOKEN, bookingId: "q1abcdef", groupIds: ["q1abcdef", "q2abcdef"] });
   });

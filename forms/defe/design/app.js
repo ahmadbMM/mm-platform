@@ -22,7 +22,7 @@
   var PARTNER = "defe";
   var LANG_KEY = "mm-defe-lang";
   // The booking app: where Google, Apple and a forgotten password are handled, and where the ticket lives.
-  var BOOKING_URL = "https://micromobilityrentals.pages.dev/";
+  var BOOKING_URL = "https://experiences.micromobility.sa/";
 
   var SH = window.SHARED, T = window.FORM_T || {};
   var html = document.documentElement;

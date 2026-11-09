@@ -4,7 +4,7 @@ import { PAGES } from "@/content";
 // it holds labels and the design's default words, nothing more.
 const ALLOWED = new Set([
   "https://staff.micromobility.sa",
-  "https://micromobilityrentals.pages.dev",
+  "https://experiences.micromobility.sa",
   "http://127.0.0.1:4173",
   "http://localhost:4173",
 ]);
