@@ -116,7 +116,11 @@ export default function PayScreen({ locale, pay, publishableKey, testMode, formJ
   }
   return (
     <div className="py-live">
-      {pay.hold && <p className="py-hold" aria-live="off">{fill(t.holding, "")}<bdi className="py-clock">{mmss(left)}</bdi></p>}
+      {pay.hold && (() => {
+        // the clock stands where the language puts {0} in the sentence
+        const [before, after = ""] = t.holding.split("{0}");
+        return <p className="py-hold" aria-live="off"><span>{before}<bdi className="py-clock">{mmss(left)}</bdi>{after}</span></p>;
+      })()}
       {(declined || tried) && <p className="py-err" role="alert">{declined ? fill(t.declined, declined) : t.declinedPlain}</p>}
       {testMode && <p className="py-test">{t.testMode}</p>}
       <p className="py-note">{t.payNote}</p>
