@@ -190,6 +190,85 @@
    1800
   ]
  },
+ "/site/store/bmx26/1.webp": {
+  "width": 1000,
+  "variants": [
+   640
+  ]
+ },
+ "/site/store/da54al/1.webp": {
+  "width": 1000,
+  "variants": [
+   640
+  ]
+ },
+ "/site/store/max/2.webp": {
+  "width": 1600,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/store/max/3.webp": {
+  "width": 1600,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/store/max/4.webp": {
+  "width": 1600,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/store/rival/1.webp": {
+  "width": 1000,
+  "variants": [
+   640
+  ]
+ },
+ "/site/store/strom/1.webp": {
+  "width": 1000,
+  "variants": [
+   640
+  ]
+ },
+ "/site/store/tourist/1.webp": {
+  "width": 1000,
+  "variants": [
+   640
+  ]
+ },
+ "/site/store/ttbgp/1.webp": {
+  "width": 1600,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/store/ttbgp/2.webp": {
+  "width": 1600,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/store/ttbgp/3.webp": {
+  "width": 1600,
+  "variants": [
+   640,
+   1280
+  ]
+ },
+ "/site/store/ttbgp/4.webp": {
+  "width": 1600,
+  "variants": [
+   640,
+   1280
+  ]
+ },
  "/site/workshop/mechanic.jpg": {
   "width": 1600,
   "variants": [
