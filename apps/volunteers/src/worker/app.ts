@@ -11,7 +11,9 @@
 //                         portal signed out (the owner, 2026-11-05): volunteer_opportunities takes no
 //                         arguments, so its session is checked here first. The one exception is
 //                         volunteer_cert_check {p_code}: an employer or a university checks a certificate
-//                         with the code printed on it (the staff review, 2026-11-06), metered like a sign-in
+//                         with the code printed on it (the staff review, 2026-11-06), metered like a sign-in.
+//                         Phone notifications use the booking app's own customer_push_subscribe / _unsubscribe,
+//                         with the same session (the volunteer rework, 2026-11-09)
 //
 // Every POST must come from this origin's own page, as JSON, and small.
 
@@ -51,6 +53,13 @@ export const RPCS = new Set([
   // the certificate on the approved design (rentals migration 20261108220000)
   "volunteer_cert_issue_session",
   "volunteer_name_ar_save",
+  // the rework of 2026-11-09 (rentals migration 20261109120000): the lead's team, the Updates list, phone notifications
+  "volunteer_team",
+  "volunteer_team_clock",
+  "volunteer_updates",
+  "volunteer_updates_seen",
+  "customer_push_subscribe",
+  "customer_push_unsubscribe",
 ]);
 
 /** Error codes the database raises on purpose, with the status each one is answered with. */
@@ -83,6 +92,13 @@ const KNOWN: Record<string, number> = {
   BLOOD_DONATED: 409,
   VOL_CERT_EMPTY: 400,
   BAD_DATE: 400,
+  // the rework of 2026-11-09: a profile first, then staff's yes; the account's emergency contact; the lead's marks
+  VOL_PROFILE: 409,
+  VOL_PENDING: 409,
+  VOL_EMERGENCY: 400,
+  VOL_NOT_LEAD: 403,
+  VOL_CHECKED_OUT: 409, // also volunteer_arrive's answer after a check-out by staff, which came out as a server fault before
+  NOT_FOUND: 404,
 };
 
 /** The status a code the database raises on purpose takes, or null for any other text

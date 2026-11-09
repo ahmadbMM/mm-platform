@@ -98,7 +98,9 @@ describe("the database functions", () => {
       expect((await handle(post(`/api/rpc/${name}`, {}, { cookie: COOKIE }), env)).status, name).toBe(404);
     }
     expect(calls).toHaveLength(0);
-    expect([...RPCS].every((n) => n.startsWith("volunteer_"))).toBe(true);
+    // the portal's own functions, and the booking app's phone-notification pair on the same session
+    expect([...RPCS].filter((n) => !n.startsWith("volunteer_")).sort()).toEqual(["customer_push_subscribe", "customer_push_unsubscribe"]);
+    for (const name of ["volunteer_team", "volunteer_team_clock", "volunteer_updates", "volunteer_updates_seen"]) expect(RPCS.has(name), name).toBe(true);
   });
   it("nobody reads the opportunities signed out, and a cookie is not a sign-in until its token opens an account", async () => {
     const calls = db(() => ({ body: [{ id: "s1" }] }));
@@ -148,6 +150,41 @@ describe("the database functions", () => {
   it("a message that is an object's own word is not a code", async () => {
     db(() => ({ status: 400, body: { message: "constructor" } }));
     expect((await handle(post("/api/rpc/volunteer_find", { p_session: "s" }, { cookie: COOKIE }), env)).status).toBe(502);
+  });
+});
+
+describe("the rework of 2026-11-09", () => {
+  it("each of the database's new refusals has its own status, not a server fault", async () => {
+    const cases: [string, string, number][] = [
+      ["volunteer_interest", "VOL_PROFILE", 409], ["volunteer_interest", "VOL_PENDING", 409], ["volunteer_apply", "VOL_EMERGENCY", 400],
+      ["volunteer_team", "VOL_NOT_LEAD", 403], ["volunteer_team_clock", "VOL_CHECKED_OUT", 409], ["volunteer_arrive", "VOL_CHECKED_OUT", 409],
+      ["volunteer_team_clock", "NOT_FOUND", 404],
+    ];
+    for (const [name, code, status] of cases) {
+      db(() => ({ status: 400, body: { message: code, code: "P0001" } }));
+      const r = await handle(post(`/api/rpc/${name}`, { p_session: "s" }, { cookie: COOKIE }), env);
+      expect(r.status, `${name} ${code}`).toBe(status);
+      expect(await r.json()).toEqual({ error: code });
+    }
+  });
+  it("the team, the updates and phone notifications are the signed-in account's, from the cookie", async () => {
+    const calls = db(() => ({ body: { ok: true } }));
+    for (const name of ["volunteer_team", "volunteer_team_clock", "volunteer_updates", "volunteer_updates_seen", "customer_push_subscribe", "customer_push_unsubscribe"]) {
+      expect((await handle(post(`/api/rpc/${name}`, {}), env)).status, name).toBe(401);
+    }
+    expect(calls).toHaveLength(0);
+    await handle(post("/api/rpc/volunteer_team_clock", { p_session: "s", p_shift: 7, p_action: "in", p_id: "x" }, { cookie: COOKIE }), env);
+    await handle(post("/api/rpc/customer_push_subscribe", { p_endpoint: "https://push.test/1", p_p256dh: "k", p_auth: "a", p_ua: "ua", p_token: "y" }, { cookie: COOKIE }), env);
+    expect(calls.map((c) => [c.name, c.args])).toEqual([
+      ["volunteer_team_clock", { p_session: "s", p_shift: 7, p_action: "in", p_id: "c123", p_token: "tokentokentokentoken" }],
+      ["customer_push_subscribe", { p_endpoint: "https://push.test/1", p_p256dh: "k", p_auth: "a", p_ua: "ua", p_id: "c123", p_token: "tokentokentokentoken" }],
+    ]);
+  });
+  it("the page may start its own service worker and read its own manifest, and nothing else's", async () => {
+    const csp = (await handle(post("/api/nope"), env)).headers.get("content-security-policy") ?? "";
+    expect(csp).toContain("worker-src 'self'");
+    expect(csp).toContain("manifest-src 'self'");
+    expect(csp).toContain("style-src 'self';");
   });
 });
 

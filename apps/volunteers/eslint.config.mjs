@@ -9,4 +9,8 @@ export default tseslint.config(
     files: ["scripts/**/*.mjs"],
     languageOptions: { globals: { console: "readonly", process: "readonly" } }, // sync-cert.mjs reads argv and RENTALS_DIR
   },
+  {
+    files: ["static/sw.js"], // the service worker: its own global, and the URL it opens
+    languageOptions: { sourceType: "script", globals: { self: "readonly", URL: "readonly" } },
+  },
 );

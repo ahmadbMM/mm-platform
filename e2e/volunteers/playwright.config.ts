@@ -10,7 +10,11 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   workers: 1, // one stub database, with state
   retries: process.env.CI ? 1 : 0,
-  use: { baseURL: `http://localhost:${PORT}` },
+  use: {
+    baseURL: `http://localhost:${PORT}`,
+    // A camera that is always there and never asks (a moving test picture): the work page's Scan keeps it running.
+    launchOptions: { args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] },
+  },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     { name: "phone", use: { ...devices["Pixel 7"] } },

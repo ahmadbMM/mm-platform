@@ -74,6 +74,40 @@ export function dayLabel(ymd: string | null | undefined): string {
   }
 }
 
+/** A session's date as the date block shows it: the month, the day and the weekday, in Riyadh. */
+export function dateParts(ymd: string | null | undefined): { month: string; day: string; weekday: string } | null {
+  const m = /^\d{4}-\d{2}-\d{2}/.exec(String(ymd ?? ""));
+  if (!m) return null;
+  const d = new Date(`${m[0]}T12:00:00+03:00`);
+  const part = (o: Intl.DateTimeFormatOptions) => { try { return d.toLocaleDateString(locale(), { timeZone: KSA, ...o }); } catch { return ""; } };
+  return { month: part({ month: "short" }), day: String(Number(m[0].slice(8, 10))), weekday: part({ weekday: "short" }) };
+}
+
+/** A date with its year ("2 April 1995"), read as noon in Riyadh. */
+export function longDate(ymd: string | null | undefined): string {
+  const m = /^\d{4}-\d{2}-\d{2}/.exec(String(ymd ?? ""));
+  if (!m) return "";
+  try {
+    return new Date(`${m[0]}T12:00:00+03:00`).toLocaleDateString(locale(), { timeZone: KSA, day: "numeric", month: "long", year: "numeric" });
+  } catch {
+    return m[0];
+  }
+}
+
+/** A moment's time of day in Riyadh ("5:02 PM"). */
+export function timeLabel(at: string | null | undefined): string {
+  const ms = at ? Date.parse(at) : NaN;
+  if (!Number.isFinite(ms)) return "";
+  try {
+    return new Date(ms).toLocaleTimeString(locale(), { timeZone: KSA, hour: "numeric", minute: "2-digit" });
+  } catch {
+    return String(at);
+  }
+}
+
+/** Today in Riyadh, YYYY-MM-DD. */
+export const ksaToday = (): string => new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10);
+
 /** A moment, as a day and a time in Riyadh. */
 export function whenLabel(at: string | null | undefined): string {
   const ms = at ? Date.parse(at) : NaN;

@@ -1,16 +1,21 @@
 // Builds dist/, the files the Worker serves (wrangler.jsonc "assets"):
 //   index.html, 404.html, robots.txt,     copied from static/ (404.html: every address the portal
 //   favicon.png                           does not have, wrangler.jsonc not_found_handling)
+//   manifest.webmanifest, icon-192.png,   the web app's manifest and icons (Add to Home Screen, which an iPhone needs
+//   icon-512.png                          before it takes a push)
+//   sw.js                                 the service worker: a push and its tap, nothing else (no fetch handler,
+//                                         nothing cached: the portal stays online only)
 //   site/                                 the website's mark (never fetched from it)
 //   lang/                                 every language but English, fetched when chosen
 //   vendor/                               jsQR, for a phone with no QR reader of its own
 //   certificate.html, certificate.css,    the volunteer certificate, synced from the booking site
-//   certificate-fonts.css
 //                                         (scripts/sync-cert.mjs); the page fills the markup and prints it
+//   certificate-fonts.css                 the certificate's two faces, from CERT_FACES below
 //   app.css                               @mm/design-tokens' tokens.css + static/app.css
 //   app.js                                src/client/main.ts bundled by esbuild (ES2022, minified)
-//   fonts/                                Space Grotesk + IBM Plex Sans Arabic, the website's two faces (self-hosted:
-//                                         the page's CSP allows nothing from elsewhere)
+//   fonts/                                self-hosted (the page's CSP allows nothing from elsewhere): Rubik, the rider
+//                                         app's face (static/fonts, from the booking site's fonts/), and IBM Plex Sans
+//                                         Arabic for Urdu; Space Grotesk 300-700 for the certificate alone
 import { build } from "esbuild";
 import { copyFileSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -28,7 +33,11 @@ mkdirSync(join(dist, "site"), { recursive: true });
 
 // certificate.html + certificate.css: the volunteer certificate, synced from the booking site by
 // scripts/sync-cert.mjs and served as they are. The page fetches and fills certificate.html.
-for (const f of ["index.html", "404.html", "robots.txt", "favicon.png", "certificate.html", "certificate.css"]) copyFileSync(join(root, "static", f), join(dist, f));
+for (const f of ["index.html", "404.html", "robots.txt", "favicon.png", "certificate.html", "certificate.css", "manifest.webmanifest", "icon-192.png", "icon-512.png", "sw.js"]) {
+  copyFileSync(join(root, "static", f), join(dist, f));
+}
+// Rubik, variable 300-900 (SIL OFL 1.1), as the booking site serves it: Latin, Latin Extended and Arabic.
+for (const f of readdirSync(join(root, "static", "fonts"))) if (f.endsWith(".woff2")) copyFileSync(join(root, "static", "fonts", f), join(dist, "fonts", f));
 copyFileSync(join(root, "static", "site", "logo-mark-dark.png"), join(dist, "site", "logo-mark-dark.png"));
 // jsQR: read only when a phone without the browser's own QR reader first scans a ticket (src/client/scan.ts).
 mkdirSync(join(dist, "vendor"), { recursive: true });
@@ -41,16 +50,27 @@ const tokens = readFileSync(require.resolve("@mm/design-tokens/tokens.css"), "ut
 const appCss = readFileSync(join(root, "static", "app.css"), "utf8");
 writeFileSync(join(dist, "app.css"), `${tokens}\n${appCss}`);
 
-// certificate-fonts.css: the two families and nothing else, for the certificate's own window. It
-// may NOT be handed app.css: that sheet has a .page of its own (the portal's own pages), which
-// would fight the certificate's 1123x794 one. Taken from the faces above so there is one list.
-const faces = appCss.match(/@font-face\s*\{[^}]*\}/g) ?? [];
-if (faces.length < 4) throw new Error("volunteers: static/app.css has no @font-face blocks to give the certificate");
+// certificate-fonts.css: the certificate's two families and nothing else, for its own window. It may NOT be handed
+// app.css: that sheet has a .page of its own (the portal's own pages), which would fight the certificate's 1123x794 one,
+// and the portal's own face is Rubik, which the certificate does not use (certificate/SPEC.md: Space Grotesk and IBM
+// Plex Sans Arabic). One list, here, beside the files it names.
+const CERT_FACES = [
+  ["Space Grotesk", 300, "space-grotesk-latin-300.woff2"],
+  ["Space Grotesk", 400, "space-grotesk-latin-400.woff2"],
+  ["Space Grotesk", 500, "space-grotesk-latin-500.woff2"],
+  ["Space Grotesk", 700, "space-grotesk-latin-700.woff2"],
+  ["IBM Plex Sans Arabic", 400, "ibm-plex-sans-arabic-arabic-400.woff2"],
+  ["IBM Plex Sans Arabic", 500, "ibm-plex-sans-arabic-arabic-500.woff2"],
+  ["IBM Plex Sans Arabic", 600, "ibm-plex-sans-arabic-arabic-600.woff2"],
+  ["IBM Plex Sans Arabic", 700, "ibm-plex-sans-arabic-arabic-700.woff2"],
+];
 writeFileSync(join(dist, "certificate-fonts.css"),
-  `/* Generated by scripts/build.mjs from the @font-face rules of static/app.css: what the volunteer\n   certificate's window needs, and nothing that could style it (certificate/README.md). */\n${faces.join("\n")}\n`);
+  `/* Generated by scripts/build.mjs (CERT_FACES): what the volunteer certificate's window needs, and nothing that\n   could style it (certificate/README.md). */\n${CERT_FACES.map(([family, weight, file]) =>
+    `@font-face { font-family: "${family}"; font-weight: ${weight}; font-display: swap; src: url("/fonts/${file}") format("woff2"); }`).join("\n")}\n`);
 
 const fonts = [
-  // 300 is the certificate's lead and recognition lines (certificate/SPEC.md); the portal itself uses 400 up.
+  // Space Grotesk is the certificate's alone (300 is its lead and recognition lines, certificate/SPEC.md); IBM Plex Sans
+  // Arabic is the certificate's Arabic and the portal's Urdu.
   ["@fontsource/space-grotesk", "space-grotesk-latin-300-normal.woff2", "space-grotesk-latin-300.woff2"],
   ["@fontsource/space-grotesk", "space-grotesk-latin-400-normal.woff2", "space-grotesk-latin-400.woff2"],
   ["@fontsource/space-grotesk", "space-grotesk-latin-500-normal.woff2", "space-grotesk-latin-500.woff2"],
