@@ -1018,6 +1018,8 @@
     pickRadio("#pays", pay);
     if (!$("#book").classList.contains("loading")) $("#book").disabled = !picked.length;
   }
+  // Card payments, only where the website takes them (apps/web /api/pay/status)
+  fetch("/api/pay/status").then(function (r) { return r.json(); }).then(function (b) { if (b && b.open) $("#pay-card").hidden = false; }, function () {});
   $("#pays").addEventListener("click", function (e) {
     var b = e.target.closest("[role=radio]"); if (!b || b.disabled) return;
     pay = b.getAttribute("data-v"); pickRadio("#pays", pay); clearMsg("f-pay");
@@ -1028,6 +1030,21 @@
     if (!pay) { setErr("f-pay", "Choose how to pay"); focusField("f-pay"); return; }
     var codes = picked.slice(), d = day, p = period, k = kindNow(), price = priceOf(p), how = pay;
     setLoading("#book", true);
+    if (how === "card") {
+      // Paying by card (2026-11-10): the website's server reserves the lockers for card payment and opens the
+      // payment page; they are held while the rider pays and let go when unpaid (apps/web /api/pay/locker).
+      var cr = null;
+      try {
+        var res = await fetch("/api/pay/locker", { method: "POST", headers: { "content-type": "application/json" },
+          body: JSON.stringify({ id: acct.id, token: acct.token, day: d, period: p, codes: codes, lang: lang }) });
+        cr = await res.json().catch(function () { return null; });
+      } catch (x) { cr = null; }
+      if (cr && cr.ok && /^\/pay\/[0-9a-f-]{36}$/.test(cr.url || "")) { clearPick(); window.location.assign(cr.url); return; }
+      setLoading("#book", false);
+      if (cr && cr.detail) { bookRefused({ message: cr.detail }); return; }
+      if (cr && cr.error === "signin") { signedOut(); return; }
+      showBanner(NET); return;
+    }
     var r;
     try { r = await rpc("customer_locker_book", { p_id: acct.id, p_token: acct.token, p_day: d, p_period: p, p_codes: codes, p_pay: how }); }
     finally { setLoading("#book", false); }

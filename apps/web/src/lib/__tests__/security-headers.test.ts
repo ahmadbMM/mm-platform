@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import config from "../../../next.config";
+import { MOYASAR_FORM_CSS, MOYASAR_FORM_JS } from "../pay/config";
 
 // The site's own headers (next.config.ts headers()). Of jsDelivr, the Content-Security-Policy allows
 // only the MapLibre files the live ride map loads (components/live/LiveMap.tsx), never the whole host,
@@ -21,8 +22,15 @@ describe("the site's Content-Security-Policy", () => {
     expect(c["script-src"]).toContain(`${base}.js`);
     expect(c["style-src"]).toContain(`${base}.css`);
     for (const [name, src] of Object.entries(c)) {
-      for (const s of src.filter((x) => x.includes("jsdelivr"))) expect([`${base}.js`, `${base}.css`], `${name} ${s}`).toContain(s);
+      for (const s of src.filter((x) => x.includes("jsdelivr"))) expect([`${base}.js`, `${base}.css`, MOYASAR_FORM_JS, MOYASAR_FORM_CSS], `${name} ${s}`).toContain(s);
     }
+  });
+  it("allows Moyasar's payment form at the version the payment page loads, and its API (2026-11-10)", async () => {
+    const c = await csp();
+    expect(c["script-src"]).toContain(MOYASAR_FORM_JS);
+    expect(c["style-src"]).toContain(MOYASAR_FORM_CSS);
+    expect(c["connect-src"]).toContain("https://api.moyasar.com");
+    expect(c["frame-src"]).not.toContain("https://api.moyasar.com"); // 3-D Secure is a full-page visit
   });
   it("still lets Next's own inline scripts run (pages kept at the edge cannot carry a nonce)", async () => {
     expect((await csp())["script-src"]).toContain("'unsafe-inline'");

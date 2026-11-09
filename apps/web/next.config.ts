@@ -19,13 +19,18 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // The two registration forms send their own headers (src/forms/headers.ts) and are left out here.
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
 const MAPLIBRE = "https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl";
+// Online payments (2026-11-10): Moyasar's payment form, its two pinned files only (src/lib/pay/config.ts names
+// the same version; a test checks they agree), which posts the card straight to Moyasar's API, reports its own
+// errors to AppSignal, and loads Apple's Apple Pay script on Apple devices. 3-D Secure is a full-page visit to
+// the bank, so no frame is needed. payment=(self): Apple Pay on the site's own pages.
+const MOYASAR = "https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.3.1/dist/moyasar";
 const CSP = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com ${MAPLIBRE}.js`,
-  `style-src 'self' 'unsafe-inline' ${MAPLIBRE}.css`,
+  `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com ${MAPLIBRE}.js ${MOYASAR}.umd.js https://applepay.cdn-apple.com`,
+  `style-src 'self' 'unsafe-inline' ${MAPLIBRE}.css ${MOYASAR}.css`,
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
-  `connect-src 'self' ${SUPABASE} https://cloudflareinsights.com https://tile.openstreetmap.org`,
+  `connect-src 'self' ${SUPABASE} https://cloudflareinsights.com https://tile.openstreetmap.org https://api.moyasar.com https://appsignal-endpoint.net https://applepay.cdn-apple.com`,
   "worker-src 'self' blob:",
   "child-src 'self' blob:",
   "frame-src https://www.google.com https://challenges.cloudflare.com",
@@ -42,7 +47,7 @@ const SECURITY_HEADERS = [
   { key: "Strict-Transport-Security", value: "max-age=31536000" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), payment=(), usb=(), geolocation=()" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), payment=(self), usb=(), geolocation=()" },
 ];
 
 const config: NextConfig = {
@@ -59,6 +64,9 @@ const config: NextConfig = {
     return [
       { source: "/apple-touch-icon.png", destination: "/apple-icon.png" },
       { source: "/apple-touch-icon-precomposed.png", destination: "/apple-icon.png" },
+      // Apple Pay on the web: the domain association file Moyasar hands out, at the exact address Apple asks
+      // for, with no extension and no redirect (app/api/pay/apple-domain).
+      { source: "/.well-known/apple-developer-merchantid-domain-association", destination: "/api/pay/apple-domain" },
     ];
   },
   async headers() {

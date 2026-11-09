@@ -8,6 +8,8 @@ import { siteSchema } from "@/content/pages/site";
 import { workshopSchema } from "@/content/pages/workshop";
 import { asLocale, resolvePage } from "@/lib/content";
 import { pageState } from "@/lib/page-state";
+import { payReady } from "@/lib/pay/config";
+import { paySettings } from "@/lib/pay/settings";
 import { slugId } from "@/lib/slug";
 import { riyadhClock } from "@/lib/workshop-days";
 import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
@@ -66,7 +68,7 @@ export default async function WorkshopPage({ params }: { params: Promise<{ local
           dayFmt={datePattern(locale, DATE_STYLES.workshopDay)}
           doneTitle={S(w.booking.doneTitle)} doneText={S(w.booking.doneText)}
         />
-        <WorkshopTrack locale={locale} whenFmt={datePattern(locale, DATE_STYLES.booked)} />
+        <WorkshopTrack locale={locale} whenFmt={datePattern(locale, DATE_STYLES.booked)} payOpen={paySettings(content).enabled && payReady()} />
       </section>
     </PageShell>
   );

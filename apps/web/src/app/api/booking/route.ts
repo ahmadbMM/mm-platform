@@ -1,6 +1,11 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
-import { makeBooking, readInput, rpcCall } from "@/lib/booking-server";
+import { makeBooking, payableOnline, readInput, rpcCall } from "@/lib/booking-server";
+import { payReady } from "@/lib/pay/config";
+import { langOf } from "@/lib/pay/http";
+import { payRpc } from "@/lib/pay/server";
+import { paySettings } from "@/lib/pay/settings";
+import { loadSiteContent } from "@/lib/site";
 import { BOOKING_URL } from "@/lib/links";
 import { cookieValue } from "@/lib/live";
 import { loadTicketSessions } from "@/lib/tickets-data";
@@ -48,6 +53,26 @@ export async function POST(req: Request) {
   const today = riyadhClock(new Date()).slice(0, 10);
   const r = await makeBooking({ ...acct, name: String(profile.name ?? ""), profile }, input, today);
   if (!r.ok) return json({ ok: false, error: r.error }, STATUS[r.error] ?? 409);
+
+  // Paying online (2026-11-10, staging first): a paid ride is paid now when staff made it required, or when
+  // the rider chose it where it is optional. The places just booked are held for pay.holdMinutes while the
+  // rider pays on /pay/<id> and let go by themselves when unpaid (rentals 20261110150000). A waitlisted place
+  // pays nothing now. If the payment cannot even start where paying is required, the booking is undone
+  // rather than left as a place nobody pays for.
+  const ps = paySettings(await loadSiteContent());
+  const seated = r.booked.filter((b) => b.status !== "waitlist").map((b) => b.id);
+  if (ps.enabled && payReady() && ps.bookings !== "off" && payableOnline(r.session) && seated.length
+      && (ps.bookings === "required" || input.payNow)) {
+    const p = await payRpc<{ id: string | null }>("pay_booking_start", {
+      p_id: acct.id, p_token: acct.token, p_ids: seated, p_hold: true, p_wallet: input.wallet, p_lang: langOf((body as Record<string, unknown> | null)?.lang),
+    });
+    if (p.status === 200 && p.data?.id) return json({ ok: true, pay: { id: p.data.id, url: `/pay/${p.data.id}` } });
+    if (!(p.status === 200 && p.data) && ps.bookings === "required") {
+      await payRpc("pay_booking_cancel", { p_id: acct.id, p_token: acct.token, p_ids: r.booked.map((b) => b.id), p_dest: "wallet" });
+      return json({ ok: false, error: "pay_start" }, 502);
+    }
+    // the wallet paid it all, or (paying being the rider's choice) it could not start: the tickets, paid at the desk
+  }
   sendConfirmation(acct.id, acct.token, r.booked[0].id);
   // The tickets as My Account draws them: my_bookings' rows, and the session as the ticket reads it.
   const order = new Map(r.booked.map((b, i) => [b.id, i]));

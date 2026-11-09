@@ -24,6 +24,8 @@ import { serverL } from "@/i18n/dicts";
 import { fill as fillAt, phrase } from "@/i18n/tx";
 import { ArrowIcon } from "@/components/site/Icons";
 import { bg } from "@/lib/img";
+import { payReady } from "@/lib/pay/config";
+import { paySettings } from "@/lib/pay/settings";
 
 // micromobility.sa/experiences - booking a ride on the website (the owner, 2026-10-03: "full
 // booking on the website"), as the booking app's own wizard books one (BookingFlow): the event,
@@ -160,9 +162,13 @@ export default async function ExperiencesPage({ params, searchParams }: { params
     return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: S(e[`${p}Note`]), sessions: ss.map(toBook) };
   };
   const events = [card("snd96", "snd", false), card("event", "ev", false), card("jcc", "jcc", true), card("community", "comm", true), card("workshop", "ws", false)].filter((x): x is FlowEvent => !!x);
-  const [acct, items] = await Promise.all([
+  const ps = paySettings(content);
+  const paying = ps.enabled && ps.bookings !== "off" && payReady();
+  const [acct, items, wallet] = await Promise.all([
     signed ? bookingAccount(signed).catch((): BookAccount | null => null) : Promise.resolve(null),
     loadAddonItems(listed.flatMap((s) => (s.free ? [] : s.addons ?? []))),
+    // the wallet's balance, for the review's Wallet switch when the ride is paid now (customer_wallet)
+    paying && signed ? rpcServer<{ balance?: number } | null>("customer_wallet", { p_id: signed.id, p_token: signed.token }).then((r) => Number(r.data?.balance) || 0, () => 0) : Promise.resolve(0),
   ]);
   const one = (v: string | string[] | undefined) => (typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : null);
   const app = navFrom(site).booking; // the booking app as staff set it
@@ -188,6 +194,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
             <BookingFlow locale={locale} events={events} prices={prices} maxPrices={maxPrices} jccCap={jccCap} acct={acct} items={items}
+              pay={paying ? { mode: ps.bookings, holdMinutes: ps.holdMinutes, refundDays: ps.refundDays, wallet } : undefined}
               start={{ ev: one(q.ev), session: one(q.session) }}
               text={{ eventTitle: S(c.steps.eventTitle), noDates: S(c.steps.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}
               links={{

@@ -63,6 +63,8 @@ type Props = {
   now: number;
   typeNames: Record<string, string>;
   routes: Record<string, TicketRoute | null>;
+  /** Paying online (2026-11-10): staff's pay.bookings, the hold, the refund rule, and the account's wallet balance. */
+  pay?: { mode: "required" | "optional" | "off"; holdMinutes: number; refundDays: number; wallet: number };
 };
 
 type Modal =
@@ -83,7 +85,7 @@ const BIKE_IMG: Record<string, { img: string; model: string; easy?: boolean }> =
 const GROUP_IMG: Record<RideGroup, string> = { beg: "group-jyc", int: "group-msr" };
 const imgOf = (name: string) => `/site/experiences/bikes/${name}.webp`;
 
-export default function BookingFlow({ locale, events, prices, maxPrices, jccCap = JCC_ACCOUNT_CAP, acct, items, start, text, links, today, now, typeNames, routes }: Props) {
+export default function BookingFlow({ locale, events, prices, maxPrices, jccCap = JCC_ACCOUNT_CAP, acct, items, start, text, links, today, now, typeNames, routes, pay }: Props) {
   const t = useLocalize(T);
   const tk = useLocalize(TICKET);
   const rtl = isRtl(locale);
@@ -118,6 +120,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const [modal, setModal] = useState<Modal>(() => resume?.gate ?? null);
   const [done, setDone] = useState<Done | null>(null);
   const [acctNow, setAcctNow] = useState<BookAccount | null>(acct);
+  const [payNow, setPayNow] = useState(true);
+  const [walletOn, setWalletOn] = useState(false); // the wallet is the rider's choice, off by default
 
   const focusTop = useCallback(() => {
     requestAnimationFrame(() => {
@@ -250,6 +254,11 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const addonTotal = free ? 0 : addonsCost(addons, items);
   const grand = free ? t.free : disc > 0 ? sar(Math.max(0, lo - disc) + addonTotal) : sarRange(lo + addonTotal, hi + addonTotal);
   const rental = free ? t.free : disc > 0 ? sar(Math.max(0, lo - disc)) : sarRange(lo, hi);
+  // Paid now online (2026-11-10): a paid ride that is not a race (paid to the organiser) or a Petromin night, with
+  // something to pay, booked into a place (a waitlisted place pays nothing now). Required, or the rider's choice.
+  const payable = !!sel && !free && !!pay && pay.mode !== "off" && !["vlap", "arena", "petromin"].includes(sel.kind) && !sel.full
+    && Math.max(0, lo - disc) + addonTotal > 0;
+  const payingNow = payable && (pay!.mode === "required" || payNow);
 
   // ── Confirm (submitReg) ──────────────────────────────────────────────────────────────────
   const refused = (e: Refusal | string) => {
@@ -284,9 +293,17 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           addons: free ? [] : addons,
           promo: promo ? { code: promo.code, appliesTo: promo.appliesTo } : null,
           waiver: needsWaiver(sel) ? waiverOk === sel.id : false,
+          payNow: payingNow,
+          wallet: payingNow && walletOn,
+          lang: locale,
         }),
       });
-      const b = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; tickets?: TicketRow[]; session?: TicketSession | null; addonsSaved?: boolean };
+      const b = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; tickets?: TicketRow[]; session?: TicketSession | null; addonsSaved?: boolean; pay?: { url?: string } };
+      if (b.ok && b.pay?.url && /^\/pay\/[0-9a-f-]{36}$/.test(b.pay.url)) {
+        // the places are held while the rider pays on the payment page (it brings them back to their tickets)
+        window.location.assign(b.pay.url);
+        return;
+      }
       if (b.ok && Array.isArray(b.tickets)) {
         setDone({ tickets: b.tickets, session: b.session ?? null, addonsSaved: b.addonsSaved !== false });
         setAcctNow((a) => (a ? { ...a, live: { ...a.live, [sel.id]: (a.live[sel.id] ?? 0) + b.tickets!.length }, height: a.height ?? (Number(riders[0]?.height) || null) } : a));
@@ -674,6 +691,35 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           )}
           <p className={`bk-sum-tot${addonTotal > 0 ? " sep" : ""}`}><span>{t.total}</span><Amt>{grand}</Amt></p>
         </div>
+        {payable && (
+          <div className="bk-card bk-paybox">
+            <h3 className="bk-h3">{t.pay.title}</h3>
+            {pay!.mode === "optional" && (
+              <div className="bk-types one" role="radiogroup" aria-label={t.pay.title}>
+                <span className={`bk-pick solo${payNow ? " on" : ""}`}>
+                  <button type="button" role="radio" aria-checked={payNow} className={`bk-pill${payNow ? " on" : ""}`} onClick={() => setPayNow(true)}><span className="bk-pill-n">{t.pay.now}</span></button>
+                </span>
+                <span className={`bk-pick solo${!payNow ? " on" : ""}`}>
+                  <button type="button" role="radio" aria-checked={!payNow} className={`bk-pill${!payNow ? " on" : ""}`} onClick={() => setPayNow(false)}><span className="bk-pill-n">{t.pay.desk}</span></button>
+                </span>
+              </div>
+            )}
+            {payingNow && pay!.wallet > 0 && (
+              <label className={`bk-agree${walletOn ? " on" : ""}`}>
+                <input type="checkbox" checked={walletOn} onChange={(e) => setWalletOn(e.target.checked)} />
+                <span>{fill(t.pay.wallet, sar(pay!.wallet))}</span>
+              </label>
+            )}
+            {payingNow && <p className="bk-note">{fill(t.pay.held, pay!.holdMinutes)}</p>}
+            <p className="bk-note">{pay!.refundDays > 1 ? fill(t.pay.refundDays, pay!.refundDays) : t.pay.refund}</p>
+            {payingNow && (
+              <p className="bk-paymarks" aria-label={t.pay.methods}>
+                {["mada", "visa", "mastercard"].map((m) => <img key={m} src={`/site/payments/${m}.svg`} alt="" width={40} height={26} />)}
+                <span>{t.pay.methods}</span>
+              </p>
+            )}
+          </div>
+        )}
         {isAlready ? (
           <div className="bk-already" role="status">
             <p className="bk-already-t">{t.already}</p>
@@ -684,7 +730,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           <div className="bk-foot">
             {err && <p className="bk-err" role="alert">{err}</p>}
             <button type="button" className="bk-btn2" disabled={busy} onClick={() => go(prevStep(sel, 3))}>{t.back}</button>
-            <button type="button" className="bk-btn grow" disabled={busy} aria-busy={busy} onClick={() => void submit()}>{busy ? <span className="bk-spin" aria-hidden="true" /> : null}{t.confirm}</button>
+            <button type="button" className="bk-btn grow" disabled={busy} aria-busy={busy} onClick={() => void submit()}>{busy ? <span className="bk-spin" aria-hidden="true" /> : null}{payingNow ? fill(t.pay.confirm, grand) : t.confirm}</button>
+            {payingNow && <p className="bk-agree-note">{t.pay.agree}</p>}
           </div>
         )}
       </section>

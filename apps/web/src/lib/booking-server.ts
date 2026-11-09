@@ -98,6 +98,10 @@ export type BookInput = {
   addons: { id: string; qty: number }[];
   promo: { code: string; appliesTo: string | null } | null;
   waiver: boolean;
+  /** Pay online now (the rider's choice where paying now is optional; always, where it is required). */
+  payNow: boolean;
+  /** Let the account's wallet pay what it can first (the review's Wallet switch). */
+  wallet: boolean;
 };
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
@@ -130,7 +134,7 @@ export function readInput(b: unknown): BookInput | null {
     const code = S(p.code).trim();
     if (/^[A-Za-z0-9_-]{1,40}$/.test(code)) promo = { code, appliesTo: isRiderType(p.appliesTo) ? p.appliesTo : null };
   }
-  return { sessionId, riders, group, addons, promo, waiver: o.waiver === true };
+  return { sessionId, riders, group, addons, promo, waiver: o.waiver === true, payNow: o.payNow === true, wallet: o.wallet === true };
 }
 
 /** The session the booking is for, read fresh (never the page's cached copy). */
@@ -248,7 +252,7 @@ export function waitlistRefused(s: Pick<LiveSession, "full" | "approval" | "capa
 
 export type Booked = { id: string; queue_num: number | null; status: string; waitlist_num: number | null; price: number | null };
 export type BookResult =
-  | { ok: true; booked: Booked[]; rows: Row[]; addonsSaved: boolean }
+  | { ok: true; booked: Booked[]; rows: Row[]; addonsSaved: boolean; session: LiveSession }
   | { ok: false; error: Refusal };
 
 /** Books the ride: the checks, the booking (customer_create_booking), then the add-ons on the
@@ -317,5 +321,9 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
   const after = await rpcCall<Row[]>("my_bookings", args, fetchImpl);
   const ids = new Set(booked.map((b) => b.id));
   const rows = (Array.isArray(after.data) ? after.data : []).filter((r) => ids.has(S(r.id)));
-  return { ok: true, booked, rows, addonsSaved };
+  return { ok: true, booked, rows, addonsSaved, session: s };
 }
+
+/** Whether a booking on this ride is paid online (rentals 20261110150000 pay_booking_start): a paid ride that is
+ *  not a race (the organiser's money, by transfer) nor a Petromin night (the company's bill or the desk). */
+export const payableOnline = (s: Pick<LiveSession, "free" | "kind">) => !s.free && !["vlap", "arena", "petromin"].includes(s.kind);

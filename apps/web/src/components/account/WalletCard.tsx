@@ -1,17 +1,19 @@
 import { fmtDayDate } from "@/lib/tickets";
 import { walletKindWord, type Wallet } from "@/lib/wallet";
 import { walletWords } from "./Wallet.words";
+import WalletTopUp from "@/components/pay/WalletTopUp";
 
 const sar = (n: number) => `\u2066\u20C1 ${Math.round((Number(n) || 0) * 100) / 100}\u2069`;
 
 // The wallet on My Account (the booking app's #cw-mine): the balance and its last ten lines. Nothing here is
 // staff's note: customer_wallet does not send it.
-export default function WalletCard({ wallet, locale }: { wallet: Wallet; locale: string }) {
+export default function WalletCard({ wallet, locale, topup = null }: { wallet: Wallet; locale: string; topup?: { min: number; max: number } | null }) {
   const t = walletWords(locale);
   return (
     <section className="ac-sec ac-wal" aria-labelledby="ac-wal-h">
       <div className="ac-wal-top"><h2 id="ac-wal-h">{t.title}</h2><strong className="ac-wal-n"><bdi>{sar(wallet.balance)}</bdi></strong></div>
       <p className="ac-text">{t.note}</p>
+      {topup && <WalletTopUp min={topup.min} max={topup.max} locale={locale} />}
       {wallet.rows.length ? (
         <ul className="ac-wal-rows">
           {wallet.rows.slice(0, 10).map((x) => (

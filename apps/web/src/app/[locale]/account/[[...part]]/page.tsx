@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { payReady } from "@/lib/pay/config";
+import { paySettings } from "@/lib/pay/settings";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { pageMeta } from "@/lib/seo";
@@ -137,6 +139,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const rows = await accountBookings(acct);
   const now = riyadhClock(new Date());
   const today = now.slice(0, 10);
+  // paying online (2026-11-10): Pay now and Cancel with a refund on the tickets, where payments are open here
+  const payCfg = paySettings(content);
+  const payOnline = payCfg.enabled && payReady();
   const d = resolvePage(experiencesSchema, content, L).dates;
   const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
   const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
@@ -277,7 +282,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                       // the live map follows the ride leader: a bike session's only (2026-10-18)
                       live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} />
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor}
+                    online={payOnline ? { open: true, refundDays: payCfg.refundDays, today } : null} />
                 );
               })}
               {past.map((g) => {
@@ -316,7 +322,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           </section>
         )}
 
-        {walletRead && <WalletCard wallet={walletRead} locale={locale} />}
+        {walletRead && <WalletCard wallet={walletRead} locale={locale} topup={payOnline && payCfg.topup ? { min: payCfg.topupMin, max: payCfg.topupMax } : null} />}
 
         {referral && <ReferralCard r={referral} locale={locale} />}
 

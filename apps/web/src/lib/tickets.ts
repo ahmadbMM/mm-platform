@@ -25,6 +25,9 @@ export type TicketRow = {
   waitlistNum: number | null; approval: string | null; price: number; paid: boolean; name: string; type: string;
   /** How the desk or the wallet took it, and how much of it the wallet holds (rentals 20261103140000). */
   payMethod?: string | null; walletPaid?: number;
+  /** Paid online (2026-11-10, rentals 20261110150000): how much the card paid, and until when the place is held
+   *  while the rider pays (ISO; null when not held). */
+  cardAmount?: number | null; payHold?: string | null;
   /** The desk's check-in and return (ISO), the minutes it timed on the bike, and the bike handed over. */
   checkedInAt: string | null; checkedOutAt: string | null; rideDuration: number | null; bikeId: string | null;
   /** The add-ons bought with the booking. */
@@ -140,6 +143,7 @@ export function ticketRow(r: Row): TicketRow | null {
   return {
     id: S(r.id), sessionId: S(r.session_id) || date, date, day: S(r.session_day), queueNum: N(r.queue_num), status,
     waitlistNum: N(r.waitlist_num), approval: S(r.approval) || null, price: N(r.price) ?? 0, paid: r.paid === true, payMethod: S(r.pay_method) || null, walletPaid: N(r.wallet_paid) ?? 0,
+    cardAmount: N(r.card_amount), payHold: S(r.pay_hold_until) || null,
     name: S(r.name), type: S(r.type_preference),
     // the Blood Donation event: a visitor, and the club or community they gave (rentals 20261105140000, 20261105150000)
     ...(r.blood_role === "visitor" ? { bloodVisitor: true } : {}), ...(S(r.blood_club) ? { bloodClub: S(r.blood_club) } : {}),

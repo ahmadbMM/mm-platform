@@ -2,6 +2,8 @@ import Qr from "./Qr";
 import Countdown from "./Countdown";
 import RaceRegQuestion from "./RaceRegQuestion";
 import WalletPay from "./WalletPay";
+import { TicketPayCancel, TicketPayNow } from "@/components/pay/TicketPay";
+import { refundable } from "@/lib/pay/settings";
 import { walletWords } from "@/components/account/Wallet.words";
 import { walletDue } from "@/lib/wallet";
 import VlTicket from "./VlTicket";
@@ -73,6 +75,8 @@ type Props = {
   now: number;
   /** The booking (and the party's rows) a Google Wallet pass is made for (WalletButton); null for none. */
   wallet?: { bookingId: string; groupIds: string[] } | null;
+  /** Paying online (2026-11-10): open on this site, the refund rule, and today in Riyadh. Absent: no Pay now, and Cancel goes to the booking app. */
+  online?: { open: boolean; refundDays: number; today: string } | null;
   /** Edit, Reschedule and Cancel under the card (My Account); false on the booking's own
    *  confirmation on Experiences, which is the booking app's renderOneTicket (none there). */
   manage?: boolean;
@@ -144,7 +148,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true, addonItems = null, lockers = null, vlPartners = null, balance = null, blood = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true, addonItems = null, lockers = null, vlPartners = null, balance = null, blood = null, online = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -183,6 +187,13 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   // the Wallet switch (the booking app's _cwPaySlot, 2026-11-03): only with a balance read
   const due = !past && !allWl && balance !== null ? walletDue(rows, s?.kind, !!s?.approval, extrasCost) : null;
   const wWords = walletWords(locale);
+  // Paying online (2026-11-10): Pay now for places still unpaid on a ride paid online; Cancel with the refund's
+  // choice for a booking paid online (never a race, a Petromin night, the blood drive, or a ride staff approve).
+  const payKind = !free && !s?.approval && !["vlap", "arena", "petromin", "blood"].includes(s?.kind ?? "");
+  const unpaid = online?.open && payKind && !past ? rows.filter((r) => (r.status === "waiting" || r.status === "active") && !r.paid).map((r) => r.id) : [];
+  const heldTill = rows.map((r) => r.payHold).find((h) => !!h && Date.parse(h) > now) ?? null;
+  const paidOnline = rows.some((r) => r.payMethod === "online");
+  const onlineBack = rows.filter((r) => r.payMethod === "online" && (r.status === "waiting" || r.status === "waitlist")).reduce((n, r) => n + (r.cardAmount ?? 0), 0);
   const cw = codeWords(locale); // the kinds of code a row used
   const canEdit = !past && rows.some((r) => r.status === "waiting" || r.status === "waitlist");
   const active = rows.some((r) => r.status === "active");
@@ -459,6 +470,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               : due.left > 0 ? wWords.usingLeft.replace("{0}", sar(due.used)).replace("{1}", sar(due.left))
               : wWords.usingAll.replace("{0}", sar(due.used))} />
         )}
+        {paidOnline && <p className="tk-line tk-online">{t.paidOnline}</p>}
+        {unpaid.length > 0 && <TicketPayNow ids={unpaid} held={heldTill} locale={locale} />}
         {!allWl && !past && bikes && <p className="tk-line">{s?.approval ? t.helmetFree : t.helmetLine}</p>}
       </div>
 
@@ -479,7 +492,10 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           {vlap && rows.length === 1 && primary.vl && <a className="tk-btn solid" href={links.manage}>{t.vlEdit}</a>}
           {/* Arena Heros: the athlete's details and division change there too (the booking app's _vlEditOpen) */}
           {arena && rows.length === 1 && primary.ah && <a className="tk-btn solid" href={links.manage}>{t.vlEdit}</a>}
-          <a className="tk-btn red" href={links.manage}>{t.cancel}</a>
+          {paidOnline && online
+            ? <TicketPayCancel ids={rows.filter((r) => r.status === "waiting" || r.status === "waitlist").map((r) => r.id)} amount={onlineBack}
+                refundable={refundable(primary.date, online.today, online.refundDays)} refundDays={online.refundDays} amountText={sar(onlineBack)} locale={locale} />
+            : <a className="tk-btn red" href={links.manage}>{t.cancel}</a>}
         </div>
       )}
     </article>

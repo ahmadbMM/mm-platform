@@ -45,6 +45,8 @@ var FORM_T = {
   "How to pay": "طريقة الدفع",
   "Pay from wallet": "الدفع من المحفظة",
   "Pay at the desk": "الدفع في المكتب",
+  "Pay by card now": "ادفع بالبطاقة الآن",
+  "mada, Visa, Mastercard, Apple Pay": "مدى، فيزا، ماستركارد، Apple Pay",
   "Reserving...": "جارٍ الحجز...",
   "Reserved": "محجوزة",
   "Reserve another": "احجز خزانة أخرى",

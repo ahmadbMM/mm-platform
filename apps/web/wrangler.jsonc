@@ -70,6 +70,9 @@
       "version_metadata": { "binding": "CF_VERSION_METADATA" },
       "observability": { "enabled": true },
       "vars": { "MM_ENV": "staging" },
+      // Online payments' reconcile run (worker.js scheduled; src/app/api/pay/reconcile). Production gets the
+      // same line when payments open there. The keys are Worker secrets (src/lib/pay/config.ts).
+      "triggers": { "crons": ["*/5 * * * *"] },
       "routes": [{ "pattern": "staging.micromobility.sa", "custom_domain": true }]
     }
   }

@@ -42,6 +42,16 @@ const worker = {
       .on("title", prefixTitles())
       .transform(out);
   },
+  // Online payments (2026-11-10): every 5 minutes (wrangler.jsonc triggers), ask Moyasar about payments still
+  // open or let go, and send card refunds that never reached it (src/app/api/pay/reconcile). The request goes
+  // straight to the site's own handler, never out on the network; it carries the server key. Nothing runs
+  // until the payment keys are set.
+  scheduled: async (event, env, ctx) => {
+    if (!env || !env.PAY_SERVER_KEY || !env.MOYASAR_SECRET_KEY) return;
+    const host = isStaging(env) ? "https://staging.micromobility.sa" : "https://micromobility.sa";
+    const req = new Request(`${host}/api/pay/reconcile`, { method: "POST", headers: { "x-pay-key": env.PAY_SERVER_KEY } });
+    ctx.waitUntil(handler.fetch(req, env, ctx).then(() => undefined, () => undefined));
+  },
 };
 
 export default worker;
