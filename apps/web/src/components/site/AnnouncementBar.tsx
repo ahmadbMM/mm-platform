@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import { useL } from "@/i18n/TxProvider";
 
 // The dark bar under the header: one message at a time, turning every six seconds. Moving text
@@ -15,7 +15,7 @@ const onMotion = (fn: () => void) => {
   return () => q.removeEventListener("change", fn);
 };
 
-export default function AnnouncementBar({ items, arrow }: { items: Announcement[]; arrow: string }) {
+export default function AnnouncementBar({ items, arrow }: { items: Announcement[]; arrow: ReactNode }) {
   const tx = useL();
   const list = items.filter((i) => i.text.trim());
   const [i, setI] = useState(0);

@@ -9,6 +9,8 @@ import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { pageState } from "@/lib/page-state";
 import { slugId } from "@/lib/slug";
+import { serverL } from "@/i18n/dicts";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/business - what we do for companies; enquiries land in the staff page (Messages).
 type Sec = Record<string, unknown>;
@@ -29,6 +31,7 @@ export default async function BusinessPage({ params }: { params: Promise<{ local
   const { content, previewing, hidden } = await pageState("business");
   const site = resolvePage(siteSchema, content, L);
   const b = resolvePage(businessSchema, content, L);
+  const tx = serverL(locale);
   const en = resolvePage(businessSchema, content, "en");
   const services: BizService[] = list(b.services.items).map((s, i) => ({
     id: slugId(S(list(en.services.items)[i]?.tab), `service-${i + 1}`), tab: S(s.tab), image: S(s.image), title: S(s.title), text: S(s.text), points: lines(s.points),
@@ -42,6 +45,14 @@ export default async function BusinessPage({ params }: { params: Promise<{ local
           <span className="bz-eyebrow">{S(b.hero.eyebrow)}</span>
           <h1>{S(b.hero.title)}</h1>
           <p>{S(b.hero.text)}</p>
+          {/* The way to talk to the team from the first screen: the form sat 1,700 px down, and the
+              top of the page had no button. */}
+          <div className="bz-hero-btns">
+            {S(b.form.button) && <a href="#enquiry" className="bz-btn">{S(b.form.button)} <ArrowIcon size={17} /></a>}
+            {S(site.social.whatsapp) && (
+              <a href={S(site.social.whatsapp)} className="bz-btn bz-btn-line" target="_blank" rel="noopener noreferrer">{tx("Message us on WhatsApp", "راسلنا على واتساب")}</a>
+            )}
+          </div>
         </section>
         <BusinessBody
           locale={locale}

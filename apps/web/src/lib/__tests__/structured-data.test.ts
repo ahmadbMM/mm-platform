@@ -20,7 +20,7 @@ describe("breadcrumbData", () => {
 // A catalogue model (lib/structured-data.ts productData): a Product only with what a ride costs.
 describe("productData", () => {
   const model = { brand: "ALVAS", name: "DA54", ride_type: "Road" } as CatalogModel;
-  const x = { path: "/bikes/road/alvas-da54", image: "/site/x.jpg", category: "Road", description: "A road bike.", bookUrl: "https://micromobilityrentals.pages.dev/?lang=en" };
+  const x = { path: "/bikes/road/alvas-da54", image: "/site/x.jpg", category: "Road", description: "A road bike.", bookUrl: "https://experiences.micromobility.sa/?lang=en" };
   it("offers a ride on it at its price in riyals, as a rental", () => {
     expect(productData(model, "en", { ...x, price: 75 })).toMatchObject({
       "@type": "Product", name: "ALVAS DA54",

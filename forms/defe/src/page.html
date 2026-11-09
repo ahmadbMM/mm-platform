@@ -659,7 +659,7 @@ fill="#a22b63" stroke="none">
       <p id="land-who" class="who" hidden></p>
       <button id="go" class="d-btn" type="button" disabled>Register &amp; book</button>
       <p id="have-acct" class="small"><span data-t="Already have a MicroMobility account?">Already have a MicroMobility account?</span> <button type="button" id="go-signin" class="d-link" data-site="authLogin">Sign in</button></p>
-      <p id="see-ticket" class="small" hidden><span data-t="Already booked?">Already booked?</span> <a id="see-ticket-a" class="d-link" href="https://micromobilityrentals.pages.dev/?tab=bookings" data-t="Sign in to see your ticket">Sign in to see your ticket</a></p>
+      <p id="see-ticket" class="small" hidden><span data-t="Already booked?">Already booked?</span> <a id="see-ticket-a" class="d-link" href="https://experiences.micromobility.sa/?tab=bookings" data-t="Sign in to see your ticket">Sign in to see your ticket</a></p>
     </div>
   </section>
 
@@ -770,14 +770,14 @@ fill="#a22b63" stroke="none">
           <div id="si-temp" class="notice" hidden>
             <b data-t="Finish signing in on the booking site">Finish signing in on the booking site</b>
             <span data-t="Your account has a temporary password. Choose your own on the booking site, then come back to this page.">Your account has a temporary password. Choose your own on the booking site, then come back to this page.</span>
-            <a id="si-temp-a" class="d-btn ghost" href="https://micromobilityrentals.pages.dev/?handoff=defe" data-t="Open the booking site">Open the booking site</a>
+            <a id="si-temp-a" class="d-btn ghost" href="https://experiences.micromobility.sa/?handoff=defe" data-t="Open the booking site">Open the booking site</a>
           </div>
           <button id="signin" class="d-btn" type="submit">
             <span class="spinner" aria-hidden="true"></span>
             <span class="btn-label" data-site="authLogin">Sign in</span>
             <span class="btn-busy" data-t="Signing in...">Signing in...</span>
           </button>
-          <p class="small"><a id="si-other" class="d-link" href="https://micromobilityrentals.pages.dev/?handoff=defe" data-t="Google / Apple, or forgot your password">Google / Apple, or forgot your password</a></p>
+          <p class="small"><a id="si-other" class="d-link" href="https://experiences.micromobility.sa/?handoff=defe" data-t="Google / Apple, or forgot your password">Google / Apple, or forgot your password</a></p>
           <p class="small"><span data-t="No account yet?">No account yet?</span> <button type="button" class="d-link to-create" data-site="authSignupBtn">Create account</button></p>
         </form>
         <button type="button" id="back-land" class="d-btn ghost" data-t="Back">Back</button>
@@ -794,7 +794,7 @@ fill="#a22b63" stroke="none">
         <div id="d-blocked" class="notice" hidden>
           <b data-t="Your account needs a few more details">Your account needs a few more details</b>
           <span data-t="Some of them can only be given on the booking site. Finish them there, then come back to this page to book.">Some of them can only be given on the booking site. Finish them there, then come back to this page to book.</span>
-          <a id="d-blocked-a" class="d-btn ghost" href="https://micromobilityrentals.pages.dev/?handoff=defe" data-t="Finish on the booking site">Finish on the booking site</a>
+          <a id="d-blocked-a" class="d-btn ghost" href="https://experiences.micromobility.sa/?handoff=defe" data-t="Finish on the booking site">Finish on the booking site</a>
         </div>
         <div id="f-birth" class="field">
           <span class="label" id="birth-label" data-t="Date of birth">Date of birth</span>
@@ -930,7 +930,7 @@ fill="#a22b63" stroke="none">
       <p class="small start" data-t="Your ticket is in My Bookings in the MicroMobility app. Show it at the bike desk on the morning of the ride.">Your ticket is in My Bookings in the MicroMobility app. Show it at the bike desk on the morning of the ride.</p>
       <p id="done-going" class="small start" role="status" data-t="Opening your booking...">Opening your booking...</p>
       <button type="button" id="done-open" class="d-btn" data-t="Open my booking">Open my booking</button>
-      <a id="done-fallback" class="d-btn ghost" href="https://micromobilityrentals.pages.dev/?tab=bookings" hidden data-t="Open the booking site">Open the booking site</a>
+      <a id="done-fallback" class="d-btn ghost" href="https://experiences.micromobility.sa/?tab=bookings" hidden data-t="Open the booking site">Open the booking site</a>
     </div>
   </section>
 </main>
@@ -1299,7 +1299,7 @@ var MMAccount = (function () {
   var PARTNER = "defe";
   var LANG_KEY = "mm-defe-lang";
   // The booking app: where Google, Apple and a forgotten password are handled, and where the ticket lives.
-  var BOOKING_URL = "https://micromobilityrentals.pages.dev/";
+  var BOOKING_URL = "https://experiences.micromobility.sa/";
 
   var SH = window.SHARED, T = window.FORM_T || {};
   var html = document.documentElement;

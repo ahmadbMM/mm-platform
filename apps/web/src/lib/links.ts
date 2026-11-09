@@ -2,7 +2,7 @@ import { phrase } from "@/i18n/tx";
 
 // Where the site's links go today. Pages that are not built yet are simply not linked; the
 // booking app (every Book button on /experiences) and the Salla shop (/store) live elsewhere.
-export const BOOKING_URL = "https://micromobilityrentals.pages.dev/";
+export const BOOKING_URL = "https://experiences.micromobility.sa/";
 /** The Salla shop (micromobility.sa/store opens it; proxy.ts) and its cart, for the header's cart
  *  icon. Staff change all three in Website > Whole site > Other addresses; these are the defaults. */
 export const STORE_URL = "https://stepdragon.com.sa";

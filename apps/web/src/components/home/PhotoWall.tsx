@@ -2,12 +2,15 @@
 
 import { useEffect, useRef, useState } from "react";
 import { bg } from "@/lib/img";
+import { fill } from "@/lib/fill";
+import { CloseIcon } from "@/components/site/Icons";
 import { useDialogFocus } from "@/components/site/use-dialog-focus";
 
-// The community photo wall: six staggered columns (three on a phone); a photo opens large.
+// The community photo wall: six staggered columns (three on a phone); a photo opens large. The
+// photos are fetched as the visitor nears the wall (data-bg, components/site/LazyBackgrounds.tsx).
 const RATIOS = ["3 / 4", "2 / 3", "4 / 5", "3 / 5", "5 / 6"];
 
-export default function PhotoWall({ photos, label, closeLabel }: { photos: string[]; label: string; closeLabel: string }) {
+export default function PhotoWall({ photos, label, closeLabel, photoLabel }: { photos: string[]; label: string; closeLabel: string; photoLabel: string }) {
   const [open, setOpen] = useState("");
   // The photo opened takes the focus to its close button, keeps it inside, and gives it back to the
   // photo the visitor opened when it closes.
@@ -28,8 +31,8 @@ export default function PhotoWall({ photos, label, closeLabel }: { photos: strin
         {cols.map((col, c) => (
           <div className="hm-wall-col" key={c}>
             {col.map(({ p, i }) => (
-              <button key={i} type="button" className="hm-tile" aria-label={`${label} ${i + 1}`} onClick={(e) => { opener.current = e.currentTarget; setOpen(p); }}
-                style={{ aspectRatio: RATIOS[i % RATIOS.length], backgroundImage: `url('${bg(p, 640)}')` }} />
+              <button key={i} type="button" className="hm-tile" aria-label={fill(photoLabel, { n: i + 1, total: photos.length })} onClick={(e) => { opener.current = e.currentTarget; setOpen(p); }}
+                data-bg={`url('${bg(p, 640)}')`} style={{ aspectRatio: RATIOS[i % RATIOS.length] }} />
             ))}
           </div>
         ))}
@@ -37,7 +40,7 @@ export default function PhotoWall({ photos, label, closeLabel }: { photos: strin
       {open && (
         <div ref={box} className="hm-lightbox" role="dialog" aria-modal="true" aria-label={label} onClick={() => setOpen("")}>
           <div style={{ backgroundImage: `url('${bg(open)}')` }} />
-          <button ref={closeBtn} type="button" aria-label={closeLabel} onClick={() => setOpen("")}>✕</button>
+          <button ref={closeBtn} type="button" aria-label={closeLabel} onClick={() => setOpen("")}><CloseIcon size={20} /></button>
         </div>
       )}
     </>

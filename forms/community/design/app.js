@@ -19,7 +19,7 @@
   var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
   var LANG_KEY = "mm-community-lang";
   // The booking site: where an existing account signs in (it hands the rider back here signed in).
-  var BOOKING_URL = "https://micromobilityrentals.pages.dev/";
+  var BOOKING_URL = "https://experiences.micromobility.sa/";
 
   var SH = window.SHARED, T = window.FORM_T || {};
   var html = document.documentElement;

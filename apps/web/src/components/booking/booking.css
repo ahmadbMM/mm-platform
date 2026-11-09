@@ -60,11 +60,10 @@
 .tk-note .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
 .tk-note.go { color: #077a4b; }
 .tk-note.warn { color: #8a5c14; }
-.tk-ok { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+.tk-ok { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 12px; border-radius: 10px;
   background: rgba(7, 122, 75, .08); border: 1px solid rgba(7, 122, 75, .25); color: #077a4b; }
 .tk-ok-tick { width: 20px; height: 20px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: #077a4b; color: #fff; font-size: 12px; font-weight: 900; }
 .tk-ok strong { display: block; font-size: 13px; font-weight: 800; }
-.tk-ok small { display: block; margin-top: 2px; font-size: 11px; font-weight: 600; color: #4f565c; }
 .tk-riders-h { padding-top: 10px; font-size: 12px; font-weight: 700; color: #4f565c; }
 .tk-rider { padding: 11px 0; border-bottom: 1px solid rgba(26, 25, 25, .14); }
 .tk-rider-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -76,6 +75,20 @@
 .tk-type { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 3px; white-space: nowrap;
   font-size: 12px; font-weight: 700;
   background: rgba(26, 25, 25, .07); color: #1a1919; border: 1px solid rgba(26, 25, 25, .14); }
+/* The code a row was booked with (2026-11-08, the booking app's _codeRowHtml): its mark in its kind's colour, the kind and
+   the code; on the live ticket's night, lighter. */
+.tk-code { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; }
+.tk-code-tag { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border: 1px solid rgba(26, 25, 25, .14);
+  border-radius: 4px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.tk-code-ic { flex: none; color: var(--ck); }
+.tk-code-kn { color: #6f6d63; }
+.tk-code-c { font-weight: 700; }
+.ck-rw { --ck: #0a7a4b; } .ck-rf { --ck: #0f766e; } .ck-rb { --ck: #a16207; }
+.ck-bd { --ck: #c8102e; } .ck-promo { --ck: #8c3b6e; } .ck-sat { --ck: #1d4ed8; } .ck-vl { --ck: #1f7ae0; }
+.tk-live .tk-code-tag { border-color: rgba(251, 249, 244, .22); }
+.tk-live .tk-code-kn { color: rgba(251, 249, 244, .66); }
+.tk-live .ck-rw { --ck: #6ee7b7; } .tk-live .ck-rf { --ck: #5eead4; } .tk-live .ck-rb { --ck: #fcd34d; }
+.tk-live .ck-bd { --ck: #ff8a9a; } .tk-live .ck-promo { --ck: #f0abd6; } .tk-live .ck-sat { --ck: #93c5fd; } .tk-live .ck-vl { --ck: #8fd0ff; }
 /* The booking app's colour for each bike type (.type-road, .type-hybrid ...). */
 .tk-type.t-hybrid, .tk-type.t-kids { background: rgba(7, 122, 75, .1); color: #077a4b; border-color: rgba(7, 122, 75, .22); }
 .tk-type.t-gravel { background: rgba(7, 122, 75, .08); color: #077a4b; border-color: rgba(7, 122, 75, .2); }
@@ -110,11 +123,11 @@
 .tk-wallet-msg { margin: 0; font-size: 11.5px; font-weight: 600; line-height: 1.45; color: #8a5c14; }
 .tk-manage { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px 16px; }
 .tk-btn { flex: 1; min-width: 88px; height: 44px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  border-radius: 0; background: #fff; color: #1a1919 !important; border: 1px solid rgba(26, 25, 25, .24);
+  border-radius: 10px; background: #fff; color: #1a1919 !important; border: 1px solid rgba(26, 25, 25, .24);
   font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .2s, border-color .2s; }
 .tk-btn svg { flex: none; } /* a long label must not squeeze the icon to nothing */
 .tk-btn:hover { background: rgba(26, 25, 25, .04); }
-.tk-btn.solid { border-radius: 0; background: #077a4b; border-color: #077a4b; color: #fff !important; }
+.tk-btn.solid { border-radius: 999px; background: #077a4b; border-color: #077a4b; color: #fff !important; }
 .tk-btn.solid:hover { background: #06603b; }
 .tk-btn.red { color: #a33b2e !important; border-color: rgba(163, 59, 46, .4); }
 /* The night ticket: a place is held (booked or checked in, its code out). Near-black with neon,
@@ -131,7 +144,6 @@
 .tk-live :is(.tk-note, .tk-ok) { background: #262524; border-color: rgba(251, 249, 244, .16); color: #fbf9f4; }
 .tk-live :is(.tk-note.go, .tk-ok) { color: #03ff89; }
 .tk-live .tk-note.warn { color: #f2c66d; }
-.tk-live .tk-ok small { color: rgba(251, 249, 244, .66); }
 .tk-live .tk-ok-tick { background: #03ff89; color: #1a1919; }
 .tk-live .tk-btn { background: transparent; color: #fbf9f4 !important; border-color: rgba(251, 249, 244, .16); }
 .tk-live .tk-btn:hover { background: #262524; border-color: rgba(251, 249, 244, .66); }
@@ -212,7 +224,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-card.ev-vlap.tk-today::after { background: #5b3fd6; }
 .tk-card.ev-vlap.tk-live { background: #fff; border-color: rgba(13, 13, 13, .28); color: #0d0d0d; }
 .tk-card.ev-vlap.tk-live :is(.tk-num, .tk-name, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l, .tk-rt-n) { color: #0d0d0d; }
-.tk-card.ev-vlap.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-ok small, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(13, 13, 13, .62); }
+.tk-card.ev-vlap.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(13, 13, 13, .62); }
 .tk-card.ev-vlap.tk-live :is(.tk-dw, .tk-when .go, .tk-total strong, .tk-pay.paid, .tk-rider-pay > .tk-amt.paid, .tk-cd, .tk-note.go, .tk-ok, .tk-rt-a) { color: #5b3fd6; }
 .tk-card.ev-vlap.tk-live .tk-pay.due, .tk-card.ev-vlap.tk-live .tk-note.warn, .tk-card.ev-vlap.tk-live .tk-wallet-msg { color: #8a5300; }
 .tk-card.ev-vlap.tk-live :is(.tk-head, .tk-rider, .tk-addons, .tk-rt) { border-color: rgba(13, 13, 13, .14); }
@@ -241,7 +253,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-card.ev-defe5k.tk-today::after { background: #a22b63; }
 .tk-card.ev-defe5k.tk-live { color: #3b1328; }
 .tk-card.ev-defe5k.tk-live :is(.tk-num, .tk-name, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l, .tk-rt-n) { color: #3b1328; }
-.tk-card.ev-defe5k.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-ok small, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(59, 19, 40, .66); }
+.tk-card.ev-defe5k.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(59, 19, 40, .66); }
 .tk-card.ev-defe5k.tk-live :is(.tk-dw, .tk-when .go, .tk-total strong, .tk-pay.paid, .tk-rider-pay > .tk-amt.paid, .tk-cd, .tk-note.go, .tk-ok, .tk-rt-a) { color: #a22b63; }
 .tk-card.ev-defe5k.tk-live .tk-pay.due, .tk-card.ev-defe5k.tk-live .tk-note.warn, .tk-card.ev-defe5k.tk-live .tk-wallet-msg { color: #8a5300; }
 .tk-card.ev-defe5k.tk-live :is(.tk-head, .tk-rider, .tk-addons, .tk-rt) { border-color: rgba(162, 43, 99, .2); }
@@ -272,18 +284,18 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-rr-q { font-size: 16px; font-weight: 800; color: #a22b63; }
 .tk-rr-sub { font-size: 13px; line-height: 1.45; color: #5b3a4a; }
 .tk-rr-yn { display: flex; gap: 8px; }
-.tk-rr-yn button { flex: 1 1 0; min-height: 44px; border-radius: 0; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1.5px solid rgba(162, 43, 99, .4); }
+.tk-rr-yn button { flex: 1 1 0; min-height: 44px; border-radius: 14px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1.5px solid rgba(162, 43, 99, .4); }
 .tk-rr-yn button:hover { border-color: #a22b63; }
 .tk-rr-yn button[aria-pressed="true"] { background: #a22b63; border-color: #a22b63; color: #fff; }
 .tk-rr-yn button:disabled { opacity: .6; cursor: default; }
 .tk-rr-no { display: grid; gap: 8px; }
-.tk-rr .tk-rr-link { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 0; text-decoration: none; background: #a22b63; border: 1.5px solid #a22b63; color: #fff; font-size: 14px; font-weight: 700; text-align: center; }
+.tk-rr .tk-rr-link { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 999px; text-decoration: none; background: #a22b63; border: 1.5px solid #a22b63; color: #fff; font-size: 14px; font-weight: 700; text-align: center; }
 .tk-rr .tk-rr-link:hover { background: #861f50; border-color: #861f50; }
 .tk-rr :focus-visible { outline: 2px solid #a22b63; outline-offset: 2px; }
 .tk-rr.tk-rr-done { display: flex; align-items: center; gap: 10px; border-width: 1px; border-color: rgba(162, 43, 99, .3); background: #fdf1f6; font-size: 13.5px; font-weight: 600; }
 .tk-rr-done > svg { color: #a22b63; flex: none; }
 .tk-rr-done > span { flex: 1 1 auto; min-width: 0; }
-.tk-rr-done button { flex: none; min-height: 36px; padding: 0 14px; border-radius: 0; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1px solid rgba(162, 43, 99, .4); }
+.tk-rr-done button { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1px solid rgba(162, 43, 99, .4); }
 .tk-rr-err { font-size: 13px; font-weight: 600; color: #b42318; }
 @media (max-width: 400px) { .tk-defe-k { min-width: 0; width: 100%; } }
 .tk-type.tk-vl { background: #0d0d0d; color: #fff; border-color: #0d0d0d; white-space: normal; }
@@ -349,7 +361,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-bld-plate { border-bottom: 1px solid rgba(11, 31, 22, .12); }
 .tk-card.ev-blood.tk-today::after { background: #0b1f16; }
 .tk-card.ev-blood.tk-live :is(.tk-name, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l) { color: #0b1f16; }
-.tk-card.ev-blood.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-qr-hold span, .tk-ok small, .tk-stages li, .tk-st-s, .tk-reveal) { color: rgba(11, 31, 22, .68); }
+.tk-card.ev-blood.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-qr-hold span, .tk-stages li, .tk-st-s, .tk-reveal) { color: rgba(11, 31, 22, .68); }
 .tk-card.ev-blood.tk-live :is(.tk-num, .tk-dw, .tk-when .go, .tk-cd, .tk-note.go, .tk-ok) { color: #0b1f16; }
 .tk-card.ev-blood.tk-live .tk-note.warn { color: #8a5300; }
 .tk-card.ev-blood.tk-live :is(.tk-head, .tk-rider) { border-color: rgba(11, 31, 22, .12); }

@@ -13,14 +13,17 @@ import { intlOf } from "@/i18n/locales";
 // left, each with its bar (a ladder's next level among them), then every badge (BadgeGrid). Rides led
 // (2026-11-06, the app's season line with its flag) closes Your rides, shown once there is one. With the
 // account's badge requests (reqs; null when the database has none) the grid offers to ask for a badge staff give.
+// The account page's parts (2026-11-09, the booking app's Stats and Badges): `part` "stats" draws Your rides alone,
+// "badges" the closest badges and the grid; without it, both.
 export type RecordText = (typeof T)["en"];
 type Props = {
   locale: string; stats: RideStats | null; led: number; badges: BadgeItem[]; t: RecordText;
   typeName: (type: string) => string; dur: { h: string; hm: string; m: string };
   reqs?: BadgeReq[] | null;
+  part?: "stats" | "badges";
 };
 
-export default function RideRecord({ locale, stats, led, badges, t, typeName, dur, reqs = null }: Props) {
+export default function RideRecord({ locale, stats, led, badges, t, typeName, dur, reqs = null, part }: Props) {
   const day = (iso: string | null | undefined) => {
     const d = iso ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T12:00:00Z` : iso) : null;
     if (!d || Number.isNaN(d.getTime())) return "";
@@ -55,10 +58,11 @@ export default function RideRecord({ locale, stats, led, badges, t, typeName, du
   });
   const choices: AskChoice[] = reqs ? askChoices(badges).map((y) => { const [name, how] = words(y); return { slug: y.slug, name, how, icon: y.icon, color: y.color, level: ladderLevel(y.slug) }; }) : [];
   const near = closestBadges(badges);
-  if (!stats && !led && !badges.length) return null;
+  const mine = part !== "badges", grid = part !== "stats";
+  if (!(mine && (stats || led)) && !(grid && badges.length)) return null;
   return (
     <>
-      {(stats || led > 0) && (
+      {mine && (stats || led > 0) && (
         <div className="myr">
           <p className="myr-h">{t.yourRides}</p>
           {stats && (
@@ -78,7 +82,7 @@ export default function RideRecord({ locale, stats, led, badges, t, typeName, du
           )}
         </div>
       )}
-      {near.length > 0 && (
+      {grid && near.length > 0 && (
         <div className="bd-next">
           <p className="bd-next-h">{t.closest}</p>
           {near.map(({ item, show, n, of }) => {
@@ -98,7 +102,7 @@ export default function RideRecord({ locale, stats, led, badges, t, typeName, du
           })}
         </div>
       )}
-      {views.length > 0 && <BadgeGrid items={views} t={{ badges: t.badges, toEarn: t.toEarn, show: t.show, hide: t.hide, notEarned: t.notEarned, howTo: t.howTo, earned: t.earned, close: t.close, levelOf: t.levelOf, maxLevel: t.maxLevel, levels: t.levels }}
+      {grid && views.length > 0 && <BadgeGrid items={views} t={{ badges: t.badges, toEarn: t.toEarn, show: t.show, hide: t.hide, notEarned: t.notEarned, howTo: t.howTo, earned: t.earned, close: t.close, levelOf: t.levelOf, maxLevel: t.maxLevel, levels: t.levels }}
         ask={reqs ? { reqs, choices, locale } : null} />}
     </>
   );

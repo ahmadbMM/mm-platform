@@ -1,7 +1,7 @@
 // The ticket's words, in English and Arabic, exactly as the booking app writes them (its LANG en/ar
 // keys named beside each); every other language translates the English (src/i18n/tx).
 // queueNumber queueNumLabel · waitlist waitlistLabel · qrHold ticketQrHold · next youreNext ·
-// inQueue inQueueMsg · onBike onBikeNow · underReview/confirmed/confirmedSub/pending/waitlistCue
+// inQueue inQueueMsg · onBike onBikeNow · underReview/confirmed/pending/waitlistCue
 // commCue* · riders/participants reviewRidersLabel/reviewPartLabel · paid/pendingPay/onTheHouse ·
 // total reviewTotalLabel · calendar addToCalendarBtn · directions
 // ticketDirections · meetingPoint meetPointLbl · edit/reschedule/cancel · available availLabel ·
@@ -38,7 +38,6 @@ export const T = {
     underReview: "Reserved - the rider list is being finalised",
     underReviewNb: "Reserved - the participant list is being finalised",
     confirmed: "Your place is confirmed",
-    confirmedSub: "Show this code at the gathering point when you arrive.",
     pending: "Reserved. Waiting for confirmation.",
     waitlistCue: "On the waitlist.",
     riders: "Riders",
@@ -98,6 +97,8 @@ export const T = {
     revealSpotsAt: (n: string) => `Breakfast spot: announced ${n}`,
     // what was bought with the booking (addonsLabel)
     addons: "Add-ons",
+    // a locker on the booking (lkTitle, 2026-11-09)
+    locker: "Locker",
     // a partner's place (queue_entries.partner, 2026-10-17): the site's own line, under the ticket's status
     withDefe: "With Defe",
     // the DEFE 5KM Run (2026-10-18): when the kits go out and the race starts, and "Have you registered for
@@ -194,7 +195,6 @@ export const T = {
     underReview: "تم الحجز - يجري إعداد قائمة المشاركين",
     underReviewNb: "تم الحجز - يجري إعداد قائمة المشاركين",
     confirmed: "تم تأكيد مقعدك",
-    confirmedSub: "اعرض هذا الرمز عند الوصول إلى نقطة التجمع.",
     pending: "تم الحجز، بانتظار التأكيد.",
     waitlistCue: "على قائمة الانتظار.",
     riders: "الركّاب",
@@ -251,6 +251,7 @@ export const T = {
     participantOffer: (n: string) => `عرض للمشاركين: ${n}`,
     revealSpotsAt: (n: string) => `موقع الفطور: يُعلَن عنه ${n}`,
     addons: "الإضافات",
+    locker: "خزانة",
     withDefe: "مع دفء",
     defeKitLabel: "استلام عُدّة السباق",
     defeKitTxt: "جدة بارك · الأربعاء 21 أكتوبر · 4–10 م",

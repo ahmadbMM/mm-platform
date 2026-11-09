@@ -206,6 +206,43 @@ export function rideStats(rows: TicketRow[], sessions: Map<string, RecordSession
   };
 }
 
+/** The nights the record counts: one row per session, the rider's own (the lowest number), completed
+ *  (rideCompleted); bike nights only unless `all`. */
+function recordNights(rows: TicketRow[], sessions: Map<string, RecordSession>, all = false): TicketRow[] {
+  const nights = new Map<string, TicketRow>();
+  for (const r of rows) {
+    if ((!all && !onBike(r.sessionId, sessions)) || !rideCompleted(r, !!sessions.get(r.sessionId)?.freeRide)) continue;
+    const c = nights.get(r.sessionId);
+    if (!c || (r.queueNum ?? 0) < (c.queueNum ?? 0)) nights.set(r.sessionId, r);
+  }
+  return [...nights.values()];
+}
+
+/** More of the record on Stats (the booking app's _myrMore, the owner, 2026-11-09: "add more stats"): rides by
+ *  month over the last twelve months on the KSA calendar, this month last; rides by bike type (not Any or None, an
+ *  own bike by its name); and sessions by kind, bike-free ones too (a pool session counts there, never as a ride),
+ *  a session the page could not read left out. Counted in nights, as Your rides is. Each list runs most first, a
+ *  tie by its name (`name`, in the reader's language). */
+export type RideMore = { months: { ym: string; n: number }[]; byType: [string, number][]; byKind: [RideKind, number][] };
+export function rideMore(rows: TicketRow[], sessions: Map<string, RecordSession>, today: string,
+  name: { type: (t: string) => string; kind: (k: RideKind) => string; locale?: string }): RideMore {
+  const N = recordNights(rows, sessions), y = Number(today.slice(0, 4)), m = Number(today.slice(5, 7)) - 1;
+  const per = new Map<string, number>();
+  for (const r of N) per.set(r.date.slice(0, 7), (per.get(r.date.slice(0, 7)) ?? 0) + 1);
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const ym = new Date(Date.UTC(y, m - 11 + i, 1)).toISOString().slice(0, 7);
+    return { ym, n: per.get(ym) ?? 0 };
+  });
+  const count = <K extends string>(keys: K[], label: (k: K) => string): [K, number][] => {
+    const c = new Map<K, number>();
+    for (const k of keys) c.set(k, (c.get(k) ?? 0) + 1);
+    return [...c.entries()].sort((a, b) => b[1] - a[1] || label(a[0]).localeCompare(label(b[0]), name.locale));
+  };
+  const byType = count(N.map((r) => r.type).filter((t): t is string => !!t && t !== "Any" && t !== "None"), name.type);
+  const byKind = count(recordNights(rows, sessions, true).map((r) => sessions.get(r.sessionId)?.kind).filter((k): k is RideKind => !!k), name.kind);
+  return { months, byType, byKind };
+}
+
 /** Rides led (the booking app's _ledN, 2026-11-06): the bike nights staff marked the rider as the ride's
  *  lead (led_at) and the rider was checked in, on the bike or done; a no-show, or a lead still waiting,
  *  never counts. One night counts once. */

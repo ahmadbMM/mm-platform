@@ -2,7 +2,8 @@
 // and the database is reached through /api only. The one thing from elsewhere is Cloudflare Web
 // Analytics (named in the Privacy Notice): Cloudflare adds its beacon to the page on this zone. No
 // inline script or style anywhere, so the policy needs no 'unsafe-inline'. The camera is for
-// scanning tickets, and only this page may ask for it.
+// scanning tickets, and only this page may ask for it. The service worker (/sw.js) and the manifest are the Worker's
+// own files too: the worker shows phone notifications and nothing else (the volunteer rework, 2026-11-09).
 
 export const CSP = [
   "default-src 'self'",
@@ -12,6 +13,8 @@ export const CSP = [
   "font-src 'self'",
   "connect-src 'self' https://cloudflareinsights.com",
   "media-src 'self' blob:",
+  "worker-src 'self'",
+  "manifest-src 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "base-uri 'none'",

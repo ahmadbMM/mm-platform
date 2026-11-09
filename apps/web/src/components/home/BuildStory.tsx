@@ -47,7 +47,7 @@ export default function BuildStory({ eyebrow, title, steps }: { eyebrow: string;
     <section className="hm-story" ref={wrap} aria-label={title}>
       <div className="hm-story-stage">
         {steps.map((s, i) => (
-          <span key={i} aria-hidden="true" className="hm-story-layer" style={{ backgroundImage: `url('${bg(s.image)}')`, opacity: i === idx ? 1 : 0 }} />
+          <span key={i} aria-hidden="true" className="hm-story-layer" data-bg={`url('${bg(s.image)}')`} style={{ opacity: i === idx ? 1 : 0 }} />
         ))}
         <span aria-hidden="true" className="hm-story-shade" />
         <div className="hm-story-copy">

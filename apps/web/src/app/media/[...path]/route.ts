@@ -48,6 +48,10 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
   const w = new URL(req.url).searchParams.get("w") ?? "";
   const small = WIDTHS.has(w) && /\.(jpe?g|png|webp)$/i.test(rel) ? rel.replace(/\.(jpe?g|png|webp)$/i, `.w${w}.webp`) : "";
   let res = small ? await fromStorage(base + small) : null;
+  // A PNG narrower than 1280 px has no 1280 copy (the staff page never makes one larger than the
+  // photo), so ?w=1280 used to send the whole PNG - 1.8 MB for Home's "Ride with us" card. Its 640
+  // copy is sent instead: a little softer on a sharp screen, a twentieth of the weight.
+  if (small && (!res || !res.ok) && w === "1280" && /\.png$/i.test(rel)) res = await fromStorage(base + rel.replace(/\.png$/i, ".w640.webp"));
   if (!res || !res.ok) res = await fromStorage(base + rel);
   if (!res) return new Response("The photo could not be fetched", { status: 504, headers: { "cache-control": "no-store" } });
   if (!res.ok) return new Response("Not found", { status: 404, headers: { "cache-control": "public, max-age=60" } });

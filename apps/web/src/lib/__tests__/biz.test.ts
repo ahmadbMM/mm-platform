@@ -165,10 +165,11 @@ describe("the rating's 'tell us why' follows rg_low", () => {
     expect(f.mock.calls.some((c) => String(c[0]).includes("/rpc/customer_booking_update"))).toBe(true);
     resetSiteContent(); vi.unstubAllEnvs(); vi.unstubAllGlobals();
   });
-  it("says the setting in the form's line, in every language", () => {
-    for (const [code, w] of Object.entries(RATING_WORDS)) expect(w.sub.match(/\{0\}/g), code).toHaveLength(1);
+  it("draws no instruction line over the scores, in any language (the user, 2026-11-09)", () => {
+    for (const [code, w] of Object.entries(RATING_WORDS)) expect("sub" in w, code).toBe(false);
     const html = renderToStaticMarkup(createElement(Tx, { locale: "en", dict: null }, createElement(RatingForm, { entryId: "q1", form: "rental", noBike: false, rgLow: 6, onRated: () => {} })));
-    expect(html).toContain("For anything 6 or under, tell us why");
+    expect(html).not.toContain("rg-sub-text");
+    expect(html).not.toContain("tell us why");
   });
 });
 

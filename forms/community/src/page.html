@@ -92,7 +92,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .brand { align-items: center; }
 .lang-wrap {
   position: relative; display: inline-flex; align-items: center; gap: 8px;
-  min-height: 42px; padding: 0 14px 0 16px; border-radius: 0;
+  min-height: 42px; padding: 0 14px 0 16px; border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.3); background: transparent; color: var(--ink);
   font-weight: 700; font-size: 14px; cursor: pointer; transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
@@ -149,7 +149,7 @@ html[dir="rtl"] .step { animation-name: step-in-rtl; }
 .sessions { display: flex; flex-direction: column; gap: 10px; }
 .session {
   display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 4px 14px; text-align: start;
-  min-height: 64px; padding: 12px 16px; border-radius: 0; border: 1px solid var(--line); background: #fff;
+  min-height: 64px; padding: 12px 16px; border-radius: 16px; border: 1px solid var(--line); background: #fff;
   transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 .session:hover { border-color: var(--ink); }
@@ -167,7 +167,7 @@ html[dir="rtl"] .step { animation-name: step-in-rtl; }
 .actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
 .actions .submit { flex: 1; margin-top: 0; }
 .back {
-  display: inline-flex; align-items: center; gap: 6px; min-height: 56px; padding: 0 18px; border-radius: 0;
+  display: inline-flex; align-items: center; gap: 6px; min-height: 56px; padding: 0 18px; border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.3); background: transparent; color: var(--ink); font-weight: 700; font-size: 15px;
   transition: border-color 0.25s ease;
 }
@@ -184,7 +184,7 @@ html[dir="rtl"] .back-arrow { transform: scaleX(-1); }
 }
 @keyframes banner-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
 .banner[hidden] { display: none; }
-.banner-close { min-height: 36px; padding: 0 14px; border: 1px solid rgba(179, 38, 30, 0.45); border-radius: 0; background: transparent; color: var(--red); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.banner-close { min-height: 36px; padding: 0 14px; border: 1px solid rgba(179, 38, 30, 0.45); border-radius: 999px; background: transparent; color: var(--red); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
 .banner-close:hover { background: rgba(179, 38, 30, 0.08); }
 
 /* Fields */
@@ -240,7 +240,7 @@ input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px r
 /* Tiles */
 .types { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .tile {
-  min-height: 52px; border-radius: 0; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.03);
+  min-height: 52px; border-radius: 999px; border: 1px solid var(--line); background: rgba(0, 0, 0, 0.03);
   font-weight: 700; font-size: 15px; color: #2b332d;
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
@@ -251,7 +251,7 @@ input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px r
 /* Submit */
 .submit {
   display: flex; align-items: center; justify-content: center; gap: 10px;
-  width: 100%; min-height: 56px; margin-top: 10px; border: 0; border-radius: 0;
+  width: 100%; min-height: 56px; margin-top: 10px; border: 0; border-radius: 999px;
   background: var(--green); color: #fbf9f4; font-weight: 700; font-size: 16px;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -342,7 +342,7 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 .field.warned .warn { display: block; }
 .field.warned input, .field.warned .sel-wrap select { border-color: #e08828; }
 .fix {
-  align-self: flex-start; min-height: 40px; padding: 0 16px; border-radius: 0; border: 1px solid var(--green);
+  align-self: flex-start; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--green);
   background: rgba(7, 122, 75, 0.06); color: var(--green); font-weight: 700; font-size: 14px;
 }
 .fix[hidden] { display: none; }
@@ -371,7 +371,7 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 .pv-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
 .pv-title { margin: 0; font-size: 22px; letter-spacing: -0.4px; }
 .pv-upd { color: var(--faint); font-size: 13px; font-weight: 600; margin-top: 2px; }
-.pv-x { flex: none; width: 40px; height: 40px; border-radius: 0; border: 1px solid var(--line); background: #fff; font-size: 22px; line-height: 1; }
+.pv-x { flex: none; width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: #fff; font-size: 22px; line-height: 1; }
 .pv-x:hover { border-color: var(--green); color: var(--green); }
 .pv-note { margin: 0 0 12px; padding: 10px 12px; border-radius: 10px; background: var(--chip); font-size: 13.5px; font-weight: 600; }
 .pv-note[hidden] { display: none; }
@@ -416,7 +416,7 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 .loading-note[hidden] { display: none; }
 .spinner-dark { width: 18px; height: 18px; border-radius: 50%; border: 2.5px solid rgba(0, 0, 0, 0.12); border-top-color: var(--green); animation: spin 0.8s linear infinite; }
 .card[data-state="loading"] .step, .card[data-state="loading"] .actions { display: none; }
-.banner-act { flex: none; min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 0; background: var(--red); color: #fff; font-size: 13px; font-weight: 700; }
+.banner-act { flex: none; min-height: 36px; padding: 0 14px; display: inline-flex; align-items: center; border-radius: 999px; background: var(--red); color: #fff; font-size: 13px; font-weight: 700; }
 .banner-act:hover { color: #fff; opacity: 0.9; }
 .banner-act[hidden] { display: none; }
 .banner-text { flex: 1; }
@@ -434,7 +434,7 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
 .em-sub { margin-bottom: 14px; }
 .em2 { margin-top: 6px; padding-top: 16px; border-top: 1px dashed var(--line); }
 .em-add {
-  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 0;
+  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px;
   border: 1px solid var(--line); background: transparent; color: var(--green); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
 }
 .em-add:hover { background: rgba(7, 122, 75, 0.08); }
@@ -490,7 +490,7 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
   <section id="card" class="card" data-state="form">
     <div id="banner" class="banner" role="alert" hidden>
       <span class="banner-text"></span>
-      <a id="banner-signin" class="banner-act" href="https://micromobilityrentals.pages.dev/?handoff=community" data-site="authLogin" hidden>Sign in</a>
+      <a id="banner-signin" class="banner-act" href="https://experiences.micromobility.sa/?handoff=community" data-site="authLogin" hidden>Sign in</a>
       <button class="banner-close" type="button" data-t="Dismiss">Dismiss</button>
     </div>
 
@@ -534,14 +534,14 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
           </div>
           <div id="si-temp" class="acct-note si-temp" role="status" hidden>
             <span><b class="acct-title" data-t="Finish signing in on the booking site">Finish signing in on the booking site</b><span class="acct-sub" data-t="Your account has a temporary password. Choose your own on the booking site, then come back to this page.">Your account has a temporary password. Choose your own on the booking site, then come back to this page.</span>
-              <a id="si-temp-a" class="pv-link" href="https://micromobilityrentals.pages.dev/?handoff=community" data-t="Open the booking site">Open the booking site</a></span>
+              <a id="si-temp-a" class="pv-link" href="https://experiences.micromobility.sa/?handoff=community" data-t="Open the booking site">Open the booking site</a></span>
           </div>
           <button id="login" class="submit" type="button">
             <span class="spinner" aria-hidden="true"></span>
             <span class="submit-label" data-site="authLogin">Sign in</span>
             <span class="submit-busy" data-t="Signing in...">Signing in...</span>
           </button>
-          <p class="have-acct"><a id="signin-link2" class="pv-link" href="https://micromobilityrentals.pages.dev/?handoff=community" data-t="Forgot your password, or signed up with Google or Apple? Sign in on the booking site">Forgot your password, or signed up with Google or Apple? Sign in on the booking site</a></p>
+          <p class="have-acct"><a id="signin-link2" class="pv-link" href="https://experiences.micromobility.sa/?handoff=community" data-t="Forgot your password, or signed up with Google or Apple? Sign in on the booking site">Forgot your password, or signed up with Google or Apple? Sign in on the booking site</a></p>
         </div>
       </fieldset>
 
@@ -755,7 +755,7 @@ html[dir="rtl"] .sel-wrap select { padding: 0 16px 0 40px; }
       </div>
       <h1 class="title" data-t="You are already a community member">You are already a community member</h1>
       <p class="result" data-t="Your account is already part of the Micromobility community. You can book the community rides on the booking site.">Your account is already part of the Micromobility community. You can book the community rides on the booking site.</p>
-      <a id="member-go" class="submit member-go" href="https://micromobilityrentals.pages.dev/" data-t="Open the booking site">Open the booking site</a>
+      <a id="member-go" class="submit member-go" href="https://experiences.micromobility.sa/" data-t="Open the booking site">Open the booking site</a>
     </div>
 
     <div id="success" class="success" hidden tabindex="-1">
@@ -2227,7 +2227,7 @@ var MMAccount = (function () {
   var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
   var LANG_KEY = "mm-community-lang";
   // The booking site: where an existing account signs in (it hands the rider back here signed in).
-  var BOOKING_URL = "https://micromobilityrentals.pages.dev/";
+  var BOOKING_URL = "https://experiences.micromobility.sa/";
 
   var SH = window.SHARED, T = window.FORM_T || {};
   var html = document.documentElement;

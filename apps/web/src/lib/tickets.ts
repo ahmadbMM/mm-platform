@@ -53,7 +53,25 @@ export type TicketRow = {
   vlTicket?: "have" | "buy" | null;
   /** When the transfer receipt came in (queue_entries.vl_receipt_at, ISO), else null. */
   vlReceiptAt?: string | null;
+  /** The promo code the row was booked with (queue_entries.promo_code) and the Saturday ride code (ride_code, rentals
+   *  20261108120000), else null: the ticket names each with its kind (codeKindOf; the booking app's _codeRowHtml, 2026-11-08). */
+  promoCode?: string | null; rideCode?: string | null;
 };
+/** The kinds of code a booking used (the booking app's _codeKindOf): the friend's referral discount (RW-), the referrer's
+ *  free ride (RF-) and bonus (RB-), the blood donation free ride (BD-), a volunteer's free ride for an event worked (VL-,
+ *  rentals 20261109120000, on the blood donors' rules), a code staff made, and a Saturday ride code. */
+export type CodeKind = "promo" | "rw" | "rf" | "rb" | "bd" | "vl" | "sat";
+export function codeKindOf(code: string): Exclude<CodeKind, "sat"> {
+  const p = code.slice(0, 3).toUpperCase();
+  return p === "RW-" ? "rw" : p === "RF-" ? "rf" : p === "RB-" ? "rb" : p === "BD-" ? "bd" : p === "VL-" ? "vl" : "promo";
+}
+/** A row's codes, as the ticket shows them: [kind, code]. */
+export function rowCodes(r: Pick<TicketRow, "promoCode" | "rideCode">): [CodeKind, string][] {
+  const out: [CodeKind, string][] = [];
+  if (r.promoCode) out.push([codeKindOf(r.promoCode), r.promoCode]);
+  if (r.rideCode) out.push(["sat", r.rideCode]);
+  return out;
+}
 /** The distances a Run for Her runner picks from (the booking app's RUN_KMS). */
 export const RUN_KMS: readonly number[] = [3, 5];
 export type TicketSession = {
@@ -135,6 +153,9 @@ export function ticketRow(r: Row): TicketRow | null {
     ...(ah !== undefined ? { ah } : {}),
     raceReg: r.race_reg === "yes" || r.race_reg === "no" ? r.race_reg : null,
     ...("vl_ticket" in r ? { vlTicket: r.vl_ticket === "have" || r.vl_ticket === "buy" ? r.vl_ticket : null, vlReceiptAt: S(r.vl_receipt_at) || null } : {}),
+    // the codes it was booked with (2026-11-08): letters, digits and dashes as the database keeps them, else none
+    promoCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.promo_code)) ? S(r.promo_code) : null,
+    rideCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.ride_code)) ? S(r.ride_code) : null,
   };
 }
 
@@ -164,14 +185,40 @@ export type AddonItem = { name: string; price: number | null };
 /** One add-on as the ticket lists it (the booking app's addonLineItems): whose it is, its name, how
  *  many, and the line's amount - the price it was sold at, else the item's price today; null when
  *  neither is known (the inventory could not be read), and then the ticket shows no total. */
-export type AddonLine = { rowId: string; rider: string; name: string; qty: number; amount: number | null };
+export type AddonLine = { rowId: string; rider: string; name: string; qty: number; amount: number | null; locker: boolean };
 const r2 = (n: number) => Math.round(n * 100) / 100;
 export function addonLines(rows: Pick<TicketRow, "id" | "name" | "addonLines">[], items: Map<string, AddonItem> | null): AddonLine[] {
   return rows.flatMap((r) => r.addonLines.map((a) => {
     const it = items?.get(a.id);
     const each = a.p ?? it?.price ?? null;
-    return { rowId: r.id, rider: r.name, name: it?.name || a.id, qty: a.qty, amount: each === null ? null : r2(each * a.qty) };
+    const locker = a.id === LOCKER_LINE; // the card names it (lockerText): it is no inventory item
+    return { rowId: r.id, rider: r.name, name: locker ? "" : it?.name || a.id, qty: a.qty, amount: each === null ? null : r2(each * a.qty), locker };
   }));
+}
+
+// A locker (the booking app's lockers, rentals 20261109120000): the database writes its fee on the booking as an
+// add-on line {"id":"locker"}, so the total already counts it; customer_lockers says the period and, once staff gave
+// one at the desk, the locker's number. The periods: 18-20 and 21-23 (or both) on a JCC night, 19-21 on a Petromin night.
+export const LOCKER_LINE = "locker";
+export type TicketLocker = { period: string; code: string | null; status: string };
+const LOCKER_TIMES: Record<string, [string, string]> = { early: ["18:00", "20:00"], late: ["21:00", "23:00"], both: ["18:00", "23:00"], pm: ["19:00", "21:00"] }; // both: one span, 6 PM - 11 PM (the owner, 2026-11-09)
+/** customer_lockers' rows by booking, the ones not cancelled; an empty map when the answer is not a list. */
+export function lockersOf(data: unknown): Map<string, TicketLocker> {
+  const out = new Map<string, TicketLocker>();
+  if (!Array.isArray(data)) return out;
+  for (const x of data) {
+    if (!x || typeof x !== "object") continue;
+    const o = x as Record<string, unknown>;
+    if (typeof o.booking_id !== "string" || typeof o.period !== "string" || o.status === "cancelled") continue;
+    out.set(o.booking_id, { period: o.period, code: typeof o.code === "string" && o.code ? o.code : null, status: String(o.status ?? "") });
+  }
+  return out;
+}
+/** "Locker · 9 PM - 11 PM · P7", as the booking app's ticket says it: the word, the period once known, the number once given. */
+export function lockerText(word: string, lk: TicketLocker | undefined, locale: string): string {
+  if (!lk) return word;
+  const span = (p: string) => (LOCKER_TIMES[p] ? `${fmtClock(LOCKER_TIMES[p][0], locale)} - ${fmtClock(LOCKER_TIMES[p][1], locale)}` : "");
+  return [word, span(lk.period), lk.code].filter(Boolean).join(" · ");
 }
 
 /** What the add-ons come to, or null when a line's amount is not known: the total then cannot be said. */
