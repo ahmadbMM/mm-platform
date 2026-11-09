@@ -21,7 +21,7 @@ export function formAddress(pathname: string): string | null {
 // the form; the user, 2026-11-09). The others still answer with the page their build writes (app/<address>/route.ts), and
 // every one of them does with ?classic=1, kept while the website's pages settle in. Either way a form opens whatever
 // Coming Soon says (the page itself answers with the form's own while the site is closed: components/forms/FormPage.tsx).
-export const SITE_FORMS: readonly string[] = ["/community/registration"];
+export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin"];
 export const formOnSite = (form: string, params: URLSearchParams) => SITE_FORMS.includes(form) && !params.has("classic");
 
 // micromobility.sa/store opens the online store (a hosted Salla shop, on its own domain), at the

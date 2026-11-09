@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { setLang } from './lang';
 
 // Bug hunt 2026-10-14: the second step checks what the database checks, Enter is Continue, one
 // registration at a time, the ticket's code is a canvas, and the hidden names are translated.
@@ -73,9 +74,9 @@ test.describe('@bh14 petromin form', () => {
   test('names nobody sees follow the language', async ({ page }) => {
     await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
     await page.goto('/petromin?lang=ar');
-    await expect(page.locator('#lang')).toHaveAttribute('aria-label', 'اللغة');
+    if (await page.locator('#lang').count()) await expect(page.locator('#lang')).toHaveAttribute('aria-label', 'اللغة');
     await expect(page.locator('#sessions')).toHaveAttribute('aria-label', 'الجلسة');
-    await page.locator('#lang').selectOption('fr');
+    await setLang(page, 'fr');
     await expect(page.locator('#stepper')).toHaveAttribute('aria-label', 'Progression');
     await expect(page.locator('.banner-close')).not.toHaveAttribute('aria-label', /.+/);
   });

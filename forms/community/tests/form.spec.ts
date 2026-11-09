@@ -777,7 +777,10 @@ test('a second emergency contact is optional, needs all three boxes, and not the
   expect(of('customer_set_emergency2')).toHaveLength(0);
   expect(errs).toEqual([]);
 
-  // a second visitor on a device of their own: the first one's answers kept on this one (mm-community-draft) are not theirs
+  // a second visitor on a device of their own: the first one's answers kept on this one (mm-community-draft) are not theirs.
+  // The first page is closed first: it writes its draft as it is hidden or closed, which on the website's page (whose
+  // scripts run once the page is drawn) could land after the second page has cleared it and before its form reads it.
+  await page.close();
   const p2 = await page.context().newPage();
   await p2.addInitScript(() => { try { localStorage.removeItem('mm-community-draft'); } catch (e) { /* none */ } });
   const b = await open(p2);

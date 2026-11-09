@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { setLang } from './lang';
 
 // Names hold letters, spaces and periods, as on the rentals site: a dash becomes a space
 // ("Al-Harbi" is "Al Harbi"), digits, emoji and other signs are dropped as they are typed, and a
@@ -160,7 +161,7 @@ test('every word of a name has two letters: an initial is refused, for the emplo
   await page.click('#submit');
   await expect(companion.locator('.rider-name .err')).toHaveText("Write the rider's name in full, not initials");
   expect(regs).toHaveLength(0);
-  await page.selectOption('#lang', 'ar');
+  await setLang(page, 'ar');
   await page.click('#submit');
   await expect(companion.locator('.rider-name .err')).toHaveText('اكتب اسم الراكب كاملًا، لا الأحرف الأولى فقط');
   await companion.locator('.rider-name input').fill('Sara Ali');

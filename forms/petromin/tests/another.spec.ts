@@ -84,7 +84,7 @@ test('a confirmation whose ride is over gives way to one of the other registrati
 const WORDS = ['Register another', 'Other registrations on this phone',
   'The ride waiver has changed. Reload this page to read and accept the new one.',
   'This booking is already paid, so it cannot move to a session with a different price. Ask the desk to change it.'];
-for (const lang of ['ar', 'ur', 'fr', 'es', 'pt', 'hi', 'ne', 'tl', 'bn']) {
+for (const lang of ['ar', 'ur', 'fr', 'es', 'pt', 'hi', 'ne', 'tl', 'bn', 'id', 'ms', 'de', 'ru', 'zh', 'ja']) {
   test(`Register another, the phone's other registrations and the new refusals read in ${lang}`, async ({ page }) => {
     await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
     await page.goto(`/petromin?lang=${lang}`, { waitUntil: 'networkidle' });

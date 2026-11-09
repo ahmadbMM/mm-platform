@@ -121,14 +121,15 @@ test('Urdu reads right to left, with the booking app\'s Urdu waiver', async ({ p
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await fillToLastStep(page, 'ur');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  await expect(page.locator('#lang')).toHaveValue('ur');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ur');
+  if (await page.locator('#lang').count()) await expect(page.locator('#lang')).toHaveValue('ur');
   await expect(page.locator('#form .title')).toHaveText('ملازمین کے لیے سائیکل رجسٹریشن فارم');
   await expect(page.locator('#f-waiver .label')).toHaveText('رائیڈ ویور');
   await expect(page.locator('#waiver-text')).toContainText('اس اقرار نامے کو پڑھ کر اس سے اتفاق کیے بغیر');
   await expect(page.locator('#waiver-text')).toContainText('دوسروں کو یا ان کی املاک کو');
 });
 
-for (const lang of ['ar', 'ur', 'fr', 'es', 'pt', 'hi', 'ne', 'tl', 'bn']) {
+for (const lang of ['ar', 'ur', 'fr', 'es', 'pt', 'hi', 'ne', 'tl', 'bn', 'id', 'ms', 'de', 'ru', 'zh', 'ja']) {
   test(`every waiver string has a ${lang} translation`, async ({ page }) => {
     await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
     await page.goto(`/petromin?lang=${lang}`, { waitUntil: 'networkidle' });
