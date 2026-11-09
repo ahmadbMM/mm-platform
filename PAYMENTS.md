@@ -31,7 +31,8 @@ Never online: free rides, races (Victory Lap, Arena Heros: the organiser's money
    status in that address is never believed: the server fetches the payment from Moyasar with the secret key and
    calls `pay_settle`, which checks it is ours, in SAR, for exactly our amount, then applies it. Idempotent.
 4. The same happens from Moyasar's webhook (`/api/pay/webhook`, secret token compared in constant time, then the
-   payment fetched again) and from the reconcile run every 5 minutes (worker.js `scheduled`), which asks Moyasar
+   payment fetched again) and from the reconcile run every 5 minutes (site.js `scheduled`, on the site's own Worker
+   behind the front), which asks Moyasar
    for every payment carrying an unpaid `pay_id`. Whichever comes first settles it; the others change nothing.
 5. pg_cron `mm-pay-tick` (every minute) expires a payment 2 minutes after its hold and lets go of what it held
    (bookings cancelled with `cancel_reason 'unpaid'`, stock put back, lockers freed). Money that arrives later is
@@ -63,7 +64,8 @@ The hourly live-to-staging copy never touches `pay.*` and `store.*` (scripts/sta
 3. Repository secrets (GitHub > ahmadbMM/mm-platform > Settings > Secrets and variables > Actions):
    `STAGING_MOYASAR_PUBLISHABLE_KEY` (pk_test_...), `STAGING_MOYASAR_SECRET_KEY` (sk_test_...),
    `STAGING_MOYASAR_WEBHOOK_SECRET` (any long random text, also typed into Moyasar below). The next staging deploy
-   uploads them to the Worker (CI "Payment keys for staging").
+   uploads them to the site's Worker, micromobility-web-staging-site (CI "Payment keys for staging"); re-run the
+   staging workflow after adding them.
 4. Moyasar dashboard > Settings > Webhooks > Add: URL `https://staging.micromobility.sa/api/pay/webhook`, method POST,
    Secret Token = the same text as `STAGING_MOYASAR_WEBHOOK_SECRET`, events: payment_paid, payment_failed,
    payment_refunded, payment_voided (or all).
