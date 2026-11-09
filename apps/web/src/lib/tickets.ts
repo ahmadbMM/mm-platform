@@ -216,6 +216,24 @@ export function lockersOf(data: unknown): Map<string, TicketLocker> {
   }
   return out;
 }
+/** The rider's own lockers with no booking behind them (customer_lockers; the lockers page, or staff renting one to the
+ *  account), today on, reserved or in use, soonest first: on that evening's ride ticket and in My Account's Your lockers,
+ *  as the booking app's My bookings (_lkOwnHtml) and ticket (_lkTkHtml) show them (2026-11-09). */
+export type OwnLocker = { id: string; day: string; period: string; code: string | null; name: string; status: string; pay: string | null; paid: boolean };
+export function ownLockersOf(data: unknown, today: string): OwnLocker[] {
+  if (!Array.isArray(data)) return [];
+  const out: OwnLocker[] = [];
+  for (const x of data) {
+    if (!x || typeof x !== "object") continue;
+    const o = x as Record<string, unknown>;
+    if (o.booking_id != null || typeof o.id !== "string" || typeof o.period !== "string") continue;
+    const day = String(o.day ?? "").slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(day) || day < today || (o.status !== "reserved" && o.status !== "in_use")) continue;
+    out.push({ id: o.id, day, period: o.period, code: typeof o.code === "string" && o.code ? o.code : null, name: typeof o.name === "string" ? o.name : "",
+      status: String(o.status), pay: typeof o.pay === "string" ? o.pay : null, paid: o.paid === true });
+  }
+  return out.sort((a, b) => (a.day < b.day ? -1 : a.day > b.day ? 1 : 0));
+}
 /** "Locker · 9 PM - 11 PM · P7", as the booking app's ticket says it: the word, the period once known, the number once given. */
 export function lockerText(word: string, lk: TicketLocker | undefined, locale: string): string {
   if (!lk) return word;

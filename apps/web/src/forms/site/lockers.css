@@ -308,28 +308,53 @@ html[lang="ar"] .mmf-lockers .landing .title { font-size: clamp(40px, 4.4vw, 56p
 .mmf-lockers .sw.st-out { background: var(--door-dim2); border-style: dashed; }
 .mmf-lockers .pick-sum { margin: 0; text-align: center; font-weight: 700; font-size: 15px; }
 .mmf-lockers #f-cab.invalid .err { text-align: center; }
-.mmf-lockers .mine { display: grid; gap: 8px; }
+.mmf-lockers .mine { display: grid; gap: 10px; }
 .mmf-lockers .sec-h { margin: 0; font: 800 12px var(--f-display); letter-spacing: .09em; text-transform: uppercase; color: var(--mute); }
 html[lang="ar"] .mmf-lockers .sec-h { font-family: var(--f-ar); letter-spacing: 0; font-size: 13.5px; }
-.mmf-lockers .mine-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.mmf-lockers .mine-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: var(--surface); }
-.mmf-lockers .mine-n { flex: none; display: grid; place-items: center; width: 44px; height: 40px; border: 1px solid var(--door-edge); border-radius: 6px; background: linear-gradient(165deg, var(--door-hi), var(--door)); font: 900 19px var(--f-display); font-stretch: 112%; }
-.mmf-lockers .mine-n svg { width: 16px; height: 16px; color: var(--mute); }
-.mmf-lockers .mine-t { flex: 1; display: grid; min-width: 0; }
-.mmf-lockers .mine-t b { font-size: 14.5px; }
-.mmf-lockers .mine-t small { color: var(--mute); font-size: 13px; overflow-wrap: anywhere; }
+.mmf-lockers .mine-list { display: grid; gap: 12px; }
+.mmf-lockers .desk { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); box-shadow: 0 10px 24px -20px rgba(0, 0, 0, .5); }
+.mmf-lockers .desk-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.mmf-lockers .desk-head { display: grid; gap: 2px; min-width: 0; }
+.mmf-lockers .desk-h { margin: 0; font: 900 19px var(--f-display); font-stretch: 112%; text-transform: uppercase; line-height: 1.1; }
+html[lang="ar"] .mmf-lockers .desk-h { font-family: var(--f-ar); font-weight: 700; font-size: 19px; text-transform: none; }
+.mmf-lockers .desk-when { margin: 0; color: var(--accent); font-weight: 700; font-size: 14px; }
+.mmf-lockers .desk-qr { flex: none; display: block; width: 148px; height: 148px; padding: 0; border-radius: 10px; overflow: hidden; border: 1px solid rgba(26, 25, 25, .14); background: #fff; line-height: 0; }
+.mmf-lockers .desk-qr canvas { display: block; width: 148px; height: 148px; image-rendering: pixelated; }
+.mmf-lockers .desk-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.mmf-lockers .desk-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.mmf-lockers .desk-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.mmf-lockers .desk-n { flex: none; display: grid; place-items: center; min-width: 58px; height: 54px; padding: 0 8px; border: 1px solid var(--door-edge); border-radius: 8px; background: linear-gradient(165deg, var(--door-hi), var(--door)); font: 900 30px var(--f-display); font-stretch: 112%; font-variant-numeric: tabular-nums; direction: ltr; }
+.mmf-lockers .desk-n svg { width: 20px; height: 20px; color: var(--mute); }
+.mmf-lockers .desk-t { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.mmf-lockers .desk-t b { font-size: 14.5px; overflow-wrap: anywhere; }
+.mmf-lockers .desk-t small { color: var(--mute); font-size: 13px; overflow-wrap: anywhere; }
+.mmf-lockers .desk-t .chip { justify-self: start; }
+.mmf-lockers .desk-acts { flex: none; display: grid; gap: 6px; }
 .mmf-lockers .chip.sm { flex: none; padding: 3px 8px; font-size: 12px; }
 .mmf-lockers .chip.st-use { color: var(--ok); border-color: currentColor; background: var(--surface); }
-.mmf-lockers .mine-x { flex: none; min-height: 36px; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; color: var(--err); font-size: 13px; font-weight: 700; }
+.mmf-lockers .mine-x, .mmf-lockers .mine-chg { min-height: 34px; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; font-size: 13px; font-weight: 700; }
+.mmf-lockers .mine-chg { color: var(--accent); }
+.mmf-lockers .mine-chg:hover { border-color: var(--accent); }
+.mmf-lockers .mine-x { color: var(--err); }
 .mmf-lockers .mine-x:hover { border-color: var(--err); }
-@media (max-width: 380px) {
-.mmf-lockers .mine-row { flex-wrap: wrap; }
-.mmf-lockers .mine-t { flex-basis: calc(100% - 60px); }
-.mmf-lockers .chip.sm { margin-inline-start: 54px; }
+@media (max-width: 400px) {
+.mmf-lockers .desk-top { flex-direction: column; align-items: stretch; }
+.mmf-lockers .desk-qr { align-self: center; }
+.mmf-lockers .desk-row { flex-wrap: wrap; }
+.mmf-lockers .desk-acts { display: flex; width: 100%; margin-inline-start: 70px; }
 }
+.mmf-lockers .chg-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--brand); border-radius: var(--r-ctl); background: var(--wash); }
+.mmf-lockers .chg-title { margin: 2px 0 0; font: 900 21px var(--f-display); font-stretch: 112%; text-transform: uppercase; line-height: 1.1; }
+.mmf-lockers .chg-title:focus { outline: none; }
+html[lang="ar"] .mmf-lockers .chg-title { font-family: var(--f-ar); font-weight: 700; text-transform: none; }
+.mmf-lockers .d-btn.ghost.sm { width: auto; min-height: 38px; padding: 4px 16px; flex: none; }
+.mmf-lockers .who .who-out { margin-inline-start: 6px; font-size: 13.5px; }
+.mmf-lockers .names { display: grid; gap: 12px; }
+.mmf-lockers .terms-line { font-size: 13.5px; }
 .mmf-lockers .amt { white-space: nowrap; }
 .mmf-lockers .modal-box.sm { max-width: 400px; }
 .mmf-lockers .modal-acts { display: grid; gap: 8px; margin-top: 14px; }
 .mmf-lockers .d-btn.danger { background: var(--err); color: var(--surface); }
 .mmf-lockers .vh { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .mmf-lockers .done-view .d-body { gap: 16px; }
+.mmf-lockers .lt-list { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 8px; line-height: 1.5; }

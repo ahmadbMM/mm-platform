@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { NextRequest } from "next/server";
 import proxy, { lockerRiderTarget, staffTapTarget } from "../../proxy";
-import { LOCKER_LINE, addonLines, addonsCost, lockerText, lockersOf } from "../tickets";
+import { LOCKER_LINE, addonLines, addonsCost, lockerText, lockersOf, ownLockersOf } from "../tickets";
 
 // Lockers (the booking app's, rentals 20261109120000; plain numbers 1 to 18 since the lockers page, 20261109220000): a
 // locker's NFC tag or QR label at micromobility.sa/lockers/7 (a tag written before, /lockers/L7) takes a staff phone to
@@ -43,6 +43,18 @@ describe("a locker's tag", () => {
   });
 });
 
+describe("a rider's show-at-desk QR (micromobility.sa/lockers/r/<rental>)", () => {
+  const id = "0b6f2a8e-1c3d-4e5f-8a9b-0c1d2e3f4a5b";
+  it("sends a staff phone to that rider's lockers in the staff app, and a rider's phone to the lockers page", () => {
+    expect(staffTapTarget(`/lockers/r/${id}`, new URLSearchParams(), "1")).toBe(`https://staff.micromobility.sa/?lkr=${id}`);
+    expect(staffTapTarget(`/lockers/r/${id.toUpperCase()}/`, new URLSearchParams(), "1")).toBe(`https://staff.micromobility.sa/?lkr=${id}`);
+    expect(staffTapTarget(`/lockers/r/${id}`, new URLSearchParams(), undefined)).toBeNull();
+    expect(lockerRiderTarget(`/lockers/r/${id}`)).toBe("/lockers");
+    expect(lockerRiderTarget(`/lockers/r/${id}`, new URLSearchParams("lang=ar"))).toBe("/lockers?lang=ar");
+    expect(lockerRiderTarget("/lockers/r/not-a-rental")).toBeNull();
+  });
+});
+
 describe("a ticket's locker line", () => {
   it("is named by the card, counted in the total, and says the period and the number", () => {
     const lines = addonLines([{ id: "q1", name: "Rana", addonLines: [{ id: LOCKER_LINE, qty: 1, p: 15 }, { id: "gel", qty: 2, p: 5 }] }], new Map([["gel", { name: "Gel", price: 5 }]]));
@@ -59,5 +71,24 @@ describe("a ticket's locker line", () => {
     expect(lockerText("Locker", lk.get("q2"), "en")).toBe("Locker · 7 PM - 9 PM");
     expect(lockerText("Locker", undefined, "en")).toBe("Locker");
     expect(lockersOf(null).size).toBe(0);
+  });
+});
+
+describe("the rider's own lockers (no booking behind them)", () => {
+  const rows = [
+    { id: "a", booking_id: null, day: "2099-01-02", period: "early", status: "reserved", code: "7", name: "Sara", pay: "desk", paid: false },
+    { id: "b", booking_id: null, day: "2099-01-01", period: "late", status: "in_use", code: "3", name: "Omar", pay: "wallet", paid: true },
+    { id: "c", booking_id: "q1", day: "2099-01-01", period: "late", status: "reserved", code: "4" },
+    { id: "d", booking_id: null, day: "2098-12-31", period: "late", status: "reserved", code: "5" },
+    { id: "e", booking_id: null, day: "2099-01-03", period: "late", status: "returned", code: "6" },
+  ];
+  it("keeps today on, reserved or in use, with no booking, soonest first", () => {
+    const own = ownLockersOf(rows, "2099-01-01");
+    expect(own.map((l) => l.id)).toEqual(["b", "a"]);
+    expect(own[0]).toEqual({ id: "b", day: "2099-01-01", period: "late", code: "3", name: "Omar", status: "in_use", pay: "wallet", paid: true });
+    expect(ownLockersOf(null, "2099-01-01")).toEqual([]);
+  });
+  it("reads as a ticket line without the word: the time and the number", () => {
+    expect(lockerText("", { period: "early", code: "7", status: "reserved" }, "en")).toBe("6 PM - 8 PM · 7");
   });
 });
