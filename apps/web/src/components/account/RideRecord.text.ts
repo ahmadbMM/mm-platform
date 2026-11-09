@@ -26,6 +26,15 @@ export const T = {
     levelOf: "Level {0} of {1}",
     maxLevel: "Top level reached",
     levels: "Levels",
+    // the account's three parts (the booking app's tabAccount, ahTabStats, mrBadgesTitle) and Stats' more of the record (myr*)
+    account: "Account",
+    stats: "Stats",
+    months: "Rides by month",
+    byBike: "Rides by bike",
+    byEvent: "By event",
+    badgesEarned: "Badges earned",
+    none: "No rides yet.",
+    rides: (n: string) => `${n} ${n === "1" ? "ride" : "rides"}`,
     names: {
       first_lap: ["First Lap", "Completed your first circuit ride", "Every rider's story starts with one lap: the first ride you finished with us."],
       regular: ["Grid Regular", "Completed 5 rides", "In motor racing, the grid is where the cars line up to start. Five rides make you a regular at the start line."],
@@ -139,6 +148,14 @@ export const T = {
     levelOf: "المستوى {0} من {1}",
     maxLevel: "وصلت إلى أعلى مستوى",
     levels: "المستويات",
+    account: "الحساب",
+    stats: "الإحصاءات",
+    months: "الجولات حسب الشهر",
+    byBike: "الجولات حسب الدراجة",
+    byEvent: "حسب الفعالية",
+    badgesEarned: "الأوسمة التي حصلت عليها",
+    none: "لا جولات بعد.",
+    rides: (n: string) => { const k = Number(n) % 100; return `${n} ${k >= 3 && k <= 10 ? "جولات" : "جولة"}`; }, // the booking app's mrRidesU: few, else one
     names: {
       first_lap: ["اللفة الأولى", "أكملت أول رحلة لك في الحلبة", "كل قصة راكب تبدأ بلفة واحدة: أول رحلة أكملتها معنا."],
       regular: ["منتظم الحلبة", "أكملت 5 رحلات", "في سباقات السيارات، الغريد هو خط الانطلاق الذي تصطف عنده السيارات. خمس رحلات تجعلك وجهاً مألوفاً عند خط الانطلاق."],

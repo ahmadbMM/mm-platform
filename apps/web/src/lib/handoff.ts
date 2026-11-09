@@ -2,7 +2,7 @@ import { rpcServer } from "./account";
 import type { Session } from "./account-core";
 
 // The booking app's hand-back (app/api/account/handoff) and the account page's question when it
-// would replace another account (app/[locale]/account/page.tsx). A one-time code is anyone's to pass
+// would replace another account (app/[locale]/account/[[...part]]/page.tsx). A one-time code is anyone's to pass
 // on: opened from a link, it used to sign that browser into the account it was made for, replacing
 // the account already signed in there without a word - and whatever was entered next went to
 // someone else's account. With another account signed in, the session handed over now waits in a

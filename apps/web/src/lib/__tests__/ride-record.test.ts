@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { badgeList, climb, closestBadges, ledRides, perfectWeeks, profilePct, recordRows, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
+import { badgeList, climb, closestBadges, ledRides, perfectWeeks, profilePct, recordRows, rideMore, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
+import RideMore from "@/components/account/RideMore";
+import AccountParts, { accountPartOf } from "@/components/account/AccountParts";
 import Medal from "@/components/account/Medal";
 import RideRecord from "@/components/account/RideRecord";
 import { T as RECORD } from "@/components/account/RideRecord.text";
@@ -500,5 +502,80 @@ describe("Rides led and the Marshal ladder (led_at, 2026-11-06)", () => {
     const html = (n: number) => renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, led: n, badges: [], t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
     expect(html(3)).toContain("Rides led: 3");
     expect(html(0)).toBe("");
+  });
+});
+
+describe("Stats' more of the record (rideMore, the booking app's _myrMore, 2026-11-09)", () => {
+  // today is 1 October 2026: the twelve months run November 2025 to October 2026
+  const ses = new Map<string, RecordSession>([
+    ["2026-10-01", { kind: "jcc", freeRide: false }], ["2026-09-20", { kind: "jcc", freeRide: false }], ["2026-09-05", { kind: "saturday", freeRide: true }],
+    ["2026-07-07", { kind: "jcc", freeRide: false }], ["2025-01-05", { kind: "jcc", freeRide: false }], ["2026-08-10-sw", { kind: "swim", freeRide: true }],
+  ]);
+  const rows = recordRows([
+    row({ session_id: "2026-10-01", type_preference: "Hybrid" }), row({ id: "p2", session_id: "2026-10-01", queue_num: 2, type_preference: "Road" }), // a party: one night, the rider's own row
+    row({ session_id: "2026-09-20", type_preference: "Hybrid" }), row({ session_id: "2026-09-05", paid: false }),
+    row({ session_id: "2026-07-07" }), row({ session_id: "2025-01-05", type_preference: "Own" }),
+    row({ session_id: "2026-08-10-sw", session_date: "2026-08-10", type_preference: "None", paid: false }),
+    row({ session_id: "2026-06-01", status: "noshow" }), // not ridden
+    row({ session_id: "2026-05-05", type_preference: "Any" }), // a session the page could not read: a ride, of no kind
+  ]);
+  const names = { type: (t: string) => t, kind: (k: string) => ({ jcc: "Circuit", saturday: "Saturday", swim: "Pool" } as Record<string, string>)[k] ?? k, locale: "en" };
+  const more = rideMore(rows, ses, today, names);
+  it("counts ride nights by month over the last twelve, this month last; the pool is not a ride", () => {
+    expect(more.months.map((x) => x.ym)).toEqual(["2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07", "2026-08", "2026-09", "2026-10"]);
+    expect(more.months.map((x) => x.n)).toEqual([0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 2, 1]);
+  });
+  it("counts rides by bike type, an own bike by its name, never Any or None, most first and a tie by name", () => {
+    expect(more.byType).toEqual([["Hybrid", 2], ["Road", 2], ["Own", 1]]);
+  });
+  it("counts sessions of every kind by event, the pool too, and leaves out one it could not read", () => {
+    expect(more.byKind).toEqual([["jcc", 4], ["swim", 1], ["saturday", 1]]); // Pool before Saturday: a tie goes by name
+  });
+  it("draws twelve columns, one value on the highest (the latest of a tie), every third month named, and the lists", () => {
+    const html = renderToStaticMarkup(createElement(RideMore, { locale: "en", more, t: RECORD.en, typeName: (x: string) => x, kindName: names.kind, earned: { n: 4, of: 30, href: "/account/badges" } }));
+    expect(html.match(/<li /g)).toHaveLength(12);
+    expect(html.match(/class="myr-mo-v"/g)).toHaveLength(1);
+    expect(html).toContain('<span class="myr-mo-v">2</span>');
+    expect(html).toContain('title="September 2026 · 2 rides"');
+    expect(html).toContain('title="October 2026 · 1 ride"');
+    expect(html.match(/class="myr-mo-b"/g)).toHaveLength(4);
+    expect([...html.matchAll(/<span class="myr-mo-l" aria-hidden="true">([^<]*)<\/span>/g)].map((m) => m[1])).toEqual(["", "", "Jan", "", "", "Apr", "", "", "Jul", "", "", "Oct"]);
+    for (const w of ["Rides by bike", "By event", "<dt>Circuit</dt><dd>4</dd>", "<dt>Pool</dt><dd>1</dd>", "Badges earned", "4/30", 'href="/account/badges"']) expect(html, w).toContain(w);
+  });
+  it("draws no chart without a ride in the twelve months, and nothing of a list with nothing in it", () => {
+    const html = renderToStaticMarkup(createElement(RideMore, { locale: "en", more: { months: more.months.map((x) => ({ ...x, n: 0 })), byType: [], byKind: [] }, t: RECORD.en, typeName: (x: string) => x, kindName: names.kind, earned: null }));
+    expect(html).toBe("");
+  });
+  it("speaks Arabic: the ride words of the booking app", () => {
+    const html = renderToStaticMarkup(createElement(RideMore, { locale: "ar", more, t: RECORD.ar, typeName: (x: string) => x, kindName: names.kind, earned: null }));
+    for (const w of ["الجولات حسب الشهر", "الجولات حسب الدراجة", "حسب الفعالية", "2 جولة", "1 جولة"]) expect(html, w).toContain(w);
+    expect(RECORD.ar.rides("3")).toBe("3 جولات");
+    expect(RECORD.ar.rides("11")).toBe("11 جولة");
+  });
+});
+
+describe("the account page's three parts (2026-11-09)", () => {
+  it("reads its part off the address; anything else is no part", () => {
+    expect(accountPartOf(undefined)).toBe("account");
+    expect(accountPartOf([])).toBe("account");
+    expect(accountPartOf(["stats"])).toBe("stats");
+    expect(accountPartOf(["badges"])).toBe("badges");
+    for (const x of [["x"], ["account"], ["stats", "x"]]) expect(accountPartOf(x), x.join("/")).toBeNull();
+  });
+  it("links the three, the open one the current page", () => {
+    const html = renderToStaticMarkup(createElement(AccountParts, { part: "stats", locale: "en", t: { account: "Account", stats: "Stats", badges: "Badges" } }));
+    expect(html).toContain('href="/account"');
+    expect(html).toContain('<a href="/account/stats" class="on" aria-current="page">Stats</a>');
+    expect(html).toContain('href="/account/badges"');
+    expect(html.match(/aria-current/g)).toHaveLength(1);
+  });
+  it("draws Your rides alone on Stats and the badges alone on Badges", () => {
+    const props = { locale: "en", stats: null, led: 2, badges: badgeList(recordRows([row({ session_id: "2026-09-29" })]), new Map(), empty, today, null), t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } };
+    const stats = renderToStaticMarkup(createElement(RideRecord, { ...props, part: "stats" }));
+    const badges = renderToStaticMarkup(createElement(RideRecord, { ...props, part: "badges" }));
+    expect(stats).toContain("Rides led: 2");
+    expect(stats).not.toContain("mr-badge");
+    expect(badges).not.toContain("Rides led");
+    expect(badges).toContain("First Lap");
   });
 });
