@@ -42,7 +42,7 @@ export function paySettings(c: SiteContent | null | undefined): PaySettings {
     topupMax: int(g("pay.topupMax"), 1000, 1, 10000),
     storeOpen: g("store.open") === true,
     orderMinutes: int(g("store.orderMinutes"), 30, 10, 120),
-    delivery: { pickup: { on: true, fee: 0, days: null }, jeddah: deliv(d.jeddah, 30), ksa: deliv(d.ksa, 45), freeOver: free },
+    delivery: { pickup: { on: true, fee: 0, days: null }, jeddah: deliv(d.jeddah, 0), ksa: deliv(d.ksa, 0), freeOver: free },
   };
 }
 

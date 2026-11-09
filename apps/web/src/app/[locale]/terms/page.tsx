@@ -5,6 +5,8 @@ import "@/components/pages/pages.css";
 import { siteSchema } from "@/content/pages/site";
 import { termsSchema } from "@/content/pages/terms";
 import { asLocale, resolvePage } from "@/lib/content";
+import { payReady } from "@/lib/pay/config";
+import { paySettings } from "@/lib/pay/settings";
 import { fill } from "@/lib/fill";
 import { isoDay, parseBody } from "@/lib/journal";
 import { pageState } from "@/lib/page-state";
@@ -39,6 +41,34 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
     ? new Intl.DateTimeFormat(intlOf(locale), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${day}T00:00:00Z`))
     : "";
   const clauses = list(t.clauses.items).filter((c) => S(c.title) || S(c.body));
+  // Paying online (2026-11-10): while this site takes payments, the Terms say how (the E-Commerce Law's disclosures
+  // before a purchase, and Moyasar's: who processes it, refunds, their timing, complaints). Written in English and
+  // Arabic as the rest of the Terms; staff do not edit it, the settings it names are theirs (pay.*).
+  const ps = paySettings(content);
+  if (ps.enabled && payReady() && clauses.length) {
+    const ar = L === "ar";
+    const days = ps.refundDays;
+    const when = ar ? (days > 1 ? `قبل يوم الرحلة بـ ${days} أيام على الأقل` : "قبل يوم الرحلة") : (days > 1 ? `at least ${days} days before the ride day` : "by the day before the ride");
+    const payClause = {
+      title: ar ? "الدفع الإلكتروني" : "Paying online",
+      body: ar ? [
+        `- تتم معالجة المدفوعات الإلكترونية عبر شركة ميسّر للمدفوعات، المرخّصة من البنك المركزي السعودي. نقبل مدى وفيزا وماستركارد وApple Pay وSTC Pay. تُرسل بيانات بطاقتك مباشرة إلى ميسّر، ولا نطّلع عليها ولا نحتفظ بها. الأسعار بالريال السعودي وشاملة ضريبة القيمة المضافة، ولا نضيف أي رسوم على الدفع بالبطاقة.`,
+        `- تُدفع الرحلات المدفوعة عند الحجز. نحتفظ بمكانك لمدة ${ps.holdMinutes} دقيقة أثناء الدفع، وإذا لم يكتمل الدفع خلالها يُلغى الحجز المؤقت ولا يُخصم أي مبلغ.`,
+        `- يمكنك إلغاء الرحلة المدفوعة إلكترونياً من «حجوزاتي». ألغِ الحجز ${when} لاسترداد المبلغ كاملاً، إلى محفظتك فوراً أو إلى بطاقتك. لا يُسترد المبلغ عند الإلغاء بعد ذلك أو عدم الحضور. وإذا ألغينا نحن الرحلة نعيد المبلغ كاملاً بطريقة الدفع نفسها ما لم تختر المحفظة.`,
+        `- في طلبات المتجر يشمل الإجمالي المعروض قبل الدفع رسوم التوصيل، ويظهر موعد التوصيل قبل الدفع وفي صفحة طلبك.`,
+        `- يصل المبلغ المسترد إلى بطاقات مدى خلال 1 إلى 3 أيام عمل، وإلى البطاقات الائتمانية خلال 14 يوم عمل كحد أقصى.`,
+        `- لأي استفسار أو شكوى عن الدفع راسلنا عبر واتساب أو البريد الإلكتروني، ونرد خلال يوم عمل واحد.`,
+      ].join("\n") : [
+        `- Online payments are processed by Moyasar, a payment company licensed by the Saudi Central Bank. We accept mada, Visa, Mastercard, Apple Pay and STC Pay. Your card details go straight to Moyasar: we never see or keep them. Prices are in Saudi riyals and include VAT, and we never add a fee for paying by card.`,
+        `- Paid rides are paid when you book. Your place is held for ${ps.holdMinutes} minutes while you pay; if the payment is not completed in that time, the place is released and nothing is charged.`,
+        `- You can cancel a ride paid online from My bookings. Cancel ${when} for a full refund, to your wallet straight away or back to your card. Cancelling later, or not coming, is not refunded. If we cancel a ride, we refund it in full, the way you paid unless you choose your wallet.`,
+        `- For store orders, the total shown before you pay includes delivery, and the delivery date is shown before you pay and on your order page.`,
+        `- Refunds reach mada cards within 1 to 3 working days, and credit cards within up to 14 working days.`,
+        `- For any question or complaint about a payment, message us on WhatsApp or by email: we reply within one working day.`,
+      ].join("\n"),
+    };
+    clauses.splice(Math.max(0, clauses.length - 1), 0, payClause as (typeof clauses)[number]);
+  }
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="pg pg-privacy">
