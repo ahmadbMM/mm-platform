@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import { sized } from "@/lib/img";
@@ -13,8 +13,8 @@ import { cartAdd } from "./useCart";
 
 // The product page's choices: size and colour (a choice nobody can have is shown but cannot be picked),
 // the price of what is picked with VAT, how many are left, the quantity and Add to cart. A pick that is
-// missing is said where it is missing. Added, a centred pop-up says so and offers the cart. On a phone, once
-// the button has scrolled away, a bar with the price and the same button stays at the bottom of the screen.
+// missing is said where it is missing. Added, a centred pop-up says so and offers the cart. No bar fixed to the
+// bottom of the screen (the owner took them out of the booking app).
 export default function BuyBox({ p, locale, licence }: { p: StoreProduct; locale: string; licence: string | null }) {
   const t = useLocalize(T);
   const o = optionsOf(p);
@@ -24,8 +24,6 @@ export default function BuyBox({ p, locale, licence }: { p: StoreProduct; locale
   const [qty, setQty] = useState(1);
   const [need, setNeed] = useState<"" | "size" | "colour" | "full">("");
   const [added, setAdded] = useState<{ qty: number; label: string } | null>(null);
-  const [bar, setBar] = useState(false);
-  const cta = useRef<HTMLDivElement>(null);
   const sizeGroup = useRef<HTMLDivElement>(null);
 
   const v = pickVariant(p, size, colour);
@@ -35,15 +33,6 @@ export default function BuyBox({ p, locale, licence }: { p: StoreProduct; locale
   const max = Math.max(1, Math.min(MAX_QTY, v?.stock ?? MAX_QTY));
   const n = Math.min(qty, max);
   const name = pick(locale, p.name_en, p.name_ar);
-
-  // the bar on a phone: shown once the button itself has gone off the top of the screen
-  useEffect(() => {
-    const el = cta.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-    const io = new IntersectionObserver(([e]) => setBar(!e.isIntersecting && e.boundingClientRect.top < 0));
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
 
   function add() {
     if (o.sizes.length && !size) { setNeed("size"); sizeGroup.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus(); return; }
@@ -99,7 +88,7 @@ export default function BuyBox({ p, locale, licence }: { p: StoreProduct; locale
 
       <p className={`st-stock ${stock.kind}`}>{stock.kind === "out" ? t.soldOut : stock.kind === "low" ? t.left(stock.left) : t.inStock}</p>
 
-      <div className="st-cta" ref={cta}>
+      <div className="st-cta">
         {canAdd && (
           <div className="st-qty" role="group" aria-label={t.qty}>
             <button type="button" onClick={() => setQty(Math.max(1, n - 1))} disabled={n <= 1} aria-label={t.less}><Ic name="minus" size={16} /></button>
@@ -112,13 +101,6 @@ export default function BuyBox({ p, locale, licence }: { p: StoreProduct; locale
         </button>
       </div>
       {need === "full" && <p className="st-need" role="alert">{t.cartFull}</p>}
-
-      {bar && canAdd && (
-        <div className="st-bar">
-          <span className="st-bar-txt"><b>{name}</b><Amt>{price}</Amt></span>
-          <button type="button" className="bk-btn" onClick={() => { cta.current?.scrollIntoView({ block: "center" }); add(); }}>{t.add}</button>
-        </div>
-      )}
 
       {added && (
         <Modal title={t.added} onClose={() => setAdded(null)} closeLabel={t.close}>

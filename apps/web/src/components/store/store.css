@@ -99,13 +99,6 @@ html:is([lang="ar"], [lang="ur"]) :is(.st, .mm-site .tk-amt) { font-family: "MM 
 .st-qty button:disabled { opacity: .35; cursor: default; }
 .st-qty output { min-width: 26px; text-align: center; font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
 .st-qty.sm button { width: 40px; height: 40px; }
-.st-bar { position: fixed; inset-inline: 0; bottom: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
-  background: rgba(255, 255, 255, .97); border-top: 1px solid rgba(26, 25, 25, .12); box-shadow: 0 -8px 24px rgba(26, 25, 25, .08); }
-.st-bar-txt { display: flex; flex-direction: column; min-width: 0; font-size: 13px; }
-.st-bar-txt b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.st-bar-txt .tk-amt { font-weight: 700; font-size: 15px; }
-.st-bar .bk-btn { flex: none; }
-@media (min-width: 900px) { .st-bar { display: none; } }
 .st-added { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; }
 .st-added-img { width: 64px; height: 64px; flex: none; border-radius: 10px; background: #fff; border: 1px solid rgba(26, 25, 25, .1); display: inline-flex; align-items: center; justify-content: center; overflow: hidden; }
 .st-added-img img { width: 100%; height: 100%; object-fit: contain; }
@@ -263,7 +256,7 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 
 /* An order's page printed or saved as a PDF: the order and its invoice, nothing of the site around them. */
 @media print {
-  .mm-nav, .mm-nav-sheet, .mm-foot, .mm-preview-bar, .mm-skip, .st-ord-acts, .st-join, .st-copy, .st-alert .bk-btn, .st-bar { display: none !important; }
+  .mm-nav, .mm-nav-sheet, .mm-foot, .mm-preview-bar, .mm-skip, .st-ord-acts, .st-join, .st-copy, .st-alert .bk-btn { display: none !important; }
   .mm-site main { padding-top: 0 !important; }
   .mm-site, .st { background: #fff !important; }
   .st { padding: 0 !important; max-width: none; }

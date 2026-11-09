@@ -86,7 +86,7 @@ export default function OrderView({ o, t, locale, seller, now, whatsapp, showroo
       <section className="st-invoice" aria-labelledby="st-inv-h">
         <h2 id="st-inv-h">{t.invoice}</h2>
         <dl className="st-kv">
-          {o.payment?.receipt_no != null && <div><dt>{t.invoiceNo}</dt><dd><bdi dir="ltr">{o.payment.receipt_no}</bdi></dd></div>}
+          {o.receipt_no != null && <div><dt>{t.invoiceNo}</dt><dd><bdi dir="ltr">{o.receipt_no}</bdi></dd></div>}
           <div><dt>{t.orderNo}</dt><dd><bdi dir="ltr">{no}</bdi></dd></div>
           <div><dt>{t.date}</dt><dd>{when(o.paid_at ?? o.created_at)}</dd></div>
           <div><dt>{t.seller}</dt><dd>{seller.trade}{seller.legal && <small>{seller.legal}</small>}</dd></div>

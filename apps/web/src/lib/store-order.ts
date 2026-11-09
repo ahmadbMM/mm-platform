@@ -14,6 +14,8 @@ export type Order = {
   address: { city?: string; district?: string } | null;
   subtotal: number; delivery_fee: number; total: number; wallet_paid: number; vat: number;
   courier: string | null; tracking_no: string | null; expires_at: string | null; paid_at: string | null; created_at: string; cancel_reason: string | null;
+  /** The order's invoice number (receipt_numbers 'ord-<no>'), also for an order the wallet paid whole. */
+  receipt_no: number | null;
   payment_id: string | null; payment: OrderPayment | null; items: OrderItem[];
   events: { at: string; status: string; note: string | null }[];
   refunds: { amount: number; dest: string; status: string; at: string }[];
@@ -37,6 +39,7 @@ export function orderOf(data: unknown, key: string | null = null): Order | null 
     address: a ? { city: s(a.city) ?? undefined, district: s(a.district) ?? undefined } : null,
     subtotal: n(o.subtotal), delivery_fee: n(o.delivery_fee), total: n(o.total), wallet_paid: n(o.wallet_paid), vat: n(o.vat),
     courier: s(o.courier), tracking_no: s(o.tracking_no), expires_at: s(o.expires_at), paid_at: s(o.paid_at), created_at: String(o.created_at ?? ""),
+    receipt_no: o.receipt_no == null ? (p?.receipt_no == null ? null : n(p.receipt_no)) : n(o.receipt_no),
     cancel_reason: s(o.cancel_reason), payment_id: s(o.payment_id),
     payment: p ? { id: String(p.id ?? ""), status: String(p.status ?? ""), method: s(p.method), brand: s(p.brand), last4: s(p.last4),
       receipt_no: p.receipt_no == null ? null : n(p.receipt_no), expires_at: String(p.expires_at ?? ""), paid_at: s(p.paid_at), amount: n(p.amount) } : null,

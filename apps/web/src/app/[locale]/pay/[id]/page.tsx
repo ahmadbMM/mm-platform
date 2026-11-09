@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PageShell from "@/components/site/PageShell";
+import { Link } from "@/i18n/navigation";
 import PayScreen from "@/components/pay/PayScreen";
 import { T } from "@/components/pay/Pay.text";
 import "@/components/experiences/experiences.css";
@@ -68,17 +69,17 @@ export default async function PayPage({ params, searchParams }: { params: Promis
         <p className="py-paid-amt"><bdi className="tk-amt">{sar(v.amount)}</bdi></p>
         {w && <p className="py-meta">{fill(t.paidWith, w)}</p>}
         {v.receipt_no != null && <p className="py-meta">{fill(t.receipt, String(v.receipt_no))}</p>}
-        <div className="bk-foot"><a className="bk-btn wide" href={next[kind]}>{t.next[kind]}</a></div>
+        <div className="bk-foot"><Link className="bk-btn wide" href={next[kind]}>{t.next[kind]}</Link></div>
       </div>
     );
   } else if (v.status === "refunded") {
-    body = <div className="py-done"><h1 className="bk-title">{t.refundedTitle}</h1><p className="bk-sub">{t.refundedSub}</p><a className="bk-btn2" href="/">{t.home}</a></div>;
+    body = <div className="py-done"><h1 className="bk-title">{t.refundedTitle}</h1><p className="bk-sub">{t.refundedSub}</p><Link className="bk-btn2" href="/">{t.home}</Link></div>;
   } else if (v.status === "expired" || v.status === "cancelled") {
     body = (
       <div className="py-done">
         <h1 className="bk-title">{v.status === "expired" ? t.expiredTitle : t.cancelledTitle}</h1>
         <p className="bk-sub">{t.expiredSub}</p>
-        <a className="bk-btn wide" href={kind === "order" ? "/store/cart" : kind === "locker" ? "/lockers" : kind === "booking" ? "/experiences" : "/"}>{t.startAgain}</a>
+        <Link className="bk-btn wide" href={kind === "order" ? "/store/cart" : kind === "locker" ? "/lockers" : kind === "booking" ? "/experiences" : "/"}>{t.startAgain}</Link>
       </div>
     );
   } else {
