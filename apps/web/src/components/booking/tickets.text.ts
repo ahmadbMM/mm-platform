@@ -96,6 +96,7 @@ export const T = {
     addons: "Add-ons",
     // a locker on the booking (lkTitle, 2026-11-09)
     locker: "Locker",
+    lockerPaid: "Paid from your wallet",
     // a partner's place (queue_entries.partner, 2026-10-17): the site's own line, under the ticket's status
     withDefe: "With Defe",
     // the DEFE 5KM Run (2026-10-18): when the kits go out and the race starts, and "Have you registered for
@@ -246,6 +247,7 @@ export const T = {
     revealSpotsAt: (n: string) => `موقع الفطور: يُعلَن عنه ${n}`,
     addons: "الإضافات",
     locker: "خزانة",
+    lockerPaid: "مدفوعة من محفظتك",
     withDefe: "مع دفء",
     defeKitLabel: "استلام عُدّة السباق",
     defeKitTxt: "جدة بارك · الأربعاء 21 أكتوبر · 4–10 م",

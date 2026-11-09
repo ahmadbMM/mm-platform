@@ -364,22 +364,54 @@ html[dir="rtl"] .opt { padding: 11px 12px 11px 40px; }
 .pick-sum { margin: 0; text-align: center; font-weight: 700; font-size: 15px; }
 #f-cab.invalid .err { text-align: center; }
 
-/* The rider's lockers: the number on its own small door, the evening and the time, and Remove while not collected. */
-.mine { display: grid; gap: 8px; }
+/* The rider's lockers: one card per evening to show at the desk. The code the desk scans sits on its own white tile
+   (drawn on a canvas, its pixels never recoloured by a phone's dark mode), each locker's number big beside its name,
+   the time and how it is paid; Change and Remove while the key is not handed. */
+.mine { display: grid; gap: 10px; }
 .sec-h { margin: 0; font: 800 12px var(--f-display); letter-spacing: .09em; text-transform: uppercase; color: var(--mute); }
 html[lang="ar"] .sec-h { font-family: var(--f-ar); letter-spacing: 0; font-size: 13.5px; }
-.mine-list { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.mine-row { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid var(--line); border-radius: var(--r-ctl); background: var(--surface); }
-.mine-n { flex: none; display: grid; place-items: center; width: 44px; height: 40px; border: 1px solid var(--door-edge); border-radius: 6px; background: linear-gradient(165deg, var(--door-hi), var(--door)); font: 900 19px var(--f-display); font-stretch: 112%; }
-.mine-n svg { width: 16px; height: 16px; color: var(--mute); }
-.mine-t { flex: 1; display: grid; min-width: 0; }
-.mine-t b { font-size: 14.5px; }
-.mine-t small { color: var(--mute); font-size: 13px; overflow-wrap: anywhere; }
+.mine-list { display: grid; gap: 12px; }
+.desk { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); box-shadow: 0 10px 24px -20px rgba(0, 0, 0, .5); }
+.desk-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.desk-head { display: grid; gap: 2px; min-width: 0; }
+.desk-h { margin: 0; font: 900 19px var(--f-display); font-stretch: 112%; text-transform: uppercase; line-height: 1.1; }
+html[lang="ar"] .desk-h { font-family: var(--f-ar); font-weight: 700; font-size: 19px; text-transform: none; }
+.desk-when { margin: 0; color: var(--accent); font-weight: 700; font-size: 14px; }
+.desk-qr { flex: none; display: block; width: 148px; height: 148px; padding: 0; border-radius: 10px; overflow: hidden; border: 1px solid rgba(26, 25, 25, .14); background: #fff; line-height: 0; }
+.desk-qr canvas { display: block; width: 148px; height: 148px; image-rendering: pixelated; }
+.desk-list { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border-top: 1px solid var(--line); }
+.desk-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.desk-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.desk-n { flex: none; display: grid; place-items: center; min-width: 58px; height: 54px; padding: 0 8px; border: 1px solid var(--door-edge); border-radius: 8px; background: linear-gradient(165deg, var(--door-hi), var(--door)); font: 900 30px var(--f-display); font-stretch: 112%; font-variant-numeric: tabular-nums; direction: ltr; }
+.desk-n svg { width: 20px; height: 20px; color: var(--mute); }
+.desk-t { flex: 1; display: grid; gap: 2px; min-width: 0; }
+.desk-t b { font-size: 14.5px; overflow-wrap: anywhere; }
+.desk-t small { color: var(--mute); font-size: 13px; overflow-wrap: anywhere; }
+.desk-t .chip { justify-self: start; }
+.desk-acts { flex: none; display: grid; gap: 6px; }
 .chip.sm { flex: none; padding: 3px 8px; font-size: 12px; }
 .chip.st-use { color: var(--ok); border-color: currentColor; background: var(--surface); }
-.mine-x { flex: none; min-height: 36px; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; color: var(--err); font-size: 13px; font-weight: 700; }
+.mine-x, .mine-chg { min-height: 34px; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; font-size: 13px; font-weight: 700; }
+.mine-chg { color: var(--accent); }
+.mine-chg:hover { border-color: var(--accent); }
+.mine-x { color: var(--err); }
 .mine-x:hover { border-color: var(--err); }
-@media (max-width: 380px) { .mine-row { flex-wrap: wrap; } .mine-t { flex-basis: calc(100% - 60px); } .chip.sm { margin-inline-start: 54px; } }
+@media (max-width: 400px) {
+  .desk-top { flex-direction: column; align-items: stretch; }
+  .desk-qr { align-self: center; }
+  .desk-row { flex-wrap: wrap; }
+  .desk-acts { display: flex; width: 100%; margin-inline-start: 70px; }
+}
+
+/* Changing a locker: its evening above the cabinet, with Cancel. */
+.chg-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--brand); border-radius: var(--r-ctl); background: var(--wash); }
+.chg-title { margin: 2px 0 0; font: 900 21px var(--f-display); font-stretch: 112%; text-transform: uppercase; line-height: 1.1; }
+.chg-title:focus { outline: none; }
+html[lang="ar"] .chg-title { font-family: var(--f-ar); font-weight: 700; text-transform: none; }
+.d-btn.ghost.sm { width: auto; min-height: 38px; padding: 4px 16px; flex: none; }
+.who .who-out { margin-inline-start: 6px; font-size: 13.5px; }
+.names { display: grid; gap: 12px; }
+.terms-line { font-size: 13.5px; }
 
 /* Reviewing and paying */
 .amt { white-space: nowrap; }
@@ -388,6 +420,7 @@ html[lang="ar"] .sec-h { font-family: var(--f-ar); letter-spacing: 0; font-size:
 .d-btn.danger { background: var(--err); color: var(--surface); }
 .vh { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .done-view .d-body { gap: 16px; }
+.lt-list { margin: 0; padding-inline-start: 22px; display: flex; flex-direction: column; gap: 8px; line-height: 1.5; }
 
 </style>
 </head>
@@ -598,7 +631,12 @@ l-6 60 -97 3 c-59 2 -99 -1 -103 -8z m1085 -802 c178 -60 310 -171 384 -321
       <p class="lede" data-t="Pick your locker for the evening, then collect the key at the desk.">Pick your locker for the evening, then collect the key at the desk.</p>
     </div>
     <div id="pick" class="d-body">
-      <p id="land-who" class="who" hidden></p>
+      <p id="land-who" class="who" hidden><span class="who-t"></span> <button type="button" class="d-link who-out" data-t="Sign out">Sign out</button></p>
+      <!-- Changing a locker: the evening stays, the time and the door may change. -->
+      <div id="chg-head" class="chg-head" hidden>
+        <div><p id="chg-when" class="eyebrow"></p><h2 id="chg-title" class="chg-title" tabindex="-1"></h2></div>
+        <button type="button" id="chg-cancel" class="d-btn ghost sm" data-t="Cancel">Cancel</button>
+      </div>
       <div id="mine-pick" class="mine" hidden>
         <h2 class="sec-h" data-t="Your lockers">Your lockers</h2>
         <ul class="mine-list"></ul>
@@ -632,7 +670,9 @@ l-6 60 -97 3 c-59 2 -99 -1 -103 -8z m1085 -802 c178 -60 310 -171 384 -321
       </div>
       <p id="pick-sum" class="pick-sum" hidden></p>
       <button id="go" class="d-btn" type="button" disabled>
-        <span class="btn-label" data-t="Continue">Continue</span>
+        <span class="spinner" aria-hidden="true"></span>
+        <span class="btn-label" id="go-label">Continue</span>
+        <span class="btn-busy" data-t="Loading...">Loading...</span>
       </button>
     </div>
   </section>
@@ -761,8 +801,9 @@ l-6 60 -97 3 c-59 2 -99 -1 -103 -8z m1085 -802 c178 -60 310 -171 384 -321
           <span class="ok-mark" aria-hidden="true"><svg><use href="#i-check"/></svg></span>
           <span><b data-t="Your account has been created">Your account has been created</b><span class="ok-sub" data-t="You can sign in to the MicroMobility app with it any time.">You can sign in to the MicroMobility app with it any time.</span></span>
         </div>
-        <p id="r-who" class="who" hidden></p>
+        <p id="r-who" class="who" hidden><span class="who-t"></span> <button type="button" class="d-link who-out" data-t="Sign out">Sign out</button></p>
         <dl id="review" class="review"></dl>
+        <div id="names" class="names" hidden></div>
         <div id="f-pay" class="field">
           <span class="label" id="pay-label" data-t="How to pay">How to pay</span>
           <div id="pays" class="opts" role="radiogroup" aria-labelledby="pay-label">
@@ -771,6 +812,7 @@ l-6 60 -97 3 c-59 2 -99 -1 -103 -8z m1085 -802 c178 -60 310 -171 384 -321
           </div>
           <p class="err" aria-live="polite"></p>
         </div>
+        <p id="terms-line" class="small start terms-line"></p>
         <button id="book" class="d-btn" type="submit">
           <span class="spinner" aria-hidden="true"></span>
           <span class="btn-label" data-t="Reserve">Reserve</span>
@@ -781,14 +823,13 @@ l-6 60 -97 3 c-59 2 -99 -1 -103 -8z m1085 -802 c178 -60 310 -171 384 -321
     </div>
   </section>
 
-  <!-- 4. Reserved: what was reserved and how it is paid, then the rider's lockers. -->
+  <!-- 4. Reserved: the rider's lockers, one card per evening to show at the desk. -->
   <section id="v-done" class="view done-view" hidden aria-labelledby="done-title">
     <div class="d-body">
       <div class="done-head">
         <span class="done-mark" aria-hidden="true"><svg><use href="#i-check"/></svg></span>
         <div><p class="eyebrow" data-t="Reserved">Reserved</p><h2 id="done-title" class="st-title" tabindex="-1"></h2></div>
       </div>
-      <dl id="done-sum" class="review"></dl>
       <div id="mine-done" class="mine" hidden>
         <h2 class="sec-h" data-t="Your lockers">Your lockers</h2>
         <ul class="mine-list"></ul>
@@ -808,7 +849,23 @@ l-6 60 -97 3 c-59 2 -99 -1 -103 -8z m1085 -802 c178 -60 310 -171 384 -321
   </span>
 </footer>
 
-<!-- The pop-ups, centred: the Privacy Notice, and taking a locker back. -->
+<!-- The pop-ups, centred: the Privacy Notice, the locker terms, and taking a locker back. -->
+<div id="lt" class="modal" hidden>
+  <div class="modal-box sm" role="dialog" aria-modal="true" aria-labelledby="lt-title">
+    <div class="modal-head">
+      <h2 class="modal-title" id="lt-title" data-t="Locker terms">Locker terms</h2>
+      <button type="button" class="modal-x" data-site-aria="closeBtn" aria-label="Close"><svg aria-hidden="true"><use href="#i-stop"/></svg></button>
+    </div>
+    <ul class="modal-body lt-list">
+      <li data-t="A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.">A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.</li>
+      <li data-t="Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.">Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.</li>
+      <li data-t="Nothing may be left overnight: collect everything the same evening.">Nothing may be left overnight: collect everything the same evening.</li>
+      <li data-t="Things left behind are kept for 14 days, then donated or disposed of.">Things left behind are kept for 14 days, then donated or disposed of.</li>
+      <li data-t="MicroMobility is not responsible for loss of or damage to anything kept in a locker.">MicroMobility is not responsible for loss of or damage to anything kept in a locker.</li>
+      <li data-t="A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.">A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.</li>
+    </ul>
+  </div>
+</div>
 <div id="pv" class="modal" hidden>
   <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="pv-title">
     <div class="modal-head">
@@ -1970,7 +2027,6 @@ var FORM_T = {
   "Use {s}": "استخدم {s}",
   "Signed in as {name}": "مسجّل الدخول باسم {name}",
   "Locker": "الخزانة",
-  "Paid": "مدفوعة",
   "In use": "مستخدمة",
   "Remove locker {n}?": "إزالة الخزانة {n}؟",
   "Remove this locker?": "إزالة هذه الخزانة؟",
@@ -1979,9 +2035,7 @@ var FORM_T = {
   "Balance {amount}": "الرصيد {amount}",
   "Your lockers are reserved": "حُجزت خزائنك",
   "Your locker is reserved": "حُجزت خزانتك",
-  "Payment": "الدفع",
-  "Paid from your wallet": "دُفعت من محفظتك",
-  "Pay at the desk when you collect the key": "ادفع في المكتب عند استلام المفتاح",
+  "Paid from your wallet": "مدفوعة من محفظتك",
   "Locker {n} was just taken. Pick another.": "حُجزت الخزانة {n} للتو. اختر خزانة أخرى.",
   "Up to 3 lockers per account for each time.": "حتى 3 خزائن لكل حساب في الوقت الواحد.",
   "Locker {n} is taken. Pick another.": "الخزانة {n} محجوزة. اختر خزانة أخرى.",
@@ -2025,6 +2079,28 @@ var FORM_T = {
   "Locker {n}, taken": "الخزانة {n}، محجوزة",
   "Locker {n}, out of service": "الخزانة {n}، خارج الخدمة",
   "Could not reach the server. Please try again.": "تعذّر الوصول إلى الخادم. يُرجى المحاولة مرة أخرى.",
+  "Sign out": "تسجيل الخروج",
+  "Cancel": "إلغاء",
+  "Change locker {n}": "تغيير الخزانة {n}",
+  "Change your locker": "تغيير خزانتك",
+  "Change locker": "تغيير الخزانة",
+  "On your booking": "على حجزك",
+  "Change": "تغيير",
+  "Show this at the desk": "اعرض هذا في المكتب",
+  "Code for the desk": "رمز QR للمكتب",
+  "By reserving you accept the {terms}.": "بإتمام الحجز فإنك توافق على {terms}.",
+  "locker terms": "شروط الخزائن",
+  "Locker terms": "شروط الخزائن",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "تُستأجر الخزانة لفترة أمسية واحدة: من 6 إلى 8 مساءً أو من 9 إلى 11 مساءً أو كلتيهما في ليلة JCC، ومن 7 إلى 9 مساءً في ليلة بترومين. يبقى المفتاح مع فريق مايكروموبيليتي، ويفتحونها لك.",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "لا تضع في الخزانة طعاماً أو مشروبات مفتوحة، ولا أي شيء قابل للاشتعال أو خطر أو مخالف للأنظمة، ولا أي سلاح.",
+  "Nothing may be left overnight: collect everything the same evening.": "لا يجوز ترك أي شيء طوال الليل: استلم كل أغراضك في الأمسية نفسها.",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "تُحفظ الأغراض المتروكة 14 يوماً، ثم يُتبرّع بها أو يُتخلّص منها.",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "لا تتحمل مايكروموبيليتي مسؤولية فقدان أو تلف أي شيء محفوظ في الخزانة.",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "تبقى الخزانة المحجوزة التي لم تُستلم محجوزة حتى يحررها الفريق، وعندها يُردّ أي مبلغ دُفع من المحفظة.",
+  "Name on locker {n}": "الاسم على الخزانة {n}",
+  "Enter a name for locker {n}": "أدخل اسماً للخزانة {n}",
+  "This locker can't be changed now. Ask at the desk.": "لا يمكن تغيير هذه الخزانة الآن. اسأل في المكتب.",
+  "Locker changed": "تم تغيير الخزانة",
   "Language": "اللغة"
  },
  "id": {
@@ -2092,7 +2168,6 @@ var FORM_T = {
   "Use {s}": "Gunakan {s}",
   "Signed in as {name}": "Masuk sebagai {name}",
   "Locker": "Loker",
-  "Paid": "Lunas",
   "In use": "Sedang dipakai",
   "Remove locker {n}?": "Hapus loker {n}?",
   "Remove this locker?": "Hapus loker ini?",
@@ -2101,9 +2176,7 @@ var FORM_T = {
   "Balance {amount}": "Saldo {amount}",
   "Your lockers are reserved": "Semua loker Anda sudah dipesan",
   "Your locker is reserved": "Loker Anda sudah dipesan",
-  "Payment": "Pembayaran",
   "Paid from your wallet": "Dibayar dari dompet Anda",
-  "Pay at the desk when you collect the key": "Bayar di loket saat mengambil kunci",
   "Locker {n} was just taken. Pick another.": "Loker {n} baru saja dipesan orang lain. Pilih yang lain.",
   "Up to 3 lockers per account for each time.": "Maksimal 3 loker per akun untuk setiap waktu.",
   "Locker {n} is taken. Pick another.": "Loker {n} sudah terisi. Pilih yang lain.",
@@ -2147,7 +2220,29 @@ var FORM_T = {
   "Locker {n}, taken": "Loker {n}, terisi",
   "Locker {n}, out of service": "Loker {n}, tidak berfungsi",
   "Could not reach the server. Please try again.": "Tidak dapat terhubung ke server. Silakan coba lagi.",
-  "Language": "Bahasa"
+  "Language": "Bahasa",
+  "Sign out": "Keluar",
+  "Cancel": "Batal",
+  "Change locker {n}": "Ganti loker {n}",
+  "Change your locker": "Ganti loker Anda",
+  "Change locker": "Ganti loker",
+  "On your booking": "Pada pemesanan Anda",
+  "Change": "Ganti",
+  "Show this at the desk": "Tunjukkan ini di meja",
+  "Code for the desk": "Kode untuk meja",
+  "By reserving you accept the {terms}.": "Dengan memesan, Anda menerima {terms}.",
+  "locker terms": "ketentuan loker",
+  "Locker terms": "Ketentuan loker",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "Loker disewa untuk satu waktu di malam hari: 18.00-20.00, 21.00-23.00, atau keduanya pada malam JCC, 19.00-21.00 pada malam Petromin. Kunci tetap dipegang staf MicroMobility, yang akan membukakannya untuk Anda.",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "Jangan menaruh makanan atau minuman terbuka, barang yang mudah terbakar, berbahaya atau ilegal, maupun senjata di dalam loker.",
+  "Nothing may be left overnight: collect everything the same evening.": "Tidak boleh ada barang yang ditinggal semalaman: ambil semuanya di malam yang sama.",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "Barang yang tertinggal disimpan selama 14 hari, lalu disumbangkan atau dibuang.",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "MicroMobility tidak bertanggung jawab atas kehilangan atau kerusakan barang apa pun yang disimpan di loker.",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "Loker yang dipesan dan tidak diambil tetap ditahan sampai staf melepaskannya; pembayaran dari dompet untuk loker itu kemudian dikembalikan.",
+  "Name on locker {n}": "Nama di loker {n}",
+  "Enter a name for locker {n}": "Masukkan nama untuk loker {n}",
+  "This locker can't be changed now. Ask at the desk.": "Loker ini tidak bisa diganti sekarang. Tanyakan di meja.",
+  "Locker changed": "Loker diganti"
  },
  "ms": {
   "Dismiss": "Tutup",
@@ -2214,7 +2309,6 @@ var FORM_T = {
   "Use {s}": "Gunakan {s}",
   "Signed in as {name}": "Log masuk sebagai {name}",
   "Locker": "Loker",
-  "Paid": "Dibayar",
   "In use": "Sedang digunakan",
   "Remove locker {n}?": "Buang loker {n}?",
   "Remove this locker?": "Buang loker ini?",
@@ -2223,9 +2317,7 @@ var FORM_T = {
   "Balance {amount}": "Baki {amount}",
   "Your lockers are reserved": "Semua loker anda telah ditempah",
   "Your locker is reserved": "Loker anda telah ditempah",
-  "Payment": "Bayaran",
   "Paid from your wallet": "Dibayar dengan dompet anda",
-  "Pay at the desk when you collect the key": "Bayar di kaunter semasa mengambil kunci",
   "Locker {n} was just taken. Pick another.": "Loker {n} baru sahaja ditempah orang lain. Pilih yang lain.",
   "Up to 3 lockers per account for each time.": "Sehingga 3 loker bagi setiap akaun untuk setiap masa.",
   "Locker {n} is taken. Pick another.": "Loker {n} telah ditempah. Pilih yang lain.",
@@ -2269,7 +2361,29 @@ var FORM_T = {
   "Locker {n}, taken": "Loker {n}, ditempah",
   "Locker {n}, out of service": "Loker {n}, tidak dapat digunakan",
   "Could not reach the server. Please try again.": "Tidak dapat menghubungi pelayan. Sila cuba lagi.",
-  "Language": "Bahasa"
+  "Language": "Bahasa",
+  "Sign out": "Log keluar",
+  "Cancel": "Batal",
+  "Change locker {n}": "Tukar loker {n}",
+  "Change your locker": "Tukar loker anda",
+  "Change locker": "Tukar loker",
+  "On your booking": "Pada tempahan anda",
+  "Change": "Tukar",
+  "Show this at the desk": "Tunjukkan ini di kaunter",
+  "Code for the desk": "Kod untuk kaunter",
+  "By reserving you accept the {terms}.": "Dengan menempah, anda menerima {terms}.",
+  "locker terms": "terma loker",
+  "Locker terms": "Terma loker",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "Loker disewa untuk satu waktu pada waktu petang: 6-8 PM, 9-11 PM atau kedua-duanya pada malam JCC, 7-9 PM pada malam Petromin. Kunci disimpan oleh kakitangan MicroMobility, yang akan membukanya untuk anda.",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "Jangan letakkan makanan atau minuman terbuka, apa-apa yang mudah terbakar, berbahaya atau menyalahi undang-undang, atau sebarang senjata di dalam loker.",
+  "Nothing may be left overnight: collect everything the same evening.": "Tiada apa-apa boleh ditinggalkan semalaman: ambil semuanya pada petang yang sama.",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "Barang yang tertinggal disimpan selama 14 hari, kemudian didermakan atau dilupuskan.",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "MicroMobility tidak bertanggungjawab atas kehilangan atau kerosakan apa-apa yang disimpan di dalam loker.",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "Loker yang ditempah tetapi tidak diambil disimpan sehingga kakitangan membebaskannya; bayaran dompet untuknya kemudian dipulangkan.",
+  "Name on locker {n}": "Nama pada loker {n}",
+  "Enter a name for locker {n}": "Masukkan nama untuk loker {n}",
+  "This locker can't be changed now. Ask at the desk.": "Loker ini tidak boleh ditukar sekarang. Tanya di kaunter.",
+  "Locker changed": "Loker ditukar"
  },
  "de": {
   "Dismiss": "Schließen",
@@ -2336,7 +2450,6 @@ var FORM_T = {
   "Use {s}": "{s} verwenden",
   "Signed in as {name}": "Angemeldet als {name}",
   "Locker": "Schließfach",
-  "Paid": "Bezahlt",
   "In use": "In Benutzung",
   "Remove locker {n}?": "Schließfach {n} entfernen?",
   "Remove this locker?": "Dieses Schließfach entfernen?",
@@ -2345,9 +2458,7 @@ var FORM_T = {
   "Balance {amount}": "Guthaben {amount}",
   "Your lockers are reserved": "Deine Schließfächer sind reserviert",
   "Your locker is reserved": "Dein Schließfach ist reserviert",
-  "Payment": "Zahlung",
   "Paid from your wallet": "Mit deinem Guthaben bezahlt",
-  "Pay at the desk when you collect the key": "Bezahle am Schalter, wenn du den Schlüssel abholst",
   "Locker {n} was just taken. Pick another.": "Schließfach {n} wurde gerade vergeben. Wähle ein anderes.",
   "Up to 3 lockers per account for each time.": "Bis zu 3 Schließfächer pro Konto und Zeitfenster.",
   "Locker {n} is taken. Pick another.": "Schließfach {n} ist belegt. Wähle ein anderes.",
@@ -2391,7 +2502,29 @@ var FORM_T = {
   "Locker {n}, taken": "Schließfach {n}, belegt",
   "Locker {n}, out of service": "Schließfach {n}, außer Betrieb",
   "Could not reach the server. Please try again.": "Der Server ist nicht erreichbar. Bitte versuch es noch einmal.",
-  "Language": "Sprache"
+  "Language": "Sprache",
+  "Sign out": "Abmelden",
+  "Cancel": "Abbrechen",
+  "Change locker {n}": "Schließfach {n} ändern",
+  "Change your locker": "Ihr Schließfach ändern",
+  "Change locker": "Schließfach ändern",
+  "On your booking": "Auf Ihrer Buchung",
+  "Change": "Ändern",
+  "Show this at the desk": "Zeigen Sie dies am Schalter",
+  "Code for the desk": "Code für den Schalter",
+  "By reserving you accept the {terms}.": "Mit der Reservierung akzeptieren Sie die {terms}.",
+  "locker terms": "Schließfachbedingungen",
+  "Locker terms": "Schließfachbedingungen",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "Ein Schließfach wird für eine Zeit an einem Abend gemietet: 18-20 Uhr, 21-23 Uhr oder beides an einem JCC-Abend, 19-21 Uhr an einem Petromin-Abend. Der Schlüssel bleibt beim MicroMobility-Team, das es für Sie öffnet.",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "Legen Sie keine Lebensmittel oder offenen Getränke, nichts Brennbares, Gefährliches oder Illegales und keine Waffen in ein Schließfach.",
+  "Nothing may be left overnight: collect everything the same evening.": "Nichts darf über Nacht bleiben: Holen Sie alles am selben Abend ab.",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "Zurückgelassene Gegenstände werden 14 Tage aufbewahrt und danach gespendet oder entsorgt.",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "MicroMobility haftet nicht für Verlust oder Beschädigung von Gegenständen in einem Schließfach.",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "Ein reserviertes, nicht abgeholtes Schließfach bleibt reserviert, bis das Team es freigibt; eine Zahlung aus dem Guthaben wird dann erstattet.",
+  "Name on locker {n}": "Name für Schließfach {n}",
+  "Enter a name for locker {n}": "Geben Sie einen Namen für Schließfach {n} ein",
+  "This locker can't be changed now. Ask at the desk.": "Dieses Schließfach kann jetzt nicht geändert werden. Fragen Sie am Schalter.",
+  "Locker changed": "Schließfach geändert"
  },
  "es": {
   "Dismiss": "Cerrar",
@@ -2458,7 +2591,6 @@ var FORM_T = {
   "Use {s}": "Usar {s}",
   "Signed in as {name}": "Sesión iniciada como {name}",
   "Locker": "Taquilla",
-  "Paid": "Pagado",
   "In use": "En uso",
   "Remove locker {n}?": "¿Quitar la taquilla {n}?",
   "Remove this locker?": "¿Quitar esta taquilla?",
@@ -2467,9 +2599,7 @@ var FORM_T = {
   "Balance {amount}": "Saldo {amount}",
   "Your lockers are reserved": "Tus taquillas están reservadas",
   "Your locker is reserved": "Tu taquilla está reservada",
-  "Payment": "Pago",
   "Paid from your wallet": "Pagado con tu saldo",
-  "Pay at the desk when you collect the key": "Paga en el mostrador al recoger la llave",
   "Locker {n} was just taken. Pick another.": "Alguien acaba de reservar la taquilla {n}. Elige otra.",
   "Up to 3 lockers per account for each time.": "Hasta 3 taquillas por cuenta en cada horario.",
   "Locker {n} is taken. Pick another.": "La taquilla {n} está ocupada. Elige otra.",
@@ -2513,7 +2643,29 @@ var FORM_T = {
   "Locker {n}, taken": "Taquilla {n}, ocupada",
   "Locker {n}, out of service": "Taquilla {n}, fuera de servicio",
   "Could not reach the server. Please try again.": "No se pudo conectar con el servidor. Inténtalo de nuevo.",
-  "Language": "Idioma"
+  "Language": "Idioma",
+  "Sign out": "Cerrar sesión",
+  "Cancel": "Cancelar",
+  "Change locker {n}": "Cambiar la taquilla {n}",
+  "Change your locker": "Cambiar tu taquilla",
+  "Change locker": "Cambiar taquilla",
+  "On your booking": "En tu reserva",
+  "Change": "Cambiar",
+  "Show this at the desk": "Muestra esto en el mostrador",
+  "Code for the desk": "Código para el mostrador",
+  "By reserving you accept the {terms}.": "Al reservar aceptas las {terms}.",
+  "locker terms": "condiciones de las taquillas",
+  "Locker terms": "Condiciones de las taquillas",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "La taquilla se alquila para una franja de una noche: 6-8 PM, 9-11 PM o ambas en una noche JCC, 7-9 PM en una noche Petromin. La llave la guarda el equipo de MicroMobility, que te la abre.",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "No guardes en la taquilla comida ni bebidas abiertas, nada inflamable, peligroso o ilegal, ni ningún arma.",
+  "Nothing may be left overnight: collect everything the same evening.": "No se puede dejar nada durante la noche: recoge todo la misma noche.",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "Los objetos olvidados se guardan 14 días y después se donan o se desechan.",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "MicroMobility no se hace responsable de la pérdida o el daño de nada guardado en una taquilla.",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "Una taquilla reservada y no recogida queda retenida hasta que el equipo la libera; entonces se devuelve el pago hecho con el monedero.",
+  "Name on locker {n}": "Nombre en la taquilla {n}",
+  "Enter a name for locker {n}": "Escribe un nombre para la taquilla {n}",
+  "This locker can't be changed now. Ask at the desk.": "Esta taquilla no se puede cambiar ahora. Pregunta en el mostrador.",
+  "Locker changed": "Taquilla cambiada"
  },
  "fr": {
   "Dismiss": "Fermer",
@@ -2580,7 +2732,6 @@ var FORM_T = {
   "Use {s}": "Utiliser {s}",
   "Signed in as {name}": "Connecté en tant que {name}",
   "Locker": "Casier",
-  "Paid": "Payé",
   "In use": "Utilisé",
   "Remove locker {n}?": "Retirer le casier {n} ?",
   "Remove this locker?": "Retirer ce casier ?",
@@ -2589,9 +2740,7 @@ var FORM_T = {
   "Balance {amount}": "Solde {amount}",
   "Your lockers are reserved": "Vos casiers sont réservés",
   "Your locker is reserved": "Votre casier est réservé",
-  "Payment": "Paiement",
   "Paid from your wallet": "Payé avec votre solde",
-  "Pay at the desk when you collect the key": "Payez à l’accueil en récupérant la clé",
   "Locker {n} was just taken. Pick another.": "Le casier {n} vient d’être pris. Choisissez-en un autre.",
   "Up to 3 lockers per account for each time.": "Jusqu’à 3 casiers par compte pour chaque créneau.",
   "Locker {n} is taken. Pick another.": "Le casier {n} est pris. Choisissez-en un autre.",
@@ -2635,7 +2784,29 @@ var FORM_T = {
   "Locker {n}, taken": "Casier {n}, pris",
   "Locker {n}, out of service": "Casier {n}, hors service",
   "Could not reach the server. Please try again.": "Impossible de joindre le serveur. Veuillez réessayer.",
-  "Language": "Langue"
+  "Language": "Langue",
+  "Sign out": "Se déconnecter",
+  "Cancel": "Annuler",
+  "Change locker {n}": "Changer le casier {n}",
+  "Change your locker": "Changer votre casier",
+  "Change locker": "Changer de casier",
+  "On your booking": "Sur votre réservation",
+  "Change": "Changer",
+  "Show this at the desk": "Montrez ceci à l’accueil",
+  "Code for the desk": "Code pour l’accueil",
+  "By reserving you accept the {terms}.": "En réservant, vous acceptez les {terms}.",
+  "locker terms": "conditions des casiers",
+  "Locker terms": "Conditions des casiers",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "Un casier se loue pour un créneau d’une soirée : 18 h-20 h, 21 h-23 h ou les deux lors d’une soirée JCC, 19 h-21 h lors d’une soirée Petromin. La clé reste chez l’équipe MicroMobility, qui vous l’ouvre.",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "Ne mettez dans un casier ni nourriture ni boisson ouverte, rien d’inflammable, de dangereux ou d’illégal, ni aucune arme.",
+  "Nothing may be left overnight: collect everything the same evening.": "Rien ne peut rester pour la nuit : récupérez tout le soir même.",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "Les objets oubliés sont conservés 14 jours, puis donnés ou jetés.",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "MicroMobility n’est pas responsable de la perte ou de l’endommagement de ce qui est rangé dans un casier.",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "Un casier réservé et non récupéré reste bloqué jusqu’à ce que l’équipe le libère ; le paiement par portefeuille est alors remboursé.",
+  "Name on locker {n}": "Nom sur le casier {n}",
+  "Enter a name for locker {n}": "Saisissez un nom pour le casier {n}",
+  "This locker can't be changed now. Ask at the desk.": "Ce casier ne peut pas être changé maintenant. Demandez à l’accueil.",
+  "Locker changed": "Casier changé"
  },
  "pt": {
   "Dismiss": "Fechar",
@@ -2702,7 +2873,6 @@ var FORM_T = {
   "Use {s}": "Usar {s}",
   "Signed in as {name}": "Conectado como {name}",
   "Locker": "Cacifo",
-  "Paid": "Pago",
   "In use": "Em uso",
   "Remove locker {n}?": "Remover o cacifo {n}?",
   "Remove this locker?": "Remover este cacifo?",
@@ -2711,9 +2881,7 @@ var FORM_T = {
   "Balance {amount}": "Saldo {amount}",
   "Your lockers are reserved": "Seus cacifos estão reservados",
   "Your locker is reserved": "Seu cacifo está reservado",
-  "Payment": "Pagamento",
   "Paid from your wallet": "Pago com sua carteira",
-  "Pay at the desk when you collect the key": "Pague no balcão ao retirar a chave",
   "Locker {n} was just taken. Pick another.": "O cacifo {n} acabou de ser reservado. Escolha outro.",
   "Up to 3 lockers per account for each time.": "Até 3 cacifos por conta em cada horário.",
   "Locker {n} is taken. Pick another.": "O cacifo {n} está ocupado. Escolha outro.",
@@ -2757,7 +2925,29 @@ var FORM_T = {
   "Locker {n}, taken": "Cacifo {n}, ocupado",
   "Locker {n}, out of service": "Cacifo {n}, fora de serviço",
   "Could not reach the server. Please try again.": "Não foi possível conectar ao servidor. Tente novamente.",
-  "Language": "Idioma"
+  "Language": "Idioma",
+  "Sign out": "Terminar sessão",
+  "Cancel": "Cancelar",
+  "Change locker {n}": "Mudar o cacifo {n}",
+  "Change your locker": "Mudar o seu cacifo",
+  "Change locker": "Mudar de cacifo",
+  "On your booking": "Na sua reserva",
+  "Change": "Mudar",
+  "Show this at the desk": "Mostre isto no balcão",
+  "Code for the desk": "Código para o balcão",
+  "By reserving you accept the {terms}.": "Ao reservar aceita as {terms}.",
+  "locker terms": "condições dos cacifos",
+  "Locker terms": "Condições dos cacifos",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "O cacifo é alugado para um horário de uma noite: 18h-20h, 21h-23h ou ambos numa noite JCC, 19h-21h numa noite Petromin. A chave fica com a equipa MicroMobility, que o abre para si.",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "Não coloque no cacifo comida ou bebidas abertas, nada inflamável, perigoso ou ilegal, nem qualquer arma.",
+  "Nothing may be left overnight: collect everything the same evening.": "Nada pode ficar durante a noite: levante tudo na mesma noite.",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "Os objetos deixados são guardados durante 14 dias e depois doados ou descartados.",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "A MicroMobility não se responsabiliza pela perda ou danos de nada guardado num cacifo.",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "Um cacifo reservado e não levantado fica retido até a equipa o libertar; o pagamento com carteira é então devolvido.",
+  "Name on locker {n}": "Nome no cacifo {n}",
+  "Enter a name for locker {n}": "Escreva um nome para o cacifo {n}",
+  "This locker can't be changed now. Ask at the desk.": "Este cacifo não pode ser mudado agora. Pergunte no balcão.",
+  "Locker changed": "Cacifo mudado"
  },
  "tl": {
   "Dismiss": "Isara",
@@ -2824,7 +3014,6 @@ var FORM_T = {
   "Use {s}": "Gamitin ang {s}",
   "Signed in as {name}": "Naka-sign in bilang {name}",
   "Locker": "Locker",
-  "Paid": "Bayad",
   "In use": "Ginagamit",
   "Remove locker {n}?": "Alisin ang locker {n}?",
   "Remove this locker?": "Alisin ang locker na ito?",
@@ -2833,9 +3022,7 @@ var FORM_T = {
   "Balance {amount}": "Balanse {amount}",
   "Your lockers are reserved": "Naka-reserve na ang iyong mga locker",
   "Your locker is reserved": "Naka-reserve na ang iyong locker",
-  "Payment": "Bayad",
   "Paid from your wallet": "Binayaran mula sa iyong wallet",
-  "Pay at the desk when you collect the key": "Magbayad sa desk pagkuha mo ng susi",
   "Locker {n} was just taken. Pick another.": "Kakakuha lang ng locker {n}. Pumili ng iba.",
   "Up to 3 lockers per account for each time.": "Hanggang 3 locker bawat account sa bawat oras.",
   "Locker {n} is taken. Pick another.": "Kuha na ang locker {n}. Pumili ng iba.",
@@ -2879,7 +3066,29 @@ var FORM_T = {
   "Locker {n}, taken": "Locker {n}, kuha na",
   "Locker {n}, out of service": "Locker {n}, hindi magagamit",
   "Could not reach the server. Please try again.": "Hindi maabot ang server. Pakisubukan ulit.",
-  "Language": "Wika"
+  "Language": "Wika",
+  "Sign out": "Mag-sign out",
+  "Cancel": "Kanselahin",
+  "Change locker {n}": "Palitan ang locker {n}",
+  "Change your locker": "Palitan ang iyong locker",
+  "Change locker": "Palitan ang locker",
+  "On your booking": "Sa iyong booking",
+  "Change": "Palitan",
+  "Show this at the desk": "Ipakita ito sa desk",
+  "Code for the desk": "Code para sa desk",
+  "By reserving you accept the {terms}.": "Sa pag-reserve, tinatanggap mo ang {terms}.",
+  "locker terms": "mga tuntunin ng locker",
+  "Locker terms": "Mga tuntunin ng locker",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "Inuupahan ang locker para sa isang oras ng gabi: 6-8 PM, 9-11 PM o pareho sa gabi ng JCC, 7-9 PM sa gabi ng Petromin. Nasa staff ng MicroMobility ang susi, at sila ang magbubukas nito para sa iyo.",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "Huwag maglagay ng pagkain o bukas na inumin, anumang madaling magliyab, mapanganib o ilegal, o anumang armas sa locker.",
+  "Nothing may be left overnight: collect everything the same evening.": "Walang maaaring iwan nang magdamag: kunin ang lahat sa parehong gabi.",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "Itinatago ang mga naiwang gamit nang 14 na araw, saka ibinibigay o itinatapon.",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "Walang pananagutan ang MicroMobility sa pagkawala o pagkasira ng anumang nakatago sa locker.",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "Ang nakareserbang locker na hindi kinuha ay hawak hanggang palayain ito ng staff; ibabalik ang bayad mula sa wallet para dito.",
+  "Name on locker {n}": "Pangalan sa locker {n}",
+  "Enter a name for locker {n}": "Maglagay ng pangalan para sa locker {n}",
+  "This locker can't be changed now. Ask at the desk.": "Hindi na mapapalitan ang locker na ito ngayon. Magtanong sa desk.",
+  "Locker changed": "Napalitan ang locker"
  },
  "ru": {
   "Dismiss": "Закрыть",
@@ -2946,7 +3155,6 @@ var FORM_T = {
   "Use {s}": "Использовать {s}",
   "Signed in as {name}": "Вы вошли как {name}",
   "Locker": "Шкафчик",
-  "Paid": "Оплачено",
   "In use": "Используется",
   "Remove locker {n}?": "Удалить шкафчик {n}?",
   "Remove this locker?": "Удалить этот шкафчик?",
@@ -2955,9 +3163,7 @@ var FORM_T = {
   "Balance {amount}": "Баланс: {amount}",
   "Your lockers are reserved": "Ваши шкафчики забронированы",
   "Your locker is reserved": "Ваш шкафчик забронирован",
-  "Payment": "Оплата",
   "Paid from your wallet": "Оплачено из кошелька",
-  "Pay at the desk when you collect the key": "Оплата на стойке при получении ключа",
   "Locker {n} was just taken. Pick another.": "Шкафчик {n} только что заняли. Выберите другой.",
   "Up to 3 lockers per account for each time.": "Не больше 3 шкафчиков на один аккаунт в одно и то же время.",
   "Locker {n} is taken. Pick another.": "Шкафчик {n} занят. Выберите другой.",
@@ -3001,7 +3207,29 @@ var FORM_T = {
   "Locker {n}, taken": "Шкафчик {n}, занят",
   "Locker {n}, out of service": "Шкафчик {n}, вне эксплуатации",
   "Could not reach the server. Please try again.": "Не удалось связаться с сервером. Попробуйте ещё раз.",
-  "Language": "Язык"
+  "Language": "Язык",
+  "Sign out": "Выйти",
+  "Cancel": "Отмена",
+  "Change locker {n}": "Изменить шкафчик {n}",
+  "Change your locker": "Изменить шкафчик",
+  "Change locker": "Сменить шкафчик",
+  "On your booking": "В вашем бронировании",
+  "Change": "Изменить",
+  "Show this at the desk": "Покажите это на стойке",
+  "Code for the desk": "Код для стойки",
+  "By reserving you accept the {terms}.": "Бронируя, вы принимаете {terms}.",
+  "locker terms": "условия пользования шкафчиками",
+  "Locker terms": "Условия пользования шкафчиками",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "Шкафчик сдаётся на одно время вечера: 18:00–20:00, 21:00–23:00 или оба в вечер JCC, 19:00–21:00 в вечер Petromin. Ключ остаётся у сотрудников MicroMobility, которые открывают его для вас.",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "Не кладите в шкафчик еду и открытые напитки, легковоспламеняющиеся, опасные или запрещённые предметы, а также оружие.",
+  "Nothing may be left overnight: collect everything the same evening.": "Ничего нельзя оставлять на ночь: заберите всё в тот же вечер.",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "Забытые вещи хранятся 14 дней, затем передаются на благотворительность или утилизируются.",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "MicroMobility не несёт ответственности за утрату или повреждение вещей, хранящихся в шкафчике.",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "Забронированный и не полученный шкафчик удерживается, пока сотрудники его не освободят; оплата из кошелька тогда возвращается.",
+  "Name on locker {n}": "Имя для шкафчика {n}",
+  "Enter a name for locker {n}": "Введите имя для шкафчика {n}",
+  "This locker can't be changed now. Ask at the desk.": "Этот шкафчик сейчас нельзя изменить. Обратитесь на стойку.",
+  "Locker changed": "Шкафчик изменён"
  },
  "ur": {
   "Dismiss": "بند کریں",
@@ -3068,7 +3296,6 @@ var FORM_T = {
   "Use {s}": "{s} استعمال کریں",
   "Signed in as {name}": "{name} کے طور پر سائن اِن ہیں",
   "Locker": "لاکر",
-  "Paid": "ادا شدہ",
   "In use": "زیرِ استعمال",
   "Remove locker {n}?": "لاکر {n} ہٹائیں؟",
   "Remove this locker?": "یہ لاکر ہٹائیں؟",
@@ -3077,9 +3304,7 @@ var FORM_T = {
   "Balance {amount}": "بیلنس {amount}",
   "Your lockers are reserved": "آپ کے لاکرز بک ہو گئے ہیں",
   "Your locker is reserved": "آپ کا لاکر بک ہو گیا ہے",
-  "Payment": "ادائیگی",
   "Paid from your wallet": "آپ کے والٹ سے ادا کیا گیا",
-  "Pay at the desk when you collect the key": "چابی لیتے وقت ڈیسک پر ادائیگی کریں",
   "Locker {n} was just taken. Pick another.": "لاکر {n} ابھی ابھی بک ہو گیا۔ کوئی اور لاکر منتخب کریں۔",
   "Up to 3 lockers per account for each time.": "ایک اکاؤنٹ ایک ہی وقت کے لیے زیادہ سے زیادہ 3 لاکرز بک کر سکتا ہے۔",
   "Locker {n} is taken. Pick another.": "لاکر {n} بک ہو چکا ہے۔ کوئی اور لاکر منتخب کریں۔",
@@ -3123,7 +3348,29 @@ var FORM_T = {
   "Locker {n}, taken": "لاکر {n}، بک شدہ",
   "Locker {n}, out of service": "لاکر {n}، سروس سے باہر",
   "Could not reach the server. Please try again.": "سرور تک رسائی نہیں ہو سکی۔ براہِ کرم دوبارہ کوشش کریں۔",
-  "Language": "زبان"
+  "Language": "زبان",
+  "Sign out": "سائن آؤٹ",
+  "Cancel": "منسوخ کریں",
+  "Change locker {n}": "لاکر {n} تبدیل کریں",
+  "Change your locker": "اپنا لاکر تبدیل کریں",
+  "Change locker": "لاکر تبدیل کریں",
+  "On your booking": "آپ کی بکنگ پر",
+  "Change": "تبدیل کریں",
+  "Show this at the desk": "یہ ڈیسک پر دکھائیں",
+  "Code for the desk": "ڈیسک کے لیے کوڈ",
+  "By reserving you accept the {terms}.": "بکنگ کر کے آپ {terms} قبول کرتے ہیں۔",
+  "locker terms": "لاکر کی شرائط",
+  "Locker terms": "لاکر کی شرائط",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "لاکر ایک شام کے ایک وقت کے لیے کرائے پر دیا جاتا ہے: JCC کی رات 6-8 PM، 9-11 PM یا دونوں، Petromin کی رات 7-9 PM۔ چابی MicroMobility کے عملے کے پاس رہتی ہے، جو آپ کے لیے اسے کھولتے ہیں۔",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "لاکر میں کھانا یا کھلے مشروبات، کوئی آتش گیر، خطرناک یا غیر قانونی چیز، یا کوئی ہتھیار نہ رکھیں۔",
+  "Nothing may be left overnight: collect everything the same evening.": "رات بھر کچھ نہیں چھوڑا جا سکتا: سب کچھ اسی شام لے جائیں۔",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "چھوڑی گئی اشیاء 14 دن تک رکھی جاتی ہیں، پھر عطیہ یا ضائع کر دی جاتی ہیں۔",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "لاکر میں رکھی کسی بھی چیز کے گم ہونے یا خراب ہونے کی ذمہ داری MicroMobility پر نہیں۔",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "محفوظ کیا گیا لاکر جو لیا نہ جائے، عملے کے خالی کرنے تک محفوظ رہتا ہے؛ تب اس کی والٹ سے ادائیگی واپس کر دی جاتی ہے۔",
+  "Name on locker {n}": "لاکر {n} پر نام",
+  "Enter a name for locker {n}": "لاکر {n} کے لیے نام لکھیں",
+  "This locker can't be changed now. Ask at the desk.": "یہ لاکر اب تبدیل نہیں ہو سکتا۔ ڈیسک پر پوچھیں۔",
+  "Locker changed": "لاکر تبدیل ہو گیا"
  },
  "hi": {
   "Dismiss": "बंद करें",
@@ -3190,7 +3437,6 @@ var FORM_T = {
   "Use {s}": "{s} इस्तेमाल करें",
   "Signed in as {name}": "{name} के रूप में साइन इन हैं",
   "Locker": "लॉकर",
-  "Paid": "भुगतान किया",
   "In use": "उपयोग में",
   "Remove locker {n}?": "लॉकर {n} हटाएँ?",
   "Remove this locker?": "यह लॉकर हटाएँ?",
@@ -3199,9 +3445,7 @@ var FORM_T = {
   "Balance {amount}": "बैलेंस {amount}",
   "Your lockers are reserved": "आपके लॉकर बुक हो गए हैं",
   "Your locker is reserved": "आपका लॉकर बुक हो गया है",
-  "Payment": "भुगतान",
   "Paid from your wallet": "आपके वॉलेट से भुगतान हो गया",
-  "Pay at the desk when you collect the key": "चाबी लेते समय डेस्क पर भुगतान करें",
   "Locker {n} was just taken. Pick another.": "लॉकर {n} अभी-अभी बुक हो गया। कोई दूसरा लॉकर चुनें।",
   "Up to 3 lockers per account for each time.": "एक खाता एक ही समय के लिए अधिकतम 3 लॉकर बुक कर सकता है।",
   "Locker {n} is taken. Pick another.": "लॉकर {n} बुक हो चुका है। कोई दूसरा लॉकर चुनें।",
@@ -3245,7 +3489,29 @@ var FORM_T = {
   "Locker {n}, taken": "लॉकर {n}, बुक हो चुका",
   "Locker {n}, out of service": "लॉकर {n}, सेवा से बाहर",
   "Could not reach the server. Please try again.": "सर्वर तक नहीं पहुँच सके। कृपया फिर से कोशिश करें।",
-  "Language": "भाषा"
+  "Language": "भाषा",
+  "Sign out": "साइन आउट",
+  "Cancel": "रद्द करें",
+  "Change locker {n}": "लॉकर {n} बदलें",
+  "Change your locker": "अपना लॉकर बदलें",
+  "Change locker": "लॉकर बदलें",
+  "On your booking": "आपकी बुकिंग पर",
+  "Change": "बदलें",
+  "Show this at the desk": "यह डेस्क पर दिखाएँ",
+  "Code for the desk": "डेस्क के लिए कोड",
+  "By reserving you accept the {terms}.": "बुकिंग करके आप {terms} स्वीकार करते हैं।",
+  "locker terms": "लॉकर की शर्तें",
+  "Locker terms": "लॉकर की शर्तें",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "लॉकर एक शाम के एक समय के लिए किराए पर दिया जाता है: JCC की रात 6-8 PM, 9-11 PM या दोनों, Petromin की रात 7-9 PM। चाबी MicroMobility स्टाफ़ के पास रहती है, जो आपके लिए इसे खोलते हैं।",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "लॉकर में खाना या खुले पेय, कोई ज्वलनशील, खतरनाक या अवैध चीज़, या कोई हथियार न रखें।",
+  "Nothing may be left overnight: collect everything the same evening.": "रात भर कुछ भी नहीं छोड़ा जा सकता: सब कुछ उसी शाम ले जाएँ।",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "छोड़ा गया सामान 14 दिन तक रखा जाता है, फिर दान या निपटान कर दिया जाता है।",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "लॉकर में रखी किसी भी चीज़ के खोने या खराब होने के लिए MicroMobility ज़िम्मेदार नहीं है।",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "आरक्षित लॉकर जो लिया नहीं गया, स्टाफ़ के खाली करने तक रखा रहता है; तब उसका वॉलेट से किया भुगतान वापस हो जाता है।",
+  "Name on locker {n}": "लॉकर {n} पर नाम",
+  "Enter a name for locker {n}": "लॉकर {n} के लिए नाम लिखें",
+  "This locker can't be changed now. Ask at the desk.": "यह लॉकर अभी बदला नहीं जा सकता। डेस्क पर पूछें।",
+  "Locker changed": "लॉकर बदल गया"
  },
  "ne": {
   "Dismiss": "बन्द गर्नुहोस्",
@@ -3312,7 +3578,6 @@ var FORM_T = {
   "Use {s}": "{s} प्रयोग गर्नुहोस्",
   "Signed in as {name}": "{name} को रूपमा साइन इन छ",
   "Locker": "लकर",
-  "Paid": "भुक्तानी भयो",
   "In use": "प्रयोगमा",
   "Remove locker {n}?": "लकर {n} हटाउने?",
   "Remove this locker?": "यो लकर हटाउने?",
@@ -3321,9 +3586,7 @@ var FORM_T = {
   "Balance {amount}": "ब्यालेन्स {amount}",
   "Your lockers are reserved": "तपाईंका लकरहरू बुक भए",
   "Your locker is reserved": "तपाईंको लकर बुक भयो",
-  "Payment": "भुक्तानी",
   "Paid from your wallet": "तपाईंको वालेटबाट भुक्तानी भयो",
-  "Pay at the desk when you collect the key": "साँचो लिँदा डेस्कमा भुक्तानी गर्नुहोस्",
   "Locker {n} was just taken. Pick another.": "लकर {n} भर्खरै बुक भयो। अर्को लकर छान्नुहोस्।",
   "Up to 3 lockers per account for each time.": "एउटा खाताले एउटै समयका लागि बढीमा 3 वटा लकर बुक गर्न सक्छ।",
   "Locker {n} is taken. Pick another.": "लकर {n} बुक भइसकेको छ। अर्को लकर छान्नुहोस्।",
@@ -3367,7 +3630,29 @@ var FORM_T = {
   "Locker {n}, taken": "लकर {n}, बुक भइसकेको",
   "Locker {n}, out of service": "लकर {n}, सेवाबाहिर",
   "Could not reach the server. Please try again.": "सर्भरमा पुग्न सकिएन। कृपया फेरि प्रयास गर्नुहोस्।",
-  "Language": "भाषा"
+  "Language": "भाषा",
+  "Sign out": "साइन आउट",
+  "Cancel": "रद्द गर्नुहोस्",
+  "Change locker {n}": "लकर {n} बदल्नुहोस्",
+  "Change your locker": "आफ्नो लकर बदल्नुहोस्",
+  "Change locker": "लकर बदल्नुहोस्",
+  "On your booking": "तपाईंको बुकिङमा",
+  "Change": "बदल्नुहोस्",
+  "Show this at the desk": "यो डेस्कमा देखाउनुहोस्",
+  "Code for the desk": "डेस्कका लागि कोड",
+  "By reserving you accept the {terms}.": "बुक गरेर तपाईं {terms} स्वीकार गर्नुहुन्छ।",
+  "locker terms": "लकरका सर्तहरू",
+  "Locker terms": "लकरका सर्तहरू",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "लकर एक साँझको एउटा समयका लागि भाडामा दिइन्छ: JCC को रात 6-8 PM, 9-11 PM वा दुवै, Petromin को रात 7-9 PM। साँचो MicroMobility का कर्मचारीसँग रहन्छ, जसले तपाईंका लागि खोलिदिन्छन्।",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "लकरमा खाना वा खुला पेय, कुनै ज्वलनशील, खतरनाक वा गैरकानुनी वस्तु, वा कुनै हतियार नराख्नुहोस्।",
+  "Nothing may be left overnight: collect everything the same evening.": "रातभर केही छोड्न पाइँदैन: सबै सामान सोही साँझ लैजानुहोस्।",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "छोडिएका सामान 14 दिनसम्म राखिन्छन्, त्यसपछि दान वा हटाइन्छन्।",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "लकरमा राखिएको कुनै पनि वस्तु हराए वा बिग्रिएमा MicroMobility जिम्मेवार हुँदैन।",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "आरक्षित तर नलिइएको लकर कर्मचारीले खाली नगरेसम्म राखिन्छ; त्यसपछि वालेटबाट गरिएको भुक्तानी फिर्ता हुन्छ।",
+  "Name on locker {n}": "लकर {n} मा नाम",
+  "Enter a name for locker {n}": "लकर {n} का लागि नाम लेख्नुहोस्",
+  "This locker can't be changed now. Ask at the desk.": "यो लकर अहिले बदल्न मिल्दैन। डेस्कमा सोध्नुहोस्।",
+  "Locker changed": "लकर बदलियो"
  },
  "bn": {
   "Dismiss": "বন্ধ করুন",
@@ -3434,7 +3719,6 @@ var FORM_T = {
   "Use {s}": "{s} ব্যবহার করুন",
   "Signed in as {name}": "{name} হিসেবে সাইন ইন করা আছে",
   "Locker": "লকার",
-  "Paid": "পরিশোধিত",
   "In use": "ব্যবহারে",
   "Remove locker {n}?": "লকার {n} সরাবেন?",
   "Remove this locker?": "এই লকারটি সরাবেন?",
@@ -3443,9 +3727,7 @@ var FORM_T = {
   "Balance {amount}": "ব্যালেন্স {amount}",
   "Your lockers are reserved": "আপনার লকারগুলো বুক হয়েছে",
   "Your locker is reserved": "আপনার লকার বুক হয়েছে",
-  "Payment": "পেমেন্ট",
   "Paid from your wallet": "আপনার ওয়ালেট থেকে পরিশোধিত",
-  "Pay at the desk when you collect the key": "চাবি নেওয়ার সময় ডেস্কে পেমেন্ট করুন",
   "Locker {n} was just taken. Pick another.": "লকার {n} এইমাত্র বুক হয়ে গেছে। অন্য একটি লকার বেছে নিন।",
   "Up to 3 lockers per account for each time.": "একটি অ্যাকাউন্ট একই সময়ের জন্য সর্বোচ্চ 3টি লকার বুক করতে পারে।",
   "Locker {n} is taken. Pick another.": "লকার {n} বুক হয়ে গেছে। অন্য একটি লকার বেছে নিন।",
@@ -3489,7 +3771,29 @@ var FORM_T = {
   "Locker {n}, taken": "লকার {n}, বুক করা",
   "Locker {n}, out of service": "লকার {n}, ব্যবহারের বাইরে",
   "Could not reach the server. Please try again.": "সার্ভারে পৌঁছানো গেল না। অনুগ্রহ করে আবার চেষ্টা করুন।",
-  "Language": "ভাষা"
+  "Language": "ভাষা",
+  "Sign out": "সাইন আউট",
+  "Cancel": "বাতিল",
+  "Change locker {n}": "লকার {n} বদলান",
+  "Change your locker": "আপনার লকার বদলান",
+  "Change locker": "লকার বদলান",
+  "On your booking": "আপনার বুকিংয়ে",
+  "Change": "বদলান",
+  "Show this at the desk": "এটি ডেস্কে দেখান",
+  "Code for the desk": "ডেস্কের জন্য কোড",
+  "By reserving you accept the {terms}.": "বুক করে আপনি {terms} মেনে নিচ্ছেন।",
+  "locker terms": "লকারের শর্তাবলি",
+  "Locker terms": "লকারের শর্তাবলি",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "লকার এক সন্ধ্যার একটি সময়ের জন্য ভাড়া দেওয়া হয়: JCC রাতে 6-8 PM, 9-11 PM বা দুটোই, Petromin রাতে 7-9 PM। চাবি MicroMobility কর্মীদের কাছে থাকে, তাঁরাই আপনার জন্য খুলে দেন।",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "লকারে খাবার বা খোলা পানীয়, দাহ্য, বিপজ্জনক বা অবৈধ কিছু, অথবা কোনো অস্ত্র রাখবেন না।",
+  "Nothing may be left overnight: collect everything the same evening.": "রাতভর কিছু রেখে যাওয়া যাবে না: সব কিছু একই সন্ধ্যায় নিয়ে যান।",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "ফেলে যাওয়া জিনিস 14 দিন রাখা হয়, তারপর দান করা বা ফেলে দেওয়া হয়।",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "লকারে রাখা কোনো কিছু হারানো বা ক্ষতিগ্রস্ত হলে MicroMobility দায়ী নয়।",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "সংরক্ষিত লকার যা নেওয়া হয়নি, কর্মীরা খালি না করা পর্যন্ত রাখা থাকে; তখন ওয়ালেট থেকে করা পরিশোধ ফেরত দেওয়া হয়।",
+  "Name on locker {n}": "লকার {n}-এর নাম",
+  "Enter a name for locker {n}": "লকার {n}-এর জন্য একটি নাম লিখুন",
+  "This locker can't be changed now. Ask at the desk.": "এই লকারটি এখন বদলানো যাবে না। ডেস্কে জিজ্ঞাসা করুন।",
+  "Locker changed": "লকার বদলানো হয়েছে"
  },
  "zh": {
   "Dismiss": "关闭",
@@ -3556,7 +3860,6 @@ var FORM_T = {
   "Use {s}": "使用 {s}",
   "Signed in as {name}": "已登录：{name}",
   "Locker": "储物柜",
-  "Paid": "已付款",
   "In use": "使用中",
   "Remove locker {n}?": "移除储物柜 {n}？",
   "Remove this locker?": "移除此储物柜？",
@@ -3565,9 +3868,7 @@ var FORM_T = {
   "Balance {amount}": "余额 {amount}",
   "Your lockers are reserved": "您的储物柜均已预订",
   "Your locker is reserved": "您的储物柜已预订",
-  "Payment": "付款",
   "Paid from your wallet": "已用钱包付款",
-  "Pay at the desk when you collect the key": "领取钥匙时在服务台付款",
   "Locker {n} was just taken. Pick another.": "储物柜 {n} 刚刚被订走。请另选一个。",
   "Up to 3 lockers per account for each time.": "每个账户在同一时段最多可预订 3 个储物柜。",
   "Locker {n} is taken. Pick another.": "储物柜 {n} 已被预订。请另选一个。",
@@ -3611,7 +3912,29 @@ var FORM_T = {
   "Locker {n}, taken": "储物柜 {n}，已被预订",
   "Locker {n}, out of service": "储物柜 {n}，暂停使用",
   "Could not reach the server. Please try again.": "无法连接服务器，请重试。",
-  "Language": "语言"
+  "Language": "语言",
+  "Sign out": "退出登录",
+  "Cancel": "取消",
+  "Change locker {n}": "更换储物柜{n}",
+  "Change your locker": "更换您的储物柜",
+  "Change locker": "更换储物柜",
+  "On your booking": "在您的预订中",
+  "Change": "更改",
+  "Show this at the desk": "请在前台出示",
+  "Code for the desk": "前台用二维码",
+  "By reserving you accept the {terms}.": "预订即表示您接受{terms}。",
+  "locker terms": "储物柜条款",
+  "Locker terms": "储物柜条款",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "储物柜按一个晚上的时段出租：JCC之夜为18:00-20:00、21:00-23:00或两者，Petromin之夜为19:00-21:00。钥匙由MicroMobility工作人员保管，由他们为您开启。",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "请勿在储物柜中存放食物或已开封的饮料、任何易燃、危险或违法物品，或任何武器。",
+  "Nothing may be left overnight: collect everything the same evening.": "物品不得过夜存放：请在当晚取走所有物品。",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "遗留物品保存14天，之后将被捐赠或处理。",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "MicroMobility对储物柜内任何物品的丢失或损坏概不负责。",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "已预订但未领取的储物柜会保留至工作人员释放；届时钱包支付的款项将退还。",
+  "Name on locker {n}": "储物柜{n}上的姓名",
+  "Enter a name for locker {n}": "请输入储物柜{n}的姓名",
+  "This locker can't be changed now. Ask at the desk.": "此储物柜现在无法更换。请向前台咨询。",
+  "Locker changed": "储物柜已更换"
  },
  "ja": {
   "Dismiss": "閉じる",
@@ -3678,7 +4001,6 @@ var FORM_T = {
   "Use {s}": "{s}を使う",
   "Signed in as {name}": "{name}としてログイン中",
   "Locker": "ロッカー",
-  "Paid": "支払い済み",
   "In use": "使用中",
   "Remove locker {n}?": "ロッカー{n}を削除しますか？",
   "Remove this locker?": "このロッカーを削除しますか？",
@@ -3687,9 +4009,7 @@ var FORM_T = {
   "Balance {amount}": "残高：{amount}",
   "Your lockers are reserved": "ロッカーを予約しました",
   "Your locker is reserved": "ロッカーを予約しました",
-  "Payment": "お支払い",
   "Paid from your wallet": "ウォレットで支払い済み",
-  "Pay at the desk when you collect the key": "鍵の受け取り時に受付でお支払いください",
   "Locker {n} was just taken. Pick another.": "ロッカー{n}は、たった今ほかの方が予約しました。別のロッカーを選んでください。",
   "Up to 3 lockers per account for each time.": "予約できるのは、1つのアカウントにつき同じ時間帯で3つまでです。",
   "Locker {n} is taken. Pick another.": "ロッカー{n}は予約済みです。別のロッカーを選んでください。",
@@ -3733,7 +4053,29 @@ var FORM_T = {
   "Locker {n}, taken": "ロッカー{n}、予約済み",
   "Locker {n}, out of service": "ロッカー{n}、休止中",
   "Could not reach the server. Please try again.": "サーバーに接続できませんでした。もう一度お試しください。",
-  "Language": "言語"
+  "Language": "言語",
+  "Sign out": "ログアウト",
+  "Cancel": "キャンセル",
+  "Change locker {n}": "ロッカー{n}を変更",
+  "Change your locker": "ロッカーを変更",
+  "Change locker": "ロッカーを変更する",
+  "On your booking": "ご予約に含まれます",
+  "Change": "変更",
+  "Show this at the desk": "これを受付で見せてください",
+  "Code for the desk": "受付用コード",
+  "By reserving you accept the {terms}.": "予約すると{terms}に同意したことになります。",
+  "locker terms": "ロッカー利用規約",
+  "Locker terms": "ロッカー利用規約",
+  "A locker is rented for one evening's time: 6-8 PM, 9-11 PM or both on a JCC night, 7-9 PM on a Petromin night. The key stays with MicroMobility staff, who open it for you.": "ロッカーは1晩のうちの時間帯で貸し出します。JCCの夜は18〜20時、21〜23時、またはその両方、Petrominの夜は19〜21時です。鍵はMicroMobilityのスタッフが保管し、スタッフが開けます。",
+  "Do not put food or open drinks, anything flammable, dangerous or illegal, or any weapon in a locker.": "ロッカーには、食べ物や開封済みの飲み物、可燃物、危険物、違法な物、武器を入れないでください。",
+  "Nothing may be left overnight: collect everything the same evening.": "夜を越えて物を置いておくことはできません。当日の夜のうちにすべてお持ち帰りください。",
+  "Things left behind are kept for 14 days, then donated or disposed of.": "忘れ物は14日間保管し、その後は寄付または処分します。",
+  "MicroMobility is not responsible for loss of or damage to anything kept in a locker.": "ロッカー内の物品の紛失・損傷について、MicroMobilityは責任を負いません。",
+  "A locker reserved and not collected is held until staff free it; a wallet payment for it is then refunded.": "予約して受け取られなかったロッカーは、スタッフが解除するまで確保されます。その際、ウォレットでの支払いは返金されます。",
+  "Name on locker {n}": "ロッカー{n}の名前",
+  "Enter a name for locker {n}": "ロッカー{n}の名前を入力してください",
+  "This locker can't be changed now. Ask at the desk.": "このロッカーは今は変更できません。受付でお尋ねください。",
+  "Locker changed": "ロッカーを変更しました"
  }
 };
 
@@ -3914,6 +4256,2304 @@ var MMAccount = (function () {
   return { ident: ident, signIn: signIn, takeCode: takeCode, redeem: redeem, plan: plan, has: function (me, k) { return !!me && !!HAS[k] && HAS[k](me); }, same: same, draft: draft };
 })();
 
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+
 </script>
 <script>
 /* The lockers page (micromobility.sa/lockers): a rider reserves a locker for an evening from a drawing of the cabinet
@@ -3930,10 +6570,14 @@ var MMAccount = (function () {
       customer_handoff_redeem), the lockers picked kept for the tab meanwhile;
    3. the review and how to pay: from the wallet now (customer_wallet; never on a Petromin night) or at the desk
       when the key is collected (customer_locker_book);
-   4. reserved: what was reserved, then the rider's lockers (customer_lockers), each one not yet collected with a
-      Remove (customer_locker_drop; a wallet payment comes back).
+   4. reserved: the rider's lockers (customer_lockers), one card per evening to show at the desk (each locker's
+      number and name, the time, how it is paid, and a code the desk scans: micromobility.sa/lockers/r/<rental>);
+      each one not yet collected can be changed (another locker or time that evening, customer_locker_change) and,
+      with no booking behind it, removed (customer_locker_drop; a wallet payment comes back).
    A locker's own tag (micromobility.sa/lockers/7, older tags /lockers/L7) arrives as ?locker=7, picked already on
-   the first evening and time it is free. The session lives in this page only, never in storage. */
+   the first evening and time it is free; ?change=<rental> (the booking app's Change) opens that locker's change once
+   signed in. The account stays signed in on this device (localStorage mm-lockers-acct) until the rider signs out or
+   the database no longer knows the session. */
 (function () {
   "use strict";
   // The public anon key (the same one the booking site ships): every call is a SECURITY DEFINER
@@ -3950,6 +6594,10 @@ var MMAccount = (function () {
   var PICK_KEY = "mm-lockers-pick";
   // The booking app: where a forgotten password is handled.
   var BOOKING_URL = "https://experiences.micromobility.sa/";
+  // The account kept on this device (the owner, 2026-11-09: stay signed in): {id, token, name, email}.
+  var ACCT_KEY = "mm-lockers-acct";
+  // What the desk scans: a rental's own address, which sends a staff phone to the staff app with that rider's lockers.
+  var DESK_URL = "https://micromobility.sa/lockers/r/";
   // Up to three lockers per account for each time (customer_locker_book's LOCKER_LIMIT counts the ones held too).
   var MAX_EACH = 3;
   // The cabinet is read again this often while the page is in view (a locker reserved is nobody else's: the owner, 2026-11-09).
@@ -4158,9 +6806,16 @@ var MMAccount = (function () {
   function ended(b, p) { return !!(b && b.ended && b.ended[p] === true); }
   function leftOf(b, p) { var v = b && b.left ? Number(b.left[p]) : NaN; return isNaN(v) ? null : v; }
   function unitsOf(b) { return (b && Array.isArray(b.units) ? b.units : []).filter(function (u) { return u && u.code != null && String(u.code) !== ""; }); }
+  // The doors taken for a time. While a locker is being changed, its own door is not taken for the times it holds.
   function takenOf(b, p) {
-    var out = {}, t = b && b.taken || {};
-    (SLOTS[p] || []).forEach(function (s) { (Array.isArray(t[s]) ? t[s] : []).forEach(function (c) { out[String(c)] = true; }); });
+    var out = {}, t = b && b.taken || {}, own = changing && changing.code && b && b.day === changing.day ? changing : null;
+    (SLOTS[p] || []).forEach(function (s) {
+      (Array.isArray(t[s]) ? t[s] : []).forEach(function (c) {
+        c = String(c);
+        if (own && c === own.code && (SLOTS[own.period] || []).indexOf(s) >= 0) return;
+        out[c] = true;
+      });
+    });
     return out;
   }
   function freeFor(b, p, code) {
@@ -4174,10 +6829,11 @@ var MMAccount = (function () {
     return mine.filter(function (r) { return !r.booking_id && r.day === day && (r.status === "reserved" || r.status === "in_use") && overlap(r.period, period); }).length;
   }
   function roomEach() { return Math.max(0, MAX_EACH - (acct ? heldNow() : 0)); }
-  function room() { var l = leftOf(board, period); return Math.min(roomEach(), l == null ? MAX_EACH : l); }
+  function room() { if (changing) return 1; var l = leftOf(board, period); return Math.min(roomEach(), l == null ? MAX_EACH : l); }
   function total() { var p = priceOf(period); return p == null ? null : p * picked.length; }
 
   function savePick() {
+    if (changing) return; // a change is not a pick to keep
     try {
       if (day && picked.length) sessionStorage.setItem(PICK_KEY, JSON.stringify({ day: day, period: period, codes: picked }));
       else sessionStorage.removeItem(PICK_KEY);
@@ -4227,7 +6883,7 @@ var MMAccount = (function () {
   function settle(tell) {
     var kind = kindNow(), open = openPeriods(board, kind);
     if (period && open.indexOf(period) < 0) period = null;
-    if (!period) period = open.filter(function (p) { return leftOf(board, p) !== 0; })[0] || open[0] || null;
+    if (!period) period = open.filter(function (p) { return changing || leftOf(board, p) !== 0; })[0] || open[0] || null;
     var gone = picked.filter(function (c) { return !period || !freeFor(board, period, c); });
     if (gone.length) {
       picked = picked.filter(function (c) { return gone.indexOf(c) < 0; });
@@ -4247,7 +6903,7 @@ var MMAccount = (function () {
     clearMsg("f-cab"); savePick(); paintPick(); loadBoard();
   }
   function pickPeriod(p) {
-    if (p === period || ended(board, p) || leftOf(board, p) === 0) return;
+    if (p === period || ended(board, p) || (!changing && leftOf(board, p) === 0)) return;
     period = p; clearMsg("f-cab");
     var gone = picked.filter(function (c) { return !freeFor(board, p, c); });
     picked = picked.filter(function (c) { return gone.indexOf(c) < 0; }).slice(0, room());
@@ -4257,7 +6913,11 @@ var MMAccount = (function () {
   function toggle(c) {
     var i = picked.indexOf(c);
     if (i >= 0) picked.splice(i, 1);
-    else {
+    else if (changing) {
+      // one door at a time: another door takes the place of the one picked
+      if (!period || !freeFor(board, period, c)) return;
+      picked = [c];
+    } else {
       if (!period || !freeFor(board, period, c)) return;
       if (picked.length >= room()) {
         if (picked.length >= roomEach()) setErr("f-cab", "Up to 3 lockers per account for each time.");
@@ -4275,6 +6935,7 @@ var MMAccount = (function () {
   $("#go").addEventListener("click", async function () {
     hideBanner();
     if (!picked.length) { setErr("f-cab", "Pick a locker"); return; }
+    if (changing) { doChange(); return; }
     // The cabinet read again first: a locker someone reserved meanwhile is dropped and said here, on the cabinet,
     // not after the account step (the owner, 2026-11-09: "whenever a locker is reserved dont allow other customers to
     // choose it"). Reserve is refused by the database all the same.
@@ -4330,8 +6991,13 @@ var MMAccount = (function () {
     notice.hidden = !n;
     if (n) $(".notice-h", notice).textContent = n;
     $("#pick-retry").hidden = !retry;
-    var some = !!(evenings && evenings.length);
-    $("#f-day").hidden = !some;
+    var some = !!(evenings && evenings.length) || !!changing;
+    $("#f-day").hidden = !some || !!changing;
+    $("#chg-head").hidden = !changing;
+    if (changing) {
+      $("#chg-title").textContent = changing.code ? tr("Change locker {n}", { n: changing.code }) : tr("Change your locker");
+      $("#chg-when").textContent = dayLong(changing.day);
+    }
     $("#days").innerHTML = (evenings || []).map(function (e) {
       var on = e.day === day;
       return '<button type="button" class="pill" role="radio" aria-checked="' + on + '" data-v="' + esc(e.day) + '">' + esc(e.kind === "pm" ? tr("{day} · Petromin", { day: dayShort(e.day) }) : dayShort(e.day)) + "</button>";
@@ -4340,7 +7006,7 @@ var MMAccount = (function () {
     var list = hasBoard ? openPeriods(board, kind) : (PERIODS[kind] || []);
     $("#f-period").hidden = !some || !day || !kind || (hasBoard && !list.length);
     $("#periods").innerHTML = list.map(function (p) {
-      var full = hasBoard && leftOf(board, p) === 0, on = p === period, pr = priceOf(p);
+      var full = !changing && hasBoard && leftOf(board, p) === 0, on = p === period, pr = priceOf(p);
       return '<button type="button" class="opt" role="radio" aria-checked="' + on + '" data-v="' + p + '"' + (full ? " disabled" : "") + ">" +
         "<b>" + esc(spanOf(p)) + "</b><span>" + (full ? esc(tr("Full")) : pr != null ? amt(pr) : "") + "</span></button>";
     }).join("");
@@ -4353,7 +7019,9 @@ var MMAccount = (function () {
       var codes = picked.slice().sort(byNumber).join(lang === "ar" ? "، " : ", ");
       sum.innerHTML = esc(picked.length > 1 ? tr("Lockers {list}", { list: codes }) : tr("Locker {n}", { n: codes })) + (t != null ? " · " + amt(t) : "");
     }
-    $("#go").disabled = !picked.length || !hasBoard;
+    var same = changing && picked[0] === changing.code && period === changing.period;
+    $("#go").disabled = !picked.length || !hasBoard || !!same;
+    $("#go-label").textContent = changing ? tr("Change locker") : tr("Continue");
     paintMine();
   }
 
@@ -4669,6 +7337,7 @@ var MMAccount = (function () {
   }
   document.addEventListener("click", function (e) {
     if (e.target.closest("#pv-open, #pv-open-foot")) { e.preventDefault(); e.stopPropagation(); showModal("#pv"); }
+    if (e.target.closest("#lt-open")) { e.preventDefault(); e.stopPropagation(); showModal("#lt"); }
   });
   $$(".modal-x").forEach(function (b) { b.addEventListener("click", closeModal); });
   $$(".modal").forEach(function (m) { m.addEventListener("click", function (e) { if (e.target === m && !busy) closeModal(); }); });
@@ -4822,33 +7491,65 @@ var MMAccount = (function () {
     var r = await MMAccount.redeem(rpc, hc);
     if (!r.row) { if (r.error === "network") showBanner(NET); else showBanner("This sign-in link has expired. Sign in again to continue."); return false; }
     acct = { id: r.row.id, token: r.row.session_token, name: r.row.name || "", email: "", phone: "", made: false };
+    keepAcct();
     return true;
   }
+
+  /* ── The account kept on this device (the owner, 2026-11-09: stay signed in) ── */
+  function keepAcct() {
+    try { if (acct) localStorage.setItem(ACCT_KEY, JSON.stringify({ id: acct.id, token: acct.token, name: acct.name || "", email: acct.email || "" })); } catch (e) {}
+  }
+  function forgetAcct() { try { localStorage.removeItem(ACCT_KEY); } catch (e) {} }
+  function keptAcct() {
+    try {
+      var v = JSON.parse(localStorage.getItem(ACCT_KEY) || "null");
+      if (v && typeof v.id === "string" && v.id && typeof v.token === "string" && v.token) return { id: v.id, token: v.token, name: String(v.name || ""), email: String(v.email || ""), phone: "", made: false };
+    } catch (e) {}
+    return null;
+  }
+  // The session the database no longer knows: forgotten here, and the page as for anyone.
+  function quietOut() {
+    acct = null; wallet = undefined; mine = []; pay = null; pendingChange = null;
+    forgetAcct();
+    if (changing) leaveChange();
+    paintWho(); paintMine(); paintPick();
+  }
+  $$(".who-out").forEach(function (b) {
+    b.addEventListener("click", function () {
+      if (busy) return;
+      quietOut(); hideBanner();
+      if (view !== "landing") backToPick();
+    });
+  });
 
   // Signed in (a new account, a sign-in, or handed back): the wallet, the rider's lockers, and the evenings again (a
   // Petromin night they are booked on appears), then on to the review with the lockers picked.
   async function signedIn() {
-    paintWho();
+    keepAcct(); paintWho();
     await Promise.all([loadWallet(), loadMine(), loadEvenings()]);
+    if (pendingChange) { openChange(pendingChange); return; }
     if (day) await loadBoard();
     if (picked.length && board && board.day === day && board.kind) enterReview();
     else backToPick();
   }
   function signedOut() {
     acct = null; wallet = undefined; mine = []; pay = null;
+    forgetAcct();
+    if (changing) leaveChange();
     showBanner("You were signed out. Sign in again to reserve.");
     paintWho(); paintMine(); openAccount("signin");
   }
   function paintWho() {
     var t = acct ? tr("Signed in as {name}", { name: acct.name || "" }) + (acct.email ? " · " + isolate(acct.email) : "") : "";
-    ["#land-who", "#r-who"].forEach(function (s) { $(s).textContent = t; $(s).hidden = !acct || (s === "#r-who" && acct.made); });
+    ["#land-who", "#r-who"].forEach(function (s) { $(".who-t", $(s)).textContent = t; $(s).hidden = !acct || (s === "#r-who" && acct.made); });
   }
 
   /* ── The wallet and the rider's lockers ───────────────────────────────── */
   var wallet = undefined; // undefined: not read yet; null: none to show (signed out, or a database without it); else {balance}
   async function loadWallet() {
     if (!acct) { wallet = undefined; return; }
-    var r = await rpc("customer_wallet", { p_id: acct.id, p_token: acct.token });
+    var who = acct, r = await rpc("customer_wallet", { p_id: acct.id, p_token: acct.token });
+    if (r.error && /NOT_AUTHORIZED/.test(errText(r.error))) { if (acct === who) quietOut(); return; }
     var b = !r.error && r.data && typeof r.data === "object" ? Number(r.data.balance) : NaN;
     wallet = isFinite(b) ? { balance: b } : null;
     paintReview();
@@ -4856,11 +7557,15 @@ var MMAccount = (function () {
   var mine = []; // customer_lockers: the rider's rentals from yesterday on
   async function loadMine() {
     if (!acct) { mine = []; return; }
-    var r = await rpc("customer_lockers", { p_id: acct.id, p_token: acct.token });
-    if (r.error) { if (/NOT_AUTHORIZED/.test(errText(r.error))) mine = []; paintMine(); return; }
-    mine = (Array.isArray(r.data) ? r.data : []).filter(function (x) { return x && typeof x === "object" && x.id && isDay(x.day) && SPANS[x.period]; })
-      .map(function (x) { return { id: String(x.id), booking_id: x.booking_id || null, day: x.day, period: x.period, status: String(x.status || ""), pay: x.pay || null, paid: x.paid === true, code: x.code != null && String(x.code) ? String(x.code) : null }; });
+    var who = acct, r = await rpc("customer_lockers", { p_id: acct.id, p_token: acct.token });
+    if (r.error) { if (/NOT_AUTHORIZED/.test(errText(r.error))) { if (acct === who) quietOut(); return false; } paintMine(); return true; }
+    mine = (Array.isArray(r.data) ? r.data : []).filter(function (x) { return x && typeof x === "object" && x.id && isDay(x.day) && SPANS[x.period]; }).map(mineOf);
     paintMine();
+    return true;
+  }
+  function mineOf(x) {
+    return { id: String(x.id), booking_id: x.booking_id || null, day: x.day, period: x.period, status: String(x.status || ""), pay: x.pay || null, paid: x.paid === true,
+      code: x.code != null && String(x.code) ? String(x.code) : null, name: clean(x.name) };
   }
   var P_ORDER = { early: 0, pm: 1, both: 2, late: 3 };
   // From today on, still reserved or with the rider: the number (once known), the evening and the time.
@@ -4869,23 +7574,133 @@ var MMAccount = (function () {
     return mine.filter(function (r) { return r.day >= t && (r.status === "reserved" || r.status === "in_use"); })
       .sort(function (a, b) { return a.day < b.day ? -1 : a.day > b.day ? 1 : (P_ORDER[a.period] - P_ORDER[b.period]) || byNumber(a.code || "", b.code || ""); });
   }
-  function mineRow(r) {
-    var drop = !r.booking_id && r.status === "reserved";
-    return '<li class="mine-row"><span class="mine-n" aria-hidden="true">' + (r.code ? esc(r.code) : '<svg><use href="#i-lock"/></svg>') + "</span>" +
-      '<span class="mine-t"><b>' + esc(r.code ? tr("Locker {n}", { n: r.code }) : tr("Locker")) + "</b><small>" + esc(dayShort(r.day)) + " · " + esc(spanOf(r.period)) +
-      (r.pay === "wallet" && r.paid ? " · " + esc(tr("Paid")) : "") + "</small></span>" +
-      '<span class="chip sm st-' + (r.status === "in_use" ? "use" : "res") + '">' + esc(r.status === "in_use" ? tr("In use") : tr("Reserved")) + "</span>" +
-      (drop ? '<button type="button" class="mine-x" data-id="' + esc(r.id) + '">' + esc(tr("Remove")) + "</button>" : "") + "</li>";
+  // How a locker is paid, in the booking app's words (lkPaidWallet, lkPayDesk); one on a booking is on its bill.
+  function payText(r) { return r.booking_id ? tr("On your booking") : r.pay === "wallet" && r.paid ? tr("Paid from your wallet") : tr("Pay at the desk"); }
+  function deskRow(r) {
+    var mayChange = r.status === "reserved", mayDrop = mayChange && !r.booking_id;
+    return '<li class="desk-row"><span class="desk-n" aria-hidden="true">' + (r.code ? esc(r.code) : '<svg><use href="#i-lock"/></svg>') + "</span>" +
+      '<span class="desk-t"><b>' + esc(r.code ? tr("Locker {n}", { n: r.code }) : tr("Locker")) + (r.name ? ' · <bdi>' + esc(r.name) + "</bdi>" : "") + "</b>" +
+      "<small>" + esc(spanOf(r.period)) + " · " + esc(payText(r)) + "</small>" + (r.status === "in_use" ? '<span class="chip sm st-use">' + esc(tr("In use")) + "</span>" : "") + "</span>" +
+      (mayChange ? '<span class="desk-acts"><button type="button" class="mine-chg" data-id="' + esc(r.id) + '">' + esc(tr("Change")) + "</button>" +
+        (mayDrop ? '<button type="button" class="mine-x" data-id="' + esc(r.id) + '">' + esc(tr("Remove")) + "</button>" : "") + "</span>" : "") + "</li>";
+  }
+  // One card per evening to show at the desk: the code the desk scans names the evening's first locker (the staff app
+  // finds the rider's others that evening), then each locker.
+  function deskCards(rows) {
+    var days = [], by = {};
+    rows.forEach(function (r) { if (!by[r.day]) { by[r.day] = []; days.push(r.day); } by[r.day].push(r); });
+    return days.map(function (d) {
+      var first = mine.filter(function (x) { return x.day === d && by[d].indexOf(x) >= 0; })[0] || by[d][0];
+      return '<article class="desk"><div class="desk-top"><div class="desk-head"><p class="desk-h">' + esc(tr("Show this at the desk")) + '</p><p class="desk-when">' + esc(dayLong(d)) + "</p></div>" +
+        '<span class="desk-qr"><canvas class="qr" width="1" height="1" data-qr="' + esc(DESK_URL + first.id) + '" role="img" aria-label="' + esc(tr("Code for the desk")) + '"></canvas></span></div>' +
+        '<ul class="desk-list">' + by[d].map(deskRow).join("") + "</ul></article>";
+    }).join("");
   }
   function paintMine() {
-    var rows = acct ? mineNow() : [], h = rows.map(mineRow).join("");
-    ["#mine-pick", "#mine-done"].forEach(function (s) { var box = $(s); box.hidden = !rows.length; $(".mine-list", box).innerHTML = h; });
+    var rows = acct ? mineNow() : [], h = deskCards(rows);
+    ["#mine-pick", "#mine-done"].forEach(function (s) {
+      var box = $(s), list = $(".mine-list", box);
+      box.hidden = !rows.length || (s === "#mine-pick" && !!changing);
+      if (list.getAttribute("data-h") !== h) { list.innerHTML = h; list.setAttribute("data-h", h); } // drawn again only when it changed
+    });
+    drawCodes();
   }
   document.addEventListener("click", function (e) {
-    var b = e.target.closest(".mine-x"); if (!b || busy) return;
+    var b = e.target.closest(".mine-x, .mine-chg"); if (!b || busy) return;
     var r = mine.filter(function (x) { return x.id === b.getAttribute("data-id"); })[0]; if (!r) return;
+    if (b.classList.contains("mine-chg")) { enterChange(r); return; }
     dropping = r; paintRemove(); showModal("#rm", "#rm-keep");
   });
+
+  /* ── The code the desk scans, drawn on a canvas as the website's tickets draw theirs (components/booking/QrCanvas.tsx,
+     lib/qr-paint.ts): a phone's dark mode recolours an svg's shapes, never a canvas's pixels. qrcode-generator is the
+     website's own encoder, inlined by the build. ── */
+  var QR_CSS = 148;
+  function drawCodes() { $$("canvas.qr[data-qr]").forEach(function (c) { paintCode(c, c.getAttribute("data-qr")); }); }
+  function paintCode(canvas, text) {
+    // qrcode by its name: on its own the encoder is a global; on the website's page every script runs inside one function
+    // (forms/shared/site-form.mjs), where its var is that function's, not window's.
+    var enc = typeof qrcode === "function" ? qrcode : window.qrcode;
+    if (typeof enc !== "function" || canvas.getAttribute("data-drawn") === text) return;
+    var q; try { q = enc(0, "M"); q.addData(text); q.make(); } catch (e) { return; }
+    var pen = canvas.getContext && canvas.getContext("2d"); if (!pen) return;
+    var n = q.getModuleCount(), px = Math.round(QR_CSS * Math.min(window.devicePixelRatio || 1, 3)), edge = [];
+    // module edge k on a tile px wide with a margin of n/20 modules each side, in whole pixels (lib/qr-paint.ts qrEdge)
+    for (var k = 0; k <= n; k++) edge.push(Math.round(((n + 20 * k) * px) / (22 * n)));
+    canvas.width = px; canvas.height = px;
+    pen.fillStyle = "#fff"; pen.fillRect(0, 0, px, px);
+    pen.fillStyle = "#1a1919";
+    for (var r = 0; r < n; r++) {
+      for (var c = 0; c < n; ) {
+        if (!q.isDark(r, c)) { c++; continue; }
+        var end = c + 1; while (end < n && q.isDark(r, end)) end++;
+        pen.fillRect(edge[c], edge[r], edge[end] - edge[c], edge[r + 1] - edge[r]);
+        c = end;
+      }
+    }
+    canvas.setAttribute("data-drawn", text);
+  }
+
+  /* ── Changing a locker before its key is handed: another door, another time of the same evening, one door at a
+     time; the locker's own door is free to keep (customer_locker_change). ── */
+  var changing = null, beforeChange = null, pendingChange = null;
+  function enterChange(r) {
+    if (!r || r.status !== "reserved" || !acct) return;
+    hideBanner(); clearMsg("f-cab");
+    if (!changing) beforeChange = { day: day, period: period, picked: picked.slice() };
+    changing = r;
+    day = r.day; period = r.period; picked = r.code ? [r.code] : [];
+    board = null; boardErr = false;
+    backToPick(); loadBoard();
+    var h = $("#chg-title"); if (h) h.focus({ preventScroll: true });
+  }
+  // ?change=<rental>: the locker named, once the account's lockers are read.
+  function openChange(id) {
+    pendingChange = null;
+    var r = mine.filter(function (x) { return x.id === id; })[0];
+    if (r && r.status === "reserved") { enterChange(r); return; }
+    backToPick(); showBanner("This locker can't be changed now. Ask at the desk.");
+  }
+  function leaveChange() {
+    changing = null;
+    if (beforeChange) { day = beforeChange.day; period = beforeChange.period; picked = beforeChange.picked; beforeChange = null; }
+    board = null; boardErr = false; clearMsg("f-cab");
+    paintPick(); if (day) loadBoard();
+  }
+  $("#chg-cancel").addEventListener("click", function () { if (!busy) leaveChange(); });
+  async function doChange() {
+    if (!acct || !changing || busy) return;
+    var r0 = changing, c = picked[0], p = period;
+    setLoading("#go", true);
+    var r;
+    try { r = await rpc("customer_locker_change", { p_id: acct.id, p_token: acct.token, p_rental: r0.id, p_period: p, p_code: c }); }
+    finally { setLoading("#go", false); }
+    if (r.error) { changeRefused(r.error); return; }
+    var o = r.data && typeof r.data === "object" ? r.data : {};
+    var code = o.code != null ? String(o.code) : c;
+    mine.forEach(function (x) { if (x.id === r0.id) { x.code = code; x.period = SPANS[o.period] ? o.period : p; if (typeof o.paid === "boolean") x.paid = o.paid; } });
+    if (o.left && board && board.day === r0.day) board.left = o.left;
+    leaveChange();
+    say("Locker changed");
+    var box = $("#mine-pick"); if (box && !box.hidden) box.scrollIntoView({ block: "start" });
+    loadMine(); if (r0.pay === "wallet") loadWallet();
+  }
+  function changeRefused(e) {
+    var m = errText(e), n = codeIn(m);
+    if (/NOT_AUTHORIZED/.test(m)) { signedOut(); return; }
+    if (/NOT_FOUND|LOCKER_NOT_OPEN/.test(m)) { leaveChange(); showBanner("This locker can't be changed now. Ask at the desk."); loadMine(); return; }
+    if (/LOCKER_TAKEN|LOCKER_OUT|LOCKER_UNKNOWN/.test(m)) {
+      if (n) picked = picked.filter(function (x) { return x !== n; });
+      if (/LOCKER_TAKEN/.test(m)) setErr("f-cab", "Locker {n} was just taken. Pick another.", { n: n });
+      else if (/LOCKER_OUT/.test(m)) setErr("f-cab", "Locker {n} is out of service", { n: n });
+      else setErr("f-cab", "No locker {n}", { n: n });
+      paintPick(); loadBoard(); return;
+    }
+    if (/LOCKERS_FULL/.test(m)) { setErr("f-cab", "The lockers for that time are all taken."); loadBoard(); return; }
+    if (/WALLET_SHORT/.test(m)) { setErr("f-cab", "Not enough in the wallet."); loadWallet(); return; }
+    if (/RATE_LIMITED/.test(m)) { showBanner(SITE_TOO_MANY); return; }
+    showBanner(NET);
+  }
 
   /* ── Taking a locker back (before its key is collected), in a pop-up centred on the screen ── */
   var dropping = null;
@@ -4925,7 +7740,7 @@ var MMAccount = (function () {
     return !!wallet && kindNow() !== "pm" && !walletOff && t != null && wallet.balance >= t;
   }
   function enterReview() {
-    clearMsg("f-pay"); walletOff = false;
+    clearMsg("f-pay"); walletOff = false; namesKey = "";
     if (pay === "wallet" && !walletUsable()) pay = null;
     paintReview(); paintWho(); goStep(2);
     if (acct && acct.made) $("#acct-made").focus({ preventScroll: true });
@@ -4947,6 +7762,41 @@ var MMAccount = (function () {
     if (!pay && wallet !== undefined && !useW) pay = "desk";
     pickRadio("#pays", pay);
     if (!$("#book").classList.contains("loading")) $("#book").disabled = !picked.length;
+    paintNames();
+    $("#terms-line").innerHTML = esc(tr("By reserving you accept the {terms}.")).replace("{terms}",
+      '<button type="button" class="d-link" id="lt-open">' + esc(tr("locker terms")) + "</button>"); // a pop-up: the website's Terms page is not open yet
+  }
+  // A name on each locker when more than one is reserved (the desk knows whose key it is): the first the account's,
+  // each one required, letters and spaces only (the owner's rule for names), 60 at most. One locker is the account's.
+  var names = {}, namesKey = "";
+  function nameClean(v) { return String(v || "").replace(DASHES, " ").replace(/[^\p{L}\p{M}\s]/gu, "").replace(/\s{2,}/g, " ").slice(0, 60); }
+  function namedCodes() { return picked.slice().sort(byNumber); }
+  function paintNames() {
+    var box = $("#names"), codes = namedCodes(), key = codes.join(",") + "|" + lang;
+    box.hidden = codes.length < 2;
+    if (codes.length < 2 || key === namesKey) return;
+    namesKey = key;
+    codes.forEach(function (c, i) { if (names[c] == null) names[c] = i === 0 && acct ? nameClean(acct.name).trim() : ""; });
+    box.innerHTML = codes.map(function (c) {
+      return '<div id="f-nm-' + esc(c) + '" class="field"><label for="nm-' + esc(c) + '">' + esc(tr("Name on locker {n}", { n: c })) + "</label>" +
+        '<input id="nm-' + esc(c) + '" class="nm" data-code="' + esc(c) + '" type="text" autocomplete="off" autocapitalize="words" maxlength="60" value="' + esc(names[c]) + '">' +
+        '<p class="err" aria-live="polite"></p></div>';
+    }).join("");
+    codes.forEach(function (c) { paintField("f-nm-" + c); });
+  }
+  $("#names").addEventListener("input", function (e) {
+    var el = e.target.closest("input.nm"); if (!el) return;
+    var c = el.getAttribute("data-code"), v = nameClean(el.value);
+    if (v !== el.value) { var at = Math.max(0, (el.selectionStart == null ? v.length : el.selectionStart) - (el.value.length - v.length)); el.value = v; try { el.setSelectionRange(at, at); } catch (x) {} }
+    names[c] = v; clearMsg("f-nm-" + c);
+  });
+  // The names to send beside the lockers, or null for one locker (the database takes the account's); false when one is missing.
+  function namesFor(codes) {
+    if (codes.length < 2) return null;
+    var out = codes.map(function (c) { return clean(names[c]); }), bad = codes.filter(function (c, i) { return !/\p{L}/u.test(out[i]); });
+    bad.forEach(function (c) { setErr("f-nm-" + c, "Enter a name for locker {n}", { n: c }); });
+    if (bad.length) { focusField("f-nm-" + bad[0]); return false; }
+    return out;
   }
   $("#pays").addEventListener("click", function (e) {
     var b = e.target.closest("[role=radio]"); if (!b || b.disabled) return;
@@ -4955,19 +7805,29 @@ var MMAccount = (function () {
   $("#s-review").addEventListener("submit", async function (e) {
     e.preventDefault(); hideBanner(); if (busy || !acct) return;
     if (!picked.length) { backToPick(); setErr("f-cab", "Pick a locker"); return; }
+    var codes = namedCodes(), nm = namesFor(codes);
+    if (nm === false) return;
     if (!pay) { setErr("f-pay", "Choose how to pay"); focusField("f-pay"); return; }
-    var codes = picked.slice(), d = day, p = period, k = kindNow(), price = priceOf(p), how = pay;
+    var d = day, p = period, k = kindNow(), price = priceOf(p), how = pay;
+    var body = { p_id: acct.id, p_token: acct.token, p_day: d, p_period: p, p_codes: codes, p_pay: how };
+    if (nm) body.p_names = nm;
     setLoading("#book", true);
     var r;
-    try { r = await rpc("customer_locker_book", { p_id: acct.id, p_token: acct.token, p_day: d, p_period: p, p_codes: codes, p_pay: how }); }
+    try { r = await rpc("customer_locker_book", body); }
     finally { setLoading("#book", false); }
     if (r.error) { bookRefused(r.error); return; }
     var out = r.data && typeof r.data === "object" ? r.data : null;
     if (!out || !out.ok) { showBanner(NET); return; }
-    var got = (Array.isArray(out.rentals) ? out.rentals : []).map(function (x) { return x && x.code != null ? String(x.code) : ""; }).filter(Boolean);
+    var rentals = (Array.isArray(out.rentals) ? out.rentals : []).filter(function (x) { return x && x.id && x.code != null; });
+    var got = rentals.map(function (x) { return String(x.code); });
     booked = { codes: got.length ? got : codes, day: d, period: p, kind: k, pay: how, total: price != null ? price * (got.length || codes.length) : null };
+    // the cards to show at the desk at once, before the lockers are read again
+    rentals.forEach(function (x, i) {
+      if (!mine.some(function (y) { return y.id === String(x.id); }))
+        mine.push(mineOf({ id: x.id, booking_id: null, day: d, period: p, status: "reserved", pay: how, paid: how === "wallet", code: x.code, name: x.name || (nm ? nm[i] : acct.name) }));
+    });
     if (out.left && board && board.day === d) board.left = out.left;
-    clearPick(); pay = null;
+    clearPick(); pay = null; names = {}; namesKey = "";
     showDone();
     loadMine(); if (how === "wallet") loadWallet();
   });
@@ -4998,18 +7858,22 @@ var MMAccount = (function () {
   var booked = null;
   function paintDone() {
     if (!booked) return;
-    var many = booked.codes.length > 1;
-    $("#done-title").textContent = many ? tr("Your lockers are reserved") : tr("Your locker is reserved");
-    $("#done-sum").innerHTML = row(many ? tr("Lockers") : tr("Locker"), "<bdi>" + esc(codesText(booked.codes)) + "</bdi>") +
-      row(tr("Evening"), esc(dayLong(booked.day))) + row(tr("Time"), esc(spanOf(booked.period))) +
-      (booked.total != null ? row(tr("Total"), amt(booked.total)) : "") +
-      row(tr("Payment"), esc(booked.pay === "wallet" ? tr("Paid from your wallet") : tr("Pay at the desk when you collect the key")));
+    $("#done-title").textContent = booked.codes.length > 1 ? tr("Your lockers are reserved") : tr("Your locker is reserved");
   }
   function showDone() {
     showView("done"); paintDone(); paintMine();
     $("#done-title").focus({ preventScroll: true });
   }
   $("#again").addEventListener("click", function () { booked = null; clearMsg("f-cab"); backToPick(); loadBoard(); });
+
+  // ?change=<rental id>: the booking app's Change on a locker, opened once signed in.
+  function takeChange() {
+    var q = new URLSearchParams(location.search), v = q.get("change");
+    if (v == null) return null;
+    q.delete("change");
+    try { history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q.toString() : "") + location.hash); } catch (e) {}
+    return /^[0-9a-fA-F-]{36}$/.test(v) ? v.toLowerCase() : null;
+  }
 
   /* ── The cabinet read again while the page is seen ────────────────────── */
   function live() { return document.visibilityState === "visible" && !busy && !!day && (view === "landing" || (view === "steps" && step === 2)); }
@@ -5044,11 +7908,12 @@ var MMAccount = (function () {
   }
 
   // Test hook: the specs read what the page works out without a network.
-  window.LockersForm = { setLang: setLang, tagCode: tagCode, spanOf: spanOf, cells: function (units) { return cabinetCells({ units: units }).map(function (u) { return u ? String(u.code) : null; }); } };
+  window.LockersForm = { setLang: setLang, tagCode: tagCode, spanOf: spanOf, nameClean: nameClean, cells: function (units) { return cabinetCells({ units: units }).map(function (u) { return u ? String(u.code) : null; }); } };
 
   setLang(pickLang(), false);
   showView("landing");
   var kept = readPick(), tag = takeTag();
+  pendingChange = takeChange();
   // The evenings and the cabinet; a tag picks its locker, else the lockers this tab picked before come back.
   async function start2() {
     evenings = undefined; evErr = false; paintPick();
@@ -5063,8 +7928,15 @@ var MMAccount = (function () {
   }
   (async function start() {
     var handed = await arrive();
+    // else the account kept on this device; one the database no longer knows is forgotten (loadMine, quietOut)
+    if (!acct) acct = keptAcct();
     if (acct) { paintWho(); await Promise.all([loadWallet(), loadMine()]); }
     await start2();
+    if (pendingChange) {
+      if (acct) openChange(pendingChange);
+      else openAccount("ask"); // signed in, the change opens (signedIn)
+      return;
+    }
     // Handed back signed in with lockers picked before: on to the review.
     if (handed && acct && picked.length && board && board.kind) enterReview();
   })();

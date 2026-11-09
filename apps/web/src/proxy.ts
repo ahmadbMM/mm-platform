@@ -79,10 +79,15 @@ const STAFF_APP = "https://staff.micromobility.sa";
 // (that locker's sheet, or into the check-in open on the phone); a rider's phone to the lockers page with that locker
 // picked, /lockers?locker=7 (lockerRiderTarget). /lockers itself is the page (app/lockers, outside the proxy).
 const LOCKER_PAGE = /^\/lockers\/([A-Za-z]{0,3}\d{1,4})\/?$/;
+// A rider's show-at-desk QR (2026-11-09): micromobility.sa/lockers/r/<rental id>. A staff phone goes on to
+// staff.micromobility.sa/?lkr=<id> (that rider's lockers that evening, keys handed in a tap); a rider's phone to /lockers.
+const LOCKER_RENTAL = /^\/lockers\/r\/([0-9a-fA-F-]{36})\/?$/;
 export function staffTapTarget(pathname: string, searchParams: URLSearchParams, cookie: string | undefined): string | null {
   if (cookie !== "1") return null;
   const lk = LOCKER_PAGE.exec(pathname);
   if (lk) return `${STAFF_APP}/?locker=${lk[1].toUpperCase()}`;
+  const lr = LOCKER_RENTAL.exec(pathname);
+  if (lr) return `${STAFF_APP}/?lkr=${lr[1].toLowerCase()}`;
   const code = FLEET_PAGE.test(pathname) ? pathname.split("/")[2] : pathname === "/" ? searchParams.get("bike") : null;
   return code && /^\d{1,6}$/.test(code) ? `${STAFF_APP}/?bike=${Number(code)}` : null;
 }
@@ -90,6 +95,10 @@ export function staffTapTarget(pathname: string, searchParams: URLSearchParams, 
 /** A rider tapping a locker's tag: the lockers page with that locker picked (the page reads 7, 07 and L7 alike),
  *  any ?lang= kept. Null for anything else. */
 export function lockerRiderTarget(pathname: string, searchParams?: URLSearchParams): string | null {
+  if (LOCKER_RENTAL.test(pathname)) {
+    const lang = searchParams?.get("lang");
+    return lang === "en" || lang === "ar" ? `/lockers?lang=${lang}` : "/lockers";
+  }
   const m = LOCKER_PAGE.exec(pathname);
   if (!m) return null;
   const q = new URLSearchParams({ locker: m[1].toUpperCase() });

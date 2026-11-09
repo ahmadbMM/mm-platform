@@ -19,7 +19,7 @@ import { AH_BANK, vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-tic
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { genderChip } from "@/lib/session-gender";
-import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
+import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, type OwnLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
 import { TickIcon } from "@/components/site/Icons";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
@@ -81,6 +81,8 @@ type Props = {
   addonItems?: Map<string, AddonItem> | null;
   /** the account's lockers by booking (customer_lockers): a locker line says its period and number */
   lockers?: Map<string, TicketLocker> | null;
+  /** the rider's own lockers that evening with no booking behind them (ownLockersOf): named on the ticket too */
+  ownLockers?: OwnLocker[] | null;
   /** Victory Lap (and Arena Heros): each team booking's partner by first name, by booking id (customer_vl_teams);
    *  a booking without one has no partner named. */
   vlPartners?: Map<string, string> | null;
@@ -144,7 +146,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true, addonItems = null, lockers = null, vlPartners = null, balance = null, blood = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -363,6 +365,17 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             </div>
           );
         })}
+        {!!ownLockers?.length && (
+          <div className="tk-addons">
+            <p className="tk-addons-h">{t.locker}</p>
+            {ownLockers.map((l) => (
+              <div key={l.id} className="tk-ad">
+                <span className="tk-ad-n"><bdi>{lockerText("", { period: l.period, code: l.code, status: l.status }, locale)}</bdi></span>
+                {l.paid && <span className="tk-amt">{t.lockerPaid}</span>}
+              </div>
+            ))}
+          </div>
+        )}
         {vlap && (() => {
           // The athlete's place (the booking app's _vlTkHtml): the team's code and the partner on a Doubles
           // race (or that our team is finding one), the division with its distance, the T-shirt, the 5 km
