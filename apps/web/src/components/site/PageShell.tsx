@@ -4,6 +4,8 @@ import SiteFooter, { type FooterContent } from "@/components/site/SiteFooter";
 import PreviewBar from "@/components/site/PreviewBar";
 import { localeInfo } from "@/i18n/locales";
 import { BOOKING_URL, STORE_CART_URL } from "@/lib/links";
+import { loadSiteContent } from "@/lib/site";
+import { storeOpen } from "@/lib/store-core";
 import "@/components/site/site.css";
 
 // The frame every inner page shares: header, the page, footer, and the staff preview bar.
@@ -40,11 +42,13 @@ export function navFrom(site: Record<string, Sec>): { labels: Record<string, str
   };
 }
 
-/** `hidden`: the pages staff have not switched on, left out of the header and footer. */
-export default function PageShell({ locale, site, preview, hidden = [], children }: { locale: string; site: Record<string, Sec>; preview: boolean; hidden?: string[]; children: ReactNode }) {
+/** `hidden`: the pages staff have not switched on, left out of the header and footer. Whether the site's own
+ *  store is open (the header's Store and cart then lead to it) comes from the content every page has read. */
+export default async function PageShell({ locale, site, preview, hidden = [], children }: { locale: string; site: Record<string, Sec>; preview: boolean; hidden?: string[]; children: ReactNode }) {
+  const shop = storeOpen(await loadSiteContent());
   return (
     <div className="mm-site" dir={localeInfo(locale).dir}>
-      <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} />
+      <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} shop={shop} />
       <main id="mm-main" style={{ paddingTop: 52 }}>{children}</main>
       <SiteFooter locale={locale} c={footerFrom(site)} hidden={hidden} booking={navFrom(site).booking} />
       {preview && <PreviewBar locale={locale} />}

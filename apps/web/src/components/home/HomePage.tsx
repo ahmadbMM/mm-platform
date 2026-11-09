@@ -30,7 +30,7 @@ const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 
 /** `learn`: the Learn to ride question (Experiences > Learn to ride), or null while it is not offered. */
-export default function HomePage({ locale, home, site, preview, hidden = [], learn = null }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean; hidden?: string[]; learn?: LearnTeaserText | null }) {
+export default function HomePage({ locale, home, site, preview, hidden = [], learn = null, shop = false }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean; hidden?: string[]; learn?: LearnTeaserText | null; shop?: boolean }) {
   const tx = serverL(locale);
   // A button to a page staff have switched off would only reload Home (the proxy sends it back
   // here): a ride page opens the booking app instead, and any other button is left out - it used to
@@ -71,7 +71,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
 
   return (
     <div className="mm-site" dir={localeInfo(locale).dir}>
-      <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} />
+      <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} shop={shop} />
       <LazyBackgrounds />
       <main id="mm-main" style={{ paddingTop: 52 }}>
         <section className="hm-top" aria-labelledby="hm-top-title">

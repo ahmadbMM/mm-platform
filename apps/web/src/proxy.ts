@@ -6,6 +6,7 @@ import { comingSoonTarget } from "./lib/coming-soon-route";
 import { PREVIEW_COOKIE, isStaffToken } from "./lib/preview";
 import { askedLang } from "./lib/lang-url";
 import { STORE_URL } from "./lib/links";
+import { storeOpen } from "./lib/store-core";
 import { NO_PAGE_CACHE } from "./lib/page-cache";
 import { apexTarget, movedStatus } from "./lib/canonical-host";
 
@@ -29,11 +30,18 @@ export const formOnSite = (form: string, params: URLSearchParams) => SITE_FORMS.
 // address staff set (Website > Whole site > Other addresses), in English when the visitor reads
 // English and in Arabic otherwise. Before Coming Soon, so the shop is reachable while the site is
 // closed. Temporary (307): the shop's address can change without browsers keeping the old one.
-const STORE_PATH = /^\/(?:(en|ar)\/)?store\/?$/;
+// Once staff open the site's own store (store.open, with payments on: lib/store-core.ts storeOpen),
+// /store and everything under it are the site's pages (app/[locale]/store). While it is closed, its
+// shopping pages (a product, the cart, checkout) go to the shop too; an order's page and Track order
+// still answer, so an order placed before the store closed stays reachable.
+const STORE_PATH = /^\/(?:(en|ar)\/)?store(?:\/([^/]*))?(?:\/.*)?$/;
+const STORE_KEPT = new Set(["order", "track"]);
 export async function storeTarget(pathname: string, req: NextRequest): Promise<string | null> {
   const m = pathname.match(STORE_PATH);
-  if (!m) return null;
-  const set = (await loadSiteContent())?.["site.links.store"];
+  if (!m || STORE_KEPT.has(m[2] ?? "")) return null;
+  const content = await loadSiteContent();
+  if (storeOpen(content)) return null;
+  const set = content?.["site.links.store"];
   const href = set && typeof set === "object" ? String((set as { href?: unknown }).href ?? "") : "";
   const base = (/^https:\/\//i.test(href) ? href : STORE_URL).replace(/\/+$/, "");
   const lang = m[1] || askedLang(req.nextUrl.searchParams) || req.cookies.get(LANG_COOKIE.name)?.value;
