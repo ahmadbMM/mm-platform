@@ -12,18 +12,28 @@ import { apexTarget, movedStatus } from "./lib/canonical-host";
 const intl = createMiddleware(routing);
 
 // The registration forms' addresses (see the matcher below).
-const FORM_ADDRESSES = ["/community/registration", "/petromin", "/defe", "/saturday", "/lockers"];
+const FORM_ADDRESSES = ["/community/registration", "/petromin", "/saturday", "/lockers"];
 export function formAddress(pathname: string): string | null {
   const p = pathname.toLowerCase().replace(/\/+$/, "");
   return FORM_ADDRESSES.includes(p) ? p : null;
 }
 // The forms that are pages of the website now (app/[locale]/<address>: the site's header, footer and languages around
-// the form; the user, 2026-11-09: all four). Each still answers with the page its build writes (app/<address>/route.ts)
+// the form; the user, 2026-11-09). Each still answers with the page its build writes (app/<address>/route.ts)
 // with ?classic=1, kept while the website's pages settle in; the lockers page (forms/lockers) is that page alone. Either
 // way a form opens whatever
 // Coming Soon says (the page itself answers with the form's own while the site is closed: components/forms/FormPage.tsx).
-export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/defe", "/saturday"];
+export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/saturday"];
 export const formOnSite = (form: string, params: URLSearchParams) => SITE_FORMS.includes(form) && !params.has("classic");
+
+// micromobility.sa/defe was the Defe x MicroMobility booking page for the Saturday Social Ride (2026-10-17); the user
+// turned it off on 2026-11-09 ("we don't need it anymore"). A link to it still around (Defe's posts, a shared message)
+// opens the Saturday ride's page, in the language it asked for; its other questions (a Defe code) mean nothing there.
+// Temporary (307), so no browser keeps it should the page come back.
+export function defeTarget(pathname: string, params: URLSearchParams): string | null {
+  if (!/^\/defe\/?$/i.test(pathname)) return null;
+  const lang = askedLang(params);
+  return "/saturday" + (lang ? `?lang=${lang}` : "");
+}
 
 // micromobility.sa/store opens the online store (a hosted Salla shop, on its own domain), at the
 // address staff set (Website > Whole site > Other addresses), in English when the visitor reads
@@ -113,6 +123,8 @@ export default async function proxy(req: NextRequest) {
   if (apex) return NextResponse.redirect(apex, movedStatus(req.method));
   // The forms answer at one lower-case address each; a link typed or printed another way
   // (/Petromin, /community/Registration/) is sent there, as their own Workers did.
+  const defe = defeTarget(pathname, searchParams);
+  if (defe) return NextResponse.redirect(new URL(defe, req.url), 307);
   const form = formAddress(pathname);
   if (form && form !== pathname) return NextResponse.redirect(new URL(form + req.nextUrl.search, req.url), 301);
   // A form's own page: nothing here applies to it (the route answers it as it is).

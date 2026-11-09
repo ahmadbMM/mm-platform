@@ -16,7 +16,8 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 // pages are kept at the edge). No site may frame a page but the staff page, whose Website section
 // shows the preview inside an iPhone-sized frame (rentals _webPhonePreview); there is no
 // X-Frame-Options, as it cannot name another host and would refuse that frame in some browsers.
-// The two registration forms send their own headers (src/forms/headers.ts) and are left out here.
+// The registration forms' own pages (?classic=1) send their own headers (src/forms/headers.ts) and are left out here;
+// the forms' pages of the website (app/[locale]/<address>) take the site's.
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
 const MAPLIBRE = "https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl";
 const CSP = [
@@ -62,8 +63,15 @@ const config: NextConfig = {
     ];
   },
   async headers() {
-    // Every page and API answer except the registration forms and the Defe page, which keep their own.
-    return [{ source: "/((?!petromin$|community/registration$|defe$).*)", headers: SECURITY_HEADERS }];
+    // Every page and API answer. At the two forms' addresses the page on its own (?classic=1, the address while the site
+    // is Coming Soon) keeps the headers its route sends; the page of the website there takes these. The Saturday and
+    // lockers pages' own headers name nothing these do not, so theirs need no exception.
+    const classic = [{ type: "query" as const, key: "classic" }];
+    return [
+      { source: "/((?!petromin$|community/registration$).*)", headers: SECURITY_HEADERS },
+      { source: "/petromin", missing: classic, headers: SECURITY_HEADERS },
+      { source: "/community/registration", missing: classic, headers: SECURITY_HEADERS },
+    ];
   },
 };
 
