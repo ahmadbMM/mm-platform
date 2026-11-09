@@ -9,7 +9,7 @@ export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "./.open-nex
 // still open or let go, and confirm card refunds left pending (src/app/api/pay/reconcile). The request goes straight to
 // the site's own handler, never out on the network, and carries the server key. Nothing runs until the payment keys
 // are set.
-export default {
+const worker = {
   fetch: (request, env, ctx) => site.fetch(request, env, ctx),
   scheduled: async (event, env, ctx) => {
     if (!env || !env.PAY_SERVER_KEY || !env.MOYASAR_SECRET_KEY) return;
@@ -18,3 +18,5 @@ export default {
     ctx.waitUntil(site.fetch(req, env, ctx).then(() => undefined, () => undefined));
   },
 };
+
+export default worker;
