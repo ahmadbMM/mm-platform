@@ -12,6 +12,7 @@ import { resolvePage } from "@/lib/content-core";
 import { BOOKING_URL, bookingLink } from "@/lib/links";
 import { loadSiteContent } from "@/lib/site";
 import "./bike.css";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // A fleet bike's NFC tag page: micromobility.sa/bikes/42 (the stickers still hold /b/42, which
 // next.config redirects here). A rider tapping a sticker sees the bike, its state and its price,
@@ -165,7 +166,7 @@ export default async function FleetBike({ code, locale }: { code: string; locale
               </a>
               {SHOW_STORE_CTA && (
                 <a className="bk-cta2" href={STORE_URL}>
-                  {t("store")} <span className="mirror-rtl">→</span>
+                  {t("store")} <ArrowIcon size={16} />
                 </a>
               )}
             </>

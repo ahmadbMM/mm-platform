@@ -23,6 +23,7 @@ import { intlOf } from "@/i18n/locales";
 import { genderViewer } from "@/lib/account";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { AH_VENUE } from "@/lib/arena";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/events - every upcoming session in the booking system, month by month, each
 // booked in the booking app; sessions are named the way /experiences names them. A session for men only
@@ -161,7 +162,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
             <div className="pg-places">
               {places.map((p, i) => (
                 <a key={i} href={S(p.href) || undefined} target="_blank" rel="noopener noreferrer">
-                  <strong>{S(p.name)}</strong>{S(p.text) && <span>{S(p.text)}</span>}{S(p.href) && <em>{tx("Directions →", "الاتجاهات ←")}</em>}
+                  <strong>{S(p.name)}</strong>{S(p.text) && <span>{S(p.text)}</span>}{S(p.href) && <em>{tx("Directions", "الاتجاهات")} <ArrowIcon size={14} /></em>}
                 </a>
               ))}
             </div>

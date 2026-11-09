@@ -1,6 +1,7 @@
 import type { RideKind } from "@/lib/rides";
 import type { RideMore as More } from "@/lib/ride-record";
-import { intlOf, isRtl } from "@/i18n/locales";
+import { intlOf } from "@/i18n/locales";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // Stats' more of the record (the booking app's _myrMore, the owner, 2026-11-09: "add more stats"): rides by month
 // as twelve thin columns on one baseline, this month last, the value on the highest one's cap (the latest of a tie),
@@ -55,7 +56,7 @@ export default function RideMore({ locale, more, t, typeName, kindName, earned }
         <a className="myr myr-bd" href={earned.href}>
           <span className="myr-bd-t">{t.badgesEarned}</span>
           <bdi className="myr-bd-n">{earned.n}/{earned.of}</bdi>
-          <span aria-hidden="true">{isRtl(locale) ? "←" : "→"}</span>
+          <ArrowIcon size={15} />
         </a>
       )}
     </>

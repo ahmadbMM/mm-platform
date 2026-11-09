@@ -6,6 +6,7 @@ import { badgeReqWords } from "./BadgeRequest.words";
 import { fill } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
 import { lastReq, PDF_MAX, type AskChoice, type BadgeReq } from "@/lib/badge-request";
+import { TickIcon } from "@/components/site/Icons";
 
 // Every badge on My Account, as the booking app's account page draws them (_mrBadgesRow,
 // _mrBadgeInfo): the earned ones in a grid of equal tiles, the ones still to earn folded under one
@@ -212,7 +213,7 @@ export default function BadgeGrid({ items, t, ask = null }: { items: BadgeView[]
                     <li key={y.slug} className={`badge-lvl${y.on ? " on" : ""}${i === open.lvN - 1 ? " cur" : ""}`}>
                       <Medal icon={y.icon} color={y.color} className={y.on ? "" : "locked"} />
                       <span className="badge-lvl-t"><b>{y.name}</b>{y.how && <small>{y.how}</small>}</span>
-                      <bdi className="badge-lvl-n">{y.on ? "✓" : y.prog && /^\d+\/\d+$/.test(y.prog) ? y.prog : <Lock />}</bdi>
+                      <bdi className="badge-lvl-n">{y.on ? <TickIcon size={13} /> : y.prog && /^\d+\/\d+$/.test(y.prog) ? y.prog : <Lock />}</bdi>
                     </li>
                   ))}
                 </ol>
@@ -220,9 +221,9 @@ export default function BadgeGrid({ items, t, ask = null }: { items: BadgeView[]
             ) : open.how && <><p className="badge-pop-how">{t.howTo}</p><p className="badge-pop-d">{open.how}</p></>}
             {!open.on && open.season && <p className="badge-pop-how badge-pop-sn">{open.season}</p>}
             {open.given?.note && <p className="badge-pop-note"><bdi>{open.given.note}</bdi></p>}
-            {open.given ? <p className="badge-pop-earned">✓ {open.given.line}</p>
-              : open.levels ? (open.lvN === open.levels.length ? <p className="badge-pop-earned">✓ {t.maxLevel}</p> : null)
-              : open.on ? <p className="badge-pop-earned">✓ {t.earned}</p>
+            {open.given ? <p className="badge-pop-earned"><TickIcon size={15} /> {open.given.line}</p>
+              : open.levels ? (open.lvN === open.levels.length ? <p className="badge-pop-earned"><TickIcon size={15} /> {t.maxLevel}</p> : null)
+              : open.on ? <p className="badge-pop-earned"><TickIcon size={15} /> {t.earned}</p>
               : open.prog ? <p className="badge-pop-prog" dir="ltr">{open.prog}</p> : null}
             {w && open.ask && (
               <div className="badge-pop-req">

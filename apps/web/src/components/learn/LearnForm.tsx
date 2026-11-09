@@ -17,6 +17,7 @@ import { EM_EMPTY, emAbsent, emReadBoth, emRefusal, emState, type EmContact, typ
 import { accountPlan } from "@/lib/account-step";
 import LearnClosed from "./LearnClosed";
 import { T } from "./LearnForm.text";
+import { TickIcon } from "@/components/site/Icons";
 
 // The Learn to ride sign-up card (/experiences/learn, right column), in two steps (the owner,
 // 2026-09-30: "apply the 2 steps registration on learn to ride too and add a question asking if the
@@ -459,7 +460,7 @@ export default function LearnForm(p: LearnFormProps) {
   if (done) {
     return (
       <div className="ln-card ln-done" role="status" ref={doneBox}>
-        <span className="ln-done-mark" aria-hidden="true">✓</span>
+        <span className="ln-done-mark" aria-hidden="true"><TickIcon size={22} /></span>
         <h2>{p.doneTitle}</h2>
         <p>{p.doneText}</p>
         <p>{t.surge}</p>
@@ -610,7 +611,7 @@ export default function LearnForm(p: LearnFormProps) {
       <div ref={stepTop} tabIndex={-1} className="ln-step-top">
         {acct?.made ? (
           <div className="ln-made" role="status">
-            <span className="ln-made-mark" aria-hidden="true">✓</span>
+            <span className="ln-made-mark" aria-hidden="true"><TickIcon size={22} /></span>
             <span><b>{t.madeTitle}</b><span>{t.madeText}</span></span>
           </div>
         ) : acct?.name ? <p className="ln-who-am">{t.signedAs(acct.name)}{acct.email ? ` · ⁦${acct.email}⁩` : ""}</p> : null}

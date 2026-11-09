@@ -26,11 +26,12 @@ import { riyadhClock } from "@/lib/workshop-days";
 import { DEFE_RACE_URL, dayWord, fmtClock, fmtDayDate, kmText, meetHeld, revealWhen, spotHeld } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt, phrase } from "@/i18n/tx";
-import { intlOf, isRtl } from "@/i18n/locales";
+import { intlOf } from "@/i18n/locales";
 import { bg } from "@/lib/img";
 import { vlConfig, vlDivNames, vlPayLine } from "@/lib/vlap";
 import { AH_INFO_URL, ahConfig, ahPayLine } from "@/lib/arena";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
@@ -353,7 +354,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
           <h1>{S(c.hero.title)}</h1>
           <p className="xp-hero-text">{S(c.hero.text)}</p>
           <div className="xp-btns">
-            <a className="xp-btn" href="#book">{S(c.hero.bookBtn)} <span aria-hidden="true">{(isRtl(locale) ? "←" : "→")}</span></a>
+            <a className="xp-btn" href="#book">{S(c.hero.bookBtn)} <ArrowIcon size={15} /></a>
           </div>
         </section>
 

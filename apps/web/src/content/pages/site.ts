@@ -114,7 +114,7 @@ export const siteSchema = {
           id: "shop", type: "list", maxItems: 10, label: bi("Column 1: links", "العمود ١: الروابط"),
           item: [{ id: "label", type: "text", max: 40, label: bi("Text", "النص"), def: bi("", "") }, { id: "href", type: "link", label: bi("Link", "الرابط"), def: "" }],
           def: [
-            [["Store", "المتجر"], "/store"], [["Find your size", "أوجد مقاسك"], "/#fit-quiz"],
+            [["Store", "المتجر"], "/store"], [["Find your bike", "اعثر على دراجتك"], "/#fit-quiz"],
             [["Experiences", "التجارب"], "/experiences"], [["Book a Service", "حجز صيانة"], "/workshop"],
             [["Track Your Order", "تتبع الطلب"], "/help#delivery"],
           ].map(([[e, a], h]) => ({ label: bi(e as string, a as string), href: { href: h as string } })),

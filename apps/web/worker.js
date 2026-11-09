@@ -3,7 +3,7 @@
 // .open-next/worker.js is written by `opennextjs-cloudflare build`, before wrangler bundles this.
 import handler from "./.open-next/worker.js";
 export { DOQueueHandler, DOShardedTagCache, BucketCachePurge } from "./.open-next/worker.js";
-import { servePage } from "./src/lib/page-cache";
+import { plainCanonical, servePage } from "./src/lib/page-cache";
 import { apexTarget, movedStatus } from "./src/lib/canonical-host";
 import { prefixTitles } from "./src/lib/staging";
 
@@ -14,13 +14,23 @@ import { prefixTitles } from "./src/lib/staging";
 // not (the registration forms, a plain document) - never twice.
 const isStaging = (env) => env && env.MM_ENV === "staging";
 
+// A page asked for at its plain address names that address as its canonical one (src/lib/page-cache.ts,
+// plainCanonical); the copy the edge keeps is untouched, so /club?lang=ar still names itself.
+function plainAddress(request, res) {
+  const canonical = plainCanonical(request);
+  if (!canonical || !(res.headers.get("content-type") || "").includes("text/html")) return res;
+  return new HTMLRewriter()
+    .on('link[rel="canonical"]', { element(el) { el.setAttribute("href", canonical); } })
+    .transform(res);
+}
+
 const worker = {
   fetch: async (request, env, ctx) => {
     // www.micromobility.sa moves to micromobility.sa, path and query kept (src/lib/canonical-host.ts),
     // before the edge's page copies are asked: they are kept without the host.
     const apex = apexTarget(request.url);
     if (apex) return Response.redirect(apex, movedStatus(request.method));
-    if (!isStaging(env)) return servePage(request, env, ctx, handler);
+    if (!isStaging(env)) return plainAddress(request, await servePage(request, env, ctx, handler));
     if (new URL(request.url).pathname === "/robots.txt") {
       return new Response("User-agent: *\nDisallow: /\n", { headers: { "content-type": "text/plain; charset=utf-8" } });
     }

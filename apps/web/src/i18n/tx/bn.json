@@ -211,7 +211,6 @@
   "Day": "দিন",
   "Deore 1×11 and fast-rolling rubber for quick desert gravel.": "Deore 1×11 আর দ্রুত গড়ানো টায়ার — মরুভূমির নুড়িপথে দ্রুত ছুটে চলার জন্য।",
   "Directions": "পথনির্দেশ",
-  "Directions →": "পথনির্দেশ →",
   "Disc + 3-spoke carbon": "ডিস্ক + 3-স্পোক কার্বন",
   "Distance": "দূরত্ব",
   "Do you already have a Micromobility account?": "আপনার কি আগে থেকেই Micromobility অ্যাকাউন্ট আছে?",
@@ -278,7 +277,6 @@
   "Fast road rides": "দ্রুতগতির রোড রাইড",
   "Female": "নারী",
   "Find us in Jeddah.": "জেদ্দায় আমাদের খুঁজে নিন।",
-  "Find your size": "আপনার সাইজ খুঁজে নিন",
   "Finish Victory Lap by Fitness Empire.": "Victory Lap by Fitness Empire শেষ করুন।",
   "First name": "নামের প্রথম অংশ",
   "First name is enough.": "শুধু প্রথম নাম হলেই চলবে।",
@@ -1573,5 +1571,7 @@
   "Premium bikes, expert servicing, rides at the Corniche and a community that rides every week.": "প্রিমিয়াম সাইকেল, দক্ষ সার্ভিসিং, কর্নিশে রাইড আর এমন এক কমিউনিটি, যারা প্রতি সপ্তাহে সাইকেল চালায়।",
   "Fleets, wellness, events": "ফ্লিট, ওয়েলনেস, ইভেন্ট",
   "EST. JEDDAH": "জেদ্দায় প্রতিষ্ঠিত",
-  "Photo {n} of {total}": "{total}টির মধ্যে ছবি {n}"
+  "Photo {n} of {total}": "{total}টির মধ্যে ছবি {n}",
+  "What's on.": "সামনে যা আছে।",
+  "Find your bike": "আপনার সাইকেল খুঁজুন"
 }

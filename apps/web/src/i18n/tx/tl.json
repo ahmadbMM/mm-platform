@@ -211,7 +211,6 @@
   "Day": "Araw",
   "Deore 1×11 and fast-rolling rubber for quick desert gravel.": "Deore 1×11 at mga gulong na mabilis gumulong, para sa mabilis na takbo sa gravel ng disyerto.",
   "Directions": "Mga direksyon",
-  "Directions →": "Mga direksyon →",
   "Disc + 3-spoke carbon": "Disc + 3-spoke na carbon",
   "Distance": "Layo",
   "Do you already have a Micromobility account?": "May Micromobility account ka na ba?",
@@ -278,7 +277,6 @@
   "Fast road rides": "Mabibilis na road ride",
   "Female": "Babae",
   "Find us in Jeddah.": "Hanapin kami sa Jeddah.",
-  "Find your size": "Alamin ang iyong laki",
   "Finish Victory Lap by Fitness Empire.": "Tapusin ang Victory Lap by Fitness Empire.",
   "First name": "Pangalan",
   "First name is enough.": "Sapat na ang unang pangalan.",
@@ -1573,5 +1571,7 @@
   "Premium bikes, expert servicing, rides at the Corniche and a community that rides every week.": "Mga premium na bisikleta, dalubhasang service, mga ride sa Corniche at isang komunidad na nagbibisikleta linggo-linggo.",
   "Fleets, wellness, events": "Fleet, wellness, event",
   "EST. JEDDAH": "ITINATAG SA JEDDAH",
-  "Photo {n} of {total}": "Larawan {n} sa {total}"
+  "Photo {n} of {total}": "Larawan {n} sa {total}",
+  "What's on.": "Mga paparating.",
+  "Find your bike": "Hanapin ang bisikleta mo"
 }

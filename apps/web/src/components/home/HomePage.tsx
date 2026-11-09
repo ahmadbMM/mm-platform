@@ -9,7 +9,7 @@ import FitQuiz, { type QuizText } from "@/components/home/FitQuiz";
 import OpenNow from "@/components/home/OpenNow";
 import LazyMap from "@/components/home/LazyMap";
 import LazyBackgrounds from "@/components/site/LazyBackgrounds";
-import { ArrowIcon } from "@/components/site/Icons";
+import { ArrowIcon, StarIcon } from "@/components/site/Icons";
 import LearnTeaser, { type LearnTeaserText } from "@/components/learn/LearnTeaser";
 import "@/components/site/site.css";
 import "@/components/home/home.css";
@@ -211,7 +211,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
             <div className="hm-visit-btns">
               {rating > 0 && (
                 <a href={S(v.reviewsHref)} target="_blank" rel="noopener noreferrer" className="rating">
-                  <span className="stars" aria-hidden="true">★★★★★</span><span className="mm-lat">{rating.toFixed(1)}</span><small>{S(v.ratingLabel)}</small>
+                  <span className="stars" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <StarIcon key={i} size={15} />)}</span><span className="mm-lat">{rating.toFixed(1)}</span><small>{S(v.ratingLabel)}</small>
                 </a>
               )}
               {S(contact.mapsHref) && <a href={S(contact.mapsHref)} target="_blank" rel="noopener noreferrer" className="dark">{S(v.directions)}</a>}

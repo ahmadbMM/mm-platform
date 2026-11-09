@@ -15,8 +15,8 @@ import { pageState } from "@/lib/page-state";
 import { slugId } from "@/lib/slug";
 import { serverL } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
-import { isRtl } from "@/i18n/locales";
 import { bg } from "@/lib/img";
+import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/about - who we are (the company profile's own story, numbers, vision, mission
 // and values), where to find us, visitor questions, the contact details with a live open / closed
@@ -48,7 +48,7 @@ export default async function AboutPage({ params }: { params: Promise<{ locale: 
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(aboutSchema, content, L);
   const en = resolvePage(aboutSchema, content, "en");
-  const arrow = (isRtl(locale) ? "←" : "→");
+  const arrow = <ArrowIcon size={15} />;
   const shown = (href: string) => !hidden.includes(pageOfLink(href));
 
   const contact = site.contact;

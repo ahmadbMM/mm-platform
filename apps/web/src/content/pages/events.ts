@@ -17,7 +17,7 @@ export const eventsSchema = {
       hint: bi("The sessions and their names come from the booking system and from Experiences > Next dates.", "الجلسات وأسماؤها من نظام الحجز ومن التجارب > المواعيد القادمة."),
       fields: [
         txt("eyebrow", 40, "Small label", "العبارة الصغيرة", "Events", "الفعاليات"),
-        txt("title", 60, "Title", "العنوان", "Ride with us.", "اركب معنا."),
+        txt("title", 60, "Title", "العنوان", "What's on.", "الفعاليات القادمة."),
         long("text", 240, "Text", "النص", "Every open ride and community session, soonest first. Book any of them in the booking app.", "كل الجولات والجلسات المجتمعية المتاحة، الأقرب أولاً. احجز أياً منها في تطبيق الحجز."),
         { id: "count", type: "number", min: 3, max: 30, step: 1, label: bi("How many sessions to show", "عدد الجلسات المعروضة"), def: 12 },
         { id: "bookHref", type: "link", label: bi("Booking link", "رابط الحجز"), def: BOOKING_URL },

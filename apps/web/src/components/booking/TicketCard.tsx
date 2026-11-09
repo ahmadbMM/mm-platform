@@ -19,6 +19,7 @@ import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { genderChip } from "@/lib/session-gender";
 import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
+import { TickIcon } from "@/components/site/Icons";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -253,7 +254,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         ) : past && allDone && onDay ? (
           <div className="tk-note go"><span className="dot" aria-hidden="true" /><span>{minutes >= 1 ? (bikes ? t.cueDone : t.cueDoneNb)(dur(minutes)) : bikes ? t.cueDoneNoDur : t.cueDoneNoDurNb}</span></div>
         ) : cue === "confirmed" ? (
-          <div className="tk-ok" role="status"><span className="tk-ok-tick" aria-hidden="true">✓</span><span><strong>{t.confirmed}</strong></span></div>
+          <div className="tk-ok" role="status"><span className="tk-ok-tick" aria-hidden="true"><TickIcon size={14} /></span><span><strong>{t.confirmed}</strong></span></div>
         ) : cue ? (
           <div className={`tk-note ${cue === "next" || cue === "onBike" ? "go" : cue === "inQueue" ? "" : "warn"}`}>
             {cue !== "next" && cue !== "inQueue" && <span className="dot" aria-hidden="true" />}

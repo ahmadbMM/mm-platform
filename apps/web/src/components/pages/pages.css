@@ -15,7 +15,7 @@ html:is([lang="ar"], [lang="ur"]) .pg-eyebrow { letter-spacing: 0; font-size: 13
 .pg-grid { columns: 3 260px; column-gap: 14px; }
 .pg-grid figure { break-inside: avoid; margin: 0 0 14px; }
 .pg-grid figure > button { display: block; width: 100%; padding: 0; border: 0; cursor: zoom-in; border-radius: 18px; overflow: hidden; background: #dfe5df; }
-.pg-grid img { display: block; width: 100%; height: auto; transition: transform .4s ease; }
+.pg-grid img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
 .pg-grid figure > button:hover img { transform: scale(1.03); }
 .pg-grid figcaption { font-size: 13px; color: #57605a; padding: 8px 4px 0; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
 .pg-grid figcaption span { color: #077a4b; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 1.2px; }
