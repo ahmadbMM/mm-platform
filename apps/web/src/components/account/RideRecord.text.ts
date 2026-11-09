@@ -37,7 +37,7 @@ export const T = {
     rides: (n: string) => `${n} ${n === "1" ? "ride" : "rides"}`,
     names: {
       first_lap: ["First Lap", "Completed your first circuit ride", "Every rider's story starts with one lap: the first ride you finished with us."],
-      regular: ["Grid Regular", "Completed 5 rides", "In motor racing, the grid is where the cars line up to start. Five rides make you a regular at the start line."],
+      regular: ["Grid Regular", "Completed 5 rides", "In a race, the grid is where the bikes line up to start. Five rides make you a regular at the start line."],
       podium: ["Podium Pace", "Completed 10 rides", "The podium is where the top finishers stand. Ten rides put you among our most dedicated riders."],
       front_row: ["Front Row", "First in the queue on a ride you rode", "The front row of the grid starts ahead of everyone: you were first in the queue for a ride."],
       pole_position: ["Pole Position", "First in the queue on 5 rides you rode", "Pole position is earned lap after lap: first in the queue on five rides you then rode."],
@@ -50,7 +50,7 @@ export const T = {
       fuel: ["Fuel Stop", "Added extras to a booking", "Every racer needs a pit stop: for adding a drink or snack to your booking."],
       corniche25: ["Corniche 25", "25 rides on the corniche", "Twenty-five rides along the Jeddah Corniche. You know this road by heart."],
       marshal: ["Marshal", "Led or swept a group ride, or helped run an event", "Marshals keep a race safe and running. Given by the team to riders who lead, sweep or help at events."],
-      pit_crew: ["Pit Crew", "Helped another rider out on a ride", "A pit crew gets a car back in the race. Given for stopping to help another rider."],
+      pit_crew: ["Pit Crew", "Helped another rider out on a ride", "A pit crew gets a bike back in the race. Given for stopping to help another rider."],
       green_flag: ["Green Flag", "Rode with care for the people around you", "The green flag means the track is clear. Given for riding with care for walkers and other riders."],
       super_licence: ["Super Licence", "Finished Learn to ride and now rides on your own", "Racing drivers need a super licence to race at the top. Given when a Learn to ride graduate rides alone."],
       scrutineer: ["Scrutineer", "Reported a bike fault the team confirmed", "Scrutineers check every bike before a race. Given for spotting a bike fault the team then fixed."],
@@ -158,7 +158,7 @@ export const T = {
     rides: (n: string) => { const k = Number(n) % 100; return `${n} ${k >= 3 && k <= 10 ? "جولات" : "جولة"}`; }, // the booking app's mrRidesU: few, else one
     names: {
       first_lap: ["اللفة الأولى", "أكملت أول رحلة لك في الحلبة", "كل قصة راكب تبدأ بلفة واحدة: أول رحلة أكملتها معنا."],
-      regular: ["منتظم الحلبة", "أكملت 5 رحلات", "في سباقات السيارات، الغريد هو خط الانطلاق الذي تصطف عنده السيارات. خمس رحلات تجعلك وجهاً مألوفاً عند خط الانطلاق."],
+      regular: ["منتظم الحلبة", "أكملت 5 رحلات", "في السباقات، الغريد هو خط الانطلاق الذي تصطف عنده الدراجات. خمس رحلات تجعلك وجهاً مألوفاً عند خط الانطلاق."],
       podium: ["إيقاع المنصة", "أكملت 10 رحلات", "منصة التتويج لأصحاب المراكز الأولى. عشر رحلات تضعك بين أكثر راكبينا التزاماً."],
       front_row: ["الصف الأول", "كنت الأول في الطابور في جولة وركبتها", "الصف الأول ينطلق قبل الجميع: كنت الأول في طابور إحدى الرحلات."],
       pole_position: ["مركز الانطلاق الأول", "كنت الأول في الطابور في 5 جولات وركبتها", "مركز الانطلاق الأول يُكسب لفة بعد لفة: كنت الأول في الطابور في خمس جولات ثم ركبتها."],
@@ -171,7 +171,7 @@ export const T = {
       fuel: ["محطة تزوّد", "أضفت إضافات إلى حجزك", "كل متسابق يحتاج إلى وقفة تزوّد: لمن أضاف مشروباً أو وجبة خفيفة إلى حجزه."],
       corniche25: ["كورنيش 25", "25 رحلة على الكورنيش", "خمس وعشرون رحلة على كورنيش جدة. صرت تعرف هذا الطريق عن ظهر قلب."],
       marshal: ["المنظّم", "قدت رحلة جماعية أو تابعت مؤخرتها، أو ساعدت في تنظيم فعالية", "المنظّمون يحافظون على سلامة السباق وسيره. يمنحه الفريق لمن يقود الرحلة أو يتابع مؤخرتها أو يساعد في الفعاليات."],
-      pit_crew: ["طاقم الصيانة", "ساعدت راكباً آخر خلال رحلة", "طاقم الصيانة يعيد السيارة إلى السباق. يُمنح لمن توقف ليساعد راكباً آخر."],
+      pit_crew: ["طاقم الصيانة", "ساعدت راكباً آخر خلال رحلة", "طاقم الصيانة يعيد الدراجة إلى السباق. يُمنح لمن توقف ليساعد راكباً آخر."],
       green_flag: ["الراية الخضراء", "قدت بعناية واهتمام بمن حولك", "الراية الخضراء تعني أن المسار خالٍ. تُمنح لمن يقود بعناية بالمشاة والراكبين الآخرين."],
       super_licence: ["الرخصة الممتازة", "أنهيت برنامج تعلّم ركوب الدراجة وصرت تقودها وحدك", "يحتاج سائقو السباقات إلى رخصة خاصة للمنافسة في القمة. تُمنح لخريج برنامج تعلّم الركوب حين يقود وحده."],
       scrutineer: ["المُدقِّق", "أبلغت عن عطل في دراجة وأكّده الفريق", "المدقّقون يفحصون كل دراجة قبل السباق. يُمنح لمن لاحظ عطلاً في دراجة ثم أصلحه الفريق."],
