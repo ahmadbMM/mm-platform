@@ -18,7 +18,7 @@ import { AH_BANK, vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-tic
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { genderChip } from "@/lib/session-gender";
-import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
+import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -74,6 +74,8 @@ type Props = {
   /** The add-ons' items by id, their names and today's prices (lib/ticket-addons.ts); null when the
    *  inventory could not be read. */
   addonItems?: Map<string, AddonItem> | null;
+  /** the account's lockers by booking (customer_lockers): a locker line says its period and number */
+  lockers?: Map<string, TicketLocker> | null;
   /** Victory Lap (and Arena Heros): each team booking's partner by first name, by booking id (customer_vl_teams);
    *  a booking without one has no partner named. */
   vlPartners?: Map<string, string> | null;
@@ -135,7 +137,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, vlPartners = null, balance = null, blood = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, lockers = null, vlPartners = null, balance = null, blood = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -346,7 +348,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               <p className="tk-addons-h">{rows.length > 1 && <><bdi>{r.name}</bdi> · </>}{t.addons}</p>
               {mine.map((x, i) => (
                 <div key={i} className="tk-ad">
-                  <span className="tk-ad-n"><bdi>{x.name}</bdi>{x.qty > 1 && <> <bdi className="tk-ad-q" dir="ltr">×{x.qty}</bdi></>}</span>
+                  <span className="tk-ad-n"><bdi>{x.locker ? lockerText(t.locker, lockers?.get(x.rowId), locale) : x.name}</bdi>{x.qty > 1 && <> <bdi className="tk-ad-q" dir="ltr">×{x.qty}</bdi></>}</span>
                   {x.amount !== null && <bdi className="tk-amt">{sar(x.amount)}</bdi>}
                 </div>
               ))}

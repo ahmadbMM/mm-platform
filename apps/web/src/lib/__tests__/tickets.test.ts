@@ -203,8 +203,8 @@ describe("the add-ons on a ticket (the booking app's entryAddons, addonLineItems
     const rows = [row({ id: "a", name: "Ann", addonLines: [{ id: "gel", qty: 2, p: null }, { id: "cap", qty: 1, p: 40 }] }), row({ id: "b", name: "Bea", addonLines: [] })];
     const lines = addonLines(rows, items);
     expect(lines).toEqual([
-      { rowId: "a", rider: "Ann", name: "Energy gel", qty: 2, amount: 24 },
-      { rowId: "a", rider: "Ann", name: "Cycling cap", qty: 1, amount: 40 },
+      { rowId: "a", rider: "Ann", name: "Energy gel", qty: 2, amount: 24, locker: false },
+      { rowId: "a", rider: "Ann", name: "Cycling cap", qty: 1, amount: 40, locker: false },
     ]);
     expect(addonsCost(lines)).toBe(64);
     expect(addonsCost([])).toBe(0);

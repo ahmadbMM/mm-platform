@@ -184,14 +184,41 @@ export type AddonItem = { name: string; price: number | null };
 /** One add-on as the ticket lists it (the booking app's addonLineItems): whose it is, its name, how
  *  many, and the line's amount - the price it was sold at, else the item's price today; null when
  *  neither is known (the inventory could not be read), and then the ticket shows no total. */
-export type AddonLine = { rowId: string; rider: string; name: string; qty: number; amount: number | null };
+export type AddonLine = { rowId: string; rider: string; name: string; qty: number; amount: number | null; locker: boolean };
 const r2 = (n: number) => Math.round(n * 100) / 100;
 export function addonLines(rows: Pick<TicketRow, "id" | "name" | "addonLines">[], items: Map<string, AddonItem> | null): AddonLine[] {
   return rows.flatMap((r) => r.addonLines.map((a) => {
     const it = items?.get(a.id);
     const each = a.p ?? it?.price ?? null;
-    return { rowId: r.id, rider: r.name, name: it?.name || a.id, qty: a.qty, amount: each === null ? null : r2(each * a.qty) };
+    const locker = a.id === LOCKER_LINE; // the card names it (lockerText): it is no inventory item
+    return { rowId: r.id, rider: r.name, name: locker ? "" : it?.name || a.id, qty: a.qty, amount: each === null ? null : r2(each * a.qty), locker };
   }));
+}
+
+// A locker (the booking app's lockers, rentals 20261109120000): the database writes its fee on the booking as an
+// add-on line {"id":"locker"}, so the total already counts it; customer_lockers says the period and, once staff gave
+// one at the desk, the locker's number. The periods: 18-20 and 21-23 (or both) on a JCC night, 19-21 on a Petromin night.
+export const LOCKER_LINE = "locker";
+export type TicketLocker = { period: string; code: string | null; status: string };
+const LOCKER_TIMES: Record<string, [string, string]> = { early: ["18:00", "20:00"], late: ["21:00", "23:00"], pm: ["19:00", "21:00"] };
+/** customer_lockers' rows by booking, the ones not cancelled; an empty map when the answer is not a list. */
+export function lockersOf(data: unknown): Map<string, TicketLocker> {
+  const out = new Map<string, TicketLocker>();
+  if (!Array.isArray(data)) return out;
+  for (const x of data) {
+    if (!x || typeof x !== "object") continue;
+    const o = x as Record<string, unknown>;
+    if (typeof o.booking_id !== "string" || typeof o.period !== "string" || o.status === "cancelled") continue;
+    out.set(o.booking_id, { period: o.period, code: typeof o.code === "string" && o.code ? o.code : null, status: String(o.status ?? "") });
+  }
+  return out;
+}
+/** "Locker · 9 PM - 11 PM · P7", as the booking app's ticket says it: the word, the period once known, the number once given. */
+export function lockerText(word: string, lk: TicketLocker | undefined, locale: string): string {
+  if (!lk) return word;
+  const span = (p: string) => (LOCKER_TIMES[p] ? `${fmtClock(LOCKER_TIMES[p][0], locale)} - ${fmtClock(LOCKER_TIMES[p][1], locale)}` : "");
+  const when = lk.period === "both" ? `${span("early")} + ${span("late")}` : span(lk.period);
+  return [word, when, lk.code].filter(Boolean).join(" · ");
 }
 
 /** What the add-ons come to, or null when a line's amount is not known: the total then cannot be said. */

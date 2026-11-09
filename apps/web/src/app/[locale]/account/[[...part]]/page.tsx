@@ -44,7 +44,7 @@ import { routeItems } from "@/lib/route-names";
 import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
 import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
-import { bloodDone, breakfastFor, doneToday, fmtDayDate, placeLink, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
+import { bloodDone, breakfastFor, doneToday, fmtDayDate, lockersOf, placeLink, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
@@ -147,7 +147,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const toRate = unratedRides(rows, today).filter((r) => r.date < RATE_FROM && r.entryId !== gate?.entryId).reverse().slice(0, 5);
     // every booked session, whatever its state now (a Petromin night, one staff closed since), read
     // with the account's token so a private ride (one its tag holders alone may see) keeps its name
-    const [sessions, blood, walletRead, referralRaw] = await Promise.all([
+    const [sessions, blood, walletRead, referralRaw, lockers] = await Promise.all([
       loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
       // the blood type (2026-10-14): no card while the database has no customer_blood_type yet, nor
       // when it cannot be read just now (a card showing none would invite saving over the real one)
@@ -156,6 +156,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       // the wallet (rentals 20261102210000): no card and no pay button while the database has none or cannot be read
       rpcServer<unknown>("customer_wallet", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? walletOf(r.data) : null)),
       referralP,
+      // the lockers (rentals 20261109120000): the period and number on a ticket's locker line; none read, the line says Locker
+      rpcServer<unknown>("customer_lockers", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? lockersOf(r.data) : null)),
     ]);
     const referral = referralOf(referralRaw, today);
     // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
@@ -237,7 +239,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                       // the live map follows the ride leader: a bike session's only (2026-10-18)
                       live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} />
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} />
                 );
               })}
               {past.map((g) => {
@@ -246,7 +248,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                   <TicketCard key={g.key} past locale={locale} today={today} rows={g.rows} session={s}
                     name={rideName(s, g.sessionId)}
                     cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} vlPartners={vlPartners} blood={donor} />
+                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} />
                 );
               })}
             </div>
