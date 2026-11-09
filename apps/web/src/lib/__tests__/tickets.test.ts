@@ -793,7 +793,7 @@ describe("the code a booking used", () => {
     expect(at({ promo_code: "RW-K7MQ2X-4FZ" }).promoCode).toBe("RW-K7MQ2X-4FZ");
     expect(at({ promo_code: "<x>" }).promoCode).toBeNull();
     expect(at({ ride_code: "IMC" }).rideCode).toBe("IMC");
-    expect(["RW-A", "rf-b", "RB-C", "BD-D", "SUMMER10"].map(codeKindOf)).toEqual(["rw", "rf", "rb", "bd", "promo"]);
+    expect(["RW-A", "rf-b", "RB-C", "BD-D", "VL-E", "vl-1a2b3c4d", "SUMMER10"].map(codeKindOf)).toEqual(["rw", "rf", "rb", "bd", "vl", "vl", "promo"]);
   });
 
   it("names the kind beside its mark on the row that used it, and nothing on a row without one", () => {
@@ -803,6 +803,11 @@ describe("the code a booking used", () => {
     expect(html).toContain("RW-K7MQ2X-4FZ");
     expect(html.match(/class="tk-code"/g)).toHaveLength(1);
     expect(card([at({ promo_code: "BD-1A2B3C4D", price: 0 })], "ar")).toContain("ركوبة مجانية للتبرع بالدم");
+    // a volunteer's free ride for an event worked (VL-, 2026-11-09), with its own mark and name
+    const vl = card([at({ promo_code: "VL-1A2B3C4D", price: 0 })]);
+    expect(vl).toContain("tk-code-tag ck-vl");
+    expect(vl).toContain("Volunteer free ride");
+    expect(card([at({ promo_code: "VL-1A2B3C4D", price: 0 })], "ar")).toContain("ركوبة مجانية للتطوع");
     expect(card([at({ ride_code: "IMC", price: 0 })])).toContain("Ride code");
   });
 });

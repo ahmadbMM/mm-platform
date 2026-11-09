@@ -58,11 +58,12 @@ export type TicketRow = {
   promoCode?: string | null; rideCode?: string | null;
 };
 /** The kinds of code a booking used (the booking app's _codeKindOf): the friend's referral discount (RW-), the referrer's
- *  free ride (RF-) and bonus (RB-), the blood donation free ride (BD-), a code staff made, and a Saturday ride code. */
-export type CodeKind = "promo" | "rw" | "rf" | "rb" | "bd" | "sat";
+ *  free ride (RF-) and bonus (RB-), the blood donation free ride (BD-), a volunteer's free ride for an event worked (VL-,
+ *  rentals 20261109120000, on the blood donors' rules), a code staff made, and a Saturday ride code. */
+export type CodeKind = "promo" | "rw" | "rf" | "rb" | "bd" | "vl" | "sat";
 export function codeKindOf(code: string): Exclude<CodeKind, "sat"> {
   const p = code.slice(0, 3).toUpperCase();
-  return p === "RW-" ? "rw" : p === "RF-" ? "rf" : p === "RB-" ? "rb" : p === "BD-" ? "bd" : "promo";
+  return p === "RW-" ? "rw" : p === "RF-" ? "rf" : p === "RB-" ? "rb" : p === "BD-" ? "bd" : p === "VL-" ? "vl" : "promo";
 }
 /** A row's codes, as the ticket shows them: [kind, code]. */
 export function rowCodes(r: Pick<TicketRow, "promoCode" | "rideCode">): [CodeKind, string][] {

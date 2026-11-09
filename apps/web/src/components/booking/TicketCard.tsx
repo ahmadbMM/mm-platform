@@ -114,12 +114,14 @@ const Tick = () => (
 );
 
 // The mark of each kind of code a booking used (the booking app's _CODE_IC, 2026-11-08): the friend's invite, the free ride
-// (a gift), the bonus (a star), the blood donation (a drop), a promo code (a tag), a Saturday ride code (a ticket).
+// (a gift), the bonus (a star), the blood donation (a drop), a volunteer's free ride (a raised hand, as on the Volunteer
+// badge, 2026-11-09), a promo code (a tag), a Saturday ride code (a ticket).
 const CODE_MARK: Record<CodeKind, React.ReactNode> = {
   rw: <><circle cx="9.4" cy="8.2" r="3.4" /><path d="M3.4 19.8c.6-3.4 3-5.4 6-5.4s5.4 2 6 5.4M18.6 7.4v6.2M15.5 10.5h6.2" /></>,
   rf: <><rect x="3.6" y="8.4" width="16.8" height="4.2" rx="1" /><path d="M5.2 12.6v6.6a1.2 1.2 0 0 0 1.2 1.2h11.2a1.2 1.2 0 0 0 1.2-1.2v-6.6M12 8.4v12M12 8.4C10.9 5.6 8.4 4 7 5.1c-1.3 1-.1 3.3 5 3.3zM12 8.4c1.1-2.8 3.6-4.4 5-3.3 1.3 1 .1 3.3-5 3.3z" /></>,
   rb: <><circle cx="12" cy="12" r="8.6" /><path d="M12 7.2l1.44 2.92 3.22.47-2.33 2.27.55 3.2L12 14.56l-2.88 1.5.55-3.2-2.33-2.27 3.22-.47z" /></>,
   bd: <path d="M12 3.4s-6.2 6.5-6.2 10.8a6.2 6.2 0 0 0 12.4 0C18.2 9.9 12 3.4 12 3.4z" />,
+  vl: <path d="M8.6 12.4V6.2a1.5 1.5 0 0 1 3 0v5M11.6 11V4.6a1.5 1.5 0 0 1 3 0V11M14.6 11.2V6.4a1.5 1.5 0 0 1 3 0v7.8c0 3.9-2.5 6.6-6 6.6-2.5 0-4.1-1.2-5.3-3.2l-2.2-3.8a1.5 1.5 0 0 1 2.5-1.7l1.4 1.9" />,
   promo: <><path d="M3.5 12.3V5a1.5 1.5 0 0 1 1.5-1.5h7.3l8.2 8.2a1.5 1.5 0 0 1 0 2.1l-7.3 7.3a1.5 1.5 0 0 1-2.1 0z" /><circle cx="8.3" cy="8.3" r="1.5" /></>,
   sat: <><path d="M3.6 7.6A1.6 1.6 0 0 1 5.2 6h13.6a1.6 1.6 0 0 1 1.6 1.6V10a2 2 0 0 0 0 4v2.4a1.6 1.6 0 0 1-1.6 1.6H5.2a1.6 1.6 0 0 1-1.6-1.6V14a2 2 0 0 0 0-4z" /><path d="M14.4 6.6v1.6M14.4 11.2v1.6M14.4 15.8v1.6" /></>,
 };
