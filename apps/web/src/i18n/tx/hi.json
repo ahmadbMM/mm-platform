@@ -707,6 +707,7 @@
   "Already on your account, so we do not ask again: {0}.": "पहले से आपके खाते में है, इसलिए दोबारा नहीं पूछते: {0}।",
   "Show them": "उन्हें दिखाएँ",
   "Our team asked you to check this.": "हमारी टीम ने आपसे इसे जाँचने को कहा है।",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0}: यह वही है जो आपके खाते में पहले से है। कृपया इसे सही करें।",
   "Signed up with Google or Apple?": "Google या Apple से साइन अप किया था?",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Google या Apple से साइन अप किया था? बुकिंग ऐप में उसी से आगे बढ़ें, और आप साइन इन होकर यहाँ लौट आएँगे।",
   "Signing in…": "साइन इन हो रहा है…",

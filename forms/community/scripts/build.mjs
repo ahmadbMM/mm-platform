@@ -22,7 +22,7 @@ const SHARED = new Function(shared + ';return SHARED;')();
 const keys = new Set();
 for (const m of html.matchAll(/data-t(?:-placeholder|-aria)?="([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/tr\("([^"]+)"/g)) keys.add(m[1]);
-for (const m of js.matchAll(/(?:hard|soft)(?:\["f-[a-z]+"\])?\s*[:=]\s*\["([^"]+)"/g)) keys.add(m[1]);
+for (const m of js.matchAll(/(?:hard|soft)(?:\[(?:"f-[a-z]+"|id)\])?\s*[:=]\s*\["([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/"f-[a-z]+", \d, "([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/showBanner\("([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/setErr\("f-[a-z0-9-]+", "([^"]+)"\)/g)) keys.add(m[1]); // a message set straight on a field

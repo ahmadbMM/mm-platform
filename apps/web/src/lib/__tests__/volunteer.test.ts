@@ -1,7 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createElement, type ReactElement } from "react";
+// The site has no @types/react-dom; this test needs one function of it.
+// @ts-expect-error -- react-dom/server ships without type declarations here
+import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { GET } from "@/app/api/account/volunteer-portal/route";
-import { volunteerCardShows } from "@/components/account/VolunteerCard";
-import { VOLUNTEER_WORDS } from "@/components/account/Volunteer.words";
+import VolunteerCard, { volunteerCardShows } from "@/components/account/VolunteerCard";
+import { VOLUNTEER_WORDS, hoursText } from "@/components/account/Volunteer.words";
 import { ACCOUNT_COOKIE, encodeSession } from "@/lib/account-core";
 import { LOCALES } from "@/i18n/locales";
 
@@ -29,7 +33,26 @@ describe("the volunteering card", () => {
       expect(w, l.code).toBeTruthy();
       for (const v of Object.values(w)) expect(v, l.code).toBeTruthy();
       expect(w.hours, l.code).toContain("{0}");
+      expect(w.hrs.other, l.code).toContain("{0}");
     }
+  });
+  // The owner, 2026-11-09: "6 · 5 Nov 2026 · Micromobility Blood Donation" read as anything but hours; the event, its
+  // day, then the hours with their word, as the booking app's _accVolRecLi.
+  it("says the hours with their word, by the language's plural", () => {
+    expect([1, 6, 2.5, 2.555].map((n) => hoursText(n, "en"))).toEqual(["1 hour", "6 hours", "2.5 hours", "2.56 hours"]);
+    expect([1, 2, 3, 10, 11, 100, 2.5].map((n) => hoursText(n, "ar"))).toEqual(["ساعة واحدة", "ساعتان", "3 ساعات", "10 ساعات", "11 ساعة", "100 ساعة", "2.5 ساعة"]);
+    expect([1, 3, 5, 2.5].map((n) => hoursText(n, "ru"))).toEqual(["1 час", "3 часа", "5 часов", "2.5 часа"]);
+    expect([1, 6].map((n) => hoursText(n, "de"))).toEqual(["1 Stunde", "6 Stunden"]);
+    expect(hoursText(6, "ja")).toBe("6時間");
+    expect(hoursText(6, "xx")).toBe("6 hours"); // a language the site does not speak reads English
+  });
+  it("lists a record as the event, its day, then the hours", () => {
+    const render = (el: ReactElement) => renderUntyped(el) as string;
+    const html = render(createElement(VolunteerCard, { locale: "en", me: { hours: 7, record: [
+      { id: 1, hours: 6, on: "2026-11-05", title: "Micromobility Blood Donation" }, { id: 2, hours: 1, on: "2026-10-31", title: null }] } }));
+    const rows = [...html.matchAll(/<li>(.*?)<\/li>/g)].map((m) => m[1].replace(/<[^>]+>/g, ""));
+    expect(rows).toEqual(["Micromobility Blood Donation · 5 Nov 20266 hours", "31 Oct 20261 hour"]); // the hours stand at the row's end
+    expect(html).toContain("<strong>6 hours</strong>");
   });
 });
 

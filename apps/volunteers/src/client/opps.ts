@@ -3,7 +3,7 @@
 
 import { rpc } from "./api";
 import { append, h, uid } from "./dom";
-import { dayLabel, sessionName, t, timesLabel, whenLabel, type Key } from "./i18n";
+import { dayLabel, hoursN, sessionName, t, timesLabel, whenLabel, type Key } from "./i18n";
 import { icon } from "./icons";
 import { briefTick, mapsLink } from "./home";
 import { go, load, myShift, render, S, say, setNote, standing, type Mine, type Opp } from "./state";
@@ -53,7 +53,7 @@ export function viewOpp(main: HTMLElement, id: string): void {
       metaLine("cal", dayLabel(o.date)),
       o.time ? metaLine("clock", timesLabel(o.time)) : null,
       o.location ? h("p", { class: "meta" }, icon("pin", 16), h("a", { href: mapsLink(o.location), target: "_blank", rel: "noopener" }, o.location)) : null,
-      o.hours_mode === "fixed" && o.fixed_hours ? metaLine("medal", t("oppHours", o.fixed_hours)) : null,
+      o.hours_mode === "fixed" && o.fixed_hours ? metaLine("medal", hoursN(o.fixed_hours)) : null,
       o.min_age ? metaLine("person", t("oppMinAge", o.min_age)) : null,
       metaLine("flag", t("oppRegisterBy", whenLabel(o.closes_at)))),
     o.about ? h("p", { class: "about" }, o.about) : null,

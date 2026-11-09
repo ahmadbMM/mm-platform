@@ -763,7 +763,7 @@
         else if (!/^[A-Za-z0-9._]{1,30}$/.test(ig)) hard["f-ig"] = ["An Instagram username has only letters, numbers, dots and underscores"];
       }
       heightCheck("f-xheight", $("#xheight").value, hard, soft);
-      if (need.em) emCheck("xem", acct.phone, hard, need.em2);
+      sameAgain(hard, need.em ? emCheck("xem", acct.phone, hard, need.em2) : null);
     } else if (n === "book") {
       if (!ride) hard["f-ride"] = ["Choose the Saturday you want to ride"];
       if (!group) hard["f-group"] = ["Choose your ride group"];
@@ -771,6 +771,32 @@
       if (!waiverOk) hard["f-waiver"] = ["Tick the box to accept the ride waiver"];
     }
     return { hard: hard, soft: soft };
+  }
+  // The answers this step gives to the questions staff flagged (fixed), in customer_fix_save's names; ec: emCheck's
+  // contacts.
+  function flaggedAnswers(ec) {
+    var out = {}, put = function (k, a) { if (fixed.indexOf(k) >= 0) out[k] = a; };
+    var em = function (x) { return { name: x.name, phone: x.phone, relation: x.rel }; };
+    if (need.birth) put("birth_date", birthValue());
+    if (need.nat) put("nationality", $("#nat").value);
+    if (need.wa && waSame !== null) put("whatsapp", waSame ? { same: true } : { same: false, phone: e164(WPK) });
+    if (need.ig) put("instagram", igNorm($("#ig").value));
+    put("height", String(parseInt(toAscii($("#xheight").value), 10)));
+    if (ec && ec.one) put("emergency", em(ec.one));
+    if (ec && ec.two) put("emergency2", em(ec.two));
+    return out;
+  }
+  // A flagged question takes another answer than the one the account holds (the owner, 2026-11-09: "don't allow a
+  // flagged account field to type in the same info in the field again"), as the booking app's check-up refuses it;
+  // MMAccount.same is the rule. Said on the question once its answer passes the other checks.
+  var SAME_AGAIN = "This is the same as what is on your account. Please correct it.";
+  var SAME_FIELD = { birth_date: "f-birth", nationality: "f-nat", instagram: "f-ig", height: "f-xheight", emergency: "f-xem-name", emergency2: "f-xem2-name" };
+  function sameAgain(hard, ec) {
+    var ans = flaggedAnswers(ec);
+    Object.keys(ans).forEach(function (k) {
+      var id = k === "whatsapp" ? (ans[k].same ? "f-wa" : "f-wanum") : SAME_FIELD[k];
+      if (!hard[id] && MMAccount.same(k, ans[k], held)) hard[id] = [SAME_AGAIN];
+    });
   }
   function passStep(n) {
     var r = check(n), hk = Object.keys(r.hard), sk = Object.keys(r.soft);
@@ -903,7 +929,9 @@
   // What the details step can ask. Anything else the account still owes (customer_fix_fields: an
   // email, a password, a field staff flagged) is answered on the booking site.
   var ASKABLE = ["birth_date", "nationality", "whatsapp", "instagram", "height", "emergency", "emergency2"];
-  var prof = null, need = {}, blocked = false;
+  // fixed: what staff flagged on the account (customer_fix_fields); held: what it holds for those questions, in
+  // MMAccount.same's names.
+  var prof = null, need = {}, blocked = false, fixed = [], held = {};
   async function readAccount() {
     var all = await Promise.all([
       rpc("customer_profile", { p_id: acct.id, p_token: acct.token }),
@@ -946,6 +974,13 @@
       em2: flag("emergency2")
     };
     blocked = fix.some(function (k) { return ASKABLE.indexOf(k) < 0; });
+    var emOf = function (n) { return a.em && a.em !== "absent" ? { name: a.em[n + "_name"], phone: a.em[n + "_phone"], relation: a.em[n + "_relation"] } : null; };
+    fixed = fix;
+    held = {
+      phone: acct.phone, whatsapp_same: a.wa && a.wa !== "absent" ? a.wa.whatsapp_same : null, whatsapp: a.wa && a.wa !== "absent" ? a.wa.whatsapp : null,
+      birth_date: prof.birth_date, nationality: prof.nationality, instagram: socials.instagram, height: prof.height,
+      emergency: emOf("emergency"), emergency2: emOf("emergency2")
+    };
     // What the account holds goes into the boxes it asks again.
     if (prof.birth_date) setBirth(prof.birth_date);
     if (prof.nationality && $$("#nat option").some(function (o) { return o.value === prof.nationality; })) { $("#nat").value = prof.nationality; $("#nat").classList.remove("ph"); }
@@ -991,6 +1026,14 @@
   async function saveDetails() {
     var saved = [], r;
     var gone = function (x) { return x && x.data === false; };
+    // The questions staff flagged are answered first, through customer_fix_save (the booking app's check-up): it
+    // clears each flag whose field the answer changed, and keeps asked one that came back as it was (20261109200000).
+    // The saves below then write the same values again, as for any rider.
+    var fv = flaggedAnswers(need.em ? emCheck("xem", acct.phone, {}, need.em2) : null);
+    if (Object.keys(fv).length) {
+      r = await rpc("customer_fix_save", { p_id: acct.id, p_token: acct.token, p_values: fv });
+      if (r.error && !absent(r.error)) { showBanner(/RATE_LIMITED/.test(errText(r.error)) ? SITE_TOO_MANY : NET); return; }
+    }
     if (need.em) {
       var em = await emSave("xem", need.em2);
       if (em.signedOut) { signedOut(); return; }

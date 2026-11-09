@@ -707,6 +707,7 @@
   "Already on your account, so we do not ask again: {0}.": "Ya está en tu cuenta, así que no lo volvemos a preguntar: {0}.",
   "Show them": "Mostrarlos",
   "Our team asked you to check this.": "Nuestro equipo te pidió revisar esto.",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0}: Es lo mismo que figura en tu cuenta. Corrígelo, por favor.",
   "Signed up with Google or Apple?": "¿Te registraste con Google o Apple?",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "¿Te registraste con Google o Apple? Continúa con esa cuenta en la app de reservas y vuelves aquí con la sesión iniciada.",
   "Signing in…": "Iniciando sesión…",

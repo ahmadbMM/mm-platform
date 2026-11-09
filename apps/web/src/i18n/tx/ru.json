@@ -707,6 +707,7 @@
   "Already on your account, so we do not ask again: {0}.": "Это уже есть в вашем аккаунте, поэтому мы не спрашиваем снова: {0}.",
   "Show them": "Показать",
   "Our team asked you to check this.": "Наша команда просит вас проверить это.",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0}: Это совпадает с тем, что указано в вашем аккаунте. Исправьте, пожалуйста.",
   "Signed up with Google or Apple?": "Регистрировались через Google или Apple?",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Регистрировались через Google или Apple? Продолжите с ним в приложении для бронирования — и вы вернётесь сюда уже с выполненным входом.",
   "Signing in…": "Входим…",

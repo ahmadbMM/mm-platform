@@ -303,6 +303,74 @@ test('a detail only the booking site can take sends the rider there', async ({ p
   await expect(page.locator('#s-book')).toBeHidden();
 });
 
+// The owner, 2026-11-09: "don't allow a flagged account field to type in the same info in the field again".
+const SAME = 'This is the same as what is on your account. Please correct it.';
+test('a question staff flagged refuses what the account already holds, and a new answer goes through customer_fix_save', async ({ page }) => {
+  let flags = ['birth_date', 'instagram', 'emergency', 'height'];
+  const { errs, of } = await open(page, '', {
+    customer_fix_fields: () => json(flags),
+    customer_fix_save: () => { flags = []; return json([]); },
+  });
+  await page.click('#go-signin');
+  await page.fill('#ident', 'sara.alharbi@gmail.com');
+  await page.fill('#spwd', 'Ride2Work');
+  await page.click('#signin');
+  await expect(page.locator('#s-details')).toBeVisible();
+  await expect(page.locator('#d-blocked')).toBeHidden(); // every one of them is asked here
+  // as the account holds them: refused on each flagged question, nothing saved
+  await page.click('#d-next');
+  for (const f of ['#f-birth', '#f-ig', '#f-xheight', '#f-xem-name']) await expect(page.locator(`${f} .err`)).toHaveText(SAME);
+  await expect(page.locator('#f-nat .err')).toHaveText(''); // asked, not flagged
+  // the same in another case, with an @, or with its spaces changed is still the same
+  await page.fill('#ig', '@Sara.Rides');
+  await page.fill('#xem-name', ' Layla   Alharbi ');
+  await page.fill('#xem-phone', '551234567');
+  await page.click('#d-next');
+  await expect(page.locator('#f-ig .err')).toHaveText(SAME);
+  await expect(page.locator('#f-xem-name .err')).toHaveText(SAME);
+  // in Arabic too
+  await page.click('#lang');
+  await expect(page.locator('#f-ig .err')).toHaveText('هذا مطابق لما هو مسجل في حسابك. يرجى تصحيحه.');
+  await page.click('#lang');
+  expect(of('customer_fix_save')).toEqual([]);
+  expect(of('customer_set_birth_nat')).toEqual([]);
+  // other answers: through customer_fix_save first (it clears the flags), then the saves every rider makes
+  await page.selectOption('#birth-d', '13');
+  await page.fill('#ig', 'sara.rides2');
+  await page.fill('#xheight', '166');
+  await page.selectOption('#xem-rel', 'friend');
+  await page.click('#d-next');
+  await expect(page.locator('#s-book')).toBeVisible();
+  expect(of('customer_fix_save')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in', p_values: {
+    birth_date: '1994-03-13', instagram: 'sara.rides2', height: '166', emergency: { name: 'Layla Alharbi', phone: '+966551234567', relation: 'friend' } } }]);
+  expect(of('customer_set_birth_nat')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in', p_birth_date: '1994-03-13', p_nationality: 'Saudi Arabia' }]);
+  expect(errs).toEqual([]);
+});
+
+test('a flagged WhatsApp answer that is the one on the account is refused, a "No" with the mobile\'s own number included', async ({ page }) => {
+  let flags = ['whatsapp'];
+  const { of } = await open(page, '', {
+    customer_fix_fields: () => json(flags),
+    customer_fix_save: () => { flags = []; return json([]); },
+  });
+  await page.click('#go-signin');
+  await page.fill('#ident', 'sara.alharbi@gmail.com');
+  await page.fill('#spwd', 'Ride2Work');
+  await page.click('#signin');
+  await expect(page.locator('#f-wa')).toBeVisible();
+  await page.click('#d-next'); // "Yes", as the account holds it
+  await expect(page.locator('#f-wa .err')).toHaveText(SAME);
+  await page.click('#was .tile[data-v="no"]');
+  await page.fill('#wa', '0552468013'); // the mobile itself
+  await page.click('#d-next');
+  await expect(page.locator('#f-wanum .err')).toHaveText(SAME);
+  expect(of('customer_fix_save')).toEqual([]);
+  await page.fill('#wa', '0557654321');
+  await page.click('#d-next');
+  await expect(page.locator('#s-book')).toBeVisible();
+  expect(of('customer_fix_save')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in', p_values: { whatsapp: { same: false, phone: '+966557654321' } } }]);
+});
+
 async function toBook(page: Page) {
   await page.click('#go-signin');
   await page.fill('#ident', 'sara.alharbi@gmail.com');

@@ -5,7 +5,7 @@
 import { rpc } from "./api";
 import { eventsWorked, getCert } from "./certs";
 import { append, h } from "./dom";
-import { dayLabel, ksaToday, sessionName, t, timeLabel, timesLabel, type Key } from "./i18n";
+import { dayLabel, hoursN, ksaToday, sessionName, t, timeLabel, timesLabel, type Key } from "./i18n";
 import { downloadIcs } from "./ics";
 import { icon } from "./icons";
 import { render, S, say, setNote, standing, type Mine } from "./state";
@@ -86,7 +86,7 @@ function rewardRow(x: ReturnType<typeof eventsWorked>[number]): HTMLElement {
   return h("div", { class: "card reward", "data-session": x.id },
     h("div", { class: "ev-main" },
       h("p", { class: "ev-name" }, x.label),
-      h("p", { class: "meta" }, `${dayLabel(x.on)} · ${t("oppHours", String(x.hours))}`)),
+      h("p", { class: "meta" }, `${dayLabel(x.on)} · ${hoursN(x.hours)}`)),
     // the free ride the event gave (VL-, the blood donors' rules), used or not
     r ? h("div", { class: `code-box${r.used ? " is-used" : ""}` }, h("span", { class: "code-ic" }, icon("gift", 20)),
       h("div", { class: "code-t" }, h("span", { class: "code-k" }, t("freeRide")), h("span", { class: "code", dir: "ltr" }, r.code),

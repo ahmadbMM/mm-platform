@@ -19,9 +19,17 @@ describe("the words", () => {
       expect(Object.keys(L).sort()).toEqual(Object.keys(en).sort());
       for (const k of Object.keys(en)) {
         expect(L[k], k).toBeTruthy();
-        expect(holes(L[k]), k).toEqual(holes(en[k]));
+        // a plural's one or two may say its number in words (Arabic ساعة واحدة, ساعتان)
+        if (!(/_(one|two)$/.test(k) && holes(L[k]).length === 0)) expect(holes(L[k]), k).toEqual(holes(en[k]));
         expect(/[٠-٩۰-۹०-९০-৯]/.test(L[k]), `${k} digits`).toBe(false);
       }
     });
   }
+
+  it("say the hours with their word in every plural the languages have", () => {
+    for (const f of ["en.json", ...others]) {
+      const L = read(f);
+      for (const c of ["zero", "one", "two", "few", "many", "other"]) expect(L[`hours_${c}`], `${f} hours_${c}`).toBeTruthy();
+    }
+  });
 });

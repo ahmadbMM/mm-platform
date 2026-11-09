@@ -707,6 +707,7 @@
   "Already on your account, so we do not ask again: {0}.": "Nasa account mo na, kaya hindi na namin itatanong ulit: {0}.",
   "Show them": "Ipakita",
   "Our team asked you to check this.": "Hiniling ng aming team na suriin mo ito.",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0}: Pareho ito sa nasa account mo. Pakiwasto ito.",
   "Signed up with Google or Apple?": "Nag-sign up gamit ang Google o Apple?",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "Nag-sign up gamit ang Google o Apple? Ituloy ito sa booking app, at babalik ka rito na naka-sign in na.",
   "Signing in…": "Nagsa-sign in…",

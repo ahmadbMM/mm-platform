@@ -13,6 +13,10 @@ lands on every form at once). It has no page of its own; each form draws its box
 - `MMAccount.takeCode()` / `MMAccount.redeem(rpc, code)`: the booking site's `?code=` hand-over.
 - `MMAccount.plan(me, keys)`: which questions a signed-in account is asked: what it holds (customer_community_me's
   names) is skipped unless staff flagged it (`me.flags` = customers.fix_fields). `{skip, ask, flagged}`.
+- `MMAccount.same(k, answer, held)`: whether the answer to a flagged question is what the account already holds (the
+  owner, 2026-11-09: "don't allow a flagged account field to type in the same info in the field again"); each form
+  refuses it on that question. The booking app's rule: words with their spaces tidied, an email in any case, a number
+  by its last nine digits, a handle in any case without its @, the rest exactly; an empty answer never.
 - `MMAccount.draft(key, days)`: a half-filled form kept on the device (`load`, `save`, `clear`).
 
 Who uses it:

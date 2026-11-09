@@ -707,6 +707,7 @@
   "Already on your account, so we do not ask again: {0}.": "您的账户中已有这些信息，因此不再询问：{0}。",
   "Show them": "显示",
   "Our team asked you to check this.": "我们的团队请您核对此项。",
+  "{0}: This is the same as what is on your account. Please correct it.": "{0}：与您账户中的信息相同，请更正。",
   "Signed up with Google or Apple?": "用 Google 或 Apple 注册过？",
   "Signed up with Google or Apple? Continue with it in the booking app, and you come back here signed in.": "使用 Google 或 Apple 注册？请在预订 App 中继续使用该账户，完成后将以登录状态返回此处。",
   "Signing in…": "正在登录…",

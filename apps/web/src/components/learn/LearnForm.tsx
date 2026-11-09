@@ -5,7 +5,7 @@ import { normalizePhone, rpcResult } from "@/lib/rpc-client";
 import { bookingLink } from "@/lib/links";
 import {
   ACCOUNT_HEIGHT, AGE, HEARD, HEIGHT, LEVELS, MAX_LEARNERS, WHO, accountArgs, accountNameOk, learnPayload, noticeDue, riyadhToday, signinIdentifier,
-  type AccountFields, type Gender, type Heard, type LearnFields, type LearnerFields, type LearnProblem,
+  type AccountFields, type Gender, type Heard, type LearnFields, type LearnerFields, type LearnPayload, type LearnProblem,
 } from "@/lib/learn";
 import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
 import { useLocalize } from "@/i18n/TxProvider";
@@ -14,7 +14,8 @@ import ChangePassword, { type PwdLook } from "@/components/account/ChangePasswor
 import Turnstile, { TURNSTILE_SITE_KEY } from "@/components/account/Turnstile";
 import EmergencyFields, { type EmLook, type EmProblem } from "@/components/account/EmergencyFields";
 import { EM_EMPTY, emAbsent, emReadBoth, emRefusal, emState, type EmContact, type EmFields } from "@/lib/emergency";
-import { accountPlan } from "@/lib/account-step";
+import { accountPlan, sameAsHeld } from "@/lib/account-step";
+import { emergencyWords } from "@/components/account/Emergency.words";
 import LearnClosed from "./LearnClosed";
 import { T } from "./LearnForm.text";
 import { TickIcon } from "@/components/site/Icons";
@@ -138,6 +139,10 @@ export default function LearnForm(p: LearnFormProps) {
   // What step 2 leaves out for a signed-in account (it holds the answer), and what staff flagged on it.
   const [skip, setSkip] = useState<Known[]>([]);
   const [flagged, setFlagged] = useState<string[]>([]);
+  // Every field staff flagged on the account (customer_community_me's flags) and what it holds for them, in
+  // sameAsHeld's names: a flagged question takes another answer (the owner, 2026-11-09).
+  const fixed = useRef<string[]>([]);
+  const held = useRef<Record<string, unknown>>({});
   const [ack, setAck] = useState(false);
   const ackBox = useRef<HTMLInputElement>(null);
   const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], birth: "", gender: "", nationality: "", height: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "", waSame: "", whatsapp: "" });
@@ -201,6 +206,8 @@ export default function LearnForm(p: LearnFormProps) {
     const fl = me && Array.isArray(me.flags) ? me.flags.map(String) : [];
     setSkip(plan ? (plan.skip as Known[]) : []);
     setFlagged(plan ? plan.flagged : []);
+    fixed.current = who.made ? [] : fl;
+    held.current = { ...(me ?? {}) };
     setNeed({ gender: !g, height: !h || (!who.made && fl.includes("height")), privacy: due === true });
     setEmNeed(em.need || (!who.made && fl.includes("emergency")));
     emSaved.current = false;
@@ -228,6 +235,10 @@ export default function LearnForm(p: LearnFormProps) {
     const st = "data" in e ? emState(Array.isArray(e.data) ? e.data[0] : null) : null;
     const em = st ? { need: !st.has, two: st.two } : { need: !("error" in e && emAbsent(e.error)), two: true };
     toLesson({ id, token, name: me?.name || name, email: me?.email || email, phone: me?.phone || "", made: false }, me, due, em);
+    // the contacts the account holds, which a flagged one is checked against
+    const row = "data" in e && Array.isArray(e.data) && e.data[0] && typeof e.data[0] === "object" ? (e.data[0] as Record<string, unknown>) : null;
+    const contact = (n: string) => (row ? { name: row[`${n}_name`], phone: row[`${n}_phone`], relation: row[`${n}_relation`] } : null);
+    held.current = { ...held.current, emergency: contact("emergency"), emergency2: contact("emergency2") };
   }
 
   // The emergency contact saved on the account: true, or what to show. A database without
@@ -407,6 +418,22 @@ export default function LearnForm(p: LearnFormProps) {
     } finally { setBusy(false); }
   }
 
+  // A question staff flagged answered with what the account already holds (the owner, 2026-11-09: "don't allow a
+  // flagged account field to type in the same info in the field again"), as the booking app's check-up refuses it:
+  // the first such question's name, or null. "I don't have one" (nothing typed) is an answer, never the same.
+  function sameAgain(pl: LearnPayload, ec: { first: EmContact; second: EmContact | null } | null): string | null {
+    if (!fixed.current.length) return null;
+    const ew = emergencyWords(p.locale), em = (x: EmContact | null | undefined) => (x ? { name: x.name, phone: x.phone, relation: x.rel } : null);
+    const asked: [string, unknown, string][] = [
+      ["whatsapp", { same: pl.whatsapp_same, phone: pl.whatsapp ?? "" }, t.waLabel], ["birth_date", pl.birth_date, t.birth],
+      ["nationality", pl.nationality, t.nationality], ["height", String(pl.height), t.height], ["instagram", pl.instagram, t.instagram],
+      ["linkedin", pl.linkedin, t.linkedin], ["profession", pl.profession, t.profession], ["workplace", pl.workplace, t.workplace],
+      ["heard_from", pl.heard_from, t.heard], ["emergency", em(ec?.first), ew.title], ["emergency2", em(ec?.second), ew.title2],
+    ];
+    const hit = asked.find(([k, a]) => fixed.current.includes(k) && sameAsHeld(k, a, held.current));
+    return hit ? hit[2] : null;
+  }
+
   // Step 2: the lesson, from the account.
   async function send(e: React.FormEvent) {
     e.preventDefault();
@@ -420,6 +447,8 @@ export default function LearnForm(p: LearnFormProps) {
     const ec = emNeed ? emReadBoth(em1, emTwo ? em2 : null, acct.phone) : null;
     if (ec && "error" in ec) return emShow(ec);
     if (need.privacy && !ack) { setErr({ text: t.errors.privacy }); setFocus({ to: "ack", n: ++moves.current }); return; }
+    const again = sameAgain(r.payload, ec);
+    if (again) return setErr({ text: t.sameAsAccount(again) });
     setBusy(true);
     try {
       // The contact first: the lesson waits until the account has it.
