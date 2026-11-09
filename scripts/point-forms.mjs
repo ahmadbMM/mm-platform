@@ -13,7 +13,10 @@ for (const [k, v] of Object.entries({ FROM_URL, FROM_KEY, TO_URL, TO_KEY })) {
 }
 if (FROM_URL === TO_URL) throw new Error("FROM_URL and TO_URL are the same project");
 
-const files = ["apps/web/src/forms/petromin-page.ts", "apps/web/src/forms/community-page.ts", "apps/web/src/forms/defe-page.ts", "apps/web/src/forms/saturday-page.ts", "apps/web/src/forms/lockers-page.ts"];
+// The website's pages for the forms (apps/web/src/forms/site/*.run.js) talk to the database the website does, staging's
+// on staging; the production address they carry as a fallback for the page built on its own is swapped all the same.
+const files = ["apps/web/src/forms/petromin-page.ts", "apps/web/src/forms/community-page.ts", "apps/web/src/forms/defe-page.ts", "apps/web/src/forms/saturday-page.ts", "apps/web/src/forms/lockers-page.ts",
+  ...["community", "petromin", "defe", "saturday"].map((n) => `apps/web/src/forms/site/${n}.run.js`)];
 for (const f of files) {
   const src = readFileSync(f, "utf8");
   const n = src.split(FROM_URL).length - 1;

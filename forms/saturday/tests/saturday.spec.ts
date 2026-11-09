@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { flipLang } from './lang';
 
 // micromobility.sa/saturday end to end in a browser, every database call stubbed (and the booking app it hands the
 // rider on to): the landing (saturday_rides), the ride code checked first (saturday_rides(code)), the account
@@ -278,9 +279,9 @@ test('a question staff flagged refuses what the account already holds; a new ans
   await page.click('#d-next');
   for (const f of ['#f-nat', '#f-ig', '#f-xem2-name']) await expect(page.locator(`${f} .err`)).toHaveText(SAME);
   await expect(page.locator('#f-xem-name .err')).toHaveText(''); // the first contact is not flagged
-  await page.click('#lang');
+  await flipLang(page);
   await expect(page.locator('#f-nat .err')).toHaveText('هذا مطابق لما هو مسجل في حسابك. يرجى تصحيحه.');
-  await page.click('#lang');
+  await flipLang(page);
   expect(of('customer_fix_save')).toEqual([]);
   await page.selectOption('#nat', 'Egypt');
   await page.fill('#ig', 'sara.on.bikes');

@@ -221,17 +221,18 @@ describe("which addresses the proxy sees", () => {
 
 describe("the registration forms' addresses", () => {
   // No database here, so the site reads as Coming Soon: a form opens all the same.
-  it("lets a form that is not a page of the website through untouched to its own page, and any form with ?classic=1", async () => {
-    for (const p of ["/defe", "/saturday?lang=ar", "/lockers", "/lockers?lang=ar&locker=7", "/community/registration?classic=1", "/community/registration?classic=1&lang=ar", "/petromin?classic=1"]) {
+  it("lets a form that is not a page of the website (the lockers page) through untouched to its own page, and any form with ?classic=1", async () => {
+    for (const p of ["/lockers", "/lockers?lang=ar&locker=7", "/defe?classic=1", "/saturday?classic=1&lang=ar", "/community/registration?classic=1", "/community/registration?classic=1&lang=ar", "/petromin?classic=1"]) {
       const res = await call(p);
       expect(res.headers.get("x-middleware-next"), p).toBe("1");
       expect(res.headers.get("x-middleware-rewrite"), p).toBeNull();
       expect(res.status, p).toBe(200);
     }
   });
-  it("draws the community application and the Petromin registration as pages of the website, whatever Coming Soon says", async () => {
+  it("draws every form as a page of the website, whatever Coming Soon says", async () => {
     for (const [p, lang, to] of [["/community/registration", "en", "/community/registration"], ["/community/registration?lang=ar", "ar", "/community/registration"], ["/community/registration?code=x&lang=fr", "fr", "/community/registration"],
-      ["/petromin", "en", "/petromin"], ["/petromin?lang=ur", "ur", "/petromin"], ["/petromin?lang=ja", "ja", "/petromin"]]) {
+      ["/petromin", "en", "/petromin"], ["/petromin?lang=ur", "ur", "/petromin"], ["/petromin?lang=ja", "ja", "/petromin"],
+      ["/defe", "en", "/defe"], ["/defe?lang=ar", "ar", "/defe"], ["/defe?code=x&lang=de", "de", "/defe"], ["/saturday", "en", "/saturday"], ["/saturday?lang=zh", "zh", "/saturday"]]) {
       const res = await call(p);
       expect(res.status, p).toBe(200);
       expect(res.headers.get("x-middleware-rewrite") ?? "", p).toContain(`/${lang}${to}`);

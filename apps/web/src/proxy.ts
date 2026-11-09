@@ -18,10 +18,11 @@ export function formAddress(pathname: string): string | null {
   return FORM_ADDRESSES.includes(p) ? p : null;
 }
 // The forms that are pages of the website now (app/[locale]/<address>: the site's header, footer and languages around
-// the form; the user, 2026-11-09). The others still answer with the page their build writes (app/<address>/route.ts), and
-// every one of them does with ?classic=1, kept while the website's pages settle in. Either way a form opens whatever
+// the form; the user, 2026-11-09: all four). Each still answers with the page its build writes (app/<address>/route.ts)
+// with ?classic=1, kept while the website's pages settle in; the lockers page (forms/lockers) is that page alone. Either
+// way a form opens whatever
 // Coming Soon says (the page itself answers with the form's own while the site is closed: components/forms/FormPage.tsx).
-export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin"];
+export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/defe", "/saturday"];
 export const formOnSite = (form: string, params: URLSearchParams) => SITE_FORMS.includes(form) && !params.has("classic");
 
 // micromobility.sa/store opens the online store (a hosted Salla shop, on its own domain), at the

@@ -77,7 +77,11 @@ export function emitSite({ name, design, body, css, scripts, images = [] }) {
   const pub = resolve(WEB, 'public/forms', name);
   mkdirSync(pub, { recursive: true });
   for (const f of images) copyFileSync(resolve(design, f), resolve(pub, basename(f)));
-  let markup = body;
+  // The website's page is one <main> already (PageShell): the form's own becomes a plain box inside it, so the page has
+  // one main landmark, at the top level. Nothing in a form's stylesheet or scripts names the element itself.
+  if ((body.match(/<main\b/g) || []).length > 1 || (body.match(/<\/main>/g) || []).length > 1) throw new Error(`${name}: more than one <main>`);
+  let markup = body.replace(/<main\b/, '<div').replace('</main>', '</div>');
+  if (/(^|[\s,>+~(])main\b(?![-\w])/m.test(css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\{[^{}]*\}/g, '{}'))) throw new Error(`${name}: the stylesheet names the <main> element, which the website's page draws as a <div>`);
   for (const f of images) markup = markup.split(`"${f}"`).join(`"/forms/${name}/${basename(f)}"`);
   if (/(src|href)="(?!https?:|\/|#|data:|mailto:|tel:)[^"]+\.(png|svg|webp|jpe?g)"/.test(markup)) throw new Error(`${name}: a picture the markup names was not given to emitSite`);
   const dir = resolve(WEB, 'src/forms/site');
