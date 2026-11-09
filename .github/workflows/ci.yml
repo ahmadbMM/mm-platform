@@ -135,6 +135,30 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/web
           command: deploy --env staging
+      # Online payments (2026-11-10): the staging Worker's payment keys come from repository secrets, uploaded only
+      # when set (an unset one is left as it is on the Worker). Names on the Worker: src/lib/pay/config.ts.
+      - name: Payment keys for staging (those set)
+        id: paykeys
+        if: github.ref == 'refs/heads/staging' && steps.secrets.outputs.present == 'true' && vars.STAGING_SUPABASE_URL != ''
+        env:
+          MOYASAR_PUBLISHABLE_KEY: ${{ secrets.STAGING_MOYASAR_PUBLISHABLE_KEY }}
+          MOYASAR_SECRET_KEY: ${{ secrets.STAGING_MOYASAR_SECRET_KEY }}
+          MOYASAR_WEBHOOK_SECRET: ${{ secrets.STAGING_MOYASAR_WEBHOOK_SECRET }}
+          PAY_SERVER_KEY: ${{ secrets.STAGING_PAY_SERVER_KEY }}
+          APPLE_PAY_DOMAIN_FILE: ${{ secrets.STAGING_APPLE_PAY_DOMAIN_FILE }}
+        run: |
+          node -e 'const n=["MOYASAR_PUBLISHABLE_KEY","MOYASAR_SECRET_KEY","MOYASAR_WEBHOOK_SECRET","PAY_SERVER_KEY","APPLE_PAY_DOMAIN_FILE"];const o={};for(const k of n)if(process.env[k])o[k]=process.env[k];require("fs").writeFileSync("apps/web/.pay-secrets.json",JSON.stringify(o));console.log("payment keys set: "+Object.keys(o).join(", "));require("fs").appendFileSync(process.env.GITHUB_OUTPUT,"count="+Object.keys(o).length+"\n")'
+      - name: Upload the payment keys
+        if: steps.paykeys.outputs.count != '' && steps.paykeys.outputs.count != '0'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/web
+          command: secret bulk .pay-secrets.json --env staging
+      - name: Forget the payment keys file
+        if: always()
+        run: rm -f apps/web/.pay-secrets.json
       - name: Staging answers
         if: github.ref == 'refs/heads/staging' && steps.secrets.outputs.present == 'true' && vars.STAGING_SUPABASE_URL != ''
         run: |
