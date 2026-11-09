@@ -20,10 +20,9 @@ export function formAddress(pathname: string): string | null {
 }
 // The forms that are pages of the website now (app/[locale]/<address>: the site's header, footer and languages around
 // the form; the user, 2026-11-09). Each still answers with the page its build writes (app/<address>/route.ts)
-// with ?classic=1, kept while the website's pages settle in; the lockers page (forms/lockers) is that page alone. Either
-// way a form opens whatever
+// with ?classic=1, kept while the website's pages settle in. Either way a form opens whatever
 // Coming Soon says (the page itself answers with the form's own while the site is closed: components/forms/FormPage.tsx).
-export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/saturday"];
+export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/saturday", "/lockers"];
 export const formOnSite = (form: string, params: URLSearchParams) => SITE_FORMS.includes(form) && !params.has("classic");
 
 // micromobility.sa/defe was the Defe x MicroMobility booking page for the Saturday Social Ride (2026-10-17); the user

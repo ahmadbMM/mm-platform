@@ -1234,7 +1234,8 @@ var FORM_T = {
   "Could not load the rides": "تعذّر تحميل الرحلات",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "احجز الآن لتنضم إلى قائمة الانتظار. إذا توفّر مكان يُمنح لقائمة الانتظار بالترتيب.",
   "Check back soon for the next ride.": "عُد قريبًا لحجز الرحلة القادمة.",
-  "It is in My Bookings in the MicroMobility app.": "تجده في «حجوزاتي» في تطبيق MicroMobility."
+  "It is in My Bookings in the MicroMobility app.": "تجده في «حجوزاتي» في تطبيق MicroMobility.",
+  "Language": "اللغة"
  },
  "id": {
   "Dismiss": "Tutup",
@@ -1399,7 +1400,8 @@ var FORM_T = {
   "Could not load the rides": "Daftar gowes tidak dapat dimuat",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Pesan sekarang untuk masuk daftar tunggu. Jika ada tempat kosong, tempat itu diberikan ke daftar tunggu sesuai urutan.",
   "Check back soon for the next ride.": "Kembali lagi nanti untuk gowes berikutnya.",
-  "It is in My Bookings in the MicroMobility app.": "Ada di “Pemesanan Saya” pada aplikasi MicroMobility."
+  "It is in My Bookings in the MicroMobility app.": "Ada di “Pemesanan Saya” pada aplikasi MicroMobility.",
+  "Language": "Bahasa"
  },
  "ms": {
   "Dismiss": "Tutup",
@@ -1564,7 +1566,8 @@ var FORM_T = {
   "Could not load the rides": "Kayuhan tidak dapat dimuatkan",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Tempah sekarang untuk menyertai senarai menunggu. Jika ada tempat kosong, ia diberikan kepada senarai menunggu mengikut giliran.",
   "Check back soon for the next ride.": "Sila kembali tidak lama lagi untuk kayuhan seterusnya.",
-  "It is in My Bookings in the MicroMobility app.": "Ia ada di “Tempahan Saya” dalam aplikasi MicroMobility."
+  "It is in My Bookings in the MicroMobility app.": "Ia ada di “Tempahan Saya” dalam aplikasi MicroMobility.",
+  "Language": "Bahasa"
  },
  "de": {
   "Dismiss": "Schließen",
@@ -1729,7 +1732,8 @@ var FORM_T = {
   "Could not load the rides": "Die Ausfahrten konnten nicht geladen werden",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Buch jetzt, um auf die Warteliste zu kommen. Wird ein Platz frei, geht er der Reihe nach an die Warteliste.",
   "Check back soon for the next ride.": "Schau bald wieder vorbei, um die nächste Ausfahrt zu sehen.",
-  "It is in My Bookings in the MicroMobility app.": "Du findest sie unter „Meine Buchungen“ in der MicroMobility-App."
+  "It is in My Bookings in the MicroMobility app.": "Du findest sie unter „Meine Buchungen“ in der MicroMobility-App.",
+  "Language": "Sprache"
  },
  "es": {
   "Dismiss": "Cerrar",
@@ -1894,7 +1898,8 @@ var FORM_T = {
   "Could not load the rides": "No se pudieron cargar los recorridos",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Reserva ahora para entrar en su lista de espera. Si se libera una plaza, se asigna por orden a la lista de espera.",
   "Check back soon for the next ride.": "Vuelve pronto para el próximo recorrido.",
-  "It is in My Bookings in the MicroMobility app.": "Está en Mis reservas, en la app de MicroMobility."
+  "It is in My Bookings in the MicroMobility app.": "Está en Mis reservas, en la app de MicroMobility.",
+  "Language": "Idioma"
  },
  "fr": {
   "Dismiss": "Fermer",
@@ -2059,7 +2064,8 @@ var FORM_T = {
   "Could not load the rides": "Impossible de charger les sorties",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Réservez maintenant pour rejoindre sa liste d’attente. Si une place se libère, elle revient à la liste d’attente, dans l’ordre.",
   "Check back soon for the next ride.": "Revenez bientôt pour la prochaine sortie.",
-  "It is in My Bookings in the MicroMobility app.": "Elle se trouve dans Mes réservations, dans l’appli MicroMobility."
+  "It is in My Bookings in the MicroMobility app.": "Elle se trouve dans Mes réservations, dans l’appli MicroMobility.",
+  "Language": "Langue"
  },
  "pt": {
   "Dismiss": "Fechar",
@@ -2224,7 +2230,8 @@ var FORM_T = {
   "Could not load the rides": "Não foi possível carregar os passeios",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Reserve agora para entrar na lista de espera. Se uma vaga abrir, ela vai para a lista de espera, por ordem.",
   "Check back soon for the next ride.": "Volte em breve para o próximo passeio.",
-  "It is in My Bookings in the MicroMobility app.": "Está em Minhas reservas, no app da MicroMobility."
+  "It is in My Bookings in the MicroMobility app.": "Está em Minhas reservas, no app da MicroMobility.",
+  "Language": "Idioma"
  },
  "tl": {
   "Dismiss": "Isara",
@@ -2389,7 +2396,8 @@ var FORM_T = {
   "Could not load the rides": "Hindi ma-load ang mga ride",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Mag-book ngayon para sumali sa waitlist nito. Kapag may nabakanteng puwesto, mapupunta ito sa waitlist ayon sa pagkakasunod-sunod.",
   "Check back soon for the next ride.": "Bumalik dito sa lalong madaling panahon para sa susunod na ride.",
-  "It is in My Bookings in the MicroMobility app.": "Nasa Aking mga Booking ito sa MicroMobility app."
+  "It is in My Bookings in the MicroMobility app.": "Nasa Aking mga Booking ito sa MicroMobility app.",
+  "Language": "Wika"
  },
  "ru": {
   "Dismiss": "Закрыть",
@@ -2554,7 +2562,8 @@ var FORM_T = {
   "Could not load the rides": "Не удалось загрузить заезды",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Забронируйте сейчас, чтобы попасть в лист ожидания. Если место освободится, оно достанется участникам из листа ожидания по порядку.",
   "Check back soon for the next ride.": "Загляните позже, чтобы узнать о следующем заезде.",
-  "It is in My Bookings in the MicroMobility app.": "Смотрите в разделе «Мои бронирования» в приложении MicroMobility."
+  "It is in My Bookings in the MicroMobility app.": "Смотрите в разделе «Мои бронирования» в приложении MicroMobility.",
+  "Language": "Язык"
  },
  "ur": {
   "Dismiss": "بند کریں",
@@ -2719,7 +2728,8 @@ var FORM_T = {
   "Could not load the rides": "رائیڈز لوڈ نہیں ہو سکیں",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "اس کی ویٹ لسٹ میں شامل ہونے کے لیے ابھی بک کریں۔ اگر کوئی جگہ خالی ہوئی تو وہ ترتیب سے ویٹ لسٹ والوں کو ملے گی۔",
   "Check back soon for the next ride.": "اگلی رائیڈ کے لیے جلد دوبارہ دیکھیں۔",
-  "It is in My Bookings in the MicroMobility app.": "یہ MicroMobility ایپ میں «میری بکنگز» میں ہے۔"
+  "It is in My Bookings in the MicroMobility app.": "یہ MicroMobility ایپ میں «میری بکنگز» میں ہے۔",
+  "Language": "زبان"
  },
  "hi": {
   "Dismiss": "बंद करें",
@@ -2884,7 +2894,8 @@ var FORM_T = {
   "Could not load the rides": "राइड लोड नहीं हो सकीं",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "इसकी प्रतीक्षा सूची में जुड़ने के लिए अभी बुक करें। अगर कोई जगह खाली होती है, तो वह क्रम से प्रतीक्षा सूची वालों को मिलती है।",
   "Check back soon for the next ride.": "अगली राइड के लिए जल्द दोबारा देखें।",
-  "It is in My Bookings in the MicroMobility app.": "यह MicroMobility ऐप में “मेरी बुकिंग” में है।"
+  "It is in My Bookings in the MicroMobility app.": "यह MicroMobility ऐप में “मेरी बुकिंग” में है।",
+  "Language": "भाषा"
  },
  "ne": {
   "Dismiss": "बन्द गर्नुहोस्",
@@ -3049,7 +3060,8 @@ var FORM_T = {
   "Could not load the rides": "राइडहरू लोड गर्न सकिएन",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "यसको प्रतीक्षा सूचीमा सामेल हुन अहिले बुक गर्नुहोस्। कुनै ठाउँ खाली भए, प्रतीक्षा सूचीको क्रमअनुसार दिइन्छ।",
   "Check back soon for the next ride.": "अर्को राइडका लागि छिट्टै फेरि हेर्नुहोस्।",
-  "It is in My Bookings in the MicroMobility app.": "यो MicroMobility एपको मेरा बुकिङमा छ।"
+  "It is in My Bookings in the MicroMobility app.": "यो MicroMobility एपको मेरा बुकिङमा छ।",
+  "Language": "भाषा"
  },
  "bn": {
   "Dismiss": "বন্ধ করুন",
@@ -3214,7 +3226,8 @@ var FORM_T = {
   "Could not load the rides": "রাইডগুলো লোড করা গেল না",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "এর ওয়েটিং লিস্টে যোগ দিতে এখনই বুক করুন। কোনো জায়গা খালি হলে তা ওয়েটিং লিস্টের ক্রম অনুযায়ী দেওয়া হয়।",
   "Check back soon for the next ride.": "পরের রাইডের জন্য শিগগিরই আবার দেখুন।",
-  "It is in My Bookings in the MicroMobility app.": "এটি MicroMobility অ্যাপের আমার বুকিং-এ আছে।"
+  "It is in My Bookings in the MicroMobility app.": "এটি MicroMobility অ্যাপের আমার বুকিং-এ আছে।",
+  "Language": "ভাষা"
  },
  "zh": {
   "Dismiss": "关闭",
@@ -3379,7 +3392,8 @@ var FORM_T = {
   "Could not load the rides": "无法加载骑行列表",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "立即预订即可加入候补名单。如有名额空出，将按候补顺序分配。",
   "Check back soon for the next ride.": "请稍后再来查看下一次骑行。",
-  "It is in My Bookings in the MicroMobility app.": "可在 MicroMobility App 的“我的预订”中查看。"
+  "It is in My Bookings in the MicroMobility app.": "可在 MicroMobility App 的“我的预订”中查看。",
+  "Language": "语言"
  },
  "ja": {
   "Dismiss": "閉じる",
@@ -3544,7 +3558,8 @@ var FORM_T = {
   "Could not load the rides": "ライドを読み込めませんでした",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "今すぐ予約すると、キャンセル待ちに登録されます。空きが出た場合は、キャンセル待ちの順に割り当てられます。",
   "Check back soon for the next ride.": "次回のライドについては、また近いうちにご確認ください。",
-  "It is in My Bookings in the MicroMobility app.": "MicroMobilityアプリの「マイ予約」にあります。"
+  "It is in My Bookings in the MicroMobility app.": "MicroMobilityアプリの「マイ予約」にあります。",
+  "Language": "言語"
  }
 };
 
@@ -3815,15 +3830,17 @@ var MMAccount = (function () {
     lang = code;
     html.lang = code; html.dir = langInfo(code).rtl ? "rtl" : "ltr";
     if (save) { try { localStorage.setItem(LANG_KEY, code); } catch (e) {} }
-    var other = code === "ar" ? "en" : "ar", b = $("#lang");
-    if (b) {
-      b.textContent = langInfo(other).label; b.lang = other;
-      b.setAttribute("aria-label", other === "ar" ? "اقرأ الصفحة بالعربية" : "Read this page in English");
-    }
+    var b = $("#lang"); if (b) { b.value = code; b.lang = code; }
     paint();
   }
-  if ($("#lang")) $("#lang").addEventListener("click", function () {
-    var next = lang === "ar" ? "en" : "ar";
+  // The page on its own: the picker, every language named in its own words; the choice is kept and put in the address.
+  (function buildLangs() {
+    var sel = $("#lang"); if (!sel) return;
+    sel.innerHTML = "";
+    SH.LANGS.forEach(function (l) { var o = document.createElement("option"); o.value = l.code; o.textContent = l.label; o.lang = l.code; sel.appendChild(o); });
+  })();
+  if ($("#lang")) $("#lang").addEventListener("change", function () {
+    var next = $("#lang").value;
     setLang(next, true);
     try { var u = new URL(location.href); u.searchParams.set("lang", next); history.replaceState(null, "", u); } catch (e) {}
   });

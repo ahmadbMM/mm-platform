@@ -20,8 +20,12 @@
   "use strict";
   // The public anon key (the same one the booking site ships): every call is a SECURITY DEFINER
   // function that checks the session token and throttles on the server.
-  var SUPABASE_URL = "https://qpffkzmsfyilicwcsszz.supabase.co";
-  var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
+  // On the website's page for it (apps/web/src/components/forms/SiteForm.tsx) the page speaks the language the site's
+  // globe picked and talks to the database the website does (staging's on staging): window.MM_SITE_FORM =
+  // {lang, db: {url, key}}. The page built on its own (?classic=1) uses these.
+  var SITE_FORM = window.MM_SITE_FORM || null;
+  var SUPABASE_URL = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.url) || "https://qpffkzmsfyilicwcsszz.supabase.co";
+  var SUPABASE_KEY = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.key) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
   var LANG_KEY = "mm-lockers-lang";
   // The evening, the time and the lockers picked, kept for this tab: across the account step, a reload, and the
   // booking app signing the rider in (a forgotten password).
@@ -75,25 +79,33 @@
   }
 
   /* ── Language: English and Arabic ────────────────────────────────────── */
+  /* Language: the website's sixteen. On the website's page, the one its globe picked; on the page built on its own,
+     ?lang=, then the one last picked here, then the phone's. */
+  function hasLang(c) { for (var i = 0; i < SH.LANGS.length; i++) if (SH.LANGS[i].code === c) return true; return false; }
   function pickLang() {
+    if (SITE_FORM && hasLang(SITE_FORM.lang)) return SITE_FORM.lang;
     var q = (new URLSearchParams(location.search).get("lang") || "").toLowerCase();
-    if (q === "en" || q === "ar") return q;
-    try { var s = localStorage.getItem(LANG_KEY); if (s === "en" || s === "ar") return s; } catch (e) {}
+    if (hasLang(q)) return q;
+    try { var s = localStorage.getItem(LANG_KEY); if (hasLang(s)) return s; } catch (e) {}
     var nav = navigator.languages || [navigator.language || "en"];
-    for (var i = 0; i < nav.length; i++) { var c = String(nav[i] || "").toLowerCase().split(/[-_]/)[0]; if (c === "ar" || c === "en") return c; }
+    for (var i = 0; i < nav.length; i++) { var c = String(nav[i] || "").toLowerCase().split(/[-_]/)[0]; if (c === "fil") c = "tl"; if (hasLang(c)) return c; }
     return "en";
   }
   function setLang(code, save) {
     lang = code;
     html.lang = code; html.dir = langInfo(code).rtl ? "rtl" : "ltr";
     if (save) { try { localStorage.setItem(LANG_KEY, code); } catch (e) {} }
-    var other = code === "ar" ? "en" : "ar", b = $("#lang");
-    b.textContent = langInfo(other).label; b.lang = other;
-    b.setAttribute("aria-label", other === "ar" ? "اقرأ الصفحة بالعربية" : "Read this page in English");
+    var b = $("#lang"); if (b) { b.value = code; b.lang = code; }
     paint();
   }
-  $("#lang").addEventListener("click", function () {
-    var next = lang === "ar" ? "en" : "ar";
+  // The page on its own: the picker, every language named in its own words; the choice is kept and put in the address.
+  (function buildLangs() {
+    var sel = $("#lang"); if (!sel) return;
+    sel.innerHTML = "";
+    SH.LANGS.forEach(function (l) { var o = document.createElement("option"); o.value = l.code; o.textContent = l.label; o.lang = l.code; sel.appendChild(o); });
+  })();
+  if ($("#lang")) $("#lang").addEventListener("change", function () {
+    var next = $("#lang").value;
     setLang(next, true);
     try { var u = new URL(location.href); u.searchParams.set("lang", next); history.replaceState(null, "", u); } catch (e) {}
   });
@@ -1114,7 +1126,7 @@
   }
 
   // Test hook: the specs read what the page works out without a network.
-  window.LockersForm = { tagCode: tagCode, spanOf: spanOf, cells: function (units) { return cabinetCells({ units: units }).map(function (u) { return u ? String(u.code) : null; }); } };
+  window.LockersForm = { setLang: setLang, tagCode: tagCode, spanOf: spanOf, cells: function (units) { return cabinetCells({ units: units }).map(function (u) { return u ? String(u.code) : null; }); } };
 
   setLang(pickLang(), false);
   showView("landing");

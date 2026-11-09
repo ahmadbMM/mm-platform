@@ -4,7 +4,11 @@ The Saturday Social Ride's booking page (the owner, 2026-11-08: "people can only
 through a new link called micromobility.sa/saturday"). Riders book with a ride code staff give out: a valid code is
 needed and is enough, member or not, and the booking then waits for staff's selection and Publish, as every Saturday
 booking does. One self-contained page that the website (`apps/web`) serves at that address, outside Coming Soon,
-built the way the Defe page (`forms/defe`, turned off 2026-11-09, in the git history) was. English and Arabic (`?lang=ar`, right to left), light and dark as the device is set.
+built the way the Defe page (`forms/defe`, turned off 2026-11-09, in the git history) was.
+In the website's sixteen languages (`?lang=`; Arabic and Urdu right to left), light and dark as the device is set. The
+website draws it as one of its own pages (`apps/web/src/app/[locale]/<address>`: the site's header, footer and language
+menu around it, its scripts run by the page; `forms/shared/site-form.mjs`); `?classic=1` answers with the page built on
+its own, whose header has a menu of the sixteen languages (the user, 2026-11-09).
 
 ## What it does, in order
 
