@@ -60,11 +60,10 @@
 .tk-note .dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
 .tk-note.go { color: #077a4b; }
 .tk-note.warn { color: #8a5c14; }
-.tk-ok { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding: 10px 12px; border-radius: 10px;
+.tk-ok { display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 12px; border-radius: 10px;
   background: rgba(7, 122, 75, .08); border: 1px solid rgba(7, 122, 75, .25); color: #077a4b; }
 .tk-ok-tick { width: 20px; height: 20px; flex: none; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: #077a4b; color: #fff; font-size: 12px; font-weight: 900; }
 .tk-ok strong { display: block; font-size: 13px; font-weight: 800; }
-.tk-ok small { display: block; margin-top: 2px; font-size: 11px; font-weight: 600; color: #4f565c; }
 .tk-riders-h { padding-top: 10px; font-size: 12px; font-weight: 700; color: #4f565c; }
 .tk-rider { padding: 11px 0; border-bottom: 1px solid rgba(26, 25, 25, .14); }
 .tk-rider-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -145,7 +144,6 @@
 .tk-live :is(.tk-note, .tk-ok) { background: #262524; border-color: rgba(251, 249, 244, .16); color: #fbf9f4; }
 .tk-live :is(.tk-note.go, .tk-ok) { color: #03ff89; }
 .tk-live .tk-note.warn { color: #f2c66d; }
-.tk-live .tk-ok small { color: rgba(251, 249, 244, .66); }
 .tk-live .tk-ok-tick { background: #03ff89; color: #1a1919; }
 .tk-live .tk-btn { background: transparent; color: #fbf9f4 !important; border-color: rgba(251, 249, 244, .16); }
 .tk-live .tk-btn:hover { background: #262524; border-color: rgba(251, 249, 244, .66); }
@@ -226,7 +224,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-card.ev-vlap.tk-today::after { background: #5b3fd6; }
 .tk-card.ev-vlap.tk-live { background: #fff; border-color: rgba(13, 13, 13, .28); color: #0d0d0d; }
 .tk-card.ev-vlap.tk-live :is(.tk-num, .tk-name, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l, .tk-rt-n) { color: #0d0d0d; }
-.tk-card.ev-vlap.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-ok small, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(13, 13, 13, .62); }
+.tk-card.ev-vlap.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(13, 13, 13, .62); }
 .tk-card.ev-vlap.tk-live :is(.tk-dw, .tk-when .go, .tk-total strong, .tk-pay.paid, .tk-rider-pay > .tk-amt.paid, .tk-cd, .tk-note.go, .tk-ok, .tk-rt-a) { color: #5b3fd6; }
 .tk-card.ev-vlap.tk-live .tk-pay.due, .tk-card.ev-vlap.tk-live .tk-note.warn, .tk-card.ev-vlap.tk-live .tk-wallet-msg { color: #8a5300; }
 .tk-card.ev-vlap.tk-live :is(.tk-head, .tk-rider, .tk-addons, .tk-rt) { border-color: rgba(13, 13, 13, .14); }
@@ -255,7 +253,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-card.ev-defe5k.tk-today::after { background: #a22b63; }
 .tk-card.ev-defe5k.tk-live { color: #3b1328; }
 .tk-card.ev-defe5k.tk-live :is(.tk-num, .tk-name, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l, .tk-rt-n) { color: #3b1328; }
-.tk-card.ev-defe5k.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-ok small, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(59, 19, 40, .66); }
+.tk-card.ev-defe5k.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(59, 19, 40, .66); }
 .tk-card.ev-defe5k.tk-live :is(.tk-dw, .tk-when .go, .tk-total strong, .tk-pay.paid, .tk-rider-pay > .tk-amt.paid, .tk-cd, .tk-note.go, .tk-ok, .tk-rt-a) { color: #a22b63; }
 .tk-card.ev-defe5k.tk-live .tk-pay.due, .tk-card.ev-defe5k.tk-live .tk-note.warn, .tk-card.ev-defe5k.tk-live .tk-wallet-msg { color: #8a5300; }
 .tk-card.ev-defe5k.tk-live :is(.tk-head, .tk-rider, .tk-addons, .tk-rt) { border-color: rgba(162, 43, 99, .2); }
@@ -363,7 +361,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-bld-plate { border-bottom: 1px solid rgba(11, 31, 22, .12); }
 .tk-card.ev-blood.tk-today::after { background: #0b1f16; }
 .tk-card.ev-blood.tk-live :is(.tk-name, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l) { color: #0b1f16; }
-.tk-card.ev-blood.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-qr-hold span, .tk-ok small, .tk-stages li, .tk-st-s, .tk-reveal) { color: rgba(11, 31, 22, .68); }
+.tk-card.ev-blood.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-qr-hold span, .tk-stages li, .tk-st-s, .tk-reveal) { color: rgba(11, 31, 22, .68); }
 .tk-card.ev-blood.tk-live :is(.tk-num, .tk-dw, .tk-when .go, .tk-cd, .tk-note.go, .tk-ok) { color: #0b1f16; }
 .tk-card.ev-blood.tk-live .tk-note.warn { color: #8a5300; }
 .tk-card.ev-blood.tk-live :is(.tk-head, .tk-rider) { border-color: rgba(11, 31, 22, .12); }

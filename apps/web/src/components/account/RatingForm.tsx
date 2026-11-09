@@ -140,7 +140,6 @@ export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, r
 
   return (
     <form className="rg-form" onSubmit={submit} noValidate>
-      <p className="rg-sub-text">{fill(t.sub, low)}</p>
       <div className="rg-list">
         {RG_FORMS[form].map(([k]) => {
           const q = tree.find((x) => x[0] === k);

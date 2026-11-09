@@ -249,7 +249,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         ) : past && allDone && onDay ? (
           <div className="tk-note go"><span className="dot" aria-hidden="true" /><span>{minutes >= 1 ? (bikes ? t.cueDone : t.cueDoneNb)(dur(minutes)) : bikes ? t.cueDoneNoDur : t.cueDoneNoDurNb}</span></div>
         ) : cue === "confirmed" ? (
-          <div className="tk-ok" role="status"><span className="tk-ok-tick" aria-hidden="true">✓</span><span><strong>{t.confirmed}</strong><small>{t.confirmedSub}</small></span></div>
+          <div className="tk-ok" role="status"><span className="tk-ok-tick" aria-hidden="true">✓</span><span><strong>{t.confirmed}</strong></span></div>
         ) : cue ? (
           <div className={`tk-note ${cue === "next" || cue === "onBike" ? "go" : cue === "inQueue" ? "" : "warn"}`}>
             {cue !== "next" && cue !== "inQueue" && <span className="dot" aria-hidden="true" />}

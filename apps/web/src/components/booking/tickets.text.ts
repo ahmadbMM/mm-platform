@@ -1,7 +1,7 @@
 // The ticket's words, in English and Arabic, exactly as the booking app writes them (its LANG en/ar
 // keys named beside each); every other language translates the English (src/i18n/tx).
 // queueNumber queueNumLabel · waitlist waitlistLabel · qrHold ticketQrHold · next youreNext ·
-// inQueue inQueueMsg · onBike onBikeNow · underReview/confirmed/confirmedSub/pending/waitlistCue
+// inQueue inQueueMsg · onBike onBikeNow · underReview/confirmed/pending/waitlistCue
 // commCue* · riders/participants reviewRidersLabel/reviewPartLabel · paid/pendingPay/onTheHouse ·
 // total reviewTotalLabel · calendar addToCalendarBtn · directions
 // ticketDirections · meetingPoint meetPointLbl · edit/reschedule/cancel · available availLabel ·
@@ -38,7 +38,6 @@ export const T = {
     underReview: "Reserved - the rider list is being finalised",
     underReviewNb: "Reserved - the participant list is being finalised",
     confirmed: "Your place is confirmed",
-    confirmedSub: "Show this code at the gathering point when you arrive.",
     pending: "Reserved. Waiting for confirmation.",
     waitlistCue: "On the waitlist.",
     riders: "Riders",
@@ -194,7 +193,6 @@ export const T = {
     underReview: "تم الحجز - يجري إعداد قائمة المشاركين",
     underReviewNb: "تم الحجز - يجري إعداد قائمة المشاركين",
     confirmed: "تم تأكيد مقعدك",
-    confirmedSub: "اعرض هذا الرمز عند الوصول إلى نقطة التجمع.",
     pending: "تم الحجز، بانتظار التأكيد.",
     waitlistCue: "على قائمة الانتظار.",
     riders: "الركّاب",

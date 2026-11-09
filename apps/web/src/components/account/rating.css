@@ -8,7 +8,6 @@
 .rr-send:disabled { opacity: .6; cursor: default; }
 .rr-thanks { margin: 0; background: rgba(7, 122, 75, .08); border: 1px solid rgba(7, 122, 75, .25); color: #077a4b; border-radius: 14px; padding: 14px 16px; font-weight: 600; font-size: 14px; line-height: 1.5; }
 .rg-form { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
-.rg-sub-text { margin: 0; color: #57605a; font-size: 14px; line-height: 1.5; }
 .rg-list { display: flex; flex-direction: column; gap: 12px; }
 /* a main question and its sub-questions, in one box */
 .rg-grp { border: 1px solid rgba(0, 0, 0, .12); border-radius: 16px; padding: 14px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }

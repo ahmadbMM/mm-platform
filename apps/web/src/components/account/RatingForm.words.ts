@@ -13,7 +13,7 @@
 import type { Locale } from "@/i18n/locales";
 
 export type RatingWords = {
-  kicker: string; title: string; sub: string; q: Record<string, string>; bfAt: string; why: string; whyErr: string; pickErr: string;
+  kicker: string; title: string; q: Record<string, string>; bfAt: string; why: string; whyErr: string; pickErr: string;
   skipBf: string; note: string; send: string; thanks: string; signOut: string; sending: string;
   /** Run for Her (the owner, 2026-10-17: a run, not a ride): the pop-up's kicker and title and the thank-you. */
   run: { kicker: string; title: string; thanks: string };
@@ -27,7 +27,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   en: {
     kicker: "Rate your ride",
     title: "How was your ride?",
-    sub: "Score each part from 1 to 10. For anything {0} or under, tell us why so we can fix it.",
     q: {service: "Service", bike: "Bike", ride: "The ride", ride_checkin: "Check-in and bike collection", ride_staff: "Staff", ride_bike: "Bike", ride_route: "Route", breakfast: "Breakfast", bf_restaurant: "Restaurant", bf_atmosphere: "Atmosphere", bf_food: "Food", bf_service: "Service", overall: "Overall experience"},
     bfAt: "Breakfast at {0}",
     why: "You gave {0}. Why, and what could be better?",
@@ -46,7 +45,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   ar: {
     kicker: "قيّم رحلتك",
     title: "كيف كانت رحلتك؟",
-    sub: "قيّم كل جزء من 1 إلى 10. وإذا كان التقييم {0} أو أقل، أخبرنا بالسبب لنحسّنه.",
     q: {service: "الخدمة", bike: "الدراجة", ride: "الرحلة", ride_checkin: "تسجيل الحضور واستلام الدراجة", ride_staff: "الفريق", ride_bike: "الدراجة", ride_route: "المسار", breakfast: "الإفطار", bf_restaurant: "المطعم", bf_atmosphere: "الأجواء", bf_food: "الطعام", bf_service: "الخدمة", overall: "التجربة بشكل عام"},
     bfAt: "الإفطار في {0}",
     why: "أعطيت {0}. ما السبب، وما الذي يمكن تحسينه؟",
@@ -65,7 +63,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   id: {
     kicker: "Nilai gowes Anda",
     title: "Bagaimana gowes Anda?",
-    sub: "Beri nilai setiap bagian dari 1 sampai 10. Untuk nilai {0} ke bawah, beri tahu kami alasannya agar bisa kami perbaiki.",
     q: {service: "Layanan", bike: "Sepeda", ride: "Sesi gowes", ride_checkin: "Check-in dan pengambilan sepeda", ride_staff: "Staf", ride_bike: "Sepeda", ride_route: "Rute", breakfast: "Sarapan", bf_restaurant: "Restoran", bf_atmosphere: "Suasana", bf_food: "Makanan", bf_service: "Layanan", overall: "Pengalaman keseluruhan"},
     bfAt: "Sarapan di {0}",
     why: "Anda memberi nilai {0}. Mengapa, dan apa yang bisa lebih baik?",
@@ -84,7 +81,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   ms: {
     kicker: "Nilai kayuhan anda",
     title: "Bagaimana kayuhan anda?",
-    sub: "Beri markah bagi setiap bahagian dari 1 hingga 10. Untuk markah {0} ke bawah, beritahu kami sebabnya supaya kami dapat memperbaikinya.",
     q: {service: "Perkhidmatan", bike: "Basikal", ride: "Kayuhan", ride_checkin: "Daftar masuk dan pengambilan basikal", ride_staff: "Kakitangan", ride_bike: "Basikal", ride_route: "Laluan", breakfast: "Sarapan", bf_restaurant: "Restoran", bf_atmosphere: "Suasana", bf_food: "Makanan", bf_service: "Perkhidmatan", overall: "Pengalaman keseluruhan"},
     bfAt: "Sarapan di {0}",
     why: "Anda memberi {0}. Mengapa, dan apa yang boleh diperbaiki?",
@@ -103,7 +99,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   de: {
     kicker: "Bewerte deine Fahrt",
     title: "Wie war deine Fahrt?",
-    sub: "Bewerte jeden Teil von 1 bis 10. Bei {0} oder weniger sag uns bitte, warum – damit wir es besser machen können.",
     q: {service: "Service", bike: "Fahrrad", ride: "Die Ausfahrt", ride_checkin: "Check-in und Radausgabe", ride_staff: "Team", ride_bike: "Fahrrad", ride_route: "Strecke", breakfast: "Frühstück", bf_restaurant: "Restaurant", bf_atmosphere: "Atmosphäre", bf_food: "Essen", bf_service: "Service", overall: "Gesamterlebnis"},
     bfAt: "Frühstück bei {0}",
     why: "Du hast {0} gegeben. Warum, und was könnten wir besser machen?",
@@ -122,7 +117,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   es: {
     kicker: "Valora tu recorrido",
     title: "¿Qué tal tu recorrido?",
-    sub: "Puntúa cada parte del 1 al 10. Si das {0} o menos, dinos por qué para poder mejorarlo.",
     q: {service: "Servicio", bike: "Bici", ride: "La salida", ride_checkin: "Registro y recogida de la bici", ride_staff: "Personal", ride_bike: "Bici", ride_route: "Ruta", breakfast: "Desayuno", bf_restaurant: "Restaurante", bf_atmosphere: "Ambiente", bf_food: "Comida", bf_service: "Servicio", overall: "Experiencia general"},
     bfAt: "Desayuno en {0}",
     why: "Has puesto {0}. ¿Por qué y qué podríamos mejorar?",
@@ -141,7 +135,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   fr: {
     kicker: "Notez votre sortie",
     title: "Comment s'est passée votre sortie ?",
-    sub: "Notez chaque partie de 1 à 10. Pour une note de {0} ou moins, dites-nous pourquoi afin que nous puissions nous améliorer.",
     q: {service: "Service", bike: "Vélo", ride: "La sortie", ride_checkin: "Accueil et retrait du vélo", ride_staff: "Équipe", ride_bike: "Vélo", ride_route: "Parcours", breakfast: "Petit-déjeuner", bf_restaurant: "Restaurant", bf_atmosphere: "Ambiance", bf_food: "Nourriture", bf_service: "Service", overall: "Expérience globale"},
     bfAt: "Petit-déjeuner chez {0}",
     why: "Vous avez donné {0}. Pourquoi, et que pourrions-nous améliorer ?",
@@ -160,7 +153,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   pt: {
     kicker: "Avalie seu passeio",
     title: "Como foi seu passeio?",
-    sub: "Avalie cada parte de 1 a 10. Se der {0} ou menos, diga-nos o porquê para podermos melhorar.",
     q: {service: "Atendimento", bike: "Bicicleta", ride: "O passeio", ride_checkin: "Check-in e retirada da bicicleta", ride_staff: "Equipe", ride_bike: "Bicicleta", ride_route: "Percurso", breakfast: "Café da manhã", bf_restaurant: "Restaurante", bf_atmosphere: "Ambiente", bf_food: "Comida", bf_service: "Atendimento", overall: "Experiência geral"},
     bfAt: "Café da manhã em {0}",
     why: "Você deu {0}. Por quê, e o que poderia ser melhor?",
@@ -179,7 +171,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   tl: {
     kicker: "I-rate ang iyong ride",
     title: "Kumusta ang iyong ride?",
-    sub: "I-rate ang bawat bahagi mula 1 hanggang 10. Kung {0} pababa, sabihin sa amin kung bakit para maayos namin.",
     q: {service: "Serbisyo", bike: "Bisikleta", ride: "Ang ride", ride_checkin: "Check-in at pagkuha ng bisikleta", ride_staff: "Staff", ride_bike: "Bisikleta", ride_route: "Ruta", breakfast: "Almusal", bf_restaurant: "Restawran", bf_atmosphere: "Kapaligiran", bf_food: "Pagkain", bf_service: "Serbisyo", overall: "Kabuuang karanasan"},
     bfAt: "Almusal sa {0}",
     why: "Nagbigay ka ng {0}. Bakit, at ano ang puwedeng mapabuti?",
@@ -198,7 +189,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   ru: {
     kicker: "Оцените заезд",
     title: "Как прошёл заезд?",
-    sub: "Оцените каждую часть от 1 до 10. Если ставите {0} или ниже, расскажите почему — так мы сможем это исправить.",
     q: {service: "Обслуживание", bike: "Велосипед", ride: "Заезд", ride_checkin: "Регистрация и выдача велосипеда", ride_staff: "Персонал", ride_bike: "Велосипед", ride_route: "Маршрут", breakfast: "Завтрак", bf_restaurant: "Ресторан", bf_atmosphere: "Атмосфера", bf_food: "Еда", bf_service: "Обслуживание", overall: "Общее впечатление"},
     bfAt: "Завтрак в {0}",
     why: "Вы поставили {0}. Почему и что можно улучшить?",
@@ -217,7 +207,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   ur: {
     kicker: "اپنی رائیڈ ریٹ کریں",
     title: "آپ کی رائیڈ کیسی رہی؟",
-    sub: "ہر حصے کو 1 سے 10 تک ریٹ کریں۔ {0} یا اس سے کم دینے پر ہمیں وجہ بتائیں تاکہ ہم بہتری لا سکیں۔",
     q: {service: "سروس", bike: "سائیکل", ride: "رائیڈ", ride_checkin: "چیک اِن اور سائیکل کی وصولی", ride_staff: "عملہ", ride_bike: "سائیکل", ride_route: "روٹ", breakfast: "ناشتہ", bf_restaurant: "ریسٹورنٹ", bf_atmosphere: "ماحول", bf_food: "کھانا", bf_service: "سروس", overall: "مجموعی تجربہ"},
     bfAt: "ناشتہ {0} میں",
     why: "آپ نے {0} دیا۔ کیوں، اور کیا بہتر ہو سکتا تھا؟",
@@ -236,7 +225,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   hi: {
     kicker: "अपनी राइड रेट करें",
     title: "आपकी राइड कैसी रही?",
-    sub: "हर हिस्से को 1 से 10 तक रेट करें। {0} या उससे कम देने पर हमें वजह बताएं ताकि हम सुधार कर सकें।",
     q: {service: "सेवा", bike: "साइकिल", ride: "राइड", ride_checkin: "चेक-इन और साइकिल लेना", ride_staff: "स्टाफ़", ride_bike: "साइकिल", ride_route: "रूट", breakfast: "नाश्ता", bf_restaurant: "रेस्टोरेंट", bf_atmosphere: "माहौल", bf_food: "खाना", bf_service: "सेवा", overall: "कुल मिलाकर अनुभव"},
     bfAt: "नाश्ता {0} में",
     why: "आपने {0} दिया। क्यों, और क्या बेहतर हो सकता था?",
@@ -255,7 +243,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   ne: {
     kicker: "आफ्नो राइड रेट गर्नुहोस्",
     title: "तपाईंको राइड कस्तो रह्यो?",
-    sub: "हरेक भागलाई 1 देखि 10 सम्म रेटिङ दिनुहोस्। {0} वा कम दिनुभयो भने कारण बताउनुहोस्, ताकि हामी सुधार गर्न सकौं।",
     q: {service: "सेवा", bike: "साइकल", ride: "राइड", ride_checkin: "चेक-इन र साइकल लिने", ride_staff: "स्टाफ", ride_bike: "साइकल", ride_route: "रुट", breakfast: "बिहानको खाजा", bf_restaurant: "रेस्टुरेन्ट", bf_atmosphere: "वातावरण", bf_food: "खाना", bf_service: "सेवा", overall: "समग्र अनुभव"},
     bfAt: "{0} मा बिहानको खाजा",
     why: "तपाईंले {0} दिनुभयो। किन, र के राम्रो हुन सक्थ्यो?",
@@ -274,7 +261,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   bn: {
     kicker: "আপনার রাইডে রেটিং দিন",
     title: "আপনার রাইড কেমন ছিল?",
-    sub: "প্রতিটি অংশকে 1 থেকে 10 এর মধ্যে রেটিং দিন। {0} বা তার কম দিলে কারণটি জানান, যাতে আমরা উন্নতি করতে পারি।",
     q: {service: "সেবা", bike: "সাইকেল", ride: "রাইড", ride_checkin: "চেক-ইন ও সাইকেল সংগ্রহ", ride_staff: "স্টাফ", ride_bike: "সাইকেল", ride_route: "রুট", breakfast: "নাশতা", bf_restaurant: "রেস্টুরেন্ট", bf_atmosphere: "পরিবেশ", bf_food: "খাবার", bf_service: "সেবা", overall: "সামগ্রিক অভিজ্ঞতা"},
     bfAt: "{0}-এ নাশতা",
     why: "আপনি {0} দিয়েছেন। কেন, আর কী আরও ভালো হতে পারত?",
@@ -293,7 +279,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   zh: {
     kicker: "为骑行评分",
     title: "这次骑行感觉如何？",
-    sub: "请为每一项打 1 到 10 分。打 {0} 分及以下时，请告诉我们原因，以便我们改进。",
     q: {service: "服务", bike: "自行车", ride: "骑行", ride_checkin: "签到与取车", ride_staff: "工作人员", ride_bike: "自行车", ride_route: "路线", breakfast: "早餐", bf_restaurant: "餐厅", bf_atmosphere: "氛围", bf_food: "餐食", bf_service: "服务", overall: "整体体验"},
     bfAt: "在 {0} 享用早餐",
     why: "您打了 {0} 分。原因是什么？哪些地方可以做得更好？",
@@ -312,7 +297,6 @@ export const RATING_WORDS: Record<Locale, RatingWords> = {
   ja: {
     kicker: "ライドを評価",
     title: "ライドはいかがでしたか？",
-    sub: "各項目を1〜10で評価してください。{0}以下の場合は、改善のために理由をお聞かせください。",
     q: {service: "サービス", bike: "自転車", ride: "ライド", ride_checkin: "受付と自転車の受け取り", ride_staff: "スタッフ", ride_bike: "自転車", ride_route: "ルート", breakfast: "朝食", bf_restaurant: "レストラン", bf_atmosphere: "雰囲気", bf_food: "料理", bf_service: "サービス", overall: "総合的な体験"},
     bfAt: "{0}での朝食",
     why: "{0}点をつけていただきました。理由と、改善できる点を教えてください。",
