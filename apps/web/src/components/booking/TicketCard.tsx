@@ -204,14 +204,14 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const clock = (x: string) => fmtClock(x, locale);
   // a session with a start time alone (the DEFE 5KM Run's 7 PM) says it once
   const when = timesText(s?.times, !!s?.gathers, clock, { gather, start });
-  // a circuit night's waitlist collects later (wlCollectTime): said under the band, or on the rider's row in a mixed party
+  // the waitlist collects later (wlCollectTime: the session's own time, or a circuit night's 15 minutes after the
+  // start): said under the band, or on the rider's row in a mixed party
   const wlc = wlCollectTime(s);
   const wlLine = wlc && !past ? t.wlCollectFrom(clock(wlc)) : "";
   const green = s?.times && s.gathers ? t.gatherAt(clock(s.times[0])) : allWl && wlLine ? "" : s?.collect && bikes ? t.collectFrom(clock(s.collect)) : "";
   const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, icsPlace(s)) : "";
   // men only, women only or mixed (the booking app's _sgChip): none on a session that did not load
   const sg = s ? genderChip(s, { male: t.sgMale, female: t.sgFemale, mixed: t.sgMixed }) : null;
-  const wl = primary.waitlistNum;
   const reward = donor ? blood?.rewards?.get(primary.id) ?? null : null;
 
   return (
@@ -230,11 +230,12 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
           {ahHeld && !allWl && <p className="tk-label">{t.ahHoldTitle}</p>}
           {!hideNum && (allWl
-            ? <><p className={`tk-label wl${wlc ? " solid" : ""}`}>{t.wlOnList}{wl ? <> · {t.wlLinePos(String(wl))}</> : ""}</p>{wlLine && <p className="tk-wl-collect">{wlLine}</p>}</>
+            ? <><p className={`tk-label wl${wlc ? " solid" : ""}`}>{t.wlOnList}</p>{wlLine && <p className="tk-wl-collect">{wlLine}</p>}</>
             : <p className="tk-label">{rows.length > 1 ? (rows.length === 2 ? (bikes ? t.bikes2 : t.party2) : (bikes ? t.bikesN : t.partyN)(String(rows.length))) : numLabel}</p>)}
           {/* a number reads left to right in every language: "#7 – #8" is never "#8 – #7" */}
           <p className={`tk-num ${big}`}>{hideNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
-          {allWl && !hideNum && <p className="tk-wl-note">{wl ? t.wlPos(String(wl)) : t.wlPosNoNum}</p>}
+          {/* in line for a place, never which number in the line (the booking app, the owner 2026-11-10) */}
+          {allWl && !hideNum && <p className="tk-wl-note">{t.wlPosNoNum}</p>}
         </div>
         <div className="tk-right">
           {past ? null : ready
@@ -317,7 +318,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           <div key={r.id} className="tk-rider">
             <div className="tk-rider-top">
               {!hideNum && (r.status === "waitlist"
-                ? <span className="tk-w"><span className="dot" aria-hidden="true" />{r.waitlistNum ? t.wlRowPos(String(r.waitlistNum)) : t.waitlist}</span>
+                ? <span className="tk-w"><span className="dot" aria-hidden="true" />{t.waitlist}</span>
                 : r.queueNum != null && <span className="tk-q" dir="ltr">#{r.queueNum}</span>)}
               <span className="tk-name">{r.name}</span>
               {bikes && r.type && r.type !== "None" && <span className={`tk-type t-${r.type.toLowerCase().replace(/\s+/g, "")}`}><Bike /> {typeName(r.type)}</span>}

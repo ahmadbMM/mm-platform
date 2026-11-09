@@ -1005,7 +1005,6 @@
   "Add to calendar": "कैलेंडर में जोड़ें",
   "Helmets are required. One comes with every bike.": "हेलमेट ज़रूरी है। हर साइकिल के साथ एक हेलमेट मिलता है।",
   "Helmets are required. We provide one for free.": "हेलमेट ज़रूरी है। हम एक हेलमेट मुफ़्त देते हैं।",
-  "In line: {0}": "कतार: {0}",
   "On the waitlist": "प्रतीक्षा सूची में",
   "On the waitlist.": "प्रतीक्षा सूची में।",
   "Queue number": "कतार नंबर",
@@ -1015,8 +1014,6 @@
   "Your place is confirmed": "आपकी जगह पक्की हो गई",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "आप जगह के लिए कतार में हैं। अभी आपके लिए कुछ पक्का नहीं है: जगह खाली होने पर स्टाफ़ इसी कोड से बूथ पर आपका चेक-इन करेगा, और पहले WhatsApp पर संदेश भी भेज सकता है।",
   "You’re next": "अगली बारी आपकी है",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "आप कतार में नंबर {0} पर हैं। अभी आपके लिए कुछ पक्का नहीं है: जगह खाली होने पर स्टाफ़ इसी कोड से बूथ पर आपका चेक-इन करेगा, और पहले WhatsApp पर संदेश भी भेज सकता है।",
-  "number {0} in line": "कतार में नंबर {0}",
   "{0} bikes": "{0} बाइक",
   "10 rides in a row with no missed booking": "लगातार 10 राइड, कोई बुकिंग नहीं छूटी",
   "25 rides on the corniche": "कॉर्निश पर 25 राइड",
@@ -1785,6 +1782,6 @@
   "Find your bike": "अपनी साइकिल चुनें",
   "Community Membership Application": "समुदाय सदस्यता आवेदन",
   "Employees Bike Registration Form": "कर्मचारी साइकिल पंजीकरण फ़ॉर्म",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | शनिवार सोशल राइड",
-  "Saturday Social Ride | MicroMobility": "शनिवार सोशल राइड | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "शनिवार सोशल राइड | MicroMobility",
+  "Lockers | MicroMobility": "लॉकर | MicroMobility"
 }

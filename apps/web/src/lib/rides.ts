@@ -212,6 +212,19 @@ export function addonIds(v: unknown): string[] {
   return Array.isArray(a) ? [...new Set(a.filter((x): x is string => typeof x === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(x)))].slice(0, 40) : [];
 }
 
+/** The waitlist's own bike collection time, as staff set it on the session (the booking app's bike_slots._wlCollect,
+ *  the owner 2026-11-10): "HH:MM", "" when staff emptied the box (no time of its own), or undefined when the session
+ *  has none stored (wlCollectTime then takes a circuit night's default). */
+export function wlCollectSlot(slots: unknown): string | undefined {
+  let o: unknown = slots;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { o = null; }
+  }
+  if (!o || typeof o !== "object" || !Object.prototype.hasOwnProperty.call(o, "_wlCollect")) return undefined;
+  const c = (o as Record<string, unknown>)._wlCollect;
+  return typeof c === "string" && /^\s*\d{1,2}:\d{2}\s*$/.test(c) ? c.trim().padStart(5, "0") : "";
+}
+
 /** The breakfast stop a row names: only when the read asked for the columns (SESSION_COLS_BREAKFAST),
  *  so a row without them gives neither field. */
 function breakfastOf(r: Row): Pick<RideSession, "breakfast" | "breakfastAr"> {

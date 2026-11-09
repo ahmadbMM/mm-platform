@@ -55,13 +55,16 @@ body.modal-open { overflow: hidden; }
   flex: none; min-height: 36px; padding: 4px 12px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent;
   color: var(--accent); font-family: var(--f-ar); font-weight: 600; font-size: 13px;
 }
-.mmf-saturday .lang[lang="en"] { font-family: var(--f-body); }
+.mmf-saturday .lang-pick { position: relative; flex: none; display: inline-flex; align-items: center; }
+.mmf-saturday select.lang { appearance: none; -webkit-appearance: none; font-family: inherit; padding-inline: 12px 28px; cursor: pointer; }
 .mmf-saturday .lang:hover { border-color: var(--accent); }
+.mmf-saturday .lang-chev { position: absolute; inset-inline-end: 10px; width: 12px; height: 12px; fill: none; stroke: var(--accent); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; pointer-events: none; }
 @media (max-width: 359px) {
 .mmf-saturday .top { padding-inline: 12px; }
 .mmf-saturday .lockup { gap: 8px; }
 .mmf-saturday .mm svg { height: 26px; }
-.mmf-saturday .lang { padding: 4px 8px; }
+.mmf-saturday select.lang { padding-inline: 8px 24px; }
+.mmf-saturday .lang-chev { inset-inline-end: 7px; }
 }
 @media (min-width: 860px) {
 .mmf-saturday .top { padding: 18px 28px 14px; }

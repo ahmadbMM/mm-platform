@@ -1005,7 +1005,6 @@
   "Add to calendar": "क्यालेन्डरमा थप्नुहोस्",
   "Helmets are required. One comes with every bike.": "हेलमेट अनिवार्य छ। हरेक साइकलसँग एउटा हेलमेट दिइन्छ।",
   "Helmets are required. We provide one for free.": "हेलमेट अनिवार्य छ। हामी निःशुल्क हेलमेट दिन्छौँ।",
-  "In line: {0}": "लाइन: {0}",
   "On the waitlist": "प्रतीक्षा सूचीमा",
   "On the waitlist.": "प्रतीक्षा सूचीमा।",
   "Queue number": "लाइन नम्बर",
@@ -1015,8 +1014,6 @@
   "Your place is confirmed": "तपाईंको ठाउँ पक्का भयो",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "तपाईं ठाउँका लागि लाइनमा हुनुहुन्छ। अहिलेसम्म तपाईंका लागि केही सुरक्षित छैन: ठाउँ खाली भएमा कर्मचारीले यही कोडबाट बुथमा चेक-इन गर्छन्, र पहिले WhatsApp मा सन्देश पठाउन सक्छन्।",
   "You’re next": "अब तपाईंको पालो",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "तपाईं लाइनमा नम्बर {0} मा हुनुहुन्छ। अहिलेसम्म तपाईंका लागि केही सुरक्षित छैन: ठाउँ खाली भएमा कर्मचारीले यही कोडबाट बुथमा चेक-इन गर्छन्, र पहिले WhatsApp मा सन्देश पठाउन सक्छन्।",
-  "number {0} in line": "लाइनमा नम्बर {0}",
   "{0} bikes": "{0} बाइक",
   "10 rides in a row with no missed booking": "कुनै बुकिङ नछुटाई लगातार 10 राइड",
   "25 rides on the corniche": "कोर्निशमा 25 राइड",
@@ -1785,6 +1782,6 @@
   "Find your bike": "आफ्नो साइकल छान्नुहोस्",
   "Community Membership Application": "समुदाय सदस्यता आवेदन",
   "Employees Bike Registration Form": "कर्मचारी साइकल दर्ता फारम",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | शनिबार सामाजिक राइड",
-  "Saturday Social Ride | MicroMobility": "शनिबार सामाजिक राइड | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "शनिबार सामाजिक राइड | MicroMobility",
+  "Lockers | MicroMobility": "लकरहरू | MicroMobility"
 }

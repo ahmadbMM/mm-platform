@@ -86,15 +86,17 @@
     lang = code;
     html.lang = code; html.dir = langInfo(code).rtl ? "rtl" : "ltr";
     if (save) { try { localStorage.setItem(LANG_KEY, code); } catch (e) {} }
-    var other = code === "ar" ? "en" : "ar", b = $("#lang");
-    if (b) {
-      b.textContent = langInfo(other).label; b.lang = other;
-      b.setAttribute("aria-label", other === "ar" ? "اقرأ الصفحة بالعربية" : "Read this page in English");
-    }
+    var b = $("#lang"); if (b) { b.value = code; b.lang = code; }
     paint();
   }
-  if ($("#lang")) $("#lang").addEventListener("click", function () {
-    var next = lang === "ar" ? "en" : "ar";
+  // The page on its own: the picker, every language named in its own words; the choice is kept and put in the address.
+  (function buildLangs() {
+    var sel = $("#lang"); if (!sel) return;
+    sel.innerHTML = "";
+    SH.LANGS.forEach(function (l) { var o = document.createElement("option"); o.value = l.code; o.textContent = l.label; o.lang = l.code; sel.appendChild(o); });
+  })();
+  if ($("#lang")) $("#lang").addEventListener("change", function () {
+    var next = $("#lang").value;
     setLang(next, true);
     try { var u = new URL(location.href); u.searchParams.set("lang", next); history.replaceState(null, "", u); } catch (e) {}
   });

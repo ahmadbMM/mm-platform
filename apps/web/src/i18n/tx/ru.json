@@ -1005,7 +1005,6 @@
   "Add to calendar": "Добавить в календарь",
   "Helmets are required. One comes with every bike.": "Шлем обязателен. Он выдаётся с каждым велосипедом.",
   "Helmets are required. We provide one for free.": "Шлем обязателен. Мы выдаём его бесплатно.",
-  "In line: {0}": "В очереди: {0}",
   "On the waitlist": "В листе ожидания",
   "On the waitlist.": "В листе ожидания.",
   "Queue number": "Номер в очереди",
@@ -1015,8 +1014,6 @@
   "Your place is confirmed": "Ваше место подтверждено",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Вы в очереди на место. Пока за вами ничего не закреплено: если место освободится, команда отметит вас на стойке по этому коду и, возможно, заранее напишет в WhatsApp.",
   "You’re next": "Ваша очередь следующая",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Ваш номер в очереди: {0}. Пока за вами ничего не закреплено: если место освободится, команда отметит вас на стойке по этому коду и, возможно, заранее напишет в WhatsApp.",
-  "number {0} in line": "номер в очереди: {0}",
   "{0} bikes": "Велосипедов: {0}",
   "10 rides in a row with no missed booking": "10 заездов подряд без пропусков",
   "25 rides on the corniche": "25 заездов на Корнише",
@@ -1785,6 +1782,6 @@
   "Find your bike": "Подберите велосипед",
   "Community Membership Application": "Заявка на членство в сообществе",
   "Employees Bike Registration Form": "Регистрационная форма: велосипеды для сотрудников",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | Субботний дружеский заезд",
-  "Saturday Social Ride | MicroMobility": "Субботний дружеский заезд | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "Субботний дружеский заезд | MicroMobility",
+  "Lockers | MicroMobility": "Шкафчики | MicroMobility"
 }

@@ -4,7 +4,11 @@ The Saturday Social Ride's booking page (the owner, 2026-11-08: "people can only
 through a new link called micromobility.sa/saturday"). Riders book with a ride code staff give out: a valid code is
 needed and is enough, member or not, and the booking then waits for staff's selection and Publish, as every Saturday
 booking does. One self-contained page that the website (`apps/web`) serves at that address, outside Coming Soon,
-built the way `forms/defe` is. English and Arabic (`?lang=ar`, right to left), light and dark as the device is set.
+built the way the Defe page (`forms/defe`, turned off 2026-11-09, in the git history) was.
+In the website's sixteen languages (`?lang=`; Arabic and Urdu right to left), light and dark as the device is set. The
+website draws it as one of its own pages (`apps/web/src/app/[locale]/<address>`: the site's header, footer and language
+menu around it, its scripts run by the page; `forms/shared/site-form.mjs`); `?classic=1` answers with the page built on
+its own, whose header has a menu of the sixteen languages (the user, 2026-11-09).
 
 ## What it does, in order
 
@@ -13,12 +17,12 @@ built the way `forms/defe` is. English and Arabic (`?lang=ar`, right to left), l
    which rides, and whether it still has a place there). Its answers each have their words: a code that does not work,
    a code whose places are taken, a ride that opens later, `RATE_LIMITED` (30 wrong codes from one address in ten
    minutes, then a wait).
-2. **The account**: the booking site's own sign-up and sign-in, exactly as `forms/defe` asks them (see its README).
+2. **The account**: the booking site's own sign-up and sign-in, exactly as the Defe page asked them.
    Google, Apple and a forgotten password go through the booking app (`?handoff=saturday&lang=`), which sends the
    rider back to `/saturday?code=<one-time code>`; the ride code waits for the way back in this tab's sessionStorage
    (`mm-saturday-code`) and is checked again on arrival.
 3. **Your details**: date of birth, nationality and Instagram every time (`saturday_book` refuses an account without
-   them: `FIX_FIRST`), the rest only what the account lacks, the height always; as `forms/defe`.
+   them: `FIX_FIRST`), the rest only what the account lacks, the height always; as the Defe page did.
 4. **Book**: which Saturday (only when the code books more than one), the group, the bike, the review and the ride
    waiver. `saturday_book(p_id, p_token, p_session, p_code, p_entry)`. A code refused there (`refused`:
    `BAD_CODE`, `CODE_USED_UP`) is answered as a row, not an error, and sends the rider back to the code box; every

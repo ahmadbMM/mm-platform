@@ -1005,7 +1005,6 @@
   "Add to calendar": "Añadir al calendario",
   "Helmets are required. One comes with every bike.": "El casco es obligatorio. Cada bicicleta incluye uno.",
   "Helmets are required. We provide one for free.": "El casco es obligatorio. Te proporcionamos uno gratis.",
-  "In line: {0}": "En fila: {0}",
   "On the waitlist": "En lista de espera",
   "On the waitlist.": "En lista de espera.",
   "Queue number": "Número de cola",
@@ -1015,8 +1014,6 @@
   "Your place is confirmed": "Tu plaza está confirmada",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Estás en la fila para una plaza. Aún no tienes plaza: si se libera una, el equipo te registra en el puesto con este código y puede escribirte antes por WhatsApp.",
   "You’re next": "Eres el siguiente",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Eres el n.º {0} en la fila. Aún no tienes plaza: si se libera una, el equipo te registra en el puesto con este código y puede escribirte antes por WhatsApp.",
-  "number {0} in line": "n.º {0} en la fila",
   "{0} bikes": "{0} bicis",
   "10 rides in a row with no missed booking": "10 salidas seguidas sin faltar a ninguna reserva",
   "25 rides on the corniche": "25 recorridos en la corniche",
@@ -1785,6 +1782,6 @@
   "Find your bike": "Encuentra tu bici",
   "Community Membership Application": "Solicitud de membresía de la comunidad",
   "Employees Bike Registration Form": "Formulario de registro de bicicletas para empleados",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | Recorrido social del sábado",
-  "Saturday Social Ride | MicroMobility": "Recorrido social del sábado | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "Recorrido social del sábado | MicroMobility",
+  "Lockers | MicroMobility": "Taquillas | MicroMobility"
 }

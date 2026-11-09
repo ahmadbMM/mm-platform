@@ -1005,7 +1005,6 @@
   "Add to calendar": "Tambah ke kalendar",
   "Helmets are required. One comes with every bike.": "Topi keledar wajib dipakai. Satu disediakan bersama setiap basikal.",
   "Helmets are required. We provide one for free.": "Topi keledar wajib dipakai. Kami menyediakan satu secara percuma.",
-  "In line: {0}": "Giliran: {0}",
   "On the waitlist": "Dalam senarai menunggu",
   "On the waitlist.": "Dalam senarai menunggu.",
   "Queue number": "Nombor giliran",
@@ -1015,8 +1014,6 @@
   "Your place is confirmed": "Tempat anda telah disahkan",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Anda sedang menunggu giliran untuk satu tempat. Belum ada tempat yang disimpan untuk anda: jika ada tempat kosong, kakitangan akan mendaftarkan anda di kaunter menggunakan kod ini, dan mungkin menghubungi anda melalui WhatsApp terlebih dahulu.",
   "You’re next": "Anda yang seterusnya",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Anda nombor {0} dalam giliran. Belum ada tempat yang disimpan untuk anda: jika ada tempat kosong, kakitangan akan mendaftarkan anda di kaunter menggunakan kod ini, dan mungkin menghubungi anda melalui WhatsApp terlebih dahulu.",
-  "number {0} in line": "nombor {0} dalam giliran",
   "{0} bikes": "{0} basikal",
   "10 rides in a row with no missed booking": "10 kayuhan berturut-turut tanpa terlepas tempahan",
   "25 rides on the corniche": "25 kayuhan di corniche",
@@ -1785,6 +1782,6 @@
   "Find your bike": "Cari basikal anda",
   "Community Membership Application": "Permohonan Keahlian Komuniti",
   "Employees Bike Registration Form": "Borang Pendaftaran Basikal Pekerja",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | Kayuhan Sosial Sabtu",
-  "Saturday Social Ride | MicroMobility": "Kayuhan Sosial Sabtu | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "Kayuhan Sosial Sabtu | MicroMobility",
+  "Lockers | MicroMobility": "Loker | MicroMobility"
 }

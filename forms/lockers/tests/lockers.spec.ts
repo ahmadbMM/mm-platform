@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { flipLang } from './lang';
 
 // micromobility.sa/lockers end to end in a browser, every database call stubbed: the evenings (locker_evenings), the
 // cabinet (locker_board), the account (sign-up, sign-in, or handed back signed in with ?code=), the wallet
@@ -458,20 +459,23 @@ test('Arabic: right to left, the cabinet as it stands (1 on the left), prices an
   await door(page, 1).click();
   await door(page, 2).click();
   await expect(page.locator('#pick-sum')).toHaveText('الخزائن 1، 2 · \u2066⃁ 20\u2069');
-  await page.click('#lang');
+  await flipLang(page);
   await expect(page.locator('html')).toHaveAttribute('dir', 'ltr');
   await expect(page.locator('#pick-sum')).toHaveText('Lockers 1, 2 · \u2066⃁ 20\u2069');
   expect(errs).toEqual([]);
 });
 
+// The page's own text (on the website's page, inside the form's box: the site's header and footer are the site's).
+const own = async (page: Page) => ((await page.locator('.mmf-lockers').count()) ? '.mmf-lockers' : 'body');
+
 test('no emoji on the page, and no Google or Apple sign-in', async ({ page }) => {
   await open(page);
   await ready(page);
-  const landing = await page.locator('body').innerText();
+  const landing = await page.locator(await own(page)).innerText();
   await door(page, 1).click();
   await page.click('#go');
   await page.click('#ask-no');
-  const signup = await page.locator('body').innerText();
+  const signup = await page.locator(await own(page)).innerText();
   const options = await page.locator('#cc option, #em-cc option').allInnerTexts();
   for (const t of [landing, signup, ...options]) expect(t).not.toMatch(/\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]/u);
   expect(signup).not.toMatch(/Google|Apple/);

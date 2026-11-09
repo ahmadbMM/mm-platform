@@ -3,12 +3,10 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve } from "node:path";
 import * as community from "../../app/community/registration/route";
 import * as petromin from "../../app/petromin/route";
-import * as defe from "../../app/defe/route";
 import * as saturday from "../../app/saturday/route";
 import * as lockers from "../../app/lockers/route";
 import communityPage from "../../forms/community-page";
 import petrominPage from "../../forms/petromin-page";
-import defePage from "../../forms/defe-page";
 import saturdayPage from "../../forms/saturday-page";
 import lockersPage from "../../forms/lockers-page";
 import { WAIVER_VERSIONS, waiverCopy } from "../../content/waivers";
@@ -20,9 +18,9 @@ const forms = resolve(__dirname, "../../../../../forms");
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
 
 describe("the registration forms", () => {
-  it("the Defe and Saturday pages use the website's ride waiver, word for word, at the version they stamp", () => {
-    // forms/defe and forms/saturday take the waiver from the booking app (sync-shared); the site's copy is content/waivers.ts.
-    for (const form of ["defe", "saturday"]) {
+  it("the Saturday page uses the website's ride waiver, word for word, at the version it stamps", () => {
+    // forms/saturday takes the waiver from the booking app (sync-shared); the site's copy is content/waivers.ts.
+    for (const form of ["saturday"]) {
       const shared = readFileSync(resolve(forms, form + "/shared/shared.js"), "utf8");
       const SH = new Function(shared + ";return SHARED;")() as { WAIVER_VERSION: string; SITE_T: Record<"en" | "ar", { waiverBody: string }> };
       expect(SH.WAIVER_VERSION, form).toBe(WAIVER_VERSIONS.ride);
@@ -34,13 +32,12 @@ describe("the registration forms", () => {
   it("are the pages the form builds wrote (run the form's build after changing it)", () => {
     expect(communityPage).toBe(readFileSync(resolve(forms, "community/src/page.html"), "utf8"));
     expect(petrominPage).toBe(readFileSync(resolve(forms, "petromin/src/page.html"), "utf8"));
-    expect(defePage).toBe(readFileSync(resolve(forms, "defe/src/page.html"), "utf8"));
     expect(saturdayPage).toBe(readFileSync(resolve(forms, "saturday/src/page.html"), "utf8"));
     expect(lockersPage).toBe(readFileSync(resolve(forms, "lockers/src/page.html"), "utf8"));
   });
 
   it("answer GET with the page and HEAD with its headers only", async () => {
-    for (const [route, page] of [[community, communityPage], [petromin, petrominPage], [defe, defePage], [saturday, saturdayPage], [lockers, lockersPage]] as const) {
+    for (const [route, page] of [[community, communityPage], [petromin, petrominPage], [saturday, saturdayPage], [lockers, lockersPage]] as const) {
       const res = route.GET();
       expect(res.status).toBe(200);
       expect(await res.text()).toBe(page);
@@ -51,18 +48,15 @@ describe("the registration forms", () => {
   });
 
   it("keep their Workers' headers: not indexed, and only Supabase, fonts and the analytics beacon allowed", () => {
-    const c = community.GET().headers, p = petromin.GET().headers, df = defe.GET().headers, sa = saturday.GET().headers, lk = lockers.GET().headers;
-    for (const h of [c, p, df, sa, lk]) {
+    const c = community.GET().headers, p = petromin.GET().headers, sa = saturday.GET().headers, lk = lockers.GET().headers;
+    for (const h of [c, p, sa, lk]) {
       expect(h.get("x-robots-tag")).toBe("noindex");
       expect(h.get("cache-control")).toBe("public, max-age=300");
       expect(h.get("content-security-policy")).toContain(`connect-src 'self' ${SUPABASE} https://cloudflareinsights.com`);
       expect(h.get("content-security-policy")).toContain("frame-ancestors 'none'");
     }
     expect(c.get("content-security-policy")).not.toContain("cdn.jsdelivr.net");
-    // the Defe page loads no script from elsewhere: its own inline script and the analytics beacon only
-    expect(df.get("content-security-policy")).toContain("script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;");
-    expect(defePage).not.toMatch(/<script\b[^>]*\bsrc=/);
-    // and so does the Saturday page (2026-11-08)
+    // the Saturday page loads no script from elsewhere: its own inline script and the analytics beacon only (2026-11-08)
     expect(sa.get("content-security-policy")).toContain("script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;");
     expect(saturdayPage).not.toMatch(/<script\b[^>]*\bsrc=/);
     // and so does the lockers page (2026-11-09)
@@ -72,9 +66,9 @@ describe("the registration forms", () => {
     const js = petrominPage.match(/<script\b[^>]*\bsrc="(https:\/\/cdn\.jsdelivr\.net\/[^"]+)"/)?.[1];
     expect(js).toMatch(/^https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[\d.]+\/dist\/umd\/supabase\.min\.js$/);
     expect(p.get("content-security-policy")).toContain(`script-src 'self' 'unsafe-inline' ${js} https://static.cloudflareinsights.com;`);
-    for (const h of [c, p, df, sa, lk]) expect(h.get("content-security-policy")).not.toMatch(/https:\/\/cdn\.jsdelivr\.net(?:\/)?(?:[\s;]|$)/);
+    for (const h of [c, p, sa, lk]) expect(h.get("content-security-policy")).not.toMatch(/https:\/\/cdn\.jsdelivr\.net(?:\/)?(?:[\s;]|$)/);
     // all: HTTPS only, as the site's own pages say it; no device features; no form the browser posts itself
-    for (const h of [c, p, df, sa, lk]) {
+    for (const h of [c, p, sa, lk]) {
       expect(h.get("strict-transport-security")).toBe("max-age=31536000");
       expect(h.get("x-frame-options")).toBe("DENY");
       expect(h.get("permissions-policy")).toBe("camera=(), microphone=(), geolocation=(), payment=()");
@@ -92,19 +86,12 @@ describe("the registration forms", () => {
       expect(named.length).toBeGreaterThanOrEqual(10);
       for (const f of named) expect(existsSync(resolve(__dirname, "../../../public/fonts/forms", f)), f).toBe(true);
     }
-    // The Defe page: Archivo for its display lines (under its own licence beside it), Space Grotesk, IBM Plex Sans Arabic.
-    const csp = defe.GET().headers.get("content-security-policy") || "";
-    expect(csp).toContain("font-src 'self'");
-    expect(defePage).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
-    const named = [...defePage.matchAll(/url\("\/fonts\/forms\/([a-z0-9-]+\.woff2)"\)/g)].map((m) => m[1]);
-    expect(named).toContain("archivo-latin-wdth-wght.woff2");
-    expect(named.length).toBeGreaterThanOrEqual(9);
-    for (const f of named) expect(existsSync(resolve(__dirname, "../../../public/fonts/forms", f)), f).toBe(true);
-    expect(existsSync(resolve(__dirname, "../../../public/fonts/forms/OFL-Archivo.txt"))).toBe(true);
-    // The Saturday page: the Defe page's fonts.
+    // The Saturday page: Archivo for its display lines (under its own licence beside it), Space Grotesk, IBM Plex Sans Arabic.
     expect(saturday.GET().headers.get("content-security-policy") || "").toContain("font-src 'self'");
     expect(saturdayPage).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
     const satNamed = [...saturdayPage.matchAll(/url\("\/fonts\/forms\/([a-z0-9-]+\.woff2)"\)/g)].map((m) => m[1]);
+    expect(satNamed).toContain("archivo-latin-wdth-wght.woff2");
+    expect(existsSync(resolve(__dirname, "../../../public/fonts/forms/OFL-Archivo.txt"))).toBe(true);
     expect(satNamed.length).toBeGreaterThanOrEqual(9);
     for (const f of satNamed) expect(existsSync(resolve(__dirname, "../../../public/fonts/forms", f)), f).toBe(true);
     // The lockers page: the Saturday page's fonts, and the site's riyal sign (public/fonts/Riyal-*.woff2, as the

@@ -1005,7 +1005,6 @@
   "Add to calendar": "Idagdag sa Kalendaryo",
   "Helmets are required. One comes with every bike.": "Kailangan ang helmet. May kasamang helmet ang bawat bisikleta.",
   "Helmets are required. We provide one for free.": "Kailangan ang helmet. Nagbibigay kami ng libreng helmet.",
-  "In line: {0}": "Sa pila: {0}",
   "On the waitlist": "Nasa waitlist",
   "On the waitlist.": "Nasa waitlist.",
   "Queue number": "Numero sa pila",
@@ -1015,8 +1014,6 @@
   "Your place is confirmed": "Kumpirmado na ang puwesto mo",
   "You’re in line for a place. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Nasa pila ka para sa isang puwesto. Wala pang nakalaan para sa iyo: kapag may nabakante, ichecheck-in ka ng staff sa booth gamit ang code na ito, at maaari ka muna nilang i-message sa WhatsApp.",
   "You’re next": "Ikaw na ang susunod",
-  "You’re number {0} in line. Nothing is held for you yet: if a place opens, staff check you in at the booth with this code, and they may message you on WhatsApp first.": "Ikaw ang ika-{0} sa pila. Wala pang nakalaan para sa iyo: kapag may nabakante, ichecheck-in ka ng staff sa booth gamit ang code na ito, at maaari ka muna nilang i-message sa WhatsApp.",
-  "number {0} in line": "ika-{0} sa pila",
   "{0} bikes": "{0} bisikleta",
   "10 rides in a row with no missed booking": "10 sunod-sunod na ride nang walang na-miss na booking",
   "25 rides on the corniche": "25 ride sa corniche",
@@ -1785,6 +1782,6 @@
   "Find your bike": "Hanapin ang bisikleta mo",
   "Community Membership Application": "Aplikasyon para sa Membership sa Komunidad",
   "Employees Bike Registration Form": "Form ng Pagpaparehistro ng Bisikleta para sa mga Empleyado",
-  "Defe x MicroMobility | Saturday Social Ride": "Defe x MicroMobility | Saturday Social Ride",
-  "Saturday Social Ride | MicroMobility": "Saturday Social Ride | MicroMobility"
+  "Saturday Social Ride | MicroMobility": "Saturday Social Ride | MicroMobility",
+  "Lockers | MicroMobility": "Mga locker | MicroMobility"
 }

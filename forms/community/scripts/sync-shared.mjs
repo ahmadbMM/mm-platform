@@ -65,7 +65,7 @@ const KEYS = ['privacyNotice', 'privacyUpdated', 'privacyEnArOnly', 'privacyAckO
   // The account step is the booking site's sign-up: its labels, password rule and messages, word for word.
   'firstName', 'lastName', 'phFirstName', 'phLastName', 'authPassword', 'authConfirmPassword', 'fixPwHint',
   'errPasswordLen', 'errPasswordMatch', 'errTooManyTries', 'authHaveTitle', 'authLogin', 'authSignupBtn',
-  // The sign-in on the form (2026-10-25): the booking site's own words, as forms/defe shows them.
+  // The sign-in on the form (2026-10-25): the booking site's own words, as forms/saturday shows them.
   'authIdentifier', 'errEmailOrPhone', 'errPasswordRequired', 'errInvalidCredentials', 'errLoginLocked', 'errLoginPhoneCc',
   // The status page names the booking site's own tab where an invitation's place is (2026-10-25).
   'tabMyRides',
