@@ -1,0 +1,42 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // The front of the site (edge.js): a small Worker that holds the site's addresses, answers from the edge's page
+  // copies (src/lib/page-cache.ts) and asks the site's own Worker (site.js, wrangler.jsonc) through the SITE service
+  // binding for the rest (the user, 2026-11-09: the first visit after a quiet spell took up to 2.5 s). Deployed by CI
+  // after the site: `wrangler deploy -c wrangler.edge.jsonc --env production` (or --env staging). The files under
+  // .open-next/assets (Next's own CSS, JavaScript, fonts and the site's pictures) are answered from here before any
+  // Worker runs.
+  "name": "micromobility-web-edge",
+  "main": "edge.js",
+  "compatibility_date": "2026-08-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "env": {
+    // micromobility.sa: the whole domain, both hosts, by ROUTE (the DNS records stay at the old host, where company
+    // email lives); a Worker route answers before the old forward to the Salla store did. Rollback = delete the two
+    // routes in the dashboard (Workers & Pages > micromobility-web > Settings > Domains & Routes).
+    "production": {
+      "name": "micromobility-web",
+      "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+      "services": [{ "binding": "SITE", "service": "micromobility-web-site" }],
+      // This deploy's id: the edge page cache keeps each deploy's pages apart (src/lib/page-cache.ts).
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "observability": { "enabled": true },
+      "routes": [
+        { "pattern": "micromobility.sa/*",     "zone_name": "micromobility.sa" },
+        { "pattern": "www.micromobility.sa/*", "zone_name": "micromobility.sa" }
+      ]
+    },
+    // staging.micromobility.sa: a custom domain, behind Cloudflare Access. MM_ENV marks every page as staging
+    // (edge/front.js): noindex, robots.txt shut, titles start with [Staging].
+    "staging": {
+      "name": "micromobility-web-staging",
+      "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+      "services": [{ "binding": "SITE", "service": "micromobility-web-staging-site" }],
+      "version_metadata": { "binding": "CF_VERSION_METADATA" },
+      "observability": { "enabled": true },
+      "vars": { "MM_ENV": "staging" },
+      "routes": [{ "pattern": "staging.micromobility.sa", "custom_domain": true }]
+    }
+  }
+}
