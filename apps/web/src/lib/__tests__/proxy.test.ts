@@ -226,6 +226,7 @@ describe("the registration forms' addresses", () => {
       const res = await call(p);
       expect(res.headers.get("x-middleware-next"), p).toBe("1");
       expect(res.headers.get("x-middleware-rewrite"), p).toBeNull();
+      expect(res.headers.get("content-security-policy"), p).toBeNull(); // the form's own page sends its own
       expect(res.status, p).toBe(200);
     }
   });
@@ -236,6 +237,9 @@ describe("the registration forms' addresses", () => {
       const res = await call(p);
       expect(res.status, p).toBe(200);
       expect(res.headers.get("x-middleware-rewrite") ?? "", p).toContain(`/${lang}${to}`);
+      // the site's security headers, which next.config.ts leaves these addresses' own pages to send (2026-11-09: none went out)
+      expect(res.headers.get("content-security-policy") ?? "", p).toContain("default-src 'self'");
+      expect(res.headers.get("strict-transport-security"), p).toBe("max-age=31536000");
     }
   });
   it("send another spelling to the one real address, with its query", async () => {

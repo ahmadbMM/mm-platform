@@ -8,6 +8,7 @@ import { askedLang } from "./lib/lang-url";
 import { STORE_URL } from "./lib/links";
 import { NO_PAGE_CACHE } from "./lib/page-cache";
 import { apexTarget, movedStatus } from "./lib/canonical-host";
+import { SECURITY_HEADERS } from "./lib/security-headers";
 
 const intl = createMiddleware(routing);
 
@@ -170,7 +171,14 @@ export default async function proxy(req: NextRequest) {
   // state - Coming Soon on, or the Bikes page not switched on. It is never a catalogue page: a
   // category's address starts with a letter (the database insists), so digits can only be a tag.
   // The Learn to ride sign-up and the Privacy Notice open the same way (LEARN_PAGE, PRIVACY_PAGE).
-  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname) || form) return keepLang(intl(req));
+  // A form's page of the website (SITE_FORMS) carries the site's security headers from here: next.config.ts leaves its
+  // address to the form's own page (?classic=1), which sends its own.
+  if (form) {
+    const res = keepLang(intl(req));
+    for (const { key, value } of SECURITY_HEADERS) res.headers.set(key, value);
+    return res;
+  }
+  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname)) return keepLang(intl(req));
   // While the site is Coming Soon, it is the only page: /login, /about and anything else go
   // back to it. /store forwards to the shop before this runs (above), and the old /b/42 tag
   // address is redirected to /bikes/42 before this runs (next.config redirects).
