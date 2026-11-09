@@ -17,7 +17,7 @@ function limiter(): Limiter | undefined {
 }
 
 /** False once this connection has made the minute's requests of this kind. */
-export async function withinLimit(req: Request, kind: "log-error" | "account-check" | "claim", get: () => Limiter | undefined = limiter): Promise<boolean> {
+export async function withinLimit(req: Request, kind: "log-error" | "account-check" | "claim" | "pay", get: () => Limiter | undefined = limiter): Promise<boolean> {
   const l = get();
   const ip = clientIp(req);
   if (!l || !ip) return true;
