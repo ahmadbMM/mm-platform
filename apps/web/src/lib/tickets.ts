@@ -201,7 +201,7 @@ export function addonLines(rows: Pick<TicketRow, "id" | "name" | "addonLines">[]
 // one at the desk, the locker's number. The periods: 18-20 and 21-23 (or both) on a JCC night, 19-21 on a Petromin night.
 export const LOCKER_LINE = "locker";
 export type TicketLocker = { period: string; code: string | null; status: string };
-const LOCKER_TIMES: Record<string, [string, string]> = { early: ["18:00", "20:00"], late: ["21:00", "23:00"], pm: ["19:00", "21:00"] };
+const LOCKER_TIMES: Record<string, [string, string]> = { early: ["18:00", "20:00"], late: ["21:00", "23:00"], both: ["18:00", "23:00"], pm: ["19:00", "21:00"] }; // both: one span, 6 PM - 11 PM (the owner, 2026-11-09)
 /** customer_lockers' rows by booking, the ones not cancelled; an empty map when the answer is not a list. */
 export function lockersOf(data: unknown): Map<string, TicketLocker> {
   const out = new Map<string, TicketLocker>();
@@ -218,8 +218,7 @@ export function lockersOf(data: unknown): Map<string, TicketLocker> {
 export function lockerText(word: string, lk: TicketLocker | undefined, locale: string): string {
   if (!lk) return word;
   const span = (p: string) => (LOCKER_TIMES[p] ? `${fmtClock(LOCKER_TIMES[p][0], locale)} - ${fmtClock(LOCKER_TIMES[p][1], locale)}` : "");
-  const when = lk.period === "both" ? `${span("early")} + ${span("late")}` : span(lk.period);
-  return [word, when, lk.code].filter(Boolean).join(" · ");
+  return [word, span(lk.period), lk.code].filter(Boolean).join(" · ");
 }
 
 /** What the add-ons come to, or null when a line's amount is not known: the total then cannot be said. */

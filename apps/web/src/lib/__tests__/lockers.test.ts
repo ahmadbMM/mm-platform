@@ -36,13 +36,13 @@ describe("a ticket's locker line", () => {
     expect(lines.map((l) => [l.locker, l.name, l.amount])).toEqual([[true, "", 15], [false, "Gel", 10]]);
     expect(addonsCost(lines)).toBe(25);
     const lk = lockersOf([
-      { booking_id: "q1", period: "both", status: "in_use", price: 15, code: "P7" },
+      { booking_id: "q1", period: "both", status: "in_use", price: 15, code: "L7" },
       { booking_id: "q2", period: "pm", status: "reserved", price: 10, code: null },
       { booking_id: "q3", period: "late", status: "cancelled", price: 10, code: null },
       "junk",
     ]);
     expect([...lk.keys()]).toEqual(["q1", "q2"]);
-    expect(lockerText("Locker", lk.get("q1"), "en")).toBe("Locker · 6 PM - 8 PM + 9 PM - 11 PM · P7");
+    expect(lockerText("Locker", lk.get("q1"), "en")).toBe("Locker · 6 PM - 11 PM · L7");
     expect(lockerText("Locker", lk.get("q2"), "en")).toBe("Locker · 7 PM - 9 PM");
     expect(lockerText("Locker", undefined, "en")).toBe("Locker");
     expect(lockersOf(null).size).toBe(0);
