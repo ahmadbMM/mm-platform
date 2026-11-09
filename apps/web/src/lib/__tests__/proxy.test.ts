@@ -212,15 +212,17 @@ describe("which addresses the proxy sees", () => {
     for (const p of ["/b", "/b/42", "/api", "/api/preview", "/_next/static/x.js", "/site/logo.png", "/robots.txt"]) expect(seen(p), p).toBe(false);
   });
   it("sees the registration forms' addresses too (it decides whether the website's page or the form's own answers), never their files", () => {
-    for (const p of ["/petromin", "/community/registration", "/defe", "/saturday", "/community", "/petrominx", "/Petromin", "/community/Registration", "/Defe", "/defense", "/Saturday", "/saturdays"]) expect(seen(p), p).toBe(true);
+    for (const p of ["/petromin", "/community/registration", "/defe", "/saturday", "/lockers", "/community", "/petrominx", "/Petromin", "/community/Registration", "/Defe", "/defense", "/Saturday", "/saturdays", "/Lockers", "/lockersx"]) expect(seen(p), p).toBe(true);
     expect(seen("/community/registration/og-image.png")).toBe(false);
+    // a locker's own tag comes here too: the proxy sends it on (lockers.test.ts)
+    for (const p of ["/lockers/7", "/lockers/L7"]) expect(seen(p), p).toBe(true);
   });
 });
 
 describe("the registration forms' addresses", () => {
   // No database here, so the site reads as Coming Soon: a form opens all the same.
   it("lets a form that is not a page of the website through untouched to its own page, and any form with ?classic=1", async () => {
-    for (const p of ["/defe", "/saturday?lang=ar", "/community/registration?classic=1", "/community/registration?classic=1&lang=ar", "/petromin?classic=1"]) {
+    for (const p of ["/defe", "/saturday?lang=ar", "/lockers", "/lockers?lang=ar&locker=7", "/community/registration?classic=1", "/community/registration?classic=1&lang=ar", "/petromin?classic=1"]) {
       const res = await call(p);
       expect(res.headers.get("x-middleware-next"), p).toBe("1");
       expect(res.headers.get("x-middleware-rewrite"), p).toBeNull();
@@ -236,7 +238,7 @@ describe("the registration forms' addresses", () => {
     }
   });
   it("send another spelling to the one real address, with its query", async () => {
-    for (const [from, to] of [["/Petromin", "/petromin"], ["/PETROMIN/", "/petromin"], ["/community/Registration?lang=ar", "/community/registration?lang=ar"], ["/Defe?lang=ar", "/defe?lang=ar"], ["/DEFE/", "/defe"], ["/Saturday?lang=ar", "/saturday?lang=ar"], ["/SATURDAY/", "/saturday"]]) {
+    for (const [from, to] of [["/Petromin", "/petromin"], ["/PETROMIN/", "/petromin"], ["/community/Registration?lang=ar", "/community/registration?lang=ar"], ["/Defe?lang=ar", "/defe?lang=ar"], ["/DEFE/", "/defe"], ["/Saturday?lang=ar", "/saturday?lang=ar"], ["/SATURDAY/", "/saturday"], ["/Lockers?lang=ar", "/lockers?lang=ar"], ["/LOCKERS/", "/lockers"]]) {
       const res = await call(from);
       expect(res.status, from).toBe(301);
       expect(redirectedTo(res), from).toBe(to);

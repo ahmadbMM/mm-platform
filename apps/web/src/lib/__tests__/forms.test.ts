@@ -5,10 +5,12 @@ import * as community from "../../app/community/registration/route";
 import * as petromin from "../../app/petromin/route";
 import * as defe from "../../app/defe/route";
 import * as saturday from "../../app/saturday/route";
+import * as lockers from "../../app/lockers/route";
 import communityPage from "../../forms/community-page";
 import petrominPage from "../../forms/petromin-page";
 import defePage from "../../forms/defe-page";
 import saturdayPage from "../../forms/saturday-page";
+import lockersPage from "../../forms/lockers-page";
 import { WAIVER_VERSIONS, waiverCopy } from "../../content/waivers";
 
 // The website serves the two registration forms exactly as their builds leave them
@@ -34,10 +36,11 @@ describe("the registration forms", () => {
     expect(petrominPage).toBe(readFileSync(resolve(forms, "petromin/src/page.html"), "utf8"));
     expect(defePage).toBe(readFileSync(resolve(forms, "defe/src/page.html"), "utf8"));
     expect(saturdayPage).toBe(readFileSync(resolve(forms, "saturday/src/page.html"), "utf8"));
+    expect(lockersPage).toBe(readFileSync(resolve(forms, "lockers/src/page.html"), "utf8"));
   });
 
   it("answer GET with the page and HEAD with its headers only", async () => {
-    for (const [route, page] of [[community, communityPage], [petromin, petrominPage], [defe, defePage], [saturday, saturdayPage]] as const) {
+    for (const [route, page] of [[community, communityPage], [petromin, petrominPage], [defe, defePage], [saturday, saturdayPage], [lockers, lockersPage]] as const) {
       const res = route.GET();
       expect(res.status).toBe(200);
       expect(await res.text()).toBe(page);
@@ -48,8 +51,8 @@ describe("the registration forms", () => {
   });
 
   it("keep their Workers' headers: not indexed, and only Supabase, fonts and the analytics beacon allowed", () => {
-    const c = community.GET().headers, p = petromin.GET().headers, df = defe.GET().headers, sa = saturday.GET().headers;
-    for (const h of [c, p, df, sa]) {
+    const c = community.GET().headers, p = petromin.GET().headers, df = defe.GET().headers, sa = saturday.GET().headers, lk = lockers.GET().headers;
+    for (const h of [c, p, df, sa, lk]) {
       expect(h.get("x-robots-tag")).toBe("noindex");
       expect(h.get("cache-control")).toBe("public, max-age=300");
       expect(h.get("content-security-policy")).toContain(`connect-src 'self' ${SUPABASE} https://cloudflareinsights.com`);
@@ -62,13 +65,16 @@ describe("the registration forms", () => {
     // and so does the Saturday page (2026-11-08)
     expect(sa.get("content-security-policy")).toContain("script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;");
     expect(saturdayPage).not.toMatch(/<script\b[^>]*\bsrc=/);
+    // and so does the lockers page (2026-11-09)
+    expect(lk.get("content-security-policy")).toContain("script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;");
+    expect(lockersPage).not.toMatch(/<script\b[^>]*\bsrc=/);
     // of jsDelivr, only the one file the Petromin page loads (supabase-js, pinned with its integrity hash)
     const js = petrominPage.match(/<script\b[^>]*\bsrc="(https:\/\/cdn\.jsdelivr\.net\/[^"]+)"/)?.[1];
     expect(js).toMatch(/^https:\/\/cdn\.jsdelivr\.net\/npm\/@supabase\/supabase-js@[\d.]+\/dist\/umd\/supabase\.min\.js$/);
     expect(p.get("content-security-policy")).toContain(`script-src 'self' 'unsafe-inline' ${js} https://static.cloudflareinsights.com;`);
-    for (const h of [c, p, df, sa]) expect(h.get("content-security-policy")).not.toMatch(/https:\/\/cdn\.jsdelivr\.net(?:\/)?(?:[\s;]|$)/);
+    for (const h of [c, p, df, sa, lk]) expect(h.get("content-security-policy")).not.toMatch(/https:\/\/cdn\.jsdelivr\.net(?:\/)?(?:[\s;]|$)/);
     // all: HTTPS only, as the site's own pages say it; no device features; no form the browser posts itself
-    for (const h of [c, p, df, sa]) {
+    for (const h of [c, p, df, sa, lk]) {
       expect(h.get("strict-transport-security")).toBe("max-age=31536000");
       expect(h.get("x-frame-options")).toBe("DENY");
       expect(h.get("permissions-policy")).toBe("camera=(), microphone=(), geolocation=(), payment=()");
@@ -101,6 +107,14 @@ describe("the registration forms", () => {
     const satNamed = [...saturdayPage.matchAll(/url\("\/fonts\/forms\/([a-z0-9-]+\.woff2)"\)/g)].map((m) => m[1]);
     expect(satNamed.length).toBeGreaterThanOrEqual(9);
     for (const f of satNamed) expect(existsSync(resolve(__dirname, "../../../public/fonts/forms", f)), f).toBe(true);
+    // The lockers page: the Saturday page's fonts, and the site's riyal sign (public/fonts/Riyal-*.woff2, as the
+    // tickets on the account page draw it).
+    expect(lockers.GET().headers.get("content-security-policy") || "").toContain("font-src 'self'");
+    expect(lockersPage).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
+    const lkNamed = [...lockersPage.matchAll(/url\("\/fonts\/((?:forms\/)?[A-Za-z0-9-]+\.woff2)"\)/g)].map((m) => m[1]);
+    expect(lkNamed).toContain("Riyal-400.woff2");
+    expect(lkNamed.length).toBeGreaterThanOrEqual(11);
+    for (const f of lkNamed) expect(existsSync(resolve(__dirname, "../../../public/fonts", f)), f).toBe(true);
   });
 
   it("have the community form's link-preview image where its page points", () => {

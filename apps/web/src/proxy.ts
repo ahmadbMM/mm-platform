@@ -12,7 +12,7 @@ import { apexTarget, movedStatus } from "./lib/canonical-host";
 const intl = createMiddleware(routing);
 
 // The registration forms' addresses (see the matcher below).
-const FORM_ADDRESSES = ["/community/registration", "/petromin", "/defe", "/saturday"];
+const FORM_ADDRESSES = ["/community/registration", "/petromin", "/defe", "/saturday", "/lockers"];
 export function formAddress(pathname: string): string | null {
   const p = pathname.toLowerCase().replace(/\/+$/, "");
   return FORM_ADDRESSES.includes(p) ? p : null;
@@ -63,10 +63,11 @@ const PRIVACY_PAGE = /^(?:\/(?:en|ar))?\/privacy\/?$/;
 // two ways. /bikes/42 and the chips' older /?bike=42 (/b/42 reaches /bikes/42 first, next.config).
 export const STAFF_TAP_COOKIE = "mm_staff_tap";
 const STAFF_APP = "https://staff.micromobility.sa";
-// A locker's tag (the booking app's lockers, 2026-11-09): micromobility.sa/lockers/P7. A staff phone goes on to
-// staff.micromobility.sa/?locker=P7 (that locker's sheet, or into the check-in open on the phone); a rider's phone
-// to their account, whose ticket says their locker and its number (lockerRiderTarget).
-const LOCKER_PAGE = /^\/lockers\/([A-Za-z]{1,3}\d{1,4})\/?$/;
+// A locker's tag (the booking app's lockers, 2026-11-09): micromobility.sa/lockers/7 (the lockers are plain numbers since
+// the lockers page; a tag written before reads /lockers/L7). A staff phone goes on to staff.micromobility.sa/?locker=7
+// (that locker's sheet, or into the check-in open on the phone); a rider's phone to the lockers page with that locker
+// picked, /lockers?locker=7 (lockerRiderTarget). /lockers itself is the page (app/lockers, outside the proxy).
+const LOCKER_PAGE = /^\/lockers\/([A-Za-z]{0,3}\d{1,4})\/?$/;
 export function staffTapTarget(pathname: string, searchParams: URLSearchParams, cookie: string | undefined): string | null {
   if (cookie !== "1") return null;
   const lk = LOCKER_PAGE.exec(pathname);
@@ -75,9 +76,15 @@ export function staffTapTarget(pathname: string, searchParams: URLSearchParams, 
   return code && /^\d{1,6}$/.test(code) ? `${STAFF_APP}/?bike=${Number(code)}` : null;
 }
 
-/** A rider tapping a locker's tag: their account (its tickets name the locker). Null for anything else. */
-export function lockerRiderTarget(pathname: string): string | null {
-  return LOCKER_PAGE.test(pathname) ? "/account" : null;
+/** A rider tapping a locker's tag: the lockers page with that locker picked (the page reads 7, 07 and L7 alike),
+ *  any ?lang= kept. Null for anything else. */
+export function lockerRiderTarget(pathname: string, searchParams?: URLSearchParams): string | null {
+  const m = LOCKER_PAGE.exec(pathname);
+  if (!m) return null;
+  const q = new URLSearchParams({ locker: m[1].toUpperCase() });
+  const lang = searchParams?.get("lang");
+  if (lang === "en" || lang === "ar") q.set("lang", lang);
+  return `/lockers?${q.toString()}`;
 }
 
 // /claim/<token> (and /en|ar/claim/<token>): the waitlist claim link's other spelling, sent to
@@ -118,7 +125,7 @@ export default async function proxy(req: NextRequest) {
     return res;
   }
   // The same address answers a staff phone and a rider's two ways, so neither answer is kept.
-  const lockerTo = lockerRiderTarget(pathname);
+  const lockerTo = lockerRiderTarget(pathname, searchParams);
   if (lockerTo) {
     const res = NextResponse.redirect(new URL(lockerTo, req.url), 307);
     res.headers.set("Cache-Control", "private, no-store");
