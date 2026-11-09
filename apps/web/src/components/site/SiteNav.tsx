@@ -7,6 +7,9 @@ import { useL } from "@/i18n/TxProvider";
 import { LOCALES, localeInfo } from "@/i18n/locales";
 import { BOOKING_URL, COMMUNITY, HEADER, NAV_LINKS, STORE_CART_URL, bookingLink, type NavLink } from "@/lib/links";
 import { ArrowIcon } from "@/components/site/Icons";
+import { useCart, useHydrated } from "@/components/store/useCart";
+import { cartCount } from "@/lib/cart";
+import { fill } from "@/i18n/tx";
 
 type NavProps = {
   locale: string;
@@ -16,13 +19,15 @@ type NavProps = {
   /** The booking app and the store's cart, as staff set them. */
   booking?: string;
   cart?: string;
+  /** The site's own store is open (lib/store-core.ts storeOpen): Store and the cart are its pages, the cart with its count. */
+  shop?: boolean;
 };
 
 // The header from SiteNav.dc.html: logo, the site's sections in the middle, and the design's
 // round icons on the end - search, language, account and the cart (the Salla store's cart);
 // below 1180px the sections open as a full-height dark sheet. Community opens the pages its
 // riders use (links.ts, COMMUNITY); the globe opens every language the site speaks.
-export default function SiteNav({ locale, hidden = [], labels = {}, booking = BOOKING_URL, cart = STORE_CART_URL }: NavProps) {
+export default function SiteNav({ locale, hidden = [], labels = {}, booking = BOOKING_URL, cart = STORE_CART_URL, shop = false }: NavProps) {
   const tx = useL();
   const name = (l: { key: string; en: string; ar: string }) => labels[l.key] || tx(l.en, l.ar);
   const arrow = <ArrowIcon size={18} />;
@@ -76,7 +81,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
     return () => { document.removeEventListener("keydown", esc); document.removeEventListener("mousedown", away); };
   }, [menu, setMenu]);
 
-  const item = (l: NavLink, onClick?: () => void, tail?: React.ReactNode) => l.external
+  const item = (l: NavLink, onClick?: () => void, tail?: React.ReactNode) => l.external && !(shop && l.key === "store")
     ? <a key={l.key} href={l.href} onClick={onClick}>{name(l)}{tail}</a>
     : <Link key={l.key} href={l.href} onClick={onClick} aria-current={path === l.href ? "page" : undefined}>{name(l)}{tail}</Link>;
   const inCommunity = community.some((l) => l.href === path);
@@ -139,9 +144,9 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
               ? <a href={accountHref} className="mm-nav-icon" title={label} aria-label={label}>{icon}</a>
               : <Link href="/account" className="mm-nav-icon" title={label} aria-label={label}>{icon}</Link>;
           })()}
-          <a href={cart} className="mm-nav-icon" title={tx("Cart", "السلة")} aria-label={tx("Cart", "السلة")}>
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="M5.5 8.5h13L17.4 20a1.5 1.5 0 0 1-1.5 1.3H8.1A1.5 1.5 0 0 1 6.6 20L5.5 8.5z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg>
-          </a>
+          {shop ? <CartLink /> : (
+            <a href={cart} className="mm-nav-icon" title={tx("Cart", "السلة")} aria-label={tx("Cart", "السلة")}>{CART_ICON}</a>
+          )}
           <button type="button" className="mm-nav-burger" aria-expanded={open} aria-controls="mm-nav-sheet" aria-label={tx("Menu", "القائمة")} onClick={() => setOpen((o) => !o)}>
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
@@ -169,6 +174,33 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
             : <Link href="/account" onClick={() => setOpen(false)}>{tx("Account", "الحساب")}{arrow}</Link>}
         </nav>
       )}
+    </>
+  );
+}
+
+const CART_ICON = <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="M5.5 8.5h13L17.4 20a1.5 1.5 0 0 1-1.5 1.3H8.1A1.5 1.5 0 0 1 6.6 20L5.5 8.5z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg>;
+
+// The site's own cart, with how many things are in it. A change while the page is open (Add to cart, a
+// quantity in the cart) is read out; the count a page opens with is not.
+function CartLink() {
+  const tx = useL();
+  const n = cartCount(useCart());
+  const ready = useHydrated();
+  const label = n === 0 ? tx("Cart", "السلة") : n === 1 ? tx("Cart, 1 item", "السلة، منتج واحد") : fill(tx("Cart, {0} items", "السلة، عدد المنتجات: {0}"), n);
+  const seen = useRef<number | null>(null);
+  const [said, setSaid] = useState("");
+  useEffect(() => {
+    if (!ready) return;
+    if (seen.current !== null && seen.current !== n) setSaid(label);
+    seen.current = n;
+  }, [ready, n, label]);
+  return (
+    <>
+      <Link href="/store/cart" className="mm-nav-icon mm-nav-cart" title={label} aria-label={label}>
+        {CART_ICON}
+        {n > 0 && <span className="mm-cart-n" aria-hidden="true">{n > 99 ? "99+" : n}</span>}
+      </Link>
+      <span className="mm-sr" aria-live="polite">{said}</span>
     </>
   );
 }

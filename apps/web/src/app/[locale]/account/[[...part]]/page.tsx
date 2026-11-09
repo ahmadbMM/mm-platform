@@ -63,6 +63,9 @@ import BadgeCelebrate, { type Cheer } from "@/components/account/BadgeCelebrate"
 import AccountSettings from "@/components/account/AccountSettings";
 import Season from "@/components/account/Season";
 import Purchases from "@/components/account/Purchases";
+import StoreOrders from "@/components/account/StoreOrders";
+import { T as STORE } from "@/components/store/Store.text";
+import { orderOf, type Order } from "@/lib/store-order";
 import NoticeDialog from "@/components/privacy/NoticeDialog";
 import { T as ACCOUNT } from "@/components/account/Account.text";
 import { loadAccountExtras } from "@/lib/account-extras";
@@ -184,7 +187,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const toRate = unratedRides(rows, today).filter((r) => r.date < RATE_FROM && r.entryId !== gate?.entryId).reverse().slice(0, 5);
     // every booked session, whatever its state now (a Petromin night, one staff closed since), read
     // with the account's token so a private ride (one its tag holders alone may see) keeps its name
-    const [sessions, blood, walletRead, referralRaw, lockers] = await Promise.all([
+    const [sessions, blood, walletRead, referralRaw, lockers, orders] = await Promise.all([
       loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
       // the blood type (2026-10-14): no card while the database has no customer_blood_type yet, nor
       // when it cannot be read just now (a card showing none would invite saving over the real one)
@@ -195,6 +198,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       referralP,
       // the lockers (rentals 20261109120000): the period and number on a ticket's locker line; none read, the line says Locker
       rpcServer<unknown>("customer_lockers", { p_id: acct.id, p_token: acct.token }).then((r) => (r.status === 200 ? lockersOf(r.data) : null)),
+      // the online store's orders (rentals 20261110150000): none listed while the database has none or cannot be read
+      rpcServer<unknown>("customer_orders", { p_id: acct.id, p_token: acct.token })
+        .then((r) => (r.status === 200 && Array.isArray(r.data) ? r.data.map((x) => orderOf(x)).filter((x): x is Order => !!x && !!x.key) : [])),
     ]);
     const referral = referralOf(referralRaw, today);
     // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
@@ -326,6 +332,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           <PasswordCard needCurrent={needCurrent} />
           {extras.consents && <RideNews on={extras.consents.rideNews} dialog="ac-privacy" />}
           <PushToggle />
+          {orders.length > 0 && <StoreOrders orders={orders} t={serverLocalize(STORE, locale)} locale={locale} />}
           {extras.purchases && extras.purchases.rows.length > 0 && <Purchases locale={locale} t={at} rows={extras.purchases.rows} total={extras.purchases.total} />}
           {extras.deletion && <DeleteAccount locale={locale} requestedAt={extras.deletion.requestedAt} />}
           <AccountSettings locale={locale} />

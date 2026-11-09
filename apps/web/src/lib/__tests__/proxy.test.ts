@@ -261,6 +261,42 @@ describe("/store", () => {
     expect(await to("/en/store")).toBe("https://stepdragon.com.sa/en");
     expect(await to("/ar/store", { cookie: "NEXT_LOCALE=en" })).toBe("https://stepdragon.com.sa/ar");
   });
+  it("sends the site's own shopping pages to the shop while the store is closed, but never an order or Track order", async () => {
+    for (const p of ["/store/", "/store/cart", "/store/checkout", "/store/da54"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(307);
+      expect(res.headers.get("location"), p).toBe("https://stepdragon.com.sa/ar");
+    }
+    for (const p of ["/store/order/1001?k=abc", "/store/track", "/storefront"]) {
+      expect(String((await call(p)).headers.get("location")), p).not.toContain("stepdragon");
+    }
+  });
+});
+
+describe("the site's own store", () => {
+  const content = (rows: { key: string; value: unknown }[]) => vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(rows), { status: 200, headers: { "content-type": "application/json" } })));
+  beforeEach(() => {
+    resetSiteContent();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    resetSiteContent();
+  });
+  it("opens /store and everything under it once staff open it with payments on", async () => {
+    content([{ key: "site.coming_soon", value: false }, { key: "store.open", value: true }, { key: "pay.enabled", value: true }]);
+    for (const p of ["/store", "/store/cart", "/store/da54", "/store/checkout"]) {
+      const res = await call(p, { cookie: "NEXT_LOCALE=en" });
+      expect(res.status, p).toBe(200);
+      expect(rewrittenTo(res), p).toBe(`/en${p}`);
+    }
+  });
+  it("keeps forwarding to the shop while payments are off", async () => {
+    content([{ key: "site.coming_soon", value: false }, { key: "store.open", value: true }, { key: "pay.enabled", value: false }]);
+    expect((await call("/store")).headers.get("location")).toBe("https://stepdragon.com.sa/ar");
+  });
 });
 
 describe("www.micromobility.sa", () => {
