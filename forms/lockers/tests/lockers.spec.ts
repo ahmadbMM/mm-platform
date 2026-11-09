@@ -409,7 +409,25 @@ test('a forgotten password goes through the booking app, and the lockers picked 
   expect(page.url()).not.toContain('code=');
 });
 
-test('the cabinet is read again every 30 seconds while seen, and a locker picked that went is dropped', async ({ page }) => {
+test('Continue reads the cabinet again first: a locker reserved meanwhile is dropped there, and the account step waits', async ({ page }) => {
+  let gone = false;
+  const { of } = await open(page, '', { locker_board: (b) => json(board(String(b.p_day), gone ? { taken: { e: ['4', '5', '7'], l: [] } } : {})) });
+  await ready(page);
+  await door(page, 5).click();
+  const reads = of('locker_board').length;
+  gone = true;
+  await page.click('#go');
+  await expect(page.locator('#f-cab .err')).toHaveText('Locker 5 was just taken. Pick another.');
+  await expect(door(page, 5)).toBeDisabled();
+  await expect(page.locator('#p-ask')).toBeHidden(); // not on to the account
+  expect(of('locker_board').length).toBe(reads + 1);
+  // nothing taken meanwhile: Continue goes on
+  await door(page, 6).click();
+  await page.click('#go');
+  await expect(page.locator('#p-ask')).toBeVisible();
+});
+
+test('the cabinet is read again every 15 seconds while seen, and a locker picked that went is dropped', async ({ page }) => {
   let gone = false;
   await page.clock.install({ time: NOW });
   const { of } = await open(page, '', { locker_board: (b) => json(board(String(b.p_day), gone ? { taken: { e: ['4', '5', '7'], l: [] } } : {})) });
@@ -418,7 +436,7 @@ test('the cabinet is read again every 30 seconds while seen, and a locker picked
   await door(page, 6).click();
   const reads = of('locker_board').length;
   gone = true;
-  await page.clock.fastForward(31000);
+  await page.clock.fastForward(16000);
   await expect(door(page, 5)).toBeDisabled();
   await expect(page.locator('#f-cab .err')).toHaveText('Locker 5 was just taken. Pick another.');
   await expect(page.locator('#pick-sum')).toHaveText('Locker 6 · \u2066⃁ 10\u2069');

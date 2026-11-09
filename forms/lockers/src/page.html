@@ -1150,7 +1150,7 @@ var MMAccount = (function () {
    1. the evening (locker_evenings: tonight first, the coming ones after; a Petromin night only for a rider signed in
       and booked on it), the time (early 6-8 PM, late 9-11 PM or both on a circuit evening; 7-9 PM on a Petromin
       night) and the cabinet (locker_board: three columns, numbered across the rows, 1-2-3 on top; the doors taken
-      for that time, never who has them), up to three lockers; read again every 30 seconds while the page is seen;
+      for that time, never who has them), up to three lockers; read again every 15 seconds while the page is seen and on Continue;
    2. the account, when not signed in: the booking site's own sign-up (customer_exists, customer_signup,
       customer_consents, customer_set_emergency/2) or its sign-in (customer_login, customer_pwd_state); a
       forgotten password goes through the booking app, which hands the rider back here signed in (?code=,
@@ -1175,7 +1175,8 @@ var MMAccount = (function () {
   var BOOKING_URL = "https://experiences.micromobility.sa/";
   // Up to three lockers per account for each time (customer_locker_book's LOCKER_LIMIT counts the ones held too).
   var MAX_EACH = 3;
-  var POLL_MS = 30000;
+  // The cabinet is read again this often while the page is in view (a locker reserved is nobody else's: the owner, 2026-11-09).
+  var POLL_MS = 15000;
 
   var SH = window.SHARED, T = window.FORM_T || {};
   var html = document.documentElement;
@@ -1486,9 +1487,17 @@ var MMAccount = (function () {
   $("#periods").addEventListener("click", function (e) { var b = e.target.closest("[role=radio]"); if (b && !b.disabled) pickPeriod(b.getAttribute("data-v")); });
   $("#cab-grid").addEventListener("click", function (e) { var b = e.target.closest(".door[data-code]"); if (b && !b.disabled) toggle(b.getAttribute("data-code")); });
   $("#pick-retry").addEventListener("click", function () { if (evenings === undefined || evErr) start2(); else loadBoard(); });
-  $("#go").addEventListener("click", function () {
+  $("#go").addEventListener("click", async function () {
     hideBanner();
     if (!picked.length) { setErr("f-cab", "Pick a locker"); return; }
+    // The cabinet read again first: a locker someone reserved meanwhile is dropped and said here, on the cabinet,
+    // not after the account step (the owner, 2026-11-09: "whenever a locker is reserved dont allow other customers to
+    // choose it"). Reserve is refused by the database all the same.
+    if ($("#go").classList.contains("loading")) return;
+    var n = picked.length;
+    setLoading("#go", true);
+    try { await loadBoard(); } finally { setLoading("#go", false); }
+    if (!picked.length || picked.length < n) return;
     if (acct) enterReview(); else openAccount("ask");
   });
 

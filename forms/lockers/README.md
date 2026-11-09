@@ -19,7 +19,7 @@ light and dark as the device is set.
    the bottom), left to right in Arabic too, as the real one stands; a number missing leaves its place empty. A door
    is free, picked (up to three; a tap again puts it back), taken for that time (a padlock; never who has it) or out of
    service (a cross). A time covers the slots `early` e, `late` l, `both` and `pm` e+l. The board is read again when
-   the evening or the time changes and every 30 seconds while the page is seen; a picked locker taken meanwhile is
+   the evening or the time changes and every 15 seconds while the page is seen and on Continue; a picked locker taken meanwhile is
    dropped and said. A signed-in rider's own lockers count towards the three (`LOCKER_LIMIT`).
 2. **The account**, when not signed in: the booking site's own sign-up and sign-in, exactly as `forms/saturday` asks
    them (the phone's country codes without flags: no emoji). A forgotten password goes through the booking app
