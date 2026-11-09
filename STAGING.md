@@ -34,7 +34,9 @@ git switch main && git merge staging && git push origin main   # when it is appr
 
 CI uses the same tests for both. On `staging` it builds against `STAGING_SUPABASE_URL` /
 `STAGING_SUPABASE_ANON_KEY`, points the two forms at the staging database
-(`scripts/point-forms.mjs`), and deploys `wrangler deploy --env staging`. It never deploys
+(`scripts/point-forms.mjs`), and deploys `wrangler deploy --env staging` (the site, `micromobility-web-staging-site`)
+then `wrangler deploy -c wrangler.edge.jsonc --env staging` (its front, `micromobility-web-staging`, which holds the
+domain; DEPLOY.md). It never deploys
 production from `staging`.
 
 ## Setting it up (once)
@@ -94,7 +96,7 @@ creates the `staging.micromobility.sa` DNS record itself (wrangler.jsonc, a cust
 ## Good to know
 
 - Staging pages have "[Staging]" at the start of their title, every answer is `noindex`, and its
-  robots.txt shuts every crawler out (apps/web/worker.js).
+  robots.txt shuts every crawler out (apps/web/edge/front.js).
 - Links from staging to the booking app go to the live booking app, which uses production's
   database. Don't book through them while testing.
 - Photos in the copied content load from production's storage (they are public). A photo uploaded

@@ -95,6 +95,9 @@ jobs:
       # (commit 9b3e25d has the last version) and re-add it below the secrets check.
       # The real site on micromobility.sa: only once the repository variable
       # MM_PRODUCTION is set to "on" (Settings > Secrets and variables > Actions > Variables).
+      # Two Workers (2026-11-10): the site (wrangler.jsonc, micromobility-web-site) first, then its front
+      # (wrangler.edge.jsonc, micromobility-web), which holds the routes and asks the site through a service binding;
+      # so the front never names a site that is not there yet.
       - name: Deploy production
         if: github.ref == 'refs/heads/main' && vars.MM_PRODUCTION == 'on' && steps.secrets.outputs.present == 'true'
         uses: cloudflare/wrangler-action@v3
@@ -103,6 +106,14 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/web
           command: deploy --env production
+      - name: Deploy production's front
+        if: github.ref == 'refs/heads/main' && vars.MM_PRODUCTION == 'on' && steps.secrets.outputs.present == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/web
+          command: deploy -c wrangler.edge.jsonc --env production
       # The live site answers after the deploy: the site, its health check (which reads the
       # database), the two forms and a bike's tag page (at its new address; /b/1 answers a redirect
       # to it). A tag no bike carries answers 404 with its own friendly page, so the tag page passes
@@ -130,6 +141,14 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/web
           command: deploy --env staging
+      - name: Deploy staging's front
+        if: github.ref == 'refs/heads/staging' && steps.secrets.outputs.present == 'true' && vars.STAGING_SUPABASE_URL != ''
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: apps/web
+          command: deploy -c wrangler.edge.jsonc --env staging
       - name: Staging answers
         if: github.ref == 'refs/heads/staging' && steps.secrets.outputs.present == 'true' && vars.STAGING_SUPABASE_URL != ''
         run: |
