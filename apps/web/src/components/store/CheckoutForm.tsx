@@ -131,119 +131,119 @@ function Checkout({ locale, products, settings, whens, showroom, account, balanc
   const wayName = (id: Fulfil) => (id === "pickup" ? t.pickup : id === "jeddah" ? t.jeddah : t.ksa);
   return (
     <>
-    <form className="st-co" onSubmit={submit} noValidate>
-      <div className="st-co-main">
-        {account ? (
-          <p className="st-who"><Ic name="user" size={18} />{t.signedAs(account.name)}</p>
-        ) : (
-          <div className="st-guest">
-            <div><b>{t.guest}</b><p>{t.guestSub}</p></div>
-            <button type="button" className="bk-btn2" onClick={() => setSignin(true)}>{t.signIn}</button>
-          </div>
-        )}
+      <form className="st-co" onSubmit={submit} noValidate>
+        <div className="st-co-main">
+          {account ? (
+            <p className="st-who"><Ic name="user" size={18} />{t.signedAs(account.name)}</p>
+          ) : (
+            <div className="st-guest">
+              <div><b>{t.guest}</b><p>{t.guestSub}</p></div>
+              <button type="button" className="bk-btn2" onClick={() => setSignin(true)}>{t.signIn}</button>
+            </div>
+          )}
 
-        <section className="bk-card" aria-labelledby="st-co-contact">
-          <h2 id="st-co-contact" className="bk-h3">{t.contact}</h2>
-          <Field id="st-name" label={t.name} value={draft.contact.name} onValue={(v) => setContact({ name: v })} error={errs.name} autoComplete="name" maxLength={60} />
-          <Field id="st-phone" label={t.phone} value={draft.contact.phone} onValue={(v) => setContact({ phone: v })} error={errs.phone} hint={t.phoneWhy}
-            type="tel" inputMode="tel" autoComplete="tel" dir="ltr" placeholder="05X XXX XXXX" maxLength={20} />
-          <Field id="st-email" label={t.email} optional={t.optional} value={draft.contact.email} onValue={(v) => setContact({ email: v })} error={errs.email}
-            type="email" inputMode="email" autoComplete="email" dir="ltr" maxLength={120} />
-        </section>
+          <section className="bk-card" aria-labelledby="st-co-contact">
+            <h2 id="st-co-contact" className="bk-h3">{t.contact}</h2>
+            <Field id="st-name" label={t.name} value={draft.contact.name} onValue={(v) => setContact({ name: v })} error={errs.name} autoComplete="name" maxLength={60} />
+            <Field id="st-phone" label={t.phone} value={draft.contact.phone} onValue={(v) => setContact({ phone: v })} error={errs.phone} hint={t.phoneWhy}
+              type="tel" inputMode="tel" autoComplete="tel" dir="ltr" placeholder="05X XXX XXXX" maxLength={20} />
+            <Field id="st-email" label={t.email} optional={t.optional} value={draft.contact.email} onValue={(v) => setContact({ email: v })} error={errs.email}
+              type="email" inputMode="email" autoComplete="email" dir="ltr" maxLength={120} />
+          </section>
 
-        <section className="bk-card" aria-labelledby="st-co-way">
-          <h2 id="st-co-way" className="bk-h3">{t.how}</h2>
-          <div className="st-ways-pick big" role="radiogroup" aria-labelledby="st-co-way">
-            {options.map((o) => (
-              <label key={o.id} className={fulfil === o.id ? "on" : undefined}>
-                <input type="radio" name="st-fulfil" value={o.id} checked={fulfil === o.id} onChange={() => setDraft((d) => ({ ...d, fulfil: o.id }))} />
-                <span>
-                  <b>{wayName(o.id)}</b>
-                  <small>{o.id === "pickup" ? [showroom.address, showroom.hours].filter(Boolean).join(" · ") : whens[o.id] ? t.arrives(whens[o.id] as string) : ""}</small>
-                </span>
-                <em>{o.fee === 0 ? t.free : <Amt>{sar(o.fee)}</Amt>}</em>
+          <section className="bk-card" aria-labelledby="st-co-way">
+            <h2 id="st-co-way" className="bk-h3">{t.how}</h2>
+            <div className="st-ways-pick big" role="radiogroup" aria-labelledby="st-co-way">
+              {options.map((o) => (
+                <label key={o.id} className={fulfil === o.id ? "on" : undefined}>
+                  <input type="radio" name="st-fulfil" value={o.id} checked={fulfil === o.id} onChange={() => setDraft((d) => ({ ...d, fulfil: o.id }))} />
+                  <span>
+                    <b>{wayName(o.id)}</b>
+                    <small>{o.id === "pickup" ? [showroom.address, showroom.hours].filter(Boolean).join(" · ") : whens[o.id] ? t.arrives(whens[o.id] as string) : ""}</small>
+                  </span>
+                  <em>{o.fee === 0 ? t.free : <Amt>{sar(o.fee)}</Amt>}</em>
+                </label>
+              ))}
+            </div>
+            {!shipsKsa(lines) && settings.delivery.ksa.on && <p className="bk-note">{t.noCourier}</p>}
+          </section>
+
+          {fulfil !== "pickup" && (
+            <section className="bk-card" aria-labelledby="st-co-addr">
+              <h2 id="st-co-addr" className="bk-h3">{t.address}</h2>
+              {errs.address && <p className="bk-ferr" role="alert">{errs.address}</p>}
+              <AddressFields t={t} fulfil={fulfil} a={draft.address} set={setAddress} errs={errs} />
+            </section>
+          )}
+
+          <section className="bk-card" aria-labelledby="st-co-note">
+            <h2 id="st-co-note" className="bk-h3">{t.note}</h2>
+            <div className="bk-field st-field">
+              <label htmlFor="st-note">{t.noteLabel} <span className="bk-hint">{t.optional}</span></label>
+              <textarea id="st-note" rows={3} maxLength={300} value={draft.note} onChange={(e) => setDraft((d) => ({ ...d, note: e.target.value }))} />
+            </div>
+          </section>
+
+          {account && balance > 0 && (
+            <section className="bk-card" aria-labelledby="st-co-wallet">
+              <h2 id="st-co-wallet" className="bk-h3">{t.wallet}</h2>
+              <label className={`bk-agree${wallet ? " on" : ""}`}>
+                <input type="checkbox" role="switch" checked={wallet} onChange={(e) => setWallet(e.target.checked)} />
+                <span>{t.useWallet} <small className="st-bal"><Amt>{t.balance(sar(balance))}</Amt></small></span>
               </label>
-            ))}
-          </div>
-          {!shipsKsa(lines) && settings.delivery.ksa.on && <p className="bk-note">{t.noCourier}</p>}
-        </section>
+            </section>
+          )}
+        </div>
 
-        {fulfil !== "pickup" && (
-          <section className="bk-card" aria-labelledby="st-co-addr">
-            <h2 id="st-co-addr" className="bk-h3">{t.address}</h2>
-            {errs.address && <p className="bk-ferr" role="alert">{errs.address}</p>}
-            <AddressFields t={t} fulfil={fulfil} a={draft.address} set={setAddress} errs={errs} />
-          </section>
-        )}
-
-        <section className="bk-card" aria-labelledby="st-co-note">
-          <h2 id="st-co-note" className="bk-h3">{t.note}</h2>
-          <div className="bk-field st-field">
-            <label htmlFor="st-note">{t.noteLabel} <span className="bk-hint">{t.optional}</span></label>
-            <textarea id="st-note" rows={3} maxLength={300} value={draft.note} onChange={(e) => setDraft((d) => ({ ...d, note: e.target.value }))} />
-          </div>
-        </section>
-
-        {account && balance > 0 && (
-          <section className="bk-card" aria-labelledby="st-co-wallet">
-            <h2 id="st-co-wallet" className="bk-h3">{t.wallet}</h2>
-            <label className={`bk-agree${wallet ? " on" : ""}`}>
-              <input type="checkbox" role="switch" checked={wallet} onChange={(e) => setWallet(e.target.checked)} />
-              <span>{t.useWallet} <small className="st-bal"><Amt>{t.balance(sar(balance))}</Amt></small></span>
-            </label>
-          </section>
-        )}
-      </div>
-
-      <aside className="st-sum st-co-sum" aria-labelledby="st-co-sum">
-        <h2 id="st-co-sum" className="st-sum-h">{t.summary}</h2>
-        <ul className="st-mini">
-          {lines.map((l) => {
-            const p = l.product, v = l.variant;
-            const issue = lineErr[l.item.variant] || (l.issue === "gone" ? t.gone : l.issue === "out" ? t.out : l.issue === "short" ? t.short(v?.stock ?? 0) : "");
-            return (
-              <li key={l.item.variant} className={issue ? "bad" : undefined}>
-                <span className="st-mini-img">{p?.images[0] ? <img src={sized(p.images[0], 640)} alt="" loading="lazy" /> : <NoPhoto />}<i>{l.item.qty}</i></span>
-                <span className="st-mini-mid">
-                  <b>{p ? pick(locale, p.name_en, p.name_ar) : t.unavailable}</b>
-                  {v && variantLabel(v, locale) && <small>{variantLabel(v, locale)}</small>}
-                  {issue && <small className="st-line-issue">{issue}</small>}
-                </span>
-                <Amt>{sar(l.unit * l.item.qty)}</Amt>
-              </li>
-            );
-          })}
-        </ul>
-        <p className="bk-sum-row"><span>{t.subtotal}</span><Amt>{sar(subtotal)}</Amt></p>
-        <p className="bk-sum-row"><span>{wayName(fulfil)}</span>{fee === 0 ? <span>{t.free}</span> : <Amt>{sar(fee)}</Amt>}</p>
-        <p className="bk-sum-tot sep"><span>{t.total}</span><Amt>{sar(total)}</Amt></p>
-        <p className="st-vatline">{t.vatOf(sar(vatIn(total)))}</p>
-        {fromWallet > 0 && (
-          <>
-            <p className="bk-sum-row"><span>{t.fromWallet}</span><Amt>{`− ${sar(fromWallet)}`}</Amt></p>
-            <p className="bk-sum-row st-due"><span>{t.toPay}</span><Amt>{sar(due)}</Amt></p>
-          </>
-        )}
-        <p ref={top} tabIndex={-1} className="bk-err st-co-msg" role="alert">{msg}</p>
-        <button type="submit" className="bk-btn wide st-place" disabled={busy || blocked} aria-busy={busy}>
-          {busy ? <><span className="bk-spin" aria-hidden="true" />{t.placing}</> : <><Ic name="lock" size={17} />{t.place(sar(total))}</>}
-        </button>
-        <p className="st-oblige">{t.oblige}</p>
-        {(links.returns || links.terms) && (
-          <p className="st-legal">
-            {links.returns && <a href={links.returns}>{t.returnsLink}</a>}
-            {links.terms && <a href={links.terms}>{t.terms}</a>}
-          </p>
-        )}
-      </aside>
-    </form>
-    {/* outside the form: the sign-in is a form of its own */}
-    {signin && (
-      <Modal title={t.signTitle} onClose={() => setSignin(false)} closeLabel={t.close}>
-        <p className="bk-sub sm">{t.signSub}</p>
-        <SignIn locale={locale} />
-      </Modal>
-    )}
+        <aside className="st-sum st-co-sum" aria-labelledby="st-co-sum">
+          <h2 id="st-co-sum" className="st-sum-h">{t.summary}</h2>
+          <ul className="st-mini">
+            {lines.map((l) => {
+              const p = l.product, v = l.variant;
+              const issue = lineErr[l.item.variant] || (l.issue === "gone" ? t.gone : l.issue === "out" ? t.out : l.issue === "short" ? t.short(v?.stock ?? 0) : "");
+              return (
+                <li key={l.item.variant} className={issue ? "bad" : undefined}>
+                  <span className="st-mini-img">{p?.images[0] ? <img src={sized(p.images[0], 640)} alt="" loading="lazy" /> : <NoPhoto />}<i>{l.item.qty}</i></span>
+                  <span className="st-mini-mid">
+                    <b>{p ? pick(locale, p.name_en, p.name_ar) : t.unavailable}</b>
+                    {v && variantLabel(v, locale) && <small>{variantLabel(v, locale)}</small>}
+                    {issue && <small className="st-line-issue">{issue}</small>}
+                  </span>
+                  <Amt>{sar(l.unit * l.item.qty)}</Amt>
+                </li>
+              );
+            })}
+          </ul>
+          <p className="bk-sum-row"><span>{t.subtotal}</span><Amt>{sar(subtotal)}</Amt></p>
+          <p className="bk-sum-row"><span>{wayName(fulfil)}</span>{fee === 0 ? <span>{t.free}</span> : <Amt>{sar(fee)}</Amt>}</p>
+          <p className="bk-sum-tot sep"><span>{t.total}</span><Amt>{sar(total)}</Amt></p>
+          <p className="st-vatline">{t.vatOf(sar(vatIn(total)))}</p>
+          {fromWallet > 0 && (
+            <>
+              <p className="bk-sum-row"><span>{t.fromWallet}</span><Amt>{`− ${sar(fromWallet)}`}</Amt></p>
+              <p className="bk-sum-row st-due"><span>{t.toPay}</span><Amt>{sar(due)}</Amt></p>
+            </>
+          )}
+          <p ref={top} tabIndex={-1} className="bk-err st-co-msg" role="alert">{msg}</p>
+          <button type="submit" className="bk-btn wide st-place" disabled={busy || blocked} aria-busy={busy}>
+            {busy ? <><span className="bk-spin" aria-hidden="true" />{t.placing}</> : <><Ic name="lock" size={17} />{t.place(sar(total))}</>}
+          </button>
+          <p className="st-oblige">{t.oblige}</p>
+          {(links.returns || links.terms) && (
+            <p className="st-legal">
+              {links.returns && <a href={links.returns}>{t.returnsLink}</a>}
+              {links.terms && <a href={links.terms}>{t.terms}</a>}
+            </p>
+          )}
+        </aside>
+      </form>
+      {/* outside the form: the sign-in is a form of its own */}
+      {signin && (
+        <Modal title={t.signTitle} onClose={() => setSignin(false)} closeLabel={t.close}>
+          <p className="bk-sub sm">{t.signSub}</p>
+          <SignIn locale={locale} />
+        </Modal>
+      )}
     </>
   );
 }
