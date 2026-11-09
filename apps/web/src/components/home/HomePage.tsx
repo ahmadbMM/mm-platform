@@ -7,18 +7,24 @@ import BuildStory, { type Step } from "@/components/home/BuildStory";
 import PhotoWall from "@/components/home/PhotoWall";
 import FitQuiz, { type QuizText } from "@/components/home/FitQuiz";
 import OpenNow from "@/components/home/OpenNow";
+import LazyMap from "@/components/home/LazyMap";
+import LazyBackgrounds from "@/components/site/LazyBackgrounds";
+import { ArrowIcon } from "@/components/site/Icons";
 import LearnTeaser, { type LearnTeaserText } from "@/components/learn/LearnTeaser";
 import "@/components/site/site.css";
 import "@/components/home/home.css";
 import { bookingLink, localHref, pageOf } from "@/lib/links";
 import { serverL } from "@/i18n/dicts";
-import { localeInfo, isRtl } from "@/i18n/locales";
-import { bg, srcSet } from "@/lib/img";
+import { localeInfo } from "@/i18n/locales";
+import { bg, sized, srcSet } from "@/lib/img";
 
 // Home, from Home.dc.html. Everything it says comes from the staff page (site_content), else
 // the design's words. Sections whose content is still empty (reviews, the numbers strip, the
 // Google rating) are left out rather than shown with invented examples.
 type Sec = Record<string, unknown>;
+/** The shade under the words on the two cards near the end (Ride with us / For business): dark
+ *  enough under the title and text that a bright sky behind them stays readable. */
+const SPLIT_SHADE = "linear-gradient(to top,rgba(0,0,0,.86),rgba(0,0,0,.62) 48%,rgba(0,0,0,.12) 78%),";
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
@@ -27,15 +33,17 @@ const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 export default function HomePage({ locale, home, site, preview, hidden = [], learn = null }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean; hidden?: string[]; learn?: LearnTeaserText | null }) {
   const tx = serverL(locale);
   // A button to a page staff have switched off would only reload Home (the proxy sends it back
-  // here): a ride page opens the booking app instead, any other the WhatsApp chat.
+  // here): a ride page opens the booking app instead, and any other button is left out - it used to
+  // open the WhatsApp chat, so "View the Gallery" opened a chat. "" = no button.
   const RIDE_PAGES = new Set(["experiences", "events", "club", "routes"]);
   const book0 = navFrom(site).booking; // the booking app as staff set it
   const H = (v: unknown) => {
     const href = S(v), pg = pageOf(href);
+    if (!href) return "";
     if (!pg || !hidden.includes(pg)) return localHref(href, locale);
-    return RIDE_PAGES.has(pg) ? bookingLink(book0, locale) : (S(site.social?.whatsapp) || bookingLink(book0, locale));
+    return RIDE_PAGES.has(pg) ? bookingLink(book0, locale) : "";
   };
-  const arrow = (isRtl(locale) ? "←" : "→");
+  const arrow = <ArrowIcon size={17} className="hm-arw" />;
   const e = home.entry, h = home.hero, f = home.feature, st = home.story, c = home.community, r = home.reviews, q = home.quiz, sp = home.split, v = home.visit;
   const contact = site.contact;
   const announcements: Announcement[] = list(site.announce.messages).map((m) => ({ text: S(m.text), cta: S(m.cta), href: S(m.href) }));
@@ -53,51 +61,36 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
     recs: { road: recs("road"), city: recs("city"), trail: recs("trail") },
   };
   const footer: FooterContent = footerFrom(site);
-  // The welcome photos, at the size the split screen draws them (home.css).
-  const riderBg = bg(S(e.riderImage)), bizBg = bg(S(e.bizImage));
+  // The top of the page: one wide photo, its words on a fixed dark shade (home.css .hm-top-shade), so
+  // any photo staff choose stays readable. The photo is the page's largest element: a real <img> in
+  // the HTML, asked for first, never lazy. In Arabic the words and the shade move to the right; the
+  // photo itself is never mirrored.
+  const topImg = S(e.image), bookHref = H(e.bookHref), bizHref = H(e.bizHref);
+  const focus = (n: unknown, d: number) => Math.min(100, Math.max(0, typeof n === "number" ? n : d));
+  const lazy = (url: string, shade = "") => `${shade}url('${url}')`;
 
   return (
     <div className="mm-site" dir={localeInfo(locale).dir}>
-      {/* The welcome photos are the first thing on the screen and its largest element, so they are
-          asked for before the stylesheet names them (React puts these <link>s in <head>). The riders'
-          photo is drawn on every screen - a half, or the phone's whole screen; the business one only
-          where the halves show (home.css hides them at 760px and below). */}
-      <link rel="preload" as="image" href={riderBg} fetchPriority="high" />
-      <link rel="preload" as="image" href={bizBg} fetchPriority="high" media="(min-width: 761px)" />
       <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} />
+      <LazyBackgrounds />
       <main id="mm-main" style={{ paddingTop: 52 }}>
-        {/* Welcome: riders or business */}
-        <section className="hm-entry" aria-label={`${S(e.riderTitle)} / ${S(e.bizTitle)}`}>
-          <a className="hm-entry-half riders" href="#start">
-            <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${riderBg}')` }} />
-            <span className="hm-entry-copy">
-              <span className="hm-entry-tick" />
-              <span className="hm-entry-eyebrow">{S(e.riderEyebrow)}</span>
-              <h2 className="hm-entry-title">{S(e.riderTitle)}</h2>
-              <span className="hm-entry-text">{S(e.riderText)}</span>
-              <span className="hm-btn hm-green hm-entry-btn">{S(e.riderBtn)} <span className="hm-arw">{arrow}</span></span>
-            </span>
-          </a>
-          <a className="hm-entry-half biz" href={H(e.bizHref)}>
-            <span className="hm-entry-bg" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.62),rgba(0,0,0,.05) 55%),url('${bizBg}')` }} />
-            <span className="hm-entry-copy">
-              <span className="hm-entry-tick" />
-              <span className="hm-entry-eyebrow">{S(e.bizEyebrow)}</span>
-              <span className="hm-entry-title" role="heading" aria-level={2}>{S(e.bizTitle)}</span>
-              <span className="hm-entry-text">{S(e.bizText)}</span>
-              <span className="hm-btn hm-light hm-entry-btn">{S(e.bizBtn)} <span className="hm-arw">{arrow}</span></span>
-            </span>
-          </a>
-          <div className="hm-entry-divider" aria-hidden="true" />
-          <div className="hm-entry-phone" style={{ backgroundImage: `linear-gradient(to top,rgba(251,249,244,.95),rgba(251,249,244,.5) 40%,rgba(251,249,244,0) 70%),url('${riderBg}')` }}>
-            <p className="hm-est mm-lat">EST. JEDDAH · 21°32′N</p>
-            {/* The page's one heading. A wider screen shows the two halves instead (each an h2), and keeps this
-                heading for screen readers alone (home.css). */}
-            <h1>{S(e.phoneTitle)}</h1>
-            <p>{S(e.phoneText)}</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-              <a href="#start" className="hm-btn hm-green">{S(e.riderBtn)} <span className="hm-arw">{arrow}</span></a>
-              <a href={H(e.bizHref)} className="hm-btn hm-ghost">{S(e.bizBtn)} <span className="hm-arw">{arrow}</span></a>
+        <section className="hm-top" aria-labelledby="hm-top-title">
+          {topImg && (
+            <img className="hm-top-img" src={sized(topImg, 1280)} srcSet={srcSet(topImg)} sizes="100vw" alt="" width={2000} height={1333}
+              fetchPriority="high" style={{ objectPosition: `${focus(e.focusX, 50)}% ${focus(e.focusY, 62)}%` }} />
+          )}
+          <span className="hm-top-shade" aria-hidden="true" />
+          <div className="hm-top-copy">
+            <h1 id="hm-top-title">{S(e.title)}</h1>
+            {S(e.text) && <p>{S(e.text)}</p>}
+            <div className="hm-top-btns">
+              {bookHref && S(e.bookBtn) && <a href={bookHref} className="hm-btn hm-neon">{S(e.bookBtn)} {arrow}</a>}
+              {bizHref && S(e.bizBtn) && (
+                <a href={bizHref} className="hm-btn hm-glass hm-top-biz">
+                  <span>{S(e.bizBtn)}</span>
+                  {S(e.bizLine) && <small>{S(e.bizLine)}</small>}
+                </a>
+              )}
             </div>
           </div>
         </section>
@@ -107,7 +100,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
         {/* Hero */}
         <header className="hm-hero" id="start">
           <div className="hm-hero-meta">
-            <span className="hm-coord mm-lat">EST. JEDDAH</span>
+            <span className="hm-coord">{tx("EST. JEDDAH", "تأسست في جدة")}</span>
             <span className="hm-hero-eyebrow">{S(h.eyebrow)}</span>
             <span className="hm-coord mm-lat">21°32′N · 39°10′E</span>
           </div>
@@ -123,27 +116,28 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
               <div key={i}><strong>{S(b.title)}</strong><span>{S(b.sub)}</span></div>
             ))}
           </div>
+          {/* The brands, still: the strip used to scroll for ever, which nobody could stop (WCAG 2.2.2). */}
           {list(h.brands).length > 0 && (
-            <div className="hm-marquee" dir="ltr" aria-hidden="true">
-              <div>
-                {[...list(h.brands), ...list(h.brands), ...list(h.brands), ...list(h.brands)].map((b, i) => <span key={i}>{S(b.name)}</span>)}
-              </div>
-            </div>
+            <ul className="hm-marquee" dir="ltr">
+              {list(h.brands).map((b, i) => S(b.name) && <li key={i}>{S(b.name)}</li>)}
+            </ul>
           )}
         </header>
 
         {/* Featured bike */}
         <section className="hm-feature" aria-label={S(f.title)}>
           <div className="hm-feature-card">
-            <a href={H(f.ctaHref)} className="hm-feature-img" style={{ backgroundImage: `url('${bg(S(f.image))}')` }} aria-label={S(f.title)} />
+            {H(f.ctaHref)
+              ? <a href={H(f.ctaHref)} className="hm-feature-img" data-bg={lazy(bg(S(f.image)))} aria-label={S(f.title)} />
+              : <span className="hm-feature-img" data-bg={lazy(bg(S(f.image)))} />}
             <div className="hm-feature-body">
               <span className="hm-eyebrow">{S(f.eyebrow)}</span>
               <h2>{S(f.title)}</h2>
               <p>{S(f.text)}</p>
               <div className="hm-chips">{list(f.chips).map((x, i) => S(x.label) && <span key={i}>{S(x.label)}</span>)}</div>
               <div className="hm-feature-ctas">
-                <a href={H(f.ctaHref)} className="hm-btn hm-green">{S(f.cta)}</a>
-                <a href={H(f.cta2Href)} className="hm-btn hm-line">{S(f.cta2)}</a>
+                {H(f.ctaHref) && S(f.cta) && <a href={H(f.ctaHref)} className="hm-btn hm-green">{S(f.cta)}</a>}
+                {H(f.cta2Href) && S(f.cta2) && <a href={H(f.cta2Href)} className="hm-btn hm-line">{S(f.cta2)}</a>}
               </div>
             </div>
           </div>
@@ -155,8 +149,8 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
         <section className="hm-community" aria-label={S(c.title)}>
           <h2>{S(c.title)}</h2>
           <p>{S(c.text)}</p>
-          {photos.length > 0 && <PhotoWall photos={photos} label={S(c.title)} closeLabel={tx("Close", "إغلاق")} />}
-          {S(c.button) && S(c.buttonHref) && (
+          {photos.length > 0 && <PhotoWall photos={photos} label={S(c.title)} closeLabel={tx("Close", "إغلاق")} photoLabel={tx("Photo {n} of {total}", "الصورة {n} من {total}")} />}
+          {S(c.button) && H(c.buttonHref) && (
             <div className="hm-center"><a href={H(c.buttonHref)} className="hm-outline-btn">{S(c.button)}</a></div>
           )}
           {stats.length > 0 && (
@@ -190,14 +184,20 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
         {learn && <LearnTeaser locale={locale} t={learn} place="home" />}
 
         {/* Experiences & business */}
-        <section className="hm-split" id="split">
-          <a href={H(sp.rentHref)} style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.06) 55%),url('${bg(S(sp.rentImage))}')` }}>
-            <div><h3>{S(sp.rentTitle)}</h3><p>{S(sp.rentText)}</p><span className="hm-btn hm-green">{S(sp.rentBtn)}</span></div>
-          </a>
-          <a href={H(sp.bizHref)} style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.8),rgba(0,0,0,.06) 55%),url('${bg(S(sp.bizImage))}')` }}>
-            <div><h3>{S(sp.bizTitle)}</h3><p>{S(sp.bizText)}</p><span className="hm-btn hm-light">{S(sp.bizBtn)}</span></div>
-          </a>
-        </section>
+        {(H(sp.rentHref) || H(sp.bizHref)) && (
+          <section className="hm-split" id="split">
+            {H(sp.rentHref) && (
+              <a href={H(sp.rentHref)} data-bg={lazy(bg(S(sp.rentImage)), SPLIT_SHADE)}>
+                <div><h3>{S(sp.rentTitle)}</h3><p>{S(sp.rentText)}</p><span className="hm-btn hm-green">{S(sp.rentBtn)} {arrow}</span></div>
+              </a>
+            )}
+            {H(sp.bizHref) && (
+              <a href={H(sp.bizHref)} data-bg={lazy(bg(S(sp.bizImage)), SPLIT_SHADE)}>
+                <div><h3>{S(sp.bizTitle)}</h3><p>{S(sp.bizText)}</p><span className="hm-btn hm-light">{S(sp.bizBtn)} {arrow}</span></div>
+              </a>
+            )}
+          </section>
+        )}
 
         {/* Visit */}
         <section className="hm-visit" id="visit" aria-label={S(v.title)}>
@@ -217,7 +217,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
               {S(contact.mapsHref) && <a href={S(contact.mapsHref)} target="_blank" rel="noopener noreferrer" className="dark">{S(v.directions)}</a>}
             </div>
           </div>
-          <iframe title={S(v.title)} src="https://www.google.com/maps?q=Micromobility+Jeddah+Saudi+Arabia&output=embed" loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+          <LazyMap title={S(v.title)} src="https://www.google.com/maps?q=Micromobility+Jeddah+Saudi+Arabia&output=embed" />
         </section>
       </main>
       <SiteFooter locale={locale} c={footer} hidden={hidden} booking={book0} />

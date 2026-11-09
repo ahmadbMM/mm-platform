@@ -4,8 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, usePathname } from "@/i18n/navigation";
 import SiteSearch from "@/components/site/SiteSearch";
 import { useL } from "@/i18n/TxProvider";
-import { LOCALES, isRtl, localeInfo } from "@/i18n/locales";
+import { LOCALES, localeInfo } from "@/i18n/locales";
 import { BOOKING_URL, COMMUNITY, HEADER, NAV_LINKS, STORE_CART_URL, bookingLink, type NavLink } from "@/lib/links";
+import { ArrowIcon } from "@/components/site/Icons";
 
 type NavProps = {
   locale: string;
@@ -19,13 +20,12 @@ type NavProps = {
 
 // The header from SiteNav.dc.html: logo, the site's sections in the middle, and the design's
 // round icons on the end - search, language, account and the cart (the Salla store's cart);
-// below 1080px the sections open as a full-height dark sheet. Community opens the pages its
+// below 1180px the sections open as a full-height dark sheet. Community opens the pages its
 // riders use (links.ts, COMMUNITY); the globe opens every language the site speaks.
 export default function SiteNav({ locale, hidden = [], labels = {}, booking = BOOKING_URL, cart = STORE_CART_URL }: NavProps) {
   const tx = useL();
   const name = (l: { key: string; en: string; ar: string }) => labels[l.key] || tx(l.en, l.ar);
-  const rtl = isRtl(locale);
-  const arrow = rtl ? "←" : "→";
+  const arrow = <ArrowIcon size={18} />;
   const byKey = (k: string) => NAV_LINKS.find((l) => l.key === k && !hidden.includes(l.key));
   const community = COMMUNITY.pages.map(byKey).filter((l): l is NavLink => !!l);
   // The account page, once staff switch it on; until then the booking app's own account.
@@ -154,7 +154,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
         <nav id="mm-nav-sheet" className="mm-nav-sheet" dir={here.dir} aria-label={tx("Sections", "الأقسام")}>
           {HEADER.map((k) => {
             const close = () => setOpen(false);
-            const tail = <span aria-hidden="true">{arrow}</span>;
+            const tail = arrow;
             if (k !== COMMUNITY.key) { const l = byKey(k); return l ? item(l, close, tail) : null; }
             if (!community.length) return null;
             return (
@@ -165,8 +165,8 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
             );
           })}
           {accountHref
-            ? <a href={accountHref}>{tx("Account", "الحساب")}<span aria-hidden="true">{arrow}</span></a>
-            : <Link href="/account" onClick={() => setOpen(false)}>{tx("Account", "الحساب")}<span aria-hidden="true">{arrow}</span></Link>}
+            ? <a href={accountHref}>{tx("Account", "الحساب")}{arrow}</a>
+            : <Link href="/account" onClick={() => setOpen(false)}>{tx("Account", "الحساب")}{arrow}</Link>}
         </nav>
       )}
     </>

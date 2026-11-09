@@ -1,5 +1,5 @@
 import { Link } from "@/i18n/navigation";
-import { isRtl } from "@/i18n/locales";
+import { ArrowIcon } from "@/components/site/Icons";
 import "./teaser.css";
 
 // The question "Never learned to ride?" and the way to the lessons sign-up (/experiences/learn), on
@@ -18,7 +18,7 @@ export function learnTeaser(l: { on: boolean; taking: boolean; teaserEyebrow: st
   return { eyebrow: l.teaserEyebrow, title: l.teaserTitle, text: l.teaserText, button: l.teaserBtn, closed: false };
 }
 
-export default function LearnTeaser({ locale, t, place }: { locale: string; t: LearnTeaserText; place: "home" | "experiences" }) {
+export default function LearnTeaser({ t, place }: { locale: string; t: LearnTeaserText; place: "home" | "experiences" }) {
   const h = `ln-tz-${place}-h`;
   return (
     <section className={`ln-tz ln-tz-${place}${t.closed ? " ln-tz-closed" : ""}`} aria-labelledby={h}>
@@ -27,7 +27,7 @@ export default function LearnTeaser({ locale, t, place }: { locale: string; t: L
         <h2 id={h}>{t.title}</h2>
         {t.text && <p className="ln-tz-text">{t.text}</p>}
       </div>
-      {!t.closed && <Link className="ln-tz-btn" href="/experiences/learn">{t.button} <span aria-hidden="true">{isRtl(locale) ? "←" : "→"}</span></Link>}
+      {!t.closed && <Link className="ln-tz-btn" href="/experiences/learn">{t.button} <ArrowIcon size={16} /></Link>}
     </section>
   );
 }

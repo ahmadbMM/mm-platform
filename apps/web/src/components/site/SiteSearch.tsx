@@ -7,6 +7,7 @@ import { useL } from "@/i18n/TxProvider";
 import { localeInfo } from "@/i18n/locales";
 import { phrase } from "@/i18n/tx";
 import { searchIndex, type SearchItem } from "@/app/[locale]/search-index";
+import { ArrowIcon, CloseIcon } from "@/components/site/Icons";
 
 // The header's search (SiteNav.dc.html): finds this site's pages by their names - in English,
 // Arabic and the page's language - and by what they are about, and, below them, the answers and
@@ -73,11 +74,11 @@ export default function SiteSearch({ locale, hidden, onClose, back }: { locale: 
         <div className="mm-search-row">
           <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.8-3.8" /></svg>
           <input ref={input} value={q} onChange={(e) => setQ(e.target.value)} placeholder={tx("Search the site", "ابحث في الموقع")} aria-label={tx("Search the site", "ابحث في الموقع")} />
-          <button type="button" onClick={onClose} aria-label={tx("Close", "إغلاق")}>×</button>
+          <button type="button" onClick={onClose} aria-label={tx("Close", "إغلاق")}><CloseIcon size={20} /></button>
         </div>
         <div className="mm-search-list">
           {found.length === 0 && answers.length === 0 ? <p>{tx("Nothing found.", "لا نتائج.")}</p> : found.map((p) => (
-            <a key={p.key} href={p.href} onClick={onClose}>{tx(p.en, p.ar)}<span aria-hidden="true">{info.dir === "rtl" ? "←" : "→"}</span></a>
+            <a key={p.key} href={p.href} onClick={onClose}>{tx(p.en, p.ar)}<ArrowIcon size={16} /></a>
           ))}
           {answers.length > 0 && (
             <>
@@ -85,7 +86,7 @@ export default function SiteSearch({ locale, hidden, onClose, back }: { locale: 
               {answers.map((x, i) => (
                 <a key={x.href + i} href={x.href} onClick={onClose} className="mm-search-item">
                   <span><strong>{x.title}</strong>{x.text && <small>{snippet(x.text, needle)}</small>}</span>
-                  <span aria-hidden="true">{info.dir === "rtl" ? "←" : "→"}</span>
+                  <ArrowIcon size={16} />
                 </a>
               ))}
             </>

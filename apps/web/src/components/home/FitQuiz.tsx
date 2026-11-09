@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { fmtSar } from "@/lib/fill";
 import { bg } from "@/lib/img";
 
@@ -10,7 +10,7 @@ type Rec = { name: string; image: string; price: number; why: Record<"speed" | "
 export type QuizText = { title: string; text: string; q1: string; q2: string; match: string; cta: string; ctaHref: string; retake: string;
   rides: { id: "road" | "city" | "trail"; label: string }[]; prios: { id: "speed" | "comfort" | "value"; label: string }[]; recs: Record<"road" | "city" | "trail", Rec> };
 
-export default function FitQuiz({ q, locale, arrow }: { q: QuizText; locale: string; arrow: string }) {
+export default function FitQuiz({ q, locale, arrow }: { q: QuizText; locale: string; arrow: ReactNode }) {
   const [ride, setRide] = useState<"" | "road" | "city" | "trail">("");
   const [prio, setPrio] = useState<"" | "speed" | "comfort" | "value">("");
   const rec = ride && prio ? q.recs[ride] : null;
@@ -43,7 +43,7 @@ export default function FitQuiz({ q, locale, arrow }: { q: QuizText; locale: str
                 <strong>{rec.name}</strong>
                 <span className="why">{rec.why[prio]}</span>
                 <div className="row">
-                  <a href={q.ctaHref} className="hm-btn hm-green">{q.cta} <span className="hm-arw">{arrow}</span></a>
+                  <a href={q.ctaHref} className="hm-btn hm-green">{q.cta} {arrow}</a>
                   {rec.price > 0 && <span className="price">{money(rec.price)}</span>}
                   <button type="button" className="retake" onClick={() => { setRide(""); setPrio(""); }}>{q.retake}</button>
                 </div>

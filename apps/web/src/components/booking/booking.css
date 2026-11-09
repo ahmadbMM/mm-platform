@@ -123,11 +123,11 @@
 .tk-wallet-msg { margin: 0; font-size: 11.5px; font-weight: 600; line-height: 1.45; color: #8a5c14; }
 .tk-manage { display: flex; gap: 8px; flex-wrap: wrap; padding: 14px 18px 16px; }
 .tk-btn { flex: 1; min-width: 88px; height: 44px; padding: 0 16px; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  border-radius: 0; background: #fff; color: #1a1919 !important; border: 1px solid rgba(26, 25, 25, .24);
+  border-radius: 10px; background: #fff; color: #1a1919 !important; border: 1px solid rgba(26, 25, 25, .24);
   font-size: 12px; font-weight: 700; text-decoration: none; white-space: nowrap; transition: background .2s, border-color .2s; }
 .tk-btn svg { flex: none; } /* a long label must not squeeze the icon to nothing */
 .tk-btn:hover { background: rgba(26, 25, 25, .04); }
-.tk-btn.solid { border-radius: 0; background: #077a4b; border-color: #077a4b; color: #fff !important; }
+.tk-btn.solid { border-radius: 999px; background: #077a4b; border-color: #077a4b; color: #fff !important; }
 .tk-btn.solid:hover { background: #06603b; }
 .tk-btn.red { color: #a33b2e !important; border-color: rgba(163, 59, 46, .4); }
 /* The night ticket: a place is held (booked or checked in, its code out). Near-black with neon,
@@ -284,18 +284,18 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-rr-q { font-size: 16px; font-weight: 800; color: #a22b63; }
 .tk-rr-sub { font-size: 13px; line-height: 1.45; color: #5b3a4a; }
 .tk-rr-yn { display: flex; gap: 8px; }
-.tk-rr-yn button { flex: 1 1 0; min-height: 44px; border-radius: 0; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1.5px solid rgba(162, 43, 99, .4); }
+.tk-rr-yn button { flex: 1 1 0; min-height: 44px; border-radius: 14px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1.5px solid rgba(162, 43, 99, .4); }
 .tk-rr-yn button:hover { border-color: #a22b63; }
 .tk-rr-yn button[aria-pressed="true"] { background: #a22b63; border-color: #a22b63; color: #fff; }
 .tk-rr-yn button:disabled { opacity: .6; cursor: default; }
 .tk-rr-no { display: grid; gap: 8px; }
-.tk-rr .tk-rr-link { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 0; text-decoration: none; background: #a22b63; border: 1.5px solid #a22b63; color: #fff; font-size: 14px; font-weight: 700; text-align: center; }
+.tk-rr .tk-rr-link { display: flex; align-items: center; justify-content: center; min-height: 44px; padding: 0 16px; border-radius: 999px; text-decoration: none; background: #a22b63; border: 1.5px solid #a22b63; color: #fff; font-size: 14px; font-weight: 700; text-align: center; }
 .tk-rr .tk-rr-link:hover { background: #861f50; border-color: #861f50; }
 .tk-rr :focus-visible { outline: 2px solid #a22b63; outline-offset: 2px; }
 .tk-rr.tk-rr-done { display: flex; align-items: center; gap: 10px; border-width: 1px; border-color: rgba(162, 43, 99, .3); background: #fdf1f6; font-size: 13.5px; font-weight: 600; }
 .tk-rr-done > svg { color: #a22b63; flex: none; }
 .tk-rr-done > span { flex: 1 1 auto; min-width: 0; }
-.tk-rr-done button { flex: none; min-height: 36px; padding: 0 14px; border-radius: 0; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1px solid rgba(162, 43, 99, .4); }
+.tk-rr-done button { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1px solid rgba(162, 43, 99, .4); }
 .tk-rr-err { font-size: 13px; font-weight: 600; color: #b42318; }
 @media (max-width: 400px) { .tk-defe-k { min-width: 0; width: 100%; } }
 .tk-type.tk-vl { background: #0d0d0d; color: #fff; border-color: #0d0d0d; white-space: normal; }

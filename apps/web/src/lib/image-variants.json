@@ -122,6 +122,14 @@
    1280
   ]
  },
+ "/site/home/hero.jpg": {
+  "width": 2000,
+  "variants": [
+   640,
+   1280,
+   2000
+  ]
+ },
  "/site/home/quiz-city.jpg": {
   "width": 900,
   "variants": [
