@@ -17,6 +17,12 @@ export function formAddress(pathname: string): string | null {
   const p = pathname.toLowerCase().replace(/\/+$/, "");
   return FORM_ADDRESSES.includes(p) ? p : null;
 }
+// The forms that are pages of the website now (app/[locale]/<address>: the site's header, footer and languages around
+// the form; the user, 2026-11-09). The others still answer with the page their build writes (app/<address>/route.ts), and
+// every one of them does with ?classic=1, kept while the website's pages settle in. Either way a form opens whatever
+// Coming Soon says (the page itself answers with the form's own while the site is closed: components/forms/FormPage.tsx).
+export const SITE_FORMS: readonly string[] = ["/community/registration"];
+export const formOnSite = (form: string, params: URLSearchParams) => SITE_FORMS.includes(form) && !params.has("classic");
 
 // micromobility.sa/store opens the online store (a hosted Salla shop, on its own domain), at the
 // address staff set (Website > Whole site > Other addresses), in English when the visitor reads
@@ -101,6 +107,8 @@ export default async function proxy(req: NextRequest) {
   // (/Petromin, /community/Registration/) is sent there, as their own Workers did.
   const form = formAddress(pathname);
   if (form && form !== pathname) return NextResponse.redirect(new URL(form + req.nextUrl.search, req.url), 301);
+  // A form's own page: nothing here applies to it (the route answers it as it is).
+  if (form && !formOnSite(form, searchParams)) return NextResponse.next();
   const store = await storeTarget(pathname, req);
   if (store) return NextResponse.redirect(store, 307);
   const staffTap = staffTapTarget(pathname, searchParams, req.cookies.get(STAFF_TAP_COOKIE)?.value);
@@ -142,7 +150,7 @@ export default async function proxy(req: NextRequest) {
   // state - Coming Soon on, or the Bikes page not switched on. It is never a catalogue page: a
   // category's address starts with a letter (the database insists), so digits can only be a tag.
   // The Learn to ride sign-up and the Privacy Notice open the same way (LEARN_PAGE, PRIVACY_PAGE).
-  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname)) return keepLang(intl(req));
+  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname) || form) return keepLang(intl(req));
   // While the site is Coming Soon, it is the only page: /login, /about and anything else go
   // back to it. /store forwards to the shop before this runs (above), and the old /b/42 tag
   // address is redirected to /bikes/42 before this runs (next.config redirects).
@@ -169,8 +177,6 @@ export default async function proxy(req: NextRequest) {
 // handled as a site page, whatever else changes. /bikes/42 itself does come here (FLEET_PAGE).
 // Only /b and /api themselves and what is under them: a bare "b" also caught /business, which
 // was a 404 once its address lost the /en in front.
-// The registration forms are excluded too (app/community/registration, app/petromin, the Defe
-// booking page app/defe and the Saturday ride's app/saturday): they
-// are public whatever Coming Soon says, and they carry their own languages. Their exact
-// addresses only - /Petromin and the like still come here and are sent to the real one.
-export const config = { matcher: ["/((?!api/|api$|b/|b$|_next|community/registration$|petromin$|defe$|saturday$|.*\\..*).*)"] };
+// The registration forms come here too: a form that is a page of the website is drawn through next-intl like any page
+// (whatever Coming Soon says), and one that is not - or any with ?classic=1 - is let through untouched to its own route.
+export const config = { matcher: ["/((?!api/|api$|b/|b$|_next|.*\\..*).*)"] };

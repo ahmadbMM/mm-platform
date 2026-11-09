@@ -211,13 +211,29 @@ describe("which addresses the proxy sees", () => {
   it("leaves the tags' old address (next.config redirects it), the API and files alone", () => {
     for (const p of ["/b", "/b/42", "/api", "/api/preview", "/_next/static/x.js", "/site/logo.png", "/robots.txt"]) expect(seen(p), p).toBe(false);
   });
-  it("leaves the two registration forms alone, so Coming Soon never covers them", () => {
-    for (const p of ["/petromin", "/community/registration", "/community/registration/og-image.png", "/defe", "/saturday"]) expect(seen(p), p).toBe(false);
-    for (const p of ["/community", "/petrominx", "/Petromin", "/community/Registration", "/Defe", "/defense", "/Saturday", "/saturdays"]) expect(seen(p), p).toBe(true);
+  it("sees the registration forms' addresses too (it decides whether the website's page or the form's own answers), never their files", () => {
+    for (const p of ["/petromin", "/community/registration", "/defe", "/saturday", "/community", "/petrominx", "/Petromin", "/community/Registration", "/Defe", "/defense", "/Saturday", "/saturdays"]) expect(seen(p), p).toBe(true);
+    expect(seen("/community/registration/og-image.png")).toBe(false);
   });
 });
 
 describe("the registration forms' addresses", () => {
+  // No database here, so the site reads as Coming Soon: a form opens all the same.
+  it("lets a form that is not a page of the website through untouched to its own page, and any form with ?classic=1", async () => {
+    for (const p of ["/petromin", "/defe", "/saturday?lang=ar", "/community/registration?classic=1", "/community/registration?classic=1&lang=ar"]) {
+      const res = await call(p);
+      expect(res.headers.get("x-middleware-next"), p).toBe("1");
+      expect(res.headers.get("x-middleware-rewrite"), p).toBeNull();
+      expect(res.status, p).toBe(200);
+    }
+  });
+  it("draws the community application as a page of the website, whatever Coming Soon says", async () => {
+    for (const [p, lang] of [["/community/registration", "en"], ["/community/registration?lang=ar", "ar"], ["/community/registration?code=x&lang=fr", "fr"]]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(200);
+      expect(res.headers.get("x-middleware-rewrite") ?? "", p).toContain(`/${lang}/community/registration`);
+    }
+  });
   it("send another spelling to the one real address, with its query", async () => {
     for (const [from, to] of [["/Petromin", "/petromin"], ["/PETROMIN/", "/petromin"], ["/community/Registration?lang=ar", "/community/registration?lang=ar"], ["/Defe?lang=ar", "/defe?lang=ar"], ["/DEFE/", "/defe"], ["/Saturday?lang=ar", "/saturday?lang=ar"], ["/SATURDAY/", "/saturday"]]) {
       const res = await call(from);

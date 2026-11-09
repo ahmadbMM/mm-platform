@@ -1,0 +1,4 @@
+/* A registration form inside a page of the website (components/forms/FormPage.tsx). The form's box is as tall as the
+   form: on its own page it filled the screen (min-height: 100vh), which left a gap above the site's footer. */
+.mmf-page .mmf { min-height: 0; }
+.mmf-page { padding-block: 20px 4px; }

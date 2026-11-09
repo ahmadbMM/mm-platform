@@ -15,8 +15,11 @@
   "use strict";
   // The public anon key (the same one the booking site ships): community_apply is a
   // SECURITY DEFINER function that checks and throttles on the server.
-  var SUPABASE_URL = "https://qpffkzmsfyilicwcsszz.supabase.co";
-  var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
+  // On the website (forms/shared/site-form.mjs) the page hands over its language and the database it talks to itself
+  // (staging's on staging): window.MM_SITE_FORM = {lang, db: {url, key}}. The page built on its own (?classic=1) uses these.
+  var SITE_FORM = window.MM_SITE_FORM || null;
+  var SUPABASE_URL = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.url) || "https://qpffkzmsfyilicwcsszz.supabase.co";
+  var SUPABASE_KEY = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.key) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
   var LANG_KEY = "mm-community-lang";
   // The booking site: where an existing account signs in (it hands the rider back here signed in).
   var BOOKING_URL = "https://experiences.micromobility.sa/";
@@ -62,6 +65,8 @@
   /* ── Language ────────────────────────────────────────────────────────── */
   function pickLang() {
     var codes = SH.LANGS.map(function (l) { return l.code; });
+    // on the website the site's language picker decides (it reloads the page in the language chosen)
+    if (SITE_FORM && codes.indexOf(SITE_FORM.lang) >= 0) return SITE_FORM.lang;
     var q = (new URLSearchParams(location.search).get("lang") || "").toLowerCase();
     if (codes.indexOf(q) >= 0) return q;
     try { var s = localStorage.getItem(LANG_KEY); if (codes.indexOf(s) >= 0) return s; } catch (e) {}
@@ -105,7 +110,7 @@
     lang = code;
     html.lang = code; html.dir = langInfo(code).rtl ? "rtl" : "ltr";
     if (save) { try { localStorage.setItem(LANG_KEY, code); } catch (e) {} }
-    $("#lang").value = code;
+    if ($("#lang")) $("#lang").value = code;
     paint();
   }
   function paint() {
@@ -133,7 +138,7 @@
   // "I have read the {Privacy Notice}", the notice a button that opens it.
   function ackLabel(id) { return esc(site("privacyAckOpt")).replace("{0}", '<button type="button" class="pv-link" id="' + id + '">' + esc(site("privacyNotice")) + "</button>") + ' <span class="req" aria-hidden="true">*</span>'; }
   (function buildLangs() {
-    var sel = $("#lang");
+    var sel = $("#lang"); if (!sel) return; // on the website the site's own picker is the one
     sel.innerHTML = SH.LANGS.map(function (l) { return '<option value="' + l.code + '">' + esc(l.label) + "</option>"; }).join("");
     sel.addEventListener("change", function () { setLang(sel.value, true); try { var u = new URL(location.href); u.searchParams.set("lang", sel.value); history.replaceState(null, "", u); } catch (e) {} });
   })();
@@ -1244,7 +1249,7 @@
   }
 
   // Test hook: the specs read the payload the form would send without a network.
-  window.CommunityForm = { e164: e164, checkEmail: checkEmail, checkName: checkName, liNorm: liNorm, igNorm: igNorm, emRead: emRead };
+  window.CommunityForm = { setLang: setLang, e164: e164, checkEmail: checkEmail, checkName: checkName, liNorm: liNorm, igNorm: igNorm, emRead: emRead };
 
   setLang(pickLang(), false);
   if (TRACK != null) showTrack(TRACK);

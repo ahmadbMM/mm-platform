@@ -68,6 +68,10 @@ jobs:
         run: |
           npm ci --prefix e2e/site --no-audit --no-fund
           (cd e2e/site && npx playwright install --with-deps chromium && npm run e2e)
+      # The registration forms on their pages of the website (app/[locale]/<address>): the same specs as on the forms' own
+      # pages (forms/<name>/playwright.site.config.ts), against the website built above.
+      - name: Form specs on the website's pages
+        run: (cd forms/community && npm run e2e:site)
       # The production deploy below needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
       # Without them wrangler-action runs with empty values and fails, turning a push red for
       # a step that was never going to work, so check once and skip instead.
