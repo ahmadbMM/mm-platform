@@ -5,7 +5,7 @@
 import { intlOf } from "@/i18n/locales";
 import { fill as fillAt } from "@/i18n/tx";
 import { fill as fillNamed } from "./fill";
-import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, type RideKind } from "./rides";
+import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, wlCollectSlot, type RideKind } from "./rides";
 import { riyadhClock } from "./workshop-days";
 import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
 import { AH_VENUE, ahConfig, ahEntry, ahHold, isArenaId, type AhConfig, type AhEntry } from "./arena";
@@ -86,6 +86,8 @@ export type TicketSession = {
   gathers: boolean;
   /** Bikes are handed out from this time (the circuit's _collect). */
   collect: string | null;
+  /** The waitlist's own collection time staff set (rides.ts wlCollectSlot): "HH:MM", "" for none, absent when unset. */
+  wlCollect?: string;
   meetUrl: string | null;
   free: boolean;
   /** Nothing to pay, as the booking app's _isFreeRide counts it for a ride ridden: any community
@@ -286,6 +288,7 @@ export function ticketSession(r: Row): TicketSession | null {
   const community = r.event_kind === "community";
   // the session's own time, or 45 minutes before the start (sessionCollectTime)
   const collect = collectTime(r.bike_slots);
+  const wlCollect = wlCollectSlot(r.bike_slots);
   const meet = S(r.meet_url);
   return {
     id: r.id, date: r.session_date, kind, title: S(r.title).trim() || null,
@@ -294,6 +297,7 @@ export function ticketSession(r: Row): TicketSession | null {
     times: slotTimes(r.bike_slots),
     gathers: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap",
     collect,
+    ...(wlCollect !== undefined ? { wlCollect } : {}),
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
@@ -408,10 +412,13 @@ export function ticketCue(rows: TicketRow[], s: TicketSession | undefined, ahead
   return null;
 }
 
-/** A waitlisted rider's collection time on a circuit night: a quarter of an hour after the start, after the
- *  riders holding a place (the booking app's _wlCollectTime; the owner, 2026-11-03). Null on every other ride. */
+/** A waitlisted rider's collection time, after the riders holding a place (the booking app's _wlCollectTime): the
+ *  time staff set on the session (the owner, 2026-11-10), else on a circuit night a quarter of an hour after the start
+ *  (the owner, 2026-11-03). Null on every other ride, and on a circuit night whose box staff emptied. */
 export function wlCollectTime(s: TicketSession | undefined): string | null {
-  if (s?.kind !== "jcc" || !s.times) return null;
+  if (s?.kind !== "jcc" && s?.kind !== "petromin") return null; // the rides with a bike collection time
+  if (s.wlCollect !== undefined) return s.wlCollect || null;
+  if (s.kind !== "jcc" || !s.times) return null;
   const m = Number(s.times[0].slice(0, 2)) * 60 + Number(s.times[0].slice(3)) + 15;
   return `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }

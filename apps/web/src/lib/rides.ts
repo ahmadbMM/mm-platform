@@ -180,6 +180,19 @@ export function collectTime(slots: unknown): string | null {
   return `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
 }
 
+/** The waitlist's own bike collection time, as staff set it on the session (the booking app's bike_slots._wlCollect,
+ *  the owner 2026-11-10): "HH:MM", "" when staff emptied the box (no time of its own), or undefined when the session
+ *  has none stored (wlCollectTime then takes a circuit night's default). */
+export function wlCollectSlot(slots: unknown): string | undefined {
+  let o: unknown = slots;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { o = null; }
+  }
+  if (!o || typeof o !== "object" || !Object.prototype.hasOwnProperty.call(o, "_wlCollect")) return undefined;
+  const c = (o as Record<string, unknown>)._wlCollect;
+  return typeof c === "string" && /^\s*\d{1,2}:\d{2}\s*$/.test(c) ? c.trim().padStart(5, "0") : "";
+}
+
 /** Where a row says the session is, as the ticket reads it (lib/tickets.ts ticketSession): only when
  *  the read asked for the columns (SESSION_COLS_PLACE), so a row without them gives neither field. */
 function placeOf(r: Row): Pick<RideSession, "location" | "meetUrl"> {
