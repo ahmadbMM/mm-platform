@@ -6,6 +6,8 @@ import "@/components/booking/booking.css";
 import "@/components/account/account.css";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
+import { termsSchema } from "@/content/pages/terms";
+import { parseBody } from "@/lib/journal";
 import { asLocale, resolvePage } from "@/lib/content";
 import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
@@ -183,6 +185,12 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   const learn = learnTeaser(c.learn); // Learn to ride: the lessons sign-up, while staff offer lessons
   const directions = S(site.contact.jccHref);
   const whatsapp = S(site.social.whatsapp);
+  // The cancellation terms a booking paid online links to from its review (the owner's answer to question 3, 2026-11-10):
+  // the Terms' refunds clause as staff keep it (Website > Terms; found by its English title, in English and Arabic only,
+  // as the Terms page shows it), under the refund rule the wizard words from staff's pay settings.
+  const refundAt = list(resolvePage(termsSchema, content, "en").clauses.items).findIndex((x) => /refund/i.test(S(x.title)));
+  const refundClause = paying && refundAt >= 0 ? list(resolvePage(termsSchema, content, L).clauses.items)[refundAt] : null;
+  const cancelTerms = refundClause ? { lang: L === "ar" ? "ar" : "en", title: S(refundClause.title), blocks: parseBody(S(refundClause.body)) } : null;
 
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
@@ -199,12 +207,13 @@ export default async function ExperiencesPage({ params, searchParams }: { params
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
             <BookingFlow locale={locale} events={events} prices={prices} maxPrices={maxPrices} jccCap={jccCap} acct={acct} items={items}
-              pay={paying ? { mode: ps.bookings, holdMinutes: ps.holdMinutes, refundDays: ps.refundDays, wallet } : undefined}
+              pay={paying ? { mode: ps.bookings, holdMinutes: ps.holdMinutes, refundDays: ps.refundDays, wallet, terms: cancelTerms } : undefined}
               start={{ ev: one(q.ev), session: one(q.session) }}
               text={{ eventTitle: S(c.steps.eventTitle), noDates: S(c.steps.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}
               links={{
                 apply: localHref("/community/registration", locale), account: localHref("/account", locale), club: hidden.includes("club") ? "" : localHref("/club", locale),
                 signup: bookingLink(`${appBase}?handoff=site&auth=signup`, locale), app: bookingLink(app, locale), place: directions || null,
+                instagram: S(site.social.instagram),
               }}
               today={today} now={new Date().getTime()}
               typeNames={Object.fromEntries(Object.entries(TYPE_NAME).map(([k, v]) => [k, tx(v.en, v.ar)]))}

@@ -16,6 +16,16 @@ export const T = {
     back: "Back",
     toReview: "Review booking",
     confirm: "Confirm booking",
+    // the Reserve page research (2026-11-10), the booking app's words: a full session's Confirm, the review's Change, the
+    // cancellation terms of a booking paid now, the place another device took first, and the riyal sign's word for a
+    // screen reader (the sign itself is drawn for the eye alone)
+    joinWl: "Join waitlist",
+    change: "Change",
+    cancelTerms: "Cancellation terms",
+    goneTitle: "The last place just went",
+    goneOther: "Choose another ride",
+    goneOtherNb: "Choose another session",
+    sarWord: "SAR",
     // online payment (2026-11-10, staging first)
     pay: {
       title: "Payment",
@@ -30,7 +40,6 @@ export const T = {
       agree: "By tapping, you book and agree to pay.",
       methods: "mada, Visa, Mastercard, Apple Pay and STC Pay accepted",
     },
-    allEvents: "All events",
     // the session card: availLabel waitlistLabel spotsLeft1/N rejCardNote ticketCollectAt priceFrom freeLabel partnerStf
     available: "Available",
     waitlist: "Waitlist",
@@ -44,23 +53,19 @@ export const T = {
     partner: "In partnership with Saudi Triathlon Federation",
     fullNote: "This ride is full. You can still reserve: you’ll join the waitlist, and if a place opens, staff may pick you.",
     noRides: "No rides are open for booking right now.",
-    noRidesSub: "New dates go up on our Instagram first.",
-    // numBikes groupCapHint jccCapNote qtyDecLabel qtyIncLabel
+    // numBikes qtyDecLabel qtyIncLabel (the cap's note went 2026-11-10: the + button rests at the cap)
     numBikes: "Number of bikes",
-    capNote: "One account can book up to {0} riders.",
     qtyDec: "Decrease number of bikes",
     qtyInc: "Increase number of bikes",
-    // riderLabel riderName riderNamePlaceholder heightLabel heightHint heightPlaceholder cmUnit
+    // riderLabel riderName riderNamePlaceholder heightLabel heightPlaceholder cmUnit (the frame-size hint gave way to the unit, 2026-11-10)
     rider: "Rider",
     riderName: "Rider’s full name",
     riderNamePh: "Enter rider's full name",
     height: "Height",
-    heightHint: "(sets the frame size)",
     heightPh: "Height in cm",
     cm: "cm",
     // bikeTypePref bikeInfoHint type* typeOwnPref
     typePref: "Bike type preference",
-    typeHint: "New to cycling? Hybrid is the easiest choice. Tap the i beside a type to see the bike.",
     types: { Road: "Road", Hybrid: "Hybrid", Mountain: "Mountain", Kids: "Kids", "Road Carbon": "Road Carbon", Own: "I have my own bike", None: "" } as Record<string, string>,
     // the bike sheet: bikeInfo* closeBtn
     bikeAria: "About {0} bikes",
@@ -86,10 +91,8 @@ export const T = {
     km: "{0} km",
     kmLap: "{0} km a lap",
     route: "Route",
-    // pricePerBike onTheHouseLabel bike
-    pricePerBike: "Price per bike",
+    // onTheHouseLabel
     onTheHouse: "On the house",
-    bike: "Bike",
     // promo*: the button says "Apply code" (TRANSLATING.md: "Apply" is applying to join)
     promo: "Promo code",
     promoApply: "Apply code",
@@ -128,7 +131,6 @@ export const T = {
     summary: "Your booking",
     // errAlreadyBooked myRidesTitle
     already: "You already have a booking for this session.",
-    alreadySub: "Change or cancel it from My Bookings.",
     myBookings: "My Bookings",
     // the done step: toastWaitlisted tkReservedTitle tkBookedTitle tk*Sub regBookAnotherBtn errAddonsNotSaved
     doneWl: "Added to the waitlist",
@@ -196,6 +198,7 @@ export const T = {
       waitlist_full: "The waitlist for this session is full.",
       pick_type: "Please select a bike type.",
       height: "Enter a height between 100 and 250 cm.",
+      kids: "Kids bikes are for riders up to 144 cm",
       name: "Please enter your full name (first and last name).",
       waiver: "Please accept the waiver to continue.",
       group: "Choose your group",
@@ -226,6 +229,13 @@ export const T = {
     back: "رجوع",
     toReview: "مراجعة الحجز",
     confirm: "تأكيد الحجز",
+    joinWl: "انضم إلى قائمة الانتظار",
+    change: "تغيير",
+    cancelTerms: "شروط الإلغاء",
+    goneTitle: "حُجز آخر مكان للتو",
+    goneOther: "اختر جولة أخرى",
+    goneOtherNb: "اختر جلسة أخرى",
+    sarWord: "ريال",
     pay: {
       title: "الدفع",
       now: "ادفع الآن إلكترونياً",
@@ -239,7 +249,6 @@ export const T = {
       agree: "بالضغط تؤكد الحجز وتلتزم بالدفع.",
       methods: "نقبل مدى وفيزا وماستركارد وApple Pay وSTC Pay",
     },
-    allEvents: "كل الفعاليات",
     available: "متاح",
     waitlist: "قائمة الانتظار",
     left1: "{0} مقعد متبقي",
@@ -252,20 +261,16 @@ export const T = {
     partner: "بالشراكة مع الاتحاد السعودي للترايثلون",
     fullNote: "هذه الجولة مكتملة. يمكنك الحجز مع ذلك: ستنضم إلى قائمة الانتظار، وإذا توفر مقعد قد يختارك الفريق.",
     noRides: "لا توجد رحلات متاحة للحجز الآن.",
-    noRidesSub: "ننشر المواعيد الجديدة على إنستغرام أولاً.",
     numBikes: "عدد الدراجات",
-    capNote: "يمكن للحساب الواحد حجز {0} مشاركين كحد أقصى.",
     qtyDec: "إنقاص عدد الدراجات",
     qtyInc: "زيادة عدد الدراجات",
     rider: "الراكب",
     riderName: "الاسم الكامل للراكب",
     riderNamePh: "أدخل الاسم الكامل",
     height: "الطول",
-    heightHint: "(لتحديد مقاس الإطار)",
     heightPh: "الطول بالسنتيمتر",
     cm: "سم",
     typePref: "تفضيل نوع الدراجة",
-    typeHint: "جديد على ركوب الدراجات؟ الهجين هو الخيار الأسهل. اضغط i بجانب أي نوع لترى الدراجة.",
     types: { Road: "طريق", Hybrid: "هجين", Mountain: "جبلي", Kids: "أطفال", "Road Carbon": "طريق كربون", Own: "لدي دراجتي الخاصة", None: "" } as Record<string, string>,
     bikeAria: "عن دراجات {0}",
     bikeFleet: "أسطولنا من دراجات ألفاس",
@@ -289,9 +294,7 @@ export const T = {
     km: "{0} كم",
     kmLap: "{0} كم للفة",
     route: "المسار",
-    pricePerBike: "السعر للدراجة",
     onTheHouse: "على حساب المحل",
-    bike: "دراجة",
     promo: "رمز الخصم",
     promoApply: "تطبيق الرمز",
     promoRemove: "إزالة",
@@ -323,7 +326,6 @@ export const T = {
     total: "الإجمالي",
     summary: "حجزك",
     already: "لديك حجز مسبق في هذه الجلسة.",
-    alreadySub: "يمكنك تعديله أو إلغاؤه من حجوزاتي.",
     myBookings: "حجوزاتي",
     doneWl: "تمت إضافتك إلى قائمة الانتظار",
     doneReserved: "استلمنا طلب حجزك",
@@ -380,6 +382,7 @@ export const T = {
       waitlist_full: "قائمة الانتظار لهذه الجلسة ممتلئة.",
       pick_type: "الرجاء اختيار نوع الدراجة.",
       height: "أدخل طولاً بين 100 و250 سم.",
+      kids: "دراجات الأطفال لمن طولهم حتى 144 سم",
       name: "الرجاء إدخال اسمك الكامل (الاسم الأول والأخير).",
       waiver: "يرجى الموافقة على الإقرار للمتابعة.",
       group: "اختر مجموعتك",

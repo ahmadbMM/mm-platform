@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  addonCap, addonCatRank, addonsCost, birthOk, codeOne, fromPrice, genderRefused, heightToSize, maxRiders, nextStep, pgDue, prevStep, priceMap, promoDiscount, promoRows, refusalOf,
+  addonCap, addonCatRank, addonsCost, asciiDigits, birthOk, codeOne, eventSteps, fromPrice, genderRefused, heightToSize, maxRiders, nextStep, pgDue, prevStep, priceMap, promoDiscount, promoRows, refusalOf,
   needsWaiver, regSteps, rentalTotal, riderPrices, sessionAddons, typeOptions, validateRiders, waiverKind, type AddonItem, type BookSession, type Rider,
 } from "../booking";
 import { accountFrom, asksOf, bookingEntries, checkBooking, liveSession, readInput, waitlistRefused, waiverVersionFor } from "../booking-server";
@@ -149,6 +149,19 @@ describe("validation", () => {
     expect(validateRiders(sat, [r("Road")], "beg", "Sara")).toBeNull();
     expect(validateRiders({ ...base, kind: "workshop" }, [r("")], null, "Sara")).toBeNull();
   });
+  it("keeps the Kids bike to riders of 144 cm and under (the owner, 2026-11-10)", () => {
+    expect(validateRiders(base, [r("Kids", "144")], null, "Sara")).toBeNull();
+    expect(validateRiders(base, [r("Kids", "145")], null, "Sara")).toEqual({ i: 0, field: "kids" });
+    expect(validateRiders(base, [r("Road", "170", "Sara"), r("Kids", "150", "Omar")], null, "Sara")).toEqual({ i: 1, field: "kids" });
+    expect(asciiDigits("١٤٠")).toBe("140");
+    expect(asciiDigits("۱۶۵ cm")).toBe("165 cm");
+  });
+  it("counts an event's steps before a date is picked, so picking one never changes the count", () => {
+    expect(eventSteps([{ kind: "workshop" }, { kind: "workshop" }])).toEqual([1, 2.5, 3]);
+    expect(eventSteps([{ kind: "jcc" }])).toEqual([1, 2, 2.5, 3]);
+    expect(eventSteps([{ kind: "saturday" }, { kind: "swim" }])).toBeNull();
+    expect(eventSteps([])).toBeNull();
+  });
   it("sizes a frame as the owner's chart", () => {
     expect(heightToSize(140, "Road")).toBe("");
     expect(heightToSize(172, "Road")).toBe("S");
@@ -210,10 +223,10 @@ describe("the server's checks", () => {
     expect(readInput({ sessionId: "a;b", riders: [r("Road")] })).toBeNull();
     expect(readInput({ sessionId: "s1", riders: [{ name: "x", height: "170", type: "Gravel" }] })).toBeNull();
     expect(readInput({ sessionId: "s1", riders: [{ name: "Al-Amin", height: 170, type: "Road", price: 0 }], addons: [{ id: "a", qty: 2 }, { id: "a", qty: 1 }, { id: "b", qty: 99 }], promo: { code: "X 1" }, waiver: true }))
-      .toEqual({ sessionId: "s1", riders: [{ name: "Al Amin", height: "170", type: "Road" }], group: null, addons: [{ id: "a", qty: 2 }], promo: null, waiver: true, payNow: false, wallet: false });
+      .toEqual({ sessionId: "s1", riders: [{ name: "Al Amin", height: "170", type: "Road" }], group: null, addons: [{ id: "a", qty: 2 }], promo: null, waiver: true, payNow: false, wallet: false, seatOnly: false });
   });
   it("refuses what the app refuses: a closed ride, one turned down, one already held, a party past the cap, no type, no waiver", () => {
-    const input = (riders: Rider[], waiver = true) => ({ sessionId: live.id, riders, group: null, addons: [], promo: null, waiver, payNow: false, wallet: false });
+    const input = (riders: Rider[], waiver = true) => ({ sessionId: live.id, riders, group: null, addons: [], promo: null, waiver, payNow: false, wallet: false, seatOnly: false });
     expect(checkBooking(input([r("Road")]), live, acct)).toEqual({ ok: true, riders: [r("Road")] });
     expect(checkBooking(input([r("Road")]), { ...live, open: false }, acct)).toEqual({ ok: false, error: "closed" });
     expect(checkBooking(input([r("Road")]), live, { ...acct, rejected: [live.id] })).toEqual({ ok: false, error: "rejected" });
@@ -232,12 +245,16 @@ describe("the server's checks", () => {
     expect(checkBooking(input([r("Road")]), satLive, acct)).toEqual({ ok: false, error: "invalid" });
   });
   it("builds the rows customer_create_booking takes, with no price and the code only where it discounts", () => {
-    const input = { sessionId: live.id, riders: [r("Road", "180"), r("Own", "120", "Kid")], group: null, addons: [], promo: { code: "SARA10", appliesTo: null }, waiver: true, payNow: false, wallet: false };
+    const input = { sessionId: live.id, riders: [r("Road", "180"), r("Own", "120", "Kid")], group: null, addons: [], promo: { code: "SARA10", appliesTo: null }, waiver: true, payNow: false, wallet: false, seatOnly: false };
     const rows = bookingEntries(input, input.riders, live, acct, waiverVersionFor(live));
     expect(rows[0]).toMatchObject({ name: "Sara Ali", size: "L", height: 180, type_preference: "Road", status: "waiting", promo_code: "SARA10", waiver_version: "2026-10-v3", session_day: "Tuesday" });
     expect(rows[1]).toMatchObject({ name: "Kid", size: "", type_preference: "Own", promo_code: null });
     expect(rows[0]).not.toHaveProperty("price");
     expect(rows[0]).not.toHaveProperty("approval");
+    expect(rows[0]).not.toHaveProperty("seat_only");
+    // a place asked for carries seat_only (rentals 20261111030000); a full session's waitlist place never does
+    expect(bookingEntries({ ...input, seatOnly: true }, input.riders, live, acct, null)[0]).toMatchObject({ seat_only: true, status: "waiting" });
+    expect(bookingEntries({ ...input, seatOnly: true }, input.riders, { ...live, full: true }, acct, null)[0]).not.toHaveProperty("seat_only");
     const ws = liveSession({ ...row, event_kind: "community", ride_kind: "workshop", open_to_all: true }, "2026-10-03")!;
     expect(bookingEntries({ ...input, promo: null }, [r("")], ws, acct, waiverVersionFor(ws))[0]).toMatchObject({ type_preference: "None", height: null, approval: "pending" });
     expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-10-v3");
@@ -313,7 +330,7 @@ function db(over: Record<string, (body: Record<string, unknown>) => Response> = 
 describe("api/booking", () => {
   beforeEach(() => { vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
-  const body = { sessionId: future, riders: [{ name: "", height: "180", type: "Road" }], group: null, addons: [{ id: "g1", qty: 2 }], promo: null, waiver: true, payNow: false, wallet: false };
+  const body = { sessionId: future, riders: [{ name: "", height: "180", type: "Road" }], group: null, addons: [{ id: "g1", qty: 2 }], promo: null, waiver: true, payNow: false, wallet: false, seatOnly: false };
 
   it("only takes this site's pages, signed in", async () => {
     db();
@@ -344,6 +361,14 @@ describe("api/booking", () => {
     expect(await (await post(book, "/api/booking", body)).json()).toEqual({ ok: false, error: "members" });
     db({ customer_create_booking: () => json({ code: "P0001", message: "FIX_FIRST" }, 400) });
     expect((await (await post(book, "/api/booking", body)).json()).error).toBe("fix_first");
+    // the last place went to another device: the rider is asked, nothing was kept
+    const calls = db({ customer_create_booking: () => json({ code: "P0001", message: "PLACE_GONE" }, 400) });
+    expect((await (await post(book, "/api/booking", { ...body, seatOnly: true })).json()).error).toBe("place_gone");
+    expect(calls.find((c) => c.fn === "customer_create_booking")!.body.p_entries).toMatchObject([{ seat_only: true }]);
+    // a session staff marked full since the page was read: gone before anything is sent
+    const calls2 = db({}, { ...SESSION, status: "full" });
+    expect((await (await post(book, "/api/booking", { ...body, seatOnly: true })).json()).error).toBe("place_gone");
+    expect(calls2.some((c) => c.fn === "customer_create_booking")).toBe(false);
     db({ customer_create_booking: () => json({ code: "P0001", message: "STALE_SESSION" }, 400) });
     const stale = await post(book, "/api/booking", body);
     expect(stale.status).toBe(401);
@@ -379,7 +404,7 @@ describe("men only, women only or mixed (the owner, 2026-10-27)", () => {
   beforeEach(() => { vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
   const pool: BookSession = { ...base, id: "2026-10-29-sw", kind: "swim", community: true, free: true, approval: true, gender: "female" };
-  const body = { sessionId: future, riders: [{ name: "", height: "180", type: "Road" }], group: null, addons: [], promo: null, waiver: true, payNow: false, wallet: false };
+  const body = { sessionId: future, riders: [{ name: "", height: "180", type: "Road" }], group: null, addons: [], promo: null, waiver: true, payNow: false, wallet: false, seatOnly: false };
 
   it("refuses a session for one gender to anyone else, and to an account with none on file", () => {
     expect(genderRefused(pool, "female")).toBeNull();
@@ -399,7 +424,7 @@ describe("men only, women only or mixed (the owner, 2026-10-27)", () => {
     const live = liveSession(row, "2026-10-27")!;
     expect(live.gender).toBe("female");
     expect(liveSession({ ...row, gender_only: null }, "2026-10-27")!.gender).toBeNull();
-    const input = { sessionId: live.id, riders: [r("")], group: null, addons: [], promo: null, waiver: true, payNow: false, wallet: false };
+    const input = { sessionId: live.id, riders: [r("")], group: null, addons: [], promo: null, waiver: true, payNow: false, wallet: false, seatOnly: false };
     const her = accountFrom("Sara", { gender: "female" }, [], true, []);
     expect(her.gender).toBe("female");
     expect(checkBooking(input, live, her)).toMatchObject({ ok: true });

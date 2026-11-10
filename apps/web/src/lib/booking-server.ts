@@ -107,6 +107,9 @@ export type BookInput = {
   payNow: boolean;
   /** Let the account's wallet pay what it can first (the review's Wallet switch). */
   wallet: boolean;
+  /** The rider is booking a place, not knowingly joining a full session's waitlist (rentals 20261111030000): a place
+   *  another device took first is refused (PLACE_GONE) rather than turned into a waitlist place, and the rider chooses. */
+  seatOnly: boolean;
 };
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
@@ -139,7 +142,7 @@ export function readInput(b: unknown): BookInput | null {
     const code = S(p.code).trim();
     if (/^[A-Za-z0-9_-]{1,40}$/.test(code)) promo = { code, appliesTo: isRiderType(p.appliesTo) ? p.appliesTo : null };
   }
-  return { sessionId, riders, group, addons, promo, waiver: o.waiver === true, payNow: o.payNow === true, wallet: o.wallet === true };
+  return { sessionId, riders, group, addons, promo, waiver: o.waiver === true, payNow: o.payNow === true, wallet: o.wallet === true, seatOnly: o.seatOnly === true };
 }
 
 /** The session the booking is for, read fresh (never the page's cached copy). */
@@ -216,6 +219,9 @@ export function bookingEntries(input: BookInput, riders: Rider[], s: LiveSession
       promo_code: tagged[i] && input.promo ? input.promo.code : null,
     };
     if (s.approval) row.approval = "pending";
+    // a place asked for (seatOnly): a database with 20261111030000 refuses PLACE_GONE instead of seating it on the waitlist;
+    // an older one ignores the key
+    if (input.seatOnly && !s.full) row.seat_only = true;
     if (waiverVersion) row.waiver_version = waiverVersion;
     if (i === 0 && hasRideGroups(s) && rgOk(input.group)) row.ride_group = input.group;
     return row;
@@ -298,6 +304,8 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
   // the riders per account admins set in the booking app (Settings > Business), as _group_ride_cap reads it
   const checked = checkBooking(input, s, a, bizOf(await loadSiteContent()).jccAccountCap);
   if (!checked.ok) return checked;
+  // a place asked for on a session staff have marked full since the page was read: gone, and the rider chooses
+  if (input.seatOnly && s.full) return { ok: false, error: "place_gone" };
   if (s.members) {
     const m = await rpcCall<boolean>("community_member", args, fetchImpl);
     if (m.data !== true) return { ok: false, error: m.status === 0 ? "generic" : "members" };

@@ -121,6 +121,14 @@ export const nextStep = (s: Pick<BookSession, "kind">, cur: Step): Step => {
   const st = regSteps(s), i = st.indexOf(cur);
   return i >= 0 && i < st.length - 1 ? st[i + 1] : 3;
 };
+/** An event's path before a date is picked (the research's row 15, 2026-11-10: "Step 1 of 3" must not turn into "of 2"
+ *  when a date is picked): its dates' path when they all share one, else null (an event mixing rides and sessions
+ *  without a bike, whose count can only follow the date picked). */
+export function eventSteps(sessions: Pick<BookSession, "kind">[]): Step[] | null {
+  if (!sessions.length) return null;
+  const first = regSteps(sessions[0]).join();
+  return sessions.every((s) => regSteps(s).join() === first) ? regSteps(sessions[0]) : null;
+}
 export const prevStep = (s: Pick<BookSession, "kind">, cur: Step): Step => {
   const st = regSteps(s), i = st.indexOf(cur);
   return i > 0 ? st[i - 1] : 1;
@@ -313,16 +321,23 @@ export function heightToSize(h: number, type: string): string {
   return (chart.find(([max]) => h <= max) as [number, string])[1];
 }
 export const heightOk = (v: string | number) => { const h = typeof v === "number" ? v : parseInt(String(v), 10); return Number.isInteger(h) && h >= 100 && h <= 250; };
+/** Arabic-Indic and Persian digits as ASCII (the booking app's _asciiDigits): "١٦٥" is read as 165, never as nothing. */
+export const asciiDigits = (s: string) => s.replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)));
+/** The owner's chart (heightToSize): a rider of 144 cm or under rides the Kids bike, and the Kids bike is for them alone
+ *  (the owner, 2026-11-10: such a height picks Kids where it is offered, and Kids is refused from 145 cm). */
+export const KIDS_MAX_CM = 144;
+export const kidsHeight = (v: string) => heightOk(v) && parseInt(v, 10) <= KIDS_MAX_CM;
 
-export type RiderError = { i: number; field: "height" | "type" | "name" } | { i: -1; field: "group" };
+export type RiderError = { i: number; field: "height" | "type" | "name" | "kids" } | { i: -1; field: "group" };
 /** The riders step's checks, in the app's order (validateRegInputs): the group, each height,
- *  then each type and (in a party) each name. Null when all is well. */
+ *  then each type (a Kids bike only up to 144 cm) and (in a party) each name. Null when all is well. */
 export function validateRiders(s: Pick<BookSession, "kind" | "community">, riders: Rider[], group: RideGroup | null, acctName: string): RiderError | null {
   if (!needsBike(s)) return null;
   if (hasRideGroups(s) && !rgOk(group)) return { i: -1, field: "group" };
   for (let i = 0; i < riders.length; i++) if (!heightOk(riders[i].height)) return { i, field: "height" };
   for (let i = 0; i < riders.length; i++) {
     if (!riders[i].type) return { i, field: "type" };
+    if (riders[i].type === "Kids" && !kidsHeight(riders[i].height)) return { i, field: "kids" };
     if (riders.length > 1 && !(riders[i].name.trim() || (i === 0 ? acctName : "")).trim()) return { i, field: "name" };
   }
   return null;
@@ -357,7 +372,7 @@ export function birthOk(v: string, today: string): boolean {
  *  for the other gender (the owner, 2026-10-27; the database's GENDER_ONLY). */
 export const REFUSALS = ["signin", "closed", "members", "rejected", "already", "one_per_session", "group_cap", "cap", "fix_first", "pick_type",
   "waitlist_full", "not_open", "waiver", "invalid", "generic", "offline", "origin", "slow", "men_only", "women_only",
-  "ref_code_carbon", "ref_code_session", "blood_code_carbon", "blood_code_session"] as const;
+  "ref_code_carbon", "ref_code_session", "blood_code_carbon", "blood_code_session", "place_gone"] as const;
 export type Refusal = (typeof REFUSALS)[number];
 
 /** A session for one gender that this account may not book (lib/session-gender.ts genderOk; the booking app's _sgOk):
@@ -372,6 +387,9 @@ export function refusalOf(err: { code?: string; message?: string; details?: stri
   const m = `${err?.code ?? ""} ${err?.message ?? ""}`;
   const d = String(err?.details ?? "").trim();
   if (/STALE_SESSION/.test(m)) return "signin";
+  // the last place went to another device while this rider was booking one (rentals 20261111030000; asked for with
+  // seat_only): nothing was kept, and the rider chooses the waitlist or another ride
+  if (/PLACE_GONE/.test(m)) return "place_gone";
   // a session for one gender (GENDER_ONLY from _gender_entry_guard, its detail the gender it is for; \bmale\b never matches "female")
   if (/GENDER_ONLY/.test(m)) return /\bmale\b/.test(d) ? "men_only" : "women_only";
   if (/SESSION_CLOSED/.test(m)) return "closed";

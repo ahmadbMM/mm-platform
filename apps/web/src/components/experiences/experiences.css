@@ -120,6 +120,48 @@ html:is([lang="ar"], [lang="ur"]) .bk-title { letter-spacing: 0; line-height: 1.
 .bk-card { background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; padding: 18px 20px; margin-bottom: 14px; }
 .bk-h3 { font-size: 17px; font-weight: 700; margin: 0 0 2px; }
 .bk-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+/* The bar under each step (the Reserve page research, 2026-11-10, row 12): Back and the step's button on every step, a short
+   summary between them (the date picked and Waitlist on a full one, row 1; the party's total once every rider has a type,
+   row 9). An error heads it and the pay line closes it. On a phone it is fixed to the bottom of the screen, the booking's
+   one floating bar, and the page keeps a focused field and its own last lines clear of it (row 7: scroll-padding equal to
+   the bar, --bk-foot-h, measured by BookingFlow, plus the safe area). */
+.bk-foot .bk-err { order: -1; }
+.bk-foot-sum { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 1px; font-size: 12.5px; line-height: 1.3; color: #4a4843; }
+.bk-foot-k { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bk-foot-v { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 14px; font-weight: 700; color: #1a1919; font-variant-numeric: tabular-nums; }
+.bk-foot-sum.tot .bk-foot-v .tk-amt { font-size: 17px; }
+.bk-wl-chip { display: inline-flex; align-items: center; margin-inline-start: 8px; padding: 1px 8px; border-radius: 999px; background: rgba(163, 59, 46, .1); color: #a33b2e; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.bk-foot-v .bk-wl-chip { margin-inline-start: 4px; }
+@media (max-width: 767px) {
+  .bk .bk-foot.fix { position: fixed; z-index: 50; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); margin: 0; padding: 10px; gap: 8px;
+    background: rgba(251, 249, 244, .96); border: 1px solid rgba(26, 25, 25, .12); border-radius: 22px; box-shadow: 0 10px 30px rgba(26, 25, 25, .16); }
+  .bk .bk-foot.fix .bk-btn2 { padding: 0 14px; }
+  .bk .bk-foot.fix .bk-btn.grow { flex: 1 1 120px; padding: 0 16px; }
+  .xs.bk:has(.bk-foot.fix) { padding-bottom: calc(var(--bk-foot-h, 72px) + 24px); }
+  html:has(.bk-foot.fix) { scroll-padding-bottom: calc(var(--bk-foot-h, 72px) + 20px + env(safe-area-inset-bottom)); }
+}
+/* A text link that is a button: the promo code's (it opens the field in place, row 10), the empty list's Instagram. */
+.bk-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 700; color: #077a4b; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.bk-link:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; border-radius: 2px; }
+/* The height's unit inside its field, in place of a hint line (the owner, 2026-11-10). */
+.bk-unit-wrap { position: relative; display: flex; align-items: center; }
+.bk-unit-wrap input { flex: 1; min-width: 0; padding-inline-end: 48px !important; }
+.bk-unit { position: absolute; inset-inline-end: 14px; font-size: 14px; font-weight: 600; color: #6e6b63; pointer-events: none; }
+/* The review's Change (row 8): a block's own way back to its step. */
+.bk-change { flex: none; min-height: 44px; min-width: 44px; padding: 0 14px; border: 1px solid rgba(26, 25, 25, .24); border-radius: 999px; background: #fff; font: inherit; font-size: 13px; font-weight: 700; color: #1a1919; cursor: pointer; }
+.bk-change:hover { background: #f4f1ea; }
+.bk-rv-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+/* Cancellation terms, a row of its own on a booking paid now (the owner, 2026-11-10), and its pop-up's clause. */
+.bk-termrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 48px; margin-top: 12px; padding: 0 14px; border: 1px solid rgba(26, 25, 25, .14); border-radius: 12px; background: #fff; font: inherit; font-size: 14px; font-weight: 700; color: #1a1919; text-align: start; cursor: pointer; }
+.bk-termrow:hover { background: #f4f1ea; }
+.bk-terms { margin: 0 0 14px; padding: 12px 14px; max-height: 46vh; overflow-y: auto; border-radius: 12px; background: #fbf9f4; font-size: 13.5px; line-height: 1.6; color: #2e352f; }
+.bk-terms .bk-h3 { font-size: 15px; margin: 0 0 4px; }
+.bk-terms h4 { margin: 10px 0 4px; font-size: 14px; }
+.bk-terms p { margin: 6px 0; }
+.bk-terms ul { margin: 6px 0; padding-inline-start: 20px; }
+.bk-terms li + li { margin-top: 4px; }
+/* An add-on: the whole row takes it (row 14). */
+.bk-addon { cursor: pointer; }
 .bk-btn, .bk-btn2 { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 22px; font: inherit; font-size: 15px; cursor: pointer; text-decoration: none; box-sizing: border-box; }
 .bk-btn { border: 0; border-radius: 999px; background: #077a4b; color: #fbf9f4 !important; font-weight: 700; }
 .bk-btn:hover { background: #06603b; }
@@ -166,7 +208,9 @@ html:is([lang="ar"], [lang="ur"]) .bk-title { letter-spacing: 0; line-height: 1.
   border: 1px solid rgba(26, 25, 25, .24); border-radius: 10px; cursor: pointer; text-align: center; transition: background .15s, border-color .15s; }
 .bk-pick:not(.solo) .bk-pill { border-start-end-radius: 0; border-end-end-radius: 0; }
 .bk-pill:hover { background: #f4f1ea; }
-.bk-pill.on { background: #1a1919; border-color: #1a1919; color: #fbf9f4; }
+/* chosen: the one selection mark of the booking pages, an ink ring and a filled dot, as the chosen date's card (row 17) */
+.bk-pill.on { background: #fff; border-color: #1a1919; box-shadow: inset 0 0 0 1px #1a1919; color: #1a1919; }
+.bk-pill.on::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: #1a1919; }
 .bk-pill-n { overflow-wrap: anywhere; }
 .bk-pill-p { font-size: 13px; font-weight: 500; opacity: .7; font-variant-numeric: tabular-nums; }
 .bk-info { flex: 0 0 40px; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; padding: 0; margin-inline-start: -1px; background: #fff; color: #4a4843;

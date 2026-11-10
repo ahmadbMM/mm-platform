@@ -8,10 +8,14 @@ import SignIn from "@/components/account/SignIn";
 import TicketCard from "@/components/booking/TicketCard";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import {
-  JCC_ACCOUNT_CAP, addonCap, addonCatRank, addonsCost, codeOne, fromPrice, genderRefused, hasRideGroups, maxRiders, needsBike, needsWaiver, nextStep, pgDue, prevStep, promoDiscount,
+  JCC_ACCOUNT_CAP, addonCap, addonCatRank, addonsCost, asciiDigits, codeOne, eventSteps, fromPrice, genderRefused, hasRideGroups, kidsHeight, maxRiders, needsBike, needsWaiver, nextStep, pgDue, prevStep, promoDiscount,
   refCodeKind, refCodeSessOk, regSteps, rentalTotal, riderPrices, RIDE_GROUPS, sessionAddons, typeOptions, validateRiders, waiverKind,
-  type AddonItem, type AddonPick, type BikeType, type BookAccount, type BookSession, type PgField, type Prices, type Promo, type Refusal, type Rider, type RideGroup, type Step,
+  type AddonItem, type AddonPick, type BikeType, type BookAccount, type BookSession, type PgField, type Prices, type Promo, type Refusal, type Rider, type RiderError, type RideGroup, type Step,
 } from "@/lib/booking";
+import type { Block } from "@/lib/journal";
+import { funnel, funnelDone } from "@/lib/funnel";
+import { radioKey, tabStop } from "@/lib/radio-keys";
+import { riyalNum } from "@/components/booking/Sar";
 import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
 import { rpcResult } from "@/lib/rpc-client";
 import { genderChip } from "@/lib/session-gender";
@@ -45,6 +49,8 @@ export type FlowLinks = {
   club: string;
   /** Directions to the circuit. */
   place: string | null;
+  /** Our Instagram, where new dates go up first (the empty list's link); "" or absent for none. */
+  instagram?: string;
 };
 type Props = {
   locale: string;
@@ -64,21 +70,33 @@ type Props = {
   typeNames: Record<string, string>;
   routes: Record<string, TicketRoute | null>;
   /** Paying online (2026-11-10): staff's pay.bookings, the hold, the refund rule, and the account's wallet balance. */
-  pay?: { mode: "required" | "optional" | "off"; holdMinutes: number; refundDays: number; wallet: number };
+  pay?: { mode: "required" | "optional" | "off"; holdMinutes: number; refundDays: number; wallet: number; terms?: CancelTerms | null };
 };
+
+/** The Terms' refunds clause as staff keep it (in English or Arabic), for the review's Cancellation terms pop-up. */
+export type CancelTerms = { lang: string; title: string; blocks: Block[] };
 
 type Modal =
   | { kind: "signin" } | { kind: "members" } | { kind: "rejected"; s: BookSession } | { kind: "fix" }
+  | { kind: "gone" } | { kind: "terms" }
   | { kind: "gender"; s: BookSession; refusal: Refusal }
   | { kind: "profile"; community: boolean; ask: PgField[]; next: string | null }
   | { kind: "bike"; type: BikeType; slot: number } | { kind: "group"; g: RideGroup } | null;
 /** `booked`: the rows the database stored (the route's), so a ticket my_bookings did not return in time is still counted. */
 type Done = { tickets: TicketRow[]; booked: { id: string; status: string }[]; session: TicketSession | null; addonsSaved: boolean };
 
-/** An amount as the booking app writes it (_sar): the riyal sign left of the number, isolated. */
-const sar = (n: number) => `⁦⃁ ${Math.round((Number(n) || 0) * 100) / 100}⁩`;
-const sarRange = (lo: number, hi: number) => (lo === hi ? sar(lo) : `⁦${sar(lo)} – ${sar(hi)}⁩`);
-const Amt = ({ children }: { children: string }) => <bdi className="tk-amt">{children}</bdi>;
+/** An amount as the booking app writes it (_sar): the riyal sign left of the number, isolated left to right, two decimals
+ *  only when it has a fraction (57.50); a range "lo – hi" when a type's fare may rise. The sign is drawn for the eye alone
+ *  and a screen reader reads `word` ("SAR", "ريال"; the research's row 18, components/booking/Sar.tsx). */
+function Money({ n, hi, word }: { n: number; hi?: number; word: string }) {
+  const one = (v: number) => <><span aria-hidden="true">{"\u20C1"}</span><span className="mm-sr">{word}</span> {riyalNum(v)}</>;
+  return <bdi className="tk-amt" dir="ltr">{one(n)}{hi != null && hi !== n && <> – {one(hi)}</>}</bdi>;
+}
+/** A sentence with an amount (or any piece) where its {0} is: "Book and pay {0}". */
+const fillNode = (tpl: string, node: React.ReactNode) => {
+  const [a, b = ""] = tpl.split("{0}");
+  return <>{a}{node}{b}</>;
+};
 const BIKE_IMG: Record<string, { img: string; model: string; easy?: boolean }> = {
   Road: { img: "road", model: "Climax" }, "Road Carbon": { img: "road-carbon", model: "DA54" }, Hybrid: { img: "hybrid", model: "Cross", easy: true },
   Mountain: { img: "mountain", model: "Strom · Monsoon" }, Kids: { img: "kids", model: "Beta" },
@@ -107,7 +125,6 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const [step, setStep] = useState<Step>(1);
   const [riders, setRiders] = useState<Rider[]>([{ name: "", height: acct?.height ? String(acct.height) : "", type: "" }]);
   const [group, setGroup] = useState<RideGroup | null>(null);
-  const [capNote, setCapNote] = useState(false);
   const [waiverOk, setWaiverOk] = useState<string | null>(null); // the session the tick was given for
   const [addons, setAddons] = useState<AddonPick[]>([]);
   const [promo, setPromo] = useState<Promo | null>(null);
@@ -123,6 +140,15 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const [acctNow, setAcctNow] = useState<BookAccount | null>(acct);
   const [payNow, setPayNow] = useState(true);
   const [walletOn, setWalletOn] = useState(false); // the wallet is the rider's choice, off by default
+  // The promo code behind a link that opens it in place (the research's row 10), open while a code is in it.
+  const [promoOpen, setPromoOpen] = useState(false);
+  // A "Change" on the review (row 8): the step it opened goes straight back to the review once all is still in order.
+  const [ret, setRet] = useState(false);
+  // Sessions whose last place went to another device while this rider was booking (PLACE_GONE): read as full from then on.
+  const [gone, setGone] = useState<string[]>([]);
+  const isFull = (s: BookSession) => s.full || gone.includes(s.id);
+  // the event's kind, for the funnel (lib/funnel.ts)
+  const fk = () => evKey ?? sel?.kind ?? "";
 
   const focusTop = useCallback(() => {
     requestAnimationFrame(() => {
@@ -131,7 +157,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       try { h?.focus({ preventScroll: true }); } catch { /* old browsers */ }
     });
   }, []);
-  const go = (n: Step) => { setStep(n); setErr(""); setFieldErr(null); focusTop(); };
+  const go = (n: Step) => { setStep(n); setErr(""); setFieldErr(null); if (n === 3) setRet(false); focusTop(); };
 
   // ── Picking a date, behind the app's gates (selectSessCard) ───────────────────────────────
   const pick = (s: BookSession, a: BookAccount | null = acctNow) => {
@@ -149,8 +175,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const gate = gateFor(s, a);
     if (gate) { setModal(gate); return; }
     if (selId !== s.id) { setAddons([]); setPromo(null); setPromoIn(""); setPromoMsg(""); setAlready(false); setErr(""); }
-    setCapNote(false);
     setSelId(s.id);
+    funnel("pick", evKey ?? s.kind);
     // a party carried over from another night may be past this night's allowance
     const cap = maxRiders(s, a.live[s.id] ?? 0, jccCap);
     setRiders((rs) => (rs.length > cap ? rs.slice(0, cap) : rs).map((r) => ({
@@ -160,6 +186,27 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     })));
   };
 
+  // The funnel's steps (row 20, lib/funnel.ts): the dates of an event shown, the riders step, the review.
+  useEffect(() => {
+    if (done || !evKey) return;
+    if (step === 1) funnel("list", evKey);
+    else if (step === 2) funnel("step2", evKey);
+    else if (step === 3) funnel("step3", evKey);
+  }, [done, evKey, step]);
+
+  // The fixed bar's height (row 7): the page scrolls a focused field clear of it (scroll-padding, experiences.css) and keeps
+  // its own last lines above it, read from the bar itself as it grows (an error, the pay line) and shrinks.
+  const footObs = useRef<ResizeObserver | null>(null);
+  const footRef = useCallback((el: HTMLDivElement | null) => {
+    footObs.current?.disconnect();
+    footObs.current = null;
+    const root = document.documentElement;
+    if (!el) { root.style.removeProperty("--bk-foot-h"); return; }
+    const set = () => root.style.setProperty("--bk-foot-h", `${Math.ceil(el.getBoundingClientRect().height)}px`);
+    set();
+    if (typeof ResizeObserver !== "undefined") { footObs.current = new ResizeObserver(set); footObs.current.observe(el); }
+  }, []);
+
   // Escape closes a pop-up.
   useEffect(() => {
     if (!modal) return;
@@ -168,9 +215,20 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     return () => document.removeEventListener("keydown", k);
   }, [modal]);
 
-  const steps = sel ? regSteps(sel) : ([1, 2, 2.5, 3] as Step[]);
+  // the count comes from the event, so picking one of its dates never changes it (row 15); an event mixing rides and
+  // sessions without a bike can only follow the date picked
+  const steps = sel ? regSteps(sel) : (ev && eventSteps(ev.sessions)) || ([1, 2, 2.5, 3] as Step[]);
   const stepLabel = (v: Step) => (v === 1 ? t.stepRide : v === 2 ? t.stepRiders : v === 2.5 ? waiverCopy(sel).title : t.stepConfirm);
   function waiverCopy(s: BookSession | null) { return t.waiver[s ? waiverKind(s) : "bike"]; }
+  // The page's title names the step (row 15; W3C's multi-page forms): "Confirm · Step 3 of 3 · Experiences …"; the page's
+  // own title stands on the list of events and the tickets, and comes back as each step goes.
+  const stepName = done ? "" : ev ? `${stepLabel(step)} · ${fill(t.stepOf, Math.max(0, steps.indexOf(step)) + 1, steps.length)}` : "";
+  useEffect(() => {
+    if (!stepName) return;
+    const base = document.title;
+    document.title = `${stepName} · ${base}`;
+    return () => { document.title = base; };
+  }, [stepName]);
   const free = !!sel?.free;
   const booked = sel && acctNow ? acctNow.live[sel.id] ?? 0 : 0;
   const cap = sel ? maxRiders(sel, booked, jccCap) : jccCap;
@@ -186,7 +244,6 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   // ── Riders ───────────────────────────────────────────────────────────────────────────────
   const setQty = (d: number) => {
     if (!sel || sel.community) return;
-    setCapNote(d > 0 && qty + d > cap);
     const n = Math.max(1, Math.min(cap, qty + d));
     // rider 1 is the account holder: their name is filled in once the party has names to give
     setRiders((rs) => (n > rs.length ? [...rs.map((r, i) => (i === 0 && !r.name && acctNow ? { ...r, name: acctNow.name } : r)), ...Array.from({ length: n - rs.length }, () => ({ name: "", height: "", type: "" as const }))] : rs.slice(0, n)));
@@ -197,20 +254,40 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     if (fieldErr?.key.endsWith(`-${i}`)) setFieldErr(null);
   };
   const setType = (i: number, ty: BikeType) => setRider(i, { type: ty });
-  const ridersOk = () => {
-    if (!sel) return false;
-    const e = validateRiders(sel, riders, group, acctNow?.name ?? "");
-    if (!e) return true;
-    const key = e.field === "group" ? "group" : `${e.field}-${e.i}`;
-    const msg = e.field === "group" ? t.err.group : e.field === "height" ? t.err.height : e.field === "type" ? t.err.pick_type : t.err.name;
+  // The height as typed, its Arabic-Indic digits read as ASCII (row 6); a height of 144 cm or under picks the Kids bike
+  // where the ride offers it (the owner, 2026-11-10).
+  const setHeight = (i: number, raw: string) => {
+    const v = asciiDigits(raw).replace(/\D/g, "").slice(0, 3);
+    const kids = !!sel && kidsHeight(v) && typeOptions(sel, acctNow?.hidden ?? []).includes("Kids");
+    setRider(i, kids ? { height: v, type: "Kids" } : { height: v });
+  };
+  // One message per mistake (row 5): at its field, nowhere else, and the field brought into view.
+  const showRiderErr = (e: RiderError) => {
+    const key = e.field === "group" ? "group" : e.field === "kids" ? `type-${e.i}` : `${e.field}-${e.i}`;
+    const msg = e.field === "group" ? t.err.group : e.field === "height" ? t.err.height : e.field === "type" ? t.err.pick_type : e.field === "kids" ? t.err.kids : t.err.name;
     setFieldErr({ key, msg });
     requestAnimationFrame(() => document.getElementById(`bk-${key}`)?.scrollIntoView({ behavior: "smooth", block: "center" }));
-    return false;
   };
+  const riderErr = () => (sel ? validateRiders(sel, riders, group, acctNow?.name ?? "") : null);
+  const ridersOk = () => {
+    if (!sel) return false;
+    const e = riderErr();
+    if (e) showRiderErr(e);
+    return !e;
+  };
+  // The review's Change (row 8): the dates (null), or rider i's answers, the step then coming straight back to the review.
+  const changeTo = (rider: number | null) => {
+    setRet(true);
+    if (rider === null) { go(1); return; }
+    go(2);
+    requestAnimationFrame(() => { const el = document.getElementById(`bk-h-${rider}`); el?.scrollIntoView({ behavior: "smooth", block: "center" }); el?.focus({ preventScroll: true }); });
+  };
+  // Back to the review after a Change (row 8) when nothing else is owed on the way: the riders complete, the waiver ticked.
+  const reviewReady = (s: BookSession) => (!needsBike(s) || !riderErr()) && (!needsWaiver(s) || waiverOk === s.id);
 
   // ── Promo (applyPromoCode) ───────────────────────────────────────────────────────────────
   const applyPromo = async () => {
-    const v = promoIn.trim().replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)));
+    const v = asciiDigits(promoIn.trim());
     if (!v) { setPromo(null); setPromoMsg(""); return; }
     setPromoBusy(true);
     let d: Record<string, unknown> | null = null;
@@ -268,35 +345,44 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const [lo, hi] = sel ? rentalTotal(sel, riders, prices, acctLite, maxPrices) : [0, 0];
   const disc = sel ? promoDiscount(promo, sel, riders, prices, acctLite) : 0;
   const addonTotal = free ? 0 : addonsCost(addons, items);
-  const grand = free ? t.free : disc > 0 ? sar(Math.max(0, lo - disc) + addonTotal) : sarRange(lo + addonTotal, hi + addonTotal);
-  const rental = free ? t.free : disc > 0 ? sar(Math.max(0, lo - disc)) : sarRange(lo, hi);
+  const word = t.sarWord;
+  const freeAmt = <bdi className="tk-amt">{t.free}</bdi>;
+  const grand = free ? freeAmt : disc > 0 ? <Money n={Math.max(0, lo - disc) + addonTotal} word={word} /> : <Money n={lo + addonTotal} hi={hi + addonTotal} word={word} />;
+  const rental = free ? freeAmt : disc > 0 ? <Money n={Math.max(0, lo - disc)} word={word} /> : <Money n={lo} hi={hi} word={word} />;
   // Paid now online (2026-11-10): a paid ride that is not a race (paid to the organiser) or a Petromin night, with
   // something to pay, booked into a place (a waitlisted place pays nothing now). Required, or the rider's choice.
-  const payable = !!sel && !free && !!pay && pay.mode !== "off" && !["vlap", "arena", "petromin"].includes(sel.kind) && !sel.full
+  const payable = !!sel && !free && !!pay && pay.mode !== "off" && !["vlap", "arena", "petromin"].includes(sel.kind) && !isFull(sel)
     && Math.max(0, lo - disc) + addonTotal > 0;
   const payingNow = payable && (pay!.mode === "required" || payNow);
 
   // ── Confirm (submitReg) ──────────────────────────────────────────────────────────────────
   const refused = (e: Refusal | string) => {
+    funnel(e === "place_gone" ? "place_gone" : "refused", fk(), e === "place_gone" ? undefined : e);
+    // the last place went to another device: nothing was kept, and the rider chooses (row 13)
+    if (e === "place_gone" && sel) { setGone((g) => (g.includes(sel.id) ? g : [...g, sel.id])); setModal({ kind: "gone" }); return; }
     if (e === "signin") { setAcctNow(null); setModal({ kind: "signin" }); return; }
     if (e === "members") { setModal({ kind: "members" }); return; }
     if (e === "rejected" && sel) { setModal({ kind: "rejected", s: sel }); return; }
     if (e === "fix_first") { setModal({ kind: "fix" }); return; }
     if (e === "already" || e === "one_per_session") { setAlready(true); return; }
-    if (e === "pick_type") { setRiders((rs) => rs.map((r) => ({ ...r }))); go(2); setFieldErr({ key: "type-0", msg: t.err.pick_type }); return; }
+    if (e === "pick_type") { go(2); setFieldErr({ key: "type-0", msg: t.err.pick_type }); return; }
     if (e === "waiver" && sel) { setWaiverOk(null); go(2.5); return; }
     if (e === "cap") { setErr(fill(t.err.cap, String(cap))); return; }
     if (e === "group_cap") { setErr(fill(t.err.group_cap, String(cap))); return; }
     setErr(t.err[e] ?? t.err.generic);
   };
-  const submit = async () => {
+  // `waitlist`: the rider chose the waitlist (a full session, or the place-gone pop-up's Join waitlist); otherwise a
+  // place is asked for, and one another device took first is refused rather than turned into a waitlist place.
+  const submit = async (waitlist = false) => {
     if (!sel || busy) return;
     if (!acctNow) { setModal({ kind: "signin" }); return; }
-    if (needsBike(sel) && !ridersOk()) { go(2); return; }
+    const re = needsBike(sel) ? riderErr() : null;
+    if (re) { go(2); showRiderErr(re); return; }
     if (needsWaiver(sel) && waiverOk !== sel.id) { go(2.5); return; }
     // a session for the other gender is refused here, before anything is sent (the server and the database refuse it too)
     const sg = genderRefused(sel, acctNow.gender);
     if (sg) { setErr(t.err[sg]); return; }
+    funnel("confirm", fk());
     setBusy(true); setErr("");
     try {
       const res = await fetch("/api/booking", {
@@ -309,8 +395,9 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           addons: free ? [] : addons,
           promo: promo ? { code: promo.code, appliesTo: promo.appliesTo } : null,
           waiver: needsWaiver(sel) ? waiverOk === sel.id : false,
-          payNow: payingNow,
-          wallet: payingNow && walletOn,
+          payNow: payingNow && !waitlist,
+          wallet: payingNow && !waitlist && walletOn,
+          seatOnly: !waitlist && !isFull(sel),
           lang: locale,
         }),
       });
@@ -319,12 +406,15 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       };
       if (b.ok && b.pay?.url && /^\/pay\/[0-9a-f-]{36}$/.test(b.pay.url)) {
         // the places are held while the rider pays on the payment page (it brings them back to their tickets)
+        funnel("booked", fk(), "pay"); funnelDone();
         window.location.assign(b.pay.url);
         return;
       }
       if (b.ok && Array.isArray(b.tickets)) {
         const booked = Array.isArray(b.booked) ? b.booked.filter((x) => x && typeof x.id === "string") : [];
         const n = booked.length || b.tickets.length;
+        const rowsNow: { status: string }[] = b.tickets.length ? b.tickets : booked;
+        funnel(rowsNow.length > 0 && rowsNow.every((r) => r.status === "waitlist") ? "waitlisted" : "booked", fk()); funnelDone();
         setDone({ tickets: b.tickets, booked, session: b.session ?? null, addonsSaved: b.addonsSaved !== false });
         setAcctNow((a) => {
           if (!a) return a;
@@ -340,12 +430,13 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         refused(b.error ?? "generic");
       }
     } catch {
+      funnel("refused", fk(), "offline");
       setErr(t.err.offline);
     }
     setBusy(false);
   };
   const another = () => {
-    setDone(null); setSelId(null); setStep(1); setAddons([]); setPromo(null); setPromoIn(""); setPromoMsg(""); setWaiverOk(null); setGroup(null); setAlready(false);
+    setDone(null); setSelId(null); setStep(1); setAddons([]); setPromo(null); setPromoIn(""); setPromoMsg(""); setPromoOpen(false); setWaiverOk(null); setGroup(null); setAlready(false); setRet(false);
     setRiders([{ name: "", height: acctNow?.height ? String(acctNow.height) : "", type: "" }]);
     setEvKey(null);
     focusTop();
@@ -371,18 +462,25 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       </div>
     );
   };
-  const head = (title: string, msg?: string) => (
+  const head = (title: string, id: string) => (
     <div className="bk-head">
       {stepper()}
-      <h2 className="bk-title" tabIndex={-1} data-step-title>{title}</h2>
-      {msg && <p className="bk-sub">{msg}</p>}
+      <h2 id={id} className="bk-title" tabIndex={-1} data-step-title>{title}</h2>
     </div>
   );
-  const fromLine = (s: BookSession) => {
+  const fromLine = (s: BookSession): React.ReactNode => {
     const p = fromPrice(s, prices);
-    return !p ? null : p.kind === "free" ? t.free : p.kind === "seat" ? fill(t.perSeat, sar(p.n)) : fill(t.from, sar(p.n));
+    return !p ? null : p.kind === "free" ? t.free : fillNode(p.kind === "seat" ? t.perSeat : t.from, <Money n={p.n} word={word} />);
   };
-  const card = (s: BookSession) => {
+  // One date is chosen among them (row 11): a radio group, one tab stop, the arrow keys. An arrow moves the choice with
+  // the focus where choosing opens nothing (no sign-in, no gate); elsewhere it moves the focus, and Enter or Space chooses.
+  const cardStop = (list: BookSession[]) => tabStop(list, (x) => x.id === selId, (x) => !x.opens && !x.satLink);
+  const cardKeys = (e: React.KeyboardEvent<HTMLElement>, list: BookSession[]) => {
+    const id = radioKey(e, rtl)?.dataset.id;
+    const s = id ? list.find((x) => x.id === id) : undefined;
+    if (s && acctNow && !gateFor(s, acctNow)) pick(s);
+  };
+  const card = (s: BookSession, stop: boolean) => {
     const named = s.kind !== "jcc";
     const sg = chip(s);
     const kicker = named || sg ? (
@@ -394,24 +492,26 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     ) : null;
     if (s.opens) {
       return (
-        <div key={s.id} className={`sc-card ev-${s.kind} closed`} aria-disabled="true">
+        <div key={s.id} className={`sc-card ev-${s.kind} closed`} role="radio" aria-checked={false} aria-disabled="true">
           {kicker}
-          <span className="sc-head"><span className="sc-dot" aria-hidden="true" /><span className="sc-date">{s.day}</span><span className="sc-spots closed">{s.opens}</span></span>
+          {/* not open yet: a clock beside when it opens, never the grey alone */}
+          <span className="sc-head"><span className="sc-dot" aria-hidden="true" /><span className="sc-date">{s.day}</span><span className="sc-spots closed"><Ic name="clock" size={13} />{s.opens}</span></span>
           <span className="sc-time"><bdi>{s.time}</bdi></span>
         </div>
       );
     }
     const on = selId === s.id;
     const rej = !!acctNow?.rejected.includes(s.id);
-    const low = !s.full && !s.approval && s.left != null && s.left > 0 && s.left <= 3;
-    const meta = [s.collect, fromLine(s)].filter((x): x is string => !!x);
+    const full = isFull(s);
+    const low = !full && !s.approval && s.left != null && s.left > 0 && s.left <= 3;
+    const meta = [s.collect, fromLine(s)].filter((x) => !!x);
     const body = (
       <>
         {kicker}
         <span className="sc-head">
           <span className={`sc-dot${on ? " on" : ""}`} aria-hidden="true" />
           <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
-          <span className={`sc-spots${rej ? " rej" : s.full ? " full" : low ? " low" : ""}`}>{rej ? t.rejCard : s.full ? t.waitlist : low ? fill(s.left === 1 ? t.left1 : t.leftN, s.left!) : t.available}</span>
+          <span className={`sc-spots${rej ? " rej" : full ? " full" : low ? " low" : ""}`}>{rej ? t.rejCard : full ? t.waitlist : low ? fill(s.left === 1 ? t.left1 : t.leftN, s.left!) : t.available}</span>
         </span>
         <span className="sc-time"><bdi>{s.time}</bdi></span>
         {meta.length > 0 && <span className="sc-meta">{meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}
@@ -422,54 +522,64 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     // goes there, for anyone with a code, member or not, as main's Experiences sends it
     if (s.satLink) return <a key={s.id} href={s.satLink} className={`sc-card ev-${s.kind}${rej ? " rej" : ""}`}>{body}</a>;
     return (
-      <button key={s.id} type="button" className={`sc-card ev-${s.kind}${on ? " sel" : ""}${rej ? " rej" : ""}`} aria-pressed={on} onClick={() => pick(s)}>
+      <button key={s.id} type="button" className={`sc-card ev-${s.kind}${on ? " sel" : ""}${rej ? " rej" : ""}`} role="radio" aria-checked={on} tabIndex={stop ? 0 : -1} data-id={s.id} onClick={() => pick(s)}>
         {body}
       </button>
     );
   };
   const fErr = (key: string) => (fieldErr?.key === key ? <p className="bk-ferr" role="alert">{fieldErr.msg}</p> : null);
-  const promoBox = (slot: string) => (free ? null : (
+  // The promo code behind a link that opens it in place (row 10), on both steps, so a code from Instagram can still be
+  // typed early; open while a code is applied, typed or answered.
+  const promoShown = promoOpen || !!promo || !!promoIn || !!promoMsg;
+  const promoBox = (slot: string) => (free ? null : !promoShown ? (
+    <div className="bk-promo">
+      <button type="button" className="bk-link" aria-expanded={false}
+        onClick={() => { setPromoOpen(true); requestAnimationFrame(() => document.getElementById(`bk-promo-${slot}`)?.focus()); }}>{t.promo}</button>
+    </div>
+  ) : (
     <div className="bk-promo">
       <label htmlFor={`bk-promo-${slot}`}>{t.promo}</label>
       <div className="bk-promo-row">
-        <input id={`bk-promo-${slot}`} type="text" value={promo ? promo.code : promoIn} disabled={!!promo} autoCapitalize="characters" maxLength={40} dir="ltr"
+        <input id={`bk-promo-${slot}`} type="text" value={promo ? promo.code : promoIn} disabled={!!promo} autoCapitalize="characters" autoComplete="off" spellCheck={false} maxLength={40} dir="ltr"
           onChange={(e) => setPromoIn(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyPromo(); } }} />
         {promo
           ? <button type="button" className="bk-btn2" onClick={removePromo}>{t.promoRemove}</button>
           : <button type="button" className="bk-btn2" onClick={() => void applyPromo()} disabled={promoBusy}>{t.promoApply}</button>}
       </div>
       {promoMsg && <p className="bk-ferr" role="alert">{promoMsg}</p>}
-      {disc > 0 && promo && <p className="bk-disc"><span>{t.discount} ({promo.code})</span><bdi dir="ltr">− <Amt>{sar(disc)}</Amt></bdi></p>}
+      {disc > 0 && promo && <p className="bk-disc"><span>{t.discount} ({promo.code})</span><bdi dir="ltr">− <Money n={disc} word={word} /></bdi></p>}
     </div>
   ));
-  const priceBox = () => {
-    if (!sel || !needsBike(sel)) return null;
-    if (free) return <div className="bk-price"><span className="bk-price-k">{t.pricePerBike}</span><span className="bk-price-v">{t.free}</span></div>;
-    const lines = riderPrices(sel, riders, prices, acctLite, maxPrices);
-    const word = (l: (typeof lines)[number]) => (l.kind === "free" ? t.free : l.kind === "house" ? t.onTheHouse : l.kind === "sar" ? sar(l.n) : sarRange(l.lo, l.hi));
-    return (
-      <>
-        <div className="bk-price">
-          <span className="bk-price-k">{qty > 1 ? lines.map((l, i) => <span key={i}>{i > 0 && " · "}{t.bike} {i + 1}: <Amt>{word(l)}</Amt></span>) : t.pricePerBike}</span>
-          <span className="bk-price-v"><Amt>{sarRange(lo, hi)}</Amt></span>
-        </div>
-      </>
-    );
-  };
   const side = () => sel && (
     <aside className="bk-side" aria-label={t.summary}>
       <p className="bk-side-h">{t.summary}</p>
-      {sel.kind !== "jcc" && <p className="bk-side-k">{sel.name}</p>}
+      <p className="bk-side-k">{sel.kind === "jcc" ? ev?.title : sel.name}</p>
       {chip(sel) && <p className="bk-side-sg">{chip(sel)}</p>}
       <p className="bk-side-when">{sel.near && <><strong>{sel.near}</strong> · </>}{sel.day}</p>
       <p className="bk-side-time"><bdi>{sel.time}</bdi></p>
       {needsBike(sel) && <p className="bk-side-row"><span>{t.numBikes}</span><span>{qty}</span></p>}
-      <p className="bk-side-total"><span>{t.total}</span><Amt>{grand}</Amt></p>
+      <p className="bk-side-total"><span>{t.total}</span>{grand}</p>
     </aside>
   );
 
   // ── The steps ────────────────────────────────────────────────────────────────────────────
   let body: React.ReactNode = null;
+  // The bar under each step (row 12): Back and the step's button, one place for Back on every step; on a phone it is
+  // fixed to the bottom of the screen, the booking's one floating bar, and the page scrolls focus clear of it (row 7).
+  // `from`: the step it stands under; Back goes to the step before it, from the dates to the list of events
+  const back = (from: Step) => {
+    if (from === 1) { setEvKey(null); setSelId(null); setRet(false); focusTop(); }
+    else if (sel) go(prevStep(sel, from));
+  };
+  const bar = (from: Step, children: React.ReactNode) => (
+    <div className="bk-foot fix" ref={footRef}>
+      <button type="button" className="bk-btn2" disabled={busy} onClick={() => back(from)}><Ic name="back" flip /> {t.back}</button>
+      {children}
+    </div>
+  );
+  // the event's own name on the circuit (the owner, 2026-11-10: one name, "Open Sports Day", the circuit its place)
+  const selName = (s: BookSession) => (s.kind === "jcc" ? ev?.title || tk.venueCircuit : s.name);
+  const wlChip = <span className="bk-wl-chip">{t.waitlist}</span>;
   if (done) {
     // the tickets my_bookings returned, else the rows the database stored: a booking whose tickets were not read in
     // time is never called booked when it went to the waitlist, and points to My Bookings for its codes
@@ -477,7 +587,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const allWl = rows.length > 0 && rows.every((r) => r.status === "waitlist");
     const missing = done.tickets.length < done.booked.length;
     const appr = !!done.session?.approval || !!sel?.approval;
-    const name = sel ? (sel.kind === "jcc" ? tk.venueCircuit : sel.name) : t.ride;
+    const name = sel ? selName(sel) : t.ride;
     body = (
       <section aria-labelledby="bk-done-h">
         <div className="bk-head">
@@ -514,154 +624,179 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       </section>
     );
   } else if (step === 1 || !sel) {
+    const stop = cardStop(ev.sessions);
     body = (
-      <section>
-        <button type="button" className="xs-back" onClick={() => { setEvKey(null); setSelId(null); focusTop(); }}><Ic name="back" flip /> {t.allEvents}</button>
-        {head(t.rideTitle)}
+      <section aria-labelledby="bk-ride-h">
+        {head(t.rideTitle, "bk-ride-h")}
         <p className="xs-picked">{ev.title}</p>
         {ev.note && <p className="bk-evnote">{ev.note}</p>}
         {ev.sessions.length === 0 ? (
-          <div className="xs-empty"><p>{text.noDates || t.noRides}</p><p className="bk-sub">{t.noRidesSub}</p></div>
+          // no dates: the words, and our Instagram where new ones go up first (its sentence went, 2026-11-10)
+          <div className="xs-empty"><p>{text.noDates || t.noRides}</p>{links.instagram && <p><a className="bk-link" href={links.instagram} target="_blank" rel="noopener">Instagram</a></p>}</div>
         ) : (
-          <div className="sc-list">{ev.sessions.map(card)}</div>
-        )}
-        {sel?.community && sel.full && <p className="bk-note bk-full"><span className="bk-full-dot" aria-hidden="true" />{t.fullNote}</p>}
-        {ev.sessions.some((s) => s.members) && text.membersNote && <p className="xs-note">{text.membersNote}{links.club && <> <a href={links.club}>{text.clubLink}</a></>}</p>}
-        {ev.sessions.length > 0 && (
-          <div className="bk-foot">
-            <button type="button" className="bk-btn wide" disabled={!sel} onClick={() => sel && go(nextStep(sel, 1))}>{t.cont}</button>
+          <div className="sc-list" role="radiogroup" aria-labelledby="bk-ride-h" onKeyDown={(e) => cardKeys(e, ev.sessions)}>
+            {ev.sessions.map((s, n) => card(s, n === stop))}
           </div>
         )}
+        {sel?.community && isFull(sel) && <p className="bk-note bk-full"><span className="bk-full-dot" aria-hidden="true" />{t.fullNote}</p>}
+        {ev.sessions.some((s) => s.members) && text.membersNote && <p className="xs-note">{text.membersNote}{links.club && <> <a href={links.club}>{text.clubLink}</a></>}</p>}
+        {bar(1, (
+          <>
+            {/* the date picked, and Waitlist when it is full (row 1): the outcome said before Confirm, never a place in line */}
+            {sel && (
+              <span className="bk-foot-sum">
+                <span className="bk-foot-k">{sel.near ?? sel.day}</span>
+                <span className="bk-foot-v"><bdi>{sel.time}</bdi>{isFull(sel) && wlChip}</span>
+              </span>
+            )}
+            <button type="button" className="bk-btn grow" disabled={!sel} onClick={() => { if (sel) go(ret && reviewReady(sel) ? 3 : nextStep(sel, 1)); }}>{t.cont}</button>
+          </>
+        ))}
       </section>
     );
   } else if (step === 2) {
     const opts = typeOptions(sel, acctNow?.hidden ?? []);
+    // the party's total beside the button once every rider has a type (row 9): a number, never a range box before that
+    const typed = riders.every((r) => !!r.type);
     body = (
-      <section>
-        {head(t.ridersTitle)}
+      <section aria-labelledby="bk-riders-h">
+        {head(t.ridersTitle, "bk-riders-h")}
         <div className="bk-card">
           {!sel.community && (
             <div className="bk-qty-row">
-              <span className="bk-qty-k">{t.numBikes}</span>
-              <div className="bk-qty-col">
-                <div className="bk-qty">
-                  <button type="button" onClick={() => setQty(-1)} aria-label={t.qtyDec}><Ic name="minus" size={18} /></button>
-                  <span aria-live="polite">{qty}</span>
-                  <button type="button" onClick={() => setQty(1)} aria-label={t.qtyInc}><Ic name="plus" size={18} /></button>
-                </div>
-                {capNote && <p className="bk-capnote" role="status">{fill(t.capNote, jccCap)}</p>}
+              <span className="bk-qty-k" id="bk-qty-k">{t.numBikes}</span>
+              <div className="bk-qty" role="group" aria-labelledby="bk-qty-k">
+                <button type="button" onClick={() => setQty(-1)} disabled={qty <= 1} aria-label={t.qtyDec}><Ic name="minus" size={18} /></button>
+                <span aria-live="polite">{qty}</span>
+                {/* at the account's allowance the button rests: the state says it, no line under it (2026-11-10) */}
+                <button type="button" onClick={() => setQty(1)} disabled={qty >= cap} aria-label={t.qtyInc}><Ic name="plus" size={18} /></button>
               </div>
             </div>
           )}
-          {riders.map((r, i) => (
-            <div key={i} className="bk-rider">
-              {qty > 1 && <p className="bk-rider-h"><span className="bk-num">{i + 1}</span>{t.rider}</p>}
-              {qty > 1 && (
-                <div className="bk-field" id={`bk-name-${i}`}>
-                  <label htmlFor={`bk-name-in-${i}`}>{t.riderName}</label>
-                  <input id={`bk-name-in-${i}`} type="text" autoComplete="name" autoCapitalize="words" maxLength={60} placeholder={t.riderNamePh}
-                    value={r.name} onChange={(e) => setRider(i, { name: e.target.value.replace(/[-‐-―]/g, " ") })} aria-invalid={fieldErr?.key === `name-${i}` || undefined} />
-                  {fErr(`name-${i}`)}
-                </div>
-              )}
-              <div className="bk-field" id={`bk-height-${i}`}>
-                <label htmlFor={`bk-h-${i}`}>{t.height} <span className="bk-hint">{t.heightHint}</span></label>
-                <input id={`bk-h-${i}`} type="number" inputMode="numeric" min={100} max={250} placeholder={t.heightPh} value={r.height}
-                  onChange={(e) => setRider(i, { height: e.target.value.slice(0, 3) })} aria-invalid={fieldErr?.key === `height-${i}` || undefined} />
-                {fErr(`height-${i}`)}
-              </div>
-              <div className="bk-field" id={`bk-type-${i}`}>
-                <span className="bk-label" id={`bk-type-l-${i}`}>{t.typePref}</span>
-                <div className="bk-types" role="group" aria-labelledby={`bk-type-l-${i}`}>
-                  {opts.map((ty) => {
-                    const on = r.type === ty;
-                    const showPrice = !free && sel.seat == null && ty !== "Own";
-                    const pill = (
-                      <button type="button" className={`bk-pill${on ? " on" : ""}`} aria-pressed={on} onClick={() => setType(i, ty)}>
-                        <span className="bk-pill-n">{pillName(ty)}</span>{showPrice && <span className="bk-pill-p"><Amt>{sar(prices[ty] ?? 0)}</Amt></span>}
-                      </button>
-                    );
-                    return BIKE_IMG[ty] ? (
-                      <span key={ty} className={`bk-pick${on ? " on" : ""}`}>{pill}
-                        <button type="button" className="bk-info" aria-haspopup="dialog" aria-label={fill(t.bikeAria, pillName(ty))} onClick={() => setModal({ kind: "bike", type: ty, slot: i })}><Ic name="info" size={15} /></button>
-                      </span>
-                    ) : <span key={ty} className={`bk-pick solo${on ? " on" : ""}`}>{pill}</span>;
-                  })}
-                </div>
-                {opts.includes("Hybrid") && <p className="bk-hint2">{t.typeHint}</p>}
-                {fErr(`type-${i}`)}
-              </div>
-              {i === 0 && hasRideGroups(sel) && (
-                <div className="bk-field" id="bk-group">
-                  <span className="bk-label" id="bk-group-l">{t.groupLabel}</span>
-                  <div className="bk-types one" role="group" aria-labelledby="bk-group-l">
-                    {RIDE_GROUPS.map((g) => (
-                      <span key={g} className={`bk-pick${group === g ? " on" : ""}`}>
-                        <button type="button" className={`bk-pill${group === g ? " on" : ""}`} aria-pressed={group === g} onClick={() => { setGroup(g); if (fieldErr?.key === "group") setFieldErr(null); }}>
-                          <span className="bk-pill-n">{t.groups[g]}</span><span className="bk-pill-p">{fill(t.km, sel.km[g])}</span>
-                        </button>
-                        <button type="button" className="bk-info" aria-haspopup="dialog" aria-label={fill(t.groupAria, t.groups[g])} onClick={() => setModal({ kind: "group", g })}><Ic name="info" size={15} /></button>
-                      </span>
-                    ))}
+          {riders.map((r, i) => {
+            const tstop = tabStop(opts, (ty) => r.type === ty);
+            return (
+              <div key={i} className="bk-rider">
+                {qty > 1 && <p className="bk-rider-h"><span className="bk-num">{i + 1}</span>{t.rider}</p>}
+                {qty > 1 && (
+                  <div className="bk-field" id={`bk-name-${i}`}>
+                    <label htmlFor={`bk-name-in-${i}`}>{t.riderName}</label>
+                    {/* rider 1 is the account holder; a companion's name is never the account's own (row 16), in its own direction */}
+                    <input id={`bk-name-in-${i}`} type="text" autoComplete={i === 0 ? "name" : "off"} dir="auto" autoCapitalize="words" maxLength={60} placeholder={t.riderNamePh}
+                      value={r.name} onChange={(e) => setRider(i, { name: e.target.value.replace(/[-‐-―]/g, " ") })} aria-invalid={fieldErr?.key === `name-${i}` || undefined} />
+                    {fErr(`name-${i}`)}
                   </div>
-                  {fErr("group")}
+                )}
+                <div className="bk-field" id={`bk-height-${i}`}>
+                  <label htmlFor={`bk-h-${i}`}>{t.height}</label>
+                  {/* a text field for digits (row 6), Arabic-Indic ones read too; its unit beside it, no hint line (2026-11-10) */}
+                  <div className="bk-unit-wrap">
+                    <input id={`bk-h-${i}`} type="text" inputMode="numeric" pattern="[0-9]*" autoComplete="off" maxLength={3} placeholder={t.heightPh} value={r.height}
+                      onChange={(e) => setHeight(i, e.target.value)} aria-describedby={`bk-h-u-${i}`} aria-invalid={fieldErr?.key === `height-${i}` || undefined} />
+                    <span className="bk-unit" id={`bk-h-u-${i}`}>{t.cm}</span>
+                  </div>
+                  {fErr(`height-${i}`)}
                 </div>
-              )}
-            </div>
-          ))}
-          <div className="bk-pricewrap">{priceBox()}</div>
+                <div className="bk-field" id={`bk-type-${i}`}>
+                  <span className="bk-label" id={`bk-type-l-${i}`}>{t.typePref}</span>
+                  <div className="bk-types" role="radiogroup" aria-labelledby={`bk-type-l-${i}`}
+                    onKeyDown={(e) => { const ty = radioKey(e, rtl)?.dataset.ty; if (ty) setType(i, ty as BikeType); }}>
+                    {opts.map((ty, n) => {
+                      const on = r.type === ty;
+                      const showPrice = !free && sel.seat == null && ty !== "Own";
+                      const pill = (
+                        <button type="button" className={`bk-pill${on ? " on" : ""}`} role="radio" aria-checked={on} tabIndex={n === tstop ? 0 : -1} data-ty={ty} onClick={() => setType(i, ty)}>
+                          <span className="bk-pill-n">{pillName(ty)}</span>{showPrice && <span className="bk-pill-p"><Money n={prices[ty] ?? 0} word={word} /></span>}
+                        </button>
+                      );
+                      return BIKE_IMG[ty] ? (
+                        <span key={ty} className={`bk-pick${on ? " on" : ""}`}>{pill}
+                          <button type="button" className="bk-info" aria-haspopup="dialog" aria-label={fill(t.bikeAria, pillName(ty))} onClick={() => setModal({ kind: "bike", type: ty, slot: i })}><Ic name="info" size={15} /></button>
+                        </span>
+                      ) : <span key={ty} className={`bk-pick solo${on ? " on" : ""}`}>{pill}</span>;
+                    })}
+                  </div>
+                  {fErr(`type-${i}`)}
+                </div>
+                {i === 0 && hasRideGroups(sel) && (
+                  <div className="bk-field" id="bk-group">
+                    <span className="bk-label" id="bk-group-l">{t.groupLabel}</span>
+                    <div className="bk-types one" role="radiogroup" aria-labelledby="bk-group-l"
+                      onKeyDown={(e) => { const g = radioKey(e, rtl)?.dataset.g; if (g === "beg" || g === "int") { setGroup(g); if (fieldErr?.key === "group") setFieldErr(null); } }}>
+                      {RIDE_GROUPS.map((g, n) => (
+                        <span key={g} className={`bk-pick${group === g ? " on" : ""}`}>
+                          <button type="button" className={`bk-pill${group === g ? " on" : ""}`} role="radio" aria-checked={group === g} tabIndex={(group ? group === g : n === 0) ? 0 : -1} data-g={g}
+                            onClick={() => { setGroup(g); if (fieldErr?.key === "group") setFieldErr(null); }}>
+                            <span className="bk-pill-n">{t.groups[g]}</span><span className="bk-pill-p">{fill(t.km, sel.km[g])}</span>
+                          </button>
+                          <button type="button" className="bk-info" aria-haspopup="dialog" aria-label={fill(t.groupAria, t.groups[g])} onClick={() => setModal({ kind: "group", g })}><Ic name="info" size={15} /></button>
+                        </span>
+                      ))}
+                    </div>
+                    {fErr("group")}
+                  </div>
+                )}
+              </div>
+            );
+          })}
           {promoBox("riders")}
         </div>
-        <div className="bk-foot">
-          <button type="button" className="bk-btn2" onClick={() => go(prevStep(sel, 2))}>{t.back}</button>
-          <button type="button" className="bk-btn grow" onClick={() => { if (ridersOk()) go(nextStep(sel, 2)); }}>{t.toReview}</button>
-        </div>
+        {bar(2, (
+          <>
+            {typed && !free && <span className="bk-foot-sum tot"><span className="bk-foot-k">{t.total}</span><span className="bk-foot-v">{rental}</span></span>}
+            <button type="button" className="bk-btn grow" onClick={() => { if (ridersOk()) go(ret && (!needsWaiver(sel) || waiverOk === sel.id) ? 3 : nextStep(sel, 2)); }}>{t.toReview}</button>
+          </>
+        ))}
       </section>
     );
   } else if (step === 2.5) {
     const w = waiverCopy(sel), ok = waiverOk === sel.id;
     body = (
-      <section>
-        {head(w.title)}
+      <section aria-labelledby="bk-waiver-h">
+        {head(w.title, "bk-waiver-h")}
         <div className="bk-card">
           <div className="bk-waiver" tabIndex={0} role="region" aria-label={w.title}>{w.body}</div>
           <label className={`bk-agree${ok ? " on" : ""}`}>
-            <input type="checkbox" checked={ok} onChange={(e) => setWaiverOk(e.target.checked ? sel.id : null)} />
+            <input type="checkbox" checked={ok} onChange={(e) => { setWaiverOk(e.target.checked ? sel.id : null); if (e.target.checked) funnel("waiver", fk()); }} />
             <span>{w.agree}</span>
           </label>
         </div>
-        <div className="bk-foot">
-          <button type="button" className="bk-btn2" onClick={() => go(prevStep(sel, 2.5))}>{t.back}</button>
-          <button type="button" className="bk-btn grow" disabled={!ok} onClick={() => go(nextStep(sel, 2.5))}>{t.cont}</button>
-        </div>
+        {bar(2.5, <button type="button" className="bk-btn grow" disabled={!ok} onClick={() => go(nextStep(sel, 2.5))}>{t.cont}</button>)}
       </section>
     );
   } else {
     const lines = riderPrices(sel, riders, prices, acctLite, maxPrices);
     const picked = addons.map((a) => ({ a, it: items.find((x) => x.id === a.id) })).filter((x) => !!x.it);
     const cats = [...new Set(sellable.map((x) => x.category || "Other"))].sort((a, b) => addonCatRank(a, items) - addonCatRank(b, items) || (t.cats[a] ?? a).localeCompare(t.cats[b] ?? b));
+    // an add-on: the whole row takes it or puts it back (row 14; the tick alone was 24px), its count changed in place
     const row = (it: AddonItem) => {
       const q = addonQty(it.id), on = q > 0, c = addonCap(it);
       return (
-        <div key={it.id} className={`bk-addon${on ? " on" : ""}`}>
-          <button type="button" className={`bk-check${on ? " on" : ""}`} aria-pressed={on} aria-label={it.name} onClick={() => setAddon(it.id, on ? -q : 1)}>{on && <Ic name="tick" size={14} />}</button>
+        <div key={it.id} className={`bk-addon${on ? " on" : ""}`} onClick={(e) => { if (!(e.target as HTMLElement).closest("button")) setAddon(it.id, on ? -q : 1); }}>
+          <button type="button" className={`bk-check${on ? " on" : ""}`} role="checkbox" aria-checked={on} aria-label={it.name} onClick={() => setAddon(it.id, on ? -q : 1)}>{on && <Ic name="tick" size={14} />}</button>
           {it.photo && <img className="bk-addon-img" src={it.photo} alt="" loading="lazy" decoding="async" />}
           <div className="bk-addon-txt"><span className="bk-addon-n">{it.name}</span>{it.brand && <span className="bk-addon-b"> · {it.brand}</span>}</div>
           {on && c > 1 && (
             <span className="bk-addon-q">
               <button type="button" onClick={() => setAddon(it.id, -1)} aria-label={`${t.qtyDec}: ${it.name}`}><Ic name="minus" size={14} /></button>
-              <span>{q}</span>
+              <span aria-live="polite">{q}</span>
               <button type="button" onClick={() => setAddon(it.id, 1)} disabled={q >= c} aria-label={`${t.qtyInc}: ${it.name}`}><Ic name="plus" size={14} /></button>
             </span>
           )}
-          <span className="bk-addon-p">{it.price > 0 ? <Amt>{sar(it.price)}</Amt> : t.free}</span>
+          <span className="bk-addon-p">{it.price > 0 ? <Money n={it.price} word={word} /> : t.free}</span>
         </div>
       );
     };
     const isAlready = already || booked > 0;
+    const full = isFull(sel);
+    // A "Change" on a block of the review (row 8): back to its step (the dates, or the riders at this rider's height),
+    // which then comes straight back here.
+    const change = (label: string, rider: number | null) => (
+      <button type="button" className="bk-change" aria-label={`${t.change} · ${label}`} onClick={() => changeTo(rider)}>{t.change}</button>
+    );
     body = (
-      <section>
-        {head(t.reviewTitle)}
+      <section aria-labelledby="bk-review-h">
+        {head(t.reviewTitle, "bk-review-h")}
         {sellable.length > 0 && (
           <div className="bk-card">
             <h3 className="bk-h3">{t.addonsTitle}</h3>
@@ -674,20 +809,24 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           <div className="bk-rv-head">
             <div>
               <p className="bk-k">{t.rideLabel}</p>
-              <p className="bk-rv-date">{sel.kind !== "jcc" && <>{sel.name}<br /></>}{sel.day}</p>
-              <p className="bk-rv-time"><bdi>{sel.time}</bdi></p>
+              <p className="bk-rv-date">{selName(sel)}<br />{sel.day}</p>
+              <p className="bk-rv-time"><bdi>{sel.time}</bdi>{full && wlChip}</p>
               {chip(sel) && <p className="bk-rv-sg">{chip(sel)}</p>}
             </div>
-            {acctNow && <div className="bk-rv-by"><p className="bk-k">{t.bookedBy}</p><p className="bk-rv-name">{acctNow.name}</p></div>}
+            <div className="bk-rv-side">
+              {change(sel.day, null)}
+              {acctNow && <div className="bk-rv-by"><p className="bk-k">{t.bookedBy}</p><p className="bk-rv-name">{acctNow.name}</p></div>}
+            </div>
           </div>
           <p className="bk-k bk-sec">{needsBike(sel) ? t.riders : t.participants} ({qty})</p>
           {riders.map((r, i) => {
             const l = lines[i];
+            const who = (r.name.trim() || (i === 0 ? acctNow?.name : "")) || `${t.rider} ${i + 1}`;
             return (
               <div key={i} className="bk-rv-rider">
                 <span className="bk-num">{i + 1}</span>
                 <div className="bk-rv-mid">
-                  <p className="bk-rv-name">{(r.name.trim() || (i === 0 ? acctNow?.name : "")) || `${t.rider} ${i + 1}`}</p>
+                  <p className="bk-rv-name">{who}</p>
                   {needsBike(sel) && (
                     <p className="bk-rv-meta">
                       {r.type && <span className={`tk-type t-${r.type.toLowerCase().replace(/\s+/g, "")}`}>{typeName(r.type)}</span>}
@@ -696,7 +835,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
                     </p>
                   )}
                 </div>
-                <span className="bk-rv-price">{l.kind === "free" ? t.free : l.kind === "house" ? t.onTheHouse : <Amt>{l.kind === "sar" ? sar(l.n) : sarRange(l.lo, l.hi)}</Amt>}</span>
+                <span className="bk-rv-price">{l.kind === "free" ? t.free : l.kind === "house" ? t.onTheHouse : l.kind === "sar" ? <Money n={l.n} word={word} /> : <Money n={l.lo} hi={l.hi} word={word} />}</span>
+                {needsBike(sel) && change(who, i)}
               </div>
             );
           })}
@@ -707,7 +847,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
                 <div key={a.id} className="bk-rv-rider">
                   {it!.photo ? <img className="bk-addon-img sm" src={it!.photo} alt="" loading="lazy" decoding="async" /> : <span className="bk-num"><Ic name="plus" size={12} /></span>}
                   <div className="bk-rv-mid"><p className="bk-rv-name">{it!.name}{a.qty > 1 && <span className="bk-rv-q"> ×{a.qty}</span>}</p>{it!.brand && <p className="bk-rv-meta">{it!.brand}</p>}</div>
-                  <span className="bk-rv-price"><Amt>{sar((it!.price || 0) * a.qty)}</Amt></span>
+                  <span className="bk-rv-price"><Money n={(it!.price || 0) * a.qty} word={word} /></span>
                 </div>
               ))}
             </>
@@ -717,33 +857,39 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         <div className="bk-card">
           {addonTotal > 0 && (
             <>
-              <p className="bk-sum-row"><span>{t.rental}</span><Amt>{rental}</Amt></p>
-              <p className="bk-sum-row"><span>{t.addons}</span><Amt>{sar(addonTotal)}</Amt></p>
+              <p className="bk-sum-row"><span>{t.rental}</span>{rental}</p>
+              <p className="bk-sum-row"><span>{t.addons}</span><Money n={addonTotal} word={word} /></p>
             </>
           )}
-          <p className={`bk-sum-tot${addonTotal > 0 ? " sep" : ""}`}><span>{t.total}</span><Amt>{grand}</Amt></p>
+          <p className={`bk-sum-tot${addonTotal > 0 ? " sep" : ""}`}><span>{t.total}</span>{grand}</p>
         </div>
         {payable && (
           <div className="bk-card bk-paybox">
-            <h3 className="bk-h3">{t.pay.title}</h3>
+            <h3 className="bk-h3" id="bk-pay-h">{t.pay.title}</h3>
             {pay!.mode === "optional" && (
-              <div className="bk-types one" role="radiogroup" aria-label={t.pay.title}>
+              <div className="bk-types one" role="radiogroup" aria-labelledby="bk-pay-h"
+                onKeyDown={(e) => { const v = radioKey(e, rtl)?.dataset.pay; if (v) setPayNow(v === "now"); }}>
                 <span className={`bk-pick solo${payNow ? " on" : ""}`}>
-                  <button type="button" role="radio" aria-checked={payNow} className={`bk-pill${payNow ? " on" : ""}`} onClick={() => setPayNow(true)}><span className="bk-pill-n">{t.pay.now}</span></button>
+                  <button type="button" role="radio" aria-checked={payNow} tabIndex={payNow ? 0 : -1} data-pay="now" className={`bk-pill${payNow ? " on" : ""}`} onClick={() => setPayNow(true)}><span className="bk-pill-n">{t.pay.now}</span></button>
                 </span>
                 <span className={`bk-pick solo${!payNow ? " on" : ""}`}>
-                  <button type="button" role="radio" aria-checked={!payNow} className={`bk-pill${!payNow ? " on" : ""}`} onClick={() => setPayNow(false)}><span className="bk-pill-n">{t.pay.desk}</span></button>
+                  <button type="button" role="radio" aria-checked={!payNow} tabIndex={payNow ? -1 : 0} data-pay="desk" className={`bk-pill${!payNow ? " on" : ""}`} onClick={() => setPayNow(false)}><span className="bk-pill-n">{t.pay.desk}</span></button>
                 </span>
               </div>
             )}
             {payingNow && pay!.wallet > 0 && (
               <label className={`bk-agree${walletOn ? " on" : ""}`}>
                 <input type="checkbox" checked={walletOn} onChange={(e) => setWalletOn(e.target.checked)} />
-                <span>{fill(t.pay.wallet, sar(pay!.wallet))}</span>
+                <span>{fillNode(t.pay.wallet, <Money n={pay!.wallet} word={word} />)}</span>
               </label>
             )}
             {payingNow && <p className="bk-note">{fill(t.pay.held, pay!.holdMinutes)}</p>}
-            <p className="bk-note">{pay!.refundDays > 1 ? fill(t.pay.refundDays, pay!.refundDays) : pay!.refundDays === 0 ? t.pay.refundSameDay : t.pay.refund}</p>
+            {/* paid online now: the cancellation and refund terms one tap away, in a centred pop-up (the owner, 2026-11-10) */}
+            {payingNow && (
+              <button type="button" className="bk-termrow" aria-haspopup="dialog" onClick={() => setModal({ kind: "terms" })}>
+                <span>{t.cancelTerms}</span><Ic name="go" flip size={16} />
+              </button>
+            )}
             {payingNow && (
               <p className="bk-paymarks" aria-label={t.pay.methods}>
                 {["mada", "visa", "mastercard"].map((m) => <img key={m} src={`/site/payments/${m}.svg`} alt="" width={40} height={26} />)}
@@ -752,20 +898,19 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
             )}
           </div>
         )}
-        {isAlready ? (
-          <div className="bk-already" role="status">
-            <p className="bk-already-t">{t.already}</p>
-            <p className="bk-sub sm">{t.alreadySub}</p>
-            <a className="bk-btn wide" href={links.account}>{t.myBookings}</a>
-          </div>
+        {isAlready && <div className="bk-already" role="status"><p className="bk-already-t">{t.already}</p></div>}
+        {bar(3, isAlready ? (
+          <a className="bk-btn grow" href={links.account}>{t.myBookings}</a>
         ) : (
-          <div className="bk-foot">
+          <>
             {err && <p className="bk-err" role="alert">{err}</p>}
-            <button type="button" className="bk-btn2" disabled={busy} onClick={() => go(prevStep(sel, 3))}>{t.back}</button>
-            <button type="button" className="bk-btn grow" disabled={busy} aria-busy={busy} onClick={() => void submit()}>{busy ? <span className="bk-spin" aria-hidden="true" /> : null}{payingNow ? fill(t.pay.confirm, grand) : t.confirm}</button>
-            {payingNow && <p className="bk-agree-note">{t.pay.agree}</p>}
-          </div>
-        )}
+            {/* the button says the outcome (row 1): Join waitlist on a full session, the amount when it is paid now */}
+            <button type="button" className="bk-btn grow" disabled={busy} aria-busy={busy} onClick={() => void submit(full)}>
+              {busy ? <span className="bk-spin" aria-hidden="true" /> : null}{full ? t.joinWl : payingNow ? fillNode(t.pay.confirm, grand) : t.confirm}
+            </button>
+            {payingNow && !full && <p className="bk-agree-note">{t.pay.agree}</p>}
+          </>
+        ))}
       </section>
     );
   }
@@ -774,7 +919,13 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   return (
     <div className={`xs bk${rtl ? " rtl" : ""}`} ref={top}>
       {wide ? <div className="bk-layout"><div className="bk-main">{body}</div>{side()}</div> : body}
-      {modal && <Pop modal={modal} close={() => setModal(null)} t={t} links={links} locale={locale} sel={sel} acct={acctNow}
+      {modal && <Pop modal={modal} close={() => setModal(null)} t={t} links={links} locale={locale} sel={sel} acct={acctNow} pay={pay}
+        onGone={(wl) => {
+          // Join waitlist: sent again as it was, for the waitlist; another ride: the dates, every rider's answers kept
+          setModal(null);
+          if (wl) void submit(true);
+          else { setRet(true); go(1); }
+        }}
         onPickBike={(slot, ty) => { setType(slot, ty); setModal(null); }}
         onPickGroup={(g) => { setGroup(g); if (fieldErr?.key === "group") setFieldErr(null); setModal(null); }}
         onProfileSaved={(next, v) => {
@@ -803,10 +954,11 @@ function gateFor(s: BookSession, a: BookAccount): Modal {
 // ── The pop-ups: centred on every screen (never a bottom sheet) ─────────────────────────────────
 type PopProps = {
   modal: NonNullable<Modal>; close: () => void; t: BookingText; links: FlowLinks; locale: string; sel: BookSession | null; acct: BookAccount | null;
+  pay: Props["pay"]; onGone: (waitlist: boolean) => void;
   onPickBike: (slot: number, ty: BikeType) => void; onPickGroup: (g: RideGroup) => void;
   onProfileSaved: (next: string | null, v: { birth: string; nationality: string }) => void; pillName: (ty: string) => string;
 };
-function Pop({ modal, close, t, links, locale, sel, acct, onPickBike, onPickGroup, onProfileSaved, pillName }: PopProps) {
+function Pop({ modal, close, t, links, locale, sel, acct, pay, onGone, onPickBike, onPickGroup, onProfileSaved, pillName }: PopProps) {
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const from = document.activeElement as HTMLElement | null;
@@ -823,6 +975,36 @@ function Pop({ modal, close, t, links, locale, sel, acct, onPickBike, onPickGrou
         <p className="bk-sub sm">{t.signSub}</p>
         <SignIn locale={locale} />
         <p className="bk-pop-alt"><a href={links.signup}>{t.signCreate}</a></p>
+      </div>
+    );
+  } else if (modal.kind === "gone") {
+    // the last place went to another device while this rider booked it (PLACE_GONE, row 13): nothing was kept; the
+    // waitlist or another date, the rider's answers kept either way. A session without a bike never says ride.
+    inner = (
+      <div className="bk-pop-body">
+        <div className="bk-pop-head"><h2 id={label} className="bk-pop-title">{t.goneTitle}</h2>{x}</div>
+        <div className="bk-pop-foot">
+          <button type="button" className="bk-btn2" onClick={() => onGone(false)}>{sel && !needsBike(sel) ? t.goneOtherNb : t.goneOther}</button>
+          <button type="button" className="bk-btn" onClick={() => onGone(true)}>{t.joinWl}</button>
+        </div>
+      </div>
+    );
+  } else if (modal.kind === "terms") {
+    // the cancellation and refund terms of a booking paid online now (the owner, 2026-11-10, question 3): the refund rule
+    // from staff's pay settings, then the Terms' refunds clause as staff keep it (English or Arabic, as the Terms page)
+    const days = pay?.refundDays ?? 1;
+    const terms = pay?.terms ?? null;
+    inner = (
+      <div className="bk-pop-body">
+        <div className="bk-pop-head"><h2 id={label} className="bk-pop-title">{t.cancelTerms}</h2>{x}</div>
+        <p className="bk-pop-msg">{days > 1 ? fill(t.pay.refundDays, days) : days === 0 ? t.pay.refundSameDay : t.pay.refund}</p>
+        {terms && terms.blocks.length > 0 && (
+          <div className="bk-terms" lang={terms.lang} dir={terms.lang === "ar" ? "rtl" : "ltr"}>
+            {terms.title && <h3 className="bk-h3">{terms.title}</h3>}
+            {terms.blocks.map((b, k) => ("h" in b ? <h4 key={k}>{b.h}</h4> : "ul" in b ? <ul key={k}>{b.ul.map((y, j) => <li key={j}>{y}</li>)}</ul> : <p key={k}>{b.p}</p>))}
+          </div>
+        )}
+        <div className="bk-pop-foot"><button type="button" className="bk-btn" onClick={close}>{t.close}</button></div>
       </div>
     );
   } else if (modal.kind === "members") {
@@ -900,7 +1082,7 @@ function Pop({ modal, close, t, links, locale, sel, acct, onPickBike, onPickGrou
   }
   return (
     <div className="bk-backdrop" onClick={(e) => { if (e.target === e.currentTarget) close(); }}>
-      <div ref={box} className={`bk-pop${modal.kind === "bike" || modal.kind === "group" ? " sheet" : ""}`} role="dialog" aria-modal="true" aria-labelledby={label}>{inner}</div>
+      <div ref={box} className={`bk-pop${modal.kind === "bike" || modal.kind === "group" ? " sheet" : ""}`} role={modal.kind === "gone" ? "alertdialog" : "dialog"} aria-modal="true" aria-labelledby={label}>{inner}</div>
     </div>
   );
 }
