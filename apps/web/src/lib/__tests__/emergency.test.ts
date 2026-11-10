@@ -52,6 +52,12 @@ describe("a contact", () => {
     expect(emPhone("+966", "")).toBe("");
     expect(emPhone("+1", "(415) 555-0132")).toBe("+14155550132");
     expect(emPhone("+966", "+966 0551234567")).toBe("+966551234567");
+    expect(emPhone("+966", "966551234567")).toBe("+966551234567");
+  });
+  it("keeps the code on a national number that only begins with the code's digits", () => {
+    expect(emPhone("+91", "9198765432")).toBe("+919198765432"); // an Indian mobile in the 91 series
+    expect(emPhone("+7", "7012345678")).toBe("+77012345678"); // a Kazakh mobile
+    expect(emPhone("+91", "919198765432")).toBe("+919198765432"); // the same, typed with its code
   });
 });
 

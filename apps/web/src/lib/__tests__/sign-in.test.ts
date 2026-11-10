@@ -79,7 +79,8 @@ describe("api/account/password", () => {
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
     expect(called(f, "customer_set_own_password")).toEqual([{ p_id: "c1", p_token: OLD, p_new_pwd: "MyOwn2026" }]);
-    expect(cookies(res)).toEqual([`mm_acct=c1~${NEW}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`, "mm_pwd=; Path=/api/account; Max-Age=0; HttpOnly; Secure; SameSite=Lax"]);
+    // the session kept aside for an earlier visitor goes, as on any sign-in (api/account)
+    expect(cookies(res)).toEqual([`mm_acct=c1~${NEW}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`, "mm_pwd=; Path=/api/account; Max-Age=0; HttpOnly; Secure; SameSite=Lax", "mm_acct_next=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax"]);
   });
   it("hands the Learn to ride form the new session instead of a cookie", async () => {
     db();

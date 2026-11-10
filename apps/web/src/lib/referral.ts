@@ -56,8 +56,10 @@ export function referrerBody(b: unknown): { code: string } | null {
   return v && v.length <= 60 ? { code: v } : null;
 }
 
-/** customer_set_referrer's refusals, as the card names them; anything else reads as a code not found. */
-export const REFERRER_REASONS = ["invalid", "self", "already", "not_new", "off"] as const;
+/** customer_set_referrer's refusals, as the card names them; anything else reads as a code not found. "busy": the
+ *  database's meter for the rider's address is full (the card says to try again in a few minutes); a database that
+ *  answers "invalid" for it too is read as before. */
+export const REFERRER_REASONS = ["invalid", "self", "already", "not_new", "off", "busy"] as const;
 export type ReferrerReason = (typeof REFERRER_REASONS)[number];
 export function referrerReason(data: unknown): ReferrerReason | "ok" {
   const d = data && typeof data === "object" ? (data as { ok?: unknown; reason?: unknown }) : null;
