@@ -67,6 +67,7 @@ export default function WaiverGateLoader({ locale }: { locale: string }) {
     setRound((n) => n + 1);
   };
 
-  if (pending) return <WaiverGate key={`${pending.sessionId}-${round}`} {...pending} onDone={(r) => done(pending.sessionId, r)} />;
+  // a Blood Donation event's donor and visitor rows are agreed one after the other: each role is skipped on its own
+  if (pending) return <WaiverGate key={`${pending.sessionId}-${round}`} {...pending} onDone={(r) => done(pending.role ? `${pending.sessionId}.${pending.role}` : pending.sessionId, r)} />;
   return clear ? <ShareGateLoader locale={locale} /> : null;
 }

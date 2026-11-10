@@ -550,10 +550,22 @@ describe("its agreement, never the activity waiver", () => {
     vi.stubGlobal("fetch", db2([row()]));
     expect(await (await get("locale=en")).json()).toEqual({ signedIn: true, pending: {
       sessionId: BD.id, version: "blood-2026-11-v1", kind: "blood", copy: waiverCopy("blood", EN), name: "Micromobility Blood Donation", when: "Thursday · 5 Nov 2099", time: "5 PM – 11 PM", venue: "Jeddah Corniche Circuit",
-      ridersLabel: "Donor", riders: [{ name: "Test Donor", num: 7 }],
+      ridersLabel: "Donor", riders: [{ name: "Test Donor", num: 7 }], role: "donor",
       kicker: "Agreement needed", sub: "You’re registered for this event. Read this agreement and agree to it to continue.",
     } });
     expect((await (await get("locale=ar")).json()).pending).toMatchObject({ kind: "blood", name: "مايكروموبيليتي التبرع بالدم", kicker: "إقرار مطلوب", sub: "أنت مسجّل في هذه الفعالية. اقرأ هذا الإقرار ووافق عليه للمتابعة.", ridersLabel: "المتبرع" });
+  });
+  it("asks the first unsigned row's role, and a donor and a visitor waiting each in turn", async () => {
+    const vis = row({ id: "q8", queue_num: 8, name: "Test Visitor", blood_role: "visitor" });
+    // the donor agreed already: the visitor's agreement, never the donor's again
+    vi.stubGlobal("fetch", db2([row({ waiver_version: "blood-2026-11-v1" }), vis]));
+    expect((await (await get("locale=en")).json()).pending).toMatchObject({ version: BLOOD_VISITOR_VERSION, role: "visitor", copy: bloodVisitorCopy(EN), riders: [{ name: "Test Visitor", num: 8 }] });
+    // a visitor on the booking does not turn a waiting donor's agreement into the visitor's
+    vi.stubGlobal("fetch", db2([row(), vis]));
+    expect((await (await get("locale=en")).json()).pending).toMatchObject({ version: "blood-2026-11-v1", role: "donor", riders: [{ name: "Test Donor", num: 7 }] });
+    // once the donor's is agreed on this page, the visitor's follows; both agreed, nothing is asked
+    expect((await (await get(`locale=en&skip=${BD.id}.donor`)).json()).pending).toMatchObject({ version: BLOOD_VISITOR_VERSION, role: "visitor" });
+    expect((await (await get(`locale=en&skip=${BD.id}.donor,${BD.id}.visitor`)).json()).pending).toBeNull();
   });
   it("records that version, and refuses any other", async () => {
     const f = db2([]);
