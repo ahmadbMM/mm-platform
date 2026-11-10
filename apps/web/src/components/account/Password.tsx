@@ -82,10 +82,15 @@ export function ForcedPassword() {
   const { t } = f;
   const router = useRouter();
   const box = useRef<HTMLDialogElement>(null);
+  const answered = useRef(false);
   useEffect(() => { const d = box.current; if (d && !d.open && typeof d.showModal === "function") d.showModal(); }, []);
   return (
-    <dialog ref={box} className="ac-dlg" aria-labelledby="ac-fpw-h" onCancel={(e) => e.preventDefault()}>
-      <form noValidate onSubmit={async (e) => { e.preventDefault(); if (await f.submit()) { box.current?.close(); router.refresh(); } }}>
+    // Only a new password closes it. Escape's cancel is refused, but a browser may close a modal pop-up anyway (Chrome
+    // honours the refusal only after a tap on the page, and once; Android's back gesture), so a close that is not the
+    // answer opens it again.
+    <dialog ref={box} className="ac-dlg" aria-labelledby="ac-fpw-h" onCancel={(e) => e.preventDefault()}
+      onClose={(e) => { const d = e.currentTarget; if (!answered.current && d.isConnected && !d.open) { try { d.showModal(); } catch { /* gone */ } } }}>
+      <form noValidate onSubmit={async (e) => { e.preventDefault(); if (await f.submit()) { answered.current = true; box.current?.close(); router.refresh(); } }}>
         <h2 id="ac-fpw-h">{t.forcedTitle}</h2>
         <p className="ac-sub">{t.forcedSub}</p>
         <PwInput id="ac-fpw-a" value={f.a} onChange={f.setA} label={t.pwNew} auto="new-password" show={f.show} />

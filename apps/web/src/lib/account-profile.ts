@@ -78,16 +78,19 @@ export const COUNTRY_CODES = ["+966", "+971", "+974", "+965", "+973", "+968"] as
 
 const asciiDigits = (s: string) => s.replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)));
 /** A number typed after a country code, stored as +<code><number> (_normPhone): an explicit + or 00
- *  keeps its own code, a trunk 0 goes, a number that already starts with the code keeps it. */
+ *  keeps its own code, a trunk 0 goes, a number that already starts with the code keeps it. The trunk
+ *  0 after the code goes however the code came (+, 00 or its digits): "00966 05..." was kept as
+ *  +9660..., which the sign-in (966 05... read as +9665...) and the taken-number check never matched. */
 export function normPhone(raw: string, cc: string = "+966"): string {
   const ccd = cc.replace(/\D/g, "");
   let s = asciiDigits(String(raw ?? "")).replace(INVISIBLE, "").trim().replace(/[\s()\-.]/g, "");
   if (!s) return "";
-  if (s[0] === "+") { let d = s.slice(1).replace(/\D/g, ""); if (ccd && d.startsWith(`${ccd}0`)) d = ccd + d.slice(ccd.length + 1); return `+${d}`; }
+  const intl = (d: string) => `+${ccd && d.startsWith(`${ccd}0`) ? ccd + d.slice(ccd.length + 1) : d}`;
+  if (s[0] === "+") return intl(s.slice(1).replace(/\D/g, ""));
   s = s.replace(/\D/g, "");
   if (!s) return "";
-  if (s.startsWith("00")) return `+${s.slice(2)}`;
-  if (ccd && s.startsWith(ccd) && s.length >= 11 && s.length - ccd.length >= 8) return `+${s}`;
+  if (s.startsWith("00")) return intl(s.slice(2));
+  if (ccd && s.startsWith(ccd) && s.length >= 11 && s.length - ccd.length >= 8) return intl(s);
   if (s[0] === "0") return cc + s.slice(1);
   return cc + s;
 }
@@ -157,10 +160,12 @@ export const SOCIAL_NETS = [
 ] as const;
 export type SocialKey = (typeof SOCIAL_NETS)[number]["key"];
 export type Socials = Partial<Record<SocialKey, string>>;
-/** Whatever was pasted - a profile link, an @handle - as the bare handle (_socNorm). */
+/** Whatever was pasted - a profile link, an @handle - as the bare handle (_socNorm). A LinkedIn link
+ *  may come from a country's address (sa.linkedin.com/in/...); the other networks' short links
+ *  (vm.tiktok.com/<code>) are not handles, so only LinkedIn takes one. */
 export function socNorm(raw: unknown): string {
   let v = String(raw ?? "").trim();
-  v = v.replace(/^(?:https?:\/\/)?(?:www\.|m\.|mobile\.)?(?:instagram\.com|x\.com|twitter\.com|tiktok\.com|linkedin\.com)\/(?:in\/)?/i, "");
+  v = v.replace(/^(?:https?:\/\/)?(?:(?:www\.|m\.|mobile\.)?(?:instagram\.com|x\.com|twitter\.com|tiktok\.com)|(?:[a-z]{2,3}\.|www\.|m\.|mobile\.)?linkedin\.com)\/(?:in\/)?/i, "");
   v = v.replace(/[?#].*$/, "").replace(/^[@/\s]+|[/\s]+$/g, "");
   return v.slice(0, 100);
 }
@@ -363,6 +368,12 @@ export const FIX_FIELDS = ["name", "email", "phone", "birth_date", "gender", "na
 export type FixField = (typeof FIX_FIELDS)[number];
 /** The asked fields the page knows, in order, each once. */
 export const fixClean = (a: unknown): FixField[] => { const on = new Set(Array.isArray(a) ? a : []); return FIX_FIELDS.filter((k) => on.has(k)); };
+/** The asked fields the page cannot answer: the ones only the booking app's check-up has for now (the WhatsApp number,
+ *  the bike type, profession, company, how they heard of us, each handle and the two emergency contacts: its FIX_EXTRA),
+ *  and any it adds later. Dropped, a request for only those never showed here, and one for a name and an emergency
+ *  contact read "done" once the name was saved; the request stays in view with the way to the booking app instead. */
+export const fixElsewhere = (a: unknown): string[] =>
+  [...new Set(Array.isArray(a) ? a : [])].filter((k): k is string => typeof k === "string" && /^[a-z0-9_]{1,40}$/.test(k) && !(FIX_FIELDS as readonly string[]).includes(k));
 /** One item per box: country and city are one answer. */
 export function fixItems(fields: FixField[]): (Exclude<FixField, "country" | "city"> | "residence")[] {
   const out: (Exclude<FixField, "country" | "city"> | "residence")[] = [];
@@ -430,20 +441,24 @@ export const daysUntil = (date: string, today: string) => Math.max(0, Math.round
 // ── Purchases (customer_purchases) ───────────────────────────────────────────────────────────
 
 export type Purchase = { id: string; at: string | null; name: string; category: string | null; qty: number; price: number; pay: string | null;
-  receipt_id: string | null; session_date: string | null; session_title: string | null; voided: boolean; refunded: boolean };
+  receipt_id: string | null; session_date: string | null; session_title: string | null; voided: boolean; refunded: boolean;
+  /** What it cost the rider: nothing on the house (pay "house" keeps the item's list price; the booking app's _purchHtml, 2026-10-05). */
+  amount: number };
 /** The rows as the list shows them (the card meta rows the desk keeps are not purchases), and the
- *  total of the ones that stand: a voided or refunded sale is shown struck through and not counted. */
+ *  total of the ones that stand: a voided or refunded sale is shown struck through and not counted,
+ *  and one on the house counts nothing. */
 export function purchasesOf(data: unknown): { rows: Purchase[]; total: number } {
   const rows: Purchase[] = (Array.isArray(data) ? data : []).filter((r) => r && typeof r === "object" && (r as { category?: unknown }).category !== "__cardmeta__").map((r) => {
     const x = r as Record<string, unknown>;
+    const qty = Number(x.qty) || 0, price = Number(x.price) || 0;
     return {
       id: String(x.id ?? ""), at: typeof x.at === "string" ? x.at : null, name: String(x.name ?? ""), category: typeof x.category === "string" ? x.category : null,
-      qty: Number(x.qty) || 0, price: Number(x.price) || 0, pay: typeof x.pay === "string" ? x.pay : null,
+      qty, price, pay: typeof x.pay === "string" ? x.pay : null, amount: x.pay === "house" ? 0 : qty * price,
       receipt_id: x.receipt_id == null ? null : String(x.receipt_id), session_date: typeof x.session_date === "string" ? x.session_date : null,
       session_title: typeof x.session_title === "string" ? x.session_title : null,
       voided: x.voided === true, refunded: x.refunded === true || x.pay === "refunded",
     };
   });
-  const total = Math.round(rows.filter((r) => !r.voided && !r.refunded).reduce((s, r) => s + r.qty * r.price, 0) * 100) / 100;
+  const total = Math.round(rows.filter((r) => !r.voided && !r.refunded).reduce((s, r) => s + r.amount, 0) * 100) / 100;
   return { rows, total };
 }

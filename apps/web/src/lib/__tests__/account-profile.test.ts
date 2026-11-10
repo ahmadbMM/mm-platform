@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   aboutArgs, cityFile, cleanChanges, cleanFix, countryOk, dobError, fixClean, fixItems, fullNameError, imageKind, initials, joinName3, nameCharsOk,
-  nameError, namePartsOk, nameTyped, normPhone, passwordError, passwordOk, photoBase, photoUrlOk, profileArgs, profileError, purchasesOf,
+  fixElsewhere, nameError, namePartsOk, nameTyped, normPhone, passwordError, passwordOk, photoBase, photoUrlOk, profileArgs, profileError, purchasesOf,
   socNorm, socRead, socialsChanged, splitName3, splitPhone, tierOf, daysUntil,
 } from "../account-profile";
 
@@ -41,6 +41,9 @@ describe("contact, height and birth date", () => {
     expect(normPhone("551234567", "+966")).toBe("+966551234567");
     expect(normPhone("+9660551234567", "+966")).toBe("+966551234567");
     expect(normPhone("00971501234567", "+966")).toBe("+971501234567");
+    // the trunk 0 after the code goes however the code was typed, as the sign-in reads it
+    expect(normPhone("00966 0501234567", "+966")).toBe("+966501234567");
+    expect(normPhone("966 0501234567", "+966")).toBe("+966501234567");
     expect(normPhone("٠٥٥١٢٣٤٥٦٧", "+966")).toBe("+966551234567");
     expect(normPhone("501234567", "+971")).toBe("+971501234567");
     expect(splitPhone("+971501234567")).toEqual({ cc: "+971", num: "501234567" });
@@ -67,6 +70,8 @@ describe("socials", () => {
     expect(socNorm("https://www.instagram.com/mm.jeddah/?hl=en")).toBe("mm.jeddah");
     expect(socNorm("@mm_jeddah")).toBe("mm_jeddah");
     expect(socNorm("https://www.linkedin.com/in/malik-n/")).toBe("malik-n");
+    expect(socNorm("https://sa.linkedin.com/in/ahmed-ali/")).toBe("ahmed-ali"); // a country's LinkedIn address
+    expect(socNorm("https://vm.tiktok.com/ZSabc123/")).toBe("https://vm.tiktok.com/ZSabc123"); // a short link is no handle
     expect(socRead({ instagram: "@mm", x: "", tiktok: " ", linkedin: "linkedin.com/in/abc" })).toEqual({ val: { instagram: "mm", linkedin: "abc" } });
     expect(socRead({ instagram: "", x: "" })).toEqual({ val: null });
     expect(socRead({ x: "way_too_long_for_x_handles" })).toEqual({ err: "x" });
@@ -129,6 +134,9 @@ describe("passwords, corrections, photos, purchases, the season", () => {
   });
   it("asks corrections in the app's order, country and city as one answer", () => {
     expect(fixClean(["photo", "city", "name", "nope", "country"])).toEqual(["name", "country", "city", "photo"]);
+    // what only the booking app answers is kept apart, not dropped
+    expect(fixElsewhere(["photo", "whatsapp", "emergency", "emergency", "Bad Key", 7, "linkedin"])).toEqual(["whatsapp", "emergency", "linkedin"]);
+    expect(fixElsewhere(null)).toEqual([]);
     expect(fixItems(["name", "country", "city", "photo"])).toEqual(["name", "residence", "photo"]);
     const base = photoBase("https://x.supabase.co");
     expect(cleanFix(["name", "email", "height"], { name: "Ali K", email: "a@privaterelay.appleid.com", height: "99" }, base, TODAY))
@@ -154,9 +162,11 @@ describe("passwords, corrections, photos, purchases, the season", () => {
       { id: "2", name: "Gel", qty: 1, price: 12.5, pay: "card", voided: true, refunded: false },
       { id: "3", name: "Tube", qty: 1, price: 30, pay: "refunded", voided: false, refunded: false },
       { id: "4", name: "meta", category: "__cardmeta__", qty: 1, price: 99 },
+      { id: "5", name: "Cap", qty: 2, price: 15, pay: "house", voided: false, refunded: false },
     ]);
-    expect(p.rows.map((r) => r.id)).toEqual(["1", "2", "3"]);
+    expect(p.rows.map((r) => r.id)).toEqual(["1", "2", "3", "5"]);
     expect(p.rows[2].refunded).toBe(true);
+    expect(p.rows[3]).toMatchObject({ price: 15, amount: 0 }); // on the house: the list price kept, nothing to pay
     expect(p.total).toBe(10);
     expect(purchasesOf(null)).toEqual({ rows: [], total: 0 });
   });

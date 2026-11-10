@@ -1,6 +1,6 @@
 import { rpcServer } from "./account";
 import type { Session } from "./account-core";
-import { fixClean, purchasesOf, type AboutRow, type FixField, type Purchase } from "./account-profile";
+import { fixClean, fixElsewhere, purchasesOf, type AboutRow, type FixField, type Purchase } from "./account-profile";
 
 // Everything else My Account reads for the signed-in rider, all at once and on the server, with
 // the cookie's own id and token: how the account signs in and the community form's answers
@@ -22,6 +22,8 @@ export type AccountExtras = {
   mustChangePwd: boolean;
   purchases: { rows: Purchase[]; total: number } | null;
   fix: FixField[];
+  /** Staff asked about details only the booking app answers for now (lib/account-profile.ts fixElsewhere). */
+  fixMore: boolean;
   ambassador: AmbassadorMine | null;
 };
 
@@ -47,6 +49,7 @@ export async function loadAccountExtras(s: Session): Promise<AccountExtras> {
     mustChangePwd: pwd.data === true,
     purchases: Array.isArray(purch.data) ? purchasesOf(purch.data) : null,
     fix: fix.status < 400 ? fixClean(fix.data) : [],
+    fixMore: fix.status < 400 && fixElsewhere(fix.data).length > 0,
     ambassador: m && m.ok === true && m.ambassador === true ? {
       code: String(m.code ?? ""), status: String(m.status ?? ""), earned: num(m.earned), balance: num(m.balance), uses: num(m.uses),
       events: (Array.isArray(m.events) ? m.events : []).slice(0, 5).map((e) => {

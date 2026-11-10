@@ -5,7 +5,9 @@ import { useRouter } from "next/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import { intlOf } from "@/i18n/locales";
 import { APPLE_RELAY, fixItems, nameTyped, normPhone, splitPhone, type FixField } from "@/lib/account-profile";
+import { BOOKING_URL } from "@/lib/links";
 import { T } from "./Account.text";
+import { profileSaved } from "./BadgeCelebrate";
 import { CitySelect, CountrySelect, DobPicker, PhoneInput, postJson, uploadPhoto, useNatOptions } from "./fields";
 
 // What staff asked the rider to correct (customer_fix_fields), and what the server asks for itself
@@ -13,9 +15,16 @@ import { CitySelect, CountrySelect, DobPicker, PhoneInput, postJson, uploadPhoto
 // Apple one, a community member's birth date and nationality - as the booking app's check-up asks
 // it (renderFixGate): one box per item, what is on the account above it, saved together through
 // /api/account/fix. What the server took is gone from the list; what it refused is asked again.
+// Details only the booking app answers for now (more: the WhatsApp number, the handles, the emergency
+// contacts...) keep the request in view with the way to its account page, and it is never "done" while
+// they are asked.
 type Was = { name: string; email: string; phone: string; birth_date: string | null; gender: string | null; nationality: string | null; country: string | null; city: string | null; height: number | null };
 
-export default function FixRequest({ locale, fields: initial, was }: { locale: string; fields: FixField[]; was: Was }) {
+export default function FixRequest({ locale, fields: initial, more: moreAtFirst = false, fillingFor = null, was }: {
+  locale: string; fields: FixField[]; more?: boolean; was: Was;
+  /** The account, while its profile is short of full: a save here may fill it (Race Ready, ProfileForm's fillingFor). */
+  fillingFor?: string | null;
+}) {
   const t = useLocalize(T);
   const router = useRouter();
   const natOpts = useNatOptions(locale);
@@ -27,9 +36,29 @@ export default function FixRequest({ locale, fields: initial, was }: { locale: s
   const [photoBusy, setPhotoBusy] = useState(false);
   const [net, setNet] = useState("");
   const [done, setDone] = useState(false);
+  const [more, setMore] = useState(moreAtFirst);
   const set = (k: keyof typeof v, x: string) => { setV((c) => ({ ...c, [k]: x })); setErrs((e) => { const n = { ...e }; delete n[k === "country" || k === "city" ? "residence" : k === "password2" ? "password" : k === "cc" || k === "num" ? "phone" : k]; return n; }); };
-  if (done) return <div className="ac-sec"><p className="ac-panel ac-ok" role="status">{t.fixThanks}</p></div>;
-  if (!fields.length) return null;
+  if (done && !more) return <div className="ac-sec"><p className="ac-panel ac-ok" role="status">{t.fixThanks}</p></div>;
+  if (!fields.length && !more) return null;
+  const kicker = (
+    <p className="ac-fix-kicker">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 21V4" /><path d="M5 4.5c2.4-1.4 4.7-1.4 7 0s4.6 1.4 7 0v8.5c-2.4 1.4-4.7 1.4-7 0s-4.6-1.4-7 0" /></svg>
+      {t.fixKicker}
+    </p>
+  );
+  const elsewhere = more && (
+    <p className="ac-hint">{t.fixElsewhere} <a href={`${BOOKING_URL}account`}>{t.fixElsewhereGo}</a></p>
+  );
+  // nothing left to answer here: only what the booking app asks
+  if (done || !fields.length) return (
+    <div className="ac-sec">
+      <div className="ac-panel ac-fix" role="region" aria-labelledby="ac-fix-h">
+        {kicker}
+        <h2 id="ac-fix-h" className="ac-panel-h">{t.fixTitle}</h2>
+        {elsewhere}
+      </div>
+    </div>
+  );
 
   const items = fixItems(fields);
   const own = fields.every((k) => k === "password" || (k === "email" && was.email.endsWith(APPLE_RELAY)) || ((k === "birth_date" || k === "nationality") && !was[k]));
@@ -64,10 +93,12 @@ export default function FixRequest({ locale, fields: initial, was }: { locale: s
       else values[k] = v[k];
     }
     setBusy(true);
-    const b = await postJson<{ left?: string[]; errors?: Record<string, string> }>("/api/account/fix", { values });
+    const b = await postJson<{ left?: string[]; more?: boolean; errors?: Record<string, string> }>("/api/account/fix", { values });
     setBusy(false);
     if (b.ok) {
       const left = (b.left ?? []) as FixField[];
+      if (fillingFor) profileSaved(fillingFor);
+      if (typeof b.more === "boolean") setMore(b.more);
       if (!left.length) { setDone(true); router.refresh(); return; }
       setFields(left);
       setErrs(Object.fromEntries(fixItems(left).map((k) => [k, "check"])));
@@ -80,10 +111,7 @@ export default function FixRequest({ locale, fields: initial, was }: { locale: s
   return (
     <div className="ac-sec">
       <form className="ac-panel ac-fix" onSubmit={save} noValidate aria-labelledby="ac-fix-h">
-        <p className="ac-fix-kicker">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 21V4" /><path d="M5 4.5c2.4-1.4 4.7-1.4 7 0s4.6 1.4 7 0v8.5c-2.4 1.4-4.7 1.4-7 0s-4.6-1.4-7 0" /></svg>
-          {t.fixKicker}
-        </p>
+        {kicker}
         <h2 id="ac-fix-h" className="ac-panel-h">{own ? t.fixOwnTitle : t.fixTitle}</h2>
         <p className="ac-sub">{own ? t.fixOwnSub : t.fixSub}</p>
         <p className="ac-fix-head">{t.fixHead} <span>{items.length}</span></p>
@@ -133,6 +161,7 @@ export default function FixRequest({ locale, fields: initial, was }: { locale: s
           })}
         </div>
         <p className="ac-hint">{t.fixNote}</p>
+        {elsewhere}
         {net && <p className="ac-err" role="alert">{net}</p>}
         <button type="submit" className="ac-go ac-go-auto" disabled={busy || photoBusy}>{busy ? t.saving : t.fixSave}</button>
       </form>

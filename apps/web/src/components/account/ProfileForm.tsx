@@ -8,6 +8,7 @@ import {
   socRead, socialsOf, splitName3, splitPhone, aboutText, aboutTextOk, type ProfileChanges, type SocialKey,
 } from "@/lib/account-profile";
 import { T } from "./Account.text";
+import { profileSaved } from "./BadgeCelebrate";
 import { CitySelect, CountrySelect, DobPicker, PhoneInput, SignInMarks, postJson, uploadPhoto, useNatOptions } from "./fields";
 
 // The account's details, as the booking app's My Account edits them (renderAccount / saveAccount):
@@ -22,9 +23,12 @@ export type ProfileProps = {
     nationality: string | null; type_preference: string | null; socials: unknown; gender: string | null; photo: string | null };
   about: { profession?: string | null; workplace?: string | null; heard_from?: string | null; sign_in?: string | null } | null;
   typeNames: Record<string, string>;
+  /** The account, while its profile is short of full (Race Ready not earned yet): a save or a photo then marks this tab,
+   *  and Race Ready pops up if it filled the profile (BadgeCelebrate). Null when the profile is full already. */
+  fillingFor?: string | null;
 };
 
-export default function ProfileForm({ locale, profile, about, typeNames }: ProfileProps) {
+export default function ProfileForm({ locale, profile, about, typeNames, fillingFor = null }: ProfileProps) {
   const t = useLocalize(T);
   const router = useRouter();
   const natOpts = useNatOptions(locale);
@@ -52,7 +56,7 @@ export default function ProfileForm({ locale, profile, about, typeNames }: Profi
     setPhotoBusy(true); setPhotoMsg("");
     const r = await uploadPhoto(file);
     setPhotoBusy(false);
-    if ("photo" in r) { setPhoto(r.photo); setPhotoMsg(t.photoSaved); router.refresh(); }
+    if ("photo" in r) { if (fillingFor) profileSaved(fillingFor); setPhoto(r.photo); setPhotoMsg(t.photoSaved); router.refresh(); }
     else setPhotoMsg(r.error === "read" || r.error === "invalid" ? t.photoRead : r.error === "signin" ? t.errors.signin : t.photoFail);
   }
   async function removePhoto() {
@@ -124,7 +128,7 @@ export default function ProfileForm({ locale, profile, about, typeNames }: Profi
     const b = await postJson("/api/account/profile", { changes: c.ch });
     setBusy(false);
     // What is on the form is what is on file now: the next save compares against it.
-    if (b.ok) { setBase((cur) => ({ ...cur, ...f, socials: { ...f.socials } })); setDone(true); router.refresh(); return; }
+    if (b.ok) { if (fillingFor) profileSaved(fillingFor); setBase((cur) => ({ ...cur, ...f, socials: { ...f.socials } })); setDone(true); router.refresh(); return; }
     const code = b.error || "generic";
     const net = /^social_(.+)$/.exec(code);
     setErr(net ? t.socialErr(SOCIAL_NETS.find((n) => n.key === net[1])?.label ?? net[1]) : t.errors[code] || t.errors.generic);
