@@ -3,7 +3,6 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
-import ClubCard from "@/components/club/ClubCard";
 import SignIn from "@/components/account/SignIn";
 import SignOut from "@/components/account/SignOut";
 import "@/components/account/account.css";
@@ -25,11 +24,9 @@ import SportCard from "@/components/account/SportCard";
 import { sportWords } from "@/components/account/Sport.words";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
-import "@/components/club/club.css";
 import "../handoff.css";
 import { accountSchema } from "@/content/pages/account";
 import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
-import { clubSchema } from "@/content/pages/club";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { readAccount, readBookings, rpcServer } from "@/lib/account";
@@ -53,7 +50,6 @@ import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
 import { riyadhClock } from "@/lib/workshop-days";
-import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
@@ -62,12 +58,13 @@ import { ArrowIcon } from "@/components/site/Icons";
 import Qr from "@/components/booking/Qr";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
-// the next rides as the booking app's own tickets (changing one opens the booking app), the Club
-// card opened with the account's own email and mobile, and shortcuts. After the booking app hands a
-// rider back (api/account/handoff), it says whom they are signed in as (?handoff=done), or, when the
-// account handed back is not the one signed in here, asks which one this browser keeps.
+// the next rides as the booking app's own tickets (changing one opens the booking app), a link to the
+// Club card (on /club, read with the account's own session since club_card was closed, 2026-11-11),
+// and shortcuts. After the booking app hands a rider back (api/account/handoff), it says whom they are
+// signed in as (?handoff=done), or, when the account handed back is not the one signed in here, asks
+// which one this browser keeps.
 // In three parts since 2026-11-09, as the booking app's account page (the owner: "divide the customer my account page
-// into 3 separate pages account stats badges"): Account at /account (the tickets, the Club card, the wallet, Invite
+// into 3 separate pages account stats badges"): Account at /account (the tickets, the Club card link, the wallet, Invite
 // friends and the rest), Stats at /account/stats (Your rides and more of the record), Badges at /account/badges. The
 // switch under the greeting moves between them; any other /account/... is not a page.
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -168,7 +165,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // badge counts the friends who rode.
   const referralP = rpcServer<unknown>("customer_referral", { p_id: acct.id, p_token: acct.token, p_make: true }).then((r) => (r.status === 200 ? r.data : null));
 
-  // Account: the tickets, the rating, the Club card, the wallet, Invite friends, the blood type, the sport and the shortcuts.
+  // Account: the tickets, the rating, the Club card link, the wallet, Invite friends, the blood type, the sport and the shortcuts.
   const accountMain = async () => {
     const groups = ticketGroups(rows, today);
     const doneTonight = doneToday(rows, today);
@@ -261,8 +258,6 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const manage = appLink({ tab: "bookings" });
     // the booking app's My Bookings, which a ticket's calendar entry leads back to (its URL line)
     const myBookings = (() => { try { return new URL("/my-bookings", app).toString(); } catch { return null; } })();
-    const club = resolvePage(clubSchema, content, L);
-    const tierNames: [string, string, string] = [S(club.tiers.t1Name), S(club.tiers.t2Name), S(club.tiers.t3Name)];
     const shortcuts = [
       ["experiences", tx("Book a ride", "احجز جولة"), "/experiences"],
       ["workshop", tx("Request a service", "اطلب صيانة"), "/workshop"],
@@ -371,8 +366,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
         {!hidden.includes("club") && (
           <section className="ac-sec" aria-labelledby="ac-club-h">
-            <h2 id="ac-club-h">{S(c.home.clubTitle)}</h2>
-            <ClubCard locale={locale} title="" text="" notMember={S(club.card.notMember)} applyBtn={S(club.hero.applyBtn)} applyHref={localHref(S(club.hero.applyHref), locale)} tierNames={tierNames} email={acct.email} phone={acct.phone} sinceFmt={datePattern(locale, DATE_STYLES.memberSince)} />
+            {/* the card itself is on /club (member_area, with this account's own session) */}
+            <div className="ac-sec-head"><h2 id="ac-club-h">{S(c.home.clubTitle)}</h2><a href={localHref("/club#card", locale)}>{tx("Open my card", "افتح بطاقتي")} <ArrowIcon size={15} /></a></div>
           </section>
         )}
 

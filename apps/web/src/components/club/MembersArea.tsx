@@ -24,7 +24,7 @@ type Props = {
   bookAt: (id: string, kind: string | null) => string;
   /** Today in Riyadh, "YYYY-MM-DD". */
   today: string;
-  /** The staff text for no upcoming ride (Club > Upcoming club rides). */
+  /** The staff text for no upcoming ride (Club > Upcoming club sessions). */
   empty: string;
   /** Whether each upcoming ride may be booked yet (the booking window): null when it may, else the
    *  words for when it opens. */

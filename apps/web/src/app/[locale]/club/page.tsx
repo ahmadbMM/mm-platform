@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
-import ClubCard from "@/components/club/ClubCard";
 import ClubRides from "@/components/club/ClubRides";
 import MembersArea from "@/components/club/MembersArea";
 import "@/components/club/club.css";
@@ -24,11 +23,13 @@ import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/club - the Community membership as the Club: how it works, a member's card,
 // the upcoming community rides. Joining is the community application, received by the staff
-// page (Community > Applications). A signed-in member sees the members' area in the card's place
-// (member_area; components/club/MembersArea.tsx) - their own membership, never another member's -
-// and a signed-in visitor who is not a member a line saying so; while the database does not have
-// the function yet, the card opens as before. Its members' rides list every ride member_area gives, one for
-// men only or women only too (the owner, 2026-10-28: "make all pool sessions visible to all genders but only
+// page (Community > Applications). A signed-in member sees the members' area (member_area, read with
+// the account's own session; components/club/MembersArea.tsx) - their own membership, never another
+// member's - and a signed-in visitor who is not a member a line saying so. Anyone else is asked to sign
+// in: the card no longer opens with an email and a mobile number (club_card, which named the member,
+// their tier and rides to anyone who typed both, is closed to the site since 2026-11-11); a signed-in
+// account whose membership cannot be read just now is told so. Its members' rides list every ride
+// member_area gives, one for men only or women only too (the owner, 2026-10-28: "make all pool sessions visible to all genders but only
 // male can book male sessions and female can book female sessions"), each such ride and each pool session
 // with its chip, and a member of the other gender reads "This session is for women only." in place of Book.
 type Sec = Record<string, unknown>;
@@ -134,8 +135,16 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
               <h2>{S(c.card.title)}</h2>
               <div className="club-notmember" role="status"><span>{S(c.card.notMember)}</span><a href={applyHref}>{S(c.hero.applyBtn)}</a></div>
             </div>
+          ) : acct && area && !area.ok && area.error === "unavailable" ? (
+            <div className="club-lookup">
+              <h2>{S(c.card.title)}</h2>
+              <p role="status">{tx("It could not be opened. Check the connection and try again.", "تعذّر الفتح. تحقق من الاتصال وحاول مجدداً.")}</p>
+            </div>
           ) : (
-            <ClubCard locale={locale} title={S(c.card.title)} text={S(c.card.text)} notMember={S(c.card.notMember)} applyBtn={S(c.hero.applyBtn)} applyHref={applyHref} tierNames={tierNames} email={acct?.email} phone={acct?.phone} sinceFmt={datePattern(locale, DATE_STYLES.memberSince)} />
+            <div className="club-lookup">
+              <h2>{S(c.card.title)}</h2>
+              <div className="club-signin"><a className="primary" href={localHref("/account", locale)}>{tx("Sign in", "تسجيل الدخول")}</a><a href={applyHref}>{S(c.hero.applyBtn)}</a></div>
+            </div>
           )}
           {earn.length > 0 && (
             <div className="club-earn">

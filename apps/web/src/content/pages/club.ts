@@ -3,8 +3,9 @@ import { BOOKING_URL } from "@/lib/links";
 
 // The Micromobility Club (Club.dc.html). The Club is the existing Community membership: joining
 // is the community application (micromobility.sa/community/registration) that the staff page
-// already approves, and a member's card reads their real rides (club_card, migration
-// 20260924180000, which applies the numbers in the rules section). Left out of the design until
+// already approves, and a signed-in member's card reads their real rides (member_area, which applies
+// the numbers in the rules section; the email-and-mobile lookup, club_card, is closed since
+// 2026-11-11, and its line asking for them is gone with it). Left out of the design until
 // they are real: the member count, the demo leaderboard and challenges, "refer a friend"
 // credits and "2x credits on events" (nothing counts them yet).
 const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
@@ -59,7 +60,6 @@ export const clubSchema = {
       label: bi("Membership card", "بطاقة العضوية"),
       fields: [
         txt("title", 40, "Title", "العنوان", "Your card", "بطاقتك"),
-        long("text", 200, "Text", "النص", "Open your membership card with the email and mobile number of your Micromobility account.", "افتح بطاقة عضويتك بالبريد الإلكتروني ورقم الجوال المسجلين في حسابك."),
         long("notMember", 200, "Not a member yet", "ليس عضواً بعد", "This account is not a Club member yet - apply to join and the team reviews it.", "هذا الحساب ليس عضواً في النادي بعد - قدّم طلب انضمام وسيراجعه الفريق."),
       ],
     },
@@ -111,11 +111,11 @@ export const clubSchema = {
     },
     {
       id: "rides",
-      label: bi("Upcoming club rides", "ركبات النادي القادمة"),
+      label: bi("Upcoming club sessions", "جلسات النادي القادمة"),
       hint: bi("The rides listed are the open community rides in the booking system.", "الركبات المعروضة هي رحلات المجتمع المفتوحة في نظام الحجز."),
       fields: [
         txt("eyebrow", 30, "Small label", "العبارة الصغيرة", "Members only", "حصري للأعضاء"),
-        txt("title", 50, "Title", "العنوان", "Upcoming club rides", "ركبات النادي القادمة"),
+        txt("title", 50, "Title", "العنوان", "Upcoming club sessions", "جلسات النادي القادمة"),
         txt("allLabel", 30, "Link text", "نص الرابط", "Book a ride", "احجز رحلة"),
         { id: "allHref", type: "link", label: bi("Link", "الرابط"), def: BOOKING_URL },
         long("empty", 160, "When none are open", "عند عدم وجود ركبات", "The next rides open soon - follow us for the dates.", "تُفتح الركبات القادمة قريباً - تابعنا لمعرفة المواعيد."),

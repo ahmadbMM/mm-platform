@@ -96,6 +96,8 @@ export const LADDERS: string[][] = [
   ["volunteer", "volunteer_10", "volunteer_25", "volunteer_50", "volunteer_100"],
   // friends who rode with the rider's invite (the booking app, 2026-11-08): 1 / 3 / 5 / 10
   ["recruiter", "recruiter_3", "recruiter_5", "recruiter_10"],
+  // the monthly challenge met, and the club goal helped reach (the booking app, 2026-11-11): 1 / 3 / 6 / 12 months
+  ["challenge_1", "challenge_3", "challenge_6", "challenge_12"], ["club_goal_1", "club_goal_3", "club_goal_6", "club_goal_12"],
 ];
 const LADDER_OF = new Map(LADDERS.flatMap((L) => L.map((s, i) => [s, [L, i]] as const)));
 /** A set of slugs held, with every level under each one (_bdgClimb). */
