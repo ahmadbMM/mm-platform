@@ -5,7 +5,6 @@ import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
-import ClubCard from "@/components/club/ClubCard";
 import SignIn from "@/components/account/SignIn";
 import SignOut from "@/components/account/SignOut";
 // the pop-up a paid ticket's Cancel opens (components/pay/TicketPay.tsx) is drawn by Experiences' rules (.bk-pop, .bk-btn),
@@ -14,7 +13,8 @@ import SignOut from "@/components/account/SignOut";
 import "@/components/experiences/experiences.css";
 import "@/components/account/account.css";
 import "@/components/booking/booking.css";
-import TicketCard from "@/components/booking/TicketCard";
+import TicketCard, { TicketCancelled } from "@/components/booking/TicketCard";
+import { TicketWake } from "@/components/booking/TicketParts";
 import RateRide from "@/components/account/RateRide";
 import RideRecord from "@/components/account/RideRecord";
 import RideMore from "@/components/account/RideMore";
@@ -30,11 +30,9 @@ import SportCard from "@/components/account/SportCard";
 import { sportWords } from "@/components/account/Sport.words";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
-import "@/components/club/club.css";
 import "../handoff.css";
 import { accountSchema } from "@/content/pages/account";
 import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
-import { clubSchema } from "@/content/pages/club";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { readAccount, readBookings, rpcServer } from "@/lib/account";
@@ -53,12 +51,11 @@ import { routeItems } from "@/lib/route-names";
 import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
 import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
-import { bloodDone, breakfastFor, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
+import { BOOTH_DIR, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, rideCompleted, shareLink, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, ledRides, profilePct, recordRows, rideMore, rideStats, weekStreak, type BadgeItem } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
 import { riyadhClock } from "@/lib/workshop-days";
-import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
@@ -85,12 +82,13 @@ import { ArrowIcon } from "@/components/site/Icons";
 import Qr from "@/components/booking/Qr";
 
 // micromobility.sa/account - sign in with the Micromobility account riders book with; signed in,
-// the next rides as the booking app's own tickets (changing one opens the booking app), the Club
-// card opened with the account's own email and mobile, and shortcuts. After the booking app hands a
-// rider back (api/account/handoff), it says whom they are signed in as (?handoff=done), or, when the
-// account handed back is not the one signed in here, asks which one this browser keeps.
+// the next rides as the booking app's own tickets (changing one opens the booking app), a link to the
+// Club card (on /club, read with the account's own session since club_card was closed, 2026-11-11),
+// and shortcuts. After the booking app hands a rider back (api/account/handoff), it says whom they are
+// signed in as (?handoff=done), or, when the account handed back is not the one signed in here, asks
+// which one this browser keeps.
 // In three parts since 2026-11-09, as the booking app's account page (the owner: "divide the customer my account page
-// into 3 separate pages account stats badges"): Account at /account (the tickets, the Club card, the wallet, Invite
+// into 3 separate pages account stats badges"): Account at /account (the tickets, the Club card link, the wallet, Invite
 // friends and the rest), Stats at /account/stats (Your rides and more of the record), Badges at /account/badges. The
 // switch under the greeting moves between them; any other /account/... is not a page.
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -216,10 +214,11 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const needCurrent = extras.fix.includes("password") ? false : extras.about?.sign_in ? null : true;
   const typeNames = Object.fromEntries(["Road", "Hybrid", "Mountain", "Kids", "Road Carbon"].map((ty) => [ty, typeName(ty)]));
 
-  // Account: the tickets, the rating, the Club card, the wallet, Invite friends, the blood type, the sport and the shortcuts.
+  // Account: the tickets, the rating, the Club card link, the wallet, Invite friends, the blood type, the sport and the shortcuts.
   const accountMain = async () => {
     const groups = ticketGroups(rows, today);
     const doneTonight = doneToday(rows, today);
+    const cancelled = cancelledGroups(rows, today); // kept, said as such, until their day has gone (2026-11-10)
     const donorEarlier = bloodDone(rows, today); // the Blood Donation event, over: kept below while its free ride is good
     // Finished rides not rated yet, one per night (a party rates once, on its first rider): the
     // booking app's post-ride rating. The oldest from the day it went live on is the pop-up the
@@ -230,7 +229,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     // every booked session, whatever its state now (a Petromin night, one staff closed since), read
     // with the account's token so a private ride (one its tag holders alone may see) keeps its name
     const [sessions, blood, walletRead, referralRaw, lockersRaw, orders, sport] = await Promise.all([
-      loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
+      loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : []), ...cancelled.map((g) => g.sessionId)], acct),
       // the blood type (2026-10-14): no card while the database has no customer_blood_type yet, nor
       // when it cannot be read just now (a card showing none would invite saving over the real one)
       rpcServer<unknown>("customer_blood_type", { p_id: acct.id, p_token: acct.token })
@@ -259,8 +258,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     // and as Your lockers below the rides, each evening with the QR the desk scans to hand the keys
     const own = ownLockersOf(lockersRaw, today);
     const referral = referralOf(referralRaw, today);
-    // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
-    const pastTonight = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
+    // tonight's ride already over stays as a past card until the day ends; one done but not yet marked paid is a ride done
+    // too (its rows say what is still to pay): it used to vanish until the desk marked it paid (the booking app, 2026-11-10)
+    const pastTonight = doneTonight;
     // The Blood Donation event (2026-11-03): a donor's free ride, asked only when a ticket is on the event; a database
     // without customer_blood_rewards, or a failed read, gives none and the ticket shows no code. The event over, its ticket
     // stays as a past card while the code on it is still good: it is good for a month, and this page lists no past bookings.
@@ -308,8 +308,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       catch { return book; }
     };
     const manage = appLink({ tab: "bookings" });
-    const club = resolvePage(clubSchema, content, L);
-    const tierNames: [string, string, string] = [S(club.tiers.t1Name), S(club.tiers.t2Name), S(club.tiers.t3Name)];
+    // the booking app's My Bookings, which a ticket's calendar entry leads back to (its URL line)
+    const myBookings = (() => { try { return new URL("/my-bookings", app).toString(); } catch { return null; } })();
     const shortcuts = [
       ["experiences", tx("Book a ride", "احجز جولة"), "/experiences"],
       ["workshop", tx("Request a service", "اطلب صيانة"), "/workshop"],
@@ -321,28 +321,42 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         {extras.ambassador && <div className="ac-sec"><AmbassadorCard locale={locale} a={extras.ambassador} /></div>}
         <section className="ac-sec" id="ac-rides" aria-labelledby="ac-rides-h">
           <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <ArrowIcon size={15} /></a></div>
+          {/* today's code large on the page: the phone stays awake while it shows (the booking app's _wakeWant, 2026-11-10) */}
+          {groups.some((g) => todayCode(g.rows, sessions.get(g.sessionId), today)) && <TicketWake />}
           {groups.length === 0 && past.length === 0 ? (unread ? failed : (
             <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <ArrowIcon size={15} /></a>}</p>
-          )) : (
+          )) : null}
+          {(groups.length > 0 || past.length > 0 || cancelled.length > 0) && (
             <div className="tk-grid">
               {groups.map((g, i) => {
                 const s = sessions.get(g.sessionId);
                 const ev = s ? EV[s.kind] : undefined;
                 // a ride staff approve and Run for Her meet at the point staff set (meetsAt), Arena Heros and the Blood
-                // Donation event are at their venue's map, the rest at the circuit
-                const place = placeLink(s, S(site.contact.jccHref) || null);
+                // Donation event are at their venue's map, a ride at another named place is searched by its name, the rest
+                // at the booth on the circuit (BOOTH_DIR, 2026-11-10; it was the circuit's map link, which led to the gate)
+                const place = placeLink(s, BOOTH_DIR);
                 return (
                   <TicketCard key={g.key} locale={locale} today={now.slice(0, 10)} rows={g.rows} session={s}
                     name={rideName(s, g.sessionId)}
                     cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
                     links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place,
                       // the live map follows the ride leader: a bike session's only (2026-10-18)
-                      live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
+                      live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null,
+                      share: shareLink(app, ev, g.sessionId), bookings: myBookings }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
                     wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor}
                     online={payOnline ? { open: payCfg.bookings !== "off", refundDays: payCfg.refundDays, today } : null} />
                 );
               })}
+              {/* the bookings cancelled, after the bookings ahead: one quiet row each, until their day has gone */}
+              {cancelled.length > 0 && (
+                <ul className="tk-cx-list">
+                  {cancelled.map((g) => {
+                    const s = sessions.get(g.sessionId);
+                    return <li key={g.key}><TicketCancelled locale={locale} date={g.date} session={s} name={rideName(s, g.sessionId)} by={g.by} t={ticketText} gather={S(d.gather)} start={S(d.start)} /></li>;
+                  })}
+                </ul>
+              )}
               {past.map((g) => {
                 const s = sessions.get(g.sessionId);
                 return (
@@ -406,8 +420,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
         {!hidden.includes("club") && (
           <section className="ac-sec" aria-labelledby="ac-club-h">
-            <h2 id="ac-club-h">{S(c.home.clubTitle)}</h2>
-            <ClubCard locale={locale} title="" text="" notMember={S(club.card.notMember)} applyBtn={S(club.hero.applyBtn)} applyHref={localHref(S(club.hero.applyHref), locale)} tierNames={tierNames} email={acct.email} phone={acct.phone} sinceFmt={datePattern(locale, DATE_STYLES.memberSince)} />
+            {/* the card itself is on /club (member_area, with this account's own session) */}
+            <div className="ac-sec-head"><h2 id="ac-club-h">{S(c.home.clubTitle)}</h2><a href={localHref("/club#card", locale)}>{tx("Open my card", "افتح بطاقتي")} <ArrowIcon size={15} /></a></div>
           </section>
         )}
 

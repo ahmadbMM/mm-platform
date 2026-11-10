@@ -14,6 +14,9 @@ export default defineConfig({
     baseURL: `http://localhost:${PORT}`,
     // A camera that is always there and never asks (a moving test picture): the work page's Scan keeps it running.
     launchOptions: { args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] },
+    // The portal registers a service worker (the app shell, decision 11). Kept out of the way of page.route() everywhere but
+    // the offline test, which turns it back on for itself.
+    serviceWorkers: "block",
   },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },

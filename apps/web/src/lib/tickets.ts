@@ -290,11 +290,39 @@ export function bloodDone(rows: Row[], today: string): Group[] {
 
 /** Tonight's rides already over (every row of the night done, nothing still ahead on it): the
  *  booking app keeps them on the page as a past card that says the ride is done, with the night's
- *  steps, until the day ends. Whether each counts as ridden (rideCompleted) needs the session. */
+ *  steps, until the day ends, marked paid or not (2026-11-10: a done ride not yet paid used to vanish until the desk
+ *  marked it paid; its rows say what is still to pay). */
 export function doneToday(rows: Row[], today: string): Group[] {
   const all = rows.map(ticketRow).filter((r): r is TicketRow => !!r && r.date === today);
   const live = new Set(all.filter((r) => r.status !== "done").map(groupKey));
   return grouped(all.filter((r) => r.status === "done" && !live.has(groupKey(r))));
+}
+
+/** A cancelled booking, as My Account lists it under the tickets (the booking app's _mrCxRow): its session, its day, and
+ *  who cancelled it (queue_entries.cancelled_by: 'staff', 'customer', or '' when nobody knows). */
+export type CancelledGroup = { key: string; sessionId: string; date: string; by: "staff" | "customer" | "" };
+/** The account's cancelled bookings whose day has not gone, one per ticket, soonest first (the booking app's _mrCancelled,
+ *  2026-11-10): with no email or SMS the page is the rider's only record, and a booking cancelled by the rider, or by
+ *  staff (a whole session cancelled with its refunds among them), used to vanish without a word. A ticket that still
+ *  has a live row (a party with one rider cancelled) is a ticket, not this. A rider turned down for a ride staff
+ *  approve (approval 'rejected') is never told by this row. */
+export function cancelledGroups(rows: Row[], today: string): CancelledGroup[] {
+  const live = new Set(rows.map(ticketRow).filter((r): r is TicketRow => !!r).map(groupKey));
+  const by = new Map<string, CancelledGroup & { who: Set<string> }>();
+  for (const r of rows) {
+    const date = S(r.session_date);
+    if (r.status !== "cancelled" || r.approval === "rejected" || !/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today) continue;
+    const sessionId = S(r.session_id) || date;
+    // Victory Lap's Singles and Doubles are two tickets (groupKey); an Arena Heros place reads its own column
+    const key = groupKey({ sessionId, vl: isArenaId(sessionId) ? null : vlEntry(r.vl) });
+    if (live.has(key)) continue;
+    const g = by.get(key) ?? { key, sessionId, date, by: "" as const, who: new Set<string>() };
+    g.who.add(S(r.cancelled_by));
+    by.set(key, g);
+  }
+  return [...by.values()]
+    .map(({ who, ...g }) => ({ ...g, by: who.has("staff") ? "staff" as const : who.has("customer") ? "customer" as const : "" as const }))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.key.localeCompare(b.key));
 }
 
 /** A ride that counts as ridden (_rideCompleted): done, and paid, on a free community ride, or on
@@ -495,11 +523,45 @@ export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined)
  *  (`circuit`). On Arena Heros the button says "Get directions": it is the venue, not a meeting point. The Blood
  *  Donation event (2026-11-03) opens the map on its row (sessions.meet_url), else the circuit's directions: it is at
  *  the circuit whichever, so never "Meeting point". */
-export function placeLink(s: Pick<TicketSession, "approval" | "kind" | "meetUrl"> | undefined, circuit: string | null): string | null {
+export function placeLink(s: (Pick<TicketSession, "approval" | "kind" | "meetUrl"> & { location?: string | null }) | undefined, circuit: string | null): string | null {
   if (s && meetsAt(s)) return s.meetUrl;
   if (s?.kind === "arena") return s.meetUrl;
   if (s?.kind === "blood") return s.meetUrl ?? circuit;
+  // Any other named place is searched by its name (the booking app's _dirBtnHtml, 2026-11-10): every booking away from
+  // the circuit used to open the circuit's directions.
+  const loc = s?.location?.trim();
+  if (loc && loc !== "JCC") return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ICS_PLACES.get(loc) ?? loc)}`;
   return circuit;
+}
+
+/** The booth at the circuit, where riders collect their bikes (the booking app's _BOOTH_PINS.JCC): a ticket's Directions
+ *  opens it as a Google Maps directions link, which the phone hands to its Maps app; on an iPhone or iPad the rider is
+ *  offered Apple Maps beside it (TicketDir, 2026-11-10). It was the circuit's own map link, which led to the gate. */
+export const BOOTH_PIN = "21.624565,39.106812";
+export const BOOTH_DIR = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(BOOTH_PIN)}`;
+export const BOOTH_APPLE = `https://maps.apple.com/?daddr=${encodeURIComponent(BOOTH_PIN)}&dirflg=d`;
+
+/** Today's code drawn large under the number (the booking app's _bigQr, 2026-11-10): on the ride's day the code is what
+ *  the desk needs, so a held place, a rider checked in and a waitlisted one (who brings the same code when a place opens)
+ *  show it at 224px; before the day the corner size is enough, the scanner refuses any other day. The page keeps the
+ *  phone awake while one is on it (TicketWake). */
+export function todayCode(rows: TicketRow[], s: TicketSession | undefined, today: string, past = false): boolean {
+  const st = rows.some((r) => r.status === "active") ? "active" : rows[0]?.status;
+  return !past && rows[0]?.date === today && codeReady(rows, s) && (st === "waiting" || st === "active" || st === "waitlist");
+}
+
+/** What a ticket's Share sends as its link (the booking app's _tkShareUrl): the booking app's page for the same date
+ *  (/reserve?ev=&session=), or its front page for a ride that is not booked from a list everyone sees (a members' ride,
+ *  a Petromin night, the donation event: `ev` 'community', 'petromin', 'blood' or none). Null when the app's address
+ *  cannot be read. */
+export function shareLink(app: string, ev: string | undefined, sessionId: string): string | null {
+  try {
+    if (!ev || ev === "community" || ev === "petromin" || ev === "blood") return new URL("/", app).toString();
+    const u = new URL("/reserve", app);
+    u.searchParams.set("ev", ev);
+    u.searchParams.set("session", sessionId);
+    return u.toString();
+  } catch { return null; }
 }
 
 // ── The DEFE 5KM Run (the owner, 2026-10-18; the booking app's _defeRegHtml) ─────────────────────
@@ -680,8 +742,11 @@ function icsWords(s: Pick<TicketSession, "bikes" | "gathers">): { desc: string; 
 
 /** The calendar file the booking app's Add to Calendar gives (downloadBookingICS): a window, or
  *  on a ride that gathers, from the gathering to two hours after the start; a window that runs
- *  past midnight ends on the next day. */
-export function icsFor(s: TicketSession, summary: string, place: string, now: Date = new Date()): string {
+ *  past midnight ends on the next day. One event per booking that stays one event (the booking app's _icsBody,
+ *  2026-11-10): its UID is the booking's (it was the session's and the moment, so every tap added another copy and no
+ *  change could find the first), SEQUENCE grows with every file, so a calendar that knows the event keeps the newer one,
+ *  and URL leads back to the booking app's My Bookings (`booking.url`). */
+export function icsFor(s: TicketSession, summary: string, place: string, now: Date = new Date(), booking: { id?: string; url?: string | null } = {}): string {
   const date = s.date.replace(/-/g, "");
   const [sMin, eMin] = rideWindow(s) ?? [540, 660];
   // The ride's hour is Jeddah's: written without a zone, a calendar read it in the phone's own (a
@@ -694,12 +759,14 @@ export function icsFor(s: TicketSession, summary: string, place: string, now: Da
   // the breakfast spot told later: the entry says when; a held ride without its meeting point has no place rather than the circuit
   const told = spotHeld(s, now.getTime()) ? `\n\nBreakfast spot: announced ${revealWhen(s.revealAt, "en", riyadhClock(now).slice(0, 10), { today: "Today", tomorrow: "Tomorrow" })}` : "";
   const noPlace = meetHeld(s, now.getTime());
+  const bid = (booking.id ?? "").replace(/[^\w-]/g, "");
   return [
-    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//Corniche Circuit//EN", "CALSCALE:GREGORIAN", "BEGIN:VEVENT",
-    `UID:${s.id}-${now.getTime()}@micromobility`, `DTSTAMP:${stamp}`,
+    "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//Bookings//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+    `UID:${bid ? `booking-${bid}` : `session-${s.id.replace(/[^\w-]/g, "")}`}@micromobility.sa`, `SEQUENCE:${Math.floor(now.getTime() / 1000)}`, `DTSTAMP:${stamp}`,
     `DTSTART:${utc(sMin)}`, `DTEND:${utc(eMin)}`,
     `SUMMARY:${esc(summary)}`, ...(noPlace ? [] : [`LOCATION:${esc(place || "Jeddah Corniche Circuit")}`]),
     `DESCRIPTION:${esc(words.desc + told)}`,
+    ...(booking.url && /^https:\/\//i.test(booking.url) ? [`URL:${booking.url}`] : []),
     "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", `DESCRIPTION:${esc(words.alarm)}`, "END:VALARM",
     "END:VEVENT", "END:VCALENDAR",
   ].join("\r\n");

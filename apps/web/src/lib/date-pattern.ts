@@ -29,8 +29,6 @@ export const DATE_STYLES = {
   rideDay: { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" },
   /** A day the Workshop form offers: "Sat 10 Oct". */
   workshopDay: { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" },
-  /** A Club member's "member since": "October 2026". */
-  memberSince: { month: "long", year: "numeric", timeZone: "Asia/Riyadh" },
   /** A line of an ambassador's points: "5 Oct 2026". */
   ledgerDay: { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Riyadh" },
   /** When a workshop job is booked for: "Mon 5 Oct, 17:00". */

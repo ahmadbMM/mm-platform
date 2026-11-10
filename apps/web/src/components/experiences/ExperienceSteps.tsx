@@ -7,7 +7,7 @@ import { fill as fillAt } from "@/i18n/tx";
 import { bookingAt, infoShown, memberOn, membersOnlyDate, membersOnlyEvent } from "@/lib/event-info";
 import { isNonBike, typeOffered } from "@/lib/bike-kinds";
 import { ArrowIcon, BackIcon, ClockIcon, InfoIcon, TickIcon } from "@/components/site/Icons";
-import { durText, opensIn } from "@/lib/opens-in";
+import { opensLine, type OpensWords } from "@/lib/opens-in";
 import { radioKey, tabStop } from "@/lib/radio-keys";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
@@ -148,7 +148,7 @@ export type StepText = {
   /** "Breakfast at {0}", {0} the stop's name (StepSession.breakfast). */
   breakfastAt: string;
   /** The countdown to a date's booking window (lib/booking-window.ts opensInWords): "Booking opens in {0}" and its units. */
-  opensIn: { opensIn: string; hm: string; h: string; m: string };
+  opensIn: OpensWords;
   /** The About and Details links, and their dialog's words; `after` heads the breakfast stop, the last fact. */
   info: {
     about: string; details: string; bookEvent: string; chooseDate: string; who: string; price: string; when: string; next: string;
@@ -211,10 +211,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   /** When a date opens, as its card says it now: the countdown within a day, null once the window has opened. */
   const opensOf = (s: StepSession): string | null => {
     if (!s.opens) return null;
-    if (s.opensAt == null || nowMs == null) return s.opens;
-    if (nowMs >= s.opensAt) return null;
-    const left = opensIn(s.opensAt, nowMs);
-    return left ? t.opensIn.opensIn.replace("{0}", durText(left, t.opensIn)) : s.opens;
+    return opensLine(s.opens, s.opensAt, nowMs, t.opensIn);
   };
   useEffect(() => {
     const d = dlg.current;

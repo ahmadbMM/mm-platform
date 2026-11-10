@@ -49,20 +49,16 @@ html:is([lang="ar"], [lang="ur"]) .club-eyebrow { letter-spacing: 0; font-size: 
 .club-lookup, .club-earn, .club-mine { background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 26px; padding: 34px; box-sizing: border-box; }
 .club-lookup h2 { font-size: clamp(24px, 2.6vw, 34px); letter-spacing: -1px; margin: 0 0 8px; }
 .club-lookup > p { color: #57605a; font-size: 14.5px; line-height: 1.6; margin: 0 0 18px; }
-.club-lookup-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.club-input { box-sizing: border-box; width: 100%; background: #fbf9f4; border: 1px solid rgba(0, 0, 0, .16); border-radius: 14px; padding: 14px 16px; font-size: 14.5px; outline: none; font-family: inherit; color: #1a1919; }
-.club-input:focus { border-color: #077a4b; }
-.club-btn { cursor: pointer; width: 100%; border: 0; border-radius: 999px; padding: 15px; margin-top: 12px; background: #077a4b; color: #fbf9f4; font-weight: 800; font-size: 15px; font-family: inherit; min-height: 48px; }
-.club-btn:disabled { opacity: .55; cursor: default; }
-.club-err { color: #b3261e; font-size: 13px; font-weight: 600; margin: 12px 0 0; }
+/* A visitor not signed in: Sign in (on /account), and Apply to join. */
+.club-signin { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 22px; margin-top: 16px; }
+.club-signin a { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; box-sizing: border-box; font-weight: 800; font-size: 15px; color: #077a4b; }
+.club-signin a.primary { border-radius: 999px; padding: 0 32px; background: #077a4b; color: #fbf9f4; }
 .club-notmember { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; background: rgba(7, 122, 75, .07); border-radius: 16px; padding: 16px 18px; color: #2b332d; font-size: 14px; line-height: 1.55; }
 .club-notmember a { color: #077a4b; font-weight: 800; }
 .club-mine { display: flex; flex-direction: column; gap: 14px; }
-.club-mine:focus { outline: none; } /* focused when the visitor opens the card (ClubCard) */
 .club-bar { display: block; height: 6px; border-radius: 3px; background: rgba(0, 0, 0, .08); overflow: hidden; }
 .club-bar span { display: block; height: 100%; background: #077a4b; }
 .club-mine-next { color: #57605a; font-size: 13.5px; margin: 0; }
-.club-link { background: none; border: 0; color: #57605a; font-family: inherit; font-size: 13px; text-decoration: underline; cursor: pointer; align-self: flex-start; padding: 0; }
 .club-earn { display: flex; flex-direction: column; gap: 14px; }
 .club-earn h3 { font-size: 15px; text-transform: uppercase; letter-spacing: 1.5px; color: #4a534c; margin: 0; }
 html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }
@@ -115,7 +111,6 @@ html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }
   .club-hero h1 { font-size: 39px; letter-spacing: -1.9px; }
   .club-join { grid-template-columns: 1fr; padding: 40px 16px 24px; }
   .club-lookup, .club-earn, .club-mine { padding: 24px 18px; }
-  .club-lookup-row { grid-template-columns: 1fr; }
   .club-sec { padding: 32px 22px; }
   .club-tiers { grid-template-columns: 1fr; }
   .club-rides { width: calc(100% - 32px); border-radius: 24px; }
@@ -139,8 +134,11 @@ html:is([lang="ar"], [lang="ur"]) .club-members h3 { letter-spacing: 0; }
 .club-up li { display: grid; grid-template-columns: 1fr auto; align-items: center; }
 .club-up li strong { grid-column: 1; }
 .club-up li > em, .club-up li > a, .club-up li > small { grid-column: 2; grid-row: 1 / span 2; }
-.club-up li.closed strong, .club-up li.closed .club-up-when { color: #8a8f8a; }
+/* the grey goes when the window opens and its Book shows (components/site/OpensIn.tsx) */
+.club-up li.closed:not(:has(> a)) strong, .club-up li.closed:not(:has(> a)) .club-up-when { color: #8a8f8a; }
 .club-up li small { font-size: 12px; font-weight: 700; color: #8a5c14; text-align: end; max-width: 160px; }
+/* a ride not open yet: a clock beside when it opens, never the grey alone (WCAG 1.4.1), as on Experiences */
+.club-up li small.club-wait { display: inline-flex; align-items: center; justify-content: flex-end; justify-self: end; gap: 5px; }
 .club-ann li { font-size: 14px; color: #2b332d; line-height: 1.55; }
 
 /* The member's title (the owner, 2026-11-02). */

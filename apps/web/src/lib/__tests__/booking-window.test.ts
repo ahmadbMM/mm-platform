@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { bookingWindow, notOpenYet, opensAt, opensOn, opensText, siteBookingWindow } from "../booking-window";
-import { durText, opensIn, riyadhMs } from "../opens-in";
+import { durText, opensIn, opensLine, riyadhMs } from "../opens-in";
 
 // The booking window, exactly as the database applies it (_booking_window_guard): a date beyond it
 // is greyed out on the site's lists, and never hidden.
@@ -79,5 +79,19 @@ describe("the countdown to the window", () => {
     expect(opensText("2026-10-10", { days: 7, at: "21:30" }, "ar", (_e, a) => a ?? _e, open - 130 * 60000)).toBe("يبدأ الحجز بعد 2 س 10 د");
     expect(opensText("2026-10-10", { days: 7, at: "21:30" }, "en", en, open - 2 * 86400e3)).toBe("Booking opens Sat 3 Oct at 9:30 PM");
     expect(opensText("2026-10-10", { days: 7, at: "21:30" }, "en", en)).toBe("Booking opens Sat 3 Oct at 9:30 PM");
+  });
+  // what a list's date says in the browser (Experiences, Events and the Club's members' rides): the server's words until the
+  // clock is read and further than a day away, the countdown within a day, nothing once it has opened
+  it("says the browser's line, and nothing once open", () => {
+    const ws = { opensIn: "Booking opens in {0}", hm: "{h} h {m} min", h: "{h} h", m: "{m} min" };
+    const open = opensAt("2026-10-10", w);
+    const far = "Booking opens Sat 3 Oct at 9 AM";
+    expect(opensLine(far, open, null, ws)).toBe(far);
+    expect(opensLine(far, null, open - 60000, ws)).toBe(far);
+    expect(opensLine(far, open, open - 2 * 86400e3, ws)).toBe(far);
+    expect(opensLine(far, open, open - 130 * 60000, ws)).toBe("Booking opens in 2 h 10 min");
+    expect(opensLine(far, open, open - 59 * 1000, ws)).toBe("Booking opens in 1 min");
+    expect(opensLine(far, open, open, ws)).toBeNull();
+    expect(opensLine(far, open, open + 50, ws)).toBeNull();
   });
 });

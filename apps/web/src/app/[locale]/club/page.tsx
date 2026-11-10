@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
-import ClubCard from "@/components/club/ClubCard";
 import ClubRides from "@/components/club/ClubRides";
 import MembersArea from "@/components/club/MembersArea";
 import "@/components/club/club.css";
@@ -14,7 +13,7 @@ import { bookingLink, bookingPage, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { getAccount, rpcServer } from "@/lib/account";
 import { memberArea, memberTitle } from "@/lib/members";
-import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
+import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { kindNames, sessionName, sessionGenders, type RideKind } from "@/lib/rides";
 import { genderBlock, genderChip, genderText, sessionGender } from "@/lib/session-gender";
 import { riyadhClock } from "@/lib/workshop-days";
@@ -24,11 +23,13 @@ import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/club - the Community membership as the Club: how it works, a member's card,
 // the upcoming community rides. Joining is the community application, received by the staff
-// page (Community > Applications). A signed-in member sees the members' area in the card's place
-// (member_area; components/club/MembersArea.tsx) - their own membership, never another member's -
-// and a signed-in visitor who is not a member a line saying so; while the database does not have
-// the function yet, the card opens as before. Its members' rides list every ride member_area gives, one for
-// men only or women only too (the owner, 2026-10-28: "make all pool sessions visible to all genders but only
+// page (Community > Applications). A signed-in member sees the members' area (member_area, read with
+// the account's own session; components/club/MembersArea.tsx) - their own membership, never another
+// member's - and a signed-in visitor who is not a member a line saying so. Anyone else is asked to sign
+// in: the card no longer opens with an email and a mobile number (club_card, which named the member,
+// their tier and rides to anyone who typed both, is closed to the site since 2026-11-11); a signed-in
+// account whose membership cannot be read just now is told so. Its members' rides list every ride
+// member_area gives, one for men only or women only too (the owner, 2026-10-28: "make all pool sessions visible to all genders but only
 // male can book male sessions and female can book female sessions"), each such ride and each pool session
 // with its chip, and a member of the other gender reads "This session is for women only." in place of Book.
 type Sec = Record<string, unknown>;
@@ -77,9 +78,13 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
     const ev = kind === "event" || kind === "workshop" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "arena" ? kind : "community";
     try { const u = new URL(bookingLink(S(c.rides.allHref), locale)); u.searchParams.set("ev", ev); u.searchParams.set("session", id); return u.toString(); } catch { return ridesHref; }
   };
-  const now = riyadhClock(new Date()), today = now.slice(0, 10);
-  const window = siteBookingWindow(content); // a members' ride not open to book yet says when it opens
-  const opens = (date: string) => (window && notOpenYet(date, window, now) ? opensText(date, window, locale, tx) : null);
+  const drawn = new Date();
+  const now = riyadhClock(drawn), today = now.slice(0, 10);
+  // a members' ride not open to book yet says when it opens, beside a clock; within a day of it, a countdown to the
+  // real window that the browser keeps up to date each minute and that turns into Book on time, as on Experiences
+  const window = siteBookingWindow(content);
+  const opens = (date: string) => (window && notOpenYet(date, window, now) ? opensText(date, window, locale, tx, drawn.getTime()) : null);
+  const opensWhen = (date: string) => (window ? opensAt(date, window) : null);
   const sgWords = genderText(tx); // a members' ride's chip (men only, women only, or mixed on a pool session) and refusal
   const words = lines(S(c.hero.marquee));
   const earn = [
@@ -127,15 +132,23 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         )}
         <section className="club-join" id="card">
           {members?.member ? (
-            <MembersArea title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens}
+            <MembersArea title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens} opensAt={opensWhen} opensWords={opensInWords(tx)}
               sgOf={(r) => (r.gender === undefined ? null : genderChip(r, sgWords))} refusalOf={(r) => genderBlock(r, viewer, sgWords)} />
           ) : members ? (
             <div className="club-lookup">
               <h2>{S(c.card.title)}</h2>
               <div className="club-notmember" role="status"><span>{S(c.card.notMember)}</span><a href={applyHref}>{S(c.hero.applyBtn)}</a></div>
             </div>
+          ) : acct && area && !area.ok && area.error === "unavailable" ? (
+            <div className="club-lookup">
+              <h2>{S(c.card.title)}</h2>
+              <p role="status">{tx("It could not be opened. Check the connection and try again.", "تعذّر الفتح. تحقق من الاتصال وحاول مجدداً.")}</p>
+            </div>
           ) : (
-            <ClubCard locale={locale} title={S(c.card.title)} text={S(c.card.text)} notMember={S(c.card.notMember)} applyBtn={S(c.hero.applyBtn)} applyHref={applyHref} tierNames={tierNames} email={acct?.email} phone={acct?.phone} sinceFmt={datePattern(locale, DATE_STYLES.memberSince)} />
+            <div className="club-lookup">
+              <h2>{S(c.card.title)}</h2>
+              <div className="club-signin"><a className="primary" href={localHref("/account", locale)}>{tx("Sign in", "تسجيل الدخول")}</a><a href={applyHref}>{S(c.hero.applyBtn)}</a></div>
+            </div>
           )}
           {earn.length > 0 && (
             <div className="club-earn">

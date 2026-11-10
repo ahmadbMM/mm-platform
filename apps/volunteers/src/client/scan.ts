@@ -25,7 +25,9 @@ function loadJsQr(): Promise<JsQr> {
   });
 }
 
-export type Scanner = { stop(): void };
+/** torch: present only where the camera says it has a light (a phone's back camera on Android, mostly); it answers
+ *  whether the light did what was asked. */
+export type Scanner = { stop(): void; torch?: (on: boolean) => Promise<boolean> };
 
 /** Starts the camera in this video element. Calls onText for every code it reads, and onFail when it cannot start. */
 export async function startScanner(video: HTMLVideoElement, onText: (txt: string) => void, onFail: () => void): Promise<Scanner> {
@@ -52,6 +54,17 @@ export async function startScanner(video: HTMLVideoElement, onText: (txt: string
   if (!detector) {
     try { jsqr = await loadJsQr(); } catch { stop(); onFail(); return { stop }; }
   }
+  // the camera's light, if the track says it has one (MediaTrackCapabilities.torch)
+  const track: MediaStreamTrack | undefined = stream.getVideoTracks()[0];
+  let torch: Scanner["torch"];
+  try {
+    const caps = (typeof track?.getCapabilities === "function" ? track.getCapabilities() : {}) as Record<string, unknown>;
+    if (track && caps.torch === true) {
+      torch = async (on: boolean) => {
+        try { await track.applyConstraints({ advanced: [{ torch: on } as MediaTrackConstraintSet] }); return true; } catch { return false; }
+      };
+    }
+  } catch { torch = undefined; }
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   const tick = async () => {
@@ -75,5 +88,5 @@ export async function startScanner(video: HTMLVideoElement, onText: (txt: string
     if (!stopped) window.setTimeout(() => void tick(), 180);
   };
   void tick();
-  return { stop };
+  return { stop, torch };
 }

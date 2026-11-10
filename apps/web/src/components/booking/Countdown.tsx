@@ -24,5 +24,7 @@ export default function Countdown({ moments, now: first, t }: { moments: [number
   }, []);
   const line = cdLine(moments, now, t);
   if (!line) return null;
-  return <p className="tk-cd"><Clock /><span suppressHydrationWarning>{line}</span></p>;
+  // role="timer": a screen reader leaves the 30-second rewrites alone (a timer is not announced as it changes) and reads
+  // the line when the rider reaches it (the booking app's _cdHtml, 2026-11-10)
+  return <p className="tk-cd" role="timer"><Clock /><span suppressHydrationWarning>{line}</span></p>;
 }

@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-10";
+export const PRIVACY_VERSION = "2026-11-11";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -116,6 +116,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Volunteering: the opportunities you register for, your message and preferred role, whether you are accepted, your role, when you start and finish, your volunteering hours, that you accepted the volunteer agreement, what you do on the volunteer portal, and notes our team keeps",
       "Only if you register to volunteer, or our team adds volunteering hours to your account. Seen by you and our staff, except our team’s notes.",
       "Running volunteering at our events, your record of hours and your certificate"
+     ],
+     [
+      "Volunteering, if you choose to tell us: why you volunteer, your rating of an event you worked and your comments, whether you would volunteer again, when you plan to leave and that you confirmed you are coming",
+      "Always optional. Your rating, your comments and why you volunteer are seen only by our staff.",
+      "Planning our events and making volunteering better"
      ],
      [
       "Victory Lap race details: the race, division and team you choose, your T-shirt size and, if you give it, your 5 km run time",
@@ -253,6 +258,16 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Volunteers working at one of our events, under our direction",
       "To check you in at that event: your name, your booking number and whether you have checked in. Where our staff allow it for that session, also your mobile number and your booking details (bike type, height and size; at a blood donation event, your blood type, whether you are a donor or a visitor, and your club). Never your email or payments. They agree to keep it confidential, and every search and mark is recorded.",
       "Saudi Arabia"
+     ],
+     [
+      "The team lead of an event you volunteer at",
+      "Only if you are on their team at that event: your name, your role and when you arrive",
+      "Saudi Arabia"
+     ],
+     [
+      "Anyone who checks a volunteer certificate we gave you",
+      "On our public check page, with the certificate’s code or its QR code: your name, the event, the date, your hours, your role and the partner named on it",
+      "Wherever they are"
      ],
      [
       "The restaurant or café hosting a Saturday ride breakfast",
@@ -470,6 +485,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "إدارة التطوع في فعالياتنا، وسجل ساعاتك وشهادتك"
      ],
      [
+      "التطوع، إن اخترت أن تخبرنا: سبب تطوعك، وتقييمك لفعالية عملت فيها وتعليقاتك، وما إذا كنت ستتطوع مرة أخرى، والوقت الذي تنوي المغادرة فيه، وتأكيدك أنك ستحضر",
+      "اختياري دائمًا. يرى تقييمك وتعليقاتك وسبب تطوعك موظفونا فقط.",
+      "التخطيط لفعالياتنا وتحسين تجربة التطوع"
+     ],
+     [
       "تفاصيل سباق فيكتوري لاب: السباق والفئة والفريق التي تختارها، ومقاس قميصك، وزمنك في جري 5 كم إن أعطيتنا إياه",
       "تُطلب فقط عند حجز فيكتوري لاب. لا يراها إلا أنت وموظفونا وكامن سبورتس؛ ويرى شريكك في الفريق اسمك الأول.",
       "وضعك في سباقك ودفعتك، وقميص السباق، وتكوين فرق الزوجي"
@@ -605,6 +625,16 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "المتطوعون الذين يعملون في إحدى فعالياتنا تحت إشرافنا",
       "لتسجيل حضورك في تلك الفعالية: اسمك ورقم حجزك وما إذا كنت قد سجلت حضورك. وحيث يسمح موظفونا بذلك في تلك الجلسة، أيضًا رقم جوالك وتفاصيل حجزك (نوع الدراجة والطول والمقاس؛ وفي فعاليات التبرع بالدم، فصيلة دمك وما إذا كنت متبرعًا أو زائرًا وناديك). ولا يطلعون أبدًا على بريدك الإلكتروني أو مدفوعاتك. ويوافقون على الحفاظ على سريتها، وتُسجَّل كل عملية بحث وتأشير.",
       "المملكة العربية السعودية"
+     ],
+     [
+      "قائد فريق المتطوعين في فعالية تتطوع فيها",
+      "فقط إذا كنت ضمن فريقه في تلك الفعالية: اسمك ودورك ووقت وصولك",
+      "المملكة العربية السعودية"
+     ],
+     [
+      "كل من يتحقق من شهادة تطوع منحناك إياها",
+      "في صفحة التحقق العامة لدينا، باستخدام رمز الشهادة أو رمز الاستجابة السريعة (QR) الخاص بها: اسمك والفعالية والتاريخ وساعاتك ودورك والشريك المذكور فيها",
+      "أينما كانوا"
      ],
      [
       "المطعم أو المقهى الذي يستضيف إفطار جولة السبت",

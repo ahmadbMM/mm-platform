@@ -14,7 +14,7 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, loadRides, oneTime, sessionName, timesText, upcoming, withoutPetromin, type RideKind, type RideSession } from "@/lib/rides";
 import { routeNameOf, routeNames } from "@/lib/route-names";
-import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
+import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { riyadhClock } from "@/lib/workshop-days";
 import { fmtClock } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
@@ -24,6 +24,7 @@ import { genderViewer } from "@/lib/account";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { AH_VENUE } from "@/lib/arena";
 import { ArrowIcon } from "@/components/site/Icons";
+import OpensIn from "@/components/site/OpensIn";
 
 // micromobility.sa/events - every upcoming session in the booking system, month by month, each
 // booked in the booking app; sessions are named the way /experiences names them. A session for men only
@@ -66,7 +67,8 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const kindName = { ...kindNames(d), blood: bloodName(tx) }, enName = { ...kindNames(dEn), blood: BLOOD_NAME };
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it
   const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en");
-  const now = riyadhClock(new Date());
+  const drawn = new Date();
+  const now = riyadhClock(drawn);
   const clock = (hhmm: string) => fmtClock(hhmm, locale);
   // never the Petromin nights, which only Experiences shows, to whom may book them (2026-10-12); men-only and
   // women-only sessions to everyone (the owner, 2026-10-28)
@@ -75,9 +77,13 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   // a session for the other gender says so in place of Book to a signed-in account (or one with none on file); a
   // visitor who is not signed in keeps Book, and the booking app signs them in and judges the booking
   const refusal = (s: RideSession) => genderBlock(s, gv, sgWords);
-  // The booking window (site_content booking.window): a date not open yet is greyed, with when it opens, never hidden.
+  // The booking window (site_content booking.window): a date not open yet is greyed, with a clock and when it opens,
+  // never hidden; within a day of opening, a countdown to the real window that the browser keeps up to date each minute
+  // and that turns into Book on time (components/site/OpensIn.tsx), as on Experiences.
   const window = siteBookingWindow(content);
-  const opens = (s: RideSession) => (window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null);
+  const opens = (s: RideSession) => (window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null);
+  const opensWords = opensInWords(tx);
+  const bookLink = (s: RideSession) => <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>;
   const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(intlOf(locale), { ...o, timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const months: { key: string; label: string; items: RideSession[] }[] = [];
   for (const s of sessions) {
@@ -141,7 +147,9 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {((g) => g && <span className={`sg-chip sg-${g.cls}`}>{g.label}</span>)(genderChip(s, sgWords))}
                       </div>
                     </div>
-                    {refusal(s) ? <span className="pg-opens">{refusal(s)}</span> : opens(s) ? <span className="pg-opens">{opens(s)}</span> : <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>}
+                    {refusal(s) ? <span className="pg-opens">{refusal(s)}</span>
+                      : opens(s) ? <OpensIn className="pg-opens pg-wait" text={opens(s) ?? ""} at={window ? opensAt(s.date, window) : null} words={opensWords}>{bookLink(s)}</OpensIn>
+                      : bookLink(s)}
                   </div>
                 ))}
               </div>
