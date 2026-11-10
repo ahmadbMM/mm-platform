@@ -21,13 +21,15 @@ type NavProps = {
   cart?: string;
   /** The site's own store is open (lib/store-core.ts storeOpen): Store and the cart are its pages, the cart with its count. */
   shop?: boolean;
+  /** A registration form's page: no store cart (nothing is bought there). */
+  noCart?: boolean;
 };
 
 // The header from SiteNav.dc.html: logo, the site's sections in the middle, and the design's
 // round icons on the end - search, language, account and the cart (the Salla store's cart);
 // below 1180px the sections open as a full-height dark sheet. Community opens the pages its
 // riders use (links.ts, COMMUNITY); the globe opens every language the site speaks.
-export default function SiteNav({ locale, hidden = [], labels = {}, booking = BOOKING_URL, cart = STORE_CART_URL, shop = false }: NavProps) {
+export default function SiteNav({ locale, hidden = [], labels = {}, booking = BOOKING_URL, cart = STORE_CART_URL, shop = false, noCart = false }: NavProps) {
   const tx = useL();
   const name = (l: { key: string; en: string; ar: string }) => labels[l.key] || tx(l.en, l.ar);
   const arrow = <ArrowIcon size={18} />;
@@ -145,7 +147,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
               ? <a href={accountHref} className="mm-nav-icon" title={label} aria-label={label}>{icon}</a>
               : <Link href="/account" className="mm-nav-icon" title={label} aria-label={label}>{icon}</Link>;
           })()}
-          {shop ? <CartLink /> : (
+          {noCart ? null : shop ? <CartLink /> : (
             <a href={cart} className="mm-nav-icon" title={tx("Cart", "السلة")} aria-label={tx("Cart", "السلة")}>{CART_ICON}</a>
           )}
           <button type="button" className="mm-nav-burger" aria-expanded={open} aria-controls="mm-nav-sheet" aria-label={tx("Menu", "القائمة")} onClick={() => setOpen((o) => !o)}>

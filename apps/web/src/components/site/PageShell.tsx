@@ -43,14 +43,16 @@ export function navFrom(site: Record<string, Sec>): { labels: Record<string, str
 }
 
 /** `hidden`: the pages staff have not switched on, left out of the header and footer. Whether the site's own
- *  store is open (the header's Store and cart then lead to it) comes from the content every page has read. */
-export default async function PageShell({ locale, site, preview, hidden = [], children }: { locale: string; site: Record<string, Sec>; preview: boolean; hidden?: string[]; children: ReactNode }) {
+ *  store is open (the header's Store and cart then lead to it) comes from the content every page has read. `plain`: a
+ *  registration form's page (the Petromin form) - no cart in the header and a footer without the store's payment marks
+ *  and links. */
+export default async function PageShell({ locale, site, preview, hidden = [], plain = false, children }: { locale: string; site: Record<string, Sec>; preview: boolean; hidden?: string[]; plain?: boolean; children: ReactNode }) {
   const shop = storeOpen(await loadSiteContent());
   return (
     <div className="mm-site" dir={localeInfo(locale).dir}>
-      <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} shop={shop} />
+      <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} shop={shop} noCart={plain} />
       <main id="mm-main" style={{ paddingTop: 52 }}>{children}</main>
-      <SiteFooter locale={locale} c={footerFrom(site)} hidden={hidden} booking={navFrom(site).booking} />
+      <SiteFooter locale={locale} c={footerFrom(site)} hidden={hidden} booking={navFrom(site).booking} slim={plain} />
       {preview && <PreviewBar locale={locale} />}
     </div>
   );

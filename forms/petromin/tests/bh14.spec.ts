@@ -60,9 +60,10 @@ test.describe('@bh14 petromin form', () => {
     await page.fill('#badge', '104582'); await page.fill('#name', 'Amal  Booked'); await page.fill('#phone', '512345678');
     await page.click('#next');
     await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
+    await page.click('#next');
     await page.check('#privacy'); await page.check('#waiver');
     await page.click('#submit');
-    await page.locator('#height').press('Enter');
+    await page.evaluate(() => (document.getElementById('form') as HTMLFormElement).requestSubmit());
     await page.evaluate(() => (document.getElementById('form') as HTMLFormElement).requestSubmit());
     await expect(page.locator('#success')).toBeVisible();
     expect(calls).toBe(1);

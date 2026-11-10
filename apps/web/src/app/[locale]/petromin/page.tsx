@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function PetrominPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Search }) {
   const { locale } = await params;
   return (
-    <FormPage locale={locale} path="/petromin" search={await searchParams}>
+    <FormPage locale={locale} path="/petromin" search={await searchParams} plain>
       <PetrominSiteForm lang={locale} />
     </FormPage>
   );

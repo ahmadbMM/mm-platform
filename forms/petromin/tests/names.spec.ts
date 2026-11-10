@@ -1,5 +1,4 @@
 import { test, expect } from '@playwright/test';
-import { setLang } from './lang';
 
 // Names hold letters, spaces and periods, as on the rentals site: a dash becomes a space
 // ("Al-Harbi" is "Al Harbi"), digits, emoji and other signs are dropped as they are typed, and a
@@ -25,12 +24,13 @@ test('a dash in a name becomes a space; digits and emoji go; what is sent has ne
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');
-  const companion = page.locator('#riders .rider').nth(0);
-  await companion.locator('.rider-name input').fill('Sara Bin-Ali😀');
-  await expect(companion.locator('.rider-name input')).toHaveValue('Sara Bin Ali');
-  await expect(companion.locator('.rider-name .err')).toHaveText('Names can only contain letters, spaces and periods.');
-  await companion.locator('.rider-height input').fill('160');
-  await companion.locator('.tile[data-v="Mountain"]').click();
+  await page.fill('#rd-name', 'Sara Bin-Ali😀');
+  await expect(page.locator('#rd-name')).toHaveValue('Sara Bin Ali');
+  await expect(page.locator('#rd-f-name .err')).toHaveText('Names can only contain letters, spaces and periods.');
+  await page.fill('#rd-height', '160');
+  await page.click('#rd-types .tile[data-v="Mountain"]');
+  await page.click('#rd-save');
+  await page.click('#next');
   await page.check('#privacy');
   await page.check('#waiver'); // the ride waiver every registration needs
   await page.click('#submit');
@@ -46,8 +46,8 @@ test('a booking saved with a dashed name reopens without the dash', async ({ pag
   await page.goto('/petromin?lang=en');
   await page.click('#edit');
   await expect(page.locator('#name')).toHaveValue('Amal Al Booked');
-  await page.click('#next'); await page.click('#next');
-  await expect(page.locator('#riders .rider').nth(0).locator('.rider-name input')).toHaveValue('Kerry Ann');
+  await expect(page.locator('#review')).toContainText('Amal Al Booked');
+  await expect(page.locator('#riders .rider').nth(0).locator('.rider-name-v')).toHaveText('Kerry Ann');
 });
 
 test('the reason reads in the page language, and an empty box still asks for the name', async ({ page }) => {
@@ -76,10 +76,9 @@ test("the server's refusal of a name lands on the box it is about", async ({ pag
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');
-  const companion = page.locator('#riders .rider').nth(0);
-  await companion.locator('.rider-name input').fill('Sara Ali');
-  await companion.locator('.rider-height input').fill('160');
-  await companion.locator('.tile[data-v="Mountain"]').click();
+  await page.fill('#rd-name', 'Sara Ali'); await page.fill('#rd-height', '160');
+  await page.click('#rd-types .tile[data-v="Mountain"]'); await page.click('#rd-save');
+  await page.click('#next');
   await page.check('#privacy');
   await page.check('#waiver'); // the ride waiver every registration needs
 
@@ -89,14 +88,16 @@ test("the server's refusal of a name lands on the box it is about", async ({ pag
   await expect(page.locator('#f-name .err')).toHaveText('Names can only contain letters, spaces and periods.');
   await page.locator('#name').press('End'); await page.locator('#name').press('Space'); // any edit clears it
   await expect(page.locator('#f-name')).not.toHaveClass(/invalid/);
-  await page.click('#next');
+  await page.click('#next'); await page.click('#next');
 
+  // A companion's refusal opens that companion, the message on its name.
   await page.click('#submit');
-  await expect(companion.locator('.rider-name')).toHaveClass(/invalid/);
-  await expect(companion.locator('.rider-name .err')).toHaveText('Names can only contain letters, spaces and periods.');
-  await companion.locator('.rider-name input').fill('');
-  await page.click('#submit');
-  await expect(companion.locator('.rider-name .err')).toHaveText("Enter the rider's full name");
+  await expect(page.locator('#rider-dialog')).toBeVisible();
+  await expect(page.locator('#rd-f-name')).toHaveClass(/invalid/);
+  await expect(page.locator('#rd-f-name .err')).toHaveText('Names can only contain letters, spaces and periods.');
+  await page.fill('#rd-name', '');
+  await page.click('#rd-save');
+  await expect(page.locator('#rd-f-name .err')).toHaveText("Enter the rider's full name");
 });
 
 test('a period after a letter stays ("Md. Rahman"); a stray one goes without a word, and what is sent keeps it', async ({ page }) => {
@@ -115,11 +116,12 @@ test('a period after a letter stays ("Md. Rahman"); a stray one goes without a w
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');
-  const companion = page.locator('#riders .rider').nth(0);
-  await companion.locator('.rider-name input').fill('Mohd. Ali');
-  await expect(companion.locator('.rider-name input')).toHaveValue('Mohd. Ali');
-  await companion.locator('.rider-height input').fill('160');
-  await companion.locator('.tile[data-v="Mountain"]').click();
+  await page.fill('#rd-name', 'Mohd. Ali');
+  await expect(page.locator('#rd-name')).toHaveValue('Mohd. Ali');
+  await page.fill('#rd-height', '160');
+  await page.click('#rd-types .tile[data-v="Mountain"]');
+  await page.click('#rd-save');
+  await page.click('#next');
   await page.check('#privacy');
   await page.check('#waiver'); // the ride waiver every registration needs
   await page.click('#submit');
@@ -151,20 +153,22 @@ test('every word of a name has two letters: an initial is refused, for the emplo
   await page.fill('#name', 'Faisal Harbi');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
+  // A companion's initial is said in the dialog on Save, and the dialog stays open.
   await page.click('#add-rider');
-  const companion = page.locator('#riders .rider').nth(0);
-  await companion.locator('.rider-name input').fill('S Ali');
-  await companion.locator('.rider-height input').fill('160');
-  await companion.locator('.tile[data-v="Mountain"]').click();
+  await page.fill('#rd-name', 'S Ali'); await page.fill('#rd-height', '160');
+  await page.click('#rd-types .tile[data-v="Mountain"]');
+  await page.click('#rd-save');
+  await expect(page.locator('#rd-f-name .err')).toHaveText("Write the rider's name in full, not initials");
+  await expect(page.locator('#rider-dialog')).toBeVisible();
+  expect(regs).toHaveLength(0);
+  // (The language picker is behind the open dialog: the page's language changes the way the picker does it.)
+  await page.evaluate(() => (window as unknown as { RiderRegistration: { applyLang(c: string): void } }).RiderRegistration.applyLang('ar'));
+  await expect(page.locator('#rd-f-name .err')).toHaveText('اكتب اسم الراكب كاملًا، لا الأحرف الأولى فقط');
+  await page.fill('#rd-name', 'Sara Ali');
+  await page.click('#rd-save');
+  await page.click('#next');
   await page.check('#privacy');
   await page.check('#waiver');
-  await page.click('#submit');
-  await expect(companion.locator('.rider-name .err')).toHaveText("Write the rider's name in full, not initials");
-  expect(regs).toHaveLength(0);
-  await setLang(page, 'ar');
-  await page.click('#submit');
-  await expect(companion.locator('.rider-name .err')).toHaveText('اكتب اسم الراكب كاملًا، لا الأحرف الأولى فقط');
-  await companion.locator('.rider-name input').fill('Sara Ali');
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(regs).toHaveLength(1);
@@ -184,15 +188,14 @@ test("the server's short-name refusal (why: short) asks for the name in full, no
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');
-  const companion = page.locator('#riders .rider').nth(0);
-  await companion.locator('.rider-name input').fill('Sara Ali');
-  await companion.locator('.rider-height input').fill('160');
-  await companion.locator('.tile[data-v="Mountain"]').click();
+  await page.fill('#rd-name', 'Sara Ali'); await page.fill('#rd-height', '160');
+  await page.click('#rd-types .tile[data-v="Mountain"]'); await page.click('#rd-save');
+  await page.click('#next');
   await page.check('#privacy');
   await page.check('#waiver');
   await page.click('#submit');
   await expect(page.locator('#f-name .err')).toHaveText('Write your first and last name in full, not initials');
-  await page.click('#next');
+  await page.click('#next'); await page.click('#next');
   await page.click('#submit');
-  await expect(companion.locator('.rider-name .err')).toHaveText("Write the rider's name in full, not initials");
+  await expect(page.locator('#rd-f-name .err')).toHaveText("Write the rider's name in full, not initials");
 });

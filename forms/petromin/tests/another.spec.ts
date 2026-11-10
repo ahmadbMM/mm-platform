@@ -24,7 +24,7 @@ test('Register another starts a fresh form and keeps the first confirmation; bot
 
   // A fresh form, nothing of the first booking in it, and Cancel back to it.
   await page.click('#another');
-  await expect(page.locator('#form .title')).toHaveText('Employees Bike Registration Form');
+  await expect(page.locator('#form .title')).toHaveText('Petromin bike night');
   await expect(page.locator('#sessions .session[aria-checked="true"]')).toHaveCount(0);
   await expect(page.locator('#badge')).toHaveValue('');
   await expect(page.locator('#name')).toHaveValue('');
@@ -45,6 +45,7 @@ test('Register another starts a fresh form and keeps the first confirmation; bot
   await page.fill('#badge', 'B-7'); await page.fill('#name', 'Basma Second'); await page.fill('#phone', '512345679');
   await page.click('#next');
   await page.fill('#height', '165'); await page.click('#types .tile[data-v="Mountain"]');
+  await page.click('#next');
   await expect(page.locator('#privacy')).not.toBeChecked(); // the next person confirms the notice for themselves
   await expect(page.locator('#f-privacy')).toBeVisible();
   await page.check('#privacy'); await page.check('#waiver');
@@ -110,6 +111,7 @@ test('a waiver the database no longer takes, and a paid booking moved to another
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.click('#next');
   await page.check('#privacy'); await page.check('#waiver');
   await page.click('#submit');
   await expect(page.locator('#banner .banner-text')).toHaveText('تغيّر إقرار الركوب. أعد تحميل هذه الصفحة لقراءة الإقرار الجديد والموافقة عليه.');
@@ -118,8 +120,9 @@ test('a waiver the database no longer takes, and a paid booking moved to another
   await page.evaluate((s) => localStorage.setItem('mm-petromin-registration', JSON.stringify(s)), SAVED);
   await page.goto('/petromin?lang=en');
   await page.click('#edit');
+  await page.click('#review .rv-change[data-go="1"]');
   await page.locator('#sessions .session').nth(1).click();
-  await page.click('#next'); await page.click('#next');
+  await page.click('#next'); // back to the summary
   await page.check('#waiver');
   await page.click('#submit');
   await expect(page.locator('#banner .banner-text')).toHaveText('This booking is already paid, so it cannot move to a session with a different price. Ask the desk to change it.');

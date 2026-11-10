@@ -29,16 +29,36 @@ kind), and only then the website side:
 
 ```bash
 npm install
-npx playwright install chromium   # first time only
+npx playwright install chromium webkit   # first time only
 npm run e2e
 ```
 
 The specs drive the real page in a browser against `serve.mjs` (the built page at its address),
-with every Supabase call stubbed, so nothing is ever written to production. CI runs them (`npm run
-e2e`) before every deploy. They cover registering with companions,
-editing a booking afterwards, the ride waiver (required on every registration and edit, sent as `p_waiver`), the booking card, and that every string on the card and in the
-companions block has a translation in every language but English (Arabic, Urdu, French, Spanish,
-Portuguese, Hindi, Nepali, Tagalog and Bengali).
+with every Supabase call stubbed, so nothing is ever written to production. They run on an Android
+phone (Chromium), and the ones tagged `@webkit` on an iPhone as well (`playwright.config.ts`). CI runs
+them (`npm run e2e`) before every deploy, and again on the website's page for the form (`npm run
+e2e:site`, after `next build`). `tests/flow.ts` walks the four steps for them. They cover registering
+with companions, editing a booking from its summary, the ride waiver (required on every registration
+and edit, sent as `p_waiver` with the page's language as `p_lang`), the Privacy Notice, names and
+digits, Find my booking, Cancel my booking, the calendar file, every string in every language, an
+accessibility check of every step (axe, English and Arabic), Jeddah's time on a phone set elsewhere,
+and a 320 px screen.
+
+## The form (2026-11-11)
+Four steps: the night, the rider, the bikes (companions as cards, each written in a centred dialog),
+then Check and agree (the answers with a Change on each part, the Privacy Notice and waiver boxes,
+"Agree and register"). Edit opens on that summary. The ticket has Find my booking (`rider_lookup`:
+the number and the mobile it was made with), Cancel my booking (`rider_cancel`), a calendar file and,
+on an iPhone, Apple Wallet (the website's `app/api/petromin-pass`, which asks the booking app's
+`/api/wallet-pass`). Each step seen, each box refused at Continue and each registration is counted
+without anyone in it (`form_step`, read on the staff Petromin page as Form steps). Riders see no hint
+lines (the owner's rule): what they need is in the labels, the messages, and as facts on the night's
+card and the ticket (bikes from, where, the helmet). The database side is rentals'
+`20261111030000_petromin_form_round.sql`.
+
+Every word is in `T` in `design/app.js`, keyed by its English, in all fifteen other languages. The
+website's copy carries one language: the build writes each one's words to
+`apps/web/public/forms/petromin/t/<lang>.<hash>.json` and fetches the page's before the form starts.
 
 ## One phone, several people
 Edit changes the booking on the screen. "Register another" opens a fresh form; the confirmation on
