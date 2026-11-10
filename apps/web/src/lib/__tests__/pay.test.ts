@@ -72,6 +72,10 @@ describe("the pages' words for the database's refusals", () => {
     expect(payError({ status: 400, message: "STORE_STOCK: 00000000-0000-4000-8000-0000000000a1" })).toEqual({ error: "stock", status: 409 });
     expect(refusedVariant("STORE_STOCK: 00000000-0000-4000-8000-0000000000a1")).toBe("00000000-0000-4000-8000-0000000000a1");
     expect(payError({ status: 401, message: "NOT_AUTHORIZED" })).toEqual({ error: "signin", status: 401 });
+    expect(payError({ status: 400, message: "PAY_HOLD_MAX" })).toEqual({ error: "hold_max", status: 409 });
+    expect(payError({ status: 400, message: "PAY_NOT_OPEN" })).toEqual({ error: "not_open", status: 409 });
+    // pay_hold_extend not on the database yet: PostgREST's own 404, never a code the page has words for
+    expect(payError({ status: 404, message: "Could not find the function public.pay_hold_extend(p_key, p_pay) in the schema cache" })).toEqual({ error: "generic", status: 502 });
     expect(payError({ status: 0, message: "" })).toEqual({ error: "generic", status: 502 });
     expect(payError({ status: 400, message: "SOMETHING_NEW" })).toEqual({ error: "generic", status: 502 });
   });

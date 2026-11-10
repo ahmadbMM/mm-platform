@@ -31,7 +31,7 @@ export function payError(r: { status: number; message: string }): { error: strin
   const code = refusal(r);
   const map: Record<string, string> = {
     NOT_AUTHORIZED: "signin", PAY_OFF: "pay_off", STORE_CLOSED: "pay_off", NOT_FOUND: "not_found",
-    PAY_NOT_OPEN: "not_open", PAY_IN_PROGRESS: "in_progress", PAY_NOTHING: "nothing", PAY_TOO_SMALL: "nothing",
+    PAY_NOT_OPEN: "not_open", PAY_HOLD_MAX: "hold_max", PAY_IN_PROGRESS: "in_progress", PAY_NOTHING: "nothing", PAY_TOO_SMALL: "nothing",
     PAY_AMOUNT: "amount", PAY_DEST: "invalid", STORE_STOCK: "stock", STORE_GONE: "gone", STORE_NO_SHIP: "no_ship",
     STORE_CITY: "city", STORE_ADDRESS: "address", STORE_NAME: "name", STORE_PHONE: "phone", STORE_EMAIL: "email",
     STORE_FULFIL: "fulfil", STORE_EMPTY: "empty", STORE_ITEM: "invalid", WALLET_SHORT: "wallet_short",
