@@ -131,13 +131,13 @@ test("the learn form will not make the account without an emergency contact, and
   await page.route(/supabase\.co(?!\/rest\/v1\/rpc\/)/, (r) => r.abort());
   await page.goto("/experiences/learn");
   const card = page.locator(".ln-card").first();
-  test.skip(!(await card.getByRole("radio", { name: "No, I'm new" }).count()), "sign-ups are switched off on this database");
-  await card.getByRole("radio", { name: "No, I'm new" }).click();
+  test.skip(!(await card.getByRole("button", { name: "No, I'm new" }).count()), "sign-ups are switched off on this database");
+  await card.getByRole("button", { name: "No, I'm new" }).click();
   await card.getByLabel("First name").fill("Karim");
   await card.getByLabel("Last name").fill("Mansour");
   await card.getByRole("radio", { name: "Male", exact: true }).click();
   await card.getByLabel("Email", { exact: true }).fill("karim.mansour@gmail.com");
-  await card.getByLabel("Mobile number", { exact: true }).fill("0552468013");
+  await card.getByLabel(/^Mobile number/).fill("0552468013");
   await card.locator("input[autocomplete='new-password']").nth(0).fill("Ride2Work");
   await card.locator("input[autocomplete='new-password']").nth(1).fill("Ride2Work");
   await card.getByLabel("Height (cm)").fill("178");
@@ -187,8 +187,8 @@ test("signed in on the learn form: the account's answers are not asked again unl
   await page.route(/supabase\.co(?!\/rest\/v1\/rpc\/)/, (r) => r.abort());
   await page.goto("/experiences/learn");
   const card = page.locator(".ln-card").first();
-  test.skip(!(await card.getByRole("radio", { name: "Yes, I have an account" }).count()), "sign-ups are switched off on this database");
-  await card.getByRole("radio", { name: "Yes, I have an account" }).click();
+  test.skip(!(await card.getByRole("button", { name: "Yes, I have an account" }).count()), "sign-ups are switched off on this database");
+  await card.getByRole("button", { name: "Yes, I have an account" }).click();
   await card.getByLabel("Email or mobile number").fill("0552468013");
   await card.getByLabel("Password", { exact: true }).fill("Ride2Work");
   await card.getByRole("button", { name: "Sign in", exact: true }).click();

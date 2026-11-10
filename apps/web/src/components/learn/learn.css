@@ -18,14 +18,19 @@
 .ln-hint-row { margin: -8px 0 18px; }
 .ln-field { display: flex; flex-direction: column; gap: 6px; margin: 0 0 14px; }
 .ln-field > span { font-size: 13.5px; color: #57605a; font-weight: 600; }
-.ln-input { background: #fff; border: 1px solid rgba(0, 0, 0, .16); border-radius: 12px; padding: 12px 15px; color: #1a1919; font-size: 15px; outline: none; font-family: inherit; width: 100%; min-height: 48px; box-sizing: border-box; }
-.ln-input:focus { border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
-.ln-input::placeholder { color: #8a938c; }
+/* Outlines at 3:1 or more on white and on the page (WCAG 1.4.11, 2026-11-10): #7d857f is 3.8:1, the focus
+   green #077a4b 5.4:1; grey words at 4.5:1 or more (#6f7771). */
+.ln-input { background: #fff; border: 1px solid #7d857f; border-radius: 12px; padding: 12px 15px; color: #1a1919; font-size: 15px; outline: none; font-family: inherit; width: 100%; min-height: 48px; box-sizing: border-box; }
+.ln-input:focus { border-color: #077a4b; box-shadow: 0 0 0 1px #077a4b; }
+.ln-input[aria-invalid="true"] { border-color: #b3261e; box-shadow: 0 0 0 1px #b3261e; }
+.ln-input::placeholder { color: #6f7771; }
+/* The mobile number's form, beside its label. */
+.ln-fmt { font-weight: 500; color: #5f6862; margin-inline-start: 4px; }
 textarea.ln-input { resize: vertical; min-height: 84px; }
 /* How they heard of us: a native select dressed as the boxes, its arrow on the end side. */
 .ln-select { appearance: none; -webkit-appearance: none; cursor: pointer; padding-inline-end: 40px; background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235b635d' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 15px center; }
 [dir="rtl"] .ln-select { background-position: left 15px center; }
-.ln-select.ln-ph { color: #8a938c; }
+.ln-select.ln-ph { color: #6f7771; }
 .ln-select option { color: #1a1919; }
 .ln-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 /* The date of birth: day, month, year side by side, on a phone too (a tighter arrow). */
@@ -45,7 +50,7 @@ textarea.ln-input { resize: vertical; min-height: 84px; }
 .mm-site .ln-learner-head h3 { margin: 0; font-size: 15px; letter-spacing: -.2px; line-height: 1.2; }
 .ln-remove { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 0; background: rgba(0, 0, 0, .06); color: #57605a; cursor: pointer; display: grid; place-items: center; }
 .ln-remove:hover { background: rgba(179, 38, 30, .1); color: #b3261e; }
-.ln-remove:focus-visible, .ln-add:focus-visible { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
+.ln-remove:focus-visible, .ln-add:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
 .ln-add { cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 50px; margin: 0 0 22px; border: 1.5px dashed rgba(7, 122, 75, .45); border-radius: 16px; background: rgba(7, 122, 75, .04);
   color: #06603b; font: inherit; font-size: 14.5px; font-weight: 700; }
 .ln-add:hover { background: rgba(7, 122, 75, .08); }
@@ -54,23 +59,33 @@ textarea.ln-input { resize: vertical; min-height: 84px; }
 /* Who is learning: three choices on each card, the mark above the words so a long name
    ("Someone else", "Jemand anderes") keeps to its third of the card. */
 .ln-who { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 16px; }
-.ln-who-opt { cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-height: 68px; padding: 10px 6px; border: 1px solid rgba(0, 0, 0, .14); border-radius: 16px;
+.ln-who-opt { cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; min-height: 68px; padding: 10px 6px; border: 1px solid #7d857f; border-radius: 16px;
   background: #fff; color: #1a1919; font: inherit; font-size: 14px; font-weight: 700; text-align: center; line-height: 1.2; overflow-wrap: anywhere; }
-.ln-who-opt:disabled { cursor: not-allowed; opacity: .4; }
 /* The choices' own mark: a ring, filled when chosen. */
-:is(.ln-who-opt, .ln-level)::before { content: ""; flex: none; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid rgba(0, 0, 0, .3); box-sizing: border-box; background: #fff; }
-:is(.ln-who-opt, .ln-level)[aria-checked="true"] { border-color: #077a4b; background: rgba(7, 122, 75, .06); }
-:is(.ln-who-opt, .ln-level)[aria-checked="true"]::before { border: 5px solid #077a4b; }
+:is(.ln-who-opt, .ln-level)::before { content: ""; flex: none; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid #6f7771; box-sizing: border-box; background: #fff; }
+:is(.ln-who-opt, .ln-level).on { border-color: #077a4b; box-shadow: inset 0 0 0 1px #077a4b; background: rgba(7, 122, 75, .06); }
+:is(.ln-who-opt, .ln-level).on::before { border: 5px solid #077a4b; }
 
 /* Riding so far: one per line */
 .ln-levels { display: flex; flex-direction: column; gap: 8px; margin: 0 0 18px; }
-.ln-level { cursor: pointer; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 12px 16px; border: 1px solid rgba(0, 0, 0, .14); border-radius: 14px; background: #fff; color: #1a1919; font: inherit; font-size: 14.5px; font-weight: 600; text-align: start; }
+.ln-level { cursor: pointer; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 50px; padding: 12px 16px; border: 1px solid #7d857f; border-radius: 14px; background: #fff; color: #1a1919; font: inherit; font-size: 14.5px; font-weight: 600; text-align: start; }
 
 /* Gender: pills (Workshop's day buttons) */
 .ln-pills { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 18px; }
-.ln-pill { cursor: pointer; min-height: 44px; padding: 8px 18px; border: 1px solid rgba(0, 0, 0, .14); border-radius: 999px; background: #fff; color: #1a1919; font: inherit; font-size: 13.5px; font-weight: 700; }
-.ln-pill:is([aria-checked="true"], [aria-pressed="true"]) { background: #1a1919; color: #03ff89; border-color: #1a1919; }
-:is(.ln-who-opt, .ln-level, .ln-pill):focus-visible { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
+.ln-pill { cursor: pointer; display: inline-flex; align-items: center; min-height: 44px; padding: 8px 18px; border: 1px solid #7d857f; border-radius: 999px; background: #fff; color: #1a1919; font: inherit; font-size: 13.5px; font-weight: 700; }
+.ln-pill.on { background: #1a1919; color: #03ff89; border-color: #1a1919; }
+
+/* Every choice is a real radio button laid over its whole label (2026-11-10, WCAG 4.1.2): unseen, it takes the
+   tap and the keyboard; the label draws the card, pill or row. The focus ring is a solid green 2px. */
+.ln-opt { position: relative; }
+.ln-opt input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; cursor: inherit; appearance: none; -webkit-appearance: none; border: 0; }
+.ln-opt.off { cursor: not-allowed; opacity: .4; }
+.ln-opt:focus-within { outline: 2px solid #077a4b; outline-offset: 2px; }
+@supports selector(:has(a)) {
+  .ln-opt:focus-within { outline: none; }
+  .ln-opt:has(input:focus-visible) { outline: 2px solid #077a4b; outline-offset: 2px; }
+}
+:is(.ln-pills, .ln-who, .ln-levels)[aria-invalid="true"] :is(.ln-pill, .ln-who-opt, .ln-level):not(.on) { border-color: #b3261e; }
 
 .ln-details { border-top: 1px solid rgba(0, 0, 0, .08); padding-top: 20px; margin-top: 4px; }
 .ln-details > .ln-hint { margin: -4px 0 12px; }
@@ -147,9 +162,19 @@ html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13
 .ln-steps li.on::before { background: #1a1919; }
 .ln-steps li.done { color: #077a4b; }
 .ln-steps li.done::before { background: #077a4b; }
-.ln-have { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 6px; }
+/* Have an account? Two rows that each open their step (buttons, so no ring: 2026-11-10, the rings drifted apart
+   when one label wrapped). */
+.ln-have { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; margin: 0 0 6px; }
+.ln-go { cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 56px; padding: 12px 16px; border: 1px solid #7d857f; border-radius: 14px;
+  background: #fff; color: #1a1919; font: inherit; font-size: 15px; font-weight: 700; text-align: start; line-height: 1.3; }
+.ln-go:hover { border-color: #077a4b; background: rgba(7, 122, 75, .04); }
+.ln-go svg { flex: none; color: #077a4b; }
 .ln-step-title { font-size: 17px; margin: 0 0 6px; }
+.ln-step-title:focus { outline: none; }
 .ln-back { display: block; margin: 14px auto 0; padding: 6px 10px; border: 0; background: none; color: #5f6862; font: inherit; font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+:is(.ln-go, .ln-btn, .ln-back, .ln-link):focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+/* The site's header stays at the top (52px): a box the keyboard moves to is never left under it (WCAG 2.4.11). */
+html:has(.ln-grid) { scroll-padding-top: 72px; }
 .ln-step-top:focus { outline: none; }
 .ln-made { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 20px; padding: 14px 16px; border-radius: 16px; background: rgba(7, 122, 75, .07); border: 1px solid rgba(7, 122, 75, .3); }
 .ln-made-mark { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: #077a4b; color: #fbf9f4; font-weight: 700; }
@@ -167,12 +192,12 @@ html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13
 .ln-em-h { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin: 0 0 4px; color: #1a1919; font-size: 15px; font-weight: 700; }
 .ln-em-h svg { flex: none; color: #077a4b; }
 .ln-em-sub { margin: 0 0 12px; }
-.ln-em-opt { color: #8a938c; font-weight: 500; font-size: 13px; }
+.ln-em-opt { color: #6f7771; font-weight: 500; font-size: 13px; }
 .ln-em .ln-field > label { font-size: 13.5px; color: #57605a; font-weight: 600; }
 .ln-em .ln-err { margin: 0; }
 .ln-em-add { margin: 0 0 6px; }
 .ln-em-add span { font-size: inherit; line-height: inherit; }
-.ln-em [aria-invalid="true"] { border-color: #b3261e; }
+.ln-em [aria-invalid="true"] { border-color: #b3261e; box-shadow: 0 0 0 1px #b3261e; }
 /* A signed-in account's answers already on file (2026-10-25): named in one line, with Show them; a question staff
    flagged says so under it. */
 .ln-skip { font-size: 13px; }
