@@ -67,6 +67,12 @@ inline style in that window, and because Cloudflare may add a script of its own 
   certificate's two faces (`CERT_FACES`: Space Grotesk and IBM Plex Sans Arabic);
 - fit the name itself (`fitCert`), once the window's fonts are in.
 
+And one more, for iPhones: **open the window on the tap** (`openCertWin`), before anything is
+awaited, and write the certificate into it afterwards. iPhone Safari refuses a window opened after
+a wait and `window.open` gives null; until 2026-11-10 the portal asked the database first and every
+Get certificate on an iPhone said "could not be opened". Chromium lets a late window through, so the
+e2e suite's `safariWindows` imposes Safari's rule on the certificate tests.
+
 **The wording is not ours either.** `CERT_WORDS` in `src/client/certs.ts` is a copy of the three
 lines the booking site's database stamps on every certificate (`_vol_cert_words`), kept for a
 certificate issued before the database stamped them. It says *his* / *her* / neither by gender, and

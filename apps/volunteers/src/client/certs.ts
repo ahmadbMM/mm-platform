@@ -38,12 +38,15 @@ const certPeriod = (from: string | null | undefined, to: string | null | undefin
   return !a ? b : !b || a === b ? a : `${a} – ${b}`;
 };
 
-let certTpl: string | null = null;
-async function certTemplate(): Promise<string> {
-  if (certTpl) return certTpl;
-  const res = await fetch("/certificate.html", { credentials: "same-origin" });
-  if (!res.ok) throw new Error(`certificate ${res.status}`);
-  certTpl = stripScripts(await res.text()); // whatever the host added to it (cert.ts)
+// One fetch, shared: Get certificate starts it on the tap and printCert waits on the same one. A failed one is
+// forgotten, so the next try fetches again.
+let certTpl: Promise<string> | null = null;
+function certTemplate(): Promise<string> {
+  certTpl ??= fetch("/certificate.html", { credentials: "same-origin" }).then(async (res) => {
+    if (!res.ok) throw new Error(`certificate ${res.status}`);
+    return stripScripts(await res.text()); // whatever the host added to it (cert.ts)
+  });
+  certTpl.catch(() => { certTpl = null; });
   return certTpl;
 }
 const certEsc = (v: unknown) => String(v ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#39;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -102,11 +105,22 @@ function certView(c: Cert): Record<string, string> {
     check_code: c.code ?? "",
   };
 }
-async function printCert(c: Cert): Promise<void> {
+// The window opens on the tap, before anything is asked: iPhone Safari refuses a window opened after a wait (a volunteer
+// got "could not be opened" on every Get certificate, 2026-11-10), and the certificate takes the database's answer and
+// the template first. It stays blank until printCert writes into it; whatever stops the certificate closes it again.
+// The booking app opens its windows the same way.
+function openCertWin(): Window | null {
+  try { return window.open("", "_blank", "width=1180,height=880"); } catch { return null; }
+}
+function dropCertWin(win: Window, msg: string): void {
+  try { win.close(); } catch { /* already gone */ }
+  setNote(msg);
+  render();
+}
+async function printCert(win: Window, c: Cert): Promise<void> {
   let tpl: string;
-  try { tpl = await certTemplate(); } catch { setNote(t("certOpenErr")); render(); return; }
-  const win = window.open("", "_blank", "width=1180,height=880");
-  if (!win) { setNote(t("certOpenErr")); render(); return; }
+  try { tpl = await certTemplate(); } catch { dropCertWin(win, t("certOpenErr")); return; }
+  if (win.closed) return; // the volunteer closed it while it was on its way
   win.document.write(fillCert(tpl, certView(c)));
   win.document.close();
   win.focus();
@@ -141,11 +155,14 @@ let busy = false;
 /** Get certificate: the one made for the event (or made now), printed. */
 export async function getCert(session: string, label: string): Promise<void> {
   if (busy) return;
+  const win = openCertWin(); // on the tap, before the wait
+  if (!win) { setNote(t("certOpenErr")); render(); return; }
   busy = true;
+  void certTemplate().catch(() => undefined); // fetched while the database answers; printCert waits on the same one
   const r = await rpc<Cert>("volunteer_cert_issue_session", { p_session: session, p_initiative: label });
   busy = false;
-  if (!r.ok) { setNote(say(r)); render(); return; }
-  if (r.data && r.data.ok) void printCert(r.data); else { setNote(t("certEmpty")); render(); }
+  if (!r.ok) { dropCertWin(win, say(r)); return; }
+  if (r.data && r.data.ok) void printCert(win, r.data); else dropCertWin(win, t("certEmpty"));
 }
 
 let showOther = false;
@@ -179,9 +196,12 @@ export function viewCert(main: HTMLElement): void {
 }
 async function makeCert(from: string, to: string): Promise<void> {
   if (!from || !to || to < from) { setNote(t("errBadDates")); render(); return; }
+  const win = openCertWin(); // on the tap, before the wait
+  if (!win) { setNote(t("certOpenErr")); render(); return; }
+  void certTemplate().catch(() => undefined);
   const r = await rpc<Cert>("volunteer_cert_issue", { p_from: from, p_to: to });
-  if (!r.ok) { setNote(r.status === 400 && r.code === "BAD_INPUT" ? t("errBadDates") : say(r)); render(); return; }
-  if (r.data && r.data.ok) void printCert(r.data);
+  if (!r.ok) { dropCertWin(win, r.status === 400 && r.code === "BAD_INPUT" ? t("errBadDates") : say(r)); return; }
+  if (r.data && r.data.ok) void printCert(win, r.data); else dropCertWin(win, t("certEmpty"));
 }
 
 // ── a certificate's check (#check/<code>): anyone, signed in or not ──
