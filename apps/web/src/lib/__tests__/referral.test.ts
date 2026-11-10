@@ -29,12 +29,15 @@ describe("referrals", () => {
     expect(referralOf(ans({ pct: 900 }), "2026-11-08")!.pct).toBe(50); // a figure the database never gives reads as its default
   });
 
-  it("says the percent, the friend's code and the share message in every language", () => {
+  it("promises no reward in any language (2026-11-10), and still says a friend's code given before", () => {
     for (const [l, w] of Object.entries(REFERRAL_WORDS)) {
-      expect(w.how, l).toContain("{0}"); expect(w.how, l).toContain("{1}");
-      expect(w.enterOk, l).toContain("{0}");
-      for (const ph of ["{0}", "{1}", "{2}"]) { expect(w.msg, l).toContain(ph); expect(w.welcome, l).toContain(ph); }
+      expect("how" in w, l).toBe(false); expect("earned" in w, l).toBe(false);
+      expect(w.enterOk, l).not.toContain("{0}");
+      expect(w.msg, l).not.toContain("{2}"); expect(w.msg, l).not.toContain("%");
+      for (const ph of ["{0}", "{1}", "{2}"]) expect(w.welcome, l).toContain(ph);
     }
+    expect(REFERRAL_WORDS.en.title).toBe("Invite friends");
+    expect(REFERRAL_WORDS.en.wasInvited).toBe("You joined with a friend’s invite.");
   });
 
   it("draws no card when switched off, refused, without a code, or for anything else", () => {
