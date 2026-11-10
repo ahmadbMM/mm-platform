@@ -15,6 +15,8 @@ describe("normalizePhone, as the booking app reads a mobile", () => {
     expect(normalizePhone("+966 055 123 4567")).toBe("+966551234567");
     expect(normalizePhone("00966 0551234567")).toBe("+966551234567");
     expect(normalizePhone("+966551234567")).toBe("+966551234567");
+    // the code typed without a plus keeps no trunk 0 either (2026-11-10 bug hunt)
+    expect(normalizePhone("966 055 123 4567")).toBe("+966551234567");
   });
 });
 

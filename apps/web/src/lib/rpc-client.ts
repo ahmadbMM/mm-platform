@@ -41,7 +41,7 @@ export function normalizePhone(raw: string): string {
     .replace(/[\s\-().]/g, "")
     .replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c)))
     .replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)))
-    .replace(/^(\+|00)9660(?=5\d{8}$)/, "+966"); // "+966 05…": the trunk 0 goes
+    .replace(/^(\+|00)?9660(?=5\d{8}$)/, "+966"); // "+966 05…" (or "966 05…" with no plus): the trunk 0 goes
   if (/^\+9665\d{8}$/.test(d)) return d;
   if (/^05\d{8}$/.test(d)) return "+966" + d.slice(1);
   if (/^5\d{8}$/.test(d)) return "+966" + d;

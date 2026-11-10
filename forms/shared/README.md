@@ -5,7 +5,7 @@ signed-in account's questions come to (the owner, 2026-10-25: "one shared sign-i
 lands on every form at once). It has no page of its own; each form draws its boxes in its own words.
 
 - `MMAccount.ident(raw)`: what `customer_login` takes for what was typed (an email in lower case; a mobile in E.164,
-  +966 when it has no code, a Saudi 05X / 5X / 9665X number as +9665X; Arabic-Indic, Persian, Devanagari and Bengali
+  +966 when it has no code, a Saudi 05X / 5X / 9665X / 96605X number as +9665X; Arabic-Indic, Persian, Devanagari and Bengali
   digits read as 0-9).
 - `MMAccount.signIn(rpc, raw, pwd)`: `customer_login`, then `customer_pwd_state`. `{row}`, or `{error}`: `id`, `pwd`,
   `locked`, `busy`, `network`, `wrong` (with `cc` when a number typed without its code is not a Saudi mobile) or

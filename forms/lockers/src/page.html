@@ -4086,7 +4086,7 @@ var FORM_T = {
    own words; this file decides what a sign-in, a hand-over and a signed-in account's questions come to.
 
      ident(raw)               what customer_login takes for what was typed: an email in lower case, or a mobile
-                              in E.164 (+966 when it has no code; a Saudi 05X / 5X / 9665X number as +9665X)
+                              in E.164 (+966 when it has no code; a Saudi 05X / 5X / 9665X / 96605X number as +9665X)
      signIn(rpc, raw, pwd)    customer_login, then customer_pwd_state: {row} or {error, cc}
                                 error: id (nothing typed), pwd (no password), locked (too many tries),
                                 busy (the network's limit), network, wrong (cc: a number typed without its
@@ -4126,6 +4126,7 @@ var MMAccount = (function () {
     if (!s) return low;
     if (s.slice(0, 2) === "00") { var y = s.slice(2); if (y.indexOf("9660") === 0) y = "966" + y.slice(4); return "+" + y; }
     if (/^9665\d{8}$/.test(s)) return "+" + s;
+    if (/^9660\d{9}$/.test(s)) return "+966" + s.slice(4); // "966 05X..." with no plus: the trunk 0 goes, as after + or 00
     if (s[0] === "0") return "+966" + s.slice(1);
     if (s.length >= 11) return "+" + s; // a number pasted with its code and no plus
     return "+966" + s;
@@ -4147,7 +4148,9 @@ var MMAccount = (function () {
     }
     var row = Array.isArray(r.data) ? r.data[0] : null;
     if (!row || !row.id || !row.session_token) {
-      return { error: "wrong", cc: id.indexOf("@") < 0 && !/^\s*(\+|00)/.test(bare(raw)) && !/^\+9665\d{8}$/.test(id) };
+      // Whether a code was typed, read as ident() reads the number: "٠٠٢٠..." or "(+20) ..." has one.
+      var typed = ascii(bare(raw)).replace(/[\s()\-.]/g, "");
+      return { error: "wrong", cc: id.indexOf("@") < 0 && !/^(\+|00)/.test(typed) && !/^\+9665\d{8}$/.test(id) };
     }
     // A password staff issued (a temporary one) is replaced before the account is used, as the booking site asks.
     var ps = await rpc("customer_pwd_state", { p_id: row.id, p_token: row.session_token });

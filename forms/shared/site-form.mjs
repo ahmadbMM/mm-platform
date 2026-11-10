@@ -9,8 +9,9 @@
 //   apps/web/src/forms/site/<name>.css         the stylesheet, every rule kept inside .mmf-<name>
 //   apps/web/public/forms/<name>/              the pictures the markup names
 //
-// The scripts read window.MM_SITE_FORM = { lang, db: { url, key } }: the page's language (the site's globe picks it)
-// and the database the website itself talks to (staging's on staging).
+// The scripts read window.MM_SITE_FORM = { lang, db: { url, key }, booking }: the page's language (the site's globe picks
+// it), the database the website itself talks to (staging's on staging), and the booking app that reads that database
+// ("https://<host>/", staging's copy on staging; "" when none is set: the form's own address, the live app).
 import { copyFileSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve, basename } from 'node:path';
 

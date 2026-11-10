@@ -17,8 +17,10 @@ reaches production. Only the team can open it (Cloudflare Access).
   after every production deploy, and on demand (Actions > staging-sync > Run workflow).
   `scripts/staging-sync.mjs` reads the live site with the public key (only what the public sees),
   writes only rows that differ, removes rows the live site no longer has, and never touches
-  riders, rides or bookings (staging keeps its made-up ones). Staging stays **open**: Coming Soon
-  off and every page on, whatever the live site's switches say.
+  riders, rides or bookings (staging keeps its made-up ones). A catalogue row whose category the
+  live site hides is left out, a hidden category that rows on staging still belong to is kept there
+  unpublished, and a refused write is listed at the end (the job turns red) without stopping the
+  rest. Staging stays **open**: Coming Soon off and every page on, whatever the live site's switches say.
 - *Database structure:* a migration is applied to staging first, then production (the Supabase MCP
   sees both projects).
 
@@ -77,8 +79,12 @@ the staging project's legacy service_role key (the content copy writes with it).
 - `STAGING_SUPABASE_URL` = `https://<staging-ref>.supabase.co`
 - `STAGING_SUPABASE_ANON_KEY` = the staging project's **legacy anon** key (Settings > API Keys >
   Legacy API keys)
+- `STAGING_BOOKING_URL` (optional) = the staging copy of the booking app, once it is live
+  (`https://micromobility-staff-staging.pages.dev/`, micromobilityrentals STAGING.md). The forms' Sign in,
+  Forgot password and Make the changes links go there on staging, so the hand-over code or change link is made
+  in the staging database the form reads. Unset, they go to the live booking app, whose codes staging cannot read.
 
-Until both are set, a push to `staging` builds and tests but deploys nothing.
+Until the first two are set, a push to `staging` builds and tests but deploys nothing.
 
 ### 3. Team-only access (Cloudflare Access)
 

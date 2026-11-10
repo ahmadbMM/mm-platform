@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { accountPlan, sameAsHeld, signinIdent } from "../account-step";
+import MMAccount from "../account-shared";
 
 // The account step every account form shares (forms/shared/account.js; the owner, 2026-10-25): the community form
 // and the Defe page inline it, the Learn to ride form reads it through lib/account-step.ts. One rule for what a
@@ -22,7 +23,18 @@ describe("the shared account step", () => {
     expect(signinIdent("00966551234567")).toBe("+966551234567");
     expect(signinIdent("+44 7700 900123")).toBe("+447700900123");
     expect(signinIdent("٠٥٥١٢٣٤٥٦٧")).toBe("+966551234567"); // Arabic-Indic digits
+    expect(signinIdent("966 050 123 4567")).toBe("+966501234567"); // the code without a plus, and the trunk 0
     expect(signinIdent("")).toBe("");
+  });
+
+  // A failed sign-in says "add your country code" only when none was typed: a code typed in Arabic-Indic digits or in
+  // brackets is one (2026-11-10 bug hunt).
+  it("asks for the country code only when the number was typed without one", async () => {
+    const none = async () => ({ data: [] });
+    expect(await MMAccount.signIn(none, "٠٠٢٠١٠٠١٢٣٤٥٦٧", "pw")).toEqual({ error: "wrong", cc: false });
+    expect(await MMAccount.signIn(none, "(+20) 100 123 4567", "pw")).toEqual({ error: "wrong", cc: false });
+    expect(await MMAccount.signIn(none, "966 050 123 4567", "pw")).toEqual({ error: "wrong", cc: false });
+    expect(await MMAccount.signIn(none, "1001234567", "pw")).toEqual({ error: "wrong", cc: true });
   });
 
   it("skips what the account holds, asks what it lacks, and asks again what staff flagged", () => {
