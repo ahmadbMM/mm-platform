@@ -7,7 +7,13 @@ const PORT = Number(process.env.PW_PORT || 8787);
 export default defineConfig({
   testDir: './tests',
   reporter: 'list',
-  use: { baseURL: `http://localhost:${PORT}`, ...devices['Pixel 7'] },
+  use: { baseURL: `http://localhost:${PORT}` },
+  // Every spec on an Android phone (Chromium); the ones tagged @webkit on an iPhone as well (Safari's engine), where most
+  // of the riders are and where the scroll, dialogs and downloads behave their own way.
+  projects: [
+    { name: 'android', use: { ...devices['Pixel 7'] } },
+    { name: 'iphone', grep: /@webkit/, use: { ...devices['iPhone 13'] } },
+  ],
   webServer: {
     command: `node serve.mjs ${PORT}`,
     url: `http://localhost:${PORT}/petromin`,

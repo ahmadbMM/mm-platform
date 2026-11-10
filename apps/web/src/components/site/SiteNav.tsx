@@ -16,13 +16,15 @@ type NavProps = {
   /** The booking app and the store's cart, as staff set them. */
   booking?: string;
   cart?: string;
+  /** A registration form's page: no store cart (nothing is bought there). */
+  noCart?: boolean;
 };
 
 // The header from SiteNav.dc.html: logo, the site's sections in the middle, and the design's
 // round icons on the end - search, language, account and the cart (the Salla store's cart);
 // below 1180px the sections open as a full-height dark sheet. Community opens the pages its
 // riders use (links.ts, COMMUNITY); the globe opens every language the site speaks.
-export default function SiteNav({ locale, hidden = [], labels = {}, booking = BOOKING_URL, cart = STORE_CART_URL }: NavProps) {
+export default function SiteNav({ locale, hidden = [], labels = {}, booking = BOOKING_URL, cart = STORE_CART_URL, noCart = false }: NavProps) {
   const tx = useL();
   const name = (l: { key: string; en: string; ar: string }) => labels[l.key] || tx(l.en, l.ar);
   const arrow = <ArrowIcon size={18} />;
@@ -140,9 +142,11 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
               ? <a href={accountHref} className="mm-nav-icon" title={label} aria-label={label}>{icon}</a>
               : <Link href="/account" className="mm-nav-icon" title={label} aria-label={label}>{icon}</Link>;
           })()}
-          <a href={cart} className="mm-nav-icon" title={tx("Cart", "السلة")} aria-label={tx("Cart", "السلة")}>
-            <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="M5.5 8.5h13L17.4 20a1.5 1.5 0 0 1-1.5 1.3H8.1A1.5 1.5 0 0 1 6.6 20L5.5 8.5z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg>
-          </a>
+          {!noCart && (
+            <a href={cart} className="mm-nav-icon" title={tx("Cart", "السلة")} aria-label={tx("Cart", "السلة")}>
+              <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" aria-hidden="true"><path d="M5.5 8.5h13L17.4 20a1.5 1.5 0 0 1-1.5 1.3H8.1A1.5 1.5 0 0 1 6.6 20L5.5 8.5z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></svg>
+            </a>
+          )}
           <button type="button" className="mm-nav-burger" aria-expanded={open} aria-controls="mm-nav-sheet" aria-label={tx("Menu", "القائمة")} onClick={() => setOpen((o) => !o)}>
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}

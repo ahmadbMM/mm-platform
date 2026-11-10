@@ -40,13 +40,14 @@ export function navFrom(site: Record<string, Sec>): { labels: Record<string, str
   };
 }
 
-/** `hidden`: the pages staff have not switched on, left out of the header and footer. */
-export default function PageShell({ locale, site, preview, hidden = [], children }: { locale: string; site: Record<string, Sec>; preview: boolean; hidden?: string[]; children: ReactNode }) {
+/** `hidden`: the pages staff have not switched on, left out of the header and footer. `plain`: a registration form's
+ *  page (the Petromin form) - no store cart in the header and a footer without the store's payment marks and links. */
+export default function PageShell({ locale, site, preview, hidden = [], plain = false, children }: { locale: string; site: Record<string, Sec>; preview: boolean; hidden?: string[]; plain?: boolean; children: ReactNode }) {
   return (
     <div className="mm-site" dir={localeInfo(locale).dir}>
-      <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} />
+      <SiteNav locale={locale} hidden={hidden} {...navFrom(site)} noCart={plain} />
       <main id="mm-main" style={{ paddingTop: 52 }}>{children}</main>
-      <SiteFooter locale={locale} c={footerFrom(site)} hidden={hidden} booking={navFrom(site).booking} />
+      <SiteFooter locale={locale} c={footerFrom(site)} hidden={hidden} booking={navFrom(site).booking} slim={plain} />
       {preview && <PreviewBar locale={locale} />}
     </div>
   );

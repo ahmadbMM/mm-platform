@@ -20,6 +20,7 @@ test('a phone and a badge typed in Arabic digits go through, and reach the serve
   await page.click('#next');
   await expect(page.locator('#f-phone')).not.toHaveClass(/invalid/);
   await page.fill('#height', '178'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.click('#next');
   await page.check('#privacy');
   await page.check('#waiver'); // the ride waiver every registration needs
   await page.click('#submit');
@@ -85,6 +86,7 @@ test('a number typed with its country code but no + or 00 keeps the code once', 
   await page.click('#next');
   await expect(page.locator('#f-phone')).not.toHaveClass(/invalid/);
   await page.fill('#height', '178'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.click('#next');
   await page.check('#privacy');
   await page.check('#waiver');
   await page.click('#submit');

@@ -16,6 +16,7 @@ async function fillToLastStep(page: Page, lang = 'en') {
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.click('#next'); // Check and agree
   await page.check('#privacy');
 }
 
@@ -24,7 +25,7 @@ test('a registration without the waiver is refused and nothing is sent; ticked, 
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => { regs.push(r.request().postDataJSON()); return r.fulfill(json(OK)); });
   await fillToLastStep(page);
-  await expect(page.locator('#f-waiver .label')).toHaveText('Ride waiver');
+  await expect(page.locator('#waiver-open')).toHaveText('Read the waiver');
   await expect(page.locator('#waiver')).not.toBeChecked();
   await page.click('#submit');
   await expect(page.locator('#f-waiver')).toHaveClass(/invalid/);
@@ -46,8 +47,7 @@ test('an edit needs the waiver too, and rider_edit gets p_waiver', async ({ page
   await page.route('**/rest/v1/rpc/rider_edit', (r) => { edits.push(r.request().postDataJSON()); return r.fulfill(json({ ...OK, resubmitted: true })); });
   await page.addInitScript((s) => localStorage.setItem('mm-petromin-registration', JSON.stringify(s)), SAVED);
   await page.goto('/petromin?lang=en');
-  await page.click('#edit');
-  await page.click('#next'); await page.click('#next');
+  await page.click('#edit'); // opens on the summary, the waiver's box under it
   await expect(page.locator('#f-waiver')).toBeVisible();
   await page.click('#submit');
   await expect(page.locator('#f-waiver .err')).toHaveText('Please accept the waiver to continue.');
@@ -69,12 +69,14 @@ test('a PGRST202 is never retried without p_waiver (the database takes it since 
   await page.click('#submit');
   await expect(page.locator('#banner')).toBeVisible();
   await expect(page.locator('#success')).toBeHidden();
-  // The notice's version is the one argument a database before its migration does not know: one
-  // more try without it, never without the waiver.
-  expect(regs).toHaveLength(2);
-  expect(regs[0]).toMatchObject({ p_waiver: '2026-10-v3', p_privacy: '2026-09-22' });
-  expect(regs[1].p_waiver).toBe('2026-10-v3');
-  expect(regs[1]).not.toHaveProperty('p_privacy');
+  // The page's language and the notice's version are the arguments a database before their migrations does not
+  // know: one more try without each, newest first, never without the waiver.
+  expect(regs).toHaveLength(3);
+  expect(regs[0]).toMatchObject({ p_waiver: '2026-10-v3', p_privacy: '2026-09-22', p_lang: 'en' });
+  expect(regs[1]).toMatchObject({ p_waiver: '2026-10-v3', p_privacy: '2026-09-22' });
+  expect(regs[1]).not.toHaveProperty('p_lang');
+  expect(regs[2].p_waiver).toBe('2026-10-v3');
+  expect(regs[2]).not.toHaveProperty('p_privacy');
 });
 
 test('any other server error is not retried', async ({ page }) => {
@@ -103,17 +105,26 @@ test("the server's {error:'waiver'} shows the waiver message on the box", async 
 test('the full waiver text reads in English and Arabic, Arabic right to left', async ({ page }) => {
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await fillToLastStep(page, 'en');
+  // The full text is a tap away, in a centred dialog, not a box of text in the middle of the step.
   const text = page.locator('#waiver-text');
+  await expect(text).toBeHidden();
+  await page.click('#waiver-open');
+  await expect(page.locator('#waiver-dialog')).toBeVisible();
+  await expect(page.locator('#waiver-title')).toHaveText('Ride waiver');
   await expect(text).toContainText('You cannot book any ride or activity');
   await expect(text).toContainText('injury, fracture, illness, loss, theft or damage');
   await expect(text).toContainText('The bike is returned in the condition it was received.');
+  await page.click('#waiver-close');
+  await expect(page.locator('#waiver-dialog')).toBeHidden();
   await expect(page.locator('#f-waiver .privacy-check')).toHaveText('I have read the waiver and agree to it on behalf of every rider on this registration');
 
   await fillToLastStep(page, 'ar');
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  await expect(page.locator('#f-waiver .label')).toHaveText('إقرار الركوب');
+  await page.click('#waiver-open');
+  await expect(page.locator('#waiver-title')).toHaveText('إقرار الركوب');
   await expect(text).toContainText('لا يمكنك حجز أي رحلة أو نشاط');
   await expect(text).toContainText('أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف');
+  await page.click('#waiver-close');
   await expect(page.locator('#f-waiver .privacy-check')).toHaveText('قرأت الإقرار وأوافق عليه نيابةً عن كل راكب في هذا التسجيل');
 });
 
@@ -123,8 +134,9 @@ test('Urdu reads right to left, with the booking app\'s Urdu waiver', async ({ p
   await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
   await expect(page.locator('html')).toHaveAttribute('lang', 'ur');
   if (await page.locator('#lang').count()) await expect(page.locator('#lang')).toHaveValue('ur');
-  await expect(page.locator('#form .title')).toHaveText('ملازمین کے لیے سائیکل رجسٹریشن فارم');
-  await expect(page.locator('#f-waiver .label')).toHaveText('رائیڈ ویور');
+  await expect(page.locator('#form .title')).toHaveText('پیٹرومن سائیکل نائٹ');
+  await page.click('#waiver-open');
+  await expect(page.locator('#waiver-title')).toHaveText('رائیڈ ویور');
   await expect(page.locator('#waiver-text')).toContainText('اس اقرار نامے کو پڑھ کر اس سے اتفاق کیے بغیر');
   await expect(page.locator('#waiver-text')).toContainText('دوسروں کو یا ان کی املاک کو');
 });
@@ -136,7 +148,7 @@ for (const lang of ['ar', 'ur', 'fr', 'es', 'pt', 'hi', 'ne', 'tl', 'bn', 'id', 
     const { missing, same } = await page.evaluate(() => {
       const w = window as unknown as { RiderRegistration?: { translations?: Record<string, Record<string, string>> } };
       const dict = w.RiderRegistration!.translations![document.documentElement.lang] || {};
-      const keys = Array.from(document.querySelectorAll('#f-waiver [data-t]')).map((e) => e.getAttribute('data-t')!);
+      const keys = Array.from(document.querySelectorAll('#f-waiver [data-t], #waiver-dialog [data-t]')).map((e) => e.getAttribute('data-t')!);
       keys.push('Please accept the waiver to continue.');
       // The title may equal the English one (Tagalog "Ride waiver"); the text, agree line and message may not.
       return { missing: keys.filter((k) => !(k in dict)), same: keys.filter((k) => k !== 'Ride waiver' && dict[k] === k) };

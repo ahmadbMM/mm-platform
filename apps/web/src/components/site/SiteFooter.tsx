@@ -36,7 +36,9 @@ function showPhone(p: string): string {
 /** The site page a link opens ("/help#returns" -> "help"), or "" for anything else. */
 const Arrow = () => <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8" /></svg>;
 
-export default function SiteFooter({ locale, c, hidden = [], booking = BOOKING_URL }: { locale: string; c: FooterContent; hidden?: string[]; booking?: string }) {
+/** `slim`: a registration form's page, where nothing is bought - the mark, the contact lines and the legal lines, without
+ *  the payment marks, the store's link columns or its "returns" and "secure checkout" line. */
+export default function SiteFooter({ locale, c, hidden = [], booking = BOOKING_URL, slim = false }: { locale: string; c: FooterContent; hidden?: string[]; booking?: string; slim?: boolean }) {
   const tx = serverL(locale);
   const year = riyadhClock(new Date()).slice(0, 4);
   const socials = SOCIAL_ORDER.map((id) => [id, c.social[id]] as const).filter(([, href]) => !!href);
@@ -44,8 +46,8 @@ export default function SiteFooter({ locale, c, hidden = [], booking = BOOKING_U
   const columns = c.columns
     .map((col) => ({ ...col, links: col.links.map(link).filter((l) => l.label && l.href && !(pageOf(l.href) && pageOf(l.href) !== "account" && hidden.includes(pageOf(l.href)))) }))
     .filter((col) => col.links.length > 0);
-  const pays = c.payments.filter((p) => p.logo);
-  const hub = c.showroom && (
+  const pays = slim ? [] : c.payments.filter((p) => p.logo);
+  const hub = !slim && c.showroom && (
     <span key="hub" className="mm-foot-hub" role="img" aria-label={tx("Prepay at Showroom", "الدفع المسبق في المعرض")}>
       <svg viewBox="0 0 223 223" width="30" height="30" aria-hidden="true"><path d="M27.5 189 V49.75 A14.75 14.75 0 0 1 57 49.75 V170.25 A14.75 14.75 0 0 0 86.5 170.25 V49.75 A14.75 14.75 0 0 1 116 49.75 V165 A24 24 0 0 0 140 189 H195" fill="none" stroke="currentColor" strokeWidth="23.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
       <span><span lang="ar">الدفع المسبق</span><b lang="ar">في المعرض</b><small>{tx("Prepay at Showroom", "الدفع في المعرض")}</small></span>
@@ -81,7 +83,7 @@ export default function SiteFooter({ locale, c, hidden = [], booking = BOOKING_U
               </div>
             )}
           </div>
-          {columns.map((col, i) => (
+          {!slim && columns.map((col, i) => (
             <div key={i} className="mm-foot-col">
               <h2>{col.title}</h2>
               <div>{col.links.map((l, j) => <a key={j} href={l.href}>{l.label}</a>)}</div>
@@ -89,7 +91,7 @@ export default function SiteFooter({ locale, c, hidden = [], booking = BOOKING_U
           ))}
         </div>
         <div className="mm-foot-up"><ToTop label={tx("Back to top", "العودة للأعلى")} /></div>
-        {c.trust.length > 0 && (
+        {!slim && c.trust.length > 0 && (
           <div className="mm-foot-trust">
             {c.trust.map((t, i) => (
               <span key={i}><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#03ff89" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>{t}</span>

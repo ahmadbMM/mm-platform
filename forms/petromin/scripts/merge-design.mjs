@@ -5,8 +5,9 @@
 //   -> src/page.html
 //
 // Usage: npm run build (in forms/petromin)
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { resolve, basename } from 'node:path';
+import { createHash } from 'node:crypto';
 import { emitSite } from '../../shared/site-form.mjs';
 
 const root = resolve(import.meta.dirname, '..');
@@ -93,7 +94,33 @@ const siteBody = siteHtml.slice(siteHtml.indexOf('<main'), siteHtml.indexOf('<sc
 const siteImages = [...new Set([...siteBody.matchAll(/src="([^":]+\.png)"/g)].map((m) => m[1]))];
 const qrSite = qrlib.replace(/\n\(function \(factory\) \{[\s\S]*\}\(function \(\) \{\s*return qrcode;\s*\}\)\);\s*$/, '\n');
 if (qrSite === qrlib) { console.error('the QR generator changed shape: its module wrapper was not found'); process.exit(1); }
-emitSite({ name: 'petromin', design: resolve(root, 'design'), body: siteBody, css, scripts: [qrSite, js], images: siteImages });
+// The website's copy carries one language: the dictionary (T, every language but English) leaves its scripts, and each
+// language's words are a file of their own beside the page, named by their content so a browser keeps them for a year
+// (apps/web/public/_headers). The page's language is fetched before the form's scripts run; another one picked later
+// is fetched then (applyLang). The form's own page keeps every language, as its picker switches without a load.
+const tStart = js.indexOf('  var T = {'), tEnd = js.indexOf('\n  var $ = function');
+if (tStart < 0 || tEnd < 0) { console.error('app.js changed shape: expected "  var T = {" before "var $ = function"'); process.exit(1); }
+const T = new Function('return ' + js.slice(tStart + '  var T = '.length, tEnd).trim().replace(/;$/, ''))();
+const tDir = resolve(root, '../../apps/web/public/forms/petromin/t');
+rmSync(tDir, { recursive: true, force: true }); mkdirSync(tDir, { recursive: true });
+const tFiles = {};
+for (const [lang, dict] of Object.entries(T)) {
+  const body = JSON.stringify(dict), hash = createHash('sha256').update(body).digest('hex').slice(0, 10);
+  writeFileSync(resolve(tDir, `${lang}.${hash}.json`), body);
+  tFiles[lang] = `/forms/petromin/t/${lang}.${hash}.json`;
+}
+const siteJs = '(function () {\n  var site = window.MM_SITE_FORM || {}, files = ' + JSON.stringify(tFiles) + ';\n  site.tBase = files;\n' +
+  '  function start(dict) {\n    var T_SITE = {}; if (dict) T_SITE[site.lang] = dict;\n' +
+  js.slice(0, tStart) + '  var T = T_SITE;' + js.slice(tEnd) + '\n  }\n' +
+  '  if (!files[site.lang] || !window.fetch) start(null);\n' +
+  '  else fetch(files[site.lang]).then(function (r) { return r.ok ? r.json() : null; }).then(start, function () { start(null); });\n})();\n';
+new Function(siteJs); // syntax check
+// The website loads Space Grotesk and IBM Plex Sans Arabic itself (next/font, --cs-font-en / --cs-font-ar): its copy
+// of the form uses those rather than fetching the same faces a second time.
+const siteCss = css.replace(/@font-face \{ font-family: "(Space Grotesk|IBM Plex Sans Arabic)";[^}]*\}\n/g, '')
+  .replace(/"Space Grotesk"/g, 'var(--cs-font-en)').replace(/"IBM Plex Sans Arabic"/g, 'var(--cs-font-ar)');
+if (/@font-face \{ font-family: "Space Grotesk"/.test(siteCss)) { console.error('the site copy still declares Space Grotesk'); process.exit(1); }
+emitSite({ name: 'petromin', design: resolve(root, 'design'), body: siteBody, css: siteCss, scripts: [qrSite, siteJs], images: siteImages });
 for (const f of siteImages) writeFileSync(resolve(root, '../../apps/web/public/forms/petromin', basename(f)), pngBare(readFileSync(d(f))));
 // The website serves this page (apps/web/src/app/petromin/route.ts): it bundles this module.
 writeFileSync(resolve(root, '../../apps/web/src/forms/petromin-page.ts'),

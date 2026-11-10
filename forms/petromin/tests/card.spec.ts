@@ -13,11 +13,12 @@ test('booking card, registering with two companions', async ({ page }) => {
   await page.fill('#badge', '104582'); await page.fill('#name', 'Faisal Al Harbi'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '178'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.click('#add-rider'); await page.fill('#rd-name', 'Sara');
+  await page.fill('#rd-height', '162'); await page.click('#rd-types .tile[data-v="Mountain"]');
+  await page.click('#rd-save');
+  await page.click('#next');
   await page.check('#privacy'); // the Privacy Notice confirmation a new registration needs
   await page.check('#waiver'); // the ride waiver every registration needs
-  await page.click('#add-rider'); await page.locator('#riders .rider').nth(0).locator('.rider-name input').fill('Sara');
-  await page.locator('#riders .rider').nth(0).locator('.rider-height input').fill('162');
-  await page.locator('#riders .rider').nth(0).locator('.tile[data-v="Mountain"]').click();
   await page.click('#submit');
   await expect(page.locator('#ticket')).toBeVisible();
   console.log('number :', (await page.locator('#ticket .ticket-num').textContent())?.trim());

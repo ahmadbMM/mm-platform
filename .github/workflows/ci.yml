@@ -49,7 +49,7 @@ jobs:
           npm ci --prefix forms/petromin --no-audit --no-fund
           npm ci --prefix forms/saturday --no-audit --no-fund
           npm ci --prefix forms/lockers --no-audit --no-fund
-          (cd forms/community && npx playwright install --with-deps chromium)
+          (cd forms/community && npx playwright install --with-deps chromium webkit) # webkit: the Petromin form's iPhone specs
           (cd forms/community && npm run e2e)
           (cd forms/petromin && npm run e2e)
           (cd forms/saturday && npm run e2e)

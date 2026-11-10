@@ -14,3 +14,13 @@
 # so a week rather than a year.
 /fonts/forms/*
   Cache-Control: public, max-age=604800
+
+# The registration forms' pictures (forms/*/design): plain names that stay across builds, so a day.
+/forms/*
+  Cache-Control: public, max-age=86400
+
+# The Petromin form's words, one file per language, named by their content: a new text is a new name.
+# ("! Cache-Control" drops the day the rule above gives every /forms/ file: Cloudflare joins the two otherwise.)
+/forms/petromin/t/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable

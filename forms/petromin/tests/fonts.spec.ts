@@ -19,7 +19,12 @@ for (const [lang, family] of [['en', 'Space Grotesk'], ['ar', 'IBM Plex Sans Ara
       return [...document.fonts].filter((x) => x.family.replace(/"/g, '') === f && x.status === 'loaded').length;
     }, family), { message: `${family} faces loaded` }).toBeGreaterThan(0);
     expect(asked.filter((u) => /fonts\.(googleapis|gstatic)\.com/.test(u))).toEqual([]);
-    expect(asked.some((u) => new URL(u).pathname.startsWith('/fonts/forms/'))).toBe(true);
+    // The website's page uses the faces the site has loaded already for Latin and Arabic (next/font): the form fetches
+    // its own files only for the scripts the site has none of (Devanagari, Bengali), never a second Space Grotesk.
+    const onSite = await page.locator('.mmf-petromin').count() > 0;
+    const own = asked.filter((u) => new URL(u).pathname.startsWith('/fonts/forms/'));
+    if (onSite && (lang === 'en' || lang === 'ar' || lang === 'ur')) expect(own.filter((u) => /space-grotesk|ibm-plex/.test(u))).toEqual([]);
+    else expect(own.length).toBeGreaterThan(0);
     expect(failed).toEqual([]);
   });
 }

@@ -14,6 +14,8 @@ async function toNotice(page: Page) {
   await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
   await page.click('#next');
+  await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.click('#next'); // Check and agree, where the box and its link are
   await page.locator('#f-privacy [data-privacy-open]').click();
 }
 
@@ -60,6 +62,7 @@ test('a registration does not go through until the notice is confirmed', async (
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.click('#next');
   // the notice link beside the box opens it without ticking the box
   await page.locator('#f-privacy [data-privacy-open]').click();
   await expect(page.locator('#privacy-dialog')).toBeVisible();
@@ -84,8 +87,8 @@ test('editing a booking does not ask again', async ({ page }) => {
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.addInitScript(() => localStorage.setItem('mm-petromin-registration', JSON.stringify({ badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Hybrid', session: { id: '2099-02-08-pw', start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' }, bookingNo: 'P-001', submittedAt: '2099-02-01T10:00:00Z' })));
   await page.goto('/petromin?lang=en');
-  await page.click('#edit');
-  await page.click('#next'); await page.click('#next');
+  await page.click('#edit'); // the summary, the waiver's box under it and no notice box
+  await expect(page.locator('#f-waiver')).toBeVisible();
   await expect(page.locator('#f-privacy')).toBeHidden();
 });
 
@@ -100,6 +103,7 @@ async function toLastStep(page: import('@playwright/test').Page) {
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
+  await page.click('#next');
   await page.check('#privacy'); await page.check('#waiver');
 }
 const BOOKED = { ok: true, id: 1, match: 'none', resubmitted: false, booking_no: 'P-001', session: S1 };
@@ -127,8 +131,9 @@ test('a database without p_privacy yet takes the registration on the second try,
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   await expect(page.locator('#banner')).toBeHidden();
-  expect(regs).toHaveLength(2);
-  expect(regs[0].p_privacy).toBe('2026-09-22');
-  expect(regs[1]).not.toHaveProperty('p_privacy');
-  expect({ ...regs[1], p_privacy: '2026-09-22' }).toEqual(regs[0]); // nothing else changed
+  // Without the page's language first (the newer argument), then without the notice too.
+  expect(regs).toHaveLength(3);
+  expect(regs[0]).toMatchObject({ p_privacy: '2026-09-22', p_lang: 'en' });
+  expect(regs[2]).not.toHaveProperty('p_privacy');
+  expect({ ...regs[2], p_privacy: '2026-09-22', p_lang: 'en' }).toEqual(regs[0]); // nothing else changed
 });

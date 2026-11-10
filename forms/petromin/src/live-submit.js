@@ -1,64 +1,11 @@
-  /* Extra strings the live page needs (added on top of the design's dictionaries) */
-  var EXTRA = {
-    ar: { "Name": "الاسم", "Company": "الشركة", "riders": "ركاب", "Riding with someone?": "هل تركب مع أحد؟", "Add up to four companions. Each gets their own bike under your booking number.": "أضف حتى أربعة مرافقين. يحصل كل واحد على دراجته تحت رقم حجزك.", "Add another rider": "إضافة راكب آخر", "Rider {n}": "الراكب {n}", "Remove": "إزالة", "Enter the rider's full name": "أدخل الاسم الكامل للراكب", "Enter the rider's height in cm (100 to 250)": "أدخل طول الراكب بالسنتيمتر (100 إلى 250)", "Riders": "الركاب", "Riding with: {names}": "يركب معك: {names}", "Up to four companions": "حتى أربعة مرافقين", "Scan this code at the desk": "امسح هذا الرمز عند المكتب", "Edit my booking": "تعديل حجزي", "Edit your booking": "تعديل حجزك", "Save changes": "حفظ التغييرات", "Saving...": "جارٍ الحفظ...", "Your booking was updated.": "تم تحديث حجزك.", "We could not find your booking. Please register again.": "لم نجد حجزك. يرجى التسجيل من جديد.", "You have already checked in. Ask the desk to change your booking.": "لقد سجّلت الدخول بالفعل. اطلب من المكتب تغيير حجزك.", "This badge is already registered for that session": "هذا البادج مسجّل بالفعل لتلك الجلسة", "Cancel": "إلغاء", "Enter a valid mobile number": "أدخل رقم جوال صحيح", "This session is no longer open": "هذه الجلسة لم تعد متاحة", "Your details were updated.": "تم تحديث بياناتك." },
-    fr: { "Name": "Nom", "Company": "Entreprise", "riders": "cyclistes", "Riding with someone?": "Vous venez accompagné ?", "Add up to four companions. Each gets their own bike under your booking number.": "Ajoutez jusqu'à quatre accompagnants. Chacun reçoit son vélo sous votre numéro de réservation.", "Add another rider": "Ajouter un cycliste", "Rider {n}": "Cycliste {n}", "Remove": "Retirer", "Enter the rider's full name": "Saisissez le nom complet du cycliste", "Enter the rider's height in cm (100 to 250)": "Saisissez la taille du cycliste en cm (100 à 250)", "Riders": "Cyclistes", "Riding with: {names}": "Avec vous : {names}", "Up to four companions": "Jusqu'à quatre accompagnants", "Scan this code at the desk": "Faites scanner ce code au comptoir", "Edit my booking": "Modifier ma réservation", "Edit your booking": "Modifier votre réservation", "Save changes": "Enregistrer les modifications", "Saving...": "Enregistrement...", "Your booking was updated.": "Votre réservation a été mise à jour.", "We could not find your booking. Please register again.": "Nous n'avons pas trouvé votre réservation. Veuillez vous inscrire à nouveau.", "You have already checked in. Ask the desk to change your booking.": "Vous avez déjà été enregistré à l'arrivée. Demandez au comptoir de modifier votre réservation.", "This badge is already registered for that session": "Ce badge est déjà inscrit pour cette session", "Cancel": "Annuler", "Enter a valid mobile number": "Saisissez un numéro de mobile valide", "This session is no longer open": "Cette session n'est plus ouverte", "Your details were updated.": "Vos informations ont été mises à jour." },
-    hi: { "Name": "नाम", "Company": "कंपनी", "riders": "सवार", "Riding with someone?": "किसी के साथ सवारी कर रहे हैं?", "Add up to four companions. Each gets their own bike under your booking number.": "अधिकतम चार साथी जोड़ें। हर एक को आपके बुकिंग नंबर के तहत अपनी बाइक मिलेगी।", "Add another rider": "एक और सवार जोड़ें", "Rider {n}": "सवार {n}", "Remove": "हटाएँ", "Enter the rider's full name": "सवार का पूरा नाम दर्ज करें", "Enter the rider's height in cm (100 to 250)": "सवार की लंबाई सेमी में दर्ज करें (100 से 250)", "Riders": "सवार", "Riding with: {names}": "आपके साथ: {names}", "Up to four companions": "अधिकतम चार साथी", "Scan this code at the desk": "डेस्क पर यह कोड स्कैन करवाएँ", "Edit my booking": "मेरी बुकिंग संपादित करें", "Edit your booking": "अपनी बुकिंग संपादित करें", "Save changes": "बदलाव सहेजें", "Saving...": "सहेजा जा रहा है...", "Your booking was updated.": "आपकी बुकिंग अपडेट हो गई।", "We could not find your booking. Please register again.": "हमें आपकी बुकिंग नहीं मिली। कृपया फिर से पंजीकरण करें।", "You have already checked in. Ask the desk to change your booking.": "आप पहले ही चेक-इन कर चुके हैं। बुकिंग बदलने के लिए डेस्क से कहें।", "This badge is already registered for that session": "यह बैज उस सत्र के लिए पहले से पंजीकृत है", "Cancel": "रद्द करें", "Enter a valid mobile number": "मान्य मोबाइल नंबर दर्ज करें", "This session is no longer open": "यह सत्र अब उपलब्ध नहीं है", "Your details were updated.": "आपका विवरण अपडेट कर दिया गया।" },
-    ne: { "Name": "नाम", "Company": "कम्पनी", "riders": "सवार", "Riding with someone?": "कसैसँग सवारी गर्दै हुनुहुन्छ?", "Add up to four companions. Each gets their own bike under your booking number.": "बढीमा चार साथी थप्नुहोस्। प्रत्येकले तपाईंको बुकिङ नम्बर अन्तर्गत आफ्नै साइकल पाउँछ।", "Add another rider": "अर्को सवार थप्नुहोस्", "Rider {n}": "सवार {n}", "Remove": "हटाउनुहोस्", "Enter the rider's full name": "सवारको पूरा नाम लेख्नुहोस्", "Enter the rider's height in cm (100 to 250)": "सवारको उचाइ सेमीमा लेख्नुहोस् (100 देखि 250)", "Riders": "सवारहरू", "Riding with: {names}": "तपाईंसँग: {names}", "Up to four companions": "बढीमा चार साथी", "Scan this code at the desk": "डेस्कमा यो कोड स्क्यान गराउनुहोस्", "Edit my booking": "मेरो बुकिङ सम्पादन गर्नुहोस्", "Edit your booking": "आफ्नो बुकिङ सम्पादन गर्नुहोस्", "Save changes": "परिवर्तनहरू सुरक्षित गर्नुहोस्", "Saving...": "सुरक्षित गर्दै...", "Your booking was updated.": "तपाईंको बुकिङ अद्यावधिक भयो।", "We could not find your booking. Please register again.": "तपाईंको बुकिङ फेला परेन। कृपया फेरि दर्ता गर्नुहोस्।", "You have already checked in. Ask the desk to change your booking.": "तपाईं पहिले नै चेक-इन भइसक्नुभयो। बुकिङ बदल्न डेस्कलाई भन्नुहोस्।", "This badge is already registered for that session": "यो ब्याज त्यो सत्रका लागि पहिले नै दर्ता छ", "Cancel": "रद्द गर्नुहोस्", "Enter a valid mobile number": "मान्य मोबाइल नम्बर राख्नुहोस्", "This session is no longer open": "यो सत्र अब खुला छैन", "Your details were updated.": "तपाईंको विवरण अद्यावधिक गरियो।" },
-    pt: { "Name": "Nome", "Company": "Empresa", "riders": "ciclistas", "Riding with someone?": "Vem acompanhado?", "Add up to four companions. Each gets their own bike under your booking number.": "Adicione até quatro acompanhantes. Cada um recebe a sua bicicleta sob o seu número de reserva.", "Add another rider": "Adicionar outro ciclista", "Rider {n}": "Ciclista {n}", "Remove": "Remover", "Enter the rider's full name": "Introduza o nome completo do ciclista", "Enter the rider's height in cm (100 to 250)": "Introduza a altura do ciclista em cm (100 a 250)", "Riders": "Ciclistas", "Riding with: {names}": "Consigo: {names}", "Up to four companions": "Até quatro acompanhantes", "Scan this code at the desk": "Mostre este código no balcão para leitura", "Edit my booking": "Editar a minha reserva", "Edit your booking": "Editar a sua reserva", "Save changes": "Guardar alterações", "Saving...": "A guardar...", "Your booking was updated.": "A sua reserva foi atualizada.", "We could not find your booking. Please register again.": "Não encontrámos a sua reserva. Inscreva-se novamente.", "You have already checked in. Ask the desk to change your booking.": "Já fez o check-in. Peça ao balcão para alterar a sua reserva.", "This badge is already registered for that session": "Este crachá já está inscrito para essa sessão", "Cancel": "Cancelar", "Enter a valid mobile number": "Introduza um número de telemóvel válido", "This session is no longer open": "Esta sessão já não está aberta", "Your details were updated.": "Os seus dados foram atualizados." },
-    es: { "Name": "Nombre", "Company": "Empresa", "riders": "ciclistas", "Riding with someone?": "¿Vienes acompañado?", "Add up to four companions. Each gets their own bike under your booking number.": "Añade hasta cuatro acompañantes. Cada uno recibe su bici con tu número de reserva.", "Add another rider": "Añadir otro ciclista", "Rider {n}": "Ciclista {n}", "Remove": "Quitar", "Enter the rider's full name": "Introduce el nombre completo del ciclista", "Enter the rider's height in cm (100 to 250)": "Introduce la altura del ciclista en cm (100 a 250)", "Riders": "Ciclistas", "Riding with: {names}": "Contigo: {names}", "Up to four companions": "Hasta cuatro acompañantes", "Scan this code at the desk": "Escanea este código en el mostrador", "Edit my booking": "Editar mi reserva", "Edit your booking": "Editar tu reserva", "Save changes": "Guardar cambios", "Saving...": "Guardando...", "Your booking was updated.": "Tu reserva se ha actualizado.", "We could not find your booking. Please register again.": "No encontramos tu reserva. Inscríbete de nuevo.", "You have already checked in. Ask the desk to change your booking.": "Ya has registrado tu llegada. Pide en el mostrador que cambien tu reserva.", "This badge is already registered for that session": "Esta acreditación ya está inscrita para esa sesión", "Cancel": "Cancelar", "Enter a valid mobile number": "Introduce un número de móvil válido", "This session is no longer open": "Esta sesión ya no está abierta", "Your details were updated.": "Tus datos se han actualizado." },
-    tl: { "Name": "Pangalan", "Company": "Kumpanya", "riders": "mga rider", "Riding with someone?": "May kasama ka ba?", "Add up to four companions. Each gets their own bike under your booking number.": "Magdagdag ng hanggang apat na kasama. Bawat isa ay may sariling bisikleta sa ilalim ng iyong booking number.", "Add another rider": "Magdagdag ng isa pang rider", "Rider {n}": "Rider {n}", "Remove": "Alisin", "Enter the rider's full name": "Ilagay ang buong pangalan ng rider", "Enter the rider's height in cm (100 to 250)": "Ilagay ang taas ng rider sa cm (100 hanggang 250)", "Riders": "Mga rider", "Riding with: {names}": "Kasama mo: {names}", "Up to four companions": "Hanggang apat na kasama", "Scan this code at the desk": "Ipa-scan ang code na ito sa desk", "Edit my booking": "I-edit ang booking ko", "Edit your booking": "I-edit ang iyong booking", "Save changes": "I-save ang mga pagbabago", "Saving...": "Sine-save...", "Your booking was updated.": "Na-update ang iyong booking.", "We could not find your booking. Please register again.": "Hindi namin nahanap ang iyong booking. Magparehistro muli.", "You have already checked in. Ask the desk to change your booking.": "Naka-check in ka na. Hilingin sa desk na baguhin ang iyong booking.", "This badge is already registered for that session": "Nakarehistro na ang badge na ito para sa session na iyon", "Cancel": "Kanselahin", "Enter a valid mobile number": "Maglagay ng wastong mobile number", "This session is no longer open": "Hindi na bukas ang session na ito", "Your details were updated.": "Na-update ang iyong mga detalye." },
-    bn: { "Name": "নাম", "Company": "কোম্পানি", "riders": "রাইডার", "Riding with someone?": "কারও সঙ্গে রাইড করছেন?", "Add up to four companions. Each gets their own bike under your booking number.": "সর্বোচ্চ চারজন সঙ্গী যোগ করুন। আপনার বুকিং নম্বরের অধীনে প্রত্যেকে নিজের একটি সাইকেল পাবেন।", "Add another rider": "আরেকজন রাইডার যোগ করুন", "Rider {n}": "রাইডার {n}", "Remove": "সরান", "Enter the rider's full name": "রাইডারের পুরো নাম লিখুন", "Enter the rider's height in cm (100 to 250)": "সেন্টিমিটারে রাইডারের উচ্চতা লিখুন (100 থেকে 250)", "Riders": "রাইডার", "Riding with: {names}": "সঙ্গে রাইড করছেন: {names}", "Up to four companions": "সর্বোচ্চ চারজন সঙ্গী", "Scan this code at the desk": "ডেস্কে এই কোডটি স্ক্যান করান", "Edit my booking": "আমার বুকিং সম্পাদনা করুন", "Edit your booking": "আপনার বুকিং সম্পাদনা করুন", "Save changes": "পরিবর্তন সংরক্ষণ করুন", "Saving...": "সংরক্ষণ হচ্ছে...", "Your booking was updated.": "আপনার বুকিং হালনাগাদ হয়েছে।", "We could not find your booking. Please register again.": "আমরা আপনার বুকিংটি খুঁজে পাইনি। অনুগ্রহ করে আবার রেজিস্টার করুন।", "You have already checked in. Ask the desk to change your booking.": "আপনি আগেই চেক ইন করেছেন। বুকিং বদলাতে ডেস্কে বলুন।", "This badge is already registered for that session": "এই ব্যাজটি ওই সেশনের জন্য আগে থেকেই রেজিস্টার করা আছে", "Cancel": "বাতিল", "Enter a valid mobile number": "একটি সঠিক মোবাইল নম্বর লিখুন", "This session is no longer open": "এই সেশনটি আর খোলা নেই", "Your details were updated.": "আপনার তথ্য হালনাগাদ হয়েছে।" },
-    ur: { "Name": "نام", "Company": "کمپنی", "riders": "رائیڈرز", "Riding with someone?": "کسی کے ساتھ رائیڈ کر رہے ہیں؟", "Add up to four companions. Each gets their own bike under your booking number.": "زیادہ سے زیادہ چار ساتھی شامل کریں۔ ہر ایک کو آپ کے بکنگ نمبر کے تحت اپنی سائیکل ملے گی۔", "Add another rider": "ایک اور رائیڈر شامل کریں", "Rider {n}": "رائیڈر {n}", "Remove": "ہٹائیں", "Enter the rider's full name": "رائیڈر کا پورا نام درج کریں", "Enter the rider's height in cm (100 to 250)": "رائیڈر کا قد سینٹی میٹر میں درج کریں (100 سے 250 تک)", "Riders": "رائیڈرز", "Riding with: {names}": "ساتھ رائیڈ کر رہے ہیں: {names}", "Up to four companions": "زیادہ سے زیادہ چار ساتھی", "Scan this code at the desk": "ڈیسک پر یہ کوڈ اسکین کروائیں", "Edit my booking": "میری بکنگ میں ترمیم کریں", "Edit your booking": "اپنی بکنگ میں ترمیم کریں", "Save changes": "تبدیلیاں محفوظ کریں", "Saving...": "محفوظ ہو رہا ہے...", "Your booking was updated.": "آپ کی بکنگ اپ ڈیٹ ہو گئی۔", "We could not find your booking. Please register again.": "ہمیں آپ کی بکنگ نہیں ملی۔ براہِ کرم دوبارہ رجسٹر کریں۔", "You have already checked in. Ask the desk to change your booking.": "آپ پہلے ہی چیک اِن کر چکے ہیں۔ اپنی بکنگ بدلنے کے لیے ڈیسک سے کہیں۔", "This badge is already registered for that session": "یہ بیج اس سیشن کے لیے پہلے ہی رجسٹرڈ ہے", "Cancel": "منسوخ کریں", "Enter a valid mobile number": "درست موبائل نمبر درج کریں", "This session is no longer open": "یہ سیشن اب کھلا نہیں ہے", "Your details were updated.": "آپ کی تفصیلات اپ ڈیٹ ہو گئیں۔" }
-  };
-  Object.keys(EXTRA).forEach(function (l) { T[l] = T[l] || {}; Object.keys(EXTRA[l]).forEach(function (k) { if (!T[l][k]) T[l][k] = EXTRA[l][k]; }); });
-
-  /* Privacy Notice (Personal Data Protection Law, Arts. 12-13): what this form collects, why, who
-     receives it, where it is kept, for how long, and the rider's rights - readable from the footer
-     and beside the required "I have read the Privacy Notice" box on the last step. English and
-     Arabic carry the full text; every other language shows the English one under a note. */
-  var PV_T = {
-    ar: ["قرأت إشعار الخصوصية.", "اقرأ إشعار الخصوصية", "يرجى تأكيد قراءتك لإشعار الخصوصية.", "إشعار الخصوصية", "هذا الإشعار متاح باللغتين العربية والإنجليزية.", "إغلاق"],
-    fr: ["J’ai lu l’avis de confidentialité.", "Lire l’avis de confidentialité", "Veuillez confirmer que vous avez lu l’avis de confidentialité.", "Avis de confidentialité", "Cet avis est disponible en anglais et en arabe.", "Fermer"],
-    es: ["He leído el aviso de privacidad.", "Leer el aviso de privacidad", "Confirma que has leído el aviso de privacidad.", "Aviso de privacidad", "Este aviso está disponible en inglés y árabe.", "Cerrar"],
-    pt: ["Li o aviso de privacidade.", "Ler o aviso de privacidade", "Confirme que leu o aviso de privacidade.", "Aviso de privacidade", "Este aviso está disponível em inglês e árabe.", "Fechar"],
-    hi: ["मैंने गोपनीयता सूचना पढ़ ली है।", "गोपनीयता सूचना पढ़ें", "कृपया पुष्टि करें कि आपने गोपनीयता सूचना पढ़ ली है।", "गोपनीयता सूचना", "यह सूचना अंग्रेज़ी और अरबी में उपलब्ध है।", "बंद करें"],
-    ne: ["मैले गोपनीयता सूचना पढेँ।", "गोपनीयता सूचना पढ्नुहोस्", "कृपया तपाईंले गोपनीयता सूचना पढ्नुभएको पुष्टि गर्नुहोस्।", "गोपनीयता सूचना", "यो सूचना अंग्रेजी र अरबीमा उपलब्ध छ।", "बन्द गर्नुहोस्"],
-    tl: ["Nabasa ko ang Abiso sa Privacy.", "Basahin ang Abiso sa Privacy", "Pakikumpirma na nabasa mo ang Abiso sa Privacy.", "Abiso sa Privacy", "Ang abisong ito ay nasa English at Arabic.", "Isara"],
-    bn: ["আমি গোপনীয়তা বিজ্ঞপ্তি পড়েছি।", "গোপনীয়তা বিজ্ঞপ্তি পড়ুন", "অনুগ্রহ করে নিশ্চিত করুন যে আপনি গোপনীয়তা বিজ্ঞপ্তি পড়েছেন।", "গোপনীয়তা বিজ্ঞপ্তি", "এই বিজ্ঞপ্তি ইংরেজি ও আরবিতে পাওয়া যায়।", "বন্ধ করুন"],
-    ur: ["میں نے پرائیویسی نوٹس پڑھ لیا ہے۔", "پرائیویسی نوٹس پڑھیں", "براہ کرم تصدیق کریں کہ آپ نے پرائیویسی نوٹس پڑھ لیا ہے۔", "پرائیویسی نوٹس", "یہ نوٹس انگریزی اور عربی میں دستیاب ہے۔", "بند کریں"]
-  };
-  var PV_KEYS = ["I have read the Privacy Notice.", "Read the Privacy Notice", "Please confirm you’ve read the Privacy Notice.", "Privacy Notice", "This notice is available in English and Arabic.", "Close"];
-  Object.keys(PV_T).forEach(function (l) { T[l] = T[l] || {}; PV_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = PV_T[l][i]; }); });
+  /* Every word the form shows is in T (design/app.js), in all fifteen languages besides English: the tables this file
+     used to merge in were folded into it on 2026-11-11, so the website's copy can carry one language (t/<lang>.json). */
   /* Why a typed character did not appear in a name box - the rentals site's own words. */
   var NAME_CHARS = "Names can only contain letters, spaces and periods.";
-  var NC_T = {
-    ar: "يمكن أن يحتوي الاسم على حروف ومسافات ونقاط فقط.",
-    fr: "Le nom ne peut contenir que des lettres, des espaces et des points.",
-    es: "El nombre solo puede contener letras, espacios y puntos.",
-    pt: "O nome só pode conter letras, espaços e pontos.",
-    hi: "नाम में केवल अक्षर, रिक्त स्थान और बिंदु (.) हो सकते हैं।",
-    ne: "नाममा अक्षर, खाली ठाउँ र बिन्दु (.) मात्र हुन सक्छन्।",
-    tl: "Mga titik, espasyo at tuldok lamang ang puwede sa pangalan.",
-    bn: "নামে শুধু অক্ষর, ফাঁকা জায়গা ও বিন্দু (.) থাকতে পারে।",
-    ur: "نام میں صرف حروف، خالی جگہ اور نقطے (.) ہو سکتے ہیں۔"
-  };
-  Object.keys(NC_T).forEach(function (l) { T[l] = T[l] || {}; if (!T[l][NAME_CHARS]) T[l][NAME_CHARS] = NC_T[l]; });
   /* Every word of a name has at least two letters, as on the rentals site (since 2026-09-25):
      the employee's (the site's own words) and each companion's. */
   var NAME_SHORT = "Write your first and last name in full, not initials";
   var RIDER_SHORT = "Write the rider's name in full, not initials";
-  var NS_T = {
-    ar: ["اكتب اسمك الأول واسم العائلة كاملين، لا الأحرف الأولى فقط", "اكتب اسم الراكب كاملًا، لا الأحرف الأولى فقط"],
-    fr: ["Écrivez votre prénom et votre nom en entier, pas seulement les initiales", "Écrivez le nom du cycliste en entier, pas seulement les initiales"],
-    es: ["Escribe tu nombre y apellido completos, no solo las iniciales", "Escribe el nombre completo del ciclista, no solo las iniciales"],
-    pt: ["Escreva o seu nome e apelido por extenso, não apenas as iniciais", "Escreva o nome do ciclista por extenso, não apenas as iniciais"],
-    hi: ["अपना पहला और अंतिम नाम पूरा लिखें, सिर्फ़ आद्याक्षर नहीं", "सवार का नाम पूरा लिखें, सिर्फ़ आद्याक्षर नहीं"],
-    ne: ["आफ्नो नाम र थर पूरा लेख्नुहोस्, छोटकरी अक्षर होइन", "सवारको नाम पूरा लेख्नुहोस्, छोटकरी अक्षर होइन"],
-    tl: ["Isulat nang buo ang iyong pangalan at apelyido, hindi inisyal", "Isulat nang buo ang pangalan ng rider, hindi inisyal"],
-    bn: ["প্রথম ও শেষ নাম পুরোটা লিখুন, শুধু আদ্যক্ষর নয়", "রাইডারের নাম পুরোটা লিখুন, শুধু আদ্যক্ষর নয়"],
-    ur: ["اپنا پہلا اور آخری نام پورا لکھیں، صرف ابتدائی حروف نہیں", "رائیڈر کا نام پورا لکھیں، صرف ابتدائی حروف نہیں"]
-  };
-  Object.keys(NS_T).forEach(function (l) { T[l] = T[l] || {}; if (!T[l][NAME_SHORT]) T[l][NAME_SHORT] = NS_T[l][0]; if (!T[l][RIDER_SHORT]) T[l][RIDER_SHORT] = NS_T[l][1]; });
   // A word with fewer than two letters (its marks count, as Hindi and Bengali vowel signs do). A
   // period ends a word as a space does: "Md. Rahman" is fine, "M. Rahman" is an initial.
   function nameShort(v) {
@@ -67,72 +14,28 @@
   /* Ride waiver (owner, 2026-10-03): nobody registers or saves an edit without agreeing to it.
      Title and text are the booking app's (micromobilityrentals app.src.html waiverTitle/waiverBody and
      i18n/<code>.json), copied verbatim; only the agree line is reworded for a registration. Its
-     version goes to rider_register / rider_edit as p_waiver. */
+     version goes to rider_register / rider_edit as p_waiver, the page's language as p_lang. */
   var WAIVER_VERSION = "2026-10-v3";
-  var WV_KEYS = ["Ride waiver","You cannot book any ride or activity with MicroMobility until you have read and agreed to this waiver. Cycling is a physical activity that carries risk. I take part entirely at my own risk, and I alone am responsible for myself, my safety and my personal belongings. I am also responsible for any damage I cause to other people or their property. To the fullest extent permitted by law, MicroMobility, its staff and its partners are not responsible for anything that happens to me or to my belongings, including any injury, fracture, illness, loss, theft or damage, however it is caused, during the activity or in connection with it. I agree to wear a helmet and to follow the team’s instructions and the route, and I am responsible for any damage to the rented bike caused by misuse. The bike is returned in the condition it was received.","I have read the waiver and agree to it on behalf of every rider on this registration","Please accept the waiver to continue."];
-  var WV_T = {
-    ar: ["إقرار الركوب","لا يمكنك حجز أي رحلة أو نشاط لدى مايكروموبيليتي إلا بعد قراءة هذا الإقرار والموافقة عليه. ركوب الدراجة نشاط بدني ينطوي على مخاطر، وأشارك فيه على مسؤوليتي الشخصية بالكامل، وأتحمل وحدي المسؤولية عن نفسي وسلامتي وممتلكاتي الشخصية. وأنا مسؤول عن أي أضرار ألحقها بالآخرين أو بممتلكاتهم. وإلى أقصى حد يسمح به النظام، لا تتحمل مايكروموبيليتي ولا موظفوها ولا شركاؤها أي مسؤولية عن أي شيء يحدث لي أو لممتلكاتي، بما في ذلك أي إصابة أو كسر أو مرض أو فقدان أو سرقة أو تلف، أيًّا كان سببه، أثناء النشاط أو بسببه. وأتعهد بارتداء الخوذة والالتزام بتعليمات الفريق والمسار، وأتحمل مسؤولية أي ضرر يلحق بالدراجة المستأجرة نتيجة سوء الاستخدام، وتُعاد الدراجة بحالتها عند الاستلام.","قرأت الإقرار وأوافق عليه نيابةً عن كل راكب في هذا التسجيل","يرجى الموافقة على الإقرار للمتابعة."],
-    fr: ["Décharge de responsabilité","Vous ne pouvez réserver aucune sortie ni activité auprès de MicroMobility avant d’avoir lu et accepté cette décharge. Le vélo est une activité physique qui comporte des risques. J’y participe entièrement à mes propres risques et je suis seul responsable de moi-même, de ma sécurité et de mes effets personnels. Je suis également responsable de tout dommage que je cause à autrui ou à ses biens. Dans toute la mesure permise par la loi, MicroMobility, son personnel et ses partenaires ne sont responsables de rien de ce qui peut m’arriver ou arriver à mes effets, y compris toute blessure, fracture, maladie, perte, vol ou dommage, quelle qu’en soit la cause, pendant l’activité ou en lien avec elle. Je m’engage à porter un casque et à suivre les consignes de l’équipe et le parcours, et je suis responsable de tout dommage causé au vélo loué par une mauvaise utilisation. Le vélo est rendu dans l’état où il a été reçu.","J’ai lu la décharge et je l’accepte au nom de chaque cycliste de cette inscription","Veuillez accepter la décharge pour continuer."],
-    es: ["Exención de responsabilidad","No puedes reservar ninguna salida ni actividad con MicroMobility hasta haber leído y aceptado esta exención. Montar en bicicleta es una actividad física que conlleva riesgos. Participo enteramente bajo mi propio riesgo y soy el único responsable de mí mismo, de mi seguridad y de mis pertenencias personales. También soy responsable de cualquier daño que cause a otras personas o a sus bienes. En la máxima medida permitida por la ley, MicroMobility, su personal y sus socios no son responsables de nada de lo que me ocurra a mí o a mis pertenencias, incluidas lesiones, fracturas, enfermedades, pérdidas, robos o daños, sea cual sea su causa, durante la actividad o en relación con ella. Me comprometo a usar casco y a seguir las instrucciones del equipo y el recorrido, y soy responsable de cualquier daño a la bicicleta alquilada causado por un mal uso. La bicicleta se devuelve en el estado en que se recibió.","He leído la exención y la acepto en nombre de todos los ciclistas de esta inscripción","Acepta la exención para continuar."],
-    pt: ["Termo de responsabilidade","Você não pode reservar nenhum passeio ou atividade com a MicroMobility antes de ler e aceitar este termo de responsabilidade. Andar de bicicleta é uma atividade física que envolve riscos. Participo inteiramente por minha conta e risco e sou o único responsável por mim, pela minha segurança e pelos meus pertences pessoais. Também sou responsável por qualquer dano que eu cause a outras pessoas ou aos seus bens. Na máxima extensão permitida por lei, a MicroMobility, sua equipe e seus parceiros não são responsáveis por nada que aconteça comigo ou com os meus pertences, incluindo qualquer lesão, fratura, doença, perda, furto ou dano, seja qual for a causa, durante a atividade ou em relação a ela. Comprometo-me a usar capacete e a seguir as instruções da equipe e o percurso, e sou responsável por qualquer dano à bicicleta alugada causado por mau uso. A bicicleta é devolvida no estado em que foi recebida.","Li o termo e concordo com ele em nome de todos os ciclistas desta inscrição","Aceite o termo de responsabilidade para continuar."],
-    hi: ["राइड छूट-पत्र","इस छूट-पत्र को पढ़कर उससे सहमत हुए बिना आप MicroMobility के साथ कोई भी राइड या गतिविधि बुक नहीं कर सकते। साइकिल चलाना एक शारीरिक गतिविधि है जिसमें जोखिम होता है। मैं पूरी तरह अपने जोखिम पर भाग लेता/लेती हूँ, और अपने, अपनी सुरक्षा और अपने निजी सामान के लिए केवल मैं ही ज़िम्मेदार हूँ। दूसरों को या उनकी संपत्ति को मेरे द्वारा पहुँचाए गए किसी भी नुकसान के लिए भी मैं ज़िम्मेदार हूँ। कानून द्वारा अनुमत अधिकतम सीमा तक, MicroMobility, उसके कर्मचारी और उसके साझेदार मेरे या मेरे सामान के साथ होने वाली किसी भी बात के लिए ज़िम्मेदार नहीं हैं, जिसमें कोई भी चोट, हड्डी टूटना, बीमारी, गुम होना, चोरी या नुकसान शामिल है, चाहे उसका कारण कुछ भी हो, गतिविधि के दौरान या उससे जुड़े किसी भी रूप में। मैं हेलमेट पहनने और टीम के निर्देशों और रास्ते का पालन करने के लिए सहमत हूँ, और गलत इस्तेमाल से किराए की साइकिल को हुए किसी भी नुकसान के लिए ज़िम्मेदार हूँ। साइकिल उसी हालत में लौटाई जाती है जिसमें वह मिली थी।","मैंने छूट-पत्र पढ़ लिया है और इस पंजीकरण के हर राइडर की ओर से इससे सहमत हूँ","जारी रखने के लिए कृपया छूट-पत्र स्वीकार करें।"],
-    ne: ["राइड छुट-पत्र","यो छुटपत्र पढेर सहमति नजनाएसम्म तपाईं MicroMobility सँग कुनै पनि राइड वा गतिविधि बुक गर्न सक्नुहुन्न। साइकल चलाउनु जोखिम भएको शारीरिक गतिविधि हो। म पूर्ण रूपमा आफ्नै जोखिममा सहभागी हुन्छु, र आफू, आफ्नो सुरक्षा र आफ्ना व्यक्तिगत सामानका लागि म मात्र जिम्मेवार छु। मैले अरूलाई वा उनीहरूको सम्पत्तिलाई गरेको कुनै पनि क्षतिका लागि पनि म जिम्मेवार छु। कानूनले अनुमति दिएको अधिकतम हदसम्म, MicroMobility, यसका कर्मचारी र साझेदारहरू मलाई वा मेरा सामानलाई हुने कुनै पनि कुराका लागि जिम्मेवार हुँदैनन्, जसमा कुनै पनि चोटपटक, हड्डी भाँचिनु, बिरामी, हराउनु, चोरी वा क्षति पर्छ, जुनसुकै कारणले भए पनि, गतिविधिका क्रममा वा त्यससँग सम्बन्धित रूपमा। म हेलमेट लगाउन र टोलीका निर्देशन तथा बाटो पालना गर्न सहमत छु, र गलत प्रयोगले भाडाको साइकललाई हुने कुनै पनि क्षतिका लागि म जिम्मेवार छु। साइकल जुन अवस्थामा लिइएको हो सोही अवस्थामा फिर्ता गरिन्छ।","मैले छुट-पत्र पढें र यो दर्ताका हरेक राइडरको तर्फबाट यसमा सहमत छु","अगाडि बढ्न कृपया छुट-पत्र स्वीकार गर्नुहोस्।"],
-    tl: ["Ride waiver","Hindi ka makakapag-book ng anumang ride o aktibidad sa MicroMobility hangga’t hindi mo nababasa at sinasang-ayunan ang waiver na ito. Ang pagbibisikleta ay pisikal na aktibidad na may kaakibat na panganib. Lumalahok ako nang buo sa sarili kong panganib, at ako lamang ang may pananagutan sa aking sarili, sa aking kaligtasan at sa aking mga personal na gamit. Ako rin ang mananagot sa anumang pinsalang maidudulot ko sa ibang tao o sa kanilang ari-arian. Hanggang sa pinakamalawak na pinapahintulutan ng batas, walang pananagutan ang MicroMobility, ang mga kawani nito at ang mga katuwang nito sa anumang mangyari sa akin o sa aking mga gamit, kabilang ang anumang pinsala sa katawan, bali, sakit, pagkawala, pagnanakaw o pagkasira, anuman ang sanhi, habang nasa aktibidad o may kaugnayan dito. Sumasang-ayon akong magsuot ng helmet at sumunod sa mga tagubilin ng team at sa ruta, at ako ang mananagot sa anumang pinsala sa inuupahang bisikleta dahil sa maling paggamit. Ibinabalik ang bisikleta sa kondisyong natanggap ito.","Nabasa ko ang waiver at sumasang-ayon ako rito para sa bawat rider sa rehistrasyong ito","Pakitanggap ang waiver para makapagpatuloy."],
-    bn: ["রাইড দায়মুক্তিপত্র","এই দায়মুক্তিপত্র পড়ে তাতে সম্মতি না দেওয়া পর্যন্ত আপনি MicroMobility-এর সাথে কোনো রাইড বা কার্যক্রম বুক করতে পারবেন না। সাইকেল চালানো একটি ঝুঁকিপূর্ণ শারীরিক কার্যক্রম। আমি সম্পূর্ণ নিজের ঝুঁকিতে অংশ নিচ্ছি, এবং নিজের, নিজের নিরাপত্তার ও নিজের ব্যক্তিগত জিনিসপত্রের জন্য শুধু আমিই দায়ী। অন্যদের বা তাদের সম্পত্তির যে ক্ষতি আমি করি, তার জন্যও আমি দায়ী। আইনে অনুমোদিত সর্বোচ্চ সীমা পর্যন্ত, MicroMobility, এর কর্মী ও অংশীদাররা আমার বা আমার জিনিসপত্রের সাথে যা-ই ঘটুক তার জন্য দায়ী নয়, যার মধ্যে যেকোনো আঘাত, হাড় ভাঙা, অসুস্থতা, হারানো, চুরি বা ক্ষতি অন্তর্ভুক্ত, কারণ যা-ই হোক, কার্যক্রম চলাকালে বা এর সাথে সম্পর্কিতভাবে। আমি হেলমেট পরতে এবং দলের নির্দেশনা ও পথ মেনে চলতে সম্মত, এবং ভুল ব্যবহারের কারণে ভাড়া করা সাইকেলের যেকোনো ক্ষতির জন্য আমি দায়ী। সাইকেলটি যে অবস্থায় নেওয়া হয়েছিল সেই অবস্থায় ফেরত দেওয়া হয়।","আমি দায়মুক্তিপত্রটি পড়েছি এবং এই নিবন্ধনের প্রত্যেক রাইডারের পক্ষে এতে সম্মতি দিচ্ছি","চালিয়ে যেতে অনুগ্রহ করে দায়মুক্তিপত্রে সম্মতি দিন।"],
-    ur: ["رائیڈ ویور","اس اقرار نامے کو پڑھ کر اس سے اتفاق کیے بغیر آپ MicroMobility کے ساتھ کوئی رائیڈ یا سرگرمی بک نہیں کر سکتے۔ سائیکل چلانا ایک جسمانی سرگرمی ہے جس میں خطرات ہوتے ہیں۔ میں مکمل طور پر اپنی ذمہ داری پر حصہ لیتا/لیتی ہوں، اور اپنی ذات، اپنی حفاظت اور اپنے ذاتی سامان کا ذمہ دار صرف میں ہوں۔ دوسروں کو یا ان کی املاک کو میری طرف سے پہنچنے والے کسی بھی نقصان کا ذمہ دار بھی میں ہوں۔ قانون کی اجازت کی آخری حد تک، MicroMobility، اس کا عملہ اور اس کے شراکت دار مجھے یا میرے سامان کو پیش آنے والی کسی بھی چیز کے ذمہ دار نہیں، بشمول کوئی بھی چوٹ، ہڈی ٹوٹنا، بیماری، گمشدگی، چوری یا نقصان، خواہ اس کی وجہ کچھ بھی ہو، سرگرمی کے دوران یا اس کے سلسلے میں۔ میں ہیلمٹ پہننے اور ٹیم کی ہدایات اور راستے پر عمل کرنے کا عہد کرتا/کرتی ہوں، اور غلط استعمال سے کرائے کی سائیکل کو پہنچنے والے کسی بھی نقصان کا ذمہ دار ہوں۔ سائیکل اسی حالت میں واپس کی جاتی ہے جس حالت میں وصول کی گئی تھی۔","میں نے ویور پڑھ لیا ہے اور اس رجسٹریشن کے ہر رائیڈر کی طرف سے اس سے اتفاق کرتا/کرتی ہوں","جاری رکھنے کے لیے براہِ کرم ویور قبول کریں۔"]
-  };
-  Object.keys(WV_T).forEach(function (l) { T[l] = T[l] || {}; WV_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = WV_T[l][i]; }); });
-  /* Register another (one phone, several people), the phone's other registrations, and two refusals
-     the database gives since the rentals migration of 2026-10-05: a waiver older than the current one
-     (WAIVER_OUTDATED, a page loaded before the waiver changed) and a paid booking moved to a session
-     with another price (PAID_MOVE). */
+  /* Two refusals the database gives since the rentals migration of 2026-10-05: a waiver older than the current one
+     (WAIVER_OUTDATED, a page loaded before the waiver changed) and a paid booking moved to a session with another
+     price (PAID_MOVE). */
   var WAIVER_OUTDATED = "The ride waiver has changed. Reload this page to read and accept the new one.";
   var PAID_MOVE = "This booking is already paid, so it cannot move to a session with a different price. Ask the desk to change it.";
-  var MORE_KEYS = ["Register another", "Other registrations on this phone", WAIVER_OUTDATED, PAID_MOVE];
-  var MORE_T = {
-    ar: ["تسجيل شخص آخر", "تسجيلات أخرى على هذا الجوال", "تغيّر إقرار الركوب. أعد تحميل هذه الصفحة لقراءة الإقرار الجديد والموافقة عليه.", "هذا الحجز مدفوع، لذا لا يمكن نقله إلى جلسة بسعر مختلف. اطلب من المكتب تغييره."],
-    fr: ["Inscrire une autre personne", "Autres inscriptions sur ce téléphone", "La décharge de responsabilité a changé. Rechargez cette page pour lire et accepter la nouvelle.", "Cette réservation est déjà payée : elle ne peut pas passer à une séance d'un autre prix. Demandez au comptoir de la modifier."],
-    es: ["Inscribir a otra persona", "Otras inscripciones en este teléfono", "La exención de responsabilidad ha cambiado. Recarga esta página para leer y aceptar la nueva.", "Esta reserva ya está pagada, así que no puede pasar a una sesión con otro precio. Pide en el mostrador que la cambien."],
-    pt: ["Registar outra pessoa", "Outros registos neste telemóvel", "O termo de responsabilidade mudou. Recarregue esta página para ler e aceitar o novo.", "Esta reserva já está paga, por isso não pode passar para uma sessão com outro preço. Peça ao balcão para a alterar."],
-    hi: ["किसी और का पंजीकरण करें", "इस फ़ोन पर अन्य पंजीकरण", "राइड छूट-पत्र बदल गया है। नया छूट-पत्र पढ़ने और स्वीकार करने के लिए यह पेज फिर से लोड करें।", "इस बुकिंग का भुगतान हो चुका है, इसलिए इसे अलग कीमत वाले सत्र में नहीं ले जाया जा सकता। इसे बदलने के लिए डेस्क से कहें।"],
-    ne: ["अर्को व्यक्ति दर्ता गर्नुहोस्", "यो फोनमा अन्य दर्ताहरू", "राइड छुट-पत्र परिवर्तन भएको छ। नयाँ छुट-पत्र पढ्न र स्वीकार गर्न यो पेज फेरि लोड गर्नुहोस्।", "यो बुकिङको भुक्तानी भइसकेको छ, त्यसैले यसलाई फरक मूल्यको सत्रमा सार्न सकिँदैन। परिवर्तन गर्न डेस्कलाई भन्नुहोस्।"],
-    tl: ["Magparehistro ng ibang tao", "Iba pang rehistro sa phone na ito", "Nagbago ang ride waiver. I-reload ang page na ito para basahin at tanggapin ang bago.", "Bayad na ang booking na ito, kaya hindi ito mailipat sa session na iba ang presyo. Hilingin sa desk na baguhin ito."],
-    bn: ["আরেকজনকে রেজিস্টার করুন", "এই ফোনে অন্যান্য রেজিস্ট্রেশন", "রাইড দায়মুক্তিপত্র বদলেছে। নতুনটি পড়তে ও তাতে সম্মতি দিতে এই পেজটি আবার লোড করুন।", "এই বুকিংয়ের টাকা আগেই দেওয়া হয়েছে, তাই এটি অন্য দামের সেশনে সরানো যাবে না। বদলাতে ডেস্কে বলুন।"],
-    ur: ["کسی اور کو رجسٹر کریں", "اس فون پر دیگر رجسٹریشنز", "رائیڈ ویور بدل گیا ہے۔ نیا ویور پڑھنے اور قبول کرنے کے لیے یہ صفحہ دوبارہ لوڈ کریں۔", "اس بکنگ کی ادائیگی ہو چکی ہے، اس لیے اسے مختلف قیمت والے سیشن میں منتقل نہیں کیا جا سکتا۔ اسے بدلنے کے لیے ڈیسک سے کہیں۔"]
-  };
-  Object.keys(MORE_T).forEach(function (l) { T[l] = T[l] || {}; MORE_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = MORE_T[l][i]; }); });
-  /* Names a screen reader hears but nobody sees (aria-label): they were English in every language. */
-  var ARIA_KEYS = ["Language", "Country code", "Progress", "Booking QR code"];
-  var ARIA_T = {
-    ar: ["اللغة", "رمز الدولة", "التقدم", "رمز QR للحجز"],
-    fr: ["Langue", "Indicatif du pays", "Progression", "Code QR de la réservation"],
-    es: ["Idioma", "Prefijo del país", "Progreso", "Código QR de la reserva"],
-    pt: ["Idioma", "Indicativo do país", "Progresso", "Código QR da reserva"],
-    hi: ["भाषा", "देश कोड", "प्रगति", "बुकिंग QR कोड"],
-    ne: ["भाषा", "देश कोड", "प्रगति", "बुकिङ QR कोड"],
-    tl: ["Wika", "Country code", "Progreso", "QR code ng booking"],
-    bn: ["ভাষা", "দেশের কোড", "অগ্রগতি", "বুকিং QR কোড"],
-    ur: ["زبان", "ملک کا کوڈ", "پیش رفت", "بکنگ کا QR کوڈ"]
-  };
-  Object.keys(ARIA_T).forEach(function (l) { T[l] = T[l] || {}; ARIA_KEYS.forEach(function (k, i) { if (!T[l][k]) T[l][k] = ARIA_T[l][i]; }); });
-  var ARIA_EL = [["#lang", "Language"], [".lang-wrap", "Language"], ["#cc", "Country code"], [".cc-wrap", "Country code"], ["#stepper", "Progress"], ["#sessions", "Session"], ["#qr", "Booking QR code"]];
-  function paintAria() { ARIA_EL.forEach(function (x) { var el = $(x[0]); if (el) el.setAttribute("aria-label", t(x[1])); }); }
-  var _applyLangDesign = applyLang;
-  applyLang = function (lang) { _applyLangDesign(lang); paintAria(); };
-  // The design paints every data-t element once, on load, before this file runs. Anything
-  // added here (the companions block, the edit flow, the QR note) was therefore missing from
-  // the dictionary at that moment and fell back to its English key, in every language.
-  // Repaint now that the dictionary is complete.
-  try { applyLang(html.lang || "en"); } catch (e) {}
+  /* Names a screen reader hears but nobody sees (aria-label). */
+  var ARIA_EL = [["#lang", "Language"], [".lang-wrap", "Language"], ["#cc", "Country code"], [".cc-wrap", "Country code"], ["#fd-cc", "Country code"], ["#stepper", "Progress"], ["#sessions", "Session"], ["#qr", "Booking QR code"]];
+  function paintAria() { ARIA_EL.forEach(function (x) { document.querySelectorAll(x[0]).forEach(function (el) { el.setAttribute("aria-label", t(x[1])); }); }); }
+  langHooks.push(paintAria);
+  paintAria();
 
   /* Live wiring: sessions and submit go through the rentals Supabase project. The anon key is
-     public by design; both RPCs are SECURITY DEFINER and validate/throttle on the server. */
+     public by design; every RPC is SECURITY DEFINER and validates/throttles on the server. */
   var SUPABASE_URL = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.url) || "https://qpffkzmsfyilicwcsszz.supabase.co";
   var SUPABASE_KEY = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.key) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
   var SOURCE = (location.pathname.split("/").filter(Boolean)[0] || "petromin").toLowerCase(); // 'petromin' on micromobility.sa/petromin
+  if (SITE_FORM && LANGS[SOURCE]) SOURCE = (location.pathname.split("/").filter(Boolean)[1] || "petromin").toLowerCase(); // /ar/petromin on the website
   var _sb = null;
-  /* The website's page loads no supabase-js (its address is not one the site's scripts may come from): the three calls
-     the form makes are plain POSTs to the database's /rest/v1/rpc, answered as supabase-js answers them ({data, error},
+  /* The website's page loads no supabase-js (its address is not one the site's scripts may come from): the calls the
+     form makes are plain POSTs to the database's /rest/v1/rpc, answered as supabase-js answers them ({data, error},
      a refusal's code and message as PostgREST sends them, a network failure as an error, never thrown). */
   function rpcFetch(fn, args) {
     return fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, { method: "POST", headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" }, body: JSON.stringify(args || {}) })
@@ -146,25 +49,42 @@
       }, function (e) { return { data: null, error: { message: "TypeError: " + (e && e.message || "Failed to fetch"), code: "", details: String(e), hint: "" }, status: 0 }; });
   }
   function sbClient() { if (!_sb) _sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : { rpc: rpcFetch }; return _sb; }
-  function toAscii(s) { return String(s).replace(/[\u0660-\u0669]/g, function (c) { return String(c.charCodeAt(0) - 0x0660); }).replace(/[\u06F0-\u06F9]/g, function (c) { return String(c.charCodeAt(0) - 0x06F0); }); }
+  // A call the database does not know yet (its migration not applied): 404, PGRST202.
+  function unknownCall(r) { return !!(r && r.error && (r.error.code === "PGRST202" || r.status === 404)); }
+  // No answer at all (the network) rather than a refusal the server gave.
+  function noAnswer(r) { var m = String((r && r.error && r.error.message) || ""); return !!(r && r.error && (!r.status || /TypeError|fetch|network/i.test(m) && !r.error.code)); }
+  function toAscii(s) { return asciiDigits(s); }
+
+  /* How far riders get, counted per step without anyone in it (form_step, rentals 20261111030000): a step seen once
+     per visit, a box refused at Continue, a registration, a refusal by its code. A test browser counts nothing. */
+  var seen = {};
+  function track(stepNo, ev, field) {
+    try {
+      if (navigator.webdriver || editing) return;
+      if (ev === "view") { if (seen[stepNo]) return; seen[stepNo] = 1; }
+      sbClient().rpc("form_step", { p_form: SOURCE, p_step: stepNo, p_event: ev, p_field: String(field || "").toLowerCase().replace(/[^a-z_]/g, "").slice(0, 24), p_lang: html.lang }).then(function () {}, function () {});
+    } catch (e) {}
+  }
+  stepHooks.push(function (n) { if (booted && $("#success").hidden) track(n, "view"); });
+
   /* Names hold letters, spaces and periods, as on the rentals site: a dash becomes a space
      ("Al-Harbi" is "Al Harbi", not "AlHarbi"), and digits, emoji and other signs are dropped as they
      are typed. Letters of every script and their combining marks stay (Hindi, Nepali and Bengali
      vowel signs). A period comes right after a letter ("Md. Rahman"): one that would start the name
      or a word, or follow another period, is dropped, as the database refuses it. */
-  var NAME_DASHES = /[\p{Pd}\u2212]/gu, NAME_BAD = /[^\p{L}\p{M}\s.]/gu;
+  var NAME_DASHES = /[\p{Pd}−]/gu, NAME_BAD = /[^\p{L}\p{M}\s.]/gu;
   function nameSigns(v) { return String(v || "").replace(NAME_DASHES, " ").replace(NAME_BAD, ""); }
   function cleanName(v) { return nameSigns(v).replace(/\.{2,}/g, ".").replace(/(^|\s)\.+/g, "$1"); }
+  function tidyName(v) { return cleanName(v).trim().replace(/\s+/g, " "); }
   // A name box's message: the given one, or back to the box's own ("Enter your full name").
   function nameMsg(f, msg) {
     var err = f && f.querySelector(".err"); if (!err) return;
     if (!err.hasAttribute("data-t0")) err.setAttribute("data-t0", err.getAttribute("data-t"));
     err.setAttribute("data-t", msg || err.getAttribute("data-t0")); render(err);
   }
-  // Runs after the box's own input handler has cleared its error. What the rule drops goes on
-  // the spot, the caret kept where it was, and the reason stays under the box for three seconds
-  // rather than flashing away on the next keystroke. A stray period just goes, without the reason:
-  // a period may be typed.
+  // What the rule drops goes on the spot, the caret kept where it was, and the reason stays under the box for three
+  // seconds rather than flashing away on the next keystroke. A stray period just goes, without the reason: a period
+  // may be typed.
   function onNameInput(el) {
     var f = el.closest(".field"), v = el.value, c = cleanName(v);
     if (c !== v) {
@@ -179,15 +99,18 @@
     if (el._nameHintUntil > Date.now()) { f.classList.add("invalid"); nameMsg(f, NAME_CHARS); }
     else if (!f.classList.contains("invalid")) nameMsg(f);
   }
+  // Leaving a name box tidies it as it is sent: no spaces at the ends, one between words.
+  function onNameBlur(el) { var v = tidyName(el.value); if (v !== el.value) el.value = v; }
   $("#name").addEventListener("input", function () { onNameInput(this); });
+  $("#name").addEventListener("blur", function () { onNameBlur(this); });
   var FIELD_ERR = { badge: "Enter your badge number", name: "Enter your full name", phone: "Enter a valid mobile number", height: "Enter your height in cm (100 to 250)", type: "Choose a bike type", session: "This session is no longer open", company: "Choose your company" };
   var FIELD_STEP = { session: 1, company: 2, badge: 2, name: 2, phone: 2, height: 3, type: 3 };
 
-  /* The second step checks what rider_register checks, so Continue says it there and then rather
-     than after the third step: a badge of the characters the database takes (letters, digits,
-     space . _ / # ’ -, at least one letter or digit), a name of two words, none of them an initial,
-     and a number of 8 to 15 digits with its country code (the database's +E.164 rule). */
-  var BADGE_OK = /^[A-Za-z0-9 ._\/#\u2019-]{1,40}$/;
+  /* The second step checks what rider_register checks, so Continue says it there and then: a badge of the characters
+     the database takes (letters, digits, space . _ / # ’ -, at least one letter or digit), a name of two words, none
+     of them an initial, and a number of 8 to 15 digits with its country code (the database's +E.164 rule). The third
+     checks every companion, the fourth the two boxes. */
+  var BADGE_OK = /^[A-Za-z0-9 ._\/#’-]{1,40}$/;
   var _phoneValidDesign = phoneValid;
   phoneValid = function () {
     if (!_phoneValidDesign()) return false;
@@ -198,12 +121,22 @@
   validateStep = function (n) {
     var ok = _validateStepDesign(n);
     if (n === 2) {
-      var badge = toAscii(asciiDigits($("#badge").value)).trim();
+      var badge = toAscii($("#badge").value).trim();
       if (badge && (!BADGE_OK.test(badge) || !/[A-Za-z0-9]/.test(badge))) { setError("f-badge", true); ok = false; }
-      var nm = cleanName($("#name").value).trim().replace(/\s+/g, " ");
+      var nm = tidyName($("#name").value);
       if (nm && !/\s/.test(nm)) { $("#name")._nameHintUntil = 0; setError("f-name", true, "Enter your full name"); ok = false; }
       else if (nm && nameShort(nm)) { $("#name")._nameHintUntil = 0; setError("f-name", true, NAME_SHORT); ok = false; }
     }
+    if (n === 3) {
+      var bad = companions.map(companionFault).indexOf(true);
+      if (bad >= 0) { ok = false; if (booted) openRider(bad, true); }
+    }
+    if (n === 4) {
+      if (!editing && !$("#privacy").checked) { setError("f-privacy", true); ok = false; }
+      if (!$("#waiver").checked) { setError("f-waiver", true, "Please accept the waiver to continue."); ok = false; }
+    }
+    if (!ok && booted) document.querySelectorAll('.step[data-step="' + n + '"] .field.invalid').forEach(function (f) { track(n, "error", f.id.replace(/^f-/, "")); });
+    if (!ok && booted && n === 3 && bad >= 0) track(3, "error", "rider");
     return ok;
   };
   // The box to focus is on the step on screen: a message left on another step is not jumped to.
@@ -218,13 +151,33 @@
     submitting = !!on; _setLoadingDesign(on);
     $("#back").disabled = !!on; $("#cancel-edit").disabled = !!on;
   };
-  // Until the calendar answers, the list is empty and busy rather than saying "No upcoming sessions".
+  // An edit opened from a saved confirmation knows its night before the calendar answers (or after the night has left
+  // the list): the review and the registration use it while it is the one picked.
+  var _collectDesign = collect;
+  collect = function () {
+    var d = _collectDesign();
+    if (!d.session && editing && editing.session && editing.session.id === selectedSession) d.session = editing.session;
+    d.name = tidyName(d.name);
+    d.badge = toAscii(d.badge).trim();
+    return d;
+  };
+
+  /* Sessions: three grey cards while the calendar answers (nothing reads as "No upcoming sessions" before it has),
+     and with no night to offer, the WhatsApp line beside the message. */
   var sessionsLoading = 0, sessionsAsked = 0;
   var _renderSessionsDesign = renderSessions;
   renderSessions = function () {
-    sessionsEl.setAttribute("aria-busy", String(sessionsLoading > 0 && !sessions.length));
-    if (sessionsLoading > 0 && !sessions.length) { sessionsEl.innerHTML = ""; return; }
+    var busy = sessionsLoading > 0 && !sessions.length;
+    sessionsEl.setAttribute("aria-busy", String(busy));
+    if (busy) {
+      sessionsEl.innerHTML = '<div class="session skeleton" aria-hidden="true"><span></span><span></span></div>'.repeat(3);
+      return;
+    }
     _renderSessionsDesign();
+    if (!sessions.length) {
+      var a = document.createElement("a"); a.className = "pill sessions-help"; a.href = "https://wa.me/966566668818"; a.target = "_blank"; a.rel = "noopener";
+      a.setAttribute("data-t", "Need help? WhatsApp us"); render(a); sessionsEl.appendChild(a);
+    }
   };
   // Only the latest ask paints: an older, slower answer (boot, then Edit) never replaces a newer one.
   async function loadSessions() {
@@ -236,85 +189,158 @@
       if (mine === sessionsAsked) { sessionsLoading = 0; setSessions(Array.isArray(r.data) ? r.data : []); }
     } catch (err) { if (mine === sessionsAsked) { sessionsLoading = 0; setSessions([]); showBanner("Could not reach the server"); } }
   }
-  // Session labels are built with the active locale, so rebuild them on a language change.
-  if ($("#lang")) $("#lang").addEventListener("change", function () { renderSessions(); });
 
+  /* Dialogs: every one is centred on the screen (the owner's rule for pop-ups); a tap on the backdrop closes the
+     ones that only show text. */
+  function openDialog(d) { if (d.showModal) { if (!d.open) d.showModal(); } else d.setAttribute("open", ""); }
+  function closeDialog(d) { if (d.close) { if (d.open) d.close(); } else d.removeAttribute("open"); }
+  // A question with two answers (remove a rider, cancel a booking): resolves true for yes.
+  function ask(text, yes, no, danger) {
+    var d = $("#ask-dialog");
+    $("#ask-text").textContent = text;
+    $("#ask-yes").textContent = t(yes); $("#ask-no").textContent = t(no);
+    $("#ask-yes").classList.toggle("danger", !!danger);
+    openDialog(d); $("#ask-no").focus();
+    return new Promise(function (res) {
+      function done(v) { $("#ask-yes").onclick = $("#ask-no").onclick = null; d.onclose = null; closeDialog(d); res(v); }
+      $("#ask-yes").onclick = function () { done(true); };
+      $("#ask-no").onclick = function () { done(false); };
+      d.onclose = function () { done(false); };
+    });
+  }
 
-
-
-  /* Companions: up to four extra riders under the same booking number. Each row is drawn from
-     `companions`; the server gets them as p_riders and answers with the party size. */
+  /* Companions: up to four extra riders under the same booking number, each a card on the third step (name, height,
+     bike) with Change and Remove. A companion is written in a centred dialog, its three boxes judged together on Save,
+     so a party of five stays a short list rather than fifteen boxes (GOV.UK / DWP "add another"). */
   var companions = [];
   var ridersEl = $("#riders");
+  function cmOf(h) { return t("{n} cm", { n: h }); }
+  function companionFault(c) { var h = heightOf(String(c.height || "")); return !c.name || nameShort(c.name) || !(h >= 100 && h <= 250) || (c.type !== "Hybrid" && c.type !== "Mountain"); }
   function renderCompanions() {
     ridersEl.innerHTML = "";
     companions.forEach(function (c, i) {
-      var row = document.createElement("div"); row.className = "rider"; row.setAttribute("data-i", String(i));
-      // Every box is named with its rider ("Rider 2, Full name"), and its message is a polite live
-      // region the box points at while it shows (describeError).
       var id = "rider-" + i;
+      var row = document.createElement("div"); row.className = "rider"; row.setAttribute("role", "listitem"); row.setAttribute("data-i", String(i));
       row.innerHTML =
-        '<div class="rider-head"><b id="' + id + '-head" data-t="Rider {n}" data-args=\'{"n":' + (i + 2) + '}\'>Rider ' + (i + 2) + '</b><button type="button" class="rider-remove" id="' + id + '-remove" aria-labelledby="' + id + '-remove ' + id + '-head" data-t="Remove">Remove</button></div>' +
-        '<div class="field rider-name"><label id="' + id + '-name-label" for="' + id + '-name" data-t="Full name">Full name</label><input id="' + id + '-name" type="text" maxlength="120" autocomplete="off" aria-labelledby="' + id + '-head ' + id + '-name-label"><p class="err" id="' + id + '-name-err" aria-live="polite" data-t="Enter the rider\'s full name">Enter the rider\'s full name</p></div>' +
-        '<div class="field rider-height"><label id="' + id + '-height-label" for="' + id + '-height" data-t="Height in cm">Height in cm</label><input id="' + id + '-height" type="number" inputmode="numeric" min="100" max="250" placeholder="175" aria-labelledby="' + id + '-head ' + id + '-height-label"><p class="err" id="' + id + '-height-err" aria-live="polite" data-t="Enter the rider\'s height in cm (100 to 250)">Enter the rider\'s height in cm (100 to 250)</p></div>' +
-        '<div class="field rider-type"><span class="label" id="' + id + '-type-label" data-t="Bike type">Bike type</span><div class="types" role="radiogroup" aria-labelledby="' + id + '-head ' + id + '-type-label"><button type="button" class="tile" data-v="Hybrid" role="radio" aria-checked="false" data-t="Hybrid">Hybrid</button><button type="button" class="tile" data-v="Mountain" role="radio" aria-checked="false" data-t="Mountain">Mountain</button></div><p class="err" id="' + id + '-type-err" aria-live="polite" data-t="Choose a bike type">Choose a bike type</p></div>';
-      row.querySelector(".rider-name input").value = c.name || "";
-      row.querySelector(".rider-height input").value = c.height || "";
-      row.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === c.type)); });
+        '<div class="rider-main"><b class="rider-head" id="' + id + '-head"></b><span class="rider-name-v" dir="auto"></span><span class="rider-meta"></span></div>' +
+        '<div class="rider-acts"><button type="button" class="rider-change" id="' + id + '-change" aria-labelledby="' + id + '-change ' + id + '-head" data-t="Change">Change</button>' +
+        '<button type="button" class="rider-remove" id="' + id + '-remove" aria-labelledby="' + id + '-remove ' + id + '-head" data-t="Remove">Remove</button></div>';
+      row.querySelector(".rider-head").textContent = t("Rider {n}", { n: i + 2 });
+      row.querySelector(".rider-name-v").textContent = c.name || "";
+      row.querySelector(".rider-meta").textContent = [c.height ? cmOf(heightOf(String(c.height)) || c.height) : "", c.type ? t(c.type) : ""].filter(Boolean).join(" · ");
+      row.classList.toggle("invalid", companionFault(c));
       row.querySelectorAll("[data-t]").forEach(render);
       ridersEl.appendChild(row);
     });
     $("#add-rider").hidden = companions.length >= 4;
+    setError("f-riders", false);
   }
-  function readCompanions() {
-    ridersEl.querySelectorAll(".rider").forEach(function (row, i) {
-      if (!companions[i]) return;
-      companions[i].name = cleanName(row.querySelector(".rider-name input").value).trim().replace(/\s+/g, " ");
-      companions[i].height = row.querySelector(".rider-height input").value.trim();
-    });
+  langHooks.push(renderCompanions);
+  var riderAt = -1;
+  var rdTypes = $("#rd-types"), rdType = null;
+  rdTypes.addEventListener("click", function (e) {
+    var tile = e.target.closest(".tile"); if (!tile) return;
+    rdType = tile.getAttribute("data-v");
+    rdTypes.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b === tile)); });
+    syncRoving(rdTypes); setError("rd-f-type", false);
+  });
+  radioKeys(rdTypes);
+  // Opens the dialog on companion i (a new one at the end); `judge` shows what is wrong with it straight away (a
+  // companion the server refused, or one saved before a rule).
+  function openRider(i, judge, serverMsg) {
+    var c = companions[i] || { name: "", height: "", type: "" };
+    riderAt = i;
+    var head = $("#rd-title"); head.setAttribute("data-args", JSON.stringify({ n: i + 2 })); render(head);
+    $("#rd-name").value = c.name || ""; $("#rd-height").value = c.height != null ? String(c.height) : "";
+    rdType = c.type || null;
+    rdTypes.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === rdType)); });
+    syncRoving(rdTypes);
+    ["rd-f-name", "rd-f-height", "rd-f-type"].forEach(function (id) { setError(id, false); nameMsg($("#" + id)); });
+    openDialog($("#rider-dialog"));
+    if (judge) { riderCheck(serverMsg); return; }
+    $("#rd-name").focus();
   }
-  function companionError(i, field, on, msg) {
-    var row = ridersEl.querySelector('.rider[data-i="' + i + '"]'); if (!row) return;
-    var f = row.querySelector(".rider-" + field); if (f) f.classList.toggle("invalid", !!on);
-    if (f && field === "name") nameMsg(f, on && msg);
-    if (f) describeError(f.querySelector("input, [role=radiogroup]"), f.querySelector(".err"), on);
-    if (on) { var inp = f && f.querySelector("input, .tile"); if (inp) inp.focus(); }
+  // Every box of the companion judged at once, each message under its box; the first wrong box takes the focus.
+  function riderCheck(serverMsg) {
+    var nm = tidyName($("#rd-name").value), h = heightOf($("#rd-height").value), first = null;
+    $("#rd-name").value = nm;
+    function bad(id, msg, el) { setError(id, true, msg); if (!first) first = el; }
+    if (!nm) bad("rd-f-name", null, $("#rd-name"));
+    else if (nameShort(nm)) bad("rd-f-name", RIDER_SHORT, $("#rd-name"));
+    else if (serverMsg && serverMsg.field === "name") bad("rd-f-name", serverMsg.msg, $("#rd-name"));
+    if (!(h >= 100 && h <= 250)) bad("rd-f-height", null, $("#rd-height"));
+    if (rdType !== "Hybrid" && rdType !== "Mountain") bad("rd-f-type", null, rdTypes.querySelector(".tile"));
+    if (first) first.focus();
+    return !first;
   }
-  function validateCompanions() {
-    readCompanions();
-    for (var i = 0; i < companions.length; i++) {
-      var c = companions[i], h = parseInt(toAscii(String(c.height || "")), 10);
-      if (!c.name) { goStep(3); companionError(i, "name", true); return false; }
-      if (nameShort(c.name)) { goStep(3); companionError(i, "name", true, RIDER_SHORT); return false; }
-      if (!(h >= 100 && h <= 250)) { goStep(3); companionError(i, "height", true); return false; }
-      if (c.type !== "Hybrid" && c.type !== "Mountain") { goStep(3); companionError(i, "type", true); return false; }
-    }
-    return true;
-  }
-  $("#add-rider").addEventListener("click", function () { readCompanions(); if (companions.length >= 4) return; companions.push({ name: "", height: "", type: "" }); renderCompanions(); var last = ridersEl.querySelector(".rider:last-child .rider-name input"); if (last) last.focus(); });
+  $("#rd-name").addEventListener("input", function () { setError("rd-f-name", false); onNameInput(this); });
+  $("#rd-name").addEventListener("blur", function () { onNameBlur(this); });
+  $("#rd-height").addEventListener("input", function () { if ($("#rd-f-height").classList.contains("invalid") && heightOk(this.value)) setError("rd-f-height", false); });
+  $("#rd-height").addEventListener("blur", function () { if (this.value.trim()) setError("rd-f-height", !heightOk(this.value)); });
+  $("#rider-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!riderCheck()) return;
+    var c = { name: tidyName($("#rd-name").value), height: String(heightOf($("#rd-height").value)), type: rdType };
+    var i = riderAt; if (i >= companions.length) { i = companions.length; companions.push(c); } else companions[i] = c;
+    riderAt = -1;
+    closeDialog($("#rider-dialog"));
+    renderCompanions();
+    var btn = ridersEl.querySelector('.rider[data-i="' + i + '"] .rider-change'); if (btn) btn.focus();
+  });
+  $("#rd-cancel").addEventListener("click", function () { riderAt = -1; closeDialog($("#rider-dialog")); $("#add-rider").hidden ? ridersEl.querySelector(".rider-change") && ridersEl.querySelector(".rider-change").focus() : $("#add-rider").focus(); });
+  $("#add-rider").addEventListener("click", function () { if (companions.length >= 4) { setError("f-riders", true); return; } openRider(companions.length); });
   ridersEl.addEventListener("click", function (e) {
     var row = e.target.closest(".rider"); if (!row) return;
     var i = Number(row.getAttribute("data-i"));
-    if (e.target.closest(".rider-remove")) { readCompanions(); companions.splice(i, 1); renderCompanions(); return; }
-    var tile = e.target.closest(".tile"); if (!tile) return;
-    companions[i].type = tile.getAttribute("data-v");
-    row.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b === tile)); });
-    companionError(i, "type", false);
+    if (e.target.closest(".rider-change")) { openRider(i, companionFault(companions[i])); return; }
+    if (e.target.closest(".rider-remove")) {
+      var who = companions[i] && companions[i].name || t("Rider {n}", { n: i + 2 });
+      ask(t("Remove {name} from this booking?", { name: who }), "Remove", "Keep it", true).then(function (yes) {
+        if (!yes) return;
+        companions.splice(i, 1); renderCompanions();
+        var to = ridersEl.querySelector(".rider-change") || $("#add-rider"); if (to && !to.hidden) to.focus();
+      });
+    }
   });
-  ridersEl.addEventListener("input", function (e) {
-    var row = e.target.closest(".rider"); if (!row) return;
-    var i = Number(row.getAttribute("data-i"));
-    var isName = !!e.target.closest(".rider-name");
-    companionError(i, isName ? "name" : "height", false);
-    if (isName) onNameInput(e.target);
-  });
-  function companionArgs() { readCompanions(); return companions.map(function (c) { return { name: c.name, height: parseInt(toAscii(String(c.height || "")), 10), type: c.type }; }); }
+  function companionArgs() { return companions.map(function (c) { return { name: tidyName(c.name), height: heightOf(String(c.height || "")), type: c.type }; }); }
   function showParty(d) {
     var n = 1 + ((d && d.riders) || []).length;
     $("#chip-riders").hidden = n < 2; $("#chip-riders-value").textContent = String(n);
     var note = $("#riders-note"); note.hidden = n < 2;
     if (n >= 2) { note.setAttribute("data-t", "Riding with: {names}"); note.setAttribute("data-args", JSON.stringify({ names: d.riders.map(function (c) { return c.name; }).join(", ") })); render(note); }
   }
+
+  /* The fourth step: every answer on one page, each part with its Change (GOV.UK "check answers"). A change goes to
+     its step, and Continue there comes straight back here. */
+  // A row of the summary: what (a label, or a rider's name as it was typed) and the answer.
+  function reviewRow(k, v, ltr, asIs) {
+    return '<div class="rv-row"><span class="rv-k"' + (asIs ? ' dir="auto"' : "") + ">" + esc(asIs ? k : t(k)) + '</span><span class="rv-v"' + (ltr ? ' dir="ltr"' : ' dir="auto"') + ">" + esc(v) + "</span></div>";
+  }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function renderReview() {
+    var d = collect(), box = $("#review"), s = d.session;
+    var part = function (n, key, rows) {
+      return '<section class="rv" aria-labelledby="rv-h' + n + '"><div class="rv-head"><h3 id="rv-h' + n + '">' + esc(t(key)) + '</h3>' +
+        '<button type="button" class="rv-change" data-go="' + n + '" id="rv-c' + n + '" aria-labelledby="rv-c' + n + ' rv-h' + n + '">' + esc(t("Change")) + "</button></div>" + rows + "</section>";
+    };
+    // Each rider is a row of their own: the name, then height and bike.
+    var bikes = reviewRow(d.name || t("Name"), [d.height ? cmOf(d.height) : "", d.type ? t(d.type) : ""].filter(Boolean).join(" · "), false, true);
+    companions.forEach(function (c) { bikes += reviewRow(tidyName(c.name), [cmOf(heightOf(String(c.height))), t(c.type)].join(" · "), false, true); });
+    var c = s && collectIso(s), ph = String(d.phone || ""), code = cc.value;
+    if (ph.indexOf("+" + code) === 0) ph = "+" + code + " " + ph.slice(code.length + 1);
+    box.innerHTML =
+      part(1, "Session", s ? reviewRow("Session", fmtDate(s.start) + ", " + fmtTime(s.start) + (s.end ? " – " + fmtTime(s.end) : "") + (s.title ? " · " + s.title : "")) +
+        (c ? reviewRow("Bike pickup", fmtTime(c)) : "") + reviewRow("Where", placeOf(s)) : "") +
+      part(2, "Your details", reviewRow("Company", d.company || "") + reviewRow("Badge", d.badge, true) + reviewRow("Name", d.name) + reviewRow("Mobile number", ph, true)) +
+      part(3, "Bike", bikes);
+  }
+  $("#review").addEventListener("click", function (e) {
+    var b = e.target.closest(".rv-change"); if (!b) return;
+    returnTo = STEPS; goStep(Number(b.getAttribute("data-go")));
+  });
+  stepHooks.push(function (n) { if (n === STEPS) renderReview(); });
+  langHooks.push(function () { if (step === STEPS && $("#success").hidden) renderReview(); });
+
   /* Booking QR: MMP-<booking number>, the same shape as the rentals tickets (MMC-...), so the
      desk's scanner opens this booking with a Check in button. Drawn whenever the confirmation shows.
      On a canvas, white quiet zone included, as the rentals tickets since 2026-10-05: Samsung
@@ -340,92 +366,31 @@
       try { box.innerHTML = q.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); } catch (e2) {}
     }
   }
-  var _showSuccessDesign = showSuccess;
-  showSuccess = function (d) { _showSuccessDesign(d); drawQr(current); showParty(current); var n = $("#tk-name"); if (n) n.textContent = (current && current.name) || ""; drawOthers(); };
-  /* Register another: one phone, several people. Edit changes the booking on the screen (its
-     session, its people), so a second person needs a fresh form. The confirmation already on this
-     phone stays as it is until the new registration goes through (a reload or Cancel shows it
-     again), then joins the phone's other registrations, listed under the confirmation and shown
-     again with a tap. Each is kept until 6 hours after its session, as the confirmation is. */
-  var KEPT = "mm-petromin-kept", another = false;
-  function ended(d) { var end = d.session && (d.session.end || d.session.start); return !!end && new Date(end).getTime() + 6 * 3600000 < Date.now(); }
-  function keptList() {
-    var list = null; try { list = JSON.parse(localStorage.getItem(KEPT) || "[]"); } catch (e) {}
-    return (Array.isArray(list) ? list : []).filter(function (d) { return d && d.bookingNo && !ended(d); });
+  // The night's facts on the ticket: when bikes are handed out, where, and the way there (the circuit's map link).
+  function paintFacts(d) {
+    var s = d && d.session, c = collectIso(s);
+    $("#tk-pickup").hidden = !c; if (c) $("#tk-pickup-value").textContent = fmtTime(c);
+    $("#tk-place").hidden = !s; if (s) $("#tk-place-value").textContent = placeOf(s);
+    $("#directions").hidden = !s || !!s.place;
   }
-  function saveKept(list) { try { if (list.length) localStorage.setItem(KEPT, JSON.stringify(list.slice(0, 10))); else localStorage.removeItem(KEPT); } catch (e) {} }
-  // A registration is its booking number on its night: numbers start again at P-001 every night, so
-  // Monday's P-004 and Wednesday's P-004 are two bookings (one dropped the other off the phone).
-  function keyOf(d) { return d ? String(d.bookingNo) + "|" + ((d.session && d.session.id) || "") : ""; }
-  function keep(d) { if (d && d.bookingNo) saveKept([d].concat(keptList().filter(function (x) { return keyOf(x) !== keyOf(d); }))); }
-  function drawOthers() {
-    var list = keptList().filter(function (x) { return !current || keyOf(x) !== keyOf(current); }), box = $("#others"), el = $("#others-list");
-    el.innerHTML = "";
-    list.forEach(function (d) {
-      var b = document.createElement("button"); b.type = "button"; b.className = "other";
-      b.setAttribute("data-key", keyOf(d)); b.textContent = d.bookingNo + " · " + (d.name || "");
-      el.appendChild(b);
-    });
-    box.hidden = !list.length;
-  }
-  $("#others-list").addEventListener("click", function (e) {
-    var b = e.target.closest(".other"); if (!b) return;
-    var key = b.getAttribute("data-key"), pick = keptList().filter(function (x) { return keyOf(x) === key; })[0];
-    if (!pick) { drawOthers(); return; }
-    saveKept(keptList().filter(function (x) { return keyOf(x) !== key; }));
-    keep(current);
-    showSuccess(pick); // the phone's confirmation now (saved as it), the one before it kept
-    setNote("Show this screen and your booking number at the desk to collect your bike.");
-    try { $("#card").scrollIntoView({ block: "start" }); } catch (err) {}
+  langHooks.push(function () {
+    if (!current) return;
+    var rr = $("#result"); rr.setAttribute("data-args", JSON.stringify({ d: sessionLabel(current.session) })); render(rr);
+    paintSession(current);
+    paintFacts(current);
   });
-  function startAnother() {
-    if (!current) return;
-    editing = null; another = true;
-    prefill({}); setSubmitLabels(false);
-    $("#privacy").checked = false; setError("f-privacy", false); // the next person confirms the notice for themselves
-    $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
-    hideBanner(); goStep(1);
-    loadSessions();
+  // The night on the ticket: its date and its time each kept whole, so a narrow column never leaves "PM" (or the
+  // Arabic "م") alone on a line.
+  function paintSession(d) {
+    var s = d && d.session, el = $("#chip-session-value"); if (!s || !el) return;
+    el.innerHTML = '<span class="nw">' + esc(fmtDate(s.start)) + ",</span> " + '<span class="nw">' + esc(fmtTime(s.start)) + "</span>";
   }
-  $("#another").addEventListener("click", startAnother);
-  /* Edit: reopen the form filled with the saved registration and save through rider_edit, which
-     updates the same row (booking number kept). The saved booking number and phone prove the row. */
-  var editing = null;
-  function setSubmitLabels(edit) {
-    var l = $("#submit .submit-label"), b = $("#submit .submit-busy"), h = $("#form .title");
-    l.setAttribute("data-t", edit ? "Save changes" : "Register"); render(l);
-    b.setAttribute("data-t", edit ? "Saving..." : "Registering..."); render(b);
-    h.setAttribute("data-t", edit ? "Edit your booking" : "Employees Bike Registration Form"); render(h);
-    $("#cancel-edit").hidden = !(edit || another); // Cancel goes back to the confirmation on the phone
-    $("#f-privacy").hidden = !!edit; // confirmed when they registered; an edit does not ask again
-    $("#waiver").checked = false; setError("f-waiver", false); // the waiver is asked again on every save, an edit too
-  }
-  function prefill(d) {
-    selectedSession = d.session ? d.session.id : null; renderSessions();
-    selectedCompany = d.company || null;
-    companies.querySelectorAll(".company").forEach(function (x) { x.setAttribute("aria-checked", String(x.getAttribute("data-v") === selectedCompany)); });
-    $("#badge").value = d.badge || ""; $("#name").value = cleanName(d.name).trim(); // a booking saved before the rule may carry a dash
-    var digits = String(d.phone || "").replace(/\D/g, ""), code = null;
-    COUNTRIES.forEach(function (x) { if (digits.indexOf(x[1]) === 0 && (!code || x[1].length > code.length)) code = x[1]; });
-    if (code) { cc.value = code; phoneIn.value = digits.slice(code.length); } else { cc.value = "966"; phoneIn.value = digits; }
-    syncPhone();
-    $("#height").value = d.height || "";
-    selectedType = d.type || null;
-    types.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === selectedType)); });
-    ["f-session", "f-company", "f-badge", "f-name", "f-phone", "f-height", "f-type"].forEach(function (id) { setError(id, false); });
-    companions = (d.riders || []).map(function (c) { return { name: cleanName(c.name).trim(), height: c.height != null ? String(c.height) : "", type: c.type || "" }; });
-    renderCompanions();
-  }
-  function startEdit() {
-    if (!current) return;
-    editing = current; another = false; prefill(current); setSubmitLabels(true);
-    $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
-    hideBanner(); goStep(1);
-    loadSessions(); // a restored confirmation never fetched the calendar; the saved session stays selected if it is still offered
-  }
-  function cancelEdit() { editing = null; another = false; setSubmitLabels(false); hideBanner(); if (current) showSuccess(current); }
-  $("#edit").addEventListener("click", startEdit);
-  $("#cancel-edit").addEventListener("click", cancelEdit);
+  var _showSuccessDesign = showSuccess;
+  showSuccess = function (d) {
+    _showSuccessDesign(d); drawQr(current); showParty(current); paintFacts(current); paintSession(current);
+    var n = $("#tk-name"); if (n) n.textContent = (current && current.name) || "";
+    setNote(null); drawOthers(); paintWallet();
+  };
   /* The notice's text. Tables carry each column's name on every cell, so a phone can show a row
      as a card (see .pv-body in styles.css). */
   function pvTable(head, rows) {
@@ -506,36 +471,240 @@
   document.querySelectorAll("[data-privacy-open]").forEach(function (b) { b.addEventListener("click", function (e) { e.preventDefault(); openPrivacy(); }); });
   $("#pv-close").addEventListener("click", closePrivacy);
   pvDialog.addEventListener("click", function (e) { if (e.target === pvDialog) closePrivacy(); }); // a tap on the backdrop
+
   $("#privacy").addEventListener("change", function () { setError("f-privacy", false); });
   $("#waiver").addEventListener("change", function () { setError("f-waiver", false); });
   function waiverRefused() { setError("f-waiver", true, "Please accept the waiver to continue."); goStep(STEPS); $("#waiver").focus(); }
-  function setNote(key) { var note = $(".done-note"); if (note) { note.setAttribute("data-t", key); render(note); } }
+  // A line under the ticket for what just happened (an edit saved, a refusal on the ticket's own buttons), or none.
+  function setNote(key, args) {
+    var note = $(".done-note"); if (!note) return;
+    note.hidden = !key; if (!key) { note.removeAttribute("data-t"); note.textContent = ""; return; }
+    note.setAttribute("data-t", key); if (args) note.setAttribute("data-args", JSON.stringify(args)); else note.removeAttribute("data-args"); render(note);
+  }
+  // A line above the form for what happened to a booking that is no longer on the screen (it was cancelled).
+  function setNotice(key) {
+    var n = $("#notice"); n.hidden = !key;
+    var txt = n.querySelector(".notice-text"); if (key) { txt.setAttribute("data-t", key); render(txt); } else { txt.removeAttribute("data-t"); txt.textContent = ""; }
+  }
 
+  /* The ride waiver: its full text in a centred dialog, opened from the line beside its box, rather than a box of
+     text in the middle of the step. */
+  var wvDialog = $("#waiver-dialog");
+  $("#waiver-open").addEventListener("click", function () { openDialog(wvDialog); $("#waiver-text").scrollTop = 0; $("#waiver-text").focus(); });
+  $("#waiver-close").addEventListener("click", function () { closeDialog(wvDialog); $("#waiver-open").focus(); });
+  wvDialog.addEventListener("click", function (e) { if (e.target === wvDialog) closeDialog(wvDialog); });
+
+  /* Register another: one phone, several people. Edit changes the booking on the screen (its
+     session, its people), so a second person needs a fresh form. The confirmation already on this
+     phone stays as it is until the new registration goes through (a reload or Cancel shows it
+     again), then joins the phone's other registrations, listed under the confirmation and shown
+     again with a tap. Each is kept until 6 hours after its session, as the confirmation is. */
+  var KEPT = "mm-petromin-kept", another = false;
+  function ended(d) { var end = d.session && (d.session.end || d.session.start); return !!end && new Date(end).getTime() + 6 * 3600000 < Date.now(); }
+  function keptList() {
+    var list = null; try { list = JSON.parse(localStorage.getItem(KEPT) || "[]"); } catch (e) {}
+    return (Array.isArray(list) ? list : []).filter(function (d) { return d && d.bookingNo && !ended(d); });
+  }
+  function saveKept(list) { try { if (list.length) localStorage.setItem(KEPT, JSON.stringify(list.slice(0, 10))); else localStorage.removeItem(KEPT); } catch (e) {} }
+  // A registration is its booking number on its night: numbers start again at P-001 every night, so
+  // Monday's P-004 and Wednesday's P-004 are two bookings (one dropped the other off the phone).
+  function keyOf(d) { return d ? String(d.bookingNo) + "|" + ((d.session && d.session.id) || "") : ""; }
+  function keep(d) { if (d && d.bookingNo) saveKept([d].concat(keptList().filter(function (x) { return keyOf(x) !== keyOf(d); }))); }
+  function drawOthers() {
+    var list = keptList().filter(function (x) { return !current || keyOf(x) !== keyOf(current); }), box = $("#others"), el = $("#others-list");
+    el.innerHTML = "";
+    list.forEach(function (d) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "other";
+      b.setAttribute("data-key", keyOf(d)); b.textContent = d.bookingNo + " · " + (d.name || "");
+      el.appendChild(b);
+    });
+    box.hidden = !list.length;
+  }
+  $("#others-list").addEventListener("click", function (e) {
+    var b = e.target.closest(".other"); if (!b) return;
+    var key = b.getAttribute("data-key"), pick = keptList().filter(function (x) { return keyOf(x) === key; })[0];
+    if (!pick) { drawOthers(); return; }
+    saveKept(keptList().filter(function (x) { return keyOf(x) !== key; }));
+    keep(current);
+    showSuccess(pick); // the phone's confirmation now (saved as it), the one before it kept
+  });
+  function startAnother() {
+    if (!current) return;
+    editing = null; another = true;
+    prefill({}); setSubmitLabels(false);
+    $("#privacy").checked = false; setError("f-privacy", false); // the next person confirms the notice for themselves
+    $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
+    hideBanner(); setNotice(null); returnTo = 0; goStep(1);
+    loadSessions();
+  }
+  $("#another").addEventListener("click", startAnother);
+  /* Edit: the form filled with the saved registration, opened on its summary (each part with its Change), and saved
+     through rider_edit, which updates the same rows (booking number kept). The saved booking number and phone prove
+     the rows. */
+  var editing = null;
+  function setSubmitLabels(edit) {
+    var l = $("#submit .submit-label"), b = $("#submit .submit-busy"), h = $("#form .title");
+    l.setAttribute("data-t", edit ? "Save changes" : "Agree and register"); render(l);
+    b.setAttribute("data-t", edit ? "Saving..." : "Registering..."); render(b);
+    h.setAttribute("data-t", edit ? "Edit your booking" : "Petromin bike night"); render(h);
+    $("#cancel-edit").hidden = !(edit || another); // Cancel goes back to the confirmation on the phone
+    $("#f-privacy").hidden = !!edit; // confirmed when they registered; an edit does not ask again
+    $("#waiver").checked = false; setError("f-waiver", false); // the waiver is asked again on every save, an edit too
+  }
+  function prefill(d) {
+    selectedSession = d.session ? d.session.id : null; renderSessions();
+    selectedCompany = d.company || null;
+    companies.querySelectorAll(".company").forEach(function (x) { x.setAttribute("aria-checked", String(x.getAttribute("data-v") === selectedCompany)); });
+    syncRoving(companies);
+    $("#badge").value = d.badge || ""; $("#name").value = tidyName(d.name); // a booking saved before the rule may carry a dash
+    var digits = String(d.phone || "").replace(/\D/g, ""), code = null;
+    COUNTRIES.forEach(function (x) { if (digits.indexOf(x[1]) === 0 && (!code || x[1].length > code.length)) code = x[1]; });
+    if (code) { cc.value = code; phoneIn.value = digits.slice(code.length); } else { cc.value = "966"; phoneIn.value = digits; }
+    syncPhone();
+    $("#height").value = d.height || "";
+    selectedType = d.type || null;
+    types.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === selectedType)); });
+    syncRoving(types);
+    ["f-session", "f-company", "f-badge", "f-name", "f-phone", "f-height", "f-type"].forEach(function (id) { setError(id, false); });
+    companions = (d.riders || []).map(function (c) { return { name: tidyName(c.name), height: c.height != null ? String(c.height) : "", type: c.type || "" }; });
+    renderCompanions();
+  }
+  function startEdit() {
+    if (!current) return;
+    editing = current; another = false; prefill(current); setSubmitLabels(true);
+    $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
+    hideBanner(); setNotice(null); returnTo = 0;
+    goStep(selectedSession ? STEPS : 1);
+    loadSessions(); // a restored confirmation never fetched the calendar; the saved session stays selected if it is still offered
+  }
+  function cancelEdit() { editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner(); if (current) showSuccess(current); }
+  $("#edit").addEventListener("click", startEdit);
+  $("#cancel-edit").addEventListener("click", cancelEdit);
+
+  /* Saving the booking elsewhere than this browser: Apple Wallet (iPhone and iPad; the website makes the pass through
+     the booking app's pass maker, app/api/petromin-pass) and a calendar file with a reminder two hours before bikes
+     are handed out. Neither needs an email or a text. */
+  var APPLE = /iP(hone|ad|od)/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+  var walletOff = false;
+  function paintWallet() { $("#wallet").hidden = !APPLE || walletOff || !current; }
+  $("#wallet").addEventListener("click", async function () {
+    var btn = this; if (!current || btn.disabled) return;
+    btn.disabled = true;
+    try {
+      var res = await fetch("/api/petromin-pass", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingNo: current.bookingNo, phone: current.phone, sessionId: current.session && current.session.id, lang: html.lang }) });
+      if (!res.ok) { if (res.status === 501 || res.status === 404 && !/json/.test(res.headers.get("content-type") || "")) { walletOff = true; paintWallet(); } setNote(res.status === 404 ? "We could not find your booking. Please register again." : "Could not reach the server"); return; }
+      var url = URL.createObjectURL(await res.blob());
+      // Opening the .pkpass shows iOS's "Add to Apple Wallet" sheet.
+      var a = document.createElement("a"); a.href = url; a.download = "booking-" + current.bookingNo + ".pkpass"; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+    } catch (e) { setNote("Could not reach the server"); }
+    finally { btn.disabled = false; }
+  });
+  function icsText(s) { return String(s || "").replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/([,;])/g, "\\$1"); }
+  function icsTime(iso) { return new Date(iso).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, ""); }
+  $("#calendar").addEventListener("click", function () {
+    var d = current, s = d && d.session; if (!s || !s.start) return;
+    var from = collectIso(s) || s.start, to = s.end || new Date(new Date(s.start).getTime() + 2 * 3600000).toISOString();
+    var title = t("Petromin bike night") + " · " + d.bookingNo;
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//Petromin form//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+      "UID:" + String(d.bookingNo).toLowerCase() + "-" + s.id + "@micromobility.sa", "DTSTAMP:" + icsTime(new Date().toISOString()),
+      "DTSTART:" + icsTime(from), "DTEND:" + icsTime(to), "SUMMARY:" + icsText(title), "LOCATION:" + icsText(placeOf(s)),
+      "DESCRIPTION:" + icsText(t("Booking") + " " + d.bookingNo + "\n" + t("Helmets are required. One comes with every bike.")),
+      "URL:https://micromobility.sa/petromin", "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", "DESCRIPTION:" + icsText(title), "END:VALARM", "END:VEVENT", "END:VCALENDAR"];
+    var url = URL.createObjectURL(new Blob([lines.join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" }));
+    var a = document.createElement("a"); a.href = url; a.download = "petromin-" + d.bookingNo + ".ics"; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+  });
+
+  /* Cancel my booking (rider_cancel, rentals 20261111030000): the whole party, after a question; the number and the
+     phone it was made with prove it. A booking the desk has taken over, or anyone on it checked in, goes to the desk. */
+  var CANCEL_ERR = { checked_in: "You have already checked in. Ask the desk to change your booking.", desk: "The desk has this booking. Ask the desk to cancel it.", notfound: "We could not find your booking. Please register again.", session: "This session is no longer open", throttled: "Too many submissions from this network" };
+  $("#cancel-booking").addEventListener("click", async function () {
+    var d = current; if (!d || !d.session) return;
+    var yes = await ask(t("Cancel booking {no}? Every rider on it loses their place.", { no: d.bookingNo }), "Cancel booking", "Keep it", true);
+    if (!yes) { $("#cancel-booking").focus(); return; }
+    var btn = $("#cancel-booking"); btn.disabled = true;
+    var r; try { r = await sbClient().rpc("rider_cancel", { p_booking_no: d.bookingNo, p_proof_phone: d.phone, p_session_id: d.session.id }); } catch (e) { r = { error: e }; }
+    btn.disabled = false;
+    if (!r || r.error || !r.data) { setNote(noAnswer(r) ? "Could not reach the server" : "We could not save this. Please try again."); return; }
+    if (!r.data.ok) { setNote(CANCEL_ERR[r.data.error] || "We could not save this. Please try again."); return; }
+    track(4, "cancel");
+    try { localStorage.removeItem(STORE); } catch (e) {}
+    saveKept(keptList().filter(function (x) { return keyOf(x) !== keyOf(d); }));
+    current = null;
+    // The phone's next registration shows, if it holds one; otherwise a fresh form.
+    if (!restoreKept()) { editing = null; another = false; prefill({}); setSubmitLabels(false); $("#privacy").checked = false; $("#success").hidden = true; $("#card").setAttribute("data-state", "form"); returnTo = 0; goStep(1); loadSessions(); }
+    setNotice("Your booking was cancelled.");
+  });
+
+  /* Find my booking: the booking number and the mobile number it was made with bring it back on any phone or browser
+     (rider_lookup, rentals 20261111030000) - this browser's copy of it is lost when its storage is cleared, and Safari
+     clears a site's after seven days away. */
+  var fdDialog = $("#find-dialog");
+  fillCC($("#fd-cc"));
+  function fdNumber() {
+    var v = toAscii($("#fd-no").value).toUpperCase().replace(/\s+/g, "");
+    var m = v.match(/^([A-Z])?-?(\d{1,4})$/);
+    return m ? (m[1] || SOURCE.charAt(0).toUpperCase()) + "-" + ("00" + m[2]).slice(-Math.max(3, m[2].length)) : "";
+  }
+  function fdPhone() {
+    var raw = toAscii($("#fd-phone").value).replace(/[^0-9+]/g, ""), code = $("#fd-cc").value;
+    if (raw.charAt(0) === "+") return "+" + raw.replace(/\D/g, "");
+    if (raw.indexOf("00") === 0) return "+" + raw.slice(2);
+    var n = raw.replace(/\D/g, "").replace(/^0+/, "");
+    if (code === "966" && n.indexOf("966") === 0 && n.length > 9) n = n.slice(3);
+    return n ? "+" + code + n : "";
+  }
+  function fdMiss(key) { var m = $("#fd-miss"); m.hidden = !key; if (key) { m.setAttribute("data-t", key); render(m); } }
+  $("#find").addEventListener("click", function () {
+    $("#fd-no").value = ""; $("#fd-phone").value = ""; $("#fd-cc").value = "966"; fdMiss(null);
+    setError("fd-f-no", false); setError("fd-f-phone", false);
+    openDialog(fdDialog); $("#fd-no").focus();
+  });
+  $("#fd-cancel").addEventListener("click", function () { closeDialog(fdDialog); $("#find").focus(); });
+  ["fd-no", "fd-phone"].forEach(function (id) { $("#" + id).addEventListener("input", function () { setError(id === "fd-no" ? "fd-f-no" : "fd-f-phone", false); fdMiss(null); }); });
+  $("#find-form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+    var no = fdNumber(), ph = fdPhone(), digits = ph.replace(/\D/g, "");
+    setError("fd-f-no", !no); setError("fd-f-phone", digits.length < 9);
+    if (!no) { $("#fd-no").focus(); return; }
+    if (digits.length < 9) { $("#fd-phone").focus(); return; }
+    var go = $("#fd-go"); go.disabled = true; go.classList.add("loading");
+    var r; try { r = await sbClient().rpc("rider_lookup", { p_booking_no: no, p_phone: ph }); } catch (err) { r = { error: err }; }
+    go.disabled = false; go.classList.remove("loading");
+    if (!r || r.error || !r.data) { fdMiss("Could not reach the server"); return; }
+    var d = r.data;
+    if (!d.ok) { fdMiss(d.error === "throttled" ? "Too many submissions from this network" : "We could not find a booking with this number and mobile number."); return; }
+    var found = { badge: d.badge || "", name: d.name || "", company: d.company || null, phone: d.phone || ph, height: d.height, type: d.type, session: d.session || null, bookingNo: d.booking_no, riders: d.riders || [], submittedAt: new Date().toISOString() };
+    closeDialog(fdDialog);
+    if (current && keyOf(current) !== keyOf(found)) keep(current);
+    editing = null; another = false; setSubmitLabels(false); setNotice(null);
+    track(1, "found");
+    showSuccess(found);
+  });
+
+  /* Registration. Refusals the form knows go to their box; anything else is said in words that tell a refusal from
+     a lost connection, and a second failure in a row offers WhatsApp. */
+  var failures = 0;
+  function failBanner(msg) {
+    failures++;
+    $("#banner-help").hidden = failures < 2;
+    showBanner(msg);
+  }
   $("#form").addEventListener("submit", async function (e) {
     e.preventDefault();
     if (submitting) return; // one registration at a time
-    // Enter in a box on the first two steps submits the form (its Register button is only hidden):
-    // that is Continue, not a registration that jumps to the last step with its boxes all in red.
-    if (step < STEPS) { if (validateStep(step)) goStep(step + 1); else focusInvalid(); return; }
+    // Enter in a box on the earlier steps submits the form (its Register button is only hidden): that is Continue,
+    // not a registration that jumps to the last step with its boxes all in red.
+    if (step < STEPS) { next(); return; }
     hideBanner();
     if (!validate()) { focusInvalid(); return; }
-    // The Privacy Notice confirmation: a new registration does not go through without it.
-    if (!editing && !$("#privacy").checked) { setError("f-privacy", true); goStep(STEPS); $("#privacy").focus(); return; }
-    // The ride waiver: no registration and no edit goes through without it (owner, 2026-10-03).
-    if (!$("#waiver").checked) { waiverRefused(); return; }
     var data = collect();
-    var name = cleanName(data.name).trim().replace(/\s+/g, " ");
-    data.name = name; // the ticket and the phone's list show the name as it was registered
-    // The employee's own name first: it is on the step before the companions, so a short name there
-    // is the one to say even when a companion's is short too.
-    if (!/\s/.test(name)) { setError("f-name", true, "Enter your full name"); goStep(2); $("#name").focus(); return; } // the server wants two words
-    if (nameShort(name)) { goStep(2); $("#name")._nameHintUntil = 0; setError("f-name", true, NAME_SHORT); $("#name").focus(); return; }
-    if (!validateCompanions()) return;
     data.riders = companionArgs();
     var args = {
-      p_badge: toAscii(data.badge),
-      p_name: name,
-      p_height: parseInt(toAscii(String(data.height)), 10),
+      p_badge: data.badge,
+      p_name: data.name,
+      p_height: data.height,
       p_type: data.type,
       p_source: SOURCE,
       p_phone: toAscii(data.phone),
@@ -544,53 +713,53 @@
     };
     if (data.riders.length) args.p_riders = data.riders;
     args.p_waiver = WAIVER_VERSION; // only reached with the box ticked
+    args.p_lang = html.lang; // the language the waiver was read in
     if (!editing && $("#privacy").checked) args.p_privacy = PRIVACY_VERSION; // the notice this registration confirmed
     setLoading(true);
     var r;
+    // A database without the newest arguments yet does not know the call with them (404, PGRST202): once more with
+    // each of them left out in turn, newest first.
+    async function call(fn, a, optional) {
+      var res = await sbClient().rpc(fn, a);
+      for (var i = 0; i < optional.length && unknownCall(res); i++) {
+        if (!(optional[i] in a)) continue;
+        var less = {}; Object.keys(a).forEach(function (k) { if (k !== optional[i]) less[k] = a[k]; }); a = less;
+        res = await sbClient().rpc(fn, a);
+      }
+      return res;
+    }
     try {
       if (editing) {
-        var edit = { p_booking_no: editing.bookingNo, p_proof_phone: editing.phone, p_badge: args.p_badge, p_name: args.p_name, p_height: args.p_height, p_type: args.p_type, p_session_id: args.p_session_id, p_company: args.p_company, p_phone: args.p_phone, p_riders: data.riders, p_waiver: args.p_waiver };
-        // Numbers start again at P-001 every night, so the number and phone alone can be another
-        // night's booking (the latest was picked: it was moved, or the edit refused as a duplicate of
-        // this one). The night of the confirmation being edited says which (p_session_id is the night
-        // it moves to).
+        var edit = { p_booking_no: editing.bookingNo, p_proof_phone: editing.phone, p_badge: args.p_badge, p_name: args.p_name, p_height: args.p_height, p_type: args.p_type, p_session_id: args.p_session_id, p_company: args.p_company, p_phone: args.p_phone, p_riders: data.riders, p_waiver: args.p_waiver, p_lang: args.p_lang };
+        // Numbers start again at P-001 every night, so the number and phone alone can be another night's booking:
+        // the night of the confirmation being edited says which (p_session_id is the night it moves to).
         if (editing.session && editing.session.id) edit.p_from_session = editing.session.id;
-        r = await sbClient().rpc("rider_edit", edit);
-        // A database that does not take p_from_session yet (until the rentals migration adding it is
-        // applied) does not know the call with it: 404, PGRST202. Once more without it, and only it.
-        if (r && r.error && edit.p_from_session && (r.error.code === "PGRST202" || r.status === 404)) {
-          var earlier = {}; Object.keys(edit).forEach(function (k) { if (k !== "p_from_session") earlier[k] = edit[k]; });
-          r = await sbClient().rpc("rider_edit", earlier);
-        }
+        r = await call("rider_edit", edit, ["p_lang", "p_from_session"]);
       } else {
-        r = await sbClient().rpc("rider_register", args);
-        // A database that does not take p_privacy yet (until the rentals migration adding it is
-        // applied) does not know the call with it: 404, PGRST202. Once more without it, and only it.
-        if (r && r.error && args.p_privacy && (r.error.code === "PGRST202" || r.status === 404)) {
-          var older = {}; Object.keys(args).forEach(function (k) { if (k !== "p_privacy") older[k] = args[k]; });
-          r = await sbClient().rpc("rider_register", older);
-        }
+        r = await call("rider_register", args, ["p_lang", "p_privacy"]);
       }
     } catch (err) { r = { error: err }; }
     setLoading(false);
     // Raised by the database (P0001) since rentals' 2026-10-05 migration: said in the page's language.
     var refused = String((r && r.error && r.error.message) || (r && r.data && r.data.error) || "");
-    if (/WAIVER_OUTDATED/.test(refused)) { showBanner(WAIVER_OUTDATED); return; }
-    if (/PAID_MOVE/.test(refused)) { showBanner(PAID_MOVE); return; }
-    if (!r || r.error || !r.data) { showBanner("Could not reach the server"); return; }
+    if (/WAIVER_OUTDATED/.test(refused)) { failBanner(WAIVER_OUTDATED); return; }
+    if (/PAID_MOVE/.test(refused)) { failBanner(PAID_MOVE); return; }
+    if (!r || r.error || !r.data) { track(4, "fail", noAnswer(r) ? "network" : "server"); failBanner(noAnswer(r) ? "Could not reach the server" : "We could not save this. Please try again."); return; }
     var d = r.data;
     if (!d.ok) {
+      track(4, "fail", d.error);
       if (d.error === "waiver") { waiverRefused(); return; }
-      if (d.error === "throttled") { showBanner("Too many submissions from this network"); return; }
-      if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} showBanner("We could not find your booking. Please register again."); return; }
-      if (d.error === "checked_in") { showBanner("You have already checked in. Ask the desk to change your booking."); return; }
-      if (d.error === "riders") { goStep(3); showBanner("Up to four companions"); return; }
+      if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
+      if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
+      if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
+      if (d.error === "riders") { goStep(3); setError("f-riders", true); return; }
       // The database refuses a one-letter word with the same code as a wrong character, saying why:
       // "short" (rider_register, rentals 20261004100000). Each gets its own words.
       var short = d.why === "short";
       if (d.error === "name_chars" || d.error === "name_short") { goStep(2); $("#name")._nameHintUntil = 0; setError("f-name", true, (short || d.error === "name_short") ? NAME_SHORT : NAME_CHARS); focusInvalid(); return; }
-      if (d.error === "rider_name_chars" || d.error === "rider_name_short") { goStep(3); companionError((Number(d.rider) || 2) - 2, "name", true, (short || d.error === "rider_name_short") ? RIDER_SHORT : NAME_CHARS); return; }
-      if (d.error === "rider_name" || d.error === "rider_height" || d.error === "rider_type") { goStep(3); companionError((Number(d.rider) || 2) - 2, d.error.slice(6), true); return; }
+      var ri = (Number(d.rider) || 2) - 2;
+      if ((d.error === "rider_name_chars" || d.error === "rider_name_short") && companions[ri]) { goStep(3); openRider(ri, true, { field: "name", msg: (short || d.error === "rider_name_short") ? RIDER_SHORT : NAME_CHARS }); return; }
+      if ((d.error === "rider_name" || d.error === "rider_height" || d.error === "rider_type") && companions[ri]) { goStep(3); openRider(ri, true); return; }
       if (d.error === "duplicate") { goStep(2); setError("f-badge", true, "This badge is already registered for that session"); focusInvalid(); return; }
       if (FIELD_ERR[d.error]) {
         goStep(FIELD_STEP[d.error] || 1);
@@ -598,15 +767,18 @@
         if (d.error === "session") loadSessions();
         focusInvalid(); return;
       }
-      showBanner("Could not reach the server"); return;
+      failBanner("We could not save this. Please try again."); return;
     }
+    failures = 0; $("#banner-help").hidden = true;
     data.bookingNo = d.booking_no;
-    if (d.session) data.session = d.session;
+    // The night as the form knew it (its hand-out time and place) with what the server says of it.
+    if (d.session) data.session = Object.assign({}, data.session || {}, d.session);
     var wasEdit = !!editing; editing = null;
+    if (!wasEdit) track(4, "done");
     if (another && current && keyOf(current) !== keyOf(data)) keep(current); // the confirmation before this one stays on the phone
     another = false; setSubmitLabels(false);
     showSuccess(data);
-    setNote(wasEdit ? "Your booking was updated." : d.resubmitted ? "Your details were updated." : "Show this screen and your booking number at the desk to collect your bike.");
+    setNote(wasEdit ? "Your booking was updated." : d.resubmitted ? "Your details were updated." : null);
   });
 
   /* Boot: restore a saved confirmation on this device (else the latest of its other registrations),
@@ -616,6 +788,8 @@
     saveKept(list.slice(1)); showSuccess(list[0]); return true;
   }
   renderCompanions();
+  setSubmitLabels(false);
   goStep(1);
   if (!restore() && !restoreKept()) loadSessions();
-
+  booted = true;
+  if ($("#success").hidden) track(1, "view");
