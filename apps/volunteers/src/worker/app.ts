@@ -7,6 +7,9 @@
 //                         the booking app after creating an account or a forgotten password
 //   POST /api/logout      clears the cookie. The token stays: it is the account's, and ending it would
 //                         also sign the rider out of the booking app.
+//   GET  /cal/<session>.ics  the volunteer's own shift as a calendar file (text/calendar, with a reminder a day before and
+//                         two hours before), from volunteer_me with the session cookie: Add to calendar (the
+//                         enhancements, 2026-11-11). Signed out it goes to the sign-in.
 //   POST /api/rpc/<name>  one of RPCS below, with p_id / p_token taken from the cookie. Nobody reads the
 //                         portal signed out (the owner, 2026-11-05): volunteer_opportunities takes no
 //                         arguments, so its session is checked here first. The one exception is
@@ -16,8 +19,13 @@
 //                         with the same session (the volunteer rework, 2026-11-09)
 //
 // Every POST must come from this origin's own page, as JSON, and small.
+//
+// Caching (fix 15): app-<hash>.js, app-<hash>.css and chunks/ are named by their content (scripts/build.mjs), so they
+// are kept for a year and never asked for again; the page itself and the service worker are always checked first.
 
-import { secure } from "./headers";
+import { calEventOf, icsText } from "../client/ics";
+import { gathers, sessionNameEn } from "../client/i18n";
+import { cacheFor, secure } from "./headers";
 import { clearCookie, sessionOf, setCookie } from "./session";
 
 type RateLimit = { limit(o: { key: string }): Promise<{ success: boolean }> };
@@ -60,6 +68,11 @@ export const RPCS = new Set([
   "volunteer_updates_seen",
   "customer_push_subscribe",
   "customer_push_unsubscribe",
+  // the enhancements of 2026-11-11 (rentals migration 20261111140000): the plan, "Still coming?", how it was, the motive
+  "volunteer_plan",
+  "volunteer_coming",
+  "volunteer_feedback",
+  "volunteer_motive",
 ]);
 
 /** Error codes the database raises on purpose, with the status each one is answered with. */
@@ -99,6 +112,8 @@ const KNOWN: Record<string, number> = {
   VOL_NOT_LEAD: 403,
   VOL_CHECKED_OUT: 409, // also volunteer_arrive's answer after a check-out by staff, which came out as a server fault before
   NOT_FOUND: 404,
+  // the enhancements of 2026-11-11: an opportunity for women only or men only (decision 12)
+  VOL_GENDER: 409,
 };
 
 /** The status a code the database raises on purpose takes, or null for any other text
@@ -181,6 +196,9 @@ async function callDb(env: Env, req: Request, name: string, args: Record<string,
   const known = knownStatus(msg);
   if (known !== null) return { ok: false, status: known, code: msg, detail: err.details ? String(err.details).slice(0, 40) : undefined };
   const pg = String(err.code || "");
+  // a function the database does not have yet (a page deployed before its migration): said as such, so the page can
+  // fall back to the older way where it has one
+  if (pg === "PGRST202") return { ok: false, status: 501, code: "NOT_BUILT" };
   if (pg.startsWith("22") || pg.startsWith("23") || pg.startsWith("PGRST1") || pg.startsWith("PGRST2")) {
     return { ok: false, status: 400, code: "BAD_INPUT" };
   }
@@ -275,6 +293,31 @@ async function rpc(req: Request, env: Env, name: string): Promise<Response> {
   return json(r.data ?? null);
 }
 
+/** The volunteer's own accepted (or worked) shift as a calendar file. Only what volunteer_me gives this account. */
+async function calendar(req: Request, env: Env, id: string): Promise<Response> {
+  const url = new URL(req.url);
+  const back = (hash: string) => new Response(null, { status: 302, headers: { Location: `${url.origin}/${hash}`, "Cache-Control": "no-store" } });
+  const s = sessionOf(req);
+  if (!s) return back(`#o/${encodeURIComponent(id)}`);
+  const r = await callDb(env, req, "volunteer_me", { p_id: s.id, p_token: s.token });
+  if (!r.ok) return new Response("Please try again.", { status: r.status === 502 ? 502 : r.status, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+  type Shift = Parameters<typeof calEventOf>[0] & { title?: string | null; ride_kind?: string | null; event_kind?: string | null; status?: string; cancelled?: boolean };
+  const me = r.data as { mine?: Shift[] } | null;
+  if (!me) return back(`#o/${encodeURIComponent(id)}`);
+  const x = (Array.isArray(me.mine) ? me.mine : []).find((m) => m.id === id && (m.status === "accepted" || m.status === "done") && !m.cancelled);
+  if (!x) return new Response("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+  // the name in the volunteer's language, as their page shows it; else its English name
+  const asked = [...(url.searchParams.get("name") ?? "")].map((c) => (c.charCodeAt(0) < 32 || c.charCodeAt(0) === 127 ? " " : c)).join("").trim().slice(0, 120);
+  const title = asked || sessionNameEn(x);
+  const file = id.replace(/[^A-Za-z0-9-]/g, "");
+  return new Response(icsText(calEventOf(x, title, gathers(x))), { headers: {
+    "Content-Type": "text/calendar; charset=utf-8",
+    // inline: an iPhone opens it straight into its calendar; other browsers save it, as they cannot show it
+    "Content-Disposition": `inline; filename="micromobility-volunteer-${file}.ics"`,
+    "Cache-Control": "no-store",
+  } });
+}
+
 async function route(req: Request, env: Env): Promise<Response> {
   const url = new URL(req.url);
   if (url.pathname === "/api" || url.pathname.startsWith("/api/")) {
@@ -288,8 +331,10 @@ async function route(req: Request, env: Env): Promise<Response> {
     return fail("NOT_FOUND", 404);
   }
   if (req.method !== "GET" && req.method !== "HEAD") return new Response("Method not allowed", { status: 405 });
+  const cal = /^\/cal\/([A-Za-z0-9_-]{1,64})\.ics$/.exec(url.pathname);
+  if (cal) return calendar(req, env, cal[1]);
   if (!env.ASSETS) return new Response("Not found", { status: 404 });
-  return env.ASSETS.fetch(req);
+  return cacheFor(url.pathname, await env.ASSETS.fetch(req));
 }
 
 /** Every answer, with the security headers. */

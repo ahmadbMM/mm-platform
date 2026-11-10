@@ -13,8 +13,8 @@ export const PUSH_SWITCH = false;
 // The public half of the VAPID pair: the browser is meant to see it.
 export const VAPID_PUBLIC_KEY ="BJSyC1Qe8jYlIWBzYCbDminoCcbRJG0XYbKlz_yhuqyyKuEx-yYjFLsfJDu5K2O27fu1N9SOi2x3KVfzS0SpA2g";
 
-const ios = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-const standalone = () => {
+export const ios = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+export const standalone = () => {
   try { return matchMedia("(display-mode: standalone)").matches || (navigator as Navigator & { standalone?: boolean }).standalone === true; } catch { return false; }
 };
 

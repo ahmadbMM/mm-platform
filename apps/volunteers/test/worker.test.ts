@@ -234,3 +234,64 @@ describe("a ticket", () => {
     expect(parseTicket("MMP-A-001")).toBeNull();
   });
 });
+
+describe("the enhancements of 2026-11-11", () => {
+  it("the plan, Still coming?, how it was and the motive go through, with the session from the cookie", async () => {
+    const calls = db(() => ({ body: { ok: true } }));
+    for (const name of ["volunteer_plan", "volunteer_coming", "volunteer_feedback", "volunteer_motive"]) {
+      expect(RPCS.has(name), name).toBe(true);
+      expect((await handle(post(`/api/rpc/${name}`, {}), env)).status, name).toBe(401);
+    }
+    expect(calls).toHaveLength(0);
+    await handle(post("/api/rpc/volunteer_coming", { p_session: "s", p_yes: false, p_reason: "travel", p_id: "x" }, { cookie: COOKIE }), env);
+    expect(calls[0]).toEqual({ name: "volunteer_coming", args: { p_session: "s", p_yes: false, p_reason: "travel", p_id: "c123", p_token: "tokentokentokentoken" } });
+  });
+  it("an opportunity for women or men only is a refusal of its own, and a function the database lacks says so", async () => {
+    db(() => ({ status: 400, body: { message: "VOL_GENDER", code: "P0001" } }));
+    const r = await handle(post("/api/rpc/volunteer_interest", { p_session: "s" }, { cookie: COOKIE }), env);
+    expect(r.status).toBe(409);
+    expect(await r.json()).toEqual({ error: "VOL_GENDER" });
+    db(() => ({ status: 404, body: { code: "PGRST202", message: "Could not find the function public.volunteer_coming" } }));
+    const old = await handle(post("/api/rpc/volunteer_coming", { p_session: "s" }, { cookie: COOKIE }), env);
+    expect(old.status).toBe(501);
+    expect(await old.json()).toEqual({ error: "NOT_BUILT" });
+  });
+
+  const shift = { id: "2099-11-05-bd", title: null, ride_kind: "blood", event_kind: "community", date: "2099-11-05", time: "17:00 - 23:00", starts_at: "2099-11-05T17:00:00+03:00",
+    ends_at: null, location: "JCC", meet_point: "Gate 3", role: "Guide", contact_name: "Ahmad", contact_phone: "+966500000010", status: "accepted", cancelled: false };
+  const get = (path: string, headers: Record<string, string> = {}) => new Request(`${ORIGIN}${path}`, { headers });
+  it("the calendar file is the volunteer's own shift, from volunteer_me, as text/calendar with two reminders", async () => {
+    const calls = db(() => ({ body: { id: "c123", mine: [shift, { ...shift, id: "2099-12-01", status: "interested" }] } }));
+    const r = await handle(get("/cal/2099-11-05-bd.ics?name=%D8%AA%D8%A8%D8%B1%D8%B9", { cookie: COOKIE }), env);
+    expect(r.status).toBe(200);
+    expect(r.headers.get("content-type")).toBe("text/calendar; charset=utf-8");
+    expect(r.headers.get("content-disposition")).toContain("micromobility-volunteer-2099-11-05-bd.ics");
+    expect(r.headers.get("cache-control")).toBe("no-store");
+    const ics = await r.text();
+    expect(ics).toContain("SUMMARY:تبرع");
+    expect(ics).toContain("DTSTART:20991105T140000Z");
+    expect(ics).toContain("LOCATION:Gate 3");
+    expect(ics).toContain("TRIGGER:-P1D");
+    expect(ics).toContain("TRIGGER:-PT2H");
+    expect(calls).toEqual([{ name: "volunteer_me", args: { p_id: "c123", p_token: "tokentokentokentoken" } }]);
+    // an offer not yet accepted has no file, and signed out it is the sign-in
+    expect((await handle(get("/cal/2099-12-01.ics", { cookie: COOKIE }), env)).status).toBe(404);
+    const out = await handle(get("/cal/2099-11-05-bd.ics"), env);
+    expect(out.status).toBe(302);
+    expect(out.headers.get("location")).toBe(`${ORIGIN}/#o/2099-11-05-bd`);
+  });
+  it("without a name asked for, the file has the event's English name; a bad address is not a calendar", async () => {
+    db(() => ({ body: { id: "c123", mine: [shift] } }));
+    expect(await (await handle(get("/cal/2099-11-05-bd.ics", { cookie: COOKIE }), env)).text()).toContain("SUMMARY:MicroMobility Blood Donation");
+    const assets: Env = { ...env, ASSETS: { fetch: async () => new Response("nope", { status: 404 }) } };
+    expect((await handle(get("/cal/../x.ics", { cookie: COOKIE }), assets)).status).toBe(404);
+  });
+  it("files named by their content are kept a year; the page and the service worker are checked every time", async () => {
+    const assets: Env = { ...env, ASSETS: { fetch: async () => new Response("x", { status: 200, headers: { "cache-control": "public, max-age=0, must-revalidate" } }) } };
+    for (const p of ["/app-7ZY4QU7D.js", "/app-c6a0667d42.css", "/chunks/qrcode-STQSHRD3.js"]) {
+      expect((await handle(get(p), assets)).headers.get("cache-control"), p).toBe("public, max-age=31536000, immutable");
+    }
+    for (const p of ["/", "/sw.js"]) expect((await handle(get(p), assets)).headers.get("cache-control"), p).toBe("no-cache");
+    expect((await handle(get("/lang/ar.json"), assets)).headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+  });
+});

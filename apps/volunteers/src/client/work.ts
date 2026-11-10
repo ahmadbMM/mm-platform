@@ -4,6 +4,10 @@
 // number, a mobile or a ticket asks volunteer_find), and the rows, each with one main button and a menu for the rest.
 // What a volunteer may see and do is the session's caps, decided by the database as before.
 //
+// Search first (the blood drive, 2026-11-05: 158 searches to 13 scans): the search box is as big as Scan and keeps its
+// text after a check-in; a scan that finds someone makes a short sound (an iPhone cannot buzz), and the torch is offered
+// where the camera has one. The floating tab bar is hidden here (main.ts), so a stray tap never ends the camera.
+//
 // Online only (the owner, 2026-11-09): nothing is kept on the phone. A mark that does not reach the database stays on
 // its row as "Not sent", in this page's memory only, and is sent again by itself when the connection is back.
 
@@ -12,9 +16,9 @@ import { append, clear, h } from "./dom";
 import { currentLang, sessionName, t, timeLabel, whenLabel, type Key } from "./i18n";
 import { icon } from "./icons";
 import { parseTicket, startScanner, type Scanner } from "./scan";
-import { go, load, lost, myShift, reloadMe, render, route, S, say, setNote, unsent, type Mine } from "./state";
-import { briefTick } from "./home";
-import { button, chip, dialog, iconButton, link, note } from "./ui";
+import { go, load, lost, myShift, noteErr, reloadMe, render, route, S, say, setNote, setQuiet, unsent, type Mine } from "./state";
+import { briefTick } from "./shift";
+import { button, chip, dialog, iconButton, link, note, skeleton, telLink } from "./ui";
 
 type Booking = { id: string; name: string; number: number | null; checked_in: boolean; donated: boolean; visitor?: boolean; own: boolean; desk: string | null;
   mine_in: boolean; mine_donated: boolean; phone?: string | null; status?: string; bike?: string | null; size?: string | null; height?: string | null;
@@ -93,7 +97,7 @@ export function viewWork(main: HTMLElement, id: string, team = false): void {
   }
   if (!S.me!.agreed) { viewAgree(main); return; }
   if (!work || work.id !== id) {
-    append(main, backHome(), note(t("loading")));
+    append(main, backHome(), skeleton(2, t("loading")));
     void enterWork(id);
     return;
   }
@@ -103,7 +107,7 @@ export function viewWork(main: HTMLElement, id: string, team = false): void {
 const backHome = () => h("a", { class: "backlink", href: "#me" }, icon("back", 18, true), h("span", {}, t("navHome")));
 
 function viewAgree(main: HTMLElement): void {
-  const go2 = button(t("vdAgreeBtn"), () => void agree(), "primary", agreeTick ? {} : { disabled: "" });
+  const go2 = button(t("vdAgreeBtn"), () => agree(), "primary", agreeTick ? {} : { disabled: "" });
   const tick = h("input", { type: "checkbox", id: "agree-tick", checked: agreeTick, onchange: ((e: Event) => { agreeTick = (e.target as HTMLInputElement).checked; go2.disabled = !agreeTick; }) as EventListener });
   append(main, backHome(), h("h1", {}, t("vdAgreeTitle")),
     h("section", { class: "card form" },
@@ -113,14 +117,14 @@ function viewAgree(main: HTMLElement): void {
 }
 async function agree(): Promise<void> {
   const r = await rpc("volunteer_agree");
-  if (!r.ok) { setNote(say(r)); render(); return; }
+  if (!r.ok) { noteErr(r); render(); return; }
   await reloadMe();
   render();
 }
 
 async function enterWork(id: string): Promise<void> {
   const r = await rpc<Entered>("volunteer_enter", { p_session: id });
-  if (!r.ok) { setNote(say(r)); await reloadMe(); go("#me"); return; }
+  if (!r.ok) { noteErr(r); await reloadMe(); go("#me"); return; }
   work = { id, ent: r.data, found: [], list: null, q: "", show: "all", sort: "number", msg: "", scanning: false, team: null, teamMsg: "" };
   armTick();
   render();
@@ -149,18 +153,19 @@ async function tick(): Promise<void> {
 }
 
 /** Leaving the page by itself: the cut-off, or the database saying it is no longer theirs. */
-export function leaveWork(text: string): void {
+export function leaveWork(text: string, quiet = false): void {
   window.clearTimeout(timer);
   stopScan();
   pending.clear();
   work = null;
-  setNote(text);
+  if (quiet) setQuiet(text); else setNote(text);
   go("#me");
 }
 /** The page is left for another: the camera goes off. */
 export function stopScan(): void {
   if (scanner) { scanner.stop(); scanner = null; }
   scanBox = null;
+  torchOn = false;
   if (work) work.scanning = false;
 }
 /** Forgets the work page altogether, its marks not sent and its timers too: signing out, or signing in, on a phone
@@ -185,9 +190,11 @@ function workPage(main: HTMLElement, sh: Mine | null): void {
   const q = h("input", { id: "w-q", type: "search", enterkeyhint: "search", autocomplete: "off", maxlength: 40, value: w.q,
     placeholder: t(w.ent.caps.list ? "workSearchPhList" : "workSearchPh"), "aria-label": t(w.ent.caps.list ? "workSearchPhList" : "workSearchPh"),
     oninput: ((e: Event) => { w.q = (e.target as HTMLInputElement).value; paintList(); }) as EventListener });
-  const form = h("form", { class: "find", role: "search", onsubmit: ((e: Event) => { e.preventDefault(); void search(q.value); }) as EventListener },
-    h("span", { class: "find-ic" }, icon("search", 20)), q, h("button", { type: "submit", class: "btn btn-secondary", id: "w-find" }, h("span", {}, t("volFindBtn"))));
-  append(main, backHome(), head, brief, scanHost, form,
+  const findBtn = h("button", { type: "submit", class: "btn btn-secondary", id: "w-find" }, h("span", {}, t("volFindBtn")));
+  const form: HTMLFormElement = h("form", { class: "find", role: "search", onsubmit: ((e: Event) => { e.preventDefault(); if (!findBtn.disabled) void busyFind(findBtn, search(q.value)); }) as EventListener },
+    h("span", { class: "find-ic" }, icon("search", 22)), q, findBtn);
+  // the search as big as Scan, and first: it is what the desk uses most
+  append(main, backHome(), head, brief, h("div", { class: "desk" }, form, scanHost),
     h("p", { class: "msg", id: "w-msg", role: "status" }),
     h("div", { class: "rows", id: "w-found" }),
     w.ent.caps.list ? listPanel(sh) : null);
@@ -230,8 +237,8 @@ function headParts(blood: boolean): Node[] {
   else if (e.clock_in && !e.clock_out) {
     chips.appendChild(chip(t("vdArrivedAt", timeLabel(e.clock_in)), "on", "tick"));
     out.push(chips);
-    if (e.hours_mode !== "none") out.push(button(t("vdFinish"), () => void finish(), "secondary", { id: "w-finish" }));
-  } else out.push(chips, button(t("vdArrive"), () => void arrive(), "primary", { id: "w-arrive" }, "tick"));
+    if (e.hours_mode !== "none") out.push(button(t("vdFinish"), () => finish(), "secondary", { id: "w-finish" }));
+  } else out.push(chips, button(t("vdArrive"), () => arrive(), "primary", { id: "w-arrive" }, "tick"));
   return out;
 }
 
@@ -248,7 +255,7 @@ async function finish(): Promise<void> {
   const w = work; if (!w) return;
   const box = dialog(t("finishQ"), [], [
     button(t("donatedNotYet"), () => box.close(), "secondary"),
-    button(t("vdFinish"), () => { box.close(); void doFinish(); }, "primary"),
+    button(t("vdFinish"), async () => { await doFinish(); if (box.open) box.close(); }, "primary"),
   ]);
 }
 async function doFinish(): Promise<void> {
@@ -265,30 +272,77 @@ async function doFinish(): Promise<void> {
   const r = await rpc("volunteer_clock_out", { p_session: w.id });
   if (!r.ok) { w.msg = say(r); paint(); return; }
   await reloadMe();
-  leaveWork(t("vdFinished"));
+  leaveWork(t("vdFinished"), true);
+}
+
+/** Find, busy while the database looks (the search box keeps its text). */
+async function busyFind(b: HTMLButtonElement, p: Promise<void>): Promise<void> {
+  b.disabled = true; b.classList.add("is-busy"); b.setAttribute("aria-busy", "true");
+  try { await p; } finally { b.disabled = false; b.classList.remove("is-busy"); b.removeAttribute("aria-busy"); }
+}
+
+// ── a short sound when a scan finds someone: web vibration does not exist on an iPhone. The sound is set up on the
+// Scan tap itself (a page may only start sound from a tap), and is a soft tone, never a voice. ──
+type Ctx = AudioContext;
+let audio: Ctx | null = null;
+function soundReady(): void {
+  try {
+    const A = window.AudioContext ?? (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!A) return;
+    audio ??= new A();
+    void audio.resume().catch(() => undefined);
+  } catch { audio = null; }
+}
+function beep(): void {
+  if (!audio) return;
+  try {
+    const at = audio.currentTime, osc = audio.createOscillator(), gain = audio.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, at);
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(0.18, at + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.12);
+    osc.connect(gain).connect(audio.destination);
+    osc.start(at);
+    osc.stop(at + 0.13);
+  } catch { /* no sound: the row still comes up */ }
 }
 
 // ── Scan: the camera stays on, and every ticket it reads comes up at the top ──
+let torchOn = false;
 function paintScan(): void {
   const host = document.getElementById("w-scan"), w = work;
   if (!host || !w) return;
   clear(host);
   if (!w.scanning) {
-    host.appendChild(button(t("scanTickets"), () => { w.scanning = true; paintScan(); }, "primary", { id: "w-scan-btn", class: "btn btn-primary btn-big" }, "scan"));
+    host.appendChild(button(t("scanTickets"), () => { soundReady(); w.scanning = true; paintScan(); }, "secondary", { id: "w-scan-btn", class: "btn btn-secondary btn-big" }, "scan"));
     return;
   }
   if (!scanBox) {
     const video = h("video", { playsinline: true, muted: true, class: "scan-video" });
     let last = "", lastAt = 0;
-    scanBox = h("div", { class: "scan", id: "w-camera" }, video, h("span", { class: "scan-frame", "aria-hidden": "true" }),
+    const tools = h("div", { class: "scan-tools", id: "w-scan-tools" },
       button(t("scanStop"), () => { stopScan(); paintScan(); }, "secondary", { id: "w-scan-stop" }, "close"));
+    scanBox = h("div", { class: "scan", id: "w-camera" }, video, h("span", { class: "scan-frame", "aria-hidden": "true" }), tools);
     void startScanner(video, (txt) => {
       const now = Date.now();
       if (txt === last && now - lastAt < 2500) return;
       last = txt; lastAt = now;
       void scanned(txt);
     }, () => { stopScan(); if (work) work.msg = t("scanNoCamera"); paintScan(); paint(); })
-      .then((sc) => { if (work?.scanning && scanBox) scanner = sc; else sc.stop(); });
+      .then((sc) => {
+        if (!(work?.scanning && scanBox)) { sc.stop(); return; }
+        scanner = sc;
+        // the torch, only where the camera says it has one
+        if (sc.torch) {
+          const tb: HTMLButtonElement = button(t("torch"), async () => {
+            const want = !torchOn;
+            if (await sc.torch?.(want)) torchOn = want;
+            tb.setAttribute("aria-pressed", torchOn ? "true" : "false");
+          }, "secondary", { id: "w-torch", "aria-pressed": "false" }, "torch");
+          tools.appendChild(tb);
+        }
+      });
   }
   host.appendChild(scanBox);
   const v = scanBox.querySelector("video");
@@ -299,7 +353,8 @@ async function scanned(txt: string): Promise<void> {
   const w = work; if (!w) return;
   const p = parseTicket(txt);
   if (!p) { w.msg = t("volNotFound"); paint(); return; }
-  await find({ p_ref: p.ref, p_ref_num: p.num }, true);
+  const hit = await find({ p_ref: p.ref, p_ref_num: p.num }, true);
+  if (hit) beep();
   try { navigator.vibrate?.(40); } catch { /* no buzz */ }
 }
 
@@ -318,16 +373,17 @@ async function search(raw: string): Promise<void> {
   }
   await find(args, false);
 }
-async function find(args: Record<string, unknown>, add: boolean): Promise<void> {
-  const w = work; if (!w) return;
+async function find(args: Record<string, unknown>, add: boolean): Promise<boolean> {
+  const w = work; if (!w) return false;
   const r = await rpc<Booking[]>("volunteer_find", { p_session: w.id, ...args });
-  if (!r.ok) { if (lost(r.code)) { await load(); leaveWork(say(r)); return; } w.msg = say(r); paint(); return; }
+  if (!r.ok) { if (lost(r.code)) { await load(); leaveWork(say(r)); return false; } w.msg = say(r); paint(); return false; }
   const hits = Array.isArray(r.data) ? r.data : [];
   for (const b of hits) overlay(b);
   // A scan adds its booking at the top and keeps the ones before it; a search shows what it found.
   w.found = add ? [...hits, ...w.found.filter((x) => !hits.some((y) => y.id === x.id))].slice(0, 8) : hits;
   w.msg = hits.length ? "" : t("volNotFound");
   paint();
+  return hits.length > 0;
 }
 async function loadList(): Promise<void> {
   const w = work; if (!w) return;
@@ -373,7 +429,7 @@ function listPanel(sh: Mine | null): HTMLElement {
     h("label", { class: "list-pick", for: id }, h("span", {}, label), h("select", { id, onchange: ((ev: Event) => { onchange((ev.target as HTMLSelectElement).value); paintList(); }) as EventListener }, ...opts));
   return h("section", { class: "list-panel", "aria-labelledby": "w-list-h" },
     h("div", { class: "list-head" }, h("h2", { class: "sec", id: "w-list-h" }, t("vdPanelTitle")), h("span", { class: "list-n", id: "w-list-n" }),
-      iconButton("again", t("vdRefresh"), () => void loadList(), { id: "w-refresh" })),
+      iconButton("again", t("vdRefresh"), () => loadList(), { id: "w-refresh" })),
     h("div", { class: "list-tools" },
       pick("w-show", t("vdFilter"), (v) => { w.show = v; },
         opt("all", t("vdFilterAll"), w.show), opt("out", t("volStOut"), w.show), opt("in", t("volStIn"), w.show), opt("desk", t("vdFilterDesk"), w.show),
@@ -416,19 +472,19 @@ function paintList(): void {
 }
 
 // ── one booking: one main button, the rest in a menu ──
-type Act = { label: string; run: () => void; main?: boolean };
+type Act = { label: string; run: () => void | Promise<unknown>; main?: boolean };
 function actionsOf(r: Booking, blood: boolean): Act[] {
   const e = work!.ent, vis = blood && r.visitor === true, acts: Act[] = [];
   if (r.own) return acts;
   // Donor or visitor (the booking app's blood_role, 20261105140000): a visitor has nothing to mark, so the free ride
   // stays with donors; one tap switches them until the donation is marked (the database refuses it then too).
-  if (!r.checked_in) { if (!r.desk && e.caps.checkin) acts.push({ label: t("checkIn"), run: () => void mark("in", r, true), main: true }); }
-  else if (blood && r.donated) { if (r.mine_donated && e.caps.undo) acts.push({ label: t("volUndoDonated"), run: () => void mark("do", r, false) }); }
+  if (!r.checked_in) { if (!r.desk && e.caps.checkin) acts.push({ label: t("checkIn"), run: () => mark("in", r, true), main: true }); }
+  else if (blood && r.donated) { if (r.mine_donated && e.caps.undo) acts.push({ label: t("volUndoDonated"), run: () => mark("do", r, false) }); }
   else {
     if (blood && !vis && e.caps.donated) acts.push({ label: t("markDonated"), run: () => askDonated(r), main: true });
-    if (r.mine_in && e.caps.undo) acts.push({ label: t("undoCheckIn"), run: () => void mark("in", r, false) });
+    if (r.mine_in && e.caps.undo) acts.push({ label: t("undoCheckIn"), run: () => mark("in", r, false) });
   }
-  if (blood && !r.donated && e.caps.checkin && (r.checked_in || !r.desk)) acts.push({ label: t(vis ? "makeDonor" : "makeVisitor"), run: () => void setRole(r, vis ? "donor" : "visitor") });
+  if (blood && !r.donated && e.caps.checkin && (r.checked_in || !r.desk)) acts.push({ label: t(vis ? "makeDonor" : "makeVisitor"), run: () => setRole(r, vis ? "donor" : "visitor") });
   return acts;
 }
 function row(r: Booking, blood: boolean): HTMLElement {
@@ -444,7 +500,7 @@ function row(r: Booking, blood: boolean): HTMLElement {
     h("div", { class: "row-who" },
       h("p", { class: "name" }, r.name, r.number != null ? h("span", { class: "num" }, ` #${r.number}`) : null),
       details.length ? h("p", { class: "meta row-details" }, details.join(" · ")) : null,
-      e.caps.phone && r.phone ? h("a", { class: "tel", dir: "ltr", href: `tel:${r.phone.replace(/[^\d+]/g, "")}`, "aria-label": t("vdCall", r.name) }, r.phone) : null,
+      e.caps.phone && r.phone ? telLink(r.phone, t("vdCall", r.name)) : null,
       h("div", { class: "chips" },
         blood ? h("span", { class: `chip ${vis ? "chip-visitor" : "chip-donor"}` }, t(vis ? "roleVisitor" : "roleDonor")) : null,
         chip(t(r.checked_in ? "volStIn" : "volStOut"), r.checked_in ? "on" : ""),
@@ -453,7 +509,7 @@ function row(r: Booking, blood: boolean): HTMLElement {
         waiting ? chip(t("notSent"), "warn", "again") : null),
       r.own ? h("p", { class: "warn" }, t("vdOwn")) : !r.checked_in && r.desk ? h("p", { class: "warn" }, t(deskKey[r.desk] ?? "vdDeskAsk")) : null),
     main || rest.length ? h("div", { class: "row-acts" },
-      main ? button(main.label, main.run, "primary", { class: "btn btn-primary row-main" }) : null,
+      main ? button(main.label, main.run, "soft", { class: "btn btn-soft row-main" }) : null,
       rest.length ? iconButton("more", t("moreFor", r.name), () => menu(r.name, rest), { class: "btn btn-icon row-more" }) : null) : null);
 }
 /** The rest of a row's actions, in a centred menu that names the person. */
@@ -549,10 +605,10 @@ function mateRow(m: Mate): HTMLElement {
   if (isPending(`team:${m.shift}`)) return mateRowWith(m, [{ label: t("notSentCancel"), run: () => cancel(`team:${m.shift}`) }]);
   const acts: Act[] = [];
   if (!m.me) {
-    if (onDuty(m)) acts.push({ label: t("teamCheckOut"), run: () => void clock(m, "out"), main: true });
-    else if (!(m.clock_out && m.clock_out_by === "staff")) acts.push({ label: t("checkIn"), run: () => void clock(m, "in"), main: true });
-    if (m.clock_in_by === "lead" && !m.clock_out) acts.push({ label: t("undoCheckIn"), run: () => void clock(m, "undo_in") });
-    if (m.clock_out_by === "lead") acts.push({ label: t("teamUndoOut"), run: () => void clock(m, "undo_out") });
+    if (onDuty(m)) acts.push({ label: t("teamCheckOut"), run: () => clock(m, "out"), main: true });
+    else if (!(m.clock_out && m.clock_out_by === "staff")) acts.push({ label: t("checkIn"), run: () => clock(m, "in"), main: true });
+    if (m.clock_in_by === "lead" && !m.clock_out) acts.push({ label: t("undoCheckIn"), run: () => clock(m, "undo_in") });
+    if (m.clock_out_by === "lead") acts.push({ label: t("teamUndoOut"), run: () => clock(m, "undo_out") });
   }
   return mateRowWith(m, acts);
 }
@@ -567,7 +623,7 @@ function mateRowWith(m: Mate, acts: Act[]): HTMLElement {
       h("div", { class: "chips" }, state, m.role ? chip(m.role) : null, m.lead ? chip(t("leadMark"), "lead", "flag") : null, m.briefed ? chip(t("briefDone"), "", "doc") : null,
         unsentNow ? chip(t("notSent"), "warn", "again") : null)),
     main || rest.length ? h("div", { class: "row-acts" },
-      main ? button(main.label, main.run, out ? "secondary" : "primary", { class: `btn btn-${out ? "secondary" : "primary"} row-main` }) : null,
+      main ? button(main.label, main.run, out ? "secondary" : "soft", { class: `btn btn-${out ? "secondary" : "soft"} row-main` }) : null,
       rest.length ? iconButton("more", t("moreFor", m.name), () => menu(m.name, rest), { class: "btn btn-icon row-more" }) : null) : null);
 }
 function teamApply(m: Mate, action: string): void {

@@ -47,6 +47,9 @@ importers:
       '@mm/design-tokens':
         specifier: workspace:*
         version: link:../../packages/design-tokens
+      qrcode-generator:
+        specifier: 1.5.2
+        version: 1.5.2
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.4
