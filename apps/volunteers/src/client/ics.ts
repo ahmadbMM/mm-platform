@@ -1,7 +1,8 @@
 // "Add to calendar": a calendar file made on the phone and handed to it, nothing sent anywhere. Riyadh keeps one
 // offset all year (UTC+3), so a session's local times turn into UTC by taking three hours off.
 
-export type CalEvent = { id: string; title: string; date: string; time: string | null; starts_at?: string | null; location: string | null; note?: string };
+// gathers: the session's times are "gather - start" (i18n gathers()), not "start - end".
+export type CalEvent = { id: string; title: string; date: string; time: string | null; starts_at?: string | null; location: string | null; note?: string; gathers?: boolean };
 
 const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/\r?\n/g, "\\n").replace(/([,;])/g, "\\$1");
 const stamp = (d: Date) => d.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
@@ -20,6 +21,9 @@ export function icsText(e: CalEvent, now = new Date()): string {
   let start = a ? at(ymd, a) : null;
   if (e.starts_at && Number.isFinite(Date.parse(e.starts_at))) start = new Date(e.starts_at);
   let end = start && b ? at(ymd, b) : null;
+  // A ride that gathers keeps "gather - start": its second time is when it sets off, and the event ended right there,
+  // leaving the volunteer free for the rest of the shift. It ends two hours after it, as the booking app's file does.
+  if (end && e.gathers) end = new Date(end.getTime() + 2 * 3600000);
   if (start && end && end <= start) end = new Date(end.getTime() + 86400000); // past midnight
   if (start && !end) end = new Date(start.getTime() + 3 * 3600000);
   const lines = [

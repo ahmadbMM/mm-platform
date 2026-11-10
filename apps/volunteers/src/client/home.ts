@@ -5,7 +5,7 @@
 import { rpc } from "./api";
 import { eventsWorked, getCert } from "./certs";
 import { append, h } from "./dom";
-import { dayLabel, hoursN, ksaToday, sessionName, t, timeLabel, timesLabel, type Key } from "./i18n";
+import { dayLabel, gathers, hoursN, ksaToday, sessionName, t, timeLabel, timesLabel, type Key } from "./i18n";
 import { downloadIcs } from "./ics";
 import { icon } from "./icons";
 import { render, S, say, setNote, standing, type Mine } from "./state";
@@ -23,11 +23,11 @@ function greeting(name: string): string {
 
 export const mapsLink = (place: string) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place)}`;
 
-/** Upcoming: accepted, not finished, its window not closed; the soonest first. */
+/** Upcoming: accepted, not finished, its window not closed, not called off; the soonest first. */
 export function upcoming(): Mine[] {
   const now = Date.now(), today = ksaToday();
   return (S.me?.mine ?? [])
-    .filter((x) => x.status === "accepted" && !x.clock_out && Date.parse(x.closes_at) > now && String(x.date).slice(0, 10) >= today)
+    .filter((x) => x.status === "accepted" && !x.cancelled && !x.clock_out && Date.parse(x.closes_at) > now && String(x.date).slice(0, 10) >= today)
     .sort((a, b) => String(a.date).localeCompare(String(b.date)));
 }
 
@@ -50,7 +50,7 @@ function nextCard(x: Mine): HTMLElement {
   const acts: HTMLElement[] = [];
   if (x.can_work) acts.push(link(t("startWork"), `#work/${encodeURIComponent(x.id)}`, "primary", "go"));
   if (x.location) acts.push(link(t("directions"), mapsLink(x.location), "secondary", "pin", { target: "_blank", rel: "noopener" }));
-  acts.push(button(t("addToCal"), () => downloadIcs({ id: x.id, title: sessionName(x), date: x.date, time: x.time, starts_at: x.starts_at, location: x.location, note: x.role ?? undefined }), "secondary", { id: "next-cal" }, "cal"));
+  acts.push(button(t("addToCal"), () => downloadIcs({ id: x.id, title: sessionName(x), date: x.date, time: x.time, starts_at: x.starts_at, location: x.location, note: x.role ?? undefined, gathers: gathers(x) }), "secondary", { id: "next-cal" }, "cal"));
   return h("section", { class: "card next", id: "next-shift", "aria-labelledby": "next-h" },
     h("div", { class: "next-top" }, dateBlock(x.date, true),
       h("div", { class: "next-what" },
@@ -59,7 +59,7 @@ function nextCard(x: Mine): HTMLElement {
         h("div", { class: "chips" }, chip(t("stAccepted"), "on", "tick"), x.lead ? chip(t("leadMark"), "lead", "flag") : null))),
     h("div", { class: "metas" },
       metaLine("cal", dayLabel(x.date)),
-      x.time ? metaLine("clock", timesLabel(x.time)) : null,
+      x.time ? metaLine("clock", timesLabel(x.time, gathers(x))) : null,
       x.location ? metaLine("pin", x.location) : null,
       x.role ? metaLine("person", x.role) : null,
       x.clock_in ? metaLine("tick", t("vdArrivedAt", timeLabel(x.clock_in)), "meta-go") : null),
@@ -68,8 +68,9 @@ function nextCard(x: Mine): HTMLElement {
 }
 
 function shiftRow(x: Mine, past: boolean): HTMLElement {
-  const words: Record<string, Key> = { interested: "stInterested", accepted: "stAccepted", declined: "stDeclined", withdrawn: "stWithdrawn", done: "stThanks", no_show: "stNoShow", ended: "stEnded" };
-  const st = x.status === "accepted" && past ? (x.clock_in ? "done" : "accepted") : x.status;
+  const words: Record<string, Key> = { interested: "stInterested", accepted: "stAccepted", declined: "stDeclined", withdrawn: "stWithdrawn", done: "stThanks", no_show: "stNoShow", ended: "stEnded",
+    cancelled: "stCancelled" };
+  const st = x.cancelled ? "cancelled" : x.status === "accepted" && past ? (x.clock_in ? "done" : "accepted") : x.status;
   const tone = st === "accepted" || st === "done" ? "on" : st === "interested" ? "wait" : "";
   return h("a", { class: "card shift", href: `#o/${encodeURIComponent(x.id)}` },
     dateBlock(x.date),
@@ -92,7 +93,7 @@ function rewardRow(x: ReturnType<typeof eventsWorked>[number]): HTMLElement {
       h("div", { class: "code-t" }, h("span", { class: "code-k" }, t("freeRide")), h("span", { class: "code", dir: "ltr" }, r.code),
         h("span", { class: "code-sub" }, r.used ? t("codeUsed") : t("codeUseBy", dayLabel(r.expires_at)))),
       copy) : null,
-    button(t("certGet"), () => void getCert(x.id, x.label), "secondary", {}, "doc"));
+    button(t("certGet"), () => void getCert(x.id, x.initiative), "secondary", {}, "doc"));
 }
 
 export function viewHome(main: HTMLElement): void {
@@ -112,7 +113,7 @@ export function viewHome(main: HTMLElement): void {
     if (up.length > 1) append(main, sec(t("homeLater")), h("div", { class: "list" }, ...up.slice(1).map((x) => shiftRow(x, false))));
   } else if (st === "active") main.appendChild(card("cta", h("p", { class: "cta-t" }, t("homeNoShift")), link(t("meSeeOpps"), "#", "primary", "go")));
 
-  const offers = (m.mine ?? []).filter((x) => x.status === "interested" && Date.parse(x.closes_at) > Date.now());
+  const offers = (m.mine ?? []).filter((x) => x.status === "interested" && !x.cancelled && Date.parse(x.closes_at) > Date.now());
   if (offers.length) append(main, sec(t("homeOffers")), h("div", { class: "list" }, ...offers.map((x) => shiftRow(x, false))));
 
   // The hours, the events and the next hours badge.

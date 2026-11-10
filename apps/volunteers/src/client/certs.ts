@@ -10,7 +10,7 @@
 import { rpc } from "./api";
 import { stripScripts } from "./cert";
 import { append, h, uid } from "./dom";
-import { dayLabel, hoursN, ksaToday, sessionName, t } from "./i18n";
+import { dayLabel, hoursN, ksaDay, ksaToday, sessionName, sessionNameEn, t } from "./i18n";
 import { icon } from "./icons";
 import { go, render, route, S, say, setNote, type Reward } from "./state";
 import { button, card, chip, note } from "./ui";
@@ -99,7 +99,8 @@ function certView(c: Cert): Record<string, string> {
     recognition: cw.recognition || d.recognition,
     arabic_line: cw.arabic_line || d.arabic_line,
     initiative_name: sess ? (c.initiative ?? "") : certPeriod(c.from, c.to),
-    event_date: onDay(sess ? c.event_date : String(c.issued_at ?? "").slice(0, 10)),
+    // a period's certificate is dated the Riyadh day it was issued (issued_at comes in UTC: before 3 a.m. it was the day before)
+    event_date: onDay(sess ? c.event_date : ksaDay(c.issued_at)),
     hours: hours > 0 ? String(hours) : "",
     certificate_no: c.serial ?? "",
     check_code: c.code ?? "",
@@ -130,20 +131,26 @@ async function printCert(win: Window, c: Cert): Promise<void> {
 }
 
 /** The events this volunteer worked: one certificate and one free ride each. From the hours (the database refuses a
- *  certificate for an event with none) and from what each shift says it gave. */
-export type Worked = { id: string; label: string; hours: number; on: string; reward: Reward | null; serial: string | null };
+ *  certificate for an event with none) and from what each shift says it gave. label is the event's name in the page's
+ *  language; initiative, in English, is what its certificate is issued with. */
+export type Worked = { id: string; label: string; initiative: string; hours: number; on: string; reward: Reward | null; serial: string | null };
 export function eventsWorked(): Worked[] {
   const by = new Map<string, Worked>();
-  for (const r of S.me?.record ?? []) {
+  // Every event's hours where volunteer_me sends them (events); else its record, which is only the newest 30 rows, so an
+  // older event would lose its Get certificate and one cut across would lose hours.
+  const events = S.me?.events;
+  const rows: { session_id: string | null; hours: number; on: string; title: string | null; ride_kind: string | null }[] =
+    Array.isArray(events) ? events : (S.me?.record ?? []);
+  for (const r of rows) {
     if (!r.session_id || !(Number(r.hours) > 0)) continue;
-    const cur = by.get(r.session_id) ?? { id: r.session_id, label: sessionName(r), hours: 0, on: r.on, reward: null, serial: null };
+    const cur = by.get(r.session_id) ?? { id: r.session_id, label: sessionName(r), initiative: sessionNameEn(r), hours: 0, on: r.on, reward: null, serial: null };
     cur.hours += Number(r.hours) || 0;
     if (r.on < cur.on) cur.on = r.on;
     by.set(r.session_id, cur);
   }
   for (const m of S.me?.mine ?? []) {
     if (!m.reward && !m.cert) continue;
-    const cur = by.get(m.id) ?? { id: m.id, label: sessionName(m), hours: Number(m.cert?.hours) || 0, on: m.date, reward: null, serial: null };
+    const cur = by.get(m.id) ?? { id: m.id, label: sessionName(m), initiative: sessionNameEn(m), hours: Number(m.cert?.hours) || 0, on: m.date, reward: null, serial: null };
     cur.reward = m.reward ?? null;
     cur.serial = m.cert?.serial ?? null;
     by.set(m.id, cur);
@@ -151,15 +158,17 @@ export function eventsWorked(): Worked[] {
   return [...by.values()].map((x) => ({ ...x, hours: Math.round(x.hours * 100) / 100 })).sort((a, b) => b.on.localeCompare(a.on));
 }
 
+// One certificate on its way at a time: a second tap on a slow phone issued a second one (a new serial and check code).
 let busy = false;
-/** Get certificate: the one made for the event (or made now), printed. */
-export async function getCert(session: string, label: string): Promise<void> {
+/** Get certificate: the one made for the event (or made now), printed. The initiative is the event's English name
+ *  (Worked.initiative): the certificate prints in English, and a new one keeps what it was issued with for good. */
+export async function getCert(session: string, initiative: string): Promise<void> {
   if (busy) return;
   const win = openCertWin(); // on the tap, before the wait
   if (!win) { setNote(t("certOpenErr")); render(); return; }
   busy = true;
   void certTemplate().catch(() => undefined); // fetched while the database answers; printCert waits on the same one
-  const r = await rpc<Cert>("volunteer_cert_issue_session", { p_session: session, p_initiative: label });
+  const r = await rpc<Cert>("volunteer_cert_issue_session", { p_session: session, p_initiative: initiative });
   busy = false;
   if (!r.ok) { dropCertWin(win, say(r)); return; }
   if (r.data && r.data.ok) void printCert(win, r.data); else dropCertWin(win, t("certEmpty"));
@@ -172,7 +181,7 @@ export function viewCert(main: HTMLElement): void {
   main.appendChild(list.length
     ? h("div", { class: "list" }, ...list.map((x) => h("div", { class: "card ev-row" },
         h("div", { class: "ev-main" }, h("p", { class: "ev-name" }, x.label), h("p", { class: "meta" }, `${dayLabel(x.on)} · ${hoursN(x.hours)}`)),
-        button(t("certGet"), () => void getCert(x.id, x.label), "secondary", {}, "doc"))))
+        button(t("certGet"), () => void getCert(x.id, x.initiative), "secondary", {}, "doc"))))
     : note(t("certNoEvents")));
   if (!S.prof) return; // a database without the profile (20261107131000) makes no certificate for other dates
   if (!showOther) { main.appendChild(h("div", { class: "row-end" }, button(t("certOther"), () => { showOther = true; render(); }, "quiet", { id: "cert-other" }))); return; }
@@ -195,11 +204,14 @@ export function viewCert(main: HTMLElement): void {
     button(t("certMake"), () => void makeCert(span.value === "day" ? to.value : from.value, to.value), "primary")));
 }
 async function makeCert(from: string, to: string): Promise<void> {
+  if (busy) return; // each call issues a new certificate: a double tap made two
   if (!from || !to || to < from) { setNote(t("errBadDates")); render(); return; }
   const win = openCertWin(); // on the tap, before the wait
   if (!win) { setNote(t("certOpenErr")); render(); return; }
+  busy = true;
   void certTemplate().catch(() => undefined);
   const r = await rpc<Cert>("volunteer_cert_issue", { p_from: from, p_to: to });
+  busy = false;
   if (!r.ok) { dropCertWin(win, r.status === 400 && r.code === "BAD_INPUT" ? t("errBadDates") : say(r)); return; }
   if (r.data && r.data.ok) void printCert(win, r.data); else dropCertWin(win, t("certEmpty"));
 }
@@ -230,13 +242,17 @@ export function viewCheck(main: HTMLElement, code: string): void {
   }
   const c = C.res;
   if (!c.ok) { main.appendChild(note(t("checkNone"), "alert", "bad")); return; }
+  // One event, as the printed certificate has it (certView): staff's own certificate for an initiative (custom) too.
+  const sess = c.kind === "session" || c.kind === "custom";
+  const hours = +(c.hours ?? 0);
   main.appendChild(h("section", { class: `card check-res${c.revoked ? " check-bad" : ""}`, id: "check-res" },
     h("p", { class: "check-state" }, icon(c.revoked ? "close" : "tick", 20), h("span", {}, t(c.revoked ? "checkRevoked" : "checkValid"))),
     h("h2", { class: "check-name" }, c.name ?? ""),
-    h("p", { class: "big-n" }, h("b", {}, String(+(c.hours ?? 0))), h("span", {}, t("homeHours"))),
+    // no hours, none said: the printed certificate leaves them out too
+    hours > 0 ? h("p", { class: "big-n" }, h("b", {}, String(hours)), h("span", {}, t("homeHours"))) : null,
     // A certificate for one event names it and the day it was held; one for a period, its period.
-    h("p", { class: "meta" }, c.kind === "session" ? `${c.initiative ?? ""} · ${dayLabel(c.event_date ?? c.from)}` : t("checkPeriod", dayLabel(c.from), dayLabel(c.to))),
+    h("p", { class: "meta" }, sess ? `${c.initiative ?? ""} · ${dayLabel(c.event_date ?? c.from)}` : t("checkPeriod", dayLabel(c.from), dayLabel(c.to))),
     // each event, its day, then the hours with their word: a bare number read as anything but hours (the owner, 2026-11-09)
     c.sessions?.length ? h("ul", { class: "rec" }, ...c.sessions.map((x) => h("li", {}, `${sessionName(x)} · ${dayLabel(x.date)} · `, h("b", {}, hoursN(x.hours))))) : null,
-    h("div", { class: "chips" }, chip(h("span", { dir: "ltr" }, c.serial ?? "")), chip(t("checkIssued", dayLabel((c.issued_at ?? "").slice(0, 10)))))));
+    h("div", { class: "chips" }, chip(h("span", { dir: "ltr" }, c.serial ?? "")), chip(t("checkIssued", dayLabel(ksaDay(c.issued_at)))))));
 }

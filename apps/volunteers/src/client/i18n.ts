@@ -117,6 +117,15 @@ export function timeLabel(at: string | null | undefined): string {
 /** Today in Riyadh, YYYY-MM-DD. */
 export const ksaToday = (): string => new Date(Date.now() + 3 * 3600000).toISOString().slice(0, 10);
 
+/** The Riyadh day (YYYY-MM-DD) of a moment the database wrote, such as a certificate's issued_at. The database writes
+ *  it in UTC, so its first ten characters are the day before for anything between midnight and 3 a.m. in Riyadh.
+ *  Built from the moment itself, never from a locale's date format (an iPhone gave en-CA as 10/27/2026). */
+export function ksaDay(at: string | null | undefined): string {
+  const raw = String(at ?? "");
+  const ms = Date.parse(raw.replace(/(\.\d{3})\d+/, "$1")); // microseconds, which not every browser reads
+  return Number.isFinite(ms) ? new Date(ms + 3 * 3600000).toISOString().slice(0, 10) : raw.slice(0, 10);
+}
+
 /** A moment, as a day and a time in Riyadh. */
 export function whenLabel(at: string | null | undefined): string {
   const ms = at ? Date.parse(at) : NaN;
@@ -128,9 +137,20 @@ export function whenLabel(at: string | null | undefined): string {
   }
 }
 
-/** A session's times as staff typed them ("17:00 - 23:00"), each in this language's clock. */
-export function timesLabel(raw: string | null | undefined): string {
-  return String(raw ?? "").split(/\s*[-–]\s*/).filter(Boolean).map((p) => {
+/** Does a session keep its times as "gather - start" rather than "start - end"? The booking app's _gathersTime: the
+ *  Saturday ride (and any community kind it does not name), the National Day ride, Run for Her and Victory Lap gather,
+ *  and their second time is when they set off, not when they end. */
+export function gathers(s: { ride_kind?: string | null; event_kind?: string | null }): boolean {
+  const kind = s.ride_kind ?? "";
+  if (kind === "snd96") return true;
+  if (s.event_kind !== "community") return false; // the circuit's own nights: a window
+  return !["event", "petromin", "swim", "workshop", "arena", "defe5k", "blood"].includes(kind);
+}
+
+/** A session's times as staff typed them ("17:00 - 23:00"), each in this language's clock. A session that gathers
+ *  (gathers()) says which is the gathering and which the start: read as a range, its shift ended as it began. */
+export function timesLabel(raw: string | null | undefined, gather = false): string {
+  const parts = String(raw ?? "").split(/\s*[-–]\s*/).filter(Boolean).map((p) => {
     const m = /^(\d{1,2}):(\d{2})$/.exec(p.trim());
     if (!m) return p.trim();
     try {
@@ -138,14 +158,23 @@ export function timesLabel(raw: string | null | undefined): string {
     } catch {
       return p.trim();
     }
-  }).join(" – ");
+  });
+  return gather && parts.length === 2 ? t("timesGather", parts[0], parts[1]) : parts.join(" – ");
 }
 
+const KIND_NAMES: Record<string, Key> = { saturday: "evSatName", petromin: "evPetroName", swim: "evSwimName", workshop: "evWorkshopName", snd96: "evSnd96Name",
+  event: "evEventName", runher: "evRunHerName", vlap: "evVlapName", arena: "evArenaName", defe5k: "evDefeName", blood: "evBloodName" };
+function nameIn(s: { title?: string | null; ride_kind?: string | null }, word: (k: Key) => string): string {
+  const kind = s.ride_kind ?? "";
+  if (!Object.prototype.hasOwnProperty.call(KIND_NAMES, kind)) return word("evJccName");
+  return s.title || word(KIND_NAMES[kind]);
+}
 /** A session's name: its own title, or its kind's name (the booking app's _evName). */
 export function sessionName(s: { title?: string | null; ride_kind?: string | null }): string {
-  const names: Record<string, Key> = { saturday: "evSatName", petromin: "evPetroName", swim: "evSwimName", workshop: "evWorkshopName", snd96: "evSnd96Name",
-    event: "evEventName", runher: "evRunHerName", vlap: "evVlapName", arena: "evArenaName", defe5k: "evDefeName", blood: "evBloodName" };
-  const kind = s.ride_kind ?? "";
-  if (!Object.prototype.hasOwnProperty.call(names, kind)) return t("evJccName");
-  return s.title || t(names[kind]);
+  return nameIn(s, (k) => t(k));
+}
+/** The same name in English, whatever language the page is in: what a certificate is issued with. The certificate
+ *  prints in English, and every reprint and its public check show what it was issued with. */
+export function sessionNameEn(s: { title?: string | null; ride_kind?: string | null }): string {
+  return nameIn(s, (k) => en[k]);
 }

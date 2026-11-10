@@ -9,6 +9,7 @@ import { icon } from "./icons";
 import { PUSH_SWITCH, pushIsOn, pushOff, pushOn, pushSupport } from "./push";
 import { BOOKING, go, load, reloadMe, render, S, say, setNote, standing, SUPPORT } from "./state";
 import { button, chip, note, toggle } from "./ui";
+import { resetWork } from "./work";
 
 const SHIRTS = ["XS", "S", "M", "L", "XL", "XXL"];
 // Sunday first, as the week runs in Saudi Arabia; 0 = Sunday, as the database keeps them.
@@ -16,12 +17,13 @@ function weekday(d: number): string {
   try { return new Date(Date.UTC(2026, 0, 4 + d)).toLocaleDateString(`${currentLang()}-u-ca-gregory-nu-latn`, { weekday: "long", timeZone: "UTC" }); } catch { return String(d); }
 }
 
-// The form's picks survive a redraw (a note, the language) until they are saved.
-let draft: { days: Set<number>; shirt: string | null } | null = null;
+// The form's picks and what was typed survive a redraw (a note, a refusal, the language) until they are saved.
+let draft: { days: Set<number>; shirt: string | null; skills: string; wa: string } | null = null;
 
 export async function signOut(): Promise<void> {
   await post("/api/logout");
   S.me = null; S.opps = null; S.prof = null; S.updates = null; draft = null;
+  resetWork(); // the work page's state, marks not sent and timers are this volunteer's, not the next one's
   go("#");
 }
 
@@ -68,10 +70,11 @@ export function viewProfile(main: HTMLElement): void {
 
 function profileForm(): HTMLElement {
   const p = S.prof!, who = standing();
-  const d = draft ?? (draft = { days: new Set(p.days ?? []), shirt: p.shirt ?? null });
+  const d = draft ?? (draft = { days: new Set(p.days ?? []), shirt: p.shirt ?? null, skills: p.skills ?? "", wa: p.whatsapp ?? "" });
   const skId = uid("skills"), waId = uid("wa");
-  const skills = h("textarea", { id: skId, rows: 3, maxlength: 300 }, p.skills ?? "");
-  const wa = h("input", { id: waId, type: "tel", dir: "ltr", maxlength: 20, autocomplete: "tel", value: p.whatsapp ?? "" });
+  const skills = h("textarea", { id: skId, rows: 3, maxlength: 300, oninput: ((e: Event) => { d.skills = (e.target as HTMLTextAreaElement).value; }) as EventListener }, d.skills);
+  const wa = h("input", { id: waId, type: "tel", dir: "ltr", maxlength: 20, autocomplete: "tel", value: d.wa,
+    oninput: ((e: Event) => { d.wa = (e.target as HTMLInputElement).value; }) as EventListener });
   // Sunday first; each a toggle chip.
   const days = [0, 1, 2, 3, 4, 5, 6].map((n) => {
     const b = h("button", { type: "button", class: "tog", "aria-pressed": d.days.has(n) ? "true" : "false", "data-day": n,
