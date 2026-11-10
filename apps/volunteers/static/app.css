@@ -193,8 +193,9 @@ a.card:active { transform: scale(.98); }
 .acts .btn-primary { flex: 1 1 100%; }
 .acts .btn-secondary, .acts .btn-quiet { flex: 1 1 auto; white-space: nowrap; }
 /* two smaller actions side by side (Directions and Calendar; fix 10) */
-.acts-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 8px; }
-.acts-pair .btn { min-height: 44px; white-space: normal; }
+/* Two side by side while both labels fit on one line; otherwise one under the other (a label never breaks). */
+.acts-pair { display: flex; flex-wrap: wrap; gap: 8px; }
+.acts-pair .btn { flex: 1 1 auto; min-height: 44px; white-space: nowrap; }
 .acts + .acts-pair { margin-top: 8px; }
 
 /* ── chips ── */
