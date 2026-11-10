@@ -18,6 +18,7 @@
       "Use the same name you booked with so we can find your booking": "استخدم نفس الاسم الذي حجزت به حتى نجد حجزك",
       "Mobile number": "رقم الجوال",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "أدخل رقم جوال سعودي صحيح (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "هذا ليس رقم جوال تابعًا للرمز ‎+{c}. يُرجى التحقق منه.",
       "Height in cm": "الطول بالسنتيمتر",
       "Bike type": "نوع الدراجة",
       "Road": "طريق", "Hybrid": "هايبرد", "Mountain": "جبلية",
@@ -63,6 +64,7 @@
       "Use the same name you booked with so we can find your booking": "वही नाम लिखें जिससे आपने बुकिंग की थी, ताकि हम आपकी बुकिंग ढूँढ सकें",
       "Mobile number": "मोबाइल नंबर",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "मान्य सऊदी मोबाइल नंबर दर्ज करें (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "यह +{c} का मोबाइल नंबर नहीं है। कृपया इसे जाँचें।",
       "Height in cm": "ऊँचाई (सेमी में)",
       "Bike type": "साइकिल का प्रकार",
       "Road": "रोड", "Hybrid": "हाइब्रिड", "Mountain": "माउंटेन",
@@ -108,6 +110,7 @@
       "Use the same name you booked with so we can find your booking": "Gamitin ang parehong pangalan na ginamit mo sa booking para mahanap namin ito",
       "Mobile number": "Numero ng mobile",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "Maglagay ng wastong Saudi mobile number (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "Hindi ito numero ng mobile para sa +{c}. Pakisuri ito.",
       "Height in cm": "Taas sa cm",
       "Bike type": "Uri ng bisikleta",
       "Road": "Road", "Hybrid": "Hybrid", "Mountain": "Mountain",
@@ -153,6 +156,7 @@
       "Use the same name you booked with so we can find your booking": "Usa el mismo nombre con el que reservaste para que podamos encontrar tu reserva",
       "Mobile number": "Número de móvil",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "Introduce un número de móvil saudí válido (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "Este no es un número de móvil de +{c}. Revísalo.",
       "Height in cm": "Altura en cm",
       "Bike type": "Tipo de bicicleta",
       "Road": "Carretera", "Hybrid": "Híbrida", "Mountain": "Montaña",
@@ -198,6 +202,7 @@
       "Use the same name you booked with so we can find your booking": "बुकिङ गर्दा प्रयोग गरेको नाम नै लेख्नुहोस्, ताकि हामी तपाईंको बुकिङ फेला पार्न सकौं",
       "Mobile number": "मोबाइल नम्बर",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "मान्य साउदी मोबाइल नम्बर लेख्नुहोस् (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "यो +{c} को मोबाइल नम्बर होइन। कृपया जाँच गर्नुहोस्।",
       "Height in cm": "उचाइ (से.मी.मा)",
       "Bike type": "साइकलको प्रकार",
       "Road": "रोड", "Hybrid": "हाइब्रिड", "Mountain": "माउन्टेन",
@@ -243,6 +248,7 @@
       "Use the same name you booked with so we can find your booking": "Utilisez le même nom que pour votre réservation afin que nous puissions la retrouver",
       "Mobile number": "Numéro de mobile",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "Saisissez un numéro de mobile saoudien valide (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "Ce n’est pas un numéro de mobile pour le +{c}. Vérifiez-le.",
       "Height in cm": "Taille en cm",
       "Bike type": "Type de vélo",
       "Road": "Route", "Hybrid": "Hybride", "Mountain": "VTT",
@@ -288,6 +294,7 @@
       "Use the same name you booked with so we can find your booking": "Use o mesmo nome da sua reserva para que possamos encontrá-la",
       "Mobile number": "Número de telemóvel",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "Introduza um número de telemóvel saudita válido (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "Este não é um número de telemóvel do indicativo +{c}. Verifique-o, por favor.",
       "Height in cm": "Altura em cm",
       "Bike type": "Tipo de bicicleta",
       "Road": "Estrada", "Hybrid": "Híbrida", "Mountain": "Montanha",
@@ -333,6 +340,7 @@
       "Use the same name you booked with so we can find your booking": "যে নামে বুক করেছেন সেই নামটিই লিখুন, যাতে আমরা আপনার বুকিং খুঁজে পাই",
       "Mobile number": "মোবাইল নম্বর",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "একটি সঠিক সৌদি মোবাইল নম্বর লিখুন (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "এটি +{c}-এর কোনো মোবাইল নম্বর নয়। অনুগ্রহ করে দেখে নিন।",
       "Height in cm": "উচ্চতা (সেমি)",
       "Bike type": "সাইকেলের ধরন",
       "Road": "রোড",
@@ -380,6 +388,7 @@
       "Use the same name you booked with so we can find your booking": "وہی نام لکھیں جس سے آپ نے بکنگ کی تھی، تاکہ ہم آپ کی بکنگ تلاش کر سکیں",
       "Mobile number": "موبائل نمبر",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "درست سعودی موبائل نمبر درج کریں (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "یہ ‎+{c} کا موبائل نمبر نہیں ہے۔ براہِ کرم اسے چیک کریں۔",
       "Height in cm": "قد (سینٹی میٹر میں)",
       "Bike type": "سائیکل کی قسم",
       "Road": "روڈ", "Hybrid": "ہائبرڈ", "Mountain": "ماؤنٹین",
@@ -425,6 +434,7 @@
       "Use the same name you booked with so we can find your booking": "Gunakan nama yang sama dengan saat Anda memesan agar kami bisa menemukan pemesanan Anda",
       "Mobile number": "Nomor ponsel",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "Masukkan nomor ponsel Arab Saudi yang valid (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "Ini bukan nomor ponsel untuk kode +{c}. Mohon periksa kembali.",
       "Height in cm": "Tinggi badan dalam cm",
       "Bike type": "Jenis sepeda",
       "Road": "Balap",
@@ -518,6 +528,7 @@
       "Use the same name you booked with so we can find your booking": "Gunakan nama yang sama seperti semasa anda menempah supaya kami dapat mencari tempahan anda",
       "Mobile number": "Nombor telefon",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "Masukkan nombor telefon Arab Saudi yang sah (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "Ini bukan nombor telefon bagi kod +{c}. Sila semak semula.",
       "Height in cm": "Ketinggian dalam cm",
       "Bike type": "Jenis basikal",
       "Road": "Jalan raya",
@@ -611,6 +622,7 @@
       "Use the same name you booked with so we can find your booking": "Verwende denselben Namen wie bei der Buchung, damit wir deine Buchung finden",
       "Mobile number": "Handynummer",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "Gib eine gültige saudische Handynummer ein (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "Das ist keine Handynummer für +{c}. Bitte prüfe sie.",
       "Height in cm": "Körpergröße in cm",
       "Bike type": "Radtyp",
       "Road": "Rennrad",
@@ -704,6 +716,7 @@
       "Use the same name you booked with so we can find your booking": "Укажите то же имя, что и при бронировании, чтобы мы могли найти ваше бронирование",
       "Mobile number": "Номер мобильного",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "Введите корректный саудовский номер мобильного (05XXXXXXXX)",
+      "This is not a mobile number for +{c}. Please check it.": "Это не номер мобильного для кода +{c}. Проверьте его.",
       "Height in cm": "Рост в см",
       "Bike type": "Тип велосипеда",
       "Road": "Шоссейный",
@@ -797,6 +810,7 @@
       "Use the same name you booked with so we can find your booking": "请使用预订时填写的姓名，以便我们找到您的预订",
       "Mobile number": "手机号",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "请输入有效的沙特手机号（05XXXXXXXX）",
+      "This is not a mobile number for +{c}. Please check it.": "这不是 +{c} 的手机号，请检查。",
       "Height in cm": "身高（厘米）",
       "Bike type": "车型",
       "Road": "公路车",
@@ -890,6 +904,7 @@
       "Use the same name you booked with so we can find your booking": "予約を照合できるよう、予約時と同じお名前を入力してください",
       "Mobile number": "携帯電話番号",
       "Enter a valid Saudi mobile number (05XXXXXXXX)": "有効なサウジアラビアの携帯電話番号を入力してください（05XXXXXXXX）",
+      "This is not a mobile number for +{c}. Please check it.": "+{c}の携帯電話番号ではありません。ご確認ください。",
       "Height in cm": "身長（cm）",
       "Bike type": "車種",
       "Road": "ロードバイク",
@@ -1107,11 +1122,42 @@
   // "+971971501234567".
   var NATIONAL_LEN = { "971": [9], "973": [8], "965": [8], "968": [8], "974": [8], "20": [10], "962": [9], "961": [7, 8], "963": [9], "967": [9], "249": [9], "212": [9], "216": [8],
     "91": [10], "92": [10], "880": [10], "977": [10], "94": [9], "63": [10], "62": [9, 10, 11, 12], "34": [9], "33": [9], "351": [9], "55": [10, 11], "52": [10], "44": [10], "1": [10], "90": [10] };
+  // The digits a mobile number starts with, for each code above (the same libphonenumber mobile rules
+  // the community form checks a number with). A number is a mobile of its code when it has one of the
+  // code's lengths and starts so: anything else is refused, naming the code. Under PK +92 a Saudi
+  // "0501234567" was sent as "+92501234567", and under AE +971 "966501234567" as "+971966501234567".
+  var MOBILE_START = { "971": "5", "973": "36", "965": "4569", "968": "179", "974": "3567", "20": "1", "962": "47", "961": "378", "963": "59", "967": "7", "249": "19", "212": "67", "216": "23459",
+    "91": "16789", "92": "3", "880": "1346", "977": "9", "94": "7", "63": "89", "62": "8", "34": "5679", "33": "67", "351": "169", "55": "123456789", "52": "23456789", "44": "7", "1": "23456789", "90": "5" };
+  function mobileOf(code, n) {
+    var lens = NATIONAL_LEN[code], first = MOBILE_START[code];
+    if (!lens) return /^\d{6,12}$/.test(n);
+    return lens.indexOf(n.length) >= 0 && (!first || first.indexOf(n.charAt(0)) >= 0);
+  }
+  // Indonesia's lengths overlap (62 and a 10-digit mobile is 12 digits, itself a length): the whole
+  // number is then read as the national one only if it starts as a mobile does. "628123456789" is the
+  // code typed (an Indonesian mobile starts with 8); it was sent as "+62628123456789".
   function codeTyped(d, code) {
     if (d.indexOf(code) !== 0) return false;
     var lens = NATIONAL_LEN[code], rest = d.slice(code.length).replace(/^0+/, "");
     if (!lens) return d.length >= 11 && rest.length >= 8;
-    return lens.indexOf(rest.length) >= 0 && lens.indexOf(d.replace(/^0+/, "").length) < 0;
+    return lens.indexOf(rest.length) >= 0 && !mobileOf(code, d.replace(/^0+/, ""));
+  }
+  // The digits after a + or 00 typed before the number (a number given with its country code), else null.
+  function typedIntl() {
+    var raw = asciiDigits(phoneIn.value).replace(/[^0-9+]/g, "");
+    if (raw.charAt(0) === "+") return raw.replace(/\D/g, "");
+    if (raw.indexOf("00") === 0) return raw.slice(2).replace(/\D/g, "");
+    return null;
+  }
+  // A number typed with its + or 00 code names its country, whatever the picker says: the picker
+  // follows it (the longest code that starts it, as an edit's prefill reads a saved number), as the
+  // community form's does. Under the default SA, "+62 812 3456 789" lost its + on leaving the box
+  // and was sent as +966 followed by 62...
+  function followTypedCode() {
+    var d = typedIntl(), code = null;
+    if (d == null || d.indexOf(cc.value) === 0) return;
+    COUNTRIES.forEach(function (x) { if (d.indexOf(x[1]) === 0 && (!code || x[1].length > code.length)) code = x[1]; });
+    if (code) cc.value = code;
   }
   function nationalDigits() {
     var raw = asciiDigits(phoneIn.value).replace(/[^0-9+]/g, "");
@@ -1125,19 +1171,28 @@
   }
   function phoneE164() { var n = nationalDigits(); return n ? "+" + cc.value + n : ""; }
   function phoneValid() {
-    var n = nationalDigits();
+    var n = nationalDigits(), d = typedIntl();
+    if (d != null && d.indexOf(cc.value) !== 0) return false; // given with a code the picker does not have
     if (cc.value === "966") return /^5\d{8}$/.test(n);
-    return /^\d{6,12}$/.test(n);
+    return mobileOf(cc.value, n);
   }
   function syncPhone() {
     phoneOut.value = phoneE164();
     var err = document.querySelector("#f-phone .err");
-    var own = cc.value === "966" ? "Enter a valid Saudi mobile number (05XXXXXXXX)" : "Enter a valid mobile number";
+    var own = cc.value === "966" ? "Enter a valid Saudi mobile number (05XXXXXXXX)" : nationalDigits() ? "This is not a mobile number for +{c}. Please check it." : "Enter a valid mobile number";
+    err.setAttribute("data-args", JSON.stringify({ c: cc.value }));
     err.setAttribute("data-t0", own); err.setAttribute("data-t", own); render(err);
     phoneIn.placeholder = cc.value === "966" ? "5X XXX XXXX" : "";
   }
-  phoneIn.addEventListener("input", syncPhone);
-  phoneIn.addEventListener("blur", function () { var n = nationalDigits(); if (n) phoneIn.value = n; syncPhone(); });
+  phoneIn.addEventListener("input", function () { followTypedCode(); syncPhone(); });
+  // Leaving the box shows the number without its code, as it is sent - unless it was given with a code
+  // the picker does not have: it keeps its + then, as its digits alone would read as a number there.
+  phoneIn.addEventListener("blur", function () {
+    followTypedCode();
+    var d = typedIntl(), n = nationalDigits();
+    if (n && (d == null || d.indexOf(cc.value) === 0)) phoneIn.value = n;
+    syncPhone();
+  });
   cc.addEventListener("change", function () { syncPhone(); setError("f-phone", false); });
   syncPhone();
 
