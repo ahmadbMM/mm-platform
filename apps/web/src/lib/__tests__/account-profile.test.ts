@@ -162,6 +162,7 @@ describe("passwords, corrections, photos, purchases, the season", () => {
       { id: "2", name: "Gel", qty: 1, price: 12.5, pay: "card", voided: true, refunded: false },
       { id: "3", name: "Tube", qty: 1, price: 30, pay: "refunded", voided: false, refunded: false },
       { id: "4", name: "meta", category: "__cardmeta__", qty: 1, price: 99 },
+      { id: "4b", name: "Discount", category: "__discount__", qty: 0, price: -10 }, // the till's spare row: not a purchase
       { id: "5", name: "Cap", qty: 2, price: 15, pay: "house", voided: false, refunded: false },
     ]);
     expect(p.rows.map((r) => r.id)).toEqual(["1", "2", "3", "5"]);

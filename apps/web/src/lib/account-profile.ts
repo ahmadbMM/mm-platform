@@ -444,11 +444,17 @@ export type Purchase = { id: string; at: string | null; name: string; category: 
   receipt_id: string | null; session_date: string | null; session_title: string | null; voided: boolean; refunded: boolean;
   /** What it cost the rider: nothing on the house (pay "house" keeps the item's list price; the booking app's _purchHtml, 2026-10-05). */
   amount: number };
-/** The rows as the list shows them (the card meta rows the desk keeps are not purchases), and the
+/** The rows as the list shows them (the card meta rows the desk keeps are not purchases, nor a receipt's spare
+ *  discount row at quantity 0, which the till keeps for a later edit: the booking app's _purchHtml, 2026-11-10), and the
  *  total of the ones that stand: a voided or refunded sale is shown struck through and not counted,
  *  and one on the house counts nothing. */
 export function purchasesOf(data: unknown): { rows: Purchase[]; total: number } {
-  const rows: Purchase[] = (Array.isArray(data) ? data : []).filter((r) => r && typeof r === "object" && (r as { category?: unknown }).category !== "__cardmeta__").map((r) => {
+  const shown = (r: unknown) => {
+    if (!r || typeof r !== "object") return false;
+    const x = r as { category?: unknown; qty?: unknown };
+    return x.category !== "__cardmeta__" && !(x.category === "__discount__" && !(Number(x.qty) || 0));
+  };
+  const rows: Purchase[] = (Array.isArray(data) ? data : []).filter(shown).map((r) => {
     const x = r as Record<string, unknown>;
     const qty = Number(x.qty) || 0, price = Number(x.price) || 0;
     return {
