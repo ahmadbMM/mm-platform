@@ -2,9 +2,9 @@
 // apart from the site's translation dictionaries (src/i18n/tx), as the blood type's are (BloodType.words.ts): the ten
 // languages the booking app speaks take its own wording word for word (spTitle, spAsk, spFedsLabel, spAdd, spRemove,
 // errSpFeds, fixErrPick, waYes, waNo, saveBtn, emChange, cancelBtn, accountSaved: English and Arabic in app.src.html,
-// the others in its i18n/<code>.json, 2026-11-10). Other's four are its spOther, spOtherLabel, errSpOther and spMore:
-// its English and Arabic, and the website's own wording in its other eight until its packs carry them. Indonesian,
-// Malay, German, Russian, Chinese and Japanese, which the booking app does not speak, follow src/i18n/TRANSLATING.md.
+// the others in its i18n/<code>.json, 2026-11-10; Other's four are its spOther, spOtherLabel, errSpOther and spMore).
+// Indonesian, Malay, German, Russian, Chinese and Japanese, which the booking app does not speak, follow
+// src/i18n/TRANSLATING.md.
 // The federations' own names are English and Arabic only (lib/sport.ts). Change a text here in every language at once.
 import type { Locale } from "@/i18n/locales";
 
@@ -130,7 +130,7 @@ export const SPORT_WORDS: Record<Locale, SportWords> = {
     saved: "Guardado.",
     other: "Otro",
     otherLabel: "Tu deporte",
-    errOther: "Escribe tu deporte con entre 2 y 60 caracteres.",
+    errOther: "Escribe tu deporte en 2 a 60 caracteres.",
     added: "Más deportes",
   },
   fr: {
@@ -149,8 +149,8 @@ export const SPORT_WORDS: Record<Locale, SportWords> = {
     saved: "Enregistré.",
     other: "Autre",
     otherLabel: "Votre sport",
-    errOther: "Indiquez votre sport en 2 à 60 caractères.",
-    added: "Plus de sports",
+    errOther: "Écrivez votre sport en 2 à 60 caractères.",
+    added: "Autres sports",
   },
   pt: {
     title: "Esporte",
@@ -186,9 +186,9 @@ export const SPORT_WORDS: Record<Locale, SportWords> = {
     cancel: "Kanselahin",
     saved: "Na-save.",
     other: "Iba pa",
-    otherLabel: "Ang iyong isport",
-    errOther: "Isulat ang iyong isport sa 2 hanggang 60 na character.",
-    added: "Higit pang isport",
+    otherLabel: "Ang isport mo",
+    errOther: "Isulat ang isport mo sa 2 hanggang 60 na character.",
+    added: "Iba pang isport",
   },
   ru: {
     title: "Спорт",
@@ -282,7 +282,7 @@ export const SPORT_WORDS: Record<Locale, SportWords> = {
     saved: "সেভ হয়েছে।",
     other: "অন্যান্য",
     otherLabel: "আপনার খেলা",
-    errOther: "আপনার খেলার নাম 2 থেকে 60 অক্ষরে লিখুন।",
+    errOther: "আপনার খেলা 2 থেকে 60 অক্ষরে লিখুন।",
     added: "আরও খেলা",
   },
   zh: {
