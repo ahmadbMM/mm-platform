@@ -59,6 +59,9 @@ export function scopeCss(css, scope) {
       for (const st of stmts) if (st.trim()) out += st.trim() + ';\n';
       const end = blockEnd(s, open);
       const body = s.slice(open + 1, end);
+      // The website has one look, the light one: a form's dark look (its phone in dark mode) is left out, or the form
+      // turns dark between the site's light header and footer (the user, 2026-11-10, a screenshot of /lockers).
+      if (/^@media\b[^{]*prefers-color-scheme\s*:\s*dark/.test(sel)) { i = end + 1; continue; }
       if (/^@(media|supports|container|layer)\b/.test(sel)) out += `${sel} {\n${walk(body)}}\n`;
       else if (/^@(-webkit-)?keyframes\b/.test(sel)) out += `${sel.replace(/([A-Za-z0-9_-]+)\s*$/, (n) => frames[n] || n)} {${body}}\n`;
       else if (/^@/.test(sel)) out += `${sel} {${body}}\n`;
@@ -81,6 +84,10 @@ export function emitSite({ name, design, body, css, scripts, images = [] }) {
   // one main landmark, at the top level. Nothing in a form's stylesheet or scripts names the element itself.
   if ((body.match(/<main\b/g) || []).length > 1 || (body.match(/<\/main>/g) || []).length > 1) throw new Error(`${name}: more than one <main>`);
   let markup = body.replace(/<main\b/, '<div').replace('</main>', '</div>');
+  // The website draws the footer too (its contact lines, Privacy Policy and payment marks): the form's own footer is
+  // left out, or the page ends in two of them. The form's Privacy Notice stays beside its "I have read" box.
+  if ((markup.match(/<footer\b/g) || []).length > 1) throw new Error(`${name}: more than one <footer>`);
+  markup = markup.replace(/<footer\b[\s\S]*?<\/footer>\s*/, '');
   if (/(^|[\s,>+~(])main\b(?![-\w])/m.test(css.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\{[^{}]*\}/g, '{}'))) throw new Error(`${name}: the stylesheet names the <main> element, which the website's page draws as a <div>`);
   for (const f of images) markup = markup.split(`"${f}"`).join(`"/forms/${name}/${basename(f)}"`);
   if (/(src|href)="(?!https?:|\/|#|data:|mailto:|tel:)[^"]+\.(png|svg|webp|jpe?g)"/.test(markup)) throw new Error(`${name}: a picture the markup names was not given to emitSite`);

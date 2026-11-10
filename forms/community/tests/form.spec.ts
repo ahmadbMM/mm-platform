@@ -947,7 +947,7 @@ test('a password the database calls weak is said on the password box, not as a l
 
 test('Tab stays inside the open Privacy Notice', async ({ page }) => {
   await open(page);
-  await page.click('#pv-open-foot');
+  await page.click('#pv-open'); // the box's link: the website's page has no footer of the form's (the site's is there)
   await expect(page.locator('#pv-x')).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   expect(await page.evaluate(() => !!document.activeElement && !!document.activeElement.closest('#pv .pv-box'))).toBe(true);
