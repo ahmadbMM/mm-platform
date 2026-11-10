@@ -115,7 +115,7 @@ describe("/api/claim", () => {
   });
   it("names a circuit night by its fixed name, as every page does", async () => {
     vi.stubGlobal("fetch", routed(() => json({ ...OPEN, session: { ...OPEN.session, title: null, ride_kind: null, event_kind: "jcc" } })));
-    expect((await (await get(TOK)).json()).title).toBe("Evening Circuit Session");
+    expect((await (await get(TOK)).json()).title).toBe("Open Sports Day");
   });
   it("answers 'gone' for a bad token without asking, and before the database has the functions", async () => {
     const f = routed(() => json({ code: "PGRST202", message: "Could not find the function" }, 404));

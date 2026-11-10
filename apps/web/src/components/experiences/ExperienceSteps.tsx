@@ -6,7 +6,9 @@ import { fill } from "@/lib/fill";
 import { fill as fillAt } from "@/i18n/tx";
 import { bookingAt, infoShown, memberOn, membersOnlyDate, membersOnlyEvent } from "@/lib/event-info";
 import { isNonBike, typeOffered } from "@/lib/bike-kinds";
-import { ArrowIcon, BackIcon, TickIcon } from "@/components/site/Icons";
+import { ArrowIcon, BackIcon, ClockIcon, InfoIcon, TickIcon } from "@/components/site/Icons";
+import { durText, opensIn } from "@/lib/opens-in";
+import { radioKey, tabStop } from "@/lib/radio-keys";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -57,6 +59,9 @@ export type StepSession = {
   reveal?: string | null;
   /** Not open to book yet (the booking window): the words for when it opens; null when it may be booked. */
   opens: string | null;
+  /** When it opens (epoch ms; lib/booking-window.ts opensAt) while it is not open yet: within a day of it the card counts
+   *  down ("Booking opens in 2 h 10 min"), each minute, and opens itself when the window does. Optional: none, no countdown. */
+  opensAt?: number | null;
   /** What its Details say, every word ready in the page's language. */
   info: StepInfo;
   /** The DEFE 5KM Run's own date card (the booking app's _defeSessCard, 2026-10-18): when, how far and
@@ -142,6 +147,8 @@ export type StepText = {
   route: string;
   /** "Breakfast at {0}", {0} the stop's name (StepSession.breakfast). */
   breakfastAt: string;
+  /** The countdown to a date's booking window (lib/booking-window.ts opensInWords): "Booking opens in {0}" and its units. */
+  opensIn: { opensIn: string; hm: string; h: string; m: string };
   /** The About and Details links, and their dialog's words; `after` heads the breakfast stop, the last fact. */
   info: {
     about: string; details: string; bookEvent: string; chooseDate: string; who: string; price: string; when: string; next: string;
@@ -186,6 +193,29 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   const head = useRef<HTMLHeadingElement>(null);
   const opener = useRef<HTMLElement | null>(null);
   const [posterLang, setPosterLang] = useState<"ar" | "en">(isRtl(locale) ? "ar" : "en"); // the poster is in these two; every other language reads the English
+  const rtl = isRtl(locale);
+  // The browser's clock, read once the page is up and then at each minute, while the dates are shown and one of them is
+  // not open yet: its countdown follows the real booking window (StepSession.opensAt), never a timer of its own. Before
+  // that the card says what the server said, so the first drawing matches the server's.
+  const [nowMs, setNowMs] = useState<number | null>(null);
+  const ticking = step === 2 && !!ev?.sessions.some((s) => s.opensAt != null);
+  useEffect(() => {
+    if (!ticking) return;
+    let h = 0;
+    const tick = () => { setNowMs(Date.now()); h = window.setTimeout(tick, 60000 - (Date.now() % 60000) + 50); };
+    h = window.setTimeout(tick, 0);
+    const back = () => { if (document.visibilityState === "visible") { window.clearTimeout(h); tick(); } };
+    document.addEventListener("visibilitychange", back);
+    return () => { window.clearTimeout(h); document.removeEventListener("visibilitychange", back); };
+  }, [ticking]);
+  /** When a date opens, as its card says it now: the countdown within a day, null once the window has opened. */
+  const opensOf = (s: StepSession): string | null => {
+    if (!s.opens) return null;
+    if (s.opensAt == null || nowMs == null) return s.opens;
+    if (nowMs >= s.opensAt) return null;
+    const left = opensIn(s.opensAt, nowMs);
+    return left ? t.opensIn.opensIn.replace("{0}", durText(left, t.opensIn)) : s.opens;
+  };
   useEffect(() => {
     const d = dlg.current;
     if (!info || !d) return;
@@ -280,9 +310,9 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   const poster = info?.ev.blood ?? null;
   const sheet = info && (poster
     // the Blood Donation event's About and Details are its poster (the booking app's _bldInfoView), its facts on the card
-    ? { kind: "blood", kick: info.s ? info.s.day : t.info.about, title: poster.info.title, text: "", extra: null, facts: [], act: info.s ? (info.s.opens ? "" : t.info.chooseDate) : t.info.bookEvent }
+    ? { kind: "blood", kick: info.s ? info.s.day : t.info.about, title: poster.info.title, text: "", extra: null, facts: [], act: info.s ? (opensOf(info.s) ? "" : t.info.chooseDate) : t.info.bookEvent }
     : info.s
-    ? { kind: info.s.kind, kick: info.s.name, title: info.s.day, text: info.s.info.text, extra: info.s.info.extra, facts: infoFacts(info.s, false), act: info.s.opens ? "" : t.info.chooseDate }
+    ? { kind: info.s.kind, kick: info.s.name, title: info.s.day, text: info.s.info.text, extra: info.s.info.extra, facts: infoFacts(info.s, false), act: opensOf(info.s) ? "" : t.info.chooseDate }
     : { kind: info.ev.sessions[0]?.kind ?? info.ev.key, kick: t.info.about, title: info.ev.title, text: info.ev.about, extra: null, facts: eventFacts(info.ev), act: t.info.bookEvent });
   // The dialog's button does what the card does. The link that opened the dialog goes with its step,
   // so the focus goes on to the next step's heading (go) rather than back to it.
@@ -383,19 +413,32 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           {ev.sessions.length === 0 ? (
             <p className="xs-empty">{t.noDates}</p>
           ) : (
-            <div className="sc-list">
-              {ev.sessions.map((s) => {
+            // One date is chosen among them (the research's row 11): a radio group with one tab stop and the arrow keys,
+            // which move the choice with the focus (nothing else happens until a date is tapped or Enter or Space pressed)
+            <div className="sc-list" role="radiogroup" aria-labelledby="xs-h2"
+              onKeyDown={(e) => { const id = radioKey(e, rtl)?.dataset.id; const s = id ? ev.sessions.find((x) => x.id === id) : undefined; if (s) setSess(s); }}>
+              {ev.sessions.map((s, n) => {
                 const details = infoShown(membersOnlyDate(s), memberOn(ev.key, { member, petromin }));
-                const spots = s.opens ? <span className="sc-spots closed">{s.opens}</span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
+                const opens = opensOf(s);
+                // a date not open yet wears a clock beside when it opens, so the grey is never the only sign (WCAG 1.4.1)
+                const spots = opens ? <span className="sc-spots closed"><ClockIcon size={13} /><span>{opens}</span></span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
                   : s.kind !== "vlap" && s.kind !== "arena" && s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
                   : <span className="sc-spots">{t.available}</span>;
-                const about = details && <button type="button" className="sc-about" aria-label={`${t.info.details} · ${s.name} · ${s.day}`} onClick={(x) => showInfo(ev, s, x.currentTarget)}>{t.info.details}</button>;
+                // the radio's own attributes: checked when it is the date chosen, the group's one tab stop
+                const stop = tabStop(ev.sessions, (x) => sess?.id === x.id, (x) => !opensOf(x));
+                const radio = { role: "radio", "aria-checked": sess?.id === s.id, tabIndex: n === stop ? 0 : -1, "data-id": s.id, disabled: !!opens, "aria-disabled": !!opens } as const;
+                // its Details: the booking app's "i", 44px, beside the card and never inside it, named for the event and the date
+                const about = details && (
+                  <button type="button" className="sc-about" aria-haspopup="dialog" aria-label={`${t.info.details} · ${named(ev) ? s.name : ev.title} · ${s.day}`} onClick={(x) => showInfo(ev, s, x.currentTarget)}>
+                    <InfoIcon size={20} />
+                  </button>
+                );
                 // The DEFE 5KM Run's own card (the booking app's _defeSessCard, 2026-10-18): white with Defe's
                 // pink washed in from the far corner, the logo, the race's name, when, how far and where, the
                 // cause along the foot with its state
                 if (s.defe) return (
                   <div key={s.id} className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
-                    <button type="button" className={`sc-card sc-defe ev-${s.kind}${s.full ? " full" : ""}${s.opens ? " closed" : ""}`} disabled={!!s.opens} aria-disabled={!!s.opens} onClick={() => pickDate(s)}>
+                    <button type="button" className={`sc-card sc-defe ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}`} {...radio} onClick={() => pickDate(s)}>
                       <span className="sc-defe-top"><span className="sc-dot" aria-hidden="true" /><img className="sc-defe-logo" src={DEFE_LOGO} alt="" width={977} height={660} decoding="async" /></span>
                       <span className="sc-defe-title">{s.name}</span>
                       {s.sg && <span className="sc-kicker">{chip(s)}</span>}
@@ -408,7 +451,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                 );
                 return (
                   <div key={s.id} className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
-                    <button type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}${s.opens ? " closed" : ""}`} disabled={!!s.opens} aria-disabled={!!s.opens} onClick={() => pickDate(s)}>
+                    <button type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}`} {...radio} onClick={() => pickDate(s)}>
                       {(named(ev) || clubOnly(s) || s.free || s.sg) && (
                         <span className="sc-kicker">
                           {named(ev) && <span className="sc-chip">{s.name}</span>}

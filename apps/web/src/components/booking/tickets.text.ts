@@ -82,6 +82,8 @@ export const T = {
     durH: "{h} h",
     durHM: "{h} h {m} min",
     durM: "{m} min",
+    // the word a screen reader reads for the riyal sign, which is drawn for the eye alone (Sar.tsx)
+    sarWord: "SAR",
     rtLap: (n: string) => `${n} km a lap`,
     rtKm: (n: string) => `${n} km`,
     rtCircuitNote: "Flat, smooth tarmac, floodlit at night",
@@ -237,6 +239,7 @@ export const T = {
     durH: "{h} س",
     durHM: "{h} س {m} د",
     durM: "{m} د",
+    sarWord: "ريال",
     rtLap: (n: string) => `${n} كم للفة`,
     rtKm: (n: string) => `${n} كم`,
     rtCircuitNote: "مسطّح وإسفلت ناعم وإضاءة ليلية",
