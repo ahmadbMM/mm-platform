@@ -39,12 +39,16 @@ export function useCart(): CartItem[] {
   return useSyncExternalStore(subscribe, read, () => EMPTY);
 }
 
-/** Adds `qty` of a variant; false when the cart already has 20 lines. */
-export function cartAdd(variant: string, qty: number): boolean {
-  const next = addItem(read(), variant, qty);
-  if (!next) return false;
-  write(next);
-  return true;
+/** Adds `qty` of a variant: how many the cart took (fewer at 10 a line, 0 when the line already has 10), or null
+ *  when the cart already has 20 lines. */
+export function cartAdd(variant: string, qty: number): number | null {
+  const c = read(), id = variant.toLowerCase();
+  const had = c.find((l) => l.variant === id)?.qty ?? 0;
+  const next = addItem(c, variant, qty);
+  if (!next) return null;
+  const got = (next.find((l) => l.variant === id)?.qty ?? 0) - had;
+  if (got > 0) write(next);
+  return got;
 }
 export const cartSetQty = (variant: string, qty: number) => write(setItemQty(read(), variant, qty));
 export const cartRemove = (variant: string) => write(removeItem(read(), variant));

@@ -711,7 +711,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
               </label>
             )}
             {payingNow && <p className="bk-note">{fill(t.pay.held, pay!.holdMinutes)}</p>}
-            <p className="bk-note">{pay!.refundDays > 1 ? fill(t.pay.refundDays, pay!.refundDays) : t.pay.refund}</p>
+            <p className="bk-note">{pay!.refundDays > 1 ? fill(t.pay.refundDays, pay!.refundDays) : pay!.refundDays === 0 ? t.pay.refundSameDay : t.pay.refund}</p>
             {payingNow && (
               <p className="bk-paymarks" aria-label={t.pay.methods}>
                 {["mada", "visa", "mastercard"].map((m) => <img key={m} src={`/site/payments/${m}.svg`} alt="" width={40} height={26} />)}

@@ -18,7 +18,8 @@ declare global { interface Window { Moyasar?: { init: MoyasarInit } } }
 
 export type PayScreenProps = {
   locale: string;
-  pay: { id: string; kind: string; ref: string; amount: number; description: string; hold: boolean; expiresAt: string };
+  /** leftMs: the hold's time left when the server drew the page (its clock, not the phone's). */
+  pay: { id: string; kind: string; ref: string; amount: number; description: string; hold: boolean; leftMs: number };
   publishableKey: string;
   testMode: boolean;
   formJs: string;
@@ -39,17 +40,21 @@ function uuid4(): string {
 export default function PayScreen({ locale, pay, publishableKey, testMode, formJs, formCss, declined, tried }: PayScreenProps) {
   const t = useLocalize(T);
   const el = useRef<HTMLDivElement>(null);
-  const [left, setLeft] = useState(() => Date.parse(pay.expiresAt) - Date.now());
+  // The time left starts as the server counted it, so the first drawing in the browser says what the server's did
+  // (no hydration mismatch), and runs down by the time that passes here (a difference of two readings of the phone's
+  // clock, which counts a phone asleep too): a phone clock set wrong changes nothing.
+  const [left, setLeft] = useState(pay.leftMs);
   const [failed, setFailed] = useState(false);
   const over = pay.hold && left <= 0;
 
   // the hold's countdown
   useEffect(() => {
     if (!pay.hold) return;
-    const tick = () => setLeft(Date.parse(pay.expiresAt) - Date.now());
+    const t0 = Date.now();
+    const tick = () => setLeft(pay.leftMs - (Date.now() - t0));
     const h = window.setInterval(tick, 1000);
     return () => window.clearInterval(h);
-  }, [pay.hold, pay.expiresAt]);
+  }, [pay.hold, pay.leftMs]);
 
   // Moyasar's form, once
   useEffect(() => {

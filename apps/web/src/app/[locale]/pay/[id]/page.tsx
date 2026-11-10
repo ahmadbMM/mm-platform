@@ -45,7 +45,12 @@ export default async function PayPage({ params, searchParams }: { params: Promis
   const s = paySettings(content);
   const kind = v.kind;
   const open = v.status === "initiated" && payReady(env) && s.enabled;
-  const policy = kind === "booking" ? (s.refundDays > 1 ? fill(t.policy.bookingDays, s.refundDays) : t.policy.booking) : t.policy[kind];
+  const policy = kind === "booking"
+    ? (s.refundDays > 1 ? fill(t.policy.bookingDays, s.refundDays) : s.refundDays === 0 ? t.policy.bookingSameDay : t.policy.booking)
+    : t.policy[kind];
+  // The policy's link, left out while staff have that page switched off (the checkout and the order page do the same):
+  // a closed page sends the payer away from this one while the hold runs.
+  const policyHref = kind === "order" ? (hidden.includes("help") ? null : "/help#returns") : (hidden.includes("terms") ? null : "/terms");
   const next: Record<PayView["kind"], string> = {
     booking: "/account", order: v.order_no && v.order_key ? `/store/order/${v.order_no}?k=${v.order_key}` : "/store",
     locker: "/lockers", topup: "/account", workshop: "/workshop",
@@ -83,6 +88,9 @@ export default async function PayPage({ params, searchParams }: { params: Promis
       </div>
     );
   } else {
+    // The hold's time left by this server's clock, never the phone's: the page counts down from it, so a phone clock
+    // set wrong neither ends the hold early nor keeps the form up after it.
+    const leftMs = Date.parse(v.expires_at) - new Date().getTime();
     body = (
       <div className="py-grid">
         <section className="py-sum" aria-labelledby="py-h">
@@ -96,7 +104,7 @@ export default async function PayPage({ params, searchParams }: { params: Promis
           <p className="py-total"><span>{t.total}</span><bdi className="tk-amt">{sar(v.amount)}</bdi></p>
           <p className="py-vat">{t.vat}</p>
           {policy && (
-            <p className="py-policy">{policy} <a href={kind === "order" ? "/help#returns" : "/terms"}>{kind === "order" ? t.returns : t.terms}</a></p>
+            <p className="py-policy">{policy}{policyHref && <> <a href={policyHref}>{kind === "order" ? t.returns : t.terms}</a></>}</p>
           )}
           <p className="py-marks" aria-label={t.methods}>
             {["mada", "visa", "mastercard"].map((m) => <img key={m} src={`/site/payments/${m}.svg`} alt="" width={46} height={30} />)}
@@ -106,7 +114,7 @@ export default async function PayPage({ params, searchParams }: { params: Promis
         <section className="py-pay">
           {open ? (
             <PayScreen locale={locale} publishableKey={env.MOYASAR_PUBLISHABLE_KEY!} testMode={payMode(env) === "test"} formJs={MOYASAR_FORM_JS} formCss={MOYASAR_FORM_CSS}
-              pay={{ id: v.id, kind, ref: v.ref, amount: v.amount, description: v.description, hold: v.hold, expiresAt: v.expires_at }}
+              pay={{ id: v.id, kind, ref: v.ref, amount: v.amount, description: v.description, hold: v.hold, leftMs: Number.isFinite(leftMs) ? leftMs : 0 }}
               declined={q.tried ? v.message : null} tried={!!q.tried} />
           ) : (
             <p className="py-msg" role="status">{t.notOpen}</p>
