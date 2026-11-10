@@ -354,22 +354,25 @@
     return (Array.isArray(list) ? list : []).filter(function (d) { return d && d.bookingNo && !ended(d); });
   }
   function saveKept(list) { try { if (list.length) localStorage.setItem(KEPT, JSON.stringify(list.slice(0, 10))); else localStorage.removeItem(KEPT); } catch (e) {} }
-  function keep(d) { if (d && d.bookingNo) saveKept([d].concat(keptList().filter(function (x) { return x.bookingNo !== d.bookingNo; }))); }
+  // A registration is its booking number on its night: numbers start again at P-001 every night, so
+  // Monday's P-004 and Wednesday's P-004 are two bookings (one dropped the other off the phone).
+  function keyOf(d) { return d ? String(d.bookingNo) + "|" + ((d.session && d.session.id) || "") : ""; }
+  function keep(d) { if (d && d.bookingNo) saveKept([d].concat(keptList().filter(function (x) { return keyOf(x) !== keyOf(d); }))); }
   function drawOthers() {
-    var list = keptList().filter(function (x) { return !current || x.bookingNo !== current.bookingNo; }), box = $("#others"), el = $("#others-list");
+    var list = keptList().filter(function (x) { return !current || keyOf(x) !== keyOf(current); }), box = $("#others"), el = $("#others-list");
     el.innerHTML = "";
     list.forEach(function (d) {
       var b = document.createElement("button"); b.type = "button"; b.className = "other";
-      b.setAttribute("data-no", d.bookingNo); b.textContent = d.bookingNo + " · " + (d.name || "");
+      b.setAttribute("data-key", keyOf(d)); b.textContent = d.bookingNo + " · " + (d.name || "");
       el.appendChild(b);
     });
     box.hidden = !list.length;
   }
   $("#others-list").addEventListener("click", function (e) {
     var b = e.target.closest(".other"); if (!b) return;
-    var no = b.getAttribute("data-no"), pick = keptList().filter(function (x) { return x.bookingNo === no; })[0];
+    var key = b.getAttribute("data-key"), pick = keptList().filter(function (x) { return keyOf(x) === key; })[0];
     if (!pick) { drawOthers(); return; }
-    saveKept(keptList().filter(function (x) { return x.bookingNo !== no; }));
+    saveKept(keptList().filter(function (x) { return keyOf(x) !== key; }));
     keep(current);
     showSuccess(pick); // the phone's confirmation now (saved as it), the one before it kept
     setNote("Show this screen and your booking number at the desk to collect your bike.");
@@ -431,7 +434,9 @@
       "</tbody></table>";
   }
   var PV_MAIL = '<a href="mailto:info@micromobility.sa">info@micromobility.sa</a>';
-  var PV_SITE = '<a href="https://micromobility.sa/?privacy" target="_blank" rel="noopener">micromobility.sa/?privacy</a>';
+  // The website's own page for the notice (it opens whatever the site's state); a ?privacy query is
+  // the booking app's, and the website answered it with its home page.
+  var PV_SITE = '<a href="https://micromobility.sa/privacy" target="_blank" rel="noopener">micromobility.sa/privacy</a>';
   // The notice's version: the day it was last updated (its first line below), as 'YYYY-MM-DD', the
   // shape the booking site records its own notice in. A new registration sends it as p_privacy, the
   // box ticked. Change it together with the "Last updated" lines.
@@ -544,7 +549,19 @@
     var r;
     try {
       if (editing) {
-        r = await sbClient().rpc("rider_edit", { p_booking_no: editing.bookingNo, p_proof_phone: editing.phone, p_badge: args.p_badge, p_name: args.p_name, p_height: args.p_height, p_type: args.p_type, p_session_id: args.p_session_id, p_company: args.p_company, p_phone: args.p_phone, p_riders: data.riders, p_waiver: args.p_waiver });
+        var edit = { p_booking_no: editing.bookingNo, p_proof_phone: editing.phone, p_badge: args.p_badge, p_name: args.p_name, p_height: args.p_height, p_type: args.p_type, p_session_id: args.p_session_id, p_company: args.p_company, p_phone: args.p_phone, p_riders: data.riders, p_waiver: args.p_waiver };
+        // Numbers start again at P-001 every night, so the number and phone alone can be another
+        // night's booking (the latest was picked: it was moved, or the edit refused as a duplicate of
+        // this one). The night of the confirmation being edited says which (p_session_id is the night
+        // it moves to).
+        if (editing.session && editing.session.id) edit.p_from_session = editing.session.id;
+        r = await sbClient().rpc("rider_edit", edit);
+        // A database that does not take p_from_session yet (until the rentals migration adding it is
+        // applied) does not know the call with it: 404, PGRST202. Once more without it, and only it.
+        if (r && r.error && edit.p_from_session && (r.error.code === "PGRST202" || r.status === 404)) {
+          var earlier = {}; Object.keys(edit).forEach(function (k) { if (k !== "p_from_session") earlier[k] = edit[k]; });
+          r = await sbClient().rpc("rider_edit", earlier);
+        }
       } else {
         r = await sbClient().rpc("rider_register", args);
         // A database that does not take p_privacy yet (until the rentals migration adding it is
@@ -586,7 +603,7 @@
     data.bookingNo = d.booking_no;
     if (d.session) data.session = d.session;
     var wasEdit = !!editing; editing = null;
-    if (another && current && current.bookingNo !== data.bookingNo) keep(current); // the confirmation before this one stays on the phone
+    if (another && current && keyOf(current) !== keyOf(data)) keep(current); // the confirmation before this one stays on the phone
     another = false; setSubmitLabels(false);
     showSuccess(data);
     setNote(wasEdit ? "Your booking was updated." : d.resubmitted ? "Your details were updated." : "Show this screen and your booking number at the desk to collect your bike.");

@@ -5,16 +5,19 @@
 import { rpc, type Err } from "./api";
 import { t, type Key } from "./i18n";
 
-export type Opp = { id: string; title: string | null; ride_kind: string | null; date: string; time: string | null; location: string | null; about: string | null;
+export type Opp = { id: string; title: string | null; ride_kind: string | null; event_kind?: string | null; date: string; time: string | null; location: string | null; about: string | null;
   needed: number | null; roles: string[] | null; min_age: number | null; hours_mode: string; fixed_hours: number | null; signup_open: boolean;
   opens_at: string | null; closes_at: string; accepted: number; role_needs?: { name: string; needed: number; filled: number }[] };
 export type Reward = { code: string; expires_at: string | null; used: boolean };
-export type Mine = { id: string; title: string | null; ride_kind: string | null; date: string; time: string | null; location: string | null; status: string; role: string | null;
+// cancelled: the session was called off (sessions.cancelled_at), once volunteer_me says so.
+export type Mine = { id: string; title: string | null; ride_kind: string | null; event_kind?: string | null; date: string; time: string | null; location: string | null; status: string; role: string | null;
   lead?: boolean; clock_in: string | null; clock_out: string | null; opens_at: string | null; closes_at: string; starts_at?: string | null; briefing: string | null;
-  can_work: boolean; reward?: Reward | null; cert?: { serial: string; hours: number } | null };
+  can_work: boolean; cancelled?: boolean; reward?: Reward | null; cert?: { serial: string; hours: number } | null };
 export type RecordRow = { id: number; hours: number; on: string; note: string | null; session_id: string | null; title: string | null; ride_kind: string | null };
+/** One event's hours, all of them (record holds only the newest 30 rows), once volunteer_me sends them. */
+export type EventHours = { session_id: string; hours: number; on: string; title: string | null; ride_kind: string | null };
 export type Me = { signedIn?: false; id: string; name: string; hours: number; account: string | null; status: string | null; profile?: boolean; agreed: boolean; unread?: number;
-  mine: Mine[]; record: RecordRow[]; first_on: string | null; last_on: string | null; sessions: number; cert_signer: string | null; cert_title: string | null };
+  mine: Mine[]; record: RecordRow[]; events?: EventHours[]; first_on: string | null; last_on: string | null; sessions: number; cert_signer: string | null; cert_title: string | null };
 export type Prof = { status: string | null; applied_at: string | null; profile_at?: string | null; skills: string | null; days: number[]; shirt: string | null; whatsapp: string | null;
   briefed: Record<string, string>; name_ar?: string | null; gender?: string | null; auto?: boolean; birth_date?: string | null;
   emergency?: { name: string; phone: string; relation: string | null } | null };
@@ -27,7 +30,7 @@ export const AFTER_KEY = "mm_vol_after"; // the opportunity to come back to, acr
 
 export const S: {
   opps: Opp[] | null; me: Me | null; prof: Prof | null; err: string; note: string; noteAt: number;
-  updates: { items: Update[]; fresh: Set<number> } | null;
+  updates: { items: Update[]; fresh: Set<number>; err?: string } | null; // err: the list could not be read
 } = { opps: null, me: null, prof: null, err: "", note: "", noteAt: 0, updates: null };
 
 let painter: () => void = () => undefined;
@@ -52,6 +55,8 @@ export function say(e: Pick<Err, "code" | "detail">): string {
     VOL_OWN_BOOKING: "vdOwn", VOL_NOT_YOURS: "volNotYours", VOL_PROFILE: "profNeeded", VOL_PENDING: "profWaiting", VOL_NOT_LEAD: "teamNotLead",
     VOL_CHECKED_OUT: "teamStaffOut", NOT_FOUND: "teamGone",
     BLOOD_VISITOR: "errVisitor", BLOOD_DONATED: "errDonatedFirst", VOL_DONATED_FIRST: "volDonatedFirst", VOL_SLOW: "volSlow", VOL_BAD_SEARCH: "volSearchHint",
+    // _blood_donated_apply's own refusals, in the booking app's words: trying again never helps, so never "connection"
+    BLOOD_NOT_CHECKED_IN: "bldErrIn", BLOOD_CODE_USED: "bldErrUsed", BLOOD_NO_ACCOUNT: "bldErrAcct",
     BOOKING_NOT_FOUND: "volNotFound", BAD_BOOKING_STATE: "volNotFound", VOL_AGREE: "vdAgreeTitle", VOL_CERT_EMPTY: "certEmpty", BAD_DATE: "errBadDates",
     BAD_INPUT: "errBadInput", BAD_LOGIN: "errBadLogin", LOCKED: "errLocked", RATE_LIMIT: "errRate", VOL_TOKEN: "vdSessionEnded",
   };

@@ -88,7 +88,8 @@ export function openBooking(preselect?: Iso): void {
       const id = uid("m");
       const on = allowed(m);
       const input = h("input", { type: "radio", name: modeName, id, value: m, disabled: !on, checked: d.mode === m });
-      input.addEventListener("change", () => { d.mode = m; editStage(); dlg.body.querySelector<HTMLInputElement>(`#${id}`)?.focus(); });
+      // editStage draws new radios with new ids: the one to focus again is found by its mode.
+      input.addEventListener("change", () => { d.mode = m; editStage(); dlg.body.querySelector<HTMLInputElement>(`.modes input[value="${m}"]`)?.focus(); });
       modes.append(
         h("div", { class: `mode${on ? "" : " is-off"}` },
           input,

@@ -186,8 +186,10 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const total = rows.reduce((sum, r) => sum + r.price, 0) + (extrasCost ?? 0);
   const free = (!!s?.free || (noNum && total === 0)) && extras.length === 0;
   const ready = codeReady(rows, s);
-  // the Wallet switch (the booking app's _cwPaySlot, 2026-11-03): only with a balance read
-  const due = !past && !allWl && balance !== null ? walletDue(rows, s?.kind, !!s?.approval, extrasCost) : null;
+  // the Wallet switch (the booking app's _cwPaySlot, 2026-11-03): only with a balance read; each row's own add-ons, so a
+  // row that costs nothing is left out of what it pays
+  const extrasBy = extrasCost === null ? null : extras.reduce((m, x) => m.set(x.rowId, (m.get(x.rowId) ?? 0) + (x.amount ?? 0)), new Map<string, number>());
+  const due = !past && !allWl && balance !== null ? walletDue(rows, s?.kind, !!s?.approval, extrasBy) : null;
   const wWords = walletWords(locale);
   // Paying online (2026-11-10): Pay now for places still unpaid on a ride paid online; Cancel with the refund's
   // choice for a booking paid online (never a race, a Petromin night, the blood drive, or a ride staff approve).

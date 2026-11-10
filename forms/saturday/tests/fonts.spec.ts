@@ -8,6 +8,7 @@ for (const [lang, family] of [['en', 'Archivo'], ['en', 'Space Grotesk'], ['ar',
     page.on('request', (r) => asked.push(r.url()));
     page.on('response', (r) => { if (r.url().includes('/fonts/') && r.status() !== 200) failed.push(`${r.status()} ${r.url()}`); });
     await page.route('**/rest/v1/rpc/*', (r) => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '[]' }));
+    await page.route('**/rest/v1/site_content*', (r) => r.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: '[]' }));
     await page.goto(`/saturday?lang=${lang}`);
     const loaded = await page.evaluate(async (f) => {
       await document.fonts.ready;

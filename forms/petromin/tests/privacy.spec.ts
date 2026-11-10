@@ -1,15 +1,26 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 
-// The Privacy Notice (Personal Data Protection Law, Arts. 12-13): readable from the footer and
-// beside a required "I have read the Privacy Notice" box on the last step. A new registration
-// does not go through without the box; editing a booking does not ask again.
+// The Privacy Notice (Personal Data Protection Law, Arts. 12-13): readable beside a required
+// "I have read the Privacy Notice" box on the last step (and from the form's own footer on its own
+// page; the website's page has the site's footer instead). A new registration does not go through
+// without the box; editing a booking does not ask again.
 const S1 = { id: '2099-02-08-pw', title: "Petromin's Wednesdays", start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' };
 const json = (body: unknown) => ({ status: 200, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'content-type': 'application/json' }, body: JSON.stringify(body) });
 
-test('the footer opens the notice: what is collected, who receives it, where it is kept', async ({ page }) => {
+// To the last step and the notice's link beside its box, which both pages have.
+async function toNotice(page: Page) {
+  await page.locator('#sessions .session').first().click();
+  await page.click('#next');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
+  await page.click('#next');
+  await page.locator('#f-privacy [data-privacy-open]').click();
+}
+
+test('the notice says what is collected, who receives it, where it is kept', async ({ page }) => {
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.goto('/petromin?lang=en');
-  await page.locator('footer [data-privacy-open]').click();
+  await toNotice(page);
   const d = page.locator('#privacy-dialog');
   await expect(d).toBeVisible();
   await expect(d.locator('#pv-title')).toHaveText('Privacy Notice');
@@ -24,14 +35,14 @@ test('the footer opens the notice: what is collected, who receives it, where it 
 test('Arabic reads the Arabic text; French reads the English under a note', async ({ page }) => {
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.goto('/petromin?lang=ar');
-  await page.locator('footer [data-privacy-open]').click();
+  await toNotice(page);
   await expect(page.locator('#pv-title')).toHaveText('إشعار الخصوصية');
   await expect(page.locator('#pv-body')).toContainText('ما يجمعه هذا النموذج ولماذا');
   await expect(page.locator('#pv-note')).toBeHidden();
   await page.locator('#pv-close').click();
 
   await page.goto('/petromin?lang=fr');
-  await page.locator('footer [data-privacy-open]').click();
+  await toNotice(page);
   await expect(page.locator('#pv-title')).toHaveText('Avis de confidentialité');
   await expect(page.locator('#pv-note')).toHaveText('Cet avis est disponible en anglais et en arabe.');
   await expect(page.locator('#pv-body')).toHaveAttribute('dir', 'ltr');

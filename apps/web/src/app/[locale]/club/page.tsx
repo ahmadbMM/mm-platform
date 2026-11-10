@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
-import PageShell from "@/components/site/PageShell";
+import PageShell, { navFrom } from "@/components/site/PageShell";
 import ClubCard from "@/components/club/ClubCard";
 import ClubRides from "@/components/club/ClubRides";
 import MembersArea from "@/components/club/MembersArea";
@@ -10,7 +10,7 @@ import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum } from "@/lib/fill";
-import { bookingLink, localHref } from "@/lib/links";
+import { bookingLink, bookingPage, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { getAccount, rpcServer } from "@/lib/account";
 import { memberArea, memberTitle } from "@/lib/members";
@@ -127,7 +127,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         )}
         <section className="club-join" id="card">
           {members?.member ? (
-            <MembersArea title={title} communityHref={bookingLink("/members", locale)} accountHref={bookingLink("/account", locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens}
+            <MembersArea title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens}
               sgOf={(r) => (r.gender === undefined ? null : genderChip(r, sgWords))} refusalOf={(r) => genderBlock(r, viewer, sgWords)} />
           ) : members ? (
             <div className="club-lookup">

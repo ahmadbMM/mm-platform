@@ -28,9 +28,6 @@ html:is([lang="ar"], [lang="ur"]) .bz-eyebrow { letter-spacing: 0; font-size: 13
 .bz-proof strong { display: block; font-size: clamp(28px, 3vw, 44px); letter-spacing: -1.5px; color: #077a4b; }
 html:is([lang="ar"], [lang="ur"]) .bz-proof strong { letter-spacing: 0; }
 .bz-proof span { color: #4e554f; font-size: 14px; font-weight: 600; }
-/* One word can be the whole figure ("Мероприятия", "Événements"): on a phone the cards stack
-   rather than squeeze two such words side by side. */
-@media (max-width: 480px) { .bz-proof { grid-template-columns: 1fr; } }
 .bz-proof > div { min-width: 0; }
 .bz-proof strong { overflow-wrap: break-word; hyphens: auto; }
 .bz-logos { margin-top: 44px; text-align: center; }
@@ -59,3 +56,7 @@ html:is([lang="ar"], [lang="ur"]) .bz-logos p { letter-spacing: 0; font-size: 13
   .bz-form-wrap { padding: 0 16px 60px; }
   .bz-form { grid-template-columns: 1fr; gap: 24px; border-radius: 28px; }
 }
+/* One word can be the whole figure ("Мероприятия", "Événements"): on a phone the cards stack
+   rather than squeeze two such words side by side. After the 900px block, whose two columns a
+   phone matches too: placed before it, this rule never won. */
+@media (max-width: 480px) { .bz-proof { grid-template-columns: 1fr; } }

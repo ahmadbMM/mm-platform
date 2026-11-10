@@ -21,6 +21,11 @@ describe("the calendar file", () => {
     expect(day).toContain("DTEND;VALUE=DATE:20991202");
     expect(day).not.toContain("LOCATION");
   });
+  it("a ride that gathers ends two hours after it sets off, not as it sets off", () => {
+    const ics = icsText({ id: "d", title: "Saturday Social Ride", date: "2099-11-07", time: "05:30 - 06:00", starts_at: "2099-11-07T05:30:00+03:00", location: null, gathers: true }, now);
+    expect(ics).toContain("DTSTART:20991107T023000Z");
+    expect(ics).toContain("DTEND:20991107T050000Z");
+  });
   it("the start the database gives wins over the typed times", () => {
     expect(icsText({ id: "c", title: "Ride", date: "2099-11-05", time: "17:00 - 23:00", starts_at: "2099-11-05T16:30:00+03:00", location: null }, now)).toContain("DTSTART:20991105T133000Z");
   });

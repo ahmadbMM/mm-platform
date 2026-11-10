@@ -97,11 +97,12 @@ export function dayStatus(day: Iso, entry: CalDay | undefined, today: Iso, tier?
   if (day < today) return entry ? "past" : "not_open";
   if (live?.status === "pending") return "requested";
   if (!entry) return "not_open";
-  // The venue's own request that was not chosen reads so; one it cancelled reads Cancelled unless the
-  // date can be asked for again.
-  if (entry.mine?.status === "declined") return "declined";
   const st: DayStatus = entry.state === "closed" ? "closed" : entry.taken ? "taken"
     : tier && day < addDays(today, tier.min_lead_days) ? "soon" : tier && day > addDays(today, tier.horizon_days) ? "far" : "available";
+  // The venue's own request that was not chosen reads so; one declined only because another venue
+  // took the date ('another_venue') can be asked for again once the date is free (that venue
+  // cancelled). One it cancelled reads Cancelled unless the date can be asked for again.
+  if (entry.mine?.status === "declined" && (st !== "available" || entry.mine.staff_note !== "another_venue")) return "declined";
   if (entry.mine?.status === "cancelled" && st !== "available") return "cancelled";
   return st;
 }
@@ -398,7 +399,9 @@ export function passwordProblem(p: string, ctx: { login?: string; venueNames?: s
 }
 
 /** A contact phone as the database keeps it (E.164: "+" and 8-15 digits; a Saudi 05xxxxxxxx or
- *  5xxxxxxxx gets +966), "" for empty, or null when it is not a phone number (BAD_PHONE). */
+ *  5xxxxxxxx gets +966), "" for empty, or null when it is not a phone number (BAD_PHONE). A Saudi
+ *  unified (92xxxxxxx) or toll-free (800xxxxxxx) number written without "+" or "00" is refused: it
+ *  is no mobile, and read as international it would be saved as another country's (+92 is Pakistan). */
 export function e164(raw: string): string | null {
   const v = raw.trim();
   if (!v) return "";
@@ -408,6 +411,7 @@ export function e164(raw: string): string | null {
     if (d.startsWith("00")) d = d.slice(2);
     else if (/^05\d{8}$/.test(d)) d = `966${d.slice(1)}`;
     else if (/^5\d{8}$/.test(d)) d = `966${d}`;
+    else if (/^92\d{7}$/.test(d) || /^800\d{7}$/.test(d)) return null;
   }
   return /^[1-9]\d{7,14}$/.test(d) ? `+${d}` : null;
 }

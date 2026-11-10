@@ -18,14 +18,6 @@
   --f-ar: "IBM Plex Sans Arabic", "Space Grotesk", system-ui, sans-serif;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-.mmf-saturday {
-    --bg: #0F1215; --wash: #15201A; --surface: #161A1D; --ink: #F2F5F2; --mute: #9AA39D; --line: #2A3330;
-    --brand: #00CF78; --brand-2: #03FF89; --on-brand: #04140C; --accent: #2EEB99; --ok: #5FD39A; --warn: #F2B36B; --err: #FF9C94;
-    --amber-bg: #3A2210;
-    color-scheme: dark;
-  }
-}
 .mmf-saturday, .mmf-saturday * { box-sizing: border-box; }
 .mmf-saturday, .mmf-saturday { margin: 0; }
 .mmf-saturday {

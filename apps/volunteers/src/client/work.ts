@@ -145,7 +145,7 @@ async function tick(): Promise<void> {
   if (document.querySelector("dialog[open]")) return; // never under a question being answered
   const r = route();
   if (r.name === "team") void loadTeam();
-  else if (work.list) void loadList();
+  else if (work.ent.caps.list) void loadList(); // a list whose first read failed too: it said "Loading…" for good
 }
 
 /** Leaving the page by itself: the cut-off, or the database saying it is no longer theirs. */
@@ -162,6 +162,17 @@ export function stopScan(): void {
   if (scanner) { scanner.stop(); scanner = null; }
   scanBox = null;
   if (work) work.scanning = false;
+}
+/** Forgets the work page altogether, its marks not sent and its timers too: signing out, or signing in, on a phone
+ *  people share. Kept, the next volunteer saw the last one's session (their role, arrival and team) and the marks
+ *  still waiting went out under the next sign-in. */
+export function resetWork(): void {
+  window.clearTimeout(timer);
+  window.clearTimeout(retryTimer);
+  stopScan();
+  pending.clear();
+  work = null;
+  agreeTick = false;
 }
 
 // ── the page ──
@@ -242,6 +253,15 @@ async function finish(): Promise<void> {
 }
 async function doFinish(): Promise<void> {
   const w = work; if (!w) return;
+  // Marks still "Not sent" go first: leaving the page forgets them, so a check-in the volunteer saw done never reached
+  // the database. Ones that still cannot get through, or that the database refuses, are said before anything is left.
+  if (pending.size) {
+    w.msg = "";
+    await flush();
+    if (work !== w) return; // the database said the page is no longer theirs
+    if (pending.size) w.msg = t("finishUnsent");
+    if (w.msg) { paint(); return; }
+  }
   const r = await rpc("volunteer_clock_out", { p_session: w.id });
   if (!r.ok) { w.msg = say(r); paint(); return; }
   await reloadMe();
@@ -312,16 +332,27 @@ async function find(args: Record<string, unknown>, add: boolean): Promise<void> 
 async function loadList(): Promise<void> {
   const w = work; if (!w) return;
   const r = await rpc<Booking[]>("volunteer_list", { p_session: w.id });
-  if (!r.ok) { if (lost(r.code)) { await load(); leaveWork(say(r)); return; } if (!unsent(r)) { w.msg = say(r); } paint(); return; }
+  if (!r.ok) {
+    if (lost(r.code)) { await load(); leaveWork(say(r)); return; }
+    if (!unsent(r)) w.msg = say(r);
+    else if (work === w && !w.list) {
+      // Never read yet: the panel says so instead of "Loading…", and the minute tick reads it again.
+      const b = document.getElementById("w-list");
+      if (b) { clear(b); b.appendChild(note(t("errConnection"))); }
+    }
+    paint(); return;
+  }
   w.list = Array.isArray(r.data) ? r.data : [];
-  for (const b of w.list) overlay(b);
-  // The list is newer than the figures from entering, and other people are marking too.
+  // The list is newer than the figures from entering, and other people are marking too. Counted as the database has
+  // them, before the marks not sent yet are laid over the rows: each of those is counted once, when it lands (ok()).
   const c = w.ent.counts, l = w.list;
   if (c) {
-    c.booked = l.length; c.in = l.filter((x) => x.checked_in && !isPending(`in:${x.id}`)).length + l.filter((x) => !x.checked_in && isPending(`in:${x.id}`)).length;
+    c.booked = l.length;
+    c.in = l.filter((x) => x.checked_in).length;
     c.donated = l.filter((x) => x.donated).length;
     if (c.visitors != null) c.visitors = l.filter((x) => x.visitor).length;
   }
+  for (const b of w.list) overlay(b);
   paint();
 }
 /** A row read again from the database wears the marks still waiting to be sent. */
@@ -481,7 +512,9 @@ function viewTeam(main: HTMLElement, sh: Mine | null): void {
     h("h1", {}, t("teamTitle")), h("div", { class: "counts", id: "t-counts" }),
     h("p", { class: "msg", id: "t-msg", role: "status" }),
     h("div", { class: "rows", id: "t-list" }, note(t("loading"))));
-  if (!w.team) void loadTeam(); else paintTeam();
+  // main.ts puts this page in the document only after it is built, and paintTeam finds its places by id: the team
+  // already read is drawn once it is there (drawn now, it said "Loading…" until the next tick), and read again behind it.
+  if (!w.team) void loadTeam(); else { queueMicrotask(paintTeam); void loadTeam(); }
 }
 async function loadTeam(): Promise<void> {
   const w = work; if (!w) return;

@@ -98,6 +98,7 @@ html:is([lang="ar"], [lang="ur"]) .pg-month { letter-spacing: 0; }
   .pg-routes { grid-template-columns: 1fr; }
   .pg-event { grid-template-columns: 58px 1fr; }
   .pg .pg-event > a { grid-column: 1 / -1; justify-content: center; }
+  .pg-event > .pg-opens { grid-column: 1 / -1; max-width: none; text-align: center; } /* where the button would be, not in the date's column */
   .pg-notice thead { display: none; }
   .pg-notice tr { display: block; border-bottom: 1px solid rgba(0, 0, 0, .12); padding: 8px 0; }
   .pg-notice td { display: block; border: 0; padding: 3px 0; }

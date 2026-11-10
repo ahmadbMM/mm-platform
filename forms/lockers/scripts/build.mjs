@@ -4,7 +4,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { createRequire } from 'node:module';
-import { ACCOUNT_JS, writeAccountForWeb } from '../../shared/emit.mjs';
+import { ACCOUNT_JS, writeAccountForWeb, sameNoticeAsSite } from '../../shared/emit.mjs';
 import { emitSite } from '../../shared/site-form.mjs';
 
 const root = resolve(import.meta.dirname, '..');
@@ -18,6 +18,7 @@ const i18n = readFileSync(d('i18n.js'), 'utf8');
 const shared = readFileSync(resolve(root, 'shared/shared.js'), 'utf8') + '\n' + readFileSync(resolve(root, '../shared/site-t-extra.js'), 'utf8') +
   '\n' + readFileSync(resolve(root, '../shared/langs16.js'), 'utf8') + '\nmmLangs16(SHARED);\n';
 const SHARED = new Function(shared + ';return SHARED;')();
+sameNoticeAsSite(SHARED, 'lockers'); // the notice the website shows, never an older copy
 // The account step every account form shares (forms/shared/account.js), inlined before the page's script;
 // the website's Learn to ride form gets the same file as apps/web/src/lib/account-shared.ts.
 writeAccountForWeb();

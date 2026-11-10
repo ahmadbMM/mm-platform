@@ -12,12 +12,13 @@
 .tk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 360px)); gap: 18px; align-items: start; }
 .tk-card { position: relative; overflow: hidden; background: #fff; color: #1a1919; font-size: 14px;
   border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; }
-/* The logo heads the number's column: dark lettering on paper, white on the night ticket. */
+/* The logo heads the number's column: dark lettering on paper, white on the night ticket. The National Day ticket is
+   paper here in every state (ticketLook), so it keeps the dark lettering: the white one vanished on it. */
 .tk-logo { display: block; line-height: 0; margin-bottom: 10px; }
 .tk-logo img { height: 44px; width: auto; }
 .tk-logo-d { display: none; }
-.tk-card:is(.tk-live, .ev-snd96) .tk-logo-l { display: none; }
-.tk-card:is(.tk-live, .ev-snd96) .tk-logo-d { display: inline; }
+.tk-card.tk-live .tk-logo-l { display: none; }
+.tk-card.tk-live .tk-logo-d { display: inline; }
 .tk-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; padding: 24px; border-bottom: 1px dashed rgba(26, 25, 25, .16); }
 .tk-num-block { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .tk-card p { margin: 0; }
@@ -76,19 +77,19 @@
   font-size: 12px; font-weight: 700;
   background: rgba(26, 25, 25, .07); color: #1a1919; border: 1px solid rgba(26, 25, 25, .14); }
 /* The code a row was booked with (2026-11-08, the booking app's _codeRowHtml): its mark in its kind's colour, the kind and
-   the code; on the live ticket's night, lighter. */
+   the code; on the live ticket's night, lighter (--ck-n). Victory Lap, the DEFE 5KM Run and the donation event stay
+   white when held: they keep the paper colours, or the kind and the edge vanished on white. */
 .tk-code { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0 0; }
 .tk-code-tag { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border: 1px solid rgba(26, 25, 25, .14);
   border-radius: 4px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .tk-code-ic { flex: none; color: var(--ck); }
 .tk-code-kn { color: #6f6d63; }
 .tk-code-c { font-weight: 700; }
-.ck-rw { --ck: #0a7a4b; } .ck-rf { --ck: #0f766e; } .ck-rb { --ck: #a16207; }
-.ck-bd { --ck: #c8102e; } .ck-promo { --ck: #8c3b6e; } .ck-sat { --ck: #1d4ed8; } .ck-vl { --ck: #1f7ae0; }
-.tk-live .tk-code-tag { border-color: rgba(251, 249, 244, .22); }
-.tk-live .tk-code-kn { color: rgba(251, 249, 244, .66); }
-.tk-live .ck-rw { --ck: #6ee7b7; } .tk-live .ck-rf { --ck: #5eead4; } .tk-live .ck-rb { --ck: #fcd34d; }
-.tk-live .ck-bd { --ck: #ff8a9a; } .tk-live .ck-promo { --ck: #f0abd6; } .tk-live .ck-sat { --ck: #93c5fd; } .tk-live .ck-vl { --ck: #8fd0ff; }
+.ck-rw { --ck: #0a7a4b; --ck-n: #6ee7b7; } .ck-rf { --ck: #0f766e; --ck-n: #5eead4; } .ck-rb { --ck: #a16207; --ck-n: #fcd34d; }
+.ck-bd { --ck: #c8102e; --ck-n: #ff8a9a; } .ck-promo { --ck: #8c3b6e; --ck-n: #f0abd6; } .ck-sat { --ck: #1d4ed8; --ck-n: #93c5fd; } .ck-vl { --ck: #1f7ae0; --ck-n: #8fd0ff; }
+.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood) .tk-code-tag { border-color: rgba(251, 249, 244, .22); }
+.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood) .tk-code-kn { color: rgba(251, 249, 244, .66); }
+.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood) .tk-code-ic { color: var(--ck-n); }
 /* The booking app's colour for each bike type (.type-road, .type-hybrid ...). */
 .tk-type.t-hybrid, .tk-type.t-kids { background: rgba(7, 122, 75, .1); color: #077a4b; border-color: rgba(7, 122, 75, .22); }
 .tk-type.t-gravel { background: rgba(7, 122, 75, .08); color: #077a4b; border-color: rgba(7, 122, 75, .2); }

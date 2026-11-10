@@ -73,30 +73,119 @@ async function write(method, path, body) {
   if (!res.ok) throw new Error(`${method} ${path}: ${res.status} ${await res.text()}`);
 }
 
+// What a catalogue row points at. The public key reads each row on its own `published` (rentals
+// 20260927100000_bike_catalog.sql), so live can hide a category while its sub-types and models stay public; staging's
+// triggers and foreign keys refuse a row whose parent is not there. A row whose parent is neither public on live nor on
+// staging is left out - live shows it nowhere either (a model whose category is unpublished is left out everywhere,
+// apps/web/src/lib/catalog.ts) - and an `optional` link is dropped instead (a model under an unpublished sub-type still
+// shows under its category there). A parent staging has and the public key cannot see is kept, unpublished (below).
+const REFS = {
+  catalog_categories: [{ col: "parent_id", to: "catalog_categories" }],
+  catalog_models: [{ col: "category_id", to: "catalog_categories" }, { col: "subtype_id", to: "catalog_categories", optional: true }],
+  catalog_colors: [{ col: "model_id", to: "catalog_models" }],
+  catalog_photos: [{ col: "model_id", to: "catalog_models" }, { col: "color_id", to: "catalog_colors", optional: true }],
+};
+// The unique keys besides the primary key: a row live deleted and made again (a new id, the same slug), or two rows that
+// swapped slugs, would meet staging's copy still holding the slug. That copy takes a placeholder slug first; the same
+// upsert then rewrites it, or it is removed below (or kept unpublished).
+const UNIQUE = {
+  catalog_categories: (r) => JSON.stringify([r.parent_id ?? null, r.slug]),
+  catalog_models: (r) => r.slug,
+};
+async function freeKeys(t, rows, stg) {
+  const key = UNIQUE[t.name];
+  if (!key) return 0;
+  const wanted = new Map(rows.map((r) => [key(r), pkOf(t, r)]));
+  let n = 0;
+  for (const s of stg) {
+    const by = wanted.get(key(s));
+    if (by === undefined || by === pkOf(t, s)) continue;
+    await write("PATCH", `${t.name}?${pkFilter(t, s)}`, { slug: `stale-${s.id}` });
+    n++;
+  }
+  return n;
+}
+
 const summary = [];
+// A write that fails is said at the end and fails the run, but never stops the rest: the tables after it, the removals
+// and the pictures still go (one refused row used to stop every hourly run in the same place).
+const errors = [];
 const live = {};
+const have = {}; // table -> the ids on staging once its rows are written: what the next tables' rows may point at
 for (const t of TABLES) {
   let prod = await readAll(PROD_URL, prodH, t.name);
   if (t.name === "site_content") {
     prod = prod.filter((r) => !(r.key in STAGING_OVERRIDES) && !STAGING_OWN(r.key));
     for (const [key, value] of Object.entries(STAGING_OVERRIDES)) prod.push({ key, value });
   }
-  live[t.name] = prod;
   let stg = await readAll(STAGING_URL, stgH, t.name);
-  if (t.name === "site_content") stg = stg.filter((r) => !STAGING_OWN(r.key));
-  const stgBy = new Map(stg.map((r) => [pkOf(t, r), r]));
-  const changed = prod.filter((r) => { const s = stgBy.get(pkOf(t, r)); return !s || !same(r, s); });
-  if (changed.length) {
-    // Only the columns the live site gave; the stamps are left to staging's own triggers.
-    const body = changed.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => !IGNORE.has(k) || t.pk.includes(k))));
-    await write("POST", `${t.name}?on_conflict=${t.pk.join(",")}`, body);
+  if (t.name === "site_content") stg = stg.filter((r) => !STAGING_OWN(r.key)); // staging's own pay./store. keys: never written over, never removed
+  const refs = REFS[t.name] || [];
+  const own = new Set([...stg, ...prod].map((r) => r.id)); // a parent in the same table: written in the same upsert, first
+  const shown = [], left = [];
+  let unlinked = 0;
+  for (const p of prod) {
+    let r = p, why = null;
+    for (const { col, to, optional } of refs) {
+      if (r[col] == null || (to === t.name ? own : have[to]).has(r[col])) continue;
+      if (optional) { r = { ...r, [col]: null }; unlinked++; } else { why = `${r.id} (${col} ${r[col]})`; break; }
+    }
+    if (why) left.push(why); else shown.push(r);
   }
-  t.gone = stg.filter((r) => !prod.some((p) => pkOf(t, p) === pkOf(t, r)));
-  summary.push(`${t.name}: ${prod.length} on live, ${changed.length} written`);
+  live[t.name] = shown;
+  const stgBy = new Map(stg.map((r) => [pkOf(t, r), r]));
+  let changed = shown.filter((r) => { const s = stgBy.get(pkOf(t, r)); return !s || !same(r, s); });
+  // Parents first inside the upsert: a row's BEFORE trigger sees only the rows written before it in the same statement.
+  const self = refs.find((x) => x.to === t.name);
+  if (self) changed = [...changed.filter((r) => r[self.col] == null), ...changed.filter((r) => r[self.col] != null)];
+  let written = 0, freed = 0;
+  if (changed.length) {
+    try {
+      freed = await freeKeys(t, changed, stg);
+      // Only the columns the live site gave; the stamps are left to staging's own triggers.
+      const body = changed.map((r) => Object.fromEntries(Object.entries(r).filter(([k]) => !IGNORE.has(k) || t.pk.includes(k))));
+      await write("POST", `${t.name}?on_conflict=${t.pk.join(",")}`, body);
+      written = changed.length;
+    } catch (e) {
+      errors.push(`${t.name}: ${e.message}`);
+    }
+  }
+  const keep = new Set(shown.map((r) => pkOf(t, r)));
+  t.gone = stg.filter((r) => !keep.has(pkOf(t, r)));
+  // What staging holds now: its rows, those written in their new form.
+  t.stay = new Map(stg.map((r) => [pkOf(t, r), r]));
+  if (written) for (const r of changed) t.stay.set(pkOf(t, r), r);
+  // A category leaving staging may yet be kept (a row staying points at it); the other tables' leaving rows go.
+  const goneIds = new Set(t.name === "catalog_categories" ? [] : t.gone.map((r) => r.id));
+  have[t.name] = new Set([...t.stay.values()].map((r) => r.id).filter((id) => !goneIds.has(id)));
+  summary.push(`${t.name}: ${prod.length} on live, ${written} written` + (freed ? `, ${freed} slug(s) freed for them` : "") +
+    (unlinked ? `, ${unlinked} without a link live hides` : "") + (left.length ? `, ${left.length} left out (live hides what they belong to): ${left.join(", ")}` : ""));
 }
+// Whether a row staging keeps points at this category: a model by its category or sub-type, a sub-type by its parent.
+const pointedAt = (id) =>
+  [...TABLES.find((x) => x.name === "catalog_models").stay.values()].some((m) => m.category_id === id || m.subtype_id === id) ||
+  [...TABLES.find((x) => x.name === "catalog_categories").stay.values()].some((c) => c.id !== id && c.parent_id === id);
 for (const t of [...TABLES].reverse()) {
-  for (const r of t.gone) await write("DELETE", `${t.name}?${pkFilter(t, r)}`);
-  if (t.gone.length) summary.push(`${t.name}: ${t.gone.length} removed`);
+  // Sub-types before the categories they belong to (parent_id is ON DELETE RESTRICT).
+  const gone = t.name === "catalog_categories" ? [...t.gone.filter((r) => r.parent_id != null), ...t.gone.filter((r) => r.parent_id == null)] : t.gone;
+  let removed = 0, kept = 0;
+  for (const r of gone) {
+    try {
+      if (t.name === "catalog_categories" && pointedAt(r.id)) {
+        // Live has it too (rows it shows point at it), unpublished, so the public key cannot see it: so on staging.
+        if (r.published !== false) await write("PATCH", `${t.name}?${pkFilter(t, r)}`, { published: false });
+        kept++;
+        continue;
+      }
+      await write("DELETE", `${t.name}?${pkFilter(t, r)}`);
+      t.stay.delete(pkOf(t, r));
+      removed++;
+    } catch (e) {
+      errors.push(`${t.name} ${pkOf(t, r)}: ${e.message}`);
+    }
+  }
+  if (removed) summary.push(`${t.name}: ${removed} removed`);
+  if (kept) summary.push(`${t.name}: ${kept} kept, unpublished (rows staging keeps belong to them)`);
 }
 
 // Pictures: every /media/<path> and every site-bucket URL the copied content names.
@@ -129,9 +218,13 @@ for (const p of paths) {
       headers: { ...stgH, "Content-Type": src.headers.get("content-type") || "application/octet-stream", "x-upsert": "true" },
       body: Buffer.from(await src.arrayBuffer()),
     });
-    if (!up.ok) throw new Error(`picture ${p}: upload ${up.status} ${await up.text()}`);
+    if (!up.ok) { errors.push(`picture ${p}: upload ${up.status} ${await up.text()}`); continue; }
   }
   copied++;
 }
 summary.push(`pictures: ${paths.size} named, ${present} already on staging, ${copied} copied`);
 console.log((DRY ? "[dry run] " : "") + summary.join("\n"));
+if (errors.length) {
+  console.error(`${errors.length} write(s) refused:\n${errors.join("\n")}`);
+  process.exitCode = 1;
+}

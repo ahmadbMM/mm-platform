@@ -33,7 +33,7 @@ import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
 import { clubSchema } from "@/content/pages/club";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
-import { accountBookings, getAccount, rpcServer } from "@/lib/account";
+import { readAccount, readBookings, rpcServer } from "@/lib/account";
 import { bloodRewards, isBloodId, rewardGood } from "@/lib/blood";
 import { btOf } from "@/lib/blood-type";
 import { spOf, spOptionsOf } from "@/lib/sport";
@@ -108,12 +108,33 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const expired = handoffState === "expired";
   const L = asLocale(locale);
   const tx = serverL(locale);
-  const [{ content, previewing, hidden }, acct] = await Promise.all([pageState("account"), getAccount()]);
+  const [{ content, previewing, hidden }, read] = await Promise.all([pageState("account"), readAccount()]);
+  const acct = read === "unread" ? null : read;
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(accountSchema, content, L);
   const app = navFrom(site).booking; // the booking app as staff set it
   const book = bookingLink(app, locale);
   const handoff = (auth?: string) => bookingLink(`${app.replace(/[?#].*$/, "")}?handoff=site${auth ? `&auth=${auth}` : ""}`, locale);
+  const again = localHref(accountPartHref(part), locale); // this page once more, when a read failed
+  const tryAgain = tx("Try again", "حاول مرة أخرى");
+
+  // The session could not be checked just now (the database slow or out of reach): said so, with the page once more and
+  // Sign out, rather than the sign-in form, which told a rider who is signed in that they were not.
+  if (read === "unread") {
+    return (
+      <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
+        <div className="ac">
+          <section className="ac-card">
+            <img src="/site/logo-dark.png" alt="Micromobility" className="ac-logo" />
+            <h1>{tx("Something went wrong", "حدث خطأ ما")}</h1>
+            <p className="ac-text" role="alert">{tx("Please try again in a moment.", "يرجى المحاولة مرة أخرى بعد قليل.")}</p>
+            <a className="ac-go ac-vol-go" href={again}>{tryAgain}</a>
+            <ul className="ac-notes"><li><SignOut label={tx("Sign out", "تسجيل الخروج")} /></li></ul>
+          </section>
+        </div>
+      </PageShell>
+    );
+  }
 
   if (!acct) {
     return (
@@ -143,7 +164,15 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const kept = decodeSession((await cookies()).get(HANDOFF_COOKIE)?.value);
   const handedP = kept && kept.id !== acct.id ? await sessionProfile(kept) : null;
   const handed = handedP && handedP !== "none" ? handedP : null;
-  const rows = await accountBookings(acct);
+  // the bookings; when they could not be read, the rides and the record say so rather than that there are none
+  const booked = await readBookings(acct);
+  const unread = booked === null;
+  const rows = booked ?? [];
+  const failed = (
+    <p className="ac-empty" role="alert">
+      {tx("Something went wrong at our end. Check your connection and try again.", "حدث خلل لدينا. تحقق من اتصالك وحاول مرة أخرى.")} <a href={again}>{tryAgain} <ArrowIcon size={15} /></a>
+    </p>
+  );
   const now = riyadhClock(new Date());
   const today = now.slice(0, 10);
   // paying online (2026-11-10): Pay now and Cancel with a refund on the tickets, where payments are open here
@@ -288,9 +317,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         {extras.ambassador && <div className="ac-sec"><AmbassadorCard locale={locale} a={extras.ambassador} /></div>}
         <section className="ac-sec" id="ac-rides" aria-labelledby="ac-rides-h">
           <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <ArrowIcon size={15} /></a></div>
-          {groups.length === 0 && past.length === 0 ? (
+          {groups.length === 0 && past.length === 0 ? (unread ? failed : (
             <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <ArrowIcon size={15} /></a>}</p>
-          ) : (
+          )) : (
             <div className="tk-grid">
               {groups.map((g, i) => {
                 const s = sessions.get(g.sessionId);
@@ -422,6 +451,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // approve it). Stats: Your rides, then more of it (RideMore) and the badges earned; Badges: the closest badges and
   // every badge.
   const recordMain = async (p: "stats" | "badges") => {
+    // no record from bookings that could not be read: every ride badge would read as not earned
+    if (unread) return <section className="ac-sec" aria-label={p === "stats" ? recordBase.stats : recordBase.badges}>{failed}</section>;
     const record = recordRows(rows);
     const [recSessions, badges, referralRaw] = await Promise.all([loadRecordSessions(record.map((r) => r.sessionId), acct), loadBadgeData(acct), referralP]);
     badges.referralRode = referralRodeOf(referralRaw); // the Recruiter badge counts these friends

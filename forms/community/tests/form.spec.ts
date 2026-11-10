@@ -287,9 +287,11 @@ test('a sign-up the database refuses says why, on the field or in the banner', a
   answer = refuse({ code: 'P0001', message: 'RATE_LIMITED' });
   await page.click('#next');
   await expect(page.locator('#banner .banner-text')).toHaveText('Too many tries from this network. Wait a few minutes and try again.');
+  // taken, with the checks before it out of lookups (customer_exists answers false): the email or the mobile, either
   answer = refuse({ code: '23505', message: 'DUPLICATE' }, 409);
   await page.click('#next');
-  await expect(page.locator('#f-email .err')).toHaveText('An account with this email already exists. Sign in to apply with it.');
+  await expect(page.locator('#f-email .err')).toHaveText('An account with this email or mobile number already exists. Sign in to apply with it.');
+  await expect(page.locator('#f-phone .err')).toHaveText('An account with this email or mobile number already exists. Sign in to apply with it.');
   await expect(step(page, 1)).toBeVisible();
 });
 
@@ -529,6 +531,18 @@ test('an account without a gender or height is asked for them on step 2', async 
   expect(of('customer_community_apply')[0].p).toEqual(expect.objectContaining({ gender: 'female', height: 165 }));
 });
 
+// A height outside 100 to 250 cm on the account (0, a typo) is no height: asked here, as the database asks for it.
+test('an account whose height is 0 or out of range is asked for it on step 2', async ({ page }) => {
+  for (const height of [0, 95, 260]) {
+    const p = await page.context().newPage();
+    await open(p, `?code=${CODE}`, { customer_community_me: () => json({ ...ME, height }) });
+    await expect(step(p, 2)).toBeVisible();
+    await expect(p.locator('#f-xheight')).toBeVisible();
+    await expect(p.locator('#f-xgender')).toBeHidden();
+    await p.close();
+  }
+});
+
 test('a member already is told so, and a used or late code asks to sign in again', async ({ page }) => {
   await open(page, `?code=${CODE}`, { customer_community_me: () => json({ ...ME, member: true }) });
   await expect(page.locator('#member')).toBeVisible();
@@ -542,6 +556,35 @@ test('a member already is told so, and a used or late code asks to sign in again
   await expect(late.locator('#banner-signin')).toBeVisible();
   await expect(step(late, 1)).toBeVisible();
   expect(of('customer_community_me')).toEqual([]);
+});
+
+// A code that fails leaves the applicant here to sign in: what they type for it is saved on top of the membership
+// answers kept on this device, never instead of them (2026-11-10 bug hunt).
+test('a code that fails keeps the saved membership answers through a sign-in typed here', async ({ page }) => {
+  let redeem = () => json([{ id: 'c-karim', name: 'Karim Mansour', session_token: 'tok-handed' }]);
+  await open(page, `?code=${CODE}&lang=en`, {
+    customer_handoff_redeem: () => redeem(),
+    customer_login: () => json([{ id: 'c-karim', name: 'Karim Mansour', session_token: 'tok-again' }]),
+    customer_pwd_state: () => json(false),
+  });
+  await expect(step(page, 2)).toBeVisible();
+  await page.selectOption('#nat', 'Egypt');
+  await page.fill('#prof', 'Architect');
+  await page.waitForTimeout(500);
+  // back by the booking site's link, the code already used
+  redeem = () => json([]);
+  await page.goto(`/community/registration?code=${CODE}&lang=en`);
+  await expect(page.locator('#banner .banner-text')).toHaveText('This sign-in link has expired. Sign in again to continue.');
+  await page.click('#to-login');
+  await page.fill('#lid', 'karim.mansour@gmail.com');
+  await page.waitForTimeout(500);
+  const kept = await page.evaluate(() => JSON.parse(localStorage.getItem('mm-community-draft') || 'null'));
+  expect(kept.data.v).toEqual(expect.objectContaining({ nat: 'Egypt', prof: 'Architect' }));
+  await page.fill('#lpw', 'Secret123');
+  await page.click('#login');
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#nat')).toHaveValue('Egypt');
+  await expect(page.locator('#prof')).toHaveValue('Architect');
 });
 
 test('Arabic: the account step and the account-made note in the page language', async ({ page }) => {
@@ -947,7 +990,7 @@ test('a password the database calls weak is said on the password box, not as a l
 
 test('Tab stays inside the open Privacy Notice', async ({ page }) => {
   await open(page);
-  await page.click('#pv-open-foot');
+  await page.click('#pv-open'); // the box's link: the website's page has no footer of the form's (the site's is there)
   await expect(page.locator('#pv-x')).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   expect(await page.evaluate(() => !!document.activeElement && !!document.activeElement.closest('#pv .pv-box'))).toBe(true);
@@ -1086,6 +1129,17 @@ test('the status page: invited to a ride, not approved, a link that leads nowher
   await page.reload();
   await expect(page.locator('.tk-end b')).toHaveText('Not approved this time');
   await expect(page.locator('#track-acts a')).toHaveCount(0);
+  // changes asked and never made, then decided: the request is no step any more, and no link leads to a page that
+  // can only say the application is gone (2026-11-10 bug hunt)
+  answer = { ok: true, first: 'Karim', lang: 'en', status: 'rejected', sent_at: '2026-10-20T08:00:00Z', updated_at: null, decided_at: '2026-10-23T08:00:00Z',
+    fix: { asked_at: '2026-10-21T08:00:00Z', fields: ['instagram'], note: null, token: 'ef'.repeat(18) }, fix_done_at: null, ride: null };
+  await page.reload();
+  await expect(page.locator('.tk-step b')).toHaveText(['Received', 'Not approved this time']);
+  await expect(page.locator('#track-acts a')).toHaveCount(0);
+  answer = { ...(answer as Record<string, unknown>), status: 'approved' };
+  await page.reload();
+  await expect(page.locator('.tk-step b')).toHaveText(['Received', 'Approved']);
+  await expect(page.locator('#track-acts a')).toHaveText('Open the booking site');
   answer = { ok: false, error: 'gone' };
   await page.reload();
   await expect(page.locator('#track-err')).toHaveText('We could not find this application. The link may be incomplete.');

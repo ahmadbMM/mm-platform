@@ -40,7 +40,7 @@ const LANG_COOKIE = "NEXT_LOCALE";
 // newsletter is the same page, so they neither stop the copy being used nor give it a key of its own.
 const TRACKING = /^(?:utm_[a-z]+|fbclid|gclid|igshid|mc_cid|mc_eid)$/i;
 
-type Cache = { match(k: string): Promise<Response | undefined>; put(k: string, r: Response): Promise<void> };
+type Cache = { match(k: string): Promise<Response | undefined>; put(k: string, r: Response): Promise<void>; delete(k: string): Promise<boolean> };
 type Ctx = { waitUntil(p: Promise<unknown>): void };
 type Env = { PAGE_CACHE?: string; CF_VERSION_METADATA?: { id?: string } };
 type Handler = { fetch(req: Request, env: never, ctx: never): Promise<Response> };
@@ -105,6 +105,10 @@ export const NO_PAGE_CACHE = "x-mm-no-page-cache";
 export const BROWSER_CACHE = "private, no-cache, max-age=0, must-revalidate";
 
 const storable = (r: Response) => r.status === 200 && (r.headers.get("content-type") || "").startsWith("text/html") && !r.headers.has(NO_PAGE_CACHE);
+/** The page is no longer there: a page staff switched off or Coming Soon turned on (the proxy's 307 to Home), a journal
+ *  article hidden or deleted (404). Not a database blip: an error (5xx) or a page drawn without the site's state
+ *  (NO_PAGE_CACHE) leaves the copy as it is. */
+const gone = (r: Response) => !r.headers.has(NO_PAGE_CACHE) && ((r.status >= 300 && r.status < 400) || r.status === 404 || r.status === 410);
 
 function toStore(r: Response, now: number, body: BodyInit | null = r.body): Response {
   const h = new Headers(r.headers);
@@ -155,6 +159,8 @@ export async function servePage(req: Request, env: Env, ctx: Ctx, handler: Handl
             try {
               const res = await handler.fetch(new Request(req), env as never, ctx as never);
               if (storable(res)) await cache.put(k, toStore(res, Date.now()));
+              // a page taken down goes from the edge too: kept, the old page was answered for the rest of the six hours
+              else if (gone(res)) await cache.delete(k);
             } catch { /* the next visitor draws it */ } finally { refreshing.delete(k); }
           })());
         }

@@ -7,14 +7,15 @@ import { rpc } from "./api";
 import { append, h } from "./dom";
 import { dayLabel, sessionName, t, whenLabel, type Key } from "./i18n";
 import { icon } from "./icons";
-import { render, route, S, type Update } from "./state";
-import { note } from "./ui";
+import { render, route, S, say, type Update } from "./state";
+import { button, note } from "./ui";
 
 const KIND: Record<string, { k: Key; ic: string; href?: (u: Update) => string }> = {
   approved: { k: "updApproved", ic: "tick", href: () => "#" },
   accepted: { k: "updAccepted", ic: "tick", href: () => "#me" },
   declined: { k: "updDeclined", ic: "hand" },
   ended: { k: "updEnded", ic: "hand" },
+  cancelled: { k: "updCancelled", ic: "close" }, // the session was called off
   briefing: { k: "updBriefing", ic: "doc", href: () => "#me" },
   reminder_day: { k: "updReminderDay", ic: "cal", href: () => "#me" },
   reminder_soon: { k: "updReminderSoon", ic: "clock", href: () => "#me" },
@@ -36,7 +37,8 @@ async function loadUpdates(): Promise<void> {
   busy = true;
   const r = await rpc<{ items: Update[]; unread: number }>("volunteer_updates");
   busy = false;
-  if (!r.ok || !r.data) { S.updates = { items: [], fresh: new Set() }; if (route().name === "updates") render(); return; }
+  // A list that could not be read says so (it said "No updates" under a lit dot), and is read again on Try again.
+  if (!r.ok || !r.data) { S.updates = { items: [], fresh: new Set(), err: r.ok ? t("errConnection") : say(r) }; if (route().name === "updates") render(); return; }
   const items = Array.isArray(r.data.items) ? r.data.items : [];
   S.updates = { items, fresh: new Set(items.filter((x) => !x.read).map((x) => x.id)) };
   if (S.updates.fresh.size) {
@@ -52,6 +54,7 @@ export const forgetUpdates = () => { S.updates = null; };
 export function viewUpdates(main: HTMLElement): void {
   main.appendChild(h("h1", {}, t("navUpdates")));
   if (!S.updates) { main.appendChild(note(t("loading"))); void loadUpdates(); return; }
+  if (S.updates.err) { append(main, note(S.updates.err, "alert"), button(t("retry"), () => { S.updates = null; render(); })); return; }
   const items = S.updates.items.filter((u) => Object.prototype.hasOwnProperty.call(KIND, u.kind));
   if (!items.length) { main.appendChild(note(t("updNone"))); return; }
   main.appendChild(h("ul", { class: "list upd", id: "updates" }, ...items.map((u) => {

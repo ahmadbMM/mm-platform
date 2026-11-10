@@ -12,6 +12,10 @@ jobs:
       # else against production's.
       NEXT_PUBLIC_SUPABASE_URL: ${{ github.ref == 'refs/heads/staging' && vars.STAGING_SUPABASE_URL || vars.NEXT_PUBLIC_SUPABASE_URL }}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ github.ref == 'refs/heads/staging' && vars.STAGING_SUPABASE_ANON_KEY || vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      # The booking app the website's forms send riders to (Sign in, Forgot password, Make the changes):
+      # on `staging` the staging copy of it (STAGING_BOOKING_URL), which reads the staging database the
+      # forms write to; empty everywhere else (the live booking app).
+      NEXT_PUBLIC_BOOKING_URL: ${{ github.ref == 'refs/heads/staging' && vars.STAGING_BOOKING_URL || '' }}
       # Staging's pages are built knowing they are staging, so the titles of pages drawn at build
       # time start with "[Staging]" too (apps/web/src/lib/staging.ts; the Worker's own MM_ENV covers
       # the rest). Empty everywhere else.

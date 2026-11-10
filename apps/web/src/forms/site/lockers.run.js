@@ -3273,7 +3273,7 @@ var FORM_T = {
    own words; this file decides what a sign-in, a hand-over and a signed-in account's questions come to.
 
      ident(raw)               what customer_login takes for what was typed: an email in lower case, or a mobile
-                              in E.164 (+966 when it has no code; a Saudi 05X / 5X / 9665X number as +9665X)
+                              in E.164 (+966 when it has no code; a Saudi 05X / 5X / 9665X / 96605X number as +9665X)
      signIn(rpc, raw, pwd)    customer_login, then customer_pwd_state: {row} or {error, cc}
                                 error: id (nothing typed), pwd (no password), locked (too many tries),
                                 busy (the network's limit), network, wrong (cc: a number typed without its
@@ -3313,6 +3313,7 @@ var MMAccount = (function () {
     if (!s) return low;
     if (s.slice(0, 2) === "00") { var y = s.slice(2); if (y.indexOf("9660") === 0) y = "966" + y.slice(4); return "+" + y; }
     if (/^9665\d{8}$/.test(s)) return "+" + s;
+    if (/^9660\d{9}$/.test(s)) return "+966" + s.slice(4); // "966 05X..." with no plus: the trunk 0 goes, as after + or 00
     if (s[0] === "0") return "+966" + s.slice(1);
     if (s.length >= 11) return "+" + s; // a number pasted with its code and no plus
     return "+966" + s;
@@ -3334,7 +3335,9 @@ var MMAccount = (function () {
     }
     var row = Array.isArray(r.data) ? r.data[0] : null;
     if (!row || !row.id || !row.session_token) {
-      return { error: "wrong", cc: id.indexOf("@") < 0 && !/^\s*(\+|00)/.test(bare(raw)) && !/^\+9665\d{8}$/.test(id) };
+      // Whether a code was typed, read as ident() reads the number: "٠٠٢٠..." or "(+20) ..." has one.
+      var typed = ascii(bare(raw)).replace(/[\s()\-.]/g, "");
+      return { error: "wrong", cc: id.indexOf("@") < 0 && !/^(\+|00)/.test(typed) && !/^\+9665\d{8}$/.test(id) };
     }
     // A password staff issued (a temporary one) is replaced before the account is used, as the booking site asks.
     var ps = await rpc("customer_pwd_state", { p_id: row.id, p_token: row.session_token });
@@ -5779,8 +5782,10 @@ var qrcode = function() {
   // The evening, the time and the lockers picked, kept for this tab: across the account step, a reload, and the
   // booking app signing the rider in (a forgotten password).
   var PICK_KEY = "mm-lockers-pick";
-  // The booking app: where a forgotten password is handled.
-  var BOOKING_URL = "https://experiences.micromobility.sa/";
+  // The booking app: where a forgotten password is handled. The staging website talks to the staging database, so it
+  // sends riders to the booking app's staging copy, which knows its accounts and hands them back to it (rentals
+  // STAGING.md, section 2); everywhere else, the live app.
+  var BOOKING_URL = location.hostname === "staging.micromobility.sa" ? "https://micromobility-staff-staging.pages.dev/" : "https://experiences.micromobility.sa/";
   // The account kept on this device (the owner, 2026-11-09: stay signed in): {id, token, name, email}.
   var ACCT_KEY = "mm-lockers-acct";
   // What the desk scans: a rental's own address, which sends a staff phone to the staff app with that rider's lockers.
@@ -5789,6 +5794,18 @@ var qrcode = function() {
   var MAX_EACH = 3;
   // The cabinet is read again this often while the page is in view (a locker reserved is nobody else's: the owner, 2026-11-09).
   var POLL_MS = 15000;
+  // On the website the page can be drawn again without a reload (the rider goes to another page of the site and comes
+  // back, and SiteForm.tsx runs this script again): the run before this one stops listening to the document and reading
+  // the cabinet, or both runs would answer every click and key and paint the one page.
+  var stopper = typeof AbortController === "function" ? new AbortController() : null;
+  try { if (window.MM_LOCKERS_RUN) window.MM_LOCKERS_RUN.abort(); } catch (e) {}
+  window.MM_LOCKERS_RUN = stopper;
+  var OWN = stopper ? { signal: stopper.signal } : false; // the document's listeners: this run's only
+  function onStop(fn) { if (stopper) stopper.signal.addEventListener("abort", fn); }
+  // It stops by itself too once the website has taken its page away (the rider went on to another page of the site),
+  // or it would go on reading the cabinet there: its timers find the form gone.
+  var formEl = document.getElementById("v-landing");
+  function gone() { if (formEl && !formEl.isConnected) { if (stopper) stopper.abort(); return true; } return false; }
 
   var SH = window.SHARED, T = window.FORM_T || {};
   var html = document.documentElement;
@@ -6063,26 +6080,31 @@ var qrcode = function() {
     if (seq !== boardSeq || d !== day) return;
     if (!b) { boardErr = true; paintPick(); return; }
     board = b; boardAt = Date.now();
-    settle(true);
+    return settle(true);
   }
   // The time and the picks made to fit the cabinet read: a time no longer open goes, then any locker no longer free,
-  // then any beyond what this account may still hold for that time.
+  // then any beyond what this account may still hold for that time. True when a pick went and that was said.
   function settle(tell) {
-    var kind = kindNow(), open = openPeriods(board, kind);
+    var kind = kindNow(), open = openPeriods(board, kind), said = null;
     if (period && open.indexOf(period) < 0) period = null;
     if (!period) period = open.filter(function (p) { return changing || leftOf(board, p) !== 0; })[0] || open[0] || null;
     var gone = picked.filter(function (c) { return !period || !freeFor(board, period, c); });
     if (gone.length) {
       picked = picked.filter(function (c) { return gone.indexOf(c) < 0; });
-      if (tell && board.kind) setErr("f-cab", "Locker {n} was just taken. Pick another.", { n: gone[0] });
+      if (tell && board.kind) said = ["Locker {n} was just taken. Pick another.", { n: gone[0] }];
     }
     if (picked.length > room()) {
       picked = picked.slice(0, room());
-      if (tell) setErr("f-cab", "Up to 3 lockers per account for each time.");
+      if (tell) said = ["Up to 3 lockers per account for each time."];
     }
     savePick();
-    paintPick();
+    // It is said on the cabinet: a rider on the review (or signing in) is taken back to it, to see what went and pick
+    // again (and hears it), never left to reserve fewer lockers than they think.
+    if (said && view !== "landing") { backToPick(); say(said[0], said[1]); }
+    else paintPick();
+    if (said) setErr("f-cab", said[0], said[1]);
     if (view === "steps" && step === 2) { if (!picked.length) backToPick(); else paintReview(); }
+    return !!said;
   }
   function pickDay(d) {
     if (d === day) return;
@@ -6169,6 +6191,18 @@ var qrcode = function() {
     grid.innerHTML = cabinetCells(board).map(function (u) { return u ? door(u, taken) : '<span class="door void" aria-hidden="true"></span>'; }).join("");
     if (keep) { var again = $('.door[data-code="' + keep.replace(/"/g, "") + '"]', grid); if (again && !again.disabled) again.focus({ preventScroll: true }); }
   }
+  // A row of buttons drawn again only when what it shows changed (the cabinet is read every 15 seconds, and a button
+  // drawn again under a keyboard or a screen reader loses its focus); when it did change, the button that had the
+  // focus has it again.
+  function putHtml(el, h) {
+    if (el.getAttribute("data-h") === h) return;
+    var f = document.activeElement, had = f && f !== el && el.contains(f) ? f : null;
+    var v = had && had.getAttribute("data-v"), id = had && had.id;
+    el.innerHTML = h; el.setAttribute("data-h", h);
+    if (!had) return;
+    var now = v != null ? $$("[data-v]", el).filter(function (x) { return x.getAttribute("data-v") === v; })[0] : id ? document.getElementById(id) : null;
+    if (now && !now.disabled) now.focus({ preventScroll: true });
+  }
   function paintPick() {
     var notice = $("#pick-notice"), n = null, retry = false;
     if (evenings === undefined) { if (evErr) { n = tr(NET); retry = true; } else n = tr("Loading..."); }
@@ -6185,18 +6219,18 @@ var qrcode = function() {
       $("#chg-title").textContent = changing.code ? tr("Change locker {n}", { n: changing.code }) : tr("Change your locker");
       $("#chg-when").textContent = dayLong(changing.day);
     }
-    $("#days").innerHTML = (evenings || []).map(function (e) {
+    putHtml($("#days"), (evenings || []).map(function (e) {
       var on = e.day === day;
       return '<button type="button" class="pill" role="radio" aria-checked="' + on + '" data-v="' + esc(e.day) + '">' + esc(e.kind === "pm" ? tr("{day} · Petromin", { day: dayShort(e.day) }) : dayShort(e.day)) + "</button>";
-    }).join("");
+    }).join(""));
     var kind = kindNow(), hasBoard = !!(board && board.day === day && board.kind);
     var list = hasBoard ? openPeriods(board, kind) : (PERIODS[kind] || []);
     $("#f-period").hidden = !some || !day || !kind || (hasBoard && !list.length);
-    $("#periods").innerHTML = list.map(function (p) {
+    putHtml($("#periods"), list.map(function (p) {
       var full = !changing && hasBoard && leftOf(board, p) === 0, on = p === period, pr = priceOf(p);
       return '<button type="button" class="opt" role="radio" aria-checked="' + on + '" data-v="' + p + '"' + (full ? " disabled" : "") + ">" +
         "<b>" + esc(spanOf(p)) + "</b><span>" + (full ? esc(tr("Full")) : pr != null ? amt(pr) : "") + "</span></button>";
-    }).join("");
+    }).join(""));
     if (hasBoard && !list.length && !n) { notice.hidden = false; $(".notice-h", notice).textContent = tr("No lockers this evening."); }
     $("#f-cab").hidden = !some || !day || (board && board.day === day && (!board.kind || !list.length));
     paintCab();
@@ -6525,7 +6559,7 @@ var qrcode = function() {
   document.addEventListener("click", function (e) {
     if (e.target.closest("#pv-open, #pv-open-foot")) { e.preventDefault(); e.stopPropagation(); showModal("#pv"); }
     if (e.target.closest("#lt-open")) { e.preventDefault(); e.stopPropagation(); showModal("#lt"); }
-  });
+  }, OWN);
   $$(".modal-x").forEach(function (b) { b.addEventListener("click", closeModal); });
   $$(".modal").forEach(function (m) { m.addEventListener("click", function (e) { if (e.target === m && !busy) closeModal(); }); });
   document.addEventListener("keydown", function (e) {
@@ -6538,7 +6572,7 @@ var qrcode = function() {
       else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
-  });
+  }, OWN);
 
   /* ── Checking a step: {hard:{field:[k,a,site]}, soft:{field:[k,a]}} ─────── */
   var acked = {};
@@ -6715,8 +6749,9 @@ var qrcode = function() {
     keepAcct(); paintWho();
     await Promise.all([loadWallet(), loadMine(), loadEvenings()]);
     if (pendingChange) { openChange(pendingChange); return; }
-    if (day) await loadBoard();
-    if (picked.length && board && board.day === day && board.kind) enterReview();
+    // a locker picked that went meanwhile, or more than this account may still hold, keeps the rider on the cabinet
+    var cut = day ? await loadBoard() : false;
+    if (!cut && picked.length && board && board.day === day && board.kind) enterReview();
     else backToPick();
   }
   function signedOut() {
@@ -6802,7 +6837,7 @@ var qrcode = function() {
     var r = mine.filter(function (x) { return x.id === b.getAttribute("data-id"); })[0]; if (!r) return;
     if (b.classList.contains("mine-chg")) { enterChange(r); return; }
     dropping = r; paintRemove(); showModal("#rm", "#rm-keep");
-  });
+  }, OWN);
 
   /* ── The code the desk scans, drawn on a canvas as the website's tickets draw theirs (components/booking/QrCanvas.tsx,
      lib/qr-paint.ts): a phone's dark mode recolours an svg's shapes, never a canvas's pixels. qrcode-generator is the
@@ -6958,8 +6993,8 @@ var qrcode = function() {
     pickRadio("#pays", pay);
     if (!$("#book").classList.contains("loading")) $("#book").disabled = !picked.length;
     paintNames();
-    $("#terms-line").innerHTML = esc(tr("By reserving you accept the {terms}.")).replace("{terms}",
-      '<button type="button" class="d-link" id="lt-open">' + esc(tr("locker terms")) + "</button>"); // a pop-up: the website's Terms page is not open yet
+    putHtml($("#terms-line"), esc(tr("By reserving you accept the {terms}.")).replace("{terms}",
+      '<button type="button" class="d-link" id="lt-open">' + esc(tr("locker terms")) + "</button>")); // a pop-up: the website's Terms page is not open yet
   }
   // A name on each locker when more than one is reserved (the desk knows whose key it is): the first the account's,
   // each one required, letters and spaces only (the owner's rule for names), 60 at most. One locker is the account's.
@@ -7024,9 +7059,21 @@ var qrcode = function() {
       if (cr && cr.error === "signin") { signedOut(); return; }
       showBanner(NET); return;
     }
-    var r;
-    try { r = await rpc("customer_locker_book", body); }
+    var r, made = null;
+    try {
+      r = await rpc("customer_locker_book", body);
+      if (r.error && mayBeMade(errText(r.error))) made = await madeAlready(d, p, codes);
+    }
     finally { setLoading("#book", false); }
+    if (made) {
+      // reserved after all: the lockers read again are the rider's now (the done screen's cards come from them)
+      var mp = made[0].pay || how;
+      booked = { codes: made.map(function (x) { return x.code; }), day: d, period: p, kind: k, pay: mp, total: price != null ? price * made.length : null };
+      clearPick(); pay = null; names = {}; namesKey = "";
+      showDone();
+      if (mp === "wallet") loadWallet();
+      return;
+    }
     if (r.error) { bookRefused(r.error); return; }
     var out = r.data && typeof r.data === "object" ? r.data : null;
     if (!out || !out.ok) { showBanner(NET); return; }
@@ -7043,6 +7090,16 @@ var qrcode = function() {
     showDone();
     loadMine(); if (how === "wallet") loadWallet();
   });
+  // A reservation the database made though its answer never arrived (a phone changing networks), and Reserve pressed
+  // again: the second is refused because of the first (its lockers taken, the limit or the room used, the wallet paid),
+  // or it had no answer either. Those refusals first read the rider's lockers again.
+  function mayBeMade(m) { return !/NOT_AUTHORIZED|RATE_LIMITED|PAY_OFF|WALLET_NOT_OPEN|LOCKER_(?:PAY|PICK|OUT|UNKNOWN|NOT_OPEN)/.test(m); }
+  // The rider's lockers for that evening and time, read again: the ones reserved, when they are every locker asked for.
+  async function madeAlready(d, p, codes) {
+    await loadMine();
+    var got = mine.filter(function (x) { return !x.booking_id && x.day === d && x.period === p && x.status === "reserved" && codes.indexOf(x.code) >= 0; });
+    return got.length && got.length >= codes.length ? got : null;
+  }
   function codeIn(m) { var x = /LOCKER_(?:TAKEN|OUT|UNKNOWN):\s*([A-Za-z0-9]+)/.exec(m); return x ? x[1] : ""; }
   function bookRefused(e) {
     var m = errText(e), n = codeIn(m);
@@ -7089,18 +7146,19 @@ var qrcode = function() {
 
   /* ── The cabinet read again while the page is seen ────────────────────── */
   function live() { return document.visibilityState === "visible" && !busy && !!day && (view === "landing" || (view === "steps" && step === 2)); }
-  setInterval(function () { if (live()) loadBoard(); }, POLL_MS);
-  document.addEventListener("visibilitychange", function () { if (live() && Date.now() - boardAt > POLL_MS) loadBoard(); });
+  var poll = setInterval(function () { if (!gone() && live()) loadBoard(); }, POLL_MS);
+  onStop(function () { clearInterval(poll); });
+  document.addEventListener("visibilitychange", function () { if (!gone() && live() && Date.now() - boardAt > POLL_MS) loadBoard(); }, OWN);
   // Back from the card payment page, the browser may show this page as it was left (its back-forward cache): busy, with
   // Reserve spinning and the lockers handed to the payment. It is drawn again from what is true now: the cabinet, with
   // the lockers held for the card among the rider's own.
   window.addEventListener("pageshow", function (e) {
-    if (!e.persisted) return;
+    if (!e.persisted || gone()) return; // this run's page only, as the board's poll and the document's listeners
     if ($("#book").classList.contains("loading")) setLoading("#book", false);
     if (view === "steps" && step === 2 && !picked.length) backToPick(); else paintReview();
     loadMine(); loadWallet();
     if (day) loadBoard();
-  });
+  }, OWN);
 
   /* ── A locker's own tag: ?locker=7 (older tags L7), picked on the first evening and time it is free ── */
   function tagCode(raw) {
@@ -7146,21 +7204,22 @@ var qrcode = function() {
     if (!found && kept && evOf(kept.day)) { day = kept.day; period = kept.period; picked = kept.codes.slice(); }
     kept = null;
     if (!day) day = evenings[0].day;
-    if (found) settle(false); else await loadBoard();
+    if (found) settle(false); else return await loadBoard();
   }
   (async function start() {
     var handed = await arrive();
     // else the account kept on this device; one the database no longer knows is forgotten (loadMine, quietOut)
     if (!acct) acct = keptAcct();
     if (acct) { paintWho(); await Promise.all([loadWallet(), loadMine()]); }
-    await start2();
+    var cut = await start2();
     if (pendingChange) {
       if (acct) openChange(pendingChange);
       else openAccount("ask"); // signed in, the change opens (signedIn)
       return;
     }
-    // Handed back signed in with lockers picked before: on to the review.
-    if (handed && acct && picked.length && board && board.kind) enterReview();
+    // Handed back signed in with lockers picked before: on to the review, unless one of them went meanwhile (said on
+    // the cabinet).
+    if (handed && acct && !cut && picked.length && board && board.kind) enterReview();
   })();
 })();
 

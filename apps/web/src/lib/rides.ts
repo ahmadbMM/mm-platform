@@ -78,6 +78,10 @@ export type RideSession = {
    *  unset) less the bookings holding one; null when not counted (a ride staff approve, a full
    *  one, one further out, or a count that failed). The cards say it at 3 or fewer. */
   left?: number | null;
+  /** Bikes out of service on the session (sessions.out_bikes, rentals 20261107111000; the booking app's _n6rOutN): each
+   *  takes a place off the capacity, as the database's _out_bikes_guard waitlists a rider past capacity less these.
+   *  Only a read that asks for it has it (SESSION_COLS_OUT); a copy kept at the edge from before has none, and reads as 0. */
+  out?: number;
   /** A community ride staff approve (needs_approval not false): no places-left count. */
   approval?: boolean;
   capacity?: number | null;
@@ -123,6 +127,7 @@ type Row = {
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
   spots?: unknown; addons?: unknown; meet_url?: unknown; location?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
   gender_only?: unknown; closed_types?: unknown;
+  out_bikes?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -239,6 +244,16 @@ function revealOf(r: Row): Pick<RideSession, "revealAt"> {
   return { revealAt: typeof r.reveal_at === "string" && Number.isFinite(Date.parse(r.reveal_at)) ? r.reveal_at : null };
 }
 
+/** The bikes out of service a row says (sessions.out_bikes, {type: count}; the booking app's _n6rOut/_n6rOutN): the
+ *  whole positive counts summed, anything else none. Only when the read asked for it (SESSION_COLS_OUT). */
+function outOf(r: Row): Pick<RideSession, "out"> {
+  if (!("out_bikes" in r)) return {};
+  let o = r.out_bikes;
+  if (typeof o === "string") { try { o = JSON.parse(o); } catch { o = null; } }
+  if (!o || typeof o !== "object" || Array.isArray(o)) return { out: 0 };
+  return { out: Object.values(o as Record<string, unknown>).reduce<number>((n, v) => { const c = Math.floor(Number(v)); return c > 0 ? n + c : n; }, 0) };
+}
+
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
  *  left out unless `petromin` (or `keepAll`): only Experiences lists them, under Petromin Days to a
  *  Petromin tag holder and among the community rides to a community member (the owner, 2026-10-12);
@@ -280,6 +295,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" || kind === "blood" ? null : collectTime(r.bike_slots),
     ...breakfastOf(r),
     ...revealOf(r),
+    ...outOf(r),
     ...((kind === "vlap" || kind === "arena") && "vl" in r ? { vl: r.vl ?? null } : {}),
     gender: sessionGender(r.gender_only),
     closedTypes: Array.isArray(r.closed_types) ? r.closed_types.filter((x): x is string => typeof x === "string") : [],
@@ -346,6 +362,9 @@ export const SESSION_COLS_GENDER = "gender_only";
 // The bike types closed on a session (the owner, 2026-11-03; rentals migration 20261103210000). A group of its own, so
 // a database without it reads as before: every type open.
 export const SESSION_COLS_CLOSED = "closed_types";
+// The bikes out of service on a session (2026-11-06, OT01; rentals migration 20261107111000): they take places off its
+// capacity, so the places left the cards say count them. A group of its own, so a database without it reads as before.
+export const SESSION_COLS_OUT = "out_bikes";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -481,11 +500,12 @@ export async function placesTaken(fetchImpl: typeof fetch, url: string, key: str
   }
 }
 
-/** The places left on the soonest open sessions nobody approves (at most 12 counts a read). */
+/** The places left on the soonest open sessions nobody approves (at most 12 counts a read): the booking app's spotsLeft,
+ *  capacity (12 when unset) less the bikes out of service, less the bookings holding a place. */
 async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, url: string, key: string): Promise<RideSession[]> {
   const ask = sessions.filter((s) => !s.full && !s.approval).slice(0, 12);
   const counts = await Promise.all(ask.map((s) => placesTaken(fetchImpl, url, key, s.id, s.kind === "petromin")));
-  const left = new Map(ask.map((s, i) => [s.id, counts[i] == null ? null : Math.max(0, (s.capacity || 12) - (counts[i] as number))]));
+  const left = new Map(ask.map((s, i) => [s.id, counts[i] == null ? null : Math.max(0, (s.capacity || 12) - (s.out ?? 0) - (counts[i] as number))]));
   return sessions.map((s) => (left.has(s.id) ? { ...s, left: left.get(s.id) ?? null } : s));
 }
 
@@ -523,7 +543,8 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=*`, key), // every column: max_price and employee_price too (lib/biz.ts)
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: SESSION_GROUPS }),
+      // and the bikes out of service, which the places left count (withPlacesLeft)
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [...SESSION_GROUPS, SESSION_COLS_OUT] }),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) prices = priceRows(p.value);
     if (s.status === "fulfilled" && Array.isArray(s.value)) {

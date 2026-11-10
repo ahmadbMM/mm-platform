@@ -88,17 +88,25 @@ export async function renderCalendar(main: HTMLElement): Promise<void> {
       state.loadedFor = month;
     } else {
       state.error = r.code;
+      // The days were wiped: no month is loaded now, so going back to the last one reads it again
+      // rather than showing this month's error there.
+      state.loadedFor = "";
     }
   }
   draw(main);
 }
 
-function go(main: HTMLElement, month: Iso, focus?: Iso): void {
+type Nav = "prev" | "next" | "today";
+
+/** nav: the toolbar button that moved the month, focused again on the redrawn page when no day of
+ *  the grid takes the focus (Prev and Next; Today on a phone, where the grid is hidden). */
+function go(main: HTMLElement, month: Iso, focus?: Iso, nav?: Nav): void {
   state.month = monthStart(month);
   state.focus = focus || (state.month === monthStart(app.me!.today) ? app.me!.today : state.month);
   void renderCalendar(main).then(() => {
     const btn = main.querySelector<HTMLButtonElement>(`.cal-grid button[data-day="${state.focus}"]`);
     if (btn && btn.offsetParent !== null && focus) btn.focus();
+    else if (nav) main.querySelector<HTMLElement>(`.cal-toolbar [data-nav="${nav}"]`)?.focus();
   });
 }
 
@@ -117,13 +125,15 @@ function draw(main: HTMLElement): void {
   const title = h("div", { class: "cal-title" },
     h("h2", { id: "cal-month", "aria-live": "polite" }, monthTitleText()),
     h("p", { class: "hijri" }, hijriMonthTitle(state.month, app.lang)));
+  const todayBtn = button(t("today"), { small: true, onclick: () => go(main, today, today, "today") });
+  todayBtn.dataset.nav = "today";
   const toolbar = h(
     "div",
     { class: "cal-toolbar" },
-    h("button", { type: "button", class: "icon-btn", "aria-label": t("prevMonth"), onclick: () => go(main, addMonths(state.month, -1)) }, icon(isRtl() ? "next" : "prev")),
+    h("button", { type: "button", class: "icon-btn", "data-nav": "prev", "aria-label": t("prevMonth"), onclick: () => go(main, addMonths(state.month, -1), undefined, "prev") }, icon(isRtl() ? "next" : "prev")),
     title,
-    h("button", { type: "button", class: "icon-btn", "aria-label": t("nextMonth"), onclick: () => go(main, addMonths(state.month, 1)) }, icon(isRtl() ? "prev" : "next")),
-    button(t("today"), { small: true, onclick: () => go(main, today, today) }),
+    h("button", { type: "button", class: "icon-btn", "data-nav": "next", "aria-label": t("nextMonth"), onclick: () => go(main, addMonths(state.month, 1), undefined, "next") }, icon(isRtl() ? "prev" : "next")),
+    todayBtn,
   );
 
   const legend = h(

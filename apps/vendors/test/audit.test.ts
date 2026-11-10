@@ -3,7 +3,7 @@
 import { describe, expect, it } from "vitest";
 import { plural, PLURALS, pluralForm } from "../src/client/plurals";
 import {
-  arrivalWindow, canCancelSeries, canEditVenue, canRequest, dayStatus, e164, emailOk, insights, passwordProblem, rideTimes, within48h,
+  arrivalWindow, canCancelSeries, canEditVenue, canRequest, dayStatus, e164, emailOk, insights, passwordProblem, pickable, rideTimes, within48h,
   type CalDay, type Mine, type SharedRatings, type Tier,
 } from "../src/client/model";
 import { STRINGS } from "../src/client/strings";
@@ -79,6 +79,16 @@ describe("the contact's phone and email", () => {
     expect(e164("call me")).toBeNull();
     expect(e164("12")).toBeNull();
   });
+  it("refuses a Saudi unified or toll-free number written without + (it was saved as +92..., Pakistan)", () => {
+    expect(e164("920012345")).toBeNull();
+    expect(e164("9200 12345")).toBeNull();
+    expect(e164("8001234567")).toBeNull();
+    expect(e164("800 123 4567")).toBeNull();
+    // Written with + or 00 it is taken as given, as before.
+    expect(e164("+966 9200 12345")).toBe("+966920012345");
+    expect(e164("00971501234567")).toBe("+971501234567");
+    expect(e164("971501234567")).toBe("+971501234567");
+  });
   it("checks an email's shape", () => {
     expect(emailOk("")).toBe(true);
     expect(emailOk("a@b.co")).toBe(true);
@@ -109,6 +119,16 @@ describe("declined dates and roles", () => {
     expect(dayStatus("2026-11-07", day({ mine: mine({ status: "declined" }), taken: true }), "2026-10-04", tier)).toBe("declined");
     expect(dayStatus("2026-11-07", day({ mine: mine({ status: "cancelled" }) }), "2026-10-04", tier)).toBe("available");
     expect(dayStatus("2026-11-07", day({ mine: mine({ status: "cancelled" }), taken: true }), "2026-10-04", tier)).toBe("cancelled");
+    // Declined only because another venue was confirmed: once that venue cancels and the date is
+    // free, it can be asked for again (the database answers ok); a decline staff chose stays.
+    const auto = mine({ status: "declined", staff_note: "another_venue" });
+    expect(dayStatus("2026-11-07", day({ mine: auto, taken: true }), "2026-10-04", tier)).toBe("declined");
+    expect(dayStatus("2026-11-07", day({ mine: auto }), "2026-10-04", tier)).toBe("available");
+    expect(pickable(day({ mine: auto }), "2026-10-04", tier)).toBe(true);
+    expect(dayStatus("2026-11-07", day({ mine: auto, state: "closed" }), "2026-10-04", tier)).toBe("declined");
+    expect(dayStatus("2026-10-08", day({ day: "2026-10-08", mine: auto }), "2026-10-04", tier)).toBe("declined"); // inside the notice period
+    expect(dayStatus("2026-11-07", day({ mine: mine({ status: "declined" }) }), "2026-10-04", tier)).toBe("declined");
+    expect(dayStatus("2026-11-07", day({ mine: mine({ status: "declined", staff_note: "No space that day" }) }), "2026-10-04", tier)).toBe("declined");
   });
   it("owner, manager and viewer", () => {
     expect([canRequest("owner"), canRequest("manager"), canRequest("viewer")]).toEqual([true, true, false]);

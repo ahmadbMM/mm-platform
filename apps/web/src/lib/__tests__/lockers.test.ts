@@ -19,6 +19,7 @@ describe("a locker's tag", () => {
     expect(lockerRiderTarget("/lockers/L7")).toBe("/lockers?locker=L7");
     expect(lockerRiderTarget("/lockers/7", new URLSearchParams("lang=ar"))).toBe("/lockers?locker=7&lang=ar");
     expect(lockerRiderTarget("/lockers/7", new URLSearchParams("lang=xx"))).toBe("/lockers?locker=7");
+    expect(lockerRiderTarget("/lockers/7", new URLSearchParams("lang=ur"))).toBe("/lockers?locker=7&lang=ur"); // the page speaks all sixteen
     // the page itself, and anything that is not a locker's number, is not a tag
     expect(lockerRiderTarget("/lockers")).toBeNull();
     expect(lockerRiderTarget("/lockers/not-a-code")).toBeNull();
@@ -51,6 +52,8 @@ describe("a rider's show-at-desk QR (micromobility.sa/lockers/r/<rental>)", () =
     expect(staffTapTarget(`/lockers/r/${id}`, new URLSearchParams(), undefined)).toBeNull();
     expect(lockerRiderTarget(`/lockers/r/${id}`)).toBe("/lockers");
     expect(lockerRiderTarget(`/lockers/r/${id}`, new URLSearchParams("lang=ar"))).toBe("/lockers?lang=ar");
+    expect(lockerRiderTarget(`/lockers/r/${id}`, new URLSearchParams("lang=de"))).toBe("/lockers?lang=de");
+    expect(lockerRiderTarget(`/lockers/r/${id}`, new URLSearchParams("lang=xx"))).toBe("/lockers");
     expect(lockerRiderTarget("/lockers/r/not-a-rental")).toBeNull();
   });
 });

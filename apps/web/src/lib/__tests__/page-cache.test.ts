@@ -52,7 +52,7 @@ describe("servePage", () => {
     new Response(body, { status: 200, headers: { "content-type": "text/html; charset=utf-8", "set-cookie": "NEXT_LOCALE=ar; Path=/", "cache-control": "private, no-store", ...headers } });
   const fakeCache = () => {
     const m = new Map<string, Response>();
-    return { m, match: async (k: string) => m.get(k)?.clone(), put: async (k: string, r: Response) => { m.set(k, r); } };
+    return { m, match: async (k: string) => m.get(k)?.clone(), put: async (k: string, r: Response) => { m.set(k, r); }, delete: async (k: string) => m.delete(k) };
   };
   const ctx = () => { const waits: Promise<unknown>[] = []; return { waits, waitUntil: (p: Promise<unknown>) => { waits.push(p); } }; };
 
@@ -128,6 +128,23 @@ describe("servePage", () => {
     expect(await draw(T0, T0 + 7 * 3600 * 1000)).toEqual({ state: null, drawn: 2 }); // seven hours on
     const beforeMidnight = Date.UTC(2026, 10, 9, 20, 50); // 23:50 in Jeddah
     expect(await draw(beforeMidnight, beforeMidnight + 20 * 60 * 1000)).toEqual({ state: null, drawn: 2 }); // 00:10 the next day
+  });
+  it("lets a page taken down go from the next visit (switched off, Coming Soon, a hidden article), and keeps the copy through a database blip", async () => {
+    const after = async (answer: () => Response) => {
+      const cache = fakeCache();
+      let n = 0;
+      const handler = { fetch: vi.fn(async () => (++n === 1 ? html() : answer())) };
+      const visit = async (at: number) => { const c = ctx(); const res = await servePage(get("/events?lang=en"), env, c, handler, cache, at); await Promise.all(c.waits); return res; };
+      await visit(T0);
+      const stale = await visit(T0 + 20 * 60 * 1000); // the old page at once; the fresh answer drawn behind it
+      const next = await visit(T0 + 21 * 60 * 1000);
+      return { first: stale.headers.get("x-mm-page-cache"), next: next.headers.get("x-mm-page-cache"), status: next.status };
+    };
+    const home = (headers: Record<string, string> = {}) => () => new Response(null, { status: 307, headers: { location: `${SITE}/`, ...headers } });
+    expect(await after(home())).toEqual({ first: "stale", next: null, status: 307 }); // switched off, or Coming Soon: Home
+    expect(await after(() => new Response("<html>not found</html>", { status: 404, headers: { "content-type": "text/html" } }))).toEqual({ first: "stale", next: null, status: 404 });
+    expect(await after(() => new Response("down", { status: 503 }))).toEqual({ first: "stale", next: "stale", status: 200 });
+    expect(await after(home({ [NO_PAGE_CACHE]: "1" }))).toEqual({ first: "stale", next: "stale", status: 200 }); // drawn without the site's state
   });
   it("answers a first visit from the copy in the language the site drew for the same browser languages, never a guessed one", async () => {
     const cache = fakeCache();

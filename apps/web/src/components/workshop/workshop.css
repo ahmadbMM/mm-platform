@@ -30,8 +30,10 @@ html:is([lang="ar"], [lang="ur"]) .ws-eyebrow { letter-spacing: 0; font-size: 13
 .ws-sub { color: #5f6862; font-size: 13.5px; margin: 0 0 18px; }
 .ws-label { font-size: 13.5px; color: #57605a; font-weight: 600; display: block; margin: 0 0 8px; }
 .ws-hint { color: #5f6862; font-size: 12px; margin: -4px 0 10px; }
+/* The lanes share one row however narrow the card: three on a phone leave each under 70px of text, so a long word
+   ("Vorbeibringen") breaks inside its lane rather than running over the next one. */
 .ws-lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 7px; margin-bottom: 16px; }
-.ws-lane { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); background: #fff; color: #1a1919; border-radius: 14px; padding: 12px 10px; font-family: inherit; text-align: start; min-height: 64px; display: flex; flex-direction: column; gap: 3px; }
+.ws-lane { cursor: pointer; border: 1px solid rgba(0, 0, 0, .14); background: #fff; color: #1a1919; border-radius: 14px; padding: 12px 10px; font-family: inherit; text-align: start; min-height: 64px; display: flex; flex-direction: column; gap: 3px; overflow-wrap: anywhere; hyphens: auto; }
 .ws-lane strong { font-size: 12.5px; line-height: 1.2; }
 .ws-lane span { font-size: 10.5px; color: #5f6862; line-height: 1.3; }
 .ws-lane[aria-checked="true"] { border-color: #077a4b; background: rgba(7, 122, 75, .06); }
@@ -49,6 +51,7 @@ html:is([lang="ar"], [lang="ur"]) .ws-eyebrow { letter-spacing: 0; font-size: 13
 .ws-price { font-weight: 700; font-size: 14px; white-space: nowrap; }
 .ws-incl { padding: 0 18px 15px; }
 .ws-incl span { font-size: 10.5px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: #077a4b; display: block; margin-bottom: 8px; }
+html:is([lang="ar"], [lang="ur"]) .ws-incl span { letter-spacing: 0; font-size: 11.5px; }
 .ws-incl ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 5px; }
 .ws-incl li { color: #4a534c; font-size: 12.5px; }
 .ws-incl li::before { content: "✓"; color: #077a4b; font-weight: 700; margin-inline-end: 8px; }

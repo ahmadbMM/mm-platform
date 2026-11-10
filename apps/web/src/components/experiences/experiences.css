@@ -378,6 +378,10 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
 .xs-event.ev-blood .xs-ev-title { color: #0b1f16; }
 .xs-event.ev-blood .xs-ev-meta { margin-top: 6px; font-weight: 600; line-height: 1.45; color: rgba(11, 31, 22, .72); }
 .xs-event.ev-blood .bld-plate { max-width: 280px; }
+/* the cause line: on the card it keeps to the side the picture leaves empty, with room for it (the summary has no picture
+   and takes the whole width). It stands before the wide-screen rules: placed after them, it overrode them at every width */
+.xs-bld-cause { margin: 0; font-size: 13px; font-weight: 800; line-height: 1.3; color: #0b1f16; }
+.xs-event .xs-bld-cause { max-width: 54%; min-height: 72px; }
 /* a card is a short teaser with the details one tap away; on a wide screen it takes the row, words beside the picture (the owner, 2026-11-04) */
 @media (min-width: 600px) {
   .xs-events:has(.xs-event.ev-blood) { display: flex; flex-wrap: wrap; }
@@ -386,9 +390,8 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
   .xs-event.ev-blood { padding-inline-end: 48%; }
   .xs-event.ev-blood .bld-plate { max-width: 340px; }
   .xs-bld-pic { width: 46%; max-width: none; }
-  .xs-bld-cause { max-width: none; min-height: 0; }
+  .xs-event .xs-bld-cause { max-width: none; min-height: 0; }
 }
-.xs-bld-cause { max-width: 54%; min-height: 72px; margin: 0; font-size: 13px; font-weight: 800; line-height: 1.3; color: #0b1f16; }
 .xs .xs-go.ev-blood { background: #0b1f16; color: #fff; }
 .xs .xs-go.ev-blood:hover { background: #173a2a; }
 

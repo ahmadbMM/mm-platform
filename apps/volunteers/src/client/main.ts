@@ -15,7 +15,7 @@ import { viewProfile } from "./profile";
 import { AFTER_KEY, BOOKING, go, load, onRender, route, S, say, SUPPORT } from "./state";
 import { note } from "./ui";
 import { forgetUpdates, viewUpdates } from "./updates";
-import { stopScan, viewWork } from "./work";
+import { resetWork, stopScan, viewWork } from "./work";
 
 const app = document.getElementById("app")!;
 let signErr = "";
@@ -43,6 +43,16 @@ function header(): HTMLElement {
         x.key === "navUpdates" && unread ? h("span", { class: "sr-only" }, ` (${t("updNew")})`) : null))) : null);
 }
 
+// "Skip to content" goes to the page's main area, not by its href: the hash is this page's router, and "#main" drew the
+// Opportunities list whatever was on the screen, closing the work page and its camera (the vendor portal's fix).
+const skipToMain = ((e: Event) => {
+  e.preventDefault();
+  const main = document.getElementById("main");
+  if (!main) return;
+  if (!main.hasAttribute("tabindex")) main.setAttribute("tabindex", "-1");
+  main.focus();
+}) as EventListener;
+
 function render(): void {
   const r = route();
   if (r.name !== "work" || !S.me) stopScan(); // the camera is off everywhere but the work page
@@ -69,7 +79,7 @@ function render(): void {
   else if (r.name === "profile" || r.name === "apply") viewProfile(main);
   else viewList(main);
   document.body.classList.toggle("signed-in", !!S.me);
-  append(app, h("a", { class: "skip", href: "#main" }, t("skipToContent")), header(), main);
+  append(app, h("a", { class: "skip", href: "#main", onclick: skipToMain }, t("skipToContent")), header(), main);
 }
 onRender(render);
 
@@ -106,6 +116,7 @@ async function signIn(who: string, pwd: string): Promise<void> {
   const r = await post("/api/login", { login: who, password: pwd });
   if (!r.ok) { signErr = say(r); render(); return; }
   signErr = ""; loginDraft = "";
+  resetWork(); // whoever had this phone before: their work page is not this volunteer's
   await load();
   afterSignIn();
 }

@@ -55,6 +55,8 @@ async function open(page: Page, qs = '', answers: Answers = {}) {
     const a = answers[fn] || base[fn];
     return r.fulfill(a ? a(body) : json({ code: 'PGRST202', message: 'Could not find the function' }, 404));
   });
+  // the booking window staff set (site_content 'booking.window'): none, unless a test gives one
+  await page.route('**/rest/v1/site_content*', (r) => r.fulfill((answers.site_content || (() => json([])))({})));
   await page.route(BOOKING + '**', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Booking app</title><p>booking app</p>' }));
   await page.goto('/saturday' + qs);
   const of = (fn: string) => calls.filter((c) => c.fn === fn).map((c) => c.body);
@@ -127,6 +129,13 @@ test('a code that does not work is said on the code box, and nothing else happen
   expect(of('saturday_rides').map((b) => b.p_code)).toEqual([null, 'NOPE1']);
 });
 
+test('a ride code typed with Arabic-Indic digits is read as its digits', async ({ page }) => {
+  const { of } = await open(page);
+  await code(page, 'IMC٢٦');
+  await expect(page.locator('#p-ask')).toBeVisible();
+  expect(of('saturday_rides').map((b) => b.p_code)).toEqual([null, 'IMC26']);
+});
+
 test('a code whose places on the ride are taken says so', async ({ page }) => {
   await open(page, '', { saturday_rides: ridesFor([RIDE], { FULL1: [true, false] }) });
   await code(page, 'FULL1');
@@ -151,6 +160,15 @@ test('a ride that opens at a set time says when', async ({ page }) => {
   await open(page, '', { saturday_rides: () => json([{ ...RIDE, status: 'closed', opens_at: '2099-11-11T17:00:00Z' }]) });
   await expect(page.locator('#state')).toHaveText('Opens soon');
   await expect(page.locator('#land-notice')).toContainText('Booking opens Wednesday 11 November at 20:00.');
+  await expect(page.locator('#go')).toBeDisabled();
+});
+
+test('an open ride the booking window has not reached says when booking opens, with no code box', async ({ page }) => {
+  // site_content 'booking.window': two days ahead, from 20:00 (the database refuses a booking before then)
+  await open(page, '', { site_content: () => json([{ value: { days: 2, at: '20:00' } }]) });
+  await expect(page.locator('#state')).toHaveText('Opens soon');
+  await expect(page.locator('#land-notice')).toContainText('Booking opens Thursday 12 November at 20:00.');
+  await expect(page.locator('#f-code')).toBeHidden();
   await expect(page.locator('#go')).toBeDisabled();
 });
 
@@ -199,6 +217,31 @@ test('a new rider: code, account, details, booking, then the booking app signed 
   expect(errs).toEqual([]);
 });
 
+test('a sign-up refused as taken that the checks before it missed names the email and the mobile both; a check with no answer is asked again', async ({ page }) => {
+  let tries = 0;
+  const { of } = await open(page, '', {
+    customer_exists: (b) => (b.p_phone && !tries++ ? json({ message: 'upstream' }, 503) : json(false)),
+    customer_signup: () => json({ code: '23505', message: 'DUPLICATE', details: null, hint: null }, 409),
+  });
+  await code(page);
+  await signUp(page);
+  await expect(page.locator('#f-email .err')).toHaveText('An account with this email or mobile number already exists. Sign in to book with it.');
+  expect(of('customer_exists')).toHaveLength(3); // the email, the mobile, the mobile again
+});
+
+test('a birth day the month does not have is cleared, never moved to the last day of the month', async ({ page }) => {
+  await open(page);
+  await code(page);
+  await signUp(page);
+  await expect(page.locator('#acct-made')).toBeVisible();
+  await page.selectOption('#birth-d', '31'); await page.selectOption('#birth-m', '4'); await page.selectOption('#birth-y', '1990');
+  await expect(page.locator('#birth-d')).toHaveValue('');
+  await page.selectOption('#birth-m', '5');
+  await expect(page.locator('#birth-d')).toHaveValue('');
+  await page.click('#d-next');
+  await expect(page.locator('#f-birth .err')).toHaveText('Choose your date of birth');
+});
+
 test('a code that books two Saturdays asks which, and books the one picked', async ({ page }) => {
   const { of } = await open(page, '', { saturday_rides: ridesFor([RIDE, RIDE2], { IMC26: [true, true] }) });
   await code(page);
@@ -241,6 +284,17 @@ test('a rider who already has a booking on the ride is told so, with the way to 
   await book(page);
   await expect(page.locator('#b-notice')).toContainText('You already have a booking on this ride.');
   await expect(page.locator('#b-open')).toBeVisible();
+  await expect(page.locator('#book')).toBeDisabled();
+});
+
+test('a booking the window refuses (not open yet) says the day it opens, not that the ride is closed', async ({ page }) => {
+  await open(page, '', { saturday_book: () => refuse('NOT_OPEN_YET: booking for 2099-11-14 opens on 2099-11-12') });
+  await code(page);
+  await signIn(page);
+  await page.click('#d-next');
+  await book(page);
+  await expect(page.locator('#b-notice')).toContainText('Booking opens Thursday 12 November.');
+  await expect(page.locator('#b-notice')).not.toContainText('closed');
   await expect(page.locator('#book')).toBeDisabled();
 });
 

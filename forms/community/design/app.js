@@ -16,13 +16,15 @@
   // The public anon key (the same one the booking site ships): community_apply is a
   // SECURITY DEFINER function that checks and throttles on the server.
   // On the website (forms/shared/site-form.mjs) the page hands over its language and the database it talks to itself
-  // (staging's on staging): window.MM_SITE_FORM = {lang, db: {url, key}}. The page built on its own (?classic=1) uses these.
+  // (staging's on staging), and the booking site that reads that database (staging's copy on staging, when it has one):
+  // window.MM_SITE_FORM = {lang, db: {url, key}, booking}. The page built on its own (?classic=1) uses these.
   var SITE_FORM = window.MM_SITE_FORM || null;
   var SUPABASE_URL = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.url) || "https://qpffkzmsfyilicwcsszz.supabase.co";
   var SUPABASE_KEY = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.key) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
   var LANG_KEY = "mm-community-lang";
-  // The booking site: where an existing account signs in (it hands the rider back here signed in).
-  var BOOKING_URL = "https://experiences.micromobility.sa/";
+  // The booking site: where an existing account signs in (it hands the rider back here signed in). The one the page's
+  // database belongs to: a hand-over code or a change link made in one database means nothing in the other.
+  var BOOKING_URL = SITE_FORM && /^https:\/\/[^\s"'<>\\?#]+\/$/.test(SITE_FORM.booking || "") ? SITE_FORM.booking : "https://experiences.micromobility.sa/";
 
   var SH = window.SHARED, T = window.FORM_T || {};
   var html = document.documentElement;
@@ -849,7 +851,13 @@
     var m = String((e.code || "") + " " + (e.message || "") + " " + (e.details || "") + " " + (e.hint || ""));
     if (/name_chars/.test(m)) { setErr("f-name", "Names can only contain letters, spaces and periods."); focusField("f-name"); }
     else if (/name_short/.test(m)) { setErr("f-name", "Write your first and last name in full, not initials"); focusField("f-name"); }
-    else if (/23505|DUPLICATE/i.test(m)) { setErr("f-email", "An account with this email already exists. Sign in to apply with it."); showBanner("An account with this email already exists. Sign in to apply with it.", true); focusField("f-email"); }
+    // customer_signup refuses a taken email and a taken mobile alike: the checks before it name which one, but they
+    // answer "not taken" once the network's lookups run out, so here either can be the taken one.
+    else if (/23505|DUPLICATE/i.test(m)) {
+      setErr("f-email", "An account with this email or mobile number already exists. Sign in to apply with it.");
+      setErr("f-phone", "An account with this email or mobile number already exists. Sign in to apply with it.");
+      showBanner("An account with this email or mobile number already exists. Sign in to apply with it.", true); focusField("f-email");
+    }
     else if (/RATE_LIMITED/.test(m)) showBanner(SITE_TOO_MANY);
     else if (/WEAK_PASSWORD/.test(m)) { setErr("f-pwd", "errPasswordLen", null, true); focusField("f-pwd"); }
     else if (/BAD_INPUT/.test(m) && /phone/.test(m)) { setErr("f-phone", "Enter a valid mobile number"); focusField("f-phone"); }
@@ -1030,7 +1038,7 @@
       var me = m.data && typeof m.data === "object" ? m.data : null;
       if (!me) { showBanner("Could not reach the server. Please try again."); return; }
       var fl = Array.isArray(me.flags) ? me.flags : [];
-      acct = { id: row.id, token: row.session_token, name: me.name || row.name || "", email: me.email || "", phone: me.phone || "", made: false, needGender: !me.gender, needHeight: !me.height || fl.indexOf("height") >= 0 };
+      acct = { id: row.id, token: row.session_token, name: me.name || row.name || "", email: me.email || "", phone: me.phone || "", made: false, needGender: !me.gender, needHeight: !(me.height >= 100 && me.height <= 250) || fl.indexOf("height") >= 0 }; // a height outside 100-250 cm (0, a typo) is none
       if (me.member) { showMember(); return; }
       // The emergency contact on the account: asked on this step when there is none. A database
       // without customer_emergency asks nothing; one that answers three columns offers no second.
@@ -1089,6 +1097,7 @@
   // A draft's answers not put back yet (the membership step's, until the account is signed in again): every save
   // keeps them, or typing the password to sign in again would write a draft without them.
   var pend = null;
+  function pendOf(d) { return d ? { v: Object.assign({}, d.v || {}), tiles: Object.assign({}, d.tiles || {}), made: !!d.made, email: d.email || "" } : null; }
   function draftData() {
     var v = pend ? Object.assign({}, pend.v) : {}, tl = pend ? Object.assign({}, pend.tiles) : {};
     $$("#form input, #form select").forEach(function (el) {
@@ -1167,7 +1176,7 @@
     if (DR && !Object.keys(DR.v || {}).length && !DR.made && !Object.keys(DR.tiles || {}).some(function (g) { return g !== "#haves"; })) { DRAFT.clear(); DR = null; }
     if (!DR) return false;
     if ((DR.tiles || {})["#haves"]) touched["#haves"] = 1;
-    pend = { v: Object.assign({}, DR.v || {}), tiles: Object.assign({}, DR.tiles || {}), made: !!DR.made, email: DR.email || "" };
+    pend = pendOf(DR);
     draftPut(DR, 1);
     $("#draft-note").hidden = false;
     var have = (DR.tiles || {})["#haves"];
@@ -1212,7 +1221,9 @@
     var steps = [], acts = [];
     var add = function (state, title, body) { steps.push('<li class="tk-step tk-' + state + '"><span class="tk-dot" aria-hidden="true"></span><div><b>' + esc(title) + "</b>" + (body ? "<p>" + body + "</p>" : "") + "</div></li>"); };
     add("done", tr("Received"), esc(dayText(d.sent_at)));
-    if (d.fix) {
+    // Changes asked are made while the application waits: once it is decided, the link to make them only answers that
+    // the application is gone (community_fix_get), so an unanswered request is no longer a step.
+    if (d.fix && d.status === "pending") {
       var fs = (Array.isArray(d.fix.fields) ? d.fix.fields : []).map(fixLabel);
       add("now", tr("Changes asked"), esc(tr("Our team asked you to change:")) + " " + esc(fs.join(", ")) + (d.fix.note ? '<span class="tk-note">' + esc(d.fix.note) + "</span>" : ""));
       if (/^[0-9a-f]{36}$/.test(d.fix.token || "")) acts.push('<a class="submit" href="' + esc(BOOKING_URL + "?appfix=" + d.fix.token + "&lang=" + lang) + '">' + esc(tr("Make the changes")) + "</a>");
@@ -1257,6 +1268,8 @@
     loadQuestions();
     var handed = new URLSearchParams(location.search).get("code") != null;
     goStep(handed ? 1 : 0);
-    if (handed) { DR = DRAFT.load(); arrive(); } else if (!draftOpen()) paintSeen();
+    // Handed over: the draft's answers wait in `pend` until the account is in (enterStepTwo puts them back), so a code
+    // that fails, and a sign-in typed here after it, never save a draft without them.
+    if (handed) { DR = DRAFT.load(); pend = pendOf(DR); arrive(); } else if (!draftOpen()) paintSeen();
   }
 })();

@@ -3,7 +3,7 @@
 
 import { rpc } from "./api";
 import { append, h, uid } from "./dom";
-import { dayLabel, hoursN, sessionName, t, timesLabel, whenLabel, type Key } from "./i18n";
+import { dayLabel, gathers, hoursN, sessionName, t, timesLabel, whenLabel, type Key } from "./i18n";
 import { icon } from "./icons";
 import { briefTick, mapsLink } from "./home";
 import { go, load, myShift, render, S, say, setNote, standing, type Mine, type Opp } from "./state";
@@ -30,7 +30,7 @@ export function viewList(main: HTMLElement): void {
       dateBlock(o.date),
       h("div", { class: "opp-what" },
         h("h2", {}, sessionName(o)),
-        o.time ? metaLine("clock", timesLabel(o.time)) : null,
+        o.time ? metaLine("clock", timesLabel(o.time, gathers(o))) : null,
         o.location ? metaLine("pin", o.location) : null,
         h("div", { class: "chips" },
           sh && statusWords[sh.status] ? chip(t(sh.status === "interested" ? "interestSent" : statusWords[sh.status]), statusTone(sh.status)) : null,
@@ -51,7 +51,7 @@ export function viewOpp(main: HTMLElement, id: string): void {
     h("div", { class: "next-top" }, dateBlock(o.date, true), h("div", { class: "next-what" }, h("h1", {}, sessionName(o)), h("div", { class: "chips" }, placesChip(o)))),
     h("div", { class: "metas" },
       metaLine("cal", dayLabel(o.date)),
-      o.time ? metaLine("clock", timesLabel(o.time)) : null,
+      o.time ? metaLine("clock", timesLabel(o.time, gathers(o))) : null,
       o.location ? h("p", { class: "meta" }, icon("pin", 16), h("a", { href: mapsLink(o.location), target: "_blank", rel: "noopener" }, o.location)) : null,
       o.hours_mode === "fixed" && o.fixed_hours ? metaLine("medal", hoursN(o.fixed_hours)) : null,
       o.min_age ? metaLine("person", t("oppMinAge", o.min_age)) : null,

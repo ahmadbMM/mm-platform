@@ -3,7 +3,7 @@
 // Usage: npm run build (in forms/community). Never edit src/page.html (or the website's copy) by hand.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { ACCOUNT_JS, writeAccountForWeb } from '../../shared/emit.mjs';
+import { ACCOUNT_JS, writeAccountForWeb, sameNoticeAsSite } from '../../shared/emit.mjs';
 import { emitSite } from '../../shared/site-form.mjs';
 
 const root = resolve(import.meta.dirname, '..');
@@ -23,6 +23,7 @@ writeAccountForWeb();
 // Every translation carries every string the page shows, with the same {placeholders}.
 const FORM_T = new Function(i18n + ';return FORM_T;')();
 const SHARED = new Function(shared + ';return SHARED;')();
+sameNoticeAsSite(SHARED, 'community'); // the notice the website shows, never an older copy
 const keys = new Set();
 for (const m of html.matchAll(/data-t(?:-placeholder|-aria)?="([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/tr\("([^"]+)"/g)) keys.add(m[1]);

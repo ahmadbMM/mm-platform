@@ -103,15 +103,13 @@ export function staffTapTarget(pathname: string, searchParams: URLSearchParams, 
 /** A rider tapping a locker's tag: the lockers page with that locker picked (the page reads 7, 07 and L7 alike),
  *  any ?lang= kept. Null for anything else. */
 export function lockerRiderTarget(pathname: string, searchParams?: URLSearchParams): string | null {
-  if (LOCKER_RENTAL.test(pathname)) {
-    const lang = searchParams?.get("lang");
-    return lang === "en" || lang === "ar" ? `/lockers?lang=${lang}` : "/lockers";
-  }
+  // any of the site's languages: the lockers page speaks all sixteen, and this answer comes before the cookie is set
+  const lang = searchParams ? askedLang(searchParams) : null;
+  if (LOCKER_RENTAL.test(pathname)) return lang ? `/lockers?lang=${lang}` : "/lockers";
   const m = LOCKER_PAGE.exec(pathname);
   if (!m) return null;
   const q = new URLSearchParams({ locker: m[1].toUpperCase() });
-  const lang = searchParams?.get("lang");
-  if (lang === "en" || lang === "ar") q.set("lang", lang);
+  if (lang) q.set("lang", lang);
   return `/lockers?${q.toString()}`;
 }
 
