@@ -325,7 +325,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
   },
   {
    "ul": [
-    "<strong>Account and profile:</strong> kept while you have an account, and destroyed within 30 days of your request to close it.",
+    "<strong>Account and profile:</strong> kept while you have an account. If you ask us to delete it, we close it within 30 days: you can no longer sign in and we stop contacting you. We keep the closed account and its history under your name, seen only by our admin team, and you can open a new account with the same email.",
     "<strong>Booking and payment records:</strong> kept for 10 years, because the law requires financial records. Then destroyed.",
     "<strong>Technical error reports:</strong> deleted after 90 days.",
     "<strong>The proof you attach to a badge request:</strong> deleted as soon as our team answers the request."
@@ -691,7 +691,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
   },
   {
    "ul": [
-    "<strong>الحساب والملف الشخصي:</strong> نحتفظ بهما ما دام حسابك قائمًا، ونتلفهما خلال 30 يومًا من طلبك إغلاق الحساب.",
+    "<strong>الحساب والملف الشخصي:</strong> نحتفظ بهما ما دام حسابك قائمًا. وإذا طلبت حذف حسابك نغلقه خلال 30 يومًا: فلا يمكنك تسجيل الدخول إليه ونتوقف عن التواصل معك. ونحتفظ بالحساب المغلق وسجله باسمك، ولا يطّلع عليه إلا فريق الإدارة لدينا، ويمكنك فتح حساب جديد بالبريد الإلكتروني نفسه.",
     "<strong>سجلات الحجز والدفع:</strong> نحتفظ بها 10 سنوات لأن النظام يُلزم بحفظ السجلات المالية، ثم نتلفها.",
     "<strong>تقارير الأخطاء التقنية:</strong> تُحذف بعد 90 يومًا.",
     "<strong>الإثبات الذي ترفقه بطلب وسام:</strong> يُحذف فور ردّ فريقنا على الطلب."
