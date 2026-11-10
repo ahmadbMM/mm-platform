@@ -13,12 +13,14 @@ export function renderVenue(main: HTMLElement, reloadMe: () => Promise<boolean>)
   const v = me.venue;
   clear(main);
   const name = app.lang === "ar" && v.name_ar ? v.name_ar : v.name;
+  const devices = devicesCard();
   main.append(
     h("div", { class: "page-head" },
       h("div", {}, h("h1", {}, name), h("p", { class: "lede" }, `${t("planLabel")}: ${tierName(app.lang, me.tier)}`))),
     h("div", { class: "venue-cols" },
       canEditVenue(me.user.role) ? profileForm(main, me, reloadMe) : profileFacts(me),
-      h("div", {}, tierCard(me.tier), passwordForm(false), devicesCard())),
+      // A new password signs every other device out too (vendor_set_password).
+      h("div", {}, tierCard(me.tier), passwordForm(false, devices.onlyThis), devices.card)),
   );
 }
 
@@ -41,10 +43,16 @@ function profileFacts(me: Me): HTMLElement {
       ...row("offerEn", v.offer_en, "ltr"), ...row("offerAr", v.offer_ar, "rtl")));
 }
 
-/** Signs out every other device using this login (vendor_logout_others). */
-function devicesCard(): HTMLElement {
+/** Signs out every other device using this login (vendor_logout_others). onlyThis: the count once
+ *  every other device was signed out (here, or by a new password): this device alone. */
+function devicesCard(): { card: HTMLElement; onlyThis: () => void } {
   const id = uid("dev");
   const n = Number(app.me!.user.sessions);
+  const count = h("span", {}, t("signedInOn", { n }));
+  const onlyThis = () => {
+    if (app.me) app.me.user.sessions = 1;
+    count.textContent = t("signedInOn", { n: 1 });
+  };
   const msg = h("div", { class: "msg" });
   const go = button(t("signOutOthers"), { kind: "secondary", icon: "signout" });
   go.addEventListener("click", async () => {
@@ -53,15 +61,17 @@ function devicesCard(): HTMLElement {
     const r = await rpc<number>("vendor_logout_others");
     busy(go, false, t("signOutOthers"));
     if (!r.ok) { msg.append(errorNote(r.code)); return; }
+    onlyThis();
     const text = t("signedOutOthers", { n: Number(r.data) || 0 });
     msg.append(note("ok", text));
     announce(text);
   });
-  return h("section", { class: "card devices", "aria-labelledby": id },
+  const card = h("section", { class: "card devices", "aria-labelledby": id },
     h("h2", { id }, t("securityTitle")),
     h("p", { class: "hint" }, t("securityIntro")),
-    Number.isFinite(n) && n > 0 ? h("p", { class: "b-meta" }, icon("shield"), h("span", {}, t("signedInOn", { n }))) : null,
+    Number.isFinite(n) && n > 0 ? h("p", { class: "b-meta" }, icon("shield"), count) : null,
     msg, h("div", { class: "actions start" }, go));
+  return { card, onlyThis };
 }
 
 function profileForm(main: HTMLElement, me: Me, reloadMe: () => Promise<boolean>): HTMLElement {

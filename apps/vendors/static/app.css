@@ -161,7 +161,8 @@ main.narrow .actions .btn { flex: 1; min-height: 52px; }
 .st-available { color: var(--accent); background: rgba(7, 122, 75, .1); }
 .st-requested, .bs-pending { color: var(--amber-ink); background: var(--amber-tint); }
 .st-confirmed, .bs-confirmed { color: var(--mm-offwhite); background: var(--mm-black); }
-.st-confirmed .icon, .bs-confirmed .icon { color: var(--mm-green-neon); }
+/* Neon on the black surfaces only (the chip, the wide grid's day): the phone list's row and the booking card are white. */
+.chip.st-confirmed .icon, .chip.bs-confirmed .icon, .cal-day.st-confirmed .icon { color: var(--mm-green-neon); }
 .st-taken, .bs-declined { color: var(--soft-ink); background: rgba(0, 0, 0, .07); }
 .st-closed { color: var(--red-ink); background: var(--red-tint); }
 .st-not_open, .st-past, .bs-cancelled, .st-soon, .st-far { color: var(--muted); background: transparent; border-color: rgba(0, 0, 0, .14); border-style: dashed; }

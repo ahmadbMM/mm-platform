@@ -43,8 +43,9 @@ async function loadMe(): Promise<boolean> {
 }
 
 function langButton(): HTMLButtonElement {
-  const b = h("button", { type: "button", class: "btn btn-ghost btn-small lang", lang: app.lang === "ar" ? "en" : "ar", "aria-label": t("langSwitchLabel") },
-    icon("globe"), h("span", {}, t("langSwitch")));
+  // Only the visible name is in the other language; the label (aria-label) is in the page's own.
+  const b = h("button", { type: "button", class: "btn btn-ghost btn-small lang", "aria-label": t("langSwitchLabel") },
+    icon("globe"), h("span", { lang: app.lang === "ar" ? "en" : "ar" }, t("langSwitch")));
   b.addEventListener("click", () => {
     setLang(app.lang === "ar" ? "en" : "ar");
     app.render();
