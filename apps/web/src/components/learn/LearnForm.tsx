@@ -16,8 +16,8 @@ import { EM_EMPTY, emAbsent, emReadBoth, emRefusal, emState, type EmContact, typ
 import { accountPlan, sameAsHeld } from "@/lib/account-step";
 import { emergencyWords } from "@/components/account/Emergency.words";
 import LearnClosed from "./LearnClosed";
-import { T } from "./LearnForm.text";
-import { TickIcon } from "@/components/site/Icons";
+import { AR_F, T } from "./LearnForm.text";
+import { ArrowIcon, TickIcon } from "@/components/site/Icons";
 
 // The Learn to ride sign-up card (/experiences/learn, right column), in two steps (the owner,
 // 2026-09-30: "apply the 2 steps registration on learn to ride too and add a question asking if the
@@ -85,6 +85,11 @@ type Known = (typeof KNOWN)[number];
 // A problem on step 2 that names one of them brings it back into view.
 const KNOWN_OF: Record<string, Known> = { whatsapp: "whatsapp", birth_date: "birth_date", birth_young: "birth_date", nationality: "nationality",
   instagram: "instagram", linkedin: "linkedin", profession: "profession", workplace: "workplace", heard_from: "heard_from" };
+// The box a problem on the lesson step is about (a learner's, with the message's index, or the person's): it is
+// marked invalid and described by the message, so a screen reader names the field with the problem (WCAG 3.3.1).
+const FIELD_OF: Record<string, string> = { learner_who: "who", learner_name: "name", learner_age: "age", learner_height: "height", learner_gender: "gender",
+  level: "level", whatsapp: "whatsapp", birth_date: "birth", birth_young: "birth", gender: "gender", nationality: "nationality", height: "height",
+  instagram: "instagram", linkedin: "linkedin", profession: "profession", workplace: "workplace", heard_from: "heard", notes: "notes" };
 const EMPTY: LearnerFields = { who: "", name: "", age: "", gender: "", height: "", level: "" };
 const NO_ACCOUNT: AccountFields = { first: "", last: "", gender: "", email: "", phone: "", password: "", password2: "", height: "", privacy: false, news: false };
 // Where the Privacy Notice's name goes in the translated sentence (LearnForm.text.ts, privacy).
@@ -103,7 +108,7 @@ const EM_LOOK: EmLook = { block: "ln-em", head: "ln-em-h", sub: "ln-hint ln-em-s
 const PWD_LOOK: PwdLook = { h: "h3", form: "ln-pc", title: "ln-step-title", sub: "ln-hint ln-pc-sub", field: "ln-field", input: "ln-input", hint: "ln-hint", err: "ln-err", btn: "ln-btn ln-btn-green", back: "ln-back" };
 
 export default function LearnForm(p: LearnFormProps) {
-  const t = useLocalize(T);
+  const t0 = useLocalize(T);
   const id = useId();
   const next = useRef(1); // the next card's key
   const [stage, setStage] = useState<Stage>("ask");
@@ -144,13 +149,27 @@ export default function LearnForm(p: LearnFormProps) {
   const [f, setF] = useState<Form>({ learners: [{ key: 0, ...EMPTY }], birth: "", gender: "", nationality: "", height: "", instagram: "", linkedin: "", profession: "", workplace: "", heard: "", notes: "", waSame: "", whatsapp: "" });
   // The date of birth as three pickers; the form holds it as YYYY-MM-DD once all three are chosen.
   const [bd, setBd] = useState({ d: "", m: "", y: "" });
+  // The Arabic speaks to no one gender until the person's own is known (neutral wording), then to a woman in the
+  // feminine (2026-11-10: nearly every learner is a woman; AR_F): her answer on the sign-up, or her account's.
+  const fem = p.locale === "ar" && (stage === "lesson" ? f.gender : a.gender) === "female";
+  const t = useMemo(() => (fem ? { ...t0, ...AR_F, errors: { ...t0.errors, ...AR_F.errors } } : t0), [t0, fem]);
   // The names of the months and the countries are the browser's (see lib/nationality.ts): drawn
   // once the page is up, so the server's first draw and the browser's agree.
   const onClient = useSyncExternalStore(never, () => true, () => false);
   const names = useMemo<{ months: string[]; nats: NatOption[] } | null>(() => (onClient ? { months: monthNames(p.locale), nats: natOptions(p.locale, t.palestine) } : null), [onClient, p.locale, t.palestine]);
   const [busy, setBusy] = useState(false);
-  // The one message on show; a learner's carries their card's place (from 0).
-  const [err, setErr] = useState<{ text: string; index?: number } | null>(null);
+  // The one message on show; a learner's carries their card's place (from 0), and `field` names the box it is about.
+  const [err, setErr] = useState<{ text: string; index?: number; field?: string } | null>(null);
+  const errId = `${id}err`;
+  // The box the message is about: marked invalid and described by the message (WCAG 3.3.1).
+  const bad = (field: string, index?: number) => (err && err.field === field && err.index === index ? { "aria-invalid": true as const, "aria-describedby": errId } : {});
+  // A step's heading, which takes the keyboard when the step opens (the fields it brings are read from there).
+  const stageTop = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (stage !== "signin" && stage !== "signup") return;
+    stageTop.current?.focus({ preventScroll: true });
+    stageTop.current?.scrollIntoView({ block: "nearest" });
+  }, [stage]);
   const [done, setDone] = useState(false);
   const [closed, setClosed] = useState(false);
   // Where the keyboard goes once the page has drawn: a new card's first choice, a card with a
@@ -178,7 +197,7 @@ export default function LearnForm(p: LearnFormProps) {
     const card = document.getElementById(focus.to);
     if (!card) return;
     card.scrollIntoView({ block: "center" });
-    (focus.first ? card.querySelector<HTMLElement>(".ln-who button:not([disabled])") : card)?.focus({ preventScroll: true });
+    (focus.first ? card.querySelector<HTMLElement>(".ln-who input:not([disabled])") : card)?.focus({ preventScroll: true });
   }, [focus]);
 
   // Step 2 for a signed-in account: what it holds fills the questions it answers already. `due`:
@@ -323,8 +342,9 @@ export default function LearnForm(p: LearnFormProps) {
       : r.error === "learner_name" && who === "other" ? e.learner_name_other
       : r.error === "learners" && i !== undefined ? e.learner_twice
       : e[r.error] || e.generic;
-    if (i === undefined) return setErr({ text });
-    setErr({ text: t.learnerError(i + 1, text), index: i });
+    const field = FIELD_OF[r.error];
+    if (i === undefined) return setErr({ text, field });
+    setErr({ text: t.learnerError(i + 1, text), index: i, field });
     setFocus({ to: cardId(f.learners[i].key), n: ++moves.current });
   }
   const [before, after] = t.privacy(SLOT).split(SLOT);
@@ -335,7 +355,7 @@ export default function LearnForm(p: LearnFormProps) {
     if (busy) return;
     setErr(null);
     const r = accountArgs(a);
-    if ("error" in r) return setErr({ text: t.errors[r.error] || t.errors.generic });
+    if ("error" in r) return setErr({ text: t.errors[r.error] || t.errors.generic, field: r.error });
     // The emergency contact, before the account is made: required, the second when filled.
     const ec = emReadBoth(em1, em2, r.args.p_phone);
     if ("error" in ec) return emShow(ec);
@@ -344,9 +364,9 @@ export default function LearnForm(p: LearnFormProps) {
       if (made.current) return await consent(made.current);
       // Each on its own, so the message says which one is taken (as the sign-up page does).
       const ex = await rpcResult<boolean>("customer_exists", { p_email: r.args.p_email, p_phone: "" });
-      if ("data" in ex && ex.data === true) return setErr({ text: t.errors.email_taken });
+      if ("data" in ex && ex.data === true) return setErr({ text: t.errors.email_taken, field: "email" });
       const ex2 = await rpcResult<boolean>("customer_exists", { p_email: "", p_phone: r.args.p_phone });
-      if ("data" in ex2 && ex2.data === true) return setErr({ text: t.errors.phone_taken });
+      if ("data" in ex2 && ex2.data === true) return setErr({ text: t.errors.phone_taken, field: "phone" });
       const newId = uid();
       const s = await rpcResult<{ id: string; session_token: string }[]>("customer_signup", { p_id: newId, ...r.args });
       if ("error" in s) {
@@ -389,7 +409,7 @@ export default function LearnForm(p: LearnFormProps) {
     if (busy) return;
     setErr(null);
     const ident = signinIdentifier(si.id);
-    if (!ident || !si.password) return setErr({ text: t.errors.signin_empty });
+    if (!ident || !si.password) return setErr({ text: t.errors.signin_empty, field: "signin" });
     if (TURNSTILE_SITE_KEY && !check) return setErr({ text: t.errors.check });
     setBusy(true);
     try {
@@ -408,7 +428,8 @@ export default function LearnForm(p: LearnFormProps) {
         if (TURNSTILE_SITE_KEY) { setCheck(""); setAgain((n) => n + 1); } // a token is good for one try
         const m = t.errors;
         return setErr({ text: b.error === "wrong" ? m.signin_bad : b.error === "locked" ? m.signin_locked : b.error === "slow" ? m.slow
-          : b.error === "check" ? m.check : b.error === "missing" ? m.signin_empty : m.generic });
+          : b.error === "check" ? m.check : b.error === "missing" ? m.signin_empty : m.generic,
+          field: b.error === "wrong" || b.error === "missing" ? "signin" : undefined });
       }
       setSi({ id: "", password: "" });
       await enter(b.id, b.token, typeof b.name === "string" ? b.name : "", typeof b.email === "string" ? b.email : "");
@@ -417,8 +438,8 @@ export default function LearnForm(p: LearnFormProps) {
 
   // A question staff flagged answered with what the account already holds (the owner, 2026-11-09: "don't allow a
   // flagged account field to type in the same info in the field again"), as the booking app's check-up refuses it:
-  // the first such question's name, or null. "I don't have one" (nothing typed) is an answer, never the same.
-  function sameAgain(pl: LearnPayload, ec: { first: EmContact; second: EmContact | null } | null): string | null {
+  // the first such question's name and key, or null. "I don't have one" (nothing typed) is an answer, never the same.
+  function sameAgain(pl: LearnPayload, ec: { first: EmContact; second: EmContact | null } | null): [string, string] | null {
     if (!fixed.current.length) return null;
     const ew = emergencyWords(p.locale), em = (x: EmContact | null | undefined) => (x ? { name: x.name, phone: x.phone, relation: x.rel } : null);
     const asked: [string, unknown, string][] = [
@@ -428,7 +449,7 @@ export default function LearnForm(p: LearnFormProps) {
       ["heard_from", pl.heard_from, t.heard], ["emergency", em(ec?.first), ew.title], ["emergency2", em(ec?.second), ew.title2],
     ];
     const hit = asked.find(([k, a]) => fixed.current.includes(k) && sameAsHeld(k, a, held.current));
-    return hit ? hit[2] : null;
+    return hit ? [hit[2], hit[0]] : null;
   }
 
   // Step 2: the lesson, from the account.
@@ -443,9 +464,9 @@ export default function LearnForm(p: LearnFormProps) {
     // An account without an emergency contact gives it here (lib/emergency.ts).
     const ec = emNeed ? emReadBoth(em1, emTwo ? em2 : null, acct.phone) : null;
     if (ec && "error" in ec) return emShow(ec);
-    if (need.privacy && !ack) { setErr({ text: t.errors.privacy }); setFocus({ to: "ack", n: ++moves.current }); return; }
+    if (need.privacy && !ack) { setErr({ text: t.errors.privacy, field: "ack" }); setFocus({ to: "ack", n: ++moves.current }); return; }
     const again = sameAgain(r.payload, ec);
-    if (again) return setErr({ text: t.sameAsAccount(again) });
+    if (again) return setErr({ text: t.sameAsAccount(again[0]), field: FIELD_OF[again[1]] });
     setBusy(true);
     try {
       // The contact first: the lesson waits until the account has it.
@@ -470,7 +491,7 @@ export default function LearnForm(p: LearnFormProps) {
       if (code === "signed_out") { setAcct(null); setStage("signin"); return setErr({ text: t.errors.signed_out }); }
       if (code === "closed") return setClosed(true);
       // An account with no notice on record the form could not tell of: the box is shown now.
-      if (code === "privacy") { setNeed((x) => ({ ...x, privacy: true })); setErr({ text: t.errors.privacy }); setFocus({ to: "ack", n: ++moves.current }); return; }
+      if (code === "privacy") { setNeed((x) => ({ ...x, privacy: true })); setErr({ text: t.errors.privacy, field: "ack" }); setFocus({ to: "ack", n: ++moves.current }); return; }
       // The account's own name, email or mobile, which learn_apply refuses: a one-word name is the
       // usual one, and the message says which.
       if (code === "account") return setErr({ text: accountNameOk(acct.name) ? t.errors.account : t.errors.account_name });
@@ -501,10 +522,17 @@ export default function LearnForm(p: LearnFormProps) {
   const flagNote = (k: string) => flagged.includes(k) && <small className="ln-hint ln-flag">{t.flagged}</small>;
   const knownLabel = (k: Known) => ({ whatsapp: t.waLabel, birth_date: t.birth, nationality: t.nationality, instagram: t.instagram, linkedin: t.linkedin,
     profession: t.profession, workplace: t.workplace, heard_from: t.heard })[k];
-  const radio = (on: boolean, pick: () => void, label: string, cls: string, disabled = false) => (
-    <button key={label} type="button" role="radio" aria-checked={on} className={cls} onClick={pick} disabled={disabled}>{label}</button>
+  // One choice of a group: a real radio button in its label, drawn as the card, pill or row (one tab stop per
+  // group, arrow keys move within it; WCAG 4.1.2). `name` keeps each group apart.
+  const radio = (name: string, on: boolean, pick: () => void, label: string, cls: string, disabled = false) => (
+    <label key={label} className={`${cls} ln-opt${on ? " on" : ""}${disabled ? " off" : ""}`}>
+      <input type="radio" name={name} checked={on} onChange={pick} disabled={disabled} />
+      <span>{label}</span>
+    </label>
   );
-  const problem = (i?: number) => err && err.index === i && <p className="ln-err" role="alert">{err.text}</p>;
+  const problem = (i?: number) => err && err.index === i && <p className="ln-err" role="alert" id={errId}>{err.text}</p>;
+  // The mobile number's form, in its label rather than a placeholder that goes on typing (left to right in Arabic too).
+  const fmt = <bdi className="ln-fmt">05XXXXXXXX</bdi>;
   const lesson = stage === "lesson";
   const steps = (
     <ol className="ln-steps" aria-label={t.stepsLabel}>
@@ -528,9 +556,10 @@ export default function LearnForm(p: LearnFormProps) {
         {stage === "loading" ? <p className="ln-hint" role="status">{t.loading}</p> : (
           <>
             <span className="ln-label" id={`${id}have`}>{t.haveQ}</span>
-            <div className="ln-have" role="radiogroup" aria-labelledby={`${id}have`}>
-              {radio(false, () => { setErr(null); setStage("signin"); }, t.haveYes, "ln-who-opt")}
-              {radio(false, () => { setErr(null); setStage("signup"); }, t.haveNo, "ln-who-opt")}
+            {/* Each answer opens its step at once, so they are buttons, not radio buttons. */}
+            <div className="ln-have" role="group" aria-labelledby={`${id}have`}>
+              <button type="button" className="ln-go" onClick={() => { setErr(null); setStage("signin"); }}><span>{t.haveYes}</span><ArrowIcon size={18} /></button>
+              <button type="button" className="ln-go" onClick={() => { setErr(null); setStage("signup"); }}><span>{t.haveNo}</span><ArrowIcon size={18} /></button>
             </div>
           </>
         )}
@@ -542,14 +571,14 @@ export default function LearnForm(p: LearnFormProps) {
     return (
       <form className="ln-card" onSubmit={signIn} noValidate>
         {head}
-        <h3 className="ln-step-title">{t.signinTitle}</h3>
+        <h3 className="ln-step-title" ref={stageTop} tabIndex={-1}>{t.signinTitle}</h3>
         <label className="ln-field">
           <span>{t.identifier}</span>
-          <input className="ln-input" value={si.id} onChange={(e) => { setSi((x) => ({ ...x, id: e.target.value })); setErr(null); }} autoComplete="username" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={254} />
+          <input className="ln-input" value={si.id} onChange={(e) => { setSi((x) => ({ ...x, id: e.target.value })); setErr(null); }} autoComplete="username" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={254} {...bad("signin")} />
         </label>
         <label className="ln-field">
           <span>{t.password}</span>
-          <input className="ln-input" type="password" value={si.password} onChange={(e) => { setSi((x) => ({ ...x, password: e.target.value })); setErr(null); }} autoComplete="current-password" dir="ltr" maxLength={72} />
+          <input className="ln-input" type="password" value={si.password} onChange={(e) => { setSi((x) => ({ ...x, password: e.target.value })); setErr(null); }} autoComplete="current-password" dir="ltr" maxLength={72} {...bad("signin")} />
         </label>
         <Turnstile locale={p.locale} onToken={onToken} resetKey={again} />
         {problem(undefined)}
@@ -574,49 +603,49 @@ export default function LearnForm(p: LearnFormProps) {
     return (
       <form className="ln-card" onSubmit={createAccount} noValidate>
         {head}
-        <h3 className="ln-step-title">{t.createTitle}</h3>
+        <h3 className="ln-step-title" ref={stageTop} tabIndex={-1}>{t.createTitle}</h3>
         <p className="ln-hint">{t.createSub}</p>
         <p className="ln-hint">{t.accountFor}</p>
         <div className="ln-row">
           <label className="ln-field">
             <span>{t.first}</span>
-            <input className="ln-input" value={a.first} onChange={(e) => setAcc("first", dashless(e.target.value))} autoComplete="given-name" maxLength={60} />
+            <input className="ln-input" value={a.first} onChange={(e) => setAcc("first", dashless(e.target.value))} autoComplete="given-name" maxLength={60} {...bad("first")} />
           </label>
           <label className="ln-field">
             <span>{t.last}</span>
-            <input className="ln-input" value={a.last} onChange={(e) => setAcc("last", dashless(e.target.value))} autoComplete="family-name" maxLength={60} />
+            <input className="ln-input" value={a.last} onChange={(e) => setAcc("last", dashless(e.target.value))} autoComplete="family-name" maxLength={60} {...bad("last")} />
           </label>
         </div>
         <span className="ln-label" id={`${id}ag`}>{t.gender}</span>
-        <div className="ln-pills" role="radiogroup" aria-labelledby={`${id}ag`}>
-          {(["male", "female"] as Gender[]).map((g) => radio(a.gender === g, () => setAcc("gender", g), t[g], "ln-pill"))}
+        <div className="ln-pills" role="radiogroup" aria-labelledby={`${id}ag`} {...bad("gender")}>
+          {(["male", "female"] as Gender[]).map((g) => radio(`${id}ag`, a.gender === g, () => setAcc("gender", g), t[g], "ln-pill"))}
         </div>
         <label className="ln-field">
           <span>{t.email}</span>
-          <input className="ln-input" value={a.email} onChange={(e) => setAcc("email", e.target.value)} type="email" autoComplete="email" dir="ltr" maxLength={254} />
+          <input className="ln-input" value={a.email} onChange={(e) => setAcc("email", e.target.value)} type="email" autoComplete="email" dir="ltr" maxLength={254} {...bad("email")} />
         </label>
         <label className="ln-field">
-          <span>{t.phone}</span>
-          <input className="ln-input" value={a.phone} onChange={(e) => setAcc("phone", e.target.value)} inputMode="tel" autoComplete="tel" dir="ltr" maxLength={20} placeholder="05XXXXXXXX" />
+          <span>{t.phone} {fmt}</span>
+          <input className="ln-input" value={a.phone} onChange={(e) => setAcc("phone", e.target.value)} inputMode="tel" autoComplete="tel" dir="ltr" maxLength={20} {...bad("phone")} />
         </label>
         <label className="ln-field">
           <span>{t.password}</span>
-          <input className="ln-input" type="password" value={a.password} onChange={(e) => setAcc("password", e.target.value)} autoComplete="new-password" dir="ltr" maxLength={72} />
+          <input className="ln-input" type="password" value={a.password} onChange={(e) => setAcc("password", e.target.value)} autoComplete="new-password" dir="ltr" maxLength={72} {...bad("password")} />
           <small className="ln-hint">{t.pwdHint}</small>
         </label>
         <label className="ln-field">
           <span>{t.password2}</span>
-          <input className="ln-input" type="password" value={a.password2} onChange={(e) => setAcc("password2", e.target.value)} autoComplete="new-password" dir="ltr" maxLength={72} />
+          <input className="ln-input" type="password" value={a.password2} onChange={(e) => setAcc("password2", e.target.value)} autoComplete="new-password" dir="ltr" maxLength={72} {...bad("password2")} />
         </label>
         <label className="ln-field">
           <span>{t.height}</span>
-          <input className="ln-input" value={a.height} onChange={(e) => setAcc("height", e.target.value)} inputMode="numeric" maxLength={3} placeholder={range(...ACCOUNT_HEIGHT)} />
+          <input className="ln-input" value={a.height} onChange={(e) => setAcc("height", e.target.value)} inputMode="numeric" maxLength={3} placeholder={range(...ACCOUNT_HEIGHT)} {...bad("acct_height")} />
         </label>
         <div ref={emBox}>
           <EmergencyFields one={em1} two={em2} onChange={onEm} offerTwo problem={emErr} look={EM_LOOK} />
         </div>
         <label className="ln-check">
-          <input type="checkbox" checked={a.privacy} onChange={(e) => setAcc("privacy", e.target.checked)} />
+          <input type="checkbox" checked={a.privacy} onChange={(e) => setAcc("privacy", e.target.checked)} {...bad("privacy")} />
           <span>{before}<NoticeLink dialog={p.notice}>{t.privacyLink}</NoticeLink>{after}</span>
         </label>
         <label className="ln-check">
@@ -655,15 +684,15 @@ export default function LearnForm(p: LearnFormProps) {
                 </button>
               )}
             </div>
-            <div className="ln-who" role="radiogroup" aria-label={t.who}>
+            <div className="ln-who" role="radiogroup" aria-label={t.who} {...bad("who", i)}>
               {/* "Me" is one card's at most: taken on another card, it is not offered here. */}
-              {WHO.map((w) => radio(c.who === w, () => setLearner(i, { who: w }), t[w], "ln-who-opt", w === "self" && selfAt >= 0 && selfAt !== i))}
+              {WHO.map((w) => radio(`${cid}w`, c.who === w, () => setLearner(i, { who: w }), t[w], "ln-who-opt", w === "self" && selfAt >= 0 && selfAt !== i))}
             </div>
 
             {(c.who === "child" || c.who === "other") && (
               <label className="ln-field">
                 <span>{c.who === "child" ? t.childName : t.otherName}</span>
-                <input className="ln-input" value={c.name} onChange={(e) => setLearner(i, { name: dashless(e.target.value) })} autoComplete="off" maxLength={60} />
+                <input className="ln-input" value={c.name} onChange={(e) => setLearner(i, { name: dashless(e.target.value) })} autoComplete="off" maxLength={60} {...bad("name", i)} />
                 {c.who === "child" && <small className="ln-hint">{t.childNameHint}</small>}
               </label>
             )}
@@ -672,25 +701,25 @@ export default function LearnForm(p: LearnFormProps) {
                 <div className="ln-row">
                   <label className="ln-field">
                     <span>{t.age}</span>
-                    <input className="ln-input" value={c.age} onChange={(e) => setLearner(i, { age: e.target.value })} inputMode="numeric" maxLength={3} placeholder={range(...AGE)} />
+                    <input className="ln-input" value={c.age} onChange={(e) => setLearner(i, { age: e.target.value })} inputMode="numeric" maxLength={3} placeholder={range(...AGE)} {...bad("age", i)} />
                   </label>
                   <label className="ln-field">
                     <span>{t.height}</span>
-                    <input className="ln-input" value={c.height} onChange={(e) => setLearner(i, { height: e.target.value })} inputMode="numeric" maxLength={3} placeholder={range(...HEIGHT)} />
+                    <input className="ln-input" value={c.height} onChange={(e) => setLearner(i, { height: e.target.value })} inputMode="numeric" maxLength={3} placeholder={range(...HEIGHT)} {...bad("height", i)} />
                   </label>
                 </div>
                 {i === rowAt && <p className="ln-hint ln-hint-row">{t.heightHint}</p>}
 
                 <span className="ln-label" id={`${cid}g`}>{t.gender}</span>
-                <div className="ln-pills" role="radiogroup" aria-labelledby={`${cid}g`}>
-                  {(["male", "female"] as Gender[]).map((g) => radio(c.gender === g, () => setLearner(i, { gender: g }), t[g], "ln-pill"))}
+                <div className="ln-pills" role="radiogroup" aria-labelledby={`${cid}g`} {...bad("gender", i)}>
+                  {(["male", "female"] as Gender[]).map((g) => radio(`${cid}g`, c.gender === g, () => setLearner(i, { gender: g }), t[g], "ln-pill"))}
                 </div>
               </>
             )}
 
             <span className="ln-label" id={`${cid}l`}>{t.level}</span>
-            <div className="ln-levels" role="radiogroup" aria-labelledby={`${cid}l`}>
-              {LEVELS.map((l) => radio(c.level === l, () => setLearner(i, { level: l }), t[l], "ln-level"))}
+            <div className="ln-levels" role="radiogroup" aria-labelledby={`${cid}l`} {...bad("level", i)}>
+              {LEVELS.map((l) => radio(`${cid}l`, c.level === l, () => setLearner(i, { level: l }), t[l], "ln-level"))}
             </div>
             {problem(i)}
           </div>
@@ -712,30 +741,30 @@ export default function LearnForm(p: LearnFormProps) {
           <>
             <span className="ln-label" id={`${id}wa`}>{t.waAsk(`\u2066${mobile}\u2069`)}</span>
             {flagNote("whatsapp")}
-            <div className="ln-pills" role="radiogroup" aria-labelledby={`${id}wa`}>
-              {(["yes", "no"] as const).map((v) => radio(f.waSame === v, () => setContact("waSame", v), v === "yes" ? t.waYes : t.waNo, "ln-pill"))}
+            <div className="ln-pills" role="radiogroup" aria-labelledby={`${id}wa`} {...(mobile ? bad("whatsapp") : {})}>
+              {(["yes", "no"] as const).map((v) => radio(`${id}wa`, f.waSame === v, () => setContact("waSame", v), v === "yes" ? t.waYes : t.waNo, "ln-pill"))}
             </div>
           </>
         )}
         {!skip.includes("whatsapp") && (f.waSame === "no" || !mobile) && (
           <label className="ln-field">
-            <span>{t.waLabel}</span>
+            <span>{t.waLabel} {fmt}</span>
             <input className="ln-input" value={f.whatsapp} onChange={(e) => { setF((x) => ({ ...x, waSame: "no", whatsapp: e.target.value })); setErr(null); }}
-              inputMode="tel" autoComplete="off" dir="ltr" maxLength={20} placeholder="05XXXXXXXX" />
+              inputMode="tel" autoComplete="off" dir="ltr" maxLength={20} {...(f.waSame === "no" || !mobile ? bad("whatsapp") : {})} />
           </label>
         )}
         {!skip.includes("birth_date") && <div className="ln-field">
           <span className="ln-label" id={`${id}b`}>{t.birth}</span>
           <div className="ln-dob" role="group" aria-labelledby={`${id}b`}>
-            <select className={`ln-input ln-select${bd.d ? "" : " ln-ph"}`} aria-label={t.day} value={bd.d} onChange={(e) => setBirth("d", e.target.value)}>
+            <select className={`ln-input ln-select${bd.d ? "" : " ln-ph"}`} aria-label={t.day} value={bd.d} onChange={(e) => setBirth("d", e.target.value)} autoComplete="bday-day" {...bad("birth")}>
               <option value="">{t.day}</option>
               {Array.from({ length: 31 }, (_, k) => <option key={k} value={two(k + 1)}>{k + 1}</option>)}
             </select>
-            <select className={`ln-input ln-select${bd.m ? "" : " ln-ph"}`} aria-label={t.month} value={bd.m} onChange={(e) => setBirth("m", e.target.value)}>
+            <select className={`ln-input ln-select${bd.m ? "" : " ln-ph"}`} aria-label={t.month} value={bd.m} onChange={(e) => setBirth("m", e.target.value)} autoComplete="bday-month" {...bad("birth")}>
               <option value="">{t.month}</option>
               {Array.from({ length: 12 }, (_, k) => <option key={k} value={two(k + 1)}>{names ? names.months[k] : two(k + 1)}</option>)}
             </select>
-            <select className={`ln-input ln-select${bd.y ? "" : " ln-ph"}`} aria-label={t.year} value={bd.y} onChange={(e) => setBirth("y", e.target.value)}>
+            <select className={`ln-input ln-select${bd.y ? "" : " ln-ph"}`} aria-label={t.year} value={bd.y} onChange={(e) => setBirth("y", e.target.value)} autoComplete="bday-year" {...bad("birth")}>
               <option value="">{t.year}</option>
               {Array.from({ length: AGE[1] + 1 }, (_, k) => <option key={k} value={String(thisYear - k)}>{thisYear - k}</option>)}
             </select>
@@ -745,14 +774,14 @@ export default function LearnForm(p: LearnFormProps) {
         {need.gender && (
           <>
             <span className="ln-label" id={`${id}g`}>{t.gender}</span>
-            <div className="ln-pills" role="radiogroup" aria-labelledby={`${id}g`}>
-              {(["male", "female"] as Gender[]).map((g) => radio(f.gender === g, () => setContact("gender", g), t[g], "ln-pill"))}
+            <div className="ln-pills" role="radiogroup" aria-labelledby={`${id}g`} {...bad("gender")}>
+              {(["male", "female"] as Gender[]).map((g) => radio(`${id}g`, f.gender === g, () => setContact("gender", g), t[g], "ln-pill"))}
             </div>
           </>
         )}
         {!skip.includes("nationality") && <label className="ln-field">
           <span>{t.nationality}</span>
-          <select className={`ln-input ln-select${f.nationality ? "" : " ln-ph"}`} value={f.nationality} onChange={(e) => setContact("nationality", e.target.value)}>
+          <select className={`ln-input ln-select${f.nationality ? "" : " ln-ph"}`} value={f.nationality} onChange={(e) => setContact("nationality", e.target.value)} {...bad("nationality")}>
             <option value="">{t.natPick}</option>
             {names?.nats.map((o, i) => <option key={`${i}-${o.value}`} value={o.value}>{o.label}</option>)}
           </select>
@@ -761,43 +790,43 @@ export default function LearnForm(p: LearnFormProps) {
         {need.height && (
           <label className="ln-field">
             <span>{t.height}</span>
-            <input className="ln-input" value={f.height} onChange={(e) => setContact("height", e.target.value)} inputMode="numeric" maxLength={3} placeholder={range(...HEIGHT)} />
+            <input className="ln-input" value={f.height} onChange={(e) => setContact("height", e.target.value)} inputMode="numeric" maxLength={3} placeholder={range(...HEIGHT)} {...bad("height")} />
             {rowAt < 0 && <small className="ln-hint">{t.heightHint}</small>}
           </label>
         )}
         {!skip.includes("instagram") && <label className="ln-field">
           <span>{t.instagram}</span>
-          <input className="ln-input" value={f.instagram} onChange={(e) => setContact("instagram", e.target.value)} autoComplete="off" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={120} placeholder="@username" />
+          <input className="ln-input" value={f.instagram} onChange={(e) => setContact("instagram", e.target.value)} autoComplete="off" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={120} placeholder="@username" {...bad("instagram")} />
           <small className="ln-hint">{t.instagramHint}</small>
           {flagNote("instagram")}
         </label>}
         {!skip.includes("linkedin") && <label className="ln-field">
           <span>{t.linkedin}</span>
-          <input className="ln-input" value={f.linkedin} onChange={(e) => setContact("linkedin", e.target.value)} autoComplete="off" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={200} placeholder="linkedin.com/in/your-name" />
+          <input className="ln-input" value={f.linkedin} onChange={(e) => setContact("linkedin", e.target.value)} autoComplete="off" autoCapitalize="off" spellCheck={false} dir="ltr" maxLength={200} placeholder="linkedin.com/in/your-name" {...bad("linkedin")} />
           <small className="ln-hint">{t.linkedinHint}</small>
           {flagNote("linkedin")}
         </label>}
         {!skip.includes("profession") && <label className="ln-field">
           <span>{t.profession}</span>
-          <input className="ln-input" value={f.profession} onChange={(e) => setContact("profession", e.target.value)} autoComplete="organization-title" maxLength={80} placeholder={t.professionPh} />
+          <input className="ln-input" value={f.profession} onChange={(e) => setContact("profession", e.target.value)} autoComplete="organization-title" maxLength={80} placeholder={t.professionPh} {...bad("profession")} />
           {flagNote("profession")}
         </label>}
         {!skip.includes("workplace") && <label className="ln-field">
           <span>{t.workplace}</span>
-          <input className="ln-input" value={f.workplace} onChange={(e) => setContact("workplace", e.target.value)} autoComplete="organization" maxLength={120} />
+          <input className="ln-input" value={f.workplace} onChange={(e) => setContact("workplace", e.target.value)} autoComplete="organization" maxLength={120} {...bad("workplace")} />
           <small className="ln-hint">{t.workplaceHint}</small>
           {flagNote("workplace")}
         </label>}
         {!skip.includes("heard_from") && <label className="ln-field">
           <span>{t.heard}</span>
-          <select className={`ln-input ln-select${f.heard ? "" : " ln-ph"}`} value={f.heard} onChange={(e) => setContact("heard", e.target.value as Heard | "")}>
+          <select className={`ln-input ln-select${f.heard ? "" : " ln-ph"}`} value={f.heard} onChange={(e) => setContact("heard", e.target.value as Heard | "")} {...bad("heard")}>
             <option value="">{t.heardPick}</option>
             {HEARD.map((h) => <option key={h} value={h}>{t.heardOpts[h]}</option>)}
           </select>
         </label>}
         <label className="ln-field">
           <span>{t.notes}</span>
-          <textarea className="ln-input" value={f.notes} onChange={(e) => setContact("notes", e.target.value)} rows={3} maxLength={600} />
+          <textarea className="ln-input" value={f.notes} onChange={(e) => setContact("notes", e.target.value)} rows={3} maxLength={600} {...bad("notes")} />
         </label>
       </div>
       {/* An account without an emergency contact (or one the account step could not save) gives it here. */}
@@ -810,7 +839,7 @@ export default function LearnForm(p: LearnFormProps) {
           confirms it here: the sign-up cannot go without it. */}
       {need.privacy && (
         <label className="ln-check ln-ack">
-          <input ref={ackBox} type="checkbox" checked={ack} onChange={(e) => { setAck(e.target.checked); setErr(null); }} />
+          <input ref={ackBox} type="checkbox" checked={ack} onChange={(e) => { setAck(e.target.checked); setErr(null); }} {...bad("ack")} />
           <span>{before}<NoticeLink dialog={p.notice}>{t.privacyLink}</NoticeLink>{after}</span>
         </label>
       )}
