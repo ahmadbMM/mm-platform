@@ -1,5 +1,6 @@
 import { WAIVER_VERSIONS, type WaiverKind } from "@/content/waivers";
-import type { TicketSession } from "./tickets";
+import { ahHold } from "./arena";
+import { satNumOk, ticketRow, type TicketRow, type TicketSession } from "./tickets";
 
 // A desk-added booking's waiver (the owner, 2026-10-04: "for the added riders and walked in ...
 // force them to accept the waiver of the session as a pop up"), as the booking app asks for it
@@ -12,6 +13,9 @@ import type { TicketSession } from "./tickets";
 // be tested.
 
 export const SESSION_ID = /^[A-Za-z0-9_-]{1,64}$/;
+/** What the pop-up sends back as agreed on this page: a ride, or on a Blood Donation event one role's rows of it
+ *  ("<session>.donor", "<session>.visitor"): each role agrees its own words, one after the other. */
+export const SKIP_ID = /^[A-Za-z0-9_-]{1,64}(\.(donor|visitor))?$/;
 /** A waiver version as the pop-up sends one back: every version the booking app has stamped has this
  *  shape ("2026-10-v3", "swim-2026-10-v3"). One that is no longer the ride's own - a deploy bumped it
  *  while the pop-up stood open - is answered "changed", so the pop-up asks again with the current
@@ -20,6 +24,11 @@ export const WAIVER_VERSION_SHAPE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,47}$/;
 const LIVE = new Set(["waiting", "waitlist", "active", "done"]);
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 type Row = Record<string, unknown>;
+/** A Blood Donation row's role (blood_role, rentals 20261105140000): a visitor, else a donor. */
+export type BloodRole = "donor" | "visitor";
+const roleOf = (r: Row): BloodRole => (r.blood_role === "visitor" ? "visitor" : "donor");
+const unsigned = (r: Row) => "waiver_version" in r && (r.waiver_version === null || r.waiver_version === "");
+const qn = (r: Row) => (typeof r.queue_num === "number" && Number.isFinite(r.queue_num) ? r.queue_num : null);
 
 /** The waiver a session is agreed under (_waiverKind): the Blood Donation event's own agreement ("there is no
  *  activity involved", the owner, 2026-11-03), the ride's where bikes are handed out, the swim's for the pool, the
@@ -38,22 +47,36 @@ const ownLive = (r: Row, customerId: string) =>
 export function pendingWaivers(rows: Row[], today: string, customerId: string, skip: readonly string[] = []): Array<{ sessionId: string; date: string }> {
   const by = new Map<string, string>();
   for (const r of rows) {
-    if (!("waiver_version" in r) || (r.waiver_version !== null && r.waiver_version !== "") || !ownLive(r, customerId)) continue;
+    if (!unsigned(r) || !ownLive(r, customerId)) continue;
     const date = S(r.session_date).slice(0, 10), sid = S(r.session_id);
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today || !SESSION_ID.test(sid) || skip.includes(sid) || by.has(sid)) continue;
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date < today || !SESSION_ID.test(sid) || skip.includes(sid) || skip.includes(`${sid}.${roleOf(r)}`) || by.has(sid)) continue;
     by.set(sid, date);
   }
   return [...by].map(([sessionId, date]) => ({ sessionId, date })).sort((a, b) => a.date.localeCompare(b.date) || a.sessionId.localeCompare(b.sessionId));
 }
 
-/** Who is on the booking, as its ticket lists them: every live row of the ride on the account, in
- *  number order. A ride staff approve never shows a number. */
-export function waiverRiders(rows: Row[], sessionId: string, customerId: string, approval: boolean): Array<{ name: string; num: number | null }> {
-  const qn = (r: Row) => (typeof r.queue_num === "number" && Number.isFinite(r.queue_num) ? r.queue_num : null);
-  return rows
-    .filter((r) => S(r.session_id) === sessionId && ownLive(r, customerId))
-    .sort((a, b) => (qn(a) ?? 0) - (qn(b) ?? 0))
-    .map((r) => ({ name: S(r.name).trim(), num: approval ? null : qn(r) }));
+/** The account's live rows of a ride, in number order (the booking app's _wgRows). */
+const rideRows = (rows: Row[], sessionId: string, customerId: string) =>
+  rows.filter((r) => S(r.session_id) === sessionId && ownLive(r, customerId)).sort((a, b) => (qn(a) ?? 0) - (qn(b) ?? 0));
+
+/** On a Blood Donation event, whose agreement the pop-up asks for (the booking app's _wgRow): the role of the first row
+ *  with no waiver yet, not one agreed to on this page. A donor and a visitor read different words, each stamped with
+ *  its own version (bug hunt 2026-11-10: the visitor's was asked whenever any row of the event was a visitor's). */
+export function waiverRole(rows: Row[], sessionId: string, customerId: string, skip: readonly string[] = []): BloodRole {
+  const r = rideRows(rows, sessionId, customerId).find((x) => unsigned(x) && !skip.includes(`${sessionId}.${roleOf(x)}`));
+  return r ? roleOf(r) : "donor";
+}
+
+/** Who is on the booking, as its ticket lists them: every live row of the ride on the account (on a Blood Donation
+ *  event, those of the role asked), in number order. Numbers hide where the ticket hides them: a ride staff approve
+ *  until a Saturday ride's list is out to a rider on it (satNumOk), an Arena Heros place until it is paid (ahHold). */
+export function waiverRiders(rows: Row[], sessionId: string, customerId: string, s: TicketSession, role?: BloodRole): Array<{ name: string; num: number | null }> {
+  const live = rideRows(rows, sessionId, customerId);
+  const t = live.map(ticketRow).filter((x): x is TicketRow => !!x);
+  const hide = (s.approval && !satNumOk(t, s)) || (s.kind === "arena" && ahHold(t));
+  return live
+    .filter((r) => !role || roleOf(r) === role)
+    .map((r) => ({ name: S(r.name).trim(), num: hide ? null : qn(r) }));
 }
 
 /** A database without the function (PostgREST's PGRST202, Postgres's 42883): the booking app's _rpcAbsent. */

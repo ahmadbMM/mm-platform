@@ -72,6 +72,6 @@ export function vlTicketView(r: Pick<TicketRow, "status" | "paid" | "vlTicket" |
   if (r.vlReceiptAt) return r.paid ? "paid" : "sent";
   if (arena) return r.paid ? "none" : "buy"; // Arena Heros: no question and no "I have a ticket" (2026-11-02)
   if (r.vlTicket === "have") return "have";
-  if (r.vlTicket === "buy") return "buy";
+  if (r.vlTicket === "buy") return r.paid ? "none" : "buy"; // marked paid at the desk: no receipt to ask for (bug hunt 2026-11-10)
   return r.paid ? "none" : "ask";
 }

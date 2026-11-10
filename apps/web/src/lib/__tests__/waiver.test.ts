@@ -3,7 +3,7 @@ import { createElement, type FC, type ReactElement, type ReactNode } from "react
 // The site has no @types/react-dom; this test needs one function of it.
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
-import { acceptAnswer, pendingWaivers, waiverKind, waiverRiders, waiverVersion } from "../waiver";
+import { acceptAnswer, pendingWaivers, waiverKind, waiverRiders, waiverRole, waiverVersion } from "../waiver";
 import { fmtClock, ticketSession } from "../tickets";
 import { resetSiteContent } from "../site";
 import { resetSessionColumns } from "../rides";
@@ -75,10 +75,37 @@ describe("the rides that ask", () => {
     void _;
     expect(pendingWaivers([noColumn], "2026-10-04", "c1")).toEqual([]);
   });
-  it("list the riders on the booking in number order, with no numbers on a ride staff approve", () => {
+  it("list the riders on the booking in number order, with no numbers where the ticket hides them", () => {
     const rows = [row("b", "j1", "2099-03-01", { queue_num: 9, name: "Omar Ali" }), row("a", "j1", "2099-03-01", { queue_num: 8 }), row("x", "j1", "2099-03-01", { status: "removed", name: "Gone" }), row("y", "j2", "2099-03-02")];
-    expect(waiverRiders(rows, "j1", "c1", false)).toEqual([{ name: "Sara Ali", num: 8 }, { name: "Omar Ali", num: 9 }]);
-    expect(waiverRiders(rows, "j1", "c1", true)).toEqual([{ name: "Sara Ali", num: null }, { name: "Omar Ali", num: null }]);
+    const jcc = ticketSession(jccRow)!, sat = ticketSession(satRow)!;
+    expect(waiverRiders(rows, "j1", "c1", jcc)).toEqual([{ name: "Sara Ali", num: 8 }, { name: "Omar Ali", num: 9 }]);
+    expect(waiverRiders(rows, "j1", "c1", sat)).toEqual([{ name: "Sara Ali", num: null }, { name: "Omar Ali", num: null }]);
+    // a Saturday ride's published list shows its riders' booking numbers (satNumOk), not before nor to a rider not through
+    const out = ticketSession({ ...satRow, hide_queue: false })!;
+    const ok = rows.map((r) => ({ ...r, approval: "approved" }));
+    expect(waiverRiders(ok, "j1", "c1", out)).toEqual([{ name: "Sara Ali", num: 8 }, { name: "Omar Ali", num: 9 }]);
+    expect(waiverRiders(rows, "j1", "c1", out).map((r) => r.num)).toEqual([null, null]);
+    // an Arena Heros place shows no number until it is paid (ahHold)
+    const ah = ticketSession({ ...jccRow, id: "2099-03-01-ah", event_kind: "community", ride_kind: "arena", needs_approval: false })!;
+    const ahRows = [row("a", "2099-03-01-ah", "2099-03-01", { queue_num: 4, price: 300, paid: false })];
+    expect(waiverRiders(ahRows, "2099-03-01-ah", "c1", ah)).toEqual([{ name: "Sara Ali", num: null }]);
+    expect(waiverRiders([{ ...ahRows[0], paid: true }], "2099-03-01-ah", "c1", ah)).toEqual([{ name: "Sara Ali", num: 4 }]);
+  });
+  it("ask a Blood Donation donor and visitor each for their own agreement, the first unsigned row's first", () => {
+    const rows = [row("v", "b1", "2099-03-01", { queue_num: 2, name: "Omar Ali", blood_role: "visitor" }), row("d", "b1", "2099-03-01", { queue_num: 1, waiver_version: "blood-2026-11-v1" })];
+    // the donor has agreed: the visitor is asked, never the donor's words because a visitor is on the booking
+    expect(waiverRole(rows, "b1", "c1")).toBe("visitor");
+    expect(waiverRole([rows[1]], "b1", "c1")).toBe("donor");
+    // both waiting: the first in number order, then the other once it is agreed on this page
+    const both = [rows[0], { ...rows[1], waiver_version: null }];
+    expect(waiverRole(both, "b1", "c1")).toBe("donor");
+    expect(waiverRole(both, "b1", "c1", ["b1.donor"])).toBe("visitor");
+    expect(pendingWaivers(both, "2026-10-04", "c1", ["b1.donor"])).toEqual([{ sessionId: "b1", date: "2099-03-01" }]);
+    expect(pendingWaivers(both, "2026-10-04", "c1", ["b1.donor", "b1.visitor"])).toEqual([]);
+    // the pop-up lists the role's own people
+    const bd = ticketSession({ ...jccRow, id: "b1", event_kind: "community", ride_kind: "blood", needs_approval: false })!;
+    expect(waiverRiders(both, "b1", "c1", bd, "visitor")).toEqual([{ name: "Omar Ali", num: 2 }]);
+    expect(waiverRiders(both, "b1", "c1", bd, "donor")).toEqual([{ name: "Sara Ali", num: 1 }]);
   });
 });
 

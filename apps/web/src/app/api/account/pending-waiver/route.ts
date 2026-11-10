@@ -12,7 +12,7 @@ import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
 import { fmtClock, fmtDayDate, venueOf, venueText } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
-import { SESSION_ID, WAIVER_VERSION_SHAPE, acceptAnswer, pendingWaivers, waiverKind, waiverRiders, waiverVersion } from "@/lib/waiver";
+import { SESSION_ID, SKIP_ID, WAIVER_VERSION_SHAPE, acceptAnswer, pendingWaivers, waiverKind, waiverRiders, waiverRole, waiverVersion } from "@/lib/waiver";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // GET /api/account/pending-waiver?locale=xx[&skip=id,id]: the ride a signed-in rider must agree a
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
   if (!(await withinLimit(req, "account-check"))) return json({ error: "busy" }, 429);
   const q = new URL(req.url).searchParams;
   const locale = q.get("locale") || "en";
-  const skip = (q.get("skip") || "").split(",").filter((x) => SESSION_ID.test(x)).slice(0, 20);
+  const skip = (q.get("skip") || "").split(",").filter((x) => SKIP_ID.test(x)).slice(0, 20);
   const rows = await accountBookings(acct);
   const list = pendingWaivers(rows, riyadhClock(new Date()).slice(0, 10), acct.id, skip);
   if (!list.length) return json({ signedIn: true, pending: null });
@@ -66,8 +66,10 @@ export async function GET(req: Request) {
   const time = timesText(s.times, s.gathers, clock, { gather: S(d.gather), start: S(d.start) });
   const kind = waiverKind(s); // Run for Her, with no bike, is agreed under the activity waiver (_waiverKind)
   const bw = kind === "blood" ? bloodWords(tx) : null;
-  // a visitor has an agreement of their own (blood_role, rentals 20261105140000)
-  const vis = !!bw && rows.some((r) => r.session_id === first.sessionId && r.blood_role === "visitor");
+  // a visitor has an agreement of their own (blood_role, rentals 20261105140000): the role is the first unsigned row's,
+  // and an account with a donor and a visitor waiting agrees each in turn (customer_accept_waiver stamps that role's rows)
+  const role = bw ? waiverRole(rows, first.sessionId, acct.id, skip) : undefined;
+  const vis = role === "visitor";
   return json({
     signedIn: true,
     pending: {
@@ -80,8 +82,8 @@ export async function GET(req: Request) {
       time,
       venue: venueText(venueOf(s), t),
       ridersLabel: bw ? (vis ? bw.visitor : bw.donor) : s.bikes ? t.riders : t.participants,
-      riders: waiverRiders(rows, first.sessionId, acct.id, s.approval),
-      ...(bw ? { kicker: bw.gate.kicker, sub: bw.gate.sub } : {}),
+      riders: waiverRiders(rows, first.sessionId, acct.id, s, role),
+      ...(bw ? { role, kicker: bw.gate.kicker, sub: bw.gate.sub } : {}),
     },
   });
 }

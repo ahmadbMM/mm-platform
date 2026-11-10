@@ -24,9 +24,10 @@ describe("Victory Lap ticket question", () => {
     expect(vlTicketView(row({ vl_ticket: "buy", vl_receipt_at: "2099-10-21T10:00:00Z", paid: true }), false)).toBe("paid");
     // staff confirm each receipt (2026-10-24): until they do, it is sent, not paid
     expect(vlTicketView(row({ vl_ticket: "buy", vl_receipt_at: "2099-10-21T10:00:00Z" }), false)).toBe("sent");
-    // staff marked it paid with no answer: nothing asked; with an answer, the answer stays
+    // staff marked it paid with no answer: nothing asked; "I have a ticket" stays; Buy one paid at the desk asks no receipt
     expect(vlTicketView(row({ vl_ticket: null, paid: true }), false)).toBe("none");
-    expect(vlTicketView(row({ vl_ticket: "buy", paid: true }), false)).toBe("buy");
+    expect(vlTicketView(row({ vl_ticket: "have", paid: true }), false)).toBe("have");
+    expect(vlTicketView(row({ vl_ticket: "buy", paid: true }), false)).toBe("none");
     // waitlist, done, a past card, a database without the column
     expect(vlTicketView(row({ vl_ticket: null, status: "waitlist" }), false)).toBe("none");
     expect(vlTicketView(row({ vl_ticket: null, status: "done" }), false)).toBe("none");

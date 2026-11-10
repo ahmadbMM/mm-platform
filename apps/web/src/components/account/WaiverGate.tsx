@@ -21,6 +21,8 @@ export type PendingWaiver = {
   /** The Blood Donation event's kicker and line in place of the waiver's (bldWgKicker, bldWgSub), from the route, so no
    *  word of the event sits in this code; absent on every other kind. */
   kicker?: string; sub?: string;
+  /** On a Blood Donation event, whose rows this agreement is for: a donor's or a visitor's (each agreed in turn). */
+  role?: "donor" | "visitor";
 };
 /** agreed: the database has it · absent: the database cannot record it yet (let through) ·
  *  stale: the ride's waiver changed since the pop-up was drawn (ask again). */
