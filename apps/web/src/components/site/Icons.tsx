@@ -49,3 +49,23 @@ export function StarIcon({ size = 16, className = "" }: P) {
     </svg>
   );
 }
+
+/** A clock: a time still to come (a date not open to book yet). */
+export function ClockIcon({ size = 14, className = "" }: P) {
+  return (
+    <svg className={`mm-ic ${className}`.trim()} viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor"
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="8.6" /><path d="M12 7.4V12l3.2 2" />
+    </svg>
+  );
+}
+
+/** An "i" in a ring: more about this (the booking app's bike-pill info mark). */
+export function InfoIcon({ size = 18, className = "" }: P) {
+  return (
+    <svg className={`mm-ic ${className}`.trim()} viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor"
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="12" r="8.6" /><path d="M12 11v5.4M12 7.7v.1" />
+    </svg>
+  );
+}

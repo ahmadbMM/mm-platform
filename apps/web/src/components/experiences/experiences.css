@@ -249,9 +249,21 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs-ev-wrap, .sc-wrap { position: relative; display: flex; min-width: 0; }
 .xs-ev-wrap > .xs-event, .sc-wrap > .sc-card { flex: 1 1 auto; width: 100%; min-width: 0; }
 .xs-ev-wrap.has-about > .xs-event { padding-bottom: 58px; }
-.sc-wrap.has-about > .sc-card { padding-bottom: 40px; }
-.xs-about, .sc-about { position: absolute; z-index: 1; margin: 0; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 700; line-height: 1.3;
+/* A date's Details is the booking app's "i" (the research's row 17, 2026-11-10): a 44px round button at the card's end,
+   halfway down, the card keeping that end clear for it. */
+.sc-wrap.has-about > .sc-card { padding-inline-end: 64px; }
+.xs-about { position: absolute; z-index: 1; margin: 0; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 700; line-height: 1.3;
   text-align: start; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.sc-about { position: absolute; z-index: 1; top: 50%; inset-inline-end: 10px; width: 44px; height: 44px; margin: -22px 0 0; padding: 0; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(26, 25, 25, .14); border-radius: 50%; background: #fff; color: var(--ev, #077a4b); font: inherit; cursor: pointer; transition: background .2s, border-color .2s; }
+.sc-about:hover { background: #f4f1ea; border-color: currentColor; }
+/* The date chosen (a radio, aria-checked): the one selection mark of the booking pages, an ink ring and a filled dot, the
+   same as a chosen option pill in the booking flow. */
+.sc-card[aria-checked="true"] { border-color: #1a1919; box-shadow: inset 0 0 0 1px #1a1919; }
+.sc-card[aria-checked="true"] .sc-dot { background: #1a1919; border-color: #1a1919; }
+/* A date not open yet: a clock beside when it opens, never the grey alone (WCAG 1.4.1). */
+.sc-spots.closed::before { content: none; }
+.sc-spots.closed .mm-ic { flex: none; }
 .xs-about { inset-inline-start: 28px; bottom: 18px; max-width: calc(100% - 56px); padding: 4px 0; color: #1a1919; }
 .xs-about.ab-runher { color: #c2416e; } /* Run for Her's pink, as on its date cards */
 /* The DEFE 5KM Run (2026-10-18): its summary wears Defe's logo and its cause, its Details' links Defe's berry */
@@ -261,8 +273,8 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs-about.ab-petromin { color: #d6202a; } /* Petromin Days: Petromin's red, as on its date cards (2026-10-12) */
 .xs-about.ab-blood { color: #0b1f16; } /* the donation event: its crimson, where every plain card has its link (2026-11-03) */
 .xs-about.ab-vlap { color: #0d0d0d; max-width: calc(100% - 100px); inset-inline-start: 25px; } /* Victory Lap: clear of the flag, under its words (the card's edge and .xs-vl-main's padding) */
-.sc-about { inset-inline-start: 35px; bottom: 11px; max-width: calc(100% - 51px); padding: 3px 0; color: var(--ev, #077a4b); }
-.xs-about:focus-visible, .sc-about:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 2px; }
+.xs-about:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: 2px; }
+.sc-about:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
 /* The one dialog both open (a native <dialog>, shown modal): centred on every screen, a phone's too,
    and scrolling inside when it is taller than the screen. Its top edge and kicker take the kind's
@@ -314,7 +326,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 
   .xs-about { inset-inline-start: 20px; bottom: 14px; max-width: calc(100% - 40px); }
 }
 @media (max-width: 560px) {
-  .sc-wrap.has-about > .sc-card { padding-bottom: 36px; }
-  .sc-about { inset-inline-start: 31px; bottom: 9px; max-width: calc(100% - 43px); }
+  .sc-wrap.has-about > .sc-card { padding-inline-end: 58px; }
+  .sc-about { inset-inline-end: 8px; }
   .xs-info-in { padding: 20px 20px 18px; }
 }

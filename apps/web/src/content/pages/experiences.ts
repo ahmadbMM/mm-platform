@@ -121,7 +121,8 @@ export const experiencesSchema = {
       hint: bi("The dates come from the booking system: every open or full session from today on. Petromin nights show only to accounts with the Petromin tag, under Petromin Days. A session with a name keeps it; the names below are for the rest. The Details texts also show in the booking app.", "المواعيد من نظام الحجز: كل جلسة مفتوحة أو ممتلئة من اليوم فصاعداً. وتظهر أمسيات بترومين لحاملي وسم بترومين فقط، ضمن أيام بترومين. الجلسة التي لها اسم تحتفظ به، والأسماء أدناه لغيرها. وتظهر نصوص «التفاصيل» في تطبيق الحجز أيضاً."),
       fields: [
         { id: "count", type: "number", min: 3, max: 24, step: 1, label: bi("How many dates to show per event", "عدد المواعيد لكل فعالية"), def: 9 },
-        txt("jccName", 50, "Name: circuit evening", "الاسم: أمسية الحلبة", "Evening Circuit Session", "جلسة الحلبة المسائية"),
+        // one name for the circuit's evenings, on its card, its dates and its tickets, with the circuit as its place (the owner, 2026-11-10)
+        txt("jccName", 50, "Name: circuit evening", "الاسم: أمسية الحلبة", "Open Sports Day", "يوم الرياضة المفتوح"),
         txt("satName", 50, "Name: Saturday ride", "الاسم: جولة السبت", "Saturday Social Ride", "جولة السبت الاجتماعية"),
         txt("swimName", 50, "Name: pool session", "الاسم: جلسة المسبح", "Triathlon Pool Session", "جلسة مسبح الترايثلون"),
         txt("workshopName", 50, "Name: triathlon workshop", "الاسم: ورشة الترايثلون", "T100 Triathlon Prep", "T100 التحضير للترايثلون"),
@@ -154,7 +155,7 @@ export const experiencesSchema = {
         txt("free", 30, "Tag: free", "الوسم: مجاني", "Complimentary", "مجاناً"),
         txt("full", 40, "Tag: full", "الوسم: ممتلئة", "Full · waitlist open", "ممتلئة · قائمة الانتظار متاحة"),
         txt("book", 30, "Button: book", "الزر: احجز", "Book", "احجز"),
-        txt("waitlist", 40, "Button: waitlist", "الزر: قائمة الانتظار", "Join the waitlist", "انضم لقائمة الانتظار"),
+        txt("waitlist", 40, "Button: waitlist", "الزر: قائمة الانتظار", "Join waitlist", "انضم إلى قائمة الانتظار"),
         txt("gather", 30, "Word: gathering", "كلمة: التجمع", "Gathering", "التجمع"),
         txt("start", 30, "Word: start", "كلمة: الانطلاق", "Start", "الانطلاق"),
         long("empty", 200, "When no date is open", "عند عدم وجود مواعيد", "No dates are open right now - check back soon.", "لا توجد مواعيد متاحة الآن - عُد قريباً."),

@@ -3,6 +3,7 @@ import type { L } from "@/i18n/tx";
 import { fill } from "./fill";
 import type { SiteContent } from "./site";
 import { fmtClock } from "./tickets";
+import { durText, opensIn, riyadhMs } from "./opens-in";
 
 // The booking window (site_content 'booking.window' = {"days": N, "at": "HH:MM"}, Riyadh time; set
 // by admins on the booking app's Sessions): a rider may not book a session more than N days
@@ -50,9 +51,27 @@ export function notOpenYet(sessionDate: string, w: BookingWindow | null, now: st
   return day === today && at !== null && hm < at;
 }
 
-/** "Booking opens Sun 5 Oct" / "Booking opens Sun 5 Oct at 9 AM", in the page's language. */
-export function opensText(sessionDate: string, w: BookingWindow, locale: string, tx: L): string {
+/** The moment booking opens for a session (Riyadh), as epoch ms: the browser counts down to it. */
+export const opensAt = (sessionDate: string, w: BookingWindow): number => {
   const o = opensOn(sessionDate, w);
+  return riyadhMs(o.day, o.at);
+};
+
+/** The countdown's words in the page's language ("Booking opens in {0}", {0} "2 h 10 min"), for the browser. */
+export const opensInWords = (tx: L) => ({
+  opensIn: tx("Booking opens in {0}", "يبدأ الحجز بعد {0}"),
+  hm: tx("{h} h {m} min", "{h} س {m} د"), h: tx("{h} h", "{h} س"), m: tx("{m} min", "{m} د"),
+});
+
+/** "Booking opens Sun 5 Oct" / "Booking opens Sun 5 Oct at 9 AM", in the page's language; with `nowMs`, an opening
+ *  within a day reads as a countdown instead: "Booking opens in 2 h 10 min" (the real window, never a timer of its own). */
+export function opensText(sessionDate: string, w: BookingWindow, locale: string, tx: L, nowMs?: number): string {
+  const o = opensOn(sessionDate, w);
+  const left = nowMs === undefined ? null : opensIn(riyadhMs(o.day, o.at), nowMs);
+  if (left) {
+    const ws = opensInWords(tx);
+    return fill(ws.opensIn.replace("{0}", "{left}"), { left: durText(left, ws) });
+  }
   const date = new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${o.day}T00:00:00Z`));
   return o.at
     ? fill(tx("Booking opens {date} at {time}", "يبدأ الحجز {date} في {time}"), { date, time: fmtClock(o.at, locale) })

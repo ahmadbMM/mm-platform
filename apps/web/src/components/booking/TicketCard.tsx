@@ -20,6 +20,7 @@ import { isNonBike } from "@/lib/bike-kinds";
 import { genderChip } from "@/lib/session-gender";
 import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, type OwnLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
 import { TickIcon } from "@/components/site/Icons";
+import { Sar, sarText } from "./Sar";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -104,10 +105,9 @@ const Live = () => (
     <circle cx="12" cy="12" r="3" /><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7" />
   </svg>
 );
-// An amount as riders read it in the booking app (_sar): the riyal sign (U+20C1, drawn by
-// /fonts/Riyal-*.woff2, booking.css) left of the number in every language, isolated left to right
-// so an Arabic line cannot flip it.
-const sar = (n: number) => `\u2066\u20C1 ${Math.round((Number(n) || 0) * 100) / 100}\u2069`;
+// An amount as riders read it in the booking app (_sar), as text inside a sentence; on its own it is <Sar> (./Sar.tsx),
+// whose sign a screen reader reads as a word.
+const sar = sarText;
 
 // The Jeddah Corniche Circuit, drawn from OpenStreetMap (© OpenStreetMap contributors, ODbL): the
 // Formula 1 ways chained into one loop, simplified, north up, the start marked (the booking app's JCC_TRACK).
@@ -340,7 +340,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             {r.status === "waitlist" && !allWl && wlLine && <p className="tk-wl-collect row">{wlLine}</p>}
             {!noNum && !donor && (
               <div className="tk-rider-pay">
-                <bdi className={`tk-amt${r.paid ? " paid" : ""}`}>{sar(r.price)}</bdi>
+                <Sar n={r.price} word={t.sarWord} className={`tk-amt${r.paid ? " paid" : ""}`} />
                 {/* Unpaid says where it is paid; a waitlisted rider owes nothing until they have a place. */}
                 {r.paid
                   ? <span className="tk-pay paid"><span className="dot" aria-hidden="true" />{r.price === 0 ? t.onTheHouse : t.paid}</span>
@@ -357,7 +357,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               {mine.map((x, i) => (
                 <div key={i} className="tk-ad">
                   <span className="tk-ad-n"><bdi>{x.locker ? lockerText(t.locker, lockers?.get(x.rowId), locale) : x.name}</bdi>{x.qty > 1 && <> <bdi className="tk-ad-q" dir="ltr">×{x.qty}</bdi></>}</span>
-                  {x.amount !== null && <bdi className="tk-amt">{sar(x.amount)}</bdi>}
+                  {x.amount !== null && <Sar n={x.amount} word={t.sarWord} />}
                 </div>
               ))}
             </div>
@@ -464,7 +464,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             )}
           </div>
         )}
-        {!donor && (free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <bdi className="tk-amt">{sar(total)}</bdi>}</strong></div>}
+        {!donor && (free || extrasCost !== null) && <div className="tk-total"><span>{t.total}</span><strong>{free ? t.free : <Sar n={total} word={t.sarWord} />}</strong></div>}
         {due && (due.used > 0 || (due.left > 0 && (balance ?? 0) > 0)) && (
           <WalletPay ids={due.ids} on={due.used > 0} title={wWords.title} failed={wWords.failed}
             sub={due.used <= 0 ? wWords.have.replace("{0}", sar(balance ?? 0))

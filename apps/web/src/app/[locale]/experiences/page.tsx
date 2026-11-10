@@ -19,7 +19,7 @@ import { dateText, eventCards, infoArena, infoBreakfast, infoDistance, infoPlace
 import { bizOf, faresOf } from "@/lib/biz";
 import { kindNames, loadRides, oneTime, sessionName, upcoming, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
-import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
+import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
@@ -160,7 +160,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     const km = s.routeSlug ? routeKm.get(s.routeSlug)?.km ?? 0 : s.kind === "jcc" ? 6.174 : 0;
     return km > 0 ? fillAt(s.routeSlug ? kmWord : tx("{0} km a lap", "{0} كم للفة"), kmText(km)) : null;
   };
-  const now = riyadhClock(new Date());
+  const drawn = new Date();
+  const now = riyadhClock(drawn);
   // every date ahead, men-only and women-only ones too, to every visitor (the owner, 2026-10-28)
   const all = upcoming(rides?.sessions ?? [], now);
   const sgWords = genderText(tx);
@@ -263,7 +264,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       reveal: held ? fillAt(tx("Breakfast spot: announced {0}", "موقع الفطور: يُعلَن عنه {0}"), held) : null,
       left: s.left ?? null,
       meta: [collect, from].filter((x): x is string => !!x),
-      opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,
+      // within a day of opening, a countdown to the real window that the browser keeps up to date each minute (opensAt)
+      opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null,
+      opensAt: window && notOpenYet(s.date, window, now) ? opensAt(s.date, window) : null,
       // its Details: staff's own line for the date shows under the text, except on an event, whose
       // description is the text
       info: {
@@ -332,6 +335,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
     everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),
     breakfastAt: tx("Breakfast at {0}", "الإفطار في {0}"),
+    opensIn: opensInWords(tx),
     info: {
       about: tx("About this event", "عن هذه الفعالية"), details: tx("Details", "التفاصيل"),
       bookEvent: tx("Book this event", "احجز هذه الفعالية"), chooseDate: tx("Choose this date", "اختر هذا الموعد"),

@@ -184,3 +184,5 @@ html:is([lang="ar"], [lang="ur"]) .mm-search-list p.mm-search-h { letter-spacing
 .sg-chip { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; font-style: normal; line-height: 1.5; letter-spacing: 0; text-transform: none; color: #fff; background: #56616b; white-space: nowrap; vertical-align: middle; }
 .sg-chip.sg-male { background: #1f6fb8; }
 .sg-chip.sg-female { background: #c2185b; }
+/* Words for a screen reader alone, out of sight (the riyal sign's "SAR", components/booking/Sar.tsx). */
+.mm-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }

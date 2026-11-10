@@ -143,7 +143,7 @@ describe("api/account/pending-waiver", () => {
     const b = await (await get("locale=en")).json();
     expect(b).toEqual({ signedIn: true, pending: {
       sessionId: "j1", version: "2026-10-v3", kind: "ride", copy: waiverCopy("ride", makeL("en", null)),
-      name: "Evening Circuit Session", when: "Sunday · 1 Mar 2099", time: "9 PM – 11 PM", venue: "Jeddah Corniche Circuit",
+      name: "Open Sports Day", when: "Sunday · 1 Mar 2099", time: "9 PM – 11 PM", venue: "Jeddah Corniche Circuit",
       ridersLabel: "Riders", riders: [{ name: "Sara Ali", num: 4 }, { name: "Omar Ali", num: 5 }],
     } });
     // the next ride, once that one is agreed on this page; a ride staff approve shows no numbers, and gathers
