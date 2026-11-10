@@ -1080,7 +1080,7 @@ test('the status page: invited to a ride, not approved, a link that leads nowher
   await expect(page.locator('.tk-step b')).toHaveText(['Received', 'Changes sent', 'Invited to a ride']);
   await expect(page.locator('.tk-step').last()).toContainText('Saturday, 31 October 2026');
   await expect(page.locator('.tk-step').last()).toContainText('05:45 - 06:15');
-  await expect(page.locator('.tk-step').last()).toContainText('Your place is in My Bookings on the booking site.');
+  await expect(page.locator('.tk-step').last()).toContainText('Your place is in Bookings on the booking site.'); // the booking app's tab, "Bookings" since its rider round two
   await expect(page.locator('#track-acts a')).toHaveText('Open the booking site');
   answer = { ok: true, first: 'Karim', lang: 'en', status: 'rejected', sent_at: '2026-10-20T08:00:00Z', updated_at: null, decided_at: '2026-10-23T08:00:00Z', fix: null, fix_done_at: null, ride: null };
   await page.reload();

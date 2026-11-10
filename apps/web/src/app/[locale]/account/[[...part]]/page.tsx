@@ -22,6 +22,8 @@ import { walletOf } from "@/lib/wallet";
 import { referralOf, referralRodeOf } from "@/lib/referral";
 import BloodTypeCard from "@/components/account/BloodTypeCard";
 import { bloodTypeWords } from "@/components/account/BloodType.words";
+import SportCard from "@/components/account/SportCard";
+import { sportWords } from "@/components/account/Sport.words";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import "@/components/club/club.css";
@@ -34,6 +36,7 @@ import { siteSchema } from "@/content/pages/site";
 import { accountBookings, getAccount, rpcServer } from "@/lib/account";
 import { bloodRewards, isBloodId, rewardGood } from "@/lib/blood";
 import { btOf } from "@/lib/blood-type";
+import { spOf, spOptionsOf } from "@/lib/sport";
 import { emAbsent } from "@/lib/emergency";
 import { decodeSession } from "@/lib/account-core";
 import { HANDOFF_COOKIE, accountLabel, sessionProfile } from "@/lib/handoff";
@@ -180,7 +183,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const needCurrent = extras.fix.includes("password") ? false : extras.about?.sign_in ? null : true;
   const typeNames = Object.fromEntries(["Road", "Hybrid", "Mountain", "Kids", "Road Carbon"].map((ty) => [ty, typeName(ty)]));
 
-  // Account: the tickets, the rating, the Club card, the wallet, Invite friends, the blood type and the shortcuts.
+  // Account: the tickets, the rating, the Club card, the wallet, Invite friends, the blood type, the sport and the shortcuts.
   const accountMain = async () => {
     const groups = ticketGroups(rows, today);
     const doneTonight = doneToday(rows, today);
@@ -193,7 +196,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const toRate = unratedRides(rows, today).filter((r) => r.date < RATE_FROM && r.entryId !== gate?.entryId).reverse().slice(0, 5);
     // every booked session, whatever its state now (a Petromin night, one staff closed since), read
     // with the account's token so a private ride (one its tag holders alone may see) keeps its name
-    const [sessions, blood, walletRead, referralRaw, lockersRaw, orders] = await Promise.all([
+    const [sessions, blood, walletRead, referralRaw, lockersRaw, orders, sport] = await Promise.all([
       loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
       // the blood type (2026-10-14): no card while the database has no customer_blood_type yet, nor
       // when it cannot be read just now (a card showing none would invite saving over the real one)
@@ -207,6 +210,16 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       // the online store's orders (rentals 20261110150000): none listed while the database has none or cannot be read
       rpcServer<unknown>("customer_orders", { p_id: acct.id, p_token: acct.token })
         .then((r) => (r.status === 200 && Array.isArray(r.data) ? r.data.map((x) => orderOf(x)).filter((x): x is Order => !!x && !!x.key) : [])),
+      // whether they compete in a sport (rentals 20261110233000): no card while the database has no customer_sport
+      // yet, nor when it cannot be read just now (a card asking the question would invite saving over the answer)
+      // (and the sports staff added to the list, which the card offers after the user's)
+      Promise.all([
+        rpcServer<unknown>("customer_sport", { p_id: acct.id, p_token: acct.token }),
+        rpcServer<unknown>("sport_option_list", {}),
+      ]).then(([r, o]) => {
+        const row = r.status === 200 && Array.isArray(r.data) ? spOf(r.data[0]) : null;
+        return row ? { ...row, added: o.status === 200 ? spOptionsOf(o.data) : [] } : null;
+      }),
     ]);
     const lockers = lockersRaw == null ? null : lockersOf(lockersRaw);
     // the rider's own lockers with no booking behind them (the lockers page; 2026-11-09): on that evening's ride ticket,
@@ -386,6 +399,13 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             <h2 id="ac-bt-h">{bloodTypeWords(locale).title}</h2>
             <p id="ac-bt-sub" className="ac-text bt-sub">{bloodTypeWords(locale).sub}</p>
             <BloodTypeCard initial={blood.type} />
+          </section>
+        )}
+
+        {sport && (
+          <section className="ac-sec bt-sec" aria-labelledby="ac-sp-h">
+            <h2 id="ac-sp-h">{sportWords(locale).title}</h2>
+            <SportCard initial={{ competes: sport.competes, feds: sport.feds, other: sport.other }} added={sport.added} />
           </section>
         )}
 

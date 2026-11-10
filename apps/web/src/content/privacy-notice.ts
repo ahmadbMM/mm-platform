@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-08";
+export const PRIVACY_VERSION = "2026-11-10";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -101,6 +101,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Blood type, if you give it (or that you don’t know it)",
       "Always optional: given in Account, or when you sign up for a blood donation event. Seen only by you, our staff, and the partners and third parties of a blood donation event you agree to share your details with; you can change or clear it in Account at any time.",
       "Letting our team plan a blood donation event. We share it only with the partners and third parties of a blood donation event you agree to share your details with, and use it for nothing else."
+     ],
+     [
+      "Whether you compete in a sport, as a professional or an amateur, and the sports federations you compete under",
+      "Community members: required, asked once on your account. Everyone else: optional, in Account. Seen only by you and our staff; you can change it in Account at any time.",
+      "So our team knows the athletes in our community and can plan rides and events with them."
      ],
      [
       "A blood donation event’s registration: your name, mobile number, birth date and nationality, whether you come as a donor or a visitor, which club or community you are from, your email address and blood type if you come as a donor, your gender if you come as a visitor, and whether you donated",
@@ -448,6 +453,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "فصيلة الدم إن أعطيتنا إياها (أو أنك لا تعرفها)",
       "اختيارية دائمًا: تُعطى في الحساب، أو عند التسجيل في فعالية للتبرع بالدم. لا يراها إلا أنت وموظفونا والشركاء والأطراف الثالثة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ويمكنك تغييرها أو حذفها من الحساب في أي وقت.",
       "مساعدة فريقنا في التخطيط لفعالية التبرع بالدم. لا نشاركها إلا مع الشركاء والأطراف الثالثة لفعالية تبرع بالدم توافق على مشاركة بياناتك معها، ولا نستخدمها لأي غرض آخر."
+     ],
+     [
+      "هل تنافس في رياضة ما بشكل احترافي أو كهاوٍ، والاتحادات الرياضية التي تنافس تحت مظلتها",
+      "أعضاء المجتمع: مطلوب، ويُسأل مرة واحدة في حسابك. وللجميع غيرهم: اختياري، من الحساب. لا يراه إلا أنت وموظفونا، ويمكنك تغييره من الحساب في أي وقت.",
+      "ليعرف فريقنا الرياضيين في مجتمعنا ويخطط معهم للجولات والفعاليات."
      ],
      [
       "التسجيل في فعالية للتبرع بالدم: اسمك ورقم جوالك وتاريخ ميلادك وجنسيتك، وما إذا كنت ستحضر كمتبرع أم كزائر، والنادي أو المجتمع الذي تنتمي إليه، وبريدك الإلكتروني وفصيلة دمك إن حضرت كمتبرع، وجنسك إن حضرت كزائر، وما إذا كنت قد تبرعت",
