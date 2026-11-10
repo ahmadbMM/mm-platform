@@ -18,9 +18,10 @@ import { AH_BANK, vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-tic
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { genderChip } from "@/lib/session-gender";
-import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, type OwnLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk } from "@/lib/tickets";
+import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, type OwnLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk, BOOTH_APPLE, BOOTH_DIR, todayCode } from "@/lib/tickets";
 import { TickIcon } from "@/components/site/Icons";
 import { Sar, sarText } from "./Sar";
+import { TicketDir, TicketMore, TicketShare } from "./TicketParts";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -45,6 +46,11 @@ import { Sar, sarText } from "./Sar";
 // and crimson: the booking app's th-blood), with the short rules, what confirmed donors get, and their free ride's code
 // once staff have confirmed the donation. Never a price, a total or a pay line, no wallet pass, no Edit or Reschedule;
 // Cancel stays. Its words come from the page (`blood`), not from T: that dictionary goes to every page's browser.
+// After the booking app's Bookings page research (2026-11-10): the date on one start-aligned line under the number and
+// the place on one more; on the ride's day the code drawn large under the number (todayCode); the route and the
+// add-ons behind one Details row (TicketMore); Calendar and Directions side by side with a square Share at the end of
+// their row, the Live map on a row of its own; the circuit's Directions at the booth, with Apple Maps offered on an
+// iPhone (TicketDir); a waitlist's cancel says Leave waitlist. The event colours stay the site's own.
 export type TicketText = (typeof T)["en"];
 type Props = {
   locale: string;
@@ -60,8 +66,9 @@ type Props = {
   gather: string;
   start: string;
   typeName: (type: string) => string;
-  /** live: the live ride map (/live?session=), on the day of the ride only. */
-  links: { edit: string | null; manage: string; place: string | null; live?: string | null };
+  /** live: the live ride map (/live?session=), on the day of the ride only. share: what Share sends as its link
+   *  (lib/tickets.ts shareLink), none for no Share. bookings: the booking app's My Bookings, the calendar entry's URL. */
+  links: { edit: string | null; manage: string; place: string | null; live?: string | null; share?: string | null; bookings?: string | null };
   /** The route the ride follows (ticketRoute): a Routes page item, or the circuit drawn; null for none. */
   route?: TicketRoute | null;
   /** The bike handed over tonight, by name, when the public key can see it. */
@@ -134,6 +141,12 @@ const CodeMark = ({ k }: { k: CodeKind }) => (
 
 const Clock = () => (
   <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.6" /><path d="M12 7.4V12l3.2 2" /></svg>
+);
+
+const Cal = () => (
+  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <rect x="4" y="5.5" width="16" height="14.5" rx="2" /><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4" />
+  </svg>
 );
 
 const Again = () => (
@@ -209,10 +222,35 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const wlc = wlCollectTime(s);
   const wlLine = wlc && !past ? t.wlCollectFrom(clock(wlc)) : "";
   const green = s?.times && s.gathers ? t.gatherAt(clock(s.times[0])) : allWl && wlLine ? "" : s?.collect && bikes ? t.collectFrom(clock(s.collect)) : "";
-  const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, icsPlace(s)) : "";
+  const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, icsPlace(s), new Date(), { id: primary.id, url: links.bookings }) : "";
   // men only, women only or mixed (the booking app's _sgChip): none on a session that did not load
   const sg = s ? genderChip(s, { male: t.sgMale, female: t.sgFemale, mixed: t.sgMixed }) : null;
   const reward = donor ? blood?.rewards?.get(primary.id) ?? null : null;
+  // The code, named with what it says (MMC-12-ab12cd), so a screen reader gives the rider the words to read to the desk,
+  // which can type them into Scan (the booking app's _qrBox, 2026-11-10); on the ride's day drawn large (todayCode).
+  const ref = bookingRef(primary, s);
+  const qrName = `${t.qrLabel} ${ref}`;
+  const largeQr = todayCode(rows, s, today, past);
+  const day = `${f({ weekday: "long" })} ${f({ day: "numeric", month: "short", year: "numeric" })}`;
+  const placeLabel = meetsAt(s) ? t.meetingPoint : t.directions;
+  // Share's words: what, when and where; never a name (the booking app's _tkShareText). A held ride's point is not told.
+  const shareText = [name, day, when, held && meetHeld(s, now) ? "" : venueText(venue, t)].filter(Boolean).join(" · ");
+  // each rider's add-ons under their name: the ones looked up behind Details, a locker in view (its period and number)
+  const looked = extras.filter((x) => !x.locker), lockerLines = extras.filter((x) => x.locker);
+  const addonRows = (list: typeof extras, head: string) => list.length > 0 && rows.map((r) => {
+    const mine = list.filter((x) => x.rowId === r.id);
+    return mine.length > 0 && (
+      <div key={`ad-${r.id}`} className="tk-addons">
+        <p className="tk-addons-h">{rows.length > 1 && <><bdi>{r.name}</bdi> · </>}{head}</p>
+        {mine.map((x, i) => (
+          <div key={i} className="tk-ad">
+            <span className="tk-ad-n"><bdi>{x.locker ? lockerText("", lockers?.get(x.rowId), locale) || t.locker : x.name}</bdi>{x.qty > 1 && <> <bdi className="tk-ad-q" dir="ltr">×{x.qty}</bdi></>}</span>
+            {x.amount !== null && <Sar n={x.amount} word={t.sarWord} />}
+          </div>
+        ))}
+      </div>
+    );
+  });
 
   return (
     <article className={`tk-card ev-${donor ? "blood" : s?.kind ?? "jcc"}${look ? ` tk-${look}` : ""}${look === "live" && onDay ? " tk-today" : ""}`}>
@@ -237,19 +275,32 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           {/* in line for a place, never which number in the line (the booking app, the owner 2026-11-10) */}
           {allWl && !hideNum && <p className="tk-wl-note">{t.wlPosNoNum}</p>}
         </div>
-        <div className="tk-right">
-          {past ? null : ready
-            ? <Qr payload={bookingRef(primary, s)} label={`${numLabel} ${num}`} />
-            : <div className="tk-qr-hold"><span>{ahHeld ? t.ahHoldNote : t.qrHold}</span></div>}
-          <p className="tk-when">
-            {dw && <><strong className="tk-dw">{dw === "today" ? t.today : t.tomorrow}</strong><br /></>}
-            {f({ weekday: "long" })}<br />{f({ day: "numeric", month: "short", year: "numeric" })}
-            {when && <><br /><bdi>{when}</bdi></>}
-            {green && !past && <><br /><span className="go">{green}</span></>}
-            {!past && <><br /><span className="tk-venue">{venueText(venue, t)}</span></>}
-            {sg && <><br /><span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span></>}
+        {!past && !largeQr && (
+          <div className="tk-right">
+            {ready
+              ? <Qr payload={ref} label={qrName} />
+              : <div className="tk-qr-hold"><span>{ahHeld ? t.ahHoldNote : t.qrHold}</span></div>}
+          </div>
+        )}
+      </div>
+      {/* today's code: 224px, centred under the number (Qr's size is the code inside its 6px white tile) */}
+      {largeQr && <div className="tk-qr-big"><Qr payload={ref} size={212} label={qrName} /></div>}
+      {/* the date on one line ([Today ·] weekday date · time) and the place on one more (venue · collect time · chip);
+          they were six right-aligned lines beside the code. A segment breaks only at its dot. */}
+      <div className="tk-when">
+        <p className="tk-when-d">
+          {dw && <><strong className="tk-dw">{dw === "today" ? t.today : t.tomorrow}</strong><span className="tk-sep" aria-hidden="true">·</span></>}
+          <bdi className="tk-seg">{day}</bdi>
+          {when && <><span className="tk-sep" aria-hidden="true">·</span><bdi>{when}</bdi></>}
+        </p>
+        {/* tonight's past card keeps only the chip (2026-10-27) */}
+        {(!past || sg) && (
+          <p className="tk-when-p">
+            {!past && <span className="tk-venue">{venueText(venue, t)}</span>}
+            {!past && green && <><span className="tk-sep" aria-hidden="true">·</span><span className="go tk-seg">{green}</span></>}
+            {sg && <span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span>}
           </p>
-        </div>
+        )}
       </div>
 
       <div className="tk-body">
@@ -294,25 +345,6 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             </div>
           );
         })()}
-        {route && (
-          <div className={`tk-rt${route.track ? " has-map" : ""}`}>
-            <div className="tk-rt-txt">
-              <p className="tk-rt-k">{t.route}</p>
-              <p className="tk-rt-n">{route.name ?? t.venueCircuit}</p>
-              {(route.km > 0 || route.track || route.note) && (
-                <p className="tk-rt-m">
-                  {route.km > 0 && (route.lap ? t.rtLap(kmText(route.km)) : t.rtKm(kmText(route.km)))}
-                  {route.km > 0 && (route.track || route.note) && " · "}
-                  {route.track ? t.rtCircuitNote : route.note}
-                </p>
-              )}
-              {past && <p className="tk-rt-done"><Tick /><span>{t.rtRidden}</span></p>}
-              {route.href && <a className="tk-rt-a" href={route.href} target="_blank" rel="noopener">{t.rtMapLink}</a>}
-              {route.track && <p className="tk-rt-osm">{t.rtOsm}</p>}
-            </div>
-            {route.track && <svg className="tk-rt-map" viewBox="0 0 40 158" aria-hidden="true" focusable="false"><path d={JCC_TRACK} /><circle cx="12.9" cy="71.4" r="3.2" /></svg>}
-          </div>
-        )}
         <p className="tk-riders-h">{bw ? (vis ? bw.visitor : bw.donor) : bikes ? t.riders : t.participants} · {hideNum ? num : <bdi dir="ltr">{num}</bdi>}</p>
         {rows.map((r) => (
           <div key={r.id} className="tk-rider">
@@ -349,20 +381,34 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             )}
           </div>
         ))}
-        {extras.length > 0 && rows.map((r) => {
-          const mine = extras.filter((x) => x.rowId === r.id);
-          return mine.length > 0 && (
-            <div key={`ad-${r.id}`} className="tk-addons">
-              <p className="tk-addons-h">{rows.length > 1 && <><bdi>{r.name}</bdi> · </>}{t.addons}</p>
-              {mine.map((x, i) => (
-                <div key={i} className="tk-ad">
-                  <span className="tk-ad-n"><bdi>{x.locker ? lockerText(t.locker, lockers?.get(x.rowId), locale) : x.name}</bdi>{x.qty > 1 && <> <bdi className="tk-ad-q" dir="ltr">×{x.qty}</bdi></>}</span>
-                  {x.amount !== null && <Sar n={x.amount} word={t.sarWord} />}
+        {/* the route and the add-ons: things a rider looks up, behind one Details row, closed until opened (the booking
+            app's _tkMore, 2026-11-10); the total stays in view */}
+        {(route || looked.length > 0) && (
+          <TicketMore label={t.details}>
+            {route && (
+              <div className={`tk-rt${route.track ? " has-map" : ""}`}>
+                <div className="tk-rt-txt">
+                  <p className="tk-rt-k">{t.route}</p>
+                  <p className="tk-rt-n">{route.name ?? t.venueCircuit}</p>
+                  {(route.km > 0 || route.track || route.note) && (
+                    <p className="tk-rt-m">
+                      {route.km > 0 && (route.lap ? t.rtLap(kmText(route.km)) : t.rtKm(kmText(route.km)))}
+                      {route.km > 0 && (route.track || route.note) && " · "}
+                      {route.track ? t.rtCircuitNote : route.note}
+                    </p>
+                  )}
+                  {past && <p className="tk-rt-done"><Tick /><span>{t.rtRidden}</span></p>}
+                  {route.href && <a className="tk-rt-a" href={route.href} target="_blank" rel="noopener">{t.rtMapLink}</a>}
+                  {route.track && <p className="tk-rt-osm">{t.rtOsm}</p>}
                 </div>
-              ))}
-            </div>
-          );
-        })}
+                {route.track && <svg className="tk-rt-map" viewBox="0 0 40 158" aria-hidden="true" focusable="false"><path d={JCC_TRACK} /><circle cx="12.9" cy="71.4" r="3.2" /></svg>}
+              </div>
+            )}
+            {addonRows(looked, t.addons)}
+          </TicketMore>
+        )}
+        {/* a locker on the booking stays in view: its number is what the rider gives at the desk (the booking app's _lkTkHtml) */}
+        {addonRows(lockerLines, t.locker)}
         {!!ownLockers?.length && (
           <div className="tk-addons">
             <p className="tk-addons-h">{t.locker}</p>
@@ -474,10 +520,16 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         {!allWl && !past && bikes && <p className="tk-line">{s?.approval ? t.helmetFree : t.helmetLine}</p>}
       </div>
 
-      {!past && <div className="tk-actions">
-        {ics && !allWl && <a className="tk-btn" href={`data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`} download={`micromobility-${primary.date.replace(/-/g, "")}.ics`}>{t.calendar}</a>}
-        {links.place && <a className="tk-btn" href={links.place} target="_blank" rel="noopener"><Pin />{meetsAt(s) ? t.meetingPoint : t.directions}</a>}
-        {links.live && <a className="tk-btn solid" href={links.live}><Live />{t.liveMap}</a>}
+      {/* Calendar and Directions side by side, Share a 48px square at the end of their row, the Live map on its own row */}
+      {!past && <div className="tk-actions tk-go">
+        {ics && !allWl && <a className="tk-btn tk-cal" href={`data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`} download={`micromobility-${primary.date.replace(/-/g, "")}.ics`}><Cal />{t.calendar}</a>}
+        {links.place && (
+          <TicketDir href={links.place} apple={links.place === BOOTH_DIR ? BOOTH_APPLE : null} words={{ title: placeLabel, apple: t.mapsApple, google: t.mapsGoogle, close: t.vtClose }}>
+            <Pin />{placeLabel}
+          </TicketDir>
+        )}
+        {links.share && <TicketShare text={shareText} url={links.share} label={t.share} copied={t.vtCopied} />}
+        {links.live && <a className="tk-btn solid tk-map" href={links.live}><Live />{t.liveMap}</a>}
       </div>}
       {/* A pass in the phone's wallet reads as a place held: none on a waitlist or before the code is out, and
           none on the DEFE 5KM Run or Arena Heros, which the passes do not know (the booking app's _walletOk). */}
@@ -491,9 +543,27 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
           {vlap && rows.length === 1 && primary.vl && <a className="tk-btn solid" href={links.manage}>{t.vlEdit}</a>}
           {/* Arena Heros: the athlete's details and division change there too (the booking app's _vlEditOpen) */}
           {arena && rows.length === 1 && primary.ah && <a className="tk-btn solid" href={links.manage}>{t.vlEdit}</a>}
-          <a className="tk-btn red" href={links.manage}>{t.cancel}</a>
+          {/* nothing is held on a waitlist: the rider leaves it (the booking app's leaveWlBtn, 2026-11-10) */}
+          <a className="tk-btn red" href={links.manage}>{allWl ? t.leaveWl : t.cancel}</a>
         </div>
       )}
     </article>
+  );
+}
+
+/** A cancelled booking, one quiet row under the tickets until its day has gone (the booking app's _mrCxRow, 2026-11-10):
+ *  what it was, when, and who cancelled it. With no email or SMS the page is the rider's only record of it. It holds no
+ *  code, no money and nothing to press: the place is gone, and where any money went is the desk's to say. */
+export function TicketCancelled({ locale, date, session: s, name, by, t, gather, start }: {
+  locale: string; date: string; session: TicketSession | undefined; name: string; by: "staff" | "customer" | ""; t: TicketText; gather: string; start: string;
+}) {
+  const d = new Date(`${date}T00:00:00Z`);
+  const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { ...o, timeZone: "UTC" }).format(d);
+  const when = timesText(s?.times, !!s?.gathers, (x) => fmtClock(x, locale), { gather, start });
+  return (
+    <div className="tk-cx">
+      <p className="tk-cx-top"><span className="tk-cx-n">{name}</span><span className="tk-cx-chip">{by === "staff" ? t.cxByUs : by === "customer" ? t.cxByYou : t.cancelled}</span></p>
+      <p className="tk-cx-w"><bdi>{f({ weekday: "long" })} {f({ day: "numeric", month: "short", year: "numeric" })}</bdi>{when && <> · <bdi>{when}</bdi></>}</p>
+    </div>
   );
 }

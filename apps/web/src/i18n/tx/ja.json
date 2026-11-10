@@ -1578,5 +1578,13 @@
   "Paid from your wallet": "ウォレットから支払い済み",
   "Pay at the desk": "受付で支払い",
   "Show this at the desk": "これを受付で見せてください",
-  "Your lockers": "あなたのロッカー"
+  "Your lockers": "あなたのロッカー",
+  "Booking QR code": "予約のQRコード",
+  "Share": "シェア",
+  "Leave waitlist": "キャンセル待ちをやめる",
+  "Cancelled by you": "お客様がキャンセル",
+  "Cancelled by us": "当社がキャンセル",
+  "Cancelled": "キャンセル済み",
+  "Apple Maps": "Apple マップ",
+  "Google Maps": "Google マップ"
 }

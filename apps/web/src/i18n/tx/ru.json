@@ -1578,5 +1578,13 @@
   "Paid from your wallet": "Оплачено из кошелька",
   "Pay at the desk": "Оплата на стойке",
   "Show this at the desk": "Покажите это на стойке",
-  "Your lockers": "Ваши шкафчики"
+  "Your lockers": "Ваши шкафчики",
+  "Booking QR code": "QR-код бронирования",
+  "Share": "Поделиться",
+  "Leave waitlist": "Покинуть лист ожидания",
+  "Cancelled by you": "Отменено вами",
+  "Cancelled by us": "Отменено нами",
+  "Cancelled": "Отменено",
+  "Apple Maps": "Apple Карты",
+  "Google Maps": "Google Карты"
 }

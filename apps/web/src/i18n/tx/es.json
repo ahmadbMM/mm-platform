@@ -1578,5 +1578,13 @@
   "Paid from your wallet": "Pagada con tu monedero",
   "Pay at the desk": "Pago en el mostrador",
   "Show this at the desk": "Muestra esto en el mostrador",
-  "Your lockers": "Tus taquillas"
+  "Your lockers": "Tus taquillas",
+  "Booking QR code": "Código QR de la reserva",
+  "Share": "Compartir",
+  "Leave waitlist": "Salir de la lista de espera",
+  "Cancelled by you": "Cancelada por ti",
+  "Cancelled by us": "Cancelada por nosotros",
+  "Cancelled": "Cancelada",
+  "Apple Maps": "Mapas de Apple",
+  "Google Maps": "Google Maps"
 }

@@ -1578,5 +1578,13 @@
   "Paid from your wallet": "已用钱包支付",
   "Pay at the desk": "在前台付款",
   "Show this at the desk": "请在前台出示",
-  "Your lockers": "您的储物柜"
+  "Your lockers": "您的储物柜",
+  "Booking QR code": "预订二维码",
+  "Share": "分享",
+  "Leave waitlist": "退出候补",
+  "Cancelled by you": "已由您取消",
+  "Cancelled by us": "已由我们取消",
+  "Cancelled": "已取消",
+  "Apple Maps": "Apple 地图",
+  "Google Maps": "Google 地图"
 }

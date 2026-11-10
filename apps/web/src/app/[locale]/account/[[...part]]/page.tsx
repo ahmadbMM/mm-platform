@@ -8,7 +8,8 @@ import SignIn from "@/components/account/SignIn";
 import SignOut from "@/components/account/SignOut";
 import "@/components/account/account.css";
 import "@/components/booking/booking.css";
-import TicketCard from "@/components/booking/TicketCard";
+import TicketCard, { TicketCancelled } from "@/components/booking/TicketCard";
+import { TicketWake } from "@/components/booking/TicketParts";
 import RateRide from "@/components/account/RateRide";
 import RideRecord from "@/components/account/RideRecord";
 import RideMore from "@/components/account/RideMore";
@@ -47,7 +48,7 @@ import { routeItems } from "@/lib/route-names";
 import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
 import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
-import { bloodDone, breakfastFor, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, type TicketSession, rideCompleted, ticketCue, ticketGroups, ticketRoute } from "@/lib/tickets";
+import { BOOTH_DIR, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, shareLink, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
@@ -171,6 +172,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const accountMain = async () => {
     const groups = ticketGroups(rows, today);
     const doneTonight = doneToday(rows, today);
+    const cancelled = cancelledGroups(rows, today); // kept, said as such, until their day has gone (2026-11-10)
     const donorEarlier = bloodDone(rows, today); // the Blood Donation event, over: kept below while its free ride is good
     // Finished rides not rated yet, one per night (a party rates once, on its first rider): the
     // booking app's post-ride rating. The oldest from the day it went live on is the pop-up the
@@ -181,7 +183,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     // every booked session, whatever its state now (a Petromin night, one staff closed since), read
     // with the account's token so a private ride (one its tag holders alone may see) keeps its name
     const [sessions, blood, walletRead, referralRaw, lockersRaw, sport] = await Promise.all([
-      loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : [])], acct),
+      loadTicketSessions([...groups.map((g) => g.sessionId), ...doneTonight.map((g) => g.sessionId), ...donorEarlier.map((g) => g.sessionId), ...toRate.map((r) => r.sessionId), ...(gate ? [gate.sessionId] : []), ...cancelled.map((g) => g.sessionId)], acct),
       // the blood type (2026-10-14): no card while the database has no customer_blood_type yet, nor
       // when it cannot be read just now (a card showing none would invite saving over the real one)
       rpcServer<unknown>("customer_blood_type", { p_id: acct.id, p_token: acct.token })
@@ -207,8 +209,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     // and as Your lockers below the rides, each evening with the QR the desk scans to hand the keys
     const own = ownLockersOf(lockersRaw, today);
     const referral = referralOf(referralRaw, today);
-    // tonight's ride already over stays as a past card while it counts as ridden (_rideCompleted)
-    const pastTonight = doneTonight.filter((g) => { const s = sessions.get(g.sessionId); return g.rows.some((r) => rideCompleted(r, !!s?.freeRide)); });
+    // tonight's ride already over stays as a past card until the day ends; one done but not yet marked paid is a ride done
+    // too (its rows say what is still to pay): it used to vanish until the desk marked it paid (the booking app, 2026-11-10)
+    const pastTonight = doneTonight;
     // The Blood Donation event (2026-11-03): a donor's free ride, asked only when a ticket is on the event; a database
     // without customer_blood_rewards, or a failed read, gives none and the ticket shows no code. The event over, its ticket
     // stays as a past card while the code on it is still good: it is good for a month, and this page lists no past bookings.
@@ -256,6 +259,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       catch { return book; }
     };
     const manage = appLink({ tab: "bookings" });
+    // the booking app's My Bookings, which a ticket's calendar entry leads back to (its URL line)
+    const myBookings = (() => { try { return new URL("/my-bookings", app).toString(); } catch { return null; } })();
     const club = resolvePage(clubSchema, content, L);
     const tierNames: [string, string, string] = [S(club.tiers.t1Name), S(club.tiers.t2Name), S(club.tiers.t3Name)];
     const shortcuts = [
@@ -268,27 +273,41 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       <>
         <section className="ac-sec" aria-labelledby="ac-rides-h">
           <div className="ac-sec-head"><h2 id="ac-rides-h">{S(c.home.ridesTitle)}</h2><a href={book}>{S(c.home.manage)} <ArrowIcon size={15} /></a></div>
+          {/* today's code large on the page: the phone stays awake while it shows (the booking app's _wakeWant, 2026-11-10) */}
+          {groups.some((g) => todayCode(g.rows, sessions.get(g.sessionId), today)) && <TicketWake />}
           {groups.length === 0 && past.length === 0 ? (unread ? failed : (
             <p className="ac-empty">{S(c.home.noRides)} {!hidden.includes("experiences") && <a href={localHref("/experiences", locale)}>{tx("See the dates", "المواعيد")} <ArrowIcon size={15} /></a>}</p>
-          )) : (
+          )) : null}
+          {(groups.length > 0 || past.length > 0 || cancelled.length > 0) && (
             <div className="tk-grid">
               {groups.map((g, i) => {
                 const s = sessions.get(g.sessionId);
                 const ev = s ? EV[s.kind] : undefined;
                 // a ride staff approve and Run for Her meet at the point staff set (meetsAt), Arena Heros and the Blood
-                // Donation event are at their venue's map, the rest at the circuit
-                const place = placeLink(s, S(site.contact.jccHref) || null);
+                // Donation event are at their venue's map, a ride at another named place is searched by its name, the rest
+                // at the booth on the circuit (BOOTH_DIR, 2026-11-10; it was the circuit's map link, which led to the gate)
+                const place = placeLink(s, BOOTH_DIR);
                 return (
                   <TicketCard key={g.key} locale={locale} today={now.slice(0, 10)} rows={g.rows} session={s}
                     name={rideName(s, g.sessionId)}
                     cue={ticketCue(g.rows, s, ahead[i])} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
                     links={{ edit: ev ? appLink({ ev, session: g.sessionId }) : null, manage, place,
                       // the live map follows the ride leader: a bike session's only (2026-10-18)
-                      live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null }}
+                      live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null,
+                      share: shareLink(app, ev, g.sessionId), bookings: myBookings }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
                     wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} />
                 );
               })}
+              {/* the bookings cancelled, after the bookings ahead: one quiet row each, until their day has gone */}
+              {cancelled.length > 0 && (
+                <ul className="tk-cx-list">
+                  {cancelled.map((g) => {
+                    const s = sessions.get(g.sessionId);
+                    return <li key={g.key}><TicketCancelled locale={locale} date={g.date} session={s} name={rideName(s, g.sessionId)} by={g.by} t={ticketText} gather={S(d.gather)} start={S(d.start)} /></li>;
+                  })}
+                </ul>
+              )}
               {past.map((g) => {
                 const s = sessions.get(g.sessionId);
                 return (

@@ -18,6 +18,8 @@
 // and defeKit*, defeRace*, defeReg*, the booking app's own keys. Men only, women only or mixed (2026-10-27):
 // sgMale, sgFemale, sgMixed, the booking app's own keys. Arena Heros (2026-10-28): athleteNumber, vlRaces wd/md,
 // vlTeamCode, vlWithPartner and vlPairWait as on Victory Lap, and the site's own ahTeamCode and ahHeat.
+// My Bookings after the research round (2026-11-10): qrLabel ticketQrLabel · details infoDetails · share tcShare ·
+// leaveWl leaveWlBtn · cxByYou/cxByUs/cancelled mrCxByYou/mrCxByUs/statusCancelled · mapsApple/mapsGoogle.
 export const T = {
   en: {
     queueNumber: "Queue number",
@@ -176,6 +178,17 @@ export const T = {
     ahBuySub: "Transfer the amount below to the organiser’s account, then upload a picture of the receipt. Each partner pays for their own place. Your QR code and number appear once our team confirms your payment.",
     ahNeedPay: "Transfer the amount and upload the receipt to confirm your place. Each partner pays for their own place.",
     venueGymnation: "Gymnation, Tahlia Street", // the booking app's venueGymnation
+    // My Bookings after the research round (2026-11-10): the code's name (read with what it says), the fold over the
+    // route and the add-ons, Share, a waitlist's cancel, a cancelled booking's chip, and the iPhone's choice of maps
+    qrLabel: "Booking QR code",
+    details: "Details",
+    share: "Share",
+    leaveWl: "Leave waitlist",
+    cxByYou: "Cancelled by you",
+    cxByUs: "Cancelled by us",
+    cancelled: "Cancelled",
+    mapsApple: "Apple Maps",
+    mapsGoogle: "Google Maps",
   },
   ar: {
     queueNumber: "رقم الدور",
@@ -318,5 +331,14 @@ export const T = {
     ahBuySub: "حوّل المبلغ أدناه إلى حساب المنظم، ثم ارفع صورة إيصال التحويل. يدفع كل شريك عن مكانه. يظهر رمز QR ورقمك بعد أن يؤكد فريقنا الدفع.",
     ahNeedPay: "حوّل المبلغ وارفع الإيصال لتأكيد مكانك. يدفع كل شريك عن مكانه.",
     venueGymnation: "Gymnation، شارع التحلية",
+    qrLabel: "رمز QR للحجز",
+    details: "التفاصيل",
+    share: "مشاركة",
+    leaveWl: "مغادرة قائمة الانتظار",
+    cxByYou: "أُلغي بطلبك",
+    cxByUs: "أُلغي من قِبَلنا",
+    cancelled: "ملغي",
+    mapsApple: "خرائط Apple",
+    mapsGoogle: "خرائط Google",
   },
 };

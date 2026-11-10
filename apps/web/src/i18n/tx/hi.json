@@ -1578,5 +1578,13 @@
   "Paid from your wallet": "आपके वॉलेट से भुगतान",
   "Pay at the desk": "डेस्क पर भुगतान",
   "Show this at the desk": "यह डेस्क पर दिखाएँ",
-  "Your lockers": "आपके लॉकर"
+  "Your lockers": "आपके लॉकर",
+  "Booking QR code": "बुकिंग QR कोड",
+  "Share": "शेयर करें",
+  "Leave waitlist": "प्रतीक्षा सूची छोड़ें",
+  "Cancelled by you": "आपने रद्द की",
+  "Cancelled by us": "हमने रद्द की",
+  "Cancelled": "रद्द",
+  "Apple Maps": "Apple Maps",
+  "Google Maps": "Google Maps"
 }
