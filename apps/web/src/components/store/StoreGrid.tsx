@@ -19,7 +19,9 @@ export default function StoreGrid({ locale, products, cats, start, licence }: {
     const q = new URLSearchParams(window.location.search);
     if (c === "all") q.delete("cat"); else q.set("cat", c);
     if (s === "featured") q.delete("sort"); else q.set("sort", s);
-    window.history.replaceState(window.history.state, "", `${window.location.pathname}${q.size ? `?${q}` : ""}`);
+    // the query as text, not q.size: Safari before 17 has no URLSearchParams.size, so the filter never reached the address
+    const qs = q.toString();
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
   };
   const pickCat = (c: string) => { setCat(c); remember(c, sort); };
   const pickSort = (s: StoreSort) => { setSort(s); remember(cat, s); };

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  addonCap, addonCatRank, addonsCost, birthOk, fromPrice, genderRefused, heightToSize, maxRiders, nextStep, prevStep, priceMap, promoDiscount, promoRows, refusalOf,
+  addonCap, addonCatRank, addonsCost, birthOk, codeOne, fromPrice, genderRefused, heightToSize, maxRiders, nextStep, pgDue, prevStep, priceMap, promoDiscount, promoRows, refusalOf,
   needsWaiver, regSteps, rentalTotal, riderPrices, sessionAddons, typeOptions, validateRiders, waiverKind, type AddonItem, type BookSession, type Rider,
 } from "../booking";
 import { accountFrom, asksOf, bookingEntries, checkBooking, liveSession, readInput, waitlistRefused, waiverVersionFor } from "../booking-server";
@@ -104,6 +104,18 @@ describe("prices", () => {
     expect(promoRows(pct, base, [r("Road")], { name: "Sara", house: "all" })).toEqual([false]);
     expect(promoRows(pct, sat, [r("Road")], null)).toEqual([false]);
   });
+  it("gives a personal one-use code rider 1's own bike alone, never Carbon, Own or a bike on the house (_codeOne)", () => {
+    expect(["RW-AB12", "rf-x", "RB-1", "BD-9", "VL-3"].every(codeOne)).toBe(true);
+    expect(codeOne("SARA10")).toBe(false);
+    const free = { code: "RF-AB12", kind: "pct", value: 100, appliesTo: null, one: true };
+    expect(promoDiscount(free, base, [r("Road"), r("Hybrid")], prices, null)).toBe(75);
+    expect(promoDiscount({ ...free, code: "RW-1", value: 50 }, base, [r("Hybrid"), r("Road")], prices, null)).toBe(28.75);
+    expect(promoDiscount(free, base, [r("Road Carbon"), r("Road")], prices, null)).toBe(0);
+    expect(promoDiscount(free, base, [r("Own"), r("Road")], prices, null)).toBe(0);
+    expect(promoDiscount(free, base, [r("Road")], prices, { name: "Sara", house: "all" })).toBe(0);
+    expect(promoRows(free, base, [r("Road"), r("Hybrid"), r("Road")], null)).toEqual([true, false, false]);
+    expect(promoRows(free, base, [r("Road Carbon"), r("Road")], null)).toEqual([false, false]);
+  });
 });
 
 describe("add-ons", () => {
@@ -163,6 +175,11 @@ describe("validation", () => {
     expect(refusalOf({ code: "P0001", message: "WAIVER_REQUIRED" })).toBe("waiver");
     expect(refusalOf({ code: "22023", message: "WAIVER_REQUIRED" })).toBe("waiver");
     expect(refusalOf({ message: "boom" })).toBe("generic");
+    // a personal code where it does not pay: the guards' details
+    expect(refusalOf({ code: "P0001", message: "A referral code is not valid on a Carbon bike.", details: "REF_CODE_CARBON" })).toBe("ref_code_carbon");
+    expect(refusalOf({ code: "P0001", message: "A referral code works on a JCC ride or a Petromin night only.", details: "REF_CODE_SESSION" })).toBe("ref_code_session");
+    expect(refusalOf({ code: "P0001", message: "This free ride is not valid on a Carbon bike.", details: "BLOOD_CODE_CARBON" })).toBe("blood_code_carbon");
+    expect(refusalOf({ code: "P0001", message: "This free ride is not valid on this session.", details: "BLOOD_CODE_SESSION" })).toBe("blood_code_session");
   });
 });
 
@@ -227,10 +244,13 @@ describe("the server's checks", () => {
   });
   it("refuses a capped waitlist that is full, and only then", () => {
     const s = { full: false, approval: false, capacity: 10, wlCap: 2 };
-    expect(waitlistRefused(s, 1, 1, 9, 2)).toBe(false); // a place left
-    expect(waitlistRefused(s, 2, 2, 9, 1)).toBe(true); // two need a bike, one place, one waitlist spot
-    expect(waitlistRefused({ ...s, full: true }, 1, 1, 0, 1)).toBe(false);
-    expect(waitlistRefused({ ...s, wlCap: null }, 1, 1, 10, 50)).toBe(false);
+    expect(waitlistRefused(s, 1, 9, 2)).toBe(false); // a place left
+    expect(waitlistRefused(s, 2, 9, 1)).toBe(true); // two need a bike, one place, one waitlist spot
+    expect(waitlistRefused({ ...s, full: true }, 1, 0, 1)).toBe(false);
+    expect(waitlistRefused({ ...s, wlCap: null }, 1, 10, 50)).toBe(false);
+    // only the riders who need a place go on the waitlist; riders on their own bikes need none (app12-1)
+    expect(waitlistRefused({ ...s, full: true }, 1, 0, 1)).toBe(false); // three riders, two on their own bikes, one spot
+    expect(waitlistRefused({ ...s, full: true }, 0, 0, 2)).toBe(false); // all on their own bikes: seated, not waitlisted
   });
   it("reads the account: live rows, a ride turned down, the house, the profile page", () => {
     const rows = [
@@ -243,6 +263,17 @@ describe("the server's checks", () => {
     expect(asksOf(["birth_date", "nationality"], {})).toEqual({ asks: [], communityOnly: true });
     expect(asksOf(["email", "birth_date"], {})).toEqual({ asks: ["email", "birth_date"], communityOnly: false });
     expect(accountFrom("Sara", {}, [], false, ["nationality"]).profileGate).toBe("community");
+    expect(accountFrom("Sara", {}, [], false, ["nationality"]).pgAsk).toEqual(["nat"]);
+  });
+  it("asks the nationality from the first booking and the birth date from the fourth, each only while not on file (_pgDue)", () => {
+    const n = (k: number) => Array.from({ length: k }, (_, i) => ({ session_id: `s${i}`, status: "done" }));
+    expect(accountFrom("Sara", {}, [], false, [])).toMatchObject({ profileGate: "none", pgAsk: [], count: 0 });
+    expect(accountFrom("Sara", {}, n(1), false, [])).toMatchObject({ profileGate: "profile", pgAsk: ["nat"], count: 1 });
+    expect(accountFrom("Sara", {}, n(3), false, [])).toMatchObject({ profileGate: "profile", pgAsk: ["nat"] });
+    expect(accountFrom("Sara", { nationality: "Egypt" }, n(3), false, [])).toMatchObject({ profileGate: "none", pgAsk: [] });
+    expect(accountFrom("Sara", { nationality: "Egypt" }, n(4), false, [])).toMatchObject({ profileGate: "profile", pgAsk: ["birth"] });
+    expect(accountFrom("Sara", {}, [...n(4), { session_id: "x", status: "cancelled" }], false, [])).toMatchObject({ pgAsk: ["birth", "nat"], count: 4 });
+    expect(pgDue({ birth: "1990-01-01", nationality: "" }, 8)).toEqual(["nat"]);
   });
 });
 
@@ -327,6 +358,11 @@ describe("api/booking", () => {
     expect((await (await post(book, "/api/booking", { ...body, group: "beg" })).json()).error).toBe("members");
     db({}, { ...SESSION, status: "full", bike_slots: '{"_time":"21:00 - 23:00","_wl":{"m":"count","v":3}}' });
     expect((await (await post(book, "/api/booking", body)).json()).error).toBe("waitlist_full");
+    // a my_bookings that failed is the database's, not a sign-in that ended (it answers no rows for a bad token)
+    db({ my_bookings: () => json({ message: "boom" }, 500) });
+    expect(await (await post(book, "/api/booking", body)).json()).toEqual({ ok: false, error: "generic" });
+    db({ customer_create_booking: () => json({ code: "P0001", message: "A referral code is not valid on a Carbon bike.", details: "REF_CODE_CARBON" }, 400) });
+    expect((await (await post(book, "/api/booking", body)).json()).error).toBe("ref_code_carbon");
   });
   it("puts no add-ons on a free ride and takes no stock for a waitlisted booking", async () => {
     let calls = db({}, { ...SESSION, event_kind: "community", ride_kind: "saturday", needs_approval: true, open_to_all: true });
@@ -394,10 +430,21 @@ describe("api/booking/promo and /profile", () => {
   it("looks a personal code up with the cookie's id and token", async () => {
     const calls = db({ promo_lookup: () => json({ ok: true, code: "MINE", kind: "flat", value: 20, applies_to: null }) });
     const b = await (await post(promoRoute, "/api/booking/promo", { code: "mine" })).json();
-    expect(b).toEqual({ ok: true, code: "MINE", kind: "flat", value: 20, applies_to: null });
+    expect(b).toEqual({ ok: true, code: "MINE", kind: "flat", value: 20, applies_to: null, session_id: null, ride_kind: null });
     expect(calls[0].body).toEqual({ p_code: "mine", p_id: "c1", p_token: TOKEN });
     db({ promo_lookup: () => json({ ok: false, reason: "expired" }) });
     expect(await (await post(promoRoute, "/api/booking/promo", { code: "old" })).json()).toEqual({ ok: false, reason: "expired" });
+    // the code's scope comes along; a lookup the server could not make is no verdict ("generic"), its meter full is "busy"
+    db({ promo_lookup: () => json({ ok: true, code: "S1", kind: "pct", value: 10, applies_to: null, session_id: "2026-11-12", ride_kind: "jcc" }) });
+    expect(await (await post(promoRoute, "/api/booking/promo", { code: "s1" })).json()).toMatchObject({ session_id: "2026-11-12", ride_kind: "jcc" });
+    db({ promo_lookup: () => json({ message: "boom" }, 500) });
+    const lost = await post(promoRoute, "/api/booking/promo", { code: "mine" });
+    expect(lost.status).toBe(502);
+    expect(await lost.json()).toEqual({ ok: false, reason: "generic" });
+    db({ promo_lookup: () => json({ ok: false, reason: "busy" }) });
+    const busy = await post(promoRoute, "/api/booking/promo", { code: "mine" });
+    expect(busy.status).toBe(429);
+    expect(await busy.json()).toEqual({ ok: false, reason: "busy" });
   });
   it("saves the two details through customer_set_birth_nat, a community member's through customer_fix_save", async () => {
     let calls = db();
@@ -407,6 +454,19 @@ describe("api/booking/promo and /profile", () => {
     expect((await post(profileRoute, "/api/booking/profile", { birth: "1990-05-01", nationality: "Egypt", community: true })).status).toBe(200);
     expect(calls[0].fn).toBe("customer_fix_save");
     expect((await post(profileRoute, "/api/booking/profile", { birth: "2024-05-01", nationality: "Egypt" })).status).toBe(400);
+  });
+  it("checks only what the page asked, and keeps the other as the account holds it", async () => {
+    let calls = db({ customer_profile: () => json([{ id: "c1", name: "Sara Ali", birth_date: "1991-03-04", nationality: null }]) });
+    expect((await post(profileRoute, "/api/booking/profile", { birth: "", nationality: "Egypt", ask: ["nat"] })).status).toBe(200);
+    expect(calls.find((c) => c.fn === "customer_set_birth_nat")!.body).toMatchObject({ p_birth_date: "1991-03-04", p_nationality: "Egypt" });
+    calls = db({ customer_profile: () => json([{ id: "c1", name: "Sara Ali", birth_date: null, nationality: "Egypt" }]) });
+    expect((await post(profileRoute, "/api/booking/profile", { birth: "1990-05-01", nationality: "", ask: ["birth"] })).status).toBe(200);
+    expect(calls.find((c) => c.fn === "customer_set_birth_nat")!.body).toMatchObject({ p_birth_date: "1990-05-01", p_nationality: "Egypt" });
+    // the birth date is not checked when only the nationality is asked; it still is when it is
+    expect((await post(profileRoute, "/api/booking/profile", { birth: "2024-05-01", nationality: "", ask: ["birth"] })).status).toBe(400);
+    calls = db({ customer_profile: () => json({ message: "boom" }, 500) });
+    expect((await post(profileRoute, "/api/booking/profile", { nationality: "Egypt", ask: ["nat"] })).status).toBe(502);
+    expect(calls.some((c) => c.fn === "customer_set_birth_nat")).toBe(false);
   });
 });
 

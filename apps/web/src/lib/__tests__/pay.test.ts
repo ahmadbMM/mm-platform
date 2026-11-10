@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { payReady, payMode, MOYASAR_FORM_JS, MOYASAR_FORM_CSS, MOYASAR_FORM_VERSION } from "../pay/config";
 import { MOYASAR_ID, safeEqual, sourceInfo, toHalalas } from "../pay/moyasar";
 import { deliveryFee, paySettings, refundable } from "../pay/settings";
 import { sar } from "../pay/money";
 import { payError, refusedVariant } from "../pay/http";
+import { confirmRefunds, sendRefund, type PendingRefund } from "../pay/server";
 
 // Online payments (2026-11-10, rentals 20261110150000): the parts that are plain logic.
 
@@ -77,5 +78,56 @@ describe("the pages' words for the database's refusals", () => {
   it("writes amounts with the riyal sign on the left, isolated, halalas only when there are some", () => {
     expect(sar(57.5)).toBe("⁦⃁ 57.50⁩");
     expect(sar(75)).toBe("⁦⃁ 75⁩");
+  });
+});
+
+// Card refunds against Moyasar's one refunded total, as the database judges them (rentals 20261110235200): each pending
+// refund's 'already' is the card refunds done on that Moyasar payment and those pending sent before it; a refund is done
+// only once pay_refund_done recorded it so.
+describe("refunds against Moyasar's one total", () => {
+  const MID = "11111111-2222-4333-8444-555555555555";
+  const env = { MOYASAR_SECRET_KEY: "sk_test_x", PAY_SERVER_KEY: "k".repeat(40) };
+  const json = (v: unknown, status = 200) => new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
+  /** Moyasar holding `refunded` halalas refunded (and growing by a refund it is sent), the database recording each answer. */
+  function stub(refunded: number, record: (b: Record<string, unknown>) => Response = (b) => json({ ok: true, status: b.p_ok ? "done" : "failed" })) {
+    const told: Record<string, unknown>[] = [];
+    let total = refunded;
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      const u = String(url);
+      if (u.endsWith("/refund")) { total += Number(JSON.parse(String(init?.body)).amount); return json({ id: MID, status: "refunded", amount: 10000, currency: "SAR", refunded: total }); }
+      if (u.startsWith("https://api.moyasar.com")) return json({ id: MID, status: "paid", amount: 10000, currency: "SAR", refunded: total });
+      const b = JSON.parse(String(init?.body)) as Record<string, unknown>;
+      told.push(b);
+      return record(b);
+    }));
+    return told;
+  }
+  const rf = (id: string, amount: number, already: number, at: string): PendingRefund => ({ id, provider_id: MID, amount, already, created_at: at });
+  beforeEach(() => { vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); });
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+
+  it("confirms two pending refunds that both went through, each once, from the refunds done", async () => {
+    // 10 SAR done before; 20 and 30 pending (their 'already': 10, then 10 + 20); Moyasar shows 60
+    const told = stub(6000);
+    expect(await confirmRefunds([rf("b", 30, 30, "2026-11-10T10:01:00Z"), rf("a", 20, 10, "2026-11-10T10:00:00Z")], env)).toBe(2);
+    expect(told.map((b) => [b.p_refund, b.p_ok, b.p_refunded_halalas])).toEqual([["a", true, 3000], ["b", true, 6000]]);
+  });
+  it("never confirms a second refund by the first one's money", async () => {
+    const told = stub(3000); // only the first (20 SAR) reached Moyasar
+    expect(await confirmRefunds([rf("a", 20, 10, "2026-11-10T10:00:00Z"), rf("b", 30, 30, "2026-11-10T10:01:00Z")], env)).toBe(1);
+    expect(told.map((b) => [b.p_refund, b.p_ok])).toEqual([["a", true], ["b", false]]);
+  });
+  it("confirms a later refund that went through when an earlier one never left", async () => {
+    const told = stub(4000); // 10 done, then only the 30 SAR one reached Moyasar
+    expect(await confirmRefunds([rf("a", 50, 10, "2026-11-10T10:00:00Z"), rf("b", 30, 60, "2026-11-10T10:01:00Z")], env)).toBe(1);
+    expect(told.map((b) => [b.p_refund, b.p_ok])).toEqual([["a", false], ["b", true]]);
+  });
+  it("says a refund done only when the database recorded it", async () => {
+    stub(0);
+    expect(await sendRefund({ id: "r1", provider_id: MID, amount: 20 }, env)).toBe(true);
+    stub(0, () => json({ message: "boom" }, 500));
+    expect(await sendRefund({ id: "r1", provider_id: MID, amount: 20 }, env)).toBe(false);
+    stub(0, () => json({ ok: true, status: "failed" }));
+    expect(await sendRefund({ id: "r1", provider_id: MID, amount: 20 }, env)).toBe(false);
   });
 });

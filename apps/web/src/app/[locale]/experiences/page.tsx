@@ -21,6 +21,7 @@ import { bookingAccount } from "@/lib/booking-server";
 import { bizOf, faresOf } from "@/lib/biz";
 import { priceMap, type AddonItem, type BookAccount, type BookSession } from "@/lib/booking";
 import { serverL } from "@/i18n/dicts";
+import { fill as fillNamed, fmtNum } from "@/lib/fill";
 import { fill as fillAt, phrase } from "@/i18n/tx";
 import { ArrowIcon } from "@/components/site/Icons";
 import { bg } from "@/lib/img";
@@ -98,7 +99,11 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // The highest fares and the riders per account admins set in the booking app (Settings > Pricing
   // and > Business; lib/biz.ts): the review's ranges and the party's cap, as the database applies them.
   const maxPrices = faresOf(rides?.prices).max;
-  const jccCap = bizOf(content).jccAccountCap;
+  const biz = bizOf(content);
+  const jccCap = biz.jccAccountCap;
+  // The cards' rules (jccNote, evNote) say the caps the database enforces through {riders} and {seats}, as main's
+  // Experiences fills them; left as written they reached the rider as "{riders}" (bug hunt 2026-11-10).
+  const caps = { riders: fmtNum(biz.jccAccountCap, locale), seats: fmtNum(biz.eventSeatMax, locale) };
 
   const kindName = kindNames(d);
   const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
@@ -159,7 +164,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
     const ss = sessionsOf(key);
     if (!always && ss.length === 0) return null;
     listed.push(...ss);
-    return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: S(e[`${p}Note`]), sessions: ss.map(toBook) };
+    return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: fillNamed(S(e[`${p}Note`]), caps), sessions: ss.map(toBook) };
   };
   const events = [card("snd96", "snd", false), card("event", "ev", false), card("jcc", "jcc", true), card("community", "comm", true), card("workshop", "ws", false)].filter((x): x is FlowEvent => !!x);
   const ps = paySettings(content);

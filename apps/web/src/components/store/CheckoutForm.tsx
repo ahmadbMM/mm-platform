@@ -100,7 +100,11 @@ function Checkout({ locale, products, settings, whens, showroom, account, balanc
   const fulfil: Fulfil = way?.id ?? "pickup";
   const fee = deliveryFee(settings, fulfil, subtotal) ?? 0;
   const total = Math.round((subtotal + fee) * 100) / 100;
-  const fromWallet = wallet && account && balance > 0 ? Math.min(balance, total) : 0;
+  // The card takes no less than 1 SAR (Moyasar's least): a wallet that would leave it less leaves it 1 SAR, as
+  // store_checkout does (bug hunt 2026-11-10, rentals 20261110235200); the summary says what the order will take.
+  const take = wallet && account && balance > 0 ? Math.min(balance, total) : 0;
+  const left = Math.round((total - take) * 100) / 100;
+  const fromWallet = left > 0 && left < 1 ? Math.max(Math.round((total - 1) * 100) / 100, 0) : take;
   const due = Math.round((total - fromWallet) * 100) / 100;
   const blocked = lines.some((l) => l.issue);
 

@@ -8,6 +8,10 @@ import PageShell, { navFrom } from "@/components/site/PageShell";
 import ClubCard from "@/components/club/ClubCard";
 import SignIn from "@/components/account/SignIn";
 import SignOut from "@/components/account/SignOut";
+// the pop-up a paid ticket's Cancel opens (components/pay/TicketPay.tsx) is drawn by Experiences' rules (.bk-pop, .bk-btn),
+// as on every page that shows one: without them it rendered unstyled here. First, as on Experiences, so the two below
+// keep the last word wherever they share a class.
+import "@/components/experiences/experiences.css";
 import "@/components/account/account.css";
 import "@/components/booking/booking.css";
 import TicketCard from "@/components/booking/TicketCard";

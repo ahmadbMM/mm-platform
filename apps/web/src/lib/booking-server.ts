@@ -3,8 +3,8 @@
 // app's own token-checked functions with the id and token from the account cookie only.
 import type { Session } from "./account-core";
 import {
-  JCC_ACCOUNT_CAP, addonCap, genderRefused, hasRideGroups, heightOk, heightToSize, isRiderType, maxRiders, needsBike, needsWaiver, noCarbon, ownOffered,
-  promoRows, refusalOf, rgOk, waiverKind, type BookAccount, type BookSession, type Refusal, type Rider, type RideGroup,
+  JCC_ACCOUNT_CAP, addonCap, codeOne, genderRefused, hasRideGroups, heightOk, heightToSize, isRiderType, maxRiders, needsBike, needsWaiver, noCarbon, ownOffered,
+  pgDue, promoRows, refusalOf, rgOk, waiverKind, type BookAccount, type BookSession, type PgField, type Refusal, type Rider, type RideGroup,
 } from "./booking";
 import { cleanName } from "./rpc-client";
 import { bizOf } from "./biz";
@@ -66,11 +66,16 @@ export function accountFrom(name: string, profile: Row, rows: Row[], member: boo
   const birth = S(profile.birth_date), nationality = S(profile.nationality);
   const { asks, communityOnly } = asksOf(fixFields, profile);
   const h = Number(profile.height);
+  // The profile page asks what the account's bookings make due and is not on file (_pgDue: the nationality from the
+  // first booking, the birth date from the fourth); a community member's page, what the server asked (_pgOpen's ask).
+  const pgAsk: PgField[] = communityOnly
+    ? (fixFields as string[]).filter((k) => k === "birth_date" || k === "nationality").map((k): PgField => (k === "birth_date" ? "birth" : "nat"))
+    : pgDue({ birth, nationality }, count);
   return {
     name, height: Number.isInteger(h) && h >= 100 && h <= 250 ? h : null, hidden, house, member,
     rejected: [...rejected], live, asks,
-    // The profile page after the eighth booking (PROFILE_GATE_AFTER) while either is missing.
-    profileGate: communityOnly ? "community" : count >= 8 && (!birth || !nationality) ? "profile" : "none",
+    profileGate: communityOnly ? "community" : pgAsk.length ? "profile" : "none",
+    pgAsk, count,
     birth, nationality,
     gender: sessionGender(profile.gender), // a session for one gender is booked by that gender alone (2026-10-27)
   };
@@ -189,7 +194,8 @@ export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAc
 
 /** The rows customer_create_booking takes (entryToDB): no price - the database sets every one. */
 export function bookingEntries(input: BookInput, riders: Rider[], s: LiveSession, acct: Pick<BookAccount, "name" | "house">, waiverVersion: string | null): Row[] {
-  const tagged = promoRows(input.promo, s, riders, acct);
+  // a personal one-use code rides on rider 1's row alone (its kind read off the code here, never the browser's word)
+  const tagged = promoRows(input.promo && { ...input.promo, one: codeOne(input.promo.code) }, s, riders, acct);
   const bike = needsBike(s);
   const now = new Date().toISOString();
   return riders.map((r, i) => {
@@ -242,12 +248,14 @@ async function counts(sessionId: string, fetchImpl: typeof fetch): Promise<{ tak
 }
 
 /** A capped waitlist that is full refuses rather than seats riders past its cap (waitlistRoom):
- *  a booking goes to the waitlist when staff marked the ride full, or (a ride nobody approves)
- *  when the places left cannot seat every rider who needs a bike. */
-export function waitlistRefused(s: Pick<LiveSession, "full" | "approval" | "capacity" | "wlCap">, need: number, riders: number, taken: number | null, waitlisted: number | null): boolean {
+ *  a booking that needs a place goes to the waitlist when staff marked the ride full, or (a ride
+ *  nobody approves) when the places left cannot seat every rider who needs a bike. Only those
+ *  riders go on it: a rider on their own bike takes no place (submitReg's _needSeats; bug hunt
+ *  2026-11-10, app12-1: a party with an own bike was refused as "waitlist full"). */
+export function waitlistRefused(s: Pick<LiveSession, "full" | "approval" | "capacity" | "wlCap">, need: number, taken: number | null, waitlisted: number | null): boolean {
   if (s.wlCap == null) return false;
-  const toWaitlist = s.full || (!s.approval && need > 0 && taken != null && s.capacity - taken < need);
-  return toWaitlist && waitlisted != null && s.wlCap - waitlisted < riders;
+  const toWaitlist = need > 0 && (s.full || (!s.approval && taken != null && s.capacity - taken < need));
+  return toWaitlist && waitlisted != null && s.wlCap - waitlisted < need;
 }
 
 export type Booked = { id: string; queue_num: number | null; status: string; waitlist_num: number | null; price: number | null };
@@ -272,8 +280,12 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
       sessionRows(fetchImpl, url, key, `id=eq.${input.sessionId}`, "id,session_date,day,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,spots,addons", Date.now(),
         { optional: [SESSION_COLS_GENDER], account: acct }),
     ]);
-    if (rows.status === 0) return { ok: false, error: "generic" };
-    if (!Array.isArray(rows.data)) return { ok: false, error: "signin" }; // a token my_bookings no longer takes
+    if (!Array.isArray(rows.data)) {
+      // my_bookings answers no rows (never an error) for a token it no longer takes, and the route checked the token
+      // with customer_profile: an error here is the database's or the way's, not a sign-in that ended, unless it says so
+      const ended = rows.status === 401 || rows.status === 403 || /STALE_SESSION/.test(`${rows.error?.code ?? ""} ${rows.error?.message ?? ""}`);
+      return { ok: false, error: ended ? "signin" : "generic" };
+    }
     rowsNow = rows.data;
     sessRow = Array.isArray(sess) && sess[0] ? (sess[0] as Row) : null;
   } catch {
@@ -294,7 +306,7 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
   const need = needsBike(s) ? riders.filter((r) => r.type !== "Own").length : riders.length;
   if (s.wlCap != null) {
     const c = await counts(s.id, fetchImpl);
-    if (waitlistRefused(s, need, riders.length, c.taken, c.waitlisted)) return { ok: false, error: "waitlist_full" };
+    if (waitlistRefused(s, need, c.taken, c.waitlisted)) return { ok: false, error: "waitlist_full" };
   }
   const entries = bookingEntries(input, riders, s, a, waiverVersionFor(s));
   const made = await rpcCall<Booked[]>("customer_create_booking", { ...args, p_entries: entries }, fetchImpl);
@@ -318,7 +330,9 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
   if (needsBike(s) && !a.height && heightOk(h0)) {
     await rpcCall<boolean>("customer_set_height", { ...args, p_height: h0 }, fetchImpl);
   }
-  const after = await rpcCall<Row[]>("my_bookings", args, fetchImpl);
+  let after = await rpcCall<Row[]>("my_bookings", args, fetchImpl);
+  // one more read when it failed: the confirmation draws a ticket for every row it returns (bug hunt 2026-11-10)
+  if (!Array.isArray(after.data)) after = await rpcCall<Row[]>("my_bookings", args, fetchImpl);
   const ids = new Set(booked.map((b) => b.id));
   const rows = (Array.isArray(after.data) ? after.data : []).filter((r) => ids.has(S(r.id)));
   return { ok: true, booked, rows, addonsSaved, session: s };

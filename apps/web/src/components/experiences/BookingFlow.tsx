@@ -8,9 +8,9 @@ import SignIn from "@/components/account/SignIn";
 import TicketCard from "@/components/booking/TicketCard";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import {
-  JCC_ACCOUNT_CAP, addonCap, addonCatRank, addonsCost, fromPrice, genderRefused, hasRideGroups, maxRiders, needsBike, needsWaiver, nextStep, prevStep, promoDiscount,
-  regSteps, rentalTotal, riderPrices, RIDE_GROUPS, sessionAddons, typeOptions, validateRiders, waiverKind,
-  type AddonItem, type AddonPick, type BikeType, type BookAccount, type BookSession, type Prices, type Promo, type Refusal, type Rider, type RideGroup, type Step,
+  JCC_ACCOUNT_CAP, addonCap, addonCatRank, addonsCost, codeOne, fromPrice, genderRefused, hasRideGroups, maxRiders, needsBike, needsWaiver, nextStep, pgDue, prevStep, promoDiscount,
+  refCodeKind, refCodeSessOk, regSteps, rentalTotal, riderPrices, RIDE_GROUPS, sessionAddons, typeOptions, validateRiders, waiverKind,
+  type AddonItem, type AddonPick, type BikeType, type BookAccount, type BookSession, type PgField, type Prices, type Promo, type Refusal, type Rider, type RideGroup, type Step,
 } from "@/lib/booking";
 import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
 import { rpcResult } from "@/lib/rpc-client";
@@ -70,9 +70,10 @@ type Props = {
 type Modal =
   | { kind: "signin" } | { kind: "members" } | { kind: "rejected"; s: BookSession } | { kind: "fix" }
   | { kind: "gender"; s: BookSession; refusal: Refusal }
-  | { kind: "profile"; community: boolean; next: string | null }
+  | { kind: "profile"; community: boolean; ask: PgField[]; next: string | null }
   | { kind: "bike"; type: BikeType; slot: number } | { kind: "group"; g: RideGroup } | null;
-type Done = { tickets: TicketRow[]; session: TicketSession | null; addonsSaved: boolean };
+/** `booked`: the rows the database stored (the route's), so a ticket my_bookings did not return in time is still counted. */
+type Done = { tickets: TicketRow[]; booked: { id: string; status: string }[]; session: TicketSession | null; addonsSaved: boolean };
 
 /** An amount as the booking app writes it (_sar): the riyal sign left of the number, isolated. */
 const sar = (n: number) => `⁦⃁ ${Math.round((Number(n) || 0) * 100) / 100}⁩`;
@@ -216,19 +217,34 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     // Any code the browser asks about itself (metered per visitor); one that belongs to an
     // account is asked again by the server with the rider's own token.
     const r = await rpcResult<Record<string, unknown>>("promo_lookup", { p_code: v, p_id: null, p_token: null });
-    if ("data" in r && r.data && typeof r.data === "object") d = r.data;
+    if ("data" in r && r.data && typeof r.data === "object" && !Array.isArray(r.data)) d = r.data;
     if (d && d.ok !== true && d.reason === "not_yours" && acctNow) {
+      let mine: Record<string, unknown> | null = null;
       try {
         const res = await fetch("/api/booking/promo", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ code: v }) });
-        d = (await res.json()) as Record<string, unknown>;
-      } catch { d = null; }
+        const b = (await res.json().catch(() => null)) as Record<string, unknown> | null;
+        // the server's verdict on the code, or its meter (busy); a lookup it could not make (502) is none
+        if (b && typeof b === "object" && (b.ok === true || (res.status < 500 && typeof b.reason === "string" && b.reason !== "generic"))) mine = b;
+      } catch { /* lost on the way */ }
+      d = mine;
     }
     setPromoBusy(false);
-    if (!d) { setPromo(null); setPromoMsg(t.err.offline); return; }
+    // A lookup lost on the way is no verdict on the code (the booking app's applyPromoCode, bug hunt 2026-11-10): it
+    // said "invalid", and riders gave up a real discount on a weak connection. What was applied stays.
+    if (!d) { setPromoMsg(t.promoMsg.lost); return; }
     if (d.ok !== true) { setPromo(null); setPromoMsg(t.promoMsg[String(d.reason)] ?? t.promoMsg.invalid); return; }
+    const refuse = (msg: string) => { setPromo(null); setPromoMsg(msg); };
+    // a code for one session or one kind of ride (promo_codes.session_id, ride_kind; the app's n6rPcNotThis)
+    const sid = typeof d.session_id === "string" ? d.session_id : "", rk = typeof d.ride_kind === "string" ? d.ride_kind : "";
+    if (sel && ((sid && sid !== sel.id) || (rk && rk !== sel.kind))) { refuse(t.promoMsg.not_this); return; }
     const appliesTo = typeof d.applies_to === "string" && d.applies_to ? d.applies_to : null;
-    if (appliesTo && !riders.some((x) => x.type === appliesTo)) { setPromo(null); setPromoMsg(fill(t.promoTypeOnly, typeName(appliesTo))); return; }
-    setPromo({ code: String(d.code ?? v), kind: String(d.kind ?? "pct"), value: Number(d.value) || 0, appliesTo });
+    if (appliesTo && !riders.some((x) => x.type === appliesTo)) { refuse(fill(t.promoTypeOnly, typeName(appliesTo))); return; }
+    const code = String(d.code ?? v);
+    // A personal one-use code (a referral code, a blood donation or volunteer free ride) pays for rider 1's own bike,
+    // never Carbon; a referral code only on a circuit ride or a Petromin night (_ref_code_guard, _blood_code_guard).
+    if (refCodeKind(code) && sel && !refCodeSessOk(sel)) { refuse(t.err.ref_code_session); return; }
+    if (codeOne(code) && /carbon/i.test(riders[0]?.type ?? "")) { refuse(refCodeKind(code) ? t.err.ref_code_carbon : t.err.blood_code_carbon); return; }
+    setPromo({ code, kind: String(d.kind ?? "pct"), value: Number(d.value) || 0, appliesTo, one: codeOne(code) });
     setPromoMsg("");
   };
   const removePromo = () => { setPromo(null); setPromoIn(""); setPromoMsg(""); };
@@ -298,15 +314,27 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           lang: locale,
         }),
       });
-      const b = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; tickets?: TicketRow[]; session?: TicketSession | null; addonsSaved?: boolean; pay?: { url?: string } };
+      const b = (await res.json().catch(() => ({}))) as {
+        ok?: boolean; error?: string; tickets?: TicketRow[]; booked?: { id: string; status: string }[]; session?: TicketSession | null; addonsSaved?: boolean; pay?: { url?: string };
+      };
       if (b.ok && b.pay?.url && /^\/pay\/[0-9a-f-]{36}$/.test(b.pay.url)) {
         // the places are held while the rider pays on the payment page (it brings them back to their tickets)
         window.location.assign(b.pay.url);
         return;
       }
       if (b.ok && Array.isArray(b.tickets)) {
-        setDone({ tickets: b.tickets, session: b.session ?? null, addonsSaved: b.addonsSaved !== false });
-        setAcctNow((a) => (a ? { ...a, live: { ...a.live, [sel.id]: (a.live[sel.id] ?? 0) + b.tickets!.length }, height: a.height ?? (Number(riders[0]?.height) || null) } : a));
+        const booked = Array.isArray(b.booked) ? b.booked.filter((x) => x && typeof x.id === "string") : [];
+        const n = booked.length || b.tickets.length;
+        setDone({ tickets: b.tickets, booked, session: b.session ?? null, addonsSaved: b.addonsSaved !== false });
+        setAcctNow((a) => {
+          if (!a) return a;
+          // the next booking asks what this one made due (_pgDue counts the rows)
+          const count = a.count + n, due = a.profileGate === "community" ? a.pgAsk : pgDue(a, count);
+          return {
+            ...a, live: { ...a.live, [sel.id]: (a.live[sel.id] ?? 0) + n }, height: a.height ?? (Number(riders[0]?.height) || null),
+            count, pgAsk: due, profileGate: a.profileGate === "community" ? a.profileGate : due.length ? "profile" : "none",
+          };
+        });
         focusTop();
       } else {
         refused(b.error ?? "generic");
@@ -443,14 +471,18 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   // ── The steps ────────────────────────────────────────────────────────────────────────────
   let body: React.ReactNode = null;
   if (done) {
-    const allWl = done.tickets.length > 0 && done.tickets.every((r) => r.status === "waitlist");
+    // the tickets my_bookings returned, else the rows the database stored: a booking whose tickets were not read in
+    // time is never called booked when it went to the waitlist, and points to My Bookings for its codes
+    const rows: { status: string }[] = done.tickets.length ? done.tickets : done.booked;
+    const allWl = rows.length > 0 && rows.every((r) => r.status === "waitlist");
+    const missing = done.tickets.length < done.booked.length;
     const appr = !!done.session?.approval || !!sel?.approval;
     const name = sel ? (sel.kind === "jcc" ? tk.venueCircuit : sel.name) : t.ride;
     body = (
       <section aria-labelledby="bk-done-h">
         <div className="bk-head">
           <h2 id="bk-done-h" className="bk-title" tabIndex={-1} data-step-title>{allWl ? t.doneWl : appr ? t.doneReserved : t.doneBooked}</h2>
-          {!(appr && allWl) && <p className="bk-sub">{appr ? t.doneReservedSub : allWl ? t.doneWlSub : t.doneBookedSub}</p>}
+          {!(appr && allWl) && <p className="bk-sub">{appr ? t.doneReservedSub : missing ? t.doneInAccount : allWl ? t.doneWlSub : t.doneBookedSub}</p>}
         </div>
         {!done.addonsSaved && <p className="bk-warn" role="status">{t.addonsNotSaved}</p>}
         <div className="tk-grid bk-tickets">
@@ -745,8 +777,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       {modal && <Pop modal={modal} close={() => setModal(null)} t={t} links={links} locale={locale} sel={sel} acct={acctNow}
         onPickBike={(slot, ty) => { setType(slot, ty); setModal(null); }}
         onPickGroup={(g) => { setGroup(g); if (fieldErr?.key === "group") setFieldErr(null); setModal(null); }}
-        onProfileSaved={(next) => {
-          const a = acctNow ? { ...acctNow, profileGate: "none" as const } : null;
+        onProfileSaved={(next, v) => {
+          const a = acctNow ? { ...acctNow, profileGate: "none" as const, pgAsk: [], birth: v.birth || acctNow.birth, nationality: v.nationality || acctNow.nationality } : null;
           setAcctNow(a); setModal(null);
           const s = next ? all.find((x) => x.id === next) : null;
           if (s && a) pick(s, a);
@@ -759,7 +791,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
  *  for, the profile page, a ride they were turned down for, a members' ride. Null: book on. */
 function gateFor(s: BookSession, a: BookAccount): Modal {
   if (a.asks.length) return { kind: "fix" };
-  if (a.profileGate !== "none") return { kind: "profile", community: a.profileGate === "community", next: s.id };
+  if (a.profileGate !== "none") return { kind: "profile", community: a.profileGate === "community", ask: a.pgAsk.length ? a.pgAsk : ["birth", "nat"], next: s.id };
   // a session for men only or women only, to an account of the other gender or with none on file (2026-10-27)
   const sg = genderRefused(s, a.gender);
   if (sg) return { kind: "gender", s, refusal: sg };
@@ -771,7 +803,8 @@ function gateFor(s: BookSession, a: BookAccount): Modal {
 // ── The pop-ups: centred on every screen (never a bottom sheet) ─────────────────────────────────
 type PopProps = {
   modal: NonNullable<Modal>; close: () => void; t: BookingText; links: FlowLinks; locale: string; sel: BookSession | null; acct: BookAccount | null;
-  onPickBike: (slot: number, ty: BikeType) => void; onPickGroup: (g: RideGroup) => void; onProfileSaved: (next: string | null) => void; pillName: (ty: string) => string;
+  onPickBike: (slot: number, ty: BikeType) => void; onPickGroup: (g: RideGroup) => void;
+  onProfileSaved: (next: string | null, v: { birth: string; nationality: string }) => void; pillName: (ty: string) => string;
 };
 function Pop({ modal, close, t, links, locale, sel, acct, onPickBike, onPickGroup, onProfileSaved, pillName }: PopProps) {
   const box = useRef<HTMLDivElement>(null);
@@ -829,7 +862,7 @@ function Pop({ modal, close, t, links, locale, sel, acct, onPickBike, onPickGrou
       </div>
     );
   } else if (modal.kind === "profile") {
-    inner = <ProfileForm t={t} locale={locale} acct={acct} community={modal.community} onSaved={() => onProfileSaved(modal.next)} close={close} />;
+    inner = <ProfileForm t={t} locale={locale} acct={acct} community={modal.community} ask={modal.ask} onSaved={(v) => onProfileSaved(modal.next, v)} close={close} />;
     label = "bk-pg-t";
   } else if (modal.kind === "bike") {
     const info = BIKE_IMG[modal.type], b = t.bikeInfo[modal.type];
@@ -873,8 +906,12 @@ function Pop({ modal, close, t, links, locale, sel, acct, onPickBike, onPickGrou
 }
 
 // The profile page (_profileGate): the birth date as three pickers and the nationality, saved
-// before the booking goes on. A community member's two go where the server asked for them.
-function ProfileForm({ t, locale, acct, community, onSaved, close }: { t: BookingText; locale: string; acct: BookAccount | null; community: boolean; onSaved: () => void; close: () => void }) {
+// before the booking goes on; only what is asked (`ask`, _pgOpen's: the nationality from the first
+// booking, the birth date from the fourth). A community member's go where the server asked for them.
+function ProfileForm({ t, locale, acct, community, ask, onSaved, close }: {
+  t: BookingText; locale: string; acct: BookAccount | null; community: boolean; ask: PgField[];
+  onSaved: (v: { birth: string; nationality: string }) => void; close: () => void;
+}) {
   const init = /^\d{4}-\d{2}-\d{2}$/.test(acct?.birth ?? "") ? acct!.birth : "";
   const [bd, setBd] = useState({ y: init.slice(0, 4), m: init.slice(5, 7), d: init.slice(8, 10) });
   const [nat, setNat] = useState(acct?.nationality ?? "");
@@ -888,26 +925,28 @@ function ProfileForm({ t, locale, acct, community, onSaved, close }: { t: Bookin
   const years = Array.from({ length: 96 }, (_, i) => String(year - 5 - i));
   const dim = bd.y && bd.m ? new Date(Number(bd.y), Number(bd.m), 0).getDate() : 31;
   const birth = bd.y && bd.m && bd.d ? `${bd.y}-${bd.m}-${bd.d}` : "";
+  const hb = ask.includes("birth"), hn = ask.includes("nat"), one = ask.length === 1;
+  const filled = (!hb || !!birth) && (!hn || !!nat);
   const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    const n = { b: birth ? undefined : t.pgErrBirth, n: nat ? undefined : t.pgErrNat };
+    const n = { b: !hb || birth ? undefined : t.pgErrBirth, n: !hn || nat ? undefined : t.pgErrNat };
     setErrs(n);
     if (n.b || n.n) return;
     setSaving(true);
     try {
-      const r = await fetch("/api/booking/profile", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ birth, nationality: nat, community }) });
+      const r = await fetch("/api/booking/profile", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ birth: hb ? birth : "", nationality: hn ? nat : "", community, ask }) });
       const b = (await r.json().catch(() => ({}))) as { ok?: boolean; error?: string };
-      if (b.ok) { onSaved(); return; }
+      if (b.ok) { onSaved({ birth: hb ? birth : "", nationality: hn ? nat : "" }); return; }
       setErrs(b.error === "birth" ? { b: t.pgErrBirth } : b.error === "nationality" ? { n: t.pgErrNat } : { net: true });
     } catch { setErrs({ net: true }); }
     setSaving(false);
   };
   return (
     <form className="bk-pop-body" onSubmit={save} noValidate>
-      <div className="bk-pop-head"><div><p className="bk-kick">{community ? t.pgCommKicker : t.pgKicker}</p><h2 id="bk-pg-t" className="bk-pop-title">{community ? t.pgCommTitle : t.pgTitle}</h2></div>
+      <div className="bk-pop-head"><div><p className="bk-kick">{community ? t.pgCommKicker : t.pgKicker}</p><h2 id="bk-pg-t" className="bk-pop-title">{community && !one ? t.pgCommTitle : one ? t.pgTitleOne : t.pgTitle}</h2></div>
         <button type="button" className="bk-x" onClick={close} aria-label={t.close}><Ic name="close" size={18} /></button></div>
-      <p className="bk-sub sm">{community ? t.pgCommSub : t.pgSub}</p>
-      <div className="bk-field">
+      <p className="bk-sub sm">{community ? t.pgCommSub : one ? t.pgSubOne : t.pgSub}</p>
+      {hb && <div className="bk-field">
         <span className="bk-label" id="bk-pg-b">{t.birth}</span>
         <div className="bk-dob" role="group" aria-labelledby="bk-pg-b">
           <select aria-label={t.day} value={bd.d} disabled={saving} onChange={(e) => setBd({ ...bd, d: e.target.value })}>
@@ -924,8 +963,8 @@ function ProfileForm({ t, locale, acct, community, onSaved, close }: { t: Bookin
           </select>
         </div>
         {errs.b && <p className="bk-ferr" role="alert">{errs.b}</p>}
-      </div>
-      <div className="bk-field">
+      </div>}
+      {hn && <div className="bk-field">
         <label htmlFor="bk-pg-nat">{t.nationality}</label>
         <select id="bk-pg-nat" value={nat} disabled={saving} onChange={(e) => setNat(e.target.value)}>
           <option value="">{t.chooseCountry}</option>
@@ -933,10 +972,10 @@ function ProfileForm({ t, locale, acct, community, onSaved, close }: { t: Bookin
           {nats.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         {errs.n && <p className="bk-ferr" role="alert">{errs.n}</p>}
-      </div>
+      </div>}
       <p className="bk-note">{t.pgNote}</p>
       {errs.net && <p className="bk-err" role="alert">{t.pgErrNet}</p>}
-      <button type="submit" className="bk-btn wide" disabled={saving || !birth || !nat}>{saving ? t.pgSaving : t.pgSave}</button>
+      <button type="submit" className="bk-btn wide" disabled={saving || !filled}>{saving ? t.pgSaving : t.pgSave}</button>
     </form>
   );
 }

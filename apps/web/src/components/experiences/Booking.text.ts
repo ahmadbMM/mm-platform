@@ -100,6 +100,12 @@ export const T = {
       expired: "That code has expired.",
       used_up: "That code has been fully used.",
       not_yours: "That code belongs to another account.",
+      // n6rPcNotThis: a code for one session or one kind of ride
+      not_this: "This code is not for this session.",
+      busy: "Too many tries. Please wait a few minutes and try again.",
+      signin: "You’ve been signed out. Please sign in again.",
+      // a lookup lost on the way: no verdict on the code
+      lost: "Could not check right now. Try again.",
     } as Record<string, string>,
     promoTypeOnly: "This code applies only to {0} bookings.",
     // waiverTitle/Body/Agree swimWaiver* activityWaiver* waiverRequired
@@ -131,6 +137,8 @@ export const T = {
     doneReservedSub: "Staff confirm each rider. Your code appears in My Bookings once your place is confirmed.",
     doneWlSub: "No place is held yet. Keep this code: if one opens, staff check you in with it.",
     doneBookedSub: "Show this code at the booth. It’s in My Bookings too.",
+    // the booking is made but its tickets were not read back in time
+    doneInAccount: "Your tickets are in My Bookings.",
     another: "Book another ride",
     addonsNotSaved: "Your booking is made, but the add-ons were not saved. Add them from My Bookings.",
     ride: "Ride",
@@ -161,6 +169,8 @@ export const T = {
     pgKicker: "Before you book",
     pgTitle: "Two details to finish your profile",
     pgSub: "We need these once, then you’re back to the ride.",
+    pgTitleOne: "One detail to finish your profile",
+    pgSubOne: "We need this once, then you’re back to the ride.",
     pgCommKicker: "Community members",
     pgCommTitle: "Two details for your community profile",
     pgCommSub: "Community members need these on their account before booking. It only takes a moment.",
@@ -197,6 +207,11 @@ export const T = {
       generic: "That didn’t work, and we’ve been sent the details. Please try again.",
       pay_start: "We couldn't start the payment, so nothing was booked. Please try again.",
       offline: "You look offline. Check your connection and try again.",
+      // errRefCodeCarbon errRefCodeSession errBloodCodeCarbon errBloodCodeSession: a personal code where it does not pay
+      ref_code_carbon: "A referral code isn’t valid on a Carbon bike.",
+      ref_code_session: "A referral code works only on Jeddah Corniche Circuit rides and Petromin nights.",
+      blood_code_carbon: "This free ride isn’t valid on a Carbon bike.",
+      blood_code_session: "This free ride isn’t valid on this session.",
     } as Record<string, string>,
   },
   ar: {
@@ -286,6 +301,10 @@ export const T = {
       expired: "انتهت صلاحية هذا الرمز.",
       used_up: "تم استخدام هذا الرمز بالكامل.",
       not_yours: "هذا الرمز يخص حسابًا آخر.",
+      not_this: "هذا الرمز ليس لهذه الجلسة.",
+      busy: "محاولات كثيرة. انتظر بضع دقائق ثم حاول مجددًا.",
+      signin: "انتهت صلاحية جلستك — يرجى تسجيل الدخول من جديد.",
+      lost: "تعذّر التحقق الآن. حاول مجدداً.",
     } as Record<string, string>,
     promoTypeOnly: "هذا الرمز يسري فقط على حجوزات {0}.",
     waiver: {
@@ -312,6 +331,7 @@ export const T = {
     doneReservedSub: "يؤكد الفريق كل مشارك على حدة. يظهر رمزك في حجوزاتي بعد تأكيد مقعدك.",
     doneWlSub: "لم يُحجز لك مقعد بعد. احتفظ بهذا الرمز: إذا توفر مقعد يسجّل الفريق دخولك به.",
     doneBookedSub: "اعرض هذا الرمز عند الكشك. تجده أيضاً في حجوزاتي.",
+    doneInAccount: "تذاكرك في حجوزاتي.",
     another: "حجز رحلة أخرى",
     addonsNotSaved: "تم الحجز، لكن الإضافات لم تُحفظ. أضفها من حجوزاتي.",
     ride: "جولة",
@@ -335,6 +355,8 @@ export const T = {
     pgKicker: "قبل الحجز",
     pgTitle: "معلومتان لإكمال ملفك الشخصي",
     pgSub: "نحتاجهما مرة واحدة فقط، ثم تعود مباشرة إلى الجولة.",
+    pgTitleOne: "معلومة واحدة لإكمال ملفك الشخصي",
+    pgSubOne: "نحتاجها مرة واحدة فقط، ثم تعود مباشرة إلى الجولة.",
     pgCommKicker: "أعضاء المجتمع",
     pgCommTitle: "معلومتان لملفك في المجتمع",
     pgCommSub: "يحتاج أعضاء المجتمع إلى هاتين المعلومتين في حساباتهم قبل الحجز. لن يستغرق الأمر سوى لحظة.",
@@ -369,6 +391,10 @@ export const T = {
       generic: "لم تنجح العملية، ووصلتنا تفاصيل الخطأ. حاول مرة أخرى من فضلك.",
       pay_start: "تعذّر بدء الدفع، لذا لم يتم الحجز. حاول مرة أخرى من فضلك.",
       offline: "يبدو أنك غير متصل بالإنترنت — تحقق من الاتصال وحاول مجدداً.",
+      ref_code_carbon: "رمز الإحالة غير صالح لدراجة الكربون.",
+      ref_code_session: "رمز الإحالة صالح فقط لجولات حلبة كورنيش جدة وليالي بترومين.",
+      blood_code_carbon: "هذه الركوبة المجانية غير صالحة لدراجة الكربون.",
+      blood_code_session: "هذه الركوبة المجانية غير صالحة لهذه الجلسة.",
     } as Record<string, string>,
   },
 };

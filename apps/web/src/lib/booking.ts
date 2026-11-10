@@ -9,6 +9,7 @@
 import { typeOffered } from "./bike-kinds";
 import type { RideKind } from "./rides";
 import { genderOk, type SessionGender } from "./session-gender";
+import { codeKindOf } from "./tickets";
 
 /** A session as the wizard reads it: what lib/rides.ts reads for the cards, and the rest of the
  *  row the booking needs. Display strings (the day, the clock) are made on the server, so the
@@ -80,9 +81,14 @@ export type BookAccount = {
   live: Record<string, number>;
   /** Account fields the server holds the booking for (customer_fix_fields: FIX_FIRST). */
   asks: string[];
-  /** The profile page before a booking (_profileGate): eight bookings and no birth date or
-   *  nationality on file; or a community member's two asks (customer_fix_save takes them). */
+  /** The profile page before a booking (_profileGate): a detail due by the account's bookings and not on file (pgDue:
+   *  the nationality from the first booking, the birth date from the fourth); or a community member's asks
+   *  (customer_fix_save takes them). */
   profileGate: "none" | "profile" | "community";
+  /** What that page asks, and only that (_pgOpen's ask): the birth date, the nationality or both. */
+  pgAsk: PgField[];
+  /** The account's bookings as _pgCount counts them (every row but a cancelled or removed one). */
+  count: number;
   birth: string;
   nationality: string;
   /** The account's gender (customers.gender, from customer_profile), null when none is on file: a session for one
@@ -197,7 +203,15 @@ export const houseSelf = (acctName: string, rider0Name: string | undefined) => {
 };
 
 export type Rider = { name: string; height: string; type: BikeType | "" };
-export type Promo = { code: string; kind: "flat" | "pct" | string; value: number; appliesTo: string | null };
+/** `one`: a personal one-use code (codeOne). */
+export type Promo = { code: string; kind: "flat" | "pct" | string; value: number; appliesTo: string | null; one?: boolean };
+/** A personal one-use code (the booking app's _codeOne): the friend's referral discount (RW-), the referrer's free ride
+ *  (RF-) and bonus (RB-), the blood donation free ride (BD-) and a volunteer's (VL-). It pays for rider 1's own bike
+ *  alone, never Carbon (the database's _ref_code_guard and _blood_code_guard refuse it there). */
+export const codeOne = (code: string) => codeKindOf(code) !== "promo";
+/** A referral code (RW-, RF-, RB-) is good only on a paid circuit ride or a Petromin night (_refCodeSessOk). */
+export const refCodeKind = (code: string) => ["rw", "rf", "rb"].includes(codeKindOf(code));
+export const refCodeSessOk = (s: Pick<BookSession, "free" | "kind">) => !s.free && (s.kind === "jcc" || s.kind === "petromin");
 
 /** One rider's price on the review: free, on the house, an amount, or a range (no type yet). */
 export type PriceLine = { kind: "free" } | { kind: "house" } | { kind: "sar"; n: number } | { kind: "range"; lo: number; hi: number };
@@ -226,13 +240,20 @@ export function rentalTotal(s: Pick<BookSession, "free" | "seat">, riders: Rider
 }
 export const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** What a code takes off the rental (_promoDiscount, _regPromoDisc): a type-restricted code
- *  discounts each matching bike; any other code the whole rental. A first rider on the house
- *  pays nothing, so their bike earns no discount. */
+/** What a code takes off the rental (_promoDiscount, _regPromoDisc): a personal one-use code rider 1's own bike alone
+ *  (never Carbon, Own or a bike on the house); a type-restricted code each matching bike; any other code the whole
+ *  rental. A first rider on the house pays nothing, so their bike earns no discount. */
 export function promoDiscount(p: Promo | null, s: Pick<BookSession, "free" | "seat">, riders: Rider[], prices: Prices, acct: Pick<BookAccount, "name" | "house"> | null): number {
   if (!p || s.free) return 0;
   const lines = riderPrices(s, riders, prices, acct);
   const base = lines.reduce((sum, l, i) => sum + (l.kind === "sar" ? l.n : l.kind === "range" ? priceFor(prices, riders[i].type || "Any") : 0), 0);
+  if (p.one) {
+    const ty = riders[0]?.type ?? "";
+    if (!ty || ty === "Own" || /carbon/i.test(ty) || lines[0]?.kind === "house") return 0;
+    const n = priceFor(prices, ty);
+    const d = p.kind === "flat" ? Math.min(Number(p.value), n) : n * (Number(p.value) / 100);
+    return Math.min(base, Math.max(0, round2(d)));
+  }
   if (p.appliesTo) {
     let d = 0;
     lines.forEach((l, i) => {
@@ -246,11 +267,13 @@ export function promoDiscount(p: Promo | null, s: Pick<BookSession, "free" | "se
 }
 
 /** Which riders carry the code into the booking (_applyPromoToEntries): only the ones it
- *  discounts - the database counts a use per row that carries it. */
-export function promoRows(p: Pick<Promo, "appliesTo"> | null, s: Pick<BookSession, "free">, riders: Pick<Rider, "type" | "name">[], acct: Pick<BookAccount, "name" | "house"> | null): boolean[] {
+ *  discounts - the database counts a use per row that carries it. A personal one-use code: rider 1 alone, never on
+ *  Carbon. */
+export function promoRows(p: Pick<Promo, "appliesTo" | "one"> | null, s: Pick<BookSession, "free">, riders: Pick<Rider, "type" | "name">[], acct: Pick<BookAccount, "name" | "house"> | null): boolean[] {
   return riders.map((r, i) => {
     if (!p || s.free || r.type === "Own" || !r.type) return false;
     if (i === 0 && acct && houseSelf(acct.name, r.name) && houseCovers(acct.house, r.type)) return false;
+    if (p.one) return i === 0 && !/carbon/i.test(r.type);
     return !p.appliesTo || p.appliesTo === r.type;
   });
 }
@@ -306,6 +329,17 @@ export function validateRiders(s: Pick<BookSession, "kind" | "community">, rider
 }
 
 // ── The profile page (_profileGate) ──
+/** The booking app's thresholds (PG_NAT_AFTER, PG_BIRTH_AFTER; the owner, 2026-10-09): the nationality is asked from the
+ *  first booking, the birth date from the fourth. */
+export const PG_NAT_AFTER = 1, PG_BIRTH_AFTER = 4;
+export type PgField = "birth" | "nat";
+/** What the profile page asks of an account with n bookings (_pgDue): each detail once it is due and still empty. */
+export function pgDue(a: { birth: string; nationality: string }, n: number): PgField[] {
+  const out: PgField[] = [];
+  if (n >= PG_BIRTH_AFTER && !a.birth.trim()) out.push("birth");
+  if (n >= PG_NAT_AFTER && !a.nationality.trim()) out.push("nat");
+  return out;
+}
 /** A birth date the booking app takes (_dobErr): a real day, at least five and at most a hundred years ago. */
 export function birthOk(v: string, today: string): boolean {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v);
@@ -322,7 +356,8 @@ export function birthOk(v: string, today: string): boolean {
 /** Every refusal the wizard words (the app's _bookRefused and its own checks). men_only and women_only: a session
  *  for the other gender (the owner, 2026-10-27; the database's GENDER_ONLY). */
 export const REFUSALS = ["signin", "closed", "members", "rejected", "already", "one_per_session", "group_cap", "cap", "fix_first", "pick_type",
-  "waitlist_full", "not_open", "waiver", "invalid", "generic", "offline", "origin", "slow", "men_only", "women_only"] as const;
+  "waitlist_full", "not_open", "waiver", "invalid", "generic", "offline", "origin", "slow", "men_only", "women_only",
+  "ref_code_carbon", "ref_code_session", "blood_code_carbon", "blood_code_session"] as const;
 export type Refusal = (typeof REFUSALS)[number];
 
 /** A session for one gender that this account may not book (lib/session-gender.ts genderOk; the booking app's _sgOk):
@@ -347,6 +382,9 @@ export function refusalOf(err: { code?: string; message?: string; details?: stri
   if (d === "MEMBERS_ONLY" || /community members only/i.test(m)) return "members";
   if (d === "ONE_PER_SESSION" || /One place per person/i.test(m)) return "one_per_session";
   if (d === "GROUP_CAP" || /riders per booking/i.test(m)) return "group_cap";
+  // a personal code where it does not pay (_ref_code_guard, _blood_code_guard): its detail names why
+  const code = /\b(REF|BLOOD)_CODE_(CARBON|SESSION)\b/.exec(`${d} ${m}`);
+  if (code) return `${code[1].toLowerCase()}_code_${code[2].toLowerCase()}` as Refusal;
   if (/BAD_INPUT|22023/.test(m)) return "invalid";
   return "generic";
 }

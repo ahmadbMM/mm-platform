@@ -6897,6 +6897,14 @@ var qrcode = function() {
     return v == null ? null : Number(v);
   }
   function ended(b, p) { return !!(b && b.ended && b.ended[p] === true); }
+  // A locker paid by card (or while its card payment is open) keeps the fee the card pays: a change goes to another door
+  // or a time of the same fee; another fee is the desk's (customer_locker_change answers LOCKER_NOT_OPEN, bug hunt
+  // 2026-11-10). Its other times are offered greyed, never picked.
+  function feeShut(p) {
+    if (!changing || changing.pay !== "card" || p === changing.period) return false;
+    var fee = changing.price != null ? changing.price : priceOf(changing.period), pr = priceOf(p);
+    return fee == null || pr == null || pr !== fee;
+  }
   function leftOf(b, p) { var v = b && b.left ? Number(b.left[p]) : NaN; return isNaN(v) ? null : v; }
   function unitsOf(b) { return (b && Array.isArray(b.units) ? b.units : []).filter(function (u) { return u && u.code != null && String(u.code) !== ""; }); }
   // The doors taken for a time. While a locker is being changed, its own door is not taken for the times it holds.
@@ -6976,7 +6984,7 @@ var qrcode = function() {
   function settle(tell) {
     var kind = kindNow(), open = openPeriods(board, kind), said = null;
     if (period && open.indexOf(period) < 0) period = null;
-    if (!period) period = open.filter(function (p) { return changing || leftOf(board, p) !== 0; })[0] || open[0] || null;
+    if (!period) period = open.filter(function (p) { return (changing || leftOf(board, p) !== 0) && !feeShut(p); })[0] || open[0] || null;
     var gone = picked.filter(function (c) { return !period || !freeFor(board, period, c); });
     if (gone.length) {
       picked = picked.filter(function (c) { return gone.indexOf(c) < 0; });
@@ -7001,7 +7009,7 @@ var qrcode = function() {
     clearMsg("f-cab"); savePick(); paintPick(); loadBoard();
   }
   function pickPeriod(p) {
-    if (p === period || ended(board, p) || (!changing && leftOf(board, p) === 0)) return;
+    if (p === period || ended(board, p) || feeShut(p) || (!changing && leftOf(board, p) === 0)) return;
     period = p; clearMsg("f-cab");
     var gone = picked.filter(function (c) { return !freeFor(board, p, c); });
     picked = picked.filter(function (c) { return gone.indexOf(c) < 0; }).slice(0, room());
@@ -7117,7 +7125,7 @@ var qrcode = function() {
     $("#f-period").hidden = !some || !day || !kind || (hasBoard && !list.length);
     putHtml($("#periods"), list.map(function (p) {
       var full = !changing && hasBoard && leftOf(board, p) === 0, on = p === period, pr = priceOf(p);
-      return '<button type="button" class="opt" role="radio" aria-checked="' + on + '" data-v="' + p + '"' + (full ? " disabled" : "") + ">" +
+      return '<button type="button" class="opt" role="radio" aria-checked="' + on + '" data-v="' + p + '"' + (full || feeShut(p) ? " disabled" : "") + ">" +
         "<b>" + esc(spanOf(p)) + "</b><span>" + (full ? esc(tr("Full")) : pr != null ? amt(pr) : "") + "</span></button>";
     }).join(""));
     if (hasBoard && !list.length && !n) { notice.hidden = false; $(".notice-h", notice).textContent = tr("No lockers this evening."); }
@@ -7676,6 +7684,7 @@ var qrcode = function() {
   }
   function mineOf(x) {
     return { id: String(x.id), booking_id: x.booking_id || null, day: x.day, period: x.period, status: String(x.status || ""), pay: x.pay || null, paid: x.paid === true,
+      price: x.price != null && isFinite(Number(x.price)) ? Number(x.price) : null,
       code: x.code != null && String(x.code) ? String(x.code) : null, name: clean(x.name) };
   }
   var P_ORDER = { early: 0, pm: 1, both: 2, late: 3 };
