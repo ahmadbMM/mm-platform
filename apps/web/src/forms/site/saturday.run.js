@@ -1160,6 +1160,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "يمكن أن يحتوي الاسم على حروف ومسافات ونقاط فقط.",
   "An account with this email already exists. Sign in to book with it.": "يوجد حساب بهذا البريد الإلكتروني. سجّل الدخول لتحجز به.",
   "An account with this mobile number already exists. Sign in to book with it.": "يوجد حساب برقم الجوال هذا. سجّل الدخول لتحجز به.",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "يوجد حساب بهذا البريد الإلكتروني أو برقم الجوال هذا. سجّل الدخول لتحجز به.",
   "Write your first and last name in full, not initials": "اكتب اسمك الأول واسم العائلة كاملين، لا الأحرف الأولى فقط",
   "Enter a valid mobile number": "أدخل رقم جوال صحيحًا",
   "Enter your height in cm (100 to 250)": "أدخل طولك بالسنتيمتر (من 100 إلى 250)",
@@ -1326,6 +1327,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "Nama hanya boleh berisi huruf, spasi, dan titik.",
   "An account with this email already exists. Sign in to book with it.": "Sudah ada akun dengan email ini. Masuk untuk memesan dengan akun tersebut.",
   "An account with this mobile number already exists. Sign in to book with it.": "Sudah ada akun dengan nomor ponsel ini. Masuk untuk memesan dengan akun tersebut.",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "Sudah ada akun dengan email atau nomor ponsel ini. Masuk untuk memesan dengan akun tersebut.",
   "Write your first and last name in full, not initials": "Tulis nama depan dan nama belakang Anda secara lengkap, bukan inisial",
   "Enter a valid mobile number": "Masukkan nomor ponsel yang valid",
   "Enter your height in cm (100 to 250)": "Masukkan tinggi badan Anda dalam cm (100 hingga 250)",
@@ -1492,6 +1494,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "Nama hanya boleh mengandungi huruf, ruang dan titik.",
   "An account with this email already exists. Sign in to book with it.": "Akaun dengan e-mel ini sudah wujud. Log masuk untuk menempah dengannya.",
   "An account with this mobile number already exists. Sign in to book with it.": "Akaun dengan nombor telefon ini sudah wujud. Log masuk untuk menempah dengannya.",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "Akaun dengan e-mel atau nombor telefon ini sudah wujud. Log masuk untuk menempah dengannya.",
   "Write your first and last name in full, not initials": "Tulis nama pertama dan nama akhir anda dengan penuh, bukan inisial",
   "Enter a valid mobile number": "Masukkan nombor telefon yang sah",
   "Enter your height in cm (100 to 250)": "Masukkan ketinggian anda dalam cm (100 hingga 250)",
@@ -1658,6 +1661,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "Namen dürfen nur Buchstaben, Leerzeichen und Punkte enthalten.",
   "An account with this email already exists. Sign in to book with it.": "Mit dieser E-Mail-Adresse gibt es schon ein Konto. Melde dich an, um damit zu buchen.",
   "An account with this mobile number already exists. Sign in to book with it.": "Mit dieser Handynummer gibt es schon ein Konto. Melde dich an, um damit zu buchen.",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "Mit dieser E-Mail-Adresse oder Handynummer gibt es schon ein Konto. Melde dich an, um damit zu buchen.",
   "Write your first and last name in full, not initials": "Schreib Vor- und Nachnamen vollständig aus, keine Initialen",
   "Enter a valid mobile number": "Gib eine gültige Handynummer ein",
   "Enter your height in cm (100 to 250)": "Gib deine Körpergröße in cm ein (100 bis 250)",
@@ -1824,6 +1828,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "El nombre solo puede contener letras, espacios y puntos.",
   "An account with this email already exists. Sign in to book with it.": "Ya existe una cuenta con este correo. Inicia sesión para reservar con ella.",
   "An account with this mobile number already exists. Sign in to book with it.": "Ya existe una cuenta con este número de móvil. Inicia sesión para reservar con ella.",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "Ya existe una cuenta con este correo o este número de móvil. Inicia sesión para reservar con ella.",
   "Write your first and last name in full, not initials": "Escribe tu nombre y apellido completos, no solo las iniciales",
   "Enter a valid mobile number": "Introduce un número de móvil válido",
   "Enter your height in cm (100 to 250)": "Introduce tu estatura en cm (de 100 a 250)",
@@ -1990,6 +1995,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "Le nom ne peut contenir que des lettres, des espaces et des points.",
   "An account with this email already exists. Sign in to book with it.": "Un compte existe déjà avec cet e-mail. Connectez-vous pour réserver avec ce compte.",
   "An account with this mobile number already exists. Sign in to book with it.": "Un compte existe déjà avec ce numéro de mobile. Connectez-vous pour réserver avec ce compte.",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "Un compte existe déjà avec cet e-mail ou ce numéro de mobile. Connectez-vous pour réserver avec ce compte.",
   "Write your first and last name in full, not initials": "Écrivez votre prénom et votre nom en entier, pas seulement les initiales",
   "Enter a valid mobile number": "Saisissez un numéro de mobile valide",
   "Enter your height in cm (100 to 250)": "Saisissez votre taille en cm (de 100 à 250)",
@@ -2156,6 +2162,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "O nome só pode conter letras, espaços e pontos.",
   "An account with this email already exists. Sign in to book with it.": "Já existe uma conta com este e-mail. Entre para reservar com ela.",
   "An account with this mobile number already exists. Sign in to book with it.": "Já existe uma conta com este número de celular. Entre para reservar com ela.",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "Já existe uma conta com este e-mail ou este número de celular. Entre para reservar com ela.",
   "Write your first and last name in full, not initials": "Escreva seu nome e sobrenome por extenso, não só as iniciais",
   "Enter a valid mobile number": "Informe um número de celular válido",
   "Enter your height in cm (100 to 250)": "Informe sua altura em cm (de 100 a 250)",
@@ -2322,6 +2329,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "Mga titik, espasyo at tuldok lamang ang puwede sa pangalan.",
   "An account with this email already exists. Sign in to book with it.": "May account na gamit ang email na ito. Mag-sign in para mag-book gamit ito.",
   "An account with this mobile number already exists. Sign in to book with it.": "May account na gamit ang mobile number na ito. Mag-sign in para mag-book gamit ito.",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "May account na gamit ang email o mobile number na ito. Mag-sign in para mag-book gamit ito.",
   "Write your first and last name in full, not initials": "Isulat nang buo ang iyong pangalan at apelyido, hindi inisyal",
   "Enter a valid mobile number": "Maglagay ng tamang numero ng mobile",
   "Enter your height in cm (100 to 250)": "Ilagay ang iyong taas sa cm (100 hanggang 250)",
@@ -2488,6 +2496,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "Имя может содержать только буквы, пробелы и точки.",
   "An account with this email already exists. Sign in to book with it.": "Аккаунт с этой эл. почтой уже существует. Войдите в него, чтобы забронировать.",
   "An account with this mobile number already exists. Sign in to book with it.": "Аккаунт с этим номером мобильного уже существует. Войдите в него, чтобы забронировать.",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "Аккаунт с этой эл. почтой или этим номером мобильного уже существует. Войдите в него, чтобы забронировать.",
   "Write your first and last name in full, not initials": "Напишите имя и фамилию полностью, а не инициалы",
   "Enter a valid mobile number": "Введите корректный номер мобильного",
   "Enter your height in cm (100 to 250)": "Укажите свой рост в см (от 100 до 250)",
@@ -2654,6 +2663,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "نام میں صرف حروف، خالی جگہ اور نقطے (.) ہو سکتے ہیں۔",
   "An account with this email already exists. Sign in to book with it.": "اس ای میل سے ایک اکاؤنٹ پہلے سے موجود ہے۔ اسی سے بک کرنے کے لیے سائن اِن کریں۔",
   "An account with this mobile number already exists. Sign in to book with it.": "اس موبائل نمبر سے ایک اکاؤنٹ پہلے سے موجود ہے۔ اسی سے بک کرنے کے لیے سائن اِن کریں۔",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "اس ای میل یا موبائل نمبر سے ایک اکاؤنٹ پہلے سے موجود ہے۔ اسی سے بک کرنے کے لیے سائن اِن کریں۔",
   "Write your first and last name in full, not initials": "اپنا پہلا اور آخری نام پورا لکھیں، صرف ابتدائی حروف نہیں",
   "Enter a valid mobile number": "درست موبائل نمبر درج کریں",
   "Enter your height in cm (100 to 250)": "اپنا قد سینٹی میٹر میں درج کریں (100 سے 250 تک)",
@@ -2820,6 +2830,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "नाम में केवल अक्षर, रिक्त स्थान और बिंदु (.) हो सकते हैं।",
   "An account with this email already exists. Sign in to book with it.": "इस ईमेल से एक खाता पहले से मौजूद है। उसी से बुक करने के लिए साइन इन करें।",
   "An account with this mobile number already exists. Sign in to book with it.": "इस मोबाइल नंबर से एक खाता पहले से मौजूद है। उसी से बुक करने के लिए साइन इन करें।",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "इस ईमेल या मोबाइल नंबर से एक खाता पहले से मौजूद है। उसी से बुक करने के लिए साइन इन करें।",
   "Write your first and last name in full, not initials": "अपना पहला और अंतिम नाम पूरा लिखें, सिर्फ़ आद्याक्षर नहीं",
   "Enter a valid mobile number": "सही मोबाइल नंबर दर्ज करें",
   "Enter your height in cm (100 to 250)": "अपनी लंबाई सेमी में दर्ज करें (100 से 250)",
@@ -2986,6 +2997,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "नाममा अक्षर, खाली ठाउँ र बिन्दु (.) मात्र हुन सक्छन्।",
   "An account with this email already exists. Sign in to book with it.": "यो इमेलबाट पहिले नै खाता छ। त्यसैबाट बुक गर्न साइन इन गर्नुहोस्।",
   "An account with this mobile number already exists. Sign in to book with it.": "यो मोबाइल नम्बरबाट पहिले नै खाता छ। त्यसैबाट बुक गर्न साइन इन गर्नुहोस्।",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "यो इमेल वा मोबाइल नम्बरबाट पहिले नै खाता छ। त्यसैबाट बुक गर्न साइन इन गर्नुहोस्।",
   "Write your first and last name in full, not initials": "आफ्नो नाम र थर पूरा लेख्नुहोस्, छोटकरी अक्षर होइन",
   "Enter a valid mobile number": "मान्य मोबाइल नम्बर लेख्नुहोस्",
   "Enter your height in cm (100 to 250)": "आफ्नो उचाइ सेमीमा लेख्नुहोस् (100 देखि 250)",
@@ -3152,6 +3164,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "নামে শুধু অক্ষর, ফাঁকা জায়গা ও বিন্দু (.) থাকতে পারে।",
   "An account with this email already exists. Sign in to book with it.": "এই ইমেইল দিয়ে আগেই একটি অ্যাকাউন্ট আছে। সেটি দিয়ে বুক করতে সাইন ইন করুন।",
   "An account with this mobile number already exists. Sign in to book with it.": "এই মোবাইল নম্বর দিয়ে আগেই একটি অ্যাকাউন্ট আছে। সেটি দিয়ে বুক করতে সাইন ইন করুন।",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "এই ইমেইল বা মোবাইল নম্বর দিয়ে আগেই একটি অ্যাকাউন্ট আছে। সেটি দিয়ে বুক করতে সাইন ইন করুন।",
   "Write your first and last name in full, not initials": "প্রথম ও শেষ নাম পুরোটা লিখুন, শুধু আদ্যক্ষর নয়",
   "Enter a valid mobile number": "একটি সঠিক মোবাইল নম্বর লিখুন",
   "Enter your height in cm (100 to 250)": "আপনার উচ্চতা সেমিতে লিখুন (100 থেকে 250)",
@@ -3318,6 +3331,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "姓名只能包含文字、空格和句点。",
   "An account with this email already exists. Sign in to book with it.": "该邮箱已注册账户。请登录后用该账户预订。",
   "An account with this mobile number already exists. Sign in to book with it.": "该手机号已注册账户。请登录后用该账户预订。",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "该邮箱或手机号已注册账户。请登录后用该账户预订。",
   "Write your first and last name in full, not initials": "请完整填写名和姓，不要只写首字母",
   "Enter a valid mobile number": "请输入有效的手机号",
   "Enter your height in cm (100 to 250)": "请输入您的身高（厘米，100 到 250）",
@@ -3484,6 +3498,7 @@ var FORM_T = {
   "Names can only contain letters, spaces and periods.": "名前に使えるのは、文字、スペース、ピリオドのみです。",
   "An account with this email already exists. Sign in to book with it.": "このメールアドレスのアカウントはすでにあります。ログインして、そのアカウントで予約してください。",
   "An account with this mobile number already exists. Sign in to book with it.": "この携帯電話番号のアカウントはすでにあります。ログインして、そのアカウントで予約してください。",
+  "An account with this email or mobile number already exists. Sign in to book with it.": "このメールアドレスまたは携帯電話番号のアカウントはすでにあります。ログインして、そのアカウントで予約してください。",
   "Write your first and last name in full, not initials": "姓と名はイニシャルではなく、省略せずに入力してください",
   "Enter a valid mobile number": "有効な携帯電話番号を入力してください",
   "Enter your height in cm (100 to 250)": "身長をcmで入力してください（100〜250）",
@@ -3776,8 +3791,22 @@ var MMAccount = (function () {
   var LANG_KEY = "mm-saturday-lang";
   // The ride code typed here, kept for this tab while the booking app signs the rider in (a forgotten password).
   var CODE_KEY = "mm-saturday-code";
-  // The booking app: where a forgotten password is handled, and where the ticket lives.
-  var BOOKING_URL = "https://experiences.micromobility.sa/";
+  // The booking app: where a forgotten password is handled, and where the ticket lives. The staging website talks to the
+  // staging database, so it sends riders to the booking app's staging copy, which knows its accounts and its sign-in codes
+  // (rentals STAGING.md, section 2); everywhere else, the live app.
+  var BOOKING_URL = location.hostname === "staging.micromobility.sa" ? "https://micromobility-staff-staging.pages.dev/" : "https://experiences.micromobility.sa/";
+  // On the website the form can be drawn again without a reload (the rider goes to another page of the site and comes
+  // back, and SiteForm.tsx runs this script again): the run before this one stops listening to the document and its
+  // timers stop, or both runs would answer every click and key (a pop-up closed by one stayed open for the other).
+  var stopper = typeof AbortController === "function" ? new AbortController() : null;
+  try { if (window.MM_SATURDAY_RUN) window.MM_SATURDAY_RUN.abort(); } catch (e) {}
+  window.MM_SATURDAY_RUN = stopper;
+  var OWN = stopper ? { signal: stopper.signal } : false; // the document's and the window's listeners: this run's only
+  function onStop(fn) { if (stopper) stopper.signal.addEventListener("abort", fn); }
+  // It stops by itself too once the website has taken its page away (the rider went on to another page of the site):
+  // its timers find the form gone, and neither read the rides there nor send the rider to the booking app from there.
+  var formEl = document.getElementById("v-landing");
+  function gone() { if (formEl && !formEl.isConnected) { if (stopper) stopper.abort(); return true; } return false; }
 
   var SH = window.SHARED, T = window.FORM_T || {};
   var html = document.documentElement;
@@ -3890,9 +3919,41 @@ var MMAccount = (function () {
     return p.map(function (x) { return x.length === 4 ? "0" + x : x; });
   }
   function meetOf(r) { var u = r && r.meet_url; return typeof u === "string" && /^https:\/\/[^\s"'<>]+$/.test(u) ? u : ""; }
-  function bookable(r) { return !!r && (r.status === "open" || r.status === "full"); }
-  // When a ride opens for booking (sessions.opens_at), in Riyadh's time.
+  // The booking window staff set (site_content 'booking.window' = {days, at}, which anyone may read; the booking app reads
+  // it the same way): a ride more than `days` ahead opens to riders on the day it comes within reach, at `at` in Riyadh's
+  // time, and the database refuses a booking before then (_booking_window_guard: NOT_OPEN_YET). None set: no window.
+  var bw = null, bwRead = null;
+  async function loadWindow() {
+    try {
+      var resp = await fetch(SUPABASE_URL + "/rest/v1/site_content?select=value&key=eq.booking.window", { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } });
+      var rows = resp.ok ? await resp.json() : null, v = Array.isArray(rows) && rows[0] ? rows[0].value : null;
+      bw = v && typeof v === "object" && /^\d+$/.test(String(v.days)) ? { days: +v.days, at: /^\d{2}:\d{2}$/.test(v.at || "") ? v.at : null } : null;
+    } catch (e) { bw = null; }
+  }
+  // The day (and hour) the window opens for a ride, Riyadh's, while it is still shut; else null.
+  function bwOpens(r) {
+    if (!bw || !r || !/^\d{4}-\d{2}-\d{2}$/.test(r.session_date || "")) return null;
+    var x = new Date(r.session_date + "T12:00:00Z"); x.setUTCDate(x.getUTCDate() - bw.days);
+    var day = x.toISOString().slice(0, 10), now = new Date(Date.now() + 3 * 3600e3).toISOString();
+    return day > now.slice(0, 10) || (day === now.slice(0, 10) && bw.at && now.slice(11, 16) < bw.at) ? { day: day, at: bw.at } : null;
+  }
+  function bookable(r) { return !!r && (r.status === "open" || r.status === "full") && !bwOpens(r); }
+  // When a ride opens for booking, in ms: sessions.opens_at, or the booking window when that is later; 0 when not known.
+  function opensAt(r) {
+    var o = r && r.opens_at ? Date.parse(r.opens_at) : NaN, w = bwOpens(r), t = w ? Date.parse(w.day + "T" + (w.at || "00:00") + ":00+03:00") : NaN;
+    return Math.max(isNaN(o) ? 0 : o, isNaN(t) ? 0 : t);
+  }
+  // A day (and hour) in Riyadh as the page says when booking opens.
+  function whenText(day, at) {
+    var o = { timeZone: "Asia/Riyadh", weekday: "long", day: "numeric", month: "long" };
+    if (at) { o.hour = "numeric"; o.minute = "2-digit"; }
+    try { return new Intl.DateTimeFormat(locale(), o).format(new Date(day + "T" + (at || "12:00") + ":00+03:00")); }
+    catch (e) { return day + (at ? " " + at : ""); }
+  }
+  // When a ride opens for booking (sessions.opens_at, or the booking window when later), in Riyadh's time.
   function opensText(r) {
+    var w = bwOpens(r), o = r && r.opens_at ? Date.parse(r.opens_at) : NaN;
+    if (w && !(o > Date.parse(w.day + "T" + (w.at || "00:00") + ":00+03:00"))) return whenText(w.day, w.at);
     if (!r || !r.opens_at) return "";
     try { return new Intl.DateTimeFormat(locale(), { timeZone: "Asia/Riyadh", weekday: "long", day: "numeric", month: "long", hour: "numeric", minute: "2-digit" }).format(new Date(r.opens_at)); }
     catch (e) { return String(r.opens_at); }
@@ -3939,13 +4000,14 @@ var MMAccount = (function () {
     if (!busy) go.disabled = state === "loading" || state === "none" || state === "opens";
     $("#go-label").textContent = state === "error" ? tr("Try again") : tr("Continue");
     $("#f-code").hidden = state === "none" || state === "opens";
+    watchOpens();
   }
   $("#code").addEventListener("input", function () { clearMsg("f-code"); });
   $("#land-form").addEventListener("submit", function (e) { e.preventDefault(); hideBanner(); if (!busy) checkCode(); });
   // The code first, before any account is made (a valid code is needed and is enough): which rides it books.
   async function checkCode() {
     if (rides === undefined && ridesErr) { loadRides(); return; }
-    var c = clean($("#code").value).replace(/\s+/g, "");
+    var c = toAscii(clean($("#code").value)).replace(/\s+/g, ""); // a code typed with Arabic-Indic or Persian digits
     if (!c) { setErr("f-code", "Enter your ride code"); focusField("f-code"); return; }
     if (!/^[A-Za-z0-9_-]{3,40}$/.test(c)) { setErr("f-code", "That code doesn't work. Check the code you were given."); focusField("f-code"); return; }
     setLoading("#go", true);
@@ -4034,12 +4096,38 @@ var MMAccount = (function () {
 
   async function loadRides() {
     ridesErr = false; rides = undefined; paintLanding();
-    var r = await rpc("saturday_rides", { p_code: null });
+    if (!bwRead) bwRead = loadWindow(); // once, beside the first read of the rides
+    var r = (await Promise.all([rpc("saturday_rides", { p_code: null }), bwRead]))[0];
     if (r.error) { ridesErr = true; rides = undefined; }
     else rides = Array.isArray(r.data) ? r.data : [];
     paintLanding();
     return rides;
   }
+  // A ride that opens later is read again once its time has come, then every minute until the database has opened it
+  // (_sessions_tick, every five minutes; until then it is not listed, so the landing keeps it meanwhile), and when the
+  // page is seen again: the landing never stays on "Booking opens" with no way on.
+  var reTimer = null;
+  function watchOpens() {
+    clearTimeout(reTimer); reTimer = null;
+    if (landState() !== "opens") return;
+    var wait = opensAt(landRide()) - Date.now();
+    reTimer = setTimeout(rereadRides, wait > 0 ? Math.min(wait + 5000, 864e5) : 60e3);
+  }
+  async function rereadRides() {
+    clearTimeout(reTimer); reTimer = null;
+    if (gone()) return;
+    if (busy || view !== "landing") { watchOpens(); return; }
+    var was = landState() === "opens" ? landRide() : null, r = await rpc("saturday_rides", { p_code: null });
+    if (busy || view !== "landing") { watchOpens(); return; }
+    var list = !r.error && Array.isArray(r.data) ? r.data : null;
+    if (list && !(was && Date.now() < opensAt(was) + 6 * 60e3 && !list.some(function (x) { return x.session_id === was.session_id; }))) rides = list;
+    paintLanding();
+  }
+  document.addEventListener("visibilitychange", function () {
+    var st = gone() ? "" : landState();
+    if (document.visibilityState === "visible" && (st === "opens" || st === "none")) rereadRides();
+  }, OWN);
+  onStop(function () { clearTimeout(reTimer); clearTimeout(autoTimer); });
 
   /* ── Nationality: Saudi Arabia first and again in its alphabetical place (the owner, 2026-10-05) ── */
   function selOnce(cur) { var done = false; return function (v) { if (done || v !== cur) return false; return (done = true); }; }
@@ -4071,7 +4159,9 @@ var MMAccount = (function () {
     var mMax = y === mx[0] ? mx[1] : 12;
     if (m > mMax) m = 0;
     var dim = y && m ? new Date(y, m, 0).getDate() : 31, dMax = (y === mx[0] && m === mx[1]) ? mx[2] : 31;
-    if (d > dim) d = dim;
+    // a day the month does not have is cleared, never moved to the month's last day (a birth date silently off by a
+    // day or more): the required check then asks for it again
+    if (d > dim) d = 0;
     if (d > dMax) d = 0;
     var yrs = '<option value="">' + esc(site("dobYear")) + "</option>";
     for (var yy = yMax; yy >= yMin; yy--) yrs += '<option value="' + yy + '"' + (yy === y ? " selected" : "") + ">" + yy + "</option>";
@@ -4451,7 +4541,7 @@ var MMAccount = (function () {
   document.addEventListener("click", function (e) {
     if (e.target.closest("#pv-open, #pv-open-foot")) { e.preventDefault(); e.stopPropagation(); showModal("#pv"); }
     else if (e.target.closest("#wv-open")) { e.preventDefault(); e.stopPropagation(); showModal("#wv"); }
-  });
+  }, OWN);
   $$(".modal-x").forEach(function (b) { b.addEventListener("click", closeModal); });
   $$(".modal").forEach(function (m) { m.addEventListener("click", function (e) { if (e.target === m) closeModal(); }); });
   document.addEventListener("keydown", function (e) {
@@ -4464,7 +4554,7 @@ var MMAccount = (function () {
       else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
       else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
     }
-  });
+  }, OWN);
 
 
   /* ── Checking a step: {hard:{field:[k,a,site]}, soft:{field:[k,a]}} ─────── */
@@ -4595,10 +4685,12 @@ var MMAccount = (function () {
     var email = clean($("#email").value).toLowerCase(), phone = e164(PK), name = fullName();
     setLoading("#create", true);
     try {
-      // Each on its own, so the message says which one is taken (as the sign-up page does).
-      var ex = await rpc("customer_exists", { p_email: email, p_phone: "" });
+      // Each on its own, so the message says which one is taken (as the sign-up page does); a check that got no answer
+      // is asked once more.
+      var exists = async function (b) { var x = await rpc("customer_exists", b); return x.error ? rpc("customer_exists", b) : x; };
+      var ex = await exists({ p_email: email, p_phone: "" });
       if (ex.data === true) { setErr("f-email", "An account with this email already exists. Sign in to book with it."); focusField("f-email"); return; }
-      ex = await rpc("customer_exists", { p_email: "", p_phone: phone });
+      ex = await exists({ p_email: "", p_phone: phone });
       if (ex.data === true) { setErr("f-phone", "An account with this mobile number already exists. Sign in to book with it."); focusField("f-phone"); return; }
       var id = uid();
       var r = await rpc("customer_signup", {
@@ -4631,7 +4723,9 @@ var MMAccount = (function () {
     var m = errText(e);
     if (/name_chars/.test(m)) { setErr("f-name", "Names can only contain letters, spaces and periods."); focusField("f-name"); }
     else if (/name_short/.test(m)) { setErr("f-name", "Write your first and last name in full, not initials"); focusField("f-name"); }
-    else if (/23505|DUPLICATE/i.test(m)) { setErr("f-email", "An account with this email already exists. Sign in to book with it."); focusField("f-email"); }
+    // customer_signup's DUPLICATE names neither the email nor the mobile, and the checks before it found neither (they
+    // answer "no" once a network has asked too often): both are named.
+    else if (/23505|DUPLICATE/i.test(m)) { setErr("f-email", "An account with this email or mobile number already exists. Sign in to book with it."); focusField("f-email"); }
     else if (/RATE_LIMITED/.test(m)) showBanner(SITE_TOO_MANY);
     else if (/WEAK_PASSWORD/.test(m)) { setErr("f-pwd", "errPasswordLen", null, true); focusField("f-pwd"); }
     else if (/BAD_INPUT/.test(m) && /phone/.test(m)) { setErr("f-phone", "Enter a valid mobile number"); focusField("f-phone"); }
@@ -4843,7 +4937,8 @@ var MMAccount = (function () {
 
 
   /* ── Step 3: the booking ──────────────────────────────────────────────── */
-  var bookState = null; // null, "closed", "already"
+  var bookState = null; // null, "closed", "already", "opens" (then bookOpens: when booking opens, as said)
+  var bookOpens = "";
   function enterBook() { bookState = null; paintRides(); paintBookState(); paintReview(); goStep(3); }
   // Which Saturday, when the code books more than one: each with whether it is open or takes the waitlist now.
   function paintRides() {
@@ -4858,10 +4953,11 @@ var MMAccount = (function () {
     if (!$("#s-book")) return;
     var st = bookState, n = $("#b-notice"), map = {
       closed: ["Booking for this ride is closed.", "Check back soon for the next ride."],
-      already: ["You already have a booking on this ride.", "It is in My Bookings in the MicroMobility app."]
+      already: ["You already have a booking on this ride.", "It is in My Bookings in the MicroMobility app."],
+      opens: ["Booking opens {when}.", ""]
     };
     n.hidden = !st;
-    if (st) { $(".notice-h", n).textContent = tr(map[st][0]); $(".notice-p", n).textContent = tr(map[st][1]); }
+    if (st) { $(".notice-h", n).textContent = tr(map[st][0], { when: bookOpens }); $(".notice-p", n).textContent = map[st][1] ? tr(map[st][1]) : ""; }
     $("#b-open").hidden = st !== "already";
     $("#book").disabled = !!st;
     paintWho();
@@ -4913,7 +5009,14 @@ var MMAccount = (function () {
   }
   function bookRefused(e) {
     var m = errText(e);
-    if (/SESSION_CLOSED|NOT_OPEN_YET/.test(m)) { bookState = "closed"; paintBookState(); loadRides(); $("#b-notice").scrollIntoView({ block: "center" }); }
+    // The booking window still shut ('NOT_OPEN_YET: booking for <date> opens on <day>', or 'opens at HH:MM' on the day
+    // itself): when it opens, not "closed", and the window read again so the landing says the same.
+    if (/NOT_OPEN_YET/.test(m)) {
+      var on = (/opens on (\d{4}-\d{2}-\d{2})/.exec(m) || [])[1], at = (/opens at (\d{2}:\d{2})/.exec(m) || [])[1];
+      bookOpens = on ? whenText(on, bw && bw.at) : at ? whenText(new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10), at) : "";
+      bookState = bookOpens ? "opens" : "closed"; paintBookState(); bwRead = null; loadRides(); $("#b-notice").scrollIntoView({ block: "center" });
+    }
+    else if (/SESSION_CLOSED/.test(m)) { bookState = "closed"; paintBookState(); loadRides(); $("#b-notice").scrollIntoView({ block: "center" }); }
     else if (/ONE_PER_SESSION|One place per person/.test(m)) { bookState = "already"; paintBookState(); $("#b-notice").scrollIntoView({ block: "center" }); }
     else if (/FIX_FIRST/.test(m)) { showBanner("Your account still needs a few details before it can book."); enterDetails(); }
     else if (/WAIVER_OUTDATED/.test(m)) showBanner("The ride waiver has changed. Reload this page to read the new one.");
@@ -4948,7 +5051,7 @@ var MMAccount = (function () {
   // The booking in the app, signed in there by a one-time code (customer_handoff_create; the app
   // reads ?signin=). Without a code, the app's My Bookings, where the rider signs in themselves.
   async function openBooking() {
-    if (leaving || !acct) return;
+    if (leaving || !acct || gone()) return;
     leaving = true; clearTimeout(autoTimer);
     $("#done-open").disabled = true; $("#b-open").disabled = true;
     var r = await rpc("customer_handoff_create", { p_id: acct.id, p_token: acct.token });
@@ -4959,6 +5062,13 @@ var MMAccount = (function () {
     if (view !== "done") location.assign(bookingsUrl());
   }
   $("#done-open").addEventListener("click", function () { openBooking(); });
+  // Back from the booking app to this page as the browser kept it (its back-forward cache): not on the way out any
+  // more, so the button works again and the booking site's link is there.
+  window.addEventListener("pageshow", function (e) {
+    if (!e.persisted || !leaving) return;
+    leaving = false; $("#done-open").disabled = false; $("#b-open").disabled = false;
+    $("#done-going").hidden = true; $("#done-fallback").hidden = false;
+  }, OWN);
 
   // Test hook: the specs read what the page would send without a network.
   window.SaturdayForm = { setLang: setLang, e164: function () { return e164(PK); }, igNorm: igNorm, sizeFor: sizeFor, loginIdent: loginIdent, checkName: checkName };

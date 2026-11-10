@@ -354,6 +354,59 @@ test('a locker taken meanwhile: back to the cabinet, said, the cabinet read agai
   expect(of('locker_board').length).toBeGreaterThanOrEqual(3);
 });
 
+test('a locker that goes while the rider is on the review: back to the cabinet, said there, never reserved short', async ({ page }) => {
+  let gone = false;
+  await page.clock.install({ time: NOW });
+  const { of } = await open(page, HANDED, { locker_board: (b) => json(board(String(b.p_day), gone ? { taken: { e: ['4', '5', '7'], l: [] } } : {})) });
+  await ready(page);
+  await door(page, 5).click();
+  await door(page, 6).click();
+  await page.click('#go');
+  await expect(page.locator('#s-review')).toBeVisible();
+  gone = true;
+  await page.clock.fastForward(16000);
+  await expect(page.locator('#v-landing')).toBeVisible();
+  await expect(page.locator('#f-cab .err')).toHaveText('Locker 5 was just taken. Pick another.');
+  await expect(door(page, 5)).toBeDisabled();
+  await expect(page.locator('#pick-sum')).toContainText('Locker 6');
+  expect(of('customer_locker_book')).toEqual([]);
+});
+
+test('a locker that goes while the rider signs in keeps them on the cabinet, said there', async ({ page }) => {
+  let gone = false;
+  await open(page, '', { locker_board: (b) => json(board(String(b.p_day), gone ? { taken: { e: ['4', '5', '7'], l: [] } } : {})) });
+  await ready(page);
+  await door(page, 5).click();
+  await door(page, 6).click();
+  await page.click('#go');
+  gone = true;
+  await signIn(page);
+  await expect(page.locator('#v-landing')).toBeVisible();
+  await expect(page.locator('#f-cab .err')).toHaveText('Locker 5 was just taken. Pick another.');
+  await expect(page.locator('#s-review')).toBeHidden();
+  await expect(page.locator('#pick-sum')).toContainText('Locker 6');
+});
+
+test('a reservation made though its answer was lost: the lockers read again say so, never "just taken"', async ({ page }) => {
+  let held: Body[] = [];
+  const { of } = await open(page, '', {
+    customer_lockers: () => json(held),
+    customer_locker_book: (b) => {
+      held = (b.p_codes as string[]).map((c, i) => ({ id: `r-${i}`, booking_id: null, day: b.p_day, period: b.p_period, status: 'reserved', price: 10, on_bill: false, pay: b.p_pay, paid: false, code: c, name: 'Sara Alharbi' }));
+      return json({ message: 'upstream timeout' }, 504); // made, but the answer never came
+    },
+  });
+  await ready(page);
+  await door(page, 3).click();
+  await page.click('#go');
+  await signIn(page);
+  await page.click('#pays [data-v="desk"]');
+  await page.click('#book');
+  await expect(page.locator('#done-title')).toHaveText('Your locker is reserved');
+  await expect(page.locator('#banner')).toBeHidden();
+  expect(of('customer_locker_book')).toHaveLength(1);
+});
+
 test('the other refusals each have their words', async ({ page }) => {
   let answer = refuse('LOCKERS_FULL');
   await open(page, '', { customer_locker_book: () => answer, customer_wallet: () => json({ balance: 100, rows: [] }) });
