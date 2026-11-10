@@ -1,5 +1,5 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-import { clientIp } from "./sign-in-guard";
+import { clientIp, ipNet } from "./sign-in-guard";
 
 // Requests a script could repeat without end, each costing a log line or database reads: the page
 // error reports (/api/log-error) and the pop-ups' checks every page makes for a signed-in rider
@@ -21,5 +21,5 @@ export async function withinLimit(req: Request, kind: "log-error" | "account-che
   const l = get();
   const ip = clientIp(req);
   if (!l || !ip) return true;
-  try { return (await l.limit({ key: `${kind}:${ip}` })).success; } catch { return true; }
+  try { return (await l.limit({ key: `${kind}:${ipNet(ip)}` })).success; } catch { return true; } // an IPv6 visitor by its /64
 }

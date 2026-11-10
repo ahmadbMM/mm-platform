@@ -99,9 +99,10 @@ export default function WorkshopForm(p: WorkshopFormProps) {
     const v = codeIn.trim().replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)));
     if (!v) return;
     try {
-      const r = await rpc<{ ok: boolean; code?: string; kind?: string; value?: number; applies_to?: string | null }>("promo_lookup", { p_code: v });
-      // A code limited to one rental bike type (applies_to) is for rentals, never a workshop job.
-      if (r.ok && r.code && r.applies_to) { setPromo(null); setCodeErr(t.errors.code); }
+      const r = await rpc<{ ok: boolean; code?: string; kind?: string; value?: number; applies_to?: string | null; session_id?: string | null; ride_kind?: string | null }>("promo_lookup", { p_code: v });
+      // A code limited to one rental bike type (applies_to), one session (session_id) or one kind of session (ride_kind,
+      // "workshop" included: a workshop session in the booking app) is for those bookings, never a workshop job.
+      if (r.ok && r.code && (r.applies_to || r.session_id || r.ride_kind)) { setPromo(null); setCodeErr(t.errors.code); }
       else if (r.ok && r.code) setPromo({ code: r.code, kind: r.kind || "percent", value: Number(r.value) || 0 });
       else { setPromo(null); setCodeErr(t.codeBad); }
     } catch { setCodeErr(t.codeBad); }
@@ -139,11 +140,12 @@ export default function WorkshopForm(p: WorkshopFormProps) {
       if (r.ok && r.ref) setDone(r.ref);
       else {
         // What the server refused is cleared, to be picked again: a day or time it no longer
-        // takes, a code it does not take for the workshop.
+        // takes, a code it does not take for the workshop ("code": for rentals or sessions only;
+        // "code_bad": no longer valid - expired or used up since it was applied).
         if (r.error === "date") { setDay(""); setTime(""); }
         if (r.error === "time") setTime("");
-        if (r.error === "code") setPromo(null);
-        setErr(t.errors[r.error || ""] || t.errors.generic);
+        if (r.error === "code" || r.error === "code_bad") setPromo(null);
+        setErr(r.error === "code_bad" ? t.codeBad : t.errors[r.error || ""] || t.errors.generic);
       }
     } catch {
       setErr(t.errors.generic);

@@ -40,19 +40,36 @@ export async function rpcServer<T>(fn: string, args: Record<string, unknown>, ti
  *  "last opened" in the account report); the database keeps one stamp every 5 minutes and ignores a
  *  wrong token. The two calls go together, so a page waits only for the slower (4 s at most). */
 export async function getAccount(): Promise<Account | null> {
+  const a = await readAccount();
+  return a === "unread" ? null : a;
+}
+
+/** getAccount for the account page, which tells the two nulls apart: a session the booking app refused (null: an
+ *  answer with no row) is signed in again, while one that could not be checked just now ("unread": a timeout, a
+ *  network error, the database answering an error) is said so - the sign-in form told a rider who is signed in that
+ *  they were not. */
+export async function readAccount(): Promise<Account | null | "unread"> {
   const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
   if (!s) return null;
   const [r] = await Promise.all([
     rpcServer<({ name?: string; email?: string; phone?: string } & Record<string, unknown>)[]>("customer_profile", { p_id: s.id, p_token: s.token }),
     rpcServer<null>("customer_seen", { p_id: s.id, p_token: s.token, p_via: "web" }),
   ]);
+  if (r.status !== 200) return "unread";
   const p = Array.isArray(r.data) ? r.data[0] : null;
   return p ? { ...s, name: p.name || "", email: p.email || "", phone: p.phone || "", profile: p } : null;
 }
 
-export async function accountBookings(a: Session): Promise<BookingRow[]> {
+/** The account's bookings, or null when they could not be read (a timeout, a network error, the database answering an
+ *  error): never taken for an account with none, which the account page would say it is. */
+export async function readBookings(a: Session): Promise<BookingRow[] | null> {
   const r = await rpcServer<BookingRow[]>("my_bookings", { p_id: a.id, p_token: a.token });
-  return Array.isArray(r.data) ? r.data : [];
+  return r.status === 200 && Array.isArray(r.data) ? r.data : null;
+}
+
+/** The account's bookings; none when they could not be read (the pop-ups' checks then ask nothing). */
+export async function accountBookings(a: Session): Promise<BookingRow[]> {
+  return (await readBookings(a)) ?? [];
 }
 
 /** Who is looking at a men-only or women-only session (lib/session-gender.ts): the signed-in account's gender

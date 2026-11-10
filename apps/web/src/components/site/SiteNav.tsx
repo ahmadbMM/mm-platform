@@ -48,7 +48,8 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
   const keepTail = () => {
     const q = new URLSearchParams(window.location.search);
     q.delete("lang");
-    setTail((q.size ? `?${q}` : "") + window.location.hash);
+    const s = q.toString(); // not q.size: Safari before 17 has none, and every query was dropped there
+    setTail((s ? `?${s}` : "") + window.location.hash);
   };
   // A mouse opens Community by hovering, and the click that naturally follows must not shut it
   // again; a tap or the keyboard (no hover) toggles it. A touch screen fires hover too, for the tap

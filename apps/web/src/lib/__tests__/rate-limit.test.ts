@@ -14,6 +14,12 @@ describe("withinLimit", () => {
     expect(await withinLimit(req(), "account-check", () => ({ limit }))).toBe(true);
     expect(limit.mock.calls.map((c) => c[0].key)).toEqual(["log-error:203.0.113.9", "account-check:203.0.113.9"]);
   });
+  it("counts an IPv6 connection by its /64: a new address in it for each request is the same visitor", async () => {
+    const limit = vi.fn(async ({ key }: { key: string }) => ({ success: key !== "" }));
+    await withinLimit(req("2001:db8:aa:bb::1"), "claim", () => ({ limit }));
+    await withinLimit(req("2001:db8:aa:bb:9f3:2c:7:e1"), "claim", () => ({ limit }));
+    expect(limit.mock.calls.map((c) => c[0].key)).toEqual(["claim:2001:db8:aa:bb::/64", "claim:2001:db8:aa:bb::/64"]);
+  });
   it("lets everything through with no limiter, no address, or a limiter that fails", async () => {
     expect(await withinLimit(req(), "log-error")).toBe(true);
     const limit = vi.fn(async () => ({ success: false }));
