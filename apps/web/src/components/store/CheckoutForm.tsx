@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import SignIn from "@/components/account/SignIn";
-import { cartLines, shipsKsa, subtotalOf } from "@/lib/cart";
+import { cartLines, shipsKsa, subtotalOf, type CartItem } from "@/lib/cart";
 import { sized } from "@/lib/img";
 import { deliveryFee, type PaySettings } from "@/lib/pay/settings";
 import { pick, sar, variantLabel, vatIn, type StoreProduct } from "@/lib/store-core";
@@ -14,7 +14,7 @@ import { T } from "./Store.text";
 import { Amt, Ic, NoPhoto } from "./bits";
 import { AddressFields, Field } from "./CheckoutFields";
 import Modal from "./Modal";
-import { cartClear, savedFulfil, useCart, useHydrated } from "./useCart";
+import { cartClear, savedFulfil, saveFulfil, useCart, useHydrated } from "./useCart";
 import type { Whens } from "./CartView";
 
 // micromobility.sa/store/checkout: one page. Contact (filled in from the account when signed in; a guest
@@ -40,15 +40,33 @@ function loadDraft(account: CheckoutAccount): Draft {
     contact: { name: c.name || account?.name || "", phone: c.phone || account?.phone || "", email: c.email || account?.email || "" },
     address: { ...EMPTY_ADDRESS, ...(d.address ?? {}) },
     note: typeof d.note === "string" ? d.note : "",
-    fulfil: (d.fulfil ?? savedFulfil()) as Fulfil | null,
+    // the way picked on the cart wins: the cart and checkout keep it in one place (useCart's FULFIL_KEY)
+    fulfil: (savedFulfil() ?? d.fulfil ?? null) as Fulfil | null,
   };
 }
 
 export default function CheckoutForm(props: Props) {
   const t = useLocalize(T);
-  const cart = useCart();
+  const live = useCart();
   const ready = useHydrated();
+  // The order placed, the page leaves for the payment page with the cart emptied: the order stays drawn as it was
+  // (its button busy) until that page opens, never "Your cart is empty" meanwhile - the cart is emptied once that is
+  // on screen. Back from the payment page out of the browser's cache, the page is drawn again as it is now.
+  const [leaving, setLeaving] = useState<{ cart: CartItem[]; url: string } | null>(null);
+  const [round, setRound] = useState(0);
+  useEffect(() => {
+    if (!leaving) return;
+    cartClear();
+    try { window.sessionStorage.removeItem(DRAFT_KEY); } catch { /* gone with the visit */ }
+    window.location.assign(leaving.url);
+  }, [leaving]);
+  useEffect(() => {
+    const back = (e: PageTransitionEvent) => { if (e.persisted) { setLeaving(null); setRound((r) => r + 1); } };
+    window.addEventListener("pageshow", back);
+    return () => window.removeEventListener("pageshow", back);
+  }, []);
   if (!ready) return <div className="st-cart-wait" aria-busy="true" />;
+  const cart = leaving?.cart ?? live;
   if (!cart.length) {
     return (
       <div className="st-empty">
@@ -57,12 +75,11 @@ export default function CheckoutForm(props: Props) {
       </div>
     );
   }
-  return <Checkout {...props} />;
+  return <Checkout key={round} {...props} cart={cart} onPlaced={(url) => setLeaving({ cart, url })} />;
 }
 
-function Checkout({ locale, products, settings, whens, showroom, account, balance, links }: Props) {
+function Checkout({ locale, products, settings, whens, showroom, account, balance, links, cart, onPlaced }: Props & { cart: CartItem[]; onPlaced: (url: string) => void }) {
   const t = useLocalize(T);
-  const cart = useCart();
   const [draft, setDraft] = useState<Draft>(() => loadDraft(account));
   const [wallet, setWallet] = useState(false);
   const [errs, setErrs] = useState<Record<string, string>>({});
@@ -111,9 +128,7 @@ function Checkout({ locale, products, settings, whens, showroom, account, balanc
       const r = await fetch("/api/store/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const b = (await r.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string; variant?: string | null };
       if (b.ok && b.url) {
-        cartClear();
-        try { window.sessionStorage.removeItem(DRAFT_KEY); } catch { /* gone with the visit */ }
-        window.location.assign(b.url);
+        onPlaced(b.url); // the cart emptied and off to the next page (CheckoutForm)
         return; // the button stays busy while the next page loads
       }
       const code = b.error || "generic";
@@ -156,7 +171,7 @@ function Checkout({ locale, products, settings, whens, showroom, account, balanc
             <div className="st-ways-pick big" role="radiogroup" aria-labelledby="st-co-way">
               {options.map((o) => (
                 <label key={o.id} className={fulfil === o.id ? "on" : undefined}>
-                  <input type="radio" name="st-fulfil" value={o.id} checked={fulfil === o.id} onChange={() => setDraft((d) => ({ ...d, fulfil: o.id }))} />
+                  <input type="radio" name="st-fulfil" value={o.id} checked={fulfil === o.id} onChange={() => { saveFulfil(o.id); setDraft((d) => ({ ...d, fulfil: o.id })); }} />
                   <span>
                     <b>{wayName(o.id)}</b>
                     <small>{o.id === "pickup" ? [showroom.address, showroom.hours].filter(Boolean).join(" · ") : whens[o.id] ? t.arrives(whens[o.id] as string) : ""}</small>

@@ -39,6 +39,7 @@ export const T = {
     policy: {
       booking: "Cancel by the day before the ride for a full refund, to your wallet or your card. Cancelling on the ride day, or not coming, isn't refunded.",
       bookingDays: "Cancel at least {0} days before the ride for a full refund, to your wallet or your card. Later cancellations, or not coming, aren't refunded.",
+      bookingSameDay: "Cancel by the end of the ride day for a full refund, to your wallet or your card. Not coming isn't refunded.",
       order: "Unused items in their original packaging can be returned within 7 days of delivery.",
       locker: "Remove the locker before the key is handed over and we refund it.",
       topup: "Wallet money pays for rides, lockers and the store. It doesn't expire.",
@@ -70,6 +71,7 @@ export const T = {
       toCard: "To my card (mada in 1 to 3 working days, credit cards in up to 14)",
       noRefund: "Cancelling on the ride day, or later, isn't refunded.",
       noRefundDays: "Cancelling less than {0} days before the ride isn't refunded.",
+      noRefundAfter: "Cancelling after the ride day isn't refunded.",
       keep: "Keep my booking",
       confirm: "Cancel booking",
       failed: "That didn't work. Please try again.",
@@ -113,6 +115,7 @@ export const T = {
     policy: {
       booking: "ألغِ الحجز قبل يوم الرحلة لاسترداد المبلغ كاملاً إلى محفظتك أو بطاقتك. لا يُسترد المبلغ عند الإلغاء في يوم الرحلة أو عدم الحضور.",
       bookingDays: "ألغِ الحجز قبل الرحلة بـ {0} أيام على الأقل لاسترداد المبلغ كاملاً إلى محفظتك أو بطاقتك. لا يُسترد المبلغ عند الإلغاء بعد ذلك أو عدم الحضور.",
+      bookingSameDay: "ألغِ الحجز حتى نهاية يوم الرحلة لاسترداد المبلغ كاملاً إلى محفظتك أو بطاقتك. لا يُسترد المبلغ عند عدم الحضور.",
       order: "يمكن إرجاع المنتجات غير المستخدمة في تغليفها الأصلي خلال 7 أيام من الاستلام.",
       locker: "إذا ألغيت الخزانة قبل تسلّم المفتاح نعيد لك المبلغ.",
       topup: "رصيد المحفظة يُستخدم للرحلات والخزائن والمتجر، ولا تنتهي صلاحيته.",
@@ -144,6 +147,7 @@ export const T = {
       toCard: "إلى بطاقتي (مدى خلال 1 إلى 3 أيام عمل، والبطاقات الائتمانية خلال 14 يوم عمل كحد أقصى)",
       noRefund: "لا يُسترد المبلغ عند الإلغاء في يوم الرحلة أو بعده.",
       noRefundDays: "لا يُسترد المبلغ عند الإلغاء قبل الرحلة بأقل من {0} أيام.",
+      noRefundAfter: "لا يُسترد المبلغ عند الإلغاء بعد يوم الرحلة.",
       keep: "الإبقاء على الحجز",
       confirm: "إلغاء الحجز",
       failed: "لم تنجح العملية. حاول مرة أخرى من فضلك.",

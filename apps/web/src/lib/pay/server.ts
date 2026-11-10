@@ -18,6 +18,8 @@ export type PayView = {
 };
 
 export type Refund = { id: string; provider_id: string | null; amount: number };
+/** A refund the reconcile run lists: 'already' is what the database counted as refunded on that Moyasar payment. */
+export type PendingRefund = Refund & { already?: number; created_at?: string };
 type RpcAnswer<T> = Awaited<ReturnType<typeof rpcServer<T>>>;
 
 /** A pay_* function with the server key. */
@@ -49,24 +51,39 @@ export async function sendRefund(rf: Refund, env: PayEnv = payEnv()): Promise<bo
   if (r.ok) { await done(r.data.refunded ?? r0 + want); return true; }
   const after = await fetchPayment(sk, rf.provider_id);
   if (after.ok && (after.data.refunded ?? 0) >= r0 + want) { await done(after.data.refunded ?? r0 + want); return true; }
+  // No answer (a timeout: the request may still land after that reading), or Moyasar's own error with its total not
+  // read again: the refund may have gone through. It stays pending for the reconcile run to judge by Moyasar's total
+  // minutes later (confirmRefunds). Failed is what staff retry, and a retry of a refund that went through pays twice.
+  if (r.status === 0 || (r.status >= 500 && !after.ok)) return false;
   await fail(`${r.status} ${r.message}`);
   return false;
 }
 
-/** A refund left 'pending' minutes ago (the server stopped between Moyasar and the database): never sent again.
- *  Moyasar's refunded total says whether it went through (more than what the database already counted for that
- *  payment); if not, it is marked failed for staff to check and retry. */
-export async function confirmRefund(rf: Refund & { already?: number }, env: PayEnv = payEnv()): Promise<boolean> {
-  if (!rf.provider_id || !env.MOYASAR_SECRET_KEY) return false;
-  const f = await fetchPayment(env.MOYASAR_SECRET_KEY, rf.provider_id);
-  if (!f.ok) return false; // asked again on the next run
+/** Refunds left 'pending' minutes ago on one Moyasar payment (the server stopped between Moyasar and the database,
+ *  or Moyasar never answered): never sent again. Moyasar's refunded total is one number for all of them, so they are
+ *  counted one after another, oldest first, from what the database already counted for that payment: each is
+ *  confirmed only while the total covers it too (two refunds are never confirmed by the same money), and the rest are
+ *  marked failed for staff to check and retry. The database is told the total counted so far, not Moyasar's whole
+ *  total, which may hold a refund still pending. Answers how many were confirmed. */
+export async function confirmRefunds(list: PendingRefund[], env: PayEnv = payEnv()): Promise<number> {
+  const id = list[0]?.provider_id;
+  if (!id || !env.MOYASAR_SECRET_KEY || list.some((rf) => rf.provider_id !== id)) return 0;
+  const f = await fetchPayment(env.MOYASAR_SECRET_KEY, id);
+  if (!f.ok) return 0; // asked again on the next run
   const total = f.data.refunded ?? 0;
-  if (total >= toHalalas((rf.already ?? 0) + rf.amount)) {
-    await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: true, p_refunded_halalas: total, p_error: null }, env);
-    return true;
+  let counted = toHalalas(Math.max(0, ...list.map((rf) => Number(rf.already) || 0)));
+  let n = 0;
+  for (const rf of [...list].sort((a, b) => String(a.created_at ?? "").localeCompare(String(b.created_at ?? "")))) {
+    const want = toHalalas(rf.amount);
+    if (want > 0 && total >= counted + want) {
+      counted += want;
+      await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: true, p_refunded_halalas: counted, p_error: null }, env);
+      n++;
+    } else {
+      await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: false, p_refunded_halalas: 0, p_error: "not confirmed by Moyasar: check its dashboard, then retry" }, env);
+    }
   }
-  await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: false, p_refunded_halalas: 0, p_error: "not confirmed by Moyasar: check its dashboard, then retry" }, env);
-  return false;
+  return n;
 }
 
 export type Settled = { ok: boolean; status: string; error?: string };
@@ -103,7 +120,7 @@ export async function settleById(moyasarId: string, source: "return" | "webhook"
 export async function reconcile(env: PayEnv = payEnv()): Promise<{ checked: number; settled: number; refunds: number }> {
   const out = { checked: 0, settled: 0, refunds: 0 };
   if (!env.MOYASAR_SECRET_KEY) return out;
-  const list = await payRpc<{ payments: string[]; refunds: (Refund & { already?: number })[] }>("pay_reconcile_list", {}, env);
+  const list = await payRpc<{ payments: string[]; refunds: PendingRefund[] }>("pay_reconcile_list", {}, env);
   if (list.status !== 200 || !list.data) return out;
   for (const id of list.data.payments ?? []) {
     out.checked++;
@@ -114,6 +131,12 @@ export async function reconcile(env: PayEnv = payEnv()): Promise<{ checked: numb
     }
   }
   if ((list.data.payments ?? []).length) await payRpc("pay_checked", { p_pays: list.data.payments }, env);
-  for (const rf of list.data.refunds ?? []) if (await confirmRefund(rf, env)) out.refunds++;
+  // the pending refunds by Moyasar payment: its one refunded total judges them together (confirmRefunds)
+  const byPayment = new Map<string, PendingRefund[]>();
+  for (const rf of list.data.refunds ?? []) {
+    if (!rf.provider_id) continue;
+    byPayment.set(rf.provider_id, [...(byPayment.get(rf.provider_id) ?? []), rf]);
+  }
+  for (const group of byPayment.values()) out.refunds += await confirmRefunds(group, env);
   return out;
 }

@@ -1,5 +1,12 @@
 /* The payment page (micromobility.sa/pay/<id>): the summary beside Moyasar's form on a wide screen,
    above it on a phone. Colours and buttons are Experiences' own (experiences.css). */
+
+/* The riyal sign (U+20C1), from Noto Naskh Arabic subset to that one glyph (OFL, /fonts), as booking.css: this page
+   loads neither booking.css nor store.css, and the site's fonts have no such glyph. */
+@font-face { font-family: "MM Riyal"; src: url(/fonts/Riyal-400.woff2) format("woff2"); font-weight: 100 600; font-display: swap; unicode-range: U+20C1; }
+@font-face { font-family: "MM Riyal"; src: url(/fonts/Riyal-700.woff2) format("woff2"); font-weight: 601 900; font-display: swap; unicode-range: U+20C1; }
+.py .tk-amt { font-family: "MM Riyal", var(--cs-font-en), var(--cs-font-ar), sans-serif; }
+html:is([lang="ar"], [lang="ur"]) .py .tk-amt { font-family: "MM Riyal", var(--cs-font-ar), var(--cs-font-en), sans-serif; }
 .py { padding-top: 24px; padding-bottom: 48px; }
 .py-grid { display: grid; grid-template-columns: 1fr; gap: 18px; }
 @media (min-width: 900px) { .py-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: start; } }

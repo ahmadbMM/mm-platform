@@ -79,7 +79,7 @@ export function TicketPayCancel({ ids, amount, refundable, refundDays, amountTex
                   <label className={`bk-agree${dest === "card" ? " on" : ""}`}><input type="radio" name="tkp-dest" checked={dest === "card"} onChange={() => setDest("card")} /><span>{t.toCard}</span></label>
                 </fieldset>
               ) : amount > 0 ? (
-                <p className="bk-pop-msg">{refundDays > 1 ? fill(t.noRefundDays, refundDays) : t.noRefund}</p>
+                <p className="bk-pop-msg">{refundDays > 1 ? fill(t.noRefundDays, refundDays) : refundDays === 0 ? t.noRefundAfter : t.noRefund}</p>
               ) : null}
               {err && <p className="bk-err" role="alert">{err}</p>}
               <div className="bk-pop-foot">

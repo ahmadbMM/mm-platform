@@ -1016,8 +1016,13 @@
     return mine.filter(function (r) { return r.day >= t && (r.status === "reserved" || r.status === "in_use"); })
       .sort(function (a, b) { return a.day < b.day ? -1 : a.day > b.day ? 1 : (P_ORDER[a.period] - P_ORDER[b.period]) || byNumber(a.code || "", b.code || ""); });
   }
-  // How a locker is paid, in the booking app's words (lkPaidWallet, lkPayDesk); one on a booking is on its bill.
-  function payText(r) { return r.booking_id ? tr("On your booking") : r.pay === "wallet" && r.paid ? tr("Paid from your wallet") : tr("Pay at the desk"); }
+  // How a locker is paid, in the booking app's words (lkPaidWallet, lkPayDesk); one on a booking is on its bill. One
+  // reserved for "Pay by card" is paid once its payment settles; until then it is held while the rider pays, and let
+  // go unpaid (never "Pay at the desk": the desk takes no payment for it).
+  function payText(r) {
+    return r.booking_id ? tr("On your booking") : r.pay === "wallet" && r.paid ? tr("Paid from your wallet")
+      : r.pay === "card" ? (r.paid ? tr("Paid by card") : tr("Card payment not finished")) : tr("Pay at the desk");
+  }
   function deskRow(r) {
     var mayChange = r.status === "reserved", mayDrop = mayChange && !r.booking_id;
     return '<li class="desk-row"><span class="desk-n" aria-hidden="true">' + (r.code ? esc(r.code) : '<svg><use href="#i-lock"/></svg>') + "</span>" +
@@ -1149,7 +1154,10 @@
   function paintRemove() {
     if (!dropping) return;
     $("#rm-title").textContent = dropping.code ? tr("Remove locker {n}?", { n: dropping.code }) : tr("Remove this locker?");
-    $("#rm-body").hidden = !(dropping.pay === "wallet" && dropping.paid);
+    // the money back the way it was paid: the wallet's at once, a card's to the card (a refund for staff to send)
+    var b = $("#rm-body");
+    b.hidden = !(dropping.paid && (dropping.pay === "wallet" || dropping.pay === "card"));
+    b.textContent = dropping.pay === "card" ? tr("The money goes back to your card.") : tr("The money goes back to your wallet.");
   }
   $("#rm-keep").addEventListener("click", function () { if (!busy) closeModal(); });
   $("#rm-go").addEventListener("click", async function () {
@@ -1262,7 +1270,7 @@
       var cr = null;
       try {
         var res = await fetch("/api/pay/locker", { method: "POST", headers: { "content-type": "application/json" },
-          body: JSON.stringify({ id: acct.id, token: acct.token, day: d, period: p, codes: codes, lang: lang }) });
+          body: JSON.stringify({ id: acct.id, token: acct.token, day: d, period: p, codes: codes, names: nm || undefined, lang: lang }) });
         cr = await res.json().catch(function () { return null; });
       } catch (x) { cr = null; }
       if (cr && cr.ok && /^\/pay\/[0-9a-f-]{36}$/.test(cr.url || "")) { clearPick(); window.location.assign(cr.url); return; }
@@ -1338,6 +1346,16 @@
   function live() { return document.visibilityState === "visible" && !busy && !!day && (view === "landing" || (view === "steps" && step === 2)); }
   setInterval(function () { if (live()) loadBoard(); }, POLL_MS);
   document.addEventListener("visibilitychange", function () { if (live() && Date.now() - boardAt > POLL_MS) loadBoard(); });
+  // Back from the card payment page, the browser may show this page as it was left (its back-forward cache): busy, with
+  // Reserve spinning and the lockers handed to the payment. It is drawn again from what is true now: the cabinet, with
+  // the lockers held for the card among the rider's own.
+  window.addEventListener("pageshow", function (e) {
+    if (!e.persisted) return;
+    if ($("#book").classList.contains("loading")) setLoading("#book", false);
+    if (view === "steps" && step === 2 && !picked.length) backToPick(); else paintReview();
+    loadMine(); loadWallet();
+    if (day) loadBoard();
+  });
 
   /* ── A locker's own tag: ?locker=7 (older tags L7), picked on the first evening and time it is free ── */
   function tagCode(raw) {
