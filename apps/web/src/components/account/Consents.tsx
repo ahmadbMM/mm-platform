@@ -58,6 +58,7 @@ export function ConsentPrompt({ needAck, needNews, dialog }: { needAck: boolean;
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [fails, setFails] = useState(0);
+  const answered = useRef(false);
   useEffect(() => {
     const d = box.current;
     if (d && !d.open && typeof d.showModal === "function") d.showModal();
@@ -67,17 +68,20 @@ export function ConsentPrompt({ needAck, needNews, dialog }: { needAck: boolean;
     setBusy(true); setErr("");
     const b = await postJson("/api/account/consents", { privacy: needAck || undefined, rideNews: needNews ? news : undefined });
     setBusy(false);
-    if (b.ok) { box.current?.close(); router.refresh(); return; }
+    if (b.ok) { answered.current = true; box.current?.close(); router.refresh(); return; }
     // Answered, but it did not save: once more; a second failure lets them through rather than
     // lock the page behind the pop-up - still unanswered, they are asked on the next visit.
-    if (fails >= 1) { box.current?.close(); return; }
+    if (fails >= 1) { answered.current = true; box.current?.close(); return; }
     setFails((n) => n + 1);
     setErr(b.error === "signin" ? t.errors.signin : t.connection);
   }
   const link = <NoticeLink dialog={dialog} className="ac-link">{t.privacy}</NoticeLink>;
   return (
-    // Only an answer closes it: Escape does nothing.
-    <dialog ref={box} className="ac-dlg" aria-labelledby="ac-cs-h" onCancel={(e) => e.preventDefault()}>
+    // Only an answer closes it: Escape does nothing. A browser may close a modal pop-up anyway (Chrome honours the
+    // refusal only after a tap on the page, and once; Android's back gesture), so a close that is not the answer opens
+    // it again.
+    <dialog ref={box} className="ac-dlg" aria-labelledby="ac-cs-h" onCancel={(e) => e.preventDefault()}
+      onClose={(e) => { const d = e.currentTarget; if (!answered.current && d.isConnected && !d.open) { try { d.showModal(); } catch { /* gone */ } } }}>
       <h2 id="ac-cs-h">{needAck ? t.askTitle : t.askNewsTitle}</h2>
       {needAck && (
         <>

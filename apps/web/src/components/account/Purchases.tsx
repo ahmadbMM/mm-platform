@@ -5,7 +5,8 @@ import { intlOf } from "@/i18n/locales";
 // The rider's own desk purchases (customer_purchases, the owner, 2026-10-03), newest first, with
 // their total: what, how many, the day and the ride it was at, and the amount with the riyal sign
 // as the booking app writes it (U+20C1, the .tk-amt font of booking.css). A voided or refunded sale
-// stays on the list struck through, with why, and is not counted in the total.
+// stays on the list struck through, with why, and is not counted in the total. One on the house costs
+// the rider nothing and says so (its list price is the desk's, as the booking app's list).
 const sar = (n: number) => `⁦⃁ ${Math.round((Number(n) || 0) * 100) / 100}⁩`;
 
 export default function Purchases({ locale, t, rows, total }: { locale: string; t: AccountText; rows: Purchase[]; total: number }) {
@@ -23,14 +24,14 @@ export default function Purchases({ locale, t, rows, total }: { locale: string; 
       </div>
       <ul className="ac-list ac-purch">
         {rows.map((r) => {
-          const off = r.voided || r.refunded;
+          const off = r.voided || r.refunded, house = !off && r.pay === "house";
           return (
             <li key={r.id} className={off ? "void" : undefined}>
               <span>
                 <b>{r.name}{r.qty > 1 && <em dir="ltr"> ×{r.qty}</em>}</b>
-                <small>{[day(r.at), r.session_title].filter(Boolean).join(" · ")}{off && <> · <i className="ac-pill warn">{r.voided ? t.voided : t.refunded}</i></>}</small>
+                <small>{[day(r.at), r.session_title].filter(Boolean).join(" · ")}{off && <> · <i className="ac-pill warn">{r.voided ? t.voided : t.refunded}</i></>}{house && <> · <i className="ac-pill">{t.onHouse}</i></>}</small>
               </span>
-              <bdi className="tk-amt">{off ? <s>{sar(r.qty * r.price)}</s> : sar(r.qty * r.price)}</bdi>
+              <bdi className="tk-amt">{off ? <s>{sar(r.amount)}</s> : sar(r.amount)}</bdi>
             </li>
           );
         })}

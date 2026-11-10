@@ -384,10 +384,10 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
         {/* The account's details and settings: everything the booking app's My Account keeps. */}
         <div className="ac-sec ac-stack" id="ac-details">
-          <ProfileForm locale={locale} profile={pr} about={extras.about} typeNames={typeNames} />
+          <ProfileForm locale={locale} profile={pr} about={extras.about} typeNames={typeNames} fillingFor={profilePct(pr) < 100 ? acct.id : null} />
           <PasswordCard needCurrent={needCurrent} />
           {extras.consents && <RideNews on={extras.consents.rideNews} dialog="ac-privacy" />}
-          <PushToggle />
+          <PushToggle who={acct.id} />
           {orders.length > 0 && <StoreOrders orders={orders} t={serverLocalize(STORE, locale)} locale={locale} />}
           {extras.purchases && extras.purchases.rows.length > 0 && <Purchases locale={locale} t={at} rows={extras.purchases.rows} total={extras.purchases.total} />}
           {extras.deletion && <DeleteAccount locale={locale} requestedAt={extras.deletion.requestedAt} />}
@@ -437,9 +437,11 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       const r = x.row;
       return [String((L === "ar" && r?.name_ar) || r?.name || x.slug), String((L === "ar" && r?.description_ar) || r?.description || ""), ""];
     };
+    // National Day 96 is news only within three days of its ride (the booking app's day1 of the 23 September 2026 night)
+    const nd96Day = record.filter((r) => (r.status === "done" || r.status === "active") && recSessions.get(r.sessionId)?.kind === "snd96").map((r) => r.date).sort()[0] ?? null;
     const cheers: Cheer[] = allBadges.filter((x) => x.on && (x.given?.at || (!x.given && (x.slug === "complete_profile" || x.slug === "national_day_96")))).map((x) => {
       const [name, how, about] = cheerWords(x);
-      return { slug: x.slug, icon: x.icon, color: x.color, name, how, about, at: x.given?.at ?? null };
+      return { slug: x.slug, icon: x.icon, color: x.color, name, how, about, at: x.given?.at ?? null, day: x.slug === "national_day_96" ? nd96Day : null };
     });
     const cheer = cheers.length > 0 && !extras.mustChangePwd && !asking && <BadgeCelebrate accountId={acct.id} items={cheers} />;
     if (p === "badges") return (
@@ -509,7 +511,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         </header>
         {/* What staff asked to correct, and what the server asks for itself, comes first, on every part. */}
         {/* Always drawn (nothing shows when nothing is asked), so its thank-you outlives the page refresh after a save. */}
-        <FixRequest locale={locale} fields={extras.fix} was={{ name: acct.name, email: acct.email, phone: acct.phone, birth_date: pr.birth_date, gender: pr.gender, nationality: pr.nationality, country: pr.country, city: pr.city, height: pr.height }} />
+        <FixRequest locale={locale} fields={extras.fix} more={extras.fixMore} fillingFor={profilePct(pr) < 100 ? acct.id : null} was={{ name: acct.name, email: acct.email, phone: acct.phone, birth_date: pr.birth_date, gender: pr.gender, nationality: pr.nationality, country: pr.country, city: pr.city, height: pr.height }} />
         <AccountParts part={part} locale={locale} t={{ account: recordBase.account, stats: recordBase.stats, badges: recordBase.badges }} />
         {main}
         <NoticeDialog id="ac-privacy" locale={locale} />

@@ -51,9 +51,12 @@ async function tellSite(body: unknown): Promise<{ ok: boolean; status: number }>
   }
 }
 
+// This tab's last link: the account and the browser's endpoint. The account is part of it, so another account signed in
+// in the same tab (a sign-out and a sign-in, or a hand-over) links the browser again; with the endpoint alone, the
+// subscription stayed on the earlier rider while the switch said On for the new one.
 const LINKED = "mm_push_linked";
 
-export default function PushToggle() {
+export default function PushToggle({ who }: { who: string }) {
   const t = useLocalize(T);
   const supported = useSupported();
   const [on, setOn] = useState<boolean | null>(null); // null until the browser has been asked
@@ -75,10 +78,10 @@ export default function PushToggle() {
         if (live && sub) {
           let done = "";
           try { done = sessionStorage.getItem(LINKED) || ""; } catch { /* storage blocked */ }
-          if (done !== sub.endpoint) {
+          if (done !== `${who}|${sub.endpoint}`) {
             const j = sub.toJSON();
             const r = await tellSite({ action: "subscribe", endpoint: j.endpoint, keys: j.keys });
-            if (r.ok) { try { sessionStorage.setItem(LINKED, sub.endpoint); } catch { /* storage blocked */ } }
+            if (r.ok) { try { sessionStorage.setItem(LINKED, `${who}|${sub.endpoint}`); } catch { /* storage blocked */ } }
           }
         }
       } catch {
@@ -86,7 +89,7 @@ export default function PushToggle() {
       }
     })();
     return () => { gone = true; };
-  }, [supported]);
+  }, [supported, who]);
 
   if (!supported || on === null) return null;
   const blocked = typeof Notification !== "undefined" && Notification.permission === "denied";
@@ -110,7 +113,7 @@ export default function PushToggle() {
         setErr(r.status === 401 ? "signin" : "failed");
         return;
       }
-      try { sessionStorage.setItem(LINKED, sub.endpoint); } catch { /* storage blocked */ }
+      try { sessionStorage.setItem(LINKED, `${who}|${sub.endpoint}`); } catch { /* storage blocked */ }
       setOn(true); setMsg("isOn");
     } catch {
       setErr("failed");

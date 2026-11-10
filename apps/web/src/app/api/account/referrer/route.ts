@@ -1,5 +1,5 @@
 import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
-import { rpcServer } from "@/lib/account";
+import { forVisitor, rpcServer } from "@/lib/account";
 import { emAbsent } from "@/lib/emergency";
 import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
@@ -8,7 +8,9 @@ import { referrerBody, referrerReason } from "@/lib/referral";
 // POST /api/account/referrer {code}: a new account names the friend who invited it (customer_set_referrer, rentals
 // 20261108160000), with the account cookie's id and token; the database decides whether this account may still be
 // referred. Answers {ok: true}, or {ok: false, error}: the database's reason ("invalid", "self", "already", "not_new",
-// "off"), "signin" when signed out, "absent" with no such function yet, "busy" or "generic". Only this site's pages may call it.
+// "off"; "busy" when its meter for the rider's address is full), "signin" when signed out, "absent" with no such function
+// yet, "busy" or "generic". The call names the rider's address (lib/account.ts forVisitor): the database meters friend's codes per
+// address, and without it every rider of the site shared this Worker's one meter. Only this site's pages may call it.
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store, private" } });
 
@@ -21,9 +23,9 @@ export async function POST(req: Request) {
   try { body = await req.json(); } catch { /* empty body */ }
   const b = referrerBody(body);
   if (!b) return json({ ok: false, error: "invalid" }, 400);
-  const r = await rpcServer<unknown>("customer_set_referrer", { p_id: acct.id, p_token: acct.token, p_code: b.code, p_via: "code" });
+  const r = await rpcServer<unknown>("customer_set_referrer", forVisitor(req, { p_id: acct.id, p_token: acct.token, p_code: b.code, p_via: "code" }));
   if (r.status === 0 || r.status >= 500) return json({ ok: false, error: "generic" }, 502);
   if (r.status >= 400) return emAbsent(r) ? json({ ok: false, error: "absent" }, 404) : json({ ok: false, error: "generic" }, 502);
   const why = referrerReason(r.data);
-  return why === "ok" ? json({ ok: true }) : json({ ok: false, error: why }, 409);
+  return why === "ok" ? json({ ok: true }) : json({ ok: false, error: why }, why === "busy" ? 429 : 409);
 }

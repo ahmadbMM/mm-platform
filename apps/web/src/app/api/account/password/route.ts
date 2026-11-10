@@ -3,6 +3,7 @@ import { rpcServer } from "@/lib/account";
 import { bodyOf, json as jsonOut, unreachable, writeSession } from "@/lib/account-route";
 import { passwordError, passwordOk } from "@/lib/account-profile";
 import { cookieValue } from "@/lib/live";
+import { HANDOFF_COOKIE } from "@/lib/handoff";
 
 // POST /api/account/password: one route for the website's password changes.
 //
@@ -50,7 +51,9 @@ export async function POST(req: Request) {
   if ("error" in a && a.error !== "done") return json({ ok: false, error: a.error }, a.error === "generic" ? 502 : 400);
   const session = { id: held.id, token: "token" in a ? a.token : held.token };
   if (page) return json({ ok: true, id: session.id, token: session.token }, 200, [unhold()]);
-  return json({ ok: true }, 200, [cookie(ACCOUNT_COOKIE, encodeSession(session), ACCOUNT_MAX_AGE), unhold()]);
+  // As a sign-in (api/account): a session the booking app handed over for an earlier visitor (kept aside, lib/handoff.ts)
+  // is dropped, or the account page offered this rider "Switch to <that rider>".
+  return json({ ok: true }, 200, [cookie(ACCOUNT_COOKIE, encodeSession(session), ACCOUNT_MAX_AGE), unhold(), cookie(HANDOFF_COOKIE, "", 0)]);
 }
 
 /** A password change for the account signed in on this site (the account cookie). */

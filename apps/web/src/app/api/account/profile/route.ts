@@ -1,4 +1,4 @@
-import { rpcServer } from "@/lib/account";
+import { forVisitor, rpcServer } from "@/lib/account";
 import { bodyOf, json, unreachable, writeSession } from "@/lib/account-route";
 import { aboutArgs, cleanChanges, profileArgs, profileError, socialsChanged, type AboutRow, type ProfileChanges, type ProfileRow } from "@/lib/account-profile";
 
@@ -8,7 +8,9 @@ import { aboutArgs, cleanChanges, profileArgs, profileError, socialsChanged, typ
 // file now, so a staff correction made since the page was drawn is never undone. Then, each only
 // when something in it changed: customer_update_profile (name, email, mobile, height, bike type,
 // birth date, country, city, nationality), customer_set_socials, customer_set_about (gender,
-// profession, company, how they heard of us).
+// profession, company, how they heard of us). customer_update_profile meters new mobiles and emails per
+// address (_ip_gate 'profile'): the call names the rider's (lib/account.ts forVisitor), or every rider of
+// the site shared this Worker's one meter.
 export async function POST(req: Request) {
   const w = writeSession(req);
   if ("refuse" in w) return w.refuse;
@@ -36,7 +38,7 @@ export async function POST(req: Request) {
 
   const args = profileArgs(cur, c.ok.core);
   if (args) {
-    const r = await rpcServer<boolean>("customer_update_profile", { p_id: id, p_token: token, ...args });
+    const r = await rpcServer<boolean>("customer_update_profile", forVisitor(req, { p_id: id, p_token: token, ...args }));
     if (r.status >= 400 || r.status === 0) return fail(r);
     if (r.data !== true) return json({ ok: false, error: "signin" }, 401);
   }

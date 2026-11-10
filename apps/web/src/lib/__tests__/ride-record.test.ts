@@ -31,6 +31,13 @@ describe("week runs", () => {
     expect(r.best).toBe(2);
     expect(r.curS).toBe(5);
   });
+  it("start again after the first quiet week when a second comes too soon", () => {
+    const wk = (n: number) => new Date(Date.parse("2026-09-30T00:00:00Z") - (12 - n) * 7 * 864e5).toISOString().slice(0, 10); // week 12 = this week
+    // weeks 1-3, 5, 7-11: the run 5..11 holds one quiet week (6), seven weeks long
+    expect(weekRuns([1, 2, 3, 5, 7, 8, 9, 10, 11].map(wk), today)).toEqual({ best: 5, bestS: 7, curS: 7 });
+    // two quiet weeks in a row (4 and 5) still end it
+    expect(weekRuns([1, 2, 3, 6, 7, 8, 9, 10, 11].map(wk), today)).toEqual({ best: 6, bestS: 6, curS: 6 });
+  });
 });
 
 describe("dated badges and perfect weeks", () => {

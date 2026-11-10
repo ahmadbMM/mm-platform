@@ -50,6 +50,15 @@ describe("every account write route", () => {
 });
 
 describe("api/account/profile", () => {
+  // customer_update_profile meters new mobiles and emails per address: the site names the rider's, with its key
+  it("names the rider's address on a contact change, with the site's key", async () => {
+    vi.stubEnv("MM_SITE_KEY", "site-key-0123456789");
+    const f = db({ customer_profile: [CUR], customer_about: [ABOUT], customer_update_profile: true });
+    vi.stubGlobal("fetch", f);
+    expect(await (await post(profile, "/api/account/profile", { changes: { email: "new@x.sa" } }, { ...HEADERS, "cf-connecting-ip": "198.51.100.4" })).json()).toEqual({ ok: true });
+    const [, init] = (f.mock.calls as unknown as [string, RequestInit][]).find(([url]) => url.endsWith("/customer_update_profile"))!;
+    expect(new Headers(init.headers).get("x-mm-visitor-ip")).toBe("198.51.100.4");
+  });
   it("writes only what changed, over the account as it is now, with the cookie's id and token", async () => {
     const f = db({ customer_profile: [CUR], customer_about: [ABOUT], customer_update_profile: true, customer_set_socials: true, customer_set_about: true });
     vi.stubGlobal("fetch", f);
@@ -173,8 +182,15 @@ describe("api/account/fix", () => {
     const f = db({ customer_fix_fields: ["name", "country", "city"], customer_fix_save: [] });
     vi.stubGlobal("fetch", f);
     const res = await post(fix, "/api/account/fix", { values: { name: "ali khan", country: "Palestine", city: "Jerusalem", email: "not-asked@x.sa" } });
-    expect(await res.json()).toEqual({ ok: true, left: [] });
+    expect(await res.json()).toEqual({ ok: true, left: [], more: false });
     expect(rpcOf(f)[1].body).toEqual({ p_id: "c1", p_token: TOKEN, p_values: { name: "Ali Khan", country: "Palestine", city: "Jerusalem" } });
+  });
+  // The booking app's check-up also asks for details this page cannot answer yet (WhatsApp, the emergency contacts...).
+  it("says when staff also asked for details only the booking app answers, so the request is not done", async () => {
+    vi.stubGlobal("fetch", db({ customer_fix_fields: ["name", "emergency"], customer_fix_save: ["emergency"] }));
+    expect(await (await post(fix, "/api/account/fix", { values: { name: "ali khan" } })).json()).toEqual({ ok: true, left: [], more: true });
+    vi.stubGlobal("fetch", db({ customer_fix_fields: ["whatsapp"] }));
+    expect(await (await post(fix, "/api/account/fix", { values: {} })).json()).toEqual({ ok: true, left: [], more: true });
   });
   it("names the boxes to check, and what the database refused", async () => {
     vi.stubGlobal("fetch", db({ customer_fix_fields: ["email", "height"] }));
@@ -182,6 +198,6 @@ describe("api/account/fix", () => {
     vi.stubGlobal("fetch", db({ customer_fix_fields: ["email"], customer_fix_save: reply({ code: "23505", message: "email_taken" }, 409) }));
     expect(await (await post(fix, "/api/account/fix", { values: { email: "a@b.sa" } })).json()).toEqual({ ok: false, error: "check", errors: { email: "email_taken" } });
     vi.stubGlobal("fetch", db({ customer_fix_fields: ["email", "phone"], customer_fix_save: ["phone"] }));
-    expect(await (await post(fix, "/api/account/fix", { values: { email: "a@b.sa", phone: "+966551234567" } })).json()).toEqual({ ok: true, left: ["phone"] });
+    expect(await (await post(fix, "/api/account/fix", { values: { email: "a@b.sa", phone: "+966551234567" } })).json()).toEqual({ ok: true, left: ["phone"], more: false });
   });
 });

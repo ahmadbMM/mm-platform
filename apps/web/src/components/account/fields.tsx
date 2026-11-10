@@ -94,6 +94,10 @@ export function DobPicker({ idBase, value, onChange, locale, labels, disabled }:
   const mMax = y === yMax ? +max.slice(5, 7) : 12;
   const dim = y && mo ? new Date(Date.UTC(y, mo, 0)).getUTCDate() : 31;
   const dMax = y === yMax && mo === +max.slice(5, 7) ? +max.slice(8, 10) : 31;
+  // A day the chosen year and month put out of reach - past the month's end, or after the youngest birth date allowed -
+  // is cleared, not kept, whichever of the three is chosen last (the booking app's _dobSync).
+  const fitDay = (yy: number, mm: number, dd: number) =>
+    yy && mm && (dd > new Date(Date.UTC(yy, mm, 0)).getUTCDate() || (yy === yMax && mm === +max.slice(5, 7) && dd > +max.slice(8, 10))) ? 0 : dd;
   const emit = (yy: number, mm: number, dd: number) => {
     const full = yy && mm && dd ? `${yy}-${String(mm).padStart(2, "0")}-${String(dd).padStart(2, "0")}` : "";
     onChange(full, !full && !!(yy || mm || dd));
@@ -110,7 +114,7 @@ export function DobPicker({ idBase, value, onChange, locale, labels, disabled }:
         {Array.from({ length: dim }, (_, i) => i + 1).map((n) => <option key={n} value={n} disabled={n > dMax}>{n}</option>)}
       </select>
       <select id={`${idBase}-m`} className={mo ? "" : "ph"} aria-label={labels.month} value={mo || ""} disabled={disabled}
-        onChange={(e) => { const v = +e.target.value || 0; const dd = y && v && d > new Date(Date.UTC(y, v, 0)).getUTCDate() ? 0 : d; setMo(v); setD(dd); emit(y, v, dd); }}>
+        onChange={(e) => { const v = +e.target.value || 0; const dd = fitDay(y, v, d); setMo(v); setD(dd); emit(y, v, dd); }}>
         <option value="">{labels.month}</option>
         {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => <option key={n} value={n} disabled={n > mMax}>{months?.[n - 1] ?? n}</option>)}
       </select>
@@ -119,7 +123,7 @@ export function DobPicker({ idBase, value, onChange, locale, labels, disabled }:
           const v = +e.target.value || 0;
           // A month or day the new year puts out of reach is cleared, not kept.
           const mm = v === yMax && mo > +max.slice(5, 7) ? 0 : mo;
-          const dd = mm && v && (d > new Date(Date.UTC(v, mm, 0)).getUTCDate() || (v === yMax && mm === +max.slice(5, 7) && d > +max.slice(8, 10))) ? 0 : d;
+          const dd = fitDay(v, mm, d);
           setY(v); setMo(mm); setD(dd); emit(v, mm, dd);
         }}>
         <option value="">{labels.year}</option>
