@@ -1,6 +1,8 @@
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { cookies } from "next/headers";
 import { ACCOUNT_COOKIE, decodeSession, type BookingRow, type Session } from "./account-core";
 import { sessionGender, type GenderViewer } from "./session-gender";
+import { clientIp } from "./sign-in-guard";
 
 // The signed-in account on the server: the cookie set by /api/account, checked against the
 // booking app's own session (customer_profile), and the account's bookings (my_bookings).
@@ -18,7 +20,7 @@ export async function rpcServer<T>(fn: string, args: Record<string, unknown>, ti
   try {
     const res = await fetch(`${url}/rest/v1/rpc/${fn}`, {
       method: "POST",
-      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Accept: "application/json" },
+      headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json", Accept: "application/json", ...visitorHeaders(VISITORS.get(args)) },
       body: JSON.stringify(args),
       cache: "no-store",
       signal: AbortSignal.timeout(timeoutMs),
@@ -32,6 +34,29 @@ export async function rpcServer<T>(fn: string, args: Record<string, unknown>, ti
   } catch {
     return { status: 0, data: null, message: "" };
   }
+}
+
+const VISITORS = new WeakMap<object, Request>();
+
+/** rpcServer's arguments for a function the database meters per address (_ip_gate: customer_set_referrer ...), sent on
+ *  behalf of the visitor whose request this is: `rpcServer(fn, forVisitor(req, { ... }))`. The database counts the
+ *  address Cloudflare saw, and for a call from this Worker that is Cloudflare's own, so every rider of the site shared
+ *  one meter: 30 friend's codes in 10 minutes, from a busy hour or one account trying codes, and every rider's code read
+ *  "not found". With the site's key (the Worker secret MM_SITE_KEY) the call names the visitor's address
+ *  (x-mm-visitor-ip, as Cloudflare saw it), which the database counts in place of its own once it holds the same key; it
+ *  ignores the address without it. No key, or no address (a local run): nothing is added, as before. */
+export function forVisitor(req: Request, args: Record<string, unknown>): Record<string, unknown> {
+  VISITORS.set(args, req);
+  return args;
+}
+
+function visitorHeaders(from?: Request): Record<string, string> {
+  const ip = from ? clientIp(from).trim().slice(0, 60) : "";
+  if (!ip) return {};
+  let site = "";
+  try { const v = (getCloudflareContext().env as { MM_SITE_KEY?: unknown }).MM_SITE_KEY; if (typeof v === "string") site = v; } catch { /* not on the Worker */ }
+  site = site || process.env.MM_SITE_KEY || "";
+  return site ? { "x-mm-visitor-ip": ip, "x-mm-site-key": site } : {};
 }
 
 /** The signed-in account, or null: no cookie, a malformed one, or a session the booking app no

@@ -114,14 +114,18 @@ export function climb(on: Iterable<string>): Set<string> {
 export const weekOf = (ds: string) => Math.floor((Date.parse(`${ds.slice(0, 10)}T00:00:00Z`) / 864e5 + 4) / 7);
 
 /** The longest run of ridden weeks, strict (best) and with one quiet week in any four forgiven
- *  (bestS), and the forgiving run still going (curS); this week is never a miss (_bdgRuns). */
+ *  (bestS), and the forgiving run still going (curS); this week is never a miss (_bdgRuns). A second
+ *  quiet week too soon after the first starts the run again the week after the first, with the second
+ *  as its one forgiven week; two quiet weeks in a row end it. */
 export function weekRuns(dates: string[], today: string): { best: number; bestS: number; curS: number } {
   const W = new Set(dates.map(weekOf).filter(Number.isFinite)), now = weekOf(today);
   let best = 0, run = 0, bestS = 0, start: number | null = null, last: number | null = null, miss: number | null = null;
   for (let w = W.size ? Math.min(...W) : now + 1; w <= now; w++) {
     if (W.has(w)) { run++; best = Math.max(best, run); if (start == null) start = w; last = w; bestS = Math.max(bestS, last - start + 1); continue; }
     run = 0; if (w === now) break;
-    if (start != null && (miss == null || w - miss >= 4)) miss = w; else start = miss = null;
+    if (start != null && (miss == null || w - miss >= 4)) miss = w;
+    else if (start != null && miss != null && w - miss > 1) { start = miss + 1; miss = w; }
+    else start = miss = null;
   }
   return { best, bestS, curS: start != null && last != null ? last - start + 1 : 0 };
 }

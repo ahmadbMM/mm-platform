@@ -37,7 +37,9 @@ const DIGITS = (s: string) => s
 const last9 = (v: string) => v.replace(/\D/g, "").slice(-9);
 
 /** The number typed under a dial code, as the database stores it: "+" and digits. A number typed with
- *  its own "+" or "00" keeps its code; a leading 0 (the trunk prefix) goes. */
+ *  its own "+" or "00" keeps its code; a leading 0 (the trunk prefix) goes. Digits that only begin with
+ *  the code's own are a national number (an Indian mobile 91..., every Kazakh one 7...) unless they are
+ *  more than one: eleven or more, eight after the code (the booking app's _ccIncluded). */
 export function emPhone(cc: string, raw: string): string {
   const s = DIGITS(raw).replace(/[​-‏‪-‮⁦-⁩﻿]/g, "").replace(/[\s\-().]/g, "");
   if (!s) return "";
@@ -50,7 +52,7 @@ export function emPhone(cc: string, raw: string): string {
   const d = s.replace(/\D/g, "");
   if (!d) return "";
   if (d.startsWith("00")) return "+" + d.slice(2);
-  if (d.startsWith(code) && d.length - code.length >= 8) return "+" + d;
+  if (d.startsWith(code) && d.length >= 11 && d.length - code.length >= 8) return "+" + d;
   return "+" + code + (d.startsWith("0") ? d.slice(1) : d);
 }
 
