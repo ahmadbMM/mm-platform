@@ -8,10 +8,11 @@ import { referralLink, type Referral } from "@/lib/referral";
 import { referralWords } from "./Referral.words";
 
 // The Invite friends card on My Account (the booking app's #ref-mine, 2026-11-08): the rider's code, Share (the phone's
-// share sheet, else WhatsApp; the site sends nothing itself) and Copy link, how many friends joined and rode and the free
-// rides that earned, and while the account is new a box for a friend's code (POST /api/account/referrer). The free rides
-// themselves are redeemed in the booking app, so a waiting one links there. A friend's own code (rentals 20261108200000:
-// pct off their own bike on their first ride) is said with its last day and also links there, where it comes off by itself.
+// share sheet, else WhatsApp; the site sends nothing itself) and Copy link, how many friends joined and rode, and while
+// the account is new a box for a friend's code (POST /api/account/referrer). Since 2026-11-10 a referral gives no discount
+// or free ride (rentals 20261111001000), so the card promises none; codes given before still show until they end: a
+// waiting free ride links to the booking app, where it is redeemed, and a friend's own code (pct off their own bike on
+// their first ride) is said with its last day and also links there, where it comes off by itself.
 export default function ReferralCard({ r, locale }: { r: Referral; locale: string }) {
   const tx = useL();
   const w = referralWords(locale);
@@ -21,7 +22,6 @@ export default function ReferralCard({ r, locale }: { r: Referral; locale: strin
   const [err, setErr] = useState("");
   const [done, setDone] = useState(false);
   const link = referralLink(r.code, locale);
-  const pct = String(r.pct);
   const until = (d: string) => {
     try { return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${d}T12:00:00Z`)); }
     catch { return d; }
@@ -29,7 +29,7 @@ export default function ReferralCard({ r, locale }: { r: Referral; locale: strin
   const failed = () => tx("It could not be sent. Check the connection and try again.", "تعذّر الإرسال. تحقق من الاتصال وحاول مجدداً.");
 
   async function share() {
-    const text = w.msg.replace("{0}", link).replace("{1}", r.code).replace("{2}", pct);
+    const text = w.msg.replace("{0}", link).replace("{1}", r.code);
     if (navigator.share) {
       try { await navigator.share({ text }); return; } catch (e) { if ((e as Error)?.name === "AbortError") return; }
     }
@@ -59,7 +59,6 @@ export default function ReferralCard({ r, locale }: { r: Referral; locale: strin
   return (
     <section className="ac-sec ac-ref" aria-labelledby="ac-ref-h">
       <h2 id="ac-ref-h">{w.title}</h2>
-      <p className="ac-text">{w.how.replace("{0}", pct).replace("{1}", String(r.days))}</p>
       {r.welcome && <p className="ac-ref-has ac-ref-w">{w.welcome.replace("{0}", String(r.welcome.pct)).replace("{1}", until(r.welcome.expiresAt)).replace("{2}", r.welcome.code)} <a href={BOOKING_URL}>{w.book}</a></p>}
       <div className="ac-ref-code"><span>{w.yourCode}</span><strong dir="ltr">{r.code}</strong></div>
       <div className="ac-ref-btns">
@@ -68,12 +67,12 @@ export default function ReferralCard({ r, locale }: { r: Referral; locale: strin
       </div>
       {note && <p className="ac-ref-note" role="status">{note}</p>}
       <dl className="ac-ref-stats">
-        {([[r.joined, w.joined], [r.rode, w.rode], [r.earned, w.earned]] as const).map(([n, label]) => (
+        {([[r.joined, w.joined], [r.rode, w.rode]] as const).map(([n, label]) => (
           <div key={label}><dt>{label}</dt><dd>{n}</dd></div>
         ))}
       </dl>
       {r.open > 0 && <p className="ac-ref-has">{w.hasFree.replace("{0}", String(r.open))} <a href={BOOKING_URL}>{w.book}</a></p>}
-      {(r.referred || done) && <p className="ac-text ac-ref-was">{done ? w.enterOk.replace("{0}", pct) : w.wasInvited}</p>}
+      {(r.referred || done) && <p className="ac-text ac-ref-was">{done ? w.enterOk : w.wasInvited}</p>}
       {r.canEnter && !done && (
         <form className="ac-ref-enter" onSubmit={enter} noValidate>
           <label htmlFor="ac-ref-in">{w.enterLabel}</label>
