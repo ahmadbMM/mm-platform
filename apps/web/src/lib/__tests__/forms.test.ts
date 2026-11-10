@@ -83,9 +83,12 @@ describe("the registration forms", () => {
       expect(csp).not.toMatch(/googleapis|gstatic/);
       expect(page).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
       const named = [...page.matchAll(/url\("\/fonts\/forms\/([a-z0-9-]+\.woff2)"\)/g)].map((m) => m[1]);
-      expect(named.length).toBeGreaterThanOrEqual(10);
+      // the community form is in the booking app's Rubik since 2026-11-11 (one variable face a script: 8 files); Petromin keeps Space Grotesk
+      expect(named.length).toBeGreaterThanOrEqual(route === community ? 8 : 10);
       for (const f of named) expect(existsSync(resolve(__dirname, "../../../public/fonts/forms", f)), f).toBe(true);
     }
+    expect([...communityPage.matchAll(/url\("\/fonts\/forms\/([a-z0-9-]+\.woff2)"\)/g)].map((m) => m[1])).toContain("rubik-var-latin.woff2");
+    expect(existsSync(resolve(__dirname, "../../../public/fonts/forms/OFL-Rubik.txt"))).toBe(true);
     // The Saturday page: Archivo for its display lines (under its own licence beside it), Space Grotesk, IBM Plex Sans Arabic.
     expect(saturday.GET().headers.get("content-security-policy") || "").toContain("font-src 'self'");
     expect(saturdayPage).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);

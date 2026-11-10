@@ -1,7 +1,8 @@
 // Builds the one self-contained page the website serves at /community/registration:
 //   design/index.html + styles.css + app.js + i18n.js + images, shared/shared.js -> src/page.html
 // Usage: npm run build (in forms/community). Never edit src/page.html (or the website's copy) by hand.
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { ACCOUNT_JS, writeAccountForWeb, sameNoticeAsSite } from '../../shared/emit.mjs';
 import { emitSite } from '../../shared/site-form.mjs';
@@ -14,8 +15,22 @@ const js = readFileSync(d('app.js'), 'utf8');
 const i18n = readFileSync(d('i18n.js'), 'utf8');
 // The booking site's strings and lists (synced), in the website's sixteen languages: forms/shared/langs16.js lays the
 // six the booking app does not speak, and their strings (forms/shared/site-t-extra.js), over them.
+// The sport question (the booking app's of 2026-11-10, asked on the form since 2026-11-11): its groups and federations
+// (apps/web/src/lib/sport.ts) and its words in the sixteen languages (apps/web/src/components/account/Sport.words.ts),
+// read from the website's own files so the form never keeps a second copy. Plain data, read out of the TypeScript.
+const webSrc = resolve(root, '../../apps/web/src');
+const literal = (file, name, open, close) => {
+  const src = readFileSync(resolve(webSrc, file), 'utf8');
+  const at = src.indexOf(`export const ${name}`);
+  if (at < 0) throw new Error(`${file}: no ${name}`);
+  const from = src.indexOf(open, src.indexOf('=', at));
+  const to = src.indexOf(close, from);
+  return new Function(`return ${src.slice(from, to + close.length - 1)};`)();
+};
+const SPORT_DATA = { groups: literal('lib/sport.ts', 'SPORT_GROUPS', '[', '\n];'), words: literal('components/account/Sport.words.ts', 'SPORT_WORDS', '{', '\n};') };
+if (SPORT_DATA.groups.length !== 10 || !SPORT_DATA.words.en || !SPORT_DATA.words.ar) throw new Error('the sport question\'s lists did not read');
 const shared = readFileSync(resolve(root, 'shared/shared.js'), 'utf8') + '\n' + readFileSync(resolve(root, '../shared/site-t-extra.js'), 'utf8') +
-  '\n' + readFileSync(resolve(root, '../shared/langs16.js'), 'utf8') + '\nmmLangs16(SHARED);\n';
+  '\n' + readFileSync(resolve(root, '../shared/langs16.js'), 'utf8') + '\nmmLangs16(SHARED);\nvar SPORT_DATA = ' + JSON.stringify(SPORT_DATA) + ';\n';
 // The account step every account form shares (forms/shared/account.js), inlined before the page's script;
 // the website's Learn to ride form gets the same file as apps/web/src/lib/account-shared.ts.
 writeAccountForWeb();
@@ -27,6 +42,7 @@ sameNoticeAsSite(SHARED, 'community'); // the notice the website shows, never an
 const keys = new Set();
 for (const m of html.matchAll(/data-t(?:-placeholder|-aria)?="([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/tr\("([^"]+)"/g)) keys.add(m[1]);
+for (const m of js.matchAll(/\bk\("([^"]+)"\)/g)) keys.add(m[1]); // k("..."): a string of the form's own, used as a key
 for (const m of js.matchAll(/(?:hard|soft)(?:\[(?:"f-[a-z]+"|id)\])?\s*[:=]\s*\["([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/"f-[a-z]+", \d, "([^"]+)"/g)) keys.add(m[1]);
 for (const m of js.matchAll(/showBanner\("([^"]+)"/g)) keys.add(m[1]);
@@ -79,7 +95,25 @@ writeFileSync(resolve(root, 'src/page.html'), html);
 const page = readFileSync(d('index.html'), 'utf8');
 const siteBody = page.slice(page.indexOf('<main'), page.indexOf('<script src="shared.js">')).trim();
 const siteImages = [...new Set([...siteBody.matchAll(/(?:src|href)="([^":]+\.(?:png|svg|webp))"/g)].map((m) => m[1]))];
-emitSite({ name: 'community', design: resolve(root, 'design'), body: siteBody, css, scripts: [shared, i18n, ACCOUNT_JS, js], images: siteImages });
+// The website's page carries English only; every other language is a file of its own, fetched by the page that needs
+// it (the owner's B19, 2026-11-10): the form's words (FORM_T), the booking site's (SITE_T), the Privacy Notice where it
+// is written in that language, and the Arabic country names. Named by their content, so a browser never keeps an old one.
+const packDir = resolve(root, '../../apps/web/public/forms/community/lang');
+rmSync(packDir, { recursive: true, force: true }); mkdirSync(packDir, { recursive: true });
+const packFiles = {};
+for (const { code } of SHARED.LANGS) {
+  if (code === 'en') continue;
+  const pack = { lang: code, T: FORM_T[code], S: SHARED.SITE_T[code] || {} };
+  if (SHARED.PRIVACY_NOTICE[code]) pack.N = SHARED.PRIVACY_NOTICE[code];
+  if (code === 'ar') pack.C = SHARED.COUNTRY_AR;
+  const body = JSON.stringify(pack);
+  const file = `${code}.${createHash('sha256').update(body).digest('hex').slice(0, 10)}.json`;
+  writeFileSync(resolve(packDir, file), body); packFiles[code] = file;
+}
+const lean = { ...SHARED, SITE_T: { en: SHARED.SITE_T.en }, PRIVACY_NOTICE: { en: SHARED.PRIVACY_NOTICE.en }, COUNTRY_AR: {} };
+const siteShared = 'var SHARED = ' + JSON.stringify(lean) + ';\nvar SPORT_DATA = ' + JSON.stringify(SPORT_DATA) + ';\n';
+emitSite({ name: 'community', design: resolve(root, 'design'), body: siteBody, css, scripts: [siteShared, 'var FORM_T = {};\n', ACCOUNT_JS, js], images: siteImages,
+  packs: { dir: '/forms/community/lang/', files: packFiles } });
 // The website serves this page (apps/web/src/app/community/registration/route.ts): it bundles this module.
 writeFileSync(resolve(root, '../../apps/web/src/forms/community-page.ts'),
   '// GENERATED by forms/community/scripts/build.mjs from src/page.html. Do not edit here:\n' +

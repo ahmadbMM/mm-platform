@@ -1,26 +1,46 @@
 # micromobility.sa/community/registration
 
-The community membership application: one self-contained page that the website (`apps/web`)
-serves at that address, outside Coming Soon. Same look as the Petromin form (`forms/petromin`).
-It moved here from its own repo and Cloudflare Worker (`~/code/community-worker`,
-`mm-community-register`) on 2026-09-25; it is due to be rebuilt as a real website page later.
+The community membership application. The website (`apps/web`) shows it as one of its own pages (its header,
+footer and sixteen languages around the form; forms/shared/site-form.mjs), and serves this folder's self-contained
+page at `?classic=1` as the fallback. It moved here from its own repo and Cloudflare Worker
+(`~/code/community-worker`, `mm-community-register`) on 2026-09-25.
 
-Two steps (the owner, 2026-09-30: the applicant makes their account first):
+**The rework of 2026-11-11** (the user, 2026-11-10: "do them all", the 25 items of the research report
+"Community form enhancement" in the booking app's repo): the booking app's rider look ("Liquid": Rubik, 14 px controls,
+26 px cards, pill buttons, warm shadows), short screens with Back and a progress bar, every problem of a screen at
+once (on the questions and in a summary at the top that takes focus), each box checked as it is left, no hint or
+introduction lines, a red star on required questions and nothing that says "optional", the code-only phone pickers
+(no flag emoji), typed birth dates, a type-to-search nationality, one bike question, the sport question, a parent or
+guardian for an applicant under 18, Check your answers, a new thank-you card, anonymous counts of where people leave,
+and the website's page carrying English only with each other language as a file of its own (`apps/web/public/forms/community/lang`).
 
-1. **Your account** is the booking site's own sign-up: first and last name, gender, email, mobile,
-   password (8 characters, an upper-case letter and a digit, typed twice), height, the Privacy
-   Notice (required) and ride news (optional). It calls `customer_exists` (email, then mobile, so the
-   message says which is taken), `customer_signup` and `customer_consents`, and then says clearly
-   that the account has been created. It also asks the **emergency contact** (the owner, 2026-10-07:
-   required, a second one optional behind "Add a second contact"), checked before the account is made
-   and saved the moment it exists (`customer_set_emergency`, then `customer_set_emergency2` when the
-   second is filled). Should that save be refused, the account stays made and step 2 asks again.
-2. **Membership** asks what the sign-up does not: date of birth, nationality, Instagram and LinkedIn
-   (may be left empty, silently), profession, company, bike type (Road, Hybrid or Mountain) and how
-   they heard of us. It is sent from that account with `customer_community_apply(id, token, answers)`,
-   so the application carries the account (`community_applications.customer_id`). An account handed
-   over without an emergency contact (`customer_emergency`) gives it here, saved before the application
-   goes; a database without those functions asks nothing, one that answers three columns offers no second.
+Two server steps (the owner, 2026-09-30: the applicant makes their account first), each in short screens:
+
+0. **The first question** (gate): the page's one title, what membership gives and how joining works (beside the
+   form on a wide screen, with a Corniche ride photo), and "Do you already have a MicroMobility account?".
+1. **The account** is the booking site's own sign-up, in four screens: About you (first and last name, gender,
+   height); How we reach you (mobile, whether it is their WhatsApp, email: leaving it calls `customer_exists`, email
+   then mobile, so a taken one is said there with "Sign in instead"); Emergency contact (the owner, 2026-10-07:
+   required, a second one behind "Add a second contact"); Create a password (8 or more characters and not a common one,
+   typed once with show/hide: the database's `_pwd_common`, migration 20261111130000; the Privacy Notice, required; ride
+   news on WhatsApp, optional). Create account calls `customer_exists` again, `customer_signup`, `customer_consents`,
+   then saves the emergency contact (`customer_set_emergency`, `customer_set_emergency2`); should that save be
+   refused, the account stays made and step 2 asks again. No way back from step 2: it would make a second account.
+2. **Membership**, in screens: Birth date and nationality (three typed boxes; type to search, by the name in the
+   reader's language, its English and Arabic names, its code and the usual other names; Saudi Arabia first and again
+   in its place, no Israel; under 18, a parent or guardian: name, relation, mobile and their own tick of the notice,
+   sent after the application with `customer_community_guardian`); Your riding ("Which bike will you ride?": Road,
+   Hybrid, Mountain or My own bike, sent as bike_type and own_bike; "Do you compete in a sport?", the website's words
+   and lists, saved on the account with `customer_set_sport` before the application); Work and socials (profession,
+   company, Instagram required since 2026-11-11, LinkedIn behind "Add LinkedIn", how they heard of us); Check your
+   answers (every answer, each with Change). Sent with `customer_community_apply(id, token, answers)`, so the
+   application carries the account (`community_applications.customer_id`). An account handed over without an
+   emergency contact (`customer_emergency`) gives it on a screen of its own, saved before the application goes.
+
+**Where people leave** (B1): `community_form_log(p_session, p_events)` gets anonymous events (open, screen reached,
+done, error with the question and why, leave with the last screen and question, made, sent), never an answer, a name
+or an account; a random id per visit. Staff read the totals in the booking app (Community > Applications > Form
+drop-off, `staff_community_form_funnel`).
 
 **Kept on this device** (the owner, 2026-10-25: "save progress"): what the applicant typed or picked is kept in
 localStorage `mm-community-draft` for three days (`MMAccount.draft`, forms/shared/account.js): never a password, a
@@ -41,9 +61,9 @@ forms/shared/account.js (see its README). A temporary password goes to the booki
 in the booking site's own words (synced: authIdentifier, errEmailOrPhone, errPasswordRequired, errInvalidCredentials,
 errLoginLocked, errLoginPhoneCc).
 
-**First question** (the owner, 2026-10-25): "Do you already have a Micromobility account?". No goes on to step 1.
+**First question** (the owner, 2026-10-25): "Do you already have a MicroMobility account?". No goes on to step 1.
 Yes signs in right here (email or mobile and password, `customer_login`; a Saudi 05X number is sent as +9665X), or on the
-booking site for a forgotten password or a Google/Apple account. A signed-in account is asked on step 2 only what it does
+booking site for a forgotten password (Google and Apple sign-in ended 2026-11-09). A signed-in account is asked on step 2 only what it does
 not hold yet, or what staff flagged on it (`customer_community_me`'s `flags` = `customers.fix_fields`, migration
 20261025180000 in the rentals repo): a filled, unflagged question is hidden but still sent from its prefilled box, named in
 one line with **Show them**, and comes back by itself if its saved value fails the checks; a flagged one says "Our team asked
@@ -63,7 +83,7 @@ the applications in the booking site: **Community > Applications**.
 
 ## Where things come from
 - `design/` — the page: `index.html`, `styles.css`, `app.js`, `i18n.js` (the form's own
-  strings in 9 languages, keyed by the English text), logos. The build drops any metadata chunk from
+  strings in the sixteen languages, keyed by the English text; a new string is written `k("...")` or `tr("...")` in app.js so the build finds it), logos. The build drops any metadata chunk from
   the PNGs it inlines. The fonts are the website's files (`apps/web/public/fonts/forms`, named in
   `styles.css`), never Google Fonts.
 - `shared/shared.js` — **generated** by `npm run sync` from the booking site's source
