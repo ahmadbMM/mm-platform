@@ -92,7 +92,8 @@ describe("api/account/password", () => {
     const f = db();
     expect((await post(choose, "/api/account/password", { password: "MyOwn2026" }, { ...held, origin: "https://evil.example" })).status).toBe(403);
     expect(await (await post(choose, "/api/account/password", { password: "MyOwn2026" })).json()).toEqual({ ok: false, error: "expired" });
-    for (const p of ["short1A", "nouppercase1", "NoDigitsHere"]) expect(await (await post(choose, "/api/account/password", { password: p }, held)).json()).toEqual({ ok: false, error: "weak" });
+    for (const p of ["short1A", "", "Ride2Wo"]) expect(await (await post(choose, "/api/account/password", { password: p }, held)).json()).toEqual({ ok: false, error: "weak" });
+    for (const p of ["Password1", "qwerty123", "aaaaaaaa"]) expect(await (await post(choose, "/api/account/password", { password: p }, held)).json()).toEqual({ ok: false, error: "common" });
     expect(f).not.toHaveBeenCalled();
   });
   it("says the database's answer: the same password, a session that ended, nothing left to change", async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HEARD, accountArgs, accountNameOk, ageOn, emailOk, igNorm, learnPayload, liNorm, noticeDue, passwordOk, phoneOk, riyadhToday, signinIdentifier, wholeNumber, type AccountFields, type LearnFields, type LearnerFields } from "../learn";
+import { HEARD, accountArgs, accountNameOk, ageOn, emailOk, igNorm, learnPayload, liNorm, noticeDue, PASSWORD_COMMON, passwordOk, passwordOldRuleMiss, passwordProblem, phoneOk, riyadhToday, signinIdentifier, wholeNumber, type AccountFields, type LearnFields, type LearnerFields } from "../learn";
 import { learnFrame } from "../learn-page";
 import { natOptions } from "../nationality";
 import { namePartsOk } from "../rpc-client";
@@ -211,19 +211,19 @@ describe("learnPayload", () => {
 
 // Step 1 for someone new: the booking app's own sign-up, its questions and rules (the owner, 2026-09-30).
 describe("accountArgs", () => {
-  const acc: AccountFields = { first: "sara", last: "al harbi", gender: "female", email: " Sara@Example.com ", phone: "0551234567", password: "Ride2Work", password2: "Ride2Work", height: "165", privacy: true, news: true };
+  const acc: AccountFields = { first: "sara", last: "al harbi", gender: "female", email: " Sara@Example.com ", phone: "0551234567", password: "Ride2Work", height: "165", privacy: true, news: true };
   const aerr = (x: Partial<AccountFields>) => { const r = accountArgs({ ...acc, ...x }); return "error" in r ? r.error : null; };
 
   it("sends customer_signup's argument: the name in capitals, a lower-cased email, the mobile as stored, the account's type Any", () => {
     expect(accountArgs(acc)).toEqual({ args: { p_name: "Sara Al Harbi", p_email: "sara@example.com", p_phone: "+966551234567", p_pwd: "Ride2Work", p_height: 165, p_type_preference: "Any", p_gender: "female" } });
   });
 
-  it("checks in the form's order: names, gender, email, mobile, password, its confirmation, height, the Privacy Notice", () => {
-    const blank: AccountFields = { first: "", last: "", gender: "", email: "", phone: "", password: "", password2: "", height: "", privacy: false, news: false };
+  it("checks in the form's order: names, gender, email, mobile, password, height, the Privacy Notice", () => {
+    const blank: AccountFields = { first: "", last: "", gender: "", email: "", phone: "", password: "", height: "", privacy: false, news: false };
     const steps: [Partial<AccountFields>, string | null][] = [
       [{}, "first"], [{ first: "Huda" }, "last"], [{ last: "Saleh" }, "gender"], [{ gender: "female" }, "email"],
-      [{ email: "huda@example.sa" }, "phone"], [{ phone: "+966 50 123 4567" }, "password"], [{ password: "Ride2Work" }, "password2"],
-      [{ password2: "Ride2Work" }, "acct_height"], [{ height: "160" }, "privacy"], [{ privacy: true }, null],
+      [{ email: "huda@example.sa" }, "phone"], [{ phone: "+966 50 123 4567" }, "password"], [{ password: "qwerty123" }, "password_common"],
+      [{ password: "Ride2Work" }, "acct_height"], [{ height: "160" }, "privacy"], [{ privacy: true }, null],
     ];
     let a = blank;
     for (const [x, want] of steps) {
@@ -239,11 +239,12 @@ describe("accountArgs", () => {
     for (const n of ["Md.", "سارة", "Kerry Ann"]) expect(aerr({ first: n }), n).toBeNull();
   });
 
-  it("refuses a hidden Apple address, and asks the password rule twice", () => {
+  it("refuses a hidden Apple address, and a password too short or too easy to guess", () => {
     expect(aerr({ email: "x7k@privaterelay.appleid.com" })).toBe("email");
-    for (const p of ["Short1", "nouppercase1", "NoDigitsHere"]) expect(aerr({ password: p, password2: p }), p).toBe("password");
-    expect(aerr({ password2: "Ride2Walk" })).toBe("password2");
-    expect(passwordOk("Ride2Work")).toBe(true);
+    for (const p of ["Short1", "", "سبعة٧٧"]) expect(aerr({ password: p }), p).toBe("password");
+    for (const p of ["Password1", "QWERTY123", "aaaaaaaa", "11111111111"]) expect(aerr({ password: p }), p).toBe("password_common");
+    // 2026-11-11: no upper-case letter or digit asked any more
+    for (const p of ["nouppercase1", "NoDigitsHere", "corniche ride", "Ride2Work"]) expect(aerr({ password: p }), p).toBeNull();
   });
 
   it("takes a height of 100 to 250 cm, as the booking app's sign-up does", () => {
@@ -254,6 +255,24 @@ describe("accountArgs", () => {
   it("reads a Saudi mobile typed any usual way, and another country's with its code", () => {
     for (const p of ["0551234567", "551234567", "+966 55 123 4567", "٠٥٥١٢٣٤٥٦٧", "+44 7700 900123"]) expect(aerr({ phone: p }), p).toBeNull();
     for (const p of ["", "12345", "+966112345678", "+9665512345"]) expect(aerr({ phone: p }), p).toBe("phone");
+  });
+});
+
+// The rider password rule (2026-11-11): the booking app's _pwdBad and the database's _pwd_common (migration 20261111130000).
+describe("the password rule", () => {
+  it("takes 8 characters or more, counted as the database counts them, not one too easy to guess", () => {
+    expect(passwordProblem("Ride2Wo")).toBe("short");
+    expect(passwordProblem("\u{1F6B2}".repeat(7))).toBe("short"); // seven characters, fourteen UTF-16 units
+    expect(passwordProblem("Ride2Work")).toBeNull();
+    expect(passwordProblem("zzzzzzzzzz")).toBe("common");
+    expect(passwordProblem("MicroMobility")).toBe("common");
+    expect(passwordOk("ride to work")).toBe(true);
+    expect(passwordOldRuleMiss("ride to work")).toBe(true);
+    expect(passwordOldRuleMiss("Ride2Work")).toBe(false);
+  });
+  it("holds exactly the database's list of common passwords", () => {
+    expect([...PASSWORD_COMMON]).toEqual("password password1 password12 password123 password1234 passw0rd p@ssw0rd p@ssword pa$$word 12345678 123456789 1234567890 0123456789 87654321 987654321 9876543210 12344321 12341234 11223344 12121212 11112222 13579246 147258369 159753456 741852963 123123123 123456123 00000000 11111111 12345612 1q2w3e4r 1q2w3e4r5t 1qaz2wsx q1w2e3r4 q1w2e3r4t5 zaq12wsx qwerty12 qwerty123 qwerty1234 qwertyui qwertyuiop qwer1234 1234qwer asdf1234 asdfghjk asdfghjkl zxcvbnm1 zxcvbnmm abc12345 abcd1234 abcdefgh abcdefg1 a1234567 a12345678 aa123456 123456aa 123456ab 123qweasd 1234abcd iloveyou iloveyou1 iloveyou2 letmein1 welcome1 welcome123 sunshine sunshine1 princess princess1 football football1 baseball superman starwars trustno1 monkey123 dragon123 master123 admin123 administrator changeme secret123 computer internet whatever mustang1 shadow123 michael1 jennifer liverpool chelsea1 arsenal1 barcelona realmadrid alhilal1 alnassr1 alittihad alahli123 ronaldo7 cristiano messi123 mohammed mohammed1 mohamed1 muhammad muhammad1 ahmed123 ahmad123 abdullah abdullah1 saudi123 saudiarabia ksa12345 jeddah123 riyadh123 makkah123 966966966 micromobility micromobility1 micromobility123 bicycle1 cycling1 bike1234 helloworld hello123 test1234 testtest guest123 user1234".split(" "));
+    for (const p of PASSWORD_COMMON) expect(passwordProblem(p), p).toBe(p.length < 8 ? "short" : "common");
   });
 });
 

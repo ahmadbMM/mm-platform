@@ -138,8 +138,8 @@ test("the learn form will not make the account without an emergency contact, and
   await card.getByRole("radio", { name: "Male", exact: true }).click();
   await card.getByLabel("Email", { exact: true }).fill("karim.mansour@gmail.com");
   await card.getByLabel(/^Mobile number/).fill("0552468013");
-  await card.locator("input[autocomplete='new-password']").nth(0).fill("Ride2Work");
-  await card.locator("input[autocomplete='new-password']").nth(1).fill("Ride2Work");
+  await expect(card.locator("input[autocomplete='new-password']")).toHaveCount(1); // one box, with show/hide (2026-11-11)
+  await card.locator("input[autocomplete='new-password']").fill("Ride2Work");
   await card.getByLabel("Height (cm)").fill("178");
   await card.locator(".ln-check input").first().check();
   await card.getByRole("button", { name: "Create account" }).click();

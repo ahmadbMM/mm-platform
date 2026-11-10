@@ -1,6 +1,6 @@
 import { ACCOUNT_COOKIE, ACCOUNT_MAX_AGE, PENDING_COOKIE, PENDING_PATH, decodeSession, encodeSession, pwdAnswer, sameOrigin } from "@/lib/account-core";
 import { rpcServer } from "@/lib/account";
-import { passwordOk } from "@/lib/learn";
+import { passwordProblem } from "@/lib/learn";
 import { cookieValue } from "@/lib/live";
 import { HANDOFF_COOKIE } from "@/lib/handoff";
 
@@ -30,8 +30,9 @@ export async function POST(req: Request) {
     password = String(b.password ?? "").slice(0, 200);
     page = b.page === true;
   } catch { /* empty body */ }
-  // the booking app's rule, which the database checks again: 8 or more, an upper-case letter, a digit
-  if (!passwordOk(password)) return json({ ok: false, error: "weak" }, 400);
+  // the booking app's rule, which the database checks again: 8 or more, and not a common one (2026-11-11)
+  const pp = passwordProblem(password);
+  if (pp) return json({ ok: false, error: pp === "short" ? "weak" : "common" }, 400);
   const a = pwdAnswer(await rpcServer<string>("customer_set_own_password", { p_id: held.id, p_token: held.token, p_new_pwd: password }));
   if ("error" in a && a.error === "expired") return json({ ok: false, error: "expired" }, 401, [unhold()]);
   if ("error" in a && a.error !== "done") return json({ ok: false, error: a.error }, a.error === "generic" ? 502 : 400);
