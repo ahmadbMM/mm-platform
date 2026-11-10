@@ -19,6 +19,20 @@ function watchCsp(page: Page): string[] {
   return seen;
 }
 
+// iPhone Safari's rule for new windows: one opened straight from a tap goes through, one opened after a wait (the
+// server's answer) is refused and window.open gives null. Chromium lets a late one through for five seconds, which is
+// how Get certificate passed here while it never opened on an iPhone (2026-11-10). The tap's own handlers run before
+// the window's bubbling listener, so anything later is not the tap.
+async function safariWindows(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    let tap = false;
+    window.addEventListener("click", (e) => { if (e.isTrusted) tap = true; }, true);
+    window.addEventListener("click", () => { tap = false; });
+    const open = window.open.bind(window);
+    window.open = (...a: Parameters<typeof window.open>) => (tap ? open(...a) : null);
+  });
+}
+
 // The Worker meters sign-in per connection, and `wrangler dev` enforces it, every test arriving from 127.0.0.1: a run that
 // signs in more often than that waits for the next minute instead of failing.
 async function submit(page: Page, login: string, pwd: string): Promise<void> {
@@ -226,6 +240,7 @@ test("updates: a dot on the tab while something is unread, the portal's own word
 
 test("Home: the next shift with its place and calendar, the hours to the next badge, and what an event gave", async ({ page }) => {
   const errors = watchCsp(page);
+  await safariWindows(page);
   await accepted(page);
   const next = page.locator("#next-shift");
   await expect(next).toContainText("Next shift");
@@ -460,6 +475,7 @@ test("the team lead sees the team by name, checks them in and out, and undoes th
 
 test("certificates: one per event worked, the one already made comes back, other dates behind one button", async ({ page }) => {
   const errors = watchCsp(page);
+  await safariWindows(page); // the window opens on the tap, as an iPhone wants it
   await accepted(page);
   await stub(page, "__reward", { id: BD, hours: 4 });
   await page.goto("/#cert");
@@ -477,6 +493,9 @@ test("certificates: one per event worked, the one already made comes back, other
   await expect(sheet.locator(".thanks-ar")).toHaveText("تقديرًا لعطائها ومشاركتها التطوعية في المبادرة");
   await expect(sheet.locator(".recognition")).toHaveText("in recognition of her time, energy and commitment as a volunteer in");
   await expect(sheet.locator(".signer-name")).toHaveText("Ahmad Babalghoum");
+  // the hours, a line of their own under the thank-you (the owner, 2026-11-10)
+  await expect(sheet.locator(".hours-n")).toHaveText("4");
+  await expect(sheet.locator(".hours-label")).toHaveText("Volunteer hours · ساعات التطوع");
   // once its stylesheet is in (the window is written, then fetches it)
   await expect.poll(() => sheet.locator(".page").evaluate((el: HTMLElement) => [el.offsetWidth, el.offsetHeight])).toEqual([1123, 794]);
   // its own two faces, never the portal's
@@ -484,7 +503,22 @@ test("certificates: one per event worked, the one already made comes back, other
   await sheet.close();
   await page.getByRole("button", { name: "Other dates" }).click();
   await expect(page.getByLabel("What it covers")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Make it with a check code" })).toBeVisible();
+  await page.getByLabel("What it covers").selectOption("day"); // today: the stub's first day worked is in 2099
+  const make = page.getByRole("button", { name: "Make it with a check code" });
+  const other = page.waitForEvent("popup");
+  await make.click();
+  const period = await other;
+  await expect(period.locator(".name")).toHaveText("Sara Haddad");
+  await period.close();
+  // a refusal closes the window it opened on the tap, and says why on the page
+  await page.route("**/api/rpc/volunteer_cert_issue", (r) => r.fulfill({ status: 503, contentType: "application/json", body: "{}" }));
+  const refused = page.waitForEvent("popup");
+  await make.click();
+  const gone = await refused;
+  await expect.poll(() => gone.isClosed()).toBe(true);
+  await expect(page.getByText("Connection problem. Please try again.")).toBeVisible();
+  await page.unroute("**/api/rpc/volunteer_cert_issue");
+  expect(page.context().pages()).toHaveLength(1);
   // an employer checks it with the code printed on it, signed in or not
   await tab(page, "Profile").click();
   await page.getByRole("button", { name: "Sign out" }).click();
