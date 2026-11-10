@@ -31,17 +31,19 @@ type DueRow = { id: string; paid: boolean; status: string; price: number; payMet
 
 /** What the Wallet switch on a ticket works on (the booking app's _cwPaySlot): its seated rows the desk has not been
  *  paid for, not on a ride staff approve, a race, a company's night or the Blood Donation event, which has no price. left: what is still to pay; used: what the
- *  wallet holds now. extras: the add-ons' cost, null when the inventory could not be read (no sum is offered: never a
- *  wrong one). A card part paid with add-ons cannot say whose they are: no sum either. */
-export function walletDue(rows: DueRow[], kind: string | undefined, approval: boolean, extras: number | null): { ids: string[]; left: number; used: number } | null {
+ *  wallet holds now. extras: each row's add-ons' cost by the row's id (addonLines' rowId; a row without any is not in it),
+ *  null when the inventory could not be read (no sum is offered: never a wrong one). A row that costs nothing, its add-ons
+ *  with it (a free-ride code, a free ride without an add-on), is left out as _cwPaySlot leaves it (_bookingAmount > 0):
+ *  customer_wallet_pay refuses the whole list over one such row (WALLET_NOTHING_DUE), so nothing would be paid. */
+export function walletDue(rows: DueRow[], kind: string | undefined, approval: boolean, extras: ReadonlyMap<string, number> | null): { ids: string[]; left: number; used: number } | null {
   if (approval || kind === "vlap" || kind === "arena" || kind === "petromin" || kind === "blood" || extras === null) return null;
-  const open = rows.filter((r) => (r.status === "waiting" || r.status === "active") && (!r.paid || r.payMethod === "wallet"));
-  if (!open.length || (extras > 0 && open.length !== rows.length)) return null;
-  const cost = open.reduce((n, r) => n + r.price, 0) + extras;
+  const round = (n: number) => Math.round(n * 100) / 100;
+  const amount = (r: DueRow) => round(r.price + (extras.get(r.id) ?? 0)); // the booking app's _bookingAmount
+  const open = rows.filter((r) => (r.status === "waiting" || r.status === "active") && (!r.paid || r.payMethod === "wallet") && amount(r) > 0);
+  if (!open.length) return null;
+  const cost = open.reduce((n, r) => n + amount(r), 0);
   // a row the wallet paid whole may carry add-ons in its price's total: what it holds is on the row
   const used = open.reduce((n, r) => n + (r.walletPaid ?? 0), 0);
-  const round = (n: number) => Math.round(n * 100) / 100;
-  if (cost <= 0) return null;
   return { ids: open.map((r) => r.id), left: Math.max(0, round(cost - used)), used: round(used) };
 }
 

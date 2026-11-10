@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bookingLink, localHref } from "../links";
+import { bookingLink, bookingPage, localHref } from "../links";
 import { slugId } from "../slug";
 
 describe("localHref", () => {
@@ -33,5 +33,18 @@ describe("bookingLink", () => {
     expect(bookingLink("https://experiences.micromobility.sa/?lang=fr", "ar")).toBe("https://experiences.micromobility.sa/?lang=fr");
     expect(bookingLink("/club", "ar")).toBe("/club");
     expect(bookingLink("#dates", "en")).toBe("#dates");
+  });
+});
+
+describe("bookingPage", () => {
+  it("opens the booking app's own page on the app staff set, never this site's address (the Club's members' links)", () => {
+    expect(bookingPage("/members", "https://experiences.micromobility.sa/", "ar")).toBe("https://experiences.micromobility.sa/members?lang=ar");
+    expect(bookingPage("/account/badges", "https://experiences.micromobility.sa/reserve?x=1", "en")).toBe("https://experiences.micromobility.sa/account/badges?lang=en");
+    expect(bookingPage("/members", "https://staging.example.com/app/", "fr")).toBe("https://staging.example.com/members?lang=fr");
+  });
+  it("falls back to the booking app's own address when the one staff set is no address", () => {
+    for (const b of ["", "experiences.micromobility.sa", "/experiences", "javascript:alert(1)"]) {
+      expect(bookingPage("/members", b, "en"), b).toBe("https://experiences.micromobility.sa/members?lang=en");
+    }
   });
 });

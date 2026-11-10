@@ -15,18 +15,27 @@ describe("the wallet", () => {
     expect(["topup", "takeout", "refund", "spend", "return", "merge_in", "merge_out", "unmerge", "adjust", "sale", "sale_back", "fee", "fee_back"].map(walletKindWord))
       .toEqual(["topup", "takeout", "refund", "spend", "back", "moved", "moved", "moved", "adjust", "sale", "saleBack", "fee", "feeBack"]);
   });
+  const none = new Map<string, number>();
   it("works on the seated rows the desk has not been paid for, and says what is left", () => {
-    expect(walletDue([row("a"), row("b", { paid: true, payMethod: "card" } as never), row("c", { status: "waitlist" })], "jcc", false, 0)).toEqual({ ids: ["a"], left: 50, used: 0 });
-    expect(walletDue([row("a"), row("b")], "jcc", false, 20)).toEqual({ ids: ["a", "b"], left: 120, used: 0 });
-    expect(walletDue([row("a", { price: 80, walletPaid: 50 } as never)], "jcc", false, 0)).toEqual({ ids: ["a"], left: 30, used: 50 });
-    expect(walletDue([row("a", { price: 80, paid: true, payMethod: "wallet", walletPaid: 80 } as never)], "jcc", false, 0)).toEqual({ ids: ["a"], left: 0, used: 80 });
+    expect(walletDue([row("a"), row("b", { paid: true, payMethod: "card" } as never), row("c", { status: "waitlist" })], "jcc", false, none)).toEqual({ ids: ["a"], left: 50, used: 0 });
+    expect(walletDue([row("a"), row("b")], "jcc", false, new Map([["a", 20]]))).toEqual({ ids: ["a", "b"], left: 120, used: 0 });
+    expect(walletDue([row("a", { price: 80, walletPaid: 50 } as never)], "jcc", false, none)).toEqual({ ids: ["a"], left: 30, used: 50 });
+    expect(walletDue([row("a", { price: 80, paid: true, payMethod: "wallet", walletPaid: 80 } as never)], "jcc", false, none)).toEqual({ ids: ["a"], left: 0, used: 80 });
+    // each row's add-ons are its own: a row the desk was paid for keeps its add-ons out of the sum
+    expect(walletDue([row("a"), row("b", { paid: true, payMethod: "card" } as never)], "jcc", false, new Map([["a", 20], ["b", 15]]))).toEqual({ ids: ["a"], left: 70, used: 0 });
+  });
+  it("leaves out a row that costs nothing, which customer_wallet_pay would refuse with the whole list (WALLET_NOTHING_DUE)", () => {
+    // a free-ride code on one place: only the other place is paid from the wallet, as the booking app's _cwPaySlot
+    expect(walletDue([row("a", { price: 0 }), row("b", { price: 60 })], "jcc", false, none)).toEqual({ ids: ["b"], left: 60, used: 0 });
+    // a free ride where only one rider bought an add-on: that rider's row alone
+    expect(walletDue([row("a", { price: 0 }), row("b", { price: 0 })], "saturday", false, new Map([["b", 20]]))).toEqual({ ids: ["b"], left: 20, used: 0 });
   });
   it("offers nothing where it would be refused or the sum is not known", () => {
-    for (const k of ["vlap", "arena", "petromin"]) expect(walletDue([row("a")], k, false, 0)).toBeNull();
-    expect(walletDue([row("a")], "saturday", true, 0)).toBeNull();
+    for (const k of ["vlap", "arena", "petromin"]) expect(walletDue([row("a")], k, false, none)).toBeNull();
+    expect(walletDue([row("a")], "saturday", true, none)).toBeNull();
     expect(walletDue([row("a")], "jcc", false, null)).toBeNull();
-    expect(walletDue([row("a"), row("b", { paid: true, payMethod: "card" } as never)], "jcc", false, 20)).toBeNull();
-    expect(walletDue([row("a", { price: 0 })], "jcc", false, 0)).toBeNull();
+    expect(walletDue([row("a", { price: 0 })], "jcc", false, none)).toBeNull();
+    expect(walletDue([row("a", { price: 0 }), row("b", { price: 0 })], "saturday", false, none)).toBeNull();
   });
   it("takes the switch's state and a list of booking ids, and nothing else", () => {
     expect(walletPayBody({ ids: ["q1", "q-2"], on: true })).toEqual({ ids: ["q1", "q-2"], on: true });

@@ -230,8 +230,8 @@ describe("no bikes, no wallet, no ride counted", () => {
     expect(isNonBike(null, "2026-11-05-bdx")).toBe(false);
   });
   it("never pays from a wallet, whatever the row says", () => {
-    expect(walletDue([{ id: "a", paid: false, status: "waiting", price: 50 }], "blood", false, 0)).toBeNull();
-    expect(walletDue([{ id: "a", paid: false, status: "waiting", price: 50 }], "jcc", false, 0)).not.toBeNull();
+    expect(walletDue([{ id: "a", paid: false, status: "waiting", price: 50 }], "blood", false, new Map())).toBeNull();
+    expect(walletDue([{ id: "a", paid: false, status: "waiting", price: 50 }], "jcc", false, new Map())).not.toBeNull();
   });
   it("its rating says session and asks no bike question, even when the session did not load", () => {
     expect(rideWord("blood")).toBe("session");
@@ -321,6 +321,17 @@ describe("on Experiences, once a session exists", () => {
     // the picture's room at the bottom, and the link's white backing, which its margin cancels, move nothing that lines up
     for (const r of rules) expect(r.replace(/padding-inline-end: 48%;|padding-inline: 4px; margin-inline-start: -4px;|padding: 0;/g, "")).not.toMatch(/padding|inset|(^|[\s;])bottom:|min-height|(^|[\s;])height:/);
     expect(css).not.toMatch(/\.xs-events\s*\{[^}]*grid-auto-rows/); // each card at its own height: a forced row stretched every card to the tallest
+  });
+  it("lets its cause line take the text column on a wide screen, and the summary's the whole width", () => {
+    const css = readFileSync(join(SRC, "components/experiences/experiences.css"), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+    const wide = css.indexOf("@media (min-width: 600px) {\n  .xs-events:has(.xs-event.ev-blood)");
+    const base = [...css.matchAll(/(^|\n)([^{}@]*\.xs-bld-cause)\s*\{([^{}]*)\}/g)].map((m) => ({ at: m.index ?? 0, sel: m[2].trim(), body: m[3] }));
+    expect(wide).toBeGreaterThan(0);
+    // every rule that holds it to the picture's side comes before the wide screen's, which lets it go: one after won at every width
+    for (const r of base.filter((x) => /max-width:\s*54%/.test(x.body))) {
+      expect(r.at, r.sel).toBeLessThan(wide);
+      expect(r.sel, "the card's alone, not the summary's").toBe(".xs-event .xs-bld-cause");
+    }
   });
   it("its facts come from the plain rules", () => {
     const s = toSession(BD)!;

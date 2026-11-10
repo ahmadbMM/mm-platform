@@ -45,6 +45,15 @@ export const pageOf = (href: string) => (/^\/(?!\/)/.test(href) ? (href.match(/^
  *  every page can keep passing it. */
 export const localHref: (href: string, locale: string) => string = (href) => href;
 
+/** A page of the booking app at its own address ("/members", the members' Community page; "/account/badges", where a
+ *  member picks the title they show), on the app staff set (`booking`, Website > Whole site; BOOKING_URL when that is
+ *  no address), in the visitor's language. This site has neither page: a plain "/members" opened its 404. */
+export function bookingPage(path: string, booking: string, locale: string): string {
+  let u: URL;
+  try { u = new URL(path, booking); } catch { u = new URL(path, BOOKING_URL); }
+  return bookingLink(u.toString(), locale);
+}
+
 /** A link to another site, opened in the visitor's language: the booking app reads ?lang= (and
  *  so keeps the language the visitor was reading in). A lang already in the link is kept; a
  *  link on this site is used as typed. */

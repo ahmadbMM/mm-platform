@@ -190,7 +190,8 @@ export default function LearnForm(p: LearnFormProps) {
     setMobile(me?.phone || (who.made ? normalizePhone(a.phone) : ""));
     const waSame = me?.whatsapp_same === true ? "yes" : me?.whatsapp_same === false ? "no" : "";
     const g = me?.gender === "male" || me?.gender === "female" ? me.gender : "";
-    const h = typeof me?.height === "number" && me.height > 0 ? String(me.height) : "";
+    // a height the form would refuse (an old row, a typo: 6, 300) is asked again, or step 2 could never be sent
+    const h = typeof me?.height === "number" && me.height >= HEIGHT[0] && me.height <= HEIGHT[1] ? String(me.height) : "";
     const heard = (HEARD as readonly string[]).includes(me?.heard_from || "") ? (me?.heard_from as Heard) : "";
     const birth = /^\d{4}-\d{2}-\d{2}$/.test(me?.birth_date || "") ? me!.birth_date! : "";
     if (birth) setBd({ y: birth.slice(0, 4), m: birth.slice(5, 7), d: birth.slice(8, 10) });

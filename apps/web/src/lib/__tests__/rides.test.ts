@@ -204,6 +204,35 @@ describe("loadRides", () => {
     await memoSettled();
   });
 
+  it("takes the bikes out of service off the places left, as the booking app's spotsLeft and the database's _out_bikes_guard (2026-11-06)", async () => {
+    const f = vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/10" } });
+      if (url.includes("ride_prices")) return json(PRICES);
+      return json([row({ capacity: 12, out_bikes: { Hybrid: 2 } }), row({ id: "2026-09-28", session_date: "2026-09-28", out_bikes: { Road: 1.7, Kids: -3, Gravel: "x" } }),
+        row({ id: "2026-09-29", session_date: "2026-09-29", capacity: 12, out_bikes: { Road: 5 } }), row({ id: "2026-09-30", session_date: "2026-09-30", out_bikes: {} })]);
+    });
+    const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
+    expect(reads[0]).toContain(",closed_types,out_bikes&");
+    // 12 less 2 out less 10 booked: none left, where the cards said 2; 12 - 1 - 10; never below none; nothing out
+    expect(r!.sessions.map((x) => [x.id, x.out, x.left])).toEqual([["2026-09-27", 2, 0], ["2026-09-28", 1, 1], ["2026-09-29", 5, 0], ["2026-09-30", 0, 2]]);
+    await memoSettled();
+  });
+
+  it("reads on without the bikes out of service on a database that does not have the column, counting none", async () => {
+    const f = vi.fn(async (url: string, init?: RequestInit) => {
+      if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/10" } });
+      if (url.includes("ride_prices")) return json(PRICES);
+      return url.includes("out_bikes") ? json({ code: "42703", message: "column list_sessions.out_bikes does not exist" }, 400) : json([row({ capacity: 12 })]);
+    });
+    const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
+    const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
+    expect(reads).toHaveLength(2);
+    expect(reads[1]).toContain(",gender_only,closed_types&session_date=gte.2026-09-25");
+    expect(r!.sessions.map((x) => [x.id, "out" in x, x.left])).toEqual([["2026-09-27", false, 2]]);
+    await memoSettled();
+  });
+
   it("counts a rider on their own bike on a Petromin night, where they hold a place (_ownTakesPlace)", async () => {
     const f = vi.fn(async (url: string, init?: RequestInit) => {
       if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/10" } });
@@ -235,9 +264,9 @@ describe("loadRides", () => {
       : url.includes("meet_url") ? json({ code: "42703", message: "column sessions.meet_url does not exist" }, 400) : json([row({})])));
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
-    expect(reads[0]).toContain("needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only,closed_types&session_date=gte.2026-09-25");
+    expect(reads[0]).toContain("needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only,closed_types,out_bikes&session_date=gte.2026-09-25");
     // the place alone is left out: the breakfast stop and the announce time are groups of their own
-    expect(reads[1]).toContain("needs_approval,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only,closed_types&session_date=gte.2026-09-25");
+    expect(reads[1]).toContain("needs_approval,description,price,route_slug,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only,closed_types,out_bikes&session_date=gte.2026-09-25");
     expect(r?.sessions.map((x) => x.id)).toEqual(["2026-09-27"]);
     await memoSettled();
   });
@@ -249,7 +278,7 @@ describe("loadRides", () => {
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(1);
-    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only,closed_types&");
+    expect(reads[0]).toContain("select=id,session_date,status,title,ride_kind,event_kind,bike_slots,open_to_all,paid_ride,capacity,needs_approval,description,price,route_slug,location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,vl,gender_only,closed_types,out_bikes&");
     expect(r?.sessions.map((x) => [x.id, x.breakfast, x.breakfastAr])).toEqual([["sat", "Bean Box", "بين بوكس"], ["2026-09-27", null, null]]);
     await memoSettled();
   });
@@ -261,7 +290,7 @@ describe("loadRides", () => {
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[1]).toContain("location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,gender_only,closed_types&session_date=gte.2026-09-25");
+    expect(reads[1]).toContain("location,meet_url,breakfast_name,breakfast_name_ar,reveal_at,gender_only,closed_types,out_bikes&session_date=gte.2026-09-25");
     expect(r!.sessions[0]).toMatchObject({ id: "2026-10-26-vl", kind: "vlap", price: 150 });
     expect("vl" in r!.sessions[0]).toBe(false);
     await memoSettled();
@@ -273,7 +302,7 @@ describe("loadRides", () => {
     const r = await loadRides(f as unknown as typeof fetch, Date.parse("2026-09-24T21:30:00Z"));
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[1]).toContain("needs_approval,description,price,route_slug,location,meet_url,reveal_at,vl,gender_only,closed_types&session_date=gte.2026-09-25");
+    expect(reads[1]).toContain("needs_approval,description,price,route_slug,location,meet_url,reveal_at,vl,gender_only,closed_types,out_bikes&session_date=gte.2026-09-25");
     const s = r!.sessions[0];
     expect(s).toMatchObject({ id: "sat", kind: "saturday", location: null, meetUrl: null });
     expect("breakfast" in s || "breakfastAr" in s).toBe(false);
@@ -515,8 +544,8 @@ describe("men only, women only or mixed (the owner, 2026-10-27; rentals 20261027
     const r = await loadRides(f as unknown as typeof fetch, AT);
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[0]).toContain(",vl,gender_only,closed_types&session_date=gte.2026-10-27");
-    expect(reads[1]).toContain(",reveal_at,vl,closed_types&session_date=gte.2026-10-27");
+    expect(reads[0]).toContain(",vl,gender_only,closed_types,out_bikes&session_date=gte.2026-10-27");
+    expect(reads[1]).toContain(",reveal_at,vl,closed_types,out_bikes&session_date=gte.2026-10-27");
     expect(r!.sessions.map((s) => [s.id, s.gender])).toEqual([["2026-10-29-sw", null]]);
     await memoSettled();
   });
@@ -527,8 +556,8 @@ describe("men only, women only or mixed (the owner, 2026-10-27; rentals 20261027
     const r = await loadRides(f as unknown as typeof fetch, AT);
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[0]).toContain(",gender_only,closed_types&session_date=gte.2026-10-27");
-    expect(reads[1]).toContain(",vl,gender_only&session_date=gte.2026-10-27");
+    expect(reads[0]).toContain(",gender_only,closed_types,out_bikes&session_date=gte.2026-10-27");
+    expect(reads[1]).toContain(",vl,gender_only,out_bikes&session_date=gte.2026-10-27");
     expect(r!.sessions.map((s) => [s.id, s.closedTypes])).toEqual([["2026-10-29-sw", []]]);
     await memoSettled();
   });
