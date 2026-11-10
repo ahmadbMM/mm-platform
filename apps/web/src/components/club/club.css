@@ -134,8 +134,11 @@ html:is([lang="ar"], [lang="ur"]) .club-members h3 { letter-spacing: 0; }
 .club-up li { display: grid; grid-template-columns: 1fr auto; align-items: center; }
 .club-up li strong { grid-column: 1; }
 .club-up li > em, .club-up li > a, .club-up li > small { grid-column: 2; grid-row: 1 / span 2; }
-.club-up li.closed strong, .club-up li.closed .club-up-when { color: #8a8f8a; }
+/* the grey goes when the window opens and its Book shows (components/site/OpensIn.tsx) */
+.club-up li.closed:not(:has(> a)) strong, .club-up li.closed:not(:has(> a)) .club-up-when { color: #8a8f8a; }
 .club-up li small { font-size: 12px; font-weight: 700; color: #8a5c14; text-align: end; max-width: 160px; }
+/* a ride not open yet: a clock beside when it opens, never the grey alone (WCAG 1.4.1), as on Experiences */
+.club-up li small.club-wait { display: inline-flex; align-items: center; justify-content: flex-end; justify-self: end; gap: 5px; }
 .club-ann li { font-size: 14px; color: #2b332d; line-height: 1.55; }
 
 /* The member's title (the owner, 2026-11-02). */

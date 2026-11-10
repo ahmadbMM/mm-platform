@@ -27,3 +27,15 @@ export function durText(d: { h: number; m: number }, w: { hm: string; h: string;
   const put = (s: string) => s.replace("{h}", String(d.h)).replace("{m}", String(d.m));
   return put(d.h === 0 ? w.m : d.m === 0 ? w.h : w.hm);
 }
+
+/** The countdown's words in the page's language (lib/booking-window.ts opensInWords). */
+export type OpensWords = { opensIn: string; hm: string; h: string; m: string };
+
+/** What a date not open to book yet says at `nowMs`: the countdown within a day of `at`, `text` (the server's words,
+ *  "Booking opens Sun 5 Oct at 9 AM") further away or before the browser's clock is read, null once it has opened. */
+export function opensLine(text: string, at: number | null | undefined, nowMs: number | null, w: OpensWords): string | null {
+  if (at == null || nowMs == null) return text;
+  if (nowMs >= at) return null;
+  const left = opensIn(at, nowMs);
+  return left ? w.opensIn.replace("{0}", durText(left, w)) : text;
+}

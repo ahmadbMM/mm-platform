@@ -13,7 +13,7 @@ import { bookingLink, bookingPage, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { getAccount, rpcServer } from "@/lib/account";
 import { memberArea, memberTitle } from "@/lib/members";
-import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
+import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { kindNames, sessionName, sessionGenders, type RideKind } from "@/lib/rides";
 import { genderBlock, genderChip, genderText, sessionGender } from "@/lib/session-gender";
 import { riyadhClock } from "@/lib/workshop-days";
@@ -78,9 +78,13 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
     const ev = kind === "event" || kind === "workshop" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "arena" ? kind : "community";
     try { const u = new URL(bookingLink(S(c.rides.allHref), locale)); u.searchParams.set("ev", ev); u.searchParams.set("session", id); return u.toString(); } catch { return ridesHref; }
   };
-  const now = riyadhClock(new Date()), today = now.slice(0, 10);
-  const window = siteBookingWindow(content); // a members' ride not open to book yet says when it opens
-  const opens = (date: string) => (window && notOpenYet(date, window, now) ? opensText(date, window, locale, tx) : null);
+  const drawn = new Date();
+  const now = riyadhClock(drawn), today = now.slice(0, 10);
+  // a members' ride not open to book yet says when it opens, beside a clock; within a day of it, a countdown to the
+  // real window that the browser keeps up to date each minute and that turns into Book on time, as on Experiences
+  const window = siteBookingWindow(content);
+  const opens = (date: string) => (window && notOpenYet(date, window, now) ? opensText(date, window, locale, tx, drawn.getTime()) : null);
+  const opensWhen = (date: string) => (window ? opensAt(date, window) : null);
   const sgWords = genderText(tx); // a members' ride's chip (men only, women only, or mixed on a pool session) and refusal
   const words = lines(S(c.hero.marquee));
   const earn = [
@@ -128,7 +132,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         )}
         <section className="club-join" id="card">
           {members?.member ? (
-            <MembersArea title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens}
+            <MembersArea title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens} opensAt={opensWhen} opensWords={opensInWords(tx)}
               sgOf={(r) => (r.gender === undefined ? null : genderChip(r, sgWords))} refusalOf={(r) => genderBlock(r, viewer, sgWords)} />
           ) : members ? (
             <div className="club-lookup">

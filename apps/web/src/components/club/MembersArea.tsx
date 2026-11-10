@@ -7,6 +7,8 @@ import { announcementsOf, isBirthday, type MemberArea, type MemberTitle, type Me
 import type { GenderChip } from "@/lib/session-gender";
 import { T } from "./MembersArea.text";
 import { ArrowIcon } from "@/components/site/Icons";
+import OpensIn from "@/components/site/OpensIn";
+import type { OpensWords } from "@/lib/opens-in";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
 // their card - name, since when, credits, tier and what is left to the next - their attendance
@@ -29,6 +31,10 @@ type Props = {
   /** Whether each upcoming ride may be booked yet (the booking window): null when it may, else the
    *  words for when it opens. */
   opens?: (date: string) => string | null;
+  /** When such a ride opens (epoch ms, lib/booking-window.ts opensAt), and the countdown's words: within a day of it the
+   *  ride counts down to it beside a clock, and its Book shows on time (components/site/OpensIn.tsx). */
+  opensAt?: (date: string) => number | null;
+  opensWords?: OpensWords;
   /** An upcoming ride's chip: men only, women only, or mixed on a pool session (the owner, 2026-10-27;
    *  lib/session-gender.ts genderChip); null for none. */
   sgOf?: (r: MemberUpcoming) => GenderChip | null;
@@ -42,7 +48,7 @@ type Props = {
   accountHref?: string;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, sgOf, refusalOf, title, communityHref, accountHref }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref }: Props) {
   const t = serverLocalize(T, locale);
   const N = (n: number) => fmtNum(n, locale);
   const arrow = <ArrowIcon size={15} />;
@@ -105,11 +111,14 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
               const closed = opens ? opens(r.date) : null;
               const sg = sgOf ? sgOf(r) : null;
               const refusal = refusalOf ? refusalOf(r) : null;
+              const book = <a href={bookAt(r.id, r.kind)}>{t.book} {arrow}</a>;
               return (
                 <li key={r.id} className={closed ? "closed" : ""}>
                   <span className="club-up-when">{day(r.date)}{r.time ? <> · {when(r.time)}</> : null}</span>
                   <strong>{nameOf(r.kind, r.title)}{sg && <> <span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span></>}</strong>
-                  {r.booked ? <em>{t.booked}</em> : refusal ? <small>{refusal}</small> : closed ? <small>{closed}</small> : <a href={bookAt(r.id, r.kind)}>{t.book} {arrow}</a>}
+                  {r.booked ? <em>{t.booked}</em> : refusal ? <small>{refusal}</small>
+                    : closed && opensWords ? <OpensIn as="small" className="club-wait" text={closed} at={opensAt ? opensAt(r.date) : null} words={opensWords}>{book}</OpensIn>
+                    : closed ? <small>{closed}</small> : book}
                 </li>
               );
             })}
