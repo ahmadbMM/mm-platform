@@ -74,4 +74,18 @@ describe("the way to the portal", () => {
     expect(f).not.toHaveBeenCalled();
     expect((await GET(req(signedIn))).headers.get("location")).toBe("https://volunteer.micromobility.sa/");
   });
+  // A code is made in the database of the site that serves the request: staging's means nothing to the live portal.
+  it("on staging, hands over to the portal it is given, and to the live one only without a code", async () => {
+    const code = "d".repeat(48);
+    const f = vi.fn(async () => new Response(JSON.stringify(code), { status: 200 }));
+    vi.stubGlobal("fetch", f);
+    vi.stubEnv("MM_ENV", "staging");
+    expect((await GET(req(signedIn))).headers.get("location")).toBe("https://volunteer.micromobility.sa/");
+    expect(f).not.toHaveBeenCalled();
+    vi.stubEnv("VOLUNTEER_PORTAL_URL", "https://volunteers-staging.example.workers.dev");
+    expect((await GET(req(signedIn))).headers.get("location")).toBe(`https://volunteers-staging.example.workers.dev/?signin=${code}`);
+    expect((await GET(req())).headers.get("location")).toBe("https://volunteers-staging.example.workers.dev/");
+    vi.stubEnv("VOLUNTEER_PORTAL_URL", "http://volunteers-staging.example.workers.dev/"); // https only
+    expect((await GET(req(signedIn))).headers.get("location")).toBe("https://volunteer.micromobility.sa/");
+  });
 });

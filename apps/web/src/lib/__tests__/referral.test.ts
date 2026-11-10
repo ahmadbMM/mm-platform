@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { POST } from "@/app/api/account/referrer/route";
 import { REFERRAL_WORDS } from "@/components/account/Referral.words";
+import { ACCOUNT_COOKIE, encodeSession } from "@/lib/account-core";
 import { referralLink, referralOf, referralRodeOf, referrerBody, referrerReason } from "@/lib/referral";
 import { badgeList } from "@/lib/ride-record";
 
@@ -60,6 +62,7 @@ describe("referrals", () => {
     expect(referrerReason({ ok: false, reason: "not_new" })).toBe("not_new");
     expect(referrerReason({ ok: false, reason: "drop table" })).toBe("invalid");
     expect(referrerReason(null)).toBe("invalid");
+    expect(referrerReason({ ok: false, reason: "busy" })).toBe("busy"); // the database's meter for the address is full
   });
 
   it("has every word in every language, with the placeholders", () => {
@@ -86,5 +89,39 @@ describe("referrals", () => {
     expect(r?.lvN).toBe(2);
     const none = badgeList([], new Map(), { ...data, referralRode: null }, "2026-11-08", null);
     expect(none.some((x) => x.slug === "recruiter" || x.lv?.some((y) => y.slug === "recruiter"))).toBe(false);
+  });
+});
+
+// The database meters friend's codes per address (_ip_gate): the site's call names the rider's, with the site's key.
+describe("a friend's code from the website", () => {
+  afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
+  const send = (ip?: string) => POST(new Request("https://micromobility.sa/api/account/referrer", { method: "POST",
+    headers: { origin: "https://micromobility.sa", "content-type": "application/json", cookie: `${ACCOUNT_COOKIE}=${encodeSession({ id: "c1", token: "tok-0123456789abcdef" })}`, ...(ip ? { "cf-connecting-ip": ip } : {}) },
+    body: JSON.stringify({ code: "K7MQ2X" }) }));
+  const db = (answer: unknown) => {
+    const seen: Headers[] = [];
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
+    vi.stubGlobal("fetch", vi.fn(async (_u: string, o: RequestInit) => { seen.push(new Headers(o.headers)); return new Response(JSON.stringify(answer), { status: 200 }); }));
+    return seen;
+  };
+  it("names the rider's address only with the site's key", async () => {
+    let seen = db({ ok: true });
+    expect((await send("203.0.113.7")).status).toBe(200);
+    expect(seen[0].get("x-mm-visitor-ip")).toBeNull(); // no key: as before
+    vi.stubEnv("MM_SITE_KEY", "site-key-0123456789");
+    seen = db({ ok: true });
+    await send("203.0.113.7");
+    expect(seen[0].get("x-mm-visitor-ip")).toBe("203.0.113.7");
+    expect(seen[0].get("x-mm-site-key")).toBe("site-key-0123456789");
+    seen = db({ ok: true });
+    await send();
+    expect(seen[0].get("x-mm-site-key")).toBeNull(); // no address, nothing to name
+  });
+  it("says a full meter is busy, not a wrong code", async () => {
+    db({ ok: false, reason: "busy" });
+    const r = await send("203.0.113.7");
+    expect(r.status).toBe(429);
+    expect(await r.json()).toEqual({ ok: false, error: "busy" });
   });
 });
