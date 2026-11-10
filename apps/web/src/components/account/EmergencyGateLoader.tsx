@@ -3,13 +3,14 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import EmergencyGate, { type EmDone } from "./EmergencyGate";
-import WaiverGateLoader from "./WaiverGateLoader";
+import SportGateLoader from "./SportGateLoader";
 import { EM_QUIET } from "./quiet";
 
 // The account's emergency contact on every page (the owner, 2026-10-07: required and unskippable for
-// every customer; the booking app's check-up), before every other pop-up: this loader holds the
-// waivers (WaiverGateLoader, which holds Run for Her's agreement and the post-ride rating in turn)
-// until it has asked and the account has its contact, and takes them down again while its pop-up is
+// every customer; the booking app's check-up), before every other pop-up: this loader holds a
+// Community member's sport question (SportGateLoader, 2026-11-10), which holds the waivers
+// (WaiverGateLoader, which holds Run for Her's agreement and the post-ride rating in turn) - until it
+// has asked and the account has its contact, and takes them down again while its pop-up is
 // up. As the waiver does, it asks /api/account/emergency, which answers a signed-out visitor from the
 // cookie alone: a signed-out answer is asked again on the next page, a signed-in "has one" is kept
 // for ten minutes in this tab (a contact is not taken off an account on its own), and an account
@@ -62,5 +63,5 @@ export default function EmergencyGateLoader({ locale }: { locale: string }) {
   };
 
   if (need) return <EmergencyGate two={need.two} onDone={done} />;
-  return clear ? <WaiverGateLoader locale={locale} /> : null;
+  return clear ? <SportGateLoader locale={locale} /> : null;
 }
