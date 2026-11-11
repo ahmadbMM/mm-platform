@@ -79,6 +79,13 @@ describe("POST /api/login", () => {
     expect(res.headers.get("set-cookie")).toBeNull();
   });
 
+  it("sends a mobile login typed in Arabic digits with Western ones", async () => {
+    answer = dbJson({ id: 7, token: TOKEN, must_change: false });
+    const res = await worker.fetch(post("/api/login", { login: " \u0660\u0665\u0660\u0661\u0662\u0663\u06F4\u06F5\u06F6\u06F7 ", password: "Secret123" }), env());
+    expect(res.status).toBe(200);
+    expect(calls[0].body).toEqual({ p_login: "0501234567", p_pwd: "Secret123" });
+  });
+
   it("answers LOCKED with 429", async () => {
     answer = dbError("LOCKED");
     const res = await worker.fetch(post("/api/login", { login: "a@b.c", password: "x" }), env());

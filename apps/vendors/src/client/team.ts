@@ -47,6 +47,7 @@ export async function renderTeam(main: HTMLElement): Promise<void> {
     const res = await rpc<number>("vendor_logout_others");
     busy(go, false, t("signOutOthers"));
     if (!res.ok) { msg.append(errorNote(res.code)); return; }
+    if (app.me) app.me.user.sessions = 1;
     const text = t("signedOutOthers", { n: Number(res.data) || 0 });
     msg.append(note("ok", text));
     announce(text);

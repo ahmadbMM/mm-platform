@@ -242,9 +242,12 @@ export function openBooking(preselect?: Iso): void {
   }
 
   function resultStage(res: { requested: number; days: Checked[] }): void {
-    clear(dlg.body);
     const n = res.requested || 0;
     const text = n === 0 ? t("resultNone") : `${tn("datesRequested", n)} ${t("resultAfter")}`;
+    // Closed (X or Escape) while the request was on its way: its close has already run, so the
+    // calendar is redrawn now and the result said, not left waiting for a close that never comes.
+    if (!dlg.el.open) { announce(text); onDone(); return; }
+    clear(dlg.body);
     const done = button(t("done"), { kind: "primary", onclick: () => { dlg.close(); } });
     dlg.body.append(h("h3", {}, t("resultTitle")), note(n ? "ok" : "warn", text), verdictList(res.days || []), h("div", { class: "actions" }, done));
     announce(text);
