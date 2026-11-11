@@ -337,14 +337,17 @@
   // The time and the picks made to fit the cabinet read: a time no longer open goes, then any locker no longer free,
   // then any beyond what this account may still hold for that time. True when a pick went and that was said.
   function settle(tell) {
-    var kind = kindNow(), open = openPeriods(board, kind), said = null;
-    if (period && open.indexOf(period) < 0) period = null;
+    var kind = kindNow(), open = openPeriods(board, kind), said = null, lost = false;
+    if (period && open.indexOf(period) < 0) { period = null; lost = picked.length > 0; }
     if (!period) period = open.filter(function (p) { return changing || leftOf(board, p) !== 0; })[0] || open[0] || null;
     var gone = picked.filter(function (c) { return !period || !freeFor(board, period, c); });
     if (gone.length) {
       picked = picked.filter(function (c) { return gone.indexOf(c) < 0; });
       if (tell && board.kind) said = ["Locker {n} was just taken. Pick another.", { n: gone[0] }];
     }
+    // The time the lockers were picked for is over (or closed): said, and the rider back on the cabinet, never left
+    // to reserve the next time without choosing it.
+    if (lost && tell && board.kind) said = ["That time is over or closed. Pick another."];
     if (picked.length > room()) {
       picked = picked.slice(0, room());
       if (tell) said = ["Up to 3 lockers per account for each time."];
@@ -999,7 +1002,7 @@
   }
   // The session the database no longer knows: forgotten here, and the page as for anyone.
   function quietOut() {
-    acct = null; wallet = undefined; mine = []; pay = null; pendingChange = null;
+    acct = null; wallet = undefined; mine = []; pay = null; names = {}; namesKey = "";
     forgetAcct();
     if (changing) leaveChange();
     paintWho(); paintMine(); paintPick();
@@ -1007,8 +1010,10 @@
   $$(".who-out").forEach(function (b) {
     b.addEventListener("click", function () {
       if (busy) return;
+      pendingChange = null;
       quietOut(); hideBanner();
       if (view !== "landing") backToPick();
+      loadEvenings();
     });
   });
 
@@ -1024,7 +1029,7 @@
     else backToPick();
   }
   function signedOut() {
-    acct = null; wallet = undefined; mine = []; pay = null;
+    acct = null; wallet = undefined; mine = []; pay = null; names = {}; namesKey = "";
     forgetAcct();
     if (changing) leaveChange();
     showBanner("You were signed out. Sign in again to reserve.");
@@ -1056,7 +1061,7 @@
   }
   function mineOf(x) {
     return { id: String(x.id), booking_id: x.booking_id || null, day: x.day, period: x.period, status: String(x.status || ""), pay: x.pay || null, paid: x.paid === true,
-      code: x.code != null && String(x.code) ? String(x.code) : null, name: clean(x.name) };
+      billPaid: x.bill_paid === true, code: x.code != null && String(x.code) ? String(x.code) : null, name: clean(x.name) };
   }
   var P_ORDER = { early: 0, pm: 1, both: 2, late: 3 };
   // From today on, still reserved or with the rider: the number (once known), the evening and the time.
@@ -1068,7 +1073,7 @@
   // How a locker is paid, in the booking app's words (lkPaidWallet, lkPayDesk); one on a booking is on its bill.
   function payText(r) { return r.booking_id ? tr("On your booking") : r.pay === "wallet" && r.paid ? tr("Paid from your wallet") : tr("Pay at the desk"); }
   function deskRow(r) {
-    var mayChange = r.status === "reserved", mayDrop = mayChange && !r.booking_id;
+    var mayChange = r.status === "reserved" && !(r.booking_id && r.billPaid), mayDrop = mayChange && !r.booking_id;
     return '<li class="desk-row"><span class="desk-n" aria-hidden="true">' + (r.code ? esc(r.code) : '<svg><use href="#i-lock"/></svg>') + "</span>" +
       '<span class="desk-t"><b>' + esc(r.code ? tr("Locker {n}", { n: r.code }) : tr("Locker")) + (r.name ? ' · <bdi>' + esc(r.name) + "</bdi>" : "") + "</b>" +
       "<small>" + esc(spanOf(r.period)) + " · " + esc(payText(r)) + "</small>" + (r.status === "in_use" ? '<span class="chip sm st-use">' + esc(tr("In use")) + "</span>" : "") + "</span>" +
@@ -1149,7 +1154,7 @@
   function openChange(id) {
     pendingChange = null;
     var r = mine.filter(function (x) { return x.id === id; })[0];
-    if (r && r.status === "reserved") { enterChange(r); return; }
+    if (r && r.status === "reserved" && !(r.booking_id && r.billPaid)) { enterChange(r); return; }
     backToPick(); showBanner("This locker can't be changed now. Ask at the desk.");
   }
   function leaveChange() {
