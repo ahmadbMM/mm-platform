@@ -200,6 +200,7 @@ html[dir="rtl"] .mmf-petromin .back-arrow { transform: scaleX(-1); }
   font-weight: 700; font-size: 15px; color: var(--ink);
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
+.mmf-petromin .tile[hidden] { display: none; }
 .mmf-petromin .tile:hover { border-color: var(--ink); }
 .mmf-petromin .tile:active { transform: scale(0.97); }
 .mmf-petromin .tile[aria-checked="true"] { background: var(--ink); color: var(--neon); border-color: var(--ink); }

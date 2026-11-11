@@ -24,7 +24,7 @@ test('a dash in a name becomes a space; digits and emoji go; what is sent has ne
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
   await page.click('#add-rider');
-  await page.fill('#rd-name', 'Sara Bin-Ali😀');
+  await page.fill('#rd-name', 'Sara Bin-Ali😀\u2764\uFE0F'); // a picked emoji leaves its variation selector behind
   await expect(page.locator('#rd-name')).toHaveValue('Sara Bin Ali');
   await expect(page.locator('#rd-f-name .err')).toHaveText('Names can only contain letters, spaces and periods.');
   await page.fill('#rd-height', '160');
@@ -42,6 +42,7 @@ test('a dash in a name becomes a space; digits and emoji go; what is sent has ne
 
 test('a booking saved with a dashed name reopens without the dash', async ({ page }) => {
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
+  await page.route('**/rest/v1/rpc/rider_lookup', (r) => r.abort()); // Edit asks the server first; with no answer the phone's copy is used
   await page.addInitScript(() => localStorage.setItem('mm-petromin-registration', JSON.stringify({ badge: 'A-12', name: 'Amal Al-Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Hybrid', session: { id: '2099-02-08-pw', start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' }, bookingNo: 'P-001', riders: [{ name: 'Kerry-Ann', height: 160, type: 'Hybrid' }], submittedAt: '2099-02-01T10:00:00Z' })));
   await page.goto('/petromin?lang=en');
   await page.click('#edit');

@@ -245,6 +245,7 @@ input:focus-visible { outline: none; }
   font-weight: 700; font-size: 15px; color: var(--ink);
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
+.tile[hidden] { display: none; }
 .tile:hover { border-color: var(--ink); }
 .tile:active { transform: scale(0.97); }
 .tile[aria-checked="true"] { background: var(--ink); color: var(--neon); border-color: var(--ink); }
