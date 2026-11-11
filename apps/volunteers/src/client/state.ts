@@ -130,7 +130,8 @@ export async function load(): Promise<void> {
 // shows when it is opened is the only news a volunteer gets, so it has to be current. ──
 let inFlight: Promise<boolean> | null = null;
 let lastRead = 0;
-const snap = () => JSON.stringify([S.me, S.prof, S.opps]);
+// the error too: a background read that failed, then one that worked, has to take the error off the page
+const snap = () => JSON.stringify([S.me, S.prof, S.opps, S.err]);
 /** Reads everything again behind the page; true when something changed. One read at a time, and none within a few
  *  seconds of the last when the app comes back to the front; a tab change (now) always reads. */
 export function refresh(now = false): Promise<boolean> {

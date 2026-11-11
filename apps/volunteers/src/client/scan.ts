@@ -5,7 +5,7 @@
 type Detector = { detect(src: CanvasImageSource): Promise<{ rawValue: string }[]> };
 type JsQr = (d: Uint8ClampedArray, w: number, h: number, o?: { inversionAttempts?: string }) => { data: string } | null;
 declare global {
-  interface Window { jsQR?: JsQr; BarcodeDetector?: new (o: { formats: string[] }) => Detector }
+  interface Window { jsQR?: JsQr; BarcodeDetector?: { new (o: { formats: string[] }): Detector; getSupportedFormats?: () => Promise<string[]> } }
 }
 
 /** A ticket's reference and number, or null for anything else. */
@@ -50,10 +50,22 @@ export async function startScanner(video: HTMLVideoElement, onText: (txt: string
   }
   let detector: Detector | null = null;
   let jsqr: JsQr | null = null;
-  try { if (window.BarcodeDetector) detector = new window.BarcodeDetector({ formats: ["qr_code"] }); } catch { detector = null; }
+  // The browser's reader only where it says it reads QR codes: an Android phone without Google's services has the
+  // reader but nothing behind it, and read nothing at all without a word.
+  try {
+    const BD = window.BarcodeDetector;
+    const formats = BD && typeof BD.getSupportedFormats === "function" ? await BD.getSupportedFormats().catch(() => [] as string[]) : null;
+    if (BD && (!formats || formats.includes("qr_code"))) detector = new BD({ formats: ["qr_code"] });
+  } catch { detector = null; }
   if (!detector) {
     try { jsqr = await loadJsQr(); } catch { stop(); onFail(); return { stop }; }
   }
+  // A reader that fails frame after frame gives way to jsQR.
+  let misses = 0;
+  const toJsQr = async () => {
+    detector = null;
+    try { jsqr = await loadJsQr(); } catch { if (!stopped) { stop(); onFail(); } }
+  };
   // the camera's light, if the track says it has one (MediaTrackCapabilities.torch)
   const track: MediaStreamTrack | undefined = stream.getVideoTracks()[0];
   let torch: Scanner["torch"];
@@ -72,7 +84,8 @@ export async function startScanner(video: HTMLVideoElement, onText: (txt: string
     try {
       if (video.readyState >= 2 && video.videoWidth) {
         if (detector) {
-          const hits = await detector.detect(video);
+          let hits: { rawValue: string }[] = [];
+          try { hits = await detector.detect(video); misses = 0; } catch { if (++misses >= 5) await toJsQr(); }
           if (hits[0]?.rawValue) onText(hits[0].rawValue);
         } else if (jsqr && ctx) {
           const scale = Math.min(1, 640 / video.videoWidth);

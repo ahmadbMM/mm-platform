@@ -84,12 +84,15 @@ async function withdraw(x: Mine, reason: string | null): Promise<void> {
 // ── Still coming? (from 48 hours before) ──
 export async function comingYes(x: Mine): Promise<void> {
   const r = await rpc<{ coming_at: string }>("volunteer_coming", { p_session: x.id, p_yes: true });
-  if (!r.ok) { noteErr(r); render(); return; }
+  if (!r.ok) { noteErr(r); if (r.code === "VOL_CLOSED") await load(); render(); return; } // what the server knows wins
   x.coming_at = r.data?.coming_at || new Date().toISOString();
   setQuiet(t("comingYes"));
   render();
 }
-export const needsComing = (x: Mine) => isAhead(x) && "coming_at" in x && !x.coming_at && startOf(x) - Date.now() <= 48 * 3600000;
+/** Until the session starts (its time, else when volunteers may start), as volunteer_coming has it: from then on the
+ *  database refuses both "Still coming?" and "I can no longer help". */
+export const beforeStart = (x: Mine) => { const at = Date.parse(x.starts_at ?? x.opens_at ?? ""); return !Number.isFinite(at) || Date.now() < at; };
+export const needsComing = (x: Mine) => isAhead(x) && "coming_at" in x && !x.coming_at && beforeStart(x) && startOf(x) - Date.now() <= 48 * 3600000;
 
 // ── the plan: "What time will you leave?" (one optional question; skipped is remembered on this phone) ──
 const SKIP_KEY = "mm_vol_plan_skip";
