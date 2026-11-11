@@ -16,7 +16,7 @@
 // customer_set_socials, the name trigger) and answers with the codes profileError reads.
 import { NATIONALITIES } from "@/content/nationalities";
 import { HEARD, type Heard } from "./learn";
-import { riyadhToday } from "./learn";
+import { passwordProblem, riyadhToday } from "./learn";
 
 export { HEARD, type Heard };
 
@@ -346,8 +346,9 @@ export function profileError(message: string, details = ""): "name_chars" | "nam
 
 // ── Passwords ────────────────────────────────────────────────────────────────────────────────
 
-/** The booking app's password rule: 8 characters or more, a capital letter and a digit. */
-export const passwordOk = (p: string) => p.length >= 8 && p.length <= 200 && /[A-Z]/.test(p) && /[0-9]/.test(p);
+/** The booking app's password rule (2026-11-11): 8 characters or more and not a common one (lib/learn's passwordProblem,
+ *  the database's _pwd_common); at most 200. */
+export const passwordOk = (p: string) => p.length <= 200 && passwordProblem(p) === null;
 export type PasswordError = "bad" | "weak" | "same" | "locked" | "notdue" | "signin" | "generic";
 /** customer_change_password / customer_set_own_password's refusals. */
 export function passwordError(message: string): PasswordError {

@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { normalizePhone, rpcResult } from "@/lib/rpc-client";
 import {
-  ACCOUNT_HEIGHT, AGE, HEARD, HEIGHT, LEVELS, MAX_LEARNERS, WHO, accountArgs, accountNameOk, learnPayload, noticeDue, riyadhToday, signinIdentifier,
+  ACCOUNT_HEIGHT, AGE, HEARD, HEIGHT, LEVELS, MAX_LEARNERS, WHO, accountArgs, accountNameOk, learnPayload, noticeDue, passwordOldRuleMiss, riyadhToday, signinIdentifier,
   type AccountFields, type Gender, type Heard, type LearnFields, type LearnerFields, type LearnPayload, type LearnProblem,
 } from "@/lib/learn";
 import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
 import { useLocalize } from "@/i18n/TxProvider";
 import NoticeLink from "@/components/privacy/NoticeLink";
 import ChangePassword, { type PwdLook } from "@/components/account/ChangePassword";
+import PasswordBox from "@/components/account/PasswordBox";
 import Turnstile, { TURNSTILE_SITE_KEY } from "@/components/account/Turnstile";
 import EmergencyFields, { type EmLook, type EmProblem } from "@/components/account/EmergencyFields";
 import { EM_EMPTY, emAbsent, emReadBoth, emRefusal, emState, type EmContact, type EmFields } from "@/lib/emergency";
@@ -23,7 +24,7 @@ import { ArrowIcon, TickIcon } from "@/components/site/Icons";
 // 2026-09-30: "apply the 2 steps registration on learn to ride too and add a question asking if the
 // learner has an account or not, if he has skip the sign up procedure"):
 //   1. the account. "Do you already have a Micromobility account?" - No: the booking app's own
-//      sign-up (first and last name, gender, email, mobile, password twice, height, the Privacy
+//      sign-up (first and last name, gender, email, mobile, password with show/hide, height, the Privacy
 //      Notice and ride news; customer_exists, customer_signup, customer_consents), after which the
 //      card says the account has been created. Yes: sign in with the email or mobile and password,
 //      through the site's own sign-in (api/account: its tries a minute and its Turnstile check,
@@ -91,7 +92,7 @@ const FIELD_OF: Record<string, string> = { learner_who: "who", learner_name: "na
   level: "level", whatsapp: "whatsapp", birth_date: "birth", birth_young: "birth", gender: "gender", nationality: "nationality", height: "height",
   instagram: "instagram", linkedin: "linkedin", profession: "profession", workplace: "workplace", heard_from: "heard", notes: "notes" };
 const EMPTY: LearnerFields = { who: "", name: "", age: "", gender: "", height: "", level: "" };
-const NO_ACCOUNT: AccountFields = { first: "", last: "", gender: "", email: "", phone: "", password: "", password2: "", height: "", privacy: false, news: false };
+const NO_ACCOUNT: AccountFields = { first: "", last: "", gender: "", email: "", phone: "", password: "", height: "", privacy: false, news: false };
 // Where the Privacy Notice's name goes in the translated sentence (LearnForm.text.ts, privacy).
 const SLOT = "\u0000";
 // A range as the box's hint, kept left to right in Arabic and Urdu too ("3–17", never "17–3").
@@ -355,7 +356,7 @@ export default function LearnForm(p: LearnFormProps) {
     if (busy) return;
     setErr(null);
     const r = accountArgs(a);
-    if ("error" in r) return setErr({ text: t.errors[r.error] || t.errors.generic, field: r.error });
+    if ("error" in r) return setErr({ text: t.errors[r.error] || t.errors.generic, field: r.error === "password_common" ? "password" : r.error });
     // The emergency contact, before the account is made: required, the second when filled.
     const ec = emReadBoth(em1, em2, r.args.p_phone);
     if ("error" in ec) return emShow(ec);
@@ -371,6 +372,8 @@ export default function LearnForm(p: LearnFormProps) {
       const s = await rpcResult<{ id: string; session_token: string }[]>("customer_signup", { p_id: newId, ...r.args });
       if ("error" in s) {
         const m = `${s.error.code || ""} ${s.error.message || ""}`;
+        // WEAK_PASSWORD: the database still asks the old rule (an upper-case letter and a digit), or knows it as a common one
+        if (/WEAK_PASSWORD/.test(m)) return setErr({ text: passwordOldRuleMiss(r.args.p_pwd) ? t.errors.password_old : t.errors.password_common, field: "password" });
         return setErr({ text: /name_short|name_chars/.test(m) ? t.errors.first : /23505|DUPLICATE/i.test(m) ? t.errors.email_taken : /RATE_LIMITED/.test(m) ? t.errors.rate_limited : t.errors.generic });
       }
       const tok = Array.isArray(s.data) ? s.data[0]?.session_token : "";
@@ -388,7 +391,7 @@ export default function LearnForm(p: LearnFormProps) {
       return setErr({ text: t.errors.consents });
     }
     made.current = null;
-    setA((x) => ({ ...x, password: "", password2: "" }));
+    setA((x) => ({ ...x, password: "" }));
     // Then the emergency contact typed with the sign-up. Should it not save, the account stays made:
     // step 2 asks for it again, with what was typed and why, and saves it before the lesson is sent.
     const ec = emReadBoth(em1, em2, acc.phone);
@@ -630,12 +633,8 @@ export default function LearnForm(p: LearnFormProps) {
         </label>
         <label className="ln-field">
           <span>{t.password}</span>
-          <input className="ln-input" type="password" value={a.password} onChange={(e) => setAcc("password", e.target.value)} autoComplete="new-password" dir="ltr" maxLength={72} {...bad("password")} />
+          <PasswordBox className="ln-input" value={a.password} onChange={(e) => setAcc("password", e.target.value)} autoComplete="new-password" dir="ltr" maxLength={72} {...bad("password")} />
           <small className="ln-hint">{t.pwdHint}</small>
-        </label>
-        <label className="ln-field">
-          <span>{t.password2}</span>
-          <input className="ln-input" type="password" value={a.password2} onChange={(e) => setAcc("password2", e.target.value)} autoComplete="new-password" dir="ltr" maxLength={72} {...bad("password2")} />
         </label>
         <label className="ln-field">
           <span>{t.height}</span>

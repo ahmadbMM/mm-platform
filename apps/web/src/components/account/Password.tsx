@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
-import { passwordOk } from "@/lib/account-profile";
+import { passwordProblem } from "@/lib/learn";
 import { T } from "./Account.text";
 import { postJson } from "./fields";
 
@@ -36,7 +36,9 @@ function usePwForm(mode: "change" | "forced", needCurrent: boolean | null) {
   async function submit(): Promise<boolean> {
     setErr(""); setDone(false);
     if (mode === "change" && needCurrent === true && !cur) { setErr(t.pwErrors.current); return false; }
-    if (!passwordOk(a)) { setErr(t.pwErrors.weak); return false; }
+    // the booking app's rule (2026-11-11): 8 or more characters, and not a common one
+    const pp = passwordProblem(a);
+    if (pp) { setErr(pp === "short" ? t.pwErrors.weak : t.pwErrors.common); return false; }
     if (a !== b) { setErr(t.pwErrors.mismatch); return false; }
     setBusy(true);
     const r = await postJson("/api/account/password", { mode, current: cur, next: a });

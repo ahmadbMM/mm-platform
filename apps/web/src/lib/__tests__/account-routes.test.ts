@@ -35,7 +35,7 @@ afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 
 describe("every account write route", () => {
   const routes: [Fn, string, unknown][] = [[profile, "/api/account/profile", { changes: {} }], [consents, "/api/account/consents", { rideNews: true }],
-    [deletion, "/api/account/deletion", { request: true }], [password, "/api/account/password", { mode: "change", next: "Secret123" }], [fix, "/api/account/fix", { values: {} }],
+    [deletion, "/api/account/deletion", { request: true }], [password, "/api/account/password", { mode: "change", next: "Corniche42" }], [fix, "/api/account/fix", { values: {} }],
     [photo, "/api/account/photo", "x"]];
   it("refuses another site and a request without the account cookie, without touching the database", async () => {
     const f = vi.fn(async () => reply(true));
@@ -150,26 +150,28 @@ describe("api/account/password", () => {
   it("changes the password and keeps this device signed in with the new token", async () => {
     const f = db({ customer_change_password: NEW_TOKEN });
     vi.stubGlobal("fetch", f);
-    const res = await post(password, "/api/account/password", { mode: "change", current: "Old12345", next: "Secret123" });
+    const res = await post(password, "/api/account/password", { mode: "change", current: "Old12345", next: "Corniche42" });
     expect(await res.json()).toEqual({ ok: true });
     expect(res.headers.get("set-cookie")).toBe(`mm_acct=c1~${NEW_TOKEN}; Path=/; Max-Age=2592000; HttpOnly; Secure; SameSite=Lax`);
-    expect(rpcOf(f)[0]).toEqual({ fn: "customer_change_password", body: { p_id: "c1", p_token: TOKEN, p_current: "Old12345", p_new: "Secret123" } });
+    expect(rpcOf(f)[0]).toEqual({ fn: "customer_change_password", body: { p_id: "c1", p_token: TOKEN, p_current: "Old12345", p_new: "Corniche42" } });
   });
   it("replaces a temporary password through customer_set_own_password", async () => {
     const f = db({ customer_set_own_password: NEW_TOKEN });
     vi.stubGlobal("fetch", f);
-    const res = await post(password, "/api/account/password", { mode: "forced", next: "Secret123" });
+    const res = await post(password, "/api/account/password", { mode: "forced", next: "Corniche42" });
     expect(res.headers.get("set-cookie")).toContain(NEW_TOKEN);
-    expect(rpcOf(f)[0]).toEqual({ fn: "customer_set_own_password", body: { p_id: "c1", p_token: TOKEN, p_new_pwd: "Secret123" } });
+    expect(rpcOf(f)[0]).toEqual({ fn: "customer_set_own_password", body: { p_id: "c1", p_token: TOKEN, p_new_pwd: "Corniche42" } });
   });
   it("refuses a weak password itself, and passes on the database's refusals", async () => {
     const f = vi.fn();
     vi.stubGlobal("fetch", f);
     expect(await (await post(password, "/api/account/password", { mode: "change", next: "short1A" })).json()).toEqual({ ok: false, error: "weak" });
+    // a common password is refused by name (2026-11-11), before the database is asked
+    expect(await (await post(password, "/api/account/password", { mode: "change", next: "Password1" })).json()).toEqual({ ok: false, error: "common" });
     expect(f).not.toHaveBeenCalled();
     for (const [message, error, status] of [["BAD_PASSWORD", "bad", 403], ["LOCKED", "locked", 429], ["SAME_PASSWORD", "same", 400], ["WEAK_PASSWORD", "weak", 400]] as const) {
       vi.stubGlobal("fetch", db({ customer_change_password: reply({ message }, 400) }));
-      const res = await post(password, "/api/account/password", { mode: "change", current: "x", next: "Secret123" });
+      const res = await post(password, "/api/account/password", { mode: "change", current: "x", next: "Corniche42" });
       expect(res.status).toBe(status);
       expect(await res.json()).toEqual({ ok: false, error });
       expect(res.headers.get("set-cookie")).toBeNull();

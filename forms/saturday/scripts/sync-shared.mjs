@@ -63,7 +63,7 @@ const KEYS = ['privacyNotice', 'privacyUpdated', 'privacyAckOpt', 'privacyAckReq
   'closeBtn', 'dobDay', 'dobMonth', 'dobYear', 'dobErrFuture', 'dobErrYoung', 'genderMale', 'genderFemale',
   // The account step is the booking site's sign-up and sign-in: its labels, password rule and messages, word for word.
   'firstName', 'lastName', 'phFirstName', 'phLastName', 'authPassword', 'authConfirmPassword', 'fixPwHint',
-  'errPasswordLen', 'errPasswordMatch', 'errTooManyTries', 'authLogin', 'authSignupBtn',
+  'errPasswordLen', 'errPasswordCommon', 'errPasswordOld', 'errPasswordMatch', 'errTooManyTries', 'authLogin', 'authSignupBtn',
   'authIdentifier', 'errEmailOrPhone', 'errPasswordRequired', 'errInvalidCredentials', 'errLoginLocked', 'errLoginPhoneCc',
   // The emergency contact (the owner, 2026-10-07: the first one required, a second one optional).
   'emTitle', 'emSubAcc', 'emName', 'emPhone', 'emRelation', 'emPick', ...EM_RELS.map((c) => 'emRel_' + c),

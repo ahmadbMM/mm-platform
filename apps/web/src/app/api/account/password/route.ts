@@ -1,7 +1,8 @@
 import { ACCOUNT_COOKIE, ACCOUNT_MAX_AGE, PENDING_COOKIE, PENDING_PATH, decodeSession, encodeSession, pwdAnswer, sameOrigin, sessionCookie } from "@/lib/account-core";
 import { rpcServer } from "@/lib/account";
 import { bodyOf, json as jsonOut, unreachable, writeSession } from "@/lib/account-route";
-import { passwordError, passwordOk } from "@/lib/account-profile";
+import { passwordError } from "@/lib/account-profile";
+import { passwordProblem } from "@/lib/learn";
 import { cookieValue } from "@/lib/live";
 import { HANDOFF_COOKIE } from "@/lib/handoff";
 
@@ -23,9 +24,9 @@ import { HANDOFF_COOKIE } from "@/lib/handoff";
 //   Either way the database mints a new session token, which signs every other device out; this
 //   device keeps going with it, in the same HttpOnly cookie.
 //
-// The rule (8+, a capital, a digit) is checked here and again by the database. Only this site's
+// The rule (8+, not a common one; 2026-11-11) is checked here and again by the database. Only this site's
 // pages may call it.
-const STATUS: Record<string, number> = { bad: 403, weak: 400, same: 400, locked: 429, notdue: 409, signin: 401, generic: 502 };
+const STATUS: Record<string, number> = { bad: 403, weak: 400, common: 400, same: 400, locked: 429, notdue: 409, signin: 401, generic: 502 };
 
 const cookie = (name: string, value: string, maxAge: number, path = "/") => `${name}=${value}; Path=${path}; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`;
 const json = (body: unknown, status = 200, cookies: string[] = []) => {
@@ -44,8 +45,9 @@ export async function POST(req: Request) {
   if (!held) return json({ ok: false, error: "expired" }, 401);
   const password = String(b.password ?? "").slice(0, 200);
   const page = b.page === true;
-  // the booking app's rule, which the database checks again: 8 or more, an upper-case letter, a digit
-  if (!passwordOk(password)) return json({ ok: false, error: "weak" }, 400);
+  // the booking app's rule, which the database checks again: 8 or more, and not a common one (2026-11-11)
+  const pp = passwordProblem(password);
+  if (pp) return json({ ok: false, error: pp === "short" ? "weak" : "common" }, 400);
   const a = pwdAnswer(await rpcServer<string>("customer_set_own_password", { p_id: held.id, p_token: held.token, p_new_pwd: password }));
   if ("error" in a && a.error === "expired") return json({ ok: false, error: "expired" }, 401, [unhold()]);
   if ("error" in a && a.error !== "done") return json({ ok: false, error: a.error }, a.error === "generic" ? 502 : 400);
@@ -65,7 +67,8 @@ async function signedIn(req: Request, b: Record<string, unknown>) {
   const next = typeof b.next === "string" ? b.next : "";
   const current = typeof b.current === "string" ? b.current.slice(0, 200) : "";
   if (!mode) return jsonOut({ ok: false, error: "invalid" }, 400);
-  if (!passwordOk(next)) return jsonOut({ ok: false, error: "weak" }, 400);
+  const np = passwordProblem(next);
+  if (np) return jsonOut({ ok: false, error: np === "short" ? "weak" : "common" }, 400);
   const r = mode === "forced"
     ? await rpcServer<string>("customer_set_own_password", { p_id: id, p_token: token, p_new_pwd: next })
     : await rpcServer<string>("customer_change_password", { p_id: id, p_token: token, p_current: current, p_new: next });

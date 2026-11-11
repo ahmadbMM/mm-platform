@@ -76,7 +76,7 @@ export function scopeCss(css, scope) {
 
 /** Writes the website's copy of a form. `body` is the page's <body> inner markup with the page header and scripts already
  *  taken out; `images` the files the markup names, relative to the design folder. */
-export function emitSite({ name, design, body, css, scripts, images = [] }) {
+export function emitSite({ name, design, body, css, scripts, images = [], packs = null }) {
   const scope = `.mmf-${name}`;
   const pub = resolve(WEB, 'public/forms', name);
   mkdirSync(pub, { recursive: true });
@@ -101,8 +101,16 @@ export function emitSite({ name, design, body, css, scripts, images = [] }) {
   // and app.js reads window.SHARED / window.FORM_T. Run inside one function here, so they are handed to window too.
   // Each script's globals are handed over right after it, before the next one (app.js) reads them.
   const js = scripts.map((s) => s + '\n;' + [...s.matchAll(/^var ([A-Z][A-Z0-9_]*|MMAccount)\s*=/gm)].map((m) => ` window.${m[1]} = ${m[1]};`).join('')).join('\n');
-  writeFileSync(resolve(dir, `${name}.run.js`), head +
-    '/* eslint-disable */\n// @ts-nocheck\nexport default function run(site) {\n  window.MM_SITE_FORM = site;\n' + js + '\n}\n');
+  // packs ({dir, files: {<lang>: <file>}}): the form's words in each language but English are files of their own
+  // (public/forms/<name>/lang), and the page fetches only its reader's before the scripts run (the owner's B19,
+  // 2026-11-10: every visitor downloaded all sixteen languages). The scripts get it as window.MM_FORM_PACK; a file that
+  // does not come shows the form in English. MM_FORM_PACKS lets the form fetch another one when its language changes.
+  const runBody = packs
+    ? `  window.MM_SITE_FORM = site;\n  window.MM_FORM_PACKS = ${JSON.stringify(packs)};\n  var go = function (pack) {\n  window.MM_FORM_PACK = pack || null;\n${js}\n  };\n` +
+      `  var file = site && window.MM_FORM_PACKS.files[site.lang];\n  if (!file) { go(null); return; }\n` +
+      `  return fetch(window.MM_FORM_PACKS.dir + file).then(function (r) { return r.ok ? r.json() : null; }, function () { return null; }).then(go, function () { go(null); });\n`
+    : `  window.MM_SITE_FORM = site;\n${js}\n`;
+  writeFileSync(resolve(dir, `${name}.run.js`), head + '/* eslint-disable */\n// @ts-nocheck\nexport default function run(site) {\n' + runBody + '}\n');
   return { markupBytes: markup.length, cssBytes: css.length };
 }
 

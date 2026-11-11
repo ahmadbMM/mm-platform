@@ -93,6 +93,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Knowing how riders find us, in totals only"
      ],
      [
+      "A community membership application from someone under 18: the name of their parent or legal guardian, whether that person is a parent or a legal guardian, their mobile number, and their confirmation of this notice",
+      "Required on a community membership application from someone under 18. Seen only by our staff.",
+      "So a parent or guardian confirms the application of someone under 18, and so our staff can contact them about it"
+     ],
+     [
       "Emergency contacts: the name, mobile number and relationship to you of someone we can call, and of a second person if you add one",
       "One is required on every account: asked when you create your account, or before your next booking if your account has none. A second is always optional. Seen only by our staff, and the first also by the hosts of an event you agree to share it with. Please tell each person you gave us their details.",
       "Calling someone for you if you need help during an event, and the second person if we cannot reach the first. We never contact them for anything else. We share only your first contact’s details, and only with the hosts of an event you agree to share them with."
@@ -162,11 +167,10 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    "ul": [
     "<strong>From you,</strong> when you sign up, edit your profile, book or give feedback.",
     "<strong>From the person who booked you,</strong> if someone booked you as part of their party. They give us your name and height.",
-    "<strong>From our community membership application</strong> at micromobility.sa/community/registration, if you apply to join our riding community. Our staff read it and reply. If you are accepted and have no account yet, we create one from those details with a temporary password, which you must change the first time you sign in.",
+    "<strong>From our community membership application</strong> at micromobility.sa/community/registration, if you apply to join our riding community. Our staff read it and reply. If you are accepted and have no account yet, we create one from those details with a temporary password, which you must change the first time you sign in. The form also keeps anonymous counts of which of its screens were reached and where people left it: never your answers or your name, and kept for 180 days.",
     "<strong>From a community member who invites you,</strong> if you apply through their link: the application records who invited you, and our staff see it. We hold nothing about you until you apply yourself.",
     "<strong>From a friend who refers you,</strong> if you make your account with their link or code: we record who referred you, and our staff see it. Your friend sees only how many friends joined and rode, never your name.",
     "<strong>From our learn-to-ride sign-up</strong> at micromobility.sa/experiences/learn, if you sign up for a riding lesson for yourself, your children or other adults. Our staff contact you to arrange the lesson. If you have no account yet, we create one from your details with a temporary password, which you must change the first time you sign in. If you sign up another adult, tell them first and make sure they agree.",
-    "<strong>From Apple or Google,</strong> if you sign in with them. They give us your name and email address, or an Apple relay address.",
     "<strong>From your device:</strong> a short technical report if the website hits an error (the error, the page and your browser type), and anonymous visit counts through Cloudflare Web Analytics, which uses no cookies."
    ]
   },
@@ -202,12 +206,12 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    "h": "Ride news and announcements"
   },
   {
-   "p": "We send ride news (new rides, schedules, offers and community news) only if you choose it, when you sign up or in your profile. You can stop any time:"
+   "p": "We send ride news (new rides, schedules, offers and community news) by WhatsApp, and only if you choose it, when you sign up or in your profile. You can stop any time:"
   },
   {
    "ul": [
     "switch it off in your profile, or",
-    "reply STOP to any WhatsApp message, or use the unsubscribe link in any email."
+    "reply STOP to any WhatsApp message."
    ]
   },
   {
@@ -285,11 +289,6 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Worldwide network"
      ],
      [
-      "Apple, Google",
-      "Sign-in, only if you use it",
-      "Outside Saudi Arabia"
-     ],
-     [
       "WhatsApp",
       "When we message you there",
       "Outside Saudi Arabia"
@@ -358,7 +357,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    "h": "Children"
   },
   {
-   "p": "Riders under 18 must be booked by a parent or guardian, who provides their details and agrees to the waiver on their behalf. A child is signed up for a riding lesson by a parent or guardian, who provides the child’s details."
+   "p": "Riders under 18 must be booked by a parent or guardian, who provides their details and agrees to the waiver on their behalf. A child is signed up for a riding lesson by a parent or guardian, who provides the child’s details. Someone under 18 who applies to join our riding community gives the name and mobile number of a parent or guardian, who confirms this notice."
   },
   {
    "h": "Data breaches"
@@ -460,6 +459,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "معرفة كيف يصل إلينا الراكبون، في صورة أعداد إجمالية فقط"
      ],
      [
+      "طلب عضوية المجتمع ممن هم دون 18 عامًا: اسم الوالد أو الولي النظامي، وما إذا كان أحد الوالدين أو وليًّا نظاميًّا، ورقم جواله، وتأكيده لهذا الإشعار",
+      "إلزامي في طلب عضوية المجتمع ممن هم دون 18 عامًا، ولا يطّلع عليه إلا موظفونا.",
+      "ليؤكّد أحد الوالدين أو الولي طلب من هم دون 18 عامًا، وليتمكن موظفونا من التواصل معه بشأنه"
+     ],
+     [
       "جهات اتصال الطوارئ: اسم شخص يمكننا الاتصال به ورقم جواله وصلة قرابته بك، وكذلك لشخص ثانٍ إن أضفته",
       "جهة واحدة مطلوبة في كل حساب: تُطلب عند إنشاء حسابك، أو قبل حجزك التالي إن لم تكن في حسابك. والجهة الثانية اختيارية دائمًا. لا يراهما إلا موظفونا، والجهات المنظِّمة لفعالية توافق على مشاركة الأولى معها. يُرجى إبلاغ كل شخص منهما بأنك أعطيتنا بياناته.",
       "الاتصال بشخص نيابةً عنك إن احتجت إلى مساعدة أثناء إحدى الفعاليات، وبالشخص الثاني إن تعذّر الوصول إلى الأول. لا نتواصل معهما لأي غرض آخر، ولا نشارك إلا بيانات جهة الاتصال الأولى، ومع الجهات المنظِّمة لفعالية توافق على مشاركتها معها فقط."
@@ -529,11 +533,10 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    "ul": [
     "<strong>منك مباشرة،</strong> عند التسجيل أو تعديل ملفك الشخصي أو الحجز أو تقديم ملاحظاتك.",
     "<strong>من الشخص الذي حجز لك،</strong> إذا حجز لك أحدهم ضمن مجموعته، فيزوّدنا باسمك وطولك.",
-    "<strong>من طلب عضوية المجتمع</strong> عبر micromobility.sa/community/registration، إذا تقدّمت للانضمام إلى مجتمع الركوب لدينا. يطّلع موظفونا على طلبك ويردّون عليك. وإذا قُبلت ولم يكن لديك حساب، ننشئ لك حسابًا من تلك البيانات بكلمة مرور مؤقتة، يجب عليك تغييرها عند أول تسجيل دخول.",
+    "<strong>من طلب عضوية المجتمع</strong> عبر micromobility.sa/community/registration، إذا تقدّمت للانضمام إلى مجتمع الركوب لدينا. يطّلع موظفونا على طلبك ويردّون عليك. وإذا قُبلت ولم يكن لديك حساب، ننشئ لك حسابًا من تلك البيانات بكلمة مرور مؤقتة، يجب عليك تغييرها عند أول تسجيل دخول. ويحتفظ النموذج أيضًا بأعداد مجهولة الهوية للشاشات التي وصل إليها الزوار والمواضع التي غادروه عندها، دون إجاباتك أو اسمك، لمدة 180 يومًا.",
     "<strong>من عضو في المجتمع يدعوك،</strong> إذا تقدّمت عبر رابطه: يسجّل الطلب من دعاك ويطّلع على ذلك موظفونا. ولا نحتفظ بأي شيء عنك حتى تتقدّم بنفسك.",
     "<strong>من صديق يحيلك،</strong> إذا أنشأت حسابك عبر رابطه أو رمزه: نسجّل من أحالك ويطّلع على ذلك موظفونا. ولا يرى صديقك إلا عدد الأصدقاء الذين انضموا وركبوا، ولا يرى اسمك أبدًا.",
     "<strong>من التسجيل في دروس تعلّم الركوب</strong> عبر micromobility.sa/experiences/learn، إذا سجّلت في درس ركوب لنفسك أو لأطفالك أو لبالغين آخرين. يتواصل معك موظفونا لترتيب الدرس. وإذا لم يكن لديك حساب، ننشئ لك حسابًا من بياناتك بكلمة مرور مؤقتة يجب تغييرها عند أول تسجيل دخول. وإذا سجّلت شخصًا بالغًا آخر، فأبلغه أولًا وتأكد من موافقته.",
-    "<strong>من Apple أو Google،</strong> إذا سجّلت الدخول عبرهما، فيزوّداننا باسمك وبريدك الإلكتروني أو عنوان بريد Apple البديل.",
     "<strong>من جهازك:</strong> تقرير تقني مختصر إذا واجه الموقع خطأً (الخطأ والصفحة ونوع المتصفح)، وأعداد زيارات مجهولة الهوية عبر Cloudflare Web Analytics الذي لا يستخدم ملفات تعريف الارتباط."
    ]
   },
@@ -569,12 +572,12 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    "h": "أخبار الرحلات والإعلانات"
   },
   {
-   "p": "لا نرسل أخبار الرحلات (الرحلات الجديدة والجداول والعروض وأخبار المجتمع) إلا إذا اخترتها عند التسجيل أو من ملفك الشخصي. ويمكنك إيقافها في أي وقت:"
+   "p": "نرسل أخبار الرحلات (الرحلات الجديدة والجداول والعروض وأخبار المجتمع) عبر واتساب، ولا نرسلها إلا إذا اخترتها عند التسجيل أو من ملفك الشخصي. ويمكنك إيقافها في أي وقت:"
   },
   {
    "ul": [
     "بإيقافها من ملفك الشخصي، أو",
-    "بالرد بكلمة STOP على أي رسالة واتساب، أو عبر رابط إلغاء الاشتراك في أي بريد إلكتروني."
+    "بالرد بكلمة STOP على أي رسالة واتساب."
    ]
   },
   {
@@ -652,11 +655,6 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "شبكة عالمية"
      ],
      [
-      "Apple وGoogle",
-      "تسجيل الدخول، فقط إذا استخدمته",
-      "خارج المملكة العربية السعودية"
-     ],
-     [
       "واتساب",
       "عند مراسلتك عبره",
       "خارج المملكة العربية السعودية"
@@ -725,7 +723,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
    "h": "الأطفال"
   },
   {
-   "p": "يجب أن يتم حجز الراكبين دون 18 عامًا عبر أحد الوالدين أو الولي، الذي يقدّم بياناتهم ويوافق على الإقرار نيابةً عنهم. ويسجّل الطفلَ في درس الركوب أحدُ والديه أو وليّ أمره، ويقدّم بيانات الطفل."
+   "p": "يجب أن يتم حجز الراكبين دون 18 عامًا عبر أحد الوالدين أو الولي، الذي يقدّم بياناتهم ويوافق على الإقرار نيابةً عنهم. ويسجّل الطفلَ في درس الركوب أحدُ والديه أو وليّ أمره، ويقدّم بيانات الطفل. ومن يتقدّم بطلب الانضمام إلى مجتمع الركوب لدينا وهو دون 18 عامًا يقدّم اسم أحد والديه أو وليّه ورقم جواله، ويؤكّد الوالد أو الولي هذا الإشعار."
   },
   {
    "h": "تسرّب البيانات"

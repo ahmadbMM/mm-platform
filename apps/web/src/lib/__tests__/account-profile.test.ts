@@ -126,9 +126,11 @@ describe("the save", () => {
 
 describe("passwords, corrections, photos, purchases, the season", () => {
   it("passwords follow the app's rule and its refusals", () => {
-    expect(passwordOk("Abcdefg1")).toBe(true);
-    expect(passwordOk("abcdefg1")).toBe(false);
-    expect(passwordOk("Abcdefgh")).toBe(false);
+    // 8 or more characters and not a common one (2026-11-11; the database's _pwd_common)
+    expect(passwordOk("corniche rides")).toBe(true);
+    expect(passwordOk("Ride2Work")).toBe(true);
+    expect(passwordOk("Abcdefg1")).toBe(false); // a common one, whatever its case
+    expect(passwordOk("aaaaaaaa")).toBe(false);
     expect(passwordOk("Ab1")).toBe(false);
     for (const [m, e] of [["BAD_PASSWORD", "bad"], ["WEAK_PASSWORD", "weak"], ["SAME_PASSWORD", "same"], ["LOCKED", "locked"], ["NO_CHANGE_DUE", "notdue"], ["BAD_TOKEN", "signin"], ["?", "generic"]]) expect(passwordError(m)).toBe(e);
   });
