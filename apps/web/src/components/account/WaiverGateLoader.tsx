@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import ShareGateLoader from "./ShareGateLoader";
 import WaiverGate, { type PendingWaiver, type WaiverDone } from "./WaiverGate";
-import { WAIVER_QUIET } from "./quiet";
+import { WAIVER_QUIET, isQuiet } from "./quiet";
 
 // A desk-added booking's waiver on every page (the owner, 2026-10-04), before the post-ride rating:
 // the booking app asks for every waiver first and the rating after (_forceRatingPrompt), so this
@@ -27,7 +27,7 @@ let off = false;
 
 async function check(locale: string): Promise<PendingWaiver | null> {
   if (off) return null;
-  try { if (Number(sessionStorage.getItem(KEY) || 0) > Date.now()) return null; } catch { /* storage off: just ask */ }
+  if (isQuiet(KEY)) return null;
   try {
     const skip = agreed.size ? `&skip=${encodeURIComponent([...agreed].join(","))}` : "";
     const r = await fetch(`/api/account/pending-waiver?locale=${encodeURIComponent(locale)}${skip}`, { cache: "no-store", credentials: "same-origin" });

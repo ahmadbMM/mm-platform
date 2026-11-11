@@ -1,8 +1,7 @@
+import { sarText as sar } from "@/components/booking/Sar";
 import { fmtDayDate } from "@/lib/tickets";
 import { walletKindWord, type Wallet } from "@/lib/wallet";
 import { walletWords } from "./Wallet.words";
-
-const sar = (n: number) => `\u2066\u20C1 ${Math.round((Number(n) || 0) * 100) / 100}\u2069`;
 
 // The wallet on My Account (the booking app's #cw-mine): the balance and its last ten lines. Nothing here is
 // staff's note: customer_wallet does not send it.

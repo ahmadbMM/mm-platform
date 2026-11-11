@@ -58,6 +58,8 @@ describe("toSession", () => {
     expect(toSession(row({ ride_kind: "snd96" }))).toMatchObject({ kind: "snd96", members: false, free: false, gather: true });
     // the database's members gate reads event_kind alone
     expect(toSession(row({ ride_kind: "snd96", event_kind: "community" }))).toMatchObject({ members: true, free: false });
+    // not a ride staff approve either (the booking app's _isApprovalRide leaves it out, as _isCommunity does)
+    expect(toSession(row({ ride_kind: "snd96", event_kind: "community", needs_approval: true }))).toMatchObject({ approval: false });
   });
   it("reads a ticketed event: its blurb, its seat price only when it is a paid ride, its seats, who may book", () => {
     const ev = { id: "2026-10-05-ev", event_kind: "community", ride_kind: "event", title: "Bike maintenance 101", description: "  Two hours on brakes, gears and flats.  ", price: 50, paid_ride: true, open_to_all: true, capacity: 40, bike_slots: '{"_time":"19:00 - 21:00"}' };

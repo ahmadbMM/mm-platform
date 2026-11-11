@@ -198,7 +198,10 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         rpcServer<unknown>("sport_option_list", {}),
       ]).then(([r, o]) => {
         const row = r.status === 200 && Array.isArray(r.data) ? spOf(r.data[0]) : null;
-        return row ? { ...row, added: o.status === 200 ? spOptionsOf(o.data) : [] } : null;
+        if (!row) return null;
+        // a list that cannot be read just now keeps the rider's own added sports: an empty one would drop them on Save
+        const added = o.status === 200 ? spOptionsOf(o.data) : row.feds.filter((c) => c.startsWith("x_")).map((code) => ({ code, en: code, ar: null }));
+        return { ...row, added };
       }),
     ]);
     const lockers = lockersRaw == null ? null : lockersOf(lockersRaw);

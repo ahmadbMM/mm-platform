@@ -24,7 +24,9 @@ export async function loadRecordSessions(ids: string[], account: SessionReader |
       const rows = await readSessions(fetchImpl, url, key, `select=id,ride_kind,event_kind,paid_ride,needs_approval,bike_slots&id=in.(${c.join(",")})`, account);
       if (!Array.isArray(rows)) return;
       for (const r of rows as Record<string, unknown>[]) {
-        if (typeof r.id === "string") out.set(r.id, { kind: rideKind(r), freeRide: r.event_kind === "community" && r.paid_ride !== true, approval: r.event_kind === "community" && r.needs_approval !== false, groupKm: groupKm(r.bike_slots), km: rideKm(r.bike_slots) });
+        // a community ride as the booking app's _isCommunity reads it: the National Day ride (snd96) is not one
+        const comm = r.event_kind === "community" && r.ride_kind !== "snd96";
+        if (typeof r.id === "string") out.set(r.id, { kind: rideKind(r), freeRide: comm && r.paid_ride !== true, approval: comm && r.needs_approval !== false, groupKm: groupKm(r.bike_slots), km: rideKm(r.bike_slots) });
       }
     } catch { /* that chunk counts as unknown sessions */ }
   }));

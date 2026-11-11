@@ -259,7 +259,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     price: (kind === "event" || kind === "vlap" || kind === "arena") && !free && price !== null && price > 0 ? price : null,
     seats: kind === "event" && seats !== null && Number.isInteger(seats) && seats > 0 ? seats : null,
     routeSlug: routeSlugOf(r.route_slug),
-    approval: community && r.needs_approval !== false,
+    approval: community && kind !== "snd96" && r.needs_approval !== false, // _isApprovalRide: not the National Day ride
     capacity: seats,
     left: null,
     collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" || kind === "blood" ? null : collectTime(r.bike_slots),

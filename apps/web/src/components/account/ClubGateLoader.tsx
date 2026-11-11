@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import ClubGate, { type PendingClub, type ClubDone } from "./ClubGate";
 import RaceGateLoader from "./RaceGateLoader";
-import { CLUB_QUIET } from "./quiet";
+import { CLUB_QUIET, isQuiet } from "./quiet";
 
 // The Blood Donation event's club or community question on every page, for everyone who registered before it (the owner,
 // 2026-11-05: "show a forced pop-up for everyone who already registered"; the booking app's _pendingClub), after the agreement
@@ -18,7 +18,7 @@ let off = false;
 
 async function check(locale: string): Promise<PendingClub | null> {
   if (off) return null;
-  try { if (Number(sessionStorage.getItem(CLUB_QUIET) || 0) > Date.now()) return null; } catch { /* storage off: just ask */ }
+  if (isQuiet(CLUB_QUIET)) return null;
   try {
     const skip = answered.size ? `&skip=${encodeURIComponent([...answered].join(","))}` : "";
     const r = await fetch(`/api/account/pending-club?locale=${encodeURIComponent(locale)}${skip}`, { cache: "no-store", credentials: "same-origin" });

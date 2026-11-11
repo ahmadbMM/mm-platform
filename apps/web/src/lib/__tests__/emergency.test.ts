@@ -53,6 +53,8 @@ describe("a contact", () => {
     expect(emPhone("+1", "(415) 555-0132")).toBe("+14155550132");
     expect(emPhone("+966", "+966 0551234567")).toBe("+966551234567");
     expect(emPhone("+966", "966551234567")).toBe("+966551234567");
+    expect(emPhone("+966", "966 0501234567")).toBe("+966501234567"); // the trunk 0 goes on every path
+    expect(emPhone("+966", "00966 0501234567")).toBe("+966501234567");
   });
   it("keeps the code on a national number that only begins with the code's digits", () => {
     expect(emPhone("+91", "9198765432")).toBe("+919198765432"); // an Indian mobile in the 91 series
@@ -108,6 +110,16 @@ describe("the dial codes", () => {
     }
     expect(dialOptions("en")[0].label).toBe("+966 Saudi Arabia");
     expect(dialOptions("ar")[0].label).toBe("+966 السعودية");
+  });
+  it("list every other country by its name, not its code, Saudi Arabia again among the S names", () => {
+    const rest = dialOptions("en").slice(6);
+    const names = rest.map((x) => x.label.replace(/^\+\d+ /, ""));
+    expect(names).toEqual([...names].sort((a, b) => a.localeCompare(b, "en")));
+    const sa = rest.findIndex((x) => x.value === "+966");
+    expect(names[sa]).toBe("Saudi Arabia");
+    expect(names[sa - 1].localeCompare("Saudi Arabia", "en")).toBeLessThan(0);
+    expect(names[sa + 1].localeCompare("Saudi Arabia", "en")).toBeGreaterThan(0);
+    expect(names[sa - 1][0] === "S" && names[sa + 1][0] === "S").toBe(true);
   });
 });
 

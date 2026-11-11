@@ -1,5 +1,6 @@
 import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
 import { rpcServer } from "@/lib/account";
+import { jsonCapped, TOO_BIG } from "@/lib/capped-body";
 import { badgeRequestBody, reqRefusal } from "@/lib/badge-request";
 import { emAbsent } from "@/lib/emergency";
 import { cookieValue } from "@/lib/live";
@@ -24,8 +25,9 @@ export async function POST(req: Request) {
   if (!acct) return json({ ok: false, error: "signin" }, 401);
   if (Number(req.headers.get("content-length") || 0) > MAX_BODY) return json({ ok: false, error: "invalid" }, 413);
   if (!(await withinLimit(req, "account-check"))) return json({ ok: false, error: "busy" }, 429);
-  let body: unknown = null;
-  try { body = await req.json(); } catch { /* empty body */ }
+  // read no further than MAX_BODY: a chunked body has no Content-Length for the check above
+  const body = await jsonCapped(req, MAX_BODY);
+  if (body === TOO_BIG) return json({ ok: false, error: "invalid" }, 413);
   const b = badgeRequestBody(body);
   if (!b) return json({ ok: false, error: "invalid" }, 400);
   const r = await rpcServer<unknown>("customer_badge_request",

@@ -4,6 +4,7 @@ import AccountPage from "../../app/[locale]/account/[[...part]]/page";
 import SignIn from "@/components/account/SignIn";
 import SignOut from "@/components/account/SignOut";
 import RideRecord from "@/components/account/RideRecord";
+import SportCard from "@/components/account/SportCard";
 import { resetRides } from "../rides";
 import { resetSiteContent } from "../site";
 
@@ -82,5 +83,14 @@ describe("the account page when a read fails", () => {
     const stats = await page((fn) => (fn === "customer_profile" ? PROFILE() : null), ["stats"]);
     expect(findAll(stats.p, RideRecord)).toHaveLength(1);
     expect(findAll(p, SignOut)).toHaveLength(1);
+  });
+  it("a sport list that cannot be read keeps the rider's own added sport, so Save does not drop it", async () => {
+    const SPORT = () => json([{ competes: true, federations: ["cycling", "x_padbol"], other: null, asked: true }]);
+    const { p } = await page((fn) => (fn === "customer_profile" ? PROFILE() : fn === "customer_sport" ? SPORT() : fn === "sport_option_list" ? TIMEOUT() : null));
+    const card = findAll(p, SportCard);
+    expect(card).toHaveLength(1);
+    const props = card[0].props as { initial: { feds: string[] }; added: { code: string }[] };
+    expect(props.initial.feds).toContain("x_padbol");
+    expect(props.added.map((o) => o.code)).toEqual(["x_padbol"]);
   });
 });
