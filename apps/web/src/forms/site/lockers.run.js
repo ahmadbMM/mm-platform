@@ -6701,7 +6701,9 @@ var qrcode = function() {
       pendingChange = null;
       quietOut(); hideBanner();
       if (view !== "landing") backToPick();
-      loadEvenings();
+      // the evenings as a guest sees them (a Petromin night of the account signed out goes), the first one shown
+      // when the one picked went, as on a fresh load
+      loadEvenings().then(function (ok) { if (ok && !day && evenings.length) { day = evenings[0].day; loadBoard(); } });
     });
   });
 
