@@ -166,7 +166,8 @@
       var resp = await fetch(SUPABASE_URL + "/rest/v1/site_content?select=value&key=eq.booking.window", { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } });
       var rows = resp.ok ? await resp.json() : null, v = Array.isArray(rows) && rows[0] ? rows[0].value : null;
       bw = v && typeof v === "object" && /^\d+$/.test(String(v.days)) ? { days: +v.days, at: /^\d{2}:\d{2}$/.test(v.at || "") ? v.at : null } : null;
-    } catch (e) { bw = null; }
+      if (!resp.ok) bwRead = null; // not read: the next read of the rides asks again
+    } catch (e) { bw = null; bwRead = null; }
   }
   // The day (and hour) the window opens for a ride, Riyadh's, while it is still shut; else null.
   function bwOpens(r) {
@@ -935,7 +936,16 @@
   $$(".to-signin").forEach(function (b) { b.addEventListener("click", function () { setTab("signin"); $("#ident").focus(); }); });
   $$(".to-create").forEach(function (b) { b.addEventListener("click", function () { setTab("create"); $("#first").focus(); }); });
 
-  $("#p-create").addEventListener("submit", function (e) { e.preventDefault(); hideBanner(); if (busy) return; if (passStep("create")) createAccount(); });
+  $("#p-create").addEventListener("submit", function (e) {
+    e.preventDefault(); hideBanner(); if (busy) return;
+    // The account is made already (its first read did not answer): Create account goes on to the details with it.
+    if (acct && acct.made) { goOnMade(); return; }
+    if (passStep("create")) createAccount();
+  });
+  async function goOnMade() {
+    setLoading("#create", true);
+    try { await enterDetails(); } finally { setLoading("#create", false); }
+  }
   async function createAccount() {
     var email = clean($("#email").value).toLowerCase(), phone = e164(PK), name = fullName();
     setLoading("#create", true);
@@ -963,9 +973,10 @@
       if (c.error) c = await rpc("customer_consents", body);
       // Then the emergency contact typed with it. Should it not save, the details step asks again.
       var em = await emSave("em", false);
-      if (!em.ok) emCarry();
+      if (!em.ok) { emCarry(); emRetry = true; }
       await enterDetails();
       if (!em.ok && em.field) { setErr(em.field.replace("f-em", "f-xem"), em.key, null, true); }
+      else if (!em.ok && em.banner && step === 2) showBanner(em.banner);
     } finally { setLoading("#create", false); }
   }
   // The sign-up's contacts, copied into the details step's boxes, which then ask for them.
@@ -1024,7 +1035,7 @@
   }
 
   function signedOut() {
-    acct = null; prof = null;
+    acct = null; prof = null; emRetry = false;
     showBanner("You were signed out. Sign in again to book.");
     paintWho(); openAccount("signin");
   }
@@ -1039,7 +1050,8 @@
   var ASKABLE = ["birth_date", "nationality", "whatsapp", "instagram", "height", "emergency", "emergency2"];
   // fixed: what staff flagged on the account (customer_fix_fields); held: what it holds for those questions, in
   // MMAccount.same's names.
-  var prof = null, need = {}, blocked = false, fixed = [], held = {};
+  // emRetry: a contact typed at sign-up did not save (the second one too): the details step asks for them again.
+  var prof = null, need = {}, blocked = false, fixed = [], held = {}, emRetry = false;
   async function readAccount() {
     var all = await Promise.all([
       rpc("customer_profile", { p_id: acct.id, p_token: acct.token }),
@@ -1078,7 +1090,7 @@
       nat: true,
       wa: !waKnown || flag("whatsapp"),
       ig: true,
-      em: !hasEm || flag("emergency") || flag("emergency2"),
+      em: !hasEm || flag("emergency") || flag("emergency2") || emRetry,
       em2: flag("emergency2")
     };
     blocked = fix.some(function (k) { return ASKABLE.indexOf(k) < 0; });
@@ -1146,6 +1158,7 @@
       var em = await emSave("xem", need.em2);
       if (em.signedOut) { signedOut(); return; }
       if (!em.ok) { if (em.field) { setErr(em.field, em.key, null, true); focusField(em.field); } else showBanner(em.banner); return; }
+      emRetry = false;
       saved.push("emergency", "emergency2");
     }
     if (need.birth || need.nat) {
@@ -1193,7 +1206,7 @@
 
   /* ── Step 3: the booking ──────────────────────────────────────────────── */
   var bookState = null; // null, "closed", "already", "opens" (then bookOpens: when booking opens, as said)
-  var bookOpens = "";
+  var bookOpens = "", opensTimer = 0;
   function enterBook() { bookState = null; paintRides(); paintBookState(); paintReview(); goStep(3); }
   // Which Saturday, when the code books more than one: each with whether it is open or takes the waitlist now.
   function paintRides() {
@@ -1268,8 +1281,13 @@
     // itself): when it opens, not "closed", and the window read again so the landing says the same.
     if (/NOT_OPEN_YET/.test(m)) {
       var on = (/opens on (\d{4}-\d{2}-\d{2})/.exec(m) || [])[1], at = (/opens at (\d{2}:\d{2})/.exec(m) || [])[1];
-      bookOpens = on ? whenText(on, bw && bw.at) : at ? whenText(new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10), at) : "";
+      var today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
+      bookOpens = on ? whenText(on, bw && bw.at) : at ? whenText(today, at) : "";
       bookState = bookOpens ? "opens" : "closed"; paintBookState(); bwRead = null; loadRides(); $("#b-notice").scrollIntoView({ block: "center" });
+      // When that time comes (a few seconds after, Riyadh's), Book is pressed again: the database says whether it is open.
+      var t = on || at ? Date.parse((on || today) + "T" + ((on ? bw && bw.at : at) || "00:00") + ":00+03:00") : NaN;
+      clearTimeout(opensTimer);
+      if (bookState === "opens" && !isNaN(t)) opensTimer = setTimeout(function () { if (bookState === "opens") { bookState = null; paintBookState(); } }, Math.min(Math.max(t - Date.now(), 0) + 5000, 2147483647));
     }
     else if (/SESSION_CLOSED/.test(m)) { bookState = "closed"; paintBookState(); loadRides(); $("#b-notice").scrollIntoView({ block: "center" }); }
     else if (/ONE_PER_SESSION|One place per person/.test(m)) { bookState = "already"; paintBookState(); $("#b-notice").scrollIntoView({ block: "center" }); }
@@ -1285,6 +1303,8 @@
     else showBanner(NET);
   }
   $("#b-open").addEventListener("click", function () { openBooking(); });
+  // Back to the ride, the account and the code kept: Continue there reads the code and the rides again.
+  $("#back-book").addEventListener("click", function () { backToLanding(); });
 
   /* ── Sent ────────────────────────────────────────────────────────────── */
   var booked = null, leaving = false, autoTimer = null;

@@ -1070,7 +1070,7 @@
   // a flagged account field to type in the same info in the field again"), as the booking app's check-up refuses it;
   // MMAccount.same is the rule. Said on the question once its answer passes the other checks.
   var SAME_FIELD = { birth_date: "f-birth", nationality: "f-nat", instagram: "f-ig", linkedin: "f-li", profession: "f-prof", workplace: "f-work",
-    heard_from: "f-heard", height: "f-xheight", emergency: "f-xem-name", emergency2: "f-xem2-name" };
+    heard_from: "f-heard", height: "f-xheight", emergency: "f-xem-name", emergency2: "f-xem2-name", type_preference: "f-type" };
   function sameAgain(H) {
     var ans = {}, em = function (x) { return { name: x.name, phone: x.phone, relation: x.rel }; };
     ans.birth_date = qOn("birth_date") ? birthValue() : "";
@@ -1080,6 +1080,7 @@
     ans.profession = qOn("profession") ? clean($("#prof").value) : "";
     ans.workplace = qOn("workplace") ? clean($("#work").value) : "";
     ans.heard_from = qOn("heard_from") ? $("#heard").value : "";
+    ans.type_preference = bikeOn() ? bikeType || "" : "";
     if (acct.needHeight) ans.height = String(parseInt(toAscii($("#xheight").value), 10));
     if (waStep === 2 && waSame !== null) ans.whatsapp = waSame ? { same: true } : { same: false, phone: e164(WPK) };
     if (acct.needEm) { var ec = emCheck("xem", acct.phone, {}); if (ec && ec.one) ans.emergency = em(ec.one); if (ec && ec.two) ans.emergency2 = em(ec.two); }
@@ -1340,6 +1341,9 @@
     $("#acct-pending-a").hidden = !(me && me.pending && /^[0-9a-f]{48}$/.test(me.track || ""));
     if (me && me.track) $("#acct-pending-a").href = trackUrl(me.track);
     prefill(me); skipKnown(me);
+    // A draft typed for another account (a shared phone or tablet) never fills this one's: it is dropped, with what of
+    // it was still waiting, so the other person's answers are neither shown nor sent nor kept in this one's draft.
+    if (DR && !draftMine(DR)) { clearTimeout(draftT); draftT = 0; DRAFT.clear(); DR = null; pend = null; $("#draft-note").hidden = true; }
     if (DR) draftPut(DR, 2); // what was typed here before wins over the account's answers, in the questions still asked
     paintReq();
     var two = flowAll().filter(function (s) { return SCREEN_STEP[s] === 2; });
@@ -1544,7 +1548,9 @@
     noEm2 = !!er && !("emergency2_name" in er);
     var emOf = function (n) { return er ? { name: er[n + "_name"], phone: er[n + "_phone"], relation: er[n + "_relation"] } : null; };
     fixed = fl.map(String);
-    held = Object.assign({}, me, { emergency: emOf("emergency"), emergency2: emOf("emergency2") });
+    // the bike as staff flag it (type_preference), in the one bike question's answers
+    var heldBike = me.own_bike === true || me.bike_type === "Own" ? "Own" : ["Road", "Hybrid", "Mountain"].indexOf(me.bike_type) >= 0 ? me.bike_type : "";
+    held = Object.assign({}, me, { type_preference: heldBike, emergency: emOf("emergency"), emergency2: emOf("emergency2") });
     // The sport answer the account holds (customer_sport): put back, and not asked again unless staff flagged it.
     var srow = !spr.error && Array.isArray(spr.data) ? spr.data[0] : (!spr.error && spr.data && typeof spr.data === "object" ? spr.data : null);
     if (spr.error && absent(spr.error)) SPORT_ON = false;
@@ -1636,7 +1642,13 @@
   // A draft's answers not put back yet (the membership step's, until the account is signed in again): every save
   // keeps them, or typing the password to sign in again would write a draft without them.
   var pend = null;
-  function pendOf(d) { return d ? { v: Object.assign({}, d.v || {}), tiles: Object.assign({}, d.tiles || {}), made: !!d.made, email: d.email || "", sp: d.sp || null } : null; }
+  function pendOf(d) { return d ? { v: Object.assign({}, d.v || {}), tiles: Object.assign({}, d.tiles || {}), made: !!d.made, email: d.email || "", id: d.id || "", sp: d.sp || null } : null; }
+  // Whose draft it is: the account it was kept for (its id, else its email), so it is put back for that account only.
+  function draftMine(d) {
+    if (d.id && acct.id) return d.id === acct.id;
+    var e = String(acct.email || "").toLowerCase();
+    return !!e && String(d.email || "").toLowerCase() === e;
+  }
   function draftData() {
     var v = pend ? Object.assign({}, pend.v) : {}, tl = pend ? Object.assign({}, pend.tiles) : {};
     $$("#form input, #form select").forEach(function (el) {
@@ -1647,6 +1659,7 @@
     TILE_GROUPS.forEach(function (g) { var on = $(g + ' .tile[aria-checked="true"]'); if (on && touched[g]) tl[g] = on.getAttribute("data-v"); });
     return { v: v, tiles: tl, news: news, step: step, screen: screen, made: !!(acct && acct.made) || !!(pend && pend.made),
       email: acct && acct.email ? acct.email : (pend && pend.email) || clean($("#email").value).toLowerCase(),
+      id: acct ? acct.id : (pend && pend.id) || "",
       em2: !$("#em2-box").hidden, xem2: !$("#xem2-box").hidden, li: liOpen,
       sp: touched.sp || touched["#sports"] ? { competes: sp.competes, feds: sp.feds.slice() } : (pend && pend.sp) || null };
   }
@@ -1744,7 +1757,10 @@
   (function () { var c = new URLSearchParams(location.search).get("inv"); if (/^[0-9a-f]{16}$/.test(c || "")) { try { localStorage.setItem(INV_KEY, JSON.stringify({ c: c, at: Date.now() })); } catch (e) {} } })();
   function knownInvite() { try { var v = JSON.parse(localStorage.getItem(INV_KEY) || "null"); return v && /^[0-9a-f]{16}$/.test(v.c) && Date.now() - v.at < 2592e6 ? v.c : ""; } catch (e) { return ""; } }
   function trackUrl(tok) { return location.origin + location.pathname + "?track=" + tok + "&lang=" + lang; }
-  function rememberTrack(tok) { try { localStorage.setItem(TRACK_KEY, JSON.stringify({ t: tok, at: Date.now() })); } catch (e) {} }
+  // at: when it was sent (community_track's sent_at), else the day it is first kept; opening its page again keeps that day.
+  function rememberTrack(tok, at) {
+    try { var was = knownTrack(); localStorage.setItem(TRACK_KEY, JSON.stringify({ t: tok, at: at || (was && was.t === tok && was.at) || Date.now() })); } catch (e) {}
+  }
   function knownTrack() { try { var v = JSON.parse(localStorage.getItem(TRACK_KEY) || "null"); return v && /^[0-9a-f]{48}$/.test(v.t || "") ? v : null; } catch (e) { return null; } }
   function fixLabel(x) { return x === "name" ? tr("Name") : tr(FIX_LABEL[x] || x); }
   var FIX_LABEL = { email: k("Email address"), phone: k("Mobile number"), whatsapp: k("WhatsApp number"), birth_date: k("Date of birth"), gender: k("Gender"), nationality: k("Nationality"),
@@ -1788,7 +1804,7 @@
       $("#track-title").focus({ preventScroll: true });
       return;
     }
-    TRACK_D = d; rememberTrack(tok); trackPaint();
+    TRACK_D = d; rememberTrack(tok, d.sent_at); trackPaint();
     $("#track-title").focus({ preventScroll: true });
   }
   // An application sent from this device before: named on the first screen, a tap from its page.

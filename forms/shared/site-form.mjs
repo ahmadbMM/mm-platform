@@ -36,12 +36,29 @@ export function scopeCss(css, scope) {
     }
     throw new Error('unbalanced CSS block');
   };
+  // A selector list cut at its own commas only: a comma inside :is() / :where() / :not(), an [attribute] or a string
+  // belongs to its selector (a rule for html:is([lang="ar"], [lang="ur"]) cut there never matched on the website).
+  const list = (sel) => {
+    const out = [];
+    let depth = 0, q = null, from = 0;
+    for (let i = 0; i < sel.length; i++) {
+      const c = sel[i];
+      if (q) { if (c === '\\') { i++; continue; } if (c === q) q = null; continue; }
+      if (c === '"' || c === "'") q = c;
+      else if (c === '(' || c === '[') depth++;
+      else if (c === ')' || c === ']') depth--;
+      else if (c === ',' && !depth) { out.push(sel.slice(from, i)); from = i + 1; }
+    }
+    out.push(sel.slice(from));
+    return out;
+  };
   const one = (sel) => {
     sel = sel.trim();
     if (!sel) return sel;
     if (/^body\.[\w-]+/.test(sel)) return sel; // a class the scripts put on the page's body (modal-open): the page's own
     let pre = '';
-    const m = sel.match(/^(html(?:\[[^\]]+\])+)\s*/);
+    // html[lang=..], html[dir=..] and html:is(..) / :where(..) / :not(..) name the page's language: kept outside the box
+    const m = sel.match(/^(html(?:\[[^\]]+\]|:(?:is|where|not)\([^()]*\))+)\s*/);
     if (m) { pre = m[1] + ' '; sel = sel.slice(m[0].length); }
     if (/^(:root|html|body)$/.test(sel) || sel === '') return pre + scope;
     if (sel === '*') return `${pre}${scope}, ${pre}${scope} *`;
@@ -66,7 +83,7 @@ export function scopeCss(css, scope) {
       if (/^@(media|supports|container|layer)\b/.test(sel)) out += `${sel} {\n${walk(body)}}\n`;
       else if (/^@(-webkit-)?keyframes\b/.test(sel)) out += `${sel.replace(/([A-Za-z0-9_-]+)\s*$/, (n) => frames[n] || n)} {${body}}\n`;
       else if (/^@/.test(sel)) out += `${sel} {${body}}\n`;
-      else out += `${sel.split(',').map(one).join(', ')} {${body.replace(/(animation(?:-name)?\s*:[^;]*)/g, (d) => d.replace(/[A-Za-z0-9_-]+/g, (w) => frames[w] || w))}}\n`;
+      else out += `${list(sel).map(one).join(', ')} {${body.replace(/(animation(?:-name)?\s*:[^;]*)/g, (d) => d.replace(/[A-Za-z0-9_-]+/g, (w) => frames[w] || w))}}\n`;
       i = end + 1;
     }
     return out;

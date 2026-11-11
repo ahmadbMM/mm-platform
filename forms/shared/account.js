@@ -108,10 +108,13 @@ var MMAccount = (function () {
     height: function (me) { return typeof me.height === "number" && me.height >= 100 && me.height <= 250; },
     gender: function (me) { return me.gender === "male" || me.gender === "female"; }
   };
+  // A question under another name than staff flag it by: the bike (and whether it is their own) is the account's
+  // type_preference in customers.fix_fields (the booking app's FIX_FIELDS).
+  var FLAG_AS = { bike_type: "type_preference", own_bike: "type_preference" };
   function plan(me, keys) {
     var flags = me && Array.isArray(me.flags) ? me.flags.map(String) : [], out = { skip: [], ask: [], flagged: [] };
     (keys || Object.keys(HAS)).forEach(function (k) {
-      var has = !!me && !!HAS[k] && HAS[k](me), fl = flags.indexOf(k) >= 0;
+      var has = !!me && !!HAS[k] && HAS[k](me), fl = flags.indexOf(k) >= 0 || (!!FLAG_AS[k] && flags.indexOf(FLAG_AS[k]) >= 0);
       if (fl) out.flagged.push(k);
       (has && !fl ? out.skip : out.ask).push(k);
     });
