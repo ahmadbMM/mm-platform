@@ -81,7 +81,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   // never hidden; within a day of opening, a countdown to the real window that the browser keeps up to date each minute
   // and that turns into Book on time (components/site/OpensIn.tsx), as on Experiences.
   const window = siteBookingWindow(content);
-  const opens = (s: RideSession) => (window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null);
+  const opens = (s: RideSession) => (window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null);
   const opensWords = opensInWords(tx);
   const bookLink = (s: RideSession) => <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>;
   const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(intlOf(locale), { ...o, timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));

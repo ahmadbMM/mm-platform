@@ -1584,5 +1584,8 @@
   "At least 8 characters.": "至少 8 个字符。",
   "Send me ride news and announcements by WhatsApp. I can stop at any time.": "通过 WhatsApp 向我发送骑行资讯与公告。我可以随时停止接收。",
   "Show password": "显示密码",
-  "Hide password": "隐藏密码"
+  "Hide password": "隐藏密码",
+  "Next announcement": "下一条公告",
+  "Pause reviews": "暂停评价",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "我们已收到此预约，预约编号为 {0}。如需为第二辆自行车预约，请在团队致电确认时告知。"
 }

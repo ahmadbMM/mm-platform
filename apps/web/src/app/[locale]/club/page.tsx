@@ -11,7 +11,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum } from "@/lib/fill";
 import { bookingLink, bookingPage, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { getAccount, rpcServer } from "@/lib/account";
+import { readAccount, rpcServer } from "@/lib/account";
 import { memberArea, memberTitle } from "@/lib/members";
 import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { kindNames, sessionName, sessionGenders, type RideKind } from "@/lib/rides";
@@ -49,14 +49,16 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const L = asLocale(locale);
   const tx = serverL(locale);
-  const [{ content, previewing, hidden }, acct] = await Promise.all([pageState("club"), getAccount()]);
+  // a profile read that timed out or failed ("unread") is not a signed-out visitor: it is told the card could not be opened
+  const [{ content, previewing, hidden }, raw] = await Promise.all([pageState("club"), readAccount()]);
+  const acct = raw === "unread" ? null : raw;
   const area = acct ? memberArea(await rpcServer<unknown>("member_area", { p_id: acct.id, p_token: acct.token })) : null;
   // member_area lists every upcoming members' ride, whatever its rule, and does not say it: each ride's is read
   // through list_sessions for the account; when that cannot be read, the rides wear no chip and keep their Book
   const genders = acct && area?.ok && area.member && area.upcoming.length ? await sessionGenders(area.upcoming.map((r) => r.id), acct) : null;
   const title = acct && area?.ok && area.member ? memberTitle(await rpcServer<unknown>("customer_my_titles", { p_id: acct.id, p_token: acct.token })) : null;
   const members = area?.ok ? (area.member && genders ? { ...area, upcoming: area.upcoming.map((r) => ({ ...r, gender: genders.get(r.id) ?? null })) } : area) : null;
-  // who is looking, for the refusal: the account's gender (customer_profile, which getAccount read; null when none is on file)
+  // who is looking, for the refusal: the account's gender (customer_profile, which readAccount read; null when none is on file)
   const viewer = acct ? { gender: sessionGender(acct.profile?.gender) } : null;
   const site = resolvePage(siteSchema, content, L);
   const c = resolvePage(clubSchema, content, L);
@@ -83,7 +85,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   // a members' ride not open to book yet says when it opens, beside a clock; within a day of it, a countdown to the
   // real window that the browser keeps up to date each minute and that turns into Book on time, as on Experiences
   const window = siteBookingWindow(content);
-  const opens = (date: string) => (window && notOpenYet(date, window, now) ? opensText(date, window, locale, tx, drawn.getTime()) : null);
+  const opens = (date: string, kind: string | null) => (window && notOpenYet(date, window, now, kind) ? opensText(date, window, locale, tx, drawn.getTime()) : null);
   const opensWhen = (date: string) => (window ? opensAt(date, window) : null);
   const sgWords = genderText(tx); // a members' ride's chip (men only, women only, or mixed on a pool session) and refusal
   const words = lines(S(c.hero.marquee));
@@ -139,7 +141,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
               <h2>{S(c.card.title)}</h2>
               <div className="club-notmember" role="status"><span>{S(c.card.notMember)}</span><a href={applyHref}>{S(c.hero.applyBtn)}</a></div>
             </div>
-          ) : acct && area && !area.ok && area.error === "unavailable" ? (
+          ) : raw === "unread" || (acct && area && !area.ok && area.error === "unavailable") ? (
             <div className="club-lookup">
               <h2>{S(c.card.title)}</h2>
               <p role="status">{tx("It could not be opened. Check the connection and try again.", "تعذّر الفتح. تحقق من الاتصال وحاول مجدداً.")}</p>

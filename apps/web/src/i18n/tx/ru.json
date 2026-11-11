@@ -1584,5 +1584,8 @@
   "At least 8 characters.": "Не менее 8 символов.",
   "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Присылайте мне новости о заездах и объявления в WhatsApp. Я могу отказаться в любой момент.",
   "Show password": "Показать пароль",
-  "Hide password": "Скрыть пароль"
+  "Hide password": "Скрыть пароль",
+  "Next announcement": "Следующее объявление",
+  "Pause reviews": "Приостановить отзывы",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "Эта заявка у нас уже есть: её номер {0}. О втором велосипеде скажите команде, когда вам позвонят для подтверждения."
 }

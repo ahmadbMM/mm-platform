@@ -265,8 +265,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       left: s.left ?? null,
       meta: [collect, from].filter((x): x is string => !!x),
       // within a day of opening, a countdown to the real window that the browser keeps up to date each minute (opensAt)
-      opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null,
-      opensAt: window && notOpenYet(s.date, window, now) ? opensAt(s.date, window) : null,
+      opens: window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null,
+      opensAt: window && notOpenYet(s.date, window, now, s.kind) ? opensAt(s.date, window) : null,
       // its Details: staff's own line for the date shows under the text, except on an event, whose
       // description is the text
       info: {

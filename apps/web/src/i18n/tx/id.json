@@ -1584,5 +1584,8 @@
   "At least 8 characters.": "Minimal 8 karakter.",
   "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp. Saya bisa berhenti kapan saja.",
   "Show password": "Tampilkan kata sandi",
-  "Hide password": "Sembunyikan kata sandi"
+  "Hide password": "Sembunyikan kata sandi",
+  "Next announcement": "Pengumuman berikutnya",
+  "Pause reviews": "Jeda ulasan",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "Permintaan ini sudah kami terima: no. referensinya {0}. Untuk sepeda kedua, beri tahu tim saat mereka menelepon untuk konfirmasi."
 }

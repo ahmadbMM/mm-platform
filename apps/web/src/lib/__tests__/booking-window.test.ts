@@ -43,6 +43,12 @@ describe("notOpenYet", () => {
     expect(notOpenYet("2026-10-02", { days: 0, at: "07:00" }, "2026-10-01T23:00")).toBe(true);
     expect(notOpenYet("2026-10-02", { days: 0, at: "07:00" }, "2026-10-02T07:00")).toBe(false);
   });
+  it("never holds a race (Victory Lap, Arena Heros), booked from the day it is announced as in the database", () => {
+    expect(notOpenYet("2026-10-10", w, "2026-10-01T12:00", "vlap")).toBe(false);
+    expect(notOpenYet("2026-10-10", w, "2026-10-01T12:00", "arena")).toBe(false);
+    expect(notOpenYet("2026-10-10", w, "2026-10-01T12:00", "event")).toBe(true);
+    expect(notOpenYet("2026-10-10", w, "2026-10-01T12:00", null)).toBe(true);
+  });
 });
 
 // Within a day of opening, the date counts down to the real window (the research's row 3, 2026-11-10); further away it

@@ -113,7 +113,10 @@
 .hm-reviews h2 { text-align: center; font-size: clamp(23px, 5.6vw, 82px); letter-spacing: -1px; line-height: .94; margin: 0 0 44px; padding: 0 6vw; }
 .hm-reviews-track { overflow: hidden; -webkit-mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent); mask-image: linear-gradient(to right, transparent, #000 5%, #000 95%, transparent); }
 .hm-reviews-row { display: flex; gap: 18px; width: max-content; animation: mmMarquee 60s linear infinite; }
-.hm-reviews-row:hover { animation-play-state: paused; }
+.hm-reviews-row:hover, .hm-reviews-track.is-paused .hm-reviews-row, .hm-reviews-track:focus-within .hm-reviews-row { animation-play-state: paused; }
+.hm-reviews-pause { display: grid; place-items: center; width: 44px; height: 44px; margin: 22px auto 0; border: 1px solid rgba(7, 122, 75, .3); border-radius: 50%; background: #fff; color: #077a4b; cursor: pointer; }
+.hm-reviews-pause:hover, .hm-reviews-pause[aria-pressed="true"] { background: #077a4b; color: #fff; }
+.hm-reviews-pause:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
 .hm-review { margin: 0; width: 360px; flex: 0 0 360px; box-sizing: border-box; border-radius: 26px; background: #fff; box-shadow: 0 18px 60px rgba(9, 48, 26, .08); padding: 30px; display: flex; flex-direction: column; gap: 16px; }
 .hm-review blockquote { margin: 0; font-size: 16.5px; line-height: 1.6; color: #2b332d; flex: 1; }
 .hm-review figcaption { display: flex; align-items: center; gap: 12px; }
@@ -215,4 +218,8 @@
   .mm-site *, .mm-site *::before { animation: none !important; transition: none !important; }
   .hm-story { height: auto; }
   .hm-story-stage { position: relative; }
+  /* the reviews stand still: on rows, every one in reach, without the copy that made the loop or a pause for nothing */
+  .hm-reviews-track { -webkit-mask-image: none; mask-image: none; }
+  .hm-reviews-row { width: auto; flex-wrap: wrap; justify-content: center; padding: 0 6vw; }
+  .hm-reviews-row > [aria-hidden="true"], .hm-reviews-pause { display: none; }
 }

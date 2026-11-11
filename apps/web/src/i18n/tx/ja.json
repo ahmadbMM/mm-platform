@@ -1584,5 +1584,8 @@
   "At least 8 characters.": "8文字以上。",
   "Send me ride news and announcements by WhatsApp. I can stop at any time.": "ライドのニュースやお知らせをWhatsAppで受け取る。いつでも配信を停止できます。",
   "Show password": "パスワードを表示",
-  "Hide password": "パスワードを隠す"
+  "Hide password": "パスワードを隠す",
+  "Next announcement": "次のお知らせ",
+  "Pause reviews": "レビューを一時停止",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "このご依頼はすでに受け付けています（受付番号：{0}）。2台目の自転車については、確認のお電話の際にスタッフにお伝えください。"
 }

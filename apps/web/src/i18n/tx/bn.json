@@ -1584,5 +1584,8 @@
   "At least 8 characters.": "কমপক্ষে 8টি অক্ষর।",
   "Send me ride news and announcements by WhatsApp. I can stop at any time.": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp-এ পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
   "Show password": "পাসওয়ার্ড দেখান",
-  "Hide password": "পাসওয়ার্ড লুকান"
+  "Hide password": "পাসওয়ার্ড লুকান",
+  "Next announcement": "পরের ঘোষণা",
+  "Pause reviews": "রিভিউ থামান",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "এই অনুরোধটি আমাদের কাছে আগেই আছে: এর রেফারেন্স {0}। দ্বিতীয় সাইকেলের জন্য, টিম নিশ্চিত করতে ফোন করলে তাদের জানান।"
 }

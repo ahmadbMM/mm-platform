@@ -1584,5 +1584,8 @@
   "At least 8 characters.": "Al menos 8 caracteres.",
   "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Envíenme novedades y anuncios de recorridos por WhatsApp. Puedo darme de baja en cualquier momento.",
   "Show password": "Mostrar contraseña",
-  "Hide password": "Ocultar contraseña"
+  "Hide password": "Ocultar contraseña",
+  "Next announcement": "Siguiente anuncio",
+  "Pause reviews": "Pausar reseñas",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "Ya tenemos esta solicitud: su referencia es {0}. Para una segunda bici, díselo al equipo cuando te llame para confirmar."
 }

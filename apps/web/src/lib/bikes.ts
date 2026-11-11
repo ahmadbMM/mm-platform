@@ -128,7 +128,8 @@ export async function getBikeByNumber(code: string): Promise<BikeLookup> {
 // booking price trigger.
 /** The booking app's built-in fares, when the caller has none read. */
 const APP_FARE_LIST: Fares = faresOf(null);
-const TYPE_RATED = new Set(["Road", "Mountain", "Hybrid"]);
+// Road Carbon is a premium tier (the app's PREMIUM_TIERS): it is always charged its own type fare, never a bike's price
+const TYPE_RATED = new Set(["Road", "Mountain", "Hybrid", "Road Carbon"]);
 
 /**
  * What a ride on a bike of this type costs, or null when there is no price to state: "Own" is

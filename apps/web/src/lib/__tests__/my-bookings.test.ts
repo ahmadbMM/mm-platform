@@ -154,6 +154,12 @@ describe("where a ticket leads", () => {
     expect(placeLink(ticketSession({ ...jccRow, location: "Sharafeyah Branch" })!, BOOTH_DIR)).toBe("https://www.google.com/maps/search/?api=1&query=Sharafeyah%2C%20Jeddah");
     expect(placeLink(ticketSession({ ...jccRow, event_kind: "community", ride_kind: "saturday", meet_url: "https://maps.app.goo.gl/x" })!, BOOTH_DIR)).toBe("https://maps.app.goo.gl/x");
     expect(placeLink(undefined, BOOTH_DIR)).toBe(BOOTH_DIR);
+    // a meeting point staff left without its link still has a way there (the booking app's _dirBtnHtml): Run for Her
+    // the Jeddah Yacht Club, the DEFE 5K and a ride staff approve with no place the booth, one with a place its name
+    expect(placeLink(ticketSession({ ...jccRow, event_kind: "community", ride_kind: "runher", needs_approval: false })!, BOOTH_DIR)).toBe("https://www.google.com/maps/search/?api=1&query=Jeddah%20Yacht%20Club");
+    expect(placeLink(ticketSession({ ...jccRow, event_kind: "community", ride_kind: "defe5k", needs_approval: false })!, BOOTH_DIR)).toBe(BOOTH_DIR);
+    expect(placeLink(ticketSession({ ...jccRow, event_kind: "community", ride_kind: "saturday" })!, BOOTH_DIR)).toBe(BOOTH_DIR);
+    expect(placeLink(ticketSession({ ...jccRow, event_kind: "community", ride_kind: "saturday", location: "Obhur beach" })!, BOOTH_DIR)).toBe("https://www.google.com/maps/search/?api=1&query=Obhur%20beach");
   });
   it("shares the booking app's page for the same date, or its front page for a ride not booked from a list", () => {
     expect(shareLink("https://book.example.test/?lang=en", "jcc", "2099-03-01")).toBe("https://book.example.test/reserve?ev=jcc&session=2099-03-01");

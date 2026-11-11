@@ -1584,5 +1584,8 @@
   "At least 8 characters.": "कम्तीमा 8 अक्षर।",
   "Send me ride news and announcements by WhatsApp. I can stop at any time.": "मलाई राइडका खबर र घोषणाहरू WhatsApp मा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
   "Show password": "पासवर्ड देखाउनुहोस्",
-  "Hide password": "पासवर्ड लुकाउनुहोस्"
+  "Hide password": "पासवर्ड लुकाउनुहोस्",
+  "Next announcement": "अर्को घोषणा",
+  "Pause reviews": "समीक्षाहरू रोक्नुहोस्",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "यो अनुरोध हामीसँग पहिल्यै छ: यसको रेफरेन्स {0} हो। दोस्रो साइकलका लागि, टोलीले पुष्टि गर्न फोन गर्दा उनीहरूलाई भन्नुहोस्।"
 }

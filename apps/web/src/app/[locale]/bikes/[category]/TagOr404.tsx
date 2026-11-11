@@ -9,8 +9,11 @@ import { useParams } from "next/navigation";
 // not-found page is given no params, so the choice is made here, where the address is known.
 const segment = (p: ReturnType<typeof useParams>) => (typeof p?.category === "string" ? p.category : "");
 
+// This boundary also catches the notFound() of the deeper [sub] and [model] pages: /bikes/42/info is not a
+// sticker's address, so it gets the site's 404 even when 42 is a sticker's number.
 export default function TagOr404({ tag, site }: { tag: ReactNode; site: ReactNode }) {
-  return /^\d{1,6}$/.test(segment(useParams())) ? tag : site;
+  const p = useParams();
+  return typeof p?.sub !== "string" && /^\d{1,6}$/.test(segment(p)) ? tag : site;
 }
 
 /** The sticker's number, as the address has it. */

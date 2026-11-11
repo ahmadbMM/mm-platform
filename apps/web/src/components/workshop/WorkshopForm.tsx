@@ -58,6 +58,9 @@ export default function WorkshopForm(p: WorkshopFormProps) {
   const doneBox = useRef<HTMLDivElement>(null);
   const formTitle = useRef<HTMLHeadingElement>(null);
   const again = useRef(false);
+  // the references this page has shown: the server answers a request it already has (same phone, service and day
+  // within 10 minutes) with that one's reference and `repeat`, and after "Request another" that is no new request
+  const shown = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (done) doneBox.current?.focus();
     else if (again.current) { again.current = false; formTitle.current?.focus(); }
@@ -129,7 +132,7 @@ export default function WorkshopForm(p: WorkshopFormProps) {
     if (lane === "pickup" && !addr.trim()) return setErr(t.errors.pickup_address);
     setBusy(true);
     try {
-      const r = await rpc<{ ok: boolean; ref?: string; error?: string }>("workshop_request", {
+      const r = await rpc<{ ok: boolean; ref?: string; error?: string; repeat?: boolean }>("workshop_request", {
         p: {
           name: nm, phone: ph, service: service.id, service_label: service.name, price: total, // the estimate the customer saw
           parts: p.parts.filter((x) => parts[x.id]).map((x) => ({ id: x.id, label: x.label, price: x.price })),
@@ -137,7 +140,8 @@ export default function WorkshopForm(p: WorkshopFormProps) {
           bike: bike.trim(), notes: notes.trim(), lang: (p.locale === "ar" ? "ar" : "en"), code: promo ? promo.code : "",
         },
       });
-      if (r.ok && r.ref) setDone(r.ref);
+      if (r.ok && r.ref && r.repeat && shown.current.has(r.ref)) setErr(t.repeat(r.ref));
+      else if (r.ok && r.ref) { shown.current.add(r.ref); setDone(r.ref); }
       else {
         // What the server refused is cleared, to be picked again: a day or time it no longer
         // takes, a code it does not take for the workshop ("code": for rentals or sessions only;

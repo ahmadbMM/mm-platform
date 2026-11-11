@@ -188,7 +188,10 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   // inventory could not be read) is listed without it, and the total is left out: never a wrong one.
   const extras = s?.approval || donor ? [] : addonLines(rows, addonItems);
   const extrasCost = addonsCost(extras);
-  const total = rows.reduce((sum, r) => sum + r.price, 0) + (extrasCost ?? 0);
+  // a rider still on the waitlist owes nothing until they have a place: in a party partly seated, their fare and
+  // add-ons stay out of the total (the booking app's _due, bug hunt 2026-10-28); a party all on the waitlist shows its whole
+  const dueRows = allWl ? rows : rows.filter((r) => r.status !== "waitlist");
+  const total = dueRows.reduce((sum, r) => sum + r.price, 0) + (addonsCost(extras.filter((x) => dueRows.some((r) => r.id === x.rowId))) ?? 0);
   const free = (!!s?.free || (noNum && total === 0)) && extras.length === 0;
   const ready = codeReady(rows, s);
   // the Wallet switch (the booking app's _cwPaySlot, 2026-11-03): only with a balance read; each row's own add-ons, so a
@@ -523,7 +526,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
       {/* Calendar and Directions side by side, Share a 48px square at the end of their row, the Live map on its own row */}
       {!past && <div className="tk-actions tk-go">
         {ics && !allWl && <a className="tk-btn tk-cal" href={`data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`} download={`micromobility-${primary.date.replace(/-/g, "")}.ics`}><Cal />{t.calendar}</a>}
-        {links.place && (
+        {/* a held ride whose meeting point is still to be told shows no way there yet (the booking app's _meetHeld) */}
+        {links.place && !(held && meetHeld(s, now)) && (
           <TicketDir href={links.place} apple={links.place === BOOTH_DIR ? BOOTH_APPLE : null} words={{ title: placeLabel, apple: t.mapsApple, google: t.mapsGoogle, close: t.vtClose }}>
             <Pin />{placeLabel}
           </TicketDir>

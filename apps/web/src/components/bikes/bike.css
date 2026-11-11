@@ -44,10 +44,15 @@ html:is([lang="ar"], [lang="ur"]) .bk-root {
   flex-direction: column;
   background: var(--mm-black);
   color: var(--mm-offwhite);
+  /* clip, not hidden: hidden makes the page a scroll box of its own that never scrolls, and the sticky footer (.bk-foot)
+     then sits at the end of the content instead of at the bottom of the screen; hidden stays for a browser without clip */
   overflow-x: hidden;
+  overflow-x: clip;
 }
-.bk-page a { color: var(--mm-green-ink); text-decoration: none; }
-.bk-page a:hover { color: #06603b; }
+/* the buttons (.bk-cta, .bk-cta2) keep their own colours: this rule outranked them, green-ink text on the neon button */
+.bk-page a:not(.bk-cta):not(.bk-cta2) { color: var(--mm-green-ink); text-decoration: none; }
+.bk-page a:not(.bk-cta):not(.bk-cta2):hover { color: #06603b; }
+.bk-page a { text-decoration: none; }
 
 /* Codes, refs, times and numerals stay left-to-right inside Arabic text. */
 .lat { direction: ltr; unicode-bidi: embed; font-variant-numeric: tabular-nums; }

@@ -105,6 +105,8 @@ describe("the price is the one the rider is actually charged", () => {
     expect(ridePrice(bike({ type: "Road", rental_price: 95 }))).toBe(75);
     expect(ridePrice(bike({ type: "Mountain", rental_price: 95 }))).toBe(57.5);
     expect(ridePrice(bike({ type: "Hybrid", rental_price: 95 }))).toBe(57.5);
+    // a premium tier is booked and charged at its own fare (PREMIUM_TIERS), whatever the bike's price says
+    expect(ridePrice(bike({ type: "Road Carbon", rental_price: 150 }))).toBe(250);
   });
 
   it("uses rental_price for the types that are priced per bike", () => {

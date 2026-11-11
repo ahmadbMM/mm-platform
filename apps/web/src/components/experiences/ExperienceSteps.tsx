@@ -192,7 +192,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
   const dlg = useRef<HTMLDialogElement>(null);
   const head = useRef<HTMLHeadingElement>(null);
   const opener = useRef<HTMLElement | null>(null);
-  const [posterLang, setPosterLang] = useState<"ar" | "en">(isRtl(locale) ? "ar" : "en"); // the poster is in these two; every other language reads the English
+  const [posterLang, setPosterLang] = useState<"ar" | "en">(locale === "ar" ? "ar" : "en"); // the poster is in these two; every other language (Urdu too, RTL as it is) reads the English
   const rtl = isRtl(locale);
   // The browser's clock, read once the page is up and then at each minute, while the dates are shown and one of them is
   // not open yet: its countdown follows the real booking window (StepSession.opensAt), never a timer of its own. Before

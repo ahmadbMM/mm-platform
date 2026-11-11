@@ -520,12 +520,14 @@ export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined)
  *  Donation event (2026-11-03) opens the map on its row (sessions.meet_url), else the circuit's directions: it is at
  *  the circuit whichever, so never "Meeting point". */
 export function placeLink(s: (Pick<TicketSession, "approval" | "kind" | "meetUrl"> & { location?: string | null }) | undefined, circuit: string | null): string | null {
-  if (s && meetsAt(s)) return s.meetUrl;
+  // a meeting point without its link falls through as in the booking app's _dirBtnHtml: Run for Her to the Jeddah Yacht
+  // Club, a ride with a place to that place, the DEFE 5K and a ride with none to the booth (bug hunt 2026-11-11: no button)
+  if (s && meetsAt(s) && s.meetUrl) return s.meetUrl;
   if (s?.kind === "arena") return s.meetUrl;
   if (s?.kind === "blood") return s.meetUrl ?? circuit;
   // Any other named place is searched by its name (the booking app's _dirBtnHtml, 2026-11-10): every booking away from
   // the circuit used to open the circuit's directions.
-  const loc = s?.location?.trim();
+  const loc = s?.location?.trim() || (s?.kind === "runher" ? "JYC" : "");
   if (loc && loc !== "JCC") return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(ICS_PLACES.get(loc) ?? loc)}`;
   return circuit;
 }
