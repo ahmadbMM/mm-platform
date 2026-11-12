@@ -84,7 +84,7 @@ describe("the badges", () => {
     const held = list({ ...empty, catalog: cat, mine: [{ slug: "talent_scout", note: null, at: "2026-09-30T18:00:00Z" }] });
     expect(held[0]).toMatchObject({ slug: "talent_scout", on: true, icon: "pass", color: "gold" });
     expect(GLYPH.pass).toBeTruthy();
-    expect(RECORD.en.names.talent_scout[2]).toContain("Micromobilian");
+    expect(RECORD.en.names.talent_scout[2]).toContain("get hired or find a job, anywhere");
   });
   it("leave out a badge the catalogue no longer lists, unless the rider holds it", () => {
     const cat = [{ slug: "first_lap" }, { slug: "regular" }];
