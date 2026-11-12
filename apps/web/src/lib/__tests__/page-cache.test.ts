@@ -30,7 +30,7 @@ describe("pageCacheKey", () => {
     expect(pageCacheKey(get("/club?lang=en&utm=x"), "v1")).toBeNull(); // not one of them
   });
   it("never keeps the account page, the API, media, bike tag pages, forms or files", () => {
-    for (const p of ["/account", "/api/account", "/media/home/x.jpg", "/b/42", "/bikes/42", "/bikes/000042/", "/petromin", "/community/registration", "/preview", "/en/club", "/robots.txt", "/_next/static/x.js"]) {
+    for (const p of ["/account", "/api/account", "/media/home/x.jpg", "/b/42", "/bikes/42", "/bikes/000042/", "/petromin", "/dukan", "/community/registration", "/preview", "/en/club", "/robots.txt", "/_next/static/x.js"]) {
       expect(pageCacheKey(get(`${p}${p.includes("?") ? "&" : "?"}lang=en`), "v1"), p).toBeNull();
     }
   });

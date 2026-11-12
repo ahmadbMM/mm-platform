@@ -1,0 +1,403 @@
+/* The fonts come from the website itself (apps/web/public/fonts/forms, under the SIL Open Font License beside them),
+   never from Google Fonts. Rubik is Dukan's own face (dukan.me) and covers Latin and Arabic; Urdu keeps IBM Plex Sans
+   Arabic (Rubik lacks eight Urdu letters), Hindi and Nepali take Noto Sans Devanagari, Bengali Noto Sans Bengali.
+   Text shows at once in the next face of its stack and swaps when the font arrives; each face covers its own script,
+   so a page fetches only what its words need. */
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 300 900; font-display: swap; src: url("/fonts/forms/rubik-var-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 300 900; font-display: swap; src: url("/fonts/forms/rubik-var-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 300 900; font-display: swap; src: url("/fonts/forms/rubik-var-arabic.woff2") format("woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+@font-face { font-family: "IBM Plex Sans Arabic"; font-style: normal; font-weight: 400; font-display: swap; src: url("/fonts/forms/ibm-plex-sans-arabic-arabic-400.woff2") format("woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+@font-face { font-family: "IBM Plex Sans Arabic"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/forms/ibm-plex-sans-arabic-arabic-600.woff2") format("woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+@font-face { font-family: "IBM Plex Sans Arabic"; font-style: normal; font-weight: 700; font-display: swap; src: url("/fonts/forms/ibm-plex-sans-arabic-arabic-700.woff2") format("woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+@font-face { font-family: "Noto Sans Devanagari"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("/fonts/forms/noto-sans-devanagari-devanagari-wght.woff2") format("woff2"); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF; }
+@font-face { font-family: "Noto Sans Bengali"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("/fonts/forms/noto-sans-bengali-bengali-wght.woff2") format("woff2"); unicode-range: U+0951-0952, U+0964-0965, U+0980-09FE, U+1CD0, U+1CD2, U+1CD5-1CD6, U+1CD8, U+1CE1, U+1CEA, U+1CED, U+1CF2, U+1CF5-1CF7, U+200C-200D, U+20B9, U+25CC, U+A8F1; }
+
+/* Dukan's look (dukan.me's own stylesheet): its green #1b7563 for every action, the dark #004f3d under a press, the
+   orange-red of the diamond in its mark as an accent only (never for text or a message: errors keep their own red),
+   black text on white. The shapes are the Petromin form's: rounded controls and cards, soft shadows, nothing
+   animating in by itself. Every box a rider types in or picks keeps a 3:1 edge (WCAG 1.4.11), and quiet text keeps
+   4.5:1 (WCAG 1.4.3): the green is 5.6:1 on white and 5.2:1 on the page's tint, white on it 5.6:1. */
+:root {
+  --bg: #f4f9f8;
+  --ink: #111111;
+  --green: #1b7563;
+  --green-dark: #004f3d;
+  --accent: #ec2f04;
+  --muted: #57605a;
+  --faint: #6b736d;               /* 4.9:1 on white, 4.6:1 on the tinted ticket */
+  --line: rgba(0, 0, 0, 0.12);    /* separators only */
+  --edge: #8a8a8a;                /* a box's own edge: 3.5:1 on white, 3.3:1 on the tint */
+  --red: #b3261e;
+  --red-bg: rgba(179, 38, 30, 0.06);
+  --chip: rgba(0, 0, 0, 0.05);
+  --wash: rgba(27, 117, 99, 0.07);
+  --ring: rgba(27, 117, 99, 0.2);
+  --r-ctl: 14px; --r-card: 26px; --r-sheet: 32px;
+  --lq-1: 0 1px 2px rgba(16, 48, 42, .06), 0 2px 6px rgba(16, 48, 42, .05);
+  --lq-2: 0 1px 2px rgba(16, 48, 42, .05), 0 4px 10px rgba(16, 48, 42, .06), 0 12px 28px rgba(16, 48, 42, .07);
+  --lq-3: 0 2px 4px rgba(16, 48, 42, .05), 0 8px 16px rgba(16, 48, 42, .06), 0 16px 32px rgba(16, 48, 42, .07), 0 32px 64px rgba(16, 48, 42, .09);
+  --font-latin: "Rubik", system-ui, sans-serif;
+  --font-urdu: "IBM Plex Sans Arabic", "Rubik", system-ui, sans-serif;
+  --font-devanagari: "Noto Sans Devanagari", "Rubik", system-ui, sans-serif;
+  --font-bengali: "Noto Sans Bengali", "Rubik", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-latin);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+html[lang="ur"] body, html[lang="ur"] .title { font-family: var(--font-urdu); letter-spacing: 0; }
+html[lang="hi"] body, html[lang="hi"] .title, html[lang="ne"] body, html[lang="ne"] .title { font-family: var(--font-devanagari); letter-spacing: 0; }
+html[lang="bn"] body, html[lang="bn"] .title { font-family: var(--font-bengali); letter-spacing: 0; }
+html[lang="ar"] .title { letter-spacing: 0; }
+html[lang="ar"] .title, html[lang="ur"] .title, html[lang="hi"] .title, html[lang="ne"] .title { line-height: 1.25; font-size: 30px; }
+html[lang="ar"] p, html[lang="ur"] p, html[lang="hi"] p, html[lang="ne"] p, html[lang="bn"] p { line-height: 1.8; }
+html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) :is(.step-title, .ticket-label, .ticket-col .tl, .stepper-item) { letter-spacing: 0; }
+a { color: inherit; text-decoration: none; }
+a:hover { color: var(--green); }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+/* Headings the form moves the focus to (a new step, the confirmation, an error) say so to a screen reader; no ring. */
+.title:focus, .step-title:focus, .banner:focus { outline: none; }
+/* Inside the form and its dialogs the ring is Dukan's green: on the website's page its own ring (MicroMobility's green,
+   .mm-site :is(...):focus-visible) is more specific than the rule above, so these name the form's own parts. A box keeps
+   its own ring (its green edge and glow), never an outline around it as well. */
+:is(.card, .privacy-dialog, .sheet) :is(a, button, summary, [tabindex]:not([tabindex="-1"])):focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+:is(.card, .privacy-dialog, .sheet) :is(input, select):not([tabindex="-1"]):focus-visible { outline: none; }
+
+/* Header (the form's own page; the website draws its own) */
+.top {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px 16px;
+  width: 100%; max-width: 600px; margin: 0 auto; padding: 18px 20px;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.mark { height: 40px; display: grid; place-items: center; flex: none; }
+.mark img { height: 40px; width: auto; display: block; }
+.lang-wrap {
+  position: relative; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 0 14px 0 16px; border-radius: 999px;
+  border: 1px solid var(--edge); background: transparent; color: var(--ink);
+  font-weight: 600; font-size: 14px; cursor: pointer; transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.lang-wrap:hover, .lang-wrap:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px var(--ring); }
+.lang-wrap svg { flex: none; }
+.lang {
+  appearance: none; -webkit-appearance: none; border: 0; background: transparent; padding: 0; margin: 0;
+  color: inherit; font: inherit; font-weight: 600; cursor: pointer; min-height: 42px; max-width: 132px;
+}
+.lang:focus { outline: none; }
+.lang option { font-weight: 500; color: var(--ink); }
+
+/* Card */
+.wrap { flex: 1; width: 100%; max-width: 600px; margin: 0 auto; padding: 8px 20px 32px; }
+.card {
+  background: #fff; border-radius: var(--r-card); box-shadow: var(--lq-3);
+  padding: 30px 32px 28px; position: relative;
+  scroll-margin-top: 68px; /* under the website's fixed header */
+}
+@media (max-width: 480px) {
+  .top { padding: 14px 16px; }
+  .mark, .mark img { height: 34px; }
+  .wrap { padding: 0; }
+  .card { border-radius: 0; box-shadow: none; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 24px 18px 22px; }
+}
+/* MicroMobility and Dukan side by side, kept apart by a hairline, as the Petromin form pairs its two companies. */
+.partners { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 0 0 18px; }
+.partners img { width: auto; object-fit: contain; display: block; }
+.partner-mm { height: 34px; }
+.partner-dukan { height: 38px; max-width: 140px; }
+.partners-rule { width: 1px; height: 30px; background: var(--line); }
+.title { font-weight: 700; font-size: 34px; line-height: 1.05; letter-spacing: -0.8px; margin: 0 0 8px; text-wrap: balance; }
+
+/* Stepper */
+.stepper { list-style: none; margin: 16px 0 24px; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stepper-item { display: flex; flex-direction: column; gap: 8px; color: var(--faint); font-size: 12px; font-weight: 600; letter-spacing: 0.2px; line-height: 1.25; }
+.stepper-bar { display: block; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, 0.1); transition: background 0.3s ease; }
+.stepper-item.done .stepper-bar { background: var(--green); }
+.stepper-item.active .stepper-bar { background: var(--ink); }
+.stepper-item.active { color: var(--ink); }
+.stepper-item.done { color: var(--green); }
+
+/* Steps */
+.step { border: 0; margin: 0; padding: 0; min-width: 0; }
+.step[hidden] { display: none; }
+.step-title { padding: 0; margin: 0 0 14px; font-size: 20px; font-weight: 700; letter-spacing: -0.2px; }
+
+/* A picked night carries a drawn tick as well as its colour (WCAG 1.4.1). A tick reads the same way in every
+   language: never mirrored. */
+.session { position: relative; }
+.session[aria-checked="true"]::before {
+  content: ""; position: absolute; inset-inline-end: 12px; top: 12px; width: 22px; height: 22px; border-radius: 50%; background: var(--green);
+}
+.session[aria-checked="true"]::after {
+  content: ""; position: absolute; inset-inline-end: 18px; top: 18px; width: 10px; height: 5px;
+  border-left: 2.5px solid #fff; border-bottom: 2.5px solid #fff; transform: rotate(-45deg); transform-origin: center;
+}
+
+/* Sessions */
+.sessions { display: flex; flex-direction: column; gap: 10px; }
+.session {
+  display: grid; grid-template-columns: 1fr; align-items: center; gap: 2px; text-align: start;
+  min-height: 64px; padding: 12px 48px 12px 16px; padding-inline: 16px 48px; border-radius: 18px; border: 1px solid var(--edge); background: #fff;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+.session:hover { border-color: var(--ink); }
+.session:active { transform: scale(0.99); }
+.session[aria-checked="true"] { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); background: var(--wash); }
+.session-date { font-weight: 700; font-size: 16px; }
+.session-time { color: var(--ink); font-size: 14.5px; font-weight: 500; }
+.session-facts { color: var(--muted); font-size: 13.5px; }
+.sessions-empty { margin: 0; padding: 18px; border-radius: 18px; border: 1px dashed var(--edge); color: var(--muted); font-size: 14px; text-align: center; }
+.sessions-help { align-self: center; }
+/* While the calendar answers: three grey cards where the nights will be. */
+.session.skeleton { pointer-events: none; border-color: var(--line); gap: 8px; }
+.session.skeleton span { display: block; height: 12px; border-radius: 6px; background: rgba(0, 0, 0, 0.07); }
+.session.skeleton span:first-child { width: 55%; height: 14px; }
+.session.skeleton span:last-child { width: 35%; }
+.quiet {
+  display: inline-flex; align-items: center; min-height: 44px; margin-top: 6px; padding: 0; border: 0; background: none;
+  font-weight: 600; font-size: 15px; color: var(--green); text-decoration: underline; text-underline-offset: 3px;
+}
+
+/* Actions */
+.actions { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+.actions .submit { flex: 1; margin-top: 0; }
+.back {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 56px; padding: 0 18px; border-radius: 999px;
+  border: 1px solid var(--edge); background: transparent; color: var(--ink); font-weight: 600; font-size: 15px;
+  transition: border-color 0.25s ease;
+}
+.back:hover { border-color: var(--green); color: var(--green); }
+.back[hidden], .submit[hidden] { display: none; }
+html[dir="rtl"] .back-arrow { transform: scaleX(-1); }
+
+/* Banner: a refusal, at the top of the card, which the page scrolls to. */
+.banner {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px;
+  margin: 0 0 20px; padding: 12px 14px; border-radius: 18px; scroll-margin-top: 80px;
+  background: var(--red-bg); color: var(--red); border: 1px solid rgba(179, 38, 30, 0.35); font-weight: 500; font-size: 14.5px;
+}
+.banner[hidden] { display: none; }
+.banner-icon { flex: none; }
+.banner-text { flex: 1; min-width: 60%; }
+.banner-help { font-weight: 600; text-decoration: underline; }
+.banner-help[hidden] { display: none; }
+.banner-close { min-height: 44px; padding: 0 16px; border: 1px solid rgba(179, 38, 30, 0.55); border-radius: 999px; background: transparent; color: var(--red); font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.banner-close:hover { background: rgba(179, 38, 30, 0.08); }
+/* A notice: something that happened, not something wrong (a booking cancelled). */
+.notice { margin: 0 0 18px; padding: 12px 16px; border-radius: 18px; background: var(--wash); border: 1px solid rgba(27, 117, 99, 0.3); color: var(--green-dark); font-weight: 600; font-size: 14.5px; }
+.notice[hidden] { display: none; }
+
+/* Fields */
+.field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 20px; }
+label, .label { font-weight: 600; font-size: 14px; }
+input {
+  height: 50px; width: 100%; padding: 0 16px; border-radius: var(--r-ctl);
+  border: 1px solid var(--edge); background: #fff; color: var(--ink); font: inherit; font-weight: 400;
+  -moz-appearance: textfield; appearance: textfield;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input::placeholder { color: var(--faint); font-weight: 400; }
+.phone-row { display: flex; gap: 8px; }
+.phone-row input { flex: 1; min-width: 0; }
+.cc-wrap {
+  position: relative; display: inline-flex; align-items: center; gap: 4px; flex: none;
+  height: 50px; padding: 0 10px 0 14px; border-radius: var(--r-ctl); border: 1px solid var(--edge); background: #fff;
+  font-weight: 600; font-size: 15px; cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.cc-wrap:hover { border-color: var(--ink); }
+.cc-wrap:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px var(--ring); }
+.cc-wrap svg { flex: none; color: var(--muted); }
+.cc { appearance: none; -webkit-appearance: none; border: 0; background: transparent; padding: 0; margin: 0; color: inherit; font: inherit; font-weight: 600; cursor: pointer; height: 48px; font-variant-numeric: tabular-nums; }
+.cc:focus { outline: none; }
+.field.invalid .cc-wrap { border-color: var(--red); }
+input:hover { border-color: var(--ink); }
+input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--ring); }
+input:focus-visible { outline: none; }
+/* A box that is wrong stays red while it is typed in: red edge, red ring, never the green "active" one around it. */
+.field.invalid input, .field.invalid input:focus, .field.invalid input:hover { border-color: var(--red); }
+.field.invalid input:focus { box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.18); }
+.err { display: none; align-items: flex-start; gap: 6px; margin: 0; font-size: 13.5px; font-weight: 500; color: var(--red); }
+/* The mark beside a message is drawn (a bar and a dot on a red disc), so a screen reader reads the message alone. */
+.err::before {
+  content: ""; flex: none; width: 16px; height: 16px; margin-top: 2px; border-radius: 50%;
+  background: linear-gradient(#fff, #fff) 50% 3.5px / 2px 6px no-repeat, linear-gradient(#fff, #fff) 50% 11px / 2px 2px no-repeat, var(--red);
+}
+.field.invalid > .err { display: flex; }
+.field.invalid .session { border-color: var(--red); }
+
+/* Submit */
+.submit {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; min-height: 56px; margin-top: 10px; padding: 0 18px; border: 0; border-radius: 999px;
+  background: var(--green); color: #fff; font-weight: 600; font-size: 16px;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.submit:hover { background: var(--green-dark); box-shadow: 0 10px 26px rgba(27, 117, 99, 0.28); }
+.submit:active { transform: scale(0.98); }
+.submit .spinner, .submit .submit-busy { display: none; }
+.submit.loading { pointer-events: none; transform: none; box-shadow: none; opacity: 0.92; }
+.submit.loading .submit-label { display: none; }
+.submit.loading .submit-busy { display: inline; }
+.submit.loading .spinner {
+  display: block; width: 18px; height: 18px; border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.35); border-top-color: #fff;
+  animation: spin 0.8s linear infinite;
+}
+.submit.danger { background: var(--red); }
+.submit.danger:hover { background: #8f1e18; box-shadow: 0 10px 26px rgba(179, 38, 30, 0.25); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* The last step: the answers, each part with its Change. */
+.review { display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px; }
+.rv { padding: 14px 16px 10px; border-radius: 18px; background: var(--bg); border: 1px solid var(--line); }
+.rv-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
+.rv-head h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.rv-change { min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--green); font-weight: 600; font-size: 14.5px; text-decoration: underline; text-underline-offset: 3px; }
+.rv-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
+.rv-row:first-of-type { border-top: 0; }
+.rv-k { color: var(--muted); flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.rv-v { font-weight: 500; text-align: end; overflow-wrap: anywhere; }
+
+/* Success */
+.success { display: flex; flex-direction: column; align-items: stretch; gap: 12px; padding-top: 4px; }
+.success[hidden] { display: none; }
+.check {
+  align-self: flex-start; width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: #fff;
+  display: grid; place-items: center; margin-bottom: 6px;
+}
+.check path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: check-draw 0.4s 0.1s ease-out forwards; }
+@keyframes check-draw { to { stroke-dashoffset: 0; } }
+.success .title { margin: 0; }
+.result { margin: 0; color: var(--muted); }
+.done-note { margin: 4px 0 0; padding: 12px 14px; border-radius: 16px; background: var(--chip); font-size: 14.5px; font-weight: 500; color: var(--ink); }
+.done-note[hidden] { display: none; }
+.card[data-state="success"] .form, .card[data-state="success"] .banner { display: none; }
+.nw { white-space: nowrap; unicode-bidi: isolate; }
+
+/* Ways to keep the booking: Wallet, calendar, the way there. */
+.save-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+.pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px;
+  border: 1px solid var(--edge); background: #fff; color: var(--ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+.pill:hover { border-color: var(--green); color: var(--green); }
+.pill[hidden] { display: none; }
+.pill[disabled] { opacity: 0.6; pointer-events: none; }
+
+/* The booking's buttons under the ticket. */
+.edit {
+  display: flex; width: 100%; align-items: center; justify-content: center; gap: 6px; min-height: 52px; padding: 0 18px; border-radius: 999px;
+  border: 1px solid var(--edge); background: transparent; color: var(--ink); font: inherit; font-weight: 600; font-size: 15px; cursor: pointer;
+  transition: border-color 0.25s ease;
+}
+.edit:hover { border-color: var(--green); color: var(--green); }
+.edit-danger { border-color: rgba(179, 38, 30, 0.55); color: var(--red); }
+.edit-danger:hover { border-color: var(--red); color: var(--red); background: rgba(179, 38, 30, 0.05); }
+
+/* The phone's other registrations (Register another): one quiet button each, under the confirmation. */
+.others { width: 100%; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--line); }
+.others[hidden] { display: none; }
+.others-title { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.others-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.other { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--edge); background: #fff; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; transition: border-color 0.2s ease; }
+.other:hover { border-color: var(--green); color: var(--green); }
+
+/* Help: the same place on every step and on the ticket (WCAG 3.2.6). */
+.help { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--green); font-weight: 600; font-size: 14.5px; }
+
+/* Booking QR: the desk scans it to open the booking and check the rider in. */
+.qr { display: flex; justify-content: center; margin: 18px 0 6px; }
+.qr:empty { display: none; }
+.qr canvas { display: block; width: 188px; height: 188px; border-radius: var(--r-ctl); box-shadow: var(--lq-1); }
+.qr svg { width: 188px; height: 188px; padding: 10px; background: #fff; border-radius: var(--r-ctl); box-shadow: var(--lq-1); }
+
+/* Booking card: the shape the rentals ticket uses (label, number, QR, a perforated edge with notches, then the details in
+   labelled columns), in Dukan's colours: its mark over the number, a green band along the top that ends in the
+   diamond's orange-red. */
+.ticket { position: relative; width: 100%; margin: 14px 0 2px; border-radius: var(--r-card); background: var(--bg); overflow: hidden; box-shadow: var(--lq-2); }
+.ticket::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, var(--green) 0 84%, var(--accent) 84% 100%); }
+html[dir="rtl"] .ticket::before { background: linear-gradient(270deg, var(--green) 0 84%, var(--accent) 84% 100%); }
+.ticket-top { padding: 26px 22px 22px; text-align: center; }
+.ticket-mark { display: block; margin: 0 auto 10px; }
+.ticket-label { font-size: 11.5px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: 1.6px; }
+.ticket-num { margin-top: 8px; font-size: 58px; font-weight: 700; line-height: 1; letter-spacing: -1px; color: var(--green); font-variant-numeric: tabular-nums; }
+.ticket-qr { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.ticket-qr .qr { margin: 0; }
+.ticket-cols { position: relative; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 10px; padding: 20px 22px 18px; text-align: center; border-top: 1px dashed var(--edge); }
+.ticket-cols::before, .ticket-cols::after { content: ""; position: absolute; top: -11px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+.ticket-cols::before { left: -11px; }
+.ticket-cols::after { right: -11px; }
+.ticket-col[hidden] { display: none; }
+.ticket-col .tl { margin-bottom: 5px; font-size: 11px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: 0.8px; }
+.ticket-value { font-size: 14px; font-weight: 500; line-height: 1.3; overflow-wrap: anywhere; }
+.ticket-helmet { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; padding: 12px 18px 16px; border-top: 1px solid var(--line); font-size: 13.5px; font-weight: 500; color: var(--muted); text-align: center; }
+.ticket-helmet svg { flex: none; color: var(--green); }
+@media (max-width: 560px) { .ticket-num { font-size: 48px; } }
+
+/* Privacy Notice and the waiver: the two boxes on the last step, each with its text a tap away. */
+.privacy-field, .waiver-field { margin-top: 2px; margin-bottom: 12px; }
+.privacy-field[hidden] { display: none; } /* .field's display:flex would otherwise keep it on screen */
+.privacy-check { display: flex; align-items: flex-start; gap: 12px; font-weight: 500; font-size: 15px; cursor: pointer; }
+.privacy-check input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; accent-color: var(--green); }
+.field.invalid .privacy-check { color: var(--red); }
+.privacy-link { align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; margin-inline-start: 34px; background: none; border: 0; padding: 0; font: inherit; font-size: 14px; font-weight: 600; color: var(--green); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.foot-privacy { color: var(--ink); align-self: auto; font-size: inherit; margin: 0; min-height: 0; }
+/* Dialogs: centred on the screen (the owner's rule for pop-ups), on the page's tint, with a dimmed page behind. */
+.privacy-dialog, .sheet { width: min(640px, calc(100vw - 24px)); max-height: 88vh; padding: 22px 20px 16px; border: 0; border-radius: var(--r-card); background: var(--bg); color: var(--ink); box-shadow: var(--lq-3); }
+.privacy-dialog::backdrop, .sheet::backdrop { background: rgba(17, 17, 17, 0.5); }
+.sheet { width: min(460px, calc(100vw - 24px)); }
+.sheet-form .field { margin-bottom: 16px; }
+.sheet-actions { display: flex; gap: 10px; margin-top: 6px; }
+.sheet-actions .submit { flex: 1; margin-top: 0; }
+.sheet-err { margin: 0 0 12px; padding: 10px 12px; border-radius: 14px; background: var(--red-bg); color: var(--red); font-weight: 500; font-size: 14px; }
+.sheet-err[hidden] { display: none; }
+.ask-text { margin: 4px 0 18px; font-size: 16px; font-weight: 500; line-height: 1.5; }
+.pv-title { margin: 0 0 12px; font-size: 20px; font-weight: 700; }
+.pv-note { margin: 0 0 10px; padding: 8px 10px; border-radius: 10px; background: var(--chip); font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.pv-body { font-size: 14.5px; line-height: 1.6; }
+.pv-body h3 { margin: 16px 0 6px; font-size: 15.5px; }
+.pv-body p, .pv-body ul { margin: 0 0 8px; }
+.pv-body ul { padding-inline-start: 20px; }
+.pv-body a { color: var(--green); font-weight: 600; }
+.pv-upd { color: var(--muted); font-size: 13px; }
+.pv-body table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 4px 0 10px; }
+.pv-body th, .pv-body td { border: 1px solid var(--line); padding: 6px 8px; text-align: start; vertical-align: top; }
+.pv-body th { background: var(--chip); }
+.pv-close { margin-top: 12px; width: 100%; }
+.waiver-text { max-height: 60vh; overflow-y: auto; }
+.waiver-text p { margin: 0; text-wrap: pretty; }
+.waiver-text:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+@media (max-width: 560px) {
+  /* A phone reads each row as a small card: the data as its title, the rest under their column's name. */
+  .pv-body thead { display: none; }
+  .pv-body table, .pv-body tbody, .pv-body tr, .pv-body td { display: block; width: 100%; }
+  .pv-body tr { border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; margin-bottom: 8px; }
+  .pv-body td { border: 0; padding: 2px 0; }
+  .pv-body td:first-child { font-weight: 700; }
+  .pv-body td:not(:first-child)::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+}
+
+/* Footer (the form's own page) */
+.foot {
+  display: flex; justify-content: center; align-items: center; gap: 8px 18px; flex-wrap: wrap;
+  padding: 18px 20px 32px; font-size: 13px; color: var(--muted);
+}
+.foot a { font-weight: 600; color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  .submit, .session, .pill, .edit, .back { transition: none; }
+  .check path { animation: none; stroke-dashoffset: 0; }
+  .submit .spinner { animation-duration: 2s; }
+  .session:active, .submit:active { transform: none; }
+}

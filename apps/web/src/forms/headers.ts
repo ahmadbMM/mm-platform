@@ -1,6 +1,6 @@
 import petrominPage from "./petromin-page";
 
-// The registration forms (forms/community, forms/petromin), the Saturday ride's booking page (forms/saturday) and the
+// The registration forms (forms/community, forms/petromin, forms/dukan), the Saturday ride's booking page (forms/saturday) and the
 // lockers page (forms/lockers) are single
 // self-contained pages the website serves as they are; each build writes its page into this
 // folder. These are the headers their own Cloudflare Workers sent: the pages talk to Supabase from
@@ -64,6 +64,12 @@ export const FORM_HEADERS = {
   petromin: {
     ...COMMON,
     "content-security-policy": csp(JSDELIVR.map((u) => ` ${u}`).join(""), ["form-action 'none'"]),
+  },
+  // Dukan's employees' form (forms/dukan, 2026-11-12): the Petromin form's kind, but it loads no supabase-js (its calls
+  // are plain POSTs to the database), so no script from elsewhere at all.
+  dukan: {
+    ...COMMON,
+    "content-security-policy": csp("", ["form-action 'none'"]),
   },
 } as const;
 
