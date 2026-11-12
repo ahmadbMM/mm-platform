@@ -86,6 +86,18 @@ describe("the badges", () => {
     expect(GLYPH.pass).toBeTruthy();
     expect(RECORD.en.names.talent_scout[2]).toContain("get hired or find a job, anywhere");
   });
+  it("let staff's switch decide who sees each badge (held_only), and keep Swimming Instructor to its holders (the booking app, 2026-11-12)", () => {
+    // A catalogue without held_only: HELD_ONLY is the start, Swimming Instructor stays out as Talent Scout does.
+    const cat = [{ slug: "first_lap", auto: true }, { slug: "volunteer", auto: false }, { slug: "swim_instructor", icon: "swim", color: "blue", auto: false }, { slug: "run_for_her", auto: true }];
+    expect(list({ ...empty, catalog: cat }).map((x) => x.slug)).toEqual(["first_lap", "front_row", "streak", "volunteer"]);
+    // The switch: Volunteer and First Lap switched off, Run for Her switched on. First Lap still shows: this rider earned it.
+    const sw = cat.map((b) => ({ ...b, held_only: b.slug === "volunteer" || b.slug === "first_lap" || b.slug === "swim_instructor" }));
+    expect(list({ ...empty, catalog: sw }).map((x) => x.slug)).toEqual(["first_lap", "front_row", "streak", "run_for_her"]);
+    const held = list({ ...empty, catalog: sw, mine: [{ slug: "swim_instructor", note: null, at: "2026-09-30T18:00:00Z" }] });
+    expect(held[0]).toMatchObject({ slug: "swim_instructor", on: true, icon: "swim", color: "blue" });
+    expect(GLYPH.swim).toBeTruthy();
+    expect(RECORD.en.names.swim_instructor[2]).toContain("teach others to swim");
+  });
   it("leave out a badge the catalogue no longer lists, unless the rider holds it", () => {
     const cat = [{ slug: "first_lap" }, { slug: "regular" }];
     expect(list({ ...empty, catalog: cat }).map((x) => x.slug)).toEqual(["first_lap", "front_row", "streak"]);

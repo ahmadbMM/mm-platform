@@ -20,6 +20,8 @@ const onBike = (sessionId: string, sessions: Map<string, RecordSession>): boolea
 export type BadgeRow = {
   slug: string; note?: string | null; at?: string | null; icon?: string | null; color?: string | null; system?: boolean | null; auto?: boolean | null;
   name?: string | null; name_ar?: string | null; description?: string | null; description_ar?: string | null;
+  /** badge_catalog: true when only its holders see it (staff's "Customers and members see it" switch, off) */
+  held_only?: boolean | null;
   rule?: { rides?: number; windows?: { from?: string; to?: string }[] } | null;
 };
 export type BadgeData = { catalog: BadgeRow[]; weeks: { w: string; ids: string[] }[] | null; seasons: BadgeRow[]; mine: BadgeRow[];
@@ -53,6 +55,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   volunteer: ["hand", "volunteer"], // Volunteer: a raised hand on its own blue special medal, given by staff (2026-11-05)
   // the hours ladder's levels: the database gives each with the volunteer's hours (the booking app, 2026-11-06 review, VL14)
   volunteer_10: ["hand", "teal"], volunteer_25: ["hand", "purple"], volunteer_50: ["hand", "gold"], volunteer_100: ["hand", "blue"],
+  swim_instructor: ["swim", "blue"], // Swimming Instructor: a swimmer's front crawl above the water, on the blue medal, given by staff (2026-11-12)
   talent_scout: ["pass", "gold"], // Talent Scout: a work pass on its lanyard, on the gold medal, given by staff for helping a member get a job (2026-11-12)
   // Recruiter (the booking app, 2026-11-08): friends who made an account with the rider's invite and finished a paid ride
   recruiter: ["people", "green"], recruiter_3: ["people", "teal"], recruiter_5: ["people", "purple"], recruiter_10: ["people", "gold"],
@@ -80,7 +83,11 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_cours
 /** Badges staff give that a rider sees only once they hold one (BDG_HELD_ONLY): never greyed under Badges to earn,
  *  never offered to request (the booking app, 2026-11-12: Talent Scout, for helping someone from the community get a job anywhere,
  *  "only visible for its holders"). */
-export const HELD_ONLY = new Set(["talent_scout"]);
+export const HELD_ONLY = new Set(["talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "back_on_track"]);
+/** Whether only a badge's holders see it (the booking app's _bdgHeldOnly, 2026-11-12: "add a switch to all badges that has
+ *  to do with the visibility of the badges to customers and members"): the catalogue's held_only, staff's switch in
+ *  Community > Badges, else the start the app keeps (def): HELD_ONLY, the ride badges rideBadges marks hide. */
+export const heldOnly = (row: BadgeRow | null | undefined, def: boolean): boolean => (row && typeof row.held_only === "boolean" ? row.held_only : def);
 
 /** Badge ladders (the booking app's BDG_LADDERS, 2026-10-09: "the same way it's done in clash of clans
  *  achievements"): badges that count the same thing to a higher number are the levels of one badge,
@@ -435,9 +442,9 @@ export function badgeList(rows: RecordRow[], sessions: Map<string, RecordSession
   const ride = rideBadges(rows, sessions, data, today, profile).map((r) => {
     const g = given.get(r.s);
     if (!(r.gv && g)) given.delete(r.s); // a Marshal level staff gave stays among the given ones, sorted first
-    return { x: item(r.s, r.on || !!g, { p: r.p ?? null, given: g ? { note: g.note ?? null, at: g.at ?? null } : null, season: r.season ?? null, row: g ?? r.row ?? null }), hide: !!r.hide && !r.on && !g };
+    return { x: item(r.s, r.on || !!g, { p: r.p ?? null, given: g ? { note: g.note ?? null, at: g.at ?? null } : null, season: r.season ?? null, row: g ?? r.row ?? null }), hide: heldOnly(cat?.get(r.s), !!r.hide || HELD_ONLY.has(r.s)) && !r.on && !g };
   });
-  const manual = (cat ? [...cat.values()].filter((b) => !b.auto && !HELD_ONLY.has(b.slug)).map((b) => b.slug) : GIVEN_SYS).map((s) => ({ x: item(s, false, { manual: true }), hide: false }));
+  const manual = (cat ? [...cat.values()].filter((b) => !b.auto && !heldOnly(b, HELD_ONLY.has(b.slug))).map((b) => b.slug) : GIVEN_SYS).map((s) => ({ x: item(s, false, { manual: true }), hide: false }));
   const staffGiven = [...given.values()].map((g) => ({ x: item(g.slug, true, { given: { note: g.note ?? null, at: g.at ?? null }, row: g }), hide: false }));
   const seen = new Set<string>(), out: BadgeItem[] = [];
   for (const { x, hide } of [...staffGiven, ...ride, ...manual]) {
