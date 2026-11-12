@@ -19,7 +19,7 @@ import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { YOGA_MARK, YOGA_MARK_SIZE, yogaKnow } from "@/lib/yoga";
 import { genderChip } from "@/lib/session-gender";
-import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, type OwnLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk, BOOTH_APPLE, BOOTH_DIR, todayCode } from "@/lib/tickets";
+import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, type OwnLocker, bookingRef, breakfastFor, cdLine, codeReady, qrTone, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk, BOOTH_APPLE, BOOTH_DIR, todayCode } from "@/lib/tickets";
 import { TickIcon } from "@/components/site/Icons";
 import { Sar, sarText } from "./Sar";
 import { TicketDir, TicketMore, TicketShare } from "./TicketParts";
@@ -241,6 +241,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const ref = bookingRef(primary, s);
   const qrName = `${t.qrLabel} ${ref}`;
   const largeQr = todayCode(rows, s, today, past);
+  const tone = qrTone(rows, !!s?.free || donor); // green once paid, orange once checked in and owing (2026-11-12)
   const day = `${f({ weekday: "long" })} ${f({ day: "numeric", month: "short", year: "numeric" })}`;
   const placeLabel = meetsAt(s) ? t.meetingPoint : t.directions;
   // Share's words: what, when and where; never a name (the booking app's _tkShareText). A held ride's point is not told.
@@ -289,13 +290,13 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         {!past && !largeQr && (
           <div className="tk-right">
             {ready
-              ? <Qr payload={ref} label={qrName} />
+              ? <Qr payload={ref} label={qrName} tone={tone} />
               : <div className="tk-qr-hold"><span>{ahHeld ? t.ahHoldNote : t.qrHold}</span></div>}
           </div>
         )}
       </div>
       {/* today's code: 224px, centred under the number (Qr's size is the code inside its 6px white tile) */}
-      {largeQr && <div className="tk-qr-big"><Qr payload={ref} size={212} label={qrName} /></div>}
+      {largeQr && <div className="tk-qr-big"><Qr payload={ref} size={212} label={qrName} tone={tone} /></div>}
       {/* the date on one line ([Today ·] weekday date · time) and the place on one more (venue · collect time · chip);
           they were six right-aligned lines beside the code. A segment breaks only at its dot. */}
       <div className="tk-when">

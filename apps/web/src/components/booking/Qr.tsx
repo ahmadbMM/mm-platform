@@ -1,11 +1,14 @@
 import qrcode from "qrcode-generator";
 import QrCanvas from "./QrCanvas";
+import { QR_DARK, QR_INK, type QrTone } from "@/lib/qr-paint";
 
 // A ticket's code: the booking app's own payload (lib/tickets.ts bookingRef), in the box the booking
 // app draws. The server works the code out once and draws it as an svg, which is what shows until
 // the browser has painted the same modules on a canvas (QrCanvas.tsx; the library never reaches the
 // browser, only the modules do): the svg is the code with no script, or before the page has woken.
-export default function Qr({ payload, size = 120, label }: { payload: string; size?: number; label: string }) {
+// tone: the booking's money (lib/tickets.ts qrTone): green once paid, orange once checked in and still owing.
+export default function Qr({ payload, size = 120, label, tone = null }: { payload: string; size?: number; label: string; tone?: QrTone | null }) {
+  const ink = tone ? QR_INK[tone] : QR_DARK;
   const qr = qrcode(0, "M");
   qr.addData(payload);
   qr.make();
@@ -36,12 +39,12 @@ export default function Qr({ payload, size = 120, label }: { payload: string; si
   // but Chrome and Safari then lay the dashes out against the unscaled length and draw two of them.
   // Its corner follows the night ticket's tile, rounded at 10px, which would clip a tighter one.
   return (
-    <span className="tk-qr">
+    <span className="tk-qr" data-tone={tone ?? undefined}>
       <svg role="img" aria-label={label} width={size + 12} height={size + 12} viewBox={`${-m} ${-m} ${n + 2 * m} ${n + 2 * m}`} shapeRendering="crispEdges">
         <rect x={-m} y={-m} width={n + 2 * m} height={n + 2 * m} fill="#fff" />
-        <path d={d} fill="#1a1919" />
+        <path d={d} fill={ink} />
       </svg>
-      <QrCanvas n={n} bits={bits} label={label} />
+      <QrCanvas n={n} bits={bits} label={label} ink={ink} />
       <svg className="tk-qr-live" aria-hidden="true" focusable="false" viewBox="0 0 100 100" preserveAspectRatio="none">
         <rect x="1.5" y="1.5" width="97" height="97" rx="6" pathLength={100} fill="none" stroke="#077a4b" strokeWidth={Math.round(30000 / (size + 12)) / 100} strokeLinecap="round" />
       </svg>

@@ -424,6 +424,18 @@ export function satNumOk(rows: TicketRow[], s: TicketSession | undefined): boole
     && rows.every((r) => r.approval === "approved" && !r.partner && r.status !== "waitlist");
 }
 
+/** The code's colour says where the money stands (the booking app's _qrTone; the owner, 2026-11-12: "change the qr code
+ *  of the booking card to orange when its checked in but not paid and green when its paid"): "paid" once every rider
+ *  with a place has paid (an on-the-house place is marked paid; a waitlisted seat owes nothing yet), "due" once a rider
+ *  is checked in (or done) with a fare still owed, null - the usual dark ink - otherwise: booked and unpaid, and a ride
+ *  that charges nothing (free: a free community ride, a blood drive). */
+export function qrTone(rows: Pick<TicketRow, "status" | "paid" | "price">[], free: boolean): "paid" | "due" | null {
+  const due = rows.filter((r) => r.status !== "waitlist");
+  if (!due.length) return null;
+  if (due.every((r) => r.paid)) return "paid";
+  return !free && due.some((r) => (r.status === "active" || r.status === "done") && !r.paid && r.price > 0) ? "due" : null;
+}
+
 /** A ride staff approve hands out no code until the rider is through: the list published, every
  *  rider on it approved. Every other ride's code is its ticket from the moment it is booked, and so
  *  is a partner's place (Defe, 2026-10-17): confirmed when booked, before the list is out. */

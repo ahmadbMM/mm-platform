@@ -9,6 +9,10 @@ export type QrRect = [x: number, y: number, w: number, h: number];
 
 export const QR_LIGHT = "#fff";
 export const QR_DARK = "#1a1919";
+/** The code's ink once paid (the action green) and once checked in with a fare still owed (orange): the booking app's
+ *  _QR_INK (the owner, 2026-11-12). Both keep about 5:1 on the white tile, which the desk's scanner reads. */
+export const QR_INK = { paid: "#077a4b", due: "#c2410c" } as const;
+export type QrTone = keyof typeof QR_INK;
 
 /** Where module edge k (0 to n) falls on a tile px pixels wide, in whole pixels. The tile is the
  *  svg's viewBox: the code's n modules and a margin of n/20 modules each side (6px of the 132px
@@ -46,6 +50,7 @@ export function paintQr(
   n: number,
   bits: string,
   px: number,
+  ink: string = QR_DARK,
 ): boolean {
   const rects = qrRects(n, bits, px);
   if (!rects.length) return false;
@@ -53,7 +58,7 @@ export function paintQr(
   canvas.height = px;
   pen.fillStyle = QR_LIGHT;
   pen.fillRect(0, 0, px, px);
-  pen.fillStyle = QR_DARK;
+  pen.fillStyle = ink;
   for (const [x, y, w, h] of rects) pen.fillRect(x, y, w, h);
   return true;
 }

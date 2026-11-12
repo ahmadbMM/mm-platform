@@ -9,7 +9,8 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { loadAddonItems } from "../ticket-addons";
 import { vlDivName } from "../vlap";
-import { placeLink, satNumOk, wlCollectTime, type TicketSession } from "../tickets";
+import { placeLink, qrTone, satNumOk, wlCollectTime, type TicketSession } from "../tickets";
+import { QR_DARK, QR_INK } from "../qr-paint";
 
 const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 
@@ -910,3 +911,40 @@ describe("the code a booking used", () => {
   });
 });
 
+
+// The owner, 2026-11-12: "change the qr code of the booking card to orange when its checked in but not paid and green
+// when its paid" (the booking app's _qrTone).
+describe("the code's colour says paid or owed", () => {
+  const s = ticketSession(jccRow)!;
+  const card = (rows: TicketRow[], today = "2099-02-01") => renderToStaticMarkup(createElement(TicketCard, {
+    locale: "en", today, rows, session: s, name: "Open Sports Day", cue: null, t: TICKET.en, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+    links: { edit: null, manage: "https://book.example.test/?tab=bookings", place: null }, now: Date.parse("2099-02-01T09:00:00Z"),
+  }));
+  const ink = (html: string) => html.match(/<path d="M[^"]*" fill="(#[0-9a-f]+)"/)?.[1];
+
+  it("is green once paid, orange once checked in and owing, the dark ink otherwise", () => {
+    expect(qrTone([row({ status: "waiting", paid: false })], false)).toBe(null);
+    expect(qrTone([row({ status: "active", paid: false })], false)).toBe("due");
+    expect(qrTone([row({ status: "active", paid: true })], false)).toBe("paid");
+    expect(qrTone([row({ status: "waiting", paid: true })], false)).toBe("paid"); // paid before the ride
+    // a party: one checked in and owing is orange; one paid and one still to come stays dark
+    expect(qrTone([row({ status: "active" }), row({ status: "waiting", paid: true })], false)).toBe("due");
+    expect(qrTone([row({ status: "active", paid: true }), row({ status: "waiting" })], false)).toBe(null);
+    // a seat on the waitlist owes nothing yet; nothing owed on a free ride, nor at 0; on the house is marked paid
+    expect(qrTone([row({ status: "active", paid: true }), row({ status: "waitlist" })], false)).toBe("paid");
+    expect(qrTone([row({ status: "active" })], true)).toBe(null);
+    expect(qrTone([row({ status: "active", price: 0 })], false)).toBe(null);
+    expect(qrTone([row({ status: "active", price: 0, paid: true })], false)).toBe("paid");
+  });
+
+  it("paints the corner code and the day's big one in that ink", () => {
+    expect(ink(card([row({ status: "waiting" })]))).toBe(QR_DARK);
+    const due = card([row({ status: "active" })]);
+    expect(due).toContain('data-tone="due"');
+    expect(ink(due)).toBe(QR_INK.due);
+    const paid = card([row({ status: "active", paid: true })], "2099-03-01"); // the ride's day: the big code
+    expect(paid).toContain("tk-qr-big");
+    expect(paid).toContain('data-tone="paid"');
+    expect(ink(paid)).toBe(QR_INK.paid);
+  });
+});
