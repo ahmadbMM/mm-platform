@@ -10,6 +10,8 @@ import { ArrowIcon, BackIcon, ClockIcon, InfoIcon, TickIcon } from "@/components
 import { opensLine, type OpensWords } from "@/lib/opens-in";
 import { radioKey, tabStop } from "@/lib/radio-keys";
 import { YOGA_MARK, YOGA_MARK_SIZE } from "@/lib/yoga";
+import { hasKindArt, kindsInOrder, rowsOfKind } from "@/lib/kind-theme";
+import { KindIcon, SatRoute, type RouteWords } from "./KindArt";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -42,6 +44,13 @@ import { YOGA_MARK, YOGA_MARK_SIZE } from "@/lib/yoga";
 // what its event's card and then its date would. On a phone two or more are one row that scrolls sideways, the next
 // showing at the edge. In its event's dates the featured ones come first under "Featured" and the rest follow under
 // "Upcoming", each date once; with nothing featured the list has no headings, and with every date featured no second one.
+// The Experiences card, its list and the Saturday ride (the owner's picks on the booking app's theming page, 2026-11-13;
+// lib/kind-theme.ts): the card leads with the brand pattern and a mark for each kind it has dates for, no lockup, and its
+// link says About and its dialog See dates; its list's heading sits in that pattern under the card's name, a switch picks
+// one of its kinds (the rows alone narrow), and a list mixing rides with sessions without a bike says Choose a date; a
+// named date wears its kind's mark on its tint, the Saturday ride, the pool and a Petromin night their motif along the
+// foot and their drawing across the top of their Details, and the Saturday ride's Details draw its two routes and say
+// when the sun rises.
 export type StepSession = {
   id: string; kind: string; day: string; name: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
@@ -125,6 +134,10 @@ export type StepInfo = {
   /** Facts of the date's own kind, after where it is: yoga's who leads it, how long, the level and what to bring
    *  (2026-11-12). Absent on any other kind. */
   more?: { k: string; v: string }[];
+  /** The Saturday ride: when the sun rises that day, in the page's clock (a fact right after when it is), and its two
+   *  routes' words for the drawing above the facts (KindArt.tsx SatRoute). Absent on any other kind. */
+  sunrise?: string;
+  route?: RouteWords;
 };
 /** `about`: what the event is, in its About (Experiences > Event cards, *About). */
 export type StepEvent = {
@@ -138,6 +151,9 @@ export type StepEvent = {
   name?: string;
   /** The Blood Donation event's card; absent on any other. */
   blood?: StepBlood;
+  /** The Experiences card: a mark for each kind it has a date for, in their order (lib/kind-theme.ts kindMarks), and
+   *  their names joined for a screen reader; absent on any other card, and when it has no such date. */
+  marks?: { kinds: string[]; label: string };
 };
 /** What the Blood Donation event's card, its summary and its poster say, every word ready in the page's language: the
  *  hosts' plate, the tagline, the four short rules, and the poster retyped from the hospital's PDF (blood-info.json). */
@@ -179,7 +195,15 @@ export type StepText = {
     about: string; details: string; bookEvent: string; chooseDate: string; who: string; price: string; when: string; next: string;
     where: string; map: string; distance: string; places: string; after: string; whoMembers: string; close: string;
     races: string; divs: string; format: string;
+    /** The Experiences card's link and its dialog's kicker ("About"), and its dialog's button ("See dates"); the
+     *  Saturday ride's sunrise fact. */
+    aboutShort: string; seeDates: string; sunrise: string;
   };
+  /** The kind switch over a list of two kinds or more: its name for a screen reader, All, and each kind's name (the
+   *  short one where it has one: Saturday, Pool, Petromin). */
+  kinds: { show: string; all: string; names: Record<string, string> };
+  /** The date step's title on a list mixing rides with sessions without a bike. */
+  chooseDate: string;
 };
 // clubHref: the Club page, "" while staff have it switched off (its address then leads Home), so no link is offered.
 // member: the visitor is a signed-in community member (the page asks community_member), so the
@@ -225,6 +249,8 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   const [step, setStep] = useState(1);
   const [ev, setEv] = useState<StepEvent | null>(null);
   const [sess, setSess] = useState<StepSession | null>(null);
+  // The kind picked on the date step's switch (null: All). It narrows the rows alone: a date already chosen stays chosen.
+  const [kind, setKind] = useState<string | null>(null);
   const top = useRef<HTMLDivElement>(null);
   // The dialog: an event's About (s null), or one of its dates' Details. It opens once its words are
   // drawn and its title takes the focus; Escape, Close or a tap outside closes it, and the focus goes
@@ -245,8 +271,13 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
     const e = events.find((x) => x.key === f.ev), s = e?.sessions.find((x) => x.id === f.id);
     return e && s?.feat ? [{ e, s, feat: s.feat }] : [];
   });
-  // The chosen event's dates as its list shows them: the featured ones first, then the rest; as given when none is.
-  const dates = featuredFirst(ev?.sessions ?? [], (s) => !!s.feat);
+  // The chosen event's kinds (two or more offer the switch) and the dates the kind picked leaves (lib/kind-theme.ts): the
+  // switch narrows the dates first, as the booking app's renderRegister does.
+  const kinds = ev ? kindsInOrder(ev.sessions) : [];
+  const picked = kinds.length > 1 && kind && kinds.includes(kind) ? kind : null;
+  const rows = ev ? rowsOfKind(ev.sessions, picked) : [];
+  // Those dates as the list shows them: the featured ones first, then the rest; as given when none is.
+  const dates = featuredFirst(rows, (s) => !!s.feat);
   const listed = [...dates.featured, ...dates.rest];
   const ticking = (step === 2 && !!ev?.sessions.some((s) => s.opensAt != null)) || (step === 1 && feats.some((f) => f.s.opensAt != null));
   useEffect(() => {
@@ -284,7 +315,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
     });
   };
   // What a card does, and what its dialog's button does too.
-  const pickEvent = (e: StepEvent) => { setEv(e); setSess(null); go(2); };
+  const pickEvent = (e: StepEvent) => { setEv(e); setSess(null); setKind(null); go(2); };
   const pickDate = (s: StepSession) => { setSess(s); go(3); };
   // A Featured card goes through its event and on to its date, as choosing the event's card and then the date would, so
   // the last step says and asks what it does that way (the Members note, a session for the other gender, where its
@@ -342,12 +373,18 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   ) : null);
   // The community rides and the events are named by their own title, the fixed events by the card's.
   const named = (e: StepEvent) => e.key === "community" || e.key === "event";
+  // The date step's title: Choose a date where the dates the kind switch leaves mix rides with sessions without a bike
+  // (the booking app's _mixList), else the page's own.
+  const dateTitle = rows.some(noBike) && !rows.every(noBike) ? t.chooseDate : t.dateTitle;
+  // The Experiences card's link and its dialog say About and See dates: it stands for several kinds of session.
+  const aboutWord = (e: StepEvent) => (e.key === "community" ? t.info.aboutShort : t.info.about);
   // A date's facts in the dialog (the booking app's _infoFacts); `next` says it as its event's next date.
   const infoFacts = (s: StepSession, next: boolean): Fact[] => {
     const i = s.info;
     const out: Fact[] = [{ k: t.info.who, v: <>{i.who}{s.sg && <>{i.who && " "}{chip(s)}</>}</> }];
     if (i.price) out.push({ k: t.info.price, v: <bdi>{i.price}</bdi> });
     out.push({ k: next ? t.info.next : t.info.when, v: <>{s.day}{s.when && <><br />{when(s)}</>}{i.collect && <><br />{i.collect}</>}{i.whenNote && <><br />{i.whenNote}</>}</> });
+    if (i.sunrise && !next) out.push({ k: t.info.sunrise, v: <bdi>{i.sunrise}</bdi> }); // the Saturday ride's sunrise
     out.push({ k: t.info.where, v: <>{i.place}{i.map && <> · <a href={i.map} target="_blank" rel="noopener">{t.info.map}</a></>}</> });
     if (i.distance) out.push({ k: t.info.distance, v: <bdi>{i.distance}</bdi> });
     for (const m of i.more ?? []) out.push({ k: m.k, v: m.v });
@@ -375,10 +412,11 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   const poster = info?.ev.blood ?? null;
   const sheet = info && (poster
     // the Blood Donation event's About and Details are its poster (the booking app's _bldInfoView), its facts on the card
-    ? { kind: "blood", kick: info.s ? info.s.day : t.info.about, title: poster.info.title, text: "", extra: null, facts: [], act: info.s ? (opensOf(info.s) ? "" : t.info.chooseDate) : t.info.bookEvent }
+    ? { kind: "blood", kick: info.s ? info.s.day : t.info.about, title: poster.info.title, text: "", extra: null, facts: [], act: info.s ? (opensOf(info.s) ? "" : t.info.chooseDate) : t.info.bookEvent, art: false, route: null }
     : info.s
-    ? { kind: info.s.kind, kick: info.s.name, title: info.s.day, text: info.s.info.text, extra: info.s.info.extra, facts: infoFacts(info.s, false), act: opensOf(info.s) ? "" : t.info.chooseDate }
-    : { kind: info.ev.sessions[0]?.kind ?? info.ev.key, kick: t.info.about, title: info.ev.title, text: info.ev.about, extra: null, facts: eventFacts(info.ev), act: t.info.bookEvent });
+    // a date's Details: its kind's drawing across the top, and the Saturday ride's routes above the facts
+    ? { kind: info.s.kind, kick: info.s.name, title: info.s.day, text: info.s.info.text, extra: info.s.info.extra, facts: infoFacts(info.s, false), act: opensOf(info.s) ? "" : t.info.chooseDate, art: hasKindArt(info.s.kind), route: info.s.info.route ?? null }
+    : { kind: info.ev.sessions[0]?.kind ?? info.ev.key, kick: aboutWord(info.ev), title: info.ev.title, text: info.ev.about, extra: null, facts: eventFacts(info.ev), act: info.ev.key === "community" ? t.info.seeDates : t.info.bookEvent, art: false, route: null });
   // The dialog's button does what the card does. The link that opened the dialog goes with its step,
   // so the focus goes on to the next step's heading (go) rather than back to it.
   const take = () => {
@@ -497,13 +535,22 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                       <span className="xs-bld-tiles" aria-hidden="true">{e.blood.types.map((x, i) => <span key={x} className={`xs-bld-ti${(i + (i > 3 ? 1 : 0)) % 2 === 0 ? " on" : ""}`}>{x}</span>)}</span>
                       <span className="xs-bld-cause">{e.blood.line} {e.blood.cause}</span>
                     </button>
+                  ) : e.key === "community" ? (
+                    // MicroMobility Experiences (the owner's picks Q1 c, Q2 c, 2026-11-13): the brand pattern, no lockup, its
+                    // name and line, and a mark for each kind it has dates for, on its tint, named for a screen reader
+                    <button type="button" className="xs-event ev-community" onClick={() => pickEvent(e)}>
+                      <span className="xs-copy">
+                        <span className="xs-ev-title">{e.title}</span>{e.meta && <span className="xs-ev-meta">{e.meta}</span>}
+                        {e.marks && <span className="xs-marks" role="img" aria-label={e.marks.label}>{e.marks.kinds.map((k) => <span key={k} className={`xs-mk ev-${k}`}><KindIcon kind={k} size={18} /></span>)}</span>}
+                      </span>
+                    </button>
                   ) : (
                     <button type="button" className={`xs-event ev-${e.key}`} onClick={() => pickEvent(e)}>
                       {e.logo && <span className="xs-logo"><img src={e.logo} alt="" /></span>}
                       <span className="xs-copy"><span className="xs-ev-title">{e.title}</span>{e.meta && <span className="xs-ev-meta">{e.meta}</span>}</span>
                     </button>
                   )}
-                  {about && <button type="button" className={`xs-about ab-${e.key}`} aria-label={`${t.info.about} · ${e.title}`} onClick={(x) => showInfo(e, null, x.currentTarget)}>{t.info.about}</button>}
+                  {about && <button type="button" className={`xs-about ab-${e.key}`} aria-label={`${aboutWord(e)} · ${e.title}`} onClick={(x) => showInfo(e, null, x.currentTarget)}>{aboutWord(e)}</button>}
                 </div>
               );
             })}
@@ -514,15 +561,32 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
       {step === 2 && ev && (
         <section aria-labelledby="xs-h2">
           <button type="button" className="xs-back" onClick={() => go(1)}><span aria-hidden="true">{back}</span> {t.back}</button>
-          <p className="xs-picked">{ev.title}</p>
-          <h2 id="xs-h2" className="xs-title" tabIndex={-1}>{t.dateTitle}</h2>
+          {ev.key === "community" ? (
+            // the Experiences list's heading in its card's pattern, under the card's name (the owner's pick B1)
+            <div className="xs-band"><p className="xs-band-k">{ev.title}</p><h2 id="xs-h2" className="xs-title" tabIndex={-1}>{dateTitle}</h2></div>
+          ) : (
+            <>
+              <p className="xs-picked">{ev.title}</p>
+              <h2 id="xs-h2" className="xs-title" tabIndex={-1}>{dateTitle}</h2>
+            </>
+          )}
+          {/* All, then each kind (the owner's pick B5): the one picked in ink */}
+          {kinds.length > 1 && (
+            <div className="xs-kinds" role="group" aria-label={t.kinds.show}>
+              {[null, ...kinds].map((k) => (
+                <button key={k ?? ""} type="button" className={`xs-kind${k ? ` ev-${k}` : ""}`} aria-pressed={picked === k} onClick={() => setKind(k)}>
+                  {k && <KindIcon kind={k} size={15} />}<span>{k ? t.kinds.names[k] ?? k : t.kinds.all}</span>
+                </button>
+              ))}
+            </div>
+          )}
           {ev.sessions.length === 0 ? (
             <p className="xs-empty">{t.noDates}</p>
           ) : (
             // One date is chosen among them (the research's row 11): a radio group with one tab stop and the arrow keys,
             // which move the choice with the focus (nothing else happens until a date is tapped or Enter or Space pressed)
             <div className="sc-list" role="radiogroup" aria-labelledby="xs-h2"
-              onKeyDown={(e) => { const id = radioKey(e, rtl)?.dataset.id; const s = id ? ev.sessions.find((x) => x.id === id) : undefined; if (s) setSess(s); }}>
+              onKeyDown={(e) => { const id = radioKey(e, rtl)?.dataset.id; const s = id ? listed.find((x) => x.id === id) : undefined; if (s) setSess(s); }}>
               {listed.map((s, n) => {
                 const details = infoShown(membersOnlyDate(s), memberOn(ev.key, { member, petromin }));
                 const opens = opensOf(s);
@@ -576,10 +640,11 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                 );
                 return (
                   <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
-                    <button type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}`} {...radio} onClick={() => pickDate(s)}>
+                    <button type="button" className={`sc-card ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}${hasKindArt(s.kind) ? " has-motif" : ""}`} {...radio} onClick={() => pickDate(s)}>
                       {(named(ev) || clubOnly(s) || s.free || s.sg) && (
                         <span className="sc-kicker">
-                          {named(ev) && <span className="sc-chip">{s.name}</span>}
+                          {/* the kind's mark on its tint, then the name (the owner's pick B2) */}
+                          {named(ev) && <span className="sc-chip has-ic"><span className="k-tile"><KindIcon kind={s.kind} size={16} /></span>{s.name}</span>}
                           {chip(s)}
                           {clubOnly(s) && <span className="sc-tag">{t.members}</span>}
                           {s.event && !s.members && <span className="sc-tag">{t.everyone}</span>}
@@ -598,6 +663,8 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                       {s.reveal && <span className="sc-meta">{s.reveal}</span>}
                       {s.event && s.description && <span className="sc-desc">{s.description}</span>}
                       {facts(s)}
+                      {/* the kind's motif along the foot: the Saturday ride's dawn band, the pool's water, Petromin's stripes */}
+                      {hasKindArt(s.kind) && <span className="k-art sc-motif" aria-hidden="true" />}
                     </button>
                     {about}
                   </div></Fragment>
@@ -657,15 +724,17 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
         </section>
       )}
 
-      <dialog ref={dlg} className={`xs-info${sheet ? ` ev-${sheet.kind}` : ""}`} aria-labelledby="xs-info-h"
+      <dialog ref={dlg} className={`xs-info${sheet ? ` ev-${sheet.kind}` : ""}${sheet?.art ? " has-art" : ""}`} aria-labelledby="xs-info-h"
         onClose={() => { setInfo(null); opener.current?.focus({ preventScroll: true }); opener.current = null; }}
         onClick={(x) => { if (x.target === x.currentTarget) dlg.current?.close(); }}>
+        {sheet?.art && <span className="k-art xs-info-art" aria-hidden="true" />}
         {sheet && (
           <div className="xs-info-in">
             <p className="xs-info-kick">{sheet.kick}</p>
             <h2 id="xs-info-h" className="xs-info-title" tabIndex={-1} ref={head}>{sheet.title}</h2>
             {sheet.text && <p className="xs-info-text">{sheet.text}</p>}
             {sheet.extra && <p className="xs-info-extra" dir="auto">{sheet.extra}</p>}
+            {sheet.route && <SatRoute w={sheet.route} rtl={rtl} />}
             {sheet.facts.length > 0 && <dl className="xs-info-facts">{sheet.facts.map((f) => <div key={f.k}><dt>{f.k}</dt><dd>{f.v}</dd></div>)}</dl>}
             {poster && (
               <>

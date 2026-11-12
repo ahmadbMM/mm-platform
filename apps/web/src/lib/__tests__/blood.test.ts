@@ -122,7 +122,7 @@ describe("with no session of the kind, nothing names the event", () => {
   for (const l of ["en", "ar", "de", "ur"]) {
     it(`on Experiences, in what the page draws and in everything it hands the browser (${l})`, async () => {
       const { page, steps, html } = await experiences([JCC], l);
-      expect(steps.props.events.map((e) => e.key)).toEqual(["jcc", "community"]);
+      expect(steps.props.events.map((e) => e.key)).toEqual(["community", "jcc"]);
       expect(steps.props.events.some((e) => e.blood)).toBe(false);
       // JSON of the tree: every prop the page gives a browser component, which is what the page's payload holds
       const handed = JSON.stringify(page);
@@ -143,9 +143,9 @@ describe("with no session of the kind, nothing names the event", () => {
   it("nor with no session at all, or a blood session already closed", async () => {
     expect((await experiences([])).html).not.toContain("blood-partners");
     resetRides();
-    expect((await experiences([{ ...BD, status: "closed" }])).steps.props.events.map((e) => e.key)).toEqual(["jcc", "community"]);
+    expect((await experiences([{ ...BD, status: "closed" }])).steps.props.events.map((e) => e.key)).toEqual(["community", "jcc"]);
     resetRides();
-    expect((await experiences([{ ...BD, id: "2001-11-05-bd", session_date: "2001-11-05" }])).steps.props.events.map((e) => e.key)).toEqual(["jcc", "community"]);
+    expect((await experiences([{ ...BD, id: "2001-11-05-bd", session_date: "2001-11-05" }])).steps.props.events.map((e) => e.key)).toEqual(["community", "jcc"]);
     expect(eventCards([{ kind: "jcc" as const }], { member: true, petromin: true }).map((c) => c.card.key)).not.toContain("blood");
   });
   it("in the Website editor's schema, which anyone may read (api/site-schema)", () => {
@@ -261,11 +261,11 @@ describe("no bikes, no wallet, no ride counted", () => {
 // ── Experiences and Events ───────────────────────────────────────────────────────────────────────────────────
 describe("on Experiences, once a session exists", () => {
   it("has a card of its own, after Petromin Days and before Victory Lap, as on the booking app's landing", () => {
-    expect(EVENT_CARDS.map((c) => c.key).slice(0, 3)).toEqual(["petromin", "blood", "vlap"]);
+    expect(EVENT_CARDS.map((c) => c.key).slice(0, 4)).toEqual(["community", "petromin", "blood", "vlap"]); // MicroMobility Experiences leads (2026-11-13)
     expect(EVENT_CARDS.find((c) => c.key === "blood")).toEqual({ key: "blood", p: "bld", always: false });
     expect(EVENT_OF.blood).toBe("blood");
     const all = [{ id: "v", kind: "vlap" as const }, { id: BD.id, kind: "blood" as const }, { id: "s", kind: "saturday" as const }];
-    expect(eventCards(all, { member: false, petromin: false }).map((c) => c.card.key)).toEqual(["blood", "vlap", "jcc", "community"]);
+    expect(eventCards(all, { member: false, petromin: false }).map((c) => c.card.key)).toEqual(["community", "blood", "vlap", "jcc"]);
     // never among the community rides
     expect(eventCards(all, { member: true, petromin: false }).find((c) => c.card.key === "community")?.sessions.map((x) => x.id)).toEqual(["s"]);
     expect(membersOnlyEvent("blood")).toBe(false);
@@ -273,7 +273,7 @@ describe("on Experiences, once a session exists", () => {
   });
   it("draws the plate, its name, when and where, its tagline and its About link, and no price, and leaves the rules for About", async () => {
     const { steps, html } = await experiences([BD, JCC]);
-    expect(steps.props.events.map((e) => e.key)).toEqual(["blood", "jcc", "community"]);
+    expect(steps.props.events.map((e) => e.key)).toEqual(["community", "blood", "jcc"]);
     expect(html).toMatch(/Thu,? 5 Nov/); // as this machine's Intl writes the short day
     for (const w of ["xs-event ev-blood", "/site/blood-partners.webp", 'width="1503"', 'height="433"', "Micromobility Blood Donation", "5 PM – 11 PM", "Jeddah Corniche Circuit", "Give blood. Ride free.", "xs-about ab-blood"]) expect(html, w).toContain(w);
     expect(html).toContain('alt="MicroMobility, Health Services at the Ministry of Defense, Jeddah Corniche Circuit, Saudi Motorsport Company, Ministry of Sport"');

@@ -45,23 +45,23 @@ describe("the event cards (Petromin Days, the owner, 2026-10-12)", () => {
   const of = (v: { member: boolean; petromin: boolean }, key: string) => eventCards(all, v).find((c) => c.card.key === key)?.sessions.map((s) => s.id);
   it("has no Petromin Days, and no Petromin night anywhere, for a visitor without either tag", () => {
     const v = { member: false, petromin: false };
-    expect(keys(v)).toEqual(["runher", "jcc", "community"]);
+    expect(keys(v)).toEqual(["community", "runher", "jcc"]);
     expect(of(v, "community")).toEqual(["sat1"]);
   });
-  it("puts Petromin Days first for a Petromin tag holder, with the Petromin nights alone", () => {
+  it("puts Petromin Days first after MicroMobility Experiences for a Petromin tag holder, with the Petromin nights alone", () => {
     const v = { member: false, petromin: true };
-    expect(keys(v)).toEqual(["petromin", "runher", "jcc", "community"]);
+    expect(keys(v)).toEqual(["community", "petromin", "runher", "jcc"]);
     expect(of(v, "petromin")).toEqual(["pm1", "pm2"]);
     expect(of(v, "community")).toEqual(["sat1"]); // never twice
-    expect(EVENT_CARDS[0]).toEqual({ key: "petromin", p: "pm", always: false });
+    expect(EVENT_CARDS[1]).toEqual({ key: "petromin", p: "pm", always: false }); // MicroMobility Experiences leads (2026-11-13, kind-theme.test.ts)
   });
   it("lists no Petromin night on the community card, as before, and no Petromin Days for a community member", () => {
     const v = { member: true, petromin: false };
-    expect(keys(v)).toEqual(["runher", "jcc", "community"]);
+    expect(keys(v)).toEqual(["community", "runher", "jcc"]);
     expect(of(v, "community")).toEqual(["sat1"]);
   });
   it("shows no Petromin Days to a holder while no Petromin night is on the books", () => {
-    expect(eventCards([night("jcc1", "jcc")], { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["jcc", "community"]);
+    expect(eventCards([night("jcc1", "jcc")], { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["community", "jcc"]);
   });
   it("hands Petromin Days over to the booking app as ev=petromin, on the night picked", () => {
     expect(bookingAt("https://book.example/?lang=ar", "petromin", "2026-10-14-pm")).toBe("https://book.example/?lang=ar&ev=petromin&session=2026-10-14-pm");
@@ -322,10 +322,10 @@ describe("Victory Lap on Experiences", () => {
 
   it("has a card of its own while it has a date, after Petromin Days and before Run for Her, as on the booking app's landing", () => {
     const all = [{ id: "rh", kind: "runher" as const }, { id: "vl", kind: "vlap" as const }, { id: "j", kind: "jcc" as const }, { id: "pm", kind: "petromin" as const }];
-    expect(eventCards(all, { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["petromin", "vlap", "runher", "jcc", "community"]);
+    expect(eventCards(all, { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["community", "petromin", "vlap", "runher", "jcc"]);
     expect(eventCards(all, { member: false, petromin: false }).find((c) => c.card.key === "vlap")?.sessions.map((x) => x.id)).toEqual(["vl"]);
     expect(eventCards([{ id: "j", kind: "jcc" as const }], { member: true, petromin: false }).map((c) => c.card.key)).not.toContain("vlap");
-    expect(EVENT_CARDS[2]).toEqual({ key: "vlap", p: "vl", always: false }); // the Blood Donation event's card sits between them while it has a date (blood.test.ts)
+    expect(EVENT_CARDS[3]).toEqual({ key: "vlap", p: "vl", always: false }); // the Blood Donation event's card sits between them while it has a date (blood.test.ts)
     expect(bookingAt("https://book.example/", "vlap", "2026-10-26-vl")).toBe("https://book.example/?ev=vlap&session=2026-10-26-vl");
   });
 
@@ -379,7 +379,7 @@ describe("the DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18)", () => {
   it("is a date among the community rides, never a card of its own", () => {
     const all = [{ id: "2026-10-22-df", kind: "defe5k" as const }, { id: "2026-10-24", kind: "saturday" as const }, { id: "j", kind: "jcc" as const }];
     const cards = eventCards(all, { member: true, petromin: false });
-    expect(cards.map((c) => c.card.key)).toEqual(["jcc", "community"]);
+    expect(cards.map((c) => c.card.key)).toEqual(["community", "jcc"]);
     expect(cards.find((c) => c.card.key === "community")?.sessions.map((x) => x.id)).toEqual(["2026-10-22-df", "2026-10-24"]);
     expect(EVENT_CARDS.map((c) => c.key)).not.toContain("defe5k");
     expect(bookingAt("https://book.example/", "community", "2026-10-22-df")).toBe("https://book.example/?ev=community&session=2026-10-22-df");
@@ -417,7 +417,7 @@ describe("yoga (ride_kind 'yoga', 2026-11-12)", () => {
   it("is a date among the community rides, never a card of its own", () => {
     const all = [{ id: "2026-11-21-yg", kind: "yoga" as const }, { id: "2026-11-21", kind: "saturday" as const }, { id: "j", kind: "jcc" as const }];
     const cards = eventCards(all, { member: true, petromin: false });
-    expect(cards.map((c) => c.card.key)).toEqual(["jcc", "community"]);
+    expect(cards.map((c) => c.card.key)).toEqual(["community", "jcc"]);
     expect(cards.find((c) => c.card.key === "community")?.sessions.map((x) => x.id)).toEqual(["2026-11-21-yg", "2026-11-21"]);
     expect(EVENT_CARDS.map((c) => c.key)).not.toContain("yoga");
     expect(EVENT_OF.yoga).toBe("community");

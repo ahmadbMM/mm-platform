@@ -17,7 +17,7 @@ import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { typeOffered } from "@/lib/bike-kinds";
 import { dateText, eventCards, featuredDates, infoArena, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { bizOf, faresOf } from "@/lib/biz";
-import { kindNames, loadRides, oneTime, sessionName, upcoming, type RideSession } from "@/lib/rides";
+import { kindNames, loadRides, oneTime, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
@@ -33,6 +33,8 @@ import { AH_INFO_URL, ahConfig, ahPayLine } from "@/lib/arena";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { yogaKnow, yogaLength } from "@/lib/yoga";
 import { ArrowIcon } from "@/components/site/Icons";
+import { kindThemeWords } from "@/components/experiences/KindTheme.words";
+import { kindMarks, sunriseHhmm } from "@/lib/kind-theme";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
@@ -52,6 +54,13 @@ import { ArrowIcon } from "@/components/site/Icons";
 // MicroMobility Experiences that staff feature, or a special event as it is made, leads its event's dates under
 // "Featured" and has a card above the event cards (lib/event-info.ts featuredDates), which opens it as its event card
 // and then its date would.
+// The Experiences card, its list and the Saturday ride (the owner's picks on the booking app's theming page, 2026-11-13;
+// lib/kind-theme.ts): the card leads, without the lockup, with a mark for each kind it has dates for; its About says About
+// and See dates; its list sits under the card's pattern, offers a switch between its kinds and says Choose a date when it
+// mixes rides with sessions without a bike; each named date wears its kind's mark, the Saturday ride's row and Details say
+// when the sun rises, and its Details draw the two routes. An Arabic page names a session by its Arabic name (title_ar).
+// The Saturday ride's number in its series is the booking app's alone: this page holds the dates from today on, never
+// the ones before, so it cannot count them.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -124,6 +133,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   // and while a Saturday date is: whether it is booked at micromobility.sa/saturday with a code
   const satLink = (rides?.sessions ?? []).some((s) => s.kind === "saturday") ? await saturdayLinkOnly() : false;
   const site = resolvePage(siteSchema, content, L);
+  const kw = kindThemeWords(locale); // the card, its list and the Saturday ride (components/experiences/KindTheme.words.ts)
   const c = resolvePage(experiencesSchema, content, L);
   const d = c.dates, e = c.events, st = c.steps;
   const book = bookingLink(S(c.hero.bookHref), locale);
@@ -234,8 +244,15 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     levelK: tx("Level", "المستوى"), levelV: tx("All levels, no yoga experience needed", "جميع المستويات، ولا تلزم خبرة سابقة في اليوغا"),
     bringK: tx("Bring", "أحضر معك"), bringV: tx("Your yoga mat, and wear comfortable clothing", "سجادة اليوغا الخاصة بك، وارتدِ ملابس مريحة"),
   };
+  // The Saturday ride's sunrise over the Corniche that day, in the page's clock (lib/kind-theme.ts), and its two routes'
+  // words; null on any other kind.
+  const sunrise = (s: RideSession) => (s.kind === "saturday" ? ((v) => (v ? clock(v) : null))(sunriseHhmm(s.date)) : null);
+  const routeOf = (s: RideSession) => (s.kind === "saturday"
+    ? { beg: fillAt(kmWord, kmText(s.groupKm?.beg ?? 20)), int: fillAt(kmWord, kmText(s.groupKm?.int ?? 40)), start: venueWords.meetingPoint, begPlace: venueWords.venueJyc, intPlace: kw.intPlace }
+    : null);
   const toStep = (s: RideSession): StepSession => {
     const seatPrice = s.kind === "event" && s.price != null ? sar(s.price) : null;
+    const sr = sunrise(s), route = routeOf(s);
     // when bikes go out and the price from, under the time, as the booking app's session card says them
     const collect = s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), clock(s.collect)) : null;
     const from = !s.free && rentsBikes(s.kind) ? fromPrice(s) : null;
@@ -246,7 +263,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       id: s.id, kind: s.kind, day: fmtDayDate(s.date, locale),
       // today or tomorrow said in words, as the booking app's session card does (_dayWord)
       near: ((w) => (w === "today" ? tx("Today", "اليوم") : w === "tomorrow" ? tx("Tomorrow", "غداً") : null))(dayWord(s.date, now.slice(0, 10))),
-      name: sessionName(s, kindName, enName, L !== "en"),
+      name: sessionName(s, kindName, enName, L !== "en", L === "ar"),
       // a session with a start time alone (the DEFE 5KM Run) says it once: b is ""
       when: s.times ? { gather: s.gather && !oneTime(s.times), a: clock(s.times[0]), b: oneTime(s.times) ? "" : clock(s.times[1]) } : null,
       // a run and Victory Lap have no bikes, so never the bike prices
@@ -282,7 +299,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       breakfast: infoBreakfast(s, locale),
       reveal: held ? fillAt(tx("Breakfast spot: announced {0}", "موقع الفطور: يُعلَن عنه {0}"), held) : null,
       left: s.left ?? null,
-      meta: [collect, from].filter((x): x is string => !!x),
+      meta: [collect, from, sr && fillAt(kw.sunriseAt, sr)].filter((x): x is string => !!x),
       // within a day of opening, a countdown to the real window that the browser keeps up to date each minute (opensAt)
       opens: window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null,
       opensAt: window && notOpenYet(s.date, window, now, s.kind) ? opensAt(s.date, window) : null,
@@ -293,6 +310,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         // a session for one gender open to everyone: its chip says who, never "Everyone" beside it
         who: s.gender && !s.members ? "" : infoWho(s, whoWords), price: infoPrice(s, { free: S(d.free), seat: seatPrice && fill(S(d.perSeat), { price: seatPrice }), from, athlete: athletePrice(s) }),
         collect, place: place.name, map: place.map,
+        // the Saturday ride: when the sun rises, after when it is, and its two routes drawn above the facts
+        ...(sr ? { sunrise: sr } : {}), ...(route ? { route } : {}),
         distance: infoDistance(s.kind, kmWord), places: infoPlaces(s, { waitlist: waitWord, left1, leftN }),
         ...((v) => (v ? { races: v.races, divs: v.divs } : {}))(infoVl(s, vlWords)),
         ...((v) => (v ? { races: v.races, divs: v.divs, guide: v.guide, format: ahFormat, whenNote: ahWhen, link: { label: tx("Race details", "تفاصيل السباق"), text: tx("The workout and standards, from the organisers", "التمارين والمعايير من المنظمين"), url: AH_INFO_URL } } : {}))(infoArena(s, ahWords)),
@@ -340,10 +359,14 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   };
   const ev: Sec = e; // the cards' texts by prefix: the Blood Donation event has no fields here, and its card brings its own
   // each card with the dates it lists (Experiences > Dates: how many per event)
-  const cards = eventCards(all, { member, petromin }).map(({ card, sessions }) => ({ card, sessions: sessions.slice(0, Math.max(1, N(d.count))) }));
-  const events: StepEvent[] = cards.map(({ card: { key, p }, sessions }) => ({
+  // (and every date on its books, onBooks, for the Experiences card's marks)
+  const cards = eventCards(all, { member, petromin }).map(({ card, sessions }) => ({ card, sessions: sessions.slice(0, Math.max(1, N(d.count))), onBooks: sessions }));
+  const events: StepEvent[] = cards.map(({ card: { key, p }, sessions, onBooks }) => ({
     key, title: S(ev[`${p}Title`]), meta: S(ev[`${p}Meta`]), logo: S(ev[`${p}Logo`]), note: fill(S(ev[`${p}Note`]), caps), about: S(ev[`${p}About`]),
     sessions: sessions.map(toStep),
+    // the Experiences card: a mark for each kind it has a date for (every one on its books, not only those it lists),
+    // named for a screen reader by the kinds' names
+    ...(key === "community" ? ((m) => (m.length ? { marks: { kinds: m, label: m.map((k) => kindName[k as RideKind]).join(" · ") } } : {}))(kindMarks(onBooks)) : {}),
     ...(key === "vlap" ? { line: vlLine(sessions[0]) } : key === "arena" ? { line: ahLine(sessions[0]), name: kindName.arena, must: tx("You must have a partner to take part. There are no individual entries.", "يجب أن يكون لديك شريك للمشاركة. لا يوجد تسجيل فردي.") } : key === "blood" ? bloodCard(sessions[0]) : {}),
   }));
   const text: StepText = {
@@ -368,7 +391,12 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       where: tx("Where", "المكان"), map: tx("Map", "الخريطة"), distance: tx("Distance", "المسافة"), places: tx("Places", "الأماكن"),
       races: tx("Races", "السباقات"), divs: tx("Divisions", "الفئات"), format: tx("Format", "النظام"),
       after: tx("After", "بعدها"), whoMembers: whoWords.members, close: tx("Close", "إغلاق"),
+      aboutShort: kw.about, seeDates: kw.seeDates, sunrise: kw.sunrise,
     },
+    // the kind switch over a list of two kinds or more: its name, All, and each kind by its short name, else its own
+    // (the kinds on the page's dates alone: the Blood Donation event's name never reaches the browser without its date)
+    kinds: { show: kw.show, all: kw.all, names: Object.fromEntries([...new Set(all.map((s) => s.kind))].map((k) => [k, (kw.kinds as Record<string, string>)[k] ?? kindName[k]])) },
+    chooseDate: kw.chooseDate,
   };
 
   const good = list(c.good.items).filter((g) => S(g.title));

@@ -174,13 +174,16 @@ export function infoBreakfast(s: Pick<RideSession, "kind" | "breakfast" | "break
 export const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community" };
 
 /** The event cards in the order the page shows them, each with its texts' prefix in Experiences'
- *  events section and whether it shows with no date. Petromin Days first (the owner, 2026-10-12), then
- *  the Blood Donation event (2026-11-03), Victory Lap (2026-10-17), Arena Heros (2026-10-28) and Run for Her, as on
- *  the booking app's landing. The Blood Donation event's texts are no fields of that section: its words are the
- *  server's (content/blood-words.ts), and the page gives its card them only when it has a date. */
+ *  events section and whether it shows with no date. MicroMobility Experiences, the community card, leads (the owner's
+ *  pick Q3 a on the booking app's theming page, 2026-11-13: the weekly ride most people come for, one-off events after
+ *  it); then Petromin Days (the owner, 2026-10-12), the Blood Donation event (2026-11-03), Victory Lap (2026-10-17),
+ *  Arena Heros (2026-10-28) and Run for Her, as on the booking app's landing. The Blood Donation event's texts are no
+ *  fields of that section: its words are the server's (content/blood-words.ts), and the page gives its card them only
+ *  when it has a date. */
 export const EVENT_CARDS = [
+  { key: "community", p: "comm", always: true },
   { key: "petromin", p: "pm", always: false }, { key: "blood", p: "bld", always: false }, { key: "vlap", p: "vl", always: false }, { key: "arena", p: "ar", always: false }, { key: "runher", p: "rh", always: false }, { key: "snd96", p: "snd", always: false },
-  { key: "jcc", p: "jcc", always: true }, { key: "community", p: "comm", always: true }, { key: "workshop", p: "ws", always: false }, { key: "event", p: "ev", always: false },
+  { key: "jcc", p: "jcc", always: true }, { key: "workshop", p: "ws", always: false }, { key: "event", p: "ev", always: false },
 ] as const;
 export type EventCard = (typeof EVENT_CARDS)[number];
 

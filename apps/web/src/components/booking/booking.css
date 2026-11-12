@@ -503,15 +503,21 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .sc-card.closed { opacity: .62; cursor: default; }
 .sc-card.closed:hover { border-color: rgba(26, 25, 25, .14); box-shadow: none; }
 .sc-spots.closed { color: #8a5c14; white-space: normal; text-align: end; max-width: 55%; }
+/* The Saturday ride's, the pool's and a Petromin night's colours (the owner's pick C1 on the booking app's theming page,
+   2026-11-13; its styles.css --k-*), one set a kind wherever it shows on Experiences: the accent (4.5:1 or more on
+   white), its tint, and the ink that reads 4.5:1 or more on that tint (the pool's accent is 4.2:1 on its tint, so its
+   ink is a shade deeper). experiences.css draws the tile, the marks, the switch, the motif and the drawings with them. */
+:root { --k-sat: #077A4B; --k-sat-tint: #E6F2EC; --k-sat-ink: #077A4B; --k-pool: #0D7D8F; --k-pool-tint: #E3F2F4; --k-pool-ink: #0A6573; --k-pm: #A33B2E; --k-pm-tint: #F8E8E5; --k-pm-ink: #A33B2E; }
 /* Each kind's colour, on its card, on the card's wrapper (for its Details link beside the card), on
    the Details dialog and on a featured date's card above the event cards (experiences.css). */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-saturday { --ev: var(--k-sat); }
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-jcc { --ev: #2f63ad; }
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-swim { --ev: #0d7d8f; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-swim { --ev: var(--k-pool); }
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-workshop { --ev: #c2410c; }
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-snd96 { --ev: #00894a; }
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-event { --ev: #6d28d9; }
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-petromin { --ev: #d6202a; } /* a Petromin night: Petromin's red, as its tag in the booking app (2026-10-12) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-petromin { --ev: var(--k-pm); } /* a Petromin night: its kind's red, as in the booking app (2026-11-13; Petromin's #d6202a before) */
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-defe5k { --ev: #a22b63; } /* the DEFE 5KM Run: Defe's berry (2026-10-18) */
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-arena { --ev: #c81e27; } /* Arena Heros: its red, as the booking app's .ev-arena (2026-10-28) */

@@ -119,14 +119,14 @@ describe("what the page gives the steps", () => {
     for (const holds of [[], ["community_member"]]) {
       jar.account = holds.length ? "c1~a1b2c3d4e5f6a7b8c9d0" : "";
       const { props } = await experiences([PM, SAT], "en", holds);
-      expect(props.events.map((e) => e.key), String(holds)).toEqual(["jcc", "community"]);
+      expect(props.events.map((e) => e.key), String(holds)).toEqual(["community", "jcc"]); // MicroMobility Experiences leads (kind-theme.test.ts)
       expect(props.featured, String(holds)).toEqual([{ ev: "community", id: "2099-11-16" }]);
     }
     jar.account = "c1~a1b2c3d4e5f6a7b8c9d0";
     const holder = await experiences([PM, SAT], "en", ["petromin_member"]);
-    expect(holder.props.events.map((e) => e.key)).toEqual(["petromin", "jcc", "community"]);
+    expect(holder.props.events.map((e) => e.key)).toEqual(["community", "petromin", "jcc"]);
     expect(holder.props.featured).toEqual([{ ev: "petromin", id: "2099-11-15-pm" }, { ev: "community", id: "2099-11-16" }]);
-    expect(holder.props.events[0].sessions.map((s) => !!s.feat)).toEqual([true]);
+    expect(holder.props.events[1].sessions.map((s) => !!s.feat)).toEqual([true]); // Petromin Days, after MicroMobility Experiences
   });
 });
 
@@ -238,14 +238,18 @@ describe("Featured's look", () => {
     expect(xp).toMatch(/\.xs-feat-day \.xs-feat-wd \{[^}]*color: var\(--mm-white\); background: var\(--ev\);/);
     // each kind's colour reaches the card (booking.css), the Saturday ride's the card's own default
     expect(xp).toMatch(/\.xs-feat-card \{ --ev: #077a4b;/);
-    for (const k of ["swim", "petromin", "defe5k", "yoga"]) expect(booking, k).toMatch(new RegExp(`:is\\(\\.sc-card, \\.sc-wrap, \\.xs-info, \\.xs-feat-card\\)\\.ev-${k} \\{ --ev: #[0-9a-f]{6}; \\}`));
+    // (the Saturday ride's, the pool's and a Petromin night's are their kind's colour set, booking.css --k-*, 2026-11-13)
+    for (const k of ["saturday", "swim", "petromin", "defe5k", "yoga"]) expect(booking, k).toMatch(new RegExp(`:is\\(\\.sc-card, \\.sc-wrap, \\.xs-info, \\.xs-feat-card\\)\\.ev-${k} \\{ --ev: (?:#[0-9a-f]{6}|var\\(--k-(?:sat|pool|pm)\\)); \\}`));
   });
   it("gives white on each kind's band a contrast of 4.5:1 or more", () => {
     const lum = (hex: string) => {
       const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255).map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
       return 0.2126 * r + 0.7152 * g + 0.0722 * b;
     };
-    const bands = ["#077a4b", ...["swim", "petromin", "defe5k", "yoga"].map((k) => new RegExp(`\\.xs-feat-card\\)\\.ev-${k} \\{ --ev: (#[0-9a-f]{6});`).exec(booking)![1]), "#b4532f"];
+    // a kind's colour set (booking.css --k-*) read as its hex
+    const hexOf = (v: string) => (v.startsWith("var(") ? new RegExp(`${v.slice(4, -1)}: (#[0-9A-Fa-f]{6});`).exec(booking)![1] : v);
+    const bands = ["#077a4b", ...["saturday", "swim", "petromin", "defe5k", "yoga"].map((k) => hexOf(new RegExp(`\\.xs-feat-card\\)\\.ev-${k} \\{ --ev: (#[0-9a-f]{6}|var\\(--k-[a-z]+\\));`).exec(booking)![1])), "#b4532f"];
+    expect(bands.slice(1, 4)).toEqual(["#077A4B", "#0D7D8F", "#A33B2E"]);
     for (const hex of bands) expect(1.05 / (lum(hex) + 0.05), hex).toBeGreaterThanOrEqual(4.5);
   });
   it("keeps yoga's card in the Sunset Hatha tokens, its glow mirrored where the page reads from the right", () => {

@@ -2,6 +2,7 @@ import { edgeStore, memo, resetMemo } from "./memo";
 import { riyadhClock } from "./workshop-days";
 import { priceRows, type PriceRow } from "./biz";
 import { sessionGender, type SessionGender } from "./session-gender";
+import { rideGroupKm } from "./kind-theme";
 
 // The rides a visitor can book, read from the booking system itself: the bike prices
 // (ride_prices) and the sessions still ahead (sessions). Both are tables the booking app reads
@@ -61,6 +62,11 @@ export type RideSession = {
   date: string; // YYYY-MM-DD, Riyadh
   full: boolean;
   title: string | null;
+  /** The session's name in Arabic (sessions.title_ar, rentals 20261113120000; the owner's pick on the booking app's
+   *  theming page, 2026-11-13): an Arabic page names the session by it (sessionName). Trimmed, at most 60 characters,
+   *  null when blank. Only a read that asks for it has it (SESSION_COLS_TITLE_AR); a copy kept at the edge from before
+   *  has none, and reads as none. */
+  titleAr?: string | null;
   kind: RideKind;
   members: boolean;
   free: boolean;
@@ -127,11 +133,14 @@ export type RideSession = {
    *  under "Featured", and gives it a card above the event cards. toSession always sets it; a copy kept at the edge from
    *  before has none, and reads as not featured. */
   featured?: boolean;
+  /** The Saturday ride's two groups' distances in km (bike_slots._km, the usual 20 and 40 when unset; lib/kind-theme.ts
+   *  rideGroupKm): its Details draw the two routes with them. Only on the Saturday ride. */
+  groupKm?: { beg: number; int: number };
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
 type Row = {
-  id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; ride_kind?: unknown;
+  id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; title_ar?: unknown; ride_kind?: unknown;
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
   location?: unknown; meet_url?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
@@ -246,6 +255,12 @@ function breakfastOf(r: Row): Pick<RideSession, "breakfast" | "breakfastAr"> {
   return { breakfast: name(r.breakfast_name), breakfastAr: name(r.breakfast_name_ar) };
 }
 
+/** The session's Arabic name a row gives (SESSION_COLS_TITLE_AR): only when the read asked for it. */
+function titleArOf(r: Row): Pick<RideSession, "titleAr"> {
+  if (!("title_ar" in r)) return {};
+  return { titleAr: typeof r.title_ar === "string" && r.title_ar.trim() ? r.title_ar.trim().slice(0, 60).trimEnd() : null };
+}
+
 /** When a row says riders are told where it meets (SESSION_COLS_REVEAL): only when the read asked. */
 function revealOf(r: Row): Pick<RideSession, "revealAt"> {
   if (!("reveal_at" in r)) return {};
@@ -295,6 +310,8 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     capacity: seats,
     left: null,
     collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" || kind === "blood" || kind === "yoga" ? null : collectTime(r.bike_slots),
+    ...titleArOf(r),
+    ...(kind === "saturday" ? { groupKm: rideGroupKm(r.bike_slots) } : {}),
     ...placeOf(r),
     ...breakfastOf(r),
     ...revealOf(r),
@@ -330,9 +347,13 @@ export function kindNames(d: Record<string, unknown>): Record<RideKind, string> 
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other
  *  session by what staff called it, else its kind. Staff titles are typed once, in English; in any
- *  other language a title that is just the kind's English name reads as that language's name. */
-export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Record<RideKind, string>, enNames: Record<RideKind, string>, localized: boolean): string {
-  if (s.kind === "jcc" || !s.title) return names[s.kind];
+ *  other language a title that is just the kind's English name reads as that language's name. An
+ *  Arabic page (`arabic`) names it by its Arabic name when staff gave one (sessions.title_ar, the
+ *  booking app's _evName since 2026-11-13). */
+export function sessionName(s: Pick<RideSession, "kind" | "title"> & { titleAr?: string | null }, names: Record<RideKind, string>, enNames: Record<RideKind, string>, localized: boolean, arabic = false): string {
+  if (s.kind === "jcc") return names.jcc;
+  if (arabic && s.titleAr) return s.titleAr;
+  if (!s.title) return names[s.kind];
   return localized && s.title.toLowerCase() === enNames[s.kind].trim().toLowerCase() ? names[s.kind] : s.title;
 }
 
@@ -366,6 +387,9 @@ export const SESSION_COLS_GENDER = "gender_only";
 // The bike types closed on a session (the owner, 2026-11-03; rentals migration 20261103210000). A group of its own, so
 // a database without it reads as before: every type open.
 export const SESSION_COLS_CLOSED = "closed_types";
+// A session's name in Arabic (the owner's pick on the booking app's theming page, 2026-11-13; rentals migration
+// 20261113120000): an Arabic page names the session by it. A group of its own, so a database without it reads as before.
+export const SESSION_COLS_TITLE_AR = "title_ar";
 // The bikes out of service on a session (2026-11-06, OT01; rentals migration 20261107111000): they take places off its
 // capacity, so the places left the cards say count them. A group of its own, so a database without it reads as before.
 export const SESSION_COLS_OUT = "out_bikes";
@@ -514,7 +538,7 @@ async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, 
 }
 
 /** The optional groups of columns every list of the sessions ahead asks for. */
-const SESSION_GROUPS = [SESSION_COLS_PLACE, SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER, SESSION_COLS_CLOSED];
+const SESSION_GROUPS = [SESSION_COLS_PLACE, SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER, SESSION_COLS_CLOSED, SESSION_COLS_TITLE_AR];
 
 /** Each of these sessions' rule, men only, women only or null (mixed; the owner, 2026-10-27), read through
  *  list_sessions for the signed-in account: the Club's members' area lists the next members' rides from

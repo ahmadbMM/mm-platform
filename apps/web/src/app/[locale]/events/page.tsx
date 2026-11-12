@@ -68,7 +68,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   };
   const kindName = { ...kindNames(d), blood: bloodName(tx) }, enName = { ...kindNames(dEn), blood: BLOOD_NAME };
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it
-  const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en");
+  const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en", L === "ar"); // by its Arabic name on the Arabic page (title_ar), as on Experiences
   const drawn = new Date();
   const now = riyadhClock(drawn);
   const clock = (hhmm: string) => fmtClock(hhmm, locale);

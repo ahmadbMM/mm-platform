@@ -63,7 +63,7 @@ afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
 describe("yoga on Experiences", () => {
   it("is a date inside MicroMobility Experiences (the community card), never a card of its own", async () => {
     const steps = await experiences([YG, SAT, JCC]);
-    expect(steps.props.events.map((e) => e.key)).toEqual(["jcc", "community"]);
+    expect(steps.props.events.map((e) => e.key)).toEqual(["community", "jcc"]);
     const comm = steps.props.events.find((e) => e.key === "community")!;
     expect(comm.sessions.map((s) => s.id)).toEqual(["2099-11-21-yg", "2099-11-28"]);
     expect(comm.sessions.filter(isYoga).map((s) => s.id)).toEqual(["2099-11-21-yg"]);
