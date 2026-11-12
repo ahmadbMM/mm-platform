@@ -2295,7 +2295,7 @@ var qrcode = function() {
 
 ;
 (function () {
-  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.fda1c6f4ff.json","hi":"/forms/petromin/t/hi.54a1dd5ea6.json","tl":"/forms/petromin/t/tl.19ac3ac796.json","es":"/forms/petromin/t/es.50048c347d.json","ne":"/forms/petromin/t/ne.f969a68905.json","fr":"/forms/petromin/t/fr.5e84ec914d.json","pt":"/forms/petromin/t/pt.6b29f6b285.json","bn":"/forms/petromin/t/bn.05a2c7482c.json","ur":"/forms/petromin/t/ur.de67ab165f.json","id":"/forms/petromin/t/id.422b2fcb23.json","ms":"/forms/petromin/t/ms.95b5f9c432.json","de":"/forms/petromin/t/de.3202be71a7.json","ru":"/forms/petromin/t/ru.e5965745e1.json","zh":"/forms/petromin/t/zh.451772b480.json","ja":"/forms/petromin/t/ja.7ff0049d71.json"};
+  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.d09bdbe76e.json","hi":"/forms/petromin/t/hi.b42e641c84.json","tl":"/forms/petromin/t/tl.f067b818af.json","es":"/forms/petromin/t/es.62f9cb3c9e.json","ne":"/forms/petromin/t/ne.7b8210bfa7.json","fr":"/forms/petromin/t/fr.e7c2a122a4.json","pt":"/forms/petromin/t/pt.daf0ffaeb4.json","bn":"/forms/petromin/t/bn.7039114bdb.json","ur":"/forms/petromin/t/ur.4565c41156.json","id":"/forms/petromin/t/id.c0665d0e23.json","ms":"/forms/petromin/t/ms.802f385320.json","de":"/forms/petromin/t/de.71e4be97d8.json","ru":"/forms/petromin/t/ru.ab5eeaedca.json","zh":"/forms/petromin/t/zh.8d9d020d7b.json","ja":"/forms/petromin/t/ja.997621a807.json"};
   site.tBase = files;
   function start(dict) {
     var T_SITE = {}; if (dict) T_SITE[site.lang] = dict;
@@ -3385,7 +3385,7 @@ var qrcode = function() {
     btn.disabled = true;
     try {
       var res = await fetch("/api/petromin-pass", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingNo: current.bookingNo, phone: current.phone, sessionId: current.session && current.session.id, lang: html.lang }) });
-      if (!res.ok) { if (res.status === 501 || res.status === 404 && !/json/.test(res.headers.get("content-type") || "")) { walletOff = true; paintWallet(); } setNote(res.status === 404 ? "We could not find your booking. Please register again." : "Could not reach the server"); return; }
+      if (!res.ok) { if (res.status === 501 || res.status === 404 && !/json/.test(res.headers.get("content-type") || "")) { walletOff = true; paintWallet(); } setNote(res.status === 404 ? "We could not find your booking. Please register again." : res.status === 429 ? "Too many tries from this network. Try again in a few minutes." : "Could not reach the server"); return; }
       var url = URL.createObjectURL(await res.blob());
       // Opening the .pkpass shows iOS's "Add to Apple Wallet" sheet.
       var a = document.createElement("a"); a.href = url; a.download = "booking-" + current.bookingNo + ".pkpass"; document.body.appendChild(a); a.click(); a.remove();
@@ -3564,6 +3564,8 @@ var qrcode = function() {
       if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
       if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
+      // rider_edit: the desk has tied this registration to a booking of its own (rentals 20261111235100, a move to another night)
+      if (d.error === "desk") { failBanner("The desk has this booking. Ask the desk to change it."); return; }
       if (d.error === "riders") { goStep(3); setError("f-riders", true); return; }
       // The database refuses a one-letter word with the same code as a wrong character, saying why:
       // "short" (rider_register, rentals 20261004100000). Each gets its own words.

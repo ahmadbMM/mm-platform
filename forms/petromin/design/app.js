@@ -111,6 +111,8 @@
       "Your booking was cancelled.": "تم إلغاء حجزك.",
       "We could not save this. Please try again.": "لم نتمكن من حفظ ذلك. يرجى المحاولة مرة أخرى.",
       "The desk has this booking. Ask the desk to cancel it.": "هذا الحجز لدى المكتب. اطلب من المكتب إلغاءه.",
+      "The desk has this booking. Ask the desk to change it.": "هذا الحجز لدى المكتب. اطلب من المكتب تغييره.",
+      "Too many tries from this network. Try again in a few minutes.": "محاولات كثيرة من هذه الشبكة. حاول مرة أخرى بعد بضع دقائق.",
       "We could not find a booking with this number and mobile number.": "لم نجد حجزًا بهذا الرقم ورقم الجوال."
     },
     hi: {
@@ -220,6 +222,8 @@
       "Your booking was cancelled.": "आपकी बुकिंग रद्द कर दी गई।",
       "We could not save this. Please try again.": "हम इसे सहेज नहीं सके। कृपया फिर से कोशिश करें।",
       "The desk has this booking. Ask the desk to cancel it.": "यह बुकिंग डेस्क के पास है। इसे रद्द करने के लिए डेस्क से कहें।",
+      "The desk has this booking. Ask the desk to change it.": "यह बुकिंग डेस्क के पास है। इसे बदलने के लिए डेस्क से कहें।",
+      "Too many tries from this network. Try again in a few minutes.": "इस नेटवर्क से बहुत अधिक प्रयास हुए हैं। कुछ मिनट बाद फिर से कोशिश करें।",
       "We could not find a booking with this number and mobile number.": "इस नंबर और मोबाइल नंबर से हमें कोई बुकिंग नहीं मिली।"
     },
     tl: {
@@ -329,6 +333,8 @@
       "Your booking was cancelled.": "Nakansela na ang iyong booking.",
       "We could not save this. Please try again.": "Hindi namin ito na-save. Pakisubukang muli.",
       "The desk has this booking. Ask the desk to cancel it.": "Nasa desk na ang booking na ito. Hilingin sa desk na kanselahin ito.",
+      "The desk has this booking. Ask the desk to change it.": "Nasa desk na ang booking na ito. Hilingin sa desk na baguhin ito.",
+      "Too many tries from this network. Try again in a few minutes.": "Masyadong maraming pagsubok mula sa network na ito. Subukang muli pagkalipas ng ilang minuto.",
       "We could not find a booking with this number and mobile number.": "Wala kaming nahanap na booking na may ganitong numero at mobile number."
     },
     es: {
@@ -438,6 +444,8 @@
       "Your booking was cancelled.": "Tu reserva se ha cancelado.",
       "We could not save this. Please try again.": "No hemos podido guardarlo. Inténtalo de nuevo.",
       "The desk has this booking. Ask the desk to cancel it.": "El mostrador tiene esta reserva. Pide en el mostrador que la cancelen.",
+      "The desk has this booking. Ask the desk to change it.": "El mostrador tiene esta reserva. Pide en el mostrador que la cambien.",
+      "Too many tries from this network. Try again in a few minutes.": "Demasiados intentos desde esta red. Inténtalo de nuevo en unos minutos.",
       "We could not find a booking with this number and mobile number.": "No encontramos ninguna reserva con este número y este móvil."
     },
     ne: {
@@ -547,6 +555,8 @@
       "Your booking was cancelled.": "तपाईंको बुकिङ रद्द गरियो।",
       "We could not save this. Please try again.": "हामीले यो सुरक्षित गर्न सकेनौं। कृपया फेरि प्रयास गर्नुहोस्।",
       "The desk has this booking. Ask the desk to cancel it.": "यो बुकिङ डेस्कमा छ। रद्द गर्न डेस्कलाई भन्नुहोस्।",
+      "The desk has this booking. Ask the desk to change it.": "यो बुकिङ डेस्कमा छ। परिवर्तन गर्न डेस्कलाई भन्नुहोस्।",
+      "Too many tries from this network. Try again in a few minutes.": "यो नेटवर्कबाट धेरै पटक प्रयास गरियो। केही मिनेटपछि फेरि प्रयास गर्नुहोस्।",
       "We could not find a booking with this number and mobile number.": "यो नम्बर र मोबाइल नम्बरसँग कुनै बुकिङ फेला परेन।"
     },
     fr: {
@@ -656,6 +666,8 @@
       "Your booking was cancelled.": "Votre réservation a été annulée.",
       "We could not save this. Please try again.": "Nous n’avons pas pu enregistrer. Veuillez réessayer.",
       "The desk has this booking. Ask the desk to cancel it.": "Cette réservation est entre les mains du comptoir. Demandez au comptoir de l’annuler.",
+      "The desk has this booking. Ask the desk to change it.": "Cette réservation est entre les mains du comptoir. Demandez au comptoir de la modifier.",
+      "Too many tries from this network. Try again in a few minutes.": "Trop de tentatives depuis ce réseau. Réessayez dans quelques minutes.",
       "We could not find a booking with this number and mobile number.": "Aucune réservation ne correspond à ce numéro et à ce mobile."
     },
     pt: {
@@ -765,6 +777,8 @@
       "Your booking was cancelled.": "A sua reserva foi cancelada.",
       "We could not save this. Please try again.": "Não foi possível guardar. Tente novamente.",
       "The desk has this booking. Ask the desk to cancel it.": "Esta reserva está com o balcão. Peça ao balcão para a cancelar.",
+      "The desk has this booking. Ask the desk to change it.": "Esta reserva está com o balcão. Peça ao balcão para a alterar.",
+      "Too many tries from this network. Try again in a few minutes.": "Demasiadas tentativas a partir desta rede. Tente novamente daqui a alguns minutos.",
       "We could not find a booking with this number and mobile number.": "Não encontrámos nenhuma reserva com este número e este telemóvel."
     },
     bn: {
@@ -874,6 +888,8 @@
       "Your booking was cancelled.": "আপনার বুকিং বাতিল হয়েছে।",
       "We could not save this. Please try again.": "আমরা এটি সংরক্ষণ করতে পারিনি। অনুগ্রহ করে আবার চেষ্টা করুন।",
       "The desk has this booking. Ask the desk to cancel it.": "এই বুকিংটি ডেস্কের কাছে আছে। বাতিল করতে ডেস্কে বলুন।",
+      "The desk has this booking. Ask the desk to change it.": "এই বুকিংটি ডেস্কের কাছে আছে। পরিবর্তন করতে ডেস্কে বলুন।",
+      "Too many tries from this network. Try again in a few minutes.": "এই নেটওয়ার্ক থেকে অনেক বেশিবার চেষ্টা করা হয়েছে। কয়েক মিনিট পরে আবার চেষ্টা করুন।",
       "We could not find a booking with this number and mobile number.": "এই নম্বর ও মোবাইল নম্বরে কোনো বুকিং পাওয়া যায়নি।"
     },
     ur: {
@@ -983,6 +999,8 @@
       "Your booking was cancelled.": "آپ کی بکنگ منسوخ کر دی گئی۔",
       "We could not save this. Please try again.": "ہم اسے محفوظ نہیں کر سکے۔ براہِ کرم دوبارہ کوشش کریں۔",
       "The desk has this booking. Ask the desk to cancel it.": "یہ بکنگ ڈیسک کے پاس ہے۔ اسے منسوخ کرنے کے لیے ڈیسک سے کہیں۔",
+      "The desk has this booking. Ask the desk to change it.": "یہ بکنگ ڈیسک کے پاس ہے۔ اسے تبدیل کرنے کے لیے ڈیسک سے کہیں۔",
+      "Too many tries from this network. Try again in a few minutes.": "اس نیٹ ورک سے بہت زیادہ کوششیں کی گئی ہیں۔ چند منٹ بعد دوبارہ کوشش کریں۔",
       "We could not find a booking with this number and mobile number.": "اس نمبر اور موبائل نمبر سے کوئی بکنگ نہیں ملی۔"
     },
     id: {
@@ -1092,6 +1110,8 @@
       "Your booking was cancelled.": "Pemesanan Anda sudah dibatalkan.",
       "We could not save this. Please try again.": "Kami tidak dapat menyimpannya. Silakan coba lagi.",
       "The desk has this booking. Ask the desk to cancel it.": "Pemesanan ini sudah ditangani meja layanan. Minta meja layanan untuk membatalkannya.",
+      "The desk has this booking. Ask the desk to change it.": "Pemesanan ini sudah ditangani meja layanan. Minta meja layanan untuk mengubahnya.",
+      "Too many tries from this network. Try again in a few minutes.": "Terlalu banyak percobaan dari jaringan ini. Coba lagi dalam beberapa menit.",
       "We could not find a booking with this number and mobile number.": "Kami tidak menemukan pemesanan dengan nomor dan nomor ponsel ini."
     },
     ms: {
@@ -1201,6 +1221,8 @@
       "Your booking was cancelled.": "Tempahan anda telah dibatalkan.",
       "We could not save this. Please try again.": "Kami tidak dapat menyimpannya. Sila cuba lagi.",
       "The desk has this booking. Ask the desk to cancel it.": "Tempahan ini dipegang oleh kaunter. Minta kaunter membatalkannya.",
+      "The desk has this booking. Ask the desk to change it.": "Tempahan ini dipegang oleh kaunter. Minta kaunter mengubahnya.",
+      "Too many tries from this network. Try again in a few minutes.": "Terlalu banyak cubaan daripada rangkaian ini. Cuba lagi dalam beberapa minit.",
       "We could not find a booking with this number and mobile number.": "Kami tidak menemui tempahan dengan nombor dan nombor telefon ini."
     },
     de: {
@@ -1310,6 +1332,8 @@
       "Your booking was cancelled.": "Deine Buchung wurde storniert.",
       "We could not save this. Please try again.": "Das konnten wir nicht speichern. Bitte versuche es noch einmal.",
       "The desk has this booking. Ask the desk to cancel it.": "Diese Buchung liegt beim Empfang. Bitte den Empfang, sie zu stornieren.",
+      "The desk has this booking. Ask the desk to change it.": "Diese Buchung liegt beim Empfang. Bitte den Empfang, sie zu ändern.",
+      "Too many tries from this network. Try again in a few minutes.": "Zu viele Versuche aus diesem Netzwerk. Versuche es in ein paar Minuten noch einmal.",
       "We could not find a booking with this number and mobile number.": "Wir haben keine Buchung mit dieser Nummer und Handynummer gefunden."
     },
     ru: {
@@ -1419,6 +1443,8 @@
       "Your booking was cancelled.": "Бронирование отменено.",
       "We could not save this. Please try again.": "Не удалось сохранить. Попробуйте ещё раз.",
       "The desk has this booking. Ask the desk to cancel it.": "Этим бронированием занимается стойка регистрации. Попросите её отменить его.",
+      "The desk has this booking. Ask the desk to change it.": "Этим бронированием занимается стойка регистрации. Попросите её изменить его.",
+      "Too many tries from this network. Try again in a few minutes.": "Слишком много попыток из этой сети. Попробуйте снова через несколько минут.",
       "We could not find a booking with this number and mobile number.": "Бронирование с таким номером и номером телефона не найдено."
     },
     zh: {
@@ -1528,6 +1554,8 @@
       "Your booking was cancelled.": "您的预订已取消。",
       "We could not save this. Please try again.": "无法保存。请重试。",
       "The desk has this booking. Ask the desk to cancel it.": "此预订已由服务台处理。请让服务台为您取消。",
+      "The desk has this booking. Ask the desk to change it.": "此预订已由服务台处理。请让服务台为您更改。",
+      "Too many tries from this network. Try again in a few minutes.": "来自此网络的尝试次数过多。请几分钟后再试。",
       "We could not find a booking with this number and mobile number.": "找不到与此预订号和手机号相符的预订。"
     },
     ja: {
@@ -1637,6 +1665,8 @@
       "Your booking was cancelled.": "予約をキャンセルしました。",
       "We could not save this. Please try again.": "保存できませんでした。もう一度お試しください。",
       "The desk has this booking. Ask the desk to cancel it.": "この予約は受付で管理されています。キャンセルは受付にお申し出ください。",
+      "The desk has this booking. Ask the desk to change it.": "この予約は受付で管理されています。変更は受付にお申し出ください。",
+      "Too many tries from this network. Try again in a few minutes.": "このネットワークからの試行回数が多すぎます。数分後にもう一度お試しください。",
       "We could not find a booking with this number and mobile number.": "この予約番号と携帯電話番号に一致する予約は見つかりませんでした。"
     }
   };

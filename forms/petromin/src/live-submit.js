@@ -641,7 +641,7 @@
     btn.disabled = true;
     try {
       var res = await fetch("/api/petromin-pass", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingNo: current.bookingNo, phone: current.phone, sessionId: current.session && current.session.id, lang: html.lang }) });
-      if (!res.ok) { if (res.status === 501 || res.status === 404 && !/json/.test(res.headers.get("content-type") || "")) { walletOff = true; paintWallet(); } setNote(res.status === 404 ? "We could not find your booking. Please register again." : "Could not reach the server"); return; }
+      if (!res.ok) { if (res.status === 501 || res.status === 404 && !/json/.test(res.headers.get("content-type") || "")) { walletOff = true; paintWallet(); } setNote(res.status === 404 ? "We could not find your booking. Please register again." : res.status === 429 ? "Too many tries from this network. Try again in a few minutes." : "Could not reach the server"); return; }
       var url = URL.createObjectURL(await res.blob());
       // Opening the .pkpass shows iOS's "Add to Apple Wallet" sheet.
       var a = document.createElement("a"); a.href = url; a.download = "booking-" + current.bookingNo + ".pkpass"; document.body.appendChild(a); a.click(); a.remove();
@@ -820,6 +820,8 @@
       if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
       if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
+      // rider_edit: the desk has tied this registration to a booking of its own (rentals 20261111235100, a move to another night)
+      if (d.error === "desk") { failBanner("The desk has this booking. Ask the desk to change it."); return; }
       if (d.error === "riders") { goStep(3); setError("f-riders", true); return; }
       // The database refuses a one-letter word with the same code as a wrong character, saying why:
       // "short" (rider_register, rentals 20261004100000). Each gets its own words.
