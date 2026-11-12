@@ -134,6 +134,9 @@ export const experiencesSchema = {
         txt("defeName", 50, "Name: DEFE 5KM Run", "الاسم: سباق دفء 5 كم", "DEFE 5KM Run", "سباق دفء 5 كم"),
         // Arena Heros (ride_kind 'arena', 2026-10-28): the race's own name, in Latin letters in every language but Arabic
         txt("arName", 50, "Name: Arena Heros", "الاسم: أرينا هيروز", "Arena Heros Hybrid Race", "سباق أرينا هيروز الهجين"),
+        // Yoga (ride_kind 'yoga', 2026-11-12): Hatha Yoga for Cyclists with Jassim Alsaady, a date among the community rides
+        // in its own "Sunset Hatha" look (the booking app's evYogaName)
+        txt("yogaName", 50, "Name: yoga", "الاسم: اليوغا", "Hatha Yoga for Cyclists", "هاثا يوغا لراكبي الدراجات"),
         // What each kind of date is, in its Details on Experiences and in the booking app (2026-10-05,
         // lib/event-info.ts): the National Day ride and the events say their card's About instead.
         // aboutPetro is a Petromin night's, which this site shows since 2026-10-12 (Petromin Days).
@@ -148,6 +151,9 @@ export const experiencesSchema = {
         { ...long("aboutAr", 420, "Details: Arena Heros", "التفاصيل: أرينا هيروز", "The race runs from {start} to {end}, with a break for prayer. The organisers give each team its heat time before race day.", "يُقام السباق من {start} إلى {end}، مع استراحة للصلاة. ويُبلغ المنظمون كل فريق بموعد دفعته قبل يوم السباق."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         // the DEFE 5KM Run's (the booking app's infoDtDefe, which it reads from here as experiences.dates.aboutDefe)
         long("aboutDefe", 420, "Details: DEFE 5KM Run", "التفاصيل: سباق دفء 5 كم", "Run 5 km with Defe for breast cancer awareness, together with the MicroMobility community, at the Jeddah Corniche Circuit. Collect your race kit at Jeddah Park on 21 October, 4–10 PM. The race starts on 22 October at 7 PM.", "اركض 5 كم مع دفء للتوعية بسرطان الثدي، مع مجتمع مايكروموبيليتي على حلبة كورنيش جدة. استلم عُدّة السباق من جدة بارك يوم 21 أكتوبر من 4 إلى 10 مساءً. ينطلق السباق يوم 22 أكتوبر الساعة 7 مساءً."),
+        // yoga's (the booking app's infoDtYoga, which it reads from here as experiences.dates.aboutYoga): who leads it, what
+        // it is, its start and end, the level and what to bring
+        { ...long("aboutYoga", 600, "Details: yoga", "التفاصيل: اليوغا", "Ninety minutes of Hatha Yoga made for cyclists, with Jassim Alsaady: mindful movement, deep stretching, gentle strengthening and breathwork for the hips, lower back and legs that riding leaves tight. A time to slow down, feel grounded and recover with the community. {start} to {end}. All levels welcome, no experience needed. Bring your yoga mat and wear comfortable clothing. Free for community members; places are limited.", "تسعون دقيقة من هاثا يوغا مصممة لراكبي الدراجات مع جاسم الساعدي: حركة واعية وإطالة عميقة وتقوية لطيفة وتمارين تنفّس للوركين وأسفل الظهر والساقين التي يشدّها ركوب الدراجة. وقت لتهدأ وتستعيد توازنك وتتعافى مع المجتمع. من {start} إلى {end}. لجميع المستويات، ولا تلزم خبرة سابقة. أحضر سجادة اليوغا وارتدِ ملابس مريحة. مجانية لأعضاء المجتمع، والأماكن محدودة."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         txt("members", 30, "Tag: members only", "الوسم: للأعضاء فقط", "Members", "للأعضاء"),
         txt("everyone", 30, "Tag: open to everyone", "الوسم: للجميع", "Open to everyone", "للجميع"),
         txt("perSeat", 40, "Event: price per seat ({price})", "الفعالية: سعر المقعد ({price})", "{price} per seat", "{price} للمقعد"),

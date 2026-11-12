@@ -15,7 +15,8 @@
 // athlete's place as the booking app's _vlTkHtml words it - vlRace_*, vlTeamCode, vlWithPartner,
 // vlWaitPartner, vlNoPartner, vlPairWait, vlShirtLabel, vlT5Short, vlT5_*, vlEdBtn, and the ticket question vt*
 // (the divisions are Kamin Sports' names, lib/vlap.ts vlDivName). The DEFE 5KM Run (2026-10-18): runnerNumber,
-// and defeKit*, defeRace*, defeReg*, the booking app's own keys. Men only, women only or mixed (2026-10-27):
+// and defeKit*, defeRace*, defeReg*, the booking app's own keys. Yoga (2026-11-12): ygLead*, ygLevel*, ygBring*, the booking
+// app's own keys. Men only, women only or mixed (2026-10-27):
 // sgMale, sgFemale, sgMixed, the booking app's own keys. Arena Heros (2026-10-28): athleteNumber, vlRaces wd/md,
 // vlTeamCode, vlWithPartner and vlPairWait as on Victory Lap, and the site's own ahTeamCode and ahHeat.
 // My Bookings after the research round (2026-11-10): qrLabel ticketQrLabel · details infoDetails · share tcShare ·
@@ -116,6 +117,13 @@ export const T = {
     defeRegCode: "Use discount code {0} for 50% off, for the first 50 members.",
     defeRegLink: "Register for the race",
     defeRegYesNote: "You told us you are registered for the race through Defe website.",
+    // yoga (2026-11-12): what to know before arriving (the booking app's ygLeadK, ygLeadV, ygLevelK, ygLevelV, ygBringK, ygBringV)
+    ygLeadK: "Led by",
+    ygLeadV: "Jassim Alsaady",
+    ygLevelK: "Level",
+    ygLevelV: "All levels, no yoga experience needed",
+    ygBringK: "Bring",
+    ygBringV: "Your yoga mat, and wear comfortable clothing",
     yes: "Yes",
     no: "No",
     change: "Change",
@@ -275,6 +283,12 @@ export const T = {
     defeRegCode: "استخدم كود الخصم {0} لخصم 50%، لأول 50 عضوًا.",
     defeRegLink: "سجّل في السباق",
     defeRegYesNote: "أخبرتنا أنك مسجّل في السباق عبر موقع دفء.",
+    ygLeadK: "يقدّمها",
+    ygLeadV: "جاسم الساعدي",
+    ygLevelK: "المستوى",
+    ygLevelV: "جميع المستويات، ولا تلزم خبرة سابقة في اليوغا",
+    ygBringK: "أحضر معك",
+    ygBringV: "سجادة اليوغا الخاصة بك، وارتدِ ملابس مريحة",
     yes: "نعم",
     no: "لا",
     change: "تغيير",

@@ -2,9 +2,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { makeL } from "@/i18n/tx";
-import { bookingAt, dateText, EVENT_CARDS, eventCards, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoVl, infoWho, memberOn, membersOnlyDate, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
+import { bookingAt, dateText, EVENT_CARDS, EVENT_OF, eventCards, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoVl, infoWho, memberOn, membersOnlyDate, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
 import type { RideKind } from "../rides";
 import { fmtClock } from "../tickets";
+import { yogaKnow, yogaLength, yogaMinutes } from "../yoga";
 
 // "About this event" and "Details" on Experiences (2026-10-05) say what the booking app's picker
 // says: the same texts, filled from the same date, and shown to the same visitors.
@@ -12,7 +13,7 @@ import { fmtClock } from "../tickets";
 const clock = (t: string) => fmtClock(t, "en");
 const TEXTS: DateTexts = {
   aboutJcc: "Circuit: bikes from {collect}, {start} to {end}.", aboutSat: "Gather {gather}, start {start}.", aboutPetro: "Petromin: bikes from {collect}.", aboutSwim: "Pool {start} to {end}.",
-  aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", aboutVl: "Doors {gather}, first heat {start}.", aboutDefe: "Defe run at {start}{end}.", aboutAr: "Heats {start} to {end}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
+  aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", aboutVl: "Doors {gather}, first heat {start}.", aboutDefe: "Defe run at {start}{end}.", aboutAr: "Heats {start} to {end}.", aboutYoga: "Yoga {start} to {end}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
 };
 const circuit = { kind: "jcc" as const, times: ["21:00", "23:00"] as [string, string], gather: false, collect: "20:15", description: null };
 const saturday = { kind: "saturday" as const, times: ["05:45", "06:15"] as [string, string], gather: true, collect: null, description: "Breakfast at the marina." };
@@ -331,5 +332,59 @@ describe("the DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18)", () => {
     expect(f("aboutDefe")?.def.en).toBe("Run 5 km with Defe for breast cancer awareness, together with the MicroMobility community, at the Jeddah Corniche Circuit. Collect your race kit at Jeddah Park on 21 October, 4–10 PM. The race starts on 22 October at 7 PM.");
     expect(f("aboutDefe")?.def.ar).toContain("دفء");
     expect(readFileSync(new URL("../../../public/site/defe-logo.svg", import.meta.url), "utf8")).toMatch(/^<svg[^>]*viewBox="112 203 977 660"/);
+  });
+});
+
+describe("yoga (ride_kind 'yoga', 2026-11-12)", () => {
+  // Hatha Yoga for Cyclists with Jassim Alsaady, as the booking app makes it: members only, free, a start and an end
+  // ("16:00 - 17:30"), at SILKDEER with its map
+  const yoga = { kind: "yoga" as const, times: ["16:00", "17:30"] as [string, string], gather: false, collect: null, description: null };
+  const MAP = "https://maps.app.goo.gl/TfCSEPEPxA4C5f7d7";
+  it("is a date among the community rides, never a card of its own", () => {
+    const all = [{ id: "2026-11-21-yg", kind: "yoga" as const }, { id: "2026-11-21", kind: "saturday" as const }, { id: "j", kind: "jcc" as const }];
+    const cards = eventCards(all, { member: true, petromin: false });
+    expect(cards.map((c) => c.card.key)).toEqual(["jcc", "community"]);
+    expect(cards.find((c) => c.card.key === "community")?.sessions.map((x) => x.id)).toEqual(["2026-11-21-yg", "2026-11-21"]);
+    expect(EVENT_CARDS.map((c) => c.key)).not.toContain("yoga");
+    expect(EVENT_OF.yoga).toBe("community");
+    expect(bookingAt("https://book.example/", EVENT_OF.yoga, "2026-11-21-yg")).toBe("https://book.example/?ev=community&session=2026-11-21-yg");
+  });
+  it("says its start and its end in its own text, for members, free, with no bike price and no distance", () => {
+    expect(infoTimes(yoga, clock)).toEqual({ gather: "", start: "4 PM", end: "5:30 PM", collect: "" });
+    expect(dateText(yoga, TEXTS, infoTimes(yoga, clock))).toBe("Yoga 4 PM to 5:30 PM.");
+    const who = { all: "Everyone", members: "Community members", members18: "Community members, 18 and over", petromin: "x", vlap: "y" };
+    expect(infoWho({ members: true, kind: "yoga" }, who)).toBe("Community members");
+    expect(rentsBikes("yoga")).toBe(false);
+    expect(infoPrice({ kind: "yoga", free: true }, { free: "Complimentary", seat: null, from: "from SAR 57.5" })).toBe("Complimentary");
+    expect(infoPrice({ kind: "yoga", free: false }, { free: "Complimentary", seat: null, from: "from SAR 57.5" })).toBeNull();
+    expect(infoDistance("yoga", "{0} km")).toBeNull();
+    expect(infoPlaces({ kind: "yoga", full: false, left: 2, approval: false }, { waitlist: "Waitlist", left1: "{0} spot left", leftN: "{0} spots left" })).toBe("2 spots left");
+  });
+  it("is at the place staff named with its own map, at its meeting point when it names none, never the circuit", () => {
+    const words = { meetingPoint: "Meeting point", venueCircuit: "Jeddah Corniche Circuit", venueJyc: "Jeddah Yacht Club" };
+    expect(infoPlace({ kind: "yoga", approval: false, location: "SILKDEER", meetUrl: MAP }, words, "https://dir")).toEqual({ name: "SILKDEER", map: MAP });
+    expect(infoPlace({ kind: "yoga", approval: false, location: null, meetUrl: MAP }, words, "https://dir")).toEqual({ name: "Meeting point", map: MAP });
+    expect(infoPlace({ kind: "yoga", approval: false, location: "SILKDEER", meetUrl: null }, words, "https://dir")).toEqual({ name: "SILKDEER", map: null });
+  });
+  it("runs as long as its start and end say, and says who leads it, how long, the level and what to bring", () => {
+    expect(yogaMinutes(["16:00", "17:30"])).toBe(90);
+    expect(yogaMinutes(["9:05", "10:00"])).toBe(55);
+    for (const t of [null, undefined, ["19:00", "19:00"], ["18:00", "17:00"], ["x", "17:00"]] as const) expect(yogaMinutes(t as [string, string] | null | undefined), String(t)).toBe(0);
+    expect(yogaLength(["16:00", "17:30"], "{0} min")).toBe("90 min");
+    expect(yogaLength(["16:00", "17:30"], "{0} دقيقة")).toBe("90 دقيقة");
+    expect(yogaLength(["19:00", "19:00"], "{0} min")).toBe("");
+    const w = { leadK: "Led by", leadV: "Jassim Alsaady", durK: "Length", levelK: "Level", levelV: "All levels, no yoga experience needed", bringK: "Bring", bringV: "Your yoga mat, and wear comfortable clothing" };
+    expect(yogaKnow(w, "90 min")).toEqual([["Led by", "Jassim Alsaady"], ["Length", "90 min"], ["Level", "All levels, no yoga experience needed"], ["Bring", "Your yoga mat, and wear comfortable clothing"]]);
+    expect(yogaKnow(w).map(([k]) => k)).toEqual(["Led by", "Level", "Bring"]);
+  });
+  it("has its name and Details text in Experiences' fields, the booking app's own words, and its mark", () => {
+    const f = (id: string) => experiencesSchema.sections.find((x) => x.id === "dates")?.fields.find((x) => x.id === id) as { def: { en: string; ar: string }; max: number } | undefined;
+    expect(f("yogaName")?.def).toEqual({ en: "Hatha Yoga for Cyclists", ar: "هاثا يوغا لراكبي الدراجات" });
+    const about = f("aboutYoga");
+    expect(about?.def.en).toBe("Ninety minutes of Hatha Yoga made for cyclists, with Jassim Alsaady: mindful movement, deep stretching, gentle strengthening and breathwork for the hips, lower back and legs that riding leaves tight. A time to slow down, feel grounded and recover with the community. {start} to {end}. All levels welcome, no experience needed. Bring your yoga mat and wear comfortable clothing. Free for community members; places are limited.");
+    expect(about?.def.ar).toContain("من {start} إلى {end}");
+    expect(about!.def.en.length).toBeLessThanOrEqual(about!.max);
+    expect(fillTimes(about!.def.en, infoTimes(yoga, clock))).toContain(" 4 PM to 5:30 PM. ");
+    expect(readFileSync(new URL("../../../public/site/yoga-mark.svg", import.meta.url), "utf8")).toMatch(/^<svg[^>]*viewBox="0 0 64 40"/);
   });
 });

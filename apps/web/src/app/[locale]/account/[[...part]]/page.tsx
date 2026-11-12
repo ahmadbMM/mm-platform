@@ -253,7 +253,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     // Edit does; Reschedule and Cancel open its My Bookings. (A Run for Her place is only cancelled;
     // its event is still named, as the booking app's event link takes it.)
     // (Victory Lap's details change in My Bookings there: it is never edited or rescheduled; nor Arena Heros'.)
-    const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood" };
+    const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community" };
     const appLink = (params: Record<string, string>) => {
       try { const u = new URL(app); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
       catch { return book; }

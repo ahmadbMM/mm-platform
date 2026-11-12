@@ -21,6 +21,7 @@ const KIND: Record<string, { en: string; ar: string }> = {
   vlap: phrase("Victory Lap", "فيكتوري لاب"),
   defe5k: phrase("DEFE 5KM Run", "سباق دفء 5 كم"), // the DEFE 5KM Run (2026-10-18): one start time, said as it is
   arena: phrase("Arena Heros Hybrid Race", "سباق أرينا هيروز الهجين"), // Arena Heros (2026-10-28): a race in teams of 2, its window as it is
+  yoga: phrase("Hatha Yoga for Cyclists", "هاثا يوغا لراكبي الدراجات"), // yoga (2026-11-12): a start and an end, as the pool
 };
 
 export default function ClubRides(p: Props) {

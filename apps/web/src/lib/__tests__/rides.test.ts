@@ -506,6 +506,30 @@ describe("the DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18)", () => {
   });
 });
 
+describe("yoga (ride_kind 'yoga', 2026-11-12)", () => {
+  // the booking app's session script (supabase/checks/yoga-session-2026-11-21.sql): Hatha Yoga for Cyclists, 15 places
+  const yg = { id: "2026-11-21-yg", session_date: "2026-11-21", event_kind: "community", ride_kind: "yoga", title: null, open_to_all: false, paid_ride: false, needs_approval: false, capacity: 15, bike_slots: '{"_time":"16:00 - 17:30"}', location: "SILKDEER", meet_url: "https://maps.app.goo.gl/TfCSEPEPxA4C5f7d7" };
+  it("is a kind of its own on a community session only", () => {
+    expect(rideKind({ event_kind: "community", ride_kind: "yoga" })).toBe("yoga");
+    expect(rideKind({ event_kind: null, ride_kind: "yoga" })).toBe("jcc");
+  });
+  it("reads members only, free, nobody approving it, a start and an end, no gathering, no bike collection", () => {
+    expect(toSession(row(yg))).toMatchObject({ id: "2026-11-21-yg", kind: "yoga", members: true, free: true, times: ["16:00", "17:30"], gather: false, price: null, seats: null, collect: null, approval: false, capacity: 15, location: "SILKDEER", meetUrl: "https://maps.app.goo.gl/TfCSEPEPxA4C5f7d7", noCarbon: true });
+    expect(toSession(row({ ...yg, status: "full" }))).toMatchObject({ kind: "yoga", full: true });
+  });
+  it("stays on the list until its end has passed", () => {
+    const s = toSession(row(yg))!;
+    expect(upcoming([s], "2026-11-21T17:00").map((x) => x.id)).toEqual(["2026-11-21-yg"]);
+    expect(upcoming([s], "2026-11-21T17:30")).toEqual([]);
+  });
+  it("is named by its own name (Experiences > Dates: yogaName), in Arabic too", () => {
+    const en = kindNames({ yogaName: "Hatha Yoga for Cyclists" }), ar = kindNames({ yogaName: "هاثا يوغا لراكبي الدراجات" });
+    expect(sessionName({ kind: "yoga", title: null }, en, en, false)).toBe("Hatha Yoga for Cyclists");
+    expect(sessionName({ kind: "yoga", title: "Hatha Yoga for Cyclists" }, ar, en, true)).toBe("هاثا يوغا لراكبي الدراجات");
+    expect(sessionName({ kind: "yoga", title: "Sunset Flow" }, ar, en, true)).toBe("Sunset Flow");
+  });
+});
+
 describe("men only, women only or mixed (the owner, 2026-10-27; rentals 20261027150000)", () => {
   const json = (v: unknown, status = 200) => new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
   const POOL = { id: "2026-10-29-sw", session_date: "2026-10-29", event_kind: "community", ride_kind: "swim", needs_approval: true, bike_slots: '{"_time":"18:00 - 19:30"}' };

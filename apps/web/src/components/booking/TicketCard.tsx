@@ -17,6 +17,7 @@ import { isBloodId, type BloodReward } from "@/lib/blood";
 import { AH_BANK, vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-ticket";
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
+import { YOGA_MARK, YOGA_MARK_SIZE, yogaKnow } from "@/lib/yoga";
 import { genderChip } from "@/lib/session-gender";
 import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, type OwnLocker, bookingRef, breakfastFor, cdLine, codeReady, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk, BOOTH_APPLE, BOOTH_DIR, todayCode } from "@/lib/tickets";
 import { TickIcon } from "@/components/site/Icons";
@@ -51,6 +52,10 @@ import { TicketDir, TicketMore, TicketShare } from "./TicketParts";
 // add-ons behind one Details row (TicketMore); Calendar and Directions side by side with a square Share at the end of
 // their row, the Live map on a row of its own; the circuit's Directions at the booth, with Apple Maps offered on an
 // iPhone (TicketDir); a waitlist's cancel says Leave waitlist. The event colours stay the site's own.
+// A yoga ticket (2026-11-12; lib/yoga.ts) wears the booking app's "Sunset Hatha" look (its th-yoga): cream in every state
+// with the low sun's glow along its foot, the mark as its logo, its number in Marcellus, clay where the night ticket is
+// neon; who leads it, the level and what to bring while it is ahead; a free place says Free for its total, never a price of
+// 0 for each participant. Its wallet pass is offered as the pool's is (the booking app's passes know yoga).
 export type TicketText = (typeof T)["en"];
 type Props = {
   locale: string;
@@ -178,6 +183,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const defe = s?.kind === "defe5k";
   const vlap = s?.kind === "vlap"; // Victory Lap: an athlete's number, the race and team, how to pay
   const arena = s?.kind === "arena"; // Arena Heros: an athlete's number, the race, division and team, payment announced later
+  const yoga = s?.kind === "yoga"; // yoga: its mark, who leads it, the level and what to bring (2026-11-12)
+  const ygFree = yoga && !!s?.free; // a free yoga place says Free, never a price of 0 (the booking app's _ygFree)
   // The Blood Donation event, by its id on a session that did not load: a donor's number, no price anywhere (2026-11-03)
   const donor = s ? s.kind === "blood" : isBloodId(primary.sessionId);
   const bw = donor ? blood?.words ?? null : null;
@@ -268,6 +275,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             ? <span className="tk-logo tk-logo-vl" aria-hidden="true"><img src="/site/victory-lap-dark.webp" alt="" decoding="async" /></span>
             : arena ? <span className="tk-logo tk-logo-ah" aria-hidden="true"><img src="/site/arena-heros-logo.webp" alt="" decoding="async" /></span>
             : defe ? <span className="tk-logo tk-logo-defe" aria-hidden="true"><img src="/site/defe-logo.svg" alt="" decoding="async" /></span>
+            : yoga ? <span className="tk-logo tk-logo-yoga" aria-hidden="true"><img src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} decoding="async" /></span>
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
           {ahHeld && !allWl && <p className="tk-label">{t.ahHoldTitle}</p>}
           {!hideNum && (allWl
@@ -373,7 +381,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               </p>
             )}
             {r.status === "waitlist" && !allWl && wlLine && <p className="tk-wl-collect row">{wlLine}</p>}
-            {!noNum && !donor && (
+            {!noNum && !donor && !ygFree && (
               <div className="tk-rider-pay">
                 <Sar n={r.price} word={t.sarWord} className={`tk-amt${r.paid ? " paid" : ""}`} />
                 {/* Unpaid says where it is paid; a waitlisted rider owes nothing until they have a place. */}
@@ -496,6 +504,14 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             )}
           </>
         )}
+        {yoga && !past && (
+          // what to know before arriving (the booking app's _ygKnowHtml): who leads it, the level, what to bring
+          <div className="tk-yg-know">
+            {yogaKnow({ leadK: t.ygLeadK, leadV: t.ygLeadV, durK: "", levelK: t.ygLevelK, levelV: t.ygLevelV, bringK: t.ygBringK, bringV: t.ygBringV }).map(([k, v]) => (
+              <p key={k}><span className="tk-yg-k">{k}</span><span className="tk-yg-v">{v}</span></p>
+            ))}
+          </div>
+        )}
         {bw && (
           // the short rules, what confirmed donors get, and the free ride once staff confirmed the donation (the booking
           // app's _bldTkHtml, _bldRwHtml); a code that has been used says so, as there
@@ -536,7 +552,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
         {links.live && <a className="tk-btn solid tk-map" href={links.live}><Live />{t.liveMap}</a>}
       </div>}
       {/* A pass in the phone's wallet reads as a place held: none on a waitlist or before the code is out, and
-          none on the DEFE 5KM Run or Arena Heros, which the passes do not know (the booking app's _walletOk). */}
+          none on the DEFE 5KM Run or Arena Heros, which the passes do not know (the booking app's _walletOk); yoga's
+          is offered, as the pool's (its passes know yoga since 2026-11-12). */}
       {wallet && !past && !allWl && ready && !defe && !arena && !donor && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
       {canEdit && (
         <div className="tk-manage">

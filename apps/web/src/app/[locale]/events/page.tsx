@@ -23,6 +23,7 @@ import { intlOf } from "@/i18n/locales";
 import { genderViewer } from "@/lib/account";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { AH_VENUE } from "@/lib/arena";
+import { yogaLength } from "@/lib/yoga";
 import { ArrowIcon } from "@/components/site/Icons";
 import OpensIn from "@/components/site/OpensIn";
 
@@ -34,12 +35,13 @@ import OpensIn from "@/components/site/OpensIn";
 // signed-in account of the other gender reads the refusal in place of Book. Arena Heros (2026-10-28) is listed in its
 // own red, named as Experiences names it, with its line, and booked in the booking app on its own event (ev=arena). The
 // Blood Donation event (2026-11-03) is listed in its crimson while it has a date, with its line and venue and never a
-// price or the free word, and booked on its own event (ev=blood).
+// price or the free word, and booked on its own event (ev=blood). Yoga (2026-11-12) is listed in its clay with how long it
+// runs and where, and booked on the community card (ev=community), as Experiences does.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16" };
+const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16", yoga: "#b4532f" };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -60,7 +62,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
   // Book opens the booking app on that event and date (?ev=&session=), as the Experiences steps do.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood" };
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community" };
   const bookAt = (s: RideSession) => {
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
@@ -130,6 +132,9 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {s.kind === "runher" && S(xp.events.rhMeta) && <span>{S(xp.events.rhMeta)}</span>}
                         {/* the DEFE 5KM Run: its one distance, as its date card on Experiences says it */}
                         {s.kind === "defe5k" && <span>{fillAt(tx("{0} km", "{0} كم"), 5)}</span>}
+                        {/* yoga: how long and where, as its date card on Experiences says them (2026-11-12) */}
+                        {s.kind === "yoga" && yogaLength(s.times, tx("{0} min", "{0} دقيقة")) && <span>{yogaLength(s.times, tx("{0} min", "{0} دقيقة"))}</span>}
+                        {s.kind === "yoga" && s.location && s.location !== "JCC" && <span><bdi>{s.location}</bdi></span>}
                         {/* Victory Lap: what it is, as its card on Experiences says it (never its price) */}
                         {s.kind === "vlap" && S(xp.events.vlMeta) && <span>{S(xp.events.vlMeta)}</span>}
                         {/* Arena Heros: what it is and where, as its card on Experiences says them (never its price) */}

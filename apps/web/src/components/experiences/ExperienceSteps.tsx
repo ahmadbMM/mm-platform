@@ -9,6 +9,7 @@ import { isNonBike, typeOffered } from "@/lib/bike-kinds";
 import { ArrowIcon, BackIcon, ClockIcon, InfoIcon, TickIcon } from "@/components/site/Icons";
 import { opensLine, type OpensWords } from "@/lib/opens-in";
 import { radioKey, tabStop } from "@/lib/radio-keys";
+import { YOGA_MARK, YOGA_MARK_SIZE } from "@/lib/yoga";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -30,6 +31,9 @@ import { radioKey, tabStop } from "@/lib/radio-keys";
 // The Blood Donation event (2026-11-03) has a card of its own while it has a date, its words in its StepEvent alone, from
 // the server, so none of them sits in this code: the hosts' plate, its name, when and where, its tagline and four short
 // rules, in crimson on white, never a price. Its About and its dates' Details open the poster in Arabic or English.
+// Yoga (2026-11-12; lib/yoga.ts) is a date inside the community card, on a card of its own in the booking app's "Sunset
+// Hatha" look: cream, the low sun rising from its far corner, the mark, its name in Marcellus clay, when, how long and
+// where, and who leads it along the foot; its summary wears the mark, its button clay.
 export type StepSession = {
   id: string; kind: string; day: string; name: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
@@ -67,6 +71,9 @@ export type StepSession = {
   /** The DEFE 5KM Run's own date card (the booking app's _defeSessCard, 2026-10-18): when, how far and
    *  where ("7 PM · 5 km · Jeddah Corniche Circuit") and the cause along its foot; absent on any other date. */
   defe?: { meta: string[]; cause: string };
+  /** Yoga's own date card (the booking app's _ygSessCard, 2026-11-12): its start and end, how long and where ("4:00 PM –
+   *  5:30 PM · 90 min · SILKDEER"), and who leads it along its foot ("with Jassim Alsaady"); absent on any other date. */
+  yoga?: { meta: string[]; with: string };
   /** Victory Lap, to those who may book it: how the ticket is paid once booked (the booking app's vlPayLater,
    *  or staff's own words, sessions.vl.pay), under the price; Arena Heros, to a community member: that how to
    *  pay will be announced (or staff's words); absent on any other date. */
@@ -103,6 +110,9 @@ export type StepInfo = {
    *  Arabia, a link of its own); absent on any other kind. */
   kit?: { label: string; text: string };
   race?: { label: string; link: string; url: string };
+  /** Facts of the date's own kind, after where it is: yoga's who leads it, how long, the level and what to bring
+   *  (2026-11-12). Absent on any other kind. */
+  more?: { k: string; v: string }[];
 };
 /** `about`: what the event is, in its About (Experiences > Event cards, *About). */
 export type StepEvent = {
@@ -169,6 +179,13 @@ const DEFE_LOGO = "/site/defe-logo.svg";
 const Ribbon = () => (
   <svg className="xs-rb" aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M7 21L14.7 9.2c.9-1.5 1-2.7.6-3.8a3.5 3.5 0 0 0-6.6 0c-.4 1.1-.3 2.3.6 3.8l1.4 2.2" /><path d="M13.1 13.6L17 21" />
+  </svg>
+);
+/** The low sun rising from yoga's card's far corner, three breaths around it (the booking app's _ygScene): drawn, never a
+ *  picture, so it takes the card's colours. */
+const YogaScene = () => (
+  <svg className="sc-yg-scene" aria-hidden="true" focusable="false" viewBox="0 0 160 80">
+    <circle className="sc-yg-ring" cx="80" cy="80" r="76" /><circle className="sc-yg-ring" cx="80" cy="80" r="58" /><circle className="sc-yg-ring" cx="80" cy="80" r="41" /><circle className="sc-yg-sun" cx="80" cy="80" r="25" />
   </svg>
 );
 /** A short rule's tick (the booking app's _cuIc tick). */
@@ -283,6 +300,7 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
     out.push({ k: next ? t.info.next : t.info.when, v: <>{s.day}{s.when && <><br />{when(s)}</>}{i.collect && <><br />{i.collect}</>}{i.whenNote && <><br />{i.whenNote}</>}</> });
     out.push({ k: t.info.where, v: <>{i.place}{i.map && <> · <a href={i.map} target="_blank" rel="noopener">{t.info.map}</a></>}</> });
     if (i.distance) out.push({ k: t.info.distance, v: <bdi>{i.distance}</bdi> });
+    for (const m of i.more ?? []) out.push({ k: m.k, v: m.v });
     if (i.format) out.push({ k: t.info.format, v: i.format });
     if (i.races) out.push({ k: t.info.races, v: i.races });
     if (i.divs) out.push({ k: t.info.divs, v: <><bdi>{i.divs}</bdi>{i.guide?.map((g, n) => <span key={n} className="xs-ah-div"><strong><bdi>{g.name}</bdi> · {g.level}</strong>{g.text}</span>)}</> });
@@ -430,6 +448,22 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
                     <InfoIcon size={20} />
                   </button>
                 );
+                // Yoga's own card (the booking app's _ygSessCard, 2026-11-12): cream, the low sun rising from the far corner,
+                // the mark, its name, when, how long and where, and who leads it along the foot with its state
+                if (s.yoga) return (
+                  <div key={s.id} className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
+                    <button type="button" className={`sc-card sc-yoga ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}`} {...radio} onClick={() => pickDate(s)}>
+                      <YogaScene />
+                      <span className="sc-yg-top"><span className="sc-dot" aria-hidden="true" /><img className="sc-yg-mark" src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} decoding="async" /></span>
+                      <span className="sc-yg-title">{s.name}</span>
+                      {s.sg && <span className="sc-kicker">{chip(s)}</span>}
+                      <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
+                      <span className="sc-yg-meta">{s.yoga.meta.map((x, i) => <span key={i}>{i > 0 && <i aria-hidden="true" />}<bdi>{x}</bdi></span>)}</span>
+                      <span className="sc-yg-foot"><span className="sc-yg-with">{s.yoga.with}</span>{spots}</span>
+                    </button>
+                    {about}
+                  </div>
+                );
                 // The DEFE 5KM Run's own card (the booking app's _defeSessCard, 2026-10-18): white with Defe's
                 // pink washed in from the far corner, the logo, the race's name, when, how far and where, the
                 // cause along the foot with its state
@@ -488,11 +522,14 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
           <div className="xs-summary">
             {ev.blood && <Plate b={ev.blood} />}
             <div className="xs-sum-head">
-              {sess.defe ? <span className="xs-logo small xs-defe-logo"><img src={DEFE_LOGO} alt="" /></span> : ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
-              <div><strong>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span></div>
+              {sess.defe ? <span className="xs-logo small xs-defe-logo"><img src={DEFE_LOGO} alt="" /></span>
+                : sess.yoga ? <span className="xs-logo small xs-yoga-logo"><img src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} /></span>
+                : ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
+              <div><strong className={sess.yoga ? "xs-yg-name" : undefined}>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span></div>
             </div>
             {tags(sess)}
             {sess.defe && <p className="xs-defe-cause"><Ribbon /><span>{sess.defe.cause}</span></p>}
+            {sess.yoga && <p className="xs-yg-with">{sess.yoga.with}</p>}
             {ev.blood && <p className="xs-bld-cause">{ev.blood.cause}</p>}
             {ev.blood && <ul className="bld-sum">{ev.blood.rules.map((x, i) => <li key={i}><Tick /><span>{x}</span></li>)}</ul>}
             {sess.event && sess.description && <p className="xs-rules">{sess.description}</p>}
@@ -517,9 +554,10 @@ export default function ExperienceSteps({ locale, events, prices, bookHref, club
             <p className="xs-refuse" role="alert">{sess.refusal}</p>
           ) : (
             <>
-              <a className={`xs-go${ev.blood ? " ev-blood" : ""}`} href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
-              {/* one place per account, so never "add the participants" on the Blood Donation event */}
-              {!ev.blood && (noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
+              <a className={`xs-go${ev.blood ? " ev-blood" : sess.yoga ? " ev-yoga" : ""}`} href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
+              {/* one place per account, so never "add the participants" on the Blood Donation event, nor on yoga (the booking
+                  app's _noGroupAdd) */}
+              {!ev.blood && !sess.yoga && (noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
             </>
           )}
         </section>

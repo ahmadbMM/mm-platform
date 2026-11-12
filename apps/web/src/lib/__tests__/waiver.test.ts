@@ -36,7 +36,7 @@ describe("which waiver a ride is agreed under", () => {
       expect(waiverVersion(ticketSession(r)!)).toBe("2026-10-v3");
     }
     expect(waiverVersion(ticketSession({ ...satRow, ride_kind: "swim" })!)).toBe("swim-2026-10-v3");
-    for (const k of ["workshop", "event"]) expect(waiverVersion(ticketSession({ ...satRow, ride_kind: k })!)).toBe("activity-2026-10-v3");
+    for (const k of ["workshop", "event", "yoga"]) expect(waiverVersion(ticketSession({ ...satRow, ride_kind: k })!)).toBe("activity-2026-10-v3"); // yoga: the activity waiver, as the booking app's desk takes it (rentals 20261112120000)
   });
   it("carries the booking app's words, every clause in English and Arabic", () => {
     for (const kind of ["ride", "swim", "activity"] as const) {

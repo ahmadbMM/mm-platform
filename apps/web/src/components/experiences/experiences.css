@@ -270,6 +270,18 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs-logo.xs-defe-logo img { height: 40px; width: auto; }
 .xs-defe-cause { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 700; color: #a22b63; }
 .xs .xs-info.ev-defe5k .xs-info-facts a { color: #a22b63; }
+/* Yoga (2026-11-12, the booking app's flow head .yg-flow-*): its summary wears the mark, its name in Marcellus clay and who
+   leads it in sage; its button and its Details' link and button in clay */
+.xs-logo.xs-yoga-logo img { height: 36px; width: auto; }
+.xs-summary .xs-yg-name { font-family: var(--cs-font-yg), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", Georgia, serif; font-weight: 400; letter-spacing: .3px; color: var(--yg-clay); }
+html:is([lang="ar"], [lang="ur"]) .xs-summary .xs-yg-name { font-family: var(--cs-font-ar), var(--cs-font-en), sans-serif; font-weight: 700; letter-spacing: 0; }
+.xs-yg-with { margin: 0; font-size: 13px; font-weight: 700; color: var(--yg-sage-ink); }
+.xs .xs-go.ev-yoga { background: var(--yg-clay); color: #fff; }
+.xs .xs-go.ev-yoga:hover { background: var(--yg-clay-dk); }
+.xs .xs-info.ev-yoga .xs-info-facts a { color: var(--yg-clay-dk); }
+.xs-info.ev-yoga .xs-info-go { background: var(--yg-clay); border-color: var(--yg-clay); color: #fff; }
+.xs-info.ev-yoga .xs-info-go:hover { background: var(--yg-clay-dk); border-color: var(--yg-clay-dk); }
+.xs-info.ev-yoga .xs-info-btns button:focus-visible { outline-color: rgba(180, 83, 47, .45); }
 .xs-about.ab-petromin { color: #d6202a; } /* Petromin Days: Petromin's red, as on its date cards (2026-10-12) */
 .xs-about.ab-blood { color: #0b1f16; } /* the donation event: its crimson, where every plain card has its link (2026-11-03) */
 .xs-about.ab-vlap { color: #0d0d0d; max-width: calc(100% - 100px); inset-inline-start: 25px; } /* Victory Lap: clear of the flag, under its words (the card's edge and .xs-vl-main's padding) */

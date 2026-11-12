@@ -12,8 +12,8 @@ import { sessionGender, type SessionGender } from "./session-gender";
 //
 // The rules below mirror the booking app (app.src.html) and the database, never guess:
 //   kind     _rideKind: snd96 first, anything not 'community' is a circuit night (jcc), then
-//            petromin / swim / workshop / event / runher / vlap / defe5k / arena / blood, and every other
-//            community row is the Saturday ride.
+//            petromin / swim / workshop / event / runher / vlap / defe5k / arena / blood / yoga, and every
+//            other community row is the Saturday ride.
 //   members  _community_booking_gate: event_kind 'community' without open_to_all is booked only
 //            by members (the Saturday tag, the Club).
 //   free     _isFreeRide: a community ride (not snd96) that is not a paid ride.
@@ -44,8 +44,13 @@ import { sessionGender, type SessionGender } from "./session-gender";
 //   blood    The Blood Donation event (ride_kind 'blood', 2026-11-03; lib/blood.ts): at the circuit, open to everyone,
 //            free, no bikes, one place per account, a window, no price anywhere; a card of its own while it has a date,
 //            and nothing names it before that (its words are the server's, content/blood-words.ts).
+//   yoga     Yoga (ride_kind 'yoga', 2026-11-12; lib/yoga.ts): Hatha Yoga for Cyclists with Jassim Alsaady, a date inside
+//            MicroMobility Experiences (the community card), never a card of its own - members only, free, one place per
+//            account, first come first served to its places and then the waitlist; no bike, no breakfast, no gathering:
+//            a start and an end ("16:00 - 17:30"), like the pool; at the place staff named (sessions.location, SILKDEER)
+//            with its map (meet_url).
 
-export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena" | "blood";
+export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena" | "blood" | "yoga";
 /** A ride_prices row: the fare, and (lib/biz.ts faresOf) the highest fare quoted and the employees' fare when the database has them. */
 export type RidePrice = PriceRow;
 export type RideSession = {
@@ -132,8 +137,8 @@ export function rideKind(r: Row): RideKind {
   if (k === "snd96") return "snd96";
   if (r.event_kind !== "community") return "jcc";
   // a kind this list does not know reads as the Saturday ride, as the booking app's _rideKind does: every kind
-  // the booking app makes is named here (Arena Heros since 2026-10-28, which read as a Saturday ride before)
-  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" || k === "arena" || k === "blood" ? k : "saturday";
+  // the booking app makes is named here (Arena Heros since 2026-10-28, which read as a Saturday ride before; yoga since 2026-11-12)
+  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" || k === "arena" || k === "blood" || k === "yoga" ? k : "saturday";
 }
 
 /** A route's slug as the Routes page writes one (content/pages/routes.ts): lower-case letters,
@@ -262,7 +267,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     approval: community && kind !== "snd96" && r.needs_approval !== false, // _isApprovalRide: not the National Day ride
     capacity: seats,
     left: null,
-    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" || kind === "blood" ? null : collectTime(r.bike_slots),
+    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" || kind === "blood" || kind === "yoga" ? null : collectTime(r.bike_slots),
     ...placeOf(r),
     ...breakfastOf(r),
     ...revealOf(r),
@@ -292,7 +297,7 @@ export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessi
  *  (content/blood-words.ts bloodName), as it adds Petromin's. */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), petromin: "", blood: "" };
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), yoga: S(d.yogaName), petromin: "", blood: "" };
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other

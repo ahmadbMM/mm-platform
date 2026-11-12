@@ -31,6 +31,7 @@ import { bg } from "@/lib/img";
 import { vlConfig, vlDivNames, vlPayLine } from "@/lib/vlap";
 import { AH_INFO_URL, ahConfig, ahPayLine } from "@/lib/arena";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
+import { yogaKnow, yogaLength } from "@/lib/yoga";
 import { ArrowIcon } from "@/components/site/Icons";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
@@ -45,7 +46,9 @@ import { ArrowIcon } from "@/components/site/Icons";
 // app (?ev=arena), which has the athlete step. The Blood Donation event (2026-11-03; lib/blood.ts) has a card of its own
 // while a session is on the books, and nothing names it before that: its words and its poster are this server's
 // (content/blood-words.ts, blood-info.json) and go into the page only with that card; its last step hands over to the
-// booking app (?ev=blood), which has the donor step.
+// booking app (?ev=blood), which has the donor step. Yoga (2026-11-12; lib/yoga.ts) is a date inside the community card,
+// on its own "Sunset Hatha" card: the mark, its name, when, how long and where, and who leads it; its Details say who
+// leads it, how long, the level and what to bring.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -172,7 +175,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
   const dateTexts: DateTexts = {
-    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr),
+    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga),
     sndAbout: S(e.sndAbout), evAbout: S(e.evAbout),
   };
   const whoWords = {
@@ -220,6 +223,14 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     kitLabel: tx("Kit collection", "استلام عُدّة السباق"), kit: tx("Jeddah Park · Wed 21 Oct · 4–10 PM", "جدة بارك · الأربعاء 21 أكتوبر · 4–10 م"),
     regLabel: tx("Race registration", "التسجيل في السباق"), regLink: tx("Defe registration", "تسجيل دفء"),
   };
+  // Yoga (2026-11-12), in the booking app's words (ygWith, ygMin, ygLeadK, ygLeadV, ygDurK, ygLevelK, ygLevelV, ygBringK,
+  // ygBringV): its date card's foot line and length, and its Details' rows
+  const ygWords = {
+    with: tx("with Jassim Alsaady", "مع جاسم الساعدي"), min: tx("{0} min", "{0} دقيقة"),
+    leadK: tx("Led by", "يقدّمها"), leadV: tx("Jassim Alsaady", "جاسم الساعدي"), durK: tx("Length", "المدة"),
+    levelK: tx("Level", "المستوى"), levelV: tx("All levels, no yoga experience needed", "جميع المستويات، ولا تلزم خبرة سابقة في اليوغا"),
+    bringK: tx("Bring", "أحضر معك"), bringV: tx("Your yoga mat, and wear comfortable clothing", "سجادة اليوغا الخاصة بك، وارتدِ ملابس مريحة"),
+  };
   const toStep = (s: RideSession): StepSession => {
     const seatPrice = s.kind === "event" && s.price != null ? sar(s.price) : null;
     // when bikes go out and the price from, under the time, as the booking app's session card says them
@@ -244,6 +255,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // the DEFE 5KM Run's own card (the booking app's _defeSessCard): the logo, its name, when, how far and
       // where, and the cause along the foot
       ...(s.kind === "defe5k" ? { defe: { meta: [s.times ? clock(s.times[0]) : "", fillAt(kmWord, 5), place.name].filter(Boolean), cause: defeWords.cause } } : {}),
+      // yoga's own card (the booking app's _ygSessCard, 2026-11-12): its start and end, how long, where, and who leads it
+      ...(s.kind === "yoga" ? { yoga: { meta: [s.times ? (oneTime(s.times) ? clock(s.times[0]) : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "", yogaLength(s.times, ygWords.min), place.name].filter(Boolean), with: ygWords.with } } : {}),
       // a copy kept at the edge from before these fields existed reads as an event without them
       event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
@@ -279,6 +292,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         ...((v) => (v ? { races: v.races, divs: v.divs, guide: v.guide, format: ahFormat, whenNote: ahWhen, link: { label: tx("Race details", "تفاصيل السباق"), text: tx("The workout and standards, from the organisers", "التمارين والمعايير من المنظمين"), url: AH_INFO_URL } } : {}))(infoArena(s, ahWords)),
         // the DEFE 5KM Run: when the kits go out, and where the race itself is entered (the booking app's _infoFacts)
         ...(s.kind === "defe5k" ? { kit: { label: defeWords.kitLabel, text: defeWords.kit }, race: { label: defeWords.regLabel, link: defeWords.regLink, url: DEFE_RACE_URL } } : {}),
+        // yoga: who leads it, how long, the level and what to bring, after where (the booking app's _infoFacts)
+        ...(s.kind === "yoga" ? { more: yogaKnow(ygWords, yogaLength(s.times, ygWords.min)).map(([k, v]) => ({ k, v })) } : {}),
       },
     };
   };

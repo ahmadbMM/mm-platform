@@ -9,7 +9,7 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { loadAddonItems } from "../ticket-addons";
 import { vlDivName } from "../vlap";
-import { satNumOk, wlCollectTime, type TicketSession } from "../tickets";
+import { placeLink, satNumOk, wlCollectTime, type TicketSession } from "../tickets";
 
 const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 
@@ -675,6 +675,83 @@ describe("a DEFE 5KM Run ticket (ride_kind 'defe5k', 2026-10-18)", () => {
     expect(DEFE_RACE_CODE).toBe("MICRO50");
     expect(TICKET.ar.defeRegNoNote).toBe("سجّل عبر دفء لتشارك في السباق.");
     expect(TICKET.ar.defeRegCode).toBe("استخدم كود الخصم {0} لخصم 50%، لأول 50 عضوًا.");
+  });
+});
+
+describe("a yoga ticket (ride_kind 'yoga', 2026-11-12)", () => {
+  // As the booking app makes it (supabase/checks/yoga-session-2026-11-21.sql): members only, free, nobody approves it, a
+  // start and an end (4 to 5:30 PM), at SILKDEER with its map; one place per account.
+  const MAP = "https://maps.app.goo.gl/TfCSEPEPxA4C5f7d7";
+  const ygRow = { id: "2099-11-21-yg", session_date: "2099-11-21", event_kind: "community", ride_kind: "yoga", needs_approval: false, hide_queue: true, open_to_all: false, paid_ride: false, bike_slots: '{"_time":"16:00 - 17:30"}', meet_url: MAP, location: "SILKDEER", title: null, capacity: 15 };
+  const yg = ticketSession(ygRow)!;
+  const t = TICKET.en;
+  const at = (o: Record<string, unknown> = {}) => ticketRow({ id: "yg1abcdef", session_id: yg.id, session_date: yg.date, session_day: "Saturday", status: "waiting", queue_num: 3, price: 0, paid: false, name: "Test Member", type_preference: "None", ...o })!;
+  const card = (rows: TicketRow[], o: { today?: string; past?: boolean; ar?: boolean } = {}) => renderToStaticMarkup(createElement(TicketCard, {
+    locale: o.ar ? "ar" : "en", today: o.today ?? "2099-11-10", rows, session: yg, name: o.ar ? "هاثا يوغا لراكبي الدراجات" : "Hatha Yoga for Cyclists", cue: null, t: o.ar ? TICKET.ar : t, gather: "Gathering", start: "Start", typeName: (x: string) => x, past: o.past,
+    links: { edit: "https://book.example.test/?ev=community", manage: "https://book.example.test/?tab=bookings", place: placeLink(yg, "https://dir.example.test/jcc") }, now: Date.parse("2099-11-10T09:00:00Z"),
+    wallet: { bookingId: "yg1abcdef", groupIds: ["yg1abcdef"] },
+  }));
+
+  it("has no bike and no gathering, a start and an end, is free, and is at SILKDEER with its own map", () => {
+    expect(yg).toMatchObject({ kind: "yoga", bikes: false, gathers: false, approval: false, free: true, times: ["16:00", "17:30"], location: "SILKDEER", meetUrl: MAP });
+    expect(codeReady([at()], yg)).toBe(true);
+    expect(venueText(venueOf(yg), t)).toBe("SILKDEER");
+    expect(meetsAt(yg)).toBe(false); // a venue, not a meeting point: its button says Directions
+    expect(placeLink(yg, "https://dir.example.test/jcc")).toBe(MAP);
+    expect(placeLink({ ...yg, meetUrl: null }, "https://dir.example.test/jcc")).toBe("https://www.google.com/maps/search/?api=1&query=SILKDEER");
+    expect(icsPlace(yg)).toBe("SILKDEER");
+    // a yoga date with a map and no place's name is at its meeting point, never the circuit
+    const noName = { ...yg, location: null };
+    expect(venueText(venueOf(noName), t)).toBe("Meeting point");
+    expect(icsPlace(noName)).toBe(MAP);
+    expect(placeLink(noName, "https://dir.example.test/jcc")).toBe(MAP);
+    // the calendar holds its window, 4 to 5:30 PM in Jeddah
+    const ics = icsFor(yg, "Hatha Yoga for Cyclists", icsPlace(yg), new Date("2099-11-01T00:00:00Z"));
+    expect(ics).toContain("DTSTART:20991121T130000Z");
+    expect(ics).toContain("DTEND:20991121T143000Z");
+    expect(ics).toContain("LOCATION:SILKDEER");
+    expect(ics).not.toMatch(/bike/i);
+    // the countdown is to the start alone: no bikes to collect
+    expect(countdownMoments(yg, yg.date)).toEqual([[Date.parse("2099-11-21T16:00:00+03:00"), "start"]]);
+  });
+  it("draws the Sunset Hatha ticket: the mark, a start and an end at SILKDEER, who leads it, the level and what to bring, Free", () => {
+    const html = card([at()]);
+    expect(html).toContain("tk-card ev-yoga tk-live");
+    expect(html).toContain('src="/site/yoga-mark.svg"');
+    expect(html).toContain("Queue number");
+    expect(html).toMatch(/<bdi>4 PM – 5:30 PM<\/bdi>/);
+    expect(html).toContain('<span class="tk-venue">SILKDEER</span>');
+    expect(html).toContain('<p><span class="tk-yg-k">Led by</span><span class="tk-yg-v">Jassim Alsaady</span></p>');
+    expect(html).toContain('<span class="tk-yg-k">Level</span><span class="tk-yg-v">All levels, no yoga experience needed</span>');
+    expect(html).toContain('<span class="tk-yg-k">Bring</span><span class="tk-yg-v">Your yoga mat, and wear comfortable clothing</span>');
+    // a free place: Free for its total, never a price of 0 for each participant
+    expect(html).toMatch(/class="tk-total"><span>Total<\/span><strong>Free<\/strong>/);
+    expect(html).not.toContain("tk-rider-pay");
+    expect(html).toContain("Participants");
+    // no bike anywhere in what it says (its markup's class names aside), nor in its calendar entry
+    expect(html.replace(/<[^>]*>/g, " ")).not.toMatch(/\b(bike|bikes|ride|rider|riders|Helmets?)\b/i);
+    expect(decodeURIComponent(/href="data:text\/calendar;charset=utf-8,([^"]*)"/.exec(html)?.[1] ?? "")).not.toMatch(/\b(bike|bikes|ride|rider|riders)\b/i);
+    expect(html).toContain(`href="${MAP}"`);
+    expect(html).toContain(">Cancel<");
+  });
+  it("leaves what to know off a past card, and has the booking app's words in Arabic", () => {
+    const past = card([at({ status: "done" })], { today: "2099-11-21", past: true });
+    expect(past).not.toContain("tk-yg-know");
+    const ar = card([at()], { ar: true });
+    expect(ar).toContain("يقدّمها");
+    expect(ar).toContain("جاسم الساعدي");
+    expect(TICKET.ar.ygLevelV).toBe("جميع المستويات، ولا تلزم خبرة سابقة في اليوغا");
+    expect(TICKET.ar.ygBringV).toBe("سجادة اليوغا الخاصة بك، وارتدِ ملابس مريحة");
+    expect(ar).toContain("مجاني");
+  });
+  it("is priced as any other kind when staff make it a paid one: each place's price, and no Free", () => {
+    const paid = ticketSession({ ...ygRow, paid_ride: true })!;
+    const html = renderToStaticMarkup(createElement(TicketCard, {
+      locale: "en", today: "2099-11-10", rows: [at({ price: 50 })], session: paid, name: "Hatha Yoga for Cyclists", cue: null, t, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+      links: { edit: null, manage: "https://book.example.test/?tab=bookings", place: null }, now: Date.parse("2099-11-10T09:00:00Z"),
+    }));
+    expect(html).toContain("tk-rider-pay");
+    expect(html).not.toMatch(/<strong>Free<\/strong>/);
   });
 });
 

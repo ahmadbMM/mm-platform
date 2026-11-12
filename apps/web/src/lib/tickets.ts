@@ -347,7 +347,7 @@ export function ticketSession(r: Row): TicketSession | null {
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -493,10 +493,13 @@ export function dayWord(date: string, today: string): "today" | "tomorrow" | nul
  *  Jeddah Yacht Club, where Run for Her meets (VENUE_KEY) - Run for Her always, its place held back or
  *  not (the owner, 2026-10-14), never the circuit; any other place as staff wrote it. Arena Heros is at
  *  its venue (Gymnation, Tahlia Street) when staff named no place, never the circuit (2026-10-28), and the Blood
- *  Donation event at the circuit (the booking app's _sessLoc, 2026-11-03). */
+ *  Donation event at the circuit (the booking app's _sessLoc, 2026-11-03). A yoga date (2026-11-12) is at the place staff
+ *  named (SILKDEER); one with a map link and no place's name is at its meeting point, never the circuit (the booking
+ *  app's _venueName). */
 export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "gym" } | { kind: "text"; text: string };
 export function venueOf(s: (Pick<TicketSession, "approval" | "meetUrl" | "location"> & { kind?: string }) | undefined): Venue {
   if (s?.approval && s.meetUrl) return { kind: "meet" };
+  if (s?.kind === "yoga" && !s.location && s.meetUrl) return { kind: "meet" };
   const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : s?.kind === "blood" ? "JCC" : "");
   return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : loc === AH_VENUE ? { kind: "gym" } : { kind: "text", text: loc };
 }
@@ -518,12 +521,14 @@ export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined)
  *  without one, never the circuit; every other ride, and a session that did not load, the circuit's directions
  *  (`circuit`). On Arena Heros the button says "Get directions": it is the venue, not a meeting point. The Blood
  *  Donation event (2026-11-03) opens the map on its row (sessions.meet_url), else the circuit's directions: it is at
- *  the circuit whichever, so never "Meeting point". */
+ *  the circuit whichever, so never "Meeting point". A yoga date (2026-11-12) opens its place's own map (sessions.meet_url,
+ *  SILKDEER's pin) when it has one, as Arena Heros does, else its place searched by name, as any other place. */
 export function placeLink(s: (Pick<TicketSession, "approval" | "kind" | "meetUrl"> & { location?: string | null }) | undefined, circuit: string | null): string | null {
   // a meeting point without its link falls through as in the booking app's _dirBtnHtml: Run for Her to the Jeddah Yacht
   // Club, a ride with a place to that place, the DEFE 5K and a ride with none to the booth (bug hunt 2026-11-11: no button)
   if (s && meetsAt(s) && s.meetUrl) return s.meetUrl;
   if (s?.kind === "arena") return s.meetUrl;
+  if (s?.kind === "yoga" && s.meetUrl) return s.meetUrl;
   if (s?.kind === "blood") return s.meetUrl ?? circuit;
   // Any other named place is searched by its name (the booking app's _dirBtnHtml, 2026-11-10): every booking away from
   // the circuit used to open the circuit's directions.
@@ -700,6 +705,7 @@ export function fmtDayDate(iso: string, locale: string): string {
 const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Branch", "Sharafeyah, Jeddah"], ["JYC", "Jeddah Yacht Club"]]);
 export function icsPlace(s: TicketSession): string {
   if (meetsAt(s) && s.meetUrl) return s.meetUrl;
+  if (s.kind === "yoga" && !s.location && s.meetUrl) return s.meetUrl; // a yoga date at its map, without a place's name: never the circuit
   const loc = s.location || (s.kind === "runher" ? "JYC" : s.kind === "arena" ? AH_VENUE : s.kind === "blood" ? "JCC" : "");
   return loc ? ICS_PLACES.get(loc) ?? loc : "";
 }
