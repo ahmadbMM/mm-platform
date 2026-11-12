@@ -73,7 +73,8 @@ async function flushNow(): Promise<void> {
         dropSession(sessOf(p));
         if (work?.id === sessOf(p)) { await load(); leaveWork(say(r)); return; }
       }
-      if (work) { work.msg = `${t(p.label)}: ${say(r)}`; work.teamMsg = work.msg; }
+      // said on its own session's page only: on another one it read as that page's mark refused
+      if (work && work.id === sessOf(p)) { work.msg = `${t(p.label)}: ${say(r)}`; work.teamMsg = work.msg; }
     }
   }
   armRetry();
