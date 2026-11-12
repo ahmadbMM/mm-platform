@@ -1592,8 +1592,10 @@ test('answers kept on this device: a reload puts them back on their screen, neve
 });
 
 test('an account made here, the tab closed on the membership step: signing in again brings the answers back', async ({ page }) => {
+  let made = 'c-new'; // signing in again opens the account made here: the same id (its draft is kept for that account only)
   const { of } = await open(page, '?lang=en', {
-    customer_login: () => json([{ id: 'c-new', name: 'Karim Mansour', session_token: 'tok-again' }]),
+    customer_signup: (b) => { made = String(b.p_id); return json([{ id: b.p_id, session_token: 'tok-new' }]); },
+    customer_login: () => json([{ id: made, name: 'Karim Mansour', session_token: 'tok-again' }]),
     customer_pwd_state: () => json(false),
     customer_community_me: () => json({ ...ME, flags: [] }),
   });
