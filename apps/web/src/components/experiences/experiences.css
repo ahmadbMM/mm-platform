@@ -263,6 +263,8 @@ html:is([lang="ar"], [lang="ur"]) .bk-title { letter-spacing: 0; line-height: 1.
 .bk-rv-rider { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid rgba(26, 25, 25, .12); }
 .bk-rv-mid { flex: 1; min-width: 0; }
 .bk-rv-mid p { margin: 0; }
+.bk-rv-field { margin-bottom: 0; } /* a ticketed event's seat named on the review */
+.bk-rv-field .bk-ferr { margin-top: 4px; }
 .bk-rv-name { font-size: 14px; font-weight: 700; overflow-wrap: anywhere; }
 .bk-rv-q { color: #6e6b63; font-weight: 600; }
 .bk-rv-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 4px !important; font-size: 12.5px; color: #4a4843; }

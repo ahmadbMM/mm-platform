@@ -207,7 +207,12 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   // Paying online (2026-11-10): Pay now for places still unpaid on a ride paid online; Cancel with the refund's
   // choice for a booking paid online (never a race, a Petromin night, the blood drive, or a ride staff approve).
   const payKind = !free && !s?.approval && !["vlap", "arena", "petromin", "blood"].includes(s?.kind ?? "");
-  const unpaid = online?.open && payKind && !past ? rows.filter((r) => (r.status === "waiting" || r.status === "active") && !r.paid).map((r) => r.id) : [];
+  // only a row that still owes something, as the database's _pay_due counts it (its price and add-ons less what the wallet
+  // paid): a row that costs nothing would only be answered "paid" and the page reloaded to the same button (bug hunt 2026-11-11)
+  const owes = (r: (typeof rows)[number]) => (extrasBy
+    ? Math.round((r.price + (extrasBy.get(r.id) ?? 0) - (r.walletPaid ?? 0)) * 100) / 100 > 0
+    : r.price > (r.walletPaid ?? 0) || extras.some((x) => x.rowId === r.id));
+  const unpaid = online?.open && payKind && !past ? rows.filter((r) => (r.status === "waiting" || r.status === "active") && !r.paid && owes(r)).map((r) => r.id) : [];
   const heldTill = rows.map((r) => r.payHold).find((h) => !!h && Date.parse(h) > now) ?? null;
   const paidOnline = rows.some((r) => r.payMethod === "online");
   const onlineBack = rows.filter((r) => r.payMethod === "online" && (r.status === "waiting" || r.status === "waitlist")).reduce((n, r) => n + (r.cardAmount ?? 0), 0);

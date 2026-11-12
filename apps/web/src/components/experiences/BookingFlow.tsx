@@ -8,7 +8,7 @@ import SignIn from "@/components/account/SignIn";
 import TicketCard from "@/components/booking/TicketCard";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import {
-  JCC_ACCOUNT_CAP, addonCap, addonCatRank, addonsCost, asciiDigits, codeOne, eventSteps, fromPrice, genderRefused, hasRideGroups, kidsHeight, maxRiders, needsBike, needsWaiver, nextStep, pgDue, prevStep, promoDiscount,
+  EVENT_SEAT_MAX, JCC_ACCOUNT_CAP, addonCap, addonCatRank, addonsCost, asciiDigits, codeOne, eventSteps, fromPrice, genderRefused, hasRideGroups, kidsHeight, maxRiders, needsBike, needsWaiver, nextStep, pgDue, prevStep, promoDiscount,
   refCodeKind, refCodeSessOk, regSteps, rentalTotal, riderPrices, RIDE_GROUPS, sessionAddons, typeOptions, validateRiders, waiverKind,
   type AddonItem, type AddonPick, type BikeType, type BookAccount, type BookSession, type PgField, type Prices, type Promo, type Refusal, type Rider, type RiderError, type RideGroup, type Step,
 } from "@/lib/booking";
@@ -60,6 +60,8 @@ type Props = {
   maxPrices?: Prices;
   /** Riders per account on a circuit night: the booking app's Settings > Business (jcc_account_cap). */
   jccCap?: number;
+  /** Seats per account on a ticketed event: Settings > Business (event_seat_max). */
+  seatMax?: number;
   acct: BookAccount | null;
   items: AddonItem[];
   start: { ev: string | null; session: string | null };
@@ -83,7 +85,7 @@ type Modal =
   | { kind: "profile"; community: boolean; ask: PgField[]; next: string | null }
   | { kind: "bike"; type: BikeType; slot: number } | { kind: "group"; g: RideGroup } | null;
 /** `booked`: the rows the database stored (the route's), so a ticket my_bookings did not return in time is still counted. */
-type Done = { tickets: TicketRow[]; booked: { id: string; status: string }[]; session: TicketSession | null; addonsSaved: boolean };
+type Done = { tickets: TicketRow[]; booked: { id: string; status: string }[]; session: TicketSession | null; addonsSaved: boolean; payDue?: boolean };
 
 /** An amount as the booking app writes it (_sar): the riyal sign left of the number, isolated left to right, two decimals
  *  only when it has a fraction (57.50); a range "lo – hi" when a type's fare may rise. The sign is drawn for the eye alone
@@ -104,7 +106,7 @@ const BIKE_IMG: Record<string, { img: string; model: string; easy?: boolean }> =
 const GROUP_IMG: Record<RideGroup, string> = { beg: "group-jyc", int: "group-msr" };
 const imgOf = (name: string) => `/site/experiences/bikes/${name}.webp`;
 
-export default function BookingFlow({ locale, events, prices, maxPrices, jccCap = JCC_ACCOUNT_CAP, acct, items, start, text, links, today, now, typeNames, routes, pay }: Props) {
+export default function BookingFlow({ locale, events, prices, maxPrices, jccCap = JCC_ACCOUNT_CAP, seatMax = EVENT_SEAT_MAX, acct, items, start, text, links, today, now, typeNames, routes, pay }: Props) {
   const t = useLocalize(T);
   const tk = useLocalize(TICKET);
   const rtl = isRtl(locale);
@@ -178,7 +180,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     setSelId(s.id);
     funnel("pick", evKey ?? s.kind);
     // a party carried over from another night may be past this night's allowance
-    const cap = maxRiders(s, a.live[s.id] ?? 0, jccCap);
+    const cap = maxRiders(s, a.live[s.id] ?? 0, jccCap, seatMax);
     setRiders((rs) => (rs.length > cap ? rs.slice(0, cap) : rs).map((r) => ({
       ...r,
       // "my own bike" and carbon are not on every ride; a pick carried over is made again
@@ -231,7 +233,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   }, [stepName]);
   const free = !!sel?.free;
   const booked = sel && acctNow ? acctNow.live[sel.id] ?? 0 : 0;
-  const cap = sel ? maxRiders(sel, booked, jccCap) : jccCap;
+  const cap = sel ? maxRiders(sel, booked, jccCap, seatMax) : jccCap;
   const qty = riders.length;
   const typeName = (ty: string) => typeNames[ty] ?? ty;
   const pillName = (ty: string) => t.types[ty] ?? ty;
@@ -243,7 +245,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
 
   // ── Riders ───────────────────────────────────────────────────────────────────────────────
   const setQty = (d: number) => {
-    if (!sel || sel.community) return;
+    if (!sel || (sel.community && sel.kind !== "event")) return; // a ticketed event's seats are counted on the review
     const n = Math.max(1, Math.min(cap, qty + d));
     // rider 1 is the account holder: their name is filled in once the party has names to give
     setRiders((rs) => (n > rs.length ? [...rs.map((r, i) => (i === 0 && !r.name && acctNow ? { ...r, name: acctNow.name } : r)), ...Array.from({ length: n - rs.length }, () => ({ name: "", height: "", type: "" as const }))] : rs.slice(0, n)));
@@ -378,6 +380,9 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     if (!acctNow) { setModal({ kind: "signin" }); return; }
     const re = needsBike(sel) ? riderErr() : null;
     if (re) { go(2); showRiderErr(re); return; }
+    // a ticketed event's other seats carry their own names, as a ride's riders do (the server refuses a party without them)
+    const unnamed = !needsBike(sel) && riders.length > 1 ? riders.findIndex((r, i) => !(r.name.trim() || (i === 0 ? acctNow.name : "")).trim()) : -1;
+    if (unnamed >= 0) { showRiderErr({ i: unnamed, field: "name" }); return; }
     if (needsWaiver(sel) && waiverOk !== sel.id) { go(2.5); return; }
     // a session for the other gender is refused here, before anything is sent (the server and the database refuse it too)
     const sg = genderRefused(sel, acctNow.gender);
@@ -402,7 +407,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         }),
       });
       const b = (await res.json().catch(() => ({}))) as {
-        ok?: boolean; error?: string; tickets?: TicketRow[]; booked?: { id: string; status: string }[]; session?: TicketSession | null; addonsSaved?: boolean; pay?: { url?: string };
+        ok?: boolean; error?: string; tickets?: TicketRow[]; booked?: { id: string; status: string }[]; session?: TicketSession | null; addonsSaved?: boolean; pay?: { url?: string }; payDue?: boolean;
       };
       if (b.ok && b.pay?.url && /^\/pay\/[0-9a-f-]{36}$/.test(b.pay.url)) {
         // the places are held while the rider pays on the payment page (it brings them back to their tickets)
@@ -415,7 +420,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         const n = booked.length || b.tickets.length;
         const rowsNow: { status: string }[] = b.tickets.length ? b.tickets : booked;
         funnel(rowsNow.length > 0 && rowsNow.every((r) => r.status === "waitlist") ? "waitlisted" : "booked", fk()); funnelDone();
-        setDone({ tickets: b.tickets, booked, session: b.session ?? null, addonsSaved: b.addonsSaved !== false });
+        setDone({ tickets: b.tickets, booked, session: b.session ?? null, addonsSaved: b.addonsSaved !== false, payDue: b.payDue === true });
         setAcctNow((a) => {
           if (!a) return a;
           // the next booking asks what this one made due (_pgDue counts the rows)
@@ -600,7 +605,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
             <TicketCard key={r.id} locale={locale} today={today} rows={[r]} session={done.session ?? undefined} name={name}
               cue={ticketCue([r], done.session ?? undefined, null)} t={tk} gather={text.gather} start={text.start} typeName={typeName}
               links={{ edit: null, manage: links.account, place: done.session?.approval ? done.session.meetUrl : links.place }} manage={false}
-              route={routes[r.sessionId] ?? null} now={now} wallet={{ bookingId: r.id, groupIds: [r.id] }} addonItems={ticketItems} />
+              route={routes[r.sessionId] ?? null} now={now} wallet={{ bookingId: r.id, groupIds: [r.id] }} addonItems={ticketItems}
+              online={done.payDue && pay ? { open: true, refundDays: pay.refundDays, today } : null} />
           ))}
         </div>
         <div className="bk-foot">
@@ -819,6 +825,17 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
             </div>
           </div>
           <p className="bk-k bk-sec">{needsBike(sel) ? t.riders : t.participants} ({qty})</p>
+          {/* a ticketed event's seats (bug hunt 2026-11-11): up to event_seat_max per account, as the booking app sells them */}
+          {sel.kind === "event" && (
+            <div className="bk-qty-row">
+              <span className="bk-qty-k" id="bk-seats-k">{t.numSeats}</span>
+              <div className="bk-qty" role="group" aria-labelledby="bk-seats-k">
+                <button type="button" onClick={() => setQty(-1)} disabled={qty <= 1} aria-label={t.fewer}><Ic name="minus" size={18} /></button>
+                <span aria-live="polite">{qty}</span>
+                <button type="button" onClick={() => setQty(1)} disabled={qty >= cap} aria-label={t.more}><Ic name="plus" size={18} /></button>
+              </div>
+            </div>
+          )}
           {riders.map((r, i) => {
             const l = lines[i];
             const who = (r.name.trim() || (i === 0 ? acctNow?.name : "")) || `${t.rider} ${i + 1}`;
@@ -826,7 +843,14 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
               <div key={i} className="bk-rv-rider">
                 <span className="bk-num">{i + 1}</span>
                 <div className="bk-rv-mid">
-                  <p className="bk-rv-name">{who}</p>
+                  {sel.kind === "event" && qty > 1 ? (
+                    <div className="bk-field bk-rv-field" id={`bk-name-${i}`}>
+                      <input id={`bk-name-in-${i}`} type="text" autoComplete={i === 0 ? "name" : "off"} dir="auto" autoCapitalize="words" maxLength={60}
+                        aria-label={`${t.fullName} ${i + 1}`} placeholder={t.fullName} value={r.name}
+                        onChange={(e) => setRider(i, { name: e.target.value.replace(/[-‐-―]/g, " ") })} aria-invalid={fieldErr?.key === `name-${i}` || undefined} />
+                      {fErr(`name-${i}`)}
+                    </div>
+                  ) : <p className="bk-rv-name">{who}</p>}
                   {needsBike(sel) && (
                     <p className="bk-rv-meta">
                       {r.type && <span className={`tk-type t-${r.type.toLowerCase().replace(/\s+/g, "")}`}>{typeName(r.type)}</span>}
@@ -1106,7 +1130,8 @@ function ProfileForm({ t, locale, acct, community, ask, onSaved, close }: {
   const year = new Date().getFullYear();
   const years = Array.from({ length: 96 }, (_, i) => String(year - 5 - i));
   const dim = bd.y && bd.m ? new Date(Number(bd.y), Number(bd.m), 0).getDate() : 31;
-  const birth = bd.y && bd.m && bd.d ? `${bd.y}-${bd.m}-${bd.d}` : "";
+  // a day the month no longer has (29 February in a common year, a 31st picked before the month) is no date at all
+  const birth = bd.y && bd.m && bd.d && Number(bd.d) <= dim ? `${bd.y}-${bd.m}-${bd.d}` : "";
   const hb = ask.includes("birth"), hn = ask.includes("nat"), one = ask.length === 1;
   const filled = (!hb || !!birth) && (!hn || !!nat);
   const save = async (e: React.FormEvent) => {
@@ -1139,7 +1164,7 @@ function ProfileForm({ t, locale, acct, community, ask, onSaved, close }: {
             <option value="">{t.month}</option>
             {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map((m, i) => <option key={m} value={m}>{months[i] ?? m}</option>)}
           </select>
-          <select aria-label={t.year} value={bd.y} disabled={saving} onChange={(e) => setBd({ ...bd, y: e.target.value })}>
+          <select aria-label={t.year} value={bd.y} disabled={saving} onChange={(e) => setBd({ ...bd, y: e.target.value, d: bd.d && Number(bd.d) > (e.target.value && bd.m ? new Date(Number(e.target.value), Number(bd.m), 0).getDate() : 31) ? "" : bd.d })}>
             <option value="">{t.year}</option>
             {years.map((y) => <option key={y} value={y}>{y}</option>)}
           </select>

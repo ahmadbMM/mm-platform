@@ -74,6 +74,8 @@ async function signedIn(req: Request, b: Record<string, unknown>) {
     : await rpcServer<string>("customer_change_password", { p_id: id, p_token: token, p_current: current, p_new: next });
   if (unreachable(r)) return jsonOut({ ok: false, error: "generic" }, 502);
   if (r.status >= 400) { const e = passwordError(r.message); return jsonOut({ ok: false, error: e }, STATUS[e] ?? 400); }
+  // a wrong current password is answered, not raised (customer_change_password counts it toward the lock)
+  if (r.data === "BAD_PASSWORD") return jsonOut({ ok: false, error: "bad" }, STATUS.bad);
   const tok = typeof r.data === "string" ? r.data : "";
   if (!/^[A-Za-z0-9_-]{16,200}$/.test(tok)) return jsonOut({ ok: false, error: "generic" }, 502);
   return jsonOut({ ok: true }, 200, { "set-cookie": sessionCookie(encodeSession({ id, token: tok })) });

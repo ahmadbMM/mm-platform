@@ -6,6 +6,7 @@ import { useLocalize } from "@/i18n/TxProvider";
 import { passwordProblem } from "@/lib/learn";
 import { T } from "./Account.text";
 import { postJson } from "./fields";
+import { signOut } from "./quiet";
 
 // Passwords on My Account, through /api/account/password (the database mints a new session token,
 // which signs every other device out; this one keeps going with it):
@@ -33,29 +34,38 @@ function usePwForm(mode: "change" | "forced", needCurrent: boolean | null) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(false);
-  async function submit(): Promise<boolean> {
+  /** true once saved; otherwise the refusal ("" for one found here, before anything was sent). */
+  async function submit(): Promise<true | string> {
     setErr(""); setDone(false);
-    if (mode === "change" && needCurrent === true && !cur) { setErr(t.pwErrors.current); return false; }
+    if (mode === "change" && needCurrent === true && !cur) { setErr(t.pwErrors.current); return ""; }
     // the booking app's rule (2026-11-11): 8 or more characters, and not a common one
     const pp = passwordProblem(a);
-    if (pp) { setErr(pp === "short" ? t.pwErrors.weak : t.pwErrors.common); return false; }
-    if (a !== b) { setErr(t.pwErrors.mismatch); return false; }
+    if (pp) { setErr(pp === "short" ? t.pwErrors.weak : t.pwErrors.common); return ""; }
+    if (a !== b) { setErr(t.pwErrors.mismatch); return ""; }
     setBusy(true);
     const r = await postJson("/api/account/password", { mode, current: cur, next: a });
     setBusy(false);
     if (r.ok) { setCur(""); setA(""); setB(""); setDone(true); return true; }
     setErr(t.pwErrors[r.error || ""] || t.pwErrors.generic);
-    return false;
+    return r.error || "generic";
   }
   return { t, cur, setCur, a, setA, b, setB, show, setShow, busy, err, done, submit };
 }
 
 /** needCurrent: true - the account has a password; false - it has none (Google or Apple only); null - not known. */
-export function PasswordCard({ needCurrent }: { needCurrent: boolean | null }) {
+export function PasswordCard({ needCurrent: drawn }: { needCurrent: boolean | null }) {
+  // a password set here is one the next change gives (bug hunt 2026-11-11): the box for it shows at once, and the page is
+  // read again for the rest of what the first password changed
+  const [set, setSet] = useState(false);
+  const needCurrent = set ? true : drawn;
+  const router = useRouter();
   const f = usePwForm("change", needCurrent);
   const { t } = f;
   return (
-    <form className="ac-panel" aria-labelledby="ac-pw-h" noValidate onSubmit={(e) => { e.preventDefault(); void f.submit(); }}>
+    <form className="ac-panel" aria-labelledby="ac-pw-h" noValidate onSubmit={async (e) => {
+      e.preventDefault();
+      if ((await f.submit()) === true && needCurrent !== true) { setSet(true); router.refresh(); }
+    }}>
       <h2 id="ac-pw-h" className="ac-panel-h">{t.pwTitle}</h2>
       <p className="ac-sub">{needCurrent === false ? t.pwSetSub : t.pwSub}</p>
       <div className="ac-grid">
@@ -92,7 +102,15 @@ export function ForcedPassword() {
     // answer opens it again.
     <dialog ref={box} className="ac-dlg" aria-labelledby="ac-fpw-h" onCancel={(e) => e.preventDefault()}
       onClose={(e) => { const d = e.currentTarget; if (!answered.current && d.isConnected && !d.open) { try { d.showModal(); } catch { /* gone */ } } }}>
-      <form noValidate onSubmit={async (e) => { e.preventDefault(); if (await f.submit()) { answered.current = true; box.current?.close(); router.refresh(); } }}>
+      <form noValidate onSubmit={async (e) => {
+        e.preventDefault();
+        const r = await f.submit();
+        // A change is no longer due (the password was replaced elsewhere, or staff cleared the mark), or this session has
+        // ended (a change on another device signs this one out): the pop-up lets go rather than asking forever (bug hunt
+        // 2026-11-11), to the page as it now stands or to signing in again.
+        if (r === true || r === "notdue") { answered.current = true; box.current?.close(); router.refresh(); }
+        else if (r === "signin") { answered.current = true; box.current?.close(); signOut(); }
+      }}>
         <h2 id="ac-fpw-h">{t.forcedTitle}</h2>
         <p className="ac-sub">{t.forcedSub}</p>
         <PwInput id="ac-fpw-a" value={f.a} onChange={f.setA} label={t.pwNew} auto="new-password" show={f.show} />

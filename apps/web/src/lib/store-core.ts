@@ -159,16 +159,22 @@ export function optionsOf(p: StoreProduct): { sizes: string[]; colours: Colour[]
   return { sizes, colours };
 }
 
-/** The variant a size and a colour name: each only where the product comes in them. Null until both are picked. */
+/** The variant a size and a colour name: each only where the product comes in them. Null until both are picked. A
+ *  variant without a size (or a colour) where others of the product have one fits any pick of it (bug hunt 2026-11-11:
+ *  it could never be bought), after one that names the pick exactly. */
 export function pickVariant(p: StoreProduct, size: string | null, colour: string | null): StoreVariant | null {
   const o = optionsOf(p);
   if ((o.sizes.length && !size) || (o.colours.length && !colour)) return null;
-  return p.variants.find((v) => (!o.sizes.length || v.size === size) && (!o.colours.length || v.color_en === colour)) ?? null;
+  return p.variants.find((v) => (!o.sizes.length || v.size === size) && (!o.colours.length || v.color_en === colour))
+    ?? p.variants.find((v) => (!o.sizes.length || !v.size || v.size === size) && (!o.colours.length || !v.color_en || v.color_en === colour)) ?? null;
 }
 
-/** Whether a size (or a colour) can still be had, with the other choice as it stands. */
+/** Whether a size (or a colour) can still be had, with the other choice as it stands; a variant without the size (or
+ *  the colour) has every one of it, as pickVariant reads it. */
 export function optionOpen(p: StoreProduct, dim: "size" | "colour", value: string, other: string | null): boolean {
-  return p.variants.some((v) => v.stock > 0 && (dim === "size" ? v.size === value && (!other || v.color_en === other) : v.color_en === value && (!other || v.size === other)));
+  return p.variants.some((v) => v.stock > 0 && (dim === "size"
+    ? (!v.size || v.size === value) && (!other || !v.color_en || v.color_en === other)
+    : (!v.color_en || v.color_en === value) && (!other || !v.size || v.size === other)));
 }
 
 /** The product's specifications in the page's language: Arabic rows on an Arabic page where written, else English. */

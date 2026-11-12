@@ -150,7 +150,11 @@ export const rgOk = (g: unknown): g is RideGroup => g === "beg" || g === "int";
  *  app (Settings > Business, jcc_account_cap; the database's _group_ride_cap reads it): the page
  *  passes the setting in (lib/biz.ts bizOf), this is its default. */
 export const JCC_ACCOUNT_CAP = 3;
-export function maxRiders(s: Pick<BookSession, "community" | "kind">, booked: number, cap: number = JCC_ACCOUNT_CAP): number {
+/** Seats one account books on a ticketed event (EVENT_SEAT_MAX, Settings > Business event_seat_max; the database's
+ *  _group_ride_cap allows five): the page passes the setting in (lib/biz.ts bizOf), this is its default. */
+export const EVENT_SEAT_MAX = 5;
+export function maxRiders(s: Pick<BookSession, "community" | "kind">, booked: number, cap: number = JCC_ACCOUNT_CAP, seatMax: number = EVENT_SEAT_MAX): number {
+  if (s.kind === "event") return Math.max(1, seatMax - booked); // a ticketed event's seats, as the booking app's _maxRiders
   if (s.community) return 1; // the Petromin ride (two) is booked through its own form, never here
   return Math.max(1, cap - booked);
 }
@@ -277,11 +281,14 @@ export function promoDiscount(p: Promo | null, s: Pick<BookSession, "free" | "se
 /** Which riders carry the code into the booking (_applyPromoToEntries): only the ones it
  *  discounts - the database counts a use per row that carries it. A personal one-use code: rider 1 alone, never on
  *  Carbon. */
-export function promoRows(p: Pick<Promo, "appliesTo" | "one"> | null, s: Pick<BookSession, "free">, riders: Pick<Rider, "type" | "name">[], acct: Pick<BookAccount, "name" | "house"> | null): boolean[] {
+export function promoRows(p: Pick<Promo, "appliesTo" | "one"> | null, s: Pick<BookSession, "free" | "seat">, riders: Pick<Rider, "type" | "name">[], acct: Pick<BookAccount, "name" | "house"> | null): boolean[] {
   return riders.map((r, i) => {
-    if (!p || s.free || r.type === "Own" || !r.type) return false;
-    if (i === 0 && acct && houseSelf(acct.name, r.name) && houseCovers(acct.house, r.type)) return false;
-    if (p.one) return i === 0 && !/carbon/i.test(r.type);
+    if (!p || s.free || r.type === "Own") return false;
+    // a seat on a paid event has no bike type and is discounted all the same (riderPrices, promoDiscount; bug hunt
+    // 2026-11-11): its row carries the code, or the database charges the full seat the review took the code off
+    if (!r.type && !(s.seat != null && s.seat > 0)) return false;
+    if (i === 0 && acct && houseSelf(acct.name, r.name) && houseCovers(acct.house, r.type || "Any")) return false;
+    if (p.one) return i === 0 && !!r.type && !/carbon/i.test(r.type);
     return !p.appliesTo || p.appliesTo === r.type;
   });
 }
@@ -372,7 +379,7 @@ export function birthOk(v: string, today: string): boolean {
  *  for the other gender (the owner, 2026-10-27; the database's GENDER_ONLY). */
 export const REFUSALS = ["signin", "closed", "members", "rejected", "already", "one_per_session", "group_cap", "cap", "fix_first", "pick_type",
   "waitlist_full", "not_open", "waiver", "invalid", "generic", "offline", "origin", "slow", "men_only", "women_only",
-  "ref_code_carbon", "ref_code_session", "blood_code_carbon", "blood_code_session", "place_gone"] as const;
+  "ref_code_carbon", "ref_code_session", "blood_code_carbon", "blood_code_session", "place_gone", "saturday_link", "waiver_outdated"] as const;
 export type Refusal = (typeof REFUSALS)[number];
 
 /** A session for one gender that this account may not book (lib/session-gender.ts genderOk; the booking app's _sgOk):
@@ -403,6 +410,10 @@ export function refusalOf(err: { code?: string; message?: string; details?: stri
   // a personal code where it does not pay (_ref_code_guard, _blood_code_guard): its detail names why
   const code = /\b(REF|BLOOD)_CODE_(CARBON|SESSION)\b/.exec(`${d} ${m}`);
   if (code) return `${code[1].toLowerCase()}_code_${code[2].toLowerCase()}` as Refusal;
+  // staff switched micromobility.sa/saturday on after this page was drawn (the queue guard's SATURDAY_LINK), and the
+  // waiver this site sends is older than the one the database asks for (WAIVER_OUTDATED), as the booking app reads them
+  if (d === "SATURDAY_LINK" || /SATURDAY_LINK|micromobility\.sa\/saturday/.test(m)) return "saturday_link";
+  if (/WAIVER_OUTDATED/.test(`${m} ${d}`)) return "waiver_outdated";
   if (/BAD_INPUT|22023/.test(m)) return "invalid";
   return "generic";
 }

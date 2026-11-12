@@ -1332,6 +1332,14 @@
         cr = await res.json().catch(function () { return null; });
       } catch (x) { cr = null; }
       if (cr && cr.ok && /^\/pay\/[0-9a-f-]{36}$/.test(cr.url || "")) { clearPick(); window.location.assign(cr.url); return; }
+      // No answer, or refused as taken or over the limit: the server may have reserved them for this card payment
+      // though its answer never arrived. The rider's lockers are read again first; lockers held for a card payment
+      // not finished show under Your lockers with Remove, rather than "just taken" (bug hunt 2026-11-11).
+      if (!cr || (cr.detail && /LOCKER_TAKEN|LOCKER_LIMIT/.test(cr.detail))) {
+        await loadMine();
+        var held = mine.filter(function (x) { return !x.booking_id && x.day === d && x.period === p && x.status === "reserved" && x.pay === "card" && !x.paid && codes.indexOf(x.code) >= 0; });
+        if (held.length) { setLoading("#book", false); clearPick(); pay = null; backToPick(); showBanner("Card payment not finished"); return; }
+      }
       setLoading("#book", false);
       if (cr && cr.detail) { bookRefused({ message: cr.detail }); return; }
       if (cr && cr.error === "signin") { signedOut(); return; }

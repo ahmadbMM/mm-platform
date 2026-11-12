@@ -65,14 +65,15 @@ export async function sendRefund(rf: Refund, env: PayEnv = payEnv()): Promise<bo
 }
 
 /** Refunds left 'pending' minutes ago on one Moyasar payment (the server stopped between Moyasar and the database,
- *  or Moyasar never answered): never sent again. Moyasar's refunded total is one number for all of them, so they are
- *  judged one after another, oldest first, as pay_reconcile_list counts them (rentals 20261110235200): each refund's
- *  'already' is the card refunds done on that Moyasar payment and those pending that were sent before it. The oldest
- *  one's is what the database counts done; from there, each is confirmed only while the total covers it too (two
- *  refunds are never confirmed by the same money), and the count grows by the ones confirmed alone, so a refund marked
- *  failed here never stands in front of a later one that went through. The rest are marked failed for staff to check
- *  and retry. The database is told the total counted so far, not Moyasar's whole total, which may hold a refund still
- *  being sent; it keeps whichever is more of that and the refunds done (pay_refund_done). Answers how many were
+ *  or Moyasar never answered): never sent again. Moyasar's refunded total is one number for all of them. What it holds
+ *  beyond the card refunds the database counts done (the oldest one's 'already', pay_reconcile_list, rentals
+ *  20261110235200) is the money these pending ones may account for, and only refunds whose amounts add up to exactly
+ *  that went through (bug hunt 2026-11-11: oldest first, an older refund that never left was confirmed by a newer
+ *  one's money, and the newer one marked failed for staff to send again). When one set of amounts adds up, those
+ *  refunds are confirmed and the rest marked failed for staff to check and retry; when none does (a refund still being
+ *  sent, or one made on Moyasar's dashboard) or two different ones do, nothing is judged for an hour, then all are
+ *  marked failed for staff to check Moyasar's dashboard. The database is told the total counted so far, not Moyasar's
+ *  whole total; it keeps whichever is more of that and the refunds done (pay_refund_done). Answers how many were
  *  confirmed and recorded. */
 export async function confirmRefunds(list: PendingRefund[], env: PayEnv = payEnv()): Promise<number> {
   const id = list[0]?.provider_id;
@@ -83,17 +84,35 @@ export async function confirmRefunds(list: PendingRefund[], env: PayEnv = payEnv
   // the smallest 'already' is the oldest refund's: the done ones alone (a database before 20261110235200 gave every
   // refund the same, the payment's refunded total, which this reads the same way)
   let counted = toHalalas(Math.max(0, Math.min(...list.map((rf) => Number(rf.already) || 0))));
-  let n = 0;
   const order = (rf: PendingRefund) => `${rf.created_at ?? ""}|${rf.id}`;
-  for (const rf of [...list].sort((a, b) => order(a).localeCompare(order(b)))) {
-    const want = toHalalas(rf.amount);
-    if (want > 0 && total >= counted + want) {
-      counted += want; // in Moyasar's total either way: a record that failed is judged again on the next run
-      const d = await payRpc<{ status?: string }>("pay_refund_done", { p_refund: rf.id, p_ok: true, p_refunded_halalas: counted, p_error: null }, env);
-      if (d.status === 200 && d.data?.status === "done") n++;
-    } else {
-      await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: false, p_refunded_halalas: 0, p_error: "not confirmed by Moyasar: check its dashboard, then retry" }, env);
-    }
+  const sorted = [...list].sort((a, b) => order(a).localeCompare(order(b))).slice(0, 12); // the rest wait for a later run
+  const wants = sorted.map((rf) => toHalalas(rf.amount));
+  // every set of these refunds whose amounts add up to what Moyasar refunded beyond the ones done (the empty set when
+  // nothing more left), told apart by their amounts alone: two refunds of one amount are the same money
+  const extra = total - counted;
+  const amounts = (m: number) => wants.filter((w, i) => w > 0 && m & (1 << i)).sort((a, b) => a - b).join(",");
+  const fits: string[] = [];
+  for (let m = 0; m < 1 << sorted.length; m++) {
+    if (wants.reduce((s, w, i) => (m & (1 << i) ? s + w : s), 0) === extra && !fits.includes(amounts(m))) fits.push(amounts(m));
+  }
+  const fail = (rf: PendingRefund) =>
+    payRpc("pay_refund_done", { p_refund: rf.id, p_ok: false, p_refunded_halalas: 0, p_error: "not confirmed by Moyasar: check its dashboard, then retry" }, env);
+  if (fits.length !== 1) {
+    const newest = Math.max(...sorted.map((rf) => Date.parse(rf.created_at ?? "") || 0));
+    if (Date.now() - newest < 3600000) return 0; // asked again on the next run
+    for (const rf of sorted) await fail(rf);
+    return 0;
+  }
+  // the refunds that went through, oldest first for each amount
+  const left = fits[0] ? fits[0].split(",").map(Number) : [];
+  let n = 0;
+  for (const [i, rf] of sorted.entries()) {
+    const k = left.indexOf(wants[i]);
+    if (k < 0) { await fail(rf); continue; }
+    left.splice(k, 1);
+    counted += wants[i]; // in Moyasar's total either way: a record that failed is judged again on the next run
+    const d = await payRpc<{ status?: string }>("pay_refund_done", { p_refund: rf.id, p_ok: true, p_refunded_halalas: counted, p_error: null }, env);
+    if (d.status === 200 && d.data?.status === "done") n++;
   }
   return n;
 }

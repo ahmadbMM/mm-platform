@@ -229,6 +229,14 @@ describe("choosing a variant", () => {
     expect(pickVariant(p, "M", null)).toBeNull();
     expect(pickVariant(p, "M", "Black")?.id).toBe(V(3));
   });
+  it("sells a variant without a colour where the product's others have one, for any colour picked", () => {
+    const q = storeOf([product("q", "jersey")], [variant(1, "q", { size: "500ml", color_en: null, stock: 5 }), variant(2, "q", { size: "750ml", color_en: "Black", stock: 0 })]).products[0];
+    expect(pickVariant(q, "500ml", "Black")?.id).toBe(V(1));
+    expect(pickVariant(q, "750ml", "Black")?.id).toBe(V(2));
+    expect(optionOpen(q, "size", "500ml", "Black")).toBe(true);
+    expect(optionOpen(q, "colour", "Black", "500ml")).toBe(true);
+    expect(optionOpen(q, "colour", "Black", "750ml")).toBe(false);
+  });
   it("closes a choice nobody can have with the other one as it stands", () => {
     expect(optionOpen(p, "size", "M", "Green")).toBe(false);
     expect(optionOpen(p, "size", "M", null)).toBe(true);

@@ -57,6 +57,11 @@ export const T = {
     numBikes: "Number of bikes",
     qtyDec: "Decrease number of bikes",
     qtyInc: "Increase number of bikes",
+    // a ticketed event's seats on the review (bug hunt 2026-11-11): its count, the buttons beside it, each seat's name
+    numSeats: "Number of seats",
+    fewer: "Fewer",
+    more: "More",
+    fullName: "Full name",
     // riderLabel riderName riderNamePlaceholder heightLabel heightPlaceholder cmUnit (the frame-size hint gave way to the unit, 2026-11-10)
     rider: "Rider",
     riderName: "Rider’s full name",
@@ -215,6 +220,10 @@ export const T = {
       ref_code_session: "A referral code works only on Jeddah Corniche Circuit rides and Petromin nights.",
       blood_code_carbon: "This free ride isn’t valid on a Carbon bike.",
       blood_code_session: "This free ride isn’t valid on this session.",
+      // satLinkMsg: staff switched micromobility.sa/saturday on while the page was open; the waiver changed in the
+      // database before this site did (bug hunt 2026-11-11)
+      saturday_link: "Saturday Social Ride places are booked at micromobility.sa/saturday, with the ride code you were given.",
+      waiver_outdated: "The waiver has just been updated. Please try again later.",
     } as Record<string, string>,
   },
   ar: {
@@ -264,6 +273,10 @@ export const T = {
     numBikes: "عدد الدراجات",
     qtyDec: "إنقاص عدد الدراجات",
     qtyInc: "زيادة عدد الدراجات",
+    numSeats: "عدد المقاعد",
+    fewer: "أقل",
+    more: "أكثر",
+    fullName: "الاسم الكامل",
     rider: "الراكب",
     riderName: "الاسم الكامل للراكب",
     riderNamePh: "أدخل الاسم الكامل",
@@ -398,6 +411,8 @@ export const T = {
       ref_code_session: "رمز الإحالة صالح فقط لجولات حلبة كورنيش جدة وليالي بترومين.",
       blood_code_carbon: "هذه الركوبة المجانية غير صالحة لدراجة الكربون.",
       blood_code_session: "هذه الركوبة المجانية غير صالحة لهذه الجلسة.",
+      saturday_link: "يكون حجز مقاعد جولة السبت الاجتماعية عبر micromobility.sa/saturday، باستخدام رمز الجولة الذي حصلت عليه.",
+      waiver_outdated: "تم تحديث الإقرار للتو. حاول مرة أخرى لاحقاً من فضلك.",
     } as Record<string, string>,
   },
 };

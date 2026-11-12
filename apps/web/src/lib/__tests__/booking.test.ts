@@ -44,6 +44,10 @@ describe("caps and types", () => {
     expect(maxRiders(base, 0, 5)).toBe(5);
     expect(maxRiders(base, 1, 5)).toBe(4);
     expect(maxRiders(sat, 0, 5)).toBe(1);
+    // a ticketed event's seats (EVENT_SEAT_MAX, event_seat_max), as the booking app's _maxRiders
+    const ev = { ...base, kind: "event" as const, community: true };
+    expect(maxRiders(ev, 0)).toBe(5);
+    expect(maxRiders(ev, 0, 3, 4)).toBe(4);
   });
   it("offers the app's types: never Any or Gravel, own bike only on community and National Day, no carbon on community", () => {
     expect(typeOptions(base)).toEqual(["Road", "Hybrid", "Mountain", "Kids", "Road Carbon"]);
@@ -103,6 +107,11 @@ describe("prices", () => {
     expect(promoRows({ appliesTo: "Road" }, base, [r("Road"), r("Hybrid")], null)).toEqual([true, false]);
     expect(promoRows(pct, base, [r("Road")], { name: "Sara", house: "all" })).toEqual([false]);
     expect(promoRows(pct, sat, [r("Road")], null)).toEqual([false]);
+    // a seat on a paid event carries the code it is discounted by; a free seat never spends one
+    const ev = { ...base, kind: "event" as const, community: true, seat: 100 };
+    expect(promoDiscount(pct, ev, [r("")], prices, null)).toBe(10);
+    expect(promoRows(pct, ev, [r("")], null)).toEqual([true]);
+    expect(promoRows(pct, { ...ev, seat: 0 }, [r("")], null)).toEqual([false]);
   });
   it("gives a personal one-use code rider 1's own bike alone, never Carbon, Own or a bike on the house (_codeOne)", () => {
     expect(["RW-AB12", "rf-x", "RB-1", "BD-9", "VL-3"].every(codeOne)).toBe(true);
@@ -177,6 +186,8 @@ describe("validation", () => {
   });
   it("reads a refusal as the app does: the code, the detail, the sentence", () => {
     expect(refusalOf({ message: "STALE_SESSION" })).toBe("signin");
+    expect(refusalOf({ code: "P0001", message: "Saturday Social Ride places are booked at micromobility.sa/saturday.", details: "SATURDAY_LINK" })).toBe("saturday_link");
+    expect(refusalOf({ code: "P0001", message: "WAIVER_OUTDATED" })).toBe("waiver_outdated");
     expect(refusalOf({ code: "P0001", message: "SESSION_CLOSED" })).toBe("closed");
     expect(refusalOf({ message: "FIX_FIRST" })).toBe("fix_first");
     expect(refusalOf({ code: "22023", message: "PICK_TYPE" })).toBe("pick_type");
@@ -243,6 +254,11 @@ describe("the server's checks", () => {
     // a community ride is one rider; carbon there becomes Road; the group is required
     expect(checkBooking({ ...input([r("Road Carbon"), r("Road")]), group: "int" }, satLive, acct)).toEqual({ ok: true, riders: [r("Road")] });
     expect(checkBooking(input([r("Road")]), satLive, acct)).toEqual({ ok: false, error: "invalid" });
+    // a ticketed event sells its seats as a party, up to event_seat_max, each seat named (rider 1 may take the account's)
+    const evLive = liveSession({ ...row, event_kind: "community", ride_kind: "event", paid_ride: true, price: "40", open_to_all: true }, "2026-10-03")!;
+    expect(checkBooking(input([r("", "", ""), r("", "", "B"), r("", "", "C")]), evLive, acct)).toMatchObject({ ok: true, riders: [r("", "", ""), r("", "", "B"), r("", "", "C")] });
+    expect(checkBooking(input([r("", "", "A"), r("", "", "B"), r("", "", "C")]), evLive, acct, 3, 2)).toEqual({ ok: false, error: "cap" });
+    expect(checkBooking(input([r("", "", "A"), r("", "", "")]), evLive, acct)).toEqual({ ok: false, error: "invalid" });
   });
   it("builds the rows customer_create_booking takes, with no price and the code only where it discounts", () => {
     const input = { sessionId: live.id, riders: [r("Road", "180"), r("Own", "120", "Kid")], group: null, addons: [], promo: { code: "SARA10", appliesTo: null }, waiver: true, payNow: false, wallet: false, seatOnly: false };

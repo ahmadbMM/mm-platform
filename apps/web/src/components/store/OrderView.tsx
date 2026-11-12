@@ -48,6 +48,10 @@ export default function OrderView({ o, t, locale, seller, now, whatsapp, showroo
               <a className="bk-btn" href={`/pay/${o.payment.id}`}><Ic name="lock" size={17} />{t.payNow} <Amt>{sar(o.payment.amount)}</Amt></a>
             </>
           ) : <p>{t.unpaid}</p>}
+          {/* its hold ran out and the order is not yet let go: the items can go back into the cart already (the payment
+              page's Start again comes here; bug hunt 2026-11-11) */}
+          {!payable(o, now) && o.payment && o.payment.status !== "paid" && o.items.some((i) => i.variant_id)
+            && <PutBack items={o.items.filter((i) => i.variant_id).map((i) => ({ variant: i.variant_id as string, qty: i.qty }))} />}
         </section>
       )}
       {o.status === "cancelled" && (

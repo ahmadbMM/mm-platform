@@ -55,6 +55,9 @@ export default async function PayPage({ params, searchParams }: { params: Promis
     booking: "/account", order: v.order_no && v.order_key ? `/store/order/${v.order_no}?k=${v.order_key}` : "/store",
     locker: "/lockers", topup: "/account", workshop: "/workshop",
   };
+  // Start again on a store order: the cart was emptied when the order was placed, so its own page, which puts the items
+  // back (PutBack), not the empty cart (bug hunt 2026-11-11)
+  const orderAgain = v.order_no && v.order_key ? next.order : "/store/cart";
 
   const lines: { k: string; v?: string }[] = [];
   for (const r of v.rides ?? []) lines.push({ k: [r.name, r.type && r.type !== "None" ? r.type : "", r.date].filter(Boolean).join(" · ") });
@@ -84,7 +87,7 @@ export default async function PayPage({ params, searchParams }: { params: Promis
       <div className="py-done">
         <h1 className="bk-title">{v.status === "expired" ? t.expiredTitle : t.cancelledTitle}</h1>
         <p className="bk-sub">{t.expiredSub}</p>
-        <Link className="bk-btn wide" href={kind === "order" ? "/store/cart" : kind === "locker" ? "/lockers" : kind === "booking" ? "/experiences" : "/"}>{t.startAgain}</Link>
+        <Link className="bk-btn wide" href={kind === "order" ? orderAgain : kind === "locker" ? "/lockers" : kind === "booking" ? "/experiences" : "/"}>{t.startAgain}</Link>
       </div>
     );
   } else {
@@ -115,7 +118,7 @@ export default async function PayPage({ params, searchParams }: { params: Promis
           {open ? (
             <PayScreen locale={locale} publishableKey={env.MOYASAR_PUBLISHABLE_KEY!} testMode={payMode(env) === "test"} formJs={MOYASAR_FORM_JS} formCss={MOYASAR_FORM_CSS}
               pay={{ id: v.id, kind, ref: v.ref, amount: v.amount, description: v.description, hold: v.hold, leftMs: Number.isFinite(leftMs) ? leftMs : 0 }}
-              declined={q.tried ? v.message : null} tried={!!q.tried} />
+              declined={q.tried ? v.message : null} tried={!!q.tried} againHref={kind === "order" ? orderAgain : null} />
           ) : (
             <p className="py-msg" role="status">{t.notOpen}</p>
           )}

@@ -3,7 +3,7 @@ import { ACCOUNT_COOKIE, decodeSession, sameOrigin } from "@/lib/account-core";
 import { makeBooking, payableOnline, readInput, rpcCall } from "@/lib/booking-server";
 import { payReady } from "@/lib/pay/config";
 import { langOf } from "@/lib/pay/http";
-import { payRpc } from "@/lib/pay/server";
+import { payRpc, refusal } from "@/lib/pay/server";
 import { paySettings } from "@/lib/pay/settings";
 import { loadSiteContent } from "@/lib/site";
 import { BOOKING_URL } from "@/lib/links";
@@ -61,6 +61,7 @@ export async function POST(req: Request) {
   // rather than left as a place nobody pays for.
   const ps = paySettings(await loadSiteContent());
   const seated = r.booked.filter((b) => b.status !== "waitlist").map((b) => b.id);
+  let payDue = false;
   if (ps.enabled && payReady() && ps.bookings !== "off" && payableOnline(r.session) && seated.length
       && (ps.bookings === "required" || input.payNow)) {
     const p = await payRpc<{ id: string | null }>("pay_booking_start", {
@@ -68,8 +69,14 @@ export async function POST(req: Request) {
     });
     if (p.status === 200 && p.data?.id) return json({ ok: true, pay: { id: p.data.id, url: `/pay/${p.data.id}` } });
     if (!(p.status === 200 && p.data) && ps.bookings === "required") {
-      await payRpc("pay_booking_cancel", { p_id: acct.id, p_token: acct.token, p_ids: r.booked.map((b) => b.id), p_dest: "wallet" });
-      return json({ ok: false, error: "pay_start" }, 502);
+      // The undo is read (bug hunt 2026-11-11): asked twice, and a second answer that the rows are no longer open
+      // means the first one went through unheard. An undo that still fails leaves the places booked and unpaid, so
+      // the rider is given the tickets with Pay now rather than told nothing was booked.
+      const undo = () => payRpc("pay_booking_cancel", { p_id: acct.id, p_token: acct.token, p_ids: r.booked.map((b) => b.id), p_dest: "wallet" });
+      let u = await undo();
+      if (u.status !== 200) u = await undo();
+      if (u.status === 200 || refusal(u) === "PAY_NOT_OPEN") return json({ ok: false, error: "pay_start" }, 502);
+      payDue = true;
     }
     // the wallet paid it all, or (paying being the rider's choice) it could not start: the tickets, paid at the desk
   }
@@ -86,5 +93,7 @@ export async function POST(req: Request) {
     // the rows as the database stored them, for a ticket my_bookings did not return in time
     booked: r.booked,
     addonsSaved: r.addonsSaved,
+    // paying was required but could not start, and the booking could not be undone: the tickets carry Pay now
+    ...(payDue ? { payDue: true } : {}),
   });
 }

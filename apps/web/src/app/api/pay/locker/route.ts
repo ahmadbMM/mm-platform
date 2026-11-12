@@ -22,6 +22,12 @@ export async function POST(req: Request) {
   }, 8000);
   if (booked.status !== 200 || !booked.data?.rentals?.length) { const e = payError(booked); return json({ ok: false, error: e.error, detail: booked.message }, e.status); }
   const r = await payRpc<PayView>("pay_locker_start", { p_id: id, p_token: token, p_rentals: booked.data.rentals.map((x) => x.id), p_lang: langOf(b.lang) });
-  if (r.status !== 200 || !r.data) { const e = payError(r); return json({ ok: false, error: e.error }, e.status); }
+  if (r.status !== 200 || !r.data) {
+    // the payment could not start: the lockers just reserved for it are let go at once (bug hunt 2026-11-11), not held
+    // for twenty minutes as the rider's own and refused to them as taken when they try again
+    await Promise.all(booked.data.rentals.map((x) => rpcServer("customer_locker_drop", { p_id: id, p_token: token, p_rental: x.id }, 8000)));
+    const e = payError(r);
+    return json({ ok: false, error: e.error }, e.status);
+  }
   return json({ ok: true, pay: r.data.id, url: `/pay/${r.data.id}` });
 }

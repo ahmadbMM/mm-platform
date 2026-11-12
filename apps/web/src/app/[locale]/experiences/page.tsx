@@ -206,7 +206,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
 
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
-            <BookingFlow locale={locale} events={events} prices={prices} maxPrices={maxPrices} jccCap={jccCap} acct={acct} items={items}
+            <BookingFlow locale={locale} events={events} prices={prices} maxPrices={maxPrices} jccCap={jccCap} seatMax={biz.eventSeatMax} acct={acct} items={items}
               pay={paying ? { mode: ps.bookings, holdMinutes: ps.holdMinutes, refundDays: ps.refundDays, wallet, terms: cancelTerms } : undefined}
               start={{ ev: one(q.ev), session: one(q.session) }}
               text={{ eventTitle: S(c.steps.eventTitle), noDates: S(c.steps.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}

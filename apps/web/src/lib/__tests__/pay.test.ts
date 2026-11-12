@@ -78,6 +78,9 @@ describe("the pages' words for the database's refusals", () => {
     expect(payError({ status: 404, message: "Could not find the function public.pay_hold_extend(p_key, p_pay) in the schema cache" })).toEqual({ error: "generic", status: 502 });
     expect(payError({ status: 0, message: "" })).toEqual({ error: "generic", status: 502 });
     expect(payError({ status: 400, message: "SOMETHING_NEW" })).toEqual({ error: "generic", status: 502 });
+    // NOT_FOUND is raised with errcode P0002, which PostgREST answers 500
+    expect(payError({ status: 500, message: "NOT_FOUND" })).toEqual({ error: "not_found", status: 409 });
+    expect(payError({ status: 503, message: "upstream connect error" })).toEqual({ error: "generic", status: 502 });
   });
   it("writes amounts with the riyal sign on the left, isolated, halalas only when there are some", () => {
     expect(sar(57.5)).toBe("⁦⃁ 57.50⁩");
@@ -125,6 +128,20 @@ describe("refunds against Moyasar's one total", () => {
     const told = stub(4000); // 10 done, then only the 30 SAR one reached Moyasar
     expect(await confirmRefunds([rf("a", 50, 10, "2026-11-10T10:00:00Z"), rf("b", 30, 60, "2026-11-10T10:01:00Z")], env)).toBe(1);
     expect(told.map((b) => [b.p_refund, b.p_ok])).toEqual([["a", false], ["b", true]]);
+  });
+  it("never confirms an older refund that never left by a newer one's money", async () => {
+    const told = stub(7000); // 50 SAR never reached Moyasar, then 70 SAR did
+    expect(await confirmRefunds([rf("a", 50, 0, "2026-11-10T10:00:00Z"), rf("b", 70, 50, "2026-11-10T10:01:00Z")], env)).toBe(1);
+    expect(told.map((b) => [b.p_refund, b.p_ok, b.p_refunded_halalas])).toEqual([["a", false, 0], ["b", true, 7000]]);
+  });
+  it("judges nothing while no set of the refunds adds up to Moyasar's total, and an hour on asks staff to check", async () => {
+    const recent = new Date(Date.now() - 5 * 60000).toISOString();
+    let told = stub(2500);
+    expect(await confirmRefunds([rf("a", 20, 0, recent), rf("b", 30, 20, recent)], env)).toBe(0);
+    expect(told).toEqual([]);
+    told = stub(2500);
+    expect(await confirmRefunds([rf("a", 20, 0, "2026-11-10T10:00:00Z"), rf("b", 30, 20, "2026-11-10T10:01:00Z")], env)).toBe(0);
+    expect(told.map((b) => [b.p_refund, b.p_ok])).toEqual([["a", false], ["b", false]]);
   });
   it("says a refund done only when the database recorded it", async () => {
     stub(0);

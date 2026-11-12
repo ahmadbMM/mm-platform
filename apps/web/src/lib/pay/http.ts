@@ -27,8 +27,7 @@ export async function guard(req: Request, opts: { signin: boolean }): Promise<Gu
 
 /** The database's refusal as a short code the pages have words for. */
 export function payError(r: { status: number; message: string }): { error: string; status: number } {
-  if (r.status === 0 || r.status >= 500) return { error: "generic", status: 502 };
-  const code = refusal(r);
+  const code = r.status === 0 ? "" : refusal(r);
   const map: Record<string, string> = {
     NOT_AUTHORIZED: "signin", PAY_OFF: "pay_off", STORE_CLOSED: "pay_off", NOT_FOUND: "not_found",
     PAY_NOT_OPEN: "not_open", PAY_HOLD_MAX: "hold_max", PAY_IN_PROGRESS: "in_progress", PAY_NOTHING: "nothing", PAY_TOO_SMALL: "nothing",
@@ -38,6 +37,9 @@ export function payError(r: { status: number; message: string }): { error: strin
     WALLET_NOT_OPEN: "not_open", LOCKER_TAKEN: "locker_taken", LOCKERS_FULL: "lockers_full", LOCKER_LIMIT: "locker_limit",
     LOCKER_NOT_OPEN: "not_open", LOCKER_OUT: "locker_taken", LOCKER_PICK: "invalid", LOCKER_PAY: "invalid",
   };
+  // A refusal the database named is read whatever the status: NOT_FOUND is raised with errcode P0002, which PostgREST
+  // answers 500 (bug hunt 2026-11-11). Only a 5xx that names none is the way failing.
+  if (r.status === 0 || (r.status >= 500 && !map[code])) return { error: "generic", status: 502 };
   const error = map[code] ?? "generic";
   return { error, status: error === "signin" ? 401 : error === "generic" ? 502 : 409 };
 }

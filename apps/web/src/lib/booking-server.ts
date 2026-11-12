@@ -3,7 +3,7 @@
 // app's own token-checked functions with the id and token from the account cookie only.
 import type { Session } from "./account-core";
 import {
-  JCC_ACCOUNT_CAP, addonCap, codeOne, genderRefused, hasRideGroups, heightOk, heightToSize, isRiderType, maxRiders, needsBike, needsWaiver, noCarbon, ownOffered,
+  EVENT_SEAT_MAX, JCC_ACCOUNT_CAP, addonCap, codeOne, genderRefused, hasRideGroups, heightOk, heightToSize, isRiderType, maxRiders, needsBike, needsWaiver, noCarbon, ownOffered,
   pgDue, promoRows, refusalOf, rgOk, waiverKind, type BookAccount, type BookSession, type PgField, type Refusal, type Rider, type RideGroup,
 } from "./booking";
 import { cleanName } from "./rpc-client";
@@ -170,7 +170,7 @@ export type Checked = { ok: true; riders: Rider[] } | { ok: false; error: Refusa
  *  is still on, it is for the account's gender (a session for men only or women only, the owner,
  *  2026-10-27), the party fits, each rider is complete, the waiver is ticked, the account holds
  *  nothing on this ride yet and was not turned down for it. */
-export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAccount, "name" | "live" | "rejected" | "gender">, cap: number = JCC_ACCOUNT_CAP): Checked {
+export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAccount, "name" | "live" | "rejected" | "gender">, cap: number = JCC_ACCOUNT_CAP, seatMax: number = EVENT_SEAT_MAX): Checked {
   if (!s.open) return { ok: false, error: "closed" };
   const sg = genderRefused(s, acct.gender);
   if (sg) return { ok: false, error: sg };
@@ -178,8 +178,10 @@ export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAc
   if ((acct.live[s.id] ?? 0) > 0) return { ok: false, error: "already" };
   const booked = acct.live[s.id] ?? 0;
   let riders = input.riders;
-  if (s.community) riders = riders.slice(0, 1); // one place per member: never a party
-  if (riders.length > maxRiders(s, booked, cap)) return { ok: false, error: "cap" };
+  // one place per member: never a party, but for a ticketed event's seats (bug hunt 2026-11-11: up to its seat cap, as the
+  // booking app and the database's _group_ride_cap allow)
+  if (s.community && s.kind !== "event") riders = riders.slice(0, 1);
+  if (riders.length > maxRiders(s, booked, cap, seatMax)) return { ok: false, error: "cap" };
   if (needsBike(s)) {
     if (hasRideGroups(s) && !rgOk(input.group)) return { ok: false, error: "invalid" };
     for (const [i, r] of riders.entries()) {
@@ -191,6 +193,8 @@ export function checkBooking(input: BookInput, s: LiveSession, acct: Pick<BookAc
     // carbon is off every community ride but Petromin (the app turns a carried-over pick into Road)
     if (noCarbon(s)) riders = riders.map((r) => (r.type === "Road Carbon" ? { ...r, type: "Road" } : r));
   }
+  // a party's other places carry their own names, on a ride or at an event alike
+  if (!needsBike(s) && riders.length > 1 && riders.some((r, i) => !(r.name || (i === 0 ? acct.name : "")))) return { ok: false, error: "invalid" };
   if (needsWaiver(s) && !input.waiver) return { ok: false, error: "waiver" };
   return { ok: true, riders };
 }
@@ -302,7 +306,8 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
   const profile = acct.profile ?? {};
   const a = accountFrom(acct.name, profile, rowsNow, false, []);
   // the riders per account admins set in the booking app (Settings > Business), as _group_ride_cap reads it
-  const checked = checkBooking(input, s, a, bizOf(await loadSiteContent()).jccAccountCap);
+  const biz = bizOf(await loadSiteContent());
+  const checked = checkBooking(input, s, a, biz.jccAccountCap, biz.eventSeatMax);
   if (!checked.ok) return checked;
   // a place asked for on a session staff have marked full since the page was read: gone, and the rider chooses
   if (input.seatOnly && s.full) return { ok: false, error: "place_gone" };

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { fill } from "@/i18n/tx";
 import { useDialogFocus } from "@/components/site/use-dialog-focus";
+import { Link } from "@/i18n/navigation";
 import { T } from "./Pay.text";
 
 // The payment page's live part (micromobility.sa/pay/<id>): the hold's countdown and Moyasar's own form
@@ -31,6 +32,8 @@ export type PayScreenProps = {
   formCss: string;
   declined: string | null;
   tried: boolean;
+  /** Where Start again goes when the hold runs out, when the page knows better than the kind (a store order's own page). */
+  againHref?: string | null;
 };
 
 /** How long before the hold lets go the warning opens: a minute, well over the 20 seconds WCAG 2.2.1 asks for. */
@@ -45,7 +48,7 @@ function uuid4(): string {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-export default function PayScreen({ locale, pay, publishableKey, testMode, formJs, formCss, declined, tried }: PayScreenProps) {
+export default function PayScreen({ locale, pay, publishableKey, testMode, formJs, formCss, declined, tried, againHref = null }: PayScreenProps) {
   const t = useLocalize(T);
   const el = useRef<HTMLDivElement>(null);
   // The time left starts as the server counted it, so the first drawing in the browser says what the server's did
@@ -169,7 +172,7 @@ export default function PayScreen({ locale, pay, publishableKey, testMode, formJ
     return (
       <div className="py-box" role="status">
         <p className="py-msg">{t.timeUp}</p>
-        <a className="bk-btn wide" href={pay.kind === "order" ? "/store/cart" : pay.kind === "locker" ? "/lockers" : "/experiences"}>{t.startAgain}</a>
+        <Link className="bk-btn wide" href={againHref ?? (pay.kind === "order" ? "/store/cart" : pay.kind === "locker" ? "/lockers" : "/experiences")}>{t.startAgain}</Link>
       </div>
     );
   }
