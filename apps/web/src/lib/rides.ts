@@ -49,6 +49,9 @@ import { sessionGender, type SessionGender } from "./session-gender";
 //            account, first come first served to its places and then the waitlist; no bike, no breakfast, no gathering:
 //            a start and an end ("16:00 - 17:30"), like the pool; at the place staff named (sessions.location, SILKDEER)
 //            with its map (meet_url).
+//   featured _featured (2026-11-13): a date inside MicroMobility Experiences (the Saturday ride, a Petromin night, the
+//            pool, the DEFE 5KM Run, yoga) that staff switched on (bike_slots._feat, beside _time: no column); with no
+//            _feat the kind answers (yoga and the DEFE 5KM Run are featured as made), and _feat 0 switches one off.
 
 export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena" | "blood" | "yoga";
 /** A ride_prices row: the fare, and (lib/biz.ts faresOf) the highest fare quoted and the employees' fare when the database has them. */
@@ -120,6 +123,10 @@ export type RideSession = {
    *  Riders cannot book them, so they are not priced (bike-kinds.ts typeOffered). toSession always sets it, empty when
    *  the read did not ask for it (SESSION_COLS_CLOSED); a copy kept at the edge from before has none, and reads as open. */
   closedTypes?: string[];
+  /** Featured (the booking app's _featured, 2026-11-13; featuredOf): Experiences lists it first among its event's dates,
+   *  under "Featured", and gives it a card above the event cards. toSession always sets it; a copy kept at the edge from
+   *  before has none, and reads as not featured. */
+  featured?: boolean;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -162,6 +169,26 @@ export function slotTimes(slots: unknown): [string, string] | null {
   if (m) return [m[1].padStart(5, "0"), m[2].padStart(5, "0")];
   const one = typeof t === "string" ? /^\s*(\d{1,2}:\d{2})\s*$/.exec(t) : null;
   return one ? [one[1].padStart(5, "0"), one[1].padStart(5, "0")] : null;
+}
+
+/** The kinds of date inside MicroMobility Experiences, the only ones that can be featured (the booking app's _featOk,
+ *  its _evMatch(s, 'community')): never a circuit night, nor a kind with a card of its own (the T100 day, a ticketed
+ *  event, Run for Her, Victory Lap, Arena Heros, the Blood Donation event, the National Day ride). */
+export const FEATURE_OK: readonly RideKind[] = ["saturday", "petromin", "swim", "defe5k", "yoga"];
+/** The special events, featured as they are made (the booking app's FEAT_KINDS). */
+export const FEATURED_KINDS: readonly RideKind[] = ["yoga", "defe5k"];
+
+/** Whether a date is featured (the booking app's _featured, 2026-11-13): one inside MicroMobility Experiences whose
+ *  settings say so (bike_slots._feat, stored as JSON text or an object: staff's switch, 1 or 0); with no _feat at all
+ *  its kind answers, so a special event is featured until staff switch it off (_feat 0). */
+export function featuredOf(kind: RideKind, slots: unknown): boolean {
+  if (!FEATURE_OK.includes(kind)) return false;
+  let o: unknown = slots;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { o = null; }
+  }
+  const f = o && typeof o === "object" ? (o as Record<string, unknown>)._feat : null;
+  return f == null ? FEATURED_KINDS.includes(kind) : !!f;
 }
 
 /** A session with a start time alone (slotTimes gave the one time twice): "7 PM", never "7 PM – 7 PM". */
@@ -275,6 +302,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...((kind === "vlap" || kind === "arena") && "vl" in r ? { vl: r.vl ?? null } : {}),
     gender: sessionGender(r.gender_only),
     closedTypes: Array.isArray(r.closed_types) ? r.closed_types.filter((x): x is string => typeof x === "string") : [],
+    featured: featuredOf(kind, r.bike_slots),
   };
 }
 

@@ -2,8 +2,8 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { makeL } from "@/i18n/tx";
-import { bookingAt, dateText, EVENT_CARDS, EVENT_OF, eventCards, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoVl, infoWho, memberOn, membersOnlyDate, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
-import type { RideKind } from "../rides";
+import { bookingAt, dateText, EVENT_CARDS, EVENT_OF, eventCards, FEATURED_MAX, featuredDates, featuredFirst, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoVl, infoWho, memberOn, membersOnlyDate, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
+import { FEATURE_OK, type RideKind } from "../rides";
 import { fmtClock } from "../tickets";
 import { yogaKnow, yogaLength, yogaMinutes } from "../yoga";
 
@@ -67,6 +67,80 @@ describe("the event cards (Petromin Days, the owner, 2026-10-12)", () => {
     expect(bookingAt("https://book.example/?lang=ar", "petromin", "2026-10-14-pm")).toBe("https://book.example/?lang=ar&ev=petromin&session=2026-10-14-pm");
     expect(bookingAt("https://book.example/?ev=community", "petromin", "x")).toBe("https://book.example/?ev=petromin&session=x");
     expect(bookingAt("/experiences", "petromin", "x")).toBe("/experiences");
+  });
+});
+
+// Featured (2026-11-13): the booking app's _featLand and renderRegister. A card above the event cards for each
+// featured date the visitor's cards list, and those dates first in their event's list.
+describe("the Featured cards and the featured dates' place in a list (2026-11-13)", () => {
+  type D = { id: string; kind: RideKind; date: string; times: [string, string] | null; featured?: boolean };
+  const d = (id: string, kind: RideKind, date: string, featured = false, start = "07:00"): D => ({ id, kind, date, times: [start, "09:00"], featured });
+  const cardsFor = (all: D[], v: { member: boolean; petromin: boolean }, count = 9) => eventCards(all, v).map(({ card, sessions }) => ({ card, sessions: sessions.slice(0, count) }));
+  const anyone = { member: false, petromin: false };
+  it("can feature only the kinds booked under the community card (and Petromin Days, which lists the same nights)", () => {
+    const community = (Object.keys(EVENT_OF) as RideKind[]).filter((k) => EVENT_OF[k] === "community").sort();
+    expect([...FEATURE_OK].sort()).toEqual(community);
+  });
+  it("gives a card to each featured date, soonest first, with the card it is booked under", () => {
+    const all = [d("sat1", "saturday", "2099-11-16", true), d("jcc1", "jcc", "2099-11-17"), d("sw1", "swim", "2099-11-18", true), d("yg", "yoga", "2099-11-21", true), d("sat2", "saturday", "2099-11-23")];
+    expect(featuredDates(cardsFor(all, anyone))).toEqual([{ ev: "community", id: "sat1" }, { ev: "community", id: "sw1" }, { ev: "community", id: "yg" }]);
+  });
+  it("gives none when nothing is featured, and reads a copy kept from before (no word on it) as not featured", () => {
+    const all = [d("sat1", "saturday", "2099-11-16"), { id: "old", kind: "yoga" as const, date: "2099-11-21", times: null }];
+    expect(featuredDates(cardsFor(all, anyone))).toEqual([]);
+  });
+  it("shows four at most, the soonest", () => {
+    const all = ["16", "17", "18", "19", "20", "21"].map((n) => d(`s${n}`, "swim", `2099-11-${n}`, true));
+    expect(FEATURED_MAX).toBe(4);
+    expect(featuredDates(cardsFor(all, anyone)).map((x) => x.id)).toEqual(["s16", "s17", "s18", "s19"]);
+    expect(featuredDates(cardsFor(all, anyone), 2).map((x) => x.id)).toEqual(["s16", "s17"]);
+  });
+  it("orders two on one day by their start", () => {
+    const all = [d("late", "yoga", "2099-11-21", true, "16:00"), d("early", "swim", "2099-11-21", true, "07:00")];
+    // the page gives them soonest first already (lib/rides.ts upcoming); the cards keep to that across events too
+    expect(featuredDates([{ card: { key: "community" }, sessions: all }]).map((x) => x.id)).toEqual(["early", "late"]);
+  });
+  it("shows a card only for a date its event lists to this visitor: a Petromin night to a Petromin tag holder alone, under Petromin Days", () => {
+    const all = [d("pm1", "petromin", "2099-11-15", true), d("sat1", "saturday", "2099-11-16", true)];
+    expect(featuredDates(cardsFor(all, anyone))).toEqual([{ ev: "community", id: "sat1" }]);
+    expect(featuredDates(cardsFor(all, { member: true, petromin: false }))).toEqual([{ ev: "community", id: "sat1" }]);
+    expect(featuredDates(cardsFor(all, { member: false, petromin: true }))).toEqual([{ ev: "petromin", id: "pm1" }, { ev: "community", id: "sat1" }]);
+  });
+  it("shows a members' date's card to every visitor, as the community card lists that date to every visitor", () => {
+    const all = [d("yg", "yoga", "2099-11-21", true)];
+    for (const v of [anyone, { member: true, petromin: false }]) expect(featuredDates(cardsFor(all, v))).toEqual([{ ev: "community", id: "yg" }]);
+  });
+  it("has no card for a featured date further out than its event's list goes (Experiences > Dates: how many per event)", () => {
+    const all = [d("sat1", "saturday", "2099-11-16"), d("sat2", "saturday", "2099-11-23"), d("sat3", "saturday", "2099-11-30"), d("yg", "yoga", "2099-12-05", true)];
+    expect(featuredDates(cardsFor(all, anyone, 3))).toEqual([]);
+    expect(featuredDates(cardsFor(all, anyone, 4))).toEqual([{ ev: "community", id: "yg" }]);
+  });
+  it("never features a circuit night or a date with a card of its own, whatever a copy says", () => {
+    // lib/rides.ts featuredOf answers no for them; a list given one anyway still files it under its own card
+    const all = [d("jcc1", "jcc", "2099-11-17"), d("rh", "runher", "2099-11-20"), d("yg", "yoga", "2099-11-21", true)];
+    expect(featuredDates(cardsFor(all, anyone))).toEqual([{ ev: "community", id: "yg" }]);
+  });
+
+  const ids = (l: { id: string }[]) => l.map((x) => x.id);
+  const feat = (s: D) => !!s.featured;
+  it("puts the featured dates first and the rest after, each in date order and every date once", () => {
+    const all = [d("sat1", "saturday", "2099-11-16"), d("sw1", "swim", "2099-11-18", true), d("yg", "yoga", "2099-11-21", true), d("sat2", "saturday", "2099-11-23")];
+    const r = featuredFirst(all, feat);
+    expect(ids(r.featured)).toEqual(["sw1", "yg"]);
+    expect(ids(r.rest)).toEqual(["sat1", "sat2"]);
+    expect([...ids(r.featured), ...ids(r.rest)].sort()).toEqual(ids(all).sort());
+  });
+  it("leaves the list exactly as it was with nothing featured", () => {
+    const all = [d("sat1", "saturday", "2099-11-16"), d("sw1", "swim", "2099-11-18")];
+    const r = featuredFirst(all, feat);
+    expect(r.featured).toEqual([]);
+    expect(r.rest).toBe(all);
+  });
+  it("has no rest when every date is featured", () => {
+    const all = [d("sw1", "swim", "2099-11-18", true), d("yg", "yoga", "2099-11-21", true)];
+    const r = featuredFirst(all, feat);
+    expect(ids(r.featured)).toEqual(["sw1", "yg"]);
+    expect(r.rest).toEqual([]);
   });
 });
 

@@ -710,6 +710,15 @@ export function fmtDayDate(iso: string, locale: string): string {
   return `${f({ weekday: "long" })} · ${f({ day: "numeric", month: "short", year: "numeric" })}`;
 }
 
+/** A day as a tile, "Sat" over "21" over "Nov": its short weekday, its day number and its short month in the page's
+ *  language (the booking app's Featured card, _featCardHtml). A date that cannot be read gives its day as stored. */
+export function fmtDayTile(iso: string, locale: string): { wd: string; dn: string; mo: string } {
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return { wd: "", dn: /^\d{4}-\d{2}-(\d{2})$/.exec(iso)?.[1] ?? "", mo: "" };
+  const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { ...o, timeZone: "UTC" }).format(d);
+  return { wd: f({ weekday: "short" }), dn: f({ day: "numeric" }), mo: f({ month: "short" }) };
+}
+
 /** Where the calendar file says the ride is (downloadBookingICS's LOCATION): a ride that meets at a
  *  map link (meetsAt: one staff approve, or Run for Her), that link; else the place staff wrote, with
  *  the three the booking app spells out for a calendar ("JCC", "Sharafeyah Branch", "JYC"); "" for

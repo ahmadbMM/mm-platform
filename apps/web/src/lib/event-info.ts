@@ -196,6 +196,28 @@ export function eventCards<T extends Pick<RideSession, "kind">>(all: T[], v: { m
   return EVENT_CARDS.map((card) => ({ card, sessions: of(card.key) })).filter((c) => c.card.always || c.sessions.length > 0);
 }
 
+/** How many Featured cards the event step shows (the booking app's FEAT_LAND_MAX). */
+export const FEATURED_MAX = 4;
+
+/** The event step's Featured cards (the booking app's _featLand, 2026-11-13): the featured dates among those the
+ *  visitor's cards list, soonest first, four at most, each with the card it is booked under. It is given the cards as
+ *  the page shows them (eventCards, cut to the dates each lists), so a card stands only for a date the visitor would
+ *  find in its event's list: a community date to everyone, a Petromin night to a Petromin tag holder. */
+export function featuredDates<T extends Pick<RideSession, "id" | "date" | "times" | "featured">>(cards: { card: { key: string }; sessions: T[] }[], max: number = FEATURED_MAX): { ev: string; id: string }[] {
+  return cards.flatMap(({ card, sessions }) => sessions.filter((s) => s.featured).map((s) => ({ ev: card.key, s })))
+    .sort((a, b) => a.s.date.localeCompare(b.s.date) || (a.s.times?.[0] ?? "").localeCompare(b.s.times?.[0] ?? ""))
+    .slice(0, Math.max(0, max))
+    .map(({ ev, s }) => ({ ev, id: s.id }));
+}
+
+/** A list of dates with the featured ones first (the booking app's renderRegister, 2026-11-13): `featured` lead it
+ *  under "Featured", `rest` follow under "Upcoming", each in the order given and every date once. With nothing
+ *  featured the list is as it was: no `featured`, and `rest` is the list itself. */
+export function featuredFirst<T>(sessions: T[], featured: (s: T) => boolean): { featured: T[]; rest: T[] } {
+  const lead = sessions.filter(featured);
+  return { featured: lead, rest: lead.length ? sessions.filter((s) => !featured(s)) : sessions };
+}
+
 /** The booking app opened on a card and one of its dates (?ev=<card>&session=<id>): Petromin Days
  *  hands over ev=petromin, which the booking app opens under its own Petromin Days. A link that is
  *  not a full address is used as it is. */

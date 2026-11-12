@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { kindNames, loadRides, loadSessionsById, oneTime, readSessions, resetRides, rideKind, routeSlugOf, sessionGenders, sessionName, sessionRows, slotTimes, timesText, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
+import { FEATURE_OK, FEATURED_KINDS, featuredOf, kindNames, loadRides, loadSessionsById, oneTime, readSessions, resetRides, rideKind, routeSlugOf, sessionGenders, sessionName, sessionRows, SESSION_COLS, slotTimes, timesText, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
 import { memoSettled } from "../memo";
 import { typeOffered } from "../bike-kinds";
 
@@ -46,7 +46,7 @@ describe("slotTimes", () => {
 
 describe("toSession", () => {
   it("shows a circuit night as open to all and paid", () => {
-    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null, collect: "20:15", approval: false, capacity: null, left: null, gender: null, closedTypes: [] });
+    expect(toSession(row({}))).toEqual({ id: "2026-09-27", date: "2026-09-27", full: false, title: null, kind: "jcc", members: false, free: false, times: ["21:00", "23:00"], gather: false, noCarbon: false, description: null, price: null, seats: null, routeSlug: null, collect: "20:15", approval: false, capacity: null, left: null, gender: null, closedTypes: [], featured: false });
   });
   it("marks a community ride members-only and free, unless the session says otherwise", () => {
     const sat = toSession(row({ event_kind: "community", ride_kind: "saturday", title: "Saturday Social Ride", bike_slots: '{"_time":"05:45 - 06:15"}' }));
@@ -527,6 +527,59 @@ describe("yoga (ride_kind 'yoga', 2026-11-12)", () => {
     expect(sessionName({ kind: "yoga", title: null }, en, en, false)).toBe("Hatha Yoga for Cyclists");
     expect(sessionName({ kind: "yoga", title: "Hatha Yoga for Cyclists" }, ar, en, true)).toBe("هاثا يوغا لراكبي الدراجات");
     expect(sessionName({ kind: "yoga", title: "Sunset Flow" }, ar, en, true)).toBe("Sunset Flow");
+  });
+});
+
+// Featured (the user, 2026-11-13: "create a new featured section under micromobility experiences in the booking app to
+// put featured sessions and special events such as hatha yoga class"): the booking app's _featured, read from the same
+// settings blob as the session's times. No column and no migration.
+describe("featured (bike_slots._feat, 2026-11-13)", () => {
+  const ALL = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k", "arena", "blood", "yoga"] as const;
+  it("can be said of a date inside MicroMobility Experiences only: the Saturday ride, a Petromin night, the pool, the DEFE 5KM Run and yoga", () => {
+    expect([...FEATURE_OK].sort()).toEqual(["defe5k", "petromin", "saturday", "swim", "yoga"]);
+    for (const k of ALL) expect(featuredOf(k, '{"_feat":1}'), k).toBe(FEATURE_OK.includes(k));
+    // a kind with a card of its own, and a circuit night, never: whatever its settings say
+    for (const k of ["jcc", "workshop", "event", "runher", "vlap", "arena", "blood", "snd96"] as const) {
+      for (const v of ['{"_feat":1}', '{"_feat":true}', "{}", null]) expect(featuredOf(k, v), `${k} ${v}`).toBe(false);
+    }
+  });
+  it("is what staff switched on: _feat truthy, as text or as an object, beside the times", () => {
+    for (const k of FEATURE_OK) {
+      expect(featuredOf(k, '{"_time":"05:45 - 06:15","_feat":1}'), k).toBe(true);
+      expect(featuredOf(k, { _time: "05:45 - 06:15", _feat: 1 }), k).toBe(true);
+      expect(featuredOf(k, '{"_feat":true}'), k).toBe(true);
+    }
+  });
+  it("is off when staff switched it off: _feat 0, on a special event too", () => {
+    for (const k of FEATURE_OK) {
+      expect(featuredOf(k, '{"_time":"16:00 - 17:30","_feat":0}'), k).toBe(false);
+      expect(featuredOf(k, { _feat: 0 }), k).toBe(false);
+      expect(featuredOf(k, '{"_feat":false}'), k).toBe(false);
+    }
+  });
+  it("is the kind's own answer with no _feat at all: yoga and the DEFE 5KM Run are featured as made, the others not", () => {
+    expect([...FEATURED_KINDS].sort()).toEqual(["defe5k", "yoga"]);
+    for (const v of ['{"_time":"16:00 - 17:30"}', "{}", { _time: "19:00" }, '{"_feat":null}', null, undefined, "", "not json", 42, "[]"]) {
+      for (const k of FEATURE_OK) expect(featuredOf(k, v), `${k} ${String(v)}`).toBe(k === "yoga" || k === "defe5k");
+    }
+  });
+  it("is on every session the site reads, from its row", () => {
+    const comm = (o: Record<string, unknown>) => toSession(row({ event_kind: "community", ...o }), false, true);
+    expect(comm({ ride_kind: "yoga", bike_slots: '{"_time":"16:00 - 17:30"}' })).toMatchObject({ kind: "yoga", featured: true, times: ["16:00", "17:30"] });
+    expect(comm({ ride_kind: "yoga", bike_slots: '{"_time":"16:00 - 17:30","_feat":0}' })).toMatchObject({ kind: "yoga", featured: false });
+    expect(comm({ ride_kind: "defe5k", bike_slots: '{"_time":"19:00"}' })).toMatchObject({ kind: "defe5k", featured: true });
+    expect(comm({ ride_kind: "saturday", bike_slots: '{"_time":"05:45 - 06:15"}' })).toMatchObject({ kind: "saturday", featured: false });
+    expect(comm({ ride_kind: "saturday", bike_slots: '{"_time":"05:45 - 06:15","_feat":1}' })).toMatchObject({ kind: "saturday", featured: true, times: ["05:45", "06:15"] });
+    expect(comm({ ride_kind: "swim", bike_slots: '{"_time":"07:00 - 08:00","_feat":1}' })).toMatchObject({ kind: "swim", featured: true });
+    expect(comm({ ride_kind: "petromin", bike_slots: '{"_time":"19:00 - 21:00","_feat":1}' })).toMatchObject({ kind: "petromin", featured: true });
+    // never a circuit night, nor a kind with a card of its own
+    expect(toSession(row({ bike_slots: '{"_time":"21:00 - 23:00","_feat":1}' }))).toMatchObject({ kind: "jcc", featured: false });
+    expect(comm({ ride_kind: "runher", bike_slots: '{"_time":"05:30 - 06:00","_feat":1}' })).toMatchObject({ kind: "runher", featured: false });
+    expect(comm({ ride_kind: "event", bike_slots: '{"_time":"18:00 - 20:00","_feat":1}' })).toMatchObject({ kind: "event", featured: false });
+  });
+  it("asks the database for nothing new: the settings the times come from", () => {
+    expect(SESSION_COLS.split(",")).toContain("bike_slots");
+    expect(SESSION_COLS).not.toMatch(/feat/);
   });
 });
 

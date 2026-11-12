@@ -503,20 +503,20 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .sc-card.closed { opacity: .62; cursor: default; }
 .sc-card.closed:hover { border-color: rgba(26, 25, 25, .14); box-shadow: none; }
 .sc-spots.closed { color: #8a5c14; white-space: normal; text-align: end; max-width: 55%; }
-/* Each kind's colour, on its card, on the card's wrapper (for its Details link beside the card) and
-   on the Details dialog (experiences.css). */
-:is(.sc-card, .sc-wrap, .xs-info).ev-jcc { --ev: #2f63ad; }
-:is(.sc-card, .sc-wrap, .xs-info).ev-swim { --ev: #0d7d8f; }
-:is(.sc-card, .sc-wrap, .xs-info).ev-workshop { --ev: #c2410c; }
-:is(.sc-card, .sc-wrap, .xs-info).ev-snd96 { --ev: #00894a; }
-:is(.sc-card, .sc-wrap, .xs-info).ev-event { --ev: #6d28d9; }
-:is(.sc-card, .sc-wrap, .xs-info).ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
-:is(.sc-card, .sc-wrap, .xs-info).ev-petromin { --ev: #d6202a; } /* a Petromin night: Petromin's red, as its tag in the booking app (2026-10-12) */
-:is(.sc-card, .sc-wrap, .xs-info).ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
-:is(.sc-card, .sc-wrap, .xs-info).ev-defe5k { --ev: #a22b63; } /* the DEFE 5KM Run: Defe's berry (2026-10-18) */
-:is(.sc-card, .sc-wrap, .xs-info).ev-arena { --ev: #c81e27; } /* Arena Heros: its red, as the booking app's .ev-arena (2026-10-28) */
-:is(.sc-card, .sc-wrap, .xs-info).ev-blood { --ev: #0b1f16; } /* the donation event: its crimson (2026-11-03) */
-:is(.sc-card, .sc-wrap, .xs-info).ev-yoga { --ev: #b4532f; } /* yoga: its clay (2026-11-12) */
+/* Each kind's colour, on its card, on the card's wrapper (for its Details link beside the card), on
+   the Details dialog and on a featured date's card above the event cards (experiences.css). */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-jcc { --ev: #2f63ad; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-swim { --ev: #0d7d8f; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-workshop { --ev: #c2410c; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-snd96 { --ev: #00894a; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-event { --ev: #6d28d9; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-petromin { --ev: #d6202a; } /* a Petromin night: Petromin's red, as its tag in the booking app (2026-10-12) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-defe5k { --ev: #a22b63; } /* the DEFE 5KM Run: Defe's berry (2026-10-18) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-arena { --ev: #c81e27; } /* Arena Heros: its red, as the booking app's .ev-arena (2026-10-28) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-blood { --ev: #0b1f16; } /* the donation event: its crimson (2026-11-03) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-yoga { --ev: #b4532f; } /* yoga: its clay (2026-11-12) */
 .sc-card.ev-blood:hover { border-color: rgba(11, 31, 22, .4); box-shadow: 0 0 14px rgba(11, 31, 22, .12); }
 .sc-card.ev-blood:focus-visible { outline-color: #0b1f16; }
 .sc-card.ev-blood .sc-dw, .sc-card.ev-blood .sc-spots:not(.full):not(.low):not(.closed) { color: #0b1f16; }

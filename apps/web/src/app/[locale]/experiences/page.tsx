@@ -15,7 +15,7 @@ import { pageState } from "@/lib/page-state";
 import { genderViewer, rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { typeOffered } from "@/lib/bike-kinds";
-import { dateText, eventCards, infoArena, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
+import { dateText, eventCards, featuredDates, infoArena, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { bizOf, faresOf } from "@/lib/biz";
 import { kindNames, loadRides, oneTime, sessionName, upcoming, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
@@ -23,7 +23,7 @@ import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from 
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
-import { DEFE_RACE_URL, dayWord, fmtClock, fmtDayDate, kmText, meetHeld, revealWhen, spotHeld } from "@/lib/tickets";
+import { DEFE_RACE_URL, dayWord, fmtClock, fmtDayDate, fmtDayTile, kmText, meetHeld, revealWhen, spotHeld } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt, phrase } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
@@ -48,7 +48,10 @@ import { ArrowIcon } from "@/components/site/Icons";
 // (content/blood-words.ts, blood-info.json) and go into the page only with that card; its last step hands over to the
 // booking app (?ev=blood), which has the donor step. Yoga (2026-11-12; lib/yoga.ts) is a date inside the community card,
 // on its own "Sunset Hatha" card: the mark, its name, when, how long and where, and who leads it; its Details say who
-// leads it, how long, the level and what to bring.
+// leads it, how long, the level and what to bring. Featured (2026-11-13; lib/rides.ts featuredOf): a date inside
+// MicroMobility Experiences that staff feature, or a special event as it is made, leads its event's dates under
+// "Featured" and has a card above the event cards (lib/event-info.ts featuredDates), which opens it as its event card
+// and then its date would.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -257,6 +260,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       ...(s.kind === "defe5k" ? { defe: { meta: [s.times ? clock(s.times[0]) : "", fillAt(kmWord, 5), place.name].filter(Boolean), cause: defeWords.cause } } : {}),
       // yoga's own card (the booking app's _ygSessCard, 2026-11-12): its start and end, how long, where, and who leads it
       ...(s.kind === "yoga" ? { yoga: { meta: [s.times ? (oneTime(s.times) ? clock(s.times[0]) : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "", yogaLength(s.times, ygWords.min), place.name].filter(Boolean), with: ygWords.with } } : {}),
+      // a featured date (the booking app's _featCardHtml, 2026-11-13): its day as its Featured card's tile, and how long
+      // yoga runs, which that card says after its time
+      ...(s.featured ? { feat: { ...fmtDayTile(s.date, locale), len: s.kind === "yoga" ? yogaLength(s.times, ygWords.min) || null : null } } : {}),
       // a copy kept at the edge from before these fields existed reads as an event without them
       event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
@@ -333,9 +339,11 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     };
   };
   const ev: Sec = e; // the cards' texts by prefix: the Blood Donation event has no fields here, and its card brings its own
-  const events: StepEvent[] = eventCards(all, { member, petromin }).map(({ card: { key, p }, sessions }) => ({
+  // each card with the dates it lists (Experiences > Dates: how many per event)
+  const cards = eventCards(all, { member, petromin }).map(({ card, sessions }) => ({ card, sessions: sessions.slice(0, Math.max(1, N(d.count))) }));
+  const events: StepEvent[] = cards.map(({ card: { key, p }, sessions }) => ({
     key, title: S(ev[`${p}Title`]), meta: S(ev[`${p}Meta`]), logo: S(ev[`${p}Logo`]), note: fill(S(ev[`${p}Note`]), caps), about: S(ev[`${p}About`]),
-    sessions: sessions.slice(0, Math.max(1, N(d.count))).map(toStep),
+    sessions: sessions.map(toStep),
     ...(key === "vlap" ? { line: vlLine(sessions[0]) } : key === "arena" ? { line: ahLine(sessions[0]), name: kindName.arena, must: tx("You must have a partner to take part. There are no individual entries.", "يجب أن يكون لديك شريك للمشاركة. لا يوجد تسجيل فردي.") } : key === "blood" ? bloodCard(sessions[0]) : {}),
   }));
   const text: StepText = {
@@ -347,6 +355,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     handoffNb: S(st.handoff) ? tx("The booking app opens on this date: sign in, add the participants and confirm.", "يفتح تطبيق الحجز على هذا الموعد: سجّل الدخول وأضف المشاركين وأكّد.") : "",
     membersNoteNb: tx("Sessions marked Members are for Club members.", "الفعاليات المعلَّمة «للأعضاء» مخصصة لأعضاء النادي."),
     available: tx("Available", "متاح"), waitlisted: waitWord, left1, leftN,
+    // the booking app's featTitle and featRest (2026-11-13)
+    featured: tx("Featured", "مميّزة"), upcoming: tx("Upcoming", "المواعيد القادمة"),
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
     everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),
     breakfastAt: tx("Breakfast at {0}", "الإفطار في {0}"),
@@ -379,7 +389,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
 
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
-            <ExperienceSteps locale={locale} events={events} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} member={member} petromin={petromin} text={text}
+            <ExperienceSteps locale={locale} events={events} featured={featuredDates(cards)} bookHref={book} clubHref={hidden.includes("club") ? "" : localHref("/club", locale)} member={member} petromin={petromin} text={text}
               prices={prices.map((p) => ({ type: p.type, label: TYPE_NAME[p.type] ? tx(TYPE_NAME[p.type].en, TYPE_NAME[p.type].ar) : p.type, price: p.price > 0 ? sarRange(p.type, p.price) : S(d.free) }))} />
           </section>
 
