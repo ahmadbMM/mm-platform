@@ -398,12 +398,20 @@ export function passwordProblem(p: string, ctx: { login?: string; venueNames?: s
   return "";
 }
 
+/** Arabic-Indic (U+0660-0669) and Persian (U+06F0-06F9) digits as Western ones: an Arabic
+ *  keyboard types those, and the database reads a login or a phone in Western digits only. */
+export function westernDigits(s: string): string {
+  return s.replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (c) => String(c.charCodeAt(0) & 0xf));
+}
+
 /** A contact phone as the database keeps it (E.164: "+" and 8-15 digits; a Saudi 05xxxxxxxx or
  *  5xxxxxxxx gets +966), "" for empty, or null when it is not a phone number (BAD_PHONE). A Saudi
  *  unified (92xxxxxxx) or toll-free (800xxxxxxx) number written without "+" or "00" is refused: it
- *  is no mobile, and read as international it would be saved as another country's (+92 is Pakistan). */
+ *  is no mobile, and read as international it would be saved as another country's (+92 is Pakistan).
+ *  Arabic digits count as Western ones, and a Saudi number written with its trunk 0 after the
+ *  country code (+966 05xxxxxxxx) loses the 0: +9660... is no number. */
 export function e164(raw: string): string | null {
-  const v = raw.trim();
+  const v = westernDigits(raw.trim());
   if (!v) return "";
   if (!/^[0-9+()\s.-]+$/.test(v)) return null;
   let d = v.replace(/\D/g, "");
@@ -413,6 +421,7 @@ export function e164(raw: string): string | null {
     else if (/^5\d{8}$/.test(d)) d = `966${d}`;
     else if (/^92\d{7}$/.test(d) || /^800\d{7}$/.test(d)) return null;
   }
+  if (/^9660\d{9}$/.test(d)) d = `966${d.slice(4)}`;
   return /^[1-9]\d{7,14}$/.test(d) ? `+${d}` : null;
 }
 

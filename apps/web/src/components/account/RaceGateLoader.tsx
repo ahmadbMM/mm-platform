@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import RatingGateLoader from "./RatingGateLoader";
 import RaceGate, { type PendingRaceReg, type RaceRegDone } from "./RaceGate";
-import { RACE_QUIET } from "./quiet";
+import { RACE_QUIET, isQuiet } from "./quiet";
 
 // A DEFE 5KM Run runner's "Have you registered for the race?" on every page (the owner, 2026-10-18; the
 // booking app's _forceRaceRegPrompt), between the run agreement and the post-ride rating: ShareGateLoader
@@ -18,7 +18,7 @@ const QUIET_MS = 2 * 60_000;
 const passed = new Set<string>();
 
 async function check(locale: string): Promise<PendingRaceReg | null> {
-  try { if (Number(sessionStorage.getItem(KEY) || 0) > Date.now()) return null; } catch { /* storage off: just ask */ }
+  if (isQuiet(KEY)) return null;
   try {
     const skip = passed.size ? `&skip=${encodeURIComponent([...passed].join(","))}` : "";
     const r = await fetch(`/api/account/pending-race-reg?locale=${encodeURIComponent(locale)}${skip}`, { cache: "no-store", credentials: "same-origin" });

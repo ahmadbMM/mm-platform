@@ -53,6 +53,28 @@ const words = (v: unknown): Record<string, string> | null => {
   return Object.keys(out).length ? out : null;
 };
 
+/** An admin's own cancel reason's code as the booking app makes it (_cxOwnCode): queue_entries' check
+ *  and the rider's cancel take only ^[a-z_]{1,24}$, so a code with a digit (an Arabic label's hash, a
+ *  repeat's _2) or past 24 gets the label's letters cut to 22, or the hash in letters; a repeat _b,
+ *  _c... 'used' holds the codes taken. */
+export function cancelOwnCode(label: string, used: Set<string>): string {
+  const h0 = Math.abs([...label].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7));
+  let c0 = "c_" + (label.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 30) || h0.toString(36));
+  if (!/^[a-z_]{1,24}$/.test(c0)) {
+    let h = h0;
+    let z = "";
+    do {
+      z += String.fromCharCode(97 + (h % 26));
+      h = Math.floor(h / 26);
+    } while (h);
+    c0 = "c_" + (label.toLowerCase().replace(/[^a-z]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 22).replace(/_+$/, "") || z);
+  }
+  let c = c0;
+  for (let n = 1; used.has(c); n++) c = c0.slice(0, 22).replace(/_+$/, "") + "_" + String.fromCharCode(97 + n);
+  used.add(c);
+  return c;
+}
+
 /** The public business settings from the site's content (its 'biz.public' row), each checked as
  *  the booking app checks it, the built-in value where there is none or it is out of range. */
 export function bizOf(content: SiteContent | null | undefined): BizPublic {
@@ -60,6 +82,11 @@ export function bizOf(content: SiteContent | null | undefined): BizPublic {
   const off = Array.isArray(b.cancel_off) ? b.cancel_off.filter((x): x is string => typeof x === "string" && x !== "other").slice(0, 60) : [];
   const own = Array.isArray(b.cancel_custom) ? b.cancel_custom : [];
   const vat = String(b.vat_no ?? "").trim();
+  const raw = own
+    .filter((x): x is { code: string; label: string } => isObj(x) && typeof x.code === "string" && /^c_[a-z0-9_]{1,40}$/.test(x.code) && typeof x.label === "string" && !!x.label.trim())
+    .slice(0, 20);
+  // A code saved before the database's check was met gets one it takes, the same the booking app sends (_bizCancel).
+  const used = new Set(raw.map((x) => x.code).filter((c) => /^[a-z_]{1,24}$/.test(c)));
   return {
     groupRideMax: num(b.group_ride_max, BIZ_DEFAULTS.groupRideMax, 1, 20),
     eventSeatMax: num(b.event_seat_max, BIZ_DEFAULTS.eventSeatMax, 1, 50),
@@ -67,10 +94,10 @@ export function bizOf(content: SiteContent | null | undefined): BizPublic {
     rgLow: num(b.rg_low, BIZ_DEFAULTS.rgLow, 1, 9),
     defaultPrice: num(b.default_price, BIZ_DEFAULTS.defaultPrice, 1, 5000),
     cancelOff: off,
-    cancelCustom: own
-      .filter((x): x is { code: string; label: string } => isObj(x) && typeof x.code === "string" && /^c_[a-z0-9_]{1,40}$/.test(x.code) && typeof x.label === "string" && !!x.label.trim())
-      .slice(0, 20)
-      .map((x) => [x.code, x.label.trim().slice(0, 60)]),
+    cancelCustom: raw.map((x): [string, string] => {
+      const l = x.label.trim().slice(0, 60);
+      return [/^[a-z_]{1,24}$/.test(x.code) ? x.code : cancelOwnCode(l, used), l];
+    }),
     addr: words(b.addr),
     hours: words(b.hours),
     vatNo: /^\d{15}$/.test(vat) ? vat : null,

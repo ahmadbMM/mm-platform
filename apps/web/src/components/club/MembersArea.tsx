@@ -29,8 +29,8 @@ type Props = {
   /** The staff text for no upcoming ride (Club > Upcoming club sessions). */
   empty: string;
   /** Whether each upcoming ride may be booked yet (the booking window): null when it may, else the
-   *  words for when it opens. */
-  opens?: (date: string) => string | null;
+   *  words for when it opens; a race (Victory Lap, Arena Heros) never waits for it. */
+  opens?: (date: string, kind: string | null) => string | null;
   /** When such a ride opens (epoch ms, lib/booking-window.ts opensAt), and the countdown's words: within a day of it the
    *  ride counts down to it beside a clock, and its Book shows on time (components/site/OpensIn.tsx). */
   opensAt?: (date: string) => number | null;
@@ -108,7 +108,7 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
         {a.upcoming.length ? (
           <ul>
             {a.upcoming.map((r) => {
-              const closed = opens ? opens(r.date) : null;
+              const closed = opens ? opens(r.date, r.kind) : null;
               const sg = sgOf ? sgOf(r) : null;
               const refusal = refusalOf ? refusalOf(r) : null;
               const book = <a href={bookAt(r.id, r.kind)}>{t.book} {arrow}</a>;

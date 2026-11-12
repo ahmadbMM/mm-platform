@@ -20,7 +20,13 @@ export default function OpenNow({ openHour, closeHour, fridayClosed }: { openHou
   const h = ksa.getHours() + ksa.getMinutes() / 60;
   const fri = ksa.getDay() === 5;
   const closedToday = fri && fridayClosed;
-  const open = !closedToday && h >= openHour && h < closeHour;
+  // a closing hour at or before the opening one runs past midnight (Opens 16, Closes 1): the hours after midnight
+  // belong to the day before, so they are shut only when that day was the closed Friday
+  const overnight = closeHour <= openHour;
+  const yesterdayClosed = ksa.getDay() === 6 && fridayClosed;
+  const open = overnight
+    ? (!closedToday && h >= openHour) || (!yesterdayClosed && h < closeHour)
+    : !closedToday && h >= openHour && h < closeHour;
   const hh = (n: number) => `${n}:00`;
   const status = open ? (tx("Open now", "مفتوح الآن")) : (tx("Closed", "مغلق"));
   // After closing on a Thursday, "tomorrow" would be the closed Friday: say Saturday.

@@ -212,14 +212,13 @@ export function normalizeLogin(raw: string): string {
   if (s.includes("@")) return s.toLowerCase();
   const t = s.replace(/[\s()-]/g, "");
   if (!t) return "";
-  if (t[0] === "+") {
-    const d = t.slice(1).replace(/\D/g, "");
-    return `+${d.startsWith("9660") ? `966${d.slice(4)}` : d}`;
-  }
+  // a stray trunk 0 after the country code is dropped ("9660…"), for every form that carries the country (_normPhone's intl)
+  const intl = (d: string) => `+${d.startsWith("9660") ? `966${d.slice(4)}` : d}`;
+  if (t[0] === "+") return intl(t.slice(1).replace(/\D/g, ""));
   const n = t.replace(/\D/g, "");
   if (!n) return s.toLowerCase();
-  if (n.startsWith("00")) return `+${n.slice(2)}`;
-  if (n.startsWith("966") && n.length >= 12) return `+${n}`;
+  if (n.startsWith("00")) return intl(n.slice(2));
+  if (n.startsWith("966") && n.length >= 12) return intl(n);
   if (n[0] === "0") return `+966${n.slice(1)}`;
   return `+966${n}`;
 }
@@ -286,11 +285,30 @@ async function rpc(req: Request, env: Env, name: string): Promise<Response> {
   if ("error" in read) return read.error;
   // Who is asking comes from the cookie only, whatever the body says.
   const args: Record<string, unknown> = { ...read.body, p_id: s.id, p_token: s.token };
+  // A certificate's initiative is the event's English name as the database gives this account the event, never text
+  // the page sends: the public check page shows it as genuine, and it is kept for good.
+  if (name === "volunteer_cert_issue_session") {
+    const who = await callDb(env, req, "volunteer_me", { p_id: s.id, p_token: s.token });
+    if (!who.ok) return fail(who.code, who.status);
+    args.p_initiative = initiativeOf(who.data, args.p_session);
+  }
   const r = await callDb(env, req, name, args);
   if (!r.ok) return fail(r.code, r.status, r.code === "VOL_TOKEN" ? clearCookie() : undefined, r.detail);
   // A token that no longer opens the account answers nothing.
   if (name === "volunteer_me" && (r.data === null || r.data === undefined)) return json({ signedIn: false }, 200, clearCookie());
   return json(r.data ?? null);
+}
+
+/** The English name a certificate for this session is issued with (the page's sessionNameEn), from the session as
+ *  volunteer_me gives it to this account; null when it is not theirs (the database then refuses or uses its own). */
+export function initiativeOf(me: unknown, session: unknown): string | null {
+  if (typeof session !== "string" || !session || !me || typeof me !== "object") return null;
+  type Named = { title?: string | null; ride_kind?: string | null };
+  const m = me as { mine?: (Named & { id?: string })[]; events?: (Named & { session_id?: string | null })[]; record?: (Named & { session_id?: string | null })[] };
+  const list = <T>(x: T[] | undefined) => (Array.isArray(x) ? x : []);
+  const hit: Named | undefined = list(m.mine).find((x) => x.id === session)
+    ?? [...list(m.events), ...list(m.record)].find((x) => x.session_id === session);
+  return hit ? sessionNameEn(hit) : null;
 }
 
 /** The volunteer's own accepted (or worked) shift as a calendar file. Only what volunteer_me gives this account. */

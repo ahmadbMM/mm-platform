@@ -10,7 +10,7 @@ import { startOf } from "./ics";
 import { icon } from "./icons";
 import { maybeHowTo } from "./install";
 import { load, myShift, noteErr, render, S, setQuiet, standing, type Mine, type Opp } from "./state";
-import { briefBox, calButton, closeoutParts, comingYes, contactFact, isAhead, isDone, logistics, mapsLink, needsComing, planForm, reasonWord, withdrawAsk } from "./shift";
+import { beforeStart, briefBox, calButton, closeoutParts, comingYes, contactFact, isAhead, isDone, logistics, mapsLink, needsComing, planForm, reasonWord, withdrawAsk } from "./shift";
 import { button, chip, dateBlock, link, metaLine, note, skeleton } from "./ui";
 
 const statusWords: Record<string, Key> = { interested: "chipInterest", accepted: "stAccepted", declined: "stDeclined", withdrawn: "stWithdrawn", done: "stThanks",
@@ -110,7 +110,7 @@ function actionCard(o: Opp | null, sh: Mine | null): HTMLElement {
     }
     if ("plan_leave" in sh) box.appendChild(planForm(sh));
     const side = h("div", { class: "acts acts-pair" }, calButton(sh, { id: "opp-cal" }));
-    if (!sh.clock_in) side.appendChild(button(t("withdrawBtn"), () => withdrawAsk(sh), "quiet", { id: "opp-withdraw" }));
+    if (!sh.clock_in && beforeStart(sh)) side.appendChild(button(t("withdrawBtn"), () => withdrawAsk(sh), "quiet", { id: "opp-withdraw" }));
     box.appendChild(side);
     return box;
   }

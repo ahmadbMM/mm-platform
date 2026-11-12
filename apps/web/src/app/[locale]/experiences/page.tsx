@@ -133,7 +133,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
       collect: s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), clock(s.collect)) : null,
       // a Saturday ride booked with a ride code (2026-11-08): anyone with a code, member or not, books it on its own page
       ...(satLink && s.kind === "saturday" ? { members: false, satLink: `/saturday?lang=${locale}` } : {}),
-      opens: window && notOpenYet(s.date, window, now) ? opensText(s.date, window, locale, tx) : null,
+      opens: window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx) : null,
       description: s.kind === "event" ? s.description ?? null : null,
       gender: s.gender ?? null, // men only, women only or mixed (2026-10-27): its chip, and who may book it
       closedTypes: s.closedTypes ?? [], // the bike types staff closed on it (2026-11-03): neither picked nor priced

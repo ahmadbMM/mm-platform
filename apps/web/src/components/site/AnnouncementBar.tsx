@@ -28,16 +28,30 @@ export default function AnnouncementBar({ items, arrow }: { items: Announcement[
     return () => clearInterval(id);
   }, [turns, paused, list.length]);
   if (!list.length) return null;
-  const m = list[i % list.length];
+  const cur = i % list.length;
+  const m = list[cur];
   return (
     <div className="mm-ann" role="region" aria-label={tx("Announcements", "الإعلانات")} aria-live="off">
-      <span>{m.text}</span>
+      {/* Every message in one cell, the others hidden: on a phone a message wraps whole (it was cut to one line with an
+          ellipsis), and the bar is as tall as the longest one, so the page under it does not jump as they turn. */}
+      <span className="mm-ann-msg">
+        {list.map((x, k) => <span key={k} className={k === cur ? undefined : "mm-ann-off"}>{x.text}</span>)}
+      </span>
       {m.cta && m.href ? <a href={m.href}>{m.cta} {arrow}</a> : null}
       {turns && (
         <button type="button" className="mm-ann-pause" aria-pressed={paused} onClick={() => setPaused((p) => !p)}
           aria-label={tx("Pause announcements", "إيقاف الإعلانات مؤقتاً")}>
           <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden="true">
             {paused ? <path d="M8 5.5v13l10.5-6.5z" /> : <path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />}
+          </svg>
+        </button>
+      )}
+      {/* For a reader who asked for less motion nothing turns: the next message is a press away, not out of reach. */}
+      {still && list.length > 1 && (
+        <button type="button" className="mm-ann-pause" onClick={() => setI((n) => (n + 1) % list.length)}
+          aria-label={tx("Next announcement", "الإعلان التالي")}>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="mm-ann-next">
+            <path d="M9 6l6 6-6 6" />
           </svg>
         </button>
       )}

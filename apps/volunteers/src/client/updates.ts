@@ -39,11 +39,16 @@ export function updateText(u: Update): string {
 const hrefOf = (u: Update) => (u.session_id ? `#o/${encodeURIComponent(u.session_id)}` : KIND[u.kind].href ?? "#me");
 
 let busy = false;
+// Moves on each time the page is left: a list that arrives after that is not kept (the next visit showed it without
+// reading again, missing what came since) and does not mark anything read.
+let gen = 0;
 async function loadUpdates(): Promise<void> {
   if (busy) return;
   busy = true;
+  const g = gen;
   const r = await rpc<{ items: Update[]; unread: number }>("volunteer_updates");
   busy = false;
+  if (g !== gen) { if (route().name === "updates") render(); return; } // back on the page already: read it afresh
   // A list that could not be read says so (it said "No updates" under a lit dot), and is read again on Try again.
   if (!r.ok || !r.data) { S.updates = { items: [], fresh: new Set(), err: r.ok ? t("errServer") : say(r) }; if (route().name === "updates") render(); return; }
   const items = Array.isArray(r.data.items) ? r.data.items : [];
@@ -56,7 +61,7 @@ async function loadUpdates(): Promise<void> {
 }
 
 /** Called when the page is left, so the next visit reads the list again. */
-export const forgetUpdates = () => { S.updates = null; };
+export const forgetUpdates = () => { gen++; S.updates = null; };
 
 export function viewUpdates(main: HTMLElement): void {
   main.appendChild(h("h1", {}, t("navUpdates")));

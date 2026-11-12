@@ -2033,5 +2033,8 @@
   "Show password": "Mostrar senha",
   "Hide password": "Ocultar senha",
   "Confirm new password": "Confirmar nova senha",
-  "Passwords do not match.": "As senhas não coincidem."
+  "Passwords do not match.": "As senhas não coincidem.",
+  "Next announcement": "Próximo aviso",
+  "Pause reviews": "Pausar avaliações",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "Já temos este pedido: a referência é {0}. Para uma segunda bicicleta, avise a equipe quando ligarem para confirmar."
 }

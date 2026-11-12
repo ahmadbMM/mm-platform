@@ -11,7 +11,8 @@ import { icon } from "./icons";
 import { PUSH_SWITCH, pushIsOn, pushOff, pushOn, pushSupport } from "./push";
 import { ACCOUNT, BOOKING, go, load, noteErr, owed, reloadMe, render, S, setNote, setQuiet, standing, SUPPORT } from "./state";
 import { reasonWord } from "./shift";
-import { button, chip, dialog, fmtPhone, link, note, submitBusy, toggle } from "./ui";
+import { button, chip, closeAsk, dialog, fmtPhone, link, note, submitBusy, toggle } from "./ui";
+import { resetCerts } from "./certs";
 import { resetWork } from "./work";
 
 const SHIRTS = ["XS", "S", "M", "L", "XL", "XXL"];
@@ -20,15 +21,23 @@ function weekday(d: number): string {
   try { return new Date(Date.UTC(2026, 0, 4 + d)).toLocaleDateString(`${currentLang()}-u-ca-gregory-nu-latn`, { weekday: "long", timeZone: "UTC" }); } catch { return String(d); }
 }
 
-// The form's picks and what was typed survive a redraw (a note, a refusal, the language) until they are saved.
-let draft: { days: Set<number>; shirt: string | null; skills: string; wa: string } | null = null;
+// The form's picks and what was typed survive a redraw (a note, a refusal, the language) until they are saved. Kept with
+// whose they are: a session can end without Sign out, and the next volunteer on the tab never gets the last one's form.
+let draft: { owner: string; days: Set<number>; shirt: string | null; skills: string; wa: string } | null = null;
 // Which Save just went through: its button says Saved until the next change.
 let saved: "" | "prof" | "ar" = "";
 
+/** Forgets the profile form's draft (someone else signing in on this tab). */
+export function resetProfile(): void { draft = null; saved = ""; }
+
 export async function signOut(): Promise<void> {
-  await post("/api/logout");
+  // Only the Worker's answer clears the session cookie: a sign-out that never got there stays signed in, says so, and
+  // can be tapped again, so a shared phone is never left looking signed out while the account is still open.
+  const r = await post("/api/logout");
+  if (!r.ok) { noteErr(r); render(); return; }
   S.me = null; S.opps = null; S.prof = null; S.updates = null; draft = null; saved = "";
   resetWork(); // the work page's state, marks not sent and timers are this volunteer's, not the next one's
+  resetCerts();
   go("#");
 }
 
@@ -39,7 +48,7 @@ function askOwed(miss: ("dob" | "emergency")[]): void {
   if (document.querySelector("dialog.ask-owed")) return;
   const box: HTMLDialogElement = dialog(t("stepDetails"), [h("div", { class: "chips" }, ...miss.map((k) => chip(t(k === "dob" ? "profDob" : "profEmergency"), "warn")))],
     [link(t("addDetails"), ACCOUNT, "primary", "go", { rel: "noopener", id: "owed-go" }),
-      button(t("navHome"), () => { box.close(); go("#me"); }, "quiet", { id: "owed-home" })], "ask-owed", true);
+      button(t("navHome"), () => { closeAsk(box); go("#me"); }, "quiet", { id: "owed-home" })], "ask-owed", true);
 }
 
 export function viewProfile(main: HTMLElement): void {
@@ -59,7 +68,9 @@ export function viewProfile(main: HTMLElement): void {
     if (miss.length) queueMicrotask(() => askOwed(miss));
     main.appendChild(profileForm());
   }
-  if (p && "motive" in p && who !== "paused" && who !== "ended") main.appendChild(motiveCard());
+  // only once there is a volunteer profile to keep it on (volunteer_profile has the key with or without one, and
+  // volunteer_motive refuses with VOL_PROFILE before the form is first saved)
+  if (p && "motive" in p && p.status != null && who !== "paused" && who !== "ended") main.appendChild(motiveCard());
 
   // The account's own, kept in the booking app (volunteer_profile, 20261109120000).
   if (p) {
@@ -110,8 +121,9 @@ function paintSaved(form: HTMLFormElement): void {
 }
 
 function profileForm(): HTMLElement {
-  const p = S.prof!, who = standing();
-  const d = draft ?? (draft = { days: new Set(p.days ?? []), shirt: p.shirt ?? null, skills: p.skills ?? "", wa: p.whatsapp ?? "" });
+  const p = S.prof!, who = standing(), owner = S.me?.id ?? "";
+  if (draft && draft.owner !== owner) draft = null;
+  const d = draft ?? (draft = { owner, days: new Set(p.days ?? []), shirt: p.shirt ?? null, skills: p.skills ?? "", wa: p.whatsapp ?? "" });
   const edited = () => { if (saved === "prof") { saved = ""; paintSaved(form); } };
   const skId = uid("skills"), waId = uid("wa");
   const skills = h("textarea", { id: skId, rows: 3, maxlength: 300, oninput: ((e: Event) => { d.skills = (e.target as HTMLTextAreaElement).value; edited(); }) as EventListener }, d.skills);
@@ -125,7 +137,8 @@ function profileForm(): HTMLElement {
   });
   const shirts = SHIRTS.map((s) => {
     const b = h("button", { type: "button", class: "tog tog-sm", "aria-pressed": d.shirt === s ? "true" : "false",
-      onclick: (() => { d.shirt = d.shirt === s ? null : s; for (const x of shirts) x.setAttribute("aria-pressed", x.textContent === d.shirt ? "true" : "false"); edited(); }) as EventListener }, s);
+      // a second tap takes a pick back only while no size is saved: the database keeps a saved size when sent none
+      onclick: (() => { d.shirt = d.shirt === s && !p.shirt ? null : s; for (const x of shirts) x.setAttribute("aria-pressed", x.textContent === d.shirt ? "true" : "false"); edited(); }) as EventListener }, s);
     return b;
   });
   const first = !p.profile_at && who !== "active";

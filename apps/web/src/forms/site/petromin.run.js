@@ -2295,7 +2295,7 @@ var qrcode = function() {
 
 ;
 (function () {
-  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.50db7fa01c.json","hi":"/forms/petromin/t/hi.b8678986cc.json","tl":"/forms/petromin/t/tl.2337c0a652.json","es":"/forms/petromin/t/es.a615ac15b7.json","ne":"/forms/petromin/t/ne.c7b1340f84.json","fr":"/forms/petromin/t/fr.3a4e933f5c.json","pt":"/forms/petromin/t/pt.7577cdd7d2.json","bn":"/forms/petromin/t/bn.56fcfefd6f.json","ur":"/forms/petromin/t/ur.df2d681482.json","id":"/forms/petromin/t/id.cc5ef9c7cc.json","ms":"/forms/petromin/t/ms.d78bcba852.json","de":"/forms/petromin/t/de.b530345fa9.json","ru":"/forms/petromin/t/ru.f6fb725cdc.json","zh":"/forms/petromin/t/zh.3ee3141fed.json","ja":"/forms/petromin/t/ja.2ee3c3f0e8.json"};
+  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.d09bdbe76e.json","hi":"/forms/petromin/t/hi.b42e641c84.json","tl":"/forms/petromin/t/tl.f067b818af.json","es":"/forms/petromin/t/es.62f9cb3c9e.json","ne":"/forms/petromin/t/ne.7b8210bfa7.json","fr":"/forms/petromin/t/fr.e7c2a122a4.json","pt":"/forms/petromin/t/pt.daf0ffaeb4.json","bn":"/forms/petromin/t/bn.7039114bdb.json","ur":"/forms/petromin/t/ur.4565c41156.json","id":"/forms/petromin/t/id.c0665d0e23.json","ms":"/forms/petromin/t/ms.802f385320.json","de":"/forms/petromin/t/de.71e4be97d8.json","ru":"/forms/petromin/t/ru.ab5eeaedca.json","zh":"/forms/petromin/t/zh.8d9d020d7b.json","ja":"/forms/petromin/t/ja.997621a807.json"};
   site.tBase = files;
   function start(dict) {
     var T_SITE = {}; if (dict) T_SITE[site.lang] = dict;
@@ -2815,8 +2815,11 @@ var qrcode = function() {
      ("Al-Harbi" is "Al Harbi", not "AlHarbi"), and digits, emoji and other signs are dropped as they
      are typed. Letters of every script and their combining marks stay (Hindi, Nepali and Bengali
      vowel signs). A period comes right after a letter ("Md. Rahman"): one that would start the name
-     or a word, or follow another period, is dropped, as the database refuses it. */
-  var NAME_DASHES = /[\p{Pd}−]/gu, NAME_BAD = /[^\p{L}\p{M}\s.]/gu;
+     or a word, or follow another period, is dropped, as the database refuses it. So are the marks an emoji leaves
+     behind when its picture is dropped (the variation selector U+FE0F, the keycap U+20E3) and anything else of
+     U+2000-U+2BFF but spaces, which the database refuses too (_name_chars_ok): they are not seen in the box, so a
+     name that kept one would be refused with nothing on the screen to take out. */
+  var NAME_DASHES = /[\p{Pd}−]/gu, NAME_BAD = /[^\p{L}\p{M}\s.]|(?!\s)[\u2000-\u2bff]|[\ufe00-\ufe0f\u{e0100}-\u{e01ef}]/gu;
   function nameSigns(v) { return String(v || "").replace(NAME_DASHES, " ").replace(NAME_BAD, ""); }
   function cleanName(v) { return nameSigns(v).replace(/\.{2,}/g, ".").replace(/(^|\s)\.+/g, "$1"); }
   function tidyName(v) { return cleanName(v).trim().replace(/\s+/g, " "); }
@@ -2957,9 +2960,18 @@ var qrcode = function() {
      bike) with Change and Remove. A companion is written in a centred dialog, its three boxes judged together on Save,
      so a party of five stays a short list rather than fifteen boxes (GOV.UK / DWP "add another"). */
   var companions = [];
+  /* The companions the desk added (rider_party_add) are listed with the party, read-only, and never sent back from
+     here: a phone's save leaves them alone, so sending them would only write them a second time (rider_lookup marks
+     them 'desk', rentals). They count towards the four. */
+  var deskRiders = [];
   var ridersEl = $("#riders");
   function cmOf(h) { return t("{n} cm", { n: h }); }
-  function companionFault(c) { var h = heightOf(String(c.height || "")); return !c.name || nameShort(c.name) || !(h >= 100 && h <= 250) || (c.type !== "Hybrid" && c.type !== "Mountain"); }
+  // A rider's height and bike on one line; one the desk left blank is left out.
+  function riderMeta(c) { return [c.height ? cmOf(heightOf(String(c.height)) || c.height) : "", c.type ? t(c.type) : ""].filter(Boolean).join(" · "); }
+  /* Road: a bike the desk may give (the database takes Road, Hybrid and Mountain) that the form does not offer. Its tile
+     shows only on a booking that holds it, so an edit keeps it rather than being made to change it. */
+  function roadTile(group, on) { var b = group.querySelector('.tile[data-v="Road"]'); if (b) { b.hidden = !on; b.disabled = !on; } }
+  function companionFault(c) { var h = heightOf(String(c.height || "")); return !c.name || nameShort(c.name) || !(h >= 100 && h <= 250) || (c.type !== "Hybrid" && c.type !== "Mountain" && c.type !== "Road"); }
   function renderCompanions() {
     ridersEl.innerHTML = "";
     companions.forEach(function (c, i) {
@@ -2971,12 +2983,20 @@ var qrcode = function() {
         '<button type="button" class="rider-remove" id="' + id + '-remove" aria-labelledby="' + id + '-remove ' + id + '-head" data-t="Remove">Remove</button></div>';
       row.querySelector(".rider-head").textContent = t("Rider {n}", { n: i + 2 });
       row.querySelector(".rider-name-v").textContent = c.name || "";
-      row.querySelector(".rider-meta").textContent = [c.height ? cmOf(heightOf(String(c.height)) || c.height) : "", c.type ? t(c.type) : ""].filter(Boolean).join(" · ");
+      row.querySelector(".rider-meta").textContent = riderMeta(c);
       row.classList.toggle("invalid", companionFault(c));
       row.querySelectorAll("[data-t]").forEach(render);
       ridersEl.appendChild(row);
     });
-    $("#add-rider").hidden = companions.length >= 4;
+    deskRiders.forEach(function (c, j) {
+      var row = document.createElement("div"); row.className = "rider"; row.setAttribute("role", "listitem");
+      row.innerHTML = '<div class="rider-main"><b class="rider-head"></b><span class="rider-name-v" dir="auto"></span><span class="rider-meta"></span></div>';
+      row.querySelector(".rider-head").textContent = t("Rider {n}", { n: companions.length + j + 2 });
+      row.querySelector(".rider-name-v").textContent = c.name || "";
+      row.querySelector(".rider-meta").textContent = riderMeta(c);
+      ridersEl.appendChild(row);
+    });
+    $("#add-rider").hidden = companions.length + deskRiders.length >= 4;
     setError("f-riders", false);
   }
   langHooks.push(renderCompanions);
@@ -2997,6 +3017,7 @@ var qrcode = function() {
     var head = $("#rd-title"); head.setAttribute("data-args", JSON.stringify({ n: i + 2 })); render(head);
     $("#rd-name").value = c.name || ""; $("#rd-height").value = c.height != null ? String(c.height) : "";
     rdType = c.type || null;
+    roadTile(rdTypes, c.type === "Road");
     rdTypes.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === rdType)); });
     syncRoving(rdTypes);
     ["rd-f-name", "rd-f-height", "rd-f-type"].forEach(function (id) { setError(id, false); nameMsg($("#" + id)); });
@@ -3013,7 +3034,8 @@ var qrcode = function() {
     else if (nameShort(nm)) bad("rd-f-name", RIDER_SHORT, $("#rd-name"));
     else if (serverMsg && serverMsg.field === "name") bad("rd-f-name", serverMsg.msg, $("#rd-name"));
     if (!(h >= 100 && h <= 250)) bad("rd-f-height", null, $("#rd-height"));
-    if (rdType !== "Hybrid" && rdType !== "Mountain") bad("rd-f-type", null, rdTypes.querySelector(".tile"));
+    var road = rdTypes.querySelector('.tile[data-v="Road"]');
+    if (rdType !== "Hybrid" && rdType !== "Mountain" && !(rdType === "Road" && road && !road.hidden)) bad("rd-f-type", null, rdTypes.querySelector(".tile"));
     if (first) first.focus();
     return !first;
   }
@@ -3032,7 +3054,7 @@ var qrcode = function() {
     var btn = ridersEl.querySelector('.rider[data-i="' + i + '"] .rider-change'); if (btn) btn.focus();
   });
   $("#rd-cancel").addEventListener("click", function () { riderAt = -1; closeDialog($("#rider-dialog")); $("#add-rider").hidden ? ridersEl.querySelector(".rider-change") && ridersEl.querySelector(".rider-change").focus() : $("#add-rider").focus(); });
-  $("#add-rider").addEventListener("click", function () { if (companions.length >= 4) { setError("f-riders", true); return; } openRider(companions.length); });
+  $("#add-rider").addEventListener("click", function () { if (companions.length + deskRiders.length >= 4) { setError("f-riders", true); return; } openRider(companions.length); });
   ridersEl.addEventListener("click", function (e) {
     var row = e.target.closest(".rider"); if (!row) return;
     var i = Number(row.getAttribute("data-i"));
@@ -3069,7 +3091,7 @@ var qrcode = function() {
     };
     // Each rider is a row of their own: the name, then height and bike.
     var bikes = reviewRow(d.name || t("Name"), [d.height ? cmOf(d.height) : "", d.type ? t(d.type) : ""].filter(Boolean).join(" · "), false, true);
-    companions.forEach(function (c) { bikes += reviewRow(tidyName(c.name), [cmOf(heightOf(String(c.height))), t(c.type)].join(" · "), false, true); });
+    companions.concat(deskRiders).forEach(function (c) { bikes += reviewRow(tidyName(c.name), riderMeta(c), false, true); });
     var c = s && collectIso(s), ph = String(d.phone || ""), code = cc.value;
     if (ph.indexOf("+" + code) === 0) ph = "+" + code + " " + ph.slice(code.length + 1);
     box.innerHTML =
@@ -3131,6 +3153,7 @@ var qrcode = function() {
   }
   var _showSuccessDesign = showSuccess;
   showSuccess = function (d) {
+    setNotice(null); // "Your booking was cancelled." is about the booking before (the cancel sets it again after)
     _showSuccessDesign(d); drawQr(current); showParty(current); paintFacts(current); paintSession(current);
     var n = $("#tk-name"); if (n) n.textContent = (current && current.name) || "";
     setNote(null); drawOthers(); paintWallet();
@@ -3307,14 +3330,40 @@ var qrcode = function() {
     syncPhone();
     $("#height").value = d.height || "";
     selectedType = d.type || null;
+    roadTile(types, d.type === "Road");
     types.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === selectedType)); });
     syncRoving(types);
     ["f-session", "f-company", "f-badge", "f-name", "f-phone", "f-height", "f-type"].forEach(function (id) { setError(id, false); });
-    companions = (d.riders || []).map(function (c) { return { name: tidyName(c.name), height: c.height != null ? String(c.height) : "", type: c.type || "" }; });
+    var party = (d.riders || []).filter(Boolean);
+    companions = party.filter(function (c) { return !c.desk; }).map(function (c) { return { name: tidyName(c.name), height: c.height != null ? String(c.height) : "", type: c.type || "" }; });
+    deskRiders = party.filter(function (c) { return c.desk; }).map(function (c) { return { name: c.name || "", height: c.height != null ? c.height : null, type: c.type || "", desk: true }; });
     renderCompanions();
   }
-  function startEdit() {
-    if (!current) return;
+  /* Edit starts from the booking as the server holds it now (rider_lookup), not this phone's copy of it: the desk, or
+     the rider on another phone through Find my booking, may have changed it since, and a save sends every part of it
+     back. The phone's copy stands in when the server cannot be asked. */
+  var editAsking = false;
+  async function startEdit() {
+    if (!current || editAsking) return;
+    var was = current, btn = $("#edit"), r = null;
+    editAsking = true; btn.disabled = true;
+    try {
+      var a = { p_booking_no: was.bookingNo, p_phone: was.phone };
+      if (was.session && was.session.id) a.p_session_id = was.session.id;
+      r = await sbClient().rpc("rider_lookup", a);
+    } catch (e) { r = null; }
+    editAsking = false; btn.disabled = false;
+    if (current !== was) return; // another booking came on the screen meanwhile
+    var d = r && !r.error && r.data;
+    if (d && d.ok && d.booking_no) {
+      var live = fromLookup(d, was.phone);
+      live.session = Object.assign({}, was.session || {}, d.session || {});
+      live.submittedAt = was.submittedAt || live.submittedAt;
+      // A database that does not mark the desk's companions yet lists them with the rider's own: the phone's list stays.
+      if (!deskKnown(live.riders)) live.riders = was.riders || [];
+      if (d.checked_in) { showSuccess(live); setNote("You have already checked in. Ask the desk to change your booking."); return; }
+      current = live; try { localStorage.setItem(STORE, JSON.stringify(live)); } catch (e) {}
+    }
     editing = current; another = false; prefill(current); setSubmitLabels(true);
     $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
     hideBanner(); setNotice(null); returnTo = 0;
@@ -3336,7 +3385,7 @@ var qrcode = function() {
     btn.disabled = true;
     try {
       var res = await fetch("/api/petromin-pass", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingNo: current.bookingNo, phone: current.phone, sessionId: current.session && current.session.id, lang: html.lang }) });
-      if (!res.ok) { if (res.status === 501 || res.status === 404 && !/json/.test(res.headers.get("content-type") || "")) { walletOff = true; paintWallet(); } setNote(res.status === 404 ? "We could not find your booking. Please register again." : "Could not reach the server"); return; }
+      if (!res.ok) { if (res.status === 501 || res.status === 404 && !/json/.test(res.headers.get("content-type") || "")) { walletOff = true; paintWallet(); } setNote(res.status === 404 ? "We could not find your booking. Please register again." : res.status === 429 ? "Too many tries from this network. Try again in a few minutes." : "Could not reach the server"); return; }
       var url = URL.createObjectURL(await res.blob());
       // Opening the .pkpass shows iOS's "Add to Apple Wallet" sheet.
       var a = document.createElement("a"); a.href = url; a.download = "booking-" + current.bookingNo + ".pkpass"; document.body.appendChild(a); a.click(); a.remove();
@@ -3399,6 +3448,12 @@ var qrcode = function() {
     if (code === "966" && n.indexOf("966") === 0 && n.length > 9) n = n.slice(3);
     return n ? "+" + code + n : "";
   }
+  // A booking as rider_lookup gives it (Find my booking, and Edit, which starts from it).
+  function fromLookup(d, ph) {
+    return { badge: d.badge || "", name: d.name || "", company: d.company || null, phone: d.phone || ph, height: d.height, type: d.type, session: d.session || null, bookingNo: d.booking_no, riders: d.riders || [], submittedAt: new Date().toISOString() };
+  }
+  // Every companion says whether the desk added it ('desk'); a database before that lists the desk's as the rider's own.
+  function deskKnown(riders) { return (riders || []).every(function (c) { return c && typeof c.desk === "boolean"; }); }
   function fdMiss(key) { var m = $("#fd-miss"); m.hidden = !key; if (key) { m.setAttribute("data-t", key); render(m); } }
   $("#find").addEventListener("click", function () {
     $("#fd-no").value = ""; $("#fd-phone").value = ""; $("#fd-cc").value = "966"; fdMiss(null);
@@ -3419,9 +3474,22 @@ var qrcode = function() {
     if (!r || r.error || !r.data) { fdMiss("Could not reach the server"); return; }
     var d = r.data;
     if (!d.ok) { fdMiss(d.error === "throttled" ? "Too many submissions from this network" : "We could not find a booking with this number and mobile number."); return; }
-    var found = { badge: d.badge || "", name: d.name || "", company: d.company || null, phone: d.phone || ph, height: d.height, type: d.type, session: d.session || null, bookingNo: d.booking_no, riders: d.riders || [], submittedAt: new Date().toISOString() };
+    /* Numbers start again at P-001 every night, so one number and mobile can be a booking on several nights: the
+       database names the others ('more', their night ids), each is asked for by its night and kept on the phone,
+       listed under the ticket. A night that is over is not shown as a ticket to change. */
+    var nights = [fromLookup(d, ph)], more = (Array.isArray(d.more) ? d.more : []).slice(0, 4);
+    if (more.length) { go.disabled = true; go.classList.add("loading"); }
+    for (var i = 0; i < more.length; i++) {
+      var x = null; try { x = await sbClient().rpc("rider_lookup", { p_booking_no: no, p_phone: ph, p_session_id: String(more[i]) }); } catch (err) {}
+      if (x && !x.error && x.data && x.data.ok) nights.push(fromLookup(x.data, ph));
+    }
+    go.disabled = false; go.classList.remove("loading");
+    nights = nights.filter(function (b) { return !ended(b); });
+    if (!nights.length) { fdMiss("We could not find a booking with this number and mobile number."); return; }
+    var found = nights[0];
     closeDialog(fdDialog);
     if (current && keyOf(current) !== keyOf(found)) keep(current);
+    nights.slice(1).forEach(function (b) { keep(b); });
     editing = null; another = false; setSubmitLabels(false); setNotice(null);
     track(1, "found");
     showSuccess(found);
@@ -3496,6 +3564,8 @@ var qrcode = function() {
       if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
       if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
+      // rider_edit: the desk has tied this registration to a booking of its own (rentals 20261111235100, a move to another night)
+      if (d.error === "desk") { failBanner("The desk has this booking. Ask the desk to change it."); return; }
       if (d.error === "riders") { goStep(3); setError("f-riders", true); return; }
       // The database refuses a one-letter word with the same code as a wrong character, saying why:
       // "short" (rider_register, rentals 20261004100000). Each gets its own words.
@@ -3518,6 +3588,7 @@ var qrcode = function() {
     // The night as the form knew it (its hand-out time and place) with what the server says of it.
     if (d.session) data.session = Object.assign({}, data.session || {}, d.session);
     var wasEdit = !!editing; editing = null;
+    if (wasEdit) data.riders = data.riders.concat(deskRiders); // the ticket lists the desk's companions too
     if (!wasEdit) track(4, "done");
     if (another && current && keyOf(current) !== keyOf(data)) keep(current); // the confirmation before this one stays on the phone
     another = false; setSubmitLabels(false);

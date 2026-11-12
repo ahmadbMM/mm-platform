@@ -2033,5 +2033,8 @@
   "Show password": "پاس ورڈ دکھائیں",
   "Hide password": "پاس ورڈ چھپائیں",
   "Confirm new password": "نئے پاس ورڈ کی تصدیق کریں",
-  "Passwords do not match.": "دونوں پاس ورڈ مماثل نہیں ہیں۔"
+  "Passwords do not match.": "دونوں پاس ورڈ مماثل نہیں ہیں۔",
+  "Next announcement": "اگلا اعلان",
+  "Pause reviews": "تبصرے روکیں",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "یہ درخواست ہمارے پاس پہلے سے ہے: اس کا ریفرنس نمبر {0} ہے۔ دوسری سائیکل کے لیے، جب ٹیم تصدیق کے لیے کال کرے تو انہیں بتائیں۔"
 }

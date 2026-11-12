@@ -2033,5 +2033,8 @@
   "Show password": "Tampilkan kata sandi",
   "Hide password": "Sembunyikan kata sandi",
   "Confirm new password": "Konfirmasi kata sandi baru",
-  "Passwords do not match.": "Kata sandi tidak cocok."
+  "Passwords do not match.": "Kata sandi tidak cocok.",
+  "Next announcement": "Pengumuman berikutnya",
+  "Pause reviews": "Jeda ulasan",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "Permintaan ini sudah kami terima: no. referensinya {0}. Untuk sepeda kedua, beri tahu tim saat mereka menelepon untuk konfirmasi."
 }

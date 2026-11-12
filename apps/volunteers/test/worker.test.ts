@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { handle, normalizeLogin, RPCS, type Env } from "../src/worker/app";
+import { handle, initiativeOf, normalizeLogin, RPCS, type Env } from "../src/worker/app";
 import { parseTicket } from "../src/client/scan";
 
 // The Worker's fetch handler, run directly with a stubbed database. Nothing here reaches a real one.
@@ -67,7 +67,7 @@ describe("signing in", () => {
     expect(await r.json()).toEqual({ error: "LOCKED" });
   });
   it("reads a mobile however it is typed, as the booking app does", () => {
-    for (const v of ["0512345678", "512345678", "966512345678", "+966512345678", "00966512345678", "+9660512345678", "05 1234 5678", "٠٥١٢٣٤٥٦٧٨"]) {
+    for (const v of ["0512345678", "512345678", "966512345678", "+966512345678", "00966512345678", "+9660512345678", "9660512345678", "009660512345678", "966 05 1234 5678", "05 1234 5678", "٠٥١٢٣٤٥٦٧٨"]) {
       expect(normalizeLogin(v), v).toBe("+966512345678");
     }
     expect(normalizeLogin("+201012345678")).toBe("+201012345678");
@@ -223,6 +223,18 @@ describe("a certificate's check (the staff review, 2026-11-06)", () => {
     const r = await handle(post("/api/rpc/volunteer_cert_issue", { p_from: "2026-10-01", p_to: "2026-10-31" }, { cookie: COOKIE }), env);
     expect(r.status).toBe(400);
     expect(await r.json()).toEqual({ error: "VOL_CERT_EMPTY" });
+  });
+  it("an event's certificate is issued with the event's own English name, never the page's text", async () => {
+    const me = { mine: [{ id: "s-sat", title: null, ride_kind: "saturday" }], events: [{ session_id: "s-run", title: "Jeddah Night Run", ride_kind: "event" }], record: [] };
+    const calls = db((c) => ({ body: c.name === "volunteer_me" ? me : { ok: true } }));
+    await handle(post("/api/rpc/volunteer_cert_issue_session", { p_session: "s-sat", p_initiative: "Ministry of Health Campaign" }, { cookie: COOKIE }), env);
+    expect(calls.map((c) => c.name)).toEqual(["volunteer_me", "volunteer_cert_issue_session"]);
+    expect(calls[1].args).toEqual({ p_session: "s-sat", p_initiative: "Saturday Social Ride", p_id: "c123", p_token: "tokentokentokentoken" });
+    await handle(post("/api/rpc/volunteer_cert_issue_session", { p_session: "s-run", p_initiative: "x" }, { cookie: COOKIE }), env);
+    expect(calls[3].args.p_initiative).toBe("Jeddah Night Run");
+    await handle(post("/api/rpc/volunteer_cert_issue_session", { p_session: "s-other", p_initiative: "x" }, { cookie: COOKIE }), env);
+    expect(calls[5].args.p_initiative).toBeNull();
+    expect(initiativeOf(null, "s-sat")).toBeNull();
   });
 });
 

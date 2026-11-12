@@ -7,6 +7,7 @@ import BuildStory, { type Step } from "@/components/home/BuildStory";
 import PhotoWall from "@/components/home/PhotoWall";
 import FitQuiz, { type QuizText } from "@/components/home/FitQuiz";
 import OpenNow from "@/components/home/OpenNow";
+import ReviewsStrip from "@/components/home/ReviewsStrip";
 import LazyMap from "@/components/home/LazyMap";
 import LazyBackgrounds from "@/components/site/LazyBackgrounds";
 import { ArrowIcon, StarIcon } from "@/components/site/Icons";
@@ -55,7 +56,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
   const recs = (k: "road" | "city" | "trail") => ({ name: S(q[`${k}Name`]), image: S(q[`${k}Image`]), price: N(q[`${k}Price`]),
     why: { speed: S(q[`${k}Speed`]), comfort: S(q[`${k}Comfort`]), value: S(q[`${k}Value`]) } });
   const quiz: QuizText = {
-    title: S(q.title), text: S(q.text), q1: S(q.q1), q2: S(q.q2), match: S(q.match), cta: S(q.cta), ctaHref: S(q.ctaHref), retake: S(q.retake),
+    title: S(q.title), text: S(q.text), q1: S(q.q1), q2: S(q.q2), match: S(q.match), cta: S(q.cta), ctaHref: H(q.ctaHref), retake: S(q.retake),
     rides: [{ id: "road", label: S(q.aRoad) }, { id: "city", label: S(q.aCity) }, { id: "trail", label: S(q.aTrail) }],
     prios: [{ id: "speed", label: S(q.pSpeed) }, { id: "comfort", label: S(q.pComfort) }, { id: "value", label: S(q.pValue) }],
     recs: { road: recs("road"), city: recs("city"), trail: recs("trail") },
@@ -165,16 +166,7 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
           <section className="hm-reviews" aria-label={S(r.title)}>
             <div className="hm-reviews-rule"><span /><img src="/site/logo-dark.png" alt="" /><span /></div>
             <h2>{S(r.title)}</h2>
-            <div className="hm-reviews-track" dir="ltr">
-              <div className="hm-reviews-row">
-                {[...reviews, ...reviews].map((x, i) => (
-                  <figure className="hm-review" key={i} dir={localeInfo(locale).dir} aria-hidden={i >= reviews.length ? true : undefined}>
-                    <blockquote>“{x.quote}”</blockquote>
-                    <figcaption><span className="init">{x.name.trim().charAt(0)}</span><span><strong>{x.name}</strong><small>{x.role}</small></span></figcaption>
-                  </figure>
-                ))}
-              </div>
-            </div>
+            <ReviewsStrip reviews={reviews} dir={localeInfo(locale).dir} />
           </section>
         )}
 

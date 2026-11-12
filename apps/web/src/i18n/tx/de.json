@@ -2033,5 +2033,8 @@
   "Show password": "Passwort anzeigen",
   "Hide password": "Passwort ausblenden",
   "Confirm new password": "Neues Passwort bestätigen",
-  "Passwords do not match.": "Die Passwörter stimmen nicht überein."
+  "Passwords do not match.": "Die Passwörter stimmen nicht überein.",
+  "Next announcement": "Nächste Ankündigung",
+  "Pause reviews": "Bewertungen anhalten",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "Diese Anfrage haben wir schon: Die Referenznummer ist {0}. Für ein zweites Rad sag dem Team Bescheid, wenn es zur Bestätigung anruft."
 }

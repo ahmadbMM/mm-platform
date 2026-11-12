@@ -41,7 +41,7 @@ html[lang="hi"] .mmf-petromin, html[lang="hi"] .mmf-petromin .title, html[lang="
 html[lang="bn"] .mmf-petromin, html[lang="bn"] .mmf-petromin .title { font-family: var(--font-bengali), var(--font-latin); letter-spacing: 0; }
 html[lang="ar"] .mmf-petromin .title, html[lang="ur"] .mmf-petromin .title, html[lang="hi"] .mmf-petromin .title, html[lang="ne"] .mmf-petromin .title { line-height: 1.2; font-size: 30px; }
 html[lang="ar"] .mmf-petromin p, html[lang="ur"] .mmf-petromin p, html[lang="hi"] .mmf-petromin p, html[lang="ne"] .mmf-petromin p, html[lang="bn"] .mmf-petromin p { line-height: 1.8; }
-.mmf-petromin html:is([lang="ar"], .mmf-petromin [lang="ur"], .mmf-petromin [lang="hi"], .mmf-petromin [lang="ne"], .mmf-petromin [lang="bn"]) :is(.step-title, .mmf-petromin .ticket-label, .mmf-petromin .ticket-col .tl, .mmf-petromin .stepper-item) { letter-spacing: 0; }
+html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .mmf-petromin :is(.step-title, .ticket-label, .ticket-col .tl, .stepper-item) { letter-spacing: 0; }
 .mmf-petromin a { color: inherit; text-decoration: none; }
 .mmf-petromin a:hover { color: var(--green); }
 .mmf-petromin button { font: inherit; color: inherit; cursor: pointer; }
@@ -200,6 +200,7 @@ html[dir="rtl"] .mmf-petromin .back-arrow { transform: scaleX(-1); }
   font-weight: 700; font-size: 15px; color: var(--ink);
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
+.mmf-petromin .tile[hidden] { display: none; }
 .mmf-petromin .tile:hover { border-color: var(--ink); }
 .mmf-petromin .tile:active { transform: scale(0.97); }
 .mmf-petromin .tile[aria-checked="true"] { background: var(--ink); color: var(--neon); border-color: var(--ink); }

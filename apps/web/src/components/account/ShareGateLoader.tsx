@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import ClubGateLoader from "./ClubGateLoader";
 import ShareGate, { type PendingShare, type ShareDone } from "./ShareGate";
-import { SHARE_QUIET } from "./quiet";
+import { SHARE_QUIET, isQuiet } from "./quiet";
 
 // A Run for Her runner's agreement to share their details with Sela and JYC on every page (the owner,
 // 2026-10-06; the booking app's _pendingShare), between the waivers and the post-ride rating:
@@ -26,7 +26,7 @@ let off = false;
 
 async function check(locale: string): Promise<PendingShare | null> {
   if (off) return null;
-  try { if (Number(sessionStorage.getItem(KEY) || 0) > Date.now()) return null; } catch { /* storage off: just ask */ }
+  if (isQuiet(KEY)) return null;
   try {
     const skip = agreed.size ? `&skip=${encodeURIComponent([...agreed].join(","))}` : "";
     const r = await fetch(`/api/account/pending-share?locale=${encodeURIComponent(locale)}${skip}`, { cache: "no-store", credentials: "same-origin" });

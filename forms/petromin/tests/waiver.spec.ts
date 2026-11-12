@@ -44,6 +44,7 @@ test('a registration without the waiver is refused and nothing is sent; ticked, 
 test('an edit needs the waiver too, and rider_edit gets p_waiver', async ({ page }) => {
   const edits: Record<string, unknown>[] = [];
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
+  await page.route('**/rest/v1/rpc/rider_lookup', (r) => r.abort()); // Edit asks the server first; with no answer the phone's copy is used
   await page.route('**/rest/v1/rpc/rider_edit', (r) => { edits.push(r.request().postDataJSON()); return r.fulfill(json({ ...OK, resubmitted: true })); });
   await page.addInitScript((s) => localStorage.setItem('mm-petromin-registration', JSON.stringify(s)), SAVED);
   await page.goto('/petromin?lang=en');

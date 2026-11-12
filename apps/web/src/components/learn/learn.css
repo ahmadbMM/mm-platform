@@ -37,6 +37,13 @@ textarea.ln-input { resize: vertical; min-height: 84px; }
 .ln-dob { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.5fr) minmax(0, 1fr); gap: 8px; }
 .ln-dob .ln-select { padding-inline-end: 28px; background-position: right 10px center; }
 [dir="rtl"] .ln-dob .ln-select { background-position: left 10px center; }
+/* A phone of 420px or less: at 360px the Day box had 18px for its words ("Da") and the year lost its last digit; less
+   padding, a closer arrow and a point smaller keep the day, a long month name and the 4-digit year whole. */
+@media (max-width: 420px) {
+  .ln-dob { grid-template-columns: minmax(0, .9fr) minmax(0, 1.6fr) minmax(0, 1.1fr); gap: 6px; }
+  .ln-dob .ln-select { padding-inline: 10px 22px; font-size: 14px; background-position: right 6px center; }
+  [dir="rtl"] .ln-dob .ln-select { background-position: left 6px center; }
+}
 .ln-field > .ln-label { margin: 0; }
 
 /* The learners: a card each (up to five), numbered, with a remove button once there are two. */

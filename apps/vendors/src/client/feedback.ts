@@ -139,6 +139,8 @@ export function openFeedback(target: FeedbackTarget, onSaved: () => void): void 
       return;
     }
     saved = true;
+    // Closed (X or Escape) while the save was on its way: its close ran with nothing saved yet.
+    if (!dlg.el.open) { announce(t("fbThanks")); onSaved(); return; }
     clear(body);
     const done = button(t("done"), { kind: "primary", onclick: dlg.close });
     body.append(note("ok", t("fbThanks")), h("div", { class: "actions" }, done));

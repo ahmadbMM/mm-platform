@@ -12,7 +12,8 @@ lands on every form at once). It has no page of its own; each form draws its box
   `temp` (a temporary password, changed on the booking site first).
 - `MMAccount.takeCode()` / `MMAccount.redeem(rpc, code)`: the booking site's `?code=` hand-over.
 - `MMAccount.plan(me, keys)`: which questions a signed-in account is asked: what it holds (customer_community_me's
-  names) is skipped unless staff flagged it (`me.flags` = customers.fix_fields). `{skip, ask, flagged}`.
+  names) is skipped unless staff flagged it (`me.flags` = customers.fix_fields; the bike questions `bike_type` and
+  `own_bike` are flagged as `type_preference`). `{skip, ask, flagged}`.
 - `MMAccount.same(k, answer, held)`: whether the answer to a flagged question is what the account already holds (the
   owner, 2026-11-09: "don't allow a flagged account field to type in the same info in the field again"); each form
   refuses it on that question. The booking app's rule: words with their spaces tidied, an email in any case, a number

@@ -2033,5 +2033,8 @@
   "Show password": "पासवर्ड देखाउनुहोस्",
   "Hide password": "पासवर्ड लुकाउनुहोस्",
   "Confirm new password": "नयाँ पासवर्ड पुष्टि गर्नुहोस्",
-  "Passwords do not match.": "दुवै पासवर्ड मिलेनन्।"
+  "Passwords do not match.": "दुवै पासवर्ड मिलेनन्।",
+  "Next announcement": "अर्को घोषणा",
+  "Pause reviews": "समीक्षाहरू रोक्नुहोस्",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "यो अनुरोध हामीसँग पहिल्यै छ: यसको रेफरेन्स {0} हो। दोस्रो साइकलका लागि, टोलीले पुष्टि गर्न फोन गर्दा उनीहरूलाई भन्नुहोस्।"
 }

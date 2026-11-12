@@ -102,6 +102,7 @@ for (const lang of ['ar', 'ur', 'fr', 'es', 'pt', 'hi', 'ne', 'tl', 'bn', 'id', 
 test('a waiver the database no longer takes, and a paid booking moved to another price, are said in the page language', async ({ page }) => {
   const refuse = (message: string) => json({ code: 'P0001', details: null, hint: null, message }, 400);
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1, S2])));
+  await page.route('**/rest/v1/rpc/rider_lookup', (r) => r.abort()); // Edit asks the server first; with no answer the phone's copy is used
   await page.route('**/rest/v1/rpc/rider_register', (r) => r.fulfill(refuse('WAIVER_OUTDATED')));
   await page.route('**/rest/v1/rpc/rider_edit', (r) => r.fulfill(refuse('PAID_MOVE')));
   await page.goto('/petromin?lang=ar');

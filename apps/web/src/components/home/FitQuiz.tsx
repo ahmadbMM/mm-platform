@@ -43,7 +43,7 @@ export default function FitQuiz({ q, locale, arrow }: { q: QuizText; locale: str
                 <strong>{rec.name}</strong>
                 <span className="why">{rec.why[prio]}</span>
                 <div className="row">
-                  <a href={q.ctaHref} className="hm-btn hm-green">{q.cta} {arrow}</a>
+                  {q.ctaHref && <a href={q.ctaHref} className="hm-btn hm-green">{q.cta} {arrow}</a>}
                   {rec.price > 0 && <span className="price">{money(rec.price)}</span>}
                   <button type="button" className="retake" onClick={() => { setRide(""); setPrio(""); }}>{q.retake}</button>
                 </div>

@@ -10,7 +10,7 @@ import { mailLink, MM_EMAIL, pwWaLink } from "./contact";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
 import { renderInsights } from "./insights";
-import type { Me } from "./model";
+import { westernDigits, type Me } from "./model";
 import { renderPrivacy } from "./privacy";
 import type { Key } from "./strings";
 import { renderTeam } from "./team";
@@ -146,7 +146,7 @@ function renderSignIn(): void {
   const wa = h("a", { class: "btn btn-secondary btn-small", target: "_blank", rel: "noopener" }, h("span", {}, t("forgotWhatsApp")));
   const mail = h("a", { class: "btn btn-secondary btn-small" }, icon("mail"), h("span", {}, t("forgotEmail")));
   function paintForgot(): void {
-    const body = t("forgotBody", { login: login.input.value.trim() || "-" });
+    const body = t("forgotBody", { login: westernDigits(login.input.value.trim()) || "-" });
     wa.setAttribute("href", pwWaLink(body));
     mail.setAttribute("href", mailLink(t("forgotSubject"), body));
   }
@@ -167,7 +167,7 @@ function renderSignIn(): void {
     clear(msg);
     if (!login.input.value.trim() || !pw.input.value) { msg.append(errorNote("BAD_LOGIN")); return; }
     busy(go, true, t("signingIn"));
-    const res = await post<{ must_change: boolean }>("/api/login", { login: login.input.value.trim(), password: pw.input.value });
+    const res = await post<{ must_change: boolean }>("/api/login", { login: westernDigits(login.input.value.trim()), password: pw.input.value });
     busy(go, false, t("signInButton"));
     if (!res.ok) {
       msg.append(errorNote(res.code));

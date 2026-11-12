@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import EmergencyGate, { type EmDone } from "./EmergencyGate";
 import SportGateLoader from "./SportGateLoader";
-import { EM_QUIET } from "./quiet";
+import { EM_QUIET, isQuiet } from "./quiet";
 
 // The account's emergency contact on every page (the owner, 2026-10-07: required and unskippable for
 // every customer; the booking app's check-up), before every other pop-up: this loader holds a
@@ -25,7 +25,7 @@ let off = false;
 type Need = { two: boolean };
 async function check(): Promise<Need | null> {
   if (off) return null;
-  try { if (Number(sessionStorage.getItem(KEY) || 0) > Date.now()) return null; } catch { /* storage off: just ask */ }
+  if (isQuiet(KEY)) return null;
   try {
     const r = await fetch("/api/account/emergency", { cache: "no-store", credentials: "same-origin" });
     if (!r.ok) return null;

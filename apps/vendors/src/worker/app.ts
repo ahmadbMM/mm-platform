@@ -169,6 +169,11 @@ async function callDb(env: Env, req: Request, name: string, args: Record<string,
   return { ok: false, status: 502, code: "SERVER" };
 }
 
+/** Arabic-Indic and Persian digits as Western ones: a mobile login typed on an Arabic keyboard
+ *  (٠٥٠...) would never match, as the database reads Western digits only. */
+export const westernDigits = (s: string): string =>
+  s.replace(/[\u0660-\u0669\u06F0-\u06F9]/g, (c) => String(c.charCodeAt(0) & 0xf));
+
 async function login(req: Request, env: Env): Promise<Response> {
   if (!(await withinTries(req, env))) return fail("RATE_LIMIT", 429);
   const read = await readBody(req, LOGIN_BODY_LIMIT);
@@ -177,7 +182,7 @@ async function login(req: Request, env: Env): Promise<Response> {
   if (typeof who !== "string" || typeof password !== "string" || !who.trim() || !password || who.length > 200 || password.length > 200) {
     return fail("BAD_LOGIN", 400);
   }
-  const r = await callDb(env, req, "vendor_login", { p_login: who.trim(), p_pwd: password });
+  const r = await callDb(env, req, "vendor_login", { p_login: westernDigits(who.trim()), p_pwd: password });
   if (!r.ok) return fail(r.code, r.status);
   const d = (r.data || {}) as { error?: string; id?: number; token?: string; must_change?: boolean };
   // An answered refusal takes its own status, as a raised one does (LOCKED is a 429 either way).

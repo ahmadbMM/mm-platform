@@ -256,6 +256,7 @@ input:focus-visible { outline: none; }
   font-weight: 700; font-size: 15px; color: var(--ink);
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
+.tile[hidden] { display: none; }
 .tile:hover { border-color: var(--ink); }
 .tile:active { transform: scale(0.97); }
 .tile[aria-checked="true"] { background: var(--ink); color: var(--neon); border-color: var(--ink); }
@@ -546,6 +547,7 @@ input:focus-visible { outline: none; }
           <div id="types" class="types" role="radiogroup" aria-labelledby="type-label">
             <button type="button" class="tile" data-v="Hybrid" role="radio" aria-checked="false" data-t="Hybrid">Hybrid</button>
             <button type="button" class="tile" data-v="Mountain" role="radio" aria-checked="false" data-t="Mountain">Mountain</button>
+            <button type="button" class="tile" data-v="Road" role="radio" aria-checked="false" data-t="Road" hidden disabled>Road</button>
           </div>
           <p class="err" aria-live="polite" data-t="Choose a bike type">Choose a bike type</p>
         </div>
@@ -691,6 +693,7 @@ input:focus-visible { outline: none; }
       <div id="rd-types" class="types" role="radiogroup" aria-labelledby="rd-type-label">
         <button type="button" class="tile" data-v="Hybrid" role="radio" aria-checked="false" data-t="Hybrid">Hybrid</button>
         <button type="button" class="tile" data-v="Mountain" role="radio" aria-checked="false" data-t="Mountain">Mountain</button>
+        <button type="button" class="tile" data-v="Road" role="radio" aria-checked="false" data-t="Road" hidden disabled>Road</button>
       </div>
       <p class="err" id="rd-type-err" aria-live="polite" data-t="Choose a bike type">Choose a bike type</p>
     </div>
@@ -3059,6 +3062,7 @@ var qrcode = function() {
       "Bike type": "نوع الدراجة",
       "Hybrid": "هايبرد",
       "Mountain": "جبلية",
+      "Road": "طريق",
       "Register": "تسجيل",
       "Registering...": "جارٍ التسجيل...",
       "Enter your badge number": "أدخل رقم بطاقتك",
@@ -3150,6 +3154,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "تم إلغاء حجزك.",
       "We could not save this. Please try again.": "لم نتمكن من حفظ ذلك. يرجى المحاولة مرة أخرى.",
       "The desk has this booking. Ask the desk to cancel it.": "هذا الحجز لدى المكتب. اطلب من المكتب إلغاءه.",
+      "The desk has this booking. Ask the desk to change it.": "هذا الحجز لدى المكتب. اطلب من المكتب تغييره.",
+      "Too many tries from this network. Try again in a few minutes.": "محاولات كثيرة من هذه الشبكة. حاول مرة أخرى بعد بضع دقائق.",
       "We could not find a booking with this number and mobile number.": "لم نجد حجزًا بهذا الرقم ورقم الجوال."
     },
     hi: {
@@ -3167,6 +3173,7 @@ var qrcode = function() {
       "Bike type": "साइकिल का प्रकार",
       "Hybrid": "हाइब्रिड",
       "Mountain": "माउंटेन",
+      "Road": "रोड",
       "Register": "पंजीकरण करें",
       "Registering...": "पंजीकरण हो रहा है...",
       "Enter your badge number": "अपना बैज नंबर दर्ज करें",
@@ -3258,6 +3265,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "आपकी बुकिंग रद्द कर दी गई।",
       "We could not save this. Please try again.": "हम इसे सहेज नहीं सके। कृपया फिर से कोशिश करें।",
       "The desk has this booking. Ask the desk to cancel it.": "यह बुकिंग डेस्क के पास है। इसे रद्द करने के लिए डेस्क से कहें।",
+      "The desk has this booking. Ask the desk to change it.": "यह बुकिंग डेस्क के पास है। इसे बदलने के लिए डेस्क से कहें।",
+      "Too many tries from this network. Try again in a few minutes.": "इस नेटवर्क से बहुत अधिक प्रयास हुए हैं। कुछ मिनट बाद फिर से कोशिश करें।",
       "We could not find a booking with this number and mobile number.": "इस नंबर और मोबाइल नंबर से हमें कोई बुकिंग नहीं मिली।"
     },
     tl: {
@@ -3275,6 +3284,7 @@ var qrcode = function() {
       "Bike type": "Uri ng bisikleta",
       "Hybrid": "Hybrid",
       "Mountain": "Mountain",
+      "Road": "Road",
       "Register": "Magparehistro",
       "Registering...": "Nagpaparehistro...",
       "Enter your badge number": "Ilagay ang iyong numero ng badge",
@@ -3366,6 +3376,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "Nakansela na ang iyong booking.",
       "We could not save this. Please try again.": "Hindi namin ito na-save. Pakisubukang muli.",
       "The desk has this booking. Ask the desk to cancel it.": "Nasa desk na ang booking na ito. Hilingin sa desk na kanselahin ito.",
+      "The desk has this booking. Ask the desk to change it.": "Nasa desk na ang booking na ito. Hilingin sa desk na baguhin ito.",
+      "Too many tries from this network. Try again in a few minutes.": "Masyadong maraming pagsubok mula sa network na ito. Subukang muli pagkalipas ng ilang minuto.",
       "We could not find a booking with this number and mobile number.": "Wala kaming nahanap na booking na may ganitong numero at mobile number."
     },
     es: {
@@ -3383,6 +3395,7 @@ var qrcode = function() {
       "Bike type": "Tipo de bicicleta",
       "Hybrid": "Híbrida",
       "Mountain": "Montaña",
+      "Road": "Carretera",
       "Register": "Registrarse",
       "Registering...": "Registrando...",
       "Enter your badge number": "Introduce tu número de credencial",
@@ -3474,6 +3487,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "Tu reserva se ha cancelado.",
       "We could not save this. Please try again.": "No hemos podido guardarlo. Inténtalo de nuevo.",
       "The desk has this booking. Ask the desk to cancel it.": "El mostrador tiene esta reserva. Pide en el mostrador que la cancelen.",
+      "The desk has this booking. Ask the desk to change it.": "El mostrador tiene esta reserva. Pide en el mostrador que la cambien.",
+      "Too many tries from this network. Try again in a few minutes.": "Demasiados intentos desde esta red. Inténtalo de nuevo en unos minutos.",
       "We could not find a booking with this number and mobile number.": "No encontramos ninguna reserva con este número y este móvil."
     },
     ne: {
@@ -3491,6 +3506,7 @@ var qrcode = function() {
       "Bike type": "साइकलको प्रकार",
       "Hybrid": "हाइब्रिड",
       "Mountain": "माउन्टेन",
+      "Road": "रोड",
       "Register": "दर्ता गर्नुहोस्",
       "Registering...": "दर्ता हुँदैछ...",
       "Enter your badge number": "आफ्नो ब्याज नम्बर लेख्नुहोस्",
@@ -3582,6 +3598,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "तपाईंको बुकिङ रद्द गरियो।",
       "We could not save this. Please try again.": "हामीले यो सुरक्षित गर्न सकेनौं। कृपया फेरि प्रयास गर्नुहोस्।",
       "The desk has this booking. Ask the desk to cancel it.": "यो बुकिङ डेस्कमा छ। रद्द गर्न डेस्कलाई भन्नुहोस्।",
+      "The desk has this booking. Ask the desk to change it.": "यो बुकिङ डेस्कमा छ। परिवर्तन गर्न डेस्कलाई भन्नुहोस्।",
+      "Too many tries from this network. Try again in a few minutes.": "यो नेटवर्कबाट धेरै पटक प्रयास गरियो। केही मिनेटपछि फेरि प्रयास गर्नुहोस्।",
       "We could not find a booking with this number and mobile number.": "यो नम्बर र मोबाइल नम्बरसँग कुनै बुकिङ फेला परेन।"
     },
     fr: {
@@ -3599,6 +3617,7 @@ var qrcode = function() {
       "Bike type": "Type de vélo",
       "Hybrid": "Hybride",
       "Mountain": "VTT",
+      "Road": "Route",
       "Register": "S'inscrire",
       "Registering...": "Inscription en cours...",
       "Enter your badge number": "Saisissez votre numéro de badge",
@@ -3690,6 +3709,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "Votre réservation a été annulée.",
       "We could not save this. Please try again.": "Nous n’avons pas pu enregistrer. Veuillez réessayer.",
       "The desk has this booking. Ask the desk to cancel it.": "Cette réservation est entre les mains du comptoir. Demandez au comptoir de l’annuler.",
+      "The desk has this booking. Ask the desk to change it.": "Cette réservation est entre les mains du comptoir. Demandez au comptoir de la modifier.",
+      "Too many tries from this network. Try again in a few minutes.": "Trop de tentatives depuis ce réseau. Réessayez dans quelques minutes.",
       "We could not find a booking with this number and mobile number.": "Aucune réservation ne correspond à ce numéro et à ce mobile."
     },
     pt: {
@@ -3707,6 +3728,7 @@ var qrcode = function() {
       "Bike type": "Tipo de bicicleta",
       "Hybrid": "Híbrida",
       "Mountain": "Montanha",
+      "Road": "Estrada",
       "Register": "Registar",
       "Registering...": "A registar...",
       "Enter your badge number": "Introduza o número do seu crachá",
@@ -3798,6 +3820,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "A sua reserva foi cancelada.",
       "We could not save this. Please try again.": "Não foi possível guardar. Tente novamente.",
       "The desk has this booking. Ask the desk to cancel it.": "Esta reserva está com o balcão. Peça ao balcão para a cancelar.",
+      "The desk has this booking. Ask the desk to change it.": "Esta reserva está com o balcão. Peça ao balcão para a alterar.",
+      "Too many tries from this network. Try again in a few minutes.": "Demasiadas tentativas a partir desta rede. Tente novamente daqui a alguns minutos.",
       "We could not find a booking with this number and mobile number.": "Não encontrámos nenhuma reserva com este número e este telemóvel."
     },
     bn: {
@@ -3815,6 +3839,7 @@ var qrcode = function() {
       "Bike type": "সাইকেলের ধরন",
       "Hybrid": "হাইব্রিড",
       "Mountain": "মাউন্টেন",
+      "Road": "রোড",
       "Register": "রেজিস্টার করুন",
       "Registering...": "রেজিস্টার করা হচ্ছে...",
       "Enter your badge number": "আপনার ব্যাজ নম্বর লিখুন",
@@ -3906,6 +3931,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "আপনার বুকিং বাতিল হয়েছে।",
       "We could not save this. Please try again.": "আমরা এটি সংরক্ষণ করতে পারিনি। অনুগ্রহ করে আবার চেষ্টা করুন।",
       "The desk has this booking. Ask the desk to cancel it.": "এই বুকিংটি ডেস্কের কাছে আছে। বাতিল করতে ডেস্কে বলুন।",
+      "The desk has this booking. Ask the desk to change it.": "এই বুকিংটি ডেস্কের কাছে আছে। পরিবর্তন করতে ডেস্কে বলুন।",
+      "Too many tries from this network. Try again in a few minutes.": "এই নেটওয়ার্ক থেকে অনেক বেশিবার চেষ্টা করা হয়েছে। কয়েক মিনিট পরে আবার চেষ্টা করুন।",
       "We could not find a booking with this number and mobile number.": "এই নম্বর ও মোবাইল নম্বরে কোনো বুকিং পাওয়া যায়নি।"
     },
     ur: {
@@ -3923,6 +3950,7 @@ var qrcode = function() {
       "Bike type": "سائیکل کی قسم",
       "Hybrid": "ہائبرڈ",
       "Mountain": "ماؤنٹین",
+      "Road": "روڈ",
       "Register": "رجسٹر کریں",
       "Registering...": "رجسٹریشن ہو رہی ہے...",
       "Enter your badge number": "اپنا بیج نمبر درج کریں",
@@ -4014,6 +4042,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "آپ کی بکنگ منسوخ کر دی گئی۔",
       "We could not save this. Please try again.": "ہم اسے محفوظ نہیں کر سکے۔ براہِ کرم دوبارہ کوشش کریں۔",
       "The desk has this booking. Ask the desk to cancel it.": "یہ بکنگ ڈیسک کے پاس ہے۔ اسے منسوخ کرنے کے لیے ڈیسک سے کہیں۔",
+      "The desk has this booking. Ask the desk to change it.": "یہ بکنگ ڈیسک کے پاس ہے۔ اسے تبدیل کرنے کے لیے ڈیسک سے کہیں۔",
+      "Too many tries from this network. Try again in a few minutes.": "اس نیٹ ورک سے بہت زیادہ کوششیں کی گئی ہیں۔ چند منٹ بعد دوبارہ کوشش کریں۔",
       "We could not find a booking with this number and mobile number.": "اس نمبر اور موبائل نمبر سے کوئی بکنگ نہیں ملی۔"
     },
     id: {
@@ -4031,6 +4061,7 @@ var qrcode = function() {
       "Bike type": "Jenis sepeda",
       "Hybrid": "Hybrid",
       "Mountain": "Gunung",
+      "Road": "Jalan raya",
       "Register": "Daftar",
       "Registering...": "Mendaftarkan...",
       "Enter your badge number": "Masukkan nomor kartu karyawan Anda",
@@ -4122,6 +4153,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "Pemesanan Anda sudah dibatalkan.",
       "We could not save this. Please try again.": "Kami tidak dapat menyimpannya. Silakan coba lagi.",
       "The desk has this booking. Ask the desk to cancel it.": "Pemesanan ini sudah ditangani meja layanan. Minta meja layanan untuk membatalkannya.",
+      "The desk has this booking. Ask the desk to change it.": "Pemesanan ini sudah ditangani meja layanan. Minta meja layanan untuk mengubahnya.",
+      "Too many tries from this network. Try again in a few minutes.": "Terlalu banyak percobaan dari jaringan ini. Coba lagi dalam beberapa menit.",
       "We could not find a booking with this number and mobile number.": "Kami tidak menemukan pemesanan dengan nomor dan nomor ponsel ini."
     },
     ms: {
@@ -4139,6 +4172,7 @@ var qrcode = function() {
       "Bike type": "Jenis basikal",
       "Hybrid": "Hibrid",
       "Mountain": "Gunung",
+      "Road": "Jalan raya",
       "Register": "Daftar",
       "Registering...": "Mendaftar...",
       "Enter your badge number": "Masukkan nombor kad pekerja anda",
@@ -4230,6 +4264,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "Tempahan anda telah dibatalkan.",
       "We could not save this. Please try again.": "Kami tidak dapat menyimpannya. Sila cuba lagi.",
       "The desk has this booking. Ask the desk to cancel it.": "Tempahan ini dipegang oleh kaunter. Minta kaunter membatalkannya.",
+      "The desk has this booking. Ask the desk to change it.": "Tempahan ini dipegang oleh kaunter. Minta kaunter mengubahnya.",
+      "Too many tries from this network. Try again in a few minutes.": "Terlalu banyak cubaan daripada rangkaian ini. Cuba lagi dalam beberapa minit.",
       "We could not find a booking with this number and mobile number.": "Kami tidak menemui tempahan dengan nombor dan nombor telefon ini."
     },
     de: {
@@ -4247,6 +4283,7 @@ var qrcode = function() {
       "Bike type": "Radtyp",
       "Hybrid": "Trekkingrad",
       "Mountain": "Mountainbike",
+      "Road": "Rennrad",
       "Register": "Anmelden",
       "Registering...": "Wird angemeldet …",
       "Enter your badge number": "Gib deine Badge-Nummer ein",
@@ -4288,7 +4325,7 @@ var qrcode = function() {
       "We could not find your booking. Please register again.": "Wir konnten deine Buchung nicht finden. Bitte melde dich erneut an.",
       "You have already checked in. Ask the desk to change your booking.": "Du hast schon eingecheckt. Wende dich an den Schalter, um deine Buchung zu ändern.",
       "This badge is already registered for that session": "Dieser Badge ist für diesen Termin schon angemeldet",
-      "Cancel": "Stornieren",
+      "Cancel": "Abbrechen",
       "This session is no longer open": "Dieser Termin ist nicht mehr offen",
       "Your details were updated.": "Deine Angaben wurden aktualisiert.",
       "I have read the Privacy Notice.": "Ich habe die Datenschutzhinweise gelesen.",
@@ -4338,6 +4375,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "Deine Buchung wurde storniert.",
       "We could not save this. Please try again.": "Das konnten wir nicht speichern. Bitte versuche es noch einmal.",
       "The desk has this booking. Ask the desk to cancel it.": "Diese Buchung liegt beim Empfang. Bitte den Empfang, sie zu stornieren.",
+      "The desk has this booking. Ask the desk to change it.": "Diese Buchung liegt beim Empfang. Bitte den Empfang, sie zu ändern.",
+      "Too many tries from this network. Try again in a few minutes.": "Zu viele Versuche aus diesem Netzwerk. Versuche es in ein paar Minuten noch einmal.",
       "We could not find a booking with this number and mobile number.": "Wir haben keine Buchung mit dieser Nummer und Handynummer gefunden."
     },
     ru: {
@@ -4355,6 +4394,7 @@ var qrcode = function() {
       "Bike type": "Тип велосипеда",
       "Hybrid": "Гибрид",
       "Mountain": "Горный",
+      "Road": "Шоссейный",
       "Register": "Зарегистрироваться",
       "Registering...": "Регистрируем…",
       "Enter your badge number": "Введите номер пропуска",
@@ -4446,6 +4486,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "Бронирование отменено.",
       "We could not save this. Please try again.": "Не удалось сохранить. Попробуйте ещё раз.",
       "The desk has this booking. Ask the desk to cancel it.": "Этим бронированием занимается стойка регистрации. Попросите её отменить его.",
+      "The desk has this booking. Ask the desk to change it.": "Этим бронированием занимается стойка регистрации. Попросите её изменить его.",
+      "Too many tries from this network. Try again in a few minutes.": "Слишком много попыток из этой сети. Попробуйте снова через несколько минут.",
       "We could not find a booking with this number and mobile number.": "Бронирование с таким номером и номером телефона не найдено."
     },
     zh: {
@@ -4463,6 +4505,7 @@ var qrcode = function() {
       "Bike type": "车型",
       "Hybrid": "城市休闲车",
       "Mountain": "山地车",
+      "Road": "公路车",
       "Register": "登记",
       "Registering...": "正在登记…",
       "Enter your badge number": "请输入您的工牌号",
@@ -4504,7 +4547,7 @@ var qrcode = function() {
       "We could not find your booking. Please register again.": "找不到您的预订。请重新登记。",
       "You have already checked in. Ask the desk to change your booking.": "您已签到。如需修改预订，请联系服务台。",
       "This badge is already registered for that session": "此工牌已登记过该场次",
-      "Cancel": "取消预订",
+      "Cancel": "取消",
       "This session is no longer open": "该场次已不再开放",
       "Your details were updated.": "您的信息已更新。",
       "I have read the Privacy Notice.": "我已阅读隐私声明。",
@@ -4554,6 +4597,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "您的预订已取消。",
       "We could not save this. Please try again.": "无法保存。请重试。",
       "The desk has this booking. Ask the desk to cancel it.": "此预订已由服务台处理。请让服务台为您取消。",
+      "The desk has this booking. Ask the desk to change it.": "此预订已由服务台处理。请让服务台为您更改。",
+      "Too many tries from this network. Try again in a few minutes.": "来自此网络的尝试次数过多。请几分钟后再试。",
       "We could not find a booking with this number and mobile number.": "找不到与此预订号和手机号相符的预订。"
     },
     ja: {
@@ -4571,6 +4616,7 @@ var qrcode = function() {
       "Bike type": "車種",
       "Hybrid": "クロスバイク",
       "Mountain": "マウンテンバイク",
+      "Road": "ロードバイク",
       "Register": "登録する",
       "Registering...": "登録中…",
       "Enter your badge number": "社員証番号を入力してください",
@@ -4662,6 +4708,8 @@ var qrcode = function() {
       "Your booking was cancelled.": "予約をキャンセルしました。",
       "We could not save this. Please try again.": "保存できませんでした。もう一度お試しください。",
       "The desk has this booking. Ask the desk to cancel it.": "この予約は受付で管理されています。キャンセルは受付にお申し出ください。",
+      "The desk has this booking. Ask the desk to change it.": "この予約は受付で管理されています。変更は受付にお申し出ください。",
+      "Too many tries from this network. Try again in a few minutes.": "このネットワークからの試行回数が多すぎます。数分後にもう一度お試しください。",
       "We could not find a booking with this number and mobile number.": "この予約番号と携帯電話番号に一致する予約は見つかりませんでした。"
     }
   };
@@ -5175,8 +5223,11 @@ var qrcode = function() {
      ("Al-Harbi" is "Al Harbi", not "AlHarbi"), and digits, emoji and other signs are dropped as they
      are typed. Letters of every script and their combining marks stay (Hindi, Nepali and Bengali
      vowel signs). A period comes right after a letter ("Md. Rahman"): one that would start the name
-     or a word, or follow another period, is dropped, as the database refuses it. */
-  var NAME_DASHES = /[\p{Pd}−]/gu, NAME_BAD = /[^\p{L}\p{M}\s.]/gu;
+     or a word, or follow another period, is dropped, as the database refuses it. So are the marks an emoji leaves
+     behind when its picture is dropped (the variation selector U+FE0F, the keycap U+20E3) and anything else of
+     U+2000-U+2BFF but spaces, which the database refuses too (_name_chars_ok): they are not seen in the box, so a
+     name that kept one would be refused with nothing on the screen to take out. */
+  var NAME_DASHES = /[\p{Pd}−]/gu, NAME_BAD = /[^\p{L}\p{M}\s.]|(?!\s)[\u2000-\u2bff]|[\ufe00-\ufe0f\u{e0100}-\u{e01ef}]/gu;
   function nameSigns(v) { return String(v || "").replace(NAME_DASHES, " ").replace(NAME_BAD, ""); }
   function cleanName(v) { return nameSigns(v).replace(/\.{2,}/g, ".").replace(/(^|\s)\.+/g, "$1"); }
   function tidyName(v) { return cleanName(v).trim().replace(/\s+/g, " "); }
@@ -5317,9 +5368,18 @@ var qrcode = function() {
      bike) with Change and Remove. A companion is written in a centred dialog, its three boxes judged together on Save,
      so a party of five stays a short list rather than fifteen boxes (GOV.UK / DWP "add another"). */
   var companions = [];
+  /* The companions the desk added (rider_party_add) are listed with the party, read-only, and never sent back from
+     here: a phone's save leaves them alone, so sending them would only write them a second time (rider_lookup marks
+     them 'desk', rentals). They count towards the four. */
+  var deskRiders = [];
   var ridersEl = $("#riders");
   function cmOf(h) { return t("{n} cm", { n: h }); }
-  function companionFault(c) { var h = heightOf(String(c.height || "")); return !c.name || nameShort(c.name) || !(h >= 100 && h <= 250) || (c.type !== "Hybrid" && c.type !== "Mountain"); }
+  // A rider's height and bike on one line; one the desk left blank is left out.
+  function riderMeta(c) { return [c.height ? cmOf(heightOf(String(c.height)) || c.height) : "", c.type ? t(c.type) : ""].filter(Boolean).join(" · "); }
+  /* Road: a bike the desk may give (the database takes Road, Hybrid and Mountain) that the form does not offer. Its tile
+     shows only on a booking that holds it, so an edit keeps it rather than being made to change it. */
+  function roadTile(group, on) { var b = group.querySelector('.tile[data-v="Road"]'); if (b) { b.hidden = !on; b.disabled = !on; } }
+  function companionFault(c) { var h = heightOf(String(c.height || "")); return !c.name || nameShort(c.name) || !(h >= 100 && h <= 250) || (c.type !== "Hybrid" && c.type !== "Mountain" && c.type !== "Road"); }
   function renderCompanions() {
     ridersEl.innerHTML = "";
     companions.forEach(function (c, i) {
@@ -5331,12 +5391,20 @@ var qrcode = function() {
         '<button type="button" class="rider-remove" id="' + id + '-remove" aria-labelledby="' + id + '-remove ' + id + '-head" data-t="Remove">Remove</button></div>';
       row.querySelector(".rider-head").textContent = t("Rider {n}", { n: i + 2 });
       row.querySelector(".rider-name-v").textContent = c.name || "";
-      row.querySelector(".rider-meta").textContent = [c.height ? cmOf(heightOf(String(c.height)) || c.height) : "", c.type ? t(c.type) : ""].filter(Boolean).join(" · ");
+      row.querySelector(".rider-meta").textContent = riderMeta(c);
       row.classList.toggle("invalid", companionFault(c));
       row.querySelectorAll("[data-t]").forEach(render);
       ridersEl.appendChild(row);
     });
-    $("#add-rider").hidden = companions.length >= 4;
+    deskRiders.forEach(function (c, j) {
+      var row = document.createElement("div"); row.className = "rider"; row.setAttribute("role", "listitem");
+      row.innerHTML = '<div class="rider-main"><b class="rider-head"></b><span class="rider-name-v" dir="auto"></span><span class="rider-meta"></span></div>';
+      row.querySelector(".rider-head").textContent = t("Rider {n}", { n: companions.length + j + 2 });
+      row.querySelector(".rider-name-v").textContent = c.name || "";
+      row.querySelector(".rider-meta").textContent = riderMeta(c);
+      ridersEl.appendChild(row);
+    });
+    $("#add-rider").hidden = companions.length + deskRiders.length >= 4;
     setError("f-riders", false);
   }
   langHooks.push(renderCompanions);
@@ -5357,6 +5425,7 @@ var qrcode = function() {
     var head = $("#rd-title"); head.setAttribute("data-args", JSON.stringify({ n: i + 2 })); render(head);
     $("#rd-name").value = c.name || ""; $("#rd-height").value = c.height != null ? String(c.height) : "";
     rdType = c.type || null;
+    roadTile(rdTypes, c.type === "Road");
     rdTypes.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === rdType)); });
     syncRoving(rdTypes);
     ["rd-f-name", "rd-f-height", "rd-f-type"].forEach(function (id) { setError(id, false); nameMsg($("#" + id)); });
@@ -5373,7 +5442,8 @@ var qrcode = function() {
     else if (nameShort(nm)) bad("rd-f-name", RIDER_SHORT, $("#rd-name"));
     else if (serverMsg && serverMsg.field === "name") bad("rd-f-name", serverMsg.msg, $("#rd-name"));
     if (!(h >= 100 && h <= 250)) bad("rd-f-height", null, $("#rd-height"));
-    if (rdType !== "Hybrid" && rdType !== "Mountain") bad("rd-f-type", null, rdTypes.querySelector(".tile"));
+    var road = rdTypes.querySelector('.tile[data-v="Road"]');
+    if (rdType !== "Hybrid" && rdType !== "Mountain" && !(rdType === "Road" && road && !road.hidden)) bad("rd-f-type", null, rdTypes.querySelector(".tile"));
     if (first) first.focus();
     return !first;
   }
@@ -5392,7 +5462,7 @@ var qrcode = function() {
     var btn = ridersEl.querySelector('.rider[data-i="' + i + '"] .rider-change'); if (btn) btn.focus();
   });
   $("#rd-cancel").addEventListener("click", function () { riderAt = -1; closeDialog($("#rider-dialog")); $("#add-rider").hidden ? ridersEl.querySelector(".rider-change") && ridersEl.querySelector(".rider-change").focus() : $("#add-rider").focus(); });
-  $("#add-rider").addEventListener("click", function () { if (companions.length >= 4) { setError("f-riders", true); return; } openRider(companions.length); });
+  $("#add-rider").addEventListener("click", function () { if (companions.length + deskRiders.length >= 4) { setError("f-riders", true); return; } openRider(companions.length); });
   ridersEl.addEventListener("click", function (e) {
     var row = e.target.closest(".rider"); if (!row) return;
     var i = Number(row.getAttribute("data-i"));
@@ -5429,7 +5499,7 @@ var qrcode = function() {
     };
     // Each rider is a row of their own: the name, then height and bike.
     var bikes = reviewRow(d.name || t("Name"), [d.height ? cmOf(d.height) : "", d.type ? t(d.type) : ""].filter(Boolean).join(" · "), false, true);
-    companions.forEach(function (c) { bikes += reviewRow(tidyName(c.name), [cmOf(heightOf(String(c.height))), t(c.type)].join(" · "), false, true); });
+    companions.concat(deskRiders).forEach(function (c) { bikes += reviewRow(tidyName(c.name), riderMeta(c), false, true); });
     var c = s && collectIso(s), ph = String(d.phone || ""), code = cc.value;
     if (ph.indexOf("+" + code) === 0) ph = "+" + code + " " + ph.slice(code.length + 1);
     box.innerHTML =
@@ -5491,6 +5561,7 @@ var qrcode = function() {
   }
   var _showSuccessDesign = showSuccess;
   showSuccess = function (d) {
+    setNotice(null); // "Your booking was cancelled." is about the booking before (the cancel sets it again after)
     _showSuccessDesign(d); drawQr(current); showParty(current); paintFacts(current); paintSession(current);
     var n = $("#tk-name"); if (n) n.textContent = (current && current.name) || "";
     setNote(null); drawOthers(); paintWallet();
@@ -5667,14 +5738,40 @@ var qrcode = function() {
     syncPhone();
     $("#height").value = d.height || "";
     selectedType = d.type || null;
+    roadTile(types, d.type === "Road");
     types.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === selectedType)); });
     syncRoving(types);
     ["f-session", "f-company", "f-badge", "f-name", "f-phone", "f-height", "f-type"].forEach(function (id) { setError(id, false); });
-    companions = (d.riders || []).map(function (c) { return { name: tidyName(c.name), height: c.height != null ? String(c.height) : "", type: c.type || "" }; });
+    var party = (d.riders || []).filter(Boolean);
+    companions = party.filter(function (c) { return !c.desk; }).map(function (c) { return { name: tidyName(c.name), height: c.height != null ? String(c.height) : "", type: c.type || "" }; });
+    deskRiders = party.filter(function (c) { return c.desk; }).map(function (c) { return { name: c.name || "", height: c.height != null ? c.height : null, type: c.type || "", desk: true }; });
     renderCompanions();
   }
-  function startEdit() {
-    if (!current) return;
+  /* Edit starts from the booking as the server holds it now (rider_lookup), not this phone's copy of it: the desk, or
+     the rider on another phone through Find my booking, may have changed it since, and a save sends every part of it
+     back. The phone's copy stands in when the server cannot be asked. */
+  var editAsking = false;
+  async function startEdit() {
+    if (!current || editAsking) return;
+    var was = current, btn = $("#edit"), r = null;
+    editAsking = true; btn.disabled = true;
+    try {
+      var a = { p_booking_no: was.bookingNo, p_phone: was.phone };
+      if (was.session && was.session.id) a.p_session_id = was.session.id;
+      r = await sbClient().rpc("rider_lookup", a);
+    } catch (e) { r = null; }
+    editAsking = false; btn.disabled = false;
+    if (current !== was) return; // another booking came on the screen meanwhile
+    var d = r && !r.error && r.data;
+    if (d && d.ok && d.booking_no) {
+      var live = fromLookup(d, was.phone);
+      live.session = Object.assign({}, was.session || {}, d.session || {});
+      live.submittedAt = was.submittedAt || live.submittedAt;
+      // A database that does not mark the desk's companions yet lists them with the rider's own: the phone's list stays.
+      if (!deskKnown(live.riders)) live.riders = was.riders || [];
+      if (d.checked_in) { showSuccess(live); setNote("You have already checked in. Ask the desk to change your booking."); return; }
+      current = live; try { localStorage.setItem(STORE, JSON.stringify(live)); } catch (e) {}
+    }
     editing = current; another = false; prefill(current); setSubmitLabels(true);
     $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
     hideBanner(); setNotice(null); returnTo = 0;
@@ -5696,7 +5793,7 @@ var qrcode = function() {
     btn.disabled = true;
     try {
       var res = await fetch("/api/petromin-pass", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bookingNo: current.bookingNo, phone: current.phone, sessionId: current.session && current.session.id, lang: html.lang }) });
-      if (!res.ok) { if (res.status === 501 || res.status === 404 && !/json/.test(res.headers.get("content-type") || "")) { walletOff = true; paintWallet(); } setNote(res.status === 404 ? "We could not find your booking. Please register again." : "Could not reach the server"); return; }
+      if (!res.ok) { if (res.status === 501 || res.status === 404 && !/json/.test(res.headers.get("content-type") || "")) { walletOff = true; paintWallet(); } setNote(res.status === 404 ? "We could not find your booking. Please register again." : res.status === 429 ? "Too many tries from this network. Try again in a few minutes." : "Could not reach the server"); return; }
       var url = URL.createObjectURL(await res.blob());
       // Opening the .pkpass shows iOS's "Add to Apple Wallet" sheet.
       var a = document.createElement("a"); a.href = url; a.download = "booking-" + current.bookingNo + ".pkpass"; document.body.appendChild(a); a.click(); a.remove();
@@ -5759,6 +5856,12 @@ var qrcode = function() {
     if (code === "966" && n.indexOf("966") === 0 && n.length > 9) n = n.slice(3);
     return n ? "+" + code + n : "";
   }
+  // A booking as rider_lookup gives it (Find my booking, and Edit, which starts from it).
+  function fromLookup(d, ph) {
+    return { badge: d.badge || "", name: d.name || "", company: d.company || null, phone: d.phone || ph, height: d.height, type: d.type, session: d.session || null, bookingNo: d.booking_no, riders: d.riders || [], submittedAt: new Date().toISOString() };
+  }
+  // Every companion says whether the desk added it ('desk'); a database before that lists the desk's as the rider's own.
+  function deskKnown(riders) { return (riders || []).every(function (c) { return c && typeof c.desk === "boolean"; }); }
   function fdMiss(key) { var m = $("#fd-miss"); m.hidden = !key; if (key) { m.setAttribute("data-t", key); render(m); } }
   $("#find").addEventListener("click", function () {
     $("#fd-no").value = ""; $("#fd-phone").value = ""; $("#fd-cc").value = "966"; fdMiss(null);
@@ -5779,9 +5882,22 @@ var qrcode = function() {
     if (!r || r.error || !r.data) { fdMiss("Could not reach the server"); return; }
     var d = r.data;
     if (!d.ok) { fdMiss(d.error === "throttled" ? "Too many submissions from this network" : "We could not find a booking with this number and mobile number."); return; }
-    var found = { badge: d.badge || "", name: d.name || "", company: d.company || null, phone: d.phone || ph, height: d.height, type: d.type, session: d.session || null, bookingNo: d.booking_no, riders: d.riders || [], submittedAt: new Date().toISOString() };
+    /* Numbers start again at P-001 every night, so one number and mobile can be a booking on several nights: the
+       database names the others ('more', their night ids), each is asked for by its night and kept on the phone,
+       listed under the ticket. A night that is over is not shown as a ticket to change. */
+    var nights = [fromLookup(d, ph)], more = (Array.isArray(d.more) ? d.more : []).slice(0, 4);
+    if (more.length) { go.disabled = true; go.classList.add("loading"); }
+    for (var i = 0; i < more.length; i++) {
+      var x = null; try { x = await sbClient().rpc("rider_lookup", { p_booking_no: no, p_phone: ph, p_session_id: String(more[i]) }); } catch (err) {}
+      if (x && !x.error && x.data && x.data.ok) nights.push(fromLookup(x.data, ph));
+    }
+    go.disabled = false; go.classList.remove("loading");
+    nights = nights.filter(function (b) { return !ended(b); });
+    if (!nights.length) { fdMiss("We could not find a booking with this number and mobile number."); return; }
+    var found = nights[0];
     closeDialog(fdDialog);
     if (current && keyOf(current) !== keyOf(found)) keep(current);
+    nights.slice(1).forEach(function (b) { keep(b); });
     editing = null; another = false; setSubmitLabels(false); setNotice(null);
     track(1, "found");
     showSuccess(found);
@@ -5856,6 +5972,8 @@ var qrcode = function() {
       if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
       if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
+      // rider_edit: the desk has tied this registration to a booking of its own (rentals 20261111235100, a move to another night)
+      if (d.error === "desk") { failBanner("The desk has this booking. Ask the desk to change it."); return; }
       if (d.error === "riders") { goStep(3); setError("f-riders", true); return; }
       // The database refuses a one-letter word with the same code as a wrong character, saying why:
       // "short" (rider_register, rentals 20261004100000). Each gets its own words.
@@ -5878,6 +5996,7 @@ var qrcode = function() {
     // The night as the form knew it (its hand-out time and place) with what the server says of it.
     if (d.session) data.session = Object.assign({}, data.session || {}, d.session);
     var wasEdit = !!editing; editing = null;
+    if (wasEdit) data.riders = data.riders.concat(deskRiders); // the ticket lists the desk's companions too
     if (!wasEdit) track(4, "done");
     if (another && current && keyOf(current) !== keyOf(data)) keep(current); // the confirmation before this one stays on the phone
     another = false; setSubmitLabels(false);

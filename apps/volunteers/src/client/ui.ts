@@ -119,15 +119,26 @@ export function telLink(raw: string, label?: string, cls = "tel"): HTMLElement {
 }
 
 /** A centred dialog. Closing it removes it; the page under it stays as it was. Firm: Escape does not close it (a
- *  detail the account owes; the owner, 2026-11-10: an unskippable pop-up). */
+ *  detail the account owes; the owner, 2026-11-10: an unskippable pop-up), and only closeAsk() does: a second Escape or
+ *  back gesture, which the browser no longer lets a page refuse, opens it again. */
 export function dialog(title: string, body: Child[], actions: HTMLElement[], cls = "", firm = false): HTMLDialogElement {
   const box = h("dialog", { class: `ask ${cls}`.trim(), "aria-labelledby": "ask-q" },
     h("h2", { class: "ask-q", id: "ask-q" }, title), ...body, h("div", { class: "ask-acts" }, ...actions));
-  box.addEventListener("close", () => box.remove());
+  box.addEventListener("close", () => {
+    if (firm && !box.dataset.done && box.isConnected) { try { box.showModal(); return; } catch { /* could not open again: let it go */ } }
+    box.remove();
+  });
   if (firm) box.addEventListener("cancel", (e) => e.preventDefault());
   document.body.append(box);
   box.showModal();
   return box;
+}
+
+/** Closes a dialog on purpose (a firm one included). */
+export function closeAsk(box: HTMLDialogElement | null | undefined): void {
+  if (!box) return;
+  box.dataset.done = "1";
+  box.close();
 }
 
 /** A switch, as a checkbox with the switch role. */

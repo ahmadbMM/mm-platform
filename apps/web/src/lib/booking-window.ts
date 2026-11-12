@@ -42,9 +42,13 @@ export function opensOn(sessionDate: string, w: BookingWindow): { day: string; a
   return { day, at: w.at };
 }
 
-/** Whether the session cannot be booked yet at `now` (Riyadh, "YYYY-MM-DDTHH:MM"). */
-export function notOpenYet(sessionDate: string, w: BookingWindow | null, now: string): boolean {
-  if (!w || !/^\d{4}-\d{2}-\d{2}$/.test(sessionDate)) return false;
+/** Whether the window holds a session of this kind: Victory Lap and Arena Heros are booked from the day they are
+ *  announced (the database's _booking_window_guard and the booking app's _bwOpensOn let them through). */
+export const windowApplies = (kind: string | null | undefined): boolean => kind !== "vlap" && kind !== "arena";
+
+/** Whether the session cannot be booked yet at `now` (Riyadh, "YYYY-MM-DDTHH:MM"); `kind`, the session's, frees the races. */
+export function notOpenYet(sessionDate: string, w: BookingWindow | null, now: string, kind?: string | null): boolean {
+  if (!w || !windowApplies(kind) || !/^\d{4}-\d{2}-\d{2}$/.test(sessionDate)) return false;
   const { day, at } = opensOn(sessionDate, w);
   const today = now.slice(0, 10), hm = now.slice(11, 16);
   if (day > today) return true;

@@ -53,6 +53,12 @@ describe("the shared account step", () => {
     expect(accountPlan({ birth_date: "12/03/1994" }, ["birth_date"]).ask).toEqual(["birth_date"]); // not a date the form takes
   });
 
+  it("asks the bike again when staff flagged it under the account's own name (type_preference)", () => {
+    const p = accountPlan({ bike_type: "Road", own_bike: false, flags: ["type_preference"] }, ["bike_type", "own_bike"]);
+    expect(p.ask).toEqual(["bike_type", "own_bike"]);
+    expect(p.flagged).toEqual(["bike_type", "own_bike"]);
+  });
+
   // The owner, 2026-11-09: "don't allow a flagged account field to type in the same info in the field again". The
   // booking app's _fixSame, word for word in its rules.
   it("tells a flagged answer that is what the account already holds", () => {

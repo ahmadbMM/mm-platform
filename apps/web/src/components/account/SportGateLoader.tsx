@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import type { SportOption } from "@/lib/sport";
 import SportGate, { type SportDone } from "./SportGate";
 import WaiverGateLoader from "./WaiverGateLoader";
-import { SPORT_QUIET } from "./quiet";
+import { SPORT_QUIET, isQuiet } from "./quiet";
 
 // Whether a Community member competes in a sport, on every page (the user, 2026-11-10: "force it on community members
 // the next time they open or sign in the website"; the booking app's check-up asks it the same way). It comes after the
@@ -25,7 +25,7 @@ let off = false;
 type Need = { added: SportOption[] };
 async function check(): Promise<Need | null> {
   if (off) return null;
-  try { if (Number(sessionStorage.getItem(KEY) || 0) > Date.now()) return null; } catch { /* storage off: just ask */ }
+  if (isQuiet(KEY)) return null;
   try {
     const r = await fetch("/api/account/sport", { cache: "no-store", credentials: "same-origin" });
     if (!r.ok) return null;

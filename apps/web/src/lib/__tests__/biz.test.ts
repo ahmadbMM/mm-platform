@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createElement, type FC, type ReactElement, type ReactNode } from "react";
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
-import { APP_FARES, BIZ_DEFAULTS, bizOf, bizWords, faresOf, loadFares, priceRows, resetFares } from "../biz";
+import { APP_FARES, BIZ_DEFAULTS, bizOf, bizWords, cancelOwnCode, faresOf, loadFares, priceRows, resetFares } from "../biz";
 import { priceForType, ridePrice, type BikeRow } from "../bikes";
 import { resolvePage } from "../content";
 import { cleanRating, ratingErrors } from "../rating";
@@ -57,6 +57,28 @@ describe("bizOf: the public business settings", () => {
     expect(b.hours).toBeNull();
     expect(b.vatNo).toBe("300000000000003");
     expect(bizOf({ "biz.public": { vat_no: "12345" } }).vatNo).toBeNull();
+  });
+  it("gives an own reason's code the database refuses one it takes, as the booking app does (_cxOwnCode)", () => {
+    const re = /^[a-z_]{1,24}$/;
+    const b = bizOf({ "biz.public": { cancel_custom: [
+      { code: "c_rain", label: "Rain" },
+      { code: "c_rain_2", label: "Rain" },
+      { code: "c_1abc", label: "مطر" },
+      { code: "c_bike_broke_down_on_the_way", label: "Bike broke down on the way" },
+      { code: "c_2nd", label: "2nd try" },
+    ] } });
+    const codes = b.cancelCustom.map(([c]) => c);
+    expect(codes[0]).toBe("c_rain");
+    expect(codes[1]).toBe("c_rain_b");
+    expect(codes[2]).toBe("c_wlnyd");
+    expect(codes[3]).toBe("c_bike_broke_down_on_the");
+    expect(codes[4]).toBe("c_nd_try");
+    expect(b.cancelCustom.map(([, l]) => l)).toEqual(["Rain", "Rain", "مطر", "Bike broke down on the way", "2nd try"]);
+    for (const c of codes) expect(c).toMatch(re);
+    expect(new Set(codes).size).toBe(codes.length);
+    // The same Arabic label gives the same letters each time, so the code stays put between loads.
+    expect(cancelOwnCode("مطر", new Set())).toBe(codes[2]);
+    expect(codes[2]).toMatch(/^c_[a-z]+$/);
   });
   it("picks a Settings text per language: its own, else English, never English on the Arabic page", () => {
     expect(bizWords({ en: "E", ar: "A" }, "ar")).toBe("A");

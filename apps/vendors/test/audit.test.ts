@@ -89,6 +89,13 @@ describe("the contact's phone and email", () => {
     expect(e164("00971501234567")).toBe("+971501234567");
     expect(e164("971501234567")).toBe("+971501234567");
   });
+  it("reads Arabic digits and drops a Saudi trunk 0 after the country code", () => {
+    expect(e164("\u0660\u0665\u0665\u0661\u0662\u0663\u0664\u0665\u0666\u0667")).toBe("+966551234567");
+    expect(e164("\u06F0\u06F5\u06F5\u06F1\u06F2\u06F3\u06F4\u06F5\u06F6\u06F7")).toBe("+966551234567");
+    expect(e164("+966 055 123 4567")).toBe("+966551234567");
+    expect(e164("00966 0551234567")).toBe("+966551234567");
+    expect(e164("+966 55 123 4567")).toBe("+966551234567");
+  });
   it("checks an email's shape", () => {
     expect(emailOk("")).toBe(true);
     expect(emailOk("a@b.co")).toBe(true);

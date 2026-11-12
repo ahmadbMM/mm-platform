@@ -2033,5 +2033,8 @@
   "Show password": "パスワードを表示",
   "Hide password": "パスワードを隠す",
   "Confirm new password": "新しいパスワード（確認）",
-  "Passwords do not match.": "パスワードが一致しません。"
+  "Passwords do not match.": "パスワードが一致しません。",
+  "Next announcement": "次のお知らせ",
+  "Pause reviews": "レビューを一時停止",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "このご依頼はすでに受け付けています（受付番号：{0}）。2台目の自転車については、確認のお電話の際にスタッフにお伝えください。"
 }

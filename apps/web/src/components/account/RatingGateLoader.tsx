@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import RatingGate from "./RatingGate";
-import { RATE_QUIET } from "./quiet";
+import { RATE_QUIET, isQuiet } from "./quiet";
 import type { RatingForm as Form } from "@/lib/rating";
 
 // The post-ride rating on every page (the owner, 2026-10-03: "open whenever a customer opens the
@@ -24,7 +24,7 @@ const KEY = RATE_QUIET;
 const QUIET_MS = 10 * 60_000;
 
 async function check(locale: string): Promise<Pending | null> {
-  try { if (Number(sessionStorage.getItem(KEY) || 0) > Date.now()) return null; } catch { /* storage off: just ask */ }
+  if (isQuiet(KEY)) return null;
   try {
     const r = await fetch(`/api/account/pending-rating?locale=${encodeURIComponent(locale)}`, { cache: "no-store", credentials: "same-origin" });
     if (!r.ok) return null;

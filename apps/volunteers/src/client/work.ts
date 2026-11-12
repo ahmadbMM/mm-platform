@@ -43,22 +43,38 @@ type Pending = { key: string; fn: string; args: Record<string, unknown>; label: 
 const pending = new Map<string, Pending>();
 let retryTimer = 0;
 const isPending = (key: string) => pending.has(key);
+// Each mark is its session's: going Home and into another session keeps the first one's marks going out, and they
+// never count, close or hold up the page now open.
+const sessOf = (p: Pending) => String(p.args.p_session ?? "");
+const pendingIn = (id: string) => [...pending.values()].filter((p) => sessOf(p) === id);
+const dropSession = (id: string) => { for (const p of pendingIn(id)) pending.delete(p.key); };
 window.addEventListener("online", () => void flush());
 function armRetry(): void {
   window.clearTimeout(retryTimer);
   if (pending.size) retryTimer = window.setTimeout(() => void flush(), 15000);
 }
-async function flush(): Promise<void> {
+// One send-again at a time: the connection coming back and the retry timer could each start one, and a mark that landed
+// twice was counted twice.
+let flushing: Promise<void> | null = null;
+function flush(): Promise<void> {
+  return flushing ??= flushNow().finally(() => { flushing = null; });
+}
+async function flushNow(): Promise<void> {
   window.clearTimeout(retryTimer);
   for (const p of [...pending.values()]) {
+    if (pending.get(p.key) !== p) continue; // taken back, or its session's marks dropped, while the others went out
     const r = await rpc<Record<string, unknown>>(p.fn, p.args);
     if (!r.ok && unsent(r)) break; // still no way through: try again later
-    pending.delete(p.key);
+    if (pending.get(p.key) === p) pending.delete(p.key); // not a newer tap on the same row made while this one went out
     if (r.ok) p.ok(r.data);
     else {
       p.undo();
-      if (lost(r.code)) { pending.clear(); await load(); leaveWork(say(r)); return; }
-      if (work) { work.msg = `${t(p.label)}: ${say(r)}`; work.teamMsg = work.msg; }
+      if (lost(r.code)) {
+        dropSession(sessOf(p));
+        if (work?.id === sessOf(p)) { await load(); leaveWork(say(r)); return; }
+      }
+      // said on its own session's page only: on another one it read as that page's mark refused
+      if (work && work.id === sessOf(p)) { work.msg = `${t(p.label)}: ${say(r)}`; work.teamMsg = work.msg; }
     }
   }
   armRetry();
@@ -137,7 +153,9 @@ function armTick(): void {
   window.clearTimeout(timer);
   if (!work) return;
   const left = Date.parse(work.ent.closes_at) - Date.now();
-  timer = window.setTimeout(() => void tick(), Math.max(1000, Math.min(left + 500, 60000)));
+  // Past the cut-off by this phone's clock while the database still says the page is theirs (a phone clock set ahead):
+  // asked again every 15 seconds, not every second.
+  timer = window.setTimeout(() => void tick(), left > 0 ? Math.max(1000, Math.min(left + 500, 60000)) : 15000);
 }
 async function tick(): Promise<void> {
   if (!work) return;
@@ -156,7 +174,7 @@ async function tick(): Promise<void> {
 export function leaveWork(text: string, quiet = false): void {
   window.clearTimeout(timer);
   stopScan();
-  pending.clear();
+  if (work) dropSession(work.id);
   work = null;
   if (quiet) setQuiet(text); else setNote(text);
   go("#me");
@@ -262,11 +280,11 @@ async function doFinish(): Promise<void> {
   const w = work; if (!w) return;
   // Marks still "Not sent" go first: leaving the page forgets them, so a check-in the volunteer saw done never reached
   // the database. Ones that still cannot get through, or that the database refuses, are said before anything is left.
-  if (pending.size) {
+  if (pendingIn(w.id).length) {
     w.msg = "";
     await flush();
     if (work !== w) return; // the database said the page is no longer theirs
-    if (pending.size) w.msg = t("finishUnsent");
+    if (pendingIn(w.id).length) w.msg = t("finishUnsent");
     if (w.msg) { paint(); return; }
   }
   const r = await rpc("volunteer_clock_out", { p_session: w.id });
@@ -323,15 +341,19 @@ function paintScan(): void {
     let last = "", lastAt = 0;
     const tools = h("div", { class: "scan-tools", id: "w-scan-tools" },
       button(t("scanStop"), () => { stopScan(); paintScan(); }, "secondary", { id: "w-scan-stop" }, "close"));
-    scanBox = h("div", { class: "scan", id: "w-camera" }, video, h("span", { class: "scan-frame", "aria-hidden": "true" }), tools);
+    const box = scanBox = h("div", { class: "scan", id: "w-camera" }, video, h("span", { class: "scan-frame", "aria-hidden": "true" }), tools);
+    // Each start belongs to its own box: a Stop and a second Scan while the camera was still starting left the first
+    // stream running for good, and its late failure closed the scanner in use.
     void startScanner(video, (txt) => {
+      if (scanBox !== box) return;
       const now = Date.now();
       if (txt === last && now - lastAt < 2500) return;
       last = txt; lastAt = now;
       void scanned(txt);
-    }, () => { stopScan(); if (work) work.msg = t("scanNoCamera"); paintScan(); paint(); })
+    }, () => { if (scanBox !== box) return; stopScan(); if (work) work.msg = t("scanNoCamera"); paintScan(); paint(); })
       .then((sc) => {
-        if (!(work?.scanning && scanBox)) { sc.stop(); return; }
+        if (!(work?.scanning && scanBox === box)) { sc.stop(); return; }
+        if (scanner && scanner !== sc) scanner.stop();
         scanner = sc;
         // the torch, only where the camera says it has one
         if (sc.torch) {
@@ -539,7 +561,7 @@ async function mark(kind: "in" | "do", r: Booking, on: boolean): Promise<void> {
   await send({
     key: `${kind}:${r.id}`, fn, args: { p_session: w.id, p_entry_id: r.id, p_on: on }, label: kind === "in" ? (on ? "checkIn" : "undoCheckIn") : (on ? "markDonated" : "volUndoDonated"),
     ok: (data) => {
-      const c = work?.ent.counts;
+      const c = work === w ? w.ent.counts : null; // landed after another session was opened: not that page's count
       if (c && !(data && (data as { noop?: boolean }).noop) && was !== on) { if (kind === "in") c.in += on ? 1 : -1; else c.donated += on ? 1 : -1; }
       set(on);
     },
@@ -552,9 +574,13 @@ async function setRole(r: Booking, role: "donor" | "visitor"): Promise<void> {
   w.msg = "";
   await send({
     key: `role:${r.id}`, fn: "volunteer_blood_role", args: { p_session: w.id, p_entry_id: r.id, p_role: role }, label: to ? "makeVisitor" : "makeDonor",
-    ok: () => {
-      const c = work?.ent.counts;
-      if (c && c.visitors != null && was !== to) c.visitors += to ? 1 : -1;
+    ok: (data) => {
+      // What the database had before, when it says (the row shown may be stale: someone else switched the person);
+      // a switch that changed nothing is not counted.
+      const d = (data ?? {}) as { noop?: boolean; prev?: string | null };
+      const before = typeof d.prev === "string" ? d.prev === "visitor" : was;
+      const c = work === w ? w.ent.counts : null;
+      if (c && c.visitors != null && !d.noop && before !== to) c.visitors += to ? 1 : -1;
       each(r.id, (x) => { x.visitor = to; });
     },
     undo: () => each(r.id, (x) => { x.visitor = was; }),

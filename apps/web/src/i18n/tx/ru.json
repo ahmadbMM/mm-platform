@@ -2033,5 +2033,8 @@
   "Show password": "Показать пароль",
   "Hide password": "Скрыть пароль",
   "Confirm new password": "Повторите новый пароль",
-  "Passwords do not match.": "Пароли не совпадают."
+  "Passwords do not match.": "Пароли не совпадают.",
+  "Next announcement": "Следующее объявление",
+  "Pause reviews": "Приостановить отзывы",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "Эта заявка у нас уже есть: её номер {0}. О втором велосипеде скажите команде, когда вам позвонят для подтверждения."
 }

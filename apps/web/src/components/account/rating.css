@@ -26,9 +26,11 @@
 .rg-skip { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font: inherit; font-size: 13.5px; font-weight: 600; color: #2e352f; background: #fbf9f4; border: 1px solid rgba(0, 0, 0, .16); border-radius: 999px; min-height: 40px; padding: 0 14px; text-align: start; }
 .rg-skip.on { border-color: #077a4b; color: #077a4b; background: rgba(7, 122, 75, .08); }
 .rg-skip svg { flex: none; }
-/* the pop-up: centred over the page on every screen, never a bottom sheet */
+/* the pop-up: centred over the page on every screen, never a bottom sheet, and above every other layer of the site
+   (the booking sheet's pop-ups, .bk-backdrop, are at 10000): it marks the rest of the page inert, so nothing may stay
+   drawn over it */
 html.rg-lock, html.rg-lock body { overflow: hidden; }
-.rg-gate { position: fixed; inset: 0; z-index: 200; background: rgba(13, 16, 13, .6); overflow-y: auto; overscroll-behavior: contain; display: flex; padding: 24px 16px; box-sizing: border-box; }
+.rg-gate { position: fixed; inset: 0; z-index: 10050; background: rgba(13, 16, 13, .6); overflow-y: auto; overscroll-behavior: contain; display: flex; padding: 24px 16px; box-sizing: border-box; }
 .rg-box { margin: auto; width: 100%; max-width: 520px; box-sizing: border-box; background: #fff; color: #1a1919; border-radius: 22px; padding: 24px 20px 20px; box-shadow: 0 30px 80px rgba(0, 0, 0, .25); display: flex; flex-direction: column; gap: 10px; outline: none; }
 .rg-kicker { margin: 0; display: inline-flex; align-items: center; gap: 8px; color: #077a4b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; }
 html:is([lang="ar"], [lang="ur"]) .rg-kicker { letter-spacing: 0; font-size: 13px; }

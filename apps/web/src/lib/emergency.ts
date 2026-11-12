@@ -44,15 +44,13 @@ export function emPhone(cc: string, raw: string): string {
   const s = DIGITS(raw).replace(/[​-‏‪-‮⁦-⁩﻿]/g, "").replace(/[\s\-().]/g, "");
   if (!s) return "";
   const code = cc.replace(/\D/g, "") || "966";
-  if (s.startsWith("+")) {
-    let x = s.slice(1).replace(/\D/g, "");
-    if (x.startsWith(code + "0")) x = code + x.slice(code.length + 1);
-    return "+" + x;
-  }
+  // A number written with its code keeps that code; a trunk 0 right after the picked code goes (the app's intl()).
+  const intl = (x: string) => "+" + (x.startsWith(code + "0") ? code + x.slice(code.length + 1) : x);
+  if (s.startsWith("+")) return intl(s.slice(1).replace(/\D/g, ""));
   const d = s.replace(/\D/g, "");
   if (!d) return "";
-  if (d.startsWith("00")) return "+" + d.slice(2);
-  if (d.startsWith(code) && d.length >= 11 && d.length - code.length >= 8) return "+" + d;
+  if (d.startsWith("00")) return intl(d.slice(2));
+  if (d.startsWith(code) && d.length >= 11 && d.length - code.length >= 8) return intl(d);
   return "+" + code + (d.startsWith("0") ? d.slice(1) : d);
 }
 
@@ -129,9 +127,11 @@ export function dialOptions(locale: string): DialOption[] {
     try { names = new Intl.DisplayNames([intl], { type: "region" }); } catch { /* the English names stand */ }
   }
   const label = (iso: string, name: string) => (locale === "en" ? name : (locale === "ar" && COUNTRY_AR[name]) || names?.of(iso) || name);
-  const opt = ([code, iso, name]: readonly [string, string, string]) => ({ value: code, label: `${code} ${label(iso, name)}` });
-  const gulf = DIAL_CODES.slice(0, 6).map(opt);
-  const rest = [...DIAL_CODES.slice(6), DIAL_CODES[0]].map(opt);
-  try { rest.sort((a, b) => a.label.localeCompare(b.label, intl)); } catch { /* code order */ }
-  return [...gulf, ...rest];
+  const named = ([code, iso, name]: readonly [string, string, string]) => ({ code, name: label(iso, name) });
+  const opt = ({ code, name }: { code: string; name: string }) => ({ value: code, label: `${code} ${name}` });
+  const gulf = DIAL_CODES.slice(0, 6).map(named);
+  const rest = [...DIAL_CODES.slice(6), DIAL_CODES[0]].map(named);
+  // Sorted by the country's name, not the label (which begins with the code).
+  try { rest.sort((a, b) => a.name.localeCompare(b.name, intl)); } catch { /* code order */ }
+  return [...gulf, ...rest].map(opt);
 }

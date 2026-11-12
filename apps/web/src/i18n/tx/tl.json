@@ -2033,5 +2033,8 @@
   "Show password": "Ipakita ang password",
   "Hide password": "Itago ang password",
   "Confirm new password": "Kumpirmahin ang bagong password",
-  "Passwords do not match.": "Hindi magkatugma ang mga password."
+  "Passwords do not match.": "Hindi magkatugma ang mga password.",
+  "Next announcement": "Susunod na anunsyo",
+  "Pause reviews": "I-pause ang mga review",
+  "We already have this request: its reference is {0}. For a second bike, tell the team when they call to confirm.": "Natanggap na namin ang request na ito: ang reference nito ay {0}. Para sa ikalawang bisikleta, sabihin sa team kapag tumawag sila para kumpirmahin."
 }

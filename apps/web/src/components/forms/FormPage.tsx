@@ -17,6 +17,8 @@ export default async function FormPage({ locale, path, search, plain = false, ch
   if (learnFrame(content, previewing) === "alone") {
     const q = new URLSearchParams();
     for (const [k, v] of Object.entries(search)) for (const x of Array.isArray(v) ? v : v == null ? [] : [v]) q.append(k, x);
+    // the form's own page reads its language from ?lang (it never sees the site's cookie): the one the site resolved
+    if (!q.has("lang")) q.set("lang", locale);
     q.set("classic", "1");
     redirect(`${path}?${q}`);
   }

@@ -193,15 +193,20 @@ export function extraHours(): { id: number; on: string; hours: number }[] {
 
 // One certificate on its way at a time: a second tap on a slow phone issued a second one (a new serial and check code).
 let busy = false;
-// Each event's certificate, once asked for: Share needs its code, and asking again answers the same one anyway.
+// Each event's certificate, once asked for: Share needs its code, and asking again answers the same one anyway. Kept per
+// volunteer: on a phone people share, the next one to sign in never gets the last one's certificate.
 const certs = new Map<string, Cert>();
+const certKey = (session: string) => `${S.me?.id ?? ""}:${session}`;
+/** Forgets the certificates asked for so far (signing out, or someone else signing in). */
+export function resetCerts(): void { certs.clear(); busy = false; }
 async function issueFor(session: string, initiative: string): Promise<Cert | { err: string; code: string }> {
-  const have = certs.get(session);
+  const key = certKey(session);
+  const have = certs.get(key);
   if (have) return have;
   const r = await rpc<Cert>("volunteer_cert_issue_session", { p_session: session, p_initiative: initiative });
   if (!r.ok) return { err: say(r), code: r.code };
   if (!r.data || !r.data.ok) return { err: t("certEmpty"), code: "VOL_CERT_EMPTY" };
-  certs.set(session, r.data);
+  certs.set(key, r.data);
   return r.data;
 }
 /** Get certificate: the one made for the event (or made now), printed. The initiative is the event's English name

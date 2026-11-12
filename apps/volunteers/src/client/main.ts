@@ -11,16 +11,16 @@
 // a clear offline screen (static/sw.js).
 
 import { post } from "./api";
-import { viewCert, viewCheck } from "./certs";
+import { resetCerts, viewCert, viewCheck } from "./certs";
 import { append, clear, h, uid } from "./dom";
 import { viewHome } from "./home";
 import { currentLang, LANGS, setLang, startLang, t } from "./i18n";
 import { icon } from "./icons";
 import { watchInstall } from "./install";
 import { viewList, viewOpp } from "./opps";
-import { viewProfile } from "./profile";
+import { resetProfile, viewProfile } from "./profile";
 import { AFTER_KEY, BOOKING, go, load, markRead, onRender, refresh, route, S, say, SUPPORT } from "./state";
-import { button, link, note, submitBusy } from "./ui";
+import { button, closeAsk, link, note, submitBusy } from "./ui";
 import { forgetUpdates, viewUpdates } from "./updates";
 import { resetWork, stopScan, viewWork } from "./work";
 
@@ -77,7 +77,7 @@ function render(): void {
   if (r.name !== "work" || !S.me) stopScan(); // the camera is off everywhere but the work page
   if (r.name !== "updates" && lastRoute === "updates") forgetUpdates();
   // the owed-details pop-up belongs to Profile: leaving it (the browser's back too) closes it
-  if (r.name !== "profile" && r.name !== "apply") document.querySelector<HTMLDialogElement>("dialog.ask-owed")?.close();
+  if ((r.name !== "profile" && r.name !== "apply") || !S.me) closeAsk(document.querySelector<HTMLDialogElement>("dialog.ask-owed"));
   lastRoute = r.name;
   document.title = t("appName");
   clear(app);
@@ -182,6 +182,7 @@ async function signIn(who: string, pwd: string): Promise<void> {
   if (!r.ok) { signErr = say(r); render(); return; }
   signErr = ""; loginDraft = ""; showPwd = false;
   resetWork(); // whoever had this phone before: their work page is not this volunteer's
+  resetProfile(); resetCerts(); // nor their profile form or certificates
   await load();
   markRead();
   afterSignIn();
