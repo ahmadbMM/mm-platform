@@ -5061,7 +5061,7 @@ var MMAccount = (function () {
       var today = new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10);
       bookOpens = on ? whenText(on, bw && bw.at) : at ? whenText(today, at) : "";
       bookState = bookOpens ? "opens" : "closed"; paintBookState(); bwRead = null; loadRides(); $("#b-notice").scrollIntoView({ block: "center" });
-      // When that time comes (a few seconds after, Riyadh's), Book is pressed again: the database says whether it is open.
+      // When that time comes (a few seconds after, Riyadh's), Book can be pressed again: the database says whether it is open.
       var t = on || at ? Date.parse((on || today) + "T" + ((on ? bw && bw.at : at) || "00:00") + ":00+03:00") : NaN;
       clearTimeout(opensTimer);
       if (bookState === "opens" && !isNaN(t)) opensTimer = setTimeout(function () { if (bookState === "opens") { bookState = null; paintBookState(); } }, Math.min(Math.max(t - Date.now(), 0) + 5000, 2147483647));
