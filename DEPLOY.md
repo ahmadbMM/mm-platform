@@ -109,7 +109,7 @@ by one: Cloudflare's analytics beacon and Turnstile, and on the live ride map (`
 files at the pinned version `components/live/LiveMap.tsx` loads (a unit test fails when the two
 differ, so a new MapLibre version changes both). The registration forms send their own policy
 (`apps/web/src/forms/headers.ts`), which allows the one supabase-js file the Petromin page loads (the Dukan page,
-`forms/dukan` at `/dukan`, loads none).
+`forms/dukan` at `/dukan`, and the Petromin guests' page, `forms/petromin-invite` at `/petromin-invite`, load none).
 
 `script-src` keeps `'unsafe-inline'` on purpose: Next writes small inline scripts into every page,
 and a nonce - the usual way to allow them without it - must be new on every answer, while the
@@ -127,7 +127,7 @@ A kept copy would carry a nonce that no longer matches. Revisit it only together
   `NEXT_PUBLIC_CF_BEACON_TOKEN` and push, and the site adds it itself. Not both.
 - **Uptime**: point a monitor (UptimeRobot's free plan, 5-minute checks, alerts by email or app)
   at `https://micromobility.sa/api/health` (200 when the site can read the database, 503 when it
-  cannot), and at `/petromin` and `/dukan` on ride nights.
+  cannot), and at `/petromin`, `/dukan` and `/petromin-invite` on ride nights.
 - **CI** checks the site's pages in a browser before every deploy (`e2e/site`), and the live
   addresses after it ("The live site answers").
 

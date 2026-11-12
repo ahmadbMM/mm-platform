@@ -36,24 +36,26 @@ jobs:
       # Coming Soon tests then failed. Blank it for this step only.
       - run: pnpm --filter web test
         env: { NEXT_PUBLIC_SUPABASE_URL: "", NEXT_PUBLIC_SUPABASE_ANON_KEY: "", MM_ENV: "" }
-      # The registration forms (forms/community, forms/petromin, forms/dukan), the Saturday ride's page
+      # The registration forms (forms/community, forms/petromin, forms/dukan, forms/petromin-invite), the Saturday ride's page
       # (forms/saturday) and the lockers page (forms/lockers; npm packages of their own,
       # outside the pnpm workspace): the pages the website serves must be what their sources
       # build, and the forms are driven in a browser. Here, before the deploy, so a broken form
       # never reaches micromobility.sa.
       - name: Forms are built from their sources
-        run: (cd forms/community && npm run build) && (cd forms/petromin && npm run build) && (cd forms/dukan && npm run build) && (cd forms/saturday && npm run build) && (cd forms/lockers && npm run build) && git diff --exit-code
+        run: (cd forms/community && npm run build) && (cd forms/petromin && npm run build) && (cd forms/dukan && npm run build) && (cd forms/petromin-invite && npm run build) && (cd forms/saturday && npm run build) && (cd forms/lockers && npm run build) && git diff --exit-code
       - name: Form specs
         run: |
           npm ci --prefix forms/community --no-audit --no-fund
           npm ci --prefix forms/petromin --no-audit --no-fund
           npm ci --prefix forms/dukan --no-audit --no-fund
+          npm ci --prefix forms/petromin-invite --no-audit --no-fund
           npm ci --prefix forms/saturday --no-audit --no-fund
           npm ci --prefix forms/lockers --no-audit --no-fund
-          (cd forms/community && npx playwright install --with-deps chromium webkit) # webkit: the Petromin and Dukan forms' iPhone specs
+          (cd forms/community && npx playwright install --with-deps chromium webkit) # webkit: the Petromin, Dukan and Petromin guests' forms' iPhone specs
           (cd forms/community && npm run e2e)
           (cd forms/petromin && npm run e2e)
           (cd forms/dukan && npm run e2e)
+          (cd forms/petromin-invite && npm run e2e)
           (cd forms/saturday && npm run e2e)
           (cd forms/lockers && npm run e2e)
       # Staging: the forms' built pages name production's project; point them at staging's, after
@@ -77,7 +79,7 @@ jobs:
       # The registration forms on their pages of the website (app/[locale]/<address>): the same specs as on the forms' own
       # pages (forms/<name>/playwright.site.config.ts), against the website built above.
       - name: Form specs on the website's pages
-        run: (cd forms/community && npm run e2e:site) && (cd forms/petromin && npm run e2e:site) && (cd forms/dukan && npm run e2e:site) && (cd forms/saturday && npm run e2e:site) && (cd forms/lockers && npm run e2e:site)
+        run: (cd forms/community && npm run e2e:site) && (cd forms/petromin && npm run e2e:site) && (cd forms/dukan && npm run e2e:site) && (cd forms/petromin-invite && npm run e2e:site) && (cd forms/saturday && npm run e2e:site) && (cd forms/lockers && npm run e2e:site)
       # The production deploy below needs CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
       # Without them wrangler-action runs with empty values and fails, turning a push red for
       # a step that was never going to work, so check once and skip instead.
@@ -130,7 +132,7 @@ jobs:
         run: |
           sleep 20
           fail=0
-          for u in / /api/health /petromin /dukan /community/registration /saturday /lockers /bikes/1 /robots.txt; do
+          for u in / /api/health /petromin /dukan /petromin-invite /community/registration /saturday /lockers /bikes/1 /robots.txt; do
             code=$(curl -s -o /dev/null -w '%{http_code}' --retry 3 --retry-delay 10 --retry-all-errors "https://micromobility.sa$u")
             echo "$u $code"
             if [ "$u" = /bikes/1 ]; then [ "$code" = 200 ] || [ "$code" = 404 ] || fail=1; else [ "$code" = 200 ] || fail=1; fi
