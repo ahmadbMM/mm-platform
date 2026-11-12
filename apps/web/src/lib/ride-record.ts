@@ -53,6 +53,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   volunteer: ["hand", "volunteer"], // Volunteer: a raised hand on its own blue special medal, given by staff (2026-11-05)
   // the hours ladder's levels: the database gives each with the volunteer's hours (the booking app, 2026-11-06 review, VL14)
   volunteer_10: ["hand", "teal"], volunteer_25: ["hand", "purple"], volunteer_50: ["hand", "gold"], volunteer_100: ["hand", "blue"],
+  talent_scout: ["pass", "gold"], // Talent Scout: a team pass on its lanyard, on the gold medal, given by staff (2026-11-12)
   // Recruiter (the booking app, 2026-11-08): friends who made an account with the rider's invite and finished a paid ride
   recruiter: ["people", "green"], recruiter_3: ["people", "teal"], recruiter_5: ["people", "purple"], recruiter_10: ["people", "gold"],
   // the staff ladders' higher levels and Front Row's (the booking app, 2026-10-12)
@@ -76,6 +77,10 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_cours
   "champion", "hat_trick", "grand_champion", "dynasty", "world_champion",
   "spirit", "fair_play", "heart_of_race", "ride_ambassador", "soul_of_ride", "t100", "t50", "t25",
   "bike_owner", "road_owner", "carbon_owner", "volunteer", "volunteer_10", "volunteer_25", "volunteer_50", "volunteer_100"];
+/** Badges staff give that a rider sees only once they hold one (BDG_HELD_ONLY): never greyed under Badges to earn,
+ *  never offered to request (the booking app, 2026-11-12: Talent Scout, for helping hire a Micromobilian,
+ *  "only visible for its holders"). */
+export const HELD_ONLY = new Set(["talent_scout"]);
 
 /** Badge ladders (the booking app's BDG_LADDERS, 2026-10-09: "the same way it's done in clash of clans
  *  achievements"): badges that count the same thing to a higher number are the levels of one badge,
@@ -432,7 +437,7 @@ export function badgeList(rows: RecordRow[], sessions: Map<string, RecordSession
     if (!(r.gv && g)) given.delete(r.s); // a Marshal level staff gave stays among the given ones, sorted first
     return { x: item(r.s, r.on || !!g, { p: r.p ?? null, given: g ? { note: g.note ?? null, at: g.at ?? null } : null, season: r.season ?? null, row: g ?? r.row ?? null }), hide: !!r.hide && !r.on && !g };
   });
-  const manual = (cat ? [...cat.values()].filter((b) => !b.auto).map((b) => b.slug) : GIVEN_SYS).map((s) => ({ x: item(s, false, { manual: true }), hide: false }));
+  const manual = (cat ? [...cat.values()].filter((b) => !b.auto && !HELD_ONLY.has(b.slug)).map((b) => b.slug) : GIVEN_SYS).map((s) => ({ x: item(s, false, { manual: true }), hide: false }));
   const staffGiven = [...given.values()].map((g) => ({ x: item(g.slug, true, { given: { note: g.note ?? null, at: g.at ?? null }, row: g }), hide: false }));
   const seen = new Set<string>(), out: BadgeItem[] = [];
   for (const { x, hide } of [...staffGiven, ...ride, ...manual]) {

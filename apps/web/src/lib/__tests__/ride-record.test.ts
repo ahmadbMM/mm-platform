@@ -78,6 +78,14 @@ describe("the badges", () => {
     expect(L[0]).toMatchObject({ slug: "champion", on: true, given: { note: "Won the hill climb", at: "2026-09-30T18:00:00Z" } });
     expect(L.filter((x) => x.slug === "champion")).toHaveLength(1);
   });
+  it("show Talent Scout only to a rider who holds it: never greyed to earn (the booking app, 2026-11-12)", () => {
+    const cat = [{ slug: "first_lap", auto: true }, { slug: "volunteer", auto: false }, { slug: "talent_scout", icon: "pass", color: "gold", auto: false }];
+    expect(list({ ...empty, catalog: cat }).map((x) => x.slug)).toEqual(["first_lap", "front_row", "streak", "volunteer"]); // Volunteer, given by staff too, still shows to earn
+    const held = list({ ...empty, catalog: cat, mine: [{ slug: "talent_scout", note: null, at: "2026-09-30T18:00:00Z" }] });
+    expect(held[0]).toMatchObject({ slug: "talent_scout", on: true, icon: "pass", color: "gold" });
+    expect(GLYPH.pass).toBeTruthy();
+    expect(RECORD.en.names.talent_scout[2]).toContain("Micromobilian");
+  });
   it("leave out a badge the catalogue no longer lists, unless the rider holds it", () => {
     const cat = [{ slug: "first_lap" }, { slug: "regular" }];
     expect(list({ ...empty, catalog: cat }).map((x) => x.slug)).toEqual(["first_lap", "front_row", "streak"]);
