@@ -62,8 +62,9 @@ export async function GET(req: Request) {
   const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
   const t = serverLocalize(TICKET, locale);
   const clock = (x: string) => fmtClock(x, locale);
-  // the time as the ticket writes it: "gathering - start" on a ride that gathers, else a window
-  const time = timesText(s.times, s.gathers, clock, { gather: S(d.gather), start: S(d.start) });
+  // the time as the ticket writes it: "gathering - start" on a ride that gathers (the Farm House Night's arrival and dinner,
+  // 2026-11-13), else a window
+  const time = timesText(s.times, s.gathers, clock, s.kind === "farm" ? { gather: t.fhArrive, start: t.fhDinner } : { gather: S(d.gather), start: S(d.start) });
   const kind = waiverKind(s); // Run for Her, with no bike, is agreed under the activity waiver (_waiverKind)
   const bw = kind === "blood" ? bloodWords(tx) : null;
   // a visitor has an agreement of their own (blood_role, rentals 20261105140000): the role is the first unsigned row's,

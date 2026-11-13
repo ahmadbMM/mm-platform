@@ -137,6 +137,9 @@ export const experiencesSchema = {
         // Yoga (ride_kind 'yoga', 2026-11-12): Hatha Yoga for Cyclists with Jassim Alsaady, a date among the community rides
         // in its own "Sunset Hatha" look (the booking app's evYogaName)
         txt("yogaName", 50, "Name: yoga", "الاسم: اليوغا", "Hatha Yoga for Cyclists", "هاثا يوغا لراكبي الدراجات"),
+        // The Farm House Night (ride_kind 'farm', 2026-11-13): an evening at a farm for members and their families, a date
+        // among the community rides in its own "Harvest Supper" look (the booking app's evFarmName)
+        txt("farmName", 50, "Name: Farm House Night", "الاسم: ليلة المزرعة", "Farm House Night", "ليلة المزرعة"),
         // What each kind of date is, in its Details on Experiences and in the booking app (2026-10-05,
         // lib/event-info.ts): the National Day ride and the events say their card's About instead.
         // aboutPetro is a Petromin night's, which this site shows since 2026-10-12 (Petromin Days).
@@ -154,6 +157,9 @@ export const experiencesSchema = {
         // yoga's (the booking app's infoDtYoga, which it reads from here as experiences.dates.aboutYoga): who leads it, what
         // it is, its start and end, the level and what to bring
         { ...long("aboutYoga", 600, "Details: yoga", "التفاصيل: اليوغا", "Ninety minutes of Hatha Yoga made for cyclists, with Jassim Alsaady: mindful movement, deep stretching, gentle strengthening and breathwork for the hips, lower back and legs that riding leaves tight. A time to slow down, feel grounded and recover with the community. {start} to {end}. All levels welcome, no experience needed. Bring your yoga mat and wear comfortable clothing. Free for community members; places are limited.", "تسعون دقيقة من هاثا يوغا مصممة لراكبي الدراجات مع جاسم الساعدي: حركة واعية وإطالة عميقة وتقوية لطيفة وتمارين تنفّس للوركين وأسفل الظهر والساقين التي يشدّها ركوب الدراجة. وقت لتهدأ وتستعيد توازنك وتتعافى مع المجتمع. من {start} إلى {end}. لجميع المستويات، ولا تلزم خبرة سابقة. أحضر سجادة اليوغا وارتدِ ملابس مريحة. مجانية لأعضاء المجتمع، والأماكن محدودة."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
+        // the Farm House Night's (the booking app's infoDtFarm, which it reads from here as experiences.dates.aboutFarm): who
+        // it is for, when to arrive ({gather}) and when dinner is ({start}), the family on the booking, staff's confirmation
+        { ...long("aboutFarm", 420, "Details: Farm House Night", "التفاصيل: ليلة المزرعة", "An evening at the farm for community members and their families. Arrive from {gather}, enjoy the farm with the community, and stay for dinner at {start}. Add each family member to your booking by name. Our team confirms every request, as for the Saturday ride.", "أمسية في المزرعة لأعضاء المجتمع وعائلاتهم. الوصول من {gather}، استمتع بالمزرعة مع المجتمع، وابقَ لتناول العشاء في {start}. أضف كل فرد من عائلتك إلى حجزك باسمه. يؤكّد فريقنا كل طلب، كما في جولة السبت."), hint: bi("{gather}, {start}, {end} and {collect} are filled from each date.", "تُملأ {gather} و{start} و{end} و{collect} من كل موعد.") },
         txt("members", 30, "Tag: members only", "الوسم: للأعضاء فقط", "Members", "للأعضاء"),
         txt("everyone", 30, "Tag: open to everyone", "الوسم: للجميع", "Open to everyone", "للجميع"),
         txt("perSeat", 40, "Event: price per seat ({price})", "الفعالية: سعر المقعد ({price})", "{price} per seat", "{price} للمقعد"),

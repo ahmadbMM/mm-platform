@@ -17,7 +17,7 @@ import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { typeOffered } from "@/lib/bike-kinds";
 import { dateText, eventCards, featuredDates, infoArena, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, nextOpen, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { bizOf, faresOf } from "@/lib/biz";
-import { kindNames, loadRides, oneTime, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
+import { kindNames, loadRides, oneTime, sessionName, timesText, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
@@ -51,7 +51,11 @@ import { kindMarks, sunriseHhmm } from "@/lib/kind-theme";
 // (content/blood-words.ts, blood-info.json) and go into the page only with that card; its last step hands over to the
 // booking app (?ev=blood), which has the donor step. Yoga (2026-11-12; lib/yoga.ts) is a date inside the community card,
 // on its own "Sunset Hatha" card: the mark, its name, when, how long and where, and who leads it; its Details say who
-// leads it, how long, the level and what to bring. Featured (2026-11-13; lib/rides.ts featuredOf): a date inside
+// leads it, how long, the level and what to bring. The Farm House Night (2026-11-13; lib/farm.ts) is a date inside the
+// community card too, on its own "Harvest Supper" card: the mark, its name, its arrival and dinner, where, and who it is
+// for (members and their families); its Details say who comes, when to arrive and when dinner is, with the farm's map; it
+// is booked in the booking app, which takes the member's family by name, and its places are staff's to approve, as on the
+// Saturday ride, so its card never says how many are left. Featured (2026-11-13; lib/rides.ts featuredOf): a date inside
 // MicroMobility Experiences that staff feature, or a special event as it is made, leads its event's dates under
 // "Featured" and has a card above the event cards (lib/event-info.ts featuredDates), which opens it as its event card
 // and then its date would.
@@ -210,7 +214,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
   const dateTexts: DateTexts = {
-    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga),
+    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga), aboutFarm: S(d.aboutFarm),
     sndAbout: S(e.sndAbout), evAbout: S(e.evAbout),
   };
   const whoWords = {
@@ -219,6 +223,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     vlap: tx("Community members and Victory Lap athletes, 16 and over", "أعضاء المجتمع ورياضيو فيكتوري لاب، من 16 عامًا فأكثر"), // the booking app's infoWhoVlap (2026-10-17)
     arena: tx("Community members, in teams of two", "أعضاء المجتمع، في فرق من شخصين"), // the booking app's infoWhoArena (2026-10-28)
     arenaAll: tx("Everyone, in teams of two. You must have a partner.", "الجميع، في فرق من شخصين. يجب أن يكون لديك شريك."), // infoWhoArenaAll (2026-11-02)
+    farm: tx("Community members and their families", "أعضاء المجتمع وعائلاتهم"), // the Farm House Night (the booking app's fhWho, 2026-11-13)
   };
   // Victory Lap's races and divisions, in the booking app's words (vlRace_*, vlDiv_*)
   const vlWords = {
@@ -266,6 +271,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     levelK: tx("Level", "المستوى"), levelV: tx("All levels, no yoga experience needed", "جميع المستويات، ولا تلزم خبرة سابقة في اليوغا"),
     bringK: tx("Bring", "أحضر معك"), bringV: tx("Your yoga mat, and wear comfortable clothing", "سجادة اليوغا الخاصة بك، وارتدِ ملابس مريحة"),
   };
+  // The Farm House Night (2026-11-13), in the booking app's words (fhArrive, fhDinner, fhFamLine): its two times, arrival
+  // and dinner, where a ride that gathers says Gathering and Start, and its card's foot line
+  const fhWords = { arrive: tx("Arrival", "الوصول"), dinner: tx("Dinner", "العشاء"), line: tx("Members and their families", "للأعضاء وعائلاتهم") };
   // The Saturday ride's sunrise over the Corniche that day, in the page's clock (lib/kind-theme.ts), and its two routes'
   // words; null on any other kind.
   const sunrise = (s: RideSession) => (s.kind === "saturday" ? ((v) => (v ? clock(v) : null))(sunriseHhmm(s.date)) : null);
@@ -305,6 +313,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       ...(s.kind === "defe5k" ? { defe: { meta: [s.times ? clock(s.times[0]) : "", fillAt(kmWord, 5), place.name].filter(Boolean), cause: defeWords.cause } } : {}),
       // yoga's own card (the booking app's _ygSessCard, 2026-11-12): its start and end, how long, where, and who leads it
       ...(s.kind === "yoga" ? { yoga: { meta: [s.times ? (oneTime(s.times) ? clock(s.times[0]) : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "", yogaLength(s.times, ygWords.min), place.name].filter(Boolean), with: ygWords.with } } : {}),
+      // the Farm House Night's own card (the booking app's _fhSessCard, 2026-11-13): arrival and dinner, where, and who it is
+      // for along the foot; and the words its two times are said with wherever its time shows
+      ...(s.kind === "farm" ? { farm: { meta: [timesText(s.times, true, clock, { gather: fhWords.arrive, start: fhWords.dinner }), place.name].filter(Boolean), line: fhWords.line, arrive: fhWords.arrive, dinner: fhWords.dinner } } : {}),
       // a featured date (the booking app's _featCardHtml, 2026-11-13): its day as its Featured card's tile, and how long
       // yoga runs, which that card says after its time
       ...(s.featured ? { feat: { ...fmtDayTile(s.date, locale), len: s.kind === "yoga" ? yogaLength(s.times, ygWords.min) || null : null } } : {}),

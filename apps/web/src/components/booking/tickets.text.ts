@@ -16,7 +16,8 @@
 // vlWaitPartner, vlNoPartner, vlPairWait, vlShirtLabel, vlT5Short, vlT5_*, vlEdBtn, and the ticket question vt*
 // (the divisions are Kamin Sports' names, lib/vlap.ts vlDivName). The DEFE 5KM Run (2026-10-18): runnerNumber,
 // and defeKit*, defeRace*, defeReg*, the booking app's own keys. Yoga (2026-11-12): ygLead*, ygLevel*, ygBring*, the booking
-// app's own keys. Men only, women only or mixed (2026-10-27):
+// app's own keys. The Farm House Night (2026-11-13): fhArrive, fhDinner, the booking app's own keys. Men only, women only
+// or mixed (2026-10-27):
 // sgMale, sgFemale, sgMixed, the booking app's own keys. Arena Heros (2026-10-28): athleteNumber, vlRaces wd/md,
 // vlTeamCode, vlWithPartner and vlPairWait as on Victory Lap, and the site's own ahTeamCode and ahHeat.
 // My Bookings after the research round (2026-11-10): qrLabel ticketQrLabel · details infoDetails · share tcShare ·
@@ -124,6 +125,9 @@ export const T = {
     ygLevelV: "All levels, no yoga experience needed",
     ygBringK: "Bring",
     ygBringV: "Your yoga mat, and wear comfortable clothing",
+    // the Farm House Night (2026-11-13): its two times, arrival then dinner (the booking app's fhArrive, fhDinner)
+    fhArrive: "Arrival",
+    fhDinner: "Dinner",
     yes: "Yes",
     no: "No",
     change: "Change",
@@ -289,6 +293,8 @@ export const T = {
     ygLevelV: "جميع المستويات، ولا تلزم خبرة سابقة في اليوغا",
     ygBringK: "أحضر معك",
     ygBringV: "سجادة اليوغا الخاصة بك، وارتدِ ملابس مريحة",
+    fhArrive: "الوصول",
+    fhDinner: "العشاء",
     yes: "نعم",
     no: "لا",
     change: "تغيير",

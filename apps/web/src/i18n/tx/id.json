@@ -1691,5 +1691,11 @@
   "Thinking": "Berpikir",
   "Fully booked": "Penuh",
   "See you next Saturday": "Sampai jumpa Sabtu depan",
-  "See you at the next session": "Sampai jumpa di sesi berikutnya"
+  "See you at the next session": "Sampai jumpa di sesi berikutnya",
+  "Farm House Night": "Malam Farm House",
+  "Arrival": "Kedatangan",
+  "Dinner": "Makan malam",
+  "Members and their families": "Anggota dan keluarganya",
+  "Community members and their families": "Anggota komunitas dan keluarganya",
+  "An evening at the farm for community members and their families. Arrive from {gather}, enjoy the farm with the community, and stay for dinner at {start}. Add each family member to your booking by name. Our team confirms every request, as for the Saturday ride.": "Malam di peternakan untuk anggota komunitas dan keluarganya. Datanglah mulai pukul {gather}, nikmati suasana peternakan bersama komunitas, dan tetaplah untuk makan malam pukul {start}. Tambahkan setiap anggota keluarga ke pemesanan Anda beserta namanya. Tim kami mengonfirmasi setiap permintaan, seperti pada Gowes Santai Sabtu."
 }

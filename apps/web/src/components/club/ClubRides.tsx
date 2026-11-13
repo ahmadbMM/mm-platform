@@ -22,6 +22,7 @@ const KIND: Record<string, { en: string; ar: string }> = {
   defe5k: phrase("DEFE 5KM Run", "سباق دفء 5 كم"), // the DEFE 5KM Run (2026-10-18): one start time, said as it is
   arena: phrase("Arena Heros Hybrid Race", "سباق أرينا هيروز الهجين"), // Arena Heros (2026-10-28): a race in teams of 2, its window as it is
   yoga: phrase("Hatha Yoga for Cyclists", "هاثا يوغا لراكبي الدراجات"), // yoga (2026-11-12): a start and an end, as the pool
+  farm: phrase("Farm House Night", "ليلة المزرعة"), // the Farm House Night (2026-11-13): its arrival, then dinner
 };
 
 export default function ClubRides(p: Props) {
@@ -34,7 +35,8 @@ export default function ClubRides(p: Props) {
   }, []);
   if (rides === null) return <div className="club-rides-grid" aria-busy="true" />;
   // As /experiences names and times them: a title that is only the kind's English name reads in
-  // the page's language, and a ride that gathers says when to gather and when it starts.
+  // the page's language, and a ride that gathers says when to gather and when it starts (the Farm House Night when to
+  // arrive and when dinner is, as the booking app's sessionTime says them).
   const nameOf = (r: Ride) => {
     const k = r.kind && KIND[r.kind] ? KIND[r.kind] : null;
     if (r.title && !(k && r.title.trim().toLowerCase() === k.en.toLowerCase())) return r.title;
@@ -43,6 +45,7 @@ export default function ClubRides(p: Props) {
   const whenOf = (r: Ride) => {
     const m = /^(\d{1,2}:\d{2})\s*[-–]\s*(\d{1,2}:\d{2})$/.exec(String(r.time || "").trim());
     if (!m) return r.time ? <bdi dir="ltr">{r.time}</bdi> : null;
+    if (r.kind === "farm") return <>{tx("Arrival", "الوصول")} <bdi dir="ltr">{m[1]}</bdi> · {tx("Dinner", "العشاء")} <bdi dir="ltr">{m[2]}</bdi></>;
     return r.kind === "saturday" || r.kind === "snd96" || r.kind === "runher" || r.kind === "vlap"
       ? <>{tx("Gathering", "التجمع")} <bdi dir="ltr">{m[1]}</bdi> · {tx("Start", "الانطلاق")} <bdi dir="ltr">{m[2]}</bdi></>
       : <bdi dir="ltr">{m[1]} – {m[2]}</bdi>;

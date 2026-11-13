@@ -5,8 +5,9 @@
 // tested: the page puts the words together (app/[locale]/experiences/page.tsx) and ExperienceSteps.tsx draws them.
 
 /** The kinds in the order the card's marks and the list's switch name them (the booking app's COMM_MARKS): the
- *  Saturday ride, the pool, Petromin, yoga, the DEFE run; any other kind after them, as it comes. */
-export const KIND_ORDER = ["saturday", "swim", "petromin", "yoga", "defe5k"] as const;
+ *  Saturday ride, the pool, Petromin, yoga, the Farm House Night (2026-11-13), the DEFE run; any other kind after them,
+ *  as it comes. */
+export const KIND_ORDER = ["saturday", "swim", "petromin", "yoga", "farm", "defe5k"] as const;
 
 /** The kinds that have a drawing of their own (the booking app's KIND_ART): the Saturday ride's dawn, the pool's water,
  *  a Petromin night's stripes, across the top of a date's Details and as the motif along its row's foot. */

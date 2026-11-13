@@ -240,7 +240,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
    "Featured" heads one card for each: the day as a calendar leaf under a band of the kind's colour (--ev, booking.css),
    the name, when, where and the price word. The heading wears a star on a neon disc: neon as a fill with ink on it,
    never neon text on the page's white. Yoga's card keeps its own cream, clay and low sun (the --yg-* tokens,
-   booking.css). In an event's dates the same heading leads the featured ones and "Upcoming" the rest (.xs-sec-h). */
+   booking.css), and the Farm House Night's its rust tile, peach name and fan of feathers (the --fh-* tokens). In an event's dates the same heading leads the featured ones and "Upcoming" the rest (.xs-sec-h). */
 .xs-feat { margin: 0 0 34px; }
 .xs .xs-feat-h, .xs-sec-h { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 700; letter-spacing: 0; line-height: 1.3; color: var(--mm-black); text-align: start; }
 .xs .xs-feat-h { margin-bottom: 14px; font-size: 20px; }
@@ -292,6 +292,24 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs-feat-yg .xs-feat-mi > span::before { background: rgba(180, 83, 47, .35); }
 .xs-feat-yg .xs-feat-with { font-weight: 700; color: var(--yg-sage-ink); }
 .xs-feat-yg .xs-feat-go { color: var(--yg-clay); }
+/* the Farm House Night's card (the booking app's .feat-fh): the venue's rust tile deepening to the far corner (mirrored where
+   the page reads from the right), the fan of feathers there, the day on cream under a rust band, the name in peach, the
+   rest in cream, who it is for in light peach */
+.xs-feat-card.xs-feat-fh { color: var(--fh-milk); border-color: rgba(110, 44, 28, .55);
+  background: linear-gradient(135deg, var(--fh-rust-lt) 0%, var(--fh-rust) 50%, var(--fh-rust-dk) 100%); }
+[dir="rtl"] .xs-feat-card.xs-feat-fh { background: linear-gradient(225deg, var(--fh-rust-lt) 0%, var(--fh-rust) 50%, var(--fh-rust-dk) 100%); }
+.xs-feat-card.xs-feat-fh:hover { filter: brightness(1.04); border-color: rgba(110, 44, 28, .55); box-shadow: 0 0 14px rgba(138, 63, 39, .18); }
+.xs-feat-card.xs-feat-fh:focus-visible { outline: 2px solid var(--fh-rust); }
+.xs-feat-fh .xs-feat-day { background: var(--fh-cream); box-shadow: inset 0 0 0 1px rgba(110, 44, 28, .3); }
+.xs-feat-fh .xs-feat-day b { color: var(--fh-ink); }
+.xs-feat-fh .xs-feat-day span { color: var(--fh-ink-2); }
+.xs-feat-fh .xs-feat-day .xs-feat-wd { color: var(--mm-white); background: var(--fh-rust); }
+.xs-feat-fh .sc-dw { color: var(--fh-peach); }
+.xs-feat-fh .xs-feat-name.sc-fh-title { font-size: 19px; }
+.xs-feat-fh .xs-feat-meta { color: var(--fh-milk); }
+.xs-feat-fh .xs-feat-mi > span::before { background: rgba(243, 199, 169, .5); }
+.xs-feat-fh .xs-feat-with { font-weight: 700; color: var(--fh-peach-lt); }
+.xs-feat-fh .xs-feat-go { color: var(--fh-peach); }
 @media (max-width: 767px) {
   .xs-feat { margin-bottom: 28px; }
   /* a phone with two or more: one row that scrolls sideways out to the screen's edges (.xp-wrap's 20px), the next card
@@ -305,6 +323,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
   .xs-feat-day { min-width: 50px; }
   .xs-feat-day b { font-size: 20px; }
   .xs-feat-yg .xs-feat-name.sc-yg-title { font-size: 18px; }
+  .xs-feat-fh .xs-feat-name.sc-fh-title { font-size: 17px; }
 }
 
 /* A phone names only the step it is on; the others keep their names for screen readers. */
@@ -354,6 +373,24 @@ html:is([lang="ar"], [lang="ur"]) .xs-summary .xs-yg-name { font-family: var(--c
 .xs-info.ev-yoga .xs-info-go { background: var(--yg-clay); border-color: var(--yg-clay); color: #fff; }
 .xs-info.ev-yoga .xs-info-go:hover { background: var(--yg-clay-dk); border-color: var(--yg-clay-dk); }
 .xs-info.ev-yoga .xs-info-btns button:focus-visible { outline-color: rgba(180, 83, 47, .45); }
+/* The Farm House Night (2026-11-13, the booking app's flow head .fh-flow-*): its summary's head is the venue's rust plate,
+   the mark, its name in Rubik 800 peach, when in cream and who it is for under it; its button and its Details' link and
+   button in rust */
+.xs-sum-head.xs-fh-head { padding: 14px 16px; border-radius: 12px; color: var(--fh-milk);
+  background: linear-gradient(135deg, var(--fh-rust-lt) 0%, var(--fh-rust) 50%, var(--fh-rust-dk) 100%);
+  border: 1px solid rgba(110, 44, 28, .55); border-inline-start: 3px solid var(--fh-peach); }
+[dir="rtl"] .xs-sum-head.xs-fh-head { background: linear-gradient(225deg, var(--fh-rust-lt) 0%, var(--fh-rust) 50%, var(--fh-rust-dk) 100%); }
+.xs-fh-head > div { min-width: 0; }
+.xs-logo.xs-farm-logo img { height: 36px; width: auto; }
+.xs-summary .xs-fh-name { font-family: var(--cs-font-fh), var(--cs-font-ar), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", sans-serif; font-size: 19px; font-weight: 800; letter-spacing: 0; line-height: 1.2; color: var(--fh-peach); overflow-wrap: anywhere; }
+.xs-fh-head span { color: var(--fh-milk); }
+.xs-fh-head .xs-fh-sub { display: block; margin-top: 3px; font-size: 12.5px; font-weight: 700; color: var(--fh-milk); }
+.xs .xs-go.ev-farm { background: var(--fh-rust); color: #fff; }
+.xs .xs-go.ev-farm:hover { background: var(--fh-rust-dk); }
+.xs .xs-info.ev-farm .xs-info-facts a { color: var(--fh-rust); }
+.xs-info.ev-farm .xs-info-go { background: var(--fh-rust); border-color: var(--fh-rust); color: #fff; }
+.xs-info.ev-farm .xs-info-go:hover { background: var(--fh-rust-dk); border-color: var(--fh-rust-dk); }
+.xs-info.ev-farm .xs-info-btns button:focus-visible { outline-color: rgba(138, 63, 39, .45); }
 .xs-about.ab-petromin { color: #d6202a; } /* Petromin Days: Petromin's red, as on its date cards (2026-10-12) */
 .xs-about.ab-blood { color: #0b1f16; } /* the donation event: its crimson, where every plain card has its link (2026-11-03) */
 .xs-about.ab-vlap { color: #0d0d0d; max-width: calc(100% - 100px); inset-inline-start: 25px; } /* Victory Lap: clear of the flag, under its words (the card's edge and .xs-vl-main's padding) */

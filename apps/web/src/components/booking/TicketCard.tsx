@@ -18,6 +18,7 @@ import { AH_BANK, vlBankWords, vlTicketAmount, vlTicketView } from "@/lib/vl-tic
 import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { YOGA_MARK, YOGA_MARK_SIZE, yogaKnow } from "@/lib/yoga";
+import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
 import { genderChip } from "@/lib/session-gender";
 import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, type OwnLocker, bookingRef, breakfastFor, cdLine, codeReady, qrTone, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk, BOOTH_APPLE, BOOTH_DIR, todayCode } from "@/lib/tickets";
 import { TickIcon } from "@/components/site/Icons";
@@ -65,6 +66,12 @@ import { gpxFileName, type RoutePage } from "@/lib/route-track";
 // with the low sun's glow along its foot, the mark as its logo, its number in Marcellus, clay where the night ticket is
 // neon; who leads it, the level and what to bring while it is ahead; a free place says Free for its total, never a price of
 // 0 for each participant. Its wallet pass is offered as the pool's is (the booking app's passes know yoga).
+// A Farm House Night ticket (2026-11-13; lib/farm.ts) wears the booking app's "Harvest Supper" look (its th-farm): cream in
+// every state with the feathers' glow along its foot, the mark as its logo, its name in Rubik 800 rust where the night
+// ticket is neon; its two times are Arrival and Dinner, never Gathering and Start, and no "Gathering at" line under the
+// place; it lists the member and their family by name under Participants and says Free for its total, as any ride staff
+// approve. Unlike the Saturday ride it keeps Edit (and Reschedule), as the booking app's ticket does, so the member adds
+// or drops family members there. Its wallet pass is offered as the pool's is (the booking app's passes know the farm).
 export type TicketText = (typeof T)["en"];
 type Props = {
   locale: string;
@@ -200,6 +207,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const arena = s?.kind === "arena"; // Arena Heros: an athlete's number, the race, division and team, payment announced later
   const yoga = s?.kind === "yoga"; // yoga: its mark, who leads it, the level and what to bring (2026-11-12)
   const ygFree = yoga && !!s?.free; // a free yoga place says Free, never a price of 0 (the booking app's _ygFree)
+  const farm = s?.kind === "farm"; // the Farm House Night: its mark, Arrival and Dinner, Edit for the family (2026-11-13)
   // The Blood Donation event, by its id on a session that did not load: a donor's number, no price anywhere (2026-11-03)
   const donor = s ? s.kind === "blood" : isBloodId(primary.sessionId);
   const bw = donor ? blood?.words ?? null : null;
@@ -249,12 +257,13 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const fmtShort = (iso: string) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const clock = (x: string) => fmtClock(x, locale);
   // a session with a start time alone (the DEFE 5KM Run's 7 PM) says it once
-  const when = timesText(s?.times, !!s?.gathers, clock, { gather, start });
+  const when = timesText(s?.times, !!s?.gathers, clock, farm ? { gather: t.fhArrive, start: t.fhDinner } : { gather, start });
   // the waitlist collects later (wlCollectTime: the session's own time, or a circuit night's 15 minutes after the
   // start): said under the band, or on the rider's row in a mixed party
   const wlc = wlCollectTime(s);
   const wlLine = wlc && !past ? t.wlCollectFrom(clock(wlc)) : "";
-  const green = s?.times && s.gathers ? t.gatherAt(clock(s.times[0])) : allWl && wlLine ? "" : s?.collect && bikes ? t.collectFrom(clock(s.collect)) : "";
+  // the Farm House Night's arrival is in its times already: no "Gathering at" line (the booking app's ticket, 2026-11-13)
+  const green = s?.times && s.gathers ? (farm ? "" : t.gatherAt(clock(s.times[0]))) : allWl && wlLine ? "" : s?.collect && bikes ? t.collectFrom(clock(s.collect)) : "";
   const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, icsPlace(s), new Date(), { id: primary.id, url: links.bookings }) : "";
   // men only, women only or mixed (the booking app's _sgChip): none on a session that did not load
   const sg = s ? genderChip(s, { male: t.sgMale, female: t.sgFemale, mixed: t.sgMixed }) : null;
@@ -300,6 +309,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             : arena ? <span className="tk-logo tk-logo-ah" aria-hidden="true"><img src="/site/arena-heros-logo.webp" alt="" decoding="async" /></span>
             : defe ? <span className="tk-logo tk-logo-defe" aria-hidden="true"><img src="/site/defe-logo.svg" alt="" decoding="async" /></span>
             : yoga ? <span className="tk-logo tk-logo-yoga" aria-hidden="true"><img src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} decoding="async" /></span>
+            : farm ? <span className="tk-logo tk-logo-farm" aria-hidden="true"><img src={FARM_MARK} alt="" width={FARM_MARK_SIZE.width} height={FARM_MARK_SIZE.height} decoding="async" /></span>
             : <span className="tk-logo" aria-hidden="true"><img className="tk-logo-l" src="/site/logo-dark.webp" alt="" decoding="async" /><img className="tk-logo-d" src="/site/logo.webp" alt="" decoding="async" /></span>}
           {ahHeld && !allWl && <p className="tk-label">{t.ahHoldTitle}</p>}
           {!hideNum && (allWl
@@ -596,9 +606,10 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
       {wallet && !past && !allWl && ready && !defe && !arena && !donor && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
       {canEdit && (
         <div className="tk-manage">
-          {/* a run booking is never changed, only cancelled, as in the booking app */}
-          {!noNum && !run && !vlap && !arena && !donor && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}
-          {!noNum && !run && !vlap && !arena && !donor && s?.kind !== "snd96" && <a className="tk-btn" href={links.manage}><Again /> {t.reschedule}</a>}
+          {/* a run booking is never changed, only cancelled, as in the booking app; a ride staff approve neither, but for the
+              Farm House Night, whose member adds or drops family members from Edit there (2026-11-13) */}
+          {(!noNum || farm) && !run && !vlap && !arena && !donor && links.edit && <a className="tk-btn solid" href={links.edit}>{t.edit}</a>}
+          {(!noNum || farm) && !run && !vlap && !arena && !donor && s?.kind !== "snd96" && <a className="tk-btn" href={links.manage}><Again /> {t.reschedule}</a>}
           {/* Victory Lap: the division, T-shirt and 5 km time change in the booking app's My Bookings (_vlEditOpen) */}
           {vlap && rows.length === 1 && primary.vl && <a className="tk-btn solid" href={links.manage}>{t.vlEdit}</a>}
           {/* Arena Heros: the athlete's details and division change there too (the booking app's _vlEditOpen) */}
@@ -619,7 +630,7 @@ export function TicketCancelled({ locale, date, session: s, name, by, t, gather,
 }) {
   const d = new Date(`${date}T00:00:00Z`);
   const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { ...o, timeZone: "UTC" }).format(d);
-  const when = timesText(s?.times, !!s?.gathers, (x) => fmtClock(x, locale), { gather, start });
+  const when = timesText(s?.times, !!s?.gathers, (x) => fmtClock(x, locale), s?.kind === "farm" ? { gather: t.fhArrive, start: t.fhDinner } : { gather, start });
   return (
     <div className="tk-cx">
       <p className="tk-cx-top"><span className="tk-cx-n">{name}</span><span className="tk-cx-chip">{by === "staff" ? t.cxByUs : by === "customer" ? t.cxByYou : t.cancelled}</span></p>

@@ -1691,5 +1691,11 @@
   "Thinking": "考え中",
   "Fully booked": "満員",
   "See you next Saturday": "来週の土曜日にお会いしましょう",
-  "See you at the next session": "次回のセッションでお会いしましょう"
+  "See you at the next session": "次回のセッションでお会いしましょう",
+  "Farm House Night": "ファームハウス・ナイト",
+  "Arrival": "到着",
+  "Dinner": "ディナー",
+  "Members and their families": "メンバーとご家族",
+  "Community members and their families": "コミュニティメンバーとご家族",
+  "An evening at the farm for community members and their families. Arrive from {gather}, enjoy the farm with the community, and stay for dinner at {start}. Add each family member to your booking by name. Our team confirms every request, as for the Saturday ride.": "コミュニティメンバーとご家族のための、ファームでの夕べです。{gather}から到着でき、コミュニティと一緒にファームを楽しんだあと、{start}からのディナーまでお過ごしください。ご家族はお一人ずつお名前で予約に追加してください。土曜ソーシャルライドと同じく、すべてのお申し込みはチームが確認します。"
 }

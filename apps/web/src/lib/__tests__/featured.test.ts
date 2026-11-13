@@ -239,7 +239,7 @@ describe("Featured's look", () => {
     // each kind's colour reaches the card (booking.css), the Saturday ride's the card's own default
     expect(xp).toMatch(/\.xs-feat-card \{ --ev: #077a4b;/);
     // (the Saturday ride's, the pool's and a Petromin night's are their kind's colour set, booking.css --k-*, 2026-11-13)
-    for (const k of ["saturday", "swim", "petromin", "defe5k", "yoga"]) expect(booking, k).toMatch(new RegExp(`:is\\(\\.sc-card, \\.sc-wrap, \\.xs-info, \\.xs-feat-card\\)\\.ev-${k} \\{ --ev: (?:#[0-9a-f]{6}|var\\(--k-(?:sat|pool|pm)\\)); \\}`));
+    for (const k of ["saturday", "swim", "petromin", "defe5k", "yoga", "farm"]) expect(booking, k).toMatch(new RegExp(`:is\\(\\.sc-card, \\.sc-wrap, \\.xs-info, \\.xs-feat-card\\)\\.ev-${k} \\{ --ev: (?:#[0-9a-f]{6}|var\\(--k-(?:sat|pool|pm)\\)); \\}`));
   });
   it("gives white on each kind's band a contrast of 4.5:1 or more", () => {
     const lum = (hex: string) => {
@@ -248,7 +248,7 @@ describe("Featured's look", () => {
     };
     // a kind's colour set (booking.css --k-*) read as its hex
     const hexOf = (v: string) => (v.startsWith("var(") ? new RegExp(`${v.slice(4, -1)}: (#[0-9A-Fa-f]{6});`).exec(booking)![1] : v);
-    const bands = ["#077a4b", ...["saturday", "swim", "petromin", "defe5k", "yoga"].map((k) => hexOf(new RegExp(`\\.xs-feat-card\\)\\.ev-${k} \\{ --ev: (#[0-9a-f]{6}|var\\(--k-[a-z]+\\));`).exec(booking)![1])), "#b4532f"];
+    const bands = ["#077a4b", ...["saturday", "swim", "petromin", "defe5k", "yoga", "farm"].map((k) => hexOf(new RegExp(`\\.xs-feat-card\\)\\.ev-${k} \\{ --ev: (#[0-9a-f]{6}|var\\(--k-[a-z]+\\));`).exec(booking)![1])), "#b4532f", "#8A3F27"];
     expect(bands.slice(1, 4)).toEqual(["#077A4B", "#0D7D8F", "#A33B2E"]);
     for (const hex of bands) expect(1.05 / (lum(hex) + 0.05), hex).toBeGreaterThanOrEqual(4.5);
   });

@@ -79,7 +79,8 @@ describe("the kinds tried (triedKinds, the booking app's _lmKindsHtml)", () => {
     expect(triedKinds(["swim", "jcc", "runher"], ["jcc", "saturday", "swim", "yoga"])).toEqual([
       { kind: "jcc", done: true }, { kind: "saturday", done: false }, { kind: "swim", done: true }, { kind: "yoga", done: false }, { kind: "runher", done: true },
     ]);
-    expect(LM_KINDS).toEqual(["jcc", "saturday", "petromin", "swim", "yoga", "workshop", "event", "snd96", "runher", "defe5k", "vlap", "arena", "blood"]);
+    // the Farm House Night (2026-11-13) after yoga, as the booking app's LM_KINDS has it
+    expect(LM_KINDS).toEqual(["jcc", "saturday", "petromin", "swim", "yoga", "farm", "workshop", "event", "snd96", "runher", "defe5k", "vlap", "arena", "blood"]);
   });
   it("is no checklist with one kind alone", () => {
     expect(triedKinds(["jcc"], ["jcc"])).toEqual([]);
