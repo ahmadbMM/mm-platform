@@ -195,6 +195,10 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-rt-m { font-size: 13px; color: #4a4843; font-variant-numeric: tabular-nums; }
 .tk-rt-done { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; color: #077a4b; }
 .tk-rt-a { font-size: 13px; font-weight: 600; color: #077a4b; }
+/* Route details (TicketRoutePage): a button dressed as the map link beside it, so each event's colour for .tk-rt-a holds */
+.tk-rt-open { justify-self: start; margin: 0; padding: 4px 0 0; border: 0; background: none; font-family: inherit; line-height: 1.3; text-align: start;
+  text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.tk-rt-open:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; border-radius: 4px; }
 .tk-rt-osm { font-size: 12px; color: #a7a399; margin-top: 2px !important; }
 .tk-rt-map { flex: none; width: 30px; height: 118px; overflow: visible; }
 .tk-rt-map path { fill: none; stroke: #077a4b; stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; }
@@ -504,6 +508,32 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-brp-send:hover { background: #06603b; }
 .tk-brp-send:disabled { opacity: .6; cursor: default; }
 .tk-brp-close { background: #fff; border: 1px solid rgba(26, 25, 25, .24); color: #1a1919; }
+/* the route's own page (TicketRoutePage, the booking app's route-page.js): its name, the line north up on a pale sheet,
+   the facts, the numbered turn points, then Save GPX file, Open the map and Close */
+.tk-rtp-dlg { width: min(420px, calc(100vw - 32px)); }
+.tk-rtp-dlg .tk-dlg-t { padding-inline-end: 0; }
+.tk-rtp-in:focus { outline: none; }
+.tk-rtp-dlg .tk-rtp-k { margin: 0 0 -10px; font-size: 12px; font-weight: 600; color: #6e6b63; }
+.tk-rtp-map { display: block; width: 100%; height: auto; max-height: 300px; border: 1px solid rgba(26, 25, 25, .12); border-radius: 10px; background: #fbf9f4; }
+.tk-rtp-map path { fill: none; stroke: #077a4b; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.tk-rtp-map .tk-rtp-st { fill: #077a4b; stroke: #fff; stroke-width: 2; }
+.tk-rtp-map .tk-rtp-tn { fill: #fff; stroke: #1a1919; stroke-width: 1.6; }
+.tk-rtp-map text { fill: #1a1919; font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tk-rtp-facts { display: grid; gap: 7px; margin: 0; padding-top: 12px; border-top: 1px solid rgba(26, 25, 25, .12); }
+.tk-rtp-facts > div { display: grid; grid-template-columns: minmax(76px, auto) minmax(0, 1fr); gap: 10px; font-size: 14px; line-height: 1.45; }
+.tk-rtp-facts dt { font-weight: 700; color: #6e6b63; }
+.tk-rtp-facts dd { margin: 0; overflow-wrap: anywhere; }
+.tk-rtp-sec { display: grid; gap: 8px; }
+.tk-rtp-h { margin: 0; font-size: 15px; font-weight: 700; color: #1a1919; }
+.tk-rtp-turns { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.tk-rtp-turns li { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 15px; color: #1a1919; }
+.tk-rtp-n { display: grid; place-items: center; width: 26px; height: 26px; border: 1px solid rgba(26, 25, 25, .24); border-radius: 999px; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.tk-rtp-tname { min-width: 0; overflow-wrap: anywhere; }
+.tk-rtp-km { font-size: 13px; color: #4a4843; font-variant-numeric: tabular-nums; }
+:is(.tk-rtp-gpx, .tk-rtp-close) { min-height: 48px; border-radius: 10px; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; }
+.tk-rtp-gpx { background: #077a4b; border: 1px solid #077a4b; color: #fff; }
+.tk-rtp-gpx:hover { background: #06603b; }
+.tk-rtp-close { background: #fff; border: 1px solid rgba(26, 25, 25, .24); color: #1a1919; }
 /* a cancelled booking (TicketCancelled): one quiet row, dashed like a place not held, who cancelled it in a chip; it spans
    the grid's columns, after the bookings ahead */
 .tk-cx-list { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 8px; margin: 0; padding: 0; list-style: none; }

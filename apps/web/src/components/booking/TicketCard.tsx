@@ -29,6 +29,9 @@ import { comingWords } from "./Coming.words";
 import { bikeReportWords } from "./BikeReport.words";
 import { comingCancelLink, stillComing } from "@/lib/still-coming";
 import { bikeReport } from "@/lib/bike-report";
+import TicketRoutePage from "./TicketRoutePage";
+import { routePageWords } from "./RoutePage.words";
+import { gpxFileName, type RoutePage } from "@/lib/route-track";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -109,6 +112,9 @@ type Props = {
   /** "Report a bike problem" (2026-11-13): the bikes' names by id, read only when a booking holds more than one (its
    *  pop-up asks which); a name not read is said as "Bike 1", "Bike 2". */
   bikeNames?: Map<string, string | null> | null;
+  /** The route's own page (2026-11-13, lib/route-track.ts routePageOf): its stored line and turn points, opened from
+   *  the route's block by Route details; null when nothing is stored for the route. */
+  routePage?: RoutePage | null;
 };
 
 const Bike = () => (
@@ -169,7 +175,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, bikeNames = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, bikeNames = null, routePage = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -227,6 +233,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const stc = stillComing(rows, s, now, past);
   const brp = bikeReport(rows, s, now);
   const brpW = brp ? bikeReportWords(locale) : null;
+  // "Route details" in the route's block, when something is stored for the route (the booking app's _rtBtn, 2026-11-13)
+  const rp = route && !route.track ? routePage : null;
+  const rpW = rp ? routePageWords(locale) : null;
   const stLabel = { booked: t.stBooked, in: t.stIn, bike: t.stBike, done: t.stDone };
   // Before the start on the ride's day: the countdown to bike collection (or the gathering), then the start.
   const cdT = { collect: t.cdCollect, gather: t.cdGather, start: t.cdStart, h: t.durH, hm: t.durHM, m: t.durM };
@@ -431,6 +440,15 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
                   )}
                   {past && <p className="tk-rt-done"><Tick /><span>{t.rtRidden}</span></p>}
                   {route.href && <a className="tk-rt-a" href={route.href} target="_blank" rel="noopener">{t.rtMapLink}</a>}
+                  {/* the route's own page: its line, the facts, the turn points and a GPX file (the booking app's _rtBtn) */}
+                  {rp && rpW && (
+                    <TicketRoutePage words={{ open: rpW.open, title: t.route, turns: rpW.turns, gpx: rpW.gpx, lineAlt: rpW.lineAlt, map: t.rtMapLink, close: t.vtClose }}
+                      page={{
+                        name: rp.name, file: gpxFileName(rp.slug), href: rp.href, pts: rp.pts,
+                        turns: rp.turns.map((x) => ({ km: x.km, kmText: t.rtKm(kmText(x.km)), name: x.name })),
+                        facts: ([[rpW.dist, rp.km > 0 ? t.rtKm(kmText(rp.km)) : "", true], [rpW.surface, rp.surface, false], [rpW.level, rp.level, false]] as [string, string, boolean][]).filter((x) => x[1]),
+                      }} />
+                  )}
                   {route.track && <p className="tk-rt-osm">{t.rtOsm}</p>}
                 </div>
                 {route.track && <svg className="tk-rt-map" viewBox="0 0 40 158" aria-hidden="true" focusable="false"><path d={JCC_TRACK} /><circle cx="12.9" cy="71.4" r="3.2" /></svg>}
