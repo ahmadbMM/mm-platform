@@ -212,7 +212,11 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
     const svg = renderToStaticMarkup(createElement(Medal, { icon: "ironman_1406", color: "gold" }));
     expect(svg).toContain(">140.6</text>");
     expect(svg).toContain('fill="#c8202f"');
-    expect(renderToStaticMarkup(createElement(Medal, { icon: "t100", color: "gold" }))).toContain('fill="#1e4f96"');
+    expect(svg).toContain('fill="#e31837"'); // the M-Dot over the distance
+    expect(renderToStaticMarkup(createElement(Medal, { icon: "ironman_703", color: "silver" }))).toMatch(/fill="#e31837".*>70\.3<\/text>/);
+    const t100 = renderToStaticMarkup(createElement(Medal, { icon: "t100", color: "gold" }));
+    expect(t100).toContain('fill="#1e4f96"');
+    expect(t100).not.toContain("#e31837");
     expect(RECORD.en.names.ironman_703[0]).toBe("Ironman 70.3 Finisher");
     expect(RECORD.ar.names.ironman_1406[0]).toBe("إنجاز آيرونمان 140.6");
   });
