@@ -45,7 +45,7 @@ import { routeItems } from "@/lib/route-names";
 import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
 import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
-import { BOOTH_DIR, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, shareLink, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
+import { BOOTH_DIR, bfFor, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, shareLink, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
@@ -204,6 +204,13 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         return { ...row, added };
       }),
     ]);
+    // A ride whose breakfast spot is for community members only (bike_slots._bfm; the booking app's _bfOff, 2026-11-13)
+    // tells it to a member alone: the members gate's own answer (community_member), asked only when such a ride is here;
+    // a failed check reads as no.
+    if ([...sessions.values()].some((x) => x.bfMembers)) {
+      const mem = (await rpcServer<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data === true;
+      for (const [k, v] of sessions) sessions.set(k, bfFor(v, mem));
+    }
     const lockers = lockersRaw == null ? null : lockersOf(lockersRaw);
     // the rider's own lockers with no booking behind them (the lockers page; 2026-11-09): on that evening's ride ticket,
     // and as Your lockers below the rides, each evening with the QR the desk scans to hand the keys

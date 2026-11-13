@@ -339,8 +339,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             ))}
           </ol>
         )}
-        {held && (
-          // the breakfast spot is told at staff's time: when, in its place (_revealNoteHtml)
+        {held && !s?.bfOff && (
+          // the breakfast spot is told at staff's time: when, in its place (_revealNoteHtml); never to a rider who will not
+          // be told, when it is for members only (bfFor, 2026-11-13)
           <p className="tk-reveal"><Clock /><bdi>{t.revealSpotsAt(revealWhen(s?.revealAt, locale, today, { today: t.today, tomorrow: t.tomorrow }))}</bdi></p>
         )}
         {(() => {

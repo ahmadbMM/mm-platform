@@ -5,7 +5,7 @@
 import { intlOf } from "@/i18n/locales";
 import { fill as fillAt } from "@/i18n/tx";
 import { fill as fillNamed } from "./fill";
-import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, wlCollectSlot, type RideKind } from "./rides";
+import { bfMembersOf, collectTime, oneTime, rideKind, routeSlugOf, slotTimes, wlCollectSlot, type RideKind } from "./rides";
 import { riyadhClock } from "./workshop-days";
 import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
 import { AH_VENUE, ahConfig, ahEntry, ahHold, isArenaId, type AhConfig, type AhEntry } from "./arena";
@@ -108,6 +108,10 @@ export type TicketSession = {
   /** When riders are told where the ride meets and has breakfast (sessions.reveal_at, ISO), or null
    *  (spotHeld). */
   revealAt: string | null;
+  /** The breakfast spot is for community members only (bike_slots._bfm, 2026-11-13; rides.ts bfMembersOf). Set only when it is. */
+  bfMembers?: boolean;
+  /** This visitor is not told the breakfast spot (bfFor): no stop (breakfastFor) and no "announced at" line. */
+  bfOff?: boolean;
   /** Victory Lap's settings (sessions.vl, lib/vlap.ts: the races open, how to pay, what goes to Kamin
    *  Sports); null on every other kind. A read without the column has every race open and no words of
    *  staff's own. */
@@ -360,6 +364,7 @@ export function ticketSession(r: Row): TicketSession | null {
       }
       : null,
     revealAt: Number.isFinite(Date.parse(S(r.reveal_at))) ? S(r.reveal_at) : null,
+    ...(bfMembersOf(r.bike_slots) ? { bfMembers: true } : {}),
     vl: kind === "vlap" ? vlConfig(r.vl) : null,
     ah: kind === "arena" ? ahConfig(r.vl) : null,
     price: N(r.price),
@@ -395,6 +400,13 @@ export function revealWhen(iso: string | null | undefined, locale: string, today
   return `${w === "today" ? words.today : w === "tomorrow" ? words.tomorrow : fmtDayDate(date, locale)} · ${fmtClock(k.slice(11, 16), locale)}`;
 }
 
+/** The session as this visitor reads it (the booking app's _bfOff, 2026-11-13): when its breakfast spot is for community
+ *  members only (bfMembers) and the visitor is not one, bfOff: no breakfast stop and no "announced at" line. The row's own
+ *  fields stay, so the meeting point and the route read as they did (spotHeld). */
+export function bfFor<T extends { bfMembers?: boolean }>(s: T, member: boolean): T & { bfOff?: boolean } {
+  return s.bfMembers && !member ? { ...s, bfOff: true } : s;
+}
+
 /** The rides with a breakfast stop: the Saturday ride, and Run for Her (the owner, 2026-10-14). */
 export const hasBreakfast = (kind: string | null | undefined): boolean => kind === "saturday" || kind === "runher";
 
@@ -402,7 +414,7 @@ export const hasBreakfast = (kind: string | null | undefined): boolean => kind =
  *  Arabic there and in English in every other language (the booking app's _commInfoHtml). */
 export function breakfastFor(s: TicketSession | undefined, locale: string): { name: string; url: string | null; offer: string | null } | null {
   const b = s?.breakfast;
-  if (!b || !hasBreakfast(s?.kind)) return null;
+  if (!b || !hasBreakfast(s?.kind) || s?.bfOff) return null; // for members only, and this visitor is not one (bfFor)
   const ar = locale === "ar";
   return { name: (ar && b.nameAr) || b.name, url: b.url, offer: (ar ? b.offerAr || b.offerEn : b.offerEn || b.offerAr) || null };
 }
@@ -795,7 +807,7 @@ export function icsFor(s: TicketSession, summary: string, place: string, now: Da
   const stamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const words = icsWords(s);
   // the breakfast spot told later: the entry says when; a held ride without its meeting point has no place rather than the circuit
-  const told = spotHeld(s, now.getTime()) ? `\n\nBreakfast spot: announced ${revealWhen(s.revealAt, "en", riyadhClock(now).slice(0, 10), { today: "Today", tomorrow: "Tomorrow" })}` : "";
+  const told = spotHeld(s, now.getTime()) && !s.bfOff ? `\n\nBreakfast spot: announced ${revealWhen(s.revealAt, "en", riyadhClock(now).slice(0, 10), { today: "Today", tomorrow: "Tomorrow" })}` : "";
   const noPlace = meetHeld(s, now.getTime());
   const bid = (booking.id ?? "").replace(/[^\w-]/g, "");
   return [

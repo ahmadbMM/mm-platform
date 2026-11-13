@@ -278,7 +278,10 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     // when bikes go out and the price from, under the time, as the booking app's session card says them
     const collect = s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), clock(s.collect)) : null;
     const from = !s.free && rentsBikes(s.kind) ? fromPrice(s) : null;
-    const held = heldWhen(s);
+    // a breakfast spot for community members only (bike_slots._bfm; the booking app's _bfOff, 2026-11-13) is told to a
+    // member alone: no stop and no "announced at" line for anyone else; the meeting point shows as it did
+    const bfOff = !!s.bfMembers && !member;
+    const held = bfOff ? null : heldWhen(s);
     const place = meetHeld(s) ? { name: venueWords.meetingPoint, map: null } : infoPlace(s, venueWords, directions);
     // what the visitor already holds on it (lib/held.ts): Booked, On the waitlist or Reserved, null when nothing
     const own = heldState(mine.get(s.id) ?? [], s);
@@ -325,7 +328,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       sg: genderChip(s, sgWords),
       refusal: genderBlock(s, gv, sgWords),
       // the Saturday ride's (and Run for Her's) breakfast stop, by its Arabic name on the Arabic page when it has one
-      breakfast: infoBreakfast(s, locale),
+      breakfast: bfOff ? null : infoBreakfast(s, locale),
       reveal: held ? fillAt(tx("Breakfast spot: announced {0}", "موقع الفطور: يُعلَن عنه {0}"), held) : null,
       left: s.left ?? null,
       meta: [collect, from, sr && fillAt(kw.sunriseAt, sr)].filter((x): x is string => !!x),

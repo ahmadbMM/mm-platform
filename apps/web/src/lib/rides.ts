@@ -147,6 +147,9 @@ export type RideSession = {
    *  under "Featured", and gives it a card above the event cards. toSession always sets it; a copy kept at the edge from
    *  before has none, and reads as not featured. */
   featured?: boolean;
+  /** The breakfast spot is for community members only (bike_slots._bfm; the booking app's _bfMem, 2026-11-13; bfMembersOf):
+   *  a visitor who is not a member is told nothing of it. Set only when it is. */
+  bfMembers?: boolean;
   /** The Saturday ride's two groups' distances in km (bike_slots._km, the usual 20 and 40 when unset; lib/kind-theme.ts
    *  rideGroupKm): its Details draw the two routes with them. Only on the Saturday ride. */
   groupKm?: { beg: number; int: number };
@@ -213,6 +216,18 @@ export function featuredOf(kind: RideKind, slots: unknown): boolean {
   }
   const f = o && typeof o === "object" ? (o as Record<string, unknown>)._feat : null;
   return f == null ? FEATURED_KINDS.includes(kind) : !!f;
+}
+
+/** Who sees the breakfast spot (the booking app's _bfMem / _bfOff; the owner, 2026-11-13: "add a switch on the breakfast spot
+ *  to choose to show it to all booking cards or only members booking cards"): bike_slots._bfm 1, stored as JSON text or an
+ *  object, is community members only. A visitor who is not a member reads no name, link or offer, and no "announced at" line;
+ *  the meeting point and the route are as they were. It is what the page shows, not a secret: the row still carries it. */
+export function bfMembersOf(slots: unknown): boolean {
+  let o: unknown = slots;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { o = null; }
+  }
+  return !!o && typeof o === "object" && !!(o as Record<string, unknown>)._bfm;
 }
 
 /** Whether a row is Full, no waitlist (the booking app's _sessFb, 2026-11-13): closed, its settings marked (bike_slots._fbk,
@@ -353,6 +368,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...(kind === "saturday" ? { groupKm: rideGroupKm(r.bike_slots) } : {}),
     ...placeOf(r),
     ...breakfastOf(r),
+    ...(bfMembersOf(r.bike_slots) ? { bfMembers: true } : {}),
     ...revealOf(r),
     ...outOf(r),
     ...publishedOf(r, community && kind !== "snd96"),

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FEATURE_OK, FEATURED_KINDS, fbkOf, featuredOf, kindNames, loadRides, loadSessionsById, oneTime, readSessions, resetRides, rideKind, routeSlugOf, sessionGenders, sessionName, sessionRows, SESSION_COLS, slotTimes, timesText, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
+import { FEATURE_OK, FEATURED_KINDS, bfMembersOf, fbkOf, featuredOf, kindNames, loadRides, loadSessionsById, oneTime, readSessions, resetRides, rideKind, routeSlugOf, sessionGenders, sessionName, sessionRows, SESSION_COLS, slotTimes, timesText, toSession, upcoming, withoutPetromin, type RideSession, collectTime } from "../rides";
 import { memoSettled } from "../memo";
 import { typeOffered } from "../bike-kinds";
 
@@ -179,6 +179,19 @@ describe("Full, no waitlist (bike_slots._fbk on a closed session, 2026-11-13)", 
   it("says so on a session read by id whatever its state, when the read asked for the columns", () => {
     expect(toSession(row(FB), true)?.fbk).toBe(true);
     expect(toSession(row({ status: "closed" }), true)?.fbk).toBe(false);
+  });
+});
+
+describe("the breakfast spot for members only (bike_slots._bfm, 2026-11-13)", () => {
+  it("reads the mark from JSON text or an object, and sets bfMembers only when it is on", () => {
+    expect(bfMembersOf('{"_time":"06:00 - 06:30","_bfm":1}')).toBe(true);
+    expect(bfMembersOf({ _bfm: 1 })).toBe(true);
+    expect(bfMembersOf('{"_time":"06:00 - 06:30"}')).toBe(false);
+    expect(bfMembersOf("not json")).toBe(false);
+    expect(bfMembersOf(null)).toBe(false);
+    const row = { id: "2099-10-24", session_date: "2099-10-24", status: "open", event_kind: "community", ride_kind: "saturday" };
+    expect(toSession({ ...row, bike_slots: '{"_time":"06:00 - 06:30","_bfm":1}' })!.bfMembers).toBe(true);
+    expect(toSession({ ...row, bike_slots: '{"_time":"06:00 - 06:30"}' })!).not.toHaveProperty("bfMembers");
   });
 });
 
