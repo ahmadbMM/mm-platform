@@ -381,7 +381,7 @@ html:is([lang="ar"], [lang="ur"]) .xs-summary .xs-yg-name { font-family: var(--c
   border: 1px solid rgba(110, 44, 28, .55); border-inline-start: 3px solid var(--fh-peach); }
 [dir="rtl"] .xs-sum-head.xs-fh-head { background: linear-gradient(225deg, var(--fh-rust-lt) 0%, var(--fh-rust) 50%, var(--fh-rust-dk) 100%); }
 .xs-fh-head > div { min-width: 0; }
-.xs-logo.xs-farm-logo img { height: 36px; width: auto; }
+.xs-logo.xs-farm-logo img { height: 40px; width: 40px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1.5px rgba(243, 199, 169, 0.75); }
 .xs-summary .xs-fh-name { font-family: var(--cs-font-fh), var(--cs-font-ar), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", sans-serif; font-size: 19px; font-weight: 800; letter-spacing: 0; line-height: 1.2; color: var(--fh-peach); overflow-wrap: anywhere; }
 .xs-fh-head span { color: var(--fh-milk); }
 .xs-fh-head .xs-fh-sub { display: block; margin-top: 3px; font-size: 12.5px; font-weight: 700; color: var(--fh-milk); }

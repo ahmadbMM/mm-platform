@@ -382,7 +382,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
   background: radial-gradient(120% 55% at 100% 100%, rgba(var(--fh-glow), .34) 0%, rgba(var(--fh-glow), .12) 38%, rgba(251, 243, 234, 0) 66%) var(--fh-cream); }
 [dir="rtl"] .tk-card.ev-farm, [dir="rtl"] .tk-card.ev-farm.tk-live { background: radial-gradient(120% 55% at 0% 100%, rgba(var(--fh-glow), .34) 0%, rgba(var(--fh-glow), .12) 38%, rgba(251, 243, 234, 0) 66%) var(--fh-cream); }
 .tk-card.ev-farm.tk-wl { border: 1.5px dashed #b98a1a; }
-.tk-logo.tk-logo-farm img { height: 30px; }
+.tk-logo.tk-logo-farm img { height: 46px; width: 46px; border-radius: 50%; object-fit: cover; }
 .tk-card.ev-farm .tk-num { font-family: var(--cs-font-fh), var(--cs-font-ar), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", sans-serif; font-weight: 800; }
 .tk-card.ev-farm.tk-today::after { background: var(--fh-rust); }
 /* rust in every state (a place waiting on staff's approval and one before its code is out too), never the night ticket's green */
@@ -699,7 +699,8 @@ html:is([lang="ar"], [lang="ur"]) .sc-yg-title { font-family: var(--cs-font-ar),
 .sc-fh-ring { fill: none; stroke: rgba(var(--fh-glow), .3); stroke-width: 1.2; }
 .sc-fh-core { fill: rgba(126, 32, 52, .42); }
 .sc-fh-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.sc-fh-mark { height: 30px; width: auto; display: block; flex: none; }
+/* the venue's Instagram picture, round as Instagram shows it, with a peach edge on the rust */
+.sc-fh-mark { height: 44px; width: 44px; border-radius: 50%; object-fit: cover; display: block; flex: none; box-shadow: 0 0 0 1.5px rgba(243, 199, 169, 0.75); }
 .sc-fh-title { font-family: var(--cs-font-fh), var(--cs-font-ar), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", sans-serif; font-size: 21px; font-weight: 800; letter-spacing: .2px; line-height: 1.15; color: var(--fh-peach); overflow-wrap: anywhere; }
 html:is([lang="ar"], [lang="ur"]) .sc-fh-title { letter-spacing: 0; }
 .sc-card.sc-farm .sc-date { flex: none; font-size: 14px; color: var(--fh-milk); }
@@ -714,7 +715,7 @@ html:is([lang="ar"], [lang="ur"]) .sc-fh-title { letter-spacing: 0; }
 .sc-fh-line { font-size: 12.5px; font-weight: 700; color: var(--fh-peach-lt); min-width: 0; overflow-wrap: anywhere; }
 /* its state (asked, on the waitlist, fully booked, when it opens) on a cream pill in deep rust, as the booking app's */
 .sc-card.sc-farm .sc-spots, .xs-feat-card.xs-feat-fh .sc-spots { padding: 2px 8px; border-radius: 999px; background: var(--fh-milk); color: var(--fh-rust-dk); }
-@media (max-width: 400px) { .sc-fh-title { font-size: 19px; } .sc-fh-mark { height: 26px; } .sc-fh-scene { width: 148px; height: 74px; } }
+@media (max-width: 400px) { .sc-fh-title { font-size: 19px; } .sc-fh-mark { height: 40px; width: 40px; } .sc-fh-scene { width: 148px; height: 74px; } }
 /* A ticketed event's card says what it is and what a seat costs. */
 .sc-desc { font-size: 12.5px; color: #4f565c; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sc-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; font-weight: 700; color: #06603b; }

@@ -238,7 +238,7 @@ describe("the Farm House Night on Experiences, to a signed-in community member",
     expect(card).toContain('role="radio"');
     expect(card).toContain('<svg class="sc-fh-scene" aria-hidden="true" focusable="false" viewBox="0 0 160 80">');
     expect(card.match(/<rect class="sc-fh-fth"/g)).toHaveLength(11);
-    expect(card).toContain(`<img class="sc-fh-mark" src="${FARM_MARK}" alt="" width="64" height="40" decoding="async"/>`);
+    expect(card).toContain(`<img class="sc-fh-mark" src="${FARM_MARK}" alt="" width="150" height="150" decoding="async"/>`);
     expect(card).toContain('<span class="sc-fh-title">Nawar Farm House Night</span>');
     expect(card).toContain('<span class="sc-fh-meta"><span class="sc-fh-mi"><span><i aria-hidden="true"></i><bdi>Arrival 4:30 PM · Dinner 8:30 PM</bdi></span><span><i aria-hidden="true"></i><bdi>Little Farmhouse, Dhahban</bdi></span></span></span>');
     expect(card).toContain('<span class="sc-fh-foot"><span class="sc-fh-line">Members and their families</span></span>');
@@ -283,7 +283,7 @@ describe("the Farm House Night on Experiences, to a signed-in community member",
   it("hands over on its summary in the booking app's rust plate, saying the family is added there", async () => {
     const p = await experiences([FH]);
     const html = draw(p, 3, comm(p), farmOf(p));
-    expect(html).toContain('<div class="xs-sum-head xs-fh-head"><span class="xs-logo small xs-farm-logo"><img src="/site/farm-mark.svg" alt="" width="64" height="40"/></span>');
+    expect(html).toContain('<div class="xs-sum-head xs-fh-head"><span class="xs-logo small xs-farm-logo"><img src="/site/farm-logo.jpg" alt="" width="150" height="150"/></span>');
     expect(html).toContain('<strong class="xs-fh-name">Nawar Farm House Night</strong>');
     expect(html).toContain("Arrival <bdi>4:30 PM</bdi> · Dinner <bdi>8:30 PM</bdi>");
     expect(html).toContain('<span class="xs-fh-sub">Members and their families</span>');
@@ -405,12 +405,12 @@ describe("the Farm House Night's look", () => {
     expect(ratio("#8A3F27", "#FBF3EA")).toBeGreaterThanOrEqual(4.5); // the ticket's rust on cream
     expect(ratio("#FFFFFF", "#8A3F27")).toBeGreaterThanOrEqual(4.5); // the button and the Featured card's weekday band
   });
-  it("has the booking app's mark: rounded feathers fanned behind a farmhouse gable", () => {
-    expect(FARM_MARK).toBe("/site/farm-mark.svg");
-    const svg = css("../../../public/site/farm-mark.svg");
-    expect(svg).toMatch(/^<svg[^>]*viewBox="0 0 64 40"/);
-    expect(svg.match(/<rect /g)).toHaveLength(9);
-    for (const c of ["#EDB091", "#C9502A", "#7E2034", "#8A3F27", "#FBF3EA", "#F6D9C5"]) expect(svg, c).toContain(c);
+  it("has the venue's Instagram picture as its logo, the booking app's assets/farm-logo.jpg", () => {
+    expect(FARM_MARK).toBe("/site/farm-logo.jpg");
+    expect(FARM_MARK_SIZE).toEqual({ width: 150, height: 150 });
+    const jpg = readFileSync(new URL("../../../public/site/farm-logo.jpg", import.meta.url));
+    expect([...jpg.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]); // a JPEG
+    expect(css("../../components/booking/booking.css")).toMatch(/\.sc-fh-mark \{[^}]*border-radius: 50%/);
   });
 });
 
@@ -435,7 +435,7 @@ describe("the Farm House Night is not to public", () => {
         expect(Object.keys(p.text.kinds.names)).not.toContain("farm");
         for (const html of [draw(p, 1), draw(p, 2, comm(p))]) {
           expect(html).not.toMatch(SECRET);
-          expect(html).not.toMatch(/sc-farm|xs-feat-fh|ev-farm|farm-mark/);
+          expect(html).not.toMatch(/sc-farm|xs-feat-fh|ev-farm|farm-logo/);
         }
       });
       it(`leaves it off the Events page for a visitor ${who} (${locale})`, async () => {
