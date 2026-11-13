@@ -1645,9 +1645,14 @@
   "You have already answered this question.": "この質問にはすでに回答済みです。",
   "You have sent all your answers to this question.": "この質問への回答はすべて送信済みです。",
   "Your answer": "あなたの回答",
-  "Your name is not shown. MicroMobility's team can see who sent it.": "お名前は表示されません。MicroMobility のチームには送信者が分かります。",
   "Your question": "あなたの質問",
   "Your session has ended. Sign in again.": "セッションが終了しました。再度ログインしてください。",
   "{0} answers": "回答 {0} 件",
-  "{0} left": "残り {0}"
+  "{0} left": "残り {0}",
+  "Your name is never shown with an answer. MicroMobility's team can see who answered.": "お名前が回答と一緒に表示されることはありません。MicroMobility のチームには回答者が分かります。",
+  "Next": "次へ",
+  "Question {0} of {1}": "{1} 問中 {0} 問目",
+  "Lowest {0}": "最小 {0}",
+  "Highest {0}": "最大 {0}",
+  "Full screen": "全画面表示"
 }

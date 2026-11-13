@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import EmergencyGate, { type EmDone } from "./EmergencyGate";
 import SportGateLoader from "./SportGateLoader";
+import { isAskScreen } from "@/lib/ask";
 import { EM_QUIET, isQuiet } from "./quiet";
 
 // The account's emergency contact on every page (the owner, 2026-10-07: required and unskippable for
@@ -44,8 +45,10 @@ export default function EmergencyGateLoader({ locale }: { locale: string }) {
   const [need, setNeed] = useState<Need | null>(null);
   const [clear, setClear] = useState(false); // asked, and the account has its contact: the next pop-ups may ask now
 
+  // the Ask big screen is a projector, not an account page: it never asks, whoever's browser shows it
+  const bare = isAskScreen(path);
   useEffect(() => {
-    if (need) return;
+    if (need || bare) return;
     let live = true;
     check().then((n) => {
       if (!live) return;
@@ -53,7 +56,7 @@ export default function EmergencyGateLoader({ locale }: { locale: string }) {
       setClear(!n);
     });
     return () => { live = false; };
-  }, [path, need]);
+  }, [path, need, bare]);
 
   const done = (r: EmDone) => {
     if (r === "absent") off = true;
@@ -62,6 +65,7 @@ export default function EmergencyGateLoader({ locale }: { locale: string }) {
     setClear(true);
   };
 
+  if (bare) return null;
   if (need) return <EmergencyGate two={need.two} onDone={done} />;
   return clear ? <SportGateLoader locale={locale} /> : null;
 }

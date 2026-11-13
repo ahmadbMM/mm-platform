@@ -57,39 +57,13 @@ export const askPct = (share: number, locale: string): string =>
 
 /* ------------------------------------------------------------------ the look (contract section A) */
 
-/** `look` on a page or a question: free keys the pages read, each falling back to its default. */
+/** `look` on a page or a question: free keys the pages read, each falling back to its default (lib/ask-look.ts reads
+ *  them: the theme, the palettes, each chart's choices). */
 export type Look = Readonly<Record<string, unknown>>;
 export const lookOf = (v: unknown): Look => obj(v) ?? {};
-
-export const ASK_THEMES = ["light", "dark", "green", "sand"] as const;
-export type AskTheme = (typeof ASK_THEMES)[number];
-/** The page's theme: the ONE place a page's `look.theme` is read (ask.css holds each theme's tokens under
- *  .ask[data-ask-theme]). An unknown name is the light, cream page. */
-export const askTheme = (pageLook: Look): AskTheme => (ASK_THEMES as readonly string[]).includes(String(pageLook.theme)) ? (pageLook.theme as AskTheme) : "light";
-
-/** The chart palettes, six colours each, every one 4.5:1 or more on white (the contract's). A chart never reads a
- *  colour of its own: it draws with --ask-c0 ... --ask-c5, which the question's results box sets from here. */
-export const ASK_PALETTES = {
-  brand: ["#077a4b", "#1a1919", "#0b6e8a", "#b4500b", "#9c1f5c", "#4a4fc4"],
-  forest: ["#0b5d3b", "#2e7d32", "#567d2e", "#7a6a1c", "#3f6b5c", "#1f4d3a"],
-  ocean: ["#0b6e8a", "#1456a8", "#2b3f9e", "#0d7a7a", "#3a6ea5", "#1b4965"],
-  sunset: ["#b4500b", "#a8321f", "#9c1f5c", "#8a5a00", "#b03a48", "#6d3b8f"],
-  berry: ["#9c1f5c", "#6d3b8f", "#4a4fc4", "#a8321f", "#7b2d6b", "#3c3f8f"],
-  mono: ["#1a1919", "#3a3f3c", "#57605a", "#6f7771", "#2b2f2d", "#454b47"],
-} as const satisfies Record<string, readonly string[]>;
-export type AskPaletteName = keyof typeof ASK_PALETTES;
-const paletteName = (v: unknown): AskPaletteName | null => (typeof v === "string" && Object.hasOwn(ASK_PALETTES, v) ? (v as AskPaletteName) : null);
-/** A question's chart colours: its own `look.palette`, else the page's, else the brand's. */
-export const askPalette = (questionLook: Look, pageLook: Look): AskPaletteName => paletteName(questionLook.palette) ?? paletteName(pageLook.palette) ?? "brand";
-/** The palette as the custom properties a results box sets: { "--ask-c0": "#077a4b", ... }. */
-export const paletteVars = (name: AskPaletteName): Record<string, string> => Object.fromEntries(ASK_PALETTES[name].map((c, i) => [`--ask-c${i}`, c]));
-
-/** The chart a question's results are drawn with: its `look.viz` when that chart is built for its kind, else the
- *  kind's first (its default). `built` is the kind's row of the charts' registry (components/ask/results). */
-export function askViz(questionLook: Look, built: readonly string[]): string | null {
-  const asked = questionLook.viz;
-  return typeof asked === "string" && built.includes(asked) ? asked : built[0] ?? null;
-}
+// The look itself is read in lib/ask-look.ts (themes, palettes, each chart's choices). Its first readers are handed on
+// from here too, under the names they were given here.
+export { ASK_PALETTES, askPalette, askTheme, askViz, paletteVars } from "./ask-look";
 
 /* ------------------------------------------------------------------ kinds and their settings */
 
@@ -539,6 +513,9 @@ export const rereadDue = (lastAt: number, now: number): boolean => now - lastAt 
 
 /* ------------------------------------------------------------------ results, shaped for their charts */
 
+/** How many answers a question's result counts (every kind's result says so as `n`), for the big screen's count. */
+export const resultCount = (raw: unknown): number => Math.max(0, int(obj(raw)?.n) ?? 0);
+
 export type CloudResult = { n: number; people: number; words: { w: string; n: number }[] };
 export function cloudResult(raw: unknown): CloudResult {
   const r = obj(raw) ?? {};
@@ -611,14 +588,14 @@ export function rankRows(config: unknown, raw: unknown, locale: string): { n: nu
 }
 
 export type PointRow = { id: string; label: string; avg: number; sum: number; share: number };
-/** Points: the options by their average, the most first; `share` is the average's part of the points a person has. */
+/** Points: the options in the order staff wrote them, each with its average; `share` is the average's part of the
+ *  points a person has. (A chart puts the most first when its look asks: `sort`.) */
 export function pointRows(config: unknown, raw: unknown, locale: string): { n: number; total: number; rows: PointRow[] } {
   const c = pointsConfig(config);
   const r = obj(raw) ?? {};
   const avg = obj(r.avg) ?? {}, sum = obj(r.sum) ?? {};
-  const rows = c.options.map((o, i) => ({ i, id: o.id, label: optionText(locale, o), avg: Math.max(0, num(avg[o.id]) ?? 0), sum: Math.max(0, num(sum[o.id]) ?? 0) }));
-  rows.sort((a, b) => b.avg - a.avg || a.i - b.i);
-  return { n: Math.max(0, int(r.n) ?? 0), total: c.total, rows: rows.map(({ id, label, avg: a, sum: s }) => ({ id, label, avg: a, sum: s, share: clamp(a / c.total, 0, 1) })) };
+  const rows = c.options.map((o) => { const a = Math.max(0, num(avg[o.id]) ?? 0); return { id: o.id, label: optionText(locale, o), avg: a, sum: Math.max(0, num(sum[o.id]) ?? 0), share: clamp(a / c.total, 0, 1) }; });
+  return { n: Math.max(0, int(r.n) ?? 0), total: c.total, rows };
 }
 
 export type NumberBin = { lo: number; hi: number; n: number };
@@ -651,6 +628,18 @@ export function screenAt(questions: readonly AskQuestion[], o: { picked: number 
 }
 /** One question on (1) or back (-1), stopping at the ends. */
 export const screenStep = (count: number, at: number, by: 1 | -1): number => (count < 1 ? -1 : clamp(at + by, 0, count - 1));
+
+/** Whether a path is an Ask page's big screen (/ask/<slug>/screen, in any language): a projector, not an account
+ *  page - the one page of the site that never puts up the account's pop-ups (account/EmergencyGateLoader.tsx). */
+export const isAskScreen = (path: string | null | undefined): boolean => /(?:^|\/)ask\/[^/]+\/screen\/?$/.test(path ?? "");
+
+/** Which question a page drawn in steps is on: the one the reader was on, by its id while it is still there, else
+ *  the same place in the list, never past its ends. -1 when there is no question. */
+export function stepAt(ids: readonly number[], held: { id: number | null; index: number }): number {
+  if (!ids.length) return -1;
+  const same = held.id === null ? -1 : ids.indexOf(held.id);
+  return same >= 0 ? same : clamp(Math.round(held.index) || 0, 0, ids.length - 1);
+}
 
 /* ------------------------------------------------------------------ coming back from creating an account */
 

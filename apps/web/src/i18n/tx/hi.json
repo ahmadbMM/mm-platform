@@ -1645,9 +1645,14 @@
   "You have already answered this question.": "आप इस सवाल का जवाब पहले ही दे चुके हैं।",
   "You have sent all your answers to this question.": "आप इस सवाल के अपने सभी जवाब भेज चुके हैं।",
   "Your answer": "आपका जवाब",
-  "Your name is not shown. MicroMobility's team can see who sent it.": "आपका नाम नहीं दिखाया जाता। MicroMobility की टीम देख सकती है कि इसे किसने भेजा।",
   "Your question": "आपका सवाल",
   "Your session has ended. Sign in again.": "आपका सेशन समाप्त हो गया है। फिर से साइन इन करें।",
   "{0} answers": "जवाब: {0}",
-  "{0} left": "बाकी: {0}"
+  "{0} left": "बाकी: {0}",
+  "Your name is never shown with an answer. MicroMobility's team can see who answered.": "आपका नाम कभी भी किसी जवाब के साथ नहीं दिखाया जाता। MicroMobility की टीम देख सकती है कि किसने जवाब दिया।",
+  "Next": "आगे",
+  "Question {0} of {1}": "{1} में से सवाल {0}",
+  "Lowest {0}": "न्यूनतम {0}",
+  "Highest {0}": "अधिकतम {0}",
+  "Full screen": "फ़ुल स्क्रीन"
 }

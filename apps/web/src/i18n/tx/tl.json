@@ -1645,9 +1645,14 @@
   "You have already answered this question.": "Nasagot mo na ang tanong na ito.",
   "You have sent all your answers to this question.": "Naipadala mo na ang lahat ng sagot mo sa tanong na ito.",
   "Your answer": "Ang iyong sagot",
-  "Your name is not shown. MicroMobility's team can see who sent it.": "Hindi ipinapakita ang pangalan mo. Makikita ng team ng MicroMobility kung sino ang nagpadala.",
   "Your question": "Ang iyong tanong",
   "Your session has ended. Sign in again.": "Natapos na ang iyong session. Mag-sign in muli.",
   "{0} answers": "Mga sagot: {0}",
-  "{0} left": "{0} na lang"
+  "{0} left": "{0} na lang",
+  "Your name is never shown with an answer. MicroMobility's team can see who answered.": "Hindi kailanman ipinapakita ang pangalan mo kasama ng sagot. Makikita ng team ng MicroMobility kung sino ang sumagot.",
+  "Next": "Susunod",
+  "Question {0} of {1}": "Tanong {0} sa {1}",
+  "Lowest {0}": "Pinakamababa: {0}",
+  "Highest {0}": "Pinakamataas: {0}",
+  "Full screen": "Buong screen"
 }

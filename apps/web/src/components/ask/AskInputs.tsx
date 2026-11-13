@@ -24,8 +24,7 @@ export type InputProps = {
 const isLocked = (state: AnswerState) => state === "done" || state === "shut";
 
 /** A written answer (cloud, open, qa): one box with what is left of its length, and Send. Enter sends; once sent the
- *  box is empty again with the keyboard still in it. The one line this page says about itself is here: whose name
- *  goes with an answer. */
+ *  box is empty again with the keyboard still in it. */
 export function WrittenInput({ q, t, busy, labelId, onSubmit }: InputProps) {
   const c = writtenConfig(q.kind, q.config);
   const [text, setText] = useState("");
@@ -55,7 +54,6 @@ export function WrittenInput({ q, t, busy, labelId, onSubmit }: InputProps) {
         </div>
         <button type="submit" className="ask-btn" disabled={busy}>{busy ? t.sending : t.send}</button>
       </div>
-      <p className="ask-private">{t.privacy}</p>
     </form>
   );
 }

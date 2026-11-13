@@ -1645,9 +1645,14 @@
   "You have already answered this question.": "您已回答过此问题。",
   "You have sent all your answers to this question.": "您已发送此问题的全部回答。",
   "Your answer": "您的回答",
-  "Your name is not shown. MicroMobility's team can see who sent it.": "不会显示您的姓名。MicroMobility 团队可以看到发送者是谁。",
   "Your question": "您的问题",
   "Your session has ended. Sign in again.": "您的登录已过期。请重新登录。",
   "{0} answers": "{0} 个回答",
-  "{0} left": "剩余 {0}"
+  "{0} left": "剩余 {0}",
+  "Your name is never shown with an answer. MicroMobility's team can see who answered.": "您的姓名绝不会与回答一同显示。MicroMobility 团队可以看到是谁回答的。",
+  "Next": "下一步",
+  "Question {0} of {1}": "第 {0} 题，共 {1} 题",
+  "Lowest {0}": "最低 {0}",
+  "Highest {0}": "最高 {0}",
+  "Full screen": "全屏"
 }

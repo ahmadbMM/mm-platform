@@ -10,7 +10,7 @@ export const T = {
     closed: "Answers closed", preview: "Preview",
     signinToAnswer: "Sign in to answer", create: "Create account", close: "Close",
     yourAnswer: "Your answer", yourQuestion: "Your question", left: (n: number) => `${n} characters left`,
-    send: "Send", sending: "Sending…", privacy: "Your name is not shown. MicroMobility's team can see who sent it.",
+    send: "Send", sending: "Sending…", privacy: "Your name is never shown with an answer. MicroMobility's team can see who answered.",
     waiting: "Waiting for approval", rejected: "Not approved", answered: "Answered", remove: "Remove",
     up: (name: string) => `Move ${name} up`, down: (name: string) => `Move ${name} down`,
     pointsLeft: (n: number) => `${n} left`, fewer: (name: string) => `Fewer points for ${name}`, more: (name: string) => `More points for ${name}`,
@@ -18,6 +18,7 @@ export const T = {
     average: (value: string) => `Average ${value}`, correct: "Correct answer",
     upvote: (n: number) => `Upvote (${n})`, votes: (n: number) => `Votes: ${n}`,
     screenBad: "This screen link is not valid", prev: "Previous question", next: "Next question",
+    lowest: (value: string) => `Lowest ${value}`, highest: (value: string) => `Highest ${value}`, back: "Back", forward: "Next", step: (at: number, of: number) => `Question ${at} of ${of}`, fullScreen: "Full screen",
     errors: {
       signin: "Your session has ended. Sign in again.", audience: "This page is not open to your account.", closed: "This question is no longer taking answers.",
       limit: "You have sent all your answers to this question.", answered: "You have already answered this question.",
@@ -33,7 +34,7 @@ export const T = {
     closed: "أُغلقت الإجابات", preview: "معاينة",
     signinToAnswer: "سجّل الدخول للإجابة", create: "إنشاء حساب", close: "إغلاق",
     yourAnswer: "إجابتك", yourQuestion: "سؤالك", left: (n: number) => `المتبقي ${n} حرفاً`,
-    send: "إرسال", sending: "جارٍ الإرسال…", privacy: "لا يظهر اسمك. فريق MicroMobility يرى من أرسل الإجابة.",
+    send: "إرسال", sending: "جارٍ الإرسال…", privacy: "لا يظهر اسمك مع أي إجابة أبداً. فريق MicroMobility يرى من أجاب.",
     waiting: "بانتظار الموافقة", rejected: "لم تتم الموافقة", answered: "تمت الإجابة", remove: "إزالة",
     up: (name: string) => `تحريك ${name} للأعلى`, down: (name: string) => `تحريك ${name} للأسفل`,
     pointsLeft: (n: number) => `المتبقي: ${n}`, fewer: (name: string) => `نقاط أقل لـ ${name}`, more: (name: string) => `نقاط أكثر لـ ${name}`,
@@ -41,6 +42,7 @@ export const T = {
     average: (value: string) => `المتوسط ${value}`, correct: "الإجابة الصحيحة",
     upvote: (n: number) => `تأييد (${n})`, votes: (n: number) => `الأصوات: ${n}`,
     screenBad: "رابط الشاشة غير صالح", prev: "السؤال السابق", next: "السؤال التالي",
+    lowest: (value: string) => `الأدنى ${value}`, highest: (value: string) => `الأعلى ${value}`, back: "رجوع", forward: "التالي", step: (at: number, of: number) => `السؤال ${at} من ${of}`, fullScreen: "ملء الشاشة",
     errors: {
       signin: "انتهت جلستك. سجّل الدخول مجدداً.", audience: "هذه الصفحة غير متاحة لحسابك.", closed: "لم يعد هذا السؤال يستقبل الإجابات.",
       limit: "أرسلت كل إجاباتك على هذا السؤال.", answered: "سبق أن أجبت عن هذا السؤال.",

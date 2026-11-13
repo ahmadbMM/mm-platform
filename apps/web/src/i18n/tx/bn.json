@@ -1645,9 +1645,14 @@
   "You have already answered this question.": "আপনি এই প্রশ্নের উত্তর আগেই দিয়েছেন।",
   "You have sent all your answers to this question.": "আপনি এই প্রশ্নের সব উত্তর পাঠিয়ে দিয়েছেন।",
   "Your answer": "আপনার উত্তর",
-  "Your name is not shown. MicroMobility's team can see who sent it.": "আপনার নাম দেখানো হয় না। MicroMobility-র টিম দেখতে পারে কে পাঠিয়েছে।",
   "Your question": "আপনার প্রশ্ন",
   "Your session has ended. Sign in again.": "আপনার সেশন শেষ হয়েছে। আবার সাইন ইন করুন।",
   "{0} answers": "উত্তর: {0}",
-  "{0} left": "বাকি: {0}"
+  "{0} left": "বাকি: {0}",
+  "Your name is never shown with an answer. MicroMobility's team can see who answered.": "আপনার নাম কখনোই কোনো উত্তরের সঙ্গে দেখানো হয় না। MicroMobility-র টিম দেখতে পারে কে উত্তর দিয়েছে।",
+  "Next": "পরবর্তী",
+  "Question {0} of {1}": "{1}টি প্রশ্নের মধ্যে {0} নম্বর",
+  "Lowest {0}": "সর্বনিম্ন {0}",
+  "Highest {0}": "সর্বোচ্চ {0}",
+  "Full screen": "পূর্ণ স্ক্রিন"
 }

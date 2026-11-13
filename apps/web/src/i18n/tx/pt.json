@@ -1645,9 +1645,14 @@
   "You have already answered this question.": "Você já respondeu a esta pergunta.",
   "You have sent all your answers to this question.": "Você já enviou todas as suas respostas a esta pergunta.",
   "Your answer": "Sua resposta",
-  "Your name is not shown. MicroMobility's team can see who sent it.": "Seu nome não é exibido. A equipe da MicroMobility pode ver quem enviou.",
   "Your question": "Sua pergunta",
   "Your session has ended. Sign in again.": "Sua sessão terminou. Entre novamente.",
   "{0} answers": "{0} respostas",
-  "{0} left": "A distribuir: {0}"
+  "{0} left": "A distribuir: {0}",
+  "Your name is never shown with an answer. MicroMobility's team can see who answered.": "Seu nome nunca é exibido junto com uma resposta. A equipe da MicroMobility pode ver quem respondeu.",
+  "Next": "Avançar",
+  "Question {0} of {1}": "Pergunta {0} de {1}",
+  "Lowest {0}": "Mínimo: {0}",
+  "Highest {0}": "Máximo: {0}",
+  "Full screen": "Tela cheia"
 }

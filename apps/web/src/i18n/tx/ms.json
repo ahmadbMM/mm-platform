@@ -1645,9 +1645,14 @@
   "You have already answered this question.": "Anda sudah menjawab soalan ini.",
   "You have sent all your answers to this question.": "Anda telah menghantar semua jawapan anda untuk soalan ini.",
   "Your answer": "Jawapan anda",
-  "Your name is not shown. MicroMobility's team can see who sent it.": "Nama anda tidak dipaparkan. Pasukan MicroMobility boleh melihat siapa yang menghantarnya.",
   "Your question": "Soalan anda",
   "Your session has ended. Sign in again.": "Sesi anda telah tamat. Log masuk semula.",
   "{0} answers": "{0} jawapan",
-  "{0} left": "Baki {0}"
+  "{0} left": "Baki {0}",
+  "Your name is never shown with an answer. MicroMobility's team can see who answered.": "Nama anda tidak pernah dipaparkan bersama jawapan. Pasukan MicroMobility boleh melihat siapa yang menjawab.",
+  "Next": "Seterusnya",
+  "Question {0} of {1}": "Soalan {0} daripada {1}",
+  "Lowest {0}": "Terendah {0}",
+  "Highest {0}": "Tertinggi {0}",
+  "Full screen": "Skrin penuh"
 }

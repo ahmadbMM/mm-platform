@@ -7,6 +7,7 @@ import {
   charCount, choiceConfig, choiceRows, cloudResult, hasPending, isDrawn, isWritten, itemsResult, numberConfig, numberResult, optionsOf, pageOpen, paletteVars, pointRows, pointsConfig, pollDelay, rankRows,
   rereadDue, resultsShown, scaleRows, scalesConfig, screenAt, screenStep, sentMarks, sentNumber, sentOrder, sentPicks, shapeChoice, shapeNumber, shapePoints, shapeRanking, shapeScales, shapeWritten,
   withMine, withVote, withoutMine, writtenConfig, type AskFull, type AskQuestion,
+  isAskScreen, resultCount, stepAt,
 } from "../ask";
 
 // "Ask" (micromobility.sa/ask): the logic the pages stand on (lib/ask.ts). The payloads here are made up to the
@@ -98,7 +99,8 @@ describe("the look", () => {
       expect(colors).toHaveLength(6);
       for (const c of colors) expect(c).toMatch(/^#[0-9a-f]{6}$/);
     }
-    expect(paletteVars("brand")).toEqual({ "--ask-c0": "#077a4b", "--ask-c1": "#1a1919", "--ask-c2": "#0b6e8a", "--ask-c3": "#b4500b", "--ask-c4": "#9c1f5c", "--ask-c5": "#4a4fc4" });
+    // the six as a results box sets them (lib/ask-look.ts holds the palettes and their tests; these readers are handed on from lib/ask.ts)
+    expect([0, 1, 2, 3, 4, 5].map((i) => paletteVars("brand")[`--ask-c${i}`])).toEqual([...ASK_PALETTES.brand]);
   });
   it("draws a question with the chart staff picked when it is built, with the kind's first otherwise", () => {
     expect(askViz({}, ["cloud", "bubbles"])).toBe("cloud");
@@ -473,12 +475,12 @@ describe("results, shaped for their charts", () => {
     expect(r.rows[1]).toMatchObject({ avg: 5, at: 1, dist: [1, 0, 0, 0, 0] }); // an average is held inside the scale
     expect(scaleRows(c, {}, "en").rows[0]).toMatchObject({ avg: null, at: 0, dist: [0, 0, 0, 0, 0], most: 0 });
   });
-  it("ranking by score and points by average, the best first", () => {
+  it("ranking by score, the best first; points in the order staff wrote them, each with its average", () => {
     const c = { options: OPTIONS, total: 100 };
     expect(rankRows(c, { n: 4, score: { a: 5, b: 9, c: 9 }, pos: { a: 2.5, b: 1.9, c: 1.6 } }, "en").rows.map((r) => [r.id, r.share])).toEqual([["c", 1], ["b", 1], ["a", 5 / 9]]);
     expect(rankRows(c, {}, "en").rows.map((r) => r.id)).toEqual(["a", "b", "c"]);
     const p = pointRows(c, { n: 3, sum: { a: 60, b: 150, c: 90 }, avg: { a: 20, b: 50, c: 30 } }, "en");
-    expect(p.rows.map((r) => [r.id, r.avg, r.share])).toEqual([["b", 50, 0.5], ["c", 30, 0.3], ["a", 20, 0.2]]);
+    expect(p.rows.map((r) => [r.id, r.avg, r.share])).toEqual([["a", 20, 0.2], ["b", 50, 0.5], ["c", 30, 0.3]]);
     expect(p).toMatchObject({ n: 3, total: 100 });
   });
   it("a number: its average and the bins of its histogram", () => {
@@ -507,6 +509,30 @@ describe("the big screen", () => {
     expect(screenStep(3, 2, 1)).toBe(2);
     expect(screenStep(3, 0, -1)).toBe(0);
     expect(screenStep(0, 0, 1)).toBe(-1);
+  });
+  it("counts the answers of the question on screen, whatever its kind", () => {
+    expect(resultCount({ n: 12, counts: {} })).toBe(12);
+    expect(resultCount({ n: "many" })).toBe(0);
+    expect(resultCount({ n: -3 })).toBe(0);
+    expect(resultCount(null)).toBe(0);
+    expect(resultCount([])).toBe(0);
+  });
+  it("knows its own address in every language - the one page that never puts up the account's pop-ups", () => {
+    for (const path of ["/ask/farm-ideas/screen", "/ar/ask/farm-ideas/screen", "/ask/farm-ideas/screen/", "ask/x1y/screen"]) expect(isAskScreen(path), path).toBe(true);
+    for (const path of ["/ask", "/ask/farm-ideas", "/ar/ask/farm-ideas", "/ask/screen", "/ask/a/b/screen", "/task/abc/screen", "/ask/farm-ideas/screens", "", null, undefined]) expect(isAskScreen(path), String(path)).toBe(false);
+  });
+});
+
+describe("a page drawn in steps", () => {
+  it("stays on the reader's question while it is there, else at the same place, never past the ends", () => {
+    expect(stepAt([11, 12, 13], { id: null, index: 0 })).toBe(0);
+    expect(stepAt([11, 12, 13], { id: 13, index: 0 })).toBe(2);
+    expect(stepAt([11, 13], { id: 12, index: 1 })).toBe(1); // their question was taken off: the one now in its place
+    expect(stepAt([11], { id: 12, index: 5 })).toBe(0);
+    expect(stepAt([11, 12], { id: null, index: -4 })).toBe(0);
+    expect(stepAt([11, 12], { id: null, index: Number.NaN })).toBe(0);
+    expect(stepAt([10, 11, 12, 13], { id: 12, index: 0 })).toBe(2); // a question added before it: still on theirs
+    expect(stepAt([], { id: 1, index: 0 })).toBe(-1);
   });
 });
 

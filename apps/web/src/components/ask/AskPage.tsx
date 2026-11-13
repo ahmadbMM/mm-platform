@@ -4,9 +4,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import {
-  REREAD_MS, applyLive, applySame, askSent, askText, askTheme, askView, askWhen, hasPending, isDrawn, pageOpen, rereadDue, withMine, withVote, withoutMine,
-  type AskView, type LiveAnswer, type SendAnswer,
+  REREAD_MS, applyLive, applySame, askSent, askText, askView, askWhen, hasPending, isDrawn, pageOpen, rereadDue, stepAt, withMine, withVote, withoutMine,
+  type AskQuestion, type AskView, type LiveAnswer, type SendAnswer,
 } from "@/lib/ask";
+import { pageLook } from "@/lib/ask-look";
 import { T } from "./Ask.text";
 import AskQuestionCard, { type QuestionActions } from "./AskQuestion";
 import AskSignIn from "./AskSignIn";
@@ -19,6 +20,10 @@ import { useAskLive } from "./useAskLive";
 // staff put a new question on or started a new round, a waiting answer may have been reviewed (the version moved; at
 // most once every 30 seconds), or an answer came back without the viewer's list. Answers, taking one back and upvotes
 // go through the site's own routes too (/api/ask/send, /unsend, /vote): the session's token never reaches this script.
+//
+// How the page looks is staff's (the page's `look`, lib/ask-look.ts pageLook): its theme, a picture across the top, the
+// line said after an answer, and whether the questions stand one under another or come one at a time ("steps": Back
+// and Next under the question, and where the reader is among them over it).
 type Props = {
   locale: string; slug: string; initial: AskView;
   /** A staff preview's key (?k=), sent with every read of the page. */
@@ -36,6 +41,8 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
   const t = useLocalize(T);
   const [view, setView] = useState(initial);
   const [signIn, setSignIn] = useState(false);
+  // the question the reader answered last: the page's thanks line stands under it
+  const [thanked, setThanked] = useState<number | null>(null);
   const held = useRef(view);
   useEffect(() => { held.current = view; });
 
@@ -85,7 +92,10 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
     if (reload || reviewed) reread();
   }, [reread]);
   const full = view.full;
-  const poke = useAskLive(slug, "page", full && full.rk && !quiet ? { key: full.rk, ver: full.live?.ver ?? 0 } : null, onLive);
+  // a staff preview of a page that is not open asks with the key in its own address: the database refuses a preview's
+  // reading key, and takes that one (contract G2)
+  const liveKey = full ? (full.preview && pageKey ? pageKey : full.rk) : "";
+  const poke = useAskLive(slug, "page", full && liveKey && !quiet ? { key: liveKey, ver: full.live?.ver ?? 0 } : null, onLive);
 
   // A page that is not open yet opens by the clock: read again at its opening time (within the next twelve hours),
   // a few seconds apart for each visitor - and, while the database still says "not yet" (this phone's clock runs
@@ -106,6 +116,7 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
       try {
         const a = askSent(await post("/api/ask/send", { question, value, lang: locale }));
         if (a.ok) {
+          setThanked(question);
           const mine = a.mine;
           if (mine) setView((v) => (v.full ? { ...v, full: withMine(v.full, question, mine) } : v));
           else reread(true);
@@ -135,6 +146,45 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
       } catch { return false; }
     },
   };
+
+  // A page drawn in steps: the question the reader is on - held by its id, so a page read again stays on it - and
+  // kept for this tab, so signing in (which loads the page again) comes back to the same question.
+  const [step, setStep] = useState<{ id: number | null; index: number }>({ id: null, index: 0 });
+  const stepKey = `mm_ask_step:${slug}`;
+  useEffect(() => {
+    let frame = 0;
+    try {
+      const v = JSON.parse(sessionStorage.getItem(stepKey) || "null") as { id?: unknown; index?: unknown } | null;
+      if (v && typeof v.index === "number" && Number.isFinite(v.index)) {
+        const held = { id: typeof v.id === "number" ? v.id : null, index: v.index };
+        frame = requestAnimationFrame(() => setStep(held));
+      }
+    } catch { /* no storage here: the page starts at its first question */ }
+    return () => cancelAnimationFrame(frame);
+  }, [stepKey]);
+  // After Back or Next the keyboard and the screen reader are where the step says which question this is, and the
+  // page is scrolled to it when it is out of view.
+  const stepHead = useRef<HTMLParagraphElement>(null);
+  const moved = useRef(false);
+  const goTo = (q: AskQuestion | undefined, index: number) => {
+    if (!q) return;
+    const held = { id: q.id, index };
+    moved.current = true;
+    setStep(held);
+    try { sessionStorage.setItem(stepKey, JSON.stringify(held)); } catch { /* kept for this visit only */ }
+  };
+  useEffect(() => {
+    if (!moved.current) return;
+    moved.current = false;
+    const el = stepHead.current;
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    const top = el.getBoundingClientRect().top;
+    if (top < 0 || top > window.innerHeight * 0.6) {
+      const calm = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollIntoView({ block: "start", behavior: calm ? "auto" : "smooth" });
+    }
+  }, [step]);
 
   const back = `/ask/${slug}`;
   if (!full) {
@@ -167,20 +217,39 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
   }
 
   const { page } = full;
+  const look = pageLook(page.look);
   const title = askText(locale, page.title_en, page.title_ar), intro = askText(locale, page.intro_en, page.intro_ar);
   const open = pageOpen(full);
+  // a kind these pages do not draw yet (grid, pin, form, the quizzes) is left out whole
+  const drawn = full.questions.filter((q) => isDrawn(q.kind));
+  const steps = look.layout === "steps" && drawn.length > 1;
+  const at = steps ? stepAt(drawn.map((q) => q.id), step) : -1;
+  const thanks = askText(locale, look.thanks_en, look.thanks_ar);
+  const card = (q: AskQuestion) => <AskQuestionCard key={q.id} q={q} full={full} locale={locale} t={t} act={act} thanks={thanked === q.id ? thanks : ""} />;
   return (
-    <div className="ask ask-page" data-ask-theme={askTheme(page.look)}>
+    <div className="ask ask-page" data-ask-theme={look.theme}>
+      {look.cover && <img className="ask-cover" src={look.cover} alt="" decoding="async" fetchPriority="high" />}
       <header className="ask-head">
         {full.preview ? <p className="ask-flags"><span className="ask-chip ask-chip-preview">{t.preview}</span></p> : !open && <p className="ask-flags"><span className="ask-chip">{t.closed}</span></p>}
         <h1 dir="auto">{title}</h1>
         {intro && <p className="ask-intro" dir="auto">{intro}</p>}
+        {/* the one line the page says about itself, once, while it takes answers: whose name goes with an answer */}
+        {open && drawn.some((q) => q.kind !== "info") && <p className="ask-private">{t.privacy}</p>}
         {open && page.closes_at && <p className="ask-until"><time dateTime={page.closes_at} suppressHydrationWarning>{t.until(askWhen(page.closes_at, locale))}</time></p>}
       </header>
-      <div className="ask-questions">
-        {/* a kind these pages do not draw yet (grid, pin, form, the quizzes) is left out whole */}
-        {full.questions.filter((q) => isDrawn(q.kind)).map((q) => <AskQuestionCard key={q.id} q={q} full={full} locale={locale} t={t} act={act} />)}
-      </div>
+      {steps ? (
+        <div className="ask-steps">
+          <p ref={stepHead} className="ask-progress" tabIndex={-1}>
+            <span>{t.step(at + 1, drawn.length)}</span>
+            <span className="ask-progress-bar" aria-hidden="true"><span style={{ inlineSize: `${((at + 1) / drawn.length) * 100}%` }} /></span>
+          </p>
+          {card(drawn[at])}
+          <div className="ask-steps-nav">
+            <button type="button" className="ask-btn ask-btn-line ask-on-page" disabled={at <= 0} onClick={() => goTo(drawn[at - 1], at - 1)}>{t.back}</button>
+            <button type="button" className="ask-btn ask-on-page" disabled={at >= drawn.length - 1} onClick={() => goTo(drawn[at + 1], at + 1)}>{t.forward}</button>
+          </div>
+        </div>
+      ) : <div className="ask-questions">{drawn.map(card)}</div>}
       <SignInDialog open={signIn && !full.signed} onClose={() => setSignIn(false)} title={t.signinToAnswer} close={t.close}>
         <AskSignIn locale={locale} create={create} back={back} />
       </SignInDialog>
@@ -202,7 +271,7 @@ function SignInDialog({ open, onClose, title, close, children }: { open: boolean
   return (
     <dialog ref={ref} className="ask-dialog" aria-labelledby="ask-signin-h" onClose={onClose} onClick={(e) => { if (e.target === ref.current) onClose(); }}>
       {open && (
-        <div className="ask-dialog-box">
+        <div className="ask-dialog-box ask-light">
           <button type="button" className="ask-x ask-dialog-x" aria-label={close} onClick={onClose}><IconClose /></button>
           <h2 id="ask-signin-h">{title}</h2>
           {children}

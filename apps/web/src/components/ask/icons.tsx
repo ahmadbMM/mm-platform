@@ -15,3 +15,6 @@ export const IconNext = ({ size = 24 }: P) => svg(size, <path d="M9 5l7 7-7 7" /
 export const IconVote = ({ size = 16 }: P) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 5.5c.5 0 1 .2 1.3.7l6.2 8.6c.8 1.1 0 2.7-1.3 2.7H5.8c-1.3 0-2.1-1.6-1.3-2.7l6.2-8.6c.3-.5.8-.7 1.3-.7z" /></svg>
 );
+/** Full screen: four corners pointing out; and back out of it: the corners pointing in. */
+export const IconFull = ({ size = 22 }: P) => svg(size, <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />);
+export const IconSmall = ({ size = 22 }: P) => svg(size, <path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" />);

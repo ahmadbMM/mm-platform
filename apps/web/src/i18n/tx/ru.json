@@ -1645,9 +1645,14 @@
   "You have already answered this question.": "Вы уже ответили на этот вопрос.",
   "You have sent all your answers to this question.": "Вы отправили все свои ответы на этот вопрос.",
   "Your answer": "Ваш ответ",
-  "Your name is not shown. MicroMobility's team can see who sent it.": "Ваше имя не показывается. Команда MicroMobility видит, кто отправил ответ.",
   "Your question": "Ваш вопрос",
   "Your session has ended. Sign in again.": "Ваша сессия завершена. Войдите снова.",
   "{0} answers": "Ответов: {0}",
-  "{0} left": "Осталось: {0}"
+  "{0} left": "Осталось: {0}",
+  "Your name is never shown with an answer. MicroMobility's team can see who answered.": "Ваше имя никогда не показывается рядом с ответом. Команда MicroMobility видит, кто ответил.",
+  "Next": "Далее",
+  "Question {0} of {1}": "Вопрос {0} из {1}",
+  "Lowest {0}": "Минимум: {0}",
+  "Highest {0}": "Максимум: {0}",
+  "Full screen": "Во весь экран"
 }

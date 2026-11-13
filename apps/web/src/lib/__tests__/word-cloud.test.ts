@@ -57,6 +57,27 @@ describe("the word cloud", () => {
     expect(layoutCloud(mixed, 900, ruler)).toEqual(layoutCloud(mixed, 900, ruler));
     expect(layoutCloud(words(80), 700, ruler)).toEqual(layoutCloud(words(80), 700, ruler));
   });
+  it("stands some words on their side when the look asks, never the most sent, and still none over another", () => {
+    const list = Array.from({ length: 30 }, (_, i) => ({ w: `Word${i + 1}`, n: 30 - i }));
+    for (const width of [360, 760, 1060]) {
+      const flat = layoutCloud(list, width, ruler);
+      expect(flat.items.some((p) => p.turned), `flat at ${width}`).toBe(false);
+      const mixed = layoutCloud(list, width, ruler, { mixed: true });
+      expect(mixed.items.length).toBe(30);
+      sound(mixed, width, `mixed at ${width}`);
+      expect(mixed.items[0].turned, `the most sent at ${width}`).toBe(false);
+      // a word on its side is as tall as it is long: its box is the other way up
+      for (const p of mixed.items.filter((x) => x.turned)) expect(p.height, p.w).toBeGreaterThan(p.width);
+      for (const p of mixed.items.filter((x) => !x.turned)) expect(p.width, p.w).toBeGreaterThan(p.height);
+      expect(layoutCloud(list, width, ruler, { mixed: true })).toEqual(mixed);
+    }
+    // on a wide box some of thirty do turn
+    expect(layoutCloud(list, 1060, ruler, { mixed: true }).items.filter((p) => p.turned).length).toBeGreaterThan(0);
+    // in a box of a set height too (the big screen)
+    const screen = layoutCloud(list, 1600, ruler, { height: 600, mixed: true });
+    sound(screen, 1600, "mixed on the screen");
+    expect(screen.height).toBeLessThanOrEqual(600);
+  });
   it("keeps a long answer inside a phone's width", () => {
     const { items } = layoutCloud([{ w: "x".repeat(40), n: 5 }, { w: "Swings", n: 1 }], 320, ruler);
     expect(items[0].width).toBeLessThanOrEqual(320);
