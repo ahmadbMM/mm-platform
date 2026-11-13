@@ -12,6 +12,7 @@ import { fill, fmtNum } from "@/lib/fill";
 import { bookingLink, bookingPage, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { readAccount, rpcServer } from "@/lib/account";
+import { readAskList } from "@/lib/ask-server";
 import { memberArea, memberTitle } from "@/lib/members";
 import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { kindNames, sessionName, sessionGenders, type RideKind } from "@/lib/rides";
@@ -57,6 +58,8 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   // through list_sessions for the account; when that cannot be read, the rides wear no chip and keep their Book
   const genders = acct && area?.ok && area.member && area.upcoming.length ? await sessionGenders(area.upcoming.map((r) => r.id), acct) : null;
   const title = acct && area?.ok && area.member ? memberTitle(await rpcServer<unknown>("customer_my_titles", { p_id: acct.id, p_token: acct.token })) : null;
+  // the open Ask pages for this member (ask_list, as micromobility.sa/ask lists them; the booking app's Community tab shows the same)
+  const asks = acct && area?.ok && area.member ? (await readAskList({ id: acct.id, token: acct.token })).pages : [];
   const members = area?.ok ? (area.member && genders ? { ...area, upcoming: area.upcoming.map((r) => ({ ...r, gender: genders.get(r.id) ?? null })) } : area) : null;
   // who is looking, for the refusal: the account's gender (customer_profile, which readAccount read; null when none is on file)
   const viewer = acct ? { gender: sessionGender(acct.profile?.gender) } : null;
@@ -134,7 +137,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         )}
         <section className="club-join" id="card">
           {members?.member ? (
-            <MembersArea title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens} opensAt={opensWhen} opensWords={opensInWords(tx)}
+            <MembersArea asks={asks} title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens} opensAt={opensWhen} opensWords={opensInWords(tx)}
               sgOf={(r) => (r.gender === undefined ? null : genderChip(r, sgWords))} refusalOf={(r) => genderBlock(r, viewer, sgWords)} />
           ) : members ? (
             <div className="club-lookup">
