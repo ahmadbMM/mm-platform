@@ -23,6 +23,12 @@ import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addon
 import { TickIcon } from "@/components/site/Icons";
 import { Sar, sarText } from "./Sar";
 import { TicketDir, TicketMore, TicketShare } from "./TicketParts";
+import TicketComing from "./TicketComing";
+import TicketBikeReport from "./TicketBikeReport";
+import { comingWords } from "./Coming.words";
+import { bikeReportWords } from "./BikeReport.words";
+import { comingCancelLink, stillComing } from "@/lib/still-coming";
+import { bikeReport } from "@/lib/bike-report";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -100,6 +106,9 @@ type Props = {
   /** The Blood Donation event: its words (content/blood-words.ts), and each booking's free ride by booking id
    *  (customer_blood_rewards), null or missing where there is none. */
   blood?: { words: BloodWords; rewards: Map<string, BloodReward> | null } | null;
+  /** "Report a bike problem" (2026-11-13): the bikes' names by id, read only when a booking holds more than one (its
+   *  pop-up asks which); a name not read is said as "Bike 1", "Bike 2". */
+  bikeNames?: Map<string, string | null> | null;
 };
 
 const Bike = () => (
@@ -160,7 +169,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, bikeNames = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -213,6 +222,11 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const handed = rows.some((r) => !!r.bikeId);
   // On the ride's day a held ticket (or tonight's finished ride) shows where the rider is.
   const night = onDay && (look === "live" || (past && allDone)) ? ticketStages(rows, bikes, bikeName, locale) : null;
+  // "Still coming?" from 24 hours before the time to turn up until the start, and "Report a bike problem" once checked in
+  // with a bike (the booking app's _stcHtml and _brpHtml, 2026-11-13; lib/still-coming.ts, lib/bike-report.ts)
+  const stc = stillComing(rows, s, now, past);
+  const brp = bikeReport(rows, s, now);
+  const brpW = brp ? bikeReportWords(locale) : null;
   const stLabel = { booked: t.stBooked, in: t.stIn, bike: t.stBike, done: t.stDone };
   // Before the start on the ride's day: the countdown to bike collection (or the gathering), then the start.
   const cdT = { collect: t.cdCollect, gather: t.cdGather, start: t.cdStart, h: t.durH, hm: t.durHM, m: t.durM };
@@ -329,6 +343,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             <span>{{ underReview: bikes ? t.underReview : t.underReviewNb, pending: t.pending, waitlist: t.waitlistCue, onBike: t.onBike, next: t.next, inQueue: t.inQueue }[cue]}</span>
           </div>
         ) : null}
+        {stc && <TicketComing sessionId={stc.sessionId} ok={stc.ok} cancel={comingCancelLink(links.bookings, stc.bookingId, locale) ?? links.manage} words={comingWords(locale)} failed={t.rrFailed} />}
         {partnerPlace(rows) === "defe" && !past && <p className="tk-line tk-partner">{t.withDefe}</p>}
         {night && (
           <ol className="tk-stages">
@@ -338,6 +353,10 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               </li>
             ))}
           </ol>
+        )}
+        {brp && brpW && (
+          <TicketBikeReport now={now} reported={brp.reported} words={brpW}
+            options={brp.options.map((o, i) => ({ ...o, name: bikeNames?.get(o.bike) || `${brpW.bike} ${i + 1}` }))} />
         )}
         {held && !s?.bfOff && (
           // the breakfast spot is told at staff's time: when, in its place (_revealNoteHtml); never to a rider who will not

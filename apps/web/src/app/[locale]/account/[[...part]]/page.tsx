@@ -49,6 +49,7 @@ import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
 import { BOOTH_DIR, bfFor, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, shareLink, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
+import { bikeReport } from "@/lib/bike-report";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadOpenKinds, loadRecordSessions } from "@/lib/ride-record-data";
 import { anniversaryOf, annivLine, triedKinds } from "@/lib/landmarks";
@@ -262,6 +263,12 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const rideName = (s: TicketSession | undefined, sessionId: string) =>
       (s ? sessionName(s, names, enNames, L !== "en") : isNonBike(null, sessionId) ? tx("Session", "الفعالية") : tx("Ride", "جولة"));
     const drawn = new Date().getTime(); // the countdown's first line, before the browser takes over
+    // "Report a bike problem" (2026-11-13): a booking holding more than one bike asks which one, by the bikes' names
+    const brpBikes = [...new Set([...groups, ...past].flatMap((g) => {
+      const o = bikeReport(g.rows, sessions.get(g.sessionId), drawn)?.options ?? [];
+      return o.length > 1 ? o.map((x) => x.bike) : [];
+    }))].slice(0, 12);
+    const bikeNames = new Map(await Promise.all(brpBikes.map(async (id) => [id, await bikeName(id)] as const)));
     // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
     // Edit does; Reschedule and Cancel open its My Bookings. (A Run for Her place is only cancelled;
     // its event is still named, as the booking app's event link takes it.)
@@ -307,7 +314,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                       live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null,
                       share: shareLink(app, ev, g.sessionId), bookings: myBookings }}
                     route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} />
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} bikeNames={bikeNames} />
                 );
               })}
               {/* the bookings cancelled, after the bookings ahead: one quiet row each, until their day has gone */}
@@ -325,7 +332,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                   <TicketCard key={g.key} past locale={locale} today={today} rows={g.rows} session={s}
                     name={rideName(s, g.sessionId)}
                     cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} />
+                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} bikeNames={bikeNames} />
                 );
               })}
             </div>

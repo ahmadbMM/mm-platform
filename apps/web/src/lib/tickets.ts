@@ -56,6 +56,14 @@ export type TicketRow = {
   /** The promo code the row was booked with (queue_entries.promo_code) and the Saturday ride code (ride_code, rentals
    *  20261108120000), else null: the ticket names each with its kind (codeKindOf; the booking app's _codeRowHtml, 2026-11-08). */
   promoCode?: string | null; rideCode?: string | null;
+  /** "Still coming?" (rentals 20261114080200; lib/still-coming.ts): when the rider said they are coming, null before; absent
+   *  when the read has no such column (nothing is asked). */
+  comingAt?: string | null;
+  /** "Report a bike problem" (rentals 20261114081500; lib/bike-report.ts): the rider's last report on the booking, null
+   *  before; absent when the read has no such column (no button). */
+  bikeReportAt?: string | null;
+  /** Every bike on the row when it holds more than one (assigned_bike_id as a JSON list); bikeId is the first. */
+  bikeIds?: string[];
 };
 /** The kinds of code a booking used (the booking app's _codeKindOf): the friend's referral discount (RW-), the referrer's
  *  free ride (RF-) and bonus (RB-), the blood donation free ride (BD-), a volunteer's free ride for an event worked (VL-,
@@ -125,6 +133,9 @@ export type TicketSession = {
   /** Men only, women only or mixed (null): sessions.gender_only (the owner, 2026-10-27; lib/session-gender.ts),
    *  which the ticket's chip names. A read without the column reads as mixed. */
   gender?: SessionGender | null;
+  /** Called off (sessions.cancelled_at, or the staff status ride_status 'cancelled' of rentals 20261114000100): "Still
+   *  coming?" asks nothing (the booking app's _stcHtml). Absent when the read had neither column. */
+  calledOff?: boolean;
 };
 
 type Row = Record<string, unknown>;
@@ -137,8 +148,8 @@ export function ticketRow(r: Row): TicketRow | null {
   const date = S(r.session_date);
   if (!status || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   // assigned_bike_id holds one id, or a JSON list of them for a rider handed more than one
-  let bike = S(r.assigned_bike_id).trim();
-  if (bike.startsWith("[")) { try { const a = JSON.parse(bike) as unknown; bike = Array.isArray(a) && typeof a[0] === "string" ? a[0] : ""; } catch { bike = ""; } }
+  let bike = S(r.assigned_bike_id).trim(), bikes: string[] = [];
+  if (bike.startsWith("[")) { try { const a = JSON.parse(bike) as unknown; bikes = Array.isArray(a) ? a.filter((x): x is string => typeof x === "string" && !!x) : []; bike = Array.isArray(a) && typeof a[0] === "string" ? a[0] : ""; } catch { bike = ""; } }
   const km = N(r.run_km); // a distance the booking app would take (_runKmOk), else none
   // an Arena Heros place keeps its race, division and team in the same column as Victory Lap's: told apart by
   // its session's id ('<date>-ah'), as my_bookings gives the row without its session's kind
@@ -162,6 +173,10 @@ export function ticketRow(r: Row): TicketRow | null {
     // the codes it was booked with (2026-11-08): letters, digits and dashes as the database keeps them, else none
     promoCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.promo_code)) ? S(r.promo_code) : null,
     rideCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.ride_code)) ? S(r.ride_code) : null,
+    // "Still coming?" and "Report a bike problem" (2026-11-13): only a read that carries the columns has them
+    ...("coming_at" in r ? { comingAt: S(r.coming_at) || null } : {}),
+    ...("bike_report_at" in r ? { bikeReportAt: S(r.bike_report_at) || null } : {}),
+    ...(bikes.length > 1 && bikes[0] === bike ? { bikeIds: bikes } : {}),
   };
 }
 
@@ -369,6 +384,7 @@ export function ticketSession(r: Row): TicketSession | null {
     ah: kind === "arena" ? ahConfig(r.vl) : null,
     price: N(r.price),
     gender: sessionGender(r.gender_only),
+    ...("cancelled_at" in r || "ride_status" in r ? { calledOff: r.cancelled_at != null || r.ride_status === "cancelled" } : {}),
   };
 }
 

@@ -16,6 +16,9 @@ const COLS = "id,session_date,day,title,ride_kind,event_kind,bike_slots,needs_ap
 // for men only or women only (SESSION_COLS_GENDER, the owner, 2026-10-27), which the ticket names on its chip;
 // every visitor sees such a session (the owner, 2026-10-28), so a booked one keeps its ticket like any other.
 const BF_COLS = "breakfast_name_ar,breakfast_offer_en,breakfast_offer_ar";
+// A session called off, by staff's cancel or the status ride_status (rentals 20261114000100): "Still coming?" asks
+// nothing there (lib/still-coming.ts). Each its own group, so a database without the newer column keeps the older.
+const OFF_COLS = ["cancelled_at", "ride_status"];
 
 /** The booked sessions by id, whatever their state (a closed night still shows its ticket), as
  *  `account` may see them (every public session, and the private ones it holds a booking on). */
@@ -24,7 +27,7 @@ export async function loadTicketSessions(ids: string[], account: SessionReader |
   const clean = [...new Set(ids)].filter((x) => ID.test(x)).slice(0, 40);
   if (!url || !key || !clean.length) return new Map();
   try {
-    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`, COLS, Date.now(), { optional: [BF_COLS, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER], account });
+    const rows = await sessionRows(fetchImpl, url, key, `id=in.(${clean.join(",")})`, COLS, Date.now(), { optional: [BF_COLS, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER, ...OFF_COLS], account });
     const list = Array.isArray(rows) ? rows.map((r) => ticketSession(r as Record<string, unknown>)).filter((x): x is TicketSession => x !== null) : [];
     return new Map(list.map((s) => [s.id, s]));
   } catch {
