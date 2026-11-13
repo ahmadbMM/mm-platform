@@ -249,6 +249,7 @@ describe("which addresses the proxy sees", () => {
   it("sees the registration forms' addresses too (it decides whether the website's page or the form's own answers), never their files", () => {
     for (const p of ["/petromin", "/community/registration", "/defe", "/saturday", "/lockers", "/community", "/petrominx", "/Petromin", "/community/Registration", "/Defe", "/defense", "/Saturday", "/saturdays", "/Lockers", "/lockersx"]) expect(seen(p), p).toBe(true);
     expect(seen("/community/registration/og-image.png")).toBe(false);
+    expect(seen("/ask/og-image.png")).toBe(false); // the Ask links' share picture: a file, never a page's slug
     // a locker's own tag comes here too: the proxy sends it on (lockers.test.ts)
     for (const p of ["/lockers/7", "/lockers/L7"]) expect(seen(p), p).toBe(true);
   });

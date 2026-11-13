@@ -664,6 +664,10 @@ export function screenAt(questions: readonly AskQuestion[], o: { picked: number 
 /** One question on (1) or back (-1), stopping at the ends. */
 export const screenStep = (count: number, at: number, by: 1 | -1): number => (count < 1 ? -1 : clamp(at + by, 0, count - 1));
 
+/** The picture a shared Ask link shows (WhatsApp, X, ...): the logo on white, the same picture as the booking app's
+ *  links (its og-image.png), not the site's photo card (lib/seo.ts DEFAULT_SHARE_IMAGE). */
+export const ASK_SHARE_IMAGE = "/ask/og-image.png";
+
 /** Whether a path is an Ask page's big screen (/ask/<slug>/screen, in any language): a projector, not an account
  *  page - the one page of the site that never puts up the account's pop-ups (account/EmergencyGateLoader.tsx). */
 export const isAskScreen = (path: string | null | undefined): boolean => /(?:^|\/)ask\/[^/]+\/screen\/?$/.test(path ?? "");

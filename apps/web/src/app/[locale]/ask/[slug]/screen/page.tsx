@@ -6,7 +6,7 @@ import "@/components/site/site.css";
 import "@/components/ask/ask.css";
 import { serverLocalize } from "@/i18n/dicts";
 import { localeInfo } from "@/i18n/locales";
-import { askText } from "@/lib/ask";
+import { ASK_SHARE_IMAGE, askText } from "@/lib/ask";
 import { askKey, qrModules, readAskScreen } from "@/lib/ask-server";
 import { SITE_URL, pageMeta } from "@/lib/seo";
 
@@ -22,7 +22,7 @@ export async function generateMetadata({ params, searchParams }: Props): Promise
   const [{ locale, slug }, sp] = await Promise.all([params, searchParams]);
   const full = await load(slug, askKey(sp.k) ?? "");
   const name = full ? askText(locale, full.page.title_en, full.page.title_ar) : "";
-  return pageMeta({ path: `/ask/${slug}/screen`, locale, noindex: true, title: `${name || serverLocalize(T, locale).listTitle} · Micromobility` });
+  return pageMeta({ path: `/ask/${slug}/screen`, locale, noindex: true, image: ASK_SHARE_IMAGE, title: `${name || serverLocalize(T, locale).listTitle} · Micromobility` });
 }
 
 export default async function AskScreenPage({ params, searchParams }: Props) {
