@@ -53,6 +53,10 @@ import { rideGroupKm } from "./kind-theme";
 //   featured _featured (2026-11-13): a date inside MicroMobility Experiences (the Saturday ride, a Petromin night, the
 //            pool, the DEFE 5KM Run, yoga) that staff switched on (bike_slots._feat, beside _time: no column); with no
 //            _feat the kind answers (yoga and the DEFE 5KM Run are featured as made), and _feat 0 switches one off.
+//   fbk      _sessFb (2026-11-13): Full, no waitlist. A session staff closed (status 'closed', which the database refuses
+//            to book) with bike_slots._fbk, beside _time: no column. Riders still see it, said Fully booked, so nobody
+//            takes it for called off; never a night called off (cancelled_at), a draft, or one waiting on its timer
+//            (opens_at). A closed session without the mark stays out of every list, as before.
 
 export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena" | "blood" | "yoga";
 /** A ride_prices row: the fare, and (lib/biz.ts faresOf) the highest fare quoted and the employees' fare when the database has them. */
@@ -60,7 +64,12 @@ export type RidePrice = PriceRow;
 export type RideSession = {
   id: string;
   date: string; // YYYY-MM-DD, Riyadh
+  /** Full with its waitlist open (status 'full'): it is booked onto the waitlist. */
   full: boolean;
+  /** Full, no waitlist (the booking app's _sessFb, 2026-11-13; fbkOf): staff closed it as fully booked, and riders still
+   *  see it, said Fully booked, with no way to book it or join a waitlist. Never `full` too. toSession always sets it; a
+   *  copy kept at the edge from before has none, and held no such session. */
+  fbk?: boolean;
   title: string | null;
   /** The session's name in Arabic (sessions.title_ar, rentals 20261113170000; the owner's pick on the booking app's
    *  theming page, 2026-11-13): an Arabic page names the session by it (sessionName). Trimmed, at most 60 characters,
@@ -151,6 +160,7 @@ type Row = {
   location?: unknown; meet_url?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
   gender_only?: unknown; closed_types?: unknown;
   out_bikes?: unknown; hide_queue?: unknown;
+  cancelled_at?: unknown; draft?: unknown; opens_at?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -203,6 +213,20 @@ export function featuredOf(kind: RideKind, slots: unknown): boolean {
   }
   const f = o && typeof o === "object" ? (o as Record<string, unknown>)._feat : null;
   return f == null ? FEATURED_KINDS.includes(kind) : !!f;
+}
+
+/** Whether a row is Full, no waitlist (the booking app's _sessFb, 2026-11-13): closed, its settings marked (bike_slots._fbk,
+ *  stored as JSON text or an object), not called off, not a draft and not waiting on its timer. Those three are told only by
+ *  a read that asked for them (SESSION_COLS_FBK): a row without them is not taken for one, so a night called off is
+ *  never shown as fully booked by a database that refused the columns. */
+export function fbkOf(r: Row): boolean {
+  if (r.status !== "closed" || !("cancelled_at" in r) || !("draft" in r) || !("opens_at" in r)) return false;
+  if (r.cancelled_at != null || r.draft === true || r.opens_at != null) return false;
+  let o: unknown = r.bike_slots;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { o = null; }
+  }
+  return !!o && typeof o === "object" && !!(o as Record<string, unknown>)._fbk;
 }
 
 /** A session with a start time alone (slotTimes gave the one time twice): "7 PM", never "7 PM – 7 PM". */
@@ -289,13 +313,15 @@ function publishedOf(r: Row, community: boolean): Pick<RideSession, "published">
   return { published: community && r.hide_queue === false };
 }
 
-/** A session row as this site shows it, or null for one it does not show. Petromin nights are
+/** A session row as this site shows it, or null for one it does not show: an open or full session, and one closed as
+ *  Full, no waitlist (fbkOf). Petromin nights are
  *  left out unless `petromin` (or `keepAll`): only Experiences lists them, under Petromin Days to a
  *  Petromin tag holder and among the community rides to a community member (the owner, 2026-10-12);
  *  every other page leaves them out as before. */
 export function toSession(r: Row, keepAll = false, petromin = false): RideSession | null {
   if (typeof r.id !== "string" || typeof r.session_date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(r.session_date)) return null;
-  if (!keepAll && r.status !== "open" && r.status !== "full") return null;
+  const fbk = fbkOf(r);
+  if (!keepAll && r.status !== "open" && r.status !== "full" && !fbk) return null;
   const kind = rideKind(r);
   if (!keepAll && !petromin && kind === "petromin") return null;
   const community = r.event_kind === "community";
@@ -305,6 +331,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     id: r.id,
     date: r.session_date,
     full: r.status === "full",
+    fbk,
     title: typeof r.title === "string" && r.title.trim() ? r.title.trim() : null,
     kind,
     members: community && r.open_to_all !== true,
@@ -411,6 +438,13 @@ export const SESSION_COLS_OUT = "out_bikes";
 // lib/held.ts), and on a ride staff approve that is Reserved until the list is out. A group of its own, so a database
 // without it reads as before: no list known to be out.
 export const SESSION_COLS_PUBLISHED = "hide_queue";
+// Whether a closed session may be shown as Full, no waitlist (the booking app's _sessFb, 2026-11-13; fbkOf): never a night
+// called off (cancelled_at, rentals 20260928200000), a draft or one waiting on its timer (draft, opens_at, 20261107110000).
+// A group of its own, so a database without them reads as before: no closed session shown.
+export const SESSION_COLS_FBK = "cancelled_at,draft,opens_at";
+/** The sessions the lists of the sessions ahead show (a PostgREST filter): open and full ones, and the closed ones whose
+ *  settings carry the Full, no waitlist mark (bike_slots is text; toSession reads the mark itself and the rest of fbkOf). */
+export const SESSION_STATUS_SHOWN = "or=(status.in.(open,full),and(status.eq.closed,bike_slots.like.*_fbk*))";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -547,9 +581,10 @@ export async function placesTaken(fetchImpl: typeof fetch, url: string, key: str
 }
 
 /** The places left on the soonest open sessions nobody approves (at most 12 counts a read): the booking app's spotsLeft,
- *  capacity (12 when unset) less the bikes out of service, less the bookings holding a place. */
+ *  capacity (12 when unset) less the bikes out of service, less the bookings holding a place. Never on one closed as
+ *  fully booked, which takes no booking. */
 async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, url: string, key: string): Promise<RideSession[]> {
-  const ask = sessions.filter((s) => !s.full && !s.approval).slice(0, 12);
+  const ask = sessions.filter((s) => !s.full && !s.fbk && !s.approval).slice(0, 12);
   const counts = await Promise.all(ask.map((s) => placesTaken(fetchImpl, url, key, s.id, s.kind === "petromin")));
   const left = new Map(ask.map((s, i) => [s.id, counts[i] == null ? null : Math.max(0, (s.capacity || 12) - (s.out ?? 0) - (counts[i] as number))]));
   return sessions.map((s) => (left.has(s.id) ? { ...s, left: left.get(s.id) ?? null } : s));
@@ -588,8 +623,9 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=*`, key), // every column: max_price and employee_price too (lib/biz.ts)
-      // and the bikes out of service, which the places left count (withPlacesLeft), and whether each rider list is out
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED] }),
+      // and the bikes out of service, which the places left count (withPlacesLeft), and whether each rider list is out;
+      // the closed sessions marked Full, no waitlist too, with what tells one from a night called off (SESSION_COLS_FBK)
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&${SESSION_STATUS_SHOWN}&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED, SESSION_COLS_FBK] }),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) prices = priceRows(p.value);
     if (s.status === "fulfilled" && Array.isArray(s.value)) {

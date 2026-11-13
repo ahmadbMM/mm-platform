@@ -60,6 +60,16 @@ export function ClockIcon({ size = 14, className = "" }: P) {
   );
 }
 
+/** A calendar leaf (the booking app's _cuIc cal): where to go next, on a date closed as fully booked. */
+export function CalendarIcon({ size = 14, className = "" }: P) {
+  return (
+    <svg className={`mm-ic ${className}`.trim()} viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor"
+      strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+      <rect x="3.6" y="5.2" width="16.8" height="15.2" rx="2.6" /><path d="M3.6 10.1h16.8M8.2 3.2v4M15.8 3.2v4" />
+    </svg>
+  );
+}
+
 /** An "i" in a ring: more about this (the booking app's bike-pill info mark). */
 export function InfoIcon({ size = 18, className = "" }: P) {
   return (

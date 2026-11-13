@@ -15,7 +15,7 @@ import { pageState } from "@/lib/page-state";
 import { accountBookings, genderViewer, rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { typeOffered } from "@/lib/bike-kinds";
-import { dateText, eventCards, featuredDates, infoArena, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
+import { dateText, eventCards, featuredDates, infoArena, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, nextOpen, rentsBikes, type DateTexts } from "@/lib/event-info";
 import { bizOf, faresOf } from "@/lib/biz";
 import { kindNames, loadRides, oneTime, sessionName, upcoming, type RideKind, type RideSession } from "@/lib/rides";
 import { routeItems, routeNameOf, routeNames } from "@/lib/route-names";
@@ -66,6 +66,10 @@ import { kindMarks, sunriseHhmm } from "@/lib/kind-theme";
 // visitor already holds says Booked, On the waitlist or Reserved where its places would be said, on its card in its
 // event's list and on its Featured card (lib/held.ts; the account's bookings are one more read, for a signed-in visitor
 // alone); and a date card says its day without the year while that is this year's (lib/tickets.ts fmtDayNoYear).
+// Full, no waitlist (the user, 2026-11-13; lib/rides.ts fbkOf, the booking app's _sessFb): a date staff closed as fully
+// booked is listed among its event's dates, said Fully booked, with See you next Saturday on the Saturday ride and See you
+// at the next session on any other, and nothing books it; it never brings back a card that shows only while it has dates,
+// nor stands as an event's next date.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -200,6 +204,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const window = siteBookingWindow(content);
   const directions = S(site.contact.jccHref);
   const waitWord = tx("Waitlist", "قائمة الانتظار"), left1 = tx("{0} spot left", "{0} مقعد متبقي"), leftN = tx("{0} spots left", "{0} مقاعد متبقية");
+  // Full, no waitlist (lib/rides.ts fbkOf): the booking app's sessFbk, sessFbkSat and sessFbkNext
+  const fbkWord = tx("Fully booked", "محجوز بالكامل");
+  const fbkLine = (s: RideSession) => (s.kind === "saturday" ? tx("See you next Saturday", "نراك السبت القادم") : tx("See you at the next session", "نراك في الجلسة القادمة"));
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
   const dateTexts: DateTexts = {
@@ -300,6 +307,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       ...(s.featured ? { feat: { ...fmtDayTile(s.date, locale), len: s.kind === "yoga" ? yogaLength(s.times, ygWords.min) || null : null } } : {}),
       // the visitor's own place on the date, said where its places would be; absent when they hold none
       ...(own ? { held: own } : {}),
+      // closed as Full, no waitlist: where to go next, under its time; absent on a date that may be booked
+      ...(s.fbk ? { fbk: fbkLine(s) } : {}),
       // a copy kept at the edge from before these fields existed reads as an event without them
       event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
@@ -320,9 +329,10 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       reveal: held ? fillAt(tx("Breakfast spot: announced {0}", "موقع الفطور: يُعلَن عنه {0}"), held) : null,
       left: s.left ?? null,
       meta: [collect, from, sr && fillAt(kw.sunriseAt, sr)].filter((x): x is string => !!x),
-      // within a day of opening, a countdown to the real window that the browser keeps up to date each minute (opensAt)
-      opens: window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null,
-      opensAt: window && notOpenYet(s.date, window, now, s.kind) ? opensAt(s.date, window) : null,
+      // within a day of opening, a countdown to the real window that the browser keeps up to date each minute (opensAt);
+      // never on a date closed as fully booked, which no window opens
+      opens: !s.fbk && window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null,
+      opensAt: !s.fbk && window && notOpenYet(s.date, window, now, s.kind) ? opensAt(s.date, window) : null,
       // its Details: staff's own line for the date shows under the text, except on an event, whose
       // description is the text
       info: {
@@ -332,7 +342,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         collect, place: place.name, map: place.map,
         // the Saturday ride: when the sun rises, after when it is, and its two routes drawn above the facts
         ...(sr ? { sunrise: sr } : {}), ...(route ? { route } : {}),
-        distance: infoDistance(s.kind, kmWord), places: infoPlaces(s, { waitlist: waitWord, left1, leftN }),
+        distance: infoDistance(s.kind, kmWord), places: infoPlaces(s, { waitlist: waitWord, left1, leftN, fbk: fbkWord }),
         ...((v) => (v ? { races: v.races, divs: v.divs } : {}))(infoVl(s, vlWords)),
         ...((v) => (v ? { races: v.races, divs: v.divs, guide: v.guide, format: ahFormat, whenNote: ahWhen, link: { label: tx("Race details", "تفاصيل السباق"), text: tx("The workout and standards, from the organisers", "التمارين والمعايير من المنظمين"), url: AH_INFO_URL } } : {}))(infoArena(s, ahWords)),
         // the DEFE 5KM Run: when the kits go out, and where the race itself is entered (the booking app's _infoFacts)
@@ -387,7 +397,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     // the Experiences card: a mark for each kind it has a date for (every one on its books, not only those it lists),
     // named for a screen reader by the kinds' names
     ...(key === "community" ? ((m) => (m.length ? { marks: { kinds: m, label: m.map((k) => kindName[k as RideKind]).join(" · ") } } : {}))(kindMarks(onBooks)) : {}),
-    ...(key === "vlap" ? { line: vlLine(sessions[0]) } : key === "arena" ? { line: ahLine(sessions[0]), name: kindName.arena, must: tx("You must have a partner to take part. There are no individual entries.", "يجب أن يكون لديك شريك للمشاركة. لا يوجد تسجيل فردي.") } : key === "blood" ? bloodCard(sessions[0]) : {}),
+    // (their soonest date that may be booked: never one closed as fully booked, the booking app's _vlSoon and _bldSess)
+    ...(key === "vlap" ? { line: vlLine(nextOpen(onBooks)) } : key === "arena" ? { line: ahLine(nextOpen(onBooks)), name: kindName.arena, must: tx("You must have a partner to take part. There are no individual entries.", "يجب أن يكون لديك شريك للمشاركة. لا يوجد تسجيل فردي.") } : key === "blood" ? bloodCard(nextOpen(onBooks)) : {}),
   }));
   const text: StepText = {
     steps: [S(st.stepEvent), S(st.stepDate), S(st.stepBook)], eventTitle: S(st.eventTitle), dateTitle: S(st.dateTitle), bookTitle: S(st.bookTitle),
@@ -402,6 +413,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     featured: tx("Featured", "مميّزة"), upcoming: tx("Upcoming", "المواعيد القادمة"),
     // a date the visitor holds: the booking app's tkStBooked, wlOnList and statusReserved (KindTheme.words.ts)
     held: kw.held,
+    fbk: fbkWord,
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
     everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),
     breakfastAt: tx("Breakfast at {0}", "الإفطار في {0}"),

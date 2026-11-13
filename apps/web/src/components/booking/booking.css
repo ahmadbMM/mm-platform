@@ -604,6 +604,14 @@ html:is([lang="ar"], [lang="ur"]) .sc-yg-title { font-family: var(--cs-font-ar),
 .sc-time { font-size: 12px; color: #6f6d63; }
 .sc-dw { color: #077a4b; font-weight: 700; }
 .sc-meta { font-size: 12px; color: #6f6d63; }
+/* Full, no waitlist (the booking app's .sess-card-fbk, 2026-11-13; lib/rides.ts fbkOf): a date staff closed as fully booked
+   stays on the list at full strength, never greyed as a date not open yet is, so nobody takes it for called off. It is no
+   choice (no pointer, no hover glow), says Fully booked in the full red where its places would be said (.sc-spots.full),
+   and where to go next as a quiet line under its time, a calendar before it. */
+.sc-card.fbk { cursor: default; }
+.sc-card.fbk:hover { border-color: rgba(26, 25, 25, .14); box-shadow: none; }
+.sc-fbk-l { display: inline-flex; align-items: center; gap: 6px; }
+.sc-fbk-l .mm-ic { flex: none; }
 @media (max-width: 560px) {
   .sc-card { padding: 12px; padding-inline-start: 31px; }
   .sc-spots { font-size: 11px; }

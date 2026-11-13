@@ -132,8 +132,8 @@ describe("whether a ride's list is out (sessions.hide_queue, the booking app's _
     const r = await loadRides(f as unknown as typeof fetch, AT);
     const reads = f.mock.calls.map((c) => String(c[0])).filter((u) => u.includes("/rpc/list_sessions?"));
     expect(reads).toHaveLength(2);
-    expect(reads[0]).toContain(",title_ar,out_bikes,hide_queue&session_date=gte.2026-10-27");
-    expect(reads[1]).toContain(",title_ar,out_bikes&session_date=gte.2026-10-27");
+    expect(reads[0]).toContain(",title_ar,out_bikes,hide_queue,cancelled_at,draft,opens_at&session_date=gte.2026-10-27");
+    expect(reads[1]).toContain(",title_ar,out_bikes,cancelled_at,draft,opens_at&session_date=gte.2026-10-27");
     expect(r!.sessions.map((s) => [s.id, s.approval, s.published])).toEqual([["2026-10-31", true, undefined]]);
     await memoSettled();
   });

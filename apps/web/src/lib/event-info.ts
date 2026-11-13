@@ -140,10 +140,12 @@ export function infoPlace(s: Pick<RideSession, "kind" | "approval" | "location" 
 export const infoDistance = (kind: RideKind, km: string): string | null =>
   (kind === "runher" ? RUN_KMS.map((n) => fillAt(km, n)).join(" · ") : kind === "defe5k" ? fillAt(km, 5) : null);
 
-/** The places a date has (_infoFacts): never said on a ride staff approve (they choose who rides);
+/** The places a date has (_infoFacts): Fully booked on one closed as Full, no waitlist (`t.fbk`, approval ride or not, as
+ *  the booking app says it, 2026-11-13); never said on a ride staff approve (they choose who rides);
  *  the waitlist on a full date or one with none left; else how many are left, when they were counted
  *  (lib/rides.ts counts the soonest open dates), and nothing when they were not. */
-export function infoPlaces(s: Pick<RideSession, "full" | "left" | "approval"> & { kind?: RideKind }, t: { waitlist: string; left1: string; leftN: string }): string | null {
+export function infoPlaces(s: Pick<RideSession, "full" | "left" | "approval" | "fbk"> & { kind?: RideKind }, t: { waitlist: string; left1: string; leftN: string; fbk?: string }): string | null {
+  if (s.fbk && t.fbk) return t.fbk;
   if (s.approval) return null;
   if (s.full) return t.waitlist;
   if (typeof s.left !== "number") return null;
@@ -191,13 +193,20 @@ export type EventCard = (typeof EVENT_CARDS)[number];
  *  lists the Petromin nights alone, to a Petromin tag holder alone (the owner, 2026-10-12: "a new
  *  event card that has the name Petromin Days that only is visible for petromin tag holders"). The
  *  website's community card lists no Petromin nights, as before (community members book them in the
- *  booking app's MicroMobility Experiences), and nobody else sees them. */
-export function eventCards<T extends Pick<RideSession, "kind">>(all: T[], v: { member: boolean; petromin: boolean }): { card: EventCard; sessions: T[] }[] {
+ *  booking app's MicroMobility Experiences), and nobody else sees them. A card that shows only while it has dates needs
+ *  one that may be booked (the booking app's _runHerLive, _vlLive and the like read the live sessions alone): a date
+ *  closed as Full, no waitlist (lib/rides.ts fbkOf) is listed under a card that shows, and never brings one back. */
+export function eventCards<T extends Pick<RideSession, "kind" | "fbk">>(all: T[], v: { member: boolean; petromin: boolean }): { card: EventCard; sessions: T[] }[] {
   const of = (key: string) => (key === "petromin"
     ? all.filter((s) => v.petromin && s.kind === "petromin")
     : all.filter((s) => EVENT_OF[s.kind] === key && s.kind !== "petromin"));
-  return EVENT_CARDS.map((card) => ({ card, sessions: of(card.key) })).filter((c) => c.card.always || c.sessions.length > 0);
+  return EVENT_CARDS.map((card) => ({ card, sessions: of(card.key) })).filter((c) => c.card.always || c.sessions.some((s) => !s.fbk));
 }
+
+/** The first date of a list that may be booked, never one closed as Full, no waitlist (the booking app's _infoNextOf and
+ *  _vlSoon read the live sessions alone): an event's About says it as the next date, and Victory Lap's, Arena Heros' and
+ *  the Blood Donation event's cards say its day. */
+export const nextOpen = <T extends { fbk?: unknown }>(sessions: readonly T[]): T | undefined => sessions.find((s) => !s.fbk);
 
 /** How many Featured cards the event step shows (the booking app's FEAT_LAND_MAX). */
 export const FEATURED_MAX = 4;
