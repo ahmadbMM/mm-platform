@@ -24,6 +24,9 @@ import BloodTypeCard from "@/components/account/BloodTypeCard";
 import { bloodTypeWords } from "@/components/account/BloodType.words";
 import SportCard from "@/components/account/SportCard";
 import { sportWords } from "@/components/account/Sport.words";
+import CalendarFeed from "@/components/account/CalendarFeed";
+import { calendarWords } from "@/components/account/Calendar.words";
+import { calfHost, calfLang, calfPeekOn } from "@/lib/calendar-feed";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import "../handoff.css";
@@ -175,6 +178,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
   // Account: the tickets, the rating, the Club card link, the wallet, Invite friends, the blood type, the sport and the shortcuts.
   const accountMain = async () => {
+    // the calendar address (2026-11-13): its section shows only once calendar_link's peek answers, which makes nothing and
+    // sends no key; a database without it, or a failed read, shows none (lib/calendar-feed.ts)
+    const calendarP = rpcServer<unknown>("calendar_link", { p_id: acct.id, p_token: acct.token, p_op: "peek" }).then(calfPeekOn);
     const groups = ticketGroups(rows, today);
     const doneTonight = doneToday(rows, today);
     const cancelled = cancelledGroups(rows, today); // kept, said as such, until their day has gone (2026-11-10)
@@ -288,6 +294,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       ["ambassadors", tx("Ambassador Program", "برنامج السفراء"), "/ambassadors"],
       ["help", tx("Help", "المساعدة"), "/help"],
     ].filter(([k]) => !hidden.includes(k));
+    const calendarOn = await calendarP;
     return (
       <>
         <section className="ac-sec" aria-labelledby="ac-rides-h">
@@ -413,6 +420,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             <SportCard initial={{ competes: sport.competes, feds: sport.feds, other: sport.other }} added={sport.added} />
           </section>
         )}
+
+        {/* the booking app's calendar address (webcal), on its own host: the section, then its pop-up */}
+        {calendarOn && <CalendarFeed host={calfHost(app)} lang={calfLang(locale)} words={calendarWords(locale)} />}
 
         {shortcuts.length > 0 && (
           <nav className="ac-links" aria-label={tx("Shortcuts", "اختصارات")}>

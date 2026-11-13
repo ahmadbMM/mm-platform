@@ -262,3 +262,22 @@ dialog.bdr-dlg::backdrop { background: rgba(26, 25, 25, .5); }
 .lk-acc-t small { color: #57605a; font-weight: 400; font-size: 13px; }
 .lk-acc-qr { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 4px; }
 .lk-acc-qr p { margin: 0; font-weight: 700; color: #2e352f; }
+
+/* The calendar address (CalendarFeed.tsx; the booking app's calendar-feed.js, 2026-11-13): the section's head button reads
+   as the Club card's link; its pop-up and the question before a replace are the ticket's centred dialog (booking.css
+   .tk-dlg), with Add to my calendar as the main button, Copy and Replace whole width under it, and the address shown to
+   copy by hand wrapping inside the box. The empty status and alert lines take no room. */
+.ac-calf-go { border: 0; background: none; padding: 0; font: inherit; font-weight: 700; font-size: 14px; color: #077a4b; cursor: pointer; }
+.ac-calf-dlg { width: min(380px, calc(100vw - 32px)); }
+.ac-calf-ask .tk-dlg-t { padding-inline-end: 0; }
+.ac-calf-k { margin: 0 0 -10px; padding-inline-end: 40px; font-size: 12px; font-weight: 600; color: #6e6b63; }
+:is(.ac-calf-main, .ac-calf-btn) { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 6px 14px; border-radius: 10px; box-sizing: border-box;
+  font: inherit; font-size: 15px; font-weight: 600; text-align: center; text-decoration: none; cursor: pointer; }
+.ac-calf-main { background: #077a4b; border: 1px solid #077a4b; color: #fff !important; }
+.ac-calf-main:hover { background: #06603b; }
+.ac-calf-btn { background: #fff; border: 1px solid rgba(26, 25, 25, .24); color: #1a1919; }
+.ac-calf-btn:disabled { opacity: .6; cursor: default; }
+.ac-calf-wait, .ac-calf-body { margin: 0; font-size: 14px; line-height: 1.5; color: #4a4843; }
+.ac-calf-note { margin: 0; font-size: 13px; line-height: 1.45; color: #4a4843; overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
+.ac-calf-err { margin: 0; font-size: 13px; font-weight: 600; color: #a33b2e; }
+:is(.ac-calf-note, .ac-calf-err):empty { display: none; }
