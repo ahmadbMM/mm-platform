@@ -49,6 +49,8 @@ import { BOOTH_DIR, bfFor, bloodDone, breakfastFor, cancelledGroups, doneToday, 
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
 import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
+import { shareDays } from "@/lib/share-days";
+import { firstNameOf } from "@/lib/share-picture";
 import { riyadhClock } from "@/lib/workshop-days";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
@@ -425,7 +427,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const dur = { h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM };
     if (p === "badges") return allBadges.length > 0 && (
       <section className="ac-sec" aria-label={recordText.badges}>
-        <RideRecord part="badges" locale={locale} stats={null} led={0} badges={allBadges} t={recordText} typeName={typeName} dur={dur} reqs={badges.requests ?? null} />
+        <RideRecord part="badges" locale={locale} stats={null} led={0} badges={allBadges} t={recordText} typeName={typeName} dur={dur} reqs={badges.requests ?? null}
+          share={{ first: firstNameOf(acct.name), rode: shareDays(record, recSessions) }} />
       </section>
     );
     const stats = rideStats(record, recSessions, today);

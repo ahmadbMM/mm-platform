@@ -12,7 +12,7 @@ export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: bool
 /** A night on a bike (lib/bike-kinds.ts BIKE_KINDS): the only nights Your rides and the ride badges count
  *  (the owner, 2026-10-18: the pool, the workshop, an event, a run and Victory Lap are not rides). A session
  *  that did not load counts unless its id names a kind without a bike. */
-const onBike = (sessionId: string, sessions: Map<string, RecordSession>): boolean => {
+export const onBike = (sessionId: string, sessions: Map<string, RecordSession>): boolean => {
   const x = sessions.get(sessionId);
   return x ? BIKE_KINDS.has(x.kind) : !isNonBike(null, sessionId);
 };

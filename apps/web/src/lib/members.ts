@@ -27,14 +27,16 @@ const DATE = /^\d{4}-\d{2}-\d{2}/;
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 /** The title a member shows (customer_my_titles; the booking app's My Account picks it). null: no card - not a
- *  member, not accepted, or a database without the function; title null: a member holding none yet. */
-export type MemberTitle = { hidden: boolean; title: { name: string; nameAr: string; color: string } | null };
+ *  member, not accepted, or a database without the function; title null: a member holding none yet. `at`: the day it
+ *  was given or reached, "YYYY-MM-DD" (rentals 20261114081200, for its shared picture); absent before that. */
+export type MemberTitle = { hidden: boolean; title: { name: string; nameAr: string; color: string; at?: string } | null };
 export function memberTitle(r: { status: number; data: unknown }): MemberTitle | null {
   const d = r.status === 200 && r.data && typeof r.data === "object" ? (r.data as Record<string, unknown>) : null;
   if (!d || d.ok !== true || d.member !== true) return null;
   const all = (Array.isArray(d.titles) ? d.titles : []).filter((x): x is Record<string, unknown> => !!x && typeof x === "object" && !!S(x.name).trim());
   const x = all.find((y) => y.id === d.shown) ?? all[0];
-  return { hidden: d.hidden === true, title: x ? { name: S(x.name), nameAr: S(x.name_ar), color: S(x.color) } : null };
+  const at = x && DATE.test(S(x.at)) ? S(x.at).slice(0, 10) : "";
+  return { hidden: d.hidden === true, title: x ? { name: S(x.name), nameAr: S(x.name_ar), color: S(x.color), ...(at ? { at } : {}) } : null };
 }
 
 /** What the function's answer means (lib/account.ts rpcServer's shape). */

@@ -2,11 +2,14 @@
 
 import { useRef, useState } from "react";
 import Medal from "./Medal";
+import ShareImage, { ShareIc } from "./ShareImage";
 import { badgeReqWords } from "./BadgeRequest.words";
+import { shareWords } from "./BadgeShare.words";
 import { fill } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
 import { lastReq, PDF_MAX, type AskChoice, type BadgeReq } from "@/lib/badge-request";
 import { TickIcon } from "@/components/site/Icons";
+import { badgeSubject, type ShareSubject } from "@/lib/share-picture";
 
 // Every badge on My Account, as the booking app's account page draws them (_mrBadgesRow,
 // _mrBadgeInfo): the earned ones in a grid of equal tiles, the ones still to earn folded under one
@@ -18,6 +21,8 @@ import { TickIcon } from "@/components/site/Icons";
 // fetched here. A rider may ask for a badge staff give (rentals 20261108210000, the booking app's _bdr*):
 // Request a badge under the badges and Request this badge in a popup open the request dialog (a
 // comment, a picture or a PDF), sent to /api/account/badge-request; a waiting request shows on its tile.
+// An earned badge's popup offers Share (the booking app's _shrBadge, new features build F12, 2026-11-13): the picture's
+// pop-up (ShareImage.tsx) takes the popup's place, and closing it gives the focus back to the badge's tile.
 export type BadgeView = {
   slug: string; icon: string; color: string; on: boolean;
   name: string; how: string; about: string;
@@ -33,6 +38,8 @@ export type BadgeView = {
   /** The level its popup offers to ask for (a badge staff give, not reached), and every level of it a request may name. */
   ask: string | null;
   askSlugs: string[];
+  /** The day its picture names (when it was given or reached), in the page's words; "" for none. */
+  day?: string;
 };
 /** The badge requests: the account's own, newest first, and the badges the dialog offers; null: none offered. */
 export type BadgeAsk = { reqs: BadgeReq[]; choices: AskChoice[]; locale: string };
@@ -99,12 +106,16 @@ const Lock = () => (
   </svg>
 );
 
-export default function BadgeGrid({ items, t, ask = null }: { items: BadgeView[]; t: BadgeGridText; ask?: BadgeAsk | null }) {
+/** Share on an earned badge: the page's language and the rider's first name ("" offers no switch); null: no Share. */
+export type BadgeShareOn = { locale: string; first: string };
+
+export default function BadgeGrid({ items, t, ask = null, share = null }: { items: BadgeView[]; t: BadgeGridText; ask?: BadgeAsk | null; share?: BadgeShareOn | null }) {
   const [more, setMore] = useState(false);
   const [open, setOpen] = useState<BadgeView | null>(null);
   const [reqs, setReqs] = useState<BadgeReq[]>(ask?.reqs ?? []);
   const [form, setForm] = useState<ReqForm | null>(null);
   const [said, setSaid] = useState("");
+  const [shr, setShr] = useState<{ n: number; sub: ShareSubject; back: HTMLElement | null } | null>(null);
   const dlg = useRef<HTMLDialogElement>(null);
   const rq = useRef<HTMLDialogElement>(null);
   const back = useRef<HTMLElement | null>(null);
@@ -163,6 +174,14 @@ export default function BadgeGrid({ items, t, ask = null }: { items: BadgeView[]
     requestAnimationFrame(() => dlg.current?.showModal());
   };
   const levelOf = (x: BadgeView) => fill(t.levelOf, x.lvN, x.levels?.length ?? 0);
+  // the open popup's badge as a picture: it closes, and the picture's pop-up opens in its place
+  const shareIt = (x: BadgeView) => {
+    if (!share) return;
+    const from = back.current;
+    back.current = null;
+    dlg.current?.close();
+    setShr((o) => ({ n: (o?.n ?? 0) + 1, back: from, sub: badgeSubject(x, shareWords(share.locale).badge, t.levelOf) }));
+  };
   // the open popup's request line, and the request dialog's picked badge
   const pr = w && open?.ask ? lastOf(open) : null, prWait = pr?.status === "pending", prNo = pr?.status === "declined";
   const prLv = pr && open?.levels ? open.levels.find((y) => y.slug === pr.slug) ?? null : null;
@@ -232,6 +251,7 @@ export default function BadgeGrid({ items, t, ask = null }: { items: BadgeView[]
                 <button type="button" className={prWait ? "badge-pop-close" : "badge-pop-ask"} onClick={() => openReq((prWait || prNo) && pr ? pr.slug : open.ask || "", null)}>{prWait ? w.change : prNo ? w.again : w.this}</button>
               </div>
             )}
+            {share && open.on && <button type="button" className="badge-pop-ask shr-btn" onClick={() => shareIt(open)}><ShareIc /><span>{shareWords(share.locale).share}</span></button>}
             <form method="dialog"><button type="submit" className="badge-pop-close">{t.close}</button></form>
           </div>
         )}
@@ -279,6 +299,7 @@ export default function BadgeGrid({ items, t, ask = null }: { items: BadgeView[]
           )}
         </dialog>
       )}
+      {share && shr && <ShareImage key={shr.n} sub={shr.sub} first={share.first} locale={share.locale} onDone={() => { const b = shr.back; setShr(null); b?.focus(); }} />}
     </div>
   );
 }

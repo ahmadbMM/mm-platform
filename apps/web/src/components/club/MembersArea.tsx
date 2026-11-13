@@ -10,6 +10,9 @@ import { T as ASK_T } from "@/components/ask/Ask.text";
 import { askText, askWhen, type AskCard } from "@/lib/ask";
 import { ArrowIcon } from "@/components/site/Icons";
 import OpensIn from "@/components/site/OpensIn";
+import { ShareButton } from "@/components/account/ShareImage";
+import { shareWords } from "@/components/account/BadgeShare.words";
+import { firstNameOf, titleSubject } from "@/lib/share-picture";
 import type { OpensWords } from "@/lib/opens-in";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
@@ -19,6 +22,8 @@ import type { OpensWords } from "@/lib/opens-in";
 // Nothing here names another member.
 // Since 2026-11-13 also the Ask pages open to this member ("Have your say", ask_list, read by the page with the account's
 // session), each opening micromobility.sa/ask/<slug>: the booking app's Community tab lists the same ones (member-hub.js).
+// Under the title, Share sends it as a picture (the booking app's _shrTitle, new features build F12, 2026-11-13; it sits
+// under the title on the app's Account > Badges, and the title shows here on the website): components/account/ShareImage.tsx.
 type Props = {
   locale: string;
   L: Locale;
@@ -91,7 +96,10 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
         <section className="club-comm" aria-labelledby="club-comm-h">
           <h3 id="club-comm-h">{t.community}</h3>
           {title.title
-            ? <p><span>{t.yourTitle}: </span><strong className="club-title"><bdi>{(locale === "ar" && title.title.nameAr) || title.title.name}</bdi></strong></p>
+            ? <>
+              <p><span>{t.yourTitle}: </span><strong className="club-title"><bdi>{(locale === "ar" && title.title.nameAr) || title.title.name}</bdi></strong></p>
+              <ShareButton className="shr-line" locale={locale} first={firstNameOf(a.firstName)} sub={titleSubject(title.title, locale, shareWords(locale).title)} />
+            </>
             : <p className="club-att-empty">{t.noTitle}</p>}
           <p className="club-comm-links"><a href={communityHref}>{t.seeMembers} {arrow}</a> <a href={accountHref}>{t.manageTitle} {arrow}</a></p>
         </section>
