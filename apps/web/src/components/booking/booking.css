@@ -98,9 +98,9 @@
 .tk-code-c { font-weight: 700; }
 .ck-rw { --ck: #0a7a4b; --ck-n: #6ee7b7; } .ck-rf { --ck: #0f766e; --ck-n: #5eead4; } .ck-rb { --ck: #a16207; --ck-n: #fcd34d; }
 .ck-bd { --ck: #c8102e; --ck-n: #ff8a9a; } .ck-promo { --ck: #8c3b6e; --ck-n: #f0abd6; } .ck-sat { --ck: #1d4ed8; --ck-n: #93c5fd; } .ck-vl { --ck: #1f7ae0; --ck-n: #8fd0ff; }
-.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood):not(.ev-yoga) .tk-code-tag { border-color: rgba(251, 249, 244, .22); }
-.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood):not(.ev-yoga) .tk-code-kn { color: rgba(251, 249, 244, .66); }
-.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood):not(.ev-yoga) .tk-code-ic { color: var(--ck-n); }
+.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood):not(.ev-yoga):not(.ev-farm) .tk-code-tag { border-color: rgba(251, 249, 244, .22); }
+.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood):not(.ev-yoga):not(.ev-farm) .tk-code-kn { color: rgba(251, 249, 244, .66); }
+.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood):not(.ev-yoga):not(.ev-farm) .tk-code-ic { color: var(--ck-n); }
 /* The booking app's colour for each bike type (.type-road, .type-hybrid ...). */
 .tk-type.t-hybrid, .tk-type.t-kids { background: rgba(7, 122, 75, .1); color: #077a4b; border-color: rgba(7, 122, 75, .22); }
 .tk-type.t-gravel { background: rgba(7, 122, 75, .08); color: #077a4b; border-color: rgba(7, 122, 75, .2); }
@@ -233,7 +233,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 @supports (color: color-mix(in srgb, red 10%, white)) { :is(.tk-stc-ok, .tk-brp-ok) { border-color: color-mix(in srgb, currentColor 28%, transparent); } }
 .tk-stc-err { grid-column: 1 / -1; margin: 0; font-size: 13px; font-weight: 600; color: #a33b2e; }
 .tk-live .tk-stc-err { color: #ff9a8c; }
-.tk-card:is(.ev-vlap, .ev-defe5k, .ev-yoga, .ev-blood) .tk-stc-err { color: #b42318; } /* the events' white tickets */
+.tk-card:is(.ev-vlap, .ev-defe5k, .ev-yoga, .ev-farm, .ev-blood) .tk-stc-err { color: #b42318; } /* the events' white tickets */
 
 /* A waitlist place is not a ticket yet: paper, a dashed edge, the number quiet. */
 .tk-card.tk-wl { border: 1.5px dashed #b98a1a; }
@@ -371,6 +371,46 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-yg-k { font-weight: 800; color: var(--yg-clay-dk); min-width: 76px; }
 .tk-yg-v { min-width: 0; overflow-wrap: anywhere; }
 @media (max-width: 400px) { .tk-yg-k { min-width: 0; width: 100%; } }
+/* The Farm House Night, "Harvest Supper" (the booking app's FARM HOUSE NIGHT block, 2026-11-13), from the venue's own
+   Instagram (@thefarmhouse.jed): its rust ground deepening to the corner, peach lettering in Rubik 800, and its turkey's
+   fanned tail drawn as rounded feathers rising from the far corner. Peach on rust 4.8:1 at the title's size, cream on rust
+   5.1:1 and up. Its tokens, then the ticket (the booking app's .ticket-card.tk-th.th-farm): cream in every state with the
+   feathers' glow along its foot (mirrored right to left), the mark as its logo, its name or number in Rubik 800, rust where
+   the night ticket is neon. */
+:root { --fh-rust: #8A3F27; --fh-rust-dk: #6E2C1C; --fh-rust-lt: #9A5236; --fh-ember: #C9502A; --fh-maroon: #7E2034; --fh-peach: #F3C7A9; --fh-peach-lt: #F6D9C5; --fh-cream: #FBF3EA; --fh-milk: #FBEFE4; --fh-ink: #3A1E14; --fh-ink-2: #6E4A3A; --fh-sand: #F6E3D4; --fh-glow: 237, 176, 145; }
+.tk-card.ev-farm, .tk-card.ev-farm.tk-live { border: 1px solid rgba(138, 63, 39, .32); color: var(--fh-ink);
+  background: radial-gradient(120% 55% at 100% 100%, rgba(var(--fh-glow), .34) 0%, rgba(var(--fh-glow), .12) 38%, rgba(251, 243, 234, 0) 66%) var(--fh-cream); }
+[dir="rtl"] .tk-card.ev-farm, [dir="rtl"] .tk-card.ev-farm.tk-live { background: radial-gradient(120% 55% at 0% 100%, rgba(var(--fh-glow), .34) 0%, rgba(var(--fh-glow), .12) 38%, rgba(251, 243, 234, 0) 66%) var(--fh-cream); }
+.tk-card.ev-farm.tk-wl { border: 1.5px dashed #b98a1a; }
+.tk-logo.tk-logo-farm img { height: 30px; }
+.tk-card.ev-farm .tk-num { font-family: var(--cs-font-fh), var(--cs-font-ar), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", sans-serif; font-weight: 800; }
+.tk-card.ev-farm.tk-today::after { background: var(--fh-rust); }
+/* rust in every state (a place waiting on staff's approval and one before its code is out too), never the night ticket's green */
+.tk-card.ev-farm :is(.tk-num, .tk-dw, .tk-total strong, .tk-cd, .tk-note.go, .tk-rt-a) { color: var(--fh-rust); }
+.tk-card.ev-farm .tk-btn.solid { background: var(--fh-rust); border-color: var(--fh-rust); color: #fff !important; }
+.tk-card.ev-farm .tk-btn.solid:hover { background: var(--fh-rust-dk); border-color: var(--fh-rust-dk); }
+.tk-card.ev-farm :focus-visible { outline-color: var(--fh-rust); }
+.tk-card.ev-farm .tk-qr .tk-qr-live rect { stroke: var(--fh-rust); }
+.tk-card.ev-farm.tk-live :is(.tk-name, .tk-when .tk-when-d, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l, .tk-rt-n) { color: var(--fh-ink); }
+.tk-card.ev-farm.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(58, 30, 20, .7); }
+.tk-card.ev-farm.tk-live :is(.tk-num, .tk-dw, .tk-when .go, .tk-total strong, .tk-pay.paid, .tk-rider-pay > .tk-amt.paid, .tk-cd, .tk-note.go, .tk-ok, .tk-rt-a) { color: var(--fh-rust); }
+.tk-card.ev-farm.tk-live .tk-pay.due, .tk-card.ev-farm.tk-live .tk-note.warn, .tk-card.ev-farm.tk-live .tk-wallet-msg { color: #8a5300; }
+.tk-card.ev-farm.tk-live :is(.tk-head, .tk-when, .tk-rider, .tk-addons, .tk-rt, .tk-more-btn) { border-color: rgba(138, 63, 39, .22); }
+.tk-card.ev-farm.tk-live :is(.tk-q, .tk-type) { background: var(--fh-sand); color: var(--fh-ink); border-color: rgba(138, 63, 39, .22); }
+.tk-card.ev-farm.tk-live :is(.tk-note, .tk-ok) { background: var(--fh-sand); border-color: rgba(138, 63, 39, .22); }
+.tk-card.ev-farm.tk-live .tk-note:not(.go):not(.warn) { color: var(--fh-ink); }
+.tk-card.ev-farm.tk-live .tk-ok-tick { background: var(--fh-rust); color: #fff; }
+.tk-card.ev-farm.tk-live .tk-btn { background: transparent; color: var(--fh-ink) !important; border-color: rgba(138, 63, 39, .32); }
+.tk-card.ev-farm.tk-live .tk-btn:hover { background: var(--fh-sand); border-color: rgba(138, 63, 39, .62); }
+.tk-card.ev-farm.tk-live .tk-btn.solid { background: var(--fh-rust); border-color: var(--fh-rust); color: #fff !important; }
+.tk-card.ev-farm.tk-live .tk-btn.solid:hover { background: var(--fh-rust-dk); border-color: var(--fh-rust-dk); }
+.tk-card.ev-farm.tk-live .tk-btn.red { color: #b42318 !important; border-color: rgba(180, 35, 24, .35); }
+.tk-card.ev-farm.tk-live :focus-visible { outline-color: var(--fh-rust); }
+.tk-card.ev-farm.tk-live .tk-qr { border-color: rgba(138, 63, 39, .22); }
+.tk-card.ev-farm.tk-live .tk-stages li::before { background: rgba(138, 63, 39, .16); }
+.tk-card.ev-farm.tk-live .tk-stages li.on::before, .tk-card.ev-farm.tk-live .tk-stages li.on .tk-st-dot { background: var(--fh-rust); border-color: var(--fh-rust); }
+.tk-card.ev-farm.tk-live .tk-st-dot { background: #fff; border-color: rgba(58, 30, 20, .4); }
+.tk-card.ev-farm.tk-live .tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(138, 63, 39, .14); }
 .tk-type.tk-vl { background: #0d0d0d; color: #fff; border-color: #0d0d0d; white-space: normal; }
 .tk-card.ev-vlap.tk-live .tk-type.tk-vl { background: #0d0d0d; color: #fff; border-color: #0d0d0d; }
 .tk-vl-team { margin-top: 12px; padding: 12px 14px; border: 1px solid rgba(13, 13, 13, .18); background: #f6f6f3; }
@@ -589,6 +629,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-arena { --ev: #c81e27; } /* Arena Heros: its red, as the booking app's .ev-arena (2026-10-28) */
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-blood { --ev: #0b1f16; } /* the donation event: its crimson (2026-11-03) */
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-yoga { --ev: #b4532f; } /* yoga: its clay (2026-11-12) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-farm { --ev: #8a3f27; } /* the Farm House Night: the venue's rust (2026-11-13) */
 /* staging: the booking flow's own cards (BookingFlow) keep the workshop's and a ticketed event's colours it drew them
    with; after main's set above, so they win on a card. */
 .sc-card.ev-workshop { --ev: #b4581e; }
@@ -624,6 +665,40 @@ html:is([lang="ar"], [lang="ur"]) .sc-yg-title { font-family: var(--cs-font-ar),
 .sc-yg-with { font-size: 12.5px; font-weight: 700; color: var(--yg-sage-ink); min-width: 0; overflow-wrap: anywhere; }
 .sc-card.sc-yoga .sc-spots:not(.full):not(.low):not(.closed):not(.held) { color: var(--yg-clay-dk); }
 @media (max-width: 400px) { .sc-yg-title { font-size: 19px; } .sc-yg-mark { height: 26px; } .sc-yg-scene { width: 140px; height: 70px; } }
+/* The Farm House Night's date card (the booking app's _fhSessCard and .fh-card, 2026-11-13): the venue's rust tile deepening
+   to the far corner (mirrored right to left), a peach edge at the start, the fan of rounded feathers rising from the far
+   bottom corner, the mark, the name in Rubik 800 peach, its day, its arrival and dinner and where in cream, who it is for
+   in light peach along the foot, and its state on a cream pill (never a count of places). */
+.sc-card.sc-farm { overflow: hidden; isolation: isolate; gap: 6px; padding-top: 14px; color: var(--fh-milk);
+  background: linear-gradient(135deg, var(--fh-rust-lt) 0%, var(--fh-rust) 48%, var(--fh-rust-dk) 100%);
+  border: 1px solid rgba(110, 44, 28, .55); border-inline-start: 3px solid var(--fh-peach); }
+[dir="rtl"] .sc-card.sc-farm { background: linear-gradient(225deg, var(--fh-rust-lt) 0%, var(--fh-rust) 48%, var(--fh-rust-dk) 100%); }
+.sc-card.sc-farm:hover { filter: brightness(1.04); border-color: rgba(110, 44, 28, .55); box-shadow: 0 0 14px rgba(138, 63, 39, .18); }
+.sc-card.sc-farm:focus-visible { outline: 2px solid var(--fh-rust); outline-offset: 2px; }
+.sc-card.sc-farm[aria-checked="true"] { border-color: var(--fh-peach); border-inline-start-color: var(--fh-peach); box-shadow: inset 0 0 0 2px var(--fh-peach); }
+.sc-card.sc-farm .sc-dot { border-color: var(--fh-peach); }
+.sc-card.sc-farm[aria-checked="true"] .sc-dot { background: var(--fh-peach); border-color: var(--fh-peach); }
+.sc-fh-scene { position: absolute; z-index: -1; bottom: -1px; inset-inline-end: -22px; width: 176px; height: 88px; pointer-events: none; }
+.sc-fh-fth { fill: rgba(var(--fh-glow), .26); }
+.sc-fh-ring { fill: none; stroke: rgba(var(--fh-glow), .3); stroke-width: 1.2; }
+.sc-fh-core { fill: rgba(126, 32, 52, .42); }
+.sc-fh-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sc-fh-mark { height: 30px; width: auto; display: block; flex: none; }
+.sc-fh-title { font-family: var(--cs-font-fh), var(--cs-font-ar), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", sans-serif; font-size: 21px; font-weight: 800; letter-spacing: .2px; line-height: 1.15; color: var(--fh-peach); overflow-wrap: anywhere; }
+html:is([lang="ar"], [lang="ur"]) .sc-fh-title { letter-spacing: 0; }
+.sc-card.sc-farm .sc-date { flex: none; font-size: 14px; color: var(--fh-milk); }
+.sc-card.sc-farm .sc-dw { color: var(--fh-peach); }
+/* arrival and dinner, then where: a rule before each part, the row reaching 19px past its box at the start, where the box
+   cuts the rule each line's first part carries, so no line starts on a rule when the place wraps under the times */
+.sc-fh-meta { display: block; min-width: 0; overflow: hidden; font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--fh-milk); }
+.sc-fh-mi { display: flex; flex-wrap: wrap; align-items: center; row-gap: 3px; margin-inline-start: -19px; }
+.sc-fh-mi > span { display: inline-flex; align-items: center; gap: 9px; min-width: 0; padding-inline-start: 9px; overflow-wrap: anywhere; }
+.sc-fh-mi i { width: 1px; height: 12px; background: rgba(243, 199, 169, .5); display: inline-block; flex: none; }
+.sc-fh-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.sc-fh-line { font-size: 12.5px; font-weight: 700; color: var(--fh-peach-lt); min-width: 0; overflow-wrap: anywhere; }
+/* its state (asked, on the waitlist, fully booked, when it opens) on a cream pill in deep rust, as the booking app's */
+.sc-card.sc-farm .sc-spots, .xs-feat-card.xs-feat-fh .sc-spots { padding: 2px 8px; border-radius: 999px; background: var(--fh-milk); color: var(--fh-rust-dk); }
+@media (max-width: 400px) { .sc-fh-title { font-size: 19px; } .sc-fh-mark { height: 26px; } .sc-fh-scene { width: 148px; height: 74px; } }
 /* A ticketed event's card says what it is. */
 .sc-desc { font-size: 13px; color: #4a4843; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sc-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }

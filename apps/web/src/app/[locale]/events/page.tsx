@@ -20,10 +20,12 @@ import { fmtClock } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
-import { genderViewer } from "@/lib/account";
+import { communityMember, genderViewer } from "@/lib/account";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { AH_VENUE } from "@/lib/arena";
 import { yogaLength } from "@/lib/yoga";
+import { farmForMembers } from "@/lib/farm";
+import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { ArrowIcon, CalendarIcon } from "@/components/site/Icons";
 import OpensIn from "@/components/site/OpensIn";
 
@@ -36,15 +38,17 @@ import OpensIn from "@/components/site/OpensIn";
 // own red, named as Experiences names it, with its line, and booked in the booking app on its own event (ev=arena). The
 // Blood Donation event (2026-11-03) is listed in its crimson while it has a date, with its line and venue and never a
 // price or the free word, and booked on its own event (ev=blood). Yoga (2026-11-12) is listed in its clay with how long it
-// runs and where, and booked on the community card (ev=community), as Experiences does. A session staff closed as Full, no
-// waitlist (the user, 2026-11-13; lib/rides.ts fbkOf, the booking app's _sessFb) stays listed, never faded, so nobody takes
-// it for called off: Fully booked in the full red among its tags, where to go next as a quiet line under them (See you next
-// Saturday on the Saturday ride, See you at the next session on any other), and no Book.
+// runs and where, and booked on the community card (ev=community), as Experiences does. The Farm House Night (2026-11-13)
+// is listed in its rust with its arrival and dinner and where, and booked on the community card too, to a signed-in
+// community member alone ("not to public": nobody else's page names it, nor its search engines' list). A session staff
+// closed as Full, no waitlist (the user, 2026-11-13; lib/rides.ts fbkOf, the booking app's _sessFb) stays listed, never
+// faded, so nobody takes it for called off: Fully booked in the full red among its tags, where to go next as a quiet line
+// under them (See you next Saturday on the Saturday ride, See you at the next session on any other), and no Book.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
-const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16", yoga: "#b4532f" };
+const KIND_COLOUR: Record<RideKind, string> = { jcc: "#2f63ad", saturday: "#077a4b", swim: "#0d7d8f", workshop: "#c2410c", snd96: "#00894a", petromin: "#a33b2e", event: "#6d28d9", runher: "#c2416e", vlap: "#0d0d0d", defe5k: "#a22b63", arena: "#c81e27", blood: "#0b1f16", yoga: "#b4532f", farm: "#8a3f27" };
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -65,19 +69,23 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const dEn = resolvePage(experiencesSchema, content, "en").dates;
   const book = bookingLink(S(c.hero.bookHref), locale);
   // Book opens the booking app on that event and date (?ev=&session=), as the Experiences steps do.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community" };
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community" };
   const bookAt = (s: RideSession) => {
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
-  const kindName = { ...kindNames(d), blood: bloodName(tx) }, enName = { ...kindNames(dEn), blood: BLOOD_NAME };
+  const fw = farmWords(tx); // the Farm House Night's words, the server's (content/farm-words.ts)
+  const kindName = { ...kindNames(d), blood: bloodName(tx), farm: fw.name }, enName = { ...kindNames(dEn), blood: BLOOD_NAME, farm: FARM_NAME };
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it
   const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en", L === "ar"); // by its Arabic name on the Arabic page (title_ar), as on Experiences
   const drawn = new Date();
   const now = riyadhClock(drawn);
   const clock = (hhmm: string) => fmtClock(hhmm, locale);
   // never the Petromin nights, which only Experiences shows, to whom may book them (2026-10-12); men-only and
-  // women-only sessions to everyone (the owner, 2026-10-28)
-  const sessions = upcoming(withoutPetromin(rides?.sessions ?? []), now).slice(0, Math.max(1, N(c.hero.count)));
+  // women-only sessions to everyone (the owner, 2026-10-28); a Farm House Night to a signed-in community member alone (the
+  // user, 2026-11-13: "not to public"), the members' check asked only while one is ahead
+  const ahead = upcoming(withoutPetromin(rides?.sessions ?? []), now);
+  const member = ahead.some((s) => s.kind === "farm") ? await communityMember() : false;
+  const sessions = farmForMembers(ahead, member).slice(0, Math.max(1, N(c.hero.count)));
   const sgWords = genderText(tx);
   // a session for the other gender says so in place of Book to a signed-in account (or one with none on file); a
   // visitor who is not signed in keeps Book, and the booking app signs them in and judges the booking
@@ -127,8 +135,9 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                       {s.kind === "event" && s.description && <p className="pg-event-desc">{s.description}</p>}
                       <div className="pg-event-meta">
                         {/* in the rider's clock, as Experiences and the tickets say them ("6 PM", "6:00 م"), each in its own direction */}
+                        {/* the Farm House Night's are its arrival and dinner (the booking app's fhArrive, fhDinner) */}
                         {s.times && (s.gather && !oneTime(s.times)
-                          ? <span>{S(d.gather)} <bdi>{clock(s.times[0])}</bdi> · {S(d.start)} <bdi>{clock(s.times[1])}</bdi></span>
+                          ? <span>{s.kind === "farm" ? fw.arrive : S(d.gather)} <bdi>{clock(s.times[0])}</bdi> · {s.kind === "farm" ? fw.dinner : S(d.start)} <bdi>{clock(s.times[1])}</bdi></span>
                           : <span><bdi>{timesText(s.times, false, clock, { gather: "", start: "" })}</bdi></span>)}
                         {routeNameOf(routes, s.routeSlug) && <span>{tx("Route", "المسار")}: {routeNameOf(routes, s.routeSlug)}</span>}
                         {/* an event's seat price and seats; a copy kept at the edge from before these fields existed has none */}
@@ -141,6 +150,8 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {/* yoga: how long and where, as its date card on Experiences says them (2026-11-12) */}
                         {s.kind === "yoga" && yogaLength(s.times, tx("{0} min", "{0} دقيقة")) && <span>{yogaLength(s.times, tx("{0} min", "{0} دقيقة"))}</span>}
                         {s.kind === "yoga" && s.location && s.location !== "JCC" && <span><bdi>{s.location}</bdi></span>}
+                        {/* the Farm House Night: where, as its date card on Experiences says it (2026-11-13) */}
+                        {s.kind === "farm" && s.location && s.location !== "JCC" && <span><bdi>{s.location}</bdi></span>}
                         {/* Victory Lap: what it is, as its card on Experiences says it (never its price) */}
                         {s.kind === "vlap" && S(xp.events.vlMeta) && <span>{S(xp.events.vlMeta)}</span>}
                         {/* Arena Heros: what it is and where, as its card on Experiences says them (never its price) */}

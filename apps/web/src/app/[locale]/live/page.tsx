@@ -7,6 +7,7 @@ import "@/components/account/account.css";
 import "@/components/live/live.css";
 import { accountSchema } from "@/content/pages/account";
 import { BLOOD_NAME, bloodName } from "@/content/blood-words";
+import { FARM_NAME, farmName } from "@/content/farm-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { getAccount } from "@/lib/account";
@@ -67,8 +68,8 @@ export default async function LivePage({ params, searchParams }: { params: Promi
   // The ride's name and day, for the heading (read with the account's token: a private ride too); a
   // session that cannot be read still gets its map.
   const d = resolvePage(experiencesSchema, content, L).dates;
-  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
-  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
+  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx), farm: farmName(tx) };
+  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME, farm: FARM_NAME };
   const s = sessionId ? (await loadTicketSessions([sessionId], acct)).get(sessionId) : undefined;
 
   return (

@@ -113,3 +113,14 @@ export async function genderViewer(): Promise<GenderViewer> {
   const row = Array.isArray(p.data) ? p.data[0] : null;
   return row ? { gender: sessionGender(row.gender) } : null;
 }
+
+/** Is the visitor a signed-in community member? The booking app's own members' gate (community_member, which checks the
+ *  token), asked only when the request carries the account's cookie; any failure reads as no. Experiences shows the
+ *  members-only cards' and dates' links by it (the owner, 2026-10-05), and Experiences and Events a Farm House Night
+ *  (lib/farm.ts farmForMembers, 2026-11-13). A signed-in visitor's page is never kept at the edge (lib/page-cache.ts). */
+export async function communityMember(): Promise<boolean> {
+  const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
+  if (!s) return false;
+  const r = await rpcServer<boolean>("community_member", { p_id: s.id, p_token: s.token });
+  return r.data === true;
+}

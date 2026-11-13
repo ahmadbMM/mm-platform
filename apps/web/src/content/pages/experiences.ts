@@ -137,6 +137,9 @@ export const experiencesSchema = {
         // Yoga (ride_kind 'yoga', 2026-11-12): Hatha Yoga for Cyclists with Jassim Alsaady, a date among the community rides
         // in its own "Sunset Hatha" look (the booking app's evYogaName)
         txt("yogaName", 50, "Name: yoga", "الاسم: اليوغا", "Hatha Yoga for Cyclists", "هاثا يوغا لراكبي الدراجات"),
+        // (The Farm House Night, ride_kind 'farm', 2026-11-13, has no fields here: it is for community members' eyes
+        // alone and this schema is public, so its name and Details are the server's, content/farm-words.ts, as the Blood
+        // Donation event's are; the booking app says its own infoDtFarm.)
         // What each kind of date is, in its Details on Experiences and in the booking app (2026-10-05,
         // lib/event-info.ts): the National Day ride and the events say their card's About instead.
         // aboutPetro is a Petromin night's, which this site shows since 2026-10-12 (Petromin Days).

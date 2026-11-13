@@ -54,7 +54,7 @@ export const fillTimes = (text: string, t: InfoTimes): string => fill(text, t);
 
 /** The Experiences texts a date's Details start with: the dates section's about* fields, and the
  *  events section's own for the National Day ride and the ticketed events. */
-export type DateTexts = { aboutJcc: string; aboutSat: string; aboutPetro: string; aboutSwim: string; aboutWs: string; aboutRun: string; aboutVl: string; aboutDefe: string; aboutAr: string; aboutYoga: string; sndAbout: string; evAbout: string };
+export type DateTexts = { aboutJcc: string; aboutSat: string; aboutPetro: string; aboutSwim: string; aboutWs: string; aboutRun: string; aboutVl: string; aboutDefe: string; aboutAr: string; aboutYoga: string; aboutFarm: string; sndAbout: string; evAbout: string };
 
 /** Which text a date's Details say (the booking app's INFO_DT): its kind's own, filled with its
  *  times, and the circuit's for any kind without one; a ticketed event says its own description
@@ -63,23 +63,24 @@ export function dateText(s: Pick<RideSession, "kind" | "description">, texts: Da
   if (s.kind === "event" && s.description) return s.description;
   const of: Partial<Record<RideKind, string>> = {
     jcc: texts.aboutJcc, saturday: texts.aboutSat, petromin: texts.aboutPetro, swim: texts.aboutSwim, workshop: texts.aboutWs,
-    runher: texts.aboutRun, vlap: texts.aboutVl, defe5k: texts.aboutDefe, arena: texts.aboutAr, yoga: texts.aboutYoga, snd96: texts.sndAbout, event: texts.evAbout, blood: "",
+    runher: texts.aboutRun, vlap: texts.aboutVl, defe5k: texts.aboutDefe, arena: texts.aboutAr, yoga: texts.aboutYoga, farm: texts.aboutFarm, snd96: texts.sndAbout, event: texts.evAbout, blood: "",
   };
   return fillTimes(of[s.kind] ?? texts.aboutJcc, times);
 }
 
 /** Who may book a date (_infoFacts): everyone, or community members - aged 18 and over on Run for
  *  Her, with Petromin's team on a Petromin night (2026-10-12, infoWhoPetromin), with the Victory Lap
- *  athletes, 16 and over, on Victory Lap (infoWhoVlap), and in teams of two on Arena Heros (infoWhoArena). */
-export function infoWho(s: Pick<RideSession, "members" | "kind">, t: { all: string; members: string; members18: string; petromin: string; vlap: string; arena?: string; arenaAll?: string }): string {
+ *  athletes, 16 and over, on Victory Lap (infoWhoVlap), in teams of two on Arena Heros (infoWhoArena), and with their
+ *  families on the Farm House Night (fhWho, 2026-11-13). */
+export function infoWho(s: Pick<RideSession, "members" | "kind">, t: { all: string; members: string; members18: string; petromin: string; vlap: string; arena?: string; arenaAll?: string; farm?: string }): string {
   if (!s.members) return s.kind === "arena" && t.arenaAll ? t.arenaAll : t.all;
-  return s.kind === "runher" ? t.members18 : s.kind === "petromin" ? t.petromin : s.kind === "vlap" ? t.vlap : s.kind === "arena" ? t.arena || t.members : t.members;
+  return s.kind === "runher" ? t.members18 : s.kind === "petromin" ? t.petromin : s.kind === "vlap" ? t.vlap : s.kind === "arena" ? t.arena || t.members : s.kind === "farm" ? t.farm || t.members : t.members;
 }
 
 /** A kind of ride that hands out bikes, priced by the bike (the booking app's _needsBike): not the
  *  pool, the T100 day, a ticketed event, a run (Run for Her, the DEFE 5KM Run), Victory Lap, Arena Heros, the
- *  Blood Donation event or yoga. */
-export const rentsBikes = (kind: RideKind): boolean => kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga";
+ *  Blood Donation event, yoga or the Farm House Night. */
+export const rentsBikes = (kind: RideKind): boolean => kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga" && kind !== "farm";
 
 /** What a date costs (_sessFromPrice): the free word on a free ride, an event's price per seat, and
  *  on a paid ride with bikes the cheapest bike ("from SAR 57.5"); null when there is nothing to say.
@@ -125,7 +126,9 @@ export function infoArena(s: Pick<RideSession, "kind" | "vl">, t: { races: Recor
  *  and the Blood Donation event's own link (sessions.meet_url), the circuit's directions on the circuit, else
  *  none. A session read without its place reads as on the circuit, Arena Heros' as at its venue. Yoga (2026-11-12) is at
  *  the place staff named (SILKDEER) with that place's map (sessions.meet_url); one with a map and no place's name is
- *  at its meeting point (lib/tickets.ts venueOf), never the circuit. */
+ *  at its meeting point (lib/tickets.ts venueOf), never the circuit. The Farm House Night (2026-11-13), a ride staff
+ *  approve, opens its map link as every such ride does, and is named by the place staff wrote (Little Farmhouse,
+ *  Dhahban), never "Meeting point" (lib/tickets.ts venueOf). */
 export function infoPlace(s: Pick<RideSession, "kind" | "approval" | "location" | "meetUrl">, t: { meetingPoint: string; venueCircuit: string; venueJyc: string; venueGymnation?: string }, circuitMap: string): { name: string; map: string | null } {
   const approval = !!s.approval, meetUrl = s.meetUrl ?? null;
   const v = venueOf({ approval, meetUrl, location: s.location ?? null, kind: s.kind });
@@ -171,9 +174,9 @@ export function infoBreakfast(s: Pick<RideSession, "kind" | "breakfast" | "break
 /** Which card each kind of date is booked under (the booking app's _evMatch): the circuit, the
  *  community rides, and the National Day ride, the T100 workshop, the ticketed events, Run for Her,
  *  Victory Lap, Arena Heros (ev=arena) and the Blood Donation event (ev=blood), which have cards of their own while they have dates. A Petromin night counts as a community ride
- *  here; Petromin Days takes its own (eventCards). The DEFE 5KM Run (2026-10-18) and yoga (2026-11-12) are dates inside
- *  MicroMobility Experiences, the community card, never cards of their own. */
-export const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community" };
+ *  here; Petromin Days takes its own (eventCards). The DEFE 5KM Run (2026-10-18), yoga (2026-11-12) and the Farm House
+ *  Night (2026-11-13) are dates inside MicroMobility Experiences, the community card, never cards of their own. */
+export const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community" };
 
 /** The event cards in the order the page shows them, each with its texts' prefix in Experiences'
  *  events section and whether it shows with no date. MicroMobility Experiences, the community card, leads (the owner's
@@ -189,7 +192,8 @@ export const EVENT_CARDS = [
 ] as const;
 export type EventCard = (typeof EVENT_CARDS)[number];
 
-/** The cards the visitor sees, in order, each with its dates (soonest first, as given). Petromin Days
+/** The cards the visitor sees, in order, each with its dates (soonest first, as given). A Farm House Night is a community
+ *  date a signed-in community member alone sees (lib/farm.ts farmForMembers, 2026-11-13). Petromin Days
  *  lists the Petromin nights alone, to a Petromin tag holder alone (the owner, 2026-10-12: "a new
  *  event card that has the name Petromin Days that only is visible for petromin tag holders"). The
  *  website's community card lists no Petromin nights, as before (community members book them in the
@@ -199,7 +203,7 @@ export type EventCard = (typeof EVENT_CARDS)[number];
 export function eventCards<T extends Pick<RideSession, "kind" | "fbk">>(all: T[], v: { member: boolean; petromin: boolean }): { card: EventCard; sessions: T[] }[] {
   const of = (key: string) => (key === "petromin"
     ? all.filter((s) => v.petromin && s.kind === "petromin")
-    : all.filter((s) => EVENT_OF[s.kind] === key && s.kind !== "petromin"));
+    : all.filter((s) => EVENT_OF[s.kind] === key && s.kind !== "petromin" && (s.kind !== "farm" || v.member)));
   return EVENT_CARDS.map((card) => ({ card, sessions: of(card.key) })).filter((c) => c.card.always || c.sessions.some((s) => !s.fbk));
 }
 

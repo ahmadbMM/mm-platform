@@ -44,7 +44,7 @@ export const monthDue = (today: string) => DAY.test(today) && Number(today.slice
 // The kinds the site has a name and a mark for; a kind it does not know is left out of the list (the total still counts it).
 const KNOWN: Record<RideKind, true> = {
   jcc: true, saturday: true, swim: true, workshop: true, petromin: true, snd96: true, event: true, runher: true, vlap: true,
-  defe5k: true, arena: true, blood: true, yoga: true,
+  defe5k: true, arena: true, blood: true, yoga: true, farm: true,
 };
 const known = (k: string): k is RideKind => Object.prototype.hasOwnProperty.call(KNOWN, k);
 

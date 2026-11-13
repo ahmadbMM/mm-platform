@@ -109,4 +109,20 @@ describe("the Experiences booking flow after main's yoga and Arabic names", () =
     // the same date open again is listed as before
     expect((await flowOf([{ ...satFb, status: "open" }], "en")).events.find((e) => e.key === "community")!.sessions.map((s) => s.id)).toEqual(["2099-11-23"]);
   });
+
+  // The hand merge of main's e43abff6 (2026-11-13). The Farm House Night (ride_kind 'farm') is "not to public" (the user):
+  // main's page draws it for a signed-in community member alone. This flow has no step for it (no bike, the family by
+  // name, staff approving each place) and lists it under no card, so what the page hands the browser holds no word of it.
+  it("lists no Farm House Night and hands the browser no word of it", async () => {
+    const FH = comm("2099-11-19-fh", "farm", { title: "Nawar Farm House Night", title_ar: "ليلة مزرعة نوار", needs_approval: true, capacity: 60, spots: 60,
+      bike_slots: '{"_time":"16:30 - 20:30"}', location: "Little Farmhouse, Dhahban", meet_url: "https://maps.app.goo.gl/BYteRL5JCueWZUEs6" });
+    for (const locale of ["en", "ar", "de", "fr"]) {
+      const flow = await flowOf([FH, SAT, JCC], locale);
+      expect(flow.events.map((e) => e.key), locale).toEqual(["jcc", "community"]);
+      expect(flow.events.flatMap((e) => e.sessions).map((s) => s.id), locale).toEqual(["2099-11-08", "2099-11-16"]);
+      expect(JSON.stringify(flow), locale).not.toMatch(/Nawar|Farm House|Farmhaus|ليلة مزرعة|2099-11-19-fh|Little Farmhouse|farm/i);
+    }
+    // with nothing but the farm on the books the community card has no date
+    expect((await flowOf([FH], "en")).events.find((e) => e.key === "community")!.sessions).toEqual([]);
+  });
 });

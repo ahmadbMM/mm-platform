@@ -169,7 +169,11 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // ride's sunrise and routes, and Booked on a date the visitor holds (2026-11-13) are its ExperienceSteps page's own:
   // they are not drawn by this booking flow. Nor is the breakfast spot (a member-only one, bike_slots._bfm, is told to
   // members alone on main's page): this flow names no breakfast stop, and its tickets' routes are read without one.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "", arena: "", blood: "", yoga: "" };
+  // The Farm House Night (ride_kind 'farm', 2026-11-13) neither: no bike, the member's family added by name and staff
+  // approving every place, none of which this booking has a step for; and it is "not to public" (the user), so main's page
+  // draws it for a signed-in community member alone and hands it to the booking app. Listed nowhere here, for anyone, so
+  // no word of it (its name, the farm, its id) reaches this page and it is never read as a Saturday ride.
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "", arena: "", blood: "", yoga: "", farm: "" };
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count)));
   const listed: RideSession[] = [];
   const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): FlowEvent | null => {

@@ -10,6 +10,7 @@ import { ArrowIcon, BackIcon, CalendarIcon, ClockIcon, InfoIcon, TickIcon } from
 import { opensLine, type OpensWords } from "@/lib/opens-in";
 import { radioKey, tabStop } from "@/lib/radio-keys";
 import { YOGA_MARK, YOGA_MARK_SIZE } from "@/lib/yoga";
+import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
 import { hasKindArt, kindsInOrder, rowsOfKind } from "@/lib/kind-theme";
 import type { Held } from "@/lib/held";
 import { KindIcon, SatRoute, type RouteWords } from "./KindArt";
@@ -37,6 +38,12 @@ import { KindIcon, SatRoute, type RouteWords } from "./KindArt";
 // Yoga (2026-11-12; lib/yoga.ts) is a date inside the community card, on a card of its own in the booking app's "Sunset
 // Hatha" look: cream, the low sun rising from its far corner, the mark, its name in Marcellus clay, when, how long and
 // where, and who leads it along the foot; its summary wears the mark, its button clay.
+// The Farm House Night (2026-11-13; lib/farm.ts) is a date inside the community card too, on its own card in the booking
+// app's "Harvest Supper" look: the venue's rust tile, a fan of rounded feathers rising from its far corner, the mark, its
+// name in Rubik 800 peach, its day, its arrival and dinner (never Gathering and Start) and where, and "Members and their
+// families" along the foot with its state, never how many places are left (staff approve each one, as on the Saturday
+// ride); its summary is the booking app's rust plate, its button rust, and it hands over to the booking app, which takes
+// the member's family by name ("add the participants").
 // Featured (2026-11-13, as the booking app's _featLandHtml and renderRegister): a date inside MicroMobility Experiences that
 // staff feature, or a special event as it is made (lib/rides.ts featuredOf). Above the event cards, "Featured" (a star on a
 // neon disc) heads one card for each, four at most, soonest first: its day as a calendar leaf (the weekday on a band of
@@ -107,6 +114,11 @@ export type StepSession = {
   /** Yoga's own date card (the booking app's _ygSessCard, 2026-11-12): its start and end, how long and where ("4:00 PM –
    *  5:30 PM · 90 min · SILKDEER"), and who leads it along its foot ("with Jassim Alsaady"); absent on any other date. */
   yoga?: { meta: string[]; with: string };
+  /** The Farm House Night's own date card (the booking app's _fhSessCard, 2026-11-13): its arrival and dinner and where
+   *  ("Arrival 4:30 PM · Dinner 8:30 PM · Little Farmhouse, Dhahban"), who it is for along its foot ("Members and their
+   *  families"), and the words its two times are said with wherever its time shows ("Arrival", "Dinner"); absent on any
+   *  other date. */
+  farm?: { meta: string[]; line: string; arrive: string; dinner: string };
   /** What the signed-in visitor already holds on the date (lib/held.ts, 2026-11-13): "ok" Booked, "wl" On the waitlist,
    *  "rsv" Reserved; absent when they hold nothing there, and for a visitor who is not signed in. */
   held?: Held;
@@ -257,6 +269,18 @@ const YogaScene = () => (
     <circle className="sc-yg-ring" cx="80" cy="80" r="76" /><circle className="sc-yg-ring" cx="80" cy="80" r="58" /><circle className="sc-yg-ring" cx="80" cy="80" r="41" /><circle className="sc-yg-sun" cx="80" cy="80" r="25" />
   </svg>
 );
+/** The Farm House Night's fan of rounded feathers (its turkey's tail) rising from its card's far corner around a ring and
+ *  a maroon core (the booking app's _fhScene): drawn, never a picture, so it takes the card's colours. */
+const FH_FEATHERS: [number, number, number][] = [
+  [20, 80, -90], [22.94, 61.46, -72], [31.46, 44.73, -54], [44.73, 31.46, -36], [61.46, 22.94, -18], [80, 20, 0],
+  [98.54, 22.94, 18], [115.27, 31.46, 36], [128.54, 44.73, 54], [137.06, 61.46, 72], [140, 80, 90],
+];
+const FarmScene = () => (
+  <svg className="sc-fh-scene" aria-hidden="true" focusable="false" viewBox="0 0 160 80">
+    {FH_FEATHERS.map(([x, y, r]) => <rect key={r} className="sc-fh-fth" x="-6" y="-12" width="12" height="24" rx="6" transform={`translate(${x} ${y}) rotate(${r})`} />)}
+    <circle className="sc-fh-ring" cx="80" cy="80" r="40" /><circle className="sc-fh-core" cx="80" cy="80" r="26" />
+  </svg>
+);
 /** Featured's star (the booking app's _cuIc star), drawn in the text's colour on its neon disc. */
 const FeatStar = () => (
   <span className="xs-star" aria-hidden="true">
@@ -361,9 +385,12 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   // The times in their own direction (a <bdi> with none forced): an Arabic clock ("9:00 م") read right
   // to left, a Latin one ("9:00 PM") left to right. Forcing ltr turned an Arabic range into
   // "م – 11:00 م 9:00" (2026-10-05).
-  // A date with a start time alone (the DEFE 5KM Run) says that time once.
+  // A date with a start time alone (the DEFE 5KM Run) says that time once. The Farm House Night's two times are its
+  // arrival and dinner (the booking app's sessionTime), never Gathering and Start.
+  const gatherWord = (s: StepSession) => s.farm?.arrive ?? t.gather;
+  const startWord = (s: StepSession) => s.farm?.dinner ?? t.start;
   const when = (s: StepSession) => (s.when ? (s.when.gather
-    ? <>{t.gather} <bdi>{s.when.a}</bdi> · {t.start} <bdi>{s.when.b}</bdi></>
+    ? <>{gatherWord(s)} <bdi>{s.when.a}</bdi> · {startWord(s)} <bdi>{s.when.b}</bdi></>
     : <bdi>{s.when.b ? `${s.when.a} – ${s.when.b}` : s.when.a}</bdi>) : null);
   // Petromin Days is Petromin's team's, who are not Club members (an account holds the Community tag or
   // the Petromin tag, never both): its dates carry no Members tag and no word about joining the Club.
@@ -485,20 +512,21 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
           <h2 id="xs-feat-h" className="xs-feat-h" tabIndex={-1}><FeatStar /><span>{t.featured}</span></h2>
           <div className={`xs-feat-grid${feats.length > 1 ? " xs-feat-rail" : ""}`}>
             {feats.map(({ e, s, feat }) => {
-              const foot = s.yoga ? s.yoga.with : s.info.price;
+              // who leads yoga, and who the Farm House Night is for, where any other date says its price word
+              const foot = s.yoga ? s.yoga.with : s.farm ? s.farm.line : s.info.price;
               return (
-                <button key={s.id} type="button" className={`xs-feat-card ev-${s.kind}${s.yoga ? " xs-feat-yg" : ""}`} onClick={() => pickFeat(e, s)}>
-                  {s.yoga && <YogaScene />}
+                <button key={s.id} type="button" className={`xs-feat-card ev-${s.kind}${s.yoga ? " xs-feat-yg" : s.farm ? " xs-feat-fh" : ""}`} onClick={() => pickFeat(e, s)}>
+                  {s.yoga && <YogaScene />}{s.farm && <FarmScene />}
                   <span className="xs-feat-day"><span className="xs-feat-wd">{feat.wd}</span><b>{feat.dn}</b><span>{feat.mo}</span></span>
                   <span className="xs-feat-copy">
-                    <span className={`xs-feat-name${s.yoga ? " sc-yg-title" : ""}`}>{s.name}</span>
+                    <span className={`xs-feat-name${s.yoga ? " sc-yg-title" : s.farm ? " sc-fh-title" : ""}`}>{s.name}</span>
                     {/* a rule before each part, cut where a line starts (.xs-feat-meta), so none starts or ends a line; a
                         ride that gathers says its gathering and its start as two parts */}
                     <span className="xs-feat-meta">
                       <span className="xs-feat-mi">
                         {s.near && <span><strong className="sc-dw">{s.near}</strong></span>}
                         {s.when && (s.when.gather
-                          ? <><span>{t.gather} <bdi>{s.when.a}</bdi></span><span>{t.start} <bdi>{s.when.b}</bdi></span></>
+                          ? <><span>{gatherWord(s)} <bdi>{s.when.a}</bdi></span><span>{startWord(s)} <bdi>{s.when.b}</bdi></span></>
                           : <span><bdi>{s.when.b ? `${s.when.a} – ${s.when.b}` : s.when.a}</bdi></span>)}
                         {feat.len && <span><bdi>{feat.len}</bdi></span>}
                       </span>
@@ -507,7 +535,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                       <span className="xs-feat-meta">
                         <span className="xs-feat-mi">
                           {s.info.place && <span><bdi>{s.info.place}</bdi></span>}
-                          {foot && <span className={s.yoga ? "xs-feat-with" : undefined}><bdi>{foot}</bdi></span>}
+                          {foot && <span className={s.yoga || s.farm ? "xs-feat-with" : undefined}><bdi>{foot}</bdi></span>}
                         </span>
                       </span>
                       {stateOf(s)}
@@ -683,6 +711,26 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                     {about}
                   </div></Fragment>
                 );
+                // The Farm House Night's own card (the booking app's _fhSessCard, 2026-11-13): the venue's rust tile, the fan of
+                // feathers rising from the far corner, the mark, its name in peach, its day, its arrival and dinner and where,
+                // and who it is for along the foot with its state alone: never Available nor how many places are left, as on
+                // every card of a ride staff approve in the booking app
+                if (s.farm) return (
+                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
+                    <button type="button" className={`sc-card sc-farm ev-${s.kind}${s.full ? " full" : ""}${opens ? " closed" : ""}`} {...radio} onClick={() => pickDate(s)}>
+                      <FarmScene />
+                      <span className="sc-fh-top"><span className="sc-dot" aria-hidden="true" /><img className="sc-fh-mark" src={FARM_MARK} alt="" width={FARM_MARK_SIZE.width} height={FARM_MARK_SIZE.height} decoding="async" /></span>
+                      <span className="sc-fh-title">{s.name}</span>
+                      {s.sg && <span className="sc-kicker">{chip(s)}</span>}
+                      <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
+                      {/* a rule before each part, cut where a line starts (.sc-fh-meta), so none starts a line when where it
+                          is wraps under arrival and dinner on a phone */}
+                      <span className="sc-fh-meta"><span className="sc-fh-mi">{s.farm.meta.map((x, i) => <span key={i}><i aria-hidden="true" /><bdi>{x}</bdi></span>)}</span></span>
+                      <span className="sc-fh-foot"><span className="sc-fh-line">{s.farm.line}</span>{stateOf(s)}</span>
+                    </button>
+                    {about}
+                  </div></Fragment>
+                );
                 // The DEFE 5KM Run's own card (the booking app's _defeSessCard, 2026-10-18): white with Defe's
                 // pink washed in from the far corner, the logo, the race's name, when, how far and where, the
                 // cause along the foot with its state
@@ -743,11 +791,14 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
           <h2 id="xs-h3" className="xs-title" tabIndex={-1}>{noBike(sess) ? t.bookTitleNb : t.bookTitle}</h2>
           <div className="xs-summary">
             {ev.blood && <Plate b={ev.blood} />}
-            <div className="xs-sum-head">
+            {/* the Farm House Night's head is the booking app's rust plate (_fhHeadHtml): the mark, its name in peach, when, and
+                who it is for */}
+            <div className={`xs-sum-head${sess.farm ? " xs-fh-head" : ""}`}>
               {sess.defe ? <span className="xs-logo small xs-defe-logo"><img src={DEFE_LOGO} alt="" /></span>
                 : sess.yoga ? <span className="xs-logo small xs-yoga-logo"><img src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} /></span>
+                : sess.farm ? <span className="xs-logo small xs-farm-logo"><img src={FARM_MARK} alt="" width={FARM_MARK_SIZE.width} height={FARM_MARK_SIZE.height} /></span>
                 : ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
-              <div><strong className={sess.yoga ? "xs-yg-name" : undefined}>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span></div>
+              <div><strong className={sess.yoga ? "xs-yg-name" : sess.farm ? "xs-fh-name" : undefined}>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span>{sess.farm && <span className="xs-fh-sub">{sess.farm.line}</span>}</div>
             </div>
             {tags(sess)}
             {sess.defe && <p className="xs-defe-cause"><Ribbon /><span>{sess.defe.cause}</span></p>}
@@ -776,9 +827,9 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
             <p className="xs-refuse" role="alert">{sess.refusal}</p>
           ) : (
             <>
-              <a className={`xs-go${ev.blood ? " ev-blood" : sess.yoga ? " ev-yoga" : ""}`} href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
+              <a className={`xs-go${ev.blood ? " ev-blood" : sess.yoga ? " ev-yoga" : sess.farm ? " ev-farm" : ""}`} href={link}>{sess.full ? t.waitlist : t.cont} <span aria-hidden="true">{arrow}</span></a>
               {/* one place per account, so never "add the participants" on the Blood Donation event, nor on yoga (the booking
-                  app's _noGroupAdd) */}
+                  app's _noGroupAdd); the Farm House Night says it, as the member adds their family there */}
               {!ev.blood && !sess.yoga && (noBike(sess) ? t.handoffNb : t.handoff) && <p className="xs-handoff">{noBike(sess) ? t.handoffNb : t.handoff}</p>}
             </>
           )}

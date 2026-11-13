@@ -38,6 +38,7 @@ import { T as TICKET } from "@/components/booking/tickets.text";
 import "../handoff.css";
 import { accountSchema } from "@/content/pages/account";
 import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
+import { FARM_NAME, farmName } from "@/content/farm-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { readAccount, readBookings, rpcServer } from "@/lib/account";
@@ -192,8 +193,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const payCfg = paySettings(content);
   const payOnline = payCfg.enabled && payReady();
   const d = resolvePage(experiencesSchema, content, L).dates;
-  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
-  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
+  // (the Farm House Night's name is the server's, content/farm-words.ts: on a member's own ticket and their Stats)
+  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx), farm: farmName(tx) };
+  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME, farm: FARM_NAME };
   const ticketText = serverLocalize(TICKET, locale);
   const recordBase = serverLocalize(RECORD, locale);
   const typeName = (ty: string) => (TYPE_NAME[ty] ? tx(TYPE_NAME[ty].en, TYPE_NAME[ty].ar) : ty);
@@ -331,8 +333,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
     // Edit does; Reschedule and Cancel open its My Bookings. (A Run for Her place is only cancelled;
     // its event is still named, as the booking app's event link takes it.)
-    // (Victory Lap's details change in My Bookings there: it is never edited or rescheduled; nor Arena Heros'.)
-    const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community" };
+    // (Victory Lap's details change in My Bookings there: it is never edited or rescheduled; nor Arena Heros'.) The Farm
+    // House Night (2026-11-13) is a community date, its Edit the booking app's, where the member adds or drops family.
+    const EV: Record<string, string> = { jcc: "jcc", saturday: "community", swim: "community", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community" };
     const appLink = (params: Record<string, string>) => {
       try { const u = new URL(app); for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v); return bookingLink(u.toString(), locale); }
       catch { return book; }
@@ -554,6 +557,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const streak = weekStreak(completed.map((r) => r.date), today);
     const next = ticketGroups(rows, today)[0];
     const anniv = anniversaryOf(stats?.first, today);
+    // a Farm House Night on offer is named to a community member alone (2026-11-13: "not to public"); one the rider
+    // went to is theirs, and stays among the kinds done
+    if (openKinds?.has("farm") && (await rpcServer<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data !== true) openKinds.delete("farm");
     const tried = openKinds ? triedKinds(more.byKind.map(([k]) => k), openKinds) : [];
     return (
       <>

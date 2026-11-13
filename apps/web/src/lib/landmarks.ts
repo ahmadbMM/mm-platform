@@ -30,7 +30,7 @@ export function annivLine(content: SiteContent | null | undefined, locale: strin
 }
 
 /** The kinds of session the checklist names, in its order (LM_KINDS). */
-export const LM_KINDS: readonly RideKind[] = ["jcc", "saturday", "petromin", "swim", "yoga", "workshop", "event", "snd96", "runher", "defe5k", "vlap", "arena", "blood"];
+export const LM_KINDS: readonly RideKind[] = ["jcc", "saturday", "petromin", "swim", "yoga", "farm", "workshop", "event", "snd96", "runher", "defe5k", "vlap", "arena", "blood"];
 
 /** The kinds tried, under By event (_lmKindsHtml): every kind with a date the rider can still book (`open`) and every
  *  kind already done (`done`: the nights by kind, as By event counts them), each ticked once one was completed. So an

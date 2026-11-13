@@ -633,9 +633,9 @@ describe("yoga (ride_kind 'yoga', 2026-11-12)", () => {
 // put featured sessions and special events such as hatha yoga class"): the booking app's _featured, read from the same
 // settings blob as the session's times. No column and no migration.
 describe("featured (bike_slots._feat, 2026-11-13)", () => {
-  const ALL = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k", "arena", "blood", "yoga"] as const;
-  it("can be said of a date inside MicroMobility Experiences only: the Saturday ride, a Petromin night, the pool, the DEFE 5KM Run and yoga", () => {
-    expect([...FEATURE_OK].sort()).toEqual(["defe5k", "petromin", "saturday", "swim", "yoga"]);
+  const ALL = ["jcc", "saturday", "swim", "workshop", "petromin", "snd96", "event", "runher", "vlap", "defe5k", "arena", "blood", "yoga", "farm"] as const;
+  it("can be said of a date inside MicroMobility Experiences only: the Saturday ride, a Petromin night, the pool, the DEFE 5KM Run, yoga and the Farm House Night", () => {
+    expect([...FEATURE_OK].sort()).toEqual(["defe5k", "farm", "petromin", "saturday", "swim", "yoga"]);
     for (const k of ALL) expect(featuredOf(k, '{"_feat":1}'), k).toBe(FEATURE_OK.includes(k));
     // a kind with a card of its own, and a circuit night, never: whatever its settings say
     for (const k of ["jcc", "workshop", "event", "runher", "vlap", "arena", "blood", "snd96"] as const) {
@@ -656,10 +656,10 @@ describe("featured (bike_slots._feat, 2026-11-13)", () => {
       expect(featuredOf(k, '{"_feat":false}'), k).toBe(false);
     }
   });
-  it("is the kind's own answer with no _feat at all: yoga and the DEFE 5KM Run are featured as made, the others not", () => {
-    expect([...FEATURED_KINDS].sort()).toEqual(["defe5k", "yoga"]);
+  it("is the kind's own answer with no _feat at all: yoga, the DEFE 5KM Run and the Farm House Night are featured as made, the others not", () => {
+    expect([...FEATURED_KINDS].sort()).toEqual(["defe5k", "farm", "yoga"]);
     for (const v of ['{"_time":"16:00 - 17:30"}', "{}", { _time: "19:00" }, '{"_feat":null}', null, undefined, "", "not json", 42, "[]"]) {
-      for (const k of FEATURE_OK) expect(featuredOf(k, v), `${k} ${String(v)}`).toBe(k === "yoga" || k === "defe5k");
+      for (const k of FEATURE_OK) expect(featuredOf(k, v), `${k} ${String(v)}`).toBe(k === "yoga" || k === "defe5k" || k === "farm");
     }
   });
   it("is on every session the site reads, from its row", () => {

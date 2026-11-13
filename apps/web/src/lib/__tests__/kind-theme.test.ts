@@ -41,8 +41,11 @@ describe("sunrise on the Corniche (the booking app's _sunriseMin)", () => {
 
 describe("the kinds' order (the booking app's COMM_MARKS)", () => {
   const s = (kind: string) => ({ kind });
-  it("is the Saturday ride, the pool, Petromin, yoga and the DEFE run", () => {
-    expect([...KIND_ORDER]).toEqual(["saturday", "swim", "petromin", "yoga", "defe5k"]);
+  it("is the Saturday ride, the pool, Petromin, yoga, the Farm House Night and the DEFE run", () => {
+    expect([...KIND_ORDER]).toEqual(["saturday", "swim", "petromin", "yoga", "farm", "defe5k"]);
+    // the Farm House Night (2026-11-13) between yoga and the DEFE run, as the booking app's COMM_MARKS has it
+    expect(kindsInOrder([s("defe5k"), s("farm"), s("saturday"), s("yoga")])).toEqual(["saturday", "yoga", "farm", "defe5k"]);
+    expect(kindMarks([s("farm"), s("saturday")])).toEqual(["saturday", "farm"]);
   });
   it("puts a list's kinds in that order, each once, any other kind after them as it comes", () => {
     expect(kindsInOrder([s("yoga"), s("event"), s("swim"), s("saturday"), s("swim"), s("workshop"), s("defe5k")])).toEqual(["saturday", "swim", "yoga", "defe5k", "event", "workshop"]);

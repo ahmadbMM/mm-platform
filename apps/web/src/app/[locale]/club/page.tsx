@@ -16,6 +16,7 @@ import { readAskList } from "@/lib/ask-server";
 import { memberArea, memberTitle } from "@/lib/members";
 import { readMemberHub } from "@/lib/member-hub-server";
 import { bloodName } from "@/content/blood-words";
+import { FARM_NAME, farmName } from "@/content/farm-words";
 import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { kindNames, sessionName, sessionGenders, type RideKind } from "@/lib/rides";
 import { genderBlock, genderChip, genderText, sessionGender } from "@/lib/session-gender";
@@ -79,9 +80,11 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   // The members' rides are named as Experiences names them, and booked in the booking app on that ride
   // (the kind is the session's ride_kind: Run for Her, 'runher', opens on its own event, ev=runher, and
   // Victory Lap, 'vlap', on its own, ev=vlap, and Arena Heros, 'arena', on its own, ev=arena; the DEFE 5KM Run,
-  // 'defe5k', and yoga, 'yoga', are community dates, ev=community).
+  // 'defe5k', yoga, 'yoga', and the Farm House Night, 'farm', are community dates, ev=community). The Farm House Night's name
+  // is the server's (content/farm-words.ts): the members' area names it to a member alone; the rides listed to every
+  // visitor (ClubRides) never do.
   const d = resolvePage(experiencesSchema, content, L).dates;
-  const kindName = kindNames(d), enName = kindNames(resolvePage(experiencesSchema, content, "en").dates);
+  const kindName = { ...kindNames(d), farm: farmName(tx) }, enName = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), farm: FARM_NAME };
   const asKind = (k: string | null): RideKind => (k && k in kindName ? (k as RideKind) : "saturday");
   const nameOf = (kind: string | null, title: string) => sessionName({ kind: asKind(kind), title: title || null }, kindName, enName, L !== "en");
   const bookAt = (id: string, kind: string | null) => {

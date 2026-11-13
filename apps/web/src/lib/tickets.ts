@@ -364,13 +364,14 @@ export function ticketSession(r: Row): TicketSession | null {
     approval: community && r.needs_approval !== false,
     published: community && r.hide_queue === false,
     times: slotTimes(r.bike_slots),
-    gathers: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap",
+    // the Farm House Night gathers too (2026-11-13): its arrival, then dinner
+    gathers: kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "farm",
     collect,
     ...(wlCollect !== undefined ? { wlCollect } : {}),
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga" && kind !== "farm",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -539,10 +540,12 @@ export function dayWord(date: string, today: string): "today" | "tomorrow" | nul
  *  its venue (Gymnation, Tahlia Street) when staff named no place, never the circuit (2026-10-28), and the Blood
  *  Donation event at the circuit (the booking app's _sessLoc, 2026-11-03). A yoga date (2026-11-12) is at the place staff
  *  named (SILKDEER); one with a map link and no place's name is at its meeting point, never the circuit (the booking
- *  app's _venueName). */
+ *  app's _venueName). The Farm House Night (2026-11-13), a ride staff approve with its map link, is named by the place
+ *  staff wrote (Little Farmhouse, Dhahban, which the booking app names by sessions.meet_name), never "Meeting point";
+ *  one with no place written is at its meeting point. */
 export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "gym" } | { kind: "text"; text: string };
 export function venueOf(s: (Pick<TicketSession, "approval" | "meetUrl" | "location"> & { kind?: string }) | undefined): Venue {
-  if (s?.approval && s.meetUrl) return { kind: "meet" };
+  if (s?.approval && s.meetUrl && !(s.kind === "farm" && s.location)) return { kind: "meet" };
   if (s?.kind === "yoga" && !s.location && s.meetUrl) return { kind: "meet" };
   const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : s?.kind === "blood" ? "JCC" : "");
   return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : loc === AH_VENUE ? { kind: "gym" } : { kind: "text", text: loc };

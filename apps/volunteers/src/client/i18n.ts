@@ -138,8 +138,9 @@ export function whenLabel(at: string | null | undefined): string {
 }
 
 /** Does a session keep its times as "gather - start" rather than "start - end"? The booking app's _gathersTime: the
- *  Saturday ride (and any community kind it does not name), the National Day ride, Run for Her and Victory Lap gather,
- *  and their second time is when they set off, not when they end. */
+ *  Saturday ride (and any community kind it does not name), the National Day ride, Run for Her, Victory Lap and the Farm
+ *  House Night (its arrival, then dinner; 2026-11-13) gather, and their second time is when they set off, not when they
+ *  end. */
 export function gathers(s: { ride_kind?: string | null; event_kind?: string | null }): boolean {
   const kind = s.ride_kind ?? "";
   if (kind === "snd96") return true;
@@ -163,7 +164,8 @@ export function timesLabel(raw: string | null | undefined, gather = false): stri
 }
 
 const KIND_NAMES: Record<string, Key> = { saturday: "evSatName", petromin: "evPetroName", swim: "evSwimName", workshop: "evWorkshopName", snd96: "evSnd96Name",
-  event: "evEventName", runher: "evRunHerName", vlap: "evVlapName", arena: "evArenaName", defe5k: "evDefeName", blood: "evBloodName", yoga: "evYogaName" };
+  event: "evEventName", runher: "evRunHerName", vlap: "evVlapName", arena: "evArenaName", defe5k: "evDefeName", blood: "evBloodName", yoga: "evYogaName",
+  farm: "evFarmName" }; // the Farm House Night (2026-11-13), named as the booking app's _vol_sess_name names it
 function nameIn(s: { title?: string | null; ride_kind?: string | null }, word: (k: Key) => string): string {
   const kind = s.ride_kind ?? "";
   if (!Object.prototype.hasOwnProperty.call(KIND_NAMES, kind)) return word("evJccName");
