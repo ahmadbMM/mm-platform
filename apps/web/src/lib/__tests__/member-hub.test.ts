@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createElement, type ReactElement } from "react";
+import { createElement, isValidElement, type ReactElement, type ReactNode } from "react";
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { hubMonthOf, hubPlanOf, monthDue, monthName, planAfter, planBoxes, type HubMonth, type HubPlan } from "../member-hub";
@@ -7,6 +7,10 @@ import { readMemberHub } from "../member-hub-server";
 import { memberArea } from "../members";
 import { POST } from "../../app/api/account/plan/route";
 import { MEMBER_HUB_WORDS, memberHubWords } from "../../components/club/MemberHub.words";
+import MyMonth from "../../components/club/MyMonth";
+import { ShareButton } from "../../components/account/ShareImage";
+import { SHARE_WORDS } from "../../components/account/BadgeShare.words";
+import { monthSubject, plainText } from "../share-picture";
 import { LOCALES } from "../../i18n/locales";
 
 // Plan my Saturdays (F10) and My month (F13) in a member's area on /club, as the booking app's member-hub.js has them
@@ -185,7 +189,8 @@ describe("the members' area", () => {
     expect(mon).toContain('<div data-mon="prev"><strong><bdi dir="ltr">+3</bdi></strong><span>Sessions compared with November</span></div>');
     expect([...mon.matchAll(/data-kind="(\w+)"/g)].map((m) => m[1])).toEqual(["saturday", "jcc", "blood", "yoga"]);
     expect(mon).toContain("<span>JCC night</span><strong><bdi>2</bdi></strong>");
-    expect(mon).not.toMatch(/share/i); // the app's Share draws through F12's pop-up, not on this page
+    expect(mon).toMatch(/<button type="button" class="shr-btn shr-line club-mon-share"><svg[^]*<span>Share<\/span><\/button><\/section>$/); // Share, last
+    expect(mon).not.toContain("<dialog"); // its pop-up opens on the tap
     expect(html).not.toContain('class="club-plan"');
   });
   it("says a month down as -n, and no comparison without a month before", async () => {
@@ -220,6 +225,63 @@ describe("the members' area", () => {
     const html = await area("en", null, null);
     expect(html).not.toContain("club-mon");
     expect(html).not.toContain("club-plan");
+  });
+});
+
+// Share on My month: the app's _monSub, through the share pop-up of F12 (components/account/ShareImage.tsx).
+describe("Share on My month", () => {
+  const month = hubMonthOf(ok(MONTH), "2026-12-27") as HubMonth;
+  const names: Record<string, string> = { saturday: "Saturday Social Ride", jcc: "JCC night", blood: "Blood Donation", yoga: "Yoga", swim: "Pool", arena: "Arena Heros" };
+  const kindName = (k: string) => names[k] ?? k;
+  const sub = (m: Partial<HubMonth> = {}, locale = "en") => monthSubject({ ...month, ...m }, locale, memberHubWords(locale), kindName);
+  // The elements a server component returns, walked for the one of a type.
+  function find(n: ReactNode, type: unknown): ReactElement<Record<string, unknown>> | null {
+    if (Array.isArray(n)) { for (const x of n) { const f = find(x, type); if (f) return f; } return null; }
+    if (!isValidElement(n)) return null;
+    if (n.type === type) return n as ReactElement<Record<string, unknown>>;
+    return find((n.props as { children?: ReactNode }).children, type);
+  }
+  it("draws the month on the calendar medal, then one line for each number, as the app's _monSub does", () => {
+    const s = sub();
+    expect({ ...s, lines: s.lines?.map(plainText) }).toEqual({
+      label: "My month", name: "December 2026", level: "", date: "", medal: { icon: "calcheck", color: "green" }, chip: null, file: "micromobility-2026-12",
+      lines: ["Saturdays ridden: 3", "Sessions: 7", "JCC night: 2", "Blood Donation: 1", "Yoga: 1", "Badges earned: 1", "Sessions compared with November: +3"],
+    });
+    expect(s.lines?.every((l) => l !== plainText(l))).toBe(true); // each number kept in order in a right-to-left line
+  });
+  it("says only what the member did: no Saturdays or badges at 0, three kinds at most, the comparison only as a gain", () => {
+    const lines = (m: Partial<HubMonth>) => sub(m).lines?.map(plainText);
+    expect(lines({ saturdays: 0, badges: 0, prev: { month: "2026-11", x: 0 } })).toEqual(["Sessions: 7", "JCC night: 2", "Blood Donation: 1", "Yoga: 1"]);
+    expect(lines({ prev: { month: "2026-11", x: -2 } })).not.toContainEqual(expect.stringMatching(/compared/));
+    expect(lines({ prev: null })).not.toContainEqual(expect.stringMatching(/compared/));
+    const many = lines({ kinds: [{ k: "saturday", n: 4 }, { k: "swim", n: 3 }, { k: "jcc", n: 2 }, { k: "yoga", n: 2 }, { k: "arena", n: 1 }] });
+    expect(many?.slice(2, 5)).toEqual(["Pool: 3", "JCC night: 2", "Yoga: 2"]); // the Saturday ride is the first line
+    expect(many).not.toContain("Arena Heros: 1");
+    expect(lines({ kinds: [] })).toEqual(["Saturdays ridden: 3", "Sessions: 7", "Badges earned: 1", "Sessions compared with November: +3"]);
+  });
+  it("is in the page's language, in all 16", () => {
+    for (const l of LOCALES) {
+      const w = MEMBER_HUB_WORDS[l.code], s = sub({}, l.code);
+      expect(s.label, l.code).toBe(w.month);
+      expect(s.name, l.code).toBe(monthName("2026-12", l.code, true));
+      expect(plainText(s.lines?.[1] ?? ""), l.code).toBe(`${w.sessions}: 7`);
+      expect(plainText(s.lines?.at(-1) ?? ""), l.code).toBe(`${w.vs.split("{0}").join(monthName("2026-11", l.code))}: +3`);
+      expect((s.lines ?? []).join(" "), l.code).not.toMatch(/\p{Extended_Pictographic}/u);
+    }
+    expect(sub({}, "ar").lines?.map(plainText)[0]).toBe("أيام السبت التي ركبت فيها: 3");
+  });
+  it("hands the pop-up that picture and the member's first name", () => {
+    const b = find(MyMonth({ locale: "en", month, kindName, first: "Sara" }), ShareButton);
+    expect(b?.props).toEqual({ className: "shr-line club-mon-share", locale: "en", first: "Sara", sub: sub() });
+  });
+  it("is the card's last button in every language, opening nothing until it is tapped", async () => {
+    for (const l of LOCALES) {
+      const html = await area(l.code, null, month);
+      const mon = /<section class="club-mon".*?<\/section>/.exec(html)?.[0] ?? "";
+      expect(mon, l.code).toMatch(new RegExp(`<span>${SHARE_WORDS[l.code].share}</span></button></section>$`));
+      expect(mon, l.code).not.toContain("<dialog");
+    }
+    expect(await area("en", null, null)).not.toContain("club-mon-share");
   });
 });
 

@@ -1,16 +1,20 @@
 import type { ReactNode } from "react";
 import { KindIcon } from "@/components/experiences/KindArt";
+import { ShareButton } from "@/components/account/ShareImage";
 import { fmtNum } from "@/lib/fill";
 import { monthName, type HubMonth } from "@/lib/member-hub";
+import { monthSubject } from "@/lib/share-picture";
 import type { RideKind } from "@/lib/rides";
 import { memberHubWords } from "./MemberHub.words";
 
 // My month in a member's area on /club (the booking app's _monHtml, new features F13): from the 26th, the member's own
 // month - its name with its year, the Saturdays they rode, their sessions, the badges they earned, and, when they had
 // sessions before this month, this month's sessions against the month before (+2, -1, 0) - then their sessions by kind,
-// most first, each with the kind's mark. Every number is the member's own (hub_month, lib/member-hub.ts). The app's
-// Share button is not here: it draws through the share pop-up of its badges (F12).
-export default function MyMonth({ locale, month: m, kindName }: { locale: string; month: HubMonth; kindName: (k: RideKind) => string }) {
+// most first, each with the kind's mark. Every number is the member's own (hub_month, lib/member-hub.ts). Last, Share
+// sends the month as a picture through the share pop-up of the badges and the title (F12, components/account/
+// ShareImage.tsx), with what the app's _monSub puts on it (lib/share-picture.ts monthSubject). `first`: the member's
+// first name for the pop-up's switch ("" for none).
+export default function MyMonth({ locale, month: m, kindName, first }: { locale: string; month: HubMonth; kindName: (k: RideKind) => string; first: string }) {
   const w = memberHubWords(locale);
   const N = (n: number) => <bdi>{fmtNum(n, locale)}</bdi>;
   const p = m.prev;
@@ -28,6 +32,7 @@ export default function MyMonth({ locale, month: m, kindName }: { locale: string
           {m.kinds.map((x) => <li key={x.k} data-kind={x.k}><KindIcon kind={x.k} size={18} /><span>{kindName(x.k)}</span><strong>{N(x.n)}</strong></li>)}
         </ul>
       )}
+      <ShareButton className="shr-line club-mon-share" locale={locale} first={first} sub={monthSubject(m, locale, w, kindName)} />
     </section>
   );
 }

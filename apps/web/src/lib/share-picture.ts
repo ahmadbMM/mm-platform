@@ -1,20 +1,24 @@
-// Share a badge or a title as a picture (the booking app's badge-share.js, new features build F12, 2026-11-13): what the
-// picture says and how it is drawn, in a plain module so the tests and the share pop-up (components/account/ShareImage.tsx)
-// share it. The picture is 1080 x 1920 in the year recap's look: the MicroMobility mark, the badge as the site draws it
-// (or the title on a chip in its colour), its name, its level, the day it was earned when the site knows one, and the
+// Share a badge or a title as a picture (the booking app's badge-share.js, new features build F12, 2026-11-13), and a
+// member's My month on /club (F13): what the picture says and how it is drawn, in a plain module so the tests and the
+// share pop-up (components/account/ShareImage.tsx) share it. The picture is 1080 x 1920 in the year recap's look: the
+// MicroMobility mark, the badge as the site draws it (or the title on a chip in its colour), its name, its level, the day it was earned when the site knows one, and the
 // rider's first name only when they ask for it. Nothing about anyone else, no ticket, no number of anyone's.
 // The booking app also prints the club's Saturday rides on a member's title; that total comes from the Community tab's
 // read (hub_feed), which the website does not call, so the website's picture never carries it.
 import { intlOf } from "@/i18n/locales";
 import { fill } from "@/i18n/tx";
+import { monthName, type HubMonth } from "./member-hub";
+import type { RideKind } from "./rides";
 
 /** What one picture shows: label ("Badge earned" / "Title"), name, level ("Level 2 of 8" or ""), date ("" for none),
- *  the medal to draw for a badge or the chip's colour for a title, and the file's name without ".png". */
+ *  the medal to draw for a badge or the chip's colour for a title, and the file's name without ".png". `lines`: a
+ *  member's My month, its numbers one to a line under the month's name (the app's _monSub, F13). */
 export type ShareSubject = {
   label: string; name: string; level: string; date: string;
   medal: { icon: string; color: string } | null;
   chip: { color: string } | null;
   file: string;
+  lines?: string[];
 };
 
 export const SHARE_W = 1080;
@@ -63,6 +67,21 @@ export function badgeSubject(x: { slug: string; name: string; icon: string; colo
  *  where there is one), on a chip in its colour, with the day it was given or reached. */
 export function titleSubject(t: { name: string; nameAr: string; color: string; at?: string }, locale: string, label: string): ShareSubject {
   return { label, name: (locale === "ar" && t.nameAr) || t.name, level: "", date: shareDay(t.at, locale), medal: null, chip: { color: t.color }, file: "micromobility-title" };
+}
+/** A member's My month as a picture (the app's _monSub, new features build F13, 2026-11-13; components/club/MyMonth.tsx):
+ *  the month with its year on the calendar medal, then one line for each number above zero. A picture a member sends out
+ *  says what they did: no Saturdays or badges line at 0, the kinds other than the Saturday ride (its Saturdays are the
+ *  first line), three at most, and the comparison with their month before only when it is a gain. Each number is kept
+ *  in order inside a right-to-left line. `w`: My month's words (MemberHub.words.ts). */
+export function monthSubject(m: HubMonth, locale: string, w: { month: string; sats: string; sessions: string; badges: string; vs: string }, kindName: (k: RideKind) => string): ShareSubject {
+  const row = (label: string, v: string | number) => `${label}: ${ltrNum(v)}`;
+  const lines: string[] = [];
+  if (m.saturdays > 0) lines.push(row(w.sats, m.saturdays));
+  lines.push(row(w.sessions, m.sessions));
+  for (const k of m.kinds.filter((x) => x.k !== "saturday").slice(0, 3)) lines.push(row(kindName(k.k), k.n));
+  if (m.badges > 0) lines.push(row(w.badges, m.badges));
+  if (m.prev && m.prev.x > 0) lines.push(row(fill(w.vs, monthName(m.prev.month, locale)), `+${m.prev.x}`));
+  return { label: w.month, name: monthName(m.month, locale, true), level: "", date: "", medal: { icon: "calcheck", color: "green" }, chip: null, lines, file: `micromobility-${m.month.slice(0, 7)}` };
 }
 
 /** What the painting needs besides the subject: the body font, the mark and the medal as pictures (null: left out or
@@ -127,12 +146,15 @@ export function paintShare(x: Ctx, sub: ShareSubject, first: string, a: ShareAss
   }
   if (sub.level) rows.push({ t: sub.level, w: 400, s: 44, c: SHARE_INK.low, h: 76 });
   if (sub.date) rows.push({ t: sub.date, w: 400, s: 44, c: SHARE_INK.mid, h: 76 });
+  for (const t of sub.lines ?? []) rows.push({ t, w: 400, s: 40, c: SHARE_INK.mid, h: 60 }); // a month's numbers (F13)
   let y = (sub.medal ? 1290 : 1010) - rows.reduce((n, r) => n + r.h, 0) / 2;
+  if (sub.lines) y = Math.max(y, 1000); // a long month stays clear of the medal above it
   for (const r of rows) { x.fillStyle = r.c; x.font = `${r.w} ${r.s}px ${fam}`; put(r.t, y + r.h * 0.72); y += r.h; }
   if (first) said.push(first);
   if (sub.medal) said.push(sub.label, sub.name);
   if (sub.level) said.push(sub.level);
   if (sub.date) said.push(sub.date);
+  if (sub.lines) said.push(...sub.lines);
   x.fillStyle = SHARE_INK.foot; x.font = `400 40px ${fam}`; put(SHARE_SITE, 1790);
   return said;
 }

@@ -138,6 +138,24 @@ describe("the picture", () => {
     expect(wrapTwo(ctx, "Hall of Fame", 940)).toEqual(["Hall of Fame"]);
     expect(wrapTwo(ctx, "one two three four five six seven eight nine ten eleven twelve thirteen", 940)).toHaveLength(2);
   });
+  it("draws a member's month: the calendar medal, its name, then its numbers one to a line, clear of the medal", () => {
+    const lines = [`Saturdays ridden: ${ltrNum(3)}`, `Sessions: ${ltrNum(7)}`, `Badges earned: ${ltrNum(1)}`];
+    const month: ShareSubject = { label: "My month", name: "December 2026", level: "", date: "", medal: { icon: "calcheck", color: "green" }, chip: null, file: "micromobility-2026-12", lines };
+    const { ctx, calls, texts } = fakeCtx();
+    const said = paintShare(ctx, month, "", assets({ tint: shareTint("green") }), false);
+    expect(calls.filter((c) => c.op === "drawImage").map((c) => c.args)).toEqual([[IMG, 476, 140, 128, 120], [MEDAL, 280, 460, 520, 520]]);
+    expect(texts().map((c) => plainText(String(c.args[0])))).toEqual(["MicroMobility", "My month", "December 2026", "Saturdays ridden: 3", "Sessions: 7", "Badges earned: 1", SHARE_SITE]);
+    const rows = texts().slice(3, 6);
+    expect(rows.every((c) => c.font === "400 40px Inter, sans-serif" && c.fill === SHARE_INK.mid)).toBe(true);
+    expect(rows.map((c) => Number(c.args[2]) - Number(rows[0].args[2]))).toEqual([0, 60, 120]);
+    expect(Number(texts()[1].args[2])).toBeGreaterThan(1000); // below the medal, however many lines
+    expect(said.map(plainText)).toEqual(["MicroMobility", "My month", "December 2026", "Saturdays ridden: 3", "Sessions: 7", "Badges earned: 1"]);
+    const long = fakeCtx();
+    paintShare(long.ctx, { ...month, lines: Array.from({ length: 7 }, (_, i) => `Line ${i}`) }, "Sara", assets(), false);
+    expect(Number(long.texts()[1].args[2])).toBeGreaterThan(1000);
+    expect(long.texts().at(-2)?.args[0]).toBe("Line 6");
+    expect(Number(long.texts().at(-2)?.args[2])).toBeLessThan(1790 - 40); // and above the address
+  });
   it("paints the eight colours as the site's medals, a special one and green as the brand green", () => {
     expect(shareTint("blue")).toBe("#3d8bfd");
     expect(shareTint("green")).toBe(SHARE_INK.go);

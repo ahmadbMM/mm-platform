@@ -143,7 +143,7 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
         ) : <p className="club-att-empty">{t.noLast}</p>}
       </section>
 
-      {month && kindName && <MyMonth locale={locale} month={month} kindName={kindName} />}
+      {month && kindName && <MyMonth locale={locale} month={month} kindName={kindName} first={firstNameOf(a.firstName)} />}
 
       <section className="club-up" aria-labelledby="club-up-h">
         <h3 id="club-up-h">{t.upcoming}</h3>
