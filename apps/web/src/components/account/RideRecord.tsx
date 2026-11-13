@@ -18,6 +18,8 @@ import { intlOf } from "@/i18n/locales";
 // With `share` (the Badges part; the booking app's Share, new features build F12, 2026-11-13) an earned badge's popup
 // offers its picture, dated the day staff or the database gave it, else the day the rider's rides reached it (`rode`,
 // lib/share-days.ts), else not dated.
+// With `helper` (a community member's helper days, the booking app's Helper path line, new features build F23, 2026-11-13;
+// HelperPath.tsx helperLine) Your rides says them under Rides led, its people glyph beside them.
 export type RecordText = (typeof T)["en"];
 type Props = {
   locale: string; stats: RideStats | null; led: number; badges: BadgeItem[]; t: RecordText;
@@ -25,9 +27,10 @@ type Props = {
   reqs?: BadgeReq[] | null;
   part?: "stats" | "badges";
   share?: { first: string; rode: Record<string, string> } | null;
+  helper?: string | null;
 };
 
-export default function RideRecord({ locale, stats, led, badges, t, typeName, dur, reqs = null, part, share = null }: Props) {
+export default function RideRecord({ locale, stats, led, badges, t, typeName, dur, reqs = null, part, share = null, helper = null }: Props) {
   const day = (iso: string | null | undefined) => {
     const d = iso ? new Date(/^\d{4}-\d{2}-\d{2}$/.test(iso) ? `${iso}T12:00:00Z` : iso) : null;
     if (!d || Number.isNaN(d.getTime())) return "";
@@ -64,10 +67,10 @@ export default function RideRecord({ locale, stats, led, badges, t, typeName, du
   const choices: AskChoice[] = reqs ? askChoices(badges).map((y) => { const [name, how] = words(y); return { slug: y.slug, name, how, icon: y.icon, color: y.color, level: ladderLevel(y.slug) }; }) : [];
   const near = closestBadges(badges);
   const mine = part !== "badges", grid = part !== "stats";
-  if (!(mine && (stats || led)) && !(grid && badges.length)) return null;
+  if (!(mine && (stats || led || helper)) && !(grid && badges.length)) return null;
   return (
     <>
-      {mine && (stats || led > 0) && (
+      {mine && (stats || led > 0 || helper) && (
         <div className="myr">
           <p className="myr-h">{t.yourRides}</p>
           {stats && (
@@ -83,6 +86,12 @@ export default function RideRecord({ locale, stats, led, badges, t, typeName, du
             <p className="myr-led">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V3.5M5 4.5h12.5l-2.6 4 2.6 4H5" /></svg>
               <span>{fillAt(t.led, String(led))}</span>
+            </p>
+          )}
+          {helper && (
+            <p className="myr-led">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8.6" r="3.1" /><path d="M3.4 19.4c.6-3.2 2.8-5 5.6-5s5 1.8 5.6 5M15.2 5.9a3 3 0 0 1 0 5.6M17.6 14.6c1.7.6 2.8 2.2 3.1 4.8" /></svg>
+              <span>{helper}</span>
             </p>
           )}
         </div>

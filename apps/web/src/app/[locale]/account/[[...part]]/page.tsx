@@ -12,6 +12,8 @@ import { TicketWake } from "@/components/booking/TicketParts";
 import RateRide from "@/components/account/RateRide";
 import RideRecord from "@/components/account/RideRecord";
 import RideMore from "@/components/account/RideMore";
+import HelperPath, { helperLine } from "@/components/account/HelperPath";
+import { Anniversary, TriedKinds } from "@/components/account/Landmarks";
 import AccountParts, { accountPartHref, accountPartOf } from "@/components/account/AccountParts";
 import WalletCard from "@/components/account/WalletCard";
 import ReferralCard from "@/components/account/ReferralCard";
@@ -48,7 +50,9 @@ import { loadAddonItems } from "@/lib/ticket-addons";
 import { BOOTH_DIR, bfFor, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, shareLink, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
-import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
+import { bikeName, loadBadgeData, loadOpenKinds, loadRecordSessions } from "@/lib/ride-record-data";
+import { anniversaryOf, annivLine, triedKinds } from "@/lib/landmarks";
+import { helperPathOf } from "@/lib/helper-path";
 import { shareDays } from "@/lib/share-days";
 import { firstNameOf } from "@/lib/share-picture";
 import { riyadhClock } from "@/lib/workshop-days";
@@ -414,33 +418,44 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // Stats and Badges: the record, read from every night booked (the kind of ride, whether it was free, whether staff
   // approve it). Stats: Your rides, then more of it (RideMore) and the badges earned; Badges: the closest badges and
   // every badge.
+  // A community member's Helper path (customer_helper_path, rentals 20261114082300; the booking app's F23): the card on
+  // Badges, the helper days under Rides led on Stats; a rider who is not a member, or a read that failed, sees neither.
+  // Stats' personal landmarks (the booking app's F16): the first ride's anniversary card leads it for that week, and the
+  // kinds tried sit under By event (the kinds the account can still book: loadOpenKinds).
   const recordMain = async (p: "stats" | "badges") => {
     // no record from bookings that could not be read: every ride badge would read as not earned
     if (unread) return <section className="ac-sec" aria-label={p === "stats" ? recordBase.stats : recordBase.badges}>{failed}</section>;
     const record = recordRows(rows);
-    const [recSessions, badges, referralRaw] = await Promise.all([loadRecordSessions(record.map((r) => r.sessionId), acct), loadBadgeData(acct), referralP]);
+    const [recSessions, badges, referralRaw, helperRaw, openKinds] = await Promise.all([loadRecordSessions(record.map((r) => r.sessionId), acct), loadBadgeData(acct), referralP,
+      rpcServer<unknown>("customer_helper_path", { p_id: acct.id, p_token: acct.token }), p === "stats" ? loadOpenKinds(today, acct) : Promise.resolve(null)]);
+    const helper = helperPathOf(helperRaw.data);
     badges.referralRode = referralRodeOf(referralRaw); // the Recruiter badge counts these friends
     const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
     // the Blood Donation Visitor badge is worded by the event's own words (content/blood-words.ts), handed on only to one who holds it
     const recordText = allBadges.some((x) => x.slug === "blood_visitor")
       ? { ...recordBase, names: { ...recordBase.names, blood_visitor: bloodWords(tx).visitorBadge } } : recordBase;
     const dur = { h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM };
-    if (p === "badges") return allBadges.length > 0 && (
+    if (p === "badges") return (allBadges.length > 0 || helper) && (
       <section className="ac-sec" aria-label={recordText.badges}>
         <RideRecord part="badges" locale={locale} stats={null} led={0} badges={allBadges} t={recordText} typeName={typeName} dur={dur} reqs={badges.requests ?? null}
           share={{ first: firstNameOf(acct.name), rode: shareDays(record, recSessions) }} />
+        {helper && <HelperPath locale={locale} path={helper} />}
       </section>
     );
     const stats = rideStats(record, recSessions, today);
     const led = ledRides(record, recSessions); // Rides led under Your rides (the booking app, 2026-11-06)
     const kindName = (k: RideKind) => names[k] || enNames[k] || k;
     const more = rideMore(record, recSessions, today, { type: typeName, kind: kindName, locale: intlOf(locale) });
+    const anniv = anniversaryOf(stats?.first, today);
+    const tried = openKinds ? triedKinds(more.byKind.map(([k]) => k), openKinds) : [];
     return (
       <section className="ac-sec" aria-label={recordText.stats}>
+        {anniv && <Anniversary locale={locale} years={anniv.years} first={anniv.first} firstLabel={recordText.first} line={annivLine(content, locale)} />}
         {!stats && !led && <p className="ac-none">{recordText.none}</p>}
-        <RideRecord part="stats" locale={locale} stats={stats} led={led} badges={[]} t={recordText} typeName={typeName} dur={dur} />
+        <RideRecord part="stats" locale={locale} stats={stats} led={led} badges={[]} t={recordText} typeName={typeName} dur={dur} helper={helperLine(locale, helper)} />
         <RideMore locale={locale} more={more} t={recordText} typeName={typeName} kindName={kindName}
-          earned={{ n: allBadges.filter((x) => x.on).length, of: allBadges.length, href: localHref(accountPartHref("badges"), locale) }} />
+          earned={{ n: allBadges.filter((x) => x.on).length, of: allBadges.length, href: localHref(accountPartHref("badges"), locale) }}
+          tried={tried.length > 0 ? <TriedKinds locale={locale} kinds={tried} name={kindName} /> : null} />
       </section>
     );
   };

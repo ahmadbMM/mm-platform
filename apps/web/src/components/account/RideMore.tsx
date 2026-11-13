@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import type { RideKind } from "@/lib/rides";
 import type { RideMore as More } from "@/lib/ride-record";
 import { intlOf } from "@/i18n/locales";
@@ -7,15 +8,17 @@ import { ArrowIcon } from "@/components/site/Icons";
 // as twelve thin columns on one baseline, this month last, the value on the highest one's cap (the latest of a tie),
 // every third month named under the axis and each column's month and count said to a screen reader and as its
 // tooltip; rides by bike; sessions by event; then the badges earned, which opens Badges. Each list shows only what
-// was ridden; the chart, only when one of its months was.
+// was ridden; the chart, only when one of its months was. `tried` (the kinds tried, Landmarks.tsx; new features build F16)
+// sits under By event, above Badges earned.
 type Props = {
   locale: string; more: More;
   t: { months: string; byBike: string; byEvent: string; badgesEarned: string; rides: (n: string) => string };
   typeName: (type: string) => string; kindName: (kind: RideKind) => string;
   earned: { n: number; of: number; href: string } | null;
+  tried?: ReactNode;
 };
 
-export default function RideMore({ locale, more, t, typeName, kindName, earned }: Props) {
+export default function RideMore({ locale, more, t, typeName, kindName, earned, tried = null }: Props) {
   const intl = locale === "en" ? "en-GB" : intlOf(locale);
   const month = (ym: string, o: Intl.DateTimeFormatOptions) => {
     try { return new Intl.DateTimeFormat(intl, { ...o, timeZone: "UTC" }).format(new Date(`${ym}-01T00:00:00Z`)); }
@@ -52,6 +55,7 @@ export default function RideMore({ locale, more, t, typeName, kindName, earned }
       )}
       {list(t.byBike, more.byType.map(([k, n]) => [typeName(k), n]))}
       {list(t.byEvent, more.byKind.map(([k, n]) => [kindName(k), n]))}
+      {tried}
       {earned && earned.of > 0 && (
         <a className="myr myr-bd" href={earned.href}>
           <span className="myr-bd-t">{t.badgesEarned}</span>
