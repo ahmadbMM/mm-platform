@@ -2,6 +2,7 @@ import { edgeStore, memo, resetMemo } from "./memo";
 import { riyadhClock } from "./workshop-days";
 import { priceRows, type PriceRow } from "./biz";
 import { sessionGender, type SessionGender } from "./session-gender";
+import { rideGroupKm } from "./kind-theme";
 
 // The rides a visitor can book, read from the booking system itself: the bike prices
 // (ride_prices) and the sessions still ahead (sessions). Both are tables the booking app reads
@@ -12,8 +13,8 @@ import { sessionGender, type SessionGender } from "./session-gender";
 //
 // The rules below mirror the booking app (app.src.html) and the database, never guess:
 //   kind     _rideKind: snd96 first, anything not 'community' is a circuit night (jcc), then
-//            petromin / swim / workshop / event / runher / vlap / defe5k / arena / blood, and every other
-//            community row is the Saturday ride.
+//            petromin / swim / workshop / event / runher / vlap / defe5k / arena / blood / yoga, and every
+//            other community row is the Saturday ride.
 //   members  _community_booking_gate: event_kind 'community' without open_to_all is booked only
 //            by members (the Saturday tag, the Club).
 //   free     _isFreeRide: a community ride (not snd96) that is not a paid ride.
@@ -44,8 +45,16 @@ import { sessionGender, type SessionGender } from "./session-gender";
 //   blood    The Blood Donation event (ride_kind 'blood', 2026-11-03; lib/blood.ts): at the circuit, open to everyone,
 //            free, no bikes, one place per account, a window, no price anywhere; a card of its own while it has a date,
 //            and nothing names it before that (its words are the server's, content/blood-words.ts).
+//   yoga     Yoga (ride_kind 'yoga', 2026-11-12; lib/yoga.ts): Hatha Yoga for Cyclists with Jassim Alsaady, a date inside
+//            MicroMobility Experiences (the community card), never a card of its own - members only, free, one place per
+//            account, first come first served to its places and then the waitlist; no bike, no breakfast, no gathering:
+//            a start and an end ("16:00 - 17:30"), like the pool; at the place staff named (sessions.location, SILKDEER)
+//            with its map (meet_url).
+//   featured _featured (2026-11-13): a date inside MicroMobility Experiences (the Saturday ride, a Petromin night, the
+//            pool, the DEFE 5KM Run, yoga) that staff switched on (bike_slots._feat, beside _time: no column); with no
+//            _feat the kind answers (yoga and the DEFE 5KM Run are featured as made), and _feat 0 switches one off.
 
-export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena" | "blood";
+export type RideKind = "jcc" | "saturday" | "swim" | "workshop" | "petromin" | "snd96" | "event" | "runher" | "vlap" | "defe5k" | "arena" | "blood" | "yoga";
 /** A ride_prices row: the fare, and (lib/biz.ts faresOf) the highest fare quoted and the employees' fare when the database has them. */
 export type RidePrice = PriceRow;
 export type RideSession = {
@@ -53,6 +62,11 @@ export type RideSession = {
   date: string; // YYYY-MM-DD, Riyadh
   full: boolean;
   title: string | null;
+  /** The session's name in Arabic (sessions.title_ar, rentals 20261113170000; the owner's pick on the booking app's
+   *  theming page, 2026-11-13): an Arabic page names the session by it (sessionName). Trimmed, at most 60 characters,
+   *  null when blank. Only a read that asks for it has it (SESSION_COLS_TITLE_AR); a copy kept at the edge from before
+   *  has none, and reads as none. */
+  titleAr?: string | null;
   kind: RideKind;
   members: boolean;
   free: boolean;
@@ -84,6 +98,11 @@ export type RideSession = {
   out?: number;
   /** A community ride staff approve (needs_approval not false): no places-left count. */
   approval?: boolean;
+  /** Its rider list is out (sessions.hide_queue false, the booking app's _commPublished; never the National Day ride):
+   *  until then a rider who holds a place on a ride staff approve is told Reserved, never a verdict (lib/held.ts). Only
+   *  a read that asks for it has it (SESSION_COLS_PUBLISHED); a copy kept at the edge from before has none, and reads
+   *  as not out. */
+  published?: boolean;
   capacity?: number | null;
   /** The booking wizard's extras (lib/booking.ts): the places an approval ride allocates
    *  (sessions.spots), the add-ons it sells, the waitlist cap and the Saturday groups' distances
@@ -118,16 +137,23 @@ export type RideSession = {
    *  Riders cannot book them, so they are not priced (bike-kinds.ts typeOffered). toSession always sets it, empty when
    *  the read did not ask for it (SESSION_COLS_CLOSED); a copy kept at the edge from before has none, and reads as open. */
   closedTypes?: string[];
+  /** Featured (the booking app's _featured, 2026-11-13; featuredOf): Experiences lists it first among its event's dates,
+   *  under "Featured", and gives it a card above the event cards. toSession always sets it; a copy kept at the edge from
+   *  before has none, and reads as not featured. */
+  featured?: boolean;
+  /** The Saturday ride's two groups' distances in km (bike_slots._km, the usual 20 and 40 when unset; lib/kind-theme.ts
+   *  rideGroupKm): its Details draw the two routes with them. Only on the Saturday ride. */
+  groupKm?: { beg: number; int: number };
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
 type Row = {
-  id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; ride_kind?: unknown;
+  id?: unknown; session_date?: unknown; status?: unknown; title?: unknown; title_ar?: unknown; ride_kind?: unknown;
   event_kind?: unknown; bike_slots?: unknown; open_to_all?: unknown; paid_ride?: unknown;
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
   spots?: unknown; addons?: unknown; meet_url?: unknown; location?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
   gender_only?: unknown; closed_types?: unknown;
-  out_bikes?: unknown;
+  out_bikes?: unknown; hide_queue?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -135,8 +161,8 @@ export function rideKind(r: Row): RideKind {
   if (k === "snd96") return "snd96";
   if (r.event_kind !== "community") return "jcc";
   // a kind this list does not know reads as the Saturday ride, as the booking app's _rideKind does: every kind
-  // the booking app makes is named here (Arena Heros since 2026-10-28, which read as a Saturday ride before)
-  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" || k === "arena" || k === "blood" ? k : "saturday";
+  // the booking app makes is named here (Arena Heros since 2026-10-28, which read as a Saturday ride before; yoga since 2026-11-12)
+  return k === "petromin" || k === "swim" || k === "workshop" || k === "event" || k === "runher" || k === "vlap" || k === "defe5k" || k === "arena" || k === "blood" || k === "yoga" ? k : "saturday";
 }
 
 /** A route's slug as the Routes page writes one (content/pages/routes.ts): lower-case letters,
@@ -160,6 +186,26 @@ export function slotTimes(slots: unknown): [string, string] | null {
   if (m) return [m[1].padStart(5, "0"), m[2].padStart(5, "0")];
   const one = typeof t === "string" ? /^\s*(\d{1,2}:\d{2})\s*$/.exec(t) : null;
   return one ? [one[1].padStart(5, "0"), one[1].padStart(5, "0")] : null;
+}
+
+/** The kinds of date inside MicroMobility Experiences, the only ones that can be featured (the booking app's _featOk,
+ *  its _evMatch(s, 'community')): never a circuit night, nor a kind with a card of its own (the T100 day, a ticketed
+ *  event, Run for Her, Victory Lap, Arena Heros, the Blood Donation event, the National Day ride). */
+export const FEATURE_OK: readonly RideKind[] = ["saturday", "petromin", "swim", "defe5k", "yoga"];
+/** The special events, featured as they are made (the booking app's FEAT_KINDS). */
+export const FEATURED_KINDS: readonly RideKind[] = ["yoga", "defe5k"];
+
+/** Whether a date is featured (the booking app's _featured, 2026-11-13): one inside MicroMobility Experiences whose
+ *  settings say so (bike_slots._feat, stored as JSON text or an object: staff's switch, 1 or 0); with no _feat at all
+ *  its kind answers, so a special event is featured until staff switch it off (_feat 0). */
+export function featuredOf(kind: RideKind, slots: unknown): boolean {
+  if (!FEATURE_OK.includes(kind)) return false;
+  let o: unknown = slots;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { o = null; }
+  }
+  const f = o && typeof o === "object" ? (o as Record<string, unknown>)._feat : null;
+  return f == null ? FEATURED_KINDS.includes(kind) : !!f;
 }
 
 /** A session with a start time alone (slotTimes gave the one time twice): "7 PM", never "7 PM – 7 PM". */
@@ -238,6 +284,12 @@ function breakfastOf(r: Row): Pick<RideSession, "breakfast" | "breakfastAr"> {
   return { breakfast: name(r.breakfast_name), breakfastAr: name(r.breakfast_name_ar) };
 }
 
+/** The session's Arabic name a row gives (SESSION_COLS_TITLE_AR): only when the read asked for it. */
+function titleArOf(r: Row): Pick<RideSession, "titleAr"> {
+  if (!("title_ar" in r)) return {};
+  return { titleAr: typeof r.title_ar === "string" && r.title_ar.trim() ? r.title_ar.trim().slice(0, 60).trimEnd() : null };
+}
+
 /** When a row says riders are told where it meets (SESSION_COLS_REVEAL): only when the read asked. */
 function revealOf(r: Row): Pick<RideSession, "revealAt"> {
   if (!("reveal_at" in r)) return {};
@@ -252,6 +304,13 @@ function outOf(r: Row): Pick<RideSession, "out"> {
   if (typeof o === "string") { try { o = JSON.parse(o); } catch { o = null; } }
   if (!o || typeof o !== "object" || Array.isArray(o)) return { out: 0 };
   return { out: Object.values(o as Record<string, unknown>).reduce<number>((n, v) => { const c = Math.floor(Number(v)); return c > 0 ? n + c : n; }, 0) };
+}
+
+/** Whether a row says its rider list is out (SESSION_COLS_PUBLISHED): only when the read asked for it, and only on a
+ *  community date (`community`: event_kind 'community', not the National Day ride). */
+function publishedOf(r: Row, community: boolean): Pick<RideSession, "published"> {
+  if (!("hide_queue" in r)) return {};
+  return { published: community && r.hide_queue === false };
 }
 
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
@@ -292,13 +351,17 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     meetUrl: typeof r.meet_url === "string" && /^https:\/\//i.test(r.meet_url.trim()) ? r.meet_url.trim() : null,
     location: typeof r.location === "string" && r.location.trim() ? r.location.trim() : null,
     left: null,
-    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" || kind === "blood" ? null : collectTime(r.bike_slots),
+    collect: kind === "swim" || kind === "workshop" || kind === "event" || kind === "saturday" || kind === "snd96" || kind === "runher" || kind === "vlap" || kind === "defe5k" || kind === "arena" || kind === "blood" || kind === "yoga" ? null : collectTime(r.bike_slots),
+    ...titleArOf(r),
+    ...(kind === "saturday" ? { groupKm: rideGroupKm(r.bike_slots) } : {}),
     ...breakfastOf(r),
     ...revealOf(r),
     ...outOf(r),
+    ...publishedOf(r, community && kind !== "snd96"),
     ...((kind === "vlap" || kind === "arena") && "vl" in r ? { vl: r.vl ?? null } : {}),
     gender: sessionGender(r.gender_only),
     closedTypes: Array.isArray(r.closed_types) ? r.closed_types.filter((x): x is string => typeof x === "string") : [],
+    featured: featuredOf(kind, r.bike_slots),
   };
 }
 
@@ -321,14 +384,18 @@ export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessi
  *  (content/blood-words.ts bloodName), as it adds Petromin's. */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), petromin: "", blood: "" };
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), yoga: S(d.yogaName), petromin: "", blood: "" };
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other
  *  session by what staff called it, else its kind. Staff titles are typed once, in English; in any
- *  other language a title that is just the kind's English name reads as that language's name. */
-export function sessionName(s: Pick<RideSession, "kind" | "title">, names: Record<RideKind, string>, enNames: Record<RideKind, string>, localized: boolean): string {
-  if (s.kind === "jcc" || !s.title) return names[s.kind];
+ *  other language a title that is just the kind's English name reads as that language's name. An
+ *  Arabic page (`arabic`) names it by its Arabic name when staff gave one (sessions.title_ar, the
+ *  booking app's _evName since 2026-11-13). */
+export function sessionName(s: Pick<RideSession, "kind" | "title"> & { titleAr?: string | null }, names: Record<RideKind, string>, enNames: Record<RideKind, string>, localized: boolean, arabic = false): string {
+  if (s.kind === "jcc") return names.jcc;
+  if (arabic && s.titleAr) return s.titleAr;
+  if (!s.title) return names[s.kind];
   return localized && s.title.toLowerCase() === enNames[s.kind].trim().toLowerCase() ? names[s.kind] : s.title;
 }
 
@@ -362,9 +429,17 @@ export const SESSION_COLS_GENDER = "gender_only";
 // The bike types closed on a session (the owner, 2026-11-03; rentals migration 20261103210000). A group of its own, so
 // a database without it reads as before: every type open.
 export const SESSION_COLS_CLOSED = "closed_types";
+// A session's name in Arabic (the owner's pick on the booking app's theming page, 2026-11-13; rentals migration
+// 20261113170000): an Arabic page names the session by it. A group of its own, so a database without it reads as before.
+export const SESSION_COLS_TITLE_AR = "title_ar";
 // The bikes out of service on a session (2026-11-06, OT01; rentals migration 20261107111000): they take places off its
 // capacity, so the places left the cards say count them. A group of its own, so a database without it reads as before.
 export const SESSION_COLS_OUT = "out_bikes";
+// Whether a ride's rider list is out (sessions.hide_queue, which a ticket's session read has always asked for,
+// lib/tickets-data.ts): Experiences says what a signed-in visitor holds on a date (the owner's pick 4, 2026-11-13;
+// lib/held.ts), and on a ride staff approve that is Reserved until the list is out. A group of its own, so a database
+// without it reads as before: no list known to be out.
+export const SESSION_COLS_PUBLISHED = "hide_queue";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -511,7 +586,7 @@ async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, 
 
 /** The optional groups of columns every list of the sessions ahead asks for (staging: not the place, which
  *  SESSION_COLS already holds for its on-site booking). */
-const SESSION_GROUPS = [SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER, SESSION_COLS_CLOSED];
+const SESSION_GROUPS = [SESSION_COLS_BREAKFAST, SESSION_COLS_REVEAL, SESSION_COLS_VL, SESSION_COLS_GENDER, SESSION_COLS_CLOSED, SESSION_COLS_TITLE_AR];
 
 /** Each of these sessions' rule, men only, women only or null (mixed; the owner, 2026-10-27), read through
  *  list_sessions for the signed-in account: the Club's members' area lists the next members' rides from
@@ -543,8 +618,8 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=*`, key), // every column: max_price and employee_price too (lib/biz.ts)
-      // and the bikes out of service, which the places left count (withPlacesLeft)
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [...SESSION_GROUPS, SESSION_COLS_OUT] }),
+      // and the bikes out of service, which the places left count (withPlacesLeft), and whether each rider list is out
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED] }),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) prices = priceRows(p.value);
     if (s.status === "fulfilled" && Array.isArray(s.value)) {

@@ -7,9 +7,10 @@ test('booking card, registering with two companions', async ({ page }) => {
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => r.fulfill(json({ ok: true, id: 1, match: 'none', booking_no: 'P-026', riders: 3, session: S1 })));
   await page.goto('/petromin', { waitUntil: 'networkidle' });
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', '104582'); await page.fill('#name', 'Faisal Al Harbi'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '178'); await page.click('#types .tile[data-v="Hybrid"]');

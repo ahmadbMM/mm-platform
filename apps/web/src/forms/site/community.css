@@ -81,11 +81,6 @@ html[lang="ur"] .mmf-community { line-height: 1.9; }
 .mmf-community .side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
 .mmf-community .payoff-inline { display: none; }
 }
-.mmf-community .side-photo {
-  aspect-ratio: 4 / 3; border-radius: var(--r-card); box-shadow: var(--lq-2);
-  background: var(--card-3) center / cover no-repeat;
-  background-image: url("/site/home/hero.w1280.webp");
-}
 .mmf-community .side-card { background: var(--card); border-radius: var(--r-card); box-shadow: var(--lq-1); padding: 24px 26px; }
 .mmf-community .side-h { margin: 0 0 12px; font-size: 17px; font-weight: 600; }
 .mmf-community .title { font-weight: 700; font-size: 26px; line-height: 1.2; margin: 0 0 18px; text-wrap: balance; }

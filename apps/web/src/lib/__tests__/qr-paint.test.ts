@@ -4,7 +4,7 @@ import { createElement, type ReactElement } from "react";
 // @ts-expect-error -- react-dom/server ships without type declarations here
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import qrcode from "qrcode-generator";
-import { paintQr, qrEdge, qrRects, QR_DARK, QR_LIGHT } from "../qr-paint";
+import { paintQr, qrEdge, qrRects, QR_DARK, QR_INK, QR_LIGHT } from "../qr-paint";
 import Qr from "../../components/booking/Qr";
 
 const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
@@ -88,6 +88,19 @@ describe("the ticket's code as pixels", () => {
     expect(calls.slice(1).map((c) => c.slice(1))).toEqual(qrRects(n, bits, 264));
     expect(QR_LIGHT).toBe("#fff");
     expect(QR_DARK).toBe("#1a1919"); // the svg's own ink
+  });
+
+  it("paints the modules in the ink it is given: green once paid, orange once checked in and owing (2026-11-12)", () => {
+    for (const ink of [QR_INK.paid, QR_INK.due]) {
+      const calls: string[] = [];
+      const pen = { fillStyle: "#000" as string | CanvasGradient | CanvasPattern, fillRect() { calls.push(String(this.fillStyle)); } };
+      expect(paintQr({ width: 0, height: 0 }, pen, n, bits, 264, ink)).toBe(true);
+      expect(calls[0]).toBe(QR_LIGHT);
+      expect(calls.slice(1).every((c) => c === ink)).toBe(true);
+    }
+    expect(QR_INK).toEqual({ paid: "#077a4b", due: "#c2410c" });
+    expect(renderToStaticMarkup(createElement(Qr, { payload: "MMC-3-q1abcd", label: "Code", tone: "due" }))).toContain('fill="#c2410c"');
+    expect(renderToStaticMarkup(createElement(Qr, { payload: "MMC-3-q1abcd", label: "Code" }))).toContain(`fill="${QR_DARK}"`);
   });
 
   it("leaves the canvas alone when there is nothing to paint (the svg stays the code)", () => {

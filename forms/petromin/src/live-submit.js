@@ -31,12 +31,12 @@
      public by design; every RPC is SECURITY DEFINER and validates/throttles on the server. */
   var SUPABASE_URL = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.url) || "https://qpffkzmsfyilicwcsszz.supabase.co";
   var SUPABASE_KEY = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.key) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
-  var SOURCE = (location.pathname.split("/").filter(Boolean)[0] || "petromin").toLowerCase(); // 'petromin' on micromobility.sa/petromin
-  if (SITE_FORM && LANGS[SOURCE]) SOURCE = (location.pathname.split("/").filter(Boolean)[1] || "petromin").toLowerCase(); // /ar/petromin on the website
+  // Every registration here is on a Petromin night (rider_register's source), whichever company the rider works for.
+  var SOURCE = "petromin";
   var _sb = null;
-  /* The website's page loads no supabase-js (its address is not one the site's scripts may come from): the calls the
-     form makes are plain POSTs to the database's /rest/v1/rpc, answered as supabase-js answers them ({data, error},
-     a refusal's code and message as PostgREST sends them, a network failure as an error, never thrown). */
+  /* The page loads no script from elsewhere (no supabase-js): the calls the form makes are plain POSTs to the database's
+     /rest/v1/rpc, answered as supabase-js answered them ({data, error}, a refusal's code and message as PostgREST sends
+     them, a network failure as an error, never thrown). */
   function rpcFetch(fn, args) {
     return fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, { method: "POST", headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" }, body: JSON.stringify(args || {}) })
       .then(function (res) {
@@ -48,7 +48,7 @@
         });
       }, function (e) { return { data: null, error: { message: "TypeError: " + (e && e.message || "Failed to fetch"), code: "", details: String(e), hint: "" }, status: 0 }; });
   }
-  function sbClient() { if (!_sb) _sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : { rpc: rpcFetch }; return _sb; }
+  function sbClient() { if (!_sb) _sb = { rpc: rpcFetch }; return _sb; }
   // A call the database does not know yet (its migration not applied): 404, PGRST202.
   function unknownCall(r) { return !!(r && r.error && (r.error.code === "PGRST202" || r.status === 404)); }
   // No answer at all (the network) rather than a refusal the server gave.
@@ -56,16 +56,27 @@
   function toAscii(s) { return asciiDigits(s); }
 
   /* How far riders get, counted per step without anyone in it (form_step, rentals 20261111030000): a step seen once
-     per visit, a box refused at Continue, a registration, a refusal by its code. A test browser counts nothing. */
+     per visit, a box refused at Continue, a registration, a refusal by its code. A test browser counts nothing.
+     The first step (the company) is counted on its own, form 'pmhome' step 1, with the company picked as 'done';
+     each company's own steps are numbered from 1 under its form: 'petromin' (Petromin and Petrolube: 1 the night,
+     2 the details, 3 the bike, 4 Check and agree, as before the company step), 'pmdukan' (the same four) and
+     'pmguest' (1 the account, 2 the night, 3 the bike, 4 Check and agree). */
+  var FORM_ID = { emp: "petromin", dukan: "pmdukan", guest: "pmguest" };
   var seen = {};
-  function track(stepNo, ev, field) {
+  function track(ui, ev, field) {
     try {
       if (navigator.webdriver || editing) return;
-      if (ev === "view") { if (seen[stepNo]) return; seen[stepNo] = 1; }
-      sbClient().rpc("form_step", { p_form: SOURCE, p_step: stepNo, p_event: ev, p_field: String(field || "").toLowerCase().replace(/[^a-z_]/g, "").slice(0, 24), p_lang: html.lang }).then(function () {}, function () {});
+      var home = ui <= 1, form = home ? "pmhome" : FORM_ID[KIND || "emp"], n = home ? 1 : ui - 1;
+      if (ev === "view") { if (seen[form + n]) return; seen[form + n] = 1; }
+      sbClient().rpc("form_step", { p_form: form, p_step: n, p_event: ev, p_field: String(field || "").toLowerCase().replace(/[^a-z_]/g, "").slice(0, 24), p_lang: html.lang }).then(function () {}, function () {});
     } catch (e) {}
   }
   stepHooks.push(function (n) { if (booted && $("#success").hidden) track(n, "view"); });
+  // The company a rider went on with, once a visit for each.
+  function trackPick() {
+    var co = String(selectedCompany || "").toLowerCase(); if (!co || seen["pick" + co]) return;
+    seen["pick" + co] = 1; track(1, "done", co);
+  }
 
   /* Names hold letters, spaces and periods, as on the rentals site: a dash becomes a space
      ("Al-Harbi" is "Al Harbi", not "AlHarbi"), and digits, emoji and other signs are dropped as they
@@ -107,7 +118,7 @@
   $("#name").addEventListener("input", function () { onNameInput(this); });
   $("#name").addEventListener("blur", function () { onNameBlur(this); });
   var FIELD_ERR = { badge: "Enter your badge number", name: "Enter your full name", phone: "Enter a valid mobile number", height: "Enter your height in cm (100 to 250)", type: "Choose a bike type", session: "This session is no longer open", company: "Choose your company" };
-  var FIELD_STEP = { session: 1, company: 2, badge: 2, name: 2, phone: 2, height: 3, type: 3 };
+  var FIELD_PANE = { session: "session", company: "company", badge: "details", name: "details", phone: "details", height: "bike", type: "bike" };
 
   /* The second step checks what rider_register checks, so Continue says it there and then: a badge of the characters
      the database takes (letters, digits, space . _ / # ’ -, at least one letter or digit), a name of two words, none
@@ -120,26 +131,29 @@
     var all = (cc.value + nationalDigits()).length;
     return cc.value === "966" || (all >= 8 && all <= 15);
   };
-  var _validateStepDesign = validateStep;
-  validateStep = function (n) {
-    var ok = _validateStepDesign(n);
-    if (n === 2) {
+  var _validatePaneDesign = validatePane;
+  validatePane = function (p) {
+    var ok = _validatePaneDesign(p), bad = -1;
+    if (p === "details") {
       var badge = toAscii($("#badge").value).trim();
-      if (badge && (!BADGE_OK.test(badge) || !/[A-Za-z0-9]/.test(badge))) { setError("f-badge", true); ok = false; }
+      if (KIND === "emp" && badge && (!BADGE_OK.test(badge) || !/[A-Za-z0-9]/.test(badge))) { setError("f-badge", true); ok = false; }
       var nm = tidyName($("#name").value);
       if (nm && !/\s/.test(nm)) { $("#name")._nameHintUntil = 0; setError("f-name", true, "Enter your full name"); ok = false; }
       else if (nm && nameShort(nm)) { $("#name")._nameHintUntil = 0; setError("f-name", true, NAME_SHORT); ok = false; }
     }
-    if (n === 3) {
-      var bad = companions.map(companionFault).indexOf(true);
+    if (p === "bike" && KIND === "emp") {
+      bad = companions.map(companionFault).indexOf(true);
       if (bad >= 0) { ok = false; if (booted) openRider(bad, true); }
     }
-    if (n === 4) {
-      if (!editing && !$("#privacy").checked) { setError("f-privacy", true); ok = false; }
+    if (p === "account") ok = guestReady() && ok; // signed in, with what the booking needs of the account
+    if (p === "check") {
+      if (!editing && KIND !== "guest" && !$("#privacy").checked) { setError("f-privacy", true); ok = false; }
       if (!$("#waiver").checked) { setError("f-waiver", true, "Please accept the waiver to continue."); ok = false; }
     }
-    if (!ok && booted) document.querySelectorAll('.step[data-step="' + n + '"] .field.invalid').forEach(function (f) { track(n, "error", f.id.replace(/^f-/, "")); });
-    if (!ok && booted && n === 3 && bad >= 0) track(3, "error", "rider");
+    var n = stepOf(p);
+    if (!ok && booted) document.querySelectorAll('.step[data-step="' + n + '"] .field.invalid').forEach(function (f) { track(n, "error", f.id.replace(/^f-/, "").replace(/-/g, "_")); });
+    if (!ok && booted && bad >= 0) track(n, "error", "rider");
+    if (ok && booted && p === "company") trackPick();
     return ok;
   };
   // The box to focus is on the step on screen: a message left on another step is not jumped to.
@@ -162,6 +176,7 @@
     if (!d.session && editing && editing.session && editing.session.id === selectedSession) d.session = editing.session;
     d.name = tidyName(d.name);
     d.badge = toAscii(d.badge).trim();
+    if (KIND === "guest") guestCollect(d); // the account's name and mobile, the company typed
     return d;
   };
 
@@ -326,7 +341,7 @@
   });
   function companionArgs() { return companions.map(function (c) { return { name: tidyName(c.name), height: heightOf(String(c.height || "")), type: c.type }; }); }
   function showParty(d) {
-    var n = 1 + ((d && d.riders) || []).length;
+    var n = 1 + (kindOfRecord(d) === "emp" ? (d.riders || []).length : 0);
     $("#chip-riders").hidden = n < 2; $("#chip-riders-value").textContent = String(n);
     var note = $("#riders-note"); note.hidden = n < 2;
     if (n >= 2) { note.setAttribute("data-t", "Riding with: {names}"); note.setAttribute("data-args", JSON.stringify({ names: d.riders.map(function (c) { return c.name; }).join(", ") })); render(note); }
@@ -341,20 +356,29 @@
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function renderReview() {
     var d = collect(), box = $("#review"), s = d.session;
-    var part = function (n, key, rows) {
+    var part = function (pane, key, rows) {
+      var n = stepOf(pane);
       return '<section class="rv" aria-labelledby="rv-h' + n + '"><div class="rv-head"><h3 id="rv-h' + n + '">' + esc(t(key)) + '</h3>' +
         '<button type="button" class="rv-change" data-go="' + n + '" id="rv-c' + n + '" aria-labelledby="rv-c' + n + ' rv-h' + n + '">' + esc(t("Change")) + "</button></div>" + rows + "</section>";
     };
+    var c = s && collectIso(s), ph = String(d.phone || ""), code = cc.value;
+    if (KIND !== "guest" && ph.indexOf("+" + code) === 0) ph = "+" + code + " " + ph.slice(code.length + 1);
+    var night = part("session", "Session", s ? reviewRow("Session", fmtDate(s.start) + ", " + fmtTime(s.start) + (s.end ? " – " + fmtTime(s.end) : "") + (nightTitle(s) ? " · " + nightTitle(s) : "")) +
+      (c ? reviewRow("Bike pickup", fmtTime(c)) : "") + reviewRow("Where", placeOf(s)) : "");
+    if (KIND === "guest") {
+      // The account's name and mobile, the company typed, then the night and the bike.
+      box.innerHTML = part("account", "Your account", reviewRow("Name", d.name) + reviewRow("Mobile number", ph, true) + reviewRow("Company", d.company || "")) +
+        night + part("bike", "Bike", reviewRow("Bike", d.type ? t(d.type) : ""));
+      return;
+    }
     // Each rider is a row of their own: the name, then height and bike.
     var bikes = reviewRow(d.name || t("Name"), [d.height ? cmOf(d.height) : "", d.type ? t(d.type) : ""].filter(Boolean).join(" · "), false, true);
-    companions.concat(deskRiders).forEach(function (c) { bikes += reviewRow(tidyName(c.name), riderMeta(c), false, true); });
-    var c = s && collectIso(s), ph = String(d.phone || ""), code = cc.value;
-    if (ph.indexOf("+" + code) === 0) ph = "+" + code + " " + ph.slice(code.length + 1);
+    if (KIND === "emp") companions.concat(deskRiders).forEach(function (x) { bikes += reviewRow(tidyName(x.name), riderMeta(x), false, true); });
     box.innerHTML =
-      part(1, "Session", s ? reviewRow("Session", fmtDate(s.start) + ", " + fmtTime(s.start) + (s.end ? " – " + fmtTime(s.end) : "") + (s.title ? " · " + s.title : "")) +
-        (c ? reviewRow("Bike pickup", fmtTime(c)) : "") + reviewRow("Where", placeOf(s)) : "") +
-      part(2, "Your details", reviewRow("Company", d.company || "") + reviewRow("Badge", d.badge, true) + reviewRow("Name", d.name) + reviewRow("Mobile number", ph, true)) +
-      part(3, "Bike", bikes);
+      // Dukan's employees are on Dukan's own steps: the company is not a question left to change there.
+      (KIND === "emp" ? part("company", "Company", reviewRow("Company", d.company || "")) : "") + night +
+      part("details", "Your details", (KIND === "emp" ? reviewRow("Badge", d.badge, true) : "") + reviewRow("Name", d.name) + reviewRow("Mobile number", ph, true)) +
+      part("bike", "Bike", bikes);
   }
   $("#review").addEventListener("click", function (e) {
     var b = e.target.closest(".rv-change"); if (!b) return;
@@ -372,8 +396,12 @@
     var box = $("#qr"); if (!box) return;
     box.innerHTML = "";
     if (!d || !d.bookingNo || typeof qrcode !== "function") return;
+    // An invited guest's booking is an ordinary booking: its code is the booking's own (ref, MMC-12-abcdef), which the
+    // desk's scanner reads straight into check-in. A registration's is MMP-<number>, which opens it on the Petromin page.
+    var code = kindOfRecord(d) === "guest" ? String(d.ref || "") : "MMP-" + String(d.bookingNo).toUpperCase();
+    if (!code) return;
     var q;
-    try { q = qrcode(0, "M"); q.addData("MMP-" + String(d.bookingNo).toUpperCase()); q.make(); } catch (e) { return; }
+    try { q = qrcode(0, "M"); q.addData(code); q.make(); } catch (e) { return; }
     try {
       var n = q.getModuleCount(), pad = 3, cell = 8, size = (n + pad * 2) * cell;
       var cv = document.createElement("canvas"), ctx = cv.getContext("2d");
@@ -383,10 +411,33 @@
       ctx.fillStyle = "#000";
       for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) ctx.fillRect((c + pad) * cell, (r + pad) * cell, cell, cell);
       cv.setAttribute("aria-hidden", "true");
+      cv.setAttribute("data-code", code);
       box.appendChild(cv);
     } catch (e) {
       try { box.innerHTML = q.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); } catch (e2) {}
     }
+  }
+  /* An amount as the website's tickets write it (apps/web/src/components/booking/Sar.tsx): the riyal sign (U+20C1, the
+     site's own font file) left of the number in every language, isolated left to right; two decimals when the amount
+     has a fraction (57.50), none when it is whole (75). The sign is drawn for the eye alone, and a word a screen reader
+     reads ("SAR", in Arabic "ريال") follows it out of sight. */
+  var RIYAL = String.fromCharCode(0x20c1);
+  function riyalNum(n) { var v = Math.round((Number(n) || 0) * 100) / 100; return v % 1 === 0 ? String(v) : v.toFixed(2); }
+  function priceHtml(n) { return '<bdi class="amt" dir="ltr"><span class="amt-sign" aria-hidden="true">' + RIYAL + '</span><span class="sr">' + esc(t("SAR")) + "</span> " + riyalNum(n) + "</bdi>"; }
+  function priced(d) { return !!d && d.price != null && d.price !== "" && isFinite(Number(d.price)); }
+  /* What each kind of ticket adds: Dukan's employee and a guest see the bike they asked for; a guest the fare paid at
+     the desk and, on a full night, the booking's status (a status word only, never a place in the line). A guest's
+     booking made on the old page has no account behind it: it can be cancelled here, not changed. */
+  function paintBooking(d) {
+    var k = kindOfRecord(d), ty = d && (d.type === "Hybrid" || d.type === "Mountain" || d.type === "Road") ? d.type : "";
+    $("#tk-type").hidden = k === "emp" || !ty; if (ty) $("#tk-type-value").textContent = t(ty);
+    var fare = k === "guest" && priced(d);
+    $("#tk-price").hidden = !fare; $("#tk-price-value").innerHTML = fare ? priceHtml(d.price) : "";
+    var wl = k === "guest" && !!d && d.status === "waitlist", h = $("#success .title");
+    h.setAttribute("data-t", wl ? "You're on the waitlist" : "You are registered"); render(h);
+    $("#result").hidden = wl;
+    $("#tk-status").hidden = !wl;
+    $("#edit").hidden = k === "guest" && !!d && d.account === false;
   }
   // The night's facts on the ticket: when bikes are handed out, where, and the way there (the circuit's map link).
   function paintFacts(d) {
@@ -400,6 +451,7 @@
     var rr = $("#result"); rr.setAttribute("data-args", JSON.stringify({ d: sessionLabel(current.session) })); render(rr);
     paintSession(current);
     paintFacts(current);
+    paintBooking(current);
   });
   // The night on the ticket: its date and its time each kept whole, so a narrow column never leaves "PM" (or the
   // Arabic "م") alone on a line.
@@ -410,7 +462,7 @@
   var _showSuccessDesign = showSuccess;
   showSuccess = function (d) {
     setNotice(null); // "Your booking was cancelled." is about the booking before (the cancel sets it again after)
-    _showSuccessDesign(d); drawQr(current); showParty(current); paintFacts(current); paintSession(current);
+    _showSuccessDesign(d); drawQr(current); showParty(current); paintFacts(current); paintSession(current); paintBooking(current);
     var n = $("#tk-name"); if (n) n.textContent = (current && current.name) || "";
     setNote(null); drawOthers(); paintWallet();
   };
@@ -429,7 +481,7 @@
   // shape the booking site records its own notice in. A new registration sends it as p_privacy, the
   // box ticked. Change it together with the "Last updated" lines.
   var PRIVACY_VERSION = "2026-09-22";
-  var PV = {
+  var PV_EMP = {
     en: '<p class="pv-upd">Last updated: 22 September 2026</p>' +
       "<h3>Who we are</h3>" +
       "<p><b>شركة التنقل الدقيق المحدودة</b> (Micromobility Company Ltd.), unified number 7041881512, Building 7933, Ibn Anuq Al Fedha Street, Al Mansurah District, Riyadh 12692. We run the bike rides your employer arranges. Contact: " + PV_MAIL + ".</p>" +
@@ -481,8 +533,64 @@
       "<p>يحق لك طلب الاطلاع على بياناتك، والحصول على نسخة منها، وتصحيحها أو إكمالها، وإتلافها متى انتهت الحاجة إليها. راسلنا على " + PV_MAIL + "، وسنرد خلال 30 يومًا. ويحق لك أيضًا تقديم شكوى إلى الهيئة السعودية للبيانات والذكاء الاصطناعي (سدايا).</p>" +
       "<p>إشعار الخصوصية الكامل للحسابات والحجوزات على موقعنا متاح على " + PV_SITE + ".</p>"
   };
+  /* Dukan's employees read Dukan's own notice (its version is recorded with their registration). It names MicroMobility
+     and Dukan only: the services that host the database and deliver the page are named in the full notice it links to. */
+  var PRIVACY_VERSION_DUKAN = "dukan-2026-11-13";
+  var PV_DUKAN = {
+    en: '<p class="pv-upd">Last updated: 13 November 2026</p>' +
+      "<h3>Who we are</h3>" +
+      "<p><b>شركة التنقل الدقيق المحدودة</b> (Micromobility Company Ltd.), unified number 7041881512, Building 7933, Ibn Anuq Al Fedha Street, Al Mansurah District, Riyadh 12692. We run the bike rides your employer, Dukan, arranges. Contact: " + PV_MAIL + ".</p>" +
+      "<h3>What this form collects, and why</h3>" +
+      pvTable(["Data", "Required?", "Why"], [
+        ["Full name, mobile number", "Required", "To book your place, find your booking, reach you at the desk and bill Dukan for your ride"],
+        ["Session", "Required", "To book your place on the ride"],
+        ["Height, bike type", "Required", "To give you a bike that fits"],
+        ["Booking number, bike, check-in and return times, price", "Created when you ride", "Running the ride and billing your employer"]
+      ]) +
+      "<h3>Legal basis</h3>" +
+      "<p>Running the ride your employer arranged for you, and keeping the billing records the law requires. We use the data only for these purposes. Without the required details we cannot register you.</p>" +
+      "<h3>Who receives it, and where it is kept</h3>" +
+      "<ul><li><b>Our staff</b>, who run the ride.</li>" +
+      "<li><b>Your employer</b> (Dukan): the names of the riders on its rides, and nothing else.</li>" +
+      "<li><b>The service that hosts our database</b>, in <b>Frankfurt, Germany</b>, in the European Union. We transfer your data there only to run the ride, and only what that needs.</li>" +
+      "<li><b>The service that delivers this page</b> to your phone.</li></ul>" +
+      "<p>We do not sell your data. It is encrypted while it travels, and only our staff can see it.</p>" +
+      "<h3>How long we keep it</h3>" +
+      "<p>Registrations are kept for the ride and its billing. Billed rides are kept for 10 years, because the law requires financial records, then destroyed or anonymised.</p>" +
+      "<h3>Your rights</h3>" +
+      "<p>You can ask to see your data, get a copy, have it corrected or completed, or have it destroyed once it is no longer needed. Email " + PV_MAIL + "; we reply within 30 days. You can also complain to the Saudi Data &amp; AI Authority (SDAIA).</p>" +
+      "<p>The full Privacy Notice, which names the services above, is at " + PV_SITE + ".</p>",
+    ar: '<p class="pv-upd">آخر تحديث: 13 نوفمبر 2026</p>' +
+      "<h3>من نحن</h3>" +
+      "<p><b>شركة التنقل الدقيق المحدودة</b>، الرقم الموحد 7041881512، مبنى 7933، شارع ابن عنق الفضة، حي المنصورة، الرياض 12692. ننظّم رحلات الدراجات التي يرتّبها صاحب عملك، الدكان. للتواصل: " + PV_MAIL + ".</p>" +
+      "<h3>ما يجمعه هذا النموذج ولماذا</h3>" +
+      pvTable(["البيانات", "إلزامي؟", "الغرض"], [
+        ["الاسم الكامل ورقم الجوال", "إلزامي", "لحجز مكانك والعثور على حجزك والتواصل معك عند المكتب وإصدار فاتورة رحلتك للدكان"],
+        ["الجلسة", "إلزامي", "لحجز مكانك في الرحلة"],
+        ["الطول ونوع الدراجة", "إلزامي", "لتوفير دراجة بمقاس مناسب لك"],
+        ["رقم الحجز والدراجة وأوقات تسجيل الوصول والإرجاع والسعر", "تُسجَّل عند الركوب", "تشغيل الرحلة وإصدار الفاتورة لصاحب عملك"]
+      ]) +
+      "<h3>المسوّغ النظامي</h3>" +
+      "<p>تنظيم الرحلة التي رتّبها لك صاحب عملك، وحفظ سجلات الفوترة التي يوجبها النظام. لا نستخدم البيانات إلا لهذه الأغراض، ودون البيانات الإلزامية لا يمكننا تسجيلك.</p>" +
+      "<h3>من يتلقاها وأين تُحفظ</h3>" +
+      "<ul><li><b>موظفونا</b> الذين يديرون الرحلة.</li>" +
+      "<li><b>صاحب عملك</b> (الدكان): أسماء الراكبين في رحلاته فقط، ولا شيء غير ذلك.</li>" +
+      "<li><b>الخدمة التي تستضيف قاعدة بياناتنا</b> في <b>فرانكفورت بألمانيا</b>، في الاتحاد الأوروبي، ولا ننقل بياناتك إليها إلا لتشغيل الرحلة وبالقدر الذي تحتاجه فقط.</li>" +
+      "<li><b>الخدمة التي توصل هذه الصفحة</b> إلى جوالك.</li></ul>" +
+      "<p>لا نبيع بياناتك. تُشفَّر أثناء انتقالها، ولا يطّلع عليها إلا موظفونا.</p>" +
+      "<h3>مدة الاحتفاظ بها</h3>" +
+      "<p>نحتفظ بالتسجيلات لأجل الرحلة وفوترتها، ونحتفظ بالرحلات المفوترة 10 سنوات لأن النظام يوجب حفظ السجلات المالية، ثم نتلفها أو نزيل ما يحدد الهوية منها.</p>" +
+      "<h3>حقوقك</h3>" +
+      "<p>يحق لك طلب الاطلاع على بياناتك، والحصول على نسخة منها، وتصحيحها أو إكمالها، وإتلافها متى انتهت الحاجة إليها. راسلنا على " + PV_MAIL + "، وسنرد خلال 30 يومًا. ويحق لك أيضًا تقديم شكوى إلى الهيئة السعودية للبيانات والذكاء الاصطناعي (سدايا).</p>" +
+      "<p>إشعار الخصوصية الكامل، الذي يسمّي الخدمات المذكورة أعلاه، متاح على " + PV_SITE + ".</p>"
+  };
   var pvDialog = $("#privacy-dialog");
+  /* The notice a rider opens is their own kind's: the employees' (Petromin and Petrolube, also before a company is
+     picked), Dukan's while Dukan's look shows, and for an invited guest, whose details are an account's, the full
+     notice on the website (their account records it; the form has none of its own for them). */
   function openPrivacy() {
+    if (KIND === "guest" && html.getAttribute("data-co") !== "dukan" && (step > 1 || $("#card").getAttribute("data-state") === "success")) { try { window.open("https://micromobility.sa/privacy", "_blank", "noopener"); } catch (e) {} return; }
+    var PV = html.getAttribute("data-co") === "dukan" ? PV_DUKAN : PV_EMP;
     var full = PV[html.lang] ? html.lang : null, body = $("#pv-body");
     body.innerHTML = PV[full || "en"];
     if (full) { body.removeAttribute("dir"); body.removeAttribute("lang"); } else { body.setAttribute("dir", "ltr"); body.setAttribute("lang", "en"); }
@@ -554,6 +662,7 @@
   function startAnother() {
     if (!current) return;
     editing = null; another = true;
+    guestForget(); // the next person signs in for themselves
     prefill({}); setSubmitLabels(false);
     $("#privacy").checked = false; setError("f-privacy", false); // the next person confirms the notice for themselves
     $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
@@ -566,20 +675,29 @@
      the rows. */
   var editing = null;
   function setSubmitLabels(edit) {
-    var l = $("#submit .submit-label"), b = $("#submit .submit-busy"), h = $("#form .title");
+    var l = $("#submit .submit-label"), b = $("#submit .submit-busy");
     l.setAttribute("data-t", edit ? "Save changes" : "Agree and register"); render(l);
     b.setAttribute("data-t", edit ? "Saving..." : "Registering..."); render(b);
-    h.setAttribute("data-t", edit ? "Edit your booking" : "Petromin bike night"); render(h);
+    titleKey = edit ? "Edit your booking" : null; paintLook();
     $("#cancel-edit").hidden = !(edit || another); // Cancel goes back to the confirmation on the phone
-    $("#f-privacy").hidden = !!edit; // confirmed when they registered; an edit does not ask again
+    paintAsked();
     $("#waiver").checked = false; setError("f-waiver", false); // the waiver is asked again on every save, an edit too
+    lockKinds(edit ? KIND : null);
+  }
+  // The Privacy Notice box: confirmed when they registered (an edit does not ask again), and an invited guest's notice
+  // is their account's, confirmed when it was made.
+  function paintAsked() { $("#f-privacy").hidden = !!editing || KIND === "guest"; }
+  kindHooks.push(paintAsked);
+  // A booking being changed stays its own kind: Petromin and Petrolube can be told apart again, nothing else.
+  function lockKinds(k) {
+    companies.querySelectorAll(".company").forEach(function (x) { x.disabled = !!k && kindOf(x.getAttribute("data-v")) !== k; });
+    syncRoving(companies);
   }
   function prefill(d) {
-    selectedSession = d.session ? d.session.id : null; renderSessions();
-    selectedCompany = d.company || null;
-    companies.querySelectorAll(".company").forEach(function (x) { x.setAttribute("aria-checked", String(x.getAttribute("data-v") === selectedCompany)); });
-    syncRoving(companies);
-    $("#badge").value = d.badge || ""; $("#name").value = tidyName(d.name); // a booking saved before the rule may carry a dash
+    var k = d && d.bookingNo ? kindOfRecord(d) : null;
+    selectedSession = d.session ? d.session.id : null;
+    setCompany(k === "dukan" ? "Dukan" : k === "guest" ? "Guest" : k ? d.company || "Petromin" : null); // draws the nights too
+    $("#badge").value = k === "emp" ? d.badge || "" : ""; $("#name").value = tidyName(d.name); // a booking saved before the rule may carry a dash
     var digits = String(d.phone || "").replace(/\D/g, ""), code = null;
     COUNTRIES.forEach(function (x) { if (digits.indexOf(x[1]) === 0 && (!code || x[1].length > code.length)) code = x[1]; });
     if (code) { cc.value = code; phoneIn.value = digits.slice(code.length); } else { cc.value = "966"; phoneIn.value = digits; }
@@ -590,10 +708,11 @@
     types.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === selectedType)); });
     syncRoving(types);
     ["f-session", "f-company", "f-badge", "f-name", "f-phone", "f-height", "f-type"].forEach(function (id) { setError(id, false); });
-    var party = (d.riders || []).filter(Boolean);
+    var party = k === "emp" ? (d.riders || []).filter(Boolean) : [];
     companions = party.filter(function (c) { return !c.desk; }).map(function (c) { return { name: tidyName(c.name), height: c.height != null ? String(c.height) : "", type: c.type || "" }; });
     deskRiders = party.filter(function (c) { return c.desk; }).map(function (c) { return { name: c.name || "", height: c.height != null ? c.height : null, type: c.type || "", desk: true }; });
     renderCompanions();
+    guestPrefill(k === "guest" ? d : null);
   }
   /* Edit starts from the booking as the server holds it now (rider_lookup), not this phone's copy of it: the desk, or
      the rider on another phone through Find my booking, may have changed it since, and a save sends every part of it
@@ -601,6 +720,7 @@
   var editAsking = false;
   async function startEdit() {
     if (!current || editAsking) return;
+    if (kindOfRecord(current) === "guest") { startGuestEdit(); return; }
     var was = current, btn = $("#edit"), r = null;
     editAsking = true; btn.disabled = true;
     try {
@@ -623,7 +743,7 @@
     editing = current; another = false; prefill(current); setSubmitLabels(true);
     $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
     hideBanner(); setNotice(null); returnTo = 0;
-    goStep(selectedSession ? STEPS : 1);
+    goStep(selectedSession ? STEPS : stepOf("session"));
     loadSessions(); // a restored confirmation never fetched the calendar; the saved session stays selected if it is still offered
   }
   function cancelEdit() { editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner(); if (current) showSuccess(current); }
@@ -654,14 +774,17 @@
   $("#calendar").addEventListener("click", function () {
     var d = current, s = d && d.session; if (!s || !s.start) return;
     var from = collectIso(s) || s.start, to = s.end || new Date(new Date(s.start).getTime() + 2 * 3600000).toISOString();
-    var title = t("Petromin bike night") + " · " + d.bookingNo;
-    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//Petromin form//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+    var k = kindOfRecord(d), dk = k === "dukan";
+    var title = t(FORM_TITLE[k] || FORM_TITLE.emp) + " · " + d.bookingNo;
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//" + (dk ? "Dukan" : "Petromin") + " form//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
       "UID:" + String(d.bookingNo).toLowerCase() + "-" + s.id + "@micromobility.sa", "DTSTAMP:" + icsTime(new Date().toISOString()),
       "DTSTART:" + icsTime(from), "DTEND:" + icsTime(to), "SUMMARY:" + icsText(title), "LOCATION:" + icsText(placeOf(s)),
-      "DESCRIPTION:" + icsText(t("Booking") + " " + d.bookingNo + "\n" + t("Helmets are required. One comes with every bike.")),
-      "URL:https://micromobility.sa/petromin", "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", "DESCRIPTION:" + icsText(title), "END:VALARM", "END:VEVENT", "END:VCALENDAR"];
+      "DESCRIPTION:" + icsText(t("Booking") + " " + d.bookingNo + "\n" + t("Helmets are required. One comes with every bike."))]
+      // The page's address names Petromin: Dukan's file leaves it out.
+      .concat(dk ? [] : ["URL:https://micromobility.sa/petromin"])
+      .concat(["BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", "DESCRIPTION:" + icsText(title), "END:VALARM", "END:VEVENT", "END:VCALENDAR"]);
     var url = URL.createObjectURL(new Blob([lines.join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" }));
-    var a = document.createElement("a"); a.href = url; a.download = "petromin-" + d.bookingNo + ".ics"; document.body.appendChild(a); a.click(); a.remove();
+    var a = document.createElement("a"); a.href = url; a.download = (dk ? "dukan-" : "petromin-") + d.bookingNo + ".ics"; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   });
 
@@ -670,14 +793,18 @@
   var CANCEL_ERR = { checked_in: "You have already checked in. Ask the desk to change your booking.", desk: "The desk has this booking. Ask the desk to cancel it.", notfound: "We could not find your booking. Please register again.", session: "This session is no longer open", throttled: "Too many submissions from this network" };
   $("#cancel-booking").addEventListener("click", async function () {
     var d = current; if (!d || !d.session) return;
-    var yes = await ask(t("Cancel booking {no}? Every rider on it loses their place.", { no: d.bookingNo }), "Cancel booking", "Keep it", true);
+    var k = kindOfRecord(d);
+    var yes = await ask(t(k === "emp" ? "Cancel booking {no}? Every rider on it loses their place." : "Cancel booking {no}? You will lose your place.", { no: d.bookingNo }), "Cancel booking", "Keep it", true);
     if (!yes) { $("#cancel-booking").focus(); return; }
     var btn = $("#cancel-booking"); btn.disabled = true;
-    var r; try { r = await sbClient().rpc("rider_cancel", { p_booking_no: d.bookingNo, p_proof_phone: d.phone, p_session_id: d.session.id }); } catch (e) { r = { error: e }; }
+    var r; try {
+      r = k === "guest" ? await sbClient().rpc("petromin_invite_cancel", { p_invite_no: d.bookingNo, p_phone: d.phone, p_session_id: d.session.id })
+        : await sbClient().rpc("rider_cancel", { p_booking_no: d.bookingNo, p_proof_phone: d.phone, p_session_id: d.session.id });
+    } catch (e) { r = { error: e }; }
     btn.disabled = false;
     if (!r || r.error || !r.data) { setNote(noAnswer(r) ? "Could not reach the server" : "We could not save this. Please try again."); return; }
     if (!r.data.ok) { setNote(CANCEL_ERR[r.data.error] || "We could not save this. Please try again."); return; }
-    track(4, "cancel");
+    track(STEPS, "cancel");
     try { localStorage.removeItem(STORE); } catch (e) {}
     saveKept(keptList().filter(function (x) { return keyOf(x) !== keyOf(d); }));
     current = null;
@@ -691,10 +818,11 @@
      clears a site's after seven days away. */
   var fdDialog = $("#find-dialog");
   fillCC($("#fd-cc"));
+  // A number typed without its letter takes the picked company's (P when none is picked).
   function fdNumber() {
     var v = toAscii($("#fd-no").value).toUpperCase().replace(/\s+/g, "");
     var m = v.match(/^([A-Z])?-?(\d{1,4})$/);
-    return m ? (m[1] || SOURCE.charAt(0).toUpperCase()) + "-" + ("00" + m[2]).slice(-Math.max(3, m[2].length)) : "";
+    return m ? (m[1] || (KIND === "dukan" ? "D" : KIND === "guest" ? "I" : "P")) + "-" + ("00" + m[2]).slice(-Math.max(3, m[2].length)) : "";
   }
   function fdPhone() {
     var raw = toAscii($("#fd-phone").value).replace(/[^0-9+]/g, ""), code = $("#fd-cc").value;
@@ -706,7 +834,18 @@
   }
   // A booking as rider_lookup gives it (Find my booking, and Edit, which starts from it).
   function fromLookup(d, ph) {
-    return { badge: d.badge || "", name: d.name || "", company: d.company || null, phone: d.phone || ph, height: d.height, type: d.type, session: d.session || null, bookingNo: d.booking_no, riders: d.riders || [], submittedAt: new Date().toISOString() };
+    var no = d.booking_no || d.invite_no;
+    // An invited guest's booking (petromin_invite_lookup): an ordinary booking with its own code, status and fare; one
+    // made on the old page has no account behind it (account false).
+    if (/^I-/i.test(String(no || ""))) return { kind: "guest", name: d.name || "", company: d.company || null, phone: d.phone || ph, type: d.type || null, status: d.status || null, price: d.price != null ? d.price : null, ref: d.ref || null, account: d.account !== false, session: d.session || null, bookingNo: no, riders: [], submittedAt: new Date().toISOString() };
+    var dk = String(d.company || "").trim() === "Dukan";
+    return { kind: dk ? "dukan" : "emp", badge: dk ? "" : d.badge || "", name: d.name || "", company: d.company || null, phone: d.phone || ph, height: d.height, type: d.type, session: d.session || null, bookingNo: no, riders: dk ? [] : d.riders || [], submittedAt: new Date().toISOString() };
+  }
+  // Which call finds a number: an invited guest's I- has its own.
+  function lookupCall(no, ph, night) {
+    var guest = /^I-/i.test(no), a = guest ? { p_invite_no: no, p_phone: ph } : { p_booking_no: no, p_phone: ph };
+    if (night) a.p_session_id = String(night);
+    return sbClient().rpc(guest ? "petromin_invite_lookup" : "rider_lookup", a);
   }
   // Every companion says whether the desk added it ('desk'); a database before that lists the desk's as the rider's own.
   function deskKnown(riders) { return (riders || []).every(function (c) { return c && typeof c.desk === "boolean"; }); }
@@ -725,7 +864,7 @@
     if (!no) { $("#fd-no").focus(); return; }
     if (digits.length < 9) { $("#fd-phone").focus(); return; }
     var go = $("#fd-go"); go.disabled = true; go.classList.add("loading");
-    var r; try { r = await sbClient().rpc("rider_lookup", { p_booking_no: no, p_phone: ph }); } catch (err) { r = { error: err }; }
+    var r; try { r = await lookupCall(no, ph); } catch (err) { r = { error: err }; }
     go.disabled = false; go.classList.remove("loading");
     if (!r || r.error || !r.data) { fdMiss("Could not reach the server"); return; }
     var d = r.data;
@@ -736,7 +875,7 @@
     var nights = [fromLookup(d, ph)], more = (Array.isArray(d.more) ? d.more : []).slice(0, 4);
     if (more.length) { go.disabled = true; go.classList.add("loading"); }
     for (var i = 0; i < more.length; i++) {
-      var x = null; try { x = await sbClient().rpc("rider_lookup", { p_booking_no: no, p_phone: ph, p_session_id: String(more[i]) }); } catch (err) {}
+      var x = null; try { x = await lookupCall(no, ph, more[i]); } catch (err) {}
       if (x && !x.error && x.data && x.data.ok) nights.push(fromLookup(x.data, ph));
     }
     go.disabled = false; go.classList.remove("loading");
@@ -746,7 +885,7 @@
     closeDialog(fdDialog);
     if (current && keyOf(current) !== keyOf(found)) keep(current);
     nights.slice(1).forEach(function (b) { keep(b); });
-    editing = null; another = false; setSubmitLabels(false); setNotice(null);
+    editing = null; another = false; guestForget(); setSubmitLabels(false); setNotice(null);
     track(1, "found");
     showSuccess(found);
   });
@@ -768,9 +907,14 @@
     hideBanner();
     if (!validate()) { focusInvalid(); return; }
     var data = collect();
-    data.riders = companionArgs();
+    if (KIND === "guest") { guestSubmit(data); return; } // an invited guest's booking is their account's (guest.js)
+    var dukan = KIND === "dukan";
+    // One rider on a Dukan registration, with no badge: the database makes one from the phone. The height and the bike
+    // are the rider's own answers since 2026-11-13.
+    data.riders = dukan ? [] : companionArgs();
+    if (dukan) data.company = "Dukan";
     var args = {
-      p_badge: data.badge,
+      p_badge: dukan ? "" : data.badge,
       p_name: data.name,
       p_height: data.height,
       p_type: data.type,
@@ -779,10 +923,10 @@
       p_session_id: data.session ? data.session.id : null,
       p_company: data.company || null
     };
-    if (data.riders.length) args.p_riders = data.riders;
+    if (dukan || data.riders.length) args.p_riders = data.riders;
     args.p_waiver = WAIVER_VERSION; // only reached with the box ticked
     args.p_lang = html.lang; // the language the waiver was read in
-    if (!editing && $("#privacy").checked) args.p_privacy = PRIVACY_VERSION; // the notice this registration confirmed
+    if (!editing && $("#privacy").checked) args.p_privacy = dukan ? PRIVACY_VERSION_DUKAN : PRIVACY_VERSION; // the notice this registration confirmed
     setLoading(true);
     var r;
     // A database without the newest arguments yet does not know the call with them (404, PGRST202): once more with
@@ -812,27 +956,27 @@
     var refused = String((r && r.error && r.error.message) || (r && r.data && r.data.error) || "");
     if (/WAIVER_OUTDATED/.test(refused)) { failBanner(WAIVER_OUTDATED); return; }
     if (/PAID_MOVE/.test(refused)) { failBanner(PAID_MOVE); return; }
-    if (!r || r.error || !r.data) { track(4, "fail", noAnswer(r) ? "network" : "server"); failBanner(noAnswer(r) ? "Could not reach the server" : "We could not save this. Please try again."); return; }
+    if (!r || r.error || !r.data) { track(STEPS, "fail", noAnswer(r) ? "network" : "server"); failBanner(noAnswer(r) ? "Could not reach the server" : "We could not save this. Please try again."); return; }
     var d = r.data;
     if (!d.ok) {
-      track(4, "fail", d.error);
+      track(STEPS, "fail", d.error);
       if (d.error === "waiver") { waiverRefused(); return; }
       if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
       if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
       // rider_edit: the desk has tied this registration to a booking of its own (rentals 20261111235100, a move to another night)
       if (d.error === "desk") { failBanner("The desk has this booking. Ask the desk to change it."); return; }
-      if (d.error === "riders") { goStep(3); setError("f-riders", true); return; }
+      if (d.error === "riders" && !dukan) { goStep(stepOf("bike")); setError("f-riders", true); return; }
       // The database refuses a one-letter word with the same code as a wrong character, saying why:
       // "short" (rider_register, rentals 20261004100000). Each gets its own words.
       var short = d.why === "short";
-      if (d.error === "name_chars" || d.error === "name_short") { goStep(2); $("#name")._nameHintUntil = 0; setError("f-name", true, (short || d.error === "name_short") ? NAME_SHORT : NAME_CHARS); focusInvalid(); return; }
+      if (d.error === "name_chars" || d.error === "name_short") { goStep(stepOf("details")); $("#name")._nameHintUntil = 0; setError("f-name", true, (short || d.error === "name_short") ? NAME_SHORT : NAME_CHARS); focusInvalid(); return; }
       var ri = (Number(d.rider) || 2) - 2;
-      if ((d.error === "rider_name_chars" || d.error === "rider_name_short") && companions[ri]) { goStep(3); openRider(ri, true, { field: "name", msg: (short || d.error === "rider_name_short") ? RIDER_SHORT : NAME_CHARS }); return; }
-      if ((d.error === "rider_name" || d.error === "rider_height" || d.error === "rider_type") && companions[ri]) { goStep(3); openRider(ri, true); return; }
-      if (d.error === "duplicate") { goStep(2); setError("f-badge", true, "This badge is already registered for that session"); focusInvalid(); return; }
-      if (FIELD_ERR[d.error]) {
-        goStep(FIELD_STEP[d.error] || 1);
+      if ((d.error === "rider_name_chars" || d.error === "rider_name_short") && companions[ri]) { goStep(stepOf("bike")); openRider(ri, true, { field: "name", msg: (short || d.error === "rider_name_short") ? RIDER_SHORT : NAME_CHARS }); return; }
+      if ((d.error === "rider_name" || d.error === "rider_height" || d.error === "rider_type") && companions[ri]) { goStep(stepOf("bike")); openRider(ri, true); return; }
+      if (d.error === "duplicate" && !dukan) { goStep(stepOf("details")); setError("f-badge", true, "This badge is already registered for that session"); focusInvalid(); return; }
+      if (FIELD_ERR[d.error] && !(dukan && d.error === "badge")) {
+        goStep(stepOf(FIELD_PANE[d.error]) || 1);
         setError("f-" + d.error, true, FIELD_ERR[d.error]);
         if (d.error === "session") loadSessions();
         focusInvalid(); return;
@@ -845,7 +989,7 @@
     if (d.session) data.session = Object.assign({}, data.session || {}, d.session);
     var wasEdit = !!editing; editing = null;
     if (wasEdit) data.riders = data.riders.concat(deskRiders); // the ticket lists the desk's companions too
-    if (!wasEdit) track(4, "done");
+    if (!wasEdit) track(STEPS, "done");
     if (another && current && keyOf(current) !== keyOf(data)) keep(current); // the confirmation before this one stays on the phone
     another = false; setSubmitLabels(false);
     showSuccess(data);
@@ -858,9 +1002,27 @@
     var list = keptList(); if (!list.length) return false;
     saveKept(list.slice(1)); showSuccess(list[0]); return true;
   }
+  /* What the pages this one replaced left on the phone (micromobility.sa/dukan and /petromin-invite, turned off
+     2026-11-13): their saved confirmations join this page's own, once, so a ticket made there still shows here. A
+     guest's booking from the old page has no account behind it. */
+  (function importOld() {
+    var take = function (key, kind, list) {
+      var v = null; try { v = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) {}
+      try { localStorage.removeItem(key); } catch (e) {}
+      (list ? (Array.isArray(v) ? v : []) : (v ? [v] : [])).forEach(function (d) {
+        if (!d || !d.bookingNo) return;
+        d.kind = kind;
+        if (kind === "dukan") d.company = "Dukan"; else { d.account = false; d.company = null; }
+        if (!ended(d)) keep(d);
+      });
+    };
+    take("mm-dukan-registration", "dukan", false); take("mm-dukan-kept", "dukan", true);
+    take("mm-pminvite-booking", "guest", false); take("mm-pminvite-kept", "guest", true);
+  })();
   renderCompanions();
   setSubmitLabels(false);
   goStep(1);
   if (!restore() && !restoreKept()) loadSessions();
   booted = true;
+  $("#card").setAttribute("data-live", ""); // the form answers taps from here on (styles.css)
   if ($("#success").hidden) track(1, "view");

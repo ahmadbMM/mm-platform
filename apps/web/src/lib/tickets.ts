@@ -351,7 +351,7 @@ export function ticketSession(r: Row): TicketSession | null {
     meetUrl: /^https:\/\//i.test(meet) ? meet : null,
     free: community && kind !== "snd96" && r.paid_ride !== true,
     freeRide: community && r.paid_ride !== true,
-    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood",
+    bikes: kind !== "swim" && kind !== "workshop" && kind !== "event" && kind !== "runher" && kind !== "vlap" && kind !== "defe5k" && kind !== "arena" && kind !== "blood" && kind !== "yoga",
     routeSlug: routeSlugOf(r.route_slug),
     location: S(r.location).trim() || null,
     breakfast: S(r.breakfast_name).trim()
@@ -428,6 +428,18 @@ export function satNumOk(rows: TicketRow[], s: TicketSession | undefined): boole
     && rows.every((r) => r.approval === "approved" && !r.partner && r.status !== "waitlist");
 }
 
+/** The code's colour says where the money stands (the booking app's _qrTone; the owner, 2026-11-12: "change the qr code
+ *  of the booking card to orange when its checked in but not paid and green when its paid"): "paid" once every rider
+ *  with a place has paid (an on-the-house place is marked paid; a waitlisted seat owes nothing yet), "due" once a rider
+ *  is checked in (or done) with a fare still owed, null - the usual dark ink - otherwise: booked and unpaid, and a ride
+ *  that charges nothing (free: a free community ride, a blood drive). */
+export function qrTone(rows: Pick<TicketRow, "status" | "paid" | "price">[], free: boolean): "paid" | "due" | null {
+  const due = rows.filter((r) => r.status !== "waitlist");
+  if (!due.length) return null;
+  if (due.every((r) => r.paid)) return "paid";
+  return !free && due.some((r) => (r.status === "active" || r.status === "done") && !r.paid && r.price > 0) ? "due" : null;
+}
+
 /** A ride staff approve hands out no code until the rider is through: the list published, every
  *  rider on it approved. Every other ride's code is its ticket from the moment it is booked, and so
  *  is a partner's place (Defe, 2026-10-17): confirmed when booked, before the list is out. */
@@ -497,10 +509,13 @@ export function dayWord(date: string, today: string): "today" | "tomorrow" | nul
  *  Jeddah Yacht Club, where Run for Her meets (VENUE_KEY) - Run for Her always, its place held back or
  *  not (the owner, 2026-10-14), never the circuit; any other place as staff wrote it. Arena Heros is at
  *  its venue (Gymnation, Tahlia Street) when staff named no place, never the circuit (2026-10-28), and the Blood
- *  Donation event at the circuit (the booking app's _sessLoc, 2026-11-03). */
+ *  Donation event at the circuit (the booking app's _sessLoc, 2026-11-03). A yoga date (2026-11-12) is at the place staff
+ *  named (SILKDEER); one with a map link and no place's name is at its meeting point, never the circuit (the booking
+ *  app's _venueName). */
 export type Venue = { kind: "meet" } | { kind: "circuit" } | { kind: "jyc" } | { kind: "gym" } | { kind: "text"; text: string };
 export function venueOf(s: (Pick<TicketSession, "approval" | "meetUrl" | "location"> & { kind?: string }) | undefined): Venue {
   if (s?.approval && s.meetUrl) return { kind: "meet" };
+  if (s?.kind === "yoga" && !s.location && s.meetUrl) return { kind: "meet" };
   const loc = s?.location || (s?.kind === "runher" ? "JYC" : s?.kind === "arena" ? AH_VENUE : s?.kind === "blood" ? "JCC" : "");
   return !loc || loc === "JCC" ? { kind: "circuit" } : loc === "JYC" ? { kind: "jyc" } : loc === AH_VENUE ? { kind: "gym" } : { kind: "text", text: loc };
 }
@@ -522,12 +537,14 @@ export const meetsAt = (s: Pick<TicketSession, "approval" | "kind"> | undefined)
  *  without one, never the circuit; every other ride, and a session that did not load, the circuit's directions
  *  (`circuit`). On Arena Heros the button says "Get directions": it is the venue, not a meeting point. The Blood
  *  Donation event (2026-11-03) opens the map on its row (sessions.meet_url), else the circuit's directions: it is at
- *  the circuit whichever, so never "Meeting point". */
+ *  the circuit whichever, so never "Meeting point". A yoga date (2026-11-12) opens its place's own map (sessions.meet_url,
+ *  SILKDEER's pin) when it has one, as Arena Heros does, else its place searched by name, as any other place. */
 export function placeLink(s: (Pick<TicketSession, "approval" | "kind" | "meetUrl"> & { location?: string | null }) | undefined, circuit: string | null): string | null {
   // a meeting point without its link falls through as in the booking app's _dirBtnHtml: Run for Her to the Jeddah Yacht
   // Club, a ride with a place to that place, the DEFE 5K and a ride with none to the booth (bug hunt 2026-11-11: no button)
   if (s && meetsAt(s) && s.meetUrl) return s.meetUrl;
   if (s?.kind === "arena") return s.meetUrl;
+  if (s?.kind === "yoga" && s.meetUrl) return s.meetUrl;
   if (s?.kind === "blood") return s.meetUrl ?? circuit;
   // Any other named place is searched by its name (the booking app's _dirBtnHtml, 2026-11-10): every booking away from
   // the circuit used to open the circuit's directions.
@@ -689,12 +706,34 @@ export function fmtClock(hhmm: string, locale: string): string {
   } catch { return hhmm; }
 }
 
-/** "Sunday · 26 Sept 2026", the booking app's day and date. */
-export function fmtDayDate(iso: string, locale: string): string {
+/** A day and its date, with the year or without it. */
+function dayDate(iso: string, locale: string, year: boolean): string {
   const d = new Date(`${iso}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) return iso;
   const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { ...o, timeZone: "UTC" }).format(d);
-  return `${f({ weekday: "long" })} · ${f({ day: "numeric", month: "short", year: "numeric" })}`;
+  return `${f({ weekday: "long" })} · ${f({ day: "numeric", month: "short", ...(year ? { year: "numeric" } : {}) })}`;
+}
+
+/** "Sunday · 26 Sept 2026", the booking app's day and date. */
+export function fmtDayDate(iso: string, locale: string): string {
+  return dayDate(iso, locale, true);
+}
+
+/** "Saturday · 14 Nov": the day and date of a date still ahead, as Experiences' date cards say it (the owner's pick 7,
+ *  2026-11-13; the booking app's _dayNoYear). The year is left out when it is `today`'s (Riyadh, YYYY-MM-DD) and kept
+ *  when it is another: a January date seen in December says its year. A ticket and every other record keep the year
+ *  (fmtDayDate). */
+export function fmtDayNoYear(iso: string, locale: string, today: string): string {
+  return dayDate(iso, locale, iso.slice(0, 4) !== today.slice(0, 4));
+}
+
+/** A day as a tile, "Sat" over "21" over "Nov": its short weekday, its day number and its short month in the page's
+ *  language (the booking app's Featured card, _featCardHtml). A date that cannot be read gives its day as stored. */
+export function fmtDayTile(iso: string, locale: string): { wd: string; dn: string; mo: string } {
+  const d = new Date(`${iso}T00:00:00Z`);
+  if (Number.isNaN(d.getTime())) return { wd: "", dn: /^\d{4}-\d{2}-(\d{2})$/.exec(iso)?.[1] ?? "", mo: "" };
+  const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { ...o, timeZone: "UTC" }).format(d);
+  return { wd: f({ weekday: "short" }), dn: f({ day: "numeric" }), mo: f({ month: "short" }) };
 }
 
 /** Where the calendar file says the ride is (downloadBookingICS's LOCATION): a ride that meets at a
@@ -704,6 +743,7 @@ export function fmtDayDate(iso: string, locale: string): string {
 const ICS_PLACES = new Map([["JCC", "Jeddah Corniche Circuit"], ["Sharafeyah Branch", "Sharafeyah, Jeddah"], ["JYC", "Jeddah Yacht Club"]]);
 export function icsPlace(s: TicketSession): string {
   if (meetsAt(s) && s.meetUrl) return s.meetUrl;
+  if (s.kind === "yoga" && !s.location && s.meetUrl) return s.meetUrl; // a yoga date at its map, without a place's name: never the circuit
   const loc = s.location || (s.kind === "runher" ? "JYC" : s.kind === "arena" ? AH_VENUE : s.kind === "blood" ? "JCC" : "");
   return loc ? ICS_PLACES.get(loc) ?? loc : "";
 }

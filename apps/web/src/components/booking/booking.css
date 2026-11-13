@@ -98,9 +98,9 @@
 .tk-code-c { font-weight: 700; }
 .ck-rw { --ck: #0a7a4b; --ck-n: #6ee7b7; } .ck-rf { --ck: #0f766e; --ck-n: #5eead4; } .ck-rb { --ck: #a16207; --ck-n: #fcd34d; }
 .ck-bd { --ck: #c8102e; --ck-n: #ff8a9a; } .ck-promo { --ck: #8c3b6e; --ck-n: #f0abd6; } .ck-sat { --ck: #1d4ed8; --ck-n: #93c5fd; } .ck-vl { --ck: #1f7ae0; --ck-n: #8fd0ff; }
-.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood) .tk-code-tag { border-color: rgba(251, 249, 244, .22); }
-.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood) .tk-code-kn { color: rgba(251, 249, 244, .66); }
-.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood) .tk-code-ic { color: var(--ck-n); }
+.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood):not(.ev-yoga) .tk-code-tag { border-color: rgba(251, 249, 244, .22); }
+.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood):not(.ev-yoga) .tk-code-kn { color: rgba(251, 249, 244, .66); }
+.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood):not(.ev-yoga) .tk-code-ic { color: var(--ck-n); }
 /* The booking app's colour for each bike type (.type-road, .type-hybrid ...). */
 .tk-type.t-hybrid, .tk-type.t-kids { background: rgba(7, 122, 75, .1); color: #077a4b; border-color: rgba(7, 122, 75, .22); }
 .tk-type.t-gravel { background: rgba(7, 122, 75, .08); color: #077a4b; border-color: rgba(7, 122, 75, .2); }
@@ -310,6 +310,51 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-rr-done button { flex: none; min-height: 36px; padding: 0 14px; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; background: #fff; color: #3b1328; border: 1px solid rgba(162, 43, 99, .4); }
 .tk-rr-err { font-size: 13px; font-weight: 600; color: #b42318; }
 @media (max-width: 400px) { .tk-defe-k { min-width: 0; width: 100%; } }
+/* Yoga, "Sunset Hatha" (the booking app's YOGA block, 2026-11-12): hatha joins ha, the sun, and tha, the moon, and the
+   session ends just before the sun sets over Jeddah. Warm sand, clay for the sun, the name and every action, sage for the
+   moon, deep earth for ink; calm and low in saturation, no neon. Its tokens, then the ticket (the booking app's
+   .ticket-card.tk-th.th-yoga): cream in every state with the low sun's glow along its foot (mirrored right to left), the
+   mark as its logo, its number in Marcellus, clay where the night ticket is neon, and what to know before arriving. */
+:root { --yg-clay: #B4532F; --yg-clay-dk: #93401F; --yg-sage: #6E8266; --yg-sage-ink: #55684E; --yg-ink: #3B2A20; --yg-ink-2: #6B5446; --yg-sand: #F8F0E5; --yg-cream: #FFFBF5; --yg-glow: 236, 150, 96; }
+.tk-card.ev-yoga, .tk-card.ev-yoga.tk-live { border: 1px solid rgba(180, 83, 47, .3); color: var(--yg-ink);
+  background: radial-gradient(120% 55% at 100% 100%, rgba(var(--yg-glow), .3) 0%, rgba(var(--yg-glow), .1) 38%, rgba(255, 251, 245, 0) 66%) var(--yg-cream); }
+[dir="rtl"] .tk-card.ev-yoga, [dir="rtl"] .tk-card.ev-yoga.tk-live { background: radial-gradient(120% 55% at 0% 100%, rgba(var(--yg-glow), .3) 0%, rgba(var(--yg-glow), .1) 38%, rgba(255, 251, 245, 0) 66%) var(--yg-cream); }
+.tk-card.ev-yoga.tk-wl { border: 1.5px dashed #b98a1a; }
+.tk-logo.tk-logo-yoga img { height: 30px; }
+.tk-card.ev-yoga .tk-num { font-family: var(--cs-font-yg), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", Georgia, serif; font-weight: 400; }
+.tk-card.ev-yoga.tk-today::after { background: var(--yg-clay); }
+/* clay in every state (a waitlist's ticket and one before its code is out too), never the night ticket's green */
+.tk-card.ev-yoga :is(.tk-dw, .tk-total strong, .tk-cd, .tk-note.go, .tk-rt-a) { color: var(--yg-clay-dk); }
+.tk-card.ev-yoga .tk-btn.solid { background: var(--yg-clay); border-color: var(--yg-clay); color: #fff !important; }
+.tk-card.ev-yoga .tk-btn.solid:hover { background: var(--yg-clay-dk); border-color: var(--yg-clay-dk); }
+.tk-card.ev-yoga :focus-visible { outline-color: var(--yg-clay); }
+.tk-card.ev-yoga .tk-qr .tk-qr-live rect { stroke: var(--yg-clay); }
+.tk-card.ev-yoga.tk-live :is(.tk-name, .tk-when .tk-when-d, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l, .tk-rt-n) { color: var(--yg-ink); }
+.tk-card.ev-yoga.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-rider-pay > .tk-amt, .tk-stages li, .tk-st-s, .tk-rt-k, .tk-rt-m, .tk-rt-osm, .tk-reveal) { color: rgba(59, 42, 32, .68); }
+.tk-card.ev-yoga.tk-live :is(.tk-num, .tk-dw, .tk-when .go, .tk-total strong, .tk-pay.paid, .tk-rider-pay > .tk-amt.paid, .tk-cd, .tk-note.go, .tk-ok, .tk-rt-a) { color: var(--yg-clay); }
+.tk-card.ev-yoga.tk-live .tk-pay.due, .tk-card.ev-yoga.tk-live .tk-note.warn, .tk-card.ev-yoga.tk-live .tk-wallet-msg { color: #8a5300; }
+.tk-card.ev-yoga.tk-live :is(.tk-head, .tk-when, .tk-rider, .tk-addons, .tk-rt, .tk-more-btn) { border-color: rgba(180, 83, 47, .2); }
+.tk-card.ev-yoga.tk-live :is(.tk-q, .tk-type) { background: #f6eadc; color: var(--yg-ink); border-color: rgba(180, 83, 47, .2); }
+.tk-card.ev-yoga.tk-live :is(.tk-note, .tk-ok) { background: var(--yg-sand); border-color: rgba(180, 83, 47, .2); }
+.tk-card.ev-yoga.tk-live .tk-note:not(.go):not(.warn) { color: var(--yg-ink); }
+.tk-card.ev-yoga.tk-live .tk-ok-tick { background: var(--yg-clay); color: #fff; }
+.tk-card.ev-yoga.tk-live .tk-btn { background: transparent; color: var(--yg-ink) !important; border-color: rgba(180, 83, 47, .3); }
+.tk-card.ev-yoga.tk-live .tk-btn:hover { background: var(--yg-sand); border-color: rgba(180, 83, 47, .62); }
+.tk-card.ev-yoga.tk-live .tk-btn.solid { background: var(--yg-clay); border-color: var(--yg-clay); color: #fff !important; }
+.tk-card.ev-yoga.tk-live .tk-btn.solid:hover { background: var(--yg-clay-dk); border-color: var(--yg-clay-dk); }
+.tk-card.ev-yoga.tk-live .tk-btn.red { color: #b42318 !important; border-color: rgba(180, 35, 24, .35); }
+.tk-card.ev-yoga.tk-live :focus-visible { outline-color: var(--yg-clay); }
+.tk-card.ev-yoga.tk-live .tk-qr { border-color: rgba(180, 83, 47, .2); }
+.tk-card.ev-yoga.tk-live .tk-stages li::before { background: rgba(180, 83, 47, .16); }
+.tk-card.ev-yoga.tk-live .tk-stages li.on::before, .tk-card.ev-yoga.tk-live .tk-stages li.on .tk-st-dot { background: var(--yg-clay); border-color: var(--yg-clay); }
+.tk-card.ev-yoga.tk-live .tk-st-dot { background: #fff; border-color: rgba(59, 42, 32, .4); }
+.tk-card.ev-yoga.tk-live .tk-stages li.cur .tk-st-dot { box-shadow: 0 0 0 3px rgba(180, 83, 47, .14); }
+/* who leads it, the level, what to bring (the booking app's .yg-know): sand, a sage edge at the start */
+.tk-yg-know { display: grid; gap: 6px; margin: 12px 0; padding: 10px 12px; background: var(--yg-sand); border: 1px solid rgba(180, 83, 47, .2); border-inline-start: 3px solid var(--yg-sage); color: var(--yg-ink); }
+.tk-yg-know p { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 13px; line-height: 1.4; min-width: 0; }
+.tk-yg-k { font-weight: 800; color: var(--yg-clay-dk); min-width: 76px; }
+.tk-yg-v { min-width: 0; overflow-wrap: anywhere; }
+@media (max-width: 400px) { .tk-yg-k { min-width: 0; width: 100%; } }
 .tk-type.tk-vl { background: #0d0d0d; color: #fff; border-color: #0d0d0d; white-space: normal; }
 .tk-card.ev-vlap.tk-live .tk-type.tk-vl { background: #0d0d0d; color: #fff; border-color: #0d0d0d; }
 .tk-vl-team { margin-top: 12px; padding: 12px 14px; border: 1px solid rgba(13, 13, 13, .18); background: #f6f6f3; }
@@ -461,19 +506,61 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .sc-card.closed { opacity: .62; cursor: default; }
 .sc-card.closed:hover { background: #fff; }
 .sc-spots.closed { color: #8a5c14; white-space: normal; text-align: end; max-width: 55%; }
-.sc-card.ev-jcc { --ev: #2f63ad; }
-.sc-card.ev-swim { --ev: #0d7d8f; }
+/* The Saturday ride's, the pool's and a Petromin night's colours (the owner's pick C1 on the booking app's theming page,
+   2026-11-13; its styles.css --k-*), one set a kind wherever it shows on Experiences: the accent (4.5:1 or more on
+   white), its tint, and the ink that reads 4.5:1 or more on that tint (the pool's accent is 4.2:1 on its tint, so its
+   ink is a shade deeper). experiences.css draws the tile, the marks, the switch, the motif and the drawings with them. */
+:root { --k-sat: #077A4B; --k-sat-tint: #E6F2EC; --k-sat-ink: #077A4B; --k-pool: #0D7D8F; --k-pool-tint: #E3F2F4; --k-pool-ink: #0A6573; --k-pm: #A33B2E; --k-pm-tint: #F8E8E5; --k-pm-ink: #A33B2E; }
+/* Each kind's colour, on its card, on the card's wrapper (for its Details link beside the card), on
+   the Details dialog and on a featured date's card above the event cards (experiences.css). */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-saturday { --ev: var(--k-sat); }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-jcc { --ev: #2f63ad; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-swim { --ev: var(--k-pool); }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-workshop { --ev: #c2410c; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-snd96 { --ev: #00894a; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-event { --ev: #6d28d9; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-petromin { --ev: var(--k-pm); } /* a Petromin night: its kind's red, as in the booking app (2026-11-13; Petromin's #d6202a before) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-defe5k { --ev: #a22b63; } /* the DEFE 5KM Run: Defe's berry (2026-10-18) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-arena { --ev: #c81e27; } /* Arena Heros: its red, as the booking app's .ev-arena (2026-10-28) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-blood { --ev: #0b1f16; } /* the donation event: its crimson (2026-11-03) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-yoga { --ev: #b4532f; } /* yoga: its clay (2026-11-12) */
+/* staging: the booking flow's own cards (BookingFlow) keep the workshop's and a ticketed event's colours it drew them
+   with; after main's set above, so they win on a card. */
 .sc-card.ev-workshop { --ev: #b4581e; }
-.sc-card.ev-snd96 { --ev: #00894a; }
 .sc-card.ev-event { --ev: #8c3b6e; }
-.sc-card.ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
-.sc-card.ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
-.sc-card.ev-defe5k { --ev: #a22b63; } /* the DEFE 5KM Run: Defe's berry (2026-10-18) */
-.sc-card.ev-arena { --ev: #c81e27; } /* Arena Heros: its red, as the booking app's .ev-arena (2026-10-28) */
-:is(.sc-card, .sc-wrap, .xs-info).ev-blood { --ev: #0b1f16; } /* the donation event: its crimson (2026-11-03) */
 .sc-card.ev-blood:hover { border-color: rgba(11, 31, 22, .4); box-shadow: 0 0 14px rgba(11, 31, 22, .12); }
 .sc-card.ev-blood:focus-visible { outline-color: #0b1f16; }
-.sc-card.ev-blood .sc-dw, .sc-card.ev-blood .sc-spots:not(.full):not(.low):not(.closed) { color: #0b1f16; }
+.sc-card.ev-blood .sc-dw, .sc-card.ev-blood .sc-spots:not(.full):not(.low):not(.closed):not(.held) { color: #0b1f16; }
+/* Yoga's date card (the booking app's _ygSessCard and .yg-card, 2026-11-12): cream, the low sun's apricot glow from the far
+   bottom corner and the sun drawn rising there, three breaths around it (mirrored right to left), a clay edge at the
+   start, the mark, the name in Marcellus clay (Arabic and Urdu in the site's Arabic face), when / how long / where, and
+   who leads it in sage along the foot. */
+.sc-card.sc-yoga { overflow: hidden; isolation: isolate; gap: 6px; padding-top: 14px; color: var(--yg-ink);
+  background-color: var(--yg-cream); background-image: radial-gradient(110% 130% at 100% 100%, rgba(var(--yg-glow), .3) 0%, rgba(var(--yg-glow), .12) 38%, rgba(255, 251, 245, 0) 66%);
+  border: 1px solid rgba(180, 83, 47, .28); border-inline-start: 3px solid var(--yg-clay); }
+[dir="rtl"] .sc-card.sc-yoga { background-image: radial-gradient(110% 130% at 0% 100%, rgba(var(--yg-glow), .3) 0%, rgba(var(--yg-glow), .12) 38%, rgba(255, 251, 245, 0) 66%); }
+.sc-card.sc-yoga:hover { background-color: #fff6ec; border-color: rgba(180, 83, 47, .6); box-shadow: 0 0 14px rgba(180, 83, 47, .12); }
+.sc-card.sc-yoga:focus-visible { outline-color: var(--yg-clay); }
+.sc-card.sc-yoga[aria-checked="true"] { background-color: #fbebdd; border-color: rgba(180, 83, 47, .6); border-inline-start-color: var(--yg-clay); box-shadow: inset 0 0 0 2px var(--yg-clay); }
+.sc-card.sc-yoga[aria-checked="true"] .sc-dot { background: var(--yg-clay); border-color: var(--yg-clay); }
+.sc-yg-scene { position: absolute; z-index: -1; bottom: -1px; inset-inline-end: -24px; width: 168px; height: 84px; pointer-events: none; }
+.sc-yg-ring { fill: none; stroke: rgba(180, 83, 47, .16); stroke-width: 1.2; }
+.sc-yg-sun { fill: rgba(var(--yg-glow), .34); }
+.sc-yg-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sc-yg-mark { height: 30px; width: auto; display: block; flex: none; }
+.sc-yg-title { font-family: var(--cs-font-yg), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", Georgia, serif; font-size: 21px; font-weight: 400; letter-spacing: .3px; line-height: 1.2; color: var(--yg-clay); overflow-wrap: anywhere; }
+html:is([lang="ar"], [lang="ur"]) .sc-yg-title { font-family: var(--cs-font-ar), var(--cs-font-en), sans-serif; font-weight: 600; letter-spacing: 0; }
+.sc-card.sc-yoga .sc-date { flex: none; font-size: 14px; }
+.sc-card.sc-yoga .sc-dw { color: var(--yg-clay-dk); }
+.sc-yg-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 9px; font-size: 13px; font-weight: 600; color: var(--yg-ink-2); min-width: 0; }
+.sc-yg-meta > span { display: inline-flex; align-items: center; gap: 9px; }
+.sc-yg-meta i { width: 1px; height: 12px; background: rgba(180, 83, 47, .35); display: inline-block; flex: none; }
+.sc-yg-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; min-width: 0; }
+.sc-yg-with { font-size: 12.5px; font-weight: 700; color: var(--yg-sage-ink); min-width: 0; overflow-wrap: anywhere; }
+.sc-card.sc-yoga .sc-spots:not(.full):not(.low):not(.closed):not(.held) { color: var(--yg-clay-dk); }
+@media (max-width: 400px) { .sc-yg-title { font-size: 19px; } .sc-yg-mark { height: 26px; } .sc-yg-scene { width: 140px; height: 70px; } }
 /* A ticketed event's card says what it is. */
 .sc-desc { font-size: 13px; color: #4a4843; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .sc-kicker { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-width: 0; }
@@ -488,6 +575,16 @@ html:is([lang="ar"], [lang="ur"]) .sc-partner { font-style: normal; }
 .sc-spots.full { color: #a33b2e; }
 .sc-spots.low { color: #8a5c14; }
 .sc-spots.rej { color: #4a4843; }
+/* A date the signed-in visitor already holds (the owner's pick 4, 2026-11-13; lib/held.ts, the booking app's
+   .spots-held), said where its places would be: Booked in the good state's green, every kind's card alike, a drawn tick
+   standing where the dot would; On the waitlist and Reserved in the amber of the few places left (.low), the dot kept.
+   The green reads 4.5:1 or more on every card it lands on: white, Defe's blush and yoga's cream under its glow and its
+   sun; the amber on white and the blush, and on yoga's cream a shade deeper, where the glow and the sun would take it
+   under 4.5:1. */
+.sc-spots.held:not(.low) { gap: 5px; }
+.sc-spots.held:not(.low)::before { content: none; }
+.sc-spots.held svg { flex: none; }
+.sc-card.sc-yoga .sc-spots.held.low, .xs-feat-card.xs-feat-yg .sc-spots.held.low { color: #6b4e0c; } /* yoga's date card and its Featured card */
 .sc-time { font-size: 20px; font-weight: 700; color: #1a1919; letter-spacing: -.2px; font-variant-numeric: tabular-nums; }
 .sc-dw { color: #077a4b; font-weight: 700; }
 .sc-meta { display: block; font-size: 13px; color: #6e6b63; }

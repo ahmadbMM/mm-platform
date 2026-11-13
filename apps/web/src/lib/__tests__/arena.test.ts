@@ -100,7 +100,7 @@ describe("on Experiences (lib/event-info.ts)", () => {
   });
   it("has a card of its own while it has a date, after Victory Lap and before Run for Her, booked on its own event", () => {
     const all = [{ id: "rh", kind: "runher" as const }, { id: "2099-11-06-ah", kind: "arena" as const }, { id: "vl", kind: "vlap" as const }, { id: "s", kind: "saturday" as const }];
-    expect(eventCards(all, nobody).map((c) => c.card.key)).toEqual(["vlap", "arena", "runher", "jcc", "community"]);
+    expect(eventCards(all, nobody).map((c) => c.card.key)).toEqual(["community", "vlap", "arena", "runher", "jcc"]);
     expect(eventCards(all, nobody).find((c) => c.card.key === "arena")?.sessions.map((x) => x.id)).toEqual(["2099-11-06-ah"]);
     // never among the community rides
     expect(eventCards(all, member).find((c) => c.card.key === "community")?.sessions.map((x) => x.id)).toEqual(["s"]);

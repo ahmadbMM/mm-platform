@@ -122,7 +122,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
     const approval = !!s.approval;
     const places = (approval ? s.spots || s.capacity : s.capacity) || 12;
     return {
-      id: s.id, date: s.date, kind: s.kind, name: s.kind === "jcc" ? "" : sessionName(s, kindName, enName, L !== "en"),
+      id: s.id, date: s.date, kind: s.kind, name: s.kind === "jcc" ? "" : sessionName(s, kindName, enName, L !== "en", L === "ar"), // by its Arabic name on the Arabic page (title_ar, 2026-11-13), as main's page and Events name it
       full: s.full, community, members: s.members, free: s.free, approval,
       seat: s.kind === "event" ? s.price ?? 0 : null,
       capacity: places, left: s.left ?? null, wlCap: s.wlCap ?? null, km: s.km ?? { beg: 20, int: 40 }, addons: s.addons ?? [],
@@ -159,7 +159,13 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // to the booking app.
   // The Blood Donation event (ride_kind 'blood', 2026-11-03) neither: no donor step here; main's page hands it to the
   // booking app (?ev=blood). Listed nowhere here, so its words and its poster never reach this page.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "", arena: "", blood: "" };
+  // Yoga (ride_kind 'yoga', 2026-11-12) neither: this booking has no step for a session without a bike other than the
+  // pool, a workshop or a ticketed event (lib/booking.ts NO_BIKE), so it would be offered a bike; main's page lists it
+  // inside MicroMobility Experiences on its own card and hands it to the booking app. Listed nowhere here, so it is
+  // never read as a Saturday ride. Main's Featured cards, the Experiences card's marks and kind switch, the Saturday
+  // ride's sunrise and routes, and Booked on a date the visitor holds (2026-11-13) are its ExperienceSteps page's own:
+  // they are not drawn by this booking flow.
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "", arena: "", blood: "", yoga: "" };
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count)));
   const listed: RideSession[] = [];
   const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): FlowEvent | null => {

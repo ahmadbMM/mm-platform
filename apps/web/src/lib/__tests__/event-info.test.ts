@@ -2,9 +2,10 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { makeL } from "@/i18n/tx";
-import { bookingAt, dateText, EVENT_CARDS, eventCards, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoVl, infoWho, memberOn, membersOnlyDate, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
-import type { RideKind } from "../rides";
+import { bookingAt, dateText, EVENT_CARDS, EVENT_OF, eventCards, FEATURED_MAX, featuredDates, featuredFirst, fillTimes, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoShown, infoTimes, infoVl, infoWho, memberOn, membersOnlyDate, membersOnlyEvent, rentsBikes, type DateTexts } from "../event-info";
+import { FEATURE_OK, type RideKind } from "../rides";
 import { fmtClock } from "../tickets";
+import { yogaKnow, yogaLength, yogaMinutes } from "../yoga";
 
 // "About this event" and "Details" on Experiences (2026-10-05) say what the booking app's picker
 // says: the same texts, filled from the same date, and shown to the same visitors.
@@ -12,7 +13,7 @@ import { fmtClock } from "../tickets";
 const clock = (t: string) => fmtClock(t, "en");
 const TEXTS: DateTexts = {
   aboutJcc: "Circuit: bikes from {collect}, {start} to {end}.", aboutSat: "Gather {gather}, start {start}.", aboutPetro: "Petromin: bikes from {collect}.", aboutSwim: "Pool {start} to {end}.",
-  aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", aboutVl: "Doors {gather}, first heat {start}.", aboutDefe: "Defe run at {start}{end}.", aboutAr: "Heats {start} to {end}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
+  aboutWs: "T100 {start} to {end}.", aboutRun: "Meet {gather}, run {start}.", aboutVl: "Doors {gather}, first heat {start}.", aboutDefe: "Defe run at {start}{end}.", aboutAr: "Heats {start} to {end}.", aboutYoga: "Yoga {start} to {end}.", sndAbout: "National Day ride.", evAbout: "Events: seats, not bikes.",
 };
 const circuit = { kind: "jcc" as const, times: ["21:00", "23:00"] as [string, string], gather: false, collect: "20:15", description: null };
 const saturday = { kind: "saturday" as const, times: ["05:45", "06:15"] as [string, string], gather: true, collect: null, description: "Breakfast at the marina." };
@@ -44,28 +45,102 @@ describe("the event cards (Petromin Days, the owner, 2026-10-12)", () => {
   const of = (v: { member: boolean; petromin: boolean }, key: string) => eventCards(all, v).find((c) => c.card.key === key)?.sessions.map((s) => s.id);
   it("has no Petromin Days, and no Petromin night anywhere, for a visitor without either tag", () => {
     const v = { member: false, petromin: false };
-    expect(keys(v)).toEqual(["runher", "jcc", "community"]);
+    expect(keys(v)).toEqual(["community", "runher", "jcc"]);
     expect(of(v, "community")).toEqual(["sat1"]);
   });
-  it("puts Petromin Days first for a Petromin tag holder, with the Petromin nights alone", () => {
+  it("puts Petromin Days first after MicroMobility Experiences for a Petromin tag holder, with the Petromin nights alone", () => {
     const v = { member: false, petromin: true };
-    expect(keys(v)).toEqual(["petromin", "runher", "jcc", "community"]);
+    expect(keys(v)).toEqual(["community", "petromin", "runher", "jcc"]);
     expect(of(v, "petromin")).toEqual(["pm1", "pm2"]);
     expect(of(v, "community")).toEqual(["sat1"]); // never twice
-    expect(EVENT_CARDS[0]).toEqual({ key: "petromin", p: "pm", always: false });
+    expect(EVENT_CARDS[1]).toEqual({ key: "petromin", p: "pm", always: false }); // MicroMobility Experiences leads (2026-11-13, kind-theme.test.ts)
   });
   it("lists no Petromin night on the community card, as before, and no Petromin Days for a community member", () => {
     const v = { member: true, petromin: false };
-    expect(keys(v)).toEqual(["runher", "jcc", "community"]);
+    expect(keys(v)).toEqual(["community", "runher", "jcc"]);
     expect(of(v, "community")).toEqual(["sat1"]);
   });
   it("shows no Petromin Days to a holder while no Petromin night is on the books", () => {
-    expect(eventCards([night("jcc1", "jcc")], { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["jcc", "community"]);
+    expect(eventCards([night("jcc1", "jcc")], { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["community", "jcc"]);
   });
   it("hands Petromin Days over to the booking app as ev=petromin, on the night picked", () => {
     expect(bookingAt("https://book.example/?lang=ar", "petromin", "2026-10-14-pm")).toBe("https://book.example/?lang=ar&ev=petromin&session=2026-10-14-pm");
     expect(bookingAt("https://book.example/?ev=community", "petromin", "x")).toBe("https://book.example/?ev=petromin&session=x");
     expect(bookingAt("/experiences", "petromin", "x")).toBe("/experiences");
+  });
+});
+
+// Featured (2026-11-13): the booking app's _featLand and renderRegister. A card above the event cards for each
+// featured date the visitor's cards list, and those dates first in their event's list.
+describe("the Featured cards and the featured dates' place in a list (2026-11-13)", () => {
+  type D = { id: string; kind: RideKind; date: string; times: [string, string] | null; featured?: boolean };
+  const d = (id: string, kind: RideKind, date: string, featured = false, start = "07:00"): D => ({ id, kind, date, times: [start, "09:00"], featured });
+  const cardsFor = (all: D[], v: { member: boolean; petromin: boolean }, count = 9) => eventCards(all, v).map(({ card, sessions }) => ({ card, sessions: sessions.slice(0, count) }));
+  const anyone = { member: false, petromin: false };
+  it("can feature only the kinds booked under the community card (and Petromin Days, which lists the same nights)", () => {
+    const community = (Object.keys(EVENT_OF) as RideKind[]).filter((k) => EVENT_OF[k] === "community").sort();
+    expect([...FEATURE_OK].sort()).toEqual(community);
+  });
+  it("gives a card to each featured date, soonest first, with the card it is booked under", () => {
+    const all = [d("sat1", "saturday", "2099-11-16", true), d("jcc1", "jcc", "2099-11-17"), d("sw1", "swim", "2099-11-18", true), d("yg", "yoga", "2099-11-21", true), d("sat2", "saturday", "2099-11-23")];
+    expect(featuredDates(cardsFor(all, anyone))).toEqual([{ ev: "community", id: "sat1" }, { ev: "community", id: "sw1" }, { ev: "community", id: "yg" }]);
+  });
+  it("gives none when nothing is featured, and reads a copy kept from before (no word on it) as not featured", () => {
+    const all = [d("sat1", "saturday", "2099-11-16"), { id: "old", kind: "yoga" as const, date: "2099-11-21", times: null }];
+    expect(featuredDates(cardsFor(all, anyone))).toEqual([]);
+  });
+  it("shows four at most, the soonest", () => {
+    const all = ["16", "17", "18", "19", "20", "21"].map((n) => d(`s${n}`, "swim", `2099-11-${n}`, true));
+    expect(FEATURED_MAX).toBe(4);
+    expect(featuredDates(cardsFor(all, anyone)).map((x) => x.id)).toEqual(["s16", "s17", "s18", "s19"]);
+    expect(featuredDates(cardsFor(all, anyone), 2).map((x) => x.id)).toEqual(["s16", "s17"]);
+  });
+  it("orders two on one day by their start", () => {
+    const all = [d("late", "yoga", "2099-11-21", true, "16:00"), d("early", "swim", "2099-11-21", true, "07:00")];
+    // the page gives them soonest first already (lib/rides.ts upcoming); the cards keep to that across events too
+    expect(featuredDates([{ card: { key: "community" }, sessions: all }]).map((x) => x.id)).toEqual(["early", "late"]);
+  });
+  it("shows a card only for a date its event lists to this visitor: a Petromin night to a Petromin tag holder alone, under Petromin Days", () => {
+    const all = [d("pm1", "petromin", "2099-11-15", true), d("sat1", "saturday", "2099-11-16", true)];
+    expect(featuredDates(cardsFor(all, anyone))).toEqual([{ ev: "community", id: "sat1" }]);
+    expect(featuredDates(cardsFor(all, { member: true, petromin: false }))).toEqual([{ ev: "community", id: "sat1" }]);
+    expect(featuredDates(cardsFor(all, { member: false, petromin: true }))).toEqual([{ ev: "petromin", id: "pm1" }, { ev: "community", id: "sat1" }]);
+  });
+  it("shows a members' date's card to every visitor, as the community card lists that date to every visitor", () => {
+    const all = [d("yg", "yoga", "2099-11-21", true)];
+    for (const v of [anyone, { member: true, petromin: false }]) expect(featuredDates(cardsFor(all, v))).toEqual([{ ev: "community", id: "yg" }]);
+  });
+  it("has no card for a featured date further out than its event's list goes (Experiences > Dates: how many per event)", () => {
+    const all = [d("sat1", "saturday", "2099-11-16"), d("sat2", "saturday", "2099-11-23"), d("sat3", "saturday", "2099-11-30"), d("yg", "yoga", "2099-12-05", true)];
+    expect(featuredDates(cardsFor(all, anyone, 3))).toEqual([]);
+    expect(featuredDates(cardsFor(all, anyone, 4))).toEqual([{ ev: "community", id: "yg" }]);
+  });
+  it("never features a circuit night or a date with a card of its own, whatever a copy says", () => {
+    // lib/rides.ts featuredOf answers no for them; a list given one anyway still files it under its own card
+    const all = [d("jcc1", "jcc", "2099-11-17"), d("rh", "runher", "2099-11-20"), d("yg", "yoga", "2099-11-21", true)];
+    expect(featuredDates(cardsFor(all, anyone))).toEqual([{ ev: "community", id: "yg" }]);
+  });
+
+  const ids = (l: { id: string }[]) => l.map((x) => x.id);
+  const feat = (s: D) => !!s.featured;
+  it("puts the featured dates first and the rest after, each in date order and every date once", () => {
+    const all = [d("sat1", "saturday", "2099-11-16"), d("sw1", "swim", "2099-11-18", true), d("yg", "yoga", "2099-11-21", true), d("sat2", "saturday", "2099-11-23")];
+    const r = featuredFirst(all, feat);
+    expect(ids(r.featured)).toEqual(["sw1", "yg"]);
+    expect(ids(r.rest)).toEqual(["sat1", "sat2"]);
+    expect([...ids(r.featured), ...ids(r.rest)].sort()).toEqual(ids(all).sort());
+  });
+  it("leaves the list exactly as it was with nothing featured", () => {
+    const all = [d("sat1", "saturday", "2099-11-16"), d("sw1", "swim", "2099-11-18")];
+    const r = featuredFirst(all, feat);
+    expect(r.featured).toEqual([]);
+    expect(r.rest).toBe(all);
+  });
+  it("has no rest when every date is featured", () => {
+    const all = [d("sw1", "swim", "2099-11-18", true), d("yg", "yoga", "2099-11-21", true)];
+    const r = featuredFirst(all, feat);
+    expect(ids(r.featured)).toEqual(["sw1", "yg"]);
+    expect(r.rest).toEqual([]);
   });
 });
 
@@ -248,10 +323,10 @@ describe("Victory Lap on Experiences", () => {
 
   it("has a card of its own while it has a date, after Petromin Days and before Run for Her, as on the booking app's landing", () => {
     const all = [{ id: "rh", kind: "runher" as const }, { id: "vl", kind: "vlap" as const }, { id: "j", kind: "jcc" as const }, { id: "pm", kind: "petromin" as const }];
-    expect(eventCards(all, { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["petromin", "vlap", "runher", "jcc", "community"]);
+    expect(eventCards(all, { member: false, petromin: true }).map((c) => c.card.key)).toEqual(["community", "petromin", "vlap", "runher", "jcc"]);
     expect(eventCards(all, { member: false, petromin: false }).find((c) => c.card.key === "vlap")?.sessions.map((x) => x.id)).toEqual(["vl"]);
     expect(eventCards([{ id: "j", kind: "jcc" as const }], { member: true, petromin: false }).map((c) => c.card.key)).not.toContain("vlap");
-    expect(EVENT_CARDS[2]).toEqual({ key: "vlap", p: "vl", always: false }); // the Blood Donation event's card sits between them while it has a date (blood.test.ts)
+    expect(EVENT_CARDS[3]).toEqual({ key: "vlap", p: "vl", always: false }); // the Blood Donation event's card sits between them while it has a date (blood.test.ts)
     expect(bookingAt("https://book.example/", "vlap", "2026-10-26-vl")).toBe("https://book.example/?ev=vlap&session=2026-10-26-vl");
   });
 
@@ -305,7 +380,7 @@ describe("the DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18)", () => {
   it("is a date among the community rides, never a card of its own", () => {
     const all = [{ id: "2026-10-22-df", kind: "defe5k" as const }, { id: "2026-10-24", kind: "saturday" as const }, { id: "j", kind: "jcc" as const }];
     const cards = eventCards(all, { member: true, petromin: false });
-    expect(cards.map((c) => c.card.key)).toEqual(["jcc", "community"]);
+    expect(cards.map((c) => c.card.key)).toEqual(["community", "jcc"]);
     expect(cards.find((c) => c.card.key === "community")?.sessions.map((x) => x.id)).toEqual(["2026-10-22-df", "2026-10-24"]);
     expect(EVENT_CARDS.map((c) => c.key)).not.toContain("defe5k");
     expect(bookingAt("https://book.example/", "community", "2026-10-22-df")).toBe("https://book.example/?ev=community&session=2026-10-22-df");
@@ -332,5 +407,59 @@ describe("the DEFE 5KM Run (ride_kind 'defe5k', 2026-10-18)", () => {
     expect(f("aboutDefe")?.def.en).toBe("Run 5 km with Defe for breast cancer awareness, together with the MicroMobility community, at the Jeddah Corniche Circuit. Collect your race kit at Jeddah Park on 21 October, 4–10 PM. The race starts on 22 October at 7 PM.");
     expect(f("aboutDefe")?.def.ar).toContain("دفء");
     expect(readFileSync(new URL("../../../public/site/defe-logo.svg", import.meta.url), "utf8")).toMatch(/^<svg[^>]*viewBox="112 203 977 660"/);
+  });
+});
+
+describe("yoga (ride_kind 'yoga', 2026-11-12)", () => {
+  // Hatha Yoga for Cyclists with Jassim Alsaady, as the booking app makes it: members only, free, a start and an end
+  // ("16:00 - 17:30"), at SILKDEER with its map
+  const yoga = { kind: "yoga" as const, times: ["16:00", "17:30"] as [string, string], gather: false, collect: null, description: null };
+  const MAP = "https://maps.app.goo.gl/TfCSEPEPxA4C5f7d7";
+  it("is a date among the community rides, never a card of its own", () => {
+    const all = [{ id: "2026-11-21-yg", kind: "yoga" as const }, { id: "2026-11-21", kind: "saturday" as const }, { id: "j", kind: "jcc" as const }];
+    const cards = eventCards(all, { member: true, petromin: false });
+    expect(cards.map((c) => c.card.key)).toEqual(["community", "jcc"]);
+    expect(cards.find((c) => c.card.key === "community")?.sessions.map((x) => x.id)).toEqual(["2026-11-21-yg", "2026-11-21"]);
+    expect(EVENT_CARDS.map((c) => c.key)).not.toContain("yoga");
+    expect(EVENT_OF.yoga).toBe("community");
+    expect(bookingAt("https://book.example/", EVENT_OF.yoga, "2026-11-21-yg")).toBe("https://book.example/?ev=community&session=2026-11-21-yg");
+  });
+  it("says its start and its end in its own text, for members, free, with no bike price and no distance", () => {
+    expect(infoTimes(yoga, clock)).toEqual({ gather: "", start: "4 PM", end: "5:30 PM", collect: "" });
+    expect(dateText(yoga, TEXTS, infoTimes(yoga, clock))).toBe("Yoga 4 PM to 5:30 PM.");
+    const who = { all: "Everyone", members: "Community members", members18: "Community members, 18 and over", petromin: "x", vlap: "y" };
+    expect(infoWho({ members: true, kind: "yoga" }, who)).toBe("Community members");
+    expect(rentsBikes("yoga")).toBe(false);
+    expect(infoPrice({ kind: "yoga", free: true }, { free: "Complimentary", seat: null, from: "from SAR 57.5" })).toBe("Complimentary");
+    expect(infoPrice({ kind: "yoga", free: false }, { free: "Complimentary", seat: null, from: "from SAR 57.5" })).toBeNull();
+    expect(infoDistance("yoga", "{0} km")).toBeNull();
+    expect(infoPlaces({ kind: "yoga", full: false, left: 2, approval: false }, { waitlist: "Waitlist", left1: "{0} spot left", leftN: "{0} spots left" })).toBe("2 spots left");
+  });
+  it("is at the place staff named with its own map, at its meeting point when it names none, never the circuit", () => {
+    const words = { meetingPoint: "Meeting point", venueCircuit: "Jeddah Corniche Circuit", venueJyc: "Jeddah Yacht Club" };
+    expect(infoPlace({ kind: "yoga", approval: false, location: "SILKDEER", meetUrl: MAP }, words, "https://dir")).toEqual({ name: "SILKDEER", map: MAP });
+    expect(infoPlace({ kind: "yoga", approval: false, location: null, meetUrl: MAP }, words, "https://dir")).toEqual({ name: "Meeting point", map: MAP });
+    expect(infoPlace({ kind: "yoga", approval: false, location: "SILKDEER", meetUrl: null }, words, "https://dir")).toEqual({ name: "SILKDEER", map: null });
+  });
+  it("runs as long as its start and end say, and says who leads it, how long, the level and what to bring", () => {
+    expect(yogaMinutes(["16:00", "17:30"])).toBe(90);
+    expect(yogaMinutes(["9:05", "10:00"])).toBe(55);
+    for (const t of [null, undefined, ["19:00", "19:00"], ["18:00", "17:00"], ["x", "17:00"]] as const) expect(yogaMinutes(t as [string, string] | null | undefined), String(t)).toBe(0);
+    expect(yogaLength(["16:00", "17:30"], "{0} min")).toBe("90 min");
+    expect(yogaLength(["16:00", "17:30"], "{0} دقيقة")).toBe("90 دقيقة");
+    expect(yogaLength(["19:00", "19:00"], "{0} min")).toBe("");
+    const w = { leadK: "Led by", leadV: "Jassim Alsaady", durK: "Length", levelK: "Level", levelV: "All levels, no yoga experience needed", bringK: "Bring", bringV: "Your yoga mat, and wear comfortable clothing" };
+    expect(yogaKnow(w, "90 min")).toEqual([["Led by", "Jassim Alsaady"], ["Length", "90 min"], ["Level", "All levels, no yoga experience needed"], ["Bring", "Your yoga mat, and wear comfortable clothing"]]);
+    expect(yogaKnow(w).map(([k]) => k)).toEqual(["Led by", "Level", "Bring"]);
+  });
+  it("has its name and Details text in Experiences' fields, the booking app's own words, and its mark", () => {
+    const f = (id: string) => experiencesSchema.sections.find((x) => x.id === "dates")?.fields.find((x) => x.id === id) as { def: { en: string; ar: string }; max: number } | undefined;
+    expect(f("yogaName")?.def).toEqual({ en: "Hatha Yoga for Cyclists", ar: "هاثا يوغا لراكبي الدراجات" });
+    const about = f("aboutYoga");
+    expect(about?.def.en).toBe("Ninety minutes of Hatha Yoga made for cyclists, with Jassim Alsaady: mindful movement, deep stretching, gentle strengthening and breathwork for the hips, lower back and legs that riding leaves tight. A time to slow down, feel grounded and recover with the community. {start} to {end}. All levels welcome, no experience needed. Bring your yoga mat and wear comfortable clothing. Free for community members; places are limited.");
+    expect(about?.def.ar).toContain("من {start} إلى {end}");
+    expect(about!.def.en.length).toBeLessThanOrEqual(about!.max);
+    expect(fillTimes(about!.def.en, infoTimes(yoga, clock))).toContain(" 4 PM to 5:30 PM. ");
+    expect(readFileSync(new URL("../../../public/site/yoga-mark.svg", import.meta.url), "utf8")).toMatch(/^<svg[^>]*viewBox="0 0 64 40"/);
   });
 });

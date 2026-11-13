@@ -263,11 +263,11 @@ describe("no bikes, no wallet, no ride counted", () => {
 // ── Experiences and Events ───────────────────────────────────────────────────────────────────────────────────
 describe("on Experiences, once a session exists", () => {
   it("has a card of its own, after Petromin Days and before Victory Lap, as on the booking app's landing", () => {
-    expect(EVENT_CARDS.map((c) => c.key).slice(0, 3)).toEqual(["petromin", "blood", "vlap"]);
+    expect(EVENT_CARDS.map((c) => c.key).slice(0, 4)).toEqual(["community", "petromin", "blood", "vlap"]); // MicroMobility Experiences leads (2026-11-13)
     expect(EVENT_CARDS.find((c) => c.key === "blood")).toEqual({ key: "blood", p: "bld", always: false });
     expect(EVENT_OF.blood).toBe("blood");
     const all = [{ id: "v", kind: "vlap" as const }, { id: BD.id, kind: "blood" as const }, { id: "s", kind: "saturday" as const }];
-    expect(eventCards(all, { member: false, petromin: false }).map((c) => c.card.key)).toEqual(["blood", "vlap", "jcc", "community"]);
+    expect(eventCards(all, { member: false, petromin: false }).map((c) => c.card.key)).toEqual(["community", "blood", "vlap", "jcc"]);
     // never among the community rides
     expect(eventCards(all, { member: true, petromin: false }).find((c) => c.card.key === "community")?.sessions.map((x) => x.id)).toEqual(["s"]);
     expect(membersOnlyEvent("blood")).toBe(false);

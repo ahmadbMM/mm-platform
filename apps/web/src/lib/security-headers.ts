@@ -10,8 +10,8 @@
 // pages are kept at the edge). No site may frame a page but the staff page, whose Website section
 // shows the preview inside an iPhone-sized frame (rentals _webPhonePreview); there is no
 // X-Frame-Options, as it cannot name another host and would refuse that frame in some browsers.
-// next.config.ts sends these with every page and API answer but at the two forms' addresses (/petromin,
-// /community/registration), where the page on its own (?classic=1) sends its own (src/forms/headers.ts); there the
+// next.config.ts sends these with every page and API answer but at the forms' addresses /petromin and
+// /community/registration, where the page on its own (?classic=1) sends its own (src/forms/headers.ts); there the
 // proxy (proxy.ts) puts these on the website's page itself, as the config cannot tell the two apart on Cloudflare.
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
 const MAPLIBRE = "https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-gl";

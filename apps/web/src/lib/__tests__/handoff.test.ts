@@ -73,6 +73,36 @@ describe("api/account/handoff", () => {
     expect(cookiesOf(dead)[0]).toMatch(/^mm_acct=c1~tk1a2b3c4d5e6f7g8h9i;/);
   });
 
+  it("lands a rider who left an Ask page to create an account back on that page, and spends the note", async () => {
+    vi.stubGlobal("fetch", redeem([{ id: "c1", name: "Spec", session_token: TOK }]));
+    const res = await call(`?code=${CODE}`, "NEXT_LOCALE=ar; mm_ask_back=%2Fask%2Ffarm-ideas");
+    expect(res.status).toBe(303);
+    expect(res.headers.get("location")).toBe("https://micromobility.sa/ask/farm-ideas?handoff=done");
+    const set = cookiesOf(res);
+    expect(set[0]).toMatch(/^mm_acct=c1~tk1a2b3c4d5e6f7g8h9i; Path=\/; Max-Age=\d+; HttpOnly; Secure; SameSite=Lax$/);
+    expect(set).toContain("mm_ask_back=; Path=/api/account/handoff; Max-Age=0; Secure; SameSite=Lax");
+    // the list itself too
+    expect((await call(`?code=${CODE}`, "mm_ask_back=%2Fask")).headers.get("location")).toBe("https://micromobility.sa/ask?handoff=done");
+  });
+  it("never lands anywhere but an Ask page on the note's word: a made-up address goes to the account as before", async () => {
+    vi.stubGlobal("fetch", redeem([{ id: "c1", name: "Spec", session_token: TOK }]));
+    for (const note of ["https%3A%2F%2Fevil.example%2Fask", "%2F%2Fevil.example", "%2Faccount%2Fbadges", "%2Fask%2F..%2Fapi", "%2Fask%2Ffarm-ideas%3Fk%3D1", "%2Fask%2Ffarm-ideas%2Fscreen", "%E0%A4%A"]) {
+      const res = await call(`?code=${CODE}`, `mm_ask_back=${note}`);
+      expect(res.headers.get("location"), note).toBe("https://micromobility.sa/account?handoff=done");
+      expect(cookiesOf(res), note).toContain("mm_ask_back=; Path=/api/account/handoff; Max-Age=0; Secure; SameSite=Lax");
+    }
+  });
+  it("still asks first when another account is signed in here, and still says a late code is late - the note spent either way", async () => {
+    vi.stubGlobal("fetch", db(() => answer([{ name: "Someone Else", email: "else@example.com" }])));
+    const other = await call(`?code=${CODE}`, `mm_acct=c2~${OTHER}; mm_ask_back=%2Fask%2Ffarm-ideas`);
+    expect(other.headers.get("location")).toBe("https://micromobility.sa/account");
+    expect(cookiesOf(other)).toEqual([`mm_acct_next=c1~${TOK}; Path=/; Max-Age=300; HttpOnly; Secure; SameSite=Lax`, "mm_ask_back=; Path=/api/account/handoff; Max-Age=0; Secure; SameSite=Lax"]);
+    vi.stubGlobal("fetch", redeem([]));
+    const late = await call(`?code=${CODE}`, "mm_ask_back=%2Fask%2Ffarm-ideas");
+    expect(late.headers.get("location")).toBe("https://micromobility.sa/account?handoff=expired");
+    expect(cookiesOf(late)).toEqual(["mm_ask_back=; Path=/api/account/handoff; Max-Age=0; Secure; SameSite=Lax"]);
+  });
+
   it("switches to the account handed over only when the rider says so, from this site's own page", async () => {
     const both = `mm_acct=c2~${OTHER}; mm_acct_next=c1~${TOK}`;
     const sw = await choose("switch", both);

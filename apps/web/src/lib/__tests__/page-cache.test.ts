@@ -34,6 +34,17 @@ describe("pageCacheKey", () => {
       expect(pageCacheKey(get(`${p}${p.includes("?") ? "&" : "?"}lang=en`), "v1"), p).toBeNull();
     }
   });
+  it("never keeps an Ask page: the list, a page of questions or its big screen, in any language, signed in or not", () => {
+    for (const p of ["/ask", "/ask/", "/ask/farm-ideas", "/ask/farm-ideas/", "/ask/farm-ideas/screen"]) {
+      expect(pageCacheKey(get(`${p}?lang=en`), "v1"), p).toBeNull();
+      expect(pageCacheKey(get(p, "NEXT_LOCALE=ar"), "v1"), p).toBeNull();
+      expect(firstVisitKey(get(p), "v1"), p).toBeNull();
+      expect(plainCanonical(get(p)), p).toBeNull();
+    }
+    expect(pageCacheKey(get("/ask/farm-ideas/screen?k=abcdef&lang=en"), "v1")).toBeNull();
+    // a page whose name only starts the same way is a page like any other
+    expect(pageCacheKey(get("/asking?lang=en"), "v1")).toBe("https://page-cache.micromobility.sa/asking?lang=en&v=v1");
+  });
   it("a malformed cookie is read as written, never a 500 on every page", () => {
     expect(() => pageCacheKey(get("/club", "NEXT_LOCALE=%E0"), "v1")).not.toThrow();
     expect(pageCacheKey(get("/club", "NEXT_LOCALE=%E0"), "v1")).toBeNull(); // not a language: rendered

@@ -22,10 +22,21 @@
 
 <main class="wrap">
   <section id="card" class="card" data-state="form" data-step="1">
-    <div class="partners">
+    <!-- The marks over the form: Petromin's and Petrolube's until a company is picked, then the picked company's own. -->
+    <div class="partners" data-look="pm">
       <img src="petromin-logo.png" alt="Petromin" width="150" height="48">
       <span class="partners-rule" aria-hidden="true"></span>
       <img src="petrolube-logo.png" alt="Petrolube" width="150" height="48">
+    </div>
+    <div class="partners" data-look="dukan" hidden>
+      <img class="partner-mm" src="logo-mark.png" alt="MicroMobility" width="40" height="38">
+      <span class="partners-rule" aria-hidden="true"></span>
+      <img class="partner-dukan" src="dukan-logo.png" alt="Dukan" width="130" height="40">
+    </div>
+    <div class="partners" data-look="guest" hidden>
+      <img class="partner-mm" src="logo-mark.png" alt="MicroMobility" width="40" height="38">
+      <span class="partners-rule" aria-hidden="true"></span>
+      <img class="partner-petromin" src="petromin-logo.png" alt="Petromin" width="150" height="62">
     </div>
 
     <div id="banner" class="banner" role="alert" tabindex="-1" hidden>
@@ -40,31 +51,177 @@
       <h1 class="title" data-t="Petromin bike night">Petromin bike night</h1>
 
       <ol id="stepper" class="stepper" aria-label="Progress">
-        <li class="stepper-item" data-step="1"><span class="stepper-bar"></span><span class="stepper-label" data-t="Session">Session</span></li>
-        <li class="stepper-item" data-step="2"><span class="stepper-bar"></span><span class="stepper-label" data-t="Your details">Your details</span></li>
-        <li class="stepper-item" data-step="3"><span class="stepper-bar"></span><span class="stepper-label" data-t="Bike">Bike</span></li>
-        <li class="stepper-item" data-step="4"><span class="stepper-bar"></span><span class="stepper-label" data-t="Check and agree">Check and agree</span></li>
+        <li class="stepper-item" data-step="1"><span class="stepper-bar"></span><span class="stepper-label" data-t="Company">Company</span></li>
+        <li class="stepper-item" data-step="2"><span class="stepper-bar"></span><span class="stepper-label" data-t="Session">Session</span></li>
+        <li class="stepper-item" data-step="3"><span class="stepper-bar"></span><span class="stepper-label" data-t="Your details">Your details</span></li>
+        <li class="stepper-item" data-step="4"><span class="stepper-bar"></span><span class="stepper-label" data-t="Bike">Bike</span></li>
+        <li class="stepper-item" data-step="5"><span class="stepper-bar"></span><span class="stepper-label" data-t="Check and agree">Check and agree</span></li>
       </ol>
 
-      <fieldset class="step" data-step="1">
+      <!-- The first step for everyone: the company. What follows depends on it (data-pane; the script numbers the steps). -->
+      <fieldset class="step" data-pane="company" data-step="1">
+        <legend class="step-title" id="company-label" data-t="Which company are you an employee for?">Which company are you an employee for?</legend>
+        <div id="f-company" class="field">
+          <div id="companies" class="companies" role="radiogroup" aria-labelledby="company-label">
+            <button type="button" class="company" data-v="Petromin" role="radio" aria-checked="false" aria-label="Petromin"><img src="petromin-logo.png" alt="Petromin" width="150" height="48"></button>
+            <button type="button" class="company" data-v="Petrolube" role="radio" aria-checked="false" aria-label="Petrolube"><img src="petrolube-logo.png" alt="Petrolube" width="150" height="48"></button>
+            <button type="button" class="company" data-v="Dukan" role="radio" aria-checked="false" aria-label="Dukan"><img src="dukan-logo.png" alt="Dukan" width="130" height="40"></button>
+            <button type="button" class="company company-text" data-v="Guest" role="radio" aria-checked="false"><span data-t="Guest/Other">Guest/Other</span></button>
+          </div>
+          <p class="err" aria-live="polite" data-t="Choose your company">Choose your company</p>
+        </div>
+        <button type="button" id="find" class="quiet" data-t="Find my booking">Find my booking</button>
+      </fieldset>
+
+      <!-- An invited guest's account: sign in, or make one, then what the booking still needs of it. -->
+      <fieldset class="step" data-pane="account" data-step="0" hidden>
+        <legend class="step-title" data-t="Your account">Your account</legend>
+
+        <div id="ac-ask" class="ac-panel">
+          <p id="ac-ask-q" class="label ac-q" data-t="Do you have a MicroMobility account?">Do you have a MicroMobility account?</p>
+          <div class="ac-opts" role="group" aria-labelledby="ac-ask-q">
+            <button type="button" id="ac-yes" class="back ac-opt" data-t="Yes, I have an account">Yes, I have an account</button>
+            <button type="button" id="ac-no" class="back ac-opt" data-t="No, I'm new to MicroMobility">No, I'm new to MicroMobility</button>
+          </div>
+        </div>
+
+        <div id="ac-signin" class="ac-panel" hidden>
+          <h2 class="ac-h" data-t="Sign in">Sign in</h2>
+          <div id="f-ac-ident" class="field">
+            <label for="ac-ident" data-t="Email or phone">Email or phone</label>
+            <input id="ac-ident" name="username" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="254" enterkeyhint="next">
+            <p class="err" aria-live="polite" data-t="Enter an email or a phone number.">Enter an email or a phone number.</p>
+          </div>
+          <div id="f-ac-spwd" class="field">
+            <label for="ac-spwd" data-t="Password">Password</label>
+            <input id="ac-spwd" name="current-password" type="password" autocomplete="current-password" maxlength="72" dir="ltr" enterkeyhint="go">
+            <p class="err" aria-live="polite" data-t="Enter your password.">Enter your password.</p>
+          </div>
+          <div id="ac-temp" class="ac-note" hidden>
+            <span data-t="Your account has a temporary password. Choose your own on the booking site, then come back to this page.">Your account has a temporary password. Choose your own on the booking site, then come back to this page.</span>
+            <a class="pill ac-app" href="https://experiences.micromobility.sa/" target="_blank" rel="noopener" data-t="Open the booking site">Open the booking site</a>
+          </div>
+          <button type="button" id="ac-signin-btn" class="submit">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="submit-label" data-t="Sign in">Sign in</span>
+            <span class="submit-busy" data-t="Signing in...">Signing in...</span>
+          </button>
+          <a id="ac-forgot" class="quiet ac-app" href="https://experiences.micromobility.sa/?auth=forgot" target="_blank" rel="noopener" data-t="Forgot password?">Forgot password?</a>
+          <p class="ac-switch"><span data-t="No account yet?">No account yet?</span> <button type="button" class="quiet ac-to-create" data-t="Create account">Create account</button></p>
+        </div>
+
+        <div id="ac-create" class="ac-panel" hidden>
+          <h2 class="ac-h" data-t="Create account">Create account</h2>
+          <div id="f-ac-name" class="field">
+            <div class="name-row">
+              <span class="name-part"><label for="ac-first" data-t="First Name">First Name</label><input id="ac-first" name="first" type="text" autocomplete="given-name" autocapitalize="words" spellcheck="false" maxlength="60" enterkeyhint="next"></span>
+              <span class="name-part"><label for="ac-last" data-t="Last Name">Last Name</label><input id="ac-last" name="last" type="text" autocomplete="family-name" autocapitalize="words" spellcheck="false" maxlength="60" enterkeyhint="next"></span>
+            </div>
+            <p class="err" aria-live="polite" data-t="Enter your first and last name">Enter your first and last name</p>
+          </div>
+          <div id="f-ac-gender" class="field">
+            <span class="label" id="ac-gender-label" data-t="Gender">Gender</span>
+            <div id="ac-genders" class="types" role="radiogroup" aria-labelledby="ac-gender-label">
+              <button type="button" class="tile" data-v="male" role="radio" aria-checked="false" data-t="Male">Male</button>
+              <button type="button" class="tile" data-v="female" role="radio" aria-checked="false" data-t="Female">Female</button>
+            </div>
+            <p class="err" aria-live="polite" data-t="Choose your gender">Choose your gender</p>
+          </div>
+          <div id="f-ac-email" class="field">
+            <label for="ac-email" data-t="Email address">Email address</label>
+            <input id="ac-email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="254" enterkeyhint="next">
+            <p class="err" aria-live="polite" data-t="Enter your email address">Enter your email address</p>
+            <button type="button" id="ac-email-fix" class="quiet ac-fix" hidden></button>
+          </div>
+          <div id="f-ac-phone" class="field">
+            <label for="ac-phone" data-t="Mobile number">Mobile number</label>
+            <div class="phone-row" dir="ltr">
+              <label class="cc-wrap cc-over" aria-label="Country code">
+                <span class="cc-face" id="ac-cc-code" aria-hidden="true">+966</span>
+                <select id="ac-cc" class="cc"></select>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+              </label>
+              <input id="ac-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" enterkeyhint="next" placeholder="5X XXX XXXX">
+            </div>
+            <p class="err" aria-live="polite" data-t="Enter your mobile number">Enter your mobile number</p>
+          </div>
+          <div id="f-ac-pwd" class="field">
+            <label for="ac-pwd" data-t="Password">Password</label>
+            <input id="ac-pwd" name="password" type="password" autocomplete="new-password" maxlength="72" dir="ltr" enterkeyhint="next">
+            <p class="err" aria-live="polite" data-t="Use at least 8 characters.">Use at least 8 characters.</p>
+          </div>
+          <div id="f-ac-pwd2" class="field">
+            <label for="ac-pwd2" data-t="Confirm password">Confirm password</label>
+            <input id="ac-pwd2" name="password2" type="password" autocomplete="new-password" maxlength="72" dir="ltr" enterkeyhint="next">
+            <p class="err" aria-live="polite" data-t="Passwords do not match.">Passwords do not match.</p>
+          </div>
+          <div id="f-ac-height" class="field">
+            <label for="ac-height" data-t="Height in cm">Height in cm</label>
+            <input id="ac-height" name="height" type="text" inputmode="numeric" autocomplete="off" maxlength="3" enterkeyhint="next" placeholder="175">
+            <p class="err" aria-live="polite" data-t="Enter your height in cm (100 to 250)">Enter your height in cm (100 to 250)</p>
+          </div>
+          <div id="em-slot"></div>
+          <div id="f-ac-ack" class="field privacy-field">
+            <label class="privacy-check"><input id="ac-ack" type="checkbox"> <span data-t="I have read the Privacy Notice.">I have read the Privacy Notice.</span></label>
+            <a class="privacy-link" id="ac-pv" href="https://micromobility.sa/privacy" target="_blank" rel="noopener" data-t="Read the Privacy Notice">Read the Privacy Notice</a>
+            <p class="err" aria-live="polite" data-t="Please confirm you’ve read the Privacy Notice.">Please confirm you’ve read the Privacy Notice.</p>
+          </div>
+          <div id="f-ac-news" class="field privacy-field">
+            <label class="privacy-check"><input id="ac-news" type="checkbox"> <span data-t="Send me ride news and announcements by WhatsApp. I can stop at any time.">Send me ride news and announcements by WhatsApp. I can stop at any time.</span></label>
+          </div>
+          <button type="button" id="ac-create-btn" class="submit">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="submit-label" data-t="Create account">Create account</span>
+            <span class="submit-busy" data-t="Creating your account...">Creating your account...</span>
+          </button>
+          <p class="ac-switch"><span data-t="Already have a MicroMobility account?">Already have a MicroMobility account?</span> <button type="button" class="quiet ac-to-signin" data-t="Sign in">Sign in</button></p>
+        </div>
+
+        <div id="ac-details" class="ac-panel" hidden>
+          <p id="ac-who" class="ac-who" dir="auto"></p>
+          <div id="ac-blocked" class="ac-note" hidden>
+            <b data-t="Your account needs a few more details">Your account needs a few more details</b>
+            <span data-t="Some of them can only be given on the booking site. Finish them there, then come back to this page to book.">Some of them can only be given on the booking site. Finish them there, then come back to this page to book.</span>
+            <a class="pill ac-app" href="https://experiences.micromobility.sa/" target="_blank" rel="noopener" data-t="Finish on the booking site">Finish on the booking site</a>
+          </div>
+          <div id="f-ac-company" class="field">
+            <label for="ac-company" data-t="Your company">Your company</label>
+            <input id="ac-company" name="organization" type="text" autocomplete="organization" autocapitalize="words" maxlength="120" enterkeyhint="next" dir="auto">
+            <p class="err" aria-live="polite" data-t="Enter your company">Enter your company</p>
+          </div>
+          <div id="f-ac-xheight" class="field" hidden>
+            <label for="ac-xheight" data-t="Height in cm">Height in cm</label>
+            <input id="ac-xheight" type="text" inputmode="numeric" autocomplete="off" maxlength="3" enterkeyhint="next" placeholder="175">
+            <p class="err" aria-live="polite" data-t="Enter your height in cm (100 to 250)">Enter your height in cm (100 to 250)</p>
+          </div>
+          <div id="xem-slot"></div>
+          <div id="f-ac-nat" class="field" hidden>
+            <label for="ac-nat" data-t="Nationality">Nationality</label>
+            <span class="sel-wrap"><select id="ac-nat" class="sel"></select></span>
+            <p class="err" aria-live="polite" data-t="Choose your nationality">Choose your nationality</p>
+          </div>
+          <div id="f-ac-birth" class="field" hidden>
+            <span class="label" id="ac-birth-label" data-t="Date of birth">Date of birth</span>
+            <div class="dob" role="group" aria-labelledby="ac-birth-label">
+              <span class="sel-wrap"><select id="ac-birth-d" class="sel" data-t-label="Day"></select></span>
+              <span class="sel-wrap"><select id="ac-birth-m" class="sel" data-t-label="Month"></select></span>
+              <span class="sel-wrap"><select id="ac-birth-y" class="sel" data-t-label="Year"></select></span>
+            </div>
+            <p class="err" aria-live="polite" data-t="Choose your date of birth">Choose your date of birth</p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="step" data-pane="session" data-step="2" hidden>
         <legend class="step-title" data-t="Choose your session">Choose your session</legend>
         <div id="f-session" class="field">
           <div id="sessions" class="sessions" role="radiogroup" aria-label="Session"></div>
           <p class="err" aria-live="polite" data-t="Choose a session">Choose a session</p>
         </div>
-        <button type="button" id="find" class="quiet" data-t="Find my booking">Find my booking</button>
       </fieldset>
 
-      <fieldset class="step" data-step="2" hidden>
+      <fieldset class="step" data-pane="details" data-step="3" hidden>
         <legend class="step-title" data-t="Your details">Your details</legend>
-        <div id="f-company" class="field">
-          <span class="label" id="company-label" data-t="Your company">Your company</span>
-          <div id="companies" class="companies" role="radiogroup" aria-labelledby="company-label">
-            <button type="button" class="company" data-v="Petromin" role="radio" aria-checked="false" aria-label="Petromin"><img src="petromin-logo.png" alt="Petromin" width="150" height="48"></button>
-            <button type="button" class="company" data-v="Petrolube" role="radio" aria-checked="false" aria-label="Petrolube"><img src="petrolube-logo.png" alt="Petrolube" width="150" height="48"></button>
-          </div>
-          <p class="err" aria-live="polite" data-t="Choose your company">Choose your company</p>
-        </div>
         <div id="f-badge" class="field">
           <label for="badge" data-t="Badge number">Badge number</label>
           <input id="badge" name="badge" type="text" inputmode="numeric" autocomplete="off" maxlength="40" enterkeyhint="next" placeholder="104582" data-t-placeholder="104582">
@@ -89,8 +246,8 @@
         </div>
       </fieldset>
 
-      <fieldset class="step" data-step="3" hidden>
-        <legend class="step-title" data-t="Height and bike">Height and bike</legend>
+      <fieldset class="step" data-pane="bike" data-step="4" hidden>
+        <legend class="step-title" id="bike-title" data-t="Height and bike">Height and bike</legend>
         <div id="f-height" class="field">
           <label for="height" data-t="Height in cm">Height in cm</label>
           <input id="height" name="height" type="text" inputmode="numeric" autocomplete="off" maxlength="3" enterkeyhint="next" placeholder="175" data-t-placeholder="175">
@@ -116,7 +273,7 @@
         </div>
       </fieldset>
 
-      <fieldset class="step" data-step="4" hidden>
+      <fieldset class="step" data-pane="check" data-step="5" hidden>
         <legend class="step-title" data-t="Check and agree">Check and agree</legend>
         <div id="review" class="review"></div>
         <div id="f-privacy" class="field privacy-field">
@@ -125,7 +282,7 @@
           <p class="err" aria-live="polite" data-t="Please confirm you’ve read the Privacy Notice.">Please confirm you’ve read the Privacy Notice.</p>
         </div>
         <div id="f-waiver" class="field waiver-field">
-          <label class="privacy-check"><input id="waiver" type="checkbox" required> <span data-t="I have read the waiver and agree to it on behalf of every rider on this registration">I have read the waiver and agree to it on behalf of every rider on this registration</span></label>
+          <label class="privacy-check"><input id="waiver" type="checkbox" required> <span id="waiver-label" data-t="I have read the waiver and agree to it on behalf of every rider on this registration">I have read the waiver and agree to it on behalf of every rider on this registration</span></label>
           <button type="button" id="waiver-open" class="privacy-link" data-t="Read the waiver">Read the waiver</button>
           <p class="err" aria-live="polite" data-t="Please accept the waiver to continue.">Please accept the waiver to continue.</p>
         </div>
@@ -138,7 +295,9 @@
           <span data-t="Back">Back</span>
         </button>
         <button id="next" class="submit" type="button">
-          <span data-t="Continue">Continue</span>
+          <span class="spinner" aria-hidden="true"></span>
+          <span class="submit-label" data-t="Continue">Continue</span>
+          <span class="submit-busy" data-t="Saving...">Saving...</span>
         </button>
         <button id="submit" class="submit" type="submit" hidden>
           <span class="spinner" aria-hidden="true"></span>
@@ -156,9 +315,11 @@
       <p id="result" class="result" data-t="Your registration for {d} is confirmed." data-args='{"d":"Wed 23 Sep, 18:00"}'>Your registration for Wed 23 Sep, 18:00 is confirmed.</p>
       <div class="ticket" id="ticket">
         <div class="ticket-top">
+          <svg class="ticket-mark" viewBox="0 0 100 100" width="30" height="30" aria-hidden="true"><path fill="#1b7563" d="M12 0H50A50 50 0 0 1 50 100H12A12 12 0 0 1 0 88V12A12 12 0 0 1 12 0Z"/><rect x="-18" y="-18" width="36" height="36" rx="8" fill="#ec2f04" transform="translate(47 50) rotate(45)"/></svg>
           <div class="ticket-label" data-t="Booking">Booking</div>
           <div class="ticket-num" id="chip-booking-value">P-001</div>
           <span id="chip-riders" class="ticket-party" hidden><b id="chip-riders-value">3</b> <span data-t="riders">riders</span></span>
+          <span id="tk-status" class="ticket-status" data-t="On the waitlist" hidden>On the waitlist</span>
           <div class="ticket-qr">
             <div id="qr" class="qr" role="img" aria-label="Booking QR code"></div>
           </div>
@@ -169,7 +330,9 @@
           <div class="ticket-col" id="tk-place"><div class="tl" data-t="Where">Where</div><div class="ticket-value" id="tk-place-value">Jeddah Corniche Circuit</div></div>
           <div class="ticket-col"><div class="tl" data-t="Name">Name</div><div class="ticket-value" id="tk-name" dir="auto">—</div></div>
           <div class="ticket-col" id="chip"><div class="tl" data-t="Badge">Badge</div><div class="ticket-value" id="chip-value" dir="ltr">104582</div></div>
-          <div class="ticket-col" id="chip-company"><div class="tl" data-t="Company">Company</div><div class="ticket-value" id="chip-company-value">Petromin</div></div>
+          <div class="ticket-col" id="tk-type" hidden><div class="tl" data-t="Bike">Bike</div><div class="ticket-value" id="tk-type-value">Hybrid</div></div>
+          <div class="ticket-col" id="chip-company"><div class="tl" data-t="Company">Company</div><div class="ticket-value" id="chip-company-value" dir="auto">Petromin</div></div>
+          <div class="ticket-col" id="tk-price" hidden><div class="tl" data-t="Price">Price</div><div class="ticket-value" id="tk-price-value"></div></div>
         </div>
         <p id="riders-note" class="ticket-riders" hidden></p>
         <p class="ticket-helmet">

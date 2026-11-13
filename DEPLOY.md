@@ -125,7 +125,8 @@ stay until the booking app's key changes).
 by one: Cloudflare's analytics beacon and Turnstile, and on the live ride map (`/live`) MapLibre's two
 files at the pinned version `components/live/LiveMap.tsx` loads (a unit test fails when the two
 differ, so a new MapLibre version changes both). The registration forms send their own policy
-(`apps/web/src/forms/headers.ts`), which allows the one supabase-js file the Petromin page loads.
+(`apps/web/src/forms/headers.ts`); none of them loads a script from elsewhere (the Petromin page, `forms/petromin`, where
+Dukan's employees and Petromin's guests register too since 2026-11-13, talks to the database with plain POSTs).
 
 `script-src` keeps `'unsafe-inline'` on purpose: Next writes small inline scripts into every page,
 and a nonce - the usual way to allow them without it - must be new on every answer, while the

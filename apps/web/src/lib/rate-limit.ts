@@ -16,10 +16,12 @@ function limiter(): Limiter | undefined {
   try { return (getCloudflareContext().env as { API_LIMIT?: Limiter }).API_LIMIT; } catch { return undefined; }
 }
 
-/** False once this connection has made the minute's requests of this kind. */
-export async function withinLimit(req: Request, kind: "log-error" | "account-check" | "claim" | "pay", get: () => Limiter | undefined = limiter): Promise<boolean> {
+/** False once this connection has made the minute's requests of this kind. `who` counts one account on its own
+ *  (the Ask pages, "ask": a room answering from one Wi-Fi shares an address, and thirty requests a minute between
+ *  them would hold their answers back - each account gets the thirty, a connection with no account shares them). */
+export async function withinLimit(req: Request, kind: "log-error" | "account-check" | "claim" | "pay" | "ask", get: () => Limiter | undefined = limiter, who = ""): Promise<boolean> {
   const l = get();
   const ip = clientIp(req);
   if (!l || !ip) return true;
-  try { return (await l.limit({ key: `${kind}:${ipNet(ip)}` })).success; } catch { return true; } // an IPv6 visitor by its /64
+  try { return (await l.limit({ key: `${kind}:${ipNet(ip)}${who ? `:${who}` : ""}` })).success; } catch { return true; } // an IPv6 visitor by its /64
 }

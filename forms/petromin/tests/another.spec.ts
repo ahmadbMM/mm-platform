@@ -39,9 +39,10 @@ test('Register another starts a fresh form and keeps the first confirmation; bot
   await expect(page.locator('#chip-booking-value')).toHaveText('P-001');
 
   await page.click('#another');
+  await page.click('#companies .company[data-v="Petrolube"]');
+  await page.click('#next');
   await page.locator('#sessions .session').nth(1).click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petrolube"]');
   await page.fill('#badge', 'B-7'); await page.fill('#name', 'Basma Second'); await page.fill('#phone', '512345679');
   await page.click('#next');
   await page.fill('#height', '165'); await page.click('#types .tile[data-v="Mountain"]');
@@ -106,9 +107,10 @@ test('a waiver the database no longer takes, and a paid booking moved to another
   await page.route('**/rest/v1/rpc/rider_register', (r) => r.fulfill(refuse('WAIVER_OUTDATED')));
   await page.route('**/rest/v1/rpc/rider_edit', (r) => r.fulfill(refuse('PAID_MOVE')));
   await page.goto('/petromin?lang=ar');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
@@ -121,7 +123,7 @@ test('a waiver the database no longer takes, and a paid booking moved to another
   await page.evaluate((s) => localStorage.setItem('mm-petromin-registration', JSON.stringify(s)), SAVED);
   await page.goto('/petromin?lang=en');
   await page.click('#edit');
-  await page.click('#review .rv-change[data-go="1"]');
+  await page.click('#review .rv-change[data-go="2"]');
   await page.locator('#sessions .session').nth(1).click();
   await page.click('#next'); // back to the summary
   await page.check('#waiver');

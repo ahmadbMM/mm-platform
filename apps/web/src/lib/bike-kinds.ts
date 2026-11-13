@@ -5,17 +5,17 @@ import type { RideKind } from "./rides";
 // workshop, an event, Run for Her, Victory Lap and the DEFE 5KM Run have no bikes: what a rider reads about
 // them (the rating, the ticket, the claim card, the booking steps) never says ride, rider or bike, and their
 // nights never count towards Your rides or the ride badges. Arena Heros (2026-10-28), a race in teams of 2, has
-// none either, nor the Blood Donation event (2026-11-03). Plain logic, so it can be tested.
+// none either, nor the Blood Donation event (2026-11-03), nor yoga (2026-11-12). Plain logic, so it can be tested.
 
 /** The kinds ridden on a bike (the booking app's KIND_TRAITS). */
 export const BIKE_KINDS: ReadonlySet<RideKind> = new Set<RideKind>(["jcc", "saturday", "petromin", "snd96"]);
 /** The kinds without a bike (the same list as lib/rides.ts rideKind's, lib/event-info.ts rentsBikes). */
-export const NON_BIKE_KINDS: ReadonlySet<string> = new Set<RideKind>(["swim", "workshop", "event", "runher", "vlap", "defe5k", "arena", "blood"]);
+export const NON_BIKE_KINDS: ReadonlySet<string> = new Set<RideKind>(["swim", "workshop", "event", "runher", "vlap", "defe5k", "arena", "blood", "yoga"]);
 /** A session id the booking app gives a kind without a bike (its _sessIdSuffix: '-tw' the workshop, '-ev' an
  *  event, '-rh' Run for Her; '-vl' Victory Lap, '-df' the DEFE 5KM Run, '-ah' Arena Heros, '-bd' the Blood Donation
- *  event), which answers when the session itself did not load. The pool's sessions carry no suffix of their own:
+ *  event, '-yg' yoga), which answers when the session itself did not load. The pool's sessions carry no suffix of their own:
  *  only their kind tells. */
-const NON_BIKE_ID = /^\d{4}-\d\d-\d\d-(tw|ev|rh|vl|df|ah|bd)(-|$)/;
+const NON_BIKE_ID = /^\d{4}-\d\d-\d\d-(tw|ev|rh|vl|df|ah|bd|yg)(-|$)/;
 
 /** Whether a session still offers a bike type: no Road Carbon on a no-carbon ride, and no type staff closed on it (the
  *  booking app's bikeTypeOpts and _typeClosed; the owner, 2026-11-03). What is not offered is not priced. */

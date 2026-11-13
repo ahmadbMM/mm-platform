@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-11";
+export const PRIVACY_VERSION = "2026-11-13";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -113,6 +113,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "So our team knows the athletes in our community and can plan rides and events with them."
      ],
      [
+      "Your answers on micromobility.sa/ask: the ideas, votes, ratings and questions you send",
+      "Optional: only when you choose to answer. Kept with your account. Other people may see an answer, never who sent it; our staff can see who sent each one.",
+      "Planning rides and events around what our community asks for, and keeping what is shown suitable for everyone"
+     ],
+     [
       "A blood donation event’s registration: your name, mobile number, birth date and nationality, whether you come as a donor or a visitor, which club or community you are from, your email address and blood type if you come as a donor, your gender if you come as a visitor, and whether you donated",
       "Asked only when you register for a blood donation event. Seen by you, our staff and that event’s partners and third parties once you agree to share them. We never ask for or keep your ID or Iqama number.",
       "Registering you for the event, and giving confirmed donors and checked-in visitors any reward the event offers"
@@ -138,9 +143,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Entering you and your team in the race, and making up teams"
      ],
      [
-      "Referrals: who referred you (if you make your account with a friend’s link or code), your own referral code, the rewards referrals earn you, and a scrambled code for the browser a friend’s code was used in",
+      "Referrals: who referred you (if you make your account with a friend’s link or code), your own referral code, any reward a referral earned you before 10 November 2026 (none are given since; one already given stays valid until it expires), and a scrambled code for the browser a friend’s code was used in",
       "Only if you use a friend’s link or code, or share your own. Our staff see who referred whom; a friend who referred you sees only how many friends joined and rode, never your name. The browser code cannot be turned back into anything about you.",
-      "Giving the reward a referral earns, and stopping misuse (one phone making many accounts)"
+      "Honouring a reward a referral earned before 10 November 2026 until it expires, and stopping misuse (one phone making many accounts)"
      ],
      [
       "Badge requests: the badge you ask for, your comment and the proof you attach (a picture or a PDF), and our team’s answer",
@@ -479,6 +484,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "ليعرف فريقنا الرياضيين في مجتمعنا ويخطط معهم للجولات والفعاليات."
      ],
      [
+      "إجاباتك في micromobility.sa/ask: الأفكار والتصويتات والتقييمات والأسئلة التي ترسلها",
+      "اختياري: فقط عندما تختار أن تجيب. تُحفظ مع حسابك. قد يرى الآخرون الإجابة، لكنهم لا يرون من أرسلها أبداً؛ أما موظفونا فيرون من أرسل كل إجابة.",
+      "لتخطيط الجولات والفعاليات وفق ما يطلبه مجتمعنا، ولإبقاء ما يُعرض مناسباً للجميع"
+     ],
+     [
       "التسجيل في فعالية للتبرع بالدم: اسمك ورقم جوالك وتاريخ ميلادك وجنسيتك، وما إذا كنت ستحضر كمتبرع أم كزائر، والنادي أو المجتمع الذي تنتمي إليه، وبريدك الإلكتروني وفصيلة دمك إن حضرت كمتبرع، وجنسك إن حضرت كزائر، وما إذا كنت قد تبرعت",
       "تُطلب فقط عند التسجيل في فعالية للتبرع بالدم. يطّلع عليها أنت وموظفونا والشركاء والأطراف الثالثة لتلك الفعالية بعد موافقتك على مشاركتها. لا نطلب رقم هويتك أو إقامتك ولا نحتفظ به.",
       "تسجيلك في الفعالية، ومنح المتبرعين المؤكَّدين والزوار الذين سجّلوا حضورهم أي مكافأة تقدمها الفعالية"
@@ -504,9 +514,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "تسجيلك أنت وفريقك في السباق، وتكوين الفرق"
      ],
      [
-      "الإحالات: من أحالك (إذا أنشأت حسابك عبر رابط صديق أو رمزه)، ورمز الإحالة الخاص بك، والمكافآت التي تكسبها الإحالات، ورمز مشفّر للمتصفح الذي استُخدم فيه رمز الصديق",
+      "الإحالات: من أحالك (إذا أنشأت حسابك عبر رابط صديق أو رمزه)، ورمز الإحالة الخاص بك، وأي مكافأة كسبتها لك إحالة قبل 10 نوفمبر 2026 (لا نمنح مكافآت جديدة منذ ذلك اليوم، وتبقى المكافأة الممنوحة صالحة حتى انتهاء مدتها)، ورمز مشفّر للمتصفح الذي استُخدم فيه رمز الصديق",
       "فقط إذا استخدمت رابط صديق أو رمزه، أو شاركت رمزك. يرى موظفونا من أحال من؛ ولا يرى الصديق الذي أحالك إلا عدد الأصدقاء الذين انضموا وركبوا، ولا يرى اسمك أبدًا. ولا يمكن تحويل رمز المتصفح إلى أي معلومة عنك.",
-      "منح المكافأة التي تكسبها الإحالة، ومنع إساءة الاستخدام (هاتف واحد ينشئ حسابات كثيرة)"
+      "الوفاء بمكافأة كسبتها إحالة قبل 10 نوفمبر 2026 حتى انتهاء مدتها، ومنع إساءة الاستخدام (هاتف واحد ينشئ حسابات كثيرة)"
      ],
      [
       "طلبات الأوسمة: الوسام الذي تطلبه، وتعليقك، والإثبات الذي ترفقه (صورة أو ملف PDF)، وردّ فريقنا",

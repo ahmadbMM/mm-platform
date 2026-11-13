@@ -2294,8 +2294,192 @@ var qrcode = function() {
 
 
 ;
+/* The account step the account forms share (the owner, 2026-10-25: "one shared sign-in and account step", so a
+   fix lands on every form at once). forms/community, forms/saturday and forms/lockers inline this file (their builds read it), and
+   the website's Learn to ride form imports apps/web/src/lib/account-shared.ts, which those builds write from it
+   (CI rebuilds the forms and refuses a stale copy). There is no page here: each form draws its own boxes in its
+   own words; this file decides what a sign-in, a hand-over and a signed-in account's questions come to.
+
+     ident(raw)               what customer_login takes for what was typed: an email in lower case, or a mobile
+                              in E.164 (+966 when it has no code; a Saudi 05X / 5X / 9665X / 96605X number as +9665X)
+     signIn(rpc, raw, pwd)    customer_login, then customer_pwd_state: {row} or {error, cc}
+                                error: id (nothing typed), pwd (no password), locked (too many tries),
+                                busy (the network's limit), network, wrong (cc: a number typed without its
+                                country code that is not a Saudi mobile), temp (a temporary password, changed
+                                on the booking site first)
+     takeCode()               the booking site's hand-over code (?code=), taken out of the address at once
+     redeem(rpc, code)        customer_handoff_redeem: {row} or {error: expired | network}
+     plan(me, keys)           a signed-in account's questions (the owner, 2026-10-25: "don't ask for the fields
+                              he already has filled, only if flagged"): skip what the account holds unless
+                              staff flagged it (me.flags = customers.fix_fields); {skip, ask, flagged}
+     same(k, answer, held)    whether the answer to a flagged question is what the account already holds (the
+                              owner, 2026-11-09: "don't allow a flagged account field to type in the same info in
+                              the field again"): the form refuses it on that question
+     draft(key, days)        a half-filled form kept on this device for a few days: {load, save, clear}
+
+   rpc(fn, body) is the form's own: it answers {data} or {error: {message, code}} and never throws. */
+var MMAccount = (function () {
+  "use strict";
+  // Arabic-Indic, Persian, Devanagari and Bengali digits as 0-9.
+  var DIGITS = /[٠-٩۰-۹०-९০-৯]/g;
+  function ascii(s) {
+    return String(s == null ? "" : s).replace(DIGITS, function (c) {
+      var n = c.charCodeAt(0), base = n >= 0x09E6 ? 0x09E6 : n >= 0x0966 ? 0x0966 : n >= 0x06F0 ? 0x06F0 : 0x0660;
+      return String(n - base);
+    });
+  }
+  // Direction marks and invisible spaces a paste from a right-to-left contact card carries.
+  function bare(s) { return String(s == null ? "" : s).replace(/[​-‏‪-‮⁦-⁩﻿ ]/g, "").trim(); }
+
+  function ident(raw) {
+    var v = bare(raw), low = v.toLowerCase();
+    if (!v) return "";
+    if (low.indexOf("@") >= 0) return low.replace(/\s+/g, "");
+    var s = ascii(v).replace(/[\s()\-.]/g, "");
+    if (s[0] === "+") { var x = s.slice(1).replace(/\D/g, ""); if (x.indexOf("9660") === 0) x = "966" + x.slice(4); return x ? "+" + x : ""; }
+    s = s.replace(/\D/g, "");
+    if (!s) return low;
+    if (s.slice(0, 2) === "00") { var y = s.slice(2); if (y.indexOf("9660") === 0) y = "966" + y.slice(4); return "+" + y; }
+    if (/^9665\d{8}$/.test(s)) return "+" + s;
+    if (/^9660\d{9}$/.test(s)) return "+966" + s.slice(4); // "966 05X..." with no plus: the trunk 0 goes, as after + or 00
+    if (s[0] === "0") return "+966" + s.slice(1);
+    if (s.length >= 11) return "+" + s; // a number pasted with its code and no plus
+    return "+966" + s;
+  }
+
+  function errText(e) { return String((e && (e.code || "")) + " " + (e && e.message || "") + " " + (e && e.details || "") + " " + (e && e.hint || "")); }
+
+  async function signIn(rpc, raw, pwd) {
+    var id = ident(raw);
+    if (!id) return { error: "id" };
+    if (!pwd) return { error: "pwd" };
+    var r = await rpc("customer_login", { p_identifier: id, p_pwd: pwd });
+    if (r.error) {
+      var m = errText(r.error);
+      if (/LOCKED/.test(m)) return { error: "locked" };
+      if (/RATE_LIMITED/.test(m)) return { error: "busy" };
+      if (r.error.message === "network" || /^HTTP 5|PGRST/.test(r.error.message || "")) return { error: "network" };
+      return { error: "wrong" };
+    }
+    var row = Array.isArray(r.data) ? r.data[0] : null;
+    if (!row || !row.id || !row.session_token) {
+      // Whether a code was typed, read as ident() reads the number: "٠٠٢٠..." or "(+20) ..." has one.
+      var typed = ascii(bare(raw)).replace(/[\s()\-.]/g, "");
+      return { error: "wrong", cc: id.indexOf("@") < 0 && !/^(\+|00)/.test(typed) && !/^\+9665\d{8}$/.test(id) };
+    }
+    // A password staff issued (a temporary one) is replaced before the account is used, as the booking site asks.
+    var ps = await rpc("customer_pwd_state", { p_id: row.id, p_token: row.session_token });
+    if (ps.data === true) return { error: "temp" };
+    return { row: row };
+  }
+
+  function takeCode() {
+    var q = new URLSearchParams(location.search), code = q.get("code");
+    if (code == null) return null;
+    q.delete("code");
+    try { history.replaceState(null, "", location.pathname + (q.toString() ? "?" + q.toString() : "") + location.hash); } catch (e) {}
+    return code;
+  }
+
+  async function redeem(rpc, code) {
+    if (!/^[0-9a-f]{48}$/.test(String(code || ""))) return { error: "expired" };
+    var r = await rpc("customer_handoff_redeem", { p_code: code });
+    var row = Array.isArray(r.data) ? r.data[0] : null;
+    if (!row || !row.id || !row.session_token) return { error: r.error && r.error.message === "network" ? "network" : "expired" };
+    return { row: row };
+  }
+
+  // What the account already answers, question by question (customer_community_me's names).
+  var HAS = {
+    whatsapp: function (me) { return me.whatsapp_same === true || (me.whatsapp_same === false && !!bare(me.whatsapp)); },
+    birth_date: function (me) { return /^\d{4}-\d{2}-\d{2}$/.test(String(me.birth_date || "")); },
+    nationality: function (me) { return !!bare(me.nationality); },
+    instagram: function (me) { return !!bare(me.instagram); },
+    linkedin: function (me) { return !!bare(me.linkedin); },
+    profession: function (me) { return !!bare(me.profession); },
+    workplace: function (me) { return !!bare(me.workplace); },
+    own_bike: function (me) { return typeof me.own_bike === "boolean"; },
+    bike_type: function (me) { return !!bare(me.bike_type); },
+    heard_from: function (me) { return !!bare(me.heard_from); },
+    height: function (me) { return typeof me.height === "number" && me.height >= 100 && me.height <= 250; },
+    gender: function (me) { return me.gender === "male" || me.gender === "female"; }
+  };
+  // A question under another name than staff flag it by: the bike (and whether it is their own) is the account's
+  // type_preference in customers.fix_fields (the booking app's FIX_FIELDS).
+  var FLAG_AS = { bike_type: "type_preference", own_bike: "type_preference" };
+  function plan(me, keys) {
+    var flags = me && Array.isArray(me.flags) ? me.flags.map(String) : [], out = { skip: [], ask: [], flagged: [] };
+    (keys || Object.keys(HAS)).forEach(function (k) {
+      var has = !!me && !!HAS[k] && HAS[k](me), fl = flags.indexOf(k) >= 0 || (!!FLAG_AS[k] && flags.indexOf(FLAG_AS[k]) >= 0);
+      if (fl) out.flagged.push(k);
+      (has && !fl ? out.skip : out.ask).push(k);
+    });
+    return out;
+  }
+
+  // A flagged question answered with what the account already holds is no answer (the owner, 2026-11-09). The booking
+  // app's rule (_fixSame), which customer_fix_save keeps too (20261109200000): a name, profession or company with its
+  // spaces tidied, in the same case; an email in any case; a mobile, WhatsApp or emergency number by its last nine
+  // digits; a handle in any case and without its @; the rest exactly. An empty answer ("I don't have one", nothing
+  // typed) is never the same, and a password is never compared.
+  //   k       the account's field, as customers.fix_fields names it
+  //   a       the answer: a string (a number for the height); {same, phone} for whatsapp; {country, city} for
+  //           residence; {name, phone, relation} for emergency and emergency2
+  //   held    what the account holds, in customer_community_me's names: name, email, phone (the mobile),
+  //           whatsapp_same, whatsapp, birth_date, gender, nationality, country, city, height, photo,
+  //           type_preference, heard_from, profession, workplace, instagram, x, tiktok, linkedin, and emergency and
+  //           emergency2 as {name, phone, relation}
+  var SAME_EXACT = ["birth_date", "gender", "nationality", "photo", "type_preference", "heard_from"];
+  var SAME_HANDLE = ["instagram", "x", "tiktok", "linkedin"];
+  function same(k, a, held) {
+    var h = held || {};
+    var sp = function (x) { return String(x == null ? "" : x).replace(/\s+/g, " ").trim(); };
+    var lo = function (x) { return sp(x).toLowerCase(); };
+    var n9 = function (x) { return ascii(x).replace(/\D/g, "").slice(-9); };
+    var at = function (x) { return lo(x).replace(/^@/, ""); };
+    if (k === "name" || k === "profession" || k === "workplace") return !!sp(a) && sp(a) === sp(h[k]);
+    if (k === "email") return !!sp(a) && lo(a) === lo(h.email);
+    if (k === "phone") return !!n9(a) && n9(a) === n9(h.phone);
+    if (k === "whatsapp") {
+      if (!a || (a.same !== true && a.same !== false)) return false;
+      // a "No" with the mobile's own number is "the same as my mobile" (customer_set_whatsapp, customer_fix_save)
+      var asSame = a.same === true || (!!n9(a.phone) && n9(a.phone) === n9(h.phone));
+      return asSame ? h.whatsapp_same === true : h.whatsapp_same === false && !!n9(h.whatsapp) && n9(a.phone) === n9(h.whatsapp);
+    }
+    if (k === "residence") return !!a && !!sp(a.country) && sp(a.country) === sp(h.country) && sp(a.city) === sp(h.city);
+    if (k === "height") return Number(a) > 0 && Number(a) === Number(h.height);
+    if (SAME_HANDLE.indexOf(k) >= 0) return !!at(a) && at(a) === at(h[k]);
+    if (k === "emergency" || k === "emergency2") {
+      var o = h[k];
+      return !!a && !!o && typeof o === "object" && !!sp(a.name) && sp(a.name) === sp(o.name) &&
+        !!n9(o.phone) && n9(a.phone) === n9(o.phone) && lo(a.relation) === lo(o.relation);
+    }
+    if (SAME_EXACT.indexOf(k) >= 0) return !!a && a === (h[k] || "");
+    return false; // the password: there is nothing to compare it with
+  }
+
+  // A form's answers kept on this device so a closed tab or a reload does not lose them. Never a password or a
+  // session (the form leaves those out); gone after `days`, and the moment the form is sent or started over.
+  function draft(key, days) {
+    var ttl = (days || 3) * 86400000;
+    function load() {
+      try {
+        var v = JSON.parse(localStorage.getItem(key) || "null");
+        if (!v || typeof v !== "object" || !(v.at > 0) || Date.now() - v.at > ttl || !v.data || typeof v.data !== "object") { clear(); return null; }
+        return v.data;
+      } catch (e) { return null; }
+    }
+    function save(data) { try { localStorage.setItem(key, JSON.stringify({ at: Date.now(), data: data })); } catch (e) {} }
+    function clear() { try { localStorage.removeItem(key); } catch (e) {} }
+    return { load: load, save: save, clear: clear };
+  }
+
+  return { ident: ident, signIn: signIn, takeCode: takeCode, redeem: redeem, plan: plan, has: function (me, k) { return !!me && !!HAS[k] && HAS[k](me); }, same: same, draft: draft };
+})();
+
+; window.MMAccount = MMAccount;
 (function () {
-  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.d09bdbe76e.json","hi":"/forms/petromin/t/hi.b42e641c84.json","tl":"/forms/petromin/t/tl.f067b818af.json","es":"/forms/petromin/t/es.62f9cb3c9e.json","ne":"/forms/petromin/t/ne.7b8210bfa7.json","fr":"/forms/petromin/t/fr.e7c2a122a4.json","pt":"/forms/petromin/t/pt.daf0ffaeb4.json","bn":"/forms/petromin/t/bn.7039114bdb.json","ur":"/forms/petromin/t/ur.4565c41156.json","id":"/forms/petromin/t/id.c0665d0e23.json","ms":"/forms/petromin/t/ms.802f385320.json","de":"/forms/petromin/t/de.71e4be97d8.json","ru":"/forms/petromin/t/ru.ab5eeaedca.json","zh":"/forms/petromin/t/zh.8d9d020d7b.json","ja":"/forms/petromin/t/ja.997621a807.json"};
+  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.9046c8d944.json","hi":"/forms/petromin/t/hi.11907e165f.json","tl":"/forms/petromin/t/tl.4adb6c9700.json","es":"/forms/petromin/t/es.97b1e7c0d4.json","ne":"/forms/petromin/t/ne.9b37589e61.json","fr":"/forms/petromin/t/fr.c097a75e2d.json","pt":"/forms/petromin/t/pt.22c83dc7b4.json","bn":"/forms/petromin/t/bn.9f608092da.json","ur":"/forms/petromin/t/ur.cadc2ae7a9.json","id":"/forms/petromin/t/id.03af9092e3.json","ms":"/forms/petromin/t/ms.ebfa74e2c5.json","de":"/forms/petromin/t/de.4458a4c445.json","ru":"/forms/petromin/t/ru.d89b294887.json","zh":"/forms/petromin/t/zh.96f479098f.json","ja":"/forms/petromin/t/ja.7aabe59218.json"};
   site.tBase = files;
   function start(dict) {
     var T_SITE = {}; if (dict) T_SITE[site.lang] = dict;
@@ -2364,7 +2548,7 @@ var qrcode = function() {
   })();
   applyLang(initialLang());
 
-  /* Choices drawn as buttons with role=radio (night, company, bike type): one stop in the tab order per group, the
+  /* Choices drawn as buttons with role=radio (company, night, bike type): one stop in the tab order per group, the
      arrow keys move the choice (the visual direction in Arabic and Urdu), Home and End go to the ends - the radio
      group a screen reader expects. */
   function radios(group) { return Array.prototype.slice.call(group.querySelectorAll('[role="radio"]:not([disabled])')); }
@@ -2386,6 +2570,68 @@ var qrcode = function() {
     });
   }
 
+  /* One page, four kinds of rider (the owner, 2026-11-13): the first step is the company, and the rest follows from it.
+       emp     Petromin and Petrolube employees: the night, their details (badge, name, mobile), height and bike with
+               companions, then Check and agree.
+       dukan   Dukan's employees, in Dukan's look from the pick on: the night, name and mobile, height and bike, Check
+               and agree. One rider, no badge, and the page names no other company while it shows.
+       guest   the people Petromin invites: a MicroMobility account first (signed into or made here), then the night,
+               the bike, Check and agree.
+     Each step's boxes are a pane (data-pane); the picked company orders them, and the script numbers them (data-step)
+     so a step is always "the n-th on screen". */
+  var ORDER = { emp: ["company", "session", "details", "bike", "check"], dukan: ["company", "session", "details", "bike", "check"], guest: ["company", "account", "session", "bike", "check"] };
+  var PANE_LABEL = { company: "Company", account: "Your account", session: "Session", details: "Your details", bike: "Bike", check: "Check and agree" };
+  var FORM_TITLE = { emp: "Petromin bike night", dukan: "Dukan bike night", guest: "Petromin Ride Night: Invited Guests" };
+  var companies = $("#companies"), selectedCompany = null, KIND = null;
+  function kindOf(co) { return co === "Dukan" ? "dukan" : co === "Guest" ? "guest" : co ? "emp" : null; }
+  function panes() { return ORDER[KIND || "emp"]; }
+  function paneAt(n) { return panes()[n - 1]; }
+  function stepOf(pane) { return panes().indexOf(pane) + 1; }
+  function formTitle() { return FORM_TITLE[KIND || "emp"]; }
+  var kindHooks = [];
+  // The form's heading: the company's own once its steps show, or what is being done to a booking ("Edit your booking").
+  var titleKey = null;
+  // The steps as the picked company orders them, and the boxes only some riders are asked.
+  function layout() {
+    var order = panes();
+    document.querySelectorAll(".step").forEach(function (f) { f.setAttribute("data-step", String(order.indexOf(f.getAttribute("data-pane")) + 1)); });
+    document.querySelectorAll(".stepper-item").forEach(function (li) {
+      var lab = li.querySelector(".stepper-label"); lab.setAttribute("data-t", PANE_LABEL[order[Number(li.getAttribute("data-step")) - 1]]); render(lab);
+    });
+    var emp = !KIND || KIND === "emp", guest = KIND === "guest";
+    $("#f-badge").hidden = !emp;            // Dukan's employees have no badge
+    $("#f-height").hidden = guest;          // a guest's height is their account's
+    $("#f-riders").hidden = !emp;           // companions ride on a Petromin or Petrolube booking only
+    var bt = $("#bike-title"); bt.setAttribute("data-t", guest ? "Bike type" : "Height and bike"); render(bt);
+    $("#type-label").hidden = guest;        // the step's own title says it
+    var wl = $("#waiver-label"); wl.setAttribute("data-t", emp ? "I have read the waiver and agree to it on behalf of every rider on this registration" : "I have read the waiver and agree to it"); render(wl);
+    $("#fd-no").placeholder = KIND === "dukan" ? "D-001" : guest ? "I-001" : "P-001";
+  }
+  function setCompany(co) {
+    selectedCompany = co || null; KIND = kindOf(selectedCompany);
+    companies.querySelectorAll(".company").forEach(function (x) { x.setAttribute("aria-checked", String(x.getAttribute("data-v") === selectedCompany)); });
+    syncRoving(companies);
+    layout();
+    kindHooks.forEach(function (f) { try { f(); } catch (e) {} });
+  }
+  companies.addEventListener("click", function (e) {
+    var b = e.target.closest(".company"); if (!b) return;
+    setCompany(b.getAttribute("data-v"));
+    setError("f-company", false);
+  });
+  radioKeys(companies); syncRoving(companies);
+  layout();
+  // The look the card wears: the picked company's once its own steps show (or its ticket), Petromin's page before.
+  // Dukan's is named on the page itself (data-co), so its colours and face reach the dialogs too.
+  function paintLook() {
+    var own = KIND && (step > 1 || $("#card").getAttribute("data-state") === "success") ? KIND : "emp";
+    var look = own === "dukan" ? "dukan" : own === "guest" ? "guest" : "pm";
+    if (look === "dukan") html.setAttribute("data-co", "dukan"); else html.removeAttribute("data-co");
+    document.querySelectorAll(".partners").forEach(function (p) { p.hidden = p.getAttribute("data-look") !== look; });
+    if (!SITE_FORM) document.title = (look === "dukan" ? "Dukan bike night" : "Petromin bike night") + " | MicroMobility";
+    var h = $("#form .title"); h.setAttribute("data-t", titleKey || FORM_TITLE[own]); render(h);
+  }
+
   /* Sessions (fed from the MicroMobility Rentals calendar). Every time is Jeddah's, whatever zone the phone is in. */
   var sessions = [], selectedSession = null;
   var sessionsEl = $("#sessions");
@@ -2404,8 +2650,11 @@ var qrcode = function() {
     var hm = s.collect.split(":");
     return String(s.start).slice(0, 10) + "T" + ("0" + hm[0]).slice(-2) + ":" + hm[1] + ":00+03:00";
   }
-  // Where: the night's own place, else the circuit every Petromin night is ridden at.
+  // Where: the night's own place, else the circuit every one of these nights is ridden at.
   function placeOf(s) { return (s && s.place) || t("Jeddah Corniche Circuit"); }
+  // The night's name in the calendar is Petromin's own for it: shown to Petromin's and Petrolube's employees, and to
+  // nobody else (Dukan's and the guests' nights are named by their day and time alone).
+  function nightTitle(s) { return (!KIND || KIND === "emp") && s && s.title ? s.title : ""; }
   function factsLine(s) {
     var c = collectIso(s), parts = [];
     if (c) parts.push(t("Bikes from {t}", { t: fmtTime(c) }));
@@ -2423,7 +2672,7 @@ var qrcode = function() {
       b.setAttribute("data-id", s.id); b.setAttribute("aria-checked", String(selectedSession === s.id));
       // No cap here: the session's capacity limits website bookings only. A partner
       // registration is never disabled or marked full, however many have signed up.
-      var date = document.createElement("span"); date.className = "session-date"; date.textContent = fmtDate(s.start) + (s.title ? " · " + s.title : "");
+      var date = document.createElement("span"); date.className = "session-date"; date.textContent = fmtDate(s.start) + (nightTitle(s) ? " · " + nightTitle(s) : "");
       var time = document.createElement("span"); time.className = "session-time"; time.textContent = fmtTime(s.start) + (s.end ? " – " + fmtTime(s.end) : "");
       var facts = document.createElement("span"); facts.className = "session-facts"; facts.textContent = factsLine(s);
       b.appendChild(date); b.appendChild(time); b.appendChild(facts);
@@ -2440,9 +2689,11 @@ var qrcode = function() {
     setError("f-session", false);
   });
   radioKeys(sessionsEl);
+  kindHooks.push(function () { renderSessions(); });
 
-  /* Steps: the night, the rider, the bikes, then everything on one page to check before agreeing. */
-  var STEPS = 4, step = 1, returnTo = 0, booted = false;
+  /* Steps: the company, then the picked company's own (above), the last one everything on one page to check before
+     agreeing. */
+  var STEPS = 5, step = 1, returnTo = 0, booted = false;
   var stepHooks = [];
   function goStep(n) {
     var was = step;
@@ -2457,6 +2708,7 @@ var qrcode = function() {
     $("#back").hidden = step === 1;
     $("#next").hidden = step === STEPS;
     $("#submit").hidden = step !== STEPS;
+    paintLook();
     hideBanner();
     stepHooks.forEach(function (f) { try { f(step, was); } catch (e) {} });
     if (!booted) return;
@@ -2477,8 +2729,9 @@ var qrcode = function() {
     if (returnTo) { var r = returnTo; returnTo = 0; goStep(r); return; }
     goStep(step + 1);
   }
-  $("#back").addEventListener("click", function () { returnTo = 0; goStep(step - 1); });
-  $("#next").addEventListener("click", next);
+  function back() { returnTo = 0; goStep(step - 1); }
+  $("#back").addEventListener("click", function () { back(); });
+  $("#next").addEventListener("click", function () { next(); });
 
   /* Phone: country code + national number, stored as E.164 in #phone-e164 */
   var COUNTRIES = [
@@ -2596,17 +2849,6 @@ var qrcode = function() {
   cc.addEventListener("change", function () { syncPhone(); setError("f-phone", false); });
   syncPhone();
 
-  /* Company */
-  var companies = $("#companies"), selectedCompany = null;
-  companies.addEventListener("click", function (e) {
-    var b = e.target.closest(".company"); if (!b) return;
-    selectedCompany = b.getAttribute("data-v");
-    companies.querySelectorAll(".company").forEach(function (x) { x.setAttribute("aria-checked", String(x === b)); });
-    syncRoving(companies);
-    setError("f-company", false);
-  });
-  radioKeys(companies); syncRoving(companies);
-
   /* Tiles */
   var types = $("#types"), selectedType = null;
   types.addEventListener("click", function (e) {
@@ -2621,13 +2863,17 @@ var qrcode = function() {
   /* Errors and banner */
   // A message passed in (the server's "This badge is already registered...") is for this time only:
   // the next error without one shows the box's own message again (kept in data-t0).
-  function setError(fieldId, on, msg) {
+  function setError(fieldId, on, msg, args) {
     var f = document.getElementById(fieldId);
     f.classList.toggle("invalid", !!on);
     var err = f.querySelector(".err"); if (!err) return;
     if (!err.hasAttribute("data-t0")) err.setAttribute("data-t0", err.getAttribute("data-t"));
-    if (msg || on) { err.setAttribute("data-t", msg || err.getAttribute("data-t0")); render(err); }
-    describeError(f.querySelector("input:not([type=hidden]), [role=radiogroup]"), err, on);
+    if (msg || on) {
+      err.setAttribute("data-t", msg || err.getAttribute("data-t0"));
+      if (msg && args) err.setAttribute("data-args", JSON.stringify(args)); else if (fieldId !== "f-phone") err.removeAttribute("data-args");
+      render(err);
+    }
+    describeError(f.querySelector("input:not([type=hidden])") || f.querySelector("select, [role=radiogroup]"), err, on);
   }
   // A screen reader hears the message with the box it is about: aria-invalid on the box, and the
   // message as its description while it shows (the message itself is a polite live region).
@@ -2666,22 +2912,24 @@ var qrcode = function() {
   });
   $("#height").addEventListener("blur", function () { if (this.value.trim()) setError("f-height", !CHECK.height()); });
 
-  function validateStep(n) {
+  // A step is judged by the pane it shows: only the boxes the picked company is asked.
+  function validatePane(p) {
     var ok = true;
-    if (n === 1) { if (!selectedSession) { setError("f-session", true); ok = false; } }
-    if (n === 2) {
-      if (!selectedCompany) { setError("f-company", true); ok = false; }
-      if (!CHECK.badge()) { setError("f-badge", true); ok = false; }
+    if (p === "company") { if (!selectedCompany) { setError("f-company", true); ok = false; } }
+    if (p === "session") { if (!selectedSession) { setError("f-session", true); ok = false; } }
+    if (p === "details") {
+      if (KIND === "emp" && !CHECK.badge()) { setError("f-badge", true); ok = false; }
       if (!CHECK.name()) { setError("f-name", true); ok = false; }
       syncPhone();
       if (!phoneValid()) { setError("f-phone", true); ok = false; }
     }
-    if (n === 3) {
-      if (!CHECK.height()) { setError("f-height", true); ok = false; }
+    if (p === "bike") {
+      if (KIND !== "guest" && !CHECK.height()) { setError("f-height", true); ok = false; }
       if (!selectedType) { setError("f-type", true); ok = false; }
     }
     return ok;
   }
+  function validateStep(n) { return validatePane(paneAt(n)); }
   function validate() { for (var i = 1; i < STEPS; i++) { if (!validateStep(i)) { goStep(i); return false; } } return validateStep(STEPS); }
   function focusInvalid() { var first = $(".field.invalid input, .field.invalid [role=radio]"); first && first.focus(); }
 
@@ -2691,30 +2939,38 @@ var qrcode = function() {
   /* Sequential booking numbers: p-001, p-002 ... The server should issue the real one; this demo counter lives on the device. */
   function bookingNumber() {
     var n = 1; try { n = (parseInt(localStorage.getItem("mm-petromin-seq") || "0", 10) || 0) + 1; localStorage.setItem("mm-petromin-seq", String(n)); } catch (e) {}
-    return "p-" + String(n).padStart(3, "0");
+    return (KIND === "dukan" ? "d-" : KIND === "guest" ? "i-" : "p-") + String(n).padStart(3, "0");
   }
   function sessionLabel(s) { return s ? fmtDate(s.start) + ", " + fmtTime(s.start) : ""; }
   function collect() {
     var s = sessions.filter(function (x) { return x.id === selectedSession; })[0];
-    return { badge: asciiDigits($("#badge").value).trim(), name: $("#name").value.trim(), company: selectedCompany, phone: phoneE164(), height: heightOf($("#height").value) || null, type: selectedType, session: s || null };
+    return { kind: KIND, badge: KIND === "emp" ? asciiDigits($("#badge").value).trim() : "", name: $("#name").value.trim(), company: selectedCompany, phone: phoneE164(),
+      height: KIND === "guest" ? null : heightOf($("#height").value) || null, type: selectedType, session: s || null };
   }
+  // A saved confirmation's kind: its own, or read from what it carries (one saved before the kinds, or by an old page).
+  function kindOfRecord(d) { return !d ? null : d.kind || (d.company === "Dukan" ? "dukan" : /^I-/i.test(String(d.bookingNo || "")) ? "guest" : "emp"); }
   /* Renders the confirmation and saves it on this device so a refresh keeps it. */
   function showSuccess(data) {
     data = data || collect();
     if (!data.bookingNo) data.bookingNo = bookingNumber();
     if (!data.submittedAt) data.submittedAt = new Date().toISOString();
+    data.kind = kindOfRecord(data);
+    // The ticket's own company is the page's from here on: its look, and what Edit and Register another start from.
+    setCompany(data.kind === "dukan" ? "Dukan" : data.kind === "guest" ? "Guest" : data.company || "Petromin");
     $("#chip-booking-value").textContent = data.bookingNo;
     var r = $("#result");
     r.setAttribute("data-t", "Your registration for {d} is confirmed.");
     r.setAttribute("data-args", JSON.stringify({ d: sessionLabel(data.session) }));
     render(r);
+    $("#chip").hidden = data.kind !== "emp";
     $("#chip-value").textContent = data.badge || "";
-    $("#chip-company").hidden = !data.company;
+    $("#chip-company").hidden = data.kind === "dukan" || !data.company;
     if (data.company) $("#chip-company-value").textContent = data.company;
     $("#chip-session").hidden = !data.session;
     if (data.session) $("#chip-session-value").textContent = sessionLabel(data.session);
     $("#card").setAttribute("data-state", "success");
     $("#success").hidden = false;
+    paintLook();
     var title = $("#success .title"); title.setAttribute("tabindex", "-1");
     if (booted) { try { title.focus({ preventScroll: true }); } catch (e) {} scrollToCard(); }
     try { localStorage.setItem(STORE, JSON.stringify(data)); } catch (e) {}
@@ -2730,18 +2986,18 @@ var qrcode = function() {
     showSuccess(saved); return true;
   }
   function reset() {
-    $("#form").reset(); cc.value = "966"; syncPhone(); selectedType = null; selectedSession = null; selectedCompany = null; renderSessions();
+    $("#form").reset(); cc.value = "966"; syncPhone(); selectedType = null; selectedSession = null; setCompany(null);
     types.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", "false"); });
-    companies.querySelectorAll(".company").forEach(function (b) { b.setAttribute("aria-checked", "false"); });
-    syncRoving(types); syncRoving(companies);
+    syncRoving(types);
     ["f-session", "f-company", "f-badge", "f-name", "f-phone", "f-height", "f-type"].forEach(function (id) { setError(id, false); });
-    returnTo = 0; goStep(1);
-    hideBanner(); setLoading(false);
     $("#success").hidden = true;
     $("#card").setAttribute("data-state", "form");
+    returnTo = 0; goStep(1);
+    hideBanner(); setLoading(false);
     current = null; try { localStorage.removeItem(STORE); } catch (e) {}
   }
 
+  var ACCT = {"COUNTRY_CODES":[["+966","SA","Saudi Arabia"],["+971","AE","UAE"],["+974","QA","Qatar"],["+965","KW","Kuwait"],["+973","BH","Bahrain"],["+968","OM","Oman"],["+1","US","USA & Canada"],["+7","KZ","Kazakhstan"],["+7","RU","Russia"],["+20","EG","Egypt"],["+27","ZA","South Africa"],["+30","GR","Greece"],["+31","NL","Netherlands"],["+32","BE","Belgium"],["+33","FR","France"],["+34","ES","Spain"],["+36","HU","Hungary"],["+39","IT","Italy"],["+40","RO","Romania"],["+41","CH","Switzerland"],["+43","AT","Austria"],["+44","GB","United Kingdom"],["+45","DK","Denmark"],["+46","SE","Sweden"],["+47","NO","Norway"],["+48","PL","Poland"],["+49","DE","Germany"],["+51","PE","Peru"],["+52","MX","Mexico"],["+53","CU","Cuba"],["+54","AR","Argentina"],["+55","BR","Brazil"],["+56","CL","Chile"],["+57","CO","Colombia"],["+58","VE","Venezuela"],["+60","MY","Malaysia"],["+61","AU","Australia"],["+62","ID","Indonesia"],["+63","PH","Philippines"],["+64","NZ","New Zealand"],["+65","SG","Singapore"],["+66","TH","Thailand"],["+81","JP","Japan"],["+82","KR","South Korea"],["+84","VN","Vietnam"],["+86","CN","China"],["+90","TR","Turkey"],["+91","IN","India"],["+92","PK","Pakistan"],["+93","AF","Afghanistan"],["+94","LK","Sri Lanka"],["+95","MM","Myanmar"],["+98","IR","Iran"],["+211","SS","South Sudan"],["+212","MA","Morocco"],["+213","DZ","Algeria"],["+216","TN","Tunisia"],["+218","LY","Libya"],["+220","GM","Gambia"],["+221","SN","Senegal"],["+222","MR","Mauritania"],["+223","ML","Mali"],["+224","GN","Guinea"],["+225","CI","Côte d'Ivoire"],["+226","BF","Burkina Faso"],["+227","NE","Niger"],["+228","TG","Togo"],["+229","BJ","Benin"],["+230","MU","Mauritius"],["+231","LR","Liberia"],["+232","SL","Sierra Leone"],["+233","GH","Ghana"],["+234","NG","Nigeria"],["+235","TD","Chad"],["+236","CF","Central African Republic"],["+237","CM","Cameroon"],["+238","CV","Cape Verde"],["+239","ST","São Tomé & Príncipe"],["+240","GQ","Equatorial Guinea"],["+241","GA","Gabon"],["+242","CG","Congo"],["+243","CD","DR Congo"],["+244","AO","Angola"],["+245","GW","Guinea-Bissau"],["+248","SC","Seychelles"],["+249","SD","Sudan"],["+250","RW","Rwanda"],["+251","ET","Ethiopia"],["+252","SO","Somalia"],["+253","DJ","Djibouti"],["+254","KE","Kenya"],["+255","TZ","Tanzania"],["+256","UG","Uganda"],["+257","BI","Burundi"],["+258","MZ","Mozambique"],["+260","ZM","Zambia"],["+261","MG","Madagascar"],["+262","RE","Réunion"],["+263","ZW","Zimbabwe"],["+264","NA","Namibia"],["+265","MW","Malawi"],["+266","LS","Lesotho"],["+267","BW","Botswana"],["+268","SZ","Eswatini"],["+269","KM","Comoros"],["+290","SH","Saint Helena"],["+291","ER","Eritrea"],["+297","AW","Aruba"],["+298","FO","Faroe Islands"],["+299","GL","Greenland"],["+350","GI","Gibraltar"],["+351","PT","Portugal"],["+352","LU","Luxembourg"],["+353","IE","Ireland"],["+354","IS","Iceland"],["+355","AL","Albania"],["+356","MT","Malta"],["+357","CY","Cyprus"],["+358","FI","Finland"],["+359","BG","Bulgaria"],["+370","LT","Lithuania"],["+371","LV","Latvia"],["+372","EE","Estonia"],["+373","MD","Moldova"],["+374","AM","Armenia"],["+375","BY","Belarus"],["+376","AD","Andorra"],["+377","MC","Monaco"],["+378","SM","San Marino"],["+380","UA","Ukraine"],["+381","RS","Serbia"],["+382","ME","Montenegro"],["+383","XK","Kosovo"],["+385","HR","Croatia"],["+386","SI","Slovenia"],["+387","BA","Bosnia & Herzegovina"],["+389","MK","North Macedonia"],["+420","CZ","Czech Republic"],["+421","SK","Slovakia"],["+423","LI","Liechtenstein"],["+500","FK","Falkland Islands"],["+501","BZ","Belize"],["+502","GT","Guatemala"],["+503","SV","El Salvador"],["+504","HN","Honduras"],["+505","NI","Nicaragua"],["+506","CR","Costa Rica"],["+507","PA","Panama"],["+508","PM","St. Pierre & Miquelon"],["+509","HT","Haiti"],["+590","GP","Guadeloupe"],["+591","BO","Bolivia"],["+592","GY","Guyana"],["+593","EC","Ecuador"],["+594","GF","French Guiana"],["+595","PY","Paraguay"],["+596","MQ","Martinique"],["+597","SR","Suriname"],["+598","UY","Uruguay"],["+599","CW","Curaçao"],["+670","TL","Timor-Leste"],["+672","NF","Norfolk Island"],["+673","BN","Brunei"],["+674","NR","Nauru"],["+675","PG","Papua New Guinea"],["+676","TO","Tonga"],["+677","SB","Solomon Islands"],["+678","VU","Vanuatu"],["+679","FJ","Fiji"],["+680","PW","Palau"],["+681","WF","Wallis & Futuna"],["+682","CK","Cook Islands"],["+683","NU","Niue"],["+685","WS","Samoa"],["+686","KI","Kiribati"],["+687","NC","New Caledonia"],["+688","TV","Tuvalu"],["+689","PF","French Polynesia"],["+690","TK","Tokelau"],["+691","FM","Micronesia"],["+692","MH","Marshall Islands"],["+850","KP","North Korea"],["+852","HK","Hong Kong"],["+853","MO","Macao"],["+855","KH","Cambodia"],["+856","LA","Laos"],["+880","BD","Bangladesh"],["+886","TW","Taiwan"],["+960","MV","Maldives"],["+961","LB","Lebanon"],["+962","JO","Jordan"],["+963","SY","Syria"],["+964","IQ","Iraq"],["+967","YE","Yemen"],["+970","PS","Palestine"],["+972","PS","Palestine"],["+975","BT","Bhutan"],["+976","MN","Mongolia"],["+977","NP","Nepal"],["+992","TJ","Tajikistan"],["+993","TM","Turkmenistan"],["+994","AZ","Azerbaijan"],["+995","GE","Georgia"],["+996","KG","Kyrgyzstan"],["+998","UZ","Uzbekistan"]],"PHONE_RULES":{"1":[["AG","268(?:464|7(?:1[3-9]|[28]\\d|3[0246]|64|7[0-689]))\\d{4}",[10]],["AI","264(?:235|4(?:69|7[67])|5(?:3[6-9]|8[1-4])|7(?:29|72))\\d{4}",[10]],["AS","684(?:2(?:48|5[2468]|7[246])|7(?:3[13]|70|82))\\d{4}",[10]],["BB","246(?:(?:2(?:[3568]\\d|4[0-57-9])|3(?:5[2-9]|6[0-6])|4(?:46|5\\d)|69[5-7]|8(?:[2-5]\\d|83))\\d|52(?:1[147]|20))\\d{3}",[10]],["BM","441(?:[2378]\\d|5[0-39]|9[02])\\d{5}",[10]],["BS","242(?:3(?:5[79]|7[56]|95)|4(?:[23][1-9]|4[1-35-9]|5[1-8]|6[2-8]|7\\d|81)|5(?:2[45]|3[35]|44|5[1-46-9]|65|77)|6[34]6|7(?:27|38)|8(?:0[1-9]|1[02-9]|2\\d|3[0-4]|[89]9))\\d{4}",[10]],["CA","(?:2(?:04|[23]6|[48]9|5[07]|63)|3(?:06|43|54|6[578]|82)|4(?:03|1[68]|[26]8|3[178]|50|74)|5(?:06|1[49]|48|79|8[147])|6(?:04|[18]3|39|47|72)|7(?:0[59]|42|53|78|8[02])|8(?:[06]7|19|25|7[39])|9(?:0[25]|42))[2-9]\\d{6}",[10]],["DM","767(?:2(?:[2-4689]5|7[5-7])|31[5-7]|61[1-8]|70[1-6])\\d{4}",[10]],["DO","8[024]9[2-9]\\d{6}",[10]],["GD","473(?:4(?:0[2-79]|1[04-9]|2[0-5]|49|5[6-8])|5(?:2[01]|3[3-8])|901)\\d{4}",[10]],["GU","671(?:2\\d\\d|3(?:00|3[39]|4[349]|55|6[26])|4(?:00|56|7[1-9]|8[02-9])|5(?:55|6[2-5]|88)|6(?:3[2-578]|4[24-9]|5[34]|78|8[235-9])|7(?:[0479]7|2[0167]|3[45]|8[7-9])|8(?:[2-57-9]8|6[478])|9(?:2[29]|6[79]|7[1279]|8[7-9]|9[16-9]))\\d{4}",[10]],["JM","(?:6582(?:[0-4]\\d|95)|876(?:2(?:0[1-9]|[13-9]\\d|2[013-9])|[348]\\d\\d|5(?:0[1-9]|[1-9]\\d)|6(?:4[89]|6[67])|7(?:0[07]|7\\d|8[1-47-9]|9[0-36-9])|9(?:[01]9|9[0579])))\\d{4}",[10]],["KN","869(?:48[89]|55[6-8]|66\\d|76[02-7])\\d{4}",[10]],["KY","345(?:32[1-9]|4(?:1[2-6]|2[0-4])|5(?:1[67]|2[5-79]|4[6-9]|50|76)|649|82[56]|9(?:1[679]|2[2-9]|3[06-9]|90))\\d{4}",[10]],["LC","758(?:28[4-7]|384|4(?:6[01]|8[4-9])|5(?:1[89]|20|84)|7(?:1[2-9]|2\\d|3[0-3])|812)\\d{4}",[10]],["MP","670(?:2(?:3[3-7]|56|8[4-8])|32[1-38]|4(?:33|8[348])|5(?:32|55|88)|6(?:64|70|82)|78[3589]|8[3-9]8|989)\\d{4}",[10]],["MS","664(?:3(?:49|9[1-6])|49[2-6])\\d{4}",[10]],["PR","(?:787|939)[2-9]\\d{6}",[10]],["SX","7215(?:1[02]|2\\d|5[034679]|8[0-24-8])\\d{4}",[10]],["TC","649(?:2(?:3[129]|4[1-79])|3\\d\\d|4[34][1-3])\\d{4}",[10]],["TT","868(?:(?:2[5-9]|3\\d)\\d|4(?:3[0-6]|[6-9]\\d)|6(?:20|78|8\\d)|7(?:0[1-9]|1[02-9]|[2-9]\\d))\\d{4}",[10]],["US","(?:472[2-47-9]|983[2-57-9])\\d{6}|(?:2(?:0[1-35-9]|1[02-9]|2[03-57-9]|3[1459]|4[08]|5[1-46]|6[0279]|7[02469]|8[13])|3(?:0[1-57-9]|1[02-9]|2[013-79]|3[0-24679]|4[167]|5[0-3]|6[01349]|8[056])|4(?:0[124-9]|1[02-579]|2[3-5]|3[0245]|4[023578]|58|6[349]|7[0589]|8[04])|5(?:0[1-57-9]|1[0235-8]|20|3[0149]|4[01]|5[179]|6[1-47]|7[0-5]|8[0256])|6(?:0[1-35-9]|1[024-9]|2[03689]|3[016]|4[0156]|5[01679]|6[0-279]|78|8[0-269])|7(?:0[1-46-8]|1[2-9]|2[04-8]|3[0-2478]|4[0378]|5[47]|6[02359]|7[0-59]|8[156])|8(?:0[1-68]|1[02-8]|2[0168]|3[0-2589]|4[03578]|5[046-9]|6[02-5]|7[028])|9(?:0[1346-9]|1[02-9]|2[0589]|3[0146-8]|4[01357-9]|5[12469]|7[0-3589]|8[04-69]))[2-9]\\d{6}",[10]],["VC","784(?:4(?:3[0-5]|5[45]|89|9[0-8])|5(?:2[6-9]|3[0-4])|720)\\d{4}",[10]],["VG","284(?:245|3(?:0[0-3]|4[0-7]|68|9[34])|4(?:4[0-6]|68|9[69])|5(?:4[0-7]|68|9[69]))\\d{4}",[10]],["VI","340(?:2(?:0\\d|10|2[06-8]|4[49]|77)|3(?:32|44)|4(?:2[23]|44|7[34]|89)|5(?:1[34]|55)|6(?:2[56]|4[23]|77|9[023])|7(?:1[2-57-9]|2[57]|7\\d)|884|998)\\d{4}",[10]]],"7":[["KZ","7(?:0[0-25-8]|47|6[0-4]|7[15-8]|85)\\d{7}",[10]],["RU","9\\d{9}",[10]]],"20":[["EG","1[0-25]\\d{8}",[10]]],"27":[["ZA","(?:1(?:3492[0-25]|4495[0235]|549(?:20|5[01]))|4[34]492[01])\\d{3}|8[1-4]\\d{3,7}|(?:2[27]|47|54)4950\\d{3}|(?:1(?:049[2-4]|9[12]\\d\\d)|(?:50[0-2]|[67]\\d\\d)\\d\\d|8(?:5\\d{3}|7(?:08[67]|158|28[5-9]|310)))\\d{4}|(?:1[6-8]|28|3[2-69]|4[025689]|5[36-8])4920\\d{3}|(?:12|[2-5]1)492\\d{4}",[5,6,7,8,9]]],"30":[["GR","68[57-9]\\d{7}|(?:69|94)\\d{8}",[10]]],"31":[["NL","(?:6[1-58]|970\\d)\\d{7}",[9,11]]],"32":[["BE","4[5-9]\\d{7}",[9]]],"33":[["FR","(?:6(?:[0-24-8]\\d|3[0-8]|9[589])|7[3-9]\\d)\\d{6}",[9]]],"34":[["ES","96906(?:09|10)\\d\\d|(?:590(?:10[0-2]|600)|97390\\d)\\d{3}|(?:6\\d|7[1-48])\\d{7}",[9]]],"36":[["HU","(?:[257]0|3[01])\\d{7}",[9]]],"39":[["IT","3[2-9]\\d{7,8}|(?:31|43)\\d{8}",[9,10]],["VA","3[1-9]\\d{8}|3[2-9]\\d{7}",[9,10]]],"40":[["RO","(?:630|702)0\\d{5}|(?:6(?:00|2\\d)|7(?:0[013-9]|1[0-3]|[2-7]\\d|8[03-8]|9[0-39]))\\d{6}",[9]]],"41":[["CH","(?:6[89]|7[235-9])\\d{7}",[9]]],"43":[["AT","6(?:485|(?:5[0-3579]|6[013-9]|[7-9]\\d)\\d)\\d{3,9}",[7,8,9,10,11,12,13]]],"44":[["GB","7(?:457[0-57-9]|700[01]|911[028])\\d{5}|7(?:[1-3]\\d\\d|4(?:[0-46-9]\\d|5[0-689])|5(?:0[0-8]|[13-9]\\d|2[0-35-9])|7(?:0[1-9]|[1-7]\\d|8[02-9]|9[0-689])|8(?:[014-9]\\d|[23][0-8])|9(?:[024-9]\\d|1[02-9]|3[0-689]))\\d{6}",[10]],["GG","7(?:(?:781|839)\\d|911[17])\\d{5}",[10]],["IM","76245[06]\\d{4}|7(?:4576|[59]24\\d|624[0-4689])\\d{5}",[10]],["JE","7(?:(?:(?:50|82)9|937)\\d|7(?:00[378]|97\\d))\\d{5}",[10]]],"45":[["DK","(?:2[6-8]|37|6[78]|96)\\d{6}|(?:2[0-59]|3[0-689]|[457]\\d|6[0-69]|8[126-9]|9[1-47-9])[1-9]\\d{5}",[8]]],"46":[["SE","7[023689]\\d{7}",[9]]],"47":[["NO","45(?:[0-24-9]\\d|3[0-57-9])\\d{4}|(?:4[016-8]|9\\d)\\d{6}",[8]],["SJ","45(?:[0-24-9]\\d|3[0-57-9])\\d{4}|(?:4[016-8]|9\\d)\\d{6}",[8]]],"48":[["PL","21(?:1[013-5]|2\\d|3[1-9])\\d{5}|(?:45|5[0137]|6[069]|7[2389]|88)\\d{7}",[9]]],"49":[["DE","1(?:6[023]|7\\d)\\d{7,8}|15(?:[0-25-9]\\d\\d|3(?:10|33))\\d{6}",[10,11]]],"51":[["PE","9\\d{8}",[9]]],"52":[["MX","(?:2(?:2\\d|3[1-35-8]|4[13-9]|7[1-689]|8[1-578]|9[467])|3(?:1[1-79]|[2458][1-9]|3\\d|7[1-8]|9[1-5])|4(?:1[1-57-9]|[267][1-9]|3[1-8]|[45]\\d|8[1-35-9]|9[2-689])|5(?:[56]\\d|88|9[1-79])|6(?:1[2-68]|[2-4][1-9]|5[1-36-9]|6[0-57-9]|7[1-7]|8[67]|9[4-8])|7(?:[1346][1-9]|[27]\\d|5[13-9]|8[1-69]|9[17])|8(?:1\\d|2[13-689]|3[1-6]|4[124-6]|6[1246-9]|7[0-378]|9[12479])|9(?:1[346-9]|2[1-4]|3[2-46-8]|5[1348]|[69]\\d|7[12]|8[1-8]))\\d{7}",[10]]],"53":[["CU","(?:5\\d|6[2-4])\\d{6}",[8]]],"54":[["AR","93(?:7(?:1[15]|81)|8(?:21|4[16]|69|9[12]))[46]\\d{5}|9(?:2(?:2(?:2[59]|44|52)|3(?:26|44)|47[35]|9(?:[07]2|2[26]|34|46))|3327)[45]\\d{5}|9(?:2(?:657|9(?:54|66))|3(?:48[27]|7(?:55|77)|8(?:65|78)))[2-8]\\d{5}|9(?:2(?:284|3(?:02|23)|477|622|920)|3(?:4(?:46|89|92)|541))[2-7]\\d{5}|(?:675\\d|9(?:11[0-8]\\d|2(?:2(?:0[45]|1[2-6]|3[3-6])|3(?:[06]4|7[45])|494|6(?:04|1[2-8]|[36][45]|4[3-6])|80[45]|9(?:[17][4-6]|[48][45]|9[3-6]))|3(?:364|4(?:1[2-8]|[25][4-6]|3[3-6]|84)|5(?:1[2-9]|[38][4-6])|6(?:2[45]|44)|7[069][45]|8(?:0[45]|1[2-7]|3[4-6]|5[3-6]|7[2-6]|8[3-68]))))\\d{6}|9(?:2(?:2(?:62|81)|320|9(?:42|83))|3(?:329|4(?:62|7[16])|5(?:43|64)|7(?:18|5[17])))[2-6]\\d{5}|92(?:2(?:21|4[23]|6[145]|7[1-4]|8[356]|9[267])|3(?:16|3[13-8]|43|5[346-8]|9[3-5])|6(?:2[46]|4[78]|5[1568])|9(?:03|2[1457-9]|3[1356]|4[08]|[56][23]|82))4\\d{5}|9(?:2(?:257|3(?:24|46|92)|9(?:01|23|64))|3(?:4(?:42|64)|5(?:25|37|4[47]|71)|7(?:35|72)|825))[3-6]\\d{5}|9(?:2(?:2(?:02|2[3467]|4[156]|5[45]|6[6-8]|91)|3(?:1[47]|25|[45][25]|96)|47[48]|625|932)|3(?:38[2578]|4(?:0[0-24-9]|3[78]|4[457]|58|6[035-9]|72|83|9[136-8])|5(?:2[124]|[368][23]|4[2689]|7[2-6])|7(?:16|2[15]|3[14]|4[13]|5[468]|7[3-5]|8[26])|8(?:2[67]|3[278]|4[3-5]|5[78]|6[1-378]|[78]7|94)))[4-6]\\d{5}",[10,11]]],"55":[["BR","(?:[14689][1-9]|2[12478]|3[1-578]|5[13-5]|7[13-579])(?:7|9\\d)\\d{7}",[10,11]]],"56":[["CL","2(?:1982[0-6]|3314[05-9])\\d{3}|(?:2(?:1(?:160|962)|3(?:(?:[24]\\d|50)\\d|3(?:[0346-9]\\d|1[0-35-9]|2[1-9]|5[0-24-9])|600)|646[59])|80[1-8]\\d\\d|9(?:(?:10[0-2]|7[1-9]\\d)\\d|3(?:[0-57-9]\\d\\d|6(?:0[02-9]|[1-9]\\d))|6(?:[0-8]\\d\\d|9(?:[02-79]\\d|1[05-9]))|9(?:[03-9]\\d\\d|1(?:[0235-9]\\d|4[0-24-9])|2(?:[0-79]\\d|8[0-46-9]))))\\d{4}|(?:22|3[2-5]|[47][1-35]|5[1-3578]|6[13-57]|8[1-9]|9[2458])\\d{7}",[9]]],"57":[["CO","333301[0-5]\\d{3}|3333(?:00|2[5-9]|[3-9]\\d)\\d{4}|(?:3(?:(?:0[0-5]|1\\d|5[01]|70)\\d|2(?:[0-3]\\d|4[1-9])|3(?:00|3[0-24-9]))|9(?:101|408))\\d{6}",[10]]],"58":[["VE","4(?:1[24-8]|2[246])\\d{7}",[10]]],"60":[["MY","1(?:(?:1888[689]|4400|8(?:47|8[27])[0-4])\\d{4}|9\\d{7,8})|1(?:0(?:[23568]\\d|4[0-6]|7[016-9]|9[0-8])|1(?:[1-5]\\d\\d|6(?:0[5-9]|[1-9]\\d)|7(?:[0-4]\\d|5[0-79]|6[02-4]|8[02-5]))|(?:[26]\\d|[37][1-9]|4[235-9])\\d|5(?:31|9\\d\\d)|8(?:1[23]|[236]\\d|4[06]|5(?:46|[7-9])|7[016-9]|8[01]|9[0-8]))\\d{5}",[9,10]]],"61":[["AU","4(?:79[01]|83[0-36-9]|95[0-3])\\d{5}|4(?:[0-36]\\d|4[047-9]|[58][0-24-9]|7[02-8]|9[0-47-9])\\d{6}",[9]],["CC","4(?:79[01]|83[0-36-9]|95[0-3])\\d{5}|4(?:[0-36]\\d|4[047-9]|[58][0-24-9]|7[02-8]|9[0-47-9])\\d{6}",[9]],["CX","4(?:79[01]|83[0-36-9]|95[0-3])\\d{5}|4(?:[0-36]\\d|4[047-9]|[58][0-24-9]|7[02-8]|9[0-47-9])\\d{6}",[9]]],"62":[["ID","8[1-35-9]\\d{7,10}",[9,10,11,12]]],"63":[["PH","(?:8(?:1[37]|9[5-8])|9(?:0[5-9]|1[0-24-9]|[235-7]\\d|4[2-9]|8[135-9]|9[1-9]))\\d{7}",[10]]],"64":[["NZ","2(?:[0-27-9]\\d|6)\\d{6,7}|2(?:1\\d|75)\\d{5}",[8,9,10]]],"65":[["SG","80[1-9]\\d{5}|(?:8[1-9]|9[0-8])\\d{6}",[8]]],"66":[["TH","(?:(?:14|[89]\\d)\\d\\d|6(?:[1-6]\\d\\d|7(?:1[0-8]|2[4-7]|3[1-6])))\\d{5}",[9]]],"81":[["JP","[6-9]0[1-9]\\d{7}",[10]]],"82":[["KR","1(?:05(?:[0-8]\\d|9[0-6])|22[13]\\d)\\d{4,5}|1(?:0[0-46-9]|[16-9]\\d|2[013-9])\\d{6,7}",[9,10]]],"84":[["VN","121[0-3]\\d{5}|(?:160|(?:3\\d|7[06-9])\\d|5(?:[1689]\\d|2[238]|59)|8(?:[1-8]\\d|9[6-9])|9(?:[0-8]\\d|9[013-9]))\\d{6}",[9]]],"86":[["CN","1(?:610\\d|740[0-5])\\d{6}|1(?:[38]\\d|4[57]|[59][0-35-9]|6[25-7]|7[0-35-8])\\d{8}",[11]]],"90":[["TR","5(?:61(?:011|61\\d)|82[2-5]\\d\\d)\\d{4}|5(?:[03-5]\\d|1[06]|24|6[24]|7[245]|9[46])\\d{7}",[10]]],"91":[["IN","(?:6(?:1279|828[01489])|7(?:887[02-9]|9313)|8(?:079[04-9]|(?:84|91)7[02-8]))\\d{5}|(?:160[01]|6(?:(?:12|[2-4]1|5[17]|6[13]|80)[0189]|7(?:1[0189]|86))|7(?:1(?:2[0189]|9[0-5])|3(?:2[5-8]|[34][017-9]|9[016-9])|5(?:[15][017-9]|2[04-9]|9[7-9])|6(?:0[0-47]|1[0-257-9]|2[0-4]|3[19]|5[4589])|70[0289]|88[089])|8(?:0(?:6[67]|7[02-8])|70[017-9]|84[01489]|91[0-289]))\\d{6}|(?:731|8(?:16|2[014]|3[126]|6[136]|7[78]|83))(?:[0189]\\d|7[02-8])\\d{5}|(?:6(?:(?:1[1358]|2[2457]|3[2-4]|4[235-7]|5[2-689]|6[24578])\\d|7(?:[23569]\\d|4[0189]|8[0-57-9])|8(?:[14-6]\\d|2[0-79]))|7(?:1(?:[013-8]\\d|9[6-9])|3(?:2[0-49]|9[2-5])|5(?:2[1-3]|9[0-6])|6(?:0[5689]|2[5-9]|3[02-8]|4\\d|5[0-367])|70[13-7]|881))[0189]\\d{5}|(?:6(?:[09]\\d|1[04679]|2[03689]|3[05-9]|4[0489]|50|6[069]|7[07]|8[7-9])|7(?:[024]\\d|3[05-8]|5[0346-8]|6[6-9]|7[1-9]|8[0-79]|9[07-9])|8(?:0[01589]|1[0-57-9]|2[235-9]|3[03-57-9]|[45]\\d|6[02457-9]|7[1-69]|8[0-25-9]|9[02-9])|9\\d\\d)\\d{7}",[10]]],"92":[["PK","3(?:[0-247]\\d|3[0-79]|55|64)\\d{7}",[10]]],"93":[["AF","7\\d{8}",[9]]],"94":[["LK","7(?:[0-25-8]\\d|4[0-4])\\d{6}",[9]]],"95":[["MM","(?:17[01]|9(?:2(?:[0-4]|[56]\\d\\d)|(?:3(?:[0-36]|4\\d)|(?:6\\d|8[89]|9[4-8])\\d|7(?:3|40|[5-9]\\d))\\d|4(?:(?:[0245]\\d|[1379])\\d|88)|5[0-6])\\d)\\d{4}|9[69]1\\d{6}|9(?:[68]\\d|9[089])\\d{5}",[7,8,9,10]]],"98":[["IR","9(?:(?:0[0-5]|[13]\\d|2[0-3])\\d\\d|9(?:[0-46]\\d\\d|5(?:10|5\\d)|8(?:[12]\\d|3[0-2]|88)|9(?:[01359]\\d|21|69|77|8[7-9])))\\d{5}",[10]]],"211":[["SS","(?:12|9[1257-9])\\d{7}",[9]]],"212":[["EH","(?:6(?:[0-79]\\d|8[0-247-9])|7(?:[016-8]\\d|2[0-8]|3[01]|5[0-5]))\\d{6}",[9]],["MA","(?:6(?:[0-79]\\d|8[0-247-9])|7(?:[016-8]\\d|2[0-8]|3[01]|5[0-5]))\\d{6}",[9]]],"213":[["DZ","5(?:4[0-29]|6[0-4])\\d{6}|(?:55|6\\d|7[7-9])\\d{7}",[9]]],"216":[["TN","3(?:001|[12]40)\\d{4}|(?:(?:[259]\\d|4[0-8])\\d|3(?:1[1-35]|6[0-4]|91))\\d{5}",[8]]],"218":[["LY","9[1-6]\\d{7}",[9]]],"220":[["GM","(?:(?:[23679]\\d|4[015]|8(?:(?:3[35]|6[68]|99)\\d|7(?:[27]\\d|4[015])))\\d|5(?:[0-489]\\d|56))\\d{4}|8[4-7]\\d{5}",[7,9]]],"221":[["SN","7(?:[015-8]\\d|21|90)\\d{6}",[9]]],"222":[["MR","[2-4][0-46-9]\\d{6}",[8]]],"223":[["ML","2(?:0(?:01|79)|17\\d)\\d{4}|(?:5[0-3]|[679]\\d|8[2-59])\\d{6}",[8]]],"224":[["GN","6[0-356]\\d{7}",[9]]],"225":[["CI","0[157]\\d{8}",[10]]],"226":[["BF","(?:0[1-7]|4[4-6]|5[0-8]|[67]\\d)\\d{6}",[8]]],"227":[["NE","(?:23|7[0467]|[89]\\d)\\d{6}",[8]]],"228":[["TG","(?:7[0-389]|9[0-36-9])\\d{6}",[8]]],"229":[["BJ","01(?:2[5-9]|[4-69]\\d)\\d{6}",[10]]],"230":[["MU","5(?:4(?:2[1-389]|7[1-9])|87[15-8])\\d{4}|(?:5(?:2[5-9]|4[3-689]|[57]\\d|8[0-689]|9[0-8])|7(?:0[0-7]|3[013]))\\d{5}",[8]]],"231":[["LR","(?:(?:(?:22|33)0|555|7(?:6[01]|7\\d)|88\\d)\\d|4(?:240|[67]))\\d{5}|[56]\\d{6}",[7,9]]],"232":[["SL","(?:25|3[0-5]|66|7\\d|8[08]|9[09])\\d{6}",[8]]],"233":[["GH","(?:2(?:[0346-9]\\d|5[67])|5(?:[03-7]\\d|9[1-9]))\\d{6}",[9]]],"234":[["NG","(?:702[0-24-9]|819[01])\\d{6}|(?:7(?:0[13-9]|[12]\\d)|8(?:0[1-9]|1[0-8])|9(?:0[1-9]|1[1-6]))\\d{7}",[10]]],"235":[["TD","(?:3[01]|[69]\\d|77|8[5-7])\\d{6}",[8]]],"236":[["CF","7[02-7]\\d{6}",[8]]],"237":[["CM","(?:24[23]|6(?:[25-9]\\d|4[0-2]))\\d{6}",[9]]],"238":[["CV","(?:36|5[1-389]|9\\d)\\d{5}",[7]]],"239":[["ST","900[5-9]\\d{3}|9(?:0[1-9]|[89]\\d)\\d{4}",[7]]],"240":[["GQ","(?:222|55\\d)\\d{6}",[9]]],"241":[["GA","(?:(?:0[2-7]|7[467])\\d|6(?:0[0-4]|10|[256]\\d))\\d{5}|[2-7]\\d{6}",[7,8]]],"242":[["CG","026(?:1[0-5]|6[6-9])\\d{4}|0(?:[14-6]\\d\\d|2(?:40|5[5-8]|6[07-9]))\\d{5}",[9]]],"243":[["CD","88\\d{5}|(?:8[0-69]|9[016-9])\\d{7}",[7,9]]],"244":[["AO","9[1-79]\\d{7}",[9]]],"245":[["GW","9(?:5\\d|6[569]|77)\\d{6}",[9]]],"246":[["IO","38\\d{5}",[7]]],"247":[["AC","[2-47]\\d{4}",[5]]],"248":[["SC","2[125-8]\\d{5}",[7]]],"249":[["SD","(?:1[0-2]|9[0-3569])\\d{7}",[9]]],"250":[["RW","7[237-9]\\d{7}",[9]]],"251":[["ET","700[1-9]\\d{5}|(?:7(?:0[1-9]|1[0-8]|2[1-35-79]|3\\d|77|86|99)|(?:8[01]|9\\d)\\d)\\d{6}",[9]]],"252":[["SO","(?:(?:15|(?:3[59]|4[89]|6\\d|7[0-35-9]|8[08])\\d|9(?:0\\d|[2-9]))\\d|2(?:4\\d|8))\\d{5}|(?:[67]\\d\\d|904)\\d{5}",[7,8,9]]],"253":[["DJ","77\\d{6}",[8]]],"254":[["KE","(?:1(?:0[0-8]|[18]\\d|2[014]|30|4[0-5])|7\\d\\d)\\d{6}",[9]]],"255":[["TZ","(?:6[0-35-9]|7\\d)\\d{7}",[9]]],"256":[["UG","7(?:28|34)0\\d{5}|7(?:[014-8]\\d|2[01467]|3[0167]|9[0-589])\\d{6}",[9]]],"257":[["BI","(?:29|6[1-9]|7[125-9])\\d{6}",[8]]],"258":[["MZ","8[2-9]\\d{7}",[9]]],"260":[["ZM","(?:[59][5-8]|7[5-9])\\d{7}",[9]]],"261":[["MG","3[2-9]\\d{7}",[9]]],"262":[["RE","(?:69(?:2\\d\\d|3(?:[06][0-6]|1[0-3]|2[0-2]|3[0-39]|4\\d|5[0-5]|7[0-37]|8[0-8]|9[0-479]))|7092[0-3])\\d{4}",[9]],["YT","(?:639(?:0[0-79]|1[019]|[267]\\d|3[09]|40|5[05-9]|9[04-79])|7093[5-7])\\d{4}",[9]]],"263":[["ZW","7(?:[1278]\\d|3[1-9]|9[01])\\d{6}",[9]]],"264":[["NA","(?:60|8[1245])\\d{7}",[9]]],"265":[["MW","111\\d{6}|(?:2[12]|31|77|[89][89])\\d{7}",[9]]],"266":[["LS","[56]\\d{7}",[8]]],"267":[["BW","(?:321|7(?:[1-8]\\d|9[03]))\\d{5}",[8]]],"268":[["SZ","7[5-9]\\d{6}",[8]]],"269":[["KM","[34]\\d{6}",[7]]],"290":[["SH","[56]\\d{4}",[5]]],"291":[["ER","(?:17[1-3]|7\\d\\d)\\d{4}",[7]]],"297":[["AW","(?:290|5[69]\\d|6(?:[03]0|22|4[0-2]|[69]\\d)|7(?:[34]\\d|7[07])|9(?:6[45]|9[4-8]))\\d{4}",[7]]],"298":[["FO","(?:[27][1-9]|5\\d|9[16])\\d{4}",[6]]],"299":[["GL","[245]\\d{5}",[6]]],"350":[["GI","5251[0-4]\\d{3}|(?:5(?:[146-8]\\d\\d|250)|60(?:1[01]|6\\d))\\d{4}",[8]]],"351":[["PT","6(?:[06]92(?:30|9\\d)|[35]92(?:[049]\\d|3[034]))\\d{3}|(?:(?:16|6[0356])93|9(?:[1-36]\\d\\d|480))\\d{5}",[9]]],"352":[["LU","6(?:[26][18]|5[1568]|7[189]|81|9[128])\\d{6}",[9]]],"353":[["IE","8(?:22|[35-9]\\d)\\d{6}",[9]]],"354":[["IS","(?:38[589]\\d\\d|6(?:1[1-8]|2[0-6]|3[026-9]|4[014679]|5[0159]|6[0-69]|70|8[06-8]|9\\d)|7(?:5[057]|[6-9]\\d)|8(?:2[0-59]|[3-69]\\d|8[238]))\\d{4}",[7,9]]],"355":[["AL","6(?:[78][2-9]|9\\d)\\d{6}",[9]]],"356":[["MT","(?:7(?:210|[79]\\d\\d)|9(?:[29]\\d\\d|69[67]|8(?:1[1-3]|89|97)))\\d{4}",[8]]],"357":[["CY","9(?:10|[4-79]\\d)\\d{5}",[8]]],"358":[["AX","4946\\d{2,6}|(?:4[0-8]|50)\\d{4,8}",[6,7,8,9,10]],["FI","4946\\d{2,6}|(?:4[0-8]|50)\\d{4,8}",[6,7,8,9,10]]],"359":[["BG","(?:43[07-9]|99[69]\\d)\\d{5}|(?:8[7-9]|98)\\d{7}",[8,9]]],"370":[["LT","6\\d{7}",[8]]],"371":[["LV","2333[0-8]\\d{3}|2(?:[0-24-9]\\d\\d|3(?:0[07]|[14-9]\\d|2[02-9]|3[0-24-9]))\\d{4}",[8]]],"372":[["EE","(?:5\\d{5}|8(?:1(?:0(?:0(?:00|[178]\\d)|[3-9]\\d\\d)|(?:1(?:0[2-6]|1\\d)|[2-79]\\d\\d)\\d)|2(?:0(?:0(?:00|4\\d)|(?:19|[2-7]\\d)\\d)|(?:(?:[124-69]\\d|3[5-9])\\d|7(?:[0-79]\\d|8[013-9])|8(?:[2-6]\\d|7[01]))\\d)|[349]\\d{4}))\\d\\d|5(?:(?:[02]\\d|5[0-478])\\d|1(?:[0-8]\\d|95)|6(?:4[0-4]|5[1-589]))\\d{3}",[7,8]]],"373":[["MD","562\\d{5}|(?:6\\d|7[16-9])\\d{6}",[8]]],"374":[["AM","(?:33|4[1349]|55|77|88|9[13-9])\\d{6}",[8]]],"375":[["BY","(?:2(?:5[5-79]|9[1-9])|(?:33|44)\\d)\\d{6}",[9]]],"376":[["AD","690\\d{6}|[356]\\d{5}",[6,9]]],"377":[["MC","4(?:[46]\\d|5[1-9])\\d{5}|(?:3|[67]\\d)\\d{7}",[8,9]]],"378":[["SM","6[16]\\d{6}",[8]]],"380":[["UA","790\\d{6}|(?:39|50|6[36-8]|7[1-357]|9[1-9])\\d{7}",[9]]],"381":[["RS","6(?:[0-689]|7\\d)\\d{6,7}",[8,9,10]]],"382":[["ME","6(?:[07-9]\\d|3[024]|6[0-25])\\d{5}",[8]]],"383":[["XK","4[3-9]\\d{6}",[8]]],"385":[["HR","9(?:(?:0[1-9]|[12589]\\d)\\d\\d|7(?:[0679]\\d\\d|5(?:[01]\\d|44|55|77|9[5-79])))\\d{4}|98\\d{6}",[8,9]]],"386":[["SI","65(?:[178]\\d|5[56]|6[01])\\d{4}|(?:[37][01]|4[013]|51|6[489])\\d{6}",[8]]],"387":[["BA","6040\\d{5}|6(?:03|[1-356]|44|7\\d)\\d{6}",[8,9]]],"389":[["MK","7(?:3555|(?:474|9[019]7)7)\\d{3}|7(?:[0-25-8]\\d\\d|3(?:[1-478]\\d|6[01])|4(?:2\\d|60|7[01578])|9(?:[2-4]\\d|5[01]|7[015]))\\d{4}",[8]]],"420":[["CZ","7060\\d{5}|(?:60[1-8]|7(?:0[2-5]|19|[2379]\\d))\\d{6}",[9]]],"421":[["SK","909[1-9]\\d{5}|9(?:0[1-8]|1[0-24-9]|4[03-57-9]|5\\d)\\d{6}",[9]]],"423":[["LI","(?:6(?:(?:4[5-9]|5\\d)\\d|6(?:[024-68]\\d|1[01]|3[7-9]|7[02]))\\d|7(?:[37-9]\\d|42|56))\\d{4}",[7,9]]],"500":[["FK","[56]\\d{4}",[5]]],"501":[["BZ","6[0-35-7]\\d{5}",[7]]],"502":[["GT","(?:[3-5]\\d\\d|80[0-4])\\d{5}",[8]]],"503":[["SV","[5-7]\\d{7}",[8]]],"504":[["HN","[37-9]\\d{7}",[8]]],"505":[["NI","(?:5(?:5[0-7]|[78]\\d)|6(?:20|3[035]|4[045]|5[05]|77|8[1-9]|9[059])|(?:7[5-8]|8\\d)\\d)\\d{5}",[8]]],"506":[["CR","(?:3005\\d|6500[01])\\d{3}|(?:5[07]|6[0-4]|7[0-3]|8[3-9])\\d{6}",[8]]],"507":[["PA","(?:1[16]1|21[89]|6\\d{3}|8(?:1[01]|7[23]))\\d{4}",[7,8]]],"508":[["PM","708(?:4[0-5]|5[0-6])\\d{4}|(?:[236-9]\\d|4[02-489]|5[02-9])\\d{4}",[6,9]]],"509":[["HT","(?:[34]\\d|5[568])\\d{6}",[8]]],"590":[["BL","(?:69(?:0\\d\\d|1(?:2[2-9]|3[0-5]))|7090[0-4])\\d{4}",[9]],["GP","(?:69(?:0\\d\\d|1(?:2[2-9]|3[0-5]))|7090[0-4])\\d{4}",[9]],["MF","(?:69(?:0\\d\\d|1(?:2[2-9]|3[0-5]))|7090[0-4])\\d{4}",[9]]],"591":[["BO","(?:57|[67]\\d)\\d{6}",[8]]],"592":[["GY","(?:51[01]|6\\d\\d|7(?:[0-5]\\d|6[0-79]|70|8[067]))\\d{4}",[7]]],"593":[["EC","964[0-2]\\d{5}|9(?:39|[57][89]|6[0-36-9]|[89]\\d)\\d{6}",[9]]],"594":[["GF","(?:694(?:[0-249]\\d|3[0-8])|7093[0-3])\\d{4}",[9]]],"595":[["PY","9(?:51|6[129]|7[1-6]|8[1-7]|9[1-5])\\d{6}",[9]]],"596":[["MQ","(?:69[67]\\d\\d|7091[0-3])\\d{4}",[9]]],"597":[["SR","(?:6[08]|7[1-7]|8[1-9])\\d{5}",[7]]],"598":[["UY","9[1-9]\\d{6}",[8]]],"599":[["BQ","(?:31(?:8[14-8]|9[14578])|416[14-9]|7(?:0[01]|7[07]|8\\d|9[056])\\d)\\d{3}",[7]],["CW","953[01]\\d{4}|9(?:5[12467]|6[5-9])\\d{5}",[7,8]]],"670":[["TL","7[2-8]\\d{6}",[8]]],"672":[["NF","(?:14|3[58])\\d{4}",[6]]],"673":[["BN","(?:22[89]|[78]\\d\\d)\\d{4}",[7]]],"674":[["NR","(?:222|55[3-9]|666|777|8\\d\\d|999)\\d{4}",[7]]],"675":[["PG","(?:7\\d|8[1-58])\\d{6}",[8]]],"676":[["TO","(?:5(?:4[0-5]|5[4-6])|6(?:[09]\\d|3[02]|8[15-9])|(?:7\\d|8[46-9])\\d|999)\\d{4}",[7]]],"677":[["SB","48\\d{3}|(?:(?:6[89]|7[1-9]|8[4-9])\\d|9(?:1[2-9]|2[013-9]|3[0-2]|[46]\\d|5[0-46-9]|7[0-689]|8[0-79]|9[0-8]))\\d{4}",[5,7]]],"678":[["VU","(?:[58]\\d|7[0-7])\\d{5}",[7]]],"679":[["FJ","(?:[279]\\d|45|5[01568]|8[034679])\\d{5}",[7]]],"680":[["PW","(?:(?:46|83)[0-5]|(?:6[2-4689]|78)0)\\d{4}|(?:45|77|88)\\d{5}",[7]]],"681":[["WF","(?:72|8[23])\\d{4}",[6]]],"682":[["CK","[578]\\d{4}",[5]]],"683":[["NU","(?:[56]|888[1-9])\\d{3}",[4,7]]],"685":[["WS","(?:7[1-35-8]|8(?:[3-7]|9\\d{3}))\\d{5}",[7,10]]],"686":[["KI","(?:6200[01]|7(?:310[1-9]|5(?:02[03-9]|12[0-47-9]|22[0-7]|[34](?:0[1-9]|8[02-9])|50[1-9])))\\d{3}|(?:63\\d\\d|7(?:(?:[0146-9]\\d|2[0-689])\\d|3(?:[02-9]\\d|1[1-9])|5(?:[0-2][013-9]|[34][1-79]|5[1-9]|[6-9]\\d)))\\d{4}",[8]]],"687":[["NC","(?:[579]\\d|8[0-79])\\d{4}",[6]]],"688":[["TV","(?:7[01]\\d|90)\\d{4}",[6,7]]],"689":[["PF","8[7-9]\\d{6}",[8]]],"690":[["TK","7[2-4]\\d{2,5}",[4,5,6,7]]],"691":[["FM","31(?:00[67]|208|309)\\d\\d|(?:3(?:[2357]0[1-9]|602|804|905)|(?:820|9[2-7]\\d)\\d)\\d{3}",[7]]],"692":[["MH","(?:(?:23|54)5|329|45[35-8])\\d{4}",[7]]],"850":[["KP","19[1-3]\\d{7}",[10]]],"852":[["HK","(?:4(?:0(?:6[0-3]|9[3-6])|24[3-6]|44[0-35-9]|6(?:4[0-57-9]|6[0-6])|7(?:4[0-48]|6[0-5]))|5(?:25[3-7]|35[4-8]|73[0-6]|95[0-8])|6(?:26[013-8]|(?:66|78)[0-5])|7(?:0(?:7[1-8]|8[0-8])|10[1-4])|84(?:4[0-2]|8[0-35-9])|9(?:29[013-9]|39[014-9]|59[0-467]|899))\\d{4}|(?:4(?:4[0-35-9]|6[0-357-9]|7[0-35])|5(?:[1-59][0-46-9]|6[0-4689]|7[0-246-9])|6(?:0[1-9]|[13-59]\\d|[268][0-57-9]|7[0-79])|70[1-59]|84[0-39]|9(?:0[1-9]|1[02-9]|[2358][0-8]|[467]\\d))\\d{5}",[8]]],"853":[["MO","6800[0-79]\\d{3}|6(?:[235]\\d\\d|6(?:0[0-5]|[1-9]\\d)|8(?:0[1-9]|[14-8]\\d|2[5-9]|[39][0-4]))\\d{4}",[8]]],"855":[["KH","(?:(?:1[28]|3[18]|9[67])\\d|6[016-9]|7(?:[07-9]|[16]\\d)|8(?:[013-79]|8\\d))\\d{6}|(?:1\\d|9[0-57-9])\\d{6}|(?:2[3-6]|3[2-6]|4[2-4]|[5-7][2-5])48\\d{5}",[8,9]]],"856":[["LA","(?:20(?:[23579]\\d|8[78])|30[24]\\d)\\d{6}|30\\d{7}",[9,10]]],"880":[["BD","(?:1[13-9]\\d|644)\\d{7}|(?:3[78]|44|66)[02-9]\\d{7}",[10]]],"886":[["TW","(?:40001[0-2]|9[0-8]\\d{4})\\d{3}",[9]]],"960":[["MV","(?:46[46]|[79]\\d\\d)\\d{4}",[7]]],"961":[["LB","(?:(?:3|81)\\d|7(?:[01]\\d|6[013-9]|8[7-9]|9[0-4]))\\d{5}",[7,8]]],"962":[["JO","(?:427|7(?:11|[29]\\d|[78][0-25-9]))\\d{6}",[9]]],"963":[["SY","(?:50|9[03-689])\\d{7}",[9]]],"964":[["IQ","7[3-9]\\d{8}",[10]]],"965":[["KW","(?:41\\d\\d|5(?:(?:[05]\\d|1[0-7]|6[56])\\d|2(?:22|5[25])|7(?:55|77)|88[58])|6(?:(?:0[034679]|5[015-9]|6\\d)\\d|1(?:00|11|6[16])|2[26]2|3[36]3|4[46]4|7(?:0[013-9]|[67]\\d)|8[68]8|9(?:[069]\\d|3[039]))|9(?:(?:[04679]\\d|8[057-9])\\d|1(?:00|1[01]|99)|2(?:00|2\\d)|3(?:00|3[03])|5(?:00|5\\d)))\\d{4}",[8]]],"966":[["SA","579[0-8]\\d{5}|5(?:[013-689]\\d|7[0-8])\\d{6}",[9]]],"967":[["YE","7[01378]\\d{7}",[9]]],"968":[["OM","(?:1505|90[1-9]\\d)\\d{4}|(?:7[124-9]|9[1-9])\\d{6}",[8]]],"970":[["PS","5[69]\\d{7}",[9]]],"971":[["AE","5[02-68]\\d{7}",[9]]],"972":[["IL","55(?:4(?:0[0-3]|10|6[015-9])|57[0-289]|8[06][0-2])\\d{4}|5(?:(?:[0-2][02-9]|[36]\\d|[49][2-9]|8[3-7])\\d|5(?:01|2\\d|3[0-3]|4[3-5]|5[0-25689]|6[6-8]|7[0-267]|8[7-9]|9[1-9]))\\d{5}",[9]]],"973":[["BH","(?:3(?:[0-79]\\d|8[0-57-9])\\d|6(?:3(?:00|33|6[16])|441|6(?:3[03-9]|[69]\\d|7[0-689])))\\d{4}",[8]]],"974":[["QA","[35-7]\\d{7}",[8]]],"975":[["BT","(?:1[67]|[78]7)\\d{6}",[8]]],"976":[["MN","(?:87[01]|92[0139])\\d{5}|(?:5[05]|6[069]|7[28]|8[0135689]|9[013-9])\\d{6}",[8]]],"977":[["NP","9(?:00|6[0-3]|7[0-24-6]|8[0-24-68])\\d{7}",[10]]],"992":[["TJ","(?:33[03-9]|4(?:1[18]|4[02-479])|81[1-9])\\d{6}|(?:[09]\\d|1[0-27-9]|2[0-27]|3[08]|40|5[05]|66|7[0157-9]|8[07-9])\\d{7}",[9]]],"993":[["TM","(?:6\\d|7[12])\\d{6}",[8]]],"994":[["AZ","36554\\d{4}|(?:[16]0|4[04]|5[015]|7[07]|99)\\d{7}",[9]]],"995":[["GE","5(?:(?:(?:0555|1(?:[17]77|555))[5-9]|757(?:7[7-9]|8[01]))\\d|22252[0-4])\\d\\d|5(?:0(?:0(?:1[09]|70)|505)|1(?:0[01]0|1(?:07|33|51))|2(?:0[02]0|2[25]2)|3(?:0[03]0|3[35]3)|4(?:0[04]0|411)|5222|9000)[0-4]\\d{3}|(?:5(?:0(?:0(?:0\\d|1[12]|2[02]|3[0-6]|4[04]|5[05]|77|88|9[09])|(?:[14]\\d|77)\\d|22[02])|1(?:1(?:[03][01]|[124]\\d|5[02-6]|7[0-6])|4\\d\\d)|2(?:228|555)|3555|4(?:4(?:[02-9]\\d|14)|555)|5(?:[0157-9]\\d\\d|200|333|4(?:44|55))|6[89]\\d\\d|7(?:(?:[0147-9]\\d|22)\\d|5(?:00|[57]5))|8(?:0(?:[018]\\d|2[0-4])|5(?:55|8[89])|8(?:55|88))|9(?:090|[1-35-9]\\d\\d))|790\\d\\d)\\d{4}",[9]]],"996":[["KG","312(?:58\\d|973)\\d{3}|(?:2(?:0[0-35]|2\\d)|5[0-24-7]\\d|600|7(?:[07]\\d|55)|88[08]|9(?:12|9[05-9]))\\d{6}",[9]]],"998":[["UZ","(?:(?:[25]0|33|8[078]|9[0-57-9])\\d{3}|6(?:1(?:2(?:2[01]|98)|35[0-4]|50\\d|61[23]|7(?:[01][017]|4\\d|55|9[5-9]))|2(?:(?:11|7\\d)\\d|2(?:[12]1|9[01379])|5(?:[126]\\d|3[0-4]))|5(?:19[01]|2(?:27|9[26])|(?:30|59|7\\d)\\d)|6(?:2(?:1[5-9]|2[0367]|38|41|52|60)|(?:3[79]|9[0-3])\\d|4(?:56|83)|7(?:[07]\\d|1[017]|3[07]|4[047]|5[057]|67|8[0178]|9[79]))|7(?:2(?:24|3[237]|4[5-9]|7[15-8])|5(?:7[12]|8[0589])|7(?:0\\d|[39][07])|9(?:0\\d|7[079])))|7(?:[07]\\d{3}|2(?:2(?:2[79]|95)|3(?:2[5-9]|6[0-6])|57\\d|7(?:0\\d|1[17]|2[27]|3[37]|44|5[057]|66|88))|3(?:2(?:1[0-6]|21|3[469]|7[159])|(?:33|9[4-6])\\d|5(?:0[0-4]|5[579]|9\\d)|7(?:[0-3579]\\d|4[0467]|6[67]|8[078]))|4(?:2(?:29|5[0257]|6[0-7]|7[1-57])|5(?:1[0-4]|8\\d|9[5-9])|7(?:0\\d|1[024589]|2[0-27]|3[0137]|[46][07]|5[01]|7[5-9]|9[079])|9(?:7[015-9]|[89]\\d))|5(?:112|2(?:0\\d|2[29]|[49]4)|3[1568]\\d|52[6-9]|7(?:0[01578]|1[017]|[23]7|4[047]|[5-7]\\d|8[78]|9[079]))|9(?:22[128]|3(?:2[0-4]|7\\d)|57[02569]|7(?:2[05-9]|3[37]|4\\d|60|7[2579]|87|9[07]))))\\d{4}",[9]]]},"NATIONALITIES":[["AF","Afghanistan"],["AL","Albania"],["DZ","Algeria"],["AD","Andorra"],["AO","Angola"],["AG","Antigua and Barbuda"],["AR","Argentina"],["AM","Armenia"],["AU","Australia"],["AT","Austria"],["AZ","Azerbaijan"],["BS","Bahamas"],["BH","Bahrain"],["BD","Bangladesh"],["BB","Barbados"],["BY","Belarus"],["BE","Belgium"],["BZ","Belize"],["BJ","Benin"],["BT","Bhutan"],["BO","Bolivia"],["BA","Bosnia and Herzegovina"],["BW","Botswana"],["BR","Brazil"],["BN","Brunei"],["BG","Bulgaria"],["BF","Burkina Faso"],["BI","Burundi"],["CV","Cabo Verde"],["KH","Cambodia"],["CM","Cameroon"],["CA","Canada"],["CF","Central African Republic"],["TD","Chad"],["CL","Chile"],["CN","China"],["CO","Colombia"],["KM","Comoros"],["CG","Congo"],["CD","Congo (DRC)"],["CR","Costa Rica"],["CI","Côte d'Ivoire"],["HR","Croatia"],["CU","Cuba"],["CY","Cyprus"],["CZ","Czechia"],["DK","Denmark"],["DJ","Djibouti"],["DM","Dominica"],["DO","Dominican Republic"],["EC","Ecuador"],["EG","Egypt"],["SV","El Salvador"],["GQ","Equatorial Guinea"],["ER","Eritrea"],["EE","Estonia"],["SZ","Eswatini"],["ET","Ethiopia"],["FJ","Fiji"],["FI","Finland"],["FR","France"],["GA","Gabon"],["GM","Gambia"],["GE","Georgia"],["DE","Germany"],["GH","Ghana"],["GR","Greece"],["GD","Grenada"],["GT","Guatemala"],["GN","Guinea"],["GW","Guinea-Bissau"],["GY","Guyana"],["HT","Haiti"],["HN","Honduras"],["HU","Hungary"],["IS","Iceland"],["IN","India"],["ID","Indonesia"],["IR","Iran"],["IQ","Iraq"],["IE","Ireland"],["IT","Italy"],["JM","Jamaica"],["JP","Japan"],["JO","Jordan"],["KZ","Kazakhstan"],["KE","Kenya"],["KI","Kiribati"],["XK","Kosovo"],["KW","Kuwait"],["KG","Kyrgyzstan"],["LA","Laos"],["LV","Latvia"],["LB","Lebanon"],["LS","Lesotho"],["LR","Liberia"],["LY","Libya"],["LI","Liechtenstein"],["LT","Lithuania"],["LU","Luxembourg"],["MG","Madagascar"],["MW","Malawi"],["MY","Malaysia"],["MV","Maldives"],["ML","Mali"],["MT","Malta"],["MH","Marshall Islands"],["MR","Mauritania"],["MU","Mauritius"],["MX","Mexico"],["FM","Micronesia"],["MD","Moldova"],["MC","Monaco"],["MN","Mongolia"],["ME","Montenegro"],["MA","Morocco"],["MZ","Mozambique"],["MM","Myanmar"],["NA","Namibia"],["NR","Nauru"],["NP","Nepal"],["NL","Netherlands"],["NZ","New Zealand"],["NI","Nicaragua"],["NE","Niger"],["NG","Nigeria"],["KP","North Korea"],["MK","North Macedonia"],["NO","Norway"],["OM","Oman"],["PK","Pakistan"],["PW","Palau"],["PS","Palestine"],["PA","Panama"],["PG","Papua New Guinea"],["PY","Paraguay"],["PE","Peru"],["PH","Philippines"],["PL","Poland"],["PT","Portugal"],["QA","Qatar"],["RO","Romania"],["RU","Russia"],["RW","Rwanda"],["KN","Saint Kitts and Nevis"],["LC","Saint Lucia"],["VC","Saint Vincent and the Grenadines"],["WS","Samoa"],["SM","San Marino"],["ST","Sao Tome and Principe"],["SA","Saudi Arabia"],["SN","Senegal"],["RS","Serbia"],["SC","Seychelles"],["SL","Sierra Leone"],["SG","Singapore"],["SK","Slovakia"],["SI","Slovenia"],["SB","Solomon Islands"],["SO","Somalia"],["ZA","South Africa"],["KR","South Korea"],["SS","South Sudan"],["ES","Spain"],["LK","Sri Lanka"],["SD","Sudan"],["SR","Suriname"],["SE","Sweden"],["CH","Switzerland"],["SY","Syria"],["TW","Taiwan"],["TJ","Tajikistan"],["TZ","Tanzania"],["TH","Thailand"],["TL","Timor-Leste"],["TG","Togo"],["TO","Tonga"],["TT","Trinidad and Tobago"],["TN","Tunisia"],["TR","Turkey"],["TM","Turkmenistan"],["TV","Tuvalu"],["UG","Uganda"],["UA","Ukraine"],["AE","United Arab Emirates"],["GB","United Kingdom"],["US","United States"],["UY","Uruguay"],["UZ","Uzbekistan"],["VU","Vanuatu"],["VA","Vatican City"],["VE","Venezuela"],["VN","Vietnam"],["YE","Yemen"],["ZM","Zambia"],["ZW","Zimbabwe"]],"COUNTRY_AR":{"Saudi Arabia":"السعودية","United Arab Emirates":"الإمارات","Kuwait":"الكويت","Qatar":"قطر","Bahrain":"البحرين","Oman":"عُمان","Egypt":"مصر","Jordan":"الأردن","Lebanon":"لبنان","Syria":"سوريا","Iraq":"العراق","Yemen":"اليمن","Palestine":"فلسطين","Sudan":"السودان","Morocco":"المغرب","Algeria":"الجزائر","Tunisia":"تونس","Libya":"ليبيا","Turkey":"تركيا","Pakistan":"باكستان","India":"الهند","Bangladesh":"بنغلاديش","Philippines":"الفلبين","Indonesia":"إندونيسيا","United Kingdom":"المملكة المتحدة","United States":"الولايات المتحدة","Canada":"كندا","France":"فرنسا","Germany":"ألمانيا"},"EM_RELS":["spouse","parent","sibling","child","relative","friend","colleague","other"],"PRIVACY_VERSION":"2026-11-13"};
   /* Every word the form shows is in T (design/app.js), in all fifteen languages besides English: the tables this file
      used to merge in were folded into it on 2026-11-11, so the website's copy can carry one language (t/<lang>.json). */
   /* Why a typed character did not appear in a name box - the rentals site's own words. */
@@ -2775,12 +3031,12 @@ var qrcode = function() {
      public by design; every RPC is SECURITY DEFINER and validates/throttles on the server. */
   var SUPABASE_URL = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.url) || "https://qpffkzmsfyilicwcsszz.supabase.co";
   var SUPABASE_KEY = (SITE_FORM && SITE_FORM.db && SITE_FORM.db.key) || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFwZmZrem1zZnlpbGljd2Nzc3p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAyNDQwODAsImV4cCI6MjEwNTgyMDA4MH0.K6qZpK0oR4MXIaFk4DRJGy-H_m6BYnJ-S31swTiHMhQ";
-  var SOURCE = (location.pathname.split("/").filter(Boolean)[0] || "petromin").toLowerCase(); // 'petromin' on micromobility.sa/petromin
-  if (SITE_FORM && LANGS[SOURCE]) SOURCE = (location.pathname.split("/").filter(Boolean)[1] || "petromin").toLowerCase(); // /ar/petromin on the website
+  // Every registration here is on a Petromin night (rider_register's source), whichever company the rider works for.
+  var SOURCE = "petromin";
   var _sb = null;
-  /* The website's page loads no supabase-js (its address is not one the site's scripts may come from): the calls the
-     form makes are plain POSTs to the database's /rest/v1/rpc, answered as supabase-js answers them ({data, error},
-     a refusal's code and message as PostgREST sends them, a network failure as an error, never thrown). */
+  /* The page loads no script from elsewhere (no supabase-js): the calls the form makes are plain POSTs to the database's
+     /rest/v1/rpc, answered as supabase-js answered them ({data, error}, a refusal's code and message as PostgREST sends
+     them, a network failure as an error, never thrown). */
   function rpcFetch(fn, args) {
     return fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, { method: "POST", headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" }, body: JSON.stringify(args || {}) })
       .then(function (res) {
@@ -2792,7 +3048,7 @@ var qrcode = function() {
         });
       }, function (e) { return { data: null, error: { message: "TypeError: " + (e && e.message || "Failed to fetch"), code: "", details: String(e), hint: "" }, status: 0 }; });
   }
-  function sbClient() { if (!_sb) _sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : { rpc: rpcFetch }; return _sb; }
+  function sbClient() { if (!_sb) _sb = { rpc: rpcFetch }; return _sb; }
   // A call the database does not know yet (its migration not applied): 404, PGRST202.
   function unknownCall(r) { return !!(r && r.error && (r.error.code === "PGRST202" || r.status === 404)); }
   // No answer at all (the network) rather than a refusal the server gave.
@@ -2800,16 +3056,27 @@ var qrcode = function() {
   function toAscii(s) { return asciiDigits(s); }
 
   /* How far riders get, counted per step without anyone in it (form_step, rentals 20261111030000): a step seen once
-     per visit, a box refused at Continue, a registration, a refusal by its code. A test browser counts nothing. */
+     per visit, a box refused at Continue, a registration, a refusal by its code. A test browser counts nothing.
+     The first step (the company) is counted on its own, form 'pmhome' step 1, with the company picked as 'done';
+     each company's own steps are numbered from 1 under its form: 'petromin' (Petromin and Petrolube: 1 the night,
+     2 the details, 3 the bike, 4 Check and agree, as before the company step), 'pmdukan' (the same four) and
+     'pmguest' (1 the account, 2 the night, 3 the bike, 4 Check and agree). */
+  var FORM_ID = { emp: "petromin", dukan: "pmdukan", guest: "pmguest" };
   var seen = {};
-  function track(stepNo, ev, field) {
+  function track(ui, ev, field) {
     try {
       if (navigator.webdriver || editing) return;
-      if (ev === "view") { if (seen[stepNo]) return; seen[stepNo] = 1; }
-      sbClient().rpc("form_step", { p_form: SOURCE, p_step: stepNo, p_event: ev, p_field: String(field || "").toLowerCase().replace(/[^a-z_]/g, "").slice(0, 24), p_lang: html.lang }).then(function () {}, function () {});
+      var home = ui <= 1, form = home ? "pmhome" : FORM_ID[KIND || "emp"], n = home ? 1 : ui - 1;
+      if (ev === "view") { if (seen[form + n]) return; seen[form + n] = 1; }
+      sbClient().rpc("form_step", { p_form: form, p_step: n, p_event: ev, p_field: String(field || "").toLowerCase().replace(/[^a-z_]/g, "").slice(0, 24), p_lang: html.lang }).then(function () {}, function () {});
     } catch (e) {}
   }
   stepHooks.push(function (n) { if (booted && $("#success").hidden) track(n, "view"); });
+  // The company a rider went on with, once a visit for each.
+  function trackPick() {
+    var co = String(selectedCompany || "").toLowerCase(); if (!co || seen["pick" + co]) return;
+    seen["pick" + co] = 1; track(1, "done", co);
+  }
 
   /* Names hold letters, spaces and periods, as on the rentals site: a dash becomes a space
      ("Al-Harbi" is "Al Harbi", not "AlHarbi"), and digits, emoji and other signs are dropped as they
@@ -2851,7 +3118,7 @@ var qrcode = function() {
   $("#name").addEventListener("input", function () { onNameInput(this); });
   $("#name").addEventListener("blur", function () { onNameBlur(this); });
   var FIELD_ERR = { badge: "Enter your badge number", name: "Enter your full name", phone: "Enter a valid mobile number", height: "Enter your height in cm (100 to 250)", type: "Choose a bike type", session: "This session is no longer open", company: "Choose your company" };
-  var FIELD_STEP = { session: 1, company: 2, badge: 2, name: 2, phone: 2, height: 3, type: 3 };
+  var FIELD_PANE = { session: "session", company: "company", badge: "details", name: "details", phone: "details", height: "bike", type: "bike" };
 
   /* The second step checks what rider_register checks, so Continue says it there and then: a badge of the characters
      the database takes (letters, digits, space . _ / # ’ -, at least one letter or digit), a name of two words, none
@@ -2864,26 +3131,29 @@ var qrcode = function() {
     var all = (cc.value + nationalDigits()).length;
     return cc.value === "966" || (all >= 8 && all <= 15);
   };
-  var _validateStepDesign = validateStep;
-  validateStep = function (n) {
-    var ok = _validateStepDesign(n);
-    if (n === 2) {
+  var _validatePaneDesign = validatePane;
+  validatePane = function (p) {
+    var ok = _validatePaneDesign(p), bad = -1;
+    if (p === "details") {
       var badge = toAscii($("#badge").value).trim();
-      if (badge && (!BADGE_OK.test(badge) || !/[A-Za-z0-9]/.test(badge))) { setError("f-badge", true); ok = false; }
+      if (KIND === "emp" && badge && (!BADGE_OK.test(badge) || !/[A-Za-z0-9]/.test(badge))) { setError("f-badge", true); ok = false; }
       var nm = tidyName($("#name").value);
       if (nm && !/\s/.test(nm)) { $("#name")._nameHintUntil = 0; setError("f-name", true, "Enter your full name"); ok = false; }
       else if (nm && nameShort(nm)) { $("#name")._nameHintUntil = 0; setError("f-name", true, NAME_SHORT); ok = false; }
     }
-    if (n === 3) {
-      var bad = companions.map(companionFault).indexOf(true);
+    if (p === "bike" && KIND === "emp") {
+      bad = companions.map(companionFault).indexOf(true);
       if (bad >= 0) { ok = false; if (booted) openRider(bad, true); }
     }
-    if (n === 4) {
-      if (!editing && !$("#privacy").checked) { setError("f-privacy", true); ok = false; }
+    if (p === "account") ok = guestReady() && ok; // signed in, with what the booking needs of the account
+    if (p === "check") {
+      if (!editing && KIND !== "guest" && !$("#privacy").checked) { setError("f-privacy", true); ok = false; }
       if (!$("#waiver").checked) { setError("f-waiver", true, "Please accept the waiver to continue."); ok = false; }
     }
-    if (!ok && booted) document.querySelectorAll('.step[data-step="' + n + '"] .field.invalid').forEach(function (f) { track(n, "error", f.id.replace(/^f-/, "")); });
-    if (!ok && booted && n === 3 && bad >= 0) track(3, "error", "rider");
+    var n = stepOf(p);
+    if (!ok && booted) document.querySelectorAll('.step[data-step="' + n + '"] .field.invalid').forEach(function (f) { track(n, "error", f.id.replace(/^f-/, "").replace(/-/g, "_")); });
+    if (!ok && booted && bad >= 0) track(n, "error", "rider");
+    if (ok && booted && p === "company") trackPick();
     return ok;
   };
   // The box to focus is on the step on screen: a message left on another step is not jumped to.
@@ -2906,6 +3176,7 @@ var qrcode = function() {
     if (!d.session && editing && editing.session && editing.session.id === selectedSession) d.session = editing.session;
     d.name = tidyName(d.name);
     d.badge = toAscii(d.badge).trim();
+    if (KIND === "guest") guestCollect(d); // the account's name and mobile, the company typed
     return d;
   };
 
@@ -3070,7 +3341,7 @@ var qrcode = function() {
   });
   function companionArgs() { return companions.map(function (c) { return { name: tidyName(c.name), height: heightOf(String(c.height || "")), type: c.type }; }); }
   function showParty(d) {
-    var n = 1 + ((d && d.riders) || []).length;
+    var n = 1 + (kindOfRecord(d) === "emp" ? (d.riders || []).length : 0);
     $("#chip-riders").hidden = n < 2; $("#chip-riders-value").textContent = String(n);
     var note = $("#riders-note"); note.hidden = n < 2;
     if (n >= 2) { note.setAttribute("data-t", "Riding with: {names}"); note.setAttribute("data-args", JSON.stringify({ names: d.riders.map(function (c) { return c.name; }).join(", ") })); render(note); }
@@ -3085,20 +3356,29 @@ var qrcode = function() {
   function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
   function renderReview() {
     var d = collect(), box = $("#review"), s = d.session;
-    var part = function (n, key, rows) {
+    var part = function (pane, key, rows) {
+      var n = stepOf(pane);
       return '<section class="rv" aria-labelledby="rv-h' + n + '"><div class="rv-head"><h3 id="rv-h' + n + '">' + esc(t(key)) + '</h3>' +
         '<button type="button" class="rv-change" data-go="' + n + '" id="rv-c' + n + '" aria-labelledby="rv-c' + n + ' rv-h' + n + '">' + esc(t("Change")) + "</button></div>" + rows + "</section>";
     };
+    var c = s && collectIso(s), ph = String(d.phone || ""), code = cc.value;
+    if (KIND !== "guest" && ph.indexOf("+" + code) === 0) ph = "+" + code + " " + ph.slice(code.length + 1);
+    var night = part("session", "Session", s ? reviewRow("Session", fmtDate(s.start) + ", " + fmtTime(s.start) + (s.end ? " – " + fmtTime(s.end) : "") + (nightTitle(s) ? " · " + nightTitle(s) : "")) +
+      (c ? reviewRow("Bike pickup", fmtTime(c)) : "") + reviewRow("Where", placeOf(s)) : "");
+    if (KIND === "guest") {
+      // The account's name and mobile, the company typed, then the night and the bike.
+      box.innerHTML = part("account", "Your account", reviewRow("Name", d.name) + reviewRow("Mobile number", ph, true) + reviewRow("Company", d.company || "")) +
+        night + part("bike", "Bike", reviewRow("Bike", d.type ? t(d.type) : ""));
+      return;
+    }
     // Each rider is a row of their own: the name, then height and bike.
     var bikes = reviewRow(d.name || t("Name"), [d.height ? cmOf(d.height) : "", d.type ? t(d.type) : ""].filter(Boolean).join(" · "), false, true);
-    companions.concat(deskRiders).forEach(function (c) { bikes += reviewRow(tidyName(c.name), riderMeta(c), false, true); });
-    var c = s && collectIso(s), ph = String(d.phone || ""), code = cc.value;
-    if (ph.indexOf("+" + code) === 0) ph = "+" + code + " " + ph.slice(code.length + 1);
+    if (KIND === "emp") companions.concat(deskRiders).forEach(function (x) { bikes += reviewRow(tidyName(x.name), riderMeta(x), false, true); });
     box.innerHTML =
-      part(1, "Session", s ? reviewRow("Session", fmtDate(s.start) + ", " + fmtTime(s.start) + (s.end ? " – " + fmtTime(s.end) : "") + (s.title ? " · " + s.title : "")) +
-        (c ? reviewRow("Bike pickup", fmtTime(c)) : "") + reviewRow("Where", placeOf(s)) : "") +
-      part(2, "Your details", reviewRow("Company", d.company || "") + reviewRow("Badge", d.badge, true) + reviewRow("Name", d.name) + reviewRow("Mobile number", ph, true)) +
-      part(3, "Bike", bikes);
+      // Dukan's employees are on Dukan's own steps: the company is not a question left to change there.
+      (KIND === "emp" ? part("company", "Company", reviewRow("Company", d.company || "")) : "") + night +
+      part("details", "Your details", (KIND === "emp" ? reviewRow("Badge", d.badge, true) : "") + reviewRow("Name", d.name) + reviewRow("Mobile number", ph, true)) +
+      part("bike", "Bike", bikes);
   }
   $("#review").addEventListener("click", function (e) {
     var b = e.target.closest(".rv-change"); if (!b) return;
@@ -3116,8 +3396,12 @@ var qrcode = function() {
     var box = $("#qr"); if (!box) return;
     box.innerHTML = "";
     if (!d || !d.bookingNo || typeof qrcode !== "function") return;
+    // An invited guest's booking is an ordinary booking: its code is the booking's own (ref, MMC-12-abcdef), which the
+    // desk's scanner reads straight into check-in. A registration's is MMP-<number>, which opens it on the Petromin page.
+    var code = kindOfRecord(d) === "guest" ? String(d.ref || "") : "MMP-" + String(d.bookingNo).toUpperCase();
+    if (!code) return;
     var q;
-    try { q = qrcode(0, "M"); q.addData("MMP-" + String(d.bookingNo).toUpperCase()); q.make(); } catch (e) { return; }
+    try { q = qrcode(0, "M"); q.addData(code); q.make(); } catch (e) { return; }
     try {
       var n = q.getModuleCount(), pad = 3, cell = 8, size = (n + pad * 2) * cell;
       var cv = document.createElement("canvas"), ctx = cv.getContext("2d");
@@ -3127,10 +3411,33 @@ var qrcode = function() {
       ctx.fillStyle = "#000";
       for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) ctx.fillRect((c + pad) * cell, (r + pad) * cell, cell, cell);
       cv.setAttribute("aria-hidden", "true");
+      cv.setAttribute("data-code", code);
       box.appendChild(cv);
     } catch (e) {
       try { box.innerHTML = q.createSvgTag({ cellSize: 6, margin: 0, scalable: true }); } catch (e2) {}
     }
+  }
+  /* An amount as the website's tickets write it (apps/web/src/components/booking/Sar.tsx): the riyal sign (U+20C1, the
+     site's own font file) left of the number in every language, isolated left to right; two decimals when the amount
+     has a fraction (57.50), none when it is whole (75). The sign is drawn for the eye alone, and a word a screen reader
+     reads ("SAR", in Arabic "ريال") follows it out of sight. */
+  var RIYAL = String.fromCharCode(0x20c1);
+  function riyalNum(n) { var v = Math.round((Number(n) || 0) * 100) / 100; return v % 1 === 0 ? String(v) : v.toFixed(2); }
+  function priceHtml(n) { return '<bdi class="amt" dir="ltr"><span class="amt-sign" aria-hidden="true">' + RIYAL + '</span><span class="sr">' + esc(t("SAR")) + "</span> " + riyalNum(n) + "</bdi>"; }
+  function priced(d) { return !!d && d.price != null && d.price !== "" && isFinite(Number(d.price)); }
+  /* What each kind of ticket adds: Dukan's employee and a guest see the bike they asked for; a guest the fare paid at
+     the desk and, on a full night, the booking's status (a status word only, never a place in the line). A guest's
+     booking made on the old page has no account behind it: it can be cancelled here, not changed. */
+  function paintBooking(d) {
+    var k = kindOfRecord(d), ty = d && (d.type === "Hybrid" || d.type === "Mountain" || d.type === "Road") ? d.type : "";
+    $("#tk-type").hidden = k === "emp" || !ty; if (ty) $("#tk-type-value").textContent = t(ty);
+    var fare = k === "guest" && priced(d);
+    $("#tk-price").hidden = !fare; $("#tk-price-value").innerHTML = fare ? priceHtml(d.price) : "";
+    var wl = k === "guest" && !!d && d.status === "waitlist", h = $("#success .title");
+    h.setAttribute("data-t", wl ? "You're on the waitlist" : "You are registered"); render(h);
+    $("#result").hidden = wl;
+    $("#tk-status").hidden = !wl;
+    $("#edit").hidden = k === "guest" && !!d && d.account === false;
   }
   // The night's facts on the ticket: when bikes are handed out, where, and the way there (the circuit's map link).
   function paintFacts(d) {
@@ -3144,6 +3451,7 @@ var qrcode = function() {
     var rr = $("#result"); rr.setAttribute("data-args", JSON.stringify({ d: sessionLabel(current.session) })); render(rr);
     paintSession(current);
     paintFacts(current);
+    paintBooking(current);
   });
   // The night on the ticket: its date and its time each kept whole, so a narrow column never leaves "PM" (or the
   // Arabic "م") alone on a line.
@@ -3154,7 +3462,7 @@ var qrcode = function() {
   var _showSuccessDesign = showSuccess;
   showSuccess = function (d) {
     setNotice(null); // "Your booking was cancelled." is about the booking before (the cancel sets it again after)
-    _showSuccessDesign(d); drawQr(current); showParty(current); paintFacts(current); paintSession(current);
+    _showSuccessDesign(d); drawQr(current); showParty(current); paintFacts(current); paintSession(current); paintBooking(current);
     var n = $("#tk-name"); if (n) n.textContent = (current && current.name) || "";
     setNote(null); drawOthers(); paintWallet();
   };
@@ -3173,7 +3481,7 @@ var qrcode = function() {
   // shape the booking site records its own notice in. A new registration sends it as p_privacy, the
   // box ticked. Change it together with the "Last updated" lines.
   var PRIVACY_VERSION = "2026-09-22";
-  var PV = {
+  var PV_EMP = {
     en: '<p class="pv-upd">Last updated: 22 September 2026</p>' +
       "<h3>Who we are</h3>" +
       "<p><b>شركة التنقل الدقيق المحدودة</b> (Micromobility Company Ltd.), unified number 7041881512, Building 7933, Ibn Anuq Al Fedha Street, Al Mansurah District, Riyadh 12692. We run the bike rides your employer arranges. Contact: " + PV_MAIL + ".</p>" +
@@ -3225,8 +3533,64 @@ var qrcode = function() {
       "<p>يحق لك طلب الاطلاع على بياناتك، والحصول على نسخة منها، وتصحيحها أو إكمالها، وإتلافها متى انتهت الحاجة إليها. راسلنا على " + PV_MAIL + "، وسنرد خلال 30 يومًا. ويحق لك أيضًا تقديم شكوى إلى الهيئة السعودية للبيانات والذكاء الاصطناعي (سدايا).</p>" +
       "<p>إشعار الخصوصية الكامل للحسابات والحجوزات على موقعنا متاح على " + PV_SITE + ".</p>"
   };
+  /* Dukan's employees read Dukan's own notice (its version is recorded with their registration). It names MicroMobility
+     and Dukan only: the services that host the database and deliver the page are named in the full notice it links to. */
+  var PRIVACY_VERSION_DUKAN = "dukan-2026-11-13";
+  var PV_DUKAN = {
+    en: '<p class="pv-upd">Last updated: 13 November 2026</p>' +
+      "<h3>Who we are</h3>" +
+      "<p><b>شركة التنقل الدقيق المحدودة</b> (Micromobility Company Ltd.), unified number 7041881512, Building 7933, Ibn Anuq Al Fedha Street, Al Mansurah District, Riyadh 12692. We run the bike rides your employer, Dukan, arranges. Contact: " + PV_MAIL + ".</p>" +
+      "<h3>What this form collects, and why</h3>" +
+      pvTable(["Data", "Required?", "Why"], [
+        ["Full name, mobile number", "Required", "To book your place, find your booking, reach you at the desk and bill Dukan for your ride"],
+        ["Session", "Required", "To book your place on the ride"],
+        ["Height, bike type", "Required", "To give you a bike that fits"],
+        ["Booking number, bike, check-in and return times, price", "Created when you ride", "Running the ride and billing your employer"]
+      ]) +
+      "<h3>Legal basis</h3>" +
+      "<p>Running the ride your employer arranged for you, and keeping the billing records the law requires. We use the data only for these purposes. Without the required details we cannot register you.</p>" +
+      "<h3>Who receives it, and where it is kept</h3>" +
+      "<ul><li><b>Our staff</b>, who run the ride.</li>" +
+      "<li><b>Your employer</b> (Dukan): the names of the riders on its rides, and nothing else.</li>" +
+      "<li><b>The service that hosts our database</b>, in <b>Frankfurt, Germany</b>, in the European Union. We transfer your data there only to run the ride, and only what that needs.</li>" +
+      "<li><b>The service that delivers this page</b> to your phone.</li></ul>" +
+      "<p>We do not sell your data. It is encrypted while it travels, and only our staff can see it.</p>" +
+      "<h3>How long we keep it</h3>" +
+      "<p>Registrations are kept for the ride and its billing. Billed rides are kept for 10 years, because the law requires financial records, then destroyed or anonymised.</p>" +
+      "<h3>Your rights</h3>" +
+      "<p>You can ask to see your data, get a copy, have it corrected or completed, or have it destroyed once it is no longer needed. Email " + PV_MAIL + "; we reply within 30 days. You can also complain to the Saudi Data &amp; AI Authority (SDAIA).</p>" +
+      "<p>The full Privacy Notice, which names the services above, is at " + PV_SITE + ".</p>",
+    ar: '<p class="pv-upd">آخر تحديث: 13 نوفمبر 2026</p>' +
+      "<h3>من نحن</h3>" +
+      "<p><b>شركة التنقل الدقيق المحدودة</b>، الرقم الموحد 7041881512، مبنى 7933، شارع ابن عنق الفضة، حي المنصورة، الرياض 12692. ننظّم رحلات الدراجات التي يرتّبها صاحب عملك، الدكان. للتواصل: " + PV_MAIL + ".</p>" +
+      "<h3>ما يجمعه هذا النموذج ولماذا</h3>" +
+      pvTable(["البيانات", "إلزامي؟", "الغرض"], [
+        ["الاسم الكامل ورقم الجوال", "إلزامي", "لحجز مكانك والعثور على حجزك والتواصل معك عند المكتب وإصدار فاتورة رحلتك للدكان"],
+        ["الجلسة", "إلزامي", "لحجز مكانك في الرحلة"],
+        ["الطول ونوع الدراجة", "إلزامي", "لتوفير دراجة بمقاس مناسب لك"],
+        ["رقم الحجز والدراجة وأوقات تسجيل الوصول والإرجاع والسعر", "تُسجَّل عند الركوب", "تشغيل الرحلة وإصدار الفاتورة لصاحب عملك"]
+      ]) +
+      "<h3>المسوّغ النظامي</h3>" +
+      "<p>تنظيم الرحلة التي رتّبها لك صاحب عملك، وحفظ سجلات الفوترة التي يوجبها النظام. لا نستخدم البيانات إلا لهذه الأغراض، ودون البيانات الإلزامية لا يمكننا تسجيلك.</p>" +
+      "<h3>من يتلقاها وأين تُحفظ</h3>" +
+      "<ul><li><b>موظفونا</b> الذين يديرون الرحلة.</li>" +
+      "<li><b>صاحب عملك</b> (الدكان): أسماء الراكبين في رحلاته فقط، ولا شيء غير ذلك.</li>" +
+      "<li><b>الخدمة التي تستضيف قاعدة بياناتنا</b> في <b>فرانكفورت بألمانيا</b>، في الاتحاد الأوروبي، ولا ننقل بياناتك إليها إلا لتشغيل الرحلة وبالقدر الذي تحتاجه فقط.</li>" +
+      "<li><b>الخدمة التي توصل هذه الصفحة</b> إلى جوالك.</li></ul>" +
+      "<p>لا نبيع بياناتك. تُشفَّر أثناء انتقالها، ولا يطّلع عليها إلا موظفونا.</p>" +
+      "<h3>مدة الاحتفاظ بها</h3>" +
+      "<p>نحتفظ بالتسجيلات لأجل الرحلة وفوترتها، ونحتفظ بالرحلات المفوترة 10 سنوات لأن النظام يوجب حفظ السجلات المالية، ثم نتلفها أو نزيل ما يحدد الهوية منها.</p>" +
+      "<h3>حقوقك</h3>" +
+      "<p>يحق لك طلب الاطلاع على بياناتك، والحصول على نسخة منها، وتصحيحها أو إكمالها، وإتلافها متى انتهت الحاجة إليها. راسلنا على " + PV_MAIL + "، وسنرد خلال 30 يومًا. ويحق لك أيضًا تقديم شكوى إلى الهيئة السعودية للبيانات والذكاء الاصطناعي (سدايا).</p>" +
+      "<p>إشعار الخصوصية الكامل، الذي يسمّي الخدمات المذكورة أعلاه، متاح على " + PV_SITE + ".</p>"
+  };
   var pvDialog = $("#privacy-dialog");
+  /* The notice a rider opens is their own kind's: the employees' (Petromin and Petrolube, also before a company is
+     picked), Dukan's while Dukan's look shows, and for an invited guest, whose details are an account's, the full
+     notice on the website (their account records it; the form has none of its own for them). */
   function openPrivacy() {
+    if (KIND === "guest" && html.getAttribute("data-co") !== "dukan" && (step > 1 || $("#card").getAttribute("data-state") === "success")) { try { window.open("https://micromobility.sa/privacy", "_blank", "noopener"); } catch (e) {} return; }
+    var PV = html.getAttribute("data-co") === "dukan" ? PV_DUKAN : PV_EMP;
     var full = PV[html.lang] ? html.lang : null, body = $("#pv-body");
     body.innerHTML = PV[full || "en"];
     if (full) { body.removeAttribute("dir"); body.removeAttribute("lang"); } else { body.setAttribute("dir", "ltr"); body.setAttribute("lang", "en"); }
@@ -3298,6 +3662,7 @@ var qrcode = function() {
   function startAnother() {
     if (!current) return;
     editing = null; another = true;
+    guestForget(); // the next person signs in for themselves
     prefill({}); setSubmitLabels(false);
     $("#privacy").checked = false; setError("f-privacy", false); // the next person confirms the notice for themselves
     $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
@@ -3310,20 +3675,29 @@ var qrcode = function() {
      the rows. */
   var editing = null;
   function setSubmitLabels(edit) {
-    var l = $("#submit .submit-label"), b = $("#submit .submit-busy"), h = $("#form .title");
+    var l = $("#submit .submit-label"), b = $("#submit .submit-busy");
     l.setAttribute("data-t", edit ? "Save changes" : "Agree and register"); render(l);
     b.setAttribute("data-t", edit ? "Saving..." : "Registering..."); render(b);
-    h.setAttribute("data-t", edit ? "Edit your booking" : "Petromin bike night"); render(h);
+    titleKey = edit ? "Edit your booking" : null; paintLook();
     $("#cancel-edit").hidden = !(edit || another); // Cancel goes back to the confirmation on the phone
-    $("#f-privacy").hidden = !!edit; // confirmed when they registered; an edit does not ask again
+    paintAsked();
     $("#waiver").checked = false; setError("f-waiver", false); // the waiver is asked again on every save, an edit too
+    lockKinds(edit ? KIND : null);
+  }
+  // The Privacy Notice box: confirmed when they registered (an edit does not ask again), and an invited guest's notice
+  // is their account's, confirmed when it was made.
+  function paintAsked() { $("#f-privacy").hidden = !!editing || KIND === "guest"; }
+  kindHooks.push(paintAsked);
+  // A booking being changed stays its own kind: Petromin and Petrolube can be told apart again, nothing else.
+  function lockKinds(k) {
+    companies.querySelectorAll(".company").forEach(function (x) { x.disabled = !!k && kindOf(x.getAttribute("data-v")) !== k; });
+    syncRoving(companies);
   }
   function prefill(d) {
-    selectedSession = d.session ? d.session.id : null; renderSessions();
-    selectedCompany = d.company || null;
-    companies.querySelectorAll(".company").forEach(function (x) { x.setAttribute("aria-checked", String(x.getAttribute("data-v") === selectedCompany)); });
-    syncRoving(companies);
-    $("#badge").value = d.badge || ""; $("#name").value = tidyName(d.name); // a booking saved before the rule may carry a dash
+    var k = d && d.bookingNo ? kindOfRecord(d) : null;
+    selectedSession = d.session ? d.session.id : null;
+    setCompany(k === "dukan" ? "Dukan" : k === "guest" ? "Guest" : k ? d.company || "Petromin" : null); // draws the nights too
+    $("#badge").value = k === "emp" ? d.badge || "" : ""; $("#name").value = tidyName(d.name); // a booking saved before the rule may carry a dash
     var digits = String(d.phone || "").replace(/\D/g, ""), code = null;
     COUNTRIES.forEach(function (x) { if (digits.indexOf(x[1]) === 0 && (!code || x[1].length > code.length)) code = x[1]; });
     if (code) { cc.value = code; phoneIn.value = digits.slice(code.length); } else { cc.value = "966"; phoneIn.value = digits; }
@@ -3334,10 +3708,11 @@ var qrcode = function() {
     types.querySelectorAll(".tile").forEach(function (b) { b.setAttribute("aria-checked", String(b.getAttribute("data-v") === selectedType)); });
     syncRoving(types);
     ["f-session", "f-company", "f-badge", "f-name", "f-phone", "f-height", "f-type"].forEach(function (id) { setError(id, false); });
-    var party = (d.riders || []).filter(Boolean);
+    var party = k === "emp" ? (d.riders || []).filter(Boolean) : [];
     companions = party.filter(function (c) { return !c.desk; }).map(function (c) { return { name: tidyName(c.name), height: c.height != null ? String(c.height) : "", type: c.type || "" }; });
     deskRiders = party.filter(function (c) { return c.desk; }).map(function (c) { return { name: c.name || "", height: c.height != null ? c.height : null, type: c.type || "", desk: true }; });
     renderCompanions();
+    guestPrefill(k === "guest" ? d : null);
   }
   /* Edit starts from the booking as the server holds it now (rider_lookup), not this phone's copy of it: the desk, or
      the rider on another phone through Find my booking, may have changed it since, and a save sends every part of it
@@ -3345,6 +3720,7 @@ var qrcode = function() {
   var editAsking = false;
   async function startEdit() {
     if (!current || editAsking) return;
+    if (kindOfRecord(current) === "guest") { startGuestEdit(); return; }
     var was = current, btn = $("#edit"), r = null;
     editAsking = true; btn.disabled = true;
     try {
@@ -3367,7 +3743,7 @@ var qrcode = function() {
     editing = current; another = false; prefill(current); setSubmitLabels(true);
     $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
     hideBanner(); setNotice(null); returnTo = 0;
-    goStep(selectedSession ? STEPS : 1);
+    goStep(selectedSession ? STEPS : stepOf("session"));
     loadSessions(); // a restored confirmation never fetched the calendar; the saved session stays selected if it is still offered
   }
   function cancelEdit() { editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner(); if (current) showSuccess(current); }
@@ -3398,14 +3774,17 @@ var qrcode = function() {
   $("#calendar").addEventListener("click", function () {
     var d = current, s = d && d.session; if (!s || !s.start) return;
     var from = collectIso(s) || s.start, to = s.end || new Date(new Date(s.start).getTime() + 2 * 3600000).toISOString();
-    var title = t("Petromin bike night") + " · " + d.bookingNo;
-    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//Petromin form//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
+    var k = kindOfRecord(d), dk = k === "dukan";
+    var title = t(FORM_TITLE[k] || FORM_TITLE.emp) + " · " + d.bookingNo;
+    var lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//MicroMobility//" + (dk ? "Dukan" : "Petromin") + " form//EN", "CALSCALE:GREGORIAN", "METHOD:PUBLISH", "BEGIN:VEVENT",
       "UID:" + String(d.bookingNo).toLowerCase() + "-" + s.id + "@micromobility.sa", "DTSTAMP:" + icsTime(new Date().toISOString()),
       "DTSTART:" + icsTime(from), "DTEND:" + icsTime(to), "SUMMARY:" + icsText(title), "LOCATION:" + icsText(placeOf(s)),
-      "DESCRIPTION:" + icsText(t("Booking") + " " + d.bookingNo + "\n" + t("Helmets are required. One comes with every bike.")),
-      "URL:https://micromobility.sa/petromin", "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", "DESCRIPTION:" + icsText(title), "END:VALARM", "END:VEVENT", "END:VCALENDAR"];
+      "DESCRIPTION:" + icsText(t("Booking") + " " + d.bookingNo + "\n" + t("Helmets are required. One comes with every bike."))]
+      // The page's address names Petromin: Dukan's file leaves it out.
+      .concat(dk ? [] : ["URL:https://micromobility.sa/petromin"])
+      .concat(["BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", "DESCRIPTION:" + icsText(title), "END:VALARM", "END:VEVENT", "END:VCALENDAR"]);
     var url = URL.createObjectURL(new Blob([lines.join("\r\n") + "\r\n"], { type: "text/calendar;charset=utf-8" }));
-    var a = document.createElement("a"); a.href = url; a.download = "petromin-" + d.bookingNo + ".ics"; document.body.appendChild(a); a.click(); a.remove();
+    var a = document.createElement("a"); a.href = url; a.download = (dk ? "dukan-" : "petromin-") + d.bookingNo + ".ics"; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
   });
 
@@ -3414,14 +3793,18 @@ var qrcode = function() {
   var CANCEL_ERR = { checked_in: "You have already checked in. Ask the desk to change your booking.", desk: "The desk has this booking. Ask the desk to cancel it.", notfound: "We could not find your booking. Please register again.", session: "This session is no longer open", throttled: "Too many submissions from this network" };
   $("#cancel-booking").addEventListener("click", async function () {
     var d = current; if (!d || !d.session) return;
-    var yes = await ask(t("Cancel booking {no}? Every rider on it loses their place.", { no: d.bookingNo }), "Cancel booking", "Keep it", true);
+    var k = kindOfRecord(d);
+    var yes = await ask(t(k === "emp" ? "Cancel booking {no}? Every rider on it loses their place." : "Cancel booking {no}? You will lose your place.", { no: d.bookingNo }), "Cancel booking", "Keep it", true);
     if (!yes) { $("#cancel-booking").focus(); return; }
     var btn = $("#cancel-booking"); btn.disabled = true;
-    var r; try { r = await sbClient().rpc("rider_cancel", { p_booking_no: d.bookingNo, p_proof_phone: d.phone, p_session_id: d.session.id }); } catch (e) { r = { error: e }; }
+    var r; try {
+      r = k === "guest" ? await sbClient().rpc("petromin_invite_cancel", { p_invite_no: d.bookingNo, p_phone: d.phone, p_session_id: d.session.id })
+        : await sbClient().rpc("rider_cancel", { p_booking_no: d.bookingNo, p_proof_phone: d.phone, p_session_id: d.session.id });
+    } catch (e) { r = { error: e }; }
     btn.disabled = false;
     if (!r || r.error || !r.data) { setNote(noAnswer(r) ? "Could not reach the server" : "We could not save this. Please try again."); return; }
     if (!r.data.ok) { setNote(CANCEL_ERR[r.data.error] || "We could not save this. Please try again."); return; }
-    track(4, "cancel");
+    track(STEPS, "cancel");
     try { localStorage.removeItem(STORE); } catch (e) {}
     saveKept(keptList().filter(function (x) { return keyOf(x) !== keyOf(d); }));
     current = null;
@@ -3435,10 +3818,11 @@ var qrcode = function() {
      clears a site's after seven days away. */
   var fdDialog = $("#find-dialog");
   fillCC($("#fd-cc"));
+  // A number typed without its letter takes the picked company's (P when none is picked).
   function fdNumber() {
     var v = toAscii($("#fd-no").value).toUpperCase().replace(/\s+/g, "");
     var m = v.match(/^([A-Z])?-?(\d{1,4})$/);
-    return m ? (m[1] || SOURCE.charAt(0).toUpperCase()) + "-" + ("00" + m[2]).slice(-Math.max(3, m[2].length)) : "";
+    return m ? (m[1] || (KIND === "dukan" ? "D" : KIND === "guest" ? "I" : "P")) + "-" + ("00" + m[2]).slice(-Math.max(3, m[2].length)) : "";
   }
   function fdPhone() {
     var raw = toAscii($("#fd-phone").value).replace(/[^0-9+]/g, ""), code = $("#fd-cc").value;
@@ -3450,7 +3834,18 @@ var qrcode = function() {
   }
   // A booking as rider_lookup gives it (Find my booking, and Edit, which starts from it).
   function fromLookup(d, ph) {
-    return { badge: d.badge || "", name: d.name || "", company: d.company || null, phone: d.phone || ph, height: d.height, type: d.type, session: d.session || null, bookingNo: d.booking_no, riders: d.riders || [], submittedAt: new Date().toISOString() };
+    var no = d.booking_no || d.invite_no;
+    // An invited guest's booking (petromin_invite_lookup): an ordinary booking with its own code, status and fare; one
+    // made on the old page has no account behind it (account false).
+    if (/^I-/i.test(String(no || ""))) return { kind: "guest", name: d.name || "", company: d.company || null, phone: d.phone || ph, type: d.type || null, status: d.status || null, price: d.price != null ? d.price : null, ref: d.ref || null, account: d.account !== false, session: d.session || null, bookingNo: no, riders: [], submittedAt: new Date().toISOString() };
+    var dk = String(d.company || "").trim() === "Dukan";
+    return { kind: dk ? "dukan" : "emp", badge: dk ? "" : d.badge || "", name: d.name || "", company: d.company || null, phone: d.phone || ph, height: d.height, type: d.type, session: d.session || null, bookingNo: no, riders: dk ? [] : d.riders || [], submittedAt: new Date().toISOString() };
+  }
+  // Which call finds a number: an invited guest's I- has its own.
+  function lookupCall(no, ph, night) {
+    var guest = /^I-/i.test(no), a = guest ? { p_invite_no: no, p_phone: ph } : { p_booking_no: no, p_phone: ph };
+    if (night) a.p_session_id = String(night);
+    return sbClient().rpc(guest ? "petromin_invite_lookup" : "rider_lookup", a);
   }
   // Every companion says whether the desk added it ('desk'); a database before that lists the desk's as the rider's own.
   function deskKnown(riders) { return (riders || []).every(function (c) { return c && typeof c.desk === "boolean"; }); }
@@ -3469,7 +3864,7 @@ var qrcode = function() {
     if (!no) { $("#fd-no").focus(); return; }
     if (digits.length < 9) { $("#fd-phone").focus(); return; }
     var go = $("#fd-go"); go.disabled = true; go.classList.add("loading");
-    var r; try { r = await sbClient().rpc("rider_lookup", { p_booking_no: no, p_phone: ph }); } catch (err) { r = { error: err }; }
+    var r; try { r = await lookupCall(no, ph); } catch (err) { r = { error: err }; }
     go.disabled = false; go.classList.remove("loading");
     if (!r || r.error || !r.data) { fdMiss("Could not reach the server"); return; }
     var d = r.data;
@@ -3480,7 +3875,7 @@ var qrcode = function() {
     var nights = [fromLookup(d, ph)], more = (Array.isArray(d.more) ? d.more : []).slice(0, 4);
     if (more.length) { go.disabled = true; go.classList.add("loading"); }
     for (var i = 0; i < more.length; i++) {
-      var x = null; try { x = await sbClient().rpc("rider_lookup", { p_booking_no: no, p_phone: ph, p_session_id: String(more[i]) }); } catch (err) {}
+      var x = null; try { x = await lookupCall(no, ph, more[i]); } catch (err) {}
       if (x && !x.error && x.data && x.data.ok) nights.push(fromLookup(x.data, ph));
     }
     go.disabled = false; go.classList.remove("loading");
@@ -3490,7 +3885,7 @@ var qrcode = function() {
     closeDialog(fdDialog);
     if (current && keyOf(current) !== keyOf(found)) keep(current);
     nights.slice(1).forEach(function (b) { keep(b); });
-    editing = null; another = false; setSubmitLabels(false); setNotice(null);
+    editing = null; another = false; guestForget(); setSubmitLabels(false); setNotice(null);
     track(1, "found");
     showSuccess(found);
   });
@@ -3512,9 +3907,14 @@ var qrcode = function() {
     hideBanner();
     if (!validate()) { focusInvalid(); return; }
     var data = collect();
-    data.riders = companionArgs();
+    if (KIND === "guest") { guestSubmit(data); return; } // an invited guest's booking is their account's (guest.js)
+    var dukan = KIND === "dukan";
+    // One rider on a Dukan registration, with no badge: the database makes one from the phone. The height and the bike
+    // are the rider's own answers since 2026-11-13.
+    data.riders = dukan ? [] : companionArgs();
+    if (dukan) data.company = "Dukan";
     var args = {
-      p_badge: data.badge,
+      p_badge: dukan ? "" : data.badge,
       p_name: data.name,
       p_height: data.height,
       p_type: data.type,
@@ -3523,10 +3923,10 @@ var qrcode = function() {
       p_session_id: data.session ? data.session.id : null,
       p_company: data.company || null
     };
-    if (data.riders.length) args.p_riders = data.riders;
+    if (dukan || data.riders.length) args.p_riders = data.riders;
     args.p_waiver = WAIVER_VERSION; // only reached with the box ticked
     args.p_lang = html.lang; // the language the waiver was read in
-    if (!editing && $("#privacy").checked) args.p_privacy = PRIVACY_VERSION; // the notice this registration confirmed
+    if (!editing && $("#privacy").checked) args.p_privacy = dukan ? PRIVACY_VERSION_DUKAN : PRIVACY_VERSION; // the notice this registration confirmed
     setLoading(true);
     var r;
     // A database without the newest arguments yet does not know the call with them (404, PGRST202): once more with
@@ -3556,27 +3956,27 @@ var qrcode = function() {
     var refused = String((r && r.error && r.error.message) || (r && r.data && r.data.error) || "");
     if (/WAIVER_OUTDATED/.test(refused)) { failBanner(WAIVER_OUTDATED); return; }
     if (/PAID_MOVE/.test(refused)) { failBanner(PAID_MOVE); return; }
-    if (!r || r.error || !r.data) { track(4, "fail", noAnswer(r) ? "network" : "server"); failBanner(noAnswer(r) ? "Could not reach the server" : "We could not save this. Please try again."); return; }
+    if (!r || r.error || !r.data) { track(STEPS, "fail", noAnswer(r) ? "network" : "server"); failBanner(noAnswer(r) ? "Could not reach the server" : "We could not save this. Please try again."); return; }
     var d = r.data;
     if (!d.ok) {
-      track(4, "fail", d.error);
+      track(STEPS, "fail", d.error);
       if (d.error === "waiver") { waiverRefused(); return; }
       if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
       if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
       // rider_edit: the desk has tied this registration to a booking of its own (rentals 20261111235100, a move to another night)
       if (d.error === "desk") { failBanner("The desk has this booking. Ask the desk to change it."); return; }
-      if (d.error === "riders") { goStep(3); setError("f-riders", true); return; }
+      if (d.error === "riders" && !dukan) { goStep(stepOf("bike")); setError("f-riders", true); return; }
       // The database refuses a one-letter word with the same code as a wrong character, saying why:
       // "short" (rider_register, rentals 20261004100000). Each gets its own words.
       var short = d.why === "short";
-      if (d.error === "name_chars" || d.error === "name_short") { goStep(2); $("#name")._nameHintUntil = 0; setError("f-name", true, (short || d.error === "name_short") ? NAME_SHORT : NAME_CHARS); focusInvalid(); return; }
+      if (d.error === "name_chars" || d.error === "name_short") { goStep(stepOf("details")); $("#name")._nameHintUntil = 0; setError("f-name", true, (short || d.error === "name_short") ? NAME_SHORT : NAME_CHARS); focusInvalid(); return; }
       var ri = (Number(d.rider) || 2) - 2;
-      if ((d.error === "rider_name_chars" || d.error === "rider_name_short") && companions[ri]) { goStep(3); openRider(ri, true, { field: "name", msg: (short || d.error === "rider_name_short") ? RIDER_SHORT : NAME_CHARS }); return; }
-      if ((d.error === "rider_name" || d.error === "rider_height" || d.error === "rider_type") && companions[ri]) { goStep(3); openRider(ri, true); return; }
-      if (d.error === "duplicate") { goStep(2); setError("f-badge", true, "This badge is already registered for that session"); focusInvalid(); return; }
-      if (FIELD_ERR[d.error]) {
-        goStep(FIELD_STEP[d.error] || 1);
+      if ((d.error === "rider_name_chars" || d.error === "rider_name_short") && companions[ri]) { goStep(stepOf("bike")); openRider(ri, true, { field: "name", msg: (short || d.error === "rider_name_short") ? RIDER_SHORT : NAME_CHARS }); return; }
+      if ((d.error === "rider_name" || d.error === "rider_height" || d.error === "rider_type") && companions[ri]) { goStep(stepOf("bike")); openRider(ri, true); return; }
+      if (d.error === "duplicate" && !dukan) { goStep(stepOf("details")); setError("f-badge", true, "This badge is already registered for that session"); focusInvalid(); return; }
+      if (FIELD_ERR[d.error] && !(dukan && d.error === "badge")) {
+        goStep(stepOf(FIELD_PANE[d.error]) || 1);
         setError("f-" + d.error, true, FIELD_ERR[d.error]);
         if (d.error === "session") loadSessions();
         focusInvalid(); return;
@@ -3589,7 +3989,7 @@ var qrcode = function() {
     if (d.session) data.session = Object.assign({}, data.session || {}, d.session);
     var wasEdit = !!editing; editing = null;
     if (wasEdit) data.riders = data.riders.concat(deskRiders); // the ticket lists the desk's companions too
-    if (!wasEdit) track(4, "done");
+    if (!wasEdit) track(STEPS, "done");
     if (another && current && keyOf(current) !== keyOf(data)) keep(current); // the confirmation before this one stays on the phone
     another = false; setSubmitLabels(false);
     showSuccess(data);
@@ -3602,13 +4002,743 @@ var qrcode = function() {
     var list = keptList(); if (!list.length) return false;
     saveKept(list.slice(1)); showSuccess(list[0]); return true;
   }
+  /* What the pages this one replaced left on the phone (micromobility.sa/dukan and /petromin-invite, turned off
+     2026-11-13): their saved confirmations join this page's own, once, so a ticket made there still shows here. A
+     guest's booking from the old page has no account behind it. */
+  (function importOld() {
+    var take = function (key, kind, list) {
+      var v = null; try { v = JSON.parse(localStorage.getItem(key) || "null"); } catch (e) {}
+      try { localStorage.removeItem(key); } catch (e) {}
+      (list ? (Array.isArray(v) ? v : []) : (v ? [v] : [])).forEach(function (d) {
+        if (!d || !d.bookingNo) return;
+        d.kind = kind;
+        if (kind === "dukan") d.company = "Dukan"; else { d.account = false; d.company = null; }
+        if (!ended(d)) keep(d);
+      });
+    };
+    take("mm-dukan-registration", "dukan", false); take("mm-dukan-kept", "dukan", true);
+    take("mm-pminvite-booking", "guest", false); take("mm-pminvite-kept", "guest", true);
+  })();
   renderCompanions();
   setSubmitLabels(false);
   goStep(1);
   if (!restore() && !restoreKept()) loadSessions();
   booted = true;
+  $("#card").setAttribute("data-live", ""); // the form answers taps from here on (styles.css)
   if ($("#success").hidden) track(1, "view");
-  window.RiderRegistration = { languages: LANGS, translations: T, applyLang: applyLang, setSessions: setSessions, goStep: goStep, getSelection: function () { return { session: selectedSession, company: selectedCompany, type: selectedType, phone: phoneE164() }; }, getPhone: phoneE164, setError: setError, showBanner: showBanner, hideBanner: hideBanner, setLoading: setLoading, showSuccess: showSuccess, reset: reset, validate: validate, collect: collect, restore: restore, getSaved: function () { return current; } };
+
+  /* ── An invited guest's account and booking (the owner, 2026-11-13: guests "create an account and go through the whole
+     process", on this page). The build puts this file after live-submit.js, inside the same function.
+
+     The account step is the booking site's own sign-in and sign-up, as the Saturday ride's page asks them
+     (forms/saturday; the sign-in itself is forms/shared/account.js, MMAccount): customer_login, or customer_exists,
+     customer_signup, customer_consents and customer_set_emergency. Signed in, the step asks the company the guest is
+     from and whatever the account still owes that this page can ask (customer_fix_fields: a height, the emergency
+     contact, the nationality, the date of birth); anything else is finished in the booking app. The booking is the
+     account's own (petromin_guest_book: the name, mobile and height are the account's), with an I- number.
+     The session is kept in memory only: a reload, or Register another, forgets it. ── */
+  var BOOKING_URL = (SITE_FORM && SITE_FORM.booking) || "https://experiences.micromobility.sa/";
+  document.querySelectorAll(".ac-app").forEach(function (a) { a.href = BOOKING_URL; });
+  var acct = null;   // {id, token, name, email, phone, made}
+  var prof = null, owe = { height: false, em: false, nat: false, birth: false }, blocked = false, fixed = [], held = {}, emRetry = false;
+  var acPanel = "ask", acBusy = false;
+  var ASKABLE = ["height", "emergency", "nationality", "birth_date"];
+  var NET = "Could not reach the server", TOO_MANY = "Too many tries from this network. Wait a few minutes and try again.";
+
+  function acClean(v) { return String(v == null ? "" : v).replace(/[​-‏‪-‮⁦-⁩﻿ ]/g, " ").replace(/\s+/g, " ").trim(); }
+  function errText(e) { return e ? String((e.code || "") + " " + (e.message || "") + " " + (e.details || "") + " " + (e.hint || "")) : ""; }
+  function absent(e) { return !!e && (e.code === "PGRST202" || /could not find the function/i.test(String(e.message || ""))); }
+  // The form's own call, as the shared account step asks for it: {data} or {error: {message, code...}}, never thrown;
+  // no answer at all is the message "network".
+  function arpc(fn, body) {
+    return rpcFetch(fn, body).then(function (r) {
+      if (!r.error) return { data: r.data };
+      if (!r.status) return { error: { message: "network" } };
+      if (r.status >= 500) return { error: { message: "HTTP " + r.status, code: r.error.code, details: r.error.details, hint: r.error.hint } };
+      return { error: r.error };
+    });
+  }
+  function acLoading(sel, on) { acBusy = !!on; var b = $(sel); b.classList.toggle("loading", !!on); b.disabled = !!on; $("#back").disabled = !!on; }
+
+  /* The panels of the step: the question, sign in, create, and (signed in) what the booking needs. Continue belongs to
+     the last one alone; the others have their own button. */
+  function acShow(p) {
+    acPanel = p;
+    ["ask", "signin", "create", "details"].forEach(function (k) { $("#ac-" + k).hidden = k !== p; });
+    paintAcctNav();
+  }
+  function paintAcctNav() { if (paneAt(step) === "account") $("#next").hidden = acPanel !== "details"; }
+  stepHooks.push(function (n, was) {
+    if (paneAt(n) !== "account") return;
+    if (acct && acPanel !== "details") acShow("details");
+    else if (!acct && acPanel === "details") acShow("ask");
+    paintAcctNav();
+  });
+  function acFocus(sel) { var el = $(sel); if (el && booted) { try { el.focus({ preventScroll: true }); } catch (e) { el.focus(); } } }
+  $("#ac-yes").addEventListener("click", function () { acShow("signin"); acFocus("#ac-ident"); });
+  $("#ac-no").addEventListener("click", function () { acShow("create"); acFocus("#ac-first"); });
+  document.querySelectorAll(".ac-to-signin").forEach(function (b) { b.addEventListener("click", function () { acShow("signin"); acFocus("#ac-ident"); }); });
+  document.querySelectorAll(".ac-to-create").forEach(function (b) { b.addEventListener("click", function () { acShow("create"); acFocus("#ac-first"); }); });
+  // Back from signing in or creating goes to the question again; Continue (and Enter) is the panel's own button.
+  var _backBase = back;
+  back = function () {
+    if (paneAt(step) === "account" && !acct && (acPanel === "signin" || acPanel === "create") && !editing) { hideBanner(); acShow("ask"); return; }
+    _backBase();
+  };
+  var _nextBase = next;
+  next = function () {
+    if (paneAt(step) !== "account") { _nextBase(); return; }
+    if (acPanel === "signin") doSignIn();
+    else if (acPanel === "create") createAccount();
+    else if (acPanel === "details" && acct) accountNext();
+  };
+  $("#ac-signin-btn").addEventListener("click", function () { doSignIn(); });
+  $("#ac-create-btn").addEventListener("click", function () { createAccount(); });
+
+  /* ── The lists the account's questions choose from (the booking site's own, put here by the build) ── */
+  var RULES = ACCT.PHONE_RULES, reCache = {}, CC_DIGITS = {};
+  ACCT.COUNTRY_CODES.forEach(function (x) { CC_DIGITS[x[0].slice(1)] = true; });
+  var dn = {};
+  function regionName(iso, fallback) {
+    var l = html.lang;
+    try {
+      if (!(l in dn)) dn[l] = (window.Intl && Intl.DisplayNames) ? new Intl.DisplayNames([l], { type: "region", fallback: "none" }) : null;
+      return (dn[l] && dn[l].of(iso)) || fallback;
+    } catch (e) { return fallback; }
+  }
+  function ccName(x) {
+    if (html.lang === "en") return x[2];
+    if (x[1] === "US") return regionName("US", "USA") + " / " + regionName("CA", "Canada");
+    if (html.lang === "ar" && ACCT.COUNTRY_AR[x[2]]) return ACCT.COUNTRY_AR[x[2]];
+    return regionName(x[1], x[2]);
+  }
+  // The Gulf first, then every country by name, Saudi Arabia again in its place (the owner, 2026-10-05).
+  function ccList() {
+    var all = ACCT.COUNTRY_CODES, rest = all.slice(6).concat(all.filter(function (x) { return x[1] === "SA"; })).map(function (x) { return { x: x, n: ccName(x) }; });
+    try { rest.sort(function (a, b) { return a.n.localeCompare(b.n, html.lang); }); } catch (e) {}
+    return all.slice(0, 6).map(function (x) { return { x: x, n: ccName(x) }; }).concat(rest);
+  }
+  function ccDigitsOf(sel) { var o = sel.selectedOptions[0]; return o ? o.getAttribute("data-cc").slice(1) : "966"; }
+  function ccFace(sel) {
+    var f = sel.parentNode.querySelector(".cc-face"); if (f) f.textContent = "+" + ccDigitsOf(sel);
+    var inp = sel.closest(".phone-row").querySelector("input"); if (inp) inp.placeholder = ccDigitsOf(sel) === "966" ? "5X XXX XXXX" : "";
+  }
+  function buildCc(sel) {
+    var cur = sel.value || "SA+966", done = false;
+    sel.innerHTML = ccList().map(function (o) {
+      var v = o.x[1] + o.x[0], on = !done && v === cur; if (on) done = true;
+      return '<option value="' + v + '" data-cc="' + o.x[0] + '"' + (on ? " selected" : "") + ">" + esc(o.n) + " (" + o.x[0] + ")</option>";
+    }).join("");
+    if (!sel.value) sel.value = "SA+966";
+    ccFace(sel);
+  }
+  function setCcDigits(sel, k) {
+    var o = Array.prototype.filter.call(sel.options, function (x) { return x.getAttribute("data-cc") === "+" + k; })[0];
+    if (o) { sel.value = o.value; ccFace(sel); }
+  }
+  function ccOf(d) { for (var n = 1; n <= 3 && n <= d.length; n++) if (CC_DIGITS[d.slice(0, n)]) return d.slice(0, n); return ""; }
+  function callingCode(d) { for (var n = 3; n >= 1; n--) if (RULES[d.slice(0, n)] || CC_DIGITS[d.slice(0, n)]) return d.slice(0, n); return ""; }
+  // Google's libphonenumber mobile patterns, the rules file the booking site's staff check reads.
+  function mobileOk(code, nat) {
+    var list = RULES[code]; if (!list) return true;
+    return list.some(function (r) { var re = reCache[r[0]] || (reCache[r[0]] = new RegExp("^(?:" + r[1] + ")$")); return r[2].indexOf(nat.length) >= 0 && re.test(nat); });
+  }
+  function ccIncluded(d, ccd) {
+    if (!ccd || d.indexOf(ccd) !== 0) return false;
+    var nat = d.slice(ccd.length);
+    if (RULES[ccd]) { if (mobileOk(ccd, d)) return false; if (mobileOk(ccd, nat)) return true; }
+    return d.length >= 11 && nat.length >= 8;
+  }
+  // A number typed under the dial code `ccd`, as the database stores it (the booking site's _normPhone).
+  function toE164(ccd, raw) {
+    var s = toAscii(raw).trim().replace(/[\s()\-]/g, "");
+    if (!s) return "";
+    if (s[0] === "+") { var x = s.slice(1).replace(/\D/g, ""); if (x.indexOf(ccd + "0") === 0) x = ccd + x.slice(ccd.length + 1); return "+" + x; }
+    s = s.replace(/\D/g, ""); if (!s) return "";
+    if (s.slice(0, 2) === "00") return "+" + s.slice(2);
+    if (ccIncluded(s, ccd)) return "+" + s;
+    if (s[0] === "0") return "+" + ccd + s.slice(1);
+    return "+" + ccd + s;
+  }
+  // A number typed with its + or 00 code names its country: the picker follows it.
+  function followCode(sel, inp) {
+    var raw = toAscii(inp.value).trim(), d = raw.replace(/\D/g, "");
+    if (!(raw[0] === "+" || d.slice(0, 2) === "00")) return;
+    if (d.slice(0, 2) === "00") d = d.slice(2);
+    if (d.indexOf(ccDigitsOf(sel)) !== 0) { var k = ccOf(d); if (k) setCcDigits(sel, k); }
+  }
+  // What is wrong with a mobile number, as [message, its values], or null.
+  function mobileFault(raw, p) {
+    var d = p.replace(/\D/g, "");
+    if (!toAscii(raw).replace(/\D/g, "")) return ["Enter your mobile number"];
+    if (d.indexOf("966") === 0) {
+      var nat = d.slice(3);
+      if (!/^5\d{8}$/.test(nat) || !mobileOk("966", nat)) return ["Enter a valid Saudi mobile number (5XXXXXXXX)"];
+    } else {
+      var code = callingCode(d);
+      if (!code || d.length < 8 || d.length > 15) return ["Enter a valid mobile number"];
+      if (!mobileOk(code, d.slice(code.length))) return ["This is not a mobile number for +{c}. Please check it.", { c: code }];
+    }
+    return null;
+  }
+
+  /* ── The emergency contact (the owner, 2026-10-07: the first is required of every account), as the booking site asks
+     it and in its words: "em" on the sign-up, "xem" for a signed-in account without one. ── */
+  var EM_RELS = ACCT.EM_RELS;
+  var REL_WORD = { spouse: "Spouse", parent: "Parent", sibling: "Brother or sister", child: "Son or daughter", relative: "Relative", friend: "Friend", colleague: "Colleague", other: "Other" };
+  var CHEVRON = '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>';
+  function emBlock(p, hidden) {
+    return '<fieldset id="' + p + '-block" class="em-block"' + (hidden ? " hidden" : "") + '><legend data-t="Emergency contact"></legend>' +
+      '<div id="f-' + p + '-name" class="field"><label for="' + p + '-name" data-t="Contact’s name"></label>' +
+      '<input id="' + p + '-name" type="text" autocomplete="off" autocapitalize="words" spellcheck="false" maxlength="80" enterkeyhint="next"><p class="err" aria-live="polite" data-t="Enter your contact’s name."></p></div>' +
+      '<div id="f-' + p + '-phone" class="field"><label for="' + p + '-phone" data-t="Contact’s mobile number"></label><div class="phone-row" dir="ltr">' +
+      '<label class="cc-wrap cc-over" data-t-label="Country code"><span class="cc-face" aria-hidden="true">+966</span><select id="' + p + '-cc" class="cc"></select>' + CHEVRON + "</label>" +
+      '<input id="' + p + '-phone" type="tel" inputmode="tel" autocomplete="off" enterkeyhint="next" placeholder="5X XXX XXXX"></div><p class="err" aria-live="polite" data-t="Enter your contact’s mobile number."></p></div>' +
+      '<div id="f-' + p + '-rel" class="field"><label for="' + p + '-rel" data-t="Relationship to you"></label>' +
+      '<span class="sel-wrap"><select id="' + p + '-rel" class="sel"></select></span><p class="err" aria-live="polite" data-t="Choose how they are related to you."></p></div></fieldset>';
+  }
+  $("#em-slot").outerHTML = emBlock("em", false);
+  $("#xem-slot").outerHTML = emBlock("xem", true);
+  var EM_PRE = ["em", "xem"];
+  function last9(v) { return String(v || "").replace(/\D/g, "").slice(-9); }
+  // A contact's three answers: {name, phone, rel}, or {err: [its box, the message]}.
+  function emRead(p, own) {
+    var n = tidyName($("#" + p + "-name").value), rel = $("#" + p + "-rel").value;
+    $("#" + p + "-name").value = n;
+    if (Array.from(n).length < 2 || Array.from(n).length > 80) return { err: ["f-" + p + "-name", "Enter your contact’s name."] };
+    if (!/\p{L}/u.test(n)) return { err: ["f-" + p + "-name", NAME_CHARS] };
+    if (nameShort(n)) return { err: ["f-" + p + "-name", "Enter your contact’s name."] }; // an initial is not a name; the box's own words (they are not a rider)
+    var ph = toAscii($("#" + p + "-phone").value).trim() ? toE164(ccDigitsOf($("#" + p + "-cc")), $("#" + p + "-phone").value) : "";
+    if (!/^\+?[0-9]{8,15}$/.test(ph)) return { err: ["f-" + p + "-phone", "Enter your contact’s mobile number."] };
+    if (last9(own).length === 9 && last9(ph) === last9(own)) return { err: ["f-" + p + "-phone", "Your contact’s number can’t be your own."] };
+    if (EM_RELS.indexOf(rel) < 0) return { err: ["f-" + p + "-rel", "Choose how they are related to you."] };
+    return { name: n, phone: ph, rel: rel };
+  }
+  var EM_DETAIL = { em_name: ["name", "Enter your contact’s name."], em_phone: ["phone", "Enter your contact’s mobile number."], em_relation: ["rel", "Choose how they are related to you."], em_self: ["phone", "Your contact’s number can’t be your own."], em_required: ["name", "Enter your contact’s name."] };
+  // Saves a block's contact on the signed-in account: {ok:true}, {field, key} for a refused box, {signedOut:true} or {banner}.
+  async function emSave(p) {
+    var c = emRead(p, acct.phone);
+    if (c.err) return { field: c.err[0], key: c.err[1] };
+    var r = await arpc("customer_set_emergency", { p_id: acct.id, p_token: acct.token, p_name: c.name, p_phone: c.phone, p_relation: c.rel });
+    if (r.error) {
+      if (absent(r.error)) return { ok: true };
+      var d = EM_DETAIL[String(r.error.details || "")];
+      if (d) return { field: "f-" + p + "-" + d[0], key: d[1] };
+      return { banner: /RATE_LIMITED/.test(errText(r.error)) ? TOO_MANY : NET };
+    }
+    if (r.data === false) return { signedOut: true };
+    return { ok: true };
+  }
+  function fillEm(p, name, phone, rel) {
+    $("#" + p + "-name").value = name || "";
+    var d = String(phone || "").replace(/\D/g, ""), k = ccOf(d);
+    if (k) { setCcDigits($("#" + p + "-cc"), k); $("#" + p + "-phone").value = d.slice(k.length); }
+    if (rel && EM_RELS.indexOf(rel) >= 0) $("#" + p + "-rel").value = rel;
+  }
+
+  /* ── Nationality and date of birth, asked only of an account that owes them (the booking site's own rule: the
+     nationality from the second booking, the birth date from the fifth). Saudi Arabia first and again in its
+     alphabetical place; nobody under five, no date in the future. ── */
+  function natLabel(x) { return html.lang === "en" ? x[1] : (html.lang === "ar" && ACCT.COUNTRY_AR[x[1]]) || regionName(x[0], x[1]); }
+  function buildNat() {
+    var sel = $("#ac-nat"), cur = sel.value, done = false;
+    var all = ACCT.NATIONALITIES.map(function (x) { return { v: x[1], n: natLabel(x) }; });
+    try { all.sort(function (a, b) { return a.n.localeCompare(b.n, html.lang); }); } catch (e) {}
+    var sa = all.filter(function (o) { return o.v === "Saudi Arabia"; });
+    sel.innerHTML = '<option value="">' + esc(t("Choose your nationality")) + "</option>" + sa.concat(all).map(function (o) {
+      var on = !done && o.v === cur; if (on) done = true;
+      return '<option value="' + esc(o.v) + '"' + (on ? " selected" : "") + ">" + esc(o.n) + "</option>";
+    }).join("");
+  }
+  // Riyadh is UTC+3 all year, so its day is plain arithmetic, not Intl's "en-CA" layout (an iPhone on iOS 17.2 laid
+  // that out as 10/27/2026).
+  function todayKsa() { return new Date(Date.now() + 3 * 3600e3).toISOString().slice(0, 10); }
+  function dobMax() { var p = todayKsa().split("-"); return (+p[0] - 5) + "-" + p[1] + "-" + p[2]; }
+  function monthNames() {
+    try { var f = new Intl.DateTimeFormat(html.lang + "-u-ca-gregory-nu-latn", { month: "long" }); var out = []; for (var i = 0; i < 12; i++) out.push(f.format(new Date(2000, i, 1))); return out; }
+    catch (e) { return ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"]; }
+  }
+  function buildDob() {
+    var ds = $("#ac-birth-d"), ms = $("#ac-birth-m"), ys = $("#ac-birth-y");
+    var d = +ds.value || 0, m = +ms.value || 0, y = +ys.value || 0;
+    var mx = dobMax().split("-").map(Number), yMax = mx[0], yMin = mx[0] - 94, mMax = y === mx[0] ? mx[1] : 12;
+    if (m > mMax) m = 0;
+    var dim = y && m ? new Date(y, m, 0).getDate() : 31, dMax = (y === mx[0] && m === mx[1]) ? mx[2] : 31;
+    // a day the month does not have is cleared, never moved to the month's last day: the check then asks for it again
+    if (d > dim || d > dMax) d = 0;
+    var yrs = '<option value="">' + esc(t("Year")) + "</option>";
+    for (var yy = yMax; yy >= yMin; yy--) yrs += '<option value="' + yy + '"' + (yy === y ? " selected" : "") + ">" + yy + "</option>";
+    ys.innerHTML = yrs;
+    ms.innerHTML = '<option value="">' + esc(t("Month")) + "</option>" + monthNames().map(function (n, i) { return '<option value="' + (i + 1) + '"' + (i + 1 === m ? " selected" : "") + (i + 1 > mMax ? " disabled" : "") + ">" + esc(n) + "</option>"; }).join("");
+    var days = '<option value="">' + esc(t("Day")) + "</option>";
+    for (var dd = 1; dd <= dim; dd++) days += '<option value="' + dd + '"' + (dd === d ? " selected" : "") + (dd > dMax ? " disabled" : "") + ">" + dd + "</option>";
+    ds.innerHTML = days;
+  }
+  function birthValue() {
+    var d = +$("#ac-birth-d").value, m = +$("#ac-birth-m").value, y = +$("#ac-birth-y").value;
+    return d && m && y ? y + "-" + String(m).padStart(2, "0") + "-" + String(d).padStart(2, "0") : "";
+  }
+  function setBirth(iso) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso || "")) return;
+    var b = iso.split("-").map(Number);
+    $("#ac-birth-y").value = String(b[0]); buildDob(); $("#ac-birth-m").value = String(b[1]); buildDob(); $("#ac-birth-d").value = String(b[2]); buildDob();
+  }
+  ["#ac-birth-d", "#ac-birth-m", "#ac-birth-y"].forEach(function (s) { $(s).addEventListener("change", function () { buildDob(); setError("f-ac-birth", false); }); });
+  $("#ac-nat").addEventListener("change", function () { setError("f-ac-nat", false); });
+
+  // The lists are drawn in the page's language, and again when it changes.
+  function buildLists() {
+    buildCc($("#ac-cc"));
+    EM_PRE.forEach(function (p) {
+      buildCc($("#" + p + "-cc"));
+      var rs = $("#" + p + "-rel"), rc = rs.value;
+      rs.innerHTML = '<option value="">' + esc(t("Choose")) + "</option>" + EM_RELS.map(function (c) { return '<option value="' + c + '"' + (c === rc ? " selected" : "") + ">" + esc(t(REL_WORD[c] || c)) + "</option>"; }).join("");
+    });
+    buildNat(); buildDob();
+    document.querySelectorAll(".em-block [data-t]").forEach(render);
+    document.querySelectorAll(".em-block [data-t-label], .dob [data-t-label]").forEach(function (el) { el.setAttribute("aria-label", t(el.getAttribute("data-t-label"))); });
+    $("#ac-cc").setAttribute("aria-label", t("Country code"));
+    paintWho();
+  }
+  langHooks.push(buildLists);
+
+  /* ── The boxes: what is dropped as it is typed, and messages that clear when the box is touched ── */
+  ["ac-first", "ac-last"].forEach(function (id) {
+    $("#" + id).addEventListener("input", function () { onNameInput(this); if (!this._nameHintUntil || this._nameHintUntil < Date.now()) setError("f-ac-name", false); });
+    $("#" + id).addEventListener("blur", function () { onNameBlur(this); });
+  });
+  EM_PRE.forEach(function (p) {
+    $("#" + p + "-name").addEventListener("input", function () { onNameInput(this); if (!this._nameHintUntil || this._nameHintUntil < Date.now()) setError("f-" + p + "-name", false); });
+    $("#" + p + "-name").addEventListener("blur", function () { onNameBlur(this); });
+    $("#" + p + "-phone").addEventListener("input", function () { followCode($("#" + p + "-cc"), this); setError("f-" + p + "-phone", false); });
+    $("#" + p + "-cc").addEventListener("change", function () { ccFace(this); setError("f-" + p + "-phone", false); });
+    $("#" + p + "-rel").addEventListener("change", function () { setError("f-" + p + "-rel", false); });
+  });
+  $("#ac-phone").addEventListener("input", function () { followCode($("#ac-cc"), this); setError("f-ac-phone", false); });
+  $("#ac-cc").addEventListener("change", function () { ccFace(this); setError("f-ac-phone", false); });
+  function digitsOnly(id, field) { $("#" + id).addEventListener("input", function () { var v = toAscii(this.value).replace(/\D/g, "").slice(0, 3); if (v !== this.value) this.value = v; setError(field, false); }); }
+  digitsOnly("ac-height", "f-ac-height"); digitsOnly("ac-xheight", "f-ac-xheight");
+  [["ac-ident", "f-ac-ident"], ["ac-spwd", "f-ac-spwd"], ["ac-pwd", "f-ac-pwd"], ["ac-pwd2", "f-ac-pwd2"], ["ac-company", "f-ac-company"]].forEach(function (x) {
+    $("#" + x[0]).addEventListener("input", function () { setError(x[1], false); });
+  });
+  $("#ac-ack").addEventListener("change", function () { setError("f-ac-ack", false); });
+  var acGender = null, acGenders = $("#ac-genders");
+  acGenders.addEventListener("click", function (e) {
+    var b = e.target.closest(".tile"); if (!b) return;
+    acGender = b.getAttribute("data-v");
+    acGenders.querySelectorAll(".tile").forEach(function (x) { x.setAttribute("aria-checked", String(x === b)); });
+    syncRoving(acGenders); setError("f-ac-gender", false);
+  });
+  radioKeys(acGenders); syncRoving(acGenders);
+
+  /* ── Email: the staff check's rules (misspelt providers, fake and throwaway domains) ── */
+  var CCTLD = {}; "ac ad ae af ag ai al am ao aq ar as at au aw ax az ba bb bd be bf bg bh bi bj bl bm bn bo bq br bs bt bv bw by bz ca cc cd cf cg ch ci ck cl cm cn co cr cu cv cw cx cy cz de dj dk dm do dz ec ee eg eh er es et eu fi fj fk fm fo fr ga gb gd ge gf gg gh gi gl gm gn gp gq gr gs gt gu gw gy hk hm hn hr ht hu id ie im in io iq ir is it je jm jo jp ke kg kh ki km kn kp kr kw ky kz la lb lc li lk lr ls lt lu lv ly ma mc md me mf mg mh mk ml mm mn mo mp mq mr ms mt mu mv mw mx my mz na nc ne nf ng ni nl no np nr nu nz om pa pe pf pg ph pk pl pm pn pr ps pt pw py qa re ro rs ru rw sa sb sc sd se sg sh si sj sk sl sm sn so sr ss st su sv sx sy sz tc td tf tg th tj tk tl tm tn to tr tt tv tw tz ua ug uk um us uy uz va vc ve vg vi vn vu wf ws ye yt za zm zw".split(" ").forEach(function (x) { CCTLD[x] = 1; });
+  var PROVIDERS = ["gmail", "googlemail", "hotmail", "outlook", "icloud", "yahoo", "windowslive", "rocketmail"];
+  var COM_ONLY = ["gmail", "googlemail", "icloud", "windowslive", "rocketmail"];
+  var REAL_NEAR = ["mail", "email", "ymail", "gmx", "live", "msn", "me", "mac", "aol", "cloud"];
+  var TLD_TYPO = ["con", "cmo", "coml", "comm", "comn", "cpm", "vom", "xom", "cim", "ocm", "cok", "clm", "ccom", "coom"];
+  var FAKE_DOMAINS = ["example.com", "example.org", "example.net", "test.com", "domain.com", "mailinator.com", "yopmail.com", "10minutemail.com", "guerrillamail.com", "tempmail.com", "temp-mail.org", "trashmail.com", "sharklasers.com", "getnada.com", "dispostable.com", "maildrop.cc", "throwawaymail.com", "fakeinbox.com"];
+  function dist(a, b) {
+    if (Math.abs(a.length - b.length) > 2) return 3;
+    var d = [], i, j; for (i = 0; i <= a.length; i++) d[i] = [i]; for (j = 0; j <= b.length; j++) d[0][j] = j;
+    for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++) {
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+    }
+    return d[a.length][b.length];
+  }
+  // What is wrong with an email address: {hard: [message, values], fix: the address meant}, or {}.
+  function checkEmail(em) {
+    var at = em.split("@");
+    if (at.length !== 2 || !at[0] || !/^[a-z0-9._%+'-]+$/.test(at[0]) || !/^[a-z0-9-]+(\.[a-z0-9-]+)*\.[a-z]{2,}$/.test(at[1]) || em.length > 254) return { hard: ["Enter a valid email address"] };
+    var dom = at[1], labels = dom.split("."), tld = labels[labels.length - 1], root = labels[0];
+    if (/(^|\.)privaterelay\.appleid\.com$/.test(dom)) return { hard: ["Please use your own email address, not an Apple hidden (relay) address"] };
+    if (FAKE_DOMAINS.indexOf(dom) >= 0 || /^(test|asdf|qwerty|abc|x{2,}|none|null|noemail|nomail|na|no)\d*$/.test(at[0])) return { hard: ["Please use your own, permanent email address"] };
+    var fix = null;
+    if (PROVIDERS.indexOf(root) >= 0) {
+      if (COM_ONLY.indexOf(root) >= 0 && dom !== root + ".com") fix = root + ".com";
+      else if (TLD_TYPO.indexOf(tld) >= 0 || (tld === "co" && labels.length === 2)) fix = root + ".com";
+    } else if (REAL_NEAR.indexOf(root) < 0) {
+      var p = PROVIDERS.filter(function (q) { return dist(root, q) <= (q.length >= 6 ? 2 : 1) || (root.indexOf(q) >= 0 && root.length <= q.length + 4); })[0];
+      if (p) fix = p + "." + ((COM_ONLY.indexOf(p) >= 0 || TLD_TYPO.indexOf(tld) >= 0) ? "com" : labels.slice(1).join("."));
+    }
+    if (!fix && TLD_TYPO.indexOf(tld) >= 0) fix = labels.slice(0, -1).join(".") + ".com";
+    if (fix && fix !== dom) return { hard: ["Did you mean {s}?", { s: at[0] + "@" + fix }], fix: at[0] + "@" + fix };
+    return {};
+  }
+  var emailFix = null;
+  function paintEmailFix() { var b = $("#ac-email-fix"); b.hidden = !emailFix; if (emailFix) b.textContent = t("Use {s}", { s: emailFix }); }
+  langHooks.push(paintEmailFix);
+  $("#ac-email-fix").addEventListener("click", function () { if (!emailFix) return; $("#ac-email").value = emailFix; emailFix = null; paintEmailFix(); setError("f-ac-email", false); $("#ac-email").focus(); });
+  $("#ac-email").addEventListener("input", function () { emailFix = null; paintEmailFix(); setError("f-ac-email", false); });
+
+  /* ── Names: letters, spaces and periods, first and last in full, in one alphabet ── */
+  function titleCase(v) { return acClean(v).replace(/(^|[\s'’.])(\p{L})/gu, function (m, sep, ch) { return sep + ch.toLocaleUpperCase(); }); }
+  function fullName() { return titleCase(tidyName($("#ac-first").value) + " " + tidyName($("#ac-last").value)); }
+  function nameFault(s) {
+    if (!s) return "Enter your first and last name";
+    if (/[^\p{L}\p{M}\s.]/u.test(s) || /(^|[\s.])\./.test(s)) return NAME_CHARS;
+    var letters = s.replace(/[ً-ٰٟ]/g, "");
+    if (/[A-Za-z]/.test(letters) && /[؀-ۿ]/.test(letters)) return "Write your name in one alphabet";
+    var parts = letters.split(/\s+/).filter(function (p) { return p.replace(/[.\p{M}]/gu, ""); });
+    var cjk = parts.length === 1 && /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/u.test(parts[0]);
+    if (parts.length < 2 && !cjk) return "Enter your first and last name";
+    if (parts.length > 1 && nameShort(letters)) return NAME_SHORT;
+    if (parts.some(function (p) { return /^(test|asdf|qwerty|user|admin|none|null|name|x{2,}|abc|unknown|other|guest)$/i.test(p.replace(/\./g, "")); })) return "Please enter your real name";
+    return "";
+  }
+  // A rider password (the booking app's rule since 2026-11-11): 8 or more characters, not one character over and over.
+  // The database refuses the common ones (WEAK_PASSWORD), said on the same box.
+  function passwordFault(pw) { if (Array.from(pw).length < 8) return "Use at least 8 characters."; if (/^([\s\S])\1*$/u.test(pw)) return "This password is too easy to guess. Choose another."; return ""; }
+
+  /* ── Sign in ── */
+  async function doSignIn() {
+    if (acBusy) return;
+    hideBanner(); $("#ac-temp").hidden = true;
+    var ok = true;
+    if (!acClean($("#ac-ident").value)) { setError("f-ac-ident", true); ok = false; }
+    if (!$("#ac-spwd").value) { setError("f-ac-spwd", true, "Enter your password."); ok = false; }
+    if (!ok) { focusInvalid(); return; }
+    acLoading("#ac-signin-btn", true);
+    try {
+      var r = await MMAccount.signIn(arpc, $("#ac-ident").value, $("#ac-spwd").value);
+      if (r.row) {
+        acct = { id: r.row.id, token: r.row.session_token, name: r.row.name || "", email: r.row.email || "", phone: r.row.phone || "", made: false };
+        $("#ac-spwd").value = "";
+        await enterDetails();
+        return;
+      }
+      track(step, "error", "signin");
+      if (r.error === "locked") setError("f-ac-spwd", true, "Too many failed attempts. Wait about 15 minutes and try again, or reset your password.");
+      else if (r.error === "busy") showBanner(TOO_MANY);
+      else if (r.error === "network") showBanner(NET);
+      else if (r.error === "temp") { $("#ac-temp").hidden = false; try { $("#ac-temp").scrollIntoView({ block: "center" }); } catch (e) {} }
+      else if (r.error === "id") setError("f-ac-ident", true);
+      else if (r.error === "pwd") setError("f-ac-spwd", true, "Enter your password.");
+      else setError("f-ac-spwd", true, r.cc ? "No account has that number as a Saudi number. If your number is from another country, type it with its country code, like +20 1012345678." : "Those sign-in details aren’t right. Try again.");
+      focusInvalid();
+    } finally { acLoading("#ac-signin-btn", false); }
+  }
+
+  /* ── Create account: every box judged at once, each message under its box ── */
+  function createCheck() {
+    var bad = [], fail = function (id, msg, args) { setError(id, true, msg, args); bad.push(id); };
+    ["f-ac-name", "f-ac-gender", "f-ac-email", "f-ac-phone", "f-ac-pwd", "f-ac-pwd2", "f-ac-height", "f-em-name", "f-em-phone", "f-em-rel", "f-ac-ack"].forEach(function (id) { setError(id, false); });
+    $("#ac-first").value = tidyName($("#ac-first").value); $("#ac-last").value = tidyName($("#ac-last").value);
+    var first = $("#ac-first").value, last = $("#ac-last").value;
+    var nf = !first || !last ? "Enter your first and last name" : nameFault(first + " " + last);
+    if (nf) { $("#ac-first")._nameHintUntil = 0; $("#ac-last")._nameHintUntil = 0; fail("f-ac-name", nf); }
+    if (!acGender) fail("f-ac-gender");
+    var em = acClean($("#ac-email").value).toLowerCase(); emailFix = null;
+    if (!em) fail("f-ac-email", "Enter your email address");
+    else { var ce = checkEmail(em); if (ce.hard) { fail("f-ac-email", ce.hard[0], ce.hard[1]); emailFix = ce.fix || null; } }
+    paintEmailFix();
+    var phone = toE164(ccDigitsOf($("#ac-cc")), $("#ac-phone").value), mf = mobileFault($("#ac-phone").value, phone);
+    if (mf) fail("f-ac-phone", mf[0], mf[1]);
+    var pw = $("#ac-pwd").value, pf = passwordFault(pw);
+    if (pf) fail("f-ac-pwd", pf);
+    else if ($("#ac-pwd2").value !== pw) fail("f-ac-pwd2", "Passwords do not match.");
+    if (!heightOk($("#ac-height").value)) fail("f-ac-height");
+    var ec = emRead("em", phone);
+    if (ec.err) fail(ec.err[0], ec.err[1]);
+    if (!$("#ac-ack").checked) fail("f-ac-ack");
+    bad.forEach(function (id) { track(step, "error", id.replace(/^f-(ac-)?/, "").replace(/-/g, "_")); });
+    return bad.length ? null : { name: fullName(), email: em, phone: phone, pwd: pw, height: heightOf($("#ac-height").value) };
+  }
+  function uid() { return Math.random().toString(36).slice(2, 9) + Date.now().toString(36); } // the booking site's own ids
+  async function createAccount() {
+    if (acBusy) return;
+    hideBanner();
+    // The account is made already (reading it back did not answer): the button goes on with it.
+    if (acct && acct.made) { acLoading("#ac-create-btn", true); try { await enterDetails(); } finally { acLoading("#ac-create-btn", false); } return; }
+    var v = createCheck();
+    if (!v) { focusInvalid(); return; }
+    acLoading("#ac-create-btn", true);
+    try {
+      // Each on its own, so the message says which one is taken (as the sign-up page does); a check that got no answer
+      // is asked once more.
+      var exists = async function (b) { var x = await arpc("customer_exists", b); return x.error ? arpc("customer_exists", b) : x; };
+      var ex = await exists({ p_email: v.email, p_phone: "" });
+      if (ex.data === true) { setError("f-ac-email", true, "An account with this email already exists. Sign in to book with it."); focusInvalid(); return; }
+      ex = await exists({ p_email: "", p_phone: v.phone });
+      if (ex.data === true) { setError("f-ac-phone", true, "An account with this mobile number already exists. Sign in to book with it."); focusInvalid(); return; }
+      var id = uid();
+      var r = await arpc("customer_signup", { p_id: id, p_name: v.name, p_email: v.email, p_phone: v.phone, p_pwd: v.pwd, p_height: v.height, p_type_preference: "Any", p_gender: acGender });
+      if (r.error) { signupRefused(r.error); return; }
+      var tok = r.data && r.data[0] && r.data[0].session_token;
+      if (!tok) { showBanner(NET); return; }
+      acct = { id: id, token: tok, name: v.name, email: v.email, phone: v.phone, made: true };
+      $("#ac-pwd").value = ""; $("#ac-pwd2").value = "";
+      // The notice they confirmed and their ride-news answer, recorded the moment the account exists.
+      var body = { p_id: id, p_token: tok, p_privacy: ACCT.PRIVACY_VERSION, p_ride_news: $("#ac-news").checked };
+      var c = await arpc("customer_consents", body);
+      if (c.error) await arpc("customer_consents", body);
+      // Then the emergency contact typed with it. Should it not save, the next panel asks for it again.
+      var em = await emSave("em");
+      if (!em.ok) { emRetry = true; ["name", "cc", "phone", "rel"].forEach(function (k) { $("#xem-" + k).value = $("#em-" + k).value; }); ccFace($("#xem-cc")); }
+      await enterDetails();
+      if (acct) setNotice("Your account has been created");
+      if (!em.ok && em.field) setError(em.field.replace("f-em-", "f-xem-"), true, em.key);
+    } finally { acLoading("#ac-create-btn", false); }
+  }
+  function signupRefused(e) {
+    var m = errText(e);
+    if (/name_chars/.test(m)) setError("f-ac-name", true, NAME_CHARS);
+    else if (/name_short/.test(m)) setError("f-ac-name", true, NAME_SHORT);
+    // customer_signup's DUPLICATE names neither the email nor the mobile, and the checks before it found neither: both are named.
+    else if (/23505|DUPLICATE/i.test(m)) setError("f-ac-email", true, "An account with this email or mobile number already exists. Sign in to book with it.");
+    else if (/RATE_LIMITED/.test(m)) { showBanner(TOO_MANY); return; }
+    else if (/WEAK_PASSWORD/.test(m)) { var wp = $("#ac-pwd").value; setError("f-ac-pwd", true, !/[A-Z]/.test(wp) || !/[0-9]/.test(wp) ? "Use at least 8 characters, with an upper-case letter and a number." : "This password is too easy to guess. Choose another."); }
+    else if (/BAD_INPUT/.test(m) && /phone/.test(m)) setError("f-ac-phone", true, "Enter a valid mobile number");
+    else if (/BAD_INPUT/.test(m) && /height/.test(m)) setError("f-ac-height", true);
+    else { showBanner(NET); return; }
+    focusInvalid();
+  }
+
+  /* ── Signed in: who is booking, the company they are from, and what the account still owes ── */
+  function paintWho() { $("#ac-who").textContent = acct ? t("Booking as {name}", { name: acct.name || "" }) + (acct.email ? " · " + acct.email : "") : ""; }
+  function guestSignedOut() {
+    acct = null; prof = null; emRetry = false;
+    if (paneAt(step) !== "account") { returnTo = step; goStep(stepOf("account")); }
+    acShow("signin"); paintWho();
+    showBanner("You were signed out. Sign in again to book.");
+  }
+  async function readAccount() {
+    var who = { p_id: acct.id, p_token: acct.token };
+    var all = await Promise.all([arpc("customer_profile", who), arpc("customer_emergency", who), arpc("customer_fix_fields", who), arpc("customer_about", who)]);
+    var p = all[0], em = all[1], fx = all[2], ab = all[3];
+    if (p.error) return { error: p.error };
+    var row = Array.isArray(p.data) ? p.data[0] : null;
+    if (!row || row.id !== acct.id) return { signedOut: true };
+    return {
+      prof: row,
+      em: em.error ? (absent(em.error) ? "absent" : null) : (Array.isArray(em.data) ? em.data[0] || null : null),
+      fix: !fx.error && Array.isArray(fx.data) ? fx.data.map(String) : [],
+      about: !ab.error && Array.isArray(ab.data) ? ab.data[0] || null : null
+    };
+  }
+  async function enterDetails() {
+    var a = await readAccount();
+    if (a.signedOut) { guestSignedOut(); return; }
+    if (a.error) { showBanner(NET); return; }
+    prof = a.prof;
+    acct.name = prof.name || acct.name; acct.email = prof.email || acct.email; acct.phone = prof.phone || acct.phone;
+    var fix = a.fix, flag = function (k) { return fix.indexOf(k) >= 0; };
+    var hasEm = a.em === "absent" || !!(a.em && a.em.emergency_name && a.em.emergency_phone && a.em.emergency_relation);
+    var hasHeight = Number(prof.height) >= 100 && Number(prof.height) <= 250;
+    owe = { height: !hasHeight || flag("height"), em: !hasEm || flag("emergency") || emRetry, nat: flag("nationality"), birth: flag("birth_date") };
+    blocked = fix.some(function (k) { return ASKABLE.indexOf(k) < 0; });
+    fixed = fix;
+    held = { phone: acct.phone, birth_date: prof.birth_date, nationality: prof.nationality, height: prof.height,
+      emergency: a.em && a.em !== "absent" ? { name: a.em.emergency_name, phone: a.em.emergency_phone, relation: a.em.emergency_relation } : null };
+    // What the account holds goes into the boxes it asks again; the company the booking or the account already names.
+    if (!acClean($("#ac-company").value) && a.about && acClean(a.about.workplace)) $("#ac-company").value = acClean(a.about.workplace).slice(0, 120);
+    if (prof.birth_date) setBirth(prof.birth_date);
+    if (prof.nationality && Array.prototype.some.call($("#ac-nat").options, function (o) { return o.value === prof.nationality; })) $("#ac-nat").value = prof.nationality;
+    if (hasHeight && !$("#ac-xheight").value) $("#ac-xheight").value = String(prof.height);
+    if (a.em && a.em !== "absent" && $("#xem-name").value === "") fillEm("xem", a.em.emergency_name, a.em.emergency_phone, a.em.emergency_relation);
+    paintDetails();
+    acShow("details");
+    acFocus(blocked ? "#ac-who" : "#ac-company");
+  }
+  function paintDetails() {
+    $("#f-ac-xheight").hidden = !owe.height;
+    $("#xem-block").hidden = !owe.em;
+    $("#f-ac-nat").hidden = !owe.nat;
+    $("#f-ac-birth").hidden = !owe.birth;
+    $("#ac-blocked").hidden = !blocked;
+    paintWho();
+  }
+  function companyTyped() { return acClean($("#ac-company").value); }
+  function companyOk() { var n = Array.from(companyTyped()).length; return n >= 2 && n <= 120; }
+  // The answers this panel gives to the questions staff flagged, in customer_fix_save's names.
+  function flaggedAnswers(ec) {
+    var out = {}, put = function (k, v) { if (fixed.indexOf(k) >= 0) out[k] = v; };
+    if (owe.birth) put("birth_date", birthValue());
+    if (owe.nat) put("nationality", $("#ac-nat").value);
+    if (owe.height) put("height", String(heightOf($("#ac-xheight").value)));
+    if (ec && !ec.err) put("emergency", { name: ec.name, phone: ec.phone, relation: ec.rel });
+    return out;
+  }
+  var SAME_AGAIN = "This is the same as what is on your account. Please correct it.";
+  var SAME_FIELD = { birth_date: "f-ac-birth", nationality: "f-ac-nat", height: "f-ac-xheight", emergency: "f-xem-name" };
+  function detailsCheck() {
+    var bad = [], fail = function (id, msg, args) { setError(id, true, msg, args); bad.push(id); };
+    ["f-ac-company", "f-ac-xheight", "f-xem-name", "f-xem-phone", "f-xem-rel", "f-ac-nat", "f-ac-birth"].forEach(function (id) { setError(id, false); });
+    $("#ac-company").value = companyTyped();
+    if (!companyOk()) fail("f-ac-company");
+    if (owe.height && !heightOk($("#ac-xheight").value)) fail("f-ac-xheight");
+    var ec = owe.em ? emRead("xem", acct.phone) : null;
+    if (ec && ec.err) fail(ec.err[0], ec.err[1]);
+    if (owe.nat && !$("#ac-nat").value) fail("f-ac-nat");
+    if (owe.birth) {
+      var b = birthValue();
+      if (!b) fail("f-ac-birth");
+      else if (b > todayKsa()) fail("f-ac-birth", "A birth date can't be in the future.");
+      else if (b > dobMax()) fail("f-ac-birth", "Riders must be at least 5 years old. Check the birth date.");
+    }
+    // A flagged question takes another answer than the one the account holds (the owner, 2026-11-09), as the booking
+    // app's check-up refuses it; MMAccount.same is the rule.
+    var ans = flaggedAnswers(ec);
+    Object.keys(ans).forEach(function (k) { if (bad.indexOf(SAME_FIELD[k]) < 0 && MMAccount.same(k, ans[k], held)) fail(SAME_FIELD[k], SAME_AGAIN); });
+    bad.forEach(function (id) { track(step, "error", id.replace(/^f-(ac-)?/, "").replace(/-/g, "_")); });
+    return !bad.length;
+  }
+  // Saves what the account owed. True when the booking can go on.
+  async function saveDetails() {
+    var saved = [], r, gone = function (x) { return x && x.data === false; };
+    var busy = function (x) { showBanner(/RATE_LIMITED/.test(errText(x.error)) ? TOO_MANY : NET); };
+    var ec = owe.em ? emRead("xem", acct.phone) : null;
+    var fv = flaggedAnswers(ec);
+    if (Object.keys(fv).length) {
+      r = await arpc("customer_fix_save", { p_id: acct.id, p_token: acct.token, p_values: fv });
+      if (r.error && !absent(r.error)) { busy(r); return false; }
+    }
+    if (owe.em) {
+      var em = await emSave("xem");
+      if (em.signedOut) { guestSignedOut(); return false; }
+      if (!em.ok) { if (em.field) { setError(em.field, true, em.key); focusInvalid(); } else showBanner(em.banner); return false; }
+      emRetry = false; saved.push("emergency");
+    }
+    if (owe.birth || owe.nat) {
+      // Both are written together: the one not asked goes back as the account holds it.
+      r = await arpc("customer_set_birth_nat", { p_id: acct.id, p_token: acct.token, p_birth_date: owe.birth ? birthValue() : (prof.birth_date || ""), p_nationality: owe.nat ? $("#ac-nat").value : (prof.nationality || "") });
+      if (gone(r)) { guestSignedOut(); return false; }
+      if (r.error) { if (/dob|birth/i.test(errText(r.error))) { setError("f-ac-birth", true, "Please check your date of birth."); focusInvalid(); } else busy(r); return false; }
+      saved.push("birth_date", "nationality");
+    }
+    if (owe.height) {
+      var h = heightOf($("#ac-xheight").value);
+      if (h !== Number(prof.height)) {
+        r = await arpc("customer_set_height", { p_id: acct.id, p_token: acct.token, p_height: h });
+        if (gone(r)) { guestSignedOut(); return false; }
+        if (r.error) { if (/height/i.test(errText(r.error))) { setError("f-ac-xheight", true); focusInvalid(); } else busy(r); return false; }
+        prof.height = h;
+      }
+      saved.push("height");
+    }
+    // What the account still owes, read again: one this page just answered, or one it cannot ask, is finished in the
+    // booking app.
+    var fx = await arpc("customer_fix_fields", { p_id: acct.id, p_token: acct.token });
+    if (fx.error) { busy(fx); return false; }
+    if (fx.data == null) { guestSignedOut(); return false; }
+    var left = Array.isArray(fx.data) ? fx.data.map(String) : [];
+    if (left.some(function (k) { return ASKABLE.indexOf(k) < 0 || saved.indexOf(k) >= 0; })) {
+      blocked = true; paintDetails(); try { $("#ac-blocked").scrollIntoView({ block: "center" }); } catch (e) {} return false;
+    }
+    if (left.length) { await enterDetails(); return false; }
+    blocked = false; owe = { height: false, em: false, nat: false, birth: false }; paintDetails();
+    return true;
+  }
+  async function accountNext() {
+    if (acBusy) return;
+    hideBanner();
+    if (!detailsCheck()) { focusInvalid(); return; }
+    var ok = false;
+    acLoading("#next", true);
+    try { ok = await saveDetails(); } finally { acLoading("#next", false); }
+    if (!ok) return;
+    setNotice(null);
+    if (returnTo) { var r = returnTo; returnTo = 0; goStep(r); return; }
+    goStep(step + 1);
+  }
+
+  /* ── What live-submit.js asks of this file ── */
+  // Whether the account step is done, as Check and agree needs it: signed in, a company typed, nothing left to finish.
+  function guestReady() {
+    if (!acct || blocked || owe.height || owe.em || owe.nat || owe.birth) return false;
+    if (!companyOk()) { setError("f-ac-company", true); return false; }
+    return true;
+  }
+  // The booking's answers: the account's own name and mobile, the company typed.
+  function guestCollect(d) {
+    var e = editing || {};
+    d.kind = "guest"; d.badge = ""; d.height = null; d.account = true;
+    d.name = acct ? acct.name : e.name || ""; d.phone = acct ? acct.phone : e.phone || "";
+    d.company = companyTyped();
+  }
+  // A booking laid into the form (its company), or a fresh form (null).
+  function guestPrefill(d) {
+    $("#ac-company").value = d && d.company ? d.company : "";
+    setError("f-ac-company", false);
+  }
+  // The account is forgotten: Register another, or a booking of another kind brought on the screen.
+  function guestForget() {
+    acct = null; prof = null; emRetry = false; blocked = false; owe = { height: false, em: false, nat: false, birth: false };
+    ["ac-ident", "ac-spwd", "ac-first", "ac-last", "ac-email", "ac-phone", "ac-pwd", "ac-pwd2", "ac-height", "ac-company", "ac-xheight", "em-name", "em-phone", "xem-name", "xem-phone"].forEach(function (id) { $("#" + id).value = ""; });
+    $("#ac-ack").checked = false; $("#ac-news").checked = false; acGender = null;
+    acGenders.querySelectorAll(".tile").forEach(function (x) { x.setAttribute("aria-checked", "false"); }); syncRoving(acGenders);
+    $("#ac-temp").hidden = true; emailFix = null; paintEmailFix();
+    acShow("ask"); paintDetails();
+  }
+  /* Edit: the booking as the server holds it now, then the account that made it (signed into again after a reload),
+     and the summary. A booking the desk has checked in, or one made on the old page (no account), is not changed here. */
+  async function startGuestEdit() {
+    var was = current, r = null;
+    editAsking = true; $("#edit").disabled = true;
+    try { r = await lookupCall(was.bookingNo, was.phone, was.session && was.session.id); } catch (e) { r = null; }
+    editAsking = false; $("#edit").disabled = false;
+    if (current !== was) return;
+    var d = r && !r.error && r.data;
+    if (d && d.ok) {
+      var live = fromLookup(d, was.phone);
+      live.session = Object.assign({}, was.session || {}, d.session || {});
+      live.submittedAt = was.submittedAt || live.submittedAt;
+      if (live.company == null) live.company = was.company || null;
+      if (d.checked_in) { showSuccess(live); setNote("You have already checked in. Ask the desk to change your booking."); return; }
+      if (live.account === false) { showSuccess(live); return; }
+      current = live; try { localStorage.setItem(STORE, JSON.stringify(live)); } catch (e) {}
+    }
+    editing = current; another = false; prefill(current); setSubmitLabels(true);
+    $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
+    hideBanner(); setNotice(null); returnTo = 0;
+    if (!acct) { returnTo = STEPS; goStep(stepOf("account")); acShow("signin"); acFocus("#ac-ident"); }
+    else goStep(selectedSession ? STEPS : stepOf("session"));
+    loadSessions();
+  }
+  var TYPE_SHUT = "That bike type is closed for this ride. Choose another.";
+  // The booking itself: the account's, on the night and bike picked, from the company typed.
+  async function guestSubmit(data) {
+    if (!acct) { guestSignedOut(); return; }
+    var a = { p_id: acct.id, p_token: acct.token, p_session_id: data.session ? data.session.id : null, p_type: data.type, p_company: data.company, p_waiver: WAIVER_VERSION };
+    if (editing) { a.p_from_no = editing.bookingNo; a.p_from_session = (editing.session && editing.session.id) || null; }
+    setLoading(true);
+    var r; try { r = await sbClient().rpc("petromin_guest_book", a); } catch (err) { r = { error: err }; }
+    setLoading(false);
+    if (/WAIVER_OUTDATED/.test(String((r && r.error && r.error.message) || ""))) { failBanner(WAIVER_OUTDATED); return; }
+    if (!r || r.error || !r.data) { track(STEPS, "fail", noAnswer(r) ? "network" : "server"); failBanner(noAnswer(r) ? NET : "We could not save this. Please try again."); return; }
+    var d = r.data;
+    if (!d.ok) {
+      track(STEPS, "fail", d.error);
+      if (d.error === "signin") { guestSignedOut(); return; }
+      if (d.error === "waiver") { waiverRefused(); return; }
+      if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
+      if (d.error === "company") { returnTo = STEPS; goStep(stepOf("account")); setError("f-ac-company", true); focusInvalid(); return; }
+      if (d.error === "type") { returnTo = STEPS; goStep(stepOf("bike")); setError("f-type", true); focusInvalid(); return; }
+      if (d.error === "type_closed" || d.error === "type_full") { returnTo = STEPS; goStep(stepOf("bike")); setError("f-type", true, TYPE_SHUT); focusInvalid(); return; }
+      if (d.error === "session") { returnTo = STEPS; goStep(stepOf("session")); setError("f-session", true, "This session is no longer open"); loadSessions(); focusInvalid(); return; }
+      // The account already rides that night on a booking of its own (a member's, a tag holder's): no guest booking is made.
+      if (d.error === "booked") { returnTo = STEPS; goStep(stepOf("session")); setError("f-session", true, "You already have a booking on this ride."); focusInvalid(); return; }
+      if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
+      if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
+      // The account owes an answer (the nationality from its second booking on): asked on the account step, then back here.
+      if (d.error === "fix") { await enterDetails(); if (acct) { returnTo = STEPS; goStep(stepOf("account")); showBanner("Your account still needs a few details before it can book."); } return; }
+      failBanner("We could not save this. Please try again."); return;
+    }
+    failures = 0; $("#banner-help").hidden = true;
+    var rec = { kind: "guest", name: d.name || acct.name, phone: d.phone || acct.phone, company: d.company || data.company, type: d.type || data.type,
+      status: d.status || null, price: d.price != null ? d.price : null, ref: d.ref || null, account: true, bookingNo: d.booking_no || d.invite_no, riders: [],
+      session: Object.assign({}, data.session || {}, d.session || {}) };
+    var wasEdit = !!editing; editing = null;
+    if (!wasEdit) track(STEPS, "done");
+    if (another && current && keyOf(current) !== keyOf(rec)) keep(current); // the confirmation before this one stays on the phone
+    another = false; setSubmitLabels(false);
+    showSuccess(rec);
+    setNote(wasEdit ? "Your booking was updated." : d.resubmitted ? "Your details were updated." : null);
+  }
+  buildLists();
+  acShow("ask");
+  window.RiderRegistration = { languages: LANGS, translations: T, applyLang: applyLang, setSessions: setSessions, goStep: goStep, getSelection: function () { return { session: selectedSession, company: selectedCompany, kind: KIND, type: selectedType, phone: phoneE164() }; }, getPhone: phoneE164, setError: setError, showBanner: showBanner, hideBanner: hideBanner, setLoading: setLoading, showSuccess: showSuccess, reset: reset, validate: validate, collect: collect, restore: restore, getSaved: function () { return current; } };
 })();
 
   }

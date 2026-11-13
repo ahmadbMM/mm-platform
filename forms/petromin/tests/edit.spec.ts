@@ -30,22 +30,22 @@ test('register, then edit the booking in place (it opens on its summary), then t
   // Edit: the summary of the booking, every part with its Change.
   await page.click('#edit');
   await expect(page.locator('#form .title')).toHaveText('Edit your booking');
-  await expect(page.locator('.step[data-step="4"]')).toBeVisible();
+  await expect(page.locator('.step[data-step="5"]')).toBeVisible();
   await expect(page.locator('#cancel-edit')).toBeVisible();
   await expect(page.locator('#review')).toContainText('A-12');
   await expect(page.locator('#review')).toContainText('Amal Booked');
   await expect(page.locator('#review')).toContainText('175 cm · Hybrid');
-  await expect(page.locator('#review .rv-change')).toHaveCount(3);
+  await expect(page.locator('#review .rv-change')).toHaveCount(4); // the company, the night, the rider, the bikes
   await expect(page.locator('#f-privacy')).toBeHidden(); // confirmed when they registered
 
   // Change the night: its step, then Continue comes straight back to the summary.
-  await page.click('#review .rv-change[data-go="1"]');
+  await page.click('#review .rv-change[data-go="2"]');
   await expect(page.locator('#sessions .session').first()).toHaveAttribute('aria-checked', 'true');
   await page.locator('#sessions .session').nth(1).click();
   await page.click('#next');
-  await expect(page.locator('.step[data-step="4"]')).toBeVisible();
+  await expect(page.locator('.step[data-step="5"]')).toBeVisible();
   // And the height, the same way.
-  await page.click('#review .rv-change[data-go="3"]');
+  await page.click('#review .rv-change[data-go="4"]');
   await expect(page.locator('#height')).toHaveValue('175');
   await expect(page.locator('#types .tile[data-v="Hybrid"]')).toHaveAttribute('aria-checked', 'true');
   await page.fill('#height', '180');
@@ -141,7 +141,7 @@ test('an employee registers with companions as cards, sees the party on the conf
 
   // Edit: the companions come back as cards; removing one asks first, then sends the shorter list.
   await page.click('#edit');
-  await page.click('#review .rv-change[data-go="3"]');
+  await page.click('#review .rv-change[data-go="4"]');
   await expect(page.locator('#riders .rider')).toHaveCount(2);
   await page.locator('#riders .rider').nth(0).locator('.rider-change').click();
   await expect(page.locator('#rd-name')).toHaveValue('Sara Ali');
@@ -182,7 +182,7 @@ test('Edit starts from the booking as the server holds it: the desk\'s companion
   await expect(page.locator('#review')).not.toContainText('NaN');
   expect(asks[0]).toEqual({ p_booking_no: 'P-001', p_phone: '+966512345678', p_session_id: S1.id });
   // The desk's companion is a card without Change or Remove.
-  await page.click('#review .rv-change[data-go="3"]');
+  await page.click('#review .rv-change[data-go="4"]');
   await expect(page.locator('#riders .rider')).toHaveCount(2);
   await expect(page.locator('#riders .rider').nth(1)).toContainText('Sara Ali');
   await expect(page.locator('#riders .rider').nth(1).locator('.rider-change')).toHaveCount(0);

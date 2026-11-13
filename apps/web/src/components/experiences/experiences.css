@@ -441,6 +441,78 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
 .xs .xs-go.ev-blood { background: #0b1f16; color: #fff; }
 .xs .xs-go.ev-blood:hover { background: #173a2a; }
 
+/* ── Featured (2026-11-13; the booking app's FEATURED block, .feat-* and .sess-sec-h) ──
+   A date inside MicroMobility Experiences that staff feature, or a special event as it is made. Above the event cards
+   "Featured" heads one card for each: the day as a calendar leaf under a band of the kind's colour (--ev, booking.css),
+   the name, when, where and the price word. The heading wears a star on a neon disc: neon as a fill with ink on it,
+   never neon text on the page's white. Yoga's card keeps its own cream, clay and low sun (the --yg-* tokens,
+   booking.css). In an event's dates the same heading leads the featured ones and "Upcoming" the rest (.xs-sec-h). */
+.xs-feat { margin: 0 0 34px; }
+.xs .xs-feat-h, .xs-sec-h { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 700; letter-spacing: 0; line-height: 1.3; color: var(--mm-black); text-align: start; }
+.xs .xs-feat-h { margin-bottom: 14px; font-size: 20px; }
+.xs-feat-h:focus { outline: none; } /* focused when the first step opens again (ExperienceSteps), to read on from */
+.xs-sec-h { font-size: 17px; }
+.xs-sec-h.xs-sec-rest { margin-top: 12px; }
+.xs-star { flex: none; display: inline-flex; padding: 5px; border-radius: 50%; background: var(--mm-green-neon); color: var(--mm-black); }
+.xs-star svg { display: block; }
+/* auto-fill: a single card keeps one column's width */
+.xs-feat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 12px; }
+.xs-feat-card { --ev: #077a4b; position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: center; gap: 14px; width: 100%; min-width: 0; margin: 0; padding: 14px 16px;
+  text-align: start; font: inherit; color: var(--mm-black); background: var(--mm-white); border: 1px solid rgba(26, 25, 25, .14); border-radius: 12px; cursor: pointer; transition: border-color .2s ease, box-shadow .2s ease; }
+.xs-feat-card:hover { border-color: rgba(26, 25, 25, .25); box-shadow: 0 1px 3px rgba(26, 25, 25, .06); }
+.xs-feat-card:focus-visible { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
+/* the day as a calendar leaf: the weekday in white on a band of the kind's colour (4.5:1 or more on every kind's), the
+   day and the month under it on a light tile */
+.xs-feat-day { flex: none; display: grid; justify-items: center; align-content: start; gap: 5px; min-width: 56px; padding: 0 0 8px; overflow: hidden; border-radius: 10px; background: #f3f1ea; line-height: 1; }
+.xs-feat-day b { font-size: 22px; font-weight: 700; color: var(--mm-black); font-variant-numeric: tabular-nums; }
+.xs-feat-day span { padding: 0 6px; font-size: 12px; font-weight: 600; color: var(--mm-n600); white-space: nowrap; }
+.xs-feat-day .xs-feat-wd { justify-self: stretch; margin-bottom: 2px; padding: 5px 6px; text-align: center; font-weight: 700; color: var(--mm-white); background: var(--ev); }
+.xs-feat-copy { flex: 1 1 auto; display: grid; gap: 4px; min-width: 0; }
+.xs-feat-name { font-size: 17px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+/* a rule between the parts of a line, drawn before each part: the row reaches 17px past its box at the start, where
+   .xs-feat-meta cuts the rule each line's first part carries, so no line starts or ends on a rule */
+.xs-feat-meta { display: block; min-width: 0; overflow: hidden; font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--mm-n600); }
+.xs-feat-mi { display: flex; flex-wrap: wrap; align-items: flex-start; row-gap: 2px; margin-inline-start: -17px; }
+.xs-feat-mi > span { position: relative; min-width: 0; padding-inline-start: 17px; overflow-wrap: anywhere; }
+.xs-feat-mi > span::before { content: ""; position: absolute; inset-inline-start: 8px; top: calc(.7em - 6px); width: 1px; height: 12px; background: rgba(26, 25, 25, .25); }
+/* where and the price word, then what is news about its places */
+.xs-feat-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; min-width: 0; }
+.xs-feat-foot > .xs-feat-meta { flex: 0 1 auto; }
+.xs-feat-foot .sc-spots.closed { max-width: 100%; text-align: start; }
+/* a date the visitor already holds (booking.css .sc-spots.held): long words wrap inside a narrow card rather than run out of it */
+.xs-feat-foot .sc-spots.held { max-width: 100%; white-space: normal; }
+.xs-feat-go { flex: none; display: inline-flex; color: var(--mm-n400); }
+/* yoga's card: cream, the low sun's glow from the far corner (mirrored where the page reads from the right), clay and sage */
+.xs-feat-card.xs-feat-yg { color: var(--yg-ink); background-color: var(--yg-cream); border-color: rgba(180, 83, 47, .28);
+  background-image: radial-gradient(110% 130% at 100% 100%, rgba(var(--yg-glow), .3) 0%, rgba(var(--yg-glow), .12) 38%, rgba(255, 251, 245, 0) 66%); }
+[dir="rtl"] .xs-feat-card.xs-feat-yg { background-image: radial-gradient(110% 130% at 0% 100%, rgba(var(--yg-glow), .3) 0%, rgba(var(--yg-glow), .12) 38%, rgba(255, 251, 245, 0) 66%); }
+.xs-feat-card.xs-feat-yg:hover { background-color: #fff6ec; border-color: rgba(180, 83, 47, .6); box-shadow: 0 0 14px rgba(180, 83, 47, .12); }
+.xs-feat-card.xs-feat-yg:focus-visible { outline: 2px solid var(--yg-clay); }
+.xs-feat-yg .xs-feat-day { background: var(--yg-sand); box-shadow: inset 0 0 0 1px rgba(180, 83, 47, .18); }
+.xs-feat-yg .xs-feat-day b { color: var(--yg-ink); }
+.xs-feat-yg .xs-feat-day span { color: var(--yg-ink-2); }
+.xs-feat-yg .xs-feat-day .xs-feat-wd { color: var(--mm-white); background: var(--yg-clay); }
+.xs-feat-yg .sc-dw { color: var(--yg-clay-dk); }
+.xs-feat-yg .xs-feat-name.sc-yg-title { font-size: 20px; }
+.xs-feat-yg .xs-feat-meta { color: var(--yg-ink-2); }
+.xs-feat-yg .xs-feat-mi > span::before { background: rgba(180, 83, 47, .35); }
+.xs-feat-yg .xs-feat-with { font-weight: 700; color: var(--yg-sage-ink); }
+.xs-feat-yg .xs-feat-go { color: var(--yg-clay); }
+@media (max-width: 767px) {
+  .xs-feat { margin-bottom: 28px; }
+  /* a phone with two or more: one row that scrolls sideways out to the screen's edges (.xp-wrap's 20px), the next card
+     showing at the edge, so the event cards stay in view; one card fills the row */
+  .xs-feat-grid.xs-feat-rail { display: flex; margin: -6px -20px -8px; padding: 6px 20px 12px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 20px; scrollbar-width: none; }
+  .xs-feat-rail::-webkit-scrollbar { display: none; }
+  .xs-feat-rail > .xs-feat-card { flex: 0 0 86%; scroll-snap-align: start; }
+}
+@media (max-width: 400px) {
+  .xs-feat-card { gap: 12px; padding: 12px 14px; }
+  .xs-feat-day { min-width: 50px; }
+  .xs-feat-day b { font-size: 20px; }
+  .xs-feat-yg .xs-feat-name.sc-yg-title { font-size: 18px; }
+}
+
 /* A phone names only the step it is on; the others keep their names for screen readers. */
 @media (max-width: 480px) {
   .xs-bar li { flex: 1 1 auto; } /* the step with its name takes the room it needs, the lines the rest */
@@ -476,6 +548,18 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
 .xs-logo.xs-defe-logo img { height: 40px; width: auto; }
 .xs-defe-cause { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: 13px; font-weight: 700; color: #a22b63; }
 .xs .xs-info.ev-defe5k .xs-info-facts a { color: #a22b63; }
+/* Yoga (2026-11-12, the booking app's flow head .yg-flow-*): its summary wears the mark, its name in Marcellus clay and who
+   leads it in sage; its button and its Details' link and button in clay */
+.xs-logo.xs-yoga-logo img { height: 36px; width: auto; }
+.xs-summary .xs-yg-name { font-family: var(--cs-font-yg), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", Georgia, serif; font-weight: 400; letter-spacing: .3px; color: var(--yg-clay); }
+html:is([lang="ar"], [lang="ur"]) .xs-summary .xs-yg-name { font-family: var(--cs-font-ar), var(--cs-font-en), sans-serif; font-weight: 700; letter-spacing: 0; }
+.xs-yg-with { margin: 0; font-size: 13px; font-weight: 700; color: var(--yg-sage-ink); }
+.xs .xs-go.ev-yoga { background: var(--yg-clay); color: #fff; }
+.xs .xs-go.ev-yoga:hover { background: var(--yg-clay-dk); }
+.xs .xs-info.ev-yoga .xs-info-facts a { color: var(--yg-clay-dk); }
+.xs-info.ev-yoga .xs-info-go { background: var(--yg-clay); border-color: var(--yg-clay); color: #fff; }
+.xs-info.ev-yoga .xs-info-go:hover { background: var(--yg-clay-dk); border-color: var(--yg-clay-dk); }
+.xs-info.ev-yoga .xs-info-btns button:focus-visible { outline-color: rgba(180, 83, 47, .45); }
 .xs-about.ab-petromin { color: #d6202a; } /* Petromin Days: Petromin's red, as on its date cards (2026-10-12) */
 .xs-about.ab-blood { color: #0b1f16; } /* the donation event: its crimson, where every plain card has its link (2026-11-03) */
 .xs-about.ab-vlap { color: #0d0d0d; max-width: calc(100% - 100px); inset-inline-start: 25px; } /* Victory Lap: clear of the flag, under its words (the card's edge and .xs-vl-main's padding) */
@@ -543,3 +627,67 @@ html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 
 .bk-paymarks img { width: 40px; height: 26px; object-fit: contain; border: 1px solid rgba(26, 25, 25, .1); border-radius: 5px; background: #fff; padding: 2px 3px; box-sizing: border-box; }
 .bk-paymarks span { flex: 1 1 100%; }
 .bk-agree-note { flex: 1 1 100%; margin: 6px 0 0; font-size: 12.5px; color: #6b665f; text-align: center; }
+
+/* ── The Experiences card, its list and the Saturday ride (the owner's picks on the booking app's theming page,
+   2026-11-13; its styles.css block of that name) ──
+   One colour set per kind (booking.css --k-*), its drawing and its motif: the Saturday ride's dawn on the Corniche, the
+   pool's water, a Petromin night's speed stripes, inline SVG of a few hundred bytes each. The drawing and the motif are
+   empty elements (.k-art), so they turn round for Arabic and Urdu without turning a word. */
+:root {
+  --art-dawn: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 360 200' preserveAspectRatio='xMidYMax slice'%3E%3Cdefs%3E%3ClinearGradient id='a' x1='0' y1='0' x2='0' y2='140' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%23232D4B'/%3E%3Cstop offset='.4' stop-color='%233B4870'/%3E%3Cstop offset='.64' stop-color='%238B7C9E'/%3E%3Cstop offset='.8' stop-color='%23E2AEAF'/%3E%3Cstop offset='.91' stop-color='%23C9B3BD'/%3E%3Cstop offset='1' stop-color='%23A7B2C8'/%3E%3C/linearGradient%3E%3ClinearGradient id='b' x1='0' y1='140' x2='0' y2='180' gradientUnits='userSpaceOnUse'%3E%3Cstop offset='0' stop-color='%237E7F9E'/%3E%3Cstop offset='.3' stop-color='%234A6382'/%3E%3Cstop offset='1' stop-color='%2327405A'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='360' height='140' fill='url(%23a)'/%3E%3Crect y='140' width='360' height='40' fill='url(%23b)'/%3E%3Cpath d='M0 140.5H360' stroke='%23F3D3C9' stroke-opacity='.55' stroke-width='.8'/%3E%3Cpath d='M188 147h22M232 147h10M150 153h14M262 152h26M206 158h30M120 160h12M300 160h18M170 167h20M250 168h14' stroke='%23F1C4BA' stroke-opacity='.5' stroke-width='1.2' stroke-linecap='round'/%3E%3Cg fill='none' stroke='%23F7E6DE' stroke-linecap='round'%3E%3Cpath d='M296 140C295 122 294.5 104 296 84' stroke-width='1.7' stroke-opacity='.9'/%3E%3Cpath d='M296 84c-6 4-10 13-12 24M296 84c6 4 10 13 12 24M296 84c-3 6-5 16-5 26M296 84c3 6 5 16 5 26' stroke-width='.9' stroke-opacity='.5'/%3E%3C/g%3E%3Crect y='178' width='360' height='22' fill='%231D2740'/%3E%3Cpath d='M0 179.5H360' stroke='%233A4766' stroke-width='1.4'/%3E%3Cpath d='M20 179V157M80 179V157M140 179V157M200 179V157M260 179V157M320 179V157' stroke='%232E3A5A' stroke-width='1.6'/%3E%3Cg fill='%23F6D7A8'%3E%3Ccircle cx='20' cy='156' r='2.3'/%3E%3Ccircle cx='80' cy='156' r='2.3'/%3E%3Ccircle cx='140' cy='156' r='2.3'/%3E%3Ccircle cx='200' cy='156' r='2.3'/%3E%3Ccircle cx='260' cy='156' r='2.3'/%3E%3Ccircle cx='320' cy='156' r='2.3'/%3E%3C/g%3E%3C/svg%3E") center bottom / cover no-repeat #1D2740;
+  --art-pool: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='72' viewBox='0 0 120 72'%3E%3Cg fill='none' stroke='%230D7D8F' stroke-linecap='round' stroke-width='2'%3E%3Cpath d='M0 22c15 0 15-7 30-7s15 7 30 7 15-7 30-7 15 7 30 7' stroke-opacity='.25'/%3E%3Cpath d='M0 40c15 0 15-7 30-7s15 7 30 7 15-7 30-7 15 7 30 7' stroke-opacity='.42'/%3E%3Cpath d='M0 58c15 0 15-7 30-7s15 7 30 7 15-7 30-7 15 7 30 7' stroke-opacity='.62'/%3E%3C/g%3E%3C/svg%3E") left 0 center / 120px 72px repeat-x, linear-gradient(to bottom, #F4FAFB, #E3F2F4) #E3F2F4;
+  --art-pm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='26' viewBox='0 0 96 26'%3E%3Cg fill='%23A33B2E'%3E%3Cpath d='M10 0h86v5H6z'/%3E%3Cpath d='M18 10h78v5H14z' opacity='.7'/%3E%3Cpath d='M26 20h70v5H22z' opacity='.45'/%3E%3C/g%3E%3C/svg%3E") right 20px center / 96px 26px no-repeat, linear-gradient(to right, #FFFFFF 0 38%, #F8E8E5 100%) #FFFFFF;
+  --motif-sat: linear-gradient(to bottom, #E2AEAF 0 50%, #A7B2C8 50% 100%);
+  --motif-pool: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='8' viewBox='0 0 60 8'%3E%3Cpath d='M0 5c10-3 20-3 30 0s20 3 30 0' fill='none' stroke='%230D7D8F' stroke-width='1.4'/%3E%3C/svg%3E") left 0 bottom 0 / 60px 8px repeat-x, #E3F2F4;
+  --motif-pm: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='8' viewBox='0 0 48 8'%3E%3Cpath d='M0 8l6-8h8l-6 8zM16 8l6-8h8l-6 8zM32 8l6-8h8l-6 8z' fill='%23A33B2E'/%3E%3C/svg%3E") right 14px bottom 0 / 48px 8px no-repeat;
+}
+:is(.sc-card, .xs-info, .xs-mk, .xs-kind).ev-saturday { --k-tint: var(--k-sat-tint); --k-ink: var(--k-sat-ink); --k-art: var(--art-dawn); --k-motif: var(--motif-sat); }
+:is(.sc-card, .xs-info, .xs-mk, .xs-kind).ev-swim { --k-tint: var(--k-pool-tint); --k-ink: var(--k-pool-ink); --k-art: var(--art-pool); --k-motif: var(--motif-pool); }
+:is(.sc-card, .xs-info, .xs-mk, .xs-kind).ev-petromin { --k-tint: var(--k-pm-tint); --k-ink: var(--k-pm-ink); --k-art: var(--art-pm); --k-motif: var(--motif-pm); }
+[dir="rtl"] .k-art { transform: scaleX(-1); }
+/* The card (Q1 c, Q2 c): the brand pattern fading in from its far top corner, no lockup, and what it holds as marks on
+   their tints, 34px each. */
+.xs-event.ev-community { background-color: #fff; border-color: rgba(3, 255, 137, .34);
+  background-image: linear-gradient(to bottom right, #fff 0 30%, rgba(255, 255, 255, .84) 62%, rgba(255, 255, 255, 0) 100%), url(/site/mm-pattern.svg);
+  background-size: 100% 100%, 112px auto; background-position: 0 0, right -16px top -12px; background-repeat: no-repeat, repeat; }
+[dir="rtl"] .xs-event.ev-community { background-image: linear-gradient(to bottom left, #fff 0 30%, rgba(255, 255, 255, .84) 62%, rgba(255, 255, 255, 0) 100%), url(/site/mm-pattern.svg); background-position: 0 0, left -16px top -12px; }
+.xs-event.ev-community:hover { border-color: #03ff89; }
+.xs-marks { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.xs-mk { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--k-tint, #f4f1ea); color: var(--k-ink, #4a4843); box-shadow: 0 0 0 1px rgba(26, 25, 25, .12); }
+/* The list's heading in the card's pattern, the card's name small above it (B1): it takes the heading's place. */
+.xs-band { margin: 0 0 18px; padding: 14px 18px 16px; border: 1px solid rgba(3, 255, 137, .34); border-radius: 12px; background-color: #fff;
+  background-image: linear-gradient(to bottom right, #fff 0 34%, rgba(255, 255, 255, .86) 62%, rgba(255, 255, 255, 0) 100%), url(/site/mm-pattern.svg);
+  background-size: 100% 100%, 112px auto; background-position: 0 0, right -16px top -12px; background-repeat: no-repeat, repeat; }
+[dir="rtl"] .xs-band { background-image: linear-gradient(to bottom left, #fff 0 34%, rgba(255, 255, 255, .86) 62%, rgba(255, 255, 255, 0) 100%), url(/site/mm-pattern.svg); background-position: 0 0, left -16px top -12px; }
+.xs-band-k { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: #4a4843; }
+.xs-band .xs-title { margin: 0; }
+/* The kind switch (B5): All, then each kind with its mark; the one picked in ink. It scrolls sideways when it is wider
+   than the screen, never the page. */
+.xs-kinds { display: flex; gap: 8px; margin: 0 0 14px; padding: 2px; overflow-x: auto; scrollbar-width: none; }
+.xs-kinds::-webkit-scrollbar { display: none; }
+.xs-kind { flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid rgba(26, 25, 25, .24);
+  background: #fff; color: #1a1919; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+.xs-kind .k-ic { flex: none; color: var(--k-ink, #4a4843); }
+.xs-kind[aria-pressed="true"] { background: #1a1919; border-color: #1a1919; color: #fbf9f4; }
+.xs-kind[aria-pressed="true"] .k-ic { color: currentColor; }
+.xs-kind:focus-visible { outline: 3px solid rgba(7, 122, 75, .4); outline-offset: 2px; }
+/* A named date (B2): its kind's mark on its tint before the name (the kind's own tint, else its colour washed into
+   white), and its kind's motif along the foot. */
+.sc-chip.has-ic { gap: 8px; font-size: 13px; }
+.sc-chip.has-ic::before { content: none; }
+.k-tile { flex: none; width: 26px; height: 26px; border-radius: 9px; display: inline-grid; place-items: center;
+  background: var(--k-tint, color-mix(in srgb, var(--ev) 12%, #fff)); color: var(--k-ink, var(--ev)); }
+.sc-card.has-motif { overflow: hidden; padding-bottom: 20px; }
+.sc-card > .sc-motif { position: absolute; inset: auto 0 0 0; height: 7px; background: var(--k-motif); pointer-events: none; }
+/* A date's Details (C3, D1): its kind's drawing across the top, under the dialog's own edge; the Saturday ride's dawn
+   shows its pink band, the sea and the lamps. Its two routes above the facts. */
+.xs-info.has-art { border-top: 1px solid rgba(26, 25, 25, .12); }
+.xs-info > .xs-info-art { display: block; height: 72px; background: var(--k-art); }
+.xs-info.ev-saturday > .xs-info-art { background-position: center 80%; }
+.sr-route { display: block; width: 100%; height: auto; margin: 14px 0 2px; overflow: visible; }
+.sr-ln { fill: none; stroke: var(--k-sat); stroke-width: 3; stroke-linecap: round; }
+.sr-back { fill: none; stroke: var(--k-sat); stroke-width: 1.4; stroke-dasharray: 2 5; stroke-linecap: round; opacity: .55; }
+.sr-st { fill: #fff; stroke: var(--k-sat); stroke-width: 2.4; }
+.sr-tn, .sr-pill rect { fill: var(--k-sat); }
+.sr-pill text { fill: #fff; font-size: 10px; font-weight: 600; }
+.sr-lb { fill: #4a4843; font-size: 10px; font-weight: 500; }

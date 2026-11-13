@@ -91,11 +91,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .side { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
   .payoff-inline { display: none; }
 }
-.side-photo {
-  aspect-ratio: 4 / 3; border-radius: var(--r-card); box-shadow: var(--lq-2);
-  background: var(--card-3) center / cover no-repeat;
-  background-image: url("/site/home/hero.w1280.webp");
-}
 .side-card { background: var(--card); border-radius: var(--r-card); box-shadow: var(--lq-1); padding: 24px 26px; }
 .side-h { margin: 0 0 12px; font-size: 17px; font-weight: 600; }
 
