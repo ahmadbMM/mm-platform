@@ -44,8 +44,11 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   national_day_96: ["n96", "national"], back_on_track: ["return", "teal"], safety_car: ["beacon", "orange"], endurance: ["clock", "purple"],
   triple_crown: ["crown", "gold"], slipstream: ["wind", "green"], paceline: ["wind", "blue"], peloton: ["wind", "gold"],
   rolling_start: ["wind", "teal"], grand_tour: ["wind", "purple"], hall_of_fame: ["wind", "special"],
+  tailwind: ["wind", "silver"], momentum: ["wind", "orange"], // the Saturday ladder's 2- and 3-ride steps (the booking app, 2026-11-13)
   km20: ["road", "green"], km40: ["road", "blue"], km70: ["road", "purple"], km100: ["road", "gold"], // the distance ladder (2026-10-16)
-  clean_sheet: ["calcheck", "green"], works_team: ["briefcase", "teal"], perfect_week: ["calstar", "purple"], perfect_month: ["calcrown", "gold"],
+  clean_sheet: ["calcheck", "green"], works_team: ["briefcase", "teal"],
+  company_challenge: ["briefcase", "blue"], // Company Challenge: given by the database after the challenge's last day (the booking app, 2026-11-13)
+  perfect_week: ["calstar", "purple"], perfect_month: ["calcrown", "gold"],
   run_for_her: ["ribbon", "pink"],
   victory_lap: ["lapring", "vlap"], // Victory Lap's lap ring, on its own special medal, purple into black (2026-10-17)
   defe_ride: ["defewheel", "defe"], // Rode with Defe: the ribbon wheel, rose into berry (2026-10-18)
@@ -83,7 +86,7 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_cours
 /** Badges staff give that a rider sees only once they hold one (BDG_HELD_ONLY): never greyed under Badges to earn,
  *  never offered to request (the booking app, 2026-11-12: Talent Scout, for helping someone from the community get a job anywhere,
  *  "only visible for its holders"). */
-export const HELD_ONLY = new Set(["talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "back_on_track"]);
+export const HELD_ONLY = new Set(["company_challenge", "talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "back_on_track"]);
 /** Whether only a badge's holders see it (the booking app's _bdgHeldOnly, 2026-11-12: "add a switch to all badges that has
  *  to do with the visibility of the badges to customers and members"): the catalogue's held_only, staff's switch in
  *  Community > Badges, else the start the app keeps (def): HELD_ONLY, the ride badges rideBadges marks hide. */
@@ -97,7 +100,7 @@ export const heldOnly = (row: BadgeRow | null | undefined, def: boolean): boolea
  *  from any bike bought from us to a road bike, then a carbon road bike. */
 export const LADDERS: string[][] = [
   ["first_lap", "regular", "podium", "corniche25"], ["streak", "safety_car", "endurance"],
-  ["rolling_start", "slipstream", "paceline", "peloton", "grand_tour", "hall_of_fame"], ["perfect_week", "perfect_month"], ["t25", "t50", "t100"],
+  ["rolling_start", "tailwind", "momentum", "slipstream", "paceline", "peloton", "grand_tour", "hall_of_fame"], ["perfect_week", "perfect_month"], ["t25", "t50", "t100"],
   ["ironman_703", "ironman_1406"], // Ironman 70.3 and 140.6, staff-given (the booking app, 2026-11-13)
   ["km20", "km40", "km70", "km100"], // the distance ladder (the booking app, 2026-10-16)
   // five levels each since 2026-10-12: 1/10/25/50/100, Champion's and Front Row's 1/5/10/25/50
@@ -402,8 +405,10 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
     { s: "squad", on: squad >= 3 }, { s: "fuel", on: fuel }, { s: "corniche25", on: rides >= 25, p: P(rides, 25) },
     { s: "safety_car", on: R.bestS >= 6, p: P(R.curS, 6) }, { s: "endurance", on: R.bestS >= 12, p: P(R.curS, 12) },
     { s: "triple_crown", on: kinds.size >= 3, p: P(kinds.size, 3) }, { s: "clean_sheet", on: cleanBest >= 10, p: P(clean, 10) },
-    // the Saturday social ride ladder (the booking app, 2026-10-03): 1, 5, 10, 25, 50, 100 ride days
-    { s: "rolling_start", on: comm >= 1, p: P(comm, 1) }, { s: "slipstream", on: comm >= 5, p: P(comm, 5) }, { s: "paceline", on: comm >= 10, p: P(comm, 10) },
+    // the Saturday social ride ladder (the booking app, 2026-10-03; 2 and 3 added 2026-11-13): 1, 2, 3, 5, 10, 25, 50, 100 ride days
+    { s: "rolling_start", on: comm >= 1, p: P(comm, 1) },
+    { s: "tailwind", on: comm >= 2, p: P(comm, 2) }, { s: "momentum", on: comm >= 3, p: P(comm, 3) }, // the 2nd and 3rd Saturday rides (new features build F1)
+    { s: "slipstream", on: comm >= 5, p: P(comm, 5) }, { s: "paceline", on: comm >= 10, p: P(comm, 10) },
     { s: "peloton", on: comm >= 25, p: P(comm, 25) }, { s: "grand_tour", on: comm >= 50, p: P(comm, 50) }, { s: "hall_of_fame", on: comm >= 100, p: P(comm, 100) },
     // the longest Saturday social ride ridden: 20 / 40 / 70 / 100 km (2026-10-16)
     ...[20, 40, 70, 100].map((n) => ({ s: `km${n}`, on: km >= n, p: P(km, n) })),

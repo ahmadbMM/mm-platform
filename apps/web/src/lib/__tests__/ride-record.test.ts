@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { badgeList, climb, closestBadges, ledRides, perfectWeeks, profilePct, recordRows, rideMore, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
+import { BADGE_SYS, HELD_ONLY, badgeList, climb, closestBadges, ledRides, perfectWeeks, profilePct, recordRows, rideMore, rideStats, seasonProgress, weekRuns, weekStreak, type BadgeData, type RecordSession } from "../ride-record";
+import { finBadge } from "../hub";
 import RideMore from "@/components/account/RideMore";
 import AccountParts, { accountPartOf } from "@/components/account/AccountParts";
 import Medal from "@/components/account/Medal";
@@ -7,7 +8,7 @@ import RideRecord from "@/components/account/RideRecord";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { GLYPH } from "@/components/account/badge-glyphs";
 import { bloodWords } from "@/content/blood-words";
-import { serverL } from "@/i18n/dicts";
+import { serverL, serverLocalize } from "@/i18n/dicts";
 import { createElement, type ReactElement } from "react";
 // The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
 // @ts-expect-error -- react-dom/server ships without type declarations here
@@ -97,6 +98,27 @@ describe("the badges", () => {
     expect(held[0]).toMatchObject({ slug: "swim_instructor", on: true, icon: "swim", color: "blue" });
     expect(GLYPH.swim).toBeTruthy();
     expect(RECORD.en.names.swim_instructor[2]).toContain("teach others to swim");
+  });
+  it("show Company Challenge only to a rider who holds it, on the blue briefcase, in the app's words (the booking app, 2026-11-13)", () => {
+    // the database gives it after the challenge's last day; a catalogue row without held_only keeps it to its holders (BDG_HELD_ONLY)
+    const cat = [{ slug: "first_lap", auto: true }, { slug: "company_challenge", icon: "medal", color: "green", system: true, auto: false }];
+    expect(HELD_ONLY.has("company_challenge")).toBe(true);
+    expect(list({ ...empty, catalog: cat }).map((x) => x.slug)).toEqual(["first_lap", "front_row", "streak"]);
+    expect(list(empty).map((x) => x.slug)).not.toContain("company_challenge"); // no catalogue: not one staff give by hand
+    // staff's switch still decides (held_only false: shown to earn)
+    expect(list({ ...empty, catalog: cat.map((b) => ({ ...b, held_only: false })) }).map((x) => x.slug)).toContain("company_challenge");
+    const held = list({ ...empty, catalog: cat, mine: [{ slug: "company_challenge", note: null, at: "2026-11-30T21:00:00Z" }] });
+    expect(held[0]).toMatchObject({ slug: "company_challenge", on: true, icon: "briefcase", color: "blue", given: { note: null, at: "2026-11-30T21:00:00Z" }, lv: null });
+    expect(GLYPH.briefcase).toBeTruthy();
+    expect(RECORD.en.names.company_challenge[0]).toBe("Company Challenge");
+    expect(RECORD.ar.names.company_challenge[1]).toBe("أكمل جلسة ضمن تحدي شركتك");
+    expect(serverLocalize(RECORD, "es").names.company_challenge[0]).toBe("Reto de empresa");
+    expect(serverLocalize(RECORD, "zh").names.company_challenge[0]).toBe("企业挑战赛");
+    const html = renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, led: 0, badges: held, t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
+    expect(html).toContain("Company Challenge");
+    expect(html).toContain("Finish a session in your company’s challenge");
+    expect(finBadge("company_challenge", [cat], serverLocalize(RECORD, "fr").names, "fr", BADGE_SYS))
+      .toEqual({ k: "badge", name: "Défi d’entreprise", icon: "briefcase", color: "blue" });
   });
   it("leave out a badge the catalogue no longer lists, unless the rider holds it", () => {
     const cat = [{ slug: "first_lap" }, { slug: "regular" }];
@@ -225,18 +247,45 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
     expect(laps).toMatchObject({ on: true, lvN: 3, nx: { slug: "corniche25", p: "0/25" } });
     expect(laps.lv!.slice(0, 2).every((x) => x.on)).toBe(true);
   });
-  it("count Saturday rides up the community ladder: 1, 5, 10, 25, 50, 100", () => {
+  it("count Saturday rides up the community ladder: 1, 2, 3, 5, 10, 25, 50, 100", () => {
     const { r, s } = rides(6, "saturday");
     const c = badgeList(r, s, empty, today, null).find((x) => x.lv?.some((y) => y.slug === "rolling_start"))!;
-    expect(c.lv!.map((x) => x.slug)).toEqual(["rolling_start", "slipstream", "paceline", "peloton", "grand_tour", "hall_of_fame"]);
-    expect(c).toMatchObject({ slug: "slipstream", lvN: 2, p: "6/10", nx: { slug: "paceline" } });
+    expect(c.lv!.map((x) => x.slug)).toEqual(["rolling_start", "tailwind", "momentum", "slipstream", "paceline", "peloton", "grand_tour", "hall_of_fame"]);
+    expect(c).toMatchObject({ slug: "slipstream", lvN: 4, p: "6/10", nx: { slug: "paceline" } });
     expect(closestBadges([c])[0]).toMatchObject({ show: { slug: "paceline" }, n: 6, of: 10 });
+  });
+  it("give the second and third Saturday rides a step each, Tailwind and Momentum (the booking app, new features build F1, 2026-11-13)", () => {
+    const sat = (n: number, kind: RecordSession["kind"] = "saturday") => {
+      const { r, s } = rides(n, kind);
+      return badgeList(r, s, empty, today, null).find((x) => x.lv?.some((y) => y.slug === "rolling_start"))!;
+    };
+    expect(sat(1)).toMatchObject({ slug: "rolling_start", lvN: 1, p: "1/2", nx: { slug: "tailwind", on: false } });
+    expect(sat(2)).toMatchObject({ slug: "tailwind", on: true, lvN: 2, p: "2/3", nx: { slug: "momentum" } });
+    expect(sat(3)).toMatchObject({ slug: "momentum", on: true, lvN: 3, p: "3/5", nx: { slug: "slipstream" } });
+    expect(closestBadges([sat(2)])[0]).toMatchObject({ show: { slug: "momentum" }, n: 2, of: 3 });
+    // drawn as the app draws them (BDG_SYS): the Saturday ladder's wind, on the silver and the orange medal
+    expect(sat(3).lv!.slice(1, 3).map((x) => [x.slug, x.icon, x.color])).toEqual([["tailwind", "wind", "silver"], ["momentum", "wind", "orange"]]);
+    // a circuit evening is not a Saturday ride, and a run is not a ride
+    expect(sat(3, "jcc")).toMatchObject({ slug: "rolling_start", on: false, lvN: 0, p: "0/1" });
+    expect(sat(3, "runher")).toMatchObject({ slug: "rolling_start", on: false, lvN: 0 });
+    // the app's own words (bdgTailwind, bdgMomentum and their D and A lines), in English, Arabic and the other languages
+    expect(RECORD.en.names.tailwind).toEqual(["Tailwind", "2 community rides", "A tailwind is the wind at your back. Your second community ride puts it behind you."]);
+    expect(RECORD.ar.names.momentum.slice(0, 2)).toEqual(["الزخم", "3 جولات مجتمعية"]);
+    expect(serverLocalize(RECORD, "fr").names.tailwind[0]).toBe("Vent arrière");
+    expect(serverLocalize(RECORD, "ur").names.momentum[1]).toBe("3 کمیونٹی رائیڈز");
+    expect(serverLocalize(RECORD, "de").names.momentum[0]).toBe("Schwung");
+    const { r, s } = rides(2, "saturday");
+    const html = renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, led: 0, badges: badgeList(r, s, empty, today, null), t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
+    expect(html).toContain('aria-label="Tailwind · Level 2 of 8: 2 community rides"');
+    // the rating pop-up's last screen names a fresh one in the page's language, drawn as the app draws it
+    expect(finBadge("momentum", [[{ slug: "momentum", icon: "medal", color: "green", system: true }]], serverLocalize(RECORD, "ar").names, "ar", BADGE_SYS))
+      .toEqual({ k: "badge", name: "الزخم", icon: "wind", color: "orange" });
   });
   it("draw a ladder as one tile with a dot per level, and its next level among the closest", () => {
     const { r, s } = rides(9, "saturday");
     const html = renderToStaticMarkup(createElement(RideRecord, { locale: "en", stats: null, led: 0, badges: badgeList(r, s, empty, today, null), t: RECORD.en, typeName: (x: string) => x, dur: { h: "{h} h", hm: "{h} h {m} min", m: "{m} min" } }));
-    expect(html).toContain('aria-label="Slipstream · Level 2 of 6: 5 community rides"');
-    expect(html).toMatch(/<span class="mr-badge-lv" aria-hidden="true">(<i class="on"><\/i>){2}(<i><\/i>){4}<\/span>/);
+    expect(html).toContain('aria-label="Slipstream · Level 4 of 8: 5 community rides"');
+    expect(html).toMatch(/<span class="mr-badge-lv" aria-hidden="true">(<i class="on"><\/i>){4}(<i><\/i>){4}<\/span>/);
     // nine nights first in the queue, too: Pole Master (10 since 2026-10-12) is one away, as Paceline is, and comes first
     expect(html.match(/<strong>[^<]*<\/strong>/g)).toEqual(["<strong>Podium Pace</strong>", "<strong>Pole Master</strong>"]);
   });
