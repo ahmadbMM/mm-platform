@@ -62,7 +62,7 @@ export type RideSession = {
   date: string; // YYYY-MM-DD, Riyadh
   full: boolean;
   title: string | null;
-  /** The session's name in Arabic (sessions.title_ar, rentals 20261113120000; the owner's pick on the booking app's
+  /** The session's name in Arabic (sessions.title_ar, rentals 20261113170000; the owner's pick on the booking app's
    *  theming page, 2026-11-13): an Arabic page names the session by it (sessionName). Trimmed, at most 60 characters,
    *  null when blank. Only a read that asks for it has it (SESSION_COLS_TITLE_AR); a copy kept at the edge from before
    *  has none, and reads as none. */
@@ -388,7 +388,7 @@ export const SESSION_COLS_GENDER = "gender_only";
 // a database without it reads as before: every type open.
 export const SESSION_COLS_CLOSED = "closed_types";
 // A session's name in Arabic (the owner's pick on the booking app's theming page, 2026-11-13; rentals migration
-// 20261113120000): an Arabic page names the session by it. A group of its own, so a database without it reads as before.
+// 20261113170000): an Arabic page names the session by it. A group of its own, so a database without it reads as before.
 export const SESSION_COLS_TITLE_AR = "title_ar";
 // The bikes out of service on a session (2026-11-06, OT01; rentals migration 20261107111000): they take places off its
 // capacity, so the places left the cards say count them. A group of its own, so a database without it reads as before.
