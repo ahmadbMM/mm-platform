@@ -64,6 +64,17 @@ const LEARN_PAGE = /^(?:\/(?:en|ar))?\/experiences\/learn\/?$/;
 // link to it, and the notice a sign-up agrees to must be readable whatever the site's state. While
 // the site is Coming Soon it stands alone too (app/[locale]/privacy).
 const PRIVACY_PAGE = /^(?:\/(?:en|ar))?\/privacy\/?$/;
+// "Ask" (the owner, 2026-11-13: questions people answer signed in, everything under one link): micromobility.sa/ask
+// (the open pages and the code box), /ask/<slug> (a page of questions) and /ask/<slug>/screen (the same page on a TV
+// or a projector). Links shared in the community's chat and shown on a screen, so they open the same way, whatever
+// the site's state: the first two stand alone while the site is Coming Soon, and the screen always does
+// (app/[locale]/ask). A slug is lower-case letters, digits and single dashes.
+const ASK_PAGE = /^(?:\/(?:en|ar))?\/ask(?:\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/screen)?)?\/?$/;
+/** An Ask address typed with capitals (a phone's keyboard writes micromobility.sa/Ask off the big screen) is the same
+ *  address in lower case; null for any other address. Only the path changes: a screen's key (?k=) is kept as written. */
+export function askLower(pathname: string): string | null {
+  return /^\/ask(?:\/|$)/i.test(pathname) && pathname !== pathname.toLowerCase() ? pathname.toLowerCase() : null;
+}
 
 // A staff phone tapping a bike's chip goes to the staff app, not the bike's page (owner,
 // 2026-09-29): staff.micromobility.sa/?bike=42 puts the bike into the check-in open on that phone,
@@ -132,6 +143,8 @@ export default async function proxy(req: NextRequest) {
   // (/Petromin, /Dukan, /Petromin-Invite, /community/Registration/) is sent there, as their own Workers did.
   const defe = defeTarget(pathname, searchParams);
   if (defe) return NextResponse.redirect(new URL(defe, req.url), 307);
+  const ask = askLower(pathname);
+  if (ask) return NextResponse.redirect(new URL(ask + req.nextUrl.search, req.url), 307);
   const form = formAddress(pathname);
   if (form && form !== pathname) return NextResponse.redirect(new URL(form + req.nextUrl.search, req.url), 301);
   // A form's own page: nothing here applies to it (the route answers it as it is).
@@ -176,7 +189,7 @@ export default async function proxy(req: NextRequest) {
   // A fleet bike's tag page (/bikes/42: a rider tapping a sticker) opens whatever the site's
   // state - Coming Soon on, or the Bikes page not switched on. It is never a catalogue page: a
   // category's address starts with a letter (the database insists), so digits can only be a tag.
-  // The Learn to ride sign-up and the Privacy Notice open the same way (LEARN_PAGE, PRIVACY_PAGE).
+  // The Learn to ride sign-up, the Privacy Notice and the Ask pages open the same way (LEARN_PAGE, PRIVACY_PAGE, ASK_PAGE).
   // A form's page of the website (SITE_FORMS) carries the site's security headers from here: next.config.ts leaves its
   // address to the form's own page (?classic=1), which sends its own.
   if (form) {
@@ -184,7 +197,7 @@ export default async function proxy(req: NextRequest) {
     for (const { key, value } of SECURITY_HEADERS) res.headers.set(key, value);
     return res;
   }
-  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname)) return keepLang(intl(req));
+  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname) || ASK_PAGE.test(pathname)) return keepLang(intl(req));
   // While the site is Coming Soon, it is the only page: /login, /about and anything else go
   // back to it. /store forwards to the shop before this runs (above), and the old /b/42 tag
   // address is redirected to /bikes/42 before this runs (next.config redirects).

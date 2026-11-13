@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import proxy, { config } from "../../proxy";
+import proxy, { askLower, config } from "../../proxy";
 import { resetSiteContent } from "../site";
 
 // The addresses carry no language (i18n/routing.ts). These run the real proxy on requests as a
@@ -129,6 +129,41 @@ describe("while the site is Coming Soon", () => {
       expect(res.status, p).toBe(307);
       expect(redirectedTo(res), p).toBe("/");
     }
+  });
+  it("still opens the Ask pages: the list, a page of questions and its big screen, links shared in a chat and shown on a screen", async () => {
+    for (const p of ["/ask", "/ask/", "/ask/farm-ideas", "/ask/farm-ideas/", "/ask/q4", "/ask/farm-ideas/screen", "/ask/farm-ideas/screen/"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(200);
+      expect(rewrittenTo(res), p).toBe(`/en${p.replace(/\/$/, "")}`);
+    }
+    // the screen's key, a staff preview's key and the question the screen is on ride along
+    expect(rewrittenTo(await call("/ask/farm-ideas/screen?k=Ab3_x-9&q=12"))).toBe("/en/ask/farm-ideas/screen");
+    expect(rewrittenTo(await call("/ask/farm-ideas?k=Ab3_x-9"))).toBe("/en/ask/farm-ideas");
+    const ar = await call("/ask/farm-ideas?lang=ar");
+    expect(rewrittenTo(ar)).toBe("/ar/ask/farm-ideas");
+    expect(langCookie(ar)).toBe("ar");
+    expect(rewrittenTo(await call("/ask", { cookie: "NEXT_LOCALE=ur" }))).toBe("/ur/ask");
+    expect(rewrittenTo(await call("/ask/farm-ideas/screen?k=abcdef", { "accept-language": "ar-SA,ar;q=0.9" }))).toBe("/ar/ask/farm-ideas/screen");
+    const old = await call("/ar/ask/farm-ideas");
+    expect(old.status).toBe(307);
+    expect(redirectedTo(old)).toBe("/ask/farm-ideas");
+    expect(langCookie(old)).toBe("ar");
+    // nothing else under or beside it: an address that is not a list, a page or a screen stays behind Coming Soon
+    for (const p of ["/asking", "/ask-us", "/ask/farm-ideas/more", "/ask/farm-ideas/screen/2", "/ask/farm_ideas", "/ask/-farm", "/ask/farm--ideas", "/ask/farm-ideas/screen2"]) {
+      const res = await call(p);
+      expect(res.status, p).toBe(307);
+      expect(redirectedTo(res), p).toBe("/");
+    }
+  });
+  it("reads an Ask address typed with capitals as the same address in lower case, its key untouched", async () => {
+    for (const [from, to] of [["/Ask", "/ask"], ["/ASK/", "/ask/"], ["/Ask/Farm-Ideas", "/ask/farm-ideas"], ["/ask/Farm-Ideas/Screen?k=Ab3_X&q=7", "/ask/farm-ideas/screen?k=Ab3_X&q=7"], ["/ASK?lang=ar", "/ask?lang=ar"]]) {
+      const res = await call(from);
+      expect(res.status, from).toBe(307);
+      expect(redirectedTo(res), from).toBe(to);
+    }
+    expect(askLower("/ask/farm-ideas")).toBeNull();
+    expect(askLower("/Asking")).toBeNull();
+    expect(askLower("/About")).toBeNull();
   });
   it("still opens the Privacy Notice, which the sign-up and the forms link to", async () => {
     for (const p of ["/privacy", "/privacy/"]) {

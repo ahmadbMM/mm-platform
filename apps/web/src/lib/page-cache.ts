@@ -8,7 +8,8 @@ import { LOCALES, LOCALE_CODES } from "../i18n/locales";
 //     a visitor's language is never guessed - a first visit with neither is rendered as before;
 //   - not signed in and not a staff preview (their cookies bring their own pages: the Club card,
 //     the preview bar), and never the account page, the API, media, the NFC bike pages (a bike's
-//     status is live: /bikes/42, and its old address /b/42) or the forms;
+//     status is live: /bikes/42, and its old address /b/42), the forms or the Ask pages (/ask: which
+//     pages are open, a page's questions and its results change by the second, and by who is asking);
 //   - for this deploy only: a new deploy's pages name new build files, so the key carries its id.
 // Staff edits already show within a minute (lib/site.ts reads them once a minute), so a minute's
 // copy changes nothing staff see. PAGE_CACHE = "off" (a Worker variable) turns it off at once.
@@ -32,7 +33,7 @@ const JEDDAH = 3 * 60 * 60 * 1000; // UTC+3 all year
 const jeddahDay = (ms: number) => Math.floor((ms + JEDDAH) / 86_400_000);
 const HTML_LANG = new Map<string, string>(LOCALES.map((l) => [l.html.toLowerCase(), l.code]));
 const LANGS = new Set<string>(LOCALE_CODES);
-const SKIP = /^\/(?:api|_next|media|b|petromin|petromin-invite|dukan|community|account|preview|login|en|ar|bikes\/\d{1,6})(?:\/|$)/;
+const SKIP = /^\/(?:api|_next|media|b|petromin|petromin-invite|dukan|community|account|ask|preview|login|en|ar|bikes\/\d{1,6})(?:\/|$)/;
 const PRIVATE = ["mm_acct", "mm_preview"];
 const LANG_COOKIE = "NEXT_LOCALE";
 // Tracking parameters (utm_*, fbclid...) change nothing on the page: a link from Instagram or a

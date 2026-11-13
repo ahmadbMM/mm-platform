@@ -20,6 +20,14 @@ describe("withinLimit", () => {
     await withinLimit(req("2001:db8:aa:bb:9f3:2c:7:e1"), "claim", () => ({ limit }));
     expect(limit.mock.calls.map((c) => c[0].key)).toEqual(["claim:2001:db8:aa:bb::/64", "claim:2001:db8:aa:bb::/64"]);
   });
+  it("counts an Ask request by its account: a room answering from one Wi-Fi does not share thirty requests a minute", async () => {
+    const limit = vi.fn(async ({ key }: { key: string }) => ({ success: key !== "" }));
+    await withinLimit(req(), "ask", () => ({ limit }), "c1");
+    await withinLimit(req(), "ask", () => ({ limit }), "c2");
+    await withinLimit(req(), "ask", () => ({ limit })); // signed out: the connection's own count
+    await withinLimit(req("2001:db8:aa:bb::1"), "ask", () => ({ limit }), "c1");
+    expect(limit.mock.calls.map((c) => c[0].key)).toEqual(["ask:203.0.113.9:c1", "ask:203.0.113.9:c2", "ask:203.0.113.9", "ask:2001:db8:aa:bb::/64:c1"]);
+  });
   it("lets everything through with no limiter, no address, or a limiter that fails", async () => {
     expect(await withinLimit(req(), "log-error")).toBe(true);
     const limit = vi.fn(async () => ({ success: false }));

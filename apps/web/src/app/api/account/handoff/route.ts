@@ -1,5 +1,6 @@
 import { ACCOUNT_COOKIE, ACCOUNT_MAX_AGE, decodeSession, encodeSession, sameOrigin } from "@/lib/account-core";
 import { rpcServer } from "@/lib/account";
+import { ASK_BACK_COOKIE, ASK_BACK_PATH, askBack } from "@/lib/ask";
 import { HANDOFF_COOKIE, HANDOFF_MAX_AGE, cookieLine, sessionProfile } from "@/lib/handoff";
 import { cookieValue } from "@/lib/live";
 
@@ -13,6 +14,11 @@ import { cookieValue } from "@/lib/live";
 // A code is anyone's to pass on (lib/handoff.ts): when ANOTHER account is signed in on this browser,
 // the session handed over is kept aside (HANDOFF_COOKIE) and the account page asks which account to
 // keep; its two buttons POST here, from this site's own page only.
+//
+// A rider who left an Ask page to create an account (micromobility.sa/ask; components/ask/AskSignIn.tsx notes the
+// page's address in a cookie only this route is sent, for half an hour) lands back on that page, which says whom they
+// are signed in as the way the account page does (?handoff=done). Only /ask and /ask/<slug> are ever landed on
+// (lib/ask.ts askBack); the note is spent by the first hand-back that carries it.
 export const dynamic = "force-dynamic";
 
 const back = (req: Request, to: string, ...cookies: string[]) => {
@@ -21,18 +27,23 @@ const back = (req: Request, to: string, ...cookies: string[]) => {
   return new Response(null, { status: 303, headers });
 };
 const clearHanded = cookieLine(HANDOFF_COOKIE, "", 0);
+const clearAsk = `${ASK_BACK_COOKIE}=; Path=${ASK_BACK_PATH}; Max-Age=0; Secure; SameSite=Lax`;
 
 export async function GET(req: Request) {
   const code = new URL(req.url).searchParams.get("code") ?? "";
-  if (!/^[0-9a-f]{48}$/.test(code)) return back(req, "/account");
+  // the Ask page this rider left to create an account, when the request carries its note: spent here, whatever comes next
+  const note = cookieValue(req.headers.get("cookie"), ASK_BACK_COOKIE);
+  const spent = note === null ? [] : [clearAsk];
+  if (!/^[0-9a-f]{48}$/.test(code)) return back(req, "/account", ...spent);
   const r = await rpcServer<{ id?: string; session_token?: string }[]>("customer_handoff_redeem", { p_code: code });
   const row = Array.isArray(r.data) ? r.data[0] : null;
-  if (!row?.id || !row.session_token) return back(req, "/account?handoff=expired");
+  if (!row?.id || !row.session_token) return back(req, "/account?handoff=expired", ...spent);
   const handed = encodeSession({ id: row.id, token: row.session_token });
   // another account still signed in here (or no answer about it): the account page asks first
   const now = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
-  if (now && now.id !== row.id && (await sessionProfile(now)) !== "none") return back(req, "/account", cookieLine(HANDOFF_COOKIE, handed, HANDOFF_MAX_AGE));
-  return back(req, "/account?handoff=done", cookieLine(ACCOUNT_COOKIE, handed, ACCOUNT_MAX_AGE), clearHanded);
+  if (now && now.id !== row.id && (await sessionProfile(now)) !== "none") return back(req, "/account", cookieLine(HANDOFF_COOKIE, handed, HANDOFF_MAX_AGE), ...spent);
+  const ask = askBack(note);
+  return back(req, ask ? `${ask}?handoff=done` : "/account?handoff=done", cookieLine(ACCOUNT_COOKIE, handed, ACCOUNT_MAX_AGE), clearHanded, ...spent);
 }
 
 /** The account page's answer (a form: do=switch, anything else stays): sign in with the account
