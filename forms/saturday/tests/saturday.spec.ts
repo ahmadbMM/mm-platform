@@ -187,6 +187,94 @@ test('a full ride takes the waitlist, and the booking says so', async ({ page })
   expect(of('saturday_book')).toHaveLength(1);
 });
 
+// A Community member's challenge with the booking (the booking app's "You're booked", 2026-11-13): hub_pulse read with the
+// account's own session after the booking; the challenge's name, the done ones filled, this booking outlined, the rest
+// empty, a link to the members' area. Never on the waitlist, for anyone not a member, once the challenge is met, for a
+// Saturday in another month than the challenge, or from a database without hub_pulse.
+const pulse = (me: Body | null, member = true) => () => json(member ? { ok: true, member: true, dot: false, me, goals: [], fresh: [] } : { ok: true, member: false });
+const ME = { kind: 'level', target: 4, n: 1, ends_on: '2099-11-30', sats: 3, levels: [2, 4], chosen: true };
+async function bookSignedIn(page: Page) {
+  await code(page);
+  await signIn(page);
+  await page.click('#d-next');
+  await book(page);
+  await expect(page.locator('#done-title')).toBeVisible();
+}
+
+test("a member's booking shows the month's challenge with this booking as an outlined dot, linking to the members' area", async ({ page }) => {
+  const { errs, of } = await open(page, '', { hub_pulse: pulse(ME) });
+  await page.route('**/club?**', (r) => r.fulfill({ status: 200, contentType: 'text/html', body: '<!doctype html><title>Club</title><p>members</p>' }));
+  await bookSignedIn(page);
+  const hub = page.locator('#done-hub');
+  await expect(hub).toBeVisible();
+  await expect(hub.locator('.d-hub-k')).toHaveText('4 sessions this month');
+  expect(await hub.locator('.hp-dots i').evaluateAll((d) => d.map((i) => i.className))).toEqual(['on', 'nx', '', '']);
+  await expect(hub.locator('.sr')).toHaveText('With this booking: 2 of 4');
+  await expect(hub.locator('.d-hub-go')).toHaveText('Community');
+  await expect(hub).toHaveAttribute('href', '/club?lang=en');
+  // above the request's own words and the ticket's rows, which are as before
+  expect(await page.locator('#v-done .d-body > :not([hidden])').evaluateAll((els) => els.map((e) => e.id || e.className))).toEqual(['done-head', 'done-hub', 'done-text', 'done-sum', 'done-going', 'done-open']);
+  await expect(page.locator('#done-text')).toContainText('Once the list is published');
+  expect(of('hub_pulse')).toEqual([{ p_id: 'c-sara', p_token: 'tok-in' }]);
+  expect(await hub.innerText()).not.toMatch(/\p{Extended_Pictographic}/u);
+  // the members' area, not the booking app over it
+  await hub.click();
+  await page.waitForURL('**/club?lang=en');
+  await page.waitForTimeout(4500);
+  expect(page.url()).toContain('/club?lang=en');
+  expect(of('customer_handoff_create')).toEqual([]);
+  expect(errs).toEqual([]);
+});
+
+test("the challenge's own names, in Arabic too", async ({ page }) => {
+  await open(page, '?lang=ar', { hub_pulse: pulse({ ...ME, kind: 'first', target: 1, n: 0 }) });
+  await bookSignedIn(page);
+  await expect(page.locator('#done-hub .d-hub-k')).toHaveText('جلستك الأولى');
+  expect(await page.locator('#done-hub .hp-dots i').evaluateAll((d) => d.map((i) => i.className))).toEqual(['nx']);
+  await expect(page.locator('#done-hub .sr')).toHaveText('مع هذا الحجز: 1 من 1');
+  await expect(page.locator('#done-hub .d-hub-go')).toHaveText('المجتمع');
+  await expect(page.locator('#done-hub')).toHaveAttribute('href', '/club?lang=ar');
+});
+
+test('a challenge above five sessions is a bar, this booking a stretch of it', async ({ page }) => {
+  await open(page, '', { hub_pulse: pulse({ ...ME, target: 8, n: 3 }) });
+  await bookSignedIn(page);
+  await expect(page.locator('#done-hub .d-hub-k')).toHaveText('8 sessions this month');
+  await expect(page.locator('#done-hub .hp-dots')).toHaveCount(0);
+  expect(await page.locator('#done-hub .hp-bar i').evaluateAll((d) => d.map((i) => [i.className, (i as HTMLElement).style.width]))).toEqual([['on', '37.5%'], ['nx', '12.5%']]);
+  await expect(page.locator('#done-hub .sr')).toHaveText('With this booking: 4 of 8');
+});
+
+for (const [name, answers] of [
+  ['a rider who is not a member', { hub_pulse: pulse(null, false) }],
+  ['a challenge already met', { hub_pulse: pulse({ ...ME, n: 4 }) }],
+  ["a challenge for another month than the ride's", { hub_pulse: pulse({ ...ME, ends_on: '2099-12-31' }) }],
+  ['a database without hub_pulse', {}],
+  ['an account the database no longer knows', { hub_pulse: () => json({ ok: false, error: 'denied' }) }],
+] as [string, Answers][]) {
+  test(`no challenge on the booking for ${name}, and on to the booking app as before`, async ({ page }) => {
+    const { errs, of } = await open(page, '', answers);
+    await bookSignedIn(page);
+    await expect(page.locator('#done-title')).toHaveText('Your request is in');
+    await expect.poll(() => of('hub_pulse').length).toBe(1);
+    await expect(page.locator('#done-hub')).toBeHidden();
+    await page.waitForURL(BOOKING + '**', { timeout: 10000 });
+    expect(errs).toEqual([]);
+  });
+}
+
+test('no challenge on a waitlisted booking, and nothing asked', async ({ page }) => {
+  const { of } = await open(page, '', {
+    saturday_rides: ridesFor([{ ...RIDE, status: 'full' }], { IMC26: [true, true] }),
+    saturday_book: (b) => json([{ id: (b.p_entry as Body).id, queue_num: 70, status: 'waitlist', refused: null }]),
+    hub_pulse: pulse(ME),
+  });
+  await bookSignedIn(page);
+  await expect(page.locator('#done-title')).toHaveText("You're on the waitlist");
+  await expect(page.locator('#done-hub')).toBeHidden();
+  expect(of('hub_pulse')).toEqual([]);
+});
+
 test('a new rider: code, account, details, booking, then the booking app signed in', async ({ page }) => {
   const { errs, of } = await open(page);
   await code(page);

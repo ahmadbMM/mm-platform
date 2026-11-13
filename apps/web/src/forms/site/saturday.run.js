@@ -1125,6 +1125,12 @@ var FORM_T = {
   "Continue": "متابعة",
   "Saving...": "جارٍ الحفظ...",
   "Open my booking": "افتح حجزي",
+  "Your first session": "جلستك الأولى",
+  "Your second session": "جلستك الثانية",
+  "Back this month": "عُد هذا الشهر",
+  "{n} sessions this month": "{n} جلسات هذا الشهر",
+  "With this booking: {n} of {of}": "مع هذا الحجز: {n} من {of}",
+  "Community": "المجتمع",
   "Ride group": "مجموعة الرحلة",
   "Beginners' group · 20 km": "مجموعة المبتدئين · 20 كم",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "إلى نادي جدة لليخوت والعودة، بسرعة 20 كم/س تقريبًا.",
@@ -1292,6 +1298,12 @@ var FORM_T = {
   "Continue": "Lanjutkan",
   "Saving...": "Menyimpan...",
   "Open my booking": "Buka pemesanan saya",
+  "Your first session": "Sesi pertama Anda",
+  "Your second session": "Sesi kedua Anda",
+  "Back this month": "Kembali bulan ini",
+  "{n} sessions this month": "{n} sesi bulan ini",
+  "With this booking: {n} of {of}": "Dengan pemesanan ini: {n} dari {of}",
+  "Community": "Komunitas",
   "Ride group": "Grup gowes",
   "Beginners' group · 20 km": "Grup pemula · 20 km",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "Ke Jeddah Yacht Club lalu kembali, dengan kecepatan sekitar 20 km/jam.",
@@ -1459,6 +1471,12 @@ var FORM_T = {
   "Continue": "Teruskan",
   "Saving...": "Menyimpan...",
   "Open my booking": "Buka tempahan saya",
+  "Your first session": "Sesi pertama anda",
+  "Your second session": "Sesi kedua anda",
+  "Back this month": "Kembali bulan ini",
+  "{n} sessions this month": "{n} sesi bulan ini",
+  "With this booking: {n} of {of}": "Dengan tempahan ini: {n} daripada {of}",
+  "Community": "Komuniti",
   "Ride group": "Kumpulan kayuhan",
   "Beginners' group · 20 km": "Kumpulan pemula · 20 km",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "Ke Jeddah Yacht Club dan kembali, pada kelajuan kira-kira 20 km/j.",
@@ -1626,6 +1644,12 @@ var FORM_T = {
   "Continue": "Weiter",
   "Saving...": "Wird gespeichert …",
   "Open my booking": "Meine Buchung öffnen",
+  "Your first session": "Deine erste Session",
+  "Your second session": "Deine zweite Session",
+  "Back this month": "Diesen Monat wieder dabei",
+  "{n} sessions this month": "Sessions diesen Monat: {n}",
+  "With this booking: {n} of {of}": "Mit dieser Buchung: {n} von {of}",
+  "Community": "Community",
   "Ride group": "Fahrgruppe",
   "Beginners' group · 20 km": "Einsteigergruppe · 20 km",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "Zum Jeddah Yacht Club und zurück, mit etwa 20 km/h.",
@@ -1793,6 +1817,12 @@ var FORM_T = {
   "Continue": "Continuar",
   "Saving...": "Guardando...",
   "Open my booking": "Abrir mi reserva",
+  "Your first session": "Tu primera sesión",
+  "Your second session": "Tu segunda sesión",
+  "Back this month": "De vuelta este mes",
+  "{n} sessions this month": "{n} sesiones este mes",
+  "With this booking: {n} of {of}": "Con esta reserva: {n} de {of}",
+  "Community": "Comunidad",
   "Ride group": "Grupo de ruta",
   "Beginners' group · 20 km": "Grupo de principiantes · 20 km",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "Hasta el Jeddah Yacht Club y vuelta, a unos 20 km/h.",
@@ -1960,6 +1990,12 @@ var FORM_T = {
   "Continue": "Continuer",
   "Saving...": "Enregistrement...",
   "Open my booking": "Ouvrir ma réservation",
+  "Your first session": "Votre première séance",
+  "Your second session": "Votre deuxième séance",
+  "Back this month": "De retour ce mois-ci",
+  "{n} sessions this month": "{n} séances ce mois-ci",
+  "With this booking: {n} of {of}": "Avec cette réservation : {n} sur {of}",
+  "Community": "Communauté",
   "Ride group": "Groupe de sortie",
   "Beginners' group · 20 km": "Groupe débutants · 20 km",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "Jusqu’au Jeddah Yacht Club et retour, à environ 20 km/h.",
@@ -2127,6 +2163,12 @@ var FORM_T = {
   "Continue": "Continuar",
   "Saving...": "A guardar...",
   "Open my booking": "Abrir minha reserva",
+  "Your first session": "A sua primeira sessão",
+  "Your second session": "A sua segunda sessão",
+  "Back this month": "De volta este mês",
+  "{n} sessions this month": "{n} sessões este mês",
+  "With this booking: {n} of {of}": "Com esta reserva: {n} de {of}",
+  "Community": "Comunidade",
   "Ride group": "Grupo do passeio",
   "Beginners' group · 20 km": "Grupo iniciante · 20 km",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "Até o Jeddah Yacht Club e volta, a cerca de 20 km/h.",
@@ -2294,6 +2336,12 @@ var FORM_T = {
   "Continue": "Magpatuloy",
   "Saving...": "Sine-save...",
   "Open my booking": "Buksan ang booking ko",
+  "Your first session": "Ang una mong session",
+  "Your second session": "Ang ikalawa mong session",
+  "Back this month": "Bumalik ngayong buwan",
+  "{n} sessions this month": "{n} session ngayong buwan",
+  "With this booking: {n} of {of}": "Kasama ang booking na ito: {n} sa {of}",
+  "Community": "Komunidad",
   "Ride group": "Grupo ng ride",
   "Beginners' group · 20 km": "Grupo ng mga baguhan · 20 km",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "Papunta sa Jeddah Yacht Club at pabalik, mga 20 km/h.",
@@ -2461,6 +2509,12 @@ var FORM_T = {
   "Continue": "Продолжить",
   "Saving...": "Сохранение…",
   "Open my booking": "Открыть моё бронирование",
+  "Your first session": "Ваше первое занятие",
+  "Your second session": "Ваше второе занятие",
+  "Back this month": "Снова с нами в этом месяце",
+  "{n} sessions this month": "Занятий в этом месяце: {n}",
+  "With this booking: {n} of {of}": "С этим бронированием: {n} из {of}",
+  "Community": "Сообщество",
   "Ride group": "Группа заезда",
   "Beginners' group · 20 km": "Группа новичков · 20 км",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "До Яхт-клуба Джидды и обратно, около 20 км/ч.",
@@ -2628,6 +2682,12 @@ var FORM_T = {
   "Continue": "جاری رکھیں",
   "Saving...": "محفوظ ہو رہا ہے...",
   "Open my booking": "میری بکنگ کھولیں",
+  "Your first session": "آپ کا پہلا سیشن",
+  "Your second session": "آپ کا دوسرا سیشن",
+  "Back this month": "اس مہینے واپس آئیں",
+  "{n} sessions this month": "اس مہینے {n} سیشن",
+  "With this booking: {n} of {of}": "اس بکنگ کے ساتھ: {of} میں سے {n}",
+  "Community": "کمیونٹی",
   "Ride group": "رائیڈ گروپ",
   "Beginners' group · 20 km": "ابتدائی گروپ · 20 کلومیٹر",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "جدہ یاٹ کلب تک اور واپس، تقریباً 20 کلومیٹر فی گھنٹہ۔",
@@ -2795,6 +2855,12 @@ var FORM_T = {
   "Continue": "आगे बढ़ें",
   "Saving...": "सहेजा जा रहा है...",
   "Open my booking": "मेरी बुकिंग खोलें",
+  "Your first session": "आपका पहला सत्र",
+  "Your second session": "आपका दूसरा सत्र",
+  "Back this month": "इस महीने वापसी",
+  "{n} sessions this month": "इस महीने {n} सत्र",
+  "With this booking: {n} of {of}": "इस बुकिंग के साथ: {of} में से {n}",
+  "Community": "समुदाय",
   "Ride group": "राइड ग्रुप",
   "Beginners' group · 20 km": "शुरुआती ग्रुप · 20 किमी",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "जेद्दाह यॉट क्लब तक और वापस, लगभग 20 किमी/घंटा।",
@@ -2962,6 +3028,12 @@ var FORM_T = {
   "Continue": "अगाडि बढ्नुहोस्",
   "Saving...": "सुरक्षित गर्दै...",
   "Open my booking": "मेरो बुकिङ खोल्नुहोस्",
+  "Your first session": "तपाईंको पहिलो सत्र",
+  "Your second session": "तपाईंको दोस्रो सत्र",
+  "Back this month": "यो महिना फर्कनुहोस्",
+  "{n} sessions this month": "यो महिना {n} सत्र",
+  "With this booking: {n} of {of}": "यो बुकिङसहित: {of} मध्ये {n}",
+  "Community": "समुदाय",
   "Ride group": "राइड समूह",
   "Beginners' group · 20 km": "सुरुवाती समूह · 20 किमी",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "जेद्दा याट क्लबसम्म गएर फर्किने, करिब 20 किमी/घण्टाको गतिमा।",
@@ -3129,6 +3201,12 @@ var FORM_T = {
   "Continue": "চালিয়ে যান",
   "Saving...": "সংরক্ষণ হচ্ছে...",
   "Open my booking": "আমার বুকিং খুলুন",
+  "Your first session": "আপনার প্রথম সেশন",
+  "Your second session": "আপনার দ্বিতীয় সেশন",
+  "Back this month": "এই মাসে ফিরে আসুন",
+  "{n} sessions this month": "এই মাসে {n}টি সেশন",
+  "With this booking: {n} of {of}": "এই বুকিংসহ: {of}টির মধ্যে {n}টি",
+  "Community": "কমিউনিটি",
   "Ride group": "রাইড গ্রুপ",
   "Beginners' group · 20 km": "শিক্ষানবিশ গ্রুপ · 20 কিমি",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "জেদ্দা ইয়ট ক্লাব পর্যন্ত গিয়ে ফেরা, প্রায় 20 কিমি/ঘণ্টা গতিতে।",
@@ -3296,6 +3374,12 @@ var FORM_T = {
   "Continue": "继续",
   "Saving...": "正在保存…",
   "Open my booking": "打开我的预订",
+  "Your first session": "您的第一场活动",
+  "Your second session": "您的第二场活动",
+  "Back this month": "本月回归",
+  "{n} sessions this month": "本月 {n} 场活动",
+  "With this booking: {n} of {of}": "加上本次预订：{of} 场中的第 {n} 场",
+  "Community": "社区",
   "Ride group": "骑行分组",
   "Beginners' group · 20 km": "初级组 · 20 公里",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "往返吉达游艇俱乐部，时速约 20 公里。",
@@ -3463,6 +3547,12 @@ var FORM_T = {
   "Continue": "続ける",
   "Saving...": "保存中…",
   "Open my booking": "予約を開く",
+  "Your first session": "初めてのセッション",
+  "Your second session": "2回目のセッション",
+  "Back this month": "今月また参加",
+  "{n} sessions this month": "今月{n}回のセッション",
+  "With this booking: {n} of {of}": "この予約で{of}回中{n}回目",
+  "Community": "コミュニティ",
   "Ride group": "ライドグループ",
   "Beginners' group · 20 km": "初級グループ · 20 km",
   "To the Jeddah Yacht Club and back, about 20 km/h.": "ジェッダ・ヨットクラブまで往復します。時速は約20 kmです。",
@@ -5094,12 +5184,60 @@ var MMAccount = (function () {
     $("#done-sum").innerHTML = row(tr("Date"), esc(dateOf(booked.ride, { weekday: "long", day: "numeric", month: "long" }) || "—")) +
       (p ? row(tr("Bike pickup"), '<bdi dir="ltr">' + esc(p.join(" – ")) + "</bdi>") : "") +
       row(tr("Group"), esc(groupName(booked.group))) + row(tr("Bike"), esc(bikeName(booked.bike))) + row(tr("Ride code"), codeCell(booked.code)) + row(tr("Price"), esc(tr("Free")));
+    paintHub();
   }
   function showDone() {
     showView("done"); paintDone();
     $("#done-title").focus({ preventScroll: true });
     autoTimer = setTimeout(openBooking, 4000);
+    loadHub(booked);
   }
+
+  /* ── A member's challenge with this booking ─────────────────────────────
+     The booking app's "You're booked" for a community session (2026-11-13, _bkHubHtml): a Community member's challenge
+     for the month, read after the booking with the account's own session (hub_pulse, rentals 20261113120000). Shown
+     under the title only when the booking is not on the waitlist, the account is a member, the challenge is not met
+     yet and this Saturday is in its month: the challenge's name, the sessions done filled, this booking an outlined
+     dot, the rest empty (a bar above five, as the app draws it), and Community. The whole of it links to the members'
+     area (/club). Nothing for anyone else, nor while it is read, nor from a database without hub_pulse. */
+  var hub = null; // { kind, n, tg } for the booking on the page
+  async function loadHub(b) {
+    hub = null; paintHub();
+    if (!acct || !b || b.status === "waitlist") return;
+    var r = await rpc("hub_pulse", { p_id: acct.id, p_token: acct.token });
+    if (booked !== b || gone()) return; // another booking, or the page went, meanwhile
+    var d = !r.error && r.data && r.data.ok === true && r.data.member === true ? r.data : null, me = d && d.me;
+    var n = Math.max(0, Number(me && me.n) || 0), tg = Number(me && me.target) || 0;
+    var month = String(b.ride.session_date || b.ride.session_id || "").slice(0, 7);
+    if (!me || !me.kind || !(tg > 0) || n >= tg || month !== String(me.ends_on || "").slice(0, 7)) return;
+    hub = { kind: String(me.kind), n: n, tg: tg };
+    paintHub();
+  }
+  function hubName(h) {
+    return h.kind === "first" ? tr("Your first session") : h.kind === "second" ? tr("Your second session") : h.kind === "back" ? tr("Back this month") : tr("{n} sessions this month", { n: h.tg });
+  }
+  // The app's _hpBar with this booking: dots up to five, a bar above that.
+  function hubMarks(n, tg) {
+    var v = Math.min(n, tg), x = v < tg ? 1 : 0, s = "", i;
+    if (tg <= 5) {
+      for (i = 0; i < tg; i++) s += "<i" + (i < v ? ' class="on"' : i < v + x ? ' class="nx"' : "") + "></i>";
+      return '<span class="hp-dots" aria-hidden="true">' + s + "</span>";
+    }
+    var w = function (k) { return (k / tg * 100).toFixed(1) + "%"; };
+    return '<span class="hp-bar" aria-hidden="true"><i class="on" style="width:' + w(v) + '"></i>' + (x ? '<i class="nx" style="width:' + w(x) + '"></i>' : "") + "</span>";
+  }
+  function paintHub() {
+    var a = $("#done-hub"); if (!a) return;
+    var h = booked && booked.status !== "waitlist" ? hub : null;
+    a.hidden = !h;
+    if (!h) { a.innerHTML = ""; return; }
+    a.href = "/club?lang=" + lang;
+    a.innerHTML = '<span class="d-hub-k"><svg aria-hidden="true"><use href="#i-flag"/></svg><bdi>' + esc(hubName(h)) + "</bdi></span>" + hubMarks(h.n, h.tg) +
+      '<span class="sr">' + esc(tr("With this booking: {n} of {of}", { n: h.n + 1, of: h.tg })) + "</span>" +
+      '<span class="d-hub-go">' + esc(tr("Community")) + '<svg aria-hidden="true"><use href="#i-go"/></svg></span>';
+  }
+  // Off to the members' area: the booking app is not opened over it.
+  $("#done-hub").addEventListener("click", function () { clearTimeout(autoTimer); leaving = true; });
   // The booking in the app, signed in there by a one-time code (customer_handoff_create; the app
   // reads ?signin=). Without a code, the app's My Bookings, where the rider signs in themselves.
   async function openBooking() {

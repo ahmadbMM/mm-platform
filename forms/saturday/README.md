@@ -30,6 +30,11 @@ its own, whose header has a menu of the sixteen languages (the user, 2026-11-09)
    `PICK_TYPE`, `TYPE_CLOSED`, `MEMBER_BIKES_FULL`, `STALE_SESSION`, `RATE_LIMITED`).
 5. **Sent**: "Your request is in" (or "You're on the waitlist" when the ride was full), then the booking app, signed
    in by a one-time code: `customer_handoff_create`, then `<booking app>?signin=<code>&tab=bookings&lang=`.
+   A Community member's request (not a waitlisted one) also shows their month's challenge under the title, as the
+   booking app's "You're booked" does (2026-11-13): `hub_pulse(p_id, p_token)`, read after the booking, gives the
+   challenge; shown while it is not met and this Saturday is in its month, the sessions done filled, this booking an
+   outlined dot, the rest empty (a bar above five), the whole a link to the members' area (`/club?lang=`). Nothing for
+   anyone else, or from a database without `hub_pulse` (rentals `20261113120000_community_reach.sql`).
 
 Database: `20261108120000_saturday_codes.sql` in the booking site repo (`saturday_codes`, `saturday_code_rides`,
 `saturday_settings`, `queue_entries.ride_code`, `saturday_rides`, `saturday_book`, `saturday_link_only`). Staff make the
