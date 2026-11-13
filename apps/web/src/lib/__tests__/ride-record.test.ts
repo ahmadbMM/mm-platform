@@ -197,6 +197,25 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
     expect(L.filter((x) => x.slug.startsWith("t") && /^t\d/.test(x.slug))).toHaveLength(1);
     expect(closestBadges(L).map((x) => x.item.slug)).not.toContain("t100");
   });
+  it("show Ironman 70.3 and 140.6 as one staff-given badge in two levels, on a red ribbon (the booking app, 2026-11-13)", () => {
+    const cat = [
+      { slug: "ironman_1406", icon: "ironman_1406", color: "gold", system: true, auto: false, held_only: false, sort: 88 },
+      { slug: "ironman_703", icon: "ironman_703", color: "silver", system: true, auto: false, held_only: false, sort: 89 },
+    ];
+    const open = badgeList([], new Map(), { ...empty, catalog: cat }, today, null).find((x) => x.slug === "ironman_703")!;
+    expect(open).toMatchObject({ on: false, lvN: 0, manual: true });
+    expect(open.lv!.map((x) => x.slug)).toEqual(["ironman_703", "ironman_1406"]);
+    const L = badgeList([], new Map(), { ...empty, catalog: cat, mine: [{ slug: "ironman_1406", note: null, at: "2026-11-13T10:00:00Z" }] }, today, null);
+    expect(L[0]).toMatchObject({ slug: "ironman_1406", on: true, lvN: 2, nx: null });
+    expect(L[0].lv!.map((x) => [x.slug, x.on])).toEqual([["ironman_703", true], ["ironman_1406", true]]);
+    expect(L.filter((x) => x.slug.startsWith("ironman"))).toHaveLength(1);
+    const svg = renderToStaticMarkup(createElement(Medal, { icon: "ironman_1406", color: "gold" }));
+    expect(svg).toContain(">140.6</text>");
+    expect(svg).toContain('fill="#c8202f"');
+    expect(renderToStaticMarkup(createElement(Medal, { icon: "t100", color: "gold" }))).toContain('fill="#1e4f96"');
+    expect(RECORD.en.names.ironman_703[0]).toBe("Ironman 70.3 Finisher");
+    expect(RECORD.ar.names.ironman_1406[0]).toBe("إنجاز آيرونمان 140.6");
+  });
   it("climb a ride ladder from a level staff gave, whatever was ridden", () => {
     const L = badgeList([], new Map(), { ...empty, mine: [{ slug: "podium" }] }, today, null), laps = L.find((x) => x.slug === "podium")!;
     expect(laps).toMatchObject({ on: true, lvN: 3, nx: { slug: "corniche25", p: "0/25" } });

@@ -17,25 +17,29 @@ const SPECIAL: Record<string, [[string, string, string], string]> = {
 }; // BadgeGrid's special() lists the same colours, to frame their tiles and pop-ups to match
 // The T100 races in Jeddah (redrawn 2026-10-09 as the booking app's _bdgRace): a finisher's medal on a ribbon,
 // the race's name struck on it, gold / silver / bronze whatever the badge's colour. [text, [gradient], rim, ink]
-const RACE: Record<string, [string, [string, string, string], string, string]> = {
+const RACE: Record<string, [string, [string, string, string], string, string, [string, string]?]> = {
   t100: ["T100", ["#fff3b8", "#f3c431", "#b07c00"], "#7d5800", "#5c3f00"],
   t50: ["T50", ["#fff", "#cfd5de", "#858f9e"], "#636b78", "#323946"],
   t25: ["T25", ["#ffd9b5", "#dc8d4c", "#93501d"], "#713b12", "#4d2408"],
+  // Ironman 70.3 and 140.6 (the booking app, 2026-11-13: "add a new half iron man and full iron man badges", then "ironman 70.3
+  // ironman 140.6"): the same medal on a red ribbon (the fifth item, else the T100 blue), 70.3 in silver and 140.6 in gold
+  ironman_703: ["70.3", ["#fff", "#cfd5de", "#858f9e"], "#636b78", "#323946", ["#c8202f", "#8a141e"]],
+  ironman_1406: ["140.6", ["#fff3b8", "#f3c431", "#b07c00"], "#7d5800", "#5c3f00", ["#c8202f", "#8a141e"]],
 };
 
 export default function Medal({ icon, color, className = "" }: { icon: string; color: string; className?: string }) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const g = GLYPH[icon] ?? GLYPH.medal, sp = SPECIAL[color], race = RACE[icon];
   if (race) {
-    const w = race[0].length > 3 ? 20.5 : 15.5;
+    const n = race[0].length, w = n > 4 ? 21 : n > 3 ? 20.5 : 15.5, rb = race[4] ?? ["#1e4f96", "#153a70"];
     const tx = (y: number, fill: string, op?: number) => (
-      <text className="bdg-rt" x="20" y={y} fill={fill} fillOpacity={op} textAnchor="middle" fontSize="11" textLength={w} lengthAdjust="spacingAndGlyphs">{race[0]}</text>
+      <text className="bdg-rt" x="20" y={y} fill={fill} fillOpacity={op} textAnchor="middle" fontSize={n > 4 ? 10 : 11} textLength={w} lengthAdjust="spacingAndGlyphs">{race[0]}</text>
     );
     return (
       <svg className={`bdg-m bdg-race ${className}`} viewBox="0 0 40 40" aria-hidden="true">
         <defs><linearGradient id={`bdg${id}`} x1="0" y1="0" x2="1" y2="1">{race[1].map((c, i) => <stop key={i} offset={i / 2} stopColor={c} />)}</linearGradient></defs>
-        <path fill="#1e4f96" d="M9 .8h7.4l6.4 12.6h-7.4z" />
-        <path fill="#153a70" d="M31 .8h-7.4l-6.4 12.6h7.4z" />
+        <path fill={rb[0]} d="M9 .8h7.4l6.4 12.6h-7.4z" />
+        <path fill={rb[1]} d="M31 .8h-7.4l-6.4 12.6h7.4z" />
         <path stroke="#fff" strokeOpacity=".55" strokeWidth=".9" fill="none" d="M12.7.8l6.4 12.6M27.3.8l-6.4 12.6" />
         <circle cx="20" cy="24.8" r="14.2" fill={`url(#bdg${id})`} stroke={race[2]} strokeWidth="1.2" />
         <circle cx="20" cy="24.8" r="11.7" fill="none" stroke={race[2]} strokeOpacity=".45" strokeWidth=".8" />

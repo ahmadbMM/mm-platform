@@ -40,7 +40,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   first_lap: ["flag", "green"], regular: ["wheel", "teal"], podium: ["podium", "purple"], front_row: ["one", "gold"], carbon: ["bike", "silver"],
   streak: ["flame", "orange"], squad: ["people", "blue"], fuel: ["bottle", "red"], corniche25: ["wave", "blue"],
   marshal: ["shield", "orange"], pit_crew: ["wrench", "silver"], green_flag: ["wflag", "green"], super_licence: ["card", "purple"],
-  scrutineer: ["search", "teal"], champion: ["trophy", "gold"], spirit: ["heart", "red"], t100: ["t100", "gold"], t50: ["t50", "silver"], t25: ["t25", "orange"], complete_profile: ["profile", "special"],
+  scrutineer: ["search", "teal"], champion: ["trophy", "gold"], spirit: ["heart", "red"], t100: ["t100", "gold"], t50: ["t50", "silver"], t25: ["t25", "orange"], ironman_703: ["ironman_703", "silver"], ironman_1406: ["ironman_1406", "gold"], complete_profile: ["profile", "special"],
   national_day_96: ["n96", "national"], back_on_track: ["return", "teal"], safety_car: ["beacon", "orange"], endurance: ["clock", "purple"],
   triple_crown: ["crown", "gold"], slipstream: ["wind", "green"], paceline: ["wind", "blue"], peloton: ["wind", "gold"],
   rolling_start: ["wind", "teal"], grand_tour: ["wind", "purple"], hall_of_fame: ["wind", "special"],
@@ -98,6 +98,7 @@ export const heldOnly = (row: BadgeRow | null | undefined, def: boolean): boolea
 export const LADDERS: string[][] = [
   ["first_lap", "regular", "podium", "corniche25"], ["streak", "safety_car", "endurance"],
   ["rolling_start", "slipstream", "paceline", "peloton", "grand_tour", "hall_of_fame"], ["perfect_week", "perfect_month"], ["t25", "t50", "t100"],
+  ["ironman_703", "ironman_1406"], // Ironman 70.3 and 140.6, staff-given (the booking app, 2026-11-13)
   ["km20", "km40", "km70", "km100"], // the distance ladder (the booking app, 2026-10-16)
   // five levels each since 2026-10-12: 1/10/25/50/100, Champion's and Front Row's 1/5/10/25/50
   ["marshal", "senior_marshal", "chief_marshal", "clerk_of_course", "race_director"], ["pit_crew", "pit_boss", "crew_chief", "team_manager", "team_principal"],
