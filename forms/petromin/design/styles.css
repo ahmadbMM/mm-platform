@@ -12,6 +12,13 @@
 @font-face { font-family: "IBM Plex Sans Arabic"; font-style: normal; font-weight: 700; font-display: swap; src: url("/fonts/forms/ibm-plex-sans-arabic-arabic-700.woff2") format("woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+0870-088E, U+0890-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
 @font-face { font-family: "Noto Sans Devanagari"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("/fonts/forms/noto-sans-devanagari-devanagari-wght.woff2") format("woff2"); unicode-range: U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF; }
 @font-face { font-family: "Noto Sans Bengali"; font-style: normal; font-weight: 100 900; font-display: swap; src: url("/fonts/forms/noto-sans-bengali-bengali-wght.woff2") format("woff2"); unicode-range: U+0951-0952, U+0964-0965, U+0980-09FE, U+1CD0, U+1CD2, U+1CD5-1CD6, U+1CD8, U+1CE1, U+1CEA, U+1CED, U+1CF2, U+1CF5-1CF7, U+200C-200D, U+20B9, U+25CC, U+A8F1; }
+/* Rubik is Dukan's own face (dukan.me), used once Dukan is picked; the riyal sign (U+20C1) on a guest's fare is the site's
+   own subset of Noto Sans. */
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 300 900; font-display: swap; src: url("/fonts/forms/rubik-var-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 300 900; font-display: swap; src: url("/fonts/forms/rubik-var-latin-ext.woff2") format("woff2"); unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Rubik"; font-style: normal; font-weight: 300 900; font-display: swap; src: url("/fonts/forms/rubik-var-arabic.woff2") format("woff2"); unicode-range: U+0600-06FF, U+0750-077F, U+0870-0891, U+0897-08E1, U+08E3-08FF, U+200C-200E, U+2010-2011, U+204F, U+2E41, U+FB50-FDFF, U+FE70-FE74, U+FE76-FEFC; }
+@font-face { font-family: "MM Riyal"; font-style: normal; font-weight: 100 600; font-display: swap; src: url("/fonts/Riyal-400.woff2") format("woff2"); unicode-range: U+20C1; }
+@font-face { font-family: "MM Riyal"; font-style: normal; font-weight: 601 900; font-display: swap; src: url("/fonts/Riyal-700.woff2") format("woff2"); unicode-range: U+20C1; }
 
 /* The look is the booking app's soft one (2026-11-07): rounded controls and cards, warm shadows instead of
    hairlines, nothing animating in by itself, no glass. Every box a rider types in or picks keeps a 3:1 edge
@@ -32,6 +39,10 @@
   --lq-1: 0 1px 2px rgba(64, 52, 44, .06), 0 2px 6px rgba(64, 52, 44, .05);
   --lq-2: 0 1px 2px rgba(64, 52, 44, .05), 0 4px 10px rgba(64, 52, 44, .06), 0 12px 28px rgba(64, 52, 44, .07);
   --lq-3: 0 2px 4px rgba(64, 52, 44, .05), 0 8px 16px rgba(64, 52, 44, .06), 0 16px 32px rgba(64, 52, 44, .07), 0 32px 64px rgba(64, 52, 44, .09);
+  --wash: rgba(7, 122, 75, 0.06); --wash-edge: rgba(7, 122, 75, 0.3); --ring: rgba(7, 122, 75, 0.16); --glow: rgba(7, 122, 75, 0.28);
+  --green-press: var(--green); --notice: var(--green); --on-green: #fbf9f4; --on-green-dim: rgba(251, 249, 244, 0.35);
+  --tile-on: var(--ink); --tile-on-ink: var(--neon);
+  --w7: 700; --w6: 600; --w5: 500;
   --font-latin: "Space Grotesk", system-ui, sans-serif;
   /* Latin words and digits in another script's page take Space Grotesk, as on the website. */
   --font-arabic: "IBM Plex Sans Arabic", "Space Grotesk", system-ui, sans-serif;
@@ -76,16 +87,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
   position: relative; display: inline-flex; align-items: center; gap: 8px;
   min-height: 44px; padding: 0 14px 0 16px; border-radius: 999px;
   border: 1px solid var(--edge); background: transparent; color: var(--ink);
-  font-weight: 700; font-size: 14px; cursor: pointer; transition: border-color 0.25s ease, box-shadow 0.25s ease;
+  font-weight: var(--w7); font-size: 14px; cursor: pointer; transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
-.lang-wrap:hover, .lang-wrap:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(7, 122, 75, 0.16); }
+.lang-wrap:hover, .lang-wrap:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px var(--ring); }
 .lang-wrap svg { flex: none; }
 .lang {
   appearance: none; -webkit-appearance: none; border: 0; background: transparent; padding: 0; margin: 0;
-  color: inherit; font: inherit; font-weight: 700; cursor: pointer; min-height: 42px; max-width: 132px;
+  color: inherit; font: inherit; font-weight: var(--w7); cursor: pointer; min-height: 42px; max-width: 132px;
 }
 .lang:focus { outline: none; }
-.lang option { font-weight: 500; color: var(--ink); }
+.lang option { font-weight: var(--w5); color: var(--ink); }
 
 /* Card */
 .wrap { flex: 1; width: 100%; max-width: 600px; margin: 0 auto; padding: 8px 20px 32px; }
@@ -102,14 +113,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 /* Both companies' marks at the same height, kept apart by a hairline: the riders' employer, under MicroMobility's
    own mark (the site's header, or the form's own). */
+.partners[hidden] { display: none; }
 .partners { display: flex; align-items: center; justify-content: center; gap: 18px; margin: 0 0 18px; }
 .partners img { height: 34px; width: auto; max-width: 132px; object-fit: contain; display: block; }
 .partners-rule { width: 1px; height: 28px; background: var(--line); }
-.title { font-weight: 700; font-size: 34px; line-height: 1.02; letter-spacing: -1.2px; margin: 0 0 8px; text-wrap: balance; }
+.title { font-weight: var(--w7); font-size: 34px; line-height: 1.02; letter-spacing: -1.2px; margin: 0 0 8px; text-wrap: balance; }
 
 /* Stepper */
-.stepper { list-style: none; margin: 16px 0 24px; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.stepper-item { display: flex; flex-direction: column; gap: 8px; color: var(--faint); font-size: 12px; font-weight: 700; letter-spacing: 0.3px; line-height: 1.25; }
+.stepper { list-style: none; margin: 16px 0 24px; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.stepper-item { display: flex; flex-direction: column; gap: 8px; color: var(--faint); font-size: 12px; font-weight: var(--w7); letter-spacing: 0.3px; line-height: 1.25; }
 .stepper-bar { display: block; height: 4px; border-radius: 4px; background: rgba(0, 0, 0, 0.1); transition: background 0.3s ease; }
 .stepper-item.done .stepper-bar { background: var(--green); }
 .stepper-item.active .stepper-bar { background: var(--ink); }
@@ -119,7 +131,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* Steps */
 .step { border: 0; margin: 0; padding: 0; min-width: 0; }
 .step[hidden] { display: none; }
-.step-title { padding: 0; margin: 0 0 14px; font-size: 20px; font-weight: 700; letter-spacing: -0.4px; }
+.step-title { padding: 0; margin: 0 0 14px; font-size: 20px; font-weight: var(--w7); letter-spacing: -0.4px; }
 
 /* A picked choice carries a drawn tick as well as its colour (WCAG 1.4.1). */
 .session, .company { position: relative; }
@@ -141,9 +153,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 .session:hover { border-color: var(--ink); }
 .session:active { transform: scale(0.99); }
-.session[aria-checked="true"] { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); background: rgba(7, 122, 75, 0.06); }
-.session-date { font-weight: 700; font-size: 16px; }
-.session-time { color: var(--ink); font-size: 14.5px; font-weight: 600; }
+.session[aria-checked="true"] { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); background: var(--wash); }
+.session-date { font-weight: var(--w7); font-size: 16px; }
+.session-time { color: var(--ink); font-size: 14.5px; font-weight: var(--w6); }
 .session-facts { color: var(--muted); font-size: 13.5px; }
 .sessions-empty { margin: 0; padding: 18px; border-radius: 18px; border: 1px dashed var(--edge); color: var(--muted); font-size: 14px; text-align: center; }
 .sessions-help { align-self: center; }
@@ -154,7 +166,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .session.skeleton span:last-child { width: 35%; }
 .quiet {
   display: inline-flex; align-items: center; min-height: 44px; margin-top: 6px; padding: 0; border: 0; background: none;
-  font-weight: 700; font-size: 15px; color: var(--green); text-decoration: underline; text-underline-offset: 3px;
+  font-weight: var(--w7); font-size: 15px; color: var(--green); text-decoration: underline; text-underline-offset: 3px;
 }
 
 /* Actions */
@@ -162,7 +174,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .actions .submit { flex: 1; margin-top: 0; }
 .back {
   display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 56px; padding: 0 18px; border-radius: 999px;
-  border: 1px solid var(--edge); background: transparent; color: var(--ink); font-weight: 700; font-size: 15px;
+  border: 1px solid var(--edge); background: transparent; color: var(--ink); font-weight: var(--w7); font-size: 15px;
   transition: border-color 0.25s ease;
 }
 .back:hover { border-color: var(--green); color: var(--green); }
@@ -173,25 +185,26 @@ html[dir="rtl"] .back-arrow { transform: scaleX(-1); }
 .banner {
   display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px;
   margin: 0 0 20px; padding: 12px 14px; border-radius: 18px; scroll-margin-top: 80px;
-  background: var(--red-bg); color: var(--red); border: 1px solid rgba(179, 38, 30, 0.35); font-weight: 600; font-size: 14.5px;
+  background: var(--red-bg); color: var(--red); border: 1px solid rgba(179, 38, 30, 0.35); font-weight: var(--w6); font-size: 14.5px;
 }
 .banner[hidden] { display: none; }
 .banner-icon { flex: none; }
 .banner-text { flex: 1; min-width: 60%; }
-.banner-help { font-weight: 700; text-decoration: underline; }
+.banner-help { font-weight: var(--w7); text-decoration: underline; }
 .banner-help[hidden] { display: none; }
-.banner-close { min-height: 44px; padding: 0 16px; border: 1px solid rgba(179, 38, 30, 0.55); border-radius: 999px; background: transparent; color: var(--red); font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.banner-close { min-height: 44px; padding: 0 16px; border: 1px solid rgba(179, 38, 30, 0.55); border-radius: 999px; background: transparent; color: var(--red); font: inherit; font-size: 13.5px; font-weight: var(--w7); cursor: pointer; }
 .banner-close:hover { background: rgba(179, 38, 30, 0.08); }
 /* A notice: something that happened, not something wrong (a booking cancelled). */
-.notice { margin: 0 0 18px; padding: 12px 16px; border-radius: 18px; background: rgba(7, 122, 75, 0.07); border: 1px solid rgba(7, 122, 75, 0.3); color: var(--green); font-weight: 700; font-size: 14.5px; }
+.notice { margin: 0 0 18px; padding: 12px 16px; border-radius: 18px; background: var(--wash); border: 1px solid var(--wash-edge); color: var(--notice); font-weight: var(--w7); font-size: 14.5px; }
 .notice[hidden] { display: none; }
 
 /* Fields */
 .field { display: flex; flex-direction: column; gap: 7px; margin-bottom: 20px; }
-label, .label { font-weight: 700; font-size: 14px; }
+.field[hidden] { display: none; } /* display:flex would otherwise keep a hidden box on screen */
+label, .label { font-weight: var(--w7); font-size: 14px; }
 input {
   height: 50px; width: 100%; padding: 0 16px; border-radius: var(--r-ctl);
-  border: 1px solid var(--edge); background: #fff; color: var(--ink); font: inherit; font-weight: 500;
+  border: 1px solid var(--edge); background: #fff; color: var(--ink); font: inherit; font-weight: var(--w5);
   -moz-appearance: textfield; appearance: textfield;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -202,21 +215,21 @@ input::placeholder { color: var(--faint); font-weight: 400; }
 .cc-wrap {
   position: relative; display: inline-flex; align-items: center; gap: 4px; flex: none;
   height: 50px; padding: 0 10px 0 14px; border-radius: var(--r-ctl); border: 1px solid var(--edge); background: #fff;
-  font-weight: 700; font-size: 15px; cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-weight: var(--w7); font-size: 15px; cursor: pointer; transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 .cc-wrap:hover { border-color: var(--ink); }
-.cc-wrap:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px rgba(7, 122, 75, 0.16); }
+.cc-wrap:focus-within { border-color: var(--green); box-shadow: 0 0 0 3px var(--ring); }
 .cc-wrap svg { flex: none; color: var(--muted); }
-.cc { appearance: none; -webkit-appearance: none; border: 0; background: transparent; padding: 0; margin: 0; color: inherit; font: inherit; font-weight: 700; cursor: pointer; height: 48px; font-variant-numeric: tabular-nums; }
+.cc { appearance: none; -webkit-appearance: none; border: 0; background: transparent; padding: 0; margin: 0; color: inherit; font: inherit; font-weight: var(--w7); cursor: pointer; height: 48px; font-variant-numeric: tabular-nums; }
 .cc:focus { outline: none; }
 .field.invalid .cc-wrap { border-color: var(--red); }
 input:hover { border-color: var(--ink); }
-input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(7, 122, 75, 0.16); }
+input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--ring); }
 input:focus-visible { outline: none; }
 /* A box that is wrong stays red while it is typed in: red edge, red ring, never the green "active" one around it. */
 .field.invalid input, .field.invalid input:focus, .field.invalid input:hover { border-color: var(--red); }
 .field.invalid input:focus { box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.18); }
-.err { display: none; align-items: flex-start; gap: 6px; margin: 0; font-size: 13.5px; font-weight: 600; color: var(--red); }
+.err { display: none; align-items: flex-start; gap: 6px; margin: 0; font-size: 13.5px; font-weight: var(--w6); color: var(--red); }
 /* The mark beside a message is drawn (a bar and a dot on a red disc), so a screen reader reads the message alone. */
 .err::before {
   content: ""; flex: none; width: 16px; height: 16px; margin-top: 2px; border-radius: 50%;
@@ -235,20 +248,20 @@ input:focus-visible { outline: none; }
 .company img { display: block; width: 100%; max-width: 140px; height: 44px; object-fit: contain; }
 .company:hover { border-color: var(--ink); }
 .company:active { transform: scale(0.98); }
-.company[aria-checked="true"] { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); background: rgba(7, 122, 75, 0.06); }
+.company[aria-checked="true"] { border-color: var(--green); box-shadow: inset 0 0 0 1px var(--green); background: var(--wash); }
 
 /* Bike type: two pills side by side, the picked one dark with its tick. */
 .types { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .tile {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   min-height: 52px; border-radius: 999px; border: 1px solid var(--edge); background: #fff;
-  font-weight: 700; font-size: 15px; color: var(--ink);
+  font-weight: var(--w7); font-size: 15px; color: var(--ink);
   transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s;
 }
 .tile[hidden] { display: none; }
 .tile:hover { border-color: var(--ink); }
 .tile:active { transform: scale(0.97); }
-.tile[aria-checked="true"] { background: var(--ink); color: var(--neon); border-color: var(--ink); }
+.tile[aria-checked="true"] { background: var(--tile-on); color: var(--tile-on-ink); border-color: var(--tile-on); }
 .tile[aria-checked="true"]::before {
   content: ""; width: 10px; height: 5px; margin-top: -3px; border-left: 2.5px solid currentColor; border-bottom: 2.5px solid currentColor; transform: rotate(-45deg);
 }
@@ -257,10 +270,10 @@ input:focus-visible { outline: none; }
 .submit {
   display: flex; align-items: center; justify-content: center; gap: 10px;
   width: 100%; min-height: 56px; margin-top: 10px; padding: 0 18px; border: 0; border-radius: 999px;
-  background: var(--green); color: #fbf9f4; font-weight: 700; font-size: 16px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: var(--green); color: var(--on-green); font-weight: var(--w7); font-size: 16px;
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
 }
-.submit:hover { box-shadow: 0 10px 26px rgba(7, 122, 75, 0.28); }
+.submit:hover { background: var(--green-press); box-shadow: 0 10px 26px var(--glow); }
 .submit:active { transform: scale(0.98); }
 .submit .spinner, .submit .submit-busy { display: none; }
 .submit.loading { pointer-events: none; transform: none; box-shadow: none; opacity: 0.92; }
@@ -268,7 +281,7 @@ input:focus-visible { outline: none; }
 .submit.loading .submit-busy { display: inline; }
 .submit.loading .spinner {
   display: block; width: 18px; height: 18px; border-radius: 50%;
-  border: 2.5px solid rgba(251, 249, 244, 0.35); border-top-color: #fbf9f4;
+  border: 2.5px solid var(--on-green-dim); border-top-color: var(--on-green);
   animation: spin 0.8s linear infinite;
 }
 .submit.danger { background: var(--red); }
@@ -281,11 +294,11 @@ input:focus-visible { outline: none; }
 .rider { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 12px 12px 16px; padding-inline: 16px 12px; border-radius: 18px; background: var(--bg); border: 1px solid var(--line); }
 .rider.invalid { border-color: var(--red); }
 .rider-main { display: flex; flex-direction: column; min-width: 0; }
-.rider-head { font-size: 12px; font-weight: 700; color: var(--muted); }
-.rider-name-v { font-weight: 700; overflow-wrap: anywhere; }
+.rider-head { font-size: 12px; font-weight: var(--w7); color: var(--muted); }
+.rider-name-v { font-weight: var(--w7); overflow-wrap: anywhere; }
 .rider-meta { font-size: 13.5px; color: var(--muted); }
 .rider-acts { display: flex; gap: 6px; flex: none; }
-.rider-change, .rider-remove { min-height: 44px; padding: 0 14px; border-radius: 999px; background: #fff; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: background 0.2s ease; }
+.rider-change, .rider-remove { min-height: 44px; padding: 0 14px; border-radius: 999px; background: #fff; font: inherit; font-size: 13.5px; font-weight: var(--w7); cursor: pointer; transition: background 0.2s ease; }
 .rider-change { border: 1px solid var(--edge); color: var(--ink); }
 .rider-remove { border: 1px solid rgba(179, 38, 30, 0.55); color: var(--red); }
 .rider-change:hover { border-color: var(--green); color: var(--green); }
@@ -299,24 +312,24 @@ input:focus-visible { outline: none; }
 .rv { padding: 14px 16px 10px; border-radius: 18px; background: var(--bg); border: 1px solid var(--line); }
 .rv-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
 .rv-head h3 { margin: 0; font-size: 15px; }
-.rv-change { min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--green); font-weight: 700; font-size: 14.5px; text-decoration: underline; text-underline-offset: 3px; }
+.rv-change { min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--green); font-weight: var(--w7); font-size: 14.5px; text-decoration: underline; text-underline-offset: 3px; }
 .rv-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14.5px; }
 .rv-row:first-of-type { border-top: 0; }
 .rv-k { color: var(--muted); flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
-.rv-v { font-weight: 600; text-align: end; overflow-wrap: anywhere; }
+.rv-v { font-weight: var(--w6); text-align: end; overflow-wrap: anywhere; }
 
 /* Success */
 .success { display: flex; flex-direction: column; align-items: stretch; gap: 12px; padding-top: 4px; }
 .success[hidden] { display: none; }
 .check {
-  align-self: flex-start; width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: #fbf9f4;
+  align-self: flex-start; width: 64px; height: 64px; border-radius: 50%; background: var(--green); color: var(--on-green);
   display: grid; place-items: center; margin-bottom: 6px;
 }
 .check path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: check-draw 0.4s 0.1s ease-out forwards; }
 @keyframes check-draw { to { stroke-dashoffset: 0; } }
 .success .title { margin: 0; }
 .result { margin: 0; color: var(--muted); }
-.done-note { margin: 4px 0 0; padding: 12px 14px; border-radius: 16px; background: var(--chip); font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.done-note { margin: 4px 0 0; padding: 12px 14px; border-radius: 16px; background: var(--chip); font-size: 14.5px; font-weight: var(--w6); color: var(--ink); }
 .done-note[hidden] { display: none; }
 .card[data-state="success"] .form, .card[data-state="success"] .banner { display: none; }
 .nw { white-space: nowrap; unicode-bidi: isolate; }
@@ -325,7 +338,7 @@ input:focus-visible { outline: none; }
 .save-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
 .pill {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 999px;
-  border: 1px solid var(--edge); background: #fff; color: var(--ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  border: 1px solid var(--edge); background: #fff; color: var(--ink); font: inherit; font-size: 14px; font-weight: var(--w7); cursor: pointer;
   transition: border-color 0.2s ease;
 }
 .pill:hover { border-color: var(--green); color: var(--green); }
@@ -335,23 +348,24 @@ input:focus-visible { outline: none; }
 /* The booking's buttons under the ticket. */
 .edit {
   display: flex; width: 100%; align-items: center; justify-content: center; gap: 6px; min-height: 52px; padding: 0 18px; border-radius: 999px;
-  border: 1px solid var(--edge); background: transparent; color: var(--ink); font: inherit; font-weight: 700; font-size: 15px; cursor: pointer;
+  border: 1px solid var(--edge); background: transparent; color: var(--ink); font: inherit; font-weight: var(--w7); font-size: 15px; cursor: pointer;
   transition: border-color 0.25s ease;
 }
 .edit:hover { border-color: var(--green); color: var(--green); }
+.edit[hidden] { display: none; }
 .edit-danger { border-color: rgba(179, 38, 30, 0.55); color: var(--red); }
 .edit-danger:hover { border-color: var(--red); color: var(--red); background: rgba(179, 38, 30, 0.05); }
 
 /* The phone's other registrations (Register another): one quiet button each, under the confirmation. */
 .others { width: 100%; margin-top: 8px; padding-top: 16px; border-top: 1px solid var(--line); }
 .others[hidden] { display: none; }
-.others-title { margin: 0 0 10px; font-size: 13.5px; font-weight: 700; color: var(--muted); }
+.others-title { margin: 0 0 10px; font-size: 13.5px; font-weight: var(--w7); color: var(--muted); }
 .others-list { display: flex; flex-wrap: wrap; gap: 8px; }
-.other { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--edge); background: #fff; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; transition: border-color 0.2s ease; }
+.other { min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--edge); background: #fff; font-size: 14px; font-weight: var(--w7); font-variant-numeric: tabular-nums; transition: border-color 0.2s ease; }
 .other:hover { border-color: var(--green); color: var(--green); }
 
 /* Help: the same place on every step and on the ticket (WCAG 3.2.6). */
-.help { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--green); font-weight: 700; font-size: 14.5px; }
+.help { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--green); font-weight: var(--w7); font-size: 14.5px; }
 
 /* Booking QR: the desk scans it to open the booking and check the rider in. */
 .qr { display: flex; justify-content: center; margin: 18px 0 6px; }
@@ -364,11 +378,11 @@ input:focus-visible { outline: none; }
 .ticket { position: relative; width: 100%; margin: 14px 0 2px; border-radius: var(--r-card); background: var(--bg); overflow: hidden; box-shadow: var(--lq-2); }
 .ticket::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--green); }
 .ticket-top { padding: 26px 22px 22px; text-align: center; }
-.ticket-label { font-size: 11.5px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: 1.6px; }
-.ticket-num { margin-top: 8px; font-size: 58px; font-weight: 700; line-height: 1; letter-spacing: -1.5px; color: var(--green); font-variant-numeric: tabular-nums; }
-.ticket-party { display: inline-block; margin-top: 12px; padding: 5px 14px; border-radius: 999px; background: var(--chip); font-size: 13px; font-weight: 600; }
+.ticket-label { font-size: 11.5px; font-weight: var(--w7); color: var(--faint); text-transform: uppercase; letter-spacing: 1.6px; }
+.ticket-num { margin-top: 8px; font-size: 58px; font-weight: var(--w7); line-height: 1; letter-spacing: -1.5px; color: var(--green); font-variant-numeric: tabular-nums; }
+.ticket-party { display: inline-block; margin-top: 12px; padding: 5px 14px; border-radius: 999px; background: var(--chip); font-size: 13px; font-weight: var(--w6); }
 .ticket-party[hidden] { display: none; }
-.ticket-party b { font-weight: 700; color: var(--green); }
+.ticket-party b { font-weight: var(--w7); color: var(--green); }
 .ticket-qr { margin-top: 20px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
 .ticket-qr .qr { margin: 0; }
 .ticket-cols { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px 10px; padding: 20px 22px 18px; text-align: center; border-top: 1px dashed var(--edge); }
@@ -376,21 +390,21 @@ input:focus-visible { outline: none; }
 .ticket-cols::before { left: -11px; }
 .ticket-cols::after { right: -11px; }
 .ticket-col[hidden] { display: none; }
-.ticket-col .tl { margin-bottom: 5px; font-size: 11px; font-weight: 700; color: var(--faint); text-transform: uppercase; letter-spacing: 0.8px; }
-.ticket-value { font-size: 14px; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
-.ticket-riders { margin: 0; padding: 0 22px 14px; text-align: center; font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.ticket-col .tl { margin-bottom: 5px; font-size: 11px; font-weight: var(--w7); color: var(--faint); text-transform: uppercase; letter-spacing: 0.8px; }
+.ticket-value { font-size: 14px; font-weight: var(--w6); line-height: 1.3; overflow-wrap: anywhere; }
+.ticket-riders { margin: 0; padding: 0 22px 14px; text-align: center; font-size: 13.5px; font-weight: var(--w6); color: var(--muted); }
 .ticket-riders[hidden] { display: none; }
-.ticket-helmet { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; padding: 12px 18px 16px; border-top: 1px solid var(--line); font-size: 13.5px; font-weight: 600; color: var(--muted); text-align: center; }
+.ticket-helmet { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0; padding: 12px 18px 16px; border-top: 1px solid var(--line); font-size: 13.5px; font-weight: var(--w6); color: var(--muted); text-align: center; }
 .ticket-helmet svg { flex: none; color: var(--green); }
 @media (max-width: 560px) { .ticket-cols { grid-template-columns: repeat(2, 1fr); } .ticket-num { font-size: 48px; } }
 
 /* Privacy Notice and the waiver: the two boxes on the last step, each with its text a tap away. */
 .privacy-field, .waiver-field { margin-top: 2px; margin-bottom: 12px; }
 .privacy-field[hidden] { display: none; } /* .field's display:flex would otherwise keep it on screen */
-.privacy-check { display: flex; align-items: flex-start; gap: 12px; font-weight: 600; font-size: 15px; cursor: pointer; }
+.privacy-check { display: flex; align-items: flex-start; gap: 12px; font-weight: var(--w6); font-size: 15px; cursor: pointer; }
 .privacy-check input { width: 22px; height: 22px; margin: 1px 0 0; flex: none; accent-color: var(--green); }
 .field.invalid .privacy-check { color: var(--red); }
-.privacy-link { align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; margin-inline-start: 34px; background: none; border: 0; padding: 0; font: inherit; font-size: 14px; font-weight: 700; color: var(--green); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.privacy-link { align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; margin-inline-start: 34px; background: none; border: 0; padding: 0; font: inherit; font-size: 14px; font-weight: var(--w7); color: var(--green); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .foot-privacy { color: var(--ink); align-self: auto; font-size: inherit; margin: 0; min-height: 0; }
 /* Dialogs: centred on the screen (the owner's rule for pop-ups), on the page's cream, with a dimmed page behind. */
 .privacy-dialog, .sheet { width: min(640px, calc(100vw - 24px)); max-height: 88vh; padding: 22px 20px 16px; border: 0; border-radius: var(--r-card); background: var(--bg); color: var(--ink); box-shadow: var(--lq-3); }
@@ -399,16 +413,16 @@ input:focus-visible { outline: none; }
 .sheet-form .field { margin-bottom: 16px; }
 .sheet-actions { display: flex; gap: 10px; margin-top: 6px; }
 .sheet-actions .submit { flex: 1; margin-top: 0; }
-.sheet-err { margin: 0 0 12px; padding: 10px 12px; border-radius: 14px; background: var(--red-bg); color: var(--red); font-weight: 600; font-size: 14px; }
+.sheet-err { margin: 0 0 12px; padding: 10px 12px; border-radius: 14px; background: var(--red-bg); color: var(--red); font-weight: var(--w6); font-size: 14px; }
 .sheet-err[hidden] { display: none; }
-.ask-text { margin: 4px 0 18px; font-size: 16px; font-weight: 600; line-height: 1.5; }
+.ask-text { margin: 4px 0 18px; font-size: 16px; font-weight: var(--w6); line-height: 1.5; }
 .pv-title { margin: 0 0 12px; font-size: 20px; }
-.pv-note { margin: 0 0 10px; padding: 8px 10px; border-radius: 10px; background: var(--chip); font-size: 13.5px; font-weight: 700; color: var(--muted); }
+.pv-note { margin: 0 0 10px; padding: 8px 10px; border-radius: 10px; background: var(--chip); font-size: 13.5px; font-weight: var(--w7); color: var(--muted); }
 .pv-body { font-size: 14.5px; line-height: 1.6; }
 .pv-body h3 { margin: 16px 0 6px; font-size: 15.5px; }
 .pv-body p, .pv-body ul { margin: 0 0 8px; }
 .pv-body ul { padding-inline-start: 20px; }
-.pv-body a { color: var(--green); font-weight: 700; }
+.pv-body a { color: var(--green); font-weight: var(--w7); }
 .pv-upd { color: var(--muted); font-size: 13px; }
 .pv-body table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 4px 0 10px; }
 .pv-body th, .pv-body td { border: 1px solid var(--line); padding: 6px 8px; text-align: start; vertical-align: top; }
@@ -423,8 +437,8 @@ input:focus-visible { outline: none; }
   .pv-body table, .pv-body tbody, .pv-body tr, .pv-body td { display: block; width: 100%; }
   .pv-body tr { border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; margin-bottom: 8px; }
   .pv-body td { border: 0; padding: 2px 0; }
-  .pv-body td:first-child { font-weight: 700; }
-  .pv-body td:not(:first-child)::before { content: attr(data-label); display: block; font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; }
+  .pv-body td:first-child { font-weight: var(--w7); }
+  .pv-body td:not(:first-child)::before { content: attr(data-label); display: block; font-size: 11px; font-weight: var(--w7); color: var(--muted); text-transform: uppercase; }
 }
 
 /* Footer (the form's own page) */
@@ -432,7 +446,104 @@ input:focus-visible { outline: none; }
   display: flex; justify-content: center; align-items: center; gap: 8px 18px; flex-wrap: wrap;
   padding: 18px 20px 32px; font-size: 13px; color: var(--muted);
 }
-.foot a { font-weight: 700; color: var(--ink); }
+.foot a { font-weight: var(--w7); color: var(--ink); }
+
+/* ── One page, four kinds of rider (2026-11-13): the company step, an invited guest's account, and Dukan's look ── */
+
+/* The company step: three marks and the guests' tile, two by two. */
+/* Until the form's script has started (on the website's page it runs once the page is on screen and its language has
+   come), a tap on the form would be lost without a sign: the card takes none until then (the script marks it live). */
+.card:not([data-live]) { pointer-events: none; }
+/* While a booking is changed the other kinds of rider cannot be picked. */
+.company:disabled { opacity: 0.45; pointer-events: none; }
+.company-text { font-weight: var(--w7); font-size: 16px; line-height: 1.25; text-align: center; color: var(--ink); }
+.partner-mm { height: 34px; }
+.partners .partner-dukan { height: 38px; max-width: 140px; }
+.partners .partner-petromin { height: 40px; max-width: 132px; }
+.stepper-label { overflow-wrap: anywhere; }
+@media (max-width: 380px) { .stepper-item { font-size: 11px; letter-spacing: 0; } }
+.submit.danger:hover { background: #8f1e18; }
+/* Out of sight, read by a screen reader (the word for the riyal sign). */
+.sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* An invited guest's account: the question, sign in, create, then what the booking still needs of the account. */
+.ac-panel[hidden] { display: none; }
+.ac-q { margin: 0 0 12px; font-size: 16px; }
+.ac-h { margin: 0 0 14px; font-size: 17px; font-weight: var(--w7); }
+.ac-opts { display: flex; flex-direction: column; gap: 10px; margin-bottom: 8px; }
+.ac-opt { width: 100%; justify-content: flex-start; text-align: start; min-height: 60px; border-radius: 18px; padding: 10px 18px; background: #fff; }
+.ac-switch { margin: 6px 0 0; font-size: 14.5px; color: var(--muted); }
+.ac-switch .quiet { margin-top: 0; }
+.ac-panel > .quiet { margin-top: 4px; }
+.ac-who { margin: 0 0 16px; padding: 10px 14px; border-radius: 14px; background: var(--chip); font-weight: var(--w6); font-size: 14.5px; overflow-wrap: anywhere; }
+.ac-who:empty { display: none; }
+.ac-note { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 0 0 18px; padding: 12px 14px; border-radius: 16px; background: var(--chip); font-size: 14.5px; font-weight: var(--w6); }
+.ac-note[hidden] { display: none; }
+.ac-fix[hidden] { display: none; }
+.ac-fix { margin-top: 0; align-self: flex-start; }
+.name-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.name-part { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+@media (max-width: 380px) { .name-row { grid-template-columns: 1fr; } }
+/* A list to choose from, drawn as the text boxes are. */
+.sel-wrap { position: relative; display: block; min-width: 0; }
+.sel {
+  appearance: none; -webkit-appearance: none; width: 100%; height: 50px; padding: 0 34px 0 14px; padding-inline: 14px 34px; border-radius: var(--r-ctl);
+  border: 1px solid var(--edge); background: #fff; color: var(--ink); font: inherit; font-weight: var(--w5); cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease; text-overflow: ellipsis;
+}
+.sel:hover { border-color: var(--ink); }
+.sel:focus, .sel:focus-visible { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--ring); }
+.sel-wrap::after { content: ""; position: absolute; inset-inline-end: 14px; top: 50%; width: 8px; height: 8px; margin-top: -7px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted); transform: rotate(45deg); pointer-events: none; }
+.field.invalid .sel { border-color: var(--red); }
+.dob { display: grid; grid-template-columns: 1fr 1.4fr 1.2fr; gap: 8px; }
+/* A calling code picked from every country: the box shows the code alone, the list (the names) lies over it unseen. */
+.cc-over { min-width: 84px; justify-content: space-between; }
+.cc-over .cc { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; }
+.cc-face { font-variant-numeric: tabular-nums; }
+.em-block { border: 1px solid var(--line); border-radius: 18px; margin: 0 0 20px; padding: 14px 16px 0; min-width: 0; background: var(--bg); }
+.em-block[hidden] { display: none; }
+.em-block legend { padding: 0 6px; font-weight: var(--w7); font-size: 14px; }
+
+/* A guest's ticket: its status on a full night, its bike, and the fare as the website's tickets write an amount. */
+.ticket-mark { display: none; margin: 0 auto 10px; }
+.ticket-status { display: inline-block; margin-top: 12px; padding: 5px 14px; border-radius: 999px; background: var(--ink); color: var(--neon); font-size: 13px; font-weight: var(--w7); }
+.ticket-status[hidden] { display: none; }
+.amt { white-space: nowrap; unicode-bidi: isolate; font-variant-numeric: tabular-nums; }
+.amt-sign { font-family: "MM Riyal", var(--font-latin); }
+
+/* Dukan's look, from the moment Dukan is picked (the script names the company on the page, data-co): dukan.me's green
+   #1b7563 for every action, the dark #004f3d under a press, the orange-red of the diamond in its mark as an accent only
+   (never for text or a message: errors keep their own red), black on white, and its face Rubik (Latin and Arabic; Urdu
+   keeps IBM Plex Sans Arabic, which has the eight Urdu letters Rubik lacks). The green is 5.6:1 on white and 5.2:1 on
+   the page's tint, white on it 5.6:1. Petromin's and Petrolube's marks are not on the page while it shows. */
+html[data-co="dukan"] {
+  --bg: #f4f9f8; --ink: #111111; --green: #1b7563; --green-press: #004f3d; --accent: #ec2f04; --edge: #8a8a8a;
+  --wash: rgba(27, 117, 99, 0.07); --wash-edge: rgba(27, 117, 99, 0.3); --ring: rgba(27, 117, 99, 0.2); --glow: rgba(27, 117, 99, 0.28);
+  --notice: #004f3d; --on-green: #fff; --on-green-dim: rgba(255, 255, 255, 0.35);
+  --tile-on: var(--green); --tile-on-ink: #fff;
+  --w7: 600; --w6: 500; --w5: 400;
+  --lq-1: 0 1px 2px rgba(16, 48, 42, .06), 0 2px 6px rgba(16, 48, 42, .05);
+  --lq-2: 0 1px 2px rgba(16, 48, 42, .05), 0 4px 10px rgba(16, 48, 42, .06), 0 12px 28px rgba(16, 48, 42, .07);
+  --lq-3: 0 2px 4px rgba(16, 48, 42, .05), 0 8px 16px rgba(16, 48, 42, .06), 0 16px 32px rgba(16, 48, 42, .07), 0 32px 64px rgba(16, 48, 42, .09);
+  --font-latin: "Rubik", system-ui, sans-serif;
+  --font-arabic: "Rubik", system-ui, sans-serif;
+  --font-devanagari: "Noto Sans Devanagari", "Rubik", system-ui, sans-serif;
+  --font-bengali: "Noto Sans Bengali", "Rubik", system-ui, sans-serif;
+}
+html[data-co="dukan"][lang="ur"] { --font-arabic: "IBM Plex Sans Arabic", "Rubik", system-ui, sans-serif; }
+html[data-co="dukan"] :is(.title, .step-title, .ticket-num, .pv-title, .rv-head h3) { font-weight: 700; }
+html[data-co="dukan"] .title { letter-spacing: -0.8px; line-height: 1.05; }
+html[data-co="dukan"]:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .title { letter-spacing: 0; line-height: 1.25; }
+/* Inside the form and its dialogs the ring is Dukan's green: on the website's page its own ring (MicroMobility's green)
+   is more specific than the plain rule, so these name the form's own parts. A box keeps its own ring. */
+html[data-co="dukan"] :is(.card, .privacy-dialog, .sheet) :is(a, button, summary, [tabindex]:not([tabindex="-1"])):focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+html[data-co="dukan"] :is(.card, .privacy-dialog, .sheet) :is(input, select):not([tabindex="-1"]):focus-visible { outline: none; }
+/* Its ticket: the mark over the number, a green band along the top that ends in the diamond's orange-red. */
+html[data-co="dukan"] .ticket-mark { display: block; }
+html[data-co="dukan"] .ticket::before { height: 5px; background: linear-gradient(90deg, var(--green) 0 84%, var(--accent) 84% 100%); }
+html[data-co="dukan"][dir="rtl"] .ticket::before { background: linear-gradient(270deg, var(--green) 0 84%, var(--accent) 84% 100%); }
+html[data-co="dukan"] .ticket-cols { grid-template-columns: repeat(2, 1fr); }
+html[data-co="dukan"] .privacy-dialog::backdrop, html[data-co="dukan"] .sheet::backdrop { background: rgba(17, 17, 17, 0.5); }
 
 @media (prefers-reduced-motion: reduce) {
   .tile, .submit, .session, .company, .pill, .edit, .back { transition: none; }

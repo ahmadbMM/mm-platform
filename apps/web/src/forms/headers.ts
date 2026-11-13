@@ -1,6 +1,4 @@
-import petrominPage from "./petromin-page";
-
-// The registration forms (forms/community, forms/petromin, forms/dukan, forms/petromin-invite), the Saturday ride's booking page (forms/saturday) and the
+// The registration forms (forms/community, forms/petromin), the Saturday ride's booking page (forms/saturday) and the
 // lockers page (forms/lockers) are single
 // self-contained pages the website serves as they are; each build writes its page into this
 // folder. These are the headers their own Cloudflare Workers sent: the pages talk to Supabase from
@@ -13,10 +11,6 @@ import petrominPage from "./petromin-page";
 // forms send it themselves, with the same value (no includeSubDomains: company email lives on the
 // old host); and the old X-Frame-Options beside frame-ancestors, for browsers that only read that.
 const SUPABASE = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://qpffkzmsfyilicwcsszz.supabase.co";
-// Of jsDelivr, only the files the Petromin page itself loads (supabase-js, pinned with its integrity
-// hash), read from the built page so a new version needs nothing here; never the whole host, which
-// serves any npm package or GitHub file.
-const JSDELIVR = [...new Set([...petrominPage.matchAll(/<script\b[^>]*\bsrc="(https:\/\/cdn\.jsdelivr\.net\/[^"\s;,']+)"/g)].map((m) => m[1]))];
 const COMMON = {
   "content-type": "text/html; charset=utf-8",
   "cache-control": "public, max-age=300",
@@ -58,22 +52,11 @@ export const FORM_HEADERS = {
     ...COMMON,
     "content-security-policy": csp("", ["form-action 'none'"]),
   },
-  // The Petromin form loads supabase-js from jsDelivr (pinned, with its integrity hash), and its
-  // script sends the answers too: a form submitted the browser's own way (Enter before the script
-  // runs) would put the rider's details in the address.
+  // The Petromin page (forms/petromin: Petromin's, Petrolube's and Dukan's employees and Petromin's invited guests, one
+  // page since 2026-11-13) loads no script from elsewhere either (supabase-js went with that build: its calls are plain
+  // POSTs to the database), and its script sends the answers: a form submitted the browser's own way (Enter before the
+  // script runs) would put the rider's details in the address. Its riyal sign is the site's own font file.
   petromin: {
-    ...COMMON,
-    "content-security-policy": csp(JSDELIVR.map((u) => ` ${u}`).join(""), ["form-action 'none'"]),
-  },
-  // Dukan's employees' form (forms/dukan, 2026-11-12): the Petromin form's kind, but it loads no supabase-js (its calls
-  // are plain POSTs to the database), so no script from elsewhere at all.
-  dukan: {
-    ...COMMON,
-    "content-security-policy": csp("", ["form-action 'none'"]),
-  },
-  // Petromin's invited guests' form (forms/petromin-invite, 2026-11-12): Dukan's kind, plain POSTs to the database and no
-  // script from elsewhere; its riyal sign is the site's own font file.
-  "petromin-invite": {
     ...COMMON,
     "content-security-policy": csp("", ["form-action 'none'"]),
   },

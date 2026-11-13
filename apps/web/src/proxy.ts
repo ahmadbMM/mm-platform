@@ -13,7 +13,9 @@ import { SECURITY_HEADERS } from "./lib/security-headers";
 const intl = createMiddleware(routing);
 
 // The registration forms' addresses (see the matcher below).
-const FORM_ADDRESSES = ["/community/registration", "/petromin", "/petromin-invite", "/dukan", "/saturday", "/lockers"];
+// (micromobility.sa/dukan and /petromin-invite were pages of their own for two days; since 2026-11-13 Dukan's employees and
+// Petromin's guests are on /petromin, and those two addresses are no page at all: not found, like any other.)
+const FORM_ADDRESSES = ["/community/registration", "/petromin", "/saturday", "/lockers"];
 export function formAddress(pathname: string): string | null {
   const p = pathname.toLowerCase().replace(/\/+$/, "");
   return FORM_ADDRESSES.includes(p) ? p : null;
@@ -22,7 +24,7 @@ export function formAddress(pathname: string): string | null {
 // the form; the user, 2026-11-09). Each still answers with the page its build writes (app/<address>/route.ts)
 // with ?classic=1, kept while the website's pages settle in. Either way a form opens whatever
 // Coming Soon says (the page itself answers with the form's own while the site is closed: components/forms/FormPage.tsx).
-export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/petromin-invite", "/dukan", "/saturday", "/lockers"];
+export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/saturday", "/lockers"];
 export const formOnSite = (form: string, params: URLSearchParams) => SITE_FORMS.includes(form) && !params.has("classic");
 
 // micromobility.sa/defe was the Defe x MicroMobility booking page for the Saturday Social Ride (2026-10-17); the user
@@ -140,7 +142,7 @@ export default async function proxy(req: NextRequest) {
   const apex = apexTarget(req.url);
   if (apex) return NextResponse.redirect(apex, movedStatus(req.method));
   // The forms answer at one lower-case address each; a link typed or printed another way
-  // (/Petromin, /Dukan, /Petromin-Invite, /community/Registration/) is sent there, as their own Workers did.
+  // (/Petromin, /community/Registration/) is sent there, as their own Workers did.
   const defe = defeTarget(pathname, searchParams);
   if (defe) return NextResponse.redirect(new URL(defe, req.url), 307);
   const ask = askLower(pathname);

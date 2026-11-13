@@ -9,9 +9,10 @@ const json = (body: unknown) => ({ status: 200, headers: { 'access-control-allow
 
 // To the last step and the notice's link beside its box, which both pages have.
 async function toNotice(page: Page) {
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
@@ -56,9 +57,10 @@ test('a registration does not go through until the notice is confirmed', async (
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => { regs.push(r.request().postDataJSON()); return r.fulfill(json({ ok: true, id: 1, match: 'none', resubmitted: false, booking_no: 'P-001', session: S1 })); });
   await page.goto('/petromin?lang=en');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
@@ -98,9 +100,10 @@ test('editing a booking does not ask again', async ({ page }) => {
 // with it - 404, PGRST202 - and is asked once more without it, so registering never waits on it.
 async function toLastStep(page: import('@playwright/test').Page) {
   await page.goto('/petromin?lang=en');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');

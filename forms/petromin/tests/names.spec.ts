@@ -11,9 +11,10 @@ test('a dash in a name becomes a space; digits and emoji go; what is sent has ne
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => { regs.push(r.request().postDataJSON()); return r.fulfill(json({ ok: true, id: 1, match: 'none', resubmitted: false, booking_no: 'P-001', riders: 2, session: S1 })); });
   await page.goto('/petromin?lang=en');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12');
   await page.locator('#name').pressSequentially('Faisal Al-Harbi2');
   await expect(page.locator('#name')).toHaveValue('Faisal Al Harbi');
@@ -54,6 +55,8 @@ test('a booking saved with a dashed name reopens without the dash', async ({ pag
 test('the reason reads in the page language, and an empty box still asks for the name', async ({ page }) => {
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.goto('/petromin?lang=ar');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
   await page.locator('#name').pressSequentially('محمد1');
@@ -70,9 +73,10 @@ test("the server's refusal of a name lands on the box it is about", async ({ pag
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => r.fulfill(json(answers.shift())));
   await page.goto('/petromin?lang=en');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Faisal Harbi'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
@@ -106,9 +110,10 @@ test('a period after a letter stays ("Md. Rahman"); a stray one goes without a w
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => { regs.push(r.request().postDataJSON()); return r.fulfill(json({ ok: true, id: 1, match: 'none', resubmitted: false, booking_no: 'P-001', riders: 2, session: S1 })); });
   await page.goto('/petromin?lang=en');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12');
   await page.locator('#name').pressSequentially('Md.. .Rahman');
   await expect(page.locator('#name')).toHaveValue('Md. Rahman');
@@ -137,16 +142,17 @@ test('every word of a name has two letters: an initial is refused, for the emplo
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => { regs.push(r.request().postDataJSON()); return r.fulfill(json({ ok: true, id: 1, match: 'none', resubmitted: false, booking_no: 'P-001', riders: 2, session: S1 })); });
   await page.goto('/petromin?lang=en');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12');
   await page.fill('#name', 'Faisal H');
   await page.fill('#phone', '512345678');
   // Continue says it on the second step itself (since 2026-10-14), not after the third
   await page.click('#next');
   await expect(page.locator('#f-name .err')).toHaveText('Write your first and last name in full, not initials');
-  await expect(page.locator('.step[data-step="2"]')).toBeVisible();
+  await expect(page.locator('.step[data-step="3"]')).toBeVisible();
   // the box's own message comes back once the rule's one is gone
   await page.fill('#name', '');
   await page.click('#next');
@@ -182,9 +188,10 @@ test("the server's short-name refusal (why: short) asks for the name in full, no
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.route('**/rest/v1/rpc/rider_register', (r) => r.fulfill(json(answers.shift())));
   await page.goto('/petromin?lang=en');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Faisal Harbi'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');

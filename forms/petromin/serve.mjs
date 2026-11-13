@@ -17,6 +17,12 @@ createServer((req, res) => {
     res.writeHead(200, { 'content-type': 'font/woff2' });
     return res.end(readFileSync(new URL(font[1], fonts)));
   }
+  // The riyal sign on a guest's fare is the website's own font file (apps/web/public/fonts).
+  const riyal = /^\/fonts\/(Riyal-\d+\.woff2)$/.exec(pathname);
+  if (riyal && existsSync(new URL('../' + riyal[1], fonts))) {
+    res.writeHead(200, { 'content-type': 'font/woff2' });
+    return res.end(readFileSync(new URL('../' + riyal[1], fonts)));
+  }
   if (pathname === '/petromin') {
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
     return res.end(page);

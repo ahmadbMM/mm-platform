@@ -26,7 +26,7 @@ const config: NextConfig = {
     // (src/forms/headers.ts). The website's pages at those addresses get these from the proxy (proxy.ts): a rule
     // here that tells them apart by the query (`missing`) works under `next start` but not on Cloudflare, where the
     // two pages went out with no security headers at all (2026-11-09).
-    return [{ source: "/((?!petromin$|petromin-invite$|dukan$|community/registration$).*)", headers: SECURITY_HEADERS }];
+    return [{ source: "/((?!petromin$|community/registration$).*)", headers: SECURITY_HEADERS }];
   },
 };
 

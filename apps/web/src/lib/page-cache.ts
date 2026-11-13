@@ -33,7 +33,7 @@ const JEDDAH = 3 * 60 * 60 * 1000; // UTC+3 all year
 const jeddahDay = (ms: number) => Math.floor((ms + JEDDAH) / 86_400_000);
 const HTML_LANG = new Map<string, string>(LOCALES.map((l) => [l.html.toLowerCase(), l.code]));
 const LANGS = new Set<string>(LOCALE_CODES);
-const SKIP = /^\/(?:api|_next|media|b|petromin|petromin-invite|dukan|community|account|ask|preview|login|en|ar|bikes\/\d{1,6})(?:\/|$)/;
+const SKIP = /^\/(?:api|_next|media|b|petromin|community|account|ask|preview|login|en|ar|bikes\/\d{1,6})(?:\/|$)/;
 const PRIVATE = ["mm_acct", "mm_preview"];
 const LANG_COOKIE = "NEXT_LOCALE";
 // Tracking parameters (utm_*, fbclid...) change nothing on the page: a link from Instagram or a

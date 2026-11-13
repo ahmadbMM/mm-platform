@@ -13,9 +13,10 @@ test('a phone and a badge typed in Arabic digits go through, and reach the serve
     return r.fulfill(json({ ok: true, id: 1, match: 'none', booking_no: 'P-026', riders: 1, session: S1 }));
   });
   await page.goto('/petromin', { waitUntil: 'networkidle' });
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', '١٠٤٥٨٢'); await page.fill('#name', 'Faisal Al Harbi'); await page.fill('#phone', '٥١٢٣٤٥٦٧٨');
   await page.click('#next');
   await expect(page.locator('#f-phone')).not.toHaveClass(/invalid/);
@@ -39,6 +40,8 @@ test('the phone picker: the Gulf first, then A to Z with Saudi Arabia again in i
   expect(isos.slice(isos.lastIndexOf('SA') - 1, isos.lastIndexOf('SA') + 2)).toEqual(['PT', 'SA', 'SD']);
   expect(opts.filter(([, on]) => on)).toEqual([['SA +966', true]]);
   expect(opts[0][1]).toBe(true); // the top copy shows the pick
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
   await page.locator('#cc').selectOption({ index: 1 });
@@ -77,9 +80,10 @@ test('a number typed with its country code but no + or 00 keeps the code once', 
     ['966', '966512345678', '+966512345678'],
   ]) expect(await e164(code, typed), `${code} ${typed}`).toBe(want);
 
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', '104582'); await page.fill('#name', 'Faisal Al Harbi');
   await page.selectOption('#cc', '971');
   await page.fill('#phone', '971501234567');

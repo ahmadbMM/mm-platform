@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import proxy, { askLower, config } from "../../proxy";
+import proxy, { askLower, config, formAddress, SITE_FORMS } from "../../proxy";
 import { resetSiteContent } from "../site";
 
 // The addresses carry no language (i18n/routing.ts). These run the real proxy on requests as a
@@ -247,7 +247,7 @@ describe("which addresses the proxy sees", () => {
     for (const p of ["/b", "/b/42", "/api", "/api/preview", "/_next/static/x.js", "/site/logo.png", "/robots.txt"]) expect(seen(p), p).toBe(false);
   });
   it("sees the registration forms' addresses too (it decides whether the website's page or the form's own answers), never their files", () => {
-    for (const p of ["/petromin", "/dukan", "/Dukan", "/dukanx", "/petromin-invite", "/Petromin-Invite", "/petromin-invitex", "/community/registration", "/defe", "/saturday", "/lockers", "/community", "/petrominx", "/Petromin", "/community/Registration", "/Defe", "/defense", "/Saturday", "/saturdays", "/Lockers", "/lockersx"]) expect(seen(p), p).toBe(true);
+    for (const p of ["/petromin", "/community/registration", "/defe", "/saturday", "/lockers", "/community", "/petrominx", "/Petromin", "/community/Registration", "/Defe", "/defense", "/Saturday", "/saturdays", "/Lockers", "/lockersx"]) expect(seen(p), p).toBe(true);
     expect(seen("/community/registration/og-image.png")).toBe(false);
     // a locker's own tag comes here too: the proxy sends it on (lockers.test.ts)
     for (const p of ["/lockers/7", "/lockers/L7"]) expect(seen(p), p).toBe(true);
@@ -257,7 +257,7 @@ describe("which addresses the proxy sees", () => {
 describe("the registration forms' addresses", () => {
   // No database here, so the site reads as Coming Soon: a form opens all the same.
   it("lets any form with ?classic=1 through untouched to its own page", async () => {
-    for (const p of ["/lockers?classic=1", "/lockers?classic=1&lang=ar&locker=7", "/saturday?classic=1&lang=ar", "/community/registration?classic=1", "/community/registration?classic=1&lang=ar", "/petromin?classic=1", "/dukan?classic=1", "/dukan?classic=1&lang=ar", "/petromin-invite?classic=1", "/petromin-invite?classic=1&lang=ar"]) {
+    for (const p of ["/lockers?classic=1", "/lockers?classic=1&lang=ar&locker=7", "/saturday?classic=1&lang=ar", "/community/registration?classic=1", "/community/registration?classic=1&lang=ar", "/petromin?classic=1", "/petromin?classic=1&lang=ar"]) {
       const res = await call(p);
       expect(res.headers.get("x-middleware-next"), p).toBe("1");
       expect(res.headers.get("x-middleware-rewrite"), p).toBeNull();
@@ -268,8 +268,6 @@ describe("the registration forms' addresses", () => {
   it("draws every form as a page of the website, whatever Coming Soon says", async () => {
     for (const [p, lang, to] of [["/community/registration", "en", "/community/registration"], ["/community/registration?lang=ar", "ar", "/community/registration"], ["/community/registration?code=x&lang=fr", "fr", "/community/registration"],
       ["/petromin", "en", "/petromin"], ["/petromin?lang=ur", "ur", "/petromin"], ["/petromin?lang=ja", "ja", "/petromin"],
-      ["/dukan", "en", "/dukan"], ["/dukan?lang=ar", "ar", "/dukan"], ["/dukan?lang=bn", "bn", "/dukan"],
-      ["/petromin-invite", "en", "/petromin-invite"], ["/petromin-invite?lang=ar", "ar", "/petromin-invite"], ["/petromin-invite?lang=ur", "ur", "/petromin-invite"],
       ["/saturday", "en", "/saturday"], ["/saturday?lang=zh", "zh", "/saturday"], ["/lockers", "en", "/lockers"], ["/lockers?lang=ar&locker=7", "ar", "/lockers"], ["/lockers?lang=bn", "bn", "/lockers"]]) {
       const res = await call(p);
       expect(res.status, p).toBe(200);
@@ -279,8 +277,24 @@ describe("the registration forms' addresses", () => {
       expect(res.headers.get("strict-transport-security"), p).toBe("max-age=31536000");
     }
   });
+  // micromobility.sa/dukan and /petromin-invite were pages for two days (2026-11-12); the owner turned them off on
+  // 2026-11-13 ("turn it off"): Dukan's employees and Petromin's guests register on /petromin, and the old addresses
+  // are no page at all. They answer as any address the site does not have, and never send anyone to /petromin.
+  it("has no page at /dukan or /petromin-invite any more: they are treated as any unknown address", async () => {
+    const unknown = await call("/no-such-page");
+    for (const p of ["/dukan", "/Dukan", "/dukan?lang=ar", "/dukan?classic=1", "/petromin-invite", "/Petromin-Invite/", "/petromin-invite?classic=1&lang=ar"]) {
+      expect(formAddress(new URL(SITE + p).pathname), p).toBeNull();
+      const res = await call(p);
+      expect(res.status, p).toBe(unknown.status);
+      expect(res.headers.get("x-middleware-next"), p).toBe(unknown.headers.get("x-middleware-next"));
+      expect(res.headers.get("location") ?? "", p).not.toMatch(/petromin(?!-invite)/i);
+      expect((res.headers.get("x-middleware-rewrite") ?? "").replace(/petromin-invite/gi, ""), p).not.toMatch(/petromin/i);
+    }
+    for (const f of ["/dukan", "/petromin-invite"]) expect(SITE_FORMS).not.toContain(f);
+    expect(SITE_FORMS).toContain("/petromin");
+  });
   it("send another spelling to the one real address, with its query", async () => {
-    for (const [from, to] of [["/Petromin", "/petromin"], ["/PETROMIN/", "/petromin"], ["/Dukan", "/dukan"], ["/DUKAN/?lang=ar", "/dukan?lang=ar"], ["/Petromin-Invite", "/petromin-invite"], ["/PETROMIN-INVITE/?lang=ar", "/petromin-invite?lang=ar"], ["/petromin-invite/", "/petromin-invite"], ["/community/Registration?lang=ar", "/community/registration?lang=ar"], ["/Saturday?lang=ar", "/saturday?lang=ar"], ["/SATURDAY/", "/saturday"], ["/Lockers?lang=ar", "/lockers?lang=ar"], ["/LOCKERS/", "/lockers"]]) {
+    for (const [from, to] of [["/Petromin", "/petromin"], ["/PETROMIN/", "/petromin"], ["/community/Registration?lang=ar", "/community/registration?lang=ar"], ["/Saturday?lang=ar", "/saturday?lang=ar"], ["/SATURDAY/", "/saturday"], ["/Lockers?lang=ar", "/lockers?lang=ar"], ["/LOCKERS/", "/lockers"]]) {
       const res = await call(from);
       expect(res.status, from).toBe(301);
       expect(redirectedTo(res), from).toBe(to);

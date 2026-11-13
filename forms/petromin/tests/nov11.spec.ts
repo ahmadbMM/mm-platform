@@ -83,7 +83,11 @@ test.describe('@webkit Petromin form, 2026-11-11', () => {
     await expect(page.locator('#tk-place-value')).toHaveText('Jeddah Corniche Circuit');
     await expect(page.locator('#directions')).toBeVisible();
     await expect(page.locator('.ticket-helmet')).toHaveText('Helmets are required. One comes with every bike.');
-    await expect(page.locator('#ticket')).not.toContainText(/\bSAR\b|﷼|[Pp]rice/); // Petromin pays: no amount on the ticket
+    // Petromin pays: no amount on the ticket (the fare is a guest's column, hidden and empty here)
+    expect(await page.locator('#ticket').innerText()).not.toMatch(/\bSAR\b|﷼|[Pp]rice/);
+    await expect(page.locator('#tk-price')).toBeHidden();
+    await expect(page.locator('#tk-price-value')).toBeEmpty();
+    await expect(page.locator('#tk-status')).toBeHidden();
     const [dl] = await Promise.all([page.waitForEvent('download'), page.click('#calendar')]);
     expect(dl.suggestedFilename()).toBe('petromin-P-004.ics');
     const ics = readFileSync(await dl.path(), 'utf8');

@@ -9,9 +9,10 @@ const json = (body: unknown) => ({ status: 200, headers: { 'access-control-allow
 async function toStep2(page: Page) {
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1])));
   await page.goto('/petromin?lang=en');
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
 }
 
 test.describe('@bh14 petromin form', () => {
@@ -19,7 +20,7 @@ test.describe('@bh14 petromin form', () => {
     await toStep2(page);
     await page.fill('#badge', '104582'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
     await page.locator('#phone').press('Enter');
-    await expect(page.locator('.step[data-step="3"]')).toBeVisible();
+    await expect(page.locator('.step[data-step="4"]')).toBeVisible();
     await expect(page.locator('#f-height')).not.toHaveClass(/invalid/);
     await expect(page.locator('#f-type')).not.toHaveClass(/invalid/);
   });
@@ -28,7 +29,7 @@ test.describe('@bh14 petromin form', () => {
     await toStep2(page);
     await page.fill('#badge', 'بطاقة'); await page.fill('#name', 'Amal'); await page.fill('#phone', '512345678');
     await page.click('#next');
-    await expect(page.locator('.step[data-step="2"]')).toBeVisible();
+    await expect(page.locator('.step[data-step="3"]')).toBeVisible();
     await expect(page.locator('#f-badge')).toHaveClass(/invalid/);
     await expect(page.locator('#f-name .err')).toHaveText('Enter your full name');
     await page.fill('#badge', 'A-12'); await page.fill('#name', 'A Booked');
@@ -37,7 +38,7 @@ test.describe('@bh14 petromin form', () => {
     await expect(page.locator('#f-name .err')).toHaveText('Write your first and last name in full, not initials');
     await page.fill('#name', 'Amal Booked');
     await page.click('#next');
-    await expect(page.locator('.step[data-step="3"]')).toBeVisible();
+    await expect(page.locator('.step[data-step="4"]')).toBeVisible();
   });
 
   test('a number too short for the database is refused on the second step', async ({ page }) => {

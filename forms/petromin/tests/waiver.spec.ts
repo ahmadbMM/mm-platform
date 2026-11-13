@@ -10,9 +10,10 @@ const SAVED = { badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: 
 
 async function fillToLastStep(page: Page, lang = 'en') {
   await page.goto(`/petromin?lang=${lang}`);
+  await page.click('#companies .company[data-v="Petromin"]');
+  await page.click('#next');
   await page.locator('#sessions .session').first().click();
   await page.click('#next');
-  await page.click('#companies .company[data-v="Petromin"]');
   await page.fill('#badge', 'A-12'); await page.fill('#name', 'Amal Booked'); await page.fill('#phone', '512345678');
   await page.click('#next');
   await page.fill('#height', '175'); await page.click('#types .tile[data-v="Hybrid"]');
