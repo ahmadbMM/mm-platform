@@ -118,6 +118,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Planning rides and events around what our community asks for, and keeping what is shown suitable for everyone"
      ],
      [
+      "The mentorship programme (Community members only): if you register as a mentee, your university, field of study, city, country, starting year, the help you want, your goal and the mentor gender you prefer; if you register as a mentor, where and what you studied, your work, the places you know, how you can help and what you tell us",
+      "Optional: only if you register. A mentee’s university, field of study, city, country, starting year, the help wanted and goal are shown to Community members without their name; the mentor gender they prefer is seen by our staff only. What a mentor tells us is seen by our staff only; a short line about their experience, without their name, is shown to the one student our staff propose them to. Once you both accept, we share your first name and WhatsApp number with that one person. You can step back at any time; we then stop sharing them.",
+      "Matching students starting university with Community members who can help them, and following up on each match"
+     ],
+     [
       "A blood donation event’s registration: your name, mobile number, birth date and nationality, whether you come as a donor or a visitor, which club or community you are from, your email address and blood type if you come as a donor, your gender if you come as a visitor, and whether you donated",
       "Asked only when you register for a blood donation event. Seen by you, our staff and that event’s partners and third parties once you agree to share them. We never ask for or keep your ID or Iqama number.",
       "Registering you for the event, and giving confirmed donors and checked-in visitors any reward the event offers"
@@ -196,7 +201,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>To share a runner’s details with the hosts of Run for Her:</strong> your consent, which we ask for before you can take part in the race.",
     "<strong>To share an athlete’s details with Kamin Sports for Victory Lap:</strong> your consent, which we ask for before you can take part in the race.",
     "<strong>To share an athlete’s details with WeSportify, Mile and Gymnation for the Arena Heros Hybrid Race:</strong> your consent, which we ask for before you can take part in the race.",
-    "<strong>To share a donor’s details with the partners and third parties of a blood donation event:</strong> your consent, which we ask for before you can register."
+    "<strong>To share a donor’s details with the partners and third parties of a blood donation event:</strong> your consent, which we ask for before you can register.",
+    "<strong>To share a mentor’s or a mentee’s first name and WhatsApp number with their match:</strong> your consent, which we ask for when you register and which you withdraw by stepping back."
    ]
   },
   {
@@ -494,6 +500,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "لتخطيط الجولات والفعاليات وفق ما يطلبه مجتمعنا، ولإبقاء ما يُعرض مناسباً للجميع"
      ],
      [
+      "برنامج الإرشاد (لأعضاء المجتمع فقط): إن سجّلت كمسترشد: جامعتك وتخصصك ومدينتك ودولتك وسنة بدئك والمساعدة التي تريدها وهدفك وجنس المرشد الذي تفضّله؛ وإن سجّلت كمرشد: أين درست وماذا درست وعملك والأماكن التي تعرفها وكيف يمكنك المساعدة وما تخبرنا به",
+      "اختياري: فقط إذا سجّلت. تُعرض جامعة المسترشد وتخصصه ومدينته ودولته وسنة بدئه والمساعدة التي يريدها وهدفه لأعضاء المجتمع دون اسمه، ولا يرى جنس المرشد الذي يفضّله إلا موظفونا. وما يخبرنا به المرشد لا يراه إلا موظفونا، ويُعرض سطر قصير عن خبرته، دون اسمه، على الطالب الوحيد الذي يقترحه عليه موظفونا. وبعد قبولكما كليكما، نشارك اسمك الأول ورقم واتساب الخاص بك مع ذلك الشخص وحده. ويمكنك الانسحاب في أي وقت، وعندها نتوقف عن مشاركتهما.",
+      "مطابقة الطلاب الذين يبدؤون دراستهم الجامعية مع أعضاء المجتمع القادرين على مساعدتهم، ومتابعة كل مطابقة"
+     ],
+     [
       "التسجيل في فعالية للتبرع بالدم: اسمك ورقم جوالك وتاريخ ميلادك وجنسيتك، وما إذا كنت ستحضر كمتبرع أم كزائر، والنادي أو المجتمع الذي تنتمي إليه، وبريدك الإلكتروني وفصيلة دمك إن حضرت كمتبرع، وجنسك إن حضرت كزائر، وما إذا كنت قد تبرعت",
       "تُطلب فقط عند التسجيل في فعالية للتبرع بالدم. يطّلع عليها أنت وموظفونا والشركاء والأطراف الثالثة لتلك الفعالية بعد موافقتك على مشاركتها. لا نطلب رقم هويتك أو إقامتك ولا نحتفظ به.",
       "تسجيلك في الفعالية، ومنح المتبرعين المؤكَّدين والزوار الذين سجّلوا حضورهم أي مكافأة تقدمها الفعالية"
@@ -572,7 +583,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>لمشاركة بيانات العدّاء مع الجهات المنظِّمة لسباق نركض لأجلها:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
     "<strong>لمشاركة بيانات الرياضي مع كامن سبورتس لسباق فيكتوري لاب:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
     "<strong>لمشاركة بيانات الرياضي مع WeSportify وMile وGymnation لسباق أرينا هيروز الهجين:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
-    "<strong>لمشاركة بيانات المتبرع مع الشركاء والأطراف الثالثة لفعالية تبرع بالدم:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من التسجيل."
+    "<strong>لمشاركة بيانات المتبرع مع الشركاء والأطراف الثالثة لفعالية تبرع بالدم:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من التسجيل.",
+    "<strong>لمشاركة الاسم الأول ورقم واتساب للمرشد أو المسترشد مع من تتم مطابقته معه:</strong> موافقتك، ونطلبها عند تسجيلك، وتسحبها بالانسحاب."
    ]
   },
   {
