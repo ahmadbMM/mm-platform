@@ -1,6 +1,6 @@
 import type { BadgeRow } from "./ride-record";
 
-// The Community tab's light read, hub_pulse (rentals migration 20261113120000, 2026-11-13), and what the post-ride
+// The Community tab's light read, hub_pulse (rentals migration 20261114000100, 2026-11-13), and what the post-ride
 // rating's last screen makes of it (the booking app's _rgFinFor and _rgFinHtml, the Community tab reach build's R5).
 // Plain logic with no imports the browser would carry, so it can be tested; app/api/account/rating-fin reads the
 // database, components/account/RatingGate.tsx draws the screen.
