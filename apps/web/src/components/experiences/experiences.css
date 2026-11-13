@@ -388,6 +388,9 @@ html:is([lang="ar"], [lang="ur"]) .xs-summary .xs-yg-name { font-family: var(--c
 .xs .xs-go.ev-farm { background: var(--fh-rust); color: #fff; }
 .xs .xs-go.ev-farm:hover { background: var(--fh-rust-dk); }
 .xs .xs-info.ev-farm .xs-info-facts a { color: var(--fh-rust); }
+/* the venue's Instagram on a date's Details (the booking app's .ev-info-ig, 2026-11-13): its mark before the handle */
+.xs-info-ig { display: inline-flex; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+.xs-ig-ic { flex: none; }
 .xs-info.ev-farm .xs-info-go { background: var(--fh-rust); border-color: var(--fh-rust); color: #fff; }
 .xs-info.ev-farm .xs-info-go:hover { background: var(--fh-rust-dk); border-color: var(--fh-rust-dk); }
 .xs-info.ev-farm .xs-info-btns button:focus-visible { outline-color: rgba(138, 63, 39, .45); }

@@ -75,7 +75,7 @@ test('@webkit a new guest makes an account on the page, as the booking site make
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   // The booking: the account's, with no name, mobile or height sent (they are the account's).
-  expect(sent).toEqual([{ p_id: made.p_id, p_token: GUEST.token, p_session_id: S1.id, p_type: 'Hybrid', p_company: 'Aramco Trading', p_waiver: '2026-10-v3' }]);
+  expect(sent).toEqual([{ p_id: made.p_id, p_token: GUEST.token, p_session_id: S1.id, p_type: 'Hybrid', p_company: 'Aramco Trading', p_waiver: '2026-11-v4' }]);
   await expect(page.locator('#chip-booking-value')).toHaveText('I-003');
   await expect(page.locator('#qr canvas')).toHaveAttribute('data-code', 'MMC-41-abcdef'); // the booking's own code, which the desk scans into check-in
   await expect(page.locator('#tk-name')).toHaveText('Sara Alharbi');
@@ -113,7 +113,7 @@ test('a guest with an account signs in: the company comes from the account, and 
   await page.check('#waiver');
   await page.click('#submit');
   await expect(page.locator('#chip-booking-value')).toHaveText('I-003');
-  expect(sent).toEqual([{ p_id: GUEST.id, p_token: GUEST.token, p_session_id: S2.id, p_type: 'Mountain', p_company: 'Red Sea Global', p_waiver: '2026-10-v3' }]);
+  expect(sent).toEqual([{ p_id: GUEST.id, p_token: GUEST.token, p_session_id: S2.id, p_type: 'Mountain', p_company: 'Red Sea Global', p_waiver: '2026-11-v4' }]);
   await expect(page.locator('#chip-company-value')).toHaveText('Red Sea Global');
   // Register another forgets the account: the next person signs in for themselves.
   await page.click('#another');
@@ -351,7 +351,7 @@ test('@webkit Edit after a reload asks for the account again, then saves the cha
   await page.check('#waiver');
   await page.click('#submit');
   await expect(page.locator('.done-note')).toHaveText('Your booking was updated.');
-  expect(sent).toEqual([{ p_id: GUEST.id, p_token: GUEST.token, p_session_id: S2.id, p_type: 'Mountain', p_company: 'Aramco Trading', p_waiver: '2026-10-v3', p_from_no: 'I-003', p_from_session: S1.id }]);
+  expect(sent).toEqual([{ p_id: GUEST.id, p_token: GUEST.token, p_session_id: S2.id, p_type: 'Mountain', p_company: 'Aramco Trading', p_waiver: '2026-11-v4', p_from_no: 'I-003', p_from_session: S1.id }]);
   await expect(page.locator('#chip-booking-value')).toHaveText('I-001'); // the other night's own number
 });
 

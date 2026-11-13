@@ -15,7 +15,7 @@
      Title and text are the booking app's (micromobilityrentals app.src.html waiverTitle/waiverBody and
      i18n/<code>.json), copied verbatim; only the agree line is reworded for a registration. Its
      version goes to rider_register / rider_edit as p_waiver, the page's language as p_lang. */
-  var WAIVER_VERSION = "2026-10-v3";
+  var WAIVER_VERSION = "2026-11-v4";
   /* Two refusals the database gives since the rentals migration of 2026-10-05: a waiver older than the current one
      (WAIVER_OUTDATED, a page loaded before the waiver changed) and a paid booking moved to a session with another
      price (PAID_MOVE). */

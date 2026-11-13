@@ -2479,7 +2479,7 @@ var MMAccount = (function () {
 
 ; window.MMAccount = MMAccount;
 (function () {
-  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.9046c8d944.json","hi":"/forms/petromin/t/hi.11907e165f.json","tl":"/forms/petromin/t/tl.4adb6c9700.json","es":"/forms/petromin/t/es.97b1e7c0d4.json","ne":"/forms/petromin/t/ne.9b37589e61.json","fr":"/forms/petromin/t/fr.c097a75e2d.json","pt":"/forms/petromin/t/pt.22c83dc7b4.json","bn":"/forms/petromin/t/bn.9f608092da.json","ur":"/forms/petromin/t/ur.cadc2ae7a9.json","id":"/forms/petromin/t/id.03af9092e3.json","ms":"/forms/petromin/t/ms.ebfa74e2c5.json","de":"/forms/petromin/t/de.4458a4c445.json","ru":"/forms/petromin/t/ru.d89b294887.json","zh":"/forms/petromin/t/zh.96f479098f.json","ja":"/forms/petromin/t/ja.7aabe59218.json"};
+  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.59ea6aaea6.json","hi":"/forms/petromin/t/hi.84564e433a.json","tl":"/forms/petromin/t/tl.4e72f4921b.json","es":"/forms/petromin/t/es.6837caa6b7.json","ne":"/forms/petromin/t/ne.61c4c82780.json","fr":"/forms/petromin/t/fr.caf6ac2cad.json","pt":"/forms/petromin/t/pt.b899cdd6bd.json","bn":"/forms/petromin/t/bn.1c2230e52d.json","ur":"/forms/petromin/t/ur.e9fad35f6e.json","id":"/forms/petromin/t/id.f5a67e15a2.json","ms":"/forms/petromin/t/ms.0ed7b12a6a.json","de":"/forms/petromin/t/de.2ced9dc290.json","ru":"/forms/petromin/t/ru.7c75ff862a.json","zh":"/forms/petromin/t/zh.c2192742cd.json","ja":"/forms/petromin/t/ja.4f962c9fbf.json"};
   site.tBase = files;
   function start(dict) {
     var T_SITE = {}; if (dict) T_SITE[site.lang] = dict;
@@ -3015,7 +3015,7 @@ var MMAccount = (function () {
      Title and text are the booking app's (micromobilityrentals app.src.html waiverTitle/waiverBody and
      i18n/<code>.json), copied verbatim; only the agree line is reworded for a registration. Its
      version goes to rider_register / rider_edit as p_waiver, the page's language as p_lang. */
-  var WAIVER_VERSION = "2026-10-v3";
+  var WAIVER_VERSION = "2026-11-v4";
   /* Two refusals the database gives since the rentals migration of 2026-10-05: a waiver older than the current one
      (WAIVER_OUTDATED, a page loaded before the waiver changed) and a paid booking moved to a session with another
      price (PAID_MOVE). */

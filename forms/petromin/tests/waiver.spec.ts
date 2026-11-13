@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 
 // The ride waiver (owner, 2026-10-03): nobody registers, and no edit is saved, without ticking it.
-// The calls carry p_waiver '2026-10-v3', and are never sent again without it.
+// The calls carry p_waiver '2026-11-v4' (v4 since 2026-11-13: for everyone on the booking), and are never sent again without it.
 const S1 = { id: '2099-02-08-pw', title: "Petromin's Wednesdays", start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' };
 const json = (body: unknown, status = 200) => ({ status, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'content-type': 'application/json' }, body: JSON.stringify(body) });
 const PGRST202 = { code: 'PGRST202', details: 'Searched for the function public.rider_register with parameters ... p_waiver ...', hint: null, message: 'Could not find the function public.rider_register(...) in the schema cache' };
@@ -39,7 +39,7 @@ test('a registration without the waiver is refused and nothing is sent; ticked, 
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(regs).toHaveLength(1);
-  expect(regs[0].p_waiver).toBe('2026-10-v3');
+  expect(regs[0].p_waiver).toBe('2026-11-v4');
 });
 
 test('an edit needs the waiver too, and rider_edit gets p_waiver', async ({ page }) => {
@@ -58,7 +58,7 @@ test('an edit needs the waiver too, and rider_edit gets p_waiver', async ({ page
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(edits).toHaveLength(1);
-  expect(edits[0]).toMatchObject({ p_booking_no: 'P-001', p_waiver: '2026-10-v3' });
+  expect(edits[0]).toMatchObject({ p_booking_no: 'P-001', p_waiver: '2026-11-v4' });
   expect(edits[0]).not.toHaveProperty('p_privacy'); // an edit does not ask for the notice again
 });
 
@@ -74,10 +74,10 @@ test('a PGRST202 is never retried without p_waiver (the database takes it since 
   // The page's language and the notice's version are the arguments a database before their migrations does not
   // know: one more try without each, newest first, never without the waiver.
   expect(regs).toHaveLength(3);
-  expect(regs[0]).toMatchObject({ p_waiver: '2026-10-v3', p_privacy: '2026-09-22', p_lang: 'en' });
-  expect(regs[1]).toMatchObject({ p_waiver: '2026-10-v3', p_privacy: '2026-09-22' });
+  expect(regs[0]).toMatchObject({ p_waiver: '2026-11-v4', p_privacy: '2026-09-22', p_lang: 'en' });
+  expect(regs[1]).toMatchObject({ p_waiver: '2026-11-v4', p_privacy: '2026-09-22' });
   expect(regs[1]).not.toHaveProperty('p_lang');
-  expect(regs[2].p_waiver).toBe('2026-10-v3');
+  expect(regs[2].p_waiver).toBe('2026-11-v4');
   expect(regs[2]).not.toHaveProperty('p_privacy');
 });
 
@@ -116,6 +116,9 @@ test('the full waiver text reads in English and Arabic, Arabic right to left', a
   await expect(text).toContainText('You cannot book any ride or activity');
   await expect(text).toContainText('injury, fracture, illness, loss, theft or damage');
   await expect(text).toContainText('The bike is returned in the condition it was received.');
+  // v4 (2026-11-13): the one who books accepts for everyone on the booking, and supervises any child on it
+  await expect(text).toContainText('I accept this waiver on behalf of each of them as well as myself');
+  await expect(text).toContainText('I am the parent or legal guardian of every child on my booking');
   await page.click('#waiver-close');
   await expect(page.locator('#waiver-dialog')).toBeHidden();
   await expect(page.locator('#f-waiver .privacy-check')).toHaveText('I have read the waiver and agree to it on behalf of every rider on this registration');

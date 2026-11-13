@@ -14,6 +14,7 @@ import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
 import { hasKindArt, kindsInOrder, rowsOfKind } from "@/lib/kind-theme";
 import type { Held } from "@/lib/held";
 import { KindIcon, SatRoute, type RouteWords } from "./KindArt";
+import { SOCIAL_ICONS } from "@/components/site/social-icons";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
 // cards; then one of its dates, as the booking app's own session cards; then the ride - its prices
@@ -169,6 +170,9 @@ export type StepInfo = {
   /** Facts of the date's own kind, after where it is: yoga's who leads it, how long, the level and what to bring
    *  (2026-11-12). Absent on any other kind. */
   more?: { k: string; v: string }[];
+  /** The venue's Instagram (bike_slots._ig, 2026-11-13; lib/instagram.ts): the row's label, the handle and its profile's
+   *  address, a row of its own after where it is (the booking app's _infoFacts); absent when the session carries none. */
+  ig?: { label: string; handle: string; url: string };
   /** The Saturday ride: when the sun rises that day, in the page's clock (a fact right after when it is), and its two
    *  routes' words for the drawing above the facts (KindArt.tsx SatRoute). Absent on any other kind. */
   sunrise?: string;
@@ -280,6 +284,10 @@ const FarmScene = () => (
     {FH_FEATHERS.map(([x, y, r]) => <rect key={r} className="sc-fh-fth" x="-6" y="-12" width="12" height="24" rx="6" transform={`translate(${x} ${y}) rotate(${r})`} />)}
     <circle className="sc-fh-ring" cx="80" cy="80" r="40" /><circle className="sc-fh-core" cx="80" cy="80" r="26" />
   </svg>
+);
+/** Instagram's mark (the site's footer's, components/site/social-icons.ts), filled with the text's colour: never a character. */
+const IgMark = () => (
+  <svg className="xs-ig-ic" aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d={SOCIAL_ICONS.instagram} /></svg>
 );
 /** Featured's star (the booking app's _cuIc star), drawn in the text's colour on its neon disc. */
 const FeatStar = () => (
@@ -449,6 +457,8 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
     out.push({ k: next ? t.info.next : t.info.when, v: <>{s.day}{s.when && <><br />{when(s)}</>}{i.collect && <><br />{i.collect}</>}{i.whenNote && <><br />{i.whenNote}</>}</> });
     if (i.sunrise && !next) out.push({ k: t.info.sunrise, v: <bdi>{i.sunrise}</bdi> }); // the Saturday ride's sunrise
     out.push({ k: t.info.where, v: <>{i.place}{i.map && <> · <a href={i.map} target="_blank" rel="noopener">{t.info.map}</a></>}</> });
+    // the venue's Instagram (the booking app's ev-info-ig, 2026-11-13): its mark and the handle, in a new tab
+    if (i.ig) out.push({ k: i.ig.label, v: <a className="xs-info-ig" href={i.ig.url} target="_blank" rel="noopener noreferrer" aria-label={`${i.ig.label} @${i.ig.handle}`}><IgMark /><bdi dir="ltr">@{i.ig.handle}</bdi></a> });
     if (i.distance) out.push({ k: t.info.distance, v: <bdi>{i.distance}</bdi> });
     for (const m of i.more ?? []) out.push({ k: m.k, v: m.v });
     if (i.format) out.push({ k: t.info.format, v: i.format });

@@ -10,6 +10,7 @@ import { riyadhClock } from "./workshop-days";
 import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
 import { AH_VENUE, ahConfig, ahEntry, ahHold, isArenaId, type AhConfig, type AhEntry } from "./arena";
 import { isBloodId } from "./blood";
+import { igOf } from "./instagram";
 import { sessionGender, type SessionGender } from "./session-gender";
 
 export type TicketStatus = "waiting" | "waitlist" | "active" | "done";
@@ -120,6 +121,9 @@ export type TicketSession = {
   bfMembers?: boolean;
   /** This visitor is not told the breakfast spot (bfFor): no stop (breakfastFor) and no "announced at" line. */
   bfOff?: boolean;
+  /** The venue's Instagram handle (bike_slots._ig, the booking app's _sessIg, 2026-11-13; lib/instagram.ts igOf): a row on
+   *  its Details and a link on its ticket. Set only when the session carries one Instagram allows. */
+  ig?: string;
   /** Victory Lap's settings (sessions.vl, lib/vlap.ts: the races open, how to pay, what goes to Kamin
    *  Sports); null on every other kind. A read without the column has every race open and no words of
    *  staff's own. */
@@ -381,6 +385,7 @@ export function ticketSession(r: Row): TicketSession | null {
       : null,
     revealAt: Number.isFinite(Date.parse(S(r.reveal_at))) ? S(r.reveal_at) : null,
     ...(bfMembersOf(r.bike_slots) ? { bfMembers: true } : {}),
+    ...((h) => (h ? { ig: h } : {}))(igOf(r.bike_slots)),
     vl: kind === "vlap" ? vlConfig(r.vl) : null,
     ah: kind === "arena" ? ahConfig(r.vl) : null,
     price: N(r.price),

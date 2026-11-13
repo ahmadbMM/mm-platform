@@ -220,6 +220,15 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-live .tk-rt-n { color: #fbf9f4; }
 .tk-live .tk-reveal { color: rgba(251, 249, 244, .66); }
 .tk-live .tk-rt-a { color: #03ff89; }
+/* The venue's Instagram under the ticket's place (the booking app's .tk-ig-row, .tk-ig; bike_slots._ig, 2026-11-13): its
+   mark and the handle in the ticket's accent, a 32px target, underlined on hover */
+.tk-when .tk-ig-row { margin: 4px 0 0; min-width: 0; }
+.tk-ig { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 13px; font-weight: 700; color: #077a4b; text-decoration: none; overflow-wrap: anywhere; }
+.tk-ig svg { flex: none; }
+.tk-ig:hover { text-decoration: underline; text-underline-offset: 2px; }
+.tk-live:not(.ev-vlap):not(.ev-defe5k):not(.ev-blood):not(.ev-yoga):not(.ev-farm) .tk-ig { color: #03ff89; } /* the night ticket's neon; the events' white tickets keep the green */
+.tk-card.ev-farm .tk-ig, .tk-card.ev-farm.tk-live .tk-ig { color: var(--fh-rust); }
+.tk-card.ev-yoga .tk-ig, .tk-card.ev-yoga.tk-live .tk-ig { color: var(--yg-clay-dk); }
 .tk-live .tk-rt-map path { stroke: #03ff89; }
 .tk-live .tk-rt-map circle { fill: #1a1919; stroke: #fbf9f4; }
 /* "Still coming?" (TicketComing): I'm coming and Can't come side by side, then one quiet chip; "Report a bike problem"

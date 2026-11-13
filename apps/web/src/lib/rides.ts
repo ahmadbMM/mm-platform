@@ -3,6 +3,7 @@ import { riyadhClock } from "./workshop-days";
 import { priceRows, type PriceRow } from "./biz";
 import { sessionGender, type SessionGender } from "./session-gender";
 import { rideGroupKm } from "./kind-theme";
+import { igOf } from "./instagram";
 
 // The rides a visitor can book, read from the booking system itself: the bike prices
 // (ride_prices) and the sessions still ahead (sessions). Both are tables the booking app reads
@@ -160,6 +161,9 @@ export type RideSession = {
   /** The Saturday ride's two groups' distances in km (bike_slots._km, the usual 20 and 40 when unset; lib/kind-theme.ts
    *  rideGroupKm): its Details draw the two routes with them. Only on the Saturday ride. */
   groupKm?: { beg: number; int: number };
+  /** The venue's Instagram handle (bike_slots._ig, the booking app's _sessIg, 2026-11-13; lib/instagram.ts igOf): a row on
+   *  its Details and a link on its ticket. Set only when the session carries one Instagram allows. */
+  ig?: string;
 };
 export type RideData = { prices: RidePrice[]; sessions: RideSession[] };
 
@@ -378,6 +382,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...placeOf(r),
     ...breakfastOf(r),
     ...(bfMembersOf(r.bike_slots) ? { bfMembers: true } : {}),
+    ...((h) => (h ? { ig: h } : {}))(igOf(r.bike_slots)),
     ...revealOf(r),
     ...outOf(r),
     ...publishedOf(r, community && kind !== "snd96"),

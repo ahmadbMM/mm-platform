@@ -34,6 +34,7 @@ import { AH_INFO_URL, ahConfig, ahPayLine } from "@/lib/arena";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { yogaKnow, yogaLength } from "@/lib/yoga";
 import { farmForMembers } from "@/lib/farm";
+import { igUrl } from "@/lib/instagram";
 import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { ArrowIcon } from "@/components/site/Icons";
 import { kindThemeWords } from "@/components/experiences/KindTheme.words";
@@ -360,6 +361,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         ...(s.kind === "defe5k" ? { kit: { label: defeWords.kitLabel, text: defeWords.kit }, race: { label: defeWords.regLabel, link: defeWords.regLink, url: DEFE_RACE_URL } } : {}),
         // yoga: who leads it, how long, the level and what to bring, after where (the booking app's _infoFacts)
         ...(s.kind === "yoga" ? { more: yogaKnow(ygWords, yogaLength(s.times, ygWords.min)).map(([k, v]) => ({ k, v })) } : {}),
+        // the venue's Instagram, a row after where it is (the booking app's _infoFacts, 2026-11-13): the Farm House Night's
+        // @thefarmhouse.jed, whose Details a member alone reads
+        ...(s.ig ? { ig: { label: tx("Instagram", "إنستغرام"), handle: s.ig, url: igUrl(s.ig) } } : {}),
       },
     };
   };

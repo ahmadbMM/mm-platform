@@ -175,11 +175,12 @@ describe("Your rides and the ride badges count bike nights alone", () => {
   });
 });
 
-describe("the activity waiver (2026-10-18, activity-2026-10-v3)", () => {
+describe("the activity waiver (2026-10-18; activity-2026-11-v4 since 2026-11-13), and the Farm House Night's own", () => {
   it("says any activity, never ride, in every language, and matches the booking app's version", async () => {
     const { WAIVER_VERSIONS, waiverCopy } = await import("@/content/waivers");
     const { serverL } = await import("@/i18n/dicts");
-    expect(WAIVER_VERSIONS.activity).toBe("activity-2026-10-v3");
+    expect(WAIVER_VERSIONS.activity).toBe("activity-2026-11-v4");
+    expect(WAIVER_VERSIONS.farm).toBe("farm-2026-11-v1");
     for (const l of LOCALE_CODES) {
       const c = waiverCopy("activity", serverL(l));
       expect(c.body, l).not.toMatch(CYCLING);
@@ -187,6 +188,10 @@ describe("the activity waiver (2026-10-18, activity-2026-10-v3)", () => {
       for (const k of ["title", "agree"] as const) expect(c[k], `${l}.${k}`).not.toMatch(CYCLING);
       const sw = waiverCopy("swim", serverL(l));
       for (const k of ["title", "body", "agree"] as const) expect(sw[k], `${l}.swim.${k}`).not.toMatch(CYCLING);
+      // the farm night's own waiver never says ride or bike either, and is translated in every language
+      const fm = waiverCopy("farm", serverL(l));
+      for (const k of ["title", "body", "agree"] as const) expect(fm[k], `${l}.farm.${k}`).not.toMatch(CYCLING);
+      if (l !== "en") expect(fm.body, l).not.toMatch(/^You cannot/);
     }
     expect(waiverCopy("activity", serverL("en")).body.startsWith("You cannot book any activity with MicroMobility")).toBe(true);
   });

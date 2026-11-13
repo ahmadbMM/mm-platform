@@ -120,7 +120,7 @@ test('a registration sends the notice it confirmed as p_privacy', async ({ page 
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(regs).toHaveLength(1);
-  expect(regs[0]).toMatchObject({ p_privacy: '2026-09-22', p_waiver: '2026-10-v3' });
+  expect(regs[0]).toMatchObject({ p_privacy: '2026-09-22', p_waiver: '2026-11-v4' });
 });
 
 test('a database without p_privacy yet takes the registration on the second try, without it', async ({ page }) => {

@@ -592,7 +592,7 @@ describe("its agreement, never the activity waiver", () => {
   it("records that version, and refuses any other", async () => {
     const f = db2([]);
     vi.stubGlobal("fetch", f);
-    expect((await post({ sessionId: BD.id, version: "activity-2026-10-v3" })).status).toBe(409);
+    expect((await post({ sessionId: BD.id, version: "activity-2026-11-v4" })).status).toBe(409);
     expect(f.mock.calls.some((c) => String(c[0]).includes("/rpc/customer_accept_waiver"))).toBe(false);
     expect(await (await post({ sessionId: BD.id, version: "blood-2026-11-v1" })).json()).toEqual({ ok: true });
     const call = f.mock.calls.find((c) => String(c[0]).includes("/rpc/customer_accept_waiver")) as unknown as [string, RequestInit];

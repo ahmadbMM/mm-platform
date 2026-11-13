@@ -325,7 +325,7 @@ describe("a Farm House Night ticket (My Account)", () => {
 
   it("has no bike, gathers (arrival, then dinner), is free, waits on staff, and is at the farm with its own map", () => {
     expect(fh).toMatchObject({ kind: "farm", bikes: false, gathers: true, approval: true, published: false, free: true, times: ["16:30", "20:30"], location: "Little Farmhouse, Dhahban", meetUrl: MAP });
-    expect(waiverKind(fh)).toBe("activity");
+    expect(waiverKind(fh)).toBe("farm"); // its own waiver since 2026-11-13 (content/farm-words.ts farmWaiverCopy)
     expect(codeReady(family, fh)).toBe(false); // the code comes once staff publish the list and approve the family
     expect(codeReady(family.map((r) => ({ ...r, approval: "approved" })), { ...fh, published: true })).toBe(true);
     expect(venueText(venueOf(fh), t)).toBe("Little Farmhouse, Dhahban");

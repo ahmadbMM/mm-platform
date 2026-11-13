@@ -19,6 +19,8 @@ import { timesText } from "@/lib/rides";
 import { isNonBike } from "@/lib/bike-kinds";
 import { YOGA_MARK, YOGA_MARK_SIZE, yogaKnow } from "@/lib/yoga";
 import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
+import { igUrl } from "@/lib/instagram";
+import { SOCIAL_ICONS } from "@/components/site/social-icons";
 import { genderChip } from "@/lib/session-gender";
 import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addonsCost, lockerText, type TicketLocker, type OwnLocker, bookingRef, breakfastFor, cdLine, codeReady, qrTone, countdownMoments, dayWord, fmtClock, icsFor, icsPlace, kmText, meetsAt, partnerPlace, meetHeld, queueNumbers, revealWhen, spotHeld, ticketLook, wlCollectTime, ticketStages, venueOf, venueText, type AddonItem, type Cue, type TicketRoute, type TicketRow, type TicketSession, satNumOk, BOOTH_APPLE, BOOTH_DIR, todayCode } from "@/lib/tickets";
 import { TickIcon } from "@/components/site/Icons";
@@ -72,6 +74,8 @@ import { gpxFileName, type RoutePage } from "@/lib/route-track";
 // place; it lists the member and their family by name under Participants and says Free for its total, as any ride staff
 // approve. Unlike the Saturday ride it keeps Edit (and Reschedule), as the booking app's ticket does, so the member adds
 // or drops family members there. Its wallet pass is offered as the pool's is (the booking app's passes know the farm).
+// A session that carries its venue's Instagram (bike_slots._ig, 2026-11-13; lib/instagram.ts), the Farm House Night's
+// @thefarmhouse.jed first, links it under the place while the night is ahead, in a new tab.
 export type TicketText = (typeof T)["en"];
 type Props = {
   locale: string;
@@ -344,6 +348,15 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             {!past && <span className="tk-venue">{venueText(venue, t)}</span>}
             {!past && green && <><span className="tk-sep" aria-hidden="true">·</span><span className="go tk-seg">{green}</span></>}
             {sg && <span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span>}
+          </p>
+        )}
+        {/* the venue's Instagram under its place, while the night is ahead (the booking app's tk-ig, 2026-11-13) */}
+        {!past && s?.ig && (
+          <p className="tk-ig-row">
+            <a className="tk-ig" href={igUrl(s.ig)} target="_blank" rel="noopener noreferrer" aria-label={`${t.instagram} @${s.ig}`}>
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true" focusable="false"><path d={SOCIAL_ICONS.instagram} /></svg>
+              <bdi dir="ltr">@{s.ig}</bdi>
+            </a>
           </p>
         )}
       </div>

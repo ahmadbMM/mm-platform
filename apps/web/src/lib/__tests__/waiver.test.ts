@@ -14,6 +14,8 @@ import Qr from "../../components/booking/Qr";
 import { TxProvider } from "../../i18n/TxProvider";
 import { makeL } from "../../i18n/tx";
 import de from "../../i18n/tx/de.json";
+import { serverL } from "../../i18n/dicts";
+import { TRANSLATED } from "../../i18n/locales";
 
 const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 const Tx = TxProvider as FC<{ locale: string; dict: Record<string, string> | null; children?: ReactNode }>;
@@ -33,10 +35,13 @@ describe("which waiver a ride is agreed under", () => {
   it("is the ride's where bikes go out, the swim's at the pool, the activity waiver for anything else", () => {
     for (const r of [jccRow, satRow, { ...satRow, ride_kind: "petromin" }, { ...jccRow, ride_kind: "snd96" }]) {
       expect(waiverKind(ticketSession(r)!)).toBe("ride");
-      expect(waiverVersion(ticketSession(r)!)).toBe("2026-10-v3");
+      expect(waiverVersion(ticketSession(r)!)).toBe("2026-11-v4");
     }
-    expect(waiverVersion(ticketSession({ ...satRow, ride_kind: "swim" })!)).toBe("swim-2026-10-v3");
-    for (const k of ["workshop", "event", "yoga", "farm"]) expect(waiverVersion(ticketSession({ ...satRow, ride_kind: k })!)).toBe("activity-2026-10-v3"); // yoga: the activity waiver, as the booking app's desk takes it (rentals 20261112120000)
+    expect(waiverVersion(ticketSession({ ...satRow, ride_kind: "swim" })!)).toBe("swim-2026-11-v4");
+    for (const k of ["workshop", "event", "yoga"]) expect(waiverVersion(ticketSession({ ...satRow, ride_kind: k })!)).toBe("activity-2026-11-v4"); // yoga: the activity waiver, as the booking app's desk takes it (rentals 20261112120000)
+    // the Farm House Night has its own (the booking app's 46689058, 2026-11-13)
+    expect(waiverKind(ticketSession({ ...satRow, ride_kind: "farm" })!)).toBe("farm");
+    expect(waiverVersion(ticketSession({ ...satRow, ride_kind: "farm" })!)).toBe("farm-2026-11-v1");
   });
   it("carries the booking app's words, every clause in English and Arabic", () => {
     for (const kind of ["ride", "swim", "activity"] as const) {
@@ -49,7 +54,25 @@ describe("which waiver a ride is agreed under", () => {
     expect(waiverCopy("ride", makeL("en", null)).agree).toBe("I have read the waiver and agree on behalf of every rider on this booking");
     expect(waiverCopy("swim", makeL("en", null)).title).toBe("Swim waiver");
     expect(waiverCopy("activity", makeL("de", de)).title).toBe((de as Record<string, string>)["Activity waiver"]);
-    expect(Object.values(WAIVER_VERSIONS)).toEqual(["2026-10-v3", "swim-2026-10-v3", "activity-2026-10-v3", "blood-2026-11-v1"]);
+    expect(Object.values(WAIVER_VERSIONS)).toEqual(["2026-11-v4", "swim-2026-11-v4", "activity-2026-11-v4", "blood-2026-11-v1", "farm-2026-11-v1"]);
+  });
+  it("ends the ride, swim and activity waivers with the sentence for everyone on a booking, v4 (the booking app's 46689058)", () => {
+    const EN = "When I book for other people, I accept this waiver on behalf of each of them as well as myself, and I confirm that I am entitled to do so. I am the parent or legal guardian of every child on my booking, or have their guardian’s permission to bring them, and I will supervise them at all times.";
+    const AR = "وعندما أحجز لأشخاص آخرين، فإنني أقبل هذا الإقرار نيابةً عن كل واحد منهم إضافةً إلى نفسي، وأؤكد أنني مخوّل بذلك. وأنا وليّ أمر كل طفل في حجزي أو الوصي النظامي عليه، أو لديّ إذن وليّ أمره بإحضاره، وسأشرف عليه طوال الوقت.";
+    for (const kind of ["ride", "swim", "activity"] as const) {
+      const en = waiverCopy(kind, makeL("en", null)).body, ar = waiverCopy(kind, makeL("ar", null)).body;
+      expect(en.endsWith(` ${EN}`), kind).toBe(true);
+      expect(ar.endsWith(` ${AR}`), kind).toBe(true);
+      // every other language says it too: its body is the old one with the sentence after it, never the English
+      for (const l of TRANSLATED) {
+        const body = waiverCopy(kind, serverL(l)).body;
+        expect(body, `${kind} ${l}`).not.toContain("When I book for other people");
+        expect(body.length, `${kind} ${l}`).toBeGreaterThan(200);
+      }
+    }
+    // the Blood Donation event's agreements are unchanged
+    expect(WAIVER_VERSIONS.blood).toBe("blood-2026-11-v1");
+    expect(waiverCopy("blood", makeL("en", null)).body).not.toContain(EN);
   });
 });
 
@@ -59,7 +82,7 @@ describe("the rides that ask", () => {
       row("a", "j2", "2099-03-08"),
       row("b", "j1", "2099-03-01", { status: "waitlist" }),
       row("c", "j1", "2099-03-01", { queue_num: 2 }),
-      row("d", "j3", "2099-03-02", { waiver_version: "2026-10-v3" }), // agreed in the booking app
+      row("d", "j3", "2099-03-02", { waiver_version: "2026-11-v4" }), // agreed in the booking app
       row("e", "j4", "2099-03-02", { waiver_version: "" }), // an empty stamp is none
       row("f", "j5", "2020-01-01"), // ridden already: not signed for after the fact
       row("g", "j6", "2099-03-03", { status: "cancelled" }),
@@ -142,7 +165,7 @@ describe("api/account/pending-waiver", () => {
     vi.stubGlobal("fetch", db(rows, [jccRow, satRow]));
     const b = await (await get("locale=en")).json();
     expect(b).toEqual({ signedIn: true, pending: {
-      sessionId: "j1", version: "2026-10-v3", kind: "ride", copy: waiverCopy("ride", makeL("en", null)),
+      sessionId: "j1", version: "2026-11-v4", kind: "ride", copy: waiverCopy("ride", makeL("en", null)),
       name: "Open Sports Day", when: "Sunday · 1 Mar 2099", time: "9 PM – 11 PM", venue: "Jeddah Corniche Circuit",
       ridersLabel: "Riders", riders: [{ name: "Sara Ali", num: 4 }, { name: "Omar Ali", num: 5 }],
     } });
@@ -153,24 +176,24 @@ describe("api/account/pending-waiver", () => {
     expect(await (await get("locale=en&skip=j1,s1")).json()).toEqual({ signedIn: true, pending: null });
   });
   it("asks nothing when every ride is agreed", async () => {
-    vi.stubGlobal("fetch", db([row("q1", "j1", "2099-03-01", { waiver_version: "2026-10-v3" })], [jccRow]));
+    vi.stubGlobal("fetch", db([row("q1", "j1", "2099-03-01", { waiver_version: "2026-11-v4" })], [jccRow]));
     expect(await (await get("locale=en")).json()).toEqual({ signedIn: true, pending: null });
   });
   it("records the agreement through customer_accept_waiver with the cookie's id and token", async () => {
     const f = db([], [jccRow]);
     vi.stubGlobal("fetch", f);
-    const res = await post({ sessionId: "j1", version: "2026-10-v3" });
+    const res = await post({ sessionId: "j1", version: "2026-11-v4" });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ ok: true });
     const call = f.mock.calls.find((c) => String(c[0]).includes("/rpc/customer_accept_waiver")) as unknown as [string, RequestInit];
-    expect(JSON.parse(String(call[1].body))).toEqual({ p_id: "c1", p_token: TOKEN, p_session_id: "j1", p_version: "2026-10-v3" });
+    expect(JSON.parse(String(call[1].body))).toEqual({ p_id: "c1", p_token: TOKEN, p_session_id: "j1", p_version: "2026-11-v4" });
   });
   it("refuses another site, a missing cookie and a malformed body without touching the database", async () => {
     const f = vi.fn(async () => json(1));
     vi.stubGlobal("fetch", f);
-    expect((await post({ sessionId: "j1", version: "2026-10-v3" }, { ...HEADERS, origin: "https://evil.example" })).status).toBe(403);
-    expect((await post({ sessionId: "j1", version: "2026-10-v3" }, { origin: HEADERS.origin })).status).toBe(401);
-    expect((await post({ sessionId: "j 1", version: "2026-10-v3" })).status).toBe(400);
+    expect((await post({ sessionId: "j1", version: "2026-11-v4" }, { ...HEADERS, origin: "https://evil.example" })).status).toBe(403);
+    expect((await post({ sessionId: "j1", version: "2026-11-v4" }, { origin: HEADERS.origin })).status).toBe(401);
+    expect((await post({ sessionId: "j 1", version: "2026-11-v4" })).status).toBe(400);
     expect((await post({ sessionId: "j1", version: "2026 10 v3" })).status).toBe(400);
     expect((await post({ sessionId: "j1", version: "" })).status).toBe(400);
     expect((await post({ sessionId: "j1", version: "v".repeat(49) })).status).toBe(400);
@@ -179,7 +202,7 @@ describe("api/account/pending-waiver", () => {
   it("asks again when the ride's waiver is not the one the rider read", async () => {
     const f = db([], [jccRow]);
     vi.stubGlobal("fetch", f);
-    const res = await post({ sessionId: "j1", version: "swim-2026-10-v3" });
+    const res = await post({ sessionId: "j1", version: "swim-2026-11-v4" });
     expect(res.status).toBe(409);
     expect(await res.json()).toEqual({ ok: false, error: "changed" });
     // a pop-up left open across a deploy that bumped the version: asked again, never refused as invalid
@@ -193,7 +216,7 @@ describe("api/account/pending-waiver", () => {
     const f = db([row("q1", "s1", "2099-03-04")], [satRow]);
     vi.stubGlobal("fetch", f);
     expect((await (await get("locale=en")).json()).pending).toMatchObject({ sessionId: "s1", kind: "ride" });
-    expect(await (await post({ sessionId: "s1", version: "2026-10-v3" })).json()).toEqual({ ok: true });
+    expect(await (await post({ sessionId: "s1", version: "2026-11-v4" })).json()).toEqual({ ok: true });
     const reads = f.mock.calls.filter((c) => String(c[0]).includes("/rpc/list_sessions?")) as unknown as [string, RequestInit][];
     expect(reads).toHaveLength(2);
     for (const [url, init] of reads) {
@@ -212,17 +235,17 @@ describe("api/account/pending-waiver", () => {
   });
   it("lets the rider through while the database has no such function, and says when the session ended", async () => {
     vi.stubGlobal("fetch", db([], [jccRow], json({ code: "PGRST202", message: "Could not find the function public.customer_accept_waiver" }, 404)));
-    expect(await (await post({ sessionId: "j1", version: "2026-10-v3" })).json()).toEqual({ ok: true, absent: true });
+    expect(await (await post({ sessionId: "j1", version: "2026-11-v4" })).json()).toEqual({ ok: true, absent: true });
     vi.stubGlobal("fetch", db([], [jccRow], json(-1)));
-    expect(await (await post({ sessionId: "j1", version: "2026-10-v3" })).json()).toEqual({ ok: false, error: "signin" });
+    expect(await (await post({ sessionId: "j1", version: "2026-11-v4" })).json()).toEqual({ ok: false, error: "signin" });
     vi.stubGlobal("fetch", db([], [jccRow], json({ message: "boom" }, 503)));
-    expect((await post({ sessionId: "j1", version: "2026-10-v3" })).status).toBe(502);
+    expect((await post({ sessionId: "j1", version: "2026-11-v4" })).status).toBe(502);
   });
 });
 
 describe("the pop-up", () => {
   const w: PendingWaiver = {
-    sessionId: "j1", version: "2026-10-v3", kind: "ride", copy: waiverCopy("ride", makeL("en", null)),
+    sessionId: "j1", version: "2026-11-v4", kind: "ride", copy: waiverCopy("ride", makeL("en", null)),
     name: "Evening Circuit Session", when: "Sunday · 1 Mar 2099", time: "9 PM – 11 PM", venue: "Jeddah Corniche Circuit",
     ridersLabel: "Riders", riders: [{ name: "Sara Ali", num: 4 }, { name: "Omar Ali", num: 5 }],
   };
