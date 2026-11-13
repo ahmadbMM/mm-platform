@@ -19,6 +19,13 @@ export const T = {
     upvote: (n: number) => `Upvote (${n})`, votes: (n: number) => `Votes: ${n}`,
     screenBad: "This screen link is not valid", prev: "Previous question", next: "Next question",
     lowest: (value: string) => `Lowest ${value}`, highest: (value: string) => `Highest ${value}`, back: "Back", forward: "Next", step: (at: number, of: number) => `Question ${at} of ${of}`, fullScreen: "Full screen",
+    // stage 2: a page staff pace, the quizzes, the form, the grid, the pin, reactions
+    waitNext: "Waiting for the next question", answerSent: "Answer sent", sent: "Sent", required: "Required",
+    right: "Correct", wrong: "Not correct", points: (n: string) => `${n} points`, secondsLeft: (n: number) => `${n} seconds left`,
+    me: (score: string) => `Your score ${score}`, mePlace: (score: string, place: number, of: number) => `Your score ${score} · place ${place} of ${of}`,
+    gotRight: (right: number, all: number) => `${right} of ${all} got it right`,
+    axisX: "Across", axisY: "Upwards", pinAt: (x: number, y: number) => `${x}% across, ${y}% down`,
+    react: { like: "Like", love: "Love", clap: "Clap", wow: "Wow", think: "Thinking" } as Record<string, string>,
     errors: {
       signin: "Your session has ended. Sign in again.", audience: "This page is not open to your account.", closed: "This question is no longer taking answers.",
       limit: "You have sent all your answers to this question.", answered: "You have already answered this question.",
@@ -43,6 +50,13 @@ export const T = {
     upvote: (n: number) => `تأييد (${n})`, votes: (n: number) => `الأصوات: ${n}`,
     screenBad: "رابط الشاشة غير صالح", prev: "السؤال السابق", next: "السؤال التالي",
     lowest: (value: string) => `الأدنى ${value}`, highest: (value: string) => `الأعلى ${value}`, back: "رجوع", forward: "التالي", step: (at: number, of: number) => `السؤال ${at} من ${of}`, fullScreen: "ملء الشاشة",
+    // المرحلة الثانية
+    waitNext: "بانتظار السؤال التالي", answerSent: "تم إرسال الإجابة", sent: "تم الإرسال", required: "مطلوب",
+    right: "صحيح", wrong: "غير صحيح", points: (n: string) => `النقاط: ${n}`, secondsLeft: (n: number) => `الثواني المتبقية: ${n}`,
+    me: (score: string) => `نقاطك ${score}`, mePlace: (score: string, place: number, of: number) => `نقاطك ${score} · المركز ${place} من ${of}`,
+    gotRight: (right: number, all: number) => `الإجابات الصحيحة: ${right} من ${all}`,
+    axisX: "أفقياً", axisY: "للأعلى", pinAt: (x: number, y: number) => `${x}% أفقياً، ${y}% من الأعلى`,
+    react: { like: "أعجبني", love: "أحببته", clap: "تصفيق", wow: "مذهل", think: "أفكّر" } as Record<string, string>,
     errors: {
       signin: "انتهت جلستك. سجّل الدخول مجدداً.", audience: "هذه الصفحة غير متاحة لحسابك.", closed: "لم يعد هذا السؤال يستقبل الإجابات.",
       limit: "أرسلت كل إجاباتك على هذا السؤال.", answered: "سبق أن أجبت عن هذا السؤال.",

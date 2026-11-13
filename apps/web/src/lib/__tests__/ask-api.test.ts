@@ -3,6 +3,7 @@ import { GET as readPage } from "../../app/api/ask/[slug]/route";
 import { GET as readPageNamedSend, POST as send } from "../../app/api/ask/send/route";
 import { POST as unsend } from "../../app/api/ask/unsend/route";
 import { POST as vote } from "../../app/api/ask/vote/route";
+import { GET as readPageNamedReact, POST as react } from "../../app/api/ask/react/route";
 import { askKey } from "../ask-server";
 
 // The Ask pages' own routes (app/api/ask): the account's session is read from the HttpOnly cookie on the server and
@@ -93,6 +94,41 @@ describe("POST /api/ask/send", () => {
     expect(await absent.json()).toEqual({ ok: false, error: "generic" });
     vi.stubGlobal("fetch", db("null"));
     expect((await send(post("/api/ask/send", { question: 11, value: { t: "x" } }))).status).toBe(502);
+  });
+});
+
+describe("POST /api/ask/react", () => {
+  it("gives or takes back one of the five reactions with the cookie's session - never the token back", async () => {
+    const f = db({ ok: true });
+    vi.stubGlobal("fetch", f);
+    const res = await react(post("/api/ask/react", { question: 11, kind: "clap", on: true }));
+    expect(res.status).toBe(200);
+    const text = await res.text();
+    expect(JSON.parse(text)).toEqual({ ok: true });
+    expect(text).not.toContain(TOK);
+    await react(post("/api/ask/react", { question: 11, kind: "clap", on: false }));
+    expect(sentTo(f, 0)).toMatchObject({ fn: "ask_react", args: { p_question: 11, p_id: "c1", p_token: TOK, p_kind: "clap", p_on: true } });
+    expect(sentTo(f, 1).args).toMatchObject({ p_kind: "clap", p_on: false });
+  });
+  it("refuses a body that is not a reaction before it reaches the database, a visitor with no session, and another site", async () => {
+    const f = db({ ok: true });
+    vi.stubGlobal("fetch", f);
+    for (const body of [{ question: 11, kind: "laugh", on: true }, { question: 11, kind: "like" }, { question: "11", kind: "like", on: true }, { kind: "like", on: true }, { question: 11, kind: "like", on: "yes" }]) {
+      expect((await react(post("/api/ask/react", body))).status, JSON.stringify(body)).toBe(400);
+    }
+    expect((await react(post("/api/ask/react", { question: 11, kind: "like", on: true }, { cookie: "" }))).status).toBe(401);
+    expect((await react(post("/api/ask/react", { question: 11, kind: "like", on: true }, { origin: "https://evil.example" }))).status).toBe(403);
+    expect(f).not.toHaveBeenCalled();
+  });
+  it("hands the database's refusal back as its code, and reads a page whose own link part is \"react\"", async () => {
+    vi.stubGlobal("fetch", db({ ok: false, error: "closed" }));
+    const res = await react(post("/api/ask/react", { question: 11, kind: "wow", on: true }));
+    expect(res.status).toBe(409);
+    expect(await res.json()).toEqual({ ok: false, error: "closed" });
+    const f = db({ state: "none" });
+    vi.stubGlobal("fetch", f);
+    expect(await (await readPageNamedReact(get("/api/ask/react"))).json()).toEqual({ ok: true, page: { state: "none" } });
+    expect(sentTo(f)).toMatchObject({ fn: "ask_page", args: { p_slug: "react" } });
   });
 });
 

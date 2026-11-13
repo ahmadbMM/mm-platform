@@ -18,3 +18,10 @@ export const IconVote = ({ size = 16 }: P) => (
 /** Full screen: four corners pointing out; and back out of it: the corners pointing in. */
 export const IconFull = ({ size = 22 }: P) => svg(size, <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />);
 export const IconSmall = ({ size = 22 }: P) => svg(size, <path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" />);
+/** The five reactions (contract H3: drawn marks of our own, each with a name a screen reader says - never an emoji):
+ *  a raised thumb, a heart, two hands meeting, a burst, a thought bubble. */
+export const IconLike = ({ size = 20 }: P) => svg(size, <path d="M7 10.5v9.5H4.5a1 1 0 0 1-1-1v-7.5a1 1 0 0 1 1-1H7zm0 0 3.6-7.2A2.4 2.4 0 0 1 13 5.7v3.3h5.4a2 2 0 0 1 2 2.4l-1.2 6.9a2 2 0 0 1-2 1.7H7" />, 1.9);
+export const IconLove = ({ size = 20 }: P) => svg(size, <path d="M12 20.2S4.4 15.6 4.4 10.3A4.2 4.2 0 0 1 12 7.8a4.2 4.2 0 0 1 7.6 2.5c0 5.3-7.6 9.9-7.6 9.9z" />, 1.9);
+export const IconClap = ({ size = 20 }: P) => svg(size, <><path d="M9.6 12.6 6.9 9.9a1.4 1.4 0 0 0-2 2l4.3 4.6a5.2 5.2 0 0 0 7.5.1l2.5-2.6a2.4 2.4 0 0 0 .5-2.6l-1.9-4.6a1.3 1.3 0 0 0-2.5.8l.7 2.2-4.9-5a1.4 1.4 0 0 0-2 2l3.3 3.4" /><path d="M9.6 12.6 7.9 10.8M4.4 4.8l1.2 1.4M7.6 3.2l.5 1.8M2.9 8l1.8.5" /></>, 1.9);
+export const IconWow = ({ size = 20 }: P) => svg(size, <path d="m12 2.8 2 5.3 5.6-.9-3.2 4.6 3.9 4.1-5.6.4-.6 5.5L12 17.4l-4.1 4.4-.6-5.5-5.6-.4 3.9-4.1-3.2-4.6 5.6.9z" />, 1.9);
+export const IconThink = ({ size = 20 }: P) => svg(size, <><path d="M7.4 14.4a3.9 3.9 0 0 1-.5-7.7 5 5 0 0 1 9.4-.8 4.1 4.1 0 0 1 .5 8.2z" /><circle cx="7.6" cy="17.9" r="1.2" /><circle cx="4.9" cy="20.5" r=".7" /></>, 1.9);

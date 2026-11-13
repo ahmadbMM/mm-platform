@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, type ComponentType } from "react";
-import type { AskQuestion, Look } from "@/lib/ask";
+import type { AskMine, AskQuestion, Look } from "@/lib/ask";
 import { askColors, askPalette, askTheme, askViz, paletteVars, questionLook, surfaceOf } from "@/lib/ask-look";
 import type { AskWords } from "../Ask.text";
 import { ChoiceBars, CloudBars, CloudList, PointBars, RankBars } from "./Bars";
@@ -10,6 +10,7 @@ import { WordCloud } from "./Cloud";
 import { ChoiceColumns } from "./Columns";
 import { ChoiceDots } from "./Dots";
 import { NumberGauge, NumberHistogram, NumberStrip } from "./Histogram";
+import { FormCount, GridScatter, PinDots, PinHeat, QuizBars, QuizColumns, QuizTextCloud, QuizTextList } from "./Kinds";
 import { RankLadder, RankPodium } from "./Podium";
 import { ChoiceDonut, ChoicePie, PointDonut } from "./Ring";
 import { AnswerCards, AnswerSpotlight, AnswerStream, AnswerWall, QuestionList, QuestionSpotlight } from "./Texts";
@@ -31,13 +32,19 @@ export const RESULT_VIEWS: Record<string, Record<string, ComponentType<ResultPro
   ranking: { bars: RankBars, podium: RankPodium, ladder: RankLadder },
   points: { bars: PointBars, donut: PointDonut, tiles: PointTiles },
   number: { histogram: NumberHistogram, gauge: NumberGauge, strip: NumberStrip },
+  // stage 2 (contract H4): a quiz's chart is drawn on reveal only (lib/ask.ts resultsShown); a form shows its count
+  grid: { scatter: GridScatter },
+  pin: { dots: PinDots, heat: PinHeat },
+  quiz: { bars: QuizBars, columns: QuizColumns },
+  quiz_text: { list: QuizTextList, cloud: QuizTextCloud },
+  form: { count: FormCount },
 };
 
 /** A question's results in its chart, in a box that carries the chart's colours (the question's palette, else the
  *  page's, else the brand's) as they are on this page's theme: --ask-mark, --ask-c0 ... --ask-c5 and their kin
  *  (lib/ask-look.ts paletteVars). The chart is handed the same colours and the question's look, read once here. */
-export default function AskResults({ q, pageLook, result, locale, t, screen = false, votes = null }: {
-  q: AskQuestion; pageLook: Look; result: unknown; locale: string; t: AskWords; screen?: boolean; votes?: VoteProps | null;
+export default function AskResults({ q, pageLook, result, locale, t, screen = false, votes = null, own = null }: {
+  q: AskQuestion; pageLook: Look; result: unknown; locale: string; t: AskWords; screen?: boolean; votes?: VoteProps | null; own?: AskMine | null;
 }) {
   const views = RESULT_VIEWS[q.kind];
   const viz = views ? askViz(q.look, Object.keys(views)) : null;
@@ -50,7 +57,7 @@ export default function AskResults({ q, pageLook, result, locale, t, screen = fa
   if (!View || !viz || result === undefined || result === null) return null;
   return (
     <div className="ask-res" data-kind={q.kind} data-viz={viz} data-palette={palette} data-size={look.size} style={vars}>
-      <View q={q} result={result} locale={locale} t={t} screen={screen} votes={votes} look={look} viz={viz} colors={colors} />
+      <View q={q} result={result} locale={locale} t={t} screen={screen} votes={votes} look={look} viz={viz} colors={colors} own={own} />
     </div>
   );
 }

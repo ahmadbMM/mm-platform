@@ -6,8 +6,10 @@ import {
   shapeChoice, shapeNumber, shapePoints, shapeRanking, shapeScales, shapeWritten, askText, writtenConfig,
   type AnswerState, type AskMine, type AskQuestion, type Shaped,
 } from "@/lib/ask";
+import type { PinTarget } from "@/lib/ask-kinds";
 import type { AskWords } from "./Ask.text";
-import { IconDown, IconMinus, IconPlus, IconUp } from "./icons";
+import { FormInput, GridInput, PinInput, QuizInput, QuizTextInput } from "./AskKinds";
+import { IconCheck, IconDown, IconMinus, IconPlus, IconUp } from "./icons";
 
 // Where a question is answered, one form a kind (lib/ask.ts shapes and checks the value; the database checks it
 // again). A form whose answer is already in ("done", or the question stopped taking answers) shows that answer,
@@ -20,6 +22,10 @@ export type InputProps = {
   sent: AskMine | null;
   /** Sends the value; true once the database took it. */
   onSubmit: (shaped: Shaped) => Promise<boolean>;
+  /** A quiz question whose clock has run out: nothing more can be sent. */
+  late?: boolean;
+  /** A pin question's right area, once staff reveal it. */
+  target?: PinTarget | null;
 };
 const isLocked = (state: AnswerState) => state === "done" || state === "shut";
 
@@ -77,6 +83,8 @@ export function ChoiceInput({ q, locale, t, busy, labelId, state, sent, onSubmit
               <input type={single ? "radio" : "checkbox"} name={`ask-${q.id}`} checked={on} disabled={!single && !on && picks.length >= c.maxPicks} onChange={() => toggle(o.id)} />
               <span className="ask-opt-mark" aria-hidden="true" />
               <span dir="auto">{optionText(locale, o)}</span>
+              {/* the right option, once staff reveal it (the database hands `correct` over only then) */}
+              {q.reveal && c.correct.includes(o.id) && <span className="ask-right"><IconCheck size={14} /><span className="mm-sr">{t.correct}</span></span>}
             </label>
           );
         })}
@@ -227,6 +235,11 @@ export function AnswerForm(p: InputProps) {
     case "ranking": return <RankingInput {...p} />;
     case "points": return <PointsInput {...p} />;
     case "number": return <NumberInput {...p} />;
+    case "grid": return <GridInput {...p} />;
+    case "pin": return <PinInput {...p} />;
+    case "form": return <FormInput {...p} />;
+    case "quiz": return <QuizInput {...p} />;
+    case "quiz_text": return <QuizTextInput {...p} />;
     default: return null;
   }
 }

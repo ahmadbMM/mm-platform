@@ -144,12 +144,14 @@ describe("palettes", () => {
 
 describe("a page's look", () => {
   it("is all defaults for a look that is empty, missing or not a look at all", () => {
-    const plain = { theme: "light", palette: null, cover: null, thanks_en: "", thanks_ar: "", layout: "stack", screen: { qr: true, count: true, rotate: 0 } };
+    const plain = { theme: "light", palette: null, reactions: false, cover: null, thanks_en: "", thanks_ar: "", layout: "stack", screen: { qr: true, count: true, rotate: 0 } };
     for (const raw of [{}, null, undefined, "dark", 7, [], { theme: "plaid", layout: "grid", screen: "all", palette: "rainbow", cover: 12, thanks_en: 4 }]) expect(pageLook(raw), JSON.stringify(raw)).toEqual(plain);
   });
   it("reads every key it knows", () => {
-    const l = pageLook({ theme: "green", palette: "ocean", cover: "https://cdn.example.com/a.jpg", thanks_en: "  Thank   you! ", thanks_ar: "شكراً", layout: "steps", screen: { qr: false, code: false, count: false, rotate: 20 }, later: "ignored" });
-    expect(l).toEqual({ theme: "green", palette: "ocean", cover: "https://cdn.example.com/a.jpg", thanks_en: "Thank you!", thanks_ar: "شكراً", layout: "steps", screen: { qr: false, count: false, rotate: 20 } });
+    const l = pageLook({ theme: "green", palette: "ocean", reactions: true, cover: "https://cdn.example.com/a.jpg", thanks_en: "  Thank   you! ", thanks_ar: "شكراً", layout: "steps", screen: { qr: false, code: false, count: false, rotate: 20 }, later: "ignored" });
+    expect(l).toEqual({ theme: "green", palette: "ocean", reactions: true, cover: "https://cdn.example.com/a.jpg", thanks_en: "Thank you!", thanks_ar: "شكراً", layout: "steps", screen: { qr: false, count: false, rotate: 20 } });
+    // the reaction buttons are off unless staff turn them on with a real `true`
+    expect(["yes", 1, "true", null, {}].map((reactions) => pageLook({ reactions }).reactions)).toEqual([false, false, false, false, false]);
   });
   it("cuts a thanks line at 120 characters and keeps the screen's own pace between 5 seconds and 10 minutes", () => {
     expect([...pageLook({ thanks_en: "x".repeat(300) }).thanks_en]).toHaveLength(120);
@@ -205,7 +207,9 @@ describe("a question's look", () => {
       expect(Object.keys(RESULT_VIEWS[kind] ?? {}), kind).toEqual([...ASK_VIZ[kind]]);
     }
     expect(Object.keys(ASK_VIZ).sort()).toEqual(Object.keys(RESULT_VIEWS).sort());
-    expect(Object.values(ASK_VIZ).flat()).toHaveLength(30);
+    // thirty charts of the second pass, and stage 2's: a grid's scatter, a pin's two, a quiz's two, a typed quiz's two, a form's count
+    expect(Object.values(ASK_VIZ).flat()).toHaveLength(38);
+    expect([ASK_VIZ.grid, ASK_VIZ.pin, ASK_VIZ.quiz, ASK_VIZ.quiz_text, ASK_VIZ.form]).toEqual([["scatter"], ["dots", "heat"], ["bars", "columns"], ["list", "cloud"], ["count"]]);
   });
 });
 

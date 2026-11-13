@@ -4,15 +4,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import {
-  REREAD_MS, applyLive, applySame, askSent, askText, askView, askWhen, hasPending, isDrawn, pageOpen, rereadDue, stepAt, withMine, withVote, withoutMine,
+  REREAD_MS, applyLive, applySame, askNum, askSent, askText, askView, askWhen, hasPending, isDrawn, pageOpen, rereadDue, stepAt, withMine, withVote, withoutMine,
   type AskQuestion, type AskView, type LiveAnswer, type SendAnswer,
 } from "@/lib/ask";
 import { pageLook } from "@/lib/ask-look";
+import { betterOffset, isLivePaced, liveQuestion, meLine, offsetOf, quizSeconds, withReaction, type Offset } from "@/lib/ask-pace";
 import { T } from "./Ask.text";
 import AskQuestionCard, { type QuestionActions } from "./AskQuestion";
 import AskSignIn from "./AskSignIn";
 import { IconClose } from "./icons";
-import { useAskLive } from "./useAskLive";
+import { useAskLive, type LiveMeta } from "./useAskLive";
 
 // micromobility.sa/ask/<slug>: one page of questions, drawn from what ask_page answered on the server and kept up to
 // date in the browser. The results come straight from the database (useAskLive); the page itself is read again
@@ -24,6 +25,11 @@ import { useAskLive } from "./useAskLive";
 // How the page looks is staff's (the page's `look`, lib/ask-look.ts pageLook): its theme, a picture across the top, the
 // line said after an answer, and whether the questions stand one under another or come one at a time ("steps": Back
 // and Next under the question, and where the reader is among them over it).
+//
+// A page staff pace (contract H5) shows ONE question, the one they put on screen, and moves to the next by itself:
+// it asks for news every 2 seconds, and reads itself again at once when staff show a question it does not hold. Before
+// the first it waits. A quiz question's clock counts against the database's time, read off those same polls. The
+// viewer's own quiz line - their points and their place, never anyone else's - stands once, above the questions.
 type Props = {
   locale: string; slug: string; initial: AskView;
   /** A staff preview's key (?k=), sent with every read of the page. */
@@ -53,6 +59,8 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
   const reread = useCallback(async function again(must = false): Promise<void> {
     const now = Date.now();
     if (reading.current) return;
+    // even a read that cannot wait keeps a second and a half from the last (a poll every 2 seconds may ask for it twice)
+    if (must && readAt.current && now - readAt.current < 1500) return;
     if (!must && !rereadDue(readAt.current, now)) {
       later.current ??= setTimeout(() => { later.current = undefined; again(); }, REREAD_MS - (now - readAt.current));
       return;
@@ -74,11 +82,15 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
   // them (a page whose results cannot be asked for at all): the page stops asking until it is opened again.
   const refused = useRef(0);
   const [quiet, setQuiet] = useState(false);
-  const onLive = useCallback((a: LiveAnswer) => {
+  // How far this device's clock stands from the database's, read off the polls (a quiz clock counts against theirs).
+  const [offset, setOffset] = useState<Offset | null>(null);
+  const onLive = useCallback((a: LiveAnswer, meta: LiveMeta) => {
     const now = held.current.full;
     const mine = own.current;
     own.current = false;
     if (!now) return;
+    const read = offsetOf(meta.sentAt, meta.gotAt, a.kind === "full" ? a.live.now : a.kind === "same" ? a.now : null);
+    if (read) setOffset((o) => betterOffset(o, read));
     if (a.kind === "gone") {
       if (++refused.current >= 3) setQuiet(true); else reread();
       return;
@@ -89,13 +101,19 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
     // the version moved while an answer of theirs waits (and not by their own answer): staff may have approved it, or not
     const reviewed = !mine && hasPending(now) && !!now.live && a.live.ver > now.live.ver;
     setView((v) => (v.full ? { ...v, full: applyLive(v.full, a.live).full } : v));
-    if (reload || reviewed) reread();
+    // on a page staff pace the question they have just shown (or revealed) cannot wait for the half minute
+    if (reload || reviewed) reread(reload && (isLivePaced(now) || a.live.pace === "live"));
   }, [reread]);
   const full = view.full;
   // a staff preview of a page that is not open asks with the key in its own address: the database refuses a preview's
   // reading key, and takes that one (contract G2)
   const liveKey = full ? (full.preview && pageKey ? pageKey : full.rk) : "";
-  const poke = useAskLive(slug, "page", full && liveKey && !quiet ? { key: liveKey, ver: full.live?.ver ?? 0 } : null, onLive);
+  const paced = !!full && isLivePaced(full) && pageOpen(full);
+  const poke = useAskLive(slug, "page", full && liveKey && !quiet ? { key: liveKey, ver: full.live?.ver ?? 0 } : null, onLive, paced);
+  // a quiz clock running on a page at its own pace: the database's time is asked for now, not at the next poll
+  const clocked = !!full && !paced && full.questions.some((q) => q.open && !q.reveal && quizSeconds(q) !== null);
+  const timed = offset !== null;
+  useEffect(() => { if (clocked && !timed) poke(); }, [clocked, timed, poke]);
 
   // A page that is not open yet opens by the clock: read again at its opening time (within the next twelve hours),
   // a few seconds apart for each visitor - and, while the database still says "not yet" (this phone's clock runs
@@ -144,6 +162,14 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
         setView((v) => (v.full ? { ...v, full: withVote(v.full, question, answer, on, votes) } : v));
         return true;
       } catch { return false; }
+    },
+    // a reaction shows at once and is put back as it was if the database did not take it
+    react: (question, kind, on) => {
+      const set = (to: boolean) => setView((v) => (v.full ? { ...v, full: withReaction(v.full, question, kind, to) } : v));
+      set(on);
+      post("/api/ask/react", { question, kind, on })
+        .then((b) => { if ((b as { ok?: boolean } | null)?.ok === true) { own.current = true; poke(); } else set(!on); })
+        .catch(() => set(!on));
     },
   };
 
@@ -220,12 +246,17 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
   const look = pageLook(page.look);
   const title = askText(locale, page.title_en, page.title_ar), intro = askText(locale, page.intro_en, page.intro_ar);
   const open = pageOpen(full);
-  // a kind these pages do not draw yet (grid, pin, form, the quizzes) is left out whole
+  // a kind these pages do not know is left out whole
   const drawn = full.questions.filter((q) => isDrawn(q.kind));
-  const steps = look.layout === "steps" && drawn.length > 1;
+  // staff show one question at a time: the page's own layout is not read (a page that has closed shows all it holds)
+  const current = paced ? liveQuestion(full) : null;
+  const steps = !paced && look.layout === "steps" && drawn.length > 1;
   const at = steps ? stepAt(drawn.map((q) => q.id), step) : -1;
   const thanks = askText(locale, look.thanks_en, look.thanks_ar);
-  const card = (q: AskQuestion) => <AskQuestionCard key={q.id} q={q} full={full} locale={locale} t={t} act={act} thanks={thanked === q.id ? thanks : ""} />;
+  const me = meLine(full);
+  const card = (q: AskQuestion) => (
+    <AskQuestionCard key={q.id} q={q} full={full} locale={locale} t={t} act={act} thanks={thanked === q.id ? thanks : ""} offsetMs={offset ? offset.ms : null} reactions={look.reactions} />
+  );
   return (
     <div className="ask ask-page" data-ask-theme={look.theme}>
       {look.cover && <img className="ask-cover" src={look.cover} alt="" decoding="async" fetchPriority="high" />}
@@ -237,7 +268,15 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
         {open && drawn.some((q) => q.kind !== "info") && <p className="ask-private">{t.privacy}</p>}
         {open && page.closes_at && <p className="ask-until"><time dateTime={page.closes_at} suppressHydrationWarning>{t.until(askWhen(page.closes_at, locale))}</time></p>}
       </header>
-      {steps ? (
+      {/* the viewer's own quiz line - their points and their place - once, above the questions */}
+      {me && <p className="ask-me" role="status">{me.rank !== null && me.players !== null ? t.mePlace(askNum(me.score, locale, 0), me.rank, me.players) : t.me(askNum(me.score, locale, 0))}</p>}
+      {paced ? (
+        <div className="ask-questions">
+          {/* said to a screen reader when staff show another question: the card itself is drawn anew */}
+          <p className="mm-sr" role="status">{current ? askText(locale, current.title_en, current.title_ar) : ""}</p>
+          {current ? card(current) : <section className="ask-q ask-wait"><p>{t.waitNext}</p></section>}
+        </div>
+      ) : steps ? (
         <div className="ask-steps">
           <p ref={stepHead} className="ask-progress" tabIndex={-1}>
             <span>{t.step(at + 1, drawn.length)}</span>

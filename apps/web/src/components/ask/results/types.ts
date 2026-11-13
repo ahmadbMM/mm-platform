@@ -1,4 +1,4 @@
-import type { AskQuestion } from "@/lib/ask";
+import type { AskMine, AskQuestion } from "@/lib/ask";
 import type { AskColors, QuestionLook } from "@/lib/ask-look";
 import type { AskWords } from "../Ask.text";
 
@@ -14,6 +14,8 @@ export type VoteProps = { mine: ReadonlySet<number>; voted: ReadonlySet<number>;
 export type ResultProps = {
   q: AskQuestion; result: unknown; locale: string; t: AskWords; screen: boolean; votes: VoteProps | null;
   look: QuestionLook; viz: string; colors: AskColors;
+  /** The viewer's own answer to the question, for a chart that marks it among the others (their pin on the picture). */
+  own?: AskMine | null;
 };
 
 /** A custom property on an element's style. */

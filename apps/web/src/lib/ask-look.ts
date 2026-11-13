@@ -137,6 +137,8 @@ export function paletteVars(name: AskPaletteName, surface: AskSurface = "light")
 export type ScreenLook = { qr: boolean; count: boolean; rotate: number };
 export type PageLook = {
   theme: AskTheme; palette: AskPaletteName | null;
+  /** The five reaction buttons under each question (and their counts on the big screen): off unless staff turn them on. */
+  reactions: boolean;
   /** A picture across the top, as the page draws it (lib/ask-look.ts askImage), or null. */
   cover: string | null;
   thanks_en: string; thanks_ar: string;
@@ -152,7 +154,7 @@ export function pageLook(raw: unknown): PageLook {
   const rotate = typeof s.rotate === "number" && Number.isFinite(s.rotate) && s.rotate > 0 ? clamp(Math.round(s.rotate), 5, 600) : 0;
   const cut = (v: unknown) => [...str(v).replace(/\s+/g, " ").trim()].slice(0, 120).join("");
   return {
-    theme: askTheme(l), palette: paletteName(l.palette), cover: askImage(l.cover, 1280), thanks_en: cut(l.thanks_en), thanks_ar: cut(l.thanks_ar),
+    theme: askTheme(l), palette: paletteName(l.palette), reactions: l.reactions === true, cover: askImage(l.cover, 1280), thanks_en: cut(l.thanks_en), thanks_ar: cut(l.thanks_ar),
     layout: oneOf(l.layout, ["stack", "steps"] as const),
     screen: { qr: flag(s.qr, true), count: flag(s.count, true), rotate },
   };
@@ -183,6 +185,12 @@ export const ASK_VIZ: Readonly<Record<string, readonly string[]>> = {
   ranking: ["bars", "podium", "ladder"],
   points: ["bars", "donut", "tiles"],
   number: ["histogram", "gauge", "strip"],
+  // stage 2 (contract H4). A form has nothing public but its count: one view, which staff never pick.
+  grid: ["scatter"],
+  pin: ["dots", "heat"],
+  quiz: ["bars", "columns"],
+  quiz_text: ["list", "cloud"],
+  form: ["count"],
 };
 /** The chart a question's results are drawn with: its `look.viz` when that chart is built for its kind, else the
  *  kind's first (its default). `built` is the kind's row of the charts' registry (components/ask/results). */
