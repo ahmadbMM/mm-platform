@@ -14,6 +14,11 @@ import { ShareButton } from "@/components/account/ShareImage";
 import { shareWords } from "@/components/account/BadgeShare.words";
 import { firstNameOf, titleSubject } from "@/lib/share-picture";
 import type { OpensWords } from "@/lib/opens-in";
+import { monthName, planBoxes, type HubMonth, type HubPlan } from "@/lib/member-hub";
+import type { RideKind } from "@/lib/rides";
+import MyMonth from "./MyMonth";
+import PlanSaturdays from "./PlanSaturdays";
+import { memberHubWords } from "./MemberHub.words";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
 // their card - name, since when, credits, tier and what is left to the next - their attendance
@@ -24,6 +29,8 @@ import type { OpensWords } from "@/lib/opens-in";
 // session), each opening micromobility.sa/ask/<slug>: the booking app's Community tab lists the same ones (member-hub.js).
 // Under the title, Share sends it as a picture (the booking app's _shrTitle, new features build F12, 2026-11-13; it sits
 // under the title on the app's Account > Badges, and the title shows here on the website): components/account/ShareImage.tsx.
+// Since the new features build (2026-11-13), the app's My month (F13, from the 26th) after their rides and Plan my
+// Saturdays (F10) after the upcoming rides (lib/member-hub.ts): each drawn only when its read answered.
 type Props = {
   locale: string;
   L: Locale;
@@ -57,9 +64,13 @@ type Props = {
   accountHref?: string;
   /** The open Ask pages this member may answer (lib/ask-server.ts readAskList); none: no section. */
   asks?: AskCard[];
+  /** Plan my Saturdays (hub_plan) and My month (hub_month), with what each kind of session is called; none: not drawn. */
+  plan?: HubPlan | null;
+  month?: HubMonth | null;
+  kindName?: (k: RideKind) => string;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName }: Props) {
   const t = serverLocalize(T, locale);
   const ask = serverLocalize(ASK_T, locale);
   const N = (n: number) => fmtNum(n, locale);
@@ -132,6 +143,8 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
         ) : <p className="club-att-empty">{t.noLast}</p>}
       </section>
 
+      {month && kindName && <MyMonth locale={locale} month={month} kindName={kindName} />}
+
       <section className="club-up" aria-labelledby="club-up-h">
         <h3 id="club-up-h">{t.upcoming}</h3>
         {a.upcoming.length ? (
@@ -154,6 +167,8 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
           </ul>
         ) : <p className="club-att-empty">{empty}</p>}
       </section>
+
+      {plan && <PlanSaturdays boxes={planBoxes(plan, locale)} title={memberHubWords(locale).plan} month={plan.month ? monthName(plan.month, locale) : ""} err={memberHubWords(locale).err} />}
 
       {anns.length > 0 && (
         <section className="club-ann" aria-labelledby="club-ann-h">

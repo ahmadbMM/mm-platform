@@ -14,6 +14,8 @@ import { pageState } from "@/lib/page-state";
 import { readAccount, rpcServer } from "@/lib/account";
 import { readAskList } from "@/lib/ask-server";
 import { memberArea, memberTitle } from "@/lib/members";
+import { readMemberHub } from "@/lib/member-hub-server";
+import { bloodName } from "@/content/blood-words";
 import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { kindNames, sessionName, sessionGenders, type RideKind } from "@/lib/rides";
 import { genderBlock, genderChip, genderText, sessionGender } from "@/lib/session-gender";
@@ -54,6 +56,9 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   const [{ content, previewing, hidden }, raw] = await Promise.all([pageState("club"), readAccount()]);
   const acct = raw === "unread" ? null : raw;
   const area = acct ? memberArea(await rpcServer<unknown>("member_area", { p_id: acct.id, p_token: acct.token })) : null;
+  // Plan my Saturdays and My month (the booking app's new features F10 and F13; lib/member-hub.ts): the member's own
+  // reads, begun here beside the reads below and awaited before the page is drawn
+  const hub = acct && area?.ok && area.member ? readMemberHub(acct, riyadhClock(new Date()).slice(0, 10)) : null;
   // member_area lists every upcoming members' ride, whatever its rule, and does not say it: each ride's is read
   // through list_sessions for the account; when that cannot be read, the rides wear no chip and keep their Book
   const genders = acct && area?.ok && area.member && area.upcoming.length ? await sessionGenders(area.upcoming.map((r) => r.id), acct) : null;
@@ -85,6 +90,9 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
   };
   const drawn = new Date();
   const now = riyadhClock(drawn), today = now.slice(0, 10);
+  const { plan, month } = hub ? await hub : { plan: null, month: null };
+  // My month's kinds, named as My Account's Stats names them (a Petromin night, the Blood Donation event too)
+  const kindOf: Record<RideKind, string> = { ...kindName, petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
   // a members' ride not open to book yet says when it opens, beside a clock; within a day of it, a countdown to the
   // real window that the browser keeps up to date each minute and that turns into Book on time, as on Experiences
   const window = siteBookingWindow(content);
@@ -137,7 +145,7 @@ export default async function ClubPage({ params }: { params: Promise<{ locale: s
         )}
         <section className="club-join" id="card">
           {members?.member ? (
-            <MembersArea asks={asks} title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens} opensAt={opensWhen} opensWords={opensInWords(tx)}
+            <MembersArea plan={plan} month={month} kindName={(k) => kindOf[k] || enName[k] || k} asks={asks} title={title} communityHref={bookingPage("/members", navFrom(site).booking, locale)} accountHref={bookingPage("/account/badges", navFrom(site).booking, locale)} locale={locale} L={L} area={members} tierNames={tierNames} nameOf={nameOf} bookAt={bookAt} today={today} empty={S(c.rides.empty)} opens={opens} opensAt={opensWhen} opensWords={opensInWords(tx)}
               sgOf={(r) => (r.gender === undefined ? null : genderChip(r, sgWords))} refusalOf={(r) => genderBlock(r, viewer, sgWords)} />
           ) : members ? (
             <div className="club-lookup">
