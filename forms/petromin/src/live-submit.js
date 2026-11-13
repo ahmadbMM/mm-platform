@@ -637,8 +637,8 @@
     return (Array.isArray(list) ? list : []).filter(function (d) { return d && d.bookingNo && !ended(d); });
   }
   function saveKept(list) { try { if (list.length) localStorage.setItem(KEPT, JSON.stringify(list.slice(0, 10))); else localStorage.removeItem(KEPT); } catch (e) {} }
-  // A registration is its booking number on its night: numbers start again at P-001 every night, so
-  // Monday's P-004 and Wednesday's P-004 are two bookings (one dropped the other off the phone).
+  // A registration is its booking number on its night: numbers start again at PM-001 every night, so
+  // Monday's PM-004 and Wednesday's PM-004 are two bookings (one dropped the other off the phone).
   function keyOf(d) { return d ? String(d.bookingNo) + "|" + ((d.session && d.session.id) || "") : ""; }
   function keep(d) { if (d && d.bookingNo) saveKept([d].concat(keptList().filter(function (x) { return keyOf(x) !== keyOf(d); }))); }
   function drawOthers() {
@@ -818,11 +818,12 @@
      clears a site's after seven days away. */
   var fdDialog = $("#find-dialog");
   fillCC($("#fd-cc"));
-  // A number typed without its letter takes the picked company's (P when none is picked).
+  // A number typed without its letters takes the picked company's: PM- Petromin (also when none is picked), PL-
+  // Petrolube, D- Dukan, I- a guest. One or two letters: the bookings made before 2026-11-14 are P-.
   function fdNumber() {
     var v = toAscii($("#fd-no").value).toUpperCase().replace(/\s+/g, "");
-    var m = v.match(/^([A-Z])?-?(\d{1,4})$/);
-    return m ? (m[1] || (KIND === "dukan" ? "D" : KIND === "guest" ? "I" : "P")) + "-" + ("00" + m[2]).slice(-Math.max(3, m[2].length)) : "";
+    var m = v.match(/^([A-Z]{1,2})?-?(\d{1,4})$/);
+    return m ? (m[1] || (KIND === "dukan" ? "D" : KIND === "guest" ? "I" : selectedCompany === "Petrolube" ? "PL" : "PM")) + "-" + ("00" + m[2]).slice(-Math.max(3, m[2].length)) : "";
   }
   function fdPhone() {
     var raw = toAscii($("#fd-phone").value).replace(/[^0-9+]/g, ""), code = $("#fd-cc").value;
@@ -869,7 +870,7 @@
     if (!r || r.error || !r.data) { fdMiss("Could not reach the server"); return; }
     var d = r.data;
     if (!d.ok) { fdMiss(d.error === "throttled" ? "Too many submissions from this network" : "We could not find a booking with this number and mobile number."); return; }
-    /* Numbers start again at P-001 every night, so one number and mobile can be a booking on several nights: the
+    /* Numbers start again at PM-001 every night, so one number and mobile can be a booking on several nights: the
        database names the others ('more', their night ids), each is asked for by its night and kept on the phone,
        listed under the ticket. A night that is over is not shown as a ticket to change. */
     var nights = [fromLookup(d, ph)], more = (Array.isArray(d.more) ? d.more : []).slice(0, 4);
@@ -943,7 +944,7 @@
     try {
       if (editing) {
         var edit = { p_booking_no: editing.bookingNo, p_proof_phone: editing.phone, p_badge: args.p_badge, p_name: args.p_name, p_height: args.p_height, p_type: args.p_type, p_session_id: args.p_session_id, p_company: args.p_company, p_phone: args.p_phone, p_riders: data.riders, p_waiver: args.p_waiver, p_lang: args.p_lang };
-        // Numbers start again at P-001 every night, so the number and phone alone can be another night's booking:
+        // Numbers start again at PM-001 every night, so the number and phone alone can be another night's booking:
         // the night of the confirmation being edited says which (p_session_id is the night it moves to).
         if (editing.session && editing.session.id) edit.p_from_session = editing.session.id;
         r = await call("rider_edit", edit, ["p_lang", "p_from_session"]);

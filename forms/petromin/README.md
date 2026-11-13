@@ -12,7 +12,7 @@ depends on the pick (`KIND` in `design/app.js`; each step's boxes are a pane, `d
 
 | Pick | Steps after it | Sent to | Number |
 | --- | --- | --- | --- |
-| Petromin, Petrolube (`emp`) | the night, the rider (badge, name, mobile), height and bike with up to four companions, Check and agree | `rider_register` / `rider_edit` | P-001 a night |
+| Petromin, Petrolube (`emp`) | the night, the rider (badge, name, mobile), height and bike with up to four companions, Check and agree | `rider_register` / `rider_edit` | PM-001 (Petromin) / PL-001 (Petrolube) a night |
 | Dukan (`dukan`) | the night, the rider (name and mobile, no badge), height and bike (both required, Hybrid or Mountain, no companions), Check and agree | `rider_register` / `rider_edit` with `p_badge: ''`, `p_company: 'Dukan'`, `p_riders: []` | D-001 a night |
 | Guest/Other (`guest`) | a MicroMobility account (signed into or made here) and the company they are from, the night, the bike, Check and agree | `petromin_guest_book` | I-001 a night |
 

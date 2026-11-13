@@ -29,7 +29,7 @@ test.describe('@webkit Petromin form, 2026-11-11', () => {
     await page.route('**/rest/v1/rpc/rider_lookup', (r) => {
       const b = r.request().postDataJSON() as Record<string, unknown>; asks.push(b);
       if (b.p_phone !== '+966512345678') return r.fulfill(json({ ok: false, error: 'notfound' }));
-      return r.fulfill(json({ ok: true, booking_no: 'P-004', company: 'Petromin', badge: 'A-12', name: 'Amal Booked', phone: '+966512345678', height: 175, type: 'Hybrid', checked_in: false, session: S1, riders: [{ name: 'Sara Ali', height: 160, type: 'Mountain' }] }));
+      return r.fulfill(json({ ok: true, booking_no: 'PM-004', company: 'Petromin', badge: 'A-12', name: 'Amal Booked', phone: '+966512345678', height: 175, type: 'Hybrid', checked_in: false, session: S1, riders: [{ name: 'Sara Ali', height: 160, type: 'Mountain' }] }));
     });
     await page.goto('/petromin?lang=en');
     await page.click('#find');
@@ -38,20 +38,20 @@ test.describe('@webkit Petromin form, 2026-11-11', () => {
     await page.click('#fd-go');
     await expect(page.locator('#fd-f-no')).toHaveClass(/invalid/);
     expect(asks).toHaveLength(0);
-    // "4" is P-004; a wrong number is a plain miss, never a hint at which part was wrong.
+    // "4" is PM-004 (Petromin's numbers since 2026-11-14); a wrong number is a plain miss, never a hint at which part was wrong.
     await page.fill('#fd-no', '4'); await page.fill('#fd-phone', '0512345679');
     await page.click('#fd-go');
     await expect(page.locator('#fd-miss')).toHaveText('We could not find a booking with this number and mobile number.');
-    expect(asks[0]).toEqual({ p_booking_no: 'P-004', p_phone: '+966512345679' });
+    expect(asks[0]).toEqual({ p_booking_no: 'PM-004', p_phone: '+966512345679' });
     await page.fill('#fd-phone', '٠٥١٢٣٤٥٦٧٨'); // Arabic digits are digits
     await page.click('#fd-go');
     await expect(d).toBeHidden();
-    await expect(page.locator('#chip-booking-value')).toHaveText('P-004');
+    await expect(page.locator('#chip-booking-value')).toHaveText('PM-004');
     await expect(page.locator('#chip-riders-value')).toHaveText('2');
     await expect(page.locator('#tk-name')).toHaveText('Amal Booked');
     // and the phone keeps it from now on
     await page.reload();
-    await expect(page.locator('#chip-booking-value')).toHaveText('P-004');
+    await expect(page.locator('#chip-booking-value')).toHaveText('PM-004');
   });
 
   test('cancel my booking asks first, then the whole party goes and the phone shows a fresh form', async ({ page }) => {

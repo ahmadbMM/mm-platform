@@ -11,7 +11,8 @@ export const dynamic = "force-dynamic";
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store" } });
 
-const BOOKING_NO = /^[A-Z]-\d{3,4}$/;
+// One or two letters: PM- Petromin and PL- Petrolube (since 2026-11-14), D- Dukan, I- a guest, P- an older booking.
+const BOOKING_NO = /^[A-Z]{1,2}-\d{3,4}$/;
 const PHONE = /^\+\d{8,15}$/;
 const SESSION = /^[A-Za-z0-9_-]{1,40}$/;
 const LANG = /^[a-z]{2,3}$/;
