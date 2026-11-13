@@ -2,7 +2,10 @@
 // experiences card not to public, every member can bring family members with them and add them to their bookings";
 // rentals migration 20261114130000): ride_kind 'farm', event_kind 'community', session id '<date>-fh'. The first is Nawar
 // Farm House Night on Thursday 19 November 2026 at Little Farmhouse, Dhahban: arrival from 4:30 PM, dinner at 8:30 PM.
-// A date inside MicroMobility Experiences (the community card), never a card of its own: members only, free, and staff
+// A date inside MicroMobility Experiences (the community card), never a card of its own, and "not to public": unlike yoga
+// and the Saturday ride, which every visitor sees listed, the site shows it to a signed-in community member alone
+// (farmForMembers): no date, Featured card, Details or Events entry for anyone else, and its words are the server's
+// (content/farm-words.ts), never the public Website editor's schema nor the browser's dictionary. Free, and staff
 // approve every place as on the Saturday Social Ride (needs_approval, the list hidden until published). A member books
 // themselves and up to four family members on one booking in the booking app, each by name (its party step; the
 // database's _group_ride_cap reads Settings event_seat_max); this site hands the booking over, as it does every date. No
@@ -21,3 +24,11 @@ export const FARM_MARK_SIZE = { width: 64, height: 40 } as const;
 /** A farm night, by the session's kind. */
 export const isFarm = (s: { kind?: string | null } | null | undefined): boolean => s?.kind === "farm";
 
+
+/** The sessions (or rides) a visitor may see named, from a list (the user, 2026-11-13: "put it under micromobility
+ *  experiences card not to public"): a Farm House Night only to a signed-in community member (`member`, the booking app's
+ *  own members' check, community_member); to anyone else, signed in or not, the list holds none, so no page, card,
+ *  Featured card, Details or list of what is on offer names it. A member's own booking on one is theirs, and My Account
+ *  shows it whatever. */
+export const farmForMembers = <T extends { kind?: string | null }>(sessions: readonly T[], member: boolean): T[] =>
+  member ? [...sessions] : sessions.filter((s) => s.kind !== "farm");

@@ -32,6 +32,7 @@ import { T as TICKET } from "@/components/booking/tickets.text";
 import "../handoff.css";
 import { accountSchema } from "@/content/pages/account";
 import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
+import { FARM_NAME, farmName } from "@/content/farm-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { readAccount, readBookings, rpcServer } from "@/lib/account";
@@ -165,8 +166,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const now = riyadhClock(new Date());
   const today = now.slice(0, 10);
   const d = resolvePage(experiencesSchema, content, L).dates;
-  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
-  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
+  // (the Farm House Night's name is the server's, content/farm-words.ts: on a member's own ticket and their Stats)
+  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx), farm: farmName(tx) };
+  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME, farm: FARM_NAME };
   const ticketText = serverLocalize(TICKET, locale);
   const recordBase = serverLocalize(RECORD, locale);
   const typeName = (ty: string) => (TYPE_NAME[ty] ? tx(TYPE_NAME[ty].en, TYPE_NAME[ty].ar) : ty);
@@ -466,6 +468,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const kindName = (k: RideKind) => names[k] || enNames[k] || k;
     const more = rideMore(record, recSessions, today, { type: typeName, kind: kindName, locale: intlOf(locale) });
     const anniv = anniversaryOf(stats?.first, today);
+    // a Farm House Night on offer is named to a community member alone (2026-11-13: "not to public"); one the rider
+    // went to is theirs, and stays among the kinds done
+    if (openKinds?.has("farm") && (await rpcServer<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data !== true) openKinds.delete("farm");
     const tried = openKinds ? triedKinds(more.byKind.map(([k]) => k), openKinds) : [];
     return (
       <section className="ac-sec" aria-label={recordText.stats}>

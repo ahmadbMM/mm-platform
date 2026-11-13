@@ -1,5 +1,6 @@
 import { T as TICKET } from "@/components/booking/tickets.text";
 import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
+import { FARM_NAME, farmName } from "@/content/farm-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { BLOOD_VISITOR_VERSION, WAIVER_VERSIONS, bloodVisitorCopy, waiverCopy } from "@/content/waivers";
 import { serverL, serverLocalize } from "@/i18n/dicts";
@@ -58,8 +59,8 @@ export async function GET(req: Request) {
   const s = first && sessions.get(first.sessionId);
   if (!first || !s) return json({ signedIn: true, pending: null });
   const d = resolvePage(experiencesSchema, content, L).dates;
-  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
-  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
+  const names = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx), farm: farmName(tx) };
+  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME, farm: FARM_NAME };
   const t = serverLocalize(TICKET, locale);
   const clock = (x: string) => fmtClock(x, locale);
   // the time as the ticket writes it: "gathering - start" on a ride that gathers (the Farm House Night's arrival and dinner,

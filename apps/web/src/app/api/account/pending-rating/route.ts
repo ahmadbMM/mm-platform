@@ -1,4 +1,5 @@
 import { BLOOD_NAME, bloodName } from "@/content/blood-words";
+import { FARM_NAME, farmName } from "@/content/farm-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { serverL } from "@/i18n/dicts";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
@@ -40,8 +41,8 @@ export async function GET(req: Request) {
   const s0 = sessions.get(gate.sessionId);
   // a breakfast spot for community members only is named to a member alone (bike_slots._bfm, 2026-11-13; bfFor)
   const s = s0?.bfMembers ? bfFor(s0, (await rpcServer<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data === true) : s0;
-  const names = { ...kindNames(resolvePage(experiencesSchema, content, L).dates), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
-  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
+  const names = { ...kindNames(resolvePage(experiencesSchema, content, L).dates), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx), farm: farmName(tx) };
+  const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME, farm: FARM_NAME };
   // a run says run, the pool, the workshop, an event and Victory Lap say session, never ride (2026-10-18)
   const word = rideWord(s?.kind, gate.sessionId);
   return json({

@@ -51,8 +51,8 @@ import { rideGroupKm } from "./kind-theme";
 //            a start and an end ("16:00 - 17:30"), like the pool; at the place staff named (sessions.location, SILKDEER)
 //            with its map (meet_url).
 //   farm     Farm House Night (ride_kind 'farm', 2026-11-13; lib/farm.ts): Nawar Farm House Night at Little Farmhouse,
-//            Dhahban, a date inside MicroMobility Experiences (the community card), never a card of its own - members
-//            only, free, staff approve every place as on the Saturday ride (needs_approval, hide_queue), and a member
+//            Dhahban, a date inside MicroMobility Experiences (the community card), never a card of its own, and shown to a
+//            signed-in community member alone (farmForMembers: "not to public") - members only, free, staff approve every place as on the Saturday ride (needs_approval, hide_queue), and a member
 //            books themselves and up to four family members on one booking in the booking app; no bike, no breakfast;
 //            it gathers: "16:30 - 20:30" is the arrival, then dinner; at the place staff named (sessions.location) with
 //            its map (meet_url).
@@ -404,10 +404,11 @@ export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessi
 
 /** The names a page gives each kind of session (Experiences > Next dates). The Blood Donation event's is no field of
  *  the Website editor, whose schema anyone may read (api/site-schema): a page that may show one adds its name
- *  (content/blood-words.ts bloodName), as it adds Petromin's. */
+ *  (content/blood-words.ts bloodName), as it adds Petromin's; nor the Farm House Night's, which is for community members'
+ *  eyes alone (content/farm-words.ts farmName, 2026-11-13). */
 export function kindNames(d: Record<string, unknown>): Record<RideKind, string> {
   const S = (v: unknown) => (typeof v === "string" ? v : "");
-  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), yoga: S(d.yogaName), farm: S(d.farmName), petromin: "", blood: "" };
+  return { jcc: S(d.jccName), saturday: S(d.satName), swim: S(d.swimName), workshop: S(d.workshopName), snd96: S(d.snd96Name), event: S(d.eventName), runher: S(d.runHerName), vlap: S(d.vlName), defe5k: S(d.defeName), arena: S(d.arName), yoga: S(d.yogaName), petromin: "", blood: "", farm: "" };
 }
 
 /** What to call a session, as the booking app does: a circuit night by its fixed name, any other

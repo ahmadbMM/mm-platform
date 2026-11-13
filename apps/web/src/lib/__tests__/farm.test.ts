@@ -7,21 +7,26 @@ import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import ExperienceSteps from "@/components/experiences/ExperienceSteps";
 import TicketCard from "@/components/booking/TicketCard";
 import { T as TICKET } from "@/components/booking/tickets.text";
-import { experiencesSchema } from "@/content/pages/experiences";
+import { PAGES } from "@/content";
+import { FARM_NAME, farmName, farmWords } from "@/content/farm-words";
+import { clientDict } from "@/i18n/dicts";
+import { TRANSLATED } from "@/i18n/locales";
+import { makeL } from "@/i18n/tx";
 import { bookingAt, dateText, EVENT_CARDS, EVENT_OF, eventCards, fillTimes, infoPlace, infoPlaces, infoPrice, infoTimes, infoWho, rentsBikes } from "../event-info";
 import { FEATURE_OK, FEATURED_KINDS, kindNames, resetRides, rideKind, sessionName, toSession, upcoming } from "../rides";
 import { resetSiteContent } from "../site";
 import { codeReady, countdownMoments, fmtClock, icsFor, icsPlace, meetsAt, placeLink, ticketCue, ticketRow, ticketSession, venueOf, venueText, type TicketRow } from "../tickets";
 import { isNonBike } from "../bike-kinds";
 import { waiverKind } from "../waiver";
-import { FARM_MARK, FARM_MARK_SIZE, isFarm } from "../farm";
+import { FARM_MARK, FARM_MARK_SIZE, farmForMembers, isFarm } from "../farm";
 import { KIND_ORDER } from "../kind-theme";
 import { LM_KINDS } from "../landmarks";
 import ExperiencesPage from "../../app/[locale]/experiences/page";
 import EventsPage from "../../app/[locale]/events/page";
 
-// cookies() is a request's; here it holds the account's cookie a test sets, or none.
-const jar = vi.hoisted(() => ({ account: "" }));
+// cookies() is a request's; here it holds the account's cookie a test sets, or none, and whether the booking app's members'
+// check (community_member) says that account is a community member.
+const jar = vi.hoisted(() => ({ account: "", member: false }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ get: (n: string) => (n === "mm_acct" && jar.account ? { name: n, value: jar.account } : undefined) }) }));
 // The steps open on the event cards (useState(1)); a test draws a later step, or an open dialog, by handing the component's
 // first states in order: the step, the event, the date, the kind, the dialog. Each render takes them once.
@@ -38,7 +43,9 @@ const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
 // inside MicroMobility Experiences for members and their families, free, staff approve every place as on the Saturday
 // ride, arrival from 4:30 PM and dinner at 8:30 PM at Little Farmhouse, Dhahban. The family is added in the booking app,
 // which this site hands the date over to; the site draws its card, its Details, its Featured card, its summary, its place
-// on Events and its ticket on My Account, in the booking app's "Harvest Supper" look.
+// on Events and its ticket on My Account, in the booking app's "Harvest Supper" look. Unlike yoga and the Saturday ride it
+// is "not to public": the site shows it to a signed-in community member alone, and no other visitor's page holds a word of
+// it (the last describe).
 const MAP = "https://maps.app.goo.gl/BYteRL5JCueWZUEs6";
 const FH = {
   id: "2099-11-19-fh", session_date: "2099-11-19", day: "Thursday", status: "open", event_kind: "community", ride_kind: "farm",
@@ -50,6 +57,10 @@ const SAT = { id: "2099-11-21", session_date: "2099-11-21", day: "Saturday", sta
 const JCC = { id: "2099-11-22", session_date: "2099-11-22", day: "Sunday", status: "open", event_kind: null, ride_kind: null, title: null, capacity: 40, bike_slots: '{"_time":"21:00 - 23:00"}', location: "JCC", meet_url: null };
 /** The words that would mean a bike or riding, read in what a visitor is shown of the night. */
 const BIKE_WORDS = /\b(bike|bikes|ride|rides|rider|riders|riding|cycling|helmets?)\b/i;
+/** A signed-in account's cookie (lib/account-core.ts decodeSession's shape). */
+const ACCOUNT = "c1~a1b2c3d4e5f6a7b8c9d0";
+/** A signed-in community member, for the tests that look at the night as members see it. */
+const asMember = () => { jar.account = ACCOUNT; jar.member = true; };
 
 const json = (v: unknown, status = 200) => new Response(JSON.stringify(v), { status, headers: { "content-type": "application/json" } });
 /** Every element of `type` in a tree a page returned, its own children unrendered. */
@@ -63,7 +74,7 @@ function findAll(n: unknown, type: unknown, out: ReactElement[] = []): ReactElem
 /** A page's database: the sessions through list_sessions, the members' check, nothing for anything else. */
 const db = (sessions: unknown[]) => vi.fn(async (url: string, init?: RequestInit) => {
   if (url.includes("/rpc/list_sessions")) return json(sessions);
-  if (url.includes("/rpc/community_member")) return json(!!jar.account);
+  if (url.includes("/rpc/community_member")) return json(!!jar.account && jar.member);
   if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/0" } });
   return json([]);
 });
@@ -92,7 +103,7 @@ const css = (p: string) => readFileSync(new URL(p, import.meta.url), "utf8");
 
 beforeEach(() => {
   resetRides(); resetSiteContent();
-  jar.account = "";
+  jar.account = ""; jar.member = false;
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
   vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
 });
@@ -126,31 +137,38 @@ describe("the Farm House Night as the site reads it (ride_kind 'farm')", () => {
     expect(upcoming([s], "2099-11-19T20:30")).toEqual([]);
   });
   it("is named by its own title, its Arabic name on the Arabic page, and Farm House Night without one", () => {
-    const en = kindNames({ farmName: "Farm House Night" }), ar = kindNames({ farmName: "ليلة المزرعة" });
+    // its name is no field of the Website editor (content/farm-words.ts): a page adds it, as the Blood Donation event's
+    expect(kindNames({ farmName: "Farm House Night" }).farm).toBe("");
+    const en = { ...kindNames({}), farm: FARM_NAME }, ar = { ...kindNames({}), farm: farmName(makeL("ar", null)) };
     expect(sessionName({ kind: "farm", title: "Nawar Farm House Night", titleAr: "ليلة مزرعة نوار" }, en, en, false)).toBe("Nawar Farm House Night");
     expect(sessionName({ kind: "farm", title: "Nawar Farm House Night", titleAr: "ليلة مزرعة نوار" }, ar, en, true, true)).toBe("ليلة مزرعة نوار");
     expect(sessionName({ kind: "farm", title: null }, en, en, false)).toBe("Farm House Night");
     expect(sessionName({ kind: "farm", title: "Farm House Night" }, ar, en, true)).toBe("ليلة المزرعة");
   });
-  it("has its name and Details text in Experiences' fields, the booking app's own words, filled with arrival and dinner", () => {
-    const f = (id: string) => experiencesSchema.sections.find((x) => x.id === "dates")?.fields.find((x) => x.id === id) as { def: { en: string; ar: string }; max: number } | undefined;
-    expect(f("farmName")?.def).toEqual({ en: "Farm House Night", ar: "ليلة المزرعة" });
-    const about = f("aboutFarm")!;
-    expect(about.def.en).toBe("An evening at the farm for community members and their families. Arrive from {gather}, enjoy the farm with the community, and stay for dinner at {start}. Add each family member to your booking by name. Our team confirms every request, as for the Saturday ride.");
-    expect(about.def.ar).toBe("أمسية في المزرعة لأعضاء المجتمع وعائلاتهم. الوصول من {gather}، استمتع بالمزرعة مع المجتمع، وابقَ لتناول العشاء في {start}. أضف كل فرد من عائلتك إلى حجزك باسمه. يؤكّد فريقنا كل طلب، كما في جولة السبت.");
-    expect(about.def.en.length).toBeLessThanOrEqual(about.max);
+  it("has its name and Details text in the server's words, the booking app's own, filled with arrival and dinner", () => {
+    const en = farmWords(makeL("en", null)), ar = farmWords(makeL("ar", null));
+    expect([en.name, ar.name]).toEqual(["Farm House Night", "ليلة المزرعة"]);
+    expect([en.arrive, en.dinner, ar.arrive, ar.dinner]).toEqual(["Arrival", "Dinner", "الوصول", "العشاء"]);
+    expect([en.line, ar.line]).toEqual(["Members and their families", "للأعضاء وعائلاتهم"]);
+    expect([en.who, ar.who]).toEqual(["Community members and their families", "أعضاء المجتمع وعائلاتهم"]);
+    expect(en.about).toBe("An evening at the farm for community members and their families. Arrive from {gather}, enjoy the farm with the community, and stay for dinner at {start}. Add each family member to your booking by name. Our team confirms every request, as for the Saturday ride.");
+    expect(ar.about).toBe("أمسية في المزرعة لأعضاء المجتمع وعائلاتهم. الوصول من {gather}، استمتع بالمزرعة مع المجتمع، وابقَ لتناول العشاء في {start}. أضف كل فرد من عائلتك إلى حجزك باسمه. يؤكّد فريقنا كل طلب، كما في جولة السبت.");
     const s = toSession(FH)!, times = infoTimes(s, (x) => fmtClock(x, "en"));
     expect(times).toEqual({ gather: "4:30 PM", start: "8:30 PM", end: "", collect: "" });
-    expect(fillTimes(about.def.en, times)).toContain("Arrive from 4:30 PM, enjoy the farm with the community, and stay for dinner at 8:30 PM.");
+    expect(fillTimes(en.about, times)).toContain("Arrive from 4:30 PM, enjoy the farm with the community, and stay for dinner at 8:30 PM.");
   });
 });
 
 describe("the Farm House Night's facts (lib/event-info.ts)", () => {
   const s = toSession(FH)!;
-  it("is a date inside MicroMobility Experiences, never a card of its own, handed over on the community card", () => {
-    const cards = eventCards([s, toSession(SAT)!, toSession(JCC)!], { member: false, petromin: false });
+  it("is a date inside MicroMobility Experiences, never a card of its own, handed over on the community card, to a member alone", () => {
+    const all = [s, toSession(SAT)!, toSession(JCC)!];
+    const cards = eventCards(all, { member: true, petromin: false });
     expect(cards.map((c) => c.card.key)).toEqual(["community", "jcc"]);
     expect(cards[0].sessions.map((x) => x.id)).toEqual(["2099-11-19-fh", "2099-11-21"]);
+    // anyone else, signed in or not, finds the community card without it
+    expect(eventCards(all, { member: false, petromin: false })[0].sessions.map((x) => x.id)).toEqual(["2099-11-21"]);
+    expect(eventCards(all, { member: false, petromin: true })[0].sessions.map((x) => x.id)).toEqual(["2099-11-21"]);
     expect(EVENT_CARDS.map((c) => c.key)).not.toContain("farm");
     expect(EVENT_OF.farm).toBe("community");
     expect(bookingAt("https://book.example/", EVENT_OF.farm, FH.id)).toBe("https://book.example/?ev=community&session=2099-11-19-fh");
@@ -173,7 +191,8 @@ describe("the Farm House Night's facts (lib/event-info.ts)", () => {
   });
 });
 
-describe("the Farm House Night on Experiences", () => {
+describe("the Farm House Night on Experiences, to a signed-in community member", () => {
+  beforeEach(asMember);
   it("gives its card its name, its arrival and dinner, where, and who it is for, members only and free", async () => {
     const p = await experiences([FH, SAT, JCC]);
     expect(p.events.map((e) => e.key)).toEqual(["community", "jcc"]);
@@ -232,13 +251,10 @@ describe("the Farm House Night on Experiences", () => {
     // the kind switch names it by its kind's name, with its barn
     expect(html).toMatch(/<button type="button" class="xs-kind ev-farm" aria-pressed="false"><svg [^>]*><path d="M3\.5 20\.5V10L12 4l8\.5 6v10\.5M2\.5 20\.5h19M9 20\.5v-6h6v6M9 14\.5l6 6M15 14\.5l-6 6"><\/path><\/svg><span>Farm House Night<\/span><\/button>/);
   });
-  it("says where it is on the waitlist on its card, on a cream pill, and Details to a member alone", async () => {
+  it("says where it is on the waitlist on its card, on a cream pill, with its Details beside it", async () => {
     const full = await experiences([{ ...FH, status: "full" }]);
     const card = /<button type="button" class="sc-card sc-farm ev-farm full"[^>]*>.*?<\/button>/.exec(draw(full, 2, comm(full)))?.[0] ?? "";
     expect(card).toContain('<span class="sc-spots full">Waitlist</span>');
-    // members only: no Details for a visitor who is not signed in, Details for a community member
-    expect(draw(full, 2, comm(full))).not.toContain('class="sc-about"');
-    jar.account = "c1~a1b2c3d4e5f6a7b8c9d0";
     const mine = await experiences([FH]);
     expect(draw(mine, 2, comm(mine))).toMatch(/<div class="sc-wrap ev-farm has-about"><button type="button" class="sc-card sc-farm ev-farm".*?<\/button><button type="button" class="sc-about" aria-haspopup="dialog" aria-label="Details · Nawar Farm House Night · Thursday · 19 Nov 2099">/);
   });
@@ -277,7 +293,8 @@ describe("the Farm House Night on Experiences", () => {
   });
 });
 
-describe("the Farm House Night on Events", () => {
+describe("the Farm House Night on Events, to a signed-in community member", () => {
+  beforeEach(asMember);
   it("is listed in its rust with its arrival and dinner and where, a members' date booked on the community card", async () => {
     const html = await eventsPage([FH, JCC]);
     expect(html).toContain("Nawar Farm House Night");
@@ -394,5 +411,63 @@ describe("the Farm House Night's look", () => {
     expect(svg).toMatch(/^<svg[^>]*viewBox="0 0 64 40"/);
     expect(svg.match(/<rect /g)).toHaveLength(9);
     for (const c of ["#EDB091", "#C9502A", "#7E2034", "#8A3F27", "#FBF3EA", "#F6D9C5"]) expect(svg, c).toContain(c);
+  });
+});
+
+// "put it under micromobility experiences card not to public" (the user, 2026-11-13): unlike yoga and the Saturday ride,
+// which every visitor sees listed, the Farm House Night is drawn for a signed-in community member alone. A visitor who is
+// not signed in, or one signed in who is no member, gets pages with no word of it: no date, no Featured card, no mark on
+// the Experiences card, no kind in its switch, no Details, no Events entry, nothing for the search engines; and its words
+// are in no public place: not the Website editor's schema (api/site-schema), not the browser's dictionary.
+describe("the Farm House Night is not to public", () => {
+  const SECRET = /Nawar|Farm House|Farmhaus|ليلة مزرعة|ليلة المزرعة|2099-11-19-fh|Members and their families|Little Farmhouse/;
+  const visitors = [["not signed in", () => { jar.account = ""; jar.member = false; }], ["signed in, no member", () => { jar.account = ACCOUNT; jar.member = false; }]] as const;
+  for (const [who, as] of visitors) {
+    for (const locale of ["en", "ar", "de", "fr"]) {
+      it(`leaves no word of it on Experiences for a visitor ${who} (${locale})`, async () => {
+        as();
+        const p = await experiences([FH, SAT, JCC], locale);
+        // what the server hands the browser (the steps' props, sent with the page) and what it draws
+        expect(JSON.stringify(p)).not.toMatch(SECRET);
+        expect(comm(p).sessions.map((x) => x.id)).toEqual(["2099-11-21"]);
+        expect(p.featured).toEqual([]);
+        expect(comm(p).marks?.kinds).toEqual(["saturday"]);
+        expect(Object.keys(p.text.kinds.names)).not.toContain("farm");
+        for (const html of [draw(p, 1), draw(p, 2, comm(p))]) {
+          expect(html).not.toMatch(SECRET);
+          expect(html).not.toMatch(/sc-farm|xs-feat-fh|ev-farm|farm-mark/);
+        }
+      });
+      it(`leaves it off the Events page for a visitor ${who} (${locale})`, async () => {
+        as();
+        const html = await eventsPage([FH, JCC], locale);
+        expect(html).not.toMatch(SECRET);
+        expect(html).not.toContain("--kind:#8a3f27");
+      });
+    }
+  }
+  it("shows a member what nobody else sees", async () => {
+    asMember();
+    const p = await experiences([FH, SAT, JCC]);
+    expect(JSON.stringify(p)).toMatch(/Nawar Farm House Night/);
+    expect(p.featured).toEqual([{ ev: "community", id: FH.id }]);
+    expect(await eventsPage([FH, JCC])).toContain("Nawar Farm House Night");
+  });
+  it("is left out of every list a visitor may read (farmForMembers), the Club's rides too", () => {
+    const rows = [{ kind: "saturday" }, { kind: "farm" }, { kind: null }, { kind: "yoga" }];
+    expect(farmForMembers(rows, false)).toEqual([{ kind: "saturday" }, { kind: null }, { kind: "yoga" }]);
+    expect(farmForMembers(rows, true)).toEqual(rows);
+    // the Club's rides (ClubRides, every visitor's list from club_rides) hold none
+    const club = readFileSync(new URL("../../components/club/ClubRides.tsx", import.meta.url), "utf8");
+    expect(club).toMatch(/farmForMembers\(r\.filter\(\(x\) => x\.kind !== "blood"\), false\)/);
+    expect(club).not.toMatch(/Farm House/);
+  });
+  it("keeps its words out of the public Website editor's schema and every language's browser dictionary", () => {
+    expect(JSON.stringify(PAGES)).not.toMatch(SECRET);
+    expect(JSON.stringify(PAGES)).not.toMatch(/farmName|aboutFarm/);
+    for (const code of TRANSLATED) {
+      const d = clientDict(code) ?? {};
+      expect(Object.keys(d).filter((k) => /Farm House|Members and their families|Community members and their families|An evening at the farm/.test(k)), code).toEqual([]);
+    }
   });
 });

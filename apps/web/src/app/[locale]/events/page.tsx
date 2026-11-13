@@ -20,10 +20,12 @@ import { fmtClock } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
-import { genderViewer } from "@/lib/account";
+import { communityMember, genderViewer } from "@/lib/account";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { AH_VENUE } from "@/lib/arena";
 import { yogaLength } from "@/lib/yoga";
+import { farmForMembers } from "@/lib/farm";
+import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { ArrowIcon, CalendarIcon } from "@/components/site/Icons";
 import OpensIn from "@/components/site/OpensIn";
 
@@ -37,7 +39,8 @@ import OpensIn from "@/components/site/OpensIn";
 // Blood Donation event (2026-11-03) is listed in its crimson while it has a date, with its line and venue and never a
 // price or the free word, and booked on its own event (ev=blood). Yoga (2026-11-12) is listed in its clay with how long it
 // runs and where, and booked on the community card (ev=community), as Experiences does. The Farm House Night (2026-11-13)
-// is listed in its rust with its arrival and dinner and where, and booked on the community card too. A session staff
+// is listed in its rust with its arrival and dinner and where, and booked on the community card too, to a signed-in
+// community member alone ("not to public": nobody else's page names it, nor its search engines' list). A session staff
 // closed as Full, no waitlist (the user, 2026-11-13; lib/rides.ts fbkOf, the booking app's _sessFb) stays listed, never
 // faded, so nobody takes it for called off: Fully booked in the full red among its tags, where to go next as a quiet line
 // under them (See you next Saturday on the Saturday ride, See you at the next session on any other), and no Book.
@@ -70,15 +73,19 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const bookAt = (s: RideSession) => {
     try { const u = new URL(book); u.searchParams.set("ev", EVENT_OF[s.kind]); u.searchParams.set("session", s.id); return u.toString(); } catch { return book; }
   };
-  const kindName = { ...kindNames(d), blood: bloodName(tx) }, enName = { ...kindNames(dEn), blood: BLOOD_NAME };
+  const fw = farmWords(tx); // the Farm House Night's words, the server's (content/farm-words.ts)
+  const kindName = { ...kindNames(d), blood: bloodName(tx), farm: fw.name }, enName = { ...kindNames(dEn), blood: BLOOD_NAME, farm: FARM_NAME };
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page names it
   const name = (s: RideSession) => sessionName(s, kindName, enName, L !== "en", L === "ar"); // by its Arabic name on the Arabic page (title_ar), as on Experiences
   const drawn = new Date();
   const now = riyadhClock(drawn);
   const clock = (hhmm: string) => fmtClock(hhmm, locale);
   // never the Petromin nights, which only Experiences shows, to whom may book them (2026-10-12); men-only and
-  // women-only sessions to everyone (the owner, 2026-10-28)
-  const sessions = upcoming(withoutPetromin(rides?.sessions ?? []), now).slice(0, Math.max(1, N(c.hero.count)));
+  // women-only sessions to everyone (the owner, 2026-10-28); a Farm House Night to a signed-in community member alone (the
+  // user, 2026-11-13: "not to public"), the members' check asked only while one is ahead
+  const ahead = upcoming(withoutPetromin(rides?.sessions ?? []), now);
+  const member = ahead.some((s) => s.kind === "farm") ? await communityMember() : false;
+  const sessions = farmForMembers(ahead, member).slice(0, Math.max(1, N(c.hero.count)));
   const sgWords = genderText(tx);
   // a session for the other gender says so in place of Book to a signed-in account (or one with none on file); a
   // visitor who is not signed in keeps Book, and the booking app signs them in and judges the booking
@@ -130,7 +137,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {/* in the rider's clock, as Experiences and the tickets say them ("6 PM", "6:00 م"), each in its own direction */}
                         {/* the Farm House Night's are its arrival and dinner (the booking app's fhArrive, fhDinner) */}
                         {s.times && (s.gather && !oneTime(s.times)
-                          ? <span>{s.kind === "farm" ? tx("Arrival", "الوصول") : S(d.gather)} <bdi>{clock(s.times[0])}</bdi> · {s.kind === "farm" ? tx("Dinner", "العشاء") : S(d.start)} <bdi>{clock(s.times[1])}</bdi></span>
+                          ? <span>{s.kind === "farm" ? fw.arrive : S(d.gather)} <bdi>{clock(s.times[0])}</bdi> · {s.kind === "farm" ? fw.dinner : S(d.start)} <bdi>{clock(s.times[1])}</bdi></span>
                           : <span><bdi>{timesText(s.times, false, clock, { gather: "", start: "" })}</bdi></span>)}
                         {routeNameOf(routes, s.routeSlug) && <span>{tx("Route", "المسار")}: {routeNameOf(routes, s.routeSlug)}</span>}
                         {/* an event's seat price and seats; a copy kept at the edge from before these fields existed has none */}

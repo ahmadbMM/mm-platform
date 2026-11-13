@@ -192,7 +192,8 @@ export const EVENT_CARDS = [
 ] as const;
 export type EventCard = (typeof EVENT_CARDS)[number];
 
-/** The cards the visitor sees, in order, each with its dates (soonest first, as given). Petromin Days
+/** The cards the visitor sees, in order, each with its dates (soonest first, as given). A Farm House Night is a community
+ *  date a signed-in community member alone sees (lib/farm.ts farmForMembers, 2026-11-13). Petromin Days
  *  lists the Petromin nights alone, to a Petromin tag holder alone (the owner, 2026-10-12: "a new
  *  event card that has the name Petromin Days that only is visible for petromin tag holders"). The
  *  website's community card lists no Petromin nights, as before (community members book them in the
@@ -202,7 +203,7 @@ export type EventCard = (typeof EVENT_CARDS)[number];
 export function eventCards<T extends Pick<RideSession, "kind" | "fbk">>(all: T[], v: { member: boolean; petromin: boolean }): { card: EventCard; sessions: T[] }[] {
   const of = (key: string) => (key === "petromin"
     ? all.filter((s) => v.petromin && s.kind === "petromin")
-    : all.filter((s) => EVENT_OF[s.kind] === key && s.kind !== "petromin"));
+    : all.filter((s) => EVENT_OF[s.kind] === key && s.kind !== "petromin" && (s.kind !== "farm" || v.member)));
   return EVENT_CARDS.map((card) => ({ card, sessions: of(card.key) })).filter((c) => c.card.always || c.sessions.some((s) => !s.fbk));
 }
 

@@ -12,7 +12,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum, fmtSar } from "@/lib/fill";
 import { BOOKING_URL, bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { accountBookings, genderViewer, rpcServer } from "@/lib/account";
+import { accountBookings, communityMember, genderViewer, rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { typeOffered } from "@/lib/bike-kinds";
 import { dateText, eventCards, featuredDates, infoArena, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, nextOpen, rentsBikes, type DateTexts } from "@/lib/event-info";
@@ -33,6 +33,8 @@ import { vlConfig, vlDivNames, vlPayLine } from "@/lib/vlap";
 import { AH_INFO_URL, ahConfig, ahPayLine } from "@/lib/arena";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { yogaKnow, yogaLength } from "@/lib/yoga";
+import { farmForMembers } from "@/lib/farm";
+import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { ArrowIcon } from "@/components/site/Icons";
 import { kindThemeWords } from "@/components/experiences/KindTheme.words";
 import { kindMarks, sunriseHhmm } from "@/lib/kind-theme";
@@ -55,7 +57,9 @@ import { kindMarks, sunriseHhmm } from "@/lib/kind-theme";
 // community card too, on its own "Harvest Supper" card: the mark, its name, its arrival and dinner, where, and who it is
 // for (members and their families); its Details say who comes, when to arrive and when dinner is, with the farm's map; it
 // is booked in the booking app, which takes the member's family by name, and its places are staff's to approve, as on the
-// Saturday ride, so its card never says how many are left. Featured (2026-11-13; lib/rides.ts featuredOf): a date inside
+// Saturday ride, so its card never says how many are left. It is "not to public" (the user): unlike yoga and the Saturday
+// ride it is drawn for a signed-in community member alone, and for anyone else the page holds no word of it (its words
+// are the server's, content/farm-words.ts, handed on only with its date). Featured (2026-11-13; lib/rides.ts featuredOf): a date inside
 // MicroMobility Experiences that staff feature, or a special event as it is made, leads its event's dates under
 // "Featured" and has a card above the event cards (lib/event-info.ts featuredDates), which opens it as its event card
 // and then its date would.
@@ -86,16 +90,8 @@ const TYPE_NAME: Record<string, { en: string; ar: string }> = {
   Kids: phrase("Kids", "أطفال"), Gravel: phrase("Gravel", "حصى"), Any: phrase("No preference", "بلا تفضيل"),
 };
 
-// Is the visitor a community member? The members-only cards and dates show their About and Details
-// links to members alone (the owner, 2026-10-05). Asked only when the request carries the account's
-// cookie, of the booking app's own members gate (community_member, which checks the token); any
-// failure reads as no. A signed-in visitor's page is never kept at the edge (lib/page-cache.ts).
-async function communityMember(): Promise<boolean> {
-  const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
-  if (!s) return false;
-  const r = await rpcServer<boolean>("community_member", { p_id: s.id, p_token: s.token });
-  return r.data === true;
-}
+// Is the visitor a community member (lib/account.ts communityMember)? The members-only cards and dates show their About
+// and Details links to members alone (the owner, 2026-10-05), and a Farm House Night shows to them alone (2026-11-13).
 
 // Does the visitor hold the Petromin tag? Petromin Days, the Petromin nights' own card, shows to
 // holders alone (the owner, 2026-10-12: "a new event card that has the name Petromin Days that only
@@ -183,8 +179,11 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const caps = { riders: fmtNum(biz.jccAccountCap, locale), seats: fmtNum(biz.eventSeatMax, locale) };
 
   // a Petromin night without a title of its own is "Petromin", as the other pages name one
-  const kindName = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
-  const enName = L !== "en" ? { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), petromin: "Petromin", blood: BLOOD_NAME } : kindName;
+  // (the Farm House Night's words are the server's, content/farm-words.ts: they reach the page only with a farm date it
+  // shows a member)
+  const fw = farmWords(tx);
+  const kindName = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx), farm: fw.name };
+  const enName = L !== "en" ? { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), petromin: "Petromin", blood: BLOOD_NAME, farm: FARM_NAME } : kindName;
   const routes = routeNames(content, L); // a ride that follows a route on the Routes page is named after it
   const routeKm = routeItems(content, L);
   // What a ride costs before anything is picked (_sessFromPrice): the cheapest bike it offers.
@@ -201,8 +200,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   };
   const drawn = new Date();
   const now = riyadhClock(drawn);
-  // every date ahead, men-only and women-only ones too, to every visitor (the owner, 2026-10-28)
-  const all = upcoming(rides?.sessions ?? [], now);
+  // every date ahead, men-only and women-only ones too, to every visitor (the owner, 2026-10-28); a Farm House Night to a
+  // signed-in community member alone (the user, 2026-11-13: "not to public")
+  const all = farmForMembers(upcoming(rides?.sessions ?? [], now), member);
   const sgWords = genderText(tx);
   // The booking window (site_content booking.window): a date not open yet is shown greyed, never hidden.
   const window = siteBookingWindow(content);
@@ -214,7 +214,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
   const dateTexts: DateTexts = {
-    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga), aboutFarm: S(d.aboutFarm),
+    aboutJcc: S(d.aboutJcc), aboutSat: S(d.aboutSat), aboutPetro: S(d.aboutPetro), aboutSwim: S(d.aboutSwim), aboutWs: S(d.aboutWs), aboutRun: S(d.aboutRun), aboutVl: S(d.aboutVl), aboutDefe: S(d.aboutDefe), aboutAr: S(d.aboutAr), aboutYoga: S(d.aboutYoga), aboutFarm: fw.about,
     sndAbout: S(e.sndAbout), evAbout: S(e.evAbout),
   };
   const whoWords = {
@@ -223,7 +223,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     vlap: tx("Community members and Victory Lap athletes, 16 and over", "أعضاء المجتمع ورياضيو فيكتوري لاب، من 16 عامًا فأكثر"), // the booking app's infoWhoVlap (2026-10-17)
     arena: tx("Community members, in teams of two", "أعضاء المجتمع، في فرق من شخصين"), // the booking app's infoWhoArena (2026-10-28)
     arenaAll: tx("Everyone, in teams of two. You must have a partner.", "الجميع، في فرق من شخصين. يجب أن يكون لديك شريك."), // infoWhoArenaAll (2026-11-02)
-    farm: tx("Community members and their families", "أعضاء المجتمع وعائلاتهم"), // the Farm House Night (the booking app's fhWho, 2026-11-13)
+    farm: fw.who, // the Farm House Night (the booking app's fhWho, 2026-11-13)
   };
   // Victory Lap's races and divisions, in the booking app's words (vlRace_*, vlDiv_*)
   const vlWords = {
@@ -271,9 +271,6 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     levelK: tx("Level", "المستوى"), levelV: tx("All levels, no yoga experience needed", "جميع المستويات، ولا تلزم خبرة سابقة في اليوغا"),
     bringK: tx("Bring", "أحضر معك"), bringV: tx("Your yoga mat, and wear comfortable clothing", "سجادة اليوغا الخاصة بك، وارتدِ ملابس مريحة"),
   };
-  // The Farm House Night (2026-11-13), in the booking app's words (fhArrive, fhDinner, fhFamLine): its two times, arrival
-  // and dinner, where a ride that gathers says Gathering and Start, and its card's foot line
-  const fhWords = { arrive: tx("Arrival", "الوصول"), dinner: tx("Dinner", "العشاء"), line: tx("Members and their families", "للأعضاء وعائلاتهم") };
   // The Saturday ride's sunrise over the Corniche that day, in the page's clock (lib/kind-theme.ts), and its two routes'
   // words; null on any other kind.
   const sunrise = (s: RideSession) => (s.kind === "saturday" ? ((v) => (v ? clock(v) : null))(sunriseHhmm(s.date)) : null);
@@ -315,7 +312,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       ...(s.kind === "yoga" ? { yoga: { meta: [s.times ? (oneTime(s.times) ? clock(s.times[0]) : `${clock(s.times[0])} – ${clock(s.times[1])}`) : "", yogaLength(s.times, ygWords.min), place.name].filter(Boolean), with: ygWords.with } } : {}),
       // the Farm House Night's own card (the booking app's _fhSessCard, 2026-11-13): arrival and dinner, where, and who it is
       // for along the foot; and the words its two times are said with wherever its time shows
-      ...(s.kind === "farm" ? { farm: { meta: [timesText(s.times, true, clock, { gather: fhWords.arrive, start: fhWords.dinner }), place.name].filter(Boolean), line: fhWords.line, arrive: fhWords.arrive, dinner: fhWords.dinner } } : {}),
+      ...(s.kind === "farm" ? { farm: { meta: [timesText(s.times, true, clock, { gather: fw.arrive, start: fw.dinner }), place.name].filter(Boolean), line: fw.line, arrive: fw.arrive, dinner: fw.dinner } } : {}),
       // a featured date (the booking app's _featCardHtml, 2026-11-13): its day as its Featured card's tile, and how long
       // yoga runs, which that card says after its time
       ...(s.featured ? { feat: { ...fmtDayTile(s.date, locale), len: s.kind === "yoga" ? yogaLength(s.times, ygWords.min) || null : null } } : {}),
