@@ -62,8 +62,9 @@ export function TicketShare({ text, url, label, copied }: { text: string; url: s
   );
 }
 
-// An iPhone or iPad (an iPad says Macintosh, with a touch screen): the one place Apple Maps is the phone's own.
-const appleTouch = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+// An iPhone or iPad (an iPad says Macintosh, with a touch screen): the one place Apple Maps is the phone's own, and where
+// the route's GPX file goes to the share sheet (TicketRoutePage).
+export const appleTouch = () => /iPhone|iPad|iPod/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
 
 /** Directions: a link to the place (`href`). At the circuit (`apple`, the booth's Apple Maps link) an iPhone or iPad is
  *  offered Apple Maps or Google Maps in a centred dialog; everything else follows the Google Maps link, which a phone

@@ -93,4 +93,20 @@ describe("the Experiences booking flow after main's yoga and Arabic names", () =
     // no Arabic name given: the typed one, as before
     expect((await flowOf([{ ...SAT, title_ar: null }], "ar")).events.find((e) => e.key === "community")!.sessions[0].name).toBe("Sunrise Ride");
   });
+
+  // The hand merge of main's dd04a7f8 (2026-11-13). lib/rides.ts now reads the sessions staff closed as Full, no waitlist
+  // (bike_slots._fbk; fbkOf) for main's ExperienceSteps page, which says them Fully booked. This flow has no card that
+  // books nothing for one (the database refuses a closed session), so it lists none, as it listed no closed session before:
+  // never offered as a date to book, and never bringing back a card that shows only while it has dates.
+  it("lists no date closed as Full, no waitlist", async () => {
+    const FBK = { status: "closed", cancelled_at: null, draft: false, opens_at: null };
+    const satFb = { ...SAT, ...FBK, id: "2099-11-23", session_date: "2099-11-23", bike_slots: '{"_time":"05:45 - 06:15","_fbk":1}' };
+    const evFb = { ...EV, ...FBK, bike_slots: '{"_time":"19:00 - 21:00","_fbk":1}' };
+    const { events, routes } = await flowOf([JCC, SAT, satFb, evFb], "en");
+    expect(events.map((e) => e.key)).toEqual(["jcc", "community"]); // the ticketed events' card stays away: its one date is closed
+    expect(events.flatMap((e) => e.sessions).map((s) => s.id)).toEqual(["2099-11-08", "2099-11-16"]);
+    expect(Object.keys(routes ?? {})).toEqual(["2099-11-08", "2099-11-16"]);
+    // the same date open again is listed as before
+    expect((await flowOf([{ ...satFb, status: "open" }], "en")).events.find((e) => e.key === "community")!.sessions.map((s) => s.id)).toEqual(["2099-11-23"]);
+  });
 });

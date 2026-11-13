@@ -24,7 +24,7 @@ import { genderViewer } from "@/lib/account";
 import { genderBlock, genderChip, genderText } from "@/lib/session-gender";
 import { AH_VENUE } from "@/lib/arena";
 import { yogaLength } from "@/lib/yoga";
-import { ArrowIcon } from "@/components/site/Icons";
+import { ArrowIcon, CalendarIcon } from "@/components/site/Icons";
 import OpensIn from "@/components/site/OpensIn";
 
 // micromobility.sa/events - every upcoming session in the booking system, month by month, each
@@ -36,7 +36,10 @@ import OpensIn from "@/components/site/OpensIn";
 // own red, named as Experiences names it, with its line, and booked in the booking app on its own event (ev=arena). The
 // Blood Donation event (2026-11-03) is listed in its crimson while it has a date, with its line and venue and never a
 // price or the free word, and booked on its own event (ev=blood). Yoga (2026-11-12) is listed in its clay with how long it
-// runs and where, and booked on the community card (ev=community), as Experiences does.
+// runs and where, and booked on the community card (ev=community), as Experiences does. A session staff closed as Full, no
+// waitlist (the user, 2026-11-13; lib/rides.ts fbkOf, the booking app's _sessFb) stays listed, never faded, so nobody takes
+// it for called off: Fully booked in the full red among its tags, where to go next as a quiet line under them (See you next
+// Saturday on the Saturday ride, See you at the next session on any other), and no Book.
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -86,6 +89,9 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const opens = (s: RideSession) => (window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null);
   const opensWords = opensInWords(tx);
   const bookLink = (s: RideSession) => <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>;
+  // Full, no waitlist: the booking app's sessFbk, sessFbkSat and sessFbkNext
+  const fbkWord = tx("Fully booked", "محجوز بالكامل");
+  const fbkLine = (s: RideSession) => (s.kind === "saturday" ? tx("See you next Saturday", "نراك السبت القادم") : tx("See you at the next session", "نراك في الجلسة القادمة"));
   const fmt = (iso: string, o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(intlOf(locale), { ...o, timeZone: "UTC" }).format(new Date(`${iso}T00:00:00Z`));
   const months: { key: string; label: string; items: RideSession[] }[] = [];
   for (const s of sessions) {
@@ -102,7 +108,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
         {/* The public rides, for search engines; members-only ones are not advertised, nor one for a single gender:
             every visitor sees both, but not everyone may book them. */}
         <JsonLd data={eventsData(sessions.filter((s) => !s.members && !s.gender).map((s) => ({
-          name: name(s), date: s.date, times: s.times, gather: s.gather, full: s.full, url: book,
+          name: name(s), date: s.date, times: s.times, gather: s.gather, full: s.full || !!s.fbk, url: book,
           place: s.kind === "jcc" || s.kind === "snd96" || s.kind === "vlap" || s.kind === "defe5k" || s.kind === "blood" ? "Jeddah Corniche Circuit" : s.kind === "runher" ? "Jeddah Yacht Club" : s.kind === "arena" ? s.location || AH_VENUE : "Jeddah",
         })))} />
         <p className="pg-eyebrow">{S(c.hero.eyebrow)}</p>
@@ -114,7 +120,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
               <div key={m.key} style={{ display: "contents" }}>
                 <p className="pg-month">{m.label}</p>
                 {m.items.map((s) => (
-                  <div key={s.id} className={`pg-event${s.full ? " is-full" : ""}${opens(s) ? " is-closed" : ""}`} style={{ ["--kind" as string]: KIND_COLOUR[s.kind] }}>
+                  <div key={s.id} className={`pg-event${s.full ? " is-full" : ""}${s.fbk ? " is-fbk" : opens(s) ? " is-closed" : ""}`} style={{ ["--kind" as string]: KIND_COLOUR[s.kind] }}>
                     <div className="pg-date"><strong>{fmt(s.date, { day: "numeric" })}</strong><span>{fmt(s.date, { weekday: "short" })}</span></div>
                     <div className="pg-event-body">
                       <strong>{name(s)}</strong>
@@ -149,10 +155,14 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {(s.kind === "event" || s.kind === "blood") && !s.members && <em>{S(d.everyone)}</em>}
                         {s.free && s.kind !== "blood" && <em>{S(d.free)}</em>}
                         {s.full && <em className="warn">{S(d.full)}</em>}
+                        {s.fbk && <em className="fbk">{fbkWord}</em>}
                         {((g) => g && <span className={`sg-chip sg-${g.cls}`}>{g.label}</span>)(genderChip(s, sgWords))}
                       </div>
+                      {s.fbk && <p className="pg-event-fbk"><CalendarIcon size={13} /><span>{fbkLine(s)}</span></p>}
                     </div>
-                    {refusal(s) ? <span className="pg-opens">{refusal(s)}</span>
+                    {/* closed as fully booked: nothing to book, so no Book, no refusal and no countdown */}
+                    {s.fbk ? null
+                      : refusal(s) ? <span className="pg-opens">{refusal(s)}</span>
                       : opens(s) ? <OpensIn className="pg-opens pg-wait" text={opens(s) ?? ""} at={window ? opensAt(s.date, window) : null} words={opensWords}>{bookLink(s)}</OpensIn>
                       : bookLink(s)}
                   </div>

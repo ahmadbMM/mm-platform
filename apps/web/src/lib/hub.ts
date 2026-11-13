@@ -10,6 +10,7 @@ import type { BadgeRow } from "./ride-record";
 // month's own challenge {kind: first | second | back | level, target, n, ends_on}, goals the season challenges running
 // [{name, name_ar, target, n, ...}], fresh the Community badges the server gave and the member has not seen yet
 // [{slug, at}], oldest first. hub_seen(p_id, p_token, p_slugs) marks badges seen. Nothing in either names another person.
+// The first five rides' path (F1) is counted from the account's own bookings, not from here (lib/first-five.ts).
 
 export type HubMe = { kind: string; target: number; n: number; endsOn: string };
 export type HubGoal = { name: string; nameAr: string; target: number; n: number };
@@ -35,11 +36,15 @@ export function readPulse(raw: unknown): HubPulse | null {
 
 /** The rating's last screen: a Community badge just earned (its name and how it is drawn), else the month's challenge
  *  the ride moved (its kind, for its name in the page's language), else the season challenge (its name). n is never
- *  above the target. */
-export type Fin =
+ *  above the target. "p5": the first five rides (lib/first-five.ts, the booking app's new features build F1), n rides
+ *  of tg, for members and non-members alike, before the month's challenge. `book`: the screen also offers Book (the
+ *  rider is on that path with nothing booked ahead); `mem` false: no Community button (not a member). */
+export type Fin = (
   | { k: "badge"; name: string; icon: string; color: string }
   | { k: "me"; kind: string; n: number; tg: number }
-  | { k: "goal"; name: string; n: number; tg: number };
+  | { k: "goal"; name: string; n: number; tg: number }
+  | { k: "p5"; n: number; tg: number }
+) & { book?: boolean; mem?: boolean };
 
 /** What the screen shows besides a badge: the month's challenge, once the member has a session in it and the ride
  *  rated is in its month; else the first season challenge with a session in it; else nothing. */

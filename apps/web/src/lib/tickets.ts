@@ -5,7 +5,7 @@
 import { intlOf } from "@/i18n/locales";
 import { fill as fillAt } from "@/i18n/tx";
 import { fill as fillNamed } from "./fill";
-import { collectTime, oneTime, rideKind, routeSlugOf, slotTimes, wlCollectSlot, type RideKind } from "./rides";
+import { bfMembersOf, collectTime, oneTime, rideKind, routeSlugOf, slotTimes, wlCollectSlot, type RideKind } from "./rides";
 import { riyadhClock } from "./workshop-days";
 import { vlCat, vlConfig, vlEntry, type VlConfig, type VlEntry } from "./vlap";
 import { AH_VENUE, ahConfig, ahEntry, ahHold, isArenaId, type AhConfig, type AhEntry } from "./arena";
@@ -59,6 +59,14 @@ export type TicketRow = {
   /** The promo code the row was booked with (queue_entries.promo_code) and the Saturday ride code (ride_code, rentals
    *  20261108120000), else null: the ticket names each with its kind (codeKindOf; the booking app's _codeRowHtml, 2026-11-08). */
   promoCode?: string | null; rideCode?: string | null;
+  /** "Still coming?" (rentals 20261114080200; lib/still-coming.ts): when the rider said they are coming, null before; absent
+   *  when the read has no such column (nothing is asked). */
+  comingAt?: string | null;
+  /** "Report a bike problem" (rentals 20261114081500; lib/bike-report.ts): the rider's last report on the booking, null
+   *  before; absent when the read has no such column (no button). */
+  bikeReportAt?: string | null;
+  /** Every bike on the row when it holds more than one (assigned_bike_id as a JSON list); bikeId is the first. */
+  bikeIds?: string[];
 };
 /** The kinds of code a booking used (the booking app's _codeKindOf): the friend's referral discount (RW-), the referrer's
  *  free ride (RF-) and bonus (RB-), the blood donation free ride (BD-), a volunteer's free ride for an event worked (VL-,
@@ -111,6 +119,10 @@ export type TicketSession = {
   /** When riders are told where the ride meets and has breakfast (sessions.reveal_at, ISO), or null
    *  (spotHeld). */
   revealAt: string | null;
+  /** The breakfast spot is for community members only (bike_slots._bfm, 2026-11-13; rides.ts bfMembersOf). Set only when it is. */
+  bfMembers?: boolean;
+  /** This visitor is not told the breakfast spot (bfFor): no stop (breakfastFor) and no "announced at" line. */
+  bfOff?: boolean;
   /** Victory Lap's settings (sessions.vl, lib/vlap.ts: the races open, how to pay, what goes to Kamin
    *  Sports); null on every other kind. A read without the column has every race open and no words of
    *  staff's own. */
@@ -124,6 +136,9 @@ export type TicketSession = {
   /** Men only, women only or mixed (null): sessions.gender_only (the owner, 2026-10-27; lib/session-gender.ts),
    *  which the ticket's chip names. A read without the column reads as mixed. */
   gender?: SessionGender | null;
+  /** Called off (sessions.cancelled_at, or the staff status ride_status 'cancelled' of rentals 20261114000100): "Still
+   *  coming?" asks nothing (the booking app's _stcHtml). Absent when the read had neither column. */
+  calledOff?: boolean;
 };
 
 type Row = Record<string, unknown>;
@@ -136,8 +151,8 @@ export function ticketRow(r: Row): TicketRow | null {
   const date = S(r.session_date);
   if (!status || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
   // assigned_bike_id holds one id, or a JSON list of them for a rider handed more than one
-  let bike = S(r.assigned_bike_id).trim();
-  if (bike.startsWith("[")) { try { const a = JSON.parse(bike) as unknown; bike = Array.isArray(a) && typeof a[0] === "string" ? a[0] : ""; } catch { bike = ""; } }
+  let bike = S(r.assigned_bike_id).trim(), bikes: string[] = [];
+  if (bike.startsWith("[")) { try { const a = JSON.parse(bike) as unknown; bikes = Array.isArray(a) ? a.filter((x): x is string => typeof x === "string" && !!x) : []; bike = Array.isArray(a) && typeof a[0] === "string" ? a[0] : ""; } catch { bike = ""; } }
   const km = N(r.run_km); // a distance the booking app would take (_runKmOk), else none
   // an Arena Heros place keeps its race, division and team in the same column as Victory Lap's: told apart by
   // its session's id ('<date>-ah'), as my_bookings gives the row without its session's kind
@@ -162,6 +177,10 @@ export function ticketRow(r: Row): TicketRow | null {
     // the codes it was booked with (2026-11-08): letters, digits and dashes as the database keeps them, else none
     promoCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.promo_code)) ? S(r.promo_code) : null,
     rideCode: /^[A-Za-z0-9_-]{1,40}$/.test(S(r.ride_code)) ? S(r.ride_code) : null,
+    // "Still coming?" and "Report a bike problem" (2026-11-13): only a read that carries the columns has them
+    ...("coming_at" in r ? { comingAt: S(r.coming_at) || null } : {}),
+    ...("bike_report_at" in r ? { bikeReportAt: S(r.bike_report_at) || null } : {}),
+    ...(bikes.length > 1 && bikes[0] === bike ? { bikeIds: bikes } : {}),
   };
 }
 
@@ -364,10 +383,12 @@ export function ticketSession(r: Row): TicketSession | null {
       }
       : null,
     revealAt: Number.isFinite(Date.parse(S(r.reveal_at))) ? S(r.reveal_at) : null,
+    ...(bfMembersOf(r.bike_slots) ? { bfMembers: true } : {}),
     vl: kind === "vlap" ? vlConfig(r.vl) : null,
     ah: kind === "arena" ? ahConfig(r.vl) : null,
     price: N(r.price),
     gender: sessionGender(r.gender_only),
+    ...("cancelled_at" in r || "ride_status" in r ? { calledOff: r.cancelled_at != null || r.ride_status === "cancelled" } : {}),
   };
 }
 
@@ -399,6 +420,13 @@ export function revealWhen(iso: string | null | undefined, locale: string, today
   return `${w === "today" ? words.today : w === "tomorrow" ? words.tomorrow : fmtDayDate(date, locale)} · ${fmtClock(k.slice(11, 16), locale)}`;
 }
 
+/** The session as this visitor reads it (the booking app's _bfOff, 2026-11-13): when its breakfast spot is for community
+ *  members only (bfMembers) and the visitor is not one, bfOff: no breakfast stop and no "announced at" line. The row's own
+ *  fields stay, so the meeting point and the route read as they did (spotHeld). */
+export function bfFor<T extends { bfMembers?: boolean }>(s: T, member: boolean): T & { bfOff?: boolean } {
+  return s.bfMembers && !member ? { ...s, bfOff: true } : s;
+}
+
 /** The rides with a breakfast stop: the Saturday ride, and Run for Her (the owner, 2026-10-14). */
 export const hasBreakfast = (kind: string | null | undefined): boolean => kind === "saturday" || kind === "runher";
 
@@ -406,7 +434,7 @@ export const hasBreakfast = (kind: string | null | undefined): boolean => kind =
  *  Arabic there and in English in every other language (the booking app's _commInfoHtml). */
 export function breakfastFor(s: TicketSession | undefined, locale: string): { name: string; url: string | null; offer: string | null } | null {
   const b = s?.breakfast;
-  if (!b || !hasBreakfast(s?.kind)) return null;
+  if (!b || !hasBreakfast(s?.kind) || s?.bfOff) return null; // for members only, and this visitor is not one (bfFor)
   const ar = locale === "ar";
   return { name: (ar && b.nameAr) || b.name, url: b.url, offer: (ar ? b.offerAr || b.offerEn : b.offerEn || b.offerAr) || null };
 }
@@ -799,7 +827,7 @@ export function icsFor(s: TicketSession, summary: string, place: string, now: Da
   const stamp = now.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
   const words = icsWords(s);
   // the breakfast spot told later: the entry says when; a held ride without its meeting point has no place rather than the circuit
-  const told = spotHeld(s, now.getTime()) ? `\n\nBreakfast spot: announced ${revealWhen(s.revealAt, "en", riyadhClock(now).slice(0, 10), { today: "Today", tomorrow: "Tomorrow" })}` : "";
+  const told = spotHeld(s, now.getTime()) && !s.bfOff ? `\n\nBreakfast spot: announced ${revealWhen(s.revealAt, "en", riyadhClock(now).slice(0, 10), { today: "Today", tomorrow: "Tomorrow" })}` : "";
   const noPlace = meetHeld(s, now.getTime());
   const bid = (booking.id ?? "").replace(/[^\w-]/g, "");
   return [

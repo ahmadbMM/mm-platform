@@ -3226,7 +3226,7 @@
     var bt = $("#bike-title"); bt.setAttribute("data-t", guest ? "Bike type" : "Height and bike"); render(bt);
     $("#type-label").hidden = guest;        // the step's own title says it
     var wl = $("#waiver-label"); wl.setAttribute("data-t", emp ? "I have read the waiver and agree to it on behalf of every rider on this registration" : "I have read the waiver and agree to it"); render(wl);
-    $("#fd-no").placeholder = KIND === "dukan" ? "D-001" : guest ? "I-001" : "P-001";
+    $("#fd-no").placeholder = KIND === "dukan" ? "D-001" : guest ? "I-001" : selectedCompany === "Petrolube" ? "PL-001" : "PM-001";
   }
   function setCompany(co) {
     selectedCompany = co || null; KIND = kindOf(selectedCompany);
@@ -3557,10 +3557,10 @@
   /* Loading and success */
   function setLoading(on) { $("#submit").classList.toggle("loading", !!on); $("#submit").disabled = !!on; }
   var STORE = "mm-petromin-registration";
-  /* Sequential booking numbers: p-001, p-002 ... The server should issue the real one; this demo counter lives on the device. */
+  /* Sequential booking numbers: pm-001, pl-001 ... The server should issue the real one; this demo counter lives on the device. */
   function bookingNumber() {
     var n = 1; try { n = (parseInt(localStorage.getItem("mm-petromin-seq") || "0", 10) || 0) + 1; localStorage.setItem("mm-petromin-seq", String(n)); } catch (e) {}
-    return (KIND === "dukan" ? "d-" : KIND === "guest" ? "i-" : "p-") + String(n).padStart(3, "0");
+    return (KIND === "dukan" ? "d-" : KIND === "guest" ? "i-" : selectedCompany === "Petrolube" ? "pl-" : "pm-") + String(n).padStart(3, "0");
   }
   function sessionLabel(s) { return s ? fmtDate(s.start) + ", " + fmtTime(s.start) : ""; }
   function collect() {

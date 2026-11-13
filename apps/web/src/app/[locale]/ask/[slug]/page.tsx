@@ -7,7 +7,7 @@ import "@/components/learn/learn.css";
 import "@/components/account/account.css";
 import "@/components/ask/ask.css";
 import { serverLocalize } from "@/i18n/dicts";
-import { askText } from "@/lib/ask";
+import { ASK_SHARE_IMAGE, askText } from "@/lib/ask";
 import { askKey, askSession, readAskPage } from "@/lib/ask-server";
 import { pageMeta } from "@/lib/seo";
 
@@ -31,7 +31,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const { locale, slug, view } = await read(props);
   const name = view.head ? askText(locale, view.head.title_en, view.head.title_ar) : "";
   const intro = view.full ? askText(locale, view.full.page.intro_en, view.full.page.intro_ar) : "";
-  return pageMeta({ path: `/ask/${slug}`, locale, noindex: true, title: `${name || serverLocalize(T, locale).listTitle} · Micromobility`, description: intro || undefined });
+  return pageMeta({ path: `/ask/${slug}`, locale, noindex: true, image: ASK_SHARE_IMAGE, title: `${name || serverLocalize(T, locale).listTitle} · Micromobility`, description: intro || undefined });
 }
 
 export default async function AskSlugPage(props: Props) {

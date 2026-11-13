@@ -170,11 +170,28 @@ test('Find my booking asks the right list for the number: an I- the guests\', a 
   });
   await page.goto('/petromin?lang=en');
   const find = async (no: string) => { await page.click('#find'); await page.fill('#fd-no', no); await page.fill('#fd-phone', '512345678'); await page.click('#fd-go'); };
-  // No company picked: a bare number is a P-.
-  await expect(page.locator('#fd-no')).toHaveAttribute('placeholder', 'P-001');
+  const missed = () => expect(page.locator('#fd-miss')).toHaveText('We could not find a booking with this number and mobile number.');
+  // No company picked: a bare number is a PM- (Petromin PM-, Petrolube PL- since 2026-11-14).
+  await expect(page.locator('#fd-no')).toHaveAttribute('placeholder', 'PM-001');
   await find('7');
-  await expect(page.locator('#fd-miss')).toHaveText('We could not find a booking with this number and mobile number.');
-  expect(asked.pop()).toEqual(['rider_lookup', { p_booking_no: 'P-007', p_phone: '+966512345678' }]);
+  await missed();
+  expect(asked.pop()).toEqual(['rider_lookup', { p_booking_no: 'PM-007', p_phone: '+966512345678' }]);
+  await page.click('#fd-cancel');
+  // Two letters typed are kept (with or without the dash or a space), and an older booking's P- still asks for P-.
+  await find('pm 12');
+  await missed();
+  expect(asked.pop()).toEqual(['rider_lookup', { p_booking_no: 'PM-012', p_phone: '+966512345678' }]);
+  await page.click('#fd-cancel');
+  await find('p-1');
+  await missed();
+  expect(asked.pop()).toEqual(['rider_lookup', { p_booking_no: 'P-001', p_phone: '+966512345678' }]);
+  await page.click('#fd-cancel');
+  // Petrolube picked: a bare number is a PL-.
+  await page.click('#companies .company[data-v="Petrolube"]');
+  await expect(page.locator('#fd-no')).toHaveAttribute('placeholder', 'PL-001');
+  await find('7');
+  await missed();
+  expect(asked.pop()).toEqual(['rider_lookup', { p_booking_no: 'PL-007', p_phone: '+966512345678' }]);
   await page.click('#fd-cancel');
   // Dukan picked: a bare number is a D-, and the booking found shows in Dukan's look.
   await page.click('#companies .company[data-v="Dukan"]');

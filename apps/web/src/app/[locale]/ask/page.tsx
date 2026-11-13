@@ -7,7 +7,7 @@ import "@/components/account/account.css";
 import "@/components/ask/ask.css";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { Link } from "@/i18n/navigation";
-import { askText, askWhen } from "@/lib/ask";
+import { ASK_SHARE_IMAGE, askText, askWhen } from "@/lib/ask";
 import { askSession, readAskList } from "@/lib/ask-server";
 import { pageMeta } from "@/lib/seo";
 
@@ -17,7 +17,7 @@ import { pageMeta } from "@/lib/seo";
 // the site's state (proxy.ts, ASK_PAGE), is never kept at the edge (lib/page-cache.ts) and never in search results.
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
-  return pageMeta({ path: "/ask", locale, noindex: true, title: `${serverLocalize(T, locale).listTitle} · Micromobility` });
+  return pageMeta({ path: "/ask", locale, noindex: true, image: ASK_SHARE_IMAGE, title: `${serverLocalize(T, locale).listTitle} · Micromobility` });
 }
 
 export default async function AskListPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {

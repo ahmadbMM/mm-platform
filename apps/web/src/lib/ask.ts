@@ -7,8 +7,9 @@ import { LOCALE_CODES, intlOf } from "@/i18n/locales";
 // text for a language, which results a viewer may see, an answer's value for its kind, and when to ask again.
 //
 // Nothing here trusts a shape: a field that is missing or of the wrong type takes its default, a question of a kind
-// these pages do not draw yet (grid, pin, form, quiz, quiz_text) is kept and drawn as nothing, and an answer that is
-// not a page at all reads as "none".
+// these pages do not know is kept and drawn as nothing, and an answer that is not a page at all reads as "none".
+// The five kinds of stage 2 (grid, pin, form, quiz, quiz_text) have their settings, values and results in
+// lib/ask-kinds.ts; a page staff pace, the quiz clock, the viewer's own score and the reactions in lib/ask-pace.ts.
 
 /* ------------------------------------------------------------------ addresses, words */
 
@@ -57,45 +58,21 @@ export const askPct = (share: number, locale: string): string =>
 
 /* ------------------------------------------------------------------ the look (contract section A) */
 
-/** `look` on a page or a question: free keys the pages read, each falling back to its default. */
+/** `look` on a page or a question: free keys the pages read, each falling back to its default (lib/ask-look.ts reads
+ *  them: the theme, the palettes, each chart's choices). */
 export type Look = Readonly<Record<string, unknown>>;
 export const lookOf = (v: unknown): Look => obj(v) ?? {};
-
-export const ASK_THEMES = ["light", "dark", "green", "sand"] as const;
-export type AskTheme = (typeof ASK_THEMES)[number];
-/** The page's theme: the ONE place a page's `look.theme` is read (ask.css holds each theme's tokens under
- *  .ask[data-ask-theme]). An unknown name is the light, cream page. */
-export const askTheme = (pageLook: Look): AskTheme => (ASK_THEMES as readonly string[]).includes(String(pageLook.theme)) ? (pageLook.theme as AskTheme) : "light";
-
-/** The chart palettes, six colours each, every one 4.5:1 or more on white (the contract's). A chart never reads a
- *  colour of its own: it draws with --ask-c0 ... --ask-c5, which the question's results box sets from here. */
-export const ASK_PALETTES = {
-  brand: ["#077a4b", "#1a1919", "#0b6e8a", "#b4500b", "#9c1f5c", "#4a4fc4"],
-  forest: ["#0b5d3b", "#2e7d32", "#567d2e", "#7a6a1c", "#3f6b5c", "#1f4d3a"],
-  ocean: ["#0b6e8a", "#1456a8", "#2b3f9e", "#0d7a7a", "#3a6ea5", "#1b4965"],
-  sunset: ["#b4500b", "#a8321f", "#9c1f5c", "#8a5a00", "#b03a48", "#6d3b8f"],
-  berry: ["#9c1f5c", "#6d3b8f", "#4a4fc4", "#a8321f", "#7b2d6b", "#3c3f8f"],
-  mono: ["#1a1919", "#3a3f3c", "#57605a", "#6f7771", "#2b2f2d", "#454b47"],
-} as const satisfies Record<string, readonly string[]>;
-export type AskPaletteName = keyof typeof ASK_PALETTES;
-const paletteName = (v: unknown): AskPaletteName | null => (typeof v === "string" && Object.hasOwn(ASK_PALETTES, v) ? (v as AskPaletteName) : null);
-/** A question's chart colours: its own `look.palette`, else the page's, else the brand's. */
-export const askPalette = (questionLook: Look, pageLook: Look): AskPaletteName => paletteName(questionLook.palette) ?? paletteName(pageLook.palette) ?? "brand";
-/** The palette as the custom properties a results box sets: { "--ask-c0": "#077a4b", ... }. */
-export const paletteVars = (name: AskPaletteName): Record<string, string> => Object.fromEntries(ASK_PALETTES[name].map((c, i) => [`--ask-c${i}`, c]));
-
-/** The chart a question's results are drawn with: its `look.viz` when that chart is built for its kind, else the
- *  kind's first (its default). `built` is the kind's row of the charts' registry (components/ask/results). */
-export function askViz(questionLook: Look, built: readonly string[]): string | null {
-  const asked = questionLook.viz;
-  return typeof asked === "string" && built.includes(asked) ? asked : built[0] ?? null;
-}
+// The look itself is read in lib/ask-look.ts (themes, palettes, each chart's choices). Its first readers are handed on
+// from here too, under the names they were given here.
+export { ASK_PALETTES, askPalette, askTheme, askViz, paletteVars } from "./ask-look";
 
 /* ------------------------------------------------------------------ kinds and their settings */
 
-/** The kinds whose screens are built (stage 1). Any other kind is kept and drawn as nothing. */
-export const ASK_DRAWN = ["cloud", "open", "qa", "choice", "scales", "ranking", "points", "number", "info"] as const;
+/** The kinds whose screens are built: every kind the database has. Any other kind is kept and drawn as nothing. */
+export const ASK_DRAWN = ["cloud", "open", "qa", "choice", "scales", "ranking", "points", "number", "info", "grid", "pin", "form", "quiz", "quiz_text"] as const;
 export const isDrawn = (kind: string): boolean => (ASK_DRAWN as readonly string[]).includes(kind);
+/** The two quiz kinds: one answer with points, a clock once staff show the question, and a chart only on reveal. */
+export const isQuiz = (kind: string): boolean => kind === "quiz" || kind === "quiz_text";
 /** The kinds answered in words, which may wait for approval and take several answers a person. */
 export const isWritten = (kind: string): boolean => kind === "cloud" || kind === "open" || kind === "qa";
 
@@ -291,7 +268,9 @@ export type AskQuestion = {
   id: number; pos: number; kind: string; title_en: string; title_ar: string; help_en: string; help_ar: string; image: string | null;
   config: Record<string, unknown>; moderated: boolean; results: AskResults; open: boolean; reveal: boolean; started_at: string | null; look: Look;
 };
-export type AskMine = { id: number; value: Record<string, unknown>; body: string; status: "pending" | "approved" | "rejected"; answered: boolean; votes: number; created_at: string };
+/** `score`: a quiz answer's points (0 for a wrong one), null for every other kind. The page says it only once staff
+ *  reveal the question (lib/ask-pace.ts). */
+export type AskMine = { id: number; value: Record<string, unknown>; body: string; status: "pending" | "approved" | "rejected"; answered: boolean; votes: number; created_at: string; score: number | null };
 export type AskStats = { answers: number; people: number };
 /** ask_live's full answer (and `live` inside ask_page and ask_screen). */
 export type AskLive = {
@@ -299,7 +278,13 @@ export type AskLive = {
   q: Record<string, { open: boolean; reveal: boolean; started_at: string | null }>;
   results: Record<string, unknown>;
   stats: AskStats | null;
+  /** The database's own time when it answered: a quiz clock counts against it, never the device's. */
+  now: string | null;
+  /** How many gave each reaction to each question: {"<question id>": {like: 3}}. */
+  reactions: Record<string, Record<string, number>>;
 };
+/** The viewer's own quiz line, as ask_page counts it: their points, their place, and how many are playing. */
+export type AskMe = { score: number; rank: number; players: number };
 export type AskPageInfo = {
   id: number; slug: string; title_en: string; title_ar: string; intro_en: string; intro_ar: string;
   pace: "self" | "live"; current_q: number | null; opens_at: string | null; closes_at: string | null; round: number; open: boolean; look: Look;
@@ -308,6 +293,9 @@ export type AskPageInfo = {
 export type AskFull = {
   signed: boolean; canAnswer: boolean; preview: boolean; rk: string;
   page: AskPageInfo; questions: AskQuestion[]; mine: Record<string, AskMine[]>; voted: number[]; live: AskLive | null;
+  /** The reactions the viewer gave, by question: {"<question id>": ["like"]}. */
+  reacted: Record<string, string[]>;
+  me: AskMe | null;
 };
 export type AskState = "none" | "signin" | "audience" | "soon" | "closed" | "ok";
 /** What ask_page answered, as the page draws it. `head`: the title of a page that shows no more of itself ("soon",
@@ -337,7 +325,7 @@ function mineOf(raw: unknown): AskMine | null {
   if (!m || id === null) return null;
   const status = m.status === "approved" || m.status === "rejected" ? m.status : "pending";
   const value = obj(m.value) ?? {};
-  return { id, value, body: str(m.body) || str(value.t), status, answered: m.answered === true, votes: Math.max(0, int(m.votes) ?? 0), created_at: str(m.created_at) };
+  return { id, value, body: str(m.body) || str(value.t), status, answered: m.answered === true, votes: Math.max(0, int(m.votes) ?? 0), created_at: str(m.created_at), score: num(m.score) };
 }
 /** The viewer's own answers to one question, as ask_page and ask_send list them. */
 export const mineList = (raw: unknown): AskMine[] => list(raw).map(mineOf).filter((m): m is AskMine => m !== null);
@@ -351,11 +339,24 @@ function liveOf(raw: unknown): AskLive | null {
     if (o) q[id] = { open: o.open !== false, reveal: o.reveal === true, started_at: when(o.started_at) };
   }
   const stats = obj(l.stats);
+  const reactions: AskLive["reactions"] = {};
+  for (const [id, v] of Object.entries(obj(l.reactions) ?? {})) {
+    const counts: Record<string, number> = {};
+    for (const [kind, n] of Object.entries(obj(v) ?? {})) { const c = int(n); if (c !== null && c > 0) counts[kind] = c; }
+    reactions[id] = counts;
+  }
   return {
     ver: Math.max(0, num(l.ver) ?? 0), state: l.state === "closed" ? "closed" : "ok", open: l.open !== false, pace: l.pace === "live" ? "live" : "self",
     current_q: int(l.current_q), round: int(l.round) ?? 1, q, results: obj(l.results) ?? {},
     stats: stats ? { answers: Math.max(0, int(stats.answers) ?? 0), people: Math.max(0, int(stats.people) ?? 0) } : null,
+    now: when(l.now), reactions,
   };
+}
+
+function meOf(raw: unknown): AskMe | null {
+  const m = obj(raw);
+  const score = num(m?.score), rank = int(m?.rank), players = int(m?.players);
+  return m && score !== null && rank !== null && rank >= 1 && players !== null && players >= rank ? { score, rank, players } : null;
 }
 
 function fullOf(o: Record<string, unknown>): AskFull | null {
@@ -373,6 +374,8 @@ function fullOf(o: Record<string, unknown>): AskFull | null {
       pace: p.pace === "live" ? "live" : "self", current_q: int(p.current_q), opens_at: when(p.opens_at), closes_at: when(p.closes_at), round: int(p.round) ?? 1, open: p.open !== false, look: lookOf(p.look),
     },
     questions, mine, voted: list(o.voted).map(int).filter((n): n is number => n !== null), live: liveOf(o.live),
+    reacted: Object.fromEntries(Object.entries(obj(o.reacted) ?? {}).map(([id, kinds]) => [id, list(kinds).filter((k): k is string => typeof k === "string")])),
+    me: meOf(o.me),
   };
 }
 
@@ -414,23 +417,23 @@ export function askScreen(raw: unknown): AskFull | null {
 
 /** ask_live's answer: the key no longer opens the page (`gone`), nothing changed since the version sent (`same`,
  *  which still says whether the page is open: a page closes by the clock with no change of version), or the whole. */
-export type LiveAnswer = { kind: "gone" } | { kind: "same"; ver: number; state: "ok" | "closed" | null; open: boolean | null } | { kind: "full"; live: AskLive };
+export type LiveAnswer = { kind: "gone" } | { kind: "same"; ver: number; state: "ok" | "closed" | null; open: boolean | null; now: string | null } | { kind: "full"; live: AskLive };
 export function askLive(raw: unknown): LiveAnswer {
   const o = obj(raw);
   if (!o || o.ok !== true) return { kind: "gone" };
-  if (o.same === true) return { kind: "same", ver: Math.max(0, num(o.ver) ?? 0), state: o.state === "closed" ? "closed" : o.state === "ok" ? "ok" : null, open: typeof o.open === "boolean" ? o.open : null };
+  if (o.same === true) return { kind: "same", ver: Math.max(0, num(o.ver) ?? 0), state: o.state === "closed" ? "closed" : o.state === "ok" ? "ok" : null, open: typeof o.open === "boolean" ? o.open : null, now: when(o.now) };
   const live = liveOf(o);
   return live ? { kind: "full", live } : { kind: "gone" };
 }
 
 /** ask_send's answer: taken (with the viewer's answers to that question when the database lists them; `repeat` when
  *  the same words were sent again and nothing new was stored), or why not. */
-export type SendAnswer = { ok: true; status: "pending" | "approved"; repeat: boolean; mine: AskMine[] | null } | { ok: false; error: AskError };
+export type SendAnswer = { ok: true; status: "pending" | "approved"; repeat: boolean; mine: AskMine[] | null; score: number | null } | { ok: false; error: AskError };
 export function askSent(raw: unknown): SendAnswer {
   const o = obj(raw);
   if (!o) return { ok: false, error: "generic" };
   if (o.ok !== true) return { ok: false, error: askErrorKey(o.error) };
-  return { ok: true, status: o.status === "approved" ? "approved" : "pending", repeat: o.repeat === true, mine: Array.isArray(o.mine) ? mineList(o.mine) : null };
+  return { ok: true, status: o.status === "approved" ? "approved" : "pending", repeat: o.repeat === true, mine: Array.isArray(o.mine) ? mineList(o.mine) : null, score: num(o.score) };
 }
 
 /* ------------------------------------------------------------------ the page as it changes */
@@ -441,7 +444,9 @@ export function askSent(raw: unknown): SendAnswer {
 export function applyLive(full: AskFull, live: AskLive): { full: AskFull; reload: boolean } {
   if (full.live && live.ver < full.live.ver) return { full, reload: false };
   const held = new Set(full.questions.map((q) => String(q.id)));
-  const reload = Object.keys(live.q).some((id) => !held.has(id)) || live.round !== full.page.round;
+  // ... or revealed a quiz question: the viewer's own score and place are the page's to read (ask_page `me`)
+  const revealed = full.questions.some((q) => isQuiz(q.kind) && !q.reveal && live.q[String(q.id)]?.reveal === true);
+  const reload = Object.keys(live.q).some((id) => !held.has(id)) || live.round !== full.page.round || revealed;
   const questions = full.questions.map((q) => {
     const now = live.q[String(q.id)];
     return now && (now.open !== q.open || now.reveal !== q.reveal || now.started_at !== q.started_at) ? { ...q, ...now } : q;
@@ -489,6 +494,8 @@ export function answerState(q: AskQuestion, full: AskFull): AnswerState {
  *  whatever the database sends. */
 export function resultsShown(q: AskQuestion, full: AskFull, screen = false): boolean {
   if (q.kind === "info" || !isDrawn(q.kind) || q.results === "staff") return false;
+  // a quiz question's chart is drawn once staff reveal it, and not before
+  if (isQuiz(q.kind) && !q.reveal) return false;
   if (q.results !== "answered" || screen) return true;
   return (full.mine[String(q.id)] ?? []).length > 0 || !(pageOpen(full) && q.open);
 }
@@ -523,21 +530,26 @@ export const hasPending = (full: AskFull): boolean => Object.values(full.mine).s
 
 /* ------------------------------------------------------------------ when to ask again */
 
-/** Between two ask_live calls: a page every 10 s, the big screen every 4. */
+/** Between two ask_live calls: a page every 10 s, the big screen every 4 - and both every 2 on a page staff pace,
+ *  where the question on screen changes under the room's eyes (`live` below). */
 export const POLL_MS = { page: 10_000, screen: 4_000 } as const;
+export const POLL_LIVE_MS = 2_000;
 /** The page itself is read again (GET /api/ask/<slug>) at most this often when a poll says a waiting answer may have
  *  been reviewed. */
 export const REREAD_MS = 30_000;
 /** How long to wait before the next ask_live: the pace, doubled for every failed try in a row - two minutes at most
  *  on a page, one on the big screen. */
-export function pollDelay(mode: keyof typeof POLL_MS, fails: number): number {
+export function pollDelay(mode: keyof typeof POLL_MS, fails: number, live = false): number {
   const most = mode === "screen" ? 60_000 : 120_000;
-  return Math.min(most, POLL_MS[mode] * 2 ** clamp(Math.floor(fails) || 0, 0, 8));
+  return Math.min(most, (live ? POLL_LIVE_MS : POLL_MS[mode]) * 2 ** clamp(Math.floor(fails) || 0, 0, 8));
 }
 /** Whether the page may be read again now, having last been read at `lastAt`. */
 export const rereadDue = (lastAt: number, now: number): boolean => now - lastAt >= REREAD_MS;
 
 /* ------------------------------------------------------------------ results, shaped for their charts */
+
+/** How many answers a question's result counts (every kind's result says so as `n`), for the big screen's count. */
+export const resultCount = (raw: unknown): number => Math.max(0, int(obj(raw)?.n) ?? 0);
 
 export type CloudResult = { n: number; people: number; words: { w: string; n: number }[] };
 export function cloudResult(raw: unknown): CloudResult {
@@ -611,14 +623,14 @@ export function rankRows(config: unknown, raw: unknown, locale: string): { n: nu
 }
 
 export type PointRow = { id: string; label: string; avg: number; sum: number; share: number };
-/** Points: the options by their average, the most first; `share` is the average's part of the points a person has. */
+/** Points: the options in the order staff wrote them, each with its average; `share` is the average's part of the
+ *  points a person has. (A chart puts the most first when its look asks: `sort`.) */
 export function pointRows(config: unknown, raw: unknown, locale: string): { n: number; total: number; rows: PointRow[] } {
   const c = pointsConfig(config);
   const r = obj(raw) ?? {};
   const avg = obj(r.avg) ?? {}, sum = obj(r.sum) ?? {};
-  const rows = c.options.map((o, i) => ({ i, id: o.id, label: optionText(locale, o), avg: Math.max(0, num(avg[o.id]) ?? 0), sum: Math.max(0, num(sum[o.id]) ?? 0) }));
-  rows.sort((a, b) => b.avg - a.avg || a.i - b.i);
-  return { n: Math.max(0, int(r.n) ?? 0), total: c.total, rows: rows.map(({ id, label, avg: a, sum: s }) => ({ id, label, avg: a, sum: s, share: clamp(a / c.total, 0, 1) })) };
+  const rows = c.options.map((o) => { const a = Math.max(0, num(avg[o.id]) ?? 0); return { id: o.id, label: optionText(locale, o), avg: a, sum: Math.max(0, num(sum[o.id]) ?? 0), share: clamp(a / c.total, 0, 1) }; });
+  return { n: Math.max(0, int(r.n) ?? 0), total: c.total, rows };
 }
 
 export type NumberBin = { lo: number; hi: number; n: number };
@@ -651,6 +663,22 @@ export function screenAt(questions: readonly AskQuestion[], o: { picked: number 
 }
 /** One question on (1) or back (-1), stopping at the ends. */
 export const screenStep = (count: number, at: number, by: 1 | -1): number => (count < 1 ? -1 : clamp(at + by, 0, count - 1));
+
+/** The picture a shared Ask link shows (WhatsApp, X, ...): the logo on white, the same picture as the booking app's
+ *  links (its og-image.png), not the site's photo card (lib/seo.ts DEFAULT_SHARE_IMAGE). */
+export const ASK_SHARE_IMAGE = "/ask/og-image.png";
+
+/** Whether a path is an Ask page's big screen (/ask/<slug>/screen, in any language): a projector, not an account
+ *  page - the one page of the site that never puts up the account's pop-ups (account/EmergencyGateLoader.tsx). */
+export const isAskScreen = (path: string | null | undefined): boolean => /(?:^|\/)ask\/[^/]+\/screen\/?$/.test(path ?? "");
+
+/** Which question a page drawn in steps is on: the one the reader was on, by its id while it is still there, else
+ *  the same place in the list, never past its ends. -1 when there is no question. */
+export function stepAt(ids: readonly number[], held: { id: number | null; index: number }): number {
+  if (!ids.length) return -1;
+  const same = held.id === null ? -1 : ids.indexOf(held.id);
+  return same >= 0 ? same : clamp(Math.round(held.index) || 0, 0, ids.length - 1);
+}
 
 /* ------------------------------------------------------------------ coming back from creating an account */
 

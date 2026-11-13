@@ -16,10 +16,13 @@
 // first try, and a word starts looking where the last one its size found room.
 
 export type CloudWord = { w: string; n: number };
-export type Placed = { w: string; n: number; key: string; size: number; x: number; y: number; width: number; height: number; color: number };
+/** A word in its place: `width` and `height` are its box as it stands (a word turned on its side stands tall). */
+export type Placed = { w: string; n: number; key: string; size: number; x: number; y: number; width: number; height: number; color: number; turned: boolean };
 export type CloudLayout = { height: number; items: Placed[] };
-/** `height`: a box of this height to fill (the big screen). The words shrink to fit it and it never grows. */
-export type CloudBox = { height?: number };
+/** `height`: a box of this height to fill (the big screen). The words shrink to fit it and it never grows.
+ *  `mixed`: some words stand on their side (about one in three, never the most sent, never a long one) - while the
+ *  words fit as a cloud; packed in rows they all lie flat. */
+export type CloudBox = { height?: number; mixed?: boolean };
 
 /** How the database groups answers (ask_answers.norm): case, punctuation and spaces ignored. */
 export const cloudKey = (w: string) => w.toLocaleLowerCase().replace(/[\p{P}\p{S}\s]+/gu, "");
@@ -86,7 +89,7 @@ export function layoutCloud(words: CloudWord[], width: number, ruler: (text: str
   const least = Math.max(floor, fixed || !phone ? 0.75 : 0.86);
   let scale = Math.min(1, Math.sqrt((W * H * FILL) / area));
   for (let attempt = 0; attempt < 3 && scale >= least; attempt++, scale *= 0.92) {
-    const items = spiral(sorted, scale, W, H);
+    const items = spiral(sorted, scale, W, H, box.mixed === true);
     if (items) return fixed ? { height: H, items } : trimmed(items, H);
   }
   return rows(sorted, floor, W, H, fixed > 0);
@@ -106,13 +109,16 @@ function trimmed(items: Placed[], H: number): CloudLayout {
   return { height, items: items.map((p) => ({ ...p, y: p.y - up })) };
 }
 
-const placed = (x: Word, size: number, px: number, py: number): Placed => {
+const placed = (x: Word, size: number, px: number, py: number, turned = false): Placed => {
   const key = cloudKey(x.w) || x.w;
-  return { w: x.w, n: x.n, key, size: Math.round(size * 10) / 10, x: px, y: py, width: x.wide * size + gapX(size), height: size * LINE + GAP_Y, color: colorOf(key) };
+  const along = x.wide * size + gapX(size), across = size * LINE + GAP_Y;
+  return { w: x.w, n: x.n, key, size: Math.round(size * 10) / 10, x: px, y: py, width: turned ? across : along, height: turned ? along : across, color: colorOf(key), turned };
 };
+/** Whether a word stands on its side in a mixed cloud: by its own text, so it stays as it is while the cloud changes. */
+const turns = (x: Word, i: number): boolean => i > 0 && [...x.w].length <= 14 && colorOf(`${cloudKey(x.w)}|turn`) % 3 === 0;
 
 /** The spiral: the first word in the middle, each next one at the first free spot on its way out. Null when a word finds none. */
-function spiral(list: Word[], scale: number, W: number, H: number): Placed[] | null {
+function spiral(list: Word[], scale: number, W: number, H: number, mixed = false): Placed[] | null {
   const cols = Math.ceil(W / CELL), lines = Math.ceil(H / CELL);
   const taken = new Uint8Array(cols * lines);
   const items: Placed[] = [];
@@ -125,8 +131,11 @@ function spiral(list: Word[], scale: number, W: number, H: number): Placed[] | n
   let classHigh = 0, lastAt = 0;
   for (let i = 0; i < list.length; i++) {
     const size = sizeOf(list[i], scale, W);
-    const w = list[i].wide * size + gapX(size), h = size * LINE + GAP_Y;
-    if (h < classHigh * 0.8 || h > classHigh) { classHigh = h; lastAt = 0; }
+    const flat = list[i].wide * size + gapX(size), high = size * LINE + GAP_Y;
+    // a word on its side: its box stands tall, when the box is high enough to hold it
+    const turned = mixed && turns(list[i], i) && flat <= H - EDGE;
+    const w = turned ? high : flat, h = turned ? flat : high;
+    if (high < classHigh * 0.8 || high > classHigh) { classHigh = high; lastAt = 0; }
     // each word starts its spiral at its own angle, so the cloud does not lean one way
     const turn = (i * 2.399963) % TAU;
     let found = false;
@@ -147,7 +156,7 @@ function spiral(list: Word[], scale: number, W: number, H: number): Placed[] | n
       }
       if (!free) continue;
       for (let l = l0; l <= l1; l++) taken.fill(1, l * cols + c0, l * cols + c1 + 1);
-      items.push(placed(list[i], size, x, y));
+      items.push(placed(list[i], size, x, y, turned));
       lastAt = r;
       found = true;
       break;

@@ -71,7 +71,7 @@ const LANGS = new Function('return ' + /var LANGS = (\{[^}]+\});/.exec(js)[1])()
 const code = js.slice(tEnd).replace(/^\s*var ACCT = .*$/m, '').replace(/var PV_EMP = \{[\s\S]*?var pvDialog/, 'var pvDialog');
 const unent = (s) => s.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 const NOT_TEXT = new Set(['Saudi Arabia', 'Asia/Riyadh', 'Content-Type', 'Bearer ', 'HTTP ', 'TypeError: ', 'Failed to fetch', 'no canvas', 'Petromin', 'Petrolube', 'Dukan', 'Guest',
-  'D-001', 'I-001', 'P-001', 'SA+966', 'USA', 'Canada', 'Any', 'MMP-', 'D', 'I', 'P', 'ArrowLeft', 'ArrowRight', 'Md. Rahman']);
+  'D-001', 'I-001', 'P-001', 'PM-001', 'PL-001', 'SA+966', 'USA', 'Canada', 'Any', 'MMP-', 'D', 'I', 'P', 'ArrowLeft', 'ArrowRight', 'Md. Rahman']);
 const keys = new Set();
 for (const m of html.matchAll(/data-t(?:-placeholder|-label)?="([^"]+)"/g)) keys.add(unent(m[1]));
 const PATTERNS = [/\bt\("((?:[^"\\]|\\.)+)"/g, /\bsetError\([^;\n]*?, (?:true|!?[a-z][\w.()!&| ]*), "((?:[^"\\]|\\.)+)"/g, /\b(?:showBanner|failBanner|setNote|setNotice|fdMiss)\("((?:[^"\\]|\\.)+)"/g, /\bfail\("[a-z0-9-]+", "((?:[^"\\]|\\.)+)"/g,

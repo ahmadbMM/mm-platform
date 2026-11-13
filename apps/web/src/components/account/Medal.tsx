@@ -17,30 +17,39 @@ const SPECIAL: Record<string, [[string, string, string], string]> = {
 }; // BadgeGrid's special() lists the same colours, to frame their tiles and pop-ups to match
 // The T100 races in Jeddah (redrawn 2026-10-09 as the booking app's _bdgRace): a finisher's medal on a ribbon,
 // the race's name struck on it, gold / silver / bronze whatever the badge's colour. [text, [gradient], rim, ink]
-const RACE: Record<string, [string, [string, string, string], string, string]> = {
+const RACE: Record<string, [string, [string, string, string], string, string, [string, string]?, 1?]> = {
   t100: ["T100", ["#fff3b8", "#f3c431", "#b07c00"], "#7d5800", "#5c3f00"],
   t50: ["T50", ["#fff", "#cfd5de", "#858f9e"], "#636b78", "#323946"],
   t25: ["T25", ["#ffd9b5", "#dc8d4c", "#93501d"], "#713b12", "#4d2408"],
+  // Ironman 70.3 and 140.6 (the booking app, 2026-11-13: "add a new half iron man and full iron man badges", then "ironman 70.3
+  // ironman 140.6"): the same medal on a red ribbon (the fifth item, else the T100 blue), 70.3 in silver and 140.6 in gold.
+  // The sixth draws the IRONMAN M-Dot in its red over the race's total distance in miles (the same day: "change the design to
+  // include the ironman logos with the total distance of the race besides it or under it")
+  ironman_703: ["70.3", ["#fff", "#cfd5de", "#858f9e"], "#636b78", "#323946", ["#c8202f", "#8a141e"], 1],
+  ironman_1406: ["140.6", ["#fff3b8", "#f3c431", "#b07c00"], "#7d5800", "#5c3f00", ["#c8202f", "#8a141e"], 1],
 };
+// The M-Dot (the booking app's BDG_MDOT): the IRONMAN mark's block M with the dot over it, centred on x 0, 35.4 wide and 49 tall
+const MDOT = "M-8.58 8.57a8.58 8.58 0 1 0 17.16 0a8.58 8.58 0 1 0-17.16 0zM-17.72 18.97H17.72V48.93H7.17V37.8L3.22 48.93H-3.22L-7.17 37.8V48.93H-17.72z";
 
 export default function Medal({ icon, color, className = "" }: { icon: string; color: string; className?: string }) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const g = GLYPH[icon] ?? GLYPH.medal, sp = SPECIAL[color], race = RACE[icon];
   if (race) {
-    const w = race[0].length > 3 ? 20.5 : 15.5;
+    const m = !!race[5], n = race[0].length, w = m ? (n > 4 ? 15 : 11.8) : n > 4 ? 21 : n > 3 ? 20.5 : 15.5, rb = race[4] ?? ["#1e4f96", "#153a70"];
     const tx = (y: number, fill: string, op?: number) => (
-      <text className="bdg-rt" x="20" y={y} fill={fill} fillOpacity={op} textAnchor="middle" fontSize="11" textLength={w} lengthAdjust="spacingAndGlyphs">{race[0]}</text>
+      <text className="bdg-rt" x="20" y={y} fill={fill} fillOpacity={op} textAnchor="middle" fontSize={m ? 7.6 : n > 4 ? 10 : 11} textLength={w} lengthAdjust="spacingAndGlyphs">{race[0]}</text>
     );
+    const lg = (y: number, fill: string, op?: number) => <path transform={`translate(20 ${y}) scale(.23)`} fill={fill} fillOpacity={op} d={MDOT} />;
     return (
       <svg className={`bdg-m bdg-race ${className}`} viewBox="0 0 40 40" aria-hidden="true">
         <defs><linearGradient id={`bdg${id}`} x1="0" y1="0" x2="1" y2="1">{race[1].map((c, i) => <stop key={i} offset={i / 2} stopColor={c} />)}</linearGradient></defs>
-        <path fill="#1e4f96" d="M9 .8h7.4l6.4 12.6h-7.4z" />
-        <path fill="#153a70" d="M31 .8h-7.4l-6.4 12.6h7.4z" />
+        <path fill={rb[0]} d="M9 .8h7.4l6.4 12.6h-7.4z" />
+        <path fill={rb[1]} d="M31 .8h-7.4l-6.4 12.6h7.4z" />
         <path stroke="#fff" strokeOpacity=".55" strokeWidth=".9" fill="none" d="M12.7.8l6.4 12.6M27.3.8l-6.4 12.6" />
         <circle cx="20" cy="24.8" r="14.2" fill={`url(#bdg${id})`} stroke={race[2]} strokeWidth="1.2" />
         <circle cx="20" cy="24.8" r="11.7" fill="none" stroke={race[2]} strokeOpacity=".45" strokeWidth=".8" />
         <path d="M9.6 21.4a11 11 0 0 1 7.3-7.7" fill="none" stroke="#fff" strokeOpacity=".75" strokeWidth="1.3" strokeLinecap="round" />
-        {tx(29.1, "#fff", 0.55)}{tx(28.4, race[3])}
+        {m ? <>{lg(15.2, "#fff", 0.55)}{lg(14.6, "#e31837")}{tx(33.6, "#fff", 0.55)}{tx(33, race[3])}</> : <>{tx(29.1, "#fff", 0.55)}{tx(28.4, race[3])}</>}
       </svg>
     );
   }

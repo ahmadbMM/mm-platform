@@ -26,6 +26,15 @@ import { DEFE_RACE_URL, raceRegAsked, rowCodes, type CodeKind, addonLines, addon
 import { TickIcon } from "@/components/site/Icons";
 import { Sar, sarText } from "./Sar";
 import { TicketDir, TicketMore, TicketShare } from "./TicketParts";
+import TicketComing from "./TicketComing";
+import TicketBikeReport from "./TicketBikeReport";
+import { comingWords } from "./Coming.words";
+import { bikeReportWords } from "./BikeReport.words";
+import { comingCancelLink, stillComing } from "@/lib/still-coming";
+import { bikeReport } from "@/lib/bike-report";
+import TicketRoutePage from "./TicketRoutePage";
+import { routePageWords } from "./RoutePage.words";
+import { gpxFileName, type RoutePage } from "@/lib/route-track";
 
 // The booking app's ticket (renderBookingTicket), for My Account: the same card, the same rules.
 // Its actions are the booking app's own - Edit, Reschedule and Cancel open it there - so the site
@@ -108,6 +117,12 @@ type Props = {
   /** The Blood Donation event: its words (content/blood-words.ts), and each booking's free ride by booking id
    *  (customer_blood_rewards), null or missing where there is none. */
   blood?: { words: BloodWords; rewards: Map<string, BloodReward> | null } | null;
+  /** "Report a bike problem" (2026-11-13): the bikes' names by id, read only when a booking holds more than one (its
+   *  pop-up asks which); a name not read is said as "Bike 1", "Bike 2". */
+  bikeNames?: Map<string, string | null> | null;
+  /** The route's own page (2026-11-13, lib/route-track.ts routePageOf): its stored line and turn points, opened from
+   *  the route's block by Route details; null when nothing is stored for the route. */
+  routePage?: RoutePage | null;
 };
 
 const Bike = () => (
@@ -168,7 +183,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, online = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, online = null, bikeNames = null, routePage = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -233,6 +248,16 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const handed = rows.some((r) => !!r.bikeId);
   // On the ride's day a held ticket (or tonight's finished ride) shows where the rider is.
   const night = onDay && (look === "live" || (past && allDone)) ? ticketStages(rows, bikes, bikeName, locale) : null;
+  // "Still coming?" from 24 hours before the time to turn up until the start, and "Report a bike problem" once checked in
+  // with a bike (the booking app's _stcHtml and _brpHtml, 2026-11-13; lib/still-coming.ts, lib/bike-report.ts). Neither on
+  // the booking's own confirmation on staging's Experiences (manage false), which is the booking app's renderOneTicket and
+  // draws neither: a ride booked for tomorrow is not asked "Still coming?" the moment it is booked.
+  const stc = manage ? stillComing(rows, s, now, past) : null;
+  const brp = manage ? bikeReport(rows, s, now) : null;
+  const brpW = brp ? bikeReportWords(locale) : null;
+  // "Route details" in the route's block, when something is stored for the route (the booking app's _rtBtn, 2026-11-13)
+  const rp = route && !route.track ? routePage : null;
+  const rpW = rp ? routePageWords(locale) : null;
   const stLabel = { booked: t.stBooked, in: t.stIn, bike: t.stBike, done: t.stDone };
   // Before the start on the ride's day: the countdown to bike collection (or the gathering), then the start.
   const cdT = { collect: t.cdCollect, gather: t.cdGather, start: t.cdStart, h: t.durH, hm: t.durHM, m: t.durM };
@@ -349,6 +374,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             <span>{{ underReview: bikes ? t.underReview : t.underReviewNb, pending: t.pending, waitlist: t.waitlistCue, onBike: t.onBike, next: t.next, inQueue: t.inQueue }[cue]}</span>
           </div>
         ) : null}
+        {stc && <TicketComing sessionId={stc.sessionId} ok={stc.ok} cancel={comingCancelLink(links.bookings, stc.bookingId, locale) ?? links.manage} words={comingWords(locale)} failed={t.rrFailed} />}
         {partnerPlace(rows) === "defe" && !past && <p className="tk-line tk-partner">{t.withDefe}</p>}
         {night && (
           <ol className="tk-stages">
@@ -359,8 +385,13 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
             ))}
           </ol>
         )}
-        {held && (
-          // the breakfast spot is told at staff's time: when, in its place (_revealNoteHtml)
+        {brp && brpW && (
+          <TicketBikeReport now={now} reported={brp.reported} words={brpW}
+            options={brp.options.map((o, i) => ({ ...o, name: bikeNames?.get(o.bike) || `${brpW.bike} ${i + 1}` }))} />
+        )}
+        {held && !s?.bfOff && (
+          // the breakfast spot is told at staff's time: when, in its place (_revealNoteHtml); never to a rider who will not
+          // be told, when it is for members only (bfFor, 2026-11-13)
           <p className="tk-reveal"><Clock /><bdi>{t.revealSpotsAt(revealWhen(s?.revealAt, locale, today, { today: t.today, tomorrow: t.tomorrow }))}</bdi></p>
         )}
         {(() => {
@@ -431,6 +462,15 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
                   )}
                   {past && <p className="tk-rt-done"><Tick /><span>{t.rtRidden}</span></p>}
                   {route.href && <a className="tk-rt-a" href={route.href} target="_blank" rel="noopener">{t.rtMapLink}</a>}
+                  {/* the route's own page: its line, the facts, the turn points and a GPX file (the booking app's _rtBtn) */}
+                  {rp && rpW && (
+                    <TicketRoutePage words={{ open: rpW.open, title: t.route, turns: rpW.turns, gpx: rpW.gpx, lineAlt: rpW.lineAlt, map: t.rtMapLink, close: t.vtClose }}
+                      page={{
+                        name: rp.name, file: gpxFileName(rp.slug), href: rp.href, pts: rp.pts,
+                        turns: rp.turns.map((x) => ({ km: x.km, kmText: t.rtKm(kmText(x.km)), name: x.name })),
+                        facts: ([[rpW.dist, rp.km > 0 ? t.rtKm(kmText(rp.km)) : "", true], [rpW.surface, rp.surface, false], [rpW.level, rp.level, false]] as [string, string, boolean][]).filter((x) => x[1]),
+                      }} />
+                  )}
                   {route.track && <p className="tk-rt-osm">{t.rtOsm}</p>}
                 </div>
                 {route.track && <svg className="tk-rt-map" viewBox="0 0 40 158" aria-hidden="true" focusable="false"><path d={JCC_TRACK} /><circle cx="12.9" cy="71.4" r="3.2" /></svg>}

@@ -414,6 +414,26 @@ describe("api/booking", () => {
     expect(calls.some((c) => c.fn === "customer_booking_update")).toBe(true);
     expect(calls.some((c) => c.fn === "customer_addon_stock")).toBe(false);
   });
+  // staging: main's breakfast spot for members only (bike_slots._bfm, 2026-11-13), on this flow's confirmation ticket
+  it("tells a breakfast spot for members only on the confirmation's ticket to a member alone, asking only for such a ride", async () => {
+    const SAT = { ...SESSION, event_kind: "community", ride_kind: "saturday", needs_approval: false, open_to_all: true, breakfast_name: "Bean Box", addons: null };
+    const bfm = { ...SAT, bike_slots: '{"_time":"05:45 - 06:15","_bfm":1}' };
+    let calls = db({ community_member: () => json(false) }, bfm);
+    let b = await (await post(book, "/api/booking", { ...body, group: "beg", addons: [] })).json();
+    expect(b.ok).toBe(true);
+    expect(b.session).toMatchObject({ bfMembers: true, bfOff: true });
+    expect(calls.filter((c) => c.fn === "community_member")).toHaveLength(1);
+    db({}, bfm);
+    b = await (await post(book, "/api/booking", { ...body, group: "beg", addons: [] })).json();
+    expect(b.session.bfMembers).toBe(true);
+    expect(b.session).not.toHaveProperty("bfOff");
+    // a ride whose spot is for everyone asks nothing more
+    calls = db({ community_member: () => json(false) }, { ...SAT, bike_slots: '{"_time":"05:45 - 06:15"}' });
+    b = await (await post(book, "/api/booking", { ...body, group: "beg", addons: [] })).json();
+    expect(b.session).not.toHaveProperty("bfMembers");
+    expect(b.session).not.toHaveProperty("bfOff");
+    expect(calls.some((c) => c.fn === "community_member")).toBe(false);
+  });
 });
 
 describe("men only, women only or mixed (the owner, 2026-10-27)", () => {

@@ -9,7 +9,7 @@ import { loadSiteContent } from "@/lib/site";
 import { BOOKING_URL } from "@/lib/links";
 import { cookieValue } from "@/lib/live";
 import { loadTicketSessions } from "@/lib/tickets-data";
-import { ticketRow, type TicketRow } from "@/lib/tickets";
+import { bfFor, ticketRow, type TicketRow } from "@/lib/tickets";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // POST /api/booking: a rider books a ride on the website (the owner, 2026-10-03: full booking on
@@ -86,10 +86,15 @@ export async function POST(req: Request) {
   const tickets = r.rows.map(ticketRow).filter((x): x is TicketRow => !!x).sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
   // read with the account's token (list_sessions), as My Account's tickets are: a private ride keeps its name
   const sessions = await loadTicketSessions([input.sessionId], acct);
+  // A breakfast spot for community members only (bike_slots._bfm, 2026-11-13; lib/tickets.ts bfFor) is told on the
+  // confirmation's ticket to a member alone, as My Account's ticket tells it: the members gate's own answer, asked only
+  // for such a ride; a failed check reads as no.
+  const read = sessions.get(input.sessionId) ?? null;
+  const session = read?.bfMembers ? bfFor(read, (await rpcCall<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data === true) : read;
   return json({
     ok: true,
     tickets,
-    session: sessions.get(input.sessionId) ?? null,
+    session,
     // the rows as the database stored them, for a ticket my_bookings did not return in time
     booked: r.booked,
     addonsSaved: r.addonsSaved,

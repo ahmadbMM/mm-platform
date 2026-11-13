@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-13";
+export const PRIVACY_VERSION = "2026-11-14";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -88,6 +88,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Arranging the lesson, having a bike of the right size ready and teaching at the right level"
      ],
      [
+      "Learn-to-ride progress: the skills our instructor ticks for each learner and when, and the instructor’s one line of feedback",
+      "Kept for each learner who takes a lesson. Seen by our staff, and on their account by the learner or the adult who signed them up.",
+      "Showing each learner their progress, and a certificate for each level they complete"
+     ],
+     [
       "How you heard about us",
       "Asked on a community membership application and a learn-to-ride sign-up; optional on your account page",
       "Knowing how riders find us, in totals only"
@@ -116,6 +121,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Your answers on micromobility.sa/ask: the ideas, votes, ratings and questions you send",
       "Optional: only when you choose to answer. Kept with your account. Other people may see an answer, never who sent it; our staff can see who sent each one.",
       "Planning rides and events around what our community asks for, and keeping what is shown suitable for everyone"
+     ],
+     [
+      "The mentorship programme (Community members only): if you register as a mentee, your university, field of study, city, country, starting year, the help you want, your goal and the mentor gender you prefer; if you register as a mentor, where and what you studied, your work, the places you know, how you can help and what you tell us",
+      "Optional: only if you register. A mentee’s university, field of study, city, country, starting year, the help wanted and goal are shown to Community members without their name; the mentor gender they prefer is seen by our staff only. What a mentor tells us is seen by our staff only; a short line about their experience, without their name, is shown to the one student our staff propose them to. Once you both accept, we share your first name and WhatsApp number with that one person. You can step back at any time; we then stop sharing them.",
+      "Matching students starting university with Community members who can help them, and following up on each match"
      ],
      [
       "A blood donation event’s registration: your name, mobile number, birth date and nationality, whether you come as a donor or a visitor, which club or community you are from, your email address and blood type if you come as a donor, your gender if you come as a visitor, and whether you donated",
@@ -153,9 +163,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Deciding whether to give you the badge. The proof is deleted as soon as our team answers."
      ],
      [
-      "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings",
+      "Bookings and rides: rides booked, when you booked, your party, check-in and return times, bike used, payments, add-ons, waiver agreement, ratings, whether you said the day before that you are still coming, and any bike problem you report from your ticket (the fault you pick, a short note if you add one, and when)",
       "Created as you use the service",
-      "Running your rides, safety, payments and records"
+      "Running your rides, safety, payments and records. Our staff read a bike problem report to fix the bike."
      ],
      [
       "Your choice about ride news, and when you made it",
@@ -166,6 +176,26 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Notifications on your phone or computer: your two switches, My rides (reminders, changes to rides you booked, waitlist places) and Community (a new challenge, the Saturday recap), when and on which device you set them, the words shown and this notice’s version, and the address your browser gives us to reach it",
       "Always optional: only if you turn notifications on, in Account or with Remind me after a booking. Each switch turns off there as easily, and turning both off deletes that address.",
       "Sending the notifications you chose and keeping proof of your choice. Each message passes, encrypted, through your browser’s own notification service, outside Saudi Arabia."
+     ],
+     [
+      "Your Updates list: the messages the app addresses to you (reminders, changes to sessions you booked, waitlist places, booking opening for a Saturday you planned, a new challenge, the Saturday recap, notes from our team), and when you opened the list",
+      "Kept for every account, with notifications on or off, for 90 days",
+      "Showing you in the app every message we sent you, and which ones you have not read yet"
+     ],
+     [
+      "Community plans and challenges: the Saturdays you tick as planning to come (Community members), each lap you scan at a circuit challenge (your account, the challenge, the session and the time), and the company challenge you join with its code, and when you joined",
+      "Always optional: only if you tick a Saturday, scan a lap or enter a company code. The Saturdays you tick are seen only by you and deleted when the month ends. Our staff see lap counts, and who joined each company challenge with their name and mobile number. Other riders never see any of it about you: a company challenge shows its riders only totals of 10 people or more.",
+      "Sending you one message when booking opens for a Saturday you ticked; counting your laps toward a challenge’s target and its badge; showing your company’s totals and giving the challenge’s badge"
+     ],
+     [
+      "Your calendar address: a random key and the language of your calendar, made when you open Calendar in Account, and when it was last read",
+      "Always optional: only if you open Calendar. You can replace the address at any time, and the old one stops working.",
+      "Putting your upcoming sessions in the calendar you choose. The calendar service you add it to reads them through that address: each session’s name, start and end, gathering time and meeting point, nobody else’s, and no prices."
+     ],
+     [
+      "A note on your account, set by our staff, to leave you out when they name riders’ milestones at a Saturday ride",
+      "Set and seen only by our staff",
+      "Not naming you at a ride’s briefing when you would rather not be named"
      ]
     ]
    }
@@ -196,7 +226,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>To share a runner’s details with the hosts of Run for Her:</strong> your consent, which we ask for before you can take part in the race.",
     "<strong>To share an athlete’s details with Kamin Sports for Victory Lap:</strong> your consent, which we ask for before you can take part in the race.",
     "<strong>To share an athlete’s details with WeSportify, Mile and Gymnation for the Arena Heros Hybrid Race:</strong> your consent, which we ask for before you can take part in the race.",
-    "<strong>To share a donor’s details with the partners and third parties of a blood donation event:</strong> your consent, which we ask for before you can register."
+    "<strong>To share a donor’s details with the partners and third parties of a blood donation event:</strong> your consent, which we ask for before you can register.",
+    "<strong>To share a mentor’s or a mentee’s first name and WhatsApp number with their match:</strong> your consent, which we ask for when you register and which you withdraw by stepping back."
    ]
   },
   {
@@ -304,6 +335,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Outside Saudi Arabia"
      ],
      [
+      "The calendar service you add your calendar address to",
+      "Only if you add it: your upcoming bookings (each session’s name, start and end, gathering time and meeting point), which it reads through your calendar address",
+      "Wherever that service is, often outside Saudi Arabia"
+     ],
+     [
       "Instagram (Meta)",
       "The Instagram handle you gave, to read that account’s public follower count, and nothing else about you",
       "Outside Saudi Arabia"
@@ -338,7 +374,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>Account and profile:</strong> kept while you have an account. If you ask us to delete it, we close it within 30 days: you can no longer sign in and we stop contacting you. We keep the closed account and its history under your name, seen only by our admin team, and you can open a new account with the same email.",
     "<strong>Booking and payment records:</strong> kept for 10 years, because the law requires financial records. Then destroyed.",
     "<strong>Technical error reports:</strong> deleted after 90 days.",
-    "<strong>The proof you attach to a badge request:</strong> deleted as soon as our team answers the request."
+    "<strong>The proof you attach to a badge request:</strong> deleted as soon as our team answers the request.",
+    "<strong>Your Updates list:</strong> each message is deleted after 90 days.",
+    "<strong>The Saturdays you plan to come:</strong> deleted when the month ends."
    ]
   },
   {
@@ -464,6 +502,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "ترتيب الدرس، وتجهيز دراجة بالمقاس المناسب، والتعليم بالمستوى المناسب"
      ],
      [
+      "تقدّم تعلّم الركوب: المهارات التي يحدّدها مدرّبنا لكل متعلّم ووقت تحديدها، وملاحظة المدرّب في سطر واحد",
+      "تُحفظ لكل متعلّم يحضر درسًا. يراها موظفونا، ويراها في حسابه المتعلّم أو البالغ الذي سجّله.",
+      "أن نعرض لكل متعلّم تقدّمه، وشهادة لكل مستوى يُكمله"
+     ],
+     [
       "كيف عرفت عنا",
       "يُسأل في طلب عضوية المجتمع وفي التسجيل في دروس تعلّم الركوب، وهو اختياري في صفحة حسابك",
       "معرفة كيف يصل إلينا الراكبون، في صورة أعداد إجمالية فقط"
@@ -492,6 +535,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "إجاباتك في micromobility.sa/ask: الأفكار والتصويتات والتقييمات والأسئلة التي ترسلها",
       "اختياري: فقط عندما تختار أن تجيب. تُحفظ مع حسابك. قد يرى الآخرون الإجابة، لكنهم لا يرون من أرسلها أبداً؛ أما موظفونا فيرون من أرسل كل إجابة.",
       "لتخطيط الجولات والفعاليات وفق ما يطلبه مجتمعنا، ولإبقاء ما يُعرض مناسباً للجميع"
+     ],
+     [
+      "برنامج الإرشاد (لأعضاء المجتمع فقط): إن سجّلت كمسترشد: جامعتك وتخصصك ومدينتك ودولتك وسنة بدئك والمساعدة التي تريدها وهدفك وجنس المرشد الذي تفضّله؛ وإن سجّلت كمرشد: أين درست وماذا درست وعملك والأماكن التي تعرفها وكيف يمكنك المساعدة وما تخبرنا به",
+      "اختياري: فقط إذا سجّلت. تُعرض جامعة المسترشد وتخصصه ومدينته ودولته وسنة بدئه والمساعدة التي يريدها وهدفه لأعضاء المجتمع دون اسمه، ولا يرى جنس المرشد الذي يفضّله إلا موظفونا. وما يخبرنا به المرشد لا يراه إلا موظفونا، ويُعرض سطر قصير عن خبرته، دون اسمه، على الطالب الوحيد الذي يقترحه عليه موظفونا. وبعد قبولكما كليكما، نشارك اسمك الأول ورقم واتساب الخاص بك مع ذلك الشخص وحده. ويمكنك الانسحاب في أي وقت، وعندها نتوقف عن مشاركتهما.",
+      "مطابقة الطلاب الذين يبدؤون دراستهم الجامعية مع أعضاء المجتمع القادرين على مساعدتهم، ومتابعة كل مطابقة"
      ],
      [
       "التسجيل في فعالية للتبرع بالدم: اسمك ورقم جوالك وتاريخ ميلادك وجنسيتك، وما إذا كنت ستحضر كمتبرع أم كزائر، والنادي أو المجتمع الذي تنتمي إليه، وبريدك الإلكتروني وفصيلة دمك إن حضرت كمتبرع، وجنسك إن حضرت كزائر، وما إذا كنت قد تبرعت",
@@ -529,9 +577,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "تحديد ما إذا كنا سنمنحك الوسام. ويُحذف الإثبات فور ردّ فريقنا."
      ],
      [
-      "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات",
+      "الحجوزات والرحلات: الرحلات المحجوزة، ووقت الحجز، ومرافقوك، وأوقات تسجيل الوصول والإرجاع، والدراجة المستخدمة، والمدفوعات، والإضافات، والموافقة على الإقرار، والتقييمات، وما إذا أكّدت في اليوم السابق أنك ما زلت قادمًا، وأي مشكلة في الدراجة تُبلغ عنها من تذكرتك (العطل الذي تختاره، وملاحظة قصيرة إن أضفتها، ووقت البلاغ)",
       "تُسجَّل أثناء استخدامك للخدمة",
-      "تشغيل رحلاتك، والسلامة، والمدفوعات، والسجلات"
+      "تشغيل رحلاتك، والسلامة، والمدفوعات، والسجلات. يقرأ موظفونا بلاغ مشكلة الدراجة لإصلاحها."
      ],
      [
       "اختيارك بشأن أخبار الرحلات ووقت اختيارك",
@@ -542,6 +590,26 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "الإشعارات على هاتفك أو حاسوبك: مفتاحاك، رحلاتي (التذكيرات، والتغييرات على الرحلات التي حجزتها، والأماكن من قائمة الانتظار) والمجتمع (تحدٍّ جديد، وملخص السبت)، ومتى ضبطتهما وعلى أي جهاز، والكلمات المعروضة، وإصدار هذا الإشعار، والعنوان الذي يعطينا إياه متصفحك للوصول إليه",
       "اختيارية دائمًا: فقط إذا فعّلت الإشعارات، من الحساب أو بزر ذكّرني بعد الحجز. ويُطفأ كل مفتاح من هناك بالسهولة نفسها، وإطفاء الاثنين يحذف ذلك العنوان.",
       "إرسال الإشعارات التي اخترتها والاحتفاظ بإثبات اختيارك. تمر كل رسالة مشفّرةً عبر خدمة الإشعارات الخاصة بمتصفحك، خارج المملكة العربية السعودية."
+     ],
+     [
+      "قائمة التحديثات: الرسائل التي يوجّهها إليك التطبيق (التذكيرات، والتغييرات على الجلسات التي حجزتها، والأماكن من قائمة الانتظار، وفتح الحجز ليوم سبت خطّطت له، وتحدٍّ جديد، وملخص السبت، وملاحظات فريقنا)، ووقت فتحك للقائمة",
+      "تُحفظ لكل حساب، سواء كانت الإشعارات مفعّلة أم لا، لمدة 90 يومًا",
+      "أن نعرض لك داخل التطبيق كل رسالة أرسلناها إليك، وما لم تقرأه منها بعد"
+     ],
+     [
+      "خطط المجتمع والتحديات: أيام السبت التي تختار أنك تنوي الحضور فيها (لأعضاء المجتمع)، وكل لفة تمسح رمزها في تحدي الحلبة (حسابك والتحدي والجلسة والوقت)، وتحدي الشركة الذي تنضم إليه برمزه ووقت انضمامك",
+      "اختيارية دائمًا: فقط إذا اخترت يوم سبت أو مسحت رمز لفة أو أدخلت رمز شركة. لا يرى أيام السبت التي تختارها إلا أنت، وتُحذف بانتهاء الشهر. يرى موظفونا أعداد اللفات، ومن انضم إلى كل تحدي شركة باسمه ورقم جواله. لا يرى الراكبون الآخرون شيئًا من ذلك عنك: لا يعرض تحدي الشركة لراكبيه إلا أعدادًا إجمالية لا تقل عن 10 أشخاص.",
+      "إرسال رسالة واحدة إليك عند فتح الحجز ليوم سبت اخترته؛ واحتساب لفاتك نحو هدف التحدي ووسامه؛ وعرض الأعداد الإجمالية لشركتك ومنح وسام التحدي"
+     ],
+     [
+      "عنوان تقويمك: مفتاح عشوائي ولغة تقويمك، يُنشآن عندما تفتح التقويم في الحساب، ووقت آخر قراءة له",
+      "اختياري دائمًا: فقط إذا فتحت التقويم. يمكنك استبدال العنوان في أي وقت، فيتوقف العنوان القديم عن العمل.",
+      "إضافة جلساتك القادمة إلى التقويم الذي تختاره. تقرأها خدمة التقويم التي تضيفه إليها عبر ذلك العنوان: اسم كل جلسة وبدايتها ونهايتها ووقت التجمّع ومكان اللقاء، دون بيانات أي شخص آخر ودون أسعار."
+     ],
+     [
+      "ملاحظة في حسابك يضعها موظفونا لاستثنائك عند ذكر إنجازات الراكبين في جولة السبت",
+      "يضعها ويراها موظفونا فقط",
+      "ألّا نذكر اسمك في إحاطة الجولة إن كنت تفضّل ذلك"
      ]
     ]
    }
@@ -572,7 +640,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>لمشاركة بيانات العدّاء مع الجهات المنظِّمة لسباق نركض لأجلها:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
     "<strong>لمشاركة بيانات الرياضي مع كامن سبورتس لسباق فيكتوري لاب:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
     "<strong>لمشاركة بيانات الرياضي مع WeSportify وMile وGymnation لسباق أرينا هيروز الهجين:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
-    "<strong>لمشاركة بيانات المتبرع مع الشركاء والأطراف الثالثة لفعالية تبرع بالدم:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من التسجيل."
+    "<strong>لمشاركة بيانات المتبرع مع الشركاء والأطراف الثالثة لفعالية تبرع بالدم:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من التسجيل.",
+    "<strong>لمشاركة الاسم الأول ورقم واتساب للمرشد أو المسترشد مع من تتم مطابقته معه:</strong> موافقتك، ونطلبها عند تسجيلك، وتسحبها بالانسحاب."
    ]
   },
   {
@@ -680,6 +749,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "خارج المملكة العربية السعودية"
      ],
      [
+      "خدمة التقويم التي تضيف إليها عنوان تقويمك",
+      "فقط إذا أضفته إليها: حجوزاتك القادمة (اسم كل جلسة وبدايتها ونهايتها ووقت التجمّع ومكان اللقاء)، تقرأها عبر عنوان تقويمك",
+      "حيثما توجد تلك الخدمة، وغالبًا خارج المملكة العربية السعودية"
+     ],
+     [
       "إنستغرام (Meta)",
       "حساب إنستغرام الذي قدّمته، لقراءة عدد متابعيه العام، ولا شيء آخر عنك",
       "خارج المملكة العربية السعودية"
@@ -714,7 +788,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>الحساب والملف الشخصي:</strong> نحتفظ بهما ما دام حسابك قائمًا. وإذا طلبت حذف حسابك نغلقه خلال 30 يومًا: فلا يمكنك تسجيل الدخول إليه ونتوقف عن التواصل معك. ونحتفظ بالحساب المغلق وسجله باسمك، ولا يطّلع عليه إلا فريق الإدارة لدينا، ويمكنك فتح حساب جديد بالبريد الإلكتروني نفسه.",
     "<strong>سجلات الحجز والدفع:</strong> نحتفظ بها 10 سنوات لأن النظام يُلزم بحفظ السجلات المالية، ثم نتلفها.",
     "<strong>تقارير الأخطاء التقنية:</strong> تُحذف بعد 90 يومًا.",
-    "<strong>الإثبات الذي ترفقه بطلب وسام:</strong> يُحذف فور ردّ فريقنا على الطلب."
+    "<strong>الإثبات الذي ترفقه بطلب وسام:</strong> يُحذف فور ردّ فريقنا على الطلب.",
+    "<strong>قائمة التحديثات:</strong> تُحذف كل رسالة بعد 90 يومًا.",
+    "<strong>أيام السبت التي تنوي الحضور فيها:</strong> تُحذف بانتهاء الشهر."
    ]
   },
   {

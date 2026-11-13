@@ -112,8 +112,11 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   const routeKm = routeItems(content, L);
   const now = riyadhClock(new Date());
   const today = now.slice(0, 10);
-  // every date ahead, men-only and women-only ones too, to every visitor (the owner, 2026-10-28)
-  const all = upcoming(rides?.sessions ?? [], now);
+  // every date ahead, men-only and women-only ones too, to every visitor (the owner, 2026-10-28). A date staff closed as
+  // Full, no waitlist (lib/rides.ts fbkOf, 2026-11-13) is listed by main's ExperienceSteps page as Fully booked; this
+  // booking flow has no card that books nothing for it, and the database refuses a closed session, so it stays out here
+  // as every closed session did before (it never brings back a card that shows only while it has dates).
+  const all = upcoming(rides?.sessions ?? [], now).filter((s) => !s.fbk);
   // The booking window (site_content booking.window): a date not open yet is shown greyed, never hidden.
   const window = siteBookingWindow(content);
   const clock = (x: string) => fmtClock(x, locale);
@@ -164,7 +167,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // inside MicroMobility Experiences on its own card and hands it to the booking app. Listed nowhere here, so it is
   // never read as a Saturday ride. Main's Featured cards, the Experiences card's marks and kind switch, the Saturday
   // ride's sunrise and routes, and Booked on a date the visitor holds (2026-11-13) are its ExperienceSteps page's own:
-  // they are not drawn by this booking flow.
+  // they are not drawn by this booking flow. Nor is the breakfast spot (a member-only one, bike_slots._bfm, is told to
+  // members alone on main's page): this flow names no breakfast stop, and its tickets' routes are read without one.
   const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "", arena: "", blood: "", yoga: "" };
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count)));
   const listed: RideSession[] = [];

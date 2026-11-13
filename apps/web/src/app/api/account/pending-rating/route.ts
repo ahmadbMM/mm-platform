@@ -2,7 +2,7 @@ import { BLOOD_NAME, bloodName } from "@/content/blood-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { serverL } from "@/i18n/dicts";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
-import { accountBookings } from "@/lib/account";
+import { accountBookings, rpcServer } from "@/lib/account";
 import { asLocale, resolvePage } from "@/lib/content";
 import { formOf, pendingRating, ratingNoBike, rideWord } from "@/lib/rating";
 import { kindNames, sessionName } from "@/lib/rides";
@@ -10,7 +10,7 @@ import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
 import { bizOf } from "@/lib/biz";
-import { breakfastFor, fmtDayDate } from "@/lib/tickets";
+import { bfFor, breakfastFor, fmtDayDate } from "@/lib/tickets";
 import { loadTicketSessions } from "@/lib/tickets-data";
 import { riyadhClock } from "@/lib/workshop-days";
 
@@ -37,7 +37,9 @@ export async function GET(req: Request) {
   const L = asLocale(locale), tx = serverL(locale);
   // the session as the account sees it (its token): a private ride keeps its name and its kind's form
   const [sessions, content] = await Promise.all([loadTicketSessions([gate.sessionId], acct), loadSiteContent()]);
-  const s = sessions.get(gate.sessionId);
+  const s0 = sessions.get(gate.sessionId);
+  // a breakfast spot for community members only is named to a member alone (bike_slots._bfm, 2026-11-13; bfFor)
+  const s = s0?.bfMembers ? bfFor(s0, (await rpcServer<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data === true) : s0;
   const names = { ...kindNames(resolvePage(experiencesSchema, content, L).dates), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx) };
   const enNames = { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), blood: BLOOD_NAME };
   // a run says run, the pool, the workshop, an event and Victory Lap say session, never ride (2026-10-18)

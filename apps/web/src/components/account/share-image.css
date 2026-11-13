@@ -1,0 +1,32 @@
+/* Share a badge or a title as a picture (ShareImage.tsx; the booking app's badge-share.js, 2026-11-13): the Share
+   buttons, and the pop-up - the picture, the first-name switch, one button, Close - centred as the badge's pop-up is.
+   .shr-probe holds a medal for the moment its colours are read; a green badge is the brand green on the picture. */
+.shr-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; }
+.shr-btn svg { flex: none; }
+.shr-line { margin-top: 8px; padding: 0 18px; border: 1px solid rgba(26, 25, 25, .24); border-radius: 999px; background: #fff; color: #1a1919; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.shr-line:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+.shr-probe { position: absolute; inset-inline-start: 0; top: 0; width: 0; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; }
+.shr-probe .bdc-green { --bc: #03ff89; }
+
+dialog.shr-dlg { width: min(92vw, 340px); max-height: 92dvh; overflow: auto; padding: 20px; border: 1px solid rgba(26, 25, 25, .12); border-top: 3px solid #077a4b; border-radius: 18px; background: #fff; color: #1a1919; text-align: center; }
+dialog.shr-dlg::backdrop { background: rgba(26, 25, 25, .5); }
+.shr-view { height: min(46dvh, 420px); aspect-ratio: 9 / 16; max-width: 100%; margin: 0 auto; border-radius: 12px; overflow: hidden; background: #0b0e0a; }
+.shr-view img { display: block; width: 100%; height: 100%; }
+.shr-wait { height: 100%; background: linear-gradient(110deg, #0b0e0a 30%, #1b231d 50%, #0b0e0a 70%) 0 0 / 300% 100%; animation: shr-wait 1.4s linear infinite; }
+@keyframes shr-wait { to { background-position: -150% 0; } }
+@media (prefers-reduced-motion: reduce) { .shr-wait { animation: none; } }
+.shr-err { display: grid; align-content: center; gap: 12px; height: 100%; padding: 12px; background: #fff; font-size: 13px; line-height: 1.45; color: #1a1919; }
+.shr-sw { display: flex; align-items: center; gap: 12px; min-height: 44px; margin-top: 14px; padding: 10px 12px; border: 1px solid rgba(26, 25, 25, .18); border-radius: 10px; text-align: start; cursor: pointer; }
+.shr-sw input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.shr-sw-box { position: relative; flex: none; width: 44px; height: 26px; border-radius: 13px; background: rgba(127, 127, 127, .45); }
+.shr-sw-box::after { content: ""; position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+.shr-sw input:checked + .shr-sw-box { background: #077a4b; }
+.shr-sw input:checked + .shr-sw-box::after { inset-inline-start: 21px; }
+.shr-sw input:focus-visible + .shr-sw-box { outline: 2px solid #077a4b; outline-offset: 2px; }
+.shr-sw-txt { font-size: 14px; font-weight: 700; }
+.shr-acts { display: grid; gap: 10px; margin-top: 14px; }
+.shr-go, .shr-x { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 44px; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+.shr-go { border: 0; background: #077a4b; color: #fbf9f4; }
+.shr-go:disabled { opacity: .55; cursor: default; }
+.shr-x { border: 1px solid rgba(26, 25, 25, .24); background: #fff; color: #1a1919; }
+.shr-go:focus-visible, .shr-x:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }

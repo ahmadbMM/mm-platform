@@ -9,7 +9,7 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { loadAddonItems } from "../ticket-addons";
 import { vlDivName } from "../vlap";
-import { placeLink, qrTone, satNumOk, wlCollectTime, type TicketSession } from "../tickets";
+import { bfFor, placeLink, qrTone, satNumOk, wlCollectTime, type TicketSession } from "../tickets";
 import { QR_DARK, QR_INK } from "../qr-paint";
 
 const renderToStaticMarkup = renderUntyped as (el: ReactElement) => string;
@@ -426,6 +426,40 @@ describe("the Saturday ride's breakfast spot told at staff's time, the meeting p
     expect(html).toContain('href="https://maps.app.goo.gl/x"');
     expect(html).not.toContain("Jeddah Corniche Circuit");
     expect(TICKET.ar.revealSpotsAt("غداً · 8 م")).toBe("موقع الفطور: يُعلَن عنه غداً · 8 م");
+  });
+});
+
+describe("the breakfast spot for members only (bike_slots._bfm; the booking app's _bfOff, 2026-11-13)", () => {
+  const NOW = Date.parse("2099-03-02T09:00:00Z");
+  const MEM = '{"_time":"05:45 - 06:15","_bfm":1}';
+  const told = ticketSession({ ...satRow, bike_slots: MEM, breakfast_name: "Bean Box", breakfast_url: "https://maps.example.test/bean" })!;
+  const held = ticketSession({ ...satRow, bike_slots: MEM, reveal_at: "2099-03-03T17:00:00Z" })!;
+  const card = (s: TicketSession) => renderToStaticMarkup(createElement(TicketCard, {
+    locale: "en", today: "2099-03-02", rows: [ticketRow({ id: "s1abcdef", session_id: s.id, session_date: s.date, session_day: "Wednesday", status: "waiting", approval: "approved", queue_num: 3, price: 0, paid: false, name: "Ann", type_preference: "Road" })!],
+    session: s, name: "Saturday Social Ride", cue: null, t: TICKET.en, gather: "Gathering", start: "Start", typeName: (x: string) => x,
+    links: { edit: null, manage: "https://book.example.test/?tab=bookings", place: s.meetUrl }, now: NOW,
+  }));
+  it("reads the switch from the ride's settings; every booking is the default", () => {
+    expect(told.bfMembers).toBe(true);
+    expect(sat.bfMembers).toBeUndefined();
+    expect(bfFor(sat, false)).toBe(sat);
+    expect(bfFor(told, true)).toBe(told);
+    expect(bfFor(told, false).bfOff).toBe(true);
+  });
+  it("a member is told it; anyone else reads no stop and no \"announced at\" line, and keeps the meeting point", () => {
+    expect(breakfastFor(bfFor(told, true), "en")).toMatchObject({ name: "Bean Box" });
+    expect(card(bfFor(told, true))).toContain("Bean Box");
+    const off = bfFor(told, false);
+    expect(breakfastFor(off, "en")).toBeNull();
+    expect(card(off)).not.toContain("Bean Box");
+    expect(card(off)).toContain('href="https://maps.app.goo.gl/x"');
+    expect(card(bfFor(held, true))).toContain("Breakfast spot: announced Tomorrow · 8 PM");
+    const hidden = bfFor(held, false);
+    expect(card(hidden)).not.toContain("Breakfast spot: announced");
+    expect(card(hidden)).toContain("tk-venue\">Meeting point<");
+    const ics = icsFor(hidden, "Saturday Social Ride - Wednesday", icsPlace(hidden), new Date(NOW));
+    expect(ics).not.toContain("Breakfast spot: announced");
+    expect(ics).toContain("LOCATION:https://maps.app.goo.gl/x");
   });
 });
 

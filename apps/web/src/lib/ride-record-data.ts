@@ -4,7 +4,7 @@
 // reads them), the badges staff gave this account and the badges it asked for (its own token), and
 // the name of a bike handed over tonight.
 import { rpcServer, type Account } from "./account";
-import { getJson, readSessions, rideKind, type SessionReader } from "./rides";
+import { getJson, readSessions, rideKind, type RideKind, type SessionReader } from "./rides";
 import type { BadgeData, BadgeRow, RecordSession } from "./ride-record";
 import { badgeReqs } from "./badge-request";
 
@@ -31,6 +31,22 @@ export async function loadRecordSessions(ids: string[], account: SessionReader |
     } catch { /* that chunk counts as unknown sessions */ }
   }));
   return out;
+}
+
+/** The kinds of session the account can still book, for Stats' kinds tried (lib/landmarks.ts triedKinds; the booking
+ *  app's _lmKindsHtml): the sessions it is sent, open or full, today (Riyadh) or later, read through list_sessions with
+ *  its own token, so a private ride it may see counts too. The Petromin nights are left out: the site lists them on
+ *  Experiences alone. Null when they could not be read: the checklist then shows nothing rather than the kinds done alone. */
+export async function loadOpenKinds(today: string, account: SessionReader | null, fetchImpl: typeof fetch = fetch): Promise<Set<RideKind> | null> {
+  const { url, key } = env();
+  if (!url || !key || !/^\d{4}-\d{2}-\d{2}$/.test(today)) return null;
+  try {
+    const rows = await readSessions(fetchImpl, url, key, `select=id,session_date,status,ride_kind,event_kind&session_date=gte.${today}&status=in.(open,full)&limit=500`, account);
+    if (!Array.isArray(rows)) return null;
+    return new Set((rows as Record<string, unknown>[]).filter((r) => r && typeof r.id === "string").map((r) => rideKind(r)).filter((k) => k !== "petromin"));
+  } catch {
+    return null;
+  }
 }
 
 /** The Saturday ride's two distances (the booking app's _rgKm): the ride's own, kept in its bike_slots as

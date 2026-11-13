@@ -18,6 +18,8 @@ import { TicketWake } from "@/components/booking/TicketParts";
 import RateRide from "@/components/account/RateRide";
 import RideRecord from "@/components/account/RideRecord";
 import RideMore from "@/components/account/RideMore";
+import HelperPath, { helperLine } from "@/components/account/HelperPath";
+import { Anniversary, TriedKinds } from "@/components/account/Landmarks";
 import AccountParts, { accountPartHref, accountPartOf } from "@/components/account/AccountParts";
 import WalletCard from "@/components/account/WalletCard";
 import ReferralCard from "@/components/account/ReferralCard";
@@ -28,6 +30,9 @@ import BloodTypeCard from "@/components/account/BloodTypeCard";
 import { bloodTypeWords } from "@/components/account/BloodType.words";
 import SportCard from "@/components/account/SportCard";
 import { sportWords } from "@/components/account/Sport.words";
+import CalendarFeed from "@/components/account/CalendarFeed";
+import { calendarWords } from "@/components/account/Calendar.words";
+import { calfHost, calfLang, calfPeekOn } from "@/lib/calendar-feed";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import "../handoff.css";
@@ -48,13 +53,19 @@ import { bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
 import { kindNames, sessionName, type RideKind } from "@/lib/rides";
 import { routeItems } from "@/lib/route-names";
+import { routePageOf } from "@/lib/route-track";
 import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
 import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
-import { BOOTH_DIR, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, rideCompleted, shareLink, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
+import { BOOTH_DIR, bfFor, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, rideCompleted, shareLink, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
+import { bikeReport } from "@/lib/bike-report";
 import { badgeList, ledRides, profilePct, recordRows, rideMore, rideStats, weekStreak, type BadgeItem } from "@/lib/ride-record";
-import { bikeName, loadBadgeData, loadRecordSessions } from "@/lib/ride-record-data";
+import { bikeName, loadBadgeData, loadOpenKinds, loadRecordSessions } from "@/lib/ride-record-data";
+import { anniversaryOf, annivLine, triedKinds } from "@/lib/landmarks";
+import { helperPathOf } from "@/lib/helper-path";
+import { shareDays } from "@/lib/share-days";
+import { firstNameOf } from "@/lib/share-picture";
 import { riyadhClock } from "@/lib/workshop-days";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { phrase } from "@/i18n/tx";
@@ -216,6 +227,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
   // Account: the tickets, the rating, the Club card link, the wallet, Invite friends, the blood type, the sport and the shortcuts.
   const accountMain = async () => {
+    // the calendar address (2026-11-13): its section shows only once calendar_link's peek answers, which makes nothing and
+    // sends no key; a database without it, or a failed read, shows none (lib/calendar-feed.ts)
+    const calendarP = rpcServer<unknown>("calendar_link", { p_id: acct.id, p_token: acct.token, p_op: "peek" }).then(calfPeekOn);
     const groups = ticketGroups(rows, today);
     const doneTonight = doneToday(rows, today);
     const cancelled = cancelledGroups(rows, today); // kept, said as such, until their day has gone (2026-11-10)
@@ -256,6 +270,13 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         return { ...row, added };
       }),
     ]);
+    // A ride whose breakfast spot is for community members only (bike_slots._bfm; the booking app's _bfOff, 2026-11-13)
+    // tells it to a member alone: the members gate's own answer (community_member), asked only when such a ride is here;
+    // a failed check reads as no.
+    if ([...sessions.values()].some((x) => x.bfMembers)) {
+      const mem = (await rpcServer<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data === true;
+      for (const [k, v] of sessions) sessions.set(k, bfFor(v, mem));
+    }
     const lockers = lockersRaw == null ? null : lockersOf(lockersRaw);
     // the rider's own lockers with no booking behind them (the lockers page; 2026-11-09): on that evening's ride ticket,
     // and as Your lockers below the rides, each evening with the QR the desk scans to hand the keys
@@ -301,6 +322,12 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const rideName = (s: TicketSession | undefined, sessionId: string) =>
       (s ? sessionName(s, names, enNames, L !== "en") : isNonBike(null, sessionId) ? tx("Session", "الفعالية") : tx("Ride", "جولة"));
     const drawn = new Date().getTime(); // the countdown's first line, before the browser takes over
+    // "Report a bike problem" (2026-11-13): a booking holding more than one bike asks which one, by the bikes' names
+    const brpBikes = [...new Set([...groups, ...past].flatMap((g) => {
+      const o = bikeReport(g.rows, sessions.get(g.sessionId), drawn)?.options ?? [];
+      return o.length > 1 ? o.map((x) => x.bike) : [];
+    }))].slice(0, 12);
+    const bikeNames = new Map(await Promise.all(brpBikes.map(async (id) => [id, await bikeName(id)] as const)));
     // Changing a booking happens in the booking app: Edit reopens its date there, as the app's own
     // Edit does; Reschedule and Cancel open its My Bookings. (A Run for Her place is only cancelled;
     // its event is still named, as the booking app's event link takes it.)
@@ -319,6 +346,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       ["ambassadors", tx("Ambassador Program", "برنامج السفراء"), "/ambassadors"],
       ["help", tx("Help", "المساعدة"), "/help"],
     ].filter(([k]) => !hidden.includes(k));
+    const calendarOn = await calendarP;
     return (
       <>
         {extras.ambassador && <div className="ac-sec"><AmbassadorCard locale={locale} a={extras.ambassador} /></div>}
@@ -346,8 +374,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                       // the live map follows the ride leader: a bike session's only (2026-10-18)
                       live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null,
                       share: shareLink(app, ev, g.sessionId), bookings: myBookings }}
-                    route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor}
+                    route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} bikeNames={bikeNames}
                     online={payOnline ? { open: payCfg.bookings !== "off", refundDays: payCfg.refundDays, today } : null} />
                 );
               })}
@@ -366,7 +394,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                   <TicketCard key={g.key} past locale={locale} today={today} rows={g.rows} session={s}
                     name={rideName(s, g.sessionId)}
                     cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} />
+                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} bikeNames={bikeNames} />
                 );
               })}
             </div>
@@ -459,6 +487,9 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           </section>
         )}
 
+        {/* the booking app's calendar address (webcal), on its own host: the section, then its pop-up */}
+        {calendarOn && <CalendarFeed host={calfHost(app)} lang={calfLang(locale)} words={calendarWords(locale)} />}
+
         {shortcuts.length > 0 && (
           <nav className="ac-links" aria-label={tx("Shortcuts", "اختصارات")}>
             {shortcuts.map(([k, label, href]) => <a key={k} href={localHref(href, locale)}>{label} <ArrowIcon size={15} /></a>)}
@@ -471,11 +502,17 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // Stats and Badges: the record, read from every night booked (the kind of ride, whether it was free, whether staff
   // approve it). Stats: Your rides, then more of it (RideMore) and the badges earned; Badges: the closest badges and
   // every badge.
+  // A community member's Helper path (customer_helper_path, rentals 20261114082300; the booking app's F23): the card on
+  // Badges, the helper days under Rides led on Stats; a rider who is not a member, or a read that failed, sees neither.
+  // Stats' personal landmarks (the booking app's F16): the first ride's anniversary card leads it for that week, and the
+  // kinds tried sit under By event (the kinds the account can still book: loadOpenKinds).
   const recordMain = async (p: "stats" | "badges") => {
     // no record from bookings that could not be read: every ride badge would read as not earned
     if (unread) return <section className="ac-sec" aria-label={p === "stats" ? recordBase.stats : recordBase.badges}>{failed}</section>;
     const record = recordRows(rows);
-    const [recSessions, badges, referralRaw] = await Promise.all([loadRecordSessions(record.map((r) => r.sessionId), acct), loadBadgeData(acct), referralP]);
+    const [recSessions, badges, referralRaw, helperRaw, openKinds] = await Promise.all([loadRecordSessions(record.map((r) => r.sessionId), acct), loadBadgeData(acct), referralP,
+      rpcServer<unknown>("customer_helper_path", { p_id: acct.id, p_token: acct.token }), p === "stats" ? loadOpenKinds(today, acct) : Promise.resolve(null)]);
+    const helper = helperPathOf(helperRaw.data);
     badges.referralRode = referralRodeOf(referralRaw); // the Recruiter badge counts these friends
     const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
     // the Blood Donation Visitor badge is worded by the event's own words (content/blood-words.ts), handed on only to one who holds it
@@ -498,9 +535,11 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const cheer = cheers.length > 0 && !extras.mustChangePwd && !asking && <BadgeCelebrate accountId={acct.id} items={cheers} />;
     if (p === "badges") return (
       <>
-        {allBadges.length > 0 && (
+        {(allBadges.length > 0 || helper) && (
           <section className="ac-sec" aria-label={recordText.badges}>
-            <RideRecord part="badges" locale={locale} stats={null} led={0} badges={allBadges} t={recordText} typeName={typeName} dur={dur} reqs={badges.requests ?? null} />
+            <RideRecord part="badges" locale={locale} stats={null} led={0} badges={allBadges} t={recordText} typeName={typeName} dur={dur} reqs={badges.requests ?? null}
+              share={{ first: firstNameOf(acct.name), rode: shareDays(record, recSessions) }} />
+            {helper && <HelperPath locale={locale} path={helper} />}
           </section>
         )}
         {cheer}
@@ -514,6 +553,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const completed = record.filter((r) => rideCompleted(r, !!recSessions.get(r.sessionId)?.freeRide));
     const streak = weekStreak(completed.map((r) => r.date), today);
     const next = ticketGroups(rows, today)[0];
+    const anniv = anniversaryOf(stats?.first, today);
+    const tried = openKinds ? triedKinds(more.byKind.map(([k]) => k), openKinds) : [];
     return (
       <>
       <div className="ac-sec">
@@ -522,10 +563,12 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           book={hidden.includes("experiences") ? book : localHref("/experiences", locale)} />
       </div>
       <section className="ac-sec" aria-label={recordText.stats}>
+        {anniv && <Anniversary locale={locale} years={anniv.years} first={anniv.first} firstLabel={recordText.first} line={annivLine(content, locale)} />}
         {!stats && !led && <p className="ac-none">{recordText.none}</p>}
-        <RideRecord part="stats" locale={locale} stats={stats} led={led} badges={[]} t={recordText} typeName={typeName} dur={dur} />
+        <RideRecord part="stats" locale={locale} stats={stats} led={led} badges={[]} t={recordText} typeName={typeName} dur={dur} helper={helperLine(locale, helper)} />
         <RideMore locale={locale} more={more} t={recordText} typeName={typeName} kindName={kindName}
-          earned={{ n: allBadges.filter((x) => x.on).length, of: allBadges.length, href: localHref(accountPartHref("badges"), locale) }} />
+          earned={{ n: allBadges.filter((x) => x.on).length, of: allBadges.length, href: localHref(accountPartHref("badges"), locale) }}
+          tried={tried.length > 0 ? <TriedKinds locale={locale} kinds={tried} name={kindName} /> : null} />
       </section>
       {cheer}
       </>

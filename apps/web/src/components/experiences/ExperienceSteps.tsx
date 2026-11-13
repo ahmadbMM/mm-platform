@@ -4,9 +4,9 @@ import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { isRtl } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
 import { fill as fillAt } from "@/i18n/tx";
-import { bookingAt, featuredFirst, infoShown, memberOn, membersOnlyDate, membersOnlyEvent } from "@/lib/event-info";
+import { bookingAt, featuredFirst, infoShown, memberOn, membersOnlyDate, membersOnlyEvent, nextOpen } from "@/lib/event-info";
 import { isNonBike, typeOffered } from "@/lib/bike-kinds";
-import { ArrowIcon, BackIcon, ClockIcon, InfoIcon, TickIcon } from "@/components/site/Icons";
+import { ArrowIcon, BackIcon, CalendarIcon, ClockIcon, InfoIcon, TickIcon } from "@/components/site/Icons";
 import { opensLine, type OpensWords } from "@/lib/opens-in";
 import { radioKey, tabStop } from "@/lib/radio-keys";
 import { YOGA_MARK, YOGA_MARK_SIZE } from "@/lib/yoga";
@@ -58,6 +58,13 @@ import { KindIcon, SatRoute, type RouteWords } from "./KindArt";
 // Reserved in the amber of the few places left, in place of the waitlist, the places left, when it opens or Available.
 // The card is otherwise as it was and opens what it opened. A date card's day comes without its year while that is this
 // year's (the page writes it, lib/tickets.ts fmtDayNoYear).
+// Full, no waitlist (the user, 2026-11-13: "add an option to show that a session is fully booked see you on the next
+// session/saturday without hiding the session so people don't think it has cancelled"; the booking app's _sessFb): a date
+// staff closed as fully booked stays in its event's list, never greyed, and is no choice: a card that is no button, its
+// name, day and time, Fully booked in the full red where its places would be said, and under its time where to go next
+// (See you next Saturday, or See you at the next session), as the booking app's card says them. A visitor holding a place
+// on it reads that place instead, and no line under it. Its Featured card says Fully booked too and opens its event's
+// dates, never the date; its Details say Fully booked for its places and offer no Choose this date.
 export type StepSession = {
   id: string; kind: string; name: string;
   /** Its day as its card says it, "Saturday · 14 Nov": the year only when it is not this year (lib/tickets.ts fmtDayNoYear). */
@@ -103,6 +110,10 @@ export type StepSession = {
   /** What the signed-in visitor already holds on the date (lib/held.ts, 2026-11-13): "ok" Booked, "wl" On the waitlist,
    *  "rsv" Reserved; absent when they hold nothing there, and for a visitor who is not signed in. */
   held?: Held;
+  /** Full, no waitlist (lib/rides.ts fbkOf, 2026-11-13): staff closed it as fully booked, so it cannot be chosen; the line
+   *  its card says under its time, ready in the page's language ("See you next Saturday" on the Saturday ride, else "See
+   *  you at the next session"). Absent on a date that may be booked. */
+  fbk?: string;
   /** A featured date (lib/rides.ts featuredOf, 2026-11-13): its day as its Featured card's tile, short weekday, day
    *  number and short month ("Sat", "21", "Nov"), and how long yoga runs ("90 min", null on any other date or when it
    *  cannot be told); absent on a date that is not featured. */
@@ -196,6 +207,9 @@ export type StepText = {
   /** A date the visitor already holds (StepSession.held): "Booked", "On the waitlist", "Reserved" (the booking app's
    *  tkStBooked, wlOnList and statusReserved). */
   held: Record<Held, string>;
+  /** A date closed as Full, no waitlist (StepSession.fbk): "Fully booked", where its places would be said (the booking
+   *  app's sessFbk). */
+  fbk: string;
   pricesTitle: string; pricesText: string; codeNote: string;
   /** An event's facts: "Open to everyone", "{price} per seat", "{n} seats" (the page fills them). */
   everyone: string; perSeat: string; seats: string;
@@ -331,13 +345,15 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   };
   // What a card does, and what its dialog's button does too.
   const pickEvent = (e: StepEvent) => { setEv(e); setSess(null); setKind(null); go(2); };
-  const pickDate = (s: StepSession) => { setSess(s); go(3); };
+  // a date closed as fully booked is never chosen: nothing books it (the database refuses a closed session)
+  const pickDate = (s: StepSession) => { if (s.fbk) return; setSess(s); go(3); };
   // A Featured card goes through its event and on to its date, as choosing the event's card and then the date would, so
   // the last step says and asks what it does that way (the Members note, a session for the other gender, where its
-  // button hands over). A date not open to book yet cannot be chosen there either: its event's dates open instead.
+  // button hands over). A date not open to book yet cannot be chosen there either, nor one closed as fully booked (the
+  // booking app's _featOpen): its event's dates open instead.
   const pickFeat = (e: StepEvent, s: StepSession) => {
     setEv(e);
-    if (opensOf(s)) { setSess(null); go(2); } else { setSess(s); go(3); }
+    if (opensOf(s) || s.fbk) { setSess(null); go(2); } else { setSess(s); go(3); }
   };
   const arrow = <ArrowIcon size={15} />;
   const arrow18 = <ArrowIcon size={18} />;
@@ -357,11 +373,13 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   // men only, women only or mixed: the booking app's .sg-chip
   const chip = (s: StepSession) => (s.sg ? <span className={`sg-chip sg-${s.sg.cls}`}>{s.sg.label}</span> : null);
   // What a card says of a date's places: the visitor's own place first, when they hold one (the owner's pick 4,
-  // 2026-11-13: Booked with a tick before it in reading order, On the waitlist or Reserved with the dot); else when it
+  // 2026-11-13: Booked with a tick before it in reading order, On the waitlist or Reserved with the dot); else Fully
+  // booked, in the full red, on a date closed as Full, no waitlist; else when it
   // opens, a clock beside it so the grey is never the only sign (WCAG 1.4.1); the waitlist once it is full; how many
   // are left at three or fewer; null with nothing to say.
   const stateOf = (s: StepSession) => {
     if (s.held) return <span className={`sc-spots held${s.held === "ok" ? "" : " low"}`} data-held={s.held}>{s.held === "ok" && <Tick size={13} />}<span>{t.held[s.held]}</span></span>;
+    if (s.fbk) return <span className="sc-spots full fbk">{t.fbk}</span>;
     const opens = opensOf(s);
     return opens ? <span className="sc-spots closed"><ClockIcon size={13} /><span>{opens}</span></span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
       : s.kind !== "vlap" && s.kind !== "arena" && s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
@@ -418,22 +436,23 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
     return out;
   };
   // An event's About lists its next date's facts; the community rides' card, which stands for several
-  // kinds of ride, says only who may book them and which ride is next - never one ride's price.
+  // kinds of ride, says only who may book them and which ride is next - never one ride's price. The next date is one that
+  // may be booked, never one closed as fully booked (the booking app's _infoNextOf).
   const eventFacts = (e: StepEvent): Fact[] => {
-    const s = e.sessions[0];
-    if (!s) return [];
-    if (e.key === "community") return [{ k: t.info.who, v: t.info.whoMembers }, { k: t.info.next, v: <>{s.name}{s.sg && <> {chip(s)}</>} · {s.day}{s.when && <><br />{when(s)}</>}</> }];
-    return infoFacts(s, true);
+    if (!e.sessions.length) return [];
+    const s = nextOpen(e.sessions);
+    if (e.key === "community") return [{ k: t.info.who, v: t.info.whoMembers }, ...(s ? [{ k: t.info.next, v: <>{s.name}{s.sg && <> {chip(s)}</>} · {s.day}{s.when && <><br />{when(s)}</>}</> }] : [])];
+    return s ? infoFacts(s, true) : [];
   };
   // What the dialog says, and its button's words: the card's own step, which a date not open to book
-  // yet does not offer ("").
+  // yet does not offer (""), nor one closed as fully booked.
   const poster = info?.ev.blood ?? null;
   const sheet = info && (poster
     // the Blood Donation event's About and Details are its poster (the booking app's _bldInfoView), its facts on the card
-    ? { kind: "blood", kick: info.s ? info.s.day : t.info.about, title: poster.info.title, text: "", extra: null, facts: [], act: info.s ? (opensOf(info.s) ? "" : t.info.chooseDate) : t.info.bookEvent, art: false, route: null }
+    ? { kind: "blood", kick: info.s ? info.s.day : t.info.about, title: poster.info.title, text: "", extra: null, facts: [], act: info.s ? (opensOf(info.s) || info.s.fbk ? "" : t.info.chooseDate) : t.info.bookEvent, art: false, route: null }
     : info.s
     // a date's Details: its kind's drawing across the top, and the Saturday ride's routes above the facts
-    ? { kind: info.s.kind, kick: info.s.name, title: info.s.day, text: info.s.info.text, extra: info.s.info.extra, facts: infoFacts(info.s, false), act: opensOf(info.s) ? "" : t.info.chooseDate, art: hasKindArt(info.s.kind), route: info.s.info.route ?? null }
+    ? { kind: info.s.kind, kick: info.s.name, title: info.s.day, text: info.s.info.text, extra: info.s.info.extra, facts: infoFacts(info.s, false), act: opensOf(info.s) || info.s.fbk ? "" : t.info.chooseDate, art: hasKindArt(info.s.kind), route: info.s.info.route ?? null }
     : { kind: info.ev.sessions[0]?.kind ?? info.ev.key, kick: aboutWord(info.ev), title: info.ev.title, text: info.ev.about, extra: null, facts: eventFacts(info.ev), act: info.ev.key === "community" ? t.info.seeDates : t.info.bookEvent, art: false, route: null });
   // The dialog's button does what the card does. The link that opened the dialog goes with its step,
   // so the focus goes on to the next step's heading (go) rather than back to it.
@@ -615,14 +634,38 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                   : n === 0 ? <h3 className="xs-sec-h"><FeatStar /><span>{t.featured}</span></h3>
                   : n === dates.featured.length ? <h3 className="xs-sec-h xs-sec-rest">{t.upcoming}</h3> : null;
                 // the radio's own attributes: checked when it is the date chosen, the group's one tab stop (the first date
-                // on the page that may be chosen)
-                const stop = tabStop(listed, (x) => sess?.id === x.id, (x) => !opensOf(x));
+                // on the page that may be chosen: never one closed as fully booked, which is no radio)
+                const stop = tabStop(listed, (x) => sess?.id === x.id, (x) => !opensOf(x) && !x.fbk);
                 const radio = { role: "radio", "aria-checked": sess?.id === s.id, tabIndex: n === stop ? 0 : -1, "data-id": s.id, disabled: !!opens, "aria-disabled": !!opens } as const;
                 // its Details: the booking app's "i", 44px, beside the card and never inside it, named for the event and the date
                 const about = details && (
                   <button type="button" className="sc-about" aria-haspopup="dialog" aria-label={`${t.info.details} · ${named(ev) ? s.name : ev.title} · ${s.day}`} onClick={(x) => showInfo(ev, s, x.currentTarget)}>
                     <InfoIcon size={20} />
                   </button>
+                );
+                // Full, no waitlist (the booking app's sess-card-fbk, 2026-11-13), whatever its kind, as the booking app
+                // draws it before its own cards: no button and no radio, so nothing chooses it; its name and its chip, its
+                // day and Fully booked (or the visitor's own place), its time, and where to go next under it. Never greyed.
+                if (s.fbk) return (
+                  <Fragment key={s.id}>{head}<div className={`sc-wrap ev-${s.kind}${details ? " has-about" : ""}`}>
+                    <div className={`sc-card fbk ev-${s.kind}${hasKindArt(s.kind) ? " has-motif" : ""}`}>
+                      {(named(ev) || s.sg) && (
+                        <span className="sc-kicker">
+                          {named(ev) && <span className="sc-chip has-ic"><span className="k-tile"><KindIcon kind={s.kind} size={16} /></span>{s.name}</span>}
+                          {chip(s)}
+                        </span>
+                      )}
+                      <span className="sc-head">
+                        <span className="sc-dot" aria-hidden="true" />
+                        <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
+                        {spots}
+                      </span>
+                      {s.when && <span className="sc-time">{when(s)}</span>}
+                      {!s.held && <span className="sc-meta sc-fbk-l"><CalendarIcon size={13} /><bdi>{s.fbk}</bdi></span>}
+                      {hasKindArt(s.kind) && <span className="k-art sc-motif" aria-hidden="true" />}
+                    </div>
+                    {about}
+                  </div></Fragment>
                 );
                 // Yoga's own card (the booking app's _ygSessCard, 2026-11-12): cream, the low sun rising from the far corner,
                 // the mark, its name, when, how long and where, and who leads it along the foot with its state

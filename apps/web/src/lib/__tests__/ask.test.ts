@@ -7,6 +7,8 @@ import {
   charCount, choiceConfig, choiceRows, cloudResult, hasPending, isDrawn, isWritten, itemsResult, numberConfig, numberResult, optionsOf, pageOpen, paletteVars, pointRows, pointsConfig, pollDelay, rankRows,
   rereadDue, resultsShown, scaleRows, scalesConfig, screenAt, screenStep, sentMarks, sentNumber, sentOrder, sentPicks, shapeChoice, shapeNumber, shapePoints, shapeRanking, shapeScales, shapeWritten,
   withMine, withVote, withoutMine, writtenConfig, type AskFull, type AskQuestion,
+  isAskScreen, resultCount, stepAt,
+  POLL_LIVE_MS, isQuiz,
 } from "../ask";
 
 // "Ask" (micromobility.sa/ask): the logic the pages stand on (lib/ask.ts). The payloads here are made up to the
@@ -33,6 +35,7 @@ const fullOf = (over: Record<string, unknown> = {}): AskFull => {
   if (!v.full) throw new Error("no page");
   return v.full;
 };
+const liveOfTest = (raw: unknown) => { const a = askLive(raw); if (a.kind !== "full") throw new Error("not a full answer"); return a.live; };
 const mine = (id: number, status = "pending", value: unknown = { t: "Kites" }) => ({ id, value, body: "Kites", status, answered: false, score: null, votes: 0, created_at: "2026-11-13T10:00:00+03:00" });
 
 describe("addresses and words", () => {
@@ -98,7 +101,8 @@ describe("the look", () => {
       expect(colors).toHaveLength(6);
       for (const c of colors) expect(c).toMatch(/^#[0-9a-f]{6}$/);
     }
-    expect(paletteVars("brand")).toEqual({ "--ask-c0": "#077a4b", "--ask-c1": "#1a1919", "--ask-c2": "#0b6e8a", "--ask-c3": "#b4500b", "--ask-c4": "#9c1f5c", "--ask-c5": "#4a4fc4" });
+    // the six as a results box sets them (lib/ask-look.ts holds the palettes and their tests; these readers are handed on from lib/ask.ts)
+    expect([0, 1, 2, 3, 4, 5].map((i) => paletteVars("brand")[`--ask-c${i}`])).toEqual([...ASK_PALETTES.brand]);
   });
   it("draws a question with the chart staff picked when it is built, with the kind's first otherwise", () => {
     expect(askViz({}, ["cloud", "bubbles"])).toBe("cloud");
@@ -112,7 +116,9 @@ describe("the look", () => {
       if (kind === "info") expect(RESULT_VIEWS[kind]).toBeUndefined();
       else expect(askViz({}, Object.keys(RESULT_VIEWS[kind] ?? {})), kind).toBeTruthy();
     }
-    for (const kind of ["grid", "pin", "form", "quiz", "quiz_text"]) {
+    // every kind the database has is drawn since stage 2; one it does not have yet is kept and drawn as nothing
+    for (const kind of ["grid", "pin", "form", "quiz", "quiz_text"]) expect(isDrawn(kind), kind).toBe(true);
+    for (const kind of ["matrix", "something-new", ""]) {
       expect(isDrawn(kind), kind).toBe(false);
       expect(RESULT_VIEWS[kind], kind).toBeUndefined();
     }
@@ -275,7 +281,7 @@ describe("what the database answers", () => {
     expect(f.questions.map((q) => q.id)).toEqual([13, 12]); // in the page's order
     expect(f.questions[1]).toMatchObject({ id: 12, results: "staff", image: null, config: {}, look: {} });
     expect(f.questions[0].image).toBe("https://cdn.example/x.jpg");
-    expect(f.mine["12"]).toEqual([{ id: 5, value: { t: "Kites" }, body: "Kites", status: "pending", answered: false, votes: 0, created_at: "2026-11-13T10:00:00+03:00" }]);
+    expect(f.mine["12"]).toEqual([{ id: 5, value: { t: "Kites" }, body: "Kites", status: "pending", answered: false, votes: 0, created_at: "2026-11-13T10:00:00+03:00", score: null }]);
     expect(f.mine.x).toEqual([]);
     expect(f.live).toBeNull();
   });
@@ -295,16 +301,20 @@ describe("what the database answers", () => {
   it("ask_live: gone, nothing new (which still says whether the page is open), or the whole", () => {
     expect(askLive({ ok: false })).toEqual({ kind: "gone" });
     expect(askLive(null)).toEqual({ kind: "gone" });
-    expect(askLive({ ok: true, ver: 7, same: true, state: "closed", open: false, now: "x" })).toEqual({ kind: "same", ver: 7, state: "closed", open: false });
-    expect(askLive({ ok: true, ver: 7, same: true })).toEqual({ kind: "same", ver: 7, state: null, open: null }); // a database from before the contract's section E
+    expect(askLive({ ok: true, ver: 7, same: true, state: "closed", open: false, now: "x" })).toEqual({ kind: "same", ver: 7, state: "closed", open: false, now: null });
+    // the database's own time rides along even when nothing changed: a quiz clock counts against it
+    expect(askLive({ ok: true, ver: 7, same: true, state: "ok", open: true, now: "2026-11-13T10:00:00.25+03:00" })).toEqual({ kind: "same", ver: 7, state: "ok", open: true, now: "2026-11-13T10:00:00.25+03:00" });
+    expect(askLive({ ok: true, ver: 7, same: true })).toEqual({ kind: "same", ver: 7, state: null, open: null, now: null }); // a database from before the contract's section E
     const a = askLive(live({ ver: 9, stats: undefined }));
     expect(a.kind).toBe("full");
     if (a.kind === "full") expect(a.live).toMatchObject({ ver: 9, state: "ok", open: true, round: 1, stats: null, q: { "11": { open: true, reveal: false, started_at: null } } });
   });
   it("ask_send: taken (with the viewer's answers when listed, and whether it was a repeat), or why not", () => {
-    expect(askSent({ ok: true, status: "pending", score: null, mine: [mine(5)] })).toEqual({ ok: true, status: "pending", repeat: false, mine: [expect.objectContaining({ id: 5, status: "pending", body: "Kites" })] });
-    expect(askSent({ ok: true, status: "approved", repeat: true, mine: [] })).toEqual({ ok: true, status: "approved", repeat: true, mine: [] });
-    expect(askSent({ ok: true, status: "approved" })).toEqual({ ok: true, status: "approved", repeat: false, mine: null });
+    expect(askSent({ ok: true, status: "pending", score: null, mine: [mine(5)] })).toEqual({ ok: true, status: "pending", repeat: false, score: null, mine: [expect.objectContaining({ id: 5, status: "pending", body: "Kites" })] });
+    expect(askSent({ ok: true, status: "approved", repeat: true, mine: [] })).toEqual({ ok: true, status: "approved", repeat: true, mine: [], score: null });
+    expect(askSent({ ok: true, status: "approved" })).toEqual({ ok: true, status: "approved", repeat: false, mine: null, score: null });
+    // a quiz answer comes back with its points (the page says them only once staff reveal the question)
+    expect(askSent({ ok: true, status: "approved", score: 820, mine: [{ ...mine(6, "approved", { o: ["a"] }), score: 820 }] })).toMatchObject({ ok: true, score: 820, mine: [{ id: 6, score: 820 }] });
     expect(askSent({ ok: false, error: "limit" })).toEqual({ ok: false, error: "limit" });
     expect(askSent({ ok: false, error: "busy" })).toEqual({ ok: false, error: "throttled" });
     expect(askSent({ ok: false, error: "origin" })).toEqual({ ok: false, error: "generic" });
@@ -373,7 +383,9 @@ describe("the page as it changes", () => {
     expect(state(fullOf({ questions: [question({ ...choice, open: false })], mine: picked }))).toBe("shut");
     expect(state(fullOf({ questions: [question({ ...choice, open: false })] }))).toBe("none");
     // an info slide and the kinds these pages do not draw yet take no answer here
-    for (const kind of ["info", "pin", "grid", "form", "quiz", "quiz_text", "something-new"]) expect(state(q({ kind })), kind).toBe("none");
+    for (const kind of ["info", "something-new"]) expect(state(q({ kind })), kind).toBe("none");
+    // the five kinds of stage 2 take one answer each, like every kind that is not written
+    for (const kind of ["pin", "grid", "form", "quiz", "quiz_text"]) expect(state(q({ kind })), kind).toBe("open");
   });
   it("shows a question's results by its rule: at once, after the viewer answered, or never", () => {
     const shown = (over: Record<string, unknown>, rest: Record<string, unknown> = {}, screen = false) => {
@@ -393,12 +405,53 @@ describe("the page as it changes", () => {
     // the big screen has no viewer
     expect(shown({ results: "answered" }, {}, true)).toBe(true);
     expect(shown({ results: "staff" }, {}, true)).toBe(false);
-    for (const kind of ["info", "pin", "quiz"]) expect(shown({ kind }), kind).toBe(false);
+    for (const kind of ["info", "something-new"]) expect(shown({ kind }), kind).toBe(false);
+    // a quiz question's chart waits for the reveal, on the page and on the big screen alike; a pin's does not
+    for (const kind of ["quiz", "quiz_text"]) {
+      expect(shown({ kind }), kind).toBe(false);
+      expect(shown({ kind }, {}, true), kind).toBe(false);
+      expect(shown({ kind, reveal: true }), kind).toBe(true);
+      expect(shown({ kind, reveal: true, results: "staff" }), kind).toBe(false);
+    }
+    for (const kind of ["pin", "grid", "form"]) expect(shown({ kind }), kind).toBe(true);
+  });
+  it("reads what stage 2 added to a page: the viewer's reactions and quiz line, each answer's points, the database's time, the reaction counts", () => {
+    const f = fullOf({
+      questions: [question({ id: 21, kind: "quiz" })],
+      mine: { "21": [{ ...mine(4, "approved", { o: ["a"] }), score: 820 }] },
+      reacted: { "21": ["like", 7, "love"], x: "y" }, me: { score: 820, rank: 2, players: 9 },
+      live: live({ q: { "21": { open: true, reveal: false, started_at: "2026-11-13T10:00:05+03:00" } }, reactions: { "21": { like: 3, love: 0, clap: "2", odd: null }, "9": "x" } }),
+    });
+    expect(f.mine["21"][0].score).toBe(820);
+    expect(f.reacted).toEqual({ "21": ["like", "love"], x: [] });
+    expect(f.me).toEqual({ score: 820, rank: 2, players: 9 });
+    expect(f.live?.now).toBe("2026-11-13T10:00:00+03:00");
+    expect(f.live?.reactions).toEqual({ "21": { like: 3, clap: 2 }, "9": {} });
+    // nothing of it on a page that has none: a page at its own pace reads as it always did
+    const plain = fullOf();
+    expect(plain.reacted).toEqual({});
+    expect(plain.me).toBeNull();
+    expect(plain.live?.reactions).toEqual({});
+    for (const me of [null, {}, { score: "x", rank: 1, players: 2 }, { score: 5, rank: 0, players: 2 }, { score: 5, rank: 3, players: 2 }, [1, 2, 3]]) expect(fullOf({ me }).me, JSON.stringify(me)).toBeNull();
+    expect(isQuiz("quiz") && isQuiz("quiz_text")).toBe(true);
+    expect(isQuiz("choice")).toBe(false);
+  });
+  it("reads the page again when staff reveal a quiz question - the viewer's own score is the page's to read - and not for any other kind", () => {
+    const quizzed = fullOf({ questions: [question({ id: 21, kind: "quiz" })], live: live({ q: { "21": { open: true, reveal: false, started_at: null } } }) });
+    const revealed = live({ ver: 8, q: { "21": { open: false, reveal: true, started_at: null } } });
+    expect(applyLive(quizzed, liveOfTest(revealed)).reload).toBe(true);
+    expect(applyLive(quizzed, liveOfTest(revealed)).full.questions[0]).toMatchObject({ open: false, reveal: true });
+    // already revealed: nothing to read again
+    const after = applyLive(quizzed, liveOfTest(revealed)).full;
+    expect(applyLive(after, liveOfTest(live({ ver: 9, q: { "21": { open: false, reveal: true, started_at: null } } }))).reload).toBe(false);
+    // a multiple choice question revealed carries its right answer in its results: no second read
+    const choice = fullOf({ questions: [question({ id: 21, kind: "choice" })], live: live({ q: { "21": { open: true, reveal: false, started_at: null } } }) });
+    expect(applyLive(choice, liveOfTest(revealed)).reload).toBe(false);
   });
   it("keeps the viewer's own answers and upvotes up to date between reads", () => {
     const f = fullOf({ mine: { "11": [mine(1), mine(2, "approved")] } });
     expect(hasPending(f)).toBe(true);
-    const sent = withMine(f, 11, [{ id: 3, value: { t: "BBQ" }, body: "BBQ", status: "approved", answered: false, votes: 0, created_at: "" }]);
+    const sent = withMine(f, 11, [{ id: 3, value: { t: "BBQ" }, body: "BBQ", status: "approved", answered: false, votes: 0, created_at: "", score: null }]);
     expect(sent.mine["11"].map((m) => m.id)).toEqual([3]);
     expect(hasPending(sent)).toBe(false);
     expect(withoutMine(f, 11, 1).mine["11"].map((m) => m.id)).toEqual([2]);
@@ -421,6 +474,15 @@ describe("when to ask again", () => {
     expect(POLL_MS).toEqual({ page: 10_000, screen: 4_000 });
     expect(pollDelay("page", 0)).toBe(10_000);
     expect(pollDelay("screen", 0)).toBe(4_000);
+  });
+  it("polls both every 2 seconds on a page staff pace - and backs off there too, to the same ceilings", () => {
+    expect(POLL_LIVE_MS).toBe(2_000);
+    expect(pollDelay("page", 0, true)).toBe(2_000);
+    expect(pollDelay("screen", 0, true)).toBe(2_000);
+    expect([1, 2, 5, 9].map((n) => pollDelay("page", n, true))).toEqual([4_000, 8_000, 64_000, 120_000]);
+    expect([1, 5, 9].map((n) => pollDelay("screen", n, true))).toEqual([4_000, 60_000, 60_000]);
+    // a page at its own pace asks exactly as before
+    expect(pollDelay("page", 0, false)).toBe(10_000);
   });
   it("backs off after each failed try in a row, up to two minutes on a page and one on the screen", () => {
     expect([1, 2, 3, 4, 9].map((n) => pollDelay("page", n))).toEqual([20_000, 40_000, 80_000, 120_000, 120_000]);
@@ -473,12 +535,12 @@ describe("results, shaped for their charts", () => {
     expect(r.rows[1]).toMatchObject({ avg: 5, at: 1, dist: [1, 0, 0, 0, 0] }); // an average is held inside the scale
     expect(scaleRows(c, {}, "en").rows[0]).toMatchObject({ avg: null, at: 0, dist: [0, 0, 0, 0, 0], most: 0 });
   });
-  it("ranking by score and points by average, the best first", () => {
+  it("ranking by score, the best first; points in the order staff wrote them, each with its average", () => {
     const c = { options: OPTIONS, total: 100 };
     expect(rankRows(c, { n: 4, score: { a: 5, b: 9, c: 9 }, pos: { a: 2.5, b: 1.9, c: 1.6 } }, "en").rows.map((r) => [r.id, r.share])).toEqual([["c", 1], ["b", 1], ["a", 5 / 9]]);
     expect(rankRows(c, {}, "en").rows.map((r) => r.id)).toEqual(["a", "b", "c"]);
     const p = pointRows(c, { n: 3, sum: { a: 60, b: 150, c: 90 }, avg: { a: 20, b: 50, c: 30 } }, "en");
-    expect(p.rows.map((r) => [r.id, r.avg, r.share])).toEqual([["b", 50, 0.5], ["c", 30, 0.3], ["a", 20, 0.2]]);
+    expect(p.rows.map((r) => [r.id, r.avg, r.share])).toEqual([["a", 20, 0.2], ["b", 50, 0.5], ["c", 30, 0.3]]);
     expect(p).toMatchObject({ n: 3, total: 100 });
   });
   it("a number: its average and the bins of its histogram", () => {
@@ -507,6 +569,30 @@ describe("the big screen", () => {
     expect(screenStep(3, 2, 1)).toBe(2);
     expect(screenStep(3, 0, -1)).toBe(0);
     expect(screenStep(0, 0, 1)).toBe(-1);
+  });
+  it("counts the answers of the question on screen, whatever its kind", () => {
+    expect(resultCount({ n: 12, counts: {} })).toBe(12);
+    expect(resultCount({ n: "many" })).toBe(0);
+    expect(resultCount({ n: -3 })).toBe(0);
+    expect(resultCount(null)).toBe(0);
+    expect(resultCount([])).toBe(0);
+  });
+  it("knows its own address in every language - the one page that never puts up the account's pop-ups", () => {
+    for (const path of ["/ask/farm-ideas/screen", "/ar/ask/farm-ideas/screen", "/ask/farm-ideas/screen/", "ask/x1y/screen"]) expect(isAskScreen(path), path).toBe(true);
+    for (const path of ["/ask", "/ask/farm-ideas", "/ar/ask/farm-ideas", "/ask/screen", "/ask/a/b/screen", "/task/abc/screen", "/ask/farm-ideas/screens", "", null, undefined]) expect(isAskScreen(path), String(path)).toBe(false);
+  });
+});
+
+describe("a page drawn in steps", () => {
+  it("stays on the reader's question while it is there, else at the same place, never past the ends", () => {
+    expect(stepAt([11, 12, 13], { id: null, index: 0 })).toBe(0);
+    expect(stepAt([11, 12, 13], { id: 13, index: 0 })).toBe(2);
+    expect(stepAt([11, 13], { id: 12, index: 1 })).toBe(1); // their question was taken off: the one now in its place
+    expect(stepAt([11], { id: 12, index: 5 })).toBe(0);
+    expect(stepAt([11, 12], { id: null, index: -4 })).toBe(0);
+    expect(stepAt([11, 12], { id: null, index: Number.NaN })).toBe(0);
+    expect(stepAt([10, 11, 12, 13], { id: 12, index: 0 })).toBe(2); // a question added before it: still on theirs
+    expect(stepAt([], { id: 1, index: 0 })).toBe(-1);
   });
 });
 

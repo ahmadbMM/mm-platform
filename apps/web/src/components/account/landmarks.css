@@ -1,0 +1,14 @@
+/* The personal landmarks on Stats (Landmarks.tsx; the booking app's .lm-anniv and .lm-kinds, new features build F16):
+   the anniversary card leads the page; the kinds tried sit under By event as one of its lists. */
+.lm-anniv { display: grid; gap: 6px; }
+.lm-anniv-t { font-size: 20px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.lm-anniv-d { font-size: 15px; color: #6e6b63; }
+.myr .lm-anniv-l { margin-top: 8px; font-size: 15px; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; }
+.lm-anniv-s { font-size: 15px; font-weight: 600; color: #6e6b63; }
+.lm-kinds-h { display: flex; justify-content: space-between; gap: 16px; }
+.lm-kinds-h bdi { font-weight: 600; font-variant-numeric: tabular-nums; }
+.lm-kinds ul { display: grid; margin: 0; padding: 0; list-style: none; }
+.lm-kinds li { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 9px 0; border-top: 1px solid rgba(26, 25, 25, .12); font-size: 15px; color: #6e6b63; overflow-wrap: anywhere; }
+.lm-kinds li.on { color: #1a1919; }
+.lm-kinds li .mm-ic { flex: none; color: #077a4b; }
+.lm-kinds li i { flex: none; box-sizing: border-box; width: 16px; height: 16px; border: 1.75px solid rgba(26, 25, 25, .24); border-radius: 50%; }
