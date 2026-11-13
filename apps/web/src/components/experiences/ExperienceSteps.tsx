@@ -11,6 +11,7 @@ import { opensLine, type OpensWords } from "@/lib/opens-in";
 import { radioKey, tabStop } from "@/lib/radio-keys";
 import { YOGA_MARK, YOGA_MARK_SIZE } from "@/lib/yoga";
 import { hasKindArt, kindsInOrder, rowsOfKind } from "@/lib/kind-theme";
+import type { Held } from "@/lib/held";
 import { KindIcon, SatRoute, type RouteWords } from "./KindArt";
 
 // Booking in steps, one at a time (owner, 2026-09-25): the event, as the booking app's own event
@@ -51,8 +52,16 @@ import { KindIcon, SatRoute, type RouteWords } from "./KindArt";
 // named date wears its kind's mark on its tint, the Saturday ride, the pool and a Petromin night their motif along the
 // foot and their drawing across the top of their Details, and the Saturday ride's Details draw its two routes and say
 // when the sun rises.
+// The owner's picks 4 and 7 from the Featured follow-ups (2026-11-13), as the booking app has them. A date the signed-in
+// visitor already holds (lib/held.ts, the booking app's _heldSt) says so where its places would be said, on its card in
+// its event's list and on its Featured card: Booked in the good state's green with a drawn tick, On the waitlist or
+// Reserved in the amber of the few places left, in place of the waitlist, the places left, when it opens or Available.
+// The card is otherwise as it was and opens what it opened. A date card's day comes without its year while that is this
+// year's (the page writes it, lib/tickets.ts fmtDayNoYear).
 export type StepSession = {
-  id: string; kind: string; day: string; name: string;
+  id: string; kind: string; name: string;
+  /** Its day as its card says it, "Saturday · 14 Nov": the year only when it is not this year (lib/tickets.ts fmtDayNoYear). */
+  day: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
   near: string | null;
   /** Under the time: when bikes go out and the price from (the booking app's sess-card-meta). */
@@ -91,6 +100,9 @@ export type StepSession = {
   /** Yoga's own date card (the booking app's _ygSessCard, 2026-11-12): its start and end, how long and where ("4:00 PM –
    *  5:30 PM · 90 min · SILKDEER"), and who leads it along its foot ("with Jassim Alsaady"); absent on any other date. */
   yoga?: { meta: string[]; with: string };
+  /** What the signed-in visitor already holds on the date (lib/held.ts, 2026-11-13): "ok" Booked, "wl" On the waitlist,
+   *  "rsv" Reserved; absent when they hold nothing there, and for a visitor who is not signed in. */
+  held?: Held;
   /** A featured date (lib/rides.ts featuredOf, 2026-11-13): its day as its Featured card's tile, short weekday, day
    *  number and short month ("Sat", "21", "Nov"), and how long yoga runs ("90 min", null on any other date or when it
    *  cannot be told); absent on a date that is not featured. */
@@ -181,6 +193,9 @@ export type StepText = {
   /** "Featured" over the featured dates and their cards, "Upcoming" over the rest of an event's dates (the booking
    *  app's featTitle and featRest). */
   featured: string; upcoming: string;
+  /** A date the visitor already holds (StepSession.held): "Booked", "On the waitlist", "Reserved" (the booking app's
+   *  tkStBooked, wlOnList and statusReserved). */
+  held: Record<Held, string>;
   pricesTitle: string; pricesText: string; codeNote: string;
   /** An event's facts: "Open to everyone", "{price} per seat", "{n} seats" (the page fills them). */
   everyone: string; perSeat: string; seats: string;
@@ -236,9 +251,9 @@ const FeatStar = () => (
     </svg>
   </span>
 );
-/** A short rule's tick (the booking app's _cuIc tick). */
-const Tick = () => (
-  <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+/** A short rule's tick (the booking app's _cuIc tick); smaller before "Booked" on a date the visitor holds. */
+const Tick = ({ size = 14 }: { size?: number }) => (
+  <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
 );
 /** The hosts' marks on their white plate: a span, as it also stands inside the card's button. */
 const Plate = ({ b }: { b: StepBlood }) => (
@@ -341,9 +356,12 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   const noBike = (s: StepSession) => isNonBike(s.kind, s.id);
   // men only, women only or mixed: the booking app's .sg-chip
   const chip = (s: StepSession) => (s.sg ? <span className={`sg-chip sg-${s.sg.cls}`}>{s.sg.label}</span> : null);
-  // What a card says of a date's places: when it opens, a clock beside it so the grey is never the only sign (WCAG
-  // 1.4.1); the waitlist once it is full; how many are left at three or fewer; null with nothing to say.
+  // What a card says of a date's places: the visitor's own place first, when they hold one (the owner's pick 4,
+  // 2026-11-13: Booked with a tick before it in reading order, On the waitlist or Reserved with the dot); else when it
+  // opens, a clock beside it so the grey is never the only sign (WCAG 1.4.1); the waitlist once it is full; how many
+  // are left at three or fewer; null with nothing to say.
   const stateOf = (s: StepSession) => {
+    if (s.held) return <span className={`sc-spots held${s.held === "ok" ? "" : " low"}`} data-held={s.held}>{s.held === "ok" && <Tick size={13} />}<span>{t.held[s.held]}</span></span>;
     const opens = opensOf(s);
     return opens ? <span className="sc-spots closed"><ClockIcon size={13} /><span>{opens}</span></span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
       : s.kind !== "vlap" && s.kind !== "arena" && s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>

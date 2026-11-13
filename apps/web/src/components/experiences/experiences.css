@@ -273,6 +273,8 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 .xs-feat-foot { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; min-width: 0; }
 .xs-feat-foot > .xs-feat-meta { flex: 0 1 auto; }
 .xs-feat-foot .sc-spots.closed { max-width: 100%; text-align: start; }
+/* a date the visitor already holds (booking.css .sc-spots.held): long words wrap inside a narrow card rather than run out of it */
+.xs-feat-foot .sc-spots.held { max-width: 100%; white-space: normal; }
 .xs-feat-go { flex: none; display: inline-flex; color: var(--mm-n400); }
 /* yoga's card: cream, the low sun's glow from the far corner (mirrored where the page reads from the right), clay and sage */
 .xs-feat-card.xs-feat-yg { color: var(--yg-ink); background-color: var(--yg-cream); border-color: rgba(180, 83, 47, .28);

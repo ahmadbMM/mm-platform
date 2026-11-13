@@ -702,12 +702,25 @@ export function fmtClock(hhmm: string, locale: string): string {
   } catch { return hhmm; }
 }
 
-/** "Sunday · 26 Sept 2026", the booking app's day and date. */
-export function fmtDayDate(iso: string, locale: string): string {
+/** A day and its date, with the year or without it. */
+function dayDate(iso: string, locale: string, year: boolean): string {
   const d = new Date(`${iso}T00:00:00Z`);
   if (Number.isNaN(d.getTime())) return iso;
   const f = (o: Intl.DateTimeFormatOptions) => new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { ...o, timeZone: "UTC" }).format(d);
-  return `${f({ weekday: "long" })} · ${f({ day: "numeric", month: "short", year: "numeric" })}`;
+  return `${f({ weekday: "long" })} · ${f({ day: "numeric", month: "short", ...(year ? { year: "numeric" } : {}) })}`;
+}
+
+/** "Sunday · 26 Sept 2026", the booking app's day and date. */
+export function fmtDayDate(iso: string, locale: string): string {
+  return dayDate(iso, locale, true);
+}
+
+/** "Saturday · 14 Nov": the day and date of a date still ahead, as Experiences' date cards say it (the owner's pick 7,
+ *  2026-11-13; the booking app's _dayNoYear). The year is left out when it is `today`'s (Riyadh, YYYY-MM-DD) and kept
+ *  when it is another: a January date seen in December says its year. A ticket and every other record keep the year
+ *  (fmtDayDate). */
+export function fmtDayNoYear(iso: string, locale: string, today: string): string {
+  return dayDate(iso, locale, iso.slice(0, 4) !== today.slice(0, 4));
 }
 
 /** A day as a tile, "Sat" over "21" over "Nov": its short weekday, its day number and its short month in the page's

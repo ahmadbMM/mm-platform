@@ -12,7 +12,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { fill, fmtNum, fmtSar } from "@/lib/fill";
 import { BOOKING_URL, bookingLink, localHref } from "@/lib/links";
 import { pageState } from "@/lib/page-state";
-import { genderViewer, rpcServer } from "@/lib/account";
+import { accountBookings, genderViewer, rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { typeOffered } from "@/lib/bike-kinds";
 import { dateText, eventCards, featuredDates, infoArena, infoBreakfast, infoDistance, infoPlace, infoPlaces, infoPrice, infoTimes, infoVl, infoWho, rentsBikes, type DateTexts } from "@/lib/event-info";
@@ -23,7 +23,8 @@ import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from 
 import ExperienceSteps, { type StepEvent, type StepSession, type StepText } from "@/components/experiences/ExperienceSteps";
 import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
-import { DEFE_RACE_URL, dayWord, fmtClock, fmtDayDate, fmtDayTile, kmText, meetHeld, revealWhen, spotHeld } from "@/lib/tickets";
+import { DEFE_RACE_URL, dayWord, fmtClock, fmtDayNoYear, fmtDayTile, kmText, meetHeld, revealWhen, spotHeld, type TicketRow } from "@/lib/tickets";
+import { heldRows, heldState } from "@/lib/held";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt, phrase } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
@@ -61,6 +62,10 @@ import { kindMarks, sunriseHhmm } from "@/lib/kind-theme";
 // when the sun rises, and its Details draw the two routes. An Arabic page names a session by its Arabic name (title_ar).
 // The Saturday ride's number in its series is the booking app's alone: this page holds the dates from today on, never
 // the ones before, so it cannot count them.
+// The owner's picks 4 and 7 from the Featured follow-ups (2026-11-13), as the booking app has them: a date the signed-in
+// visitor already holds says Booked, On the waitlist or Reserved where its places would be said, on its card in its
+// event's list and on its Featured card (lib/held.ts; the account's bookings are one more read, for a signed-in visitor
+// alone); and a date card says its day without the year while that is this year's (lib/tickets.ts fmtDayNoYear).
 type Sec = Record<string, unknown>;
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
@@ -108,6 +113,16 @@ async function vlapMember(): Promise<boolean> {
   return r.data === true;
 }
 
+// What the visitor already holds (the owner's pick 4, 2026-11-13; lib/held.ts): the account's live bookings by session,
+// from its own my_bookings (which checks the token), the read My Account's tickets are made from. Asked only when the
+// request carries the account's cookie; bookings that could not be read, or a token the booking app no longer accepts,
+// read as holding nothing, and the page is drawn as for a visitor who is not signed in.
+async function heldDates(): Promise<Map<string, TicketRow[]>> {
+  const s = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
+  if (!s) return new Map();
+  return heldRows(await accountBookings(s));
+}
+
 // Are Saturday rides booked at micromobility.sa/saturday, with a ride code (the owner, 2026-11-08)? Staff switch it on in
 // the booking app (saturday_link_only, rentals 20261108120000); then a Saturday date's button goes to that page, for
 // anyone with a code, member or not. Any failure, or a database without the function, reads as no: the booking app.
@@ -127,7 +142,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const { locale } = await params;
   const L = asLocale(locale);
   const tx = serverL(locale);
-  const [{ content, previewing, hidden }, rides, member, petromin, gv] = await Promise.all([pageState("experiences"), loadRides(), communityMember(), petrominMember(), genderViewer()]);
+  const [{ content, previewing, hidden }, rides, member, petromin, gv, mine] = await Promise.all([pageState("experiences"), loadRides(), communityMember(), petrominMember(), genderViewer(), heldDates()]);
   // asked only while a Victory Lap date is on the books: its price is said to those who may book it
   const vlBook = (rides?.sessions ?? []).some((s) => s.kind === "vlap") ? await vlapMember() : false;
   // and while a Saturday date is: whether it is booked at micromobility.sa/saturday with a code
@@ -258,9 +273,12 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     const from = !s.free && rentsBikes(s.kind) ? fromPrice(s) : null;
     const held = heldWhen(s);
     const place = meetHeld(s) ? { name: venueWords.meetingPoint, map: null } : infoPlace(s, venueWords, directions);
+    // what the visitor already holds on it (lib/held.ts): Booked, On the waitlist or Reserved, null when nothing
+    const own = heldState(mine.get(s.id) ?? [], s);
     return {
-      // the booking app's session card: "Sunday · 26 Sept 2026", and its times in the rider's clock
-      id: s.id, kind: s.kind, day: fmtDayDate(s.date, locale),
+      // the booking app's session card: "Sunday · 26 Sept", the year said only when it is not this one (the owner's
+      // pick 7, 2026-11-13: every date listed is still ahead), and its times in the rider's clock
+      id: s.id, kind: s.kind, day: fmtDayNoYear(s.date, locale, now.slice(0, 10)),
       // today or tomorrow said in words, as the booking app's session card does (_dayWord)
       near: ((w) => (w === "today" ? tx("Today", "اليوم") : w === "tomorrow" ? tx("Tomorrow", "غداً") : null))(dayWord(s.date, now.slice(0, 10))),
       name: sessionName(s, kindName, enName, L !== "en", L === "ar"),
@@ -280,6 +298,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // a featured date (the booking app's _featCardHtml, 2026-11-13): its day as its Featured card's tile, and how long
       // yoga runs, which that card says after its time
       ...(s.featured ? { feat: { ...fmtDayTile(s.date, locale), len: s.kind === "yoga" ? yogaLength(s.times, ygWords.min) || null : null } } : {}),
+      // the visitor's own place on the date, said where its places would be; absent when they hold none
+      ...(own ? { held: own } : {}),
       // a copy kept at the edge from before these fields existed reads as an event without them
       event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
@@ -380,6 +400,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     available: tx("Available", "متاح"), waitlisted: waitWord, left1, leftN,
     // the booking app's featTitle and featRest (2026-11-13)
     featured: tx("Featured", "مميّزة"), upcoming: tx("Upcoming", "المواعيد القادمة"),
+    // a date the visitor holds: the booking app's tkStBooked, wlOnList and statusReserved (KindTheme.words.ts)
+    held: kw.held,
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
     everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),
     breakfastAt: tx("Breakfast at {0}", "الإفطار في {0}"),

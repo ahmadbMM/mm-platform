@@ -525,7 +525,7 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 :is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-yoga { --ev: #b4532f; } /* yoga: its clay (2026-11-12) */
 .sc-card.ev-blood:hover { border-color: rgba(11, 31, 22, .4); box-shadow: 0 0 14px rgba(11, 31, 22, .12); }
 .sc-card.ev-blood:focus-visible { outline-color: #0b1f16; }
-.sc-card.ev-blood .sc-dw, .sc-card.ev-blood .sc-spots:not(.full):not(.low):not(.closed) { color: #0b1f16; }
+.sc-card.ev-blood .sc-dw, .sc-card.ev-blood .sc-spots:not(.full):not(.low):not(.closed):not(.held) { color: #0b1f16; }
 /* The DEFE 5KM Run's date card (the booking app's _defeSessCard, 2026-10-18): white with Defe's blush washed in
    from the far corner (mirrored right to left), the logo (the ribbon woven into دفء, rose), the race's name in
    berry, when / how far / where, and the cause with its ribbon along the foot. */
@@ -547,7 +547,7 @@ html:is([lang="ar"], [lang="ur"]) .sc-defe-title { letter-spacing: 0; text-trans
 .sc-defe-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; min-width: 0; }
 .sc-defe-cause { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: #a22b63; min-width: 0; }
 .xs-rb { color: #d782a0; flex: none; }
-.sc-card.sc-defe .sc-spots:not(.full):not(.low):not(.closed) { color: #a22b63; }
+.sc-card.sc-defe .sc-spots:not(.full):not(.low):not(.closed):not(.held) { color: #a22b63; }
 @media (max-width: 400px) { .sc-defe-title { font-size: 17px; } .sc-defe-logo { height: 32px; } }
 /* Yoga's date card (the booking app's _ygSessCard and .yg-card, 2026-11-12): cream, the low sun's apricot glow from the far
    bottom corner and the sun drawn rising there, three breaths around it (mirrored right to left), a clay edge at the
@@ -575,7 +575,7 @@ html:is([lang="ar"], [lang="ur"]) .sc-yg-title { font-family: var(--cs-font-ar),
 .sc-yg-meta i { width: 1px; height: 12px; background: rgba(180, 83, 47, .35); display: inline-block; flex: none; }
 .sc-yg-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; min-width: 0; }
 .sc-yg-with { font-size: 12.5px; font-weight: 700; color: var(--yg-sage-ink); min-width: 0; overflow-wrap: anywhere; }
-.sc-card.sc-yoga .sc-spots:not(.full):not(.low):not(.closed) { color: var(--yg-clay-dk); }
+.sc-card.sc-yoga .sc-spots:not(.full):not(.low):not(.closed):not(.held) { color: var(--yg-clay-dk); }
 @media (max-width: 400px) { .sc-yg-title { font-size: 19px; } .sc-yg-mark { height: 26px; } .sc-yg-scene { width: 140px; height: 70px; } }
 /* A ticketed event's card says what it is and what a seat costs. */
 .sc-desc { font-size: 12.5px; color: #4f565c; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -591,6 +591,16 @@ html:is([lang="ar"], [lang="ur"]) .sc-yg-title { font-family: var(--cs-font-ar),
 .sc-spots::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .sc-spots.full { color: #a33b2e; }
 .sc-spots.low { color: #7a5a10; }
+/* A date the signed-in visitor already holds (the owner's pick 4, 2026-11-13; lib/held.ts, the booking app's
+   .spots-held), said where its places would be: Booked in the good state's green, every kind's card alike, a drawn tick
+   standing where the dot would; On the waitlist and Reserved in the amber of the few places left (.low), the dot kept.
+   The green reads 4.5:1 or more on every card it lands on: white, Defe's blush and yoga's cream under its glow and its
+   sun; the amber on white and the blush, and on yoga's cream a shade deeper, where the glow and the sun would take it
+   under 4.5:1. */
+.sc-spots.held:not(.low) { gap: 5px; }
+.sc-spots.held:not(.low)::before { content: none; }
+.sc-spots.held svg { flex: none; }
+.sc-card.sc-yoga .sc-spots.held.low, .xs-feat-card.xs-feat-yg .sc-spots.held.low { color: #6b4e0c; } /* yoga's date card and its Featured card */
 .sc-time { font-size: 12px; color: #6f6d63; }
 .sc-dw { color: #077a4b; font-weight: 700; }
 .sc-meta { font-size: 12px; color: #6f6d63; }

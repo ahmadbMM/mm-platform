@@ -98,6 +98,11 @@ export type RideSession = {
   out?: number;
   /** A community ride staff approve (needs_approval not false): no places-left count. */
   approval?: boolean;
+  /** Its rider list is out (sessions.hide_queue false, the booking app's _commPublished; never the National Day ride):
+   *  until then a rider who holds a place on a ride staff approve is told Reserved, never a verdict (lib/held.ts). Only
+   *  a read that asks for it has it (SESSION_COLS_PUBLISHED); a copy kept at the edge from before has none, and reads
+   *  as not out. */
+  published?: boolean;
   capacity?: number | null;
   /** Where the session is (sessions.location): "JCC" or nothing for the circuit, "JYC" for the
    *  Jeddah Yacht Club, else a place as staff wrote it; and its meeting point's map link
@@ -145,7 +150,7 @@ type Row = {
   description?: unknown; price?: unknown; capacity?: unknown; route_slug?: unknown; needs_approval?: unknown;
   location?: unknown; meet_url?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
   gender_only?: unknown; closed_types?: unknown;
-  out_bikes?: unknown;
+  out_bikes?: unknown; hide_queue?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -277,6 +282,13 @@ function outOf(r: Row): Pick<RideSession, "out"> {
   return { out: Object.values(o as Record<string, unknown>).reduce<number>((n, v) => { const c = Math.floor(Number(v)); return c > 0 ? n + c : n; }, 0) };
 }
 
+/** Whether a row says its rider list is out (SESSION_COLS_PUBLISHED): only when the read asked for it, and only on a
+ *  community date (`community`: event_kind 'community', not the National Day ride). */
+function publishedOf(r: Row, community: boolean): Pick<RideSession, "published"> {
+  if (!("hide_queue" in r)) return {};
+  return { published: community && r.hide_queue === false };
+}
+
 /** A session row as this site shows it, or null for one it does not show. Petromin nights are
  *  left out unless `petromin` (or `keepAll`): only Experiences lists them, under Petromin Days to a
  *  Petromin tag holder and among the community rides to a community member (the owner, 2026-10-12);
@@ -316,6 +328,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...breakfastOf(r),
     ...revealOf(r),
     ...outOf(r),
+    ...publishedOf(r, community && kind !== "snd96"),
     ...((kind === "vlap" || kind === "arena") && "vl" in r ? { vl: r.vl ?? null } : {}),
     gender: sessionGender(r.gender_only),
     closedTypes: Array.isArray(r.closed_types) ? r.closed_types.filter((x): x is string => typeof x === "string") : [],
@@ -393,6 +406,11 @@ export const SESSION_COLS_TITLE_AR = "title_ar";
 // The bikes out of service on a session (2026-11-06, OT01; rentals migration 20261107111000): they take places off its
 // capacity, so the places left the cards say count them. A group of its own, so a database without it reads as before.
 export const SESSION_COLS_OUT = "out_bikes";
+// Whether a ride's rider list is out (sessions.hide_queue, which a ticket's session read has always asked for,
+// lib/tickets-data.ts): Experiences says what a signed-in visitor holds on a date (the owner's pick 4, 2026-11-13;
+// lib/held.ts), and on a ride staff approve that is Reserved until the list is out. A group of its own, so a database
+// without it reads as before: no list known to be out.
+export const SESSION_COLS_PUBLISHED = "hide_queue";
 const RETRY_NEW_MS = 10 * 60_000;
 const MISSING: unique symbol = Symbol.for("mm.sessions.missingColumnGroups");
 /** Each optional group of columns the database refused, and until when it is left out. */
@@ -570,8 +588,8 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=*`, key), // every column: max_price and employee_price too (lib/biz.ts)
-      // and the bikes out of service, which the places left count (withPlacesLeft)
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [...SESSION_GROUPS, SESSION_COLS_OUT] }),
+      // and the bikes out of service, which the places left count (withPlacesLeft), and whether each rider list is out
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&status=in.(open,full)&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED] }),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) prices = priceRows(p.value);
     if (s.status === "fulfilled" && Array.isArray(s.value)) {
