@@ -39,6 +39,22 @@ html:is([lang="ar"], [lang="ur"]) .rg-kicker { letter-spacing: 0; font-size: 13p
 .rg-meta { margin: 0 0 4px; color: #57605a; font-size: 13.5px; }
 .rg-out { border: 1px solid rgba(0, 0, 0, .2); background: #fff; border-radius: 999px; min-height: 44px; font: inherit; font-weight: 700; font-size: 14px; cursor: pointer; color: #1a1919; }
 .rg-out:disabled { opacity: .6; cursor: default; }
+/* The last screen (RatingGate, the booking app's .rg-fin): centred, a badge just earned or the challenge's progress
+   (dots up to five, a bar above that, and the count), then Community and Done. No sentence. */
+.rg-box.rg-fin { align-items: center; text-align: center; padding-top: 28px; }
+.rg-fin-k { margin: 0; color: #077a4b; font-size: 13.5px; font-weight: 700; }
+.bdg-m.rg-fin-medal { display: block; width: 84px; height: 84px; margin: 2px auto 4px; }
+.rg-fin-t { margin-top: 2px; }
+.rg-fin-p { display: grid; justify-items: center; gap: 8px; width: 100%; margin: 6px 0 8px; }
+.rg-fin-n { font-weight: 800; font-size: 20px; font-variant-numeric: tabular-nums; color: #1a1919; }
+.rg-fin .hp-dots { display: flex; justify-content: center; gap: 6px; width: 100%; }
+.rg-fin .hp-dots i { flex: 0 1 30px; height: 10px; border-radius: 999px; background: #ece8df; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .1); }
+.rg-fin .hp-dots i.on { background: #077a4b; box-shadow: none; }
+.rg-fin .hp-bar { display: flex; width: 100%; max-width: 240px; height: 10px; border-radius: 999px; background: #ece8df; overflow: hidden; }
+.rg-fin .hp-bar i { flex: none; border-radius: 999px; background: #077a4b; }
+.rg-fin-go { align-self: stretch; display: flex; align-items: center; justify-content: center; margin-top: 6px; text-decoration: none; }
+.rg-fin-go:focus-visible, .rg-fin-done:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+.rg-fin-done { border: 0; background: none; min-height: 44px; padding: 0 12px; font: inherit; font-size: 14.5px; font-weight: 600; color: #2e352f; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 @media (max-width: 420px) {
   .rg-box { padding: 20px 14px 16px; border-radius: 18px; }
   .rg-grp { padding: 12px 10px; }
