@@ -91,8 +91,8 @@ describe("the words", () => {
       }
       expect(w.level, `${loc} level`).toContain("{0}");
     }
-    expect(RATING_FIN_WORDS.en).toEqual({ badge: "New badge!", first: "Your first session", second: "Your second session", back: "Back this month", level: "{0} sessions this month", community: "Community", done: "Done" });
-    expect(RATING_FIN_WORDS.ar).toEqual({ badge: "وسام جديد!", first: "جلستك الأولى", second: "جلستك الثانية", back: "عُد هذا الشهر", level: "{0} جلسات هذا الشهر", community: "المجتمع", done: "تم" });
+    expect(RATING_FIN_WORDS.en).toEqual({ badge: "New badge!", first: "Your first session", second: "Your second session", back: "Back this month", level: "{0} sessions this month", community: "Community", done: "Done", p5: "Your first five rides", p5Of: "{0} of {1}", book: "Book your next ride" });
+    expect(RATING_FIN_WORDS.ar).toEqual({ badge: "وسام جديد!", first: "جلستك الأولى", second: "جلستك الثانية", back: "عُد هذا الشهر", level: "{0} جلسات هذا الشهر", community: "المجتمع", done: "تم", p5: "جولاتك الخمس الأولى", p5Of: "{0} من {1}", book: "احجز جولتك القادمة" });
     expect(RATING_FIN_WORDS.fr.badge).toBe("Nouveau badge !");
     expect(RATING_FIN_WORDS.ur.community).toBe("کمیونٹی");
   });
@@ -112,11 +112,14 @@ describe("api/account/rating-fin", () => {
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.useRealTimers(); });
   const URL_ = "https://micromobility.sa/api/account/rating-fin";
   const post = (body: unknown, headers: Record<string, string> = HEADERS) => POST(new Request(URL_, { method: "POST", headers, body: JSON.stringify(body) }));
+  // a function by its name, its query left out (list_sessions takes one); a read of a table is never answered
+  const fn = (url: string) => String(url.split("/rpc/")[1] ?? "").split("?")[0];
   const db = (answers: Record<string, Response>) => vi.fn(async (url: string) => {
-    const a = answers[url.split("/rpc/")[1]];
+    const a = answers[fn(url)];
     return a ? a.clone() : json({ code: "PGRST202", message: "Could not find the function" }, 404);
   });
-  const sent = (fx: ReturnType<typeof db>) => fx.mock.calls.map((c) => [String(c[0]).split("/rpc/")[1], JSON.parse(String((c as unknown as [string, RequestInit])[1].body))]);
+  const sent = (fx: ReturnType<typeof db>) => fx.mock.calls.filter((c) => String(c[0]).includes("/rpc/"))
+    .map((c) => [fn(String(c[0])), JSON.parse(String((c as unknown as [string, RequestInit])[1].body))]);
   const fin = async (r: Response) => ((await r.json()) as { fin: unknown }).fin;
 
   it("shows a member the month's challenge the ride moved, read with the account's own session", async () => {
@@ -125,7 +128,8 @@ describe("api/account/rating-fin", () => {
     const r = await post({ entryId: "e1", locale: "en" });
     expect(r.status).toBe(200);
     expect(await fin(r)).toEqual({ k: "me", kind: "level", n: 3, tg: 4 });
-    expect(sent(fx).sort()).toEqual([["hub_pulse", { p_id: "c1", p_token: TOKEN }], ["my_bookings", { p_id: "c1", p_token: TOKEN }]]);
+    // and the kinds of the sessions it rode, for the first five rides' count (lib/first-five.ts), as the account sees them
+    expect(sent(fx).sort()).toEqual([["hub_pulse", { p_id: "c1", p_token: TOKEN }], ["list_sessions", { p_id: "c1", p_token: TOKEN }], ["my_bookings", { p_id: "c1", p_token: TOKEN }]]);
   });
 
   it("shows the newest Community badge not seen, in the page's language, and marks every one brought as seen", async () => {

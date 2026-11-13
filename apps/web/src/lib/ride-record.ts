@@ -230,7 +230,7 @@ export function rideStats(rows: TicketRow[], sessions: Map<string, RecordSession
 
 /** The nights the record counts: one row per session, the rider's own (the lowest number), completed
  *  (rideCompleted); bike nights only unless `all`. */
-function recordNights(rows: TicketRow[], sessions: Map<string, RecordSession>, all = false): TicketRow[] {
+export function recordNights(rows: TicketRow[], sessions: Map<string, RecordSession>, all = false): TicketRow[] {
   const nights = new Map<string, TicketRow>();
   for (const r of rows) {
     if ((!all && !onBike(r.sessionId, sessions)) || !rideCompleted(r, !!sessions.get(r.sessionId)?.freeRide)) continue;

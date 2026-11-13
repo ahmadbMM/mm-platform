@@ -97,6 +97,82 @@ test("a season challenge above five is a bar; in Arabic the screen reads right t
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
 });
 
+// The first five rides (the booking app's new features build F1, 2026-11-13): a rider with 1 to 4 bike rides sees that
+// path in place of the month's challenge, member or not, with Book when nothing is booked ahead; a non-member's screen
+// has no Community button.
+test("a non-member on the first five rides: five marks, \"2 of 5\", Book and Done; Book opens Experiences", async ({ page }) => {
+  await rating(page, { k: "p5", n: 2, tg: 5, book: true, mem: false });
+  await page.goto("/");
+  const dlg = await rate(page);
+  await expect(dlg.getByRole("heading")).toHaveText("Your first five rides");
+  const bar = dlg.getByRole("progressbar");
+  await expect(bar).toHaveAttribute("aria-valuetext", "2 of 5");
+  await expect(bar).toHaveAttribute("aria-valuemax", "5");
+  expect(await bar.locator(".hp-dots i").evaluateAll((d) => d.map((i) => i.className))).toEqual(["on", "on", "", "", ""]);
+  await expect(bar.locator(".rg-fin-n")).toHaveText("2 of 5");
+  await expect(bar.locator(".rg-fin-n")).not.toHaveAttribute("dir", "ltr");
+  expect((await dlg.innerText()).split("\n").map((s) => s.trim()).filter(Boolean)).toEqual(["Your first five rides", "2 of 5", "Book your next ride", "Done"]);
+  const box = await dlg.boundingBox(), vp = page.viewportSize()!;
+  expect(Math.abs(box!.x + box!.width / 2 - vp.width / 2)).toBeLessThan(2);
+  await page.addScriptTag({ content: AXE });
+  const bad = await page.evaluate(async () => {
+    const w = window as unknown as { axe: { run(d: Element, o: object): Promise<{ violations: { id: string; impact: string; nodes: unknown[] }[] }> } };
+    const r = await w.axe.run(document.querySelector("[role=dialog]")!, { runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] } });
+    return r.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id} x${v.nodes.length}`);
+  });
+  expect(bad).toEqual([]);
+  // Book: Experiences, nothing chosen, the pop-up gone
+  await dlg.getByRole("link", { name: "Book your next ride" }).click();
+  await page.waitForURL("**/experiences");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("a member on the path: Book filled, then Community outlined, then Done", async ({ page }) => {
+  await rating(page, { k: "p5", n: 3, tg: 5, book: true });
+  await page.goto("/");
+  const dlg = await rate(page);
+  await expect(dlg.getByRole("heading")).toHaveText("Your first five rides");
+  await expect(dlg.locator(".rg-fin-n")).toHaveText("3 of 5");
+  expect(await dlg.locator("a, button").allTextContents()).toEqual(["Book your next ride", "Community", "Done"]);
+  const community = dlg.getByRole("link", { name: "Community" });
+  await expect(community).toHaveClass(/rg-fin-2/);
+  const bg = (name: string) => dlg.getByRole("link", { name }).evaluate((a) => getComputedStyle(a).backgroundColor);
+  expect(await bg("Community")).not.toBe(await bg("Book your next ride"));
+  await community.click();
+  await page.waitForURL("**/club");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("a member on the path with a booking ahead: no Book, Community filled as before", async ({ page }) => {
+  await rating(page, { k: "p5", n: 4, tg: 5 });
+  await page.goto("/");
+  const dlg = await rate(page);
+  await expect(dlg.locator(".rg-fin-n")).toHaveText("4 of 5");
+  expect(await dlg.locator("a, button").allTextContents()).toEqual(["Community", "Done"]);
+  await expect(dlg.getByRole("link", { name: "Community" })).not.toHaveClass(/rg-fin-2/);
+});
+
+test("a badge just earned still comes first, with Book for a rider on the path", async ({ page }) => {
+  await rating(page, { k: "badge", name: "Challenge Met", icon: "target", color: "orange", book: true });
+  await page.goto("/");
+  const dlg = await rate(page);
+  await expect(dlg.getByRole("heading")).toHaveText("Challenge Met");
+  await expect(dlg.getByRole("progressbar")).toHaveCount(0);
+  expect(await dlg.locator("a, button").allTextContents()).toEqual(["Book your next ride", "Community", "Done"]);
+});
+
+test("in Arabic the path's count reads in its own direction; with a booking ahead only Done", async ({ page }) => {
+  await rating(page, { k: "p5", n: 2, tg: 5, mem: false });
+  await page.goto("/?lang=ar");
+  const dlg = await rate(page);
+  await expect(dlg.getByRole("heading")).toHaveText("جولاتك الخمس الأولى");
+  await expect(dlg.locator(".rg-fin-n")).toHaveText("2 من 5");
+  await expect(dlg.locator(".rg-fin-n")).not.toHaveAttribute("dir", "ltr");
+  expect(await dlg.locator("a, button").allTextContents()).toEqual(["تم"]);
+  await dlg.getByRole("button", { name: "تم" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
 test("nothing to show: the thank-you, then the pop-up goes as before", async ({ page }) => {
   const asked = await rating(page, null);
   await page.goto("/");

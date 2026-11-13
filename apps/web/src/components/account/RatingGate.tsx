@@ -25,9 +25,13 @@ import type { RatingForm as Form } from "@/lib/rating";
 // next page: a badge just earned, else the month's challenge this ride moved, else the season challenge, with Community
 // (the members' area, /club) and Done, and no sentence. /api/account/rating-fin decides; the thank-you shows while it
 // answers, and with nothing to show the pop-up closes as before.
+// The first five rides (the booking app's new features build F1, 2026-11-13): a rider with 1 to 4 bike rides, member
+// or not, sees that path in place of the month's challenge (five marks, "2 of 5" in the page's own words), with Book
+// your next ride (Experiences, nothing chosen) when nothing is booked ahead, before a filled Community, which is then
+// outlined; a non-member's screen has no Community button.
 type Props = { entryId: string; name: string; when: string; form: Form; noBike: boolean; restaurant?: string | null; rgLow?: number; run?: boolean; session?: boolean; onDone?: () => void };
 
-const FIN_KINDS = new Set(["badge", "me", "goal"]);
+const FIN_KINDS = new Set(["badge", "me", "goal", "p5"]);
 /** The last screen for this rating, or null: nothing to show, or no answer within eight seconds. */
 async function askFin(entryId: string, locale: string): Promise<Fin | null> {
   const stop = new AbortController(), timer = window.setTimeout(() => stop.abort(), 8000);
@@ -39,15 +43,16 @@ async function askFin(entryId: string, locale: string): Promise<Fin | null> {
   } catch { return null; } finally { window.clearTimeout(timer); }
 }
 
-/** The challenge's progress, as the Community tab draws it: dots up to five, a bar above that, and "3 / 4". */
-function FinProgress({ n, tg, labelledBy }: { n: number; tg: number; labelledBy: string }) {
-  const v = Math.min(Math.max(0, n), tg), m = hubMarks(v, tg), txt = `${v} / ${tg}`;
+/** The challenge's progress, as the Community tab draws it: dots up to five, a bar above that, and "3 / 4"; `of`, the
+ *  first five rides' "{0} of {1}", is written in the page's own words and direction. */
+function FinProgress({ n, tg, labelledBy, of }: { n: number; tg: number; labelledBy: string; of?: string }) {
+  const v = Math.min(Math.max(0, n), tg), m = hubMarks(v, tg), txt = of ? of.replace("{0}", String(v)).replace("{1}", String(tg)) : `${v} / ${tg}`;
   return (
     <div className="rg-fin-p" role="progressbar" aria-valuemin={0} aria-valuemax={tg} aria-valuenow={v} aria-valuetext={txt} aria-labelledby={labelledBy}>
       {"dots" in m
         ? <span className="hp-dots" aria-hidden="true">{m.dots.map((c, i) => <i key={i} className={c || undefined} />)}</span>
         : <span className="hp-bar" aria-hidden="true"><i className="on" style={{ width: `${m.bar.on.toFixed(1)}%` }} /></span>}
-      <bdi className="rg-fin-n" dir="ltr">{txt}</bdi>
+      <bdi className="rg-fin-n" dir={of ? undefined : "ltr"}>{txt}</bdi>
     </div>
   );
 }
@@ -101,14 +106,15 @@ export default function RatingGate({ entryId, name, when, form, noBike, restaura
   };
 
   if (fin) {
-    const title = fin.k === "me" ? challengeName(fin.kind, fin.tg, fw) : fin.name;
+    const title = fin.k === "me" ? challengeName(fin.kind, fin.tg, fw) : fin.k === "p5" ? fw.p5 : fin.name;
     return (
       <div className="rg-gate">
         <div ref={box} className="rg-box rg-fin" role="dialog" aria-modal="true" aria-labelledby={`rg-title-${entryId}`} tabIndex={-1}>
           {fin.k === "badge" && <><p className="rg-fin-k">{fw.badge}</p><Medal icon={fin.icon} color={fin.color} className="rg-fin-medal" /></>}
           <h2 id={`rg-title-${entryId}`} className="rg-title rg-fin-t"><bdi>{title}</bdi></h2>
-          {fin.k !== "badge" && <FinProgress n={fin.n} tg={fin.tg} labelledBy={`rg-title-${entryId}`} />}
-          <Link href="/club" className="rr-send rg-fin-go" onClick={finish}>{fw.community}</Link>
+          {fin.k !== "badge" && <FinProgress n={fin.n} tg={fin.tg} labelledBy={`rg-title-${entryId}`} of={fin.k === "p5" ? fw.p5Of : undefined} />}
+          {fin.book && <Link href="/experiences" className="rr-send rg-fin-go" onClick={finish}>{fw.book}</Link>}
+          {fin.mem !== false && <Link href="/club" className={`rr-send rg-fin-go${fin.book ? " rg-fin-2" : ""}`} onClick={finish}>{fw.community}</Link>}
           <button type="button" className="rg-fin-done" onClick={finish}>{fw.done}</button>
         </div>
       </div>
