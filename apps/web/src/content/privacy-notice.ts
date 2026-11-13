@@ -161,6 +161,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Your choice about ride news, and when you made it",
       "Recorded when you choose",
       "Knowing whether we may send you ride news"
+     ],
+     [
+      "Notifications on your phone or computer: your two switches, My rides (reminders, changes to rides you booked, waitlist places) and Community (a new challenge, the Saturday recap), when and on which device you set them, the words shown and this notice’s version, and the address your browser gives us to reach it",
+      "Always optional: only if you turn notifications on, in Account or with Remind me after a booking. Each switch turns off there as easily, and turning both off deletes that address.",
+      "Sending the notifications you chose and keeping proof of your choice. Each message passes, encrypted, through your browser’s own notification service, outside Saudi Arabia."
      ]
     ]
    }
@@ -532,6 +537,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "اختيارك بشأن أخبار الرحلات ووقت اختيارك",
       "يُسجَّل عند اختيارك",
       "معرفة ما إذا كان يحق لنا إرسال أخبار الرحلات إليك"
+     ],
+     [
+      "الإشعارات على هاتفك أو حاسوبك: مفتاحاك، رحلاتي (التذكيرات، والتغييرات على الرحلات التي حجزتها، والأماكن من قائمة الانتظار) والمجتمع (تحدٍّ جديد، وملخص السبت)، ومتى ضبطتهما وعلى أي جهاز، والكلمات المعروضة، وإصدار هذا الإشعار، والعنوان الذي يعطينا إياه متصفحك للوصول إليه",
+      "اختيارية دائمًا: فقط إذا فعّلت الإشعارات، من الحساب أو بزر ذكّرني بعد الحجز. ويُطفأ كل مفتاح من هناك بالسهولة نفسها، وإطفاء الاثنين يحذف ذلك العنوان.",
+      "إرسال الإشعارات التي اخترتها والاحتفاظ بإثبات اختيارك. تمر كل رسالة مشفّرةً عبر خدمة الإشعارات الخاصة بمتصفحك، خارج المملكة العربية السعودية."
      ]
     ]
    }

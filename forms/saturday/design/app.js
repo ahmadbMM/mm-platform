@@ -1317,12 +1317,60 @@
     $("#done-sum").innerHTML = row(tr("Date"), esc(dateOf(booked.ride, { weekday: "long", day: "numeric", month: "long" }) || "—")) +
       (p ? row(tr("Bike pickup"), '<bdi dir="ltr">' + esc(p.join(" – ")) + "</bdi>") : "") +
       row(tr("Group"), esc(groupName(booked.group))) + row(tr("Bike"), esc(bikeName(booked.bike))) + row(tr("Ride code"), codeCell(booked.code)) + row(tr("Price"), esc(tr("Free")));
+    paintHub();
   }
   function showDone() {
     showView("done"); paintDone();
     $("#done-title").focus({ preventScroll: true });
     autoTimer = setTimeout(openBooking, 4000);
+    loadHub(booked);
   }
+
+  /* ── A member's challenge with this booking ─────────────────────────────
+     The booking app's "You're booked" for a community session (2026-11-13, _bkHubHtml): a Community member's challenge
+     for the month, read after the booking with the account's own session (hub_pulse, rentals 20261114000100). Shown
+     under the title only when the booking is not on the waitlist, the account is a member, the challenge is not met
+     yet and this Saturday is in its month: the challenge's name, the sessions done filled, this booking an outlined
+     dot, the rest empty (a bar above five, as the app draws it), and Community. The whole of it links to the members'
+     area (/club). Nothing for anyone else, nor while it is read, nor from a database without hub_pulse. */
+  var hub = null; // { kind, n, tg } for the booking on the page
+  async function loadHub(b) {
+    hub = null; paintHub();
+    if (!acct || !b || b.status === "waitlist") return;
+    var r = await rpc("hub_pulse", { p_id: acct.id, p_token: acct.token });
+    if (booked !== b || gone()) return; // another booking, or the page went, meanwhile
+    var d = !r.error && r.data && r.data.ok === true && r.data.member === true ? r.data : null, me = d && d.me;
+    var n = Math.max(0, Number(me && me.n) || 0), tg = Number(me && me.target) || 0;
+    var month = String(b.ride.session_date || b.ride.session_id || "").slice(0, 7);
+    if (!me || !me.kind || !(tg > 0) || n >= tg || month !== String(me.ends_on || "").slice(0, 7)) return;
+    hub = { kind: String(me.kind), n: n, tg: tg };
+    paintHub();
+  }
+  function hubName(h) {
+    return h.kind === "first" ? tr("Your first session") : h.kind === "second" ? tr("Your second session") : h.kind === "back" ? tr("Back this month") : tr("{n} sessions this month", { n: h.tg });
+  }
+  // The app's _hpBar with this booking: dots up to five, a bar above that.
+  function hubMarks(n, tg) {
+    var v = Math.min(n, tg), x = v < tg ? 1 : 0, s = "", i;
+    if (tg <= 5) {
+      for (i = 0; i < tg; i++) s += "<i" + (i < v ? ' class="on"' : i < v + x ? ' class="nx"' : "") + "></i>";
+      return '<span class="hp-dots" aria-hidden="true">' + s + "</span>";
+    }
+    var w = function (k) { return (k / tg * 100).toFixed(1) + "%"; };
+    return '<span class="hp-bar" aria-hidden="true"><i class="on" style="width:' + w(v) + '"></i>' + (x ? '<i class="nx" style="width:' + w(x) + '"></i>' : "") + "</span>";
+  }
+  function paintHub() {
+    var a = $("#done-hub"); if (!a) return;
+    var h = booked && booked.status !== "waitlist" ? hub : null;
+    a.hidden = !h;
+    if (!h) { a.innerHTML = ""; return; }
+    a.href = "/club?lang=" + lang;
+    a.innerHTML = '<span class="d-hub-k"><svg aria-hidden="true"><use href="#i-flag"/></svg><bdi>' + esc(hubName(h)) + "</bdi></span>" + hubMarks(h.n, h.tg) +
+      '<span class="sr">' + esc(tr("With this booking: {n} of {of}", { n: h.n + 1, of: h.tg })) + "</span>" +
+      '<span class="d-hub-go">' + esc(tr("Community")) + '<svg aria-hidden="true"><use href="#i-go"/></svg></span>';
+  }
+  // Off to the members' area: the booking app is not opened over it.
+  $("#done-hub").addEventListener("click", function () { clearTimeout(autoTimer); leaving = true; });
   // The booking in the app, signed in there by a one-time code (customer_handoff_create; the app
   // reads ?signin=). Without a code, the app's My Bookings, where the rider signs in themselves.
   async function openBooking() {

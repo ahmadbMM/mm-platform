@@ -1,3 +1,4 @@
+import "./medal.css";
 import { useId } from "react";
 import { GLYPH } from "./badge-glyphs";
 

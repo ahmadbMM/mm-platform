@@ -24,6 +24,8 @@
     <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12.5 12H22M18 12v4M21 12v3" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
     <symbol id="i-open" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5" fill="currentColor"/></symbol>
     <symbol id="i-stop" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/></symbol>
+    <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5.4 21V3.8M5.4 4.4h11.8l-2.4 4 2.4 4H5.4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-go" viewBox="0 0 24 24"><path d="M9.4 5.4L16 12l-6.4 6.6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
     <symbol id="i-wheel" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" stroke-width="6"/><circle cx="50" cy="50" r="7" fill="currentColor"/><path d="M50 10v80M10 50h80M22 22l56 56M78 22L22 78" stroke="currentColor" stroke-width="2.5"/></symbol>
   </defs>
 </svg>
@@ -311,6 +313,8 @@
         <span class="done-mark" aria-hidden="true"><svg><use href="#i-check"/></svg></span>
         <div><p class="eyebrow" id="done-eyebrow"></p><h2 id="done-title" class="st-title" tabindex="-1"></h2></div>
       </div>
+      <!-- A Community member's month with this booking (the booking app's "You're booked", 2026-11-13): filled by app.js. -->
+      <a id="done-hub" class="d-hub" href="/club" hidden></a>
       <p id="done-text" class="small start"></p>
       <dl id="done-sum" class="review"></dl>
       <p id="done-going" class="small start" role="status" data-t="Opening your booking...">Opening your booking...</p>
