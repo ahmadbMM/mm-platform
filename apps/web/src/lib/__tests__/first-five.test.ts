@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { P5, firstFive, firstFiveIds } from "../first-five";
 import type { RecordSession } from "../ride-record";
+import { resetSiteContent } from "../site";
 import { RATING_FIN_WORDS } from "../../components/account/RatingFin.words";
 import { LOCALES } from "../../i18n/locales";
 import { POST } from "../../app/api/account/rating-fin/route";
@@ -105,11 +106,14 @@ describe("api/account/rating-fin and the first five rides", () => {
   beforeEach(() => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
     vi.useFakeTimers({ toFake: ["Date"] }); vi.setSystemTime(new Date(`${TODAY}T09:00:00Z`));
+    resetSiteContent();
   });
   afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); vi.useRealTimers(); });
   const post = (body: unknown) => POST(new Request("https://micromobility.sa/api/account/rating-fin", { method: "POST", headers: HEADERS, body: JSON.stringify(body) }));
   const fn = (url: string) => String(url.split("/rpc/")[1] ?? "").split("?")[0];
-  const db = (answers: Record<string, Response>) => vi.fn(async (url: string) => {
+  // the site's content says Experiences is switched on unless a test says otherwise
+  const db = (answers: Record<string, Response>, experiences = true) => vi.fn(async (url: string) => {
+    if (url.includes("/site_content?")) return json([{ key: "page.experiences.visible", value: experiences }]);
     const a = answers[fn(url)];
     return a ? a.clone() : json({ code: "PGRST202", message: "Could not find the function" }, 404);
   });
@@ -134,6 +138,11 @@ describe("api/account/rating-fin and the first five rides", () => {
   it("leaves Book out for a rider with a booking ahead", async () => {
     vi.stubGlobal("fetch", account(1, { hub_pulse: json(NOT_MEMBER) }, [AHEAD]));
     expect(await fin(await post({ entryId: "e1", locale: "en" }))).toEqual({ k: "p5", n: 1, tg: 5, mem: false });
+  });
+
+  it("leaves Book out while staff have Experiences switched off, as My Account leaves its Experiences links out", async () => {
+    vi.stubGlobal("fetch", db({ my_bookings: json(rides(2)), list_sessions: json(DAYS.slice(0, 2).map(circuit)), hub_pulse: json(PULSE) }, false));
+    expect(await fin(await post({ entryId: "e1", locale: "en" }))).toEqual({ k: "p5", n: 2, tg: 5 });
   });
 
   it("shows a non-member nothing from the fifth ride on, or after a session without a bike, as before", async () => {
@@ -188,9 +197,14 @@ describe("api/account/rating-fin and the first five rides", () => {
     expect(names(off)).not.toContain("community_member");
   });
 
-  it("counts the rides from the ids when the sessions cannot be read, and reads nothing for an account with no ride done", async () => {
+  it("shows no path when the sessions cannot be read whole, and reads nothing for an account with no ride done", async () => {
+    // free Saturdays unread would count as none: a non-member is shown nothing, a member the month's challenge as before
     vi.stubGlobal("fetch", db({ my_bookings: json(rides(3)), hub_pulse: json(NOT_MEMBER) }));
-    expect(await fin(await post({ entryId: "e1", locale: "en" }))).toEqual({ k: "p5", n: 3, tg: 5, book: true, mem: false });
+    expect(await fin(await post({ entryId: "e1", locale: "en" }))).toBeNull();
+    vi.stubGlobal("fetch", db({ my_bookings: json(rides(3)), list_sessions: json(DAYS.slice(0, 2).map(circuit)), hub_pulse: json(NOT_MEMBER) }));
+    expect(await fin(await post({ entryId: "e1", locale: "en" }))).toBeNull();
+    vi.stubGlobal("fetch", db({ my_bookings: json(rides(3)), hub_pulse: json(PULSE) }));
+    expect(await fin(await post({ entryId: "e1", locale: "en" }))).toEqual({ k: "me", kind: "level", n: 3, tg: 4 });
     // the ride rated is the account's only row, and not a finished one: nothing to look up, nothing to show
     const fx = db({ my_bookings: json([{ ...ride("e1", "2026-11-14"), status: "active" }]), hub_pulse: json(NOT_MEMBER) });
     vi.stubGlobal("fetch", fx);

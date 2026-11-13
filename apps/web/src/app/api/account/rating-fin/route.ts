@@ -10,6 +10,7 @@ import { withinLimit } from "@/lib/rate-limit";
 import { ENTRY_ID, pendingRating } from "@/lib/rating";
 import { BADGE_SYS, type BadgeRow, type RecordSession } from "@/lib/ride-record";
 import { loadRecordSessions } from "@/lib/ride-record-data";
+import { loadSiteContent, pageOn } from "@/lib/site";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // POST /api/account/rating-fin {entryId, locale}: the post-ride rating's last screen (the booking app's _rgFinFor,
@@ -25,7 +26,8 @@ import { riyadhClock } from "@/lib/workshop-days";
 // - else the month's challenge, once the member has a session in it and the ride rated is in its month;
 // - else the season challenge running, once it has a session in it.
 // A rider who is not a Community member gets the first five rides alone, without the Community button (mem false); a
-// rider on that path with nothing booked ahead gets Book too, beside a badge as well (book). When hub_pulse gives no
+// rider on that path with nothing booked ahead gets Book too, beside a badge as well (book), while staff have
+// Experiences switched on. When hub_pulse gives no
 // answer, community_member (the booking app's commAccess) says whether the path keeps its Community button.
 // {fin: null} for anything else, a database without hub_pulse (unless the path shows), or one that did not answer.
 // Only this site's pages may call it; a connection asks 30 times a minute at most, with the pop-ups' checks
@@ -60,8 +62,11 @@ export async function POST(req: Request) {
     ids.length ? loadRecordSessions(ids, acct) : Promise.resolve(new Map<string, RecordSession>()),
     fresh.length ? Promise.all([rpcServer<unknown>("customer_my_badges", me), rpcServer<unknown>("badge_catalog", {})]) : Promise.resolve(null),
   ]);
-  const f5 = firstFive(bookings, entryId, sessions, today);
-  const path: Fin | null = f5 ? { k: "p5", n: f5.n, tg: f5.tg, ...(f5.book ? { book: true } : {}) } : null;
+  // counted only once every finished booking's session came back (a read cut short would count a long-standing rider's
+  // free rides as none, as the booking app counts only from a whole read); Book only while Experiences is switched on
+  const f5 = ids.every((id) => sessions.has(id)) ? firstFive(bookings, entryId, sessions, today) : null;
+  const book = !!f5?.book && pageOn(await loadSiteContent(), "experiences");
+  const path: Fin | null = f5 ? { k: "p5", n: f5.n, tg: f5.tg, ...(book ? { book: true } : {}) } : null;
   if (!p) {
     // no pulse: the path alone, its Community button only for an account community_member says is a member
     if (!path) return none();
