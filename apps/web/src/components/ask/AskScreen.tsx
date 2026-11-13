@@ -17,7 +17,7 @@ const NOBODY: ReadonlySet<number> = new Set();
 const COUNTS: VoteProps = { mine: NOBODY, voted: NOBODY, can: false, busy: null, onVote: () => {} };
 
 // micromobility.sa/ask/<slug>/screen?k=<key>: a page on a TV or a projector - one question at a time, its results
-// filling the screen, and along the bottom where to answer: the address, the page's code and a QR code of its link.
+// filling the screen, and along the bottom where to answer: the page's own address and a QR code of it.
 // No account and nothing of the site around it. The results are asked for every 4 seconds with the screen's own key
 // (useAskLive); the page is read again (ask_screen, straight from the database too) when staff add a question or
 // start a new round. The operator moves with the two buttons, the arrow keys or a clicker (Page Up / Page Down); on a
@@ -110,8 +110,7 @@ export default function AskScreen({ locale, slug, screenKey, initial, asked, qr,
       <footer className="ask-scr-strip">
         <span className="ask-scr-mark" role="img" aria-label="Micromobility" />
         <p className="ask-scr-join">
-          <span className="ask-scr-url mm-lat">micromobility.sa/ask</span>
-          {page.code && <span className="ask-scr-code"><span>{t.code}</span> <b className="mm-lat">{page.code.slice(0, 3)}<span className="ask-scr-gap" />{page.code.slice(3)}</b></span>}
+          <span className="ask-scr-url mm-lat" dir="ltr">{link.replace(/^https?:\/\//, "")}</span>
         </p>
         {count > 1 && (
           <nav className="ask-scr-nav" aria-label={`${at + 1} / ${count}`}>

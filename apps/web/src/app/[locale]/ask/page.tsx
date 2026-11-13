@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { T } from "@/components/ask/Ask.text";
-import AskCodeBox from "@/components/ask/AskCodeBox";
 import AskFrame, { SignedInAs, askSite } from "@/components/ask/AskFrame";
 import AskSignIn from "@/components/ask/AskSignIn";
 import "@/components/learn/learn.css";
@@ -13,8 +12,8 @@ import { askSession, readAskList } from "@/lib/ask-server";
 import { pageMeta } from "@/lib/seo";
 
 // micromobility.sa/ask - "Have your say": the pages of questions that are open to this visitor (ask_list, with the
-// account cookie's session when there is one), a box for a page's 6-digit code (the big screen shows it), and, for a
-// visitor who is signed out, the sign-in and the way to an account - answering always needs one. It opens whatever
+// account cookie's session when there is one) and, for a visitor who is signed out, the sign-in and the way to an
+// account - answering always needs one. No code is asked for: a page opens from this list or from its own link. It opens whatever
 // the site's state (proxy.ts, ASK_PAGE), is never kept at the edge (lib/page-cache.ts) and never in search results.
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
@@ -46,7 +45,6 @@ export default async function AskListPage({ params, searchParams }: { params: Pr
             ))}
           </ul>
         ) : <p className="ask-open-none">{t.nothing}</p>}
-        <AskCodeBox />
         {signedOut && (
           <section className="ask-box" aria-labelledby="ask-signin">
             <h2 id="ask-signin">{tx("Sign in to your account", "تسجيل الدخول إلى حسابك")}</h2>

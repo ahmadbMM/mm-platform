@@ -10,7 +10,7 @@ import { LOCALE_CODES, intlOf } from "@/i18n/locales";
 // these pages do not draw yet (grid, pin, form, quiz, quiz_text) is kept and drawn as nothing, and an answer that is
 // not a page at all reads as "none".
 
-/* ------------------------------------------------------------------ addresses, codes, words */
+/* ------------------------------------------------------------------ addresses, words */
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 /** A page's link part: lower-case letters, digits and single dashes, 3 to 40 characters. */
@@ -19,12 +19,6 @@ export const askSlugOk = (s: unknown): s is string => typeof s === "string" && s
 /** Digits as typed on an Arabic or a Persian keyboard, as the Latin ones every number on the site is written in. */
 export const latinDigits = (s: string): string =>
   s.replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)));
-
-/** A page's 6-digit code as typed (Arabic and Persian digits too, spaces and dashes between them), or null. */
-export function askCode(raw: unknown): string | null {
-  const d = latinDigits(String(raw ?? "")).replace(/[\s\-‐-―.]/g, "");
-  return /^\d{6}$/.test(d) ? d : null;
-}
 
 const str = (v: unknown): string => (typeof v === "string" ? v : "");
 const num = (v: unknown): number | null => {
@@ -307,7 +301,7 @@ export type AskLive = {
   stats: AskStats | null;
 };
 export type AskPageInfo = {
-  id: number; slug: string; code: string; title_en: string; title_ar: string; intro_en: string; intro_ar: string;
+  id: number; slug: string; title_en: string; title_ar: string; intro_en: string; intro_ar: string;
   pace: "self" | "live"; current_q: number | null; opens_at: string | null; closes_at: string | null; round: number; open: boolean; look: Look;
 };
 /** A page with its questions: state "ok", a closed page that still shows its results, and the big screen. */
@@ -375,7 +369,7 @@ function fullOf(o: Record<string, unknown>): AskFull | null {
   return {
     signed: o.signed === true, canAnswer: o.can_answer === true && !preview, preview, rk: str(o.rk),
     page: {
-      id, slug: p.slug, code: /^\d{6}$/.test(str(p.code)) ? str(p.code) : "", title_en: str(p.title_en), title_ar: str(p.title_ar), intro_en: str(p.intro_en), intro_ar: str(p.intro_ar),
+      id, slug: p.slug, title_en: str(p.title_en), title_ar: str(p.title_ar), intro_en: str(p.intro_en), intro_ar: str(p.intro_ar),
       pace: p.pace === "live" ? "live" : "self", current_q: int(p.current_q), opens_at: when(p.opens_at), closes_at: when(p.closes_at), round: int(p.round) ?? 1, open: p.open !== false, look: lookOf(p.look),
     },
     questions, mine, voted: list(o.voted).map(int).filter((n): n is number => n !== null), live: liveOf(o.live),

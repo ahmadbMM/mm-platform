@@ -5,7 +5,7 @@ export const T = {
   en: {
     listTitle: "Have your say", nothing: "Nothing is open right now.",
     until: (date: string) => `Open until ${date}`, opens: (date: string) => `Opens ${date}`,
-    code: "Code", codeGo: "Open page", codeBad: "No open page has this code.", codeBusy: "Too many tries - wait a few minutes.", tryLater: "Please try again in a moment.",
+    tryLater: "Please try again in a moment.",
     none: "This page is not available.", signinTitle: "Sign in to see this page", notYours: "This page is not open to your account.", closedPage: "This page is closed.",
     closed: "Answers closed", preview: "Preview",
     signinToAnswer: "Sign in to answer", create: "Create account", close: "Close",
@@ -28,7 +28,7 @@ export const T = {
   ar: {
     listTitle: "شاركنا رأيك", nothing: "لا يوجد شيء مفتوح حالياً.",
     until: (date: string) => `مفتوح حتى ${date}`, opens: (date: string) => `يفتح ${date}`,
-    code: "الرمز", codeGo: "فتح الصفحة", codeBad: "لا توجد صفحة مفتوحة بهذا الرمز.", codeBusy: "محاولات كثيرة - انتظر دقائق.", tryLater: "يرجى المحاولة مرة أخرى بعد قليل.",
+    tryLater: "يرجى المحاولة مرة أخرى بعد قليل.",
     none: "هذه الصفحة غير متاحة.", signinTitle: "سجّل الدخول لعرض هذه الصفحة", notYours: "هذه الصفحة غير متاحة لحسابك.", closedPage: "هذه الصفحة مغلقة.",
     closed: "أُغلقت الإجابات", preview: "معاينة",
     signinToAnswer: "سجّل الدخول للإجابة", create: "إنشاء حساب", close: "إغلاق",

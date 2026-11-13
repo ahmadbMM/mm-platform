@@ -3,7 +3,7 @@ import { T } from "../../components/ask/Ask.text";
 import { RESULT_VIEWS } from "../../components/ask/results";
 import {
   ASK_DRAWN, ASK_ERRORS, ASK_PALETTES, POLL_MS, REREAD_MS,
-  answerState, applyLive, applySame, askBack, askCode, askErrorKey, askLang, askList, askLive, askNum, askPalette, askPct, askScreen, askSent, askSlugOk, askText, askTheme, askView, askViz, askWhen,
+  answerState, applyLive, applySame, askBack, askErrorKey, askLang, askList, askLive, askNum, askPalette, askPct, askScreen, askSent, askSlugOk, askText, askTheme, askView, askViz, askWhen,
   charCount, choiceConfig, choiceRows, cloudResult, hasPending, isDrawn, isWritten, itemsResult, numberConfig, numberResult, optionsOf, pageOpen, paletteVars, pointRows, pointsConfig, pollDelay, rankRows,
   rereadDue, resultsShown, scaleRows, scalesConfig, screenAt, screenStep, sentMarks, sentNumber, sentOrder, sentPicks, shapeChoice, shapeNumber, shapePoints, shapeRanking, shapeScales, shapeWritten,
   withMine, withVote, withoutMine, writtenConfig, type AskFull, type AskQuestion,
@@ -35,18 +35,10 @@ const fullOf = (over: Record<string, unknown> = {}): AskFull => {
 };
 const mine = (id: number, status = "pending", value: unknown = { t: "Kites" }) => ({ id, value, body: "Kites", status, answered: false, score: null, votes: 0, created_at: "2026-11-13T10:00:00+03:00" });
 
-describe("addresses, codes and words", () => {
+describe("addresses and words", () => {
   it("knows a page's link part: lower-case letters, digits and single dashes, 3 to 40 characters", () => {
     for (const s of ["farm-ideas", "q4-2026", "abc", "a".repeat(40)]) expect(askSlugOk(s), s).toBe(true);
     for (const s of ["ab", "Farm-Ideas", "farm_ideas", "-farm", "farm-", "farm--ideas", "a".repeat(41), "farm ideas", "", null, 12]) expect(askSlugOk(s), String(s)).toBe(false);
-  });
-  it("reads a 6-digit code however it is typed, and nothing else as one", () => {
-    expect(askCode("482913")).toBe("482913");
-    expect(askCode(" 482 913 ")).toBe("482913");
-    expect(askCode("482-913")).toBe("482913");
-    expect(askCode("٤٨٢٩١٣")).toBe("482913");
-    expect(askCode("۴۸۲۹۱۳")).toBe("482913");
-    for (const bad of ["48291", "4829134", "48a913", "", null, undefined]) expect(askCode(bad), String(bad)).toBeNull();
   });
   it("shows what staff wrote: the Arabic to Arabic readers, the English to everyone else, each falling back to the other", () => {
     expect(askText("ar", "Your ideas", "أفكاركم")).toBe("أفكاركم");
@@ -256,7 +248,9 @@ describe("what the database answers", () => {
     expect(closed.full?.questions).toHaveLength(1);
     const ok = askView(payload());
     expect(ok.state).toBe("ok");
-    expect(ok.full).toMatchObject({ signed: true, canAnswer: true, preview: false, rk: "rk1", voted: [], page: { id: 1, slug: "farm-ideas", code: "482913", round: 1, open: true, look: {} } });
+    expect(ok.full).toMatchObject({ signed: true, canAnswer: true, preview: false, rk: "rk1", voted: [], page: { id: 1, slug: "farm-ideas", round: 1, open: true, look: {} } });
+    // the database still sends a page's 6-digit code; no page asks for one any more, so it is not carried
+    expect(ok.full?.page).not.toHaveProperty("code");
     expect(ok.full?.questions[0]).toMatchObject({ id: 11, kind: "cloud", results: "live", open: true, moderated: true, look: {} });
     expect(ok.full?.live).toMatchObject({ ver: 7, state: "ok", open: true, stats: { answers: 3, people: 2 } });
   });
@@ -268,7 +262,7 @@ describe("what the database answers", () => {
   it("keeps what it can of a page that came half-formed, and never trusts a field's type", () => {
     const v = askView(payload({
       signed: "yes", can_answer: "yes", rk: 5, voted: [3, "4", "x", null],
-      page: page({ code: "12", closes_at: "soon", round: "2", look: "dark", current_q: "9" }),
+      page: page({ closes_at: "soon", round: "2", look: "dark", current_q: "9" }),
       questions: [question({ id: "12", pos: 2, kind: "choice", results: "everyone", image: "javascript:alert(1)", config: null, look: [1] }), question({ id: 13, pos: 1, image: "https://cdn.example/x.jpg" }), { kind: "cloud" }, null],
       mine: { "12": [mine(5, "odd"), { value: {} }], x: "y" }, live: "none",
     }));
@@ -277,7 +271,7 @@ describe("what the database answers", () => {
     expect(f.canAnswer).toBe(false);
     expect(f.rk).toBe("");
     expect(f.voted).toEqual([3, 4]);
-    expect(f.page).toMatchObject({ code: "", closes_at: null, round: 2, look: {}, current_q: 9 });
+    expect(f.page).toMatchObject({ closes_at: null, round: 2, look: {}, current_q: 9 });
     expect(f.questions.map((q) => q.id)).toEqual([13, 12]); // in the page's order
     expect(f.questions[1]).toMatchObject({ id: 12, results: "staff", image: null, config: {}, look: {} });
     expect(f.questions[0].image).toBe("https://cdn.example/x.jpg");
@@ -295,7 +289,7 @@ describe("what the database answers", () => {
     expect(askScreen({ ok: false })).toBeNull();
     expect(askScreen(null)).toBeNull();
     const s = askScreen({ ok: true, page: page(), questions: [question()], live: live() });
-    expect(s).toMatchObject({ signed: false, canAnswer: false, mine: {}, page: { slug: "farm-ideas", code: "482913" } });
+    expect(s).toMatchObject({ signed: false, canAnswer: false, mine: {}, page: { slug: "farm-ideas" } });
     expect(s?.live?.results["11"]).toBeTruthy();
   });
   it("ask_live: gone, nothing new (which still says whether the page is open), or the whole", () => {
