@@ -38,6 +38,9 @@ const TABLES = [
 const IGNORE = new Set(["updated_at", "updated_by", "created_at"]);
 const PAGES = ["experiences", "workshop", "business", "help", "ambassadors", "club", "about", "events", "gallery", "routes", "journal", "account", "terms", "bikes"];
 const STAGING_OVERRIDES = { "site.coming_soon": false, ...Object.fromEntries(PAGES.map((p) => [`page.${p}.visible`, true])) };
+// Staging's own settings, never copied from live nor removed (2026-11-10): online payments and the store are tried on
+// staging first (pay.*, store.*), switched on there while live keeps them off.
+const STAGING_OWN = (key) => /^(pay|store)\./.test(key);
 
 const prodH = { apikey: PROD_ANON_KEY, Authorization: `Bearer ${PROD_ANON_KEY}` };
 const stgH = { apikey: STAGING_SERVICE_KEY, Authorization: `Bearer ${STAGING_SERVICE_KEY}` };
@@ -112,10 +115,11 @@ const have = {}; // table -> the ids on staging once its rows are written: what 
 for (const t of TABLES) {
   let prod = await readAll(PROD_URL, prodH, t.name);
   if (t.name === "site_content") {
-    prod = prod.filter((r) => !(r.key in STAGING_OVERRIDES));
+    prod = prod.filter((r) => !(r.key in STAGING_OVERRIDES) && !STAGING_OWN(r.key));
     for (const [key, value] of Object.entries(STAGING_OVERRIDES)) prod.push({ key, value });
   }
-  const stg = await readAll(STAGING_URL, stgH, t.name);
+  let stg = await readAll(STAGING_URL, stgH, t.name);
+  if (t.name === "site_content") stg = stg.filter((r) => !STAGING_OWN(r.key)); // staging's own pay./store. keys: never written over, never removed
   const refs = REFS[t.name] || [];
   const own = new Set([...stg, ...prod].map((r) => r.id)); // a parent in the same table: written in the same upsert, first
   const shown = [], left = [];
