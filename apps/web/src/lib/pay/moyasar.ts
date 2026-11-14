@@ -56,6 +56,16 @@ export async function paymentsFor(sk: string, payId: string, f?: typeof fetch): 
 export const refundPayment = (sk: string, id: string, halalas?: number, f?: typeof fetch) =>
   call<MoyasarPayment>(sk, `/payments/${id}/refund`, { method: "POST", body: JSON.stringify(halalas ? { amount: halalas } : {}) }, f);
 
+/** A webhook's one-time code sent back (docs.moyasar.com, Verify Webhook, 2026-11-14): a new webhook receives no events until
+ *  it is verified, and Moyasar sends the 6-digit code once, to the webhook's own address, in a `webhook_verification` event
+ *  (data.webhook_id, data.verification_code), valid 30 minutes. Answering it here means nobody has to catch the code and
+ *  type it into the dashboard. */
+export const WEBHOOK_CODE = /^\d{6}$/;
+export const verifyWebhook = (sk: string, webhookId: string, code: string, f?: typeof fetch) =>
+  MOYASAR_ID.test(webhookId) && WEBHOOK_CODE.test(code)
+    ? call<{ id: string; verified?: boolean }>(sk, `/webhooks/${webhookId}/verify`, { method: "POST", body: JSON.stringify({ code }) }, f)
+    : Promise.resolve({ ok: false, status: 400, message: "id" } as const);
+
 /** SAR to halalas, exactly (57.5 -> 5750). */
 export const toHalalas = (sar: number) => Math.round(Number(sar) * 100);
 

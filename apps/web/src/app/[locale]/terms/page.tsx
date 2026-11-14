@@ -7,6 +7,7 @@ import { termsSchema } from "@/content/pages/terms";
 import { asLocale, resolvePage } from "@/lib/content";
 import { payReady } from "@/lib/pay/config";
 import { paySettings } from "@/lib/pay/settings";
+import { withoutBoothLine } from "@/lib/pay/booth";
 import { fill } from "@/lib/fill";
 import { isoDay, parseBody } from "@/lib/journal";
 import { pageState } from "@/lib/page-state";
@@ -82,6 +83,11 @@ export default async function TermsPage({ params }: { params: Promise<{ locale: 
       ]).filter(Boolean).join("\n"),
     };
     clauses.splice(Math.max(0, clauses.length - 1), 0, payClause as (typeof clauses)[number]);
+    // Rides paid when booking (2026-11-14): the Rides and rentals clause's default line that payment is collected at the
+    // booth would contradict the clause above, so it goes while that is so (lib/pay/booth.ts).
+    if (ps.bookings === "required") {
+      for (let i = 0; i < clauses.length; i++) clauses[i] = { ...clauses[i], body: withoutBoothLine(S(clauses[i].body)) };
+    }
   }
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>

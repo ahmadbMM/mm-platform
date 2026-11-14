@@ -34,6 +34,8 @@ export type PayScreenProps = {
   tried: boolean;
   /** Where Start again goes when the hold runs out, when the page knows better than the kind (a store order's own page). */
   againHref?: string | null;
+  /** The Terms' address for the agreement's link; null while staff have the Terms page switched off. */
+  termsHref?: string | null;
 };
 
 /** How long before the hold lets go the warning opens: a minute, well over the 20 seconds WCAG 2.2.1 asks for. */
@@ -48,9 +50,13 @@ function uuid4(): string {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-export default function PayScreen({ locale, pay, publishableKey, testMode, formJs, formCss, declined, tried, againHref = null }: PayScreenProps) {
+export default function PayScreen({ locale, pay, publishableKey, testMode, formJs, formCss, declined, tried, againHref = null, termsHref = null }: PayScreenProps) {
   const t = useLocalize(T);
   const el = useRef<HTMLDivElement>(null);
+  // The refund policy is accepted with a tick before paying (2026-11-14, the card schemes' click-to-accept): until it is
+  // ticked Moyasar's form is drawn but inert, so neither a card, STC Pay nor Apple Pay can be used. A disabled form says
+  // nothing more (owner, 2026-11-08: no why-disabled lines); the tick sits right above it.
+  const [agreed, setAgreed] = useState(false);
   // The time left starts as the server counted it, so the first drawing in the browser says what the server's did
   // (no hydration mismatch), and runs down by the time that passes here (a difference of two readings of the phone's
   // clock, which counts a phone asleep too): a phone clock set wrong changes nothing.
@@ -167,6 +173,12 @@ export default function PayScreen({ locale, pay, publishableKey, testMode, formJ
     const [before, after = ""] = t.holding.split("{0}");
     return <span>{before}<bdi className="py-clock">{mmss(left)}</bdi>{after}</span>;
   };
+  // "I agree to the refund policy and the {0}.": the Terms' name stands where the language puts {0}, as a link that opens
+  // beside this page, so reading them never loses the hold
+  const agreeLine = () => {
+    const [before, after = ""] = t.agree.split("{0}");
+    return <>{before}{termsHref ? <a href={termsHref} target="_blank" rel="noopener">{t.termsFull}</a> : t.termsFull}{after}</>;
+  };
 
   if (over) {
     return (
@@ -181,15 +193,22 @@ export default function PayScreen({ locale, pay, publishableKey, testMode, formJ
       {pay.hold && <p className="py-hold" aria-live="off">{holding()}</p>}
       {(declined || tried) && <p className="py-err" role="alert">{declined ? fill(t.declined, declined) : t.declinedPlain}</p>}
       {testMode && <p className="py-test">{t.testMode}</p>}
+      <label className="py-agree">
+        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+        <span>{agreeLine()}</span>
+      </label>
       <p className="py-note">{t.payNote}</p>
-      <div ref={el} className="py-form" dir={locale === "ar" ? "rtl" : "ltr"} />
+      <div ref={el} className={`py-form${agreed ? "" : " off"}`} dir={locale === "ar" ? "rtl" : "ltr"} inert={!agreed} />
       {failed && (
         <div className="py-box" role="alert">
           <p className="py-msg">{t.loadError}</p>
           <button type="button" className="bk-btn2" onClick={() => window.location.reload()}>{t.reload}</button>
         </div>
       )}
-      <p className="py-secure">{t.secure}</p>
+      <p className="py-secure">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4" /></svg>
+        <span>{t.secure}</span>
+      </p>
       {warn && (
         // centred, as every pop-up on the site; an alert dialog, so it is read out when it opens and keeps the keyboard
         <div className="bk-backdrop">

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import PageShell from "@/components/site/PageShell";
 import { Link } from "@/i18n/navigation";
 import PayScreen from "@/components/pay/PayScreen";
+import PayMarks from "@/components/pay/PayMarks";
 import { T } from "@/components/pay/Pay.text";
 import "@/components/experiences/experiences.css";
 import "@/components/pay/pay.css";
@@ -24,7 +25,8 @@ import { fill } from "@/i18n/tx";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Payment", robots: { index: false, follow: false } };
 
-const BRAND: Record<string, string> = { mada: "mada", visa: "Visa", mastercard: "Mastercard", amex: "American Express" };
+const S = (v: unknown) => (typeof v === "string" ? v : "");
+const BRAND: Record<string, string> ={ mada: "mada", visa: "Visa", mastercard: "Mastercard", amex: "American Express" };
 const METHOD: Record<string, string> = { applepay: "Apple Pay", stcpay: "STC Pay", samsungpay: "Samsung Pay", googlepay: "Google Pay" };
 
 function paidWith(v: PayView): string | null {
@@ -94,36 +96,45 @@ export default async function PayPage({ params, searchParams }: { params: Promis
     // The hold's time left by this server's clock, never the phone's: the page counts down from it, so a phone clock
     // set wrong neither ends the hold early nor keeps the form up after it.
     const leftMs = Date.parse(v.expires_at) - new Date().getTime();
+    // Who is paid and where (the card schemes ask for the merchant's name and country on the screen that takes the
+    // card, not behind a link): the registered name staff keep in Website > Whole site > Legal line.
+    const merchant = S(site.legal?.legalName) || "Micromobility Company Ltd.";
     body = (
-      <div className="py-grid">
-        <section className="py-sum" aria-labelledby="py-h">
-          <p className="py-kind">{t.kinds[kind]}</p>
-          <h1 id="py-h" className="py-desc">{v.description}</h1>
-          {lines.length > 0 && (
-            <ul className="py-lines">
-              {lines.map((l, i) => <li key={i}><span>{l.k}</span>{l.v && <bdi className="tk-amt">{l.v}</bdi>}</li>)}
-            </ul>
-          )}
-          <p className="py-total"><span>{t.total}</span><bdi className="tk-amt">{sar(v.amount)}</bdi></p>
-          <p className="py-vat">{t.vat}</p>
-          {policy && (
-            <p className="py-policy">{policy}{policyHref && <> <a href={policyHref}>{kind === "order" ? t.returns : t.terms}</a></>}</p>
-          )}
-          <p className="py-marks" aria-label={t.methods}>
-            {["mada", "visa", "mastercard"].map((m) => <img key={m} src={`/site/payments/${m}.svg`} alt="" width={46} height={30} />)}
-            <span className="py-marks-t">{t.methods}</span>
-          </p>
-        </section>
-        <section className="py-pay">
-          {open ? (
-            <PayScreen locale={locale} publishableKey={env.MOYASAR_PUBLISHABLE_KEY!} testMode={payMode(env) === "test"} formJs={MOYASAR_FORM_JS} formCss={MOYASAR_FORM_CSS}
-              pay={{ id: v.id, kind, ref: v.ref, amount: v.amount, description: v.description, hold: v.hold, leftMs: Number.isFinite(leftMs) ? leftMs : 0 }}
-              declined={q.tried ? v.message : null} tried={!!q.tried} againHref={kind === "order" ? orderAgain : null} />
-          ) : (
-            <p className="py-msg" role="status">{t.notOpen}</p>
-          )}
-        </section>
-      </div>
+      <>
+        <h1 className="py-title">{t.title}</h1>
+        <div className="py-grid">
+          <section className="py-sum" aria-labelledby="py-h">
+            <p className="py-kind">{t.kinds[kind]}</p>
+            <h2 id="py-h" className="py-desc">{v.description}</h2>
+            {lines.length > 0 && (
+              <ul className="py-lines">
+                {lines.map((l, i) => <li key={i}><span>{l.k}</span>{l.v && <bdi className="tk-amt">{l.v}</bdi>}</li>)}
+              </ul>
+            )}
+            <p className="py-total"><span>{t.total}</span><bdi className="tk-amt">{sar(v.amount)}</bdi></p>
+            <p className="py-vat">{t.vat}</p>
+            {policy && (
+              <p className="py-policy">{policy}{policyHref && <> <a href={policyHref}>{kind === "order" ? t.returns : t.terms}</a></>}</p>
+            )}
+            <PayMarks label={t.methods} />
+            <p className="py-merchant">
+              <span className="py-merchant-mark" aria-hidden="true">
+                <svg viewBox="0 0 223 223" width="20" height="20"><path d="M27.5 189 V49.75 A14.75 14.75 0 0 1 57 49.75 V170.25 A14.75 14.75 0 0 0 86.5 170.25 V49.75 A14.75 14.75 0 0 1 116 49.75 V165 A24 24 0 0 0 140 189 H195" fill="none" stroke="currentColor" strokeWidth="23.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              </span>
+              <span><b>{merchant}</b><span>{t.where}</span></span></p>
+          </section>
+          <section className="py-pay" aria-label={t.title}>
+            {open ? (
+              <PayScreen locale={locale} publishableKey={env.MOYASAR_PUBLISHABLE_KEY!} testMode={payMode(env) === "test"} formJs={MOYASAR_FORM_JS} formCss={MOYASAR_FORM_CSS}
+                pay={{ id: v.id, kind, ref: v.ref, amount: v.amount, description: v.description, hold: v.hold, leftMs: Number.isFinite(leftMs) ? leftMs : 0 }}
+                declined={q.tried ? v.message : null} tried={!!q.tried} againHref={kind === "order" ? orderAgain : null}
+                termsHref={hidden.includes("terms") ? null : "/terms"} />
+            ) : (
+              <p className="py-msg" role="status">{t.notOpen}</p>
+            )}
+          </section>
+        </div>
+      </>
     );
   }
 

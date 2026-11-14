@@ -114,6 +114,8 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
 .mm-foot-pay img { height: 26px; width: auto; display: block; }
 .mm-foot-pay img.pay-mastercard { height: 38px; }
 .mm-foot-pay img.pay-tabby { height: 44px; }
+.mm-foot-pay img.pay-mada { height: 30px; } /* mada never smaller than the other marks, and at least 60px wide */
+.mm-foot-pay img.pay-stcpay { height: 24px; }
 .mm-foot-hub { display: inline-flex; align-items: center; gap: 9px; }
 .mm-foot-hub > span { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; line-height: 1.25; }
 /* The mark's two Arabic words are drawn with the device's own Arabic face everywhere but on the
@@ -157,6 +159,8 @@ html:is([lang="ar"], [lang="ur"]) .mm-foot-hub :is(span span, b) { font-family: 
   .mm-foot-pay img, .mm-foot-pay svg { height: 15px; width: auto; flex: none; }
   .mm-foot-pay img.pay-mastercard { height: 19px; }
   .mm-foot-pay img.pay-tabby { height: 20px; }
+  .mm-foot-pay img.pay-mada { height: 21px; }
+  .mm-foot-pay img.pay-stcpay { height: 15px; }
   .mm-foot-hub > span { display: none; }
   .mm-foot-bottom { flex-direction: column; align-items: flex-start; gap: 12px; font-size: 12.5px; }
 }

@@ -1,0 +1,15 @@
+/* The ways to pay (components/pay/PayMarks.tsx). mada's rules: first, at least 60px wide, never smaller than the other
+   marks, on the page's own light background (no white box). Each mark's height is set so mada stays the widest. */
+.py-marks { display: grid; gap: 8px; margin: 0; }
+.py-marks-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+.py-mark { display: block; width: auto; flex: none; }
+.py-mark-mada { height: 26px; }
+.py-mark-visa { height: 20px; }
+.py-mark-mastercard { height: 30px; }
+.py-mark-stcpay { height: 20px; }
+.py-marks-t { font-size: 13px; line-height: 1.45; color: #6e6b63; }
+.py-marks.small .py-marks-row { gap: 8px 16px; }
+.py-marks.small .py-mark-mada { height: 24px; }
+.py-marks.small .py-mark-visa { height: 18px; }
+.py-marks.small .py-mark-mastercard { height: 27px; }
+.py-marks.small .py-mark-stcpay { height: 18px; }

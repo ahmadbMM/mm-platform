@@ -21,6 +21,7 @@ import { rpcResult } from "@/lib/rpc-client";
 import { genderChip } from "@/lib/session-gender";
 import { ticketCue, type AddonItem as TicketAddonItem, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 import { Ic, KindIc } from "./BookIcons";
+import PayMarks from "@/components/pay/PayMarks";
 import { T, type BookingText } from "./Booking.text";
 
 // Booking a ride on the website (the owner, 2026-10-03: "full booking on the website"), as the
@@ -914,12 +915,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
                 <span>{t.cancelTerms}</span><Ic name="go" flip size={16} />
               </button>
             )}
-            {payingNow && (
-              <p className="bk-paymarks" aria-label={t.pay.methods}>
-                {["mada", "visa", "mastercard"].map((m) => <img key={m} src={`/site/payments/${m}.svg`} alt="" width={40} height={26} />)}
-                <span>{t.pay.methods}</span>
-              </p>
-            )}
+            {payingNow && <PayMarks label={t.pay.methods} compact />}
           </div>
         )}
         {isAlready && <div className="bk-already" role="status"><p className="bk-already-t">{t.already}</p></div>}

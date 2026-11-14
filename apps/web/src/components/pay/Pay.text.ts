@@ -56,6 +56,11 @@ export const T = {
     item: "Item",
     locker: "Locker {0}",
     methods: "mada, Visa, Mastercard, Apple Pay and STC Pay accepted",
+    // the refund policy's tick before paying ({0}: the Terms' name, a link), and where the merchant is (the card schemes
+    // ask for the seller's country on the screen that takes the card)
+    agree: "I agree to the refund policy and the {0}.",
+    termsFull: "Terms & Conditions",
+    where: "Jeddah, Saudi Arabia",
     topup: {
       add: "Add money",
       title: "Add money to your wallet",
@@ -135,6 +140,9 @@ export const T = {
     item: "المنتج",
     locker: "الخزانة {0}",
     methods: "نقبل مدى وفيزا وماستركارد وApple Pay وSTC Pay",
+    agree: "أوافق على سياسة الاسترداد و{0}.",
+    termsFull: "الشروط والأحكام",
+    where: "جدة، المملكة العربية السعودية",
     topup: {
       add: "شحن الرصيد",
       title: "اشحن رصيد محفظتك",

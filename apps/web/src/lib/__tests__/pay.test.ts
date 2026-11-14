@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { payReady, payMode, MOYASAR_FORM_JS, MOYASAR_FORM_CSS, MOYASAR_FORM_VERSION } from "../pay/config";
-import { MOYASAR_ID, safeEqual, sourceInfo, toHalalas } from "../pay/moyasar";
+import { MOYASAR_ID, safeEqual, sourceInfo, toHalalas, verifyWebhook } from "../pay/moyasar";
+import { isBoothCard, withoutBoothLine } from "../pay/booth";
 import { deliveryFee, paySettings, refundable } from "../pay/settings";
 import { sar } from "../pay/money";
 import { payError, refusedVariant } from "../pay/http";
@@ -21,6 +22,16 @@ describe("payment settings (site_content pay.* and store.*)", () => {
     expect(deliveryFee(s, "jeddah", 100)).toBe(30);
     expect(deliveryFee(s, "jeddah", 500)).toBe(0);
     expect(deliveryFee(s, "ksa", 100)).toBeNull();
+  });
+  it("drops only the default pay-at-the-booth words while rides are paid when booking", () => {
+    const body = "- Rides and rentals are booked in our booking app.\n- At the Corniche Circuit, payment is collected at our booth when you arrive. Please have your queue number ready.\n- Bikes are assigned first come, first served.";
+    expect(withoutBoothLine(body)).toBe("- Rides and rentals are booked in our booking app.\n- Bikes are assigned first come, first served.");
+    const rewritten = "- Pay at our booth, or online when you book.";
+    expect(withoutBoothLine(rewritten)).toBe(rewritten);
+    expect(withoutBoothLine("- في حلبة الكورنيش، يتم الدفع عند الكشك عند وصولك. يرجى إحضار رقم طابورك.\n- سطر")).toBe("- سطر");
+    expect(isBoothCard("Pay at the booth")).toBe(true);
+    expect(isBoothCard("الدفع عند الكشك")).toBe(true);
+    expect(isBoothCard("Come early")).toBe(false);
   });
   it("refunds a cancel made at least refundDays before the ride day (by Riyadh's date)", () => {
     expect(refundable("2026-11-12", "2026-11-11", 1)).toBe(true);
@@ -85,6 +96,26 @@ describe("the pages' words for the database's refusals", () => {
   it("writes amounts with the riyal sign on the left, isolated, halalas only when there are some", () => {
     expect(sar(57.5)).toBe("⁦⃁ 57.50⁩");
     expect(sar(75)).toBe("⁦⃁ 75⁩");
+    // grouped, as the store's prices and Moyasar's own Pay button write it
+    expect(sar(5823)).toBe("⁦⃁ 5,823⁩");
+    expect(sar(1100.2)).toBe("⁦⃁ 1,100.20⁩");
+  });
+  it("answers a webhook's verification with the secret key, and sends nothing for a bad id or code", async () => {
+    const calls: { url: string; init: RequestInit }[] = [];
+    const f = (async (url: string, init: RequestInit) => {
+      calls.push({ url, init });
+      return new Response(JSON.stringify({ id: "c4bc247d-5288-4673-9b40-39c082ac7fbb", verified: true }), { status: 200 });
+    }) as unknown as typeof fetch;
+    const r = await verifyWebhook("sk_test_x", "c4bc247d-5288-4673-9b40-39c082ac7fbb", "482913", f);
+    expect(r.ok).toBe(true);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe("https://api.moyasar.com/v1/webhooks/c4bc247d-5288-4673-9b40-39c082ac7fbb/verify");
+    expect(calls[0].init.method).toBe("POST");
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ code: "482913" });
+    expect((calls[0].init.headers as Record<string, string>).Authorization).toBe("Basic " + btoa("sk_test_x:"));
+    expect((await verifyWebhook("sk_test_x", "../payments", "482913", f)).ok).toBe(false);
+    expect((await verifyWebhook("sk_test_x", "c4bc247d-5288-4673-9b40-39c082ac7fbb", "48291", f)).ok).toBe(false);
+    expect(calls).toHaveLength(1);
   });
 });
 

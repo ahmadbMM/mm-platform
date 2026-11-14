@@ -11,6 +11,8 @@ import { pick, sar, variantLabel, vatIn, type StoreProduct } from "@/lib/store-c
 import { deliveryOptions, type Fulfil } from "@/lib/store-delivery";
 import { checkoutBody, EMPTY_ADDRESS, formProblems, refusalPlace, type Address, type Contact } from "@/lib/store-form";
 import { T } from "./Store.text";
+import { T as PayT } from "@/components/pay/Pay.text";
+import PayMarks from "@/components/pay/PayMarks";
 import { Amt, Ic, NoPhoto } from "./bits";
 import { AddressFields, Field } from "./CheckoutFields";
 import Modal from "./Modal";
@@ -80,6 +82,7 @@ export default function CheckoutForm(props: Props) {
 
 function Checkout({ locale, products, settings, whens, showroom, account, balance, links, cart, onPlaced }: Props & { cart: CartItem[]; onPlaced: (url: string) => void }) {
   const t = useLocalize(T);
+  const payT = useLocalize(PayT);
   const [draft, setDraft] = useState<Draft>(() => loadDraft(account));
   const [wallet, setWallet] = useState(false);
   const [errs, setErrs] = useState<Record<string, string>>({});
@@ -248,6 +251,7 @@ function Checkout({ locale, products, settings, whens, showroom, account, balanc
             {busy ? <><span className="bk-spin" aria-hidden="true" />{t.placing}</> : <><Ic name="lock" size={17} />{t.place(sar(total))}</>}
           </button>
           <p className="st-oblige">{t.oblige}</p>
+          <PayMarks label={payT.methods} compact />
           {(links.returns || links.terms) && (
             <p className="st-legal">
               {links.returns && <a href={links.returns}>{t.returnsLink}</a>}

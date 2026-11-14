@@ -29,6 +29,7 @@ import { ArrowIcon } from "@/components/site/Icons";
 import { bg } from "@/lib/img";
 import { payReady } from "@/lib/pay/config";
 import { paySettings } from "@/lib/pay/settings";
+import { isBoothCard } from "@/lib/pay/booth";
 
 // micromobility.sa/experiences - booking a ride on the website (the owner, 2026-10-03: "full
 // booking on the website"), as the booking app's own wizard books one (BookingFlow): the event,
@@ -195,7 +196,9 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   const app = navFrom(site).booking; // the booking app as staff set it
   const appBase = app.replace(/[?#].*$/, "");
 
-  const good = list(c.good.items).filter((g) => S(g.title));
+  // While paid rides are paid when booking (pay.bookings 'required'), the card saying payment is collected at the booth
+  // is left out (2026-11-14): it would tell the payer the opposite of the review step (lib/pay/booth.ts).
+  const good = list(c.good.items).filter((g) => S(g.title) && !(paying && ps.bookings === "required" && isBoothCard(S(g.title))));
   const learn = learnTeaser(c.learn); // Learn to ride: the lessons sign-up, while staff offer lessons
   const directions = S(site.contact.jccHref);
   const whatsapp = S(site.social.whatsapp);

@@ -18,14 +18,15 @@ const MAPLIBRE = "https://cdn.jsdelivr.net/npm/maplibre-gl@5.12.0/dist/maplibre-
 // Online payments (2026-11-10): Moyasar's payment form, its two pinned files only (src/lib/pay/config.ts names
 // the same version; a test checks they agree), which posts the card straight to Moyasar's API, reports its own
 // errors to AppSignal, and loads Apple's Apple Pay script on Apple devices. 3-D Secure is a full-page visit to
-// the bank, so no frame is needed. payment=(self): Apple Pay on the site's own pages.
+// the bank, so no frame is needed. payment=(self): Apple Pay on the site's own pages. Apple's script draws the
+// Apple Pay button's words in its own font, from the same host (2026-11-14: refused until then).
 const MOYASAR = "https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.3.1/dist/moyasar";
 export const CSP = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com ${MAPLIBRE}.js ${MOYASAR}.umd.js https://applepay.cdn-apple.com`,
   `style-src 'self' 'unsafe-inline' ${MAPLIBRE}.css ${MOYASAR}.css`,
   "img-src 'self' data: blob: https:",
-  "font-src 'self' data:",
+  "font-src 'self' data: https://applepay.cdn-apple.com",
   `connect-src 'self' ${SUPABASE} https://cloudflareinsights.com https://tile.openstreetmap.org https://api.moyasar.com https://appsignal-endpoint.net https://applepay.cdn-apple.com`,
   "worker-src 'self' blob:",
   "child-src 'self' blob:",

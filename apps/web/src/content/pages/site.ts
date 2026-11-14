@@ -101,7 +101,9 @@ export const siteSchema = {
         {
           id: "payments", type: "list", maxItems: 8, label: bi("Payment marks", "شعارات الدفع"),
           item: [{ id: "name", type: "text", max: 30, label: bi("Name", "الاسم"), def: bi("", "") }, { id: "logo", type: "image", label: bi("Logo", "الشعار"), def: "" }],
-          def: [["Visa", "visa"], ["Mastercard", "mastercard"], ["mada", "mada"], ["tabby", "tabby"]].map(([n, f]) => ({ name: bi(n, n), logo: { url: `/site/payments/${f}.svg` } })),
+          // mada first and in its own colours, Visa and Mastercard in theirs, then STC Pay (2026-11-14, the card schemes'
+          // rules for a site that takes cards online: components/pay/PayMarks.tsx)
+          def: [["mada", "mada-color"], ["Visa", "visa-color"], ["Mastercard", "mastercard-color"], ["STC Pay", "stcpay"], ["tabby", "tabby"]].map(([n, f]) => ({ name: bi(n, n), logo: { url: `/site/payments/${f}.svg` } })),
         },
         { id: "showroom", type: "toggle", label: bi("Show \"Prepay at Showroom\"", "إظهار «الدفع المسبق في المعرض»"), def: true },
         {
