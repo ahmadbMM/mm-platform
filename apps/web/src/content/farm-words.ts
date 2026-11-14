@@ -6,7 +6,8 @@ import type { L } from "@/i18n/tx";
 // micromobility experiences card not to public"), so its words live here, on the server, as the Blood Donation event's do
 // (content/blood-words.ts): this file is never imported by a browser component and is no *.text.ts, whose words go to
 // every page's browser in its dictionary (src/i18n/extract.ts); no field of the Website editor either, whose schema is
-// public (api/site-schema). A page hands them on only with a farm date it shows a community member, or a booking on one.
+// public (api/site-schema). A page hands them on only with a farm date it shows a community member, a booking on one, or
+// the Farmhouse Night badge to one who holds it (farmBadge).
 // (The ticket's two time words, Arrival and Dinner, are the ticket's own: components/booking/tickets.text.ts.) Its waiver
 // too (farmWaiverCopy), which content/waivers.ts waiverCopy hands on for a farm night.
 
@@ -30,6 +31,18 @@ export function farmWords(tx: L) {
   };
 }
 export type FarmWords = ReturnType<typeof farmWords>;
+
+/** The Farmhouse Night badge on My Account (farmhouse_night, lib/ride-record.ts; the booking app's bdgFarmNight, D and A,
+ *  2026-11-14): its name, how it is earned and what it means. Here, not in RideRecord.text.ts, because it names the night:
+ *  the account page hands them on only to one who holds it, as bloodWords' visitorBadge. */
+export const farmBadge = (tx: L): [string, string, string] => [
+  tx("Farmhouse Night", "ليلة فارم هاوس"),
+  tx("Come to one of our farmhouse nights.", "احضر ليلة فارم هاوس معنا."),
+  tx(
+    "For joining a MicroMobility farmhouse night, an evening at the farm for community members and their families. Given once our team checks you in.",
+    "لحضورك ليلة فارم هاوس مع مايكروموبيليتي، أمسية في المزرعة لأعضاء المجتمع وعائلاتهم. تُمنح بعد أن يسجّل فريقنا حضورك.",
+  ),
+];
 
 /** The Farm House Night's own waiver (the booking app's fhWaiverTitle, fhWaiverBody, fhWaiverAgree; FARM_WAIVER_VERSION
  *  farm-2026-11-v1, content/waivers.ts WAIVER_VERSIONS.farm; the user, 2026-11-13: "update all waivers especially the

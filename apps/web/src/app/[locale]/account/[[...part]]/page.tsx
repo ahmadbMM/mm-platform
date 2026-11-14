@@ -32,7 +32,7 @@ import { T as TICKET } from "@/components/booking/tickets.text";
 import "../handoff.css";
 import { accountSchema } from "@/content/pages/account";
 import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
-import { FARM_NAME, farmName } from "@/content/farm-words";
+import { FARM_NAME, farmBadge, farmName } from "@/content/farm-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { readAccount, readBookings, rpcServer } from "@/lib/account";
@@ -452,9 +452,12 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const helper = helperPathOf(helperRaw.data);
     badges.referralRode = referralRodeOf(referralRaw); // the Recruiter badge counts these friends
     const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
-    // the Blood Donation Visitor badge is worded by the event's own words (content/blood-words.ts), handed on only to one who holds it
-    const recordText = allBadges.some((x) => x.slug === "blood_visitor")
-      ? { ...recordBase, names: { ...recordBase.names, blood_visitor: bloodWords(tx).visitorBadge } } : recordBase;
+    // the Blood Donation Visitor and Farmhouse Night badges are worded by their events' own words (content/blood-words.ts,
+    // content/farm-words.ts), handed on only to one who holds them; the farm night's only once earned or given, even were staff
+    // to show it to everyone, as it is for community members' eyes alone
+    const recordText = { ...recordBase, names: { ...recordBase.names,
+      ...(allBadges.some((x) => x.slug === "blood_visitor") ? { blood_visitor: bloodWords(tx).visitorBadge } : {}),
+      ...(allBadges.some((x) => x.slug === "farmhouse_night" && x.on) ? { farmhouse_night: farmBadge(tx) } : {}) } };
     const dur = { h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM };
     if (p === "badges") return (allBadges.length > 0 || helper) && (
       <section className="ac-sec" aria-label={recordText.badges}>

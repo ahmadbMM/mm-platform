@@ -8,7 +8,7 @@ import ExperienceSteps from "@/components/experiences/ExperienceSteps";
 import TicketCard from "@/components/booking/TicketCard";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import { PAGES } from "@/content";
-import { FARM_NAME, farmName, farmWords } from "@/content/farm-words";
+import { FARM_NAME, farmBadge, farmName, farmWords } from "@/content/farm-words";
 import { clientDict } from "@/i18n/dicts";
 import { TRANSLATED } from "@/i18n/locales";
 import { makeL } from "@/i18n/tx";
@@ -23,6 +23,8 @@ import { KIND_ORDER } from "../kind-theme";
 import { LM_KINDS } from "../landmarks";
 import ExperiencesPage from "../../app/[locale]/experiences/page";
 import EventsPage from "../../app/[locale]/events/page";
+import AccountPage from "../../app/[locale]/account/[[...part]]/page";
+import RideRecord from "@/components/account/RideRecord";
 
 // cookies() is a request's; here it holds the account's cookie a test sets, or none, and whether the booking app's members'
 // check (community_member) says that account is a community member.
@@ -414,13 +416,65 @@ describe("the Farm House Night's look", () => {
   });
 });
 
+// The Farmhouse Night badge (farmhouse_night, the booking app 2026-11-14: "create a badge for attending the farmhouse night"):
+// earned by a booking on a farm night that staff checked in or out (lib/ride-record.ts), and worded by the night's own words
+// (content/farm-words.ts farmBadge), which My Account hands on only to one who holds it.
+describe("the Farmhouse Night badge on My Account", () => {
+  const WORDS = /Farmhouse Night|farmhouse night|ليلة فارم هاوس|Soirée à la ferme/;
+  const booking = (o: Record<string, unknown> = {}) => ({ id: "q1abcdef", session_id: FH.id, session_date: FH.session_date, session_day: "Thursday", status: "done", queue_num: 4, price: 0, paid: false, name: "Sara Haddad", type_preference: "None", ...o });
+  /** The Badges part for a signed-in account with these bookings (and, if given, this badges catalogue): RideRecord's props. */
+  const badges = async (rows: unknown[], locale = "en", catalog: unknown[] = []) => {
+    jar.account = ACCOUNT; jar.member = true;
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.includes("/rpc/customer_profile")) return json([{ name: "Sara Haddad", email: "sara@example.test", phone: "+966500000000" }]);
+      if (url.includes("/rpc/my_bookings")) return json(rows);
+      if (url.includes("/rpc/list_sessions")) return json([FH, SAT]);
+      if (url.includes("/rpc/community_member")) return json(true);
+      if (url.includes("/rpc/badge_catalog")) return json(catalog);
+      if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/0" } });
+      return json([]);
+    }));
+    const page = await AccountPage({ params: Promise.resolve({ locale, part: ["badges"] }), searchParams: Promise.resolve({}) });
+    const rec = findAll(page, RideRecord)[0];
+    return rec ? (rec.props as { t: { names: Record<string, [string, string, string]> }; badges: { slug: string; on: boolean }[] }) : null;
+  };
+
+  it("names it, with how it is earned and what it means, to one checked in or out at a farm night", async () => {
+    for (const status of ["done", "active"]) {
+      const r = await badges([booking({ status })]);
+      expect(r?.badges.find((x) => x.slug === "farmhouse_night"), status).toMatchObject({ on: true });
+      expect(r?.t.names.farmhouse_night, status).toEqual(farmBadge(makeL("en", null)));
+    }
+    expect((await badges([booking()], "ar"))?.t.names.farmhouse_night?.[0]).toBe("ليلة فارم هاوس");
+    expect((await badges([booking()], "fr"))?.t.names.farmhouse_night?.[0]).toBe("Soirée à la ferme");
+  });
+
+  it("hands its words to nobody else: still waiting, no farm night, or shown to everyone by staff but not held", async () => {
+    const SATB = { ...booking(), id: "q9abcdef", session_id: SAT.id, session_date: SAT.session_date, session_day: "Saturday", type_preference: "Road", paid: true };
+    for (const [why, rows, catalog] of [
+      ["waiting", [booking({ status: "waiting" })], []],
+      ["cancelled", [booking({ status: "cancelled" })], []],
+      ["a Saturday ride", [SATB], []],
+      ["no bookings", [], []],
+      ["shown to everyone, not held", [booking({ status: "waiting" })], [{ slug: "farmhouse_night", icon: "barn", color: "red", system: true, auto: true, held_only: false, name: "Badge", name_ar: "Badge" }]],
+    ] as const) {
+      const r = await badges([...rows], "en", [...catalog]);
+      expect(r, why).not.toBeNull();
+      // staff's switch shows it greyed, by the catalogue's name, never the night's words
+      expect(r?.badges.find((x) => x.slug === "farmhouse_night"), why).toEqual(catalog.length ? expect.objectContaining({ on: false }) : undefined);
+      expect(r?.t.names.farmhouse_night, why).toBeUndefined();
+      expect(JSON.stringify(r ?? {}), why).not.toMatch(WORDS);
+    }
+  });
+});
+
 // "put it under micromobility experiences card not to public" (the user, 2026-11-13): unlike yoga and the Saturday ride,
 // which every visitor sees listed, the Farm House Night is drawn for a signed-in community member alone. A visitor who is
 // not signed in, or one signed in who is no member, gets pages with no word of it: no date, no Featured card, no mark on
 // the Experiences card, no kind in its switch, no Details, no Events entry, nothing for the search engines; and its words
 // are in no public place: not the Website editor's schema (api/site-schema), not the browser's dictionary.
 describe("the Farm House Night is not to public", () => {
-  const SECRET = /Nawar|Farm House|Farmhaus|ليلة مزرعة|ليلة المزرعة|2099-11-19-fh|Members and their families|Little Farmhouse/;
+  const SECRET = /Nawar|Farm House|Farmhouse Night|farmhouse night|Farmhaus|ليلة مزرعة|ليلة المزرعة|ليلة فارم هاوس|2099-11-19-fh|Members and their families|Little Farmhouse/;
   const visitors = [["not signed in", () => { jar.account = ""; jar.member = false; }], ["signed in, no member", () => { jar.account = ACCOUNT; jar.member = false; }]] as const;
   for (const [who, as] of visitors) {
     for (const locale of ["en", "ar", "de", "fr"]) {
@@ -467,7 +521,7 @@ describe("the Farm House Night is not to public", () => {
     expect(JSON.stringify(PAGES)).not.toMatch(/farmName|aboutFarm/);
     for (const code of TRANSLATED) {
       const d = clientDict(code) ?? {};
-      expect(Object.keys(d).filter((k) => /Farm House|Members and their families|Community members and their families|An evening at the farm/.test(k)), code).toEqual([]);
+      expect(Object.keys(d).filter((k) => /Farm House|Farmhouse Night|farmhouse night|Members and their families|Community members and their families|An evening at the farm/.test(k)), code).toEqual([]);
     }
   });
 });

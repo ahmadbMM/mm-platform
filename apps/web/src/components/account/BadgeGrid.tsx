@@ -51,9 +51,9 @@ export type BadgeGridText = {
   levelOf: string; maxLevel: string; levels: string;
 };
 
-// The colours Medal draws special (its SPECIAL): Race Ready, National Day 96, Run for Her's pink and
-// Victory Lap's purple into black.
-const special = (c: string) => c === "special" || c === "national" || c === "pink" || c === "vlap" || c === "defe" || c === "volunteer";
+// The colours Medal draws special (its SPECIAL): Race Ready, National Day 96, Run for Her's pink,
+// Victory Lap's purple into black, Defe's, the Volunteer's and the Farmhouse Night's.
+const special = (c: string) => c === "special" || c === "national" || c === "pink" || c === "vlap" || c === "defe" || c === "volunteer" || c === "farm";
 // A request waiting, on its tile and in its popup (the booking app's clock); a PDF proof in the dialog.
 const Clock = ({ px = 12 }: { px?: number }) => (
   <svg viewBox="0 0 24 24" width={px} height={px} aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
