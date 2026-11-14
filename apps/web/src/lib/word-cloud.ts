@@ -1,6 +1,8 @@
-// The Ask pages' word cloud (components/ask/AskCloud.tsx): each answer once, sized by how many
+// The Ask pages' word cloud (components/ask/results/Cloud.tsx): each answer once, sized by how many
 // people sent it, the most sent in the middle and the rest around it, every word level. Pure: the
 // page hands in the box's width and a ruler, so a test can lay out a cloud without a browser.
+// An answer of up to some 28 characters is one line; a longer one (an answer may run to 2,000)
+// goes on as many lines as it needs, broken at its spaces, and is placed as the block they make.
 //
 // Two layouts, and every word is always placed:
 //   - the spiral, while the words fit the box with air around them: the most sent in the middle,
@@ -16,8 +18,10 @@
 // first try, and a word starts looking where the last one its size found room.
 
 export type CloudWord = { w: string; n: number };
-/** A word in its place: `width` and `height` are its box as it stands (a word turned on its side stands tall). */
-export type Placed = { w: string; n: number; key: string; size: number; x: number; y: number; width: number; height: number; color: number; turned: boolean };
+/** A word in its place: `width` and `height` are its box as it stands (a word turned on its side stands tall).
+ *  `lines`: its text as it is drawn, one line each (a short answer: one, its whole text), `lead` px apart - the box
+ *  holds them all. A word on more than one line never turns. */
+export type Placed = { w: string; n: number; key: string; size: number; x: number; y: number; width: number; height: number; color: number; turned: boolean; lines: string[]; lead: number };
 export type CloudLayout = { height: number; items: Placed[] };
 /** `height`: a box of this height to fill (the big screen). The words shrink to fit it and it never grows.
  *  `mixed`: some words stand on their side (about one in three, never the most sent, never a long one) - while the
@@ -37,8 +41,12 @@ export function colorOf(key: string): number {
   return (h >>> 0) % CLOUD_COLORS;
 }
 
-const LINE = 1.15; // a word's box: its font size times this, the line-height ask.css gives it
+const LINE = 1.15; // a word's line: its font size times this, the line-height ask.css gives it
 const GAP_Y = 2;
+/** The widest a line of an answer runs, in em (its width over its font size): about 28 characters. A longer answer is
+ *  broken at its spaces into lines no wider; a single word wider than this takes a line of its own, which `sizeOf`
+ *  shrinks to fit the box as it does a long one-line answer. */
+const WRAP_EM = 16;
 /** The air beside a word, half on each side: a third of its font size, 6px at least - so two large words side by side
  *  read as two, as two small ones do. */
 const gapX = (size: number) => Math.max(6, size * 0.34);
@@ -50,11 +58,44 @@ const STEP = 8; // between two spots tried along the spiral, in px
 const FILL = 0.4; // the share of the box the words' boxes take at the spiral's first try
 const TAU = Math.PI * 2;
 
-type Word = { w: string; n: number; base: number; wide: number };
+/** An answer to lay out: `wide` is its widest line in em, `lines` its lines (one, its text, for most), `most` the
+ *  largest it may be drawn whatever its count (see TALL). */
+type Word = { w: string; n: number; base: number; wide: number; lines: string[]; most: number };
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-/** A word's font size at a scale: never wider than the box, its air counted. */
-const sizeOf = (x: Word, scale: number, W: number) => Math.min(x.base * scale, (W - EDGE) / (x.wide + 0.34));
+/** A word's font size at a scale: never wider than the box, its air counted, nor larger than its `most`. */
+const sizeOf = (x: Word, scale: number, W: number) => Math.min(x.base * scale, (W - EDGE) / (x.wide + 0.34), x.most);
+/** In a box of a set height (the big screen), the most of its height one answer's lines may take: a long one is drawn
+ *  smaller to keep within it, as a long line is to keep within the width - so one answer of many lines never shrinks
+ *  every other word in the box (a box of its own height grows for it instead). A one-line word never comes near it. */
+const TALL = 0.5;
+/** A word's box lying flat at a size: as wide as its widest line with its air, as high as its lines. */
+const flatOf = (x: Word, size: number) => x.wide * size + gapX(size);
+const highOf = (x: Word, size: number) => x.lines.length * size * LINE + GAP_Y;
+
+/** An answer's lines, worked out once in em - every size draws the same lines. One line (the text as it is) while it
+ *  is no wider than WRAP_EM; past that its words go on a line while they fit and start the next one when they do not,
+ *  a line's width the sum of its words' and spaces' (the lines are then measured whole). */
+function wrapped(text: string, ruler: (text: string) => number): { wide: number; lines: string[] } {
+  const whole = Math.max(1, ruler(text)) / 100;
+  if (whole <= WRAP_EM) return { wide: whole, lines: [text] };
+  const space = ruler(" ") / 100;
+  const lines: string[] = [];
+  let line = "", run = 0;
+  for (const part of text.split(/\s+/)) {
+    if (!part) continue;
+    const em = ruler(part) / 100;
+    if (line && run + space + em <= WRAP_EM) { line += ` ${part}`; run += space + em; continue; }
+    if (line) lines.push(line);
+    line = part;
+    run = em;
+  }
+  if (line) lines.push(line);
+  if (lines.length < 2) return { wide: whole, lines: [text] }; // one long word: one line, shrunk to fit
+  let wide = 1 / 100;
+  for (const l of lines) wide = Math.max(wide, ruler(l) / 100);
+  return { wide, lines };
+}
 
 /**
  * Lays the words out in a box `width` wide. `ruler(text)` is the text's width at a font size of
@@ -79,10 +120,14 @@ export function layoutCloud(words: CloudWord[], width: number, ruler: (text: str
   const sorted: Word[] = list
     .map((x, i) => ({ x, i }))
     .sort((a, b) => b.x.n - a.x.n || a.i - b.i)
-    .map(({ x }) => ({ w: x.w, n: x.n, base: minSize + (maxSize - minSize) * share(x.n), wide: Math.max(1, ruler(x.w)) / 100 }));
+    .map(({ x }) => {
+      const { wide, lines } = wrapped(x.w, ruler);
+      const most = fixed ? (fixed * TALL - GAP_Y) / (lines.length * LINE) : Infinity;
+      return { w: x.w, n: x.n, base: minSize + (maxSize - minSize) * share(x.n), wide, lines, most };
+    });
   const floor = (fixed ? 9 : FLOOR) / minSize;
   const H = fixed || Math.round(phone ? Math.max(300, W * 1.05) : Math.max(320, W * 0.58));
-  const area = sorted.reduce((a, x) => { const size = sizeOf(x, 1, W); return a + (x.wide * size + gapX(size)) * (size * LINE + GAP_Y); }, 0);
+  const area = sorted.reduce((a, x) => { const size = sizeOf(x, 1, W); return a + flatOf(x, size) * highOf(x, size); }, 0);
   // The spiral, at the size that fills the box about two fifths, then a little smaller, three times at most - and only
   // while its words stay near their full size (a phone's least sent word 13px or more): smaller than that, rows hold
   // the same words larger.
@@ -111,11 +156,12 @@ function trimmed(items: Placed[], H: number): CloudLayout {
 
 const placed = (x: Word, size: number, px: number, py: number, turned = false): Placed => {
   const key = cloudKey(x.w) || x.w;
-  const along = x.wide * size + gapX(size), across = size * LINE + GAP_Y;
-  return { w: x.w, n: x.n, key, size: Math.round(size * 10) / 10, x: px, y: py, width: turned ? across : along, height: turned ? along : across, color: colorOf(key), turned };
+  const along = flatOf(x, size), across = highOf(x, size);
+  return { w: x.w, n: x.n, key, size: Math.round(size * 10) / 10, x: px, y: py, width: turned ? across : along, height: turned ? along : across, color: colorOf(key), turned, lines: x.lines, lead: size * LINE };
 };
-/** Whether a word stands on its side in a mixed cloud: by its own text, so it stays as it is while the cloud changes. */
-const turns = (x: Word, i: number): boolean => i > 0 && [...x.w].length <= 14 && colorOf(`${cloudKey(x.w)}|turn`) % 3 === 0;
+/** Whether a word stands on its side in a mixed cloud: by its own text, so it stays as it is while the cloud changes.
+ *  Never a long one, so never one on more than a line. */
+const turns = (x: Word, i: number): boolean => i > 0 && x.lines.length === 1 && [...x.w].length <= 14 && colorOf(`${cloudKey(x.w)}|turn`) % 3 === 0;
 
 /** The spiral: the first word in the middle, each next one at the first free spot on its way out. Null when a word finds none. */
 function spiral(list: Word[], scale: number, W: number, H: number, mixed = false): Placed[] | null {
@@ -131,10 +177,11 @@ function spiral(list: Word[], scale: number, W: number, H: number, mixed = false
   let classHigh = 0, lastAt = 0;
   for (let i = 0; i < list.length; i++) {
     const size = sizeOf(list[i], scale, W);
-    const flat = list[i].wide * size + gapX(size), high = size * LINE + GAP_Y;
+    const flat = flatOf(list[i], size), high = highOf(list[i], size);
     // a word on its side: its box stands tall, when the box is high enough to hold it
     const turned = mixed && turns(list[i], i) && flat <= H - EDGE;
     const w = turned ? high : flat, h = turned ? flat : high;
+    if (h > H) return null; // a long answer's lines higher than the box: no spot holds them
     if (high < classHigh * 0.8 || high > classHigh) { classHigh = high; lastAt = 0; }
     // each word starts its spiral at its own angle, so the cloud does not lean one way
     const turn = (i * 2.399963) % TAU;
@@ -175,7 +222,7 @@ function rowsAt(list: Word[], scale: number, W: number): { made: Row[]; total: n
   let total = 0;
   for (let i = 0; i < list.length; i++) {
     const size = sizeOf(list[i], scale, W);
-    const w = list[i].wide * size + gapX(size), h = size * LINE + GAP_Y;
+    const w = flatOf(list[i], size), h = highOf(list[i], size);
     if (row.at.length && row.width + w > W) { made.push(row); total += row.height; row = { at: [], width: 0, height: 0 }; }
     row.at.push(i);
     row.width += w;
@@ -222,7 +269,7 @@ function rows(list: Word[], floor: number, W: number, H: number, fixed: boolean)
     let x = Math.max(0, (W - r.width) / 2);
     for (const i of across) {
       const size = sizeOf(list[i], scale, W);
-      const p = placed(list[i], size, x, y + (r.height - (size * LINE + GAP_Y)) / 2);
+      const p = placed(list[i], size, x, y + (r.height - highOf(list[i], size)) / 2);
       items[i] = p;
       x += p.width;
     }

@@ -16,6 +16,9 @@ import { cssVars, type ResultProps, type VoteProps } from "./types";
 // marked for a moment. The look's `limit` shows only the first so many; without one, every answer the database sends.
 
 const shown = (items: AskItem[], look: QuestionLook) => (look.limit ? items.slice(0, look.limit) : items);
+/** How long an answer the spotlight shows: its type is smaller the longer it is (ask.css), and past 500 characters
+ *  (an answer may run to 2,000) the big screen shows its first lines. */
+const lenOf = (t: string) => { const n = [...t].length; return n > 500 ? "x" : n > 200 ? "l" : n > 80 ? "m" : undefined; };
 const names = (items: AskItem[]) => items.map((x) => String(x.id));
 
 /** An answer's votes: a button for a signed-in viewer on someone else's answer, the bare count otherwise. */
@@ -124,7 +127,7 @@ export function AnswerSpotlight(p: ResultProps) {
       {x && (
         <>
           <figure className="ask-spot">
-            <blockquote key={x.id} className="ask-spot-text" dir="auto" data-len={[...x.t].length > 200 ? "l" : [...x.t].length > 80 ? "m" : undefined}>{x.t}</blockquote>
+            <blockquote key={x.id} className="ask-spot-text" dir="auto" data-len={lenOf(x.t)}>{x.t}</blockquote>
             <figcaption className="ask-spot-foot">
               <Votes item={x} votes={votes} t={t} />
               {count > 1 && (screen ? <span className="ask-spot-at mm-lat" aria-hidden="true">{i + 1} / {count}</span> : (

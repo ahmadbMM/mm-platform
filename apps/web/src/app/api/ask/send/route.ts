@@ -11,8 +11,10 @@ export const POST = (req: Request) =>
     args: (s, b) => {
       const question = askId(b.question);
       const value = b.value && typeof b.value === "object" && !Array.isArray(b.value) ? b.value : null;
-      // an answer is a few numbers or a line of words: 4 KB holds the longest (500 characters, any script)
-      if (question === null || !value || JSON.stringify(value).length > 4000) return null;
+      // an answer is a few numbers or some words: 16,000 holds the longest written one (ASK_TEXT_MAX, 2,000 characters
+      // in any script) written out, where a character takes up to 6 (a control character escaped, as a lone surrogate
+      // is; a quote or a backslash takes 2, as one outside the basic plane does)
+      if (question === null || !value || JSON.stringify(value).length > 16000) return null;
       return { p_question: question, p_id: s.id, p_token: s.token, p_value: value, p_lang: askLang(b.lang) };
     },
   });

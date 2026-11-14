@@ -92,12 +92,15 @@ export function optionsOf(config: unknown): AskOption[] {
 }
 export const optionText = (locale: string, o: AskOption): string => askText(locale, o.en, o.ar);
 
-export type WrittenConfig = { maxLen: number; perPerson: number; votes: boolean };
+/** The longest a written answer (cloud, open, qa) may be, in characters as the database counts them (charCount): a
+ *  safety net, never shown - a question sets no length of its own, and a `max_len` an older question still carries is
+ *  not read. The database refuses one longer ("long"). */
+export const ASK_TEXT_MAX = 2000;
+
+export type WrittenConfig = { perPerson: number; votes: boolean };
 export function writtenConfig(kind: string, config: unknown): WrittenConfig {
   const c = obj(config) ?? {};
-  const cloud = kind === "cloud";
   return {
-    maxLen: clamp(int(c.max_len) ?? (cloud ? 25 : 200), 1, 500),
     perPerson: clamp(int(c.per_person) ?? (kind === "open" ? 1 : 3), 1, 10),
     votes: typeof c.votes === "boolean" ? c.votes : kind === "qa",
   };
@@ -159,12 +162,12 @@ export const charCount = (s: string): number => [...s].length;
 const LINK = /(?:https?:\/\/|www\.)\S/i;
 
 /** A written answer (cloud, open, qa): {t}. Refused here only where the database surely would - nothing typed (a
- *  word cloud's entry: nothing but marks, which it stores without), longer than the question takes, or an address
- *  written out; the database has the last word on the rest. */
-export function shapeWritten(kind: string, config: unknown, text: unknown): Shaped {
+ *  word cloud's entry: nothing but marks, which it stores without), longer than ASK_TEXT_MAX, or an address written
+ *  out; the database has the last word on the rest. `config` is the question's, which sets no length. */
+export function shapeWritten(kind: string, _config: unknown, text: unknown): Shaped {
   const t = foldSpaces(str(text));
   if (!t || (kind === "cloud" && !/[\p{L}\p{N}]/u.test(t))) return no("empty");
-  if (charCount(t) > writtenConfig(kind, config).maxLen) return no("long");
+  if (charCount(t) > ASK_TEXT_MAX) return no("long");
   if (LINK.test(t)) return no("link");
   return yes({ t });
 }

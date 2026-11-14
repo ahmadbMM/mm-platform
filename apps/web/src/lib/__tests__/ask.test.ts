@@ -6,7 +6,7 @@ import {
   answerState, applyLive, applySame, askBack, askErrorKey, askLang, askList, askLive, askNum, askPalette, askPct, askScreen, askSent, askSlugOk, askText, askTheme, askView, askViz, askWhen,
   charCount, choiceConfig, choiceRows, cloudResult, hasPending, isDrawn, isWritten, itemsResult, numberConfig, numberResult, optionsOf, pageOpen, paletteVars, pointRows, pointsConfig, pollDelay, rankRows,
   rereadDue, resultsShown, scaleRows, scalesConfig, screenAt, screenStep, sentMarks, sentNumber, sentOrder, sentPicks, shapeChoice, shapeNumber, shapePoints, shapeRanking, shapeScales, shapeWritten,
-  withMine, withVote, withoutMine, writtenConfig, type AskFull, type AskQuestion,
+  withMine, withVote, withoutMine, writtenConfig, ASK_TEXT_MAX, type AskFull, type AskQuestion,
   isAskScreen, resultCount, stepAt,
   POLL_LIVE_MS, isQuiz,
 } from "../ask";
@@ -134,11 +134,14 @@ describe("a question's settings", () => {
     expect(optionsOf({ options: "a" })).toEqual([]);
   });
   it("gives each kind its defaults, and holds a setting inside its limits", () => {
-    expect(writtenConfig("cloud", {})).toEqual({ maxLen: 25, perPerson: 3, votes: false });
-    expect(writtenConfig("open", {})).toEqual({ maxLen: 200, perPerson: 1, votes: false });
-    expect(writtenConfig("qa", {})).toEqual({ maxLen: 200, perPerson: 3, votes: true });
-    expect(writtenConfig("cloud", { max_len: 40, per_person: 10 })).toEqual({ maxLen: 40, perPerson: 10, votes: false });
-    expect(writtenConfig("open", { max_len: 9999, per_person: 0, votes: true })).toEqual({ maxLen: 500, perPerson: 1, votes: true });
+    expect(writtenConfig("cloud", {})).toEqual({ perPerson: 3, votes: false });
+    expect(writtenConfig("open", {})).toEqual({ perPerson: 1, votes: false });
+    expect(writtenConfig("qa", {})).toEqual({ perPerson: 3, votes: true });
+    expect(writtenConfig("cloud", { per_person: 10 })).toEqual({ perPerson: 10, votes: false });
+    expect(writtenConfig("open", { per_person: 0, votes: true })).toEqual({ perPerson: 1, votes: true });
+    // a written question sets no length: a `max_len` an older one still carries is not read
+    expect(writtenConfig("cloud", { max_len: 5, per_person: 2 })).toEqual({ perPerson: 2, votes: false });
+    expect(writtenConfig("open", { max_len: 9999 })).toEqual(writtenConfig("open", {}));
     expect(choiceConfig({ options: OPTIONS, max_picks: 9, change: true, correct: ["b", "zz"] })).toEqual({ options: OPTIONS, maxPicks: 3, change: true, correct: ["b"] });
     expect(choiceConfig({ options: OPTIONS })).toMatchObject({ maxPicks: 1, change: false, correct: [] });
     expect(scalesConfig({ options: OPTIONS })).toMatchObject({ min: 1, max: 5, skip: false, lo_en: "", hi_ar: "" });
@@ -153,12 +156,23 @@ describe("a question's settings", () => {
 
 describe("an answer's value, shaped for its kind", () => {
   it("a written answer: spaces folded; refused when empty, too long or a link", () => {
-    expect(shapeWritten("cloud", { max_len: 40 }, "  Face   painting ")).toEqual({ ok: true, value: { t: "Face painting" } });
+    expect(shapeWritten("cloud", {}, "  Face   painting ")).toEqual({ ok: true, value: { t: "Face painting" } });
     expect(shapeWritten("cloud", {}, "   ")).toEqual({ ok: false, error: "empty" });
     expect(shapeWritten("cloud", {}, "!!!")).toEqual({ ok: false, error: "empty" }); // a cloud's entry is stored without its punctuation
     expect(shapeWritten("open", {}, "!!!")).toEqual({ ok: true, value: { t: "!!!" } });
-    expect(shapeWritten("cloud", { max_len: 5 }, "Kites!")).toEqual({ ok: false, error: "long" });
-    expect(shapeWritten("cloud", { max_len: 5 }, "طائرة")).toEqual({ ok: true, value: { t: "طائرة" } });
+    // as long as the writer needs, up to ASK_TEXT_MAX characters as the database counts them, in every written kind
+    expect(ASK_TEXT_MAX).toBe(2000);
+    for (const kind of ["cloud", "open", "qa"]) {
+      expect(shapeWritten(kind, {}, "a".repeat(2000)), kind).toEqual({ ok: true, value: { t: "a".repeat(2000) } });
+      expect(shapeWritten(kind, {}, "a".repeat(2001)), kind).toEqual({ ok: false, error: "long" });
+      expect(shapeWritten(kind, {}, `a${"\u{1F6B2}".repeat(1999)}`), kind).toMatchObject({ ok: true }); // a bicycle is one character, not two
+      expect(shapeWritten(kind, {}, `a${"\u{1F6B2}".repeat(2000)}`), kind).toEqual({ ok: false, error: "long" });
+      expect(shapeWritten(kind, {}, `  ${"ب ".repeat(1000)}   `), kind).toMatchObject({ ok: true }); // counted once its spaces are folded
+    }
+    // a `max_len` an older question still carries is not read
+    expect(shapeWritten("cloud", { max_len: 5 }, "Kites and a long line of bikes along the corniche")).toMatchObject({ ok: true });
+    expect(shapeWritten("open", { max_len: 5 }, "a".repeat(2000))).toMatchObject({ ok: true });
+    expect(shapeWritten("qa", { max_len: 5000 }, "a".repeat(2001))).toEqual({ ok: false, error: "long" });
     expect(shapeWritten("qa", {}, "see https://example.com")).toEqual({ ok: false, error: "link" });
     expect(shapeWritten("qa", {}, "www.example.com")).toEqual({ ok: false, error: "link" });
     expect(shapeWritten("qa", {}, "Is 9.30 a.m. too early?")).toMatchObject({ ok: true });
