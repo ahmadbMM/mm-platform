@@ -385,6 +385,10 @@ html:is([lang="ar"], [lang="ur"]) .xs-summary .xs-yg-name { font-family: var(--c
 .xs-summary .xs-fh-name { font-family: var(--cs-font-fh), var(--cs-font-ar), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", sans-serif; font-size: 19px; font-weight: 800; letter-spacing: 0; line-height: 1.2; color: var(--fh-peach); overflow-wrap: anywhere; }
 .xs-fh-head span { color: var(--fh-milk); }
 .xs-fh-head .xs-fh-sub { display: block; margin-top: 3px; font-size: 12.5px; font-weight: 700; color: var(--fh-milk); }
+/* the venue's Instagram on the plate (the booking app's .fh-flow-ig, 2026-11-14): milk on the rust, underlined, the mark in peach */
+.xs-fh-head .xs-fh-ig { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; margin-top: 4px; font-size: 13px; font-weight: 700; color: var(--fh-milk); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.xs-fh-head .xs-fh-ig .xs-ig-ic { flex: none; color: var(--fh-peach); }
+.xs-fh-head .xs-fh-ig:focus-visible { outline: 2px solid var(--fh-peach); outline-offset: 2px; border-radius: 4px; }
 .xs .xs-go.ev-farm { background: var(--fh-rust); color: #fff; }
 .xs .xs-go.ev-farm:hover { background: var(--fh-rust-dk); }
 .xs .xs-info.ev-farm .xs-info-facts a { color: var(--fh-rust); }

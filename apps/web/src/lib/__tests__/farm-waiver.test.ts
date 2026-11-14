@@ -183,6 +183,17 @@ describe("a session's venue on Instagram (bike_slots._ig)", () => {
     expect(sat.info.ig).toBeUndefined();
     expect(/<dialog .*<\/dialog>/.exec(draw(p, 2, ev, null, null, { ev, s: sat }))?.[0]).not.toContain("Instagram");
   });
+  it("is a link on the summary's rust plate before the hand-over to the booking app (2026-11-14)", async () => {
+    jar.account = ACCOUNT; jar.member = true;
+    const p = await experiences([FH, SAT]);
+    const ev = comm(p), s = ev.sessions.find((x) => x.kind === "farm")!;
+    const head = /<div class="xs-sum-head xs-fh-head">.*?<\/div><\/div>/.exec(draw(p, 3, ev, s))?.[0] ?? "";
+    expect(head).toMatch(new RegExp(`<span class="xs-fh-sub">Members and their families</span><a class="xs-fh-ig" href="${IG_URL.replace(/[.]/g, "\\.")}" target="_blank" rel="noopener noreferrer" aria-label="Instagram @thefarmhouse\\.jed"><svg class="xs-ig-ic"`));
+    expect(head).toContain('<bdi dir="ltr">@thefarmhouse.jed</bdi></a></div>');
+    // a date that carries none has no such link
+    const sat = ev.sessions.find((x) => x.kind === "saturday")!;
+    expect(draw(p, 3, ev, sat)).not.toContain("xs-fh-ig");
+  });
   it("is never shown to anyone else: no word of it on Experiences or Events for a visitor signed out or a non-member", async () => {
     for (const [account, member] of [["", false], [ACCOUNT, false]] as const) {
       jar.account = account; jar.member = member;

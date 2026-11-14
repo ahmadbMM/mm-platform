@@ -808,7 +808,9 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                 : sess.yoga ? <span className="xs-logo small xs-yoga-logo"><img src={YOGA_MARK} alt="" width={YOGA_MARK_SIZE.width} height={YOGA_MARK_SIZE.height} /></span>
                 : sess.farm ? <span className="xs-logo small xs-farm-logo"><img src={FARM_MARK} alt="" width={FARM_MARK_SIZE.width} height={FARM_MARK_SIZE.height} /></span>
                 : ev.logo && <span className="xs-logo small"><img src={ev.logo} alt="" /></span>}
-              <div><strong className={sess.yoga ? "xs-yg-name" : sess.farm ? "xs-fh-name" : undefined}>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span>{sess.farm && <span className="xs-fh-sub">{sess.farm.line}</span>}</div>
+              <div><strong className={sess.yoga ? "xs-yg-name" : sess.farm ? "xs-fh-name" : undefined}>{named(ev) ? sess.name : ev.title}</strong><span>{sess.day}{sess.when ? <> · {when(sess)}</> : null}{sess.route ? <> · {t.route}: {sess.route}</> : null}{sess.routeKm ? <> · {sess.route ? "" : <>{t.route}: </>}{sess.routeKm}</> : null}{sess.breakfast ? <> · {breakfastAt(sess.breakfast)}</> : null}</span>{sess.farm && <span className="xs-fh-sub">{sess.farm.line}</span>}{/* the venue's Instagram on the rust plate before the hand-over (the booking app's .fh-flow-ig; the user, 2026-11-14:
+                  "add the insta of the farmhouse in the registration process so people can see before registering") */}
+              {sess.farm && sess.info.ig && <a className="xs-fh-ig" href={sess.info.ig.url} target="_blank" rel="noopener noreferrer" aria-label={`${sess.info.ig.label} @${sess.info.ig.handle}`}><IgMark /><bdi dir="ltr">@{sess.info.ig.handle}</bdi></a>}</div>
             </div>
             {tags(sess)}
             {sess.defe && <p className="xs-defe-cause"><Ribbon /><span>{sess.defe.cause}</span></p>}
