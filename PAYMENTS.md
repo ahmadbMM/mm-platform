@@ -68,7 +68,9 @@ The hourly live-to-staging copy never touches `pay.*` and `store.*` (scripts/sta
    staging workflow after adding them.
 4. Moyasar dashboard > Settings > Webhooks > Add: URL `https://staging.micromobility.sa/api/pay/webhook`, method POST,
    Secret Token = the same text as `STAGING_MOYASAR_WEBHOOK_SECRET`, events: payment_paid, payment_failed,
-   payment_refunded, payment_voided (or all).
+   payment_refunded, payment_voided (or all). A new webhook gets no events until it is verified: Moyasar sends a
+   6-digit code once to the webhook's own address, and `/api/pay/webhook` sends it back by itself (2026-11-14), so the
+   keys must be deployed BEFORE the webhook is added. If the dashboard still says unverified, press Resend code there.
 5. Apple Pay (optional on staging): Moyasar dashboard > Settings > Apple Pay Domains > add `staging.micromobility.sa`
    > Download Association > put the file's whole text in the repository secret `STAGING_APPLE_PAY_DOMAIN_FILE` >
    deploy > Validate > Register. Each host is registered on its own (later: `micromobility.sa`, `www.micromobility.sa`).
@@ -97,3 +99,43 @@ The hourly live-to-staging copy never touches `pay.*` and `store.*` (scripts/sta
 - Moyasar activation: they review products, images, prices, policies (terms, refunds, delivery, complaints handling
   time) and contact details before live keys; register `micromobility.sa` and `www` for Apple Pay; live keys go in
   production secrets the same way (`MOYASAR_*` without the STAGING_ prefix, to be added to the production deploy step).
+
+## Moyasar's review and going live (checked 2026-11-14)
+
+Moyasar publishes no list of website requirements; its FAQ says the review looks at "products, images, pricing,
+policies, and communication channels", and its merchant terms, the card schemes (Visa, mada) and the Saudi E-Commerce
+Law fill in the rest. What the site shows for that, on staging:
+
+- Real products with photos and SAR prices including VAT; delivery fees and dates before paying (checkout, product
+  page), the total before paying; no fee for paying by card.
+- Terms (with a Paying online clause while payments are open: Moyasar named, accepted ways to pay, refunds and their
+  timing, complaints answered within one working day), Privacy Notice, returns and delivery (Help), contact details
+  (footer, About: phone, email, store address, hours), legal name, CR, unified number, VAT number, registered address.
+- On the payment page itself: the seller's legal name and "Jeddah, Saudi Arabia" (the schemes want the merchant's
+  country on the screen that takes the card), the refund policy, and a tick accepting it and the Terms before the form
+  can be used (click-to-accept); an itemised summary and, once paid, a receipt number.
+- mada first in every row of payment marks, never smaller than the others, at least 60px wide, never in a white box,
+  in its own colours; Visa and Mastercard in theirs (components/pay/PayMarks.tsx, the footer's strip).
+- Card details only ever in Moyasar's form; every payment fetched again on the server and checked for status, amount
+  and currency before anything counts as paid; webhook token compared in constant time, answered at once, idempotent.
+
+To give the reviewers: the address https://staging.micromobility.sa (public, no login; it is noindex). Moyasar does not
+say whether it accepts a staging address; if it wants the live domain, the same pages must be on micromobility.sa.
+
+Papers they ask for: the commercial registration (its activities should cover retail, rental and repair services),
+a Saudi bank account (IBAN letter) in the company's name, the signed agreement, and the owner's or manager's ID when
+asked; the VAT certificate helps. STC Pay needs the company's own STC Pay merchant account (its merchant ID sent to
+Moyasar). Cards issued outside Saudi Arabia are refused until Moyasar approves a request for them (tourists).
+
+Blocking live, to settle first:
+- **Live secret key and fixed addresses.** Moyasar's live secret key works only from addresses on the account's
+  Allowed IPs list (at least one is required). This site's server is a Cloudflare Worker, which has no fixed outbound
+  address, and it uses the secret key to check every payment and send refunds. Live needs the secret-key calls to go
+  out through a fixed address (a small proxy with a static IP, or a Cloudflare plan with dedicated egress addresses),
+  and that address put on the list. Test keys are not limited this way.
+- The footer's trust line still says "Maroof verified": Maroof was replaced in 2023 by the Saudi Business Center's
+  e-store authentication. Change it to the badge or number the company actually holds, or remove it (Website > Whole
+  site > Footer > Trust line).
+- The footer shows a tabby mark, which online checkout does not offer; keep it only if tabby is taken somewhere.
+- The wallet top-up (switch `pay.topup`): a wallet usable only for the company's own services is a closed-loop
+  account under SAMA's rules (registration); declare it to Moyasar, which may route its funding differently.
