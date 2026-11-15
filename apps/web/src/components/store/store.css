@@ -185,7 +185,7 @@ html:is([lang="ar"], [lang="ur"]) :is(.st, .mm-site .tk-amt) { font-family: "MM 
 .st-field input:focus, .st-field textarea:focus { outline: none; border-color: #077a4b; box-shadow: inset 0 0 0 1px #077a4b; }
 .st-field input[aria-invalid="true"] { border-color: #a33b2e; }
 .st-field input[dir="ltr"]::placeholder { text-align: start; }
-[dir="rtl"] .st-field input[dir="ltr"] { text-align: right; }
+[dir="rtl"] .st-field input[dir="ltr"] { text-align: left; } /* A09-B: a phone, a code or a number types and reads left to right, from the left */
 .st-fixed { margin: 0; min-height: 48px; display: flex; align-items: center; padding: 0 12px; border-radius: 10px; background: #f4f1ea; font-weight: 600; }
 .st-row3 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 12px; }
 @media (min-width: 560px) { .st-row3 { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -269,3 +269,96 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
   .st-invoice, .st-ord-way, .st-info, .st-alert { border-color: #999 !important; break-inside: avoid; }
   a { color: inherit !important; text-decoration: none !important; }
 }
+
+/* ── Store build w4 (2026-11-15): checkout in steps (O12-C), marks (F74), slots (F78), the district switch (F79), codes
+   (F67), gift cards (F57: paying with one, and its page), the cart's Goes with (F66), Saved for later (F68) and Apple
+   Pay (F83). Phone first, logical properties, 44px taps. ── */
+.st-req { margin-inline-start: 3px; color: #a33b2e; font-weight: 700; }
+.st-co-withbtn { display: flex; gap: 8px; align-items: stretch; }
+.st-co-withbtn > input { flex: 1 1 auto; min-width: 0; }
+.st-co-withbtn > .bk-btn2 { flex: none; min-height: 48px; padding: 0 16px; }
+.st-co-main { min-width: 0; }
+.st-co-step { padding: 16px 18px; }
+.st-co-step-head { display: flex; align-items: center; gap: 12px; min-height: 44px; }
+.st-co-step-head h2 { flex: 1; min-width: 0; margin: 0; }
+.st-co-step-head h2:focus { outline: none; }
+.st-co-step-n { width: 28px; height: 28px; flex: none; border-radius: 50%; border: 2px solid rgba(26, 25, 25, .2); box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #4a4843; background: #fff; }
+.st-co-step.is-open .st-co-step-n { border-color: #077a4b; color: #077a4b; }
+.st-co-step.is-done .st-co-step-n { border-color: #077a4b; background: #077a4b; color: #fbf9f4; }
+.st-co-step.is-todo { background: #fbf9f4; }
+.st-co-step.is-todo h2 { color: #6e6b63; }
+.st-co-edit { min-height: 44px; padding: 0 6px; border: 0; background: none; color: #077a4b; font: inherit; font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.st-co-step-sum { margin: 2px 0 0; padding-inline-start: 40px; font-size: 14px; line-height: 1.5; color: #4a4843; overflow-wrap: anywhere; }
+.st-co-step-body { margin-top: 12px; }
+.st-co-go { width: 100%; margin-top: 4px; }
+@media (min-width: 600px) { .st-co-go { width: auto; min-width: 180px; } }
+.st-co-switched { margin: 0 0 12px; padding: 12px 14px; border-radius: 10px; background: #f4f1ea; border: 1px solid rgba(138, 92, 20, .3); color: #1a1919; font-size: 14px; line-height: 1.5; }
+.st-co-slot { display: grid; gap: 14px; margin-top: 14px; }
+.st-co-pills { border: 0; margin: 0; padding: 0; min-width: 0; }
+.st-co-pills legend { padding: 0; margin: 0 0 8px; font-size: 13px; font-weight: 600; color: #4a4843; }
+.st-co-pills > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.st-co-pills label { position: relative; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(26, 25, 25, .24); background: #fff; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.st-co-pills label:hover { background: #f4f1ea; }
+.st-co-pills label.on { border-color: #1a1919; background: #1a1919; color: #fbf9f4; }
+.st-co-pills input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.st-co-pills label:has(input:focus-visible) { outline: 3px solid rgba(7, 122, 75, .35); outline-offset: 2px; }
+.st-co-pills .bk-ferr { margin-top: 8px; }
+.st-co-giftnote { margin-top: 10px; }
+.st-co-more { display: inline-flex; align-items: center; min-height: 44px; padding: 0; border: 0; background: none; color: #077a4b; font: inherit; font-size: 14px; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+.st-co-step-body > .st-co-more { margin-top: 8px; }
+.st-co-code { margin: 4px 0 10px; }
+.st-co-off .tk-amt { color: #077a4b !important; }
+.st-co-off > span:first-child { display: inline-flex; align-items: center; gap: 2px; }
+.st-co-x { width: 44px; height: 44px; margin: -10px 0; flex: none; border: 0; border-radius: 50%; background: none; color: #4a4843; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.st-co-x:hover { background: #f4f1ea; color: #a33b2e; }
+.st-co-gc { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border: 1.5px solid #077a4b; border-radius: 12px; background: rgba(7, 122, 75, .04); }
+.st-co-gc > svg { color: #077a4b; }
+.st-co-gc > span { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.st-co-gc b { font-size: 14.5px; letter-spacing: .4px; font-variant-numeric: tabular-nums; }
+.st-co-gc small { font-size: 13px; color: #4a4843; }
+.st-co-gcf { margin-top: 12px; margin-bottom: 0; }
+.st-co-legal { margin: 0 0 4px; }
+.st-co-ap { display: none; }
+@supports (-webkit-appearance: -apple-pay-button) {
+  /* Apple's own button, as Safari draws it (the official artwork) */
+  .st-co-ap { display: block; width: 100%; height: 48px; margin-top: 10px; border: 0; border-radius: 999px; cursor: pointer; -webkit-appearance: -apple-pay-button; -apple-pay-button-type: check-out; -apple-pay-button-style: black; }
+}
+
+/* the cart: its lines, then Goes with your bike and Saved for later */
+.st-ct-main { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+@media (min-width: 900px) { .st-cart.st-ct-none { grid-template-columns: minmax(0, 1fr); } }
+.st-ct-gw, .st-ct-later { min-width: 0; }
+.st-ct-gw ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.st-ct-gw-card { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; min-width: 0; }
+.st-ct-gw-img { position: relative; display: block; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden; background: #fff; }
+.st-ct-gw-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.st-ct-gw-mid { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 14px; font-weight: 700; }
+.st-ct-gw-mid .st-line-name { font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.st-ct-add { width: 100%; min-height: 44px; padding: 0 12px; margin-top: auto; }
+.st-ct-add.is-added { background: #077a4b; border-color: #077a4b; color: #fbf9f4 !important; }
+.st-ct-later .st-line { opacity: .96; }
+.st-ct-move { min-height: 40px; padding: 0 14px; font-size: 13.5px; }
+
+/* the gift card page */
+.st-gc { display: grid; grid-template-columns: minmax(0, 1fr); gap: 22px; align-items: start; margin-top: 8px; }
+.st-gc + .st-gc { margin-top: 36px; padding-top: 28px; border-top: 1px solid rgba(26, 25, 25, .12); }
+.st-gc-card { position: relative; aspect-ratio: 1.586 / 1; max-width: 520px; border-radius: 18px; background: #077a4b; color: #fbf9f4; overflow: hidden; box-shadow: 0 10px 30px rgba(7, 122, 75, .18); }
+.st-gc-card::after { content: ""; position: absolute; inset-inline-end: -18%; top: -30%; width: 70%; aspect-ratio: 1; border-radius: 50%; border: 22px solid rgba(251, 249, 244, .08); }
+.st-gc-mark { position: absolute; top: 22px; inset-inline-start: 22px; }
+.st-gc-card-k { position: absolute; top: 26px; inset-inline-end: 24px; font-size: 13px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; opacity: .9; }
+.st-gc-card-amt { position: absolute; bottom: 22px; inset-inline-start: 24px; font-size: clamp(30px, 7vw, 44px); font-weight: 700; font-variant-numeric: tabular-nums; }
+.st-gc-card-name { position: absolute; bottom: 28px; inset-inline-end: 24px; font-size: 14px; font-weight: 700; opacity: .9; }
+.st-gc-h { font-size: 22px !important; letter-spacing: -.4px; margin: 0 0 12px; }
+.st-gc-amts { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.st-gc-amts button { min-width: 88px; min-height: 48px; padding: 0 16px; border-radius: 10px; border: 1px solid rgba(26, 25, 25, .24); background: #fff; color: #1a1919; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
+.st-gc-amts button:hover:not(:disabled) { background: #f4f1ea; }
+.st-gc-amts button[aria-checked="true"] { background: #1a1919; border-color: #1a1919; color: #fbf9f4; }
+.st-gc-amts button:disabled { color: #a7a399; text-decoration: line-through; cursor: default; background: #fbf9f4; }
+.st-gc-valid { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; font-size: 14px; color: #4a4843; }
+.st-gc-valid .st-ic { color: #077a4b; }
+.st-gc-cta .bk-btn, .st-gc-cta .bk-btn2 { min-height: 48px; }
+.st-gc-add { flex: 1 1 180px; }
+.st-gc-now { flex: 1 1 140px; }
+.st-gc-cart { display: inline-flex; align-items: center; min-height: 44px; margin-top: 6px; color: #077a4b !important; font-weight: 700; font-size: 14px; }
+.st-gc-about { margin: 14px 0 0; font-size: 15px; line-height: 1.65; color: #2e352f; max-width: 620px; }
+@media (min-width: 900px) { .st-gc { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 44px; } }

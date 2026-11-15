@@ -4,10 +4,12 @@ import PageShell from "@/components/site/PageShell";
 import CartView from "@/components/store/CartView";
 import { allWhens, openOr404, storeState } from "@/components/store/store-data";
 import { cartProducts } from "@/components/store/slim";
+import { payEnv, payReady } from "@/lib/pay/config";
 import "@/components/experiences/experiences.css";
 import "@/components/store/store.css";
 
-// micromobility.sa/store/cart - the cart kept in this browser, priced with the store as it is now.
+// micromobility.sa/store/cart - the cart kept in this browser, priced with the store as it is now. Apple Pay's own button
+// (F83) shows on a device that has it only while payments are taken here and Apple Pay's domain file is in place.
 type Props = { params: Promise<{ locale: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -24,7 +26,8 @@ export default async function CartPage({ params }: Props) {
     <PageShell locale={locale} site={s.site} preview={s.previewing} hidden={s.hidden}>
       <div className="st">
         <h1 className="st-title">{s.t.cart}</h1>
-        <CartView locale={locale} products={cartProducts(s.store)} settings={s.settings} whens={allWhens(s, locale)} />
+        <CartView locale={locale} products={cartProducts(s.store)} settings={s.settings} whens={allWhens(s, locale)} licence={s.licence}
+          applePay={s.settings.enabled && payReady() && !!payEnv().APPLE_PAY_DOMAIN_FILE} />
       </div>
     </PageShell>
   );
