@@ -30,23 +30,24 @@ export const codeOf = (raw: string) => raw.trim().toUpperCase().replace(/\s+/g, 
 // ── Codes and gift cards (F67, F57; w4) ─────────────────────────────────────────────────────────
 
 export type PromoCheck = { code: string; kind: "percent" | "amount"; value: number; discount: number; eligible: number };
-/** Whether a code takes something off these cart lines (store_promo_check): the database prices the lines itself. */
-export async function promoCheck(code: string, items: CartItem[]): Promise<ApiAnswer<PromoCheck>> {
+/** Whether a code takes something off these cart lines (store_promo_check): the database prices the lines itself. `from`
+ *  is the shopper's request: the database meters each visitor, not the Worker's one address. */
+export async function promoCheck(code: string, items: CartItem[], from?: Request): Promise<ApiAnswer<PromoCheck>> {
   const c = codeOf(code);
   if (!/^[A-Z0-9-]{3,24}$/.test(c)) return { ok: false, error: "promo", status: 409 };
   const lines = items.filter((i) => UUID.test(i.variant) && i.qty >= 1 && i.qty <= 10).slice(0, 20).map((i) => ({ variant: i.variant, qty: i.qty }));
   if (!lines.length) return bad("empty");
-  return answer(await payRpc<PromoCheck>("store_promo_check", { p_code: c, p_items: lines }), (d) => typeof d.discount === "number");
+  return answer(await payRpc<PromoCheck>("store_promo_check", { p_code: c, p_items: lines }, undefined, from), (d) => typeof d.discount === "number");
 }
 
 /** expires_at: a card ends a year after it was issued (CONTRACTS.md, additions by lead 3); null from a database that
  *  does not say. An expired card is refused (STORE_GIFT_EXPIRED, "gift_expired"; additions by w4). */
 export type GiftCardCheck = { code: string; balance: number; expires_at: string | null };
 /** What a gift card still holds and until when (store_gift_card_check). */
-export async function giftCardCheck(code: string): Promise<ApiAnswer<GiftCardCheck>> {
+export async function giftCardCheck(code: string, from?: Request): Promise<ApiAnswer<GiftCardCheck>> {
   const c = codeOf(code);
   if (!/^GC-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/.test(c)) return { ok: false, error: "gift", status: 409 };
-  const r = answer(await payRpc<GiftCardCheck>("store_gift_card_check", { p_code: c }), (d) => Number.isFinite(Number(d.balance)));
+  const r = answer(await payRpc<GiftCardCheck>("store_gift_card_check", { p_code: c }, undefined, from), (d) => Number.isFinite(Number(d.balance)));
   if (!r.ok) return r;
   const at = typeof r.data.expires_at === "string" && Number.isFinite(Date.parse(r.data.expires_at)) ? r.data.expires_at : null;
   return { ok: true, data: { code: typeof r.data.code === "string" ? r.data.code : c, balance: Number(r.data.balance), expires_at: at } };

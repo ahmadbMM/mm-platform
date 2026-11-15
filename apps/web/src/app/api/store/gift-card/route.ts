@@ -7,7 +7,7 @@ import { giftCardCheck } from "@/lib/store-api";
 export async function POST(req: Request) {
   const g = await guard(req, { signin: false });
   if (!g.ok) return g.res;
-  const r = await giftCardCheck(typeof g.body.code === "string" ? g.body.code.slice(0, 30) : "");
+  const r = await giftCardCheck(typeof g.body.code === "string" ? g.body.code.slice(0, 30) : "", req); // metered per shopper in the database
   if (!r.ok) return json({ ok: false, error: r.error }, r.status);
   if (!(r.data.balance > 0)) return json({ ok: false, error: "gift" }, 409);
   return json({ ok: true, code: r.data.code, balance: r.data.balance, expires: r.data.expires_at });

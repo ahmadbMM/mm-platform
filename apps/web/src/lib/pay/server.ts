@@ -1,4 +1,4 @@
-import { rpcServer } from "@/lib/account";
+import { forVisitor, rpcServer } from "@/lib/account";
 import { payEnv, type PayEnv } from "./config";
 import { fetchPayment, paymentsFor, refundPayment, sourceInfo, toHalalas, type MoyasarPayment } from "./moyasar";
 
@@ -29,9 +29,12 @@ export type Refund = { id: string; provider_id: string | null; amount: number };
 export type PendingRefund = Refund & { already?: number; created_at?: string };
 type RpcAnswer<T> = Awaited<ReturnType<typeof rpcServer<T>>>;
 
-/** A pay_* function with the server key. */
-export function payRpc<T>(fn: string, args: Record<string, unknown>, env: PayEnv = payEnv()): Promise<RpcAnswer<T>> {
-  return rpcServer<T>(fn, { p_key: env.PAY_SERVER_KEY ?? "", ...args }, 8000);
+/** A pay_* function with the server key. `from`: the shopper's request, for a function the database meters per visitor
+ *  (store_stock_request, store_promo_check, store_gift_card_check: _ip_gate on x-mm-visitor-ip, rentals 20261115200100):
+ *  without it every shopper shares the Worker's one address and its one meter (lib/account.ts forVisitor). */
+export function payRpc<T>(fn: string, args: Record<string, unknown>, env: PayEnv = payEnv(), from?: Request): Promise<RpcAnswer<T>> {
+  const a = { p_key: env.PAY_SERVER_KEY ?? "", ...args };
+  return rpcServer<T>(fn, from ? forVisitor(from, a) : a, 8000);
 }
 
 /** The refusal the database named (its exception text up to a colon), for the page's words. */

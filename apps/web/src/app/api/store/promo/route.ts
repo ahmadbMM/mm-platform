@@ -13,7 +13,7 @@ export async function POST(req: Request) {
     const o = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
     return { variant: typeof o.variant === "string" ? o.variant.toLowerCase() : "", qty: Number(o.qty) };
   });
-  const r = await promoCheck(code, items);
+  const r = await promoCheck(code, items, req); // metered per shopper in the database
   if (!r.ok) return json({ ok: false, error: r.error }, r.status);
   return json({ ok: true, code: r.data.code, discount: Number(r.data.discount) || 0, eligible: Number(r.data.eligible) || 0 });
 }

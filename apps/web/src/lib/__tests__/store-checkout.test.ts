@@ -233,6 +233,16 @@ describe("the server's calls (gift cards, the address lookup, Tabby)", () => {
     expect(refusalPlace("gift_expired")).toEqual({ field: "giftCard" });
   });
 
+  it("meter a code's and a gift card's checks per shopper, by the address Cloudflare saw (db addition 7)", async () => {
+    const api = await import("../store-api");
+    vi.stubEnv("MM_SITE_KEY", "site-key");
+    const calls = db({ store_promo_check: { code: "RIDE10", kind: "percent", value: 10, discount: 45, eligible: 450 }, store_gift_card_check: { code: "GC-ABCD-EFGH-JKMN", balance: 50, expires_at: null } });
+    const req = new Request("https://staging.micromobility.sa/api/store/promo", { headers: { "cf-connecting-ip": "203.0.113.7" } });
+    await api.promoCheck("RIDE10", [{ variant: ID(3), qty: 1 }], req);
+    await api.giftCardCheck("GC-ABCD-EFGH-JKMN", req);
+    for (const c of calls) expect(new Headers(c.headers).get("x-mm-visitor-ip")).toBe("203.0.113.7");
+  });
+
   it("ask the national address service with its key, and read its answer (F76)", async () => {
     const api = await import("../store-api");
     const env = { NATIONAL_ADDRESS_KEY: "na-key" };

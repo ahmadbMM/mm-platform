@@ -427,7 +427,7 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
           </ul>
           <p className="bk-sum-row"><span>{t.subtotal}</span><Amt>{sar(money.subtotal)}</Amt></p>
           {money.setOff > 0 && <p className="bk-sum-row st-co-off"><span>{w.setLine}</span><Off n={money.setOff} /></p>}
-          {licence && <CodeRow promo={promo} off={money.codeOff} t={t} w={w} />}
+          {licence && !digital && <CodeRow promo={promo} off={money.codeOff} t={t} w={w} />}
           {!digital && <p className="bk-sum-row"><span>{wayName(way)}</span>{(money.fee ?? 0) === 0 ? <span>{t.free}</span> : <Amt>{sar(money.fee ?? 0)}</Amt>}</p>}
           <p className="bk-sum-tot sep"><span>{t.total}</span><Amt>{sar(money.total)}</Amt></p>
           <p className="st-vatline">{t.vatOf(sar(vatIn(Math.max(0, money.total - giftValue))))}</p>

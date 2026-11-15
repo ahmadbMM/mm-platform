@@ -90,7 +90,7 @@ export default function CartView({ locale, products, settings, whens, licence, a
         <h2 id="st-sum-h" className="st-sum-h">{t.summary}</h2>
         <p className="bk-sum-row"><span>{t.subtotal}</span><Amt>{sar(money.subtotal)}</Amt></p>
         {money.setOff > 0 && <p className="bk-sum-row st-co-off"><span>{w.setLine}</span><Off n={money.setOff} /></p>}
-        {licence && <CodeRow promo={promo} off={money.codeOff} t={t} w={w} />}
+        {licence && !digital && <CodeRow promo={promo} off={money.codeOff} t={t} w={w} />}
         {options.length > 0 && (
           <fieldset className="st-ways-pick">
             <legend>{t.deliveryTo}</legend>
