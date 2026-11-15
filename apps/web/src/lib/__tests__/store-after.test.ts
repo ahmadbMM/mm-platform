@@ -266,6 +266,20 @@ describe("the order's page", () => {
     expect(whole).toContain('class="st-ogc-acts"');
     expect(whole).toContain("Print gift card");
   });
+  it("shows a card staff voided (Void cards and refund) as cancelled, with no balance, expiry, copy or print, masked or whole", async () => {
+    const voided = { amount: 100, balance: 0, status: "void", expires_at: "2027-11-10T08:05:00Z" };
+    for (const g of [{ ...voided, code: "GC-••••-••••-JKLM", masked: true }, { ...voided, code: "GC-ABCD-EFGH-JKLM", masked: false }]) {
+      const html = await page(order({ gift_cards: [g] }), "en");
+      expect(html).toContain('class="st-ogc g-void"');
+      expect(html).toContain('<p class="st-pill g-void">Cancelled</p>');
+      expect(html).not.toContain("Valid until");
+      expect(html).not.toContain('class="st-ogc-bal"');
+      expect(html).not.toContain('class="st-ogc-acts"');
+      expect(html).not.toContain("Print gift card");
+      expect(html).toContain(g.code);
+    }
+    expect(await page(order({ gift_cards: [{ ...voided, code: "GC-••••-••••-JKLM", masked: true }] }), "ar")).toContain("ملغاة");
+  });
   it("says the booked delivery day only while the order is still to come (F78)", async () => {
     const o = (status: string) => order({ status, slot: { day: "2026-11-27", time: "am" }, delivered_at: null, events: [] });
     const slot = "Thu 27 Nov, 09:00–13:00";
