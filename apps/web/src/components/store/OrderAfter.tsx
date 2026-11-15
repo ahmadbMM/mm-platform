@@ -1,21 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import { sized } from "@/lib/img";
-import { returnBody, type ReturnLine, type ReturnPick } from "@/lib/store-after";
-import { RETURN_REASONS, type ReturnReason } from "@/lib/store-order";
+import { returnBody, wholeCodes, type ReturnLine, type ReturnPick } from "@/lib/store-after";
+import { RETURN_REASONS, type IssuedGiftCard, type ReturnReason } from "@/lib/store-order";
 import { T as STORE } from "./Store.text";
 import { T as W5 } from "./w5.text";
 import { Ic, NoPhoto } from "./bits";
 import { StIcon } from "./icons";
 import Modal from "./Modal";
+import { CopyNo } from "./OrderActions";
+import { giftKeyFor } from "./useLists";
 
 // An order's page, the parts that need the browser (the store build, chain w5): a return or an exchange asked for in a
 // centred pop-up (F93; staff approve it in the staff page and the refund goes the existing way), a verified buyer's
-// review of each product once it is delivered (F94; staff show it), and printing one gift card alone (F57). Nothing is
-// sent by email or SMS: the order's page is where the customer sees what happened.
+// review of each product once it is delivered (F94; staff show it), and the gift cards it bought, their whole codes in
+// the browser that placed the order alone, to copy and print one card alone (F57). Nothing is sent by email or SMS: the
+// order's page is where the customer sees what happened.
 
 async function post(url: string, body: unknown): Promise<{ ok?: boolean; error?: string }> {
   try {
@@ -181,6 +184,47 @@ function ReviewRow({ no, k, lang, item }: { no: number; k: string; lang: string;
       )}
     </li>
   );
+}
+
+// ── The gift cards' codes (F57): whole for their buyer alone ─────────────────────────────────────
+
+const Whole = createContext<(string | null)[]>([]);
+
+/** The gift cards on the order's page, each with the code it may show whole (CONTRACTS.md Additions by lead: gift card
+ *  codes): its own when the page read it whole (the account that placed the order), else the one the gift key this
+ *  browser kept from the checkout reads (POST /api/store/gift-codes). Without either the page shows each code masked, as
+ *  the database gave it, with nothing to copy or print. */
+export function GiftReveal({ no, k, cards, children }: { no: number; k: string | null; cards: IssuedGiftCard[]; children: ReactNode }) {
+  const [got, setGot] = useState<IssuedGiftCard[] | null>(null);
+  const masked = cards.some((g) => g.masked);
+  useEffect(() => {
+    const gift = masked && k ? giftKeyFor(no) : null;
+    if (!gift) return;
+    let live = true;
+    void post("/api/store/gift-codes", { no, key: k, gift }).then((b) => {
+      const list = (b as { cards?: unknown }).cards;
+      if (!live || !b.ok || !Array.isArray(list)) return;
+      setGot(list.map((c) => {
+        const o = (c && typeof c === "object" ? c : {}) as Record<string, unknown>;
+        return { code: String(o.code ?? ""), masked: o.masked !== false, amount: Number(o.amount), balance: Number(o.balance), status: o.status === "void" ? "void" : "active",
+          expires_at: typeof o.expires_at === "string" ? o.expires_at : null };
+      }));
+    });
+    return () => { live = false; };
+  }, [no, k, masked]);
+  return <Whole.Provider value={wholeCodes(cards, got)}>{children}</Whole.Provider>;
+}
+
+/** A bought card's code: whole where this page may show it (GiftReveal), else masked as the database gave it. */
+export function GiftCode({ i, code }: { i: number; code: string }) {
+  const whole = useContext(Whole)[i];
+  return <bdi dir="ltr">{whole ?? code}</bdi>;
+}
+
+/** Copy and Print gift card, once the code is whole here: a masked code is nothing to give. */
+export function GiftActs({ i, target }: { i: number; target: string }) {
+  const whole = useContext(Whole)[i];
+  return whole ? <div className="st-ogc-acts"><CopyNo text={whole} /><GiftPrint target={target} /></div> : null;
 }
 
 // ── Print one gift card (F57) ────────────────────────────────────────────────────────────────────

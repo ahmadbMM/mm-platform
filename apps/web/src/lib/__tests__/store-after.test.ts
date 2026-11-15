@@ -10,8 +10,9 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   discountRows, eventKey, eventNote, giftState, invoiceIssued, invoiceNumber, invoiceQr, lineHref, outToday, paidParts, refundRows, returnableLines,
-  returnBody, returnLines, reviewItems, riyadhDayOf, serviceShown, slotWhen, statusKey,
+  returnBody, returnLines, reviewItems, riyadhDayOf, serviceShown, slotWhen, statusKey, wholeCodes,
 } from "../store-after";
+import { GIFT_KEYS_KEY, giftKeyFirst, giftKeyOf, MAX_GIFT_KEYS, parseGiftKeys } from "../store-lists";
 import { orderOf, type Order } from "../store-order";
 import { DEFAULT_SLOTS } from "../store-settings";
 import { zatcaFields } from "../zatca";
@@ -243,10 +244,27 @@ describe("the order's page", () => {
     expect(html).toContain("GC-ABCD-EFGH-JKLM");
     expect(html).toMatch(/Valid until 10 Nov 2027/);
     expect(html).toContain("Print gift card");
-    expect(html).toContain('id="st-ogc-GC-ABCD-EFGH-JKLM"');
+    expect(html).toContain('id="st-ogc-1"');
     // its own class names: the gift card page's (w4: .st-gc, .st-gc-card in the same store.css) never style it
     expect(html).toContain('class="st-ogc g-active"');
     expect(html).not.toMatch(/class="[^"]*\bst-gc/);
+  });
+  it("shows a masked code as the database gave it, with its amount, balance and expiry, and nothing to copy or print", async () => {
+    const masked = (x: Record<string, unknown> = {}) =>
+      order({ gift_cards: [{ code: "GC-••••-••••-JKLM", masked: true, amount: 100, balance: 60, status: "active", expires_at: "2027-11-10T08:05:00Z", ...x }] });
+    const html = await page(masked(), "en");
+    expect(html).toContain("GC-••••-••••-JKLM");
+    expect(html).not.toContain("GC-ABCD-EFGH-JKLM");
+    expect(html).toMatch(/Valid until 10 Nov 2027/);
+    expect(html).toMatch(/<p class="st-ogc-bal">[^<]*<[^>]+>[^<]*60/); // what is left on it
+    expect(html).not.toContain("Print gift card");
+    expect(html).not.toContain('class="st-ogc-acts"');
+    expect(html).toContain('class="st-ogc g-active"');
+    expect(await page(masked({ status: "void" }), "en")).toContain("GC-••••-••••-JKLM"); // a cancelled card says so, masked
+    // the whole code (the account that placed it read it so): Copy and Print gift card
+    const whole = await page(order(), "en");
+    expect(whole).toContain('class="st-ogc-acts"');
+    expect(whole).toContain("Print gift card");
   });
   it("says the booked delivery day only while the order is still to come (F78)", async () => {
     const o = (status: string) => order({ status, slot: { day: "2026-11-27", time: "am" }, delivered_at: null, events: [] });
@@ -339,6 +357,41 @@ describe("the after-the-order routes", () => {
     expect(calls).toHaveLength(0);
   });
 
+  it("read a gift card's whole codes with the order's number, key and gift key, and nothing without all three", async () => {
+    const { POST } = await import("../../app/api/store/gift-codes/route");
+    const GIFT = "b".repeat(32);
+    db(200, RAW);
+    const res = await POST(post("/api/store/gift-codes", { no: 1042, key: KEY, gift: GIFT }));
+    expect(res.status).toBe(200);
+    const b = await res.json();
+    expect(b).toEqual({ ok: true, cards: [{ code: "GC-ABCD-EFGH-JKLM", amount: 100, balance: 100, status: "active", expires_at: "2027-11-10T08:05:00Z", masked: false }] });
+    expect(calls[0].url).toMatch(/\/rpc\/store_order_get$/);
+    expect(calls[0].body).toEqual({ p_key: "k".repeat(40), p_no: 1042, p_track: KEY, p_gift: GIFT });
+    // a wrong gift key: the database masks them, and so does the answer
+    db(200, { ...RAW, gift_cards: [{ code: "GC-••••-••••-JKLM", masked: true, amount: 100, balance: 100, status: "active" }] });
+    expect((await (await POST(post("/api/store/gift-codes", { no: 1042, key: KEY, gift: GIFT }))).json()).cards[0]).toMatchObject({ code: "GC-••••-••••-JKLM", masked: true });
+    db(200, null); // no order with that number and key
+    const none = await POST(post("/api/store/gift-codes", { no: 1042, key: KEY, gift: GIFT }));
+    expect([none.status, (await none.json()).error]).toEqual([404, "not_found"]);
+    db(200, RAW);
+    for (const bad of [{ no: 1042, key: KEY }, { no: 1042, key: KEY, gift: "short" }, { no: 1042, key: "short", gift: GIFT }, { no: 0, key: KEY, gift: GIFT }]) {
+      expect((await POST(post("/api/store/gift-codes", bad))).status).toBe(400);
+    }
+    expect((await POST(post("/api/store/gift-codes", { no: 1042, key: KEY, gift: GIFT }, { origin: "https://evil.test" }))).status).toBe(403);
+    expect(calls).toHaveLength(0);
+  });
+
+  it("give the checkout's browser the gift key of an order that buys gift cards, and no other", async () => {
+    const { POST } = await import("../../app/api/store/checkout/route");
+    const body = { items: [{ variant: U(103), qty: 1 }], fulfil: "digital", contact: { name: "Huda", phone: "0551234567" }, lang: "en" };
+    db(200, { order: { id: "o1", no: 1042, status: "pending", total: 100 }, key: KEY, payment: { id: U(70) }, gift_key: "c".repeat(32) });
+    expect(await (await POST(post("/api/store/checkout", body))).json()).toEqual({ ok: true, no: 1042, key: KEY, url: `/pay/${U(70)}`, giftKey: "c".repeat(32) });
+    db(200, { order: { id: "o1", no: 1043, status: "paid", total: 100 }, key: KEY, payment: null, gift_key: null });
+    expect(await (await POST(post("/api/store/checkout", body))).json()).toEqual({ ok: true, no: 1043, key: KEY, url: `/store/order/1043?k=${KEY}` });
+    db(200, { order: { id: "o1", no: 1044, status: "paid", total: 100 }, key: KEY, payment: null, gift_key: "<script>" });
+    expect((await (await POST(post("/api/store/checkout", body))).json()).giftKey).toBeUndefined();
+  });
+
   it("make no SMSA label while the switch is off or without SMSA's key, and only for staff from the staff page", async () => {
     const { POST } = await import("../../app/api/store/smsa-label/route");
     const staff = { origin: "https://staff-staging.micromobility.sa", authorization: `Bearer ${"j".repeat(40)}` };
@@ -370,5 +423,58 @@ describe("closing the account (L13)", () => {
     expect(del).toContain("showModal()"); // a modal <dialog>, centred (account.css: margin auto)
     expect(src("../../components/account/account.css")).toMatch(/dialog\.ac-dlg \{[^}]*margin: auto/);
     expect(src("../../app/api/account/deletion/route.ts")).toContain('"customer_deletion_request"');
+  });
+});
+
+// ── Gift card codes stay with the buyer (CONTRACTS.md Additions by lead: gift card codes) ──────────
+
+describe("gift card codes stay with the buyer", () => {
+  const src = (p: string) => readFileSync(fileURLToPath(new URL(p, import.meta.url)), "utf8");
+  it("reads a masked code as masked, whether the database says so or only masks it", () => {
+    const card = { amount: 100, balance: 100, status: "active", expires_at: null };
+    expect(order({ gift_cards: [{ ...card, code: "GC-••••-••••-JKLM", masked: true }] }).gift_cards[0].masked).toBe(true);
+    expect(order({ gift_cards: [{ ...card, code: "GC-••••-••••-JKLM" }] }).gift_cards[0].masked).toBe(true);
+    expect(order({ gift_cards: [{ ...card, code: "GC-ABCD-EFGH-JKLM", masked: false }] }).gift_cards[0].masked).toBe(false);
+    expect(order().gift_cards[0].masked).toBe(false); // a database before the fix
+  });
+  it("shows a whole code only where the buyer's read gave the same card whole", () => {
+    const m = (code: string, amount = 100) => ({ code, masked: true, amount });
+    const w = (code: string, amount = 100) => ({ code, masked: false, amount });
+    expect(wholeCodes([m("GC-••••-••••-JKLM"), m("GC-••••-••••-MNPQ", 50)], null)).toEqual([null, null]);
+    expect(wholeCodes([m("GC-••••-••••-JKLM"), m("GC-••••-••••-MNPQ", 50)], [w("GC-ABCD-EFGH-JKLM"), w("GC-RSTU-VWXY-MNPQ", 50)]))
+      .toEqual(["GC-ABCD-EFGH-JKLM", "GC-RSTU-VWXY-MNPQ"]);
+    expect(wholeCodes([m("GC-••••-••••-JKLM")], [m("GC-••••-••••-JKLM")])).toEqual([null]); // a wrong gift key: masked again
+    expect(wholeCodes([m("GC-••••-••••-JKLM")], [w("GC-ABCD-EFGH-ZZZZ")])).toEqual([null]); // another card
+    expect(wholeCodes([m("GC-••••-••••-JKLM")], [w("GC-ABCD-EFGH-JKLM", 50)])).toEqual([null]);
+    expect(wholeCodes([m("GC-••••-••••-JKLM"), m("GC-••••-••••-MNPQ")], [w("GC-ABCD-EFGH-JKLM")])).toEqual(["GC-ABCD-EFGH-JKLM", null]);
+    expect(wholeCodes([w("GC-ABCD-EFGH-JKLM")], null)).toEqual(["GC-ABCD-EFGH-JKLM"]); // read whole already (the account's own)
+  });
+  it("keeps each order's gift key in this browser, newest first, one per order, 20 at most", () => {
+    const k = (c: string) => c.repeat(32);
+    expect(GIFT_KEYS_KEY).toBe("mm-gift-keys");
+    expect(parseGiftKeys(JSON.stringify([{ no: 7, key: k("a") }, { no: 7, key: k("b") }, { no: 8, key: "short" }, { no: -1, key: k("c") }, { no: 9, key: k("D") }, null, "x"])))
+      .toEqual([{ no: 7, key: k("a") }, { no: 9, key: k("d") }]);
+    expect(parseGiftKeys("not json")).toEqual([]);
+    expect(parseGiftKeys({ no: 7, key: k("a") })).toEqual([]);
+    const list = giftKeyFirst(giftKeyFirst([], 7, k("a")), 8, k("b"));
+    expect(list).toEqual([{ no: 8, key: k("b") }, { no: 7, key: k("a") }]);
+    expect(giftKeyFirst(list, 7, k("c"))).toEqual([{ no: 7, key: k("c") }, { no: 8, key: k("b") }]);
+    expect(giftKeyFirst(list, 9, "nope")).toEqual(list);
+    expect(giftKeyOf(list, 7)).toBe(k("a"));
+    expect(giftKeyOf(list, 10)).toBeNull();
+    let many: { no: number; key: string }[] = [];
+    for (let i = 1; i <= 25; i++) many = giftKeyFirst(many, i, k("e"));
+    expect(many).toHaveLength(MAX_GIFT_KEYS);
+    expect(many[0].no).toBe(25);
+  });
+  it("is kept by the checkout, asked for by the order's page, and read for the account that placed the order", () => {
+    const checkout = src("../../components/store/CheckoutForm.tsx");
+    expect(checkout).toContain("giftKeyKeep(b.no, b.giftKey)");
+    const after = src("../../components/store/OrderAfter.tsx");
+    expect(after).toContain('post("/api/store/gift-codes", { no, key: k, gift })');
+    expect(after).toContain("giftKeyFor(no)");
+    const pageSrc = src("../../app/[locale]/store/order/[no]/page.tsx");
+    expect(pageSrc).toContain('rpcServer<unknown>("customer_orders", { p_id: acct.id, p_token: acct.token })');
+    expect(pageSrc).toContain("read.gift_cards.some((g) => g.masked)");
   });
 });

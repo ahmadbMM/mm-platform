@@ -2,18 +2,22 @@
 
 import { useSyncExternalStore } from "react";
 import type { CartItem } from "@/lib/cart";
-import { LATER_KEY, MAX_RECENT, MAX_SAVED, parseLater, parseSlugs, RECENT_KEY, SAVED_KEY, slugFirst, slugToggle } from "@/lib/store-lists";
+import {
+  GIFT_KEYS_KEY, giftKeyFirst, giftKeyOf, LATER_KEY, MAX_RECENT, MAX_SAVED, parseGiftKeys, parseLater, parseSlugs, RECENT_KEY, SAVED_KEY, slugFirst,
+  slugToggle, type GiftKey,
+} from "@/lib/store-lists";
 
 // The store's browser-kept lists (lib/store-lists.ts) the way useCart keeps the cart: one copy per key here, every
 // component that shows a list re-drawn when it changes, in this tab and in another through the storage event. A page is
 // drawn with empty lists and fills in once it runs in the browser.
 
-type Kind = "saved" | "recent" | "later";
-const KEYS: Record<Kind, string> = { saved: SAVED_KEY, recent: RECENT_KEY, later: LATER_KEY };
+type Kind = "saved" | "recent" | "later" | "gifts";
+const KEYS: Record<Kind, string> = { saved: SAVED_KEY, recent: RECENT_KEY, later: LATER_KEY, gifts: GIFT_KEYS_KEY };
 const parse: Record<Kind, (raw: unknown) => unknown[]> = {
   saved: (r) => parseSlugs(r, MAX_SAVED),
   recent: (r) => parseSlugs(r, MAX_RECENT),
   later: (r) => parseLater(r),
+  gifts: (r) => parseGiftKeys(r),
 };
 const EMPTY: unknown[] = [];
 const cache: Partial<Record<Kind, unknown[]>> = {};
@@ -68,3 +72,9 @@ export function laterPut(item: CartItem) {
   write("later", parseLater([item, ...was.filter((l) => l.variant !== item.variant.toLowerCase())]));
 }
 export const laterRemove = (variant: string) => write("later", (read("later") as CartItem[]).filter((l) => l.variant !== variant.toLowerCase()));
+
+/** Keeps the gift key the checkout gave for an order that buys gift cards: this browser alone then shows their whole codes
+ *  on the order's page (the order's link and Track order show them masked). */
+export const giftKeyKeep = (no: number, key: string) => write("gifts", giftKeyFirst(read("gifts") as GiftKey[], no, key));
+/** The gift key this browser kept for the order, or null. */
+export const giftKeyFor = (no: number): string | null => giftKeyOf(read("gifts") as GiftKey[], no);

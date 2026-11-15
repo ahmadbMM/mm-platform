@@ -9,6 +9,8 @@ import { payRpc, type PayView } from "@/lib/pay/server";
 // Body: {items:[{variant, qty}], fulfil, contact:{name, phone, email}, address?, note?, wallet?, lang}, and since the store
 // build (2026-11-15, CONTRACTS.md section 5.1) promo?, giftCard?, gift?, giftNote?, slot?: {day, time}; fulfil "digital"
 // for gift cards alone. The database checks every one of them (the licence, the code, the card, the slot).
+// An order that buys gift cards also answers its gift key (giftKey): the checkout's browser keeps it, and it alone then
+// sees the cards' whole codes on the order's page (CONTRACTS.md Additions by lead: gift card codes).
 export async function POST(req: Request) {
   const g = await guard(req, { signin: false });
   if (!g.ok) return g.res;
@@ -38,17 +40,18 @@ export async function POST(req: Request) {
     gift_note: b.gift === true ? str(b.giftNote, 200) : undefined,
     slot: slotOf(b.slot),
   };
-  const r = await payRpc<{ order: { id: string; no: number; status: string; total: number }; key: string; payment: PayView | null }>("store_checkout", {
+  const r = await payRpc<{ order: { id: string; no: number; status: string; total: number }; key: string; payment: PayView | null; gift_key?: string | null }>("store_checkout", {
     p_id: g.acct?.id ?? null, p_token: g.acct?.token ?? null, p_order: order,
   });
   if (r.status !== 200 || !r.data) {
     const e = payError(r);
     return json({ ok: false, error: e.error, variant: refusedVariant(r.message) }, e.status);
   }
-  const { order: o, key, payment } = r.data;
+  const { order: o, key, payment, gift_key } = r.data;
   return json({
     ok: true, no: o.no, key,
     url: payment ? `/pay/${payment.id}` : `/store/order/${o.no}?k=${key}`,
+    ...(typeof gift_key === "string" && /^[0-9a-f]{32}$/.test(gift_key) ? { giftKey: gift_key } : {}),
   });
 }
 

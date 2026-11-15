@@ -24,8 +24,11 @@ export type OrderReturn = {
   reason: ReturnReason; note: string | null; amount: number | null; created_at: string; decided_at: string | null;
 };
 /** expires_at: a year after it was issued (the owner, 2026-11-15; CONTRACTS.md Additions by lead 3), null from a database
- *  that does not say yet. */
-export type IssuedGiftCard = { code: string; amount: number; balance: number; status: "active" | "void"; expires_at: string | null };
+ *  that does not say yet. masked: the code is shown as "GC-••••-••••-JKLM" (CONTRACTS.md Additions by lead: gift card
+ *  codes): a code is the money, so the database gives the whole one only to staff and to its buyer (the order's gift key
+ *  this browser kept from the checkout, or the account that placed the order); the order's link and Track order alone
+ *  read it masked. */
+export type IssuedGiftCard = { code: string; amount: number; balance: number; status: "active" | "void"; expires_at: string | null; masked: boolean };
 /** dest: "card", "wallet" or "gift" (back onto the gift card that paid). */
 export type OrderRefund = { amount: number; dest: string; status: string; at: string };
 export type OrderPayment = { id: string; status: string; method: string | null; brand: string | null; last4: string | null; receipt_no: number | null; expires_at: string; paid_at: string | null; amount: number };
@@ -88,7 +91,8 @@ export function orderOf(data: unknown, key: string | null = null): Order | null 
     slot: slotOf(o.slot), delivered_at: s(o.delivered_at),
     returns: arr(o.returns).map(returnOf).filter((r): r is OrderReturn => !!r),
     gift_cards: arr(o.gift_cards).filter((g) => typeof g.code === "string" && g.code).map((g) => ({
-      code: String(g.code), amount: n(g.amount), balance: n(g.balance), status: g.status === "void" ? "void" : "active", expires_at: s(g.expires_at) })),
+      code: String(g.code), amount: n(g.amount), balance: n(g.balance), status: g.status === "void" ? "void" : "active", expires_at: s(g.expires_at),
+      masked: g.masked === true || String(g.code).includes("•") })),
   };
 }
 

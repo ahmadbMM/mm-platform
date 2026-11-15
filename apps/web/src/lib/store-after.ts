@@ -1,4 +1,4 @@
-import { outAt, reviewable, type Order, type OrderItem, type OrderReturn, type ReturnReason, RETURN_REASONS } from "./store-order";
+import { outAt, reviewable, type IssuedGiftCard, type Order, type OrderItem, type OrderReturn, type ReturnReason, RETURN_REASONS } from "./store-order";
 import { DEFAULT_SLOTS, type Slots } from "./store-settings";
 import { zatcaQr } from "./zatca";
 
@@ -113,6 +113,17 @@ export function giftState(g: { status: string; balance: number; expires_at: stri
   const exp = g.expires_at ? Date.parse(g.expires_at) : NaN;
   if (Number.isFinite(exp) && exp <= now) return "expired";
   return g.balance <= 0 ? "spent" : "active";
+}
+
+/** Each gift card's whole code to show, copy and print, in the order the page lists them: its own when the page has it
+ *  whole, else the one the buyer's gift key read (store_order_get, the same order of cards) when that is whole and ends as
+ *  the masked one does, else null (the page shows the masked code, and nothing to copy or print). */
+export function wholeCodes(shown: readonly Pick<IssuedGiftCard, "code" | "masked" | "amount">[], got: readonly Pick<IssuedGiftCard, "code" | "masked" | "amount">[] | null): (string | null)[] {
+  return shown.map((g, i) => {
+    if (!g.masked) return g.code;
+    const w = got?.[i];
+    return w && !w.masked && w.amount === g.amount && w.code.slice(-4) === g.code.slice(-4) ? w.code : null;
+  });
 }
 
 /** The delivery day and hours a scheduled Jeddah order was booked for (F78), with the hours of the slot staff offer (or

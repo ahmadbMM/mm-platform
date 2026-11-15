@@ -24,6 +24,7 @@ import { AddressFields, Field } from "./CheckoutFields";
 import { CodeRow, GiftCardBox, Off, Pills, Step, type StepState } from "./CheckoutBits";
 import Modal from "./Modal";
 import { cartClear, savedFulfil, saveFulfil, useCart, useHydrated } from "./useCart";
+import { giftKeyKeep } from "./useLists";
 import { useGiftCard, usePromo } from "./useCode";
 import type { Whens } from "./CartView";
 
@@ -267,9 +268,11 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
         gift: !digital && draft.gift, giftNote: draft.giftNote, slot: slotsOn ? draft.slot : null,
       });
       const r = await fetch("/api/store/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-      const b = (await r.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string; variant?: string | null };
+      const b = (await r.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string; variant?: string | null; no?: number; giftKey?: string };
       if (b.ok && b.url) {
         promo.remove(); // the code is the order's now
+        // the gift cards' whole codes are this browser's alone: their order's page asks for them with this key
+        if (typeof b.no === "number" && typeof b.giftKey === "string") giftKeyKeep(b.no, b.giftKey);
         onPlaced(b.url); // the cart emptied and off to the next page (CheckoutForm)
         return; // the button stays busy while the next page loads
       }

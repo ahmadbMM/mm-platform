@@ -7,12 +7,13 @@ import TrackForm from "@/components/store/TrackForm";
 import { storeState } from "@/components/store/store-data";
 import { T as STORE_T } from "@/components/store/Store.text";
 import { T as W5 } from "@/components/store/w5.text";
-import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
+import { rpcServer } from "@/lib/account";
+import { ACCOUNT_COOKIE, decodeSession, type Session } from "@/lib/account-core";
 import { bookingLink } from "@/lib/links";
 import { payRpc } from "@/lib/pay/server";
 import { slotWhen } from "@/lib/store-after";
 import { fmtRange } from "@/lib/store-delivery";
-import { orderExpected, orderOf } from "@/lib/store-order";
+import { orderExpected, orderOf, type Order } from "@/lib/store-order";
 import { POLICY } from "@/lib/store-policy";
 import { deliverySlots, storeLegal } from "@/lib/store-settings";
 import { serverLocalize } from "@/i18n/dicts";
@@ -24,7 +25,9 @@ import "@/components/store/store.css";
 // (components/store/OrderView.tsx), read by this server with the order's own key (store_order_get). The
 // payment page sends the customer here, and so do Track order and My Account. Without a key that matches,
 // the page asks for the order number and the mobile it was placed with. It answers whether the store is
-// open or not: an order placed before it closed must stay reachable.
+// open or not: an order placed before it closed must stay reachable. The gift cards it bought show their codes
+// masked (the key is what Track order hands anyone with the number and the phone), whole only for their buyer: the
+// account that placed the order (read here, customer_orders) or the browser that placed it (its gift key, GiftReveal).
 type Props = { params: Promise<{ locale: string; no: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -40,7 +43,9 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const num = /^\d{1,9}$/.test(no) ? Number(no) : null;
   const s = await storeState(locale);
   const r = key && num ? await payRpc<unknown>("store_order_get", { p_no: num, p_track: key }) : null;
-  const o = r && r.status === 200 ? orderOf(r.data, key) : null;
+  const read = r && r.status === 200 ? orderOf(r.data, key) : null;
+  const acct = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
+  const o = read && acct && read.gift_cards.some((g) => g.masked) ? await withOwnCodes(read, acct) : read;
   const { t, site } = s;
   const S = (v: unknown) => (typeof v === "string" ? v : "");
 
@@ -57,7 +62,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
   }
   const now = new Date().getTime(); // the server draws the page once: the hold and the day to report a mistake are read from it
   const expected = orderExpected(o, s.settings);
-  const guest = !decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
+  const guest = !acct;
   const app = navFrom(site).booking.replace(/[?#].*$/, "");
   // the seller as the invoice names it (L06): the store's one legal identity (lib/store-settings.ts storeLegal), the
   // legal name in the page's language with the other one beside it, the Arabic one in ZATCA's QR
@@ -88,4 +93,12 @@ export default async function OrderPage({ params, searchParams }: Props) {
       />
     </PageShell>
   );
+}
+
+/** The order with its gift cards' whole codes when the signed-in account placed it (customer_orders answers its own orders'
+ *  codes whole; CONTRACTS.md Additions by lead: gift card codes); as it was read otherwise. */
+async function withOwnCodes(o: Order, acct: Session): Promise<Order> {
+  const r = await rpcServer<unknown>("customer_orders", { p_id: acct.id, p_token: acct.token });
+  const mine = r.status === 200 && Array.isArray(r.data) ? r.data.map((x) => orderOf(x)).find((x) => !!x && x.id === o.id) : null;
+  return mine ? { ...o, gift_cards: mine.gift_cards } : o;
 }

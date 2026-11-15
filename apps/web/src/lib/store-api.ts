@@ -3,7 +3,7 @@ import type { CartItem } from "./cart";
 import { payError } from "./pay/http";
 import { payRpc, payView } from "./pay/server";
 import { tabbyCheckout, type TabbyOrder } from "./pay/tabby";
-import { orderOf, RETURN_REASONS, type Order, type ReturnReason } from "./store-order";
+import { orderOf, RETURN_REASONS, type IssuedGiftCard, type Order, type ReturnReason } from "./store-order";
 
 // The store build's calls to the database from this server (2026-11-15, rentals migration 20261115200100;
 // CONTRACTS.md sections 5.1 and 6). Each takes the server key the way store_checkout does (payRpc), so the public key
@@ -90,6 +90,19 @@ export async function reviewAdd(a: { no: number; key: string; product: string; r
     p_no: a.no, p_track: a.key, p_product: a.product, p_rating: a.rating, p_body: a.body.trim().slice(0, 1000) || null,
     p_lang: a.lang && LANG.test(a.lang) ? a.lang : null,
   }), (d) => typeof d.id === "string");
+}
+
+/** The gift cards an order bought, with their whole codes for its buyer (store_order_get with the order's gift key, which
+ *  the checkout gave this buyer's browser; CONTRACTS.md Additions by lead: gift card codes). A wrong gift key reads them
+ *  masked, as the order's link alone does; "not_found" for a number and key that name no order. */
+export async function giftCodes(a: { no: number; key: string; gift: string }): Promise<ApiAnswer<IssuedGiftCard[]>> {
+  if (!Number.isInteger(a.no) || a.no < 1 || !KEY32.test(a.key) || !KEY32.test(a.gift)) return bad();
+  const r = await payRpc<unknown>("store_order_get", { p_no: a.no, p_track: a.key, p_gift: a.gift.toLowerCase() });
+  if (r.status === 200 && r.data == null) return { ok: false, error: "not_found", status: 404 };
+  const got = answer(r);
+  if (!got.ok) return got;
+  const o = orderOf(got.data, a.key);
+  return o ? { ok: true, data: o.gift_cards } : { ok: false, error: "generic", status: 502 };
 }
 
 // ── The outside services, built but off until their keys exist ────────────────────────────────

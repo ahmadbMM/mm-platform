@@ -15,16 +15,16 @@ import { Amt, Ic, NoPhoto, WhatsAppMark } from "./bits";
 import { StIcon } from "./icons";
 import InvoiceQr from "./InvoiceQr";
 import { CopyNo, PrintButton, PutBack } from "./OrderActions";
-import { GiftPrint, ReturnStart, ReviewAsk } from "./OrderAfter";
+import { GiftActs, GiftCode, GiftReveal, ReturnStart, ReviewAsk } from "./OrderAfter";
 
 // An order's page: confirmation, tracking and the invoice in one, to keep or print. The number to copy, where
 // the order is (paid, preparing, ready or on its way, out for delivery today, then collected or delivered), when it is
 // expected or the day booked, the courier's tracking number once it is sent, the gift cards it bought with their codes
-// to print, a review asked of each product once it is delivered, the simplified tax invoice (every line and amount with
-// the VAT, the seller's name, address, VAT and CR numbers, its own number and ZATCA's QR, the labels in Arabic beside the
-// page's language) with every refund under it, what happened to it, the return terms with a return or exchange to ask
-// for, and the workshop. An unpaid order offers its payment while the items are held; one that was never paid can put
-// its items back in the cart.
+// to print (whole for their buyer alone, else masked: GiftReveal), a review asked of each product once it is delivered,
+// the simplified tax invoice (every line and amount with the VAT, the seller's name, address, VAT and CR numbers, its own
+// number and ZATCA's QR, the labels in Arabic beside the page's language) with every refund under it, what happened to
+// it, the return terms with a return or exchange to ask for, and the workshop. An unpaid order offers its payment while
+// the items are held; one that was never paid can put its items back in the cart.
 export type Seller = {
   trade: string; legal: string; vat: string; cr: string; address: string;
   /** The legal name the QR carries (the Arabic one, as registered), and the one beside the page's. */
@@ -142,32 +142,34 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
       </section>
 
       {o.gift_cards.length > 0 && (
-        <section className="st-ogcs" aria-labelledby="st-ogcs-h">
-          <h2 id="st-ogcs-h">{w.giftCardsH}</h2>
-          <ul>
-            {o.gift_cards.map((g) => {
-              const st = giftState(g, now);
-              const id = `st-ogc-${g.code}`;
-              return (
-                <li key={g.code} id={id} className={`st-ogc g-${st}`}>
-                  <div className="st-ogc-card">
-                    <p className="st-ogc-brand"><span>{seller.trade}</span><StIcon name="gift" size={22} /></p>
-                    <p className="st-ogc-name">{w.giftCard}</p>
-                    <p className="st-ogc-amt"><Amt>{sar(g.amount)}</Amt></p>
-                    <p className="st-ogc-code"><bdi dir="ltr">{g.code}</bdi></p>
-                    {g.expires_at && st !== "void" && <p className="st-ogc-exp">{w.giftValid(day(g.expires_at))}</p>}
-                    <p className="st-ogc-site" dir="ltr">micromobility.sa/store</p>
-                  </div>
-                  <div className="st-ogc-meta">
-                    {st !== "active" && <p className={`st-pill g-${st}`}>{w.giftState[st]}</p>}
-                    {st === "active" && g.balance < g.amount && <p className="st-ogc-bal"><Amt>{t.balance(sar(g.balance))}</Amt></p>}
-                    {st === "active" && <div className="st-ogc-acts"><CopyNo text={g.code} /><GiftPrint target={id} /></div>}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+        <GiftReveal no={o.no} k={o.key} cards={o.gift_cards}>
+          <section className="st-ogcs" aria-labelledby="st-ogcs-h">
+            <h2 id="st-ogcs-h">{w.giftCardsH}</h2>
+            <ul>
+              {o.gift_cards.map((g, i) => {
+                const st = giftState(g, now);
+                const id = `st-ogc-${i + 1}`;
+                return (
+                  <li key={id} id={id} className={`st-ogc g-${st}`}>
+                    <div className="st-ogc-card">
+                      <p className="st-ogc-brand"><span>{seller.trade}</span><StIcon name="gift" size={22} /></p>
+                      <p className="st-ogc-name">{w.giftCard}</p>
+                      <p className="st-ogc-amt"><Amt>{sar(g.amount)}</Amt></p>
+                      <p className="st-ogc-code"><GiftCode i={i} code={g.code} /></p>
+                      {g.expires_at && st !== "void" && <p className="st-ogc-exp">{w.giftValid(day(g.expires_at))}</p>}
+                      <p className="st-ogc-site" dir="ltr">micromobility.sa/store</p>
+                    </div>
+                    <div className="st-ogc-meta">
+                      {st !== "active" && <p className={`st-pill g-${st}`}>{w.giftState[st]}</p>}
+                      {st === "active" && g.balance < g.amount && <p className="st-ogc-bal"><Amt>{t.balance(sar(g.balance))}</Amt></p>}
+                      {st === "active" && <GiftActs i={i} target={id} />}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        </GiftReveal>
       )}
 
       {o.key && toReview.length > 0 && <ReviewAsk no={o.no} k={o.key} lang={locale} items={toReview} />}
