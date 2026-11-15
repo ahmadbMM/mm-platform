@@ -573,3 +573,139 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-policy p + p { margin-top: 8px; }
 .st-policy .st-policy-lead { font-weight: 600; color: #1a1919; }
 .st-nt-msg { margin: 0 0 12px; }
+
+/* ── w3b: the product page's sections below the buy box (store build 2026-11-15): F36 the grouped specification table,
+   F37 what's in the box, F38 the fit panel, F30 + D17-C the add-ons with their own Add (D14-E "Added"), F31 the starter
+   set, F10 + O09-B the comparison, F52 trade-in, F42 verified buyers' reviews, F41 questions. Nothing fixed to the
+   screen; logical properties, so Arabic mirrors. ── */
+.st-pd-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.st-pd-sec { margin-top: 44px; }
+.st-pd-sec > h2 { font-size: clamp(22px, 2.4vw, 28px); letter-spacing: -.8px; margin: 0 0 14px; }
+html:is([lang="ar"], [lang="ur"]) .st-pd-sec > h2 { letter-spacing: 0; }
+.st-pd-chev { color: #4a4843; transition: transform .2s ease; }
+
+/* F36: the specification table */
+.st-pd-spec { width: 100%; border-collapse: separate; border-spacing: 0; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; overflow: hidden; }
+.st-pd-spec th, .st-pd-spec td { padding: 12px 16px; text-align: start; vertical-align: top; }
+.st-pd-spec tr + tr > *, .st-pd-spec tbody + tbody > tr:first-child > * { border-top: 1px solid rgba(26, 25, 25, .08); }
+.st-pd-spec .st-pd-spec-g + tr > * { border-top: 0; }
+.st-pd-spec th[scope="row"] { width: 38%; min-width: 110px; font-size: 13.5px; font-weight: 600; color: #4a4843; }
+.st-pd-spec td { font-size: 14.5px; overflow-wrap: anywhere; }
+.st-pd-spec-g th { padding-block: 16px 4px; font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #077a4b; }
+html:is([lang="ar"], [lang="ur"]) .st-pd-spec-g th { letter-spacing: 0; text-transform: none; font-size: 13px; }
+.st-pd-basis { color: #6e6b63; }
+
+/* F37, F38: two small cards side by side from 700px (one alone takes the row) */
+.st-pd-pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(320px, 100%), 1fr)); gap: 16px; align-items: start; margin-top: 44px; }
+.st-pd-pair:empty { display: none; }
+.st-pd-card { background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; padding: 16px 18px; }
+.st-pd-h3 { margin: 0 0 12px; font-size: 18px !important; letter-spacing: 0 !important; font-weight: 700; }
+.st-pd-box { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr)); gap: 10px 16px; }
+.st-pd-box li { display: flex; align-items: center; gap: 10px; font-size: 14.5px; line-height: 1.35; }
+.st-pd-box-ic { width: 40px; height: 40px; flex: none; border-radius: 10px; background: #f4f1ea; color: #1a1919; display: inline-flex; align-items: center; justify-content: center; }
+.st-pd-fit { margin: 0; }
+.st-pd-fit > div { display: grid; grid-template-columns: minmax(90px, 34%) 1fr; gap: 12px; padding: 10px 0; }
+.st-pd-fit > div:first-child { padding-top: 0; }
+.st-pd-fit > div + div { border-top: 1px solid rgba(26, 25, 25, .08); }
+.st-pd-fit dt { font-size: 13.5px; font-weight: 600; color: #4a4843; }
+.st-pd-fit dd { margin: 0; font-size: 14.5px; font-weight: 600; }
+
+/* F30, D17-C: Complete your ride */
+.st-pd-addons { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.st-pd-addon { display: flex; flex-direction: column; gap: 8px; padding-bottom: 12px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; overflow: hidden; }
+.st-pd-addon-link { display: flex; flex-direction: column; gap: 4px; color: inherit !important; text-decoration: none !important; }
+.st-pd-addon-img { position: relative; display: block; aspect-ratio: 1 / 1; background: #fff; border-bottom: 1px solid rgba(26, 25, 25, .08); }
+.st-pd-addon-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 10px; box-sizing: border-box; }
+.st-pd-addon-link .st-brand { margin-top: 6px; }
+.st-pd-addon-link .st-brand, .st-pd-addon-name, .st-pd-addon-price, .st-pd-addon > .st-pd-pick, .st-pd-addon > .st-pd-add, .st-pd-addon > .st-need { margin-inline: 12px; }
+.st-pd-addon-name { font-size: 15px; line-height: 1.3; letter-spacing: -.2px; }
+.st-pd-addon-link:hover .st-pd-addon-name { color: #077a4b; }
+.st-pd-addon-price { margin-block: 0; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.st-pd-addon > .st-pd-add { margin-top: auto; }
+.st-pd-addon > .st-need { margin-block: 0; font-size: 13px; }
+.st-pd-pick { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.st-pd-pick select { width: 100%; min-height: 44px; padding: 0 10px; border: 1px solid rgba(26, 25, 25, .24); border-radius: 10px; background: #fff; color: #1a1919; font: inherit; font-size: 16px; }
+.st-pd-pick select[aria-invalid="true"] { border-color: #a33b2e; }
+.st-pd-pick-k { font-size: 13px; font-weight: 600; color: #4a4843; }
+.st-pd-add { min-height: 44px; padding: 0 16px; font-size: 14.5px; }
+.st-pd-add.is-added { border-color: #077a4b; background: rgba(7, 122, 75, .07); color: #077a4b !important; }
+@media (min-width: 700px) { .st-pd-addons { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; } }
+@media (min-width: 1000px) { .st-pd-addons { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+/* F31: the starter set */
+.st-pd-set { display: grid; gap: 16px; padding: 18px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; }
+.st-pd-set-imgs { display: flex; }
+.st-pd-set-imgs > span { position: relative; width: 84px; height: 84px; flex: none; border-radius: 14px; background: #fff; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(26, 25, 25, .14); overflow: hidden; }
+.st-pd-set-imgs > span + span { margin-inline-start: -18px; }
+.st-pd-set-imgs img { width: 100%; height: 100%; object-fit: contain; padding: 6px; box-sizing: border-box; }
+.st-pd-set-names { margin: 0 0 6px; font-size: 16px; font-weight: 700; line-height: 1.4; }
+.st-pd-set-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; margin: 0; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.st-pd-set-price .st-was { font-size: 15px; }
+.st-pd-save { align-self: center; padding: 3px 10px; border-radius: 999px; background: rgba(7, 122, 75, .1); color: #077a4b; font-size: 13px; font-weight: 700; }
+.st-pd-set .st-vat { margin: 2px 0 14px; }
+.st-pd-lic { white-space: nowrap; }
+.st-pd-set-picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr)); gap: 10px; margin: 0 0 14px; }
+.st-pd-set-add.is-added { background: #06603b; }
+.st-pd-set-body > .st-need { margin-top: 10px; }
+@media (min-width: 700px) {
+  .st-pd-set { grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 28px; padding: 22px 24px; }
+  .st-pd-set-imgs > span { width: 112px; height: 112px; }
+  .st-pd-set-imgs > span + span { margin-inline-start: -26px; }
+}
+
+/* F10, O09-B: the comparison; four columns scroll inside the box, never the page */
+.st-pd-cmp-wrap { overflow-x: auto; margin-inline: -16px; padding: 2px 16px; scrollbar-width: thin; }
+.st-pd-cmp-wrap:focus-visible { outline: 2px solid #077a4b; outline-offset: -2px; }
+/* the columns share the width equally, so this one (the first, at the start) is tinted from the table's own background:
+   a column's background would also paint the fact names that span every column */
+.st-pd-cmp { --cur: 50%; width: 100%; table-layout: fixed; border-collapse: separate; border-spacing: 0; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; overflow: hidden;
+  background: linear-gradient(to right, rgba(7, 122, 75, .06) var(--cur), #fff var(--cur)) #fff; }
+[dir="rtl"] .st-pd-cmp { background: linear-gradient(to left, rgba(7, 122, 75, .06) var(--cur), #fff var(--cur)) #fff; }
+.st-pd-cmp.n3 { --cur: 33.3333%; min-width: 330px; }
+.st-pd-cmp.n4 { --cur: 25%; min-width: 540px; }
+.st-pd-cmp thead th { padding: 14px 10px 16px; vertical-align: top; text-align: center; font-weight: 400; }
+.st-pd-cmp-img { position: relative; display: block; aspect-ratio: 1 / 1; max-width: 160px; margin: 0 auto 10px; border-radius: 10px; background: #fff; overflow: hidden; }
+.st-pd-cmp-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.st-pd-cmp-name { display: block; font-size: 14.5px; line-height: 1.3; font-weight: 700; overflow-wrap: anywhere; }
+.st-pd-cmp-price { display: block; margin: 4px 0 10px; font-size: 14.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.st-pd-cur { display: inline-flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 999px; background: #1a1919; color: #fbf9f4; font-size: 12.5px; font-weight: 700; line-height: 1.2; }
+.st-pd-cmp .st-pd-view { min-height: 40px; padding: 0 16px; font-size: 13.5px; }
+.st-pd-cmp-k th { padding: 12px 10px 2px; border-top: 1px solid rgba(26, 25, 25, .08); font-size: 12px; font-weight: 700; color: #6e6b63; text-align: center; }
+.st-pd-cmp td { padding: 2px 10px 12px; text-align: center; vertical-align: top; font-size: 14px; overflow-wrap: anywhere; }
+
+/* F52: trade-in */
+.st-pd-trade { display: flex; align-items: center; gap: 12px; margin-top: 44px; min-height: 68px; padding: 12px 16px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; color: #1a1919 !important; text-decoration: none !important; transition: border-color .2s ease; }
+.st-pd-trade:hover { border-color: rgba(7, 122, 75, .5); }
+.st-pd-trade-ic { width: 44px; height: 44px; flex: none; border-radius: 10px; background: #f4f1ea; display: inline-flex; align-items: center; justify-content: center; }
+.st-pd-trade b { flex: 1; min-width: 0; font-size: 15.5px; }
+.st-pd-trade-wa { display: inline-flex; color: #077a4b; }
+.st-pd-trade > .st-ic:last-child { color: #6e6b63; }
+
+/* F42: reviews */
+.st-pd-rev-sum { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: -4px 0 14px; font-size: 14.5px; color: #4a4843; }
+.st-pd-rev-sum b { font-size: 20px; color: #1a1919; font-variant-numeric: tabular-nums; }
+.st-pd-stars { display: inline-flex; gap: 2px; color: rgba(26, 25, 25, .28); }
+.st-pd-stars .on { color: #8a5c14; }
+.st-pd-revs { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.st-pd-revs li { display: flex; flex-direction: column; gap: 8px; padding: 16px 18px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; }
+.st-pd-revs p { margin: 0; font-size: 15px; line-height: 1.6; white-space: pre-line; overflow-wrap: anywhere; }
+.st-pd-revs small { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #4a4843; }
+.st-pd-revs small .st-ic { color: #077a4b; }
+.st-pd-more { margin-top: 12px; }
+.st-pd-more > summary { list-style: none; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border: 1px solid rgba(26, 25, 25, .24); border-radius: 999px; background: #fff; font-size: 14px; font-weight: 600; cursor: pointer; }
+.st-pd-more > summary:hover { background: #f4f1ea; }
+.st-pd-more[open] > summary { display: none; }
+.st-pd-more > .st-pd-revs { margin-top: 0; }
+@media (min-width: 900px) { .st-pd-revs { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* F41: questions */
+.st-pd-faq { max-width: 860px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; overflow: hidden; }
+.st-pd-faq details + details { border-top: 1px solid rgba(26, 25, 25, .08); }
+.st-pd-faq summary { list-style: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 12px 18px; cursor: pointer; font-size: 15.5px; font-weight: 600; line-height: 1.4; }
+.st-pd-faq summary:hover { background: #f4f1ea; }
+.st-pd-faq summary:focus-visible { outline: 2px solid #077a4b; outline-offset: -2px; }
+.st-pd-faq summary::-webkit-details-marker, .st-pd-more > summary::-webkit-details-marker { display: none; }
+.st-pd-faq details[open] .st-pd-chev { transform: rotate(180deg); }
+.st-pd-faq-a { padding: 0 18px 14px; }
+.st-pd-faq-a p { margin: 0 0 10px; font-size: 15px; line-height: 1.65; color: #2e352f; }
+@media (prefers-reduced-motion: reduce) { .st-pd-chev, .st-pd-trade { transition: none; } }

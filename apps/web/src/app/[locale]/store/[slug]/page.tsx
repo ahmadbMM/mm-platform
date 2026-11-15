@@ -7,7 +7,9 @@ import RecordView from "@/components/store/RecordView";
 import { topProps } from "@/components/store/pdp-top";
 import { openOr404, storeState } from "@/components/store/store-data";
 import { Link } from "@/i18n/navigation";
-import { categoryHref, findProduct, paragraphs, pick, productHref, specRows } from "@/lib/store";
+import { categoryHref, findProduct, paragraphs, pick, productHref } from "@/lib/store";
+import { specTable } from "@/lib/store-sections";
+import { CompareBikes, CompleteRide, FitPanel, InTheBox, ProductFaq, ProductJsonLd, ProductReviews, SpecTable, StarterBundle, TradeIn } from "@/components/store/pdp";
 import "@/components/experiences/experiences.css";
 import "@/components/store/store.css";
 
@@ -37,7 +39,7 @@ export default async function ProductPage({ params }: Props) {
   const { t } = s;
   const name = pick(locale, p.name_en, p.name_ar);
   const desc = paragraphs(pick(locale, p.description_en, p.description_ar));
-  const specs = specRows(p, locale);
+  const specs = specTable(p, locale);
   return (
     <PageShell locale={locale} site={s.site} preview={s.previewing} hidden={s.hidden}>
       <div className="st">
@@ -61,13 +63,24 @@ export default async function ProductPage({ params }: Props) {
             {specs.length > 0 && (
               <section aria-labelledby="st-spec-h">
                 <h2 id="st-spec-h">{t.specs}</h2>
-                <dl className="st-specs">
-                  {specs.map(([k, v], i) => <div key={i}><dt>{k}</dt><dd>{v}</dd></div>)}
-                </dl>
+                <SpecTable groups={specs} locale={locale} />
               </section>
             )}
           </div>
         )}
+        {/* w3b sections */}
+        <div className="st-pd-pair">
+          <FitPanel p={p} locale={locale} />
+          <InTheBox p={p} locale={locale} />
+        </div>
+        <CompleteRide store={s.store} p={p} locale={locale} />
+        <StarterBundle store={s.store} p={p} locale={locale} licence={s.licence} />
+        <CompareBikes store={s.store} p={p} locale={locale} />
+        <TradeIn p={p} locale={locale} site={s.site} />
+        <ProductReviews p={p} locale={locale} />
+        <ProductFaq p={p} locale={locale} />
+        <ProductJsonLd p={p} locale={locale} />
+        {/* end w3b */}
       </div>
     </PageShell>
   );
