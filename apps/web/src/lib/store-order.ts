@@ -23,7 +23,9 @@ export type OrderReturn = {
   id: string; kind: "return" | "exchange"; status: "open" | "approved" | "refused"; items: { item_id: number; qty: number }[];
   reason: ReturnReason; note: string | null; amount: number | null; created_at: string; decided_at: string | null;
 };
-export type IssuedGiftCard = { code: string; amount: number; balance: number; status: "active" | "void" };
+/** expires_at: a year after it was issued (the owner, 2026-11-15; CONTRACTS.md Additions by lead 3), null from a database
+ *  that does not say yet. */
+export type IssuedGiftCard = { code: string; amount: number; balance: number; status: "active" | "void"; expires_at: string | null };
 /** dest: "card", "wallet" or "gift" (back onto the gift card that paid). */
 export type OrderRefund = { amount: number; dest: string; status: string; at: string };
 export type OrderPayment = { id: string; status: string; method: string | null; brand: string | null; last4: string | null; receipt_no: number | null; expires_at: string; paid_at: string | null; amount: number };
@@ -32,8 +34,12 @@ export type Order = {
   address: { city?: string; district?: string } | null;
   subtotal: number; delivery_fee: number; total: number; wallet_paid: number; vat: number;
   courier: string | null; tracking_no: string | null; expires_at: string | null; paid_at: string | null; created_at: string; cancel_reason: string | null;
-  /** The order's invoice number (receipt_numbers 'ord-<no>'), also for an order the wallet paid whole. */
+  /** The order's receipt number (receipt_numbers 'ord-<no>'), also for an order the wallet paid whole. */
   receipt_no: number | null;
+  /** The store invoice's own number, "INV-000001", given when the order is paid (L06; CONTRACTS.md Additions by lead 4
+   *  and by db 2: the JSON's `invoice`, or its number `invoice_no`); null before, and from a database that does not give
+   *  it yet. */
+  invoice_no: string | null;
   payment_id: string | null; payment: OrderPayment | null; items: OrderItem[];
   events: { at: string; status: string; note: string | null }[];
   refunds: OrderRefund[];
@@ -65,6 +71,7 @@ export function orderOf(data: unknown, key: string | null = null): Order | null 
     subtotal: n(o.subtotal), delivery_fee: n(o.delivery_fee), total: n(o.total), wallet_paid: n(o.wallet_paid), vat: n(o.vat),
     courier: s(o.courier), tracking_no: s(o.tracking_no), expires_at: s(o.expires_at), paid_at: s(o.paid_at), created_at: String(o.created_at ?? ""),
     receipt_no: o.receipt_no == null ? (p?.receipt_no == null ? null : n(p.receipt_no)) : n(o.receipt_no),
+    invoice_no: invoiceNoOf(o.invoice) ?? invoiceNoOf(o.invoice_no),
     cancel_reason: s(o.cancel_reason), payment_id: s(o.payment_id),
     payment: p ? { id: String(p.id ?? ""), status: String(p.status ?? ""), method: s(p.method), brand: s(p.brand), last4: s(p.last4),
       receipt_no: p.receipt_no == null ? null : n(p.receipt_no), expires_at: String(p.expires_at ?? ""), paid_at: s(p.paid_at), amount: n(p.amount) } : null,
@@ -81,8 +88,14 @@ export function orderOf(data: unknown, key: string | null = null): Order | null 
     slot: slotOf(o.slot), delivered_at: s(o.delivered_at),
     returns: arr(o.returns).map(returnOf).filter((r): r is OrderReturn => !!r),
     gift_cards: arr(o.gift_cards).filter((g) => typeof g.code === "string" && g.code).map((g) => ({
-      code: String(g.code), amount: n(g.amount), balance: n(g.balance), status: g.status === "void" ? "void" : "active" })),
+      code: String(g.code), amount: n(g.amount), balance: n(g.balance), status: g.status === "void" ? "void" : "active", expires_at: s(g.expires_at) })),
   };
+}
+
+/** The invoice number as the database writes it ("INV-000042", its `invoice`), or its number (`invoice_no`) written that way. */
+function invoiceNoOf(v: unknown): string | null {
+  if (typeof v === "number" && Number.isInteger(v) && v > 0) return `INV-${String(v).padStart(6, "0")}`;
+  return typeof v === "string" && /^INV-\d{6,}$/.test(v.trim()) ? v.trim() : null;
 }
 
 function slotOf(v: unknown): { day: string; time: string } | null {

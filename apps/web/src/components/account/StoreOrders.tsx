@@ -1,18 +1,22 @@
 import { Link } from "@/i18n/navigation";
 import { intlOf } from "@/i18n/locales";
+import { statusKey } from "@/lib/store-after";
 import { sar } from "@/lib/store-core";
 import { orderNo, type Order } from "@/lib/store-order";
 import type { StoreText } from "@/components/store/Store.text";
+import type { W5Text } from "@/components/store/w5.text";
 
-// The account's online-store orders (customer_orders), newest first: the number, the day, where it is and
-// the total, each opening its own page (its key is in the link, as Track order gives it).
-export default function StoreOrders({ orders, t, locale }: { orders: Order[]; t: StoreText; locale: string }) {
+// The account's online-store orders (customer_orders), newest first: the number, the day, where it is (out for
+// delivery today, a gift card ready to use: the order page's own words) and the total, each opening its own page (its
+// key is in the link, as Track order gives it).
+export default function StoreOrders({ orders, t, w, today, locale }: { orders: Order[]; t: StoreText; w: W5Text; today: string; locale: string }) {
   const day = (iso: string) => {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return "";
     return new Intl.DateTimeFormat(intlOf(locale), { day: "numeric", month: "short", year: "numeric", timeZone: "Asia/Riyadh" }).format(d);
   };
-  const word = (o: Order) => (o.status === "delivered" && o.fulfil === "pickup" ? t.status.collected : t.status[o.status] ?? o.status);
+  const words: Record<string, string> = { ...t.status, out: w.statusOut, outToday: w.statusOutToday, giftReady: w.giftReady };
+  const word = (o: Order) => { const k = statusKey(o, o.status, today); return words[k] ?? o.status; };
   return (
     <section className="ac-panel" aria-labelledby="ac-orders-h">
       <h2 id="ac-orders-h" className="ac-panel-h">{t.yourOrders}</h2>

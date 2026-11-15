@@ -83,6 +83,8 @@ import Season from "@/components/account/Season";
 import Purchases from "@/components/account/Purchases";
 import StoreOrders from "@/components/account/StoreOrders";
 import { T as STORE } from "@/components/store/Store.text";
+import { T as STORE_W5 } from "@/components/store/w5.text";
+import { riyadhToday } from "@/lib/store-delivery";
 import { orderOf, type Order } from "@/lib/store-order";
 import NoticeDialog from "@/components/privacy/NoticeDialog";
 import { T as ACCOUNT } from "@/components/account/Account.text";
@@ -469,7 +471,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           <PasswordCard needCurrent={needCurrent} />
           {extras.consents && <RideNews on={extras.consents.rideNews} dialog="ac-privacy" />}
           <PushToggle who={acct.id} />
-          {orders.length > 0 && <StoreOrders orders={orders} t={serverLocalize(STORE, locale)} locale={locale} />}
+          {orders.length > 0 && <StoreOrders orders={orders} t={serverLocalize(STORE, locale)} w={serverLocalize(STORE_W5, locale)} today={riyadhToday()} locale={locale} />}
           {extras.purchases && extras.purchases.rows.length > 0 && <Purchases locale={locale} t={at} rows={extras.purchases.rows} total={extras.purchases.total} />}
           {extras.deletion && <DeleteAccount locale={locale} requestedAt={extras.deletion.requestedAt} />}
           <AccountSettings locale={locale} />

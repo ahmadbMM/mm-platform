@@ -52,6 +52,7 @@ describe("the store's pages", () => {
   it("draw an order with its invoice, the payment it took and the seller's numbers", async () => {
     const { default: OrderView } = await import("@/components/store/OrderView");
     const { T } = await import("@/components/store/Store.text");
+    const { T: W5 } = await import("@/components/store/w5.text");
     const o = orderOf({
       id: "o", no: 1001, status: "paid", fulfil: "jeddah", name: "Sara", phone: "•••• 5678", address: { city: "Jeddah", district: "Al Rawdah" }, subtotal: 520, delivery_fee: 30,
       total: 550, wallet_paid: 50, vat: 71.74, created_at: new Date().toISOString(), paid_at: new Date().toISOString(),
@@ -61,8 +62,10 @@ describe("the store's pages", () => {
     for (const locale of ["en", "ar"]) {
       const t = localize(T, locale, null);
       const html = render(wrap(locale, createElement(OrderView, {
-        o, t, locale, now: Date.now(), whatsapp: "966566668818", showroom: "Al Sharafeyah", expected: "Wed 11 – Thu 12 Nov", signup: "https://experiences.micromobility.sa/?handoff=site&auth=signup", returnsHref: "/help#returns",
-        seller: { trade: "Micromobility", legal: "Micromobility Company Ltd.", vat: "312555068900003", cr: "1009107240" },
+        o, t, w: localize(W5, locale, null), beside: locale === "ar" ? { lang: "en", t: T.en, w: W5.en } : { lang: "ar", t: T.ar, w: W5.ar },
+        locale, now: Date.now(), today: "2026-11-15", whatsapp: "966566668818", showroom: "Al Sharafeyah", expected: "Wed 11 – Thu 12 Nov", slot: null,
+        signup: "https://experiences.micromobility.sa/?handoff=site&auth=signup", returnsHref: "/returns", policy: "Return within 7 days.", hidden: [],
+        seller: { trade: "Micromobility", legal: "Micromobility Company Ltd.", vat: "312555068900003", cr: "1009107240", address: "Al Sharafeyah", qrName: "شركة التنقل الدقيق المحدودة", legalBeside: "" },
       })));
       expect(html, locale).toContain("MM-1001");
       expect(html, locale).toContain("312555068900003");
