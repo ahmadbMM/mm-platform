@@ -82,6 +82,10 @@ export function buyNowOf(q: Record<string, string | string[] | undefined> | URLS
 }
 export const buyNowHref = (variant: string, qty = 1) => `/store/checkout?buy=${encodeURIComponent(variant.toLowerCase())}&qty=${Math.min(MAX_QTY, Math.max(1, Math.floor(qty)))}`;
 
+/** How long an Add button says "Added" with its drawn tick before it is Add again (D14-E): the same moment on a card's quick
+ *  add, the buy box, the add-ons and the starter set. */
+export const ADDED_MS = 2500;
+
 /** The bundle discounts these lines earn (F31), as the database works them out at checkout (store_checkout): only beside
  *  a discount licence; for each product with a bundle, in the store's order, every complete set (the product and each
  *  of its items once, a unit counted in one set only) costs the bundle's price instead of the lowest price of each.

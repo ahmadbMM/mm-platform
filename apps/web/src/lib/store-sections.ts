@@ -5,8 +5,9 @@
 // browser's components can use it too.
 import { intlOf } from "@/i18n/locales";
 import { SITE_NAME, SITE_URL, langPath } from "./seo";
+import { extrasOf, waDigits, waHref } from "./store-pdp";
 import {
-  KEY_SPEC_ICONS, optionsOf, pick, priceRange, productHref, productStock, relatedOf, reviewSummary, variantLabel,
+  KEY_SPEC_ICONS, linePhotos, optionsOf, pick, priceRange, productHref, productStock, relatedOf, reviewSummary, variantLabel,
   type CmRange, type KeySpecIcon, type Store, type StoreProduct, type StoreReview, type StoreSpec, type StoreVariant,
 } from "./store-core";
 import { MAX_LINES, MAX_QTY } from "./cart";
@@ -88,17 +89,19 @@ export function specTable(p: StoreProduct, locale: string): SpecGroup[] {
 
 // ── F30, D17-C, F31: products the shopper adds from the page ────────────────────────────────────
 
-/** The add-ons staff paired with it (goes_with), in their order: still in the store, in stock, never a gift card. */
-export const addonsOf = (store: Store, p: StoreProduct): StoreProduct[] =>
-  relatedOf(store, p.goes_with, p.id).filter((x) => x.kind !== "gift_card" && productStock(x).kind !== "out");
+/** The add-ons staff paired with it (goes_with), in their order: still in the store, in stock, never a gift card. The
+ *  buy box's Extras step lists the same ones (lib/store-pdp.ts extrasOf), so a bike's Extras and its "Complete your
+ *  ride" never disagree about what goes with it. */
+export const addonsOf = (store: Store, p: StoreProduct): StoreProduct[] => extrasOf(relatedOf(store, p.goes_with, p.id));
 
-/** A product as a card's client component needs it: its first photo (with what staff wrote about it) and its variants;
- *  no long texts, specifications or relations. */
+/** A product as a card's client component needs it: its first photo and each colour's first (with what staff wrote about
+ *  them, so the card's photo follows the colour picked, as the cart's line will: linePhoto) and its variants; no long
+ *  texts, specifications or relations. */
 export function leanProduct(p: StoreProduct): StoreProduct {
-  const img = p.images[0];
+  const images = linePhotos(p);
   return {
-    ...p, description_en: null, description_ar: null, tagline_en: null, tagline_ar: null, specs: [], images: img ? [img] : [],
-    key_specs: [], box: [], fit: null, faq: [], sizes: [], image_meta: img && p.image_meta[img] ? { [img]: p.image_meta[img] } : {},
+    ...p, description_en: null, description_ar: null, tagline_en: null, tagline_ar: null, specs: [], images,
+    key_specs: [], box: [], fit: null, faq: [], sizes: [], image_meta: Object.fromEntries(images.filter((src) => p.image_meta[src]).map((src) => [src, p.image_meta[src]])),
     goes_with: [], compare_with: [], bundle: null,
   };
 }
@@ -175,16 +178,15 @@ export const avgText = (avg: number): string => (Math.round(avg * 10) / 10).toFi
 // ── F52: trade-in on WhatsApp ────────────────────────────────────────────────────────────────────
 
 /** The store's WhatsApp number, digits only: the site's WhatsApp link when it names one (wa.me/966...), else the phone
- *  staff set under Contact; "" when neither is a number. */
+ *  staff set under Contact; "" when neither is a number. The same number the buy box's "Ask about this bike" opens
+ *  (lib/store-pdp.ts waDigits), so the two WhatsApp rows of one product page never reach two numbers. */
 export function waNumber(site: { social?: Record<string, unknown>; contact?: Record<string, unknown> }): string {
   const link = typeof site.social?.whatsapp === "string" ? site.social.whatsapp : "";
-  const m = /(?:wa\.me\/|[?&]phone=)\+?(\d{8,15})\b/.exec(link);
-  if (m) return m[1];
-  const phone = typeof site.contact?.phone === "string" ? site.contact.phone.replace(/\D/g, "") : "";
-  return /^\d{8,15}$/.test(phone) ? phone : "";
+  const phone = typeof site.contact?.phone === "string" ? site.contact.phone : "";
+  return waDigits(link, phone);
 }
 /** A WhatsApp chat with the store, its first message written. */
-export const waHref = (num: string, text: string): string => `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
+export { waHref };
 
 // ── F45: the product's structured data ───────────────────────────────────────────────────────────
 

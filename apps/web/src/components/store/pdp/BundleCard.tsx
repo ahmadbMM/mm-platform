@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { sized } from "@/lib/img";
-import { pick, priceRange, sar, variantPrice, type StoreProduct, type StoreVariant } from "@/lib/store-core";
+import { linePhoto, pick, priceRange, sar, variantPrice, type StoreProduct, type StoreVariant } from "@/lib/store-core";
 import { cartRoom, choiceKind, choicesOf } from "@/lib/store-sections";
 import { T as StoreT } from "../Store.text";
 import { T } from "../w3b.text";
@@ -44,7 +44,7 @@ export default function BundleCard({ products, price, licence, locale }: { produ
   return (
     <div className="st-pd-set">
       <div className="st-pd-set-imgs" aria-hidden="true">
-        {products.map((p) => <span key={p.id}>{p.images[0] ? <img src={sized(p.images[0], 640)} alt="" loading="lazy" decoding="async" /> : <NoPhoto />}</span>)}
+        {picks.map(({ p, v }) => { const img = v ? linePhoto(p, v) : p.images[0]; return <span key={p.id}>{img ? <img src={sized(img, 640)} alt="" loading="lazy" decoding="async" /> : <NoPhoto />}</span>; })}
       </div>
       <div className="st-pd-set-body">
         <p className="st-pd-set-names">{names.map((n, i) => <span key={i}>{i > 0 && " + "}<bdi>{n}</bdi></span>)}</p>

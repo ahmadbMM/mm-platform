@@ -7,7 +7,7 @@ import SignIn from "@/components/account/SignIn";
 import { cartLines, shipsKsa, type CartItem } from "@/lib/cart";
 import { sized } from "@/lib/img";
 import type { PaySettings } from "@/lib/pay/settings";
-import { pick, sar, variantLabel, vatIn, type StoreProduct } from "@/lib/store-core";
+import { linePhoto, pick, sar, variantLabel, vatIn, type StoreProduct } from "@/lib/store-core";
 import { deliveryOptions, type Fulfil } from "@/lib/store-delivery";
 import { checkoutBody, EMPTY_ADDRESS, refusalPlace, type Address, type Contact } from "@/lib/store-form";
 import { slotDays, type District, type Slots } from "@/lib/store-settings";
@@ -414,11 +414,11 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
           <h2 id="st-co-sum" className="st-sum-h">{t.summary}</h2>
           <ul className="st-mini">
             {lines.map((l) => {
-              const p = l.product, v = l.variant;
+              const p = l.product, v = l.variant, img = p ? linePhoto(p, v) : null;
               const issue = lineErr[l.item.variant] || (l.issue === "gone" ? t.gone : l.issue === "out" ? t.out : l.issue === "short" ? t.short(v?.stock ?? 0) : "");
               return (
                 <li key={l.item.variant} className={issue ? "bad" : undefined}>
-                  <span className="st-mini-img">{p?.images[0] ? <img src={sized(p.images[0], 640)} alt="" loading="lazy" /> : <NoPhoto />}<i>{l.item.qty}</i></span>
+                  <span className="st-mini-img">{img ? <img src={sized(img, 640)} alt="" loading="lazy" /> : <NoPhoto />}<i>{l.item.qty}</i></span>
                   <span className="st-mini-mid">
                     <b>{p ? pick(locale, p.name_en, p.name_ar) : t.unavailable}</b>
                     {v && variantLabel(v, locale) && <small>{variantLabel(v, locale)}</small>}

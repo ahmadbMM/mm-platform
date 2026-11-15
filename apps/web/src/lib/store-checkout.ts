@@ -1,9 +1,10 @@
-import { bundleDiscount, MAX_QTY, subtotalOf, type CartItem, type CartLine } from "./cart";
+import { bundleDiscount, subtotalOf, type CartLine } from "./cart";
 import { deliveryFee, type PaySettings } from "./pay/settings";
 import { optionsOf, productStock, relatedOf, type StoreProduct, type StoreVariant } from "./store-core";
 import { fmtRange, type Fulfil } from "./store-delivery";
 import { formProblems, latinDigits, storePhone, type Address, type Contact } from "./store-form";
 import { districtServed, slotOk, type District, type Slots, type SlotTime } from "./store-settings";
+import { buyNowLines, tabbyPart } from "./store-pdp";
 
 // The cart and checkout's rules (store build 2026-11-15, chain w4; CONTRACTS.md sections 5.1 and 7): checkout in steps
 // that close into a summary (O12-C), the checks a field gets as it is left (F77), what the order costs once a starter
@@ -228,22 +229,11 @@ export function onlyChoice(p: StoreProduct): StoreVariant | null {
 
 // ── Buy now (F35) with a bike's extras (F60) ────────────────────────────────────────────────────────
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 /** The lines a buy-now address names (/store/checkout?buy=<variant>&qty=<n>&with=<variant>,<variant>; CONTRACTS.md,
  *  additions by w3a): the item bought now, then each extra once with quantity 1 (8 at most, never the item again); []
- *  when it names no item. The cart is left alone. */
-export function buyLinesOf(q: Record<string, string | string[] | undefined> | URLSearchParams): CartItem[] {
-  const get = (k: string) => (q instanceof URLSearchParams ? q.get(k) : typeof q[k] === "string" ? (q[k] as string) : null);
-  const id = (get("buy") ?? "").toLowerCase();
-  if (!UUID.test(id)) return [];
-  const n = Math.floor(Number(get("qty") ?? "1"));
-  const out: CartItem[] = [{ variant: id, qty: n >= 1 && n <= MAX_QTY ? n : 1 }];
-  for (const x of (get("with") ?? "").split(",").map((s) => s.trim().toLowerCase())) {
-    if (out.length > 8) break;
-    if (UUID.test(x) && !out.some((l) => l.variant === x)) out.push({ variant: x, qty: 1 });
-  }
-  return out;
-}
+ *  when it names no item. The cart is left alone. The product page's own reader (lib/store-pdp.ts buyNowLines), so the
+ *  address the buy box writes and the one checkout reads are one rule. */
+export const buyLinesOf = buyNowLines;
 
 // ── A code, a gift card and Tabby ───────────────────────────────────────────────────────────────────
 
@@ -260,5 +250,6 @@ export const giftCodeOk = (c: string) => /^GC-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4
 /** A promo code as the database keeps it. */
 export const promoCodeOf = (raw: string) => latinDigits(raw).trim().toUpperCase().replace(/\s+/g, "");
 export const promoCodeOk = (c: string) => /^[A-Z0-9-]{3,24}$/.test(c);
-/** One of Tabby's four payments (the last takes what rounding leaves). */
-export const tabbyQuarter = (amount: number) => Math.ceil((Number(amount) || 0) * 25) / 100;
+/** One of Tabby's four payments (the last takes what rounding leaves): the product page's line (lib/store-pdp.ts
+ *  tabbyPart), worked in whole halalas, so the pay page's tile and the line under the price name the same amount. */
+export const tabbyQuarter = tabbyPart;

@@ -83,6 +83,13 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
   .mm-lang { position: static; }
   .mm-lang-menu { top: 100%; inset-inline-end: clamp(16px, 4vw, 40px); }
 }
+/* With the store's Saved heart (F07) the bar can hold six icons beside the logo: 336px of them at 40px, wider than a
+   320px phone. Below 360px each icon is 36px wide (still 40px tall) and the gaps close up, 296px in all. */
+@media (max-width: 359px) {
+  .mm-nav { gap: 8px; }
+  .mm-nav-end { gap: 0; }
+  .mm-nav-icon, .mm-nav-burger { width: 36px; }
+}
 
 /* ── Announcement bar ── */
 .mm-ann { background: #1a1919; color: #d5dbd6; font-size: 13px; display: flex; justify-content: center; gap: 26px; flex-wrap: wrap; padding: 9px 16px; text-align: center; }

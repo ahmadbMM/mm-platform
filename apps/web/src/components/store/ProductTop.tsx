@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { isRtl } from "@/i18n/locales";
-import { MAX_QTY } from "@/lib/cart";
+import { ADDED_MS, MAX_QTY } from "@/lib/cart";
 import type { PaySettings } from "@/lib/pay/settings";
 import {
   optionOpen, optionsOf, photosFor, pick, pickVariant, priceRange, productStock, sar, sizeForHeight, stockState, variantLabel, variantPrice,
@@ -161,7 +161,7 @@ export default function ProductTop(props: TopProps) {
     setNeed(full ? "full" : "");
     setAdded(true);
     window.clearTimeout(addedTimer.current);
-    addedTimer.current = window.setTimeout(() => setAdded(false), 2600);
+    addedTimer.current = window.setTimeout(() => setAdded(false), ADDED_MS);
   }
   function buyNow() {
     const got = chosen();

@@ -6,7 +6,7 @@ import { useLocalize } from "@/i18n/TxProvider";
 import { cartLines, MAX_QTY, shipsKsa, type CartLine } from "@/lib/cart";
 import { sized } from "@/lib/img";
 import type { PaySettings } from "@/lib/pay/settings";
-import { pick, priceRange, productHref, sar, variantLabel, vatIn, type StoreProduct } from "@/lib/store-core";
+import { linePhoto, pick, priceRange, productHref, sar, variantLabel, vatIn, type StoreProduct } from "@/lib/store-core";
 import { deliveryOptions, freeProgress, type Fulfil } from "@/lib/store-delivery";
 import { checkoutMoney, digitalOnly, goesWithCart, hasBike, onlyChoice, type Way } from "@/lib/store-checkout";
 import { T, type StoreText } from "./Store.text";
@@ -127,13 +127,13 @@ export default function CartView({ locale, products, settings, whens, licence, a
 }
 
 function Line({ l, t, w, locale }: { l: CartLine; t: StoreText; w: W4Text; locale: string }) {
-  const p = l.product, v = l.variant;
+  const p = l.product, v = l.variant, img = p ? linePhoto(p, v) : null;
   const name = p ? pick(locale, p.name_en, p.name_ar) : "";
   const max = Math.max(1, Math.min(MAX_QTY, v?.stock ?? 1));
   const issue = l.issue === "gone" ? t.gone : l.issue === "out" ? t.out : l.issue === "short" ? t.short(v?.stock ?? 0) : "";
   return (
     <li className={`st-line${l.issue ? " bad" : ""}`}>
-      <span className="st-line-img">{p?.images[0] ? <img src={sized(p.images[0], 640)} alt="" loading="lazy" /> : <NoPhoto />}</span>
+      <span className="st-line-img">{img ? <img src={sized(img, 640)} alt="" loading="lazy" /> : <NoPhoto />}</span>
       <div className="st-line-mid">
         {p ? <Link href={productHref(p)} className="st-line-name">{name}</Link> : <span className="st-line-name">{t.unavailable}</span>}
         {v && variantLabel(v, locale) && <small>{variantLabel(v, locale)}</small>}
@@ -166,11 +166,11 @@ function Later({ lines, t, w, locale, msg, onMove }: { lines: CartLine[]; t: Sto
       {msg && <p className="bk-err" role="alert">{msg}</p>}
       <ul className="st-lines">
         {lines.map((l) => {
-          const p = l.product, v = l.variant;
+          const p = l.product, v = l.variant, img = p ? linePhoto(p, v) : null;
           const name = p ? pick(locale, p.name_en, p.name_ar) : t.unavailable;
           return (
             <li key={l.item.variant} className="st-line">
-              <span className="st-line-img">{p?.images[0] ? <img src={sized(p.images[0], 640)} alt="" loading="lazy" /> : <NoPhoto />}</span>
+              <span className="st-line-img">{img ? <img src={sized(img, 640)} alt="" loading="lazy" /> : <NoPhoto />}</span>
               <div className="st-line-mid">
                 {p ? <Link href={productHref(p)} className="st-line-name">{name}</Link> : <span className="st-line-name">{name}</span>}
                 {v && variantLabel(v, locale) && <small>{variantLabel(v, locale)}</small>}

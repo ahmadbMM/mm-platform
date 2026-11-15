@@ -298,7 +298,7 @@ describe("the sections as the server draws them", () => {
     expect(en).toContain("Starter set");
     expect(en).toContain("8,800");
     expect(en).toMatch(/<s class="st-was"[^>]*>.*9,155/); // 8,435 + 520 + 200
-    expect(en).toContain("Save");
+    expect(en).toContain("You save"); // not the heart's "Save <product>" (one English text, one meaning in the translations)
     expect(en).toContain('Discount licence no. <bdi dir="ltr" class="st-pd-lic">MC-123</bdi>'); // kept left to right in Arabic too
     expect(en).toMatch(/<s class="st-was"><span aria-hidden="true">.*<\/span><span class="st-pd-sr">.*9,155.* bought separately<\/span><\/s>/);
     expect(en).toContain("Add the set to your cart");

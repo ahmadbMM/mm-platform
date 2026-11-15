@@ -144,7 +144,7 @@ export const tabbyPart = (amount: number): number => Math.ceil(Math.round((Numbe
 
 /** The number WhatsApp opens: the site's WhatsApp link when it is a wa.me one, else the contact phone; digits only. */
 export function waDigits(link: string | null | undefined, phone: string | null | undefined): string {
-  const m = /^https:\/\/(?:wa\.me|api\.whatsapp\.com\/send\?phone=)\/?(\d{8,15})/i.exec((link ?? "").trim());
+  const m = /^https:\/\/(?:wa\.me\/|api\.whatsapp\.com\/send\/?\?phone=)\+?(\d{8,15})/i.exec((link ?? "").trim());
   if (m) return m[1];
   const d = (phone ?? "").replace(/\D/g, "");
   return d.length >= 8 && d.length <= 15 ? d : "";

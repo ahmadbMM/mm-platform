@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import { sized, srcSet } from "@/lib/img";
-import { photoAlt, pick, priceRange, productHref, sar, variantPrice, type StoreProduct } from "@/lib/store-core";
+import { linePhoto, photoAlt, pick, priceRange, productHref, sar, variantPrice, type StoreProduct } from "@/lib/store-core";
 import { cartRoom, choiceKind, choicesOf } from "@/lib/store-sections";
 import { T as StoreT } from "../Store.text";
 import { T } from "../w3b.text";
@@ -27,7 +27,7 @@ export default function AddonCard({ p, locale }: { p: StoreProduct; locale: stri
   const { lo, hi } = priceRange(p);
   const price = v ? sar(variantPrice(p, v)) : lo !== hi ? t.from(sar(lo)) : sar(lo);
   const name = pick(locale, p.name_en, p.name_ar);
-  const img = p.images[0];
+  const img = v ? linePhoto(p, v) : p.images[0]; // the colour picked shows its own photo
   const ask = kind === "size" ? t.pickSize : kind === "colour" ? t.pickColour : kind === "both" ? w.pickBoth : w.pickOne;
   const short = kind === "size" ? t.size : kind === "colour" ? t.colour : kind === "both" ? w.sizeAndColour : w.pickOne; // fits a phone's card
 

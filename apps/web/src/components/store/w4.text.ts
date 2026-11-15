@@ -166,7 +166,7 @@ export const T = {
 
     goesWith: "يناسب دراجتك",
     add: "أضف",
-    added: "أُضيف",
+    added: "تمت الإضافة",
     choose: "اختر",
     saveLater: "احفظه لوقت لاحق",
     laterH: (n: number) => `محفوظ لوقت لاحق (${n})`,

@@ -3,7 +3,7 @@
 import type { RefObject } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { sized } from "@/lib/img";
-import { colourPhoto, optionOpen, optionsOf, pick, sar, variantLabel, variantPrice, type StoreProduct } from "@/lib/store-core";
+import { colourPhoto, linePhoto, optionOpen, optionsOf, pick, sar, variantLabel, variantPrice, type StoreProduct } from "@/lib/store-core";
 import { extraChoices, guideOf, sizeHeight } from "@/lib/store-pdp";
 import { T } from "./Store.text";
 import { T as W } from "./w3a.text";
@@ -94,13 +94,14 @@ export default function PdpPickers(props: {
               const ch = extraChoices(x);
               const cv = ch.find((c) => c.id === choice[x.id]) ?? ch[0];
               const nm = pick(locale, x.name_en, x.name_ar);
+              const img = linePhoto(x, cv); // the choice picked shows its own colour
               const on = !!ticks[x.id];
               const id = `st-x-${x.id}`;
               return (
                 <li key={x.id} className={on ? "on" : undefined}>
                   <input id={id} type="checkbox" checked={on} onChange={(e) => onTick(x.id, e.target.checked)} />
                   <label htmlFor={id}>
-                    <span className="st-extra-img">{x.images[0] ? <img src={sized(x.images[0], 640)} alt="" loading="lazy" decoding="async" /> : <NoPhoto />}</span>
+                    <span className="st-extra-img">{img ? <img src={sized(img, 640)} alt="" loading="lazy" decoding="async" /> : <NoPhoto />}</span>
                     <span className="st-extra-name"><Bidi text={nm} rtl={rtl} /></span>
                     {cv && <Amt>{sar(variantPrice(x, cv))}</Amt>}
                   </label>

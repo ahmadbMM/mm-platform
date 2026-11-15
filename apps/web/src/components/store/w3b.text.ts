@@ -33,7 +33,7 @@ export const T = {
     setH: "Starter set",
     setAdd: "Add the set to your cart",
     setAdded: "Set added",
-    save: (p: string) => `Save ${p}`,
+    save: (p: string) => `You save ${p}`,
     apart: (p: string) => `${p} bought separately`,
 
     // F10, O09-B: the comparison
@@ -88,7 +88,7 @@ export const T = {
     setH: "طقم البداية",
     setAdd: "أضف الطقم إلى سلتك",
     setAdded: "تمت إضافة الطقم",
-    save: (p: string) => `وفّر ${p}`,
+    save: (p: string) => `توفّر ${p}`,
     apart: (p: string) => `${p} عند الشراء منفصلاً`,
 
     cmpBikes: "قارن الدراجات",

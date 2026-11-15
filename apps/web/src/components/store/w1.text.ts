@@ -58,7 +58,7 @@ export const T = {
     howTo: "كيف تقدّم شكوى",
     byWhatsApp: "راسلنا عبر واتساب",
     byPhone: "اتصل بنا",
-    byVisit: "زر المعرض",
+    byVisit: "زُر صالة العرض",
     directions: "الاتجاهات",
     giveRef: "أرسل لنا رقم طلبك أو رقم حجزك، وأخبرنا بما حدث.",
 

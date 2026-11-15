@@ -1,8 +1,11 @@
 import { helpSchema } from "@/content/pages/help";
 import { asLocale, resolvePage } from "@/lib/content";
 import { payEnv, payReady } from "@/lib/pay/config";
+import { tabbyKeys } from "@/lib/pay/tabby";
+import { storeEnv } from "@/lib/store-api";
 import { SITE_URL } from "@/lib/seo";
-import { productHref, relatedOf, type StoreProduct } from "@/lib/store";
+import { linePhotos, productHref, relatedOf, type StoreProduct } from "@/lib/store";
+import { returnsAnswers } from "@/lib/policies";
 import { storeSwitches } from "@/lib/store-settings";
 import { waDigits } from "@/lib/store-pdp";
 import { allWhens, type StoreState } from "./store-data";
@@ -14,16 +17,20 @@ import type { TopProps } from "./ProductTop";
 
 /** The product without the long texts the sections below the buy box draw on the server (w3b's). */
 const slim = (p: StoreProduct): StoreProduct => ({ ...p, description_en: null, description_ar: null, specs: [], faq: [], box: [], fit: null });
-/** An add-on as the Extras step draws it: its first photo, its name, its variants. */
-const slimExtra = (p: StoreProduct): StoreProduct => ({ ...slim(p), tagline_en: null, tagline_ar: null, images: p.images.slice(0, 1), image_meta: {}, key_specs: [], sizes: [] });
+/** An add-on as the Extras step draws it: its name, its variants, and its first photo and each colour's first (the row's
+ *  photo follows the choice picked, as the cart's line will: linePhoto). */
+const slimExtra = (p: StoreProduct): StoreProduct => {
+  const images = linePhotos(p);
+  return { ...slim(p), tagline_en: null, tagline_ar: null, images, key_specs: [], sizes: [],
+    image_meta: Object.fromEntries(images.filter((src) => p.image_meta[src]).map((src) => [src, p.image_meta[src]])) };
+};
 
 const S = (v: unknown) => (typeof v === "string" ? v : "");
-type Sec = Record<string, unknown>;
 
 export function topProps(s: StoreState, p: StoreProduct, locale: string): TopProps {
   const help = resolvePage(helpSchema, s.content, asLocale(locale));
-  const policy = (Array.isArray(help.topics.returns) ? (help.topics.returns as Sec[]) : [])
-    .map((x) => ({ q: S(x.q).trim(), a: S(x.a).trim() })).filter((x) => x.q && x.a);
+  // the Returns page's own answers (lib/policies.ts, w1's /returns), so the pop-up and the page never differ
+  const policy = returnsAnswers(help.topics.returns);
   return {
     p: slim(p),
     locale,
@@ -35,9 +42,12 @@ export function topProps(s: StoreState, p: StoreProduct, locale: string): TopPro
     showroom: S(s.site.contact.address),
     policy,
     whatsapp: waDigits(S(s.site.social.whatsapp), S(s.site.contact.phone)),
-    tabby: storeSwitches(s.content).tabby,
-    // Apple Pay pays on the payment page only where Apple knows the site (its domain file, a Worker secret)
-    applePay: payReady() && !!payEnv().APPLE_PAY_DOMAIN_FILE,
+    // the line under the price promises only what the payment page offers: its Tabby tile wants the switch AND Tabby's
+    // keys (app/[locale]/pay/[id]/page.tsx), so the line does too (off means absent)
+    tabby: storeSwitches(s.content).tabby && tabbyKeys(storeEnv()),
+    // Apple Pay pays on the payment page only while payments are on and where Apple knows the site (its domain file, a
+    // Worker secret): the cart's express button asks the same (app/[locale]/store/cart/page.tsx)
+    applePay: s.settings.enabled && payReady() && !!payEnv().APPLE_PAY_DOMAIN_FILE,
     href: `${SITE_URL}${productHref(p)}`,
   };
 }

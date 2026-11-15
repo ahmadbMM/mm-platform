@@ -6,6 +6,7 @@ import { sized, srcSet } from "@/lib/img";
 import { quickRoom } from "@/lib/store-listing";
 import { Ic, NoPhoto } from "./bits";
 import { StIcon } from "./icons";
+import { ADDED_MS } from "@/lib/cart";
 import { cartAdd, useCart } from "./useCart";
 import { savedToggle, useSaved } from "./useLists";
 import { BagPlus } from "./w2-icons";
@@ -87,7 +88,7 @@ export function QuickAdd({ variant, stock, label, added, cant }: { variant: stri
     const got = quickRoom(cart, { id: variant, stock }) > 0 ? cartAdd(variant, 1) : 0;
     setState(got !== null && got > 0 ? "added" : "cant");
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => setState(""), 2500);
+    timer.current = setTimeout(() => setState(""), ADDED_MS);
   };
   return (
     <>

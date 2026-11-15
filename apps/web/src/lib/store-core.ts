@@ -378,6 +378,18 @@ export function photosFor(p: StoreProduct, colour: string | null): string[] {
 /** The photo a colour chip shows (D15-B): the first photo of that colour, or null. */
 export const colourPhoto = (p: StoreProduct, colour: string): string | null => p.images.find((src) => p.image_meta[src]?.colour === colour) ?? null;
 
+/** The photo a line of the cart, checkout or an add-on card shows for its variant: the first photo of the variant's
+ *  colour, else the product's first photo. The database snapshots the same photo on the order's line (store_checkout,
+ *  X08), so the cart, checkout and the order page show one picture of what was bought. */
+export const linePhoto = (p: StoreProduct, v: Pick<StoreVariant, "color_en"> | null | undefined): string | null =>
+  (v?.color_en ? colourPhoto(p, v.color_en) : null) ?? p.images[0] ?? null;
+/** The photos linePhoto can answer for one of the product's variants (its first photo, then each colour's first), in the
+ *  product's order: what a small card's product keeps when the rest of its photos are left out. */
+export function linePhotos(p: StoreProduct): string[] {
+  const keep = new Set([p.images[0], ...p.variants.map((v) => linePhoto(p, v))].filter((x): x is string => !!x));
+  return p.images.filter((src) => keep.has(src));
+}
+
 /** The former price to strike through (F107, R8): only beside a discount licence and, when staff set the licence's dates,
  *  between them (today a YYYY-MM-DD in Riyadh); null otherwise. */
 export function wasPrice(p: Pick<StoreProduct, "compare_at" | "sale_from" | "sale_to">, licence: string | boolean | null, today: string): number | null {

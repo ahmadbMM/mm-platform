@@ -337,8 +337,8 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-dots { flex-wrap: wrap; }
 .st-when { display: inline-flex; align-items: center; gap: 4px; align-self: flex-start; max-width: 100%; box-sizing: border-box; margin-top: 2px; padding-block: 3px; padding-inline: 6px 8px; border-radius: 8px; background: rgba(7, 122, 75, .08); color: #06603b; font-size: 11.5px; font-weight: 700; line-height: 1.3; }
 .st-when .st-ic { vertical-align: 0; }
-.st-warranty { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #4a4843; }
-.st-warranty .st-ic { color: #077a4b; vertical-align: 0; }
+.st-card-warranty { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #4a4843; }
+.st-card-warranty .st-ic { color: #077a4b; vertical-align: 0; }
 /* every price row is the quick add's height, so the prices of a row line up with or without one (A02-A) */
 .st-card-body { padding-bottom: 10px; }
 .st-card-price { min-height: 40px; align-items: center; }

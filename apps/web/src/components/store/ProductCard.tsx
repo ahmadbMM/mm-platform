@@ -41,7 +41,7 @@ export default function ProductCard({ p, locale, t, w, licence, today, whens, ea
             {colours.map((c) => <i key={c.key} className={c.hex ? undefined : "st-dot-none"} style={c.hex ? { background: c.hex } : undefined} title={pick(locale, c.en, c.ar)} />)}
           </span>
         )}
-        {p.condition === "certified" && <span className="st-warranty"><StIcon name="shield" size={16} />{warrantyText(p, w)}</span>}
+        {p.condition === "certified" && <span className="st-card-warranty"><StIcon name="shield" size={16} />{warrantyText(p, w)}</span>}
         {when && <span className={`st-when is-${when.way}`}><Ic name={when.way === "pickup" ? "shop" : "truck"} size={15} />{when.text}</span>}
         {stock.kind === "low" && <span className="st-low">{t.left(stock.left)}</span>}
         <span className="st-card-price">

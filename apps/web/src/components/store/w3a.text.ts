@@ -89,7 +89,7 @@ export const T = {
 
     summary: "الملخص",
     totalWith: { pickup: "الإجمالي مع الاستلام", jeddah: "الإجمالي مع التوصيل داخل جدة", ksa: "الإجمالي مع التوصيل لجميع مناطق المملكة" } as Record<string, string>,
-    addedBtn: "أُضيف",
+    addedBtn: "تمت الإضافة",
     buyNow: "اشترِ الآن",
     applePay: "اشترِ باستخدام Apple Pay",
     askBike: "اسأل عن هذه الدراجة",
