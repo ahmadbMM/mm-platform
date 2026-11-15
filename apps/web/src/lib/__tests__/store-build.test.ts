@@ -279,7 +279,7 @@ describe("an order's new fields", () => {
     expect(o.items.map((i) => [i.id, i.gift_card, i.product_id])).toEqual([[7, false, BIKE], [8, true, CARD]]);
     expect(o.returns).toHaveLength(1);
     expect(o.returns[0]).toMatchObject({ kind: "return", status: "open", reason: "wrong_size", items: [{ item_id: 7, qty: 1 }], amount: null });
-    expect(o.gift_cards).toEqual([{ code: "GC-ABCD-EFGH-JKLM", amount: 100, balance: 100, status: "active" }]);
+    expect(o.gift_cards).toEqual([{ code: "GC-ABCD-EFGH-JKLM", amount: 100, balance: 100, status: "active", expires_at: null }]);
     expect(o.refunds[0].dest).toBe("gift");
     // an order the database answered before the build still reads
     const before = orderOf({ id: "o2", no: 1, status: "paid", fulfil: "pickup", items: [{ name: "X", qty: 1, unit_price: 5 }] })!;
