@@ -7,8 +7,9 @@ import { intlOf } from "@/i18n/locales";
 import { SITE_NAME, SITE_URL, langPath } from "./seo";
 import {
   KEY_SPEC_ICONS, optionsOf, pick, priceRange, productHref, productStock, relatedOf, reviewSummary, variantLabel,
-  type CmRange, type KeySpecIcon, type Store, type StoreProduct, type StoreReview, type StoreSpec,
+  type CmRange, type KeySpecIcon, type Store, type StoreProduct, type StoreReview, type StoreSpec, type StoreVariant,
 } from "./store-core";
+import { MAX_LINES, MAX_QTY } from "./cart";
 import { RETURN_DAYS, warrantyMonths } from "./store-policy";
 
 // ── F36: the specification table ─────────────────────────────────────────────────────────────────
@@ -25,7 +26,8 @@ export type SpecGroup = { id: SpecGroupId | null; rows: SpecRow[] };
 // "Wheel size" is a wheel and "Frame size" a size.
 const GROUP_WORDS: [SpecGroupId, RegExp][] = [
   ["wheels", /\b(wheels?|wheelset|tyres?|tires?|rims?|hubs?|spokes?)\b/i],
-  ["power", /\b(motor|battery|range|charger|charging|assist|display|torque|throttle|voltage|watts?)\b/i],
+  ["drive", /\bgear(ing)? (range|ratios?)\b/i], // before "range", which alone is a battery's
+  ["power", /\b(motor|battery|range|charger|charging|assist|display|torque|throttle|voltage|watts?|(top|max(imum)?) speed)\b/i],
   ["brakes", /\b(brakes?|braking|rotors?|calipers?)\b/i],
   ["drive", /\b(groupset|drivetrain|gears?|gearing|speeds?|shifters?|shifting|derailleurs?|cranks?|crankset|chain|chainrings?|cassette|freewheel|bottom bracket|pedals?)\b/i],
   ["size", /\b(rider|height|sizes?|sizing|weight|load|geometry|reach|stack)\b/i],
@@ -112,6 +114,16 @@ export function choiceKind(p: StoreProduct): ChoiceKind | null {
 /** Every variant to pick from, in staff's order: "M · Black", and whether it can still be had. */
 export const choicesOf = (p: StoreProduct, locale: string): { id: string; label: string; open: boolean }[] =>
   p.variants.map((v, i) => ({ id: v.id, label: variantLabel(v, locale) || String(i + 1), open: v.stock > 0 }));
+
+/** Whether one more of each of these variants fits the cart (an add-on's Add, the starter set's "Add the set"): "most"
+ *  when one is sold out or the cart already holds the most of it that can be ordered (10, or what is left), "full" when
+ *  its new lines would take the cart past its 20, else "ok". */
+export function cartRoom(cart: readonly { variant: string; qty: number }[], vs: readonly StoreVariant[]): "ok" | "most" | "full" {
+  const inCart = (v: StoreVariant) => cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0;
+  if (vs.some((v) => v.stock <= 0 || inCart(v) >= Math.min(MAX_QTY, v.stock))) return "most";
+  const fresh = new Set(vs.map((v) => v.id.toLowerCase()).filter((id) => !cart.some((l) => l.variant === id))).size;
+  return cart.length + fresh > MAX_LINES ? "full" : "ok";
+}
 
 // ── F10, O09-B: the comparison ───────────────────────────────────────────────────────────────────
 

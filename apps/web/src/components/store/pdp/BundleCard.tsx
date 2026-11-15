@@ -2,10 +2,9 @@
 
 import { useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
-import { MAX_LINES, MAX_QTY } from "@/lib/cart";
 import { sized } from "@/lib/img";
 import { pick, priceRange, sar, variantPrice, type StoreProduct, type StoreVariant } from "@/lib/store-core";
-import { choiceKind, choicesOf } from "@/lib/store-sections";
+import { cartRoom, choiceKind, choicesOf } from "@/lib/store-sections";
 import { T as StoreT } from "../Store.text";
 import { T } from "../w3b.text";
 import { Amt, Ic, NoPhoto } from "../bits";
@@ -35,8 +34,8 @@ export default function BundleCard({ products, price, licence, locale }: { produ
   function add() {
     if (picks.some((x) => !x.v)) { setNeed("pick"); return; }
     const vs = picks.map((x) => x.v as StoreVariant);
-    if (vs.some((v) => v.stock <= 0 || (cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0) >= Math.min(MAX_QTY, v.stock))) { setNeed("most"); return; }
-    if (cart.length + vs.filter((v) => !cart.some((l) => l.variant === v.id.toLowerCase())).length > MAX_LINES) { setNeed("full"); return; }
+    const room = cartRoom(cart, vs);
+    if (room !== "ok") { setNeed(room); return; }
     for (const v of vs) cartAdd(v.id, 1);
     setNeed("");
     flash();
@@ -51,10 +50,10 @@ export default function BundleCard({ products, price, licence, locale }: { produ
         <p className="st-pd-set-names">{names.map((n, i) => <span key={i}>{i > 0 && " + "}<bdi>{n}</bdi></span>)}</p>
         <p className="st-pd-set-price">
           <Amt>{sar(price)}</Amt>
-          {save > 0 && <s className="st-was" aria-label={w.apart(sar(sum))}><Amt>{sar(sum)}</Amt></s>}
+          {save > 0 && <s className="st-was"><span aria-hidden="true"><Amt>{sar(sum)}</Amt></span><span className="st-pd-sr">{w.apart(sar(sum))}</span></s>}
           {save > 0 && <span className="st-pd-save">{w.save(sar(save))}</span>}
         </p>
-        <p className="st-vat">{t.vatIncl} · {lic[0]}<bdi className="st-pd-lic">{licence}</bdi>{lic[1]}</p>
+        <p className="st-vat">{t.vatIncl} · {lic[0]}<bdi dir="ltr" className="st-pd-lic">{licence}</bdi>{lic[1]}</p>
         {picks.some(({ p }) => choiceKind(p)) && (
           <div className="st-pd-set-picks">
             {picks.map(({ p }, i) => {

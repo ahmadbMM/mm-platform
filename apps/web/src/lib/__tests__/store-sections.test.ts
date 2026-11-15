@@ -9,7 +9,7 @@ import { TxProvider } from "@/i18n/TxProvider";
 import { storeOf, type Store, type StoreReview } from "../store-core";
 import {
   addonsOf, avgText, choiceKind, choicesOf, cmText, compareTable, leanProduct, monthLabel, productLd, riderHeight, specGroupOf, specTable,
-  splitBasis, starsOf, waHref, waNumber,
+  splitBasis, starsOf, waHref, waNumber, cartRoom,
 } from "../store-sections";
 import { T as W } from "../../components/store/w3b.text";
 import SpecTable from "../../components/store/pdp/SpecTable";
@@ -120,6 +120,9 @@ describe("the specification table (F36)", () => {
   it("groups by the row's English name, the first match winning", () => {
     expect(["Wheel size", "Tyres", "Frame size", "Frame material", "Groupset", "Battery", "Rotors", "Colour", "Max load"].map(specGroupOf))
       .toEqual(["wheels", "wheels", "size", "frame", "drive", "power", "brakes", "other", "size"]);
+    // an e-bike's top speed is the motor's, a gear range the drivetrain's (a "Range" alone is the battery's)
+    expect(["Top speed", "Max speed", "Gear range", "Gear ratios", "Range", "Speeds"].map(specGroupOf))
+      .toEqual(["power", "power", "drive", "drive", "power", "drive"]);
   });
   it("splits a basis off a value only when it ends the value in brackets", () => {
     expect(splitBasis("10.4 kg (size M)")).toEqual({ value: "10.4 kg", basis: "size M" });
@@ -154,6 +157,23 @@ describe("the add-ons and the starter set (F30, D17-C, F31)", () => {
     expect(Object.keys(l.image_meta)).toEqual(["/media/store/max/1.webp"]);
     expect([l.specs, l.faq, l.box, l.sizes, l.goes_with, l.compare_with, l.description_en, l.bundle]).toEqual([[], [], [], [], [], [], null, null]);
     expect(l.variants).toHaveLength(3);
+  });
+  it("add only while the cart has room: 10 of a variant at most (or what is left), 20 lines in all", () => {
+    const [m, , w] = P("helmet").variants; // M Black (3 left), L Black (sold out), M White (2 left)
+    const lights = P("lights").variants[0]; // 9 left
+    const line = (v: { id: string }, qty: number) => ({ variant: v.id.toLowerCase(), qty });
+    expect(cartRoom([], [m])).toBe("ok");
+    expect(cartRoom([line(m, 2)], [m])).toBe("ok");
+    expect(cartRoom([line(m, 3)], [m])).toBe("most"); // all that is left is already in the cart
+    expect(cartRoom([], [P("helmet").variants[1]])).toBe("most"); // sold out
+    expect(cartRoom([line(lights, 9)], [lights])).toBe("most");
+    const many = { ...lights, stock: 50 };
+    expect(cartRoom([line(many, 10)], [many])).toBe("most"); // 10 of one line at most
+    const nineteen = Array.from({ length: 19 }, (_, i) => ({ variant: U(900 + i), qty: 1 }));
+    expect(cartRoom(nineteen, [m])).toBe("ok"); // the 20th line
+    expect(cartRoom(nineteen, [m, w])).toBe("full"); // a set of two new lines would make 21
+    expect(cartRoom([...nineteen, line(m, 1)], [m, w])).toBe("full");
+    expect(cartRoom([...nineteen, line(m, 1)], [m])).toBe("ok"); // one more of a line already there
   });
   it("ask for a size, a colour or both only when a product comes in several variants", () => {
     expect(choiceKind(P("helmet"))).toBe("both");
@@ -279,7 +299,8 @@ describe("the sections as the server draws them", () => {
     expect(en).toContain("8,800");
     expect(en).toMatch(/<s class="st-was"[^>]*>.*9,155/); // 8,435 + 520 + 200
     expect(en).toContain("Save");
-    expect(en).toContain('Discount licence no. <bdi class="st-pd-lic">MC-123</bdi>');
+    expect(en).toContain('Discount licence no. <bdi dir="ltr" class="st-pd-lic">MC-123</bdi>'); // kept left to right in Arabic too
+    expect(en).toMatch(/<s class="st-was"><span aria-hidden="true">.*<\/span><span class="st-pd-sr">.*9,155.* bought separately<\/span><\/s>/);
     expect(en).toContain("Add the set to your cart");
     const pricey = storeOf([product(BIKE, "b", { bundle: { items: [LIGHTS], price: 400 } }), product(LIGHTS, "l", { price: 200 })], [variant(1, BIKE), variant(2, LIGHTS)]);
     expect(render(wrap("en", createElement(StarterBundle, { store: pricey, p: pricey.products[0], locale: "en", licence: "MC-1" })))).toBe("");

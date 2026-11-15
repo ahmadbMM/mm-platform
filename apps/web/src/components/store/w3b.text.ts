@@ -41,7 +41,6 @@ export const T = {
     cmp: "Compare",
     current: "Currently viewing",
     view: "View",
-    price: "Price",
     keys: {
       weight: "Weight", gears: "Gears", brakes: "Brakes", wheel: "Wheel size", frame: "Frame", fork: "Fork", tyre: "Tyres",
       battery: "Battery", motor: "Motor", range: "Range", material: "Material",
@@ -96,7 +95,6 @@ export const T = {
     cmp: "قارن",
     current: "تشاهده الآن",
     view: "عرض",
-    price: "السعر",
     keys: {
       weight: "الوزن", gears: "التروس", brakes: "الفرامل", wheel: "مقاس العجلات", frame: "الإطار", fork: "الشوكة", tyre: "الإطارات",
       battery: "البطارية", motor: "المحرك", range: "المدى", material: "الخامة",

@@ -3,10 +3,9 @@
 import { useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
-import { MAX_QTY } from "@/lib/cart";
 import { sized, srcSet } from "@/lib/img";
 import { photoAlt, pick, priceRange, productHref, sar, variantPrice, type StoreProduct } from "@/lib/store-core";
-import { choiceKind, choicesOf } from "@/lib/store-sections";
+import { cartRoom, choiceKind, choicesOf } from "@/lib/store-sections";
 import { T as StoreT } from "../Store.text";
 import { T } from "../w3b.text";
 import { Amt, Ic, NoPhoto } from "../bits";
@@ -35,8 +34,8 @@ export default function AddonCard({ p, locale }: { p: StoreProduct; locale: stri
   function add() {
     if (!v) { setNeed("pick"); select.current?.focus(); return; }
     if (v.stock <= 0) return;
-    const inCart = cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0;
-    if (inCart >= Math.min(MAX_QTY, v.stock)) { setNeed("most"); return; }
+    const room = cartRoom(cart, [v]);
+    if (room !== "ok") { setNeed(room); return; }
     const got = cartAdd(v.id, 1);
     if (got === null) { setNeed("full"); return; }
     if (got <= 0) { setNeed("most"); return; }
