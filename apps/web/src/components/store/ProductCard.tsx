@@ -48,7 +48,7 @@ export default function ProductCard({ p, locale, t, w, licence, today, whens, ea
           <Amt>{from ? t.from(sar(lo)) : sar(lo)}</Amt>
           {was !== null && <s className="st-was"><Amt>{sar(was)}</Amt></s>}
         </span>
-        {quick && <QuickAdd variant={quick.id} label={w.quickAdd(name)} added={w.added} cant={w.cantAdd} />}
+        {quick && <QuickAdd variant={quick.id} stock={quick.stock} label={w.quickAdd(name)} added={w.added} cant={w.cantAdd} />}
       </div>
     </div>
   );

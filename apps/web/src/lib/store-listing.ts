@@ -1,3 +1,4 @@
+import { MAX_QTY, type CartItem } from "./cart";
 import type { PaySettings } from "./pay/settings";
 import { deliveryOptions, deliveryRange } from "./store-delivery";
 import { warrantyMonths, warrantyParts } from "./store-policy";
@@ -136,6 +137,13 @@ export function quickVariant(p: StoreProduct): StoreVariant | null {
   if (p.kind !== "item" || p.category === "bikes" || p.variants.length !== 1) return null;
   const v = p.variants[0];
   return v.stock > 0 ? v : null;
+}
+
+/** How many more of a variant the cart can take from a card's quick add: what is in stock, 10 a line at most, less what
+ *  the cart already holds (the product page's Add counts the same way, BuyBox `room`). */
+export function quickRoom(cart: readonly CartItem[], v: Pick<StoreVariant, "id" | "stock">): number {
+  const had = cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0;
+  return Math.max(0, Math.min(MAX_QTY, v.stock) - had);
 }
 
 /** The colours a card shows as dots (F04): every one the product comes in, in staff's order. */

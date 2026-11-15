@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "@/i18n/navigation";
 import { sized, srcSet } from "@/lib/img";
+import { quickRoom } from "@/lib/store-listing";
 import { Ic, NoPhoto } from "./bits";
 import { StIcon } from "./icons";
-import { cartAdd } from "./useCart";
+import { cartAdd, useCart } from "./useCart";
 import { savedToggle, useSaved } from "./useLists";
 import { BagPlus } from "./w2-icons";
 
@@ -75,13 +76,15 @@ export function SaveHeart({ slug, label }: { slug: string; label: string }) {
 }
 
 /** Add to cart from the card (F06), for gear sold in one size and one colour: the round bag turns into "Added" with a
- *  drawn tick for a moment (D14-E, no pop-up), or says the cart cannot take more of it. */
-export function QuickAdd({ variant, label, added, cant }: { variant: string; label: string; added: string; cant: string }) {
+ *  drawn tick for a moment (D14-E, no pop-up), or says the cart cannot take more of it: the cart is full, or it already
+ *  holds all that is in stock (10 a line at most), as the product page's Add counts. */
+export function QuickAdd({ variant, stock, label, added, cant }: { variant: string; stock: number; label: string; added: string; cant: string }) {
   const [state, setState] = useState<"" | "added" | "cant">("");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const cart = useCart();
   useEffect(() => () => clearTimeout(timer.current), []);
   const add = () => {
-    const got = cartAdd(variant, 1);
+    const got = quickRoom(cart, { id: variant, stock }) > 0 ? cartAdd(variant, 1) : 0;
     setState(got !== null && got > 0 ? "added" : "cant");
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setState(""), 2500);

@@ -11,7 +11,7 @@ import { storeOf, type Store } from "../store";
 import { paySettings } from "../pay/settings";
 import {
   bySlugs, cardWhen, cardWhens, categoryTiles, cleanFilters, facetsOf, filterCount, listOf, listProducts, listQueryOf, listQueryText, matches, noFilters,
-  quickVariant, recentItems, sortSizes, warrantyText, whenFor, whenText, type CardWhens,
+  quickRoom, quickVariant, recentItems, sortSizes, warrantyText, whenFor, whenText, type CardWhens,
 } from "../store-listing";
 import { T as W } from "../../components/store/w2.text";
 
@@ -104,6 +104,14 @@ describe("a card", () => {
     expect(quickVariant(P("gift-card"))).toBeNull();
     expect(quickVariant(P("jersey"))).toBeNull();
     expect(quickVariant(P("cap"))).toBeNull(); // sold out
+  });
+  it("never puts more in the cart from a card than is in stock, 10 a line at most (F06, L11)", () => {
+    const helmet = quickVariant(P("helmet"))!; // 3 in stock
+    expect(quickRoom([], helmet)).toBe(3);
+    expect(quickRoom([{ variant: helmet.id.toLowerCase(), qty: 2 }], helmet)).toBe(1);
+    expect(quickRoom([{ variant: helmet.id.toLowerCase(), qty: 3 }], helmet)).toBe(0); // all of it is in the cart already
+    expect(quickRoom([{ variant: U(999), qty: 5 }], { id: helmet.id.toUpperCase(), stock: 50 })).toBe(10);
+    expect(quickRoom([{ variant: helmet.id.toLowerCase(), qty: 10 }], { id: helmet.id, stock: 50 })).toBe(0);
   });
   it("names the day it can be had from the delivery staff set (F05): Jeddah first, then the courier, then the showroom", () => {
     const set = (d: Record<string, unknown>) => paySettings({ "pay.enabled": true, "store.delivery": d });
