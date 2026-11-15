@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-14";
+export const PRIVACY_VERSION = "2026-11-15";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -133,9 +133,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Registering you for the event, and giving confirmed donors and checked-in visitors any reward the event offers"
      ],
      [
-      "Volunteering: the opportunities you register for, your message and preferred role, whether you are accepted, your role, when you start and finish, your volunteering hours, that you accepted the volunteer agreement, what you do on the volunteer portal, and notes our team keeps",
-      "Only if you register to volunteer, or our team adds volunteering hours to your account. Seen by you and our staff, except our team’s notes.",
-      "Running volunteering at our events, your record of hours and your certificate"
+      "Volunteering: the opportunities you register for, your message and preferred role, whether you are accepted, your role, when you start and finish, your volunteering hours, that you accepted the volunteer agreement, what you do on the volunteer portal, notes our team keeps, and our team’s rating of how each event you work went, with their comments",
+      "Only if you register to volunteer, or our team adds volunteering hours to your account. Seen by you and our staff, except our team’s notes, ratings and comments, which only our staff see.",
+      "Running volunteering at our events, your record of hours and your certificate, and choosing volunteers for later events"
      ],
      [
       "Volunteering, if you choose to tell us: why you volunteer, your rating of an event you worked and your comments, whether you would volunteer again, when you plan to leave and that you confirmed you are coming",
@@ -547,9 +547,9 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "تسجيلك في الفعالية، ومنح المتبرعين المؤكَّدين والزوار الذين سجّلوا حضورهم أي مكافأة تقدمها الفعالية"
      ],
      [
-      "التطوع: الفرص التي تسجل فيها، ورسالتك ودورك المفضل، وقبولك من عدمه، ودورك، ووقت بدئك وانتهائك، وساعات تطوعك، وموافقتك على إقرار المتطوع، وما تقوم به في بوابة المتطوعين، وملاحظات يحتفظ بها فريقنا",
-      "فقط إذا سجلت للتطوع، أو أضاف فريقنا ساعات تطوع إلى حسابك. يراها أنت وموظفونا، باستثناء ملاحظات فريقنا.",
-      "إدارة التطوع في فعالياتنا، وسجل ساعاتك وشهادتك"
+      "التطوع: الفرص التي تسجل فيها، ورسالتك ودورك المفضل، وقبولك من عدمه، ودورك، ووقت بدئك وانتهائك، وساعات تطوعك، وموافقتك على إقرار المتطوع، وما تقوم به في بوابة المتطوعين، وملاحظات يحتفظ بها فريقنا، وتقييم فريقنا لأدائك في كل فعالية تعمل فيها مع تعليقاتهم",
+      "فقط إذا سجلت للتطوع، أو أضاف فريقنا ساعات تطوع إلى حسابك. يراها أنت وموظفونا، باستثناء ملاحظات فريقنا وتقييماته وتعليقاته، فلا يراها إلا موظفونا.",
+      "إدارة التطوع في فعالياتنا، وسجل ساعاتك وشهادتك، واختيار المتطوعين للفعاليات القادمة"
      ],
      [
       "التطوع، إن اخترت أن تخبرنا: سبب تطوعك، وتقييمك لفعالية عملت فيها وتعليقاتك، وما إذا كنت ستتطوع مرة أخرى، والوقت الذي تنوي المغادرة فيه، وتأكيدك أنك ستحضر",
