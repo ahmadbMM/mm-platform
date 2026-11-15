@@ -1,143 +1,82 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
-import { sized } from "@/lib/img";
-import { optionOpen, optionsOf, pick, pickVariant, priceRange, productStock, sar, stockState, variantLabel, variantPrice, type StoreProduct } from "@/lib/store-core";
-import { MAX_QTY } from "@/lib/cart";
+import { pick, sar, variantLabel, type StockState, type StoreProduct, type StoreVariant } from "@/lib/store-core";
+import type { Estimate } from "@/lib/store-pdp";
 import { T } from "./Store.text";
-import { Amt, Ic } from "./bits";
-import Modal from "./Modal";
-import { cartAdd, useCart } from "./useCart";
+import { T as W } from "./w3a.text";
+import { Amt, Ic, WhatsAppMark } from "./bits";
+import { Bidi } from "./pdp-bits";
 
-// The product page's choices: size and colour (a choice nobody can have is shown but cannot be picked),
-// the price of what is picked with VAT, how many are left, the quantity and Add to cart. A pick that is
-// missing is said where it is missing. Added, a centred pop-up says so and offers the cart. No bar fixed to the
-// bottom of the screen (the owner took them out of the booking app).
-// A size or a colour in stock only with another pick is open too, drawn lighter: a size picked that way brings the
-// first colour it comes in; a colour picked that way clears the size, for the customer to choose again (a size is
-// never changed for them). The quantity goes up to what the cart can still take of it: the stock, 10 a line.
-export default function BuyBox({ p, locale, licence }: { p: StoreProduct; locale: string; licence: string | null }) {
+// The buy box (D10, F25, F35, F83, F32, D14-E): bordered, beside the choices on a desktop (and in view as the page
+// scrolls), under them on a phone, where a bike's reads as the summary of its steps. It holds the price, the day it
+// can be had by the way picked, the stock, the quantity, the estimated total with that way (one row above Add: "Total
+// with Jeddah delivery"), Add to cart - which says Added with a tick for a moment, no pop-up - Buy now straight to
+// checkout (with the extras ticked), Apple Pay's own button on a device that has it (it goes to the same checkout and
+// pays with Apple Pay there: Moyasar's form takes the delivery choice nowhere else), and "Ask about this bike" on
+// WhatsApp as an outline pill. A product sold out offers to be told when it is back instead.
+type Line = { variant: string; price: number; product: StoreProduct };
+
+export default function BuyBox({ locale, rtl, bike, name, v, priceText, unit, qty, max, stock, extras, est, whens, canAdd, added, need, applePay, askHref, onQty, onAdd, onBuy, onNotify }: {
+  locale: string; rtl: boolean; bike: boolean; name: string; v: StoreVariant | null; priceText: string; unit: number | null; qty: number; max: number; stock: StockState;
+  extras: Line[]; est: Estimate; whens: Record<string, string | null>; canAdd: boolean; added: boolean; need: string; applePay: boolean; askHref: string;
+  onQty: (q: number) => void; onAdd: () => void; onBuy: () => void; onNotify: () => void;
+}) {
   const t = useLocalize(T);
-  const o = optionsOf(p);
-  const firstColour = o.colours.find((c) => optionOpen(p, "colour", c.key, null))?.key ?? o.colours[0]?.key ?? null;
-  const [size, setSize] = useState<string | null>(o.sizes.length === 1 ? o.sizes[0] : null);
-  const [colour, setColour] = useState<string | null>(o.colours.length ? firstColour : null);
-  const [qty, setQty] = useState(1);
-  const [need, setNeed] = useState<"" | "size" | "colour" | "full" | "most">("");
-  const [added, setAdded] = useState<{ qty: number; label: string } | null>(null);
-  const sizeGroup = useRef<HTMLDivElement>(null);
-  const cart = useCart();
-
-  const v = pickVariant(p, size, colour);
-  const { lo, hi } = priceRange(p);
-  const price = v ? sar(variantPrice(p, v)) : lo !== hi ? t.from(sar(lo)) : sar(lo);
-  const stock = v ? stockState(v.stock) : productStock(p);
-  const inCart = v ? cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0 : 0;
-  const room = Math.min(MAX_QTY, v?.stock ?? MAX_QTY) - inCart;
-  const max = Math.max(1, room);
-  const n = Math.min(qty, max);
-  const name = pick(locale, p.name_en, p.name_ar);
-  const colourName = (key: string | null | undefined) => { const c = o.colours.find((x) => x.key === key); return c ? pick(locale, c.en, c.ar) : ""; };
-
-  function pickSize(s: string) {
-    setSize(s); setNeed("");
-    if (colour && !optionOpen(p, "size", s, colour)) setColour(o.colours.find((c) => optionOpen(p, "size", s, c.key))?.key ?? colour);
-  }
-  function pickColour(c: string) {
-    setColour(c); setNeed("");
-    if (size && !optionOpen(p, "colour", c, size)) setSize(null);
-  }
-  function add() {
-    if (o.sizes.length && !size) { setNeed("size"); sizeGroup.current?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus(); return; }
-    if (o.colours.length && !colour) { setNeed("colour"); return; }
-    if (!v || v.stock <= 0) return;
-    if (room <= 0) { setNeed("most"); return; }
-    const got = cartAdd(v.id, n);
-    if (got === null) { setNeed("full"); return; }
-    if (got <= 0) { setNeed("most"); return; }
-    setNeed("");
-    setAdded({ qty: got, label: variantLabel(v, locale) });
-  }
-  const canAdd = !(v && v.stock <= 0) && stock.kind !== "out";
-
+  const w = useLocalize(W);
+  const way = est.way;
+  const when = way ? whens[way.id] ?? null : null;
+  const pickName = (x: StoreProduct) => pick(locale, x.name_en, x.name_ar);
+  const Box = bike ? "section" : "div";
   return (
-    <div className="st-buy">
-      <p className="st-price">
-        <Amt>{price}</Amt>
-        {licence && p.compare_at && !v?.price && <s className="st-was"><Amt>{sar(p.compare_at)}</Amt></s>}
-      </p>
-      <p className="st-vat">{t.vatIncl}{licence && p.compare_at ? ` · ${t.licence(licence)}` : ""}</p>
-
-      {o.sizes.length > 0 && (
-        <div className="st-opt">
-          <p className="st-opt-k" id="st-size-k">{t.size}{size ? <b>: {size}</b> : null}</p>
-          <div className="st-sizes" role="group" aria-labelledby="st-size-k" ref={sizeGroup}>
-            {o.sizes.map((s) => {
-              const open = optionOpen(p, "size", s, null), here = optionOpen(p, "size", s, colour);
-              // in stock only in another colour: said with the colour a tap brings
-              const other = open && !here && colour ? colourName(o.colours.find((c) => optionOpen(p, "size", s, c.key))?.key) : "";
-              return (
-                <button key={s} type="button" aria-pressed={size === s} disabled={!open} className={open && !here ? "st-elsewhere" : undefined} onClick={() => pickSize(s)}
-                  aria-label={!open ? `${s}, ${t.soldOut}` : other ? `${s}, ${other}` : s}>{s}</button>
-              );
-            })}
-          </div>
-          {need === "size" && <p className="st-need" role="alert">{t.pickSize}</p>}
-        </div>
+    <Box className="st-buybox" {...(bike ? { "aria-labelledby": "st-buy-h" } : {})}>
+      {bike && <h2 id="st-buy-h" className="st-buybox-h">{w.summary}</h2>}
+      <p className="st-buybox-price"><Amt>{priceText}</Amt></p>
+      {when && way && (
+        <p className="st-buybox-when"><Ic name={way.id === "pickup" ? "shop" : "truck"} size={18} />{way.id === "pickup" ? w.ready(when) : t.arrives(when)}</p>
       )}
-      {o.colours.length > 0 && (
-        <div className="st-opt">
-          <p className="st-opt-k" id="st-colour-k">{t.colour}{colour ? <b>: {pick(locale, o.colours.find((c) => c.key === colour)?.en, o.colours.find((c) => c.key === colour)?.ar)}</b> : null}</p>
-          <div className="st-swatches" role="group" aria-labelledby="st-colour-k">
-            {o.colours.map((c) => {
-              const open = optionOpen(p, "colour", c.key, null), here = optionOpen(p, "colour", c.key, size);
-              const label = pick(locale, c.en, c.ar);
-              return (
-                <button key={c.key} type="button" aria-pressed={colour === c.key} disabled={!open} className={open && !here ? "st-elsewhere" : undefined} title={label} onClick={() => pickColour(c.key)}
-                  aria-label={open ? label : `${label}, ${t.soldOut}`}>
-                  <span className="st-sw" style={c.hex ? { background: c.hex } : undefined} aria-hidden="true" />
-                </button>
-              );
-            })}
-          </div>
-          {need === "colour" && <p className="st-need" role="alert">{t.pickColour}</p>}
-        </div>
-      )}
-
       <p className={`st-stock ${stock.kind}`}>{stock.kind === "out" ? t.soldOut : stock.kind === "low" ? t.left(stock.left) : t.inStock}</p>
+
+      {bike && unit !== null && (
+        <ul className="st-sumlines">
+          <li><span><Bidi text={name} rtl={rtl} />{v && variantLabel(v, locale) ? <small> · {variantLabel(v, locale)}</small> : null}{qty > 1 ? <small> · {t.qtyN(qty)}</small> : null}</span><Amt>{sar(unit * qty)}</Amt></li>
+          {extras.map((x) => <li key={x.variant}><span><Bidi text={pickName(x.product)} rtl={rtl} /></span><Amt>{sar(x.price)}</Amt></li>)}
+          {way && <li><span>{way.id === "pickup" ? w.pickupBuilt : way.id === "jeddah" ? w.jeddahBuilt : t.ksa}</span>{way.fee === 0 ? <span>{t.free}</span> : <Amt>{sar(way.fee)}</Amt>}</li>}
+        </ul>
+      )}
+      {canAdd && est.total !== null && (
+        <p className="bk-sum-tot st-total"><span>{way ? w.totalWith[way.id] : t.total}</span><Amt>{sar(est.total)}</Amt></p>
+      )}
 
       <div className="st-cta">
         {canAdd && (
           <div className="st-qty" role="group" aria-label={t.qty}>
-            <button type="button" onClick={() => setQty(Math.max(1, n - 1))} disabled={n <= 1} aria-label={t.less}><Ic name="minus" size={16} /></button>
-            <output aria-live="polite">{n}</output>
-            <button type="button" onClick={() => setQty(Math.min(max, n + 1))} disabled={n >= max} aria-label={t.more}><Ic name="plus" size={16} /></button>
+            <button type="button" onClick={() => onQty(Math.max(1, qty - 1))} disabled={qty <= 1} aria-label={t.less}><Ic name="minus" size={16} /></button>
+            <output aria-live="polite">{qty}</output>
+            <button type="button" onClick={() => onQty(Math.min(max, qty + 1))} disabled={qty >= max} aria-label={t.more}><Ic name="plus" size={16} /></button>
           </div>
         )}
-        <button type="button" className="bk-btn grow" onClick={add} disabled={!canAdd}>
-          <Ic name="bag" size={18} />{canAdd ? t.add : t.soldOut}
+        <button type="button" className={`bk-btn grow st-add${added ? " is-added" : ""}`} onClick={onAdd} disabled={!canAdd}>
+          {added ? <><Ic name="tick" size={18} />{w.addedBtn}</> : <><Ic name="bag" size={18} />{canAdd ? t.add : t.soldOut}</>}
         </button>
       </div>
+      <p className="st-sr" aria-live="polite">{added ? t.added : ""}</p>
       {need === "full" && <p className="st-need" role="alert">{t.cartFull}</p>}
       {need === "most" && <p className="st-need" role="alert">{t.cartHasMost}</p>}
-
-      {added && (
-        <Modal title={t.added} onClose={() => setAdded(null)} closeLabel={t.close}>
-          <div className="st-added">
-            <span className="st-added-img">{p.images[0] ? <img src={sized(p.images[0], 640)} alt="" /> : <Ic name="bag" size={26} />}</span>
-            <span>
-              <b>{name}</b>
-              <small>{[added.label, t.qtyN(added.qty)].filter(Boolean).join(" · ")}</small>
-            </span>
-          </div>
-          <div className="bk-pop-foot">
-            <button type="button" className="bk-btn2" onClick={() => setAdded(null)}>{t.keepShopping}</button>
-            <Link href="/store/cart" className="bk-btn">{t.viewCart}</Link>
-          </div>
-        </Modal>
+      {canAdd ? (
+        <>
+          <button type="button" className="bk-btn2 wide st-buynow" onClick={onBuy}>{w.buyNow}</button>
+          {applePay && (
+            // Apple's own button, drawn by Safari (-apple-pay-button), in the page's language: the official artwork
+            <button type="button" className="st-applepay" lang={locale === "ar" ? "ar" : "en"} onClick={onBuy} aria-label={w.applePay} />
+          )}
+        </>
+      ) : (
+        <button type="button" className="bk-btn2 wide st-buynow" aria-haspopup="dialog" onClick={onNotify}>{w.notifyAny}</button>
       )}
-    </div>
+      {askHref && (
+        <a className="st-ask" href={askHref} target="_blank" rel="noopener noreferrer"><WhatsAppMark size={18} />{bike ? w.askBike : w.askItem}</a>
+      )}
+    </Box>
   );
 }

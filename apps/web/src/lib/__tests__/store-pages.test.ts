@@ -34,13 +34,18 @@ describe("the store's pages", () => {
     expect(html).not.toContain("st-was");
     expect(html).not.toMatch(/\p{Extended_Pictographic}/u);
   });
-  it("offer a product's sizes, a sold-out one closed, with the price and VAT", async () => {
-    const { default: BuyBox } = await import("@/components/store/BuyBox");
-    const en = render(wrap("en", createElement(BuyBox, { p: STORE.products[0], locale: "en", licence: null })));
+  it("offer a product's sizes, a sold-out one struck through and asking to be told when it is back, with the price and VAT", async () => {
+    const { default: ProductTop } = await import("@/components/store/ProductTop");
+    const top = (locale: string, licence: string | null) => createElement(ProductTop, {
+      p: STORE.products[0], locale, licence, today: "2026-11-15", related: [], settings: paySettings({}), whens: {}, showroom: "Al Sharafeyah",
+      policy: [], whatsapp: "966566668818", tabby: false, applePay: false, href: "https://micromobility.sa/store/helmet",
+    });
+    const en = render(wrap("en", top("en", null)));
     expect(en).toContain("VAT included");
-    expect(en).toMatch(/aria-label="L, Sold out"[^>]*disabled|disabled[^>]*aria-label="L, Sold out"/);
+    expect(en).toMatch(/class="st-out"[^>]*aria-haspopup="dialog"[^>]*aria-label="L, Sold out"/);
     expect(en).toContain("Add to cart");
-    const ar = render(wrap("ar", createElement(BuyBox, { p: STORE.products[0], locale: "ar", licence: "123" })));
+    expect(en).not.toContain("st-was");
+    const ar = render(wrap("ar", top("ar", "123")));
     expect(ar).toContain("أضف إلى السلة");
     expect(ar).toContain("رقم ترخيص التخفيض 123");
   });
