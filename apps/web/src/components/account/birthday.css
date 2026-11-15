@@ -1,0 +1,19 @@
+/* The birthday week (BirthdayConfetti.tsx, 2026-11-15): confetti over everything, the line in the middle, taps go
+   through both. The booking app's look (styles.css .bdfx-cv / .bdfx-hi). */
+.bdfx-cv { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 100000; pointer-events: none; }
+.bdfx-hi {
+  position: fixed; left: 50%; top: 50%; z-index: 100001; transform: translate(-50%, -50%);
+  display: flex; align-items: center; gap: 12px; width: max-content; max-width: min(86vw, 440px);
+  padding: 18px 24px; border-radius: 26px; background: #1a1919; color: #fbf9f4;
+  font-size: 21px; font-weight: 700; line-height: 1.3; text-align: start;
+  box-shadow: 0 0 0 1px rgba(251, 249, 244, 0.16), 0 8px 28px rgba(26, 25, 25, 0.3); pointer-events: none; /* the ring holds it on a dark page */
+  animation: bdfxHi 4.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+.bdfx-hi svg { flex: none; color: #03ff89; }
+@keyframes bdfxHi {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  10%, 84% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.98); }
+}
+/* reduced motion: no confetti, and the line stands still until its timer takes it */
+@media (prefers-reduced-motion: reduce) { .bdfx-hi { animation: none; } }

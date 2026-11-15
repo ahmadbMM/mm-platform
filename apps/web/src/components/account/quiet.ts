@@ -12,6 +12,8 @@ export const SHARE_QUIET = "mm_share_none";
 export const CLUB_QUIET = "mm_club_none";
 export const RACE_QUIET = "mm_race_none";
 export const RATE_QUIET = "mm_rate_none";
+/** Not a quiet window: the birthday week's answer for the day (BirthdayConfetti.tsx), forgotten with them. */
+export const BDAY_SEEN = "mm_bday";
 
 // A sign-in through the booking app's hand-over (api/account/handoff) lands on /account?handoff=done with no sign-in
 // form on the way, so the first look at a window on that page load forgets them all, as a sign-in does.
@@ -38,6 +40,7 @@ export function forgetQuiet(): void {
     sessionStorage.removeItem(CLUB_QUIET);
     sessionStorage.removeItem(RACE_QUIET);
     sessionStorage.removeItem(RATE_QUIET);
+    sessionStorage.removeItem(BDAY_SEEN);
   } catch { /* storage off: nothing kept */ }
 }
 

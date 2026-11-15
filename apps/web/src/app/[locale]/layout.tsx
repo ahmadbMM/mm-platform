@@ -8,6 +8,7 @@ import { localeInfo } from "@/i18n/locales";
 import { clientDict } from "@/i18n/dicts";
 import { TxProvider } from "@/i18n/TxProvider";
 import EmergencyGateLoader from "@/components/account/EmergencyGateLoader";
+import BirthdayConfetti from "@/components/account/BirthdayConfetti";
 import { layoutTitle } from "@/lib/staging";
 import "../globals.css";
 
@@ -51,8 +52,9 @@ export default async function LocaleLayout({
     <html lang={info.html} dir={info.dir} className={`${grotesk.variable} ${plexAr.variable} ${arFace.variable} ${ygFace.variable} ${fhFace.variable}`}>
       <body>
         <NextIntlClientProvider>
+          {/* a signed-in rider's birthday week: confetti and a line, on its own beside the pop-ups (BirthdayConfetti) */}
           {/* the pop-ups a signed-in rider cannot skip: the account's emergency contact, then a Community member's "Do you compete in a sport?", then a desk-added booking's waiver, then a Run for Her runner's agreement to share their details, then a Defe runner's "Have you registered for the race?", then the post-ride rating (EmergencyGateLoader holds SportGateLoader, which holds WaiverGateLoader, which holds ShareGateLoader, which holds RaceGateLoader, which holds RatingGateLoader) */}
-          <TxProvider locale={locale} dict={clientDict(locale)}>{children}<EmergencyGateLoader locale={locale} /></TxProvider>
+          <TxProvider locale={locale} dict={clientDict(locale)}>{children}<EmergencyGateLoader locale={locale} /><BirthdayConfetti /></TxProvider>
         </NextIntlClientProvider>
         {BEACON && <Script src="https://static.cloudflareinsights.com/beacon.min.js" strategy="afterInteractive" data-cf-beacon={JSON.stringify({ token: BEACON })} />}
       </body>
