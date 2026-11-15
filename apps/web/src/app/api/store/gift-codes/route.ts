@@ -4,7 +4,7 @@ import { giftCodes } from "@/lib/store-api";
 // POST /api/store/gift-codes (F57): the order's page, in the browser that placed the order, asks for the whole codes of
 // the gift cards it bought. A code is the money, so the database masks them for the order's link alone (Track order hands
 // that link to anyone with the order number and the phone); the order's gift key, which the checkout gave this browser
-// (lib/store-lists.ts, "mm-gift-keys"), shows them (store_order_get, rentals 20261115200100; CONTRACTS.md Additions by
+// (lib/store-lists.ts, "mm-gift-keys"), shows them (store_order_get, rentals 20261115235500; CONTRACTS.md Additions by
 // lead: gift card codes). Body: {no, key, gift}. Answers {ok: true, cards} (masked again for a wrong gift key) or
 // {ok: false, error: invalid | not_found | busy | ...}.
 export async function POST(req: Request) {

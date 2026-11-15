@@ -4,7 +4,7 @@ import { reviewAdd } from "@/lib/store-api";
 // POST /api/store/review (F94): a verified buyer's review of one product of a delivered order, from the card the order's
 // page shows once it is delivered. The order is named by its number and its own key; the database checks it was
 // delivered, that the product is one of its lines (never a gift card) and that it was not reviewed yet
-// (store_review_add, rentals 20261115200100). It waits for staff to show it; no name, phone or account is kept with it
+// (store_review_add, rentals 20261115235500). It waits for staff to show it; no name, phone or account is kept with it
 // (owner rule: nobody's name), and nothing invented ever reaches the product page.
 // Body: {no, key, product, rating: 1-5, body, lang}. Answers {ok: true} or
 // {ok: false, error: review_state | review_item | review_done | not_found | busy | invalid | ...}.

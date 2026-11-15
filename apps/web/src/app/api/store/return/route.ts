@@ -6,7 +6,7 @@ import { RETURN_REASONS, type ReturnReason } from "@/lib/store-order";
 // order. The order is named by its number and its own key (the order page's link, as Track order and My Account give
 // it), never by the account; the database checks the window (7 days to return, 15 to exchange, from the day it was
 // delivered), that no request is open, and that each line is the order's own and not more than was bought
-// (store_return_request, rentals 20261115200100). Staff approve or refuse it in the staff page; the refund then goes the
+// (store_return_request, rentals 20261115235500). Staff approve or refuse it in the staff page; the refund then goes the
 // existing way (Payments > Refunds). Nothing is sent by email or SMS: the order's page shows the request.
 // Body: {no, key, kind: "return" | "exchange", items: [{item, qty}], reason, note}. Answers {ok: true, order} or
 // {ok: false, error: return_window | return_open | return_items | not_found | busy | invalid | ...}.

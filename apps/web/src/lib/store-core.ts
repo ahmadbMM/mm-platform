@@ -10,7 +10,7 @@ export type StoreCategory = (typeof STORE_CATEGORIES)[number];
 /** One line of a product's specifications in both languages: {en: [label, value], ar: [label, value]}. */
 export type StoreSpec = { en?: [string, string]; ar?: [string, string] };
 
-// ── The product's richer fields (store build 2026-11-15, rentals migration 20261115200100; CONTRACTS.md section 2) ──
+// ── The product's richer fields (store build 2026-11-15, rentals migration 20261115235500; CONTRACTS.md section 2) ──
 
 /** A text staff write in English, and in Arabic when they have it. */
 export type StoreBi = { en: string; ar: string | null };

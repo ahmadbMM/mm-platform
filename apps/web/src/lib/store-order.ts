@@ -6,7 +6,7 @@ import type { PaySettings } from "./pay/settings";
 // paid and when it is expected. The customer's own copy: the phone masked, the address only its city and
 // district, and only the events staff marked public.
 
-// The store build (2026-11-15, rentals migration 20261115200100; CONTRACTS.md section 3) added: out for delivery (F96), a
+// The store build (2026-11-15, rentals migration 20261115235500; CONTRACTS.md section 3) added: out for delivery (F96), a
 // gift card alone ("digital", F57), discounts (bundle F31, code F67), what a gift card paid, the gift note (F58), the
 // delivery slot (F78), the day it was delivered, returns asked for (F93), the gift cards it bought, each line's own
 // photo and address (X08) and whether it was reviewed (F94), and every refund with where it went (X09).

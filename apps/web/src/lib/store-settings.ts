@@ -1,7 +1,7 @@
 import { workingDay } from "./store-delivery";
 import type { SiteContent } from "./site";
 
-// The store build's settings (2026-11-15, rentals migration 20261115200100; CONTRACTS.md section 1), read the way the
+// The store build's settings (2026-11-15, rentals migration 20261115235500; CONTRACTS.md section 1), read the way the
 // database reads them: a key that is missing or malformed reads as its default, which is off. Staff edit them in the
 // staff page's Payments > Settings. Nothing here reads anything, so the browser's components can use it too.
 

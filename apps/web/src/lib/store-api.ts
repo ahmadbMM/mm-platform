@@ -5,7 +5,7 @@ import { payRpc, payView } from "./pay/server";
 import { tabbyCheckout, type TabbyOrder } from "./pay/tabby";
 import { orderOf, RETURN_REASONS, type IssuedGiftCard, type Order, type ReturnReason } from "./store-order";
 
-// The store build's calls to the database from this server (2026-11-15, rentals migration 20261115200100;
+// The store build's calls to the database from this server (2026-11-15, rentals migration 20261115235500;
 // CONTRACTS.md sections 5.1 and 6). Each takes the server key the way store_checkout does (payRpc), so the public key
 // alone opens none of them; the routes that call these are the chains' own (/api/store/promo, /gift-card,
 // /stock-request, /return, /review). The answer is the data, or the page's code for the database's refusal (payError)

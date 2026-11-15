@@ -7,7 +7,7 @@
 // Prices are VAT included. A variant's own price, when it has one, replaces the product's. The pages only
 // show prices: the database prices every order itself (store_checkout), so nothing here decides money.
 //
-// The store build (2026-11-15, rentals migration 20261115200100) added the product's richer fields (NEW_COLS) and the
+// The store build (2026-11-15, rentals migration 20261115235500) added the product's richer fields (NEW_COLS) and the
 // verified buyers' reviews staff show (store_reviews, read the same way). A database without those columns yet answers
 // the first read with an error, so the products are read again with the columns it has: the pages never go empty
 // while the migration waits.

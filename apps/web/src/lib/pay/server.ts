@@ -30,7 +30,7 @@ export type PendingRefund = Refund & { already?: number; created_at?: string };
 type RpcAnswer<T> = Awaited<ReturnType<typeof rpcServer<T>>>;
 
 /** A pay_* function with the server key. `from`: the shopper's request, for a function the database meters per visitor
- *  (store_stock_request, store_promo_check, store_gift_card_check: _ip_gate on x-mm-visitor-ip, rentals 20261115200100):
+ *  (store_stock_request, store_promo_check, store_gift_card_check: _ip_gate on x-mm-visitor-ip, rentals 20261115235500):
  *  without it every shopper shares the Worker's one address and its one meter (lib/account.ts forVisitor). */
 export function payRpc<T>(fn: string, args: Record<string, unknown>, env: PayEnv = payEnv(), from?: Request): Promise<RpcAnswer<T>> {
   const a = { p_key: env.PAY_SERVER_KEY ?? "", ...args };

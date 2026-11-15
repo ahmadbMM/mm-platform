@@ -20,7 +20,7 @@ import { ICON_NAMES } from "../../components/store/icons";
 
 // The store build's shared pieces (2026-11-15, CONTRACTS.md): the product's richer fields as the pages read them, the
 // rules on top of them, the new settings, the order's new fields, the browser-kept lists and the invoice's QR. The
-// database prices and checks everything itself (rentals 20261115200100); these keep the pages saying the same.
+// database prices and checks everything itself (rentals 20261115235500); these keep the pages saying the same.
 const U = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const variant = (n: number, pid: string, x: Record<string, unknown> = {}) => ({ id: U(100 + n), product_id: pid, size: null, color_en: null, color_ar: null, color_hex: null, price: null, stock: 5, sort: n, ...x });
 const product = (id: string, slug: string, x: Record<string, unknown> = {}) => ({
