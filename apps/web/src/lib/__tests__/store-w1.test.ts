@@ -10,7 +10,10 @@ vi.mock("next/headers", () => ({ cookies: async () => ({ get: () => undefined })
 
 import proxy, { POLICY_PAGE } from "../../proxy";
 import { searchIndex } from "../../app/[locale]/search-index";
-import { isPolicyHref, keptTrust, legalParts, policyLinks, POLICY_LINKS, returnsAnswers, waNumber, whatsappHref, withoutPolicyLinks } from "../policies";
+import { footerColumns, isPolicyHref, keptTrust, legalParts, policyLinks, POLICY_LINKS, returnsAnswers, waNumber, whatsappHref, withoutPolicyLinks } from "../policies";
+import { bikesState } from "../../components/bikes/catalog-data";
+import { resetCatalog } from "../catalog";
+import { resetFares } from "../biz";
 import { productFacts, storeLinksByModel, storePaths, storeSearchItems } from "../store-site";
 import { storeOf, type Store } from "../store-core";
 import { resetStore } from "../store";
@@ -81,6 +84,20 @@ describe("the footer's Policies column (L12)", () => {
     for (const h of ["/help", "/help#delivery", "/termsx", "/about", "https://example.com/terms", "/store/returns"]) expect(isPolicyHref(h), h).toBe(false);
     expect(withoutPolicyLinks([{ label: "Help", href: "/help" }, { label: "Returns", href: "/help#returns" }, { label: "Privacy", href: "/privacy" }]))
       .toEqual([{ label: "Help", href: "/help" }]);
+  });
+  it("comes after staff's columns, which keep their other links, a column without a title too; a column left empty is not drawn", () => {
+    const policies = { title: "Policies", links: [{ label: "Returns", href: "/returns" }] };
+    const staff = [
+      { title: "", links: [{ label: "Help", href: "/help" }, { label: "Terms", href: "/terms" }] },
+      { title: "Legal", links: [{ label: "Privacy", href: "/privacy" }] },
+      { title: "Shop", links: [{ label: "Store", href: "/store" }, { label: "Off", href: "/club" }] },
+    ];
+    const cols = footerColumns(staff, policies, (links) => links.filter((l) => l.href !== "/club"));
+    expect(cols).toEqual([
+      { title: "", links: [{ label: "Help", href: "/help" }] },
+      { title: "Shop", links: [{ label: "Store", href: "/store" }] },
+      policies,
+    ]);
   });
   it("starts the Company column without those links, so the Website editor shows what the footer draws", () => {
     const company = resolvePage(siteSchema, null, "en").footer.company as { href: string }[];
@@ -241,6 +258,38 @@ describe("the header's search", () => {
 });
 
 describe("the /bikes catalogue's store link (F12)", () => {
+  const json = (v: unknown) => new Response(JSON.stringify(v), { status: 200, headers: { "content-type": "application/json" } });
+  const asked: string[] = [];
+  const db = (storeOn: boolean) => vi.fn(async (url: string) => {
+    asked.push(url);
+    if (url.includes("/site_content?") && url.includes("key=not.like.journal")) {
+      return json([{ key: "site.coming_soon", value: false }, { key: "store.open", value: storeOn }, { key: "pay.enabled", value: true }]);
+    }
+    if (url.includes("/store_products?")) return json([product(BIKE, "da54", { category: "bikes", price: 8000, sort: 1, catalog_model: MODEL })]);
+    if (url.includes("/store_variants?")) return json([variant(1, BIKE, { size: "M", stock: 2 })]);
+    return json([]);
+  });
+  beforeEach(() => {
+    asked.length = 0;
+    resetSiteContent();
+    resetStore();
+    resetCatalog();
+    resetFares();
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://example.supabase.co");
+    vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
+  });
+  afterEach(() => { vi.unstubAllEnvs(); vi.unstubAllGlobals(); });
+  it("never reads the store's tables while the store forwards to the Salla shop (production has none)", async () => {
+    vi.stubGlobal("fetch", db(false));
+    const s = await bikesState("en");
+    expect(s.shop.size).toBe(0);
+    expect(asked.some((u) => u.includes("/store_products") || u.includes("/store_variants"))).toBe(false);
+  });
+  it("links each model a product sells while the store is open", async () => {
+    vi.stubGlobal("fetch", db(true));
+    const s = await bikesState("en");
+    expect(s.shop.get(MODEL)).toBe("/store/da54");
+  });
   it("is read only while the site's own store is open, and drawn on the cards and the model page", () => {
     const data = readFileSync(here("../../components/bikes/catalog-data.ts"), "utf8");
     expect(data).toMatch(/storeOpen\(state\.content\) \? storeLinksByModel\(store\)/);

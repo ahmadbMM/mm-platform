@@ -6,7 +6,7 @@ import { siteSchema } from "@/content/pages/site";
 import { Link } from "@/i18n/navigation";
 import { BOOKING_URL, bookingLink, pageOf } from "@/lib/links";
 import { resolvePage } from "@/lib/content-core";
-import { keptTrust, legalParts, policyLinks, withoutPolicyLinks } from "@/lib/policies";
+import { footerColumns, keptTrust, legalParts, policyLinks } from "@/lib/policies";
 import { loadSiteContent } from "@/lib/site";
 import { storeLegal } from "@/lib/store-settings";
 import { POLICY } from "@/lib/store-policy";
@@ -62,9 +62,7 @@ export default async function SiteFooter({ locale, c, hidden = [], booking = BOO
   const socials = SOCIAL_ORDER.map((id) => [id, c.social[id]] as const).filter(([, href]) => !!href);
   const link = (l: FooterLink) => (pageOf(l.href) === "account" && hidden.includes("account") ? { ...l, href: bookingLink(booking, locale) } : l.href.startsWith(BOOKING_URL) || l.href.startsWith(booking) ? { ...l, href: bookingLink(l.href, locale) } : l);
   const policies = { title: t.policies, links: policyLinks(hidden).map((p) => ({ label: t[p.key], href: p.href })) };
-  const columns = [...c.columns.map((col) => ({ ...col, links: withoutPolicyLinks(col.links) })), policies]
-    .map((col) => ({ ...col, links: col.links.map(link).filter((l) => l.label && l.href && !(pageOf(l.href) && pageOf(l.href) !== "account" && hidden.includes(pageOf(l.href)))) }))
-    .filter((col) => col.title && col.links.length > 0);
+  const columns = footerColumns(c.columns, policies, (links) => links.map(link).filter((l) => l.label && l.href && !(pageOf(l.href) && pageOf(l.href) !== "account" && hidden.includes(pageOf(l.href)))));
   // The trust line as staff keep it, read in English too, so a replaced line is known in any language.
   const enList = resolvePage(siteSchema, content, "en").footer.trust as unknown;
   const trustEn = (Array.isArray(enList) ? (enList as Record<string, unknown>[]) : []).map((x) => (typeof x.text === "string" ? x.text : ""));

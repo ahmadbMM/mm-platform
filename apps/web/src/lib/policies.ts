@@ -29,6 +29,16 @@ export function isPolicyHref(href: string): boolean {
 /** A column's links without the ones the Policies column gives (no link twice in the footer). */
 export const withoutPolicyLinks = <T extends { href: string }>(links: readonly T[]): T[] => links.filter((l) => !isPolicyHref(l.href));
 
+export type FooterColumn<T> = { title: string; links: T[] };
+/** The footer's link columns: staff's own, each without the links the Policies column gives, then the Policies column.
+ *  `shown` is the footer's own pass over a column's links (the booking app's addresses, a page staff switched off left
+ *  out). A column left with no link is not drawn; one whose title staff left empty still shows its links, as it always has. */
+export function footerColumns<T extends { href: string }>(staff: readonly FooterColumn<T>[], policies: FooterColumn<T>, shown: (links: readonly T[]) => T[]): FooterColumn<T>[] {
+  return [...staff.map((col) => ({ ...col, links: withoutPolicyLinks(col.links) })), policies]
+    .map((col) => ({ ...col, links: shown(col.links) }))
+    .filter((col) => col.links.length > 0);
+}
+
 // A trust line the store build replaced, whatever staff saved (the Website editor keeps the list it was given): Maroof
 // (the SBC badge stands in its place, L02) and any returns promise (the footer gives the one sentence, X03), read in
 // English and in Arabic.

@@ -4,6 +4,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { loadCatalog, type Catalog } from "@/lib/catalog";
 import { loadFares } from "@/lib/biz";
 import { pageState } from "@/lib/page-state";
+import { loadSiteContent } from "@/lib/site";
 import { loadStore, storeOpen } from "@/lib/store";
 import { storeLinksByModel } from "@/lib/store-site";
 import { serverL } from "@/i18n/dicts";
@@ -14,8 +15,12 @@ import { serverL } from "@/i18n/dicts";
 // a model's ride price is quoted at (lib/biz.ts loadFares: the booking app's Settings > Pricing). `shop`: the models a
 // product of the site's own store sells, each with its store page (the store build, 2026-11-15, F12: "See it in the
 // store"), only while that store is open - until then /store forwards to the Salla shop, which has no page per model.
+// The store's tables are read only while it is open (the site's content, which says so, is the one pageState reads,
+// kept a minute): a closed store - production has no store tables at all - costs the catalogue no database call and
+// no wait.
 export async function bikesState(locale: string) {
-  const [state, catalog, fares, store] = await Promise.all([pageState("bikes"), loadCatalog(), loadFares(), loadStore()]);
+  const shopStore = loadSiteContent().then((content) => (storeOpen(content) ? loadStore() : null));
+  const [state, catalog, fares, store] = await Promise.all([pageState("bikes"), loadCatalog(), loadFares(), shopStore]);
   const L = asLocale(locale);
   return {
     ...state,
