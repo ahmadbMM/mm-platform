@@ -5,6 +5,10 @@ import { useLocalize } from "@/i18n/TxProvider";
 import { fill } from "@/i18n/tx";
 import { useDialogFocus } from "@/components/site/use-dialog-focus";
 import { Link } from "@/i18n/navigation";
+import { sar } from "@/lib/pay/money";
+import { tabbyQuarter } from "@/lib/store-checkout";
+import { useApplePay } from "@/components/store/useCode";
+import { T as W } from "@/components/store/w4.text";
 import { T } from "./Pay.text";
 
 // The payment page's live part (micromobility.sa/pay/<id>): the hold's countdown and Moyasar's own form
@@ -18,6 +22,10 @@ import { T } from "./Pay.text";
 // paying?" with the time left running down, and Keep my place asks for more (/api/pay/extend, rentals pay_hold_extend):
 // the hold starts again from then, up to twice its length from when the payment began, after which Keep my place goes
 // and the countdown stays. Close leaves the hold as it is, and the warning comes back only for a hold kept again.
+// A payment that did not go through (store build 2026-11-15, F87) says so in a banner with two ways on: Try Apple Pay (on a
+// device that has it: Moyasar's form is drawn again with Apple Pay alone) and Use another card (the whole form again, the
+// keyboard on the card number). A store order may also be paid in 4 with Tabby (F84) while staff switch it on and the
+// Worker holds Tabby's keys: a tile under the form, behind the same tick, that opens Tabby's own page.
 
 type MoyasarInit = (cfg: Record<string, unknown>) => void;
 declare global { interface Window { Moyasar?: { init: MoyasarInit } } }
@@ -36,7 +44,15 @@ export type PayScreenProps = {
   againHref?: string | null;
   /** The Terms' address for the agreement's link; null while staff have the Terms page switched off. */
   termsHref?: string | null;
+  /** Apple Pay can be taken here (its domain file is in place): Try Apple Pay after a decline, on a device that has it. */
+  applePay?: boolean;
+  /** Tabby's "Pay in 4" for a store order (F84), only while it is switched on and its keys are there. */
+  tabby?: boolean;
+  /** Back from Tabby without paying: "cancel" or "fail". */
+  tabbyBack?: string | null;
 };
+
+const ALL_METHODS = ["applepay", "creditcard", "stcpay"];
 
 /** How long before the hold lets go the warning opens: a minute, well over the 20 seconds WCAG 2.2.1 asks for. */
 const WARN_MS = 60000;
@@ -50,8 +66,16 @@ function uuid4(): string {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
-export default function PayScreen({ locale, pay, publishableKey, testMode, formJs, formCss, declined, tried, againHref = null, termsHref = null }: PayScreenProps) {
+export default function PayScreen({ locale, pay, publishableKey, testMode, formJs, formCss, declined, tried, againHref = null, termsHref = null, applePay = false, tabby = false, tabbyBack = null }: PayScreenProps) {
   const t = useLocalize(T);
+  const w = useLocalize(W);
+  const appleHere = useApplePay(applePay);
+  // the ways Moyasar's form offers (F87: Apple Pay alone after Try Apple Pay), and whether the card number takes the keyboard once drawn
+  const [methods, setMethods] = useState<string[]>(ALL_METHODS);
+  const toCard = useRef(false);
+  const agreeBox = useRef<HTMLInputElement>(null);
+  const [tabbyBusy, setTabbyBusy] = useState(false);
+  const [tabbyErr, setTabbyErr] = useState(tabbyBack ? w.tabbyErr[tabbyBack] ?? w.tabbyErr.generic : "");
   const el = useRef<HTMLDivElement>(null);
   // The refund policy is accepted with a tick before paying (2026-11-14, the card schemes' click-to-accept): until it is
   // ticked Moyasar's form is drawn but inert, so neither a card, STC Pay nor Apple Pay can be used. A disabled form says
@@ -132,7 +156,7 @@ export default function PayScreen({ locale, pay, publishableKey, testMode, formJ
           description: pay.description,
           publishable_api_key: publishableKey,
           callback_url: `${window.location.origin}/api/pay/return?pay=${pay.id}`,
-          methods: ["applepay", "creditcard", "stcpay"],
+          methods,
           supported_networks: ["mada", "visa", "mastercard"],
           language: locale === "ar" ? "ar" : "en",
           metadata: { pay_id: pay.id, kind: pay.kind, ref: pay.ref.slice(0, 80) },
@@ -150,6 +174,10 @@ export default function PayScreen({ locale, pay, publishableKey, testMode, formJ
             } catch { /* the return page and the webhook settle it anyway */ }
           },
         });
+        if (toCard.current) {
+          toCard.current = false;
+          requestAnimationFrame(() => el.current?.querySelector<HTMLInputElement>("#mysr-cc-number")?.focus());
+        }
       } catch { setFailed(true); }
     };
     if (window.Moyasar) start();
@@ -162,7 +190,34 @@ export default function PayScreen({ locale, pay, publishableKey, testMode, formJ
       return () => { gone = true; window.clearTimeout(late); s?.removeEventListener("load", start); };
     }
     return () => { gone = true; };
-  }, [over]); // eslint-disable-line react-hooks/exhaustive-deps -- drawn once per page; the props never change
+  }, [over, methods]); // eslint-disable-line react-hooks/exhaustive-deps -- drawn once per page and per change of ways; the props never change
+
+  // F87: the ways on after a payment that did not go through. Until the refund policy is ticked the form takes nothing,
+  // so the tick gets the keyboard first.
+  const later = (fn: () => void) => requestAnimationFrame(() => requestAnimationFrame(fn));
+  function tryApple() {
+    setMethods(["applepay"]);
+    later(() => { if (!agreed) agreeBox.current?.focus(); el.current?.scrollIntoView({ block: "center", behavior: "smooth" }); });
+  }
+  function otherCard() {
+    const narrowed = methods.length !== ALL_METHODS.length;
+    if (!agreed) agreeBox.current?.focus();
+    else if (narrowed) toCard.current = true; // once the whole form is drawn again
+    else el.current?.querySelector<HTMLInputElement>("#mysr-cc-number")?.focus();
+    if (narrowed) setMethods(ALL_METHODS);
+    later(() => el.current?.scrollIntoView({ block: "center", behavior: "smooth" }));
+  }
+  async function goTabby() {
+    if (tabbyBusy || !agreed) return;
+    setTabbyBusy(true); setTabbyErr("");
+    try {
+      const r = await fetch("/api/pay/tabby", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pay: pay.id, lang: locale }), signal: AbortSignal.timeout(15000) });
+      const b = (await r.json().catch(() => null)) as { ok?: boolean; url?: string; error?: string } | null;
+      if (b?.ok && b.url && /^https:\/\//.test(b.url)) { window.location.assign(b.url); return; } // busy while Tabby's page opens
+      setTabbyErr(w.tabbyErr[b?.error ?? ""] ?? w.tabbyErr.generic);
+    } catch { setTabbyErr(w.tabbyErr.generic); }
+    setTabbyBusy(false);
+  }
 
   const mmss = (ms: number) => {
     const s = Math.max(0, Math.ceil(ms / 1000));
@@ -191,14 +246,29 @@ export default function PayScreen({ locale, pay, publishableKey, testMode, formJ
   return (
     <div className="py-live">
       {pay.hold && <p className="py-hold" aria-live="off">{holding()}</p>}
-      {(declined || tried) && <p className="py-err" role="alert">{declined ? fill(t.declined, declined) : t.declinedPlain}</p>}
+      {(declined || tried || tabbyErr) && (
+        <div className="py-err py-recover" role="alert">
+          <p>{tabbyErr || (declined ? fill(t.declined, declined) : t.declinedPlain)}</p>
+          <div className="py-recover-acts">
+            {appleHere && <button type="button" className="bk-btn2" onClick={tryApple}>{w.tryApple}</button>}
+            <button type="button" className="bk-btn2" onClick={otherCard}>{w.otherCard}</button>
+          </div>
+        </div>
+      )}
       {testMode && <p className="py-test">{t.testMode}</p>}
       <label className="py-agree">
-        <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
+        <input ref={agreeBox} type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} />
         <span>{agreeLine()}</span>
       </label>
       <p className="py-note">{t.payNote}</p>
-      <div ref={el} className={`py-form${agreed ? "" : " off"}`} dir={locale === "ar" ? "rtl" : "ltr"} inert={!agreed} />
+      <div ref={el} className={`py-form${agreed ? "" : " off"}${methods.length < ALL_METHODS.length ? " one" : ""}`} dir={locale === "ar" ? "rtl" : "ltr"} inert={!agreed} />
+      {tabby && pay.kind === "order" && (
+        <div className={`py-tb${agreed ? "" : " off"}`} inert={!agreed}>
+          <img src="/site/payments/tabby.svg" alt="Tabby" width={58} height={37} />
+          <span><b>{w.tabby}</b><small><bdi className="tk-amt">{w.tabbyParts(sar(tabbyQuarter(pay.amount)))}</bdi></small></span>
+          <button type="button" className="bk-btn2" onClick={() => void goTabby()} disabled={tabbyBusy} aria-busy={tabbyBusy}>{w.tabbyGo}</button>
+        </div>
+      )}
       {failed && (
         <div className="py-box" role="alert">
           <p className="py-msg">{t.loadError}</p>

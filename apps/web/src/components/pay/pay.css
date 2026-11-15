@@ -85,3 +85,15 @@ html:is([lang="ar"], [lang="ur"]) .py-kind { text-transform: none; letter-spacin
 .py-tick::after { content: ""; position: absolute; left: 19px; top: 14px; width: 14px; height: 24px; border: solid #fbf9f4; border-width: 0 4px 4px 0; transform: rotate(45deg); }
 .py-paid-amt { margin: 4px 0 0; font-size: 30px; font-weight: 700; color: #1a1919; }
 .py-meta { margin: 0; font-size: 14px; color: #6e6b63; }
+
+/* Store build w4 (2026-11-15): a payment that did not go through, with the ways on (F87), and Tabby's Pay in 4 (F84) */
+.py-recover p { margin: 0; }
+.py-form.one { min-height: 0; } /* Apple Pay alone (Try Apple Pay): no room kept for the card's fields */
+.py-recover-acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.py-recover-acts .bk-btn2 { min-height: 44px; padding: 0 16px; font-size: 14px; }
+.py-tb { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 14px 0 0; padding: 14px; border: 1px solid rgba(26, 25, 25, .14); border-radius: 12px; background: #fff; transition: opacity .2s ease; }
+.py-tb.off { opacity: .4; filter: grayscale(.6); cursor: not-allowed; }
+.py-tb img { width: 58px; height: auto; flex: none; }
+.py-tb > span { flex: 1 1 160px; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 15px; }
+.py-tb small { font-size: 13px; color: #4a4843; }
+.py-tb .bk-btn2 { min-height: 44px; padding: 0 16px; font-size: 14px; }
