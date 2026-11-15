@@ -63,10 +63,21 @@ export function firstOpen(steps: readonly StepId[], problems: readonly string[])
 /** After Continue on `from`: the next step not yet seen or with something to fix, else the review. */
 export function nextStep(steps: readonly StepId[], from: StepId, seen: readonly StepId[], problems: readonly string[]): StepId {
   const i = steps.indexOf(from);
+  // a step before this one left with something to fix (Edit opened another step meanwhile) comes first: it is drawn as
+  // not done (stepState), so Continue is the way back to it
+  const earlier = steps.slice(0, Math.max(i, 0)).find((st) => problems.some((f) => stepOfField(f) === st));
+  if (earlier) return earlier;
   for (let k = i + 1; k < steps.length; k++) {
     if (!seen.includes(steps[k]) || problems.some((f) => stepOfField(f) === steps[k])) return steps[k];
   }
   return steps[steps.length - 1];
+}
+
+/** How a step is drawn: open; done (closed into its summary, with Edit) once it was seen and has nothing to fix; else not
+ *  done yet (its heading alone). A step left with a mistake (Edit opened another one) never shows the done tick. */
+export function stepState(st: StepId, open: StepId, seen: readonly StepId[], problems: readonly string[]): "open" | "done" | "todo" {
+  if (st === open) return "open";
+  return seen.includes(st) && !problems.some((f) => stepOfField(f) === st) ? "done" : "todo";
 }
 
 /** What a Jeddah district the customer gave means (F79): served, or not served and so collected instead (when pickup is

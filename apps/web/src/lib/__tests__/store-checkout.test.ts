@@ -14,7 +14,7 @@ import { EMPTY_ADDRESS, refusalPlace } from "../store-form";
 import { DEFAULT_SLOTS, slotDays } from "../store-settings";
 import {
   buyLinesOf, checkoutMoney, checkoutProblems, dateLabel, dayLabel, digitalOnly, districtOutcome, fieldCheck, firstOpen, giftCodeOf, giftCodeOk,
-  goesWithCart, hasBike, hasGiftCard, nextStep, onlyChoice, promoCodeOf, stepOfField, stepsFor, tabbyQuarter, takeOf, timeLabel, type CheckoutState,
+  goesWithCart, hasBike, hasGiftCard, nextStep, onlyChoice, promoCodeOf, stepOfField, stepState, stepsFor, tabbyQuarter, takeOf, timeLabel, type CheckoutState,
 } from "../store-checkout";
 
 // The cart, checkout and payment page's rules (store build 2026-11-15, chain w4): checkout's steps (O12-C), the checks a
@@ -78,6 +78,13 @@ describe("checkout's steps (O12-C)", () => {
     // editing the contact again, with delivery done: on to the address, which still needs fixing
     expect(nextStep(steps, "contact", ["contact", "delivery"], signedIn)).toBe("address");
     expect(nextStep(steps, "address", ["contact", "delivery", "address"], [])).toBe("review");
+    // contact left with a mistake through Edit: it is not drawn done, and Continue on a later step goes back to it
+    const noName = checkoutProblems(at({ way: "jeddah", contact: { ...contact, name: "" }, address: { ...EMPTY_ADDRESS, district: "Al Rawdah", street: "Main St" } }));
+    expect(stepState("contact", "delivery", ["contact"], noName)).toBe("todo");
+    expect(stepState("contact", "delivery", ["contact"], [])).toBe("done");
+    expect(stepState("delivery", "delivery", [], noName)).toBe("open");
+    expect(stepState("address", "delivery", [], [])).toBe("todo");
+    expect(nextStep(steps, "delivery", ["contact", "delivery"], noName)).toBe("contact");
     expect(stepOfField("slot")).toBe("delivery");
     expect(stepOfField("district_unserved")).toBe("address");
     expect(stepOfField("giftCard")).toBe("review");
@@ -308,6 +315,26 @@ describe("the server's calls (gift cards, the address lookup, Tabby)", () => {
     expect((await tabbySettle(PAY, TID, "return", view as never, TB)).error).toBe("metadata"); // another payment's
   });
 
+  it("never counts a Tabby payment closed without a capture as paid, and never closes one because our own read failed", async () => {
+    const { tabbySettle } = await import("../pay/tabby");
+    // closed by this server (another amount, or paid another way), then its webhook: nothing was taken
+    let calls = db({ pay_settle: { ok: true, status: "initiated", refund: null } }, (url) =>
+      (url.endsWith(`/payments/${TID}`) ? new Response(JSON.stringify({ id: TID, status: "CLOSED", amount: "400.00", currency: "SAR", order: { reference_id: PAY }, captures: [] }), { status: 200 }) : null));
+    expect(await tabbySettle(PAY, TID, "webhook", view as never, TB)).toEqual({ ok: false, status: "initiated", error: "closed" });
+    const settled = calls.filter((c) => c.url.endsWith("/pay_settle")).map((c) => c.body.p_status);
+    expect(settled).toEqual(["failed"]);
+    // a closed payment that was captured is paid by what its captures took
+    calls = db({ pay_settle: { ok: true, status: "paid", refund: null } }, (url) =>
+      (url.endsWith(`/payments/${TID}`) ? new Response(JSON.stringify({ id: TID, status: "CLOSED", amount: "400.00", currency: "SAR", order: { reference_id: PAY }, captures: [{ amount: "400.00" }] }), { status: 200 }) : null));
+    expect((await tabbySettle(PAY, TID, "webhook", null, TB)).ok).toBe(true);
+    expect(calls.find((c) => c.url.endsWith("/pay_settle"))?.body).toMatchObject({ p_status: "captured", p_amount_halalas: 40000 });
+    // approved at Tabby, but our payment could not be read: left as it is for the next try, not closed
+    calls = db({}, (url) =>
+      (url.endsWith(`/payments/${TID}`) ? new Response(JSON.stringify({ id: TID, status: "AUTHORIZED", amount: "400.00", currency: "SAR", order: { reference_id: PAY } }), { status: 200 }) : null));
+    expect((await tabbySettle(PAY, TID, "webhook", null, TB)).error).toBe("gateway");
+    expect(calls.some((c) => c.url.endsWith("/close") || c.url.endsWith("/captures") || c.url.endsWith("/pay_settle"))).toBe(false);
+  });
+
   it("sends a refund the database answers through Tabby", async () => {
     const { tabbySettle } = await import("../pay/tabby");
     const calls = db({ pay_settle: { ok: true, status: "paid", refund: { id: U(88), provider_id: TID, amount: 400 } }, pay_refund_done: { ok: true, status: "done" } }, (url) => {
@@ -338,6 +365,17 @@ describe("the pages", () => {
     const ar = render(wrap("ar", createElement(GiftCardBuy, { p: card, locale: "ar", about: [], named: false })));
     expect(ar).toContain("صالحة لمدة سنة");
     expect(ar).not.toMatch(/[٠-٩]/);
+    // no line under the page's heading, and a sold-out amount is never struck through (a struck amount reads as a former price)
+    expect(src("app/[locale]/store/gift-card/page.tsx")).not.toContain('className="st-lead"');
+    expect(src("components/store/store.css")).not.toMatch(/\.st-gc-amts button:disabled \{[^}]*line-through/);
+  });
+  it("write a code taken as one left-to-right unit inside an Arabic line (F67)", async () => {
+    const { CodeRow } = await import("@/components/store/CheckoutBits");
+    const { T: W4 } = await import("@/components/store/w4.text");
+    const { T: ST } = await import("@/components/store/Store.text");
+    const promo = { hit: { code: "SUMMER-25", discount: 50 }, want: "SUMMER-25", err: "", busy: false, apply: () => {}, remove: () => {} };
+    const html = render(wrap("ar", createElement(CodeRow, { promo, off: 50, t: ST.ar, w: W4.ar } as never)));
+    expect(html).toContain("⁦SUMMER-25⁩");
   });
   it("mark needed fields and optional ones, with no line that only helps (F74, X12)", async () => {
     const { Field } = await import("@/components/store/CheckoutFields");

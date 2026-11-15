@@ -42,13 +42,17 @@ const wantSet = (c: string | null) => { codeCache = c; keepCode(c); codeSubs.for
 const wantSub = (l: () => void) => { codeSubs.add(l); return () => { codeSubs.delete(l); }; };
 
 /** A promo code for these lines (F67): checked when it is applied and again a moment after the lines change. Off (always
- *  empty) without the licence. */
+ *  empty) without the licence, and for gift cards alone (a code takes nothing off them: the database refuses it, and a
+ *  code kept from the cart would refuse the order). */
 export function usePromo(items: CartItem[], on: boolean): Promo {
   const key = JSON.stringify(items.map((i) => [i.variant, i.qty]));
   const stored = useSyncExternalStore(wantSub, wantNow, () => null);
   const want = on ? stored : null;
   const [hit, setHit] = useState<{ code: string; discount: number; for: string } | null>(null);
   const [fail, setFail] = useState<{ error: string; for: string; code: string } | null>(null);
+  // one more each time Apply is pressed: the same code applied again after a refusal is asked again (the code asked for
+  // and the lines are unchanged then, so nothing else starts the check, and it stayed "being checked" for good)
+  const [round, setRound] = useState(0);
   useEffect(() => {
     if (!want) return;
     const ac = new AbortController();
@@ -63,7 +67,7 @@ export function usePromo(items: CartItem[], on: boolean): Promo {
       });
     }, 350);
     return () => { ac.abort(); window.clearTimeout(h); };
-  }, [want, key]);
+  }, [want, key, round]);
   const err = on && fail && (fail.for === key || FINAL.has(fail.error)) ? fail.error : "";
   const taken = on && hit && hit.code === want ? hit : null;
   return {
@@ -74,7 +78,7 @@ export function usePromo(items: CartItem[], on: boolean): Promo {
     apply: (raw) => {
       const c = promoCodeOf(raw);
       if (!promoCodeOk(c)) { setFail({ error: "promo", for: key, code: c }); return; }
-      setFail(null); setHit(null); wantSet(c);
+      setFail(null); setHit(null); wantSet(c); setRound((r) => r + 1);
     },
     remove: () => { wantSet(null); setHit(null); setFail(null); },
   };

@@ -39,7 +39,7 @@ export default function CartView({ locale, products, settings, whens, licence, a
   const [picked, setPicked] = useState<Fulfil | null>(() => null);
   const [moveMsg, setMoveMsg] = useState("");
   const [gwAdded, setGwAdded] = useState<string[]>([]);
-  const promo = usePromo(cart, !!licence);
+  const promo = usePromo(cart, !!licence && !digitalOnly(cartLines(cart, { products })));
   if (!ready) return <div className="st-cart-wait" aria-busy="true" />;
   const store = { products };
   const lines = cartLines(cart, store);
@@ -48,6 +48,7 @@ export default function CartView({ locale, products, settings, whens, licence, a
   const laterList = kept.length > 0 && <Later lines={kept} t={t} w={w} locale={locale} msg={moveMsg} onMove={(v, qty) => {
     const got = cartAdd(v, qty);
     if (got === null) { setMoveMsg(t.cartFull); return; }
+    if (got <= 0) { setMoveMsg(t.cartHasMost); return; } // the cart's line is at its most already: kept here, not lost
     setMoveMsg(""); laterRemove(v);
   }} />;
   if (!lines.length) {

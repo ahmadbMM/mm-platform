@@ -355,7 +355,7 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-gc-amts button { min-width: 88px; min-height: 48px; padding: 0 16px; border-radius: 10px; border: 1px solid rgba(26, 25, 25, .24); background: #fff; color: #1a1919; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; }
 .st-gc-amts button:hover:not(:disabled) { background: #f4f1ea; }
 .st-gc-amts button[aria-checked="true"] { background: #1a1919; border-color: #1a1919; color: #fbf9f4; }
-.st-gc-amts button:disabled { color: #a7a399; text-decoration: line-through; cursor: default; background: #fbf9f4; }
+.st-gc-amts button:disabled { color: #a7a399; border-style: dashed; cursor: default; background: #fbf9f4; } /* never struck through: a struck amount reads as a former price, which needs the discount licence */
 .st-gc-valid { display: flex; align-items: center; gap: 8px; margin: 0 0 16px; font-size: 14px; color: #4a4843; }
 .st-gc-valid .st-ic { color: #077a4b; }
 .st-gc-cta .bk-btn, .st-gc-cta .bk-btn2 { min-height: 48px; }

@@ -45,8 +45,9 @@ export default async function GiftCardPage({ params }: Props) {
             <li aria-current="page">{w.giftTitle}</li>
           </ol>
         </nav>
+        {/* no line under the heading (the owner's no-subtitle rule): what the card is for is the page's description for
+            search and links only, and staff's own words for the card show beside it */}
         <h1 className="st-title">{cards.length === 1 ? pick(locale, cards[0].name_en, cards[0].name_ar) : w.giftTitle}</h1>
-        <p className="st-lead">{w.giftLead}</p>
         {cards.map((p) => (
           <GiftCardBuy key={p.id} p={{ ...p, specs: [], description_en: null, description_ar: null }} locale={locale}
             about={paragraphs(pick(locale, p.description_en, p.description_ar))} named={cards.length > 1} />

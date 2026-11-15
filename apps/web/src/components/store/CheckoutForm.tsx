@@ -13,7 +13,7 @@ import { checkoutBody, EMPTY_ADDRESS, refusalPlace, type Address, type Contact }
 import { slotDays, type District, type Slots } from "@/lib/store-settings";
 import {
   checkoutMoney, checkoutProblems, dayLabel, digitalOnly, districtOutcome, fieldCheck, firstOpen, hasBike, hasGiftCard, nextStep, stepOfField,
-  stepsFor, timeLabel, type Check, type StepId, type Way,
+  stepState, stepsFor, timeLabel, type Check, type StepId, type Way,
 } from "@/lib/store-checkout";
 import { T } from "./Store.text";
 import { T as W } from "./w4.text";
@@ -115,7 +115,7 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
   const [finding, setFinding] = useState(false);
   const [foundMsg, setFoundMsg] = useState("");
   const top = useRef<HTMLParagraphElement>(null);
-  const promo = usePromo(cart, !!licence);
+  const promo = usePromo(cart, !!licence && !digitalOnly(cartLines(cart, { products })));
   const gift = useGiftCard();
 
   useEffect(() => {
@@ -281,6 +281,10 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
         setErrs((x) => ({ ...x, [field]: field === "address" ? t.errs.address : words(field === "district_unserved" || field === "slot" ? field : code) }));
         setView((v) => ({ ...v, open: stepOfField(field) }));
       }
+      // a code or a gift card the database refused for this order is taken off it (the message above says why), so
+      // Place order goes through without it rather than being refused the same way again
+      if (field === "promo") promo.remove();
+      if (field === "giftCard") gift.remove();
       fail(code === "city" ? t.errs.address : w.checks[code] ?? t.errs[code] ?? t.errs.generic);
     } catch {
       fail(t.errs.network);
@@ -298,7 +302,7 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
     if (id === "jeddah" && slotsOn) return slotText(draft.slot);
     return id !== "digital" && whens[id] ? t.arrives(whens[id] as string) : "";
   };
-  const stateOf = (st: StepId): StepState => (st === open ? "open" : view.seen.includes(st) ? "done" : "todo");
+  const stateOf = (st: StepId): StepState => stepState(st, open, view.seen, problems);
   const delivered = way === "jeddah" || way === "ksa";
   const title: Record<StepId, string> = { contact: t.contact, delivery: t.how, address: t.address, review: w.review };
   const a = draft.address;

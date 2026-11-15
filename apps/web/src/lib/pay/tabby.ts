@@ -118,21 +118,35 @@ export async function tabbySettle(payId: string, tabbyId: string, source: "retur
     await settle("failed", halalas(p.amount), st.toLowerCase());
     return { ok: false, status: view?.status ?? "initiated", error: st.toLowerCase() };
   }
+  // What Tabby holds as captured: only its captures count. A CLOSED payment with none was closed without the money ever
+  // being taken (this server closed it below: another amount, or ours paid another way), so it pays nothing.
+  const capturedOf = (x: TabbyPayment) => (x.captures ?? []).reduce((n, c) => n + (halalas(c.amount) || 0), 0);
+  let captured: number;
   if (st === "AUTHORIZED") {
+    // our own payment not read (a database blip): left authorised at Tabby for the webhook or the return to take again,
+    // never closed for it (a close cannot be undone, and the shopper did approve)
+    if (!view) return { ok: false, status: "unknown", error: "gateway" };
     // never captured: another amount, or ours already paid another way (the authorisation is let go at Tabby)
-    const taken = view && (view.status === "paid" || view.status === "refunded" || view.status === "partly_refunded");
-    if (!view || halalas(p.amount) !== Math.round(view.amount * 100) || String(p.currency).toUpperCase() !== "SAR" || taken) {
+    const taken = view.status === "paid" || view.status === "refunded" || view.status === "partly_refunded";
+    if (halalas(p.amount) !== Math.round(view.amount * 100) || String(p.currency).toUpperCase() !== "SAR" || taken) {
       await call(sk, `/payments/${tabbyId}/close`, { method: "POST", body: {} }, f);
       await settle("failed", halalas(p.amount), "closed");
-      return { ok: false, status: view?.status ?? "unknown", error: "amount" };
+      return { ok: false, status: view.status, error: "amount" };
     }
+    const asked = halalas(p.amount);
     const cap = await call<TabbyPayment>(sk, `/payments/${tabbyId}/captures`, { method: "POST", body: { amount: p.amount, reference_id: `cap-${payId}` } }, f);
     if (!cap.ok) return { ok: false, status: view.status, error: "gateway" };
     p = cap.data;
-  } else if (st !== "CLOSED") {
+    captured = capturedOf(p) || asked; // the capture went through: what was asked, when its answer lists no captures
+  } else if (st === "CLOSED") {
+    captured = capturedOf(p);
+    if (!captured) {
+      await settle("failed", halalas(p.amount), "closed");
+      return { ok: false, status: view?.status ?? "unknown", error: "closed" };
+    }
+  } else {
     return { ok: false, status: view?.status ?? "initiated", error: "not_paid" }; // still on Tabby's page
   }
-  const captured = (p.captures ?? []).reduce((n, c) => n + halalas(c.amount), 0) || halalas(p.amount);
   const r = await settle("captured", captured);
   if (r.status !== 200 || !r.data) return { ok: false, status: "unknown", error: refusal(r) || "generic" };
   if (r.data.refund) await tabbyRefund(r.data.refund, env, f);

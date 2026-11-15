@@ -23,7 +23,8 @@ export function CodeRow({ promo, off, t, w }: { promo: Promo; off: number; t: St
   if (promo.hit) {
     return (
       <p className="bk-sum-row st-co-off">
-        <span>{w.codeLine(promo.hit.code)}<button type="button" className="st-co-x" onClick={() => { promo.remove(); setRaw(""); }} aria-label={w.removeOf(promo.hit.code)}><Ic name="close" size={14} /></button></span>
+        {/* the code one left-to-right unit: "SUMMER-25" would read "25-SUMMER" in an Arabic line */}
+        <span>{w.codeLine(`⁦${promo.hit.code}⁩`)}<button type="button" className="st-co-x" onClick={() => { promo.remove(); setRaw(""); }} aria-label={w.removeOf(promo.hit.code)}><Ic name="close" size={14} /></button></span>
         <Off n={off} />
       </p>
     );
