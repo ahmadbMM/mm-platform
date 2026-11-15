@@ -1,0 +1,26 @@
+/* The Returns and Complaints pages (app/[locale]/returns, /complaints; store build 2026-11-15, chain w1: X07's target,
+   L12). The Privacy Notice's page (pages.css .pg-privacy, .pg-notice) with the key promise in a pale card and the ways
+   to complain as cards. Logical properties only, so Arabic and Urdu mirror. */
+.pol-key { display: flex; align-items: flex-start; gap: 12px; margin: 0 0 32px; padding: 18px 20px; border-radius: 14px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); color: #1a1919; font-size: 17px; font-weight: 600; line-height: 1.55; }
+.pol-key .st-ic { flex: none; margin-top: 3px; color: #077a4b; }
+.pol .pg-notice section + section { border-top: 1px solid rgba(26, 25, 25, .08); }
+.pol .pg-notice h2 { margin-top: 22px; }
+.pol-act { margin: 28px 0 0; }
+.pol-act .pg-btn { gap: 10px; }
+.pol-more { display: flex; flex-wrap: wrap; gap: 8px 20px; margin: 28px 0 0; font-size: 14.5px; }
+.pol-more a { color: #077a4b; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.pg .pol-h { font-size: 22px; letter-spacing: -.4px; line-height: 1.3; margin: 0 0 14px; }
+.pol-ways { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0 0 22px; }
+.pol-way { display: flex; flex-direction: column; gap: 6px; padding: 18px; border-radius: 14px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); color: #1a1919; font-size: 14.5px; line-height: 1.5; }
+a.pol-way { transition: border-color .2s ease; }
+a.pol-way:hover { border-color: rgba(7, 122, 75, .5); }
+.pol-way .st-ic { color: #077a4b; margin-bottom: 4px; }
+.pol-way strong { font-size: 16px; }
+.pol-way span { color: #4a4843; }
+.pol-way .pol-num { font-variant-numeric: tabular-nums; } /* the number reads left to right inside a line that follows the page */
+.pol-way a { color: #077a4b; font-weight: 700; margin-top: auto; padding-top: 6px; }
+.pol-note { color: #4a4843; font-size: 15px; line-height: 1.6; margin: 0; }
+@media (max-width: 760px) {
+  .pol-ways { grid-template-columns: 1fr; }
+  .pol-key { font-size: 16px; padding: 16px; }
+}
