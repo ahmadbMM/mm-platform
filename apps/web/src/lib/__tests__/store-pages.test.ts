@@ -26,7 +26,8 @@ const STORE = storeOf(
 describe("the store's pages", () => {
   it("list the products with their prices, low stock and no former price without a licence", async () => {
     const { default: StoreGrid } = await import("@/components/store/StoreGrid");
-    const html = render(wrap("en", createElement(StoreGrid, { locale: "en", products: STORE.products, cats: ["bikes", "accessories"], start: { cat: "all", sort: "featured" }, licence: false })));
+    const html = render(wrap("en", createElement(StoreGrid, { locale: "en", products: STORE.products, start: { sort: "featured", filters: { price: [], size: [], colour: [], brand: [] } },
+      licence: false, today: "2026-11-16", whens: { ship: null, local: null } })));
     expect(html).toContain("Aero Helmet");
     expect(html).toContain("Only 2 left");
     expect(html).toContain("8,935");

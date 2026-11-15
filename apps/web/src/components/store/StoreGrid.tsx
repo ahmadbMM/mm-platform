@@ -2,59 +2,93 @@
 
 import { useMemo, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
-import { STORE_SORTS, sortProducts, type StoreCategory, type StoreProduct, type StoreSort } from "@/lib/store-core";
+import { STORE_SORTS, type StoreProduct, type StoreSort } from "@/lib/store-core";
+import { cleanFilters, facetsOf, filterCount, listOf, listQueryText, noFilters, type CardWhens, type ListFilters } from "@/lib/store-listing";
 import { T } from "./Store.text";
+import { T as W } from "./w2.text";
+import FilterPanel from "./FilterPanel";
+import Modal from "./Modal";
 import ProductCard from "./ProductCard";
+import { StIcon } from "./icons";
 
-// The list at /store: a chip per category that has products, the order, and the cards. Both choices stay
-// in the address (?cat=bikes&sort=price-asc), so a shared link opens the same list.
-export default function StoreGrid({ locale, products, cats, start, licence }: {
-  locale: string; products: StoreProduct[]; cats: StoreCategory[]; start: { cat: string; sort: StoreSort }; licence: boolean;
+// A list of products: on /store every product under the category tiles (F01), on a category's page that category's
+// (O01-E). The order (O04-A, the Sort select) and the filters (O05-C: a panel beside the list on a wide screen, a
+// Filters button opening a centred pop-up on a phone) stay in the address (?sort=price-asc&size=M), so a shared link
+// opens the same list. The certified pre-owned products sit apart under the new ones, in their own section with its
+// drawn badge (F53).
+export default function StoreGrid({ locale, products, start, licence, today, whens }: {
+  locale: string; products: StoreProduct[]; start: { sort: StoreSort; filters: ListFilters }; licence: boolean; today: string; whens: CardWhens;
 }) {
   const t = useLocalize(T);
-  const [cat, setCat] = useState(start.cat);
+  const w = useLocalize(W);
+  const facets = useMemo(() => facetsOf(products), [products]);
   const [sort, setSort] = useState<StoreSort>(start.sort);
-  const shown = useMemo(() => sortProducts(cat === "all" ? products : products.filter((p) => p.category === cat), sort), [products, cat, sort]);
-  const remember = (c: string, s: StoreSort) => {
-    const q = new URLSearchParams(window.location.search);
-    if (c === "all") q.delete("cat"); else q.set("cat", c);
-    if (s === "featured") q.delete("sort"); else q.set("sort", s);
-    // the query as text, not q.size: Safari before 17 has no URLSearchParams.size, so the filter never reached the address
-    const qs = q.toString();
-    window.history.replaceState(window.history.state, "", `${window.location.pathname}${qs ? `?${qs}` : ""}`);
-  };
-  const pickCat = (c: string) => { setCat(c); remember(c, sort); };
-  const pickSort = (s: StoreSort) => { setSort(s); remember(cat, s); };
+  const [f, setF] = useState<ListFilters>(() => cleanFilters(start.filters, facets));
+  const [open, setOpen] = useState(false);
+  const { fresh, certified } = useMemo(() => listOf(products, f, sort), [products, f, sort]);
+  const shown = fresh.length + certified.length;
+  const active = filterCount(f);
+
+  const remember = (nf: ListFilters, s: StoreSort) =>
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${listQueryText(window.location.search, nf, s)}${window.location.hash}`);
+  const pickSort = (s: StoreSort) => { setSort(s); remember(f, s); };
+  const pickFilters = (nf: ListFilters) => { setF(nf); remember(nf, sort); };
+  const clear = () => pickFilters(noFilters());
 
   if (!products.length) return <p className="st-empty">{t.emptyStore}</p>;
+  const card = (p: StoreProduct, i: number) => <ProductCard key={p.id} p={p} locale={locale} t={t} w={w} licence={licence} today={today} whens={whens} eager={i < 4} />;
   return (
-    <>
-      <div className="st-tools">
-        {cats.length > 1 && (
-          <div className="st-chips" role="group" aria-label={t.catsLabel}>
-            {(["all", ...cats] as string[]).map((c) => (
-              <button key={c} type="button" aria-pressed={cat === c} onClick={() => pickCat(c)}>{t.cats[c] ?? c}</button>
-            ))}
+    <div className={`st-list${facets.length ? " has-side" : ""}`}>
+      {facets.length > 0 && (
+        <aside className="st-side" aria-label={w.filters}>
+          <div className="st-side-head">
+            <h2>{w.filters}</h2>
+            {active > 0 && <button type="button" className="st-clear" onClick={clear}>{w.clearAll}</button>}
           </div>
-        )}
-        <label className="st-sort">
-          <span>{t.sortLabel}</span>
-          <select value={sort} onChange={(e) => pickSort(e.target.value as StoreSort)}>
-            {STORE_SORTS.map((s) => <option key={s} value={s}>{t.sorts[s]}</option>)}
-          </select>
-        </label>
-      </div>
-      <p className="st-count" aria-live="polite">{shown.length === 1 ? t.count1 : t.countN(shown.length)}</p>
-      {shown.length ? (
-        <div className="st-grid">
-          {shown.map((p, i) => <ProductCard key={p.id} p={p} locale={locale} t={t} licence={licence} eager={i < 4} />)}
-        </div>
-      ) : (
-        <div className="st-empty">
-          <p>{t.emptyCat}</p>
-          <button type="button" className="bk-btn2" onClick={() => pickCat("all")}>{t.showAll}</button>
-        </div>
+          <FilterPanel facets={facets} f={f} onChange={pickFilters} locale={locale} t={t} w={w} idp="st-side" />
+        </aside>
       )}
-    </>
+      <div className="st-list-main">
+        <div className="st-tools">
+          {facets.length > 0 && (
+            <button type="button" className={`st-filter-btn${active ? " on" : ""}`} aria-haspopup="dialog" onClick={() => setOpen(true)}>
+              <StIcon name="filter" size={18} />{active ? w.filtersN(String(active)) : w.filters}
+            </button>
+          )}
+          <label className="st-sort">
+            <span>{t.sortLabel}</span>
+            <select value={sort} onChange={(e) => pickSort(e.target.value as StoreSort)}>
+              {STORE_SORTS.map((s) => <option key={s} value={s}>{t.sorts[s]}</option>)}
+            </select>
+          </label>
+        </div>
+        <p className="st-count" aria-live="polite">{shown === 1 ? t.count1 : t.countN(shown)}</p>
+        {shown === 0 ? (
+          <div className="st-empty">
+            <p>{active ? w.noMatch : t.emptyCat}</p>
+            {active > 0 && <button type="button" className="bk-btn2" onClick={clear}>{w.clearFilters}</button>}
+          </div>
+        ) : (
+          <>
+            {fresh.length > 0 && <div className="st-grid">{fresh.map(card)}</div>}
+            {certified.length > 0 && (
+              <section className="st-cert" aria-labelledby="st-cert-h">
+                <h2 id="st-cert-h" className="st-h2"><StIcon name="badge" size={24} />{w.certified}</h2>
+                <div className="st-grid">{certified.map((p, i) => card(p, fresh.length + i))}</div>
+              </section>
+            )}
+          </>
+        )}
+      </div>
+      {open && (
+        <Modal title={w.filters} onClose={() => setOpen(false)} closeLabel={t.close}>
+          <FilterPanel facets={facets} f={f} onChange={pickFilters} locale={locale} t={t} w={w} idp="st-pop" />
+          <div className="st-pop-acts">
+            <button type="button" className="bk-btn2" onClick={clear} disabled={!active}>{w.clearAll}</button>
+            <button type="button" className="bk-btn grow" onClick={() => setOpen(false)}>{shown === 1 ? w.show1 : w.showN(String(shown))}</button>
+          </div>
+        </Modal>
+      )}
+    </div>
   );
 }
