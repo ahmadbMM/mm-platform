@@ -5,11 +5,15 @@ import * as community from "../../app/community/registration/route";
 import * as petromin from "../../app/petromin/route";
 import * as saturday from "../../app/saturday/route";
 import * as lockers from "../../app/lockers/route";
+import * as farmhouse from "../../app/farmhouse/route";
 import communityPage from "../../forms/community-page";
 import petrominPage from "../../forms/petromin-page";
 import saturdayPage from "../../forms/saturday-page";
 import lockersPage from "../../forms/lockers-page";
+import farmhousePage from "../../forms/farmhouse-page";
 import { WAIVER_VERSIONS, waiverCopy } from "../../content/waivers";
+import { farmWaiverCopy } from "../../content/farm-words";
+import { serverL } from "../../i18n/dicts";
 
 // The website serves the registration forms exactly as their builds leave them
 // (forms/community, forms/petromin), with the headers their own Workers sent. Dukan's employees and Petromin's guests
@@ -30,15 +34,28 @@ describe("the registration forms", () => {
     }
   });
 
+  // The Farmhouse Night's page (forms/farmhouse, the user 2026-11-15: booked with a code, account and all) takes the farm
+  // night's own waiver from the booking app (sync-shared: its ten languages, the website's six more); the site's copy is
+  // content/farm-words.ts farmWaiverCopy, which the waiver pop-up on My Account shows a farm night's booker.
+  it("the Farmhouse page uses the website's farm waiver, word for word in every language, at the version it stamps", () => {
+    const shared = readFileSync(resolve(forms, "farmhouse/shared/shared.js"), "utf8");
+    const SH = new Function(shared + ";return SHARED;")() as { FARM_WAIVER: Record<string, { title: string; body: string; agree: string }> & { version: string } };
+    expect(SH.FARM_WAIVER.version).toBe(WAIVER_VERSIONS.farm);
+    const langs = Object.keys(SH.FARM_WAIVER).filter((k) => k !== "version");
+    expect(langs.sort()).toEqual(["ar", "bn", "de", "en", "es", "fr", "hi", "id", "ja", "ms", "ne", "pt", "ru", "tl", "ur", "zh"]);
+    for (const l of langs) expect(SH.FARM_WAIVER[l], l).toEqual(farmWaiverCopy(serverL(l)));
+  });
+
   it("are the pages the form builds wrote (run the form's build after changing it)", () => {
     expect(communityPage).toBe(readFileSync(resolve(forms, "community/src/page.html"), "utf8"));
     expect(petrominPage).toBe(readFileSync(resolve(forms, "petromin/src/page.html"), "utf8"));
     expect(saturdayPage).toBe(readFileSync(resolve(forms, "saturday/src/page.html"), "utf8"));
     expect(lockersPage).toBe(readFileSync(resolve(forms, "lockers/src/page.html"), "utf8"));
+    expect(farmhousePage).toBe(readFileSync(resolve(forms, "farmhouse/src/page.html"), "utf8"));
   });
 
   it("answer GET with the page and HEAD with its headers only", async () => {
-    for (const [route, page] of [[community, communityPage], [petromin, petrominPage], [saturday, saturdayPage], [lockers, lockersPage]] as const) {
+    for (const [route, page] of [[community, communityPage], [petromin, petrominPage], [saturday, saturdayPage], [lockers, lockersPage], [farmhouse, farmhousePage]] as const) {
       const res = route.GET();
       expect(res.status).toBe(200);
       expect(await res.text()).toBe(page);
@@ -49,8 +66,8 @@ describe("the registration forms", () => {
   });
 
   it("keep their Workers' headers: not indexed, and only Supabase, fonts and the analytics beacon allowed", () => {
-    const c = community.GET().headers, p = petromin.GET().headers, sa = saturday.GET().headers, lk = lockers.GET().headers;
-    for (const h of [c, p, sa, lk]) {
+    const c = community.GET().headers, p = petromin.GET().headers, sa = saturday.GET().headers, lk = lockers.GET().headers, fh = farmhouse.GET().headers;
+    for (const h of [c, p, sa, lk, fh]) {
       expect(h.get("x-robots-tag")).toBe("noindex");
       expect(h.get("cache-control")).toBe("public, max-age=300");
       expect(h.get("content-security-policy")).toContain(`connect-src 'self' ${SUPABASE} https://cloudflareinsights.com`);
@@ -63,13 +80,16 @@ describe("the registration forms", () => {
     // and so does the lockers page (2026-11-09)
     expect(lk.get("content-security-policy")).toContain("script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;");
     expect(lockersPage).not.toMatch(/<script\b[^>]*\bsrc=/);
+    // and so does the Farmhouse Night's page (2026-11-15)
+    expect(fh.get("content-security-policy")).toContain("script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;");
+    expect(farmhousePage).not.toMatch(/<script\b[^>]*\bsrc=/);
     // and so does the Petromin page since 2026-11-13 (Petromin's, Petrolube's and Dukan's employees and Petromin's guests on
     // one page): its calls are plain POSTs, supabase-js is gone, and nothing of jsDelivr is allowed any more
     expect(p.get("content-security-policy")).toContain("script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com;");
     expect(petrominPage).not.toMatch(/<script\b[^>]*\bsrc=/);
-    for (const h of [c, p, sa, lk]) expect(h.get("content-security-policy")).not.toContain("cdn.jsdelivr.net");
+    for (const h of [c, p, sa, lk, fh]) expect(h.get("content-security-policy")).not.toContain("cdn.jsdelivr.net");
     // all: HTTPS only, as the site's own pages say it; no device features; no form the browser posts itself
-    for (const h of [c, p, sa, lk]) {
+    for (const h of [c, p, sa, lk, fh]) {
       expect(h.get("strict-transport-security")).toBe("max-age=31536000");
       expect(h.get("x-frame-options")).toBe("DENY");
       expect(h.get("permissions-policy")).toBe("camera=(), microphone=(), geolocation=(), payment=()");
@@ -113,6 +133,15 @@ describe("the registration forms", () => {
     expect(lkNamed).toContain("Riyal-400.woff2");
     expect(lkNamed.length).toBeGreaterThanOrEqual(11);
     for (const f of lkNamed) expect(existsSync(resolve(__dirname, "../../../public/fonts", f)), f).toBe(true);
+    // The Farmhouse Night's page: Rubik for its title (the night's own face, as the booking app writes it), Space Grotesk
+    // and IBM Plex Sans Arabic for the text, and the venue's picture from the site's own files.
+    expect(farmhouse.GET().headers.get("content-security-policy") || "").toContain("font-src 'self'");
+    expect(farmhousePage).not.toMatch(/fonts\.(googleapis|gstatic)\.com/);
+    const fhNamed = [...farmhousePage.matchAll(/url\("\/fonts\/forms\/([a-z0-9-]+\.woff2)"\)/g)].map((m) => m[1]);
+    expect(fhNamed).toEqual(expect.arrayContaining(["rubik-var-latin.woff2", "rubik-var-arabic.woff2", "space-grotesk-latin-400.woff2", "ibm-plex-sans-arabic-arabic-400.woff2"]));
+    for (const f of fhNamed) expect(existsSync(resolve(__dirname, "../../../public/fonts/forms", f)), f).toBe(true);
+    expect(farmhousePage).toContain('src="/site/farm-logo.jpg"');
+    expect(existsSync(resolve(__dirname, "../../../public/site/farm-logo.jpg"))).toBe(true);
   });
 
   it("have the community form's link-preview image where its page points", () => {
