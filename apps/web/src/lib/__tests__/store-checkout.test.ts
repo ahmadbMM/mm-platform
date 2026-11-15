@@ -345,11 +345,11 @@ describe("the pages", () => {
   it("close finished steps into what was given, with Edit (O12-C)", async () => {
     const { Step } = await import("@/components/store/CheckoutBits");
     const { T } = await import("@/components/store/w4.text");
-    const done = render(wrap("en", createElement(Step, { id: "contact", n: 1, of: 4, title: "Contact", state: "done", summary: "Sami · 0501112233", onEdit: () => {}, w: T.en, children: createElement("input", { id: "st-name" }) })));
+    const done = render(wrap("en", createElement(Step, { id: "contact", n: 1, of: 4, title: "Contact", state: "done", summary: "Sami · 0501112233", onEdit: () => {}, w: T.en } as never, createElement("input", { id: "st-name" }))));
     expect(done).toContain("Sami · 0501112233");
     expect(done).toContain('aria-label="Edit: Contact"');
     expect(done).not.toContain('id="st-name"');
-    const open = render(wrap("en", createElement(Step, { id: "contact", n: 1, of: 4, title: "Contact", state: "open", onEdit: () => {}, onContinue: () => {}, w: T.en, children: createElement("input", { id: "st-name" }) })));
+    const open = render(wrap("en", createElement(Step, { id: "contact", n: 1, of: 4, title: "Contact", state: "open", onEdit: () => {}, onContinue: () => {}, w: T.en } as never, createElement("input", { id: "st-name" }))));
     expect(open).toContain('id="st-name"');
     expect(open).toContain(">Continue<");
   });

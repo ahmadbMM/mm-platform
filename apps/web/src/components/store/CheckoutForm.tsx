@@ -139,7 +139,9 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
   const slotsOn = way === "jeddah" && slots ? slots : null;
   const problems = checkoutProblems({ way, contact: draft.contact, address: draft.address, slot: draft.slot, slots, today, districts });
   const [view, setView] = useState<{ open: StepId; seen: StepId[] }>(() => {
-    const first = firstOpen(steps, problems);
+    // a way nobody picked yet (not on the cart, not here before) is asked for, even though one is ticked to start with
+    const fix = firstOpen(steps, problems);
+    const first = !draft.fulfil && steps.includes("delivery") && steps.indexOf("delivery") < steps.indexOf(fix) ? "delivery" : fix;
     return { open: first, seen: steps.slice(0, steps.indexOf(first)) };
   });
   const open = steps.includes(view.open) ? view.open : firstOpen(steps, problems);

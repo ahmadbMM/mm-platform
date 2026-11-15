@@ -85,7 +85,7 @@ export function Pills<V extends string>({ name, label, items, value, onPick, err
   name: string; label: string; items: { value: V; label: string }[]; value: V | null; onPick: (v: V) => void; error?: string;
 }) {
   return (
-    <fieldset className="st-co-pills" aria-invalid={error ? true : undefined} aria-describedby={error ? `${name}-e` : undefined}>
+    <fieldset className="st-co-pills" aria-describedby={error ? `${name}-e` : undefined}>
       <legend>{label}</legend>
       <div>
         {items.map((it) => (
