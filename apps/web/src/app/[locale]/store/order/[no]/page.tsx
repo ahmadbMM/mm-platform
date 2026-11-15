@@ -5,12 +5,17 @@ import PageShell, { navFrom } from "@/components/site/PageShell";
 import OrderView from "@/components/store/OrderView";
 import TrackForm from "@/components/store/TrackForm";
 import { storeState } from "@/components/store/store-data";
+import { T as STORE_T } from "@/components/store/Store.text";
+import { T as W5 } from "@/components/store/w5.text";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
-import { bizOf } from "@/lib/biz";
 import { bookingLink } from "@/lib/links";
 import { payRpc } from "@/lib/pay/server";
+import { slotWhen } from "@/lib/store-after";
 import { fmtRange } from "@/lib/store-delivery";
 import { orderExpected, orderOf } from "@/lib/store-order";
+import { POLICY } from "@/lib/store-policy";
+import { deliverySlots, storeLegal } from "@/lib/store-settings";
+import { serverLocalize } from "@/i18n/dicts";
 import { intlOf } from "@/i18n/locales";
 import "@/components/experiences/experiences.css";
 import "@/components/store/store.css";
@@ -54,16 +59,32 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const expected = orderExpected(o, s.settings);
   const guest = !decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
   const app = navFrom(site).booking.replace(/[?#].*$/, "");
+  // the seller as the invoice names it (L06): the store's one legal identity (lib/store-settings.ts storeLegal), the
+  // legal name in the page's language with the other one beside it, the Arabic one in ZATCA's QR
+  const legal = storeLegal(s.content, locale);
+  const ar = locale === "ar";
+  const other = storeLegal(s.content, ar ? "en" : "ar");
+  const intl = intlOf(locale);
+  const booked = slotWhen(o, deliverySlots(s.content));
+  const slot = booked ? [fmtRange({ from: booked.day, to: booked.day }, intl), booked.from && booked.to ? `${booked.from}–${booked.to}` : ""].filter(Boolean).join(", ") : null;
   return (
     <PageShell locale={locale} site={site} preview={s.previewing} hidden={s.hidden}>
       <OrderView
-        o={o} t={t} locale={locale} now={now}
-        seller={{ trade: "Micromobility", legal: S(site.legal.legalName), vat: bizOf(s.content).vatNo ?? S(site.legal.vat), cr: S(site.legal.cr) }}
+        o={o} t={t} w={serverLocalize(W5, locale)} locale={locale} now={now} today={s.today}
+        beside={ar ? { lang: "en", t: STORE_T.en, w: W5.en } : { lang: "ar", t: STORE_T.ar, w: W5.ar }}
+        seller={{
+          trade: "Micromobility", legal: legal.legalName, legalBeside: other.legalName, vat: legal.vat, cr: legal.cr,
+          address: S(site.contact.address), qrName: storeLegal(s.content, "ar").legalName,
+        }}
         whatsapp={S(site.contact.phone).replace(/\D/g, "")}
         showroom={S(site.contact.address)}
-        expected={expected ? fmtRange(expected, intlOf(locale)) : null}
+        expected={expected ? fmtRange(expected, intl) : null}
+        slot={slot}
         signup={guest ? bookingLink(`${app}?handoff=site&auth=signup`, locale) : null}
-        returnsHref={s.hidden.includes("help") ? null : "/help#returns"}
+        // the Returns page answers whatever the store and Help switches say (CONTRACTS.md section 7, w1)
+        returnsHref="/returns"
+        policy={serverLocalize(POLICY, locale).returnSentence}
+        hidden={s.hidden}
       />
     </PageShell>
   );
