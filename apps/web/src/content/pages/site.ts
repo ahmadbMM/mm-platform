@@ -91,6 +91,10 @@ export const siteSchema = {
         { id: "unified", type: "text", max: 40, mono: true, label: bi("Unified number", "الرقم الموحد"), def: bi("7041881512", "7041881512") },
         { id: "address", type: "text", max: 160, label: bi("Registered address", "العنوان المسجل"), def: bi("7933 Ibn Anuq Al Fedha St, Al Mansurah, Riyadh 12692 (additional no. 2987)", "7933 شارع ابن عنق الفضة، حي المنصورة، الرياض 12692 (الرقم الإضافي 2987)") },
         { id: "shortAddress", type: "text", max: 20, mono: true, label: bi("National short address", "العنوان المختصر"), def: bi("RCMA7933", "RCMA7933") },
+        // The store build (2026-11-15, L01 and L02): the e-store's own CR entry, and the Saudi Business Center's page that
+        // verifies the e-store (the footer's SBC badge opens it; no badge while it is empty). lib/store-settings.ts storeLegal.
+        { id: "ecr", type: "text", max: 40, optional: true, mono: true, label: bi("E-store CR number", "رقم السجل التجاري للمتجر الإلكتروني"), def: bi("", "") },
+        { id: "sbc", type: "link", optional: true, label: bi("Saudi Business Center verification page", "صفحة التوثيق في المركز السعودي للأعمال"), def: "" },
       ],
     },
     {

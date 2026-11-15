@@ -10,6 +10,34 @@ export type StoreCategory = (typeof STORE_CATEGORIES)[number];
 /** One line of a product's specifications in both languages: {en: [label, value], ar: [label, value]}. */
 export type StoreSpec = { en?: [string, string]; ar?: [string, string] };
 
+// ── The product's richer fields (store build 2026-11-15, rentals migration 20261115200100; CONTRACTS.md section 2) ──
+
+/** A text staff write in English, and in Arabic when they have it. */
+export type StoreBi = { en: string; ar: string | null };
+export type ProductKind = "item" | "gift_card";
+export type ProductCondition = "new" | "certified";
+/** The drawn icons a key-spec chip can carry (F24): components/store/icons.tsx draws each. */
+export const KEY_SPEC_ICONS = ["weight", "gears", "brakes", "wheel", "frame", "fork", "tyre", "battery", "motor", "range", "material", "other"] as const;
+export type KeySpecIcon = (typeof KEY_SPEC_ICONS)[number];
+/** The drawn icons a "What's in the box" row can carry (F37). */
+export const BOX_ICONS = ["bike", "pedals", "tools", "manual", "charger", "battery", "lights", "bell", "reflectors", "bag", "bottle", "other"] as const;
+export type BoxIcon = (typeof BOX_ICONS)[number];
+export type KeySpec = { icon: KeySpecIcon; en: string; ar: string | null };
+export type BoxItem = { icon: BoxIcon; en: string; ar: string | null };
+/** The apparel fit panel (F38): three rows, each optional. */
+export type FitPanel = { fit: StoreBi | null; size: StoreBi | null; best: StoreBi | null };
+export type FaqItem = { q: StoreBi; a: StoreBi };
+/** Centimetres; an open end ("190+") is null. */
+export type CmRange = { min: number | null; max: number | null };
+/** One size's fit (F20-F22): a bike's rider height, a jersey's chest and waist. `size` is a variant's size. */
+export type SizeRow = { size: string; height: CmRange | null; chest: CmRange | null; waist: CmRange | null };
+/** What staff wrote about one photo (X10, F104) and the colour it shows (F18), keyed by the images[] entry. */
+export type PhotoMeta = { alt_en: string | null; alt_ar: string | null; colour: string | null };
+/** One price for this product with 1-3 others (F31); shown and charged only beside a discount licence. */
+export type Bundle = { items: string[]; price: number };
+/** A verified buyer's review staff chose to show (F42): no name, only the month it was bought. */
+export type StoreReview = { id: string; product_id: string; rating: number; body: string | null; lang: string | null; bought: string };
+
 export type StoreVariant = {
   id: string;
   product_id: string;
@@ -47,6 +75,27 @@ export type StoreProduct = {
   sort: number;
   created_at: string;
   variants: StoreVariant[];
+  /** "gift_card": each variant is one face value; its page is /store/gift-card (F57). */
+  kind: ProductKind;
+  /** "certified": a certified pre-owned (ex-rental) bike, with its 1-year warranty (F53). */
+  condition: ProductCondition;
+  /** null: the legal minimum (warrantyMonths). */
+  warranty_months: number | null;
+  key_specs: KeySpec[];
+  box: BoxItem[];
+  fit: FitPanel | null;
+  faq: FaqItem[];
+  sizes: SizeRow[];
+  image_meta: Record<string, PhotoMeta>;
+  /** Product ids: the add-ons (F30, F60, F66), the bikes to compare with (F10), in staff's order. */
+  goes_with: string[];
+  compare_with: string[];
+  bundle: Bundle | null;
+  /** YYYY-MM-DD: the discount licence's dates; the former price shows only between them (F107). */
+  sale_from: string | null;
+  sale_to: string | null;
+  /** The /bikes catalogue's model this product sells (F12). */
+  catalog_model: string | null;
 };
 
 export type Store = { products: StoreProduct[] };
@@ -64,7 +113,74 @@ function specOf(v: unknown): StoreSpec | null {
   return en || ar ? { en, ar } : null;
 }
 
-/** The two tables' rows as products with their variants; a row the pages could not draw is left out. */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+const obj = (v: unknown): Record<string, unknown> | null => (v && typeof v === "object" && !Array.isArray(v) ? (v as Record<string, unknown>) : null);
+const list = (v: unknown, max: number): unknown[] => (Array.isArray(v) ? v.slice(0, max) : []);
+const txt = (v: unknown, max: number) => { const t = str(v); return t ? t.slice(0, max) : null; };
+const keep = <T,>(xs: (T | null)[]): T[] => xs.filter((x): x is T => x !== null);
+
+/** {en, ar} with an English text (Arabic optional), or null. */
+export function biOf(v: unknown, max = 400): StoreBi | null {
+  const o = obj(v);
+  const en = o && txt(o.en, max);
+  return o && en ? { en, ar: txt(o.ar, max) } : null;
+}
+const iconRow = <I extends string>(icons: readonly I[], max: number) => (v: unknown): { icon: I; en: string; ar: string | null } | null => {
+  const o = obj(v);
+  const en = o && txt(o.en, max);
+  if (!o || !en) return null;
+  return { icon: (icons as readonly string[]).includes(String(o.icon)) ? (o.icon as I) : ("other" as I), en, ar: txt(o.ar, max) };
+};
+function cmOf(v: unknown): CmRange | null {
+  const o = obj(v);
+  if (!o) return null;
+  const cm = (x: unknown) => (typeof x === "number" && Number.isInteger(x) && x >= 50 && x <= 230 ? x : null);
+  const min = cm(o.min), max = cm(o.max);
+  if (min === null && max === null) return null;
+  return min !== null && max !== null && max < min ? null : { min, max };
+}
+function sizeRowOf(v: unknown): SizeRow | null {
+  const o = obj(v);
+  const size = o && txt(o.size, 20);
+  if (!o || !size) return null;
+  const r = { size, height: cmOf(o.height), chest: cmOf(o.chest), waist: cmOf(o.waist) };
+  return r.height || r.chest || r.waist ? r : null;
+}
+function fitOf(v: unknown): FitPanel | null {
+  const o = obj(v);
+  if (!o) return null;
+  const f = { fit: biOf(o.fit, 80), size: biOf(o.size, 120), best: biOf(o.best, 120) };
+  return f.fit || f.size || f.best ? f : null;
+}
+function faqOf(v: unknown): FaqItem | null {
+  const o = obj(v);
+  const q = o && biOf(o.q, 200), a = o && biOf(o.a, 1500);
+  return q && a ? { q, a } : null;
+}
+function metaOf(v: unknown, images: string[]): Record<string, PhotoMeta> {
+  const o = obj(v) ?? {};
+  const out: Record<string, PhotoMeta> = {};
+  for (const src of images) {
+    const m = obj(o[src]);
+    if (!m) continue;
+    const meta = { alt_en: txt(m.alt_en, 200), alt_ar: txt(m.alt_ar, 200), colour: txt(m.colour, 30) };
+    if (meta.alt_en || meta.alt_ar || meta.colour) out[src] = meta;
+  }
+  return out;
+}
+const idsOf = (v: unknown, max: number, self: string): string[] =>
+  [...new Set(list(v, 20).filter((x): x is string => typeof x === "string" && UUID.test(x)).map((x) => x.toLowerCase()))].filter((x) => x !== self.toLowerCase()).slice(0, max);
+function bundleOf_(v: unknown, self: string): Bundle | null {
+  const o = obj(v);
+  if (!o) return null;
+  const items = idsOf(o.items, 3, self), price = num(o.price);
+  return items.length && price > 0 && price <= 100000 ? { items, price } : null;
+}
+
+/** The two tables' rows as products with their variants; a row the pages could not draw is left out. Every field the
+ *  store build added (CONTRACTS.md section 2) is read here; a malformed element is dropped, never the product, and a
+ *  database without those columns yet reads as a product without them. */
 export function storeOf(products: Record<string, unknown>[], variants: Record<string, unknown>[]): Store {
   const byProduct = new Map<string, StoreVariant[]>();
   for (const v of variants) {
@@ -81,14 +197,32 @@ export function storeOf(products: Record<string, unknown>[], variants: Record<st
     const id = str(p.id), slug = str(p.slug), name = str(p.name_en), price = num(p.price);
     if (!id || !slug || !name || !isCat(p.category) || !(price > 0)) continue;
     const compare = p.compare_at == null ? null : num(p.compare_at);
+    const images = (Array.isArray(p.images) ? p.images : []).filter((u): u is string => typeof u === "string" && /^(\/(site|media)\/|https:\/\/)/.test(u));
+    const condition: ProductCondition = p.condition === "certified" ? "certified" : "new";
+    const wm = num(p.warranty_months);
+    const day = (v: unknown) => (typeof v === "string" && DAY.test(v.slice(0, 10)) ? v.slice(0, 10) : null);
     out.push({
       id, slug, category: p.category, brand: str(p.brand), name_en: name, name_ar: str(p.name_ar),
       tagline_en: str(p.tagline_en), tagline_ar: str(p.tagline_ar), description_en: str(p.description_en), description_ar: str(p.description_ar),
       specs: (Array.isArray(p.specs) ? p.specs : []).map(specOf).filter((s): s is StoreSpec => !!s),
-      images: (Array.isArray(p.images) ? p.images : []).filter((u): u is string => typeof u === "string" && /^(\/(site|media)\/|https:\/\/)/.test(u)),
+      images,
       price, compare_at: compare !== null && compare > price ? compare : null, ship_ksa: p.ship_ksa !== false,
       sort: Number.isFinite(num(p.sort)) ? num(p.sort) : 0, created_at: str(p.created_at) ?? "",
       variants: (byProduct.get(id) ?? []).sort((a, b) => a.sort - b.sort),
+      kind: p.kind === "gift_card" && p.category === "gift" ? "gift_card" : "item",
+      condition,
+      warranty_months: Number.isInteger(wm) && wm >= 12 && wm <= 120 ? wm : null,
+      key_specs: keep(list(p.key_specs, 6).map(iconRow(KEY_SPEC_ICONS, 40))),
+      box: keep(list(p.box, 12).map(iconRow(BOX_ICONS, 80))),
+      fit: fitOf(p.fit),
+      faq: keep(list(p.faq, 8).map(faqOf)),
+      sizes: keep(list(p.sizes, 12).map(sizeRowOf)),
+      image_meta: metaOf(p.image_meta, images),
+      goes_with: idsOf(p.goes_with, 8, id),
+      compare_with: idsOf(p.compare_with, 3, id),
+      bundle: bundleOf_(p.bundle, id),
+      sale_from: day(p.sale_from), sale_to: day(p.sale_to),
+      catalog_model: typeof p.catalog_model === "string" && UUID.test(p.catalog_model) ? p.catalog_model.toLowerCase() : null,
     });
   }
   return { products: out };
@@ -215,3 +349,90 @@ export function sar(n: number): string {
 
 /** The VAT inside a VAT-inclusive amount (15%), as the database writes it on the order (_store_order_json). */
 export const vatIn = (total: number) => Math.round(total * 15 / 115 * 100) / 100;
+
+// ── The store build's rules (2026-11-15, CONTRACTS.md section 2) ─────────────────────────────────
+
+/** A staff text in the page's language: the Arabic on an Arabic page when written, the English everywhere else. */
+export const pickBi = (locale: string, b: StoreBi | null | undefined): string => (b ? pick(locale, b.en, b.ar) : "");
+
+/** Where a product's page is: a gift card's is the gift card page (F57). */
+export const productHref = (p: Pick<StoreProduct, "slug" | "kind">): string => (p.kind === "gift_card" ? "/store/gift-card" : `/store/${p.slug}`);
+/** A category's own list page (O01-E). */
+export const categoryHref = (cat: StoreCategory): string => `/store/category/${cat}`;
+export const isStoreCategory = isCat;
+
+/** What staff wrote about a photo, in the page's language (Arabic falls back to the English); "" when nothing (X10). */
+export function photoAlt(p: StoreProduct, src: string, locale: string): string {
+  const m = p.image_meta[src];
+  return m ? pick(locale, m.alt_en, m.alt_ar) : "";
+}
+
+/** The photos to show while a colour is picked (F18): those of that colour first, then those of no colour; another
+ *  colour's photos are left out. With no colour picked, or none tagged with it, every photo in staff's order. */
+export function photosFor(p: StoreProduct, colour: string | null): string[] {
+  if (!colour || !p.images.some((src) => p.image_meta[src]?.colour === colour)) return p.images;
+  const of = (src: string) => p.image_meta[src]?.colour ?? null;
+  return [...p.images.filter((src) => of(src) === colour), ...p.images.filter((src) => of(src) === null)];
+}
+
+/** The photo a colour chip shows (D15-B): the first photo of that colour, or null. */
+export const colourPhoto = (p: StoreProduct, colour: string): string | null => p.images.find((src) => p.image_meta[src]?.colour === colour) ?? null;
+
+/** The former price to strike through (F107, R8): only beside a discount licence and, when staff set the licence's dates,
+ *  between them (today a YYYY-MM-DD in Riyadh); null otherwise. */
+export function wasPrice(p: Pick<StoreProduct, "compare_at" | "sale_from" | "sale_to">, licence: string | boolean | null, today: string): number | null {
+  if (!licence || p.compare_at === null) return null;
+  if (p.sale_from && today < p.sale_from) return null;
+  if (p.sale_to && today > p.sale_to) return null;
+  return p.compare_at;
+}
+
+/** The fit staff gave a size (F20), or null. */
+export const sizeRow = (p: StoreProduct, size: string): SizeRow | null => p.sizes.find((r) => r.size === size) ?? null;
+const inCm = (r: CmRange | null, cm: number) => !!r && (r.min === null || cm >= r.min) && (r.max === null || cm <= r.max);
+/** The size a rider of this height fits (F22): the first row whose height range holds it, among the sizes the product
+ *  comes in; null when none does or the height is not 50-230 cm. */
+export function sizeForHeight(p: StoreProduct, cm: number): string | null {
+  if (!Number.isFinite(cm) || cm < 50 || cm > 230) return null;
+  const sizes = optionsOf(p).sizes;
+  return p.sizes.find((r) => inCm(r.height, cm) && (!sizes.length || sizes.includes(r.size)))?.size ?? null;
+}
+
+/** The products these ids name, in their order: published ones only (the store holds no other), never `self`. */
+export function relatedOf(store: Store, ids: readonly string[], self?: string): StoreProduct[] {
+  const by = new Map(store.products.map((p) => [p.id.toLowerCase(), p]));
+  return ids.map((id) => by.get(id.toLowerCase())).filter((p): p is StoreProduct => !!p && p.id !== self);
+}
+
+/** The starter bundle (F31): this product and its bundle's items at one price, only beside a discount licence, with
+ *  every item still in the store and in stock, and a price under what they cost one by one (`save`, the difference,
+ *  counted at each product's lowest price). Null otherwise. */
+export function bundleOf(store: Store, p: StoreProduct, licence: string | boolean | null):
+  { products: StoreProduct[]; price: number; sum: number; save: number } | null {
+  if (!licence || !p.bundle || p.kind === "gift_card") return null;
+  const items = relatedOf(store, p.bundle.items, p.id);
+  if (items.length !== p.bundle.items.length || items.some((x) => x.kind === "gift_card")) return null;
+  const all = [p, ...items];
+  if (all.some((x) => productStock(x).kind === "out")) return null;
+  const sum = Math.round(all.reduce((n, x) => n + priceRange(x).lo, 0) * 100) / 100;
+  const save = Math.round((sum - p.bundle.price) * 100) / 100;
+  return save > 0 ? { products: all, price: p.bundle.price, sum, save } : null;
+}
+
+/** How many reviews a product has and their average: the average only from five reviews on (F42), to one decimal. */
+export function reviewSummary(reviews: readonly StoreReview[]): { count: number; avg: number | null } {
+  const count = reviews.length;
+  if (count < 5) return { count, avg: null };
+  return { count, avg: Math.round((reviews.reduce((n, r) => n + r.rating, 0) / count) * 10) / 10 };
+}
+
+/** The review rows as read (store_reviews, status shown); a row the page could not draw is left out. */
+export function reviewsOf(rows: Record<string, unknown>[]): StoreReview[] {
+  const out: StoreReview[] = [];
+  for (const r of rows) {
+    const id = str(r.id), pid = str(r.product_id), rating = num(r.rating), bought = str(r.bought_month);
+    if (!id || !pid || !Number.isInteger(rating) || rating < 1 || rating > 5 || !bought || !/^\d{4}-\d{2}$/.test(bought)) continue;
+    out.push({ id, product_id: pid, rating, body: txt(r.body, 1000), lang: str(r.lang), bought });
+  }
+  return out;
+}

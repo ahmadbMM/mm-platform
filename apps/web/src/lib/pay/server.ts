@@ -11,6 +11,9 @@ export type PayView = {
   hold: boolean; expires_at: string; paid_at: string | null; method: string | null; brand: string | null; last4: string | null;
   message: string | null; refunded: number; receipt_no: number | null; created_at: string;
   order_no?: number; order_key?: string; order_status?: string; delivery_fee?: number; wallet_paid?: number;
+  /** The store build (2026-11-15, pay_view): the order's goods, its discount, what a gift card paid, its total, and who
+   *  took the card part ("moyasar", or "tabby" once instalments are on). */
+  subtotal?: number; discount?: number; gift_paid?: number; total?: number; provider?: string;
   items?: { name: string; variant: string | null; qty: number; unit_price: number; image: string | null }[];
   rides?: { id: string; name: string; type: string; date: string; title: string | null; kind: string | null; status: string; paid: boolean }[];
   lockers?: { code: string; day: string; period: string; status: string }[];

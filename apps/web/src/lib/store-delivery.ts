@@ -17,8 +17,14 @@ export function deliveryOptions(s: PaySettings, cart: { subtotal: number; shipKs
   return FULFILS.flatMap((id) => {
     if (id === "ksa" && !cart.shipKsa) return [];
     const fee = deliveryFee(s, id, cart.subtotal);
-    return fee === null ? [] : [{ id, fee, days: id === "pickup" ? null : s.delivery[id].days }];
+    return fee === null ? [] : [{ id, fee, days: s.delivery[id].days }];
   });
+}
+
+/** The day an order placed on `today` is ready to collect at the showroom (F28): the last day of pickup's days, or
+ *  null when staff set none. */
+export function readyDay(s: PaySettings, today: string): string | null {
+  return deliveryRange(s.delivery.pickup.days, today)?.to ?? null;
 }
 
 /** "1-2" -> [1, 2], "3" -> [3, 3]; null for anything else. */

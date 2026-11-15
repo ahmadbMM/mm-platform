@@ -32,13 +32,13 @@ export type Contact = { name: string; phone: string; email: string };
 
 /** The fields the customer must fix before the order can be sent, by name ("name", "phone", "email",
  *  "district", "street", "city", "postal", "extra", "short"). */
-export function formProblems(f: { fulfil: Fulfil; contact: Contact; address: Address }): string[] {
+export function formProblems(f: { fulfil: Fulfil | "digital"; contact: Contact; address: Address }): string[] {
   const out: string[] = [];
   if (f.contact.name.trim().replace(/\s+/g, " ").length < 2) out.push("name");
   if (!storePhone(f.contact.phone)) out.push("phone");
   const email = f.contact.email.trim();
   if (email && (email.length > 120 || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))) out.push("email");
-  if (f.fulfil === "pickup") return out;
+  if (f.fulfil === "pickup" || f.fulfil === "digital") return out;
   const a = f.address;
   if (f.fulfil === "ksa" && !a.city.trim()) out.push("city");
   if (!a.district.trim()) out.push("district");
@@ -49,10 +49,15 @@ export function formProblems(f: { fulfil: Fulfil; contact: Contact; address: Add
   return out;
 }
 
-/** The body of POST /api/store/checkout. The city of a Jeddah delivery is Jeddah. */
-export function checkoutBody(f: { items: CartItem[]; fulfil: Fulfil; contact: Contact; address: Address; note: string; wallet: boolean; lang: string }) {
+/** What the store build added to a checkout (CONTRACTS.md section 5.1): a code (F67), a gift card to pay with (F57), a
+ *  gift order and its note (F58), a scheduled Jeddah delivery (F78). */
+export type CheckoutExtras = { promo?: string; giftCard?: string; gift?: boolean; giftNote?: string; slot?: { day: string; time: string } | null };
+
+/** The body of POST /api/store/checkout. The city of a Jeddah delivery is Jeddah. A gift card alone goes "digital":
+ *  nothing is delivered and no address is sent. */
+export function checkoutBody(f: { items: CartItem[]; fulfil: Fulfil | "digital"; contact: Contact; address: Address; note: string; wallet: boolean; lang: string } & CheckoutExtras) {
   const a = f.address;
-  const address = f.fulfil === "pickup" ? undefined : {
+  const address = f.fulfil === "pickup" || f.fulfil === "digital" ? undefined : {
     city: f.fulfil === "jeddah" ? "Jeddah" : a.city.trim(), district: a.district.trim(), street: a.street.trim(),
     building: a.building.trim() || undefined, postal: a.postal || undefined, extra: a.extra || undefined, short: a.short || undefined,
   };
@@ -64,6 +69,11 @@ export function checkoutBody(f: { items: CartItem[]; fulfil: Fulfil; contact: Co
     note: f.note.trim() || undefined,
     wallet: f.wallet,
     lang: f.lang,
+    promo: f.promo?.trim() ? f.promo.trim().toUpperCase() : undefined,
+    giftCard: f.giftCard?.trim() ? f.giftCard.trim().toUpperCase() : undefined,
+    gift: f.gift ? true : undefined,
+    giftNote: f.gift && f.giftNote?.trim() ? f.giftNote.trim() : undefined,
+    slot: f.fulfil === "jeddah" && f.slot ? f.slot : undefined,
   };
 }
 
@@ -73,5 +83,9 @@ export function refusalPlace(error: string): { field?: string; line?: true } {
   if (error === "stock" || error === "gone" || error === "no_ship") return { line: true };
   if (error === "phone" || error === "name" || error === "email" || error === "city") return { field: error };
   if (error === "address") return { field: "address" };
+  // the store build (2026-11-15): the district a Jeddah delivery does not serve, the delivery slot, the code, the gift card
+  if (error === "district" || error === "slot") return { field: error };
+  if (error === "promo" || error === "promo_min" || error === "promo_used" || error === "licence") return { field: "promo" };
+  if (error === "gift" || error === "gift_on_gift") return { field: "giftCard" };
   return {};
 }

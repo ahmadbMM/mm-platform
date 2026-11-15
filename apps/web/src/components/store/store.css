@@ -17,6 +17,8 @@ html:is([lang="ar"], [lang="ur"]) :is(.st, .mm-site .tk-amt) { font-family: "MM 
 .st-licence { margin: -8px 0 16px; font-size: 13px; font-weight: 600; color: #4a4843; }
 .st-eyebrow { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #077a4b; }
 .st-ic { flex: none; vertical-align: -3px; }
+/* an arrow along the reading direction mirrors on right-to-left pages (icons.tsx flip; A06-A) */
+[dir="rtl"] .st-ic-flip { transform: scaleX(-1); }
 .st-empty { background: #fff; border: 1px dashed rgba(26, 25, 25, .25); border-radius: 14px; padding: 24px; color: #4a4843; display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
 .st-empty p { margin: 0; font-size: 16px; }
 .st-link { display: block; text-align: center; margin-top: 12px; color: #077a4b !important; font-weight: 700; font-size: 14px; min-height: 44px; line-height: 44px; }

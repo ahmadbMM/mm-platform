@@ -70,3 +70,42 @@ export const shipsKsa = (lines: CartLine[]) => lines.every((l) => !l.product || 
 
 /** "From" goes before a product's price when its variants cost different amounts. */
 export const priceFrom = (p: StoreProduct) => { const r = priceRange(p); return r.lo !== r.hi; };
+
+// ── The store build (2026-11-15, CONTRACTS.md sections 3 and 7) ─────────────────────────────────
+
+/** "Buy now" (F35): /store/checkout?buy=<variant>&qty=<1-10> checks out that one line and leaves the cart alone. Null
+ *  when the address asks for none (or a malformed one). */
+export function buyNowOf(q: Record<string, string | string[] | undefined> | URLSearchParams): CartItem | null {
+  const get = (k: string) => (q instanceof URLSearchParams ? q.get(k) : typeof q[k] === "string" ? (q[k] as string) : null);
+  const id = (get("buy") ?? "").toLowerCase(), qty = Math.floor(Number(get("qty") ?? "1"));
+  return UUID.test(id) ? { variant: id, qty: qty >= 1 && qty <= MAX_QTY ? qty : 1 } : null;
+}
+export const buyNowHref = (variant: string, qty = 1) => `/store/checkout?buy=${encodeURIComponent(variant.toLowerCase())}&qty=${Math.min(MAX_QTY, Math.max(1, Math.floor(qty)))}`;
+
+/** The bundle discounts these lines earn (F31), as the database works them out at checkout (store_checkout): only beside
+ *  a discount licence; for each product with a bundle, in the store's order, every complete set (the product and each
+ *  of its items once, a unit counted in one set only) costs the bundle's price instead of the lowest price of each.
+ *  Gift cards never. A line that cannot be ordered is not counted. */
+export function bundleDiscount(lines: CartLine[], licence: string | boolean | null): { ref: string; sets: number; amount: number }[] {
+  if (!licence) return [];
+  const ok = lines.filter((l) => !l.issue && l.product && l.variant && l.product.kind !== "gift_card");
+  const left = new Map<string, number>(), unit = new Map<string, number>();
+  for (const l of ok) {
+    const id = (l.product as StoreProduct).id;
+    left.set(id, (left.get(id) ?? 0) + l.item.qty);
+    unit.set(id, Math.min(unit.get(id) ?? Infinity, l.unit));
+  }
+  const heads = [...new Map(ok.map((l) => [(l.product as StoreProduct).id, l.product as StoreProduct])).values()]
+    .filter((p) => p.bundle).sort((a, b) => a.sort - b.sort || a.name_en.localeCompare(b.name_en));
+  const out: { ref: string; sets: number; amount: number }[] = [];
+  for (const p of heads) {
+    const ids = [p.id, ...(p.bundle as NonNullable<StoreProduct["bundle"]>).items];
+    if (ids.some((id) => !left.has(id))) continue;
+    const sets = Math.min(...ids.map((id) => left.get(id) ?? 0));
+    const per = Math.round((ids.reduce((n, id) => n + (unit.get(id) ?? 0), 0) - (p.bundle as NonNullable<StoreProduct["bundle"]>).price) * 100) / 100;
+    if (sets < 1 || per <= 0) continue;
+    for (const id of ids) left.set(id, (left.get(id) ?? 0) - sets);
+    out.push({ ref: p.slug, sets, amount: Math.round(per * sets * 100) / 100 });
+  }
+  return out;
+}

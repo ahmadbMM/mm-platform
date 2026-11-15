@@ -6,7 +6,9 @@ import { payRpc, type PayView } from "@/lib/pay/server";
 // account's order is theirs, and only they may let the wallet pay part of it. The body names variants and
 // quantities, never a price: every price, the delivery fee and the total are the database's. Stock is held
 // for store.orderMinutes while the customer pays, and put back if they do not.
-// Body: {items:[{variant, qty}], fulfil, contact:{name, phone, email}, address?, note?, wallet?, lang}.
+// Body: {items:[{variant, qty}], fulfil, contact:{name, phone, email}, address?, note?, wallet?, lang}, and since the store
+// build (2026-11-15, CONTRACTS.md section 5.1) promo?, giftCard?, gift?, giftNote?, slot?: {day, time}; fulfil "digital"
+// for gift cards alone. The database checks every one of them (the licence, the code, the card, the slot).
 export async function POST(req: Request) {
   const g = await guard(req, { signin: false });
   if (!g.ok) return g.res;
@@ -30,6 +32,11 @@ export async function POST(req: Request) {
     note: str(b.note, 300),
     wallet: b.wallet === true && !!g.acct,
     lang: langOf(b.lang),
+    promo: str(b.promo, 24),
+    gift_card: str(b.giftCard, 20),
+    gift: b.gift === true || undefined,
+    gift_note: b.gift === true ? str(b.giftNote, 200) : undefined,
+    slot: slotOf(b.slot),
   };
   const r = await payRpc<{ order: { id: string; no: number; status: string; total: number }; key: string; payment: PayView | null }>("store_checkout", {
     p_id: g.acct?.id ?? null, p_token: g.acct?.token ?? null, p_order: order,
@@ -43,4 +50,11 @@ export async function POST(req: Request) {
     ok: true, no: o.no, key,
     url: payment ? `/pay/${payment.id}` : `/store/order/${o.no}?k=${key}`,
   });
+}
+
+/** A delivery slot as the body names it ({day: YYYY-MM-DD, time: an id}), or nothing. */
+function slotOf(v: unknown): { day: string; time: string } | undefined {
+  const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  return typeof o.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(o.day) && typeof o.time === "string" && /^[a-z0-9]{1,12}$/.test(o.time)
+    ? { day: o.day, time: o.time } : undefined;
 }

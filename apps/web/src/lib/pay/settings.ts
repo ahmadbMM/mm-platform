@@ -42,13 +42,18 @@ export function paySettings(c: SiteContent | null | undefined): PaySettings {
     topupMax: int(g("pay.topupMax"), 1000, 1, 10000),
     storeOpen: g("store.open") === true,
     orderMinutes: int(g("store.orderMinutes"), 30, 10, 120),
-    delivery: { pickup: { on: true, fee: 0, days: null }, jeddah: deliv(d.jeddah, 0), ksa: deliv(d.ksa, 0), freeOver: free },
+    // Pickup is offered unless staff switched it off (X01: an explicit false; a store.delivery without it, as seeded
+    // before 2026-11-15, keeps it on), always free; its days are when it is ready (F28).
+    delivery: { pickup: { ...deliv(d.pickup, 0), on: obj(d.pickup).on !== false, fee: 0 }, jeddah: deliv(d.jeddah, 0), ksa: deliv(d.ksa, 0), freeOver: free },
   };
 }
 
-/** The delivery fee the database will charge (_store_delivery_fee): null when that way is off. */
-export function deliveryFee(s: PaySettings, fulfil: "pickup" | "jeddah" | "ksa", subtotal: number): number | null {
-  if (fulfil === "pickup") return 0;
+/** The delivery fee the database will charge (_store_delivery_fee): null when that way is off. Pickup is free while it
+ *  is on (X01); a gift card alone ("digital") is never delivered and costs nothing. `subtotal` is what the goods cost
+ *  after any discount. */
+export function deliveryFee(s: PaySettings, fulfil: "pickup" | "jeddah" | "ksa" | "digital", subtotal: number): number | null {
+  if (fulfil === "digital") return 0;
+  if (fulfil === "pickup") return s.delivery.pickup.on ? 0 : null;
   const d = s.delivery[fulfil];
   if (!d.on) return null;
   if (s.delivery.freeOver != null && subtotal >= s.delivery.freeOver) return 0;

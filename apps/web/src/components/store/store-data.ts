@@ -4,7 +4,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { pageState } from "@/lib/page-state";
 import { paySettings } from "@/lib/pay/settings";
 import { discountLicence, loadStore, storeOpen, type Store } from "@/lib/store";
-import { deliveryOptions, deliveryRange, fmtRange, riyadhToday, type DeliveryOption } from "@/lib/store-delivery";
+import { deliveryOptions, deliveryRange, fmtRange, readyDay, riyadhToday, type DeliveryOption } from "@/lib/store-delivery";
 import { intlOf } from "@/i18n/locales";
 import { serverLocalize } from "@/i18n/dicts";
 import { T } from "./Store.text";
@@ -44,12 +44,15 @@ export function shownOptions(s: StoreState, locale: string, cart: { subtotal: nu
   });
 }
 
-/** The delivery dates of every way staff offer, whatever the cart: the cart and checkout pick from these. */
+/** The delivery dates of every way staff offer, whatever the cart: the cart and checkout pick from these. `pickup` is
+ *  the one day it is ready to collect (F28), null when staff set no days for it. */
 export function allWhens(s: StoreState, locale: string): Record<string, string | null> {
   const out: Record<string, string | null> = {};
   for (const id of ["jeddah", "ksa"] as const) {
     const r = deliveryRange(s.settings.delivery[id].days, s.today);
     out[id] = r ? fmtRange(r, intlOf(locale)) : null;
   }
+  const ready = readyDay(s.settings, s.today);
+  out.pickup = ready ? fmtRange({ from: ready, to: ready }, intlOf(locale)) : null;
   return out;
 }
