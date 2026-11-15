@@ -262,7 +262,8 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
     try {
       const body = checkoutBody({
         items: cart, fulfil: way, contact: draft.contact, address: draft.address, note: draft.note, wallet: money.wallet > 0, lang: locale,
-        promo: promo.hit?.code ?? promo.want ?? undefined, giftCard: !giftLines && gift.card ? gift.card.code : undefined,
+        // a code the database refused for these lines (under its minimum) is not sent: it would refuse the order too
+        promo: promo.hit?.code ?? (promo.busy ? promo.want : null) ?? undefined, giftCard: !giftLines && gift.card ? gift.card.code : undefined,
         gift: !digital && draft.gift, giftNote: draft.giftNote, slot: slotsOn ? draft.slot : null,
       });
       const r = await fetch("/api/store/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
