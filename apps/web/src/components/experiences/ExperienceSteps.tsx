@@ -127,6 +127,9 @@ export type StepSession = {
    *  its card says under its time, ready in the page's language ("See you next Saturday" on the Saturday ride, else "See
    *  you at the next session"). Absent on a date that may be booked. */
   fbk?: string;
+  /** Few spots left (lib/rides.ts fewOf, 2026-11-15): staff said so, and its cards say it where no count of three or
+   *  fewer is said; absent otherwise. */
+  few?: boolean;
   /** A featured date (lib/rides.ts featuredOf, 2026-11-13): its day as its Featured card's tile, short weekday, day
    *  number and short month ("Sat", "21", "Nov"), and how long yoga runs ("90 min", null on any other date or when it
    *  cannot be told); absent on a date that is not featured. */
@@ -226,6 +229,8 @@ export type StepText = {
   /** A date closed as Full, no waitlist (StepSession.fbk): "Fully booked", where its places would be said (the booking
    *  app's sessFbk). */
   fbk: string;
+  /** "Few spots left" on a date staff marked (StepSession.few; the booking app's fewSpots). */
+  few: string;
   pricesTitle: string; pricesText: string; codeNote: string;
   /** An event's facts: "Open to everyone", "{price} per seat", "{n} seats" (the page fills them). */
   everyone: string; perSeat: string; seats: string;
@@ -411,13 +416,14 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   // 2026-11-13: Booked with a tick before it in reading order, On the waitlist or Reserved with the dot); else Fully
   // booked, in the full red, on a date closed as Full, no waitlist; else when it
   // opens, a clock beside it so the grey is never the only sign (WCAG 1.4.1); the waitlist once it is full; how many
-  // are left at three or fewer; null with nothing to say.
+  // are left at three or fewer; Few spots left where staff say so (2026-11-15); null with nothing to say.
   const stateOf = (s: StepSession) => {
     if (s.held) return <span className={`sc-spots held${s.held === "ok" ? "" : " low"}`} data-held={s.held}>{s.held === "ok" && <Tick size={13} />}<span>{t.held[s.held]}</span></span>;
     if (s.fbk) return <span className="sc-spots full fbk">{t.fbk}</span>;
     const opens = opensOf(s);
     return opens ? <span className="sc-spots closed"><ClockIcon size={13} /><span>{opens}</span></span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
       : s.kind !== "vlap" && s.kind !== "arena" && s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
+      : s.few ? <span className="sc-spots low">{t.few}</span>
       : null;
   };
   const tags = (s: StepSession) => (

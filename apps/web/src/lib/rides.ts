@@ -78,6 +78,9 @@ export type RideSession = {
    *  see it, said Fully booked, with no way to book it or join a waitlist. Never `full` too. toSession always sets it; a
    *  copy kept at the edge from before has none, and held no such session. */
   fbk?: boolean;
+  /** Few spots left (the booking app's _sessFew, 2026-11-15; fewOf): staff said so on the session, so its cards and its
+   *  Details say "Few spots left", on a ride staff approve too. Set on an open date alone; absent otherwise. */
+  few?: true;
   title: string | null;
   /** The session's name in Arabic (sessions.title_ar, rentals 20261113170000; the owner's pick on the booking app's
    *  theming page, 2026-11-13): an Arabic page names the session by it (sessionName). Trimmed, at most 60 characters,
@@ -256,6 +259,18 @@ export function fbkOf(r: Row): boolean {
   return !!o && typeof o === "object" && !!(o as Record<string, unknown>)._fbk;
 }
 
+/** Whether staff say a date has few spots left (the booking app's _sessFew; the user, 2026-11-15: "in the farmhouse session
+ *  show everywhere that there are few spots remaining on the event card too"): open, its settings marked (bike_slots._few,
+ *  stored as JSON text or an object). A full date says the waitlist instead, and one closed as full says Fully booked. */
+export function fewOf(r: Row): boolean {
+  if (r.status !== "open") return false;
+  let o: unknown = r.bike_slots;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { o = null; }
+  }
+  return !!o && typeof o === "object" && !!(o as Record<string, unknown>)._few;
+}
+
 /** A session with a start time alone (slotTimes gave the one time twice): "7 PM", never "7 PM – 7 PM". */
 export const oneTime = (t: readonly [string, string] | null | undefined): boolean => !!t && t[0] === t[1];
 
@@ -382,6 +397,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...placeOf(r),
     ...breakfastOf(r),
     ...(bfMembersOf(r.bike_slots) ? { bfMembers: true } : {}),
+    ...(fewOf(r) ? { few: true as const } : {}),
     ...((h) => (h ? { ig: h } : {}))(igOf(r.bike_slots)),
     ...revealOf(r),
     ...outOf(r),

@@ -211,6 +211,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const waitWord = tx("Waitlist", "قائمة الانتظار"), left1 = tx("{0} spot left", "{0} مقعد متبقي"), leftN = tx("{0} spots left", "{0} مقاعد متبقية");
   // Full, no waitlist (lib/rides.ts fbkOf): the booking app's sessFbk, sessFbkSat and sessFbkNext
   const fbkWord = tx("Fully booked", "محجوز بالكامل");
+  // Few spots left where staff say so (lib/rides.ts fewOf, 2026-11-15): the booking app's fewSpots
+  const fewWord = tx("Few spots left", "أماكن قليلة متبقية");
   const fbkLine = (s: RideSession) => (s.kind === "saturday" ? tx("See you next Saturday", "نراك السبت القادم") : tx("See you at the next session", "نراك في الجلسة القادمة"));
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
@@ -321,6 +323,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       ...(own ? { held: own } : {}),
       // closed as Full, no waitlist: where to go next, under its time; absent on a date that may be booked
       ...(s.fbk ? { fbk: fbkLine(s) } : {}),
+      // staff say few spots are left: said where its places would be, on its card and its Featured card
+      ...(s.few ? { few: true } : {}),
       // a copy kept at the edge from before these fields existed reads as an event without them
       event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
@@ -354,7 +358,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         collect, place: place.name, map: place.map,
         // the Saturday ride: when the sun rises, after when it is, and its two routes drawn above the facts
         ...(sr ? { sunrise: sr } : {}), ...(route ? { route } : {}),
-        distance: infoDistance(s.kind, kmWord), places: infoPlaces(s, { waitlist: waitWord, left1, leftN, fbk: fbkWord }),
+        distance: infoDistance(s.kind, kmWord), places: infoPlaces(s, { waitlist: waitWord, left1, leftN, fbk: fbkWord, few: fewWord }),
         ...((v) => (v ? { races: v.races, divs: v.divs } : {}))(infoVl(s, vlWords)),
         ...((v) => (v ? { races: v.races, divs: v.divs, guide: v.guide, format: ahFormat, whenNote: ahWhen, link: { label: tx("Race details", "تفاصيل السباق"), text: tx("The workout and standards, from the organisers", "التمارين والمعايير من المنظمين"), url: AH_INFO_URL } } : {}))(infoArena(s, ahWords)),
         // the DEFE 5KM Run: when the kits go out, and where the race itself is entered (the booking app's _infoFacts)
@@ -428,7 +432,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     featured: tx("Featured", "مميّزة"), upcoming: tx("Upcoming", "المواعيد القادمة"),
     // a date the visitor holds: the booking app's tkStBooked, wlOnList and statusReserved (KindTheme.words.ts)
     held: kw.held,
-    fbk: fbkWord,
+    fbk: fbkWord, few: fewWord,
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
     everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),
     breakfastAt: tx("Breakfast at {0}", "الإفطار في {0}"),

@@ -144,19 +144,22 @@ export const infoDistance = (kind: RideKind, km: string): string | null =>
   (kind === "runher" ? RUN_KMS.map((n) => fillAt(km, n)).join(" · ") : kind === "defe5k" ? fillAt(km, 5) : null);
 
 /** The places a date has (_infoFacts): Fully booked on one closed as Full, no waitlist (`t.fbk`, approval ride or not, as
- *  the booking app says it, 2026-11-13); never said on a ride staff approve (they choose who rides);
+ *  the booking app says it, 2026-11-13); never counted on a ride staff approve (they choose who rides);
  *  the waitlist on a full date or one with none left; else how many are left, when they were counted
- *  (lib/rides.ts counts the soonest open dates), and nothing when they were not. */
-export function infoPlaces(s: Pick<RideSession, "full" | "left" | "approval" | "fbk"> & { kind?: RideKind }, t: { waitlist: string; left1: string; leftN: string; fbk?: string }): string | null {
+ *  (lib/rides.ts counts the soonest open dates), and nothing when they were not. Few spots left (`t.few`, lib/rides.ts
+ *  fewOf, 2026-11-15) where staff said so and no count of three or fewer is said, approval ride or not. */
+export function infoPlaces(s: Pick<RideSession, "full" | "left" | "approval" | "fbk" | "few"> & { kind?: RideKind }, t: { waitlist: string; left1: string; leftN: string; fbk?: string; few?: string }): string | null {
   if (s.fbk && t.fbk) return t.fbk;
-  if (s.approval) return null;
+  const few = s.few && t.few ? t.few : null;
+  if (s.approval) return few;
   if (s.full) return t.waitlist;
-  if (typeof s.left !== "number") return null;
+  if (typeof s.left !== "number") return few;
   // Victory Lap never says how many places are left, only the waitlist once it is full (the owner, 2026-10-17);
   // nor Arena Heros, whose places are an athlete's each while a team books two, nor the Blood Donation event, which
   // has no real cap (the owner, 2026-11-03)
-  if (s.kind === "vlap" || s.kind === "arena" || s.kind === "blood") return s.left <= 0 ? t.waitlist : null;
+  if (s.kind === "vlap" || s.kind === "arena" || s.kind === "blood") return s.left <= 0 ? t.waitlist : few;
   if (s.left <= 0) return t.waitlist;
+  if (s.left > 3 && few) return few;
   return fillAt(s.left === 1 ? t.left1 : t.leftN, s.left);
 }
 
