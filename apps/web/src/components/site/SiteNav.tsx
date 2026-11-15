@@ -8,6 +8,7 @@ import { LOCALES, localeInfo } from "@/i18n/locales";
 import { BOOKING_URL, COMMUNITY, HEADER, NAV_LINKS, STORE_CART_URL, bookingLink, type NavLink } from "@/lib/links";
 import { ArrowIcon } from "@/components/site/Icons";
 import { useCart, useHydrated } from "@/components/store/useCart";
+import SavedLink from "@/components/store/SavedLink";
 import { cartCount } from "@/lib/cart";
 import { fill } from "@/i18n/tx";
 
@@ -147,6 +148,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
               ? <a href={accountHref} className="mm-nav-icon" title={label} aria-label={label}>{icon}</a>
               : <Link href="/account" className="mm-nav-icon" title={label} aria-label={label}>{icon}</Link>;
           })()}
+          {shop && !noCart && <SavedLink />}
           {noCart ? null : shop ? <CartLink /> : (
             <a href={cart} className="mm-nav-icon" title={tx("Cart", "السلة")} aria-label={tx("Cart", "السلة")}>{CART_ICON}</a>
           )}
