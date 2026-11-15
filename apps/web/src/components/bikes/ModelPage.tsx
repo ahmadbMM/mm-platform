@@ -9,12 +9,16 @@ import { priceForType } from "@/lib/bikes";
 import { fill, fmtNum } from "@/lib/fill";
 import { bookingLink } from "@/lib/links";
 import { breadcrumbData, productData } from "@/lib/structured-data";
+import { ArrowIcon } from "@/components/site/Icons";
+import { T as W1 } from "@/components/store/w1.text";
+import { serverLocalize } from "@/i18n/dicts";
 import "@/components/pages/pages.css";
 import "./catalog.css";
 
 // One model of the catalogue: its photos and colours, name, tagline, year and ride price, the
 // Book button, its description, its specifications by group, its spec sheet and a few of the
-// other bikes in its category.
+// other bikes in its category. A model the site's own store sells has "See it in the store" beside Book (the store build,
+// 2026-11-15, F12), and so has each of those bikes' cards.
 export const modelTitle = (m: CatalogModel) => [m.brand, m.name].map((s) => s.trim()).filter(Boolean).join(" ");
 
 /** What search engines and a shared link read: the tagline, else the start of the description. */
@@ -42,6 +46,7 @@ export default function ModelPage({ locale, model, catalog, s }: { locale: strin
   if (cat) crumbs.push({ href: `/bikes/${cat.slug}`, label: catName });
   if (cat && sub) crumbs.push({ href: `/bikes/${cat.slug}/${sub.slug}`, label: pick(locale, sub.name_en, sub.name_ar) });
   const cover = coverOf(model, catalog.photos);
+  const shop = s.shop.get(model.id);
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <JsonLd data={[
@@ -62,7 +67,12 @@ export default function ModelPage({ locale, model, catalog, s }: { locale: strin
                 {price !== null && <span className="ct-price">{fill(tx("{n} SAR per ride", "{n} ر.س للجولة"), { n: fmtNum(price, locale) })}</span>}
               </p>
             )}
-            {price !== null && <a className="pg-btn" href={bookingLink(navFrom(site).booking, locale)}>{tx("Book a ride", "احجز جولة")}</a>}
+            {(price !== null || shop) && (
+              <div className="ct-ctas">
+                {price !== null && <a className="pg-btn" href={bookingLink(navFrom(site).booking, locale)}>{tx("Book a ride", "احجز جولة")}</a>}
+                {shop && <a className="pg-btn line" href={shop}>{serverLocalize(W1, locale).seeInStore}<ArrowIcon size={16} /></a>}
+              </div>
+            )}
           </div>
         </div>
         {desc.length > 0 && <div className="ct-desc">{desc.map((p, i) => <p key={i}>{p}</p>)}</div>}
@@ -84,7 +94,7 @@ export default function ModelPage({ locale, model, catalog, s }: { locale: strin
           <section className="ct-more">
             <h2>{fill(tx("More {category} bikes", "المزيد من دراجات {category}"), { category: catName })}</h2>
             <div className="ct-grid">
-              {siblings.map((m) => <ModelCard key={m.id} model={m} catalog={catalog} locale={locale} />)}
+              {siblings.map((m) => <ModelCard key={m.id} model={m} catalog={catalog} locale={locale} shop={s.shop.get(m.id)} />)}
             </div>
           </section>
         )}

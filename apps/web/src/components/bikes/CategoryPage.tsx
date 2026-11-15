@@ -64,7 +64,7 @@ export default function CategoryPage({ locale, category, subtype, catalog, s }: 
         {models.length === 0 && <p className="pg-empty">{emptyText(tx)}</p>}
         {loose.length > 0 && (
           <div className="ct-grid">
-            {loose.map((m) => <ModelCard key={m.id} model={m} catalog={catalog} locale={locale} />)}
+            {loose.map((m) => <ModelCard key={m.id} model={m} catalog={catalog} locale={locale} shop={s.shop.get(m.id)} />)}
           </div>
         )}
         {subs.map((x) => {
@@ -74,7 +74,7 @@ export default function CategoryPage({ locale, category, subtype, catalog, s }: 
             <section key={x.id} className="ct-section">
               <h2>{pick(locale, x.name_en, x.name_ar)}</h2>
               <div className="ct-grid">
-                {own.map((m) => <ModelCard key={m.id} model={m} catalog={catalog} locale={locale} />)}
+                {own.map((m) => <ModelCard key={m.id} model={m} catalog={catalog} locale={locale} shop={s.shop.get(m.id)} />)}
               </div>
             </section>
           );
