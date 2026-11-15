@@ -60,7 +60,9 @@ export function ReturnStart({ no, k, lines, ret, exchange }: { no: number; k: st
       {open && (
         <Modal title={w.returnTitle} onClose={close} closeLabel={t.close}>
           <div className="st-ret">
-            {kinds.length > 1 && (
+            {/* always drawn, even with one kind left: after the 7 days only an exchange is possible, and the customer
+                sees that it is an exchange they are asking for, not a refund */}
+            {kinds.length > 0 && (
               <fieldset className="st-ways-pick st-ret-kind">
                 <legend>{w.kindLabel}</legend>
                 {kinds.map((kd) => (
@@ -138,7 +140,8 @@ function ReviewRow({ no, k, lang, item }: { no: number; k: string; lang: string;
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(false);
-  const id = `st-rv-${item.product.slice(0, 8)}`;
+  // the whole product id: two products of one order never share a group of stars (the first 8 characters could)
+  const id = `st-rv-${item.product}`;
   async function send() {
     if (!rating || busy) return;
     setBusy(true); setErr("");
@@ -188,9 +191,9 @@ export function GiftPrint({ target }: { target: string }) {
   const print = () => {
     const root = document.documentElement, box = document.getElementById(target);
     if (!box) return window.print();
-    const done = () => { root.removeAttribute("data-st-print"); box.classList.remove("st-gc-on"); window.removeEventListener("afterprint", done); };
+    const done = () => { root.removeAttribute("data-st-print"); box.classList.remove("st-ogc-on"); window.removeEventListener("afterprint", done); };
     root.setAttribute("data-st-print", "gc");
-    box.classList.add("st-gc-on");
+    box.classList.add("st-ogc-on");
     window.addEventListener("afterprint", done);
     window.print();
   };

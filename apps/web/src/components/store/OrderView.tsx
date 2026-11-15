@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { Link } from "@/i18n/navigation";
 import { intlOf } from "@/i18n/locales";
 import { sized } from "@/lib/img";
@@ -32,6 +33,13 @@ export type Seller = {
 /** The invoice's labels in the other of English and Arabic, shown beside the page's own once the invoice is issued
  *  (ZATCA: a tax invoice is in Arabic; the page's language reads it). */
 export type Beside = { lang: "ar" | "en"; t: StoreText; w: W5Text };
+
+/** The booked delivery day (F78) is said while the order is still to come: not once it is delivered, cancelled or
+ *  refunded (the expected dates' own rule, lib/store-order.ts orderExpected, with an order still to pay). */
+const SLOT_SHOWN: readonly string[] = ["pending", "paid", "preparing", "shipped", "out"];
+/** A code typed in Latin letters, digits and dashes ("WELCOME-10") as one left-to-right run inside the page's words, so
+ *  an Arabic line never shows it as "10-WELCOME" (the same isolates sar() puts round an amount). */
+const ltr = (s: string) => `\u2066${s}\u2069`;
 
 export default function OrderView({ o, t, w, beside, locale, seller, now, today, whatsapp, showroom, expected, slot, signup, returnsHref, policy, hidden }: {
   o: Order; t: StoreText; w: W5Text; beside: Beside; locale: string; seller: Seller; now: number; today: string; whatsapp: string; showroom: string;
@@ -123,7 +131,7 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
         <p>{o.fulfil === "digital" ? <StIcon name="gift" size={20} /> : <Ic name={o.fulfil === "pickup" ? "shop" : "truck"} size={20} />}<b>{way}</b></p>
         {o.fulfil === "pickup" ? <p>{t.collectFrom(showroom)}</p>
           : o.fulfil !== "digital" && o.address && <p>{t.deliverTo}: {[o.address.district, o.address.city].filter(Boolean).join(", ")}</p>}
-        {!outNow && (slot && o.status !== "delivered" ? <p className="st-expected">{w.slotOn(slot)}</p>
+        {!outNow && (slot && SLOT_SHOWN.includes(o.status) ? <p className="st-expected">{w.slotOn(slot)}</p>
           : expected && <p className="st-expected">{t.expected(expected)}</p>)}
         {(o.courier || o.tracking_no) && (
           <dl className="st-kv">
@@ -134,26 +142,26 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
       </section>
 
       {o.gift_cards.length > 0 && (
-        <section className="st-gcs" aria-labelledby="st-gcs-h">
-          <h2 id="st-gcs-h">{w.giftCardsH}</h2>
+        <section className="st-ogcs" aria-labelledby="st-ogcs-h">
+          <h2 id="st-ogcs-h">{w.giftCardsH}</h2>
           <ul>
             {o.gift_cards.map((g) => {
               const st = giftState(g, now);
-              const id = `st-gc-${g.code}`;
+              const id = `st-ogc-${g.code}`;
               return (
-                <li key={g.code} id={id} className={`st-gc g-${st}`}>
-                  <div className="st-gc-card">
-                    <p className="st-gc-brand"><span>{seller.trade}</span><StIcon name="gift" size={22} /></p>
-                    <p className="st-gc-name">{w.giftCard}</p>
-                    <p className="st-gc-amt"><Amt>{sar(g.amount)}</Amt></p>
-                    <p className="st-gc-code"><bdi dir="ltr">{g.code}</bdi></p>
-                    {g.expires_at && st !== "void" && <p className="st-gc-exp">{w.giftValid(day(g.expires_at))}</p>}
-                    <p className="st-gc-site" dir="ltr">micromobility.sa/store</p>
+                <li key={g.code} id={id} className={`st-ogc g-${st}`}>
+                  <div className="st-ogc-card">
+                    <p className="st-ogc-brand"><span>{seller.trade}</span><StIcon name="gift" size={22} /></p>
+                    <p className="st-ogc-name">{w.giftCard}</p>
+                    <p className="st-ogc-amt"><Amt>{sar(g.amount)}</Amt></p>
+                    <p className="st-ogc-code"><bdi dir="ltr">{g.code}</bdi></p>
+                    {g.expires_at && st !== "void" && <p className="st-ogc-exp">{w.giftValid(day(g.expires_at))}</p>}
+                    <p className="st-ogc-site" dir="ltr">micromobility.sa/store</p>
                   </div>
-                  <div className="st-gc-meta">
+                  <div className="st-ogc-meta">
                     {st !== "active" && <p className={`st-pill g-${st}`}>{w.giftState[st]}</p>}
-                    {st === "active" && g.balance < g.amount && <p className="st-gc-bal"><Amt>{t.balance(sar(g.balance))}</Amt></p>}
-                    {st === "active" && <div className="st-gc-acts"><CopyNo text={g.code} /><GiftPrint target={id} /></div>}
+                    {st === "active" && g.balance < g.amount && <p className="st-ogc-bal"><Amt>{t.balance(sar(g.balance))}</Amt></p>}
+                    {st === "active" && <div className="st-ogc-acts"><CopyNo text={g.code} /><GiftPrint target={id} /></div>}
                   </div>
                 </li>
               );
@@ -212,7 +220,7 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
         <p className="bk-sum-row"><span>{lab(t.subtotal, bt.subtotal)}</span><Amt>{sar(o.subtotal)}</Amt></p>
         {discountRows(o).map((d, k) => (
           <p key={k} className="bk-sum-row st-disc">
-            <span>{d.kind === "bundle" ? lab(w.discBundle, bw.discBundle) : d.kind === "promo" ? lab(w.discCode(d.ref), bw.discCode(d.ref)) : lab(w.discount, bw.discount)}</span>
+            <span>{d.kind === "bundle" ? lab(w.discBundle, bw.discBundle) : d.kind === "promo" ? lab(w.discCode(ltr(d.ref)), bw.discCode(ltr(d.ref))) : lab(w.discount, bw.discount)}</span>
             <Amt>{`−${sar(d.amount)}`}</Amt>
           </p>
         ))}
@@ -269,7 +277,8 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
               <li key={r.id}>
                 <span>
                   <b>{r.kind === "exchange" ? w.reqExchange(day(r.created_at)) : w.reqReturn(day(r.created_at))}</b>
-                  <small>{[...returnLines(o, r), w.reasons[r.reason]].join(" · ")}</small>
+                  {/* each line in its own isolate: a Latin model name with "× 1" keeps its order inside an Arabic line */}
+                  <small>{returnLines(o, r).map((l, k) => <Fragment key={k}><bdi>{l}</bdi>{" · "}</Fragment>)}{w.reasons[r.reason]}</small>
                 </span>
                 <span className={`st-pill r-${r.status}`}>{w.reqState[r.status]}</span>
               </li>

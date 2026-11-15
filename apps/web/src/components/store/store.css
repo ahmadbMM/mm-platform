@@ -300,22 +300,23 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-refunds li > .tk-amt { font-weight: 600; white-space: nowrap; }
 .st-rets { margin: 0 0 6px; }
 
-/* the gift cards an order bought: each drawn as the card, its code to copy, printed alone */
-.st-gcs { margin: 0 0 16px; }
-.st-gcs h2 { font-size: 18px !important; letter-spacing: 0 !important; margin: 0 0 10px; }
-.st-gcs ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); }
-.st-gc-card { position: relative; aspect-ratio: 1.586; max-width: 380px; box-sizing: border-box; padding: 18px 20px; border-radius: 14px; background: #077a4b; color: #fbf9f4;
+/* the gift cards an order bought: each drawn as the card, its code to copy, printed alone (st-ogc, "order gift card":
+   the gift card page has its own .st-gc and .st-gc-card in this file) */
+.st-ogcs { margin: 0 0 16px; }
+.st-ogcs h2 { font-size: 18px !important; letter-spacing: 0 !important; margin: 0 0 10px; }
+.st-ogcs ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); }
+.st-ogc-card { position: relative; aspect-ratio: 1.586; max-width: 380px; box-sizing: border-box; padding: 18px 20px; border-radius: 14px; background: #077a4b; color: #fbf9f4;
   display: flex; flex-direction: column; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.st-gc.g-void .st-gc-card, .st-gc.g-expired .st-gc-card, .st-gc.g-spent .st-gc-card { background: #6e6b63; }
-.st-gc-card p { margin: 0; }
-.st-gc-brand { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 15px; font-weight: 700; }
-.st-gc-name { font-size: 12.5px; font-weight: 600; opacity: .85; }
-.st-gc-amt { margin-top: auto !important; font-size: 30px; font-weight: 700; line-height: 1.2; }
-.st-gc-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 17px; font-weight: 700; letter-spacing: 1px; }
-.st-gc-exp, .st-gc-site { font-size: 12.5px; opacity: .85; }
-.st-gc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
-.st-gc-acts { display: flex; flex-wrap: wrap; gap: 10px; }
-.st-gc-bal { margin: 0; font-size: 14px; font-weight: 600; }
+.st-ogc.g-void .st-ogc-card, .st-ogc.g-expired .st-ogc-card, .st-ogc.g-spent .st-ogc-card { background: #6e6b63; }
+.st-ogc-card p { margin: 0; }
+.st-ogc-brand { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 15px; font-weight: 700; }
+.st-ogc-name { font-size: 12.5px; font-weight: 600; opacity: .85; }
+.st-ogc-amt { margin-top: auto !important; font-size: 30px; font-weight: 700; line-height: 1.2; }
+.st-ogc-code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 17px; font-weight: 700; letter-spacing: 1px; }
+.st-ogc-exp, .st-ogc-site { font-size: 12.5px; opacity: .85; }
+.st-ogc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 10px; }
+.st-ogc-acts { display: flex; flex-wrap: wrap; gap: 10px; }
+.st-ogc-bal { margin: 0; font-size: 14px; font-weight: 600; }
 
 /* a review of each product once it is delivered */
 .st-rv { margin: 0 0 16px; padding: 16px 18px; background: #fff; border: 1.5px solid #077a4b; border-radius: 14px; }
@@ -348,8 +349,8 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-ret :is(.st-ret-kind, .st-ret-why) label:has(input:focus-visible) { outline: 2px solid #077a4b; outline-offset: 2px; }
 
 @media print {
-  .st-ret-go, .st-rv, .st-gc-meta { display: none !important; }
+  .st-ret-go, .st-rv, .st-ogc-meta { display: none !important; }
   /* Print gift card: that card alone */
-  html[data-st-print="gc"] .st-order > :not(.st-gcs), html[data-st-print="gc"] .st-gcs > h2, html[data-st-print="gc"] .st-gc:not(.st-gc-on) { display: none !important; }
-  html[data-st-print="gc"] .st-gcs ul { display: block; }
+  html[data-st-print="gc"] .st-order > :not(.st-ogcs), html[data-st-print="gc"] .st-ogcs > h2, html[data-st-print="gc"] .st-ogc:not(.st-ogc-on) { display: none !important; }
+  html[data-st-print="gc"] .st-ogcs ul { display: block; }
 }

@@ -170,6 +170,11 @@ describe("a return or an exchange (F93)", () => {
     expect(returnBody(a, { ...pick, items: { 7: 0 } })).toBeNull();
     expect(returnBody({ ...a, key: null }, pick)).toBeNull();
   });
+  it("shows which kind is asked for even when only one is left (after the 7 days, an exchange)", () => {
+    const src = readFileSync(fileURLToPath(new URL("../../components/store/OrderAfter.tsx", import.meta.url)), "utf8");
+    expect(src).toContain("{kinds.length > 0 && (\n              <fieldset className=\"st-ways-pick st-ret-kind\">");
+    expect(src).not.toContain("kinds.length > 1 &&");
+  });
   it("lists a request's lines in words", () => {
     expect(returnLines(order(), { items: [{ item_id: 7, qty: 1 }, { item_id: 99, qty: 1 }] })).toEqual(["DA54 · M · Black × 1"]);
   });
@@ -238,12 +243,28 @@ describe("the order's page", () => {
     expect(html).toContain("GC-ABCD-EFGH-JKLM");
     expect(html).toMatch(/Valid until 10 Nov 2027/);
     expect(html).toContain("Print gift card");
-    expect(html).toContain('id="st-gc-GC-ABCD-EFGH-JKLM"');
+    expect(html).toContain('id="st-ogc-GC-ABCD-EFGH-JKLM"');
+    // its own class names: the gift card page's (w4: .st-gc, .st-gc-card in the same store.css) never style it
+    expect(html).toContain('class="st-ogc g-active"');
+    expect(html).not.toMatch(/class="[^"]*\bst-gc/);
+  });
+  it("says the booked delivery day only while the order is still to come (F78)", async () => {
+    const o = (status: string) => order({ status, slot: { day: "2026-11-27", time: "am" }, delivered_at: null, events: [] });
+    const slot = "Thu 27 Nov, 09:00–13:00";
+    for (const st of ["pending", "paid", "preparing", "shipped"]) expect(await page(o(st), "en", { slot }), st).toContain(`Delivery on ${slot}`);
+    for (const st of ["delivered", "cancelled", "refunded"]) expect(await page(o(st), "en", { slot }), st).not.toContain("Delivery on");
+  });
+  it("keeps a code and a Latin model name in their own order inside Arabic words", async () => {
+    const ar = await page(order({ discounts: [{ kind: "promo", ref: "WELCOME-10", amount: 270 }], promo_code: "WELCOME-10" }), "ar");
+    expect(ar).toContain("الرمز \u2066WELCOME-10\u2069");
+    expect(ar).toContain("Code \u2066WELCOME-10\u2069"); // the English beside it, the same
+    const o = order({ returns: [{ id: "r1", kind: "return", status: "open", items: [{ item_id: 7, qty: 1 }], reason: "wrong_size", created_at: "2026-11-13T10:00:00Z" }] });
+    expect(await page(o, "ar")).toContain("<bdi>DA54 · M · Black × 1</bdi> · المقاس غير مناسب");
   });
   it("asks for a review of each product once delivered, with five drawn stars and a text box (F94)", async () => {
     const html = await page(order(), "en");
     expect(html).toContain("How was it?");
-    expect(html.match(/name="st-rv-00000000"/g)).toHaveLength(5);
+    expect(html.match(new RegExp(`name="st-rv-${BIKE}"`, "g"))).toHaveLength(5); // the whole id: no two products share a group
     expect(html).toContain("5 out of 5");
     expect(html).toContain("Send review");
     expect(await page(order({ status: "out" }), "en")).not.toContain("How was it?");
@@ -261,7 +282,7 @@ describe("the order's page", () => {
     const o = order({ returns: [{ id: "r1", kind: "exchange", status: "open", items: [{ item_id: 7, qty: 1 }], reason: "wrong_size", created_at: "2026-11-13T10:00:00Z" }] });
     const html = await page(o, "en");
     expect(html).toContain("Exchange requested on 13 Nov 2026");
-    expect(html).toContain("DA54 · M · Black × 1 · Wrong size");
+    expect(html).toContain("<bdi>DA54 · M · Black × 1</bdi> · Wrong size");
     expect(html).toContain('href="/returns"');
     expect(html).not.toContain("Return an item"); // a request is open
   });
