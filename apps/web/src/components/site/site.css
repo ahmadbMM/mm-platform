@@ -194,6 +194,16 @@ html:is([lang="ar"], [lang="ur"]) .mm-search-list p.mm-search-h { letter-spacing
 .mm-search-item { gap: 12px; }
 .mm-search-item > span:first-child { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .mm-search-item small { color: #57605a; font-size: 13px; font-weight: 400; line-height: 1.45; }
+/* The store's products in the search (store build, 2026-11-15, O06-B): the price as the store writes it, in the riyal
+   sign's own one-glyph font (store.css), loaded only where the sign is, and the stock. */
+@font-face { font-family: "MM Riyal"; src: url(/fonts/Riyal-400.woff2) format("woff2"); font-weight: 100 600; font-display: swap; unicode-range: U+20C1; }
+@font-face { font-family: "MM Riyal"; src: url(/fonts/Riyal-700.woff2) format("woff2"); font-weight: 601 900; font-display: swap; unicode-range: U+20C1; }
+.mm-search .tk-amt { font-family: "MM Riyal", var(--cs-font-en), var(--cs-font-ar), sans-serif; }
+html:is([lang="ar"], [lang="ur"]) .mm-search .tk-amt { font-family: "MM Riyal", var(--cs-font-ar), var(--cs-font-en), sans-serif; }
+.mm-search-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+.mm-search-facts .tk-amt { color: #1a1919; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mm-search-facts small { color: #077a4b; font-weight: 600; }
+.mm-search-facts small.is-out { color: #a33b2e; }
 
 /* ── Men only, women only or mixed (the owner, 2026-10-27; lib/session-gender.ts) ── */
 /* The chip a session wears wherever a page shows it - Experiences' dates, their Details and the booking summary,
