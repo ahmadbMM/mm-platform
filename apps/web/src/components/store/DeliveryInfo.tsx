@@ -1,36 +1,81 @@
+"use client";
+
+import { useState } from "react";
+import { useLocalize } from "@/i18n/TxProvider";
 import { sar } from "@/lib/store-core";
-import type { ShownOption } from "./store-data";
-import type { StoreText } from "./Store.text";
-import { Amt, Ic, type StoreIcon } from "./bits";
+import type { Fulfil } from "@/lib/store-delivery";
+import { POLICY, warrantyParts } from "@/lib/store-policy";
+import type { Estimate } from "@/lib/store-pdp";
+import { T } from "./Store.text";
+import { T as W, warrantyWords } from "./w3a.text";
+import { Amt, Ic } from "./bits";
+import { StIcon } from "./icons";
+import Modal from "./Modal";
 
-// The product page's delivery and returns: every way to have it with its fee and the dates it is expected
-// on, the free-delivery threshold, and the return terms with a link to the policy. Shown before the cart, so
-// nobody meets a delivery fee for the first time at checkout.
-const ICON: Record<string, StoreIcon> = { pickup: "shop", jeddah: "truck", ksa: "truck" };
+// The product page's delivery and returns box (D16-A, F26-F28, X06, X07, L07, L09): one row for each way to have it,
+// with its fee at the price of what is picked (a dearer size can reach free delivery, X06) and the day it is expected
+// on; the way picked feeds the buy box's total and is the cart's too. A bike's ways say who builds it, "Collect fully
+// built" with a spanner and "Delivered ready to ride in Jeddah" (F27); pickup says the day it is ready (F28). Then the
+// store's one return sentence word for word (L07) with "Returns policy", always there and opening the full policy in a
+// centred pop-up whatever the Help page's switch says (X07), and the warranty with a drawn shield (L09): 2 years new,
+// 1 year certified pre-owned, or staff's longer term.
+const LOOK: Record<Fulfil, "shop" | "truck"> = { pickup: "shop", jeddah: "truck", ksa: "truck" };
 
-export default function DeliveryInfo({ t, options, freeOver, bike, returnsHref, showroom }: {
-  t: StoreText; options: ShownOption[]; freeOver: number | null; bike: boolean; returnsHref: string | null; showroom: string;
+export default function DeliveryInfo({ bike, est, onWay, whens, freeOver, showroom, policy, warranty }: {
+  bike: boolean; est: Estimate; onWay: (id: Fulfil) => void; whens: Record<string, string | null>; freeOver: number | null; showroom: string;
+  policy: { q: string; a: string }[]; warranty: number;
 }) {
-  const label = (id: string) => (id === "pickup" ? t.pickup : id === "jeddah" ? t.jeddah : t.ksa);
+  const t = useLocalize(T);
+  const w = useLocalize(W);
+  const pol = useLocalize(POLICY);
+  const [open, setOpen] = useState(false);
+  const label = (id: Fulfil) => (id === "pickup" ? (bike ? w.pickupBuilt : t.pickup) : id === "jeddah" ? (bike ? w.jeddahBuilt : t.jeddah) : t.ksa);
+  const sub = (id: Fulfil) => { const d = whens[id]; return id === "pickup" ? (d ? w.ready(d) : showroom) : d ? t.arrives(d) : ""; };
+  const pickable = est.options.length > 1;
+  const wy = warrantyParts(warranty);
+  const row = (id: Fulfil, fee: number) => (
+    <>
+      {bike && id === "pickup" ? <StIcon name="spanner" size={20} /> : <Ic name={LOOK[id]} size={20} />}
+      <span><b>{label(id)}</b>{sub(id) && <small>{sub(id)}</small>}</span>
+      <em>{fee === 0 ? t.free : <Amt>{sar(fee)}</Amt>}</em>
+    </>
+  );
   return (
     <section className="st-info" aria-labelledby="st-deliv-h">
       <h2 id="st-deliv-h" className="st-info-h">{t.delivery}</h2>
-      <ul className="st-ways">
-        {options.map((o) => (
-          <li key={o.id}>
-            <Ic name={ICON[o.id]} size={20} />
-            <span>
-              <b>{label(o.id)}</b>
-              <small>{o.id === "pickup" ? showroom : o.when ? t.arrives(o.when) : ""}</small>
-            </span>
-            <em>{o.fee === 0 ? t.free : <Amt>{sar(o.fee)}</Amt>}</em>
-          </li>
-        ))}
-      </ul>
+      {pickable ? (
+        <div className="st-ways st-ways-on" role="radiogroup" aria-labelledby="st-deliv-h">
+          {est.options.map((o) => (
+            <label key={o.id} className={est.way?.id === o.id ? "on" : undefined}>
+              <input type="radio" name="st-pdp-way" value={o.id} checked={est.way?.id === o.id} onChange={() => onWay(o.id)} />
+              {row(o.id, o.fee)}
+            </label>
+          ))}
+        </div>
+      ) : (
+        <ul className="st-ways">
+          {est.options.map((o) => <li key={o.id}>{row(o.id, o.fee)}</li>)}
+        </ul>
+      )}
       {freeOver !== null && <p className="st-info-note">{t.freeOver(sar(freeOver))}</p>}
-      {bike && <p className="st-info-note">{t.bikeLocal}</p>}
       <h2 className="st-info-h st-info-h2"><Ic name="back" size={18} />{t.returnsH}</h2>
-      <p className="st-info-note">{t.returns}{returnsHref && <> <a href={returnsHref}>{t.returnsLink}</a></>}</p>
+      <p className="st-info-note">{pol.returnSentence}{" "}
+        <button type="button" className="st-linkbtn" aria-haspopup="dialog" onClick={() => setOpen(true)}>{t.returnsLink}</button>
+      </p>
+      <p className="st-warranty"><StIcon name="shield" size={20} /><b>{w.warranty}</b><em>{warrantyWords(w, wy.years, wy.months)}</em></p>
+      {open && (
+        <Modal title={t.returnsLink} onClose={() => setOpen(false)} closeLabel={t.close}>
+          <div className="st-policy">
+            <p className="st-policy-lead">{pol.returnSentence}</p>
+            {policy.map((x, i) => (
+              <div key={i}>
+                <h3>{x.q}</h3>
+                <p>{x.a}</p>
+              </div>
+            ))}
+          </div>
+        </Modal>
+      )}
     </section>
   );
 }
