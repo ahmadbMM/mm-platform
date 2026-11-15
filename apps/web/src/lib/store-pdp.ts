@@ -72,9 +72,10 @@ export function heightCm(raw: string): number | null {
 // ── Sold out: the back-in-stock request (F34) ───────────────────────────────────────────────────
 
 /** The variant a request for a sold-out choice names: the size (or colour) tapped with the other choice as picked, else
- *  the first variant of it; for a product without choices, its first variant. Null when it names none. */
-export function soldOutTarget(p: StoreProduct, dim: "size" | "colour" | null, value: string | null, other: string | null): StoreVariant | null {
-  if (!dim || value === null) return p.variants[0] ?? null;
+ *  the first variant of it. The product's own "Tell me when it's back" (no size or colour tapped) names the choice made
+ *  (`picked`, a size and colour sold out together), else the first variant. Null when it names none. */
+export function soldOutTarget(p: StoreProduct, dim: "size" | "colour" | null, value: string | null, other: string | null, picked: StoreVariant | null = null): StoreVariant | null {
+  if (!dim || value === null) return picked ?? p.variants[0] ?? null;
   const has = (v: StoreVariant) => (dim === "size" ? v.size === value : v.color_en === value);
   const otherOk = (v: StoreVariant) => !other || (dim === "size" ? !v.color_en || v.color_en === other : !v.size || v.size === other);
   return p.variants.find((v) => has(v) && otherOk(v)) ?? p.variants.find(has) ?? null;
@@ -135,8 +136,9 @@ export function buyNowLines(q: Record<string, string | string[] | undefined> | U
 
 // ── Tabby's line under the price (F29) ──────────────────────────────────────────────────────────
 
-/** One of Tabby's four payments for this amount (the last one takes what rounding leaves). */
-export const tabbyPart = (amount: number): number => Math.ceil((Number(amount) || 0) * 25) / 100;
+/** One of Tabby's four payments for this amount (the last one takes what rounding leaves), worked in whole halalas: in
+ *  riyals 4.4 * 25 is 110.00000000000001, which rounded up to 1.11 where a quarter of 4.40 is 1.10. */
+export const tabbyPart = (amount: number): number => Math.ceil(Math.round((Number(amount) || 0) * 100) / 4) / 100;
 
 // ── Ask about it on WhatsApp (F32) ──────────────────────────────────────────────────────────────
 

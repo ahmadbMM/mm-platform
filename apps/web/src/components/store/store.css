@@ -319,7 +319,9 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 }
 @media (prefers-reduced-motion: reduce) { .st-gal-track { scroll-behavior: auto; } .st-gal-dots i { transition: none; } }
 
-/* the viewer (F13): dark, over the whole screen, the photo centred */
+/* the viewer (F13): dark, over the whole screen, the photo centred. The gallery holding it is lifted over the page while
+   it is open: the sticky gallery column paints its insides at its own level, under the site's fixed header (z 60) */
+.st-gal.viewing { z-index: 10001; }
 .st-viewer { position: fixed; inset: 0; z-index: 10001; background: #0f0f0e; color: #fbf9f4; display: grid; grid-template-rows: auto minmax(0, 1fr); }
 .st-viewer-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 12px; }
 .st-viewer-n { padding-inline-start: 6px; font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -435,5 +437,6 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-warranty em { font-style: normal; font-weight: 700; }
 .st-policy h3 { margin: 14px 0 4px; font-size: 15px; }
 .st-policy p { margin: 0; font-size: 14px; line-height: 1.6; color: #2e352f; }
+.st-policy p + p { margin-top: 8px; }
 .st-policy .st-policy-lead { font-weight: 600; color: #1a1919; }
 .st-nt-msg { margin: 0 0 12px; }

@@ -115,6 +115,9 @@ describe("back in stock (F34)", () => {
     expect(soldOutTarget(P(BIKE), "size", "L", null)?.id).toBe(U(104));
     expect(soldOutTarget(P(BIKE), "colour", "Red", "L")?.id).toBe(U(104));
     expect(soldOutTarget(P(OUT), null, null, null)?.id).toBe(U(109));
+    // the product's own button names the size and colour picked when that choice is sold out, not the first variant
+    expect(soldOutTarget(P(BIKE), null, null, null, P(BIKE).variants[3])?.id).toBe(U(104));
+    expect(soldOutTarget(P(BIKE), "size", "M", "Black", P(BIKE).variants[3])?.id).toBe(U(102));
     expect(soldOutTarget(P(BIKE), "size", "XXL", null)).toBeNull();
     expect(requestLabel(P(BIKE).variants[1])).toBe("M · Black");
     expect(requestLabel(P(OUT).variants[0])).toBe("");
@@ -148,6 +151,9 @@ describe("Tabby, WhatsApp and Latin names (F29, F32, O11-B)", () => {
   it("splits a price in Tabby's four, rounded up to the halala", () => {
     expect(tabbyPart(8435)).toBe(2108.75);
     expect(tabbyPart(100.01)).toBe(25.01);
+    expect(tabbyPart(4.4)).toBe(1.1); // a quarter exactly, not a halala more from the float
+    expect(tabbyPart(1104.4)).toBe(276.1);
+    expect(tabbyPart(0.28)).toBe(0.07);
   });
   it("finds the WhatsApp number in the site's link, else its phone", () => {
     expect(waDigits("https://wa.me/966566668818", "+966 12 000 0000")).toBe("966566668818");
@@ -209,25 +215,35 @@ describe("the warranty row (L09)", () => {
 
 describe("the back-in-stock route (POST /api/store/stock-request)", () => {
   afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); });
-  const calls: { fn: string; body: Record<string, unknown> }[] = [];
+  const calls: { fn: string; body: Record<string, unknown>; headers: Headers }[] = [];
   const setup = (status: number, answer: unknown) => {
     calls.length = 0;
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://db.test"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon");
     vi.stubEnv("MOYASAR_PUBLISHABLE_KEY", "pk_test_x"); vi.stubEnv("MOYASAR_SECRET_KEY", "sk_test_x"); vi.stubEnv("PAY_SERVER_KEY", "k".repeat(40));
     vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
-      calls.push({ fn: String(url).replace(/^.*\/rpc\//, ""), body: JSON.parse(String(init?.body ?? "{}")) });
+      calls.push({ fn: String(url).replace(/^.*\/rpc\//, ""), body: JSON.parse(String(init?.body ?? "{}")), headers: new Headers(init?.headers) });
       return new Response(JSON.stringify(answer), { status });
     }));
   };
-  const post = async (body: unknown, origin = "https://micromobility.sa") => {
+  const post = async (body: unknown, origin = "https://micromobility.sa", ip?: string) => {
     const { POST } = await import("../../app/api/store/stock-request/route");
-    const r = await POST(new Request("https://micromobility.sa/api/store/stock-request", { method: "POST", headers: { origin, "content-type": "application/json" }, body: JSON.stringify(body) }));
+    const r = await POST(new Request("https://micromobility.sa/api/store/stock-request", {
+      method: "POST", headers: { origin, "content-type": "application/json", ...(ip ? { "cf-connecting-ip": ip } : {}) }, body: JSON.stringify(body),
+    }));
     return { status: r.status, body: (await r.json()) as Record<string, unknown> };
   };
   it("keeps the name and the mobile for staff, the mobile as the database keeps it", async () => {
     setup(200, { id: U(900) });
     expect(await post({ variant: U(102).toUpperCase(), name: "  Sami   Rider ", phone: "٠٥٠١١١٢٢٣٣", lang: "ar" })).toEqual({ status: 200, body: { ok: true } });
-    expect(calls[0]).toEqual({ fn: "store_stock_request", body: { p_key: "k".repeat(40), p_variant: U(102), p_name: "Sami Rider", p_phone: "966501112233", p_lang: "ar" } });
+    expect(calls[0].fn).toBe("store_stock_request");
+    expect(calls[0].body).toEqual({ p_key: "k".repeat(40), p_variant: U(102), p_name: "Sami Rider", p_phone: "966501112233", p_lang: "ar" });
+  });
+  it("names the shopper's own address to the database's meter, not the Worker's one address for every shopper", async () => {
+    setup(200, { id: U(900) });
+    vi.stubEnv("MM_SITE_KEY", "site-key-0123456789");
+    expect((await post({ variant: U(102), name: "Sami", phone: "0501112233" }, undefined, "203.0.113.9")).status).toBe(200);
+    expect(calls[0].headers.get("x-mm-visitor-ip")).toBe("203.0.113.9");
+    expect(calls[0].headers.get("x-mm-site-key")).toBe("site-key-0123456789");
   });
   it("refuses a missing name or a mobile that is not Saudi before asking, and says the database's refusal", async () => {
     setup(200, { id: U(900) });
@@ -303,10 +319,27 @@ describe("the top of a product's page as the server draws it", () => {
     expect(html).toContain("استلمها مركّبة بالكامل");
     expect(html).toContain(POLICY.ar.returnSentence);
   });
-  it("sends a gift card's address to the gift card page and notes the product as looked at", () => {
+  it("sends a gift card's address to the gift card page, never round to itself, and notes the product as looked at", () => {
     const src = readFileSync(fileURLToPath(new URL("../../app/[locale]/store/[slug]/page.tsx", import.meta.url)), "utf8");
-    expect(src).toContain('if (p.kind === "gift_card") redirect(productHref(p));');
+    expect(src).toContain('if (p.kind === "gift_card") { if (productHref(p) === `/store/${p.slug}`) notFound(); redirect(productHref(p)); }');
     expect(src).toContain("<RecordView slug={p.slug} />");
     expect(src).toContain("categoryHref(p.category)");
+  });
+  it("draws its pop-ups outside the columns that stay in view, which the site's header would paint over", () => {
+    const read = (f: string) => readFileSync(fileURLToPath(new URL(`../../components/store/${f}`, import.meta.url)), "utf8");
+    expect(read("ProductGallery.tsx")).toContain('${view !== null ? " viewing" : ""}');
+    expect(read("store.css")).toMatch(/\.st-gal\.viewing \{ z-index: 10001; \}/);
+    const box = read("DeliveryInfo.tsx").split("export function ReturnsPop")[0];
+    expect(box).not.toContain("<Modal");
+    const top = read("ProductTop.tsx");
+    const buy = top.slice(top.indexOf('<div className="st-pdp-buy">'), top.indexOf("{guide && ("));
+    expect(buy).not.toMatch(/ReturnsPop|<Modal|StockAsk|SizeGuide/);
+    expect(top).toContain("<ReturnsPop policy={policy}");
+  });
+  it("says the returns policy's answers paragraph by paragraph, after the one sentence", async () => {
+    const { ReturnsPop } = await import("@/components/store/DeliveryInfo");
+    const html = render(wrap("en", createElement(ReturnsPop, { policy: [{ q: "How?", a: "Bring it back.\n\nWith the invoice." }], onClose: () => {} })));
+    expect(html).toContain(`<p class="st-policy-lead">${POLICY.en.returnSentence}</p>`);
+    expect(html).toContain("<h3>How?</h3><p>Bring it back.</p><p>With the invoice.</p>");
   });
 });

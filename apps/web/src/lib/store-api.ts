@@ -48,13 +48,14 @@ export async function giftCardCheck(code: string): Promise<ApiAnswer<GiftCardChe
 
 // ── Back in stock (F34; w3a) ────────────────────────────────────────────────────────────────────
 
-/** A shopper asks to be called when a sold-out choice is back (store_stock_request); staff call them on WhatsApp. */
-export async function stockRequest(a: { variant: string; name: string; phone: string; lang: string | null }): Promise<ApiAnswer<{ id: string }>> {
+/** A shopper asks to be called when a sold-out choice is back (store_stock_request); staff call them on WhatsApp. `from`
+ *  is the shopper's request: the database meters each visitor (10 in 10 minutes), not the Worker's one address. */
+export async function stockRequest(a: { variant: string; name: string; phone: string; lang: string | null }, from?: Request): Promise<ApiAnswer<{ id: string }>> {
   if (!UUID.test(a.variant)) return bad();
   const name = a.name.trim().replace(/\s+/g, " ").slice(0, 60);
   return answer(await payRpc<{ id: string }>("store_stock_request", {
     p_variant: a.variant, p_name: name, p_phone: a.phone.trim().slice(0, 20), p_lang: a.lang && LANG.test(a.lang) ? a.lang : null,
-  }), (d) => typeof d.id === "string");
+  }, undefined, from), (d) => typeof d.id === "string");
 }
 
 // ── After the order: returns and reviews (F93, F94; w5) ─────────────────────────────────────────

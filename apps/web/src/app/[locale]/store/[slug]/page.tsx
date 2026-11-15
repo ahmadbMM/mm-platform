@@ -31,7 +31,9 @@ export default async function ProductPage({ params }: Props) {
   openOr404(s);
   const p = findProduct(s.store, slug);
   if (!p) notFound();
-  if (p.kind === "gift_card") redirect(productHref(p));
+  // a gift card's page is the gift card page; a card whose own slug is that page's (gift-card) reaches here only while
+  // that page is missing, and is not found then, never sent round to itself again
+  if (p.kind === "gift_card") { if (productHref(p) === `/store/${p.slug}`) notFound(); redirect(productHref(p)); }
   const { t } = s;
   const name = pick(locale, p.name_en, p.name_ar);
   const desc = paragraphs(pick(locale, p.description_en, p.description_ar));

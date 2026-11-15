@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
-import { sar } from "@/lib/store-core";
+import { paragraphs, sar } from "@/lib/store-core";
 import type { Fulfil } from "@/lib/store-delivery";
 import { POLICY, warrantyParts } from "@/lib/store-policy";
 import type { Estimate } from "@/lib/store-pdp";
@@ -19,16 +18,18 @@ import Modal from "./Modal";
 // store's one return sentence word for word (L07) with "Returns policy", always there and opening the full policy in a
 // centred pop-up whatever the Help page's switch says (X07), and the warranty with a drawn shield (L09): 2 years new,
 // 1 year certified pre-owned, or staff's longer term.
+//   The pop-up itself is ReturnsPop, drawn by ProductTop beside the size guide: this box sits in the buy column, which
+// stays in view on a desktop (position: sticky), and a sticky column paints everything inside it at its own level, so a
+// pop-up drawn in here was covered by the site's header (its close button under it).
 const LOOK: Record<Fulfil, "shop" | "truck"> = { pickup: "shop", jeddah: "truck", ksa: "truck" };
 
-export default function DeliveryInfo({ bike, est, onWay, whens, freeOver, showroom, policy, warranty }: {
+export default function DeliveryInfo({ bike, est, onWay, whens, freeOver, showroom, onPolicy, warranty }: {
   bike: boolean; est: Estimate; onWay: (id: Fulfil) => void; whens: Record<string, string | null>; freeOver: number | null; showroom: string;
-  policy: { q: string; a: string }[]; warranty: number;
+  onPolicy: () => void; warranty: number;
 }) {
   const t = useLocalize(T);
   const w = useLocalize(W);
   const pol = useLocalize(POLICY);
-  const [open, setOpen] = useState(false);
   const label = (id: Fulfil) => (id === "pickup" ? (bike ? w.pickupBuilt : t.pickup) : id === "jeddah" ? (bike ? w.jeddahBuilt : t.jeddah) : t.ksa);
   const sub = (id: Fulfil) => { const d = whens[id]; return id === "pickup" ? (d ? w.ready(d) : showroom) : d ? t.arrives(d) : ""; };
   const pickable = est.options.length > 1;
@@ -60,22 +61,29 @@ export default function DeliveryInfo({ bike, est, onWay, whens, freeOver, showro
       {freeOver !== null && <p className="st-info-note">{t.freeOver(sar(freeOver))}</p>}
       <h2 className="st-info-h st-info-h2"><Ic name="back" size={18} />{t.returnsH}</h2>
       <p className="st-info-note">{pol.returnSentence}{" "}
-        <button type="button" className="st-linkbtn" aria-haspopup="dialog" onClick={() => setOpen(true)}>{t.returnsLink}</button>
+        <button type="button" className="st-linkbtn" aria-haspopup="dialog" onClick={onPolicy}>{t.returnsLink}</button>
       </p>
       <p className="st-warranty"><StIcon name="shield" size={20} /><b>{w.warranty}</b><em>{warrantyWords(w, wy.years, wy.months)}</em></p>
-      {open && (
-        <Modal title={t.returnsLink} onClose={() => setOpen(false)} closeLabel={t.close}>
-          <div className="st-policy">
-            <p className="st-policy-lead">{pol.returnSentence}</p>
-            {policy.map((x, i) => (
-              <div key={i}>
-                <h3>{x.q}</h3>
-                <p>{x.a}</p>
-              </div>
-            ))}
-          </div>
-        </Modal>
-      )}
     </section>
+  );
+}
+
+/** The returns policy (X07): the one sentence, then the Help page's Returns answers as staff keep them (each answer's
+ *  paragraphs as they wrote them), in a centred pop-up. */
+export function ReturnsPop({ policy, onClose }: { policy: { q: string; a: string }[]; onClose: () => void }) {
+  const t = useLocalize(T);
+  const pol = useLocalize(POLICY);
+  return (
+    <Modal title={t.returnsLink} onClose={onClose} closeLabel={t.close}>
+      <div className="st-policy">
+        <p className="st-policy-lead">{pol.returnSentence}</p>
+        {policy.map((x, i) => (
+          <div key={i}>
+            <h3>{x.q}</h3>
+            {paragraphs(x.a).map((para, j) => <p key={j}>{para}</p>)}
+          </div>
+        ))}
+      </div>
+    </Modal>
   );
 }

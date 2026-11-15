@@ -18,7 +18,7 @@ import { Amt } from "./bits";
 import { specIcon, StIcon } from "./icons";
 import { Bidi } from "./pdp-bits";
 import BuyBox from "./BuyBox";
-import DeliveryInfo from "./DeliveryInfo";
+import DeliveryInfo, { ReturnsPop } from "./DeliveryInfo";
 import PdpPickers from "./PdpPickers";
 import ProductGallery from "./ProductGallery";
 import SizeGuide from "./SizeGuide";
@@ -91,6 +91,7 @@ export default function ProductTop(props: TopProps) {
   const [way, setWay] = useState<Fulfil | null>(null);
   const [height, setHeight] = useState("");
   const [guide, setGuide] = useState(false);
+  const [policyOpen, setPolicyOpen] = useState(false);
   const [ask, setAsk] = useState<StoreVariant | null>(null);
   const sizeGroup = useRef<HTMLDivElement>(null);
   const addedTimer = useRef<number | undefined>(undefined);
@@ -139,7 +140,7 @@ export default function ProductTop(props: TopProps) {
     if (size && !optionOpen(p, "colour", c, size)) setSize(null);
   }
   function soldOut(dim: "size" | "colour" | null, value: string | null) {
-    setAsk(soldOutTarget(p, dim, value, dim === "size" ? colour : dim === "colour" ? size : null));
+    setAsk(soldOutTarget(p, dim, value, dim === "size" ? colour : dim === "colour" ? size : null, v));
   }
   /** The choice made, or what is missing said where it is missing; the variant when it can be bought. */
   function chosen(): StoreVariant | null {
@@ -217,13 +218,15 @@ export default function ProductTop(props: TopProps) {
           extras={withX} est={est} whens={whens} canAdd={canAdd} added={added} need={need} applePay={appleHere} askHref={askHref}
           onQty={(q) => { setQty(q); setAdded(false); }} onAdd={add} onBuy={buyNow} onNotify={() => soldOut(null, null)} />
         <DeliveryInfo bike={bike} est={est} onWay={pickWay} whens={whens} freeOver={settings.delivery.freeOver} showroom={showroom}
-          policy={policy} warranty={warrantyMonths(p)} />
+          onPolicy={() => setPolicyOpen(true)} warranty={warrantyMonths(p)} />
       </div>
 
       {guide && (
         <SizeGuide p={p} size={size} height={height} onHeight={setHeight}
           onChoose={(s) => { pickSize(s); setGuide(false); }} onClose={() => setGuide(false)} />
       )}
+      {/* drawn here, outside the sticky buy column, so nothing on the page paints over it (DeliveryInfo) */}
+      {policyOpen && <ReturnsPop policy={policy} onClose={() => setPolicyOpen(false)} />}
       {ask && <StockAsk variant={ask} label={requestLabel(ask) ? variantLabel(ask, locale) : ""} locale={locale} onClose={() => setAsk(null)} />}
     </article>
   );

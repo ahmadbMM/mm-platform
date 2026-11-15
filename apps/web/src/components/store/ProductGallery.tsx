@@ -17,6 +17,9 @@ import PhotoViewer from "./PhotoViewer";
 // row mirrors on right-to-left pages (A06-A: the next photo comes from the left), the photos never. A tap on a photo
 // opens the dark viewer (PhotoViewer: arrows, pinch and zoom). `photos` are those of the colour picked (photosFor), and
 // each is described by what staff wrote about it (photoAlt), the first by the product's name when they wrote nothing.
+//   While the viewer is open the gallery is lifted over the page (.viewing): from 900px this column stays in view
+// (position: sticky), and a sticky column paints everything inside it at its own level, which left the viewer under the
+// site's fixed header (its close button hidden) and under the buy column beside it.
 export default function ProductGallery({ p, photos, locale, name }: { p: StoreProduct; photos: string[]; locale: string; name: string }) {
   const t = useLocalize(T);
   const w = useLocalize(W);
@@ -46,7 +49,7 @@ export default function ProductGallery({ p, photos, locale, name }: { p: StorePr
   const altOf = (src: string, i: number) => photoAlt(p, src, locale) || (i === 0 ? name : "");
 
   return (
-    <div className={`st-gal${n > 1 ? " many" : ""}`} role="region" aria-roledescription="carousel" aria-label={w.photos}>
+    <div className={`st-gal${n > 1 ? " many" : ""}${view !== null ? " viewing" : ""}`} role="region" aria-roledescription="carousel" aria-label={w.photos}>
       {n > 1 && (
         <div className="st-gal-thumbs">
           <div>
