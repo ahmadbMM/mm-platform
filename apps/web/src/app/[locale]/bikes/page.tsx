@@ -55,7 +55,7 @@ export default async function BikesPage({ params }: { params: Promise<{ locale: 
             <div className="ct-grid">
               {models.map((m) => {
                 const cat = categoryOf(m, catalog.categories);
-                return <ModelCard key={m.id} model={m} catalog={catalog} locale={locale} kicker={cat ? pick(locale, cat.name_en, cat.name_ar) : undefined} />;
+                return <ModelCard key={m.id} model={m} catalog={catalog} locale={locale} kicker={cat ? pick(locale, cat.name_en, cat.name_ar) : undefined} shop={s.shop.get(m.id)} />;
               })}
             </div>
           </section>

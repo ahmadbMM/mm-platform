@@ -1,6 +1,7 @@
 "use server";
 
 import { journalState } from "@/components/journal/journal-data";
+import { T as StoreT } from "@/components/store/Store.text";
 import { aboutSchema } from "@/content/pages/about";
 import { clubSchema } from "@/content/pages/club";
 import { experiencesSchema } from "@/content/pages/experiences";
@@ -10,6 +11,9 @@ import { termsSchema } from "@/content/pages/terms";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill } from "@/lib/fill";
 import { pageState } from "@/lib/page-state";
+import { loadStore, storeOpen } from "@/lib/store";
+import { storeSearchItems } from "@/lib/store-site";
+import { serverLocalize } from "@/i18n/dicts";
 
 // What the header's search looks through besides the pages' names (components/site/SiteSearch.tsx):
 // the Help answers, the About and Club questions, the Journal's articles and the Terms' clauses,
@@ -18,8 +22,10 @@ import { pageState } from "@/lib/page-state";
 // own dictionaries; kept a minute per language, as staff edits are. While the site is Coming Soon a
 // visitor can open none of them, so it answers nothing (a server action can be called by anyone,
 // from anywhere); staff previewing the site search it as it will be.
-/** `words`: more words it is found by, never shown. */
-export type SearchItem = { title: string; text: string; href: string; words?: string };
+// The store build (2026-11-15, O06-B): while the site's own store is open, its category pages and its products, each
+// product with its price and stock as the store's card writes them (lib/store-site.ts), in staff's order.
+/** `words`: more words it is found by, never shown. `price` and `stock`: a product's, written; `out` when it is sold out. */
+export type SearchItem = { title: string; text: string; href: string; words?: string; price?: string; stock?: string; out?: boolean };
 
 // What someone looking for lessons might type, in English and Arabic (with and without the shadda).
 const LEARN_WORDS = "learn learning lesson lessons beginner beginners teach teaching training first time balance kids children adults "
@@ -61,6 +67,10 @@ export async function searchIndex(locale: string): Promise<SearchItem[]> {
   }
   if (on("terms")) {
     for (const c of list(resolvePage(termsSchema, content, L).clauses.items)) if (S(c.title)) items.push({ title: S(c.title), text: S(c.body).replace(/^- /gm, ""), href: "/terms" });
+  }
+  if (storeOpen(content)) {
+    const store = await loadStore();
+    if (store) items.push(...storeSearchItems(store, L, serverLocalize(StoreT, L)));
   }
   kept.set(key, { at: Date.now(), items });
   return items;

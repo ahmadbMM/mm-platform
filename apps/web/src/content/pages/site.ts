@@ -102,18 +102,15 @@ export const siteSchema = {
       label: bi("Footer", "التذييل"),
       hint: bi("A link to a page that is switched off is not shown.", "الرابط إلى صفحة متوقفة لا يظهر."),
       fields: [
-        {
-          id: "payments", type: "list", maxItems: 8, label: bi("Payment marks", "شعارات الدفع"),
-          item: [{ id: "name", type: "text", max: 30, label: bi("Name", "الاسم"), def: bi("", "") }, { id: "logo", type: "image", label: bi("Logo", "الشعار"), def: "" }],
-          // mada first and in its own colours, Visa and Mastercard in theirs, then STC Pay (2026-11-14, the card schemes'
-          // rules for a site that takes cards online: components/pay/PayMarks.tsx)
-          def: [["mada", "mada-color"], ["Visa", "visa-color"], ["Mastercard", "mastercard-color"], ["STC Pay", "stcpay"], ["tabby", "tabby"]].map(([n, f]) => ({ name: bi(n, n), logo: { url: `/site/payments/${f}.svg` } })),
-        },
-        { id: "showroom", type: "toggle", label: bi("Show \"Prepay at Showroom\"", "إظهار «الدفع المسبق في المعرض»"), def: true },
+        // The payment marks are no longer a list staff keep (the store build, 2026-11-15, X05): the footer's strip is what
+        // checkout takes, each mark the brand's own artwork, the same row as the payment page's (components/pay/PayMarks.tsx).
+        // The trust line's Maroof (the Saudi Business Center's badge stands there now, from the Legal line's verification
+        // page, L02) and its "7-day returns" (the footer gives the one return sentence, X03) are left out even where a
+        // saved list still has them (lib/policies.ts keptTrust).
         {
           id: "trust", type: "list", maxItems: 6, label: bi("Trust line", "سطر الثقة"),
           item: [{ id: "text", type: "text", max: 40, label: bi("Text", "النص"), def: bi("", "") }],
-          def: [["Maroof verified", "موثّق في معروف"], ["VAT reg. 15%", "رقم ضريبي 15%"], ["Secure SSL checkout", "دفع آمن SSL"], ["7-day returns", "إرجاع خلال 7 أيام"]].map(([e, a]) => ({ text: bi(e, a) })),
+          def: [["VAT reg. 15%", "رقم ضريبي 15%"], ["Secure SSL checkout", "دفع آمن SSL"]].map(([e, a]) => ({ text: bi(e, a) })),
         },
         { id: "shopTitle", type: "text", max: 30, label: bi("Column 1: title", "العمود ١: العنوان"), def: bi("Shop", "تسوّق") },
         {
@@ -139,9 +136,9 @@ export const siteSchema = {
           id: "company", type: "list", maxItems: 10, label: bi("Column 3: links", "العمود ٣: الروابط"),
           item: [{ id: "label", type: "text", max: 40, label: bi("Text", "النص"), def: bi("", "") }, { id: "href", type: "link", label: bi("Link", "الرابط"), def: "" }],
           def: [
+            // Terms, Privacy and Returns are in the footer's own Policies column (L12), with Complaints
             [["About Us", "من نحن"], "/about"], [["Account", "الحساب"], "/account"], [["Help Center", "مركز المساعدة"], "/help"],
-            [["Returns + Exchanges", "الإرجاع والاستبدال"], "/help#returns"], [["Shipping", "الشحن"], "/help#delivery"],
-            [["Privacy Policy", "سياسة الخصوصية"], "/privacy"], [["Terms & Conditions", "الشروط والأحكام"], "/terms"],
+            [["Shipping", "الشحن"], "/help#delivery"],
           ].map(([[e, a], h]) => ({ label: bi(e as string, a as string), href: { href: h as string } })),
         },
       ],

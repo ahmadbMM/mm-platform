@@ -1,23 +1,38 @@
 import ToTop from "@/components/site/ToTop";
 import { SOCIAL_ICONS } from "@/components/site/social-icons";
+import { PAY_MARKS } from "@/components/pay/PayMarks";
+import { T as W1 } from "@/components/store/w1.text";
+import { siteSchema } from "@/content/pages/site";
+import { Link } from "@/i18n/navigation";
 import { BOOKING_URL, bookingLink, pageOf } from "@/lib/links";
-import { serverL } from "@/i18n/dicts";
+import { resolvePage } from "@/lib/content-core";
+import { footerColumns, keptTrust, legalParts, policyLinks } from "@/lib/policies";
+import { loadSiteContent } from "@/lib/site";
+import { storeLegal } from "@/lib/store-settings";
+import { POLICY } from "@/lib/store-policy";
+import { serverL, serverLocalize } from "@/i18n/dicts";
 import { localeInfo } from "@/i18n/locales";
 import { phrase } from "@/i18n/tx";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // The footer from SiteFooter.dc.html, as the design has it: the payment strip, the contact
 // block with both branches, directions and the social marks, three columns of links, back to
-// top, the trust line and the legal line. Everything in it is staff-editable (Website > Whole
+// top, the trust line and the legal line. Its words and links are staff-editable (Website > Whole
 // site > Footer); a link to a page staff have switched off is left out, and My Account opens
 // the booking app until the site's own account page is on.
+// The store build (2026-11-15) made the parts the law and the card schemes ask for the site's own, drawn from one place
+// each, so no saved list can make them say something else: the payment strip is exactly what checkout takes (X05,
+// components/pay/PayMarks.tsx; no tabby, no "Prepay at Showroom"); a fourth column, Policies (L12: Terms, Privacy, Returns,
+// Complaints; the other columns lose their own links to those); the Saudi Business Center's badge in place of "Maroof
+// verified" (X04, L02: its own artwork, opening the e-store's verification page staff set, none while it is empty); the
+// one return sentence under the trust line (X03, lib/store-policy.ts), linking to the Returns page; and the seller's legal
+// identity as one grey line (L01: legal name, CR, the e-store's CR, VAT number, from lib/store-settings.ts storeLegal, the
+// invoice's own reading). `trust` holds the staff list item for item (an empty one too), so its English can be matched.
 export type FooterLink = { label: string; href: string };
 export type FooterContent = {
   contact: { address: string; mapsHref: string; jccName: string; jccAddress: string; jccHref: string; email: string; phone: string; supportPhone: string; hoursText: string };
   social: Record<string, string>;
   legal: { company: string; vat: string; cr: string; legalName: string; unified: string; address: string };
-  payments: { name: string; logo: string }[];
-  showroom: boolean;
   trust: string[];
   columns: { title: string; links: FooterLink[] }[];
 };
@@ -29,7 +44,7 @@ const SOCIAL_NAMES: Record<string, { en: string; ar: string }> = {
 const SOCIAL_ORDER = ["instagram", "x", "snapchat", "tiktok", "youtube", "facebook", "whatsapp", "telegram"];
 
 /** "+966566668818" as the design writes it: "+(966) 56 666 8818". */
-function showPhone(p: string): string {
+export function showPhone(p: string): string {
   const m = /^\+966(5\d)(\d{3})(\d{4})$/.exec(p.replace(/\s/g, ""));
   return m ? `+(966) ${m[1]} ${m[2]} ${m[3]}` : p;
 }
@@ -38,27 +53,29 @@ const Arrow = () => <svg viewBox="0 0 24 24" width="14" height="14" fill="none" 
 
 /** `slim`: a registration form's page, where nothing is bought - the mark, the contact lines and the legal lines, without
  *  the payment marks, the store's link columns or its "returns" and "secure checkout" line. */
-export default function SiteFooter({ locale, c, hidden = [], booking = BOOKING_URL, slim = false }: { locale: string; c: FooterContent; hidden?: string[]; booking?: string; slim?: boolean }) {
+export default async function SiteFooter({ locale, c, hidden = [], booking = BOOKING_URL, slim = false }: { locale: string; c: FooterContent; hidden?: string[]; booking?: string; slim?: boolean }) {
   const tx = serverL(locale);
+  const t = serverLocalize(W1, locale);
+  const content = await loadSiteContent();
+  const legal = storeLegal(content, locale);
   const year = riyadhClock(new Date()).slice(0, 4);
   const socials = SOCIAL_ORDER.map((id) => [id, c.social[id]] as const).filter(([, href]) => !!href);
   const link = (l: FooterLink) => (pageOf(l.href) === "account" && hidden.includes("account") ? { ...l, href: bookingLink(booking, locale) } : l.href.startsWith(BOOKING_URL) || l.href.startsWith(booking) ? { ...l, href: bookingLink(l.href, locale) } : l);
-  const columns = c.columns
-    .map((col) => ({ ...col, links: col.links.map(link).filter((l) => l.label && l.href && !(pageOf(l.href) && pageOf(l.href) !== "account" && hidden.includes(pageOf(l.href)))) }))
-    .filter((col) => col.links.length > 0);
-  const pays = slim ? [] : c.payments.filter((p) => p.logo);
-  const hub = !slim && c.showroom && (
-    <span key="hub" className="mm-foot-hub" role="img" aria-label={tx("Prepay at Showroom", "الدفع المسبق في المعرض")}>
-      <svg viewBox="0 0 223 223" width="30" height="30" aria-hidden="true"><path d="M27.5 189 V49.75 A14.75 14.75 0 0 1 57 49.75 V170.25 A14.75 14.75 0 0 0 86.5 170.25 V49.75 A14.75 14.75 0 0 1 116 49.75 V165 A24 24 0 0 0 140 189 H195" fill="none" stroke="currentColor" strokeWidth="23.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      <span><span lang="ar">الدفع المسبق</span><b lang="ar">في المعرض</b><small>{tx("Prepay at Showroom", "الدفع في المعرض")}</small></span>
-    </span>
-  );
-  // The design sets the showroom mark before the last payment mark (tabby).
-  const strip = pays.map((p) => <img key={p.name + p.logo} src={p.logo} alt={p.name} className={`pay-${p.name.toLowerCase().replace(/[^a-z]/g, "")}`} />);
-  if (hub) strip.splice(Math.max(0, strip.length - 1), 0, hub);
+  const policies = { title: t.policies, links: policyLinks(hidden).map((p) => ({ label: t[p.key], href: p.href })) };
+  const columns = footerColumns(c.columns, policies, (links) => links.map(link).filter((l) => l.label && l.href && !(pageOf(l.href) && pageOf(l.href) !== "account" && hidden.includes(pageOf(l.href)))));
+  // The trust line as staff keep it, read in English too, so a replaced line is known in any language.
+  const enList = resolvePage(siteSchema, content, "en").footer.trust as unknown;
+  const trustEn = (Array.isArray(enList) ? (enList as Record<string, unknown>[]) : []).map((x) => (typeof x.text === "string" ? x.text : ""));
+  const trust = slim ? [] : keptTrust(c.trust, trustEn);
+  const shield = <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#03ff89" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>;
+  const legalLine = legalParts(legal, { unified: c.legal.unified, address: c.legal.address }, { cr: tx("CR", "س.ت"), ecr: t.ecr, vat: tx("VAT No.", "الرقم الضريبي"), unified: tx("Unified No.", "الرقم الموحد") });
   return (
     <footer className="mm-foot" dir={localeInfo(locale).dir}>
-      {strip.length > 0 && <div className="mm-foot-pay"><div>{strip}</div></div>}
+      {!slim && (
+        <div className="mm-foot-pay">
+          <div>{PAY_MARKS.map((m) => <img key={m.id} src={m.src} alt={m.name} width={m.w} height={m.h} className={`pay-${m.id}`} />)}</div>
+        </div>
+      )}
       <div className="mm-foot-main">
         <div className="mm-foot-grid">
           <div className="mm-foot-brand">
@@ -91,25 +108,21 @@ export default function SiteFooter({ locale, c, hidden = [], booking = BOOKING_U
           ))}
         </div>
         <div className="mm-foot-up"><ToTop label={tx("Back to top", "العودة للأعلى")} /></div>
-        {!slim && c.trust.length > 0 && (
+        {!slim && (
           <div className="mm-foot-trust">
-            {c.trust.map((t, i) => (
-              <span key={i}><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#03ff89" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>{t}</span>
-            ))}
+            {legal.sbc && (
+              <a className="mm-foot-sbc" href={legal.sbc} target="_blank" rel="noopener noreferrer" aria-label={t.sbc}>
+                <img src="/site/sbc.svg" alt="" width={200} height={39} />
+              </a>
+            )}
+            {trust.map((x, i) => <span key={i}>{shield}{x}</span>)}
+            <p className="mm-foot-returns"><Link href="/returns">{serverLocalize(POLICY, locale).returnSentence}</Link></p>
           </div>
         )}
         <div className="mm-foot-bottom">
           <span>© {year} {c.legal.company}. {tx("All Rights Reserved", "جميع الحقوق محفوظة.")}</span>
-          <span className="mm-lat">
-            {c.legal.vat ? `${tx("VAT No.", "الرقم الضريبي")} ${c.legal.vat}` : ""}
-            {c.legal.cr ? ` · ${tx("CR", "س.ت")} ${c.legal.cr}` : ""}
-          </span>
         </div>
-        {(c.legal.legalName || c.legal.address) && (
-          <p className="mm-foot-legal">
-            {[c.legal.legalName, c.legal.unified && `${tx("Unified No.", "الرقم الموحد")} ${c.legal.unified}`, c.legal.address].filter(Boolean).join(" · ")}
-          </p>
-        )}
+        {legalLine.length > 0 && <p className="mm-foot-legal">{legalLine.join(" · ")}</p>}
       </div>
     </footer>
   );

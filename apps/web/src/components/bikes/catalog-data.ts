@@ -4,14 +4,23 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { loadCatalog, type Catalog } from "@/lib/catalog";
 import { loadFares } from "@/lib/biz";
 import { pageState } from "@/lib/page-state";
+import { loadSiteContent } from "@/lib/site";
+import { loadStore, storeOpen } from "@/lib/store";
+import { storeLinksByModel } from "@/lib/store-site";
 import { serverL } from "@/i18n/dicts";
 
 // What every catalogue page needs: the page state (Bikes is a switched page), the site's settings
 // and the page's own words for this language (typed from the schema: c.hero.title is a string), and
 // the catalogue itself - null when it could not be read and nothing was read before - and the fares
-// a model's ride price is quoted at (lib/biz.ts loadFares: the booking app's Settings > Pricing).
+// a model's ride price is quoted at (lib/biz.ts loadFares: the booking app's Settings > Pricing). `shop`: the models a
+// product of the site's own store sells, each with its store page (the store build, 2026-11-15, F12: "See it in the
+// store"), only while that store is open - until then /store forwards to the Salla shop, which has no page per model.
+// The store's tables are read only while it is open (the site's content, which says so, is the one pageState reads,
+// kept a minute): a closed store - production has no store tables at all - costs the catalogue no database call and
+// no wait.
 export async function bikesState(locale: string) {
-  const [state, catalog, fares] = await Promise.all([pageState("bikes"), loadCatalog(), loadFares()]);
+  const shopStore = loadSiteContent().then((content) => (storeOpen(content) ? loadStore() : null));
+  const [state, catalog, fares, store] = await Promise.all([pageState("bikes"), loadCatalog(), loadFares(), shopStore]);
   const L = asLocale(locale);
   return {
     ...state,
@@ -21,6 +30,7 @@ export async function bikesState(locale: string) {
     c: resolvePage(bikesSchema, state.content, L),
     catalog,
     fares,
+    shop: store && storeOpen(state.content) ? storeLinksByModel(store) : new Map<string, string>(),
   };
 }
 

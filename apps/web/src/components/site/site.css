@@ -113,20 +113,14 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
 .mm-foot-pay > div { display: flex; align-items: center; justify-content: center; gap: clamp(20px, 4.4vw, 64px); flex-wrap: wrap; max-width: 1440px; margin: 0 auto; color: #077a4b; }
 .mm-foot-pay img { height: 26px; width: auto; display: block; }
 .mm-foot-pay img.pay-mastercard { height: 38px; }
-.mm-foot-pay img.pay-tabby { height: 44px; }
+.mm-foot-pay img.pay-applepay { height: 30px; } /* Apple's mark, as tall as mada and never taller */
 .mm-foot-pay img.pay-mada { height: 30px; } /* mada never smaller than the other marks, and at least 60px wide */
 .mm-foot-pay img.pay-stcpay { height: 24px; }
-.mm-foot-hub { display: inline-flex; align-items: center; gap: 9px; }
-.mm-foot-hub > span { display: inline-flex; flex-direction: column; align-items: flex-start; gap: 1px; line-height: 1.25; }
 /* The mark's two Arabic words are drawn with the device's own Arabic face everywhere but on the
    Arabic and Urdu pages: set in the site's Arabic font, they made every English page download two
    of its weights - about 98 KB - for these two words alone. */
-.mm-foot-hub span span { font-family: system-ui, "Segoe UI", "Noto Sans Arabic", "Noto Naskh Arabic", "Geeza Pro", Tahoma, Arial, sans-serif; font-size: 12px; font-weight: 500; }
-.mm-foot-hub b { font-family: system-ui, "Segoe UI", "Noto Sans Arabic", "Noto Naskh Arabic", "Geeza Pro", Tahoma, Arial, sans-serif; font-size: 13.5px; font-weight: 700; }
-html:is([lang="ar"], [lang="ur"]) .mm-foot-hub :is(span span, b) { font-family: var(--cs-font-ar), sans-serif; }
-.mm-foot-hub small { font-size: 9.5px; font-weight: 700; direction: ltr; }
 .mm-foot-main { padding: 36px 7vw 0; }
-.mm-foot-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 40px; margin: 0 auto 36px; max-width: 1440px; }
+.mm-foot-grid { display: grid; grid-template-columns: 1.5fr repeat(4, minmax(0, 1fr)); gap: 32px; margin: 0 auto 36px; max-width: 1440px; }
 .mm-foot-mark { display: block; width: 120px; height: 60px; margin: 0 0 20px; background: #0fa463; -webkit-mask: url("/site/brand-wordmark.png") left center / contain no-repeat; mask: url("/site/brand-wordmark.png") left center / contain no-repeat; }
 [dir="rtl"] .mm-foot-mark { -webkit-mask-position: right center; mask-position: right center; }
 .mm-foot-brand p { font-size: 14.5px; line-height: 1.7; margin: 0 0 6px; max-width: 320px; }
@@ -145,10 +139,19 @@ html:is([lang="ar"], [lang="ur"]) .mm-foot-hub :is(span span, b) { font-family: 
 .mm-foot-totop:hover { background: #077a4b; color: #fbf9f4; }
 .mm-foot-trust { display: flex; justify-content: center; align-items: center; gap: 14px 22px; flex-wrap: wrap; max-width: 1440px; margin: 0 auto 22px; padding-bottom: 22px; border-bottom: 1px solid rgba(255, 255, 255, .12); }
 .mm-foot-trust span { display: inline-flex; align-items: center; gap: 8px; color: #c3cac4; font-size: 12px; font-weight: 600; }
+/* The Saudi Business Center's badge (X04, L02): its own artwork on a white tile, as the dark footer cannot carry it; then
+   the one return sentence (X03), on a line of its own (store build, 2026-11-15). */
+.mm-foot-sbc { display: inline-flex; align-items: center; background: #fff; border-radius: 8px; padding: 6px 10px; }
+.mm-foot-sbc img { display: block; height: 32px; width: auto; }
+.mm-foot .mm-foot-sbc:hover { box-shadow: 0 0 0 2px #03ff89; }
+.mm-foot-returns { flex-basis: 100%; margin: 2px 0 0; text-align: center; font-size: 12.5px; line-height: 1.6; }
+.mm-foot .mm-foot-returns a { color: #c3cac4; text-decoration: underline; text-decoration-color: rgba(195, 202, 196, .4); text-underline-offset: 3px; }
+.mm-foot .mm-foot-returns a:hover { color: #03ff89; }
 .mm-foot-bottom { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; padding-top: 4px; max-width: 1440px; margin: 0 auto; font-size: 14px; color: #b9c0ba; }
 .mm-foot-bottom .mm-lat { color: #8a938c; }
 .mm-foot-legal { max-width: 1440px; margin: 12px auto 0; font-size: 12px; color: #8a938c; line-height: 1.6; }
-@media (max-width: 1100px) { .mm-foot-grid { grid-template-columns: 1fr 1fr; gap: 44px 36px; } }
+/* below a desktop width the brand block spans the row and the four link columns share the next (Policies made four) */
+@media (max-width: 1100px) { .mm-foot-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 44px 28px; } .mm-foot-brand { grid-column: 1 / -1; } }
 @media (max-width: 760px) {
   .mm-foot-grid { grid-template-columns: 1fr 1fr; gap: 24px 18px; }
   .mm-foot-brand { grid-column: 1 / -1; }
@@ -158,10 +161,10 @@ html:is([lang="ar"], [lang="ur"]) .mm-foot-hub :is(span span, b) { font-family: 
   .mm-foot-pay > div::-webkit-scrollbar { display: none; }
   .mm-foot-pay img, .mm-foot-pay svg { height: 15px; width: auto; flex: none; }
   .mm-foot-pay img.pay-mastercard { height: 19px; }
-  .mm-foot-pay img.pay-tabby { height: 20px; }
+  .mm-foot-pay img.pay-applepay { height: 21px; }
   .mm-foot-pay img.pay-mada { height: 21px; }
   .mm-foot-pay img.pay-stcpay { height: 15px; }
-  .mm-foot-hub > span { display: none; }
+  .mm-foot-sbc img { height: 26px; }
   .mm-foot-bottom { flex-direction: column; align-items: flex-start; gap: 12px; font-size: 12.5px; }
 }
 
@@ -191,6 +194,16 @@ html:is([lang="ar"], [lang="ur"]) .mm-search-list p.mm-search-h { letter-spacing
 .mm-search-item { gap: 12px; }
 .mm-search-item > span:first-child { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .mm-search-item small { color: #57605a; font-size: 13px; font-weight: 400; line-height: 1.45; }
+/* The store's products in the search (store build, 2026-11-15, O06-B): the price as the store writes it, in the riyal
+   sign's own one-glyph font (store.css), loaded only where the sign is, and the stock. */
+@font-face { font-family: "MM Riyal"; src: url(/fonts/Riyal-400.woff2) format("woff2"); font-weight: 100 600; font-display: swap; unicode-range: U+20C1; }
+@font-face { font-family: "MM Riyal"; src: url(/fonts/Riyal-700.woff2) format("woff2"); font-weight: 601 900; font-display: swap; unicode-range: U+20C1; }
+.mm-search .tk-amt { font-family: "MM Riyal", var(--cs-font-en), var(--cs-font-ar), sans-serif; }
+html:is([lang="ar"], [lang="ur"]) .mm-search .tk-amt { font-family: "MM Riyal", var(--cs-font-ar), var(--cs-font-en), sans-serif; }
+.mm-search-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 12px; }
+.mm-search-facts .tk-amt { color: #1a1919; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mm-search-facts small { color: #077a4b; font-weight: 600; }
+.mm-search-facts small.is-out { color: #a33b2e; }
 
 /* ── Men only, women only or mixed (the owner, 2026-10-27; lib/session-gender.ts) ── */
 /* The chip a session wears wherever a page shows it - Experiences' dates, their Details and the booking summary,

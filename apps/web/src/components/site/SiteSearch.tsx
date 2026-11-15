@@ -3,20 +3,26 @@
 import { useEffect, useRef, useState, type RefObject } from "react";
 import { useDialogFocus } from "@/components/site/use-dialog-focus";
 import { NAV_LINKS } from "@/lib/links";
-import { useL } from "@/i18n/TxProvider";
+import { useL, useLocalize } from "@/i18n/TxProvider";
 import { localeInfo } from "@/i18n/locales";
 import { phrase } from "@/i18n/tx";
 import { searchIndex, type SearchItem } from "@/app/[locale]/search-index";
 import { ArrowIcon, CloseIcon } from "@/components/site/Icons";
+import { Amt } from "@/components/store/bits";
+import { T as W1 } from "@/components/store/w1.text";
 
 // The header's search (SiteNav.dc.html): finds this site's pages by their names - in English,
 // Arabic and the page's language - and by what they are about, and, below them, the answers and
 // articles whose words match (app/[locale]/search-index.ts, asked for once when search opens).
-// Pages staff have switched off are not offered.
+// Pages staff have switched off are not offered. The store build (2026-11-15): the Returns and Complaints pages (L12),
+// and, while the site's own store is open, its category pages and products in a group of their own, each product with its
+// price and stock (O06-B).
 const EXTRA = [
   { key: "privacy", href: "/privacy", ...phrase("Privacy Notice", "إشعار الخصوصية") },
   { key: "account", href: "/account", ...phrase("Account", "الحساب") },
   { key: "terms", href: "/terms", ...phrase("Terms & Conditions", "الشروط والأحكام") },
+  { key: "returns", href: "/returns", en: W1.en.returnsTitle, ar: W1.ar.returnsTitle },
+  { key: "complaints", href: "/complaints", en: W1.en.complaints, ar: W1.ar.complaints },
 ];
 const WORDS: Record<string, string> = {
   store: "shop buy bikes accessories helmet gear متجر شراء دراجات إكسسوارات",
@@ -35,7 +41,11 @@ const WORDS: Record<string, string> = {
   privacy: "data policy personal بيانات خصوصية",
   account: "sign in login bookings profile تسجيل الدخول حجوزاتي حساب",
   terms: "conditions rules legal policy returns refund الشروط الأحكام سياسة استرجاع",
+  returns: "return returns refund exchange money back policy إرجاع استرجاع استبدال استرداد سياسة",
+  complaints: "complaint complain problem issue wrong report شكوى شكاوى مشكلة بلاغ",
 };
+const MAX_PRODUCTS = 6;
+const inStore = (x: SearchItem) => x.href === "/store" || x.href.startsWith("/store/");
 const MAX_ITEMS = 8;
 const snippet = (text: string, needle: string) => {
   const t = text.replace(/\s+/g, " ").trim();
@@ -48,6 +58,7 @@ const snippet = (text: string, needle: string) => {
 // back: the button that opened the search, which takes the focus again when it closes.
 export default function SiteSearch({ locale, hidden, onClose, back }: { locale: string; hidden: string[]; onClose: () => void; back?: RefObject<HTMLElement | null> }) {
   const tx = useL();
+  const w = useLocalize(W1);
   const info = localeInfo(locale);
   const [q, setQ] = useState("");
   const [items, setItems] = useState<SearchItem[]>([]);
@@ -67,7 +78,9 @@ export default function SiteSearch({ locale, hidden, onClose, back }: { locale: 
   const pages = [...NAV_LINKS, ...EXTRA].filter((p) => !hidden.includes(p.key));
   const needle = q.trim().toLowerCase();
   const found = needle ? pages.filter((p) => `${p.en} ${p.ar} ${tx(p.en, p.ar)} ${WORDS[p.key] ?? ""}`.toLowerCase().includes(needle)) : pages;
-  const answers = needle.length > 1 ? items.filter((x) => `${x.title} ${x.text} ${x.words ?? ""}`.toLowerCase().includes(needle)).slice(0, MAX_ITEMS) : [];
+  const hits = needle.length > 1 ? items.filter((x) => `${x.title} ${x.text} ${x.words ?? ""}`.toLowerCase().includes(needle)) : [];
+  const products = hits.filter(inStore).slice(0, MAX_PRODUCTS);
+  const answers = hits.filter((x) => !inStore(x)).slice(0, MAX_ITEMS);
   return (
     <div ref={box} className="mm-search" role="dialog" aria-modal="true" aria-label={tx("Search", "بحث")} dir={info.dir}>
       <div className="mm-search-box">
@@ -77,9 +90,25 @@ export default function SiteSearch({ locale, hidden, onClose, back }: { locale: 
           <button type="button" onClick={onClose} aria-label={tx("Close", "إغلاق")}><CloseIcon size={20} /></button>
         </div>
         <div className="mm-search-list">
-          {found.length === 0 && answers.length === 0 ? <p>{tx("Nothing found.", "لا نتائج.")}</p> : found.map((p) => (
+          {found.length === 0 && answers.length === 0 && products.length === 0 ? <p>{tx("Nothing found.", "لا نتائج.")}</p> : found.map((p) => (
             <a key={p.key} href={p.href} onClick={onClose}>{tx(p.en, p.ar)}<ArrowIcon size={16} /></a>
           ))}
+          {products.length > 0 && (
+            <>
+              <p className="mm-search-h">{w.products}</p>
+              {products.map((x) => (
+                <a key={x.href} href={x.href} onClick={onClose} className="mm-search-item">
+                  <span>
+                    <strong>{x.title}</strong>
+                    {x.price ? (
+                      <span className="mm-search-facts"><Amt>{x.price}</Amt>{x.stock && <small className={x.out ? "is-out" : undefined}>{x.stock}</small>}</span>
+                    ) : x.text && <small>{x.text}</small>}
+                  </span>
+                  <ArrowIcon size={16} />
+                </a>
+              ))}
+            </>
+          )}
           {answers.length > 0 && (
             <>
               <p className="mm-search-h">{tx("Answers and articles", "إجابات ومقالات")}</p>

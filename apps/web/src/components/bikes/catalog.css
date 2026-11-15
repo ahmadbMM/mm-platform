@@ -75,3 +75,11 @@ html:is([lang="ar"], [lang="ur"]) :is(.ct-spec-group h3, .ct-spec-group dt, .ct-
   .ct-model h1 { font-size: 32px; letter-spacing: -1.2px; }
   .ct-tile strong { font-size: 21px; }
 }
+
+/* The store build (2026-11-15, F12): a model the site's own store sells has "See it in the store" - beside Book on its
+   page, and as a second button under its card (the card is then a frame around its link and the button). */
+.ct-ctas { display: flex; flex-wrap: wrap; gap: 10px; }
+.ct .ct-card-two { padding: 14px; }
+.ct-card-main { display: flex; flex-direction: column; gap: 6px; flex: 1; color: inherit; }
+.ct-card-shop { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 44px; margin-top: 8px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .2); background: #fff; color: #1a1919; font-size: 14px; font-weight: 700; transition: border-color .2s ease, color .2s ease; }
+.ct-card-shop:hover { border-color: #077a4b; color: #077a4b; }
