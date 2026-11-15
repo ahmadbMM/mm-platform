@@ -1,7 +1,8 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import type { CartItem } from "./cart";
 import { payError } from "./pay/http";
-import { payRpc } from "./pay/server";
+import { payRpc, payView } from "./pay/server";
+import { tabbyCheckout, type TabbyOrder } from "./pay/tabby";
 import { orderOf, RETURN_REASONS, type Order, type ReturnReason } from "./store-order";
 
 // The store build's calls to the database from this server (2026-11-15, rentals migration 20261115200100;
@@ -38,12 +39,17 @@ export async function promoCheck(code: string, items: CartItem[]): Promise<ApiAn
   return answer(await payRpc<PromoCheck>("store_promo_check", { p_code: c, p_items: lines }), (d) => typeof d.discount === "number");
 }
 
-export type GiftCardCheck = { code: string; balance: number };
-/** What a gift card still holds (store_gift_card_check). */
+/** expires_at: a card ends a year after it was issued (CONTRACTS.md, additions by lead 3); null from a database that
+ *  does not say. An expired card is refused (STORE_GIFT_EXPIRED, "gift_expired"; additions by w4). */
+export type GiftCardCheck = { code: string; balance: number; expires_at: string | null };
+/** What a gift card still holds and until when (store_gift_card_check). */
 export async function giftCardCheck(code: string): Promise<ApiAnswer<GiftCardCheck>> {
   const c = codeOf(code);
   if (!/^GC-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}-[A-HJ-NP-Z2-9]{4}$/.test(c)) return { ok: false, error: "gift", status: 409 };
-  return answer(await payRpc<GiftCardCheck>("store_gift_card_check", { p_code: c }), (d) => typeof d.balance === "number");
+  const r = answer(await payRpc<GiftCardCheck>("store_gift_card_check", { p_code: c }), (d) => Number.isFinite(Number(d.balance)));
+  if (!r.ok) return r;
+  const at = typeof r.data.expires_at === "string" && Number.isFinite(Date.parse(r.data.expires_at)) ? r.data.expires_at : null;
+  return { ok: true, data: { code: typeof r.data.code === "string" ? r.data.code : c, balance: Number(r.data.balance), expires_at: at } };
 }
 
 // ── Back in stock (F34; w3a) ────────────────────────────────────────────────────────────────────
@@ -87,31 +93,72 @@ export async function reviewAdd(a: { no: number; key: string; product: string; r
 // ── The outside services, built but off until their keys exist ────────────────────────────────
 
 /** The Worker secrets the outside services take (none exist yet; `wrangler secret put <NAME> --env staging`). */
-export type StoreEnv = { NATIONAL_ADDRESS_KEY?: string; TABBY_SECRET_KEY?: string; TABBY_PUBLIC_KEY?: string; TABBY_MERCHANT_CODE?: string; SMSA_API_KEY?: string };
+export type StoreEnv = { NATIONAL_ADDRESS_KEY?: string; TABBY_SECRET_KEY?: string; TABBY_PUBLIC_KEY?: string; TABBY_MERCHANT_CODE?: string; TABBY_WEBHOOK_SECRET?: string; SMSA_API_KEY?: string };
 export function storeEnv(): StoreEnv {
   let env: StoreEnv = {};
   try { env = getCloudflareContext().env as StoreEnv; } catch { /* a local run or a test */ }
   const pick = (k: keyof StoreEnv) => env[k] || process.env[k] || undefined;
   return {
     NATIONAL_ADDRESS_KEY: pick("NATIONAL_ADDRESS_KEY"), TABBY_SECRET_KEY: pick("TABBY_SECRET_KEY"), TABBY_PUBLIC_KEY: pick("TABBY_PUBLIC_KEY"),
-    TABBY_MERCHANT_CODE: pick("TABBY_MERCHANT_CODE"), SMSA_API_KEY: pick("SMSA_API_KEY"),
+    TABBY_MERCHANT_CODE: pick("TABBY_MERCHANT_CODE"), TABBY_WEBHOOK_SECRET: pick("TABBY_WEBHOOK_SECRET"), SMSA_API_KEY: pick("SMSA_API_KEY"),
   };
 }
 
 export type FoundAddress = { city: string; district: string; street: string; building: string; postal: string; extra: string };
-/** The district and street of a national short address (F76; w4 builds the provider's call). Off until the switch
- *  (store.addressLookup.on) and NATIONAL_ADDRESS_KEY are both there. */
-export async function addressLookup(short: string, on: boolean, env: StoreEnv = storeEnv()): Promise<ApiAnswer<FoundAddress>> {
-  if (!on || !env.NATIONAL_ADDRESS_KEY) return { ok: false, error: "lookup_off", status: 503 };
-  if (!/^[A-Z]{4}\d{4}$/.test(short)) return bad();
-  return { ok: false, error: "lookup_off", status: 503 }; // w4: the provider's call goes here
+
+/** The national address's own service (Saudi Post, SPL: api.address.gov.sa, "address by short address"), asked with
+ *  the key NATIONAL_ADDRESS_KEY. CHECK when the key is bought: the path and the answer's names below are the service's
+ *  v3.1 ones as published (Addresses[0].City, District, Street, BuildingNumber, PostCode, AdditionalNumber); the parser
+ *  also takes them in camel case. */
+export const NATIONAL_ADDRESS_URL = "https://apina.address.gov.sa/NationalAddress/v3.1/Address/address-by-shortaddress";
+
+/** The address the service answered, or null when it names none. */
+export function nationalAddressOf(data: unknown): FoundAddress | null {
+  const o = (data && typeof data === "object" ? data : {}) as Record<string, unknown>;
+  const list = (o.Addresses ?? o.addresses ?? o.Address ?? o.address) as unknown;
+  const a = (Array.isArray(list) ? list[0] : list) as Record<string, unknown> | undefined;
+  if (!a || typeof a !== "object") return null;
+  const g = (...k: string[]) => { for (const x of k) { const v = a[x]; if (typeof v === "string" && v.trim()) return v.trim(); if (typeof v === "number") return String(v); } return ""; };
+  const digits = (s: string, n: number) => (new RegExp(`^\\d{${n}}$`).test(s) ? s : "");
+  const out = {
+    city: g("City", "city", "CityName").slice(0, 40), district: g("District", "district", "DistrictName").slice(0, 60),
+    street: g("Street", "street", "StreetName").slice(0, 80), building: digits(g("BuildingNumber", "buildingNumber"), 4),
+    postal: digits(g("PostCode", "postCode", "ZipCode", "zipCode"), 5), extra: digits(g("AdditionalNumber", "additionalNumber"), 4),
+  };
+  return out.district || out.street ? out : null;
 }
 
-/** A Tabby checkout for one payment of ours (F84; w4 builds it). Off until store.tabby.on and the TABBY_* secrets. */
-export async function tabbySession(payId: string, on: boolean, env: StoreEnv = storeEnv()): Promise<ApiAnswer<{ url: string }>> {
+/** The district and street of a national short address (F76). Off until the switch (store.addressLookup.on) and
+ *  NATIONAL_ADDRESS_KEY are both there; "not_found" for a short address the service does not know. */
+export async function addressLookup(short: string, on: boolean, env: StoreEnv = storeEnv(), lang = "en", f: typeof fetch = fetch): Promise<ApiAnswer<FoundAddress>> {
+  if (!on || !env.NATIONAL_ADDRESS_KEY) return { ok: false, error: "lookup_off", status: 503 };
+  if (!/^[A-Z]{4}\d{4}$/.test(short)) return bad();
+  const u = new URL(NATIONAL_ADDRESS_URL);
+  u.searchParams.set("shortaddress", short);
+  u.searchParams.set("language", lang === "ar" ? "A" : "E");
+  u.searchParams.set("format", "json");
+  u.searchParams.set("encode", "utf8");
+  try {
+    const r = await f(u.toString(), { headers: { api_key: env.NATIONAL_ADDRESS_KEY, accept: "application/json" }, signal: AbortSignal.timeout(6000) });
+    if (r.status === 404 || r.status === 400) return { ok: false, error: "not_found", status: 404 };
+    if (!r.ok) return { ok: false, error: "lookup_off", status: 503 };
+    const a = nationalAddressOf(await r.json().catch(() => null));
+    return a ? { ok: true, data: a } : { ok: false, error: "not_found", status: 404 };
+  } catch {
+    return { ok: false, error: "lookup_off", status: 503 };
+  }
+}
+
+/** A Tabby checkout for one payment of ours (F84; lib/pay/tabby.ts): Tabby's page to send the shopper to. Off until
+ *  store.tabby.on and the TABBY_* secrets; only a store order still to pay. */
+export async function tabbySession(payId: string, on: boolean, env: StoreEnv = storeEnv(), opts: { origin: string; lang: string; showroom: string } = { origin: "https://micromobility.sa", lang: "en", showroom: "" }):
+  Promise<ApiAnswer<{ url: string }>> {
   if (!on || !env.TABBY_SECRET_KEY || !env.TABBY_PUBLIC_KEY || !env.TABBY_MERCHANT_CODE) return { ok: false, error: "tabby_off", status: 503 };
   if (!UUID.test(payId)) return bad();
-  return { ok: false, error: "tabby_off", status: 503 }; // w4: the session call goes here
+  const v = await payView(payId);
+  if (!v) return { ok: false, error: "not_found", status: 404 };
+  if (v.kind !== "order" || v.status !== "initiated") return { ok: false, error: "not_open", status: 409 };
+  return tabbyCheckout(v as typeof v & TabbyOrder, opts, env);
 }
 
 /** An SMSA label and waybill for an order staff ship (F108; w5 builds the route, the staff page the button). Off until

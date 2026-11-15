@@ -86,6 +86,6 @@ export function refusalPlace(error: string): { field?: string; line?: true } {
   // the store build (2026-11-15): the district a Jeddah delivery does not serve, the delivery slot, the code, the gift card
   if (error === "district" || error === "slot") return { field: error };
   if (error === "promo" || error === "promo_min" || error === "promo_used" || error === "licence") return { field: "promo" };
-  if (error === "gift" || error === "gift_on_gift") return { field: "giftCard" };
+  if (error === "gift" || error === "gift_on_gift" || error === "gift_expired") return { field: "giftCard" };
   return {};
 }
