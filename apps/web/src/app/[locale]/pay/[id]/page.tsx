@@ -16,18 +16,26 @@ import { payView, type PayView } from "@/lib/pay/server";
 import { paySettings } from "@/lib/pay/settings";
 import { serverLocalize } from "@/i18n/dicts";
 import { fill } from "@/i18n/tx";
+import { POLICY } from "@/lib/store-policy";
+import { storeEnv } from "@/lib/store-api";
+import { tabbyKeys } from "@/lib/pay/tabby";
+import { storeSwitches } from "@/lib/store-settings";
+import { T as W } from "@/components/store/w4.text";
 
 // micromobility.sa/pay/<id>: the one page that takes a payment, whatever it pays (a store order, ride
 // bookings, lockers, a wallet top-up, a workshop job; rentals 20261110150000 payments). Its address is the
 // payment's own id, which nobody can guess; it shows what is paid, the total the database wrote, the hold's
 // time left, the refund policy before the Pay button (Saudi E-Commerce Law art. 7), and Moyasar's form.
 // Paid, it says so with the receipt number and where to go next; a store order goes to its order page.
+// A store order (store build 2026-11-15) states the store's one return sentence (X03, L07) with the Returns page beside it
+// (open whatever the switches say), lists what a discount and a gift card took, and may be paid in 4 with Tabby (F84)
+// while staff switch it on and the Worker holds Tabby's keys.
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Payment", robots: { index: false, follow: false } };
 
 const S = (v: unknown) => (typeof v === "string" ? v : "");
 const BRAND: Record<string, string> ={ mada: "mada", visa: "Visa", mastercard: "Mastercard", amex: "American Express" };
-const METHOD: Record<string, string> = { applepay: "Apple Pay", stcpay: "STC Pay", samsungpay: "Samsung Pay", googlepay: "Google Pay" };
+const METHOD: Record<string, string> = { applepay: "Apple Pay", stcpay: "STC Pay", samsungpay: "Samsung Pay", googlepay: "Google Pay", tabby: "Tabby" };
 
 function paidWith(v: PayView): string | null {
   const m = v.method && METHOD[v.method];
@@ -40,6 +48,7 @@ export default async function PayPage({ params, searchParams }: { params: Promis
   const q = await searchParams;
   const L = asLocale(locale);
   const t = serverLocalize(T, locale);
+  const w = serverLocalize(W, locale);
   const [{ content, previewing, hidden }, v] = await Promise.all([pageState(), payView(id)]);
   if (!v) notFound();
   const site = resolvePage(siteSchema, content, L);
@@ -49,10 +58,10 @@ export default async function PayPage({ params, searchParams }: { params: Promis
   const open = v.status === "initiated" && payReady(env) && s.enabled;
   const policy = kind === "booking"
     ? (s.refundDays > 1 ? fill(t.policy.bookingDays, s.refundDays) : s.refundDays === 0 ? t.policy.bookingSameDay : t.policy.booking)
-    : t.policy[kind];
-  // The policy's link, left out while staff have that page switched off (the checkout and the order page do the same):
-  // a closed page sends the payer away from this one while the hold runs.
-  const policyHref = kind === "order" ? (hidden.includes("help") ? null : "/help#returns") : (hidden.includes("terms") ? null : "/terms");
+    : kind === "order" ? serverLocalize(POLICY, locale).returnSentence : t.policy[kind];
+  // The policy's link: a store order's is the Returns page, which answers whatever the switches say; the Terms are left
+  // out while staff have that page switched off (a closed page sends the payer away from this one while the hold runs).
+  const policyHref = kind === "order" ? "/returns" : (hidden.includes("terms") ? null : "/terms");
   const next: Record<PayView["kind"], string> = {
     booking: "/account", order: v.order_no && v.order_key ? `/store/order/${v.order_no}?k=${v.order_key}` : "/store",
     locker: "/lockers", topup: "/account", workshop: "/workshop",
@@ -65,6 +74,8 @@ export default async function PayPage({ params, searchParams }: { params: Promis
   for (const r of v.rides ?? []) lines.push({ k: [r.name, r.type && r.type !== "None" ? r.type : "", r.date].filter(Boolean).join(" · ") });
   for (const i of v.items ?? []) lines.push({ k: `${i.name}${i.variant ? ` · ${i.variant}` : ""}${i.qty > 1 ? ` ×${i.qty}` : ""}`, v: sar(i.unit_price * i.qty) });
   if ((v.delivery_fee ?? 0) > 0) lines.push({ k: t.delivery, v: sar(v.delivery_fee!) });
+  if ((v.discount ?? 0) > 0) lines.push({ k: w.discount, v: `− ${sar(v.discount!)}` });
+  if ((v.gift_paid ?? 0) > 0) lines.push({ k: w.fromGift, v: `− ${sar(v.gift_paid!)}` });
   if ((v.wallet_paid ?? 0) > 0) lines.push({ k: t.fromWallet, v: `− ${sar(v.wallet_paid!)}` });
   for (const l of v.lockers ?? []) lines.push({ k: `${fill(t.locker, l.code)} · ${l.day}` });
 
@@ -128,7 +139,9 @@ export default async function PayPage({ params, searchParams }: { params: Promis
               <PayScreen locale={locale} publishableKey={env.MOYASAR_PUBLISHABLE_KEY!} testMode={payMode(env) === "test"} formJs={MOYASAR_FORM_JS} formCss={MOYASAR_FORM_CSS}
                 pay={{ id: v.id, kind, ref: v.ref, amount: v.amount, description: v.description, hold: v.hold, leftMs: Number.isFinite(leftMs) ? leftMs : 0 }}
                 declined={q.tried ? v.message : null} tried={!!q.tried} againHref={kind === "order" ? orderAgain : null}
-                termsHref={hidden.includes("terms") ? null : "/terms"} />
+                termsHref={hidden.includes("terms") ? null : "/terms"} applePay={!!env.APPLE_PAY_DOMAIN_FILE}
+                tabby={kind === "order" && storeSwitches(content).tabby && tabbyKeys(storeEnv())}
+                tabbyBack={q.tabby === "cancel" || q.tabby === "fail" ? q.tabby : null} />
             ) : (
               <p className="py-msg" role="status">{t.notOpen}</p>
             )}

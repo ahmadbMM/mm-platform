@@ -38,7 +38,7 @@ export function payError(r: { status: number; message: string }): { error: strin
     LOCKER_NOT_OPEN: "not_open", LOCKER_OUT: "locker_taken", LOCKER_PICK: "invalid", LOCKER_PAY: "invalid",
     // the store build (2026-11-15, CONTRACTS.md section 6)
     STORE_LICENCE: "licence", STORE_PROMO: "promo", STORE_PROMO_MIN: "promo_min", STORE_PROMO_USED: "promo_used",
-    STORE_GIFT: "gift", STORE_GIFT_ON_GIFT: "gift_on_gift", STORE_DISTRICT: "district", STORE_SLOT: "slot", STORE_DIGITAL: "digital",
+    STORE_GIFT: "gift", STORE_GIFT_ON_GIFT: "gift_on_gift", STORE_GIFT_EXPIRED: "gift_expired", STORE_DISTRICT: "district", STORE_SLOT: "slot", STORE_DIGITAL: "digital",
     STORE_BUSY: "busy", STORE_RETURN_WINDOW: "return_window", STORE_RETURN_OPEN: "return_open", STORE_RETURN_ITEMS: "return_items",
     STORE_REVIEW_STATE: "review_state", STORE_REVIEW_DONE: "review_done", STORE_REVIEW_ITEM: "review_item", STORE_REVIEW_RATING: "invalid",
     STORE_KIND: "invalid", STORE_BUNDLE: "invalid",

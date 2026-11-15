@@ -14,6 +14,10 @@ export type PayView = {
   /** The store build (2026-11-15, pay_view): the order's goods, its discount, what a gift card paid, its total, and who
    *  took the card part ("moyasar", or "tabby" once instalments are on). */
   subtotal?: number; discount?: number; gift_paid?: number; total?: number; provider?: string;
+  /** A store order's buyer and where it goes, for Tabby's session alone (F84; CONTRACTS.md, additions by w4): read by this
+   *  server, never drawn on the payment page. */
+  buyer?: { name: string; phone: string; email: string | null } | null;
+  ship?: { city?: string; district?: string; street?: string; postal?: string } | null;
   items?: { name: string; variant: string | null; qty: number; unit_price: number; image: string | null }[];
   rides?: { id: string; name: string; type: string; date: string; title: string | null; kind: string | null; status: string; paid: boolean }[];
   lockers?: { code: string; day: string; period: string; status: string }[];
