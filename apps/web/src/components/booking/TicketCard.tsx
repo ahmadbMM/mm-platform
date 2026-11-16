@@ -28,10 +28,13 @@ import { Sar, sarText } from "./Sar";
 import { TicketDir, TicketMore, TicketShare } from "./TicketParts";
 import TicketComing from "./TicketComing";
 import TicketBikeReport from "./TicketBikeReport";
+import TicketHelp from "./TicketHelp";
 import { comingWords } from "./Coming.words";
 import { bikeReportWords } from "./BikeReport.words";
+import { rideHelpWords } from "./RideHelp.words";
 import { comingCancelLink, stillComing } from "@/lib/still-coming";
 import { bikeReport } from "@/lib/bike-report";
+import { rideHelp } from "@/lib/ride-help";
 import TicketRoutePage from "./TicketRoutePage";
 import { routePageWords } from "./RoutePage.words";
 import { gpxFileName, type RoutePage } from "@/lib/route-track";
@@ -76,6 +79,9 @@ import { gpxFileName, type RoutePage } from "@/lib/route-track";
 // or drops family members there. Its wallet pass is offered as the pool's is (the booking app's passes know the farm).
 // A session that carries its venue's Instagram (bike_slots._ig, 2026-11-13; lib/instagram.ts), the Farm House Night's
 // @thefarmhouse.jed first, links it under the place while the night is ahead, in a new tab.
+// "Need help?" (2026-11-16; lib/ride-help.ts, TicketHelp) stands above "Report a bike problem" on a booking that holds a
+// place, from an hour before the session until 3 hours after it, never on the Blood Donation event: WhatsApp us with what
+// is wrong, the rider, the session and their location; Call us; the ambulance.
 export type TicketText = (typeof T)["en"];
 type Props = {
   locale: string;
@@ -126,6 +132,9 @@ type Props = {
   /** The route's own page (2026-11-13, lib/route-track.ts routePageOf): its stored line and turn points, opened from
    *  the route's block by Route details; null when nothing is stored for the route. */
   routePage?: RoutePage | null;
+  /** The signed-in account's name, which "Need help?"'s WhatsApp message gives first (the booking app's _rhOpen: the
+   *  account's, else the booking's); the first rider's when not given. */
+  account?: string | null;
 };
 
 const Bike = () => (
@@ -186,7 +195,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, bikeNames = null, routePage = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, bikeNames = null, routePage = null, account = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -245,6 +254,9 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const stc = stillComing(rows, s, now, past);
   const brp = bikeReport(rows, s, now);
   const brpW = brp ? bikeReportWords(locale) : null;
+  // "Need help?" (the booking app's _rhHtml, 2026-11-16; lib/ride-help.ts): drawn for a window open now or opening within
+  // the day, shown by the browser while it is open
+  const rh = rideHelp(rows, s, now);
   // "Route details" in the route's block, when something is stored for the route (the booking app's _rtBtn, 2026-11-13)
   const rp = route && !route.track ? routePage : null;
   const rpW = rp ? routePageWords(locale) : null;
@@ -385,6 +397,10 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
               </li>
             ))}
           </ol>
+        )}
+        {rh && (
+          <TicketHelp from={rh.from} until={rh.until} now={now} kinds={rh.kinds} locale={locale} words={rideHelpWords(locale)}
+            who={(account || primary.name).trim()} line={[name, fmtShort(primary.date), when].filter(Boolean).join(" · ")} />
         )}
         {brp && brpW && (
           <TicketBikeReport now={now} reported={brp.reported} words={brpW}

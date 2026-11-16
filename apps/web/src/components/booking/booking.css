@@ -235,7 +235,11 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
    (TicketBikeReport): one button, then the same chip (the booking app's .stc-row, .brp-row, 2026-11-13) */
 .tk-stc { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 4px; }
 .tk-brp { display: grid; margin: 12px 0 4px; }
-:is(.tk-stc, .tk-brp) > .tk-btn { min-width: 0; height: auto; min-height: 48px; padding: 6px 10px; white-space: normal; line-height: 1.2; text-align: center; font-size: 13px; }
+/* "Need help?" (TicketHelp, the booking app's .rh-row, 2026-11-16): the same outlined button, above the bike report */
+.tk-rh { display: grid; margin: 12px 0 4px; }
+.tk-rh + .tk-brp { margin-top: 0; }
+.tk-rh > .tk-btn { gap: 8px; }
+:is(.tk-stc, .tk-brp, .tk-rh) > .tk-btn { min-width: 0; height: auto; min-height: 48px; padding: 6px 10px; white-space: normal; line-height: 1.2; text-align: center; font-size: 13px; }
 .tk-stc > .tk-btn:disabled { opacity: .6; cursor: default; }
 :is(.tk-stc-ok, .tk-brp-ok) { grid-column: 1 / -1; justify-self: start; display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px;
   border: 1px solid rgba(26, 25, 25, .2); font-size: 13px; font-weight: 600; }
@@ -557,6 +561,20 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-brp-send:hover { background: #06603b; }
 .tk-brp-send:disabled { opacity: .6; cursor: default; }
 .tk-brp-close { background: #fff; border: 1px solid rgba(26, 25, 25, .24); color: #1a1919; }
+/* the help pop-up (TicketHelp): the bike report's radios, then WhatsApp us (a pin once the rider's location is in the
+   message), Call us, the ambulance in red and Close, each a whole-width row */
+.tk-rh-dlg { width: min(380px, calc(100vw - 32px)); }
+.tk-rh-dlg .tk-dlg-t { padding-inline-end: 0; }
+.tk-rh-dlg .tk-dlg-acts > :is(a, button) { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 6px 12px;
+  border-radius: 10px; border: 1px solid rgba(26, 25, 25, .24); background: #fff; color: #1a1919; font: inherit; font-size: 15px; font-weight: 600;
+  text-align: center; text-decoration: none; cursor: pointer; }
+.tk-rh-dlg .tk-dlg-acts svg { flex: none; }
+.tk-rh-dlg .tk-dlg-acts > .tk-rh-wa { background: #077a4b; border-color: #077a4b; color: #fff; }
+.tk-rh-dlg .tk-dlg-acts > .tk-rh-wa:hover { background: #06603b; }
+.tk-rh-dlg .tk-dlg-acts > .tk-rh-amb { color: #a33b2e; border-color: #a33b2e; }
+.tk-rh-loc { display: inline-flex; align-items: center; }
+.tk-rh-loc[hidden] { display: none; }
+.tk-rh-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 /* the route's own page (TicketRoutePage, the booking app's route-page.js): its name, the line north up on a pale sheet,
    the facts, the numbered turn points, then Save GPX file, Open the map and Close */
 .tk-rtp-dlg { width: min(420px, calc(100vw - 32px)); }

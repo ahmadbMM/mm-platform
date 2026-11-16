@@ -325,7 +325,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                       live: g.date === now.slice(0, 10) && (s ? s.bikes : !isNonBike(null, g.sessionId)) ? localHref(`/live?session=${encodeURIComponent(g.sessionId)}`, locale) : null,
                       share: shareLink(app, ev, g.sessionId), bookings: myBookings }}
                     route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
-                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} bikeNames={bikeNames} />
+                    wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} bikeNames={bikeNames} account={acct.name} />
                 );
               })}
               {/* the bookings cancelled, after the bookings ahead: one quiet row each, until their day has gone */}
@@ -343,7 +343,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                   <TicketCard key={g.key} past locale={locale} today={today} rows={g.rows} session={s}
                     name={rideName(s, g.sessionId)}
                     cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} bikeNames={bikeNames} />
+                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} bikeNames={bikeNames} account={acct.name} />
                 );
               })}
             </div>
