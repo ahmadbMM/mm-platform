@@ -387,7 +387,7 @@ describe("the Farm House Night's look", () => {
     expect(booking).toMatch(/\.sc-fh-mi \{[^}]*margin-inline-start: -19px; \}/); // the rule a line starts with is cut
     expect(booking).toMatch(/\.sc-fh-line \{[^}]*color: var\(--fh-peach-lt\);/);
     expect(booking).toMatch(/\.sc-card\.sc-farm \.sc-spots, \.xs-feat-card\.xs-feat-fh \.sc-spots \{[^}]*background: var\(--fh-milk\); color: var\(--fh-rust-dk\); \}/);
-    for (const sel of [".tk-card.ev-farm, .tk-card.ev-farm.tk-live", '[dir="rtl"] .tk-card.ev-farm', ".tk-logo.tk-logo-farm", ".sc-fh-scene", ":is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-farm { --ev: #8a3f27; }"]) expect(booking, sel).toContain(sel);
+    for (const sel of [".tk-card.ev-farm, .tk-card.ev-farm.tk-live", '[dir="rtl"] .tk-card.ev-farm', ".tk-logo.tk-logo-farm", ".sc-fh-scene", ":is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-farm { --ev: #8a3f27; }"]) expect(booking, sel).toContain(sel);
     expect(booking).toMatch(/\.tk-card\.ev-farm \.tk-num \{ font-family: var\(--cs-font-fh\)[^}]*font-weight: 800; \}/);
     for (const sel of [".xs-feat-card.xs-feat-fh", '[dir="rtl"] .xs-feat-card.xs-feat-fh', ".xs-sum-head.xs-fh-head", ".xs .xs-go.ev-farm", ".xs-info.ev-farm .xs-info-go"]) expect(xp, sel).toContain(sel);
     // the face the names ask for is the one the layout loads: Rubik, its heaviest weight here, its Arabic letters too

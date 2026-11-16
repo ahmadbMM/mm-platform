@@ -621,21 +621,22 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
    ink is a shade deeper). experiences.css draws the tile, the marks, the switch, the motif and the drawings with them. */
 :root { --k-sat: #077A4B; --k-sat-tint: #E6F2EC; --k-sat-ink: #077A4B; --k-pool: #0D7D8F; --k-pool-tint: #E3F2F4; --k-pool-ink: #0A6573; --k-pm: #A33B2E; --k-pm-tint: #F8E8E5; --k-pm-ink: #A33B2E; }
 /* Each kind's colour, on its card, on the card's wrapper (for its Details link beside the card), on
-   the Details dialog and on a featured date's card above the event cards (experiences.css). */
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-saturday { --ev: var(--k-sat); }
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-jcc { --ev: #2f63ad; }
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-swim { --ev: var(--k-pool); }
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-workshop { --ev: #c2410c; }
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-snd96 { --ev: #00894a; }
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-event { --ev: #6d28d9; }
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-petromin { --ev: var(--k-pm); } /* a Petromin night: its kind's red, as in the booking app (2026-11-13; Petromin's #d6202a before) */
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-defe5k { --ev: #a22b63; } /* the DEFE 5KM Run: Defe's berry (2026-10-18) */
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-arena { --ev: #c81e27; } /* Arena Heros: its red, as the booking app's .ev-arena (2026-10-28) */
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-blood { --ev: #0b1f16; } /* the donation event: its crimson (2026-11-03) */
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-yoga { --ev: #b4532f; } /* yoga: its clay (2026-11-12) */
-:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-farm { --ev: #8a3f27; } /* the Farm House Night: the venue's rust (2026-11-13) */
+   the Details dialog, on a featured date's card above the event cards and on its dot in the date step's calendar
+   (experiences.css). */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-saturday { --ev: var(--k-sat); }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-jcc { --ev: #2f63ad; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-swim { --ev: var(--k-pool); }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-workshop { --ev: #c2410c; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-snd96 { --ev: #00894a; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-event { --ev: #6d28d9; }
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-runher { --ev: #c2416e; } /* Run for Her: the booking app's pink (--rf-pink-dk) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-petromin { --ev: var(--k-pm); } /* a Petromin night: its kind's red, as in the booking app (2026-11-13; Petromin's #d6202a before) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-vlap { --ev: #0d0d0d; } /* Victory Lap: the race's black (2026-10-17) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-defe5k { --ev: #a22b63; } /* the DEFE 5KM Run: Defe's berry (2026-10-18) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-arena { --ev: #c81e27; } /* Arena Heros: its red, as the booking app's .ev-arena (2026-10-28) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-blood { --ev: #0b1f16; } /* the donation event: its crimson (2026-11-03) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-yoga { --ev: #b4532f; } /* yoga: its clay (2026-11-12) */
+:is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-farm { --ev: #8a3f27; } /* the Farm House Night: the venue's rust (2026-11-13) */
 .sc-card.ev-blood:hover { border-color: rgba(11, 31, 22, .4); box-shadow: 0 0 14px rgba(11, 31, 22, .12); }
 .sc-card.ev-blood:focus-visible { outline-color: #0b1f16; }
 .sc-card.ev-blood .sc-dw, .sc-card.ev-blood .sc-spots:not(.full):not(.low):not(.closed):not(.held) { color: #0b1f16; }

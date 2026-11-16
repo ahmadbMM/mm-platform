@@ -259,9 +259,9 @@ describe("the look", () => {
   it("has one colour set per kind, and the kind's colour on its date card and dialog", () => {
     const booking = css("../../components/booking/booking.css");
     for (const t of ["--k-sat: #077A4B", "--k-sat-tint: #E6F2EC", "--k-sat-ink: #077A4B", "--k-pool: #0D7D8F", "--k-pool-tint: #E3F2F4", "--k-pool-ink: #0A6573", "--k-pm: #A33B2E", "--k-pm-tint: #F8E8E5", "--k-pm-ink: #A33B2E"]) expect(booking, t).toContain(t);
-    expect(booking).toContain(":is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-saturday { --ev: var(--k-sat); }"); // the Featured card too
-    expect(booking).toContain(":is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-swim { --ev: var(--k-pool); }"); // the Featured card too
-    expect(booking).toContain(":is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-petromin { --ev: var(--k-pm); }"); // the Featured card too
+    expect(booking).toContain(":is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-saturday { --ev: var(--k-sat); }"); // the Featured card and the calendar's dot too
+    expect(booking).toContain(":is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-swim { --ev: var(--k-pool); }"); // the Featured card and the calendar's dot too
+    expect(booking).toContain(":is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-petromin { --ev: var(--k-pm); }"); // the Featured card and the calendar's dot too
   });
   it("draws the tile, the marks, the switch, the motifs, the band and the Details' drawing, turned round right to left", () => {
     const xp = css("../../components/experiences/experiences.css");

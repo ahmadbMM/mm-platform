@@ -522,3 +522,38 @@ html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 
 .sr-tn, .sr-pill rect { fill: var(--k-sat); }
 .sr-pill text { fill: #fff; font-size: 10px; font-weight: 600; }
 .sr-lb { fill: #4a4843; font-size: 10px; font-weight: 500; }
+/* The date step's calendar (2026-11-16, the booking app's Reserve calendar): List and Calendar at the end of the kind
+   switch's row, the one picked in ink; then one month, weeks from Sunday, whose days with dates are buttons carrying a
+   dot per kind (booking.css gives each kind's colour); the day shown in ink, the picked date's day ringed green, today
+   ringed, the days before it muted, a day the visitor holds a place on ticked in its top corner. */
+.xs-tools { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 14px; }
+.xs-tools > .xs-kinds { flex: 1 1 auto; min-width: 0; margin: 0; }
+.xs-views { flex: none; display: inline-flex; gap: 2px; margin-inline-start: auto; padding: 3px; border-radius: 999px; border: 1px solid rgba(26, 25, 25, .24); background: #fff; }
+.xs-view { display: inline-grid; place-items: center; width: 38px; height: 36px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: #4a4843; cursor: pointer; }
+.xs-view[aria-pressed="true"] { background: #1a1919; color: #fbf9f4; }
+.xs-view:focus-visible { outline: 3px solid rgba(7, 122, 75, .4); outline-offset: 2px; }
+.xs-cal { margin: 0 0 18px; padding: 12px 12px 14px; border: 1px solid rgba(26, 25, 25, .14); border-radius: 12px; background: #fff; }
+.xs-cal-head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.xs .xs-cal-t { flex: 1; min-width: 0; margin: 0; text-align: center; font-size: 17px; font-weight: 700; letter-spacing: 0; line-height: 1.3; color: #1a1919; }
+.xs-cal-nav { flex: none; display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 10px; background: #f4f1ea; color: #1a1919; cursor: pointer; }
+.xs-cal-nav:disabled { background: transparent; color: #b9c0ba; cursor: default; }
+.xs-cal-nav:focus-visible, .xs-cal-day:focus-visible { outline: 2px solid #077a4b; outline-offset: 1px; }
+.xs-cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.xs-cal-dows { display: contents; }
+.xs-cal-dow { padding: 2px 0 6px; text-align: center; font-size: 12px; font-weight: 600; line-height: 1.3; color: #57605a; }
+.xs-cal-day { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; min-height: 46px; padding: 4px 0;
+  border: 0; border-radius: 10px; background: transparent; color: #57605a; font: inherit; font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1; }
+.xs-cal-day.past { color: #8a938c; }
+.xs-cal-day.today { box-shadow: inset 0 0 0 1.5px rgba(26, 25, 25, .4); }
+.xs-cal-day.has { background: #f4f1ea; color: #1a1919; font-weight: 700; cursor: pointer; }
+.xs-cal-day.has.sel { box-shadow: inset 0 0 0 2px #077a4b; }
+.xs-cal-day.has.on { background: #1a1919; color: #fbf9f4; box-shadow: none; }
+.xs-cal-day.has.on.sel { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #077a4b; }
+.xs-cal-day.fb:not(.on) { color: #57605a; font-weight: 500; }
+.xs-cal-marks { display: flex; gap: 3px; height: 6px; }
+.xs-cal-mk { width: 6px; height: 6px; border-radius: 50%; background: var(--ev, #077a4b); }
+.xs-cal-day.on .xs-cal-mk { box-shadow: 0 0 0 1.5px #fbf9f4; }
+.xs-cal-day.fb .xs-cal-mk { opacity: .4; }
+/* 12px at 2px from the corner, so it stays clear of the day's number on a phone's 44px day */
+.xs-cal-mine { position: absolute; top: 2px; inset-inline-end: 2px; display: inline-grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; background: #077a4b; color: #fff; }
+.xs-cal-mine svg { stroke-width: 3; }

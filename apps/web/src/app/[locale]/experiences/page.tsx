@@ -297,6 +297,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       // the booking app's session card: "Sunday · 26 Sept", the year said only when it is not this one (the owner's
       // pick 7, 2026-11-13: every date listed is still ahead), and its times in the rider's clock
       id: s.id, kind: s.kind, day: fmtDayNoYear(s.date, locale, now.slice(0, 10)),
+      // its day as stored (YYYY-MM-DD), which the date step's calendar puts it on (lib/reserve-calendar.ts)
+      date: s.date,
       // today or tomorrow said in words, as the booking app's session card does (_dayWord)
       near: ((w) => (w === "today" ? tx("Today", "اليوم") : w === "tomorrow" ? tx("Tomorrow", "غداً") : null))(dayWord(s.date, now.slice(0, 10))),
       name: sessionName(s, kindName, enName, L !== "en", L === "ar"),
@@ -450,6 +452,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     // (the kinds on the page's dates alone: the Blood Donation event's name never reaches the browser without its date)
     kinds: { show: kw.show, all: kw.all, names: Object.fromEntries([...new Set(all.map((s) => s.kind))].map((k) => [k, (kw.kinds as Record<string, string>)[k] ?? kindName[k]])) },
     chooseDate: kw.chooseDate,
+    // the date step's List / Calendar switch and the month's arrows: the booking app's shGrpView, calViewList, calViewCal,
+    // calPrev and calNext (KindTheme.words.ts)
+    cal: kw.cal,
   };
 
   const good = list(c.good.items).filter((g) => S(g.title));

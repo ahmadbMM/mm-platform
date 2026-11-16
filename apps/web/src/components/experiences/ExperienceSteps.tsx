@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { isRtl } from "@/i18n/locales";
 import { fill } from "@/lib/fill";
 import { fill as fillAt } from "@/i18n/tx";
@@ -13,6 +13,7 @@ import { YOGA_MARK, YOGA_MARK_SIZE } from "@/lib/yoga";
 import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
 import { hasKindArt, kindsInOrder, rowsOfKind } from "@/lib/kind-theme";
 import type { Held } from "@/lib/held";
+import { calDayLabel, calKey, calMonth, calMonths, calMove, calOffered, calPlan, calTitle, calToday, calViewRead, calViewSave, calWeekdays, type CalPlan, type CalView } from "@/lib/reserve-calendar";
 import { KindIcon, SatRoute, type RouteWords } from "./KindArt";
 import { SOCIAL_ICONS } from "@/components/site/social-icons";
 
@@ -73,8 +74,19 @@ import { SOCIAL_ICONS } from "@/components/site/social-icons";
 // (See you next Saturday, or See you at the next session), as the booking app's card says them. A visitor holding a place
 // on it reads that place instead, and no line under it. Its Featured card says Fully booked too and opens its event's
 // dates, never the date; its Details say Fully booked for its places and offer no Choose this date.
+// The calendar (the user, 2026-11-16: "add a calendar view in reserve section for customers"; the booking app's Reserve
+// calendar, lib/reserve-calendar.ts): an event whose dates fall on two days or more (counted before the kind switch
+// narrows them) offers List and Calendar at the end of the kind switch's row, the choice kept on the device. Calendar
+// draws one month, weeks from Sunday: a day with dates is a button with a dot per kind in the kind's colour, today is
+// ringed, the days before it muted, the picked date's day ringed green and a day the visitor holds a place on ticked.
+// Under the month only the day shown's dates, as the list draws them, with no Featured or Upcoming heading: a day only
+// shows, a date is still picked on its card. The arrows go to the month before or after that has dates; the keys move
+// along the days with dates (Left and Right turned round in Arabic and Urdu, Up and Down a week, Home and End, Page Up
+// and Page Down a month).
 export type StepSession = {
   id: string; kind: string; name: string;
+  /** Its day as stored, YYYY-MM-DD: the calendar's day for it (absent: the first ten characters of its id). */
+  date?: string;
   /** Its day as its card says it, "Saturday · 14 Nov": the year only when it is not this year (lib/tickets.ts fmtDayNoYear). */
   day: string;
   /** "Today" or "Tomorrow" in the page's language when the date is that close, else null. */
@@ -254,6 +266,9 @@ export type StepText = {
   kinds: { show: string; all: string; names: Record<string, string> };
   /** The date step's title on a list mixing rides with sessions without a bike. */
   chooseDate: string;
+  /** The date step's List / Calendar switch: its name for a screen reader, its two buttons' names, and the calendar's
+   *  arrows to the month before and after (the booking app's shGrpView, calViewList, calViewCal, calPrev, calNext). */
+  cal: { view: string; list: string; cal: string; prev: string; next: string };
 };
 // clubHref: the Club page, "" while staff have it switched off (its address then leads Home), so no link is offered.
 // member: the visitor is a signed-in community member (the page asks community_member), so the
@@ -306,6 +321,18 @@ const FeatStar = () => (
 const Tick = ({ size = 14 }: { size?: number }) => (
   <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
 );
+/** The calendar switch's List (the booking app's _cuIc rows): three lines, each with its dot. */
+const RowsIcon = () => (
+  <svg className="mm-ic" aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9.4 6.4h10.4M9.4 12h10.4M9.4 17.6h10.4M4.6 6.4h.2M4.6 12h.2M4.6 17.6h.2" />
+  </svg>
+);
+/** The calendar's arrows (the booking app's _cuIc back and go), turned round right to left (.mm-ic-dir). */
+const Chevron = ({ back }: { back?: boolean }) => (
+  <svg className="mm-ic mm-ic-dir" aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d={back ? "M14.6 5.4L8 12l6.6 6.6" : "M9.4 5.4L16 12l-6.4 6.6"} />
+  </svg>
+);
 /** The hosts' marks on their white plate: a span, as it also stands inside the card's button. */
 const Plate = ({ b }: { b: StepBlood }) => (
   <span className="bld-plate"><img src={b.plate.src} alt={b.plate.alt} width={b.plate.width} height={b.plate.height} decoding="async" /></span>
@@ -331,6 +358,13 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   // not open yet: its countdown follows the real booking window (StepSession.opensAt), never a timer of its own. Before
   // that the card says what the server said, so the first drawing matches the server's.
   const [nowMs, setNowMs] = useState<number | null>(null);
+  // The date step's view (the booking app's S.regView): the list, or the calendar, kept on the device; the day the
+  // calendar shows (the one tapped; null: the picked date's, else the first); and today in Riyadh. The view and today are
+  // read as an event's dates open, never while the page is drawn on the server.
+  const [view, setView] = useState<CalView>("list");
+  const [calDay, setCalDay] = useState<string | null>(null);
+  const [today, setToday] = useState("");
+  const calBox = useRef<HTMLElement>(null);
   // The Featured cards: each a date of one of the cards below, found there, so none stands for a date its event does
   // not list.
   const feats = (featured ?? []).flatMap((f) => {
@@ -345,6 +379,11 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   // Those dates as the list shows them: the featured ones first, then the rest; as given when none is.
   const dates = featuredFirst(rows, (s) => !!s.feat);
   const listed = [...dates.featured, ...dates.rest];
+  // The calendar, offered for two days or more counted before the kind narrows the dates (the booking app's _rcMany);
+  // in it, the day shown's dates alone, in their order, without the headings.
+  const calMany = !!ev && calOffered(ev.sessions);
+  const plan = calMany && view === "cal" ? calPlan(rows, calDay, sess?.id ?? null) : null;
+  const shown = plan ? plan.list : listed;
   const ticking = (step === 2 && !!ev?.sessions.some((s) => s.opensAt != null)) || (step === 1 && feats.some((f) => f.s.opensAt != null));
   useEffect(() => {
     if (!ticking) return;
@@ -380,8 +419,10 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
       top.current?.querySelector<HTMLElement>(".xs-feat-h, .xs-title")?.focus({ preventScroll: true });
     });
   };
+  // An event's dates open on the view kept on this device, at the picked date's day or the first.
+  const openDates = () => { setView(calViewRead()); setToday(calToday()); setCalDay(null); };
   // What a card does, and what its dialog's button does too.
-  const pickEvent = (e: StepEvent) => { setEv(e); setSess(null); setKind(null); go(2); };
+  const pickEvent = (e: StepEvent) => { setEv(e); setSess(null); setKind(null); openDates(); go(2); };
   // a date closed as fully booked is never chosen: nothing books it (the database refuses a closed session)
   const pickDate = (s: StepSession) => { if (s.fbk) return; setSess(s); go(3); };
   // A Featured card goes through its event and on to its date, as choosing the event's card and then the date would, so
@@ -390,6 +431,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   // booking app's _featOpen): its event's dates open instead.
   const pickFeat = (e: StepEvent, s: StepSession) => {
     setEv(e);
+    openDates();
     if (opensOf(s) || s.fbk) { setSess(null); go(2); } else { setSess(s); go(3); }
   };
   const arrow = <ArrowIcon size={15} />;
@@ -509,6 +551,70 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   // Petromin Days hands over ev=petromin, which the booking app opens under its own Petromin Days. A Saturday ride
   // booked with a ride code goes to its own page (micromobility.sa/saturday) instead.
   const link = ev && sess ? sess.satLink || bookingAt(bookHref, ev.key, sess.id) : bookHref;
+
+  // The List / Calendar switch: the view picked is kept on this device.
+  const pickView = (v: CalView) => { setView(v); calViewSave(v); };
+  // An arrow, or Page Up and Page Down: the month before or after that has dates, at its first day with dates. The arrow
+  // keeps the focus unless it is now off (the last month that way); from a key the focus goes to the day shown.
+  const moveMonth = (f: number, fromKey: boolean) => {
+    const to = plan ? calMove(plan.days, plan.day, f) : null;
+    if (!to) return;
+    setCalDay(to);
+    requestAnimationFrame(() => {
+      const box = calBox.current;
+      const b = box?.querySelector<HTMLButtonElement>(f < 0 ? ".xs-cal-prev" : ".xs-cal-next");
+      if (fromKey || !b || b.disabled) box?.querySelector<HTMLElement>(".xs-cal-day.on")?.focus();
+    });
+  };
+  // The keys on a day (the booking app's _rcKey): along the days with dates, one tab stop among them; Enter or Space shows
+  // the day the focus is on.
+  const calKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const b = (e.target as HTMLElement).closest<HTMLButtonElement>(".xs-cal-day.has");
+    if (!b) return;
+    if (e.key === "PageUp" || e.key === "PageDown") { e.preventDefault(); moveMonth(e.key === "PageUp" ? -1 : 1, true); return; }
+    const all = Array.from(e.currentTarget.querySelectorAll<HTMLButtonElement>(".xs-cal-day.has"));
+    const to = calKey(all.map((x) => x.dataset.day ?? ""), b.dataset.day ?? "", e.key, rtl);
+    if (to === undefined) return;
+    e.preventDefault();
+    const n = to ? all.find((x) => x.dataset.day === to) : undefined;
+    if (!n) return;
+    b.tabIndex = -1;
+    n.tabIndex = 0;
+    n.focus();
+  };
+  // The month (the booking app's _rcMonthHtml): its arrows and title, the week's days from Sunday, and its days.
+  const monthCard = (p: CalPlan<StepSession>) => {
+    const ym = p.day.slice(0, 7), months = calMonths(p.days), mi = months.indexOf(ym), m = calMonth(ym);
+    return (
+      <section className="xs-cal" ref={calBox} aria-labelledby="xs-cal-t">
+        <div className="xs-cal-head">
+          <button type="button" className="xs-cal-nav xs-cal-prev" aria-label={t.cal.prev} disabled={mi <= 0} onClick={() => moveMonth(-1, false)}><Chevron back /></button>
+          <h3 id="xs-cal-t" className="xs-cal-t" aria-live="polite">{calTitle(ym, locale)}</h3>
+          <button type="button" className="xs-cal-nav xs-cal-next" aria-label={t.cal.next} disabled={mi >= months.length - 1} onClick={() => moveMonth(1, false)}><Chevron /></button>
+        </div>
+        <div className="xs-cal-grid" onKeyDown={calKeyDown}>
+          <div className="xs-cal-dows" aria-hidden="true">{calWeekdays(locale).map((w, i) => <span key={i} className="xs-cal-dow">{w}</span>)}</div>
+          {Array.from({ length: m.lead }, (_, i) => <span key={`p${i}`} className="xs-cal-pad" />)}
+          {m.days.map((iso) => {
+            const l = p.by.get(iso), n = Number(iso.slice(8));
+            const cl = `${iso === today ? " today" : ""}${today && iso < today ? " past" : ""}`;
+            if (!l) return <span key={iso} className={`xs-cal-day${cl}`}>{n}</span>;
+            // the day shown in ink, the picked date's day ringed green, a day the visitor holds a place on ticked, a day
+            // whose every date is closed as fully booked quieter; a dot for each kind it has, three at most
+            const on = iso === p.day, held = l.some((s) => s.held), fb = l.every((s) => !!s.fbk);
+            return (
+              <button key={iso} type="button" className={`xs-cal-day has${cl}${on ? " on" : ""}${iso === p.picked ? " sel" : ""}${held ? " mine" : ""}${fb ? " fb" : ""}`}
+                data-day={iso} aria-pressed={on} aria-label={calDayLabel(iso, locale, l, { held: t.held, fbk: t.fbk })} tabIndex={on ? 0 : -1} onClick={() => setCalDay(iso)}>
+                {n}
+                {held && <span className="xs-cal-mine" aria-hidden="true"><TickIcon size={9} /></span>}
+                <span className="xs-cal-marks" aria-hidden="true">{[...new Set(l.map((s) => s.kind))].slice(0, 3).map((k) => <i key={k} className={`xs-cal-mk ev-${k}`} />)}</span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+    );
+  };
 
   return (
     <div className="xs" ref={top}>
@@ -651,35 +757,51 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
               <h2 id="xs-h2" className="xs-title" tabIndex={-1}>{dateTitle}</h2>
             </>
           )}
-          {/* All, then each kind (the owner's pick B5): the one picked in ink */}
-          {kinds.length > 1 && (
-            <div className="xs-kinds" role="group" aria-label={t.kinds.show}>
-              {[null, ...kinds].map((k) => (
-                <button key={k ?? ""} type="button" className={`xs-kind${k ? ` ev-${k}` : ""}`} aria-pressed={picked === k} onClick={() => setKind(k)}>
-                  {k && <KindIcon kind={k} size={15} />}<span>{k ? t.kinds.names[k] ?? k : t.kinds.all}</span>
-                </button>
-              ))}
+          {/* All, then each kind (the owner's pick B5): the one picked in ink; List and Calendar at the row's end (the
+              booking app's reg-tools), the one picked in ink */}
+          {ev.sessions.length > 0 && (kinds.length > 1 || calMany) && (
+            <div className="xs-tools">
+              {kinds.length > 1 && (
+                <div className="xs-kinds" role="group" aria-label={t.kinds.show}>
+                  {[null, ...kinds].map((k) => (
+                    <button key={k ?? ""} type="button" className={`xs-kind${k ? ` ev-${k}` : ""}`} aria-pressed={picked === k} onClick={() => setKind(k)}>
+                      {k && <KindIcon kind={k} size={15} />}<span>{k ? t.kinds.names[k] ?? k : t.kinds.all}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {calMany && (
+                <div className="xs-views" role="group" aria-label={t.cal.view}>
+                  {(["list", "cal"] as const).map((v) => (
+                    <button key={v} type="button" className="xs-view" aria-pressed={view === v} aria-label={v === "cal" ? t.cal.cal : t.cal.list} title={v === "cal" ? t.cal.cal : t.cal.list} onClick={() => pickView(v)}>
+                      {v === "cal" ? <CalendarIcon size={18} /> : <RowsIcon />}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           )}
+          {/* the calendar's month, over the day shown's dates */}
+          {plan && monthCard(plan)}
           {ev.sessions.length === 0 ? (
             <p className="xs-empty">{t.noDates}</p>
           ) : (
             // One date is chosen among them (the research's row 11): a radio group with one tab stop and the arrow keys,
             // which move the choice with the focus (nothing else happens until a date is tapped or Enter or Space pressed)
             <div className="sc-list" role="radiogroup" aria-labelledby="xs-h2"
-              onKeyDown={(e) => { const id = radioKey(e, rtl)?.dataset.id; const s = id ? listed.find((x) => x.id === id) : undefined; if (s) setSess(s); }}>
-              {listed.map((s, n) => {
+              onKeyDown={(e) => { const id = radioKey(e, rtl)?.dataset.id; const s = id ? shown.find((x) => x.id === id) : undefined; if (s) setSess(s); }}>
+              {shown.map((s, n) => {
                 const details = infoShown(membersOnlyDate(s), memberOn(ev.key, { member, petromin }));
                 const opens = opensOf(s);
                 const spots = stateOf(s) ?? <span className="sc-spots">{t.available}</span>;
                 // "Featured" over the featured dates, which come first, and "Upcoming" over the rest; none when nothing is
-                // featured, and no second one when every date is
-                const head = dates.featured.length === 0 ? null
+                // featured, and no second one when every date is; none under the calendar's day
+                const head = plan || dates.featured.length === 0 ? null
                   : n === 0 ? <h3 className="xs-sec-h"><FeatStar /><span>{t.featured}</span></h3>
                   : n === dates.featured.length ? <h3 className="xs-sec-h xs-sec-rest">{t.upcoming}</h3> : null;
                 // the radio's own attributes: checked when it is the date chosen, the group's one tab stop (the first date
                 // on the page that may be chosen: never one closed as fully booked, which is no radio)
-                const stop = tabStop(listed, (x) => sess?.id === x.id, (x) => !opensOf(x) && !x.fbk);
+                const stop = tabStop(shown, (x) => sess?.id === x.id, (x) => !opensOf(x) && !x.fbk);
                 const radio = { role: "radio", "aria-checked": sess?.id === s.id, tabIndex: n === stop ? 0 : -1, "data-id": s.id, disabled: !!opens, "aria-disabled": !!opens } as const;
                 // its Details: the booking app's "i", 44px, beside the card and never inside it, named for the event and the date
                 const about = details && (
