@@ -4,7 +4,7 @@ import { useEffect, useId, useState } from "react";
 import MessageForm from "@/components/site/MessageForm";
 
 // The answer tabs (only those with questions), the accordion, and the message form, which notes
-// the tab the visitor was reading. #delivery, #returns, #warranty open that tab (footer links).
+// the tab the visitor was reading. #rides, #delivery, #returns, #warranty open that tab (footer links).
 export type HelpTab = { id: string; label: string; items: { q: string; a: string }[] };
 type Props = {
   locale: string;

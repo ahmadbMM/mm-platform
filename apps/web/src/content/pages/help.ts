@@ -1,12 +1,16 @@
 import { bi, type PageSchema } from "@/content/types";
 
-// The help centre (Help.dc.html): answers in four tabs, WhatsApp and a call, and - so a question
+// The help centre (Help.dc.html): answers in five tabs, WhatsApp and a call, and - so a question
 // can be asked here too - a message form that lands in the staff page's Messages. A tab with no
-// answers is not shown. The warranty answers are the company profile's own warranty policy. The
-// shipping answers are what the online store itself states (free delivery to every region, store
-// pickup, orders reviewed and confirmed before they are prepared), and the returns answers follow
-// the Ministry of Commerce's rules (7 days to return, 15 to exchange, unused, with the invoice) -
-// written 2026-09-25 for the owner to confirm; staff change them in Website > Help.
+// answers is not shown. The "Rides & bookings" answers (help.topics.rides, 2026-11-16) are shared
+// with the booking app's Account > Help (rider-help.js), which shows staff's saved list and falls
+// back to its own copy of these defaults; it finds its translations of an answer by the English
+// shipped here, so its defaults (RH_QA) and these change together, word for word. The warranty
+// answers are the company profile's own warranty policy. The shipping answers are what the online
+// store itself states (free delivery to every region, store pickup, orders reviewed and confirmed
+// before they are prepared), and the returns answers follow the Ministry of Commerce's rules (7
+// days to return, 15 to exchange, unused, with the invoice) - written 2026-09-25 for the owner to
+// confirm; staff change them in Website > Help.
 const txt = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "text" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 const long = <I extends string>(id: I, max: number, en: string, ar: string, dEn: string, dAr: string) => ({ id, type: "longtext" as const, max, label: bi(en, ar), def: bi(dEn, dAr) });
 const qa = (q: [string, string], a: [string, string]) => ({ q: bi(...q), a: bi(...a) });
@@ -16,7 +20,7 @@ const answers = <I extends string>(id: I, en: string, ar: string, def: ReturnTyp
   def,
 });
 
-export const HELP_TOPICS = ["faq", "delivery", "returns", "warranty"] as const;
+export const HELP_TOPICS = ["faq", "rides", "delivery", "returns", "warranty"] as const;
 
 export const helpSchema = {
   page: "help",
@@ -47,8 +51,23 @@ export const helpSchema = {
           qa(["How do I book a ride?", "كيف أحجز رحلة؟"],
             ["Choose a ride on the Experiences page and book your place online; you'll find it under Bookings.", "اختر رحلة من صفحة التجارب واحجز مكانك أونلاين، وستجدها في «الحجوزات»."]),
         ]),
-        txt("deliveryTab", 30, "Tab 2: name", "التبويب ٢: الاسم", "Shipping & delivery", "الشحن والتوصيل"),
-        answers("delivery", "Tab 2: questions", "التبويب ٢: الأسئلة", [
+        txt("ridesTab", 30, "Tab 2: name", "التبويب ٢: الاسم", "Rides & bookings", "الجولات والحجوزات"),
+        answers("rides", "Tab 2: questions", "التبويب ٢: الأسئلة", [
+          qa(["How do I book?", "كيف أحجز؟"],
+            ["Choose an experience and a date, add who is coming and confirm. Your booking then shows under Bookings.", "اختر التجربة والتاريخ، وأضف من سيحضر، ثم أكّد. سيظهر حجزك بعدها في «الحجوزات»."]),
+          qa(["Can I cancel my booking?", "هل يمكنني إلغاء حجزي؟"],
+            ["Yes. Find it under Bookings and tap Cancel, so someone else can take the place.", "نعم. اضغط «إلغاء» على الحجز في «الحجوزات»، ليأخذ مكانك شخص آخر."]),
+          qa(["Where do we meet?", "أين نلتقي؟"],
+            ["Your ticket under Bookings shows where and when to meet.", "تذكرتك في «الحجوزات» تبيّن مكان اللقاء ووقته."]),
+          qa(["Do I need my own helmet?", "هل أحتاج إلى خوذة خاصة بي؟"],
+            ["No. Helmets are required. One comes with every bike.", "لا. الخوذة إلزامية، وتأتي خوذة مع كل دراجة."]),
+          qa(["What if I need help during a ride?", "ماذا لو احتجت مساعدة أثناء الجولة؟"],
+            ["Tap Need help? on your ticket under Bookings to message or call us, with your location.", "اضغط «تحتاج مساعدة؟» على تذكرتك في «الحجوزات» لتراسلنا أو تتصل بنا، مع موقعك."]),
+          qa(["I left something behind.", "نسيت شيئاً بعد الجولة."],
+            ["Things left behind are kept for 14 days. Send us a message below with your booking date and what you left.", "نحتفظ بالأغراض المنسية 14 يوماً. أرسل لنا رسالة من الأسفل بتاريخ حجزك وما نسيته."]),
+        ]),
+        txt("deliveryTab", 30, "Tab 3: name", "التبويب ٣: الاسم", "Shipping & delivery", "الشحن والتوصيل"),
+        answers("delivery", "Tab 3: questions", "التبويب ٣: الأسئلة", [
           qa(["Do you deliver across Saudi Arabia?", "هل توصلون إلى جميع مناطق المملكة؟"],
             ["Yes. Orders from our online store ship free of charge to every region of the Kingdom.", "نعم، طلبات متجرنا الإلكتروني تُشحن مجاناً إلى جميع مناطق المملكة."]),
           qa(["How long does delivery take?", "كم يستغرق التوصيل؟"],
@@ -58,8 +77,8 @@ export const helpSchema = {
           qa(["How do I follow my order?", "كيف أتابع طلبي؟"],
             ["Message us on WhatsApp with your order number and the team will tell you where it is.", "راسلنا على واتساب برقم طلبك وسيخبرك الفريق بحالته."]),
         ]),
-        txt("returnsTab", 30, "Tab 3: name", "التبويب ٣: الاسم", "Returns & exchanges", "الإرجاع والاستبدال"),
-        answers("returns", "Tab 3: questions", "التبويب ٣: الأسئلة", [
+        txt("returnsTab", 30, "Tab 4: name", "التبويب ٤: الاسم", "Returns & exchanges", "الإرجاع والاستبدال"),
+        answers("returns", "Tab 4: questions", "التبويب ٤: الأسئلة", [
           qa(["Can I return or exchange something I bought?", "هل يمكنني إرجاع منتج اشتريته أو استبداله؟"],
             ["Yes. You can return a product within 7 days, or exchange it within 15 days, of receiving it, as long as it is unused, in its original packaging and with its invoice.", "نعم. يمكنك إرجاع المنتج خلال 7 أيام، أو استبداله خلال 15 يوماً، من تاريخ استلامه، بشرط أن يكون غير مستخدم وفي تغليفه الأصلي ومعه الفاتورة."]),
           qa(["Is there anything that can't be returned?", "هل توجد منتجات لا يمكن إرجاعها؟"],
@@ -71,8 +90,8 @@ export const helpSchema = {
           qa(["What if the product is faulty?", "ماذا لو كان في المنتج عيب؟"],
             ["Manufacturing defects are covered by our warranty: the Warranty tab sets out what it covers. Contact us and we'll put it right.", "العيوب المصنعية يشملها ضماننا، ويوضح تبويب الضمان ما يشمله. تواصل معنا وسنعالجها لك."]),
         ]),
-        txt("warrantyTab", 30, "Tab 4: name", "التبويب ٤: الاسم", "Warranty", "الضمان"),
-        answers("warranty", "Tab 4: questions", "التبويب ٤: الأسئلة", [
+        txt("warrantyTab", 30, "Tab 5: name", "التبويب ٥: الاسم", "Warranty", "الضمان"),
+        answers("warranty", "Tab 5: questions", "التبويب ٥: الأسئلة", [
           qa(["What does the warranty cover?", "ماذا يشمل الضمان؟"],
             ["Manufacturing defects, with full after-sales support. Shift levers are covered for two years, spare parts included; misuse and wheels are not covered. Terms and conditions apply.", "العيوب المصنعية مع دعم فني كامل بعد البيع. أذرع تبديل السرعات مضمونة لمدة سنتين وتشمل قطع الغيار، ولا يشمل الضمان سوء الاستخدام والعجلات. تطبق الشروط والأحكام."]),
           qa(["Is maintenance included?", "هل الصيانة مشمولة؟"],

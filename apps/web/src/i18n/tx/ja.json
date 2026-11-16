@@ -1705,5 +1705,18 @@
   "Farmhouse Night": "ファームハウス・ナイト",
   "Come to one of our farmhouse nights.": "ファームハウス・ナイトのいずれかに参加しましょう。",
   "For joining a MicroMobility farmhouse night, an evening at the farm for community members and their families. Given once our team checks you in.": "MicroMobilityのファームハウス・ナイトに参加した方へ。コミュニティメンバーとご家族のための、ファームでの夕べです。スタッフがチェックインした後に贈られます。",
-  "Few spots left": "残りわずか"
+  "Few spots left": "残りわずか",
+  "Rides & bookings": "ライド・予約",
+  "How do I book?": "予約するにはどうすればよいですか？",
+  "Can I cancel my booking?": "予約はキャンセルできますか？",
+  "Where do we meet?": "集合場所はどこですか？",
+  "Do I need my own helmet?": "ヘルメットは自分で用意する必要がありますか？",
+  "What if I need help during a ride?": "ライド中に助けが必要になったらどうすればよいですか？",
+  "I left something behind.": "忘れ物をしました。",
+  "Choose an experience and a date, add who is coming and confirm. Your booking then shows under Bookings.": "体験と日付を選び、参加する人を追加して確定してください。予約は「予約（Bookings）」に表示されます。",
+  "Yes. Find it under Bookings and tap Cancel, so someone else can take the place.": "はい。「予約（Bookings）」で該当の予約を開き、「キャンセル（Cancel）」をタップしてください。その枠をほかの方が利用できるようになります。",
+  "Your ticket under Bookings shows where and when to meet.": "「予約（Bookings）」のチケットに、集合場所と時間が表示されます。",
+  "No. Helmets are required. One comes with every bike.": "いいえ。ヘルメットの着用は必須で、どの自転車にも1つ付いています。",
+  "Tap Need help? on your ticket under Bookings to message or call us, with your location.": "「予約（Bookings）」のチケットで「お困りですか？（Need help?）」をタップすると、現在地を添えてメッセージや電話でご連絡いただけます。",
+  "Things left behind are kept for 14 days. Send us a message below with your booking date and what you left.": "忘れ物は14日間保管しています。下のフォームから、予約日と忘れた物を書いてメッセージをお送りください。"
 }

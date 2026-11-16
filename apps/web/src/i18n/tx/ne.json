@@ -1705,5 +1705,18 @@
   "Farmhouse Night": "फार्म हाउस नाइट",
   "Come to one of our farmhouse nights.": "हाम्रो कुनै फार्म हाउस नाइटमा आउनुहोस्।",
   "For joining a MicroMobility farmhouse night, an evening at the farm for community members and their families. Given once our team checks you in.": "MicroMobility को फार्म हाउस नाइटमा सहभागी भएकोमा, जुन समुदायका सदस्य र उनीहरूका परिवारका लागि फार्ममा एउटा साँझ हो। हाम्रो टोलीले तपाईंलाई चेक इन गरेपछि दिइन्छ।",
-  "Few spots left": "थोरै ठाउँ मात्र बाँकी"
+  "Few spots left": "थोरै ठाउँ मात्र बाँकी",
+  "Rides & bookings": "सवारी र बुकिङ",
+  "How do I book?": "बुकिङ कसरी गर्ने?",
+  "Can I cancel my booking?": "के म मेरो बुकिङ रद्द गर्न सक्छु?",
+  "Where do we meet?": "हामी कहाँ भेट्छौं?",
+  "Do I need my own helmet?": "के मलाई आफ्नै हेलमेट चाहिन्छ?",
+  "What if I need help during a ride?": "सवारीको बेला सहयोग चाहियो भने?",
+  "I left something behind.": "मैले केही छोडें।",
+  "Choose an experience and a date, add who is coming and confirm. Your booking then shows under Bookings.": "अनुभव र मिति छान्नुहोस्, को-को आउँदै हुनुहुन्छ थप्नुहोस् र पुष्टि गर्नुहोस्। त्यसपछि तपाईंको बुकिङ «बुकिङ» मा देखिन्छ।",
+  "Yes. Find it under Bookings and tap Cancel, so someone else can take the place.": "सक्नुहुन्छ। «बुकिङ» मा यसलाई फेला पार्नुहोस् र «रद्द गर्नुहोस्» थिच्नुहोस्, ताकि अरू कसैले त्यो ठाउँ लिन सकून्।",
+  "Your ticket under Bookings shows where and when to meet.": "«बुकिङ» मा तपाईंको टिकटले भेट्ने ठाउँ र समय देखाउँछ।",
+  "No. Helmets are required. One comes with every bike.": "चाहिँदैन। हेलमेट अनिवार्य छ। हरेक साइकलसँग एउटा हेलमेट दिइन्छ।",
+  "Tap Need help? on your ticket under Bookings to message or call us, with your location.": "«बुकिङ» मा आफ्नो टिकटमा «सहयोग चाहिन्छ?» थिच्नुहोस् र आफ्नो लोकेसनसहित हामीलाई सन्देश पठाउनुहोस् वा फोन गर्नुहोस्।",
+  "Things left behind are kept for 14 days. Send us a message below with your booking date and what you left.": "छुटेका सामान 14 दिनसम्म राखिन्छन्। तल आफ्नो बुकिङको मिति र छुटेको सामानबारे हामीलाई सन्देश पठाउनुहोस्।"
 }
