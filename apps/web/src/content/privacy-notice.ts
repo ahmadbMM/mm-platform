@@ -2,7 +2,7 @@
 // (MicromobilityRentalsSystem app.src.html). Do not edit here: change it in the booking app and
 // run the script again, so the two never disagree.
 export type NoticeBlock = { h?: string; p?: string; ul?: string[]; table?: { head: string[]; rows: string[][] } };
-export const PRIVACY_VERSION = "2026-11-15";
+export const PRIVACY_VERSION = "2026-11-18";
 // The last version riders must confirm: an account that confirmed it or any later one is not asked again.
 export const PRIVACY_ASK_FROM = "2026-10-02";
 export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
@@ -124,7 +124,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "The mentorship programme (Community members only): if you register as a mentee, your university, field of study, city, country, starting year, the help you want, your goal and the mentor gender you prefer; if you register as a mentor, where and what you studied, your work, the places you know, how you can help and what you tell us",
-      "Optional: only if you register. A mentee’s university, field of study, city, country, starting year, the help wanted and goal are shown to Community members without their name; the mentor gender they prefer is seen by our staff only. What a mentor tells us is seen by our staff only; a short line about their experience, without their name, is shown to the one student our staff propose them to. Once you both accept, we share your first name and WhatsApp number with that one person. You can step back at any time; we then stop sharing them.",
+      "Optional: only if you register. A mentee’s university and field of study are shown to Community members without their name; their city, country, starting year, the help wanted, their goal and the mentor gender they prefer are seen by our staff only. What a mentor tells us is seen by our staff only; a short line about their experience, without their name, is shown to the one student our staff propose them to. Once you both accept, we share your first name and WhatsApp number with that one person. You can step back at any time; we then stop sharing them.",
       "Matching students starting university with Community members who can help them, and following up on each match"
      ],
      [
@@ -538,7 +538,7 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
      ],
      [
       "برنامج الإرشاد (لأعضاء المجتمع فقط): إن سجّلت كمسترشد: جامعتك وتخصصك ومدينتك ودولتك وسنة بدئك والمساعدة التي تريدها وهدفك وجنس المرشد الذي تفضّله؛ وإن سجّلت كمرشد: أين درست وماذا درست وعملك والأماكن التي تعرفها وكيف يمكنك المساعدة وما تخبرنا به",
-      "اختياري: فقط إذا سجّلت. تُعرض جامعة المسترشد وتخصصه ومدينته ودولته وسنة بدئه والمساعدة التي يريدها وهدفه لأعضاء المجتمع دون اسمه، ولا يرى جنس المرشد الذي يفضّله إلا موظفونا. وما يخبرنا به المرشد لا يراه إلا موظفونا، ويُعرض سطر قصير عن خبرته، دون اسمه، على الطالب الوحيد الذي يقترحه عليه موظفونا. وبعد قبولكما كليكما، نشارك اسمك الأول ورقم واتساب الخاص بك مع ذلك الشخص وحده. ويمكنك الانسحاب في أي وقت، وعندها نتوقف عن مشاركتهما.",
+      "اختياري: فقط إذا سجّلت. تُعرض جامعة المسترشد وتخصصه لأعضاء المجتمع دون اسمه، ولا يرى مدينته ودولته وسنة بدئه والمساعدة التي يريدها وهدفه وجنس المرشد الذي يفضّله إلا موظفونا. وما يخبرنا به المرشد لا يراه إلا موظفونا، ويُعرض سطر قصير عن خبرته، دون اسمه، على الطالب الوحيد الذي يقترحه عليه موظفونا. وبعد قبولكما كليكما، نشارك اسمك الأول ورقم واتساب الخاص بك مع ذلك الشخص وحده. ويمكنك الانسحاب في أي وقت، وعندها نتوقف عن مشاركتهما.",
       "مطابقة الطلاب الذين يبدؤون دراستهم الجامعية مع أعضاء المجتمع القادرين على مساعدتهم، ومتابعة كل مطابقة"
      ],
      [
