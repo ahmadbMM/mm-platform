@@ -458,3 +458,55 @@ test('Arabic: right to left, the code and the ride in Arabic', async ({ page }) 
   await expect(page.locator('#f-code .err')).toHaveText('هذا الرمز غير صالح. تحقّق من الرمز الذي حصلت عليه.');
   expect(errs).toEqual([]);
 });
+
+// The bug hunt of 2026-11-18.
+test('Full, no waitlist: a ride staff closed as fully booked says Fully booked, never that no ride is open', async ({ page }) => {
+  await open(page, '', { saturday_rides: () => json([{ ...RIDE, status: 'closed', bike_slots: '{"_time":"05:45 - 06:15","_fbk":1}' }]) });
+  await expect(page.locator('#state')).toHaveText('Fully booked');
+  await expect(page.locator('#land-notice')).toContainText('See you next Saturday');
+  await expect(page.locator('#land-notice')).not.toContainText('No Saturday ride');
+  await expect(page.locator('#f-code')).toBeHidden();
+  await expect(page.locator('#go')).toBeDisabled();
+});
+
+test('the phone code pickers show the code and the country, never a flag emoji; no lead lines on the account step', async ({ page }) => {
+  await open(page);
+  await code(page);
+  await expect(page.locator('#p-ask')).toBeVisible();
+  await page.click('#ask-yes');
+  await expect(page.locator('#p-signin .lead')).toHaveCount(0);
+  const texts = [...(await page.locator('#cc option, #wacc option').allTextContents()), ...(await page.locator('.cc-face').allTextContents())];
+  expect(texts.length).toBeGreaterThan(10);
+  for (const t of texts) expect(t).not.toMatch(/\p{Extended_Pictographic}|[\u{1F1E6}-\u{1F1FF}]/u);
+  expect(await page.locator('#cc option[value="SA+966"]').first().textContent()).toBe('Saudi Arabia (+966)');
+  await expect(page.locator('#cc-flag, #wacc-flag')).toHaveCount(0);
+});
+
+test('handed to the booking app signed in, the page the browser keeps holds no session for the next person', async ({ page }) => {
+  const { of } = await open(page);
+  // The booking app answers 204: the browser stays on this page, as it would come back to it from its cache.
+  await page.route(BOOKING + '**', (r) => r.fulfill({ status: 204, body: '' }));
+  await bookSignedIn(page);
+  await page.click('#done-open');
+  await expect.poll(() => of('customer_handoff_create').length).toBe(1);
+  await page.click('#done-open', { force: true }).catch(() => {});
+  await page.waitForTimeout(300);
+  expect(of('customer_handoff_create')).toHaveLength(1); // the session went with the code
+  await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pageshow', { persisted: true })));
+  await expect(page.locator('#v-landing')).toBeVisible();
+  await expect(page.locator('#v-done')).toBeHidden();
+  await expect(page.locator('#land-who')).toBeHidden();
+});
+
+test('Urdu takes the Arabic-script faces: no letter-spacing on the small labels, the title in the Arabic face', async ({ page }) => {
+  await open(page, '?lang=ur');
+  await expect(page.locator('html')).toHaveAttribute('lang', 'ur');
+  const st = await page.evaluate(() => {
+    const e = getComputedStyle(document.querySelector('.eyebrow')!), t = getComputedStyle(document.querySelector('.title')!);
+    return { ls: e.letterSpacing, ef: e.fontFamily, tf: t.fontFamily, lh: parseFloat(t.lineHeight) / parseFloat(t.fontSize) };
+  });
+  expect(['0px', 'normal']).toContain(st.ls);
+  expect(st.ef).toMatch(/IBM Plex Sans Arabic/);
+  expect(st.tf).toMatch(/IBM Plex Sans Arabic/);
+  expect(st.lh).toBeGreaterThan(1.3);
+});

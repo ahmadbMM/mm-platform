@@ -359,7 +359,6 @@
      rules file the booking site's staff check reads). ─────────────────────────────────────── */
   var RULES = SH.PHONE_RULES, reCache = {};
   var CC_DIGITS = {}; SH.COUNTRY_CODES.forEach(function (x) { CC_DIGITS[x[0].slice(1)] = true; });
-  function flagOf(iso) { return String.fromCodePoint.apply(null, iso.toUpperCase().split("").map(function (c) { return 0x1F1E6 + c.charCodeAt(0) - 65; })); }
   var dn = {};
   function regionName(iso, fallback) {
     try {
@@ -379,18 +378,19 @@
     try { rest.sort(function (a, b) { return a.n.localeCompare(b.n, lang); }); } catch (e) {}
     return gulf.map(function (x) { return { x: x, n: ccName(x) }; }).concat(rest);
   }
-  var PK = { sel: "#cc", flag: "#cc-flag", code: "#cc-code", input: "#phone" };
-  var WPK = { sel: "#wacc", flag: "#wacc-flag", code: "#wacc-code", input: "#wa" };
+  // The code and the country's name only: no flag emoji (the owner's rule, no emoji anywhere), as the booking app's picker.
+  var PK = { sel: "#cc", code: "#cc-code", input: "#phone" };
+  var WPK = { sel: "#wacc", code: "#wacc-code", input: "#wa" };
   function buildCc() { buildCcOne(PK); buildCcOne(WPK); }
   function buildCcOne(pk) {
     var sel = $(pk.sel), cur = sel.value || "SA+966", on = selOnce(cur);
-    sel.innerHTML = ccList().map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + flagOf(o.x[1]) + " " + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
+    sel.innerHTML = ccList().map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
     if (!sel.value) sel.value = "SA+966";
     ccFace(pk);
   }
   function ccFace(pk) {
     var o = $(pk.sel).selectedOptions[0]; if (!o) return;
-    $(pk.flag).textContent = flagOf(o.getAttribute("data-iso")); $(pk.code).textContent = o.getAttribute("data-cc");
+    $(pk.code).textContent = o.getAttribute("data-cc");
   }
   function ccDigits(pk) { var o = $(pk.sel).selectedOptions[0]; return o ? o.getAttribute("data-cc").slice(1) : "966"; }
   function setCcDigits(k, pk) { var o = $$(pk.sel + " option").filter(function (x) { return x.getAttribute("data-cc") === "+" + k; })[0]; if (o) { $(pk.sel).value = o.value; ccFace(pk); } }

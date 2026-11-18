@@ -43,7 +43,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Perempuan",
   "fixPwHint": "Minimal 8 karakter, dengan satu huruf besar dan satu angka.",
   "authConfirmPassword": "Konfirmasi kata sandi",
-  "rideNewsOpt": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp dan email. Saya bisa berhenti kapan saja.",
+  "rideNewsOpt": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp. Saya bisa berhenti kapan saja.",
   "heardLabel": "Dari mana Anda mengetahui kami?",
   "authSignupBtn": "Buat akun",
   "closeBtn": "Tutup",
@@ -127,7 +127,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Perempuan",
   "fixPwHint": "Sekurang-kurangnya 8 aksara, dengan satu huruf besar dan satu nombor.",
   "authConfirmPassword": "Sahkan kata laluan",
-  "rideNewsOpt": "Hantar berita dan pengumuman kayuhan kepada saya melalui WhatsApp dan e-mel. Saya boleh berhenti pada bila-bila masa.",
+  "rideNewsOpt": "Hantar berita dan pengumuman kayuhan kepada saya melalui WhatsApp. Saya boleh berhenti pada bila-bila masa.",
   "heardLabel": "Bagaimana anda mengetahui tentang kami?",
   "authSignupBtn": "Cipta akaun",
   "closeBtn": "Tutup",
@@ -211,7 +211,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Weiblich",
   "fixPwHint": "Mindestens 8 Zeichen, mit einem Großbuchstaben und einer Zahl.",
   "authConfirmPassword": "Passwort bestätigen",
-  "rideNewsOpt": "Schickt mir Neuigkeiten zu Ausfahrten und Ankündigungen per WhatsApp und E-Mail. Ich kann das jederzeit beenden.",
+  "rideNewsOpt": "Schickt mir Neuigkeiten zu Ausfahrten und Ankündigungen per WhatsApp. Ich kann das jederzeit beenden.",
   "heardLabel": "Wie hast du von uns erfahren?",
   "authSignupBtn": "Konto erstellen",
   "closeBtn": "Schließen",
@@ -295,7 +295,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Mujer",
   "fixPwHint": "Al menos 8 caracteres, con una mayúscula y un número.",
   "authConfirmPassword": "Confirmar contraseña",
-  "rideNewsOpt": "Envíenme novedades y anuncios de recorridos por WhatsApp y correo electrónico. Puedo darme de baja en cualquier momento.",
+  "rideNewsOpt": "Envíenme novedades y anuncios de recorridos por WhatsApp. Puedo darme de baja en cualquier momento.",
   "heardLabel": "¿Cómo nos conociste?",
   "authSignupBtn": "Crear cuenta",
   "closeBtn": "Cerrar",
@@ -368,7 +368,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Femme",
   "fixPwHint": "Au moins 8 caractères, dont une majuscule et un chiffre.",
   "authConfirmPassword": "Confirmer le mot de passe",
-  "rideNewsOpt": "Envoyez-moi les actualités et annonces des sorties par WhatsApp et e-mail. Je peux arrêter à tout moment.",
+  "rideNewsOpt": "Envoyez-moi les actualités et annonces des sorties par WhatsApp. Je peux arrêter à tout moment.",
   "heardLabel": "Comment nous avez-vous connus ?",
   "authSignupBtn": "Créer un compte",
   "closeBtn": "Fermer",
@@ -441,7 +441,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Feminino",
   "fixPwHint": "Pelo menos 8 caracteres, com uma letra maiúscula e um número.",
   "authConfirmPassword": "Confirmar senha",
-  "rideNewsOpt": "Envie-me novidades e anúncios dos passeios por WhatsApp e e-mail. Posso cancelar a qualquer momento.",
+  "rideNewsOpt": "Envie-me novidades e anúncios dos passeios por WhatsApp. Posso cancelar a qualquer momento.",
   "heardLabel": "Como você nos conheceu?",
   "authSignupBtn": "Criar conta",
   "closeBtn": "Fechar",
@@ -514,7 +514,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Babae",
   "fixPwHint": "Hindi bababa sa 8 character, may isang malaking titik at isang numero.",
   "authConfirmPassword": "Kumpirmahin ang Password",
-  "rideNewsOpt": "Padalhan ako ng mga balita at anunsyo tungkol sa ride sa WhatsApp at email. Puwede ko itong ihinto anumang oras.",
+  "rideNewsOpt": "Padalhan ako ng mga balita at anunsyo tungkol sa ride sa WhatsApp. Puwede ko itong ihinto anumang oras.",
   "heardLabel": "Paano mo kami nalaman?",
   "authSignupBtn": "Gumawa ng account",
   "closeBtn": "Isara",
@@ -587,7 +587,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Женский",
   "fixPwHint": "Не менее 8 символов, с заглавной буквой и цифрой.",
   "authConfirmPassword": "Повторите пароль",
-  "rideNewsOpt": "Присылайте мне новости о заездах и объявления в WhatsApp и по эл. почте. Я могу отказаться в любой момент.",
+  "rideNewsOpt": "Присылайте мне новости о заездах и объявления в WhatsApp. Я могу отказаться в любой момент.",
   "heardLabel": "Как вы о нас узнали?",
   "authSignupBtn": "Создать аккаунт",
   "closeBtn": "Закрыть",
@@ -671,7 +671,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "عورت",
   "fixPwHint": "کم از کم 8 حروف، جن میں ایک بڑا حرف اور ایک ہندسہ ہو۔",
   "authConfirmPassword": "پاس ورڈ کی تصدیق کریں",
-  "rideNewsOpt": "مجھے رائیڈز کی خبریں اور اعلانات WhatsApp اور ای میل پر بھیجیں۔ میں کسی بھی وقت بند کر سکتا/سکتی ہوں۔",
+  "rideNewsOpt": "مجھے رائیڈز کی خبریں اور اعلانات WhatsApp پر بھیجیں۔ میں کسی بھی وقت بند کر سکتا/سکتی ہوں۔",
   "heardLabel": "آپ کو ہمارے بارے میں کیسے پتا چلا؟",
   "authSignupBtn": "اکاؤنٹ بنائیں",
   "closeBtn": "بند کریں",
@@ -744,7 +744,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "महिला",
   "fixPwHint": "कम से कम 8 अक्षर, जिनमें एक बड़ा अक्षर और एक अंक हो।",
   "authConfirmPassword": "पासवर्ड की पुष्टि करें",
-  "rideNewsOpt": "मुझे राइड की खबरें और घोषणाएँ WhatsApp और ईमेल पर भेजें। मैं कभी भी बंद कर सकता/सकती हूँ।",
+  "rideNewsOpt": "मुझे राइड की खबरें और घोषणाएँ WhatsApp पर भेजें। मैं कभी भी बंद कर सकता/सकती हूँ।",
   "heardLabel": "आपको हमारे बारे में कैसे पता चला?",
   "authSignupBtn": "खाता बनाएँ",
   "closeBtn": "बंद करें",
@@ -817,7 +817,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "महिला",
   "fixPwHint": "कम्तीमा 8 अक्षर, एउटा ठूलो अक्षर र एउटा अंकसहित।",
   "authConfirmPassword": "पासवर्ड पुष्टि गर्नुहोस्",
-  "rideNewsOpt": "मलाई राइडका खबर र घोषणाहरू WhatsApp र इमेलमा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
+  "rideNewsOpt": "मलाई राइडका खबर र घोषणाहरू WhatsApp मा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
   "heardLabel": "तपाईंले हाम्रो बारेमा कसरी थाहा पाउनुभयो?",
   "authSignupBtn": "खाता बनाउनुहोस्",
   "closeBtn": "बन्द गर्नुहोस्",
@@ -890,7 +890,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "নারী",
   "fixPwHint": "কমপক্ষে 8টি অক্ষর, একটি বড় হাতের অক্ষর ও একটি সংখ্যাসহ।",
   "authConfirmPassword": "পাসওয়ার্ড নিশ্চিত করুন",
-  "rideNewsOpt": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp ও ইমেইলে পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
+  "rideNewsOpt": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp-এ পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
   "heardLabel": "আপনি আমাদের সম্পর্কে কীভাবে জানলেন?",
   "authSignupBtn": "অ্যাকাউন্ট তৈরি করুন",
   "closeBtn": "বন্ধ করুন",
@@ -963,7 +963,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "女",
   "fixPwHint": "至少 8 个字符，包含一个大写字母和一个数字。",
   "authConfirmPassword": "确认密码",
-  "rideNewsOpt": "通过 WhatsApp 和邮件向我发送骑行资讯与公告。我可以随时停止接收。",
+  "rideNewsOpt": "通过 WhatsApp 向我发送骑行资讯与公告。我可以随时停止接收。",
   "heardLabel": "您是如何了解我们的？",
   "authSignupBtn": "创建账户",
   "closeBtn": "关闭",
@@ -1047,7 +1047,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "女性",
   "fixPwHint": "8文字以上で、大文字と数字をそれぞれ1つ以上含めてください。",
   "authConfirmPassword": "パスワード（確認）",
-  "rideNewsOpt": "ライドのニュースやお知らせをWhatsAppとメールで受け取る。いつでも配信を停止できます。",
+  "rideNewsOpt": "ライドのニュースやお知らせをWhatsAppで受け取る。いつでも配信を停止できます。",
   "heardLabel": "私たちを知ったきっかけは？",
   "authSignupBtn": "アカウントを作成",
   "closeBtn": "閉じる",
@@ -3726,7 +3726,6 @@ var MMAccount = (function () {
      rules file the booking site's staff check reads). ─────────────────────────────────────── */
   var RULES = SH.PHONE_RULES, reCache = {};
   var CC_DIGITS = {}; SH.COUNTRY_CODES.forEach(function (x) { CC_DIGITS[x[0].slice(1)] = true; });
-  function flagOf(iso) { return String.fromCodePoint.apply(null, iso.toUpperCase().split("").map(function (c) { return 0x1F1E6 + c.charCodeAt(0) - 65; })); }
   var dn = {};
   function regionName(iso, fallback) {
     try {
@@ -3746,18 +3745,19 @@ var MMAccount = (function () {
     try { rest.sort(function (a, b) { return a.n.localeCompare(b.n, lang); }); } catch (e) {}
     return gulf.map(function (x) { return { x: x, n: ccName(x) }; }).concat(rest);
   }
-  var PK = { sel: "#cc", flag: "#cc-flag", code: "#cc-code", input: "#phone" };
-  var WPK = { sel: "#wacc", flag: "#wacc-flag", code: "#wacc-code", input: "#wa" };
+  // The code and the country's name only: no flag emoji (the owner's rule, no emoji anywhere), as the booking app's picker.
+  var PK = { sel: "#cc", code: "#cc-code", input: "#phone" };
+  var WPK = { sel: "#wacc", code: "#wacc-code", input: "#wa" };
   function buildCc() { buildCcOne(PK); buildCcOne(WPK); }
   function buildCcOne(pk) {
     var sel = $(pk.sel), cur = sel.value || "SA+966", on = selOnce(cur);
-    sel.innerHTML = ccList().map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + flagOf(o.x[1]) + " " + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
+    sel.innerHTML = ccList().map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
     if (!sel.value) sel.value = "SA+966";
     ccFace(pk);
   }
   function ccFace(pk) {
     var o = $(pk.sel).selectedOptions[0]; if (!o) return;
-    $(pk.flag).textContent = flagOf(o.getAttribute("data-iso")); $(pk.code).textContent = o.getAttribute("data-cc");
+    $(pk.code).textContent = o.getAttribute("data-cc");
   }
   function ccDigits(pk) { var o = $(pk.sel).selectedOptions[0]; return o ? o.getAttribute("data-cc").slice(1) : "966"; }
   function setCcDigits(k, pk) { var o = $$(pk.sel + " option").filter(function (x) { return x.getAttribute("data-cc") === "+" + k; })[0]; if (o) { $(pk.sel).value = o.value; ccFace(pk); } }

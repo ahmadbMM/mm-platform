@@ -67,8 +67,8 @@ body {
   font-family: "MM Riyal", var(--f-body), var(--f-ar); font-size: 15px; line-height: 1.5;
   -webkit-font-smoothing: antialiased; overflow-x: hidden;
 }
-html[lang="ar"] body { font-family: "MM Riyal", var(--f-ar); }
-html[lang="ar"] p { line-height: 1.75; }
+html:is([lang="ar"], [lang="ur"]) body { font-family: "MM Riyal", var(--f-ar); }
+html:is([lang="ar"], [lang="ur"]) p { line-height: 1.75; }
 body.modal-open { overflow: hidden; }
 .defs { position: absolute; width: 0; height: 0; overflow: hidden; }
 a { color: inherit; }
@@ -120,10 +120,11 @@ select.lang { appearance: none; -webkit-appearance: none; font-family: inherit; 
 .hero { position: relative; padding: 18px 16px 22px; background: linear-gradient(180deg, var(--bg), var(--wash)); overflow: hidden; display: grid; gap: 10px; }
 .cab-art { position: absolute; inset-inline-end: -30px; top: -26px; width: 170px; height: 170px; color: var(--brand); opacity: .09; pointer-events: none; }
 .eyebrow { margin: 0; position: relative; font: 800 11.5px var(--f-display); letter-spacing: .09em; text-transform: uppercase; color: var(--accent); }
-html[lang="ar"] .eyebrow { font-family: var(--f-ar); font-weight: 700; letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) .eyebrow { font-family: var(--f-ar); font-weight: 700; letter-spacing: 0; font-size: 13px; }
 .title { margin: 0; position: relative; font-family: var(--f-display); font-stretch: 125%; font-weight: 900; font-size: clamp(27px, 8.4vw, 40px); line-height: 1.02; text-transform: uppercase; text-wrap: balance; overflow-wrap: anywhere; }
 .title em { font-style: normal; color: var(--accent); }
-html[lang="ar"] .title { font-family: var(--f-ar); font-weight: 700; font-size: clamp(30px, 8.8vw, 42px); line-height: 1.25; }
+html:is([lang="ar"], [lang="ur"]) .title { font-family: var(--f-ar); font-weight: 700; font-size: clamp(30px, 8.8vw, 42px); line-height: 1.25; }
+html[lang="ur"] .title { line-height: 1.4; } /* Urdu's taller letters need the room */
 .lede { margin: 0; position: relative; color: var(--mute); font-size: 15px; max-width: 46ch; }
 
 .d-body { padding: 16px; display: grid; gap: 14px; align-content: start; min-width: 0; }
@@ -154,11 +155,11 @@ html[lang="ar"] .title { font-family: var(--f-ar); font-weight: 700; font-size: 
   border: 0; border-radius: var(--r-pill); background: var(--brand); color: var(--on-brand); text-decoration: none; text-align: center;
   font: 800 15px var(--f-display); font-stretch: 110%; letter-spacing: .02em; text-transform: uppercase;
 }
-html[lang="ar"] .d-btn { font-family: var(--f-ar); font-weight: 700; letter-spacing: 0; }
+html:is([lang="ar"], [lang="ur"]) .d-btn { font-family: var(--f-ar); font-weight: 700; letter-spacing: 0; }
 .d-btn:hover { filter: brightness(1.06); }
 .d-btn[disabled] { background: var(--line); color: var(--mute); cursor: not-allowed; filter: none; }
 .d-btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); border-radius: var(--r-pill); text-transform: none; font: 600 14px var(--f-body); letter-spacing: 0; min-height: 44px; }
-html[lang="ar"] .d-btn.ghost { font-family: var(--f-ar); }
+html:is([lang="ar"], [lang="ur"]) .d-btn.ghost { font-family: var(--f-ar); }
 .d-btn .spinner, .d-btn .btn-busy { display: none; }
 .d-btn.loading { pointer-events: none; }
 .d-btn.loading .btn-label { display: none; }
@@ -173,10 +174,10 @@ html[lang="ar"] .d-btn.ghost { font-family: var(--f-ar); }
 .steps li.on { background: var(--brand); }
 .st-head { padding: 14px 16px 2px; display: grid; gap: 2px; }
 .st-head small { font: 800 11px var(--f-display); letter-spacing: .09em; text-transform: uppercase; color: var(--mute); }
-html[lang="ar"] .st-head small { font-family: var(--f-ar); letter-spacing: 0; font-size: 12.5px; }
+html:is([lang="ar"], [lang="ur"]) .st-head small { font-family: var(--f-ar); letter-spacing: 0; font-size: 12.5px; }
 .st-title { margin: 0; font-family: var(--f-display); font-stretch: 115%; font-weight: 900; font-size: 23px; text-transform: uppercase; line-height: 1.1; }
 .st-title:focus { outline: none; }
-html[lang="ar"] .st-title { font-family: var(--f-ar); font-weight: 700; font-size: 25px; }
+html:is([lang="ar"], [lang="ur"]) .st-title { font-family: var(--f-ar); font-weight: 700; font-size: 25px; }
 .step { display: grid; gap: 14px; min-width: 0; }
 .panel { display: grid; gap: 14px; min-width: 0; }
 .lead { margin: 0; color: var(--mute); font-size: 14.5px; }
@@ -307,7 +308,7 @@ html[dir="rtl"] .opt { padding: 11px 12px 11px 40px; }
   .landing .hero { padding: 40px 36px; align-content: start; gap: 16px; }
   .landing .cab-art { width: 300px; height: 300px; inset-inline-end: -60px; top: -40px; }
   .landing .title { font-size: clamp(36px, 3.5vw, 50px); }
-  html[lang="ar"] .landing .title { font-size: clamp(40px, 4.4vw, 56px); }
+  html:is([lang="ar"], [lang="ur"]) .landing .title { font-size: clamp(40px, 4.4vw, 56px); }
   .landing .lede { font-size: 16.5px; }
   .landing .d-body { padding: 32px 34px; background: var(--surface); border-inline-start: 1px solid var(--line); }
   .steps-view { max-width: 600px; margin: 0 auto; }
@@ -369,13 +370,13 @@ html[dir="rtl"] .opt { padding: 11px 12px 11px 40px; }
    the time and how it is paid; Change and Remove while the key is not handed. */
 .mine { display: grid; gap: 10px; }
 .sec-h { margin: 0; font: 800 12px var(--f-display); letter-spacing: .09em; text-transform: uppercase; color: var(--mute); }
-html[lang="ar"] .sec-h { font-family: var(--f-ar); letter-spacing: 0; font-size: 13.5px; }
+html:is([lang="ar"], [lang="ur"]) .sec-h { font-family: var(--f-ar); letter-spacing: 0; font-size: 13.5px; }
 .mine-list { display: grid; gap: 12px; }
 .desk { display: grid; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: var(--r-card); background: var(--surface); box-shadow: 0 10px 24px -20px rgba(0, 0, 0, .5); }
 .desk-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .desk-head { display: grid; gap: 2px; min-width: 0; }
 .desk-h { margin: 0; font: 900 19px var(--f-display); font-stretch: 112%; text-transform: uppercase; line-height: 1.1; }
-html[lang="ar"] .desk-h { font-family: var(--f-ar); font-weight: 700; font-size: 19px; text-transform: none; }
+html:is([lang="ar"], [lang="ur"]) .desk-h { font-family: var(--f-ar); font-weight: 700; font-size: 19px; text-transform: none; }
 .desk-when { margin: 0; color: var(--accent); font-weight: 700; font-size: 14px; }
 .desk-qr { flex: none; display: block; width: 148px; height: 148px; padding: 0; border-radius: 10px; overflow: hidden; border: 1px solid rgba(26, 25, 25, .14); background: #fff; line-height: 0; }
 .desk-qr canvas { display: block; width: 148px; height: 148px; image-rendering: pixelated; }
@@ -407,7 +408,7 @@ html[lang="ar"] .desk-h { font-family: var(--f-ar); font-weight: 700; font-size:
 .chg-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid var(--brand); border-radius: var(--r-ctl); background: var(--wash); }
 .chg-title { margin: 2px 0 0; font: 900 21px var(--f-display); font-stretch: 112%; text-transform: uppercase; line-height: 1.1; }
 .chg-title:focus { outline: none; }
-html[lang="ar"] .chg-title { font-family: var(--f-ar); font-weight: 700; text-transform: none; }
+html:is([lang="ar"], [lang="ur"]) .chg-title { font-family: var(--f-ar); font-weight: 700; text-transform: none; }
 .d-btn.ghost.sm { width: auto; min-height: 38px; padding: 4px 16px; flex: none; }
 .who .who-out { margin-inline-start: 6px; font-size: 13.5px; }
 .names { display: grid; gap: 12px; }
@@ -933,7 +934,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Perempuan",
   "fixPwHint": "Minimal 8 karakter, dengan satu huruf besar dan satu angka.",
   "authConfirmPassword": "Konfirmasi kata sandi",
-  "rideNewsOpt": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp dan email. Saya bisa berhenti kapan saja.",
+  "rideNewsOpt": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp. Saya bisa berhenti kapan saja.",
   "heardLabel": "Dari mana Anda mengetahui kami?",
   "authSignupBtn": "Buat akun",
   "closeBtn": "Tutup",
@@ -1017,7 +1018,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Perempuan",
   "fixPwHint": "Sekurang-kurangnya 8 aksara, dengan satu huruf besar dan satu nombor.",
   "authConfirmPassword": "Sahkan kata laluan",
-  "rideNewsOpt": "Hantar berita dan pengumuman kayuhan kepada saya melalui WhatsApp dan e-mel. Saya boleh berhenti pada bila-bila masa.",
+  "rideNewsOpt": "Hantar berita dan pengumuman kayuhan kepada saya melalui WhatsApp. Saya boleh berhenti pada bila-bila masa.",
   "heardLabel": "Bagaimana anda mengetahui tentang kami?",
   "authSignupBtn": "Cipta akaun",
   "closeBtn": "Tutup",
@@ -1101,7 +1102,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Weiblich",
   "fixPwHint": "Mindestens 8 Zeichen, mit einem Großbuchstaben und einer Zahl.",
   "authConfirmPassword": "Passwort bestätigen",
-  "rideNewsOpt": "Schickt mir Neuigkeiten zu Ausfahrten und Ankündigungen per WhatsApp und E-Mail. Ich kann das jederzeit beenden.",
+  "rideNewsOpt": "Schickt mir Neuigkeiten zu Ausfahrten und Ankündigungen per WhatsApp. Ich kann das jederzeit beenden.",
   "heardLabel": "Wie hast du von uns erfahren?",
   "authSignupBtn": "Konto erstellen",
   "closeBtn": "Schließen",
@@ -1185,7 +1186,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Mujer",
   "fixPwHint": "Al menos 8 caracteres, con una mayúscula y un número.",
   "authConfirmPassword": "Confirmar contraseña",
-  "rideNewsOpt": "Envíenme novedades y anuncios de recorridos por WhatsApp y correo electrónico. Puedo darme de baja en cualquier momento.",
+  "rideNewsOpt": "Envíenme novedades y anuncios de recorridos por WhatsApp. Puedo darme de baja en cualquier momento.",
   "heardLabel": "¿Cómo nos conociste?",
   "authSignupBtn": "Crear cuenta",
   "closeBtn": "Cerrar",
@@ -1258,7 +1259,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Femme",
   "fixPwHint": "Au moins 8 caractères, dont une majuscule et un chiffre.",
   "authConfirmPassword": "Confirmer le mot de passe",
-  "rideNewsOpt": "Envoyez-moi les actualités et annonces des sorties par WhatsApp et e-mail. Je peux arrêter à tout moment.",
+  "rideNewsOpt": "Envoyez-moi les actualités et annonces des sorties par WhatsApp. Je peux arrêter à tout moment.",
   "heardLabel": "Comment nous avez-vous connus ?",
   "authSignupBtn": "Créer un compte",
   "closeBtn": "Fermer",
@@ -1331,7 +1332,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Feminino",
   "fixPwHint": "Pelo menos 8 caracteres, com uma letra maiúscula e um número.",
   "authConfirmPassword": "Confirmar senha",
-  "rideNewsOpt": "Envie-me novidades e anúncios dos passeios por WhatsApp e e-mail. Posso cancelar a qualquer momento.",
+  "rideNewsOpt": "Envie-me novidades e anúncios dos passeios por WhatsApp. Posso cancelar a qualquer momento.",
   "heardLabel": "Como você nos conheceu?",
   "authSignupBtn": "Criar conta",
   "closeBtn": "Fechar",
@@ -1404,7 +1405,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Babae",
   "fixPwHint": "Hindi bababa sa 8 character, may isang malaking titik at isang numero.",
   "authConfirmPassword": "Kumpirmahin ang Password",
-  "rideNewsOpt": "Padalhan ako ng mga balita at anunsyo tungkol sa ride sa WhatsApp at email. Puwede ko itong ihinto anumang oras.",
+  "rideNewsOpt": "Padalhan ako ng mga balita at anunsyo tungkol sa ride sa WhatsApp. Puwede ko itong ihinto anumang oras.",
   "heardLabel": "Paano mo kami nalaman?",
   "authSignupBtn": "Gumawa ng account",
   "closeBtn": "Isara",
@@ -1477,7 +1478,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Женский",
   "fixPwHint": "Не менее 8 символов, с заглавной буквой и цифрой.",
   "authConfirmPassword": "Повторите пароль",
-  "rideNewsOpt": "Присылайте мне новости о заездах и объявления в WhatsApp и по эл. почте. Я могу отказаться в любой момент.",
+  "rideNewsOpt": "Присылайте мне новости о заездах и объявления в WhatsApp. Я могу отказаться в любой момент.",
   "heardLabel": "Как вы о нас узнали?",
   "authSignupBtn": "Создать аккаунт",
   "closeBtn": "Закрыть",
@@ -1561,7 +1562,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "عورت",
   "fixPwHint": "کم از کم 8 حروف، جن میں ایک بڑا حرف اور ایک ہندسہ ہو۔",
   "authConfirmPassword": "پاس ورڈ کی تصدیق کریں",
-  "rideNewsOpt": "مجھے رائیڈز کی خبریں اور اعلانات WhatsApp اور ای میل پر بھیجیں۔ میں کسی بھی وقت بند کر سکتا/سکتی ہوں۔",
+  "rideNewsOpt": "مجھے رائیڈز کی خبریں اور اعلانات WhatsApp پر بھیجیں۔ میں کسی بھی وقت بند کر سکتا/سکتی ہوں۔",
   "heardLabel": "آپ کو ہمارے بارے میں کیسے پتا چلا؟",
   "authSignupBtn": "اکاؤنٹ بنائیں",
   "closeBtn": "بند کریں",
@@ -1634,7 +1635,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "महिला",
   "fixPwHint": "कम से कम 8 अक्षर, जिनमें एक बड़ा अक्षर और एक अंक हो।",
   "authConfirmPassword": "पासवर्ड की पुष्टि करें",
-  "rideNewsOpt": "मुझे राइड की खबरें और घोषणाएँ WhatsApp और ईमेल पर भेजें। मैं कभी भी बंद कर सकता/सकती हूँ।",
+  "rideNewsOpt": "मुझे राइड की खबरें और घोषणाएँ WhatsApp पर भेजें। मैं कभी भी बंद कर सकता/सकती हूँ।",
   "heardLabel": "आपको हमारे बारे में कैसे पता चला?",
   "authSignupBtn": "खाता बनाएँ",
   "closeBtn": "बंद करें",
@@ -1707,7 +1708,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "महिला",
   "fixPwHint": "कम्तीमा 8 अक्षर, एउटा ठूलो अक्षर र एउटा अंकसहित।",
   "authConfirmPassword": "पासवर्ड पुष्टि गर्नुहोस्",
-  "rideNewsOpt": "मलाई राइडका खबर र घोषणाहरू WhatsApp र इमेलमा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
+  "rideNewsOpt": "मलाई राइडका खबर र घोषणाहरू WhatsApp मा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
   "heardLabel": "तपाईंले हाम्रो बारेमा कसरी थाहा पाउनुभयो?",
   "authSignupBtn": "खाता बनाउनुहोस्",
   "closeBtn": "बन्द गर्नुहोस्",
@@ -1780,7 +1781,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "নারী",
   "fixPwHint": "কমপক্ষে 8টি অক্ষর, একটি বড় হাতের অক্ষর ও একটি সংখ্যাসহ।",
   "authConfirmPassword": "পাসওয়ার্ড নিশ্চিত করুন",
-  "rideNewsOpt": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp ও ইমেইলে পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
+  "rideNewsOpt": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp-এ পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
   "heardLabel": "আপনি আমাদের সম্পর্কে কীভাবে জানলেন?",
   "authSignupBtn": "অ্যাকাউন্ট তৈরি করুন",
   "closeBtn": "বন্ধ করুন",
@@ -1853,7 +1854,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "女",
   "fixPwHint": "至少 8 个字符，包含一个大写字母和一个数字。",
   "authConfirmPassword": "确认密码",
-  "rideNewsOpt": "通过 WhatsApp 和邮件向我发送骑行资讯与公告。我可以随时停止接收。",
+  "rideNewsOpt": "通过 WhatsApp 向我发送骑行资讯与公告。我可以随时停止接收。",
   "heardLabel": "您是如何了解我们的？",
   "authSignupBtn": "创建账户",
   "closeBtn": "关闭",
@@ -1937,7 +1938,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "女性",
   "fixPwHint": "8文字以上で、大文字と数字をそれぞれ1つ以上含めてください。",
   "authConfirmPassword": "パスワード（確認）",
-  "rideNewsOpt": "ライドのニュースやお知らせをWhatsAppとメールで受け取る。いつでも配信を停止できます。",
+  "rideNewsOpt": "ライドのニュースやお知らせをWhatsAppで受け取る。いつでも配信を停止できます。",
   "heardLabel": "私たちを知ったきっかけは？",
   "authSignupBtn": "アカウントを作成",
   "closeBtn": "閉じる",

@@ -110,11 +110,34 @@ test.describe('@webkit Petromin form, 2026-11-11', () => {
   });
 
   test('no night to offer, or no answer: the WhatsApp line is beside the message', async ({ page }) => {
-    await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.abort());
+    await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([])));
+    await page.goto('/petromin?lang=en');
+    await expect(page.locator('#sessions .sessions-empty')).toHaveText('No upcoming sessions');
+    await expect(page.locator('#sessions a.sessions-help')).toHaveAttribute('href', /wa\.me\/966566668818/);
+    await expect(page.locator('#sessions-retry')).toHaveCount(0);
+  });
+
+  // 2026-11-18 bug hunt: a calendar that never answered read as "No upcoming sessions" once Continue hid the banner, and
+  // nothing asked again.
+  test('no answer from the calendar: the night step says so, asks again on its own and with Try again', async ({ page }) => {
+    let fail = true, asked = 0;
+    await page.route('**/rest/v1/rpc/rider_sessions', (r) => { asked++; return fail ? r.abort() : r.fulfill(json([S1])); });
     await page.goto('/petromin?lang=en');
     await expect(page.locator('#banner .banner-text')).toHaveText('Could not reach the server');
-    await expect(page.locator('#sessions .sessions-empty')).toHaveText('No upcoming sessions');
-    await expect(page.locator('#sessions .sessions-help')).toHaveAttribute('href', /wa\.me\/966566668818/);
+    await expect.poll(() => asked).toBe(1);
+    // Continue to the night: asked once more by itself, and still no answer
+    await page.click('#companies .company[data-v="Petromin"]');
+    await page.click('#next');
+    await expect.poll(() => asked).toBe(2);
+    await expect(page.locator('#sessions .sessions-empty')).toHaveText('Could not reach the server');
+    await expect(page.locator('#sessions')).not.toContainText('No upcoming sessions');
+    await expect(page.locator('#sessions a.sessions-help')).toHaveAttribute('href', /wa\.me\/966566668818/);
+    // Try again, now answered: the nights are there
+    fail = false;
+    await page.click('#sessions-retry');
+    await expect(page.locator('#sessions .session')).toHaveCount(1);
+    await expect(page.locator('#sessions-retry')).toHaveCount(0);
+    expect(asked).toBe(3);
   });
 
   test('a refusal the form does not know is not called a lost connection, and the second offers WhatsApp', async ({ page }) => {

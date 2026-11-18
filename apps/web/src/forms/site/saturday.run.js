@@ -43,7 +43,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Perempuan",
   "fixPwHint": "Minimal 8 karakter, dengan satu huruf besar dan satu angka.",
   "authConfirmPassword": "Konfirmasi kata sandi",
-  "rideNewsOpt": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp dan email. Saya bisa berhenti kapan saja.",
+  "rideNewsOpt": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp. Saya bisa berhenti kapan saja.",
   "heardLabel": "Dari mana Anda mengetahui kami?",
   "authSignupBtn": "Buat akun",
   "closeBtn": "Tutup",
@@ -127,7 +127,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Perempuan",
   "fixPwHint": "Sekurang-kurangnya 8 aksara, dengan satu huruf besar dan satu nombor.",
   "authConfirmPassword": "Sahkan kata laluan",
-  "rideNewsOpt": "Hantar berita dan pengumuman kayuhan kepada saya melalui WhatsApp dan e-mel. Saya boleh berhenti pada bila-bila masa.",
+  "rideNewsOpt": "Hantar berita dan pengumuman kayuhan kepada saya melalui WhatsApp. Saya boleh berhenti pada bila-bila masa.",
   "heardLabel": "Bagaimana anda mengetahui tentang kami?",
   "authSignupBtn": "Cipta akaun",
   "closeBtn": "Tutup",
@@ -211,7 +211,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Weiblich",
   "fixPwHint": "Mindestens 8 Zeichen, mit einem Großbuchstaben und einer Zahl.",
   "authConfirmPassword": "Passwort bestätigen",
-  "rideNewsOpt": "Schickt mir Neuigkeiten zu Ausfahrten und Ankündigungen per WhatsApp und E-Mail. Ich kann das jederzeit beenden.",
+  "rideNewsOpt": "Schickt mir Neuigkeiten zu Ausfahrten und Ankündigungen per WhatsApp. Ich kann das jederzeit beenden.",
   "heardLabel": "Wie hast du von uns erfahren?",
   "authSignupBtn": "Konto erstellen",
   "closeBtn": "Schließen",
@@ -295,7 +295,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Mujer",
   "fixPwHint": "Al menos 8 caracteres, con una mayúscula y un número.",
   "authConfirmPassword": "Confirmar contraseña",
-  "rideNewsOpt": "Envíenme novedades y anuncios de recorridos por WhatsApp y correo electrónico. Puedo darme de baja en cualquier momento.",
+  "rideNewsOpt": "Envíenme novedades y anuncios de recorridos por WhatsApp. Puedo darme de baja en cualquier momento.",
   "heardLabel": "¿Cómo nos conociste?",
   "authSignupBtn": "Crear cuenta",
   "closeBtn": "Cerrar",
@@ -368,7 +368,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Femme",
   "fixPwHint": "Au moins 8 caractères, dont une majuscule et un chiffre.",
   "authConfirmPassword": "Confirmer le mot de passe",
-  "rideNewsOpt": "Envoyez-moi les actualités et annonces des sorties par WhatsApp et e-mail. Je peux arrêter à tout moment.",
+  "rideNewsOpt": "Envoyez-moi les actualités et annonces des sorties par WhatsApp. Je peux arrêter à tout moment.",
   "heardLabel": "Comment nous avez-vous connus ?",
   "authSignupBtn": "Créer un compte",
   "closeBtn": "Fermer",
@@ -441,7 +441,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Feminino",
   "fixPwHint": "Pelo menos 8 caracteres, com uma letra maiúscula e um número.",
   "authConfirmPassword": "Confirmar senha",
-  "rideNewsOpt": "Envie-me novidades e anúncios dos passeios por WhatsApp e e-mail. Posso cancelar a qualquer momento.",
+  "rideNewsOpt": "Envie-me novidades e anúncios dos passeios por WhatsApp. Posso cancelar a qualquer momento.",
   "heardLabel": "Como você nos conheceu?",
   "authSignupBtn": "Criar conta",
   "closeBtn": "Fechar",
@@ -514,7 +514,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Babae",
   "fixPwHint": "Hindi bababa sa 8 character, may isang malaking titik at isang numero.",
   "authConfirmPassword": "Kumpirmahin ang Password",
-  "rideNewsOpt": "Padalhan ako ng mga balita at anunsyo tungkol sa ride sa WhatsApp at email. Puwede ko itong ihinto anumang oras.",
+  "rideNewsOpt": "Padalhan ako ng mga balita at anunsyo tungkol sa ride sa WhatsApp. Puwede ko itong ihinto anumang oras.",
   "heardLabel": "Paano mo kami nalaman?",
   "authSignupBtn": "Gumawa ng account",
   "closeBtn": "Isara",
@@ -587,7 +587,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Женский",
   "fixPwHint": "Не менее 8 символов, с заглавной буквой и цифрой.",
   "authConfirmPassword": "Повторите пароль",
-  "rideNewsOpt": "Присылайте мне новости о заездах и объявления в WhatsApp и по эл. почте. Я могу отказаться в любой момент.",
+  "rideNewsOpt": "Присылайте мне новости о заездах и объявления в WhatsApp. Я могу отказаться в любой момент.",
   "heardLabel": "Как вы о нас узнали?",
   "authSignupBtn": "Создать аккаунт",
   "closeBtn": "Закрыть",
@@ -671,7 +671,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "عورت",
   "fixPwHint": "کم از کم 8 حروف، جن میں ایک بڑا حرف اور ایک ہندسہ ہو۔",
   "authConfirmPassword": "پاس ورڈ کی تصدیق کریں",
-  "rideNewsOpt": "مجھے رائیڈز کی خبریں اور اعلانات WhatsApp اور ای میل پر بھیجیں۔ میں کسی بھی وقت بند کر سکتا/سکتی ہوں۔",
+  "rideNewsOpt": "مجھے رائیڈز کی خبریں اور اعلانات WhatsApp پر بھیجیں۔ میں کسی بھی وقت بند کر سکتا/سکتی ہوں۔",
   "heardLabel": "آپ کو ہمارے بارے میں کیسے پتا چلا؟",
   "authSignupBtn": "اکاؤنٹ بنائیں",
   "closeBtn": "بند کریں",
@@ -744,7 +744,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "महिला",
   "fixPwHint": "कम से कम 8 अक्षर, जिनमें एक बड़ा अक्षर और एक अंक हो।",
   "authConfirmPassword": "पासवर्ड की पुष्टि करें",
-  "rideNewsOpt": "मुझे राइड की खबरें और घोषणाएँ WhatsApp और ईमेल पर भेजें। मैं कभी भी बंद कर सकता/सकती हूँ।",
+  "rideNewsOpt": "मुझे राइड की खबरें और घोषणाएँ WhatsApp पर भेजें। मैं कभी भी बंद कर सकता/सकती हूँ।",
   "heardLabel": "आपको हमारे बारे में कैसे पता चला?",
   "authSignupBtn": "खाता बनाएँ",
   "closeBtn": "बंद करें",
@@ -817,7 +817,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "महिला",
   "fixPwHint": "कम्तीमा 8 अक्षर, एउटा ठूलो अक्षर र एउटा अंकसहित।",
   "authConfirmPassword": "पासवर्ड पुष्टि गर्नुहोस्",
-  "rideNewsOpt": "मलाई राइडका खबर र घोषणाहरू WhatsApp र इमेलमा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
+  "rideNewsOpt": "मलाई राइडका खबर र घोषणाहरू WhatsApp मा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
   "heardLabel": "तपाईंले हाम्रो बारेमा कसरी थाहा पाउनुभयो?",
   "authSignupBtn": "खाता बनाउनुहोस्",
   "closeBtn": "बन्द गर्नुहोस्",
@@ -890,7 +890,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "নারী",
   "fixPwHint": "কমপক্ষে 8টি অক্ষর, একটি বড় হাতের অক্ষর ও একটি সংখ্যাসহ।",
   "authConfirmPassword": "পাসওয়ার্ড নিশ্চিত করুন",
-  "rideNewsOpt": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp ও ইমেইলে পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
+  "rideNewsOpt": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp-এ পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
   "heardLabel": "আপনি আমাদের সম্পর্কে কীভাবে জানলেন?",
   "authSignupBtn": "অ্যাকাউন্ট তৈরি করুন",
   "closeBtn": "বন্ধ করুন",
@@ -963,7 +963,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "女",
   "fixPwHint": "至少 8 个字符，包含一个大写字母和一个数字。",
   "authConfirmPassword": "确认密码",
-  "rideNewsOpt": "通过 WhatsApp 和邮件向我发送骑行资讯与公告。我可以随时停止接收。",
+  "rideNewsOpt": "通过 WhatsApp 向我发送骑行资讯与公告。我可以随时停止接收。",
   "heardLabel": "您是如何了解我们的？",
   "authSignupBtn": "创建账户",
   "closeBtn": "关闭",
@@ -1047,7 +1047,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "女性",
   "fixPwHint": "8文字以上で、大文字と数字をそれぞれ1つ以上含めてください。",
   "authConfirmPassword": "パスワード（確認）",
-  "rideNewsOpt": "ライドのニュースやお知らせをWhatsAppとメールで受け取る。いつでも配信を停止できます。",
+  "rideNewsOpt": "ライドのニュースやお知らせをWhatsAppで受け取る。いつでも配信を停止できます。",
   "heardLabel": "私たちを知ったきっかけは？",
   "authSignupBtn": "アカウントを作成",
   "closeBtn": "閉じる",
@@ -1145,7 +1145,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "سجّل الدخول ببريدك الإلكتروني أو رقم جوالك وكلمة المرور.",
   "No, I'm new to MicroMobility": "لا، أنا جديد في MicroMobility",
   "Create your account. It is the one you book every ride with.": "أنشئ حسابك. هو الحساب الذي تحجز به كل رحلاتك.",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "هذا هو الحساب الذي تحجز به الرحلات في تطبيق MicroMobility. تسجّل الدخول ببريدك الإلكتروني أو رقم جوالك وكلمة المرور.",
   "Gender": "الجنس",
   "Email address": "البريد الإلكتروني",
   "Mobile number": "رقم الجوال",
@@ -1153,7 +1152,6 @@ var FORM_T = {
   "Height in cm": "الطول بالسنتيمتر",
   "Creating your account...": "جارٍ إنشاء حسابك...",
   "Already have a MicroMobility account?": "لديك حساب في MicroMobility؟",
-  "Sign in with the account you use in the MicroMobility app.": "سجّل الدخول بالحساب الذي تستخدمه في تطبيق MicroMobility.",
   "Finish signing in on the booking site": "أكمل تسجيل الدخول في موقع الحجز",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "لحسابك كلمة مرور مؤقتة. اختر كلمة مرورك في موقع الحجز، ثم عد إلى هذه الصفحة.",
   "Open the booking site": "افتح موقع الحجز",
@@ -1162,8 +1160,6 @@ var FORM_T = {
   "No account yet?": "ليس لديك حساب بعد؟",
   "Back": "رجوع",
   "Your account has been created": "تم إنشاء حسابك",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "يمكنك تسجيل الدخول به إلى تطبيق MicroMobility في أي وقت. والآن بعض التفاصيل للرحلة.",
-  "The details every Saturday ride asks for.": "التفاصيل التي تطلبها كل رحلة سبت.",
   "Your account needs a few more details": "حسابك يحتاج بعض التفاصيل الإضافية",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "بعضها لا يُستكمل إلا في موقع الحجز. أكملها هناك، ثم عد إلى هذه الصفحة لتحجز.",
   "Finish on the booking site": "أكمل في موقع الحجز",
@@ -1175,7 +1171,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "اسم المستخدم في Instagram، أو رابط حسابك",
   "Your height in cm": "طولك بالسنتيمتر",
-  "We pick the bike size from it.": "نختار مقاس الدراجة بناءً عليه.",
   "Continue": "متابعة",
   "Saving...": "جارٍ الحفظ...",
   "Open my booking": "افتح حجزي",
@@ -1275,7 +1270,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "اركب على كورنيش جدة مع مجتمع MicroMobility صباح السبت. احجز مكانك برمز الرحلة الذي حصلت عليه.",
   "Booking needs a ride code": "الحجز يحتاج رمز الرحلة",
   "Ride code": "رمز الرحلة",
-  "The code MicroMobility gave you for the Saturday ride.": "الرمز الذي أعطتك إياه MicroMobility لرحلة السبت.",
   "Checking the code...": "جارٍ التحقق من الرمز...",
   "Sign in to see your booking": "سجّل الدخول لترى حجزك",
   "Which Saturday?": "أي سبت؟",
@@ -1303,6 +1297,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "لديك حجز في هذه الرحلة بالفعل.",
   "Waitlist only": "قائمة الانتظار فقط",
   "No ride open": "لا توجد رحلة مفتوحة",
+  "Fully booked": "محجوز بالكامل",
+  "See you next Saturday": "نراك السبت القادم",
   "Opens soon": "يفتح قريبًا",
   "Could not load the rides": "تعذّر تحميل الرحلات",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "احجز الآن لتنضم إلى قائمة الانتظار. إذا توفّر مكان يُمنح لقائمة الانتظار بالترتيب.",
@@ -1318,7 +1314,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "Masuk dengan email atau nomor ponsel dan kata sandi Anda.",
   "No, I'm new to MicroMobility": "Belum, saya baru di MicroMobility",
   "Create your account. It is the one you book every ride with.": "Buat akun Anda. Akun inilah yang Anda pakai untuk memesan setiap gowes.",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "Inilah akun yang Anda gunakan untuk memesan gowes di aplikasi MicroMobility. Anda masuk dengan email atau nomor ponsel dan kata sandi Anda.",
   "Gender": "Jenis kelamin",
   "Email address": "Alamat email",
   "Mobile number": "Nomor ponsel",
@@ -1326,7 +1321,6 @@ var FORM_T = {
   "Height in cm": "Tinggi badan dalam cm",
   "Creating your account...": "Membuat akun Anda...",
   "Already have a MicroMobility account?": "Sudah punya akun MicroMobility?",
-  "Sign in with the account you use in the MicroMobility app.": "Masuk dengan akun yang Anda gunakan di aplikasi MicroMobility.",
   "Finish signing in on the booking site": "Selesaikan proses masuk di situs pemesanan",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "Akun Anda memakai kata sandi sementara. Pilih kata sandi Anda sendiri di situs pemesanan, lalu kembali ke halaman ini.",
   "Open the booking site": "Buka situs pemesanan",
@@ -1335,8 +1329,6 @@ var FORM_T = {
   "No account yet?": "Belum punya akun?",
   "Back": "Kembali",
   "Your account has been created": "Akun Anda sudah dibuat",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "Anda bisa masuk ke aplikasi MicroMobility dengan akun ini kapan saja. Sekarang, beberapa detail untuk gowes ini.",
-  "The details every Saturday ride asks for.": "Detail yang diminta di setiap gowes Sabtu.",
   "Your account needs a few more details": "Akun Anda memerlukan beberapa detail lagi",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "Sebagian hanya bisa diisi di situs pemesanan. Lengkapi di sana, lalu kembali ke halaman ini untuk memesan.",
   "Finish on the booking site": "Lengkapi di situs pemesanan",
@@ -1348,7 +1340,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "Nama pengguna Instagram Anda, atau tautan ke profil Anda",
   "Your height in cm": "Tinggi badan Anda dalam cm",
-  "We pick the bike size from it.": "Kami menentukan ukuran sepeda berdasarkan tinggi badan ini.",
   "Continue": "Lanjutkan",
   "Saving...": "Menyimpan...",
   "Open my booking": "Buka pemesanan saya",
@@ -1448,7 +1439,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "Bersepedalah menyusuri Corniche Jeddah bersama komunitas MicroMobility pada Sabtu pagi. Pesan tempat Anda dengan kode gowes yang Anda terima.",
   "Booking needs a ride code": "Pemesanan memerlukan kode gowes",
   "Ride code": "Kode gowes",
-  "The code MicroMobility gave you for the Saturday ride.": "Kode yang diberikan MicroMobility kepada Anda untuk gowes Sabtu.",
   "Checking the code...": "Memeriksa kode...",
   "Sign in to see your booking": "Masuk untuk melihat pemesanan Anda",
   "Which Saturday?": "Sabtu yang mana?",
@@ -1476,6 +1466,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "Anda sudah punya pemesanan di gowes ini.",
   "Waitlist only": "Hanya daftar tunggu",
   "No ride open": "Tidak ada gowes yang dibuka",
+  "Fully booked": "Penuh",
+  "See you next Saturday": "Sampai jumpa Sabtu depan",
   "Opens soon": "Segera dibuka",
   "Could not load the rides": "Daftar gowes tidak dapat dimuat",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Pesan sekarang untuk masuk daftar tunggu. Jika ada tempat kosong, tempat itu diberikan ke daftar tunggu sesuai urutan.",
@@ -1491,7 +1483,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "Log masuk dengan e-mel atau nombor telefon dan kata laluan anda.",
   "No, I'm new to MicroMobility": "Belum, saya baharu di MicroMobility",
   "Create your account. It is the one you book every ride with.": "Cipta akaun anda. Akaun inilah yang anda gunakan untuk menempah setiap kayuhan.",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "Inilah akaun yang anda gunakan untuk menempah kayuhan dalam aplikasi MicroMobility. Anda log masuk dengan e-mel atau nombor telefon dan kata laluan anda.",
   "Gender": "Jantina",
   "Email address": "Alamat e-mel",
   "Mobile number": "Nombor telefon",
@@ -1499,7 +1490,6 @@ var FORM_T = {
   "Height in cm": "Ketinggian dalam cm",
   "Creating your account...": "Mencipta akaun anda...",
   "Already have a MicroMobility account?": "Sudah ada akaun MicroMobility?",
-  "Sign in with the account you use in the MicroMobility app.": "Log masuk dengan akaun yang anda gunakan dalam aplikasi MicroMobility.",
   "Finish signing in on the booking site": "Selesaikan log masuk di laman tempahan",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "Akaun anda menggunakan kata laluan sementara. Pilih kata laluan anda sendiri di laman tempahan, kemudian kembali ke halaman ini.",
   "Open the booking site": "Buka laman tempahan",
@@ -1508,8 +1498,6 @@ var FORM_T = {
   "No account yet?": "Belum ada akaun?",
   "Back": "Kembali",
   "Your account has been created": "Akaun anda telah dicipta",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "Anda boleh log masuk ke aplikasi MicroMobility dengannya pada bila-bila masa. Sekarang, beberapa butiran untuk kayuhan ini.",
-  "The details every Saturday ride asks for.": "Butiran yang diminta untuk setiap kayuhan Sabtu.",
   "Your account needs a few more details": "Akaun anda memerlukan beberapa butiran lagi",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "Sebahagiannya hanya boleh diisi di laman tempahan. Lengkapkannya di sana, kemudian kembali ke halaman ini untuk menempah.",
   "Finish on the booking site": "Lengkapkan di laman tempahan",
@@ -1521,7 +1509,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "Nama pengguna Instagram anda, atau pautan ke profil anda",
   "Your height in cm": "Ketinggian anda dalam cm",
-  "We pick the bike size from it.": "Kami memilih saiz basikal berdasarkan ketinggian ini.",
   "Continue": "Teruskan",
   "Saving...": "Menyimpan...",
   "Open my booking": "Buka tempahan saya",
@@ -1621,7 +1608,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "Kayuh di sepanjang Corniche Jeddah bersama komuniti MicroMobility pada pagi Sabtu. Tempah tempat anda dengan kod kayuhan yang diberikan kepada anda.",
   "Booking needs a ride code": "Tempahan memerlukan kod kayuhan",
   "Ride code": "Kod kayuhan",
-  "The code MicroMobility gave you for the Saturday ride.": "Kod yang diberikan oleh MicroMobility kepada anda untuk kayuhan Sabtu.",
   "Checking the code...": "Menyemak kod...",
   "Sign in to see your booking": "Log masuk untuk melihat tempahan anda",
   "Which Saturday?": "Sabtu yang mana?",
@@ -1649,6 +1635,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "Anda sudah mempunyai tempahan untuk kayuhan ini.",
   "Waitlist only": "Senarai menunggu sahaja",
   "No ride open": "Tiada kayuhan dibuka",
+  "Fully booked": "Penuh",
+  "See you next Saturday": "Jumpa lagi Sabtu depan",
   "Opens soon": "Dibuka tidak lama lagi",
   "Could not load the rides": "Kayuhan tidak dapat dimuatkan",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Tempah sekarang untuk menyertai senarai menunggu. Jika ada tempat kosong, ia diberikan kepada senarai menunggu mengikut giliran.",
@@ -1664,7 +1652,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "Melde dich mit deiner E-Mail-Adresse oder Handynummer und deinem Passwort an.",
   "No, I'm new to MicroMobility": "Nein, ich bin neu bei MicroMobility",
   "Create your account. It is the one you book every ride with.": "Erstelle dein Konto. Damit buchst du jede Ausfahrt.",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "Mit diesem Konto buchst du deine Ausfahrten in der MicroMobility-App. Du meldest dich mit deiner E-Mail-Adresse oder Handynummer und deinem Passwort an.",
   "Gender": "Geschlecht",
   "Email address": "E-Mail-Adresse",
   "Mobile number": "Handynummer",
@@ -1672,7 +1659,6 @@ var FORM_T = {
   "Height in cm": "Körpergröße in cm",
   "Creating your account...": "Dein Konto wird erstellt …",
   "Already have a MicroMobility account?": "Du hast schon ein MicroMobility-Konto?",
-  "Sign in with the account you use in the MicroMobility app.": "Melde dich mit dem Konto an, das du in der MicroMobility-App nutzt.",
   "Finish signing in on the booking site": "Schließ die Anmeldung auf der Buchungsseite ab",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "Dein Konto hat ein vorläufiges Passwort. Wähle auf der Buchungsseite dein eigenes und komm dann auf diese Seite zurück.",
   "Open the booking site": "Buchungsseite öffnen",
@@ -1681,8 +1667,6 @@ var FORM_T = {
   "No account yet?": "Noch kein Konto?",
   "Back": "Zurück",
   "Your account has been created": "Dein Konto wurde erstellt",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "Damit kannst du dich jederzeit in der MicroMobility-App anmelden. Jetzt noch ein paar Angaben zur Ausfahrt.",
-  "The details every Saturday ride asks for.": "Die Angaben, die jede Samstagsausfahrt erfordert.",
   "Your account needs a few more details": "Deinem Konto fehlen noch ein paar Angaben",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "Manche davon kannst du nur auf der Buchungsseite angeben. Ergänze sie dort und komm dann zum Buchen auf diese Seite zurück.",
   "Finish on the booking site": "Auf der Buchungsseite abschließen",
@@ -1694,7 +1678,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "Dein Instagram-Benutzername oder ein Link zu deinem Profil",
   "Your height in cm": "Deine Körpergröße in cm",
-  "We pick the bike size from it.": "Danach wählen wir die Radgröße aus.",
   "Continue": "Weiter",
   "Saving...": "Wird gespeichert …",
   "Open my booking": "Meine Buchung öffnen",
@@ -1794,7 +1777,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "Fahr am Samstagmorgen mit der MicroMobility-Community die Corniche von Dschidda entlang. Buch deinen Platz mit dem Fahrtcode, den du bekommen hast.",
   "Booking needs a ride code": "Zum Buchen brauchst du einen Fahrtcode",
   "Ride code": "Fahrtcode",
-  "The code MicroMobility gave you for the Saturday ride.": "Der Code, den dir MicroMobility für die Samstagsausfahrt gegeben hat.",
   "Checking the code...": "Code wird geprüft …",
   "Sign in to see your booking": "Melde dich an, um deine Buchung zu sehen",
   "Which Saturday?": "Welcher Samstag?",
@@ -1822,6 +1804,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "Du hast schon eine Buchung für diese Ausfahrt.",
   "Waitlist only": "Nur Warteliste",
   "No ride open": "Keine Ausfahrt offen",
+  "Fully booked": "Ausgebucht",
+  "See you next Saturday": "Bis nächsten Samstag",
   "Opens soon": "Öffnet bald",
   "Could not load the rides": "Die Ausfahrten konnten nicht geladen werden",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Buch jetzt, um auf die Warteliste zu kommen. Wird ein Platz frei, geht er der Reihe nach an die Warteliste.",
@@ -1837,7 +1821,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "Inicia sesión con tu correo electrónico o tu número de móvil y tu contraseña.",
   "No, I'm new to MicroMobility": "No, es mi primera vez en MicroMobility",
   "Create your account. It is the one you book every ride with.": "Crea tu cuenta. Es con la que reservas todos tus recorridos.",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "Esta es la cuenta con la que reservas recorridos en la app de MicroMobility. Inicias sesión con tu correo electrónico o tu número de móvil y tu contraseña.",
   "Gender": "Género",
   "Email address": "Dirección de correo",
   "Mobile number": "Número de móvil",
@@ -1845,7 +1828,6 @@ var FORM_T = {
   "Height in cm": "Estatura en cm",
   "Creating your account...": "Creando tu cuenta...",
   "Already have a MicroMobility account?": "¿Ya tienes una cuenta de MicroMobility?",
-  "Sign in with the account you use in the MicroMobility app.": "Inicia sesión con la cuenta que usas en la app de MicroMobility.",
   "Finish signing in on the booking site": "Termina de iniciar sesión en el sitio de reservas",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "Tu cuenta tiene una contraseña temporal. Elige la tuya en el sitio de reservas y luego vuelve a esta página.",
   "Open the booking site": "Abrir el sitio de reservas",
@@ -1854,8 +1836,6 @@ var FORM_T = {
   "No account yet?": "¿Aún no tienes cuenta?",
   "Back": "Atrás",
   "Your account has been created": "Tu cuenta se ha creado",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "Puedes iniciar sesión con ella en la app de MicroMobility cuando quieras. Ahora, unos datos para el recorrido.",
-  "The details every Saturday ride asks for.": "Los datos que pide cada recorrido del sábado.",
   "Your account needs a few more details": "Tu cuenta necesita algunos datos más",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "Algunos solo se pueden indicar en el sitio de reservas. Complétalos allí y luego vuelve a esta página para reservar.",
   "Finish on the booking site": "Completar en el sitio de reservas",
@@ -1867,7 +1847,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "Tu usuario de Instagram o el enlace a tu perfil",
   "Your height in cm": "Tu estatura en cm",
-  "We pick the bike size from it.": "Con ella elegimos la talla de la bici.",
   "Continue": "Continuar",
   "Saving...": "Guardando...",
   "Open my booking": "Abrir mi reserva",
@@ -1967,7 +1946,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "Pedalea por la Corniche de Yeda con la comunidad MicroMobility el sábado por la mañana. Reserva tu plaza con el código del recorrido que te dieron.",
   "Booking needs a ride code": "Para reservar necesitas un código del recorrido",
   "Ride code": "Código del recorrido",
-  "The code MicroMobility gave you for the Saturday ride.": "El código que te dio MicroMobility para el recorrido del sábado.",
   "Checking the code...": "Comprobando el código...",
   "Sign in to see your booking": "Inicia sesión para ver tu reserva",
   "Which Saturday?": "¿Qué sábado?",
@@ -1995,6 +1973,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "Ya tienes una reserva en este recorrido.",
   "Waitlist only": "Solo lista de espera",
   "No ride open": "Ningún recorrido abierto",
+  "Fully booked": "Completa",
+  "See you next Saturday": "Nos vemos el próximo sábado",
   "Opens soon": "Abre pronto",
   "Could not load the rides": "No se pudieron cargar los recorridos",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Reserva ahora para entrar en su lista de espera. Si se libera una plaza, se asigna por orden a la lista de espera.",
@@ -2010,7 +1990,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "Connectez-vous avec votre e-mail ou votre numéro de mobile et votre mot de passe.",
   "No, I'm new to MicroMobility": "Non, je découvre MicroMobility",
   "Create your account. It is the one you book every ride with.": "Créez votre compte. C’est avec lui que vous réserverez toutes vos sorties.",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "C’est le compte avec lequel vous réservez vos sorties dans l’appli MicroMobility. Vous vous connectez avec votre e-mail ou votre numéro de mobile et votre mot de passe.",
   "Gender": "Genre",
   "Email address": "Adresse e-mail",
   "Mobile number": "Numéro de mobile",
@@ -2018,7 +1997,6 @@ var FORM_T = {
   "Height in cm": "Taille en cm",
   "Creating your account...": "Création de votre compte...",
   "Already have a MicroMobility account?": "Vous avez déjà un compte MicroMobility ?",
-  "Sign in with the account you use in the MicroMobility app.": "Connectez-vous avec le compte que vous utilisez dans l’appli MicroMobility.",
   "Finish signing in on the booking site": "Terminez la connexion sur le site de réservation",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "Votre compte a un mot de passe temporaire. Choisissez le vôtre sur le site de réservation, puis revenez sur cette page.",
   "Open the booking site": "Ouvrir le site de réservation",
@@ -2027,8 +2005,6 @@ var FORM_T = {
   "No account yet?": "Pas encore de compte ?",
   "Back": "Retour",
   "Your account has been created": "Votre compte a été créé",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "Il vous permet de vous connecter à l’appli MicroMobility à tout moment. Maintenant, quelques informations pour la sortie.",
-  "The details every Saturday ride asks for.": "Les informations demandées pour chaque sortie du samedi.",
   "Your account needs a few more details": "Il manque quelques informations à votre compte",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "Certaines ne peuvent être renseignées que sur le site de réservation. Complétez-les là-bas, puis revenez sur cette page pour réserver.",
   "Finish on the booking site": "Terminer sur le site de réservation",
@@ -2040,7 +2016,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "Votre nom d’utilisateur Instagram, ou le lien vers votre profil",
   "Your height in cm": "Votre taille en cm",
-  "We pick the bike size from it.": "Elle nous permet de choisir la taille du vélo.",
   "Continue": "Continuer",
   "Saving...": "Enregistrement...",
   "Open my booking": "Ouvrir ma réservation",
@@ -2140,7 +2115,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "Roulez sur la Corniche de Djeddah avec la communauté MicroMobility le samedi matin. Réservez votre place avec le code de sortie qui vous a été remis.",
   "Booking needs a ride code": "Réservation sur code de sortie",
   "Ride code": "Code de sortie",
-  "The code MicroMobility gave you for the Saturday ride.": "Le code que MicroMobility vous a remis pour la sortie du samedi.",
   "Checking the code...": "Vérification du code...",
   "Sign in to see your booking": "Connectez-vous pour voir votre réservation",
   "Which Saturday?": "Quel samedi ?",
@@ -2168,6 +2142,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "Vous avez déjà une réservation pour cette sortie.",
   "Waitlist only": "Liste d’attente uniquement",
   "No ride open": "Aucune sortie ouverte",
+  "Fully booked": "Complète",
+  "See you next Saturday": "À samedi prochain",
   "Opens soon": "Ouverture prochaine",
   "Could not load the rides": "Impossible de charger les sorties",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Réservez maintenant pour rejoindre sa liste d’attente. Si une place se libère, elle revient à la liste d’attente, dans l’ordre.",
@@ -2183,7 +2159,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "Entre com seu e-mail ou número de celular e sua senha.",
   "No, I'm new to MicroMobility": "Não, é minha primeira vez na MicroMobility",
   "Create your account. It is the one you book every ride with.": "Crie sua conta. É com ela que você reserva todos os seus passeios.",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "Esta é a conta com a qual você reserva passeios no app da MicroMobility. Você entra com seu e-mail ou número de celular e sua senha.",
   "Gender": "Gênero",
   "Email address": "Endereço de e-mail",
   "Mobile number": "Número de celular",
@@ -2191,7 +2166,6 @@ var FORM_T = {
   "Height in cm": "Altura em cm",
   "Creating your account...": "Criando sua conta...",
   "Already have a MicroMobility account?": "Já tem uma conta MicroMobility?",
-  "Sign in with the account you use in the MicroMobility app.": "Entre com a conta que você usa no app da MicroMobility.",
   "Finish signing in on the booking site": "Termine de entrar no site de reservas",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "Sua conta tem uma senha temporária. Escolha a sua no site de reservas e depois volte para esta página.",
   "Open the booking site": "Abrir o site de reservas",
@@ -2200,8 +2174,6 @@ var FORM_T = {
   "No account yet?": "Ainda não tem conta?",
   "Back": "Voltar",
   "Your account has been created": "Sua conta foi criada",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "Você pode entrar no app da MicroMobility com ela quando quiser. Agora, alguns dados para o passeio.",
-  "The details every Saturday ride asks for.": "Os dados que todo passeio de sábado pede.",
   "Your account needs a few more details": "Sua conta precisa de mais alguns dados",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "Alguns só podem ser informados no site de reservas. Complete-os lá e depois volte a esta página para reservar.",
   "Finish on the booking site": "Concluir no site de reservas",
@@ -2213,7 +2185,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "Seu nome de usuário do Instagram ou o link do seu perfil",
   "Your height in cm": "Sua altura em cm",
-  "We pick the bike size from it.": "Com ela escolhemos o tamanho da bicicleta.",
   "Continue": "Continuar",
   "Saving...": "A guardar...",
   "Open my booking": "Abrir minha reserva",
@@ -2313,7 +2284,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "Pedale pela Corniche de Jeddah com a comunidade MicroMobility no sábado de manhã. Reserve sua vaga com o código do passeio que você recebeu.",
   "Booking needs a ride code": "A reserva exige um código do passeio",
   "Ride code": "Código do passeio",
-  "The code MicroMobility gave you for the Saturday ride.": "O código que você recebeu da MicroMobility para o passeio de sábado.",
   "Checking the code...": "Verificando o código...",
   "Sign in to see your booking": "Entre para ver sua reserva",
   "Which Saturday?": "Qual sábado?",
@@ -2341,6 +2311,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "Você já tem uma reserva neste passeio.",
   "Waitlist only": "Só lista de espera",
   "No ride open": "Nenhum passeio aberto",
+  "Fully booked": "Lotada",
+  "See you next Saturday": "Até o próximo sábado",
   "Opens soon": "Abre em breve",
   "Could not load the rides": "Não foi possível carregar os passeios",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Reserve agora para entrar na lista de espera. Se uma vaga abrir, ela vai para a lista de espera, por ordem.",
@@ -2356,7 +2328,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "Mag-sign in gamit ang iyong email o mobile number at ang iyong password.",
   "No, I'm new to MicroMobility": "Wala, bago ako sa MicroMobility",
   "Create your account. It is the one you book every ride with.": "Gumawa ng iyong account. Ito ang gagamitin mo sa pag-book ng bawat ride.",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "Ito ang account na gagamitin mo sa pag-book ng mga ride sa MicroMobility app. Mag-sign in ka gamit ang iyong email o mobile number at ang iyong password.",
   "Gender": "Kasarian",
   "Email address": "Email address",
   "Mobile number": "Numero ng mobile",
@@ -2364,7 +2335,6 @@ var FORM_T = {
   "Height in cm": "Taas sa cm",
   "Creating your account...": "Ginagawa ang iyong account...",
   "Already have a MicroMobility account?": "May MicroMobility account ka na?",
-  "Sign in with the account you use in the MicroMobility app.": "Mag-sign in gamit ang account na ginagamit mo sa MicroMobility app.",
   "Finish signing in on the booking site": "Tapusin ang pag-sign in sa booking site",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "Pansamantala ang password ng account mo. Pumili ng sarili mong password sa booking site, saka bumalik sa page na ito.",
   "Open the booking site": "Buksan ang booking site",
@@ -2373,8 +2343,6 @@ var FORM_T = {
   "No account yet?": "Wala ka pang account?",
   "Back": "Bumalik",
   "Your account has been created": "Nagawa na ang iyong account",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "Puwede mo itong gamitin sa pag-sign in sa MicroMobility app anumang oras. Ngayon, ilang detalye para sa ride.",
-  "The details every Saturday ride asks for.": "Ang mga detalyeng hinihingi sa bawat Saturday ride.",
   "Your account needs a few more details": "Kailangan pa ng ilang detalye sa account mo",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "Ang ilan sa mga ito ay sa booking site lang maibibigay. Tapusin ang mga ito roon, saka bumalik sa page na ito para mag-book.",
   "Finish on the booking site": "Tapusin sa booking site",
@@ -2386,7 +2354,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "Ang iyong Instagram username, o link sa iyong profile",
   "Your height in cm": "Ang iyong taas sa cm",
-  "We pick the bike size from it.": "Dito namin ibabatay ang laki ng bisikleta.",
   "Continue": "Magpatuloy",
   "Saving...": "Sine-save...",
   "Open my booking": "Buksan ang booking ko",
@@ -2486,7 +2453,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "Magbisikleta sa Jeddah Corniche kasama ang komunidad ng MicroMobility sa Sabado ng umaga. I-book ang iyong puwesto gamit ang ride code na ibinigay sa iyo.",
   "Booking needs a ride code": "Kailangan ng ride code para mag-book",
   "Ride code": "Ride code",
-  "The code MicroMobility gave you for the Saturday ride.": "Ang code na ibinigay sa iyo ng MicroMobility para sa Saturday ride.",
   "Checking the code...": "Sinusuri ang code...",
   "Sign in to see your booking": "Mag-sign in para makita ang booking mo",
   "Which Saturday?": "Aling Sabado?",
@@ -2514,6 +2480,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "May booking ka na sa ride na ito.",
   "Waitlist only": "Waitlist na lang",
   "No ride open": "Walang bukas na ride",
+  "Fully booked": "Puno na",
+  "See you next Saturday": "Kita-kits sa susunod na Sabado",
   "Opens soon": "Malapit nang magbukas",
   "Could not load the rides": "Hindi ma-load ang mga ride",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Mag-book ngayon para sumali sa waitlist nito. Kapag may nabakanteng puwesto, mapupunta ito sa waitlist ayon sa pagkakasunod-sunod.",
@@ -2529,7 +2497,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "Войдите по эл. почте или номеру мобильного и паролю.",
   "No, I'm new to MicroMobility": "Нет, я впервые в MicroMobility",
   "Create your account. It is the one you book every ride with.": "Создайте аккаунт. Через него вы бронируете все заезды.",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "С этим аккаунтом вы бронируете заезды в приложении MicroMobility. Вход — по эл. почте или номеру мобильного и паролю.",
   "Gender": "Пол",
   "Email address": "Адрес электронной почты",
   "Mobile number": "Номер мобильного",
@@ -2537,7 +2504,6 @@ var FORM_T = {
   "Height in cm": "Рост в см",
   "Creating your account...": "Создаём аккаунт…",
   "Already have a MicroMobility account?": "Уже есть аккаунт MicroMobility?",
-  "Sign in with the account you use in the MicroMobility app.": "Войдите в аккаунт, которым вы пользуетесь в приложении MicroMobility.",
   "Finish signing in on the booking site": "Завершите вход на сайте бронирования",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "У вашего аккаунта временный пароль. Придумайте свой на сайте бронирования, а затем вернитесь на эту страницу.",
   "Open the booking site": "Открыть сайт бронирования",
@@ -2546,8 +2512,6 @@ var FORM_T = {
   "No account yet?": "Ещё нет аккаунта?",
   "Back": "Назад",
   "Your account has been created": "Аккаунт создан",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "С ним вы можете в любое время войти в приложение MicroMobility. А теперь несколько данных для заезда.",
-  "The details every Saturday ride asks for.": "Данные, которые нужны для каждого субботнего заезда.",
   "Your account needs a few more details": "В аккаунте не хватает некоторых данных",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "Некоторые из них можно указать только на сайте бронирования. Заполните их там, а затем вернитесь на эту страницу, чтобы забронировать.",
   "Finish on the booking site": "Завершить на сайте бронирования",
@@ -2559,7 +2523,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "Ваше имя пользователя в Instagram или ссылка на профиль",
   "Your height in cm": "Ваш рост в см",
-  "We pick the bike size from it.": "По нему мы подбираем размер велосипеда.",
   "Continue": "Продолжить",
   "Saving...": "Сохранение…",
   "Open my booking": "Открыть моё бронирование",
@@ -2659,7 +2622,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "Прокатитесь по набережной Корниш в Джидде вместе с сообществом MicroMobility в субботу утром. Забронируйте место по коду заезда, который вам выдали.",
   "Booking needs a ride code": "Для бронирования нужен код заезда",
   "Ride code": "Код заезда",
-  "The code MicroMobility gave you for the Saturday ride.": "Код, который вам выдала MicroMobility для субботнего заезда.",
   "Checking the code...": "Проверяем код…",
   "Sign in to see your booking": "Войдите, чтобы увидеть бронирование",
   "Which Saturday?": "В какую субботу?",
@@ -2687,6 +2649,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "У вас уже есть бронирование на этот заезд.",
   "Waitlist only": "Только лист ожидания",
   "No ride open": "Нет открытых заездов",
+  "Fully booked": "Мест нет",
+  "See you next Saturday": "До встречи в следующую субботу",
   "Opens soon": "Скоро откроется",
   "Could not load the rides": "Не удалось загрузить заезды",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "Забронируйте сейчас, чтобы попасть в лист ожидания. Если место освободится, оно достанется участникам из листа ожидания по порядку.",
@@ -2702,7 +2666,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "اپنے ای میل یا موبائل نمبر اور پاس ورڈ سے سائن اِن کریں۔",
   "No, I'm new to MicroMobility": "نہیں، MicroMobility میرے لیے نیا ہے",
   "Create your account. It is the one you book every ride with.": "اپنا اکاؤنٹ بنائیں۔ اسی سے آپ ہر رائیڈ بک کرتے ہیں۔",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "اسی اکاؤنٹ سے آپ MicroMobility ایپ میں رائیڈز بک کرتے ہیں۔ آپ اپنے ای میل یا موبائل نمبر اور پاس ورڈ سے سائن اِن کرتے ہیں۔",
   "Gender": "جنس",
   "Email address": "ای میل ایڈریس",
   "Mobile number": "موبائل نمبر",
@@ -2710,7 +2673,6 @@ var FORM_T = {
   "Height in cm": "قد (سینٹی میٹر میں)",
   "Creating your account...": "آپ کا اکاؤنٹ بن رہا ہے...",
   "Already have a MicroMobility account?": "پہلے سے MicroMobility اکاؤنٹ ہے؟",
-  "Sign in with the account you use in the MicroMobility app.": "اسی اکاؤنٹ سے سائن اِن کریں جو آپ MicroMobility ایپ میں استعمال کرتے ہیں۔",
   "Finish signing in on the booking site": "بکنگ سائٹ پر سائن اِن مکمل کریں",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "آپ کے اکاؤنٹ کا پاس ورڈ عارضی ہے۔ بکنگ سائٹ پر اپنا پاس ورڈ منتخب کریں، پھر اس صفحے پر واپس آئیں۔",
   "Open the booking site": "بکنگ سائٹ کھولیں",
@@ -2719,8 +2681,6 @@ var FORM_T = {
   "No account yet?": "ابھی اکاؤنٹ نہیں ہے؟",
   "Back": "واپس",
   "Your account has been created": "آپ کا اکاؤنٹ بن گیا ہے",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "آپ کسی بھی وقت اس سے MicroMobility ایپ میں سائن اِن کر سکتے ہیں۔ اب رائیڈ کے لیے چند تفصیلات۔",
-  "The details every Saturday ride asks for.": "وہ تفصیلات جو ہفتے کی ہر رائیڈ کے لیے مانگی جاتی ہیں۔",
   "Your account needs a few more details": "آپ کے اکاؤنٹ کو چند مزید تفصیلات درکار ہیں",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "ان میں سے کچھ صرف بکنگ سائٹ پر دی جا سکتی ہیں۔ انہیں وہاں مکمل کریں، پھر بک کرنے کے لیے اس صفحے پر واپس آئیں۔",
   "Finish on the booking site": "بکنگ سائٹ پر مکمل کریں",
@@ -2732,7 +2692,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "آپ کا Instagram یوزر نیم، یا آپ کی پروفائل کا لنک",
   "Your height in cm": "آپ کا قد (سینٹی میٹر میں)",
-  "We pick the bike size from it.": "اسی سے ہم سائیکل کا سائز چنتے ہیں۔",
   "Continue": "جاری رکھیں",
   "Saving...": "محفوظ ہو رہا ہے...",
   "Open my booking": "میری بکنگ کھولیں",
@@ -2832,7 +2791,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "ہفتے کی صبح MicroMobility کمیونٹی کے ساتھ جدہ کورنیش پر سائیکل چلائیں۔ آپ کو دیے گئے رائیڈ کوڈ سے اپنی جگہ بک کریں۔",
   "Booking needs a ride code": "بکنگ کے لیے رائیڈ کوڈ درکار ہے",
   "Ride code": "رائیڈ کوڈ",
-  "The code MicroMobility gave you for the Saturday ride.": "وہ کوڈ جو MicroMobility نے آپ کو ہفتے کی رائیڈ کے لیے دیا۔",
   "Checking the code...": "کوڈ چیک ہو رہا ہے...",
   "Sign in to see your booking": "اپنی بکنگ دیکھنے کے لیے سائن اِن کریں",
   "Which Saturday?": "کس ہفتے کی رائیڈ؟",
@@ -2860,6 +2818,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "اس رائیڈ پر آپ کی بکنگ پہلے سے ہے۔",
   "Waitlist only": "صرف ویٹ لسٹ",
   "No ride open": "کوئی رائیڈ کھلی نہیں",
+  "Fully booked": "مکمل بھرا",
+  "See you next Saturday": "اگلے ہفتے کی رائیڈ پر ملتے ہیں",
   "Opens soon": "جلد کھلے گی",
   "Could not load the rides": "رائیڈز لوڈ نہیں ہو سکیں",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "اس کی ویٹ لسٹ میں شامل ہونے کے لیے ابھی بک کریں۔ اگر کوئی جگہ خالی ہوئی تو وہ ترتیب سے ویٹ لسٹ والوں کو ملے گی۔",
@@ -2875,7 +2835,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "अपने ईमेल या मोबाइल नंबर और पासवर्ड से साइन इन करें।",
   "No, I'm new to MicroMobility": "नहीं, MicroMobility मेरे लिए नया है",
   "Create your account. It is the one you book every ride with.": "अपना खाता बनाएँ। इसी से आप हर राइड बुक करते हैं।",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "इसी खाते से आप MicroMobility ऐप में राइड बुक करते हैं। आप अपने ईमेल या मोबाइल नंबर और पासवर्ड से साइन इन करते हैं।",
   "Gender": "लिंग",
   "Email address": "ईमेल पता",
   "Mobile number": "मोबाइल नंबर",
@@ -2883,7 +2842,6 @@ var FORM_T = {
   "Height in cm": "लंबाई (सेमी में)",
   "Creating your account...": "आपका खाता बन रहा है...",
   "Already have a MicroMobility account?": "क्या आपका पहले से MicroMobility खाता है?",
-  "Sign in with the account you use in the MicroMobility app.": "उसी खाते से साइन इन करें जो आप MicroMobility ऐप में इस्तेमाल करते हैं।",
   "Finish signing in on the booking site": "बुकिंग साइट पर साइन इन पूरा करें",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "आपके खाते का पासवर्ड अस्थायी है। बुकिंग साइट पर अपना पासवर्ड चुनें, फिर इस पेज पर लौट आएँ।",
   "Open the booking site": "बुकिंग साइट खोलें",
@@ -2892,8 +2850,6 @@ var FORM_T = {
   "No account yet?": "अभी खाता नहीं है?",
   "Back": "पीछे",
   "Your account has been created": "आपका खाता बन गया है",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "आप कभी भी इससे MicroMobility ऐप में साइन इन कर सकते हैं। अब राइड के लिए कुछ जानकारी।",
-  "The details every Saturday ride asks for.": "वह जानकारी जो शनिवार की हर राइड के लिए माँगी जाती है।",
   "Your account needs a few more details": "आपके खाते में कुछ और जानकारी चाहिए",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "इनमें से कुछ जानकारी सिर्फ़ बुकिंग साइट पर दी जा सकती है। उसे वहाँ पूरा करें, फिर बुक करने के लिए इस पेज पर लौट आएँ।",
   "Finish on the booking site": "बुकिंग साइट पर पूरा करें",
@@ -2905,7 +2861,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "आपका Instagram यूज़रनेम, या आपकी प्रोफ़ाइल का लिंक",
   "Your height in cm": "आपकी लंबाई (सेमी में)",
-  "We pick the bike size from it.": "इसी से हम साइकिल का साइज़ चुनते हैं।",
   "Continue": "आगे बढ़ें",
   "Saving...": "सहेजा जा रहा है...",
   "Open my booking": "मेरी बुकिंग खोलें",
@@ -3005,7 +2960,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "शनिवार सुबह MicroMobility समुदाय के साथ जेद्दाह कॉर्निश पर साइकिल चलाएँ। आपको दिए गए राइड कोड से अपनी जगह बुक करें।",
   "Booking needs a ride code": "बुकिंग के लिए राइड कोड चाहिए",
   "Ride code": "राइड कोड",
-  "The code MicroMobility gave you for the Saturday ride.": "वह कोड जो MicroMobility ने आपको शनिवार की राइड के लिए दिया।",
   "Checking the code...": "कोड जाँचा जा रहा है...",
   "Sign in to see your booking": "अपनी बुकिंग देखने के लिए साइन इन करें",
   "Which Saturday?": "कौन-सा शनिवार?",
@@ -3033,6 +2987,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "इस राइड पर आपकी बुकिंग पहले से है।",
   "Waitlist only": "सिर्फ़ प्रतीक्षा सूची",
   "No ride open": "कोई राइड खुली नहीं",
+  "Fully booked": "पूरी तरह भरा",
+  "See you next Saturday": "अगले शनिवार मिलते हैं",
   "Opens soon": "जल्द खुलेगी",
   "Could not load the rides": "राइड लोड नहीं हो सकीं",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "इसकी प्रतीक्षा सूची में जुड़ने के लिए अभी बुक करें। अगर कोई जगह खाली होती है, तो वह क्रम से प्रतीक्षा सूची वालों को मिलती है।",
@@ -3048,7 +3004,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "आफ्नो इमेल वा मोबाइल नम्बर र पासवर्डबाट साइन इन गर्नुहोस्।",
   "No, I'm new to MicroMobility": "छैन, म MicroMobility मा नयाँ हुँ",
   "Create your account. It is the one you book every ride with.": "आफ्नो खाता बनाउनुहोस्। यही खाताबाट तपाईं हरेक राइड बुक गर्नुहुन्छ।",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "यही खाताबाट तपाईं MicroMobility एपमा राइड बुक गर्नुहुन्छ। तपाईं आफ्नो इमेल वा मोबाइल नम्बर र पासवर्डबाट साइन इन गर्नुहुन्छ।",
   "Gender": "लिङ्ग",
   "Email address": "इमेल ठेगाना",
   "Mobile number": "मोबाइल नम्बर",
@@ -3056,7 +3011,6 @@ var FORM_T = {
   "Height in cm": "उचाइ (सेमीमा)",
   "Creating your account...": "तपाईंको खाता बन्दैछ...",
   "Already have a MicroMobility account?": "पहिल्यै MicroMobility खाता छ?",
-  "Sign in with the account you use in the MicroMobility app.": "MicroMobility एपमा प्रयोग गर्ने खाताबाट साइन इन गर्नुहोस्।",
   "Finish signing in on the booking site": "बुकिङ साइटमा साइन इन पूरा गर्नुहोस्",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "तपाईंको खाताको पासवर्ड अस्थायी हो। बुकिङ साइटमा आफ्नै पासवर्ड छान्नुहोस्, अनि यो पेजमा फर्कनुहोस्।",
   "Open the booking site": "बुकिङ साइट खोल्नुहोस्",
@@ -3065,8 +3019,6 @@ var FORM_T = {
   "No account yet?": "अझै खाता छैन?",
   "Back": "पछाडि",
   "Your account has been created": "तपाईंको खाता बनिसकेको छ",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "यसबाट तपाईं जुनसुकै बेला MicroMobility एपमा साइन इन गर्न सक्नुहुन्छ। अब राइडका लागि केही विवरण।",
-  "The details every Saturday ride asks for.": "हरेक शनिबार राइडमा सोधिने विवरण।",
   "Your account needs a few more details": "तपाईंको खातामा केही थप विवरण चाहिन्छ",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "तीमध्ये केही बुकिङ साइटमा मात्र दिन सकिन्छ। ती त्यहीँ पूरा गर्नुहोस्, अनि बुक गर्न यो पेजमा फर्कनुहोस्।",
   "Finish on the booking site": "बुकिङ साइटमा पूरा गर्नुहोस्",
@@ -3078,7 +3030,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "तपाईंको Instagram प्रयोगकर्ता नाम, वा प्रोफाइलको लिंक",
   "Your height in cm": "तपाईंको उचाइ (सेमीमा)",
-  "We pick the bike size from it.": "यसैबाट हामी साइकलको साइज छान्छौं।",
   "Continue": "अगाडि बढ्नुहोस्",
   "Saving...": "सुरक्षित गर्दै...",
   "Open my booking": "मेरो बुकिङ खोल्नुहोस्",
@@ -3178,7 +3129,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "शनिबार बिहान MicroMobility समुदायसँग जेद्दा कोर्निशमा राइड गर्नुहोस्। तपाईंलाई दिइएको राइड कोडबाट आफ्नो ठाउँ बुक गर्नुहोस्।",
   "Booking needs a ride code": "बुकिङ गर्न राइड कोड चाहिन्छ",
   "Ride code": "राइड कोड",
-  "The code MicroMobility gave you for the Saturday ride.": "शनिबार राइडका लागि MicroMobility ले तपाईंलाई दिएको कोड।",
   "Checking the code...": "कोड जाँच हुँदैछ...",
   "Sign in to see your booking": "आफ्नो बुकिङ हेर्न साइन इन गर्नुहोस्",
   "Which Saturday?": "कुन शनिबार?",
@@ -3206,6 +3156,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "यो राइडमा तपाईंको बुकिङ पहिले नै छ।",
   "Waitlist only": "प्रतीक्षा सूची मात्र",
   "No ride open": "कुनै राइड खुला छैन",
+  "Fully booked": "पूरै भरियो",
+  "See you next Saturday": "अर्को शनिबार भेटौँला",
   "Opens soon": "छिट्टै खुल्छ",
   "Could not load the rides": "राइडहरू लोड गर्न सकिएन",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "यसको प्रतीक्षा सूचीमा सामेल हुन अहिले बुक गर्नुहोस्। कुनै ठाउँ खाली भए, प्रतीक्षा सूचीको क्रमअनुसार दिइन्छ।",
@@ -3221,7 +3173,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "আপনার ইমেইল বা মোবাইল নম্বর এবং পাসওয়ার্ড দিয়ে সাইন ইন করুন।",
   "No, I'm new to MicroMobility": "না, আমি MicroMobility-তে নতুন",
   "Create your account. It is the one you book every ride with.": "আপনার অ্যাকাউন্ট তৈরি করুন। এই অ্যাকাউন্ট দিয়েই আপনি প্রতিটি রাইড বুক করবেন।",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "এই অ্যাকাউন্ট দিয়েই আপনি MicroMobility অ্যাপে রাইড বুক করবেন। আপনার ইমেইল বা মোবাইল নম্বর এবং পাসওয়ার্ড দিয়ে সাইন ইন করবেন।",
   "Gender": "লিঙ্গ",
   "Email address": "ইমেইল ঠিকানা",
   "Mobile number": "মোবাইল নম্বর",
@@ -3229,7 +3180,6 @@ var FORM_T = {
   "Height in cm": "উচ্চতা (সেমি)",
   "Creating your account...": "আপনার অ্যাকাউন্ট তৈরি হচ্ছে...",
   "Already have a MicroMobility account?": "আগে থেকেই MicroMobility অ্যাকাউন্ট আছে?",
-  "Sign in with the account you use in the MicroMobility app.": "MicroMobility অ্যাপে যে অ্যাকাউন্ট ব্যবহার করেন, সেটি দিয়ে সাইন ইন করুন।",
   "Finish signing in on the booking site": "বুকিং সাইটে সাইন ইন শেষ করুন",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "আপনার অ্যাকাউন্টের পাসওয়ার্ডটি অস্থায়ী। বুকিং সাইটে নিজের পাসওয়ার্ড বেছে নিন, তারপর এই পেজে ফিরে আসুন।",
   "Open the booking site": "বুকিং সাইট খুলুন",
@@ -3238,8 +3188,6 @@ var FORM_T = {
   "No account yet?": "এখনও অ্যাকাউন্ট নেই?",
   "Back": "পেছনে",
   "Your account has been created": "আপনার অ্যাকাউন্ট তৈরি হয়েছে",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "এটি দিয়ে আপনি যেকোনো সময় MicroMobility অ্যাপে সাইন ইন করতে পারবেন। এবার রাইডের জন্য কিছু তথ্য।",
-  "The details every Saturday ride asks for.": "প্রতিটি শনিবারের রাইডে যে তথ্যগুলো চাওয়া হয়।",
   "Your account needs a few more details": "আপনার অ্যাকাউন্টে আরও কিছু তথ্য দরকার",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "এর কিছু তথ্য শুধু বুকিং সাইটেই দেওয়া যায়। সেগুলো সেখানে শেষ করুন, তারপর বুক করতে এই পেজে ফিরে আসুন।",
   "Finish on the booking site": "বুকিং সাইটে শেষ করুন",
@@ -3251,7 +3199,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "আপনার Instagram ইউজারনেম, অথবা প্রোফাইলের লিংক",
   "Your height in cm": "আপনার উচ্চতা (সেমি)",
-  "We pick the bike size from it.": "এটি দেখে আমরা সাইকেলের সাইজ বেছে নিই।",
   "Continue": "চালিয়ে যান",
   "Saving...": "সংরক্ষণ হচ্ছে...",
   "Open my booking": "আমার বুকিং খুলুন",
@@ -3351,7 +3298,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "শনিবার সকালে MicroMobility কমিউনিটির সাথে জেদ্দা কর্নিশে রাইড করুন। আপনাকে দেওয়া রাইড কোড দিয়ে আপনার জায়গা বুক করুন।",
   "Booking needs a ride code": "বুকিং করতে রাইড কোড লাগবে",
   "Ride code": "রাইড কোড",
-  "The code MicroMobility gave you for the Saturday ride.": "শনিবারের রাইডের জন্য MicroMobility আপনাকে যে কোড দিয়েছে।",
   "Checking the code...": "কোড যাচাই করা হচ্ছে...",
   "Sign in to see your booking": "আপনার বুকিং দেখতে সাইন ইন করুন",
   "Which Saturday?": "কোন শনিবার?",
@@ -3379,6 +3325,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "এই রাইডে আপনার বুকিং আগে থেকেই আছে।",
   "Waitlist only": "শুধু ওয়েটিং লিস্ট",
   "No ride open": "কোনো রাইড খোলা নেই",
+  "Fully booked": "পুরোপুরি বুক",
+  "See you next Saturday": "আগামী শনিবার দেখা হবে",
   "Opens soon": "শিগগিরই খুলবে",
   "Could not load the rides": "রাইডগুলো লোড করা গেল না",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "এর ওয়েটিং লিস্টে যোগ দিতে এখনই বুক করুন। কোনো জায়গা খালি হলে তা ওয়েটিং লিস্টের ক্রম অনুযায়ী দেওয়া হয়।",
@@ -3394,7 +3342,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "请使用邮箱或手机号及密码登录。",
   "No, I'm new to MicroMobility": "没有，我是 MicroMobility 新用户",
   "Create your account. It is the one you book every ride with.": "创建您的账户。今后每次预订骑行都将使用这个账户。",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "这是您在 MicroMobility App 中预订骑行所用的账户。您可以用邮箱或手机号加密码登录。",
   "Gender": "性别",
   "Email address": "电子邮箱地址",
   "Mobile number": "手机号",
@@ -3402,7 +3349,6 @@ var FORM_T = {
   "Height in cm": "身高（厘米）",
   "Creating your account...": "正在创建账户…",
   "Already have a MicroMobility account?": "已有 MicroMobility 账户？",
-  "Sign in with the account you use in the MicroMobility app.": "请使用您在 MicroMobility App 中的账户登录。",
   "Finish signing in on the booking site": "请在预订网站上完成登录",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "您的账户使用的是临时密码。请在预订网站上设置您自己的密码，然后返回此页面。",
   "Open the booking site": "打开预订网站",
@@ -3411,8 +3357,6 @@ var FORM_T = {
   "No account yet?": "还没有账户？",
   "Back": "返回",
   "Your account has been created": "您的账户已创建",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "您可以随时用它登录 MicroMobility App。接下来，请填写几项骑行所需的信息。",
-  "The details every Saturday ride asks for.": "每次周六骑行都需要的信息。",
   "Your account needs a few more details": "您的账户还需要补充几项信息",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "其中部分信息只能在预订网站上填写。请在那里完成后，返回此页面预订。",
   "Finish on the booking site": "在预订网站上完成",
@@ -3424,7 +3368,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "您的 Instagram 用户名或个人主页链接",
   "Your height in cm": "您的身高（厘米）",
-  "We pick the bike size from it.": "我们会据此选择自行车尺寸。",
   "Continue": "继续",
   "Saving...": "正在保存…",
   "Open my booking": "打开我的预订",
@@ -3524,7 +3467,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "周六早上，与 MicroMobility 社区一起骑行吉达滨海大道。请使用您收到的骑行代码预订名额。",
   "Booking needs a ride code": "预订需要骑行代码",
   "Ride code": "骑行代码",
-  "The code MicroMobility gave you for the Saturday ride.": "MicroMobility 为周六骑行发给您的代码。",
   "Checking the code...": "正在验证代码…",
   "Sign in to see your booking": "登录查看您的预订",
   "Which Saturday?": "哪个周六？",
@@ -3552,6 +3494,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "您已预订本次骑行。",
   "Waitlist only": "仅限候补",
   "No ride open": "暂无开放的骑行",
+  "Fully booked": "已满",
+  "See you next Saturday": "下周六见",
   "Opens soon": "即将开放",
   "Could not load the rides": "无法加载骑行列表",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "立即预订即可加入候补名单。如有名额空出，将按候补顺序分配。",
@@ -3567,7 +3511,6 @@ var FORM_T = {
   "Sign in with your email or mobile number and your password.": "メールアドレスまたは携帯電話番号と、パスワードでログインしてください。",
   "No, I'm new to MicroMobility": "いいえ、MicroMobilityは初めてです",
   "Create your account. It is the one you book every ride with.": "アカウントを作成しましょう。すべてのライドの予約に使うアカウントです。",
-  "This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.": "MicroMobilityアプリでライドの予約に使うアカウントです。メールアドレスまたは携帯電話番号とパスワードでログインします。",
   "Gender": "性別",
   "Email address": "メールアドレス",
   "Mobile number": "携帯電話番号",
@@ -3575,7 +3518,6 @@ var FORM_T = {
   "Height in cm": "身長（cm）",
   "Creating your account...": "アカウントを作成中…",
   "Already have a MicroMobility account?": "すでにMicroMobilityアカウントをお持ちですか？",
-  "Sign in with the account you use in the MicroMobility app.": "MicroMobilityアプリで使っているアカウントでログインしてください。",
   "Finish signing in on the booking site": "予約サイトでログインを完了してください",
   "Your account has a temporary password. Choose your own on the booking site, then come back to this page.": "アカウントに仮パスワードが設定されています。予約サイトでご自身のパスワードを設定してから、このページに戻ってください。",
   "Open the booking site": "予約サイトを開く",
@@ -3584,8 +3526,6 @@ var FORM_T = {
   "No account yet?": "まだアカウントをお持ちでないですか？",
   "Back": "戻る",
   "Your account has been created": "アカウントが作成されました",
-  "You can sign in to the MicroMobility app with it any time. Now a few details for the ride.": "このアカウントで、いつでもMicroMobilityアプリにログインできます。続いて、ライドに必要な情報をいくつか入力してください。",
-  "The details every Saturday ride asks for.": "毎回の土曜ライドでお聞きしている情報です。",
   "Your account needs a few more details": "アカウントにいくつか情報を追加する必要があります",
   "Some of them can only be given on the booking site. Finish them there, then come back to this page to book.": "一部の情報は予約サイトでしか入力できません。予約サイトで入力を済ませてから、このページに戻って予約してください。",
   "Finish on the booking site": "予約サイトで完了する",
@@ -3597,7 +3537,6 @@ var FORM_T = {
   "Instagram": "Instagram",
   "Your Instagram username, or a link to your profile": "Instagramのユーザー名、またはプロフィールのリンク",
   "Your height in cm": "身長（cm）",
-  "We pick the bike size from it.": "これをもとに自転車のサイズを選びます。",
   "Continue": "続ける",
   "Saving...": "保存中…",
   "Open my booking": "予約を開く",
@@ -3697,7 +3636,6 @@ var FORM_T = {
   "Ride the Jeddah Corniche with the MicroMobility community on Saturday morning. Book your place with the ride code you were given.": "土曜の朝、MicroMobilityコミュニティと一緒にジェッダのコーニッシュを走りましょう。お手元のライドコードで参加枠を予約してください。",
   "Booking needs a ride code": "予約にはライドコードが必要です",
   "Ride code": "ライドコード",
-  "The code MicroMobility gave you for the Saturday ride.": "MicroMobilityがお渡しした、土曜ライド用のコードです。",
   "Checking the code...": "コードを確認中…",
   "Sign in to see your booking": "ログインして予約を確認",
   "Which Saturday?": "どの土曜日にしますか？",
@@ -3725,6 +3663,8 @@ var FORM_T = {
   "You already have a booking on this ride.": "このライドはすでに予約済みです。",
   "Waitlist only": "キャンセル待ちのみ",
   "No ride open": "受付中のライドはありません",
+  "Fully booked": "満員",
+  "See you next Saturday": "来週の土曜日にお会いしましょう",
   "Opens soon": "まもなく受付開始",
   "Could not load the rides": "ライドを読み込めませんでした",
   "Book now to join its waitlist. If a place opens, it goes to the waitlist in order.": "今すぐ予約すると、キャンセル待ちに登録されます。空きが出た場合は、キャンセル待ちの順に割り当てられます。",
@@ -4098,6 +4038,13 @@ var MMAccount = (function () {
     return day > now.slice(0, 10) || (day === now.slice(0, 10) && bw.at && now.slice(11, 16) < bw.at) ? { day: day, at: bw.at } : null;
   }
   function bookable(r) { return !!r && (r.status === "open" || r.status === "full") && !bwOpens(r); }
+  // Full, no waitlist (the booking app's _sessFb): staff closed the ride as fully booked (bike_slots._fbk). Riders see it
+  // said so, never "No ride open", so nobody thinks it was called off; nothing is booked on it.
+  function fbkOf(r) {
+    if (!r || r.status !== "closed") return false;
+    var b = r.bike_slots; try { if (typeof b === "string") b = JSON.parse(b); } catch (e) { b = null; }
+    return !!b && typeof b === "object" && !!b._fbk;
+  }
   // When a ride opens for booking, in ms: sessions.opens_at, or the booking window when that is later; 0 when not known.
   function opensAt(r) {
     var o = r && r.opens_at ? Date.parse(r.opens_at) : NaN, w = bwOpens(r), t = w ? Date.parse(w.day + "T" + (w.at || "00:00") + ":00+03:00") : NaN;
@@ -4123,11 +4070,12 @@ var MMAccount = (function () {
 
   /* ── The landing ─────────────────────────────────────────────────────── */
   function fact(dt, dd) { return '<div class="fact"><dt>' + esc(dt) + "</dt><dd>" + dd + "</dd></div>"; }
-  var STATES = { open: "Places open", full: "Waitlist only", none: "No ride open", opens: "Opens soon", error: "Could not load the rides" };
+  var STATES = { open: "Places open", full: "Waitlist only", fbk: "Fully booked", none: "No ride open", opens: "Opens soon", error: "Could not load the rides" };
   function landState() {
     if (rides === undefined) return ridesErr ? "error" : "loading";
     var r = landRide();
     if (!r) return "none";
+    if (fbkOf(r)) return "fbk";
     if (!bookable(r)) return "opens";
     return r.status === "full" ? "full" : "open";
   }
@@ -4151,15 +4099,16 @@ var MMAccount = (function () {
       '<svg aria-hidden="true"><use href="#' + (state === "open" || state === "full" ? "i-open" : "i-stop") + '"/></svg>' + esc(tr(STATES[state]));
     var n = null;
     if (state === "full") n = ["This ride is full.", "Book now to join its waitlist. If a place opens, it goes to the waitlist in order."];
+    else if (state === "fbk") n = ["See you next Saturday", ""];
     else if (state === "none") n = ["No Saturday ride is open for booking right now.", "Check back soon for the next ride."];
     else if (state === "opens") n = ["Booking opens {when}.", ""];
     else if (state === "error") n = ["Could not reach the server. Please try again.", ""];
     note.hidden = !n;
     if (n) { $(".notice-h", note).textContent = tr(n[0], { when: opensText(r) }); $(".notice-p", note).textContent = n[1] ? tr(n[1]) : ""; }
     var go = $("#go");
-    if (!busy) go.disabled = state === "loading" || state === "none" || state === "opens";
+    if (!busy) go.disabled = state === "loading" || state === "none" || state === "opens" || state === "fbk";
     $("#go-label").textContent = state === "error" ? tr("Try again") : tr("Continue");
-    $("#f-code").hidden = state === "none" || state === "opens";
+    $("#f-code").hidden = state === "none" || state === "opens" || state === "fbk";
     watchOpens();
   }
   $("#code").addEventListener("input", function () { clearMsg("f-code"); });
@@ -4351,7 +4300,6 @@ var MMAccount = (function () {
      rules file the booking site's staff check reads). ─────────────────────────────────────── */
   var RULES = SH.PHONE_RULES, reCache = {};
   var CC_DIGITS = {}; SH.COUNTRY_CODES.forEach(function (x) { CC_DIGITS[x[0].slice(1)] = true; });
-  function flagOf(iso) { return String.fromCodePoint.apply(null, iso.toUpperCase().split("").map(function (c) { return 0x1F1E6 + c.charCodeAt(0) - 65; })); }
   var dn = {};
   function regionName(iso, fallback) {
     try {
@@ -4371,18 +4319,19 @@ var MMAccount = (function () {
     try { rest.sort(function (a, b) { return a.n.localeCompare(b.n, lang); }); } catch (e) {}
     return gulf.map(function (x) { return { x: x, n: ccName(x) }; }).concat(rest);
   }
-  var PK = { sel: "#cc", flag: "#cc-flag", code: "#cc-code", input: "#phone" };
-  var WPK = { sel: "#wacc", flag: "#wacc-flag", code: "#wacc-code", input: "#wa" };
+  // The code and the country's name only: no flag emoji (the owner's rule, no emoji anywhere), as the booking app's picker.
+  var PK = { sel: "#cc", code: "#cc-code", input: "#phone" };
+  var WPK = { sel: "#wacc", code: "#wacc-code", input: "#wa" };
   function buildCc() { buildCcOne(PK); buildCcOne(WPK); }
   function buildCcOne(pk) {
     var sel = $(pk.sel), cur = sel.value || "SA+966", on = selOnce(cur);
-    sel.innerHTML = ccList().map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + flagOf(o.x[1]) + " " + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
+    sel.innerHTML = ccList().map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
     if (!sel.value) sel.value = "SA+966";
     ccFace(pk);
   }
   function ccFace(pk) {
     var o = $(pk.sel).selectedOptions[0]; if (!o) return;
-    $(pk.flag).textContent = flagOf(o.getAttribute("data-iso")); $(pk.code).textContent = o.getAttribute("data-cc");
+    $(pk.code).textContent = o.getAttribute("data-cc");
   }
   function ccDigits(pk) { var o = $(pk.sel).selectedOptions[0]; return o ? o.getAttribute("data-cc").slice(1) : "966"; }
   function setCcDigits(k, pk) { var o = $$(pk.sel + " option").filter(function (x) { return x.getAttribute("data-cc") === "+" + k; })[0]; if (o) { $(pk.sel).value = o.value; ccFace(pk); } }
@@ -5228,7 +5177,7 @@ var MMAccount = (function () {
   $("#back-book").addEventListener("click", function () { backToLanding(); });
 
   /* ── Sent ────────────────────────────────────────────────────────────── */
-  var booked = null, leaving = false, autoTimer = null;
+  var booked = null, leaving = false, autoTimer = null, handedOff = false;
   function paintDone() {
     if (!booked) return;
     var wl = booked.status === "waitlist", p = pickupOf(booked.ride);
@@ -5300,7 +5249,9 @@ var MMAccount = (function () {
     $("#done-open").disabled = true; $("#b-open").disabled = true;
     var r = await rpc("customer_handoff_create", { p_id: acct.id, p_token: acct.token });
     var hc = !r.error && typeof r.data === "string" && /^[0-9a-f]{48}$/.test(r.data) ? r.data : null;
-    if (hc) { location.assign(BOOKING_URL + "?signin=" + hc + "&tab=bookings&lang=" + lang); return; }
+    // The session goes with the code: the page the browser may keep for Back holds none of it for the next person on
+    // this phone (signing out in the booking app does not end the session on the server).
+    if (hc) { handedOff = true; acct = null; prof = null; location.assign(BOOKING_URL + "?signin=" + hc + "&tab=bookings&lang=" + lang); return; }
     leaving = false; $("#done-open").disabled = false; $("#b-open").disabled = false;
     $("#done-going").hidden = true; $("#done-fallback").hidden = false;
     if (view !== "done") location.assign(bookingsUrl());
@@ -5309,7 +5260,9 @@ var MMAccount = (function () {
   // Back from the booking app to this page as the browser kept it (its back-forward cache): not on the way out any
   // more, so the button works again and the booking site's link is there.
   window.addEventListener("pageshow", function (e) {
-    if (!e.persisted || !leaving) return;
+    if (!e.persisted) return;
+    if (handedOff) { location.reload(); return; } // signed in over there: a fresh page here, not the last rider's
+    if (!leaving) return;
     leaving = false; $("#done-open").disabled = false; $("#b-open").disabled = false;
     $("#done-going").hidden = true; $("#done-fallback").hidden = false;
   }, OWN);

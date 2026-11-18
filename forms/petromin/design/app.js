@@ -208,6 +208,7 @@
       "Choose how they are related to you.": "اختر صلة القرابة.",
       "Your contact’s number can’t be your own.": "لا يمكن أن يكون رقم جهة الاتصال هو رقمك.",
       "The two emergency contacts can’t have the same number.": "لا يمكن أن يكون لجهتَي اتصال الطوارئ الرقم نفسه.",
+      "Try again": "إعادة المحاولة",
       "Send me ride news and announcements by WhatsApp. I can stop at any time.": "أرسلوا لي أخبار الجولات والإعلانات عبر واتساب، ويمكنني إيقافها في أي وقت.",
       "Which company are you an employee for?": "ما الشركة التي أنت موظف لديها؟",
       "Guest/Other": "ضيف/أخرى",
@@ -417,7 +418,8 @@
       "Choose how they are related to you.": "चुनें कि वे आपके क्या लगते हैं।",
       "Your contact’s number can’t be your own.": "संपर्क का नंबर आपका अपना नंबर नहीं हो सकता।",
       "The two emergency contacts can’t have the same number.": "दोनों आपातकालीन संपर्कों का नंबर एक नहीं हो सकता।",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "मुझे राइड की खबरें और घोषणाएँ WhatsApp और ईमेल पर भेजें। मैं कभी भी बंद कर सकता/सकती हूँ।",
+      "Try again": "फिर कोशिश करें",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "मुझे राइड की खबरें और घोषणाएँ WhatsApp पर भेजें। मैं कभी भी बंद कर सकता/सकती हूँ।",
       "Which company are you an employee for?": "आप किस कंपनी के कर्मचारी हैं?",
       "Guest/Other": "अतिथि/अन्य",
       "Enter your company": "अपनी कंपनी का नाम लिखें"
@@ -626,7 +628,8 @@
       "Choose how they are related to you.": "Piliin ang kaugnayan niya sa iyo.",
       "Your contact’s number can’t be your own.": "Hindi puwedeng sarili mong numero ang numero ng contact.",
       "The two emergency contacts can’t have the same number.": "Hindi puwedeng iisa ang numero ng dalawang emergency contact.",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Padalhan ako ng mga balita at anunsyo tungkol sa ride sa WhatsApp at email. Puwede ko itong ihinto anumang oras.",
+      "Try again": "Subukan ulit",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Padalhan ako ng mga balita at anunsyo tungkol sa ride sa WhatsApp. Puwede ko itong ihinto anumang oras.",
       "Which company are you an employee for?": "Saang kumpanya ka empleyado?",
       "Guest/Other": "Bisita/Iba pa",
       "Enter your company": "Ilagay ang iyong kumpanya"
@@ -835,7 +838,8 @@
       "Choose how they are related to you.": "Elige tu relación con esa persona.",
       "Your contact’s number can’t be your own.": "El número de tu contacto no puede ser el tuyo.",
       "The two emergency contacts can’t have the same number.": "Los dos contactos de emergencia no pueden tener el mismo número.",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Envíenme novedades y anuncios de recorridos por WhatsApp y correo electrónico. Puedo darme de baja en cualquier momento.",
+      "Try again": "Reintentar",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Envíenme novedades y anuncios de recorridos por WhatsApp. Puedo darme de baja en cualquier momento.",
       "Which company are you an employee for?": "¿De qué empresa eres empleado?",
       "Guest/Other": "Invitado/Otro",
       "Enter your company": "Escribe tu empresa"
@@ -1044,7 +1048,8 @@
       "Choose how they are related to you.": "उहाँ तपाईंको को हुनुहुन्छ, छान्नुहोस्।",
       "Your contact’s number can’t be your own.": "सम्पर्क व्यक्तिको नम्बर तपाईंको आफ्नै नम्बर हुन सक्दैन।",
       "The two emergency contacts can’t have the same number.": "दुवै आपतकालीन सम्पर्कको नम्बर एउटै हुन सक्दैन।",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "मलाई राइडका खबर र घोषणाहरू WhatsApp र इमेलमा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
+      "Try again": "फेरि प्रयास गर्नुहोस्",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "मलाई राइडका खबर र घोषणाहरू WhatsApp मा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
       "Which company are you an employee for?": "तपाईं कुन कम्पनीको कर्मचारी हुनुहुन्छ?",
       "Guest/Other": "अतिथि/अन्य",
       "Enter your company": "आफ्नो कम्पनीको नाम लेख्नुहोस्"
@@ -1253,7 +1258,8 @@
       "Choose how they are related to you.": "Indiquez votre lien avec cette personne.",
       "Your contact’s number can’t be your own.": "Le numéro de votre contact ne peut pas être le vôtre.",
       "The two emergency contacts can’t have the same number.": "Les deux contacts d’urgence ne peuvent pas avoir le même numéro.",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Envoyez-moi les actualités et annonces des sorties par WhatsApp et e-mail. Je peux arrêter à tout moment.",
+      "Try again": "Réessayer",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Envoyez-moi les actualités et annonces des sorties par WhatsApp. Je peux arrêter à tout moment.",
       "Which company are you an employee for?": "De quelle entreprise êtes-vous salarié ?",
       "Guest/Other": "Invité/Autre",
       "Enter your company": "Indiquez votre entreprise"
@@ -1462,7 +1468,8 @@
       "Choose how they are related to you.": "Escolha a sua relação com essa pessoa.",
       "Your contact’s number can’t be your own.": "O número do contato não pode ser o seu.",
       "The two emergency contacts can’t have the same number.": "Os dois contatos de emergência não podem ter o mesmo número.",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Envie-me novidades e anúncios dos passeios por WhatsApp e e-mail. Posso cancelar a qualquer momento.",
+      "Try again": "Tentar novamente",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Envie-me novidades e anúncios dos passeios por WhatsApp. Posso cancelar a qualquer momento.",
       "Which company are you an employee for?": "De que empresa é funcionário?",
       "Guest/Other": "Convidado/Outro",
       "Enter your company": "Indique a sua empresa"
@@ -1671,7 +1678,8 @@
       "Choose how they are related to you.": "তিনি আপনার কী হন, বেছে নিন।",
       "Your contact’s number can’t be your own.": "যোগাযোগের নম্বর আপনার নিজের নম্বর হতে পারে না।",
       "The two emergency contacts can’t have the same number.": "দুটি জরুরি যোগাযোগের নম্বর একই হতে পারে না।",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp ও ইমেইলে পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
+      "Try again": "আবার চেষ্টা করুন",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp-এ পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
       "Which company are you an employee for?": "আপনি কোন কোম্পানির কর্মী?",
       "Guest/Other": "অতিথি/অন্যান্য",
       "Enter your company": "আপনার কোম্পানির নাম লিখুন"
@@ -1880,7 +1888,8 @@
       "Choose how they are related to you.": "منتخب کریں کہ وہ آپ کے کیا لگتے ہیں۔",
       "Your contact’s number can’t be your own.": "رابطے کا نمبر آپ کا اپنا نمبر نہیں ہو سکتا۔",
       "The two emergency contacts can’t have the same number.": "دونوں ہنگامی رابطوں کا نمبر ایک نہیں ہو سکتا۔",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "مجھے رائیڈز کی خبریں اور اعلانات WhatsApp اور ای میل پر بھیجیں۔ میں کسی بھی وقت بند کر سکتا/سکتی ہوں۔",
+      "Try again": "دوبارہ کوشش کریں",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "مجھے رائیڈز کی خبریں اور اعلانات WhatsApp پر بھیجیں۔ میں کسی بھی وقت بند کر سکتا/سکتی ہوں۔",
       "Which company are you an employee for?": "آپ کس کمپنی کے ملازم ہیں؟",
       "Guest/Other": "مہمان/دیگر",
       "Enter your company": "اپنی کمپنی کا نام لکھیں"
@@ -2089,7 +2098,8 @@
       "Choose how they are related to you.": "Pilih hubungan kontak ini dengan Anda.",
       "Your contact’s number can’t be your own.": "Nomor kontak tidak boleh sama dengan nomor Anda sendiri.",
       "The two emergency contacts can’t have the same number.": "Kedua kontak darurat tidak boleh memiliki nomor yang sama.",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp dan email. Saya bisa berhenti kapan saja.",
+      "Try again": "Coba lagi",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp. Saya bisa berhenti kapan saja.",
       "Which company are you an employee for?": "Anda karyawan perusahaan mana?",
       "Guest/Other": "Tamu/Lainnya",
       "Enter your company": "Masukkan nama perusahaan Anda"
@@ -2298,7 +2308,8 @@
       "Choose how they are related to you.": "Pilih hubungan mereka dengan anda.",
       "Your contact’s number can’t be your own.": "Nombor orang hubungan tidak boleh sama dengan nombor anda sendiri.",
       "The two emergency contacts can’t have the same number.": "Kedua-dua kenalan kecemasan tidak boleh mempunyai nombor yang sama.",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Hantar berita dan pengumuman kayuhan kepada saya melalui WhatsApp dan e-mel. Saya boleh berhenti pada bila-bila masa.",
+      "Try again": "Cuba lagi",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Hantar berita dan pengumuman kayuhan kepada saya melalui WhatsApp. Saya boleh berhenti pada bila-bila masa.",
       "Which company are you an employee for?": "Anda pekerja syarikat mana?",
       "Guest/Other": "Tetamu/Lain-lain",
       "Enter your company": "Masukkan nama syarikat anda"
@@ -2507,7 +2518,8 @@
       "Choose how they are related to you.": "Wähle aus, in welcher Beziehung die Person zu dir steht.",
       "Your contact’s number can’t be your own.": "Die Nummer deiner Kontaktperson darf nicht deine eigene sein.",
       "The two emergency contacts can’t have the same number.": "Die beiden Notfallkontakte dürfen nicht dieselbe Nummer haben.",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Schickt mir Neuigkeiten zu Ausfahrten und Ankündigungen per WhatsApp und E-Mail. Ich kann das jederzeit beenden.",
+      "Try again": "Erneut versuchen",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Schickt mir Neuigkeiten zu Ausfahrten und Ankündigungen per WhatsApp. Ich kann das jederzeit beenden.",
       "Which company are you an employee for?": "Bei welchem Unternehmen bist du angestellt?",
       "Guest/Other": "Gast/Sonstige",
       "Enter your company": "Gib dein Unternehmen an"
@@ -2716,7 +2728,8 @@
       "Choose how they are related to you.": "Выберите, кем вам приходится этот человек.",
       "Your contact’s number can’t be your own.": "Номер контактного лица не может совпадать с вашим.",
       "The two emergency contacts can’t have the same number.": "У двух экстренных контактов не может быть одного номера.",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Присылайте мне новости о заездах и объявления в WhatsApp и по эл. почте. Я могу отказаться в любой момент.",
+      "Try again": "Попробовать снова",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "Присылайте мне новости о заездах и объявления в WhatsApp. Я могу отказаться в любой момент.",
       "Which company are you an employee for?": "Сотрудником какой компании вы являетесь?",
       "Guest/Other": "Гость/Другое",
       "Enter your company": "Укажите вашу компанию"
@@ -2925,7 +2938,8 @@
       "Choose how they are related to you.": "请选择对方与您的关系。",
       "Your contact’s number can’t be your own.": "联系人的号码不能是您自己的号码。",
       "The two emergency contacts can’t have the same number.": "两位紧急联系人的号码不能相同。",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "通过 WhatsApp 和邮件向我发送骑行资讯与公告。我可以随时停止接收。",
+      "Try again": "重试",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "通过 WhatsApp 向我发送骑行资讯与公告。我可以随时停止接收。",
       "Which company are you an employee for?": "您是哪家公司的员工？",
       "Guest/Other": "嘉宾/其他",
       "Enter your company": "请输入您的公司名称"
@@ -3134,7 +3148,8 @@
       "Choose how they are related to you.": "あなたとの関係を選択してください。",
       "Your contact’s number can’t be your own.": "連絡先の番号にご自身の番号は使えません。",
       "The two emergency contacts can’t have the same number.": "2人の緊急連絡先に同じ番号は使えません。",
-      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "ライドのニュースやお知らせをWhatsAppとメールで受け取る。いつでも配信を停止できます。",
+      "Try again": "再試行",
+      "Send me ride news and announcements by WhatsApp. I can stop at any time.": "ライドのニュースやお知らせをWhatsAppで受け取る。いつでも配信を停止できます。",
       "Which company are you an employee for?": "どの会社の従業員ですか？",
       "Guest/Other": "ゲスト/その他",
       "Enter your company": "所属会社を入力してください"

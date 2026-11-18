@@ -2479,7 +2479,7 @@ var MMAccount = (function () {
 
 ; window.MMAccount = MMAccount;
 (function () {
-  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.00a0758317.json","hi":"/forms/petromin/t/hi.6751704f03.json","tl":"/forms/petromin/t/tl.faae8ed589.json","es":"/forms/petromin/t/es.fd34e10083.json","ne":"/forms/petromin/t/ne.bd43b109c5.json","fr":"/forms/petromin/t/fr.42c6e97724.json","pt":"/forms/petromin/t/pt.4fdc043223.json","bn":"/forms/petromin/t/bn.ae4b824aef.json","ur":"/forms/petromin/t/ur.2555f8707d.json","id":"/forms/petromin/t/id.6429488412.json","ms":"/forms/petromin/t/ms.ac1154037a.json","de":"/forms/petromin/t/de.dd1154971b.json","ru":"/forms/petromin/t/ru.8cda475375.json","zh":"/forms/petromin/t/zh.bdbb156496.json","ja":"/forms/petromin/t/ja.1804a6564d.json"};
+  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.469bc0380e.json","hi":"/forms/petromin/t/hi.2f14d42a66.json","tl":"/forms/petromin/t/tl.9e4798baa7.json","es":"/forms/petromin/t/es.a9487af948.json","ne":"/forms/petromin/t/ne.5bba6c7d61.json","fr":"/forms/petromin/t/fr.8fe17e2679.json","pt":"/forms/petromin/t/pt.11b4c754bc.json","bn":"/forms/petromin/t/bn.8e71802f5b.json","ur":"/forms/petromin/t/ur.501e8dc20f.json","id":"/forms/petromin/t/id.3dabbb686b.json","ms":"/forms/petromin/t/ms.c93776fd8b.json","de":"/forms/petromin/t/de.0bfafc9555.json","ru":"/forms/petromin/t/ru.4e3aa67807.json","zh":"/forms/petromin/t/zh.8ccacfdee3.json","ja":"/forms/petromin/t/ja.4f65788b28.json"};
   site.tBase = files;
   function start(dict) {
     var T_SITE = {}; if (dict) T_SITE[site.lang] = dict;
@@ -3170,6 +3170,7 @@ var MMAccount = (function () {
   setLoading = function (on) {
     submitting = !!on; _setLoadingDesign(on);
     $("#back").disabled = !!on; $("#cancel-edit").disabled = !!on;
+    document.querySelectorAll("#review .rv-change").forEach(function (b) { b.disabled = !!on; }); // the review's Change too
   };
   // An edit opened from a saved confirmation knows its night before the calendar answers (or after the night has left
   // the list): the review and the registration use it while it is the one picked.
@@ -3185,7 +3186,7 @@ var MMAccount = (function () {
 
   /* Sessions: three grey cards while the calendar answers (nothing reads as "No upcoming sessions" before it has),
      and with no night to offer, the WhatsApp line beside the message. */
-  var sessionsLoading = 0, sessionsAsked = 0;
+  var sessionsLoading = 0, sessionsAsked = 0, sessionsFailed = false;
   var _renderSessionsDesign = renderSessions;
   renderSessions = function () {
     var busy = sessionsLoading > 0 && !sessions.length;
@@ -3194,7 +3195,13 @@ var MMAccount = (function () {
       sessionsEl.innerHTML = '<div class="session skeleton" aria-hidden="true"><span></span><span></span></div>'.repeat(3);
       return;
     }
-    _renderSessionsDesign();
+    // A calendar that never answered is not "No upcoming sessions": it says so, with a button that asks again.
+    if (sessionsFailed && !sessions.length) {
+      sessionsEl.innerHTML = "";
+      var p = document.createElement("p"); p.className = "sessions-empty"; p.setAttribute("data-t", "Could not reach the server"); render(p); sessionsEl.appendChild(p);
+      var b = document.createElement("button"); b.type = "button"; b.id = "sessions-retry"; b.className = "pill sessions-help"; b.setAttribute("data-t", "Try again"); render(b);
+      b.addEventListener("click", function () { loadSessions(); }); sessionsEl.appendChild(b);
+    } else _renderSessionsDesign();
     if (!sessions.length) {
       var a = document.createElement("a"); a.className = "pill sessions-help"; a.href = "https://wa.me/966566668818"; a.target = "_blank"; a.rel = "noopener";
       a.setAttribute("data-t", "Need help? WhatsApp us"); render(a); sessionsEl.appendChild(a);
@@ -3207,9 +3214,11 @@ var MMAccount = (function () {
     try {
       var r = await sbClient().rpc("rider_sessions", { p_source: SOURCE });
       if (r.error) throw r.error;
-      if (mine === sessionsAsked) { sessionsLoading = 0; setSessions(Array.isArray(r.data) ? r.data : []); }
-    } catch (err) { if (mine === sessionsAsked) { sessionsLoading = 0; setSessions([]); showBanner("Could not reach the server"); } }
+      if (mine === sessionsAsked) { sessionsLoading = 0; sessionsFailed = false; setSessions(Array.isArray(r.data) ? r.data : []); }
+    } catch (err) { if (mine === sessionsAsked) { sessionsLoading = 0; sessionsFailed = true; setSessions([]); showBanner("Could not reach the server"); } }
   }
+  // The night step asks the calendar again when the last ask got no answer (a weak signal at boot).
+  stepHooks.push(function (n) { if (paneAt(n) === "session" && sessionsFailed && !sessionsLoading) loadSessions(); });
 
   /* Dialogs: every one is centred on the screen (the owner's rule for pop-ups); a tap on the backdrop closes the
      ones that only show text. */
@@ -3384,7 +3393,7 @@ var MMAccount = (function () {
       part("bike", "Bike", bikes);
   }
   $("#review").addEventListener("click", function (e) {
-    var b = e.target.closest(".rv-change"); if (!b) return;
+    var b = e.target.closest(".rv-change"); if (!b || submitting) return; // nothing changes under a registration on its way
     returnTo = STEPS; goStep(Number(b.getAttribute("data-go")));
   });
   stepHooks.push(function (n) { if (n === STEPS) renderReview(); });
@@ -3660,7 +3669,7 @@ var MMAccount = (function () {
     if (!pick) { drawOthers(); return; }
     saveKept(keptList().filter(function (x) { return keyOf(x) !== key; }));
     keep(current);
-    guestForget(); // the account signed in for the last booking is not this one's (bug hunt 2026-11-18)
+    guestKeepFor(pick); // a guest's account in memory is not the next ticket's
     showSuccess(pick); // the phone's confirmation now (saved as it), the one before it kept
   });
   function startAnother() {
@@ -3814,7 +3823,7 @@ var MMAccount = (function () {
     saveKept(keptList().filter(function (x) { return keyOf(x) !== keyOf(d); }));
     current = null;
     // The phone's next registration shows, if it holds one; otherwise a fresh form.
-    if (!restoreKept()) { editing = null; another = false; prefill({}); setSubmitLabels(false); $("#privacy").checked = false; $("#success").hidden = true; $("#card").setAttribute("data-state", "form"); returnTo = 0; goStep(1); loadSessions(); }
+    if (!restoreKept()) { editing = null; another = false; guestForget(); prefill({}); setSubmitLabels(false); $("#privacy").checked = false; $("#success").hidden = true; $("#card").setAttribute("data-state", "form"); returnTo = 0; goStep(1); loadSessions(); }
     setNotice("Your booking was cancelled.");
   });
 
@@ -4006,7 +4015,7 @@ var MMAccount = (function () {
      otherwise start at step 1 with live sessions. */
   function restoreKept() {
     var list = keptList(); if (!list.length) return false;
-    saveKept(list.slice(1)); showSuccess(list[0]); return true;
+    saveKept(list.slice(1)); guestKeepFor(list[0]); showSuccess(list[0]); return true;
   }
   /* What the pages this one replaced left on the phone (micromobility.sa/dukan and /petromin-invite, turned off
      2026-11-13): their saved confirmations join this page's own, once, so a ticket made there still shows here. A
@@ -4044,7 +4053,10 @@ var MMAccount = (function () {
      account's own (petromin_guest_book: the name, mobile and height are the account's), with an I- number.
      The session is kept in memory only: a reload, or Register another, forgets it. ── */
   var BOOKING_URL = (SITE_FORM && SITE_FORM.booking) || "https://experiences.micromobility.sa/";
-  document.querySelectorAll(".ac-app").forEach(function (a) { a.href = BOOKING_URL; });
+  // Forgot password opens the booking site on its own reset step: it reads ?auth= only beside a ?handoff= it knows
+  // ("site"), and this tab stays open to sign in here with the new password.
+  function paintAppLinks() { document.querySelectorAll(".ac-app").forEach(function (a) { a.href = a.id === "ac-forgot" ? BOOKING_URL + "?handoff=site&auth=forgot&lang=" + html.lang : BOOKING_URL; }); }
+  paintAppLinks(); langHooks.push(paintAppLinks);
   var acct = null;   // {id, token, name, email, phone, made}
   var prof = null, owe = { height: false, em: false, nat: false, birth: false }, blocked = false, fixed = [], held = {}, emRetry = false;
   var acPanel = "ask", acBusy = false;
@@ -4289,6 +4301,7 @@ var MMAccount = (function () {
     var b = iso.split("-").map(Number);
     $("#ac-birth-y").value = String(b[0]); buildDob(); $("#ac-birth-m").value = String(b[1]); buildDob(); $("#ac-birth-d").value = String(b[2]); buildDob();
   }
+  function clearBirth() { $("#ac-birth-d").value = ""; $("#ac-birth-m").value = ""; $("#ac-birth-y").value = ""; buildDob(); }
   ["#ac-birth-d", "#ac-birth-m", "#ac-birth-y"].forEach(function (s) { $(s).addEventListener("change", function () { buildDob(); setError("f-ac-birth", false); }); });
   $("#ac-nat").addEventListener("change", function () { setError("f-ac-nat", false); });
 
@@ -4539,9 +4552,10 @@ var MMAccount = (function () {
       emergency: a.em && a.em !== "absent" ? { name: a.em.emergency_name, phone: a.em.emergency_phone, relation: a.em.emergency_relation } : null };
     // What the account holds goes into the boxes it asks again; the company the booking or the account already names.
     if (!acClean($("#ac-company").value) && a.about && acClean(a.about.workplace)) $("#ac-company").value = acClean(a.about.workplace).slice(0, 120);
-    // (an account without them starts from empty boxes, never from what was in them before)
-    if (prof.birth_date) setBirth(prof.birth_date); else { ["#ac-birth-d", "#ac-birth-m", "#ac-birth-y"].forEach(function (s) { $(s).value = ""; }); buildDob(); }
-    if (prof.nationality && Array.prototype.some.call($("#ac-nat").options, function (o) { return o.value === prof.nationality; })) $("#ac-nat").value = prof.nationality; else $("#ac-nat").value = "";
+    // The birth date and nationality boxes hold this account's own, or nothing: never what an account signed in
+    // before it on this phone held.
+    if (prof.birth_date) setBirth(prof.birth_date); else clearBirth();
+    $("#ac-nat").value = prof.nationality && Array.prototype.some.call($("#ac-nat").options, function (o) { return o.value === prof.nationality; }) ? prof.nationality : "";
     if (hasHeight && !$("#ac-xheight").value) $("#ac-xheight").value = String(prof.height);
     if (a.em && a.em !== "absent" && $("#xem-name").value === "") fillEm("xem", a.em.emergency_name, a.em.emergency_phone, a.em.emergency_relation);
     paintDetails();
@@ -4673,15 +4687,17 @@ var MMAccount = (function () {
   function guestForget() {
     acct = null; prof = null; emRetry = false; blocked = false; owe = { height: false, em: false, nat: false, birth: false };
     ["ac-ident", "ac-spwd", "ac-first", "ac-last", "ac-email", "ac-phone", "ac-pwd", "ac-pwd2", "ac-height", "ac-company", "ac-xheight", "em-name", "em-phone", "xem-name", "xem-phone"].forEach(function (id) { $("#" + id).value = ""; });
-    // the selects too: the last account's nationality and birth date, the relations and the codes picked (bug hunt 2026-11-18)
-    $("#ac-nat").value = ""; ["#ac-birth-d", "#ac-birth-m", "#ac-birth-y"].forEach(function (s) { $(s).value = ""; }); buildDob();
-    EM_PRE.forEach(function (p) { $("#" + p + "-rel").value = ""; $("#" + p + "-cc").value = "SA+966"; ccFace($("#" + p + "-cc")); });
-    $("#ac-cc").value = "SA+966"; ccFace($("#ac-cc"));
+    // The lists too: the next person never sees the last one's birth date, nationality, relations or calling codes.
+    ["ac-nat", "em-rel", "xem-rel"].forEach(function (id) { $("#" + id).value = ""; }); clearBirth();
+    ["ac-cc", "em-cc", "xem-cc"].forEach(function (id) { var sel = $("#" + id); sel.value = "SA+966"; ccFace(sel); });
     $("#ac-ack").checked = false; $("#ac-news").checked = false; acGender = null;
     acGenders.querySelectorAll(".tile").forEach(function (x) { x.setAttribute("aria-checked", "false"); }); syncRoving(acGenders);
     $("#ac-temp").hidden = true; emailFix = null; paintEmailFix();
     acShow("ask"); paintDetails();
   }
+  // The account in memory belongs to the ticket on screen: a ticket of another kind, or one booked with another mobile
+  // (another person's on a shared phone), forgets it, so its Edit asks for that ticket's own sign-in.
+  function guestKeepFor(d) { if (acct && (!d || kindOfRecord(d) !== "guest" || last9(acct.phone) !== last9(d.phone))) guestForget(); }
   /* Edit: the booking as the server holds it now, then the account that made it (signed into again after a reload),
      and the summary. A booking the desk has checked in, or one made on the old page (no account), is not changed here. */
   async function startGuestEdit() {
@@ -4700,9 +4716,7 @@ var MMAccount = (function () {
       if (live.account === false) { showSuccess(live); return; }
       current = live; try { localStorage.setItem(STORE, JSON.stringify(live)); } catch (e) {}
     }
-    // The account in memory is the last one signed in on this phone: another guest's booking (one of the phone's others)
-    // is never edited under it, it signs in for itself (bug hunt 2026-11-18).
-    if (acct && (!last9(acct.phone) || last9(acct.phone) !== last9(current.phone))) guestForget();
+    guestKeepFor(current);
     editing = current; another = false; prefill(current); setSubmitLabels(true);
     $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
     hideBanner(); setNotice(null); returnTo = 0;
@@ -4734,7 +4748,14 @@ var MMAccount = (function () {
       // The account already rides that night on a booking of its own (a member's, a tag holder's): no guest booking is made.
       if (d.error === "booked") { returnTo = STEPS; goStep(stepOf("session")); setError("f-session", true, "You already have a booking on this ride."); focusInvalid(); return; }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
-      if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
+      // A ticket booked with another mobile than this account's is that account's booking, not a lost one: it stays
+      // on the phone (Cancel goes back to it, and a registration now keeps it in the list).
+      if (d.error === "notfound") {
+        var gone = !editing || last9(acct.phone) === last9(editing.phone);
+        editing = null; if (!gone) another = true; setSubmitLabels(false);
+        if (gone) { try { localStorage.removeItem(STORE); } catch (err) {} }
+        failBanner("We could not find your booking. Please register again."); return;
+      }
       // The account owes an answer (the nationality from its second booking on): asked on the account step, then back here.
       if (d.error === "fix") { await enterDetails(); if (acct) { returnTo = STEPS; goStep(stepOf("account")); showBanner("Your account still needs a few details before it can book."); } return; }
       failBanner("We could not save this. Please try again."); return;

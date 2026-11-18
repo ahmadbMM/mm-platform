@@ -170,6 +170,7 @@
   setLoading = function (on) {
     submitting = !!on; _setLoadingDesign(on);
     $("#back").disabled = !!on; $("#cancel-edit").disabled = !!on;
+    document.querySelectorAll("#review .rv-change").forEach(function (b) { b.disabled = !!on; }); // the review's Change too
   };
   // An edit opened from a saved confirmation knows its night before the calendar answers (or after the night has left
   // the list): the review and the registration use it while it is the one picked.
@@ -185,7 +186,7 @@
 
   /* Sessions: three grey cards while the calendar answers (nothing reads as "No upcoming sessions" before it has),
      and with no night to offer, the WhatsApp line beside the message. */
-  var sessionsLoading = 0, sessionsAsked = 0;
+  var sessionsLoading = 0, sessionsAsked = 0, sessionsFailed = false;
   var _renderSessionsDesign = renderSessions;
   renderSessions = function () {
     var busy = sessionsLoading > 0 && !sessions.length;
@@ -194,7 +195,13 @@
       sessionsEl.innerHTML = '<div class="session skeleton" aria-hidden="true"><span></span><span></span></div>'.repeat(3);
       return;
     }
-    _renderSessionsDesign();
+    // A calendar that never answered is not "No upcoming sessions": it says so, with a button that asks again.
+    if (sessionsFailed && !sessions.length) {
+      sessionsEl.innerHTML = "";
+      var p = document.createElement("p"); p.className = "sessions-empty"; p.setAttribute("data-t", "Could not reach the server"); render(p); sessionsEl.appendChild(p);
+      var b = document.createElement("button"); b.type = "button"; b.id = "sessions-retry"; b.className = "pill sessions-help"; b.setAttribute("data-t", "Try again"); render(b);
+      b.addEventListener("click", function () { loadSessions(); }); sessionsEl.appendChild(b);
+    } else _renderSessionsDesign();
     if (!sessions.length) {
       var a = document.createElement("a"); a.className = "pill sessions-help"; a.href = "https://wa.me/966566668818"; a.target = "_blank"; a.rel = "noopener";
       a.setAttribute("data-t", "Need help? WhatsApp us"); render(a); sessionsEl.appendChild(a);
@@ -207,9 +214,11 @@
     try {
       var r = await sbClient().rpc("rider_sessions", { p_source: SOURCE });
       if (r.error) throw r.error;
-      if (mine === sessionsAsked) { sessionsLoading = 0; setSessions(Array.isArray(r.data) ? r.data : []); }
-    } catch (err) { if (mine === sessionsAsked) { sessionsLoading = 0; setSessions([]); showBanner("Could not reach the server"); } }
+      if (mine === sessionsAsked) { sessionsLoading = 0; sessionsFailed = false; setSessions(Array.isArray(r.data) ? r.data : []); }
+    } catch (err) { if (mine === sessionsAsked) { sessionsLoading = 0; sessionsFailed = true; setSessions([]); showBanner("Could not reach the server"); } }
   }
+  // The night step asks the calendar again when the last ask got no answer (a weak signal at boot).
+  stepHooks.push(function (n) { if (paneAt(n) === "session" && sessionsFailed && !sessionsLoading) loadSessions(); });
 
   /* Dialogs: every one is centred on the screen (the owner's rule for pop-ups); a tap on the backdrop closes the
      ones that only show text. */
@@ -384,7 +393,7 @@
       part("bike", "Bike", bikes);
   }
   $("#review").addEventListener("click", function (e) {
-    var b = e.target.closest(".rv-change"); if (!b) return;
+    var b = e.target.closest(".rv-change"); if (!b || submitting) return; // nothing changes under a registration on its way
     returnTo = STEPS; goStep(Number(b.getAttribute("data-go")));
   });
   stepHooks.push(function (n) { if (n === STEPS) renderReview(); });
@@ -660,7 +669,7 @@
     if (!pick) { drawOthers(); return; }
     saveKept(keptList().filter(function (x) { return keyOf(x) !== key; }));
     keep(current);
-    guestForget(); // the account signed in for the last booking is not this one's (bug hunt 2026-11-18)
+    guestKeepFor(pick); // a guest's account in memory is not the next ticket's
     showSuccess(pick); // the phone's confirmation now (saved as it), the one before it kept
   });
   function startAnother() {
@@ -814,7 +823,7 @@
     saveKept(keptList().filter(function (x) { return keyOf(x) !== keyOf(d); }));
     current = null;
     // The phone's next registration shows, if it holds one; otherwise a fresh form.
-    if (!restoreKept()) { editing = null; another = false; prefill({}); setSubmitLabels(false); $("#privacy").checked = false; $("#success").hidden = true; $("#card").setAttribute("data-state", "form"); returnTo = 0; goStep(1); loadSessions(); }
+    if (!restoreKept()) { editing = null; another = false; guestForget(); prefill({}); setSubmitLabels(false); $("#privacy").checked = false; $("#success").hidden = true; $("#card").setAttribute("data-state", "form"); returnTo = 0; goStep(1); loadSessions(); }
     setNotice("Your booking was cancelled.");
   });
 
@@ -1006,7 +1015,7 @@
      otherwise start at step 1 with live sessions. */
   function restoreKept() {
     var list = keptList(); if (!list.length) return false;
-    saveKept(list.slice(1)); showSuccess(list[0]); return true;
+    saveKept(list.slice(1)); guestKeepFor(list[0]); showSuccess(list[0]); return true;
   }
   /* What the pages this one replaced left on the phone (micromobility.sa/dukan and /petromin-invite, turned off
      2026-11-13): their saved confirmations join this page's own, once, so a ticket made there still shows here. A

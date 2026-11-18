@@ -177,6 +177,13 @@
     return day > now.slice(0, 10) || (day === now.slice(0, 10) && bw.at && now.slice(11, 16) < bw.at) ? { day: day, at: bw.at } : null;
   }
   function bookable(r) { return !!r && (r.status === "open" || r.status === "full") && !bwOpens(r); }
+  // Full, no waitlist (the booking app's _sessFb): staff closed the ride as fully booked (bike_slots._fbk). Riders see it
+  // said so, never "No ride open", so nobody thinks it was called off; nothing is booked on it.
+  function fbkOf(r) {
+    if (!r || r.status !== "closed") return false;
+    var b = r.bike_slots; try { if (typeof b === "string") b = JSON.parse(b); } catch (e) { b = null; }
+    return !!b && typeof b === "object" && !!b._fbk;
+  }
   // When a ride opens for booking, in ms: sessions.opens_at, or the booking window when that is later; 0 when not known.
   function opensAt(r) {
     var o = r && r.opens_at ? Date.parse(r.opens_at) : NaN, w = bwOpens(r), t = w ? Date.parse(w.day + "T" + (w.at || "00:00") + ":00+03:00") : NaN;
@@ -202,11 +209,12 @@
 
   /* ── The landing ─────────────────────────────────────────────────────── */
   function fact(dt, dd) { return '<div class="fact"><dt>' + esc(dt) + "</dt><dd>" + dd + "</dd></div>"; }
-  var STATES = { open: "Places open", full: "Waitlist only", none: "No ride open", opens: "Opens soon", error: "Could not load the rides" };
+  var STATES = { open: "Places open", full: "Waitlist only", fbk: "Fully booked", none: "No ride open", opens: "Opens soon", error: "Could not load the rides" };
   function landState() {
     if (rides === undefined) return ridesErr ? "error" : "loading";
     var r = landRide();
     if (!r) return "none";
+    if (fbkOf(r)) return "fbk";
     if (!bookable(r)) return "opens";
     return r.status === "full" ? "full" : "open";
   }
@@ -230,15 +238,16 @@
       '<svg aria-hidden="true"><use href="#' + (state === "open" || state === "full" ? "i-open" : "i-stop") + '"/></svg>' + esc(tr(STATES[state]));
     var n = null;
     if (state === "full") n = ["This ride is full.", "Book now to join its waitlist. If a place opens, it goes to the waitlist in order."];
+    else if (state === "fbk") n = ["See you next Saturday", ""];
     else if (state === "none") n = ["No Saturday ride is open for booking right now.", "Check back soon for the next ride."];
     else if (state === "opens") n = ["Booking opens {when}.", ""];
     else if (state === "error") n = ["Could not reach the server. Please try again.", ""];
     note.hidden = !n;
     if (n) { $(".notice-h", note).textContent = tr(n[0], { when: opensText(r) }); $(".notice-p", note).textContent = n[1] ? tr(n[1]) : ""; }
     var go = $("#go");
-    if (!busy) go.disabled = state === "loading" || state === "none" || state === "opens";
+    if (!busy) go.disabled = state === "loading" || state === "none" || state === "opens" || state === "fbk";
     $("#go-label").textContent = state === "error" ? tr("Try again") : tr("Continue");
-    $("#f-code").hidden = state === "none" || state === "opens";
+    $("#f-code").hidden = state === "none" || state === "opens" || state === "fbk";
     watchOpens();
   }
   $("#code").addEventListener("input", function () { clearMsg("f-code"); });
@@ -430,7 +439,6 @@
      rules file the booking site's staff check reads). ─────────────────────────────────────── */
   var RULES = SH.PHONE_RULES, reCache = {};
   var CC_DIGITS = {}; SH.COUNTRY_CODES.forEach(function (x) { CC_DIGITS[x[0].slice(1)] = true; });
-  function flagOf(iso) { return String.fromCodePoint.apply(null, iso.toUpperCase().split("").map(function (c) { return 0x1F1E6 + c.charCodeAt(0) - 65; })); }
   var dn = {};
   function regionName(iso, fallback) {
     try {
@@ -450,18 +458,19 @@
     try { rest.sort(function (a, b) { return a.n.localeCompare(b.n, lang); }); } catch (e) {}
     return gulf.map(function (x) { return { x: x, n: ccName(x) }; }).concat(rest);
   }
-  var PK = { sel: "#cc", flag: "#cc-flag", code: "#cc-code", input: "#phone" };
-  var WPK = { sel: "#wacc", flag: "#wacc-flag", code: "#wacc-code", input: "#wa" };
+  // The code and the country's name only: no flag emoji (the owner's rule, no emoji anywhere), as the booking app's picker.
+  var PK = { sel: "#cc", code: "#cc-code", input: "#phone" };
+  var WPK = { sel: "#wacc", code: "#wacc-code", input: "#wa" };
   function buildCc() { buildCcOne(PK); buildCcOne(WPK); }
   function buildCcOne(pk) {
     var sel = $(pk.sel), cur = sel.value || "SA+966", on = selOnce(cur);
-    sel.innerHTML = ccList().map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + flagOf(o.x[1]) + " " + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
+    sel.innerHTML = ccList().map(function (o) { var v = o.x[1] + o.x[0]; return '<option value="' + v + '" data-iso="' + o.x[1] + '" data-cc="' + o.x[0] + '"' + (on(v) ? " selected" : "") + ">" + esc(o.n) + " (" + o.x[0] + ")</option>"; }).join("");
     if (!sel.value) sel.value = "SA+966";
     ccFace(pk);
   }
   function ccFace(pk) {
     var o = $(pk.sel).selectedOptions[0]; if (!o) return;
-    $(pk.flag).textContent = flagOf(o.getAttribute("data-iso")); $(pk.code).textContent = o.getAttribute("data-cc");
+    $(pk.code).textContent = o.getAttribute("data-cc");
   }
   function ccDigits(pk) { var o = $(pk.sel).selectedOptions[0]; return o ? o.getAttribute("data-cc").slice(1) : "966"; }
   function setCcDigits(k, pk) { var o = $$(pk.sel + " option").filter(function (x) { return x.getAttribute("data-cc") === "+" + k; })[0]; if (o) { $(pk.sel).value = o.value; ccFace(pk); } }
@@ -1307,7 +1316,7 @@
   $("#back-book").addEventListener("click", function () { backToLanding(); });
 
   /* ── Sent ────────────────────────────────────────────────────────────── */
-  var booked = null, leaving = false, autoTimer = null;
+  var booked = null, leaving = false, autoTimer = null, handedOff = false;
   function paintDone() {
     if (!booked) return;
     var wl = booked.status === "waitlist", p = pickupOf(booked.ride);
@@ -1379,7 +1388,9 @@
     $("#done-open").disabled = true; $("#b-open").disabled = true;
     var r = await rpc("customer_handoff_create", { p_id: acct.id, p_token: acct.token });
     var hc = !r.error && typeof r.data === "string" && /^[0-9a-f]{48}$/.test(r.data) ? r.data : null;
-    if (hc) { location.assign(BOOKING_URL + "?signin=" + hc + "&tab=bookings&lang=" + lang); return; }
+    // The session goes with the code: the page the browser may keep for Back holds none of it for the next person on
+    // this phone (signing out in the booking app does not end the session on the server).
+    if (hc) { handedOff = true; acct = null; prof = null; location.assign(BOOKING_URL + "?signin=" + hc + "&tab=bookings&lang=" + lang); return; }
     leaving = false; $("#done-open").disabled = false; $("#b-open").disabled = false;
     $("#done-going").hidden = true; $("#done-fallback").hidden = false;
     if (view !== "done") location.assign(bookingsUrl());
@@ -1388,7 +1399,9 @@
   // Back from the booking app to this page as the browser kept it (its back-forward cache): not on the way out any
   // more, so the button works again and the booking site's link is there.
   window.addEventListener("pageshow", function (e) {
-    if (!e.persisted || !leaving) return;
+    if (!e.persisted) return;
+    if (handedOff) { location.reload(); return; } // signed in over there: a fresh page here, not the last rider's
+    if (!leaving) return;
     leaving = false; $("#done-open").disabled = false; $("#b-open").disabled = false;
     $("#done-going").hidden = true; $("#done-fallback").hidden = false;
   }, OWN);

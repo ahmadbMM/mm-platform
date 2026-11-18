@@ -10,7 +10,10 @@
      account's own (petromin_guest_book: the name, mobile and height are the account's), with an I- number.
      The session is kept in memory only: a reload, or Register another, forgets it. ── */
   var BOOKING_URL = (SITE_FORM && SITE_FORM.booking) || "https://experiences.micromobility.sa/";
-  document.querySelectorAll(".ac-app").forEach(function (a) { a.href = BOOKING_URL; });
+  // Forgot password opens the booking site on its own reset step: it reads ?auth= only beside a ?handoff= it knows
+  // ("site"), and this tab stays open to sign in here with the new password.
+  function paintAppLinks() { document.querySelectorAll(".ac-app").forEach(function (a) { a.href = a.id === "ac-forgot" ? BOOKING_URL + "?handoff=site&auth=forgot&lang=" + html.lang : BOOKING_URL; }); }
+  paintAppLinks(); langHooks.push(paintAppLinks);
   var acct = null;   // {id, token, name, email, phone, made}
   var prof = null, owe = { height: false, em: false, nat: false, birth: false }, blocked = false, fixed = [], held = {}, emRetry = false;
   var acPanel = "ask", acBusy = false;
@@ -255,6 +258,7 @@
     var b = iso.split("-").map(Number);
     $("#ac-birth-y").value = String(b[0]); buildDob(); $("#ac-birth-m").value = String(b[1]); buildDob(); $("#ac-birth-d").value = String(b[2]); buildDob();
   }
+  function clearBirth() { $("#ac-birth-d").value = ""; $("#ac-birth-m").value = ""; $("#ac-birth-y").value = ""; buildDob(); }
   ["#ac-birth-d", "#ac-birth-m", "#ac-birth-y"].forEach(function (s) { $(s).addEventListener("change", function () { buildDob(); setError("f-ac-birth", false); }); });
   $("#ac-nat").addEventListener("change", function () { setError("f-ac-nat", false); });
 
@@ -505,9 +509,10 @@
       emergency: a.em && a.em !== "absent" ? { name: a.em.emergency_name, phone: a.em.emergency_phone, relation: a.em.emergency_relation } : null };
     // What the account holds goes into the boxes it asks again; the company the booking or the account already names.
     if (!acClean($("#ac-company").value) && a.about && acClean(a.about.workplace)) $("#ac-company").value = acClean(a.about.workplace).slice(0, 120);
-    // (an account without them starts from empty boxes, never from what was in them before)
-    if (prof.birth_date) setBirth(prof.birth_date); else { ["#ac-birth-d", "#ac-birth-m", "#ac-birth-y"].forEach(function (s) { $(s).value = ""; }); buildDob(); }
-    if (prof.nationality && Array.prototype.some.call($("#ac-nat").options, function (o) { return o.value === prof.nationality; })) $("#ac-nat").value = prof.nationality; else $("#ac-nat").value = "";
+    // The birth date and nationality boxes hold this account's own, or nothing: never what an account signed in
+    // before it on this phone held.
+    if (prof.birth_date) setBirth(prof.birth_date); else clearBirth();
+    $("#ac-nat").value = prof.nationality && Array.prototype.some.call($("#ac-nat").options, function (o) { return o.value === prof.nationality; }) ? prof.nationality : "";
     if (hasHeight && !$("#ac-xheight").value) $("#ac-xheight").value = String(prof.height);
     if (a.em && a.em !== "absent" && $("#xem-name").value === "") fillEm("xem", a.em.emergency_name, a.em.emergency_phone, a.em.emergency_relation);
     paintDetails();
@@ -639,15 +644,17 @@
   function guestForget() {
     acct = null; prof = null; emRetry = false; blocked = false; owe = { height: false, em: false, nat: false, birth: false };
     ["ac-ident", "ac-spwd", "ac-first", "ac-last", "ac-email", "ac-phone", "ac-pwd", "ac-pwd2", "ac-height", "ac-company", "ac-xheight", "em-name", "em-phone", "xem-name", "xem-phone"].forEach(function (id) { $("#" + id).value = ""; });
-    // the selects too: the last account's nationality and birth date, the relations and the codes picked (bug hunt 2026-11-18)
-    $("#ac-nat").value = ""; ["#ac-birth-d", "#ac-birth-m", "#ac-birth-y"].forEach(function (s) { $(s).value = ""; }); buildDob();
-    EM_PRE.forEach(function (p) { $("#" + p + "-rel").value = ""; $("#" + p + "-cc").value = "SA+966"; ccFace($("#" + p + "-cc")); });
-    $("#ac-cc").value = "SA+966"; ccFace($("#ac-cc"));
+    // The lists too: the next person never sees the last one's birth date, nationality, relations or calling codes.
+    ["ac-nat", "em-rel", "xem-rel"].forEach(function (id) { $("#" + id).value = ""; }); clearBirth();
+    ["ac-cc", "em-cc", "xem-cc"].forEach(function (id) { var sel = $("#" + id); sel.value = "SA+966"; ccFace(sel); });
     $("#ac-ack").checked = false; $("#ac-news").checked = false; acGender = null;
     acGenders.querySelectorAll(".tile").forEach(function (x) { x.setAttribute("aria-checked", "false"); }); syncRoving(acGenders);
     $("#ac-temp").hidden = true; emailFix = null; paintEmailFix();
     acShow("ask"); paintDetails();
   }
+  // The account in memory belongs to the ticket on screen: a ticket of another kind, or one booked with another mobile
+  // (another person's on a shared phone), forgets it, so its Edit asks for that ticket's own sign-in.
+  function guestKeepFor(d) { if (acct && (!d || kindOfRecord(d) !== "guest" || last9(acct.phone) !== last9(d.phone))) guestForget(); }
   /* Edit: the booking as the server holds it now, then the account that made it (signed into again after a reload),
      and the summary. A booking the desk has checked in, or one made on the old page (no account), is not changed here. */
   async function startGuestEdit() {
@@ -666,9 +673,7 @@
       if (live.account === false) { showSuccess(live); return; }
       current = live; try { localStorage.setItem(STORE, JSON.stringify(live)); } catch (e) {}
     }
-    // The account in memory is the last one signed in on this phone: another guest's booking (one of the phone's others)
-    // is never edited under it, it signs in for itself (bug hunt 2026-11-18).
-    if (acct && (!last9(acct.phone) || last9(acct.phone) !== last9(current.phone))) guestForget();
+    guestKeepFor(current);
     editing = current; another = false; prefill(current); setSubmitLabels(true);
     $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
     hideBanner(); setNotice(null); returnTo = 0;
@@ -700,7 +705,14 @@
       // The account already rides that night on a booking of its own (a member's, a tag holder's): no guest booking is made.
       if (d.error === "booked") { returnTo = STEPS; goStep(stepOf("session")); setError("f-session", true, "You already have a booking on this ride."); focusInvalid(); return; }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
-      if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
+      // A ticket booked with another mobile than this account's is that account's booking, not a lost one: it stays
+      // on the phone (Cancel goes back to it, and a registration now keeps it in the list).
+      if (d.error === "notfound") {
+        var gone = !editing || last9(acct.phone) === last9(editing.phone);
+        editing = null; if (!gone) another = true; setSubmitLabels(false);
+        if (gone) { try { localStorage.removeItem(STORE); } catch (err) {} }
+        failBanner("We could not find your booking. Please register again."); return;
+      }
       // The account owes an answer (the nationality from its second booking on): asked on the account step, then back here.
       if (d.error === "fix") { await enterDetails(); if (acct) { returnTo = STEPS; goStep(stepOf("account")); showBanner("Your account still needs a few details before it can book."); } return; }
       failBanner("We could not save this. Please try again."); return;

@@ -62,7 +62,6 @@
       <div id="f-code" class="field">
         <label for="code" data-t="Ride code">Ride code</label>
         <input id="code" name="code" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" dir="ltr" maxlength="40">
-        <p class="hint" data-t="The code MicroMobility gave you for the Saturday ride.">The code MicroMobility gave you for the Saturday ride.</p>
         <p class="err" aria-live="polite"></p>
       </div>
       <button id="go" class="d-btn" type="submit" disabled>
@@ -94,7 +93,6 @@
         </div>
 
         <form id="p-create" class="panel" novalidate autocomplete="on" hidden>
-          <p class="lead" data-t="This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.">This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.</p>
           <div id="f-name" class="field">
             <div class="name-row">
               <span class="name-part"><label for="first" data-site="firstName">First Name</label><input id="first" name="first" type="text" autocomplete="given-name" autocapitalize="words" maxlength="60" data-site-placeholder="phFirstName"></span>
@@ -122,7 +120,7 @@
             <label for="phone" data-t="Mobile number">Mobile number</label>
             <div class="phone-row" dir="ltr">
               <label class="cc-wrap">
-                <span class="cc-face" aria-hidden="true"><span id="cc-flag" class="cc-flag"></span><span id="cc-code">+966</span></span>
+                <span class="cc-face" aria-hidden="true"><span id="cc-code">+966</span></span>
                 <select id="cc" class="cc" aria-label="Country code" data-t-aria="Country code"></select>
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
               </label>
@@ -165,7 +163,6 @@
         </form>
 
         <form id="p-signin" class="panel" novalidate autocomplete="on" hidden>
-          <p class="lead" data-t="Sign in with the account you use in the MicroMobility app.">Sign in with the account you use in the MicroMobility app.</p>
           <div id="f-ident" class="field">
             <label for="ident" data-site="authIdentifier">Email or phone</label>
             <input id="ident" name="username" type="text" autocomplete="username" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="254">
@@ -196,10 +193,9 @@
       <form id="s-details" class="step" data-step="2" novalidate hidden>
         <div id="acct-made" class="ok-note" role="status" tabindex="-1" hidden>
           <span class="ok-mark" aria-hidden="true"><svg><use href="#i-check"/></svg></span>
-          <span><b data-t="Your account has been created">Your account has been created</b><span class="ok-sub" data-t="You can sign in to the MicroMobility app with it any time. Now a few details for the ride.">You can sign in to the MicroMobility app with it any time. Now a few details for the ride.</span></span>
+          <span><b data-t="Your account has been created">Your account has been created</b></span>
         </div>
         <p id="d-who" class="who" hidden></p>
-        <p class="lead" data-t="The details every Saturday ride asks for.">The details every Saturday ride asks for.</p>
         <div id="d-blocked" class="notice" hidden>
           <b data-t="Your account needs a few more details">Your account needs a few more details</b>
           <span data-t="Some of them can only be given on the booking site. Finish them there, then come back to this page to book.">Some of them can only be given on the booking site. Finish them there, then come back to this page to book.</span>
@@ -232,7 +228,7 @@
           <label for="wa" data-t="WhatsApp number">WhatsApp number</label>
           <div class="phone-row" dir="ltr">
             <label class="cc-wrap">
-              <span class="cc-face" aria-hidden="true"><span id="wacc-flag" class="cc-flag"></span><span id="wacc-code">+966</span></span>
+              <span class="cc-face" aria-hidden="true"><span id="wacc-code">+966</span></span>
               <select id="wacc" class="cc" aria-label="Country code" data-t-aria="Country code"></select>
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
             </label>
@@ -244,13 +240,11 @@
         <div id="f-ig" class="field">
           <label for="ig" data-t="Instagram">Instagram</label>
           <input id="ig" name="instagram" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="120" placeholder="@username">
-          <p class="hint" data-t="Your Instagram username, or a link to your profile">Your Instagram username, or a link to your profile</p>
           <p class="err" aria-live="polite"></p>
         </div>
         <div id="f-xheight" class="field">
           <label for="xheight" data-t="Your height in cm">Your height in cm</label>
           <input id="xheight" name="xheight" type="text" inputmode="numeric" maxlength="3" placeholder="175" autocomplete="off">
-          <p class="hint" data-t="We pick the bike size from it.">We pick the bike size from it.</p>
           <p class="err" aria-live="polite"></p>
           <p class="warn" aria-live="polite"></p>
         </div>
