@@ -11,6 +11,7 @@ import { useCart, useHydrated } from "@/components/store/useCart";
 import SavedLink from "@/components/store/SavedLink";
 import { cartCount } from "@/lib/cart";
 import { fill } from "@/i18n/tx";
+import "./sx-B1-nav.css";
 
 type NavProps = {
   locale: string;
@@ -30,6 +31,9 @@ type NavProps = {
 // round icons on the end - search, language, account and the cart (the Salla store's cart);
 // below 1180px the sections open as a full-height dark sheet. Community opens the pages its
 // riders use (links.ts, COMMUNITY); the globe opens every language the site speaks.
+// On every screen (the user, 2026-11-18: "do all", SM11-B, P12): each round icon is a 44px target; below 360px the globe
+// leaves the bar for the menu, so the rest keep theirs; a section is marked where its pages are (the Store on a category
+// page or a product too).
 export default function SiteNav({ locale, hidden = [], labels = {}, booking = BOOKING_URL, cart = STORE_CART_URL, shop = false, noCart = false }: NavProps) {
   const tx = useL();
   const name = (l: { key: string; en: string; ar: string }) => labels[l.key] || tx(l.en, l.ar);
@@ -85,10 +89,11 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
     return () => { document.removeEventListener("keydown", esc); document.removeEventListener("mousedown", away); };
   }, [menu, setMenu]);
 
+  const isAt = (href: string) => path === href || (href !== "/" && path.startsWith(`${href}/`));
   const item = (l: NavLink, onClick?: () => void, tail?: React.ReactNode) => l.external && !(shop && l.key === "store")
     ? <a key={l.key} href={l.href} onClick={onClick}>{name(l)}{tail}</a>
-    : <Link key={l.key} href={l.href} onClick={onClick} aria-current={path === l.href ? "page" : undefined}>{name(l)}{tail}</Link>;
-  const inCommunity = community.some((l) => l.href === path);
+    : <Link key={l.key} href={l.href} onClick={onClick} aria-current={isAt(l.href) ? "page" : undefined}>{name(l)}{tail}</Link>;
+  const inCommunity = community.some((l) => isAt(l.href));
   const here = localeInfo(locale);
 
   return (
@@ -152,7 +157,7 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
           {noCart ? null : shop ? <CartLink /> : (
             <a href={cart} className="mm-nav-icon" title={tx("Cart", "السلة")} aria-label={tx("Cart", "السلة")}>{CART_ICON}</a>
           )}
-          <button type="button" className="mm-nav-burger" aria-expanded={open} aria-controls="mm-nav-sheet" aria-label={tx("Menu", "القائمة")} onClick={() => setOpen((o) => !o)}>
+          <button type="button" className="mm-nav-burger" aria-expanded={open} aria-controls="mm-nav-sheet" aria-label={tx("Menu", "القائمة")} onClick={() => { keepTail(); setOpen((o) => !o); }}>
             <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
             </svg>
@@ -177,6 +182,14 @@ export default function SiteNav({ locale, hidden = [], labels = {}, booking = BO
           {accountHref
             ? <a href={accountHref}>{tx("Account", "الحساب")}{arrow}</a>
             : <Link href="/account" onClick={() => setOpen(false)}>{tx("Account", "الحساب")}{arrow}</Link>}
+          <details className="mm-nav-sheet-lang">
+            <summary>{tx("Language", "اللغة")}<bdi lang={here.html}>{here.name}</bdi></summary>
+            {LOCALES.map((l) => (
+              <Link key={l.code} href={path + tail} locale={l.code} hrefLang={l.html} aria-current={l.code === locale ? "true" : undefined} onClick={() => setOpen(false)}>
+                <bdi lang={l.html}>{l.name}</bdi>
+              </Link>
+            ))}
+          </details>
         </nav>
       )}
     </>
