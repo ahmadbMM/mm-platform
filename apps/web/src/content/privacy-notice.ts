@@ -123,6 +123,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Planning rides and events around what our community asks for, and keeping what is shown suitable for everyone"
      ],
      [
+      "Suggest a ride (Community members only): each suggestion you send (a route, a breakfast spot, a ride idea or something else, in your own words), when you sent it, and our team’s status and reply",
+      "Always optional: only if you send one. Seen by you and our staff; other members never see it. Kept until your account is deleted.",
+      "Planning rides and sessions around what our members suggest, and telling you in your Updates list when yours is planned or happens"
+     ],
+     [
       "The mentorship programme (Community members only): if you register as a mentee, your university, field of study, city, country, starting year, the help you want, your goal and the mentor gender you prefer; if you register as a mentor, where and what you studied, your work, the places you know, how you can help and what you tell us",
       "Optional: only if you register. A mentee’s university and field of study are shown to Community members without their name; their city, country, starting year, the help wanted, their goal and the mentor gender they prefer are seen by our staff only. What a mentor tells us is seen by our staff only; a short line about their experience, without their name, is shown to the one student our staff propose them to. Once you both accept, we share your first name and WhatsApp number with that one person. You can step back at any time; we then stop sharing them.",
       "Matching students starting university with Community members who can help them, and following up on each match"
@@ -186,6 +191,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Community plans and challenges: the Saturdays you tick as planning to come (Community members), each lap you scan at a circuit challenge (your account, the challenge, the session and the time), and the company challenge you join with its code, and when you joined",
       "Always optional: only if you tick a Saturday, scan a lap or enter a company code. The Saturdays you tick are seen only by you and deleted when the month ends. Our staff see lap counts, and who joined each company challenge with their name and mobile number. Other riders never see any of it about you: a company challenge shows its riders only totals of 10 people or more.",
       "Sending you one message when booking opens for a Saturday you ticked; counting your laps toward a challenge’s target and its badge; showing your company’s totals and giving the challenge’s badge"
+     ],
+     [
+      "Your interests: the kinds of sessions you pick in the Community tab (Community members), for example Saturday rides, runs or swimming",
+      "Always optional: you pick them and change them at any time. Seen only by you and our staff.",
+      "Showing you those sessions first, and sending you updates about them"
      ],
      [
       "Your calendar address: a random key and the language of your calendar, made when you open Calendar in Account, and when it was last read",
@@ -376,7 +386,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>Technical error reports:</strong> deleted after 90 days.",
     "<strong>The proof you attach to a badge request:</strong> deleted as soon as our team answers the request.",
     "<strong>Your Updates list:</strong> each message is deleted after 90 days.",
-    "<strong>The Saturdays you plan to come:</strong> deleted when the month ends."
+    "<strong>The Saturdays you plan to come:</strong> deleted when the month ends.",
+    "<strong>Your interests:</strong> kept until you change them or your account is deleted."
    ]
   },
   {
@@ -537,6 +548,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "لتخطيط الجولات والفعاليات وفق ما يطلبه مجتمعنا، ولإبقاء ما يُعرض مناسباً للجميع"
      ],
      [
+      "اقترح جولة (لأعضاء المجتمع فقط): كل اقتراح ترسله (مسار، أو مكان للفطور، أو فكرة جولة، أو شيء آخر، بكلماتك)، ووقت إرساله، وحالته وردّ فريقنا عليه",
+      "اختياري دائماً: فقط إن أرسلت اقتراحاً. لا يراه إلا أنت وموظفونا، ولا يراه الأعضاء الآخرون أبداً. يُحفظ حتى حذف حسابك.",
+      "لتخطيط الجولات والفعاليات وفق ما يقترحه أعضاؤنا، ولإبلاغك في قائمة التحديثات عندما نخطط لاقتراحك أو ننفّذه"
+     ],
+     [
       "برنامج الإرشاد (لأعضاء المجتمع فقط): إن سجّلت كمسترشد: جامعتك وتخصصك ومدينتك ودولتك وسنة بدئك والمساعدة التي تريدها وهدفك وجنس المرشد الذي تفضّله؛ وإن سجّلت كمرشد: أين درست وماذا درست وعملك والأماكن التي تعرفها وكيف يمكنك المساعدة وما تخبرنا به",
       "اختياري: فقط إذا سجّلت. تُعرض جامعة المسترشد وتخصصه لأعضاء المجتمع دون اسمه، ولا يرى مدينته ودولته وسنة بدئه والمساعدة التي يريدها وهدفه وجنس المرشد الذي يفضّله إلا موظفونا. وما يخبرنا به المرشد لا يراه إلا موظفونا، ويُعرض سطر قصير عن خبرته، دون اسمه، على الطالب الوحيد الذي يقترحه عليه موظفونا. وبعد قبولكما كليكما، نشارك اسمك الأول ورقم واتساب الخاص بك مع ذلك الشخص وحده. ويمكنك الانسحاب في أي وقت، وعندها نتوقف عن مشاركتهما.",
       "مطابقة الطلاب الذين يبدؤون دراستهم الجامعية مع أعضاء المجتمع القادرين على مساعدتهم، ومتابعة كل مطابقة"
@@ -600,6 +616,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "خطط المجتمع والتحديات: أيام السبت التي تختار أنك تنوي الحضور فيها (لأعضاء المجتمع)، وكل لفة تمسح رمزها في تحدي الحلبة (حسابك والتحدي والجلسة والوقت)، وتحدي الشركة الذي تنضم إليه برمزه ووقت انضمامك",
       "اختيارية دائمًا: فقط إذا اخترت يوم سبت أو مسحت رمز لفة أو أدخلت رمز شركة. لا يرى أيام السبت التي تختارها إلا أنت، وتُحذف بانتهاء الشهر. يرى موظفونا أعداد اللفات، ومن انضم إلى كل تحدي شركة باسمه ورقم جواله. لا يرى الراكبون الآخرون شيئًا من ذلك عنك: لا يعرض تحدي الشركة لراكبيه إلا أعدادًا إجمالية لا تقل عن 10 أشخاص.",
       "إرسال رسالة واحدة إليك عند فتح الحجز ليوم سبت اخترته؛ واحتساب لفاتك نحو هدف التحدي ووسامه؛ وعرض الأعداد الإجمالية لشركتك ومنح وسام التحدي"
+     ],
+     [
+      "اهتماماتك: أنواع الجلسات التي تختارها في تبويب المجتمع (لأعضاء المجتمع)، مثل جولات السبت أو الجري أو السباحة",
+      "اختيارية دائمًا: تختارها وتغيّرها متى شئت. لا يراها إلا أنت وموظفونا.",
+      "أن نعرض لك تلك الجلسات أولًا، ونرسل إليك تحديثات عنها"
      ],
      [
       "عنوان تقويمك: مفتاح عشوائي ولغة تقويمك، يُنشآن عندما تفتح التقويم في الحساب، ووقت آخر قراءة له",
@@ -790,7 +811,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>تقارير الأخطاء التقنية:</strong> تُحذف بعد 90 يومًا.",
     "<strong>الإثبات الذي ترفقه بطلب وسام:</strong> يُحذف فور ردّ فريقنا على الطلب.",
     "<strong>قائمة التحديثات:</strong> تُحذف كل رسالة بعد 90 يومًا.",
-    "<strong>أيام السبت التي تنوي الحضور فيها:</strong> تُحذف بانتهاء الشهر."
+    "<strong>أيام السبت التي تنوي الحضور فيها:</strong> تُحذف بانتهاء الشهر.",
+    "<strong>اهتماماتك:</strong> نحتفظ بها حتى تغيّرها أو يُحذف حسابك."
    ]
   },
   {
