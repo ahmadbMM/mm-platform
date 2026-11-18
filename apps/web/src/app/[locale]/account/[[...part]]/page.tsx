@@ -84,6 +84,8 @@ import FixRequest from "@/components/account/FixRequest";
 import AmbassadorCard from "@/components/account/AmbassadorCard";
 import BadgeCelebrate, { type Cheer } from "@/components/account/BadgeCelebrate";
 import AccountSettings from "@/components/account/AccountSettings";
+import { PasskeyCard, PasskeyOffer } from "@/components/account/PasskeyParts";
+import { passkeysShown } from "@/lib/sx-B7-passkey-server";
 import Season from "@/components/account/Season";
 import Purchases from "@/components/account/Purchases";
 import StoreOrders from "@/components/account/StoreOrders";
@@ -141,6 +143,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   const handoff = (auth?: string) => bookingLink(`${app.replace(/[?#].*$/, "")}?handoff=site${auth ? `&auth=${auth}` : ""}`, locale);
   const again = localHref(accountPartHref(part), locale); // this page once more, when a read failed
   const tryAgain = tx("Try again", "حاول مرة أخرى");
+  const passkeys = passkeysShown(content); // N06: site_content 'account.passkeys', off by default
 
   // The session could not be checked just now (the database slow or out of reach): said so, with the page once more and
   // Sign out, rather than the sign-in form, which told a rider who is signed in that they were not.
@@ -192,7 +195,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             <h1>{S(c.signin.title)}</h1>
             <p className="ac-text">{S(c.signin.text)}</p>
             {expired && <p className="ac-err" role="status">{tx("That sign-in link has expired. Please sign in again.", "انتهت صلاحية رابط تسجيل الدخول. يرجى تسجيل الدخول مجدداً.")}</p>}
-            <SignIn locale={locale} />
+            <SignIn locale={locale} passkeys={passkeys} />
             {/* Sign-up and a password reset happen in the booking app, which hands the rider back
                 here signed in (?handoff=site; api/account/handoff). */}
             <ul className="ac-notes">
@@ -502,6 +505,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         <div className="ac-sec ac-stack" id="ac-details">
           <ProfileForm locale={locale} profile={pr} about={extras.about} typeNames={typeNames} fillingFor={profilePct(pr) < 100 ? acct.id : null} />
           <PasswordCard needCurrent={needCurrent} />
+          {passkeys && <PasskeyCard />}
           {extras.consents && <RideNews on={extras.consents.rideNews} dialog="ac-privacy" />}
           <PushToggle who={acct.id} />
           <HomeScreen className="sxb-acct-home" />
@@ -667,6 +671,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         <NoticeDialog id="ac-privacy" locale={locale} />
         {ask && asking && <ConsentPrompt needAck={ask.ack} needNews={ask.news} dialog="ac-privacy" />}
         {extras.mustChangePwd && <ForcedPassword />}
+        {passkeys && <PasskeyOffer />}
       </div>
     </PageShell>
   );

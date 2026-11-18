@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
 import SignIn from "@/components/account/SignIn";
+import { passkeysShown } from "@/lib/sx-B7-passkey-server";
 import HandoffLink from "@/components/account/HandoffLink";
 import LiveMap from "@/components/live/LiveMap";
 import "@/components/account/account.css";
@@ -55,7 +56,7 @@ export default async function LivePage({ params, searchParams }: { params: Promi
             <p className="ac-eyebrow">{title}</p>
             <h1>{S(c.signin.title)}</h1>
             <p className="ac-text">{tx("Sign in with your Micromobility account to see where your ride is.", "سجّل الدخول بحساب مايكروموبيليتي لترى أين وصلت جولتك.")}</p>
-            <SignIn locale={locale} />
+            <SignIn locale={locale} passkeys={passkeysShown(content)} />
             <ul className="ac-notes">
               <li><HandoffLink href={handoff("signup")}>{S(c.signin.create)}</HandoffLink></li>
               <li><HandoffLink href={handoff("forgot")}>{S(c.signin.forgot)}</HandoffLink></li>

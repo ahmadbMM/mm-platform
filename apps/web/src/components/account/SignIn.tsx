@@ -6,13 +6,16 @@ import { T } from "./SignIn.text";
 import ChangePassword from "./ChangePassword";
 import { forgetQuiet } from "./quiet";
 import Turnstile, { TURNSTILE_SITE_KEY } from "./Turnstile";
+import { PasskeySignIn, offerPasskeyNext } from "./PasskeyParts";
 
 // Sign in with a Micromobility account: email or mobile, and the password. The page reloads
 // signed in; the session stays in an HttpOnly cookie this script never sees. A password staff
 // issued (a temporary one) is replaced first: the sign-in answers must_change, and the form gives
 // way to ChangePassword until the rider has chosen their own.
+// `passkeys` (the page's server says site_content 'account.passkeys' is on, N06): "Sign in with a passkey" under the
+// form, and a password sign-in marks the offer to add one (components/account/PasskeyParts.tsx).
 
-export default function SignIn({ locale }: { locale: string }) {
+export default function SignIn({ locale, passkeys = false }: { locale: string; passkeys?: boolean }) {
   const t = useLocalize(T);
   const [check, setCheck] = useState("");
   const [again, setAgain] = useState(0); // a new Turnstile check after a failed try
@@ -26,7 +29,7 @@ export default function SignIn({ locale }: { locale: string }) {
   // Only a visitor who is signed out sees this form: the pop-ups' quiet minutes were another
   // account's (./quiet.ts).
   useEffect(() => forgetQuiet(), []);
-  const signedIn = () => { forgetQuiet(); window.location.reload(); };
+  const signedIn = (byPassword = true) => { forgetQuiet(); if (passkeys && byPassword) offerPasskeyNext(); window.location.reload(); };
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (busy) return;
@@ -52,8 +55,9 @@ export default function SignIn({ locale }: { locale: string }) {
     }
     setBusy(false);
   }
-  if (held) return <ChangePassword onDone={signedIn} onBack={() => setHeld(false)} />;
+  if (held) return <ChangePassword onDone={() => signedIn()} onBack={() => setHeld(false)} />;
   return (
+    <>
     <form className="ac-form" onSubmit={submit} noValidate>
       <label>{t.id}<input value={identifier} onChange={(e) => setIdentifier(e.target.value)} autoComplete="username" inputMode="email" dir="ltr" maxLength={254} /></label>
       <label>{t.pwd}
@@ -66,5 +70,7 @@ export default function SignIn({ locale }: { locale: string }) {
       {err && <p className="ac-err" role="alert">{err}</p>}
       <button type="submit" className="ac-go" disabled={busy}>{busy ? t.busy : t.go}</button>
     </form>
+    {passkeys && <PasskeySignIn onSignedIn={() => signedIn(false)} onHeld={() => setHeld(true)} />}
+    </>
   );
 }

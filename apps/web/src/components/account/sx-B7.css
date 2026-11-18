@@ -1,0 +1,24 @@
+/* Passkeys (N06, B7, 2026-11-18): the sign-in button under the password form, My Account's list, the offer pop-up.
+   The account page's own look (account.css): ink #1a1919, muted #57605a, green #077a4b; logical properties only. */
+.pk-signin { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.pk-or { display: flex; align-items: center; gap: 12px; margin: 0; color: #6e6b63; font-size: 13px; font-weight: 600; }
+.pk-or::before, .pk-or::after { content: ""; flex: 1 1 0; border-top: 1px solid rgba(0, 0, 0, .1); }
+.pk-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 52px; padding: 0 18px; border: 1px solid rgba(0, 0, 0, .2);
+  border-radius: 999px; background: #fff; color: #1a1919; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.pk-btn:disabled { opacity: .6; cursor: default; }
+.pk-btn:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+@media (hover: hover) { .pk-btn:not(:disabled):hover { background: #f4f1ea; } }
+
+.pk-list { list-style: none; margin: 4px 0 14px; padding: 0; display: flex; flex-direction: column; }
+.pk-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid rgba(0, 0, 0, .08); }
+.pk-row:first-child { border-top: 0; padding-top: 4px; }
+.pk-mark { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 12px; background: #eef4ef; color: #077a4b; }
+.pk-what { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.pk-name { align-self: flex-start; font-weight: 700; font-size: 15px; color: #1a1919; }
+.pk-facts { color: #57605a; font-size: 13px; line-height: 1.45; }
+.pk-rm { flex: none; }
+.pk-add { margin-top: 2px; }
+
+.pk-offer { text-align: center; }
+.pk-offer h2 { line-height: 1.25; }
+.pk-offer-mark { display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 18px; background: #eef4ef; color: #077a4b; margin-bottom: 12px; }
