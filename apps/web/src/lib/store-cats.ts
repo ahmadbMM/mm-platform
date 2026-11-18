@@ -29,8 +29,9 @@ export type StoreCat = {
   seo: StoreSeo | null;
   filters: CatFilter[];
 };
-/** The categories a page draws: staff's (`table`), or the six built-in ones. */
-export type CatTree = { cats: StoreCat[]; table: boolean };
+/** The categories a page draws: staff's (`table`), or the six built-in ones. `unread`: staff's could not be read (and no
+ *  copy of them was kept), so nothing is known of a category outside the six: no product is hidden for being in one. */
+export type CatTree = { cats: StoreCat[]; table: boolean; unread?: boolean };
 
 /** The six as the staff page seeded them (English names it showed): a seeded row whose English is still one of these
  *  keeps the site's own translation of its name in the other languages. */
@@ -94,9 +95,24 @@ export const inCat = (tree: CatTree, p: Pick<StoreProduct, "category">, slug: st
 export const catProducts = <P extends Pick<StoreProduct, "category">>(tree: CatTree, products: readonly P[], slug: string): P[] =>
   products.filter((p) => inCat(tree, p, slug));
 
-/** The products the store shows: those in a category it shows (a hidden category's products go with it). */
+/** The products the store shows: those in a category it shows (a hidden category's products go with it). While staff's
+ *  categories could not be read, every product (a failed read never hides one, nor turns a cart's line gone). */
 export const inShownCat = <P extends Pick<StoreProduct, "category">>(tree: CatTree, products: readonly P[]): P[] =>
-  products.filter((p) => !!catOf(tree, p.category));
+  tree.unread ? [...products] : products.filter((p) => !!catOf(tree, p.category));
+
+/** A slug as a name, while nothing better is known ("road-bikes": "Road bikes"). */
+export const slugLabel = (slug: string): string => { const s = slug.replace(/-+/g, " ").trim(); return s.charAt(0).toUpperCase() + s.slice(1); };
+
+/** The categories a page draws from: while staff's could not be read, the six built-in ones and, for a product in any
+ *  other, that category on its own under its slug's name (its page, its tile and its chip work; its place under another
+ *  category comes back with the next good read). Otherwise the tree as it is. */
+export function catsFor(tree: CatTree, products: readonly Pick<StoreProduct, "category">[]): CatTree {
+  if (!tree.unread) return tree;
+  const extra = [...new Set(products.map((p) => p.category))].filter((slug) => !catOf(tree, slug)).sort().map((slug, i): StoreCat => ({
+    slug, parent: null, name_en: slugLabel(slug), name_ar: null, blurb_en: null, blurb_ar: null, image: null, sort: 1000 + i, seo: null, filters: [...FALLBACK_FILTERS],
+  }));
+  return extra.length ? { ...tree, cats: [...tree.cats, ...extra] } : tree;
+}
 
 /** The first-level categories that have a product (in themselves or a sub-category), in staff's order. */
 export const topsWithProducts = (tree: CatTree, products: readonly Pick<StoreProduct, "category">[]): StoreCat[] =>

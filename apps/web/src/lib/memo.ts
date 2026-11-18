@@ -40,6 +40,9 @@ export type Keep<T> = { read(): Promise<T | null>; write(value: T): Promise<void
 export type MemoOptions<T> = {
   /** How long a copy is served without a fresh read, in milliseconds. */
   ttl: number;
+  /** How long "nothing could be read" is held when there is no copy at all (the store's categories, 2026-11-19: a cold
+   *  start during a failed read must not stand for a whole ttl); unset: the ttl. */
+  failTtl?: number;
   /** The read; null when it could not be read. It is given the copy it replaces, so a read of
    *  several things can keep the parts that failed. */
   read: (prev: T | null) => Promise<T | null>;
@@ -62,7 +65,7 @@ export async function memo<T>(key: string, o: MemoOptions<T>): Promise<T | null>
   const s = store();
   let slot = s.get(key) as Slot<T> | undefined;
   if (!slot) s.set(key, (slot = { at: -Infinity, value: null, inflight: null, since: now }));
-  if (now - slot.at < o.ttl) return slot.value;
+  if (now - slot.at < (slot.value === null && o.failTtl !== undefined ? o.failTtl : o.ttl)) return slot.value;
   if (slot.inflight && now - slot.since > LOST_MS) slot.inflight = null; // lost: read afresh
   if (!slot.inflight) {
     const own = slot;

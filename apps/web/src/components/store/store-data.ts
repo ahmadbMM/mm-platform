@@ -5,6 +5,7 @@ import { pageState } from "@/lib/page-state";
 import { paySettings } from "@/lib/pay/settings";
 import { discountLicence, loadBest, loadCats, loadColls, loadStore, storeOpen, type Store } from "@/lib/store";
 import type { CollCtx } from "@/lib/store-colls";
+import { catsFor } from "@/lib/store-cats";
 import { bannerToday, storeBanner, storeRules, withRules } from "@/lib/store-rules";
 import { deliveryOptions, deliveryRange, fmtRange, readyDay, riyadhToday, type DeliveryOption } from "@/lib/store-delivery";
 import { intlOf } from "@/i18n/locales";
@@ -22,12 +23,14 @@ export async function storeState(locale: string) {
   const L = asLocale(locale);
   const today = riyadhToday();
   const rules = storeRules(state.content);
+  const products = withRules((store ?? ({ products: [] } as Store)).products, rules, today, Date.now());
   return {
     ...state,
     site: resolvePage(siteSchema, state.content, L),
     open: storeOpen(state.content),
-    store: { products: withRules((store ?? ({ products: [] } as Store)).products, rules, today, Date.now()) } as Store,
-    cats,
+    store: { products } as Store,
+    // while staff's categories could not be read, a product's own category still has its page (catsFor)
+    cats: catsFor(cats, products),
     colls,
     rules,
     banner: bannerToday(storeBanner(state.content), today),

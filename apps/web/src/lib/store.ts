@@ -22,7 +22,7 @@
 // visibleProducts: never a Preview product off staging) in a category it shows.
 import { edgeStore, memo, resetMemo } from "./memo";
 import { isStaging } from "./staging";
-import { catTree, inShownCat, topOf, type CatTree } from "./store-cats";
+import { BUILTIN_TREE, catTree, inShownCat, topOf, type CatTree } from "./store-cats";
 import { bestIds, collsOf, type StoreColl } from "./store-colls";
 import { reviewsOf, storeOf, type Store, type StoreReview } from "./store-core";
 import { visibleProducts } from "./store-rules";
@@ -30,6 +30,9 @@ import { visibleProducts } from "./store-rules";
 export * from "./store-core";
 
 const TTL_MS = 60_000;
+/** How long "could not be read, and no copy kept" is held for staff's categories, collections and best sellers before
+ *  they are asked again (a cold start during a failed read; a good copy is kept TTL_MS). */
+const FAIL_TTL_MS = 5_000;
 const KEY = "store";
 const REVIEWS_KEY = "store-reviews";
 const CATS_KEY = "store-cats";
@@ -171,15 +174,16 @@ export async function loadStore(fetchImpl: typeof fetch = fetch, now: number = D
 }
 
 /** The store's categories (store_categories, kept a minute like the products); the six built-in ones while there are
- *  none or they could never be read. */
+ *  none (the table is missing or empty). Never read at all (a failed read with no copy kept, asked again after a few
+ *  seconds): the six, marked `unread`, so no product is hidden for a category nothing is known of. */
 export async function loadCats(fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<CatTree> {
-  const r = await memo<{ rows: Record<string, unknown>[] }>(CATS_KEY, { ttl: TTL_MS, now, read: () => readCats(fetchImpl), keep: edgeStore("store-cats") });
-  return catTree(r?.rows);
+  const r = await memo<{ rows: Record<string, unknown>[] }>(CATS_KEY, { ttl: TTL_MS, failTtl: FAIL_TTL_MS, now, read: () => readCats(fetchImpl), keep: edgeStore("store-cats") });
+  return r ? catTree(r.rows) : { ...BUILTIN_TREE, unread: true };
 }
 
 /** The collections the public sees, kept a minute; none while they cannot be read. */
 export async function loadColls(fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<StoreColl[]> {
-  const r = await memo<{ colls: StoreColl[] }>(COLLS_KEY, { ttl: TTL_MS, now, read: () => readColls(fetchImpl), keep: edgeStore("store-colls") });
+  const r = await memo<{ colls: StoreColl[] }>(COLLS_KEY, { ttl: TTL_MS, failTtl: FAIL_TTL_MS, now, read: () => readColls(fetchImpl), keep: edgeStore("store-colls") });
   return r?.colls ?? [];
 }
 
@@ -188,7 +192,7 @@ export async function loadColls(fetchImpl: typeof fetch = fetch, now: number = D
 export async function loadBest(days: readonly number[], fetchImpl: typeof fetch = fetch, now: number = Date.now()): Promise<Map<number, string[]>> {
   const out = new Map<number, string[]>();
   await Promise.all([...new Set(days)].map(async (d) => {
-    const r = await memo<{ ids: string[] }>(`${BEST_KEY}-${d}`, { ttl: TTL_MS, now, read: () => readBest(d, fetchImpl) });
+    const r = await memo<{ ids: string[] }>(`${BEST_KEY}-${d}`, { ttl: TTL_MS, failTtl: FAIL_TTL_MS, now, read: () => readBest(d, fetchImpl) });
     out.set(d, r?.ids ?? []);
   }));
   return out;
