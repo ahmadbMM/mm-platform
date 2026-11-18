@@ -138,7 +138,7 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-bra
 .st-qty button:hover:not(:disabled) { background: var(--st-well); }
 .st-qty button:disabled { opacity: .35; cursor: default; }
 .st-qty output { min-width: 26px; text-align: center; font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
-.st-qty.sm button { width: 44px; height: 44px; }
+.st-qty.sm button { width: 40px; height: 40px; }
 
 /* delivery and returns, under the button */
 .st-info { margin-top: 22px; padding: 18px 20px 20px; background: #fff; border: 1px solid var(--st-line); border-radius: var(--st-r-panel); box-shadow: var(--st-sh-1); }

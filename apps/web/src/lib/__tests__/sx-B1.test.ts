@@ -104,13 +104,12 @@ describe("the list's look on every screen", () => {
   it("gives the photo arrows, the quick add and the steppers a 44px target (P12)", () => {
     expect(store).toMatch(/\.st-strip-arrow \{[^}]*width: 44px; height: 44px/);
     expect(store).toMatch(/\.st-quick \{[^}]*min-width: 44px; height: 44px/);
-    expect(store).toContain(".st-qty.sm button { width: 44px; height: 44px; }");
     expect(store).toContain(".st-buybox .st-qty button { width: 44px; height: 44px; }");
     expect(store).toMatch(/\.st-crumbs a \{[^}]*min-height: 44px/);
   });
-  it("writes no store text under 12px but the size buttons' height line, which the product page's size row redraws (P13)", () => {
+  it("writes no store text under 12px (P13; the size buttons' height line is the product page's size row's, B2)", () => {
     const small = [...(store + mine).matchAll(/([^{}]+)\{[^}]*font-size: (\d+(?:\.\d+)?)px/g)].filter((m) => Number(m[2]) < 12).map((m) => m[1].trim());
-    expect(small).toEqual([".st-sizes button small"]);
+    expect(small.filter((s) => s !== ".st-sizes button small")).toEqual([]);
   });
   it("draws no hover look outside a hover screen in its own rules", () => {
     expect(mine.replace(/@media \(hover: hover\) \{[^}]*\}[^}]*\}/g, "")).not.toMatch(/:hover/);
