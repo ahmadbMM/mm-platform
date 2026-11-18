@@ -215,6 +215,41 @@ test('an account: sign in, only what it still owes is asked (here the nationalit
   expect(of('farm_night').at(-1)).toEqual({ p_code: CODE, p_id: 'c-sara', p_token: 'tok-in' });
 });
 
+// A flagged second contact, or a non-member's flagged Instagram, may be answered "I don't have one" (customer_fix_save's
+// p_values.none, as the booking app's check-up offers it; bug hunt 2026-11-18): never a contact made up to get past.
+test("a flagged second contact or a non-member's Instagram: I don't have one clears it, and the booking goes on", async ({ page }) => {
+  let owes = ['emergency2', 'instagram'];
+  const { of } = await open(page, '', {
+    customer_fix_fields: () => json(owes),
+    customer_fix_save: () => { owes = []; return json([]); },
+    community_member: () => json(false),
+    customer_emergency: () => json([{ ...EM_ROW, emergency2_name: 'Omar Alharbi', emergency2_phone: '+966559998877', emergency2_relation: 'friend' }]),
+  });
+  await code(page);
+  await signIn(page);
+  await expect(page.locator('#s-details')).toBeVisible();
+  await expect(page.locator('#xem2-box')).toBeVisible();
+  await expect(page.locator('#xem2-none')).toHaveText("I don't have one");
+  await expect(page.locator('#ig-none')).toBeVisible();
+  await page.click('#xem2-none');
+  await expect(page.locator('#xem2-box')).toBeHidden();
+  await page.fill('#ig', '');
+  await page.click('#ig-none');
+  await page.click('#d-next');
+  await expect(page.locator('#s-book')).toBeVisible();
+  expect(of('customer_fix_save')[0]).toEqual({ p_id: 'c-sara', p_token: 'tok-in', p_values: { none: ['instagram', 'emergency2'] } });
+  expect(of('customer_set_emergency2')).toEqual([]);
+  expect(of('customer_set_socials')).toEqual([]);
+});
+
+test("a Community member's flagged Instagram is not offered I don't have one", async ({ page }) => {
+  await open(page, '', { customer_fix_fields: () => json(['instagram']), community_member: () => json(true) });
+  await code(page);
+  await signIn(page);
+  await expect(page.locator('#f-ig')).toBeVisible();
+  await expect(page.locator('#ig-none')).toBeHidden();
+});
+
 test('family members: up to four in all, each named by the rules a booking takes, and sent without the holder', async ({ page }) => {
   const { of } = await open(page);
   await code(page);

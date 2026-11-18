@@ -60,6 +60,9 @@ for (const { code } of SHARED.LANGS) {
   }
   for (const k of Object.keys(t)) if (!keys.has(k)) problems.push(`${code}: unused "${k}"`);
 }
+// The booking site's strings (SITE_T, synced; forms/shared/site-t-extra.js for the website's six more): every one in every
+// language, as a field's message raised as a key (setErr(..., true), an emergency contact's) shows English otherwise.
+for (const { code } of SHARED.LANGS) for (const k of Object.keys(SHARED.SITE_T.en)) if (!(SHARED.SITE_T[code] || {})[k]) problems.push(`${code}: the booking site's "${k}" has no text`);
 if (problems.length) { console.error(problems.slice(0, 40).join('\n')); process.exit(1); }
 
 // A PNG with only the chunks that draw it (IHDR, PLTE, tRNS, IDAT, IEND): a design export's metadata

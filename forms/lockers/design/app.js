@@ -71,7 +71,8 @@
   function site(key) { return (SH.SITE_T[lang] && SH.SITE_T[lang][key]) || SH.SITE_T.en[key] || key; }
   function langInfo(code) { for (var i = 0; i < SH.LANGS.length; i++) if (SH.LANGS[i].code === code) return SH.LANGS[i]; return SH.LANGS[0]; }
   function locale() { return langInfo(lang).locale; }
-  function toAscii(s) { return String(s == null ? "" : s).replace(/[٠-٩]/g, function (c) { return String(c.charCodeAt(0) - 0x0660); }).replace(/[۰-۹]/g, function (c) { return String(c.charCodeAt(0) - 0x06F0); }); }
+  // Arabic-Indic, Persian, Devanagari (hi, ne) and Bengali digits as Latin ones, as forms/shared/account.js reads them.
+  function toAscii(s) { return String(s == null ? "" : s).replace(/[٠-٩]/g, function (c) { return String(c.charCodeAt(0) - 0x0660); }).replace(/[۰-۹]/g, function (c) { return String(c.charCodeAt(0) - 0x06F0); }).replace(/[०-९]/g, function (c) { return String(c.charCodeAt(0) - 0x0966); }).replace(/[০-৯]/g, function (c) { return String(c.charCodeAt(0) - 0x09E6); }); }
   function clean(v) { return String(v == null ? "" : v).replace(/[​-‏‪-‮⁦-⁩﻿ ]/g, " ").replace(/\s+/g, " ").trim(); }
   function isolate(s) { return "⁦" + s + "⁩"; }
   // An amount as riders read it in the booking app and on the website's tickets: the riyal sign (U+20C1, drawn by the
@@ -406,8 +407,10 @@
     if ($("#go").classList.contains("loading")) return;
     var n = picked.length;
     setLoading("#go", true);
-    try { await loadBoard(); } finally { setLoading("#go", false); }
-    if (!picked.length || picked.length < n) return;
+    // settle() said something on the cabinet (a pick gone, or the time over and another one taken): the rider stays there
+    var cut = false;
+    try { cut = await loadBoard(); } finally { setLoading("#go", false); }
+    if (cut || !picked.length || picked.length < n) return;
     if (acct) enterReview(); else openAccount("ask");
   });
 
@@ -1005,7 +1008,26 @@
     acct = null; wallet = undefined; mine = []; pay = null; names = {}; namesKey = "";
     forgetAcct();
     if (changing) leaveChange();
+    resetAccountForms();
     paintWho(); paintMine(); paintPick();
+  }
+  // Signed out (a shared or family phone, a desk device): the sign-up and sign-in boxes are emptied, so the next person
+  // never finds, nor saves on their own account, the last one's name, email, mobile, height, gender, emergency contacts
+  // or ticked notice (bug hunt 2026-11-18). reset() alone could bring back a code picked before the lists were redrawn.
+  function resetAccountForms() {
+    $("#p-create").reset(); $("#p-signin").reset();
+    $(PK.sel).value = "SA+966"; ccFace();
+    EM_PRE.forEach(function (p) {
+      $("#" + p + "-name").value = ""; $("#" + p + "-phone").value = "";
+      $("#" + p + "-cc").value = "SA+966"; emCcFace(p);
+      $("#" + p + "-rel").value = ""; $("#" + p + "-rel").classList.add("ph");
+    });
+    $("#em2-box").hidden = true; $("#em2-add").hidden = false;
+    gender = null; ack = false; news = false; pickRadio("#genders", null);
+    $("#ack").setAttribute("aria-checked", "false"); $("#news").setAttribute("aria-checked", "false");
+    emailFix = null; paintEmailFix(); $("#si-temp").hidden = true;
+    $$("#p-create .field[id], #p-signin .field[id]").forEach(function (f) { clearMsg(f.id); });
+    acked.create = null; acked.signin = null;
   }
   $$(".who-out").forEach(function (b) {
     b.addEventListener("click", function () {
@@ -1381,7 +1403,9 @@
     $("#done-title").textContent = booked.codes.length > 1 ? tr("Your lockers are reserved") : tr("Your locker is reserved");
   }
   function showDone() {
-    showView("done"); paintDone(); paintMine();
+    // "Your account has been created" is said once: a later review of the same visit is an ordinary one, with Sign out
+    if (acct) acct.made = false;
+    showView("done"); paintDone(); paintMine(); paintWho();
     $("#done-title").focus({ preventScroll: true });
   }
   $("#again").addEventListener("click", function () { booked = null; clearMsg("f-cab"); backToPick(); loadBoard(); });

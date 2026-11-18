@@ -1618,6 +1618,33 @@ test('an account made here, the tab closed on the membership step: signing in ag
   expect(of('customer_signup')).toHaveLength(1); // the account made once, never twice
 });
 
+// A shared phone (bug hunt 2026-11-18): the draft of an account made here waits for that account. Another one signing in
+// never finds its WhatsApp answer and number or its emergency contact in the boxes, nor sends them.
+test('a shared phone: the draft of an account made here never fills another account signing in', async ({ page }) => {
+  const { of } = await open(page, '?lang=en', {
+    customer_login: () => json([{ id: 'c-other', name: 'Fahad Saleh', session_token: 'tok-other' }]),
+    customer_pwd_state: () => json(false),
+    customer_community_me: () => json({ ...ME, name: 'Fahad Saleh', email: 'fahad.saleh@gmail.com', phone: '+966559876543', flags: [] }),
+  });
+  await accountStep(page, { wa: 'no', waNum: '0507654321', em: { name: 'Layla Mansour', phone: '0551234567', rel: 'parent' } });
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  await page.reload();
+  await expect(page.locator('#login-box')).toBeVisible();
+  await expect(page.locator('#wa')).toHaveValue('');
+  await expect(page.locator('#em-name')).toHaveValue('');
+  await page.fill('#lid', 'fahad.saleh@gmail.com');
+  await page.fill('#lpw', 'Secret123');
+  await page.click('#login');
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#was .tile[aria-checked="true"]')).toHaveCount(0);
+  await expect(page.locator('#wa')).toHaveValue('');
+  await expect(page.locator('#em-name')).toHaveValue('');
+  await apply(page);
+  const sent = of('customer_community_apply').at(-1)!.p as Record<string, unknown>;
+  expect(sent.whatsapp_same).toBe(true); // this account's own answer
+  expect(sent).not.toHaveProperty('whatsapp');
+});
+
 test('a friend who came by a member\'s link: the application is sent, then says who invited them, and the code is used once', async ({ page }) => {
   const { errs, of, calls } = await open(page, '?inv=abcdef0123456789');
   await accountStep(page);

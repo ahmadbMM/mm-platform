@@ -59,6 +59,9 @@ for (const m of html.matchAll(/data-site(?:-aria|-placeholder)?="([^"]+)"/g)) si
 for (const m of js.matchAll(/\bsite\("([^"]+)"/g)) siteKeys.add(m[1]);
 for (const k of [...siteKeys]) if (k.endsWith('_')) { siteKeys.delete(k); for (const e of Object.keys(SHARED.SITE_T.en)) if (e.startsWith(k)) siteKeys.add(e); } // site("emRel_" + r): every one of them
 for (const { code } of SHARED.LANGS) for (const k of siteKeys) if (!(SHARED.SITE_T[code] || {})[k]) problems.push(`${code}: the booking site's "${k}" has no text`);
+// Every one of the booking site's strings this page carries, in every language: a field's message is also raised as a key
+// (setErr(..., true), [key, null, true]), which the scan above does not see, so English would show in its place.
+for (const { code } of SHARED.LANGS) for (const k of Object.keys(SHARED.SITE_T.en)) if (!siteKeys.has(k) && !(SHARED.SITE_T[code] || {})[k]) problems.push(`${code}: the booking site's "${k}" has no text`);
 if (problems.length) { console.error(problems.join('\n')); process.exit(1); }
 
 // The logo is drawn inline, so its words follow the page's colour (currentColor) in light and dark.

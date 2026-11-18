@@ -490,7 +490,8 @@
       '<p class="hint" data-site="emSubAcc"></p>' + emFields(pre) +
       '<button type="button" id="' + pre + '2-add" class="em-add"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="square" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span data-site="em2Add"></span></button>' +
       '<div id="' + pre + '2-box" class="em2" hidden><p class="em-h"><span data-site="em2Title"></span> <span class="em-opt">(<span data-site="optionalLabel"></span>)</span></p>' +
-      '<p class="hint" data-site="em2Sub"></p>' + emFields(pre + "2") + '</div></fieldset>';
+      '<p class="hint" data-site="em2Sub"></p>' + emFields(pre + "2") + '</div>' +
+      (pre === "xem" ? '<div id="xem2-none" class="tick" role="checkbox" aria-checked="false" tabindex="0" hidden><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" data-site="fixNone"></span></div>' : "") + '</fieldset>';
   }
   $("#em-slot").outerHTML = emBlock("em", false);
   $("#xem-slot").outerHTML = emBlock("xem", true);
@@ -674,6 +675,11 @@
   tick("ack", function () { return ack; }, function (v) { ack = v; }, "f-ack");
   tick("news", function () { return news; }, function (v) { news = v; });
   tick("waiver", function () { return waiverOk; }, function (v) { waiverOk = v; }, "f-waiver");
+  // "I don't have one" (customer_fix_save's p_values.none, as the booking app's check-up offers it, 2026-10-06): a second
+  // contact staff flagged, or a non-member's Instagram, is answered by clearing it (bug hunt 2026-11-18).
+  var noneEm2 = false, noneIg = false, igMayNone = false;
+  tick("xem2-none", function () { return noneEm2; }, function (v) { noneEm2 = v; $("#xem2-box").hidden = v; ["name", "phone", "rel"].forEach(function (x) { clearMsg("f-xem2-" + x); }); });
+  tick("ig-none", function () { return noneIg; }, function (v) { noneIg = v; $("#ig").disabled = v; }, "f-ig");
 
   /* ── The two pop-ups, centred: the Privacy Notice and the ride waiver ───── */
   var modalReturn = null, openModal = null;
@@ -796,7 +802,7 @@
         if (waSame === null) hard["f-wa"] = ["Tell us whether this is your WhatsApp number"];
         else if (!waSame) { r = checkMobile($("#wa").value.replace(/\D/g, ""), e164(WPK), true); if (r.hard) hard["f-wanum"] = r.hard; else if (r.soft) soft["f-wanum"] = r.soft; }
       }
-      if (need.ig) {
+      if (need.ig && !(igMayNone && noneIg)) {
         var ig = igNorm($("#ig").value);
         if (!ig) hard["f-ig"] = ["Your Instagram username, or a link to your profile"];
         else if (!/^[A-Za-z0-9._]{1,30}$/.test(ig)) hard["f-ig"] = ["An Instagram username has only letters, numbers, dots and underscores"];
@@ -817,10 +823,13 @@
     if (need.birth) put("birth_date", birthValue());
     if (need.nat) put("nationality", $("#nat").value);
     if (need.wa && waSame !== null) put("whatsapp", waSame ? { same: true } : { same: false, phone: e164(WPK) });
-    if (need.ig) put("instagram", igNorm($("#ig").value));
+    var none = [];
+    if (need.ig) { if (igMayNone && noneIg) none.push("instagram"); else put("instagram", igNorm($("#ig").value)); }
     if (need.height) put("height", String(parseInt(toAscii($("#xheight").value), 10)));
     if (ec && ec.one) put("emergency", em(ec.one));
     if (ec && ec.two) put("emergency2", em(ec.two));
+    else if (need.em2 && noneEm2) none.push("emergency2");
+    if (none.length) out.none = none;
     return out;
   }
   // A flagged question takes another answer than the one the account holds (the owner, 2026-11-09: "don't allow a
@@ -831,6 +840,7 @@
   function sameAgain(hard, ec) {
     var ans = flaggedAnswers(ec);
     Object.keys(ans).forEach(function (k) {
+      if (k === "none") return; // "I don't have one" is an answer, never compared
       var id = k === "whatsapp" ? (ans[k].same ? "f-wa" : "f-wanum") : SAME_FIELD[k];
       if (!hard[id] && MMAccount.same(k, ans[k], held)) hard[id] = [SAME_AGAIN];
     });
@@ -1032,6 +1042,11 @@
     };
     // Nothing to ask: on to who is coming.
     if (!blocked && !need.birth && !need.nat && !need.wa && !need.ig && !need.height && !need.em) { await enterBook(); return; }
+    // "I don't have one" starts unticked; for Instagram it is offered only when the database says the account is not a
+    // Community member (a member's Instagram is required, and customer_fix_save keeps it).
+    noneEm2 = false; noneIg = false; $("#xem2-none").setAttribute("aria-checked", "false"); $("#ig-none").setAttribute("aria-checked", "false"); $("#ig").disabled = false;
+    igMayNone = false;
+    if (need.ig) { var cm = await rpc("community_member", { p_id: acct.id, p_token: acct.token }); igMayNone = !cm.error && cm.data === false; }
     // What the account holds goes into the boxes it asks again.
     if (prof.birth_date) setBirth(prof.birth_date);
     if (prof.nationality && $$("#nat option").some(function (o) { return o.value === prof.nationality; })) { $("#nat").value = prof.nationality; $("#nat").classList.remove("ph"); }
@@ -1064,6 +1079,8 @@
     $("#f-wa").hidden = !need.wa || !(acct && acct.phone); $("#f-wanum").hidden = !need.wa || waSame !== false;
     $("#f-ig").hidden = !need.ig; $("#f-xheight").hidden = !need.height;
     $("#xem-block").hidden = !need.em;
+    $("#ig-none").hidden = !(need.ig && igMayNone); $("#xem2-none").hidden = !need.em2;
+    if (need.em2 && noneEm2) $("#xem2-box").hidden = true;
     $("#d-blocked").hidden = !blocked;
     $("#d-next").hidden = blocked && !need.birth && !need.nat && !need.wa && !need.ig && !need.height && !need.em;
     paintWa(); paintWho();
@@ -1106,7 +1123,8 @@
       if (r.error) { if (/wa_/.test(errText(r.error))) { setErr("f-wanum", "Enter a valid mobile number"); $("#f-wanum").hidden = false; focusField("f-wanum"); } else showBanner(/RATE_LIMITED/.test(errText(r.error)) ? SITE_TOO_MANY : NET); return; }
       saved.push("whatsapp");
     }
-    if (need.ig) {
+    if (need.ig && igMayNone && noneIg) saved.push("instagram"); // cleared by customer_fix_save above
+    else if (need.ig) {
       // customer_set_socials replaces the whole object: the other handles go back as they are.
       var cur = prof.socials && typeof prof.socials === "object" && !Array.isArray(prof.socials) ? prof.socials : {};
       var soc = {}; Object.keys(cur).forEach(function (k) { soc[k] = cur[k]; }); soc.instagram = igNorm($("#ig").value);

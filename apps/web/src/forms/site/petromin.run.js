@@ -2479,7 +2479,7 @@ var MMAccount = (function () {
 
 ; window.MMAccount = MMAccount;
 (function () {
-  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.59ea6aaea6.json","hi":"/forms/petromin/t/hi.84564e433a.json","tl":"/forms/petromin/t/tl.4e72f4921b.json","es":"/forms/petromin/t/es.6837caa6b7.json","ne":"/forms/petromin/t/ne.61c4c82780.json","fr":"/forms/petromin/t/fr.caf6ac2cad.json","pt":"/forms/petromin/t/pt.b899cdd6bd.json","bn":"/forms/petromin/t/bn.1c2230e52d.json","ur":"/forms/petromin/t/ur.e9fad35f6e.json","id":"/forms/petromin/t/id.f5a67e15a2.json","ms":"/forms/petromin/t/ms.0ed7b12a6a.json","de":"/forms/petromin/t/de.2ced9dc290.json","ru":"/forms/petromin/t/ru.7c75ff862a.json","zh":"/forms/petromin/t/zh.c2192742cd.json","ja":"/forms/petromin/t/ja.4f962c9fbf.json"};
+  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.00a0758317.json","hi":"/forms/petromin/t/hi.6751704f03.json","tl":"/forms/petromin/t/tl.faae8ed589.json","es":"/forms/petromin/t/es.fd34e10083.json","ne":"/forms/petromin/t/ne.bd43b109c5.json","fr":"/forms/petromin/t/fr.42c6e97724.json","pt":"/forms/petromin/t/pt.4fdc043223.json","bn":"/forms/petromin/t/bn.ae4b824aef.json","ur":"/forms/petromin/t/ur.2555f8707d.json","id":"/forms/petromin/t/id.6429488412.json","ms":"/forms/petromin/t/ms.ac1154037a.json","de":"/forms/petromin/t/de.dd1154971b.json","ru":"/forms/petromin/t/ru.8cda475375.json","zh":"/forms/petromin/t/zh.bdbb156496.json","ja":"/forms/petromin/t/ja.1804a6564d.json"};
   site.tBase = files;
   function start(dict) {
     var T_SITE = {}; if (dict) T_SITE[site.lang] = dict;
@@ -3021,6 +3021,9 @@ var MMAccount = (function () {
      price (PAID_MOVE). */
   var WAIVER_OUTDATED = "The ride waiver has changed. Reload this page to read and accept the new one.";
   var PAID_MOVE = "This booking is already paid, so it cannot move to a session with a different price. Ask the desk to change it.";
+  // A booking the server no longer knows by this number on this night: the desk moves a party to another night under a new
+  // number (staff_rider_party_move), so the ticket stays on the phone and the desk is asked, never "register again".
+  var GONE_ASK_DESK = "We could not find this booking. Please ask the desk: it may have been moved to another night.";
   /* Names a screen reader hears but nobody sees (aria-label). */
   var ARIA_EL = [["#lang", "Language"], [".lang-wrap", "Language"], ["#cc", "Country code"], [".cc-wrap", "Country code"], ["#fd-cc", "Country code"], ["#stepper", "Progress"], ["#sessions", "Session"], ["#qr", "Booking QR code"]];
   function paintAria() { ARIA_EL.forEach(function (x) { document.querySelectorAll(x[0]).forEach(function (el) { el.setAttribute("aria-label", t(x[1])); }); }); }
@@ -3657,6 +3660,7 @@ var MMAccount = (function () {
     if (!pick) { drawOthers(); return; }
     saveKept(keptList().filter(function (x) { return keyOf(x) !== key; }));
     keep(current);
+    guestForget(); // the account signed in for the last booking is not this one's (bug hunt 2026-11-18)
     showSuccess(pick); // the phone's confirmation now (saved as it), the one before it kept
   });
   function startAnother() {
@@ -3731,6 +3735,7 @@ var MMAccount = (function () {
     editAsking = false; btn.disabled = false;
     if (current !== was) return; // another booking came on the screen meanwhile
     var d = r && !r.error && r.data;
+    if (d && d.ok === false && d.error === "notfound") { setNote(GONE_ASK_DESK); return; } // nothing to edit: ask the desk
     if (d && d.ok && d.booking_no) {
       var live = fromLookup(d, was.phone);
       live.session = Object.assign({}, was.session || {}, d.session || {});
@@ -3963,7 +3968,7 @@ var MMAccount = (function () {
       track(STEPS, "fail", d.error);
       if (d.error === "waiver") { waiverRefused(); return; }
       if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
-      if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
+      if (d.error === "notfound") { editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner(); if (current) { showSuccess(current); setNote(GONE_ASK_DESK); } else failBanner(GONE_ASK_DESK); return; }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
       // rider_edit: the desk has tied this registration to a booking of its own (rentals 20261111235100, a move to another night)
       if (d.error === "desk") { failBanner("The desk has this booking. Ask the desk to change it."); return; }
@@ -4215,7 +4220,7 @@ var MMAccount = (function () {
     if (EM_RELS.indexOf(rel) < 0) return { err: ["f-" + p + "-rel", "Choose how they are related to you."] };
     return { name: n, phone: ph, rel: rel };
   }
-  var EM_DETAIL = { em_name: ["name", "Enter your contact’s name."], em_phone: ["phone", "Enter your contact’s mobile number."], em_relation: ["rel", "Choose how they are related to you."], em_self: ["phone", "Your contact’s number can’t be your own."], em_required: ["name", "Enter your contact’s name."] };
+  var EM_DETAIL = { em_name: ["name", "Enter your contact’s name."], em_phone: ["phone", "Enter your contact’s mobile number."], em_relation: ["rel", "Choose how they are related to you."], em_self: ["phone", "Your contact’s number can’t be your own."], em_same: ["phone", "The two emergency contacts can’t have the same number."], em_required: ["name", "Enter your contact’s name."] };
   // Saves a block's contact on the signed-in account: {ok:true}, {field, key} for a refused box, {signedOut:true} or {banner}.
   async function emSave(p) {
     var c = emRead(p, acct.phone);
@@ -4534,8 +4539,9 @@ var MMAccount = (function () {
       emergency: a.em && a.em !== "absent" ? { name: a.em.emergency_name, phone: a.em.emergency_phone, relation: a.em.emergency_relation } : null };
     // What the account holds goes into the boxes it asks again; the company the booking or the account already names.
     if (!acClean($("#ac-company").value) && a.about && acClean(a.about.workplace)) $("#ac-company").value = acClean(a.about.workplace).slice(0, 120);
-    if (prof.birth_date) setBirth(prof.birth_date);
-    if (prof.nationality && Array.prototype.some.call($("#ac-nat").options, function (o) { return o.value === prof.nationality; })) $("#ac-nat").value = prof.nationality;
+    // (an account without them starts from empty boxes, never from what was in them before)
+    if (prof.birth_date) setBirth(prof.birth_date); else { ["#ac-birth-d", "#ac-birth-m", "#ac-birth-y"].forEach(function (s) { $(s).value = ""; }); buildDob(); }
+    if (prof.nationality && Array.prototype.some.call($("#ac-nat").options, function (o) { return o.value === prof.nationality; })) $("#ac-nat").value = prof.nationality; else $("#ac-nat").value = "";
     if (hasHeight && !$("#ac-xheight").value) $("#ac-xheight").value = String(prof.height);
     if (a.em && a.em !== "absent" && $("#xem-name").value === "") fillEm("xem", a.em.emergency_name, a.em.emergency_phone, a.em.emergency_relation);
     paintDetails();
@@ -4667,6 +4673,10 @@ var MMAccount = (function () {
   function guestForget() {
     acct = null; prof = null; emRetry = false; blocked = false; owe = { height: false, em: false, nat: false, birth: false };
     ["ac-ident", "ac-spwd", "ac-first", "ac-last", "ac-email", "ac-phone", "ac-pwd", "ac-pwd2", "ac-height", "ac-company", "ac-xheight", "em-name", "em-phone", "xem-name", "xem-phone"].forEach(function (id) { $("#" + id).value = ""; });
+    // the selects too: the last account's nationality and birth date, the relations and the codes picked (bug hunt 2026-11-18)
+    $("#ac-nat").value = ""; ["#ac-birth-d", "#ac-birth-m", "#ac-birth-y"].forEach(function (s) { $(s).value = ""; }); buildDob();
+    EM_PRE.forEach(function (p) { $("#" + p + "-rel").value = ""; $("#" + p + "-cc").value = "SA+966"; ccFace($("#" + p + "-cc")); });
+    $("#ac-cc").value = "SA+966"; ccFace($("#ac-cc"));
     $("#ac-ack").checked = false; $("#ac-news").checked = false; acGender = null;
     acGenders.querySelectorAll(".tile").forEach(function (x) { x.setAttribute("aria-checked", "false"); }); syncRoving(acGenders);
     $("#ac-temp").hidden = true; emailFix = null; paintEmailFix();
@@ -4690,6 +4700,9 @@ var MMAccount = (function () {
       if (live.account === false) { showSuccess(live); return; }
       current = live; try { localStorage.setItem(STORE, JSON.stringify(live)); } catch (e) {}
     }
+    // The account in memory is the last one signed in on this phone: another guest's booking (one of the phone's others)
+    // is never edited under it, it signs in for itself (bug hunt 2026-11-18).
+    if (acct && (!last9(acct.phone) || last9(acct.phone) !== last9(current.phone))) guestForget();
     editing = current; another = false; prefill(current); setSubmitLabels(true);
     $("#success").hidden = true; $("#card").setAttribute("data-state", "form");
     hideBanner(); setNotice(null); returnTo = 0;

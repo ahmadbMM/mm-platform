@@ -96,12 +96,12 @@
           <p id="ask-q" class="ask-q" data-t="Do you have a MicroMobility account?">Do you have a MicroMobility account?</p>
           <div class="opts" role="group" aria-labelledby="ask-q">
             <button type="button" id="ask-yes" class="opt choice"><b data-t="Yes, I have an account">Yes, I have an account</b><span data-t="Sign in with your email or mobile number and your password.">Sign in with your email or mobile number and your password.</span></button>
-            <button type="button" id="ask-no" class="opt choice"><b data-t="No, I'm new to MicroMobility">No, I'm new to MicroMobility</b><span data-t="Create your account. It is the one you book every ride with.">Create your account. It is the one you book every ride with.</span></button>
+            <button type="button" id="ask-no" class="opt choice"><b data-t="No, I'm new to MicroMobility">No, I'm new to MicroMobility</b><span data-t="Create your account. It is the one you book with in the MicroMobility app.">Create your account. It is the one you book with in the MicroMobility app.</span></button>
           </div>
         </div>
 
         <form id="p-create" class="panel" novalidate autocomplete="on" hidden>
-          <p class="lead" data-t="This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.">This is the account you book rides with in the MicroMobility app. You sign in with your email or mobile number and your password.</p>
+          <p class="lead" data-t="This is your MicroMobility account. You sign in with your email or mobile number and your password.">This is your MicroMobility account. You sign in with your email or mobile number and your password.</p>
           <div id="f-name" class="field">
             <div class="name-row">
               <span class="name-part"><label for="first" data-site="firstName">First Name</label><input id="first" name="first" type="text" autocomplete="given-name" autocapitalize="words" maxlength="60" data-site-placeholder="phFirstName"></span>
@@ -155,7 +155,7 @@
             <p class="err" aria-live="polite"></p>
           </div>
           <div id="f-news" class="field consent">
-            <div id="news" class="tick" role="checkbox" aria-checked="false" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" data-site="rideNewsOpt">Send me ride news and announcements by WhatsApp and email. I can stop at any time.</span></div>
+            <div id="news" class="tick" role="checkbox" aria-checked="false" tabindex="0"><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" data-t="Send me news and announcements by WhatsApp. I can stop at any time.">Send me news and announcements by WhatsApp. I can stop at any time.</span></div>
           </div>
           <button id="create" class="d-btn" type="submit">
             <span class="spinner" aria-hidden="true"></span>
@@ -248,6 +248,7 @@
           <input id="ig" name="instagram" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" dir="ltr" maxlength="120" placeholder="@username">
           <p class="hint" data-t="Your Instagram username, or a link to your profile">Your Instagram username, or a link to your profile</p>
           <p class="err" aria-live="polite"></p>
+          <div id="ig-none" class="tick" role="checkbox" aria-checked="false" tabindex="0" hidden><span class="tick-box" aria-hidden="true"></span><span class="tick-lbl" data-site="fixNone">I don't have one</span></div>
         </div>
         <div id="f-xheight" class="field">
           <label for="xheight" data-t="Your height in cm">Your height in cm</label>

@@ -41,7 +41,10 @@ function stringAt(marker) {
   return m[1];
 }
 
-const LANGS = valueAt('const LANGS=[').filter((l) => l.code === 'en' || l.code === 'ar');
+// The booking app's ten languages: their words for the site's strings below (as forms/community syncs them), so a
+// language the booking app speaks never falls back to English; the page's own list is English and Arabic here.
+const APP_LANGS = valueAt('const LANGS=[');
+const LANGS = APP_LANGS.filter((l) => l.code === 'en' || l.code === 'ar');
 if (LANGS.length !== 2) throw new Error('sync-shared: the site no longer lists English and Arabic');
 const COUNTRY_CODES = valueAt('const COUNTRY_CODES=[');
 const NATIONALITIES = valueAt('const NATIONALITIES=[');
@@ -67,12 +70,15 @@ const KEYS = ['privacyNotice', 'privacyUpdated', 'privacyAckOpt', 'privacyAckReq
   'emTitle', 'emSubAcc', 'emName', 'emPhone', 'emRelation', 'emPick', ...EM_RELS.map((c) => 'emRel_' + c),
   'em2Title', 'em2Sub', 'em2Add', 'optionalLabel', 'errEmName', 'errEmPhone', 'errEmRelation', 'errEmSelf', 'errEmSame',
   'errNameChars', 'errNameShort',
+  // "I don't have one": an optional question staff flagged (the second contact, a non-member's Instagram) answered by clearing it.
+  'fixNone',
   'tabMyRides'];
 const SITE_T = {};
-for (const { code } of LANGS) {
+for (const { code } of APP_LANGS) {
+  const pack = code === 'en' || code === 'ar' ? LANG[code] : JSON.parse(readFileSync(join(rentals, 'i18n', code + '.json'), 'utf8'));
   SITE_T[code] = {};
   for (const k of KEYS) {
-    const v = LANG[code][k] ?? LANG.en[k];
+    const v = pack[k] ?? LANG.en[k];
     if (v == null) throw new Error(`sync-shared: the site has no string ${k} (${code})`);
     SITE_T[code][k] = v;
   }

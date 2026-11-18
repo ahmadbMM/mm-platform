@@ -122,6 +122,41 @@ test('a guest with an account signs in: the company comes from the account, and 
   await expect(page.locator('#ac-ident')).toHaveValue('');
 });
 
+// One phone, several guests (bug hunt 2026-11-18): another guest's kept ticket shown is edited under its own account, signed
+// into again, never the one still in memory; and the boxes the last account filled (its birth date, its nationality) are
+// empty for the next one.
+test('one phone: Edit on another guest\'s kept ticket asks for that account; the last account\'s birth date and nationality are gone', async ({ page }) => {
+  const OTHER = { kind: 'guest', name: 'Huda Kept', phone: '+966500000077', company: 'Aramco Trading', type: 'Hybrid', status: 'waiting', price: 75, ref: 'MMC-77-cccccc', account: true, session: S1, bookingNo: 'I-007', riders: [], submittedAt: '2099-02-01T10:00:00Z' };
+  await page.addInitScript((o) => { if (!localStorage.getItem('mm-petromin-registration')) localStorage.setItem('mm-petromin-registration', JSON.stringify(o)); }, OTHER);
+  await nights(page);
+  await stubAccount(page, { workplace: 'Red Sea Global', profile: { birth_date: '1990-05-17', nationality: 'Saudi Arabia' } });
+  await page.route('**/rest/v1/rpc/petromin_invite_lookup', (r) => r.fulfill(json({ ok: true, booking_no: 'I-007', invite_no: 'I-007', ref: 'MMC-77-cccccc', company: 'Aramco Trading', account: true, name: OTHER.name, phone: OTHER.phone, type: 'Hybrid', status: 'waiting', checked_in: false, price: 75, paid: false, session: S1, more: [], riders: [] })));
+  const sent = await book(page, (b) => BOOKED({ company: b.p_company, type: b.p_type, session: S2 }));
+  await page.goto('/petromin?lang=en');
+  await expect(page.locator('#chip-booking-value')).toHaveText('I-007'); // the last guest's ticket on this phone
+  await page.click('#another');
+  await pickCompany(page, 'Guest');
+  await guestSignIn(page);
+  await expect(page.locator('#ac-nat')).toHaveValue('Saudi Arabia'); // held by this account, in a box not asked
+  await expect(page.locator('#ac-birth-y')).toHaveValue('1990');
+  await page.click('#next');
+  await page.locator('#sessions .session').nth(1).click();
+  await page.click('#next');
+  await page.click('#types .tile[data-v="Mountain"]');
+  await toCheck(page);
+  await page.check('#waiver');
+  await page.click('#submit');
+  await expect(page.locator('#chip-booking-value')).toHaveText('I-003');
+  await expect(page.locator('#others-list .other')).toHaveText(['I-007 · Huda Kept']);
+  await page.locator('#others-list .other').click();
+  await expect(page.locator('#chip-booking-value')).toHaveText('I-007');
+  await expect(page.locator('#ac-nat')).toHaveValue('');
+  await expect(page.locator('#ac-birth-y')).toHaveValue('');
+  await page.click('#edit');
+  await expect(page.locator('#ac-signin')).toBeVisible(); // that ticket's own account signs in
+  expect(sent).toHaveLength(1);
+});
+
 test('sign-in says what is wrong: nothing typed, the wrong details, too many tries, a temporary password', async ({ page }) => {
   await nights(page);
   let answer: { status: number; body: unknown } = { status: 200, body: [] };

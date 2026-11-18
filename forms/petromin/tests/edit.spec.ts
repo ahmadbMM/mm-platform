@@ -94,11 +94,30 @@ test('an edit the server refuses is explained: checked in, not found, duplicate 
   await expect(page.locator('#f-badge .err')).toHaveText('This badge is already registered for that session');
   await expect(page.locator('#f-badge')).toHaveClass(/invalid/);
 
+  // Not found: the desk moved the party to another night (a new number) or took it off. The ticket stays on the phone and
+  // the rider is sent to the desk, never told to register again, which would make a second booking (bug hunt 2026-11-18).
   answer = { ok: false, error: 'notfound' };
   await page.click('#next'); await page.click('#next'); await page.click('#submit');
-  await expect(page.locator('#banner')).toContainText('could not find your booking');
-  await expect(page.locator('#form .title')).toHaveText('Petromin bike night');
-  expect(await page.evaluate(() => localStorage.getItem('mm-petromin-registration'))).toBeNull();
+  await expect(page.locator('#success')).toBeVisible();
+  await expect(page.locator('.done-note')).toHaveText('We could not find this booking. Please ask the desk: it may have been moved to another night.');
+  await expect(page.locator('#chip-booking-value')).toHaveText('P-001');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('mm-petromin-registration') || 'null')?.bookingNo)).toBe('P-001');
+});
+
+test('Edit on a booking the server no longer knows (moved by the desk) stays on the ticket and sends the rider to the desk', async ({ page }) => {
+  const edits: unknown[] = [];
+  await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1, S2])));
+  await page.route('**/rest/v1/rpc/rider_lookup', (r) => r.fulfill(json({ ok: false, error: 'notfound' })));
+  await page.route('**/rest/v1/rpc/rider_edit', (r) => { edits.push(r.request().postDataJSON()); return r.fulfill(json({ ok: false, error: 'notfound' })); });
+  await page.addInitScript(() => localStorage.setItem('mm-petromin-registration', JSON.stringify({ badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Road', session: { id: '2099-02-08-pw', start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' }, bookingNo: 'P-004', submittedAt: '2099-02-01T10:00:00Z' })));
+  await page.goto('/petromin');
+  await expect(page.locator('#success')).toBeVisible();
+  await page.click('#edit');
+  await expect(page.locator('.done-note')).toHaveText('We could not find this booking. Please ask the desk: it may have been moved to another night.');
+  await expect(page.locator('#success')).toBeVisible();
+  await expect(page.locator('#chip-booking-value')).toHaveText('P-004');
+  expect(edits).toHaveLength(0);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('mm-petromin-registration') || 'null')?.bookingNo)).toBe('P-004');
 });
 
 test('an employee registers with companions as cards, sees the party on the confirmation, and edits it', async ({ page }) => {

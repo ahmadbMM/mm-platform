@@ -21,6 +21,9 @@
      price (PAID_MOVE). */
   var WAIVER_OUTDATED = "The ride waiver has changed. Reload this page to read and accept the new one.";
   var PAID_MOVE = "This booking is already paid, so it cannot move to a session with a different price. Ask the desk to change it.";
+  // A booking the server no longer knows by this number on this night: the desk moves a party to another night under a new
+  // number (staff_rider_party_move), so the ticket stays on the phone and the desk is asked, never "register again".
+  var GONE_ASK_DESK = "We could not find this booking. Please ask the desk: it may have been moved to another night.";
   /* Names a screen reader hears but nobody sees (aria-label). */
   var ARIA_EL = [["#lang", "Language"], [".lang-wrap", "Language"], ["#cc", "Country code"], [".cc-wrap", "Country code"], ["#fd-cc", "Country code"], ["#stepper", "Progress"], ["#sessions", "Session"], ["#qr", "Booking QR code"]];
   function paintAria() { ARIA_EL.forEach(function (x) { document.querySelectorAll(x[0]).forEach(function (el) { el.setAttribute("aria-label", t(x[1])); }); }); }
@@ -657,6 +660,7 @@
     if (!pick) { drawOthers(); return; }
     saveKept(keptList().filter(function (x) { return keyOf(x) !== key; }));
     keep(current);
+    guestForget(); // the account signed in for the last booking is not this one's (bug hunt 2026-11-18)
     showSuccess(pick); // the phone's confirmation now (saved as it), the one before it kept
   });
   function startAnother() {
@@ -731,6 +735,7 @@
     editAsking = false; btn.disabled = false;
     if (current !== was) return; // another booking came on the screen meanwhile
     var d = r && !r.error && r.data;
+    if (d && d.ok === false && d.error === "notfound") { setNote(GONE_ASK_DESK); return; } // nothing to edit: ask the desk
     if (d && d.ok && d.booking_no) {
       var live = fromLookup(d, was.phone);
       live.session = Object.assign({}, was.session || {}, d.session || {});
@@ -963,7 +968,7 @@
       track(STEPS, "fail", d.error);
       if (d.error === "waiver") { waiverRefused(); return; }
       if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
-      if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
+      if (d.error === "notfound") { editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner(); if (current) { showSuccess(current); setNote(GONE_ASK_DESK); } else failBanner(GONE_ASK_DESK); return; }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
       // rider_edit: the desk has tied this registration to a booking of its own (rentals 20261111235100, a move to another night)
       if (d.error === "desk") { failBanner("The desk has this booking. Ask the desk to change it."); return; }
