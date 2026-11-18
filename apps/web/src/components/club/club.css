@@ -187,7 +187,7 @@ html:is([lang="ar"], [lang="ur"]) .club-members h3 { letter-spacing: 0; }
 .club-bup-l li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 4px 0; border-bottom: 1px dashed rgba(0, 0, 0, .08); }
 .club-bup-l li:last-child { border-bottom: 0; }
 .club-bup-d { font-weight: 600; font-size: 14px; color: #1a1919; font-variant-numeric: tabular-nums; }
-.club-bup-l li.past .club-bup-d { font-weight: 400; color: #8a8f8a; }
+.club-bup-l li:is(.past, .none) .club-bup-d { font-weight: 400; color: #8a8f8a; }
 .club-bup-s { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #57605a; }
 .club-bup-l li:is(.done, .held) .club-bup-s { color: #077a4b; }
 .club-mine .club-bup-go { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: #077a4b; font-weight: 800; font-size: 13.5px; white-space: nowrap; }

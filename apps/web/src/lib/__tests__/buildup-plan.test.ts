@@ -63,7 +63,7 @@ describe("buildupPlan", () => {
     const p = buildupPlan(early, map(EV), TODAY, null, always);
     expect(p?.rows.map((r) => r.date)).toEqual(["2026-10-24", "2026-10-31", "2026-11-07", "2026-11-14", "2026-11-21", "2026-11-28", "2026-12-05", "2026-12-12"]);
   });
-  it("says Fully booked, Cancelled or Not open yet when there is nothing to book", () => {
+  it("says Fully booked, Cancelled, Not open yet or the date alone when there is nothing to book", () => {
     const at = (l: BupSession[], gender: "male" | "female" | null = null, open = always) =>
       buildupPlan([book(EV.id, "waiting")], map(EV, ...l), TODAY, gender, open)?.rows.find((r) => r.date === "2026-12-05");
     const d = { id: "2026-12-05", date: "2026-12-05" };
@@ -74,10 +74,17 @@ describe("buildupPlan", () => {
     expect(at([ses({ ...d, cancelled: true }), ses({ id: "2026-12-05-b", date: "2026-12-05", status: "closed" })])?.state).toBe("soon");
     expect(at([ses({ ...d, draft: true })])?.state).toBe("soon");
     expect(at([ses(d)], null, () => false)?.state).toBe("soon"); // its booking window not open yet
-    expect(at([ses({ ...d, gender: "female" })], "male")?.state).toBe("soon"); // a ride for the other gender
-    expect(at([ses({ ...d, gender: "female", status: "full" })], "male")?.state).toBe("soon");
+    // every ride that day for the other gender: none will open to this member, so never Not open yet (cf-platform1-2)
+    expect(at([ses({ ...d, gender: "female" })], "male")?.state).toBe("none");
+    expect(at([ses({ ...d, gender: "female", status: "full" })], "male")?.state).toBe("none");
+    expect(at([ses({ ...d, gender: "female", status: "closed" })], "male")?.state).toBe("none");
+    expect(at([ses({ ...d, gender: "female" }), ses({ id: "2026-12-05-c", date: "2026-12-05", gender: "female", cancelled: true })], "male")?.state).toBe("none");
     expect(at([ses({ ...d, gender: "female" })], "female")).toEqual({ date: "2026-12-05", state: "book", book: "2026-12-05" });
-    expect(at([ses({ ...d, gender: "female" })], null)?.state).toBe("soon"); // no gender on file
+    expect(at([ses({ ...d, gender: "female" })], null)?.state).toBe("none"); // no gender on file
+    // one for them that day too, not open yet: still Not open yet; one called off for them, the other's open: the date alone
+    expect(at([ses({ ...d, gender: "female" }), ses({ id: "2026-12-05-m", date: "2026-12-05", gender: "male", status: "closed" })], "male")?.state).toBe("soon");
+    expect(at([ses({ ...d, gender: "female" }), ses({ id: "2026-12-05-m", date: "2026-12-05", status: "closed" })], "male")?.state).toBe("soon");
+    expect(at([ses({ ...d, gender: "female" }), ses({ id: "2026-12-05-m", date: "2026-12-05", gender: "male", cancelled: true })], "male")?.state).toBe("none");
   });
   it("takes the nearest held place on a marked event still to come, never a waitlist, a Saturday ride or one called off", () => {
     const later = ses({ id: "2027-01-10-ev", date: "2027-01-10", kind: "vlap", bup: true });
@@ -187,6 +194,11 @@ describe("the card", () => {
     expect(at('class="club-bup"')).toBeLessThan(at('class="club-att"'));
     expect(html).toContain('href="https://book.example.test/?ev=saturday&amp;session=2026-11-21"');
     expect(renderToStaticMarkup(createElement(MembersArea, { ...props, bup: null }))).not.toContain("club-bup");
+  });
+  it("draws a Saturday whose rides are all for the other gender as the date alone, dimmed (cf-platform1-2)", () => {
+    const html = draw("en", { ...plan!, rows: [{ date: "2026-12-05", state: "none" }] });
+    expect(html).toContain('<li class="none" data-state="none"><span class="club-bup-d"><bdi>5 Dec</bdi></span></li>');
+    expect(html).not.toContain("Not open yet");
   });
   it("says one Saturday in its own words, and speaks Arabic", () => {
     const one = draw("en", { ...plan!, togo: 1 });

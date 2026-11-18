@@ -7,7 +7,8 @@ import { memberHubWords } from "./MemberHub.words";
 // The Build-up plan in a member's area on /club (lib/buildup-plan.ts; the booking app's _bupHtml and its .hub-bup card,
 // 2026-11-18): under "Build-up plan" beside a flag, the event's name as its ticket names it, its date, how many Saturdays
 // are left, then one row per Saturday: its day and what it says at the row's end (Done with a tick, Booked, On the
-// waitlist, Book, Fully booked, Cancelled or Not open yet; a day gone and not ridden is the date alone, dimmed). Book opens
+// waitlist, Book, Fully booked, Cancelled or Not open yet; a day gone and not ridden, or one whose rides are all for the
+// other gender, is the date alone, dimmed). Book opens
 // the booking app on that ride (`bookAt`). `name`: the event's name in the page's language.
 type Props = { locale: string; plan: BupPlan; name: string; bookAt: (id: string) => string };
 
@@ -26,7 +27,7 @@ export default function BuildupPlan({ locale, plan, name, bookAt }: Props) {
   const end = (r: BupRow) => {
     switch (r.state) {
       case "done": return <span className="club-bup-s"><TickIcon size={14} />{w.bupDone}</span>;
-      case "past": return null;
+      case "past": case "none": return null;
       case "held": return <span className="club-bup-s">{w.bupBooked}</span>;
       case "wl": return <span className="club-bup-s">{w.bupWl}</span>;
       case "book": return r.book ? <a className="club-bup-go" href={bookAt(r.book)}>{w.bupBook} <ArrowIcon size={15} /></a> : null;
@@ -43,7 +44,7 @@ export default function BuildupPlan({ locale, plan, name, bookAt }: Props) {
       {plan.rows.length > 0 && (
         <ul className="club-bup-l" aria-label={w.bupSats}>
           {plan.rows.map((r) => (
-            <li key={r.date} className={r.state === "done" || r.state === "past" || r.state === "held" ? r.state : undefined} data-state={r.state}>
+            <li key={r.date} className={r.state === "done" || r.state === "past" || r.state === "held" || r.state === "none" ? r.state : undefined} data-state={r.state}>
               <span className="club-bup-d"><bdi>{fmt(r.date, { day: "numeric", month: "short" })}</bdi></span>
               {end(r)}
             </li>
