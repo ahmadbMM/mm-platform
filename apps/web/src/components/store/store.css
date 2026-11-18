@@ -532,7 +532,7 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
   .st-gal-thumbs { display: block; order: 2; min-width: 0; }
   .st-gal-thumbs > div { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
   .st-gal-thumbs button { flex: none; width: 64px; height: 64px; padding: 4px; box-sizing: border-box; border-radius: 14px; overflow: hidden; border: 0; background: #fff; cursor: pointer; box-shadow: 0 0 0 1px var(--st-line-2); transition: box-shadow .2s ease; }
-  .st-gal-thumbs button:hover { box-shadow: 0 0 0 1px rgba(26, 25, 25, .35); }
+  @media (hover: hover) { .st-gal-thumbs button:hover { box-shadow: 0 0 0 1px rgba(26, 25, 25, .35); } }
   .st-gal-thumbs button[aria-current="true"] { box-shadow: 0 0 0 2px #1a1919; }
   .st-gal-thumbs img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .st-gal-slide { flex-basis: 100%; aspect-ratio: 1 / 1; }
