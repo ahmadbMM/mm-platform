@@ -13,6 +13,7 @@ import { StIcon } from "./icons";
 import Modal from "./Modal";
 import { CopyNo } from "./OrderActions";
 import { giftKeyFor } from "./useLists";
+import PhotoPick, { type Picked } from "./after/PhotoPick";
 
 // An order's page, the parts that need the browser (the store build, chain w5): a return or an exchange asked for in a
 // centred pop-up (F93; staff approve it in the staff page and the refund goes the existing way), a verified buyer's
@@ -42,6 +43,7 @@ export function ReturnStart({ no, k, lines, ret, exchange }: { no: number; k: st
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [sent, setSent] = useState(false);
+  const [photos, setPhotos] = useState<Picked[]>([]); // N08 (builder B4): photos of what is wrong, shrunk on the phone
   if (!kinds.length || !lines.length) return null;
   if (sent) return <p className="st-ok" role="status">{w.requestSent}</p>;
 
@@ -50,7 +52,7 @@ export function ReturnStart({ no, k, lines, ret, exchange }: { no: number; k: st
   async function send() {
     if (!body || busy) return;
     setBusy(true); setErr("");
-    const r = await post("/api/store/return", body);
+    const r = await post("/api/store/return", photos.length ? { ...body, photos: photos.map((p) => p.path) } : body);
     setBusy(false);
     if (r.ok) { setOpen(false); setSent(true); router.refresh(); return; }
     setErr(w.errs[r.error ?? ""] ?? w.errs.generic);
@@ -111,6 +113,7 @@ export function ReturnStart({ no, k, lines, ret, exchange }: { no: number; k: st
               <label htmlFor="st-ret-note">{t.noteLabel}<span className="bk-hint"> {t.optional}</span></label>
               <textarea id="st-ret-note" value={pick.note} maxLength={300} onChange={(e) => setPick((p) => ({ ...p, note: e.target.value }))} />
             </div>
+            <PhotoPick no={no} k={k} photos={photos} onChange={setPhotos} id="st-ret-ph" />
             {err && <p className="bk-err" role="alert">{err}</p>}
             <button type="button" className="bk-btn wide" onClick={send} disabled={!body || busy}>
               {busy ? <><span className="bk-spin" aria-hidden="true" />{w.sending}</> : w.sendRequest}

@@ -26,6 +26,8 @@ export type WorkshopFormProps = {
   /** How the page's language writes a day ("Mon 5 Oct"), described by the server (lib/date-pattern). */
   dayFmt: DatePattern;
   doneTitle: string; doneText: string;
+  /** The notes as the form opens: a store order's free first check-up names its order (builder B4, N12). */
+  startNotes?: string;
 };
 
 
@@ -46,7 +48,7 @@ export default function WorkshopForm(p: WorkshopFormProps) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [bike, setBike] = useState("");
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(p.startNotes ?? "");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [done, setDone] = useState("");

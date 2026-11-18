@@ -1,0 +1,113 @@
+/* After the sale on an order's page and in My Account (builder B4, 2026-11-18): share, the Wallet pickup pass, Add to
+   calendar, the pickup handover and Change time, "I'm here", the build photos and check sheet, warranty claims with
+   photos, Add to Home Screen and notifications. The store's tokens (store.css :root), logical properties throughout so
+   Arabic mirrors it, 44 px tap targets, 16 px fields, hover only where there is a pointer that hovers. Class prefix sxb-. */
+
+/* the row under the order's number: Share, the Wallet pass, Add to calendar */
+.sxb-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 14px 0 0; }
+.sxb-head > * { flex: 0 1 auto; }
+.st .sxb-act { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
+.sxb-share, .sxb-wallet, .sxb-push { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sxb-msg { font-size: 13px; font-weight: 600; color: var(--st-green-2); }
+.sxb-msg.bk-err { color: #a33b2e; }
+
+/* the Wallet button: Apple's and Google's own black, the words beside a drawn wallet until the official badge is there */
+.sxb-wallet-btn { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border: 0; border-radius: var(--st-r-ctl); background: #000; color: #fff; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.sxb-wallet-btn:disabled { opacity: .7; cursor: default; }
+.sxb-wallet-art { display: inline-flex; padding: 0; border: 0; background: none; cursor: pointer; min-height: 44px; }
+.sxb-wallet-art img { display: block; height: 44px; width: auto; }
+
+/* the way: the handover line, Change time, I'm here */
+.sxb-way { margin-top: 6px; }
+.sxb-hijri { margin-inline-start: 8px; font-weight: 600; color: var(--st-ink-3); font-size: 13px; }
+.st-kv dd .sxb-hijri, .st-zb .sxb-hijri { display: block; margin: 0; font-weight: 400; }
+.sxb-change { margin: 2px 0 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.sxb-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-inline-start: -2px; padding: 0 4px; border: 0; background: none; color: var(--st-green); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.sxb-here { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--st-line); }
+.sxb-here-at { color: var(--st-green-2) !important; font-weight: 700; }
+.sxb-here-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.sxb-here-row .st-field { flex: 1 1 180px; margin: 0; }
+.sxb-here-row input { font-size: 16px; min-height: 48px; }
+.st .sxb-here-btn { flex: 0 0 auto; min-height: 48px; display: inline-flex; align-items: center; gap: 8px; }
+
+/* Change time: the days and the times as pills that wrap; the radio is read out, not drawn */
+.sxb-slot { display: flex; flex-direction: column; gap: 6px; }
+.sxb-wait { display: flex; justify-content: center; padding: 18px 0; }
+.sxb-chips { border: 0; margin: 6px 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.sxb-chips legend { width: 100%; margin: 0 0 8px; padding: 0; font-size: 13px; font-weight: 600; color: var(--st-ink-2); }
+.sxb-chips label { position: relative; display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1.5px solid var(--st-line-2); border-radius: 999px; font-size: 14px; font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums; }
+.sxb-chips label.on { border-color: var(--st-green); background: var(--st-green-soft); color: var(--st-green-2); }
+.sxb-chips input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.sxb-chips label:has(input:focus-visible) { outline: 2px solid var(--st-green); outline-offset: 2px; }
+
+/* Your bike is built: up to three photos, square on a phone, then the ticks */
+.sxb-build { margin: 0 0 16px; padding: 18px 20px 20px; background: #fff; border: 1px solid var(--st-line); border-radius: var(--st-r-card); box-shadow: var(--st-sh-1); }
+.sxb-build h2 { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 18px !important; letter-spacing: 0 !important; color: var(--st-green-2); }
+.sxb-build-ph { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.sxb-build-ph.n1 { grid-template-columns: minmax(0, 1fr); }
+.sxb-build-ph.n2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sxb-build-ph img { display: block; width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--st-r-ctl); background: var(--st-well); }
+.sxb-build-ph.n1 img { aspect-ratio: 4 / 3; }
+.sxb-checks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; }
+.sxb-checks li { display: flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; }
+.sxb-checks .st-ic { color: var(--st-green); }
+.sxb-build-note { margin: 12px 0 0; font-size: 14px; color: var(--st-ink-2); }
+
+/* Warranty: claims, then each line still covered with Start a claim */
+.sxb-warranty { margin: 0 0 16px; }
+.sxb-claim-lines { list-style: none; margin: 0; padding: 0; }
+.sxb-claim-lines li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 8px 0; }
+.sxb-claim-lines li + li { border-top: 1px solid var(--st-line); }
+.sxb-claim-lines li > span { min-width: 0; display: flex; flex-direction: column; font-size: 14px; }
+.sxb-claim-lines small { color: var(--st-ink-2); font-size: 12.5px; }
+.st .sxb-claim-btn { min-height: 44px; display: inline-flex; align-items: center; gap: 8px; }
+.st-pill.sxb-c-open { background: rgba(185, 138, 26, .14); color: #8a5c14; }
+.st-pill.sxb-c-in_progress { background: rgba(26, 25, 25, .08); color: var(--st-ink); }
+.st-pill.sxb-c-resolved { background: rgba(7, 122, 75, .1); color: var(--st-green); }
+.st-pill.sxb-c-refused { background: rgba(163, 59, 46, .1); color: #a33b2e; }
+.sxb-claim-one { display: flex; align-items: center; gap: 12px; margin: 0 0 4px; }
+.sxb-claim-one > span:last-child { display: flex; flex-direction: column; font-size: 14px; }
+.sxb-claim-one small { color: var(--st-ink-2); font-size: 12.5px; }
+.sxb-claim textarea { font-size: 16px; }
+
+/* photos (N08): the camera button only where there is a camera to open at once (a touch screen) */
+.sxb-photos { border: 0; margin: 8px 0; padding: 0; }
+.sxb-photos legend { margin: 0 0 8px; padding: 0; font-size: 13px; font-weight: 600; color: var(--st-ink-2); }
+.sxb-thumbs { list-style: none; margin: 0 0 10px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.sxb-thumbs li { position: relative; width: 84px; height: 84px; }
+.sxb-thumbs img { width: 100%; height: 100%; object-fit: cover; border-radius: var(--st-r-ctl); background: var(--st-well); }
+.sxb-thumb-x { position: absolute; top: -10px; inset-inline-end: -10px; width: 44px; height: 44px; padding: 0; border: 0; background: none; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+.sxb-thumb-x .st-ic { box-sizing: content-box; padding: 4px; border-radius: 50%; background: var(--st-ink); color: #fff; }
+.sxb-photo-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.sxb-photo-btns label { position: relative; min-height: 44px; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.sxb-photo-btns label:has(input:focus-visible) { outline: 2px solid var(--st-green); outline-offset: 2px; }
+.sxb-file { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.sxb-cam { display: none !important; }
+@media (pointer: coarse) { .sxb-cam { display: inline-flex !important; } }
+
+/* Add to Home Screen: Safari's two steps, each with its mark */
+.sxb-steps { list-style: none; margin: 4px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; counter-reset: s; }
+.sxb-steps li { display: flex; align-items: center; gap: 12px; font-size: 16px; font-weight: 600; counter-increment: s; }
+.sxb-steps li::before { content: counter(s); flex: none; width: 28px; height: 28px; border-radius: 50%; background: var(--st-well); display: inline-flex; align-items: center; justify-content: center; font-size: 14px; }
+.sxb-step-ic { flex: none; width: 44px; height: 44px; border-radius: var(--st-r-ctl); border: 1px solid var(--st-line-2); display: inline-flex; align-items: center; justify-content: center; color: #0a6cff; }
+
+@media (hover: hover) {
+  .sxb-link:hover { color: var(--st-green-2); }
+  .sxb-wallet-btn:hover:not(:disabled) { background: #222; }
+  .sxb-chips label:hover:not(.on) { border-color: rgba(26, 25, 25, .3); }
+}
+
+/* printed: none of these parts, which are actions, not the order */
+@media print {
+  .sxb-head, .sxb-change, .sxb-here, .sxb-claim-lines, .sxb-push { display: none !important; }
+}
+
+/* Add to Home Screen in My Account, a page that does not load store.css: the button sits in the account's stack, and its
+   pop-up's close mark gets the store's look (the store's Modal draws it as .st-x) */
+.sxb-acct-home { align-self: flex-start; }
+.ac .bk-pop-head .st-x, .ac-sec .bk-pop-head .st-x { width: 44px; height: 44px; margin-block-start: -10px; margin-inline-end: -10px; flex: none; border: 0; border-radius: 50%; background: none; color: #4a4843; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+
+/* the Hijri date under the Gregorian one on the way's lines (they are flex rows in store.css), and a claim's reply */
+.st-ord-way .st-expected { flex-wrap: wrap; row-gap: 2px; }
+.st-ord-way .st-expected .sxb-hijri { flex-basis: 100%; margin: 0; }
+.st-rets .sxb-reply { color: var(--st-ink); }

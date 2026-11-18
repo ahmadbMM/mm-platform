@@ -16,6 +16,7 @@ import { StIcon } from "./icons";
 import InvoiceQr from "./InvoiceQr";
 import { CopyNo, PrintButton, PutBack } from "./OrderActions";
 import { GiftActs, GiftCode, GiftReveal, ReturnStart, ReviewAsk } from "./OrderAfter";
+import type { AfterNodes } from "./after/AfterParts";
 
 // An order's page: confirmation, tracking and the invoice in one, to keep or print. The number to copy, where
 // the order is (paid, preparing, ready or on its way, out for delivery today, then collected or delivered), when it is
@@ -41,10 +42,13 @@ const SLOT_SHOWN: readonly string[] = ["pending", "paid", "preparing", "shipped"
  *  an Arabic line never shows it as "10-WELCOME" (the same isolates sar() puts round an amount). */
 const ltr = (s: string) => `\u2066${s}\u2069`;
 
-export default function OrderView({ o, t, w, beside, locale, seller, now, today, whatsapp, showroom, expected, slot, signup, returnsHref, policy, hidden }: {
+export default function OrderView({ o, t, w, beside, locale, seller, now, today, whatsapp, showroom, expected, slot, signup, returnsHref, policy, hidden, after = null }: {
   o: Order; t: StoreText; w: W5Text; beside: Beside; locale: string; seller: Seller; now: number; today: string; whatsapp: string; showroom: string;
   expected: string | null; slot: string | null; signup: string | null; returnsHref: string; policy: string; hidden: readonly string[];
+  /** After the sale (builder B4, components/store/after/AfterParts.tsx): its parts in their places, and Hijri dates. */
+  after?: AfterNodes | null;
 }) {
+  const hj = after?.hijri;
   const no = orderNo(o.no);
   const intl = intlOf(locale);
   const when = (iso: string | null) => {
@@ -90,6 +94,7 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
         <div className="st-ord-no"><h1><bdi dir="ltr">{no}</bdi></h1><CopyNo text={no} /></div>
         <p className={`st-badge s-${o.status}`}>{word(statusKey(o, o.status, today))}</p>
         {["paid", "preparing", "ready", "shipped", "out", "delivered"].includes(o.status) && <p className="st-thanks">{t.thanks}</p>}
+        {after?.head}
       </header>
 
       {o.status === "pending" && (
@@ -131,15 +136,17 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
         <p>{o.fulfil === "digital" ? <StIcon name="gift" size={20} /> : <Ic name={o.fulfil === "pickup" ? "shop" : "truck"} size={20} />}<b>{way}</b></p>
         {o.fulfil === "pickup" ? <p>{t.collectFrom(showroom)}</p>
           : o.fulfil !== "digital" && o.address && <p>{t.deliverTo}: {[o.address.district, o.address.city].filter(Boolean).join(", ")}</p>}
-        {!outNow && (slot && SLOT_SHOWN.includes(o.status) ? <p className="st-expected">{w.slotOn(slot)}</p>
-          : expected && <p className="st-expected">{t.expected(expected)}</p>)}
+        {!outNow && (slot && SLOT_SHOWN.includes(o.status) ? <p className="st-expected">{w.slotOn(slot)}{hj?.slot && <span className="sxb-hijri">{hj.slot}</span>}</p>
+          : expected && <p className="st-expected">{t.expected(expected)}{hj?.expected && <span className="sxb-hijri">{hj.expected}</span>}</p>)}
         {(o.courier || o.tracking_no) && (
           <dl className="st-kv">
             {o.courier && <div><dt>{t.courier}</dt><dd>{o.courier}</dd></div>}
             {o.tracking_no && <div><dt>{t.tracking}</dt><dd><bdi dir="ltr">{o.tracking_no}</bdi></dd></div>}
           </dl>
         )}
+        {after?.way}
       </section>
+      {after?.build}
 
       {o.gift_cards.length > 0 && (
         <GiftReveal no={o.no} k={o.key} cards={o.gift_cards}>
@@ -185,7 +192,7 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
         <dl className="st-kv">
           {invNo && <div><dt>{lab(t.invoiceNo, bt.invoiceNo)}</dt><dd><bdi dir="ltr">{invNo}</bdi></dd></div>}
           <div><dt>{lab(t.orderNo, bt.orderNo)}</dt><dd><bdi dir="ltr">{no}</bdi></dd></div>
-          <div><dt>{lab(issued ? w.issued : t.date, bw.issued)}</dt><dd>{when(o.paid_at ?? o.created_at)}</dd></div>
+          <div><dt>{lab(issued ? w.issued : t.date, bw.issued)}</dt><dd>{when(o.paid_at ?? o.created_at)}{hj?.issued && <small className="sxb-hijri">{hj.issued}</small>}</dd></div>
           <div>
             <dt>{lab(t.seller, bt.seller)}</dt>
             <dd>{seller.trade}{seller.legal && <small>{seller.legal}</small>}
@@ -199,7 +206,7 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
             <div>
               <dt>{lab(w.supplied, bw.supplied)}</dt>
               <dd>{way}{o.address && (o.address.district || o.address.city) && <small>{[o.address.district, o.address.city].filter(Boolean).join(", ")}</small>}
-                {o.delivered_at && <small>{day(o.delivered_at)}</small>}</dd>
+                {o.delivered_at && <small>{day(o.delivered_at)}{hj?.supplied && <span className="sxb-hijri">{hj.supplied}</span>}</small>}</dd>
             </div>
           )}
         </dl>
@@ -290,11 +297,13 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
         <p className="st-info-note">{policy} <Link href={returnsHref}>{t.returnsLink}</Link></p>
         {o.key && (win.ret || win.exchange) && <div className="st-ret-go"><ReturnStart no={o.no} k={o.key} lines={lines} ret={win.ret} exchange={win.exchange} /></div>}
       </section>
+      {after?.claim}
 
       <div className="st-ord-acts">
         <PrintButton />
-        {serviceShown(o, hidden) && <Link className="bk-btn2" href="/workshop"><StIcon name="spanner" size={18} />{w.bookService}</Link>}
+        {serviceShown(o, hidden) && !after?.noService && <Link className="bk-btn2" href="/workshop"><StIcon name="spanner" size={18} />{w.bookService}</Link>}
         {wa && reportable(o, now) && <a className="bk-btn2" href={wa} target="_blank" rel="noopener noreferrer"><WhatsAppMark size={18} />{t.mistake}</a>}
+        {after?.acts}
       </div>
 
       {signup && (

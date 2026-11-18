@@ -16,6 +16,10 @@ import { fmtRange } from "@/lib/store-delivery";
 import { orderExpected, orderOf, type Order } from "@/lib/store-order";
 import { POLICY } from "@/lib/store-policy";
 import { deliverySlots } from "@/lib/store-settings";
+import { afterSettings, APP_META, handoverOf } from "@/lib/sx-B4";
+import { afterRead } from "@/lib/sx-B4-api";
+import { LEGAL_WARRANTY_MONTHS, warrantyMonths } from "@/lib/store-policy";
+import { afterParts } from "@/components/store/after/AfterParts";
 import { serverLocalize } from "@/i18n/dicts";
 import { intlOf } from "@/i18n/locales";
 import "@/components/experiences/experiences.css";
@@ -33,7 +37,8 @@ type Props = { params: Promise<{ locale: string; no: string }>; searchParams: Pr
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, no } = await params;
   const s = await storeState(locale);
-  return pageMeta({ path: `/store/order/${no}`, locale, title: `${s.t.order(`MM-${no.replace(/\D/g, "")}`)} · Micromobility`, noindex: true });
+  // Add to Home Screen is offered on an order's page (N05, builder B4): the page names the site's manifest
+  return { ...pageMeta({ path: `/store/order/${no}`, locale, title: `${s.t.order(`MM-${no.replace(/\D/g, "")}`)} · Micromobility`, noindex: true }), ...APP_META };
 }
 
 export default async function OrderPage({ params, searchParams }: Props) {
@@ -42,10 +47,13 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const key = typeof k === "string" && /^[0-9a-f]{32}$/i.test(k) ? k : null;
   const num = /^\d{1,9}$/.test(no) ? Number(no) : null;
   const s = await storeState(locale);
-  const r = key && num ? await payRpc<unknown>("store_order_get", { p_no: num, p_track: key }) : null;
+  // the order, and beside it what after the sale adds (builder B4: null from a database without store_after_read)
+  const [r, extra] = key && num ? await Promise.all([payRpc<unknown>("store_order_get", { p_no: num, p_track: key }), afterRead(num, key)]) : [null, null];
   const read = r && r.status === 200 ? orderOf(r.data, key) : null;
   const acct = decodeSession((await cookies()).get(ACCOUNT_COOKIE)?.value);
   const o = read && acct && read.gift_cards.some((g) => g.masked) ? await withOwnCodes(read, acct) : read;
+  // notifications for an order are offered to the account that placed it alone (N04, while staff have them on)
+  const owner = !!(read && acct && afterSettings(s.content).push && extra) && (await ownOrder(read, acct));
   const { t, site } = s;
   const S = (v: unknown) => (typeof v === "string" ? v : "");
 
@@ -71,7 +79,14 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const ar = locale === "ar";
   const intl = intlOf(locale);
   const booked = slotWhen(o, deliverySlots(s.content));
-  const slot = booked ? [fmtRange({ from: booked.day, to: booked.day }, intl), booked.from && booked.to ? `${booked.from}–${booked.to}` : ""].filter(Boolean).join(", ") : null;
+  // the hours as one left-to-right run (an Arabic line showed "21:00–16:00"; builder B4)
+  const slot = booked ? [fmtRange({ from: booked.day, to: booked.day }, intl), booked.from && booked.to ? `\u2066${booked.from}–${booked.to}\u2069` : ""].filter(Boolean).join(", ") : null;
+  const products = new Map(s.store.products.map((p) => [p.id, p]));
+  const after = afterParts({
+    o: { ...o, handover: handoverOf(r?.data) }, after: extra, content: s.content, locale, today: s.today, now, owner, workshop: !s.hidden.includes("workshop"), expected,
+    bikes: new Set(s.store.products.filter((p) => p.category === "bikes").map((p) => p.id)),
+    monthsOf: (id) => { const p = id ? products.get(id) : null; return p ? warrantyMonths(p) : LEGAL_WARRANTY_MONTHS.new; },
+  });
   return (
     <PageShell locale={locale} site={site} preview={s.previewing} hidden={s.hidden}>
       <OrderView
@@ -87,9 +102,16 @@ export default async function OrderPage({ params, searchParams }: Props) {
         returnsHref="/returns"
         policy={serverLocalize(POLICY, locale).returnSentence}
         hidden={s.hidden}
+        after={after}
       />
     </PageShell>
   );
+}
+
+/** Whether the signed-in account placed this order (customer_orders answers the account's own orders). */
+async function ownOrder(o: Order, acct: Session): Promise<boolean> {
+  const r = await rpcServer<unknown>("customer_orders", { p_id: acct.id, p_token: acct.token });
+  return r.status === 200 && Array.isArray(r.data) && r.data.some((x) => orderOf(x)?.id === o.id);
 }
 
 /** The order with its gift cards' whole codes when the signed-in account placed it (customer_orders answers its own orders'

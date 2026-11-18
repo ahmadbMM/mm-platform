@@ -14,6 +14,8 @@ import { slugId } from "@/lib/slug";
 import { riyadhClock } from "@/lib/workshop-days";
 import { DATE_STYLES, datePattern } from "@/lib/date-pattern";
 import { bg } from "@/lib/img";
+import { serverLocalize } from "@/i18n/dicts";
+import { T as B4 } from "@/components/store/sx-B4.text";
 
 // micromobility.sa/workshop - a service request, received by the staff page (Workshop section).
 type Sec = Record<string, unknown>;
@@ -29,8 +31,13 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   return pageMeta({ path: "/workshop", locale, title: `${S(w.intro.title).replace(/[.。।۔!]\s*$/, "")} · Micromobility`, description: S(w.intro.text), closed });
 }
 
-export default async function WorkshopPage({ params }: { params: Promise<{ locale: string }> }) {
+export default async function WorkshopPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { locale } = await params;
+  // ?checkup=MM-1234: the free first check-up of a bike the store sold (N12, builder B4; the order's page links here). It
+  // is offered first, at no charge, and the notes name the order; the workshop checks the order when it confirms.
+  const cq = (await searchParams).checkup;
+  const checkup = typeof cq === "string" && /^MM-\d{1,9}$/.test(cq) ? cq : null;
+  const cw = serverLocalize(B4, locale);
   const L = asLocale(locale);
   const { content, previewing, hidden } = await pageState("workshop");
   const site = resolvePage(siteSchema, content, L);
@@ -42,6 +49,7 @@ export default async function WorkshopPage({ params }: { params: Promise<{ local
     id: slug(S(list(enNames.services.items)[i]?.name), i), pos: i + 1, name: S(s.name), sub: S(s.sub), price: N(s.price), mins: N(s.mins),
     includes: S(s.includes).split("\n").map((x) => x.trim()).filter(Boolean),
   })).filter((s) => s.name);
+  if (checkup) services.unshift({ id: "free-checkup", pos: 0, name: cw.checkupName, sub: checkup, price: 0, mins: 0, includes: [] });
   const parts = list(w.services.parts).map((p, i) => ({ id: slug(S(list(enNames.services.parts)[i]?.label), i).replace(/^service-/, "part-"), label: S(p.label), price: N(p.price) })).filter((p) => p.label);
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
@@ -67,6 +75,7 @@ export default async function WorkshopPage({ params }: { params: Promise<{ local
           fridayClosed={site.contact.fridayClosed === true} closeHour={N(site.contact.closeHour) || 22}
           dayFmt={datePattern(locale, DATE_STYLES.workshopDay)}
           doneTitle={S(w.booking.doneTitle)} doneText={S(w.booking.doneText)}
+          startNotes={checkup ? cw.checkupNote(checkup) : undefined}
         />
         <WorkshopTrack locale={locale} whenFmt={datePattern(locale, DATE_STYLES.booked)} payOpen={paySettings(content).enabled && payReady()} />
       </section>
