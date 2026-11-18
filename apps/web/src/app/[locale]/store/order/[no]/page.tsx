@@ -4,6 +4,10 @@ import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
 import OrderView from "@/components/store/OrderView";
 import TrackForm from "@/components/store/TrackForm";
+import { LearnOffer, OrderWayFacts } from "@/components/store/OrderPlus";
+import { learnOpen } from "@/components/store/sx-b3-data";
+import { T as SX } from "@/components/store/sx-B3.text";
+import "@/components/store/sx-B3.css";
 import { storeState } from "@/components/store/store-data";
 import { T as STORE_T } from "@/components/store/Store.text";
 import { T as W5 } from "@/components/store/w5.text";
@@ -20,6 +24,7 @@ import { afterSettings, APP_META, handoverOf } from "@/lib/sx-B4";
 import { afterRead } from "@/lib/sx-B4-api";
 import { LEGAL_WARRANTY_MONTHS, warrantyMonths } from "@/lib/store-policy";
 import { afterParts } from "@/components/store/after/AfterParts";
+import { orderExtrasOf, sxSettings } from "@/lib/sx-b3";
 import { serverLocalize } from "@/i18n/dicts";
 import { intlOf } from "@/i18n/locales";
 import "@/components/experiences/experiences.css";
@@ -87,6 +92,12 @@ export default async function OrderPage({ params, searchParams }: Props) {
     bikes: new Set(s.store.products.filter((p) => p.category === "bikes").map((p) => p.id)),
     monthsOf: (id) => { const p = id ? products.get(id) : null; return p ? warrantyMonths(p) : LEGAL_WARRANTY_MONTHS.new; },
   });
+  // the build of 2026-11-18 (B3): a company's standard tax invoice (N34), the handover slot, session and pin (N13, N15,
+  // N07), and the lessons for a bike bought by someone still learning (N17), from the order's own JSON (absent on a
+  // database without them)
+  const ex = orderExtrasOf(r?.data);
+  const sx = serverLocalize(SX, locale);
+  const learn = ex.learning && sxSettings(s.content).learning && learnOpen(s, locale) && !["cancelled", "refunded", "pending"].includes(o.status);
   return (
     <PageShell locale={locale} site={site} preview={s.previewing} hidden={s.hidden}>
       <OrderView
@@ -103,6 +114,12 @@ export default async function OrderPage({ params, searchParams }: Props) {
         policy={serverLocalize(POLICY, locale).returnSentence}
         hidden={s.hidden}
         after={after}
+        sx={{
+          buyer: ex.buyer, x: sx, bx: ar ? SX.en : SX.ar,
+          wayName: ex.session ? sx.atSession : undefined,
+          way: <OrderWayFacts e={ex} x={sx} intl={intl} />,
+          after: learn ? <LearnOffer x={sx} /> : null,
+        }}
       />
     </PageShell>
   );

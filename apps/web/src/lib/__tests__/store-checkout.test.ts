@@ -428,7 +428,8 @@ describe("the pages", () => {
     const page = src("app/[locale]/pay/[id]/page.tsx");
     expect(page).toContain("serverLocalize(POLICY, locale).returnSentence");
     expect(page).toContain('kind === "order" ? "/returns"');
-    const checkout = src("app/[locale]/store/checkout/page.tsx");
+    // the checkout page and a quote's link draw one form (components/store/sx-b3-checkout.tsx, 2026-11-18)
+    const checkout = src("components/store/sx-b3-checkout.tsx");
     expect(checkout).toContain('returns: "/returns"');
     const form = src("components/store/CheckoutForm.tsx");
     expect(form.indexOf("st-co-legal")).toBeLessThan(form.indexOf("st-place"));

@@ -1,5 +1,6 @@
 import { workingDay } from "./store-delivery";
 import type { SiteContent } from "./site";
+import { inSeason, ramadanOf } from "./sx-b3-handover";
 
 // The store build's settings (2026-11-15, rentals migration 20261115235500; CONTRACTS.md section 1), read the way the
 // database reads them: a key that is missing or malformed reads as its default, which is off. Staff edit them in the
@@ -7,7 +8,9 @@ import type { SiteContent } from "./site";
 
 export type StoreSwitches = { tabby: boolean; smsa: boolean; addressLookup: boolean };
 export type SlotTime = { id: string; from: string; to: string };
-export type Slots = { on: boolean; ahead: number; lead: number; skip: number[]; times: SlotTime[] };
+/** `season` (N36, store.ramadan): on its days only the windows it names (its ids among `times`) are offered, on the
+ *  other days only the rest. */
+export type Slots = { on: boolean; ahead: number; lead: number; skip: number[]; times: SlotTime[]; season?: { from: string; to: string; ids: string[] } };
 export type District = { en: string; ar: string | null };
 export type StoreLegal = { legalName: string; cr: string; ecr: string; vat: string; sbc: string };
 
@@ -32,11 +35,24 @@ export function deliverySlots(c: SiteContent | null | undefined): Slots | null {
   const o = obj(c?.["store.slots"]);
   if (o.on !== true) return null;
   const times = (Array.isArray(o.times) ? o.times : []).map(obj)
-    .filter((t) => typeof t.id === "string" && /^[a-z0-9]{1,12}$/.test(t.id) && HM.test(String(t.from)) && HM.test(String(t.to)) && String(t.to) > String(t.from))
+    // a window may run past midnight (21:00-01:00, the Ramadan evenings of N36): its end is then before its start
+    .filter((t) => typeof t.id === "string" && /^[a-z0-9]{1,12}$/.test(t.id) && HM.test(String(t.from)) && HM.test(String(t.to)) && String(t.to) !== String(t.from))
     .slice(0, 4).map((t) => ({ id: t.id as string, from: t.from as string, to: t.to as string }));
   const skip = [...new Set((Array.isArray(o.skip) ? o.skip : []).filter((d): d is number => Number.isInteger(d) && d >= 0 && d <= 6))];
   if (!times.length || skip.length >= 7) return null;
-  return { on: true, ahead: int(o.ahead, DEFAULT_SLOTS.ahead, 1, 14), lead: int(o.lead, DEFAULT_SLOTS.lead, 0, 7), skip, times };
+  const out: Slots = { on: true, ahead: int(o.ahead, DEFAULT_SLOTS.ahead, 1, 14), lead: int(o.lead, DEFAULT_SLOTS.lead, 0, 7), skip, times };
+  // Ramadan's evening windows (store.ramadan, N36), as the database's _store_slots adds them: an id the usual ones use is
+  // left out
+  const r = ramadanOf(c), extra = (r?.times ?? []).filter((t) => !times.some((x) => x.id === t.id));
+  return r && extra.length ? { ...out, times: [...times, ...extra], season: { from: r.from, to: r.to, ids: extra.map((t) => t.id) } } : out;
+}
+
+/** The windows a day has, before the clock: Ramadan's on its days, the usual ones on the others. */
+export function seasonTimes(s: Slots, day: string): SlotTime[] {
+  const z = s.season;
+  if (!z) return s.times;
+  const on = inSeason(z, day);
+  return s.times.filter((t) => z.ids.includes(t.id) === on);
 }
 
 const weekday = (iso: string) => new Date(`${iso}T12:00:00Z`).getUTCDay();
@@ -46,9 +62,10 @@ const nextDay = (iso: string) => new Date(Date.parse(`${iso}T12:00:00Z`) + 86400
  *  the page knows it) only those not started yet, and none on a day already past. With a lead of 0 days today is
  *  offered, and a window already over could be booked (bug hunt 2026-11-18). */
 export function slotTimes(s: Slots, day: string, now?: string | null): SlotTime[] {
-  if (!now || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(now)) return s.times;
+  const times = seasonTimes(s, day);
+  if (!now || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(now)) return times;
   const nowDay = now.slice(0, 10), hm = now.slice(11, 16);
-  return day < nowDay ? [] : day === nowDay ? s.times.filter((t) => t.from > hm) : s.times;
+  return day < nowDay ? [] : day === nowDay ? times.filter((t) => t.from > hm) : times;
 }
 
 /** The days a scheduled delivery can be booked for, counted from `today` (YYYY-MM-DD, Riyadh): the first `lead` working

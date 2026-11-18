@@ -23,7 +23,7 @@ export default function PayMarks({ label, compact = false }: { label: string; co
       <span className="py-marks-row">
         {PAY_MARKS.map((m) => <img key={m.id} className={`py-mark py-mark-${m.id}`} src={m.src} alt="" width={m.w} height={m.h} />)}
       </span>
-      <span className="py-marks-t">{label}</span>
+      {label && <span className="py-marks-t">{label}</span>}
     </div>
   );
 }

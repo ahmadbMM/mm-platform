@@ -1,0 +1,71 @@
+/* The cart, checkout and quote link (build of 2026-11-18, builder B3: P10 P14 P15 P16 SM10-B SM10-C N07 N13 N15 N17 N20
+   N23 N34 N36). The store's tokens (store.css :root); logical properties only, so Arabic and Urdu mirror it; hover only
+   where there is one; nothing moves under reduced motion. Classes prefixed sx3-. */
+
+/* SM10-B: the line's drawn Save for later and Remove, 44 px each, at the end of its second row */
+.sx3-acts { display: inline-flex; align-items: center; gap: 4px; margin-inline-end: -8px; }
+.sx3-icbtn { width: 44px; height: 44px; flex: none; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--st-ink-3); cursor: pointer; transition: color .15s ease, background-color .15s ease; }
+.sx3-icbtn:focus-visible { outline: 2.5px solid var(--st-green); outline-offset: 1px; }
+@media (hover: hover) { .sx3-icbtn:hover { background: var(--st-well); color: var(--st-ink); } }
+
+/* SM10-C: on a phone the total and Checkout open the cart (it scrolls away with the page: nothing is pinned) */
+.sx3-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 12px 12px 18px; background: #fff; border: 1px solid var(--st-line); border-radius: var(--st-r-card); box-shadow: var(--st-sh-1); }
+[dir="rtl"] .sx3-top { padding: 12px 18px 12px 12px; }
+.sx3-top p { margin: 0; display: flex; flex-direction: column; min-width: 0; }
+.sx3-top p span { font-size: 12.5px; font-weight: 600; color: var(--st-ink-3); }
+.sx3-top .tk-amt { font-size: 19px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.sx3-top .bk-btn { flex: none; min-height: 48px; padding: 0 22px; }
+@media (min-width: 900px) { .sx3-top { display: none; } }
+
+/* P14: the amount on the Place order button never breaks from its sign */
+.st-place .sx3-amt { white-space: nowrap; }
+
+/* P15: the payment marks beside Place order only where the summary stands beside the steps; on a phone the footer's row
+   of the same marks is a few lines below */
+.sx3-marks { display: none; }
+@media (min-width: 900px) { .sx3-marks { display: block; } }
+
+/* N34 buying for a company; N17 still learning: ticks of the Review step, the company's fields under its tick */
+.sx3-ic { flex: none; vertical-align: -4px; margin-inline-end: 6px; color: var(--st-ink-2); }
+.sx3-co { margin: 0 0 14px; }
+.sx3-co-fields { margin-top: 12px; padding: 16px 16px 4px; border-radius: var(--st-r-card); background: var(--st-well); }
+.sx3-row2 { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0 12px; }
+@media (min-width: 560px) { .sx3-row2 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* N07 the Jeddah delivery's map pin: a button, or the pinned line with Change and Remove; the map in a centred pop-up */
+.sx3-pin { margin: 6px 0 4px; }
+.sx3-pin-go { display: inline-flex; align-items: center; gap: 8px; min-height: 48px; }
+.sx3-pin-on { display: flex; align-items: center; gap: 4px 10px; flex-wrap: wrap; min-height: 48px; padding: 4px 4px 4px 14px; border-radius: var(--st-r-ctl); background: var(--st-green-soft); color: var(--st-ink); }
+[dir="rtl"] .sx3-pin-on { padding: 4px 14px 4px 4px; }
+.sx3-pin-on .sx3-ic { color: var(--st-green); margin: 0; }
+.sx3-pin-on b { flex: 1; min-width: 0; font-size: 14.5px; }
+.sx3-map { display: flex; flex-direction: column; gap: 10px; }
+.sx3-map-box { position: relative; height: min(56svh, 440px); min-height: 260px; border-radius: var(--st-r-card); overflow: hidden; background: var(--st-well); box-shadow: inset 0 0 0 1px var(--st-line-2); }
+/* MapLibre makes its box position: relative: the size is given too, so it still fills the frame */
+.sx3-map-gl { position: absolute; inset: 0; width: 100%; height: 100%; }
+/* the pin stays in the middle: its point on the map's centre */
+.sx3-map-pin { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); color: #a33b2e; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(26, 25, 25, .35)); }
+.sx3-map-pin svg { fill: #fff; }
+.sx3-map-off { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; margin: 0; padding: 16px; text-align: center; color: var(--st-ink-2); font-size: 14px; }
+.sx3-map .bk-ferr:empty { display: none; }
+.sx3-map-acts { display: flex; flex-wrap: wrap; gap: 10px; justify-content: space-between; }
+.sx3-map-acts button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; flex: 1 1 180px; }
+
+/* N13 the handover slot under "Collect fully built" (the delivery slots' pills, F78) */
+.sx3-ho { margin-top: 12px; }
+
+/* N23 the quote's link: its number and date as one row of facts under the heading */
+.sx3-qh { margin-bottom: 8px !important; }
+.sx3-qfacts { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 22px; font-size: 14px; font-weight: 600; color: var(--st-ink-2); }
+
+/* An order's page: the way's own facts (N13, N15, N07) and the lessons for a rider still learning (N17) */
+.sx3-ow { margin-top: 10px; }
+.sx3-learn { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; padding: 18px 22px; background: var(--st-green-soft); border-radius: var(--st-r-card); }
+.sx3-learn h2 { margin: 0; font-size: 17px; letter-spacing: -.2px; }
+.sx3-learn .bk-btn2 { min-height: 44px; }
+
+/* N20 a store gift card into the account's wallet (My Account's wallet) */
+.sx3-gw-open { margin: 4px 0 12px; min-height: 44px; }
+.sx3-gw { display: grid; gap: 4px 12px; margin: 4px 0 14px; }
+@media (min-width: 560px) { .sx3-gw { grid-template-columns: minmax(0, 1fr) auto; align-items: end; } .sx3-gw .bk-btn { margin-bottom: 14px; } .sx3-gw p { grid-column: 1 / -1; } }
+.sx3-gw-ok { margin: 0; color: var(--st-green); font-weight: 600; font-size: 14px; }

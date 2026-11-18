@@ -23,6 +23,7 @@ import HelperPath, { helperLine } from "@/components/account/HelperPath";
 import { Anniversary, TriedKinds } from "@/components/account/Landmarks";
 import AccountParts, { accountPartHref, accountPartOf } from "@/components/account/AccountParts";
 import WalletCard from "@/components/account/WalletCard";
+import { sxSettings } from "@/lib/sx-b3";
 import ReferralCard from "@/components/account/ReferralCard";
 import VolunteerCard, { volunteerCardShows, type VolunteerMe } from "@/components/account/VolunteerCard";
 import { walletOf } from "@/lib/wallet";
@@ -492,7 +493,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           </section>
         )}
 
-        {walletRead && <WalletCard wallet={walletRead} locale={locale} topup={payOnline && payCfg.topup ? { min: payCfg.topupMin, max: payCfg.topupMax } : null} />}
+        {walletRead && <WalletCard wallet={walletRead} locale={locale} topup={payOnline && payCfg.topup ? { min: payCfg.topupMin, max: payCfg.topupMax } : null}
+          giftCard={payOnline && sxSettings(content).giftWallet} />}
 
         {referral && <ReferralCard r={referral} locale={locale} />}
 
