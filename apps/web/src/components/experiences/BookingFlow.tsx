@@ -77,6 +77,9 @@ type Props = {
   routes: Record<string, TicketRoute | null>;
   /** Paying online (2026-11-10): staff's pay.bookings, the hold, the refund rule, and the account's wallet balance. */
   pay?: { mode: "required" | "optional" | "off"; holdMinutes: number; refundDays: number; wallet: number; terms?: CancelTerms | null };
+  /** The list of every session (Experiences, 2026-11-18): Back from the dates and Book another go there; absent, to the
+   *  event cards. */
+  exit?: string;
 };
 
 /** The Terms' refunds clause as staff keep it (in English or Arabic), for the review's Cancellation terms pop-up. */
@@ -110,7 +113,7 @@ const BIKE_IMG: Record<string, { img: string; model: string; easy?: boolean }> =
 const GROUP_IMG: Record<RideGroup, string> = { beg: "group-jyc", int: "group-msr" };
 const imgOf = (name: string) => `/site/experiences/bikes/${name}.webp`;
 
-export default function BookingFlow({ locale, events, prices, maxPrices, jccCap = JCC_ACCOUNT_CAP, seatMax = EVENT_SEAT_MAX, acct, items, start, text, links, today, now, typeNames, routes, pay }: Props) {
+export default function BookingFlow({ locale, events, prices, maxPrices, jccCap = JCC_ACCOUNT_CAP, seatMax = EVENT_SEAT_MAX, acct, items, start, text, links, today, now, typeNames, routes, pay, exit }: Props) {
   const t = useLocalize(T);
   const tk = useLocalize(TICKET);
   const rtl = isRtl(locale);
@@ -456,6 +459,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     setBusy(false);
   };
   const another = () => {
+    if (exit) { window.location.assign(exit); return; }
     setDone(null); setSelId(null); setStep(1); setAddons([]); setPromo(null); setPromoIn(""); setPromoMsg(""); setPromoOpen(false); setWaiverOk(null); setGroup(null); setAlready(false); setRet(false);
     setRiders([{ name: "", height: acctNow?.height ? String(acctNow.height) : "", type: "" }]);
     setEvKey(null);
@@ -547,11 +551,12 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const mfMark = !rej && !full && !low && !fewOn && !!s.mf;
     // a date handed to the booking app is priced there (a race's fee is the organiser's, told to those who may book it)
     const meta = [s.collect, s.handoff ? null : fromLine(s)].filter((x) => !!x);
+    const out = s.satLink || s.handoff; // E05: a card that goes elsewhere wears an arrow, never a radio dot
     const body = (
       <>
         {kicker}
         <span className="sc-head">
-          <span className={`sc-dot${on ? " on" : ""}`} aria-hidden="true" />
+          {!out && <span className={`sc-dot${on ? " on" : ""}`} aria-hidden="true" />}
           <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
           <span className={`sc-spots${rej ? " rej" : full ? " full" : low || fewOn ? " low" : mfMark ? " mf" : ""}`}>{rej ? t.rejCard : full ? t.waitlist : low ? fill(s.left === 1 ? t.left1 : t.leftN, s.left!) : fewOn ? t.few : mfMark ? <><Ic name="people" size={13} />{s.mf?.label}</> : t.available}</span>
         </span>
@@ -563,8 +568,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     // a Saturday ride while staff take its bookings at micromobility.sa/saturday with a ride code (2026-11-08): its card
     // goes there, for anyone with a code, member or not, as main's Experiences sends it
     // and a kind this booking has no steps for goes to the booking app on its card and this date (BookSession.handoff)
-    const out = s.satLink || s.handoff;
-    if (out) return <a key={s.id} href={out} className={`sc-card ev-${s.kind}${rej ? " rej" : ""}`}>{body}</a>;
+    if (out) return <a key={s.id} href={out} className={`sc-card ev-${s.kind} sc-out${rej ? " rej" : ""}`}>{body}<Ic name="go" size={16} flip className="sc-go" /></a>;
     return (
       <button key={s.id} type="button" className={`sc-card ev-${s.kind}${on ? " sel" : ""}${rej ? " rej" : ""}`} role="radio" aria-checked={on} tabIndex={stop ? 0 : -1} data-id={s.id} onClick={() => pick(s)}>
         {body}
@@ -612,7 +616,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   // fixed to the bottom of the screen, the booking's one floating bar, and the page scrolls focus clear of it (row 7).
   // `from`: the step it stands under; Back goes to the step before it, from the dates to the list of events
   const back = (from: Step) => {
-    if (from === 1) { setEvKey(null); setSelId(null); setRet(false); focusTop(); }
+    if (from === 1) { if (exit) { window.location.assign(exit); return; } setEvKey(null); setSelId(null); setRet(false); focusTop(); }
     else if (sel) go(prevStep(sel, from));
   };
   const bar = (from: Step, children: React.ReactNode) => (
@@ -674,7 +678,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       <section aria-labelledby="bk-ride-h">
         {handedOver
           ? <div className="bk-head"><h2 id="bk-ride-h" className="bk-title" tabIndex={-1} data-step-title>{text.dateTitle || t.rideTitle}</h2></div>
-          : head(t.rideTitle, "bk-ride-h")}
+          : head(text.dateTitle || t.rideTitle, "bk-ride-h")}
         <p className="xs-picked">{ev.title}</p>
         {ev.note && <p className="bk-evnote">{ev.note}</p>}
         {ev.sessions.length === 0 ? (
