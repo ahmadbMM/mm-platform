@@ -7,7 +7,7 @@ import {
 // The store's products as a Google Merchant Center feed (the user, 2026-11-18: "do all", N27): micromobility.sa/store/
 // feed.xml, one RSS 2.0 file in the Google namespace, so the bikes and the gear can show free in Shopping, Images and Lens
 // (app/store/feed.xml/route.ts serves it while the store is open). One item for each size and colour on sale, grouped by
-// its product; the price with VAT in riyals, as every page shows it; a former price only beside the discount licence,
+// its product, its link opening the page with that size and colour picked; the price with VAT in riyals, as every page shows it; a former price only beside the discount licence,
 // between its dates (F107), as the cards show it; the stock as it is. Gift cards are left out (Merchant Center refuses
 // them) and so is a product without a photo (an item needs one). ?lang=ar writes the Arabic names and links the Arabic
 // pages, for a second feed of Arabic listings. Pure, so it is tested without a database.
@@ -50,7 +50,6 @@ export function feedItems(products: readonly StoreProduct[], o: FeedOptions): st
     const name = pick(o.lang, p.name_en, p.name_ar);
     const title = (p.brand ? `${p.brand} ${brandOnce(name, p.brand)}` : name).slice(0, 150);
     const description = plain(pick(o.lang, p.description_en, p.description_ar) || pick(o.lang, p.tagline_en, p.tagline_ar) || title);
-    const link = `${o.site}${productHref(p)}?lang=${o.lang}`;
     const variants: (StoreVariant | null)[] = p.variants.length ? p.variants : [null];
     const grouped = variants.length > 1;
     for (const v of variants) {
@@ -59,6 +58,11 @@ export function feedItems(products: readonly StoreProduct[], o: FeedOptions): st
       const stock = v ? v.stock : productStock(p).kind === "out" ? 0 : 1;
       const was = wasPriceAt(p, o.licence, o.today, price);
       const colour = v ? pick(o.lang, v.color_en, v.color_ar) : "";
+      // the page opens with this size and colour picked (?size=&colour=, the product page's preset, N09)
+      const q = new URLSearchParams({ lang: o.lang });
+      if (v?.size) q.set("size", v.size);
+      if (v?.color_en) q.set("colour", v.color_en);
+      const link = `${o.site}${productHref(p)}?${q.toString()}`;
       const tags = [
         ["g:id", (v ? v.id : p.id).toLowerCase()],
         ...(grouped ? [["g:item_group_id", p.id.toLowerCase()]] : []),

@@ -231,13 +231,14 @@ describe("the store's products as a Google Merchant Center feed (N27)", () => {
   });
   it("links the page in the feed's language, the photos on the open web, the text plain and safe", () => {
     const [m] = items();
-    expect(tag(m, "link")).toEqual(["https://micromobility.sa/store/max?lang=en"]);
+    expect(tag(m, "link")).toEqual(["https://micromobility.sa/store/max?lang=en&amp;size=M&amp;colour=Black"]);
+    expect(tag(items()[2], "link")).toEqual(["https://micromobility.sa/store/helmet?lang=en"]);
     expect(tag(m, "g:image_link")).toEqual(["https://micromobility.sa/site/store/max/1.webp"]);
     expect(tag(m, "g:additional_image_link")).toEqual(["https://micromobility.sa/media/store/max/2.webp", "https://cdn.example/3.webp"]);
     expect(tag(m, "description")).toEqual(["Carbon Shimano 105 &amp; disc brakes"]);
     expect(tag(items()[2], "description")).toEqual(["Light and cool"]);
     const [a] = items({ lang: "ar" });
-    expect(tag(a, "link")).toEqual(["https://micromobility.sa/store/max?lang=ar"]);
+    expect(tag(a, "link")).toEqual(["https://micromobility.sa/store/max?lang=ar&amp;size=M&amp;colour=Black"]);
     expect(tag(a, "description")).toEqual(["كربون &lt;كامل&gt;"]);
     expect(tag(a, "g:color")).toEqual(["أسود"]);
     expect(absolute("//evil/x.webp", o.site)).toBeNull();
