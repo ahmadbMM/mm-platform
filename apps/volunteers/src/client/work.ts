@@ -442,7 +442,8 @@ async function loadList(): Promise<void> {
   // The list is newer than the figures from entering, and other people are marking too. Counted as the database has
   // them, before the marks not sent yet are laid over the rows: each of those is counted once, when it lands (ok()).
   const c = w.ent.counts, l = w.list;
-  // volunteer_list stops at 1,000 bookings: a list that long may be cut short, and the counts from entering stay.
+  // volunteer_list stops at 1,000 bookings: a list that long may be cut short, so its counts are asked of the database
+  // instead (volunteer_counts, over every booking); until that answers, the counts from entering stay.
   if (c && l.length < LIST_CAP) {
     c.booked = l.length;
     c.in = l.filter((x) => x.checked_in).length;
@@ -451,11 +452,28 @@ async function loadList(): Promise<void> {
   }
   for (const b of w.list) overlay(b);
   paint();
+  if (c && l.length >= LIST_CAP) void loadCounts(w);
 }
 /** The most rows volunteer_list sends (its limit 1000). */
 const LIST_CAP = 1000;
-/** What volunteer_find does not send (a blood drive's donor or visitor, the phone and the details), from the list's row for
- *  the same booking when the page has one: a visitor found by search or scan never reads as a donor. */
+/** The head's counts over every booking of the session (volunteer_counts, rentals 20261119000600), for a list cut at its
+ *  1,000. Like the list's, they are the database's own: a mark not sent yet is counted once, when it lands. An answer it
+ *  cannot read, or a database without the function yet, leaves the counts as they were. */
+async function loadCounts(w: Work): Promise<void> {
+  const r = await rpc<Record<string, unknown> | null>("volunteer_counts", { p_session: w.id });
+  const c = w.ent.counts;
+  if (work !== w || !c || !r.ok || !r.data || typeof r.data !== "object") return;
+  const d = r.data;
+  const n = (k: string): number | null => { const v = d[k]; return typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null; };
+  const booked = n("booked"), arrived = n("in"), donated = n("donated"), visitors = n("visitors");
+  if (booked === null || arrived === null || donated === null) return;
+  c.booked = booked; c.in = arrived; c.donated = donated;
+  if (c.visitors != null && visitors !== null) c.visitors = visitors;
+  paint();
+}
+/** What an older volunteer_find did not send (a blood drive's donor or visitor, the phone and the details; rentals
+ *  20261119000600 sends them), from the list's row for the same booking when the page has one: a visitor found by
+ *  search or scan never reads as a donor. What the database sent is kept. */
 const LIST_ONLY = ["visitor", "phone", "status", "bike", "size", "height", "blood_type", "club"] as const;
 function fromList(b: Booking): void {
   const l = work?.list?.find((x) => x.id === b.id);

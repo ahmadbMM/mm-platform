@@ -73,6 +73,8 @@ export const RPCS = new Set([
   "volunteer_coming",
   "volunteer_feedback",
   "volunteer_motive",
+  // the bug hunt of 2026-11-18 (rentals migration 20261119000600): the head's counts over every booking
+  "volunteer_counts",
 ]);
 
 /** Error codes the database raises on purpose, with the status each one is answered with. */

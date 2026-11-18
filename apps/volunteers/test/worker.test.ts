@@ -111,7 +111,15 @@ describe("the database functions", () => {
     expect(calls).toHaveLength(0);
     // the portal's own functions, and the booking app's phone-notification pair on the same session
     expect([...RPCS].filter((n) => !n.startsWith("volunteer_")).sort()).toEqual(["customer_push_subscribe", "customer_push_unsubscribe"]);
-    for (const name of ["volunteer_team", "volunteer_team_clock", "volunteer_updates", "volunteer_updates_seen"]) expect(RPCS.has(name), name).toBe(true);
+    for (const name of ["volunteer_team", "volunteer_team_clock", "volunteer_updates", "volunteer_updates_seen", "volunteer_counts"]) expect(RPCS.has(name), name).toBe(true);
+  });
+  it("the head's counts over every booking go through with the session from the cookie", async () => {
+    const calls = db(() => ({ body: { booked: 1300, in: 20, donated: 0, visitors: 0 } }));
+    expect((await handle(post("/api/rpc/volunteer_counts", { p_session: "s" }), env)).status).toBe(401);
+    expect(calls).toHaveLength(0);
+    const res = await handle(post("/api/rpc/volunteer_counts", { p_session: "s", p_id: "x" }, { cookie: COOKIE }), env);
+    expect(res.status).toBe(200);
+    expect(calls[0]).toEqual({ name: "volunteer_counts", args: { p_session: "s", p_id: "c123", p_token: "tokentokentokentoken" } });
   });
   it("nobody reads the opportunities signed out, and a cookie is not a sign-in until its token opens an account", async () => {
     const calls = db(() => ({ body: [{ id: "s1" }] }));

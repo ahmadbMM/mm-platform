@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { itemsResult, type AskItem } from "@/lib/ask";
+import { itemsResult, streamResult, type AskItem } from "@/lib/ask";
 import type { QuestionLook } from "@/lib/ask-look";
 import type { AskWords } from "../Ask.text";
 import { IconCheck, IconNext, IconVote } from "../icons";
@@ -80,9 +80,11 @@ export function AnswerWall(p: ResultProps) {
 
 /** Open answers in one column, the newest at the top. */
 export function AnswerStream(p: ResultProps) {
-  const { t, votes, look, screen } = p;
-  const { n, items, fresh } = useItems(p);
-  const newest = useMemo(() => [...items].sort((a, b) => b.id - a.id), [items]);
+  const { t, votes, look, screen, result } = p;
+  // the most voted and the newest the database sends, each once, the newest first; the look's limit keeps the newest
+  const { n, items: all } = useMemo(() => streamResult(result), [result]);
+  const newest = useMemo(() => shown(all, look), [all, look]);
+  const fresh = useFresh(names(newest));
   return (
     <>
       <Total n={n} t={t} show={look.total && !screen} />

@@ -527,13 +527,15 @@ export function withVote(full: AskFull, question: number, answer: number, on: bo
   const result = obj(full.live?.results[String(question)]);
   if (!full.live || !result || !Array.isArray(result.items)) return { ...full, voted };
   const was = full.voted.includes(answer);
-  const items = result.items.map((x) => {
+  // the answer may be among the most voted (`items`), the newest (`recent`), or both
+  const bump = (rows: unknown[]) => rows.map((x) => {
     const o = obj(x);
     if (!o || int(o.id) !== answer) return x;
     const v = votes ?? Math.max(0, (int(o.v) ?? 0) + (on === was ? 0 : on ? 1 : -1));
     return { ...o, v };
   });
-  return { ...full, voted, live: { ...full.live, results: { ...full.live.results, [String(question)]: { ...result, items } } } };
+  const next = { ...result, items: bump(result.items), ...(Array.isArray(result.recent) ? { recent: bump(result.recent) } : {}) };
+  return { ...full, voted, live: { ...full.live, results: { ...full.live.results, [String(question)]: next } } };
 }
 
 /** The viewer has an answer waiting for approval somewhere on the page. */
@@ -580,16 +582,31 @@ export function cloudResult(raw: unknown): CloudResult {
 
 export type AskItem = { id: number; t: string; v: number; a: boolean };
 /** Open answers and Q&A: the texts with their votes. Q&A reads unanswered first, the most voted first among them. */
-export function itemsResult(kind: string, raw: unknown): { n: number; items: AskItem[] } {
-  const r = obj(raw) ?? {};
+function askItems(raw: unknown): AskItem[] {
   const items: AskItem[] = [];
-  for (const x of list(r.items)) {
+  for (const x of list(raw)) {
     const o = obj(x);
     const id = int(o?.id);
     if (o && id !== null && str(o.t).trim()) items.push({ id, t: str(o.t).trim(), v: Math.max(0, int(o.v) ?? 0), a: o.a === true });
   }
+  return items;
+}
+export function itemsResult(kind: string, raw: unknown): { n: number; items: AskItem[] } {
+  const r = obj(raw) ?? {};
+  const items = askItems(r.items);
   const sorted = kind === "qa" ? items.map((x, i) => ({ x, i })).sort((p, q) => Number(p.x.a) - Number(q.x.a) || q.x.v - p.x.v || p.i - q.i).map(({ x }) => x) : items;
   return { n: Math.max(0, int(r.n) ?? items.length), items: sorted.slice(0, 100) };
+}
+/** Open answers for the stream, the newest first: the most voted the database sends (`items`) and its newest 50
+ *  (`recent`, when it sends them), each answer once - so a new answer with no votes is never left out. */
+export function streamResult(raw: unknown): { n: number; items: AskItem[] } {
+  const r = obj(raw) ?? {};
+  const seen = new Set<number>(), items: AskItem[] = [];
+  for (const x of [...askItems(r.items).slice(0, 100), ...askItems(r.recent).slice(0, 50)]) {
+    if (!seen.has(x.id)) { seen.add(x.id); items.push(x); }
+  }
+  items.sort((a, b) => b.id - a.id);
+  return { n: Math.max(0, int(r.n) ?? items.length), items };
 }
 
 export type BarRow = { id: string; label: string; n: number; share: number; correct: boolean };

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  GRID_STEP, axisName, formFields, gridAt, gridConfig, gridResult, gridSnap, pinAt, pinCells, pinMove, pinResult, pinTarget, quizConfig, quizRows, quizTextConfig, quizTextResult,
+  GRID_STEP, axisName, formFields, gridAt, gridConfig, gridResult, gridSnap, heatCells, pinAt, pinCells, pinMove, pinResult, pinTarget, quizConfig, quizRows, quizTextConfig, quizTextResult,
   rightWords, sentForm, sentGrid, sentPin, sentQuiz, shapeForm, shapeGrid, shapePin, shapeQuiz, shapeQuizText,
 } from "../ask-kinds";
 
@@ -99,6 +99,17 @@ describe("a pin", () => {
     expect(most).toBe(2);
     expect(pinCells([], 10, 8)).toEqual({ counts: Array.from({ length: 80 }, () => 0), most: 0 });
     expect(pinCells([{ x: 1, y: 1 }], 10, 8).counts[79]).toBe(1); // the far corner is the last cell, not one past it
+  });
+  it("the heat chart uses the database's cells over every answer when it sends them, else counts the pins it sent", () => {
+    const cells = Array.from({ length: 80 }, (_, i) => (i === 0 ? 650 : i === 79 ? 3 : 0));
+    expect(heatCells({ n: 653, pins: [[0.5, 0.5]], cells }, [{ x: 0.5, y: 0.5 }], 10, 8)).toEqual({ counts: cells, most: 650 });
+    const fallback = heatCells({ n: 1, pins: [[0.5, 0.5]] }, [{ x: 0.5, y: 0.5 }], 10, 8);
+    expect(fallback.counts[45]).toBe(1);
+    expect(fallback.most).toBe(1);
+    // a shape that is not 80 counts of none or more: the pins it sent
+    for (const bad of [cells.slice(0, 79), [...cells.slice(0, 79), -1], [...cells.slice(0, 79), 1.5], [...cells.slice(0, 79), "x"]]) {
+      expect(heatCells({ cells: bad }, [], 10, 8).most, JSON.stringify(bad.slice(-1))).toBe(0);
+    }
   });
 });
 

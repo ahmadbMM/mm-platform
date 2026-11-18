@@ -120,6 +120,65 @@ test('Edit on a booking the server no longer knows (moved by the desk) stays on 
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('mm-petromin-registration') || 'null')?.bookingNo)).toBe('P-004');
 });
 
+// Since rentals 20261119000600 the server says where a moved party went: rider_lookup and rider_edit, asked for the old
+// number on the old night, answer 'moved' with the new number and night (bug hunt 2026-11-18, forms-js2-2).
+const OLD = { badge: 'A-12', name: 'Amal Booked', company: 'Petromin', phone: '+966512345678', height: 175, type: 'Road', session: { id: '2099-02-08-pw', start: '2099-02-08T19:00:00+03:00', end: '2099-02-08T21:00:00+03:00' }, bookingNo: 'PM-004', submittedAt: '2099-02-01T10:00:00Z' };
+const MOVED = { ok: false, error: 'moved', booking_no: 'PM-007', session_id: '2099-02-15-pw', session_date: '2099-02-15' };
+const NEW = { ok: true, booking_no: 'PM-007', company: 'Petromin', badge: 'A-12', name: 'Amal Booked', phone: '+966512345678', height: 175, type: 'Road', checked_in: false, session: S2, riders: [] };
+const MOVED_TEXT = /^The desk moved your booking to another night: .*15.*\. Its number is now PM-007\.$/;
+
+test('Edit on a booking the desk moved shows the new number and night, and Edit starts from it', async ({ page }) => {
+  const asks: Record<string, unknown>[] = []; const edits: unknown[] = [];
+  await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1, S2])));
+  await page.route('**/rest/v1/rpc/rider_lookup', (r) => { const b = r.request().postDataJSON(); asks.push(b); return r.fulfill(json(b.p_booking_no === 'PM-007' ? NEW : MOVED)); });
+  await page.route('**/rest/v1/rpc/rider_edit', (r) => { edits.push(r.request().postDataJSON()); return r.fulfill(json({ ok: true, booking_no: 'PM-007', session: S2 })); });
+  await page.addInitScript((d) => { if (!sessionStorage.getItem('pw-seeded')) { sessionStorage.setItem('pw-seeded', '1'); localStorage.setItem('mm-petromin-registration', JSON.stringify(d)); } }, OLD);
+  const errs: string[] = []; page.on('pageerror', (e) => errs.push(e.message));
+  await page.goto('/petromin?lang=en');
+  await expect(page.locator('#chip-booking-value')).toHaveText('PM-004');
+  await page.click('#edit');
+  await expect(page.locator('#chip-booking-value')).toHaveText('PM-007');
+  await expect(page.locator('.done-note')).toHaveText(MOVED_TEXT);
+  await expect(page.locator('#chip-session-value')).toContainText('15');
+  expect(asks.map((a) => [a.p_booking_no, a.p_session_id])).toEqual([['PM-004', '2099-02-08-pw'], ['PM-007', '2099-02-15-pw']]);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('mm-petromin-registration') || 'null')?.bookingNo)).toBe('PM-007');
+  // Edit again: it starts from the new booking
+  await page.click('#edit');
+  await expect(page.locator('#form .title')).toHaveText('Edit your booking');
+  await page.check('#waiver'); await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  expect(edits).toHaveLength(1);
+  expect(edits[0]).toMatchObject({ p_booking_no: 'PM-007', p_from_session: '2099-02-15-pw' });
+  expect(errs).toEqual([]);
+});
+
+test('a save the server answers "moved" is never sent again: the ticket becomes the new booking', async ({ page }) => {
+  const edits: unknown[] = [];
+  await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1, S2])));
+  // Edit's first question gets no answer (the phone's copy is used); the new number is found
+  await page.route('**/rest/v1/rpc/rider_lookup', (r) => (r.request().postDataJSON().p_booking_no === 'PM-007' ? r.fulfill(json(NEW)) : r.abort()));
+  await page.route('**/rest/v1/rpc/rider_edit', (r) => { edits.push(r.request().postDataJSON()); return r.fulfill(json(MOVED)); });
+  await page.addInitScript((d) => localStorage.setItem('mm-petromin-registration', JSON.stringify(d)), OLD);
+  await page.goto('/petromin?lang=en');
+  await page.click('#edit');
+  await page.check('#waiver'); await page.click('#submit');
+  await expect(page.locator('#success')).toBeVisible();
+  await expect(page.locator('#chip-booking-value')).toHaveText('PM-007');
+  await expect(page.locator('.done-note')).toHaveText(MOVED_TEXT);
+  await expect(page.locator('#form .title')).toHaveText('Petromin bike night');
+  expect(edits).toHaveLength(1);
+});
+
+test('Find my booking with a number the desk moved brings the new booking', async ({ page }) => {
+  await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1, S2])));
+  await page.route('**/rest/v1/rpc/rider_lookup', (r) => r.fulfill(json(r.request().postDataJSON().p_booking_no === 'PM-007' ? NEW : MOVED)));
+  await page.goto('/petromin?lang=en');
+  await page.click('#find'); await page.fill('#fd-no', 'PM-004'); await page.fill('#fd-phone', '512345678'); await page.click('#fd-go');
+  await expect(page.locator('#success')).toBeVisible();
+  await expect(page.locator('#chip-booking-value')).toHaveText('PM-007');
+  await expect(page.locator('.done-note')).toHaveText(MOVED_TEXT);
+});
+
 test('an employee registers with companions as cards, sees the party on the confirmation, and edits it', async ({ page }) => {
   const regs: Record<string, unknown>[] = []; const edits: Record<string, unknown>[] = [];
   await page.route('**/rest/v1/rpc/rider_sessions', (r) => r.fulfill(json([S1, S2])));

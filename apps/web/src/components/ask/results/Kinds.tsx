@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { askNum, optionText, type AskQuestion } from "@/lib/ask";
-import { axisName, gridConfig, gridResult, pinCells, pinResult, quizConfig, quizRows, quizTextResult, sentPin } from "@/lib/ask-kinds";
+import { axisName, gridConfig, gridResult, heatCells, pinResult, quizConfig, quizRows, quizTextResult, sentPin } from "@/lib/ask-kinds";
 import { askImage } from "@/lib/ask-look";
 import { IconCheck } from "../icons";
 import { BarList, CloudList, Right } from "./Bars";
@@ -63,7 +63,7 @@ function Pins({ q, result, t, look, screen, own, heat }: ResultProps & { heat: b
   const { n, pins, correct } = pinResult(result);
   const image = askImage(q.image, 1280);
   const mine = sentPin(own?.value);
-  const cells = heat ? pinCells(pins, HEAT_COLS, HEAT_ROWS) : null;
+  const cells = heat ? heatCells(result, pins, HEAT_COLS, HEAT_ROWS) : null;
   // the picture's own shape (width over height), known once it has loaded: the big screen fits the picture into its
   // panel by it, so every pin stays on the spot it was dropped on
   const pic = useRef<HTMLImageElement>(null);

@@ -129,6 +129,17 @@ export function pinCells(pins: readonly Pin[], cols: number, rows: number): { co
   for (const p of pins) counts[Math.min(rows - 1, Math.floor(p.y * rows)) * cols + Math.min(cols - 1, Math.floor(p.x * cols))]++;
   return { counts, most: Math.max(...counts, 0) };
 }
+/** The heat chart's cells: the database counts them over every answer (`cells`, cols x rows, row by row from the top
+ *  left) when it sends them; otherwise they are counted here from the pins it sent (its newest 400). */
+export function heatCells(raw: unknown, pins: readonly Pin[], cols: number, rows: number): { counts: number[]; most: number } {
+  const sent = list(obj(raw)?.cells);
+  const counts = sent.map((c) => int(c));
+  if (sent.length === Math.max(1, cols) * Math.max(1, rows) && counts.every((c) => c !== null && c >= 0)) {
+    const ok = counts as number[];
+    return { counts: ok, most: Math.max(...ok, 0) };
+  }
+  return pinCells(pins, cols, rows);
+}
 
 /* ------------------------------------------------------------------ form: a few fields, one Send */
 

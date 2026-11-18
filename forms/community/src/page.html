@@ -6755,11 +6755,21 @@ var MMAccount = (function () {
     $("#track-acts").innerHTML = acts.join("") + '<a class="submit submit-line" href="' + HELP_WA + '" target="_blank" rel="noopener">' + esc(tr("WhatsApp us")) + "</a>";
   }
   function openSite() { return '<a class="submit submit-line" href="' + esc(BOOKING_URL + "?lang=" + lang) + '">' + esc(tr("Open the booking site")) + "</a>"; }
+  // The changes staff asked for, and their link, are the applicant's own: community_track gives them only to the
+  // application's account, signed in on this page (rentals 20261119000600; its session lives in this page only, never
+  // stored). Signed out, the page shows the rest, as the link kept on a shared phone may be opened by someone else.
+  var trackSeq = 0;
   async function showTrack(tok) {
+    var my = ++trackSeq;
     $("#card").setAttribute("data-state", "track");
-    $("#form").hidden = true; $("#track").hidden = false; $("#track-err").hidden = true;
+    $("#form").hidden = true; $("#success").hidden = true; $("#member").hidden = true; $("#track").hidden = false; $("#track-err").hidden = true;
     $("#track-steps").innerHTML = '<li class="tk-wait"><span class="spinner-dark" aria-hidden="true"></span> ' + esc(tr("Loading...")) + "</li>";
-    var r = /^[0-9a-f]{48}$/.test(tok) ? await rpc("community_track", { p_token: tok }) : { data: { ok: false, error: "gone" } };
+    var ok = /^[0-9a-f]{48}$/.test(tok), a = { p_token: tok };
+    if (acct && acct.id && acct.token) { a.p_cid = acct.id; a.p_ctoken = acct.token; }
+    var r = ok ? await rpc("community_track", a) : { data: { ok: false, error: "gone" } };
+    // a database before the account's two arguments does not know the call with them: asked as before
+    if (ok && r.error && a.p_cid && absent(r.error)) r = await rpc("community_track", { p_token: tok });
+    if (my !== trackSeq) return; // gone back to the form meanwhile
     var d = r.data && typeof r.data === "object" ? r.data : null;
     if (!d || !d.ok) {
       $("#track-steps").innerHTML = ""; $("#track-err").hidden = false;
@@ -6767,9 +6777,34 @@ var MMAccount = (function () {
       $("#track-title").focus({ preventScroll: true });
       return;
     }
-    TRACK_D = d; rememberTrack(tok, d.sent_at); trackPaint();
+    TRACK_D = d; rememberTrack(tok, d.sent_at, acct && acct.id); trackPaint();
     $("#track-title").focus({ preventScroll: true });
   }
+  // Signed in here, the application's page opens in this page (a new page would start signed out, without the changes
+  // asked), and Back comes back to where it was opened from. Signed out, its link opens the page as before.
+  var trackFrom = null;
+  function viewNow() { return { state: $("#card").getAttribute("data-state"), form: $("#form").hidden, success: $("#success").hidden, member: $("#member").hidden, title: document.title }; }
+  function openTrackHere(e, href) {
+    var tok = null; try { tok = new URL(href, location.href).searchParams.get("track"); } catch (x) {}
+    if (!acct || TRACK != null || !/^[0-9a-f]{48}$/.test(tok || "")) return;
+    e.preventDefault();
+    trackFrom = viewNow();
+    try { history.pushState(null, "", trackUrl(tok)); } catch (x) {}
+    showTrack(tok);
+  }
+  ["#track-link", "#acct-pending-a"].forEach(function (id) { $(id).addEventListener("click", function (e) { openTrackHere(e, this.getAttribute("href")); }); });
+  window.addEventListener("popstate", function () {
+    if (!trackFrom) return;
+    var tok = new URLSearchParams(location.search).get("track"), on = !$("#track").hidden;
+    if (tok) { if (acct && !on) { trackFrom = viewNow(); showTrack(tok); } return; } // forward to it again
+    if (!on) return;
+    var f = trackFrom;
+    trackSeq++; TRACK_D = null; // the changes asked, and their link, are not kept once the page is left
+    $("#track").hidden = true; $("#track-steps").innerHTML = ""; $("#track-acts").innerHTML = "";
+    $("#form").hidden = f.form; $("#success").hidden = f.success; $("#member").hidden = f.member;
+    if (f.state) $("#card").setAttribute("data-state", f.state); else $("#card").removeAttribute("data-state");
+    document.title = f.title;
+  });
   // An application sent from this device before: named on the first screen, a tap from its page.
   function paintSeen() {
     var x = knownTrack(), on = !!x && screen === "gate" && !DR;

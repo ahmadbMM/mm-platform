@@ -4,7 +4,7 @@ import { RESULT_VIEWS } from "../../components/ask/results";
 import {
   ASK_DRAWN, ASK_ERRORS, ASK_PALETTES, POLL_MS, REREAD_MS,
   answerState, applyLive, applySame, askBack, askErrorKey, askLang, askList, askLive, askNum, askPalette, askPct, askScreen, askSent, askSlugOk, askText, askTheme, askView, askViz, askWhen,
-  charCount, choiceConfig, choiceRows, cloudResult, hasPending, isDrawn, isWritten, itemsResult, numberConfig, numberResult, optionsOf, pageOpen, paletteVars, pointRows, pointsConfig, pollDelay, rankRows,
+  charCount, choiceConfig, choiceRows, cloudResult, hasPending, isDrawn, isWritten, itemsResult, streamResult, numberConfig, numberResult, optionsOf, pageOpen, paletteVars, pointRows, pointsConfig, pollDelay, rankRows,
   rereadDue, resultsShown, scaleRows, scalesConfig, screenAt, screenStep, sentMarks, sentNumber, sentOrder, sentPicks, shapeChoice, shapeNumber, shapePoints, shapeRanking, shapeScales, shapeWritten,
   withMine, withVote, withoutMine, writtenConfig, ASK_TEXT_MAX, type AskFull, type AskQuestion,
   isAskScreen, resultCount, stepAt,
@@ -494,6 +494,10 @@ describe("the page as it changes", () => {
     expect(down.voted).toEqual([]);
     expect(itemsResult("qa", down.live?.results["11"]).items.find((x) => x.id === 21)?.v).toBe(1);
     expect(qa.voted).toEqual([]);
+    // an answer the database sent among the newest only: its count moves there too
+    const open = fullOf({ live: live({ results: { "11": { n: 2, items: [{ id: 20, t: "Kites", v: 5, a: false }], recent: [{ id: 22, t: "BBQ", v: 0, a: false }, { id: 20, t: "Kites", v: 5, a: false }] } } }) });
+    const r = streamResult(withVote(open, 11, 22, true, 1).live?.results["11"]);
+    expect(r.items.map((x) => [x.id, x.v])).toEqual([[22, 1], [20, 5]]);
   });
 });
 
@@ -540,6 +544,18 @@ describe("results, shaped for their charts", () => {
     expect(itemsResult("open", raw).items.map((x) => x.id)).toEqual([1, 2, 3, 4]);
     expect(itemsResult("qa", raw).n).toBe(4);
     expect(itemsResult("open", {})).toEqual({ n: 0, items: [] });
+  });
+  it("the stream: the most voted and the newest the database sends, each once, the newest first", () => {
+    const voted = Array.from({ length: 100 }, (_, i) => ({ id: i + 1, t: `old ${i + 1}`, v: 1, a: false }));
+    const raw = { n: 141, items: voted, recent: [{ id: 141, t: "Brand new", v: 0, a: false }, { id: 100, t: "old 100", v: 1, a: false }, { id: "x", t: "no id" }] };
+    const r = streamResult(raw);
+    expect(r.n).toBe(141);
+    expect(r.items).toHaveLength(101); // 100 is in both lists: once
+    expect(r.items[0]).toEqual({ id: 141, t: "Brand new", v: 0, a: false });
+    expect(r.items.map((x) => x.id)).toEqual([...r.items.map((x) => x.id)].sort((a, b) => b - a));
+    // an older answer from the database without `recent`: the items alone, the newest first
+    expect(streamResult({ n: 2, items: [{ id: 1, t: "a", v: 5, a: false }, { id: 2, t: "b", v: 0, a: false }] }).items.map((x) => x.id)).toEqual([2, 1]);
+    expect(streamResult(null)).toEqual({ n: 0, items: [] });
   });
   it("multiple choice: every option in staff's order, with its count and its share of the people who answered", () => {
     const c = { options: OPTIONS };

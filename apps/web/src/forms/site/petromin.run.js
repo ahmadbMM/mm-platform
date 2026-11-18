@@ -2479,7 +2479,7 @@ var MMAccount = (function () {
 
 ; window.MMAccount = MMAccount;
 (function () {
-  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.469bc0380e.json","hi":"/forms/petromin/t/hi.2f14d42a66.json","tl":"/forms/petromin/t/tl.9e4798baa7.json","es":"/forms/petromin/t/es.a9487af948.json","ne":"/forms/petromin/t/ne.5bba6c7d61.json","fr":"/forms/petromin/t/fr.8fe17e2679.json","pt":"/forms/petromin/t/pt.11b4c754bc.json","bn":"/forms/petromin/t/bn.8e71802f5b.json","ur":"/forms/petromin/t/ur.501e8dc20f.json","id":"/forms/petromin/t/id.3dabbb686b.json","ms":"/forms/petromin/t/ms.c93776fd8b.json","de":"/forms/petromin/t/de.0bfafc9555.json","ru":"/forms/petromin/t/ru.4e3aa67807.json","zh":"/forms/petromin/t/zh.8ccacfdee3.json","ja":"/forms/petromin/t/ja.4f65788b28.json"};
+  var site = window.MM_SITE_FORM || {}, files = {"ar":"/forms/petromin/t/ar.c6bdd6cd58.json","hi":"/forms/petromin/t/hi.3a25b56b98.json","tl":"/forms/petromin/t/tl.c249a81c5d.json","es":"/forms/petromin/t/es.5aa9f5c8df.json","ne":"/forms/petromin/t/ne.6a38addf23.json","fr":"/forms/petromin/t/fr.061ff0a3cb.json","pt":"/forms/petromin/t/pt.9f52390ecd.json","bn":"/forms/petromin/t/bn.9b3ea157b3.json","ur":"/forms/petromin/t/ur.203932e04e.json","id":"/forms/petromin/t/id.d2154c9fd1.json","ms":"/forms/petromin/t/ms.2cd496ccff.json","de":"/forms/petromin/t/de.af453612d8.json","ru":"/forms/petromin/t/ru.355716d11c.json","zh":"/forms/petromin/t/zh.61d64fb817.json","ja":"/forms/petromin/t/ja.fe0fb288da.json"};
   site.tBase = files;
   function start(dict) {
     var T_SITE = {}; if (dict) T_SITE[site.lang] = dict;
@@ -3024,6 +3024,9 @@ var MMAccount = (function () {
   // A booking the server no longer knows by this number on this night: the desk moves a party to another night under a new
   // number (staff_rider_party_move), so the ticket stays on the phone and the desk is asked, never "register again".
   var GONE_ASK_DESK = "We could not find this booking. Please ask the desk: it may have been moved to another night.";
+  // Since rentals 20261119000600 the server says so: rider_lookup and rider_edit, asked for the old number on the old
+  // night, answer 'moved' with the new number and night, and the ticket becomes the booking as it is now.
+  var MOVED_NOTE = "The desk moved your booking to another night: {d}. Its number is now {no}.";
   /* Names a screen reader hears but nobody sees (aria-label). */
   var ARIA_EL = [["#lang", "Language"], [".lang-wrap", "Language"], ["#cc", "Country code"], [".cc-wrap", "Country code"], ["#fd-cc", "Country code"], ["#stepper", "Progress"], ["#sessions", "Session"], ["#qr", "Booking QR code"]];
   function paintAria() { ARIA_EL.forEach(function (x) { document.querySelectorAll(x[0]).forEach(function (el) { el.setAttribute("aria-label", t(x[1])); }); }); }
@@ -3745,6 +3748,13 @@ var MMAccount = (function () {
     if (current !== was) return; // another booking came on the screen meanwhile
     var d = r && !r.error && r.data;
     if (d && d.ok === false && d.error === "notfound") { setNote(GONE_ASK_DESK); return; } // nothing to edit: ask the desk
+    // moved to another night by the desk: the ticket becomes the new one, and Edit starts from it on the next tap
+    if (d && d.ok === false && d.error === "moved") {
+      editAsking = true; btn.disabled = true;
+      await showMoved(was, d);
+      editAsking = false; btn.disabled = false;
+      return;
+    }
     if (d && d.ok && d.booking_no) {
       var live = fromLookup(d, was.phone);
       live.session = Object.assign({}, was.session || {}, d.session || {});
@@ -3761,6 +3771,30 @@ var MMAccount = (function () {
     loadSessions(); // a restored confirmation never fetched the calendar; the saved session stays selected if it is still offered
   }
   function cancelEdit() { editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner(); if (current) showSuccess(current); }
+  /* The desk moved the party to another night under a new number (staff_rider_party_move): the server's 'moved' answer
+     names the new number and night. The ticket on the phone becomes that booking (asked of rider_lookup by its new
+     number and night), and the note says where it went and its new number. Without an answer the old ticket stays,
+     with the same note; a 'moved' without its number or night is the desk's to explain, as before. */
+  async function showMoved(was, d) {
+    var no = String(d.booking_no || "").trim(), night = d.session_id ? String(d.session_id) : "";
+    var day = /^\d{4}-\d{2}-\d{2}$/.test(String(d.session_date || "")) ? fmtDate(d.session_date + "T12:00:00+03:00") : "";
+    if (!no || !night) { if (current !== was) return; showSuccess(was); setNote(GONE_ASK_DESK); return; }
+    var r = null; try { r = await lookupCall(no, was.phone, night); } catch (e) { r = null; }
+    if (current !== was) return; // another booking came on the screen meanwhile
+    var x = r && !r.error && r.data;
+    if (x && x.ok && x.booking_no) {
+      var live = fromLookup(x, was.phone);
+      live.submittedAt = was.submittedAt || live.submittedAt;
+      // A database that does not mark the desk's companions yet lists them with the rider's own: the phone's list stays.
+      if (!deskKnown(live.riders)) live.riders = was.riders || [];
+      saveKept(keptList().filter(function (k) { return keyOf(k) !== keyOf(was); })); // the old number on the old night is gone
+      showSuccess(live);
+      setNote(MOVED_NOTE, { d: sessionLabel(live.session) || day, no: live.bookingNo });
+      return;
+    }
+    showSuccess(was);
+    setNote(day ? MOVED_NOTE : GONE_ASK_DESK, day ? { d: day, no: no } : null);
+  }
   $("#edit").addEventListener("click", startEdit);
   $("#cancel-edit").addEventListener("click", cancelEdit);
 
@@ -3883,6 +3917,15 @@ var MMAccount = (function () {
     go.disabled = false; go.classList.remove("loading");
     if (!r || r.error || !r.data) { fdMiss("Could not reach the server"); return; }
     var d = r.data;
+    // a number the desk moved to another night: the booking under its new number, and a note saying so
+    var movedNo = null;
+    if (!d.ok && d.error === "moved" && d.booking_no && d.session_id) {
+      movedNo = String(d.booking_no); no = movedNo;
+      go.disabled = true; go.classList.add("loading");
+      try { r = await lookupCall(no, ph, String(d.session_id)); } catch (err) { r = null; }
+      go.disabled = false; go.classList.remove("loading");
+      d = r && !r.error && r.data ? r.data : { ok: false, error: "notfound" };
+    }
     if (!d.ok) { fdMiss(d.error === "throttled" ? "Too many submissions from this network" : "We could not find a booking with this number and mobile number."); return; }
     /* Numbers start again at PM-001 every night, so one number and mobile can be a booking on several nights: the
        database names the others ('more', their night ids), each is asked for by its night and kept on the phone,
@@ -3903,6 +3946,7 @@ var MMAccount = (function () {
     editing = null; another = false; guestForget(); setSubmitLabels(false); setNotice(null);
     track(1, "found");
     showSuccess(found);
+    if (movedNo && found.bookingNo === movedNo) setNote(MOVED_NOTE, { d: sessionLabel(found.session), no: movedNo });
   });
 
   /* Registration. Refusals the form knows go to their box; anything else is said in words that tell a refusal from
@@ -3978,6 +4022,13 @@ var MMAccount = (function () {
       if (d.error === "waiver") { waiverRefused(); return; }
       if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
       if (d.error === "notfound") { editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner(); if (current) { showSuccess(current); setNote(GONE_ASK_DESK); } else failBanner(GONE_ASK_DESK); return; }
+      // the desk moved it to another night under a new number: never sent again (the night picked here would move it
+      // back), the ticket becomes the new booking and Edit starts again from it
+      if (d.error === "moved") {
+        var movedFrom = editing; editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner();
+        if (current && movedFrom) await showMoved(current, d); else failBanner(GONE_ASK_DESK);
+        return;
+      }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
       // rider_edit: the desk has tied this registration to a booking of its own (rentals 20261111235100, a move to another night)
       if (d.error === "desk") { failBanner("The desk has this booking. Ask the desk to change it."); return; }
