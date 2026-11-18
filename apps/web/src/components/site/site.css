@@ -42,7 +42,7 @@ html:is([lang="ar"], [lang="ur"]) .mm-site p { line-height: 1.85; }
 /* The site's own cart (once the store is open): how many things are in it, on the icon's corner. */
 .mm-nav-cart { position: relative; }
 .mm-cart-n { position: absolute; top: 3px; inset-inline-end: 1px; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 999px; background: #077a4b; color: #fbf9f4;
-  font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; }
+  font-size: 12px; font-weight: 700; line-height: 18px; text-align: center; font-variant-numeric: tabular-nums; pointer-events: none; }
 /* Added to the cart while the page is open (SM09-B): the count pulses once; never as a page opens, never under reduced motion */
 .mm-cart-n.is-new { animation: mmCartPulse .5s cubic-bezier(.22, .8, .24, 1); }
 @keyframes mmCartPulse { 0% { transform: scale(1); } 35% { transform: scale(1.45); } 100% { transform: scale(1); } }
