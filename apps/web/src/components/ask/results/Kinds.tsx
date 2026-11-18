@@ -97,8 +97,9 @@ export const PinDots = (p: ResultProps) => <Pins {...p} heat={false} />;
 export const PinHeat = (p: ResultProps) => <Pins {...p} heat />;
 
 /** How many got a revealed quiz question right. */
-function GotRight({ right, n, t }: { right: number | null; n: number; t: ResultProps["t"] }) {
-  return right === null || n < 1 ? null : <p className="ask-figure"><span>{t.gotRight(right, n)}</span></p>;
+function GotRight({ right, n, t }: { right?: number | null; n: number; t: ResultProps["t"] }) {
+  // a question not revealed yet sends no count at all (bug hunt 2026-11-18, round 2): nothing, not "0 of N"
+  return typeof right !== "number" || n < 1 ? null : <p className="ask-figure"><span>{t.gotRight(right, n)}</span></p>;
 }
 /** A quiz as bars: the options in the order staff wrote them. */
 export function QuizBars({ q, result, locale, t, look, screen }: ResultProps) {
