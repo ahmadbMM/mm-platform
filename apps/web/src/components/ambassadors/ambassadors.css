@@ -39,7 +39,8 @@ html:is([lang="ar"], [lang="ur"]) .amb-eyebrow { letter-spacing: 0; font-size: 1
 .amb-tier ul { list-style: none; margin: 0; padding: 14px 0 0; border-top: 1px solid rgba(0, 0, 0, .09); display: flex; flex-direction: column; gap: 8px; }
 .amb-tier.elite ul { border-top-color: rgba(255, 255, 255, .14); }
 .amb-tier li { display: flex; gap: 8px; font-size: 13.5px; line-height: 1.45; }
-.amb-tier li::before { content: "✓"; color: #03ff89; font-weight: 800; }
+/* a drawn tick (the icon set's, as the site's language menu), never a text glyph */
+.amb-tier li::before { content: ""; flex: none; width: 15px; height: 15px; margin-top: .1em; background: #03ff89; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; }
 .amb-tier:not(.elite) li::before { color: #077a4b; }
 .amb-board { list-style: none; margin: 0; padding: 10px 24px; background: #fff; border: 1px solid rgba(0, 0, 0, .09); border-radius: 22px; }
 .amb-board li { display: flex; align-items: center; gap: 14px; border-bottom: 1px solid rgba(0, 0, 0, .07); padding: 13px 0; font-size: 14.5px; }
@@ -75,6 +76,8 @@ html:is([lang="ar"], [lang="ur"]) .amb-eyebrow { letter-spacing: 0; font-size: 1
 .amb-card-code button { cursor: pointer; border: 0; border-radius: 999px; padding: 9px 16px; background: #077a4b; color: #fbf9f4; font-weight: 800; font-size: 12px; font-family: inherit; min-height: 38px; }
 .amb-card-nums { display: flex; gap: 20px; }
 .amb-card-nums span { display: block; color: rgba(251, 249, 244, .55); font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+/* spaced letters break the joins of Arabic script */
+html:is([lang="ar"], [lang="ur"]) :is(.amb-card-brand span, .amb-card-nums span, .amb-demo > span:first-child) { letter-spacing: 0; }
 .amb-card-nums strong { font-size: 30px; letter-spacing: -1.5px; }
 .amb-card-nums strong.dim { color: rgba(251, 249, 244, .6); }
 .amb-bar { display: block; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .14); overflow: hidden; }

@@ -443,18 +443,21 @@ export function askSent(raw: unknown): SendAnswer {
 
 /** A live answer taken into the page: each question's open and reveal, the page's state, the results. `reload`: the
  *  page itself must be read again - staff put a question on screen that it does not hold, or started a new round (the
- *  viewer's own answers are the old round's). A version older than the page's is dropped (`ver` only ever grows). */
-export function applyLive(full: AskFull, live: AskLive): { full: AskFull; reload: boolean } {
-  if (full.live && live.ver < full.live.ver) return { full, reload: false };
+ *  viewer's own answers are the old round's). A version older than the page's is dropped (`ver` only ever grows).
+ *  `revealed`: the reload is for a question staff have just revealed. */
+export function applyLive(full: AskFull, live: AskLive): { full: AskFull; reload: boolean; revealed: boolean } {
+  if (full.live && live.ver < full.live.ver) return { full, reload: false, revealed: false };
   const held = new Set(full.questions.map((q) => String(q.id)));
-  // ... or revealed a quiz question: the viewer's own score and place are the page's to read (ask_page `me`)
-  const revealed = full.questions.some((q) => isQuiz(q.kind) && !q.reveal && live.q[String(q.id)]?.reveal === true);
+  // ... or revealed a quiz question: the viewer's own score and place are the page's to read (ask_page `me`); or revealed
+  // any question no result comes with (its results kept for staff): its right answer is only in the question as the
+  // page reads it again (_ask_public_q leaves it out until the reveal), never in a poll (bug hunt 2026-11-18)
+  const revealed = full.questions.some((q) => !q.reveal && live.q[String(q.id)]?.reveal === true && (isQuiz(q.kind) || live.results[String(q.id)] == null));
   const reload = Object.keys(live.q).some((id) => !held.has(id)) || live.round !== full.page.round || revealed;
   const questions = full.questions.map((q) => {
     const now = live.q[String(q.id)];
     return now && (now.open !== q.open || now.reveal !== q.reveal || now.started_at !== q.started_at) ? { ...q, ...now } : q;
   });
-  return { full: { ...full, questions, live, page: { ...full.page, open: live.open && live.state === "ok", current_q: live.current_q, pace: live.pace } }, reload };
+  return { full: { ...full, questions, live, page: { ...full.page, open: live.open && live.state === "ok", current_q: live.current_q, pace: live.pace } }, reload, revealed };
 }
 
 /** An unchanged poll's news: whether the page is still open. */

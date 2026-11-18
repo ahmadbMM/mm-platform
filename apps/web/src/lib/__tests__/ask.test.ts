@@ -361,7 +361,7 @@ describe("the page as it changes", () => {
     const f = fullOf();
     const old = askLive(live({ ver: 6, results: {} }));
     if (old.kind !== "full") throw new Error("not full");
-    expect(applyLive(f, old.live)).toEqual({ full: f, reload: false });
+    expect(applyLive(f, old.live)).toEqual({ full: f, reload: false, revealed: false });
   });
   it("closes by the clock: a poll with nothing new still says the page stopped taking answers", () => {
     const f = fullOf();
@@ -450,7 +450,7 @@ describe("the page as it changes", () => {
     expect(isQuiz("quiz") && isQuiz("quiz_text")).toBe(true);
     expect(isQuiz("choice")).toBe(false);
   });
-  it("reads the page again when staff reveal a quiz question - the viewer's own score is the page's to read - and not for any other kind", () => {
+  it("reads the page again when staff reveal a quiz question - the viewer's own score is the page's to read - or a question whose results are staff's", () => {
     const quizzed = fullOf({ questions: [question({ id: 21, kind: "quiz" })], live: live({ q: { "21": { open: true, reveal: false, started_at: null } } }) });
     const revealed = live({ ver: 8, q: { "21": { open: false, reveal: true, started_at: null } } });
     expect(applyLive(quizzed, liveOfTest(revealed)).reload).toBe(true);
@@ -458,9 +458,16 @@ describe("the page as it changes", () => {
     // already revealed: nothing to read again
     const after = applyLive(quizzed, liveOfTest(revealed)).full;
     expect(applyLive(after, liveOfTest(live({ ver: 9, q: { "21": { open: false, reveal: true, started_at: null } } }))).reload).toBe(false);
+    expect(applyLive(quizzed, liveOfTest(revealed)).revealed).toBe(true);
     // a multiple choice question revealed carries its right answer in its results: no second read
     const choice = fullOf({ questions: [question({ id: 21, kind: "choice" })], live: live({ q: { "21": { open: true, reveal: false, started_at: null } } }) });
-    expect(applyLive(choice, liveOfTest(revealed)).reload).toBe(false);
+    const withResult = live({ ver: 8, q: { "21": { open: false, reveal: true, started_at: null } }, results: { "21": { n: 4, correct: ["a"] } } });
+    expect(applyLive(choice, liveOfTest(withResult)).reload).toBe(false);
+    // ... but with its results kept for staff no poll carries it: the page (and its right answer) is read again
+    expect(applyLive(choice, liveOfTest(revealed))).toMatchObject({ reload: true, revealed: true });
+    // a new question is a reload, not a reveal
+    const more = live({ ver: 8, q: { "21": { open: true, reveal: false, started_at: null }, "22": { open: true, reveal: false, started_at: null } } });
+    expect(applyLive(choice, liveOfTest(more))).toMatchObject({ reload: true, revealed: false });
   });
   it("keeps the viewer's own answers and upvotes up to date between reads", () => {
     const f = fullOf({ mine: { "11": [mine(1), mine(2, "approved")] } });

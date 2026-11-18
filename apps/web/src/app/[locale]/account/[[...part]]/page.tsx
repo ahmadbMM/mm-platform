@@ -5,6 +5,7 @@ import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
 import SignIn from "@/components/account/SignIn";
 import SignOut from "@/components/account/SignOut";
+import HandoffLink from "@/components/account/HandoffLink";
 import "@/components/account/account.css";
 import "@/components/booking/booking.css";
 import TicketCard, { TicketCancelled } from "@/components/booking/TicketCard";
@@ -127,6 +128,28 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   }
 
   if (!acct) {
+    // A hand-back this browser did not ask for (api/account/handoff), kept aside: the account it would sign in as is
+    // named, and signed in only when the rider says so.
+    const parked = decodeSession((await cookies()).get(HANDOFF_COOKIE)?.value);
+    const offeredP = parked ? await sessionProfile(parked) : null;
+    const offered = offeredP && offeredP !== "none" ? offeredP : null;
+    if (offered) {
+      return (
+        <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
+          <div className="ac">
+            <section className="ac-card" aria-labelledby="ac-ho-h">
+              <img src="/site/logo-dark.png" alt="Micromobility" className="ac-logo" />
+              <h1 id="ac-ho-h">{fill(tx("Sign in as {name}?", "تسجيل الدخول باسم {name}؟"), { name: offered.name || offered.email || offered.phone })}</h1>
+              <p className="ac-text">{fill(tx("This link signs this site in as {who}. Continue only if this is your account.", "يسجّل هذا الرابط الدخول إلى هذا الموقع باسم {who}. تابع فقط إن كان هذا حسابك."), { who: accountLabel(offered) })}</p>
+              <form method="post" action="/api/account/handoff" className="ac-ho-btns">
+                <button type="submit" name="do" value="switch" className="ac-go">{tx("Continue", "متابعة")}</button>
+                <button type="submit" name="do" value="stay" className="ac-out">{tx("Cancel", "إلغاء")}</button>
+              </form>
+            </section>
+          </div>
+        </PageShell>
+      );
+    }
     return (
       <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
         <div className="ac">
@@ -140,8 +163,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             {/* Sign-up and a password reset happen in the booking app, which hands the rider back
                 here signed in (?handoff=site; api/account/handoff). */}
             <ul className="ac-notes">
-              <li><a href={handoff("signup")}>{S(c.signin.create)}</a></li>
-              <li><a href={handoff("forgot")}>{S(c.signin.forgot)}</a></li>
+              <li><HandoffLink href={handoff("signup")}>{S(c.signin.create)}</HandoffLink></li>
+              <li><HandoffLink href={handoff("forgot")}>{S(c.signin.forgot)}</HandoffLink></li>
             </ul>
           </section>
         </div>
@@ -352,7 +375,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
         {own.length > 0 && (
           <section className="ac-sec" aria-labelledby="ac-lk-h">
-            <div className="ac-sec-head"><h2 id="ac-lk-h">{tx("Your lockers", "خزائنك")}</h2><a href={`/api/account/lockers-link?lang=${L === "ar" ? "ar" : "en"}`}>{tx("Manage", "إدارة")} <ArrowIcon size={15} /></a></div>
+            <div className="ac-sec-head"><h2 id="ac-lk-h">{tx("Your lockers", "خزائنك")}</h2><a href={`/api/account/lockers-link?lang=${L}`}>{tx("Manage", "إدارة")} <ArrowIcon size={15} /></a></div>
             <div className="lk-acc">
               {[...new Set(own.map((l) => l.day))].map((d) => {
                 const ls = own.filter((l) => l.day === d), due = ls.find((l) => l.status === "reserved");

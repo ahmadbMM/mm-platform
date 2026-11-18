@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import ClubGate, { type PendingClub, type ClubDone } from "./ClubGate";
 import RaceGateLoader from "./RaceGateLoader";
-import { CLUB_QUIET, isQuiet } from "./quiet";
+import { CLUB_QUIET, BUSY, BUSY_RETRY_MS, isQuiet } from "./quiet";
 
 // The Blood Donation event's club or community question on every page, for everyone who registered before it (the owner,
 // 2026-11-05: "show a forced pop-up for everyone who already registered"; the booking app's _pendingClub), after the agreement
@@ -16,12 +16,13 @@ const QUIET_MS = 2 * 60_000;
 const answered = new Set<string>();
 let off = false;
 
-async function check(locale: string): Promise<PendingClub | null> {
+async function check(locale: string): Promise<PendingClub | typeof BUSY | null> {
   if (off) return null;
   if (isQuiet(CLUB_QUIET)) return null;
   try {
     const skip = answered.size ? `&skip=${encodeURIComponent([...answered].join(","))}` : "";
     const r = await fetch(`/api/account/pending-club?locale=${encodeURIComponent(locale)}${skip}`, { cache: "no-store", credentials: "same-origin" });
+    if (r.status === 429) return BUSY; // the meter is full: not an answer, asked again shortly
     if (!r.ok) return null;
     const b = (await r.json()) as { signedIn?: boolean; pending?: PendingClub | null };
     try {
@@ -36,18 +37,21 @@ export default function ClubGateLoader({ locale }: { locale: string }) {
   const path = usePathname();
   const [pending, setPending] = useState<PendingClub | null>(null);
   const [clear, setClear] = useState(false); // asked, and nothing waits: the next pop-ups may ask now
+  const [retry, setRetry] = useState(0); // bumped to ask again after the meter turned a check away
   const [round, setRound] = useState(0);
 
   useEffect(() => {
     if (pending) return;
     let live = true;
+    let wait: ReturnType<typeof setTimeout> | undefined;
     check(locale).then((p) => {
       if (!live) return;
+      if (p === BUSY) { wait = setTimeout(() => setRetry((k) => k + 1), BUSY_RETRY_MS); return; } // the next pop-ups keep waiting
       if (p) setPending(p);
       setClear(!p);
     });
-    return () => { live = false; };
-  }, [path, locale, pending, round]);
+    return () => { live = false; clearTimeout(wait); };
+  }, [path, locale, pending, round, retry]);
 
   const done = (sessionId: string, r: ClubDone) => {
     answered.add(sessionId);

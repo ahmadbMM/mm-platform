@@ -12,16 +12,27 @@ import { clientIp, ipNet } from "./sign-in-guard";
 
 type Limiter = { limit(o: { key: string }): Promise<{ success: boolean }> };
 
-function limiter(): Limiter | undefined {
-  try { return (getCloudflareContext().env as { API_LIMIT?: Limiter }).API_LIMIT; } catch { return undefined; }
+function limiter(name: "API_LIMIT" | "API_WIDE_LIMIT" = "API_LIMIT"): Limiter | undefined {
+  try { return (getCloudflareContext().env as { API_LIMIT?: Limiter; API_WIDE_LIMIT?: Limiter })[name]; } catch { return undefined; }
 }
+const wideLimiter = () => limiter("API_WIDE_LIMIT");
 
 /** False once this connection has made the minute's requests of this kind. `who` counts one account on its own
  *  (the Ask pages, "ask": a room answering from one Wi-Fi shares an address, and thirty requests a minute between
- *  them would hold their answers back - each account gets the thirty, a connection with no account shares them). */
-export async function withinLimit(req: Request, kind: "log-error" | "account-check" | "claim" | "ask", get: () => Limiter | undefined = limiter, who = ""): Promise<boolean> {
+ *  them would hold their answers back - each account gets the thirty, a connection with no account shares them).
+ *  The signed-in account's checks and actions ("account-check": the pop-ups every page asks for, Wallet, I'm coming, a
+ *  bike report...) are counted per account too (bug hunt 2026-11-18: fifteen members on a venue's Wi-Fi used up one
+ *  thirty between them, and the pop-ups a rider cannot skip were let through), and the connection as a whole gets a
+ *  wider ceiling (API_WIDE_LIMIT, 600 a minute), so a script that makes up a new account id for each request is still
+ *  held. */
+export async function withinLimit(req: Request, kind: "log-error" | "account-check" | "claim" | "ask", get: () => Limiter | undefined = limiter, who = "", wide: () => Limiter | undefined = wideLimiter): Promise<boolean> {
   const l = get();
   const ip = clientIp(req);
   if (!l || !ip) return true;
-  try { return (await l.limit({ key: `${kind}:${ipNet(ip)}${who ? `:${who}` : ""}` })).success; } catch { return true; } // an IPv6 visitor by its /64
+  const net = ipNet(ip); // an IPv6 visitor by its /64
+  if (kind === "account-check" && who) {
+    const w = wide();
+    try { if (w && !(await w.limit({ key: `${kind}:${net}` })).success) return false; } catch { /* a limiter that fails holds nobody */ }
+  }
+  try { return (await l.limit({ key: `${kind}:${net}${who ? `:${who}` : ""}` })).success; } catch { return true; }
 }

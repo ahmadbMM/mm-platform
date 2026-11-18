@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import Medal from "./Medal";
 import { shareWords } from "./BadgeShare.words";
 import { isRtl } from "@/i18n/locales";
+import { onBackdrop } from "@/lib/backdrop";
 import { paintShare, plainText, shareTint, SHARE_H, SHARE_MARK, SHARE_W, type ShareAssets, type ShareSubject } from "@/lib/share-picture";
 
 // Share a badge or a title as a picture (the booking app's badge-share.js, new features build F12, 2026-11-13): the
@@ -157,7 +158,7 @@ export default function ShareImage({ sub, first, locale, onDone }: { sub: ShareS
     <>
       <span className="shr-probe" aria-hidden="true" ref={probe}>{sub.medal && <Medal icon={sub.medal.icon} color={sub.medal.color} />}</span>
       <dialog ref={dlg} className="shr-dlg" aria-label={w.share} onClose={onDone}
-        onClick={(e) => { if (e.target === e.currentTarget) dlg.current?.close(); }}>
+        onClick={(e) => { if (onBackdrop(e)) dlg.current?.close(); }}>
         <div className="shr-view">
           {err ? (
             <div className="shr-err" role="alert"><span>{w.err}</span><button type="button" className="shr-x" onClick={again}>{w.retry}</button></div>

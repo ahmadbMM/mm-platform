@@ -100,11 +100,19 @@ export function AnswerStream(p: ResultProps) {
 export function AnswerSpotlight(p: ResultProps) {
   const { t, votes, look, screen } = p;
   const { n, items } = useItems(p);
-  const [at, setAt] = useState(0);
+  // The answer shown, held by its id, and the place it stood: an upvote reorders the list (the most upvoted first), and
+  // the reader stays on the answer they were reading (bug hunt 2026-11-18: held by its place, another answer slid under
+  // them); the place counts only once that answer is gone.
+  const [at, setAt] = useState<{ id: number | null; index: number }>(() => ({ id: items[0]?.id ?? null, index: 0 }));
   const count = items.length;
+  const held = at.id === null ? -1 : items.findIndex((x) => x.id === at.id);
+  const i = count ? (held >= 0 ? held : Math.min(at.index, count - 1)) : 0;
+  const go = (k: number) => { if (count) { const j = ((k % count) + count) % count; setAt({ id: items[j].id, index: j }); } };
+  const turn = useRef(() => {});
+  useEffect(() => { turn.current = () => go(i + 1); });
   useEffect(() => {
     if (!screen || count < 2) return;
-    const id = setInterval(() => setAt((i) => i + 1), 7000);
+    const id = setInterval(() => turn.current(), 7000);
     return () => clearInterval(id);
   }, [screen, count]);
   const ids = items.map((x) => x.id).join(",");
@@ -116,10 +124,9 @@ export function AnswerSpotlight(p: ResultProps) {
     const first = now.findIndex((id) => !known.has(id));
     now.forEach((id) => known.add(id));
     if (first < 0 || !screen) return;
-    const id = requestAnimationFrame(() => setAt(first));
+    const id = requestAnimationFrame(() => setAt({ id: Number(now[first]), index: first }));
     return () => cancelAnimationFrame(id);
   }, [ids, screen]);
-  const i = count ? ((at % count) + count) % count : 0;
   const x = items[i];
   return (
     <>
@@ -132,9 +139,9 @@ export function AnswerSpotlight(p: ResultProps) {
               <Votes item={x} votes={votes} t={t} />
               {count > 1 && (screen ? <span className="ask-spot-at mm-lat" aria-hidden="true">{i + 1} / {count}</span> : (
                 <span className="ask-pager">
-                  <button type="button" className="ask-icon-btn ask-prev" aria-label={t.back} onClick={() => setAt(i - 1 + count)}><IconNext size={20} /></button>
+                  <button type="button" className="ask-icon-btn ask-prev" aria-label={t.back} onClick={() => go(i - 1)}><IconNext size={20} /></button>
                   <span className="ask-spot-at mm-lat">{i + 1} / {count}</span>
-                  <button type="button" className="ask-icon-btn" aria-label={t.forward} onClick={() => setAt(i + 1)}><IconNext size={20} /></button>
+                  <button type="button" className="ask-icon-btn" aria-label={t.forward} onClick={() => go(i + 1)}><IconNext size={20} /></button>
                 </span>
               ))}
             </figcaption>

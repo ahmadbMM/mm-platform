@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import ClubGateLoader from "./ClubGateLoader";
 import ShareGate, { type PendingShare, type ShareDone } from "./ShareGate";
-import { SHARE_QUIET, isQuiet } from "./quiet";
+import { SHARE_QUIET, BUSY, BUSY_RETRY_MS, isQuiet } from "./quiet";
 
 // A Run for Her runner's agreement to share their details with Sela and JYC on every page (the owner,
 // 2026-10-06; the booking app's _pendingShare), between the waivers and the post-ride rating:
@@ -24,12 +24,13 @@ const QUIET_MS = 2 * 60_000;
 const agreed = new Set<string>();
 let off = false;
 
-async function check(locale: string): Promise<PendingShare | null> {
+async function check(locale: string): Promise<PendingShare | typeof BUSY | null> {
   if (off) return null;
   if (isQuiet(KEY)) return null;
   try {
     const skip = agreed.size ? `&skip=${encodeURIComponent([...agreed].join(","))}` : "";
     const r = await fetch(`/api/account/pending-share?locale=${encodeURIComponent(locale)}${skip}`, { cache: "no-store", credentials: "same-origin" });
+    if (r.status === 429) return BUSY; // the meter is full: not an answer, asked again shortly
     if (!r.ok) return null;
     const b = (await r.json()) as { signedIn?: boolean; pending?: PendingShare | null };
     try {
@@ -44,18 +45,21 @@ export default function ShareGateLoader({ locale }: { locale: string }) {
   const path = usePathname();
   const [pending, setPending] = useState<PendingShare | null>(null);
   const [clear, setClear] = useState(false); // asked, and no run waits: the rating may ask now
+  const [retry, setRetry] = useState(0); // bumped to ask again after the meter turned a check away
   const [round, setRound] = useState(0); // bumped once an agreement lands, to ask for the next run
 
   useEffect(() => {
     if (pending) return;
     let live = true;
+    let wait: ReturnType<typeof setTimeout> | undefined;
     check(locale).then((p) => {
       if (!live) return;
+      if (p === BUSY) { wait = setTimeout(() => setRetry((k) => k + 1), BUSY_RETRY_MS); return; } // the next pop-ups keep waiting
       if (p) setPending(p);
       setClear(!p);
     });
-    return () => { live = false; };
-  }, [path, locale, pending, round]);
+    return () => { live = false; clearTimeout(wait); };
+  }, [path, locale, pending, round, retry]);
 
   const done = (sessionId: string, r: ShareDone) => {
     if (r !== "stale") agreed.add(sessionId);

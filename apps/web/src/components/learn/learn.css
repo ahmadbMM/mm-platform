@@ -138,7 +138,7 @@ html:is([lang="ar"], [lang="ur"]) .ln-eyebrow { letter-spacing: 0; font-size: 13
   display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .ln-top .bk-lang-menu button:hover { background: rgba(0, 0, 0, .05); }
 .ln-top .bk-lang-menu button[aria-checked="true"] { color: #077a4b; font-weight: 700; }
-.ln-top .bk-lang-menu button[aria-checked="true"]::after { content: "✓"; }
+.ln-top .bk-lang-menu button[aria-checked="true"]::after { content: ""; flex: none; width: 15px; height: 15px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; }
 .ln-alone .ln-grid { padding-top: 52px; }
 @media (min-width: 901px) and (min-height: 860px) { .ln-alone .ln-intro { top: 32px; } }
 .ln-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 18px; padding: 22px clamp(16px, 4vw, 40px) calc(22px + env(safe-area-inset-bottom, 0px));

@@ -22,7 +22,7 @@ export async function POST(req: Request) {
   if (!sameOrigin(req.headers.get("origin"), req.url)) return json({ ok: false, error: "origin" }, 403);
   const acct = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (!acct) return json({ ok: false, error: "signin" }, 401);
-  if (!(await withinLimit(req, "account-check"))) return json({ ok: false, error: "busy" }, 429);
+  if (!(await withinLimit(req, "account-check", undefined, acct.id))) return json({ ok: false, error: "busy" }, 429);
   let body: unknown = null;
   try { body = await req.json(); } catch { /* empty body */ }
   const b = bikeReportBody(body);

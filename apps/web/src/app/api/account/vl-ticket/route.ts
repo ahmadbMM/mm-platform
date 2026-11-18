@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   const acct = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (!acct) return json({ ok: false, error: "signin" }, 401);
   if (Number(req.headers.get("content-length") || 0) > MAX_BODY) return json({ ok: false, error: "invalid" }, 413);
-  if (!(await withinLimit(req, "account-check"))) return json({ ok: false, error: "busy" }, 429);
+  if (!(await withinLimit(req, "account-check", undefined, acct.id))) return json({ ok: false, error: "busy" }, 429);
   // read no further than MAX_BODY: a chunked body has no Content-Length for the check above
   const body = await jsonCapped(req, MAX_BODY);
   if (body === TOO_BIG) return json({ ok: false, error: "invalid" }, 413);

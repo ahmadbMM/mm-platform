@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pageMeta } from "@/lib/seo";
 import PageShell, { navFrom } from "@/components/site/PageShell";
 import SignIn from "@/components/account/SignIn";
+import HandoffLink from "@/components/account/HandoffLink";
 import LiveMap from "@/components/live/LiveMap";
 import "@/components/account/account.css";
 import "@/components/live/live.css";
@@ -56,8 +57,8 @@ export default async function LivePage({ params, searchParams }: { params: Promi
             <p className="ac-text">{tx("Sign in with your Micromobility account to see where your ride is.", "سجّل الدخول بحساب مايكروموبيليتي لترى أين وصلت جولتك.")}</p>
             <SignIn locale={locale} />
             <ul className="ac-notes">
-              <li><a href={handoff("signup")}>{S(c.signin.create)}</a></li>
-              <li><a href={handoff("forgot")}>{S(c.signin.forgot)}</a></li>
+              <li><HandoffLink href={handoff("signup")}>{S(c.signin.create)}</HandoffLink></li>
+              <li><HandoffLink href={handoff("forgot")}>{S(c.signin.forgot)}</HandoffLink></li>
             </ul>
           </section>
         </div>

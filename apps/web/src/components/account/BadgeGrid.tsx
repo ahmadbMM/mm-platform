@@ -9,6 +9,7 @@ import { fill } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
 import { lastReq, PDF_MAX, type AskChoice, type BadgeReq } from "@/lib/badge-request";
 import { TickIcon } from "@/components/site/Icons";
+import { onBackdrop } from "@/lib/backdrop";
 import { badgeSubject, type ShareSubject } from "@/lib/share-picture";
 
 // Every badge on My Account, as the booking app's account page draws them (_mrBadgesRow,
@@ -166,7 +167,8 @@ export default function BadgeGrid({ items, t, ask = null, share = null }: { item
     }
     const err = res.error === "held" ? w.errHeld : res.error === "limit" ? w.errLimit : res.error === "badge" || res.error === "absent" ? w.errBadge
       : res.error === "proof" || res.error === "invalid" ? w.proofBad : res.error === "signin" ? w.errSignin : w.errGeneric;
-    setForm((x) => x && { ...x, busy: false, err });
+    if (rq.current?.open) setForm((x) => x && { ...x, busy: false, err });
+    else setSaid(err); // the pop-up was closed while it sent (a phone's back): the refusal is said under the badges
   }
   const show = (x: BadgeView, el: HTMLElement) => {
     back.current = el;
@@ -217,7 +219,7 @@ export default function BadgeGrid({ items, t, ask = null, share = null }: { item
       )}
       <dialog ref={dlg} className={`badge-pop-box${open && special(open.color) ? ` special sp-${open.color}` : ""}`} aria-label={open?.name}
         onClose={() => { setOpen(null); back.current?.focus(); }}
-        onClick={(e) => { if (e.target === e.currentTarget) dlg.current?.close(); }}>
+        onClick={(e) => { if (onBackdrop(e)) dlg.current?.close(); }}>
         {open && (
           <div className="badge-pop-in">
             <Medal icon={open.icon} color={open.color} className={`badge-pop-ic${open.on ? "" : " locked"}`} />
@@ -259,7 +261,8 @@ export default function BadgeGrid({ items, t, ask = null, share = null }: { item
       {w && (
         <dialog ref={rq} className="bdr-dlg" aria-labelledby="bdr-title"
           onClose={() => { setForm(null); rqBack.current?.focus(); }}
-          onClick={(e) => { if (e.target === e.currentTarget && !form?.busy) rq.current?.close(); }}>
+          onCancel={(e) => { if (form?.busy) e.preventDefault(); }}
+          onClick={(e) => { if (onBackdrop(e) && !form?.busy) rq.current?.close(); }}>
           {form && (
               <form className="bdr-in" onSubmit={send}>
                 <p id="bdr-title" className="bdr-title">{w.title}</p>

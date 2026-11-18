@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import EmergencyGate, { type EmDone } from "./EmergencyGate";
 import SportGateLoader from "./SportGateLoader";
 import { isAskScreen } from "@/lib/ask";
-import { EM_QUIET, isQuiet } from "./quiet";
+import { EM_QUIET, BUSY, BUSY_RETRY_MS, isQuiet } from "./quiet";
 
 // The account's emergency contact on every page (the owner, 2026-10-07: required and unskippable for
 // every customer; the booking app's check-up), before every other pop-up: this loader holds a
@@ -24,11 +24,12 @@ const QUIET_MS = 10 * 60_000;
 let off = false;
 
 type Need = { two: boolean };
-async function check(): Promise<Need | null> {
+async function check(): Promise<Need | typeof BUSY | null> {
   if (off) return null;
   if (isQuiet(KEY)) return null;
   try {
     const r = await fetch("/api/account/emergency", { cache: "no-store", credentials: "same-origin" });
+    if (r.status === 429) return BUSY; // the meter is full: not an answer, asked again shortly
     if (!r.ok) return null;
     const b = (await r.json()) as { signedIn?: boolean; need?: boolean; two?: boolean; absent?: boolean };
     if (b.absent) off = true;
@@ -44,19 +45,22 @@ export default function EmergencyGateLoader({ locale }: { locale: string }) {
   const path = usePathname();
   const [need, setNeed] = useState<Need | null>(null);
   const [clear, setClear] = useState(false); // asked, and the account has its contact: the next pop-ups may ask now
+  const [retry, setRetry] = useState(0); // bumped to ask again after the meter turned a check away
 
   // the Ask big screen is a projector, not an account page: it never asks, whoever's browser shows it
   const bare = isAskScreen(path);
   useEffect(() => {
     if (need || bare) return;
     let live = true;
+    let wait: ReturnType<typeof setTimeout> | undefined;
     check().then((n) => {
       if (!live) return;
+      if (n === BUSY) { wait = setTimeout(() => setRetry((k) => k + 1), BUSY_RETRY_MS); return; } // the next pop-ups keep waiting
       if (n) setNeed(n);
       setClear(!n);
     });
-    return () => { live = false; };
-  }, [path, need, bare]);
+    return () => { live = false; clearTimeout(wait); };
+  }, [path, need, bare, retry]);
 
   const done = (r: EmDone) => {
     if (r === "absent") off = true;

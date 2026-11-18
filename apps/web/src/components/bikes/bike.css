@@ -150,7 +150,8 @@ html:is([lang="ar"], [lang="ur"]) .bk-root {
 }
 .bk-lang-menu button:hover { background: rgba(0, 0, 0, .05); }
 .bk-lang-menu button[aria-checked="true"] { color: #077a4b; font-weight: 700; }
-.bk-lang-menu button[aria-checked="true"]::after { content: "✓"; }
+/* a drawn tick (the icon set's, as the site's language menu), never a text glyph */
+.bk-lang-menu button[aria-checked="true"]::after { content: ""; flex: none; width: 15px; height: 15px; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; }
 
 .bk-code {
   flex: none;

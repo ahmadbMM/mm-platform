@@ -26,7 +26,7 @@ const json = (body: unknown, status = 200) =>
 export async function GET(req: Request) {
   const acct = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (!acct) return json({ signedIn: false });
-  if (!(await withinLimit(req, "account-check"))) return json({ error: "busy" }, 429);
+  if (!(await withinLimit(req, "account-check", undefined, acct.id))) return json({ error: "busy" }, 429);
   const r = await rpcServer<unknown[]>("customer_emergency", { p_id: acct.id, p_token: acct.token });
   if (r.status >= 400 && emAbsent(r)) return json({ signedIn: true, need: false, absent: true });
   if (!Array.isArray(r.data)) return json({ signedIn: true, need: false });
