@@ -193,14 +193,14 @@ export function PasskeyCard() {
 
 /* ------------------------------------------------------------------ the offer after a password sign-in */
 
-/** Whether to offer now: a password sign-in marked it in this tab, and it was never shown in this browser. The mark is
- *  taken either way, so it is asked once. */
-function takeOffer(): boolean {
-  try {
-    if (sessionStorage.getItem(OFFER_NEXT) !== "1") return false;
-    sessionStorage.removeItem(OFFER_NEXT);
-    return localStorage.getItem(OFFERED) !== "1";
-  } catch { return false; }
+/** Whether an offer is due: a password sign-in marked it in this tab, and it was never shown in this browser. */
+function offerDue(): boolean {
+  try { return sessionStorage.getItem(OFFER_NEXT) === "1" && localStorage.getItem(OFFERED) !== "1"; } catch { return false; }
+}
+/** The offer decided: the tab's mark goes either way, and a shown offer is never shown again in this browser. Taken only
+ *  here, when the answer is known (an effect that runs twice, or a page left half-way, must not lose it). */
+function offerSettled(shown: boolean): void {
+  try { sessionStorage.removeItem(OFFER_NEXT); if (shown) localStorage.setItem(OFFERED, "1"); } catch { /* no storage */ }
 }
 
 export function PasskeyOffer() {
@@ -211,13 +211,17 @@ export function PasskeyOffer() {
   useEffect(() => {
     let live = true;
     (async () => {
-      if (!takeOffer() || !(await deviceCanMakePasskeys())) return;
+      if (!offerDue()) return;
+      const can = await deviceCanMakePasskeys();
+      if (!live) return;
+      if (!can) return offerSettled(false);
       const r = await postJson<Answer>("/api/account/passkey/list", {});
-      if (!live || !r.ok || !Array.isArray(r.items) || r.items.length > 0) return;
+      if (!live) return;
+      if (!r.ok || !Array.isArray(r.items) || r.items.length > 0) return offerSettled(false);
       // another pop-up the page must ask first (a new password, the privacy notice, a waiver, a rating): the offer waits
       // for the next page in this tab
-      if (document.querySelector("dialog[open], [aria-modal='true']")) { try { sessionStorage.setItem(OFFER_NEXT, "1"); } catch { /* none */ } return; }
-      try { localStorage.setItem(OFFERED, "1"); } catch { /* shown once in this page at least */ }
+      if (document.querySelector("dialog[open], [aria-modal='true']")) return;
+      offerSettled(true);
       dlg.current?.showModal();
     })();
     return () => { live = false; };

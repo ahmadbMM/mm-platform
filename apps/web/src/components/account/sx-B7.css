@@ -14,7 +14,7 @@
 .pk-row:first-child { border-top: 0; padding-top: 4px; }
 .pk-mark { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 12px; background: #eef4ef; color: #077a4b; }
 .pk-what { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.pk-name { font-weight: 700; font-size: 15px; color: #1a1919; }
+.pk-name { align-self: flex-start; font-weight: 700; font-size: 15px; color: #1a1919; }
 .pk-facts { color: #57605a; font-size: 13px; line-height: 1.45; }
 .pk-rm { flex: none; }
 .pk-add { margin-top: 2px; }
