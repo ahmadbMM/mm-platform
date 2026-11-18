@@ -79,8 +79,15 @@ export type RideSession = {
    *  copy kept at the edge from before has none, and held no such session. */
   fbk?: boolean;
   /** Few spots left (the booking app's _sessFew, 2026-11-15; fewOf): staff said so on the session, so its cards and its
-   *  Details say "Few spots left", on a ride staff approve too. Set on an open date alone; absent otherwise. */
+   *  Details say "Few spots left", on a ride staff approve too. Set on an open date alone; absent otherwise. Since
+   *  2026-11-18 also set by withPlacesLeft once the places left reach `fewAt`. */
   few?: true;
+  /** The places left at which Few spots left turns itself on (the booking app's _fewAtOf, bike_slots._fewAt, the staff
+   *  Bookings round of 2026-11-18): a whole number 1-999, on an open date whose switch is off; absent otherwise. */
+  fewAt?: number;
+  /** A ride staff approve: its own places (sessions.spots, the booking app's spotsLeft cap before capacity). Only a read
+   *  that asks for it has it (SESSION_COLS_SPOTS). */
+  spots?: number | null;
   title: string | null;
   /** The session's name in Arabic (sessions.title_ar, rentals 20261113170000; the owner's pick on the booking app's
    *  theming page, 2026-11-13): an Arabic page names the session by it (sessionName). Trimmed, at most 60 characters,
@@ -271,6 +278,18 @@ export function fewOf(r: Row): boolean {
   return !!o && typeof o === "object" && !!(o as Record<string, unknown>)._few;
 }
 
+/** The places left at which staff want Few spots left said by itself (the booking app's _fewAtOf; the user's pick 4 of the
+ *  staff Bookings round, 2026-11-18: "Automatic Few spots left. The switch turns itself on once places left drop to a
+ *  number staff set"): bike_slots._fewAt, a whole number 1-999, else 0 (off). */
+export function fewAtOf(slots: unknown): number {
+  let o: unknown = slots;
+  if (typeof o === "string") {
+    try { o = JSON.parse(o); } catch { o = null; }
+  }
+  const n = o && typeof o === "object" ? Number((o as Record<string, unknown>)._fewAt) : NaN;
+  return Number.isInteger(n) && n >= 1 && n <= 999 ? n : 0;
+}
+
 /** A session with a start time alone (slotTimes gave the one time twice): "7 PM", never "7 PM – 7 PM". */
 export const oneTime = (t: readonly [string, string] | null | undefined): boolean => !!t && t[0] === t[1];
 
@@ -397,7 +416,8 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...placeOf(r),
     ...breakfastOf(r),
     ...(bfMembersOf(r.bike_slots) ? { bfMembers: true } : {}),
-    ...(fewOf(r) ? { few: true as const } : {}),
+    ...(fewOf(r) ? { few: true as const } : r.status === "open" && fewAtOf(r.bike_slots) ? { fewAt: fewAtOf(r.bike_slots) } : {}),
+    ...("spots" in r ? { spots: num(r.spots) } : {}),
     ...((h) => (h ? { ig: h } : {}))(igOf(r.bike_slots)),
     ...revealOf(r),
     ...outOf(r),
@@ -489,6 +509,10 @@ export const SESSION_COLS_PUBLISHED = "hide_queue";
 // called off (cancelled_at, rentals 20260928200000), a draft or one waiting on its timer (draft, opens_at, 20261107110000).
 // A group of its own, so a database without them reads as before: no closed session shown.
 export const SESSION_COLS_FBK = "cancelled_at,draft,opens_at";
+// A ride staff approve: its own places (sessions.spots), which the booking app's spotsLeft counts before its capacity, so
+// Few spots left turns itself on at the number staff set (fewAt) as it does there. A group of its own, so a database
+// without it reads as before: the capacity counts.
+export const SESSION_COLS_SPOTS = "spots";
 /** The sessions the lists of the sessions ahead show (a PostgREST filter): open and full ones, and the closed ones whose
  *  settings carry the Full, no waitlist mark (bike_slots is text; toSession reads the mark itself and the rest of fbkOf). */
 export const SESSION_STATUS_SHOWN = "or=(status.in.(open,full),and(status.eq.closed,bike_slots.like.*_fbk*))";
@@ -610,11 +634,12 @@ export async function getJson(fetchImpl: typeof fetch, url: string, key: string,
  *  no-show one, and not a rider on their own bike, who holds a place only on a Petromin night
  *  (`ownTakesPlace`, the booking app's _ownTakesPlace). Asked as a count, so nothing but the number
  *  comes back. */
-export async function placesTaken(fetchImpl: typeof fetch, url: string, key: string, sessionId: string, ownTakesPlace = false): Promise<number | null> {
+export async function placesTaken(fetchImpl: typeof fetch, url: string, key: string, sessionId: string, ownTakesPlace = false, noWaitlist = false): Promise<number | null> {
   if (!/^[A-Za-z0-9_-]{1,64}$/.test(sessionId)) return null;
   try {
     const own = ownTakesPlace ? "" : "&or=(type_preference.is.null,type_preference.neq.Own)";
-    const res = await fetchImpl(`${url}/rest/v1/queue_public?select=id&session_id=eq.${sessionId}&status=not.in.(cancelled,removed,noshow)${own}`, {
+    const out = noWaitlist ? "cancelled,removed,noshow,waitlist" : "cancelled,removed,noshow"; // a ride staff approve: a waitlisted request holds none
+    const res = await fetchImpl(`${url}/rest/v1/queue_public?select=id&session_id=eq.${sessionId}&status=not.in.(${out})${own}`, {
       method: "HEAD",
       headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: "count=exact" },
       cache: "no-store",
@@ -629,12 +654,26 @@ export async function placesTaken(fetchImpl: typeof fetch, url: string, key: str
 
 /** The places left on the soonest open sessions nobody approves (at most 12 counts a read): the booking app's spotsLeft,
  *  capacity (12 when unset) less the bikes out of service, less the bookings holding a place. Never on one closed as
- *  fully booked, which takes no booking. */
+ *  fully booked, which takes no booking.
+ *  Few spots left turns itself on (the booking app's _sessFew, 2026-11-18) once those places reach the number staff set
+ *  (fewAt), on a date that counts them (_fewCounts: its capacity set). A ride staff approve says no count, but one with
+ *  the number and places of its own (spots, else capacity) is counted for it alone (at most 6 a read): those places less
+ *  the requests holding one, a waitlisted request not. */
 async function withPlacesLeft(sessions: RideSession[], fetchImpl: typeof fetch, url: string, key: string): Promise<RideSession[]> {
   const ask = sessions.filter((s) => !s.full && !s.fbk && !s.approval).slice(0, 12);
-  const counts = await Promise.all(ask.map((s) => placesTaken(fetchImpl, url, key, s.id, s.kind === "petromin")));
+  const auto = sessions.filter((s) => s.approval && !s.full && !s.fbk && s.fewAt && (s.spots || s.capacity)).slice(0, 6);
+  const [counts, autoCounts] = await Promise.all([
+    Promise.all(ask.map((s) => placesTaken(fetchImpl, url, key, s.id, s.kind === "petromin"))),
+    Promise.all(auto.map((s) => placesTaken(fetchImpl, url, key, s.id, s.kind === "petromin", true))),
+  ]);
   const left = new Map(ask.map((s, i) => [s.id, counts[i] == null ? null : Math.max(0, (s.capacity || 12) - (s.out ?? 0) - (counts[i] as number))]));
-  return sessions.map((s) => (left.has(s.id) ? { ...s, left: left.get(s.id) ?? null } : s));
+  const autoLeft = new Map(auto.map((s, i) => [s.id, autoCounts[i] == null ? null : Math.max(0, (s.spots || s.capacity || 12) - (autoCounts[i] as number))]));
+  return sessions.map((s) => {
+    const n = left.has(s.id) ? left.get(s.id) ?? null : null;
+    const now = s.approval ? autoLeft.get(s.id) ?? null : s.capacity ? n : null;
+    const few = !s.few && !!s.fewAt && now != null && now <= s.fewAt;
+    return left.has(s.id) || few ? { ...s, ...(left.has(s.id) ? { left: n } : {}), ...(few ? { few: true as const } : {}) } : s;
+  });
 }
 
 /** The optional groups of columns every list of the sessions ahead asks for. */
@@ -672,7 +711,7 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=*`, key), // every column: max_price and employee_price too (lib/biz.ts)
       // and the bikes out of service, which the places left count (withPlacesLeft), and whether each rider list is out;
       // the closed sessions marked Full, no waitlist too, with what tells one from a night called off (SESSION_COLS_FBK)
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&${SESSION_STATUS_SHOWN}&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED, SESSION_COLS_FBK] }),
+      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&${SESSION_STATUS_SHOWN}&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED, SESSION_COLS_FBK, SESSION_COLS_SPOTS] }),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) prices = priceRows(p.value);
     if (s.status === "fulfilled" && Array.isArray(s.value)) {

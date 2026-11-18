@@ -7,7 +7,7 @@ import ExperienceSteps, { type StepSession } from "@/components/experiences/Expe
 import { dictOf } from "@/i18n/dicts";
 import { TRANSLATED } from "@/i18n/locales";
 import { infoPlaces } from "../event-info";
-import { fewOf, resetRides, toSession } from "../rides";
+import { fewAtOf, fewOf, resetRides, toSession } from "../rides";
 import { resetSiteContent } from "../site";
 import ExperiencesPage from "../../app/[locale]/experiences/page";
 
@@ -155,5 +155,85 @@ describe("the words", () => {
       expect(v.length, `${code} ${v}`).toBeLessThanOrEqual(30);
       expect(v, code).not.toMatch(/\p{Extended_Pictographic}/u);
     }
+  });
+});
+
+// Few spots left turns itself on (the user's pick 4 of the staff Bookings round, 2026-11-18: "Automatic Few spots left.
+// The switch turns itself on once places left drop to a number staff set"), as the booking app's _sessFew: staff set
+// bike_slots._fewAt, and once the places left reach it the date says Few spots left. A ride staff approve counts its own
+// places (spots, else capacity) less the requests holding one, a waitlisted request not; a ride nobody approves counts
+// as its "N spots left" does, and only when its capacity is set.
+describe("automatic (bike_slots._fewAt)", () => {
+  const taken = (by: Record<string, number>) => vi.fn(async (url: string, init?: RequestInit) => {
+    if (url.includes("/rpc/list_sessions")) return json(rows);
+    if (url.includes("/rpc/my_bookings")) return json([]);
+    if (url.includes("/rpc/community_member")) return json(!!jar.account);
+    if (init?.method === "HEAD") {
+      const id = /session_id=eq\.([^&]+)/.exec(url)?.[1] ?? "";
+      return new Response(null, { status: 200, headers: { "content-range": `0-0/${by[id] ?? 0}` } });
+    }
+    return json([]);
+  });
+  let rows: unknown[] = [];
+  const page = async (list: unknown[], by: Record<string, number>) => {
+    rows = list; resetRides();
+    const f = taken(by);
+    vi.stubGlobal("fetch", f);
+    const p = await ExperiencesPage({ params: Promise.resolve({ locale: "en" }) });
+    const props = (findAll(p, ExperienceSteps)[0] as ReactElement<Props>).props;
+    const heads = f.mock.calls.filter((c) => (c[1] as RequestInit | undefined)?.method === "HEAD").map((c) => String(c[0]));
+    return { by: Object.fromEntries(props.events.flatMap((e) => e.sessions).map((s) => [s.id, s])), heads };
+  };
+  const FA = comm("2099-11-19-fh", "farm", '{"_time":"16:30 - 20:30","_fewAt":10}', { title: "The Farmhouse Night", capacity: 130, spots: 40 });
+  const JCC = (id: string, slots: string, more: Record<string, unknown> = {}) => ({
+    id, session_date: id.slice(0, 10), status: "open", event_kind: null, ride_kind: null, title: null, open_to_all: false, paid_ride: false,
+    capacity: 20, bike_slots: slots, location: null, meet_url: null, description: null, cancelled_at: null, draft: false, opens_at: null, ...more,
+  });
+
+  it("reads the number: a whole number 1-999 on an open date whose switch is off", () => {
+    expect(fewAtOf('{"_fewAt":10}')).toBe(10);
+    expect(fewAtOf({ _fewAt: 999 })).toBe(999);
+    for (const v of ['{"_fewAt":0}', '{"_fewAt":1000}', '{"_fewAt":2.5}', '{"_fewAt":"x"}', "{}", "not json", null]) expect(fewAtOf(v)).toBe(0);
+    expect(toSession(FA)).toMatchObject({ fewAt: 10, spots: 40 });
+    expect("few" in toSession(FA)!).toBe(false);
+    expect("fewAt" in toSession({ ...FA, status: "full" }, true)!).toBe(false);
+    expect("fewAt" in toSession(FH)!).toBe(false); // the switch already says it
+  });
+
+  it("a ride staff approve: on once its own places less the requests holding one reach the number, a waitlisted one not counted", async () => {
+    const on = await page([FA], { [FA.id]: 30 }); // 40 - 30 = 10
+    expect(on.by[FA.id]).toMatchObject({ few: true });
+    expect(on.by[FA.id].info.places).toBe("Few spots left");
+    expect(on.heads).toHaveLength(1);
+    expect(on.heads[0]).toContain(`session_id=eq.${FA.id}&status=not.in.(cancelled,removed,noshow,waitlist)`);
+    const off = await page([FA], { [FA.id]: 29 }); // 11 left
+    expect("few" in off.by[FA.id]).toBe(false);
+    expect(off.by[FA.id].info.places ?? null).toBeNull(); // a ride staff approve never says its count
+    const cap = await page([{ ...FA, spots: null }], { [FA.id]: 125 }); // no places of its own: the capacity, 130 - 125
+    expect(cap.by[FA.id]).toMatchObject({ few: true });
+  });
+
+  it("a ride nobody approves: at the number its N spots left reaches, only with its capacity set", async () => {
+    const A = JCC("2099-11-20", '{"_time":"21:00 - 23:00","_fewAt":5}');
+    const on = await page([A], { [A.id]: 15 }); // 20 - 15 = 5
+    expect(on.by[A.id]).toMatchObject({ few: true });
+    expect(on.by[A.id].info.places).toBe("Few spots left");
+    expect(on.heads[0]).toContain("status=not.in.(cancelled,removed,noshow)&");
+    const off = await page([A], { [A.id]: 14 });
+    expect("few" in off.by[A.id]).toBe(false);
+    expect(off.by[A.id].info.places).toBe("6 spots left");
+    const noCap = await page([{ ...A, capacity: null }], { [A.id]: 8 }); // 12 by default, 4 left, but nothing set to count from
+    expect("few" in noCap.by[A.id]).toBe(false);
+    const three = await page([A], { [A.id]: 18 }); // a count of three or fewer still says itself
+    expect(three.by[A.id].info.places).toBe("2 spots left");
+  });
+
+  it("never on a full date, nor without the number", async () => {
+    const A = JCC("2099-11-20", '{"_time":"21:00 - 23:00","_fewAt":5}');
+    const full = await page([{ ...A, status: "full" }], { [A.id]: 20 });
+    expect("few" in full.by[A.id]).toBe(false);
+    const none = await page([{ ...FA, bike_slots: '{"_time":"16:30 - 20:30"}' }], { [FA.id]: 39 });
+    expect("few" in none.by[FA.id]).toBe(false);
+    expect(none.heads).toHaveLength(0); // a ride staff approve without the number is not counted at all
   });
 });
