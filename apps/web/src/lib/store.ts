@@ -22,7 +22,7 @@
 // visibleProducts: never a Preview product off staging) in a category it shows.
 import { edgeStore, memo, resetMemo } from "./memo";
 import { isStaging } from "./staging";
-import { catTree, inShownCat, type CatTree } from "./store-cats";
+import { catTree, inShownCat, topOf, type CatTree } from "./store-cats";
 import { bestIds, collsOf, type StoreColl } from "./store-colls";
 import { reviewsOf, storeOf, type Store, type StoreReview } from "./store-core";
 import { visibleProducts } from "./store-rules";
@@ -167,7 +167,7 @@ export async function loadStore(fetchImpl: typeof fetch = fetch, now: number = D
     memo<Store>(KEY, { ttl: TTL_MS, now, read: () => readStore(fetchImpl), keep: edgeStore("store-2") }),
     loadCats(fetchImpl, now),
   ]);
-  return raw ? { products: inShownCat(cats, visibleProducts(raw.products, now, isStaging())) } : null;
+  return raw ? { products: inShownCat(cats, visibleProducts(raw.products, now, isStaging())).map((p) => ({ ...p, top: topOf(cats, p.category) })) } : null;
 }
 
 /** The store's categories (store_categories, kept a minute like the products); the six built-in ones while there are

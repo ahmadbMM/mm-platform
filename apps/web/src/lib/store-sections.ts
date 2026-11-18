@@ -7,7 +7,7 @@ import { intlOf } from "@/i18n/locales";
 import { SITE_NAME, SITE_URL, langPath } from "./seo";
 import { extrasOf, waDigits, waHref } from "./store-pdp";
 import {
-  KEY_SPEC_ICONS, linePhotos, optionsOf, pick, priceRange, productHref, productStock, relatedOf, reviewSummary, variantLabel,
+  isBike, KEY_SPEC_ICONS, linePhotos, optionsOf, pick, priceRange, productHref, productStock, relatedOf, reviewSummary, variantLabel,
   type CmRange, type KeySpecIcon, type Store, type StoreProduct, type StoreReview, type StoreSpec, type StoreVariant,
 } from "./store-core";
 import { MAX_LINES, MAX_QTY, roomFor } from "./cart";
@@ -82,7 +82,7 @@ export function specTable(p: StoreProduct, locale: string): SpecGroup[] {
   }
   if (!rows.length) return [];
   rows.sort((a, b) => Number(b.first) - Number(a.first)); // stable: the rider height first, the rest in staff's order
-  if (p.category !== "bikes") return [{ id: null, rows: rows.map((x) => x.row) }];
+  if (!isBike(p)) return [{ id: null, rows: rows.map((x) => x.row) }];
   const groups = SPEC_GROUPS.map((id) => ({ id, rows: rows.filter((x) => x.group === id).map((x) => x.row) })).filter((g) => g.rows.length);
   return groups.length < 2 ? [{ id: null, rows: groups[0].rows }] : groups;
 }
@@ -206,7 +206,9 @@ export function productLd(p: StoreProduct, x: { locale: string; reviews: readonl
   const description = (pick(x.locale, p.description_en, p.description_ar) || pick(x.locale, p.tagline_en, p.tagline_ar)).slice(0, 5000);
   const common = {
     priceCurrency: "SAR",
-    availability: `https://schema.org/${productStock(p).kind === "out" ? "OutOfStock" : "InStock"}`,
+    // a pre-order (the product-management build 2026-11-19) is ordered now and ships on its day
+    availability: `https://schema.org/${p.preorder ? "PreOrder" : productStock(p).kind === "out" ? "OutOfStock" : "InStock"}`,
+    ...(p.preorder && p.ships_on ? { availabilityStarts: p.ships_on } : {}),
     itemCondition: `https://schema.org/${p.condition === "certified" ? "UsedCondition" : "NewCondition"}`,
     url,
     seller: { "@type": "Organization", "@id": `${SITE_URL}/#organization`, name: SITE_NAME },

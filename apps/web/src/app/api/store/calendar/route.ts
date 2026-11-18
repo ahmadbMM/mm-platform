@@ -5,7 +5,7 @@ import { asLocale, resolvePage } from "@/lib/content";
 import { payRpc } from "@/lib/pay/server";
 import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
-import { loadStore } from "@/lib/store";
+import { isBike, loadStore } from "@/lib/store";
 import { orderOf } from "@/lib/store-order";
 import { afterSettings, bikeLines, bookedSlot, checkupDays, handoverOf, icsText, orderPath, slotCalendarOpen, type IcsEvent } from "@/lib/sx-B4";
 import { T } from "@/components/store/sx-B4.text";
@@ -45,7 +45,7 @@ export async function GET(req: Request) {
       location: pickup ? showroom : undefined, text: `${t.calOrder(id)}\n${link}`, url: link, alarms: ["-P1D", "-PT1H"],
     });
   } else {
-    const bikes = new Set((store?.products ?? []).filter((p) => p.category === "bikes").map((p) => p.id));
+    const bikes = new Set((store?.products ?? []).filter(isBike).map((p) => p.id));
     const set = afterSettings(content);
     const due = set.checkup.on ? checkupDays(o, set.checkup.weeks, bikeLines(o, bikes).length > 0) : null;
     if (!due) return no(404);

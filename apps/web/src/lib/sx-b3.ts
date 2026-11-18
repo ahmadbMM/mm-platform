@@ -1,5 +1,6 @@
 import type { CartItem, CartLine } from "./cart";
 import type { SiteContent } from "./site";
+import { isBike } from "./store-core";
 import type { Fulfil } from "./store-delivery";
 import { digitsOnly, latinDigits, storePhone } from "./store-form";
 import { handoverPickOf, type HandoverPick } from "./sx-b3-handover";
@@ -197,7 +198,7 @@ export const mapsHref = (p: Pin) => `https://www.google.com/maps/search/?api=1&q
 
 /** Small things only: every line one a courier may carry (store_products.ship_ksa), never a bike or a gift card. */
 export function smallOnly(lines: readonly CartLine[]): boolean {
-  return lines.length > 0 && lines.every((l) => !!l.product && l.product.ship_ksa && l.product.category !== "bikes" && l.product.kind !== "gift_card");
+  return lines.length > 0 && lines.every((l) => !!l.product && l.product.ship_ksa && !isBike(l.product) && l.product.kind !== "gift_card");
 }
 
 export type SessionChoice = { entry: string; session: string; date: string };

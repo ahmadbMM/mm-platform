@@ -4,7 +4,7 @@ import type { PaySettings } from "./pay/settings";
 import { deliveryOptions, deliveryRange } from "./store-delivery";
 import { warrantyMonths, warrantyParts } from "./store-policy";
 import {
-  optionsOf, pick, priceRange, productStock, sortProducts, STORE_SORTS, variantPrice,
+  isBike, optionsOf, pick, priceRange, productStock, sortProducts, STORE_SORTS, variantPrice,
   type StoreProduct, type StoreSort, type StoreVariant,
 } from "./store-core";
 
@@ -162,7 +162,7 @@ export function listOf(products: readonly StoreProduct[], f: ListFilters, sort: 
  *  gift card or anything with a choice to make opens its page instead (a pop-up for a choice is not built), and so do a
  *  pre-order (its page says when it ships) and a Preview (never sold). */
 export function quickVariant(p: StoreProduct): StoreVariant | null {
-  if (p.kind !== "item" || p.category === "bikes" || p.variants.length !== 1 || p.preorder || p.preview) return null;
+  if (p.kind !== "item" || isBike(p) || p.variants.length !== 1 || p.preorder || p.preview) return null;
   const v = p.variants[0];
   return v.stock > 0 ? v : null;
 }

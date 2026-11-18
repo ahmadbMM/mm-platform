@@ -129,6 +129,9 @@ export type StoreProduct = {
   unpublish_at: string | null;
   /** "Only N left" at or under this many (store.showStock; 0: never). Unset: 3, as before the setting. */
   low_at?: number;
+  /** The first-level category it sits in: its own, or the one above its sub-category (lib/store.ts loadStore sets it from
+   *  staff's categories). Unset: its own category. */
+  top?: string;
 };
 
 export type Store = { products: StoreProduct[] };
@@ -425,6 +428,10 @@ export const vatIn = (total: number) => Math.round(total * 15 / 115 * 100) / 100
 
 /** A staff text in the page's language: the Arabic on an Arabic page when written, the English everywhere else. */
 export const pickBi = (locale: string, b: StoreBi | null | undefined): string => (b ? pick(locale, b.en, b.ar) : "");
+
+/** Whether a product is a bike: in Bikes, or in one of Bikes' sub-categories (the product-management build 2026-11-19).
+ *  The store's bike rules (the wide card, the numbered steps, the handover, trade-in) follow this. */
+export const isBike = (p: Pick<StoreProduct, "category" | "top">): boolean => (p.top ?? p.category) === "bikes";
 
 /** Where a product's page is: a gift card's is the gift card page (F57). */
 export const productHref = (p: Pick<StoreProduct, "slug" | "kind">): string => (p.kind === "gift_card" ? "/store/gift-card" : `/store/${p.slug}`);

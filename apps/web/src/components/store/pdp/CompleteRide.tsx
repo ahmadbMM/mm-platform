@@ -1,5 +1,5 @@
 import { serverLocalize } from "@/i18n/dicts";
-import type { Store, StoreProduct } from "@/lib/store-core";
+import { isBike, type Store, type StoreProduct } from "@/lib/store-core";
 import { addonsOf, leanProduct } from "@/lib/store-sections";
 import { T } from "../w3b.text";
 import AddonCard from "./AddonCard";
@@ -13,7 +13,7 @@ export default function CompleteRide({ store, p, locale }: { store: Store; p: St
   const w = serverLocalize(T, locale);
   return (
     <section className="st-pd-sec" aria-labelledby="st-pd-ride-h">
-      <h2 id="st-pd-ride-h">{p.category === "bikes" ? w.rideH : w.goesH}</h2>
+      <h2 id="st-pd-ride-h">{isBike(p) ? w.rideH : w.goesH}</h2>
       <ul className="st-pd-addons">
         {list.map((x) => <AddonCard key={x.id} p={leanProduct(x)} locale={locale} />)}
       </ul>

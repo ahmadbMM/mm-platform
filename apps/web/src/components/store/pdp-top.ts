@@ -4,7 +4,7 @@ import { payEnv, payReady } from "@/lib/pay/config";
 import { tabbyKeys } from "@/lib/pay/tabby";
 import { storeEnv } from "@/lib/store-api";
 import { SITE_URL } from "@/lib/seo";
-import { linePhotos, productHref, relatedOf, type StoreProduct } from "@/lib/store";
+import { isBike, linePhotos, productHref, relatedOf, type StoreProduct } from "@/lib/store";
 import { returnsAnswers } from "@/lib/policies";
 import { storeSwitches } from "@/lib/store-settings";
 import { waDigits } from "@/lib/store-pdp";
@@ -38,7 +38,7 @@ export function topProps(s: StoreState, p: StoreProduct, locale: string): TopPro
     locale,
     licence: s.licence,
     today: s.today,
-    related: p.category === "bikes" ? relatedOf(s.store, p.goes_with, p.id).map(slimExtra) : [],
+    related: isBike(p) ? relatedOf(s.store, p.goes_with, p.id).map(slimExtra) : [],
     settings: s.settings,
     whens: allWhens(s, locale),
     showroom: S(s.site.contact.address),

@@ -6,7 +6,7 @@ import { isRtl } from "@/i18n/locales";
 import { ADDED_MS, MAX_QTY, productInCart, roomFor } from "@/lib/cart";
 import type { PaySettings } from "@/lib/pay/settings";
 import {
-  optionOpen, optionsOf, photosFor, pick, pickVariant, priceRange, productStock, sar, sizeForHeight, variantLabel, variantPrice, variantStock,
+  isBike, optionOpen, optionsOf, photosFor, pick, pickVariant, priceRange, productStock, sar, sizeForHeight, variantLabel, variantPrice, variantStock,
   wasPriceAt, type StoreProduct, type StoreVariant,
 } from "@/lib/store-core";
 import { warrantyMonths } from "@/lib/store-policy";
@@ -98,7 +98,7 @@ export default function ProductTop(props: TopProps) {
   const b = useLocalize(B);
   const rtl = isRtl(locale);
   const o = optionsOf(p);
-  const bike = p.category === "bikes";
+  const bike = isBike(p);
   // a link may ask for a size and a colour (N09: a showroom tag, a shared link); else the first colour in stock
   const firstColour = b2?.preset.colour ?? o.colours.find((c) => optionOpen(p, "colour", c.key, null))?.key ?? o.colours[0]?.key ?? null;
   const [size, setSize] = useState<string | null>(o.sizes.length === 1 ? o.sizes[0] : b2?.preset.size ?? null);

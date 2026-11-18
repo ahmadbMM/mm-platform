@@ -17,6 +17,7 @@ import { bookingLink } from "@/lib/links";
 import { payRpc } from "@/lib/pay/server";
 import { invoiceSeller, slotWhen } from "@/lib/store-after";
 import { fmtRange } from "@/lib/store-delivery";
+import { isBike } from "@/lib/store-core";
 import { orderExpected, orderOf, type Order } from "@/lib/store-order";
 import { POLICY } from "@/lib/store-policy";
 import { deliverySlots } from "@/lib/store-settings";
@@ -89,7 +90,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const products = new Map(s.store.products.map((p) => [p.id, p]));
   const after = afterParts({
     o: { ...o, handover: handoverOf(r?.data) }, after: extra, content: s.content, locale, today: s.today, now, owner, workshop: !s.hidden.includes("workshop"), expected,
-    bikes: new Set(s.store.products.filter((p) => p.category === "bikes").map((p) => p.id)),
+    bikes: new Set(s.store.products.filter(isBike).map((p) => p.id)),
     monthsOf: (id) => { const p = id ? products.get(id) : null; return p ? warrantyMonths(p) : LEGAL_WARRANTY_MONTHS.new; },
   });
   // the build of 2026-11-18 (B3): a company's standard tax invoice (N34), the handover slot, session and pin (N13, N15,

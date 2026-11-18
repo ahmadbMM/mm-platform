@@ -78,7 +78,9 @@ export function feedItems(products: readonly StoreProduct[], o: FeedOptions): st
         ["link", link],
         ["g:image_link", photos[0]],
         ...photos.slice(1, 11).map((x) => ["g:additional_image_link", x]),
-        ["g:availability", stock > 0 ? "in_stock" : "out_of_stock"],
+        // a pre-order (the product-management build 2026-11-19): Google's own value, with the day it ships when staff gave one
+        ...(p.preorder ? [["g:availability", "preorder"], ...(p.ships_on ? [["g:availability_date", `${p.ships_on}T00:00+03:00`]] : [])]
+          : [["g:availability", stock > 0 ? "in_stock" : "out_of_stock"]]),
         ...(was !== null && was > price ? [["g:price", money(was)], ["g:sale_price", money(price)]] : [["g:price", money(price)]]),
         ...(p.brand ? [["g:brand", p.brand]] : [["g:brand", o.storeName]]),
         ["g:condition", p.condition === "certified" ? "refurbished" : "new"],

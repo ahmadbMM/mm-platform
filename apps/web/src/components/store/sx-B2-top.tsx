@@ -5,7 +5,7 @@ import { intlOf } from "@/i18n/locales";
 import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { rpcServer } from "@/lib/account";
 import { fmtRange, type Fulfil } from "@/lib/store-delivery";
-import { pick, type StoreProduct } from "@/lib/store-core";
+import { isBike, pick, type StoreProduct } from "@/lib/store-core";
 import { checkupWeeks, fleetRecordOf, orderByDays, orderByOf, presetOf, rodeOf } from "@/lib/sx-B2";
 import { T } from "./sx-B2.text";
 import { B2Icon } from "./sx-B2-icons";
@@ -30,7 +30,7 @@ export type B2Top = {
 
 export function b2Top(s: StoreState, p: StoreProduct, locale: string, q: Record<string, string | string[] | undefined>): B2Top {
   const t = serverLocalize(T, locale);
-  const bike = p.category === "bikes";
+  const bike = isBike(p);
   const occ = orderByOf(s.content);
   const what = occ ? pick(locale, occ.en, occ.ar) : "";
   const days = orderByDays(occ, s.settings, s.today);

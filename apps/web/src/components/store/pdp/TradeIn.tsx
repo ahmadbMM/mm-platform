@@ -1,5 +1,5 @@
 import { serverLocalize } from "@/i18n/dicts";
-import type { StoreProduct } from "@/lib/store-core";
+import { isBike, type StoreProduct } from "@/lib/store-core";
 import { waHref, waNumber } from "@/lib/store-sections";
 import { WhatsAppMark } from "../bits";
 import { StIcon } from "../icons";
@@ -9,7 +9,7 @@ import { SwapMark } from "./marks";
 // "Trade in your old bike" (F52), on a bike's page: one row that opens a WhatsApp chat with the store, its first
 // message naming this bike; the workshop values the old one by hand. Nothing when the site has no WhatsApp number.
 export default function TradeIn({ p, locale, site }: { p: StoreProduct; locale: string; site: { social?: Record<string, unknown>; contact?: Record<string, unknown> } }) {
-  if (p.category !== "bikes") return null;
+  if (!isBike(p)) return null;
   const num = waNumber(site);
   if (!num) return null;
   const w = serverLocalize(T, locale);

@@ -1,4 +1,4 @@
-import type { StoreProduct } from "./store-core";
+import { isBike, type StoreProduct } from "./store-core";
 import { FILTER_KEYS, type Facet, type FacetOption, type FilterKey, type ListFilters } from "./store-listing";
 
 // The store's lists on every screen (the user, 2026-11-18: "do all" of the store and Experiences mobile report, builder
@@ -8,7 +8,7 @@ import { FILTER_KEYS, type Facet, type FacetOption, type FilterKey, type ListFil
 
 /** A bike takes a whole row on a phone, half a row on a tablet and two of four columns on a computer (SM03-B, which
  *  reopens D02-A at the owner's "do all"); everything else keeps one cell. A gift card is never a bike. */
-export const isWideCard = (p: Pick<StoreProduct, "category" | "kind">): boolean => p.kind === "item" && p.category === "bikes";
+export const isWideCard = (p: Pick<StoreProduct, "category" | "kind" | "top">): boolean => p.kind === "item" && isBike(p);
 
 /** The `sizes` of a card's photos, for the grid store.css draws (SM03-B, SM08-B): two cells a row on a phone (a bike the
  *  whole row), six columns on a tablet (a cell two, a bike three), four beside the 212px filter panel on a computer (a

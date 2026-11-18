@@ -1,7 +1,7 @@
 import { serverLocalize } from "@/i18n/dicts";
 import { Link } from "@/i18n/navigation";
 import { sized } from "@/lib/img";
-import { photoAlt, pick, priceRange, productHref, sar, type Store, type StoreProduct } from "@/lib/store-core";
+import { isBike, photoAlt, pick, priceRange, productHref, sar, type Store, type StoreProduct } from "@/lib/store-core";
 import { cmText, compareTable, type CompareRow } from "@/lib/store-sections";
 import { T as StoreT } from "../Store.text";
 import { T } from "../w3b.text";
@@ -23,7 +23,7 @@ export default function CompareBikes({ store, p, locale }: { store: Store; p: St
   const cur = (i: number) => (i === 0 ? "is-cur" : undefined);
   return (
     <section className="st-pd-sec" aria-labelledby="st-pd-cmp-h">
-      <h2 id="st-pd-cmp-h">{p.category === "bikes" ? w.cmpBikes : w.cmp}</h2>
+      <h2 id="st-pd-cmp-h">{isBike(p) ? w.cmpBikes : w.cmp}</h2>
       <div className="st-pd-cmp-wrap" role="region" aria-labelledby="st-pd-cmp-h" tabIndex={0}>
         <table className={`st-pd-cmp n${n}`}>
           <thead>

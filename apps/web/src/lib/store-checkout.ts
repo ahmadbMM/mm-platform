@@ -1,6 +1,6 @@
 import { bundleDiscount, subtotalOf, type CartLine } from "./cart";
 import { deliveryFee, type PaySettings } from "./pay/settings";
-import { optionsOf, productStock, relatedOf, type StoreProduct, type StoreVariant } from "./store-core";
+import { isBike, optionsOf, productStock, relatedOf, type StoreProduct, type StoreVariant } from "./store-core";
 import { fmtRange, type Fulfil } from "./store-delivery";
 import { formProblems, latinDigits, storePhone, type Address, type Contact } from "./store-form";
 import { districtServed, slotOk, type District, type Slots, type SlotTime } from "./store-settings";
@@ -23,7 +23,7 @@ export const digitalOnly = (lines: readonly CartLine[]) => lines.length > 0 && l
 /** A gift card in the order: it cannot be paid with a gift card (STORE_GIFT_ON_GIFT). */
 export const hasGiftCard = (lines: readonly CartLine[]) => lines.some((l) => isGiftCard(l.product));
 /** A bike in the order: its ways take a bike's names (F27, "Collect fully built"). */
-export const hasBike = (lines: readonly CartLine[]) => lines.some((l) => l.product?.category === "bikes");
+export const hasBike = (lines: readonly CartLine[]) => lines.some((l) => !!l.product && isBike(l.product));
 
 /** The steps checkout goes through for this way: no delivery step for gift cards alone, no address for pickup. */
 export function stepsFor(way: Way): StepId[] {
@@ -211,7 +211,7 @@ export function goesWithCart(products: StoreProduct[], lines: readonly CartLine[
   const inCart = new Set(lines.map((l) => l.product?.id).filter((id): id is string => !!id && !keep.includes(id)));
   const out: StoreProduct[] = [];
   for (const l of lines) {
-    if (l.product?.category !== "bikes") continue;
+    if (!l.product || !isBike(l.product)) continue;
     for (const p of relatedOf({ products }, l.product.goes_with, l.product.id)) {
       if (out.length >= max) return out;
       if (inCart.has(p.id) || out.includes(p) || isGiftCard(p) || productStock(p).kind === "out") continue;

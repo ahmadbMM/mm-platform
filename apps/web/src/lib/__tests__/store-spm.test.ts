@@ -5,7 +5,7 @@ import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { NextIntlClientProvider } from "next-intl";
 import { TxProvider } from "@/i18n/TxProvider";
 import { localize } from "@/i18n/tx";
-import { loadBest, loadCats, loadColls, loadStore, productStock, resetStore, stockState, storeOf, variantStock, type Store } from "../store";
+import { isBike, loadBest, loadCats, loadColls, loadStore, productStock, resetStore, stockState, storeOf, variantStock, type Store } from "../store";
 import { BUILTIN_TREE, catFilters, catName, catOf, catPath, catProducts, catTiles, catTree, catsWithProducts, inShownCat, subsWithProducts, topOf, topsWithProducts } from "../store-cats";
 import { bestIds, collOpen, collProducts, collsOf, inCollOrder, onSale, storeSections, type CollCtx } from "../store-colls";
 import {
@@ -16,6 +16,7 @@ import { facetsOf, listOf, listQueryOf, listQueryText, matches, noFilters, quick
 import { storePaths, storeSearchItems } from "../store-site";
 import { feedItems } from "../sx-B1-feed";
 import { payError } from "../pay/http";
+import { isWideCard } from "../sx-B1-list";
 import { refusalPlace } from "../store-form";
 import { memoSettled } from "../memo";
 import { T as ST } from "../../components/store/Store.text";
@@ -85,6 +86,17 @@ describe("a product's new fields", () => {
     expect(stockState(5, 6)).toEqual({ kind: "low", left: 5 });
     expect(stockState(2, 0)).toEqual({ kind: "in" });
     expect(stockState(2)).toEqual({ kind: "low", left: 2 });
+  });
+});
+
+describe("a bike in a sub-category of Bikes", () => {
+  it("is still a bike: its wide card, its steps and its rules follow its first-level category", () => {
+    const road = { ...by("road"), top: topOf(TREE, "road") };
+    expect(isBike(road)).toBe(true);
+    expect(isWideCard(road)).toBe(true);
+    expect(isBike(by("road"))).toBe(false); // read without staff's categories, it is in its own
+    expect(isBike({ category: "bikes" })).toBe(true);
+    expect(quickVariant({ ...road, variants: [road.variants[0]] })).toBeNull();
   });
 });
 
@@ -340,11 +352,12 @@ describe("the sitemap, the search and the feed", () => {
     expect(items.some((i) => i.href === "/store/preview")).toBe(false);
   });
   it("leave a Preview out of the feed and give a sub-category its path and its category's Google category", () => {
-    const xml = feedItems([...store.products, { ...by("helmet"), slug: "prev-helmet", preview: true }],
+    const xml = feedItems([...store.products, { ...by("helmet"), slug: "prev-helmet", preview: true }, { ...by("pre"), slug: "pre-photo", images: ["/site/store/pre/1.webp"] }],
       { site: "https://micromobility.sa", lang: "en", licence: null, today: TODAY, storeName: "Micromobility", cats: TREE }).join("\n");
     expect(xml).toContain("<g:product_type>bikes &gt; road</g:product_type>");
     expect(xml).toContain("Bicycles</g:google_product_category>");
     expect(xml).not.toContain("prev-helmet");
+    expect(xml).toContain("<g:availability>preorder</g:availability><g:availability_date>2026-12-03T00:00+03:00</g:availability_date>");
   });
 });
 
@@ -410,6 +423,7 @@ describe("reading what staff manage", () => {
     const s = await loadStore(f, NOW);
     expect(urls.find((u) => u.includes("store_products"))).toContain("or=(published.is.true,preview.is.true)");
     expect(s?.products.map((p) => [p.slug, p.preview])).toEqual([["helmet", false], ["preview", true]]);
+    expect(s?.products[0].top).toBe("accessories");
     await memoSettled();
   });
   it("never asks for Preview products elsewhere, and reads the store build's columns when the new ones are not there", async () => {
