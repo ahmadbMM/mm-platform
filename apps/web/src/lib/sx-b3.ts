@@ -68,19 +68,19 @@ export function boxValue(prev: string | undefined, n: number, wide: boolean, h: 
 
 /** One cart line in the one template (SM10-B): 72 px photo row and the 44 px row of controls, with its padding. */
 export const LINE_PX = 155;
-/** The cart's height drawn from its lines when it was never measured: the lines (and the total row on a phone, SM10-C)
- *  over the summary, or beside it; the empty cart's message box otherwise. */
+/** The cart's height drawn from its lines when it was never measured (measured on staging 2026-11-18 with two delivery
+ *  ways): the total row (SM10-C), the lines and the summary one over the other on a phone; side by side, the taller. */
 export function cartEstimate(n: number, wide: boolean): number {
   if (n <= 0) return 140;
   const lines = n * LINE_PX + 2;
-  return wide ? Math.max(lines, 560) : 84 + lines + 20 + 560;
+  return wide ? Math.max(lines, 470) : 94 + 20 + lines + 20 + 470;
 }
-/** Checkout's height from its lines: the open first step (about 470 px) and the closed ones, then the summary with each
- *  line's 72 px row (beside on a wide screen). */
+/** Checkout's height from its lines: the steps (Contact open, the others closed: about 690 px) and the summary with each
+ *  line's 72 px row, one over the other on a phone; side by side, the taller. */
 export function checkoutEstimate(n: number, wide: boolean): number {
   if (n <= 0) return 140;
-  const steps = 470 + 3 * 80, sum = 560 + n * 72;
-  return wide ? Math.max(steps, sum) : steps + 20 + sum;
+  const sum = 470 + n * 72;
+  return wide ? Math.max(720, sum + 20) : 690 + 20 + sum;
 }
 
 /** The two heights to keep, from what was measured or else from the line count. */

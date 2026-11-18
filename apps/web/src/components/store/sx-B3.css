@@ -41,7 +41,8 @@
 .sx3-pin-on b { flex: 1; min-width: 0; font-size: 14.5px; }
 .sx3-map { display: flex; flex-direction: column; gap: 10px; }
 .sx3-map-box { position: relative; height: min(56svh, 440px); min-height: 260px; border-radius: var(--st-r-card); overflow: hidden; background: var(--st-well); box-shadow: inset 0 0 0 1px var(--st-line-2); }
-.sx3-map-gl { position: absolute; inset: 0; }
+/* MapLibre makes its box position: relative: the size is given too, so it still fills the frame */
+.sx3-map-gl { position: absolute; inset: 0; width: 100%; height: 100%; }
 /* the pin stays in the middle: its point on the map's centre */
 .sx3-map-pin { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -100%); color: #a33b2e; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(26, 25, 25, .35)); }
 .sx3-map-pin svg { fill: #fff; }

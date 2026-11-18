@@ -1,6 +1,17 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { createElement, type ReactElement, type ReactNode } from "react";
+// @ts-expect-error -- react-dom/server ships without type declarations here
+import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
+import { NextIntlClientProvider } from "next-intl";
+import { AppRouterContext } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { TxProvider } from "@/i18n/TxProvider";
+import { localize } from "@/i18n/tx";
+import { orderOf } from "../store-order";
+import { T as STORE_T } from "../../components/store/Store.text";
+import { T as W5 } from "../../components/store/w5.text";
+import { T as SX } from "../../components/store/sx-B3.text";
 import type { CartLine } from "../cart";
 import type { StoreProduct } from "../store-core";
 import { deliverySlots, seasonTimes, slotDays, slotOk, slotTimes } from "../store-settings";
@@ -246,5 +257,50 @@ describe("the checkout route and the order page", () => {
     expect(sxSettings({})).toEqual({ company: false, pin: false, learning: false, session: { on: false, days: 21 }, handover: false, giftWallet: false });
     expect(sxSettings({ "store.company.on": true, "store.handover": { on: true }, "store.sessionHandover": { on: true, days: 7 } }))
       .toMatchObject({ company: true, handover: true, session: { on: true, days: 7 } });
+  });
+});
+
+describe("an order's page with these parts (N34, N13, N15, N07, N17)", () => {
+  const render = renderUntyped as (el: ReactElement) => string;
+  const ROUTER = { refresh() {}, push() {}, replace() {}, back() {}, forward() {}, prefetch() {} };
+  const wrap = (locale: string, child: ReactNode) =>
+    createElement(AppRouterContext.Provider, { value: ROUTER } as never,
+      createElement(NextIntlClientProvider, { locale, messages: {} } as never, createElement(TxProvider, { locale, dict: null } as never, child)));
+  const RAW = {
+    id: "o1", no: 1042, status: "paid", fulfil: "pickup", name: "Huda", phone: "•••• 1234", subtotal: 8000, discount: 0, delivery_fee: 0, total: 8000,
+    wallet_paid: 0, gift_paid: 0, vat: 1043.48, created_at: "2026-11-10T08:00:00Z", paid_at: "2026-11-10T08:05:00Z", invoice_no: "INV-000042", receipt_no: 77,
+    discounts: [], payment: { id: "pay", status: "paid", method: "creditcard", brand: "mada", last4: "4242", receipt_no: 77, expires_at: "", amount: 8000 },
+    items: [{ id: 7, name: "DA54", variant: "M", qty: 1, unit_price: 8000, product_id: "00000000-0000-4000-8000-000000000001", variant_id: null, image: null, slug: "da54" }],
+    events: [{ at: "2026-11-10T08:05:00Z", status: "paid" }], returns: [], gift_cards: [], refunds: [],
+    company: { name: "Acme Trading", vat: "300000000000003", cr: "1010101010", address: { building: "1234", street: "King Road", district: "Rawdah", city: "Jeddah", postal: "23434" } },
+    handover: { day: "2026-11-23", at: "16:00", to: "16:20" }, pinned: false, learning: true,
+  };
+  const SELLER = { trade: "Micromobility", legal: "Micromobility Company Ltd.", legalBeside: "شركة التنقل الدقيق المحدودة", vat: "312555068900003", cr: "1009107240",
+    address: "Jeddah", qrName: "شركة التنقل الدقيق المحدودة" };
+  async function page(raw: Record<string, unknown>, locale: string) {
+    const { default: OrderView } = await import("@/components/store/OrderView");
+    const { OrderWayFacts } = await import("@/components/store/OrderPlus");
+    const ex = orderExtrasOf(raw), x = localize(SX, locale, null);
+    return render(wrap(locale, createElement(OrderView, {
+      o: orderOf(raw, "a".repeat(32))!, t: localize(STORE_T, locale, null), w: localize(W5, locale, null),
+      beside: locale === "ar" ? { lang: "en", t: STORE_T.en, w: W5.en } : { lang: "ar", t: STORE_T.ar, w: W5.ar },
+      locale, seller: SELLER, now: Date.parse("2026-11-12T10:00:00Z"), today: "2026-11-12", whatsapp: "", showroom: "Al Sharafeyah",
+      expected: null, slot: null, signup: null, returnsHref: "/returns", policy: "", hidden: [],
+      sx: { buyer: ex.buyer, x, bx: locale === "ar" ? SX.en : SX.ar, way: createElement(OrderWayFacts, { e: ex, x, intl: "en-GB" }) },
+    } as never)));
+  }
+  it("prints a company's order as a tax invoice naming the buyer, its VAT number and address, in both languages", async () => {
+    const html = await page(RAW, "en");
+    expect(html).toContain("Tax invoice");
+    expect(html).not.toContain("Simplified tax invoice");
+    expect(html).toContain("فاتورة ضريبية");
+    expect(html).toContain("Acme Trading");
+    expect(html).toContain("300000000000003");
+    expect(html).toContain("1234 King Road, Rawdah, Jeddah, 23434");
+    expect(html).toContain("Buyer&#x27;s VAT number");
+    expect(html).toContain("Mon 23 Nov · 16:00 – 16:20");
+    const plain = await page({ ...RAW, company: null }, "en");
+    expect(plain).toContain("Simplified tax invoice");
+    expect(plain).not.toContain("Buyer&#x27;s VAT number");
   });
 });
