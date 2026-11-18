@@ -425,7 +425,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const freeAmt = <bdi className="tk-amt">{t.free}</bdi>;
   // EF29: the early-bird share off the fare of a date booked far enough ahead, while staff switch it on and the discount
   // licence is set (the database's _xp_early_bird takes the same share off each row it prices; 0 otherwise)
-  const early = sel && !free ? earlyPct(sx?.settings.early ?? null, sel.kind, sel.date, today) : 0;
+  // never with a code (a promo, a gift ride, a lesson pack): the database's _xp_early_bird does not stack on one (B8 fix g)
+  const early = sel && !free && !promo ? earlyPct(sx?.settings.early ?? null, sel.kind, sel.date, today) : 0;
   const net = (n: number) => (early ? lessPct(n, early) : n);
   const grand = free ? freeAmt : disc > 0 ? <Money n={net(Math.max(0, lo - disc)) + addonTotal} word={word} /> : <Money n={net(lo) + addonTotal} hi={net(hi) + addonTotal} word={word} />;
   const rental = free ? freeAmt : disc > 0 ? <Money n={net(Math.max(0, lo - disc))} word={word} /> : <Money n={net(lo)} hi={net(hi)} word={word} />;
