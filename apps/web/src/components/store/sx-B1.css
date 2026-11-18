@@ -9,7 +9,7 @@
 /* a one-line lead and the count are no paragraphs to read: Arabic's 1.85 line (site.css) would push the list down */
 html:is([lang="ar"], [lang="ur"]) .st .st-head .st-lead, html:is([lang="ar"], [lang="ur"]) .st .st-list-main > .st-count { line-height: 1.5; }
 @media (max-width: 699px) { .st > .st-head:first-child { margin-top: -16px; } }
-@media (min-width: 700px) { .st-head .st-lead { margin-bottom: 20px; font-size: 16.5px; } }
+@media (min-width: 700px) { .st-head .st-lead { margin-bottom: 16px; font-size: 16.5px; } }
 
 /* All among the store page's categories: a chip on a phone and a tablet; a computer's panels leave it to the heading */
 @media (min-width: 1000px) { .st-tile-all { display: none; } }
