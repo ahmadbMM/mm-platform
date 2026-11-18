@@ -9,6 +9,8 @@ html:is([lang="ar"], [lang="ur"]) .mm-site { font-family: var(--cs-font-ar), var
 .mm-site a { color: inherit; text-decoration: none; }
 .mm-site h1, .mm-site h2, .mm-site h3 { font-weight: 800; letter-spacing: -.5px; }
 html:is([lang="ar"], [lang="ur"]) .mm-site :is(h1, h2, h3) { letter-spacing: 0 !important; line-height: 1.15 !important; }
+/* Urdu's taller letters need more room than Arabic's: 1.15 clipped them, and the forms give their titles 1.4 */
+html[lang="ur"] .mm-site :is(h1, h2, h3) { line-height: 1.4 !important; }
 /* Devanagari and Bengali marks reach well above and below the line: a heading's lines would run into each other at the
    tight Latin line-heights (About's .92), as the volunteer portal found */
 html:is([lang="hi"], [lang="ne"], [lang="bn"]) .mm-site :is(h1, h2, h3) { letter-spacing: 0 !important; line-height: 1.45 !important; }

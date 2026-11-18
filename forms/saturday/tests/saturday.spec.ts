@@ -502,7 +502,7 @@ test('Urdu takes the Arabic-script faces: no letter-spacing on the small labels,
   await open(page, '?lang=ur');
   await expect(page.locator('html')).toHaveAttribute('lang', 'ur');
   const st = await page.evaluate(() => {
-    const e = getComputedStyle(document.querySelector('.eyebrow')!), t = getComputedStyle(document.querySelector('.title')!);
+    const e = getComputedStyle(document.querySelector('#v-landing .eyebrow')!), t = getComputedStyle(document.querySelector('#v-landing .title')!); // the form's own, not a site element of the same class
     return { ls: e.letterSpacing, ef: e.fontFamily, tf: t.fontFamily, lh: parseFloat(t.lineHeight) / parseFloat(t.fontSize) };
   });
   expect(['0px', 'normal']).toContain(st.ls);
