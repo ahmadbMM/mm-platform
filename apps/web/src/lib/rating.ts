@@ -7,8 +7,8 @@ import { BOOKING_URL } from "./links";
 // The rating is the booking app's own (app.src.html, "Post-ride rating: an unskippable page",
 // 2026-10-03). What it asks depends on the ride: a circuit or Petromin ride (and any other kind)
 // scores service and the bike (the owner, 2026-11-03: the experience question went); a Saturday
-// social ride scores the ride (check-in and collection, staff, bike, route), the breakfast
-// (restaurant, atmosphere, food, service) and the whole experience. Every score is 1-10, and one of
+// social ride scores the ride, the bike, the breakfast and the whole experience, and a ride or a
+// breakfast scored low opens its parts (RG_IF_LOW, 2026-11-18). Every score is 1-10, and one of
 // 8 or under carries the rider's reason. It goes to customer_booking_update as the booking app
 // sends it: rating_bike and rating_exp (the bike, and the ride's headline score: a Saturday's
 // overall, any other ride's service), feedback, and rating_detail
@@ -35,6 +35,11 @@ export const RG_FORMS: Record<RatingForm, ReadonlyArray<readonly [string, readon
   rental: [["service", []], ["bike", []]],
   social: [["ride", ["ride_checkin", "ride_staff", "ride_bike", "ride_route"]], ["breakfast", ["bf_restaurant", "bf_atmosphere", "bf_food", "bf_service"]], ["overall", []]],
 };
+/** The Saturday ride's parts asked only when their group scores low (the booking app's RG_IF_LOW; the owner,
+ *  2026-11-18: "shorten the rating of the saturday social ride as it is too long"): a ride at or under the low
+ *  score opens check-in, staff and route, such a breakfast its four. The bike is asked of every rider on one of
+ *  ours, as a question of its own. */
+export const RG_IF_LOW: ReadonlySet<string> = new Set(["ride_checkin", "ride_staff", "ride_route", "bf_restaurant", "bf_atmosphere", "bf_food", "bf_service"]);
 const BIKE_KEYS = new Set(["bike", "ride_bike"]);
 const BREAKFAST_KEYS = new Set(["breakfast", "bf_restaurant", "bf_atmosphere", "bf_food", "bf_service"]);
 const KEY = /^[a-z_]{1,24}$/;
@@ -59,14 +64,30 @@ export const rideWord = (kind: string | null | undefined, sessionId?: string | n
 export const ratingNoBike = (ownBike: boolean, s: { kind?: string; bikes?: boolean } | null | undefined, sessionId: string): boolean =>
   ownBike || (s ? s.bikes === false || isNonBike(s.kind, sessionId) : isNonBike(null, sessionId));
 
-/** The questions a ride asks, as [question, sub-questions]: no bike question for a rider on their
- *  own bike or an activity with none, no breakfast once the rider says they did not stay. */
-export function questionTree(form: RatingForm, o: { noBike?: boolean; skipBf?: boolean } = {}): Array<[string, string[]]> {
-  return RG_FORMS[form]
-    .filter(([k]) => !(o.noBike && k === "bike") && !(o.skipBf && k === "breakfast"))
-    .map(([k, sub]) => [k, sub.filter((x) => !(o.noBike && x === "ride_bike"))]);
+export type TreeOpts = {
+  noBike?: boolean; skipBf?: boolean;
+  /** The scores so far: a group at or under `low` opens its RG_IF_LOW parts. */
+  s?: Record<string, unknown>;
+  /** The low score (rgLowFor); left out, the form's default. */
+  low?: number;
+};
+/** The questions a ride asks, as [question, parts] in page order: no bike question for a rider on their
+ *  own bike or an activity with none, no breakfast once the rider says they did not stay. A part asked of
+ *  everyone (the Saturday bike) is a question of its own; a part asked only after a low score sits under
+ *  its group once the group is low. */
+export function questionTree(form: RatingForm, o: TreeOpts = {}): Array<[string, string[]]> {
+  const low = o.low ?? rgLowFor(form);
+  const out: Array<[string, string[]]> = [];
+  for (const [k, sub] of RG_FORMS[form]) {
+    if ((o.noBike && k === "bike") || (o.skipBf && k === "breakfast")) continue;
+    const v = o.s?.[k];
+    const isLow = typeof v === "number" && v >= 1 && v <= low;
+    out.push([k, sub.filter((x) => RG_IF_LOW.has(x) && isLow)]);
+    for (const x of sub) if (!RG_IF_LOW.has(x) && !(o.noBike && x === "ride_bike")) out.push([x, []]);
+  }
+  return out;
 }
-export const questionKeys = (form: RatingForm, o: { noBike?: boolean; skipBf?: boolean } = {}) =>
+export const questionKeys = (form: RatingForm, o: TreeOpts = {}) =>
   questionTree(form, o).flatMap(([k, sub]) => [k, ...sub]);
 
 /** What a rider must fix before the rating can be sent: per question, "pick" (no score) or "why"
@@ -111,15 +132,18 @@ export function cleanRating(body: unknown, low: number = RG_LOW): { entryId: str
   const form: RatingForm = b.form;
   low = rgLowFor(form, low);
   const skipBf = form === "social" && b.skipBf === true;
-  const asked = new Set(questionKeys(form, { skipBf }));
+  const any = new Set(RG_FORMS[form].flatMap(([k, sub]) => [k, ...sub]).filter((k) => !(skipBf && BREAKFAST_KEYS.has(k))));
   const sIn = isObj(b.s) ? b.s : {}, whyIn = isObj(b.why) ? b.why : {};
   const s: Record<string, number> = {}, why: Record<string, string> = {};
   for (const [k, v] of Object.entries(sIn).slice(0, 20)) {
-    if (!KEY.test(k) || !asked.has(k)) continue;
+    if (!KEY.test(k) || !any.has(k)) continue;
     const n = score(v);
     if (n === null) return null;
     s[k] = n;
   }
+  // A part whose group scored high was not asked (RG_IF_LOW, 2026-11-18): a page from before sends it, and it is dropped.
+  const asked = new Set(questionKeys(form, { skipBf, s, low }));
+  for (const k of Object.keys(s)) if (!asked.has(k)) delete s[k];
   for (const [k, v] of Object.entries(whyIn).slice(0, 20)) {
     const w = cleanText(v, REASON_MAX);
     if (KEY.test(k) && s[k] !== undefined && s[k] <= low && w) why[k] = w;

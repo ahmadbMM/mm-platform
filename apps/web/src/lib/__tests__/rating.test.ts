@@ -41,8 +41,13 @@ describe("the questions", () => {
     expect(formOf("vlap")).toBe("rental");
     expect(questionKeys(formOf("vlap"), { noBike: !ticketSession({ id: "v", session_date: "2099-10-26", event_kind: "community", ride_kind: "vlap", needs_approval: false, paid_ride: true })!.bikes })).toEqual(["service"]);
     expect(isRun("vlap", "2099-10-26-vl")).toBe(false); // a race, not Run for Her's run
-    expect(questionKeys("social")).toEqual(Object.keys(SOCIAL));
-    expect(questionKeys("social", { noBike: true, skipBf: true })).toEqual(["ride", "ride_checkin", "ride_staff", "ride_route", "overall"]);
+    // the Saturday ride (2026-11-18): four questions, the bike its own; a low ride or breakfast opens its parts
+    expect(questionKeys("social")).toEqual(["ride", "ride_bike", "breakfast", "overall"]);
+    expect(questionKeys("social", { s: SOCIAL })).toEqual(["ride", "ride_bike", "breakfast", "bf_restaurant", "bf_atmosphere", "bf_food", "bf_service", "overall"]); // breakfast 6
+    expect(questionKeys("social", { s: { ...SOCIAL, ride: 8 } })).toEqual(["ride", "ride_checkin", "ride_staff", "ride_route", "ride_bike", "breakfast", "bf_restaurant", "bf_atmosphere", "bf_food", "bf_service", "overall"]);
+    expect(questionKeys("social", { s: { ...SOCIAL, ride: 8 }, low: 6 })).toEqual(["ride", "ride_bike", "breakfast", "bf_restaurant", "bf_atmosphere", "bf_food", "bf_service", "overall"]); // an 8 is not low at 6
+    expect(questionKeys("social", { noBike: true, skipBf: true })).toEqual(["ride", "overall"]);
+    expect(questionKeys("social", { noBike: true, skipBf: true, s: { ride: 5 } })).toEqual(["ride", "ride_checkin", "ride_staff", "ride_route", "overall"]);
   });
   it("wants every score, and a reason for 8 or under", () => {
     expect(ratingErrors(["service", "bike"], { service: 9 }, {})).toEqual({ bike: "pick" });
@@ -62,10 +67,21 @@ describe("cleanRating", () => {
   });
   it("keeps a social ride's rating, the breakfast skipped or not", () => {
     const why = { ride_bike: "Seat too low", breakfast: "Crowded", bf_food: "Cold" };
-    expect(cleanRating({ entryId: "q2", form: "social", s: SOCIAL, why })!.patch).toEqual({ rating_bike: 7, rating_exp: 9, feedback: null, rating_detail: { form: "social", s: SOCIAL, why } });
+    // a 9 ride: its check-in, staff and route were not asked, so a page that still sends them has them dropped
+    const asked = Object.fromEntries(Object.entries(SOCIAL).filter(([k]) => !["ride_checkin", "ride_staff", "ride_route"].includes(k)));
+    expect(cleanRating({ entryId: "q2", form: "social", s: SOCIAL, why })!.patch).toEqual({ rating_bike: 7, rating_exp: 9, feedback: null, rating_detail: { form: "social", s: asked, why } });
     const skipped = cleanRating({ entryId: "q2", form: "social", s: { ...SOCIAL, breakfast: 2 }, why: { ride_bike: "Seat" }, skipBf: true })!.patch.rating_detail!;
     expect(skipped.skip_bf).toBe(true);
-    expect(Object.keys(skipped.s)).toEqual(["ride", "ride_checkin", "ride_staff", "ride_bike", "ride_route", "overall"]);
+    expect(Object.keys(skipped.s)).toEqual(["ride", "ride_bike", "overall"]);
+    // a happy rider's four answers are the whole rating
+    const happy = { ride: 10, ride_bike: 10, breakfast: 9, overall: 10 };
+    expect(cleanRating({ entryId: "q2", form: "social", s: happy, why: {} })!.patch).toEqual({ rating_bike: 10, rating_exp: 10, feedback: null, rating_detail: { form: "social", s: happy, why: {} } });
+    // a low ride must have its parts, each low one with its reason
+    const low = { ride: 6, ride_bike: 10, breakfast: 10, overall: 9 };
+    expect(cleanRating({ entryId: "q2", form: "social", s: low, why: { ride: "Slow" } })).toBeNull();
+    expect(cleanRating({ entryId: "q2", form: "social", s: { ...low, ride_checkin: 10, ride_staff: 10, ride_route: 5 }, why: { ride: "Slow" } })).toBeNull();
+    expect(cleanRating({ entryId: "q2", form: "social", s: { ...low, ride_checkin: 10, ride_staff: 10, ride_route: 5 }, why: { ride: "Slow", ride_route: "Too long" } })!.patch.rating_detail!.s)
+      .toEqual({ ...low, ride_checkin: 10, ride_staff: 10, ride_route: 5 });
   });
   it("refuses a rating that is not whole", () => {
     const ok = { entryId: "q1", form: "rental", s: { service: 9 }, why: {} };
@@ -226,7 +242,10 @@ describe("the breakfast box's sharing line", () => {
     expect(html.split(SHARE)).toHaveLength(2);
     // right after the breakfast question's own label, before its scale and its sub-questions
     expect(html).toMatch(/id="rg[^"]*-q1-breakfast-l">Breakfast<\/div><p class="rg-share">Your breakfast answers may be shared/);
-    expect(html.indexOf(SHARE)).toBeLessThan(html.indexOf("-q1-bf_restaurant"));
+    expect(html).not.toContain("-q1-bf_restaurant"); // the parts wait for a low breakfast (2026-11-18)
+    expect(html).not.toContain("-q1-ride_checkin");
+    expect(html).toContain("-q1-ride_bike-l"); // the bike is a question of its own
+    expect(html).not.toMatch(/rg-sub/);
   });
   it("is not on a rental's form", () => {
     expect(draw("rental")).not.toContain("rg-share");

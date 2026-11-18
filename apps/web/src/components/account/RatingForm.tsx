@@ -4,12 +4,13 @@ import "./rating.css";
 import { useId, useState, type ReactNode } from "react";
 import { useL, useTxLocale } from "@/i18n/TxProvider";
 import { fill } from "@/i18n/tx";
-import { NOTE_MAX, REASON_MAX, RG_FORMS, RG_LOW, questionKeys, questionTree, ratingErrors, rgLowFor, type RatingForm as Form } from "@/lib/rating";
+import { NOTE_MAX, REASON_MAX, RG_FORMS, RG_IF_LOW, RG_LOW, questionKeys, questionTree, ratingErrors, rgLowFor, type RatingForm as Form } from "@/lib/rating";
 import { ratingWords, type RatingWords } from "./RatingForm.words";
 
 // The post-ride rating's questions, as the booking app asks them (lib/rating.ts): each question a
 // 1-10 scale, a sub-question indented under its main one, each main question and its subs in one
-// box; a score of 8 or under opens a box asking why, which is then required (8 is the booking app's default; admins change it there). The breakfast box has
+// box; a Saturday ride or breakfast scored low opens its parts (RG_IF_LOW, 2026-11-18), and the bike is a
+// question of its own; a score of 8 or under opens a box asking why, which is then required (8 is the booking app's default; admins change it there). The breakfast box has
 // its own "I did not stay for breakfast". It goes to /api/account/rate with the account cookie.
 // RateRide (a card on My Account) and RatingGate (the pop-up a rider cannot skip) both use it.
 // Under the breakfast heading, one quiet line says those answers may reach the restaurant without
@@ -51,7 +52,7 @@ export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, r
   // a card), and an id must name one element only.
   const inst = useId();
   const id = (k: string) => `rg${inst}-${entryId}-${k}`;
-  const opts = { noBike, skipBf };
+  const opts = { noBike, skipBf, s, low };
   const tree = questionTree(form, opts);
   // A question's heading. The breakfast box's names the restaurant, the name where the language puts
   // it and in its own direction (a <bdi>): a name in English reads right on an Arabic page, and an
@@ -141,7 +142,7 @@ export default function RatingForm({ entryId, form, noBike, restaurant, rgLow, r
   return (
     <form className="rg-form" onSubmit={submit} noValidate>
       <div className="rg-list">
-        {RG_FORMS[form].map(([k]) => {
+        {RG_FORMS[form].flatMap(([k, sub]) => [k, ...sub.filter((x) => !RG_IF_LOW.has(x))]).map((k) => {
           const q = tree.find((x) => x[0] === k);
           const skip = k === "breakfast" ? (
             <button type="button" className={`rg-skip${skipBf ? " on" : ""}`} aria-pressed={skipBf} onClick={() => setSkipBf((x) => !x)}>
