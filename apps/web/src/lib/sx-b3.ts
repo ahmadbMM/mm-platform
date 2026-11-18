@@ -113,7 +113,8 @@ export function quoteOf(raw: unknown): Quote | null {
   const slot = typeof sl.day === "string" && DAY.test(sl.day) && typeof sl.time === "string" && /^[a-z0-9]{1,12}$/.test(sl.time) ? { day: sl.day, time: sl.time } : null;
   return {
     state, no, items: state === "open" ? items : [], fulfil: f, slot, handover: handoverPickOf(o.handover),
-    name: str(o.name, 60), phone: storePhone(str(o.phone, 20)) ? str(o.phone, 20) : "",
+    // the mobile as a customer writes it (05X XXX XXXX), from the database's 9665XXXXXXXX
+    name: str(o.name, 60), phone: ((p) => (p ? `0${p.slice(3)}` : ""))(storePhone(str(o.phone, 20))),
     expires: typeof o.expires_at === "string" ? o.expires_at : "", orderNo: typeof o.order_no === "number" ? o.order_no : null,
   };
 }
