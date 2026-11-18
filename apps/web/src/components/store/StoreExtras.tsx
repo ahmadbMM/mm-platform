@@ -6,22 +6,27 @@ import type { W2Text } from "./w2.text";
 import { NoPhoto } from "./bits";
 import { StIcon } from "./icons";
 import { MapThumb } from "./w2-icons";
+import "./sx-B1.css";
 
 // The store page's pieces around the list (chain w2), drawn by the server: the category tiles that lead to each
 // category's page (O01-E), the category chips of a category's page (F02), the brand band under the list (F03) and the
 // showroom (F101).
 
-/** A tile per category with a product: its first product's photo on white and the category's name (O01-E). */
+/** The store page's categories (O01-E, SM02-B): All (this page, filled) and each category with a product, leading to its
+ *  page. On a phone and a tablet a row of chips like a category page's, so the first products show in the first screen;
+ *  on a computer a row of short panels, each with its first product's photo on the soft panel and the category's name
+ *  (All is the heading there). */
 export function CategoryTiles({ tiles, t }: { tiles: { cat: StoreCategory; image: string | null }[]; t: StoreText }) {
   if (tiles.length < 2) return null;
   return (
     <nav className="st-tiles" aria-label={t.catsLabel}>
       <ul>
-        {tiles.map(({ cat, image }, i) => (
+        <li className="st-tile-all"><Link href="/store" className="st-tile" aria-current="page"><span className="st-tile-name">{t.cats.all}</span></Link></li>
+        {tiles.map(({ cat, image }) => (
           <li key={cat}>
             <Link href={categoryHref(cat)} className="st-tile">
-              <span className="st-tile-img">
-                {image ? <img src={sized(image, 640)} srcSet={srcSet(image)} sizes="(max-width: 700px) 33vw, 200px" alt="" loading={i < 3 ? undefined : "lazy"} decoding="async" /> : <NoPhoto />}
+              <span className="st-tile-img" aria-hidden="true">
+                {image ? <img src={sized(image, 640)} srcSet={srcSet(image)} sizes="(max-width: 999px) 1px, 160px" alt="" loading="lazy" decoding="async" /> : <NoPhoto />}
               </span>
               <span className="st-tile-name">{t.cats[cat] ?? cat}</span>
             </Link>

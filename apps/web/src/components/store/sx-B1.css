@@ -1,0 +1,54 @@
+/* The store's lists on every screen (the user, 2026-11-18: "do all" of the store and Experiences mobile report, builder
+   B1): the heading and its one-line lead (SM02-B), the Sort button (SM13-B, P11, P18), the filters that are on as pills
+   (SM13-B), a bike's wider card (SM03-B, SM08-B) and the card's fixed slots (SM04-B, P17). Existing rules changed in
+   place in store.css; the classes below are new. Tokens from the top of store.css; logical properties only. */
+
+/* the heading of a list page: a tighter top on a phone, so the first products are in the first screen (SM02-B) */
+.st .st-head h1 { margin-bottom: 6px; }
+.st-head .st-lead { margin-bottom: 12px; font-size: 15px; line-height: 1.4; }
+/* a one-line lead and the count are no paragraphs to read: Arabic's 1.85 line (site.css) would push the list down */
+html:is([lang="ar"], [lang="ur"]) .st .st-head .st-lead, html:is([lang="ar"], [lang="ur"]) .st .st-list-main > .st-count { line-height: 1.5; }
+@media (max-width: 699px) { .st > .st-head:first-child { margin-top: -16px; } }
+@media (min-width: 700px) { .st-head .st-lead { margin-bottom: 16px; font-size: 16.5px; } }
+
+/* All among the store page's categories: a chip on a phone and a tablet; a computer's panels leave it to the heading */
+@media (min-width: 1000px) { .st-tile-all { display: none; } }
+
+/* Sort: a native menu at 16px drawn as a button with a drawn mark at its start; its words ("Sort by") are read by screen
+   readers and shown beside it only beside the computer's side panel */
+.st-sort > span:first-child { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.st-sort-ic { position: absolute; top: 50%; inset-inline-start: 16px; margin-top: -9px; color: #1a1919; pointer-events: none; }
+@media (min-width: 1000px) {
+  .st-list.has-side .st-tools { display: flex; justify-content: flex-end; }
+  .st-list.has-side .st-sort > span:first-child { position: static; width: auto; height: auto; margin: 0; overflow: visible; clip: auto; }
+  .st-list.has-side .st-sort select { width: auto; padding-inline-start: 16px; }
+  .st-list.has-side .st-sort-ic { display: none; }
+}
+
+/* the filters that are on, as pills above the list: each takes itself off (SM13-B) */
+.st-fpills { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0 10px; }
+.st-fpill { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; max-width: 100%; padding-inline: 14px 12px; box-sizing: border-box; border: 1px solid #1a1919; border-radius: 999px; background: #fff; color: #1a1919; font: inherit; font-size: 14px; font-weight: 600; line-height: 1.25; cursor: pointer; transition: background-color .15s ease; }
+.st-fpill > span:not(.mm-sr), .st-fpill > bdi { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-fpill .st-ic { flex: none; color: #4a4843; }
+.st-fpill-dot { width: 14px; height: 14px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(26, 25, 25, .2); }
+.st-fpill:focus-visible { outline: 2.5px solid #077a4b; outline-offset: 2px; }
+@media (hover: hover) { .st-fpill:hover { background: var(--st-well); } }
+@media (prefers-reduced-motion: reduce) { .st-fpill { transition: none; } }
+
+/* a card's status slot: "Only N left" or a certified bike's warranty, one line, kept when empty (SM04-B) */
+.st-card-status { display: flex; align-items: center; min-height: 17px; min-width: 0; white-space: nowrap; overflow: hidden; }
+
+/* a bike's card (SM03-B): the grid gives it the whole row on a phone, half of it on a tablet and two of four columns on a
+   computer (store.css .st-grid); its photo box is wider in step (--st-ratio), so the photos of a row stand as tall */
+.st-card.is-wide { grid-column: span var(--st-wide, 2); }
+.st-card.is-wide .st-card-img { aspect-ratio: var(--st-ratio, 4 / 3); }
+/* alone in its row on a phone: the price beside the brand and the name, so it is in the first screen; a slot with nothing
+   in it takes no room (no other card stands beside it to line up with) */
+@media (max-width: 699px) {
+  .st-card.is-wide .st-card-body { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 3px; align-content: start; }
+  .st-card.is-wide .st-card-body > * { grid-column: 1 / -1; }
+  .st-card.is-wide .st-card-body > .st-brand { grid-column: 1; grid-row: 1; }
+  .st-card.is-wide .st-card-body > .st-card-name { grid-column: 1; grid-row: 2; min-height: 0; -webkit-line-clamp: 1; }
+  .st-card.is-wide .st-card-body > .st-card-price { grid-column: 2; grid-row: 1 / span 2; align-self: center; justify-content: flex-end; min-height: 0; margin: 0; padding: 0; font-size: 18px; }
+  .st-card.is-wide .st-card-body > :empty { display: none; }
+}

@@ -149,28 +149,30 @@ export function quickRoom(cart: readonly CartItem[], v: Pick<StoreVariant, "id" 
 /** The colours a card shows as dots (F04): every one the product comes in, in staff's order. */
 export const cardColours = (p: StoreProduct) => (p.kind === "gift_card" ? [] : optionsOf(p).colours);
 
-/** The day a card says the product can be had (F05), from the delivery staff set: Jeddah delivery first (the store's
- *  own city), then the courier for what may be shipped, then the showroom's ready day. `by`: the days are a range, so
- *  the card names its last day. Null when no way names its days. */
-export type CardWhen = { way: "jeddah" | "ksa" | "pickup"; day: string; by: boolean };
+/** The day a card says the product can be had (F05), from the delivery staff set, as the product page's first way
+ *  promises it (SM04-B, the user's "do all" 2026-11-18: a card promised Jeddah delivery while the product page opened on
+ *  Collect): the showroom's ready day while staff offer pickup, else Jeddah delivery, else the courier for what may be
+ *  shipped. `by`: the days are a range, so the card names its last day. `day` null: that way names no days, so the card
+ *  names the way (the product page shows the showroom's address there). Null when no way is offered. */
+export type CardWhen = { way: "jeddah" | "ksa" | "pickup"; day: string | null; by: boolean };
 export function cardWhen(s: PaySettings, shipKsa: boolean, today: string): CardWhen | null {
-  const ways = deliveryOptions(s, { subtotal: 0, shipKsa });
-  for (const id of ["jeddah", "ksa", "pickup"] as const) {
-    const o = ways.find((w) => w.id === id);
-    const r = o ? deliveryRange(o.days, today) : null;
-    if (r) return { way: id, day: r.to, by: r.from !== r.to };
-  }
-  return null;
+  const first = deliveryOptions(s, { subtotal: 0, shipKsa })[0];
+  if (!first) return null;
+  const r = deliveryRange(first.days, today);
+  return r ? { way: first.id, day: r.to, by: r.from !== r.to } : { way: first.id, day: null, by: false };
 }
 
 export type WhenWords = {
   today: string; tomorrow: string; byTomorrow: string; by: (d: string) => string; inJeddah: (d: string) => string;
   readyToday: string; readyTomorrow: string; ready: (d: string) => string;
+  /** A way's own name, for a way that names no days ("Collect in Jeddah"); without it such a card says nothing. */
+  ways?: Partial<Record<CardWhen["way"], string>>;
 };
 const nextDay = (iso: string) => new Date(Date.parse(`${iso}T12:00:00Z`) + 86400000).toISOString().slice(0, 10);
 /** The card's chip in the page's language: "Tomorrow in Jeddah", "By Thu 19 Nov in Jeddah", "By Mon 23 Nov" (the courier),
  *  "Ready tomorrow" (the showroom). Written by the server, which has every language's dates. */
 export function whenText(w: CardWhen, today: string, intl: string, t: WhenWords): string {
+  if (w.day === null) return t.ways?.[w.way] ?? "";
   const rel = w.day === today ? "today" : w.day === nextDay(today) ? "tomorrow" : null;
   const date = new Intl.DateTimeFormat(intl, { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${w.day}T12:00:00Z`));
   if (w.way === "pickup") return rel === "today" ? t.readyToday : rel === "tomorrow" ? t.readyTomorrow : t.ready(date);
@@ -182,7 +184,7 @@ export function whenText(w: CardWhen, today: string, intl: string, t: WhenWords)
  *  says the same, so the server writes the two once. */
 export type CardWhens = { ship: { text: string; way: CardWhen["way"] } | null; local: { text: string; way: CardWhen["way"] } | null };
 export function cardWhens(s: PaySettings, today: string, intl: string, t: WhenWords): CardWhens {
-  const of = (ship: boolean) => { const w = cardWhen(s, ship, today); return w ? { text: whenText(w, today, intl, t), way: w.way } : null; };
+  const of = (ship: boolean) => { const w = cardWhen(s, ship, today); const text = w ? whenText(w, today, intl, t) : ""; return w && text ? { text, way: w.way } : null; };
   return { ship: of(true), local: of(false) };
 }
 /** A card's chip: none for what is sold out or a gift card (nothing is delivered). */

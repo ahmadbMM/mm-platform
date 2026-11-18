@@ -1,0 +1,26 @@
+/* The header and its search on every screen (the user, 2026-11-18: "do all" of the store and Experiences mobile report,
+   builder B1; SM11-B, P12, P23). Existing rules changed in place in site.css; the classes below are new. */
+
+/* the menu marks the section whose pages are open */
+.mm-nav-sheet a[aria-current="page"] { color: #03ff89; }
+
+/* below 360px the globe leaves the bar (site.css) and the menu holds the languages instead: one Language row that opens */
+.mm-nav-sheet-lang { display: none; }
+@media (max-width: 359px) { .mm-nav-sheet-lang { display: block; } }
+.mm-nav-sheet-lang summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 14px 0; border-bottom: 1px solid rgba(255, 255, 255, .08); font-size: 22px; font-weight: 700; cursor: pointer; list-style: none; }
+.mm-nav-sheet-lang summary::-webkit-details-marker { display: none; }
+.mm-nav-sheet-lang summary bdi { font-size: 15px; font-weight: 500; color: rgba(251, 249, 244, .65); }
+.mm-nav-sheet .mm-nav-sheet-lang a { min-height: 44px; box-sizing: border-box; padding-block: 10px; padding-inline: 14px 0; font-size: 17px; font-weight: 500; }
+.mm-nav-sheet .mm-nav-sheet-lang a[aria-current="true"] { color: #03ff89; font-weight: 700; }
+.mm-nav-sheet-lang summary:focus-visible { outline: 2px solid #03ff89; outline-offset: 2px; }
+
+/* on a phone the search is a page of its own: the whole screen, its own Back at the start, the list scrolling with it */
+.mm-search-back { display: none; }
+@media (max-width: 699px) {
+  .mm-search { overflow-y: auto; overscroll-behavior: contain; background: #fff; }
+  .mm-search-scrim { display: none; }
+  .mm-search-box { min-height: 100%; box-sizing: border-box; padding-top: calc(6px + env(safe-area-inset-top, 0px)); box-shadow: none; border-bottom: 0; }
+  .mm-search-list { max-height: none; overflow: visible; }
+  .mm-search-back { display: inline-flex; align-items: center; justify-content: center; margin-inline-start: -12px; color: #1a1919 !important; }
+  .mm-search-mag, .mm-search-x { display: none; }
+}

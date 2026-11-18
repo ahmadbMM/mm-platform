@@ -113,15 +113,25 @@ describe("a card", () => {
     expect(quickRoom([{ variant: U(999), qty: 5 }], { id: helmet.id.toUpperCase(), stock: 50 })).toBe(10);
     expect(quickRoom([{ variant: helmet.id.toLowerCase(), qty: 10 }], { id: helmet.id, stock: 50 })).toBe(0);
   });
-  it("names the day it can be had from the delivery staff set (F05): Jeddah first, then the courier, then the showroom", () => {
+  it("names the day it can be had from the delivery staff set (F05), as the product page's first way: the showroom, then Jeddah, then the courier (SM04-B)", () => {
     const set = (d: Record<string, unknown>) => paySettings({ "pay.enabled": true, "store.delivery": d });
     const today = "2026-11-16"; // a Monday
     const both = set({ pickup: { on: true, days: "0" }, jeddah: { on: true, fee: 30, days: "1" }, ksa: { on: true, fee: 45, days: "3-5" } });
-    expect(cardWhen(both, true, today)).toEqual({ way: "jeddah", day: "2026-11-17", by: false });
+    expect(cardWhen(both, true, today)).toEqual({ way: "pickup", day: "2026-11-16", by: false });
+    const noPickup = set({ pickup: { on: false }, jeddah: { on: true, fee: 30, days: "1" }, ksa: { on: true, fee: 45, days: "3-5" } });
+    expect(cardWhen(noPickup, true, today)).toEqual({ way: "jeddah", day: "2026-11-17", by: false });
+    const courierOnly = set({ pickup: { on: false }, jeddah: { on: false }, ksa: { on: true, fee: 45, days: "3-5" } });
+    expect(cardWhen(courierOnly, true, today)).toEqual({ way: "ksa", day: "2026-11-22", by: true }); // Friday is not counted
+    expect(cardWhen(courierOnly, false, today)).toBeNull(); // a bike is never sent by courier
     const noJeddah = set({ pickup: { on: true, days: "1-2" }, jeddah: { on: false }, ksa: { on: true, fee: 45, days: "3-5" } });
-    expect(cardWhen(noJeddah, true, today)).toEqual({ way: "ksa", day: "2026-11-22", by: true }); // Friday is not counted
+    expect(cardWhen(noJeddah, true, today)).toEqual({ way: "pickup", day: "2026-11-18", by: true });
     expect(cardWhen(noJeddah, false, today)).toEqual({ way: "pickup", day: "2026-11-18", by: true });
-    expect(cardWhen(set({ pickup: { on: false }, jeddah: { on: true } }), true, today)).toBeNull(); // no days named: no promise
+    expect(cardWhen(set({ pickup: { on: false }, jeddah: { on: true } }), true, today)).toEqual({ way: "jeddah", day: null, by: false }); // no days named: no date
+    expect(cardWhen(set({ pickup: { on: true }, jeddah: { on: true, fee: 30, days: "1" } }), true, today)).toEqual({ way: "pickup", day: null, by: false });
+    expect(cardWhen(set({ pickup: { on: false }, jeddah: { on: false }, ksa: { on: true, fee: 45, days: "3-5" } }), false, today)).toBeNull(); // no way at all
+    expect(whenText({ way: "pickup", day: null, by: false }, today, "en-GB", EN)).toBe(""); // a way without days says nothing without its name
+    expect(whenText({ way: "pickup", day: null, by: false }, today, "en-GB", { ...EN, ways: { pickup: "Collect in Jeddah" } })).toBe("Collect in Jeddah");
+    expect(cardWhens(set({ pickup: { on: true }, jeddah: { on: true, fee: 30, days: "1" } }), today, "en-GB", EN)).toEqual({ ship: null, local: null });
     const en = (w: Parameters<typeof whenText>[0]) => whenText(w, today, "en-GB", EN);
     expect(en({ way: "jeddah", day: "2026-11-17", by: false })).toBe("Tomorrow in Jeddah");
     expect(en({ way: "jeddah", day: "2026-11-16", by: false })).toBe("Today in Jeddah");
@@ -132,10 +142,10 @@ describe("a card", () => {
     expect(whenText({ way: "jeddah", day: "2026-11-17", by: false }, today, "ar-SA-u-nu-latn-ca-gregory", AR)).toBe("غداً في جدة");
     expect(whenText({ way: "jeddah", day: "2026-11-19", by: true }, today, "ar-SA-u-nu-latn-ca-gregory", AR)).toMatch(/^بحلول .*19.* في جدة$/);
     const w = cardWhens(both, today, "en-GB", EN);
-    expect(w).toEqual({ ship: { text: "Tomorrow in Jeddah", way: "jeddah" }, local: { text: "Tomorrow in Jeddah", way: "jeddah" } });
+    expect(w).toEqual({ ship: { text: "Ready today", way: "pickup" }, local: { text: "Ready today", way: "pickup" } });
     expect(whenFor(P("cap"), w)).toBeNull(); // sold out: nothing is promised
     expect(whenFor(P("gift-card"), w)).toBeNull();
-    expect(whenFor(P("da54"), w)?.text).toBe("Tomorrow in Jeddah");
+    expect(whenFor(P("da54"), w)?.text).toBe("Ready today");
   });
   it("says a certified pre-owned bike's warranty: the law's year, or staff's longer term", () => {
     expect(warrantyText({ condition: "certified", warranty_months: null }, EN)).toBe("1-year warranty");
