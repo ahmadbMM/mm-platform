@@ -385,6 +385,14 @@ describe("api/booking", () => {
     const calls2 = db({}, { ...SESSION, status: "full" });
     expect((await (await post(book, "/api/booking", { ...body, seatOnly: true })).json()).error).toBe("place_gone");
     expect(calls2.some((c) => c.fn === "customer_create_booking")).toBe(false);
+    // a party all on their own bikes takes no place: booked on a full ride all the same (bug hunt 2026-11-18)
+    const SATFULL = { ...SESSION, status: "full", event_kind: "community", ride_kind: "saturday", needs_approval: false, open_to_all: true, addons: null };
+    const calls3 = db({}, SATFULL);
+    const own = await (await post(book, "/api/booking", { ...body, group: "beg", addons: [], seatOnly: true, riders: [{ name: "", height: "180", type: "Own" }] })).json();
+    expect(own.error).not.toBe("place_gone");
+    expect(calls3.some((c) => c.fn === "customer_create_booking")).toBe(true);
+    db({}, SATFULL);
+    expect((await (await post(book, "/api/booking", { ...body, group: "beg", addons: [], seatOnly: true })).json()).error).toBe("place_gone");
     db({ customer_create_booking: () => json({ code: "P0001", message: "STALE_SESSION" }, 400) });
     const stale = await post(book, "/api/booking", body);
     expect(stale.status).toBe(401);

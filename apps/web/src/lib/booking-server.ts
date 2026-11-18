@@ -309,14 +309,15 @@ export async function makeBooking(acct: Session & { name: string; profile?: Row 
   const biz = bizOf(await loadSiteContent());
   const checked = checkBooking(input, s, a, biz.jccAccountCap, biz.eventSeatMax);
   if (!checked.ok) return checked;
-  // a place asked for on a session staff have marked full since the page was read: gone, and the rider chooses
-  if (input.seatOnly && s.full) return { ok: false, error: "place_gone" };
+  const riders = checked.riders;
+  const need = needsBike(s) ? riders.filter((r) => r.type !== "Own").length : riders.length;
+  // a place asked for on a session staff have marked full since the page was read: gone, and the rider chooses. A party
+  // all on their own bikes takes no place (the database books it as on a session that is not full; bug hunt 2026-11-18)
+  if (input.seatOnly && s.full && need > 0) return { ok: false, error: "place_gone" };
   if (s.members) {
     const m = await rpcCall<boolean>("community_member", args, fetchImpl);
     if (m.data !== true) return { ok: false, error: m.status === 0 ? "generic" : "members" };
   }
-  const riders = checked.riders;
-  const need = needsBike(s) ? riders.filter((r) => r.type !== "Own").length : riders.length;
   if (s.wlCap != null) {
     const c = await counts(s.id, fetchImpl);
     if (waitlistRefused(s, need, c.taken, c.waitlisted)) return { ok: false, error: "waitlist_full" };

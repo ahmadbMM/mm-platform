@@ -1,5 +1,7 @@
 import { payEnv } from "@/lib/pay/config";
 import { sendRefund } from "@/lib/pay/server";
+import { tabbyRefundHeld } from "@/lib/pay/tabby";
+import { storeEnv } from "@/lib/store-api";
 
 // POST /api/pay/refund: a refund staff decide in the staff page (Store > Orders, Payments > Refunds). The
 // staff page sends its own signed-in session (Authorization: Bearer <access token>); the database decides
@@ -61,7 +63,8 @@ export async function POST(req: Request) {
   const out = (await res.json().catch(() => null)) as { id?: string; status?: string; dest?: string; amount?: number; provider_id?: string | null; message?: string } | null;
   if (!res.ok || !out) return json(origin, { ok: false, error: /^[A-Z_]+/.exec(out?.message ?? "")?.[0] ?? "generic" }, res.status === 401 ? 401 : 409);
   if (out.dest === "card" && out.status === "pending" && out.id) {
-    const sent = await sendRefund({ id: out.id, provider_id: out.provider_id ?? null, amount: Number(out.amount) }, payEnv());
+    // a Tabby-paid order's refund goes to Tabby (Moyasar does not know its payment)
+    const sent = await sendRefund({ id: out.id, provider_id: out.provider_id ?? null, amount: Number(out.amount) }, payEnv(), (rf) => tabbyRefundHeld(rf, storeEnv()));
     return json(origin, { ok: sent, id: out.id, status: sent ? "done" : "failed", dest: "card", amount: out.amount, error: sent ? undefined : "gateway" }, sent ? 200 : 502);
   }
   return json(origin, { ok: true, ...out });

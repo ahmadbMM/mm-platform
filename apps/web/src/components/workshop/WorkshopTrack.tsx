@@ -26,7 +26,7 @@ export default function WorkshopTrack({ locale, whenFmt, payOpen = false }: { lo
     if (!res?.ref || paying) return;
     setPaying(true); setPayErr("");
     try {
-      const r = await fetch("/api/pay/workshop", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ref: res.ref, phone: normalizePhone(phone), lang: locale }) });
+      const r = await fetch("/api/pay/workshop", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ref: res.ref, phone: resPhone, lang: locale }) });
       const b = (await r.json().catch(() => null)) as { ok?: boolean; url?: string } | null;
       if (b?.ok && b.url && /^\/pay\/[0-9a-f-]{36}$/.test(b.url)) { window.location.assign(b.url); return; }
       setPayErr(pt.ticket.failed);
@@ -37,6 +37,9 @@ export default function WorkshopTrack({ locale, whenFmt, payOpen = false }: { lo
   const [phone, setPhone] = useState("");
   const [busy, setBusy] = useState(false);
   const [res, setRes] = useState<Res | null>(null);
+  // the phone the job shown was found with: the box may be edited after, and Pay now pays the job shown (bug hunt
+  // 2026-11-18)
+  const [resPhone, setResPhone] = useState("");
   const [msg, setMsg] = useState("");
   async function check() {
     setMsg(""); setRes(null); setBusy(true);
@@ -45,8 +48,9 @@ export default function WorkshopTrack({ locale, whenFmt, payOpen = false }: { lo
       // direction marks a phone adds around a pasted reference would never match.
       const at = ref.replace(/[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, "").trim()
         .replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c))).replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)));
-      const r = await rpc<Res>("workshop_track", { p_ref: at, p_phone: normalizePhone(phone) });
-      if (r.ok) setRes(r); else setMsg(r.error === "throttled" ? t.throttled : t.notFound);
+      const ph = normalizePhone(phone);
+      const r = await rpc<Res>("workshop_track", { p_ref: at, p_phone: ph });
+      if (r.ok) { setRes(r); setResPhone(ph); } else setMsg(r.error === "throttled" ? t.throttled : t.notFound);
     } catch { setMsg(t.error); }
     setBusy(false);
   }

@@ -36,6 +36,7 @@ export default function PhotoViewer({ photos, start, locale, name, altOf, onClos
   const pts = useRef(new Map<number, Pt>());
   const g = useRef<{ dist: number; s: number; x: number; y: number; sx: number; sy: number; moved: boolean } | null>(null);
   const lastTap = useRef(0);
+  const lastType = useRef("");
   const close = useRef(onClose);
   const atNow = useRef(at);
   useEffect(() => { close.current = onClose; atNow.current = at; });
@@ -63,6 +64,7 @@ export default function PhotoViewer({ photos, start, locale, name, altOf, onClos
     return { w: r?.width || 1, h: r?.height || 1 };
   }
   function down(e: RPointerEvent<HTMLDivElement>) {
+    lastType.current = e.pointerType;
     try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* an old browser */ }
     pts.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     const ps = [...pts.current.values()];
@@ -122,7 +124,12 @@ export default function PhotoViewer({ photos, start, locale, name, altOf, onClos
         <button type="button" className="st-viewer-x" onClick={() => onClose(at)} aria-label={t.close}><Ic name="close" size={22} /></button>
       </div>
       <div className="st-viewer-stage" ref={stage} onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
-        onDoubleClick={() => setZ(z.s > 1 ? FLAT : { s: 2.5, x: 0, y: 0 })} onWheel={wheel}>
+        onDoubleClick={() => {
+          // a mouse's double click alone: a phone's double tap was zoomed by up(), and the dblclick the browser then
+          // fires would zoom it straight back out (bug hunt 2026-11-18)
+          if (lastType.current !== "mouse") return;
+          setZ(z.s > 1 ? FLAT : { s: 2.5, x: 0, y: 0 });
+        }} onWheel={wheel}>
         <img key={src} src={sized(src, 1280)} srcSet={srcSet(src)} sizes="100vw" alt={alt} draggable={false}
           style={{ transform: `translate3d(${z.x}px, ${z.y}px, 0) scale(${z.s})` }} className={z.s > 1 ? "zoomed" : undefined} />
       </div>

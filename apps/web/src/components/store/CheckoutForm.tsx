@@ -10,7 +10,8 @@ import type { PaySettings } from "@/lib/pay/settings";
 import { linePhoto, pick, sar, variantLabel, vatIn, type StoreProduct } from "@/lib/store-core";
 import { deliveryOptions, type Fulfil } from "@/lib/store-delivery";
 import { checkoutBody, EMPTY_ADDRESS, refusalPlace, type Address, type Contact } from "@/lib/store-form";
-import { slotDays, type District, type Slots } from "@/lib/store-settings";
+import { slotDays, slotTimes, type District, type Slots } from "@/lib/store-settings";
+import { riyadhClock } from "@/lib/workshop-days";
 import {
   checkoutMoney, checkoutProblems, dayLabel, digitalOnly, districtOutcome, fieldCheck, firstOpen, hasBike, hasGiftCard, nextStep, stepOfField,
   stepState, stepsFor, timeLabel, type Check, type StepId, type Way,
@@ -145,7 +146,10 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
   const blocked = lines.some((l) => l.issue);
   const steps = stepsFor(way);
   const slotsOn = way === "jeddah" && slots ? slots : null;
-  const problems = checkoutProblems({ way, contact: draft.contact, address: draft.address, slot: draft.slot, slots, today, districts });
+  // the Riyadh clock (this form is drawn in the browser only): today's delivery windows already started are not offered
+  // (bug hunt 2026-11-18)
+  const now = riyadhClock(new Date());
+  const problems = checkoutProblems({ way, contact: draft.contact, address: draft.address, slot: draft.slot, slots, today, districts, now });
   const [view, setView] = useState<{ open: StepId; seen: StepId[] }>(() => {
     // a way nobody picked yet (not on the cart, not here before) is asked for, even though one is ticked to start with
     const fix = firstOpen(steps, problems);
@@ -302,7 +306,8 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
     setBusy(false);
   }
 
-  const days = slotsOn ? slotDays(slotsOn, today) : [];
+  const days = slotsOn ? slotDays(slotsOn, today, now) : [];
+  const times = slotsOn ? (draft.slot?.day && days.includes(draft.slot.day) ? slotTimes(slotsOn, draft.slot.day, now) : slotsOn.times) : [];
   const slotText = (s: { day: string; time: string } | null) => {
     const tm = s && slotsOn?.times.find((x) => x.id === s.time);
     return s && tm && days.includes(s.day) ? `${dayLabel(s.day, intl)} · ${timeLabel(tm, intl)}` : "";
@@ -353,8 +358,8 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
             <Pills name="st-co-slot-day" label={w.slotDay} value={draft.slot && days.includes(draft.slot.day) ? draft.slot.day : null}
               items={days.map((d) => ({ value: d, label: dayLabel(d, intl) }))}
               onPick={(d) => { setDraft((x) => ({ ...x, slot: { day: d, time: x.slot?.time ?? "" } })); clear(["slot"]); }} />
-            <Pills name="st-co-slot-time" label={w.slotTime} value={draft.slot?.time && slotsOn.times.some((x) => x.id === draft.slot?.time) ? draft.slot.time : null}
-              items={slotsOn.times.map((x) => ({ value: x.id, label: timeLabel(x, intl) }))}
+            <Pills name="st-co-slot-time" label={w.slotTime} value={draft.slot?.time && times.some((x) => x.id === draft.slot?.time) ? draft.slot.time : null}
+              items={times.map((x) => ({ value: x.id, label: timeLabel(x, intl) }))}
               onPick={(tm) => { setDraft((x) => ({ ...x, slot: { day: x.slot?.day ?? "", time: tm } })); clear(["slot"]); }} error={errs.slot} />
           </div>
         )}

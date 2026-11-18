@@ -398,6 +398,11 @@ export function wasPrice(p: Pick<StoreProduct, "compare_at" | "sale_from" | "sal
   if (p.sale_to && today > p.sale_to) return null;
   return p.compare_at;
 }
+/** The former price beside the price shown (bug hunt 2026-11-18): compare_at is the former price of the product's own
+ *  price alone (the database checks it against that price only), so a "From" price (null), or a variant's own price
+ *  that is not the product's, strikes nothing through. */
+export const wasPriceAt = (p: Pick<StoreProduct, "price" | "compare_at" | "sale_from" | "sale_to">, licence: string | boolean | null, today: string, shown: number | null): number | null =>
+  shown !== null && shown === p.price ? wasPrice(p, licence, today) : null;
 
 /** The fit staff gave a size (F20), or null. */
 export const sizeRow = (p: StoreProduct, size: string): SizeRow | null => p.sizes.find((r) => r.size === size) ?? null;

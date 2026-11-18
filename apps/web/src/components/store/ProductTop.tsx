@@ -7,10 +7,11 @@ import { ADDED_MS, MAX_QTY } from "@/lib/cart";
 import type { PaySettings } from "@/lib/pay/settings";
 import {
   optionOpen, optionsOf, photosFor, pick, pickVariant, priceRange, productStock, sar, sizeForHeight, stockState, variantLabel, variantPrice,
-  wasPrice, type StoreProduct, type StoreVariant,
+  wasPriceAt, type StoreProduct, type StoreVariant,
 } from "@/lib/store-core";
 import { warrantyMonths } from "@/lib/store-policy";
-import { buyNowWithHref, estimate, extrasOf, extraChoices, heightCm, keptWay, requestLabel, soldOutTarget, tabbyPart, ticked, waHref } from "@/lib/store-pdp";
+import { buyNowWithHref, estimate, extrasOf, extraChoices, heightCm, keptWay, pickedSetOff, requestLabel, soldOutTarget, tabbyPart, ticked, waHref } from "@/lib/store-pdp";
+import { cartRoom } from "@/lib/store-sections";
 import type { Fulfil } from "@/lib/store-delivery";
 import { T } from "./Store.text";
 import { T as W } from "./w3a.text";
@@ -106,7 +107,7 @@ export default function ProductTop(props: TopProps) {
   const { lo, hi } = priceRange(p);
   const unit = v ? variantPrice(p, v) : lo === hi ? lo : null;
   const priceText = unit !== null ? sar(unit) : t.from(sar(lo));
-  const was = v?.price ? null : wasPrice(p, licence, today);
+  const was = wasPriceAt(p, licence, today, unit);
   const stock = v ? stockState(v.stock) : productStock(p);
   const inCart = v ? cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0 : 0;
   const room = Math.min(MAX_QTY, v?.stock ?? MAX_QTY) - inCart;
@@ -124,7 +125,8 @@ export default function ProductTop(props: TopProps) {
 
   // the delivery rows, the way picked and the total at the price of what is picked (X06, F25)
   const kept = way ?? (ready ? keptWay(savedFulfil()) : null);
-  const est = estimate(settings, { unit, lo, qty: n, extras: withX.map((x) => x.price), shipKsa: p.ship_ksa && withX.every((x) => x.product.ship_ksa), picked: kept });
+  const est = estimate(settings, { unit, lo, qty: n, extras: withX.map((x) => x.price), shipKsa: p.ship_ksa && withX.every((x) => x.product.ship_ksa), picked: kept,
+    discount: pickedSetOff(p, v, n, withX, licence) });
   const pickWay = (id: Fulfil) => { setWay(id); saveFulfil(id); };
 
   const fit = (() => { const cm = heightCm(height); return cm === null ? null : sizeForHeight(p, cm); })();
@@ -153,12 +155,22 @@ export default function ProductTop(props: TopProps) {
     const got0 = chosen();
     if (!got0) return;
     if (room <= 0) { setNeed("most"); return; }
+    // the extras ticked go in with it, one of each: each checked first against its stock and what the cart holds of it,
+    // and the cart's lines, as an add-on's Add is (cartRoom), so nothing goes in when one of them cannot (bug hunt
+    // 2026-11-18: an extra past its stock went in, and one the cart could take no more of counted as added)
+    const xs = withX.map((x) => x.product.variants.find((c) => c.id.toLowerCase() === x.variant)).filter((c): c is StoreVariant => !!c);
+    const fits = cartRoom(cart, [got0, ...xs]);
+    if (fits !== "ok") { setNeed(fits); return; }
     const got = cartAdd(got0.id, n);
     if (got === null) { setNeed("full"); return; }
     if (got <= 0) { setNeed("most"); return; }
-    // the extras ticked go in with it, one of each; a cart with no room left for one says so
-    const full = withX.some((x) => cartAdd(x.variant, 1) === null);
-    setNeed(full ? "full" : "");
+    let short: Need = "";
+    for (const x of withX) {
+      const g = cartAdd(x.variant, 1);
+      if (g === null) short = "full";
+      else if (g <= 0 && !short) short = "most";
+    }
+    setNeed(short);
     setAdded(true);
     window.clearTimeout(addedTimer.current);
     addedTimer.current = window.setTimeout(() => setAdded(false), ADDED_MS);

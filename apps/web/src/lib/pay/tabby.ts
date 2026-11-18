@@ -1,4 +1,4 @@
-import { payRpc, refusal, type PayView, type Settled } from "./server";
+import { payRpc, refusal, type PayView, type Refund, type Settled } from "./server";
 import { safeEqual } from "./moyasar";
 
 // Tabby's "Pay in 4" for a store order (F84; store build 2026-11-15, chain w4). Built but off: it is offered only while
@@ -167,6 +167,16 @@ export async function tabbyRefund(rf: { id: string; provider_id: string; amount:
   const total = (r.data.refunds ?? []).reduce((n, x) => n + halalas(x.amount), 0) || halalas(rf.amount);
   const d = await payRpc<{ status?: string }>("pay_refund_done", { p_refund: rf.id, p_ok: true, p_refunded_halalas: total, p_error: null });
   return d.status === 200 && d.data?.status === "done";
+}
+
+/** A refund whose payment Moyasar does not know (lib/pay/server.ts RefundElsewhere): sent through Tabby when Tabby holds
+ *  that payment; null when it does not (or Tabby is off), false when Tabby could not be asked (left pending for the
+ *  reconcile run). Staff refunds of a Tabby-paid order went to Moyasar and failed every time (bug hunt 2026-11-18). */
+export async function tabbyRefundHeld(rf: Refund, env: TabbyEnv, f: typeof fetch = fetch): Promise<boolean | null> {
+  if (!env.TABBY_SECRET_KEY || !rf.provider_id || !isTabbyId(rf.provider_id)) return null;
+  const got = await call<TabbyPayment>(env.TABBY_SECRET_KEY, `/payments/${rf.provider_id}`, {}, f);
+  if (!got.ok) return got.status === 404 ? null : false;
+  return tabbyRefund({ id: rf.id, provider_id: rf.provider_id, amount: rf.amount }, env, f);
 }
 
 /** Whether a webhook carries the secret we registered it with (constant time). */

@@ -1,6 +1,8 @@
 import { payEnv } from "@/lib/pay/config";
 import { safeEqual } from "@/lib/pay/moyasar";
 import { reconcile } from "@/lib/pay/server";
+import { tabbyRefundHeld } from "@/lib/pay/tabby";
+import { storeEnv } from "@/lib/store-api";
 
 // POST /api/pay/reconcile: the Worker's own cron (worker.js scheduled, every 5 minutes) asks Moyasar about
 // payments still open or let go, and sends card refunds that never reached it. Only the Worker itself
@@ -11,6 +13,6 @@ export async function POST(req: Request) {
   const env = payEnv();
   const k = req.headers.get("x-pay-key") ?? "";
   if (!env.PAY_SERVER_KEY || !safeEqual(k, env.PAY_SERVER_KEY)) return new Response("forbidden", { status: 403 });
-  const r = await reconcile(env);
+  const r = await reconcile(env, (rf) => tabbyRefundHeld(rf, storeEnv()));
   return Response.json(r, { headers: { "cache-control": "no-store" } });
 }

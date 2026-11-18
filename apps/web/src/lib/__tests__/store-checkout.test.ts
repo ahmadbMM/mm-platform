@@ -195,6 +195,10 @@ describe("the cart", () => {
   it("writes codes the way the database keeps them", () => {
     expect(giftCodeOf("gc abcd efgh jkmn")).toBe("GC-ABCD-EFGH-JKMN");
     expect(giftCodeOf("ABCDEFGHJKMN")).toBe("GC-ABCD-EFGH-JKMN");
+    // a code whose own 12 start with GC, typed with or without its prefix (bug hunt 2026-11-18)
+    expect(giftCodeOf("GCK7ABCD2345")).toBe("GC-GCK7-ABCD-2345");
+    expect(giftCodeOf("GCK7-ABCD-2345")).toBe("GC-GCK7-ABCD-2345");
+    expect(giftCodeOf("GC-GCK7-ABCD-2345")).toBe("GC-GCK7-ABCD-2345");
     expect(giftCodeOk("GC-ABCD-EFGH-JKMN")).toBe(true);
     expect(giftCodeOk("GC-ABCD-EFGH-JKM0")).toBe(false); // no 0, O, 1 or I in a code
     expect(promoCodeOf(" ride 10 ")).toBe("RIDE10");
@@ -345,6 +349,23 @@ describe("the server's calls (gift cards, the address lookup, Tabby)", () => {
     await tabbySettle(PAY, TID, "webhook", { ...view, status: "expired" } as never, TB);
     expect(calls.find((c) => c.url.endsWith("/refunds"))?.body).toEqual({ amount: "400.00", reference_id: U(88) });
     expect(calls.find((c) => c.url.endsWith("/pay_refund_done"))?.body).toMatchObject({ p_refund: U(88), p_ok: true, p_refunded_halalas: 40000 });
+  });
+
+  it("sends a staff refund of a Tabby-paid order through Tabby, once Moyasar does not know its payment (bug hunt 2026-11-18)", async () => {
+    const { tabbyRefundHeld } = await import("../pay/tabby");
+    const held = (url: string) => {
+      if (url.endsWith(`/payments/${TID}`)) return new Response(JSON.stringify({ id: TID, status: "CLOSED", amount: "400.00", currency: "SAR", order: { reference_id: PAY }, captures: [{ amount: "400.00" }] }), { status: 200 });
+      if (url.endsWith("/refunds")) return new Response(JSON.stringify({ id: TID, refunds: [{ amount: "150.00" }] }), { status: 200 });
+      return null;
+    };
+    let calls = db({ pay_refund_done: { ok: true, status: "done" } }, held);
+    expect(await tabbyRefundHeld({ id: U(89), provider_id: TID, amount: 150 }, TB)).toBe(true);
+    expect(calls.find((c) => c.url.endsWith("/refunds"))?.body).toEqual({ amount: "150.00", reference_id: U(89) });
+    // Tabby does not hold it either: left to the caller
+    calls = db({}, (url) => (url.endsWith(`/payments/${TID}`) ? new Response("{}", { status: 404 }) : null));
+    expect(await tabbyRefundHeld({ id: U(89), provider_id: TID, amount: 150 }, TB)).toBeNull();
+    expect(calls.some((c) => c.url.endsWith("/refunds"))).toBe(false);
+    expect(await tabbyRefundHeld({ id: U(89), provider_id: TID, amount: 150 }, {})).toBeNull(); // Tabby off
   });
 });
 

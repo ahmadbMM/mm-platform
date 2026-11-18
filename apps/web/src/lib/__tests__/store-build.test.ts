@@ -1,15 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   bundleOf, categoryHref, colourPhoto, loadReviews, loadStore, photoAlt, photosFor, productHref, relatedOf, resetStore, reviewsOf, reviewSummary,
-  sizeForHeight, sizeRow, storeOf, wasPrice, BOX_ICONS, KEY_SPEC_ICONS, type Store,
+  sizeForHeight, sizeRow, storeOf, wasPrice, wasPriceAt, linePhotos, BOX_ICONS, KEY_SPEC_ICONS, type Store,
 } from "../store";
+import { estimate, pickedSetOff } from "../store-pdp";
+import { cartProducts } from "../../components/store/slim";
 import { orderExpected, orderOf, orderSteps, outAt, reviewable } from "../store-order";
 import { bundleDiscount, buyNowHref, buyNowOf, cartLines } from "../cart";
 import { deliveryOptions, readyDay } from "../store-delivery";
 import { checkoutBody, EMPTY_ADDRESS, formProblems, refusalPlace } from "../store-form";
 import { deliveryFee, paySettings } from "../pay/settings";
 import { payError } from "../pay/http";
-import { complaintsDays, deliverySlots, districtServed, LEGAL_DEFAULTS, lowStock, servedDistricts, slotDays, slotOk, storeLegal, storeSwitches } from "../store-settings";
+import { complaintsDays, deliverySlots, districtServed, LEGAL_DEFAULTS, lowStock, servedDistricts, slotDays, slotOk, slotTimes, storeLegal, storeSwitches } from "../store-settings";
 import { EXCHANGE_DAYS, LEGAL_WARRANTY_MONTHS, POLICY, RETURN_DAYS, returnWindow, warrantyMonths, warrantyParts } from "../store-policy";
 import { parseLater, parseSlugs, slugFirst, slugToggle } from "../store-lists";
 import { zatcaAmount, zatcaFields, zatcaQr } from "../zatca";
@@ -124,6 +126,36 @@ describe("the rules on top of them", () => {
     expect(wasPrice({ compare_at: 50, sale_from: null, sale_to: null }, true, "2030-01-01")).toBe(50);
   });
 
+  it("strikes the former price only beside the product's own price (bug hunt 2026-11-18)", () => {
+    const b = P("da54"); // price 8000, compare_at 9000; the red M costs 8100 of its own
+    expect(wasPriceAt(b, "LIC-1", "2026-11-15", 8000)).toBe(9000);
+    expect(wasPriceAt(b, "LIC-1", "2026-11-15", null)).toBeNull(); // "From"
+    expect(wasPriceAt(b, "LIC-1", "2026-11-15", 8100)).toBeNull(); // a variant's own price
+    expect(wasPriceAt(b, "LIC-1", "2026-11-15", 7500)).toBeNull(); // a cheaper variant
+    expect(wasPriceAt(b, "LIC-1", "2026-11-15", 9500)).toBeNull(); // dearer than the former price
+    expect(wasPriceAt(b, null, "2026-11-15", 8000)).toBeNull();
+  });
+
+  it("counts the starter set's saving in the buy box's estimate, and the free delivery after it (bug hunt 2026-11-18)", () => {
+    const b = P("da54"), h = P("helmet"), l = P("lights");
+    const x = (p: typeof h) => ({ variant: p.variants[0].id.toLowerCase(), product: p });
+    // the set: 8000 + 450 + 120 = 8570 one by one, 8300 together
+    expect(pickedSetOff(b, b.variants[0], 1, [x(h), x(l)], "LIC-1")).toBe(270);
+    expect(pickedSetOff(b, b.variants[0], 2, [x(h), x(l)], "LIC-1")).toBe(270); // one set only
+    expect(pickedSetOff(b, b.variants[0], 1, [x(h)], "LIC-1")).toBe(0);
+    expect(pickedSetOff(b, b.variants[0], 1, [x(h), x(l)], null)).toBe(0);
+    expect(pickedSetOff(b, null, 1, [x(h), x(l)], "LIC-1")).toBe(0);
+    const s = paySettings({ "store.delivery": { jeddah: { on: true, fee: 30, days: "1-2" }, ksa: { on: true, fee: 45, days: "4-7" }, freeOver: 500 } });
+    expect(estimate(s, { unit: 450, lo: 450, qty: 1, extras: [100], shipKsa: true, picked: "jeddah" }).total).toBe(550);
+    expect(estimate(s, { unit: 450, lo: 450, qty: 1, extras: [100], shipKsa: true, picked: "jeddah", discount: 70 }).total).toBe(510);
+  });
+
+  it("gives the cart each colour's photo, as the product page and the order show it (bug hunt 2026-11-18)", () => {
+    const b = cartProducts(STORE).find((p) => p.slug === "da54")!;
+    expect(b.images).toEqual(linePhotos(P("da54")));
+    expect(b.images).toContain(IMG[1]); // the red one
+  });
+
   it("puts the rider's height in a size and finds the size for a height", () => {
     const b = P("da54");
     expect(sizeRow(b, "M")?.height).toEqual({ min: 171, max: 185 });
@@ -168,7 +200,7 @@ describe("reading the store", () => {
     const urls: string[] = [];
     const f = vi.fn(async (u: string) => {
       urls.push(u);
-      if (u.includes("store_products") && u.includes("key_specs")) return new Response("{}", { status: 400 });
+      if (u.includes("store_products") && u.includes("key_specs")) return new Response(JSON.stringify({ code: "42703", message: "column store_products.kind does not exist" }), { status: 400 });
       if (u.includes("store_products")) return ok([product(BIKE, "da54")]);
       return ok([variant(1, BIKE)]);
     }) as unknown as typeof fetch;
@@ -176,6 +208,42 @@ describe("reading the store", () => {
     expect(s?.products.map((p) => p.slug)).toEqual(["da54"]);
     expect(urls.filter((u) => u.includes("store_products"))).toHaveLength(2);
     expect(urls[0]).toContain("image_meta");
+    await memoSettled();
+  });
+
+  it("keeps the last good copy when the full read fails another way: never a store without its columns (bug hunt 2026-11-18)", async () => {
+    env();
+    const urls: string[] = [];
+    const f = vi.fn(async (u: string) => {
+      urls.push(u);
+      if (u.includes("store_products") && u.includes("key_specs")) return new Response(JSON.stringify({ message: "upstream" }), { status: 503 });
+      if (u.includes("store_products")) return ok([product(BIKE, "da54")]);
+      return ok([variant(1, BIKE)]);
+    }) as unknown as typeof fetch;
+    expect(await loadStore(f, 1)).toBeNull();
+    expect(urls.filter((u) => u.includes("store_products"))).toHaveLength(1);
+    await memoSettled();
+  });
+
+  it("reads past 1,000 variants and reviews, a page at a time (bug hunt 2026-11-18)", async () => {
+    env();
+    const urls: string[] = [];
+    const f = vi.fn(async (u: string) => {
+      urls.push(u);
+      const first = u.includes("offset=0");
+      if (u.includes("store_products")) return ok([product(BIKE, "da54")]);
+      if (u.includes("store_variants")) return ok(first ? Array.from({ length: 1000 }, (_, i) => variant(i + 1, BIKE)) : [variant(1001, BIKE)]);
+      const review = (i: number) => ({ id: U(5000 + i), product_id: BIKE, rating: 4, body: null, bought_month: "2026-11" });
+      return ok(first ? Array.from({ length: 1000 }, (_, i) => review(i)) : [review(1000), review(1001)]);
+    }) as unknown as typeof fetch;
+    const s = await loadStore(f, 1);
+    expect(s?.products[0].variants).toHaveLength(1001);
+    const vs = urls.filter((u) => u.includes("store_variants"));
+    expect(vs).toHaveLength(2);
+    expect(vs[0]).toContain("order=sort.asc,id.asc");
+    expect(vs[1]).toContain("limit=1000&offset=1000");
+    const by = await loadReviews(f, 1);
+    expect(by.get(BIKE)).toHaveLength(1002);
     await memoSettled();
   });
 
@@ -228,6 +296,18 @@ describe("the store build's settings", () => {
     expect(slotOk(s, "2026-11-12", { day: "2026-11-15", time: "am" })).toBe(true);
     expect(slotOk(s, "2026-11-12", { day: "2026-11-13", time: "am" })).toBe(false);
     expect(slotOk(s, "2026-11-12", { day: "2026-11-15", time: "pm" })).toBe(false);
+  });
+
+  it("offers today, with a lead of 0, only the windows not started yet (bug hunt 2026-11-18)", () => {
+    const s = deliverySlots({ "store.slots": { on: true, ahead: 3, lead: 0, skip: [5], times: [{ id: "am", from: "09:00", to: "13:00" }, { id: "pm", from: "16:00", to: "21:00" }] } })!;
+    expect(slotDays(s, "2026-11-12")).toEqual(["2026-11-12", "2026-11-14", "2026-11-15"]);
+    expect(slotTimes(s, "2026-11-12", "2026-11-12T10:00").map((t) => t.id)).toEqual(["pm"]);
+    expect(slotTimes(s, "2026-11-14", "2026-11-12T10:00").map((t) => t.id)).toEqual(["am", "pm"]);
+    expect(slotOk(s, "2026-11-12", { day: "2026-11-12", time: "am" }, "2026-11-12T10:00")).toBe(false);
+    expect(slotOk(s, "2026-11-12", { day: "2026-11-12", time: "pm" }, "2026-11-12T10:00")).toBe(true);
+    // 21:30: nothing left today, so today is not offered
+    expect(slotDays(s, "2026-11-12", "2026-11-12T21:30")).toEqual(["2026-11-14", "2026-11-15", "2026-11-16"]);
+    expect(slotOk(s, "2026-11-12", { day: "2026-11-12", time: "pm" }, "2026-11-12T21:30")).toBe(false);
   });
 
   it("checks a district against the served list while the check is on", () => {

@@ -1,5 +1,5 @@
 import { Link } from "@/i18n/navigation";
-import { photoAlt, pick, productHref, productStock, sar, wasPrice, type StoreProduct } from "@/lib/store-core";
+import { photoAlt, pick, productHref, productStock, sar, wasPriceAt, type StoreProduct } from "@/lib/store-core";
 import { cardColours, cardPrice, quickVariant, warrantyText, type CardWhens, whenFor } from "@/lib/store-listing";
 import type { StoreText } from "./Store.text";
 import type { W2Text } from "./w2.text";
@@ -23,7 +23,7 @@ export default function ProductCard({ p, locale, t, w, licence, today, whens, ea
   const { lo, from } = cardPrice(p);
   const stock = productStock(p);
   const colours = cardColours(p);
-  const was = from ? null : wasPrice(p, licence, today);
+  const was = wasPriceAt(p, licence, today, from ? null : lo);
   const when = whenFor(p, whens);
   const quick = quickVariant(p);
   return (

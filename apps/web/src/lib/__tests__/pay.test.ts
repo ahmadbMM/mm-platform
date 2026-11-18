@@ -174,6 +174,31 @@ describe("refunds against Moyasar's one total", () => {
     expect(await confirmRefunds([rf("a", 20, 0, "2026-11-10T10:00:00Z"), rf("b", 30, 20, "2026-11-10T10:01:00Z")], env)).toBe(0);
     expect(told.map((b) => [b.p_refund, b.p_ok])).toEqual([["a", false], ["b", false]]);
   });
+  it("hands a refund on a payment Moyasar does not know to the provider that holds it (Tabby; bug hunt 2026-11-18)", async () => {
+    const told: Record<string, unknown>[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      if (String(url).startsWith("https://api.moyasar.com")) return json({ type: "not_found", message: "Object not found" }, 404);
+      told.push(JSON.parse(String(init?.body)) as Record<string, unknown>);
+      return json({ ok: true, status: "failed" });
+    }));
+    const there = vi.fn(async () => true);
+    expect(await sendRefund({ id: "r1", provider_id: MID, amount: 20 }, env, there)).toBe(true);
+    expect(there).toHaveBeenCalledTimes(1);
+    expect(told).toEqual([]); // nothing marked failed here
+    // not held there either: failed, as before
+    expect(await sendRefund({ id: "r1", provider_id: MID, amount: 20 }, env, async () => null)).toBe(false);
+    expect(told.map((b) => [b.p_refund, b.p_ok])).toEqual([["r1", false]]);
+    // the reconcile run: sent there again (one refund by its reference); one still unanswered an hour on is failed
+    told.length = 0;
+    const recent = new Date(Date.now() - 5 * 60000).toISOString();
+    expect(await confirmRefunds([rf("a", 20, 0, recent), rf("b", 30, 0, recent)], env, async (x) => x.id === "a")).toBe(1);
+    expect(told).toEqual([]);
+    expect(await confirmRefunds([rf("a", 20, 0, "2026-11-10T10:00:00Z")], env, async () => false)).toBe(0);
+    expect(told.map((b) => [b.p_refund, b.p_ok])).toEqual([["a", false]]);
+    told.length = 0;
+    expect(await confirmRefunds([rf("a", 20, 0, "2026-11-10T10:00:00Z")], env)).toBe(0); // no other provider: asked again
+    expect(told).toEqual([]);
+  });
   it("says a refund done only when the database recorded it", async () => {
     stub(0);
     expect(await sendRefund({ id: "r1", provider_id: MID, amount: 20 }, env)).toBe(true);

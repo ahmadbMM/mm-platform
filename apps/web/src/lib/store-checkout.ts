@@ -44,6 +44,8 @@ export type CheckoutState = {
   way: Way; contact: Contact; address: Address;
   slot: { day: string; time: string } | null; slots: Slots | null; today: string;
   districts: readonly District[] | null;
+  /** The Riyadh clock in the browser ("YYYY-MM-DDTHH:MM"): today's windows already started are not offered. */
+  now?: string | null;
 };
 
 /** Every field the customer must fix before the order can be sent, in the page's order: the form's own rules
@@ -51,7 +53,7 @@ export type CheckoutState = {
  *  ones they serve (F79: "district_unserved"). */
 export function checkoutProblems(s: CheckoutState): string[] {
   const base = formProblems({ fulfil: s.way, contact: s.contact, address: s.address });
-  const slot = s.way === "jeddah" && s.slots && !slotOk(s.slots, s.today, s.slot) ? ["slot"] : [];
+  const slot = s.way === "jeddah" && s.slots && !slotOk(s.slots, s.today, s.slot, s.now) ? ["slot"] : [];
   const district = s.way === "jeddah" && s.districts && s.address.district.trim() && !districtServed(s.districts, s.address.district) ? ["district_unserved"] : [];
   return [...base.filter((f) => stepOfField(f) === "contact"), ...slot, ...base.filter((f) => stepOfField(f) !== "contact"), ...district];
 }
@@ -242,7 +244,8 @@ export const CODE_KEY = "mm-cart-code";
 /** A gift card's code as typed: upper case, Latin, the dashes put back (GC-ABCD-EFGH-JKLM). */
 export function giftCodeOf(raw: string): string {
   const s = latinDigits(raw).toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const body = s.startsWith("GC") ? s.slice(2) : s;
+  // the prefix only when it is there (14 characters): a code's own 12 may start with GC too (bug hunt 2026-11-18)
+  const body = s.length === 14 && s.startsWith("GC") ? s.slice(2) : s;
   if (body.length !== 12) return raw.trim().toUpperCase();
   return `GC-${body.slice(0, 4)}-${body.slice(4, 8)}-${body.slice(8)}`;
 }

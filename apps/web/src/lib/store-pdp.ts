@@ -1,4 +1,4 @@
-import { buyNowHref, MAX_QTY, type CartItem } from "./cart";
+import { bundleDiscount, buyNowHref, MAX_QTY, type CartItem, type CartLine } from "./cart";
 import { deliveryOptions, type DeliveryOption, type Fulfil } from "./store-delivery";
 import type { PaySettings } from "./pay/settings";
 import { optionsOf, productStock, sizeRow, variantPrice, type CmRange, type SizeRow, type StoreProduct, type StoreVariant } from "./store-core";
@@ -24,12 +24,31 @@ export type Estimate = {
   total: number | null;
 };
 
-export function estimate(s: PaySettings, a: { unit: number | null; lo: number; qty: number; extras: readonly number[]; shipKsa: boolean; picked: string | null }): Estimate {
+export function estimate(s: PaySettings, a: { unit: number | null; lo: number; qty: number; extras: readonly number[]; shipKsa: boolean; picked: string | null; discount?: number }): Estimate {
   const qty = Math.min(MAX_QTY, Math.max(1, Math.floor(a.qty) || 1));
   const subtotal = r2((a.unit ?? a.lo) * qty + a.extras.reduce((n, x) => n + x, 0));
-  const options = deliveryOptions(s, { subtotal, shipKsa: a.shipKsa });
+  // the starter set's saving comes off first, and the free-delivery threshold is reached by what is left, as
+  // store_checkout works it out (bug hunt 2026-11-18)
+  const goods = r2(subtotal - Math.min(subtotal, Math.max(0, a.discount ?? 0)));
+  const options = deliveryOptions(s, { subtotal: goods, shipKsa: a.shipKsa });
   const way = options.find((o) => o.id === a.picked) ?? options[0] ?? null;
-  return { subtotal, options, way, total: a.unit === null ? null : r2(subtotal + (way?.fee ?? 0)) };
+  return { subtotal, options, way, total: a.unit === null ? null : r2(goods + (way?.fee ?? 0)) };
+}
+
+/** What the starter sets save on the item picked (qty of it) and the extras ticked (one of each), beside a discount
+ *  licence (F31, cart.ts bundleDiscount, as checkout and store_checkout count them); 0 while no variant is picked. */
+export function pickedSetOff(p: StoreProduct, v: StoreVariant | null, qty: number, extras: readonly { variant: string; product: StoreProduct }[], licence: string | boolean | null): number {
+  if (!v || !licence) return 0;
+  const line = (product: StoreProduct, variant: StoreVariant, n: number): CartLine => {
+    const unit = variantPrice(product, variant);
+    return { item: { variant: variant.id.toLowerCase(), qty: n }, product, variant, unit, total: r2(unit * n), issue: null };
+  };
+  const lines = [line(p, v, Math.min(MAX_QTY, Math.max(1, Math.floor(qty) || 1)))];
+  for (const x of extras) {
+    const xv = x.product.variants.find((c) => c.id.toLowerCase() === x.variant);
+    if (xv) lines.push(line(x.product, xv, 1));
+  }
+  return r2(bundleDiscount(lines, licence).reduce((n, b) => n + b.amount, 0));
 }
 
 /** A way kept from the cart or this page (sessionStorage mm-cart-fulfil), as a delivery way, or null. */

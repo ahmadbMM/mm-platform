@@ -42,20 +42,32 @@ export function deliverySlots(c: SiteContent | null | undefined): Slots | null {
 const weekday = (iso: string) => new Date(`${iso}T12:00:00Z`).getUTCDay();
 const nextDay = (iso: string) => new Date(Date.parse(`${iso}T12:00:00Z`) + 86400000).toISOString().slice(0, 10);
 
+/** The windows a day can be booked in: all of them, but on the day of `now` (the Riyadh clock, "YYYY-MM-DDTHH:MM", when
+ *  the page knows it) only those not started yet, and none on a day already past. With a lead of 0 days today is
+ *  offered, and a window already over could be booked (bug hunt 2026-11-18). */
+export function slotTimes(s: Slots, day: string, now?: string | null): SlotTime[] {
+  if (!now || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(now)) return s.times;
+  const nowDay = now.slice(0, 10), hm = now.slice(11, 16);
+  return day < nowDay ? [] : day === nowDay ? s.times.filter((t) => t.from > hm) : s.times;
+}
+
 /** The days a scheduled delivery can be booked for, counted from `today` (YYYY-MM-DD, Riyadh): the first `lead` working
- *  days on (Fridays not counted, as the delivery dates), then `ahead` days that are not among the days staff skip. The
- *  database takes the same days (store_checkout, STORE_SLOT). */
-export function slotDays(s: Slots, today: string): string[] {
+ *  days on (Fridays not counted, as the delivery dates), then `ahead` days that are not among the days staff skip, and
+ *  not a day with no window left (slotTimes, with `now`). The database takes the same days (store_checkout,
+ *  STORE_SLOT). */
+export function slotDays(s: Slots, today: string, now?: string | null): string[] {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) return [];
   let d = workingDay(today, s.lead);
   const out: string[] = [];
-  for (let guard = 0; out.length < s.ahead && guard < 60; guard++, d = nextDay(d)) if (!s.skip.includes(weekday(d))) out.push(d);
+  for (let guard = 0; out.length < s.ahead && guard < 60; guard++, d = nextDay(d)) {
+    if (!s.skip.includes(weekday(d)) && slotTimes(s, d, now).length) out.push(d);
+  }
   return out;
 }
 
 /** Whether a slot the customer picked is one of those offered. */
-export const slotOk = (s: Slots, today: string, slot: { day: string; time: string } | null | undefined): boolean =>
-  !!slot && slotDays(s, today).includes(slot.day) && s.times.some((t) => t.id === slot.time);
+export const slotOk = (s: Slots, today: string, slot: { day: string; time: string } | null | undefined, now?: string | null): boolean =>
+  !!slot && slotDays(s, today, now).includes(slot.day) && slotTimes(s, slot.day, now).some((t) => t.id === slot.time);
 
 /** The Jeddah districts the shop delivers to (store.districts, F79), or null while the check is off. */
 export function servedDistricts(c: SiteContent | null | undefined): District[] | null {

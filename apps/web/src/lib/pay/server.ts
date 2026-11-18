@@ -25,6 +25,11 @@ export type PayView = {
 };
 
 export type Refund = { id: string; provider_id: string | null; amount: number };
+/** A refund whose payment Moyasar does not know, handed to the other provider that may hold it (Tabby: its payment ids
+ *  are UUIDs as Moyasar's are, and the database's refund names no provider; bug hunt 2026-11-18): true when it recorded
+ *  the refund done, false when it is left pending or failed there, null when that provider does not hold the payment
+ *  either (judged here as before). */
+export type RefundElsewhere = (rf: Refund) => Promise<boolean | null>;
 /** A refund the reconcile run lists: 'already' is what the database counted as refunded on that Moyasar payment. */
 export type PendingRefund = Refund & { already?: number; created_at?: string };
 type RpcAnswer<T> = Awaited<ReturnType<typeof rpcServer<T>>>;
@@ -49,7 +54,7 @@ export async function payView(id: string, env?: PayEnv): Promise<PayView | null>
 /** Sends a refund the database wrote 'pending' to Moyasar and records the answer. Moyasar documents no
  *  idempotency key for refunds, so the payment's refunded total is read first: an answer lost on the way (a
  *  timeout) is judged by whether that total grew by this refund, never by sending it again. */
-export async function sendRefund(rf: Refund, env: PayEnv = payEnv()): Promise<boolean> {
+export async function sendRefund(rf: Refund, env: PayEnv = payEnv(), elsewhere?: RefundElsewhere): Promise<boolean> {
   if (!rf.provider_id || !env.MOYASAR_SECRET_KEY) return false;
   const sk = env.MOYASAR_SECRET_KEY, want = toHalalas(rf.amount);
   // Done only once the database recorded it so: an answer it could not record (a timeout, an error) leaves the refund
@@ -60,6 +65,10 @@ export async function sendRefund(rf: Refund, env: PayEnv = payEnv()): Promise<bo
   };
   const fail = (why: string) => payRpc("pay_refund_done", { p_refund: rf.id, p_ok: false, p_refunded_halalas: 0, p_error: why.slice(0, 300) }, env);
   const before = await fetchPayment(sk, rf.provider_id);
+  if (!before.ok && before.status === 404 && elsewhere) {
+    const there = await elsewhere(rf);
+    if (there !== null) return there;
+  }
   if (!before.ok) { await fail(`gateway ${before.status} ${before.message}`); return false; }
   const r0 = before.data.refunded ?? 0;
   const r = await refundPayment(sk, rf.provider_id, want);
@@ -85,10 +94,11 @@ export async function sendRefund(rf: Refund, env: PayEnv = payEnv()): Promise<bo
  *  marked failed for staff to check Moyasar's dashboard. The database is told the total counted so far, not Moyasar's
  *  whole total; it keeps whichever is more of that and the refunds done (pay_refund_done). Answers how many were
  *  confirmed and recorded. */
-export async function confirmRefunds(list: PendingRefund[], env: PayEnv = payEnv()): Promise<number> {
+export async function confirmRefunds(list: PendingRefund[], env: PayEnv = payEnv(), elsewhere?: RefundElsewhere): Promise<number> {
   const id = list[0]?.provider_id;
   if (!id || !env.MOYASAR_SECRET_KEY || list.some((rf) => rf.provider_id !== id)) return 0;
   const f = await fetchPayment(env.MOYASAR_SECRET_KEY, id);
+  if (!f.ok && f.status === 404 && elsewhere) return confirmElsewhere(list, env, elsewhere);
   if (!f.ok) return 0; // asked again on the next run
   const total = f.data.refunded ?? 0;
   // the smallest 'already' is the oldest refund's: the done ones alone (a database before 20261110235200 gave every
@@ -127,6 +137,21 @@ export async function confirmRefunds(list: PendingRefund[], env: PayEnv = payEnv
   return n;
 }
 
+/** Pending refunds on a payment Moyasar does not know (a Tabby one left pending by a timeout): sent to the provider
+ *  that holds it again, which takes each refund once by its own reference (lib/pay/tabby.ts tabbyRefund); one still
+ *  without an answer an hour on is marked failed for staff to check that provider's dashboard and retry, as Moyasar's
+ *  are (bug hunt 2026-11-18: they were asked of Moyasar on every run and stayed pending for good). */
+async function confirmElsewhere(list: PendingRefund[], env: PayEnv, elsewhere: RefundElsewhere): Promise<number> {
+  let n = 0;
+  for (const rf of list) {
+    const there = await elsewhere(rf);
+    if (there === true) { n++; continue; }
+    if (there === null || Date.now() - (Date.parse(rf.created_at ?? "") || 0) < 3600000) continue; // asked again on the next run
+    await payRpc("pay_refund_done", { p_refund: rf.id, p_ok: false, p_refunded_halalas: 0, p_error: "not confirmed by Tabby: check its dashboard, then retry" }, env);
+  }
+  return n;
+}
+
 export type Settled = { ok: boolean; status: string; error?: string };
 
 /** One Moyasar payment, fetched by this server, settled against ours: it must carry our id in its
@@ -158,7 +183,7 @@ export async function settleById(moyasarId: string, source: "return" | "webhook"
  *  refunds that never reached Moyasar. Webhooks and the return page settle nearly everything; this
  *  catches a rider who closed the tab after 3-D Secure while a webhook was lost. A refund left pending is
  *  confirmed against Moyasar, never sent twice. */
-export async function reconcile(env: PayEnv = payEnv()): Promise<{ checked: number; settled: number; refunds: number }> {
+export async function reconcile(env: PayEnv = payEnv(), elsewhere?: RefundElsewhere): Promise<{ checked: number; settled: number; refunds: number }> {
   const out = { checked: 0, settled: 0, refunds: 0 };
   if (!env.MOYASAR_SECRET_KEY) return out;
   const list = await payRpc<{ payments: string[]; refunds: PendingRefund[] }>("pay_reconcile_list", {}, env);
@@ -178,6 +203,6 @@ export async function reconcile(env: PayEnv = payEnv()): Promise<{ checked: numb
     if (!rf.provider_id) continue;
     byPayment.set(rf.provider_id, [...(byPayment.get(rf.provider_id) ?? []), rf]);
   }
-  for (const group of byPayment.values()) out.refunds += await confirmRefunds(group, env);
+  for (const group of byPayment.values()) out.refunds += await confirmRefunds(group, env, elsewhere);
   return out;
 }
