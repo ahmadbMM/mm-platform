@@ -69,6 +69,8 @@ html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }
 .club-sec { padding: 40px 7vw; max-width: 1180px; margin: 0 auto; box-sizing: content-box; }
 .club-center { text-align: center; margin-bottom: 36px; }
 .club-center p { color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 10px; }
+html:is([lang="ar"], [lang="ur"]) :is(.club-center p, .club-rides-head p) { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) :is(.club-cardviz-brand span, .club-cardviz-label) { letter-spacing: 0; }
 .club-sec h2 { font-size: clamp(28px, 3.4vw, 48px); letter-spacing: -1.5px; margin: 0; }
 .club-tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
 .club-tier { background: #fff; border: 1.5px solid rgba(0, 0, 0, .1); border-radius: 26px; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
@@ -81,8 +83,7 @@ html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }
 .club-tier ul { list-style: none; margin: 0; padding: 16px 0 0; border-top: 1px solid rgba(0, 0, 0, .09); display: flex; flex-direction: column; gap: 9px; flex: 1; }
 .club-tier.legend ul { border-top-color: rgba(255, 255, 255, .14); }
 .club-tier li { display: flex; gap: 9px; font-size: 13.5px; line-height: 1.4; }
-/* a drawn tick (the icon set's, as the site's language menu), never a text glyph */
-.club-tier li::before { content: ""; flex: none; width: 15px; height: 15px; margin-top: .1em; background: #077a4b; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; }
+.club-tier li::before { content: ""; flex: none; width: 14px; height: 14px; margin-top: 2px; color: #077a4b; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; }
 .club-tier.legend li::before { color: #03ff89; }
 .club-perks-text { color: #57605a; font-size: 15px; max-width: 600px; margin: 8px 0 28px; }
 .club-perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }

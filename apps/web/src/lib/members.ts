@@ -11,6 +11,8 @@ import type { SessionGender } from "./session-gender";
 
 export type MemberRide = { date: string; title: string; kind: string | null; rated: boolean };
 export type MemberUpcoming = { id: string; date: string; title: string; kind: string | null; time: string | null; booked: boolean;
+  /** Only on the waitlist, no place held (member_area's `waitlist`; never the place in line): it says so, not Booked. */
+  waitlist?: boolean;
   /** Men only, women only or mixed (null; the owner, 2026-10-27), which member_area does not say: read through
    *  list_sessions for the account (lib/rides.ts sessionGenders, app/[locale]/club/page.tsx); absent when that was
    *  not read, and the ride then wears no chip. */
@@ -53,7 +55,7 @@ export function memberArea(r: { status: number; data: unknown; message: string }
     .slice(0, 5);
   const upcoming: MemberUpcoming[] = (Array.isArray(d.upcoming) ? d.upcoming : [])
     .filter((x): x is Record<string, unknown> => !!x && typeof x === "object" && ID.test(S(x.id)) && DATE.test(S(x.date)) && x.kind !== "blood")
-    .map((x) => ({ id: S(x.id), date: S(x.date).slice(0, 10), title: S(x.title).trim(), kind: S(x.kind) || null, time: S(x.time).trim() || null, booked: x.booked === true }))
+    .map((x) => ({ id: S(x.id), date: S(x.date).slice(0, 10), title: S(x.title).trim(), kind: S(x.kind) || null, time: S(x.time).trim() || null, booked: x.booked === true, waitlist: x.booked !== true && x.waitlist === true }))
     .slice(0, 8);
   return {
     ok: true, member: true, firstName,

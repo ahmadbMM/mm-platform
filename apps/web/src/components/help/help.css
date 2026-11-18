@@ -2,6 +2,7 @@
 .hp { position: relative; overflow: hidden; padding: 56px clamp(16px, 7vw, 110px) 80px; background: radial-gradient(circle at 80% 0%, #e3eede, #fbf9f4 60%); }
 .hp-ghost { position: absolute; top: -12px; inset-inline-end: -1.5%; font-size: clamp(90px, 15vw, 230px); font-weight: 800; letter-spacing: -8px; line-height: .8; color: rgba(10, 13, 9, .04); pointer-events: none; user-select: none; white-space: nowrap; z-index: 0; }
 .hp > * { position: relative; z-index: 1; }
+.hp > .hp-ghost { position: absolute; z-index: 0; } /* the ghost word stays out of the flow, behind the header */
 .hp-eyebrow { color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 12px; }
 html:is([lang="ar"], [lang="ur"]) .hp-eyebrow { letter-spacing: 0; font-size: 13px; }
 .hp h1 { font-size: clamp(38px, 5vw, 64px); line-height: .94; letter-spacing: -2px; margin: 0 0 10px; }

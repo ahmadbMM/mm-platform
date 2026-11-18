@@ -13,7 +13,7 @@ import { YOGA_MARK, YOGA_MARK_SIZE } from "@/lib/yoga";
 import { FARM_MARK, FARM_MARK_SIZE } from "@/lib/farm";
 import { hasKindArt, kindsInOrder, rowsOfKind } from "@/lib/kind-theme";
 import type { Held } from "@/lib/held";
-import { calDayLabel, calKey, calMonth, calMonths, calMove, calOffered, calPlan, calTitle, calToday, calViewRead, calViewSave, calWeekdays, type CalPlan, type CalView } from "@/lib/reserve-calendar";
+import { calDayLabel, calDayOf, calKey, calMonth, calMonths, calMove, calOffered, calPlan, calTitle, calToday, calViewRead, calViewSave, calWeekdays, type CalPlan, type CalView } from "@/lib/reserve-calendar";
 import { KindIcon, SatRoute, type RouteWords } from "./KindArt";
 import { SOCIAL_ICONS } from "@/components/site/social-icons";
 
@@ -430,8 +430,8 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   // button hands over). A date not open to book yet cannot be chosen there either, nor one closed as fully booked (the
   // booking app's _featOpen): its event's dates open instead.
   const pickFeat = (e: StepEvent, s: StepSession) => {
-    setEv(e);
-    openDates();
+    setEv(e); setKind(null);
+    openDates(); setCalDay(calDayOf(s));
     if (opensOf(s) || s.fbk) { setSess(null); go(2); } else { setSess(s); go(3); }
   };
   const arrow = <ArrowIcon size={15} />;

@@ -158,7 +158,7 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
                 <li key={r.id} className={closed ? "closed" : ""}>
                   <span className="club-up-when">{day(r.date)}{r.time ? <> · {when(r.time)}</> : null}</span>
                   <strong>{nameOf(r.kind, r.title)}{sg && <> <span className={`sg-chip sg-${sg.cls}`}>{sg.label}</span></>}</strong>
-                  {r.booked ? <em>{t.booked}</em> : refusal ? <small>{refusal}</small>
+                  {r.booked ? <em>{t.booked}</em> : r.waitlist ? <em>{t.waitlist}</em> : refusal ? <small>{refusal}</small>
                     : closed && opensWords ? <OpensIn as="small" className="club-wait" text={closed} at={opensAt ? opensAt(r.date) : null} words={opensWords}>{book}</OpensIn>
                     : closed ? <small>{closed}</small> : book}
                 </li>

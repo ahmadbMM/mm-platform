@@ -374,7 +374,7 @@ export default function LearnForm(p: LearnFormProps) {
         const m = `${s.error.code || ""} ${s.error.message || ""}`;
         // WEAK_PASSWORD: the database still asks the old rule (an upper-case letter and a digit), or knows it as a common one
         if (/WEAK_PASSWORD/.test(m)) return setErr({ text: passwordOldRuleMiss(r.args.p_pwd) ? t.errors.password_old : t.errors.password_common, field: "password" });
-        return setErr({ text: /name_short|name_chars/.test(m) ? t.errors.first : /23505|DUPLICATE/i.test(m) ? t.errors.email_taken : /RATE_LIMITED/.test(m) ? t.errors.rate_limited : t.errors.generic });
+        return setErr({ text: /name_short|name_chars/.test(m) ? t.errors.first : /23505|DUPLICATE/i.test(m) ? t.errors.taken : /RATE_LIMITED/.test(m) ? t.errors.rate_limited : t.errors.generic });
       }
       const tok = Array.isArray(s.data) ? s.data[0]?.session_token : "";
       if (!tok) return setErr({ text: t.errors.generic });

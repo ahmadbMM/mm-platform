@@ -40,6 +40,8 @@ export default function TicketHelp({ from, until, now: drawn, kinds, who, line, 
   const [now, setNow] = useState(drawn);
   const [pick, setPick] = useState<RhKind | "">("");
   const [pos, setPos] = useState<{ lat: number; lng: number } | null>(null);
+  // the pop-up is open: it stays until the rider closes it, even when the window closes meanwhile
+  const [shown, setShown] = useState(false);
   const on = now >= from && now < until;
   // shown and hidden as the window opens and closes (looked at again within the hour, so a far time never overflows)
   useEffect(() => {
@@ -53,6 +55,7 @@ export default function TicketHelp({ from, until, now: drawn, kinds, who, line, 
     const n = ++seq.current;
     setPick(""); setPos(null);
     dlg.current?.showModal();
+    setShown(true);
     // where the rider is, asked once as the pop-up opens (the browser asks first); the link stays a plain link, so the tap
     // that sends it is never held up waiting for the phone
     try {
@@ -61,11 +64,11 @@ export default function TicketHelp({ from, until, now: drawn, kinds, who, line, 
   }
   const close = () => dlg.current?.close();
 
-  if (!on) return null;
+  if (!on && !shown) return null;
   return (
     <div className="tk-rh">
-      <button type="button" className="tk-btn" onClick={open}><Ic d={HELP} /><span>{words.btn}</span></button>
-      <dialog ref={dlg} className="tk-dlg tk-rh-dlg" aria-labelledby={`${id}-t`} onClose={() => { seq.current++; }}
+      {on && <button type="button" className="tk-btn" onClick={open}><Ic d={HELP} /><span>{words.btn}</span></button>}
+      <dialog ref={dlg} className="tk-dlg tk-rh-dlg" aria-labelledby={`${id}-t`} onClose={() => { seq.current++; setShown(false); }}
         onClick={(e) => { if (e.target === e.currentTarget) e.currentTarget.close(); }}>
         <div className="tk-dlg-in">
           <h2 id={`${id}-t`} className="tk-dlg-t">{words.btn}</h2>

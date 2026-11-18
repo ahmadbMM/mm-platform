@@ -262,7 +262,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const rpW = rp ? routePageWords(locale) : null;
   const stLabel = { booked: t.stBooked, in: t.stIn, bike: t.stBike, done: t.stDone };
   // Before the start on the ride's day: the countdown to bike collection (or the gathering), then the start.
-  const cdT = { collect: t.cdCollect, gather: t.cdGather, start: t.cdStart, h: t.durH, hm: t.durHM, m: t.durM };
+  const cdT = { collect: t.cdCollect, gather: farm ? t.fhCdArrive : t.cdGather, start: farm ? t.fhCdDinner : t.cdStart, h: t.durH, hm: t.durHM, m: t.durM };
   const moments = look === "live" && onDay && !active ? countdownMoments(s, primary.date) : [];
   const dur = (min: number) => { const h = Math.floor(min / 60), m = min % 60; return h ? (m ? fill(t.durHM, { h, m }) : fill(t.durH, { h })) : fill(t.durM, { m }); };
   const minutes = rows.reduce((m, r) => Math.max(m, r.rideDuration ?? 0), 0);

@@ -374,6 +374,22 @@ describe("a Farm House Night ticket (My Account)", () => {
     expect(TICKET.ar.fhArrive).toBe("الوصول");
     expect(TICKET.ar.fhDinner).toBe("العشاء");
   });
+  it("counts down on its day to Arrival, then Dinner (the booking app's fhCdArrive, fhCdDinner), never Gathering or Starts", () => {
+    const ok = family.map((r) => ({ ...r, approval: "approved" }));
+    const s = { ...fh, published: true };
+    const on = (now: string, ar = false) => renderToStaticMarkup(createElement(TicketCard, {
+      locale: ar ? "ar" : "en", today: "2099-11-19", rows: ok, session: s, name: "Nawar Farm House Night", cue: ticketCue(ok, s, null), t: ar ? TICKET.ar : t,
+      gather: "Gathering", start: "Start", typeName: (x: string) => x,
+      links: { edit: "https://book.example.test/", manage: "https://book.example.test/?tab=bookings", place: placeLink(s, "https://dir.example.test/jcc") },
+      now: Date.parse(now), wallet: { bookingId: ok[0].id, groupIds: ok.map((r) => r.id) },
+    })).replace(/<[^>]*>/g, " ");
+    const before = on("2099-11-19T15:00:00+03:00"), after = on("2099-11-19T18:00:00+03:00");
+    expect(before).toMatch(/Arrival in 1/);
+    expect(after).toMatch(/Dinner in 2/);
+    for (const x of [before, after]) expect(x).not.toMatch(/Gathering in|Starts in/);
+    expect(on("2099-11-19T15:00:00+03:00", true)).toMatch(/الوصول بعد/);
+    expect([TICKET.en.fhCdArrive, TICKET.en.fhCdDinner, TICKET.ar.fhCdArrive, TICKET.ar.fhCdDinner]).toEqual(["Arrival in {0}", "Dinner in {0}", "الوصول بعد {0}", "العشاء بعد {0}"]);
+  });
 });
 
 describe("the Farm House Night's look", () => {

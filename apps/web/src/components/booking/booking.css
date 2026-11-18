@@ -487,10 +487,10 @@ html[dir="rtl"] .tk-card.tk-today::after { transform-origin: right; }
 .tk-bld-plate { border-bottom: 1px solid rgba(11, 31, 22, .12); }
 .tk-card.ev-blood.tk-today::after { background: #0b1f16; }
 .tk-card.ev-blood.tk-live :is(.tk-name, .tk-when .tk-when-d, .tk-when .tk-venue, .tk-when .tk-route, .tk-stages li.cur .tk-st-l) { color: #0b1f16; }
-.tk-card.ev-blood.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-qr-hold span, .tk-stages li, .tk-st-s, .tk-reveal) { color: rgba(11, 31, 22, .68); }
+.tk-card.ev-blood.tk-live :is(.tk-label, .tk-when, .tk-riders-h, .tk-total > span, .tk-line, .tk-qr-hold span, .tk-addons-h, .tk-ad-q, .tk-stages li, .tk-st-s, .tk-reveal) { color: rgba(11, 31, 22, .68); }
 .tk-card.ev-blood.tk-live :is(.tk-num, .tk-dw, .tk-when .go, .tk-cd, .tk-note.go, .tk-ok) { color: #0b1f16; }
 .tk-card.ev-blood.tk-live .tk-note.warn { color: #8a5300; }
-.tk-card.ev-blood.tk-live :is(.tk-head, .tk-when, .tk-rider, .tk-more-btn) { border-color: rgba(11, 31, 22, .12); }
+.tk-card.ev-blood.tk-live :is(.tk-head, .tk-when, .tk-rider, .tk-addons, .tk-more-btn) { border-color: rgba(11, 31, 22, .12); }
 .tk-card.ev-blood.tk-live :is(.tk-q, .tk-type) { background: #e6f2ec; color: #0b1f16; border-color: rgba(11, 31, 22, .12); }
 .tk-card.ev-blood.tk-live :is(.tk-note, .tk-ok) { background: #e6f2ec; border-color: rgba(11, 31, 22, .12); }
 .tk-card.ev-blood.tk-live .tk-note:not(.go):not(.warn) { color: #0b1f16; }

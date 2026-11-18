@@ -41,7 +41,7 @@
 .ct-model .pg-lead { margin-bottom: 22px; }
 .ct-facts { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px; margin: 0 0 22px; color: #57605a; font-size: 15px; }
 .ct-price { color: #1a1919; font-weight: 800; font-size: 22px; letter-spacing: -.4px; }
-.ct-gallery { display: flex; flex-direction: column; gap: 12px; }
+.ct-gallery { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .ct-gallery-main { margin: 0; aspect-ratio: 4 / 3; border-radius: 24px; overflow: hidden; background: #eef2ee; }
 .ct-gallery-main img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ct-thumbs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: thin; }
@@ -68,7 +68,7 @@ html:is([lang="ar"], [lang="ur"]) :is(.ct-spec-group h3, .ct-spec-group dt, .ct-
 
 @media (max-width: 900px) {
   .ct-grid { grid-template-columns: 1fr 1fr; }
-  .ct-model { grid-template-columns: 1fr; }
+  .ct-model { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 600px) {
   .ct-grid { grid-template-columns: 1fr; }

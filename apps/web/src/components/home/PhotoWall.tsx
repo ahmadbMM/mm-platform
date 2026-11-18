@@ -8,6 +8,8 @@ import { useDialogFocus } from "@/components/site/use-dialog-focus";
 
 // The community photo wall: six staggered columns (three on a phone); a photo opens large. The
 // photos are fetched as the visitor nears the wall (data-bg, components/site/LazyBackgrounds.tsx).
+// A phone gets every photo too, in order, three to a row (hm-wall-flat; bug hunt 2026-11-18: hiding columns
+// four to six had hidden every other three photos there); the hidden wall's photos are never fetched.
 const RATIOS = ["3 / 4", "2 / 3", "4 / 5", "3 / 5", "5 / 6"];
 
 export default function PhotoWall({ photos, label, closeLabel, photoLabel }: { photos: string[]; label: string; closeLabel: string; photoLabel: string }) {
@@ -25,18 +27,20 @@ export default function PhotoWall({ photos, label, closeLabel, photoLabel }: { p
     return () => document.removeEventListener("keydown", esc);
   }, [open]);
   const cols = Array.from({ length: 6 }, (_, c) => photos.map((p, i) => ({ p, i })).filter(({ i }) => i % 6 === c));
+  const tile = (p: string, i: number) => (
+    <button key={i} type="button" className="hm-tile" aria-label={fill(photoLabel, { n: i + 1, total: photos.length })} onClick={(e) => { opener.current = e.currentTarget; setOpen(p); }}
+      data-bg={`url('${bg(p, 640)}')`} style={{ aspectRatio: RATIOS[i % RATIOS.length] }} />
+  );
   return (
     <>
-      <div className="hm-wall">
+      <div className="hm-wall hm-wall-cols">
         {cols.map((col, c) => (
           <div className="hm-wall-col" key={c}>
-            {col.map(({ p, i }) => (
-              <button key={i} type="button" className="hm-tile" aria-label={fill(photoLabel, { n: i + 1, total: photos.length })} onClick={(e) => { opener.current = e.currentTarget; setOpen(p); }}
-                data-bg={`url('${bg(p, 640)}')`} style={{ aspectRatio: RATIOS[i % RATIOS.length] }} />
-            ))}
+            {col.map(({ p, i }) => tile(p, i))}
           </div>
         ))}
       </div>
+      <div className="hm-wall hm-wall-flat">{photos.map(tile)}</div>
       {open && (
         <div ref={box} className="hm-lightbox" role="dialog" aria-modal="true" aria-label={label} onClick={() => setOpen("")}>
           <div style={{ backgroundImage: `url('${bg(open)}')` }} />

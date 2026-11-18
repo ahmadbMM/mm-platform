@@ -128,6 +128,9 @@ export const T = {
     // the Farm House Night (2026-11-13): its two times, arrival then dinner (the booking app's fhArrive, fhDinner)
     fhArrive: "Arrival",
     fhDinner: "Dinner",
+    // and its countdown to them (the booking app's fhCdArrive, fhCdDinner), never "Gathering in" / "Starts in"
+    fhCdArrive: "Arrival in {0}",
+    fhCdDinner: "Dinner in {0}",
     // the venue's Instagram on the ticket (the booking app's socInstagram, 2026-11-13): the link's name for a screen reader
     instagram: "Instagram",
     yes: "Yes",
@@ -297,6 +300,8 @@ export const T = {
     ygBringV: "سجادة اليوغا الخاصة بك، وارتدِ ملابس مريحة",
     fhArrive: "الوصول",
     fhDinner: "العشاء",
+    fhCdArrive: "الوصول بعد {0}",
+    fhCdDinner: "العشاء بعد {0}",
     instagram: "إنستغرام",
     yes: "نعم",
     no: "لا",
