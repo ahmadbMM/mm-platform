@@ -37,4 +37,5 @@ export function WhatsAppMark({ size = 18 }: { size?: number }) {
 }
 
 /** The frame of a product with no photo yet: a drawn picture mark in the same box. */
-export const NoPhoto = () => <span className="st-nophoto"><Ic name="photo" size={34} /></span>;
+// no photo yet: the brand's mark, faint, drawn by store.css (.st-nophoto)
+export const NoPhoto = () => <span className="st-nophoto" />;

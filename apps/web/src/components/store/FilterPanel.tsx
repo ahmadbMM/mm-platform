@@ -8,6 +8,7 @@ import type { W2Text } from "./w2.text";
 // The list's filters (O05-C): price band, size, colour and brand, each a group of ticks; any tick of a group keeps what
 // has it, every group ticked must agree. The same panel sits beside the list on a wide screen and in the centred pop-up
 // a phone opens with its Filters button. A group with one choice is never offered (lib/store-listing.ts facetsOf).
+// Sizes are drawn as a row of chips (store.css .st-facet.is-size); each is still a tick box underneath.
 export default function FilterPanel({ facets, f, onChange, locale, t, w, idp }: {
   facets: Facet[]; f: ListFilters; onChange: (next: ListFilters) => void; locale: string; t: StoreText; w: W2Text; idp: string;
 }) {
@@ -24,7 +25,7 @@ export default function FilterPanel({ facets, f, onChange, locale, t, w, idp }: 
   return (
     <div className="st-facets">
       {facets.map((fc) => (
-        <fieldset key={fc.key} className="st-facet">
+        <fieldset key={fc.key} className={`st-facet is-${fc.key}`}>
           <legend>{title[fc.key]}</legend>
           {fc.options.map((o, i) => {
             const id = `${idp}-${fc.key}-${i}`;
