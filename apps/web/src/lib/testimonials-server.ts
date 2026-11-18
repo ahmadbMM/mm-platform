@@ -96,12 +96,11 @@ export async function tmPost(req: Request, call: Call): Promise<Response> {
 
 /* ------------------------------------------------------------------ the photo */
 
-/** What a browser is told about a photo: an hour, then the copy it has while it asks again (up to a day) - the site's
- *  media's own (app/media): a photo staff take off, or one its rider deletes, must stop being served (PDPL), so no
- *  copy lives for long, while a published photo itself never changes. */
-export const TM_PHOTO_CACHE = "public, max-age=3600, stale-while-revalidate=86400";
-/** How long the edge keeps a photo read from the database: a day, as the site's media. */
-const PHOTO_EDGE_S = 86_400;
+/** What a browser is told about a photo: an hour, then the copy it has while it asks again (another hour at most): a
+ *  photo staff take off, or one its rider deletes, must stop being served (PDPL), so no copy lives for long. */
+export const TM_PHOTO_CACHE = "public, max-age=3600, stale-while-revalidate=3600";
+/** How long the edge keeps a photo read from the database: an hour, so one staff reject or hide (or the rider's delete) stops being served within the hour. */
+const PHOTO_EDGE_S = 3_600;
 type EdgeCache = { match(k: string): Promise<Response | undefined>; put(k: string, r: Response): Promise<void> };
 const edgeCache = (): EdgeCache | null => {
   try { return ((globalThis as { caches?: { default?: EdgeCache } }).caches?.default) ?? null; } catch { return null; }
@@ -114,8 +113,8 @@ const later = (p: Promise<unknown>) => {
 const notFound = (maxAge = 60) => new Response("Not found", { status: 404, headers: { "cache-control": `public, max-age=${maxAge}` } });
 
 /** GET /api/testimonials/photo/<id>: a PUBLISHED testimonial's photo (testimonial_photo), as the picture itself with its
- *  own type, kept at the edge for a day (Cloudflare's cache, the key scoped to the database as the site's other edge
- *  copies are) so the database is read once per photo per place and day, not once per visitor. 404 for anything else -
+ *  own type, kept at the edge for an hour (Cloudflare's cache, the key scoped to the database as the site's other edge
+ *  copies are) so the database is read once per photo per place and hour, not once per visitor. 404 for anything else -
  *  an id that is not a number, a testimonial not published or with no photo, a database without the function - and
  *  504, kept nowhere, when the database did not answer. */
 export async function tmPhotoGet(id: string): Promise<Response> {

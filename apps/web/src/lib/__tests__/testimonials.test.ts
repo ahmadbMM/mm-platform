@@ -359,7 +359,7 @@ describe("the routes", () => {
     const ok = await get("7");
     expect(ok.status).toBe(200);
     expect(ok.headers.get("content-type")).toBe("image/png");
-    expect(ok.headers.get("cache-control")).toBe("public, max-age=3600, stale-while-revalidate=86400");
+    expect(ok.headers.get("cache-control")).toBe("public, max-age=3600, stale-while-revalidate=3600");
     expect(ok.headers.get("x-content-type-options")).toBe("nosniff");
     expect(new Uint8Array(await ok.arrayBuffer()).slice(1, 4)).toEqual(new Uint8Array([0x50, 0x4e, 0x47]));
     expect(JSON.parse(String((f.mock.calls[0][1] as RequestInit).body))).toEqual({ p_tid: 7 });
