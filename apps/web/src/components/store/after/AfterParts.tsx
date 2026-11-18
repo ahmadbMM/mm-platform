@@ -3,10 +3,9 @@ import { Link } from "@/i18n/navigation";
 import { intlOf } from "@/i18n/locales";
 import { serverLocalize } from "@/i18n/dicts";
 import { sized } from "@/lib/img";
-import type { Order } from "@/lib/store-order";
 import {
   afterSettings, arriveOpen, bikeLines, bookedSlot, checkupDays, claimLines, CHECK_KEYS, handedOver, hijriDay, hijriRange, orderPath,
-  passOpen, riyadhDay, slotCalendarOpen, slotChangeOpen, type After,
+  passOpen, riyadhDay, slotCalendarOpen, slotChangeOpen, type After, type AfterOrder,
 } from "@/lib/sx-B4";
 import type { SiteContent } from "@/lib/site";
 import { T } from "../sx-B4.text";
@@ -38,7 +37,7 @@ export type AfterNodes = {
 };
 
 export function afterParts(a: {
-  o: Order; after: After | null; content: SiteContent | null; locale: string; today: string; now: number;
+  o: AfterOrder; after: After | null; content: SiteContent | null; locale: string; today: string; now: number;
   bikes: ReadonlySet<string>; monthsOf: (productId: string | null) => number; owner: boolean; workshop: boolean;
   expected: { from: string; to: string } | null;
 }): AfterNodes {
@@ -78,9 +77,10 @@ export function afterParts(a: {
   const way = (pickupLine || change || (after && k && arriveOpen(o, today))) ? (
     <div className="sxb-way">
       {pickupLine && slot && (
-        <p className="st-expected">{t.pickupOn(`${short(slot.day)}, ${slot.from}–${slot.to}`)}{hijri.slot && <span className="sxb-hijri">{hijri.slot}</span>}</p>
+        // the hours as one left-to-right run, so an Arabic line never shows "16:20–16:00"
+        <p className="st-expected">{t.pickupOn(`${short(slot.day)} · \u2066${slot.from}–${slot.to}\u2069`)}{hijri.slot && <span className="sxb-hijri">{hijri.slot}</span>}</p>
       )}
-      {change && slot && k && <p className="sxb-change"><SlotChange no={o.no} k={k} current={{ day: slot.day, time: slot.time }} /></p>}
+      {change && slot && k && <div className="sxb-change"><SlotChange no={o.no} k={k} current={{ day: slot.day, time: slot.time }} /></div>}
       {after && k && arriveOpen(o, today) && <Arrive no={o.no} k={k} was={after.arrival} />}
     </div>
   ) : null;
@@ -115,7 +115,7 @@ export function afterParts(a: {
             const d = riyadhDay(c.created_at);
             return (
               <li key={c.id}>
-                <span><b>{d ? t.claimOf(short(d)) : t.claimTitle}</b><small><bdi>{item?.name ?? ""}</bdi>{c.reply && <> · {c.reply}</>}</small></span>
+                <span><b>{d ? t.claimOf(short(d)) : t.claimTitle}</b><small><bdi>{item?.name ?? ""}</bdi></small>{c.reply && <small className="sxb-reply">{c.reply}</small>}</span>
                 <span className={`st-pill sxb-c-${c.state}`}>{t.claimState[c.state]}</span>
               </li>
             );

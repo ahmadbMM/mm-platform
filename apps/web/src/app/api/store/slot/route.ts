@@ -4,13 +4,13 @@ import { payRpc } from "@/lib/pay/server";
 import { loadSiteContent } from "@/lib/site";
 import { orderOf } from "@/lib/store-order";
 import { deliverySlots, slotDays, slotTimes } from "@/lib/store-settings";
-import { addDays, afterSettings, bookedSlot, slotChangeOpen } from "@/lib/sx-B4";
-import { afterRead, handoverSlots, slotChange } from "@/lib/sx-B4-api";
+import { afterSettings, bookedSlot, handoverOf, slotChangeOpen } from "@/lib/sx-B4";
+import { afterRead, handoverDays, slotChange } from "@/lib/sx-B4-api";
 
 // POST /api/store/slot: Change time (N30, builder B4) on an order's page.
 //   {action: "options", no, key, lang}: the days and windows the order can move to: a Jeddah delivery's from the store's
 //     scheduled-delivery settings (F78, the same days and windows the checkout offers, lib/store-settings.ts), a pickup's
-//     handover windows with places left on each of the next seven days (B3's store_handover_slots, N13).
+//     handover slots still open on the days offered (B3's store_handover_slots, N13).
 //   {action: "change", no, key, day, time}: moves it there (store_after_slot_change checks the cut-off, the count and the
 //     choice again, and writes a public event staff see in the order's history).
 // The order is read with its own key first: only an order whose Change time shows gets options.
@@ -27,8 +27,9 @@ export async function POST(req: Request) {
   }
   if (b.action !== "options") return json({ ok: false, error: "invalid" }, 400);
   const [r, extra, content] = await Promise.all([payRpc<unknown>("store_order_get", { p_no: no, p_track: key }), afterRead(no, key), loadSiteContent()]);
-  const o = r.status === 200 ? orderOf(r.data, key) : null;
-  if (!o) return json({ ok: false, error: "not_found" }, 404);
+  const read = r.status === 200 ? orderOf(r.data, key) : null;
+  if (!read) return json({ ok: false, error: "not_found" }, 404);
+  const o = { ...read, handover: handoverOf(r.data) };
   if (!extra) return json({ ok: false, error: "off" }, 404);
   if (!slotChangeOpen(o, Date.now(), afterSettings(content).change, extra.changes)) return json({ ok: false, error: "cutoff" }, 409);
   const cur = bookedSlot(o);
@@ -43,12 +44,8 @@ export async function POST(req: Request) {
     const s = deliverySlots(content);
     if (s) days = slotDays(s, today, clock).map((d) => ({ day: d, label: label(d), times: slotTimes(s, d, clock).map((x) => ({ time: x.id, label: `${x.from}–${x.to}` })) }));
   } else if (o.fulfil === "pickup") {
-    const list = await Promise.all(Array.from({ length: 7 }, (_, i) => addDays(today, i)).map(async (d) => ({ d, slots: await handoverSlots(d) })));
-    days = list.map(({ d, slots }) => ({
-      day: d, label: label(d),
-      // today's windows only before they start
-      times: (slots ?? []).filter((x) => d > today || x.from > clock.slice(11)).map((x) => ({ time: x.time, label: `${x.from}–${x.to}` })),
-    }));
+    // B3 says a slot is open only before it starts and while it has room
+    days = ((await handoverDays()) ?? []).map((d) => ({ day: d.day, label: label(d.day), times: d.slots.map((x) => ({ time: x.at, label: `${x.at}–${x.to}` })) }));
   }
   // the order's own window stays offered, so the pop-up opens on it
   days = days.filter((d) => d.times.length || d.day === cur?.day);

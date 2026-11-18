@@ -40,10 +40,8 @@ export const T = {
     builtPhoto: (n: number) => `Your bike, photo ${n}`,
     // the free check-up (N12) and the Saturday ride (N18)
     checkupBook: "Book your free check-up",
-    checkupUntil: (d: string) => `Free check-up until ${d}`,
     checkupNote: (no: string) => `Free first check-up · ${no}`,
     checkupName: "Free first check-up",
-    free: "Free",
     rideSat: "Ride it with us on Saturday",
     // warranty claims (N31) and photos (N08)
     warrantyH: "Warranty",
@@ -123,10 +121,8 @@ export const T = {
     checks: { brakes: "الفرامل", gears: "ناقل السرعات", torque: "شدّ البراغي بالعزم", tyres: "الإطارات" } as Record<string, string>,
     builtPhoto: (n: number) => `دراجتك، الصورة ${n}`,
     checkupBook: "احجز فحصك المجاني",
-    checkupUntil: (d: string) => `الفحص مجاني حتى ${d}`,
     checkupNote: (no: string) => `الفحص الأول المجاني · ${no}`,
     checkupName: "الفحص الأول المجاني",
-    free: "مجانًا",
     rideSat: "اركبها معنا يوم السبت",
     warrantyH: "الضمان",
     coveredUntil: (d: string) => `مشمول بالضمان حتى ${d}`,

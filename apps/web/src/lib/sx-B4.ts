@@ -109,18 +109,34 @@ export function checkupDays(o: Pick<Order, "status" | "fulfil" | "delivered_at">
   return { remind: addDays(from, Math.max(1, Math.round(weeks / 2)) * 7), by: addDays(from, weeks * 7) };
 }
 
-/** The slot an order is booked for, with its hours: a Jeddah delivery window (F78) or a pickup handover (N13, B3), as
- *  the order kept it ({day, time, from, to}); null without one, or without its hours. */
-export function bookedSlot(o: Pick<Order, "slot" | "fulfil">): { day: string; time: string; from: string; to: string } | null {
+/** A pickup's handover (N13, builder B3's contract): the order JSON's `handover` {day, at, to}, kept beside the order
+ *  (lib/store-order.ts orderOf does not read it), or null. `to` at or before `at` runs past midnight (Ramadan, N36). */
+export type Handover = { day: string; at: string; to: string };
+export function handoverOf(raw: unknown): Handover | null {
+  const h = raw && typeof raw === "object" ? obj((raw as Record<string, unknown>).handover) : {};
+  return typeof h.day === "string" && DAY.test(h.day) && typeof h.at === "string" && HM.test(h.at) && typeof h.to === "string" && HM.test(h.to)
+    ? { day: h.day, at: h.at, to: h.to } : null;
+}
+/** An order as after the sale reads it: the order and its handover. */
+export type AfterOrder = Order & { handover?: Handover | null };
+type Slotted = Pick<Order, "slot" | "fulfil"> & { handover?: Handover | null };
+
+/** The slot an order is booked for, with its hours: a Jeddah delivery window as the order kept it (F78: {day, time,
+ *  from, to}) or a pickup's handover (N13: its start is its time); null without one, or without its hours. */
+export function bookedSlot(o: Slotted): { day: string; time: string; from: string; to: string } | null {
+  if (o.fulfil === "pickup") {
+    const h = o.handover;
+    return h ? { day: h.day, time: h.at, from: h.at, to: h.to } : null;
+  }
   const s = o.slot;
-  if (!s || (o.fulfil !== "jeddah" && o.fulfil !== "pickup")) return null;
+  if (!s || o.fulfil !== "jeddah") return null;
   if (!DAY.test(s.day) || !s.from || !s.to || !HM.test(s.from) || !HM.test(s.to)) return null;
   return { day: s.day, time: s.time, from: s.from, to: s.to };
 }
 
 /** Change time (N30): an order still to come with a booked slot, more than `hours` before it starts, changed fewer than
  *  `max` times. */
-export function slotChangeOpen(o: Pick<Order, "slot" | "fulfil" | "status">, now: number, set: AfterSettings["change"], changes: number): boolean {
+export function slotChangeOpen(o: Slotted & Pick<Order, "status">, now: number, set: AfterSettings["change"], changes: number): boolean {
   const s = bookedSlot(o);
   if (!s || !set || changes >= set.max) return false;
   if (!["paid", "preparing", "ready"].includes(o.status)) return false;
@@ -128,7 +144,7 @@ export function slotChangeOpen(o: Pick<Order, "slot" | "fulfil" | "status">, now
 }
 
 /** "I'm here" (N14): a pickup order that is ready, on the day it is booked for (any day once ready, without a slot). */
-export function arriveOpen(o: Pick<Order, "slot" | "fulfil" | "status">, today: string): boolean {
+export function arriveOpen(o: Slotted & Pick<Order, "status">, today: string): boolean {
   if (o.fulfil !== "pickup" || o.status !== "ready") return false;
   const s = bookedSlot(o);
   return !s || s.day === today;
@@ -138,7 +154,7 @@ export function arriveOpen(o: Pick<Order, "slot" | "fulfil" | "status">, today: 
 export const passOpen = (o: Pick<Order, "fulfil" | "status">) => o.fulfil === "pickup" && ["paid", "preparing", "ready"].includes(o.status);
 
 /** The calendar entry for the booked slot (N03): while the order is still to come. */
-export const slotCalendarOpen = (o: Pick<Order, "slot" | "fulfil" | "status">) => !!bookedSlot(o) && ["paid", "preparing", "ready", "shipped", "out"].includes(o.status);
+export const slotCalendarOpen = (o: Slotted & Pick<Order, "status">) => !!bookedSlot(o) && ["paid", "preparing", "ready", "shipped", "out"].includes(o.status);
 
 // ── Warranty claims (N31) ─────────────────────────────────────────────────────────────────────────
 
@@ -272,7 +288,10 @@ export function icsText(events: readonly IcsEvent[], now: number): string {
     if (!DAY.test(e.day)) continue;
     const timed = !!(e.from && e.to && HM.test(e.from) && HM.test(e.to));
     L.push("BEGIN:VEVENT", `UID:${e.uid}`, `DTSTAMP:${utc(now)}`);
-    if (timed) L.push(`DTSTART:${utc(riyadhAt(e.day, e.from as string))}`, `DTEND:${utc(riyadhAt(e.day, e.to as string))}`);
+    if (timed) {
+      const a = riyadhAt(e.day, e.from as string), b = riyadhAt(e.day, e.to as string);
+      L.push(`DTSTART:${utc(a)}`, `DTEND:${utc(b > a ? b : b + 86400000)}`); // a Ramadan evening's window runs past midnight
+    }
     else L.push(`DTSTART;VALUE=DATE:${compact(e.day)}`, `DTEND;VALUE=DATE:${compact(addDays(e.day, 1))}`);
     L.push(`SUMMARY:${esc(e.title)}`);
     if (e.location) L.push(`LOCATION:${esc(e.location)}`);

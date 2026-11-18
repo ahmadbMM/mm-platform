@@ -16,7 +16,7 @@ import { fmtRange } from "@/lib/store-delivery";
 import { orderExpected, orderOf, type Order } from "@/lib/store-order";
 import { POLICY } from "@/lib/store-policy";
 import { deliverySlots } from "@/lib/store-settings";
-import { afterSettings, APP_META } from "@/lib/sx-B4";
+import { afterSettings, APP_META, handoverOf } from "@/lib/sx-B4";
 import { afterRead } from "@/lib/sx-B4-api";
 import { LEGAL_WARRANTY_MONTHS, warrantyMonths } from "@/lib/store-policy";
 import { afterParts } from "@/components/store/after/AfterParts";
@@ -79,10 +79,11 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const ar = locale === "ar";
   const intl = intlOf(locale);
   const booked = slotWhen(o, deliverySlots(s.content));
-  const slot = booked ? [fmtRange({ from: booked.day, to: booked.day }, intl), booked.from && booked.to ? `${booked.from}–${booked.to}` : ""].filter(Boolean).join(", ") : null;
+  // the hours as one left-to-right run (an Arabic line showed "21:00–16:00"; builder B4)
+  const slot = booked ? [fmtRange({ from: booked.day, to: booked.day }, intl), booked.from && booked.to ? `\u2066${booked.from}–${booked.to}\u2069` : ""].filter(Boolean).join(", ") : null;
   const products = new Map(s.store.products.map((p) => [p.id, p]));
   const after = afterParts({
-    o, after: extra, content: s.content, locale, today: s.today, now, owner, workshop: !s.hidden.includes("workshop"), expected,
+    o: { ...o, handover: handoverOf(r?.data) }, after: extra, content: s.content, locale, today: s.today, now, owner, workshop: !s.hidden.includes("workshop"), expected,
     bikes: new Set(s.store.products.filter((p) => p.category === "bikes").map((p) => p.id)),
     monthsOf: (id) => { const p = id ? products.get(id) : null; return p ? warrantyMonths(p) : LEGAL_WARRANTY_MONTHS.new; },
   });

@@ -21,7 +21,7 @@
 .sxb-way { margin-top: 6px; }
 .sxb-hijri { margin-inline-start: 8px; font-weight: 600; color: var(--st-ink-3); font-size: 13px; }
 .st-kv dd .sxb-hijri, .st-zb .sxb-hijri { display: block; margin: 0; font-weight: 400; }
-.sxb-change { margin: 2px 0 6px !important; }
+.sxb-change { margin: 2px 0 6px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .sxb-link { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin-inline-start: -2px; padding: 0 4px; border: 0; background: none; color: var(--st-green); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .sxb-here { margin-top: 12px; padding-top: 14px; border-top: 1px solid var(--st-line); }
 .sxb-here-at { color: var(--st-green-2) !important; font-weight: 700; }
@@ -106,3 +106,8 @@
    pop-up's close mark gets the store's look (the store's Modal draws it as .st-x) */
 .sxb-acct-home { align-self: flex-start; }
 .ac .bk-pop-head .st-x, .ac-sec .bk-pop-head .st-x { width: 44px; height: 44px; margin-block-start: -10px; margin-inline-end: -10px; flex: none; border: 0; border-radius: 50%; background: none; color: #4a4843; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+
+/* the Hijri date under the Gregorian one on the way's lines (they are flex rows in store.css), and a claim's reply */
+.st-ord-way .st-expected { flex-wrap: wrap; row-gap: 2px; }
+.st-ord-way .st-expected .sxb-hijri { flex-basis: 100%; margin: 0; }
+.st-rets .sxb-reply { color: var(--st-ink); }

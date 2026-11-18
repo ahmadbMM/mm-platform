@@ -7,7 +7,7 @@ import { withinLimit } from "@/lib/rate-limit";
 import { loadSiteContent } from "@/lib/site";
 import { loadStore } from "@/lib/store";
 import { orderOf } from "@/lib/store-order";
-import { afterSettings, bikeLines, bookedSlot, checkupDays, icsText, orderPath, slotCalendarOpen, type IcsEvent } from "@/lib/sx-B4";
+import { afterSettings, bikeLines, bookedSlot, checkupDays, handoverOf, icsText, orderPath, slotCalendarOpen, type IcsEvent } from "@/lib/sx-B4";
 import { T } from "@/components/store/sx-B4.text";
 
 // GET /api/store/calendar?no=<n>&k=<key>&what=slot|checkup&lang=en|ar: Add to calendar (N03, builder B4) for a store
@@ -25,8 +25,9 @@ export async function GET(req: Request) {
   const n = Number(q.get("no")), key = (q.get("k") ?? "").toLowerCase(), what = q.get("what"), lang = q.get("lang") === "ar" ? "ar" : "en";
   if (!Number.isInteger(n) || n < 1 || n > 999999999 || !/^[0-9a-f]{32}$/.test(key) || (what !== "slot" && what !== "checkup")) return no(400);
   const r = await payRpc<unknown>("store_order_get", { p_no: n, p_track: key });
-  const o = r.status === 200 ? orderOf(r.data, key) : null;
-  if (!o) return no(404);
+  const read = r.status === 200 ? orderOf(r.data, key) : null;
+  if (!read) return no(404);
+  const o = { ...read, handover: handoverOf(r.data) };
   const [content, store] = await Promise.all([loadSiteContent(), loadStore()]);
   const t = serverLocalize(T, lang);
   const site = resolvePage(siteSchema, content, asLocale(lang));

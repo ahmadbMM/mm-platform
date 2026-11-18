@@ -1,3 +1,4 @@
+import { rpcServer } from "./account";
 import { payRpc, refusal } from "./pay/server";
 import { payError } from "./pay/http";
 import { afterOf, carOf, claimText, photoPathOk, PHOTO_MAX, type After } from "./sx-B4";
@@ -23,7 +24,8 @@ export const AFTER_CODES: Record<string, string> = {
 };
 
 export function afterError(r: { status: number; message: string }): { error: string; status: number } {
-  if (r.status === 404 && !refusal(r)) return { error: "off", status: 404 }; // the function is not there yet
+  // the function is not there yet (PostgREST's "Could not find the function ...": no code of ours before a colon)
+  if (r.status === 404 && !/^[A-Z][A-Z_]{2,}$/.test(refusal(r))) return { error: "off", status: 404 };
   const mine = AFTER_CODES[refusal(r)];
   if (mine) return { error: mine, status: mine === "busy" ? 429 : 409 };
   return payError(r);
@@ -58,20 +60,22 @@ export async function slotChange(a: { no: number; key: string; day: string; time
   return answer(await payRpc<unknown>("store_after_slot_change", { p_no: a.no, p_track: a.key, p_day: a.day, p_time: a.time }));
 }
 
-/** A pickup day's handover windows with places left (B3's store_handover_slots, N13), for Change time on a pickup. */
-export async function handoverSlots(day: string): Promise<{ time: string; from: string; to: string; left: number }[] | null> {
-  if (!DAY.test(day)) return null;
-  const r = await payRpc<unknown>("store_handover_slots", { p_day: day });
-  if (r.status !== 200) return null;
-  const raw = Array.isArray(r.data) ? r.data : r.data && typeof r.data === "object" && Array.isArray((r.data as { slots?: unknown }).slots) ? (r.data as { slots: unknown[] }).slots : null;
-  if (!raw) return null;
+/** The handover windows a pickup can move to (B3's store_handover_slots, N13): every offered day with its open slots
+ *  ({on, minutes, days: [{day, slots: [{at, to, open}]}]}); null while it is off or not there. It takes no key: it says
+ *  only which slots are free. */
+export async function handoverDays(): Promise<{ day: string; slots: { at: string; to: string }[] }[] | null> {
+  const r = await rpcServer<unknown>("store_handover_slots", {});
+  const o = r.status === 200 && r.data && typeof r.data === "object" ? (r.data as Record<string, unknown>) : null;
+  if (!o || o.on !== true || !Array.isArray(o.days)) return null;
   const HM = /^([01]\d|2[0-3]):[0-5]\d$/;
-  return raw.flatMap((x) => {
-    const o = (x && typeof x === "object" ? x : {}) as Record<string, unknown>;
-    const from = String(o.from ?? ""), to = String(o.to ?? "");
-    const time = typeof o.time === "string" && o.time ? o.time : typeof o.id === "string" && o.id ? o.id : from;
-    const left = typeof o.left === "number" ? o.left : 1;
-    return HM.test(from) && HM.test(to) && to > from && left > 0 ? [{ time, from, to, left }] : [];
+  return o.days.flatMap((d) => {
+    const x = (d && typeof d === "object" ? d : {}) as Record<string, unknown>;
+    if (typeof x.day !== "string" || !DAY.test(x.day) || !Array.isArray(x.slots)) return [];
+    const slots = x.slots.flatMap((s) => {
+      const y = (s && typeof s === "object" ? s : {}) as Record<string, unknown>;
+      return y.open === true && typeof y.at === "string" && HM.test(y.at) && typeof y.to === "string" && HM.test(y.to) ? [{ at: y.at, to: y.to }] : [];
+    });
+    return [{ day: x.day, slots }];
   });
 }
 

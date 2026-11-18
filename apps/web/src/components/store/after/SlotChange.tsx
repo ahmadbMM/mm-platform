@@ -54,7 +54,7 @@ export default function SlotChange({ no, k, current }: { no: number; k: string; 
         <Modal title={t.changeTime} onClose={close} closeLabel={s.close}>
           <div className="sxb-slot">
             {days === null ? <p className="sxb-wait"><span className="bk-spin" aria-hidden="true" /></p>
-              : days.length === 0 ? <p>{t.noTimes}</p> : (
+              : days.length === 0 ? (!err && <p>{t.noTimes}</p>) : (
                 <>
                   <fieldset className="sxb-chips">
                     <legend>{t.pickDay}</legend>
