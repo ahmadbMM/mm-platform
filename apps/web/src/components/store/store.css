@@ -112,10 +112,12 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-bra
 .st-opt { margin: 0 0 14px; }
 .st-opt-k { margin: 0 0 10px; font-size: 13.5px; font-weight: 600; color: #4a4843; }
 .st-opt-k b { color: #1a1919; }
-/* sizes in equal cells, one row where they fit, never one alone on a line */
-.st-sizes { display: grid; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: 6px; }
-.st-sizes:has(.st-two) { grid-template-columns: repeat(auto-fit, minmax(84px, 1fr)); }
-.st-sizes button { min-width: 0; min-height: 46px; padding: 0 8px; border-radius: var(--st-r-ctl); border: 1px solid var(--st-ctl); background: #fff; color: #1a1919; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease; }
+/* sizes in equal cells in even rows (SM06-B, P05): --sz-n across in a narrow column (six go 3 + 3), --sz-w where the
+   column has room (six across); the product page sets both (PdpPickers, lib/sx-B2.ts sizeGrid) */
+.st-sizes { display: grid; grid-template-columns: repeat(var(--sz-n, 3), minmax(0, 1fr)); gap: 6px; }
+@container st-sz (min-width: 400px) { .st-sizes { grid-template-columns: repeat(var(--sz-w, var(--sz-n, 3)), minmax(0, 1fr)); } }
+@container st-sz2 (min-width: 520px) { .st-sizes { grid-template-columns: repeat(var(--sz-w, var(--sz-n, 3)), minmax(0, 1fr)); } } /* two lines need more room */
+.st-sizes button { position: relative; min-width: 0; min-height: 46px; padding: 0 8px; border-radius: var(--st-r-ctl); border: 1px solid var(--st-ctl); background: #fff; color: #1a1919; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease; }
 .st-sizes button:hover:not(:disabled):not([aria-pressed="true"]) { border-color: rgba(26, 25, 25, .45); }
 .st-sizes button[aria-pressed="true"] { background: #1a1919; border-color: #1a1919; color: #fbf9f4; }
 .st-sizes button:disabled { color: #a7a399; text-decoration: line-through; cursor: default; background: #fbf9f4; }
@@ -490,22 +492,22 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
    box. Nothing is fixed to the bottom of the screen (D13-A); desktop columns stay in view. ── */
 .st-sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
-/* one column on a phone (the photos, the name and choices, the buy box); from 900px the photos | the rest; from
-   1120px the photos | the name and choices | the buy box */
+/* one column on a phone (the photos, the name and choices, the buy box); from 768px the photos | the rest (SM07-B);
+   from 1200px the photos (about half, with their rail) | the name and choices | the buy box (SM08-B) */
 .st-top { grid-template-columns: minmax(0, 1fr); grid-template-areas: "gal" "info" "buy"; gap: 22px; }
 .st-top > .st-gal { grid-area: gal; }
 .st-top > .st-pdp-info { grid-area: info; min-width: 0; }
 .st-top > .st-pdp-buy { grid-area: buy; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
 .st-top .st-info { margin-top: 0; }
-@media (min-width: 900px) {
-  .st-top { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); grid-template-areas: "gal info" "gal buy"; grid-template-rows: auto 1fr; gap: 24px 40px; }
+@media (min-width: 768px) {
+  .st-top { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); grid-template-areas: "gal info" "gal buy"; grid-template-rows: auto 1fr; gap: 24px 28px; }
   .st-top .st-pdp-info { position: static; }
   .st-top > .st-gal { position: sticky; top: 76px; }
 }
-@media (min-width: 1120px) {
-  .st-top { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr) 330px; grid-template-areas: "gal info buy"; grid-template-rows: auto; gap: 36px; }
+@media (min-width: 1200px) {
+  .st-top { grid-template-columns: minmax(0, 1fr) minmax(250px, .46fr) 320px; grid-template-areas: "gal info buy"; grid-template-rows: auto; gap: 28px; }
   .st-top > .st-pdp-buy { position: sticky; top: 76px; }
-  .st-top .st-pdp-info h1 { font-size: clamp(30px, 2.8vw, 40px); }
+  .st-top .st-pdp-info h1 { font-size: clamp(28px, 2.3vw, 34px); }
 }
 
 /* the photos (D12-C): a row that snaps; on a phone each is the column less 32px so the next one peeks in */
@@ -514,7 +516,7 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-gal-main { position: relative; min-width: 0; }
 .st-gal-track { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain; border-radius: var(--st-r-panel); }
 .st-gal-track::-webkit-scrollbar { display: none; }
-.st-gal-slide { position: relative; flex: 0 0 calc(100% - 32px); aspect-ratio: 1 / 1; scroll-snap-align: start; border-radius: var(--st-r-panel); overflow: hidden; background: #fff; border: 1px solid var(--st-line); box-shadow: var(--st-sh-1); box-sizing: border-box; }
+.st-gal-slide { position: relative; flex: 0 0 calc(100% - 32px); aspect-ratio: 4 / 3; scroll-snap-align: start; border-radius: var(--st-r-panel); overflow: hidden; background: #fff; border: 1px solid var(--st-line); box-shadow: var(--st-sh-1); box-sizing: border-box; }
 .st-gal:not(.many) .st-gal-slide { flex-basis: 100%; }
 .st-gal-slide button { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: zoom-in; }
 .st-gal-slide img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 4%; box-sizing: border-box; } /* the whole product, never cropped, never flipped */
@@ -529,20 +531,25 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-gal-dots button { width: 24px; height: 24px; padding: 0; border: 0; background: none; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .st-gal-dots i { width: 6px; height: 6px; border-radius: 999px; background: rgba(26, 25, 25, .22); transition: width .3s var(--st-ease), background-color .2s ease; }
 .st-gal-dots button[aria-current="true"] i { width: 18px; background: #1a1919; }
-@media (min-width: 900px) {
-  /* one photo fills the frame; the thumbnails stand in a column on the reading side */
-  .st-gal.many { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 14px; align-items: start; }
-  .st-gal-thumbs { display: block; position: relative; align-self: stretch; }
-  .st-gal-thumbs > div { position: absolute; inset: 0; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; scrollbar-width: none; padding: 2px; }
+@media (min-width: 768px) {
+  /* one square photo fills the frame, the thumbnails in a row under it (SM07-B); from 1200px they stand in a rail on the
+     reading side (SM08-B) */
+  .st-gal-thumbs { display: block; order: 2; min-width: 0; }
+  .st-gal-thumbs > div { display: flex; gap: 10px; overflow-x: auto; scrollbar-width: none; padding: 2px; }
   .st-gal-thumbs button { flex: none; width: 64px; height: 64px; padding: 4px; box-sizing: border-box; border-radius: 14px; overflow: hidden; border: 0; background: #fff; cursor: pointer; box-shadow: 0 0 0 1px var(--st-line-2); transition: box-shadow .2s ease; }
-  .st-gal-thumbs button:hover { box-shadow: 0 0 0 1px rgba(26, 25, 25, .35); }
+  @media (hover: hover) { .st-gal-thumbs button:hover { box-shadow: 0 0 0 1px rgba(26, 25, 25, .35); } }
   .st-gal-thumbs button[aria-current="true"] { box-shadow: 0 0 0 2px #1a1919; }
   .st-gal-thumbs img { width: 100%; height: 100%; object-fit: contain; display: block; }
-  .st-gal-slide { flex-basis: 100%; }
+  .st-gal-slide { flex-basis: 100%; aspect-ratio: 1 / 1; }
   .st-gal-dots { display: none; }
   .st-gal-arrow.next { inset-inline-end: 14px; }
   .st-gal-arrow.prev { inset-inline-start: 14px; }
   .st-gal-zoom, .st-gal.many .st-gal-zoom { inset-inline-end: 14px; }
+}
+@media (min-width: 1200px) {
+  .st-gal.many { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 14px; align-items: start; }
+  .st-gal-thumbs { order: 0; position: relative; align-self: stretch; }
+  .st-gal-thumbs > div { position: absolute; inset: 0; flex-direction: column; overflow-x: hidden; overflow-y: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .st-gal-track { scroll-behavior: auto; } .st-gal-dots i { transition: none; } }
 
@@ -585,10 +592,13 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-steps-on .st-opt-k { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #1a1919; }
 .st-step-n { width: 24px; height: 24px; flex: none; border-radius: 50%; background: #1a1919; color: #fbf9f4; display: inline-flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .st-guide-btn { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 2px; border: 0; background: none; color: #077a4b; font: inherit; font-size: 13.5px; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
-.st-sizes button.st-two { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 78px; padding: 6px 12px; line-height: 1.15; }
-.st-sizes button small { font-size: 11.5px; font-weight: 500; color: #4a4843; white-space: nowrap; }
+.st-sizes button.st-two { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; min-width: 0; min-height: 52px; padding: 6px 4px; line-height: 1.15; }
+.st-sizes button small { font-size: 12px; font-weight: 500; color: #4a4843; white-space: nowrap; }
 .st-sizes button[aria-pressed="true"] small { color: rgba(251, 249, 244, .85); }
-.st-sizes button.st-out { color: #a7a399; text-decoration: line-through; background: #fbf9f4; }
+/* sold out: struck with a drawn line corner to corner (F19, SM06-B), not a text strike that splits the two lines */
+.st-sizes button.st-out { color: #a7a399; background: #fbf9f4; overflow: hidden; }
+.st-sizes button.st-out::after { content: ""; position: absolute; inset-inline: -10%; top: 50%; height: 1.5px; background: #a7a399; transform: rotate(-18deg); pointer-events: none; }
+[dir="rtl"] .st-sizes button.st-out::after { transform: rotate(18deg); }
 .st-sizes button.st-out small { color: #a7a399; }
 .st-sizes button.st-fit:not([aria-pressed="true"]) { border-color: #077a4b; box-shadow: 0 0 0 2px #077a4b; }
 .st-sizes button.st-fit[aria-pressed="true"] { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #077a4b; }
@@ -629,9 +639,6 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-buybox > p { margin: 0; }
 .st-buybox-h { margin: 0; font-size: 13px !important; font-weight: 600 !important; letter-spacing: .06em !important; text-transform: uppercase; color: #6e6b63; }
 html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-buybox-h { text-transform: none; letter-spacing: 0 !important; font-size: 14px !important; }
-.st-buybox-price { font-size: 30px; font-weight: 700; letter-spacing: -.6px; line-height: 1.1; font-variant-numeric: tabular-nums; }
-@media (max-width: 1119px) { .st-buybox-price { display: none; } } /* the price is just above it, under the name */
-.st-buybox-when { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; color: #06603b; }
 .st-sumlines { list-style: none; margin: 0; padding: 12px 0; border-block: 1px solid var(--st-line-2); display: flex; flex-direction: column; gap: 8px; }
 .st-sumlines li { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; font-size: 14px; color: #4a4843; }
 .st-sumlines li > span:first-child { min-width: 0; }
@@ -639,8 +646,9 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-buy
 .st-total { margin: 0; }
 .st-total { padding-bottom: 4px; }
 .st-total .tk-amt { font-size: 22px; letter-spacing: -.3px; }
-.st-buybox .st-cta { flex-wrap: nowrap; }
-.st-buybox .st-cta .bk-btn { min-height: 52px; flex: 1 1 auto; padding: 0 14px; white-space: nowrap; font-size: 15.5px; }
+/* the quantity and Add on one row; under 360px Add takes its own row under the quantity (P06) */
+.st-buybox .st-cta { flex-wrap: wrap; }
+.st-buybox .st-cta .bk-btn { min-height: 52px; flex: 1 1 150px; padding: 0 14px; white-space: nowrap; font-size: 15.5px; }
 .st-buybox .st-qty { flex: none; }
 .st-buybox .st-qty button { width: 44px; height: 44px; }
 .st-add.is-added { background: #055c39; }

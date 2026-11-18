@@ -7,28 +7,37 @@ import RecordView from "@/components/store/RecordView";
 import { topProps } from "@/components/store/pdp-top";
 import { openOr404, storeState } from "@/components/store/store-data";
 import { Link } from "@/i18n/navigation";
-import { categoryHref, findProduct, paragraphs, pick, productHref } from "@/lib/store";
+import { categoryHref, findProduct, paragraphs, pick, priceRange, productHref } from "@/lib/store";
+import { previewText } from "@/lib/sx-B2";
+import { b2Top } from "@/components/store/sx-B2-top";
+import { StIcon } from "@/components/store/icons";
 import { specTable } from "@/lib/store-sections";
 import { CompareBikes, CompleteRide, FitPanel, InTheBox, ProductFaq, ProductJsonLd, ProductReviews, SpecTable, StarterBundle, TradeIn } from "@/components/store/pdp";
 import "@/components/experiences/experiences.css";
 import "@/components/store/store.css";
+import "@/components/store/sx-B2.css";
 
 // micromobility.sa/store/<product>: its photos, the choices and Add to cart, delivery and returns before
 // the cart (components/store/ProductTop.tsx: three columns on a desktop, steps on a phone), then its description and
 // specifications. A gift card's page is the gift card page (/store/gift-card).
-type Props = { params: Promise<{ locale: string; slug: string }> };
+type Props = { params: Promise<{ locale: string; slug: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const s = await storeState(locale);
   const p = findProduct(s.store, slug);
   if (!p) return { robots: { index: false, follow: false } };
-  return pageMeta({ path: `/store/${p.slug}`, locale, title: `${pick(locale, p.name_en, p.name_ar)} · Micromobility`,
-    description: pick(locale, p.tagline_en, p.tagline_ar) || pick(locale, p.description_en, p.description_ar).slice(0, 160), image: p.images[0], closed: s.closed || !s.open });
+  // a shared link's preview (N01): the product's first photo, its name, and its price with VAT before the tagline
+  const { lo, hi } = priceRange(p);
+  const tagline = pick(locale, p.tagline_en, p.tagline_ar) || pick(locale, p.description_en, p.description_ar).slice(0, 120);
+  const meta = pageMeta({ path: `/store/${p.slug}`, locale, title: `${pick(locale, p.name_en, p.name_ar)} · Micromobility`,
+    description: previewText(locale, lo, lo !== hi, tagline), image: p.images[0], closed: s.closed || !s.open });
+  return { ...meta, other: { "product:price:amount": String(lo), "product:price:currency": "SAR" } };
 }
 
-export default async function ProductPage({ params }: Props) {
+export default async function ProductPage({ params, searchParams }: Props) {
   const { locale, slug } = await params;
+  const q = await searchParams;
   const s = await storeState(locale);
   openOr404(s);
   const p = findProduct(s.store, slug);
@@ -42,15 +51,17 @@ export default async function ProductPage({ params }: Props) {
   const specs = specTable(p, locale);
   return (
     <PageShell locale={locale} site={s.site} preview={s.previewing} hidden={s.hidden}>
-      <div className="st">
-        <nav className="st-crumbs" aria-label={t.store}>
+      <div className="st st-b2-pdp">
+        {/* on a phone one line back to the category (SM05-B); the full trail from a tablet up */}
+        <Link href={categoryHref(p.category)} className="st-b2-back"><StIcon name="prev" flip size={18} />{t.cats[p.category]}</Link>
+        <nav className="st-crumbs st-b2-crumbs" aria-label={t.store}>
           <ol>
             <li><Link href="/store">{t.store}</Link></li>
             <li><Link href={categoryHref(p.category)}>{t.cats[p.category]}</Link></li>
             <li aria-current="page"><bdi>{name}</bdi></li>
           </ol>
         </nav>
-        <ProductTop {...topProps(s, p, locale)} />
+        <ProductTop {...topProps(s, p, locale)} b2={b2Top(s, p, locale, q)} />
         <RecordView slug={p.slug} />
         {(desc.length > 0 || specs.length > 0) && (
           <div className="st-more">

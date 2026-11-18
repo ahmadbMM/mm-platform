@@ -26,6 +26,12 @@ import SizeGuide from "./SizeGuide";
 import StockAsk from "./StockAsk";
 import { cartAdd, savedFulfil, saveFulfil, useCart, useHydrated } from "./useCart";
 import { savedToggle, useSaved } from "./useLists";
+import { shareHref } from "@/lib/sx-B2";
+import { T as B } from "./sx-B2.text";
+import type { B2Top } from "./sx-B2-top";
+import ShareButton from "./sx-B2-share";
+import WayStep from "./sx-B2-ways";
+import HandoverPick from "./sx-B2-handover";
 
 // The top of a product's page (store build 2026-11-15, chain w3a): its photos, its name and price, the choices, the buy
 // box and the delivery and returns box, as one piece because they share what is picked.
@@ -61,6 +67,9 @@ export type TopProps = {
   applePay: boolean;
   /** The page's own address, for the WhatsApp message (the browser's is used once it runs). */
   href: string;
+  /** The "do all" build's additions (2026-11-18, sx-B2-top.tsx): the size and colour the address asks for (N09), the
+   *  free check-up (N12), the order-by lines (N36) and the streamed fact rows (N16, N25). */
+  b2?: B2Top;
 };
 
 type Need = "" | "size" | "colour" | "full" | "most";
@@ -75,14 +84,16 @@ function useApplePayHere(on: boolean): boolean {
 }
 
 export default function ProductTop(props: TopProps) {
-  const { p, locale, licence, today, related, settings, whens, showroom, policy, whatsapp, tabby, applePay, href } = props;
+  const { p, locale, licence, today, related, settings, whens, showroom, policy, whatsapp, tabby, applePay, href, b2 } = props;
   const t = useLocalize(T);
   const w = useLocalize(W);
+  const b = useLocalize(B);
   const rtl = isRtl(locale);
   const o = optionsOf(p);
   const bike = p.category === "bikes";
-  const firstColour = o.colours.find((c) => optionOpen(p, "colour", c.key, null))?.key ?? o.colours[0]?.key ?? null;
-  const [size, setSize] = useState<string | null>(o.sizes.length === 1 ? o.sizes[0] : null);
+  // a link may ask for a size and a colour (N09: a showroom tag, a shared link); else the first colour in stock
+  const firstColour = b2?.preset.colour ?? o.colours.find((c) => optionOpen(p, "colour", c.key, null))?.key ?? o.colours[0]?.key ?? null;
+  const [size, setSize] = useState<string | null>(o.sizes.length === 1 ? o.sizes[0] : b2?.preset.size ?? null);
   const [colour, setColour] = useState<string | null>(o.colours.length ? firstColour : null);
   const [qty, setQty] = useState(1);
   const [need, setNeed] = useState<Need>("");
@@ -146,8 +157,8 @@ export default function ProductTop(props: TopProps) {
   }
   /** The choice made, or what is missing said where it is missing; the variant when it can be bought. */
   function chosen(): StoreVariant | null {
-    if (o.sizes.length && !size) { setNeed("size"); sizeGroup.current?.querySelector<HTMLButtonElement>("button:not(.st-out)")?.focus(); return null; }
     if (o.colours.length && !colour) { setNeed("colour"); return null; }
+    if (o.sizes.length && !size) { setNeed("size"); sizeGroup.current?.querySelector<HTMLButtonElement>("button:not(.st-out)")?.focus(); return null; }
     if (!v || v.stock <= 0) return null;
     return v;
   }
@@ -183,8 +194,14 @@ export default function ProductTop(props: TopProps) {
 
   const vl = v ? variantLabel(v, locale) : "";
   const ask0 = vl ? `${name} (${vl})` : name;
-  const askHref = waHref(whatsapp, w.askMsg(ask0, ready ? window.location.href.split("#")[0] : href));
+  const here = ready ? window.location.href.split("#")[0] : href;
+  const askHref = waHref(whatsapp, w.askMsg(ask0, here));
   const keys = p.key_specs;
+  // the link shared and the video call's message carry the size and colour picked (N01, N24)
+  const linkNow = () => shareHref(window.location.origin, p.slug, { size, colour });
+  const videoHref = bike ? waHref(whatsapp, b.videoMsg(ask0, ready ? linkNow() : href)) : "";
+  // the way to have it is the last numbered step on a bike (SM05-B): after colour, size and extras
+  const wayStep = bike ? (o.colours.length ? 1 : 0) + (o.sizes.length ? 1 : 0) + (extras.length ? 1 : 0) + 1 : null;
 
   return (
     <article className={`st-pdp st-top${bike ? " is-bike" : ""}`}>
@@ -194,16 +211,18 @@ export default function ProductTop(props: TopProps) {
         {p.brand && <p className="st-brand"><Bidi text={p.brand} rtl={rtl} /></p>}
         <div className="st-pdp-name">
           <h1><Bidi text={name} rtl={rtl} /></h1>
+          <ShareButton url={linkNow} title={name} className="st-b2-share-pdp" />
           <button type="button" className="st-save" aria-pressed={saved} aria-label={w.save} title={saved ? w.saved : w.save} onClick={() => savedToggle(p.slug)}>
             <StIcon name="heart" filled={saved} size={22} />
           </button>
         </div>
-        {tagline && <p className="st-tagline"><Bidi text={tagline} rtl={rtl} /></p>}
+        {/* the price right under the name (SM05-B), the one price of the page (SM08-B: the buy box holds the total) */}
         <p className="st-price">
           <Amt>{priceText}</Amt>
           {was !== null && <s className="st-was"><Amt>{sar(was)}</Amt></s>}
         </p>
         <p className="st-vat">{t.vatIncl}{was !== null && licence ? ` · ${t.licence(licence)}` : ""}</p>
+        {tagline && <p className="st-tagline"><Bidi text={tagline} rtl={rtl} /></p>}
         {tabby && (
           <p className="st-tabby">
             <span>{w.tabby(sar(tabbyPart(unit ?? lo)))}</span>
@@ -226,11 +245,16 @@ export default function ProductTop(props: TopProps) {
       </div>
 
       <div className="st-pdp-buy">
-        <BuyBox locale={locale} rtl={rtl} bike={bike} name={name} v={v} priceText={priceText} unit={unit} qty={n} max={max} stock={stock}
-          extras={withX} est={est} whens={whens} canAdd={canAdd} added={added} need={need} applePay={appleHere} askHref={askHref}
+        <BuyBox locale={locale} rtl={rtl} bike={bike} name={name} v={v} unit={unit} qty={n} max={max} stock={stock}
+          extras={withX} est={est} canAdd={canAdd} added={added} need={need} applePay={appleHere} askHref={askHref} videoHref={videoHref}
+          ways={<WayStep bike={bike} step={wayStep} est={est} onWay={pickWay} whens={whens} freeOver={settings.delivery.freeOver} showroom={showroom}
+            orderBy={b2?.orderBy ?? {}} handover={bike && est.way?.id === "pickup" ? <HandoverPick locale={locale} /> : null} />}
+          facts={<>
+            {b2?.checkup ? <li className="st-b2-fact"><StIcon name="spanner" size={20} /><span>{b.checkup(b2.checkup)}</span></li> : null}
+            {b2?.facts}
+          </>}
           onQty={(q) => { setQty(q); setAdded(false); }} onAdd={add} onBuy={buyNow} onNotify={() => soldOut(null, null)} />
-        <DeliveryInfo bike={bike} est={est} onWay={pickWay} whens={whens} freeOver={settings.delivery.freeOver} showroom={showroom}
-          onPolicy={() => setPolicyOpen(true)} warranty={warrantyMonths(p)} />
+        <DeliveryInfo onPolicy={() => setPolicyOpen(true)} warranty={warrantyMonths(p)} />
       </div>
 
       {guide && (

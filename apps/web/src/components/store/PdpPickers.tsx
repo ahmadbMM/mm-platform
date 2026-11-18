@@ -1,18 +1,20 @@
 "use client";
 
-import type { RefObject } from "react";
+import type { CSSProperties, RefObject } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
-import { sized } from "@/lib/img";
 import { colourPhoto, linePhoto, optionOpen, optionsOf, pick, sar, variantLabel, variantPrice, type StoreProduct } from "@/lib/store-core";
 import { extraChoices, guideOf, sizeHeight } from "@/lib/store-pdp";
+import { sizeGrid, thumbSrc } from "@/lib/sx-B2";
 import { T } from "./Store.text";
 import { T as W } from "./w3a.text";
 import { Amt, NoPhoto } from "./bits";
 import { StIcon } from "./icons";
 import { Bidi, cmWords } from "./pdp-bits";
 
-// The product's choices (D11-C, F19-F23, D15-B, F60). A bike's are numbered steps - 1 Size, 2 Colour, 3 Extras - and
-// the rest's the plain pickers, the same buttons either way.
+// The product's choices (D11-C, F19-F23, D15-B, F60). A bike's are numbered steps - 1 Colour, 2 Size, 3 Extras (colour
+// first since the "do all" build of 2026-11-18, SM05-B: the photos above follow it), then the buy box's "How to get it" -
+// and the rest's the plain pickers, the same buttons either way. The sizes stand in even rows (SM06-B, P05): 3 + 3 in a
+// narrow column, 6 across where there is room (sizeGrid, store.css .st-sizes and its container query).
 //   Sizes: two lines when staff gave the rider height, "M" over "165-174 cm" (F20); a size sold out is struck through
 //   and a tap asks to be told when it is back (F34); one in stock only in another colour is dashed (F19); the one the
 //   size guide's height fits has a green ring (F22). "Size guide" beside the label opens the guide (F21).
@@ -20,6 +22,9 @@ import { Bidi, cmWords } from "./pdp-bits";
 //   label, "Colour: Black" (F23).
 //   Extras: the products staff put under Goes with, each a row to tick with its photo and price, and its own choice
 //   when it comes in several; ticked, it goes into the cart with the bike and into the total.
+/** The size grid's columns for store.css (--sz-n in a narrow column, --sz-w where there is room). */
+const sizeVars = (n: number, two: boolean) => { const g = sizeGrid(n, two); return { "--sz-n": g.narrow, "--sz-w": g.wide } as CSSProperties; };
+
 export default function PdpPickers(props: {
   p: StoreProduct; locale: string; rtl: boolean; numbered: boolean; size: string | null; colour: string | null; fit: string | null;
   need: string; sizeGroup: RefObject<HTMLDivElement | null>;
@@ -38,12 +43,36 @@ export default function PdpPickers(props: {
 
   return (
     <div className={`st-picks${numbered ? " st-steps-on" : ""}`}>
+      {o.colours.length > 0 && (
+        <div className="st-opt">
+          <p className="st-opt-k" id="st-colour-k">{num()}<span>{t.colour}{colour ? <b>: <Bidi text={colourName(colour)} rtl={rtl} /></b> : null}</span></p>
+          <div className="st-swatches" role="group" aria-labelledby="st-colour-k">
+            {o.colours.map((c) => {
+              const open = optionOpen(p, "colour", c.key, null), here = optionOpen(p, "colour", c.key, size);
+              const label = pick(locale, c.en, c.ar);
+              const photo = colourPhoto(p, c.key);
+              const cls = [!open ? "st-out" : !here ? "st-elsewhere" : "", photo ? "st-chip" : ""].filter(Boolean).join(" ");
+              return (
+                <button key={c.key} type="button" aria-pressed={open ? colour === c.key : undefined} className={cls || undefined} title={label}
+                  aria-haspopup={open ? undefined : "dialog"} onClick={() => (open ? onColour(c.key) : onSoldOut("colour", c.key))}
+                  aria-label={open ? label : `${label}, ${t.soldOut}`}>
+                  {photo
+                    ? <img src={thumbSrc(photo)} alt="" loading="lazy" decoding="async" />
+                    : <span className="st-sw" style={c.hex ? { background: c.hex } : undefined} aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+          {need === "colour" && <p className="st-need" role="alert">{t.pickColour}</p>}
+        </div>
+      )}
       {o.sizes.length > 0 && (
         <div className="st-opt">
           <div className="st-opt-head">
             <p className="st-opt-k" id="st-size-k">{num()}<span>{t.size}{size ? <b>: {size}</b> : null}</span></p>
             {guide && <button type="button" className="st-guide-btn" aria-haspopup="dialog" onClick={onGuide}><StIcon name="ruler" size={18} />{w.sizeGuide}</button>}
           </div>
+          <div className={`st-b2-szbox${guide?.cols.includes("height") ? " is-two" : ""}`} style={sizeVars(o.sizes.length, !!guide?.cols.includes("height"))}>
           <div className="st-sizes" role="group" aria-labelledby="st-size-k" ref={sizeGroup}>
             {o.sizes.map((s) => {
               const open = optionOpen(p, "size", s, null), here = optionOpen(p, "size", s, colour);
@@ -60,30 +89,8 @@ export default function PdpPickers(props: {
               );
             })}
           </div>
-          {need === "size" && <p className="st-need" role="alert">{t.pickSize}</p>}
-        </div>
-      )}
-      {o.colours.length > 0 && (
-        <div className="st-opt">
-          <p className="st-opt-k" id="st-colour-k">{num()}<span>{t.colour}{colour ? <b>: <Bidi text={colourName(colour)} rtl={rtl} /></b> : null}</span></p>
-          <div className="st-swatches" role="group" aria-labelledby="st-colour-k">
-            {o.colours.map((c) => {
-              const open = optionOpen(p, "colour", c.key, null), here = optionOpen(p, "colour", c.key, size);
-              const label = pick(locale, c.en, c.ar);
-              const photo = colourPhoto(p, c.key);
-              const cls = [!open ? "st-out" : !here ? "st-elsewhere" : "", photo ? "st-chip" : ""].filter(Boolean).join(" ");
-              return (
-                <button key={c.key} type="button" aria-pressed={open ? colour === c.key : undefined} className={cls || undefined} title={label}
-                  aria-haspopup={open ? undefined : "dialog"} onClick={() => (open ? onColour(c.key) : onSoldOut("colour", c.key))}
-                  aria-label={open ? label : `${label}, ${t.soldOut}`}>
-                  {photo
-                    ? <img src={sized(photo, 640)} alt="" loading="lazy" decoding="async" />
-                    : <span className="st-sw" style={c.hex ? { background: c.hex } : undefined} aria-hidden="true" />}
-                </button>
-              );
-            })}
           </div>
-          {need === "colour" && <p className="st-need" role="alert">{t.pickColour}</p>}
+          {need === "size" && <p className="st-need" role="alert">{t.pickSize}</p>}
         </div>
       )}
       {extras.length > 0 && (
@@ -101,7 +108,7 @@ export default function PdpPickers(props: {
                 <li key={x.id} className={on ? "on" : undefined}>
                   <input id={id} type="checkbox" checked={on} onChange={(e) => onTick(x.id, e.target.checked)} />
                   <label htmlFor={id}>
-                    <span className="st-extra-img">{img ? <img src={sized(img, 640)} alt="" loading="lazy" decoding="async" /> : <NoPhoto />}</span>
+                    <span className="st-extra-img">{img ? <img src={thumbSrc(img)} alt="" loading="lazy" decoding="async" /> : <NoPhoto />}</span>
                     <span className="st-extra-name"><Bidi text={nm} rtl={rtl} /></span>
                     {cv && <Amt>{sar(variantPrice(x, cv))}</Amt>}
                   </label>

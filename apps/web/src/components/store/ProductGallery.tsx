@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
-import { sized, srcSet } from "@/lib/img";
+import { sized } from "@/lib/img";
+import { GALLERY_SIZES, pdpSrcSet, thumbSrc } from "@/lib/sx-B2";
 import { photoAlt, type StoreProduct } from "@/lib/store-core";
 import { stepPhoto } from "@/lib/store-pdp";
 import { T } from "./Store.text";
@@ -17,6 +18,10 @@ import PhotoViewer from "./PhotoViewer";
 // row mirrors on right-to-left pages (A06-A: the next photo comes from the left), the photos never. A tap on a photo
 // opens the dark viewer (PhotoViewer: arrows, pinch and zoom). `photos` are those of the colour picked (photosFor), and
 // each is described by what staff wrote about it (photoAlt), the first by the product's name when they wrote nothing.
+//   The "do all" build (2026-11-18, B2): on a phone the slide is 4:3, so the name and price reach the first screen
+// (SM05-B); on a tablet two columns with the thumbnails under the photo (SM07-B); from 1200px the photo column of three
+// with its thumbnail rail (SM08-B). The photo comes at up to 1,600 px wide for the width it is drawn at, thumbnails
+// from the smallest copy (P09, lib/sx-B2.ts).
 //   While the viewer is open the gallery is lifted over the page (.viewing): from 900px this column stays in view
 // (position: sticky), and a sticky column paints everything inside it at its own level, which left the viewer under the
 // site's fixed header (its close button hidden) and under the buy column beside it.
@@ -55,7 +60,7 @@ export default function ProductGallery({ p, photos, locale, name }: { p: StorePr
           <div>
             {photos.map((u, i) => (
               <button key={u + i} type="button" aria-current={i === at ? "true" : undefined} aria-label={t.photo(i + 1, n)} onClick={() => go(i)}>
-                <img src={sized(u, 640)} alt="" loading="lazy" decoding="async" />
+                <img src={thumbSrc(u)} alt="" loading="lazy" decoding="async" />
               </button>
             ))}
           </div>
@@ -68,7 +73,7 @@ export default function ProductGallery({ p, photos, locale, name }: { p: StorePr
             return (
               <div key={u + i} className="st-gal-slide" data-i={i} role="group" aria-roledescription="slide" aria-label={t.photo(i + 1, n)}>
                 <button type="button" onClick={() => setView(i)} aria-label={w.enlarge(alt || name)}>
-                  <img src={sized(u, 1280)} srcSet={srcSet(u)} sizes="(max-width: 900px) 92vw, 46vw" alt={alt}
+                  <img src={sized(u, 1280)} srcSet={pdpSrcSet(u)} sizes={GALLERY_SIZES} alt={alt}
                     loading={i === 0 ? undefined : "lazy"} fetchPriority={i === 0 ? "high" : undefined} decoding="async" />
                 </button>
               </div>

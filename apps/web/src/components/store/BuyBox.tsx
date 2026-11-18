@@ -1,12 +1,16 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { Link } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import { pick, sar, variantLabel, type StockState, type StoreProduct, type StoreVariant } from "@/lib/store-core";
 import type { Estimate } from "@/lib/store-pdp";
 import { T } from "./Store.text";
 import { T as W } from "./w3a.text";
+import { T as B } from "./sx-B2.text";
 import { Amt, Ic, WhatsAppMark } from "./bits";
 import { Bidi } from "./pdp-bits";
+import { B2Icon } from "./sx-B2-icons";
 
 // The buy box (D10, F25, F35, F83, F32, D14-E): bordered, beside the choices on a desktop (and in view as the page
 // scrolls), under them on a phone, where a bike's reads as the summary of its steps. It holds the price, the day it
@@ -15,27 +19,29 @@ import { Bidi } from "./pdp-bits";
 // checkout (with the extras ticked), Apple Pay's own button on a device that has it (it goes to the same checkout and
 // pays with Apple Pay there: Moyasar's form takes the delivery choice nowhere else), and "Ask about this bike" on
 // WhatsApp as an outline pill. A product sold out offers to be told when it is back instead.
+//   The "do all" build (2026-11-18, B2): the way to have it is picked here, above Add, on every screen (`ways`, P21,
+// SM05-B); the box holds the total, not a second price (SM08-B); "Added" brings a "View cart" link where the quantity
+// was, for that moment (SM09-B); the facts under Buy now (`facts`: the free check-up N12, the rider's own rides on the
+// type N16, an ex-rental's record N25); "See it on video" beside the question on a bike (N24).
 type Line = { variant: string; price: number; product: StoreProduct };
 
-export default function BuyBox({ locale, rtl, bike, name, v, priceText, unit, qty, max, stock, extras, est, whens, canAdd, added, need, applePay, askHref, onQty, onAdd, onBuy, onNotify }: {
-  locale: string; rtl: boolean; bike: boolean; name: string; v: StoreVariant | null; priceText: string; unit: number | null; qty: number; max: number; stock: StockState;
-  extras: Line[]; est: Estimate; whens: Record<string, string | null>; canAdd: boolean; added: boolean; need: string; applePay: boolean; askHref: string;
+export default function BuyBox({ locale, rtl, bike, name, v, unit, qty, max, stock, extras, est, canAdd, added, need, applePay, askHref, videoHref, ways, facts, onQty, onAdd, onBuy, onNotify }: {
+  locale: string; rtl: boolean; bike: boolean; name: string; v: StoreVariant | null; unit: number | null; qty: number; max: number; stock: StockState;
+  extras: Line[]; est: Estimate; canAdd: boolean; added: boolean; need: string; applePay: boolean; askHref: string; videoHref: string;
+  ways: ReactNode; facts: ReactNode;
   onQty: (q: number) => void; onAdd: () => void; onBuy: () => void; onNotify: () => void;
 }) {
   const t = useLocalize(T);
   const w = useLocalize(W);
+  const b = useLocalize(B);
   const way = est.way;
-  const when = way ? whens[way.id] ?? null : null;
   const pickName = (x: StoreProduct) => pick(locale, x.name_en, x.name_ar);
   const Box = bike ? "section" : "div";
   return (
     <Box className="st-buybox" {...(bike ? { "aria-labelledby": "st-buy-h" } : {})}>
-      {bike && <h2 id="st-buy-h" className="st-buybox-h">{w.summary}</h2>}
-      <p className="st-buybox-price"><Amt>{priceText}</Amt></p>
-      {when && way && (
-        <p className="st-buybox-when"><Ic name={way.id === "pickup" ? "shop" : "truck"} size={18} />{way.id === "pickup" ? w.ready(when) : t.arrives(when)}</p>
-      )}
       <p className={`st-stock ${stock.kind}`}>{stock.kind === "out" ? t.soldOut : stock.kind === "low" ? t.left(stock.left) : t.inStock}</p>
+      {ways}
+      {bike && <h2 id="st-buy-h" className="st-buybox-h">{w.summary}</h2>}
 
       {bike && unit !== null && (
         <ul className="st-sumlines">
@@ -49,7 +55,9 @@ export default function BuyBox({ locale, rtl, bike, name, v, priceText, unit, qt
       )}
 
       <div className="st-cta">
-        {canAdd && (
+        {canAdd && added ? (
+          <Link href="/store/cart" className="st-b2-viewcart">{b.viewCart}</Link>
+        ) : canAdd && (
           <div className="st-qty" role="group" aria-label={t.qty}>
             <button type="button" onClick={() => onQty(Math.max(1, qty - 1))} disabled={qty <= 1} aria-label={t.less}><Ic name="minus" size={16} /></button>
             <output aria-live="polite">{qty}</output>
@@ -74,8 +82,12 @@ export default function BuyBox({ locale, rtl, bike, name, v, priceText, unit, qt
       ) : (
         <button type="button" className="bk-btn2 wide st-buynow" aria-haspopup="dialog" onClick={onNotify}>{w.notifyAny}</button>
       )}
-      {askHref && (
-        <a className="st-ask" href={askHref} target="_blank" rel="noopener noreferrer"><WhatsAppMark size={18} />{bike ? w.askBike : w.askItem}</a>
+      <ul className="st-b2-facts">{facts}</ul>
+      {(askHref || videoHref) && (
+        <div className="st-b2-asks">
+          {askHref && <a className="st-ask" href={askHref} target="_blank" rel="noopener noreferrer"><WhatsAppMark size={18} />{bike ? w.askBike : w.askItem}</a>}
+          {videoHref && <a className="st-ask" href={videoHref} target="_blank" rel="noopener noreferrer"><B2Icon name="video" size={18} />{b.video}</a>}
+        </div>
       )}
     </Box>
   );

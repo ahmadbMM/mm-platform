@@ -275,8 +275,11 @@ describe("the top of a product's page as the server draws it", () => {
     expect(html).toContain('<b>S</b><small>160-170 cm</small>');
     expect(html).toContain("186+ cm");
     expect(html).toContain("Size guide");
-    expect(html).toMatch(/st-step-n[^>]*>1<\/span><span>Size/);
+    // colour first since the "do all" build (SM05-B), then size, extras, and How to get it in the buy box
+    expect(html).toMatch(/st-step-n[^>]*>1<\/span><span>Colour/);
+    expect(html).toMatch(/st-step-n[^>]*>2<\/span><span>Size/);
     expect(html).toMatch(/st-step-n[^>]*>3<\/span>Extras/);
+    expect(html).toMatch(/st-step-n[^>]*>4<\/span><span>How to get it/);
     expect(html).toContain("Aero Helmet");
     expect(html).not.toContain("SOLD-OUT"); // a sold-out add-on is not offered
     expect(html).toContain("10.4 kg");
@@ -297,7 +300,7 @@ describe("the top of a product's page as the server draws it", () => {
   });
   it("draws the colour's photo as its chip and the photos of the colour picked first", async () => {
     const html = await draw(P(BIKE), "en");
-    expect(html).toMatch(/title="Black"[^>]*><img src="\/media\/store\/b\/1\.webp\?w=640"/);
+    expect(html).toMatch(/title="Black"[^>]*><img src="\/media\/store\/b\/1\.webp\?w=320"/); // the smallest copy (P09)
     expect(html).toContain('alt="Rider on the black DA54 MAX"');
     expect(html.indexOf("/media/store/b/2.webp?w=1280")).toBe(-1); // the red photo is not among the black ones
   });

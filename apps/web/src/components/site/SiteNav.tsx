@@ -216,7 +216,8 @@ function CartLink() {
     <>
       <Link href="/store/cart" className="mm-nav-icon mm-nav-cart" title={label} aria-label={label}>
         {CART_ICON}
-        {n > 0 && <span className="mm-cart-n" aria-hidden="true">{n > 99 ? "99+" : n}</span>}
+        {/* keyed by the count, so a change while the page is open (said) plays the pulse again (SM09-B) */}
+        {n > 0 && <span key={said ? n : "n"} className={`mm-cart-n${said ? " is-new" : ""}`} aria-hidden="true">{n > 99 ? "99+" : n}</span>}
       </Link>
       <span className="mm-sr" aria-live="polite">{said}</span>
     </>
