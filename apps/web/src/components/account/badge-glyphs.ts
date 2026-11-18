@@ -43,6 +43,9 @@ export const GLYPH: Record<string, string> = {
   "briefcase": "<rect class=\"o\" x=\"2.5\" y=\"7\" width=\"19\" height=\"13.5\" rx=\"1.8\"/><path class=\"s\" d=\"M9 7V5.3A1.3 1.3 0 0 1 10.3 4h3.4A1.3 1.3 0 0 1 15 5.3V7\"/><path d=\"M2.5 12h19v2h-19zM10.4 10.6h3.2v4.8h-3.2z\"/>",
   "snow": "<path class=\"s\" d=\"M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5M9.6 3.9 12 6.3l2.4-2.4M9.6 20.1l2.4-2.4 2.4 2.4M3.5 10.4l3.3.9-.9 3.3M20.5 13.6l-3.3-.9.9-3.3M5.9 9.7l.9-3.3-3.3-.9M18.1 14.3l-.9 3.3 3.3.9\"/>",
   "lantern": "<path class=\"s\" d=\"M12 1.6v2.2\"/><path d=\"M8.4 4.6h7.2l-1.1 2.2H9.5z\"/><path class=\"o\" d=\"M8 7.4h8l1.6 4-1.6 7.2H8l-1.6-7.2z\"/><path d=\"M10.6 9.2h2.8v7.6h-2.8z\"/><path d=\"M7.4 19h9.2l-1.2 2.8H8.6z\"/>",
+  // Ramadan 2027 (the booking app's crescent, 2026-11-18, the Ramadan season: "a season badge"): a crescent, thinner than the
+  // moon, with its star in the hollow (.o). The Eid badge wears the lantern above; /club's Ramadan card draws the same crescent.
+  "crescent": "<path d=\"M15.6 3.2A9.3 9.3 0 1 0 15.6 20.8 8.83 8.83 0 1 1 15.6 3.2Z\"/><path class=\"o\" d=\"M18.6 7.4l.68 1.87 1.98.06-1.57 1.23.56 1.91-1.65-1.12-1.65 1.12.56-1.91-1.57-1.23 1.98-.06z\"/>",
   "fort": "<path class=\"o\" d=\"M9.5 3h5v5h-5z\"/><path d=\"M3.5 21.5V9.5h2.3v2h2.3v-2h2.3v2h3.2v-2h2.3v2h2.3v-2h2.3v12h-6.5v-4.3a2 2 0 0 0-4 0v4.3z\"/>",
   "calstar": "<rect class=\"o\" x=\"3\" y=\"4.5\" width=\"18\" height=\"16.5\" rx=\"2.2\"/><path d=\"M3 8.5h18v2H3z\"/><path class=\"s\" d=\"M8 2.5v4M16 2.5v4\"/><path d=\"M12 11.5 13.03 14.18 15.9 14.33 13.66 16.14 14.41 18.92 12 17.35 9.59 18.92 10.34 16.14 8.1 14.33 10.97 14.18Z\"/>",
   "calcrown": "<rect class=\"o\" x=\"3\" y=\"4.5\" width=\"18\" height=\"16.5\" rx=\"2.2\"/><path d=\"M3 8.5h18v2H3z\"/><path class=\"s\" d=\"M8 2.5v4M16 2.5v4\"/><path transform=\"translate(5.64 9.94) scale(.53)\" d=\"M3 7.5l4.6 4.2L12 4.5l4.4 7.2L21 7.5l-1.8 10.5H4.8z\"/>",

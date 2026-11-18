@@ -6,6 +6,7 @@ import { bupBookings, bupEvent, bupFrom, bupSession, buildupPlan, dayPlus, type 
 import type { SessionGender } from "./session-gender";
 import { interestsOf, type Interests } from "./member-interests";
 import { rsgRows, type RsgRow } from "./ride-suggestions";
+import { ramadanOf, type Ramadan } from "./hub-season";
 
 /** Plan my Saturdays and My month for a signed-in member of /club (lib/member-hub.ts), read with the account's own
  *  token, at once: hub_plan always, hub_month only from the 26th (Riyadh's `today`, "YYYY-MM-DD"), as the booking app
@@ -62,4 +63,10 @@ export async function readInterests(acct: Session): Promise<Interests | null> {
  *  database without the function, no answer). */
 export async function readSuggestions(acct: Session): Promise<RsgRow[] | null> {
   return rsgRows(await rpcServer<unknown>("ride_suggestions_mine", { p_id: acct.id, p_token: acct.token }));
+}
+
+/** The Ramadan season for a signed-in member of /club (lib/hub-season.ts; the booking app's _ssnFetch, 2026-11-18): hub_season
+ *  with the account's own token. Null: no Ramadan known, a refusal, or a database without the function. */
+export async function readSeason(acct: Session): Promise<Ramadan | null> {
+  return ramadanOf(await rpcServer<unknown>("hub_season", { p_id: acct.id, p_token: acct.token }));
 }

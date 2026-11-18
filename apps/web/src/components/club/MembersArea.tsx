@@ -24,6 +24,7 @@ import { InterestsBox, InterestsCard } from "./Interests";
 import type { Interests } from "@/lib/member-interests";
 import { interestWords, suggestWords } from "./MemberHub.words";
 import SuggestRide from "./SuggestRide";
+import SeasonCard from "./SeasonCard";
 import type { RsgRow } from "@/lib/ride-suggestions";
 import { memberHubWords } from "./MemberHub.words";
 
@@ -41,7 +42,9 @@ import { memberHubWords } from "./MemberHub.words";
 // The Community features round (2026-11-18), placed as the app's tab places them: the Build-up plan (BuildupPlan.tsx) right
 // after the card, as the app's comes right after its first card; My interests (Interests.tsx) after it until the member
 // first saves them, then at the end of the area; Suggest a ride (SuggestRide.tsx) after the announcements, as the app's
-// stands near the end of its tab, before its invitation.
+// stands near the end of its tab, before its invitation; the Ramadan season (SeasonCard.tsx, lib/hub-season.ts): its card
+// leads the area while Ramadan runs and on Eid al-Fitr's first three days, and the members' sessions take its night blue
+// and gold, as the app's next session's card does.
 type Props = {
   locale: string;
   L: Locale;
@@ -85,9 +88,11 @@ type Props = {
   interests?: Interests | null;
   /** Suggest a ride: the member's own suggestions (ride_suggestions_mine, lib/ride-suggestions.ts); none: no card. */
   suggestions?: RsgRow[] | null;
+  /** The Ramadan season today (lib/hub-season.ts seasonKind): its card and look; "" or none: neither. */
+  season?: "ramadan" | "eid" | "";
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions, season }: Props) {
   const t = serverLocalize(T, locale);
   const ask = serverLocalize(ASK_T, locale);
   const N = (n: number) => fmtNum(n, locale);
@@ -102,8 +107,9 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
   };
   return (
     <InterestsBox initial={interests ?? null} words={interestWords(locale)}>
-    <div className="club-mine club-members">
+    <div className={`club-mine club-members${season ? " club-ssn-on" : ""}`}>
       <h2>{t.title}</h2>
+      {season && <SeasonCard locale={locale} kind={season} />}
       {isBirthday(a.birthDate, today) && (
         <p className="club-bday" role="status"><strong>{t.birthday(a.firstName)}</strong><span>{t.birthdayText}</span></p>
       )}
