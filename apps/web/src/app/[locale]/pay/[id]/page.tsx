@@ -23,8 +23,7 @@ import { storeSwitches } from "@/lib/store-settings";
 import { T as W } from "@/components/store/w4.text";
 import { T as SX6 } from "@/components/experiences/sx-B6.text";
 import XpPaid from "@/components/experiences/XpPaid";
-import { refundLine } from "@/lib/sx-b6";
-import { fmtDayDate } from "@/lib/tickets";
+import { refundLine, shortDay } from "@/lib/sx-b6";
 import { riyadhClock } from "@/lib/workshop-days";
 
 // micromobility.sa/pay/<id>: the one page that takes a payment, whatever it pays (a store order, ride
@@ -68,7 +67,7 @@ export default async function PayPage({ params, searchParams }: { params: Promis
   const firstRide = (v.rides ?? []).map((r) => String(r.date ?? "").slice(0, 10)).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort()[0];
   const rl = kind === "booking" && firstRide ? refundLine(firstRide, riyadhClock(new Date()).slice(0, 10), s.refundDays) : null;
   const policy = kind === "booking"
-    ? (rl && "until" in rl ? s6.refundBy(fmtDayDate(rl.until, locale))
+    ? (rl && "until" in rl ? s6.refundBy(shortDay(rl.until, locale))
       : s.refundDays > 1 ? fill(t.policy.bookingDays, s.refundDays) : s.refundDays === 0 ? t.policy.bookingSameDay : t.policy.booking)
     : kind === "order" ? serverLocalize(POLICY, locale).returnSentence : kind === "xp" ? null : t.policy[kind];
   // The policy's link: a store order's is the Returns page, which answers whatever the switches say; the Terms are left

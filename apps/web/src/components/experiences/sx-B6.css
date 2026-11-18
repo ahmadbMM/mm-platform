@@ -39,8 +39,9 @@ html[dir="rtl"] .sx6-chev.on { transform: rotate(90deg); }
 .sx6-agree { cursor: default; }
 .sx6-agree-l { flex: 1 1 auto; min-height: 44px; padding: 0; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; line-height: 1.45; color: #1a1919; text-align: start; text-decoration: underline; text-decoration-color: rgba(26, 25, 25, .3); text-underline-offset: 3px; cursor: pointer; }
 .sx6-wv-body { max-height: min(52svh, 420px); overflow-y: auto; margin-bottom: 14px; }
-/* EF14: the refund line under the total */
-.bk-sum-row.sx6-cancel span:last-child { color: #1a1919; font-weight: 600; text-align: end; }
+/* EF14, EF22: fact rows under the total, the key on one line and the fact beside it */
+.bk-sum-row.sx6-row span:first-child { flex: none; white-space: nowrap; }
+.bk-sum-row.sx6-row span:last-child { color: #1a1919; font-weight: 600; text-align: end; }
 
 /* EM09-B: the confirmation */
 .sx6-done-h { display: flex; align-items: center; gap: 10px; }

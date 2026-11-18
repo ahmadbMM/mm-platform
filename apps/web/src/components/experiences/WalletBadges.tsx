@@ -16,6 +16,10 @@ const never = () => () => {};
 const useDevice = () => useSyncExternalStore(never, () => (isApple(navigator.userAgent || "") ? "apple" : "google"), () => null);
 let ready: Promise<boolean> | null = null;
 const googleReady = () => (ready ??= fetch("/api/google-wallet?ready", { cache: "no-store" }).then((r) => r.ok, () => { ready = null; return false; }));
+/** Whether the official artwork files are in place (public/site/wallet/add-to-apple-wallet-{en,ar}.svg and
+ *  save-to-google-wallet-{en,ar}.svg, downloaded from Apple's and Google's brand pages, never redrawn): true once they
+ *  are, so no ticket asks for a file that is not there; until then the plain buttons stand in. */
+export const WALLET_ART: Record<"apple" | "google", boolean> = { apple: false, google: false };
 /** The official artwork's file for a language (Arabic where it exists, else English). */
 export const badgeSrc = (which: "apple" | "google", locale: string) => `/site/wallet/${which === "apple" ? "add-to-apple-wallet" : "save-to-google-wallet"}-${locale === "ar" ? "ar" : "en"}.svg`;
 
@@ -26,7 +30,7 @@ export default function WalletBadges({ bookingId, groupIds, locale }: { bookingI
   const [gone, setGone] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
-  const [art, setArt] = useState(true); // the artwork loaded (false: the plain button)
+  const [broken, setBroken] = useState(false); // the artwork failed to load: the plain button
   useEffect(() => {
     if (device !== "google") return;
     let live = true;
@@ -60,11 +64,12 @@ export default function WalletBadges({ bookingId, groupIds, locale }: { bookingI
   }
 
   const label = device === "apple" ? t.appleAdd : t.googleAdd;
+  const art = WALLET_ART[device] && !broken;
   return (
     <div className="tk-wallet sx6-wallet">
       <button type="button" className={art ? "sx6-badge" : "tk-btn"} onClick={() => void add()} disabled={busy} aria-busy={busy} aria-label={label}>
         {art
-          ? <img src={badgeSrc(device, locale)} alt="" height={44} onError={() => setArt(false)} />
+          ? <img src={badgeSrc(device, locale)} alt="" height={44} onError={() => setBroken(true)} />
           : busy ? t.passBusy : label}
       </button>
       {msg && <p className="tk-wallet-msg" role="status">{msg}</p>}

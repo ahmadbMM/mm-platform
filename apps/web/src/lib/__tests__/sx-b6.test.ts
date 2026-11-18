@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   datesLive, daysUntil, declineCause, earlyPct, giftLink, giftName, keyboardUp, kitFor, kitPick, KIT_NAMES, lessPct, packsOf, partyOf,
-  refundLine, refundUntil, riderDone, setParty, soonDays, xpSettings,
+  refundLine, refundUntil, riderDone, setParty, shortDay, soonDays, xpSettings,
 } from "../sx-b6";
 import { icsFor, type TicketSession } from "../tickets";
 
@@ -14,6 +14,11 @@ describe("dates on the steps and the tickets", () => {
     expect(soonDays("2027-01-17", "2026-11-18")).toBe(60);
     expect(soonDays("2027-01-18", "2026-11-18")).toBeNull();
     expect(soonDays("not a date", "2026-11-18")).toBeNull();
+  });
+  it("writes a day short, day before month in English", () => {
+    expect(shortDay("2026-12-09", "en")).toBe("Wed 9 Dec");
+    expect(shortDay("x", "en")).toBe("");
+    expect(shortDay("2026-12-09", "ar")).not.toBe("");
   });
   it("puts the last refund day refundDays before the ride, as pay_booking_cancel counts it (EF14)", () => {
     expect(refundUntil("2026-11-21", 1)).toBe("2026-11-20");

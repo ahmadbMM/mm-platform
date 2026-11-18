@@ -19,7 +19,7 @@ import { riyalNum } from "@/components/booking/Sar";
 import { monthNames, natOptions, type NatOption } from "@/lib/nationality";
 import { rpcResult } from "@/lib/rpc-client";
 import { genderChip } from "@/lib/session-gender";
-import { fmtDayDate, ticketCue, type AddonItem as TicketAddonItem, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
+import { ticketCue, type AddonItem as TicketAddonItem, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 import { Ic, KindIc } from "./BookIcons";
 import { CalendarIcon } from "@/components/site/Icons";
 import PayMarks from "@/components/pay/PayMarks";
@@ -31,7 +31,7 @@ import BookedExtras from "./BookedExtras";
 import XpPacks, { PackUse } from "./XpPacks";
 import GiftNote from "./GiftNote";
 import { useKeyboardUp } from "./useKeyboardUp";
-import { datesLive, earlyPct, lessPct, partyOf, refundLine, riderDone, setParty, type PartyRider, type SxFlow } from "@/lib/sx-b6";
+import { datesLive, earlyPct, lessPct, partyOf, refundLine, riderDone, setParty, shortDay, type PartyRider, type SxFlow } from "@/lib/sx-b6";
 
 // Booking a ride on the website (the owner, 2026-10-03: "full booking on the website"), as the
 // booking app's own wizard books one (renderRegister): the event, then the Ride step (the date, as
@@ -708,7 +708,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       try { const u = new URL("/experiences", sx?.origin || window.location.origin); if (ek) u.searchParams.set("ev", ek); u.searchParams.set("session", sid); return u.toString(); } catch { return null; }
     };
     const rl = done.paid && pay && ds ? refundLine(ds.date, today, pay.refundDays) : null;
-    const until = rl && "until" in rl ? s6.refundUntil(fmtDayDate(rl.until, locale)) : null;
+    const until = rl && "until" in rl ? s6.refundUntil(shortDay(rl.until, locale)) : null;
     const isBooked = !allWl && !appr;
     body = (
       <section aria-labelledby="bk-done-h">
@@ -733,7 +733,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         )}
         </div>
         <div className="bk-foot">
-          <a className="bk-btn2" href={links.account}>{t.myBookings}</a>
+          {/* My Bookings is Manage booking above (EM09-B), unless the waitlist drew no extras */}
+          {allWl && <a className="bk-btn2" href={links.account}>{t.myBookings}</a>}
           <button type="button" className="bk-btn" onClick={another}>{t.another}</button>
         </div>
       </section>
@@ -1040,8 +1041,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
           )}
           {early > 0 && <p className="bk-sum-row"><span>{s6.earlyK}</span><bdi dir="ltr">−{early}%</bdi></p>}
           <p className={`bk-sum-tot${addonTotal > 0 ? " sep" : ""}`}><span>{t.total}</span>{grand}</p>
-          {rf && <p className="bk-sum-row sx6-cancel"><span>{s6.cancelK}</span><span>{"until" in rf ? s6.refundUntil(fmtDayDate(rf.until, locale)) : s6.refundNone}</span></p>}
-          {credit && <p className="bk-sum-row"><span>{s6.bikeCreditK}</span><span>{s6.bikeCreditV(fmtDayDate(creditBy, locale))}</span></p>}
+          {rf && <p className="bk-sum-row sx6-row"><span>{s6.cancelK}</span><span>{"until" in rf ? s6.refundUntil(shortDay(rf.until, locale)) : s6.refundNone}</span></p>}
+          {credit && <p className="bk-sum-row sx6-row"><span>{s6.bikeCreditK}</span><span>{s6.bikeCreditV(shortDay(creditBy, locale))}</span></p>}
         </div>
         {payable && (
           <div className="bk-card bk-paybox">

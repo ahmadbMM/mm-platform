@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { Link } from "@/i18n/navigation";
-import { fmtDayDate } from "@/lib/tickets";
-import { giftLink, waLink } from "@/lib/sx-b6";
+import { giftLink, shortDay, waLink } from "@/lib/sx-b6";
 import { T } from "./sx-B6.text";
 import "./sx-B6.css";
 
@@ -34,7 +33,7 @@ export default function XpPaid({ payId, locale }: { payId: string; locale: strin
     const title = (locale === "ar" && it.title_ar) || it.title_en || "";
     return (
       <div className="sx6-after">
-        <p className="sx6-until">{[title, t.packLessons(it.lessons), it.expires_on ? t.packUntil(fmtDayDate(it.expires_on, locale)) : ""].filter(Boolean).join(" · ")}</p>
+        <p className="sx6-until">{[title, t.packLessons(it.lessons), it.expires_on ? t.packUntil(shortDay(it.expires_on, locale)) : ""].filter(Boolean).join(" · ")}</p>
         <div className="bk-foot"><Link className="bk-btn wide" href="/experiences#book">{t.book}</Link></div>
       </div>
     );

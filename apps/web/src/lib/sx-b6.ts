@@ -2,6 +2,7 @@
 // 2026-11-18: "do all" of the Store and Experiences mobile report; builder B6). Pure rules, browser-safe (no server
 // imports), so the components stay thin and the rules are tested (src/lib/__tests__/sx-b6.test.ts).
 import type { Rider } from "./booking";
+import { intlOf } from "@/i18n/locales";
 
 type Json = Record<string, unknown>;
 const obj = (v: unknown): Json => (v && typeof v === "object" && !Array.isArray(v) ? (v as Json) : {});
@@ -29,6 +30,12 @@ export function refundUntil(date: string, refundDays: number): string | null {
   const d = dayMs(date);
   if (!Number.isFinite(d) || !Number.isFinite(refundDays) || refundDays < 0) return null;
   return new Date(d - Math.floor(refundDays) * DAY).toISOString().slice(0, 10);
+}
+/** A day as a short fact, "Wed 9 Dec" (en-GB for English: never en-CA's month-first form, the en-CA trap of 2026-10-27). */
+export function shortDay(iso: string, locale: string): string {
+  const d = dayMs(iso);
+  if (!Number.isFinite(d)) return "";
+  return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(d)).replace(",", "");
 }
 /** EF14: the refund line beside the price: until a day ("until" + that day), or none left when booked after it. */
 export function refundLine(date: string, today: string, refundDays: number): { until: string } | { none: true } | null {
