@@ -11,7 +11,9 @@ export async function POST(req: Request) {
   if (!g.ok) return g.res;
   const code = giftCodeOf(typeof g.body.code === "string" ? g.body.code.slice(0, 30) : "");
   if (!giftCodeOk(code)) return json({ ok: false, error: "gift" }, 400);
-  const r = await payRpc<{ amount: number; balance: number }>("store_gift_card_to_wallet", { p_id: g.acct!.id, p_token: g.acct!.token, p_code: code });
+  // metered per visitor in the database (x-mm-visitor-ip): without `req` every shopper shared one meter of ten tries
+  // (security review 2026-11-18, M1)
+  const r = await payRpc<{ amount: number; balance: number }>("store_gift_card_to_wallet", { p_id: g.acct!.id, p_token: g.acct!.token, p_code: code }, undefined, req);
   if (r.status !== 200 || !r.data) {
     const mine = sxRefusal(r.message);
     if (mine) return json({ ok: false, error: mine }, 409);

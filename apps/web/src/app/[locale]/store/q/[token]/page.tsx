@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { pageMeta } from "@/lib/seo";
 import PageShell from "@/components/site/PageShell";
@@ -6,7 +7,7 @@ import { openOr404, storeState } from "@/components/store/store-data";
 import { CheckoutView } from "@/components/store/sx-b3-checkout";
 import { T as X } from "@/components/store/sx-B3.text";
 import { Link } from "@/i18n/navigation";
-import { getAccount } from "@/lib/account";
+import { getAccount, visitorOf } from "@/lib/account";
 import { payRpc } from "@/lib/pay/server";
 import { dateLabel } from "@/lib/store-checkout";
 import { quoteNo, quoteOf, quoteTokenOk } from "@/lib/sx-b3";
@@ -35,7 +36,9 @@ export default async function QuotePage({ params }: Props) {
   if (!quoteTokenOk(token)) notFound();
   const [s, acct] = await Promise.all([storeState(locale), getAccount()]);
   openOr404(s);
-  const r = await payRpc<unknown>("store_quote_get", { p_token: token });
+  // the database meters quote reads per visitor (x-mm-visitor-ip): without the visitor every shopper shares the Worker's
+  // one address, and thirty reads anywhere in ten minutes made every quote link a 404 (security review 2026-11-18, M1)
+  const r = await payRpc<unknown>("store_quote_get", { p_token: token }, undefined, visitorOf(await headers()));
   const q = r.status === 200 ? quoteOf(r.data) : null;
   if (!q) notFound();
   const x = serverLocalize(X, locale);

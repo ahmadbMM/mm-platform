@@ -51,6 +51,13 @@ export function forVisitor(req: Request, args: Record<string, unknown>): Record<
   return args;
 }
 
+/** The visitor for forVisitor / payRpc's `from` in a server component, which has the request's headers
+ *  (`await headers()` from next/headers) and no Request: a stand-in that carries only the address Cloudflare saw. */
+export function visitorOf(h: { get(name: string): string | null }): Request {
+  const ip = (h.get("cf-connecting-ip") ?? "").trim().slice(0, 60);
+  return new Request("https://visitor.invalid/", { headers: ip ? { "cf-connecting-ip": ip } : {} });
+}
+
 function visitorHeaders(from?: Request): Record<string, string> {
   const ip = from ? clientIp(from).trim().slice(0, 60) : "";
   if (!ip) return {};

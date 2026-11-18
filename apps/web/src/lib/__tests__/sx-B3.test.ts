@@ -141,7 +141,8 @@ describe("a quote's link (N23)", () => {
   it("is never kept at the edge, and opens the same checkout as /store/checkout", () => {
     expect(src("lib/page-cache.ts")).toContain("store\\/(?:cart|checkout|order|track|q)");
     const page = src("app/[locale]/store/q/[token]/page.tsx");
-    expect(page).toContain('payRpc<unknown>("store_quote_get", { p_token: token })');
+    // metered per visitor (security review 2026-11-18, M1)
+    expect(page).toContain('payRpc<unknown>("store_quote_get", { p_token: token }, undefined, visitorOf(await headers()))');
     expect(page).toContain("<CheckoutView");
     expect(page).toContain("noindex: true");
     expect(src("app/[locale]/store/checkout/page.tsx")).toContain("<CheckoutView");
