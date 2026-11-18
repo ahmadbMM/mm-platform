@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
-import { fill } from "@/i18n/tx";
 import { useDialogFocus } from "@/components/site/use-dialog-focus";
 import { Link } from "@/i18n/navigation";
 import { sar } from "@/lib/pay/money";
@@ -10,6 +9,8 @@ import { tabbyQuarter } from "@/lib/store-checkout";
 import { useApplePay } from "@/components/store/useCode";
 import { T as W } from "@/components/store/w4.text";
 import { T } from "./Pay.text";
+import { T as SX6 } from "@/components/experiences/sx-B6.text";
+import { declineCause } from "@/lib/sx-b6";
 
 // The payment page's live part (micromobility.sa/pay/<id>): the hold's countdown and Moyasar's own form
 // (moyasar-payment-form, pinned in lib/pay/config.ts). The form posts the card straight to Moyasar with the
@@ -69,6 +70,7 @@ function uuid4(): string {
 export default function PayScreen({ locale, pay, publishableKey, testMode, formJs, formCss, declined, tried, againHref = null, termsHref = null, applePay = false, tabby = false, tabbyBack = null }: PayScreenProps) {
   const t = useLocalize(T);
   const w = useLocalize(W);
+  const s6 = useLocalize(SX6);
   const appleHere = useApplePay(applePay);
   // the ways Moyasar's form offers (F87: Apple Pay alone after Try Apple Pay), and whether the card number takes the keyboard once drawn
   const [methods, setMethods] = useState<string[]>(ALL_METHODS);
@@ -248,7 +250,9 @@ export default function PayScreen({ locale, pay, publishableKey, testMode, formJ
       {pay.hold && <p className="py-hold" aria-live="off">{holding()}</p>}
       {(declined || tried || tabbyErr) && (
         <div className="py-err py-recover" role="alert">
-          <p>{tabbyErr || (declined ? fill(t.declined, declined) : t.declinedPlain)}</p>
+          {/* the cause in plain words, from the gateway's message (EF13, 2026-11-18), then that nothing was taken; every
+              entry stays (the booking or order is still held) and the ways on follow: Apple Pay first where the device has it */}
+          <p>{tabbyErr || `${s6.decline[declineCause(declined)] ?? s6.decline.generic} ${s6.nothingTaken}`}</p>
           <div className="py-recover-acts">
             {appleHere && <button type="button" className="bk-btn2" onClick={tryApple}>{w.tryApple}</button>}
             <button type="button" className="bk-btn2" onClick={otherCard}>{w.otherCard}</button>

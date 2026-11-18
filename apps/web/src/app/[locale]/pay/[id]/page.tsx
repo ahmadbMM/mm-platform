@@ -21,6 +21,10 @@ import { storeEnv } from "@/lib/store-api";
 import { tabbyKeys } from "@/lib/pay/tabby";
 import { storeSwitches } from "@/lib/store-settings";
 import { T as W } from "@/components/store/w4.text";
+import { T as SX6 } from "@/components/experiences/sx-B6.text";
+import XpPaid from "@/components/experiences/XpPaid";
+import { refundLine, shortDay } from "@/lib/sx-b6";
+import { riyadhClock } from "@/lib/workshop-days";
 
 // micromobility.sa/pay/<id>: the one page that takes a payment, whatever it pays (a store order, ride
 // bookings, lockers, a wallet top-up, a workshop job; rentals 20261110150000 payments). Its address is the
@@ -56,15 +60,23 @@ export default async function PayPage({ params, searchParams }: { params: Promis
   const s = paySettings(content);
   const kind = v.kind;
   const open = v.status === "initiated" && payReady(env) && s.enabled;
+  const s6 = serverLocalize(SX6, locale);
+  // EF14 (2026-11-18): a ride's refund rule said with its last day, as the review said it ("Cancel by Fri 20 Nov for a
+  // full refund..."); booked after that day, the rule as before. A gift or a pack (kind xp) states none here: their terms
+  // are the Terms page's, linked from the agreement.
+  const firstRide = (v.rides ?? []).map((r) => String(r.date ?? "").slice(0, 10)).filter((d) => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort()[0];
+  const rl = kind === "booking" && firstRide ? refundLine(firstRide, riyadhClock(new Date()).slice(0, 10), s.refundDays) : null;
   const policy = kind === "booking"
-    ? (s.refundDays > 1 ? fill(t.policy.bookingDays, s.refundDays) : s.refundDays === 0 ? t.policy.bookingSameDay : t.policy.booking)
-    : kind === "order" ? serverLocalize(POLICY, locale).returnSentence : t.policy[kind];
+    ? (rl && "until" in rl ? s6.refundBy(shortDay(rl.until, locale))
+      : s.refundDays > 1 ? fill(t.policy.bookingDays, s.refundDays) : s.refundDays === 0 ? t.policy.bookingSameDay : t.policy.booking)
+    : kind === "order" ? serverLocalize(POLICY, locale).returnSentence : kind === "xp" ? null : t.policy[kind];
   // The policy's link: a store order's is the Returns page, which answers whatever the switches say; the Terms are left
   // out while staff have that page switched off (a closed page sends the payer away from this one while the hold runs).
   const policyHref = kind === "order" ? "/returns" : (hidden.includes("terms") ? null : "/terms");
+  // a ride paid goes back to Experiences' own confirmation with its tickets (EM09-B, 2026-11-18: /experiences?paid=)
   const next: Record<PayView["kind"], string> = {
-    booking: "/account", order: v.order_no && v.order_key ? `/store/order/${v.order_no}?k=${v.order_key}` : "/store",
-    locker: "/lockers", topup: "/account", workshop: "/workshop",
+    booking: `/experiences?paid=${v.id}#book`, order: v.order_no && v.order_key ? `/store/order/${v.order_no}?k=${v.order_key}` : "/store",
+    locker: "/lockers", topup: "/account", workshop: "/workshop", xp: "/experiences",
   };
   // Start again on a store order: the cart was emptied when the order was placed, so its own page, which puts the items
   // back (PutBack), not the empty cart (bug hunt 2026-11-11)
@@ -86,11 +98,13 @@ export default async function PayPage({ params, searchParams }: { params: Promis
       <div className="py-done" role="status">
         <span className="py-tick" aria-hidden="true" />
         <h1 className="bk-title">{t.paidTitle}</h1>
-        <p className="bk-sub">{t.paidSub[kind]}</p>
+        {kind !== "xp" && <p className="bk-sub">{t.paidSub[kind]}</p>}
         <p className="py-paid-amt"><bdi className="tk-amt">{sar(v.amount)}</bdi></p>
         {w && <p className="py-meta">{fill(t.paidWith, w)}</p>}
         {v.receipt_no != null && <p className="py-meta">{fill(t.receipt, String(v.receipt_no))}</p>}
-        <div className="bk-foot"><Link className="bk-btn wide" href={next[kind]}>{t.next[kind]}</Link></div>
+        {/* a gift's link to send, or a pack's sessions (EF20, EF21) */}
+        {kind === "xp" && <XpPaid payId={v.id} locale={locale} />}
+        {kind !== "xp" && <div className="bk-foot"><Link className="bk-btn wide" href={next[kind]}>{kind === "booking" ? s6.seeTicket : t.next[kind]}</Link></div>}
       </div>
     );
   } else if (v.status === "refunded") {
@@ -100,7 +114,7 @@ export default async function PayPage({ params, searchParams }: { params: Promis
       <div className="py-done">
         <h1 className="bk-title">{v.status === "expired" ? t.expiredTitle : t.cancelledTitle}</h1>
         <p className="bk-sub">{t.expiredSub}</p>
-        <Link className="bk-btn wide" href={kind === "order" ? orderAgain : kind === "locker" ? "/lockers" : kind === "booking" ? "/experiences" : "/"}>{t.startAgain}</Link>
+        <Link className="bk-btn wide" href={kind === "order" ? orderAgain : kind === "locker" ? "/lockers" : kind === "booking" || kind === "xp" ? "/experiences" : "/"}>{t.startAgain}</Link>
       </div>
     );
   } else {
@@ -115,7 +129,7 @@ export default async function PayPage({ params, searchParams }: { params: Promis
         <h1 className="py-title">{t.title}</h1>
         <div className="py-grid">
           <section className="py-sum" aria-labelledby="py-h">
-            <p className="py-kind">{t.kinds[kind]}</p>
+            <p className="py-kind">{kind === "xp" ? s6.xpKind : t.kinds[kind]}</p>
             <h2 id="py-h" className="py-desc">{v.description}</h2>
             {lines.length > 0 && (
               <ul className="py-lines">

@@ -6,7 +6,8 @@ import { fetchPayment, paymentsFor, refundPayment, sourceInfo, toHalalas, type M
 // (PAY_SERVER_KEY; the database keeps its sha256), so the public key alone opens none of them.
 
 export type PayView = {
-  id: string; kind: "order" | "booking" | "locker" | "topup" | "workshop"; ref: string; amount: number; currency: string;
+  /** "xp": a gift ride or a pack of sessions bought for Experiences (2026-11-18, rentals SX B6). */
+  id: string; kind: "order" | "booking" | "locker" | "topup" | "workshop" | "xp"; ref: string; amount: number; currency: string;
   description: string; status: "initiated" | "paid" | "expired" | "cancelled" | "refunded" | "partly_refunded";
   hold: boolean; expires_at: string; paid_at: string | null; method: string | null; brand: string | null; last4: string | null;
   message: string | null; refunded: number; receipt_no: number | null; created_at: string;

@@ -119,13 +119,13 @@ export const waiverKind = (s: Pick<BookSession, "kind">): WaiverKind => (BIKE_WA
 /** Every booking needs an agreed waiver (owner, 2026-10-03: "you can't book anything without
  *  agreeing"; the database refuses one without: WAIVER_REQUIRED). */
 export const needsWaiver = (s: Pick<BookSession, "kind">) => Boolean(waiverKind(s));
-/** The wizard's path (_regSteps): the riders step only where there is a bike, then the waiver
- *  (every booking), then the review. */
+/** The wizard's path (_regSteps): the riders step only where there is a bike, then the review, where the waiver is
+ *  ticked right above the button (the booking app's review since 2026-10-10; the website's since 2026-11-18, EM07-B: its
+ *  own step 2.5 went). 2.5 stays in the type for an older address only. */
 export type Step = 1 | 2 | 2.5 | 3;
 export function regSteps(s: Pick<BookSession, "kind">): Step[] {
   const st: Step[] = [1];
   if (needsBike(s)) st.push(2);
-  if (needsWaiver(s)) st.push(2.5);
   st.push(3);
   return st;
 }
