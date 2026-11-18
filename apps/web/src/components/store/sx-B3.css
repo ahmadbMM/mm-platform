@@ -56,3 +56,15 @@
 /* N23 the quote's link: its number and date as one row of facts under the heading */
 .sx3-qh { margin-bottom: 8px !important; }
 .sx3-qfacts { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 0 0 22px; font-size: 14px; font-weight: 600; color: var(--st-ink-2); }
+
+/* An order's page: the way's own facts (N13, N15, N07) and the lessons for a rider still learning (N17) */
+.sx3-ow { margin-top: 10px; }
+.sx3-learn { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; padding: 18px 22px; background: var(--st-green-soft); border-radius: var(--st-r-card); }
+.sx3-learn h2 { margin: 0; font-size: 17px; letter-spacing: -.2px; }
+.sx3-learn .bk-btn2 { min-height: 44px; }
+
+/* N20 a store gift card into the account's wallet (My Account's wallet) */
+.sx3-gw-open { margin: 4px 0 12px; min-height: 44px; }
+.sx3-gw { display: grid; gap: 4px 12px; margin: 4px 0 14px; }
+@media (min-width: 560px) { .sx3-gw { grid-template-columns: minmax(0, 1fr) auto; align-items: end; } .sx3-gw .bk-btn { margin-bottom: 14px; } .sx3-gw p { grid-column: 1 / -1; } }
+.sx3-gw-ok { margin: 0; color: var(--st-green); font-weight: 600; font-size: 14px; }

@@ -1,4 +1,6 @@
-import { Fragment } from "react";
+import { Fragment, type ReactNode } from "react";
+import type { Buyer } from "@/lib/sx-b3";
+import type { SxText } from "./sx-B3.text";
 import { Link } from "@/i18n/navigation";
 import { intlOf } from "@/i18n/locales";
 import { sized } from "@/lib/img";
@@ -41,9 +43,12 @@ const SLOT_SHOWN: readonly string[] = ["pending", "paid", "preparing", "shipped"
  *  an Arabic line never shows it as "10-WELCOME" (the same isolates sar() puts round an amount). */
 const ltr = (s: string) => `\u2066${s}\u2069`;
 
-export default function OrderView({ o, t, w, beside, locale, seller, now, today, whatsapp, showroom, expected, slot, signup, returnsHref, policy, hidden }: {
+export default function OrderView({ o, t, w, beside, locale, seller, now, today, whatsapp, showroom, expected, slot, signup, returnsHref, policy, hidden, sx }: {
   o: Order; t: StoreText; w: W5Text; beside: Beside; locale: string; seller: Seller; now: number; today: string; whatsapp: string; showroom: string;
   expected: string | null; slot: string | null; signup: string | null; returnsHref: string; policy: string; hidden: readonly string[];
+  /** The build of 2026-11-18 (B3): a company's standard tax invoice (N34: the buyer, with the words in both languages),
+   *  the way's own facts (the handover slot, the session, the pin) and what follows it (learning to ride). */
+  sx?: { buyer: Buyer | null; x: SxText; bx: SxText; way?: ReactNode; after?: ReactNode; wayName?: string };
 }) {
   const no = orderNo(o.no);
   const intl = intlOf(locale);
@@ -60,7 +65,7 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
   const { steps, at } = orderSteps(o);
   const card = paidWith(o.payment);
   const parts = paidParts(o);
-  const way = o.fulfil === "pickup" ? t.pickup : o.fulfil === "jeddah" ? t.jeddah : o.fulfil === "ksa" ? t.ksa : w.wayDigital;
+  const way = sx?.wayName ? sx.wayName : o.fulfil === "pickup" ? t.pickup : o.fulfil === "jeddah" ? t.jeddah : o.fulfil === "ksa" ? t.ksa : w.wayDigital;
   const wa = whatsapp ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(t.mistakeMsg(no))}` : null;
   const outNow = outToday(o, today);
 
@@ -68,6 +73,7 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
   const issued = invoiceIssued(o);
   const invNo = issued ? invoiceNumber(o) : null;
   const qr = invoiceQr(o, { name: seller.qrName, vat: seller.vat });
+  const buyer = sx?.buyer ?? null;
   const dir = beside.lang === "ar" ? "rtl" : "ltr";
   const bw = beside.w, bt = beside.t;
   // a label in the page's language, and once the invoice is issued the other one beside it
@@ -129,7 +135,7 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
 
       <section className="st-ord-way" aria-label={way}>
         <p>{o.fulfil === "digital" ? <StIcon name="gift" size={20} /> : <Ic name={o.fulfil === "pickup" ? "shop" : "truck"} size={20} />}<b>{way}</b></p>
-        {o.fulfil === "pickup" ? <p>{t.collectFrom(showroom)}</p>
+        {o.fulfil === "pickup" ? !sx?.wayName && <p>{t.collectFrom(showroom)}</p>
           : o.fulfil !== "digital" && o.address && <p>{t.deliverTo}: {[o.address.district, o.address.city].filter(Boolean).join(", ")}</p>}
         {!outNow && (slot && SLOT_SHOWN.includes(o.status) ? <p className="st-expected">{w.slotOn(slot)}</p>
           : expected && <p className="st-expected">{t.expected(expected)}</p>)}
@@ -139,7 +145,9 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
             {o.tracking_no && <div><dt>{t.tracking}</dt><dd><bdi dir="ltr">{o.tracking_no}</bdi></dd></div>}
           </dl>
         )}
+        {sx?.way}
       </section>
+      {sx?.after}
 
       {o.gift_cards.length > 0 && (
         <GiftReveal no={o.no} k={o.key} cards={o.gift_cards}>
@@ -177,8 +185,9 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
       <section className={`st-invoice${issued ? " st-zinv" : ""}`} aria-labelledby="st-inv-h">
         <div className="st-inv-top">
           <div>
-            <h2 id="st-inv-h">{issued ? w.taxInvoice : t.summary}</h2>
-            {issued && <p className="st-zb-h">{other(bw.taxInvoice)}</p>}
+            {/* a company's order is a standard tax invoice with the buyer's VAT number, name and address (N34) */}
+            <h2 id="st-inv-h">{issued ? (buyer && sx ? sx.x.taxInvoice : w.taxInvoice) : t.summary}</h2>
+            {issued && <p className="st-zb-h">{other(buyer && sx ? sx.bx.taxInvoice : bw.taxInvoice)}</p>}
           </div>
           {qr && <InvoiceQr text={qr} label={w.qrLabel} />}
         </div>
@@ -194,7 +203,10 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
           {issued && seller.address && <div><dt>{lab(t.address, bt.address)}</dt><dd>{seller.address}</dd></div>}
           {seller.vat && <div><dt>{lab(t.vatNo, bt.vatNo)}</dt><dd><bdi dir="ltr">{seller.vat}</bdi></dd></div>}
           {seller.cr && <div><dt>{lab(t.crNo, bt.crNo)}</dt><dd><bdi dir="ltr">{seller.cr}</bdi></dd></div>}
-          <div><dt>{lab(t.billTo, bt.billTo)}</dt><dd>{o.name}</dd></div>
+          <div><dt>{lab(t.billTo, bt.billTo)}</dt><dd>{buyer ? <>{buyer.name}<small>{o.name}</small></> : o.name}</dd></div>
+          {buyer && sx && <div><dt>{lab(sx.x.buyerVat, sx.bx.buyerVat)}</dt><dd><bdi dir="ltr">{buyer.vat}</bdi></dd></div>}
+          {buyer?.cr && sx && <div><dt>{lab(sx.x.buyerCr, sx.bx.buyerCr)}</dt><dd><bdi dir="ltr">{buyer.cr}</bdi></dd></div>}
+          {buyer?.address && sx && <div><dt>{lab(sx.x.buyerAddress, sx.bx.buyerAddress)}</dt><dd>{buyer.address}</dd></div>}
           {issued && sent && (
             <div>
               <dt>{lab(w.supplied, bw.supplied)}</dt>

@@ -3,16 +3,19 @@ import { fmtDayDate } from "@/lib/tickets";
 import { walletKindWord, type Wallet } from "@/lib/wallet";
 import { walletWords } from "./Wallet.words";
 import WalletTopUp from "@/components/pay/WalletTopUp";
+import GiftToWallet from "@/components/store/GiftToWallet";
 
 // The wallet on My Account (the booking app's #cw-mine): the balance and its last ten lines. Nothing here is
 // staff's note: customer_wallet does not send it.
-export default function WalletCard({ wallet, locale, topup = null }: { wallet: Wallet; locale: string; topup?: { min: number; max: number } | null }) {
+// giftCard: a store gift card can be added to the wallet (N20, 2026-11-18; staff switch store.giftCardWallet.on).
+export default function WalletCard({ wallet, locale, topup = null, giftCard = false }: { wallet: Wallet; locale: string; topup?: { min: number; max: number } | null; giftCard?: boolean }) {
   const t = walletWords(locale);
   return (
     <section className="ac-sec ac-wal" aria-labelledby="ac-wal-h">
       <div className="ac-wal-top"><h2 id="ac-wal-h">{t.title}</h2><strong className="ac-wal-n"><bdi>{sar(wallet.balance)}</bdi></strong></div>
       <p className="ac-text">{t.note}</p>
       {topup && <WalletTopUp min={topup.min} max={topup.max} locale={locale} />}
+      {giftCard && <GiftToWallet />}
       {wallet.rows.length ? (
         <ul className="ac-wal-rows">
           {wallet.rows.slice(0, 10).map((x) => (
