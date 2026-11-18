@@ -175,3 +175,19 @@ html:is([lang="ar"], [lang="ur"]) .club-members h3 { letter-spacing: 0; }
 .club-sat:disabled { opacity: .5; cursor: default; }
 .club-sat:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
 .club-plan-err { margin: 10px 0 0; font-size: 13.5px; font-weight: 600; color: #a3271d; }
+
+/* The Build-up plan (BuildupPlan.tsx; the booking app's .hub-bup card, 2026-11-18): the event, its date, the Saturdays to
+   go, one row per Saturday with what it says at its end; a day gone and not ridden dimmed. */
+.club-bup { border-top: 1px solid rgba(0, 0, 0, .08); padding-top: 14px; }
+.club-bup h3 { display: flex; align-items: center; gap: 6px; }
+.club-bup-ev { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 16px; color: #1a1919; }
+.club-bup-ev span { font-size: 13px; color: #57605a; }
+.club-bup-n { margin: 6px 0 4px; font-size: 17px; font-weight: 800; color: #077a4b; }
+.club-bup-l { list-style: none; margin: 0; padding: 0; }
+.club-bup-l li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 4px 0; border-bottom: 1px dashed rgba(0, 0, 0, .08); }
+.club-bup-l li:last-child { border-bottom: 0; }
+.club-bup-d { font-weight: 600; font-size: 14px; color: #1a1919; font-variant-numeric: tabular-nums; }
+.club-bup-l li.past .club-bup-d { font-weight: 400; color: #8a8f8a; }
+.club-bup-s { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #57605a; }
+.club-bup-l li:is(.done, .held) .club-bup-s { color: #077a4b; }
+.club-mine .club-bup-go { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: #077a4b; font-weight: 800; font-size: 13.5px; white-space: nowrap; }

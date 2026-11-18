@@ -18,6 +18,8 @@ import { monthName, planBoxes, type HubMonth, type HubPlan } from "@/lib/member-
 import type { RideKind } from "@/lib/rides";
 import MyMonth from "./MyMonth";
 import PlanSaturdays from "./PlanSaturdays";
+import BuildupPlan from "./BuildupPlan";
+import type { BupPlan } from "@/lib/buildup-plan";
 import { memberHubWords } from "./MemberHub.words";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
@@ -31,6 +33,8 @@ import { memberHubWords } from "./MemberHub.words";
 // under the title on the app's Account > Badges, and the title shows here on the website): components/account/ShareImage.tsx.
 // Since the new features build (2026-11-13), the app's My month (F13, from the 26th) after their rides and Plan my
 // Saturdays (F10) after the upcoming rides (lib/member-hub.ts): each drawn only when its read answered.
+// The Community features round (2026-11-18), placed as the app's tab places them: the Build-up plan (BuildupPlan.tsx) right
+// after the card, as the app's comes right after its first card.
 type Props = {
   locale: string;
   L: Locale;
@@ -68,9 +72,11 @@ type Props = {
   plan?: HubPlan | null;
   month?: HubMonth | null;
   kindName?: (k: RideKind) => string;
+  /** The Build-up plan (lib/buildup-plan.ts) and the event's name in the page's language; none: not drawn. */
+  bup?: { plan: BupPlan; name: string } | null;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup }: Props) {
   const t = serverLocalize(T, locale);
   const ask = serverLocalize(ASK_T, locale);
   const N = (n: number) => fmtNum(n, locale);
@@ -102,6 +108,8 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
       </div>
       <span className="club-bar"><span style={{ width: `${pct}%` }} /></span>
       <p className="club-mine-next">{a.tier >= 2 || !a.next ? t.top : t.toNext(N(Math.max(0, a.next - a.credits)), tierNames[a.tier + 1])}</p>
+
+      {bup && <BuildupPlan locale={locale} plan={bup.plan} name={bup.name} bookAt={(id) => bookAt(id, "saturday")} />}
 
       {title && (
         <section className="club-comm" aria-labelledby="club-comm-h">

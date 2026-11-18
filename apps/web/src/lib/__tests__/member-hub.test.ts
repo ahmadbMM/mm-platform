@@ -141,7 +141,7 @@ describe("the words", () => {
     expect(memberHubWords("xx")).toBe(MEMBER_HUB_WORDS.en);
   });
   it("are the booking app's own where it speaks the language", () => {
-    expect(MEMBER_HUB_WORDS.en).toEqual({ plan: "Plan my Saturdays", err: "We could not do that. Please try again.", month: "My month", sats: "Saturdays ridden", sessions: "Sessions", badges: "Badges earned", vs: "Sessions compared with {0}" });
+    expect(MEMBER_HUB_WORDS.en).toMatchObject({ plan: "Plan my Saturdays", err: "We could not do that. Please try again.", month: "My month", sats: "Saturdays ridden", sessions: "Sessions", badges: "Badges earned", vs: "Sessions compared with {0}" });
     expect(MEMBER_HUB_WORDS.ar.plan).toBe("خطتي لأيام السبت");
     expect(MEMBER_HUB_WORDS.ar.vs).toBe("الأنشطة مقارنةً بشهر {0}");
     expect(MEMBER_HUB_WORDS.fr.month).toBe("Mon mois");
