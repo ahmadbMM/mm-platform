@@ -1,8 +1,14 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { createElement, type ReactElement } from "react";
+// @ts-expect-error -- react-dom/server ships without type declarations here
+import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
+import SpecTable from "../../components/store/pdp/SpecTable";
 import { activeFilters, brandOnce, cardSizes, isWideCard, photoLoad, withoutFilter } from "../sx-B1-list";
 import { distance, findProducts, holds, normalise, words } from "../sx-B1-search";
+import { absolute, feedItems, productFeed, type FeedOptions } from "../sx-B1-feed";
+import { storeOf } from "../store";
 import { noFilters, type Facet } from "../store-listing";
 
 // The store's lists and header on every screen (the user, 2026-11-18: "do all" of the store and Experiences mobile
@@ -170,5 +176,99 @@ describe("the header search finds products the way a shopper types (N26)", () =>
     expect(holds("Returns & refunds — إرجاع المنتجات", "ارجاع")).toBe(true);
     expect(holds("Workshop", "WORK")).toBe(true);
     expect(holds("Workshop", "wrok")).toBe(false);
+  });
+});
+
+describe("the store's products as a Google Merchant Center feed (N27)", () => {
+  const U = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+  const product = (n: number, slug: string, x: Record<string, unknown> = {}) => ({
+    id: U(n), slug, category: "accessories", brand: null, name_en: slug, name_ar: null, tagline_en: null, tagline_ar: null, description_en: null,
+    description_ar: null, specs: [], images: [`/site/store/${slug}/1.webp`], price: 100, compare_at: null, ship_ksa: true, sort: n, created_at: "2026-11-01T00:00:00Z", ...x,
+  });
+  const variant = (n: number, pid: number, x: Record<string, unknown> = {}) => ({ id: U(100 + n), product_id: U(pid), size: null, color_en: null, color_ar: null, color_hex: null, price: null, stock: 5, sort: n, ...x });
+  const store = storeOf([
+    product(1, "max", { category: "bikes", brand: "Alvas", name_en: "ALVAS DA54 MAX", name_ar: "ألفاس DA54 MAX", price: 8435, description_en: "## Carbon\n- **Shimano** 105 & [disc](https://x) brakes", description_ar: "كربون <كامل>",
+      images: ["/site/store/max/1.webp", "/media/store/max/2.webp", "https://cdn.example/3.webp", "//evil/4.webp"] }),
+    product(2, "helmet", { price: 450, compare_at: 520, sale_from: "2026-11-10", sale_to: "2026-11-20", tagline_en: "Light and cool" }),
+    product(3, "nophoto", { images: [] }),
+    product(4, "gift-card", { kind: "gift_card", category: "gift" }),
+    product(5, "used", { category: "bikes", condition: "certified", price: 5200 }),
+  ], [
+    variant(1, 1, { size: "M", color_en: "Black", color_ar: "أسود", stock: 2 }), variant(2, 1, { size: "L", color_en: "Black", color_ar: "أسود", stock: 0, price: 8600 }),
+    variant(3, 2, { stock: 3 }), variant(4, 3, { stock: 3 }), variant(5, 4, { price: 100, stock: 999 }), variant(6, 5, { stock: 1 }),
+  ]);
+  const o: FeedOptions = { site: "https://micromobility.sa", lang: "en", licence: null, today: "2026-11-18", storeName: "Micromobility" };
+  const items = (x: Partial<FeedOptions> = {}) => feedItems(store.products, { ...o, ...x });
+  const tag = (item: string, k: string) => [...item.matchAll(new RegExp(`<${k}>([^<]*)</${k}>`, "g"))].map((m) => m[1]);
+  it("lists each size and colour on sale, grouped by its product, but no gift card and nothing without a photo", () => {
+    const all = items();
+    expect(all).toHaveLength(4); // two of the bike's, the helmet, the certified bike
+    expect(all.map((i) => tag(i, "g:id")[0])).toEqual([U(101), U(102), U(103), U(106)]);
+    expect(tag(all[0], "g:item_group_id")).toEqual([U(1)]);
+    expect(tag(all[2], "g:item_group_id")).toEqual([]); // one variant: no group
+    expect(all.join("")).not.toContain("gift-card");
+    expect(all.join("")).not.toContain("nophoto");
+  });
+  it("gives the price with VAT in riyals, the stock as it is and the brand once in the title", () => {
+    const [m, l] = items();
+    expect(tag(m, "g:price")).toEqual(["8435.00 SAR"]);
+    expect(tag(l, "g:price")).toEqual(["8600.00 SAR"]);
+    expect(tag(m, "g:availability")).toEqual(["in_stock"]);
+    expect(tag(l, "g:availability")).toEqual(["out_of_stock"]);
+    expect(tag(m, "title")).toEqual(["Alvas DA54 MAX"]);
+    expect(tag(m, "g:size")).toEqual(["M"]);
+    expect(tag(m, "g:color")).toEqual(["Black"]);
+    expect(tag(m, "g:google_product_category")).toEqual(["Sporting Goods &gt; Outdoor Recreation &gt; Cycling &gt; Bicycles"]);
+    expect(tag(items()[3], "g:condition")).toEqual(["refurbished"]); // certified pre-owned
+    expect(tag(items()[2], "g:brand")).toEqual(["Micromobility"]);
+  });
+  it("shows a former price only beside the discount licence, between its dates", () => {
+    expect(tag(items()[2], "g:sale_price")).toEqual([]);
+    expect(tag(items()[2], "g:price")).toEqual(["450.00 SAR"]);
+    const on = items({ licence: "L-123" })[2];
+    expect(tag(on, "g:price")).toEqual(["520.00 SAR"]);
+    expect(tag(on, "g:sale_price")).toEqual(["450.00 SAR"]);
+    expect(tag(items({ licence: "L-123", today: "2026-11-21" })[2], "g:sale_price")).toEqual([]);
+  });
+  it("links the page in the feed's language, the photos on the open web, the text plain and safe", () => {
+    const [m] = items();
+    expect(tag(m, "link")).toEqual(["https://micromobility.sa/store/max?lang=en"]);
+    expect(tag(m, "g:image_link")).toEqual(["https://micromobility.sa/site/store/max/1.webp"]);
+    expect(tag(m, "g:additional_image_link")).toEqual(["https://micromobility.sa/media/store/max/2.webp", "https://cdn.example/3.webp"]);
+    expect(tag(m, "description")).toEqual(["Carbon Shimano 105 &amp; disc brakes"]);
+    expect(tag(items()[2], "description")).toEqual(["Light and cool"]);
+    const [a] = items({ lang: "ar" });
+    expect(tag(a, "link")).toEqual(["https://micromobility.sa/store/max?lang=ar"]);
+    expect(tag(a, "description")).toEqual(["كربون &lt;كامل&gt;"]);
+    expect(tag(a, "g:color")).toEqual(["أسود"]);
+    expect(absolute("//evil/x.webp", o.site)).toBeNull();
+  });
+  it("wraps the items in one RSS file in Google's namespace", () => {
+    const xml = productFeed(store.products, { ...o, description: "Bikes & gear" });
+    expect(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')).toBe(true);
+    expect(xml).toContain('<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0"><channel><title>Micromobility</title>');
+    expect(xml).toContain("<description>Bikes &amp; gear</description>");
+    expect(xml.match(/<item>/g)).toHaveLength(4);
+    expect(xml.trim().endsWith("</channel></rss>")).toBe(true);
+  });
+  it("is served at /store/feed.xml only while the site and the store are open", () => {
+    const route = readFileSync(join(__dirname, "../../app/store/feed.xml/route.ts"), "utf8");
+    expect(route).toContain("if (closed || !storeOpen(content)) return new Response(\"Not found\", { status: 404");
+    expect(route).toContain('"Content-Type": "application/xml; charset=utf-8"');
+  });
+});
+
+describe("a specification with Arabic in it reads right to left (P22)", () => {
+  const render = renderUntyped as (el: ReactElement) => string;
+  const groups = [{ id: null, rows: [
+    { kind: "spec" as const, label: "العجلات", value: "HELUX DD5 كربون 700×60مم", basis: null },
+    { kind: "spec" as const, label: "Groupset", value: "Shimano 105", basis: null },
+  ] }];
+  it("sets only the Latin runs of a mixed cell apart, and keeps an English-only row in its own direction", () => {
+    const ar = render(createElement(SpecTable, { groups, locale: "ar" }));
+    expect(ar).toContain("<td><bdi>HELUX DD5</bdi> كربون 700×60مم</td>");
+    expect(ar).toContain("<th scope=\"row\">العجلات</th>");
+    expect(ar).toContain("<td><bdi>Shimano 105</bdi></td>");
+    expect(ar).toContain("<th scope=\"row\"><bdi>Groupset</bdi></th>");
   });
 });
