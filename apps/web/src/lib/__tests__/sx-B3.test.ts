@@ -298,7 +298,8 @@ describe("an order's page with these parts (N34, N13, N15, N07, N17)", () => {
     expect(html).toContain("300000000000003");
     expect(html).toContain("1234 King Road, Rawdah, Jeddah, 23434");
     expect(html).toContain("Buyer&#x27;s VAT number");
-    expect(html).toContain("Mon 23 Nov · 16:00 – 16:20");
+    // the handover slot is said once, by B4's "Pickup on ..." line (after/AfterParts.tsx), not again in these facts
+    expect(html).not.toContain("Mon 23 Nov · 16:00 – 16:20");
     const plain = await page({ ...RAW, company: null }, "en");
     expect(plain).toContain("Simplified tax invoice");
     expect(plain).not.toContain("Buyer&#x27;s VAT number");
