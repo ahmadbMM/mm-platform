@@ -17,7 +17,7 @@ import { notOpenYet, opensText, siteBookingWindow } from "@/lib/booking-window";
 import BookingFlow, { type FlowEvent } from "@/components/experiences/BookingFlow";
 import LearnTeaser, { learnTeaser } from "@/components/learn/LearnTeaser";
 import { riyadhClock } from "@/lib/workshop-days";
-import { dayWord, fmtClock, fmtDayDate, ticketRoute, type TicketRoute } from "@/lib/tickets";
+import { dayWord, fmtClock, fmtDayDate, revealWhen, ticketRoute, type TicketRoute } from "@/lib/tickets";
 import { getAccount, rpcServer } from "@/lib/account";
 import { bookingAccount } from "@/lib/booking-server";
 import { bizOf, faresOf } from "@/lib/biz";
@@ -34,6 +34,8 @@ import { bookingAt } from "@/lib/event-info";
 import { farmForMembers } from "@/lib/farm";
 import { BLOOD_NAME, bloodName } from "@/content/blood-words";
 import { FARM_NAME, farmWords } from "@/content/farm-words";
+import { mfAt } from "@/lib/members-first";
+import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
 
 // micromobility.sa/experiences - booking a ride on the website (the owner, 2026-10-03: "full
 // booking on the website"), as the booking app's own wizard books one (BookingFlow): the event,
@@ -155,10 +157,21 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // The booking window (site_content booking.window): a date not open yet is shown greyed, never hidden.
   const window = siteBookingWindow(content);
   const clock = (x: string) => fmtClock(x, locale);
+  // Members book first (lib/members-first.ts, 2026-11-18; the booking app's mfMark, mfStatus and mfEveryone), as main's page
+  // has it: until sessions.public_at a member sees "Members first" and books; anyone else sees the date held, "Members book
+  // first" and when everyone may, and cannot choose it (the booking window's path, so a window not open yet is said first).
+  // The database refuses anyone else's place before then (MEMBERS_FIRST).
+  const mfW = membersFirstWords(locale);
+  const drawn = new Date().getTime();
+  const nearWords = { today: tx("Today", "اليوم"), tomorrow: tx("Tomorrow", "غداً") };
   const toBook = (s: RideSession): BookSession => {
     const community = s.kind !== "jcc" && s.kind !== "snd96"; // rideKind: anything but these is a community row
     const approval = !!s.approval;
     const places = (approval ? s.spots || s.capacity : s.capacity) || 12;
+    const win = window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx) : null;
+    const mfMs = s.fbk ? 0 : mfAt(s, drawn);
+    const mfLine = mfMs ? fillAt(mfW.everyone, revealWhen(s.publicAt, locale, today, nearWords)) : "";
+    const mfHold = !!mfMs && !acct?.member;
     return {
       id: s.id, date: s.date, kind: s.kind, name: s.kind === "jcc" ? "" : sessionName(s, kindName, enName, L !== "en", L === "ar"), // by its Arabic name on the Arabic page (title_ar, 2026-11-13), as main's page and Events name it
       full: s.full, community, members: s.members, free: s.free, approval,
@@ -171,7 +184,11 @@ export default async function ExperiencesPage({ params, searchParams }: { params
       collect: s.collect ? fillAt(tx("Collect bikes from {0}", "استلام الدراجات من {0}"), clock(s.collect)) : null,
       // a Saturday ride booked with a ride code (2026-11-08): anyone with a code, member or not, books it on its own page
       ...(satLink && s.kind === "saturday" ? { members: false, satLink: `/saturday?lang=${locale}` } : {}),
-      opens: window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx) : null,
+      opens: win ?? (mfHold ? mfLine : null),
+      // members book first while it lasts: held from a visitor who is not a member, behind a lock, unless its window says first
+      ...(mfMs ? { mf: { held: mfHold && !win, label: mfHold ? mfW.status : mfW.mark, everyone: mfLine } } : {}),
+      // Few spots left where staff say so, or once the places left reach the number they set (lib/rides.ts fewOf, withPlacesLeft)
+      ...(s.few ? { few: true as const } : {}),
       description: s.kind === "event" ? s.description ?? null : null,
       gender: s.gender ?? null, // men only, women only or mixed (2026-10-27): its chip, and who may book it
       closedTypes: s.closedTypes ?? [], // the bike types staff closed on it (2026-11-03): neither picked nor priced

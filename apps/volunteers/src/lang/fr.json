@@ -51,6 +51,7 @@
   "errEmailOrPhone": "Saisissez votre e-mail ou votre numéro de mobile.",
   "errPassword": "Saisissez votre mot de passe.",
   "vdSessionEnded": "Vous avez été déconnecté. Veuillez vous reconnecter.",
+  "vdHandoffFailed": "Nous n’avons pas pu vous connecter depuis l’application de réservation. Connectez-vous ici.",
   "vdNotVolunteer": "Ce compte n'est pas un compte de bénévole. Veuillez demander à notre équipe.",
   "vdPaused": "Votre accès bénévole est suspendu. Veuillez demander à notre équipe.",
   "vdExpired": "Votre accès bénévole est terminé. Veuillez demander à notre équipe.",

@@ -2,8 +2,8 @@
 
 import { useRef, useState } from "react";
 import {
-  charCount, choiceConfig, latinDigits, numberConfig, optionText, optionsOf, pointsConfig, scalesConfig, sentMarks, sentNumber, sentOrder, sentPicks,
-  shapeChoice, shapeNumber, shapePoints, shapeRanking, shapeScales, shapeWritten, askText, writtenConfig,
+  ASK_TEXT_MAX, choiceConfig, latinDigits, numberConfig, optionText, optionsOf, pointsConfig, scalesConfig, sentMarks, sentNumber, sentOrder, sentPicks,
+  shapeChoice, shapeNumber, shapePoints, shapeRanking, shapeScales, shapeWritten, askText,
   type AnswerState, type AskMine, type AskQuestion, type Shaped,
 } from "@/lib/ask";
 import type { PinTarget } from "@/lib/ask-kinds";
@@ -29,14 +29,12 @@ export type InputProps = {
 };
 const isLocked = (state: AnswerState) => state === "done" || state === "shut";
 
-/** A written answer (cloud, open, qa): one box with what is left of its length, and Send. Enter sends; once sent the
- *  box is empty again with the keyboard still in it. */
+/** A written answer (cloud, open, qa): one box as long as the answer (ASK_TEXT_MAX, never shown), and Send. Enter
+ *  sends and Shift+Enter starts a new line (the database keeps the answer on one); once sent the box is empty again
+ *  with the keyboard still in it. */
 export function WrittenInput({ q, t, busy, labelId, onSubmit }: InputProps) {
-  const c = writtenConfig(q.kind, q.config);
   const [text, setText] = useState("");
-  const box = useRef<HTMLInputElement & HTMLTextAreaElement>(null);
-  const left = c.maxLen - charCount(text);
-  const long = c.maxLen > 80;
+  const box = useRef<HTMLTextAreaElement>(null);
   async function send() {
     if (busy) return;
     const sent = text;
@@ -44,19 +42,13 @@ export function WrittenInput({ q, t, busy, labelId, onSubmit }: InputProps) {
     if (await onSubmit(shapeWritten(q.kind, q.config, sent))) setText((now) => (now === sent ? "" : now));
     box.current?.focus();
   }
-  const field = {
-    className: "ask-input", value: text, dir: "auto" as const, maxLength: c.maxLen, autoComplete: "off", enterKeyHint: "send" as const,
-    placeholder: q.kind === "qa" ? t.yourQuestion : t.yourAnswer, "aria-labelledby": labelId, "aria-describedby": `${labelId}-left`,
-    onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setText(e.target.value),
-  };
   return (
     <form className="ask-write" onSubmit={(e) => { e.preventDefault(); send(); }} noValidate>
       <div className="ask-write-row">
         <div className="ask-field">
-          {long
-            ? <textarea ref={box} {...field} rows={2} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
-            : <input ref={box} {...field} type="text" />}
-          <span id={`${labelId}-left`} className={`ask-left${left <= 5 ? " low" : ""}`}><span aria-hidden="true">{left}</span><span className="mm-sr">{t.left(left)}</span></span>
+          <textarea ref={box} className="ask-input" value={text} dir="auto" maxLength={ASK_TEXT_MAX} autoComplete="off" enterKeyHint="send" rows={2}
+            placeholder={q.kind === "qa" ? t.yourQuestion : t.yourAnswer} aria-labelledby={labelId} onChange={(e) => setText(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); send(); } }} />
         </div>
         <button type="submit" className="ask-btn" disabled={busy}>{busy ? t.sending : t.send}</button>
       </div>

@@ -237,7 +237,7 @@ export default function VlTicket({ arena = false, entryId, answer: initial, rece
                 {err && <p className="vt-err" role="alert">{err}</p>}
                 <button type="button" className="vt-send" disabled={busy || !img} onClick={send}>{busy ? t.saving : t.send}</button>
                 <div className="vt-foot">
-                  {!arena && <button type="button" className="vt-link" disabled={busy} onClick={() => { setErr(""); setStep("ask"); }}>{t.back}</button>}
+                  {!arena && !receipt && <button type="button" className="vt-link" disabled={busy} onClick={() => { setErr(""); setStep("ask"); }}>{t.back}</button>}
                   {!receipt && <button type="button" className="vt-link" disabled={busy} onClick={later}>{t.later}</button>}
                 </div>
               </>

@@ -130,6 +130,31 @@ describe("the members' rides for one gender (the owner, 2026-10-28: \"make all p
   });
 });
 
+describe("a members' ride the member only waits for (bug hunt 2026-11-18: a waitlist entry read as Booked)", () => {
+  it("says On the waitlist, with no Book and never a place in line; a place held still says Booked", async () => {
+    const { default: MembersArea } = await import("@/components/club/MembersArea");
+    const a = memberArea({ status: 200, data: { ...full, upcoming: [
+      { id: "2026-10-04", date: "2026-10-04", title: "", kind: "saturday", time: "05:45 - 06:15", booked: false, waitlist: true },
+      { id: "2026-10-11", date: "2026-10-11", title: "", kind: "saturday", time: "05:45 - 06:15", booked: true, waitlist: true },
+    ] }, message: "" });
+    if (!a.ok || !a.member) throw new Error("not a member");
+    expect(a.upcoming.map((r) => [r.booked, r.waitlist])).toEqual([[false, true], [true, false]]);
+    const html = renderToStaticMarkup(createElement(MembersArea, {
+      locale: "en", L: "en", area: a, tierNames: ["Member", "Pro", "Legend"], nameOf: () => "Saturday Social Ride",
+      bookAt: (id: string) => `https://book.example.test/?session=${id}`, today: "2026-10-01", empty: "None",
+    }));
+    const rows = (/<section class="club-up".*?<\/section>/.exec(html)?.[0] ?? "").match(/<li[^>]*>.*?<\/li>/g) ?? [];
+    expect(rows[0]).toContain("<em>On the waitlist</em>");
+    expect(rows[0]).not.toContain("?session=");
+    expect(rows[0]).not.toContain("Booked");
+    expect(rows[1]).toContain("<em>Booked</em>");
+    // a database before the flag: as before
+    const old = memberArea({ status: 200, data: full, message: "" });
+    if (!old.ok || !old.member) throw new Error("not a member");
+    expect(old.upcoming.every((r) => r.waitlist === false)).toBe(true);
+  });
+});
+
 describe("memberTitle", () => {
   const titles = [{ id: "a", name: "Captain", name_ar: "قائد", color: "gold" }, { id: "b", name: "Legend", name_ar: "أسطورة", color: "purple" }];
   it("reads the title the member picked, else the first held", () => {

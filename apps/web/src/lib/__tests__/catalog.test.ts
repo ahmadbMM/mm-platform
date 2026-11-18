@@ -184,6 +184,25 @@ describe("loadCatalog", () => {
     }
   });
 
+  it("reads a table past the database's 1,000 rows a page at a time, and fails whole when a page fails", async () => {
+    const photo = (i: number) => ({ id: i, model_id: "m1", color_id: null, url: `https://x/${i}.jpg`, alt_en: "", alt_ar: "", sort: i, is_cover: false });
+    const many = Array.from({ length: 1500 }, (_, i) => photo(i + 1));
+    const paged = (failSecond = false) => vi.fn(async (url: string) => {
+      const table = url.match(/rest\/v1\/(\w+)\?/)?.[1] ?? "";
+      const from = Number(url.match(/offset=(\d+)/)?.[1] ?? 0), n = Number(url.match(/limit=(\d+)/)?.[1] ?? 1e9);
+      if (failSecond && table === "catalog_photos" && from > 0) return new Response("oops", { status: 500 });
+      const all = table === "catalog_photos" ? many : ((FULL as Record<string, unknown[]>)[table] ?? []);
+      return new Response(JSON.stringify(all.slice(from, from + n)), { status: 200, headers: { "content-type": "application/json" } });
+    });
+    const f = paged();
+    const c = await loadCatalog(f as unknown as typeof fetch, 0);
+    expect(c?.photos).toHaveLength(1500);
+    expect(c?.photos.at(-1)?.id).toBe(1500);
+    expect(f.mock.calls.filter((x) => String(x[0]).includes("catalog_photos"))).toHaveLength(2);
+    resetCatalog();
+    expect(await loadCatalog(paged(true) as unknown as typeof fetch, 0)).toBeNull();
+  });
+
   it("counts a read that misses one table as failed", async () => {
     const partial = vi.fn(async (url: string) => (url.includes("catalog_photos") ? new Response("oops", { status: 500 }) : new Response("[]", { status: 200 })));
     expect(await loadCatalog(partial as unknown as typeof fetch, 0)).toBeNull();

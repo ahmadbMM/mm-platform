@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, addMonths, arrowStep, defaultUntil, hijriDay, hijriLabel, isIso, localeTag, longDate, monthGrid, patternArgs, patternDays, patternValid, weekday } from "../src/client/dates";
+import { addDays, addMonths, addMonthsSameDay, arrowStep, defaultUntil, hijriDay, hijriLabel, isIso, localeTag, longDate, monthGrid, patternArgs, patternDays, patternValid, riyadhToday, weekday } from "../src/client/dates";
 import { dayStatus, lateCancel, pickable, reasonText, staffNoteText, verdictText, type CalDay, type Tier } from "../src/client/model";
 import { STRINGS } from "../src/client/strings";
 
@@ -28,6 +28,19 @@ describe("month grid", () => {
     expect(addMonths("2026-01-31", -1)).toBe("2025-12-01");
     expect(isIso("2026-02-30")).toBe(false);
     expect(isIso("2026-02-28")).toBe(true);
+  });
+
+  it("PageUp and PageDown keep the day of the month, or the month's last day", () => {
+    expect(addMonthsSameDay("2026-11-21", 1)).toBe("2026-12-21");
+    expect(addMonthsSameDay("2026-11-21", -1)).toBe("2026-10-21");
+    expect(addMonthsSameDay("2026-01-31", 1)).toBe("2026-02-28");
+    expect(addMonthsSameDay("2028-03-31", -1)).toBe("2028-02-29");
+    expect(addMonthsSameDay("2026-12-31", 1)).toBe("2027-01-31");
+  });
+
+  it("today in Riyadh turns at 21:00 UTC", () => {
+    expect(riyadhToday(Date.parse("2026-11-20T20:59:00Z"))).toBe("2026-11-20");
+    expect(riyadhToday(Date.parse("2026-11-20T21:00:00Z"))).toBe("2026-11-21");
   });
 });
 

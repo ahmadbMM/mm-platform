@@ -92,12 +92,15 @@ export function optionsOf(config: unknown): AskOption[] {
 }
 export const optionText = (locale: string, o: AskOption): string => askText(locale, o.en, o.ar);
 
-export type WrittenConfig = { maxLen: number; perPerson: number; votes: boolean };
+/** The longest a written answer (cloud, open, qa) may be, in characters as the database counts them (charCount): a
+ *  safety net, never shown - a question sets no length of its own, and a `max_len` an older question still carries is
+ *  not read. The database refuses one longer ("long"). */
+export const ASK_TEXT_MAX = 2000;
+
+export type WrittenConfig = { perPerson: number; votes: boolean };
 export function writtenConfig(kind: string, config: unknown): WrittenConfig {
   const c = obj(config) ?? {};
-  const cloud = kind === "cloud";
   return {
-    maxLen: clamp(int(c.max_len) ?? (cloud ? 25 : 200), 1, 500),
     perPerson: clamp(int(c.per_person) ?? (kind === "open" ? 1 : 3), 1, 10),
     votes: typeof c.votes === "boolean" ? c.votes : kind === "qa",
   };
@@ -159,12 +162,12 @@ export const charCount = (s: string): number => [...s].length;
 const LINK = /(?:https?:\/\/|www\.)\S/i;
 
 /** A written answer (cloud, open, qa): {t}. Refused here only where the database surely would - nothing typed (a
- *  word cloud's entry: nothing but marks, which it stores without), longer than the question takes, or an address
- *  written out; the database has the last word on the rest. */
-export function shapeWritten(kind: string, config: unknown, text: unknown): Shaped {
+ *  word cloud's entry: nothing but marks, which it stores without), longer than ASK_TEXT_MAX, or an address written
+ *  out; the database has the last word on the rest. `config` is the question's, which sets no length. */
+export function shapeWritten(kind: string, _config: unknown, text: unknown): Shaped {
   const t = foldSpaces(str(text));
   if (!t || (kind === "cloud" && !/[\p{L}\p{N}]/u.test(t))) return no("empty");
-  if (charCount(t) > writtenConfig(kind, config).maxLen) return no("long");
+  if (charCount(t) > ASK_TEXT_MAX) return no("long");
   if (LINK.test(t)) return no("link");
   return yes({ t });
 }
@@ -224,11 +227,16 @@ export function shapePoints(config: unknown, points: unknown): Shaped {
   return yes({ p });
 }
 
-/** A number: {n} - from min to max, on one of the question's steps. Typed with Arabic digits or a decimal comma too. */
+/** A number: {n} - from min to max, on one of the question's steps. Typed with Arabic digits or a decimal comma too.
+ *  Thousands grouped ("1,000", "12,500.5", "١٬٠٠٠") read as one number: the Arabic separator always, a comma when a
+ *  decimal point follows or the question takes whole numbers (bug hunt 2026-11-18: "1,000" was sent as 1). */
 export function shapeNumber(config: unknown, raw: unknown): Shaped {
   const c = numberConfig(config);
   const typed = typeof raw === "number" ? String(raw) : str(raw);
-  const text = latinDigits(typed).replace(/[٫,]/g, ".").trim();
+  let text = latinDigits(typed).trim();
+  const whole = Number.isInteger(c.step) && Number.isInteger(c.min);
+  if (/^-?\d{1,3}(?:[,٬]\d{3})+(?:[.٫]\d+)?$/.test(text) && (whole || /[٬.٫]/.test(text))) text = text.replace(/[,٬]/g, "");
+  text = text.replace(/[٫,]/g, ".");
   if (!text) return no("empty");
   if (!/^-?\d+(?:\.\d+)?$/.test(text)) return no("invalid");
   const n = Number(text);
@@ -440,18 +448,21 @@ export function askSent(raw: unknown): SendAnswer {
 
 /** A live answer taken into the page: each question's open and reveal, the page's state, the results. `reload`: the
  *  page itself must be read again - staff put a question on screen that it does not hold, or started a new round (the
- *  viewer's own answers are the old round's). A version older than the page's is dropped (`ver` only ever grows). */
-export function applyLive(full: AskFull, live: AskLive): { full: AskFull; reload: boolean } {
-  if (full.live && live.ver < full.live.ver) return { full, reload: false };
+ *  viewer's own answers are the old round's). A version older than the page's is dropped (`ver` only ever grows).
+ *  `revealed`: the reload is for a question staff have just revealed. */
+export function applyLive(full: AskFull, live: AskLive): { full: AskFull; reload: boolean; revealed: boolean } {
+  if (full.live && live.ver < full.live.ver) return { full, reload: false, revealed: false };
   const held = new Set(full.questions.map((q) => String(q.id)));
-  // ... or revealed a quiz question: the viewer's own score and place are the page's to read (ask_page `me`)
-  const revealed = full.questions.some((q) => isQuiz(q.kind) && !q.reveal && live.q[String(q.id)]?.reveal === true);
+  // ... or revealed a quiz question: the viewer's own score and place are the page's to read (ask_page `me`); or revealed
+  // any question no result comes with (its results kept for staff): its right answer is only in the question as the
+  // page reads it again (_ask_public_q leaves it out until the reveal), never in a poll (bug hunt 2026-11-18)
+  const revealed = full.questions.some((q) => !q.reveal && live.q[String(q.id)]?.reveal === true && (isQuiz(q.kind) || live.results[String(q.id)] == null));
   const reload = Object.keys(live.q).some((id) => !held.has(id)) || live.round !== full.page.round || revealed;
   const questions = full.questions.map((q) => {
     const now = live.q[String(q.id)];
     return now && (now.open !== q.open || now.reveal !== q.reveal || now.started_at !== q.started_at) ? { ...q, ...now } : q;
   });
-  return { full: { ...full, questions, live, page: { ...full.page, open: live.open && live.state === "ok", current_q: live.current_q, pace: live.pace } }, reload };
+  return { full: { ...full, questions, live, page: { ...full.page, open: live.open && live.state === "ok", current_q: live.current_q, pace: live.pace } }, reload, revealed };
 }
 
 /** An unchanged poll's news: whether the page is still open. */
@@ -516,13 +527,15 @@ export function withVote(full: AskFull, question: number, answer: number, on: bo
   const result = obj(full.live?.results[String(question)]);
   if (!full.live || !result || !Array.isArray(result.items)) return { ...full, voted };
   const was = full.voted.includes(answer);
-  const items = result.items.map((x) => {
+  // the answer may be among the most voted (`items`), the newest (`recent`), or both
+  const bump = (rows: unknown[]) => rows.map((x) => {
     const o = obj(x);
     if (!o || int(o.id) !== answer) return x;
     const v = votes ?? Math.max(0, (int(o.v) ?? 0) + (on === was ? 0 : on ? 1 : -1));
     return { ...o, v };
   });
-  return { ...full, voted, live: { ...full.live, results: { ...full.live.results, [String(question)]: { ...result, items } } } };
+  const next = { ...result, items: bump(result.items), ...(Array.isArray(result.recent) ? { recent: bump(result.recent) } : {}) };
+  return { ...full, voted, live: { ...full.live, results: { ...full.live.results, [String(question)]: next } } };
 }
 
 /** The viewer has an answer waiting for approval somewhere on the page. */
@@ -569,16 +582,31 @@ export function cloudResult(raw: unknown): CloudResult {
 
 export type AskItem = { id: number; t: string; v: number; a: boolean };
 /** Open answers and Q&A: the texts with their votes. Q&A reads unanswered first, the most voted first among them. */
-export function itemsResult(kind: string, raw: unknown): { n: number; items: AskItem[] } {
-  const r = obj(raw) ?? {};
+function askItems(raw: unknown): AskItem[] {
   const items: AskItem[] = [];
-  for (const x of list(r.items)) {
+  for (const x of list(raw)) {
     const o = obj(x);
     const id = int(o?.id);
     if (o && id !== null && str(o.t).trim()) items.push({ id, t: str(o.t).trim(), v: Math.max(0, int(o.v) ?? 0), a: o.a === true });
   }
+  return items;
+}
+export function itemsResult(kind: string, raw: unknown): { n: number; items: AskItem[] } {
+  const r = obj(raw) ?? {};
+  const items = askItems(r.items);
   const sorted = kind === "qa" ? items.map((x, i) => ({ x, i })).sort((p, q) => Number(p.x.a) - Number(q.x.a) || q.x.v - p.x.v || p.i - q.i).map(({ x }) => x) : items;
   return { n: Math.max(0, int(r.n) ?? items.length), items: sorted.slice(0, 100) };
+}
+/** Open answers for the stream, the newest first: the most voted the database sends (`items`) and its newest 50
+ *  (`recent`, when it sends them), each answer once - so a new answer with no votes is never left out. */
+export function streamResult(raw: unknown): { n: number; items: AskItem[] } {
+  const r = obj(raw) ?? {};
+  const seen = new Set<number>(), items: AskItem[] = [];
+  for (const x of [...askItems(r.items).slice(0, 100), ...askItems(r.recent).slice(0, 50)]) {
+    if (!seen.has(x.id)) { seen.add(x.id); items.push(x); }
+  }
+  items.sort((a, b) => b.id - a.id);
+  return { n: Math.max(0, int(r.n) ?? items.length), items };
 }
 
 export type BarRow = { id: string; label: string; n: number; share: number; correct: boolean };

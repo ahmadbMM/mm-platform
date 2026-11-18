@@ -124,7 +124,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const resume = useMemo(() => {
     const s = start.session ? all.find((x) => x.id === start.session) : undefined;
     // a Saturday ride booked at micromobility.sa/saturday is never picked here, even from an old address
-    return s && acct && !s.satLink && !s.handoff && !s.fbk ? { s, gate: gateFor(s, acct) } : null;
+    return s && acct && !s.opens && !s.satLink && !s.handoff && !s.fbk ? { s, gate: gateFor(s, acct) } : null;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- the address is read once, as the page drew it
   const [selId, setSelId] = useState<string | null>(() => (resume && !resume.gate ? resume.s.id : null));
   const sel = all.find((s) => s.id === selId) ?? null;
@@ -524,12 +524,16 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
       );
     }
     if (s.opens) {
+      // members book first (2026-11-18), as main's Experiences: held from a visitor who is not a member, "Members book first"
+      // behind a lock, and when everyone may under its time
+      const mfHold = !!s.mf?.held;
       return (
         <div key={s.id} className={`sc-card ev-${s.kind} closed`} role="radio" aria-checked={false} aria-disabled="true">
           {kicker}
           {/* not open yet: a clock beside when it opens, never the grey alone */}
-          <span className="sc-head"><span className="sc-dot" aria-hidden="true" /><span className="sc-date">{s.day}</span><span className="sc-spots closed"><Ic name="clock" size={13} />{s.opens}</span></span>
+          <span className="sc-head"><span className="sc-dot" aria-hidden="true" /><span className="sc-date">{s.day}</span><span className={`sc-spots closed${mfHold ? " mf" : ""}`}><Ic name={mfHold ? "lock" : "clock"} size={13} />{mfHold ? s.mf?.label : s.opens}</span></span>
           <span className="sc-time"><bdi>{s.time}</bdi></span>
+          {mfHold && <span className="sc-meta sc-mf-l"><Ic name="clock" size={13} /><bdi>{s.opens}</bdi></span>}
         </div>
       );
     }
@@ -537,6 +541,10 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const rej = !!acctNow?.rejected.includes(s.id);
     const full = isFull(s);
     const low = !full && !s.approval && s.left != null && s.left > 0 && s.left <= 3;
+    // Few spots left where staff say so (2026-11-15, by itself from 2026-11-18), after a count of three or fewer; a member's
+    // "Members first" mark while members book first (2026-11-18), as main's Experiences says them
+    const fewOn = !rej && !full && !low && !!s.few;
+    const mfMark = !rej && !full && !low && !fewOn && !!s.mf;
     // a date handed to the booking app is priced there (a race's fee is the organiser's, told to those who may book it)
     const meta = [s.collect, s.handoff ? null : fromLine(s)].filter((x) => !!x);
     const body = (
@@ -545,7 +553,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         <span className="sc-head">
           <span className={`sc-dot${on ? " on" : ""}`} aria-hidden="true" />
           <span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span>
-          <span className={`sc-spots${rej ? " rej" : full ? " full" : low ? " low" : ""}`}>{rej ? t.rejCard : full ? t.waitlist : low ? fill(s.left === 1 ? t.left1 : t.leftN, s.left!) : t.available}</span>
+          <span className={`sc-spots${rej ? " rej" : full ? " full" : low || fewOn ? " low" : mfMark ? " mf" : ""}`}>{rej ? t.rejCard : full ? t.waitlist : low ? fill(s.left === 1 ? t.left1 : t.leftN, s.left!) : fewOn ? t.few : mfMark ? <><Ic name="people" size={13} />{s.mf?.label}</> : t.available}</span>
         </span>
         <span className="sc-time"><bdi>{s.time}</bdi></span>
         {meta.length > 0 && <span className="sc-meta">{meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}

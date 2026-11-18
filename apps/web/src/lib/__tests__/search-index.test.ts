@@ -32,6 +32,8 @@ describe("the header search's index", () => {
     const open = await searchIndex("en");
     expect(open.length).toBeGreaterThan(0);
     expect(open.every((x) => x.href.startsWith("/help"))).toBe(true);
+    // the Rides & bookings answers open their own tab (2026-11-16)
+    expect(open.find((x) => x.title === "Can I cancel my booking?")?.href).toBe("/help#rides");
     resetSiteContent();
     vi.stubGlobal("fetch", db(true));
     jar.preview = "staff.preview.token";

@@ -8,7 +8,7 @@ import ExperienceSteps from "@/components/experiences/ExperienceSteps";
 import TicketCard from "@/components/booking/TicketCard";
 import { T as TICKET } from "@/components/booking/tickets.text";
 import { PAGES } from "@/content";
-import { FARM_NAME, farmName, farmWords } from "@/content/farm-words";
+import { FARM_NAME, farmBadge, farmName, farmWords } from "@/content/farm-words";
 import { clientDict } from "@/i18n/dicts";
 import { TRANSLATED } from "@/i18n/locales";
 import { makeL } from "@/i18n/tx";
@@ -23,6 +23,8 @@ import { KIND_ORDER } from "../kind-theme";
 import { LM_KINDS } from "../landmarks";
 import ExperiencesPage from "../../app/[locale]/experiences/page";
 import EventsPage from "../../app/[locale]/events/page";
+import AccountPage from "../../app/[locale]/account/[[...part]]/page";
+import RideRecord from "@/components/account/RideRecord";
 
 // cookies() is a request's; here it holds the account's cookie a test sets, or none, and whether the booking app's members'
 // check (community_member) says that account is a community member.
@@ -239,7 +241,7 @@ describe.skip("the Farm House Night on Experiences, to a signed-in community mem
     expect(card).toContain('role="radio"');
     expect(card).toContain('<svg class="sc-fh-scene" aria-hidden="true" focusable="false" viewBox="0 0 160 80">');
     expect(card.match(/<rect class="sc-fh-fth"/g)).toHaveLength(11);
-    expect(card).toContain(`<img class="sc-fh-mark" src="${FARM_MARK}" alt="" width="64" height="40" decoding="async"/>`);
+    expect(card).toContain(`<img class="sc-fh-mark" src="${FARM_MARK}" alt="" width="150" height="150" decoding="async"/>`);
     expect(card).toContain('<span class="sc-fh-title">Nawar Farm House Night</span>');
     expect(card).toContain('<span class="sc-fh-meta"><span class="sc-fh-mi"><span><i aria-hidden="true"></i><bdi>Arrival 4:30 PM · Dinner 8:30 PM</bdi></span><span><i aria-hidden="true"></i><bdi>Little Farmhouse, Dhahban</bdi></span></span></span>');
     expect(card).toContain('<span class="sc-fh-foot"><span class="sc-fh-line">Members and their families</span></span>');
@@ -284,7 +286,7 @@ describe.skip("the Farm House Night on Experiences, to a signed-in community mem
   it("hands over on its summary in the booking app's rust plate, saying the family is added there", async () => {
     const p = await experiences([FH]);
     const html = draw(p, 3, comm(p), farmOf(p));
-    expect(html).toContain('<div class="xs-sum-head xs-fh-head"><span class="xs-logo small xs-farm-logo"><img src="/site/farm-mark.svg" alt="" width="64" height="40"/></span>');
+    expect(html).toContain('<div class="xs-sum-head xs-fh-head"><span class="xs-logo small xs-farm-logo"><img src="/site/farm-logo.jpg" alt="" width="150" height="150"/></span>');
     expect(html).toContain('<strong class="xs-fh-name">Nawar Farm House Night</strong>');
     expect(html).toContain("Arrival <bdi>4:30 PM</bdi> · Dinner <bdi>8:30 PM</bdi>");
     expect(html).toContain('<span class="xs-fh-sub">Members and their families</span>');
@@ -326,7 +328,7 @@ describe("a Farm House Night ticket (My Account)", () => {
 
   it("has no bike, gathers (arrival, then dinner), is free, waits on staff, and is at the farm with its own map", () => {
     expect(fh).toMatchObject({ kind: "farm", bikes: false, gathers: true, approval: true, published: false, free: true, times: ["16:30", "20:30"], location: "Little Farmhouse, Dhahban", meetUrl: MAP });
-    expect(waiverKind(fh)).toBe("activity");
+    expect(waiverKind(fh)).toBe("farm"); // its own waiver since 2026-11-13 (content/farm-words.ts farmWaiverCopy)
     expect(codeReady(family, fh)).toBe(false); // the code comes once staff publish the list and approve the family
     expect(codeReady(family.map((r) => ({ ...r, approval: "approved" })), { ...fh, published: true })).toBe(true);
     expect(venueText(venueOf(fh), t)).toBe("Little Farmhouse, Dhahban");
@@ -373,6 +375,22 @@ describe("a Farm House Night ticket (My Account)", () => {
     expect(TICKET.ar.fhArrive).toBe("الوصول");
     expect(TICKET.ar.fhDinner).toBe("العشاء");
   });
+  it("counts down on its day to Arrival, then Dinner (the booking app's fhCdArrive, fhCdDinner), never Gathering or Starts", () => {
+    const ok = family.map((r) => ({ ...r, approval: "approved" }));
+    const s = { ...fh, published: true };
+    const on = (now: string, ar = false) => renderToStaticMarkup(createElement(TicketCard, {
+      locale: ar ? "ar" : "en", today: "2099-11-19", rows: ok, session: s, name: "Nawar Farm House Night", cue: ticketCue(ok, s, null), t: ar ? TICKET.ar : t,
+      gather: "Gathering", start: "Start", typeName: (x: string) => x,
+      links: { edit: "https://book.example.test/", manage: "https://book.example.test/?tab=bookings", place: placeLink(s, "https://dir.example.test/jcc") },
+      now: Date.parse(now), wallet: { bookingId: ok[0].id, groupIds: ok.map((r) => r.id) },
+    })).replace(/<[^>]*>/g, " ");
+    const before = on("2099-11-19T15:00:00+03:00"), after = on("2099-11-19T18:00:00+03:00");
+    expect(before).toMatch(/Arrival in 1/);
+    expect(after).toMatch(/Dinner in 2/);
+    for (const x of [before, after]) expect(x).not.toMatch(/Gathering in|Starts in/);
+    expect(on("2099-11-19T15:00:00+03:00", true)).toMatch(/الوصول بعد/);
+    expect([TICKET.en.fhCdArrive, TICKET.en.fhCdDinner, TICKET.ar.fhCdArrive, TICKET.ar.fhCdDinner]).toEqual(["Arrival in {0}", "Dinner in {0}", "الوصول بعد {0}", "العشاء بعد {0}"]);
+  });
 });
 
 describe("the Farm House Night's look", () => {
@@ -386,7 +404,7 @@ describe("the Farm House Night's look", () => {
     expect(booking).toMatch(/\.sc-fh-mi \{[^}]*margin-inline-start: -19px; \}/); // the rule a line starts with is cut
     expect(booking).toMatch(/\.sc-fh-line \{[^}]*color: var\(--fh-peach-lt\);/);
     expect(booking).toMatch(/\.sc-card\.sc-farm \.sc-spots, \.xs-feat-card\.xs-feat-fh \.sc-spots \{[^}]*background: var\(--fh-milk\); color: var\(--fh-rust-dk\); \}/);
-    for (const sel of [".tk-card.ev-farm, .tk-card.ev-farm.tk-live", '[dir="rtl"] .tk-card.ev-farm', ".tk-logo.tk-logo-farm", ".sc-fh-scene", ":is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card).ev-farm { --ev: #8a3f27; }"]) expect(booking, sel).toContain(sel);
+    for (const sel of [".tk-card.ev-farm, .tk-card.ev-farm.tk-live", '[dir="rtl"] .tk-card.ev-farm', ".tk-logo.tk-logo-farm", ".sc-fh-scene", ":is(.sc-card, .sc-wrap, .xs-info, .xs-feat-card, .xs-cal-mk).ev-farm { --ev: #8a3f27; }"]) expect(booking, sel).toContain(sel);
     expect(booking).toMatch(/\.tk-card\.ev-farm \.tk-num \{ font-family: var\(--cs-font-fh\)[^}]*font-weight: 800; \}/);
     for (const sel of [".xs-feat-card.xs-feat-fh", '[dir="rtl"] .xs-feat-card.xs-feat-fh', ".xs-sum-head.xs-fh-head", ".xs .xs-go.ev-farm", ".xs-info.ev-farm .xs-info-go"]) expect(xp, sel).toContain(sel);
     // the face the names ask for is the one the layout loads: Rubik, its heaviest weight here, its Arabic letters too
@@ -406,12 +424,64 @@ describe("the Farm House Night's look", () => {
     expect(ratio("#8A3F27", "#FBF3EA")).toBeGreaterThanOrEqual(4.5); // the ticket's rust on cream
     expect(ratio("#FFFFFF", "#8A3F27")).toBeGreaterThanOrEqual(4.5); // the button and the Featured card's weekday band
   });
-  it("has the booking app's mark: rounded feathers fanned behind a farmhouse gable", () => {
-    expect(FARM_MARK).toBe("/site/farm-mark.svg");
-    const svg = css("../../../public/site/farm-mark.svg");
-    expect(svg).toMatch(/^<svg[^>]*viewBox="0 0 64 40"/);
-    expect(svg.match(/<rect /g)).toHaveLength(9);
-    for (const c of ["#EDB091", "#C9502A", "#7E2034", "#8A3F27", "#FBF3EA", "#F6D9C5"]) expect(svg, c).toContain(c);
+  it("has the venue's Instagram picture as its logo, the booking app's assets/farm-logo.jpg", () => {
+    expect(FARM_MARK).toBe("/site/farm-logo.jpg");
+    expect(FARM_MARK_SIZE).toEqual({ width: 150, height: 150 });
+    const jpg = readFileSync(new URL("../../../public/site/farm-logo.jpg", import.meta.url));
+    expect([...jpg.subarray(0, 3)]).toEqual([0xff, 0xd8, 0xff]); // a JPEG
+    expect(css("../../components/booking/booking.css")).toMatch(/\.sc-fh-mark \{[^}]*border-radius: 50%/);
+  });
+});
+
+// The Farmhouse Night badge (farmhouse_night, the booking app 2026-11-14: "create a badge for attending the farmhouse night"):
+// earned by a booking on a farm night that staff checked in or out (lib/ride-record.ts), and worded by the night's own words
+// (content/farm-words.ts farmBadge), which My Account hands on only to one who holds it.
+describe("the Farmhouse Night badge on My Account", () => {
+  const WORDS = /Farmhouse Night|farmhouse night|ليلة فارم هاوس|Soirée à la ferme/;
+  const booking = (o: Record<string, unknown> = {}) => ({ id: "q1abcdef", session_id: FH.id, session_date: FH.session_date, session_day: "Thursday", status: "done", queue_num: 4, price: 0, paid: false, name: "Sara Haddad", type_preference: "None", ...o });
+  /** The Badges part for a signed-in account with these bookings (and, if given, this badges catalogue): RideRecord's props. */
+  const badges = async (rows: unknown[], locale = "en", catalog: unknown[] = []) => {
+    jar.account = ACCOUNT; jar.member = true;
+    vi.stubGlobal("fetch", vi.fn(async (url: string, init?: RequestInit) => {
+      if (url.includes("/rpc/customer_profile")) return json([{ name: "Sara Haddad", email: "sara@example.test", phone: "+966500000000" }]);
+      if (url.includes("/rpc/my_bookings")) return json(rows);
+      if (url.includes("/rpc/list_sessions")) return json([FH, SAT]);
+      if (url.includes("/rpc/community_member")) return json(true);
+      if (url.includes("/rpc/badge_catalog")) return json(catalog);
+      if (init?.method === "HEAD") return new Response(null, { status: 200, headers: { "content-range": "0-0/0" } });
+      return json([]);
+    }));
+    const page = await AccountPage({ params: Promise.resolve({ locale, part: ["badges"] }), searchParams: Promise.resolve({}) });
+    const rec = findAll(page, RideRecord)[0];
+    return rec ? (rec.props as { t: { names: Record<string, [string, string, string]> }; badges: { slug: string; on: boolean }[] }) : null;
+  };
+
+  it("names it, with how it is earned and what it means, to one checked in or out at a farm night", async () => {
+    for (const status of ["done", "active"]) {
+      const r = await badges([booking({ status })]);
+      expect(r?.badges.find((x) => x.slug === "farmhouse_night"), status).toMatchObject({ on: true });
+      expect(r?.t.names.farmhouse_night, status).toEqual(farmBadge(makeL("en", null)));
+    }
+    expect((await badges([booking()], "ar"))?.t.names.farmhouse_night?.[0]).toBe("ليلة فارم هاوس");
+    expect((await badges([booking()], "fr"))?.t.names.farmhouse_night?.[0]).toBe("Soirée à la ferme");
+  });
+
+  it("hands its words to nobody else: still waiting, no farm night, or shown to everyone by staff but not held", async () => {
+    const SATB = { ...booking(), id: "q9abcdef", session_id: SAT.id, session_date: SAT.session_date, session_day: "Saturday", type_preference: "Road", paid: true };
+    for (const [why, rows, catalog] of [
+      ["waiting", [booking({ status: "waiting" })], []],
+      ["cancelled", [booking({ status: "cancelled" })], []],
+      ["a Saturday ride", [SATB], []],
+      ["no bookings", [], []],
+      ["shown to everyone, not held", [booking({ status: "waiting" })], [{ slug: "farmhouse_night", icon: "barn", color: "red", system: true, auto: true, held_only: false, name: "Badge", name_ar: "Badge" }]],
+    ] as const) {
+      const r = await badges([...rows], "en", [...catalog]);
+      expect(r, why).not.toBeNull();
+      // staff's switch shows it greyed, by the catalogue's name, never the night's words
+      expect(r?.badges.find((x) => x.slug === "farmhouse_night"), why).toEqual(catalog.length ? expect.objectContaining({ on: false }) : undefined);
+      expect(r?.t.names.farmhouse_night, why).toBeUndefined();
+      expect(JSON.stringify(r ?? {}), why).not.toMatch(WORDS);
+    }
   });
 });
 
@@ -421,7 +491,7 @@ describe("the Farm House Night's look", () => {
 // the Experiences card, no kind in its switch, no Details, no Events entry, nothing for the search engines; and its words
 // are in no public place: not the Website editor's schema (api/site-schema), not the browser's dictionary.
 describe("the Farm House Night is not to public", () => {
-  const SECRET = /Nawar|Farm House|Farmhaus|ليلة مزرعة|ليلة المزرعة|2099-11-19-fh|Members and their families|Little Farmhouse/;
+  const SECRET = /Nawar|Farm House|Farmhouse Night|farmhouse night|Farmhaus|ليلة مزرعة|ليلة المزرعة|ليلة فارم هاوس|2099-11-19-fh|Members and their families|Little Farmhouse/;
   const visitors = [["not signed in", () => { jar.account = ""; jar.member = false; }], ["signed in, no member", () => { jar.account = ACCOUNT; jar.member = false; }]] as const;
   for (const [who, as] of visitors) {
     for (const locale of ["en", "ar", "de", "fr"]) {
@@ -437,7 +507,7 @@ describe("the Farm House Night is not to public", () => {
         expect(Object.keys(p.text.kinds.names)).not.toContain("farm");
         for (const html of [draw(p, 1), draw(p, 2, comm(p))]) {
           expect(html).not.toMatch(SECRET);
-          expect(html).not.toMatch(/sc-farm|xs-feat-fh|ev-farm|farm-mark/);
+          expect(html).not.toMatch(/sc-farm|xs-feat-fh|ev-farm|farm-logo/);
         }
       });
       it(`leaves it off the Events page for a visitor ${who} (${locale})`, async () => {
@@ -470,7 +540,7 @@ describe("the Farm House Night is not to public", () => {
     expect(JSON.stringify(PAGES)).not.toMatch(/farmName|aboutFarm/);
     for (const code of TRANSLATED) {
       const d = clientDict(code) ?? {};
-      expect(Object.keys(d).filter((k) => /Farm House|Members and their families|Community members and their families|An evening at the farm/.test(k)), code).toEqual([]);
+      expect(Object.keys(d).filter((k) => /Farm House|Farmhouse Night|farmhouse night|Members and their families|Community members and their families|An evening at the farm/.test(k)), code).toEqual([]);
     }
   });
 });

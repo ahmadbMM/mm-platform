@@ -4,6 +4,7 @@ export const T = {
   en: {
     name: "Name", company: "Company", email: "Email", phone: "Mobile", message: "Message", sending: "Sending…",
     placeholderBiz: "What would you like to build with us?", placeholderHelp: "How can we help?", ref: "Reference", another: "Send another",
+    repeat: (r: string) => `We already have this message: its reference is ${r}.`,
     errors: {
       name_short: "Write each name in full: every name needs at least two letters.", name: "Enter your name - letters, spaces and periods only.", email: "Check the email address.", phone: "Check the mobile number, e.g. 05XXXXXXXX.",
       contact: "Add an email or a mobile number so we can answer.", message: "Write your message.", throttled: "Too many messages from this network - try again in a few minutes.",
@@ -13,6 +14,7 @@ export const T = {
   ar: {
     name: "الاسم", company: "الشركة", email: "البريد الإلكتروني", phone: "الجوال", message: "الرسالة", sending: "جارٍ الإرسال…",
     placeholderBiz: "ماذا تريد أن تبني معنا؟", placeholderHelp: "كيف نقدر نساعدك؟", ref: "رقم الرسالة", another: "رسالة أخرى",
+    repeat: (r: string) => `لدينا هذه الرسالة بالفعل: رقمها ${r}.`,
     errors: {
       name_short: "اكتب كل اسم كاملًا: يجب أن يتكون كل اسم من حرفين على الأقل.", name: "أدخل اسمك - حروف ومسافات ونقاط فقط.", email: "تحقق من البريد الإلكتروني.", phone: "تحقق من رقم الجوال، مثل 05XXXXXXXX.",
       contact: "أضف بريداً إلكترونياً أو رقم جوال لنرد عليك.", message: "اكتب رسالتك.", throttled: "رسائل كثيرة من هذه الشبكة - حاول بعد دقائق.",

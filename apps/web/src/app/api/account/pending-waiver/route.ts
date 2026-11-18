@@ -37,7 +37,10 @@ import { riyadhClock } from "@/lib/workshop-days";
 // one was never asked for its waiver.
 //
 // The Blood Donation event (2026-11-03) is agreed under its own agreement, its version blood-2026-11-v1 (lib/waiver.ts
-// waiverKind), and the pop-up's kicker and line come with it, so no word of the event sits in the browser's code.
+// waiverKind), and the pop-up's kicker and line come with it, so no word of the event sits in the browser's code. The
+// Farm House Night (2026-11-13) is agreed under its own waiver too, farm-2026-11-v1 (content/farm-words.ts
+// farmWaiverCopy), handed only to the signed-in booker of that night; the ride, swim and activity waivers are v4 since
+// 2026-11-13 (content/waivers.ts), and a version the pop-up showed before that deploy answers "changed".
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json", "cache-control": "no-store, private" } });
 const S = (v: unknown) => (typeof v === "string" ? v : "");
@@ -45,7 +48,7 @@ const S = (v: unknown) => (typeof v === "string" ? v : "");
 export async function GET(req: Request) {
   const acct = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (!acct) return json({ signedIn: false });
-  if (!(await withinLimit(req, "account-check"))) return json({ error: "busy" }, 429);
+  if (!(await withinLimit(req, "account-check", undefined, acct.id))) return json({ error: "busy" }, 429);
   const q = new URL(req.url).searchParams;
   const locale = q.get("locale") || "en";
   const skip = (q.get("skip") || "").split(",").filter((x) => SKIP_ID.test(x)).slice(0, 20);

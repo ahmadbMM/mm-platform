@@ -412,7 +412,7 @@
     var ccd = ccDigits(pk), intl = raw[0] === "+" || d.slice(0, 2) === "00", plus = false;
     if (d.slice(0, 2) === "00") d = d.slice(2);
     if (intl) {
-      if (d.indexOf(ccd) !== 0) { var x = ccOf(d); if (x) { setCcDigits(x, pk); ccd = x; } }
+      if (d.indexOf(ccd) !== 0) { var x = ccOf(d); if (x) { var was = $(pk.sel).value; setCcDigits(x, pk); ccd = x; if (pk === PK && $(pk.sel).value !== was) ccFollow(); } }
       if (d.indexOf(ccd) === 0) d = d.slice(ccd.length); else plus = true;
     } else if (ccIncluded(d, ccd)) d = d.slice(ccd.length);
     el.value = (plus ? "+" : "") + groupNat(ccd, d.slice(0, 15));
@@ -434,12 +434,13 @@
   // +966551234567 as people read it: +966 55 123 4567.
   function fmtPhone(e) { var d = String(e || "").replace(/\D/g, ""), c = callingCode(d); return c ? "+" + c + " " + groupNat(c, d.slice(c.length)) : String(e || ""); }
   $("#phone").addEventListener("input", function () { onPhoneInput(); clearMsg("f-phone"); paintWa(); });
-  $("#cc").addEventListener("change", function () {
-    ccFace(); clearMsg("f-phone"); paintWa();
-    // the other numbers start from the applicant's own country code until someone changes them
+  $("#cc").addEventListener("change", function () { ccFace(); clearMsg("f-phone"); paintWa(); ccFollow(); });
+  // The other numbers start from the applicant's own country code until someone changes them: the code picked, or the
+  // one a mobile typed with it (+971 ...) set, which changes the picker without a change event (bug hunt 2026-11-18).
+  function ccFollow() {
     [WPK, GPK].forEach(function (pk) { if (!$(pk.input).value && !touched[pk.sel.slice(1)]) { $(pk.sel).value = $("#cc").value; ccFace(pk); } });
     EM_PRE.forEach(function (p) { if (!$("#" + p + "-phone").value && !touched[p + "-cc"]) { $("#" + p + "-cc").value = $("#cc").value; emCcFace(p); } });
-  });
+  }
   // A mobile number's problems, for the mobile and the WhatsApp number alike: {hard} or {soft} or {}.
   function checkMobile(raw, p, wa) {
     var d = p.replace(/\D/g, "");
@@ -1256,6 +1257,7 @@
       var tok = r.data && r.data[0] && r.data[0].session_token;
       if (!tok) { showBanner(k("Could not reach the server. Please try again.")); return; }
       acct = { id: id, token: tok, name: name, email: email, phone: phone, made: true, needGender: false, needHeight: false, consented: false, news: news };
+      forgetTrack(); // an application link kept on this device is someone else's: a new account has none
       $("#pwd").value = "";
       ev("made");
       await saveConsents();
@@ -1343,7 +1345,8 @@
     prefill(me); skipKnown(me);
     // A draft typed for another account (a shared phone or tablet) never fills this one's: it is dropped, with what of
     // it was still waiting, so the other person's answers are neither shown nor sent nor kept in this one's draft.
-    if (DR && !draftMine(DR)) { clearTimeout(draftT); draftT = 0; DRAFT.clear(); DR = null; pend = null; $("#draft-note").hidden = true; }
+    if (DR && !draftMine(DR)) { clearTimeout(draftT); draftT = 0; DRAFT.clear(); DR = null; pend = null; oneLater = false; $("#draft-note").hidden = true; }
+    if (DR && oneLater) { oneLater = false; draftPut(DR, 1); } // the account step's answers, held back until now
     if (DR) draftPut(DR, 2); // what was typed here before wins over the account's answers, in the questions still asked
     paintReq();
     var two = flowAll().filter(function (s) { return SCREEN_STEP[s] === 2; });
@@ -1461,6 +1464,12 @@
       if (acct.emSaved) payload.emergency_saved = true;
       if (acct.needGender) payload.gender = xgender;
       if (acct.needHeight) payload.height = parseInt(toAscii($("#xheight").value), 10);
+      // A height held outside 100-250 cm (0, a typo) that staff did not flag: customer_community_apply keeps a held height
+      // and refuses it, so the one typed here is saved on the account first (customer_set_height), or no Send ever goes.
+      if (acct.needHeight && acct.badHeight && payload.height >= 100 && payload.height <= 250) {
+        var hr = await rpc("customer_set_height", { p_id: acct.id, p_token: acct.token, p_height: payload.height });
+        if (hr.data === true) acct.badHeight = false;
+      }
       var r = await rpc("customer_community_apply", { p_id: acct.id, p_token: acct.token, p: payload });
       var res = r.data;
       if (!res || typeof res !== "object") { showBanner(k("Could not reach the server. Please try again.")); return; }
@@ -1481,7 +1490,20 @@
       }
       // A parent or guardian of an applicant under 18, kept on the application just sent (customer_community_guardian).
       // A database without the function yet keeps the application without it.
-      if (minorNow()) { try { await rpc("customer_community_guardian", { p_id: acct.id, p_token: acct.token, p_name: clean($("#gname").value), p_relation: grel, p_phone: e164(GPK), p_privacy: SH.PRIVACY_VERSION }); } catch (x) {} }
+      // rpc() never throws: its answer is read. A refusal or a lost connection (tried twice) keeps the applicant here to send
+      // again, which updates the application and sends the guardian once more; never a thank-you without the guardian.
+      if (minorNow()) {
+        var gb = { p_id: acct.id, p_token: acct.token, p_name: clean($("#gname").value), p_relation: grel, p_phone: e164(GPK), p_privacy: SH.PRIVACY_VERSION };
+        var gr = await rpc("customer_community_guardian", gb);
+        if (!guardianOk(gr)) gr = await rpc("customer_community_guardian", gb);
+        if (!guardianOk(gr)) {
+          var ge = gr.data && typeof gr.data === "object" ? gr.data.error : "";
+          var gf = { name: ["f-gname", k("Enter their full name")], relation: ["f-grel", k("Choose how they are related to you")], phone: ["f-gphone", k("Enter their mobile number")] }[ge];
+          if (gf) { showFieldError(gf[0], gf[1]); return; }
+          if (ge === "denied") { showBanner(k("You were signed out. Sign in again to send your application."), true); return; }
+          showBanner(k("Could not reach the server. Please try again.")); return;
+        }
+      }
       // Who invited them, when they came by a member's link (member_invite_code in the booking app). A separate call:
       // the application is already in, so a failure here costs only the "Invited by" line.
       var inv = knownInvite();
@@ -1490,13 +1512,15 @@
       showSuccess({ name: acct.name, phone: acct.phone, email: acct.email, track: res.track });
     } finally { setLoading("#next", false); }
   }
+  // customer_community_guardian kept the guardian: {ok:true} (or a database without the function yet).
+  function guardianOk(r) { return r.error ? absent(r.error) : !(r.data && typeof r.data === "object" && r.data.ok === false); }
   // Sent: the card says it is with the team, what comes next, how they sign in (there is no email from us), and
   // where to go from here: the application's own page, the booking site, and WhatsApp for help.
   function showSuccess(p, repaint) {
     sent = p; DRAFT.clear(); DR = null; $("#draft-note").hidden = true;
     var tok = /^[0-9a-f]{48}$/.test(p.track || "") ? p.track : "";
     $("#track-link").hidden = !tok;
-    if (tok) { $("#track-link").href = trackUrl(tok); rememberTrack(tok); }
+    if (tok) { $("#track-link").href = trackUrl(tok); rememberTrack(tok, null, acct && acct.id); }
     $("#card").setAttribute("data-state", "success");
     $("#form").hidden = true; $("#member").hidden = true; $("#success").hidden = false;
     $("#result").textContent = tr("{name}, your application is with our team.", { name: String(p.name || "").split(" ")[0] });
@@ -1539,7 +1563,12 @@
     var me = m.data && typeof m.data === "object" ? m.data : null;
     if (!me) { showBanner(k("Could not reach the server. Please try again.")); return; }
     var fl = Array.isArray(me.flags) ? me.flags : [];
-    acct = { id: row.id, token: row.session_token, name: me.name || row.name || "", email: me.email || "", phone: me.phone || "", made: false, needGender: !me.gender, needHeight: !(me.height >= 100 && me.height <= 250) || fl.indexOf("height") >= 0 }; // a height outside 100-250 cm (0, a typo) is none
+    acct = { id: row.id, token: row.session_token, name: me.name || row.name || "", email: me.email || "", phone: me.phone || "", made: false, needGender: !me.gender, needHeight: !(me.height >= 100 && me.height <= 250) || fl.indexOf("height") >= 0, // a height outside 100-250 cm (0, a typo) is none
+      badHeight: typeof me.height === "number" && !(me.height >= 100 && me.height <= 250) && fl.indexOf("height") < 0 };
+    // The application link kept on this device (mm-community-track) is the account's own, or it goes: on a shared phone the
+    // next person signing in here never gets the last applicant's link, whose page names them and can hold a change link.
+    var tk = knownTrack();
+    if (tk && tk.c !== row.id) { if (tk.t === me.track) rememberTrack(tk.t, tk.at, row.id); else forgetTrack(); }
     if (me.member) { showMember(); return; }
     // The emergency contact on the account: asked when there is none. A database without customer_emergency asks
     // nothing; one that answers three columns offers no second.
@@ -1642,6 +1671,8 @@
   // A draft's answers not put back yet (the membership step's, until the account is signed in again): every save
   // keeps them, or typing the password to sign in again would write a draft without them.
   var pend = null;
+  // The account step's answers of a draft whose account signs in again, held back until it is in and the draft is its own.
+  var oneLater = false;
   function pendOf(d) { return d ? { v: Object.assign({}, d.v || {}), tiles: Object.assign({}, d.tiles || {}), made: !!d.made, email: d.email || "", id: d.id || "", sp: d.sp || null } : null; }
   // Whose draft it is: the account it was kept for (its id, else its email), so it is put back for that account only.
   function draftMine(d) {
@@ -1688,7 +1719,7 @@
   // The step a box belongs to, as the draft puts it back: the membership step's (and WhatsApp's, which moves
   // there for a signed-in account) wait for the account.
   function stepOf(el) { var f = el.closest("fieldset.step"); var n = f ? +f.getAttribute("data-step") : 0; return el.closest("#f-wa, #f-wanum") ? waStep : n; }
-  function draftPut(d, which) {
+  function draftPut(d, which, gate) {
     if (!d) return;
     prefilling = true;
     try {
@@ -1696,6 +1727,7 @@
       Object.keys(v).forEach(function (id) {
         if (id === "nat") return;
         var el = document.getElementById(id); if (!el || stepOf(el) !== which && !(which === 1 && stepOf(el) === 0)) return;
+        if (gate && stepOf(el) !== 0) return; // only the first screen's (the sign-in's) for now
         if (which === 2 && el.closest("[data-skipped]")) return; // the account's answer stands for a question not asked
         touched[id] = 1; if (pend) delete pend.v[id];
         el.value = v[id];
@@ -1703,15 +1735,15 @@
       });
       if (which === 2 && v.nat && !$("#f-nat").hasAttribute("data-skipped")) { natPick(v.nat, true); touched["nat-q"] = 1; if (pend) delete pend.v.nat; }
       TILE_GROUPS.forEach(function (g) {
-        var val = (d.tiles || {})[g]; if (!val || g === "#haves") return;
+        var val = (d.tiles || {})[g]; if (!val || g === "#haves" || gate) return;
         var b = $(g + ' .tile[data-v="' + val + '"]'); if (!b || stepOf(b) !== which || (which === 2 && b.closest("[data-skipped]"))) return;
         touched[g] = 1; if (pend) delete pend.tiles[g];
         if (b.getAttribute("aria-checked") !== "true") b.click();
       });
       if (which === 1) {
         ccFace(PK); paintWa();
-        if (typeof d.news === "boolean") { news = d.news; $("#news").setAttribute("aria-checked", String(news)); }
-        if (d.em2) emOpen2("em", true);
+        if (typeof d.news === "boolean" && !gate) { news = d.news; $("#news").setAttribute("aria-checked", String(news)); }
+        if (d.em2 && !gate) emOpen2("em", true);
       } else {
         ccFace(WPK); ccFace(GPK); if ($("#wa").value) onPhoneInput(WPK); if ($("#gphone").value) onPhoneInput(GPK);
         if (d.xem2) emOpen2("xem", true);
@@ -1732,9 +1764,13 @@
     if (!DR) return false;
     if ((DR.tiles || {})["#haves"]) touched["#haves"] = 1;
     pend = pendOf(DR);
-    draftPut(DR, 1);
-    $("#draft-note").hidden = false;
     var have = (DR.tiles || {})["#haves"];
+    // An account that signs in again (made here, or signed into) gets the account step's answers once it is in and the
+    // draft is its own (enterStepTwo): on a shared phone the next person never finds the last one's WhatsApp number or
+    // emergency contact in the boxes, nor sends them (bug hunt 2026-11-18). Until then they wait in `pend`.
+    oneLater = !!(DR.made || have === "yes");
+    draftPut(DR, 1, oneLater);
+    $("#draft-note").hidden = false;
     if (DR.made || have === "yes") {
       goScreen("gate", { noFocus: true, noDraft: true });
       tileSet("#haves", "yes");
@@ -1758,10 +1794,19 @@
   function knownInvite() { try { var v = JSON.parse(localStorage.getItem(INV_KEY) || "null"); return v && /^[0-9a-f]{16}$/.test(v.c) && Date.now() - v.at < 2592e6 ? v.c : ""; } catch (e) { return ""; } }
   function trackUrl(tok) { return location.origin + location.pathname + "?track=" + tok + "&lang=" + lang; }
   // at: when it was sent (community_track's sent_at), else the day it is first kept; opening its page again keeps that day.
-  function rememberTrack(tok, at) {
-    try { var was = knownTrack(); localStorage.setItem(TRACK_KEY, JSON.stringify({ t: tok, at: at || (was && was.t === tok && was.at) || Date.now() })); } catch (e) {}
+  // who: the account it was sent from. Thirty days after it was last kept (sent, or its page opened), it is forgotten.
+  function rememberTrack(tok, at, who) {
+    try { var was = knownTrack(), same = !!was && was.t === tok; localStorage.setItem(TRACK_KEY, JSON.stringify({ t: tok, at: at || (same && was.at) || Date.now(), c: who || (same && was.c) || "", kept: Date.now() })); } catch (e) {}
   }
-  function knownTrack() { try { var v = JSON.parse(localStorage.getItem(TRACK_KEY) || "null"); return v && /^[0-9a-f]{48}$/.test(v.t || "") ? v : null; } catch (e) { return null; } }
+  function knownTrack() {
+    try {
+      var v = JSON.parse(localStorage.getItem(TRACK_KEY) || "null");
+      if (!v || !/^[0-9a-f]{48}$/.test(v.t || "")) return null;
+      if (Date.now() - (+v.kept || +v.at || Date.parse(v.at) || 0) > 2592e6) { forgetTrack(); return null; }
+      return v;
+    } catch (e) { return null; }
+  }
+  function forgetTrack() { try { localStorage.removeItem(TRACK_KEY); } catch (e) {} }
   function fixLabel(x) { return x === "name" ? tr("Name") : tr(FIX_LABEL[x] || x); }
   var FIX_LABEL = { email: k("Email address"), phone: k("Mobile number"), whatsapp: k("WhatsApp number"), birth_date: k("Date of birth"), gender: k("Gender"), nationality: k("Nationality"),
     height: k("Height in cm"), bike_type: k("Which bike will you ride?"), profession: k("Profession"), workplace: k("Company"), instagram: k("Instagram"), linkedin: k("LinkedIn") };
@@ -1792,11 +1837,21 @@
     $("#track-acts").innerHTML = acts.join("") + '<a class="submit submit-line" href="' + HELP_WA + '" target="_blank" rel="noopener">' + esc(tr("WhatsApp us")) + "</a>";
   }
   function openSite() { return '<a class="submit submit-line" href="' + esc(BOOKING_URL + "?lang=" + lang) + '">' + esc(tr("Open the booking site")) + "</a>"; }
+  // The changes staff asked for, and their link, are the applicant's own: community_track gives them only to the
+  // application's account, signed in on this page (rentals 20261119000600; its session lives in this page only, never
+  // stored). Signed out, the page shows the rest, as the link kept on a shared phone may be opened by someone else.
+  var trackSeq = 0;
   async function showTrack(tok) {
+    var my = ++trackSeq;
     $("#card").setAttribute("data-state", "track");
-    $("#form").hidden = true; $("#track").hidden = false; $("#track-err").hidden = true;
+    $("#form").hidden = true; $("#success").hidden = true; $("#member").hidden = true; $("#track").hidden = false; $("#track-err").hidden = true;
     $("#track-steps").innerHTML = '<li class="tk-wait"><span class="spinner-dark" aria-hidden="true"></span> ' + esc(tr("Loading...")) + "</li>";
-    var r = /^[0-9a-f]{48}$/.test(tok) ? await rpc("community_track", { p_token: tok }) : { data: { ok: false, error: "gone" } };
+    var ok = /^[0-9a-f]{48}$/.test(tok), a = { p_token: tok };
+    if (acct && acct.id && acct.token) { a.p_cid = acct.id; a.p_ctoken = acct.token; }
+    var r = ok ? await rpc("community_track", a) : { data: { ok: false, error: "gone" } };
+    // a database before the account's two arguments does not know the call with them: asked as before
+    if (ok && r.error && a.p_cid && absent(r.error)) r = await rpc("community_track", { p_token: tok });
+    if (my !== trackSeq) return; // gone back to the form meanwhile
     var d = r.data && typeof r.data === "object" ? r.data : null;
     if (!d || !d.ok) {
       $("#track-steps").innerHTML = ""; $("#track-err").hidden = false;
@@ -1804,9 +1859,34 @@
       $("#track-title").focus({ preventScroll: true });
       return;
     }
-    TRACK_D = d; rememberTrack(tok, d.sent_at); trackPaint();
+    TRACK_D = d; rememberTrack(tok, d.sent_at, acct && acct.id); trackPaint();
     $("#track-title").focus({ preventScroll: true });
   }
+  // Signed in here, the application's page opens in this page (a new page would start signed out, without the changes
+  // asked), and Back comes back to where it was opened from. Signed out, its link opens the page as before.
+  var trackFrom = null;
+  function viewNow() { return { state: $("#card").getAttribute("data-state"), form: $("#form").hidden, success: $("#success").hidden, member: $("#member").hidden, title: document.title }; }
+  function openTrackHere(e, href) {
+    var tok = null; try { tok = new URL(href, location.href).searchParams.get("track"); } catch (x) {}
+    if (!acct || TRACK != null || !/^[0-9a-f]{48}$/.test(tok || "")) return;
+    e.preventDefault();
+    trackFrom = viewNow();
+    try { history.pushState(null, "", trackUrl(tok)); } catch (x) {}
+    showTrack(tok);
+  }
+  ["#track-link", "#acct-pending-a"].forEach(function (id) { $(id).addEventListener("click", function (e) { openTrackHere(e, this.getAttribute("href")); }); });
+  window.addEventListener("popstate", function () {
+    if (!trackFrom) return;
+    var tok = new URLSearchParams(location.search).get("track"), on = !$("#track").hidden;
+    if (tok) { if (acct && !on) { trackFrom = viewNow(); showTrack(tok); } return; } // forward to it again
+    if (!on) return;
+    var f = trackFrom;
+    trackSeq++; TRACK_D = null; // the changes asked, and their link, are not kept once the page is left
+    $("#track").hidden = true; $("#track-steps").innerHTML = ""; $("#track-acts").innerHTML = "";
+    $("#form").hidden = f.form; $("#success").hidden = f.success; $("#member").hidden = f.member;
+    if (f.state) $("#card").setAttribute("data-state", f.state); else $("#card").removeAttribute("data-state");
+    document.title = f.title;
+  });
   // An application sent from this device before: named on the first screen, a tap from its page.
   function paintSeen() {
     var x = knownTrack(), on = !!x && screen === "gate" && !DR;

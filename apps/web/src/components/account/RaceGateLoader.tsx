@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import RatingGateLoader from "./RatingGateLoader";
 import RaceGate, { type PendingRaceReg, type RaceRegDone } from "./RaceGate";
-import { RACE_QUIET, isQuiet } from "./quiet";
+import { RACE_QUIET, BUSY, BUSY_RETRY_MS, isQuiet } from "./quiet";
 
 // A DEFE 5KM Run runner's "Have you registered for the race?" on every page (the owner, 2026-10-18; the
 // booking app's _forceRaceRegPrompt), between the run agreement and the post-ride rating: ShareGateLoader
@@ -17,11 +17,12 @@ const KEY = RACE_QUIET;
 const QUIET_MS = 2 * 60_000;
 const passed = new Set<string>();
 
-async function check(locale: string): Promise<PendingRaceReg | null> {
+async function check(locale: string): Promise<PendingRaceReg | typeof BUSY | null> {
   if (isQuiet(KEY)) return null;
   try {
     const skip = passed.size ? `&skip=${encodeURIComponent([...passed].join(","))}` : "";
     const r = await fetch(`/api/account/pending-race-reg?locale=${encodeURIComponent(locale)}${skip}`, { cache: "no-store", credentials: "same-origin" });
+    if (r.status === 429) return BUSY; // the meter is full: not an answer, asked again shortly
     if (!r.ok) return null;
     const b = (await r.json()) as { signedIn?: boolean; pending?: PendingRaceReg | null };
     try {
@@ -36,18 +37,21 @@ export default function RaceGateLoader({ locale }: { locale: string }) {
   const path = usePathname();
   const [pending, setPending] = useState<PendingRaceReg | null>(null);
   const [clear, setClear] = useState(false); // asked, and no place waits: the rating may ask now
+  const [retry, setRetry] = useState(0); // bumped to ask again after the meter turned a check away
   const [round, setRound] = useState(0);
 
   useEffect(() => {
     if (pending) return;
     let live = true;
+    let wait: ReturnType<typeof setTimeout> | undefined;
     check(locale).then((p) => {
       if (!live) return;
+      if (p === BUSY) { wait = setTimeout(() => setRetry((k) => k + 1), BUSY_RETRY_MS); return; } // the next pop-ups keep waiting
       if (p) setPending(p);
       setClear(!p);
     });
-    return () => { live = false; };
-  }, [path, locale, pending, round]);
+    return () => { live = false; clearTimeout(wait); };
+  }, [path, locale, pending, round, retry]);
 
   const done = (entryId: string, r: RaceRegDone) => {
     if (r !== "stale") passed.add(entryId);

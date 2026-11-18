@@ -82,6 +82,74 @@ describe("the word cloud", () => {
     const { items } = layoutCloud([{ w: "x".repeat(40), n: 5 }, { w: "Swings", n: 1 }], 320, ruler);
     expect(items[0].width).toBeLessThanOrEqual(320);
   });
+  it("draws a short answer on one line, its whole text, as high as one line", () => {
+    for (const width of [320, 1060]) {
+      for (const p of layoutCloud([...words(40), { w: "x".repeat(29), n: 2 }], width, ruler).items) {
+        expect(p.lines, p.w).toEqual([p.w]);
+        expect(p.height, p.w).toBeCloseTo(p.lead + 2, 6);
+        expect(p.lead, p.w).toBeCloseTo(p.size * 1.15, 0);
+      }
+    }
+  });
+  it("breaks a long answer at its spaces onto lines no wider than about 28 characters, inside the box and over no other", () => {
+    const text = Array.from({ length: 30 }, (_, i) => `idea${i + 1} for the corniche ride`).join(" ").slice(0, 2000).trim();
+    const list = [{ w: "Kites", n: 4 }, { w: text, n: 1 }, { w: "Face painting", n: 3 }, ...words(12)];
+    for (const [width, height] of [[320, 0], [390, 0], [760, 0], [1060, 0], [1600, 620], [640, 300]]) {
+      const label = `${width}x${height}`;
+      const laid = layoutCloud(list, width, ruler, height ? { height } : {});
+      expect(laid.items.length, label).toBe(list.length);
+      sound(laid, width, label);
+      const long = laid.items.find((p) => p.w === text)!;
+      expect(long.lines.length, label).toBeGreaterThan(5);
+      expect(long.lines.join(" "), label).toBe(text);
+      for (const l of long.lines) expect(ruler(l), `${label}: ${l}`).toBeLessThanOrEqual(1600);
+      expect(long.width, label).toBeLessThanOrEqual(width);
+      expect(long.height, label).toBeCloseTo(long.lines.length * long.lead + 2, 6);
+      // every other answer stays on one line
+      for (const p of laid.items.filter((x) => x !== long)) expect(p.lines, `${label}: ${p.w}`).toEqual([p.w]);
+    }
+  });
+  it("gives a word longer than a line a line of its own, and never stands a long answer on its side", () => {
+    const text = `see ${"x".repeat(45)} and more ideas for the next ride along the sea`;
+    const { items } = layoutCloud([{ w: "Kites", n: 2 }, { w: text, n: 1 }], 390, ruler);
+    const long = items.find((p) => p.w === text)!;
+    expect(long.lines).toEqual(["see", "x".repeat(45), "and more ideas for the next", "ride along the sea"]);
+    expect(long.width).toBeLessThanOrEqual(390);
+    const many = Array.from({ length: 30 }, (_, i) => ({ w: i % 3 ? `Word${i + 1}` : `Answer ${i + 1} is a sentence that runs past one line`, n: 30 - i }));
+    for (const width of [360, 1060]) {
+      const mixed = layoutCloud(many, width, ruler, { mixed: true });
+      sound(mixed, width, `mixed at ${width}`);
+      for (const p of mixed.items.filter((x) => x.lines.length > 1)) expect(p.turned, p.w).toBe(false);
+    }
+  });
+  it("holds the longest answers there are (2,000 characters) on a phone and on the big screen, quickly", () => {
+    const longest = (i: number) => `${i + 1} ${"a few words ".repeat(170)}`.slice(0, 2000).trim();
+    const list = [...Array.from({ length: 30 }, (_, i) => ({ w: longest(i), n: 1 })), ...words(120)];
+    for (const [width, height] of [[320, 0], [1060, 0], [1600, 620]]) {
+      const laid = layoutCloud(list, width, ruler, height ? { height } : {});
+      expect(laid.items.length).toBe(150);
+      sound(laid, width, `${width}x${height}`);
+      let best = Infinity;
+      for (let i = 0; i < 3; i++) {
+        const from = performance.now();
+        layoutCloud(list, width, ruler, height ? { height } : {});
+        best = Math.min(best, performance.now() - from);
+      }
+      expect(best, `${width}x${height}`).toBeLessThan(50);
+    }
+  });
+  it("on the big screen keeps a long answer within half the box's height, and the other words as large as without it", () => {
+    const base = [{ w: "Kites", n: 6 }, { w: "Face painting", n: 4 }, { w: "BBQ", n: 3 }, { w: "Pony rides", n: 2 }, { w: "Yoga", n: 1 }];
+    const longest = `${"a shaded rest stop with cold water ".repeat(60)}`.slice(0, 2000).trim();
+    for (const [width, height] of [[1600, 620], [1100, 420]]) {
+      const without = layoutCloud(base, width, ruler, { height });
+      const laid = layoutCloud([...base, { w: longest, n: 1 }], width, ruler, { height });
+      sound(laid, width, `${width}x${height}`);
+      const long = laid.items.find((p) => p.w === longest)!;
+      expect(long.height, `${width}x${height}`).toBeLessThanOrEqual(height / 2 + 0.01);
+      for (const p of without.items) expect(laid.items.find((x) => x.w === p.w)!.size, `${width}x${height}: ${p.w}`).toBe(p.size);
+    }
+  });
   it("fills a box of a given height (the big screen) without growing it, however many answers", () => {
     for (const [width, height] of [[1600, 620], [1100, 420], [640, 300]]) {
       for (const n of [1, 12, 60, 150]) {

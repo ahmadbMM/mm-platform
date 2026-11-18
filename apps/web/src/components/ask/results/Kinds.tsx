@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { askNum, optionText, type AskQuestion } from "@/lib/ask";
-import { axisName, gridConfig, gridResult, pinCells, pinResult, quizConfig, quizRows, quizTextResult, sentPin } from "@/lib/ask-kinds";
+import { axisName, gridConfig, gridResult, heatCells, pinResult, quizConfig, quizRows, quizTextResult, sentPin } from "@/lib/ask-kinds";
 import { askImage } from "@/lib/ask-look";
 import { IconCheck } from "../icons";
 import { BarList, CloudList, Right } from "./Bars";
@@ -63,7 +63,7 @@ function Pins({ q, result, t, look, screen, own, heat }: ResultProps & { heat: b
   const { n, pins, correct } = pinResult(result);
   const image = askImage(q.image, 1280);
   const mine = sentPin(own?.value);
-  const cells = heat ? pinCells(pins, HEAT_COLS, HEAT_ROWS) : null;
+  const cells = heat ? heatCells(result, pins, HEAT_COLS, HEAT_ROWS) : null;
   // the picture's own shape (width over height), known once it has loaded: the big screen fits the picture into its
   // panel by it, so every pin stays on the spot it was dropped on
   const pic = useRef<HTMLImageElement>(null);
@@ -97,8 +97,9 @@ export const PinDots = (p: ResultProps) => <Pins {...p} heat={false} />;
 export const PinHeat = (p: ResultProps) => <Pins {...p} heat />;
 
 /** How many got a revealed quiz question right. */
-function GotRight({ right, n, t }: { right: number | null; n: number; t: ResultProps["t"] }) {
-  return right === null || n < 1 ? null : <p className="ask-figure"><span>{t.gotRight(right, n)}</span></p>;
+function GotRight({ right, n, t }: { right?: number | null; n: number; t: ResultProps["t"] }) {
+  // a question not revealed yet sends no count at all (bug hunt 2026-11-18, round 2): nothing, not "0 of N"
+  return typeof right !== "number" || n < 1 ? null : <p className="ask-figure"><span>{t.gotRight(right, n)}</span></p>;
 }
 /** A quiz as bars: the options in the order staff wrote them. */
 export function QuizBars({ q, result, locale, t, look, screen }: ResultProps) {

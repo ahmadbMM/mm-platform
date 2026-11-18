@@ -69,6 +69,8 @@ html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }
 .club-sec { padding: 40px 7vw; max-width: 1180px; margin: 0 auto; box-sizing: content-box; }
 .club-center { text-align: center; margin-bottom: 36px; }
 .club-center p { color: #077a4b; text-transform: uppercase; letter-spacing: 2px; font-size: 12px; font-weight: 700; margin: 0 0 10px; }
+html:is([lang="ar"], [lang="ur"]) :is(.club-center p, .club-rides-head p) { letter-spacing: 0; font-size: 13px; }
+html:is([lang="ar"], [lang="ur"]) :is(.club-cardviz-brand span, .club-cardviz-label) { letter-spacing: 0; }
 .club-sec h2 { font-size: clamp(28px, 3.4vw, 48px); letter-spacing: -1.5px; margin: 0; }
 .club-tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; align-items: stretch; }
 .club-tier { background: #fff; border: 1.5px solid rgba(0, 0, 0, .1); border-radius: 26px; padding: 28px; display: flex; flex-direction: column; gap: 14px; }
@@ -81,7 +83,7 @@ html:is([lang="ar"], [lang="ur"]) .club-earn h3 { letter-spacing: 0; }
 .club-tier ul { list-style: none; margin: 0; padding: 16px 0 0; border-top: 1px solid rgba(0, 0, 0, .09); display: flex; flex-direction: column; gap: 9px; flex: 1; }
 .club-tier.legend ul { border-top-color: rgba(255, 255, 255, .14); }
 .club-tier li { display: flex; gap: 9px; font-size: 13.5px; line-height: 1.4; }
-.club-tier li::before { content: "✓"; color: #077a4b; font-weight: 800; }
+.club-tier li::before { content: ""; flex: none; width: 14px; height: 14px; margin-top: 2px; color: #077a4b; background: currentColor; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / contain no-repeat; }
 .club-tier.legend li::before { color: #03ff89; }
 .club-perks-text { color: #57605a; font-size: 15px; max-width: 600px; margin: 8px 0 28px; }
 .club-perks { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
@@ -173,3 +175,88 @@ html:is([lang="ar"], [lang="ur"]) .club-members h3 { letter-spacing: 0; }
 .club-sat:disabled { opacity: .5; cursor: default; }
 .club-sat:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
 .club-plan-err { margin: 10px 0 0; font-size: 13.5px; font-weight: 600; color: #a3271d; }
+
+/* The Build-up plan (BuildupPlan.tsx; the booking app's .hub-bup card, 2026-11-18): the event, its date, the Saturdays to
+   go, one row per Saturday with what it says at its end; a day gone and not ridden dimmed. */
+.club-bup { border-top: 1px solid rgba(0, 0, 0, .08); padding-top: 14px; }
+.club-bup h3 { display: flex; align-items: center; gap: 6px; }
+.club-bup-ev { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; font-size: 16px; color: #1a1919; }
+.club-bup-ev span { font-size: 13px; color: #57605a; }
+.club-bup-n { margin: 6px 0 4px; font-size: 17px; font-weight: 800; color: #077a4b; }
+.club-bup-l { list-style: none; margin: 0; padding: 0; }
+.club-bup-l li { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 4px 0; border-bottom: 1px dashed rgba(0, 0, 0, .08); }
+.club-bup-l li:last-child { border-bottom: 0; }
+.club-bup-d { font-weight: 600; font-size: 14px; color: #1a1919; font-variant-numeric: tabular-nums; }
+.club-bup-l li.past .club-bup-d { font-weight: 400; color: #8a8f8a; }
+.club-bup-s { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #57605a; }
+.club-bup-l li:is(.done, .held) .club-bup-s { color: #077a4b; }
+.club-mine .club-bup-go { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: #077a4b; font-weight: 800; font-size: 13.5px; white-space: nowrap; }
+
+/* My interests (Interests.tsx; the booking app's .int-card with its .mt-chip chips, 2026-11-18): chips that flip where they
+   are, Save (and Cancel when changing a save); once saved, the picks as quiet chips and Change. */
+.club-int { border-top: 1px solid rgba(0, 0, 0, .08); padding-top: 14px; }
+.club-int h3 { display: flex; align-items: center; gap: 6px; }
+.club-int h3 .mm-ic { color: #077a4b; }
+.club-int-picks, .club-int-mine { display: flex; flex-wrap: wrap; gap: 8px; }
+.club-int-mine { list-style: none; margin: 0 0 12px; padding: 0; }
+.club-int-mine li { padding: 6px 12px; border-radius: 999px; background: rgba(7, 122, 75, .1); color: #055c38; font-size: 13.5px; font-weight: 700; }
+.club-int-chip { min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .16); background: #fff; color: #1a1919; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.club-int-chip.on { border-color: #077a4b; background: #077a4b; color: #fff; }
+.club-int-chip:focus-visible, .club-int-btn:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+.club-int-acts { display: flex; gap: 10px; margin-top: 14px; }
+.club-int-btn { min-height: 44px; padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(0, 0, 0, .16); background: #fff; color: #1a1919; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.club-int > .club-int-btn { width: 100%; }
+.club-int-acts .club-int-btn { flex: 1 1 0; }
+.club-int-save { border-color: #077a4b; background: #077a4b; color: #fff; }
+.club-int-btn:disabled { opacity: .6; cursor: default; }
+.club-int-err { margin: 10px 0 0; font-size: 13.5px; font-weight: 600; color: #a3271d; }
+
+/* Suggest a ride (SuggestRide.tsx; the booking app's .rsg-* page, 2026-11-18): the form opened in place, then the member's
+   own suggestions, each with its kind, its state, the text, its day and the team's reply. */
+.club-rsg { border-top: 1px solid rgba(0, 0, 0, .08); padding-top: 14px; }
+.club-rsg h3 { display: flex; align-items: center; gap: 6px; }
+.club-rsg .club-rsg-open { width: 100%; }
+.club-rsg-form { display: flex; flex-direction: column; gap: 8px; }
+.club-rsg-lbl { font-size: 13.5px; font-weight: 700; color: #2b332d; }
+.club-rsg-kind { display: inline-flex; align-items: center; gap: 6px; }
+.club-rsg-text { width: 100%; box-sizing: border-box; min-height: 104px; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(0, 0, 0, .2); font: inherit; font-size: 15px; color: #1a1919; background: #fff; resize: vertical; }
+.club-rsg-text:focus-visible { outline: 2px solid #077a4b; outline-offset: 1px; }
+.club-rsg-text[aria-invalid="true"] { border-color: #a3271d; }
+.club-rsg-msg { margin: 0; min-height: 0; font-size: 13.5px; font-weight: 600; color: #a3271d; }
+.club-rsg-msg:empty { display: none; }
+.club-rsg-mine { margin: 18px 0 8px; font-size: 14px; color: #1a1919; }
+.club-rsg-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.club-rsg-row { padding: 12px 14px; border-radius: 14px; background: rgba(7, 122, 75, .05); display: flex; flex-direction: column; gap: 6px; }
+.club-rsg-row-h { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.club-rsg-k { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #4a534c; }
+html:is([lang="ar"], [lang="ur"]) .club-rsg-k { text-transform: none; letter-spacing: 0; }
+.club-rsg-st { font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: rgba(0, 0, 0, .06); color: #4a534c; white-space: nowrap; }
+.club-rsg-st-planned { background: rgba(196, 128, 10, .14); color: #8a5c14; }
+.club-rsg-st-done { background: rgba(7, 122, 75, .12); color: #055c38; }
+.club-rsg-body { margin: 0; font-size: 14.5px; color: #1a1919; line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
+.club-rsg-day { font-size: 12.5px; color: #57605a; }
+.club-rsg-reply { border-inline-start: 3px solid #077a4b; padding-inline-start: 10px; }
+.club-rsg-reply span { font-size: 12px; font-weight: 700; color: #077a4b; }
+.club-rsg-reply p { margin: 2px 0 0; font-size: 14px; color: #2b332d; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* The Ramadan season (SeasonCard.tsx; the booking app's .hub-ssn and #hub-body.hub-ssn-on, 2026-11-18): a night-blue card in
+   gold leads the area, "Ramadan Kareem" (or "Eid Mubarak") beside a drawn crescent and two lanterns, and the members'
+   sessions take the same night and gold. These tokens are the season's only colours. */
+.club-members { --ssn-night: #0f1e3d; --ssn-night-2: #1a2c55; --ssn-gold: #d9ae55; --ssn-gold-2: #f3d58e; --ssn-ink: #fbf6e9; --ssn-line: rgba(243, 213, 142, .32); }
+.club-ssn { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 84px; padding: 14px 18px; border-radius: 16px; overflow: hidden;
+  background: linear-gradient(135deg, var(--ssn-night) 0%, var(--ssn-night-2) 100%); border: 1px solid var(--ssn-line); color: var(--ssn-ink); }
+.club-ssn-t { font-size: 20px; line-height: 1.3; color: var(--ssn-gold-2); }
+.club-ssn-art { flex: none; width: 124px; height: 56px; }
+.club-ssn-art .hs-moon, .club-ssn-art .hs-cap { fill: var(--ssn-gold); }
+.club-ssn-art .hs-star, .club-ssn-art .hs-core { fill: var(--ssn-gold-2); }
+.club-ssn-art .hs-str { fill: none; stroke: var(--ssn-gold); stroke-width: 1; opacity: .7; }
+.club-ssn-art .hs-glass { fill: var(--ssn-night-2); stroke: var(--ssn-gold); stroke-width: .8; }
+.club-ssn-on .club-up { margin-top: 4px; padding: 14px 16px; border: 1px solid var(--ssn-line); border-radius: 16px; background: linear-gradient(160deg, var(--ssn-night-2) 0%, var(--ssn-night) 60%); color: var(--ssn-ink); }
+.club-ssn-on .club-up h3 { color: var(--ssn-gold-2); }
+.club-ssn-on .club-up li { border-bottom-color: var(--ssn-line); }
+.club-ssn-on .club-up li strong { color: var(--ssn-ink); }
+.club-ssn-on .club-up .club-up-when, .club-ssn-on .club-up .club-att-empty { color: rgba(251, 246, 233, .75); }
+.club-ssn-on .club-up em { background: rgba(243, 213, 142, .16); color: var(--ssn-gold-2); }
+.club-mine.club-ssn-on .club-up a { color: var(--ssn-gold-2); }
+.club-ssn-on .club-up li small { color: var(--ssn-gold); }
+.club-ssn-on .club-up li.closed:not(:has(> a)) strong, .club-ssn-on .club-up li.closed:not(:has(> a)) .club-up-when { color: rgba(251, 246, 233, .55); }

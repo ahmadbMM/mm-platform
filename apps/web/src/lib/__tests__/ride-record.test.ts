@@ -8,6 +8,7 @@ import RideRecord from "@/components/account/RideRecord";
 import { T as RECORD } from "@/components/account/RideRecord.text";
 import { GLYPH } from "@/components/account/badge-glyphs";
 import { bloodWords } from "@/content/blood-words";
+import { farmBadge } from "@/content/farm-words";
 import { serverL, serverLocalize } from "@/i18n/dicts";
 import { createElement, type ReactElement } from "react";
 // The site has no @types/react-dom; this test needs one function of it (as rating.test.ts does).
@@ -217,6 +218,14 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
     expect(laps.lv!.map((x) => [x.slug, x.on])).toEqual([["first_lap", true], ["regular", true], ["podium", true], ["corniche25", false]]);
     // the count counts each ladder once
     expect(L.map((x) => x.slug)).not.toContain("regular");
+  });
+  it("count a party's rows on one night as one ride, as the booking app does (bug hunt 2026-11-18)", () => {
+    const party = ["a", "b", "c", "d"].map((x, i) => row({ id: `p-${x}`, session_id: "2026-01-03", queue_num: i + 1 }));
+    const r = recordRows([...party, row({ session_id: "2026-01-10" })]);
+    const s = new Map<string, RecordSession>(r.map((x) => [x.sessionId, { kind: "jcc", freeRide: false }]));
+    const laps = badgeList(r, s, empty, today, null).find((x) => x.slug === "first_lap" || x.slug === "regular")!;
+    expect(laps).toMatchObject({ slug: "first_lap", on: true, p: "2/5" });
+    expect(laps.lv!.map((x) => [x.slug, x.on])).toEqual([["first_lap", true], ["regular", false], ["podium", false], ["corniche25", false]]);
   });
   it("show a ladder not begun as its first level, with nothing reached", () => {
     const L = badgeList([], new Map(), empty, today, null), t = L.find((x) => x.slug === "t25")!;
@@ -548,6 +557,66 @@ describe("the Blood Donation Visitor badge (blood_visitor, 2026-11-06)", () => {
     expect(bloodWords(serverL("en")).visitorBadge[0]).toBe("Blood Donation Visitor");
     expect(bloodWords(serverL("ar")).visitorBadge[0]).toBe("زائر حملة التبرع بالدم");
     expect(RECORD.en.names.blood_visitor).toBeUndefined();
+  });
+});
+
+describe("the Farmhouse Night badge (farmhouse_night, 2026-11-14)", () => {
+  // Coming to a Farm House Night (ride_kind 'farm', session id '<date>-fh'): a booking staff checked in (active) or checked
+  // out (done), read from every row, as the night has no bike; shown only to those who came, as the night itself is
+  // community members' alone.
+  const FH = "2026-11-19-fh";
+  const fhRows = (o: Record<string, unknown>) => recordRows([row({ id: "q1", session_id: FH, session_date: "2026-11-19", status: "done", paid: false, type_preference: "None", ...o })]);
+  const fhSes = new Map<string, RecordSession>([[FH, { kind: "farm", freeRide: true, approval: true }]]);
+  const slugs = (rows: ReturnType<typeof fhRows>, s: Map<string, RecordSession> = fhSes) => badgeList(rows, s, empty, today, null).map((x) => x.slug);
+
+  it("is earned by a booking on a farm night that staff checked in or checked out, on its own medal: the barn under the moon", () => {
+    for (const status of ["active", "done"]) {
+      expect(badgeList(fhRows({ status }), fhSes, empty, today, null).find((x) => x.slug === "farmhouse_night"), status).toMatchObject({ on: true, icon: "barn", color: "farm" });
+    }
+    expect(BADGE_SYS.farmhouse_night).toEqual(["barn", "farm"]);
+    expect(GLYPH.barn).toContain("evenodd");
+    // the badges table may hold it in an ordinary colour: still its own medal
+    const catalog = [{ slug: "farmhouse_night", icon: "barn", color: "red", system: true, auto: true }];
+    expect(badgeList(fhRows({}), fhSes, { ...empty, catalog }, today, null).find((x) => x.slug === "farmhouse_night")).toMatchObject({ on: true, icon: "barn", color: "farm" });
+  });
+
+  it("stays out of sight until then: waiting, cancelled, a no-show, or a night of another kind", () => {
+    for (const status of ["waiting", "cancelled", "noshow"]) expect(slugs(fhRows({ status })), status).not.toContain("farmhouse_night");
+    const sat = recordRows([row({ id: "q2", session_id: "2026-11-21", session_date: "2026-11-21", status: "done" })]);
+    expect(slugs(sat, new Map([["2026-11-21", { kind: "saturday" as const, freeRide: true }]]))).not.toContain("farmhouse_night");
+    expect(slugs(fhRows({}), new Map([[FH, { kind: "event" as const, freeRide: true }]]))).not.toContain("farmhouse_night");
+    expect(HELD_ONLY.has("farmhouse_night")).toBe(true);
+    // a catalogue row without held_only keeps it to its holders
+    expect(badgeList(fhRows({ status: "waiting" }), fhSes, { ...empty, catalog: [{ slug: "farmhouse_night", icon: "barn", color: "red", system: true, auto: true }] }, today, null).map((x) => x.slug)).not.toContain("farmhouse_night");
+  });
+
+  it("counts a farm night whose session did not load by its id's -fh, and no other id", () => {
+    expect(slugs(fhRows({}), new Map())).toContain("farmhouse_night");
+    expect(slugs(fhRows({ session_id: "2026-11-19-fh-2", id: "q4" }), new Map())).toContain("farmhouse_night");
+    expect(slugs(fhRows({ status: "waiting" }), new Map())).not.toContain("farmhouse_night");
+    for (const id of ["2026-11-19-bd", "2026-11-19", "2026-11-19-fhx"]) expect(slugs(fhRows({ session_id: id, id: "q5" }), new Map()), id).not.toContain("farmhouse_night");
+  });
+
+  it("is not a ride", () => {
+    const L = badgeList(fhRows({}), fhSes, empty, today, null);
+    expect(L.find((x) => x.slug === "first_lap")?.on).toBe(false);
+    expect(L.find((x) => x.slug === "rolling_start")?.on).toBe(false);
+  });
+
+  it("is worded by the night's own words on the server, never the browser's dictionary", () => {
+    expect(farmBadge(serverL("en"))).toEqual(["Farmhouse Night", "Come to one of our farmhouse nights.",
+      "For joining a MicroMobility farmhouse night, an evening at the farm for community members and their families. Given once our team checks you in."]);
+    expect(farmBadge(serverL("ar"))).toEqual(["ليلة فارم هاوس", "احضر ليلة فارم هاوس معنا.",
+      "لحضورك ليلة فارم هاوس مع مايكروموبيليتي، أمسية في المزرعة لأعضاء المجتمع وعائلاتهم. تُمنح بعد أن يسجّل فريقنا حضورك."]);
+    expect(farmBadge(serverL("fr"))[0]).toBe("Soirée à la ferme"); // the booking app's own French
+    expect(farmBadge(serverL("de"))[0]).toBe("Farmhaus-Abend");
+    expect(RECORD.en.names.farmhouse_night).toBeUndefined();
+    expect(RECORD.ar.names.farmhouse_night).toBeUndefined();
+  });
+
+  it("is drawn on its own special medal, peach into the venue's rust and wine, the barn in white", () => {
+    const html = renderToStaticMarkup(createElement(Medal, { icon: "barn", color: "farm" }));
+    for (const c of ["bdg-sp", "#f3c7a9", "#c9502a", "#7e2034", "#6e2c1c", "M2.2 22.4V12.2"]) expect(html, c).toContain(c);
   });
 });
 

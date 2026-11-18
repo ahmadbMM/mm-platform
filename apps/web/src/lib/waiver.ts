@@ -17,7 +17,7 @@ export const SESSION_ID = /^[A-Za-z0-9_-]{1,64}$/;
  *  ("<session>.donor", "<session>.visitor"): each role agrees its own words, one after the other. */
 export const SKIP_ID = /^[A-Za-z0-9_-]{1,64}(\.(donor|visitor))?$/;
 /** A waiver version as the pop-up sends one back: every version the booking app has stamped has this
- *  shape ("2026-10-v3", "swim-2026-10-v3"). One that is no longer the ride's own - a deploy bumped it
+ *  shape ("2026-11-v4", "swim-2026-11-v4", "farm-2026-11-v1"). One that is no longer the ride's own - a deploy bumped it
  *  while the pop-up stood open - is answered "changed", so the pop-up asks again with the current
  *  words; only a version of another shape is refused as invalid. */
 export const WAIVER_VERSION_SHAPE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,47}$/;
@@ -31,9 +31,11 @@ const unsigned = (r: Row) => "waiver_version" in r && (r.waiver_version === null
 const qn = (r: Row) => (typeof r.queue_num === "number" && Number.isFinite(r.queue_num) ? r.queue_num : null);
 
 /** The waiver a session is agreed under (_waiverKind): the Blood Donation event's own agreement ("there is no
- *  activity involved", the owner, 2026-11-03), the ride's where bikes are handed out, the swim's for the pool, the
- *  activity waiver for anything else (the workshop, an event). */
-export const waiverKind = (s: Pick<TicketSession, "kind" | "bikes">): WaiverKind => (s.kind === "blood" ? "blood" : s.bikes ? "ride" : s.kind === "swim" ? "swim" : "activity");
+ *  activity involved", the owner, 2026-11-03), the ride's where bikes are handed out, the swim's for the pool, the Farm
+ *  House Night's own (2026-11-13: its farm, animals, food and the family on the booking), the activity waiver for anything
+ *  else (the workshop, an event, yoga). */
+export const waiverKind = (s: Pick<TicketSession, "kind" | "bikes">): WaiverKind =>
+  (s.kind === "blood" ? "blood" : s.bikes ? "ride" : s.kind === "swim" ? "swim" : s.kind === "farm" ? "farm" : "activity");
 export const waiverVersion = (s: Pick<TicketSession, "kind" | "bikes">): string => WAIVER_VERSIONS[waiverKind(s)];
 
 /** One of the account's own live rows (the row's customer, when my_bookings names it, is the account). */

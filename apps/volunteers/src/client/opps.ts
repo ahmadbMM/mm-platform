@@ -86,6 +86,10 @@ export function viewOpp(main: HTMLElement, id: string): void {
   main.appendChild(actionCard(o, sh));
 }
 
+// What was typed for "I can help" and the role picked survive a redraw (a refusal, a lost connection, the language) until
+// the offer goes through. Kept with whose and which opportunity they are, as the profile form's draft.
+let offerDraft: { opp: string; owner: string; role: string | null; msg: string } | null = null;
+
 function actionCard(o: Opp | null, sh: Mine | null): HTMLElement {
   const box = h("section", { class: "card action", id: "opp-action" });
   const st = sh?.status;
@@ -131,14 +135,19 @@ function actionCard(o: Opp | null, sh: Mine | null): HTMLElement {
   // women only or men only, and the account says otherwise: no button to press for a refusal
   const g = S.prof?.gender;
   if (o.gender && g && g !== o.gender) { box.appendChild(h("p", { class: "state", id: "opp-gender" }, t(o.gender === "female" ? "oppWomenOnlyState" : "oppMenOnlyState"))); return box; }
+  const owner = S.me?.id ?? "";
+  if (offerDraft && (offerDraft.opp !== o.id || offerDraft.owner !== owner)) offerDraft = null;
+  const d = offerDraft ?? (offerDraft = { opp: o.id, owner, role: null, msg: "" });
+  if (d.role !== null && !o.roles?.includes(d.role)) d.role = null; // a role staff took off since
   const msgId = uid("msg");
-  const msg = h("textarea", { id: msgId, rows: 3, maxlength: 300 });
-  let role: string | null = null;
+  const msg = h("textarea", { id: msgId, rows: 3, maxlength: 300, oninput: ((e: Event) => { d.msg = (e.target as HTMLTextAreaElement).value; }) as EventListener });
+  msg.value = d.msg;
+  let role: string | null = d.role;
   const roles = o.roles?.length ? h("fieldset", { class: "pick" }, h("legend", {}, t("interestRole")),
     h("div", { class: "chips" }, ...[null, ...o.roles].map((r) => {
       const rid = uid("role");
       return h("span", { class: "pick-one" },
-        h("input", { type: "radio", name: "role", id: rid, value: r ?? "", checked: r === null, onchange: (() => { role = r; }) as EventListener }),
+        h("input", { type: "radio", name: "role", id: rid, value: r ?? "", checked: r === role, onchange: (() => { role = r; d.role = r; }) as EventListener }),
         h("label", { for: rid }, r ?? t("interestAny")));
     }))) : null;
   append(box, st === "withdrawn" ? h("p", { class: "state" }, t("stWithdrawn")) : null, roles, h("div", { class: "field" }, h("label", { for: msgId }, t("interestMsg")), msg),
@@ -155,6 +164,7 @@ async function interest(id: string, on: boolean, role: string | null = null, mes
     render();
     return;
   }
+  if (on) offerDraft = null; // sent: the next offer starts empty
   setQuiet(on ? t(r.data.status === "accepted" ? "stAccepted" : "interestSent") : t("withdrawn"));
   await load();
   render();

@@ -19,11 +19,14 @@ const day = (x: { date: string }) => String(x.date).slice(0, 10);
 /** The day a week ago in Riyadh, YYYY-MM-DD. */
 const weekAgo = () => new Date(Date.now() + 3 * 3600000 - 7 * 86400000).toISOString().slice(0, 10);
 
-/** Worked: finished, or arrived on a day that is over. */
-export const isDone = (x: Mine) => !x.cancelled && (x.status === "done" || (x.status === "accepted" && (!!x.clock_out || (!!x.clock_in && day(x) < ksaToday()))));
-/** Accepted, not finished and not called off: still to come (or under way). */
-export const isAhead = (x: Mine) => x.status === "accepted" && !x.cancelled && !x.clock_out && Date.parse(x.closes_at) > Date.now() && day(x) >= ksaToday();
-export const isToday = (x: Mine) => isAhead(x) && day(x) === ksaToday();
+/** The shift's cut-off (closes_at) still ahead: a session that runs past midnight is still under way after 00:00
+ *  (_vol_session_end, and volunteer_me's can_work, keep to it). */
+const windowOpen = (x: Mine) => Date.parse(x.closes_at) > Date.now();
+/** Worked: finished, or arrived on a day that is over, once its cut-off has passed too. */
+export const isDone = (x: Mine) => !x.cancelled && (x.status === "done" || (x.status === "accepted" && (!!x.clock_out || (!!x.clock_in && day(x) < ksaToday() && !windowOpen(x)))));
+/** Accepted, not finished and not called off: still to come, or under way (past midnight too). */
+export const isAhead = (x: Mine) => x.status === "accepted" && !x.cancelled && !x.clock_out && windowOpen(x) && (day(x) >= ksaToday() || !!x.can_work || !!x.clock_in);
+export const isToday = (x: Mine) => isAhead(x) && day(x) <= ksaToday();
 /** Worked in the last seven days: its close-out still leads Home. */
 export const recentDone = (): Mine[] => (S.me?.mine ?? []).filter((x) => isDone(x) && day(x) >= weekAgo() && day(x) <= ksaToday()).sort((a, b) => day(b).localeCompare(day(a)));
 
@@ -85,7 +88,8 @@ async function withdraw(x: Mine, reason: string | null): Promise<void> {
 export async function comingYes(x: Mine): Promise<void> {
   const r = await rpc<{ coming_at: string }>("volunteer_coming", { p_session: x.id, p_yes: true });
   if (!r.ok) { noteErr(r); if (r.code === "VOL_CLOSED") await load(); render(); return; } // what the server knows wins
-  x.coming_at = r.data?.coming_at || new Date().toISOString();
+  // onto the shift the page holds now: a read behind the page (back to the app, a tab change) replaced x
+  (myShift(x.id) ?? x).coming_at = r.data?.coming_at || new Date().toISOString();
   setQuiet(t("comingYes"));
   render();
 }
@@ -109,7 +113,7 @@ export const needsPlan = (x: Mine) => isAhead(x) && "plan_leave" in x && !x.plan
 async function savePlan(x: Mine, value: string): Promise<void> {
   const r = await rpc<{ plan_leave: string | null }>("volunteer_plan", { p_session: x.id, p_leave: value || null });
   if (!r.ok) { noteErr(r); render(); return; }
-  x.plan_leave = r.data?.plan_leave ?? (value || null);
+  (myShift(x.id) ?? x).plan_leave = r.data?.plan_leave ?? (value || null); // the shift held now, as comingYes
   setQuiet(t("applySaved"));
   render();
 }
@@ -214,7 +218,7 @@ export function closeoutCard(x: Mine): HTMLElement {
 }
 
 // ── How was it? Optional, never in the way of the certificate (the owner's decision 6) ──
-export const canRate = (x: Mine) => "feedback" in x && !x.cancelled && (x.status === "done" || (x.status === "accepted" && !!x.clock_in && day(x) < ksaToday()));
+export const canRate = (x: Mine) => "feedback" in x && !x.cancelled && (x.status === "done" || (x.status === "accepted" && !!x.clock_in && day(x) < ksaToday() && !windowOpen(x)));
 const SCALE = [1, 2, 3, 4, 5];
 /** One step of the five, drawn: a bar a little taller than the one before. */
 function stepMark(n: number): SVGSVGElement {
@@ -257,7 +261,7 @@ export function ratingBox(x: Mine): HTMLElement | null {
     if (!rating) return;
     const r = await rpc("volunteer_feedback", { p_session: x.id, p_rating: rating, p_again: again, p_comment: comment.value.trim() || null });
     if (!r.ok) { noteErr(r); render(); return; }
-    x.feedback = { rating, again };
+    (myShift(x.id) ?? x).feedback = { rating, again }; // the shift held now, as comingYes
     setQuiet(t("rateThanks"));
     render();
   }, "secondary", { id: `rate-send-${x.id}`, class: "btn btn-secondary rate-send", disabled: "" });

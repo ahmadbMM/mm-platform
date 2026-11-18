@@ -17,6 +17,11 @@ describe("normalizePhone, as the booking app reads a mobile", () => {
     expect(normalizePhone("+966551234567")).toBe("+966551234567");
     // the code typed without a plus keeps no trunk 0 either (2026-11-10 bug hunt)
     expect(normalizePhone("966 055 123 4567")).toBe("+966551234567");
+    // any separator, as the booking app drops every non-digit (2026-11-18 bug hunt)
+    expect(normalizePhone("050\u2011123\u20114567")).toBe("+966501234567");
+    expect(normalizePhone("050/1234567")).toBe("+966501234567");
+    expect(normalizePhone("+44 7700\u2013900123")).toBe("+447700900123");
+    expect(normalizePhone("call me")).toBe("callme"); // words stay words: the form's check refuses them
   });
 });
 

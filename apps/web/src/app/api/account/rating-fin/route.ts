@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   if (!sameOrigin(req.headers.get("origin"), req.url)) return none(403);
   const acct = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (!acct) return none(401);
-  if (!(await withinLimit(req, "account-check"))) return none(429);
+  if (!(await withinLimit(req, "account-check", undefined, acct.id))) return none(429);
   type Body = { entryId?: unknown; locale?: unknown };
   let body: Body | null = null;
   try { body = (await req.json()) as Body; } catch { /* empty body */ }

@@ -11,6 +11,7 @@ import SignOut from "@/components/account/SignOut";
 // as on every page that shows one: without them it rendered unstyled here. First, as on Experiences, so the two below
 // keep the last word wherever they share a class.
 import "@/components/experiences/experiences.css";
+import HandoffLink from "@/components/account/HandoffLink";
 import "@/components/account/account.css";
 import "@/components/booking/booking.css";
 import TicketCard, { TicketCancelled } from "@/components/booking/TicketCard";
@@ -38,7 +39,7 @@ import { T as TICKET } from "@/components/booking/tickets.text";
 import "../handoff.css";
 import { accountSchema } from "@/content/pages/account";
 import { BLOOD_NAME, bloodName, bloodWords } from "@/content/blood-words";
-import { FARM_NAME, farmName } from "@/content/farm-words";
+import { FARM_NAME, farmBadge, farmName } from "@/content/farm-words";
 import { experiencesSchema } from "@/content/pages/experiences";
 import { siteSchema } from "@/content/pages/site";
 import { readAccount, readBookings, rpcServer } from "@/lib/account";
@@ -62,7 +63,9 @@ import { BOOTH_DIR, bfFor, bloodDone, breakfastFor, cancelledGroups, doneToday, 
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { bikeReport } from "@/lib/bike-report";
 import { badgeList, ledRides, profilePct, recordRows, rideMore, rideStats, weekStreak, type BadgeItem } from "@/lib/ride-record";
-import { bikeName, loadBadgeData, loadOpenKinds, loadRecordSessions } from "@/lib/ride-record-data";
+import { bikeName, loadBadgeData, loadBikeTypes, loadOpenKinds, loadRecordSessions } from "@/lib/ride-record-data";
+import { myRecords } from "@/lib/my-records";
+import MyRecords from "@/components/account/MyRecords";
 import { anniversaryOf, annivLine, triedKinds } from "@/lib/landmarks";
 import { helperPathOf } from "@/lib/helper-path";
 import { shareDays } from "@/lib/share-days";
@@ -153,6 +156,28 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   }
 
   if (!acct) {
+    // A hand-back this browser did not ask for (api/account/handoff), kept aside: the account it would sign in as is
+    // named, and signed in only when the rider says so.
+    const parked = decodeSession((await cookies()).get(HANDOFF_COOKIE)?.value);
+    const offeredP = parked ? await sessionProfile(parked) : null;
+    const offered = offeredP && offeredP !== "none" ? offeredP : null;
+    if (offered) {
+      return (
+        <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
+          <div className="ac">
+            <section className="ac-card" aria-labelledby="ac-ho-h">
+              <img src="/site/logo-dark.png" alt="Micromobility" className="ac-logo" />
+              <h1 id="ac-ho-h">{fill(tx("Sign in as {name}?", "تسجيل الدخول باسم {name}؟"), { name: offered.name || offered.email || offered.phone })}</h1>
+              <p className="ac-text">{fill(tx("This link signs this site in as {who}. Continue only if this is your account.", "يسجّل هذا الرابط الدخول إلى هذا الموقع باسم {who}. تابع فقط إن كان هذا حسابك."), { who: accountLabel(offered) })}</p>
+              <form method="post" action="/api/account/handoff" className="ac-ho-btns">
+                <button type="submit" name="do" value="switch" className="ac-go">{tx("Continue", "متابعة")}</button>
+                <button type="submit" name="do" value="stay" className="ac-out">{tx("Cancel", "إلغاء")}</button>
+              </form>
+            </section>
+          </div>
+        </PageShell>
+      );
+    }
     return (
       <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
         <div className="ac">
@@ -166,8 +191,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
             {/* Sign-up and a password reset happen in the booking app, which hands the rider back
                 here signed in (?handoff=site; api/account/handoff). */}
             <ul className="ac-notes">
-              <li><a href={handoff("signup")}>{S(c.signin.create)}</a></li>
-              <li><a href={handoff("forgot")}>{S(c.signin.forgot)}</a></li>
+              <li><HandoffLink href={handoff("signup")}>{S(c.signin.create)}</HandoffLink></li>
+              <li><HandoffLink href={handoff("forgot")}>{S(c.signin.forgot)}</HandoffLink></li>
             </ul>
           </section>
         </div>
@@ -381,7 +406,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                       share: shareLink(app, ev, g.sessionId), bookings: myBookings }}
                     route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn}
                     wallet={{ bookingId: g.rows[0].id, groupIds: g.rows.map((r) => r.id) }} addonItems={addonItems} lockers={lockers} ownLockers={own.filter((l) => l.day === g.date)} vlPartners={vlPartners} balance={walletRead?.balance ?? null} blood={donor} bikeNames={bikeNames}
-                    online={payOnline ? { open: payCfg.bookings !== "off", refundDays: payCfg.refundDays, today } : null} />
+                    online={payOnline ? { open: payCfg.bookings !== "off", refundDays: payCfg.refundDays, today } : null} account={acct.name} />
                 );
               })}
               {/* the bookings cancelled, after the bookings ahead: one quiet row each, until their day has gone */}
@@ -399,7 +424,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                   <TicketCard key={g.key} past locale={locale} today={today} rows={g.rows} session={s}
                     name={rideName(s, g.sessionId)}
                     cue={null} t={ticketText} gather={S(d.gather)} start={S(d.start)} typeName={typeName}
-                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} bikeNames={bikeNames} />
+                    links={{ edit: null, manage, place: null }} route={ticketRoute(s, routes)} routePage={routePageOf(s, routes, content, L)} bikeName={bikeOf.get(g.sessionId) ?? null} now={drawn} addonItems={addonItems} lockers={lockers} vlPartners={vlPartners} blood={donor} bikeNames={bikeNames} account={acct.name} />
                 );
               })}
             </div>
@@ -408,7 +433,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
 
         {own.length > 0 && (
           <section className="ac-sec" aria-labelledby="ac-lk-h">
-            <div className="ac-sec-head"><h2 id="ac-lk-h">{tx("Your lockers", "خزائنك")}</h2><a href={`/api/account/lockers-link?lang=${L === "ar" ? "ar" : "en"}`}>{tx("Manage", "إدارة")} <ArrowIcon size={15} /></a></div>
+            <div className="ac-sec-head"><h2 id="ac-lk-h">{tx("Your lockers", "خزائنك")}</h2><a href={`/api/account/lockers-link?lang=${L}`}>{tx("Manage", "إدارة")} <ArrowIcon size={15} /></a></div>
             <div className="lk-acc">
               {[...new Set(own.map((l) => l.day))].map((d) => {
                 const ls = own.filter((l) => l.day === d), due = ls.find((l) => l.status === "reserved");
@@ -510,19 +535,29 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // A community member's Helper path (customer_helper_path, rentals 20261114082300; the booking app's F23): the card on
   // Badges, the helper days under Rides led on Stats; a rider who is not a member, or a read that failed, sees neither.
   // Stats' personal landmarks (the booking app's F16): the first ride's anniversary card leads it for that week, and the
-  // kinds tried sit under By event (the kinds the account can still book: loadOpenKinds).
+  // kinds tried sit under By event (the kinds the account can still book: loadOpenKinds). My records (the booking app's
+  // _recHtml, 2026-11-18; lib/my-records.ts) follow Your rides on Stats.
   const recordMain = async (p: "stats" | "badges") => {
     // no record from bookings that could not be read: every ride badge would read as not earned
     if (unread) return <section className="ac-sec" aria-label={p === "stats" ? recordBase.stats : recordBase.badges}>{failed}</section>;
     const record = recordRows(rows);
-    const [recSessions, badges, referralRaw, helperRaw, openKinds] = await Promise.all([loadRecordSessions(record.map((r) => r.sessionId), acct), loadBadgeData(acct), referralP,
-      rpcServer<unknown>("customer_helper_path", { p_id: acct.id, p_token: acct.token }), p === "stats" ? loadOpenKinds(today, acct) : Promise.resolve(null)]);
+    // My records' Bike types tried (lib/my-records.ts): the type of each bike handed over on a booking made for no type, read
+    // only when Stats has such a booking
+    const anyBikes = p === "stats" ? record.filter((r) => r.type === "Any" && r.bikeId && (r.status === "done" || r.status === "active")).map((r) => r.bikeId as string) : [];
+    const [recSessions, badges, referralRaw, helperRaw, openKinds, bikeTypes] = await Promise.all([loadRecordSessions(record.map((r) => r.sessionId), acct), loadBadgeData(acct), referralP,
+      rpcServer<unknown>("customer_helper_path", { p_id: acct.id, p_token: acct.token }), p === "stats" ? loadOpenKinds(today, acct) : Promise.resolve(null),
+      anyBikes.length ? loadBikeTypes(anyBikes) : Promise.resolve(new Map<string, string>())]);
     const helper = helperPathOf(helperRaw.data);
     badges.referralRode = referralRodeOf(referralRaw); // the Recruiter badge counts these friends
     const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
-    // the Blood Donation Visitor badge is worded by the event's own words (content/blood-words.ts), handed on only to one who holds it
-    const recordText = allBadges.some((x) => x.slug === "blood_visitor")
-      ? { ...recordBase, names: { ...recordBase.names, blood_visitor: bloodWords(tx).visitorBadge } } : recordBase;
+    // the Blood Donation Visitor and Farmhouse Night badges are worded by their events' own words (content/blood-words.ts,
+    // content/farm-words.ts), handed on only to one who holds them; the farm night's only once earned or given, even were staff
+    // to show it to everyone, as it is for community members' eyes alone
+    // typed as RideRecord's own names (by slug), so a badge just earned is looked up by its slug too (cheerWords)
+    const badgeNames: typeof recordBase.names = { ...recordBase.names,
+      ...(allBadges.some((x) => x.slug === "blood_visitor") ? { blood_visitor: bloodWords(tx).visitorBadge } : {}),
+      ...(allBadges.some((x) => x.slug === "farmhouse_night" && x.on) ? { farmhouse_night: farmBadge(tx) } : {}) };
+    const recordText = { ...recordBase, names: badgeNames };
     const dur = { h: ticketText.durH, hm: ticketText.durHM, m: ticketText.durM };
     // A badge just earned, in the reader's words (RideRecord's own): the ones staff gave, Race Ready, National Day 96.
     const cheerWords = (x: BadgeItem): [string, string, string] => {
@@ -559,6 +594,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const streak = weekStreak(completed.map((r) => r.date), today);
     const next = ticketGroups(rows, today)[0];
     const anniv = anniversaryOf(stats?.first, today);
+    // My records (the booking app's _recHtml, 2026-11-18): after Your rides, for two or more finished sessions
+    const recs = myRecords(record, recSessions, (id) => bikeTypes.get(id) ?? null);
     // a Farm House Night on offer is named to a community member alone (2026-11-13: "not to public"); one the rider
     // went to is theirs, and stays among the kinds done
     if (openKinds?.has("farm") && (await rpcServer<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data !== true) openKinds.delete("farm");
@@ -574,6 +611,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         {anniv && <Anniversary locale={locale} years={anniv.years} first={anniv.first} firstLabel={recordText.first} line={annivLine(content, locale)} />}
         {!stats && !led && <p className="ac-none">{recordText.none}</p>}
         <RideRecord part="stats" locale={locale} stats={stats} led={led} badges={[]} t={recordText} typeName={typeName} dur={dur} helper={helperLine(locale, helper)} />
+        {recs && <MyRecords locale={locale} recs={recs} />}
         <RideMore locale={locale} more={more} t={recordText} typeName={typeName} kindName={kindName}
           earned={{ n: allBadges.filter((x) => x.on).length, of: allBadges.length, href: localHref(accountPartHref("badges"), locale) }}
           tried={tried.length > 0 ? <TriedKinds locale={locale} kinds={tried} name={kindName} /> : null} />

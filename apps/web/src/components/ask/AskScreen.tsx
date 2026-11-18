@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { localeInfo } from "@/i18n/locales";
-import { applyLive, applySame, askScreen, askText, isDrawn, isQuiz, rereadDue, resultCount, resultsShown, screenAt, screenStep, writtenConfig, type AskFull, type LiveAnswer } from "@/lib/ask";
+import { REREAD_MS, applyLive, applySame, askScreen, askText, isDrawn, isQuiz, rereadDue, resultCount, resultsShown, screenAt, screenStep, writtenConfig, type AskFull, type LiveAnswer } from "@/lib/ask";
 import { rightWords } from "@/lib/ask-kinds";
 import { askImage, pageLook } from "@/lib/ask-look";
 import { betterOffset, isLivePaced, offsetOf, type Offset } from "@/lib/ask-pace";
@@ -50,16 +50,24 @@ export default function AskScreen({ locale, slug, screenKey, initial, asked, qr,
   useEffect(() => { held.current = full; });
 
   const readAt = useRef(0);
-  const reread = useCallback(async (must = false) => {
+  const later = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const reread = useCallback(async function again(must = false): Promise<void> {
     const now = Date.now();
     // at most every half minute - or, when it cannot wait (staff showed a question the screen does not hold), a second and a half
-    if (must ? !!readAt.current && now - readAt.current < 1500 : !rereadDue(readAt.current, now)) return;
+    if (must && readAt.current && now - readAt.current < 1500) return;
+    // not due yet: read when it is, as the page does - dropped, a question staff added stayed off the screen, the polls
+    // after it answering "same" (bug hunt 2026-11-18)
+    if (!must && !rereadDue(readAt.current, now)) {
+      later.current ??= setTimeout(() => { later.current = undefined; again(); }, REREAD_MS - (now - readAt.current));
+      return;
+    }
     readAt.current = now;
     const r = await rpcResult<unknown>("ask_screen", { p_slug: slug, p_key: screenKey });
     if ("error" in r) return; // out of reach: the screen keeps what it shows
     const next = askScreen(r.data);
     if (next) setFull(next); else setBad(true);
   }, [slug, screenKey]);
+  useEffect(() => () => clearTimeout(later.current), []);
 
   // How far this device's clock stands from the database's, read off the polls (a quiz clock counts against theirs).
   const [offset, setOffset] = useState<Offset | null>(null);
@@ -68,9 +76,10 @@ export default function AskScreen({ locale, slug, screenKey, initial, asked, qr,
     if (read) setOffset((o) => betterOffset(o, read));
     if (a.kind === "gone") { reread(); return; }
     if (a.kind === "same") { setFull((f) => applySame(f, a)); return; }
-    const { reload } = applyLive(held.current, a.live);
+    const { reload, revealed } = applyLive(held.current, a.live);
     setFull((f) => applyLive(f, a.live).full);
-    if (reload) reread(isLivePaced(held.current) || a.live.pace === "live");
+    // a question just revealed shows its right answer to the room now, not in half a minute
+    if (reload) reread(revealed || isLivePaced(held.current) || a.live.pace === "live");
   }, [reread]);
   const paced = isLivePaced(full);
   useAskLive(slug, "screen", bad ? null : { key: screenKey, ver: full.live?.ver ?? 0 }, onLive, paced);

@@ -51,7 +51,7 @@ test('@webkit a Dukan registration sends the name, mobile, height and bike on th
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   expect(regs).toHaveLength(1);
-  expect(regs[0]).toEqual({ p_badge: '', p_name: 'Faisal Al Harbi', p_height: 168, p_type: 'Mountain', p_source: 'petromin', p_phone: '+966512345678', p_session_id: S1.id, p_company: 'Dukan', p_riders: [], p_waiver: '2026-10-v3', p_lang: 'en', p_privacy: 'dukan-2026-11-13' });
+  expect(regs[0]).toEqual({ p_badge: '', p_name: 'Faisal Al Harbi', p_height: 168, p_type: 'Mountain', p_source: 'petromin', p_phone: '+966512345678', p_session_id: S1.id, p_company: 'Dukan', p_riders: [], p_waiver: '2026-11-v4', p_lang: 'en', p_privacy: 'dukan-2026-11-13' });
   await expect(page.locator('#chip-booking-value')).toHaveText('D-001');
   await expect(page.locator('#tk-name')).toHaveText('Faisal Al Harbi');
   await expect(page.locator('#tk-type-value')).toHaveText('Mountain');
@@ -184,7 +184,7 @@ test('Edit opens a Dukan booking on its summary and saves it as Dukan\'s, with i
   await page.check('#waiver');
   await page.click('#submit');
   await expect(page.locator('.done-note')).toHaveText('Your booking was updated.');
-  expect(edits[0]).toEqual({ p_booking_no: 'D-004', p_proof_phone: '+966512345678', p_badge: '', p_name: 'Amal Booked', p_height: 168, p_type: 'Mountain', p_session_id: S1.id, p_company: 'Dukan', p_phone: '+966512345678', p_riders: [], p_waiver: '2026-10-v3', p_lang: 'en', p_from_session: S1.id });
+  expect(edits[0]).toEqual({ p_booking_no: 'D-004', p_proof_phone: '+966512345678', p_badge: '', p_name: 'Amal Booked', p_height: 168, p_type: 'Mountain', p_session_id: S1.id, p_company: 'Dukan', p_phone: '+966512345678', p_riders: [], p_waiver: '2026-11-v4', p_lang: 'en', p_from_session: S1.id });
   // While it was edited the other kinds of rider could not be picked on the first step.
   await page.click('#edit');
   await page.click('#back'); await page.click('#back'); await page.click('#back'); await page.click('#back');

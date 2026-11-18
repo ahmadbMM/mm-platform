@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import RatingGate from "./RatingGate";
-import { RATE_QUIET, isQuiet } from "./quiet";
+import { RATE_QUIET, BUSY, BUSY_RETRY_MS, isQuiet } from "./quiet";
 import type { RatingForm as Form } from "@/lib/rating";
 
 // The post-ride rating on every page (the owner, 2026-10-03: "open whenever a customer opens the
@@ -23,10 +23,11 @@ type Pending = { entryId: string; name: string; when: string; form: Form; noBike
 const KEY = RATE_QUIET;
 const QUIET_MS = 10 * 60_000;
 
-async function check(locale: string): Promise<Pending | null> {
+async function check(locale: string): Promise<Pending | typeof BUSY | null> {
   if (isQuiet(KEY)) return null;
   try {
     const r = await fetch(`/api/account/pending-rating?locale=${encodeURIComponent(locale)}`, { cache: "no-store", credentials: "same-origin" });
+    if (r.status === 429) return BUSY; // the meter is full: not an answer, asked again shortly
     if (!r.ok) return null;
     const b = (await r.json()) as { signedIn?: boolean; pending?: Pending | null };
     try {
@@ -41,13 +42,19 @@ export default function RatingGateLoader({ locale }: { locale: string }) {
   const path = usePathname();
   const [pending, setPending] = useState<Pending | null>(null);
   const [round, setRound] = useState(0); // bumped once a rating lands, to ask for the next ride
+  const [retry, setRetry] = useState(0); // bumped to ask again after the meter turned a check away
 
   useEffect(() => {
     if (pending) return;
     let live = true;
-    check(locale).then((p) => { if (live && p) setPending(p); });
-    return () => { live = false; };
-  }, [path, locale, pending, round]);
+    let wait: ReturnType<typeof setTimeout> | undefined;
+    check(locale).then((p) => {
+      if (!live) return;
+      if (p === BUSY) wait = setTimeout(() => setRetry((k) => k + 1), BUSY_RETRY_MS);
+      else if (p) setPending(p);
+    });
+    return () => { live = false; clearTimeout(wait); };
+  }, [path, locale, pending, round, retry]);
 
   if (!pending) return null;
   return <RatingGate key={pending.entryId} {...pending} onDone={() => { try { sessionStorage.removeItem(KEY); } catch { /* */ } setPending(null); setRound((n) => n + 1); }} />;

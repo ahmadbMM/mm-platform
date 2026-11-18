@@ -111,7 +111,7 @@ describe("on the ticket", () => {
     const at = END - H;
     const html = card([entry(jcc, { bike_report_at: new Date(at).toISOString() })], at + 5 * M);
     expect(html).toMatch(/<span class="tk-brp-ok"><svg[^>]*>.*?<\/svg>Problem reported<\/span>/);
-    expect(html).not.toContain("<dialog");
+    expect(html).not.toContain("tk-brp-dlg"); // the bike report's pop-up (the ticket's "Need help?" has its own, 2026-11-16)
     expect(card([entry(jcc, { bike_report_at: new Date(at).toISOString() })], at + BRP_QUIET_MS)).toContain("Report a bike problem");
   });
   it("speaks the page's language", () => {

@@ -100,6 +100,9 @@ function profileForm(main: HTMLElement, me: Me, reloadMe: () => Promise<boolean>
     const seats = f.seats.input.value.trim();
     let bad = false;
     if (map && !/^https:\/\/\S+$/i.test(map)) { f.map_url.setError(t("errMapUrl")); bad = true; }
+    // vendor_profile_save refuses a link over 500 characters (TOO_LONG). No maxlength on the field: a pasted link cut
+    // short there would be saved broken.
+    else if (map.length > 500) { f.map_url.setError(t("errTooLong")); bad = true; }
     // A number box holding something that is not a number reads as "" with badInput set: never a cleared count.
     const seatsBad = (f.seats.input as HTMLInputElement).validity?.badInput;
     if (seatsBad || (seats && !(/^\d+$/.test(seats) && +seats >= 1 && +seats <= 2000))) { f.seats.setError(t("errSeats")); bad = true; }
@@ -124,7 +127,8 @@ function profileForm(main: HTMLElement, me: Me, reloadMe: () => Promise<boolean>
     });
     busy(save, false, t("save"));
     if (!r.ok) {
-      const at = r.code === "BAD_PHONE" ? f.contact_phone : r.code === "BAD_EMAIL" ? f.contact_email : null;
+      // TOO_LONG: the map link is the one field the form does not already hold to the database's length.
+      const at = r.code === "BAD_PHONE" ? f.contact_phone : r.code === "BAD_EMAIL" ? f.contact_email : r.code === "TOO_LONG" ? f.map_url : null;
       if (at) { at.setError(t(errorKey(r.code))); at.input.focus(); return; }
       // BAD_INPUT from vendor_profile_save is the seats count (outside 1-2000, or not a number): said
       // on that field when one was typed; otherwise the general "not valid" note below.

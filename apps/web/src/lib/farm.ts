@@ -7,19 +7,20 @@
 // (farmForMembers): no date, Featured card, Details or Events entry for anyone else, and its words are the server's
 // (content/farm-words.ts), never the public Website editor's schema nor the browser's dictionary. Free, and staff
 // approve every place as on the Saturday Social Ride (needs_approval, the list hidden until published). A member books
-// themselves and up to four family members on one booking in the booking app, each by name (its party step; the
-// database's _group_ride_cap reads Settings event_seat_max); this site hands the booking over, as it does every date. No
+// themselves and up to three more on one booking in the booking app, each by name (its party step, FARM_SEAT_MAX 4: the
+// account holder and three with them, the user 2026-11-13; the database's _group_ride_cap says 4, 20261114150000); this site hands the booking over, as it does every date. No
 // bike anywhere, so session and participant words; the activity waiver. It gathers, as the Saturday ride does: its
 // "16:30 - 20:30" is the arrival, then dinner, and every page says "Arrival 4:30 PM · Dinner 8:30 PM" (the booking app's
 // sessionTime, fhArrive and fhDinner; lib/rides.ts timesText with those words), never a gathering and a start.
 // Its look is the booking app's "Harvest Supper", from the venue's own Instagram (@thefarmhouse.jed): the venue's rust
 // tile, peach lettering in Rubik's heaviest weight, and its turkey's fanned tail drawn as rounded feathers rising from
-// the far corner; the mark is those feathers fanned behind a farmhouse gable (public/site/farm-mark.svg, the booking
-// app's assets/farm-mark.svg). Plain logic, so it can be tested (the booking app's _isFarm).
+// the far corner. Its logo is the venue's own Instagram picture, shown round as Instagram shows it
+// (public/site/farm-logo.jpg, the booking app's assets/farm-logo.jpg, 150 px; the user, 2026-11-13: "make sure the logo
+// of the session to be the same of the insta account"). Plain logic, so it can be tested (the booking app's _isFarm).
 
-/** The mark: rounded feathers fanned behind a farmhouse gable (64 by 40). */
-export const FARM_MARK = "/site/farm-mark.svg";
-export const FARM_MARK_SIZE = { width: 64, height: 40 } as const;
+/** The logo: the venue's Instagram picture (@thefarmhouse.jed, 150 by 150), drawn round. */
+export const FARM_MARK = "/site/farm-logo.jpg";
+export const FARM_MARK_SIZE = { width: 150, height: 150 } as const;
 
 /** A farm night, by the session's kind. */
 export const isFarm = (s: { kind?: string | null } | null | undefined): boolean => s?.kind === "farm";

@@ -8,6 +8,7 @@
 import { eventsWorked, extraHours, getCert } from "./certs";
 import { append, h } from "./dom";
 import { dayLabel, gathers, hoursN, sessionName, t, timeLabel, timesLabel, type Key } from "./i18n";
+import { startOf } from "./ics";
 import { icon } from "./icons";
 import { ACCOUNT, owed, S, standing, type Mine } from "./state";
 import { briefBox, calAsk, calButton, closeoutCard, comingYes, impactLine, isAhead, isToday, mapsLink, needsComing, needsPlan, nextOpp, planForm,
@@ -26,9 +27,10 @@ function greeting(name: string): string {
 
 export { mapsLink } from "./shift";
 
-/** Upcoming: accepted, not finished, its window not closed, not called off; the soonest first. */
+/** Upcoming: accepted, not finished, its window not closed, not called off; the soonest first (two on one day by their
+ *  start: volunteer_me sends a day's shifts in no order of time). */
 export function upcoming(): Mine[] {
-  return (S.me?.mine ?? []).filter(isAhead).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  return (S.me?.mine ?? []).filter(isAhead).sort((a, b) => String(a.date).slice(0, 10).localeCompare(String(b.date).slice(0, 10)) || (startOf(a) || 0) - (startOf(b) || 0));
 }
 
 // ── the next-step card: one card, one action ──

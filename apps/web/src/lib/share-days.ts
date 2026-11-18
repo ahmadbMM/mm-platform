@@ -5,10 +5,10 @@ import { rideCompleted, type TicketRow } from "./tickets";
 import { onBike, type RecordSession } from "./ride-record";
 
 // The two ladders that count nights (the app's SHR_NIGHTS and SHR_SATS): the rider's bike rides (First Lap to Corniche
-// 25) and their Saturday social rides (Rolling Start to Hall of Fame), counted as the badge list counts them, a night once. The day is that of the night that made the count; a night without a day
+// 25) and their Saturday social rides (Rolling Start, Tailwind, Momentum to Hall of Fame), counted as the badge list counts them, a night once. The day is that of the night that made the count; a night without a day
 // leaves it out rather than guess. Any other badge earned by riding has no one day the site can name.
 const NIGHTS: Record<string, number> = { first_lap: 1, regular: 5, podium: 10, corniche25: 25 };
-const SATS: Record<string, number> = { rolling_start: 1, slipstream: 5, paceline: 10, peloton: 25, grand_tour: 50, hall_of_fame: 100 };
+const SATS: Record<string, number> = { rolling_start: 1, tailwind: 2, momentum: 3, slipstream: 5, paceline: 10, peloton: 25, grand_tour: 50, hall_of_fame: 100 };
 /** Every one of those badges reached, by slug, with its day ("YYYY-MM-DD"). */
 export function shareDays(rows: TicketRow[], sessions: Map<string, RecordSession>): Record<string, string> {
   const rode = (r: TicketRow) => rideCompleted(r, !!sessions.get(r.sessionId)?.freeRide) || (r.type === "Own" && (r.status === "done" || r.status === "active"));

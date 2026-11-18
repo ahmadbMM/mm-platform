@@ -40,6 +40,9 @@ export default function MessageForm(p: Props) {
   const doneBox = useRef<HTMLDivElement>(null);
   const nameBox = useRef<HTMLInputElement>(null);
   const again = useRef(false);
+  // the references this form has shown: the server answers a message it already has (same contact, kind and text within
+  // 10 minutes) with that one's reference and `repeat`, and after "Send another" that is no new message (WorkshopForm's)
+  const shown = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (done) doneBox.current?.focus();
     else if (again.current) { again.current = false; nameBox.current?.focus(); }
@@ -56,10 +59,11 @@ export default function MessageForm(p: Props) {
     if (!message.trim()) return setErr(t.errors.message);
     setBusy(true);
     try {
-      const r = await rpc<{ ok: boolean; ref?: string; error?: string }>("site_message_send", {
+      const r = await rpc<{ ok: boolean; ref?: string; error?: string; repeat?: boolean }>("site_message_send", {
         p: { kind: p.kind, topic: p.topics ? topic : p.topic, name: nm, company: p.withCompany ? company.trim() : "", email: em, phone: ph, message: message.trim(), lang: (p.locale === "ar" ? "ar" : "en") },
       });
-      if (r.ok && r.ref) setDone(r.ref);
+      if (r.ok && r.ref && r.repeat && shown.current.has(r.ref)) setErr(t.repeat(r.ref));
+      else if (r.ok && r.ref) { shown.current.add(r.ref); setDone(r.ref); }
       else setErr(t.errors[r.error || ""] || t.errors.generic);
     } catch {
       setErr(t.errors.generic);

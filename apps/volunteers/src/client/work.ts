@@ -42,6 +42,9 @@ let timer = 0;
 type Pending = { key: string; fn: string; args: Record<string, unknown>; label: Key; ok: (data: unknown) => void; undo: () => void };
 const pending = new Map<string, Pending>();
 let retryTimer = 0;
+// Moved on by resetWork (a sign-out or a sign-in): a mark still on its way then is the last volunteer's, never put back
+// or sent again under the next sign-in.
+let epoch = 0;
 const isPending = (key: string) => pending.has(key);
 // Each mark is its session's: going Home and into another session keeps the first one's marks going out, and they
 // never count, close or hold up the page now open.
@@ -61,9 +64,11 @@ function flush(): Promise<void> {
 }
 async function flushNow(): Promise<void> {
   window.clearTimeout(retryTimer);
+  const gen = epoch;
   for (const p of [...pending.values()]) {
     if (pending.get(p.key) !== p) continue; // taken back, or its session's marks dropped, while the others went out
     const r = await rpc<Record<string, unknown>>(p.fn, p.args);
+    if (gen !== epoch) return; // signed out (and maybe someone else in) while it went out
     if (!r.ok && unsent(r)) break; // still no way through: try again later
     if (pending.get(p.key) === p) pending.delete(p.key); // not a newer tap on the same row made while this one went out
     if (r.ok) p.ok(r.data);
@@ -83,7 +88,9 @@ async function flushNow(): Promise<void> {
 /** Sends a mark; when it cannot get through, shows it done with "Not sent" and keeps it for the next try. */
 async function send(p: Pending, show: () => void): Promise<void> {
   pending.delete(p.key);
+  const gen = epoch;
   const r = await rpc<Record<string, unknown>>(p.fn, p.args);
+  if (gen !== epoch) return; // signed out (and maybe someone else in) while it went out: not the next volunteer's mark
   if (r.ok) { p.ok(r.data); paint(); return; }
   if (unsent(r)) { pending.set(p.key, p); show(); armRetry(); paint(); return; }
   await refused(r);
@@ -162,7 +169,15 @@ async function tick(): Promise<void> {
   const id = work.id;
   await reloadMe();
   if (!work || work.id !== id) return;
-  if (!myShift(id)?.can_work) { await load(); leaveWork(t("volClosed")); return; }
+  const sh = myShift(id);
+  if (!sh?.can_work) { await load(); leaveWork(t("volClosed")); return; }
+  // Staff can move the cut-off while the page is open: the page keeps to the one the database has now ("Open until",
+  // and when to ask next; kept, a later cut-off had it asking every 15 seconds).
+  if (sh.closes_at && sh.closes_at !== work.ent.closes_at) {
+    work.ent.closes_at = sh.closes_at;
+    const head = document.getElementById("w-head");
+    if (head) { clear(head); append(head, ...headParts(sh.ride_kind === "blood")); }
+  }
   armTick();
   if (document.querySelector("dialog[open]")) return; // never under a question being answered
   const r = route();
@@ -194,6 +209,7 @@ export function resetWork(): void {
   window.clearTimeout(retryTimer);
   stopScan();
   pending.clear();
+  epoch++;
   work = null;
   agreeTick = false;
 }
@@ -390,7 +406,9 @@ async function search(raw: string): Promise<void> {
   else if (/^\d{1,6}$/.test(digits)) args = { p_number: Number(digits) };
   else if (/^\d{7,15}$/.test(digits)) args = { p_mobile: digits };
   if (!args) {
-    if (w.list) { w.msg = ""; paint(); return; } // a name: the list below is already filtered by it
+    // a name: the list below is already filtered by it; a list cut at its 1,000 that has nobody by it points to the
+    // number or the mobile, which ask the database
+    if (w.list) { w.msg = w.list.length >= LIST_CAP && !listRows().length ? t("volSearchHint") : ""; paint(); return; }
     w.found = []; w.msg = t("volSearchHint"); paint(); return;
   }
   await find(args, false);
@@ -400,7 +418,7 @@ async function find(args: Record<string, unknown>, add: boolean): Promise<boolea
   const r = await rpc<Booking[]>("volunteer_find", { p_session: w.id, ...args });
   if (!r.ok) { if (lost(r.code)) { await load(); leaveWork(say(r)); return false; } w.msg = say(r); paint(); return false; }
   const hits = Array.isArray(r.data) ? r.data : [];
-  for (const b of hits) overlay(b);
+  for (const b of hits) { fromList(b); overlay(b); }
   // A scan adds its booking at the top and keeps the ones before it; a search shows what it found.
   w.found = add ? [...hits, ...w.found.filter((x) => !hits.some((y) => y.id === x.id))].slice(0, 8) : hits;
   w.msg = hits.length ? "" : t("volNotFound");
@@ -424,7 +442,9 @@ async function loadList(): Promise<void> {
   // The list is newer than the figures from entering, and other people are marking too. Counted as the database has
   // them, before the marks not sent yet are laid over the rows: each of those is counted once, when it lands (ok()).
   const c = w.ent.counts, l = w.list;
-  if (c) {
+  // volunteer_list stops at 1,000 bookings: a list that long may be cut short, so its counts are asked of the database
+  // instead (volunteer_counts, over every booking); until that answers, the counts from entering stay.
+  if (c && l.length < LIST_CAP) {
     c.booked = l.length;
     c.in = l.filter((x) => x.checked_in).length;
     c.donated = l.filter((x) => x.donated).length;
@@ -432,6 +452,33 @@ async function loadList(): Promise<void> {
   }
   for (const b of w.list) overlay(b);
   paint();
+  if (c && l.length >= LIST_CAP) void loadCounts(w);
+}
+/** The most rows volunteer_list sends (its limit 1000). */
+const LIST_CAP = 1000;
+/** The head's counts over every booking of the session (volunteer_counts, rentals 20261119000600), for a list cut at its
+ *  1,000. Like the list's, they are the database's own: a mark not sent yet is counted once, when it lands. An answer it
+ *  cannot read, or a database without the function yet, leaves the counts as they were. */
+async function loadCounts(w: Work): Promise<void> {
+  const r = await rpc<Record<string, unknown> | null>("volunteer_counts", { p_session: w.id });
+  const c = w.ent.counts;
+  if (work !== w || !c || !r.ok || !r.data || typeof r.data !== "object") return;
+  const d = r.data;
+  const n = (k: string): number | null => { const v = d[k]; return typeof v === "number" && Number.isInteger(v) && v >= 0 ? v : null; };
+  const booked = n("booked"), arrived = n("in"), donated = n("donated"), visitors = n("visitors");
+  if (booked === null || arrived === null || donated === null) return;
+  c.booked = booked; c.in = arrived; c.donated = donated;
+  if (c.visitors != null && visitors !== null) c.visitors = visitors;
+  paint();
+}
+/** What an older volunteer_find did not send (a blood drive's donor or visitor, the phone and the details; rentals
+ *  20261119000600 sends them), from the list's row for the same booking when the page has one: a visitor found by
+ *  search or scan never reads as a donor. What the database sent is kept. */
+const LIST_ONLY = ["visitor", "phone", "status", "bike", "size", "height", "blood_type", "club"] as const;
+function fromList(b: Booking): void {
+  const l = work?.list?.find((x) => x.id === b.id);
+  if (!l) return;
+  for (const k of LIST_ONLY) if (!(k in b) && k in l) Object.assign(b, { [k]: l[k] });
 }
 /** A row read again from the database wears the marks still waiting to be sent. */
 function overlay(b: Booking): void {

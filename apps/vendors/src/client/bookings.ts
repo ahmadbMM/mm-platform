@@ -219,8 +219,18 @@ function cancelDialog(main: HTMLElement, r: Row): void {
     busy(go, false, t("confirmCancel"));
     if (!res.ok) { msg.append(errorNote(res.code)); return; }
     const n = Number(res.data) || 0;
-    dlg.close();
     invalidateCalendar();
+    if (n === 0) {
+      // Nothing was cancelled: the date is past (vendor_cancel takes only dates from the database's today on) or
+      // MicroMobility changed it meanwhile. Said here, and the bookings are read again behind the dialog with the
+      // portal's today read again too (a page left open past midnight).
+      msg.append(note("error", t("errCantCancel")));
+      go.disabled = true;
+      await app.reloadMe();
+      void renderBookings(main);
+      return;
+    }
+    dlg.close();
     announce(tn("datesCancelled", n));
     void renderBookings(main);
   });

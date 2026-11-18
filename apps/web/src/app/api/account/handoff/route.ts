@@ -1,4 +1,4 @@
-import { ACCOUNT_COOKIE, ACCOUNT_MAX_AGE, decodeSession, encodeSession, sameOrigin } from "@/lib/account-core";
+import { ACCOUNT_COOKIE, ACCOUNT_MAX_AGE, HANDOFF_START_COOKIE, HANDOFF_START_PATH, decodeSession, encodeSession, sameOrigin } from "@/lib/account-core";
 import { rpcServer } from "@/lib/account";
 import { ASK_BACK_COOKIE, ASK_BACK_PATH, askBack } from "@/lib/ask";
 import { HANDOFF_COOKIE, HANDOFF_MAX_AGE, cookieLine, sessionProfile } from "@/lib/handoff";
@@ -13,7 +13,11 @@ import { cookieValue } from "@/lib/live";
 //
 // A code is anyone's to pass on (lib/handoff.ts): when ANOTHER account is signed in on this browser,
 // the session handed over is kept aside (HANDOFF_COOKIE) and the account page asks which account to
-// keep; its two buttons POST here, from this site's own page only.
+// keep; its two buttons POST here, from this site's own page only. A hand-back this browser did not ask for - no note
+// from the sign-in's Create account or Forgot password (HANDOFF_START_COOKIE) and none from an Ask page - is kept aside
+// the same way when nobody is signed in here: an account's own code, sent to a signed-out rider as a link, signed them
+// in as that account without a word, and what they entered next went to it (bug hunt 2026-11-18). The account page
+// names the account and asks first.
 //
 // A rider who left an Ask page to create an account (micromobility.sa/ask; components/ask/AskSignIn.tsx notes the
 // page's address in a cookie only this route is sent, for half an hour) lands back on that page, which says whom they
@@ -28,12 +32,15 @@ const back = (req: Request, to: string, ...cookies: string[]) => {
 };
 const clearHanded = cookieLine(HANDOFF_COOKIE, "", 0);
 const clearAsk = `${ASK_BACK_COOKIE}=; Path=${ASK_BACK_PATH}; Max-Age=0; Secure; SameSite=Lax`;
+const clearStart = `${HANDOFF_START_COOKIE}=; Path=${HANDOFF_START_PATH}; Max-Age=0; Secure; SameSite=Lax`;
 
 export async function GET(req: Request) {
   const code = new URL(req.url).searchParams.get("code") ?? "";
   // the Ask page this rider left to create an account, when the request carries its note: spent here, whatever comes next
   const note = cookieValue(req.headers.get("cookie"), ASK_BACK_COOKIE);
-  const spent = note === null ? [] : [clearAsk];
+  // this browser's own Create account / Forgot password, noted as the rider left (spent here too)
+  const began = cookieValue(req.headers.get("cookie"), HANDOFF_START_COOKIE);
+  const spent = [...(note === null ? [] : [clearAsk]), ...(began === null ? [] : [clearStart])];
   if (!/^[0-9a-f]{48}$/.test(code)) return back(req, "/account", ...spent);
   const r = await rpcServer<{ id?: string; session_token?: string }[]>("customer_handoff_redeem", { p_code: code });
   const row = Array.isArray(r.data) ? r.data[0] : null;
@@ -42,6 +49,8 @@ export async function GET(req: Request) {
   // another account still signed in here (or no answer about it): the account page asks first
   const now = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (now && now.id !== row.id && (await sessionProfile(now)) !== "none") return back(req, "/account", cookieLine(HANDOFF_COOKIE, handed, HANDOFF_MAX_AGE), ...spent);
+  // a hand-back this browser did not ask for, signed out here: the account page names the account and asks first
+  if (note === null && began === null && now?.id !== row.id) return back(req, "/account", cookieLine(HANDOFF_COOKIE, handed, HANDOFF_MAX_AGE), ...spent);
   const ask = askBack(note);
   return back(req, ask ? `${ask}?handoff=done` : "/account?handoff=done", cookieLine(ACCOUNT_COOKIE, handed, ACCOUNT_MAX_AGE), clearHanded, ...spent);
 }

@@ -75,7 +75,7 @@ test('@webkit a new guest makes an account on the page, as the booking site make
   await page.click('#submit');
   await expect(page.locator('#success')).toBeVisible();
   // The booking: the account's, with no name, mobile or height sent (they are the account's).
-  expect(sent).toEqual([{ p_id: made.p_id, p_token: GUEST.token, p_session_id: S1.id, p_type: 'Hybrid', p_company: 'Aramco Trading', p_waiver: '2026-10-v3' }]);
+  expect(sent).toEqual([{ p_id: made.p_id, p_token: GUEST.token, p_session_id: S1.id, p_type: 'Hybrid', p_company: 'Aramco Trading', p_waiver: '2026-11-v4' }]);
   await expect(page.locator('#chip-booking-value')).toHaveText('I-003');
   await expect(page.locator('#qr canvas')).toHaveAttribute('data-code', 'MMC-41-abcdef'); // the booking's own code, which the desk scans into check-in
   await expect(page.locator('#tk-name')).toHaveText('Sara Alharbi');
@@ -113,13 +113,48 @@ test('a guest with an account signs in: the company comes from the account, and 
   await page.check('#waiver');
   await page.click('#submit');
   await expect(page.locator('#chip-booking-value')).toHaveText('I-003');
-  expect(sent).toEqual([{ p_id: GUEST.id, p_token: GUEST.token, p_session_id: S2.id, p_type: 'Mountain', p_company: 'Red Sea Global', p_waiver: '2026-10-v3' }]);
+  expect(sent).toEqual([{ p_id: GUEST.id, p_token: GUEST.token, p_session_id: S2.id, p_type: 'Mountain', p_company: 'Red Sea Global', p_waiver: '2026-11-v4' }]);
   await expect(page.locator('#chip-company-value')).toHaveText('Red Sea Global');
   // Register another forgets the account: the next person signs in for themselves.
   await page.click('#another');
   await pickCompany(page, 'Guest');
   await expect(page.locator('#ac-ask')).toBeVisible();
   await expect(page.locator('#ac-ident')).toHaveValue('');
+});
+
+// One phone, several guests (bug hunt 2026-11-18): another guest's kept ticket shown is edited under its own account, signed
+// into again, never the one still in memory; and the boxes the last account filled (its birth date, its nationality) are
+// empty for the next one.
+test('one phone: Edit on another guest\'s kept ticket asks for that account; the last account\'s birth date and nationality are gone', async ({ page }) => {
+  const OTHER = { kind: 'guest', name: 'Huda Kept', phone: '+966500000077', company: 'Aramco Trading', type: 'Hybrid', status: 'waiting', price: 75, ref: 'MMC-77-cccccc', account: true, session: S1, bookingNo: 'I-007', riders: [], submittedAt: '2099-02-01T10:00:00Z' };
+  await page.addInitScript((o) => { if (!localStorage.getItem('mm-petromin-registration')) localStorage.setItem('mm-petromin-registration', JSON.stringify(o)); }, OTHER);
+  await nights(page);
+  await stubAccount(page, { workplace: 'Red Sea Global', profile: { birth_date: '1990-05-17', nationality: 'Saudi Arabia' } });
+  await page.route('**/rest/v1/rpc/petromin_invite_lookup', (r) => r.fulfill(json({ ok: true, booking_no: 'I-007', invite_no: 'I-007', ref: 'MMC-77-cccccc', company: 'Aramco Trading', account: true, name: OTHER.name, phone: OTHER.phone, type: 'Hybrid', status: 'waiting', checked_in: false, price: 75, paid: false, session: S1, more: [], riders: [] })));
+  const sent = await book(page, (b) => BOOKED({ company: b.p_company, type: b.p_type, session: S2 }));
+  await page.goto('/petromin?lang=en');
+  await expect(page.locator('#chip-booking-value')).toHaveText('I-007'); // the last guest's ticket on this phone
+  await page.click('#another');
+  await pickCompany(page, 'Guest');
+  await guestSignIn(page);
+  await expect(page.locator('#ac-nat')).toHaveValue('Saudi Arabia'); // held by this account, in a box not asked
+  await expect(page.locator('#ac-birth-y')).toHaveValue('1990');
+  await page.click('#next');
+  await page.locator('#sessions .session').nth(1).click();
+  await page.click('#next');
+  await page.click('#types .tile[data-v="Mountain"]');
+  await toCheck(page);
+  await page.check('#waiver');
+  await page.click('#submit');
+  await expect(page.locator('#chip-booking-value')).toHaveText('I-003');
+  await expect(page.locator('#others-list .other')).toHaveText(['I-007 · Huda Kept']);
+  await page.locator('#others-list .other').click();
+  await expect(page.locator('#chip-booking-value')).toHaveText('I-007');
+  await expect(page.locator('#ac-nat')).toHaveValue('');
+  await expect(page.locator('#ac-birth-y')).toHaveValue('');
+  await page.click('#edit');
+  await expect(page.locator('#ac-signin')).toBeVisible(); // that ticket's own account signs in
+  expect(sent).toHaveLength(1);
 });
 
 test('sign-in says what is wrong: nothing typed, the wrong details, too many tries, a temporary password', async ({ page }) => {
@@ -332,7 +367,7 @@ test('@webkit Edit after a reload asks for the account again, then saves the cha
   await page.goto('/petromin?lang=en');
   await expect(page.locator('#chip-booking-value')).toHaveText('I-003');
   await page.click('#edit');
-  expect(looked[0]).toEqual({ p_invite_no: 'I-003', p_phone: GUEST.phone, p_session_id: S1.id });
+  await expect.poll(() => looked[0]).toEqual({ p_invite_no: 'I-003', p_phone: GUEST.phone, p_session_id: S1.id }); // the lookup answers after the tap
   // No account in memory after the reload: sign in first.
   await expect(page.locator('#ac-signin')).toBeVisible();
   await expect(page.locator('#form .title')).toHaveText('Edit your booking');
@@ -351,7 +386,7 @@ test('@webkit Edit after a reload asks for the account again, then saves the cha
   await page.check('#waiver');
   await page.click('#submit');
   await expect(page.locator('.done-note')).toHaveText('Your booking was updated.');
-  expect(sent).toEqual([{ p_id: GUEST.id, p_token: GUEST.token, p_session_id: S2.id, p_type: 'Mountain', p_company: 'Aramco Trading', p_waiver: '2026-10-v3', p_from_no: 'I-003', p_from_session: S1.id }]);
+  expect(sent).toEqual([{ p_id: GUEST.id, p_token: GUEST.token, p_session_id: S2.id, p_type: 'Mountain', p_company: 'Aramco Trading', p_waiver: '2026-11-v4', p_from_no: 'I-003', p_from_session: S1.id }]);
   await expect(page.locator('#chip-booking-value')).toHaveText('I-001'); // the other night's own number
 });
 

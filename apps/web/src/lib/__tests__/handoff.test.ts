@@ -26,12 +26,13 @@ describe("api/account/handoff", () => {
   it("trades a good code for the session cookie and lands on the account, which says whom it signed in", async () => {
     const f = redeem([{ id: "c1", name: "Spec", session_token: TOK }]);
     vi.stubGlobal("fetch", f);
-    const res = await call(`?code=${CODE}`);
+    const res = await call(`?code=${CODE}`, "mm_ho_go=1");
     expect(res.status).toBe(303);
     expect(res.headers.get("location")).toBe("https://micromobility.sa/account?handoff=done");
     const set = cookiesOf(res);
     expect(set[0]).toMatch(/^mm_acct=c1~tk1a2b3c4d5e6f7g8h9i; Path=\/; Max-Age=\d+; HttpOnly; Secure; SameSite=Lax$/);
     expect(set[1]).toBe("mm_acct_next=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax");
+    expect(set[2]).toBe("mm_ho_go=; Path=/api/account/handoff; Max-Age=0; Secure; SameSite=Lax"); // the note is spent
     const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://example.supabase.co/rest/v1/rpc/customer_handoff_redeem");
     expect(JSON.parse(String(init.body))).toEqual({ p_code: CODE });
@@ -68,9 +69,25 @@ describe("api/account/handoff", () => {
     expect(cookiesOf(same)[0]).toMatch(/^mm_acct=c1~tk1a2b3c4d5e6f7g8h9i;/);
     expect(f.mock.calls.some((c) => String(c[0]).endsWith("/rpc/customer_profile"))).toBe(false);
     vi.stubGlobal("fetch", db(() => answer([])));
-    const dead = await call(`?code=${CODE}`, `mm_acct=c2~${OTHER}`);
+    const dead = await call(`?code=${CODE}`, `mm_acct=c2~${OTHER}; mm_ho_go=1`);
     expect(dead.headers.get("location")).toBe("https://micromobility.sa/account?handoff=done");
     expect(cookiesOf(dead)[0]).toMatch(/^mm_acct=c1~tk1a2b3c4d5e6f7g8h9i;/);
+  });
+
+  it("never signs a browser in on a hand-back it did not ask for: signed out, the session waits and the account page asks", async () => {
+    vi.stubGlobal("fetch", redeem([{ id: "c1", name: "Spec", session_token: TOK }]));
+    const res = await call(`?code=${CODE}`);
+    expect(res.headers.get("location")).toBe("https://micromobility.sa/account");
+    expect(cookiesOf(res)).toEqual([`mm_acct_next=c1~${TOK}; Path=/; Max-Age=300; HttpOnly; Secure; SameSite=Lax`]);
+    // over a session the database no longer accepts, the same
+    vi.stubGlobal("fetch", db(() => answer([])));
+    const dead = await call(`?code=${CODE}`, `mm_acct=c2~${OTHER}`);
+    expect(dead.headers.get("location")).toBe("https://micromobility.sa/account");
+    expect(cookiesOf(dead)).toEqual([`mm_acct_next=c1~${TOK}; Path=/; Max-Age=300; HttpOnly; Secure; SameSite=Lax`]);
+    // the rider's yes signs in with it, from this site's own page
+    const yes = await choose("switch", `mm_acct_next=c1~${TOK}`);
+    expect(yes.headers.get("location")).toBe("https://micromobility.sa/account?handoff=done");
+    expect(cookiesOf(yes)[0]).toMatch(/^mm_acct=c1~tk1a2b3c4d5e6f7g8h9i;/);
   });
 
   it("lands a rider who left an Ask page to create an account back on that page, and spends the note", async () => {

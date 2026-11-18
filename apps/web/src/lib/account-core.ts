@@ -15,6 +15,13 @@ export const ACCOUNT_MAX_AGE = 30 * 24 * 3600;
 export const PENDING_COOKIE = "mm_pwd";
 export const PENDING_MAX_AGE = 600;
 export const PENDING_PATH = "/api/account";
+/** This browser asked for a hand-back: the sign-in's Create account and Forgot password (components/account/HandoffLink)
+ *  note it as the rider leaves for the booking app - a cookie sent to the hand-back route only, half an hour. A
+ *  hand-back link this browser did not ask for (anyone can make one from their own account and pass it on) never signs
+ *  it in without asking first (api/account/handoff; bug hunt 2026-11-18). */
+export const HANDOFF_START_COOKIE = "mm_ho_go";
+export const HANDOFF_START_MAX_AGE = 1800;
+export const HANDOFF_START_PATH = "/api/account/handoff";
 
 export type Session = { id: string; token: string };
 

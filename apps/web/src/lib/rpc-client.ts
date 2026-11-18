@@ -34,13 +34,17 @@ export async function rpcResult<T>(fn: string, args: Record<string, unknown>): P
   }
 }
 
-/** A Saudi mobile typed any usual way (05…, 5…, 9665…, +9665…) as +9665XXXXXXXX; other +codes kept. */
+/** A Saudi mobile typed any usual way (05…, 5…, 9665…, +9665…) as +9665XXXXXXXX; other +codes kept. Every mark
+ *  between the digits goes (a non-breaking hyphen from a contact card, a slash), as the booking app's _normPhone
+ *  drops every non-digit but a leading + (bug hunt 2026-11-18). */
 export function normalizePhone(raw: string): string {
-  const d = raw
+  const t = raw
     .replace(/[\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/g, "") // direction marks pasted from RTL contacts
-    .replace(/[\s\-().]/g, "")
     .replace(/[٠-٩]/g, (c) => String("٠١٢٣٤٥٦٧٨٩".indexOf(c)))
     .replace(/[۰-۹]/g, (c) => String("۰۱۲۳۴۵۶۷۸۹".indexOf(c)))
+    .trim();
+  if (/\p{L}/u.test(t)) return t.replace(/[\s\-().]/g, ""); // words, not a number: left for the check to refuse
+  const d = ((t.startsWith("+") ? "+" : "") + t.replace(/\D/g, ""))
     .replace(/^(\+|00)?9660(?=5\d{8}$)/, "+966"); // "+966 05…" (or "966 05…" with no plus): the trunk 0 goes
   if (/^\+9665\d{8}$/.test(d)) return d;
   if (/^05\d{8}$/.test(d)) return "+966" + d.slice(1);

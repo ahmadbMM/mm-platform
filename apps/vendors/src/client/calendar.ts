@@ -4,7 +4,7 @@ import { rpc, type Result } from "./api";
 import { announce, app, button, errorNote, isRtl, t, tn } from "./app";
 import { openBooking } from "./book";
 import { openFeedback } from "./feedback";
-import { addDays, addMonths, arrowStep, hijriLabel, hijriMonthTitle, longDate, monthGrid, monthRange, monthStart, num, shortDate, spans, type Iso } from "./dates";
+import { addDays, addMonths, addMonthsSameDay, arrowStep, hijriLabel, hijriMonthTitle, longDate, monthGrid, monthRange, monthStart, num, shortDate, spans, type Iso } from "./dates";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
 import { awaitsFeedback, canRequest, dayStatus, reasonText, STATUS_KEY, type CalDay, type DayStatus } from "./model";
@@ -203,8 +203,8 @@ function grid(main: HTMLElement, today: Iso): HTMLElement {
     if (step) next = addDays(day, step);
     else if (e.key === "Home") next = addDays(day, -new Date(`${day}T00:00:00Z`).getUTCDay());
     else if (e.key === "End") next = addDays(day, 6 - new Date(`${day}T00:00:00Z`).getUTCDay());
-    else if (e.key === "PageUp") next = addMonths(day, -1);
-    else if (e.key === "PageDown") next = addMonths(day, 1);
+    else if (e.key === "PageUp") next = addMonthsSameDay(day, -1);
+    else if (e.key === "PageDown") next = addMonthsSameDay(day, 1);
     if (!next) return;
     e.preventDefault();
     if (!inMonth(next)) { go(main, next, next); return; }

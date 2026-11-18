@@ -4,9 +4,9 @@ import { RESULT_VIEWS } from "../../components/ask/results";
 import {
   ASK_DRAWN, ASK_ERRORS, ASK_PALETTES, POLL_MS, REREAD_MS,
   answerState, applyLive, applySame, askBack, askErrorKey, askLang, askList, askLive, askNum, askPalette, askPct, askScreen, askSent, askSlugOk, askText, askTheme, askView, askViz, askWhen,
-  charCount, choiceConfig, choiceRows, cloudResult, hasPending, isDrawn, isWritten, itemsResult, numberConfig, numberResult, optionsOf, pageOpen, paletteVars, pointRows, pointsConfig, pollDelay, rankRows,
+  charCount, choiceConfig, choiceRows, cloudResult, hasPending, isDrawn, isWritten, itemsResult, streamResult, numberConfig, numberResult, optionsOf, pageOpen, paletteVars, pointRows, pointsConfig, pollDelay, rankRows,
   rereadDue, resultsShown, scaleRows, scalesConfig, screenAt, screenStep, sentMarks, sentNumber, sentOrder, sentPicks, shapeChoice, shapeNumber, shapePoints, shapeRanking, shapeScales, shapeWritten,
-  withMine, withVote, withoutMine, writtenConfig, type AskFull, type AskQuestion,
+  withMine, withVote, withoutMine, writtenConfig, ASK_TEXT_MAX, type AskFull, type AskQuestion,
   isAskScreen, resultCount, stepAt,
   POLL_LIVE_MS, isQuiz,
 } from "../ask";
@@ -134,11 +134,14 @@ describe("a question's settings", () => {
     expect(optionsOf({ options: "a" })).toEqual([]);
   });
   it("gives each kind its defaults, and holds a setting inside its limits", () => {
-    expect(writtenConfig("cloud", {})).toEqual({ maxLen: 25, perPerson: 3, votes: false });
-    expect(writtenConfig("open", {})).toEqual({ maxLen: 200, perPerson: 1, votes: false });
-    expect(writtenConfig("qa", {})).toEqual({ maxLen: 200, perPerson: 3, votes: true });
-    expect(writtenConfig("cloud", { max_len: 40, per_person: 10 })).toEqual({ maxLen: 40, perPerson: 10, votes: false });
-    expect(writtenConfig("open", { max_len: 9999, per_person: 0, votes: true })).toEqual({ maxLen: 500, perPerson: 1, votes: true });
+    expect(writtenConfig("cloud", {})).toEqual({ perPerson: 3, votes: false });
+    expect(writtenConfig("open", {})).toEqual({ perPerson: 1, votes: false });
+    expect(writtenConfig("qa", {})).toEqual({ perPerson: 3, votes: true });
+    expect(writtenConfig("cloud", { per_person: 10 })).toEqual({ perPerson: 10, votes: false });
+    expect(writtenConfig("open", { per_person: 0, votes: true })).toEqual({ perPerson: 1, votes: true });
+    // a written question sets no length: a `max_len` an older one still carries is not read
+    expect(writtenConfig("cloud", { max_len: 5, per_person: 2 })).toEqual({ perPerson: 2, votes: false });
+    expect(writtenConfig("open", { max_len: 9999 })).toEqual(writtenConfig("open", {}));
     expect(choiceConfig({ options: OPTIONS, max_picks: 9, change: true, correct: ["b", "zz"] })).toEqual({ options: OPTIONS, maxPicks: 3, change: true, correct: ["b"] });
     expect(choiceConfig({ options: OPTIONS })).toMatchObject({ maxPicks: 1, change: false, correct: [] });
     expect(scalesConfig({ options: OPTIONS })).toMatchObject({ min: 1, max: 5, skip: false, lo_en: "", hi_ar: "" });
@@ -153,12 +156,23 @@ describe("a question's settings", () => {
 
 describe("an answer's value, shaped for its kind", () => {
   it("a written answer: spaces folded; refused when empty, too long or a link", () => {
-    expect(shapeWritten("cloud", { max_len: 40 }, "  Face   painting ")).toEqual({ ok: true, value: { t: "Face painting" } });
+    expect(shapeWritten("cloud", {}, "  Face   painting ")).toEqual({ ok: true, value: { t: "Face painting" } });
     expect(shapeWritten("cloud", {}, "   ")).toEqual({ ok: false, error: "empty" });
     expect(shapeWritten("cloud", {}, "!!!")).toEqual({ ok: false, error: "empty" }); // a cloud's entry is stored without its punctuation
     expect(shapeWritten("open", {}, "!!!")).toEqual({ ok: true, value: { t: "!!!" } });
-    expect(shapeWritten("cloud", { max_len: 5 }, "Kites!")).toEqual({ ok: false, error: "long" });
-    expect(shapeWritten("cloud", { max_len: 5 }, "طائرة")).toEqual({ ok: true, value: { t: "طائرة" } });
+    // as long as the writer needs, up to ASK_TEXT_MAX characters as the database counts them, in every written kind
+    expect(ASK_TEXT_MAX).toBe(2000);
+    for (const kind of ["cloud", "open", "qa"]) {
+      expect(shapeWritten(kind, {}, "a".repeat(2000)), kind).toEqual({ ok: true, value: { t: "a".repeat(2000) } });
+      expect(shapeWritten(kind, {}, "a".repeat(2001)), kind).toEqual({ ok: false, error: "long" });
+      expect(shapeWritten(kind, {}, `a${"\u{1F6B2}".repeat(1999)}`), kind).toMatchObject({ ok: true }); // a bicycle is one character, not two
+      expect(shapeWritten(kind, {}, `a${"\u{1F6B2}".repeat(2000)}`), kind).toEqual({ ok: false, error: "long" });
+      expect(shapeWritten(kind, {}, `  ${"ب ".repeat(1000)}   `), kind).toMatchObject({ ok: true }); // counted once its spaces are folded
+    }
+    // a `max_len` an older question still carries is not read
+    expect(shapeWritten("cloud", { max_len: 5 }, "Kites and a long line of bikes along the corniche")).toMatchObject({ ok: true });
+    expect(shapeWritten("open", { max_len: 5 }, "a".repeat(2000))).toMatchObject({ ok: true });
+    expect(shapeWritten("qa", { max_len: 5000 }, "a".repeat(2001))).toEqual({ ok: false, error: "long" });
     expect(shapeWritten("qa", {}, "see https://example.com")).toEqual({ ok: false, error: "link" });
     expect(shapeWritten("qa", {}, "www.example.com")).toEqual({ ok: false, error: "link" });
     expect(shapeWritten("qa", {}, "Is 9.30 a.m. too early?")).toMatchObject({ ok: true });
@@ -210,6 +224,13 @@ describe("an answer's value, shaped for its kind", () => {
     expect(shapeNumber({ min: 0, max: 1, step: 0.1 }, "0.3")).toEqual({ ok: true, value: { n: 0.3 } });
     expect(shapeNumber({ min: -5, max: 5, step: 5 }, "-5")).toEqual({ ok: true, value: { n: -5 } });
     expect(shapeNumber({ min: 10, max: 100, step: 10 }, "25")).toEqual({ ok: false, error: "invalid" });
+    // thousands grouped: one number, never a decimal (bug hunt 2026-11-18)
+    const km = { min: 0, max: 20000, step: 1 };
+    expect(shapeNumber(km, "1,000")).toEqual({ ok: true, value: { n: 1000 } });
+    expect(shapeNumber(km, "12,500")).toEqual({ ok: true, value: { n: 12500 } });
+    expect(shapeNumber(km, "١٬٠٠٠")).toEqual({ ok: true, value: { n: 1000 } });
+    expect(shapeNumber({ min: 0, max: 5, step: 0.5 }, "1,5")).toEqual({ ok: true, value: { n: 1.5 } });
+    expect(shapeNumber({ min: 0, max: 20000, step: 0.5 }, "12,500.5")).toEqual({ ok: true, value: { n: 12500.5 } });
   });
   it("reads an answer back for its form", () => {
     expect(sentPicks({ o: ["a", 2, "c"] })).toEqual(["a", "c"]);
@@ -347,7 +368,7 @@ describe("the page as it changes", () => {
     const f = fullOf();
     const old = askLive(live({ ver: 6, results: {} }));
     if (old.kind !== "full") throw new Error("not full");
-    expect(applyLive(f, old.live)).toEqual({ full: f, reload: false });
+    expect(applyLive(f, old.live)).toEqual({ full: f, reload: false, revealed: false });
   });
   it("closes by the clock: a poll with nothing new still says the page stopped taking answers", () => {
     const f = fullOf();
@@ -436,7 +457,7 @@ describe("the page as it changes", () => {
     expect(isQuiz("quiz") && isQuiz("quiz_text")).toBe(true);
     expect(isQuiz("choice")).toBe(false);
   });
-  it("reads the page again when staff reveal a quiz question - the viewer's own score is the page's to read - and not for any other kind", () => {
+  it("reads the page again when staff reveal a quiz question - the viewer's own score is the page's to read - or a question whose results are staff's", () => {
     const quizzed = fullOf({ questions: [question({ id: 21, kind: "quiz" })], live: live({ q: { "21": { open: true, reveal: false, started_at: null } } }) });
     const revealed = live({ ver: 8, q: { "21": { open: false, reveal: true, started_at: null } } });
     expect(applyLive(quizzed, liveOfTest(revealed)).reload).toBe(true);
@@ -444,9 +465,16 @@ describe("the page as it changes", () => {
     // already revealed: nothing to read again
     const after = applyLive(quizzed, liveOfTest(revealed)).full;
     expect(applyLive(after, liveOfTest(live({ ver: 9, q: { "21": { open: false, reveal: true, started_at: null } } }))).reload).toBe(false);
+    expect(applyLive(quizzed, liveOfTest(revealed)).revealed).toBe(true);
     // a multiple choice question revealed carries its right answer in its results: no second read
     const choice = fullOf({ questions: [question({ id: 21, kind: "choice" })], live: live({ q: { "21": { open: true, reveal: false, started_at: null } } }) });
-    expect(applyLive(choice, liveOfTest(revealed)).reload).toBe(false);
+    const withResult = live({ ver: 8, q: { "21": { open: false, reveal: true, started_at: null } }, results: { "21": { n: 4, correct: ["a"] } } });
+    expect(applyLive(choice, liveOfTest(withResult)).reload).toBe(false);
+    // ... but with its results kept for staff no poll carries it: the page (and its right answer) is read again
+    expect(applyLive(choice, liveOfTest(revealed))).toMatchObject({ reload: true, revealed: true });
+    // a new question is a reload, not a reveal
+    const more = live({ ver: 8, q: { "21": { open: true, reveal: false, started_at: null }, "22": { open: true, reveal: false, started_at: null } } });
+    expect(applyLive(choice, liveOfTest(more))).toMatchObject({ reload: true, revealed: false });
   });
   it("keeps the viewer's own answers and upvotes up to date between reads", () => {
     const f = fullOf({ mine: { "11": [mine(1), mine(2, "approved")] } });
@@ -466,6 +494,10 @@ describe("the page as it changes", () => {
     expect(down.voted).toEqual([]);
     expect(itemsResult("qa", down.live?.results["11"]).items.find((x) => x.id === 21)?.v).toBe(1);
     expect(qa.voted).toEqual([]);
+    // an answer the database sent among the newest only: its count moves there too
+    const open = fullOf({ live: live({ results: { "11": { n: 2, items: [{ id: 20, t: "Kites", v: 5, a: false }], recent: [{ id: 22, t: "BBQ", v: 0, a: false }, { id: 20, t: "Kites", v: 5, a: false }] } } }) });
+    const r = streamResult(withVote(open, 11, 22, true, 1).live?.results["11"]);
+    expect(r.items.map((x) => [x.id, x.v])).toEqual([[22, 1], [20, 5]]);
   });
 });
 
@@ -512,6 +544,18 @@ describe("results, shaped for their charts", () => {
     expect(itemsResult("open", raw).items.map((x) => x.id)).toEqual([1, 2, 3, 4]);
     expect(itemsResult("qa", raw).n).toBe(4);
     expect(itemsResult("open", {})).toEqual({ n: 0, items: [] });
+  });
+  it("the stream: the most voted and the newest the database sends, each once, the newest first", () => {
+    const voted = Array.from({ length: 100 }, (_, i) => ({ id: i + 1, t: `old ${i + 1}`, v: 1, a: false }));
+    const raw = { n: 141, items: voted, recent: [{ id: 141, t: "Brand new", v: 0, a: false }, { id: 100, t: "old 100", v: 1, a: false }, { id: "x", t: "no id" }] };
+    const r = streamResult(raw);
+    expect(r.n).toBe(141);
+    expect(r.items).toHaveLength(101); // 100 is in both lists: once
+    expect(r.items[0]).toEqual({ id: 141, t: "Brand new", v: 0, a: false });
+    expect(r.items.map((x) => x.id)).toEqual([...r.items.map((x) => x.id)].sort((a, b) => b - a));
+    // an older answer from the database without `recent`: the items alone, the newest first
+    expect(streamResult({ n: 2, items: [{ id: 1, t: "a", v: 5, a: false }, { id: 2, t: "b", v: 0, a: false }] }).items.map((x) => x.id)).toEqual([2, 1]);
+    expect(streamResult(null)).toEqual({ n: 0, items: [] });
   });
   it("multiple choice: every option in staff's order, with its count and its share of the people who answered", () => {
     const c = { options: OPTIONS };

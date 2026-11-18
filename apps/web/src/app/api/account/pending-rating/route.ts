@@ -30,7 +30,7 @@ const json = (body: unknown, status = 200) =>
 export async function GET(req: Request) {
   const acct = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (!acct) return json({ signedIn: false });
-  if (!(await withinLimit(req, "account-check"))) return json({ error: "busy" }, 429);
+  if (!(await withinLimit(req, "account-check", undefined, acct.id))) return json({ error: "busy" }, 429);
   const locale = new URL(req.url).searchParams.get("locale") || "en";
   const rows = await accountBookings(acct);
   const gate = pendingRating(rows, riyadhClock(new Date()).slice(0, 10));

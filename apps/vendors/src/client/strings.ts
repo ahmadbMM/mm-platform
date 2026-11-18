@@ -203,6 +203,7 @@ const en = {
   errTooEarly: "Feedback opens on the day of the breakfast.",
   errNotConfirmed: "Feedback is only for confirmed breakfasts.",
   errNotFound: "We could not find this booking. Refresh the page and try again.",
+  errCantCancel: "This date can no longer be cancelled.",
 
   // Venue
   venueTitle: "Venue",
@@ -510,6 +511,7 @@ const ar: Record<Key, string> = {
   errTooEarly: "تُتاح الملاحظات ابتداءً من يوم الفطور.",
   errNotConfirmed: "الملاحظات متاحة للحجوزات المؤكدة فقط.",
   errNotFound: "تعذّر العثور على هذا الحجز. حدّث الصفحة وحاول مرة أخرى.",
+  errCantCancel: "لم يعد بالإمكان إلغاء هذا التاريخ.",
 
   venueTitle: "المنشأة",
   venueName: "اسم المنشأة",

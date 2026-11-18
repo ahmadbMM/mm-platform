@@ -607,6 +607,35 @@ test('stays signed in on this device, until Sign out', async ({ page }) => {
   await expect(page.locator('#p-ask')).toBeVisible(); // signed out: the account step again
 });
 
+// A shared phone (bug hunt 2026-11-18): "account created" is said once, and Sign out empties the account step, so the next
+// person never finds (nor saves) the last one's details.
+test('account created is said once; Sign out leaves the sign-up and sign-in empty for the next person', async ({ page }) => {
+  await open(page);
+  await ready(page);
+  await door(page, 1).click();
+  await page.click('#go');
+  await signUp(page);
+  await expect(page.locator('#acct-made')).toBeVisible();
+  await page.click('#book');
+  await expect(page.locator('#done-title')).toHaveText('Your locker is reserved');
+  await page.click('#again');
+  await door(page, 3).click();
+  await page.click('#go');
+  await expect(page.locator('#s-review')).toBeVisible();
+  await expect(page.locator('#acct-made')).toBeHidden();
+  await expect(page.locator('#r-who')).toBeVisible();
+  await page.locator('#r-who .who-out').click();
+  await expect(page.locator('#v-landing')).toBeVisible();
+  await page.click('#go');
+  await page.click('#ask-no');
+  for (const id of ['first', 'last', 'email', 'phone', 'height', 'em-name', 'em-phone', 'pwd']) await expect(page.locator('#' + id), id).toHaveValue('');
+  await expect(page.locator('#em-rel')).toHaveValue('');
+  await expect(page.locator('#genders .tile[aria-checked="true"]')).toHaveCount(0);
+  await expect(page.locator('#ack')).toHaveAttribute('aria-checked', 'false');
+  await page.click('.to-signin');
+  await expect(page.locator('#ident')).toHaveValue('');
+});
+
 test('a kept session the database no longer knows is forgotten, quietly', async ({ page }) => {
   await page.addInitScript(() => { try { localStorage.setItem('mm-lockers-acct', JSON.stringify({ id: 'c-old', token: 'gone', name: 'Old Name', email: '' })); } catch { /* none */ } });
   await open(page, '', { customer_lockers: () => refuse('NOT_AUTHORIZED', '42501', 401), customer_wallet: () => refuse('NOT_AUTHORIZED', '42501', 401) });

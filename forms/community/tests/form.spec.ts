@@ -1618,6 +1618,33 @@ test('an account made here, the tab closed on the membership step: signing in ag
   expect(of('customer_signup')).toHaveLength(1); // the account made once, never twice
 });
 
+// A shared phone (bug hunt 2026-11-18): the draft of an account made here waits for that account. Another one signing in
+// never finds its WhatsApp answer and number or its emergency contact in the boxes, nor sends them.
+test('a shared phone: the draft of an account made here never fills another account signing in', async ({ page }) => {
+  const { of } = await open(page, '?lang=en', {
+    customer_login: () => json([{ id: 'c-other', name: 'Fahad Saleh', session_token: 'tok-other' }]),
+    customer_pwd_state: () => json(false),
+    customer_community_me: () => json({ ...ME, name: 'Fahad Saleh', email: 'fahad.saleh@gmail.com', phone: '+966559876543', flags: [] }),
+  });
+  await accountStep(page, { wa: 'no', waNum: '0507654321', em: { name: 'Layla Mansour', phone: '0551234567', rel: 'parent' } });
+  await page.evaluate(() => window.dispatchEvent(new Event('pagehide')));
+  await page.reload();
+  await expect(page.locator('#login-box')).toBeVisible();
+  await expect(page.locator('#wa')).toHaveValue('');
+  await expect(page.locator('#em-name')).toHaveValue('');
+  await page.fill('#lid', 'fahad.saleh@gmail.com');
+  await page.fill('#lpw', 'Secret123');
+  await page.click('#login');
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#was .tile[aria-checked="true"]')).toHaveCount(0);
+  await expect(page.locator('#wa')).toHaveValue('');
+  await expect(page.locator('#em-name')).toHaveValue('');
+  await apply(page);
+  const sent = of('customer_community_apply').at(-1)!.p as Record<string, unknown>;
+  expect(sent.whatsapp_same).toBe(true); // this account's own answer
+  expect(sent).not.toHaveProperty('whatsapp');
+});
+
 test('a friend who came by a member\'s link: the application is sent, then says who invited them, and the code is used once', async ({ page }) => {
   const { errs, of, calls } = await open(page, '?inv=abcdef0123456789');
   await accountStep(page);
@@ -1745,6 +1772,44 @@ test('a signed-in account with a waiting application is given its status page; t
   await expect(p2.locator('#track-seen-txt')).toHaveText('You sent an application on 20 October 2026.');
   await p2.click('#haves .tile[data-v="no"]');
   await expect(p2.locator('#track-seen')).toBeHidden();
+});
+
+// The changes asked, and their link, are the applicant's own (bug hunt 2026-11-18, form-community-1-2; rentals
+// 20261119000600): signed in, the status page opens in this page and community_track is asked with the account.
+test('signed in, the status page opens here with the account, so the changes asked show; Back returns; signed out they do not', async ({ page }) => {
+  const FIX = { ok: true, first: 'Karim', lang: 'en', status: 'pending', sent_at: '2026-10-20T08:00:00Z', updated_at: null, decided_at: null,
+    fix: { asked_at: '2026-10-21T08:00:00Z', fields: ['instagram'], note: 'Your handle has a typo', token: 'ef'.repeat(18) }, fix_done_at: null, ride: null };
+  let newDb = true;
+  const track = (b: Body) => {
+    if (!newDb) return b.p_cid ? refuse({ code: 'PGRST202', message: 'Could not find the function public.community_track' }, 404) : json(FIX);
+    return json(b.p_cid === 'c-karim' && b.p_ctoken === 'tok-handed' ? FIX : { ...FIX, fix: null });
+  };
+  const { of, errs } = await open(page, `?code=${CODE}&lang=en`, { customer_community_me: () => json({ ...ME, pending: true, track: TRACK }), community_track: track });
+  await expect(step(page, 2)).toBeVisible();
+  await page.click('#acct-pending-a');
+  await expect(page.locator('#track')).toBeVisible();
+  await expect(page).toHaveURL(new RegExp(`\\?track=${TRACK}&lang=en$`));
+  await expect(page.locator('#track-steps .tk-step b')).toHaveText(['Received', 'Changes asked', 'With our team']);
+  await expect(page.locator('#track-acts a').first()).toHaveAttribute('href', `https://experiences.micromobility.sa/?appfix=${'ef'.repeat(18)}&lang=en`);
+  expect(of('community_track')).toEqual([{ p_token: TRACK, p_cid: 'c-karim', p_ctoken: 'tok-handed' }]);
+  // Back: the form as it was, and nothing of the changes asked left on the page
+  await page.goBack();
+  await expect(page.locator('#track')).toBeHidden();
+  await expect(step(page, 2)).toBeVisible();
+  await expect(page.locator('#track-acts a')).toHaveCount(0);
+  // a database before the account's two arguments: asked again without them, the page as it was
+  newDb = false;
+  await page.click('#acct-pending-a');
+  await expect(page.locator('#track-steps .tk-step b')).toHaveText(['Received', 'Changes asked', 'With our team']);
+  expect(of('community_track').slice(1)).toEqual([{ p_token: TRACK, p_cid: 'c-karim', p_ctoken: 'tok-handed' }, { p_token: TRACK }]);
+  expect(errs).toEqual([]);
+  // signed out (the link kept on a shared phone): no changes asked, no link to make them
+  newDb = true;
+  const p2 = await page.context().newPage();
+  const t2 = await open(p2, `?track=${TRACK}&lang=en`, { community_track: track }, null, true);
+  await expect(p2.locator('#track-steps .tk-step b')).toHaveText(['Received', 'With our team']);
+  await expect(p2.locator('#track-acts a')).toHaveText(['WhatsApp us']);
+  expect(t2.of('community_track')).toEqual([{ p_token: TRACK }]);
 });
 
 test('a phone that lays out en-CA dates as 10/27/2026 still takes a typed birth date and sends (an iOS 17.2 iPhone, 2026-10-27)', async ({ page }) => {

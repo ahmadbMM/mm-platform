@@ -54,8 +54,11 @@ export default function WalletButton({ bookingId, groupIds }: { bookingId: strin
       setMsg(r.status === 409 ? t.notYet : t.err);
     } catch {
       setMsg(t.err);
+    } finally {
+      // after the save link too, as the booking app's button: the page can stay (Android hands the link to the Wallet
+      // app, or Back brings the page from the cache), and the button must be there to try again
+      setBusy(false);
     }
-    setBusy(false);
   }
 
   return (

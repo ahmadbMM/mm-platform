@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import {
-  answerState, askErrorKey, askText, isQuiz, isWritten, resultsShown, writtenConfig,
+  answerState, askErrorKey, askText, isQuiz, isWritten, pageOpen, resultsShown, writtenConfig,
   type AskFull, type AskQuestion as Question, type SendAnswer, type Shaped,
 } from "@/lib/ask";
 import { pinResult, pinTarget, rightWords } from "@/lib/ask-kinds";
@@ -84,7 +84,8 @@ export default function AskQuestionCard({ q, full, locale, t, act, thanks = "", 
   const mineIds = useMemo(() => new Set(mine.map((m) => m.id)), [mine]);
   const votedIds = useMemo(() => new Set(full.voted), [full.voted]);
   const votes: VoteProps | null = !takesVotes ? null : {
-    mine: mineIds, voted: votedIds, can: full.signed && !full.preview, busy: voting,
+    // a page that takes no more answers takes no more upvotes either (ask_vote: "closed"): the bare count stands
+    mine: mineIds, voted: votedIds, can: full.signed && !full.preview && pageOpen(full), busy: voting,
     onVote: async (answerId, on) => {
       if (voting !== null) return;
       setVoting(answerId);
@@ -96,7 +97,8 @@ export default function AskQuestionCard({ q, full, locale, t, act, thanks = "", 
   const sent = written ? null : mine[0] ?? null;
   // the page is open but this question takes no more answers: said with one small mark
   const shut = !q.open && full.page.open && q.kind !== "info" && !full.preview;
-  const shown = resultsShown(q, full);
+  // drawn only when the database sent the results: under "closed" they come once the question closes (bug hunt 2026-11-18)
+  const shown = resultsShown(q, full) && result !== undefined && result !== null;
   const state = answer;
   // A pin already dropped is drawn on the results' own picture, where there is one: the picture stands once.
   const formed = (state === "open" || state === "change" || state === "done" || state === "shut") && !(q.kind === "pin" && (state === "done" || state === "shut") && shown);

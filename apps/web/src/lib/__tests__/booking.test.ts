@@ -263,7 +263,7 @@ describe("the server's checks", () => {
   it("builds the rows customer_create_booking takes, with no price and the code only where it discounts", () => {
     const input = { sessionId: live.id, riders: [r("Road", "180"), r("Own", "120", "Kid")], group: null, addons: [], promo: { code: "SARA10", appliesTo: null }, waiver: true, payNow: false, wallet: false, seatOnly: false };
     const rows = bookingEntries(input, input.riders, live, acct, waiverVersionFor(live));
-    expect(rows[0]).toMatchObject({ name: "Sara Ali", size: "L", height: 180, type_preference: "Road", status: "waiting", promo_code: "SARA10", waiver_version: "2026-10-v3", session_day: "Tuesday" });
+    expect(rows[0]).toMatchObject({ name: "Sara Ali", size: "L", height: 180, type_preference: "Road", status: "waiting", promo_code: "SARA10", waiver_version: "2026-11-v4", session_day: "Tuesday" });
     expect(rows[1]).toMatchObject({ name: "Kid", size: "", type_preference: "Own", promo_code: null });
     expect(rows[0]).not.toHaveProperty("price");
     expect(rows[0]).not.toHaveProperty("approval");
@@ -273,7 +273,7 @@ describe("the server's checks", () => {
     expect(bookingEntries({ ...input, seatOnly: true }, input.riders, { ...live, full: true }, acct, null)[0]).not.toHaveProperty("seat_only");
     const ws = liveSession({ ...row, event_kind: "community", ride_kind: "workshop", open_to_all: true }, "2026-10-03")!;
     expect(bookingEntries({ ...input, promo: null }, [r("")], ws, acct, waiverVersionFor(ws))[0]).toMatchObject({ type_preference: "None", height: null, approval: "pending" });
-    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-10-v3");
+    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-11-v4");
   });
   it("refuses a capped waitlist that is full, and only then", () => {
     const s = { full: false, approval: false, capacity: 10, wlCap: 2 };
@@ -366,7 +366,7 @@ describe("api/booking", () => {
     expect(made.body).toMatchObject({ p_id: "c1", p_token: TOKEN });
     const entries = made.body.p_entries as Record<string, unknown>[];
     expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ name: "Sara Ali", type_preference: "Road", size: "L", height: 180, waiver_version: "2026-10-v3" });
+    expect(entries[0]).toMatchObject({ name: "Sara Ali", type_preference: "Road", size: "L", height: 180, waiver_version: "2026-11-v4" });
     expect(entries[0]).not.toHaveProperty("price");
     expect(calls.find((c) => c.fn === "customer_booking_update")!.body).toMatchObject({ p_entry_id: "q1", p_patch: { addons: '[{"id":"g1","qty":2}]' } });
     expect(calls.find((c) => c.fn === "customer_addon_stock")!.body).toMatchObject({ p_items: [{ id: "g1", delta: -2 }] });
@@ -539,10 +539,10 @@ describe("api/booking/promo and /profile", () => {
   });
 });
 
-describe("the waiver wording (the booking app's 2026-10-v3)", () => {
+describe("the waiver wording (the booking app's 2026-11-v4)", () => {
   it("keeps every clause in English and Arabic, for the ride and the swim", async () => {
     const { T } = await import("../../components/experiences/Booking.text");
-    expect(waiverVersionFor(base)).toBe("2026-10-v3");
+    expect(waiverVersionFor(base)).toBe("2026-11-v4");
     for (const kind of ["bike", "swim"] as const) {
       const en = T.en.waiver[kind].body;
       for (const clause of [
@@ -569,17 +569,31 @@ describe("the waiver wording (the booking app's 2026-10-v3)", () => {
     expect(T.ar.waiver.swim.body).toContain("ضمن المنطقة الخاضعة للإشراف");
   });
 
-  it("gives every other kind the activity waiver (activity-2026-10-v3), every clause in English and Arabic", async () => {
+  it("says the words main's content/waivers.ts says for the version it stamps, the sentence for other people's bookings with them", async () => {
+    const { T } = await import("../../components/experiences/Booking.text");
+    const { waiverCopy } = await import("../../content/waivers");
+    const { makeL } = await import("../../i18n/tx");
+    for (const [mine, theirs] of [["bike", "ride"], ["swim", "swim"], ["activity", "activity"]] as const) {
+      for (const l of ["en", "ar"] as const) {
+        const c = waiverCopy(theirs, makeL(l, null));
+        expect(T[l].waiver[mine].body, `${l} ${mine}`).toBe(c.body);
+        expect(T[l].waiver[mine].agree, `${l} ${mine}`).toBe(c.agree);
+      }
+      expect(T.en.waiver[mine].body).toContain("When I book for other people, I accept this waiver on behalf of each of them as well as myself");
+    }
+  });
+
+  it("gives every other kind the activity waiver (activity-2026-11-v4), every clause in English and Arabic", async () => {
     const { T } = await import("../../components/experiences/Booking.text");
     for (const kind of ["workshop", "event"] as const) {
       expect(needsWaiver({ kind })).toBe(true);
       expect(waiverKind({ kind })).toBe("activity");
-      expect(waiverVersionFor({ kind })).toBe("activity-2026-10-v3");
+      expect(waiverVersionFor({ kind })).toBe("activity-2026-11-v4");
     }
-    expect(waiverVersionFor({ kind: "other" as RideKind })).toBe("activity-2026-10-v3");
+    expect(waiverVersionFor({ kind: "other" as RideKind })).toBe("activity-2026-11-v4");
     expect(waiverKind({ kind: "swim" })).toBe("swim");
-    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-10-v3");
-    for (const kind of ["jcc", "saturday", "petromin", "snd96"] as const) expect(waiverVersionFor({ kind })).toBe("2026-10-v3");
+    expect(waiverVersionFor({ kind: "swim" })).toBe("swim-2026-11-v4");
+    for (const kind of ["jcc", "saturday", "petromin", "snd96"] as const) expect(waiverVersionFor({ kind })).toBe("2026-11-v4");
     const en = T.en.waiver.activity, ar = T.ar.waiver.activity;
     expect(en.title).toBe("Activity waiver");
     expect(ar.title).toBe("إقرار المشاركة");

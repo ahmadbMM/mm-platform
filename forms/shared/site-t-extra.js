@@ -33,7 +33,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Perempuan",
   "fixPwHint": "Minimal 8 karakter, dengan satu huruf besar dan satu angka.",
   "authConfirmPassword": "Konfirmasi kata sandi",
-  "rideNewsOpt": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp dan email. Saya bisa berhenti kapan saja.",
+  "rideNewsOpt": "Kirimi saya kabar dan pengumuman seputar sesi bersepeda melalui WhatsApp. Saya bisa berhenti kapan saja.",
   "heardLabel": "Dari mana Anda mengetahui kami?",
   "authSignupBtn": "Buat akun",
   "closeBtn": "Tutup",
@@ -75,7 +75,16 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "Terlalu banyak percobaan gagal. Tunggu sekitar 15 menit, lalu coba lagi, atau atur ulang kata sandi Anda.",
   "errInvalidCredentials": "Detail masuk tersebut salah. Coba lagi.",
   "waiverTitle": "Pernyataan risiko bersepeda",
-  "waiverBody": "Anda tidak dapat memesan sesi bersepeda atau aktivitas apa pun di MicroMobility sebelum membaca dan menyetujui pernyataan risiko ini. Bersepeda adalah aktivitas fisik yang memiliki risiko. Saya ikut serta sepenuhnya atas risiko saya sendiri, dan hanya saya yang bertanggung jawab atas diri saya, keselamatan saya, dan barang-barang pribadi saya. Saya juga bertanggung jawab atas kerugian apa pun yang saya timbulkan pada orang lain atau harta benda mereka. Sejauh diizinkan oleh hukum hingga batas maksimal, MicroMobility, stafnya, dan mitranya tidak bertanggung jawab atas apa pun yang terjadi pada saya atau barang-barang saya, termasuk cedera, patah tulang, penyakit, kehilangan, pencurian, atau kerusakan apa pun, apa pun penyebabnya, selama aktivitas berlangsung atau yang berkaitan dengannya. Saya setuju untuk memakai helm serta mengikuti arahan tim dan rute, dan saya bertanggung jawab atas setiap kerusakan pada sepeda sewaan akibat penyalahgunaan. Sepeda dikembalikan dalam kondisi seperti saat diterima."
+  "waiverBody": "Anda tidak dapat memesan sesi bersepeda atau aktivitas apa pun di MicroMobility sebelum membaca dan menyetujui pernyataan risiko ini. Bersepeda adalah aktivitas fisik yang memiliki risiko. Saya ikut serta sepenuhnya atas risiko saya sendiri, dan hanya saya yang bertanggung jawab atas diri saya, keselamatan saya, dan barang-barang pribadi saya. Saya juga bertanggung jawab atas kerugian apa pun yang saya timbulkan pada orang lain atau harta benda mereka. Sejauh diizinkan oleh hukum hingga batas maksimal, MicroMobility, stafnya, dan mitranya tidak bertanggung jawab atas apa pun yang terjadi pada saya atau barang-barang saya, termasuk cedera, patah tulang, penyakit, kehilangan, pencurian, atau kerusakan apa pun, apa pun penyebabnya, selama aktivitas berlangsung atau yang berkaitan dengannya. Saya setuju untuk memakai helm serta mengikuti arahan tim dan rute, dan saya bertanggung jawab atas setiap kerusakan pada sepeda sewaan akibat penyalahgunaan. Sepeda dikembalikan dalam kondisi seperti saat diterima. Jika saya memesan untuk orang lain, saya menerima pernyataan risiko ini atas nama masing-masing dari mereka sekaligus atas nama saya sendiri, dan saya menyatakan bahwa saya berhak melakukannya. Saya adalah orang tua atau wali sah dari setiap anak dalam pemesanan saya, atau telah mendapat izin dari wali mereka untuk membawanya, dan saya akan mengawasi mereka setiap saat.",
+  "errEmName": "Masukkan nama kontak Anda.",
+  "errEmPhone": "Masukkan nomor ponsel kontak Anda.",
+  "errEmRelation": "Pilih hubungan mereka dengan Anda.",
+  "errEmSelf": "Nomor kontak tidak boleh nomor Anda sendiri.",
+  "errEmSame": "Kedua kontak darurat tidak boleh memiliki nomor yang sama.",
+  "errNameChars": "Nama hanya boleh berisi huruf, spasi, dan titik.",
+  "errNameShort": "Tulis setiap nama secara lengkap: setiap nama minimal dua huruf.",
+  "errLoginPhoneCc": "Tidak ada akun dengan nomor itu sebagai nomor Saudi. Jika nomor Anda dari negara lain, ketik dengan kode negaranya, misalnya +20 1012345678.",
+  "fixNone": "Saya tidak punya"
  },
  "ms": {
   "privacyAckOpt": "Saya telah membaca {0}.",
@@ -108,7 +117,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Perempuan",
   "fixPwHint": "Sekurang-kurangnya 8 aksara, dengan satu huruf besar dan satu nombor.",
   "authConfirmPassword": "Sahkan kata laluan",
-  "rideNewsOpt": "Hantar berita dan pengumuman kayuhan kepada saya melalui WhatsApp dan e-mel. Saya boleh berhenti pada bila-bila masa.",
+  "rideNewsOpt": "Hantar berita dan pengumuman kayuhan kepada saya melalui WhatsApp. Saya boleh berhenti pada bila-bila masa.",
   "heardLabel": "Bagaimana anda mengetahui tentang kami?",
   "authSignupBtn": "Cipta akaun",
   "closeBtn": "Tutup",
@@ -150,7 +159,16 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "Terlalu banyak cubaan gagal. Tunggu kira-kira 15 minit dan cuba lagi, atau tetapkan semula kata laluan anda.",
   "errInvalidCredentials": "Butiran log masuk itu tidak betul. Cuba lagi.",
   "waiverTitle": "Penepian liabiliti kayuhan",
-  "waiverBody": "Anda tidak boleh menempah sebarang kayuhan atau aktiviti dengan MicroMobility sehingga anda telah membaca dan bersetuju dengan penepian liabiliti ini. Berbasikal ialah aktiviti fizikal yang mempunyai risiko. Saya mengambil bahagian sepenuhnya atas risiko saya sendiri, dan hanya saya yang bertanggungjawab atas diri saya, keselamatan saya dan barang peribadi saya. Saya juga bertanggungjawab atas sebarang kerosakan yang saya sebabkan kepada orang lain atau harta benda mereka. Setakat maksimum yang dibenarkan oleh undang-undang, MicroMobility, kakitangannya dan rakan kongsinya tidak bertanggungjawab atas apa-apa yang berlaku kepada saya atau barang saya, termasuk sebarang kecederaan, patah tulang, penyakit, kehilangan, kecurian atau kerosakan, walau apa pun puncanya, semasa aktiviti atau berkaitan dengannya. Saya bersetuju untuk memakai topi keledar serta mematuhi arahan pasukan dan laluan, dan saya bertanggungjawab atas sebarang kerosakan pada basikal sewaan akibat salah guna. Basikal dipulangkan dalam keadaan yang sama seperti semasa diterima."
+  "waiverBody": "Anda tidak boleh menempah sebarang kayuhan atau aktiviti dengan MicroMobility sehingga anda telah membaca dan bersetuju dengan penepian liabiliti ini. Berbasikal ialah aktiviti fizikal yang mempunyai risiko. Saya mengambil bahagian sepenuhnya atas risiko saya sendiri, dan hanya saya yang bertanggungjawab atas diri saya, keselamatan saya dan barang peribadi saya. Saya juga bertanggungjawab atas sebarang kerosakan yang saya sebabkan kepada orang lain atau harta benda mereka. Setakat maksimum yang dibenarkan oleh undang-undang, MicroMobility, kakitangannya dan rakan kongsinya tidak bertanggungjawab atas apa-apa yang berlaku kepada saya atau barang saya, termasuk sebarang kecederaan, patah tulang, penyakit, kehilangan, kecurian atau kerosakan, walau apa pun puncanya, semasa aktiviti atau berkaitan dengannya. Saya bersetuju untuk memakai topi keledar serta mematuhi arahan pasukan dan laluan, dan saya bertanggungjawab atas sebarang kerosakan pada basikal sewaan akibat salah guna. Basikal dipulangkan dalam keadaan yang sama seperti semasa diterima. Apabila saya menempah untuk orang lain, saya menerima penepian liabiliti ini bagi pihak setiap seorang daripada mereka dan juga bagi pihak saya sendiri, dan saya mengesahkan bahawa saya berhak berbuat demikian. Saya ialah ibu bapa atau penjaga sah bagi setiap kanak-kanak dalam tempahan saya, atau mempunyai kebenaran penjaga mereka untuk membawa mereka, dan saya akan mengawasi mereka pada setiap masa.",
+  "errEmName": "Masukkan nama kenalan anda.",
+  "errEmPhone": "Masukkan nombor telefon bimbit kenalan anda.",
+  "errEmRelation": "Pilih hubungan mereka dengan anda.",
+  "errEmSelf": "Nombor kenalan tidak boleh nombor anda sendiri.",
+  "errEmSame": "Kedua-dua kenalan kecemasan tidak boleh mempunyai nombor yang sama.",
+  "errNameChars": "Nama hanya boleh mengandungi huruf, ruang dan noktah.",
+  "errNameShort": "Tulis setiap nama dengan penuh: setiap nama perlu sekurang-kurangnya dua huruf.",
+  "errLoginPhoneCc": "Tiada akaun dengan nombor itu sebagai nombor Saudi. Jika nombor anda dari negara lain, taipkannya bersama kod negaranya, contohnya +20 1012345678.",
+  "fixNone": "Saya tiada"
  },
  "de": {
   "privacyAckOpt": "Ich habe die {0} gelesen.",
@@ -183,7 +201,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Weiblich",
   "fixPwHint": "Mindestens 8 Zeichen, mit einem Großbuchstaben und einer Zahl.",
   "authConfirmPassword": "Passwort bestätigen",
-  "rideNewsOpt": "Schickt mir Neuigkeiten zu Ausfahrten und Ankündigungen per WhatsApp und E-Mail. Ich kann das jederzeit beenden.",
+  "rideNewsOpt": "Schickt mir Neuigkeiten zu Ausfahrten und Ankündigungen per WhatsApp. Ich kann das jederzeit beenden.",
   "heardLabel": "Wie hast du von uns erfahren?",
   "authSignupBtn": "Konto erstellen",
   "closeBtn": "Schließen",
@@ -225,7 +243,16 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "Zu viele fehlgeschlagene Versuche. Warte etwa 15 Minuten und versuch es dann erneut, oder setz dein Passwort zurück.",
   "errInvalidCredentials": "Diese Anmeldedaten stimmen nicht. Versuch es noch einmal.",
   "waiverTitle": "Haftungserklärung Radfahren",
-  "waiverBody": "Du kannst bei MicroMobility keine Fahrt und keine Aktivität buchen, bevor du diese Haftungserklärung gelesen und ihr zugestimmt hast. Radfahren ist eine körperliche Aktivität, die Risiken birgt. Ich nehme vollständig auf eigene Gefahr teil und bin allein verantwortlich für mich selbst, meine Sicherheit und meine persönlichen Sachen. Ich bin außerdem für jeden Schaden verantwortlich, den ich anderen Personen oder ihrem Eigentum zufüge. Im größtmöglichen gesetzlich zulässigen Umfang sind MicroMobility, seine Mitarbeitenden und seine Partner für nichts verantwortlich, was mir oder meinen Sachen zustößt, einschließlich Verletzungen, Knochenbrüchen, Erkrankungen, Verlust, Diebstahl oder Beschädigung, gleich aus welcher Ursache, während der Aktivität oder im Zusammenhang mit ihr. Ich verpflichte mich, einen Helm zu tragen und die Anweisungen des Teams sowie die Route einzuhalten, und ich hafte für jeden Schaden am Leihrad, der durch unsachgemäße Nutzung entsteht. Das Rad wird in dem Zustand zurückgegeben, in dem es übernommen wurde."
+  "waiverBody": "Du kannst bei MicroMobility keine Fahrt und keine Aktivität buchen, bevor du diese Haftungserklärung gelesen und ihr zugestimmt hast. Radfahren ist eine körperliche Aktivität, die Risiken birgt. Ich nehme vollständig auf eigene Gefahr teil und bin allein verantwortlich für mich selbst, meine Sicherheit und meine persönlichen Sachen. Ich bin außerdem für jeden Schaden verantwortlich, den ich anderen Personen oder ihrem Eigentum zufüge. Im größtmöglichen gesetzlich zulässigen Umfang sind MicroMobility, seine Mitarbeitenden und seine Partner für nichts verantwortlich, was mir oder meinen Sachen zustößt, einschließlich Verletzungen, Knochenbrüchen, Erkrankungen, Verlust, Diebstahl oder Beschädigung, gleich aus welcher Ursache, während der Aktivität oder im Zusammenhang mit ihr. Ich verpflichte mich, einen Helm zu tragen und die Anweisungen des Teams sowie die Route einzuhalten, und ich hafte für jeden Schaden am Leihrad, der durch unsachgemäße Nutzung entsteht. Das Rad wird in dem Zustand zurückgegeben, in dem es übernommen wurde. Wenn ich für andere Personen buche, akzeptiere ich diese Haftungserklärung im Namen jeder dieser Personen ebenso wie in meinem eigenen, und ich bestätige, dass ich dazu berechtigt bin. Ich bin Elternteil oder gesetzlicher Vormund jedes Kindes in meiner Buchung oder habe die Erlaubnis seines Erziehungsberechtigten, es mitzubringen, und ich werde es jederzeit beaufsichtigen.",
+  "errEmName": "Gib den Namen deines Kontakts ein.",
+  "errEmPhone": "Gib die Handynummer deines Kontakts ein.",
+  "errEmRelation": "Wähle aus, in welcher Beziehung ihr zueinander steht.",
+  "errEmSelf": "Die Nummer deines Kontakts darf nicht deine eigene sein.",
+  "errEmSame": "Die beiden Notfallkontakte dürfen nicht dieselbe Nummer haben.",
+  "errNameChars": "Namen dürfen nur Buchstaben, Leerzeichen und Punkte enthalten.",
+  "errNameShort": "Schreibe jeden Namen aus: Jeder Name braucht mindestens zwei Buchstaben.",
+  "errLoginPhoneCc": "Kein Konto hat diese Nummer als saudische Nummer. Wenn deine Nummer aus einem anderen Land ist, gib sie mit der Ländervorwahl ein, zum Beispiel +20 1012345678.",
+  "fixNone": "Habe ich nicht"
  },
  "es": {
   "privacyAckOpt": "He leído el {0}.",
@@ -258,7 +285,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Mujer",
   "fixPwHint": "Al menos 8 caracteres, con una mayúscula y un número.",
   "authConfirmPassword": "Confirmar contraseña",
-  "rideNewsOpt": "Envíenme novedades y anuncios de recorridos por WhatsApp y correo electrónico. Puedo darme de baja en cualquier momento.",
+  "rideNewsOpt": "Envíenme novedades y anuncios de recorridos por WhatsApp. Puedo darme de baja en cualquier momento.",
   "heardLabel": "¿Cómo nos conociste?",
   "authSignupBtn": "Crear cuenta",
   "closeBtn": "Cerrar",
@@ -298,7 +325,7 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "Demasiados intentos fallidos. Espera unos 15 minutos e inténtalo de nuevo, o restablece tu contraseña.",
   "errInvalidCredentials": "Credenciales incorrectas. Inténtalo de nuevo.",
   "waiverTitle": "Exención de responsabilidad",
-  "waiverBody": "No puedes reservar ninguna salida ni actividad con MicroMobility hasta haber leído y aceptado esta exención. Montar en bicicleta es una actividad física que conlleva riesgos. Participo enteramente bajo mi propio riesgo y soy el único responsable de mí mismo, de mi seguridad y de mis pertenencias personales. También soy responsable de cualquier daño que cause a otras personas o a sus bienes. En la máxima medida permitida por la ley, MicroMobility, su personal y sus socios no son responsables de nada de lo que me ocurra a mí o a mis pertenencias, incluidas lesiones, fracturas, enfermedades, pérdidas, robos o daños, sea cual sea su causa, durante la actividad o en relación con ella. Me comprometo a usar casco y a seguir las instrucciones del equipo y el recorrido, y soy responsable de cualquier daño a la bicicleta alquilada causado por un mal uso. La bicicleta se devuelve en el estado en que se recibió."
+  "waiverBody": "No puedes reservar ninguna salida ni actividad con MicroMobility hasta haber leído y aceptado esta exención. Montar en bicicleta es una actividad física que conlleva riesgos. Participo enteramente bajo mi propio riesgo y soy el único responsable de mí mismo, de mi seguridad y de mis pertenencias personales. También soy responsable de cualquier daño que cause a otras personas o a sus bienes. En la máxima medida permitida por la ley, MicroMobility, su personal y sus socios no son responsables de nada de lo que me ocurra a mí o a mis pertenencias, incluidas lesiones, fracturas, enfermedades, pérdidas, robos o daños, sea cual sea su causa, durante la actividad o en relación con ella. Me comprometo a usar casco y a seguir las instrucciones del equipo y el recorrido, y soy responsable de cualquier daño a la bicicleta alquilada causado por un mal uso. La bicicleta se devuelve en el estado en que se recibió. Cuando reservo para otras personas, acepto esta exención en nombre de cada una de ellas además del mío y confirmo que estoy autorizado para hacerlo. Soy el padre, la madre o el tutor legal de cada menor de mi reserva, o tengo el permiso de su tutor para traerlo, y lo supervisaré en todo momento."
  },
  "fr": {
   "privacyAckOpt": "J’ai lu l’{0}.",
@@ -331,7 +358,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Femme",
   "fixPwHint": "Au moins 8 caractères, dont une majuscule et un chiffre.",
   "authConfirmPassword": "Confirmer le mot de passe",
-  "rideNewsOpt": "Envoyez-moi les actualités et annonces des sorties par WhatsApp et e-mail. Je peux arrêter à tout moment.",
+  "rideNewsOpt": "Envoyez-moi les actualités et annonces des sorties par WhatsApp. Je peux arrêter à tout moment.",
   "heardLabel": "Comment nous avez-vous connus ?",
   "authSignupBtn": "Créer un compte",
   "closeBtn": "Fermer",
@@ -371,7 +398,7 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "Trop de tentatives échouées. Attendez environ 15 minutes et réessayez, ou réinitialisez votre mot de passe.",
   "errInvalidCredentials": "Identifiants incorrects. Veuillez réessayer.",
   "waiverTitle": "Décharge de responsabilité",
-  "waiverBody": "Vous ne pouvez réserver aucune sortie ni activité auprès de MicroMobility avant d’avoir lu et accepté cette décharge. Le vélo est une activité physique qui comporte des risques. J’y participe entièrement à mes propres risques et je suis seul responsable de moi-même, de ma sécurité et de mes effets personnels. Je suis également responsable de tout dommage que je cause à autrui ou à ses biens. Dans toute la mesure permise par la loi, MicroMobility, son personnel et ses partenaires ne sont responsables de rien de ce qui peut m’arriver ou arriver à mes effets, y compris toute blessure, fracture, maladie, perte, vol ou dommage, quelle qu’en soit la cause, pendant l’activité ou en lien avec elle. Je m’engage à porter un casque et à suivre les consignes de l’équipe et le parcours, et je suis responsable de tout dommage causé au vélo loué par une mauvaise utilisation. Le vélo est rendu dans l’état où il a été reçu."
+  "waiverBody": "Vous ne pouvez réserver aucune sortie ni activité auprès de MicroMobility avant d’avoir lu et accepté cette décharge. Le vélo est une activité physique qui comporte des risques. J’y participe entièrement à mes propres risques et je suis seul responsable de moi-même, de ma sécurité et de mes effets personnels. Je suis également responsable de tout dommage que je cause à autrui ou à ses biens. Dans toute la mesure permise par la loi, MicroMobility, son personnel et ses partenaires ne sont responsables de rien de ce qui peut m’arriver ou arriver à mes effets, y compris toute blessure, fracture, maladie, perte, vol ou dommage, quelle qu’en soit la cause, pendant l’activité ou en lien avec elle. Je m’engage à porter un casque et à suivre les consignes de l’équipe et le parcours, et je suis responsable de tout dommage causé au vélo loué par une mauvaise utilisation. Le vélo est rendu dans l’état où il a été reçu. Lorsque je réserve pour d’autres personnes, j’accepte cette décharge au nom de chacune d’elles ainsi qu’en mon nom propre, et je confirme être habilité à le faire. Je suis le parent ou le tuteur légal de chaque enfant de ma réservation, ou j’ai l’autorisation de son tuteur pour l’amener, et je le surveillerai en permanence."
  },
  "pt": {
   "privacyAckOpt": "Li o {0}.",
@@ -404,7 +431,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Feminino",
   "fixPwHint": "Pelo menos 8 caracteres, com uma letra maiúscula e um número.",
   "authConfirmPassword": "Confirmar senha",
-  "rideNewsOpt": "Envie-me novidades e anúncios dos passeios por WhatsApp e e-mail. Posso cancelar a qualquer momento.",
+  "rideNewsOpt": "Envie-me novidades e anúncios dos passeios por WhatsApp. Posso cancelar a qualquer momento.",
   "heardLabel": "Como você nos conheceu?",
   "authSignupBtn": "Criar conta",
   "closeBtn": "Fechar",
@@ -444,7 +471,7 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "Muitas tentativas falhas. Aguarde cerca de 15 minutos e tente novamente, ou redefina sua senha.",
   "errInvalidCredentials": "Credenciais incorretas. Tente novamente.",
   "waiverTitle": "Termo de responsabilidade",
-  "waiverBody": "Você não pode reservar nenhum passeio ou atividade com a MicroMobility antes de ler e aceitar este termo de responsabilidade. Andar de bicicleta é uma atividade física que envolve riscos. Participo inteiramente por minha conta e risco e sou o único responsável por mim, pela minha segurança e pelos meus pertences pessoais. Também sou responsável por qualquer dano que eu cause a outras pessoas ou aos seus bens. Na máxima extensão permitida por lei, a MicroMobility, sua equipe e seus parceiros não são responsáveis por nada que aconteça comigo ou com os meus pertences, incluindo qualquer lesão, fratura, doença, perda, furto ou dano, seja qual for a causa, durante a atividade ou em relação a ela. Comprometo-me a usar capacete e a seguir as instruções da equipe e o percurso, e sou responsável por qualquer dano à bicicleta alugada causado por mau uso. A bicicleta é devolvida no estado em que foi recebida."
+  "waiverBody": "Você não pode reservar nenhum passeio ou atividade com a MicroMobility antes de ler e aceitar este termo de responsabilidade. Andar de bicicleta é uma atividade física que envolve riscos. Participo inteiramente por minha conta e risco e sou o único responsável por mim, pela minha segurança e pelos meus pertences pessoais. Também sou responsável por qualquer dano que eu cause a outras pessoas ou aos seus bens. Na máxima extensão permitida por lei, a MicroMobility, sua equipe e seus parceiros não são responsáveis por nada que aconteça comigo ou com os meus pertences, incluindo qualquer lesão, fratura, doença, perda, furto ou dano, seja qual for a causa, durante a atividade ou em relação a ela. Comprometo-me a usar capacete e a seguir as instruções da equipe e o percurso, e sou responsável por qualquer dano à bicicleta alugada causado por mau uso. A bicicleta é devolvida no estado em que foi recebida. Quando reservo para outras pessoas, aceito este termo em nome de cada uma delas, além do meu, e confirmo que tenho autorização para fazê-lo. Sou pai, mãe ou responsável legal de cada criança da minha reserva, ou tenho a permissão do responsável para trazê-la, e vou supervisioná-la o tempo todo."
  },
  "tl": {
   "privacyAckOpt": "Nabasa ko ang {0}.",
@@ -477,7 +504,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Babae",
   "fixPwHint": "Hindi bababa sa 8 character, may isang malaking titik at isang numero.",
   "authConfirmPassword": "Kumpirmahin ang Password",
-  "rideNewsOpt": "Padalhan ako ng mga balita at anunsyo tungkol sa ride sa WhatsApp at email. Puwede ko itong ihinto anumang oras.",
+  "rideNewsOpt": "Padalhan ako ng mga balita at anunsyo tungkol sa ride sa WhatsApp. Puwede ko itong ihinto anumang oras.",
   "heardLabel": "Paano mo kami nalaman?",
   "authSignupBtn": "Gumawa ng account",
   "closeBtn": "Isara",
@@ -517,7 +544,7 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "Masyadong maraming bigong pagsubok. Maghintay ng mga 15 minuto at subukan ulit, o i-reset ang iyong password.",
   "errInvalidCredentials": "Maling credentials. Subukan ulit.",
   "waiverTitle": "Ride waiver",
-  "waiverBody": "Hindi ka makakapag-book ng anumang ride o aktibidad sa MicroMobility hangga’t hindi mo nababasa at sinasang-ayunan ang waiver na ito. Ang pagbibisikleta ay pisikal na aktibidad na may kaakibat na panganib. Lumalahok ako nang buo sa sarili kong panganib, at ako lamang ang may pananagutan sa aking sarili, sa aking kaligtasan at sa aking mga personal na gamit. Ako rin ang mananagot sa anumang pinsalang maidudulot ko sa ibang tao o sa kanilang ari-arian. Hanggang sa pinakamalawak na pinapahintulutan ng batas, walang pananagutan ang MicroMobility, ang mga kawani nito at ang mga katuwang nito sa anumang mangyari sa akin o sa aking mga gamit, kabilang ang anumang pinsala sa katawan, bali, sakit, pagkawala, pagnanakaw o pagkasira, anuman ang sanhi, habang nasa aktibidad o may kaugnayan dito. Sumasang-ayon akong magsuot ng helmet at sumunod sa mga tagubilin ng team at sa ruta, at ako ang mananagot sa anumang pinsala sa inuupahang bisikleta dahil sa maling paggamit. Ibinabalik ang bisikleta sa kondisyong natanggap ito."
+  "waiverBody": "Hindi ka makakapag-book ng anumang ride o aktibidad sa MicroMobility hangga’t hindi mo nababasa at sinasang-ayunan ang waiver na ito. Ang pagbibisikleta ay pisikal na aktibidad na may kaakibat na panganib. Lumalahok ako nang buo sa sarili kong panganib, at ako lamang ang may pananagutan sa aking sarili, sa aking kaligtasan at sa aking mga personal na gamit. Ako rin ang mananagot sa anumang pinsalang maidudulot ko sa ibang tao o sa kanilang ari-arian. Hanggang sa pinakamalawak na pinapahintulutan ng batas, walang pananagutan ang MicroMobility, ang mga kawani nito at ang mga katuwang nito sa anumang mangyari sa akin o sa aking mga gamit, kabilang ang anumang pinsala sa katawan, bali, sakit, pagkawala, pagnanakaw o pagkasira, anuman ang sanhi, habang nasa aktibidad o may kaugnayan dito. Sumasang-ayon akong magsuot ng helmet at sumunod sa mga tagubilin ng team at sa ruta, at ako ang mananagot sa anumang pinsala sa inuupahang bisikleta dahil sa maling paggamit. Ibinabalik ang bisikleta sa kondisyong natanggap ito. Kapag nagbu-book ako para sa ibang tao, tinatanggap ko ang waiver na ito para sa bawat isa sa kanila at para sa aking sarili, at kinukumpirma kong may karapatan akong gawin ito. Ako ang magulang o legal na tagapag-alaga ng bawat bata sa aking booking, o may pahintulot ako ng kanilang tagapag-alaga na isama sila, at babantayan ko sila sa lahat ng oras."
  },
  "ru": {
   "privacyAckOpt": "Я прочитал(а) {0}.",
@@ -550,7 +577,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "Женский",
   "fixPwHint": "Не менее 8 символов, с заглавной буквой и цифрой.",
   "authConfirmPassword": "Повторите пароль",
-  "rideNewsOpt": "Присылайте мне новости о заездах и объявления в WhatsApp и по эл. почте. Я могу отказаться в любой момент.",
+  "rideNewsOpt": "Присылайте мне новости о заездах и объявления в WhatsApp. Я могу отказаться в любой момент.",
   "heardLabel": "Как вы о нас узнали?",
   "authSignupBtn": "Создать аккаунт",
   "closeBtn": "Закрыть",
@@ -592,7 +619,16 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "Слишком много неудачных попыток. Подождите около 15 минут и попробуйте снова или сбросьте пароль.",
   "errInvalidCredentials": "Неверные данные для входа. Попробуйте ещё раз.",
   "waiverTitle": "Отказ от ответственности: заезд",
-  "waiverBody": "Вы не можете забронировать ни заезд, ни другое мероприятие MicroMobility, пока не прочитаете этот отказ от ответственности и не согласитесь с ним. Езда на велосипеде — физическая активность, сопряжённая с риском. Я участвую полностью на свой страх и риск и единолично отвечаю за себя, свою безопасность и свои личные вещи. Я также несу ответственность за любой ущерб, причинённый мной другим людям или их имуществу. В максимальной степени, допускаемой законом, MicroMobility, её сотрудники и партнёры не несут ответственности ни за что, что произойдёт со мной или с моими вещами, включая любые травмы, переломы, заболевания, утрату, кражу или повреждение, независимо от причины, во время мероприятия или в связи с ним. Я обязуюсь носить шлем, следовать указаниям команды и маршруту и несу ответственность за любой ущерб арендованному велосипеду, причинённый неправильным использованием. Велосипед возвращается в том состоянии, в котором был получен."
+  "waiverBody": "Вы не можете забронировать ни заезд, ни другое мероприятие MicroMobility, пока не прочитаете этот отказ от ответственности и не согласитесь с ним. Езда на велосипеде — физическая активность, сопряжённая с риском. Я участвую полностью на свой страх и риск и единолично отвечаю за себя, свою безопасность и свои личные вещи. Я также несу ответственность за любой ущерб, причинённый мной другим людям или их имуществу. В максимальной степени, допускаемой законом, MicroMobility, её сотрудники и партнёры не несут ответственности ни за что, что произойдёт со мной или с моими вещами, включая любые травмы, переломы, заболевания, утрату, кражу или повреждение, независимо от причины, во время мероприятия или в связи с ним. Я обязуюсь носить шлем, следовать указаниям команды и маршруту и несу ответственность за любой ущерб арендованному велосипеду, причинённый неправильным использованием. Велосипед возвращается в том состоянии, в котором был получен. Бронируя для других людей, я принимаю этот отказ от ответственности от имени каждого из них, а также от своего имени, и подтверждаю, что имею на это право. Я являюсь родителем или законным опекуном каждого ребёнка в моём бронировании либо имею разрешение его опекуна взять его с собой и буду постоянно присматривать за ним.",
+  "errEmName": "Укажите имя контакта.",
+  "errEmPhone": "Укажите мобильный номер контакта.",
+  "errEmRelation": "Выберите, кем вам приходится этот человек.",
+  "errEmSelf": "Номер контакта не может совпадать с вашим.",
+  "errEmSame": "У двух экстренных контактов не может быть одного номера.",
+  "errNameChars": "Имя может содержать только буквы, пробелы и точки.",
+  "errNameShort": "Пишите каждое имя полностью: в каждом имени не меньше двух букв.",
+  "errLoginPhoneCc": "Нет аккаунта с этим номером как с саудовским. Если ваш номер из другой страны, введите его с кодом страны, например +20 1012345678.",
+  "fixNone": "У меня нет"
  },
  "ur": {
   "privacyAckOpt": "میں نے {0} پڑھ لیا ہے۔",
@@ -625,7 +661,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "عورت",
   "fixPwHint": "کم از کم 8 حروف، جن میں ایک بڑا حرف اور ایک ہندسہ ہو۔",
   "authConfirmPassword": "پاس ورڈ کی تصدیق کریں",
-  "rideNewsOpt": "مجھے رائیڈز کی خبریں اور اعلانات WhatsApp اور ای میل پر بھیجیں۔ میں کسی بھی وقت بند کر سکتا/سکتی ہوں۔",
+  "rideNewsOpt": "مجھے رائیڈز کی خبریں اور اعلانات WhatsApp پر بھیجیں۔ میں کسی بھی وقت بند کر سکتا/سکتی ہوں۔",
   "heardLabel": "آپ کو ہمارے بارے میں کیسے پتا چلا؟",
   "authSignupBtn": "اکاؤنٹ بنائیں",
   "closeBtn": "بند کریں",
@@ -665,7 +701,7 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "بہت زیادہ ناکام کوششیں۔ تقریباً 15 منٹ انتظار کر کے دوبارہ کوشش کریں، یا اپنا پاس ورڈ ری سیٹ کریں۔",
   "errInvalidCredentials": "غلط معلومات۔ دوبارہ کوشش کریں۔",
   "waiverTitle": "رائیڈ ویور",
-  "waiverBody": "اس اقرار نامے کو پڑھ کر اس سے اتفاق کیے بغیر آپ MicroMobility کے ساتھ کوئی رائیڈ یا سرگرمی بک نہیں کر سکتے۔ سائیکل چلانا ایک جسمانی سرگرمی ہے جس میں خطرات ہوتے ہیں۔ میں مکمل طور پر اپنی ذمہ داری پر حصہ لیتا/لیتی ہوں، اور اپنی ذات، اپنی حفاظت اور اپنے ذاتی سامان کا ذمہ دار صرف میں ہوں۔ دوسروں کو یا ان کی املاک کو میری طرف سے پہنچنے والے کسی بھی نقصان کا ذمہ دار بھی میں ہوں۔ قانون کی اجازت کی آخری حد تک، MicroMobility، اس کا عملہ اور اس کے شراکت دار مجھے یا میرے سامان کو پیش آنے والی کسی بھی چیز کے ذمہ دار نہیں، بشمول کوئی بھی چوٹ، ہڈی ٹوٹنا، بیماری، گمشدگی، چوری یا نقصان، خواہ اس کی وجہ کچھ بھی ہو، سرگرمی کے دوران یا اس کے سلسلے میں۔ میں ہیلمٹ پہننے اور ٹیم کی ہدایات اور راستے پر عمل کرنے کا عہد کرتا/کرتی ہوں، اور غلط استعمال سے کرائے کی سائیکل کو پہنچنے والے کسی بھی نقصان کا ذمہ دار ہوں۔ سائیکل اسی حالت میں واپس کی جاتی ہے جس حالت میں وصول کی گئی تھی۔"
+  "waiverBody": "اس اقرار نامے کو پڑھ کر اس سے اتفاق کیے بغیر آپ MicroMobility کے ساتھ کوئی رائیڈ یا سرگرمی بک نہیں کر سکتے۔ سائیکل چلانا ایک جسمانی سرگرمی ہے جس میں خطرات ہوتے ہیں۔ میں مکمل طور پر اپنی ذمہ داری پر حصہ لیتا/لیتی ہوں، اور اپنی ذات، اپنی حفاظت اور اپنے ذاتی سامان کا ذمہ دار صرف میں ہوں۔ دوسروں کو یا ان کی املاک کو میری طرف سے پہنچنے والے کسی بھی نقصان کا ذمہ دار بھی میں ہوں۔ قانون کی اجازت کی آخری حد تک، MicroMobility، اس کا عملہ اور اس کے شراکت دار مجھے یا میرے سامان کو پیش آنے والی کسی بھی چیز کے ذمہ دار نہیں، بشمول کوئی بھی چوٹ، ہڈی ٹوٹنا، بیماری، گمشدگی، چوری یا نقصان، خواہ اس کی وجہ کچھ بھی ہو، سرگرمی کے دوران یا اس کے سلسلے میں۔ میں ہیلمٹ پہننے اور ٹیم کی ہدایات اور راستے پر عمل کرنے کا عہد کرتا/کرتی ہوں، اور غلط استعمال سے کرائے کی سائیکل کو پہنچنے والے کسی بھی نقصان کا ذمہ دار ہوں۔ سائیکل اسی حالت میں واپس کی جاتی ہے جس حالت میں وصول کی گئی تھی۔ جب میں دوسروں کے لیے بکنگ کرتا/کرتی ہوں تو میں اپنے ساتھ ساتھ ان میں سے ہر ایک کی طرف سے یہ اقرار نامہ قبول کرتا/کرتی ہوں اور تصدیق کرتا/کرتی ہوں کہ مجھے ایسا کرنے کا حق حاصل ہے۔ میں اپنی بکنگ کے ہر بچے کا والد/والدہ یا قانونی سرپرست ہوں، یا اسے لانے کے لیے اس کے سرپرست کی اجازت رکھتا/رکھتی ہوں، اور ہر وقت اس کی نگرانی کروں گا/گی۔"
  },
  "hi": {
   "privacyAckOpt": "मैंने {0} पढ़ ली है।",
@@ -698,7 +734,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "महिला",
   "fixPwHint": "कम से कम 8 अक्षर, जिनमें एक बड़ा अक्षर और एक अंक हो।",
   "authConfirmPassword": "पासवर्ड की पुष्टि करें",
-  "rideNewsOpt": "मुझे राइड की खबरें और घोषणाएँ WhatsApp और ईमेल पर भेजें। मैं कभी भी बंद कर सकता/सकती हूँ।",
+  "rideNewsOpt": "मुझे राइड की खबरें और घोषणाएँ WhatsApp पर भेजें। मैं कभी भी बंद कर सकता/सकती हूँ।",
   "heardLabel": "आपको हमारे बारे में कैसे पता चला?",
   "authSignupBtn": "खाता बनाएँ",
   "closeBtn": "बंद करें",
@@ -738,7 +774,7 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "बहुत अधिक असफल प्रयास। लगभग 15 मिनट रुकें और फिर कोशिश करें, या अपना पासवर्ड रीसेट करें।",
   "errInvalidCredentials": "गलत क्रेडेंशियल। कृपया फिर कोशिश करें।",
   "waiverTitle": "राइड छूट-पत्र",
-  "waiverBody": "इस छूट-पत्र को पढ़कर उससे सहमत हुए बिना आप MicroMobility के साथ कोई भी राइड या गतिविधि बुक नहीं कर सकते। साइकिल चलाना एक शारीरिक गतिविधि है जिसमें जोखिम होता है। मैं पूरी तरह अपने जोखिम पर भाग लेता/लेती हूँ, और अपने, अपनी सुरक्षा और अपने निजी सामान के लिए केवल मैं ही ज़िम्मेदार हूँ। दूसरों को या उनकी संपत्ति को मेरे द्वारा पहुँचाए गए किसी भी नुकसान के लिए भी मैं ज़िम्मेदार हूँ। कानून द्वारा अनुमत अधिकतम सीमा तक, MicroMobility, उसके कर्मचारी और उसके साझेदार मेरे या मेरे सामान के साथ होने वाली किसी भी बात के लिए ज़िम्मेदार नहीं हैं, जिसमें कोई भी चोट, हड्डी टूटना, बीमारी, गुम होना, चोरी या नुकसान शामिल है, चाहे उसका कारण कुछ भी हो, गतिविधि के दौरान या उससे जुड़े किसी भी रूप में। मैं हेलमेट पहनने और टीम के निर्देशों और रास्ते का पालन करने के लिए सहमत हूँ, और गलत इस्तेमाल से किराए की साइकिल को हुए किसी भी नुकसान के लिए ज़िम्मेदार हूँ। साइकिल उसी हालत में लौटाई जाती है जिसमें वह मिली थी।"
+  "waiverBody": "इस छूट-पत्र को पढ़कर उससे सहमत हुए बिना आप MicroMobility के साथ कोई भी राइड या गतिविधि बुक नहीं कर सकते। साइकिल चलाना एक शारीरिक गतिविधि है जिसमें जोखिम होता है। मैं पूरी तरह अपने जोखिम पर भाग लेता/लेती हूँ, और अपने, अपनी सुरक्षा और अपने निजी सामान के लिए केवल मैं ही ज़िम्मेदार हूँ। दूसरों को या उनकी संपत्ति को मेरे द्वारा पहुँचाए गए किसी भी नुकसान के लिए भी मैं ज़िम्मेदार हूँ। कानून द्वारा अनुमत अधिकतम सीमा तक, MicroMobility, उसके कर्मचारी और उसके साझेदार मेरे या मेरे सामान के साथ होने वाली किसी भी बात के लिए ज़िम्मेदार नहीं हैं, जिसमें कोई भी चोट, हड्डी टूटना, बीमारी, गुम होना, चोरी या नुकसान शामिल है, चाहे उसका कारण कुछ भी हो, गतिविधि के दौरान या उससे जुड़े किसी भी रूप में। मैं हेलमेट पहनने और टीम के निर्देशों और रास्ते का पालन करने के लिए सहमत हूँ, और गलत इस्तेमाल से किराए की साइकिल को हुए किसी भी नुकसान के लिए ज़िम्मेदार हूँ। साइकिल उसी हालत में लौटाई जाती है जिसमें वह मिली थी। जब मैं दूसरों के लिए बुक करता/करती हूँ, तो मैं अपने साथ-साथ उनमें से हर एक की ओर से यह छूट-पत्र स्वीकार करता/करती हूँ और पुष्टि करता/करती हूँ कि मुझे ऐसा करने का अधिकार है। मेरी बुकिंग के हर बच्चे का मैं माता-पिता या कानूनी अभिभावक हूँ, या उसे लाने के लिए मेरे पास उसके अभिभावक की अनुमति है, और मैं हर समय उसकी देखरेख करूँगा/करूँगी।"
  },
  "ne": {
   "privacyAckOpt": "मैले {0} पढेँ।",
@@ -771,7 +807,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "महिला",
   "fixPwHint": "कम्तीमा 8 अक्षर, एउटा ठूलो अक्षर र एउटा अंकसहित।",
   "authConfirmPassword": "पासवर्ड पुष्टि गर्नुहोस्",
-  "rideNewsOpt": "मलाई राइडका खबर र घोषणाहरू WhatsApp र इमेलमा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
+  "rideNewsOpt": "मलाई राइडका खबर र घोषणाहरू WhatsApp मा पठाउनुहोस्। म जुनसुकै बेला रोक्न सक्छु।",
   "heardLabel": "तपाईंले हाम्रो बारेमा कसरी थाहा पाउनुभयो?",
   "authSignupBtn": "खाता बनाउनुहोस्",
   "closeBtn": "बन्द गर्नुहोस्",
@@ -811,7 +847,7 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "धेरै असफल प्रयास। लगभग 15 मिनेट पर्खेर फेरि प्रयास गर्नुहोस्, वा पासवर्ड रिसेट गर्नुहोस्।",
   "errInvalidCredentials": "गलत प्रमाण। कृपया फेरि प्रयास गर्नुहोस्।",
   "waiverTitle": "राइड छुट-पत्र",
-  "waiverBody": "यो छुटपत्र पढेर सहमति नजनाएसम्म तपाईं MicroMobility सँग कुनै पनि राइड वा गतिविधि बुक गर्न सक्नुहुन्न। साइकल चलाउनु जोखिम भएको शारीरिक गतिविधि हो। म पूर्ण रूपमा आफ्नै जोखिममा सहभागी हुन्छु, र आफू, आफ्नो सुरक्षा र आफ्ना व्यक्तिगत सामानका लागि म मात्र जिम्मेवार छु। मैले अरूलाई वा उनीहरूको सम्पत्तिलाई गरेको कुनै पनि क्षतिका लागि पनि म जिम्मेवार छु। कानूनले अनुमति दिएको अधिकतम हदसम्म, MicroMobility, यसका कर्मचारी र साझेदारहरू मलाई वा मेरा सामानलाई हुने कुनै पनि कुराका लागि जिम्मेवार हुँदैनन्, जसमा कुनै पनि चोटपटक, हड्डी भाँचिनु, बिरामी, हराउनु, चोरी वा क्षति पर्छ, जुनसुकै कारणले भए पनि, गतिविधिका क्रममा वा त्यससँग सम्बन्धित रूपमा। म हेलमेट लगाउन र टोलीका निर्देशन तथा बाटो पालना गर्न सहमत छु, र गलत प्रयोगले भाडाको साइकललाई हुने कुनै पनि क्षतिका लागि म जिम्मेवार छु। साइकल जुन अवस्थामा लिइएको हो सोही अवस्थामा फिर्ता गरिन्छ।"
+  "waiverBody": "यो छुटपत्र पढेर सहमति नजनाएसम्म तपाईं MicroMobility सँग कुनै पनि राइड वा गतिविधि बुक गर्न सक्नुहुन्न। साइकल चलाउनु जोखिम भएको शारीरिक गतिविधि हो। म पूर्ण रूपमा आफ्नै जोखिममा सहभागी हुन्छु, र आफू, आफ्नो सुरक्षा र आफ्ना व्यक्तिगत सामानका लागि म मात्र जिम्मेवार छु। मैले अरूलाई वा उनीहरूको सम्पत्तिलाई गरेको कुनै पनि क्षतिका लागि पनि म जिम्मेवार छु। कानूनले अनुमति दिएको अधिकतम हदसम्म, MicroMobility, यसका कर्मचारी र साझेदारहरू मलाई वा मेरा सामानलाई हुने कुनै पनि कुराका लागि जिम्मेवार हुँदैनन्, जसमा कुनै पनि चोटपटक, हड्डी भाँचिनु, बिरामी, हराउनु, चोरी वा क्षति पर्छ, जुनसुकै कारणले भए पनि, गतिविधिका क्रममा वा त्यससँग सम्बन्धित रूपमा। म हेलमेट लगाउन र टोलीका निर्देशन तथा बाटो पालना गर्न सहमत छु, र गलत प्रयोगले भाडाको साइकललाई हुने कुनै पनि क्षतिका लागि म जिम्मेवार छु। साइकल जुन अवस्थामा लिइएको हो सोही अवस्थामा फिर्ता गरिन्छ। अरूका लागि बुक गर्दा, म आफ्नो साथै उनीहरू प्रत्येकको तर्फबाट यो छुट-पत्र स्वीकार गर्छु र त्यसो गर्ने अधिकार मसँग छ भनी पुष्टि गर्छु। मेरो बुकिङका हरेक बालबालिकाको म आमाबुबा वा कानुनी अभिभावक हुँ, वा उनीहरूलाई ल्याउन उनका अभिभावकको अनुमति मसँग छ, र म सधैं उनीहरूको हेरचाह गर्नेछु।"
  },
  "bn": {
   "privacyAckOpt": "আমি {0} পড়েছি।",
@@ -844,7 +880,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "নারী",
   "fixPwHint": "কমপক্ষে 8টি অক্ষর, একটি বড় হাতের অক্ষর ও একটি সংখ্যাসহ।",
   "authConfirmPassword": "পাসওয়ার্ড নিশ্চিত করুন",
-  "rideNewsOpt": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp ও ইমেইলে পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
+  "rideNewsOpt": "আমাকে রাইডের খবর ও ঘোষণা WhatsApp-এ পাঠান। আমি যেকোনো সময় বন্ধ করতে পারি।",
   "heardLabel": "আপনি আমাদের সম্পর্কে কীভাবে জানলেন?",
   "authSignupBtn": "অ্যাকাউন্ট তৈরি করুন",
   "closeBtn": "বন্ধ করুন",
@@ -884,7 +920,7 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "অনেকবার চেষ্টা ব্যর্থ হয়েছে। অনুগ্রহ করে প্রায় 15 মিনিট অপেক্ষা করে আবার চেষ্টা করুন, অথবা পাসওয়ার্ড রিসেট করুন।",
   "errInvalidCredentials": "ভুল তথ্য। অনুগ্রহ করে আবার চেষ্টা করুন।",
   "waiverTitle": "রাইড দায়মুক্তিপত্র",
-  "waiverBody": "এই দায়মুক্তিপত্র পড়ে তাতে সম্মতি না দেওয়া পর্যন্ত আপনি MicroMobility-এর সাথে কোনো রাইড বা কার্যক্রম বুক করতে পারবেন না। সাইকেল চালানো একটি ঝুঁকিপূর্ণ শারীরিক কার্যক্রম। আমি সম্পূর্ণ নিজের ঝুঁকিতে অংশ নিচ্ছি, এবং নিজের, নিজের নিরাপত্তার ও নিজের ব্যক্তিগত জিনিসপত্রের জন্য শুধু আমিই দায়ী। অন্যদের বা তাদের সম্পত্তির যে ক্ষতি আমি করি, তার জন্যও আমি দায়ী। আইনে অনুমোদিত সর্বোচ্চ সীমা পর্যন্ত, MicroMobility, এর কর্মী ও অংশীদাররা আমার বা আমার জিনিসপত্রের সাথে যা-ই ঘটুক তার জন্য দায়ী নয়, যার মধ্যে যেকোনো আঘাত, হাড় ভাঙা, অসুস্থতা, হারানো, চুরি বা ক্ষতি অন্তর্ভুক্ত, কারণ যা-ই হোক, কার্যক্রম চলাকালে বা এর সাথে সম্পর্কিতভাবে। আমি হেলমেট পরতে এবং দলের নির্দেশনা ও পথ মেনে চলতে সম্মত, এবং ভুল ব্যবহারের কারণে ভাড়া করা সাইকেলের যেকোনো ক্ষতির জন্য আমি দায়ী। সাইকেলটি যে অবস্থায় নেওয়া হয়েছিল সেই অবস্থায় ফেরত দেওয়া হয়।"
+  "waiverBody": "এই দায়মুক্তিপত্র পড়ে তাতে সম্মতি না দেওয়া পর্যন্ত আপনি MicroMobility-এর সাথে কোনো রাইড বা কার্যক্রম বুক করতে পারবেন না। সাইকেল চালানো একটি ঝুঁকিপূর্ণ শারীরিক কার্যক্রম। আমি সম্পূর্ণ নিজের ঝুঁকিতে অংশ নিচ্ছি, এবং নিজের, নিজের নিরাপত্তার ও নিজের ব্যক্তিগত জিনিসপত্রের জন্য শুধু আমিই দায়ী। অন্যদের বা তাদের সম্পত্তির যে ক্ষতি আমি করি, তার জন্যও আমি দায়ী। আইনে অনুমোদিত সর্বোচ্চ সীমা পর্যন্ত, MicroMobility, এর কর্মী ও অংশীদাররা আমার বা আমার জিনিসপত্রের সাথে যা-ই ঘটুক তার জন্য দায়ী নয়, যার মধ্যে যেকোনো আঘাত, হাড় ভাঙা, অসুস্থতা, হারানো, চুরি বা ক্ষতি অন্তর্ভুক্ত, কারণ যা-ই হোক, কার্যক্রম চলাকালে বা এর সাথে সম্পর্কিতভাবে। আমি হেলমেট পরতে এবং দলের নির্দেশনা ও পথ মেনে চলতে সম্মত, এবং ভুল ব্যবহারের কারণে ভাড়া করা সাইকেলের যেকোনো ক্ষতির জন্য আমি দায়ী। সাইকেলটি যে অবস্থায় নেওয়া হয়েছিল সেই অবস্থায় ফেরত দেওয়া হয়। অন্যদের জন্য বুক করলে, আমি নিজের পাশাপাশি তাদের প্রত্যেকের পক্ষে এই দায়মুক্তিপত্র গ্রহণ করছি এবং নিশ্চিত করছি যে আমার তা করার অধিকার আছে। আমার বুকিংয়ের প্রতিটি শিশুর আমি পিতা-মাতা বা আইনগত অভিভাবক, অথবা তাকে আনার জন্য তার অভিভাবকের অনুমতি আমার আছে, এবং আমি সারাক্ষণ তার দেখাশোনা করব।"
  },
  "zh": {
   "privacyAckOpt": "我已阅读{0}。",
@@ -917,7 +953,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "女",
   "fixPwHint": "至少 8 个字符，包含一个大写字母和一个数字。",
   "authConfirmPassword": "确认密码",
-  "rideNewsOpt": "通过 WhatsApp 和邮件向我发送骑行资讯与公告。我可以随时停止接收。",
+  "rideNewsOpt": "通过 WhatsApp 向我发送骑行资讯与公告。我可以随时停止接收。",
   "heardLabel": "您是如何了解我们的？",
   "authSignupBtn": "创建账户",
   "closeBtn": "关闭",
@@ -959,7 +995,16 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "失败次数过多。请等待约 15 分钟后重试，或重置密码。",
   "errInvalidCredentials": "登录信息不正确，请重试。",
   "waiverTitle": "骑行免责声明",
-  "waiverBody": "在阅读并同意本免责声明之前，您无法在 MicroMobility 预订任何骑行或活动。骑行是一项存在风险的体育活动。我自愿参与，风险完全由本人承担，并由本人独自对自身、自身安全及个人物品负责。对于本人给他人或他人财产造成的任何损害，本人亦须负责。在法律允许的最大范围内，MicroMobility 及其员工和合作伙伴对我本人或我的物品发生的任何事情概不负责，包括任何受伤、骨折、疾病、遗失、被盗或损坏，无论因何原因造成，亦无论发生在活动期间还是与活动相关。我同意佩戴头盔，遵守团队指示和路线，并对因使用不当对所租自行车造成的任何损坏负责。自行车须按领取时的状态归还。"
+  "waiverBody": "在阅读并同意本免责声明之前，您无法在 MicroMobility 预订任何骑行或活动。骑行是一项存在风险的体育活动。我自愿参与，风险完全由本人承担，并由本人独自对自身、自身安全及个人物品负责。对于本人给他人或他人财产造成的任何损害，本人亦须负责。在法律允许的最大范围内，MicroMobility 及其员工和合作伙伴对我本人或我的物品发生的任何事情概不负责，包括任何受伤、骨折、疾病、遗失、被盗或损坏，无论因何原因造成，亦无论发生在活动期间还是与活动相关。我同意佩戴头盔，遵守团队指示和路线，并对因使用不当对所租自行车造成的任何损坏负责。自行车须按领取时的状态归还。 当我为他人预订时，我代表其中每一位以及我本人接受本免责声明，并确认我有权这样做。我是我预订中每一名儿童的父母或法定监护人，或已获得其监护人的许可带其前来，并将始终对其进行看护。",
+  "errEmName": "请输入联系人的姓名。",
+  "errEmPhone": "请输入联系人的手机号码。",
+  "errEmRelation": "请选择对方与您的关系。",
+  "errEmSelf": "联系人的号码不能是您自己的号码。",
+  "errEmSame": "两位紧急联系人的号码不能相同。",
+  "errNameChars": "姓名只能包含字母、空格和句点。",
+  "errNameShort": "请写出完整姓名：每个名字至少两个字母。",
+  "errLoginPhoneCc": "没有账户以沙特号码登记这个号码。如果您的号码来自其他国家，请连同国家代码一起输入，例如 +20 1012345678。",
+  "fixNone": "我没有"
  },
  "ja": {
   "privacyAckOpt": "{0}を読みました。",
@@ -992,7 +1037,7 @@ var SITE_T_EXTRA = {
   "genderFemale": "女性",
   "fixPwHint": "8文字以上で、大文字と数字をそれぞれ1つ以上含めてください。",
   "authConfirmPassword": "パスワード（確認）",
-  "rideNewsOpt": "ライドのニュースやお知らせをWhatsAppとメールで受け取る。いつでも配信を停止できます。",
+  "rideNewsOpt": "ライドのニュースやお知らせをWhatsAppで受け取る。いつでも配信を停止できます。",
   "heardLabel": "私たちを知ったきっかけは？",
   "authSignupBtn": "アカウントを作成",
   "closeBtn": "閉じる",
@@ -1034,6 +1079,15 @@ var SITE_T_EXTRA = {
   "errLoginLocked": "失敗した回数が多すぎます。15分ほど待ってから再度お試しいただくか、パスワードを再設定してください。",
   "errInvalidCredentials": "ログイン情報が正しくありません。もう一度お試しください。",
   "waiverTitle": "ライドの免責同意書",
-  "waiverBody": "この免責同意書を読んで同意するまで、MicroMobilityのライドやアクティビティは一切予約できません。サイクリングはリスクを伴う身体活動です。私は全面的に自己の責任において参加し、自分自身、自分の安全および私物について、私のみが責任を負います。また、私が他の人またはその財産に与えた損害についても、私が責任を負います。法律で認められる最大限の範囲において、MicroMobility、そのスタッフおよびパートナーは、私または私の所持品に生じるいかなる事態についても責任を負いません。これには、原因を問わず、アクティビティ中またはこれに関連して生じたけが、骨折、病気、紛失、盗難または損傷が含まれます。ヘルメットを着用し、スタッフの指示とルートに従うことに同意します。また、誤った使用によりレンタル自転車に生じた損傷について、私が責任を負います。自転車は受け取った時と同じ状態で返却します。"
+  "waiverBody": "この免責同意書を読んで同意するまで、MicroMobilityのライドやアクティビティは一切予約できません。サイクリングはリスクを伴う身体活動です。私は全面的に自己の責任において参加し、自分自身、自分の安全および私物について、私のみが責任を負います。また、私が他の人またはその財産に与えた損害についても、私が責任を負います。法律で認められる最大限の範囲において、MicroMobility、そのスタッフおよびパートナーは、私または私の所持品に生じるいかなる事態についても責任を負いません。これには、原因を問わず、アクティビティ中またはこれに関連して生じたけが、骨折、病気、紛失、盗難または損傷が含まれます。ヘルメットを着用し、スタッフの指示とルートに従うことに同意します。また、誤った使用によりレンタル自転車に生じた損傷について、私が責任を負います。自転車は受け取った時と同じ状態で返却します。 他の人のために予約する場合、私は自分自身に加えて、その一人ひとりに代わってこの免責同意書に同意し、その権限があることを確認します。私は予約に含まれるすべての子どもの親または法定後見人であるか、その保護者から子どもを連れて来る許可を得ており、常に子どもを監督します。",
+  "errEmName": "連絡先の方のお名前を入力してください。",
+  "errEmPhone": "連絡先の方の携帯電話番号を入力してください。",
+  "errEmRelation": "あなたとの関係を選択してください。",
+  "errEmSelf": "連絡先の番号にご自身の番号は使えません。",
+  "errEmSame": "2人の緊急連絡先に同じ番号は使えません。",
+  "errNameChars": "名前に使えるのは文字、スペース、ピリオドのみです。",
+  "errNameShort": "名前は省略せずに入力してください。各名前は2文字以上必要です。",
+  "errLoginPhoneCc": "この番号をサウジアラビアの番号として登録しているアカウントはありません。ほかの国の番号の場合は、+20 1012345678 のように国番号を付けて入力してください。",
+  "fixNone": "ありません"
  }
 };

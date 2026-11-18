@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import type { SportOption } from "@/lib/sport";
 import SportGate, { type SportDone } from "./SportGate";
 import WaiverGateLoader from "./WaiverGateLoader";
-import { SPORT_QUIET, isQuiet } from "./quiet";
+import { SPORT_QUIET, BUSY, BUSY_RETRY_MS, isQuiet } from "./quiet";
 
 // Whether a Community member competes in a sport, on every page (the user, 2026-11-10: "force it on community members
 // the next time they open or sign in the website"; the booking app's check-up asks it the same way). It comes after the
@@ -23,11 +23,12 @@ let off = false;
 
 // What the pop-up needs when it is up: the sports staff added to the list (the user's 74 are the site's own).
 type Need = { added: SportOption[] };
-async function check(): Promise<Need | null> {
+async function check(): Promise<Need | typeof BUSY | null> {
   if (off) return null;
   if (isQuiet(KEY)) return null;
   try {
     const r = await fetch("/api/account/sport", { cache: "no-store", credentials: "same-origin" });
+    if (r.status === 429) return BUSY; // the meter is full: not an answer, asked again shortly
     if (!r.ok) return null;
     const b = (await r.json()) as { signedIn?: boolean; need?: boolean; absent?: boolean; options?: SportOption[] };
     if (b.absent) off = true;
@@ -43,17 +44,20 @@ export default function SportGateLoader({ locale }: { locale: string }) {
   const path = usePathname();
   const [need, setNeed] = useState<Need | null>(null);
   const [clear, setClear] = useState(false); // asked, and nothing to answer: the next pop-ups may ask now
+  const [retry, setRetry] = useState(0); // bumped to ask again after the meter turned a check away
 
   useEffect(() => {
     if (need) return;
     let live = true;
+    let wait: ReturnType<typeof setTimeout> | undefined;
     check().then((n) => {
       if (!live) return;
+      if (n === BUSY) { wait = setTimeout(() => setRetry((k) => k + 1), BUSY_RETRY_MS); return; } // the next pop-ups keep waiting
       if (n) setNeed(n);
       setClear(!n);
     });
-    return () => { live = false; };
-  }, [path, need]);
+    return () => { live = false; clearTimeout(wait); };
+  }, [path, need, retry]);
 
   const done = (r: SportDone) => {
     if (r === "absent") off = true;

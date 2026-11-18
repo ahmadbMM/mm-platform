@@ -77,7 +77,7 @@ describe("the day a ride badge was reached", () => {
     ["2026-09-01-sw", { kind: "swim", freeRide: false }], ["2026-10-10", { kind: "saturday", freeRide: true }], ["2026-10-11", { kind: "jcc", freeRide: false }],
   ]);
   it("is the night that made the count, for the bike rides and the Saturday rides", () => {
-    expect(shareDays(rows, ses)).toEqual({ first_lap: "2026-08-30", regular: "2026-09-26", rolling_start: "2026-09-05", slipstream: "2026-10-03" });
+    expect(shareDays(rows, ses)).toEqual({ first_lap: "2026-08-30", regular: "2026-09-26", rolling_start: "2026-09-05", tailwind: "2026-09-12", momentum: "2026-09-19", slipstream: "2026-10-03" });
   });
   it("names none for a count a night without a day would decide, and none for anything else", () => {
     const one = recordRows([row("2026-09-05")]), odd = [...one, { ...one[0], id: "x1-1", sessionId: "x1", date: "" }];
@@ -217,7 +217,7 @@ describe("Share on My Account > Badges", () => {
     const items = g?.props.items as { slug: string; on: boolean; day?: string }[];
     expect(items.find((x) => x.slug === "marshal")?.day).toBe("20 Oct 2026"); // the day staff gave it
     expect(items.find((x) => x.slug === "first_lap")?.day).toBe("3 Oct 2026"); // the night that reached it
-    expect(items.find((x) => x.slug === "tailwind")?.day).toBe(""); // reached, but a day the app does not name
+    expect(items.find((x) => x.slug === "tailwind")?.day).toBe("10 Oct 2026"); // the 2nd Saturday ride (bug hunt 2026-11-18)
     expect(items.filter((x) => !x.on).every((x) => x.day === undefined)).toBe(true); // nothing to share yet
   });
   it("offers nothing without it, and draws the grid as before", () => {

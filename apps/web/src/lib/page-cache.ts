@@ -130,8 +130,12 @@ function fromStore(r: Response, req: Request, state: "hit" | "stale"): Response 
   return new Response(r.body, { status: r.status, headers: h });
 }
 
-// The copies being drawn again behind a stale answer, in this Worker: one at a time each.
-const refreshing = new Set<string>();
+// The copies being drawn again behind a stale answer, in this Worker: one at a time each, by when each began. A
+// drawing cut off with its request (Cloudflare drops a waitUntil past its budget without settling it, lib/memo.ts)
+// never reaches its `finally`: one still on the list after REFRESH_LOST_MS is taken as lost and the next stale
+// answer starts another (bug hunt 2026-11-18).
+const refreshing = new Map<string, number>();
+const REFRESH_LOST_MS = 35_000;
 
 const withLang = (u: string, lang: string) => new Request(u + (u.includes("?") ? "&" : "?") + "lang=" + lang);
 
@@ -154,15 +158,16 @@ export async function servePage(req: Request, env: Env, ctx: Ctx, handler: Handl
       if (now - stored <= PAGE_TTL * 1000) return fromStore(hit, req, "hit");
       if (now - stored <= PAGE_STALE * 1000 && jeddahDay(stored) === jeddahDay(now)) {
         const k = key as string;
-        if (!refreshing.has(k)) {
-          refreshing.add(k);
+        const began = refreshing.get(k);
+        if (began === undefined || now - began > REFRESH_LOST_MS) {
+          refreshing.set(k, now);
           ctx.waitUntil((async () => {
             try {
               const res = await handler.fetch(new Request(req), env as never, ctx as never);
               if (storable(res)) await cache.put(k, toStore(res, Date.now()));
               // a page taken down goes from the edge too: kept, the old page was answered for the rest of the six hours
               else if (gone(res)) await cache.delete(k);
-            } catch { /* the next visitor draws it */ } finally { refreshing.delete(k); }
+            } catch { /* the next visitor draws it */ } finally { if (refreshing.get(k) === now) refreshing.delete(k); }
           })());
         }
         return fromStore(hit, req, "stale");

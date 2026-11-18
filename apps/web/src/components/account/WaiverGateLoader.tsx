@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import ShareGateLoader from "./ShareGateLoader";
 import WaiverGate, { type PendingWaiver, type WaiverDone } from "./WaiverGate";
-import { WAIVER_QUIET, isQuiet } from "./quiet";
+import { WAIVER_QUIET, BUSY, BUSY_RETRY_MS, isQuiet } from "./quiet";
 
 // A desk-added booking's waiver on every page (the owner, 2026-10-04), before the post-ride rating:
 // the booking app asks for every waiver first and the rating after (_forceRatingPrompt), so this
@@ -25,12 +25,13 @@ const QUIET_MS = 2 * 60_000;
 const agreed = new Set<string>();
 let off = false;
 
-async function check(locale: string): Promise<PendingWaiver | null> {
+async function check(locale: string): Promise<PendingWaiver | typeof BUSY | null> {
   if (off) return null;
   if (isQuiet(KEY)) return null;
   try {
     const skip = agreed.size ? `&skip=${encodeURIComponent([...agreed].join(","))}` : "";
     const r = await fetch(`/api/account/pending-waiver?locale=${encodeURIComponent(locale)}${skip}`, { cache: "no-store", credentials: "same-origin" });
+    if (r.status === 429) return BUSY; // the meter is full: not an answer, asked again shortly
     if (!r.ok) return null;
     const b = (await r.json()) as { signedIn?: boolean; pending?: PendingWaiver | null };
     try {
@@ -45,18 +46,21 @@ export default function WaiverGateLoader({ locale }: { locale: string }) {
   const path = usePathname();
   const [pending, setPending] = useState<PendingWaiver | null>(null);
   const [clear, setClear] = useState(false); // asked, and no waiver waits: the next pop-ups may ask now
+  const [retry, setRetry] = useState(0); // bumped to ask again after the meter turned a check away
   const [round, setRound] = useState(0); // bumped once a waiver lands, to ask for the next ride
 
   useEffect(() => {
     if (pending) return;
     let live = true;
+    let wait: ReturnType<typeof setTimeout> | undefined;
     check(locale).then((p) => {
       if (!live) return;
+      if (p === BUSY) { wait = setTimeout(() => setRetry((k) => k + 1), BUSY_RETRY_MS); return; } // the next pop-ups keep waiting
       if (p) setPending(p);
       setClear(!p);
     });
-    return () => { live = false; };
-  }, [path, locale, pending, round]);
+    return () => { live = false; clearTimeout(wait); };
+  }, [path, locale, pending, round, retry]);
 
   const done = (sessionId: string, r: WaiverDone) => {
     if (r !== "stale") agreed.add(sessionId);

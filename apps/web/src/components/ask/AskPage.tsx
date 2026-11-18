@@ -56,9 +56,15 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
   const readAt = useRef(0);
   const reading = useRef(false);
   const later = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // The reader's own changes (an answer sent or taken back, an upvote, a reaction) counted: a read that set out before
+  // one of them brings the page as it was, and must not put back what the reader has just changed (bug hunt
+  // 2026-11-18: an answer just sent vanished from "your answers" under a read already on its way).
+  const edits = useRef(0);
+  // a read that could not wait, asked for while another was on its way: made once that one ends
+  const queued = useRef(false);
   const reread = useCallback(async function again(must = false): Promise<void> {
     const now = Date.now();
-    if (reading.current) return;
+    if (reading.current) { if (must) queued.current = true; return; }
     // even a read that cannot wait keeps a second and a half from the last (a poll every 2 seconds may ask for it twice)
     if (must && readAt.current && now - readAt.current < 1500) return;
     if (!must && !rereadDue(readAt.current, now)) {
@@ -67,12 +73,16 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
     }
     reading.current = true;
     readAt.current = now;
+    const seen = edits.current;
+    let stale = false;
     try {
       const r = await fetch(`/api/ask/${slug}${pageKey ? `?k=${encodeURIComponent(pageKey)}` : ""}`, { cache: "no-store", credentials: "same-origin" });
       const b = (await r.json().catch(() => null)) as { ok?: boolean; page?: unknown } | null;
-      if (b?.ok) setView(askView(b.page));
+      if (b?.ok) { if (edits.current === seen) setView(askView(b.page)); else stale = true; }
     } catch { /* out of reach: the page keeps what it shows */ }
     reading.current = false;
+    // older than the reader's own change, or another read waits: the page is read once more, now
+    if (stale || queued.current) { queued.current = false; readAt.current = 0; again(true); }
   }, [slug, pageKey]);
   useEffect(() => () => clearTimeout(later.current), []);
 
@@ -136,6 +146,7 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
         if (a.ok) {
           setThanked(question);
           const mine = a.mine;
+          edits.current++;
           if (mine) setView((v) => (v.full ? { ...v, full: withMine(v.full, question, mine) } : v));
           else reread(true);
           own.current = true;
@@ -149,6 +160,7 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
         const b = (await post("/api/ask/unsend", { answer })) as { ok?: boolean } | null;
         // not taken back: it may no longer be waiting (staff reviewed it meanwhile) - the page is read again
         if (b?.ok !== true) { if (b) reread(); return false; }
+        edits.current++;
         setView((v) => (v.full ? { ...v, full: withoutMine(v.full, question, answer) } : v));
         poke();
         return true;
@@ -159,13 +171,14 @@ export default function AskPage({ locale, slug, initial, pageKey, create }: Prop
         const b = (await post("/api/ask/vote", { answer, on })) as { ok?: boolean; votes?: unknown } | null;
         if (b?.ok !== true) return false;
         const votes = typeof b.votes === "number" && Number.isFinite(b.votes) ? b.votes : null;
+        edits.current++;
         setView((v) => (v.full ? { ...v, full: withVote(v.full, question, answer, on, votes) } : v));
         return true;
       } catch { return false; }
     },
     // a reaction shows at once and is put back as it was if the database did not take it
     react: (question, kind, on) => {
-      const set = (to: boolean) => setView((v) => (v.full ? { ...v, full: withReaction(v.full, question, kind, to) } : v));
+      const set = (to: boolean) => { edits.current++; setView((v) => (v.full ? { ...v, full: withReaction(v.full, question, kind, to) } : v)); };
       set(on);
       post("/api/ask/react", { question, kind, on })
         .then((b) => { if ((b as { ok?: boolean } | null)?.ok === true) { own.current = true; poke(); } else set(!on); })

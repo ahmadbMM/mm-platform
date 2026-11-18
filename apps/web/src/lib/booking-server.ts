@@ -233,10 +233,12 @@ export function bookingEntries(input: BookInput, riders: Rider[], s: LiveSession
 }
 
 /** The waiver text's version (WAIVER_VERSION / SWIM_WAIVER_VERSION / ACTIVITY_WAIVER_VERSION): every rider row carries the
- *  wording it was agreed under. Bump it with the app's whenever the text changes. */
-export const WAIVER_VERSION = "2026-10-v3";
-export const SWIM_WAIVER_VERSION = "swim-2026-10-v3";
-export const ACTIVITY_WAIVER_VERSION = "activity-2026-10-v3";
+ *  wording it was agreed under. Bump it with the app's whenever the text changes. v4 since the merge of main's c85fe21c (the
+ *  booking app's 46689058, 2026-11-13: the sentence a booking for other people needs), whose migration 20261114160000
+ *  refuses an older one (WAIVER_OUTDATED); the same words and versions as content/waivers.ts. */
+export const WAIVER_VERSION = "2026-11-v4";
+export const SWIM_WAIVER_VERSION = "swim-2026-11-v4";
+export const ACTIVITY_WAIVER_VERSION = "activity-2026-11-v4";
 const WAIVER_VERSIONS = { bike: WAIVER_VERSION, swim: SWIM_WAIVER_VERSION, activity: ACTIVITY_WAIVER_VERSION } as const;
 export const waiverVersionFor = (s: Pick<BookSession, "kind">): string | null => (needsWaiver(s) ? WAIVER_VERSIONS[waiverKind(s)] : null);
 

@@ -8,7 +8,9 @@ import { BIKE_KINDS, isNonBike } from "./bike-kinds";
 import type { BadgeReq } from "./badge-request";
 
 /** What the record needs of a session: its kind, and whether it costs nothing (_isFreeRide). */
-export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: boolean; groupKm?: { beg: number; int: number }; km?: number };
+export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: boolean; groupKm?: { beg: number; int: number }; km?: number;
+  /** The route it followed (sessions.route_slug; My records' Routes ridden, lib/my-records.ts), null for none; absent when not read. */
+  route?: string | null };
 /** A night on a bike (lib/bike-kinds.ts BIKE_KINDS): the only nights Your rides and the ride badges count
  *  (the owner, 2026-10-18: the pool, the workshop, an event, a run and Victory Lap are not rides). A session
  *  that did not load counts unless its id names a kind without a bike. */
@@ -35,6 +37,8 @@ export type BadgeData = { catalog: BadgeRow[]; weeks: { w: string; ids: string[]
  *  medal, which the badges table cannot hold (it stores the badge as 'red'). */
 /** The Saturday social rides with Defe that earn Rode with Defe (session ids; the booking app's DEFE_RIDE_IDS). */
 export const DEFE_RIDE_IDS = ["2026-10-24"];
+/** A Farm House Night's session id ('<date>-fh', lib/farm.ts): the Farmhouse Night badge reads it when the session itself did not load. */
+const FARM_ID = /^\d{4}-\d\d-\d\d-fh(-|$)/;
 
 export const BADGE_SYS: Record<string, [string, string]> = {
   first_lap: ["flag", "green"], regular: ["wheel", "teal"], podium: ["podium", "purple"], front_row: ["one", "gold"], carbon: ["bike", "silver"],
@@ -55,6 +59,7 @@ export const BADGE_SYS: Record<string, [string, string]> = {
   defe_5k: ["defe", "defe"], // the DEFE 5KM Run: Defe's ribbon inside the finisher's ring, rose into berry (2026-10-18)
   blood_donor: ["drop", "red"], // Blood Donor: a drop with a heart, on the ordinary red medal (2026-11-05)
   blood_visitor: ["dropo", "teal"], // Blood Donation Visitor: the drop's outline with a heart inside, on the teal medal (2026-11-06)
+  farmhouse_night: ["barn", "farm"], // Farmhouse Night: a barn under a crescent moon, on its own special medal, peach into rust and wine (2026-11-14)
   volunteer: ["hand", "volunteer"], // Volunteer: a raised hand on its own blue special medal, given by staff (2026-11-05)
   // the hours ladder's levels: the database gives each with the volunteer's hours (the booking app, 2026-11-06 review, VL14)
   volunteer_10: ["hand", "teal"], volunteer_25: ["hand", "purple"], volunteer_50: ["hand", "gold"], volunteer_100: ["hand", "blue"],
@@ -86,7 +91,7 @@ const GIVEN_SYS = ["marshal", "senior_marshal", "chief_marshal", "clerk_of_cours
 /** Badges staff give that a rider sees only once they hold one (BDG_HELD_ONLY): never greyed under Badges to earn,
  *  never offered to request (the booking app, 2026-11-12: Talent Scout, for helping someone from the community get a job anywhere,
  *  "only visible for its holders"). */
-export const HELD_ONLY = new Set(["company_challenge", "talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "back_on_track"]);
+export const HELD_ONLY = new Set(["company_challenge", "talent_scout", "swim_instructor", "national_day_96", "run_for_her", "defe_5k", "victory_lap", "defe_ride", "blood_donor", "blood_visitor", "farmhouse_night", "back_on_track"]);
 /** Whether only a badge's holders see it (the booking app's _bdgHeldOnly, 2026-11-12: "add a switch to all badges that has
  *  to do with the visibility of the badges to customers and members"): the catalogue's held_only, staff's switch in
  *  Community > Badges, else the start the app keeps (def): HELD_ONLY, the ride badges rideBadges marks hide. */
@@ -325,7 +330,8 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
   // a ride that counts towards a badge (_bdgRode): done and paid, or free, or an own bike checked in;
   // the booking app counts every badge off these rows (_mrBadges(all, all.filter(_bdgRode)))
   const rode = (r: TicketRow) => done(r) || (r.type === "Own" && (r.status === "done" || r.status === "active"));
-  const completed = rows.filter(rode), rides = completed.length;
+  // counted in nights, as the booking app's _mrBadges (bug hunt 2026-11-11) and Your rides: a party's rows are one night
+  const completed = rows.filter(rode), rides = new Set(completed.map((r) => r.sessionId)).size;
   // Front Row's levels (2026-10-12): nights first in the queue and ridden ("make sure all badges go for
   // deserved holders"); a ride staff approve shows no number, so it never counts
   const p1 = new Set(rows.filter((r) => r.queueNum === 1 && rode(r) && !ses(r.sessionId)?.approval).map((r) => r.sessionId)).size;
@@ -385,6 +391,10 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
   // Blood Donation Visitor (the booking app, 2026-11-06): everyone who came, donors and visitors alike: a booking on a Blood
   // Donation session that staff checked out (done), or one marked Donated. Blood Donor stays with those who donated.
   const bvs = bld || all.some((r) => r.status === "done" && ses(r.sessionId)?.kind === "blood");
+  // Farmhouse Night (the booking app, 2026-11-14): checked in (at the farm or checked out) on a Farm House Night, read from every
+  // row, as the night has no bike; a session that did not load counts by its id's -fh
+  const farmNight = (id: string) => { const x = ses(id); return x ? x.kind === "farm" : FARM_ID.test(id); };
+  const fhn = all.some((r) => (r.status === "done" || r.status === "active") && farmNight(r.sessionId));
   // the Marshal ladder is earned by leading rides too (the booking app, 2026-11-06); staff still give it by hand
   const led = ledRides(all, sessions);
   const P = (n: number, of: number) => `${Math.min(n, of)}/${of}`, pct = profile ? profilePct(profile) : 0;
@@ -398,6 +408,7 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
     { s: "defe_ride", on: dfr, hide: true }, // the ribbon wheel: shown to those who rode it
     { s: "blood_donor", on: bld, hide: true }, // the drop: shown to those who gave blood
     { s: "blood_visitor", on: bvs, hide: true }, // the drop's outline: shown to everyone who came, donors and visitors
+    { s: "farmhouse_night", on: fhn, hide: true }, // the barn under the moon: shown to those who came to a farm night
     { s: "first_lap", on: rides >= 1, p: `${rides}/1` }, { s: "regular", on: rides >= 5, p: P(rides, 5) }, { s: "podium", on: rides >= 10, p: P(rides, 10) },
     { s: "front_row", on: p1 >= 1, p: P(p1, 1) }, { s: "pole_position", on: p1 >= 5, p: P(p1, 5) }, { s: "pole_master", on: p1 >= 10, p: P(p1, 10) },
     { s: "grid_leader", on: p1 >= 25, p: P(p1, 25) }, { s: "pole_legend", on: p1 >= 50, p: P(p1, 50) },

@@ -131,6 +131,7 @@ html:is([lang="ar"], [lang="ur"]) .ac-eyebrow { letter-spacing: 0; font-size: 13
 .mr-badge.sp-vlap { --sp1: #bdbdbd; --sp2: #333333; --sp3: #000000; } /* Victory Lap: black and white (2026-10-27) */
 .mr-badge.sp-defe { --sp1: #f6c3d6; --sp2: #d782a0; --sp3: #a22b63; } /* Rode with Defe */
 .mr-badge.sp-volunteer { --sp1: #8fd0ff; --sp2: #1f7ae0; --sp3: #0b3b82; } /* the Volunteer badge */
+.mr-badge.sp-farm { --sp1: #f3c7a9; --sp2: #c9502a; --sp3: #7e2034; } /* the Farmhouse Night badge */
 .mr-badge.special.locked { background: #fff; border: 1px solid rgba(26, 25, 25, .12); }
 .mr-badges-more { display: flex; align-items: center; gap: 10px; width: 100%; margin-top: 10px; padding: 9px 12px; background: #fff; border: 1px dashed rgba(26, 25, 25, .24); border-radius: 10px; font: inherit; font-size: 13px; font-weight: 700; color: #1a1919; text-align: start; cursor: pointer; }
 .mr-bm-peek { display: flex; flex: none; }
@@ -148,6 +149,7 @@ dialog.badge-pop-box.sp-pink { border-top-color: #f2789f; }
 dialog.badge-pop-box.sp-vlap { border-top-color: #333333; }
 dialog.badge-pop-box.sp-defe { border-top-color: #d782a0; }
 dialog.badge-pop-box.sp-volunteer { border-top-color: #1f7ae0; }
+dialog.badge-pop-box.sp-farm { border-top-color: #c9502a; }
 .badge-pop-in p { margin: 0; }
 .badge-pop-ic { width: 84px !important; height: 84px !important; display: block !important; margin: 0 auto 12px; }
 .badge-pop-nm { font-size: 20px; font-weight: 800; margin-bottom: 10px !important; }
@@ -167,6 +169,7 @@ dialog.badge-pop-box.sp-volunteer { border-top-color: #1f7ae0; }
 .mr-badge-lv i { width: 5px; height: 5px; border-radius: 50%; background: rgba(26, 25, 25, .14); }
 .mr-badge-lv i.on { background: #077a4b; }
 .badge-pop-lvn { margin: -6px 0 12px !important; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: #077a4b; font-variant-numeric: tabular-nums; }
+html:is([lang="ar"], [lang="ur"]) .badge-pop-lvn { letter-spacing: 0; }
 /* Badge requests (rentals 20261108210000, the booking app's .mr-bdr and #confirm-modal .bdr-box): the button under the
    badges, a popup's request line and its button, the request dialog. */
 .mr-bdr { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 14px; }
@@ -436,3 +439,19 @@ dialog.ac-dlg::backdrop { background: rgba(26, 25, 25, .55); }
 .ac-calf-note { margin: 0; font-size: 13px; line-height: 1.45; color: #4a4843; overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
 .ac-calf-err { margin: 0; font-size: 13px; font-weight: 600; color: #a33b2e; }
 :is(.ac-calf-note, .ac-calf-err):empty { display: none; }
+/* My records (MyRecords.tsx; the booking app's .rec, 2026-11-18): two tiles a row, each a big number, its name and one short value. */
+.rec-g { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.rec-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 12px 14px; border-radius: 12px; background: #f6f3ec; }
+.rec-n { font-size: 26px; font-weight: 700; line-height: 1.15; color: #1a1919; font-variant-numeric: tabular-nums; }
+.rec-l { font-size: 13px; font-weight: 600; color: #1a1919; }
+.rec-v { font-size: 13px; color: #6e6b63; }
+/* The club calendar's switch (CalendarFeed.tsx, 2026-11-18; the booking app's .cw-sw .calf-club), under Add to my calendar. */
+.ac-calf-sw { position: relative; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 10px 12px; border: 1px solid rgba(26, 25, 25, .18); border-radius: 10px; text-align: start; cursor: pointer; }
+.ac-calf-sw input { position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0; }
+.ac-calf-sw-box { position: relative; flex: none; width: 44px; height: 26px; border-radius: 13px; background: rgba(127, 127, 127, .45); }
+.ac-calf-sw-box::after { content: ""; position: absolute; top: 3px; inset-inline-start: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; }
+.ac-calf-sw input:checked + .ac-calf-sw-box { background: #077a4b; }
+.ac-calf-sw input:checked + .ac-calf-sw-box::after { inset-inline-start: 21px; }
+.ac-calf-sw input:focus-visible + .ac-calf-sw-box { outline: 2px solid #077a4b; outline-offset: 2px; }
+.ac-calf-sw input:disabled + .ac-calf-sw-box { opacity: .6; }
+.ac-calf-sw-txt { font-size: 14px; font-weight: 700; color: #1a1919; }

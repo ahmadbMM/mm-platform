@@ -16,7 +16,7 @@ const intl = createMiddleware(routing);
 // The registration forms' addresses (see the matcher below).
 // (micromobility.sa/dukan and /petromin-invite were pages of their own for two days; since 2026-11-13 Dukan's employees and
 // Petromin's guests are on /petromin, and those two addresses are no page at all: not found, like any other.)
-const FORM_ADDRESSES = ["/community/registration", "/petromin", "/saturday", "/lockers"];
+const FORM_ADDRESSES = ["/community/registration", "/petromin", "/saturday", "/lockers", "/farmhouse"];
 export function formAddress(pathname: string): string | null {
   const p = pathname.toLowerCase().replace(/\/+$/, "");
   return FORM_ADDRESSES.includes(p) ? p : null;
@@ -25,7 +25,7 @@ export function formAddress(pathname: string): string | null {
 // the form; the user, 2026-11-09). Each still answers with the page its build writes (app/<address>/route.ts)
 // with ?classic=1, kept while the website's pages settle in. Either way a form opens whatever
 // Coming Soon says (the page itself answers with the form's own while the site is closed: components/forms/FormPage.tsx).
-export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/saturday", "/lockers"];
+export const SITE_FORMS: readonly string[] = ["/community/registration", "/petromin", "/saturday", "/lockers", "/farmhouse"];
 export const formOnSite = (form: string, params: URLSearchParams) => SITE_FORMS.includes(form) && !params.has("classic");
 
 // micromobility.sa/defe was the Defe x MicroMobility booking page for the Saturday Social Ride (2026-10-17); the user
@@ -39,8 +39,9 @@ export function defeTarget(pathname: string, params: URLSearchParams): string | 
 }
 
 // micromobility.sa/store opens the online store (a hosted Salla shop, on its own domain), at the
-// address staff set (Website > Whole site > Other addresses), in English when the visitor reads
-// English and in Arabic otherwise. Before Coming Soon, so the shop is reachable while the site is
+// address staff set (Website > Whole site > Other addresses), in Arabic when the visitor reads Arabic
+// or no language is known, and in English for every other of the site's languages (the shop has only
+// the two; bug hunt 2026-11-18). Before Coming Soon, so the shop is reachable while the site is
 // closed. Temporary (307): the shop's address can change without browsers keeping the old one.
 // Once staff open the site's own store (store.open, with payments on: lib/store-core.ts storeOpen),
 // /store and everything under it are the site's pages (app/[locale]/store). While it is closed, its
@@ -57,7 +58,8 @@ export async function storeTarget(pathname: string, req: NextRequest): Promise<s
   const href = set && typeof set === "object" ? String((set as { href?: unknown }).href ?? "") : "";
   const base = (/^https:\/\//i.test(href) ? href : STORE_URL).replace(/\/+$/, "");
   const lang = m[1] || askedLang(req.nextUrl.searchParams) || req.cookies.get(LANG_COOKIE.name)?.value;
-  return `${base}/${lang === "en" ? "en" : "ar"}`;
+  const known = !!lang && (routing.locales as readonly string[]).includes(lang);
+  return `${base}/${known && lang !== "ar" ? "en" : "ar"}`;
 }
 
 // The staff preview page; the staff page still opens it as /en/preview or /ar/preview.

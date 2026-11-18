@@ -587,13 +587,20 @@ html:is([lang="ar"], [lang="ur"]) .xs-summary .xs-yg-name { font-family: var(--c
   border: 1px solid rgba(110, 44, 28, .55); border-inline-start: 3px solid var(--fh-peach); }
 [dir="rtl"] .xs-sum-head.xs-fh-head { background: linear-gradient(225deg, var(--fh-rust-lt) 0%, var(--fh-rust) 50%, var(--fh-rust-dk) 100%); }
 .xs-fh-head > div { min-width: 0; }
-.xs-logo.xs-farm-logo img { height: 36px; width: auto; }
+.xs-logo.xs-farm-logo img { height: 40px; width: 40px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 1.5px rgba(243, 199, 169, 0.75); }
 .xs-summary .xs-fh-name { font-family: var(--cs-font-fh), var(--cs-font-ar), var(--cs-font-en), "Noto Sans Devanagari", "Noto Sans Bengali", sans-serif; font-size: 19px; font-weight: 800; letter-spacing: 0; line-height: 1.2; color: var(--fh-peach); overflow-wrap: anywhere; }
 .xs-fh-head span { color: var(--fh-milk); }
 .xs-fh-head .xs-fh-sub { display: block; margin-top: 3px; font-size: 12.5px; font-weight: 700; color: var(--fh-milk); }
+/* the venue's Instagram on the plate (the booking app's .fh-flow-ig, 2026-11-14): milk on the rust, underlined, the mark in peach */
+.xs-fh-head .xs-fh-ig { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; margin-top: 4px; font-size: 13px; font-weight: 700; color: var(--fh-milk); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.xs-fh-head .xs-fh-ig .xs-ig-ic { flex: none; color: var(--fh-peach); }
+.xs-fh-head .xs-fh-ig:focus-visible { outline: 2px solid var(--fh-peach); outline-offset: 2px; border-radius: 4px; }
 .xs .xs-go.ev-farm { background: var(--fh-rust); color: #fff; }
 .xs .xs-go.ev-farm:hover { background: var(--fh-rust-dk); }
 .xs .xs-info.ev-farm .xs-info-facts a { color: var(--fh-rust); }
+/* the venue's Instagram on a date's Details (the booking app's .ev-info-ig, 2026-11-13): its mark before the handle */
+.xs-info-ig { display: inline-flex; align-items: center; gap: 6px; overflow-wrap: anywhere; }
+.xs-ig-ic { flex: none; }
 .xs-info.ev-farm .xs-info-go { background: var(--fh-rust); border-color: var(--fh-rust); color: #fff; }
 .xs-info.ev-farm .xs-info-go:hover { background: var(--fh-rust-dk); border-color: var(--fh-rust-dk); }
 .xs-info.ev-farm .xs-info-btns button:focus-visible { outline-color: rgba(138, 63, 39, .45); }
@@ -726,3 +733,47 @@ html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 
 .sr-tn, .sr-pill rect { fill: var(--k-sat); }
 .sr-pill text { fill: #fff; font-size: 10px; font-weight: 600; }
 .sr-lb { fill: #4a4843; font-size: 10px; font-weight: 500; }
+/* The date step's calendar (2026-11-16, the booking app's Reserve calendar): List and Calendar at the end of the kind
+   switch's row, the one picked in ink; then one month, weeks from Sunday, whose days with dates are buttons carrying a
+   dot per kind (booking.css gives each kind's colour); the day shown in ink, the picked date's day ringed green, today
+   ringed, the days before it muted, a day the visitor holds a place on ticked in its top corner. */
+.xs-tools { display: flex; align-items: flex-start; gap: 8px; margin: 0 0 14px; }
+.xs-tools > .xs-kinds { flex: 1 1 auto; min-width: 0; margin: 0; }
+.xs-views { flex: none; display: inline-flex; gap: 2px; margin-inline-start: auto; padding: 3px; border-radius: 999px; border: 1px solid rgba(26, 25, 25, .24); background: #fff; }
+.xs-view { display: inline-grid; place-items: center; width: 38px; height: 36px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: #4a4843; cursor: pointer; }
+.xs-view[aria-pressed="true"] { background: #1a1919; color: #fbf9f4; }
+.xs-view:focus-visible { outline: 3px solid rgba(7, 122, 75, .4); outline-offset: 2px; }
+.xs-cal { margin: 0 0 18px; padding: 12px 12px 14px; border: 1px solid rgba(26, 25, 25, .14); border-radius: 12px; background: #fff; }
+.xs-cal-head { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; }
+.xs .xs-cal-t { flex: 1; min-width: 0; margin: 0; text-align: center; font-size: 17px; font-weight: 700; letter-spacing: 0; line-height: 1.3; color: #1a1919; }
+.xs-cal-nav { flex: none; display: inline-grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 10px; background: #f4f1ea; color: #1a1919; cursor: pointer; }
+.xs-cal-nav:disabled { background: transparent; color: #b9c0ba; cursor: default; }
+.xs-cal-nav:focus-visible, .xs-cal-day:focus-visible { outline: 2px solid #077a4b; outline-offset: 1px; }
+.xs-cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.xs-cal-dows { display: contents; }
+.xs-cal-dow { padding: 2px 0 6px; text-align: center; font-size: 12px; font-weight: 600; line-height: 1.3; color: #57605a; }
+.xs-cal-day { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-width: 0; min-height: 46px; padding: 4px 0;
+  border: 0; border-radius: 10px; background: transparent; color: #57605a; font: inherit; font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1; }
+.xs-cal-day.past { color: #8a938c; }
+.xs-cal-day.today { box-shadow: inset 0 0 0 1.5px rgba(26, 25, 25, .4); }
+.xs-cal-day.has { background: #f4f1ea; color: #1a1919; font-weight: 700; cursor: pointer; }
+.xs-cal-day.has.sel { box-shadow: inset 0 0 0 2px #077a4b; }
+.xs-cal-day.has.on { background: #1a1919; color: #fbf9f4; box-shadow: none; }
+.xs-cal-day.has.on.sel { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #077a4b; }
+.xs-cal-day.fb:not(.on) { color: #57605a; font-weight: 500; }
+.xs-cal-marks { display: flex; gap: 3px; height: 6px; }
+.xs-cal-mk { width: 6px; height: 6px; border-radius: 50%; background: var(--ev, #077a4b); }
+.xs-cal-day.on .xs-cal-mk { box-shadow: 0 0 0 1.5px #fbf9f4; }
+.xs-cal-day.fb .xs-cal-mk { opacity: .4; }
+/* 12px at 2px from the corner, so it stays clear of the day's number on a phone's 44px day */
+.xs-cal-mine { position: absolute; top: 2px; inset-inline-end: 2px; display: inline-grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; background: #077a4b; color: #fff; }
+.xs-cal-mine svg { stroke-width: 3; }
+/* Members book first (2026-11-18, the booking app's .spots-mf and .sess-card-mf): a member's mark in the good state's green
+   beside two people; to anyone else the held date's status behind a padlock (the not-open-yet amber) and, under its time,
+   when everyone may book beside a clock. */
+.sc-spots.mf { gap: 5px; }
+.sc-spots.mf:not(.closed) { color: #06603b; }
+.sc-spots.mf::before { content: none; }
+.sc-spots.mf .mm-ic { flex: none; }
+.sc-mf-l { display: inline-flex; align-items: center; gap: 6px; color: #8a5c14; font-weight: 600; }
+.sc-mf-l .mm-ic { flex: none; }

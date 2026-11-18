@@ -23,7 +23,7 @@ const json = (body: unknown, status = 200) =>
 export async function GET(req: Request) {
   const acct = decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
   if (!acct) return json({ signedIn: false });
-  if (!(await withinLimit(req, "account-check"))) return json({ error: "busy" }, 429);
+  if (!(await withinLimit(req, "account-check", undefined, acct.id))) return json({ error: "busy" }, 429);
   const q = new URL(req.url).searchParams;
   const locale = q.get("locale") || "en";
   const skip = (q.get("skip") || "").split(",").filter((x) => SESSION_ID.test(x)).slice(0, 20);

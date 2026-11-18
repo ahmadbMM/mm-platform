@@ -16,7 +16,7 @@ import { kindNames, loadRides, oneTime, sessionName, timesText, upcoming, withou
 import { routeNameOf, routeNames } from "@/lib/route-names";
 import { notOpenYet, opensAt, opensInWords, opensText, siteBookingWindow } from "@/lib/booking-window";
 import { riyadhClock } from "@/lib/workshop-days";
-import { fmtClock } from "@/lib/tickets";
+import { fmtClock, revealWhen } from "@/lib/tickets";
 import { serverL } from "@/i18n/dicts";
 import { fill as fillAt } from "@/i18n/tx";
 import { intlOf } from "@/i18n/locales";
@@ -28,6 +28,8 @@ import { farmForMembers } from "@/lib/farm";
 import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { ArrowIcon, CalendarIcon } from "@/components/site/Icons";
 import OpensIn from "@/components/site/OpensIn";
+import { mfAt } from "@/lib/members-first";
+import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
 
 // micromobility.sa/events - every upcoming session in the booking system, month by month, each
 // booked in the booking app; sessions are named the way /experiences names them. A session for men only
@@ -84,7 +86,8 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   // women-only sessions to everyone (the owner, 2026-10-28); a Farm House Night to a signed-in community member alone (the
   // user, 2026-11-13: "not to public"), the members' check asked only while one is ahead
   const ahead = upcoming(withoutPetromin(rides?.sessions ?? []), now);
-  const member = ahead.some((s) => s.kind === "farm") ? await communityMember() : false;
+  // and while a date ahead is for members first (2026-11-18): a member reads its mark and books, anyone else waits
+  const member = ahead.some((s) => s.kind === "farm" || mfAt(s, drawn.getTime())) ? await communityMember() : false;
   const sessions = farmForMembers(ahead, member).slice(0, Math.max(1, N(c.hero.count)));
   const sgWords = genderText(tx);
   // a session for the other gender says so in place of Book to a signed-in account (or one with none on file); a
@@ -96,6 +99,12 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
   const window = siteBookingWindow(content);
   const opens = (s: RideSession) => (window && notOpenYet(s.date, window, now, s.kind) ? opensText(s.date, window, locale, tx, drawn.getTime()) : null);
   const opensWords = opensInWords(tx);
+  // Members book first (lib/members-first.ts, 2026-11-18; the booking app's mfMark, mfStatus and mfEveryone): while it lasts,
+  // a member's mark among the tags; anyone else reads "Members book first" there and, in place of Book, when everyone may
+  // (beside a clock, no countdown), which turns into Book on time. A booking window not open yet is said first.
+  const mfW = membersFirstWords(locale);
+  const mfMs = (s: RideSession) => (s.fbk ? 0 : mfAt(s, drawn.getTime()));
+  const mfLine = (s: RideSession) => fillAt(mfW.everyone, revealWhen(s.publicAt, locale, now.slice(0, 10), { today: tx("Today", "اليوم"), tomorrow: tx("Tomorrow", "غداً") }));
   const bookLink = (s: RideSession) => <a href={bookAt(s)}>{s.full ? S(d.waitlist) : S(d.book)}</a>;
   // Full, no waitlist: the booking app's sessFbk, sessFbkSat and sessFbkNext
   const fbkWord = tx("Fully booked", "محجوز بالكامل");
@@ -128,7 +137,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
               <div key={m.key} style={{ display: "contents" }}>
                 <p className="pg-month">{m.label}</p>
                 {m.items.map((s) => (
-                  <div key={s.id} className={`pg-event${s.full ? " is-full" : ""}${s.fbk ? " is-fbk" : opens(s) ? " is-closed" : ""}`} style={{ ["--kind" as string]: KIND_COLOUR[s.kind] }}>
+                  <div key={s.id} className={`pg-event${s.full ? " is-full" : ""}${s.fbk ? " is-fbk" : opens(s) || (mfMs(s) && !member) ? " is-closed" : ""}`} style={{ ["--kind" as string]: KIND_COLOUR[s.kind] }}>
                     <div className="pg-date"><strong>{fmt(s.date, { day: "numeric" })}</strong><span>{fmt(s.date, { weekday: "short" })}</span></div>
                     <div className="pg-event-body">
                       <strong>{name(s)}</strong>
@@ -167,6 +176,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                         {s.free && s.kind !== "blood" && <em>{S(d.free)}</em>}
                         {s.full && <em className="warn">{S(d.full)}</em>}
                         {s.fbk && <em className="fbk">{fbkWord}</em>}
+                        {mfMs(s) > 0 && <em className={member ? "mf" : "mf warn"}>{member ? mfW.mark : mfW.status}</em>}
                         {((g) => g && <span className={`sg-chip sg-${g.cls}`}>{g.label}</span>)(genderChip(s, sgWords))}
                       </div>
                       {s.fbk && <p className="pg-event-fbk"><CalendarIcon size={13} /><span>{fbkLine(s)}</span></p>}
@@ -175,6 +185,7 @@ export default async function EventsPage({ params }: { params: Promise<{ locale:
                     {s.fbk ? null
                       : refusal(s) ? <span className="pg-opens">{refusal(s)}</span>
                       : opens(s) ? <OpensIn className="pg-opens pg-wait" text={opens(s) ?? ""} at={window ? opensAt(s.date, window) : null} words={opensWords}>{bookLink(s)}</OpensIn>
+                      : mfMs(s) && !member ? <OpensIn className="pg-opens pg-wait" text={mfLine(s)} at={mfMs(s)} words={opensWords} countdown={false}>{bookLink(s)}</OpensIn>
                       : bookLink(s)}
                   </div>
                 ))}

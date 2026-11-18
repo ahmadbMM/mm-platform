@@ -40,13 +40,13 @@ describe("the helpers", () => {
   });
   it("takes a key of the database's shape only", () => {
     expect(CALF_KEY.test(KEYS[0])).toBe(true);
-    expect(calfAnswer({ ok: true, key: KEYS[0] })).toEqual({ ok: true, key: KEYS[0] });
+    expect(calfAnswer({ ok: true, key: KEYS[0] })).toEqual({ ok: true, key: KEYS[0], club: null }); // a database before the club calendar: no switch
     expect(calfAnswer({ ok: true, key: KEYS[0].toUpperCase() })).toEqual({ ok: false, error: "generic" });
     expect(calfAnswer({ ok: true, key: KEYS[0].slice(1) })).toEqual({ ok: false, error: "generic" });
     expect(calfAnswer({ ok: true, has: true })).toEqual({ ok: false, error: "generic" }); // a peek's answer has no key
     expect(calfAnswer({ ok: false, error: "denied" })).toEqual({ ok: false, error: "signin" });
     expect(calfAnswer(null)).toEqual({ ok: false, error: "generic" });
-    expect(calfGot({ ok: true, key: KEYS[1] })).toEqual({ key: KEYS[1] });
+    expect(calfGot({ ok: true, key: KEYS[1] })).toEqual({ key: KEYS[1], club: null });
     expect(calfGot({ ok: false, error: "signin" })).toEqual({ error: "signin" });
     expect(calfGot({ ok: false, error: "absent" })).toEqual({ error: "absent" });
     expect(calfGot({ ok: false, error: "busy" })).toEqual({ error: "generic" });
@@ -78,7 +78,7 @@ describe("api/account/calendar", () => {
     const f = vi.fn(async () => json({ ok: true, key: KEYS[0] }));
     vi.stubGlobal("fetch", f);
     const res = await post({ op: "get", lang: "ar" });
-    expect([res.status, res.headers.get("cache-control"), await res.json()]).toEqual([200, "no-store, private", { ok: true, key: KEYS[0] }]);
+    expect([res.status, res.headers.get("cache-control"), await res.json()]).toEqual([200, "no-store, private", { ok: true, key: KEYS[0], club: null }]);
     const [url, init] = f.mock.calls[0] as unknown as [string, RequestInit];
     expect(url).toBe("https://example.supabase.co/rest/v1/rpc/calendar_link");
     expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: TOKEN, p_lang: "ar", p_op: "get" });
@@ -87,7 +87,7 @@ describe("api/account/calendar", () => {
   it("replaces it with 'new'; a language the app does not speak keeps the stored one", async () => {
     const f = vi.fn(async () => json({ ok: true, key: KEYS[1] }));
     vi.stubGlobal("fetch", f);
-    expect(await (await post({ op: "new", lang: "de" })).json()).toEqual({ ok: true, key: KEYS[1] });
+    expect(await (await post({ op: "new", lang: "de" })).json()).toEqual({ ok: true, key: KEYS[1], club: null });
     const [, init] = f.mock.calls[0] as unknown as [string, RequestInit];
     expect(JSON.parse(String(init.body))).toEqual({ p_id: "c1", p_token: TOKEN, p_lang: null, p_op: "new" });
   });
@@ -149,7 +149,7 @@ describe("the section and its pop-up", () => {
 });
 
 describe("its words", () => {
-  const keys: (keyof CalendarWords)[] = ["row", "title", "add", "copy", "replace", "askTitle", "askBody", "err", "close", "retry", "loading", "cancel"];
+  const keys: (keyof CalendarWords)[] = ["row", "title", "add", "copy", "replace", "askTitle", "askBody", "err", "close", "retry", "loading", "cancel", "club"];
   it("exist in every language the site speaks, with Latin digits", () => {
     expect(Object.keys(CALENDAR_WORDS).sort()).toEqual([...LOCALE_CODES].sort());
     for (const l of LOCALE_CODES) for (const k of keys) {
@@ -161,7 +161,7 @@ describe("its words", () => {
     expect(calendarWords("en")).toEqual({
       row: "Calendar", title: "Your bookings in your calendar", add: "Add to my calendar", copy: "Copy the address", replace: "Replace the address",
       askTitle: "Replace the address?", askBody: "The old address stops working. A calendar that uses it will no longer update.",
-      err: "We could not do that. Please try again.", close: "Close", retry: "Try again", loading: "Loading…", cancel: "Cancel",
+      err: "We could not do that. Please try again.", close: "Close", retry: "Try again", loading: "Loading…", cancel: "Cancel", club: "Club sessions too",
     });
     expect(calendarWords("ar").row).toBe("تقويم");
     expect(calendarWords("fr").copy).toBe("Copier l’adresse");

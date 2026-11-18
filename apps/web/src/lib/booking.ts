@@ -69,6 +69,12 @@ export type BookSession = {
   /** A kind this site's booking has no steps for (a run, a race, the donor, yoga, the Farm House Night, a Petromin night):
    *  the booking app opened on its card and this date (?ev=&session=), where its card goes. */
   handoff?: string | null;
+  /** Few spots left (lib/rides.ts fewOf, 2026-11-15, and withPlacesLeft's bike_slots._fewAt, 2026-11-18): said where its
+   *  places would be, after the waitlist and a count of three or fewer. */
+  few?: true;
+  /** Members book first (lib/members-first.ts, 2026-11-18) while it lasts: `held` for a visitor who is not a member, whose
+   *  `opens` then says when everyone may (`everyone`); `label` is "Members book first" held, else a member's "Members first". */
+  mf?: { held: boolean; label: string; everyone: string };
 };
 
 /** The signed-in account, as the wizard needs it (lib/booking-server.ts bookingAccount). */

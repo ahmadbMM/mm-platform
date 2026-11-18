@@ -28,6 +28,23 @@ describe("withinLimit", () => {
     await withinLimit(req("2001:db8:aa:bb::1"), "ask", () => ({ limit }), "c1");
     expect(limit.mock.calls.map((c) => c[0].key)).toEqual(["ask:203.0.113.9:c1", "ask:203.0.113.9:c2", "ask:203.0.113.9", "ask:2001:db8:aa:bb::/64:c1"]);
   });
+  it("counts a signed-in account's checks by its account, under a wider ceiling for the whole connection", async () => {
+    const limit = vi.fn(async ({ key }: { key: string }) => ({ success: key !== "" }));
+    const wide = vi.fn(async ({ key }: { key: string }) => ({ success: key !== "" }));
+    await withinLimit(req(), "account-check", () => ({ limit }), "c1", () => ({ limit: wide }));
+    await withinLimit(req(), "account-check", () => ({ limit }), "c2", () => ({ limit: wide }));
+    expect(limit.mock.calls.map((c) => c[0].key)).toEqual(["account-check:203.0.113.9:c1", "account-check:203.0.113.9:c2"]);
+    expect(wide.mock.calls.map((c) => c[0].key)).toEqual(["account-check:203.0.113.9", "account-check:203.0.113.9"]);
+    // a script making up a new account id for each request is held by the connection's ceiling
+    const full = vi.fn(async () => ({ success: false }));
+    expect(await withinLimit(req(), "account-check", () => ({ limit }), "c3", () => ({ limit: full }))).toBe(false);
+    // the ceiling is the signed-in checks' only: Ask keeps its per-account count alone
+    const unused = vi.fn(async () => ({ success: false }));
+    expect(await withinLimit(req(), "ask", () => ({ limit }), "c1", () => ({ limit: unused }))).toBe(true);
+    expect(unused).not.toHaveBeenCalled();
+    // a ceiling that fails holds nobody
+    expect(await withinLimit(req(), "account-check", () => ({ limit }), "c4", () => ({ limit: async () => { throw new Error("down"); } }))).toBe(true);
+  });
   it("lets everything through with no limiter, no address, or a limiter that fails", async () => {
     expect(await withinLimit(req(), "log-error")).toBe(true);
     const limit = vi.fn(async () => ({ success: false }));

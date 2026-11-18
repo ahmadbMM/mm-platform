@@ -125,6 +125,21 @@ describe("servePage", () => {
     expect(next.headers.get("x-mm-page-cache")).toBe("hit");
     expect(await next.text()).toBe('<html lang="ar">page 2</html>');
   });
+  it("gives up a fresh drawing that never settles, and starts another once it is taken as lost", async () => {
+    const cache = fakeCache();
+    const handler = { fetch: vi.fn(async () => html('<html lang="en">page</html>')) };
+    const c1 = ctx();
+    await servePage(get("/journal?lang=en"), env, c1, handler, cache, T0);
+    await Promise.all(c1.waits);
+    handler.fetch.mockImplementation(() => new Promise<Response>(() => {})); // cut off: never settles
+    const stale = (at: number) => servePage(get("/journal?lang=en"), env, ctx(), handler, cache, at);
+    expect((await stale(T0 + 2 * 60 * 1000)).headers.get("x-mm-page-cache")).toBe("stale");
+    expect(handler.fetch).toHaveBeenCalledTimes(2);
+    await stale(T0 + 2 * 60 * 1000 + 10_000); // still drawing: not a second one
+    expect(handler.fetch).toHaveBeenCalledTimes(2);
+    await stale(T0 + 2 * 60 * 1000 + 40_000); // lost: drawn again
+    expect(handler.fetch).toHaveBeenCalledTimes(3);
+  });
   it("never answers with a copy older than six hours, or one drawn before midnight in Jeddah", async () => {
     const draw = async (stored: number, now: number) => {
       const cache = fakeCache();

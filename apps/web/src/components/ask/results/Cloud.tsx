@@ -10,9 +10,9 @@ import type { ResultProps } from "./types";
 // The word cloud: every answer once, sized by how many sent it (lib/word-cloud.ts lays it out for the box's width,
 // and on the big screen for its height too). The words are measured in the page's own font, again once its files
 // have loaded. Each word keeps its colour (one of the palette's six, from its text) and glides to its new place as
-// the cloud changes. The look sets how many words there are, their case, and whether some stand on their side. On a
-// page the box grows when the cloud needs more room and never shrinks under the reader. A screen reader gets the same
-// answers as a list, with how many sent each.
+// the cloud changes; a long answer is drawn on the lines the layout broke it into. The look sets how many words there
+// are, their case, and whether some stand on their side. On a page the box grows when the cloud needs more room and
+// never shrinks under the reader. A screen reader gets the same answers as a list, with how many sent each.
 let canvas: HTMLCanvasElement | null = null;
 const rulers = new Map<string, (text: string) => number>();
 /** A ruler for a font: a text's width at 100px. `fonts` counts the times the page's font files have come in - a new
@@ -89,10 +89,15 @@ export function WordCloud({ result, t, screen, look, viz, locale }: ResultProps)
       {some && (
         <>
           <div ref={area} className="ask-cloud" aria-hidden="true" style={laid && !screen ? { height: drawn } : undefined}>
-            {laid?.items.map((p) => (
-              <span key={p.w} dir="auto" className={`ask-w ask-c${p.color}${p.turned ? " turned" : ""}`}
-                style={{ fontSize: p.size, width: p.width, height: p.height, lineHeight: `${p.turned ? p.width : p.height}px`, transform: `translate(${p.x}px, ${p.y + (drawn - laid.height) / 2}px)` }}>{p.w}</span>
-            ))}
+            {laid?.items.map((p) => {
+              const lines = p.lines.length > 1; // a long answer: its lines as the layout broke them, one under the other
+              return (
+                <span key={p.w} dir="auto" className={`ask-w ask-c${p.color}${p.turned ? " turned" : ""}${lines ? " lines" : ""}`}
+                  style={{ fontSize: p.size, width: p.width, height: p.height, lineHeight: `${lines ? p.lead : p.turned ? p.width : p.height}px`, transform: `translate(${p.x}px, ${p.y + (drawn - laid.height) / 2}px)` }}>
+                  {lines ? p.lines.join("\n") : p.w}
+                </span>
+              );
+            })}
           </div>
           <ul className="mm-sr">
             {words.map((x) => <li key={x.w} dir="auto">{x.w}{x.n > 1 ? ` (${x.n})` : ""}</li>)}

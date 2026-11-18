@@ -83,6 +83,17 @@ describe("signing in", () => {
     db(() => ({ body: [] }));
     expect((await handle(post("/api/handoff", { code }), env)).status).toBe(400);
   });
+  it("a hand-over that fails signs out whoever was signed in on the phone", async () => {
+    const code = "b".repeat(48);
+    db(() => ({ body: [] }));
+    const used = await handle(post("/api/handoff", { code }, { cookie: COOKIE }), env);
+    expect(used.status).toBe(400);
+    expect(used.headers.get("set-cookie")).toContain("Max-Age=0");
+    db(() => ({ status: 400, body: { message: "BAD_CODE", code: "P0001" } }));
+    const refused = await handle(post("/api/handoff", { code }, { cookie: COOKIE }), env);
+    expect(refused.ok).toBe(false);
+    expect(refused.headers.get("set-cookie")).toContain("Max-Age=0");
+  });
   it("signing out clears the cookie and leaves the account's token alone", async () => {
     const calls = db(() => ({ body: null }));
     const r = await handle(post("/api/logout", {}, { cookie: COOKIE }), env);
@@ -100,7 +111,15 @@ describe("the database functions", () => {
     expect(calls).toHaveLength(0);
     // the portal's own functions, and the booking app's phone-notification pair on the same session
     expect([...RPCS].filter((n) => !n.startsWith("volunteer_")).sort()).toEqual(["customer_push_subscribe", "customer_push_unsubscribe"]);
-    for (const name of ["volunteer_team", "volunteer_team_clock", "volunteer_updates", "volunteer_updates_seen"]) expect(RPCS.has(name), name).toBe(true);
+    for (const name of ["volunteer_team", "volunteer_team_clock", "volunteer_updates", "volunteer_updates_seen", "volunteer_counts"]) expect(RPCS.has(name), name).toBe(true);
+  });
+  it("the head's counts over every booking go through with the session from the cookie", async () => {
+    const calls = db(() => ({ body: { booked: 1300, in: 20, donated: 0, visitors: 0 } }));
+    expect((await handle(post("/api/rpc/volunteer_counts", { p_session: "s" }), env)).status).toBe(401);
+    expect(calls).toHaveLength(0);
+    const res = await handle(post("/api/rpc/volunteer_counts", { p_session: "s", p_id: "x" }, { cookie: COOKIE }), env);
+    expect(res.status).toBe(200);
+    expect(calls[0]).toEqual({ name: "volunteer_counts", args: { p_session: "s", p_id: "c123", p_token: "tokentokentokentoken" } });
   });
   it("nobody reads the opportunities signed out, and a cookie is not a sign-in until its token opens an account", async () => {
     const calls = db(() => ({ body: [{ id: "s1" }] }));

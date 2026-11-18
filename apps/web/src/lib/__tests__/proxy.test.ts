@@ -247,7 +247,7 @@ describe("which addresses the proxy sees", () => {
     for (const p of ["/b", "/b/42", "/api", "/api/preview", "/_next/static/x.js", "/site/logo.png", "/robots.txt"]) expect(seen(p), p).toBe(false);
   });
   it("sees the registration forms' addresses too (it decides whether the website's page or the form's own answers), never their files", () => {
-    for (const p of ["/petromin", "/community/registration", "/defe", "/saturday", "/lockers", "/community", "/petrominx", "/Petromin", "/community/Registration", "/Defe", "/defense", "/Saturday", "/saturdays", "/Lockers", "/lockersx"]) expect(seen(p), p).toBe(true);
+    for (const p of ["/petromin", "/community/registration", "/defe", "/saturday", "/lockers", "/community", "/petrominx", "/Petromin", "/community/Registration", "/Defe", "/defense", "/Saturday", "/saturdays", "/Lockers", "/lockersx", "/farmhouse", "/Farmhouse", "/farmhousex"]) expect(seen(p), p).toBe(true);
     expect(seen("/community/registration/og-image.png")).toBe(false);
     expect(seen("/ask/og-image.png")).toBe(false); // the Ask links' share picture: a file, never a page's slug
     // a locker's own tag comes here too: the proxy sends it on (lockers.test.ts)
@@ -258,7 +258,7 @@ describe("which addresses the proxy sees", () => {
 describe("the registration forms' addresses", () => {
   // No database here, so the site reads as Coming Soon: a form opens all the same.
   it("lets any form with ?classic=1 through untouched to its own page", async () => {
-    for (const p of ["/lockers?classic=1", "/lockers?classic=1&lang=ar&locker=7", "/saturday?classic=1&lang=ar", "/community/registration?classic=1", "/community/registration?classic=1&lang=ar", "/petromin?classic=1", "/petromin?classic=1&lang=ar"]) {
+    for (const p of ["/lockers?classic=1", "/lockers?classic=1&lang=ar&locker=7", "/saturday?classic=1&lang=ar", "/community/registration?classic=1", "/community/registration?classic=1&lang=ar", "/petromin?classic=1", "/petromin?classic=1&lang=ar", "/farmhouse?classic=1", "/farmhouse?classic=1&lang=ur"]) {
       const res = await call(p);
       expect(res.headers.get("x-middleware-next"), p).toBe("1");
       expect(res.headers.get("x-middleware-rewrite"), p).toBeNull();
@@ -269,7 +269,8 @@ describe("the registration forms' addresses", () => {
   it("draws every form as a page of the website, whatever Coming Soon says", async () => {
     for (const [p, lang, to] of [["/community/registration", "en", "/community/registration"], ["/community/registration?lang=ar", "ar", "/community/registration"], ["/community/registration?code=x&lang=fr", "fr", "/community/registration"],
       ["/petromin", "en", "/petromin"], ["/petromin?lang=ur", "ur", "/petromin"], ["/petromin?lang=ja", "ja", "/petromin"],
-      ["/saturday", "en", "/saturday"], ["/saturday?lang=zh", "zh", "/saturday"], ["/lockers", "en", "/lockers"], ["/lockers?lang=ar&locker=7", "ar", "/lockers"], ["/lockers?lang=bn", "bn", "/lockers"]]) {
+      ["/saturday", "en", "/saturday"], ["/saturday?lang=zh", "zh", "/saturday"], ["/lockers", "en", "/lockers"], ["/lockers?lang=ar&locker=7", "ar", "/lockers"], ["/lockers?lang=bn", "bn", "/lockers"],
+      ["/farmhouse", "en", "/farmhouse"], ["/farmhouse?lang=ar", "ar", "/farmhouse"], ["/farmhouse?lang=ja", "ja", "/farmhouse"]]) {
       const res = await call(p);
       expect(res.status, p).toBe(200);
       expect(res.headers.get("x-middleware-rewrite") ?? "", p).toContain(`/${lang}${to}`);
@@ -295,7 +296,7 @@ describe("the registration forms' addresses", () => {
     expect(SITE_FORMS).toContain("/petromin");
   });
   it("send another spelling to the one real address, with its query", async () => {
-    for (const [from, to] of [["/Petromin", "/petromin"], ["/PETROMIN/", "/petromin"], ["/community/Registration?lang=ar", "/community/registration?lang=ar"], ["/Saturday?lang=ar", "/saturday?lang=ar"], ["/SATURDAY/", "/saturday"], ["/Lockers?lang=ar", "/lockers?lang=ar"], ["/LOCKERS/", "/lockers"]]) {
+    for (const [from, to] of [["/Petromin", "/petromin"], ["/PETROMIN/", "/petromin"], ["/community/Registration?lang=ar", "/community/registration?lang=ar"], ["/Saturday?lang=ar", "/saturday?lang=ar"], ["/SATURDAY/", "/saturday"], ["/FarmHouse?lang=ar", "/farmhouse?lang=ar"], ["/FARMHOUSE/", "/farmhouse"], ["/Lockers?lang=ar", "/lockers?lang=ar"], ["/LOCKERS/", "/lockers"]]) {
       const res = await call(from);
       expect(res.status, from).toBe(301);
       expect(redirectedTo(res), from).toBe(to);
@@ -330,6 +331,11 @@ describe("/store", () => {
     expect(await to("/store", { cookie: "NEXT_LOCALE=en" })).toBe("https://stepdragon.com.sa/en");
     expect(await to("/en/store")).toBe("https://stepdragon.com.sa/en");
     expect(await to("/ar/store", { cookie: "NEXT_LOCALE=en" })).toBe("https://stepdragon.com.sa/ar");
+    // the site's other languages: the English shop (bug hunt 2026-11-18)
+    expect(await to("/store", { cookie: "NEXT_LOCALE=fr" })).toBe("https://stepdragon.com.sa/en");
+    expect(await to("/store?lang=hi")).toBe("https://stepdragon.com.sa/en");
+    expect(await to("/store", { cookie: "NEXT_LOCALE=ar" })).toBe("https://stepdragon.com.sa/ar");
+    expect(await to("/store", { cookie: "NEXT_LOCALE=xx" })).toBe("https://stepdragon.com.sa/ar");
   });
   it("sends the site's own shopping pages to the shop while the store is closed, but never an order or Track order", async () => {
     for (const p of ["/store/", "/store/cart", "/store/checkout", "/store/da54"]) {

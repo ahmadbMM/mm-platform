@@ -44,6 +44,18 @@ export function addMonths(s: Iso, n: number): Iso {
 export function monthEnd(s: Iso): Iso {
   return addDays(addMonths(s, 1), -1);
 }
+/** The same day n months on, or that month's last day when it is shorter (31 Jan + 1 = 28 Feb): the grid's
+ *  PageUp and PageDown. */
+export function addMonthsSameDay(s: Iso, n: number): Iso {
+  const m = addMonths(s, n);
+  return addDays(m, Math.min(Number(s.slice(8)), Number(monthEnd(m).slice(8))) - 1);
+}
+
+/** Today in Riyadh by this device's clock (UTC+3 all year, no daylight saving). Only used to notice that a page left
+ *  open has passed midnight; the portal's today itself is the database's (vendor_me). */
+export function riyadhToday(now = Date.now()): Iso {
+  return toIso(new Date(now + 3 * 3600000));
+}
 
 /** 0 = Sunday ... 6 = Saturday. */
 export function weekday(s: Iso): number {

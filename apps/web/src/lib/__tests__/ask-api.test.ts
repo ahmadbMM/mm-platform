@@ -66,12 +66,21 @@ describe("POST /api/ask/send", () => {
   it("refuses a body that is not an answer before asking the database", async () => {
     const f = db({ ok: true });
     vi.stubGlobal("fetch", f);
-    for (const body of [{}, { question: "11", value: { t: "x" } }, { question: 0, value: { t: "x" } }, { question: 1.5, value: { t: "x" } }, { question: 11 }, { question: 11, value: "Kites" }, { question: 11, value: ["a"] }, { question: 11, value: { t: "x".repeat(5000) } }, "not json", [1]]) {
+    for (const body of [{}, { question: "11", value: { t: "x" } }, { question: 0, value: { t: "x" } }, { question: 1.5, value: { t: "x" } }, { question: 11 }, { question: 11, value: "Kites" }, { question: 11, value: ["a"] }, { question: 11, value: { t: "x".repeat(16001) } }, "not json", [1]]) {
       const res = await send(post("/api/ask/send", body));
       expect(res.status, JSON.stringify(body).slice(0, 60)).toBe(400);
       expect(await res.json()).toEqual({ ok: false, error: "invalid" });
     }
     expect(f).not.toHaveBeenCalled();
+  });
+  it("lets the longest written answer through, in any script: 2,000 characters, even each one written out in six", async () => {
+    for (const t of ["x".repeat(2000), "ب".repeat(2000), "\u{1F6B2}".repeat(2000), '"'.repeat(2000), "\\".repeat(2000), "\u0001".repeat(2000), "\uD800".repeat(2000)]) {
+      const f = db({ ok: true, status: "pending" });
+      vi.stubGlobal("fetch", f);
+      const res = await send(post("/api/ask/send", { question: 11, value: { t } }));
+      expect(res.status, t.slice(0, 2)).toBe(200);
+      expect(sentTo(f).args.p_value, t.slice(0, 2)).toEqual({ t });
+    }
   });
   it("passes on why the database did not take it, by the contract's code", async () => {
     for (const [error, status] of [["limit", 409], ["closed", 409], ["throttled", 409], ["signin", 401]] as const) {

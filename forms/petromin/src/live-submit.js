@@ -15,12 +15,18 @@
      Title and text are the booking app's (micromobilityrentals app.src.html waiverTitle/waiverBody and
      i18n/<code>.json), copied verbatim; only the agree line is reworded for a registration. Its
      version goes to rider_register / rider_edit as p_waiver, the page's language as p_lang. */
-  var WAIVER_VERSION = "2026-10-v3";
+  var WAIVER_VERSION = "2026-11-v4";
   /* Two refusals the database gives since the rentals migration of 2026-10-05: a waiver older than the current one
      (WAIVER_OUTDATED, a page loaded before the waiver changed) and a paid booking moved to a session with another
      price (PAID_MOVE). */
   var WAIVER_OUTDATED = "The ride waiver has changed. Reload this page to read and accept the new one.";
   var PAID_MOVE = "This booking is already paid, so it cannot move to a session with a different price. Ask the desk to change it.";
+  // A booking the server no longer knows by this number on this night: the desk moves a party to another night under a new
+  // number (staff_rider_party_move), so the ticket stays on the phone and the desk is asked, never "register again".
+  var GONE_ASK_DESK = "We could not find this booking. Please ask the desk: it may have been moved to another night.";
+  // Since rentals 20261119000600 the server says so: rider_lookup and rider_edit, asked for the old number on the old
+  // night, answer 'moved' with the new number and night, and the ticket becomes the booking as it is now.
+  var MOVED_NOTE = "The desk moved your booking to another night: {d}. Its number is now {no}.";
   /* Names a screen reader hears but nobody sees (aria-label). */
   var ARIA_EL = [["#lang", "Language"], [".lang-wrap", "Language"], ["#cc", "Country code"], [".cc-wrap", "Country code"], ["#fd-cc", "Country code"], ["#stepper", "Progress"], ["#sessions", "Session"], ["#qr", "Booking QR code"]];
   function paintAria() { ARIA_EL.forEach(function (x) { document.querySelectorAll(x[0]).forEach(function (el) { el.setAttribute("aria-label", t(x[1])); }); }); }
@@ -167,6 +173,7 @@
   setLoading = function (on) {
     submitting = !!on; _setLoadingDesign(on);
     $("#back").disabled = !!on; $("#cancel-edit").disabled = !!on;
+    document.querySelectorAll("#review .rv-change").forEach(function (b) { b.disabled = !!on; }); // the review's Change too
   };
   // An edit opened from a saved confirmation knows its night before the calendar answers (or after the night has left
   // the list): the review and the registration use it while it is the one picked.
@@ -182,7 +189,7 @@
 
   /* Sessions: three grey cards while the calendar answers (nothing reads as "No upcoming sessions" before it has),
      and with no night to offer, the WhatsApp line beside the message. */
-  var sessionsLoading = 0, sessionsAsked = 0;
+  var sessionsLoading = 0, sessionsAsked = 0, sessionsFailed = false;
   var _renderSessionsDesign = renderSessions;
   renderSessions = function () {
     var busy = sessionsLoading > 0 && !sessions.length;
@@ -191,7 +198,13 @@
       sessionsEl.innerHTML = '<div class="session skeleton" aria-hidden="true"><span></span><span></span></div>'.repeat(3);
       return;
     }
-    _renderSessionsDesign();
+    // A calendar that never answered is not "No upcoming sessions": it says so, with a button that asks again.
+    if (sessionsFailed && !sessions.length) {
+      sessionsEl.innerHTML = "";
+      var p = document.createElement("p"); p.className = "sessions-empty"; p.setAttribute("data-t", "Could not reach the server"); render(p); sessionsEl.appendChild(p);
+      var b = document.createElement("button"); b.type = "button"; b.id = "sessions-retry"; b.className = "pill sessions-help"; b.setAttribute("data-t", "Try again"); render(b);
+      b.addEventListener("click", function () { loadSessions(); }); sessionsEl.appendChild(b);
+    } else _renderSessionsDesign();
     if (!sessions.length) {
       var a = document.createElement("a"); a.className = "pill sessions-help"; a.href = "https://wa.me/966566668818"; a.target = "_blank"; a.rel = "noopener";
       a.setAttribute("data-t", "Need help? WhatsApp us"); render(a); sessionsEl.appendChild(a);
@@ -204,9 +217,11 @@
     try {
       var r = await sbClient().rpc("rider_sessions", { p_source: SOURCE });
       if (r.error) throw r.error;
-      if (mine === sessionsAsked) { sessionsLoading = 0; setSessions(Array.isArray(r.data) ? r.data : []); }
-    } catch (err) { if (mine === sessionsAsked) { sessionsLoading = 0; setSessions([]); showBanner("Could not reach the server"); } }
+      if (mine === sessionsAsked) { sessionsLoading = 0; sessionsFailed = false; setSessions(Array.isArray(r.data) ? r.data : []); }
+    } catch (err) { if (mine === sessionsAsked) { sessionsLoading = 0; sessionsFailed = true; setSessions([]); showBanner("Could not reach the server"); } }
   }
+  // The night step asks the calendar again when the last ask got no answer (a weak signal at boot).
+  stepHooks.push(function (n) { if (paneAt(n) === "session" && sessionsFailed && !sessionsLoading) loadSessions(); });
 
   /* Dialogs: every one is centred on the screen (the owner's rule for pop-ups); a tap on the backdrop closes the
      ones that only show text. */
@@ -381,7 +396,7 @@
       part("bike", "Bike", bikes);
   }
   $("#review").addEventListener("click", function (e) {
-    var b = e.target.closest(".rv-change"); if (!b) return;
+    var b = e.target.closest(".rv-change"); if (!b || submitting) return; // nothing changes under a registration on its way
     returnTo = STEPS; goStep(Number(b.getAttribute("data-go")));
   });
   stepHooks.push(function (n) { if (n === STEPS) renderReview(); });
@@ -657,6 +672,7 @@
     if (!pick) { drawOthers(); return; }
     saveKept(keptList().filter(function (x) { return keyOf(x) !== key; }));
     keep(current);
+    guestKeepFor(pick); // a guest's account in memory is not the next ticket's
     showSuccess(pick); // the phone's confirmation now (saved as it), the one before it kept
   });
   function startAnother() {
@@ -731,6 +747,14 @@
     editAsking = false; btn.disabled = false;
     if (current !== was) return; // another booking came on the screen meanwhile
     var d = r && !r.error && r.data;
+    if (d && d.ok === false && d.error === "notfound") { setNote(GONE_ASK_DESK); return; } // nothing to edit: ask the desk
+    // moved to another night by the desk: the ticket becomes the new one, and Edit starts from it on the next tap
+    if (d && d.ok === false && d.error === "moved") {
+      editAsking = true; btn.disabled = true;
+      await showMoved(was, d);
+      editAsking = false; btn.disabled = false;
+      return;
+    }
     if (d && d.ok && d.booking_no) {
       var live = fromLookup(d, was.phone);
       live.session = Object.assign({}, was.session || {}, d.session || {});
@@ -747,6 +771,30 @@
     loadSessions(); // a restored confirmation never fetched the calendar; the saved session stays selected if it is still offered
   }
   function cancelEdit() { editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner(); if (current) showSuccess(current); }
+  /* The desk moved the party to another night under a new number (staff_rider_party_move): the server's 'moved' answer
+     names the new number and night. The ticket on the phone becomes that booking (asked of rider_lookup by its new
+     number and night), and the note says where it went and its new number. Without an answer the old ticket stays,
+     with the same note; a 'moved' without its number or night is the desk's to explain, as before. */
+  async function showMoved(was, d) {
+    var no = String(d.booking_no || "").trim(), night = d.session_id ? String(d.session_id) : "";
+    var day = /^\d{4}-\d{2}-\d{2}$/.test(String(d.session_date || "")) ? fmtDate(d.session_date + "T12:00:00+03:00") : "";
+    if (!no || !night) { if (current !== was) return; showSuccess(was); setNote(GONE_ASK_DESK); return; }
+    var r = null; try { r = await lookupCall(no, was.phone, night); } catch (e) { r = null; }
+    if (current !== was) return; // another booking came on the screen meanwhile
+    var x = r && !r.error && r.data;
+    if (x && x.ok && x.booking_no) {
+      var live = fromLookup(x, was.phone);
+      live.submittedAt = was.submittedAt || live.submittedAt;
+      // A database that does not mark the desk's companions yet lists them with the rider's own: the phone's list stays.
+      if (!deskKnown(live.riders)) live.riders = was.riders || [];
+      saveKept(keptList().filter(function (k) { return keyOf(k) !== keyOf(was); })); // the old number on the old night is gone
+      showSuccess(live);
+      setNote(MOVED_NOTE, { d: sessionLabel(live.session) || day, no: live.bookingNo });
+      return;
+    }
+    showSuccess(was);
+    setNote(day ? MOVED_NOTE : GONE_ASK_DESK, day ? { d: day, no: no } : null);
+  }
   $("#edit").addEventListener("click", startEdit);
   $("#cancel-edit").addEventListener("click", cancelEdit);
 
@@ -809,7 +857,7 @@
     saveKept(keptList().filter(function (x) { return keyOf(x) !== keyOf(d); }));
     current = null;
     // The phone's next registration shows, if it holds one; otherwise a fresh form.
-    if (!restoreKept()) { editing = null; another = false; prefill({}); setSubmitLabels(false); $("#privacy").checked = false; $("#success").hidden = true; $("#card").setAttribute("data-state", "form"); returnTo = 0; goStep(1); loadSessions(); }
+    if (!restoreKept()) { editing = null; another = false; guestForget(); prefill({}); setSubmitLabels(false); $("#privacy").checked = false; $("#success").hidden = true; $("#card").setAttribute("data-state", "form"); returnTo = 0; goStep(1); loadSessions(); }
     setNotice("Your booking was cancelled.");
   });
 
@@ -869,6 +917,15 @@
     go.disabled = false; go.classList.remove("loading");
     if (!r || r.error || !r.data) { fdMiss("Could not reach the server"); return; }
     var d = r.data;
+    // a number the desk moved to another night: the booking under its new number, and a note saying so
+    var movedNo = null;
+    if (!d.ok && d.error === "moved" && d.booking_no && d.session_id) {
+      movedNo = String(d.booking_no); no = movedNo;
+      go.disabled = true; go.classList.add("loading");
+      try { r = await lookupCall(no, ph, String(d.session_id)); } catch (err) { r = null; }
+      go.disabled = false; go.classList.remove("loading");
+      d = r && !r.error && r.data ? r.data : { ok: false, error: "notfound" };
+    }
     if (!d.ok) { fdMiss(d.error === "throttled" ? "Too many submissions from this network" : "We could not find a booking with this number and mobile number."); return; }
     /* Numbers start again at PM-001 every night, so one number and mobile can be a booking on several nights: the
        database names the others ('more', their night ids), each is asked for by its night and kept on the phone,
@@ -889,6 +946,7 @@
     editing = null; another = false; guestForget(); setSubmitLabels(false); setNotice(null);
     track(1, "found");
     showSuccess(found);
+    if (movedNo && found.bookingNo === movedNo) setNote(MOVED_NOTE, { d: sessionLabel(found.session), no: movedNo });
   });
 
   /* Registration. Refusals the form knows go to their box; anything else is said in words that tell a refusal from
@@ -963,7 +1021,14 @@
       track(STEPS, "fail", d.error);
       if (d.error === "waiver") { waiverRefused(); return; }
       if (d.error === "throttled") { failBanner("Too many submissions from this network"); return; }
-      if (d.error === "notfound") { editing = null; setSubmitLabels(false); try { localStorage.removeItem(STORE); } catch (err) {} failBanner("We could not find your booking. Please register again."); return; }
+      if (d.error === "notfound") { editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner(); if (current) { showSuccess(current); setNote(GONE_ASK_DESK); } else failBanner(GONE_ASK_DESK); return; }
+      // the desk moved it to another night under a new number: never sent again (the night picked here would move it
+      // back), the ticket becomes the new booking and Edit starts again from it
+      if (d.error === "moved") {
+        var movedFrom = editing; editing = null; another = false; returnTo = 0; setSubmitLabels(false); hideBanner();
+        if (current && movedFrom) await showMoved(current, d); else failBanner(GONE_ASK_DESK);
+        return;
+      }
       if (d.error === "checked_in") { failBanner("You have already checked in. Ask the desk to change your booking."); return; }
       // rider_edit: the desk has tied this registration to a booking of its own (rentals 20261111235100, a move to another night)
       if (d.error === "desk") { failBanner("The desk has this booking. Ask the desk to change it."); return; }
@@ -1001,7 +1066,7 @@
      otherwise start at step 1 with live sessions. */
   function restoreKept() {
     var list = keptList(); if (!list.length) return false;
-    saveKept(list.slice(1)); showSuccess(list[0]); return true;
+    saveKept(list.slice(1)); guestKeepFor(list[0]); showSuccess(list[0]); return true;
   }
   /* What the pages this one replaced left on the phone (micromobility.sa/dukan and /petromin-invite, turned off
      2026-11-13): their saved confirmations join this page's own, once, so a ticket made there still shows here. A

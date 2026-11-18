@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type MouseEvent } from "react";
 import { ArrowIcon, CalendarIcon, CloseIcon } from "@/components/site/Icons";
-import { calfAddress, calfGot, type CalfOp } from "@/lib/calendar-feed";
+import { calfAddress, calfClubGot, calfGot, type CalfOp } from "@/lib/calendar-feed";
 import type { CalendarWords } from "./Calendar.words";
 
 // My Account's Calendar section (lib/calendar-feed.ts; the booking app's Account row "Calendar" and calendar-feed.js,
@@ -15,6 +15,11 @@ import type { CalendarWords } from "./Calendar.words";
 // did not come is said with Try again; a replace that failed is said and the old key stays. The key is held only while
 // the pop-up is open (closed, it is dropped) and is never logged or stored. A signed-out session draws the page again; a
 // database without the function takes the section away. Its words come ready in the page's language (Calendar.words.ts).
+// The club calendar (2026-11-18; the booking app's _calfClub): under Add to my calendar, the "Club sessions too" switch, shown
+// only when the key's answer said where it stands (a database before rentals 20261118211000 says nothing, and there is no
+// switch). A flip shows at once and posts {op: "club", on} (calendar_club_set); a refusal puts it back and says so in the
+// pop-up's error line, and nothing is said when it worked. The same address then lists the club's Saturday rides (to a
+// member) and featured sessions too; the booking app's /api/ics serves them.
 type Focus = "" | "add" | "retry" | "new";
 
 export default function CalendarFeed({ host, lang, words: w }: { host: string; lang: string | null; words: CalendarWords }) {
@@ -32,6 +37,8 @@ export default function CalendarFeed({ host, lang, words: w }: { host: string; l
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState("");
   const [err, setErr] = useState("");
+  const [club, setClub] = useState<boolean | null>(null);
+  const [clubBusy, setClubBusy] = useState(false);
 
   useEffect(() => {
     const f = want.current;
@@ -50,14 +57,14 @@ export default function CalendarFeed({ host, lang, words: w }: { host: string; l
       return calfGot(null);
     }
   }
-  const reset = () => { setKey(""); setFailed(false); setBusy(false); setNote(""); setErr(""); };
+  const reset = () => { setKey(""); setFailed(false); setBusy(false); setNote(""); setErr(""); setClub(null); setClubBusy(false); };
 
   async function load() {
     const t = ++turn.current;
     reset();
     const g = await post("get");
     if (turn.current !== t) return; // closed meanwhile, or opened again
-    if ("key" in g) { want.current = "add"; setKey(g.key); return; }
+    if ("key" in g) { want.current = "add"; setKey(g.key); setClub(g.club); return; }
     if (g.error === "signin") { window.location.reload(); return; }
     if (g.error === "absent") { dlg.current?.close(); setGone(true); return; }
     want.current = "retry";
@@ -82,6 +89,28 @@ export default function CalendarFeed({ host, lang, words: w }: { host: string; l
     if (turn.current !== t) return;
     setErr("");
     setNote(ok ? "" : url);
+  }
+
+  // the club switch: the rider's choice shows at once; the database's answer is what stays
+  async function flip(on: boolean) {
+    if (!key || club === null || clubBusy) return;
+    const t = turn.current, was = club;
+    setClub(on); setClubBusy(true); setErr("");
+    let g: ReturnType<typeof calfClubGot>;
+    try {
+      const r = await fetch("/api/account/calendar", {
+        method: "POST", credentials: "same-origin", cache: "no-store", headers: { "content-type": "application/json" }, body: JSON.stringify({ op: "club", on }),
+      });
+      g = calfClubGot(await r.json().catch(() => null));
+    } catch {
+      g = calfClubGot(null);
+    }
+    if (turn.current !== t) return;
+    setClubBusy(false);
+    if ("club" in g) { setClub(g.club); return; }
+    if (g.error === "signin") { window.location.reload(); return; }
+    setClub(was);
+    setErr(w.err);
   }
 
   async function replace() {
@@ -115,6 +144,13 @@ export default function CalendarFeed({ host, lang, words: w }: { host: string; l
           {key ? (
             <>
               <a ref={addRef} className="ac-calf-main" href={calfAddress(host, key, "webcal")}><CalendarIcon size={18} /><span>{w.add}</span></a>
+              {club !== null && (
+                <label className="ac-calf-sw">
+                  <input type="checkbox" role="switch" checked={club} disabled={clubBusy} onChange={(e) => void flip(e.target.checked)} />
+                  <span className="ac-calf-sw-box" aria-hidden="true" />
+                  <span className="ac-calf-sw-txt">{w.club}</span>
+                </label>
+              )}
               <div className="tk-dlg-acts">
                 <button type="button" className="ac-calf-btn" disabled={busy} onClick={copy}>{w.copy}</button>
                 <button ref={newRef} type="button" className="ac-calf-btn" disabled={busy} onClick={() => ask.current?.showModal()}>{w.replace}</button>

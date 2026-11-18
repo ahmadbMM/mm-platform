@@ -4,14 +4,15 @@
 // reads them), the badges staff gave this account and the badges it asked for (its own token), and
 // the name of a bike handed over tonight.
 import { rpcServer, type Account } from "./account";
-import { getJson, readSessions, rideKind, type RideKind, type SessionReader } from "./rides";
+import { getJson, missingColumn, readSessions, rideKind, routeSlugOf, type RideKind, type SessionReader } from "./rides";
 import type { BadgeData, BadgeRow, RecordSession } from "./ride-record";
 import { badgeReqs } from "./badge-request";
 
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 const env = () => ({ url: process.env.NEXT_PUBLIC_SUPABASE_URL, key: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY });
 
-/** Every session by id (any state, past ones too), 80 to a request, as `account` may see them. */
+/** Every session by id (any state, past ones too), 80 to a request, as `account` may see them, with the route each
+ *  followed (My records' Routes ridden, lib/my-records.ts; a database without the column is read without it). */
 export async function loadRecordSessions(ids: string[], account: SessionReader | null = null, fetchImpl: typeof fetch = fetch): Promise<Map<string, RecordSession>> {
   const { url, key } = env();
   const clean = [...new Set(ids)].filter((x) => ID.test(x)).slice(0, 800);
@@ -21,12 +22,15 @@ export async function loadRecordSessions(ids: string[], account: SessionReader |
   for (let i = 0; i < clean.length; i += 80) chunks.push(clean.slice(i, i + 80));
   await Promise.all(chunks.map(async (c) => {
     try {
-      const rows = await readSessions(fetchImpl, url, key, `select=id,ride_kind,event_kind,paid_ride,needs_approval,bike_slots&id=in.(${c.join(",")})`, account);
+      const q = (cols: string) => readSessions(fetchImpl, url, key, `select=${cols}&id=in.(${c.join(",")})`, account);
+      const base = "id,ride_kind,event_kind,paid_ride,needs_approval,bike_slots";
+      const rows = await q(`${base},route_slug`).catch((e: unknown) => { if (missingColumn(e) === "route_slug") return q(base); throw e; });
       if (!Array.isArray(rows)) return;
       for (const r of rows as Record<string, unknown>[]) {
         // a community ride as the booking app's _isCommunity reads it: the National Day ride (snd96) is not one
         const comm = r.event_kind === "community" && r.ride_kind !== "snd96";
-        if (typeof r.id === "string") out.set(r.id, { kind: rideKind(r), freeRide: comm && r.paid_ride !== true, approval: comm && r.needs_approval !== false, groupKm: groupKm(r.bike_slots), km: rideKm(r.bike_slots) });
+        if (typeof r.id === "string") out.set(r.id, { kind: rideKind(r), freeRide: comm && r.paid_ride !== true, approval: comm && r.needs_approval !== false, groupKm: groupKm(r.bike_slots), km: rideKm(r.bike_slots),
+          ...("route_slug" in r ? { route: routeSlugOf(r.route_slug) } : {}) });
       }
     } catch { /* that chunk counts as unknown sessions */ }
   }));
@@ -88,6 +92,20 @@ export async function loadBadgeData(a: Account): Promise<BadgeData> {
     mine: list<BadgeRow>(mine.data).filter((b) => b && typeof b.slug === "string"),
     requests: reqs.status === 0 || reqs.status >= 400 ? null : badgeReqs(reqs.data),
   };
+}
+
+/** The type of each bike handed over ("Road", "Hybrid"...) by its id, for My records' Bike types tried on a booking made
+ *  for no type (lib/my-records.ts; the booking app's resolvedType): one read with the public key, only when there is such
+ *  a booking. A bike the key cannot see, or a failed read, is left out. */
+export async function loadBikeTypes(ids: string[], fetchImpl: typeof fetch = fetch): Promise<Map<string, string>> {
+  const { url, key } = env();
+  const clean = [...new Set(ids)].filter((x) => ID.test(x)).slice(0, 80), out = new Map<string, string>();
+  if (!url || !key || !clean.length) return out;
+  try {
+    const rows = await getJson(fetchImpl, `${url}/rest/v1/bikes?select=id,type&id=in.(${clean.join(",")})`, key);
+    for (const r of Array.isArray(rows) ? (rows as Record<string, unknown>[]) : []) if (typeof r.id === "string" && typeof r.type === "string") out.set(r.id, r.type);
+  } catch { /* the bikes stay unknown */ }
+  return out;
 }
 
 /** A bike's name ("B-12") by its id, or null when the public key cannot see it. */
