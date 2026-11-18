@@ -2689,5 +2689,6 @@
   "Windows PC": "Windows 电脑",
   "You have 10 passkeys. Remove one to add another.": "您已有 10 个通行密钥。请先移除一个，再添加新的。",
   "Your session has ended. Please sign in again.": "您的登录已过期。请重新登录。",
-  "or": "或"
+  "or": "或",
+  "Keep it": "保留"
 }

@@ -2689,5 +2689,6 @@
   "Windows PC": "Windows PC",
   "You have 10 passkeys. Remove one to add another.": "パスキーは10個登録されています。追加するには1つ削除してください。",
   "Your session has ended. Please sign in again.": "セッションが終了しました。もう一度ログインしてください。",
-  "or": "または"
+  "or": "または",
+  "Keep it": "残す"
 }

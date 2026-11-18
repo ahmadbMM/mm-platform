@@ -2689,5 +2689,6 @@
   "Windows PC": "ПК с Windows",
   "You have 10 passkeys. Remove one to add another.": "У вас 10 ключей доступа. Удалите один, чтобы добавить новый.",
   "Your session has ended. Please sign in again.": "Ваша сессия завершена. Пожалуйста, войдите снова.",
-  "or": "или"
+  "or": "или",
+  "Keep it": "Оставить"
 }

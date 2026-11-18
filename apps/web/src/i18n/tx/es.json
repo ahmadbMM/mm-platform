@@ -2689,5 +2689,6 @@
   "Windows PC": "PC con Windows",
   "You have 10 passkeys. Remove one to add another.": "Tienes 10 llaves de acceso. Quita una para añadir otra.",
   "Your session has ended. Please sign in again.": "Tu sesión ha terminado. Vuelve a iniciar sesión.",
-  "or": "o"
+  "or": "o",
+  "Keep it": "Mantener"
 }
