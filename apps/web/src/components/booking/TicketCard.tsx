@@ -7,7 +7,8 @@ import { refundable } from "@/lib/pay/settings";
 import { walletWords } from "@/components/account/Wallet.words";
 import { walletDue } from "@/lib/wallet";
 import VlTicket from "./VlTicket";
-import WalletButton from "@/components/account/WalletButton";
+import WalletBadges from "@/components/experiences/WalletBadges";
+import TicketSoon from "@/components/experiences/TicketSoon";
 import type { T } from "./tickets.text";
 import { codeWords } from "./Code.words";
 import { BLOOD_PLATE_SIZE, bloodPlate } from "@/content/blood-plate";
@@ -116,6 +117,8 @@ type Props = {
   wallet?: { bookingId: string; groupIds: string[] } | null;
   /** Paying online (2026-11-10): open on this site, the refund rule, and today in Riyadh. Absent: no Pay now, and Cancel goes to the booking app. */
   online?: { open: boolean; refundDays: number; today: string } | null;
+  /** The calendar entry's reminders, minutes before the start (the website's confirmation: 12 h and 1 h, EF15); absent: 2 h. */
+  alarms?: number[];
   /** Edit, Reschedule and Cancel under the card (My Account); false on the booking's own
    *  confirmation on Experiences, which is the booking app's renderOneTicket (none there). */
   manage?: boolean;
@@ -203,7 +206,7 @@ const Again = () => (
   </svg>
 );
 
-export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, online = null, bikeNames = null, routePage = null, account = null }: Props) {
+export default function TicketCard({ locale, today, rows, session: s, name, cue, t, gather, start, typeName, links, route = null, wallet = null, bikeName = null, past = false, now, manage = true, alarms, addonItems = null, lockers = null, ownLockers = null, vlPartners = null, balance = null, blood = null, online = null, bikeNames = null, routePage = null, account = null }: Props) {
   const primary = rows[0];
   const noNum = !s || s.approval; // a ride staff approve never shows its order (nor prices, nor edit)
   // ...except a Saturday ride's booking number once its list is out, to a rider on it (satNumOk, 2026-10-25)
@@ -302,7 +305,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
   const wlLine = wlc && !past ? t.wlCollectFrom(clock(wlc)) : "";
   // the Farm House Night's arrival is in its times already: no "Gathering at" line (the booking app's ticket, 2026-11-13)
   const green = s?.times && s.gathers ? (farm ? "" : t.gatherAt(clock(s.times[0]))) : allWl && wlLine ? "" : s?.collect && bikes ? t.collectFrom(clock(s.collect)) : "";
-  const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, icsPlace(s), new Date(), { id: primary.id, url: links.bookings }) : "";
+  const ics = s ? icsFor(s, `${name} - ${f({ weekday: "long" })}`, icsPlace(s), new Date(), { id: primary.id, url: links.bookings, alarms }) : "";
   // men only, women only or mixed (the booking app's _sgChip): none on a session that did not load
   const sg = s ? genderChip(s, { male: t.sgMale, female: t.sgFemale, mixed: t.sgMixed }) : null;
   const reward = donor ? blood?.rewards?.get(primary.id) ?? null : null;
@@ -373,6 +376,8 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
       <div className="tk-when">
         <p className="tk-when-d">
           {dw && <><strong className="tk-dw">{dw === "today" ? t.today : t.tomorrow}</strong><span className="tk-sep" aria-hidden="true">·</span></>}
+          {/* "In 3 days" beside the date from two days ahead (EF34, 2026-11-18) */}
+          {!dw && !past && <TicketSoon date={primary.date} today={today} />}
           <bdi className="tk-seg">{day}</bdi>
           {when && <><span className="tk-sep" aria-hidden="true">·</span><bdi>{when}</bdi></>}
         </p>
@@ -656,7 +661,7 @@ export default function TicketCard({ locale, today, rows, session: s, name, cue,
       {/* A pass in the phone's wallet reads as a place held: none on a waitlist or before the code is out, and
           none on the DEFE 5KM Run or Arena Heros, which the passes do not know (the booking app's _walletOk); yoga's
           is offered, as the pool's (its passes know yoga since 2026-11-12). */}
-      {wallet && !past && !allWl && ready && !defe && !arena && !donor && <div className="tk-actions"><WalletButton bookingId={wallet.bookingId} groupIds={wallet.groupIds} /></div>}
+      {wallet && !past && !allWl && ready && !defe && !arena && !donor && <div className="tk-actions"><WalletBadges bookingId={wallet.bookingId} groupIds={wallet.groupIds} locale={locale} /></div>}
       {canEdit && manage && (
         <div className="tk-manage">
           {/* a run booking is never changed, only cancelled, as in the booking app; a ride staff approve neither, but for the

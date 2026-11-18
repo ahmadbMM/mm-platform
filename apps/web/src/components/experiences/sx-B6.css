@@ -1,0 +1,93 @@
+/* ── The Experiences booking steps, the payment page's booking half and the confirmation (the user, 2026-11-18: "do all";
+   builder B6). The booking's own look: paper #fbf9f4, ink #1a1919 / #4a4843 / #6e6b63, action green #077a4b, hairlines
+   rgba(26,25,25,.12-.24), 10px controls, 14px cards; 44px hit areas; logical properties only. ── */
+
+/* EM04-B: the fixed bar steps aside while the phone's keyboard is up (useKeyboardUp) */
+.bk .bk-foot.fix.kb { display: none; }
+
+/* EF09, EM06-B: the party, adults and children 5+, on the dates step and the riders step */
+.sx6-party { display: flex; flex-direction: column; gap: 4px; margin: 0 0 16px; padding: 6px 16px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; }
+.bk-card .sx6-party { padding: 0 0 12px; margin-bottom: 16px; border: 0; border-bottom: 1px solid rgba(26, 25, 25, .12); border-radius: 0; }
+.sx6-party-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; }
+.sx6-party-k { font-size: 15px; font-weight: 700; color: #1a1919; }
+
+/* E04: the empty list's Instagram as a button */
+.xs-empty .sx6-ig { margin-top: 12px; }
+
+/* EM07-B: a rider of a party as one row that opens their answers */
+.bk-rider.sx6-fold + .bk-rider.sx6-fold { padding-top: 4px; }
+.sx6-rider-h { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 48px; margin: 0 0 4px; padding: 0; border: 0; background: none; font: inherit; color: #1a1919; text-align: start; cursor: pointer; }
+.sx6-rider-h:focus-visible, .sx6-fold-tog:focus-visible, .sx6-agree-l:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; border-radius: 8px; }
+.sx6-rider-s { flex: 1 1 auto; min-width: 0; font-size: 14.5px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sx6-chev { flex: none; color: #6e6b63; transition: transform .15s ease; }
+.sx6-chev.on { transform: rotate(90deg); }
+html[dir="rtl"] .sx6-chev { transform: scaleX(-1); }
+html[dir="rtl"] .sx6-chev.on { transform: rotate(90deg); }
+/* rider 1's height from the account, as a fact with Change */
+.sx6-fact { display: flex; align-items: center; gap: 10px; margin: 0; min-height: 44px; font-size: 15px; }
+.sx6-fact-k { color: #4a4843; font-weight: 600; }
+.sx6-fact-v { font-weight: 700; color: #1a1919; }
+.sx6-fact .bk-change { margin-inline-start: auto; }
+
+/* the add-ons and the waiver's title behind their arrow (EM07-B) */
+.sx6-fold-h { margin: 0; }
+.sx6-fold-tog { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px; padding: 0; border: 0; background: none; font: inherit; font-size: 17px; font-weight: 700; color: #1a1919; text-align: start; cursor: pointer; }
+.sx6-fold-tog > span:first-child { flex: 1 1 auto; min-width: 0; }
+.sx6-count { flex: none; min-width: 22px; height: 22px; padding: 0 7px; border-radius: 999px; background: #077a4b; color: #fbf9f4; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; }
+#bk-ad-body { margin-top: 8px; }
+/* the waiver's tick row: the box ticks, its words open the waiver */
+.sx6-agree { cursor: default; }
+.sx6-agree-l { flex: 1 1 auto; min-height: 44px; padding: 0; border: 0; background: none; font: inherit; font-size: 14px; font-weight: 600; line-height: 1.45; color: #1a1919; text-align: start; text-decoration: underline; text-decoration-color: rgba(26, 25, 25, .3); text-underline-offset: 3px; cursor: pointer; }
+.sx6-wv-body { max-height: min(52svh, 420px); overflow-y: auto; margin-bottom: 14px; }
+/* EF14: the refund line under the total */
+.bk-sum-row.sx6-cancel span:last-child { color: #1a1919; font-weight: 600; text-align: end; }
+
+/* EM09-B: the confirmation */
+.sx6-done-h { display: flex; align-items: center; gap: 10px; }
+.sx6-done-tick { flex: none; width: 32px; height: 32px; border-radius: 50%; background: #077a4b; color: #fbf9f4; display: inline-flex; align-items: center; justify-content: center; }
+.sx6-after { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+.sx6-manage { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.sx6-manage .bk-btn2 { flex: 1 1 160px; }
+.sx6-until { flex: 1 1 100%; margin: 0; font-size: 14px; font-weight: 600; color: #1a1919; }
+.sx6-kit-h { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.sx6-kit ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.sx6-kit a { display: flex; align-items: center; gap: 12px; min-height: 64px; padding: 6px 12px 6px 6px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 12px; color: #1a1919; text-decoration: none; font-size: 14px; font-weight: 700; }
+html[dir="rtl"] .sx6-kit a { padding: 6px 6px 6px 12px; }
+.sx6-kit a > span:not(.sx6-kit-ph) { flex: 1 1 auto; min-width: 0; }
+.sx6-kit img, .sx6-kit-ph { flex: none; width: 56px; height: 56px; border-radius: 8px; object-fit: cover; background: #f4f1ea; display: inline-flex; align-items: center; justify-content: center; color: #6e6b63; }
+@media (min-width: 768px) {
+  .sx6-done { display: grid; grid-template-columns: minmax(0, 1fr) minmax(240px, 320px); gap: 24px; align-items: start; }
+  .sx6-done .sx6-after { margin-top: 0; }
+}
+/* the official Wallet artwork, as a button no smaller than the others (Google's brand rules) */
+.sx6-wallet { align-items: flex-start; }
+.sx6-badge { display: inline-flex; align-items: center; min-height: 48px; padding: 2px 0; border: 0; background: none; cursor: pointer; }
+.sx6-badge img { display: block; height: 44px; width: auto; }
+.sx6-badge:disabled { opacity: .6; cursor: default; }
+.sx6-badge:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; border-radius: 10px; }
+/* EF34: "In 3 days" beside the date */
+.tk-dw.sx6-soon { white-space: nowrap; }
+
+/* the pop-ups this build adds (gift, packs) */
+.sx6-pop { max-height: 90svh; }
+.sx6-ta { width: 100%; box-sizing: border-box; min-height: 88px; padding: 10px 12px; border: 1px solid rgba(26, 25, 25, .24); border-radius: 10px; font: inherit; font-size: 16px; color: #1a1919; background: #fff; resize: vertical; }
+.sx6-ta:focus { outline: none; border-color: #077a4b; box-shadow: inset 0 0 0 1px #077a4b; }
+.sx6-link { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid rgba(26, 25, 25, .12); border-radius: 10px; background: #fbf9f4; font-size: 14px; word-break: break-all; }
+
+/* EF21: the packs on the dates step, EF20: a gift's own line */
+.sx6-packs { margin: 16px 0 0; padding: 14px 16px; background: #fff; border: 1px solid rgba(26, 25, 25, .12); border-radius: 14px; }
+.sx6-packs h3 { margin: 0 0 8px; font-size: 15px; font-weight: 700; }
+.sx6-pack { display: flex; align-items: center; gap: 12px; min-height: 52px; }
+.sx6-pack + .sx6-pack { border-top: 1px solid rgba(26, 25, 25, .12); }
+.sx6-pack-t { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; font-size: 14px; font-weight: 700; }
+.sx6-pack-t small { font-size: 13px; font-weight: 600; color: #4a4843; }
+.sx6-pack .bk-btn2 { flex: none; min-height: 44px; padding: 0 16px; }
+.sx6-use { margin: 8px 0 0; }
+
+@media (hover: hover) {
+  .sx6-kit a:hover { border-color: rgba(26, 25, 25, .24); background: #f4f1ea; }
+  .sx6-rider-h:hover .sx6-rider-s, .sx6-fold-tog:hover > span:first-child { color: #077a4b; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sx6-chev { transition: none; }
+}

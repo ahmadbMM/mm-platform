@@ -824,7 +824,7 @@ function icsWords(s: Pick<TicketSession, "bikes" | "gathers">): { desc: string; 
  *  2026-11-10): its UID is the booking's (it was the session's and the moment, so every tap added another copy and no
  *  change could find the first), SEQUENCE grows with every file, so a calendar that knows the event keeps the newer one,
  *  and URL leads back to the booking app's My Bookings (`booking.url`). */
-export function icsFor(s: TicketSession, summary: string, place: string, now: Date = new Date(), booking: { id?: string; url?: string | null } = {}): string {
+export function icsFor(s: TicketSession, summary: string, place: string, now: Date = new Date(), booking: { id?: string; url?: string | null; alarms?: number[] } = {}): string {
   const date = s.date.replace(/-/g, "");
   const [sMin, eMin] = rideWindow(s) ?? [540, 660];
   // The ride's hour is Jeddah's: written without a zone, a calendar read it in the phone's own (a
@@ -845,7 +845,10 @@ export function icsFor(s: TicketSession, summary: string, place: string, now: Da
     `SUMMARY:${esc(summary)}`, ...(noPlace ? [] : [`LOCATION:${esc(place || "Jeddah Corniche Circuit")}`]),
     `DESCRIPTION:${esc(words.desc + told)}`,
     ...(booking.url && /^https:\/\//i.test(booking.url) ? [`URL:${booking.url}`] : []),
-    "BEGIN:VALARM", "TRIGGER:-PT2H", "ACTION:DISPLAY", `DESCRIPTION:${esc(words.alarm)}`, "END:VALARM",
+    // one reminder per alarm, minutes before the start (2 hours unless the caller asks others: the website's confirmation
+    // asks 12 hours and 1 hour, EF15, 2026-11-18)
+    ...(booking.alarms?.length ? booking.alarms : [120]).filter((m) => Number.isInteger(m) && m > 0 && m <= 10080).slice(0, 3)
+      .flatMap((m) => ["BEGIN:VALARM", `TRIGGER:-PT${m % 60 ? `${m}M` : `${m / 60}H`}`, "ACTION:DISPLAY", `DESCRIPTION:${esc(words.alarm)}`, "END:VALARM"]),
     "END:VEVENT", "END:VCALENDAR",
   ].join("\r\n");
 }

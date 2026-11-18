@@ -64,7 +64,9 @@ describe("the ticket's date and code", () => {
     expect(html).toContain('<p class="tk-when-p"><span class="tk-venue">Jeddah Corniche Circuit</span><span class="tk-sep" aria-hidden="true">·</span><span class="go tk-seg">Collect bikes from 8:15 PM</span></p>');
     expect(html).not.toContain("<br");
     expect(card([row({})], { today: "2099-02-28" })).toContain('<strong class="tk-dw">Tomorrow</strong>');
-    expect(card([row({})], { today: "2099-02-20" })).not.toContain("tk-dw");
+    // from two days ahead the date carries "In 9 days" before it (EF34, 2026-11-18); past sixty days nothing
+    expect(card([row({})], { today: "2099-02-20" })).toContain('<strong class="tk-dw sx6-soon">In 9 days</strong>');
+    expect(card([row({})], { today: "2098-12-01" })).not.toContain("tk-dw");
   });
   it("draws today's code large under the number, named with what it says; other days keep the corner code", () => {
     const today = card([row({})]);

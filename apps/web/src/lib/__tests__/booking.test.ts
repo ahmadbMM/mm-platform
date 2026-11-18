@@ -21,16 +21,16 @@ const prices = priceMap([{ type: "Road", price: 75 }, { type: "Road Carbon", pri
 const r = (type: Rider["type"], height = "175", name = ""): Rider => ({ name, height, type });
 
 describe("the steps", () => {
-  it("walks Ride, Riders (a bike), the waiver (every booking), Review", () => {
-    expect(regSteps(base)).toEqual([1, 2, 2.5, 3]);
-    expect(regSteps({ kind: "swim" })).toEqual([1, 2.5, 3]);
-    expect(regSteps({ kind: "workshop" })).toEqual([1, 2.5, 3]);
-    expect(regSteps({ kind: "event" })).toEqual([1, 2.5, 3]);
-    expect(nextStep({ kind: "workshop" }, 1)).toBe(2.5);
-    expect(prevStep({ kind: "workshop" }, 3)).toBe(2.5);
-    expect(prevStep({ kind: "event" }, 2.5)).toBe(1);
-    expect(prevStep({ kind: "swim" }, 3)).toBe(2.5);
-    expect(nextStep(base, 2)).toBe(2.5);
+  it("walks Ride, Riders (a bike), Review, the waiver ticked on the review itself (2026-11-18, EM07-B)", () => {
+    expect(regSteps(base)).toEqual([1, 2, 3]);
+    expect(regSteps({ kind: "swim" })).toEqual([1, 3]);
+    expect(regSteps({ kind: "workshop" })).toEqual([1, 3]);
+    expect(regSteps({ kind: "event" })).toEqual([1, 3]);
+    expect(nextStep({ kind: "workshop" }, 1)).toBe(3);
+    expect(prevStep({ kind: "workshop" }, 3)).toBe(1);
+    expect(prevStep({ kind: "swim" }, 3)).toBe(1);
+    expect(nextStep(base, 2)).toBe(3);
+    expect(prevStep(base, 3)).toBe(2);
   });
 });
 
@@ -166,8 +166,8 @@ describe("validation", () => {
     expect(asciiDigits("۱۶۵ cm")).toBe("165 cm");
   });
   it("counts an event's steps before a date is picked, so picking one never changes the count", () => {
-    expect(eventSteps([{ kind: "workshop" }, { kind: "workshop" }])).toEqual([1, 2.5, 3]);
-    expect(eventSteps([{ kind: "jcc" }])).toEqual([1, 2, 2.5, 3]);
+    expect(eventSteps([{ kind: "workshop" }, { kind: "workshop" }])).toEqual([1, 3]);
+    expect(eventSteps([{ kind: "jcc" }])).toEqual([1, 2, 3]);
     expect(eventSteps([{ kind: "saturday" }, { kind: "swim" }])).toBeNull();
     expect(eventSteps([])).toBeNull();
   });

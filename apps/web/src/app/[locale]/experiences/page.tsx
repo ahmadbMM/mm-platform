@@ -36,6 +36,7 @@ import { BLOOD_NAME, bloodName } from "@/content/blood-words";
 import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { mfAt } from "@/lib/members-first";
 import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
+import { sxFlow } from "@/lib/sx-b6-server";
 
 // micromobility.sa/experiences - booking a ride on the website (the owner, 2026-10-03: "full
 // booking on the website"), as the booking app's own wizard books one (BookingFlow): the event,
@@ -220,7 +221,8 @@ export default async function ExperiencesPage({ params, searchParams }: { params
     card("petromin", "pm", false), card("blood", "bld", false), card("vlap", "vl", false), card("arena", "ar", false), card("runher", "rh", false),
     card("workshop", "ws", false),
   ].filter((x): x is FlowEvent => !!x);
-  const items = await loadAddonItems(listed.flatMap((s) => (s.free ? [] : s.addons ?? [])));
+  // the 2026-11-18 build's settings and each kind of ride's kit from the store (builder B6, lib/sx-b6-server.ts)
+  const [items, sx] = await Promise.all([loadAddonItems(listed.flatMap((s) => (s.free ? [] : s.addons ?? []))), sxFlow(content, locale)]);
   const one = (v: string | string[] | undefined) => (typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : null);
 
   // While paid rides are paid when booking (pay.bookings 'required'), the card saying payment is collected at the booth
@@ -251,7 +253,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
         <div className="xp-wrap">
           <section className="xp-sec" id="book">
             <BookingFlow locale={locale} events={events} prices={prices} maxPrices={maxPrices} jccCap={jccCap} seatMax={biz.eventSeatMax} acct={acct} items={items}
-              pay={paying ? { mode: ps.bookings, holdMinutes: ps.holdMinutes, refundDays: ps.refundDays, wallet, terms: cancelTerms } : undefined}
+              pay={paying ? { mode: ps.bookings, holdMinutes: ps.holdMinutes, refundDays: ps.refundDays, wallet, terms: cancelTerms } : undefined} sx={sx}
               start={{ ev: one(q.ev), session: one(q.session) }}
               text={{ eventTitle: S(c.steps.eventTitle), dateTitle: S(c.steps.dateTitle), noDates: S(c.steps.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}
               links={{

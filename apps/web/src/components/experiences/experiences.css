@@ -98,7 +98,9 @@ html:is([lang="ar"], [lang="ur"]) .xs-ev-title { text-transform: none; font-size
 
 .bk-ic { flex: none; vertical-align: -3px; }
 html[dir="rtl"] .bk-ic-flip { transform: scaleX(-1); }
-.bk-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 28px; align-items: start; }
+/* EM10-B (2026-11-18): the steps beside a 380px summary card that sticks under the header; the grid follows the page's
+   direction, so in Arabic and Urdu the card stands on the left */
+.bk-layout { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; align-items: start; }
 .bk-main { min-width: 0; }
 .bk-head { margin-bottom: 18px; }
 .bk-title { font-size: 26px; font-weight: 700; letter-spacing: -.5px; line-height: 1.15; margin: 0; color: #1a1919; }
@@ -134,7 +136,7 @@ html:is([lang="ar"], [lang="ur"]) .bk-title { letter-spacing: 0; line-height: 1.
 .bk-foot-v .bk-wl-chip { margin-inline-start: 4px; }
 @media (max-width: 767px) {
   .bk .bk-foot.fix { position: fixed; z-index: 50; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); margin: 0; padding: 10px; gap: 8px;
-    background: rgba(251, 249, 244, .96); border: 1px solid rgba(26, 25, 25, .12); border-radius: 22px; box-shadow: 0 10px 30px rgba(26, 25, 25, .16); }
+    background: #fbf9f4; border: 1px solid rgba(26, 25, 25, .12); border-radius: 22px; box-shadow: 0 10px 30px rgba(26, 25, 25, .16); }
   .bk .bk-foot.fix .bk-btn2 { padding: 0 14px; }
   .bk .bk-foot.fix .bk-btn.grow { flex: 1 1 120px; padding: 0 16px; }
   .xs.bk:has(.bk-foot.fix) { padding-bottom: calc(var(--bk-foot-h, 72px) + 24px); }
@@ -323,6 +325,10 @@ html[dir="rtl"] .bk-x { margin: -8px 0 0 -10px; }
 @media (max-width: 899px) {
   .bk-layout { grid-template-columns: 1fr; }
   .bk-side { display: none; }
+}
+/* EM10-B: on a tablet the steps stand in one centred column of 560-640px */
+@media (min-width: 600px) and (max-width: 899px) {
+  .bk-layout .bk-main { width: 100%; max-width: 640px; margin-inline: auto; }
 }
 /* A session for the other gender (the owner, 2026-10-27): why it cannot be booked, in place of the button. */
 .xs-refuse { margin: 0; padding: 14px 16px; border-inline-start: 4px solid #7a5a10; background: rgba(122, 90, 16, .08); color: #1a1919; font-weight: 700; font-size: 15px; line-height: 1.5; }
