@@ -27,7 +27,13 @@ import Modal from "./Modal";
 import { cartClear, savedFulfil, saveFulfil, useCart, useHydrated } from "./useCart";
 import { giftKeyKeep } from "./useLists";
 import { useGiftCard, usePromo } from "./useCode";
-import type { Whens } from "./CartView";
+import { ReserveBox, type Whens } from "./CartView";
+import { EMPTY_SX, smallOnly, sxDraftOf, sxExtras, sxPlace, sxProblems, type SxDraft } from "@/lib/sx-b3";
+import { handoverPickOf, pickOpen } from "@/lib/sx-b3-handover";
+import { T as X } from "./sx-B3.text";
+import { CompanyBox, HandoverBox, handoverText, LearningTick, PinBox, SessionPick, type SxCheckout } from "./CheckoutPlus";
+import { useBoxCookie } from "./sx-b3-reserve";
+import "./sx-B3.css";
 
 // micromobility.sa/store/checkout (store build 2026-11-15, O12-C): steps that close into a summary when done - Contact
 // (filled in from the account when signed in; a guest orders with a name and a mobile), Delivery (the way, and a
@@ -48,13 +54,16 @@ type Props = {
   licence: string | null; today: string; slots: Slots | null; districts: District[] | null; lookup: boolean;
   /** The buy-now lines (?buy=…&with=…), checked out instead of the cart; null: the cart. */
   buy: CartItem[] | null;
+  /** The build of 2026-11-18 (B3): a company, the pin, the handover slot, a session, still learning, a quote's link. */
+  sx: SxCheckout;
 };
-/** `who`: the account the draft was typed under ("" a guest), so another account never takes it over. */
-type Draft = { contact: Contact; address: Address; note: string; fulfil: Fulfil | null; slot: { day: string; time: string } | null; gift: boolean; giftNote: string; who?: string };
+/** `who`: the account the draft was typed under ("" a guest), so another account never takes it over. `x`: the build of
+ *  2026-11-18's parts (lib/sx-b3.ts SxDraft). */
+type Draft = { contact: Contact; address: Address; note: string; fulfil: Fulfil | null; slot: { day: string; time: string } | null; gift: boolean; giftNote: string; who?: string; x: SxDraft };
 const DRAFT_KEY = "mm-checkout";
 const whoOf = (a: CheckoutAccount) => (a ? `${a.phone}|${a.email}` : "");
 
-function loadDraft(account: CheckoutAccount): Draft {
+function loadDraft(account: CheckoutAccount, quote: SxCheckout["quote"]): Draft {
   let d: Partial<Draft> = {};
   try { d = JSON.parse(window.sessionStorage.getItem(DRAFT_KEY) || "{}") as Partial<Draft>; } catch { /* none kept */ }
   // A draft typed under another account is not this one's (bug hunt 2026-11-18): on a shared phone or the showroom's
@@ -64,20 +73,28 @@ function loadDraft(account: CheckoutAccount): Draft {
   const c = d.contact ?? { name: "", phone: "", email: "" };
   const slot = d.slot && typeof d.slot.day === "string" && typeof d.slot.time === "string" ? d.slot : null;
   return {
-    contact: { name: c.name || account?.name || "", phone: c.phone || account?.phone || "", email: c.email || account?.email || "" },
+    // a quote's link (N23) fills in what staff wrote on it: the name and mobile, the way, the slot
+    contact: { name: c.name || quote?.name || account?.name || "", phone: c.phone || quote?.phone || account?.phone || "", email: c.email || account?.email || "" },
     address: { ...EMPTY_ADDRESS, ...(d.address ?? {}) },
     note: typeof d.note === "string" ? d.note : "",
     // the way picked on the cart wins: the cart and checkout keep it in one place (useCart's FULFIL_KEY)
-    fulfil: (savedFulfil() ?? d.fulfil ?? null) as Fulfil | null,
-    slot, gift: d.gift === true, giftNote: typeof d.giftNote === "string" ? d.giftNote.slice(0, 200) : "",
+    fulfil: (quote?.fulfil ?? savedFulfil() ?? d.fulfil ?? null) as Fulfil | null,
+    slot: quote?.slot ?? slot, gift: d.gift === true, giftNote: typeof d.giftNote === "string" ? d.giftNote.slice(0, 200) : "",
     who: whoOf(account),
+    x: sxDraftOf(d.x, quote?.handover ?? handoverPickOf(handoverKept())),
   };
+}
+
+/** The handover slot the buy box picked (N13's contract: sessionStorage mm-handover). */
+function handoverKept(): unknown {
+  try { return JSON.parse(window.sessionStorage.getItem("mm-handover") || "null"); } catch { return null; }
 }
 
 export default function CheckoutForm(props: Props) {
   const t = useLocalize(T);
   const live = useCart();
   const ready = useHydrated();
+  const box = useRef<HTMLDivElement>(null);
   // The order placed, the page leaves for the payment page with the cart emptied: the order stays drawn as it was
   // (its button busy) until that page opens, never "Your cart is empty" meanwhile - the cart is emptied once that is
   // on screen (a buy-now order leaves it as it was). Back from the payment page out of the browser's cache, the page is
@@ -95,8 +112,10 @@ export default function CheckoutForm(props: Props) {
     window.addEventListener("pageshow", back);
     return () => window.removeEventListener("pageshow", back);
   }, []);
-  if (!ready) return <div className="st-cart-wait" aria-busy="true" />;
-  const cart = leaving?.cart ?? (props.buy?.length ? props.buy : live);
+  const cart = ready ? leaving?.cart ?? (props.buy?.length ? props.buy : live) : [];
+  // checkout's place kept until the browser's cart is read (P10, 2026-11-18): its height when first drawn last time
+  useBoxCookie(box, "co", cart.length, ready, true);
+  if (!ready) return <ReserveBox reserve={props.sx.reserve} />;
   if (!cart.length) {
     return (
       <div className="st-empty">
@@ -105,15 +124,16 @@ export default function CheckoutForm(props: Props) {
       </div>
     );
   }
-  return <Checkout key={round} {...props} cart={cart} onPlaced={(url) => setLeaving({ cart, url, buy: !!props.buy?.length })} />;
+  return <div ref={box}><Checkout key={round} {...props} cart={cart} onPlaced={(url) => setLeaving({ cart, url, buy: !!props.buy?.length })} /></div>;
 }
 
 function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => void }) {
-  const { locale, intl, products, settings, whens, showroom, account, balance, links, licence, today, slots, districts, lookup, cart, onPlaced } = props;
+  const { locale, intl, products, settings, whens, showroom, account, balance, links, licence, today, slots, districts, lookup, cart, onPlaced, sx } = props;
   const t = useLocalize(T);
   const w = useLocalize(W);
+  const x = useLocalize(X);
   const payT = useLocalize(PayT);
-  const [draft, setDraft] = useState<Draft>(() => loadDraft(account));
+  const [draft, setDraft] = useState<Draft>(() => loadDraft(account, sx.quote));
   const [wallet, setWallet] = useState(false);
   const [errs, setErrs] = useState<Record<string, string>>({});
   const [lineErr, setLineErr] = useState<Record<string, string>>({});
@@ -146,10 +166,23 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
   const blocked = lines.some((l) => l.issue);
   const steps = stepsFor(way);
   const slotsOn = way === "jeddah" && slots ? slots : null;
+  // the build of 2026-11-18 (B3): handed over at a session (N15: small things, the account's own seated booking), the
+  // handover slot (N13: pickup with a bike), still learning (N17: with a bike, while learn-to-ride takes sign-ups)
+  const xd = draft.x ?? EMPTY_SX;
+  const small = smallOnly(lines);
+  const sessionsOn = sx.settings.session.on && small && sx.sessions.length > 0 && options.some((o) => o.id === "pickup");
+  const sess = way === "pickup" && sessionsOn && xd.session && sx.sessions.some((s) => s.entry === xd.session) ? xd.session : null;
+  const handoverOn = way === "pickup" && bike && !sess && sx.settings.handover && sx.handover.on;
+  const learnOn = bike && sx.settings.learning && sx.learnOpen;
+  const setX = (patch: Partial<SxDraft>) => {
+    setDraft((d) => ({ ...d, x: { ...(d.x ?? EMPTY_SX), ...patch } }));
+    clear(Object.keys(patch).filter((k) => k === "pin" || k === "handover" || k === "session"));
+  };
+  const setErr = (f: string, m: string) => setErrs((e) => ({ ...e, [f]: m }));
   // the Riyadh clock (this form is drawn in the browser only): today's delivery windows already started are not offered
   // (bug hunt 2026-11-18)
   const now = riyadhClock(new Date());
-  const problems = checkoutProblems({ way, contact: draft.contact, address: draft.address, slot: draft.slot, slots, today, districts, now });
+  const problems = [...checkoutProblems({ way, contact: draft.contact, address: draft.address, slot: draft.slot, slots, today, districts, now }), ...sxProblems(xd, sx.settings.company)];
   const [view, setView] = useState<{ open: StepId; seen: StepId[] }>(() => {
     // a way nobody picked yet (not on the cart, not here before) is asked for, even though one is ticked to start with
     const fix = firstOpen(steps, problems);
@@ -173,7 +206,7 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
     if (k.code === "phone_len") return w.phoneLen(k.n ?? 0);
     if (k.code === "postal_len") return w.postalLen(k.n ?? 0);
     if (k.code === "extra_len") return w.extraLen(k.n ?? 0);
-    return w.checks[k.code] ?? t.errs[k.code] ?? t.errs.fix;
+    return x.checks[k.code] ?? w.checks[k.code] ?? t.errs[k.code] ?? t.errs.fix;
   };
   const valueOf = (f: string): string => (f in draft.contact ? draft.contact[f as keyof Contact] : f in draft.address ? draft.address[f as keyof Address] : "");
   /** What is wrong with a field, as specifically as it can be said (F77). */
@@ -192,7 +225,9 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
     setDraft((d) => ({ ...d, address: { ...d.address, ...patch } }));
     clear([...Object.keys(patch), "address", ...("district" in patch ? ["district_unserved"] : [])]);
   };
-  const setWay = (id: Fulfil) => { saveFulfil(id); setSwitched(null); setDraft((d) => ({ ...d, fulfil: id })); clear(["fulfil", "slot"]); };
+  const setWay = (id: Fulfil, session: string | null = null) => {
+    saveFulfil(id); setSwitched(null); setDraft((d) => ({ ...d, fulfil: id, x: { ...(d.x ?? EMPTY_SX), session } })); clear(["fulfil", "slot", "session"]);
+  };
   const fail = (m: string) => { setMsg(m); requestAnimationFrame(() => top.current?.focus()); };
   // the field to fix gets the keyboard once its step is open (two frames: the step opens, then draws its fields)
   const focusField = (f: string) => requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -201,6 +236,7 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
   }));
 
   function wayName(id: Way): string {
+    if (id === "pickup" && sess) return x.atSession;
     if (id === "pickup") return bike ? w.pickupBuilt : t.pickup;
     if (id === "jeddah") return bike ? w.jeddahBuilt : t.jeddah;
     return id === "ksa" ? t.ksa : "";
@@ -278,6 +314,10 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
         promo: promo.hit?.code ?? (promo.busy ? promo.want : null) ?? undefined, giftCard: !giftLines && gift.card ? gift.card.code : undefined,
         gift: !digital && draft.gift, giftNote: draft.giftNote, slot: slotsOn ? draft.slot : null,
       });
+      Object.assign(body, sxExtras({
+        d: xd, way, bike, small, quote: sx.quote?.token ?? null, on: sx.settings, learnOpen: sx.learnOpen, sessions: sessionsOn ? sx.sessions : [],
+        handoverOpen: handoverOn && !!pickOpen(sx.handover, xd.handover), seasonSlot: !!slotsOn?.season && !!draft.slot,
+      }));
       const r = await fetch("/api/store/checkout", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
       const b = (await r.json().catch(() => ({}))) as { ok?: boolean; url?: string; error?: string; variant?: string | null; no?: number; giftKey?: string };
       if (b.ok && b.url) {
@@ -290,6 +330,12 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
       const code = b.error || "generic";
       const place = refusalPlace(code);
       if (place.line && b.variant) setLineErr({ [b.variant]: t.lineIssue[code] ?? t.lineIssue.gone });
+      // the build of 2026-11-18's refusals: put on their part, in their step (lib/sx-b3.ts sxPlace)
+      const sxf = sxPlace(code);
+      if (sxf) {
+        setErrs((e) => ({ ...e, [sxf]: x.checks[code] ?? t.errs.fix }));
+        setView((v) => ({ ...v, open: sxf === "pin" ? "address" : sxf === "coVat" ? "review" : "delivery" }));
+      }
       const field = place.field === "district" ? "district_unserved" : place.field;
       if (field && field !== "promo" && field !== "giftCard") {
         setErrs((x) => ({ ...x, [field]: field === "address" ? t.errs.address : words(field === "district_unserved" || field === "slot" ? field : code) }));
@@ -299,7 +345,7 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
       // Place order goes through without it rather than being refused the same way again
       if (field === "promo") promo.remove();
       if (field === "giftCard") gift.remove();
-      fail(code === "city" ? t.errs.address : w.checks[code] ?? t.errs[code] ?? t.errs.generic);
+      fail(code === "city" ? t.errs.address : x.checks[code] ?? w.checks[code] ?? t.errs[code] ?? t.errs.generic);
     } catch {
       fail(t.errs.network);
     }
@@ -307,12 +353,15 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
   }
 
   const days = slotsOn ? slotDays(slotsOn, today, now) : [];
-  const times = slotsOn ? (draft.slot?.day && days.includes(draft.slot.day) ? slotTimes(slotsOn, draft.slot.day, now) : slotsOn.times) : [];
+  // before a day is picked, the first day's windows (Ramadan's evening ones in Ramadan, N36), not every window there is
+  const times = slotsOn ? slotTimes(slotsOn, draft.slot?.day && days.includes(draft.slot.day) ? draft.slot.day : days[0] ?? today, draft.slot?.day && days.includes(draft.slot.day) ? now : null) : [];
   const slotText = (s: { day: string; time: string } | null) => {
     const tm = s && slotsOn?.times.find((x) => x.id === s.time);
     return s && tm && days.includes(s.day) ? `${dayLabel(s.day, intl)} · ${timeLabel(tm, intl)}` : "";
   };
   const wayLine = (id: Way) => {
+    if (id === "pickup" && sess) return sx.sessions.find((s) => s.entry === sess)?.label ?? "";
+    if (id === "pickup" && handoverOn && handoverText(sx.handover, xd.handover, x, intl)) return handoverText(sx.handover, xd.handover, x, intl);
     if (id === "pickup") return [whens.pickup ? w.ready(whens.pickup) : "", showroom.address, showroom.hours].filter(Boolean).join(" · ");
     if (id === "jeddah" && slotsOn) return slotText(draft.slot);
     return id !== "digital" && whens[id] ? t.arrives(whens[id] as string) : "";
@@ -344,15 +393,31 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
         {switched && way === "pickup" && <p className="st-co-switched" role="status">{w.unserved(switched, wayName("pickup"))}</p>}
         {options.length ? (
           <div className="st-ways-pick big" role="radiogroup" aria-labelledby="st-co-delivery-h">
-            {options.map((o) => (
-              <label key={o.id} className={way === o.id ? "on" : undefined}>
-                <input type="radio" name="st-fulfil" value={o.id} checked={way === o.id} onChange={() => setWay(o.id)} />
-                <span><b>{wayName(o.id)}</b>{wayLine(o.id) && <small>{wayLine(o.id)}</small>}</span>
-                <em>{o.fee === 0 ? t.free : <Amt>{sar(o.fee)}</Amt>}</em>
+            {options.map((o) => {
+              const on = way === o.id && !(o.id === "pickup" && sess);
+              // the showroom's own words stay on the pickup way while a session is picked (wayName/wayLine name the session)
+              const name = o.id === "pickup" && sess ? (bike ? w.pickupBuilt : t.pickup) : wayName(o.id);
+              const line = o.id === "pickup" && sess ? [whens.pickup ? w.ready(whens.pickup) : "", showroom.address, showroom.hours].filter(Boolean).join(" · ") : wayLine(o.id);
+              return (
+                <label key={o.id} className={on ? "on" : undefined}>
+                  <input type="radio" name="st-fulfil" value={o.id} checked={on} onChange={() => setWay(o.id)} />
+                  <span><b>{name}</b>{line && <small>{line}</small>}</span>
+                  <em>{o.fee === 0 ? t.free : <Amt>{sar(o.fee)}</Amt>}</em>
+                </label>
+              );
+            })}
+            {sessionsOn && (
+              <label className={sess ? "on" : undefined}>
+                <input type="radio" name="st-fulfil" value="session" checked={!!sess} onChange={() => setWay("pickup", sx.sessions[0].entry)} />
+                <span><b>{x.atSession}</b><small>{sx.sessions.find((s) => s.entry === sess)?.label ?? sx.sessions[0].label}</small></span>
+                <em>{t.free}</em>
               </label>
-            ))}
+            )}
           </div>
         ) : <p className="bk-ferr" role="alert">{t.errs.fulfil}</p>}
+        {sess && <SessionPick sessions={sx.sessions} value={sess} set={setX} err={errs.session} x={x} />}
+        {!sess && errs.session && <p className="bk-ferr" role="alert">{errs.session}</p>}
+        {handoverOn && <HandoverBox h={sx.handover} pick={xd.handover} set={setX} err={errs.handover} x={x} intl={intl} />}
         {slotsOn && days.length > 0 && (
           <div className="st-co-slot" id="st-co-slot">
             <Pills name="st-co-slot-day" label={w.slotDay} value={draft.slot && days.includes(draft.slot.day) ? draft.slot.day : null}
@@ -371,11 +436,14 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
         <AddressFields t={t} way={way} a={draft.address} set={setAddress} errs={errs} check={check} requiredLabel={w.required}
           districts={districts && way === "jeddah" ? districts.map((d) => pick(locale, d.en, d.ar)) : null}
           lookup={lookup ? { label: w.find, busy: w.finding, busyNow: finding, find: () => void find() } : null} />
+        {way === "jeddah" && sx.settings.pin && <PinBox pin={xd.pin} set={setX} err={errs.pin} x={x} t={t} />}
         <p className="mm-sr" role="status">{foundMsg}</p>
       </>
     ),
     review: (
       <>
+        {sx.settings.company && <CompanyBox d={xd} set={setX} errs={errs} setErr={setErr} x={x} t={t} requiredLabel={w.required} />}
+        {learnOn && <LearningTick on={xd.learning} set={setX} x={x} />}
         <div className="bk-field st-field">
           <label htmlFor="st-note">{t.noteLabel}<span className="bk-hint"> {t.optional}</span></label>
           <textarea id="st-note" rows={3} maxLength={300} value={draft.note} onChange={(e) => setDraft((d) => ({ ...d, note: e.target.value }))} />
@@ -461,10 +529,13 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
           </p>
           {/* the amount charged now, as "To pay now" above says it: the total less a gift card and the wallet (bug hunt 2026-11-18) */}
           <button type="submit" className="bk-btn wide st-place" disabled={busy || blocked} aria-busy={busy}>
-            {busy ? <><span className="bk-spin" aria-hidden="true" />{t.placing}</> : <><Ic name="lock" size={17} />{money.due > 0 ? t.place(sar(money.due)) : t.placeFree}</>}
+            {/* P14: the amount on its own, never broken between the sign and the number at 320 px */}
+            {busy ? <><span className="bk-spin" aria-hidden="true" />{t.placing}</> : <><Ic name="lock" size={17} />{money.due > 0 ? <><span>{x.placePay}</span> <Amt className="sx3-amt">{sar(money.due)}</Amt></> : t.placeFree}</>}
           </button>
           <p className="st-oblige">{t.oblige}</p>
-          <PayMarks label={payT.methods} compact />
+          {/* P15: no "mada, Visa ... accepted" line, and the marks only where the summary stands beside the steps (on a
+              phone the footer's row of the same marks is a few lines below) */}
+          <div className="sx3-marks"><PayMarks label="" compact /></div>
         </aside>
       </form>
       {/* outside the form: the sign-in is a form of its own */}

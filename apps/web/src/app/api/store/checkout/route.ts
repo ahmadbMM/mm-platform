@@ -1,5 +1,6 @@
 import { guard, json, langOf, payError, refusedVariant } from "@/lib/pay/http";
 import { payRpc, type PayView } from "@/lib/pay/server";
+import { extrasOf, hasExtras, sxRefusal } from "@/lib/sx-b3";
 
 // POST /api/store/checkout: places a store order (store_checkout) and answers where to pay it. A guest
 // may order (name and a Saudi mobile; the order is tracked by its number and that phone); a signed-in
@@ -40,10 +41,19 @@ export async function POST(req: Request) {
     gift_note: b.gift === true ? str(b.giftNote, 200) : undefined,
     slot: slotOf(b.slot),
   };
-  const r = await payRpc<{ order: { id: string; no: number; status: string; total: number }; key: string; payment: PayView | null; gift_key?: string | null }>("store_checkout", {
-    p_id: g.acct?.id ?? null, p_token: g.acct?.token ?? null, p_order: order,
+  // The build of 2026-11-18 (B3, lib/sx-b3.ts extrasOf): a quote's token (N23), a company (N34), a Jeddah map pin (N07),
+  // a handover slot (N13), a booked session (N15), still learning (N17), a Ramadan slot (N36). An order with any of them
+  // goes through store_checkout_plus, which places it with store_checkout and checks and keeps them in the same
+  // transaction (a refusal undoes the whole order); the pages send them only while their settings are on, which the
+  // database work brings.
+  const extras = extrasOf(b);
+  const plus = hasExtras(extras);
+  const r = await payRpc<{ order: { id: string; no: number; status: string; total: number }; key: string; payment: PayView | null; gift_key?: string | null }>(plus ? "store_checkout_plus" : "store_checkout", {
+    p_id: g.acct?.id ?? null, p_token: g.acct?.token ?? null, p_order: plus ? { ...order, ...extras } : order,
   });
   if (r.status !== 200 || !r.data) {
+    const mine = sxRefusal(r.message);
+    if (mine) return json({ ok: false, error: mine }, 409);
     const e = payError(r);
     return json({ ok: false, error: e.error, variant: refusedVariant(r.message) }, e.status);
   }

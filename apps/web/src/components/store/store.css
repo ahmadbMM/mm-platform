@@ -137,7 +137,8 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-bra
 .st-qty button:hover:not(:disabled) { background: var(--st-well); }
 .st-qty button:disabled { opacity: .35; cursor: default; }
 .st-qty output { min-width: 26px; text-align: center; font-weight: 700; font-size: 16px; font-variant-numeric: tabular-nums; }
-.st-qty.sm button { width: 40px; height: 40px; }
+.st-qty.sm { padding: 0; }
+.st-qty.sm button { width: 44px; height: 42px; } /* SM10-B: the cart line's stepper is 44 px high with 44 px buttons */
 
 /* delivery and returns, under the button */
 .st-info { margin-top: 22px; padding: 18px 20px 20px; background: #fff; border: 1px solid var(--st-line); border-radius: var(--st-r-panel); box-shadow: var(--st-sh-1); }
@@ -167,7 +168,8 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-bra
 }
 
 /* ── The cart and checkout ── */
-.st-cart-wait { min-height: 50vh; }
+/* P10 (2026-11-18): the height the cart or checkout had when last drawn here, kept until the browser's cart is read */
+.st-cart-wait { min-height: var(--sx3-n, 50vh); }
 .st-cart, .st-co { display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; align-items: start; }
 /* the booking wizard's cards and pop-ups, in the store's look */
 .st .bk-card { border: 1px solid var(--st-line); border-radius: var(--st-r-card); box-shadow: var(--st-sh-1); }
@@ -175,20 +177,22 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-bra
 .st .bk-pop { border-radius: var(--st-r-panel); border: 1px solid var(--st-line); box-shadow: 0 30px 80px -20px rgba(26, 25, 25, .35); }
 .st .bk-pop-body { padding: 22px 24px 24px; }
 .st-lines { list-style: none; margin: 0; padding: 0; background: #fff; border: 1px solid var(--st-line); border-radius: var(--st-r-card); box-shadow: var(--st-sh-1); }
-.st-line { display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; gap: 14px; padding: 16px; align-items: start; }
+/* SM10-B, P16 (2026-11-18): one template for every line: the photo, the name and its choice, the price; under them the
+   stepper at the start and the drawn Save and Remove buttons at the end, always in the same places (155 px a line) */
+.st-line { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; gap: 0 12px; padding: 14px; align-items: start; }
 .st-line + .st-line { border-top: 1px solid var(--st-line); }
 .st-line.bad { background: rgba(163, 59, 46, .04); }
-.st-line-img { position: relative; width: 84px; height: 84px; border-radius: 16px; background: #fff; box-shadow: inset 0 0 0 1px var(--st-line-2); overflow: hidden; }
-.st-line-img img { width: 100%; height: 100%; object-fit: contain; padding: 6px; box-sizing: border-box; }
+.st-line-img { position: relative; width: 72px; height: 72px; border-radius: 14px; background: #fff; box-shadow: inset 0 0 0 1px var(--st-line-2); overflow: hidden; }
+.st-line-img img { width: 100%; height: 100%; object-fit: contain; padding: 5px; box-sizing: border-box; }
 .st-line-mid { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .st-line-mid small { color: #6e6b63; font-size: 13px; }
-.st-line-name { font-weight: 600; font-size: 15.5px; line-height: 1.3; letter-spacing: -.1px; }
+.st-line-name { font-weight: 600; font-size: 15.5px; line-height: 1.3; letter-spacing: -.1px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .st-line-issue { margin: 4px 0 0; color: #a33b2e !important; font-size: 13px !important; font-weight: 600; }
-.st-line-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 10px; }
+.st-line-acts { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 44px; margin-top: 10px; }
 .st-remove { min-height: 44px; padding: 0 2px; border: 0; background: none; color: #6e6b63; font: inherit; font-size: 13.5px; font-weight: 600; text-decoration: none; cursor: pointer; transition: color .15s ease; }
 .st-remove:hover { text-decoration: underline; text-underline-offset: 3px; color: #1a1919; }
 
-.st-line-tot { font-weight: 700; font-size: 16px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.st-line-tot { font-weight: 700; font-size: 16px; line-height: 1.3; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .st-sum { background: #fff; border: 1px solid var(--st-line); border-radius: var(--st-r-panel); box-shadow: var(--st-sh-2); padding: 22px 24px 24px; }
 .st-sum-h { font-size: 19px !important; letter-spacing: -.3px !important; margin: 0 0 14px; }
 .st-sum .bk-sum-row .tk-amt, .st-sum .bk-sum-row > span:last-child { color: #1a1919; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -215,6 +219,7 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-bra
 @media (min-width: 900px) {
   .st-cart, .st-co { grid-template-columns: minmax(0, 1fr) 380px; gap: 32px; }
   .st-sum { position: sticky; top: 76px; }
+  .st-cart-wait { min-height: var(--sx3-w, 50vh); }
 }
 
 .st-who { display: flex; align-items: center; gap: 8px; margin: 0 0 14px; font-size: 14px; font-weight: 600; color: #4a4843; }

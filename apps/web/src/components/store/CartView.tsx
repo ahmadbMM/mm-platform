@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState, type CSSProperties } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
 import { cartLines, MAX_QTY, shipsKsa, type CartLine } from "@/lib/cart";
@@ -16,6 +16,10 @@ import { ApplePayButton, CodeRow, Off } from "./CheckoutBits";
 import { cartAdd, cartRemove, cartSetQty, savedFulfil, saveFulfil, useCart, useHydrated } from "./useCart";
 import { laterPut, laterRemove, useLater } from "./useLists";
 import { useApplePay, usePromo } from "./useCode";
+import { T as X, type SxText } from "./sx-B3.text";
+import { SxIcon } from "./sx-b3-icons";
+import { useBoxCookie } from "./sx-b3-reserve";
+import "./sx-B3.css";
 
 // micromobility.sa/store/cart: each line with its photo, choice, price and quantity; a line that cannot be ordered as it
 // is (gone, sold out, fewer left) is marked and holds checkout until it is fixed, and any line can be saved for later
@@ -24,13 +28,21 @@ import { useApplePay, usePromo } from "./useCode";
 // "Added"). Beside them, the subtotal, a starter set's saving and the code (F31, F67: only beside the discount
 // licence), the delivery ways with their fees and dates, how far free delivery is, the total, Checkout and, on a device
 // with Apple Pay, Apple's own button to the same checkout (F83: Moyasar's form there offers Apple Pay first).
+// The build of 2026-11-18 (SM10-B, SM10-C, P10, P16): every line in one template (a 72 px photo, the name, the size and
+// colour and the price on one row; under it the 44 px stepper and the drawn Save for later and Remove buttons), the box
+// kept at the height it had when last drawn here until the browser's cart is read (lib/sx-b3.ts), on a phone a row at
+// the top with the total and Checkout, and under the total Apple Pay first, then Checkout.
 export type Whens = Record<string, string | null>;
 
-export default function CartView({ locale, products, settings, whens, licence, applePay }: {
+export default function CartView({ locale, products, settings, whens, licence, applePay, reserve }: {
   locale: string; products: StoreProduct[]; settings: PaySettings; whens: Whens; licence: string | null; applePay: boolean;
+  /** the box's height until the cart is read: narrow (under 900 px) and wide, in px */
+  reserve: { narrow: number; wide: number };
 }) {
   const t = useLocalize(T);
   const w = useLocalize(W);
+  const x = useLocalize(X);
+  const box = useRef<HTMLDivElement>(null);
   const cart = useCart();
   const later = useLater();
   const ready = useHydrated();
@@ -40,14 +52,15 @@ export default function CartView({ locale, products, settings, whens, licence, a
   const [moveMsg, setMoveMsg] = useState("");
   const [gwAdded, setGwAdded] = useState<string[]>([]);
   const promo = usePromo(cart, !!licence && !digitalOnly(cartLines(cart, { products })));
-  if (!ready) return <div className="st-cart-wait" aria-busy="true" />;
+  useBoxCookie(box, "cart", cart.length, ready);
+  if (!ready) return <ReserveBox reserve={reserve} />;
   const store = { products };
   const lines = cartLines(cart, store);
   const kept = cartLines(later, store);
   // added from the row and still in the cart: one removed since (Remove, Save for later) offers Add again
   const gwLive = gwAdded.filter((id) => lines.some((l) => l.product?.id === id));
   const goes = goesWithCart(products, lines, 2, gwLive);
-  const laterList = kept.length > 0 && <Later lines={kept} t={t} w={w} locale={locale} msg={moveMsg} onMove={(v, qty) => {
+  const laterList = kept.length > 0 && <Later lines={kept} t={t} w={w} x={x} locale={locale} msg={moveMsg} onMove={(v, qty) => {
     const got = cartAdd(v, qty);
     if (got === null) { setMoveMsg(t.cartFull); return; }
     if (got <= 0) { setMoveMsg(t.cartHasMost); return; } // the cart's line is at its most already: kept here, not lost
@@ -57,7 +70,7 @@ export default function CartView({ locale, products, settings, whens, licence, a
   }} />;
   if (!lines.length) {
     return (
-      <div className="st-cart st-ct-none">
+      <div className="st-cart st-ct-none" ref={box}>
         <div className="st-ct-main">
           <div className="st-empty">
             <p>{t.cartEmpty}</p>
@@ -82,11 +95,21 @@ export default function CartView({ locale, products, settings, whens, licence, a
   const wayName = (id: Fulfil) => (id === "pickup" ? (bike ? w.pickupBuilt : t.pickup) : id === "jeddah" ? (bike ? w.jeddahBuilt : t.jeddah) : t.ksa);
   const wayLine = (id: Fulfil) => (id === "pickup" ? (whens.pickup ? w.ready(whens.pickup) : "") : whens[id] ? t.arrives(whens[id] as string) : "");
 
+  const go = blocked
+    ? <button type="button" className="bk-btn wide" disabled>{t.checkout}</button>
+    : <Link href="/store/checkout" className="bk-btn wide"><Ic name="lock" size={17} />{t.checkout}</Link>;
   return (
-    <div className="st-cart">
+    <div className="st-cart" ref={box}>
+      {/* SM10-C: on a phone, the total and Checkout before the lines (not pinned: it scrolls away with the page) */}
+      <div className="sx3-top">
+        <p><span>{t.total}</span><Amt>{sar(money.total)}</Amt></p>
+        {blocked
+          ? <button type="button" className="bk-btn" disabled>{t.checkout}</button>
+          : <Link href="/store/checkout" className="bk-btn">{t.checkout}</Link>}
+      </div>
       <div className="st-ct-main">
         <ul className="st-lines">
-          {lines.map((l) => <Line key={l.item.variant} l={l} t={t} w={w} locale={locale} />)}
+          {lines.map((l) => <Line key={l.item.variant} l={l} t={t} w={w} x={x} locale={locale} />)}
         </ul>
         {goes.length > 0 && <GoesWith list={goes} added={gwLive} onAdded={(id) => setGwAdded((x) => (x.includes(id) ? x : [...x, id]))} t={t} w={w} locale={locale} />}
         {laterList}
@@ -120,50 +143,62 @@ export default function CartView({ locale, products, settings, whens, licence, a
         <p className="bk-sum-tot sep"><span>{t.total}</span><Amt>{sar(money.total)}</Amt></p>
         <p className="st-vatline">{t.vatOf(sar(vatIn(Math.max(0, money.total - giftValue))))}</p>
         {blocked && <p className="bk-err" role="alert">{t.fixCart}</p>}
-        {blocked
-          ? <button type="button" className="bk-btn wide" disabled>{t.checkout}</button>
-          : <Link href="/store/checkout" className="bk-btn wide"><Ic name="lock" size={17} />{t.checkout}</Link>}
+        {/* SM10-B: the express button first, then Checkout (both lead to the same checkout) */}
         {apple && !blocked && <ApplePayButton label={w.applePay} lang={locale} onClick={() => router.push("/store/checkout")} />}
+        {go}
         <Link href="/store" className="st-link">{t.keepShopping}</Link>
       </aside>
     </div>
   );
 }
 
-function Line({ l, t, w, locale }: { l: CartLine; t: StoreText; w: W4Text; locale: string }) {
+/** The box drawn until the browser's cart is read: the height the cart had when last drawn (P10). */
+export function ReserveBox({ reserve }: { reserve: { narrow: number; wide: number } }) {
+  return <div className="st-cart-wait" aria-busy="true" style={{ "--sx3-n": `${reserve.narrow}px`, "--sx3-w": `${reserve.wide}px` } as CSSProperties} />;
+}
+
+/** One line (SM10-B, P16): the photo, the name, the size and colour (and "2 × price" for more than one) and the line's
+ *  price on the first row; the stepper, Save for later and Remove on the second, always in the same places. */
+function Line({ l, t, w, x, locale }: { l: CartLine; t: StoreText; w: W4Text; x: SxText; locale: string }) {
   const p = l.product, v = l.variant, img = p ? linePhoto(p, v) : null;
   const name = p ? pick(locale, p.name_en, p.name_ar) : "";
   const max = Math.max(1, Math.min(MAX_QTY, v?.stock ?? 1));
   const issue = l.issue === "gone" ? t.gone : l.issue === "out" ? t.out : l.issue === "short" ? t.short(v?.stock ?? 0) : "";
+  const label = v ? variantLabel(v, locale) : "";
   return (
     <li className={`st-line${l.issue ? " bad" : ""}`}>
-      <span className="st-line-img">{img ? <img src={sized(img, 640)} alt="" loading="lazy" /> : <NoPhoto />}</span>
+      <span className="st-line-img">{img ? <img src={sized(img, 320)} alt="" loading="lazy" width={72} height={72} /> : <NoPhoto />}</span>
       <div className="st-line-mid">
         {p ? <Link href={productHref(p)} className="st-line-name">{name}</Link> : <span className="st-line-name">{t.unavailable}</span>}
-        {v && variantLabel(v, locale) && <small>{variantLabel(v, locale)}</small>}
-        {p && <small><Amt>{t.each(sar(l.unit))}</Amt></small>}
+        {(label || (p && l.item.qty > 1)) && <small>{[label, p && l.item.qty > 1 ? x.times(l.item.qty, sar(l.unit)) : ""].filter(Boolean).join(" · ")}</small>}
         {issue && <p className="st-line-issue" role="status">{issue}</p>}
-        <div className="st-line-acts">
-          {p && v && v.stock > 0 && (
-            <div className="st-qty sm" role="group" aria-label={`${t.qty}: ${name}`}>
-              <button type="button" onClick={() => cartSetQty(l.item.variant, l.item.qty - 1)} disabled={l.item.qty <= 1} aria-label={t.less}><Ic name="minus" size={15} /></button>
-              <output>{l.item.qty}</output>
-              <button type="button" onClick={() => cartSetQty(l.item.variant, Math.min(max, l.item.qty + 1))} disabled={l.item.qty >= max} aria-label={t.more}><Ic name="plus" size={15} /></button>
-            </div>
-          )}
-          <button type="button" className="st-remove" onClick={() => cartRemove(l.item.variant)} aria-label={`${t.remove}: ${name}`}>{t.remove}</button>
-          {p && (
-            <button type="button" className="st-remove" onClick={() => { laterPut(l.item); cartRemove(l.item.variant); }} aria-label={`${w.saveLater}: ${name}`}>{w.saveLater}</button>
-          )}
-        </div>
       </div>
       <Amt className="st-line-tot">{sar(l.issue ? l.unit * l.item.qty : l.total)}</Amt>
+      <div className="st-line-acts">
+        {p && v && v.stock > 0 ? (
+          <div className="st-qty sm" role="group" aria-label={`${t.qty}: ${name}`}>
+            <button type="button" onClick={() => cartSetQty(l.item.variant, l.item.qty - 1)} disabled={l.item.qty <= 1} aria-label={t.less}><Ic name="minus" size={15} /></button>
+            <output>{l.item.qty}</output>
+            <button type="button" onClick={() => cartSetQty(l.item.variant, Math.min(max, l.item.qty + 1))} disabled={l.item.qty >= max} aria-label={t.more}><Ic name="plus" size={15} /></button>
+          </div>
+        ) : <span />}
+        <span className="sx3-acts">
+          {p && (
+            <button type="button" className="sx3-icbtn" onClick={() => { laterPut(l.item); cartRemove(l.item.variant); }} aria-label={x.saveOf(name)} title={w.saveLater}>
+              <SxIcon name="bookmark" size={20} />
+            </button>
+          )}
+          <button type="button" className="sx3-icbtn" onClick={() => cartRemove(l.item.variant)} aria-label={x.removeOf(name || t.unavailable)} title={t.remove}>
+            <SxIcon name="trash" size={20} />
+          </button>
+        </span>
+      </div>
     </li>
   );
 }
 
 /** Saved for later (F68): what was put aside, with Move to cart and Remove; a choice no longer in the store says so. */
-function Later({ lines, t, w, locale, msg, onMove }: { lines: CartLine[]; t: StoreText; w: W4Text; locale: string; msg: string; onMove: (variant: string, qty: number) => void }) {
+function Later({ lines, t, w, x, locale, msg, onMove }: { lines: CartLine[]; t: StoreText; w: W4Text; x: SxText; locale: string; msg: string; onMove: (variant: string, qty: number) => void }) {
   return (
     <section className="st-ct-later" aria-labelledby="st-ct-later-h">
       <h2 id="st-ct-later-h" className="st-sum-h">{w.laterH(lines.length)}</h2>
@@ -174,17 +209,21 @@ function Later({ lines, t, w, locale, msg, onMove }: { lines: CartLine[]; t: Sto
           const name = p ? pick(locale, p.name_en, p.name_ar) : t.unavailable;
           return (
             <li key={l.item.variant} className="st-line">
-              <span className="st-line-img">{img ? <img src={sized(img, 640)} alt="" loading="lazy" /> : <NoPhoto />}</span>
+              <span className="st-line-img">{img ? <img src={sized(img, 320)} alt="" loading="lazy" width={72} height={72} /> : <NoPhoto />}</span>
               <div className="st-line-mid">
                 {p ? <Link href={productHref(p)} className="st-line-name">{name}</Link> : <span className="st-line-name">{name}</span>}
                 {v && variantLabel(v, locale) && <small>{variantLabel(v, locale)}</small>}
                 {l.issue === "gone" ? <p className="st-line-issue" role="status">{t.lineIssue.gone}</p> : l.issue === "out" ? <p className="st-line-issue" role="status">{t.soldOut}</p> : null}
-                <div className="st-line-acts">
-                  {p && v && <button type="button" className="bk-btn2 st-ct-move" onClick={() => onMove(l.item.variant, l.item.qty)} aria-label={`${w.toCart}: ${name}`}>{w.toCart}</button>}
-                  <button type="button" className="st-remove" onClick={() => laterRemove(l.item.variant)} aria-label={`${t.remove}: ${name}`}>{t.remove}</button>
-                </div>
               </div>
-              {p && <Amt className="st-line-tot">{sar(l.unit * l.item.qty)}</Amt>}
+              {p ? <Amt className="st-line-tot">{sar(l.unit * l.item.qty)}</Amt> : <span />}
+              <div className="st-line-acts">
+                {p && v ? <button type="button" className="bk-btn2 st-ct-move" onClick={() => onMove(l.item.variant, l.item.qty)} aria-label={`${w.toCart}: ${name}`}>{w.toCart}</button> : <span />}
+                <span className="sx3-acts">
+                  <button type="button" className="sx3-icbtn" onClick={() => laterRemove(l.item.variant)} aria-label={x.removeOf(name)} title={t.remove}>
+                    <SxIcon name="trash" size={20} />
+                  </button>
+                </span>
+              </div>
             </li>
           );
         })}

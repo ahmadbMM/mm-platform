@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { addItem, CART_KEY, parseCart, removeItem, setItemQty, type CartItem } from "@/lib/cart";
+import { keepCartCount } from "./sx-b3-reserve";
 
 // The cart in this browser (localStorage "mm-cart"), shared by the header's count, the product page, the
 // cart and checkout: one copy here, every component that shows it re-drawn when it changes - in this tab,
@@ -21,6 +22,7 @@ function read(): CartItem[] {
 function write(next: CartItem[]) {
   cache = next;
   try { window.localStorage.setItem(CART_KEY, JSON.stringify(next)); } catch { /* private mode or full: kept for this page */ }
+  keepCartCount(next.length); // the cart page keeps its height from it before the cart is read (P10, 2026-11-18)
   listeners.forEach((l) => l());
 }
 
