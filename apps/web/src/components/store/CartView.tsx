@@ -44,11 +44,15 @@ export default function CartView({ locale, products, settings, whens, licence, a
   const store = { products };
   const lines = cartLines(cart, store);
   const kept = cartLines(later, store);
-  const goes = goesWithCart(products, lines, 2, gwAdded);
+  // added from the row and still in the cart: one removed since (Remove, Save for later) offers Add again
+  const gwLive = gwAdded.filter((id) => lines.some((l) => l.product?.id === id));
+  const goes = goesWithCart(products, lines, 2, gwLive);
   const laterList = kept.length > 0 && <Later lines={kept} t={t} w={w} locale={locale} msg={moveMsg} onMove={(v, qty) => {
     const got = cartAdd(v, qty);
     if (got === null) { setMoveMsg(t.cartFull); return; }
     if (got <= 0) { setMoveMsg(t.cartHasMost); return; } // the cart's line is at its most already: kept here, not lost
+    // the cart took part of it (a line holds 10 at most): the rest stays here, never lost
+    if (got < qty) { laterPut({ variant: v, qty: qty - got }); setMoveMsg(t.cartHasMost); return; }
     setMoveMsg(""); laterRemove(v);
   }} />;
   if (!lines.length) {
@@ -84,7 +88,7 @@ export default function CartView({ locale, products, settings, whens, licence, a
         <ul className="st-lines">
           {lines.map((l) => <Line key={l.item.variant} l={l} t={t} w={w} locale={locale} />)}
         </ul>
-        {goes.length > 0 && <GoesWith list={goes} added={gwAdded} onAdded={(id) => setGwAdded((x) => [...x, id])} t={t} w={w} locale={locale} />}
+        {goes.length > 0 && <GoesWith list={goes} added={gwLive} onAdded={(id) => setGwAdded((x) => (x.includes(id) ? x : [...x, id]))} t={t} w={w} locale={locale} />}
         {laterList}
       </div>
       <aside className="st-sum" aria-labelledby="st-sum-h">

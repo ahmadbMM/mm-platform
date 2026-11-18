@@ -21,6 +21,7 @@ import { rpcResult } from "@/lib/rpc-client";
 import { genderChip } from "@/lib/session-gender";
 import { ticketCue, type AddonItem as TicketAddonItem, type TicketRoute, type TicketRow, type TicketSession } from "@/lib/tickets";
 import { Ic, KindIc } from "./BookIcons";
+import { CalendarIcon } from "@/components/site/Icons";
 import PayMarks from "@/components/pay/PayMarks";
 import { T, type BookingText } from "./Booking.text";
 
@@ -37,7 +38,9 @@ import { T, type BookingText } from "./Booking.text";
 // server checks it again, and the database's GENDER_ONLY reads the same.
 
 export type FlowEvent = { key: string; title: string; meta: string; logo: string; note: string; sessions: BookSession[] };
-export type FlowText = { eventTitle: string; noDates: string; membersNote: string; clubLink: string; gather: string; start: string };
+export type FlowText = { eventTitle: string; noDates: string; membersNote: string; clubLink: string; gather: string; start: string;
+  /** The dates' title of an event booked in the booking app alone (Experiences > Steps: "Pick a date"): no ride, no steps. */
+  dateTitle?: string };
 export type FlowLinks = {
   /** The community application (Apply for membership). */
   apply: string;
@@ -121,7 +124,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const resume = useMemo(() => {
     const s = start.session ? all.find((x) => x.id === start.session) : undefined;
     // a Saturday ride booked at micromobility.sa/saturday is never picked here, even from an old address
-    return s && acct && !s.satLink ? { s, gate: gateFor(s, acct) } : null;
+    return s && acct && !s.satLink && !s.handoff && !s.fbk ? { s, gate: gateFor(s, acct) } : null;
   }, []); // eslint-disable-line react-hooks/exhaustive-deps -- the address is read once, as the page drew it
   const [selId, setSelId] = useState<string | null>(() => (resume && !resume.gate ? resume.s.id : null));
   const sel = all.find((s) => s.id === selId) ?? null;
@@ -162,16 +165,23 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   }, []);
   const go = (n: Step) => { setStep(n); setErr(""); setFieldErr(null); if (n === 3) setRet(false); focusTop(); };
 
+  // Sign in first, then back to this very ride: the address carries it across the reload (SignIn reloads the page). Every
+  // way into the sign-in pop-up writes it: a date picked signed out, and a session that ran out at Confirm (bug hunt
+  // 2026-11-18). The riders' answers are asked again: on a shared phone they may be another account's.
+  const keepRide = (s: BookSession | null) => {
+    if (!s) return;
+    try {
+      const u = new URL(window.location.href);
+      u.searchParams.set("ev", evKey ?? ""); u.searchParams.set("session", s.id);
+      window.history.replaceState(window.history.state, "", u.toString());
+    } catch { /* the ride is picked again by hand */ }
+  };
+
   // ── Picking a date, behind the app's gates (selectSessCard) ───────────────────────────────
   const pick = (s: BookSession, a: BookAccount | null = acctNow) => {
-    if (s.opens || s.satLink) return;
+    if (s.opens || s.satLink || s.handoff || s.fbk) return;
     if (!a) {
-      // Sign in first, then back to this very ride: the address carries it across the reload.
-      try {
-        const u = new URL(window.location.href);
-        u.searchParams.set("ev", evKey ?? ""); u.searchParams.set("session", s.id);
-        window.history.replaceState(window.history.state, "", u.toString());
-      } catch { /* the ride is picked again by hand */ }
+      keepRide(s);
       setModal({ kind: "signin" });
       return;
     }
@@ -225,7 +235,10 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   function waiverCopy(s: BookSession | null) { return t.waiver[s ? waiverKind(s) : "bike"]; }
   // The page's title names the step (row 15; W3C's multi-page forms): "Confirm · Step 3 of 3 · Experiences …"; the page's
   // own title stands on the list of events and the tickets, and comes back as each step goes.
-  const stepName = done ? "" : ev ? `${stepLabel(step)} · ${fill(t.stepOf, Math.max(0, steps.indexOf(step)) + 1, steps.length)}` : "";
+  // An event whose dates all go to the booking app (a run, a race, the donor, Petromin Days; BookSession.handoff) is no
+  // booking here: its dates under a plain title, no steps and no Continue, and no ride named for one without a bike.
+  const handedOver = !!ev && ev.sessions.some((s) => !!s.handoff) && ev.sessions.every((s) => !!s.handoff || !!s.fbk);
+  const stepName = done || handedOver ? "" : ev ? `${stepLabel(step)} · ${fill(t.stepOf, Math.max(0, steps.indexOf(step)) + 1, steps.length)}` : "";
   useEffect(() => {
     if (!stepName) return;
     const base = document.title;
@@ -354,8 +367,9 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   const rental = free ? freeAmt : disc > 0 ? <Money n={Math.max(0, lo - disc)} word={word} /> : <Money n={lo} hi={hi} word={word} />;
   // Paid now online (2026-11-10): a paid ride that is not a race (paid to the organiser) or a Petromin night, with
   // something to pay, booked into a place (a waitlisted place pays nothing now). Required, or the rider's choice.
+  // Moyasar takes 1 SAR at least (pay_booking_start's PAY_TOO_SMALL): an amount under it is paid at the desk.
   const payable = !!sel && !free && !!pay && pay.mode !== "off" && !["vlap", "arena", "petromin"].includes(sel.kind) && !isFull(sel)
-    && Math.max(0, lo - disc) + addonTotal > 0;
+    && Math.max(0, lo - disc) + addonTotal >= 1;
   const payingNow = payable && (pay!.mode === "required" || payNow);
 
   // ── Confirm (submitReg) ──────────────────────────────────────────────────────────────────
@@ -363,7 +377,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     funnel(e === "place_gone" ? "place_gone" : "refused", fk(), e === "place_gone" ? undefined : e);
     // the last place went to another device: nothing was kept, and the rider chooses (row 13)
     if (e === "place_gone" && sel) { setGone((g) => (g.includes(sel.id) ? g : [...g, sel.id])); setModal({ kind: "gone" }); return; }
-    if (e === "signin") { setAcctNow(null); setModal({ kind: "signin" }); return; }
+    if (e === "signin") { keepRide(sel); setAcctNow(null); setModal({ kind: "signin" }); return; }
     if (e === "members") { setModal({ kind: "members" }); return; }
     if (e === "rejected" && sel) { setModal({ kind: "rejected", s: sel }); return; }
     if (e === "fix_first") { setModal({ kind: "fix" }); return; }
@@ -378,7 +392,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   // place is asked for, and one another device took first is refused rather than turned into a waitlist place.
   const submit = async (waitlist = false) => {
     if (!sel || busy) return;
-    if (!acctNow) { setModal({ kind: "signin" }); return; }
+    if (!acctNow) { keepRide(sel); setModal({ kind: "signin" }); return; }
     const re = needsBike(sel) ? riderErr() : null;
     if (re) { go(2); showRiderErr(re); return; }
     // a ticketed event's other seats carry their own names, as a ride's riders do (the server refuses a party without them)
@@ -480,7 +494,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
   };
   // One date is chosen among them (row 11): a radio group, one tab stop, the arrow keys. An arrow moves the choice with
   // the focus where choosing opens nothing (no sign-in, no gate); elsewhere it moves the focus, and Enter or Space chooses.
-  const cardStop = (list: BookSession[]) => tabStop(list, (x) => x.id === selId, (x) => !x.opens && !x.satLink);
+  const cardStop = (list: BookSession[]) => tabStop(list, (x) => x.id === selId, (x) => !x.opens && !x.satLink && !x.handoff && !x.fbk);
   const cardKeys = (e: React.KeyboardEvent<HTMLElement>, list: BookSession[]) => {
     const id = radioKey(e, rtl)?.dataset.id;
     const s = id ? list.find((x) => x.id === id) : undefined;
@@ -496,6 +510,19 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         {s.kind === "workshop" && <span className="sc-partner">{t.partner}</span>}
       </span>
     ) : null;
+    // Full, no waitlist (lib/rides.ts fbkOf, the user, 2026-11-13), as main's Experiences and the booking app draw it: listed
+    // at full strength so nobody takes it for called off, Fully booked where its places would be said, where to go next
+    // under its time, and no radio, so nothing chooses it.
+    if (s.fbk) {
+      return (
+        <div key={s.id} className={`sc-card fbk ev-${s.kind}`}>
+          {kicker}
+          <span className="sc-head"><span className="sc-dot" aria-hidden="true" /><span className="sc-date">{s.near && <><strong className="sc-dw">{s.near}</strong> · </>}{s.day}</span><span className="sc-spots full">{t.fbk}</span></span>
+          <span className="sc-time"><bdi>{s.time}</bdi></span>
+          <span className="sc-meta sc-fbk-l"><CalendarIcon size={13} /><bdi>{s.kind === "saturday" ? t.fbkSat : t.fbkNext}</bdi></span>
+        </div>
+      );
+    }
     if (s.opens) {
       return (
         <div key={s.id} className={`sc-card ev-${s.kind} closed`} role="radio" aria-checked={false} aria-disabled="true">
@@ -510,7 +537,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const rej = !!acctNow?.rejected.includes(s.id);
     const full = isFull(s);
     const low = !full && !s.approval && s.left != null && s.left > 0 && s.left <= 3;
-    const meta = [s.collect, fromLine(s)].filter((x) => !!x);
+    // a date handed to the booking app is priced there (a race's fee is the organiser's, told to those who may book it)
+    const meta = [s.collect, s.handoff ? null : fromLine(s)].filter((x) => !!x);
     const body = (
       <>
         {kicker}
@@ -526,7 +554,9 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     );
     // a Saturday ride while staff take its bookings at micromobility.sa/saturday with a ride code (2026-11-08): its card
     // goes there, for anyone with a code, member or not, as main's Experiences sends it
-    if (s.satLink) return <a key={s.id} href={s.satLink} className={`sc-card ev-${s.kind}${rej ? " rej" : ""}`}>{body}</a>;
+    // and a kind this booking has no steps for goes to the booking app on its card and this date (BookSession.handoff)
+    const out = s.satLink || s.handoff;
+    if (out) return <a key={s.id} href={out} className={`sc-card ev-${s.kind}${rej ? " rej" : ""}`}>{body}</a>;
     return (
       <button key={s.id} type="button" className={`sc-card ev-${s.kind}${on ? " sel" : ""}${rej ? " rej" : ""}`} role="radio" aria-checked={on} tabIndex={stop ? 0 : -1} data-id={s.id} onClick={() => pick(s)}>
         {body}
@@ -634,7 +664,9 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
     const stop = cardStop(ev.sessions);
     body = (
       <section aria-labelledby="bk-ride-h">
-        {head(t.rideTitle, "bk-ride-h")}
+        {handedOver
+          ? <div className="bk-head"><h2 id="bk-ride-h" className="bk-title" tabIndex={-1} data-step-title>{text.dateTitle || t.rideTitle}</h2></div>
+          : head(t.rideTitle, "bk-ride-h")}
         <p className="xs-picked">{ev.title}</p>
         {ev.note && <p className="bk-evnote">{ev.note}</p>}
         {ev.sessions.length === 0 ? (
@@ -656,7 +688,7 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
                 <span className="bk-foot-v"><bdi>{sel.time}</bdi>{isFull(sel) && wlChip}</span>
               </span>
             )}
-            <button type="button" className="bk-btn grow" disabled={!sel} onClick={() => { if (sel) go(ret && reviewReady(sel) ? 3 : nextStep(sel, 1)); }}>{t.cont}</button>
+            {!handedOver && <button type="button" className="bk-btn grow" disabled={!sel} onClick={() => { if (sel) go(ret && reviewReady(sel) ? 3 : nextStep(sel, 1)); }}>{t.cont}</button>}
           </>
         ))}
       </section>
@@ -750,7 +782,8 @@ export default function BookingFlow({ locale, events, prices, maxPrices, jccCap 
         </div>
         {bar(2, (
           <>
-            {typed && !free && <span className="bk-foot-sum tot"><span className="bk-foot-k">{t.total}</span><span className="bk-foot-v">{rental}</span></span>}
+            {/* the same Total as the summary beside it: add-ons picked on the review and kept through its Change count too */}
+            {typed && !free && <span className="bk-foot-sum tot"><span className="bk-foot-k">{t.total}</span><span className="bk-foot-v">{grand}</span></span>}
             <button type="button" className="bk-btn grow" onClick={() => { if (ridersOk()) go(ret && (!needsWaiver(sel) || waiverOk === sel.id) ? 3 : nextStep(sel, 2)); }}>{t.toReview}</button>
           </>
         ))}
@@ -980,11 +1013,15 @@ type PopProps = {
 };
 function Pop({ modal, close, t, links, locale, sel, acct, pay, onGone, onPickBike, onPickGroup, onProfileSaved, pillName }: PopProps) {
   const box = useRef<HTMLDivElement>(null);
+  // Focus goes back to what opened the first pop-up once the last one closes; it moves into each pop-up as it opens,
+  // including one that takes another's place without closing (the profile saved, then the members or gender gate).
   useEffect(() => {
     const from = document.activeElement as HTMLElement | null;
-    requestAnimationFrame(() => box.current?.querySelector<HTMLElement>("button, input, select, a[href]")?.focus());
     return () => { try { from?.focus(); } catch { /* gone */ } };
   }, []);
+  useEffect(() => {
+    requestAnimationFrame(() => box.current?.querySelector<HTMLElement>("button, input, select, a[href]")?.focus());
+  }, [modal.kind]);
   const x = <button type="button" className="bk-x" onClick={close} aria-label={t.close}><Ic name="close" size={18} /></button>;
   let inner: React.ReactNode = null;
   let label = "bk-pop-t";

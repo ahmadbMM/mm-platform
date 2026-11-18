@@ -102,6 +102,8 @@ export const T = {
     toPay: "To pay now",
     summary: "Order summary",
     place: (p: string) => `Place order and pay ${p}`,
+    // nothing left to pay now: a gift card or the wallet covers it all
+    placeFree: "Place order",
     placing: "Placing your order…",
     oblige: "By tapping, you place the order and agree to pay.",
     signTitle: "Sign in",
@@ -285,6 +287,7 @@ export const T = {
     toPay: "المطلوب دفعه الآن",
     summary: "ملخص الطلب",
     place: (p: string) => `تأكيد الطلب والدفع ${p}`,
+    placeFree: "تأكيد الطلب",
     placing: "جارٍ تأكيد طلبك…",
     oblige: "بالضغط، تؤكد طلبك وتلتزم بالدفع.",
     signTitle: "تسجيل الدخول",

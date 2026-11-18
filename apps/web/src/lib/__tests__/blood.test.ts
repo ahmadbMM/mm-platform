@@ -273,15 +273,20 @@ describe("on Experiences, once a session exists", () => {
     expect(membersOnlyEvent("blood")).toBe(false);
     expect(membersOnlyDate({ members: false, kind: "blood" })).toBe(false);
   });
-  // staging: Experiences is its own booking flow (BookingFlow), which has no donor step, so it lists no Blood Donation
-  // event, as it lists no run and no race. Main's page draws a card and hands the booking to the app (?ev=blood).
-  it("is listed nowhere on staging's booking flow: with a session on the books the page still names none of it", async () => {
+  // staging: Experiences is its own booking flow (BookingFlow), which has no donor step. As on main's page, the event has a
+  // card of its own while it has a date, and its date hands the booking to the app (?ev=blood; bug hunt 2026-11-18,
+  // stg-diff0-2). The card is named and nothing more: the cause, the rules, the poster and the waiver stay the booking
+  // app's, and none of them reaches the page.
+  it("has a card on staging's booking flow while it has a date, named alone, handed to the booking app", async () => {
     for (const l of ["en", "ar", "de", "ur"]) {
       resetRides();
       const { page, steps, html } = await experiences([BD, JCC], l);
-      expect(steps.props.events.map((e) => e.key)).toEqual(["jcc", "community"]);
+      expect(steps.props.events.map((e) => e.key)).toEqual(["jcc", "community", "blood"]);
+      const card = steps.props.events.find((e) => e.key === "blood")!;
+      expect(card.title).toBe(bloodName(serverL(l)));
+      expect(card.sessions.map((s) => s.handoff)).toEqual([expect.stringMatching(/[?&]ev=blood&session=2099-11-05-bd$/)]);
       const handed = JSON.stringify(page);
-      for (const w of [...named(l), ...MARKS]) {
+      for (const w of [...named(l).filter((x) => x !== bloodName(serverL(l))), ...MARKS.filter((m) => m !== "ev-blood" && m !== "ev=blood")]) {
         expect(html, w).not.toContain(w);
         expect(handed, w).not.toContain(w);
       }

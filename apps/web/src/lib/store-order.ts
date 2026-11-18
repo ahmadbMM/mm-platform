@@ -48,7 +48,7 @@ export type Order = {
   refunds: OrderRefund[];
   /** subtotal - discount + delivery_fee = total; the card pays total - gift_paid - wallet_paid. */
   discount: number; discounts: OrderDiscount[]; promo_code: string | null; gift_paid: number;
-  gift: boolean; gift_note: string | null; slot: { day: string; time: string } | null;
+  gift: boolean; gift_note: string | null; slot: { day: string; time: string; from?: string | null; to?: string | null } | null;
   /** The first "delivered" event: returns are counted from it (F93). */
   delivered_at: string | null;
   returns: OrderReturn[]; gift_cards: IssuedGiftCard[];
@@ -102,9 +102,13 @@ function invoiceNoOf(v: unknown): string | null {
   return typeof v === "string" && /^INV-\d{6,}$/.test(v.trim()) ? v.trim() : null;
 }
 
-function slotOf(v: unknown): { day: string; time: string } | null {
+function slotOf(v: unknown): { day: string; time: string; from?: string | null; to?: string | null } | null {
   const o = v && typeof v === "object" ? (v as Record<string, unknown>) : null;
-  return o && typeof o.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(o.day) && typeof o.time === "string" && o.time ? { day: o.day, time: o.time } : null;
+  if (!(o && typeof o.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(o.day) && typeof o.time === "string" && o.time)) return null;
+  // the window's hours as the order was booked (store_checkout keeps them with the slot, bug hunt 2026-11-18), when it has them
+  const hm = (x: unknown) => (typeof x === "string" && /^\d{2}:\d{2}$/.test(x) ? x : null);
+  const from = hm(o.from), to = hm(o.to);
+  return from && to ? { day: o.day, time: o.time, from, to } : { day: o.day, time: o.time };
 }
 
 function returnOf(r: Record<string, unknown>): OrderReturn | null {

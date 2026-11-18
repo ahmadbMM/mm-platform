@@ -63,11 +63,13 @@ export default function FixRequest({ locale, fields: initial, more: moreAtFirst 
   const items = fixItems(fields);
   const own = fields.every((k) => k === "password" || (k === "email" && was.email.endsWith(APPLE_RELAY)) || ((k === "birth_date" || k === "nationality") && !was[k]));
   const day = (iso: string) => { try { return new Intl.DateTimeFormat(locale === "en" ? "en-GB" : intlOf(locale), { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }).format(new Date(`${iso}T12:00:00Z`)); } catch { return iso; } };
+  // the height with its unit in the page's language ("175 سم"), never a Latin "cm" inside an Arabic sentence
+  const cm = (n: number) => { try { return new Intl.NumberFormat(intlOf(locale), { style: "unit", unit: "centimeter" }).format(n); } catch { return `${n} cm`; } };
   const wasText = (k: string): string | null => {
     if (k === "photo" || k === "password") return null;
     const x = k === "name" ? was.name : k === "email" ? was.email : k === "phone" ? was.phone : k === "birth_date" ? (was.birth_date ? day(was.birth_date) : "")
       : k === "gender" ? (was.gender === "female" ? t.female : was.gender === "male" ? t.male : "") : k === "nationality" ? (natOpts?.find((o) => o.value === was.nationality)?.label ?? was.nationality ?? "")
-      : k === "residence" ? [natOpts?.find((o) => o.value === was.country)?.label ?? was.country, was.city].filter(Boolean).join(" · ") : k === "height" ? (was.height ? `${was.height} cm` : "") : "";
+      : k === "residence" ? [natOpts?.find((o) => o.value === was.country)?.label ?? was.country, was.city].filter(Boolean).join(" · ") : k === "height" ? (was.height ? cm(was.height) : "") : "";
     return x ? t.fixWas(x) : t.fixWasEmpty;
   };
   const msg = (code: string | undefined) => (code ? (code === "weak" ? t.errors.weak : code === "mismatch" ? t.pwErrors.mismatch : t.errors[code] || t.fixCheck) : "");

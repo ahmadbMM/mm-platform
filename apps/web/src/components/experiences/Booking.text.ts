@@ -43,6 +43,10 @@ export const T = {
     // the session card: availLabel waitlistLabel spotsLeft1/N rejCardNote ticketCollectAt priceFrom freeLabel partnerStf
     available: "Available",
     waitlist: "Waitlist",
+    // Full, no waitlist (the booking app's sessFbk, sessFbkSat, sessFbkNext; 2026-11-13)
+    fbk: "Fully booked",
+    fbkSat: "See you next Saturday",
+    fbkNext: "See you at the next session",
     left1: "{0} spot left",
     leftN: "{0} spots left",
     rejCard: "Full for this week",
@@ -260,6 +264,9 @@ export const T = {
     },
     available: "متاح",
     waitlist: "قائمة الانتظار",
+    fbk: "محجوز بالكامل",
+    fbkSat: "نراك السبت القادم",
+    fbkNext: "نراك في الجلسة القادمة",
     left1: "{0} مقعد متبقي",
     leftN: "{0} مقاعد متبقية",
     rejCard: "مكتمل هذا الأسبوع",

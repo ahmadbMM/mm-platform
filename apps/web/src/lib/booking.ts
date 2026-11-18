@@ -63,6 +63,12 @@ export type BookSession = {
   /** A Saturday ride while staff take its bookings at micromobility.sa/saturday with a ride code (rentals 20261108120000,
    *  saturday_link_only; the owner, 2026-11-08): where its card goes. The database refuses a rider's booking made here. */
   satLink?: string | null;
+  /** Full, no waitlist (lib/rides.ts fbkOf, the user, 2026-11-13): staff closed it as fully booked. It is listed, said Fully
+   *  booked, and nothing chooses it. */
+  fbk?: boolean;
+  /** A kind this site's booking has no steps for (a run, a race, the donor, yoga, the Farm House Night, a Petromin night):
+   *  the booking app opened on its card and this date (?ev=&session=), where its card goes. */
+  handoff?: string | null;
 };
 
 /** The signed-in account, as the wizard needs it (lib/booking-server.ts bookingAccount). */

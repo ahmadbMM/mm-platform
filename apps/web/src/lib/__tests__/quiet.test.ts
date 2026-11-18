@@ -36,3 +36,22 @@ describe("the quiet windows", () => {
     expect(q.isQuiet(q.WAIVER_QUIET)).toBe(false);
   });
 });
+
+// The store's details kept for the visit (the checkout's draft, the back in stock form) are the signed-in account's: a
+// sign-out forgets them, so the next account on a shared phone or the showroom's tablet never finds the last one's name,
+// mobile, email and address filled in and ordered with (bug hunt 2026-11-18, stg5-1).
+describe("a sign-out", () => {
+  it("forgets the store's kept details with the quiet windows, and nothing else", async () => {
+    const q = await import("@/components/account/quiet");
+    const reload = vi.fn();
+    vi.stubGlobal("window", { location: { search: "", reload } });
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 204 })));
+    store.set("mm-checkout", JSON.stringify({ contact: { name: "Sara Ali", phone: "0551234567", email: "s@example.com" } }));
+    store.set("mm-notify", JSON.stringify({ name: "Sara Ali", phone: "0551234567" }));
+    store.set("mm-cart-fulfil", "jeddah");
+    store.set(q.WAIVER_QUIET, String(Date.now() + 60_000));
+    q.signOut();
+    expect([...store.keys()]).toEqual(["mm-cart-fulfil"]); // the way picked names nobody
+    await vi.waitFor(() => expect(reload).toHaveBeenCalled());
+  });
+});

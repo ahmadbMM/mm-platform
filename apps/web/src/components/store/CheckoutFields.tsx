@@ -52,7 +52,7 @@ export function AddressFields({ t, way, a, set, errs, check, requiredLabel, dist
   const short = (
     <Field id="st-short" label={t.shortAddr} optional={ksa ? undefined : t.optional} required={ksa} requiredLabel={requiredLabel} value={a.short}
       onValue={(v) => set({ short: shortAddress(v) })} onBlur={() => check("short")} error={errs.short}
-      dir="ltr" autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="RCMA7933" maxLength={8}
+      dir="ltr" autoCapitalize="characters" autoCorrect="off" spellCheck={false} placeholder="RCMA7933" maxLength={12}
       after={lookup ? (
         <button type="button" className="bk-btn2 st-co-find" onClick={lookup.find} disabled={lookup.busyNow} aria-busy={lookup.busyNow}>
           {lookup.busyNow ? lookup.busy : lookup.label}

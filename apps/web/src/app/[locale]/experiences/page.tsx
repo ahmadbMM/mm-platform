@@ -30,6 +30,10 @@ import { bg } from "@/lib/img";
 import { payReady } from "@/lib/pay/config";
 import { paySettings } from "@/lib/pay/settings";
 import { isBoothCard } from "@/lib/pay/booth";
+import { bookingAt } from "@/lib/event-info";
+import { farmForMembers } from "@/lib/farm";
+import { BLOOD_NAME, bloodName } from "@/content/blood-words";
+import { FARM_NAME, farmWords } from "@/content/farm-words";
 
 // micromobility.sa/experiences - booking a ride on the website (the owner, 2026-10-03: "full
 // booking on the website"), as the booking app's own wizard books one (BookingFlow): the event,
@@ -80,6 +84,14 @@ async function saturdayLinkOnly(): Promise<boolean> {
   return r.data === true;
 }
 
+// Does the visitor hold the Petromin tag? Petromin Days, the Petromin nights' own card, shows to holders alone (the owner,
+// 2026-10-12), as on main's page: the booking app's own answer (petromin_member, which checks the token); any failure reads
+// as no.
+async function petrominMember(s: { id: string; token: string }): Promise<boolean> {
+  const r = await rpcServer<boolean>("petromin_member", { p_id: s.id, p_token: s.token });
+  return r.data === true;
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const { content, closed } = await pageState("experiences");
@@ -108,16 +120,38 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // Experiences fills them; left as written they reached the rider as "{riders}" (bug hunt 2026-11-10).
   const caps = { riders: fmtNum(biz.jccAccountCap, locale), seats: fmtNum(biz.eventSeatMax, locale) };
 
-  const kindName = kindNames(d);
-  const enName = L !== "en" ? kindNames(resolvePage(experiencesSchema, content, "en").dates) : kindName;
+  // a Petromin night without a title of its own is "Petromin", as main's page names one; the Farm House Night's words are
+  // the server's (content/farm-words.ts) and reach the page only with a farm date it shows a member
+  const kindName = { ...kindNames(d), petromin: tx("Petromin", "بترومين"), blood: bloodName(tx), farm: farmWords(tx).name };
+  const enName = L !== "en" ? { ...kindNames(resolvePage(experiencesSchema, content, "en").dates), petromin: "Petromin", blood: BLOOD_NAME, farm: FARM_NAME } : kindName;
   const routeKm = routeItems(content, L);
   const now = riyadhClock(new Date());
   const today = now.slice(0, 10);
-  // every date ahead, men-only and women-only ones too, to every visitor (the owner, 2026-10-28). A date staff closed as
-  // Full, no waitlist (lib/rides.ts fbkOf, 2026-11-13) is listed by main's ExperienceSteps page as Fully booked; this
-  // booking flow has no card that books nothing for it, and the database refuses a closed session, so it stays out here
-  // as every closed session did before (it never brings back a card that shows only while it has dates).
-  const all = upcoming(rides?.sessions ?? [], now).filter((s) => !s.fbk);
+  const ahead = upcoming(rides?.sessions ?? [], now);
+  const ps = paySettings(content);
+  const paying = ps.enabled && ps.bookings !== "off" && payReady();
+  const [acct, petromin, wallet] = await Promise.all([
+    signed ? bookingAccount(signed).catch((): BookAccount | null => null) : Promise.resolve(null),
+    // asked only while a Petromin night is ahead
+    signed && ahead.some((s) => s.kind === "petromin") ? petrominMember(signed) : Promise.resolve(false),
+    // the wallet's balance, for the review's Wallet switch when the ride is paid now (customer_wallet)
+    paying && signed ? rpcServer<{ balance?: number } | null>("customer_wallet", { p_id: signed.id, p_token: signed.token }).then((r) => Number(r.data?.balance) || 0, () => 0) : Promise.resolve(0),
+  ]);
+  // every date ahead, men-only and women-only ones too, to every visitor (the owner, 2026-10-28); a Farm House Night to a
+  // signed-in community member alone ("not to public", lib/farm.ts) and the Petromin nights to a Petromin tag holder alone.
+  // A date staff closed as Full, no waitlist (lib/rides.ts fbkOf, the user, 2026-11-13) stays listed, said Fully booked,
+  // and nothing books it (BookingFlow), so nobody takes it for called off.
+  const all = farmForMembers(ahead, !!acct?.member).filter((s) => s.kind !== "petromin" || petromin);
+  const app = navFrom(site).booking; // the booking app as staff set it
+  const appBase = app.replace(/[?#].*$/, "");
+  // The booking app's events (_evMatch) by card, as main's page shows them (lib/event-info.ts EVENT_OF): the circuit, the
+  // community rides (with the pool, the DEFE 5KM Run, yoga and the Farm House Night inside them), Petromin Days, the
+  // Blood Donation event, Victory Lap, Arena Heros, Run for Her, the National Day ride, the T100 workshop and the ticketed
+  // events. HERE are the kinds this booking has steps for. Every other date (a run, a race, the donor, yoga or the farm,
+  // and the Petromin nights) is listed under its card all the same and hands over to the booking app on that card and
+  // date (?ev=&session=), which has their steps (the runner's, the athlete's, the donor's, the member's family).
+  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "petromin", workshop: "workshop", snd96: "snd96", event: "event", runher: "runher", vlap: "vlap", defe5k: "community", arena: "arena", blood: "blood", yoga: "community", farm: "community" };
+  const HERE = new Set<RideKind>(["jcc", "saturday", "swim", "workshop", "snd96", "event"]);
   // The booking window (site_content booking.window): a date not open yet is shown greyed, never hidden.
   const window = siteBookingWindow(content);
   const clock = (x: string) => fmtClock(x, locale);
@@ -141,6 +175,9 @@ export default async function ExperiencesPage({ params, searchParams }: { params
       description: s.kind === "event" ? s.description ?? null : null,
       gender: s.gender ?? null, // men only, women only or mixed (2026-10-27): its chip, and who may book it
       closedTypes: s.closedTypes ?? [], // the bike types staff closed on it (2026-11-03): neither picked nor priced
+      fbk: !!s.fbk, // Full, no waitlist: listed as Fully booked, never chosen
+      // a kind this booking has no steps for is handed to the booking app on its card and that date, as main's page does
+      ...(HERE.has(s.kind) ? {} : { handoff: bookingAt(bookingLink(appBase, locale), EVENT_OF[s.kind], s.id) }),
     };
   };
   // The route on a booking's ticket (ticketRoute): the Routes page's, or the circuit drawn.
@@ -149,52 +186,25 @@ export default async function ExperiencesPage({ params, searchParams }: { params
     meetUrl: s.meetUrl ?? null, free: s.free, freeRide: s.free, bikes: s.kind !== "swim" && s.kind !== "workshop" && s.kind !== "event" && s.kind !== "runher" && s.kind !== "vlap" && s.kind !== "arena", routeSlug: s.routeSlug, location: s.location ?? null, breakfast: null,
     revealAt: s.revealAt ?? null, // a Saturday ride whose meeting point is told later draws no route yet (spotHeld)
   }, routeKm);
-  // The booking app's events (_evMatch) in its order: the National Day ride and the ticketed
-  // events while they have dates, the circuit, the community rides, and the T100 workshop while
-  // one is dated. Petromin nights are booked through the company's own form, never here.
-  // Run for Her (ride_kind 'runher') is not offered here yet: this booking has no runner step (the distance,
-  // the emergency contact, 18 and over), so a run is booked in the booking app, as main's page hands it over.
-  // Victory Lap (ride_kind 'vlap') neither: no athlete step here (race, division, team, T-shirt, 16 and over,
-  // Kamin Sports' agreement); main's page hands it to the booking app (?ev=vlap).
-  // The Arena Heros Hybrid Race (ride_kind 'arena', 2026-10-28) neither: no athlete step here (the race, the division,
-  // the team code, the organisers' agreement); main's page hands it to the booking app (?ev=arena). Listed nowhere
-  // here, so it is never read as a Saturday ride.
-  // The DEFE 5KM Run (ride_kind 'defe5k') neither: no runner step or race question here; main's page hands it
-  // to the booking app.
-  // The Blood Donation event (ride_kind 'blood', 2026-11-03) neither: no donor step here; main's page hands it to the
-  // booking app (?ev=blood). Listed nowhere here, so its words and its poster never reach this page.
-  // Yoga (ride_kind 'yoga', 2026-11-12) neither: this booking has no step for a session without a bike other than the
-  // pool, a workshop or a ticketed event (lib/booking.ts NO_BIKE), so it would be offered a bike; main's page lists it
-  // inside MicroMobility Experiences on its own card and hands it to the booking app. Listed nowhere here, so it is
-  // never read as a Saturday ride. Main's Featured cards, the Experiences card's marks and kind switch, the Saturday
-  // ride's sunrise and routes, and Booked on a date the visitor holds (2026-11-13) are its ExperienceSteps page's own:
-  // they are not drawn by this booking flow. Nor is the breakfast spot (a member-only one, bike_slots._bfm, is told to
-  // members alone on main's page): this flow names no breakfast stop, and its tickets' routes are read without one.
-  // The Farm House Night (ride_kind 'farm', 2026-11-13) neither: no bike, the member's family added by name and staff
-  // approving every place, none of which this booking has a step for; and it is "not to public" (the user), so main's page
-  // draws it for a signed-in community member alone and hands it to the booking app. Listed nowhere here, for anyone, so
-  // no word of it (its name, the farm, its id) reaches this page and it is never read as a Saturday ride.
-  const EVENT_OF: Record<RideKind, string> = { jcc: "jcc", saturday: "community", swim: "community", petromin: "", workshop: "workshop", snd96: "snd96", event: "event", runher: "", vlap: "", defe5k: "", arena: "", blood: "", yoga: "", farm: "" };
   const sessionsOf = (key: string) => all.filter((s) => EVENT_OF[s.kind] === key).slice(0, Math.max(1, N(d.count)));
+  // the dates booked here, for their add-ons and their tickets' routes
   const listed: RideSession[] = [];
-  const card = (key: string, p: "snd" | "jcc" | "comm" | "ws" | "ev", always: boolean): FlowEvent | null => {
+  const ev: Sec = e; // the cards' texts by prefix: the Blood Donation event has no fields here, and its card is named by the server
+  const card = (key: string, p: string, always: boolean): FlowEvent | null => {
     const ss = sessionsOf(key);
-    if (!always && ss.length === 0) return null;
-    listed.push(...ss);
-    return { key, title: S(e[`${p}Title`]), meta: S(e[`${p}Meta`]), logo: S(e[`${p}Logo`]), note: fillNamed(S(e[`${p}Note`]), caps), sessions: ss.map(toBook) };
+    // a card that shows only while it has dates needs one that may be booked: a date closed as Full, no waitlist is listed
+    // under a card that shows, and never brings one back (lib/event-info.ts eventCards)
+    if (!always && !ss.some((s) => !s.fbk)) return null;
+    listed.push(...ss.filter((s) => !s.fbk && HERE.has(s.kind)));
+    return { key, title: S(ev[`${p}Title`]) || (key === "blood" ? bloodName(tx) : ""), meta: S(ev[`${p}Meta`]), logo: S(ev[`${p}Logo`]), note: fillNamed(S(ev[`${p}Note`]), caps), sessions: ss.map(toBook) };
   };
-  const events = [card("snd96", "snd", false), card("event", "ev", false), card("jcc", "jcc", true), card("community", "comm", true), card("workshop", "ws", false)].filter((x): x is FlowEvent => !!x);
-  const ps = paySettings(content);
-  const paying = ps.enabled && ps.bookings !== "off" && payReady();
-  const [acct, items, wallet] = await Promise.all([
-    signed ? bookingAccount(signed).catch((): BookAccount | null => null) : Promise.resolve(null),
-    loadAddonItems(listed.flatMap((s) => (s.free ? [] : s.addons ?? []))),
-    // the wallet's balance, for the review's Wallet switch when the ride is paid now (customer_wallet)
-    paying && signed ? rpcServer<{ balance?: number } | null>("customer_wallet", { p_id: signed.id, p_token: signed.token }).then((r) => Number(r.data?.balance) || 0, () => 0) : Promise.resolve(0),
-  ]);
+  const events = [
+    card("snd96", "snd", false), card("event", "ev", false), card("jcc", "jcc", true), card("community", "comm", true),
+    card("petromin", "pm", false), card("blood", "bld", false), card("vlap", "vl", false), card("arena", "ar", false), card("runher", "rh", false),
+    card("workshop", "ws", false),
+  ].filter((x): x is FlowEvent => !!x);
+  const items = await loadAddonItems(listed.flatMap((s) => (s.free ? [] : s.addons ?? [])));
   const one = (v: string | string[] | undefined) => (typeof v === "string" && /^[A-Za-z0-9_-]{1,64}$/.test(v) ? v : null);
-  const app = navFrom(site).booking; // the booking app as staff set it
-  const appBase = app.replace(/[?#].*$/, "");
 
   // While paid rides are paid when booking (pay.bookings 'required'), the card saying payment is collected at the booth
   // is left out (2026-11-14): it would tell the payer the opposite of the review step (lib/pay/booth.ts).
@@ -226,7 +236,7 @@ export default async function ExperiencesPage({ params, searchParams }: { params
             <BookingFlow locale={locale} events={events} prices={prices} maxPrices={maxPrices} jccCap={jccCap} seatMax={biz.eventSeatMax} acct={acct} items={items}
               pay={paying ? { mode: ps.bookings, holdMinutes: ps.holdMinutes, refundDays: ps.refundDays, wallet, terms: cancelTerms } : undefined}
               start={{ ev: one(q.ev), session: one(q.session) }}
-              text={{ eventTitle: S(c.steps.eventTitle), noDates: S(c.steps.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}
+              text={{ eventTitle: S(c.steps.eventTitle), dateTitle: S(c.steps.dateTitle), noDates: S(c.steps.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}
               links={{
                 apply: localHref("/community/registration", locale), account: localHref("/account", locale), club: hidden.includes("club") ? "" : localHref("/club", locale),
                 signup: bookingLink(`${appBase}?handoff=site&auth=signup`, locale), app: bookingLink(app, locale), place: directions || null,

@@ -126,10 +126,12 @@ export function wholeCodes(shown: readonly Pick<IssuedGiftCard, "code" | "masked
   });
 }
 
-/** The delivery day and hours a scheduled Jeddah order was booked for (F78), with the hours of the slot staff offer (or
- *  the default ones); null when it has none. */
+/** The delivery day and hours a scheduled Jeddah order was booked for (F78): the hours the order kept with its slot, else
+ *  (an order from before they were kept) the hours of the slot staff offer now (or the default ones); null when it has
+ *  none. Staff changing a slot's hours later never changes an order already booked (bug hunt 2026-11-18). */
 export function slotWhen(o: Pick<Order, "slot" | "fulfil">, slots: Slots | null): { day: string; from: string | null; to: string | null } | null {
   if (!o.slot || o.fulfil !== "jeddah") return null;
+  if (o.slot.from && o.slot.to) return { day: o.slot.day, from: o.slot.from, to: o.slot.to };
   const t = (slots?.times ?? []).find((x) => x.id === o.slot!.time) ?? DEFAULT_SLOTS.times.find((x) => x.id === o.slot!.time);
   return { day: o.slot.day, from: t?.from ?? null, to: t?.to ?? null };
 }

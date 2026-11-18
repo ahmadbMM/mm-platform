@@ -41,11 +41,20 @@ export function forgetQuiet(): void {
   } catch { /* storage off: nothing kept */ }
 }
 
+/** The store's details kept for this visit (the checkout's draft: name, mobile, email, address and notes; the back in stock
+ *  form's name and mobile): the signed-in account's, so a sign-out forgets them, and the next account on a shared phone or
+ *  the showroom's tablet never finds them filled in (bug hunt 2026-11-18). */
+export const STORE_KEPT = ["mm-checkout", "mm-notify"];
+export function forgetStore(): void {
+  try { for (const k of STORE_KEPT) sessionStorage.removeItem(k); } catch { /* storage off: nothing kept */ }
+}
+
 /** Signs out of this site - its own cookie only; the booking app stays signed in - and draws the
  *  page again, signed out. Every sign-out button on the site goes through here. */
 export function signOut(): void {
   forgetQuiet();
+  forgetStore();
   fetch("/api/account", { method: "DELETE" })
     .catch(() => null)
-    .finally(() => { forgetQuiet(); window.location.reload(); });
+    .finally(() => { forgetQuiet(); forgetStore(); window.location.reload(); });
 }

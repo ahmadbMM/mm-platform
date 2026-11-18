@@ -25,6 +25,10 @@ export function Ic({ name, size = 16, flip = false, className = "" }: { name: Ic
   );
 }
 
-/** Each ride kind wears a drawn glyph beside its name (KIND_IC). */
-const KIND_IC: Record<string, IconName> = { saturday: "people", petromin: "people", event: "ticket", workshop: "clock", swim: "wave", snd96: "flag", jcc: "bike" };
+/** Each ride kind wears a drawn glyph beside its name (KIND_IC). A kind without a bike never wears the bike: the dates
+ *  handed to the booking app (a run, a race, the donor, yoga, the farm) have theirs too (bug hunt 2026-11-18). */
+const KIND_IC: Record<string, IconName> = {
+  saturday: "people", petromin: "people", event: "ticket", workshop: "clock", swim: "wave", snd96: "flag", jcc: "bike",
+  runher: "people", defe5k: "people", vlap: "flag", arena: "flag", blood: "ticket", yoga: "people", farm: "people",
+};
 export const KindIc = ({ kind }: { kind: string }) => <Ic name={KIND_IC[kind] ?? "bike"} size={14} />;

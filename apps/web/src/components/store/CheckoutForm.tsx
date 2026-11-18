@@ -48,12 +48,18 @@ type Props = {
   /** The buy-now lines (?buy=…&with=…), checked out instead of the cart; null: the cart. */
   buy: CartItem[] | null;
 };
-type Draft = { contact: Contact; address: Address; note: string; fulfil: Fulfil | null; slot: { day: string; time: string } | null; gift: boolean; giftNote: string };
+/** `who`: the account the draft was typed under ("" a guest), so another account never takes it over. */
+type Draft = { contact: Contact; address: Address; note: string; fulfil: Fulfil | null; slot: { day: string; time: string } | null; gift: boolean; giftNote: string; who?: string };
 const DRAFT_KEY = "mm-checkout";
+const whoOf = (a: CheckoutAccount) => (a ? `${a.phone}|${a.email}` : "");
 
 function loadDraft(account: CheckoutAccount): Draft {
   let d: Partial<Draft> = {};
   try { d = JSON.parse(window.sessionStorage.getItem(DRAFT_KEY) || "{}") as Partial<Draft>; } catch { /* none kept */ }
+  // A draft typed under another account is not this one's (bug hunt 2026-11-18): on a shared phone or the showroom's
+  // tablet, the next account found the last one's name, mobile, email and address filled in, and ordered with them. A
+  // guest's draft carried into a sign-in stays, as signing in keeps what was typed.
+  if (typeof d.who === "string" && d.who && d.who !== whoOf(account)) d = { fulfil: d.fulfil };
   const c = d.contact ?? { name: "", phone: "", email: "" };
   const slot = d.slot && typeof d.slot.day === "string" && typeof d.slot.time === "string" ? d.slot : null;
   return {
@@ -63,6 +69,7 @@ function loadDraft(account: CheckoutAccount): Draft {
     // the way picked on the cart wins: the cart and checkout keep it in one place (useCart's FULFIL_KEY)
     fulfil: (savedFulfil() ?? d.fulfil ?? null) as Fulfil | null,
     slot, gift: d.gift === true, giftNote: typeof d.giftNote === "string" ? d.giftNote.slice(0, 200) : "",
+    who: whoOf(account),
   };
 }
 
@@ -447,8 +454,9 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
             {links.terms && <a href={links.terms} target="_blank" rel="noopener">{t.terms}</a>}
             <a href={links.returns} target="_blank" rel="noopener">{payT.returns}</a>
           </p>
+          {/* the amount charged now, as "To pay now" above says it: the total less a gift card and the wallet (bug hunt 2026-11-18) */}
           <button type="submit" className="bk-btn wide st-place" disabled={busy || blocked} aria-busy={busy}>
-            {busy ? <><span className="bk-spin" aria-hidden="true" />{t.placing}</> : <><Ic name="lock" size={17} />{t.place(sar(money.total))}</>}
+            {busy ? <><span className="bk-spin" aria-hidden="true" />{t.placing}</> : <><Ic name="lock" size={17} />{money.due > 0 ? t.place(sar(money.due)) : t.placeFree}</>}
           </button>
           <p className="st-oblige">{t.oblige}</p>
           <PayMarks label={payT.methods} compact />

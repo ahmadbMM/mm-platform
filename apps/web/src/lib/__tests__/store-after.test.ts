@@ -142,6 +142,12 @@ describe("the lines and the gift cards", () => {
     expect(slotWhen(order({ slot: { day: "2026-11-16", time: "eve" } }), { ...DEFAULT_SLOTS, on: true, times: [{ id: "eve", from: "18:00", to: "22:00" }] }))
       .toEqual({ day: "2026-11-16", from: "18:00", to: "22:00" });
     expect(slotWhen(order({ slot: { day: "2026-11-16", time: "zz" } }), null)).toEqual({ day: "2026-11-16", from: null, to: null });
+    // the hours the order kept with its slot win over today's settings: staff moving pm later, or removing it, changes
+    // no order already booked (bug hunt 2026-11-18); hours that are not HH:MM are not believed
+    const later = { ...DEFAULT_SLOTS, on: true, times: [{ id: "pm", from: "17:00", to: "22:00" }] };
+    expect(slotWhen(order({ slot: { day: "2026-11-16", time: "pm", from: "16:00", to: "21:00" } }), later)).toEqual({ day: "2026-11-16", from: "16:00", to: "21:00" });
+    expect(slotWhen(order({ slot: { day: "2026-11-16", time: "gone", from: "18:00", to: "22:00" } }), null)).toEqual({ day: "2026-11-16", from: "18:00", to: "22:00" });
+    expect(slotWhen(order({ slot: { day: "2026-11-16", time: "pm", from: "4pm", to: "21:00" } }), later)).toEqual({ day: "2026-11-16", from: "17:00", to: "22:00" });
     expect(slotWhen(order({ fulfil: "ksa", slot: { day: "2026-11-16", time: "am" } }), null)).toBeNull();
     expect(slotWhen(order(), null)).toBeNull();
   });

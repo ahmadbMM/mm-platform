@@ -68,7 +68,9 @@ export async function POST(req: Request) {
       p_id: acct.id, p_token: acct.token, p_ids: seated, p_hold: true, p_wallet: input.wallet, p_lang: langOf((body as Record<string, unknown> | null)?.lang),
     });
     if (p.status === 200 && p.data?.id) return json({ ok: true, pay: { id: p.data.id, url: `/pay/${p.data.id}` } });
-    if (!(p.status === 200 && p.data) && ps.bookings === "required") {
+    // Under Moyasar's 1 SAR (PAY_TOO_SMALL: a flat code or the house leaving a few halalas, bug hunt 2026-11-18) nothing
+    // can be paid online: the booking stays, paid at the desk, rather than being undone on every try.
+    if (!(p.status === 200 && p.data) && ps.bookings === "required" && refusal(p) !== "PAY_TOO_SMALL") {
       // The undo is read (bug hunt 2026-11-11): asked twice, and a second answer that the rows are no longer open
       // means the first one went through unheard. An undo that still fails leaves the places booked and unpaid, so
       // the rider is given the tickets with Pay now rather than told nothing was booked.
