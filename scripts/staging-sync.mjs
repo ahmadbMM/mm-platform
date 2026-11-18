@@ -3,6 +3,12 @@
 // staging always looks like micromobility.sa. Run by .github/workflows/staging-sync.yml (every hour,
 // after every production deploy, and by hand); safe to run any time.
 //
+// The store's catalogue too (2026-11-19, rentals 20261119400000/400100): staff keep the products, categories and
+// collections in the live staff app, on the live database, while the store itself is open on staging only. What the
+// public key can read there (live and Preview products, their active variants, visible categories, collections in
+// their dates) is copied here, with the store's photos, so staging.micromobility.sa shows what staff publish. Live
+// keeps no store pages: micromobility.sa/store still forwards to the old shop.
+//
 // It reads the live site the way the website does - with the public key, so only what the public
 // can see - and writes staging with staging's service key. Only rows that differ are written, and rows
 // the live site no longer has are removed from staging. Riders, rides and bookings are never touched:
@@ -33,22 +39,40 @@ const TABLES = [
   { name: "catalog_photos", pk: ["id"] },
   { name: "ride_prices", pk: ["type"] },
   { name: "ride_prices_by_kind", pk: ["ride_kind", "type"] },
+  // The store's catalogue (absent on a live database without it: skipped, said in the summary). `id` names the column
+  // other tables point at when it is not "id".
+  { name: "store_categories", pk: ["slug"], id: "slug", optional: true },
+  { name: "store_collections", pk: ["slug"], id: "slug", optional: true },
+  { name: "store_products", pk: ["id"], optional: true },
+  { name: "store_variants", pk: ["id"], optional: true },
+  { name: "store_collection_items", pk: ["collection", "product_id"], optional: true },
 ];
+const idOf = (t, r) => r[t.id || "id"];
+// Store rows the public key no longer sees (a product unpublished, a variant switched off, a category hidden) are not
+// removed from staging but switched off there: staging's orders, stock requests and reviews point at them.
+const SOFT_GONE = {
+  store_products: { published: false, preview: false },
+  store_variants: { active: false },
+  store_categories: { visible: false },
+};
 // Stamps the database sets itself on every write; comparing them would rewrite every row every run.
 const IGNORE = new Set(["updated_at", "updated_by", "created_at"]);
 const PAGES = ["experiences", "workshop", "business", "help", "ambassadors", "club", "about", "events", "gallery", "routes", "journal", "account", "terms", "bikes"];
 const STAGING_OVERRIDES = { "site.coming_soon": false, ...Object.fromEntries(PAGES.map((p) => [`page.${p}.visible`, true])) };
-// Staging's own settings, never copied from live nor removed (2026-11-10): online payments and the store are tried on
-// staging first (pay.*, store.*), switched on there while live keeps them off.
-const STAGING_OWN = (key) => /^(pay|store)\./.test(key);
+// Staging's own settings, never copied from live nor removed (2026-11-10): online payments are tried on staging first
+// (pay.*), and the store is open there (store.open) while live keeps it shut. Every other store.* setting is kept by
+// staff in the live staff app since 2026-11-19 and copied here like the rest.
+const STAGING_OWN = (key) => /^pay\./.test(key) || key === "store.open";
 
 const prodH = { apikey: PROD_ANON_KEY, Authorization: `Bearer ${PROD_ANON_KEY}` };
 const stgH = { apikey: STAGING_SERVICE_KEY, Authorization: `Bearer ${STAGING_SERVICE_KEY}` };
 
+class Absent extends Error {}
 async function readAll(base, headers, table) {
   const rows = [];
   for (let from = 0; ; from += 1000) {
     const res = await fetch(`${base}/rest/v1/${table}?select=*`, { headers: { ...headers, Range: `${from}-${from + 999}`, "Range-Unit": "items" } });
+    if (res.status === 404) throw new Absent(`${table}: not on ${base}`); // PostgREST: no such table (PGRST205)
     if (!res.ok) throw new Error(`${table}: read ${base} answered ${res.status} ${await res.text()}`);
     const page = await res.json();
     rows.push(...page);
@@ -84,24 +108,40 @@ const REFS = {
   catalog_models: [{ col: "category_id", to: "catalog_categories" }, { col: "subtype_id", to: "catalog_categories", optional: true }],
   catalog_colors: [{ col: "model_id", to: "catalog_models" }],
   catalog_photos: [{ col: "model_id", to: "catalog_models" }, { col: "color_id", to: "catalog_colors", optional: true }],
+  // The store: a sub-category's parent, a product's category, a variant's product, a collection's rows. A product's
+  // fleet bike is live's fleet, not staging's: never copied (fleet_bike_id is cleared below).
+  store_categories: [{ col: "parent", to: "store_categories" }],
+  store_products: [{ col: "category", to: "store_categories" }],
+  store_variants: [{ col: "product_id", to: "store_products" }],
+  store_collection_items: [{ col: "collection", to: "store_collections" }, { col: "product_id", to: "store_products" }],
 };
+// Columns a live row carries that mean something only on live's own database.
+const LOCAL_ONLY = { store_products: { fleet_bike_id: null } };
 // The unique keys besides the primary key: a row live deleted and made again (a new id, the same slug), or two rows that
 // swapped slugs, would meet staging's copy still holding the slug. That copy takes a placeholder slug first; the same
 // upsert then rewrites it, or it is removed below (or kept unpublished).
 const UNIQUE = {
-  catalog_categories: (r) => JSON.stringify([r.parent_id ?? null, r.slug]),
-  catalog_models: (r) => r.slug,
+  catalog_categories: [{ key: (r) => JSON.stringify([r.parent_id ?? null, r.slug]), free: (s) => ({ slug: `stale-${s.id}` }) }],
+  catalog_models: [{ key: (r) => r.slug, free: (s) => ({ slug: `stale-${s.id}` }) }],
+  store_products: [{ key: (r) => r.slug, free: (s) => ({ slug: `stale-${s.id}` }) }],
+  // a variant's SKU and barcode are unique and may be empty: an empty one holds nothing
+  store_variants: [
+    { key: (r) => r.sku ?? null, free: () => ({ sku: null }) },
+    { key: (r) => r.barcode ?? null, free: () => ({ barcode: null }) },
+  ],
 };
 async function freeKeys(t, rows, stg) {
-  const key = UNIQUE[t.name];
-  if (!key) return 0;
-  const wanted = new Map(rows.map((r) => [key(r), pkOf(t, r)]));
   let n = 0;
-  for (const s of stg) {
-    const by = wanted.get(key(s));
-    if (by === undefined || by === pkOf(t, s)) continue;
-    await write("PATCH", `${t.name}?${pkFilter(t, s)}`, { slug: `stale-${s.id}` });
-    n++;
+  for (const { key, free } of UNIQUE[t.name] || []) {
+    const wanted = new Map(rows.filter((r) => key(r) != null).map((r) => [key(r), pkOf(t, r)]));
+    for (const s of stg) {
+      const k = key(s);
+      if (k == null) continue;
+      const by = wanted.get(k);
+      if (by === undefined || by === pkOf(t, s)) continue;
+      await write("PATCH", `${t.name}?${pkFilter(t, s)}`, free(s));
+      n++;
+    }
   }
   return n;
 }
@@ -113,7 +153,18 @@ const errors = [];
 const live = {};
 const have = {}; // table -> the ids on staging once its rows are written: what the next tables' rows may point at
 for (const t of TABLES) {
-  let prod = await readAll(PROD_URL, prodH, t.name);
+  let prod;
+  try {
+    prod = await readAll(PROD_URL, prodH, t.name);
+  } catch (e) {
+    // A table live does not have yet (the store's, before its migration): nothing to copy, nothing removed.
+    if (!(e instanceof Absent) || !t.optional) throw e;
+    t.skip = true;
+    have[t.name] = new Set();
+    summary.push(`${t.name}: not on live, skipped`);
+    continue;
+  }
+  if (LOCAL_ONLY[t.name]) prod = prod.map((r) => ({ ...r, ...LOCAL_ONLY[t.name] }));
   if (t.name === "site_content") {
     prod = prod.filter((r) => !(r.key in STAGING_OVERRIDES) && !STAGING_OWN(r.key));
     for (const [key, value] of Object.entries(STAGING_OVERRIDES)) prod.push({ key, value });
@@ -121,14 +172,14 @@ for (const t of TABLES) {
   let stg = await readAll(STAGING_URL, stgH, t.name);
   if (t.name === "site_content") stg = stg.filter((r) => !STAGING_OWN(r.key)); // staging's own pay./store. keys: never written over, never removed
   const refs = REFS[t.name] || [];
-  const own = new Set([...stg, ...prod].map((r) => r.id)); // a parent in the same table: written in the same upsert, first
+  const own = new Set([...stg, ...prod].map((r) => idOf(t, r))); // a parent in the same table: written in the same upsert, first
   const shown = [], left = [];
   let unlinked = 0;
   for (const p of prod) {
     let r = p, why = null;
     for (const { col, to, optional } of refs) {
-      if (r[col] == null || (to === t.name ? own : have[to]).has(r[col])) continue;
-      if (optional) { r = { ...r, [col]: null }; unlinked++; } else { why = `${r.id} (${col} ${r[col]})`; break; }
+      if (r[col] == null || (to === t.name ? own : have[to] || new Set()).has(r[col])) continue;
+      if (optional) { r = { ...r, [col]: null }; unlinked++; } else { why = `${idOf(t, r) ?? pkOf(t, r)} (${col} ${r[col]})`; break; }
     }
     if (why) left.push(why); else shown.push(r);
   }
@@ -155,10 +206,11 @@ for (const t of TABLES) {
   // What staging holds now: its rows, those written in their new form.
   t.stay = new Map(stg.map((r) => [pkOf(t, r), r]));
   if (written) for (const r of changed) t.stay.set(pkOf(t, r), r);
-  // A category leaving staging may yet be kept (a row staying points at it); the other tables' leaving rows go.
-  const goneIds = new Set(t.name === "catalog_categories" ? [] : t.gone.map((r) => r.id));
-  have[t.name] = new Set([...t.stay.values()].map((r) => r.id).filter((id) => !goneIds.has(id)));
-  summary.push(`${t.name}: ${prod.length} on live, ${written} written` + (freed ? `, ${freed} slug(s) freed for them` : "") +
+  // A category leaving staging may yet be kept (a row staying points at it), and the store's rows are switched off,
+  // not removed (SOFT_GONE); the other tables' leaving rows go.
+  const goneIds = new Set(t.name === "catalog_categories" || SOFT_GONE[t.name] ? [] : t.gone.map((r) => idOf(t, r)));
+  have[t.name] = new Set([...t.stay.values()].map((r) => idOf(t, r)).filter((id) => !goneIds.has(id)));
+  summary.push(`${t.name}: ${prod.length} on live, ${written} written` + (freed ? `, ${freed} unique key(s) (slug, SKU, barcode) freed for them` : "") +
     (unlinked ? `, ${unlinked} without a link live hides` : "") + (left.length ? `, ${left.length} left out (live hides what they belong to): ${left.join(", ")}` : ""));
 }
 // Whether a row staging keeps points at this category: a model by its category or sub-type, a sub-type by its parent.
@@ -166,11 +218,18 @@ const pointedAt = (id) =>
   [...TABLES.find((x) => x.name === "catalog_models").stay.values()].some((m) => m.category_id === id || m.subtype_id === id) ||
   [...TABLES.find((x) => x.name === "catalog_categories").stay.values()].some((c) => c.id !== id && c.parent_id === id);
 for (const t of [...TABLES].reverse()) {
+  if (t.skip) continue;
   // Sub-types before the categories they belong to (parent_id is ON DELETE RESTRICT).
   const gone = t.name === "catalog_categories" ? [...t.gone.filter((r) => r.parent_id != null), ...t.gone.filter((r) => r.parent_id == null)] : t.gone;
   let removed = 0, kept = 0;
   for (const r of gone) {
     try {
+      const off = SOFT_GONE[t.name];
+      if (off) {
+        // switched off on staging, once (a row already off is left as it is, and not counted again)
+        if (Object.entries(off).some(([k, v]) => r[k] !== v)) { await write("PATCH", `${t.name}?${pkFilter(t, r)}`, off); kept++; }
+        continue;
+      }
       if (t.name === "catalog_categories" && pointedAt(r.id)) {
         // Live has it too (rows it shows point at it), unpublished, so the public key cannot see it: so on staging.
         if (r.published !== false) await write("PATCH", `${t.name}?${pkFilter(t, r)}`, { published: false });
@@ -185,7 +244,7 @@ for (const t of [...TABLES].reverse()) {
     }
   }
   if (removed) summary.push(`${t.name}: ${removed} removed`);
-  if (kept) summary.push(`${t.name}: ${kept} kept, unpublished (rows staging keeps belong to them)`);
+  if (kept) summary.push(SOFT_GONE[t.name] ? `${t.name}: ${kept} not public on live, switched off here` : `${t.name}: ${kept} kept, unpublished (rows staging keeps belong to them)`);
 }
 
 // Pictures: every /media/<path> and every site-bucket URL the copied content names.
@@ -193,12 +252,15 @@ const text = JSON.stringify(live);
 const paths = new Set();
 for (const m of text.matchAll(/\/media\/([a-z0-9_-]+(?:\/[A-Za-z0-9_.-]+)+)/g)) paths.add(m[1]);
 for (const m of text.matchAll(/\/storage\/v1\/object\/public\/site\/([A-Za-z0-9_./-]+)/g)) paths.add(m[1]);
-// A photo's smaller copies too (<name>.w640.webp, .w1280.webp, which the staff page saves beside it): the
-// pages ask for them (lib/img.ts, ?w=), and without them staging sent every photo whole - a 21 MB Home.
+// The store's photos are kept as site-bucket paths ('/site/store/<slug>/<file>', categories' and collections' tiles too).
+for (const m of text.matchAll(/"\/site\/(store\/[A-Za-z0-9_./-]+)"/g)) paths.add(m[1]);
+// A photo's smaller copies too (<name>.w640.webp, .w1280.webp, which the staff page saves beside it; the store's
+// .w320 and .w1600 as well): the pages ask for them (lib/img.ts, ?w=), and without them staging sent every photo
+// whole - a 21 MB Home.
 const SIZES = new Set();
 for (const p of [...paths]) {
   if (!/\.(jpe?g|png|webp)$/i.test(p) || /\.w\d+\.webp$/i.test(p)) continue;
-  for (const w of [640, 1280]) { const c = p.replace(/\.(jpe?g|png|webp)$/i, `.w${w}.webp`); paths.add(c); SIZES.add(c); }
+  for (const w of p.startsWith("store/") ? [320, 640, 1280, 1600] : [640, 1280]) { const c = p.replace(/\.(jpe?g|png|webp)$/i, `.w${w}.webp`); paths.add(c); SIZES.add(c); }
 }
 let copied = 0, present = 0;
 for (const p of paths) {
