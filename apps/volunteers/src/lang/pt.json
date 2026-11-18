@@ -51,6 +51,7 @@
   "errEmailOrPhone": "Digite seu e-mail ou celular.",
   "errPassword": "Digite sua senha.",
   "vdSessionEnded": "Você foi desconectado. Entre novamente.",
+  "vdHandoffFailed": "Não foi possível entrar pela app de reservas. Entre aqui.",
   "vdNotVolunteer": "Esta conta não é de voluntário. Pergunte à nossa equipe.",
   "vdPaused": "Seu acesso de voluntário está em pausa. Pergunte à nossa equipe.",
   "vdExpired": "Seu acesso de voluntário terminou. Pergunte à nossa equipe.",

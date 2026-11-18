@@ -163,4 +163,14 @@ describe("insights", () => {
     expect(s.ownAvg).toBe(4.5);
     expect(s.ownCount).toBe(2);
   });
+
+  it("today's breakfast moves to hosted once its feedback is given", () => {
+    const fb = { booking_id: 1, venue_id: 3, day: "2026-10-10", rating: 5, turnout: 30, went_well: "", improve: "", created_at: "", updated_at: "" };
+    const today = "2026-10-10";
+    const before = insights([{ day: today, state: "open", reason: "", taken: false, riders: 30, mine: mine() }], [], today);
+    expect([before.hosted, before.upcoming, before.ownCount]).toEqual([0, 1, 0]);
+    const after = insights([{ day: today, state: "open", reason: "", taken: false, riders: 30, mine: mine({ feedback: fb }) }], [], today);
+    expect([after.hosted, after.upcoming, after.ownAvg, after.ownCount]).toEqual([1, 0, 5, 1]);
+    expect(after.recent).toEqual([{ day: today, riders: 30, turnout: 30 }]);
+  });
 });

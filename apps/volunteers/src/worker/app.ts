@@ -250,9 +250,11 @@ async function handoff(req: Request, env: Env): Promise<Response> {
   const code = read.body.code;
   if (typeof code !== "string" || !/^[0-9a-f]{48}$/.test(code)) return fail("BAD_CODE", 400);
   const r = await callDb(env, req, "customer_handoff_redeem", { p_code: code });
-  if (!r.ok) return fail(r.code, r.status);
+  // A hand-over that fails leaves nobody signed in: the last person's session on this phone is never shown to the one
+  // handed over.
+  if (!r.ok) return fail(r.code, r.status, clearCookie());
   const row = Array.isArray(r.data) ? (r.data[0] as { id?: unknown; session_token?: unknown } | undefined) : undefined;
-  if (!row || !validSession(row.id, row.session_token)) return fail("BAD_CODE", 400);
+  if (!row || !validSession(row.id, row.session_token)) return fail("BAD_CODE", 400, clearCookie());
   return json({ ok: true }, 200, setCookie({ id: row.id, token: row.session_token as string }));
 }
 

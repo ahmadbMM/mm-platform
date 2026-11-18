@@ -51,6 +51,7 @@
   "errEmailOrPhone": "Escribe tu correo o tu número de móvil.",
   "errPassword": "Escribe tu contraseña.",
   "vdSessionEnded": "Se cerró tu sesión. Inicia sesión de nuevo.",
+  "vdHandoffFailed": "No pudimos iniciar tu sesión desde la app de reservas. Inicia sesión aquí.",
   "vdNotVolunteer": "Esta cuenta no es de voluntario. Pregunta a nuestro equipo.",
   "vdPaused": "Tu acceso de voluntario está en pausa. Pregunta a nuestro equipo.",
   "vdExpired": "Tu acceso de voluntario ha terminado. Pregunta a nuestro equipo.",

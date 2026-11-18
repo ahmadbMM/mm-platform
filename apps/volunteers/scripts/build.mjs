@@ -1,6 +1,6 @@
 // Builds dist/, the files the Worker serves (wrangler.jsonc "assets"):
-//   index.html, 404.html, robots.txt,     copied from static/ (404.html: every address the portal
-//   favicon.png                           does not have, wrangler.jsonc not_found_handling)
+//   index.html, 404.html, robots.txt,     from static/ (404.html: every address the portal does not have,
+//   favicon.png                           wrangler.jsonc not_found_handling); the two pages name the styles' built file
 //   manifest.webmanifest, icon-192.png,   the web app's manifest and icons (Add to Home Screen, which an iPhone needs
 //   icon-512.png                          before it takes a push)
 //   sw.js                                 the service worker: a push and its tap, and the app's shell for an offline
@@ -38,7 +38,7 @@ mkdirSync(join(dist, "site"), { recursive: true });
 
 // certificate.html + certificate.css: the volunteer certificate, synced from the booking site by
 // scripts/sync-cert.mjs and served as they are. The page fetches and fills certificate.html.
-for (const f of ["404.html", "robots.txt", "favicon.png", "certificate.html", "certificate.css", "manifest.webmanifest", "icon-192.png", "icon-512.png"]) {
+for (const f of ["robots.txt", "favicon.png", "certificate.html", "certificate.css", "manifest.webmanifest", "icon-192.png", "icon-512.png"]) {
   copyFileSync(join(root, "static", f), join(dist, f));
 }
 // Rubik, variable 300-900 (SIL OFL 1.1), as the booking site serves it: Latin, Latin Extended and Arabic.
@@ -57,6 +57,11 @@ const css = `${tokens}\n${appCss}`;
 const hash = (s) => createHash("sha256").update(s).digest("hex").slice(0, 10);
 const cssName = `app-${hash(css)}.css`;
 writeFileSync(join(dist, cssName), css);
+// 404.html names the styles as index.html does: there is no /app.css in dist, and the Worker answered it with this same
+// page (text/html), which a browser refuses as a stylesheet, so the page came out bare.
+const notFound = readFileSync(join(root, "static", "404.html"), "utf8");
+if (!notFound.includes('href="/app.css"')) throw new Error("volunteers: 404.html no longer names /app.css");
+writeFileSync(join(dist, "404.html"), notFound.replace('href="/app.css"', `href="/${cssName}"`));
 
 // certificate-fonts.css: the certificate's two families and nothing else, for its own window. It may NOT be handed
 // app.css: that sheet has a .page of its own (the portal's own pages), which would fight the certificate's 1123x794 one,

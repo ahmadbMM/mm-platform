@@ -7,6 +7,7 @@ import { afterBooking } from "./book";
 import { renderBookings } from "./bookings";
 import { invalidateCalendar, renderCalendar, resetCalendar } from "./calendar";
 import { mailLink, MM_EMAIL, pwWaLink } from "./contact";
+import { riyadhToday } from "./dates";
 import { clear, h } from "./dom";
 import { icon, type IconName } from "./icons";
 import { renderInsights } from "./insights";
@@ -40,6 +41,21 @@ async function loadMe(): Promise<boolean> {
   if (!r.ok) return false;
   app.me = r.data;
   return true;
+}
+app.reloadMe = loadMe;
+
+/** The device's day that last made the page read vendor_me again (once a day at most, a clock set wrong included). */
+let checkedDay = "";
+/** The portal's today is the database's, read at sign-in. A page left open past Riyadh midnight (a venue's tablet)
+ *  reads it again once the device's clock has moved to another day, so the dates, Cancel and the feedback follow the
+ *  new day. Answers whether today changed. */
+async function freshToday(): Promise<boolean> {
+  const before = app.me?.today;
+  const day = riyadhToday();
+  if (!before || day === before || day === checkedDay) return false;
+  checkedDay = day;
+  if (!(await loadMe())) return false;
+  return !!app.me && app.me.today !== before;
 }
 
 function langButton(): HTMLButtonElement {
@@ -108,6 +124,9 @@ async function signOut(btn: HTMLButtonElement): Promise<void> {
   }
   resetCalendar();
   app.me = null;
+  // A shared tablet: the next person never finds the last one's login on the form or in the forgot-password message.
+  draft.login = "";
+  draft.password = "";
   screen = "signin";
   app.render();
 }
@@ -176,6 +195,7 @@ function renderSignIn(): void {
       return;
     }
     signedOutNote = false;
+    draft.login = "";
     draft.password = "";
     resetCalendar();
     if (!(await loadMe())) { msg.append(errorNote("SERVER")); return; }
@@ -191,6 +211,13 @@ function renderSignIn(): void {
 function renderForce(): void {
   const r = root();
   clear(r);
+  // The footer's privacy notice opens here too; its Back ("#") comes back to the password form.
+  if (location.hash === "#privacy") {
+    const main = h("main", { id: "main", class: "narrow" });
+    frame("force", header({ signOut: true }), main);
+    renderPrivacy(main, true);
+    return;
+  }
   const form = passwordForm(true, async () => {
     await loadMe();
     screen = "app";
@@ -260,11 +287,26 @@ document.querySelector("a.skip")?.addEventListener("click", (e) => {
   main.focus();
 });
 
-window.addEventListener("hashchange", () => {
-  if (screen === "signin") { app.render(); return; }
+window.addEventListener("hashchange", async () => {
+  if (screen === "signin" || screen === "force") { app.render(); return; }
+  if (screen !== "app") return;
+  // Each arrival on a tab reads its dates again: MicroMobility's answers, other venues' dates and closures change behind
+  // an open page. Moving around inside the calendar (focus, the month, the language) keeps what it read.
+  invalidateCalendar();
+  await freshToday();
   if (screen !== "app") return;
   app.render();
   document.getElementById("main")?.focus();
+});
+
+// Back to a page left open: past midnight, the day is read again and the page drawn for it (never under a dialog).
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible" || screen !== "app") return;
+  void freshToday().then((changed) => {
+    if (!changed || screen !== "app" || document.querySelector("dialog[open]")) return;
+    invalidateCalendar();
+    app.render();
+  });
 });
 
 async function boot(): Promise<void> {

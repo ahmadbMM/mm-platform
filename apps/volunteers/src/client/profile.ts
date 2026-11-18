@@ -48,7 +48,9 @@ function askOwed(miss: ("dob" | "emergency")[]): void {
   if (document.querySelector("dialog.ask-owed")) return;
   const box: HTMLDialogElement = dialog(t("stepDetails"), [h("div", { class: "chips" }, ...miss.map((k) => chip(t(k === "dob" ? "profDob" : "profEmergency"), "warn")))],
     [link(t("addDetails"), ACCOUNT, "primary", "go", { rel: "noopener", id: "owed-go" }),
-      button(t("navHome"), () => { closeAsk(box); go("#me"); }, "quiet", { id: "owed-home" })], "ask-owed", true);
+      button(t("navHome"), () => { closeAsk(box); go("#me"); }, "quiet", { id: "owed-home" }),
+      // The pop-up covers the page's only Sign out: on a shared phone the account must still be able to leave.
+      button(t("signOut"), async () => { closeAsk(box); await signOut(); }, "quiet", { id: "owed-out" }, "out")], "ask-owed", true);
 }
 
 export function viewProfile(main: HTMLElement): void {

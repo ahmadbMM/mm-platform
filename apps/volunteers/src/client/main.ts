@@ -220,6 +220,7 @@ async function start(): Promise<void> {
   // Handed over from the booking app with a one-time code (My Account, or back from its sign-in): the code first, so the
   // reads after it go with the new cookie; the language meanwhile.
   let handed = false;
+  let handFail: Awaited<ReturnType<typeof post>> | null = null;
   const lang = setLang(startLang());
   if (code) {
     q.delete("signin");
@@ -227,8 +228,15 @@ async function start(): Promise<void> {
     history.replaceState(null, "", `${location.pathname}${rest ? `?${rest}` : ""}${location.hash}`);
     const r = await post("/api/handoff", { code });
     handed = r.ok;
+    if (!r.ok) {
+      // The hand-over failed (a used or expired code, too many tries, no connection): whoever was signed in on this
+      // phone before is signed out rather than shown to the person handed over, and the sign-in form says why.
+      handFail = r;
+      await post("/api/logout");
+    }
   }
   await Promise.all([lang, load()]);
+  if (handFail && !handFail.ok && !S.me) signErr = handFail.code === "BAD_CODE" ? t("vdHandoffFailed") : say(handFail);
   markRead();
   window.addEventListener("hashchange", onHash);
   // back to the front: read again (with push off, opening the app is the only way news arrives)

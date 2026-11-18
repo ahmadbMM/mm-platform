@@ -443,14 +443,16 @@ export type Insights = {
 };
 export function insights(days: CalDay[], shared: SharedRatings[], today: Iso): Insights {
   const conf = days.filter((d) => d.mine?.status === "confirmed").sort((a, b) => a.day.localeCompare(b.day));
-  const past = conf.filter((d) => d.day < today);
+  // Hosted: the day is over, or it is today and the venue has given its feedback (feedback opens on the day itself).
+  const done = (d: CalDay) => d.day < today || (d.day === today && !!feedbackOf(d.mine));
+  const past = conf.filter(done);
   const recent = past.slice(-6).reverse().map((d) => ({ day: d.day, riders: d.riders ?? null, turnout: feedbackOf(d.mine)?.turnout ?? null }));
   const lastShared = [...shared].filter((s) => typeof s?.averages?.breakfast === "number").sort((a, b) => b.day.localeCompare(a.day)).slice(0, 6);
   const own = past.map((d) => feedbackOf(d.mine)?.rating).filter((r): r is number => typeof r === "number");
   const avg = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : null);
   return {
     hosted: past.length,
-    upcoming: conf.filter((d) => d.day >= today).length,
+    upcoming: conf.filter((d) => !done(d)).length,
     recent,
     sharedAvg: avg(lastShared.map((s) => s.averages.breakfast as number)),
     sharedCount: lastShared.length,

@@ -51,6 +51,7 @@
   "errEmailOrPhone": "Ilagay ang iyong email o mobile number.",
   "errPassword": "Ilagay ang iyong password.",
   "vdSessionEnded": "Na-sign out ka. Mag-sign in ulit.",
+  "vdHandoffFailed": "Hindi ka namin ma-sign in mula sa booking app. Mag-sign in dito.",
   "vdNotVolunteer": "Hindi volunteer ang account na ito. Magtanong sa aming team.",
   "vdPaused": "Naka-pause ang iyong volunteer access. Magtanong sa aming team.",
   "vdExpired": "Tapos na ang iyong volunteer access. Magtanong sa aming team.",

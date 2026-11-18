@@ -11,6 +11,8 @@ export const app = {
   me: null as Me | null,
   /** Draws the current screen again (after a language switch, or new data). */
   render: () => {},
+  /** Reads vendor_me again (today's date, the plan, the venue); main.ts sets it. */
+  reloadMe: async (): Promise<boolean> => false,
 };
 
 export const t = (k: Key, vars?: Record<string, string | number>) => fmt(app.lang, k, vars);

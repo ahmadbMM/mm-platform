@@ -83,6 +83,17 @@ describe("signing in", () => {
     db(() => ({ body: [] }));
     expect((await handle(post("/api/handoff", { code }), env)).status).toBe(400);
   });
+  it("a hand-over that fails signs out whoever was signed in on the phone", async () => {
+    const code = "b".repeat(48);
+    db(() => ({ body: [] }));
+    const used = await handle(post("/api/handoff", { code }, { cookie: COOKIE }), env);
+    expect(used.status).toBe(400);
+    expect(used.headers.get("set-cookie")).toContain("Max-Age=0");
+    db(() => ({ status: 400, body: { message: "BAD_CODE", code: "P0001" } }));
+    const refused = await handle(post("/api/handoff", { code }, { cookie: COOKIE }), env);
+    expect(refused.ok).toBe(false);
+    expect(refused.headers.get("set-cookie")).toContain("Max-Age=0");
+  });
   it("signing out clears the cookie and leaves the account's token alone", async () => {
     const calls = db(() => ({ body: null }));
     const r = await handle(post("/api/logout", {}, { cookie: COOKIE }), env);

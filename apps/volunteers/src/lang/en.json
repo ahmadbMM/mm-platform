@@ -51,6 +51,7 @@
   "errEmailOrPhone": "Enter your email or mobile number.",
   "errPassword": "Enter your password.",
   "vdSessionEnded": "You were signed out. Please sign in again.",
+  "vdHandoffFailed": "We could not sign you in from the booking app. Please sign in here.",
   "vdNotVolunteer": "This account is not a volunteer. Please ask our team.",
   "vdPaused": "Your volunteer access is paused. Please ask our team.",
   "vdExpired": "Your volunteer access has ended. Please ask our team.",
