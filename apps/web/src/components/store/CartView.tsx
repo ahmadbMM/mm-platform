@@ -77,6 +77,8 @@ export default function CartView({ locale, products, settings, whens, licence, a
   const gwLive = gwAdded.filter((id) => lines.some((l) => l.product?.id === id));
   const goes = goesWithCart(products, lines, 2, gwLive);
   const laterList = kept.length > 0 && <Later lines={kept} t={t} w={w} x={x} locale={locale} msg={moveMsg} onMove={(v, qty) => {
+    // a Preview's line reads as gone (no Move to cart); never moved even so
+    if (!kept.some((l) => l.item.variant === v && l.product && !l.product.preview)) return;
     const got = cartAdd(v, qty);
     if (got === null) { setMoveMsg(t.cartFull); return; }
     if (got <= 0) { setMoveMsg(t.cartHasMost); return; } // the cart's line is at its most already: kept here, not lost
@@ -276,7 +278,7 @@ function GoesWith({ list, added, onAdded, t, w, locale }: { list: StoreProduct[]
               </span>
               {one ? (
                 <button type="button" className={`bk-btn2 st-ct-add${added.includes(p.id) ? " is-added" : ""}`} aria-label={added.includes(p.id) ? `${w.added}: ${name}` : `${w.add}: ${name}`}
-                  onClick={() => { if (added.includes(p.id)) return; const got = cartAdd(one.id, 1); if (got === null) { setFull(true); return; } setFull(false); onAdded(p.id); }}>
+                  onClick={() => { if (added.includes(p.id) || p.preview) return; const got = cartAdd(one.id, 1); if (got === null) { setFull(true); return; } setFull(false); onAdded(p.id); }}>
                   {added.includes(p.id) ? <><Ic name="tick" size={16} />{w.added}</> : <><Ic name="plus" size={16} />{w.add}</>}
                 </button>
               ) : (

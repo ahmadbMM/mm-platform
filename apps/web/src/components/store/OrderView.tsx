@@ -4,6 +4,7 @@ import type { SxText } from "./sx-B3.text";
 import { dayLabel } from "@/lib/store-checkout";
 import { T as SPM, type SpmText } from "./spm.text";
 import { PreorderLine } from "./spm-parts";
+import { putBackItems } from "@/lib/store-rules";
 import { Link } from "@/i18n/navigation";
 import { intlOf } from "@/i18n/locales";
 import { sized } from "@/lib/img";
@@ -52,7 +53,7 @@ const PRE_DATED: readonly string[] = ["pending", "paid", "preparing"];
  *  an Arabic line never shows it as "10-WELCOME" (the same isolates sar() puts round an amount). */
 const ltr = (s: string) => `\u2066${s}\u2069`;
 
-export default function OrderView({ o, t, w, beside, locale, seller, now, today, whatsapp, showroom, expected, slot, signup, returnsHref, policy, hidden, after = null, sx, x = SPM.en }: {
+export default function OrderView({ o, t, w, beside, locale, seller, now, today, whatsapp, showroom, expected, slot, signup, returnsHref, policy, hidden, after = null, sx, x = SPM.en, notSold }: {
   o: Order; t: StoreText; w: W5Text; beside: Beside; locale: string; seller: Seller; now: number; today: string; whatsapp: string; showroom: string;
   expected: string | null; slot: string | null; signup: string | null; returnsHref: string; policy: string; hidden: readonly string[];
   /** After the sale (builder B4, components/store/after/AfterParts.tsx): its parts in their places, and Hijri dates. */
@@ -61,6 +62,8 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
    *  the way's own facts (the handover slot, the session, the pin) and what follows it (learning to ride). */
   sx?: { buyer: Buyer | null; x: SxText; bx: SxText; way?: ReactNode; after?: ReactNode; wayName?: string };
   x?: SpmText;
+  /** The variants (lower case) of products the store does not sell (a Preview): never put back in the cart. */
+  notSold?: ReadonlySet<string>;
 }) {
   const hj = after?.hijri;
   const no = orderNo(o.no);
@@ -101,6 +104,8 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
   const win = returnWindow(o, now);
   const lines = returnableLines(o);
   const toReview = o.key ? reviewItems(o) : [];
+  // what Put back adds: never a product the store does not sell (a Preview)
+  const back = putBackItems(o.items, notSold);
 
   return (
     <div className="st st-order">
@@ -123,15 +128,14 @@ export default function OrderView({ o, t, w, beside, locale, seller, now, today,
           ) : <p>{t.unpaid}</p>}
           {/* its hold ran out and the order is not yet let go: the items can go back into the cart already (the payment
               page's Start again comes here; bug hunt 2026-11-11) */}
-          {!payable(o, now) && o.payment && o.payment.status !== "paid" && o.items.some((i) => i.variant_id)
-            && <PutBack items={o.items.filter((i) => i.variant_id).map((i) => ({ variant: i.variant_id as string, qty: i.qty }))} />}
+          {!payable(o, now) && o.payment && o.payment.status !== "paid" && back.length > 0 && <PutBack items={back} />}
         </section>
       )}
       {o.status === "cancelled" && (
         <section className="st-alert warn">
           <h2>{t.cancelledMsg}</h2>
           {unpaidCancel(o) && <p>{t.unpaid}</p>}
-          {unpaidCancel(o) && o.items.some((i) => i.variant_id) && <PutBack items={o.items.filter((i) => i.variant_id).map((i) => ({ variant: i.variant_id as string, qty: i.qty }))} />}
+          {unpaidCancel(o) && back.length > 0 && <PutBack items={back} />}
         </section>
       )}
       {o.status === "refunded" && <section className="st-alert warn"><h2>{t.refundedMsg}</h2></section>}

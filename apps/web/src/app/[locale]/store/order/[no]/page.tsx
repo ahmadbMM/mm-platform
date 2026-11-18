@@ -103,7 +103,8 @@ export default async function OrderPage({ params, searchParams }: Props) {
   return (
     <PageShell locale={locale} site={site} preview={s.previewing} hidden={s.hidden}>
       <OrderView
-        o={o} t={t} w={serverLocalize(W5, locale)} x={serverLocalize(SPM, locale)} locale={locale} now={now} today={s.today}
+        o={o} t={t} w={serverLocalize(W5, locale)} x={serverLocalize(SPM, locale)} locale={locale}
+        notSold={new Set(s.store.products.filter((p) => p.preview).flatMap((p) => p.variants.map((v) => v.id.toLowerCase())))} now={now} today={s.today}
         beside={ar ? { lang: "en", t: STORE_T.en, w: W5.en } : { lang: "ar", t: STORE_T.ar, w: W5.ar }}
         seller={{ trade: "Micromobility", ...seller, address: S(site.contact.address) }}
         whatsapp={S(site.contact.phone).replace(/\D/g, "")}

@@ -507,7 +507,8 @@ export function relatedOf(store: Store, ids: readonly string[], self?: string): 
  *  counted at each product's lowest price). Null otherwise. */
 export function bundleOf(store: Store, p: StoreProduct, licence: string | boolean | null):
   { products: StoreProduct[]; price: number; sum: number; save: number } | null {
-  if (!licence || !p.bundle || p.kind === "gift_card") return null;
+  // a Preview (the staging site's, never sold) is never offered as a set, nor is a set with one in it
+  if (!licence || !p.bundle || p.kind === "gift_card" || p.preview) return null;
   const items = relatedOf(store, p.bundle.items, p.id);
   if (items.length !== p.bundle.items.length || items.some((x) => x.kind === "gift_card")) return null;
   const all = [p, ...items];

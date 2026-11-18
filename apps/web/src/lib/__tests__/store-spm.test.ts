@@ -5,11 +5,11 @@ import { renderToStaticMarkup as renderUntyped } from "react-dom/server";
 import { NextIntlClientProvider } from "next-intl";
 import { TxProvider } from "@/i18n/TxProvider";
 import { localize } from "@/i18n/tx";
-import { isBike, loadBest, loadCats, loadColls, loadStore, productStock, resetStore, stockState, storeOf, variantStock, type Store } from "../store";
-import { BUILTIN_TREE, catFilters, catName, catOf, catPath, catProducts, catTiles, catTree, catsWithProducts, inShownCat, subsWithProducts, topOf, topsWithProducts } from "../store-cats";
+import { bundleOf, isBike, loadBest, loadCats, loadColls, loadStore, productStock, resetStore, stockState, storeOf, variantStock, type Store } from "../store";
+import { BUILTIN_TREE, catsFor, catFilters, catName, catOf, catPath, catProducts, catTiles, catTree, catsWithProducts, inShownCat, subsWithProducts, topOf, topsWithProducts } from "../store-cats";
 import { bestIds, collOpen, collProducts, collsOf, inCollOrder, onSale, storeSections, type CollCtx } from "../store-colls";
 import {
-  bannerLink, bannerToday, liveAt, minOrderLeft, seoText, shownBadge, staffText, storeBanner, storeHeading, storeRules, storeSeo, visibleProducts, withRules,
+  bannerLink, bannerToday, liveAt, minOrderLeft, putBackItems, seoText, shownBadge, staffText, storeBanner, storeHeading, storeRules, storeSeo, visibleProducts, withRules,
 } from "../store-rules";
 import { cartLines, clampCart, productInCart, roomFor } from "../cart";
 import { facetsOf, listOf, listQueryOf, listQueryText, matches, noFilters, quickRoom, quickVariant } from "../store-listing";
@@ -19,7 +19,8 @@ import { payError } from "../pay/http";
 import { isWideCard } from "../sx-B1-list";
 import { refusalPlace } from "../store-form";
 import { orderOf } from "../store-order";
-import { memoSettled } from "../memo";
+import { memo, memoSettled, resetMemo } from "../memo";
+import { cartRoom } from "../store-sections";
 import { T as ST } from "../../components/store/Store.text";
 import { T as SPM } from "../../components/store/spm.text";
 
@@ -394,6 +395,80 @@ describe("the pieces as the server draws them", () => {
     expect(sub).toContain("st-chips-sub");
     expect(sub).toMatch(/aria-current="page"[^>]*href="\/store\/category\/bikes"|href="\/store\/category\/bikes"[^>]*aria-current="page"/);
     expect(sub).toContain('aria-label="Bikes"');
+  });
+});
+
+describe("a Preview is never put in the cart, by any way in", () => {
+  const SET = U(20), PART = U(21);
+  const shop = storeOf([product(SET, "set", { bundle: { items: [PART], price: 150 }, preview: true, published: false }), product(PART, "part", { price: 100 })],
+    [variant(20, SET), variant(21, PART)]);
+  const set = shop.products[0], part = shop.products[1];
+  it("offers no set on a Preview's page, nor a set with a Preview in it", () => {
+    expect(bundleOf(shop, set, "L-1")).toBeNull();
+    expect(bundleOf(shop, { ...set, preview: false }, "L-1")?.products.map((p) => p.slug)).toEqual(["set", "part"]);
+    const withPreviewItem = { products: [{ ...set, preview: false }, { ...part, preview: true }] };
+    expect(bundleOf(withPreviewItem, withPreviewItem.products[0], "L-1")).toBeNull();
+  });
+  it("leaves no room for a Preview in the cart: the set's, an add-on's and the buy box's Add all ask the same", () => {
+    expect(roomFor([], set, set.variants[0])).toBe(0);
+    expect(cartRoom([], [set.variants[0], part.variants[0]], [set, part])).toBe("most");
+    expect(cartRoom([], [part.variants[0]], [part])).toBe("ok");
+  });
+  it("never puts a Preview back in the cart from an unpaid order", () => {
+    const items = [{ variant_id: U(120).toUpperCase(), qty: 1 }, { variant_id: U(121), qty: 2 }, { variant_id: null, qty: 1 }];
+    expect(putBackItems(items, new Set([U(120)]))).toEqual([{ variant: U(121), qty: 2 }]);
+    expect(putBackItems(items)).toHaveLength(2);
+  });
+});
+
+describe("a cold start while staff's categories cannot be read", () => {
+  const env = () => { vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://db.test"); vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "anon"); };
+  const ok = (v: unknown) => new Response(JSON.stringify(v), { status: 200 });
+  afterEach(() => { resetStore(); resetMemo("t-fail"); vi.unstubAllEnvs(); });
+  it("holds a failed read with nothing to show a few seconds, a good one its whole minute", async () => {
+    let n = 0, give: string | null = null;
+    const read = async () => { n++; return give; };
+    const o = { ttl: 60_000, failTtl: 5_000, read };
+    expect(await memo("t-fail", { ...o, now: 1 })).toBeNull();
+    await memoSettled();
+    expect(await memo("t-fail", { ...o, now: 4_000 })).toBeNull();
+    expect(n).toBe(1);
+    give = "rows";
+    await memo("t-fail", { ...o, now: 5_002 });
+    await memoSettled();
+    expect(n).toBe(2);
+    expect(await memo("t-fail", { ...o, now: 30_000 })).toBe("rows");
+    expect(n).toBe(2);
+  });
+  it("hides no product and turns no cart line gone; its category keeps a page under its own name", async () => {
+    env();
+    let catReads = 0;
+    const f = vi.fn(async (u: string) => {
+      if (u.includes("store_categories")) { catReads++; return new Response("{}", { status: 503 }); }
+      if (u.includes("store_products")) return ok([product(ROAD, "road", { category: "road-bikes" }), product(HELMET, "helmet")]);
+      return ok([variant(1, ROAD), variant(3, HELMET)]);
+    }) as unknown as typeof fetch;
+    const cats = await loadCats(f, NOW);
+    expect(cats.unread).toBe(true);
+    const s = await loadStore(f, NOW);
+    expect(s?.products.map((p) => p.slug)).toEqual(["road", "helmet"]);
+    expect(cartLines([{ variant: U(101), qty: 1 }], s!)[0].issue).toBeNull();
+    const tree = catsFor(cats, s!.products);
+    expect(catOf(tree, "road-bikes")?.name_en).toBe("Road bikes");
+    expect(catName(tree, "road-bikes", "en", ST.en.cats)).toBe("Road bikes");
+    expect(catTiles(tree, s!.products, "en", ST.en.cats).map((x) => x.cat)).toEqual(["accessories", "road-bikes"]);
+    await memoSettled();
+    const before = catReads;
+    await loadCats(f, NOW + 1_000);
+    expect(catReads).toBe(before); // held a moment
+    await loadCats(f, NOW + 6_000);
+    await memoSettled();
+    expect(catReads).toBe(before + 1); // asked again after a few seconds, not a minute
+  });
+  it("still hides a hidden category's products once the categories are read, and a table that is not there is the six", async () => {
+    expect(catsFor(TREE, STORE.products)).toBe(TREE);
+    expect(inShownCat(TREE, STORE.products).map((p) => p.slug)).not.toContain("gel");
+    expect(inShownCat({ ...BUILTIN_TREE, unread: true }, STORE.products)).toHaveLength(STORE.products.length);
   });
 });
 

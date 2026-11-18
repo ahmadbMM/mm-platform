@@ -78,8 +78,9 @@ export const productInCart = (cart: readonly CartItem[], p: Pick<StoreProduct, "
 };
 
 /** How many more of a variant the cart can take: 10 a line, what is in stock (a pre-order has no such bound) and the
- *  product's limit across its lines, less what the cart holds. */
-export function roomFor(cart: readonly CartItem[], p: Pick<StoreProduct, "variants" | "preorder" | "max_per_order">, v: Pick<StoreVariant, "id" | "stock">): number {
+ *  product's limit across its lines, less what the cart holds. None of a Preview (never sold). */
+export function roomFor(cart: readonly CartItem[], p: Pick<StoreProduct, "variants" | "preorder" | "max_per_order"> & { preview?: boolean }, v: Pick<StoreVariant, "id" | "stock">): number {
+  if (p.preview) return 0;
   const line = cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0;
   const byStock = p.preorder ? MAX_QTY : v.stock;
   const byLimit = p.max_per_order === null ? Infinity : p.max_per_order - productInCart(cart, p);

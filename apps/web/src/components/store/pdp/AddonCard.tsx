@@ -32,6 +32,7 @@ export default function AddonCard({ p, locale }: { p: StoreProduct; locale: stri
   const short = kind === "size" ? t.size : kind === "colour" ? t.colour : kind === "both" ? w.sizeAndColour : w.pickOne; // fits a phone's card
 
   function add() {
+    if (p.preview) return; // never sold (relatedOf leaves a Preview out; this Add never takes one)
     if (!v) { setNeed("pick"); select.current?.focus(); return; }
     if (v.stock <= 0 && !p.preorder) return;
     const room = cartRoom(cart, [v], [p]);

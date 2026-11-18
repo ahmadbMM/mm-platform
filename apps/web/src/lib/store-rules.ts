@@ -151,6 +151,13 @@ export function storeBanner(c: SiteContent | null | undefined): StoreBanner | nu
 export const bannerToday = (b: StoreBanner | null, today: string): StoreBanner | null =>
   b && (!b.from || today >= b.from) && (!b.to || today <= b.to) ? b : null;
 
+// ── Putting an order's items back in the cart ─────────────────────────────────────────────────
+
+/** An unpaid order's items as "Put back in the cart" adds them: those with a variant, never one of `never` (the variants
+ *  of a product the store does not sell: a Preview). */
+export const putBackItems = (items: readonly { variant_id: string | null; qty: number }[], never: ReadonlySet<string> = new Set()) =>
+  items.filter((i) => i.variant_id && !never.has(i.variant_id.toLowerCase())).map((i) => ({ variant: i.variant_id as string, qty: i.qty }));
+
 // ── The smallest order (store.minOrder) ────────────────────────────────────────────────────────
 
 /** How much more the cart needs before it can be ordered (the database's STORE_MIN_ORDER: the lines' subtotal, gift

@@ -32,6 +32,7 @@ export default function BundleCard({ products, price, licence, locale }: { produ
   const lic = t.licence("\u0000").split("\u0000"); // the sentence around the number, which is kept whole and left to right
 
   function add() {
+    if (products.some((p) => p.preview)) return; // never sold (bundleOf offers no set with a Preview in it)
     if (picks.some((x) => !x.v)) { setNeed("pick"); return; }
     const vs = picks.map((x) => x.v as StoreVariant);
     const room = cartRoom(cart, vs, products);
