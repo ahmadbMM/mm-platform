@@ -93,6 +93,8 @@ import NoticeDialog from "@/components/privacy/NoticeDialog";
 import { T as ACCOUNT } from "@/components/account/Account.text";
 import { loadAccountExtras } from "@/lib/account-extras";
 import PushToggle from "@/components/account/PushToggle";
+import HomeScreen from "@/components/store/after/HomeScreen";
+import { APP_META } from "@/lib/sx-B4";
 import { PRIVACY_ASK_FROM } from "@/content/privacy-notice";
 import { bizOf } from "@/lib/biz";
 import { ArrowIcon } from "@/components/site/Icons";
@@ -116,7 +118,8 @@ const TYPE_NAME: Record<string, { en: string; ar: string }> = {
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string; part?: string[] }> }): Promise<Metadata> {
   const { locale, part } = await params;
-  return pageMeta({ path: accountPartHref(accountPartOf(part) ?? "account"), locale, title: `${serverL(locale)("Account", "الحساب")} · Micromobility`, noindex: true });
+  // Add to Home Screen is offered here (N05, builder B4): the page names the site's manifest
+  return { ...pageMeta({ path: accountPartHref(accountPartOf(part) ?? "account"), locale, title: `${serverL(locale)("Account", "الحساب")} · Micromobility`, noindex: true }), ...APP_META };
 }
 
 export default async function AccountPage({ params, searchParams }: { params: Promise<{ locale: string; part?: string[] }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -496,6 +499,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
           <PasswordCard needCurrent={needCurrent} />
           {extras.consents && <RideNews on={extras.consents.rideNews} dialog="ac-privacy" />}
           <PushToggle who={acct.id} />
+          <HomeScreen className="sxb-acct-home" />
           {orders.length > 0 && <StoreOrders orders={orders} t={serverLocalize(STORE, locale)} w={serverLocalize(STORE_W5, locale)} today={riyadhToday()} locale={locale} />}
           {extras.purchases && extras.purchases.rows.length > 0 && <Purchases locale={locale} t={at} rows={extras.purchases.rows} total={extras.purchases.total} />}
           {extras.deletion && <DeleteAccount locale={locale} requestedAt={extras.deletion.requestedAt} />}

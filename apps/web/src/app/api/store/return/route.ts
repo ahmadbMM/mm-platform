@@ -1,5 +1,6 @@
 import { guard, json } from "@/lib/pay/http";
 import { returnRequest } from "@/lib/store-api";
+import { returnPhotos } from "@/lib/sx-B4-api";
 import { RETURN_REASONS, type ReturnReason } from "@/lib/store-order";
 
 // POST /api/store/return (F93): the customer asks, from the order's page, to return or exchange items of a delivered
@@ -25,5 +26,8 @@ export async function POST(req: Request) {
     return { item: Number(o.item), qty: Number(o.qty) };
   });
   const r = await returnRequest({ no, key, kind, items, reason, note: typeof b.note === "string" ? b.note.slice(0, 300) : "" });
+  // the photos it carries (N08, builder B4) go on the request just made; a database without store_after_return_photos
+  // keeps the request without them, as before
+  if (r.ok && Array.isArray(b.photos) && b.photos.length) await returnPhotos({ no, key, photos: b.photos });
   return r.ok ? json({ ok: true, order: r.data }) : json({ ok: false, error: r.error }, r.status);
 }
