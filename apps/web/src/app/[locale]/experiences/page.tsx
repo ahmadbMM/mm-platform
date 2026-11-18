@@ -39,6 +39,8 @@ import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { ArrowIcon } from "@/components/site/Icons";
 import { kindThemeWords } from "@/components/experiences/KindTheme.words";
 import { kindMarks, sunriseHhmm } from "@/lib/kind-theme";
+import { mfAt } from "@/lib/members-first";
+import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
 
 // micromobility.sa/experiences - booking in steps (ExperienceSteps): the event, a date, then the
 // ride with its prices and rules, handed to the booking app on that event and date. The events,
@@ -213,6 +215,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
   const fbkWord = tx("Fully booked", "محجوز بالكامل");
   // Few spots left where staff say so (lib/rides.ts fewOf, 2026-11-15): the booking app's fewSpots
   const fewWord = tx("Few spots left", "أماكن قليلة متبقية");
+  // Members book first (lib/members-first.ts, 2026-11-18): the booking app's mfMark, mfStatus and mfEveryone
+  const mfW = membersFirstWords(locale);
   const fbkLine = (s: RideSession) => (s.kind === "saturday" ? tx("See you next Saturday", "نراك السبت القادم") : tx("See you at the next session", "نراك في الجلسة القادمة"));
   // "About this event" and "Details" (the owner, 2026-10-05; lib/event-info.ts): what each date is
   // and its facts, in the booking app's words - Experiences' own texts, which the booking app reads too.
@@ -293,6 +297,9 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     const place = meetHeld(s) ? { name: venueWords.meetingPoint, map: null } : infoPlace(s, venueWords, directions);
     // what the visitor already holds on it (lib/held.ts): Booked, On the waitlist or Reserved, null when nothing
     const own = heldState(mine.get(s.id) ?? [], s);
+    // members book first while it lasts (2026-11-18): when everyone may, as the booking app's _mfWhen says it
+    const mfMs = s.fbk ? 0 : mfAt(s, drawn.getTime());
+    const mfLine = mfMs ? fillAt(mfW.everyone, revealWhen(s.publicAt, locale, now.slice(0, 10), nearWords)) : "";
     return {
       // the booking app's session card: "Sunday · 26 Sept", the year said only when it is not this one (the owner's
       // pick 7, 2026-11-13: every date listed is still ahead), and its times in the rider's clock
@@ -327,6 +334,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
       ...(s.fbk ? { fbk: fbkLine(s) } : {}),
       // staff say few spots are left: said where its places would be, on its card and its Featured card
       ...(s.few ? { few: true } : {}),
+      // members book first: a member's mark, or the date held from anyone else, until everyone may book it
+      ...(mfMs ? { mf: { at: mfMs, held: !member, everyone: mfLine } } : {}),
       // a copy kept at the edge from before these fields existed reads as an event without them
       event: s.kind === "event", description: s.kind === "event" ? s.description ?? null : null,
       seatPrice, seats: s.kind === "event" && s.seats != null ? fmtNum(s.seats, locale) : null,
@@ -370,6 +379,8 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
         // the venue's Instagram, a row after where it is (the booking app's _infoFacts, 2026-11-13): the Farm House Night's
         // @thefarmhouse.jed, whose Details a member alone reads
         ...(s.ig ? { ig: { label: tx("Instagram", "إنستغرام"), handle: s.ig, url: igUrl(s.ig) } } : {}),
+        // members book first, and when everyone may: a row after the places, for every visitor (the booking app's _infoFacts)
+        ...(mfMs ? { mf: { label: mfW.status, text: mfLine } } : {}),
       },
     };
   };
@@ -434,7 +445,7 @@ export default async function ExperiencesPage({ params }: { params: Promise<{ lo
     featured: tx("Featured", "مميّزة"), upcoming: tx("Upcoming", "المواعيد القادمة"),
     // a date the visitor holds: the booking app's tkStBooked, wlOnList and statusReserved (KindTheme.words.ts)
     held: kw.held,
-    fbk: fbkWord, few: fewWord,
+    fbk: fbkWord, few: fewWord, mf: { mark: mfW.mark, status: mfW.status },
     pricesTitle: S(c.prices.title), pricesText: S(c.prices.text), codeNote: S(c.prices.codeNote),
     everyone: S(d.everyone), perSeat: S(d.perSeat), seats: S(d.seats), route: tx("Route", "المسار"),
     breakfastAt: tx("Breakfast at {0}", "الإفطار في {0}"),

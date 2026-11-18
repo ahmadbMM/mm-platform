@@ -20,9 +20,11 @@ type Props = {
   as?: "span" | "small";
   /** What shows once the window has opened: the date's Book. */
   children: ReactNode;
+  /** false: no countdown, the words stay until `at` (members book first's "Everyone from ...", lib/members-first.ts). */
+  countdown?: boolean;
 };
 
-export default function OpensIn({ text, at, words, className, as: Tag = "span", children }: Props) {
+export default function OpensIn({ text, at, words, className, as: Tag = "span", children, countdown = true }: Props) {
   const [nowMs, setNowMs] = useState<number | null>(null);
   useEffect(() => {
     if (at == null) return;
@@ -37,7 +39,7 @@ export default function OpensIn({ text, at, words, className, as: Tag = "span", 
     document.addEventListener("visibilitychange", back);
     return () => { window.clearTimeout(h); document.removeEventListener("visibilitychange", back); };
   }, [at]);
-  const line = opensLine(text, at, nowMs, words);
+  const line = countdown ? opensLine(text, at, nowMs, words) : at != null && nowMs != null && nowMs >= at ? null : text;
   if (line === null) return <>{children}</>;
   return <Tag className={className}><ClockIcon size={13} /><span>{line}</span></Tag>;
 }

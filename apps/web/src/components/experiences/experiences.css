@@ -557,3 +557,12 @@ html:is([lang="ar"], [lang="ur"]) .xs-info-kick { letter-spacing: 0; font-size: 
 /* 12px at 2px from the corner, so it stays clear of the day's number on a phone's 44px day */
 .xs-cal-mine { position: absolute; top: 2px; inset-inline-end: 2px; display: inline-grid; place-items: center; width: 12px; height: 12px; border-radius: 50%; background: #077a4b; color: #fff; }
 .xs-cal-mine svg { stroke-width: 3; }
+/* Members book first (2026-11-18, the booking app's .spots-mf and .sess-card-mf): a member's mark in the good state's green
+   beside two people; to anyone else the held date's status behind a padlock (the not-open-yet amber) and, under its time,
+   when everyone may book beside a clock. */
+.sc-spots.mf { gap: 5px; }
+.sc-spots.mf:not(.closed) { color: #06603b; }
+.sc-spots.mf::before { content: none; }
+.sc-spots.mf .mm-ic { flex: none; }
+.sc-mf-l { display: inline-flex; align-items: center; gap: 6px; color: #8a5c14; font-weight: 600; }
+.sc-mf-l .mm-ic { flex: none; }

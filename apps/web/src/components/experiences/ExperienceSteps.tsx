@@ -142,6 +142,11 @@ export type StepSession = {
   /** Few spots left (lib/rides.ts fewOf, 2026-11-15): staff said so, and its cards say it where no count of three or
    *  fewer is said; absent otherwise. */
   few?: boolean;
+  /** Members book first (lib/members-first.ts, 2026-11-18): while members alone may book it, when everyone may (epoch ms),
+   *  whether this visitor is held from it (not a member) and the line that says when ("Everyone from Sat 21 Nov · 9 AM").
+   *  A member reads a "Members first" mark and books; anyone else reads "Members book first" and cannot choose it. Absent
+   *  once everyone may book, and on every other date. */
+  mf?: { at: number; held: boolean; everyone: string };
   /** A featured date (lib/rides.ts featuredOf, 2026-11-13): its day as its Featured card's tile, short weekday, day
    *  number and short month ("Sat", "21", "Nov"), and how long yoga runs ("90 min", null on any other date or when it
    *  cannot be told); absent on a date that is not featured. */
@@ -188,6 +193,9 @@ export type StepInfo = {
   /** The venue's Instagram (bike_slots._ig, 2026-11-13; lib/instagram.ts): the row's label, the handle and its profile's
    *  address, a row of its own after where it is (the booking app's _infoFacts); absent when the session carries none. */
   ig?: { label: string; handle: string; url: string };
+  /** Members book first: the row's name ("Members book first") and when everyone may book (StepSession.mf), a row of its own
+   *  after the places, while members alone may book it. */
+  mf?: { label: string; text: string };
   /** The Saturday ride: when the sun rises that day, in the page's clock (a fact right after when it is), and its two
    *  routes' words for the drawing above the facts (KindArt.tsx SatRoute). Absent on any other kind. */
   sunrise?: string;
@@ -243,6 +251,9 @@ export type StepText = {
   fbk: string;
   /** "Few spots left" on a date staff marked (StepSession.few; the booking app's fewSpots). */
   few: string;
+  /** Members book first (StepSession.mf; the booking app's mfMark and mfStatus): a member's mark, and what anyone else reads
+   *  where the date's places are said. */
+  mf: { mark: string; status: string };
   pricesTitle: string; pricesText: string; codeNote: string;
   /** An event's facts: "Open to everyone", "{price} per seat", "{n} seats" (the page fills them). */
   everyone: string; perSeat: string; seats: string;
@@ -321,6 +332,18 @@ const FeatStar = () => (
 const Tick = ({ size = 14 }: { size?: number }) => (
   <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
 );
+/** Members book first (2026-11-18; the booking app's _cuIc lock and people): a padlock beside "Members book first", two
+ *  people beside a member's "Members first". */
+const LockIcon = () => (
+  <svg className="mm-ic" aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 10.5h12v9.5H6zM8.5 10.5V7.8a3.5 3.5 0 0 1 7 0v2.7" />
+  </svg>
+);
+const PeopleIcon = () => (
+  <svg className="mm-ic" aria-hidden="true" focusable="false" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 11.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4ZM3.2 19.5c.5-3.3 2.8-5.2 5.8-5.2s5.3 1.9 5.8 5.2M15.6 5a3 3 0 0 1 0 5.8M17.6 14.4c1.8.6 2.9 2.3 3.2 5.1" />
+  </svg>
+);
 /** The calendar switch's List (the booking app's _cuIc rows): three lines, each with its dot. */
 const RowsIcon = () => (
   <svg className="mm-ic" aria-hidden="true" focusable="false" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -384,7 +407,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   const calMany = !!ev && calOffered(ev.sessions);
   const plan = calMany && view === "cal" ? calPlan(rows, calDay, sess?.id ?? null) : null;
   const shown = plan ? plan.list : listed;
-  const ticking = (step === 2 && !!ev?.sessions.some((s) => s.opensAt != null)) || (step === 1 && feats.some((f) => f.s.opensAt != null));
+  const ticking = (step === 2 && !!ev?.sessions.some((s) => s.opensAt != null || s.mf)) || (step === 1 && feats.some((f) => f.s.opensAt != null || f.s.mf));
   useEffect(() => {
     if (!ticking) return;
     let h = 0;
@@ -394,11 +417,13 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
     document.addEventListener("visibilitychange", back);
     return () => { window.clearTimeout(h); document.removeEventListener("visibilitychange", back); };
   }, [ticking]);
-  /** When a date opens, as its card says it now: the countdown within a day, null once the window has opened. */
-  const opensOf = (s: StepSession): string | null => {
-    if (!s.opens) return null;
-    return opensLine(s.opens, s.opensAt, nowMs, t.opensIn);
-  };
+  /** When a date's booking window opens, as its card says it now: the countdown within a day, null once it has opened. */
+  const winOf = (s: StepSession): string | null => (s.opens ? opensLine(s.opens, s.opensAt, nowMs, t.opensIn) : null);
+  /** Members book first while it lasts (the server's word until the page has its own clock), else null. */
+  const mfOn = (s: StepSession) => (s.mf && (nowMs == null || s.mf.at > nowMs) ? s.mf : null);
+  /** Why a date cannot be chosen yet, as its card says it now: its booking window first, then members booking first for a
+   *  visitor who is not one (the booking app's _bwOpensOn); null when it may be chosen. */
+  const opensOf = (s: StepSession): string | null => winOf(s) ?? (mfOn(s)?.held ? (mfOn(s)?.everyone ?? null) : null);
   useEffect(() => {
     const d = dlg.current;
     if (!info || !d) return;
@@ -462,10 +487,14 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
   const stateOf = (s: StepSession) => {
     if (s.held) return <span className={`sc-spots held${s.held === "ok" ? "" : " low"}`} data-held={s.held}>{s.held === "ok" && <Tick size={13} />}<span>{t.held[s.held]}</span></span>;
     if (s.fbk) return <span className="sc-spots full fbk">{t.fbk}</span>;
-    const opens = opensOf(s);
-    return opens ? <span className="sc-spots closed"><ClockIcon size={13} /><span>{opens}</span></span> : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
+    const win = winOf(s), mf = mfOn(s);
+    // members book first (2026-11-18): said as such to anyone else, behind a lock, when everyone may under the time
+    return win ? <span className="sc-spots closed"><ClockIcon size={13} /><span>{win}</span></span>
+      : mf?.held ? <span className="sc-spots closed mf"><LockIcon /><span>{t.mf.status}</span></span>
+      : s.full ? <span className="sc-spots full">{t.waitlisted}</span>
       : s.kind !== "vlap" && s.kind !== "arena" && s.left != null && s.left > 0 && s.left <= 3 ? <span className="sc-spots low">{fillAt(s.left === 1 ? t.left1 : t.leftN, s.left)}</span>
       : s.few ? <span className="sc-spots low">{t.few}</span>
+      : mf ? <span className="sc-spots mf"><PeopleIcon /><span>{t.mf.mark}</span></span>
       : null;
   };
   const tags = (s: StepSession) => (
@@ -516,6 +545,7 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
     if (i.race) out.push({ k: i.race.label, v: <a href={i.race.url} target="_blank" rel="noopener">{i.race.link}</a> });
     if (i.link) out.push({ k: i.link.label, v: <a href={i.link.url} target="_blank" rel="noopener">{i.link.text}</a> });
     if (i.places) out.push({ k: t.info.places, v: i.places });
+    if (i.mf && mfOn(s)) out.push({ k: i.mf.label, v: <bdi>{i.mf.text}</bdi> }); // members book first, and when everyone may
     if (s.breakfast) out.push({ k: t.info.after, v: breakfastAt(s.breakfast) });
     else if (s.reveal) out.push({ k: t.info.after, v: s.reveal }); // the breakfast spot is told later: when
     return out;
@@ -904,6 +934,8 @@ export default function ExperienceSteps({ locale, events, featured, prices, book
                         {spots}
                       </span>
                       {s.when && <span className="sc-time">{when(s)}</span>}
+                      {/* members book first (2026-11-18): when everyone may, under the time, to a visitor it holds */}
+                      {mfOn(s)?.held && !winOf(s) && <span className="sc-meta sc-mf-l"><ClockIcon size={13} /><bdi>{mfOn(s)?.everyone}</bdi></span>}
                       {s.meta && s.meta.length > 0 && <span className="sc-meta">{s.meta.map((x, i) => <span key={i}>{i > 0 && " · "}<bdi>{x}</bdi></span>)}</span>}
                       {s.route && <span className="sc-time">{t.route}: {s.route}</span>}
                       {s.breakfast && <span className="sc-meta">{breakfastAt(s.breakfast)}</span>}

@@ -88,6 +88,10 @@ export type RideSession = {
   /** A ride staff approve: its own places (sessions.spots, the booking app's spotsLeft cap before capacity). Only a read
    *  that asks for it has it (SESSION_COLS_SPOTS). */
   spots?: number | null;
+  /** Members book first (sessions.public_at, rentals 20261118210800; lib/members-first.ts): until this time (ISO) only
+   *  Community members may book it. Only a read that asks for it has it (SESSION_COLS_PUBLIC_AT), and only when set; a
+   *  copy kept at the edge from before has none, and reads as open to everyone. */
+  publicAt?: string;
   title: string | null;
   /** The session's name in Arabic (sessions.title_ar, rentals 20261113170000; the owner's pick on the booking app's
    *  theming page, 2026-11-13): an Arabic page names the session by it (sessionName). Trimmed, at most 60 characters,
@@ -184,7 +188,7 @@ type Row = {
   location?: unknown; meet_url?: unknown; breakfast_name?: unknown; breakfast_name_ar?: unknown; reveal_at?: unknown; vl?: unknown;
   gender_only?: unknown; closed_types?: unknown;
   out_bikes?: unknown; hide_queue?: unknown;
-  cancelled_at?: unknown; draft?: unknown; opens_at?: unknown;
+  cancelled_at?: unknown; draft?: unknown; opens_at?: unknown; public_at?: unknown;
 };
 
 export function rideKind(r: Row): RideKind {
@@ -351,6 +355,11 @@ function titleArOf(r: Row): Pick<RideSession, "titleAr"> {
   return { titleAr: typeof r.title_ar === "string" && r.title_ar.trim() ? r.title_ar.trim().slice(0, 60).trimEnd() : null };
 }
 
+/** Until when members alone may book a row (SESSION_COLS_PUBLIC_AT): only when the read asked, and only a time it can read. */
+function publicAtOf(r: Row): Pick<RideSession, "publicAt"> {
+  return "public_at" in r && typeof r.public_at === "string" && Number.isFinite(Date.parse(r.public_at)) ? { publicAt: r.public_at } : {};
+}
+
 /** When a row says riders are told where it meets (SESSION_COLS_REVEAL): only when the read asked. */
 function revealOf(r: Row): Pick<RideSession, "revealAt"> {
   if (!("reveal_at" in r)) return {};
@@ -420,6 +429,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     ...("spots" in r ? { spots: num(r.spots) } : {}),
     ...((h) => (h ? { ig: h } : {}))(igOf(r.bike_slots)),
     ...revealOf(r),
+    ...publicAtOf(r),
     ...outOf(r),
     ...publishedOf(r, community && kind !== "snd96"),
     ...((kind === "vlap" || kind === "arena") && "vl" in r ? { vl: r.vl ?? null } : {}),
@@ -513,6 +523,10 @@ export const SESSION_COLS_FBK = "cancelled_at,draft,opens_at";
 // Few spots left turns itself on at the number staff set (fewAt) as it does there. A group of its own, so a database
 // without it reads as before: the capacity counts.
 export const SESSION_COLS_SPOTS = "spots";
+// Members book first (rentals 20261118210800, 2026-11-18; lib/members-first.ts): until sessions.public_at only Community
+// members may book the session. Riders may read it with the row; a group of its own, so a database without it reads as
+// before: nobody held.
+export const SESSION_COLS_PUBLIC_AT = "public_at";
 /** The sessions the lists of the sessions ahead show (a PostgREST filter): open and full ones, and the closed ones whose
  *  settings carry the Full, no waitlist mark (bike_slots is text; toSession reads the mark itself and the rest of fbkOf). */
 export const SESSION_STATUS_SHOWN = "or=(status.in.(open,full),and(status.eq.closed,bike_slots.like.*_fbk*))";
@@ -709,7 +723,7 @@ async function sessionsAhead(fetchImpl: typeof fetch, url: string, key: string, 
     // and the bikes out of service, which the places left count (withPlacesLeft), and whether each rider list is out;
     // the closed sessions marked Full, no waitlist too, with what tells one from a night called off (SESSION_COLS_FBK)
     const page = await sessionRows(fetchImpl, url, key, `session_date=gte.${today}&${SESSION_STATUS_SHOWN}&order=session_date.asc,id.asc&limit=${AHEAD_PAGE}&offset=${i * AHEAD_PAGE}`, SESSION_COLS, now,
-      { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED, SESSION_COLS_FBK, SESSION_COLS_SPOTS] });
+      { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED, SESSION_COLS_FBK, SESSION_COLS_SPOTS, SESSION_COLS_PUBLIC_AT] });
     if (!Array.isArray(page)) throw new Error("sessions");
     out.push(...(page as Row[]));
     if (page.length < AHEAD_PAGE) break;
