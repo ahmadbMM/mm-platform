@@ -15,7 +15,15 @@ Small enough that the whole copy takes a couple of minutes.
 OLD_DB_URL='…' NEW_DB_URL='…' scripts/clone-database.sh
 ```
 
-It stops with a non-zero exit if any table's row count differs between the two.
+It shows both project refs and asks for the new one to be typed before anything changes. It
+refuses production (`qpffkzmsfyilicwcsszz`) as the new project, the same project twice, and a new
+project that already holds 50 customers or more; the cutover-night re-run onto the project the
+first run built says so with `CLONE_AGAIN=1`. Each run replaces the new project's public schema,
+sign-in users and migration history whole, and copies the storage buckets and the storage and
+realtime policies (the photo upload rules).
+
+It stops with a non-zero exit if any table's row count, the sign-in users (passwords included),
+the migration history, the buckets, the storage policies or the functions differ between the two.
 
 ## What the script cannot do
 

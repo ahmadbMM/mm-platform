@@ -247,12 +247,31 @@ describe("loadRides", () => {
     const urls = f.mock.calls.map((c) => c[0] as string);
     expect(urls).toContain("https://example.supabase.co/rest/v1/ride_prices?select=*");
     // open and full sessions, and the closed ones marked Full, no waitlist (fbkOf; the rest of its rule is toSession's)
-    expect(urls.find((u) => u.includes("/rpc/list_sessions?"))).toContain("&session_date=gte.2026-09-25&or=(status.in.(open,full),and(status.eq.closed,bike_slots.like.*_fbk*))&order=session_date.asc&limit=60");
+    expect(urls.find((u) => u.includes("/rpc/list_sessions?"))).toContain("&session_date=gte.2026-09-25&or=(status.in.(open,full),and(status.eq.closed,bike_slots.like.*_fbk*))&order=session_date.asc,id.asc&limit=200&offset=0");
     expect(await loadRides(f as unknown as typeof fetch, at + 30_000)).toBe(a);
     expect(f).toHaveBeenCalledTimes(3); // the prices, the sessions, and the open night's places
     expect(await loadRides(f as unknown as typeof fetch, at + 61_000)).toBe(a); // past the minute: served as it is, refreshed behind
     await memoSettled();
     expect(f).toHaveBeenCalledTimes(6);
+  });
+
+  it("reads every session ahead, a page at a time, and keeps the last copy when a page fails (bug hunt 2026-11-18)", async () => {
+    const day = (i: number) => new Date(Date.UTC(2026, 9, 1) + i * 864e5).toISOString().slice(0, 10);
+    const all = Array.from({ length: 250 }, (_, i) => row({ id: `${day(Math.floor(i / 3))}-${i}`, session_date: day(Math.floor(i / 3)), status: "full" }));
+    const paged = (failSecond = false) => vi.fn(async (url: string) => {
+      if (url.includes("ride_prices")) return json(PRICES);
+      const from = Number(url.match(/offset=(\d+)/)?.[1] ?? 0), n = Number(url.match(/limit=(\d+)/)?.[1] ?? 1e9);
+      return failSecond && from > 0 ? json({ message: "down" }, 503) : json(all.slice(from, from + n));
+    });
+    const at = Date.parse("2026-09-24T21:30:00Z");
+    const f = paged();
+    const a = await loadRides(f as unknown as typeof fetch, at);
+    expect(a?.sessions).toHaveLength(250);
+    expect(a?.sessions.at(-1)?.id).toBe(all[249].id);
+    expect(f.mock.calls.filter((c) => String(c[0]).includes("/rpc/list_sessions?"))).toHaveLength(2);
+    resetRides();
+    const b = await loadRides(paged(true) as unknown as typeof fetch, at);
+    expect(b?.sessions).toEqual([]); // the prices alone: a half list never stands for the whole
   });
 
   it("counts the places left on an open night nobody approves, as a number only", async () => {

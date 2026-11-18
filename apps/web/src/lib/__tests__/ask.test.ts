@@ -224,6 +224,13 @@ describe("an answer's value, shaped for its kind", () => {
     expect(shapeNumber({ min: 0, max: 1, step: 0.1 }, "0.3")).toEqual({ ok: true, value: { n: 0.3 } });
     expect(shapeNumber({ min: -5, max: 5, step: 5 }, "-5")).toEqual({ ok: true, value: { n: -5 } });
     expect(shapeNumber({ min: 10, max: 100, step: 10 }, "25")).toEqual({ ok: false, error: "invalid" });
+    // thousands grouped: one number, never a decimal (bug hunt 2026-11-18)
+    const km = { min: 0, max: 20000, step: 1 };
+    expect(shapeNumber(km, "1,000")).toEqual({ ok: true, value: { n: 1000 } });
+    expect(shapeNumber(km, "12,500")).toEqual({ ok: true, value: { n: 12500 } });
+    expect(shapeNumber(km, "١٬٠٠٠")).toEqual({ ok: true, value: { n: 1000 } });
+    expect(shapeNumber({ min: 0, max: 5, step: 0.5 }, "1,5")).toEqual({ ok: true, value: { n: 1.5 } });
+    expect(shapeNumber({ min: 0, max: 20000, step: 0.5 }, "12,500.5")).toEqual({ ok: true, value: { n: 12500.5 } });
   });
   it("reads an answer back for its form", () => {
     expect(sentPicks({ o: ["a", 2, "c"] })).toEqual(["a", "c"]);

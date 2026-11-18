@@ -25,7 +25,9 @@ import { claimToken } from "@/lib/claim";
 async function state(locale: string) {
   const [t, content] = await Promise.all([getTranslations({ locale, namespace: "comingSoon" }), loadSiteContent()]);
   const closed = siteCanOpen() ? isComingSoon(content) : true;
-  const previewing = closed ? await isStaffToken((await cookies()).get(PREVIEW_COOKIE)?.value) : false;
+  // staff previewing: the preview bar on a closed site; every page in the menus, open or closed (bug hunt 2026-11-18)
+  const staff = closed || hiddenPages(content).length ? await isStaffToken((await cookies()).get(PREVIEW_COOKIE)?.value) : false;
+  const previewing = closed && staff;
   // A Coming Soon text staff wrote: in this language, or - in a translated one - their English
   // translated (src/i18n/tx); else the default message.
   const tx = serverL(locale);
@@ -35,7 +37,7 @@ async function state(locale: string) {
     const en = siteText(content, key, "en", "");
     return en ? tx(en) : fallback;
   };
-  return { t, content, closed, previewing, showHome: !closed || previewing, soon };
+  return { t, content, closed, previewing, staff, showHome: !closed || previewing, soon };
 }
 
 type Search = Promise<Record<string, string | string[] | undefined>>;
@@ -81,7 +83,7 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   }
   const L = asLocale(locale);
   const site = resolvePage(siteSchema, s.content, L);
-  const hidden = s.previewing ? [] : hiddenPages(s.content);
+  const hidden = s.staff ? [] : hiddenPages(s.content);
   // The Learn to ride question, from the Experiences page's content: only while staff offer
   // lessons and Experiences is open - the sign-up it leads to lives under /experiences.
   const learn = hidden.includes("experiences") ? null : learnTeaser(resolvePage(experiencesSchema, s.content, L).learn);

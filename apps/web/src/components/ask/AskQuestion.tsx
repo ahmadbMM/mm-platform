@@ -97,7 +97,8 @@ export default function AskQuestionCard({ q, full, locale, t, act, thanks = "", 
   const sent = written ? null : mine[0] ?? null;
   // the page is open but this question takes no more answers: said with one small mark
   const shut = !q.open && full.page.open && q.kind !== "info" && !full.preview;
-  const shown = resultsShown(q, full);
+  // drawn only when the database sent the results: under "closed" they come once the question closes (bug hunt 2026-11-18)
+  const shown = resultsShown(q, full) && result !== undefined && result !== null;
   const state = answer;
   // A pin already dropped is drawn on the results' own picture, where there is one: the picture stands once.
   const formed = (state === "open" || state === "change" || state === "done" || state === "shut") && !(q.kind === "pin" && (state === "done" || state === "shut") && shown);

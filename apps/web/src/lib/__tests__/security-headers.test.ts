@@ -28,3 +28,19 @@ describe("the site's Content-Security-Policy", () => {
     expect((await csp())["script-src"]).toContain("'unsafe-inline'");
   });
 });
+
+describe("the site's Permissions-Policy", () => {
+  async function policy(): Promise<string> {
+    const rules = (await config.headers?.()) ?? [];
+    return rules.flatMap((r) => r.headers).find((h) => h.key === "Permissions-Policy")?.value ?? "";
+  }
+  it("lets the site itself ask for a location: the ticket's Need help? adds it to the WhatsApp message (bug hunt 2026-11-18)", async () => {
+    const p = await policy();
+    expect(p).toContain("geolocation=(self)");
+    expect(p).not.toContain("geolocation=()");
+  });
+  it("keeps the camera, the microphone and payments off", async () => {
+    const p = await policy();
+    for (const f of ["camera=()", "microphone=()", "payment=()"]) expect(p).toContain(f);
+  });
+});

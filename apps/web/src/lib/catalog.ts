@@ -95,29 +95,41 @@ const TTL_MS = 60_000; // a staff save shows within a minute
 const KEY = "catalog";
 
 // Each table's columns and order. Named rather than "*", so a column staff gain later is never
-// sent to the page unasked; the order is the one staff set, then the name.
+// sent to the page unasked; the order is the one staff set, then the name, then the row's own key
+// (one order every page of a long table agrees on).
 const TABLES = {
-  categories: { table: "catalog_categories", cols: "id,parent_id,slug,name_en,name_ar,blurb_en,blurb_ar,cover,sort", filter: "published=is.true&order=sort.asc,name_en.asc" },
-  fields: { table: "catalog_spec_fields", cols: "key,label_en,label_ar,group_en,group_ar,unit_en,unit_ar,sort", filter: "order=sort.asc,label_en.asc" },
-  models: { table: "catalog_models", cols: "id,category_id,subtype_id,slug,brand,name,model_year,ride_type,tagline_en,tagline_ar,description_en,description_ar,specs,spec_sheet,sort", filter: "published=is.true&order=sort.asc,name.asc" },
-  colors: { table: "catalog_colors", cols: "id,model_id,name_en,name_ar,hex,sort", filter: "order=sort.asc,name_en.asc" },
+  categories: { table: "catalog_categories", cols: "id,parent_id,slug,name_en,name_ar,blurb_en,blurb_ar,cover,sort", filter: "published=is.true&order=sort.asc,name_en.asc,id.asc" },
+  fields: { table: "catalog_spec_fields", cols: "key,label_en,label_ar,group_en,group_ar,unit_en,unit_ar,sort", filter: "order=sort.asc,label_en.asc,key.asc" },
+  models: { table: "catalog_models", cols: "id,category_id,subtype_id,slug,brand,name,model_year,ride_type,tagline_en,tagline_ar,description_en,description_ar,specs,spec_sheet,sort", filter: "published=is.true&order=sort.asc,name.asc,id.asc" },
+  colors: { table: "catalog_colors", cols: "id,model_id,name_en,name_ar,hex,sort", filter: "order=sort.asc,name_en.asc,id.asc" },
   photos: { table: "catalog_photos", cols: "id,model_id,color_id,url,alt_en,alt_ar,sort,is_cover", filter: "order=sort.asc,id.asc" },
 } as const;
 
-/** One table's rows with the public key; null when it could not be read. */
+// The database answers 1,000 rows a request at most: a table is read a page at a time until a page
+// comes back short, so the 1,001st photo is never dropped unseen (bug hunt 2026-11-18).
+const PAGE = 1000;
+const MAX_PAGES = 20;
+
+/** One table's rows with the public key, every page of it; null when any page could not be read. */
 async function readTable<T>(spec: { table: string; cols: string; filter: string }, fetchImpl: typeof fetch): Promise<T[] | null> {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return null;
+  const out: T[] = [];
   try {
-    const res = await fetchImpl(`${url}/rest/v1/${spec.table}?select=${spec.cols}&${spec.filter}`, {
-      headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" },
-      cache: "no-store",
-      signal: AbortSignal.timeout(2500),
-    });
-    if (!res.ok) return null;
-    const rows = (await res.json()) as unknown;
-    return Array.isArray(rows) ? (rows.filter((r) => r && typeof r === "object") as T[]) : null;
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const res = await fetchImpl(`${url}/rest/v1/${spec.table}?select=${spec.cols}&${spec.filter}&limit=${PAGE}&offset=${page * PAGE}`, {
+        headers: { apikey: key, Authorization: `Bearer ${key}`, Accept: "application/json" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(2500),
+      });
+      if (!res.ok) return null;
+      const rows = (await res.json()) as unknown;
+      if (!Array.isArray(rows)) return null;
+      out.push(...(rows.filter((r) => r && typeof r === "object") as T[]));
+      if (rows.length < PAGE) return out;
+    }
+    return null; // longer than any catalogue: half of it would be read as the whole
   } catch {
     return null; // unreachable or slow
   }

@@ -38,8 +38,9 @@ export function defeTarget(pathname: string, params: URLSearchParams): string | 
 }
 
 // micromobility.sa/store opens the online store (a hosted Salla shop, on its own domain), at the
-// address staff set (Website > Whole site > Other addresses), in English when the visitor reads
-// English and in Arabic otherwise. Before Coming Soon, so the shop is reachable while the site is
+// address staff set (Website > Whole site > Other addresses), in Arabic when the visitor reads Arabic
+// or no language is known, and in English for every other of the site's languages (the shop has only
+// the two; bug hunt 2026-11-18). Before Coming Soon, so the shop is reachable while the site is
 // closed. Temporary (307): the shop's address can change without browsers keeping the old one.
 const STORE_PATH = /^\/(?:(en|ar)\/)?store\/?$/;
 export async function storeTarget(pathname: string, req: NextRequest): Promise<string | null> {
@@ -49,7 +50,8 @@ export async function storeTarget(pathname: string, req: NextRequest): Promise<s
   const href = set && typeof set === "object" ? String((set as { href?: unknown }).href ?? "") : "";
   const base = (/^https:\/\//i.test(href) ? href : STORE_URL).replace(/\/+$/, "");
   const lang = m[1] || askedLang(req.nextUrl.searchParams) || req.cookies.get(LANG_COOKIE.name)?.value;
-  return `${base}/${lang === "en" ? "en" : "ar"}`;
+  const known = !!lang && (routing.locales as readonly string[]).includes(lang);
+  return `${base}/${known && lang !== "ar" ? "en" : "ar"}`;
 }
 
 // The staff preview page; the staff page still opens it as /en/preview or /ar/preview.

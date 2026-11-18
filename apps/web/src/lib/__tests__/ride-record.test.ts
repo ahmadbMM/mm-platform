@@ -207,6 +207,14 @@ describe("badge ladders (the booking app's _bdgFold, 2026-10-09)", () => {
     // the count counts each ladder once
     expect(L.map((x) => x.slug)).not.toContain("regular");
   });
+  it("count a party's rows on one night as one ride, as the booking app does (bug hunt 2026-11-18)", () => {
+    const party = ["a", "b", "c", "d"].map((x, i) => row({ id: `p-${x}`, session_id: "2026-01-03", queue_num: i + 1 }));
+    const r = recordRows([...party, row({ session_id: "2026-01-10" })]);
+    const s = new Map<string, RecordSession>(r.map((x) => [x.sessionId, { kind: "jcc", freeRide: false }]));
+    const laps = badgeList(r, s, empty, today, null).find((x) => x.slug === "first_lap" || x.slug === "regular")!;
+    expect(laps).toMatchObject({ slug: "first_lap", on: true, p: "2/5" });
+    expect(laps.lv!.map((x) => [x.slug, x.on])).toEqual([["first_lap", true], ["regular", false], ["podium", false], ["corniche25", false]]);
+  });
   it("show a ladder not begun as its first level, with nothing reached", () => {
     const L = badgeList([], new Map(), empty, today, null), t = L.find((x) => x.slug === "t25")!;
     expect(t).toMatchObject({ on: false, lvN: 0, nx: { slug: "t25" }, manual: true });

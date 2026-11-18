@@ -38,5 +38,7 @@ export const SECURITY_HEADERS = [
   { key: "Strict-Transport-Security", value: "max-age=31536000" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-  { key: "Permissions-Policy", value: "camera=(), microphone=(), payment=(), usb=(), geolocation=()" },
+  // geolocation for the site itself: the ticket's Need help? pop-up adds the rider's location to the WhatsApp message
+  // when they allow it (components/booking/TicketHelp.tsx), as the booking app's _headers allow (bug hunt 2026-11-18)
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), payment=(), usb=(), geolocation=(self)" },
 ];

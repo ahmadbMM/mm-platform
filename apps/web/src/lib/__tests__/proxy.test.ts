@@ -331,6 +331,11 @@ describe("/store", () => {
     expect(await to("/store", { cookie: "NEXT_LOCALE=en" })).toBe("https://stepdragon.com.sa/en");
     expect(await to("/en/store")).toBe("https://stepdragon.com.sa/en");
     expect(await to("/ar/store", { cookie: "NEXT_LOCALE=en" })).toBe("https://stepdragon.com.sa/ar");
+    // the site's other languages: the English shop (bug hunt 2026-11-18)
+    expect(await to("/store", { cookie: "NEXT_LOCALE=fr" })).toBe("https://stepdragon.com.sa/en");
+    expect(await to("/store?lang=hi")).toBe("https://stepdragon.com.sa/en");
+    expect(await to("/store", { cookie: "NEXT_LOCALE=ar" })).toBe("https://stepdragon.com.sa/ar");
+    expect(await to("/store", { cookie: "NEXT_LOCALE=xx" })).toBe("https://stepdragon.com.sa/ar");
   });
 });
 

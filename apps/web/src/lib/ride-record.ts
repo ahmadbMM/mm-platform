@@ -328,7 +328,8 @@ function rideBadges(all: RecordRow[], sessions: Map<string, RecordSession>, data
   // a ride that counts towards a badge (_bdgRode): done and paid, or free, or an own bike checked in;
   // the booking app counts every badge off these rows (_mrBadges(all, all.filter(_bdgRode)))
   const rode = (r: TicketRow) => done(r) || (r.type === "Own" && (r.status === "done" || r.status === "active"));
-  const completed = rows.filter(rode), rides = completed.length;
+  // counted in nights, as the booking app's _mrBadges (bug hunt 2026-11-11) and Your rides: a party's rows are one night
+  const completed = rows.filter(rode), rides = new Set(completed.map((r) => r.sessionId)).size;
   // Front Row's levels (2026-10-12): nights first in the queue and ridden ("make sure all badges go for
   // deserved holders"); a ride staff approve shows no number, so it never counts
   const p1 = new Set(rows.filter((r) => r.queueNum === 1 && rode(r) && !ses(r.sessionId)?.approval).map((r) => r.sessionId)).size;

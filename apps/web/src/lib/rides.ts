@@ -698,6 +698,25 @@ export async function sessionGenders(ids: string[], account: SessionReader, fetc
   }
 }
 
+// The sessions from today (Riyadh) on, a page at a time until a page comes back short, as the booking app reads them
+// (_pagedAll): a cap of 60 dropped the latest dates unseen once more were scheduled (bug hunt 2026-11-18). A page that
+// fails fails the whole read, so a half list never stands for the whole.
+const AHEAD_PAGE = 200;
+const AHEAD_PAGES = 10;
+async function sessionsAhead(fetchImpl: typeof fetch, url: string, key: string, today: string, now: number): Promise<Row[]> {
+  const out: Row[] = [];
+  for (let i = 0; i < AHEAD_PAGES; i++) {
+    // and the bikes out of service, which the places left count (withPlacesLeft), and whether each rider list is out;
+    // the closed sessions marked Full, no waitlist too, with what tells one from a night called off (SESSION_COLS_FBK)
+    const page = await sessionRows(fetchImpl, url, key, `session_date=gte.${today}&${SESSION_STATUS_SHOWN}&order=session_date.asc,id.asc&limit=${AHEAD_PAGE}&offset=${i * AHEAD_PAGE}`, SESSION_COLS, now,
+      { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED, SESSION_COLS_FBK, SESSION_COLS_SPOTS] });
+    if (!Array.isArray(page)) throw new Error("sessions");
+    out.push(...(page as Row[]));
+    if (page.length < AHEAD_PAGE) break;
+  }
+  return out;
+}
+
 /** One read of both: the prices and the sessions from today (Riyadh) on. Each keeps the copy it
  *  replaces when its own read fails; null when neither has ever been read. */
 async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: number): Promise<RideData | null> {
@@ -709,9 +728,7 @@ async function readRides(prev: RideData | null, fetchImpl: typeof fetch, now: nu
     const today = riyadhClock(new Date(now)).slice(0, 10);
     const [p, s] = await Promise.allSettled([
       getJson(fetchImpl, `${url}/rest/v1/ride_prices?select=*`, key), // every column: max_price and employee_price too (lib/biz.ts)
-      // and the bikes out of service, which the places left count (withPlacesLeft), and whether each rider list is out;
-      // the closed sessions marked Full, no waitlist too, with what tells one from a night called off (SESSION_COLS_FBK)
-      sessionRows(fetchImpl, url, key, `session_date=gte.${today}&${SESSION_STATUS_SHOWN}&order=session_date.asc&limit=60`, SESSION_COLS, now, { optional: [...SESSION_GROUPS, SESSION_COLS_OUT, SESSION_COLS_PUBLISHED, SESSION_COLS_FBK, SESSION_COLS_SPOTS] }),
+      sessionsAhead(fetchImpl, url, key, today, now),
     ]);
     if (p.status === "fulfilled" && Array.isArray(p.value)) prices = priceRows(p.value);
     if (s.status === "fulfilled" && Array.isArray(s.value)) {

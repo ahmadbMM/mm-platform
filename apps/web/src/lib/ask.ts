@@ -227,11 +227,16 @@ export function shapePoints(config: unknown, points: unknown): Shaped {
   return yes({ p });
 }
 
-/** A number: {n} - from min to max, on one of the question's steps. Typed with Arabic digits or a decimal comma too. */
+/** A number: {n} - from min to max, on one of the question's steps. Typed with Arabic digits or a decimal comma too.
+ *  Thousands grouped ("1,000", "12,500.5", "١٬٠٠٠") read as one number: the Arabic separator always, a comma when a
+ *  decimal point follows or the question takes whole numbers (bug hunt 2026-11-18: "1,000" was sent as 1). */
 export function shapeNumber(config: unknown, raw: unknown): Shaped {
   const c = numberConfig(config);
   const typed = typeof raw === "number" ? String(raw) : str(raw);
-  const text = latinDigits(typed).replace(/[٫,]/g, ".").trim();
+  let text = latinDigits(typed).trim();
+  const whole = Number.isInteger(c.step) && Number.isInteger(c.min);
+  if (/^-?\d{1,3}(?:[,٬]\d{3})+(?:[.٫]\d+)?$/.test(text) && (whole || /[٬.٫]/.test(text))) text = text.replace(/[,٬]/g, "");
+  text = text.replace(/[٫,]/g, ".");
   if (!text) return no("empty");
   if (!/^-?\d+(?:\.\d+)?$/.test(text)) return no("invalid");
   const n = Number(text);
