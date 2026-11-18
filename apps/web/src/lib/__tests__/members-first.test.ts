@@ -52,7 +52,7 @@ const experiences = async (sessions: unknown[], locale = "en") => {
   resetRides();
   const f = db(sessions);
   vi.stubGlobal("fetch", f);
-  const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({}) });
+  const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ ev: "community" }) });
   const props = (findAll(page, ExperienceSteps)[0] as ReactElement<Props>).props;
   return { props, dates: props.events.flatMap((e) => e.sessions), f };
 };
@@ -68,7 +68,7 @@ const flow = async (sessions: unknown[], locale = "en") => {
   resetRides();
   const f = db(sessions);
   vi.stubGlobal("fetch", f);
-  const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({}) });
+  const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ ev: "community" }) });
   const props = (findAll(page, BookingFlow)[0] as ReactElement<FlowProps>).props;
   return { props, dates: props.events.flatMap((e) => e.sessions), f };
 };
@@ -109,7 +109,7 @@ describe("the window (lib/members-first.ts)", () => {
     resetRides();
     const old = vi.fn(async (url: string) => (url.includes("/rpc/list_sessions") ? (url.includes("public_at") ? json({ code: "42703", message: "column list_sessions.public_at does not exist" }, 400) : json([{ ...POOL, public_at: undefined }])) : json([])));
     vi.stubGlobal("fetch", old);
-    const page = await ExperiencesPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) });
+    const page = await ExperiencesPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({ ev: "community" }) });
     const dates = (findAll(page, BookingFlow)[0] as ReactElement<FlowProps>).props.events.flatMap((e) => e.sessions); // staging: its own booking flow
     expect(dates.find((s) => s.id === POOL.id)?.mf).toBeUndefined();
   });

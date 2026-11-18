@@ -85,7 +85,7 @@ const db = (sessions: unknown[], more: (url: string) => Response | null = () => 
 });
 const experiences = async (sessions: unknown[], locale = "en") => {
   vi.stubGlobal("fetch", db(sessions));
-  const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({}) });
+  const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ ev: "community" }) });
   const steps = findAll(page, BookingFlow)[0] as ReactElement<Parameters<typeof BookingFlow>[0]>;
   return { page, steps, html: renderToStaticMarkup(steps) };
 };

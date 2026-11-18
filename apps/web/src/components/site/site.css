@@ -147,7 +147,8 @@ html:is([lang="ar"], [lang="ur"]) .mm-nav-sheet-group > p { letter-spacing: 0; }
 .mm-foot-brand p.mm-foot-hours { margin-bottom: 20px; }
 .mm-foot-dirs { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 26px; }
 .mm-foot .mm-foot-dirs a { display: inline-flex; align-items: center; gap: 7px; color: #fbf9f4; font-weight: 700; font-size: 15px; border-bottom: 2px solid #03ff89; padding-bottom: 3px; }
-.mm-foot-social { display: flex; gap: 10px; flex-wrap: wrap; }
+/* four to a row, so eight marks sit 4 + 4 and never 6 + 2 (E08, 2026-11-18) */
+.mm-foot-social { display: grid; grid-template-columns: repeat(4, max-content); gap: 10px; }
 .mm-foot .mm-foot-social a { width: 40px; height: 40px; border-radius: 50%; background: #077a4b; color: #fbf9f4; display: inline-flex; align-items: center; justify-content: center; transition: background .2s ease, color .2s ease; }
 .mm-foot .mm-foot-social a:hover { background: #fbf9f4; color: #077a4b; }
 .mm-foot-col h2 { color: #0fa463; font-size: 25px; font-weight: 700; letter-spacing: -.5px; margin: 0 0 22px; }

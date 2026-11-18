@@ -177,6 +177,11 @@ export type RideSession = {
   /** The Saturday ride's two groups' distances in km (bike_slots._km, the usual 20 and 40 when unset; lib/kind-theme.ts
    *  rideGroupKm): its Details draw the two routes with them. Only on the Saturday ride. */
   groupKm?: { beg: number; int: number };
+  /** A test ride on a shop bike (sessions.ride_kind 'testride'; the Experiences build of 2026-11-18, EF23): listed on
+   *  Experiences under a kind of its own only while staff switch it on (site_content xp.general.testRides), and booked in
+   *  the booking app. Its kind reads as the Saturday ride's here, as any kind this list does not know does, so every
+   *  other page leaves it out with the Petromin nights (withoutPetromin). Set only when it is one. */
+  testRide?: true;
   /** The venue's Instagram handle (bike_slots._ig, the booking app's _sessIg, 2026-11-13; lib/instagram.ts igOf): a row on
    *  its Details and a link on its ticket. Set only when the session carries one Instagram allows. */
   ig?: string;
@@ -463,6 +468,7 @@ export function toSession(r: Row, keepAll = false, petromin = false): RideSessio
     gender: sessionGender(r.gender_only),
     closedTypes: Array.isArray(r.closed_types) ? r.closed_types.filter((x): x is string => typeof x === "string") : [],
     featured: featuredOf(kind, r.bike_slots),
+    ...(r.ride_kind === "testride" ? { testRide: true as const } : {}),
   };
 }
 
@@ -477,8 +483,8 @@ export function upcoming(sessions: RideSession[], now: string): RideSession[] {
 }
 
 /** The sessions without the Petromin nights: every page but Experiences, which shows them only to a
- *  Petromin tag holder or a community member (the owner, 2026-10-12), lists none. */
-export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessions.filter((s) => s.kind !== "petromin");
+ *  Petromin tag holder or a community member (the owner, 2026-10-12), lists none. Nor the test rides (testRide). */
+export const withoutPetromin = (sessions: RideSession[]): RideSession[] => sessions.filter((s) => s.kind !== "petromin" && !s.testRide);
 
 /** The names a page gives each kind of session (Experiences > Next dates). The Blood Donation event's is no field of
  *  the Website editor, whose schema anyone may read (api/site-schema): a page that may show one adds its name

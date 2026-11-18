@@ -71,7 +71,7 @@ type Props = Parameters<typeof ExperienceSteps>[0];
 const experiences = async (sessions: unknown[], locale = "en") => {
   resetRides();
   vi.stubGlobal("fetch", db(sessions));
-  const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({}) });
+  const page = await ExperiencesPage({ params: Promise.resolve({ locale }), searchParams: Promise.resolve({ ev: "community" }) });
   return (findAll(page, ExperienceSteps)[0] as ReactElement<Props>).props;
 };
 const draw = (props: Props, ...first: unknown[]) => {
@@ -204,7 +204,7 @@ describe("a session's venue on Instagram (bike_slots._ig)", () => {
       // staging: its own booking flow (BookingFlow): the page, what it hands the browser, its events and its community dates
       resetRides();
       vi.stubGlobal("fetch", db([FH, SAT]));
-      const page = await ExperiencesPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({}) });
+      const page = await ExperiencesPage({ params: Promise.resolve({ locale: "en" }), searchParams: Promise.resolve({ ev: "community" }) });
       expect(JSON.stringify(page)).not.toContain("thefarmhouse");
       const flow = findAll(page, BookingFlow)[0] as ReactElement<Parameters<typeof BookingFlow>[0]>;
       expect(flow.props.events.flatMap((e) => e.sessions).map((s) => s.id)).toEqual([SAT.id]);

@@ -25,8 +25,6 @@ import { priceMap, type AddonItem, type BookAccount, type BookSession } from "@/
 import { serverL } from "@/i18n/dicts";
 import { fill as fillNamed, fmtNum } from "@/lib/fill";
 import { fill as fillAt, phrase } from "@/i18n/tx";
-import { ArrowIcon } from "@/components/site/Icons";
-import { bg } from "@/lib/img";
 import { payReady } from "@/lib/pay/config";
 import { paySettings } from "@/lib/pay/settings";
 import { isBoothCard } from "@/lib/pay/booth";
@@ -36,6 +34,10 @@ import { BLOOD_NAME, bloodName } from "@/content/blood-words";
 import { FARM_NAME, farmWords } from "@/content/farm-words";
 import { mfAt } from "@/lib/members-first";
 import { membersFirstWords } from "@/components/experiences/MembersFirst.words";
+import XpList from "@/components/experiences/XpList";
+import { sized, srcSet } from "@/lib/img";
+import { filterFromQuery, waNumber } from "@/lib/sx-B5";
+import { withWeather, xpExtras, xpItems, xpRatings, xpSettings } from "@/lib/sx-B5-server";
 
 // micromobility.sa/experiences - booking a ride on the website (the owner, 2026-10-03: "full
 // booking on the website"), as the booking app's own wizard books one (BookingFlow): the event,
@@ -98,7 +100,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const { content, closed } = await pageState("experiences");
   const c = resolvePage(experiencesSchema, content, asLocale(locale));
-  return pageMeta({ path: "/experiences", locale, title: `${serverL(locale)("Experiences", "التجارب")} · Micromobility`, description: S(c.hero.text), closed });
+  return pageMeta({ path: "/experiences", locale, title: `${serverL(locale)("Experiences", "التجارب")} · MicroMobility`, description: S(c.hero.text), closed });
 }
 
 export default async function ExperiencesPage({ params, searchParams }: { params: Promise<{ locale: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
@@ -143,7 +145,9 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   // signed-in community member alone ("not to public", lib/farm.ts) and the Petromin nights to a Petromin tag holder alone.
   // A date staff closed as Full, no waitlist (lib/rides.ts fbkOf, the user, 2026-11-13) stays listed, said Fully booked,
   // and nothing books it (BookingFlow), so nobody takes it for called off.
-  const all = farmForMembers(ahead, !!acct?.member).filter((s) => s.kind !== "petromin" || petromin);
+  // A test ride (EF23, lib/rides.ts testRide) is never one of the booking's cards: the list alone shows it, while staff
+  // switch test rides on (xp.general.testRides).
+  const all = farmForMembers(ahead, !!acct?.member).filter((s) => (s.kind !== "petromin" || petromin) && !s.testRide);
   const app = navFrom(site).booking; // the booking app as staff set it
   const appBase = app.replace(/[?#].*$/, "");
   // The booking app's events (_evMatch) by card, as main's page shows them (lib/event-info.ts EVENT_OF): the circuit, the
@@ -236,34 +240,61 @@ export default async function ExperiencesPage({ params, searchParams }: { params
   const refundClause = paying && refundAt >= 0 ? list(resolvePage(termsSchema, content, L).clauses.items)[refundAt] : null;
   const cancelTerms = refundClause ? { lang: L === "ar" ? "ar" : "en", title: S(refundClause.title), blocks: parseBody(S(refundClause.body)) } : null;
 
+  // The booking steps (BookingFlow) open on a date picked from the list or a session's page (?ev=&session=, also the
+  // address SignIn comes back to); every other visit is the list of every session (EM03-B, lib/sx-B5.ts), its rows the
+  // dates the cards above would list, and a test ride while staff list them.
+  const flowEv = one(q.ev);
+  const flow = !!flowEv && events.some((x) => x.key === flowEv);
+  const xs = xpSettings(content, L);
+  const listIds = new Set(events.flatMap((x) => x.sessions.map((s) => s.id)));
+  const listSrc = [...all.filter((s) => listIds.has(s.id)), ...(xs.general.testRides ? ahead.filter((s) => s.testRide) : [])];
+  const xpCtx = { locale, content, now, nowMs: drawn, member: !!acct?.member, satLink, prices, window, appBase, bookBase: localHref("/experiences", locale), facts: xs.facts };
+  const [xpRows, ratings] = flow ? [[], new Map()] : await Promise.all([withWeather(xpItems(listSrc, xpCtx), xs.general.weatherDays, drawn), xpRatings(xs.general.ratingMin)]);
+  const xpX = xpExtras(xpRows, { content, locale, calendars: xs.general.calendars, ratings, wa: xs.general.privateOn ? waNumber(S(site.social.whatsapp)) : null, gatherWord: S(d.gather), startWord: S(d.start) });
+  const heroImg = S(c.hero.image);
+  const flowBox = (
+    <BookingFlow locale={locale} events={events} prices={prices} maxPrices={maxPrices} jccCap={jccCap} seatMax={biz.eventSeatMax} acct={acct} items={items}
+      pay={paying ? { mode: ps.bookings, holdMinutes: ps.holdMinutes, refundDays: ps.refundDays, wallet, terms: cancelTerms } : undefined}
+      start={{ ev: one(q.ev), session: one(q.session) }}
+      text={{ eventTitle: S(c.steps.eventTitle), dateTitle: S(c.steps.dateTitle), noDates: S(c.steps.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}
+      links={{
+        apply: localHref("/community/registration", locale), account: localHref("/account", locale), club: hidden.includes("club") ? "" : localHref("/club", locale),
+        signup: bookingLink(`${appBase}?handoff=site&auth=signup`, locale), app: bookingLink(app, locale), place: directions || null,
+        instagram: S(site.social.instagram),
+      }}
+      today={today} now={new Date().getTime()}
+      typeNames={Object.fromEntries(Object.entries(TYPE_NAME).map(([k, v]) => [k, tx(v.en, v.ar)]))}
+      routes={Object.fromEntries(listed.map((s) => [s.id, routeOf(s)]))} exit={localHref("/experiences", locale)} />
+  );
+
   return (
     <PageShell locale={locale} site={site} preview={previewing} hidden={hidden}>
       <div className="xp">
-        <section className="xp-hero" style={{ backgroundImage: `linear-gradient(to top,rgba(0,0,0,.82),rgba(0,0,0,.25) 46%,rgba(0,0,0,.12) 70%),url('${bg(S(c.hero.image))}')` }}>
-          <p className="xp-eyebrow">{S(c.hero.eyebrow)}</p>
-          <h1>{S(c.hero.title)}</h1>
-          <p className="xp-hero-text">{S(c.hero.text)}</p>
-          <div className="xp-btns">
-            <a className="xp-btn" href="#book">{S(c.hero.bookBtn)} <ArrowIcon size={15} /></a>
-          </div>
-        </section>
+        {flow ? (
+          <div className="xp-wrap xq-flow"><section className="xp-sec" id="book">{flowBox}</section></div>
+        ) : (
+          <>
+            {/* EM02-B: the heading, and from 768px a short photo band beside it (never under its words: E03), an <img> with
+                srcset and fetchpriority high (E09); a phone takes a 1px picture instead and loads no photo at all */}
+            <div className="xq-top">
+              <h1>{S(c.hero.title)}</h1>
+              {heroImg && (
+                <picture className="xq-band">
+                  <source media="(max-width: 767px)" srcSet="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" />
+                  <img src={sized(heroImg, 800)} srcSet={srcSet(heroImg)} sizes="(min-width: 1200px) 480px, 42vw" alt="" fetchPriority="high" decoding="async" />
+                </picture>
+              )}
+            </div>
+            <div className="xq-wrap">
+              <section id="book" aria-labelledby="xq-h">
+                <h2 id="xq-h" className="mm-sr">{S(c.steps.dateTitle) || S(c.hero.title)}</h2>
+                <XpList locale={locale} items={xpRows} order={xpX.order} x={xpX.x} today={today} start={filterFromQuery(q)} pageBase={`${localHref("/experiences", locale)}/s/`} empty={S(d.empty)} />
+              </section>
+            </div>
+          </>
+        )}
 
-        <div className="xp-wrap">
-          <section className="xp-sec" id="book">
-            <BookingFlow locale={locale} events={events} prices={prices} maxPrices={maxPrices} jccCap={jccCap} seatMax={biz.eventSeatMax} acct={acct} items={items}
-              pay={paying ? { mode: ps.bookings, holdMinutes: ps.holdMinutes, refundDays: ps.refundDays, wallet, terms: cancelTerms } : undefined}
-              start={{ ev: one(q.ev), session: one(q.session) }}
-              text={{ eventTitle: S(c.steps.eventTitle), dateTitle: S(c.steps.dateTitle), noDates: S(c.steps.noDates), membersNote: S(d.membersNote), clubLink: S(d.clubLink), gather: S(d.gather), start: S(d.start) }}
-              links={{
-                apply: localHref("/community/registration", locale), account: localHref("/account", locale), club: hidden.includes("club") ? "" : localHref("/club", locale),
-                signup: bookingLink(`${appBase}?handoff=site&auth=signup`, locale), app: bookingLink(app, locale), place: directions || null,
-                instagram: S(site.social.instagram),
-              }}
-              today={today} now={new Date().getTime()}
-              typeNames={Object.fromEntries(Object.entries(TYPE_NAME).map(([k, v]) => [k, tx(v.en, v.ar)]))}
-              routes={Object.fromEntries(listed.map((s) => [s.id, routeOf(s)]))} />
-          </section>
-
+        <div className="xp-wrap xq-after">
           {learn && <LearnTeaser locale={locale} t={learn} place="experiences" />}
 
           {good.length > 0 && (
