@@ -11,7 +11,9 @@ import { sessionGender, type SessionGender } from "./session-gender";
 // and eight weeks before the event (the last eight at most): Done with a tick (a Saturday ride finished, or checked in on
 // a day gone), the date dimmed (gone, not ridden), Booked, On the waitlist, Book (a ride the member may book now: open,
 // not full, its booking window open, for their gender; members book it even while members book first, as the app's
-// _bwOpen(s, 1) lets them), Fully booked, Cancelled (every session that day called off) or Not open yet. With no
+// _bwOpen(s, 1) lets them), Fully booked, Cancelled (every session that day called off), the date alone, dimmed (every
+// ride that day is for the other gender, so none will open to this member; bug hunt 2026-11-18, cf-platform1-2) or Not
+// open yet (nothing for them that day yet, or not open yet). With no
 // Saturday left before the event there is no card, so it never says 0 and is gone on the event's own day. The card's
 // words never call the event a ride: it may be a run or a race.
 // Plain logic, so it can be tested; lib/member-hub-server.ts reads the member's bookings (my_bookings) and the sessions
@@ -91,7 +93,7 @@ export function bupFrom(bookings: BupBooking[], ev: BupSession): string {
   return made > eight ? made : eight;
 }
 
-export type BupState = "done" | "past" | "held" | "wl" | "book" | "full" | "cancel" | "soon";
+export type BupState = "done" | "past" | "held" | "wl" | "book" | "full" | "cancel" | "none" | "soon";
 /** A Saturday's row: its day, what it says, and the session Book opens. */
 export type BupRow = { date: string; state: BupState; book?: string };
 export type BupPlan = { ev: BupSession; togo: number; rows: BupRow[] };
@@ -123,6 +125,7 @@ export function buildupPlan(bookings: BupBooking[], sessions: Map<string, BupSes
     const ok = L.find((s) => s.status === "open" && open(s) && sgOk(s));
     if (ok) return { date: d, state: "book", book: ok.id };
     if (L.some((s) => sgOk(s) && (s.status === "full" || (s.status === "closed" && s.fbk)))) return { date: d, state: "full" };
+    if (L.length && !L.some(sgOk)) return { date: d, state: "none" }; // only the other gender's rides that day
     return { date: d, state: !L.length && all.length ? "cancel" : "soon" };
   };
   return { ev, togo, rows: days.map(row) };
