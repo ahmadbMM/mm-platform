@@ -10,6 +10,7 @@
   --st-ink: #1a1919; --st-ink-2: #4a4843; --st-ink-3: #6e6b63; --st-ink-4: #a7a399;
   --st-well: #f3f0e9; --st-line: rgba(26, 25, 25, .07); --st-line-2: rgba(26, 25, 25, .13); --st-ctl: rgba(26, 25, 25, .17);
   --st-green: #077a4b; --st-green-2: #06603b; --st-green-soft: rgba(7, 122, 75, .07);
+  --st-amber: #8a5c14; --st-amber-soft: #fbf3e4; --st-red: #a33b2e;
   --st-r-ctl: 12px; --st-r-card: 20px; --st-r-panel: 24px;
   --st-sh-1: 0 1px 2px rgba(26, 25, 25, .04), 0 4px 14px -6px rgba(26, 25, 25, .07);
   --st-sh-2: 0 2px 4px rgba(26, 25, 25, .04), 0 18px 40px -16px rgba(26, 25, 25, .2);
@@ -72,7 +73,7 @@ html:is([lang="ar"], [lang="ur"]) :is(.st, .mm-site .tk-amt) { font-family: "MM 
 .st-card-img { position: relative; display: block; aspect-ratio: 1 / 1; background: #fff; overflow: hidden; } /* the product photos are on white */
 .st-card-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 12px; box-sizing: border-box; transition: transform .6s var(--st-ease); }
 .st-card.is-out .st-card-img img { opacity: .5; filter: grayscale(.4); }
-.st-flag { position: absolute; top: 10px; inset-inline-start: 10px; padding: 4px 10px; border-radius: 999px; background: rgba(26, 25, 25, .88); color: #fbf9f4; font-size: 12px; font-weight: 600; }
+.st-flag { padding: 4px 10px; border-radius: 999px; background: rgba(26, 25, 25, .88); color: #fbf9f4; font-size: 12px; font-weight: 600; }
 .st-card-body { display: flex; flex-direction: column; gap: 4px; padding: 4px 14px 14px; flex: 1; }
 .st-brand { font-size: 12px; font-weight: 600; color: #6e6b63; margin: 0; letter-spacing: .06em; text-transform: uppercase; }
 html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-brand { letter-spacing: 0; }
@@ -409,7 +410,8 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-strip::-webkit-scrollbar { display: none; }
 .st-strip-i { position: relative; display: block; flex: 0 0 100%; height: 100%; overflow: hidden; scroll-snap-align: start; scroll-snap-stop: always; }
 .st-strip-one { position: absolute; inset: 0; }
-.st-flag { z-index: 2; }
+/* Sold out, staff's mark and Preview, one under another at the photo's top corner (the product-management build) */
+.st-flags { position: absolute; top: 10px; inset-inline-start: 10px; inset-inline-end: 54px; z-index: 2; display: flex; flex-direction: column; align-items: flex-start; gap: 6px; pointer-events: none; }
 .st-strip-arrow { position: absolute; top: 50%; z-index: 2; width: 44px; height: 44px; margin-top: -22px; padding: 0; border-radius: 50%; border: 0; background: none; color: #1a1919; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: opacity .25s ease; }
 .st-strip-arrow::before { content: ""; position: absolute; inset: 5px; z-index: -1; border-radius: 50%; background: rgba(255, 255, 255, .9); box-shadow: 0 0 0 1px rgba(26, 25, 25, .06), 0 2px 8px rgba(26, 25, 25, .14); transition: background-color .2s ease; }
 .st-strip-arrow.is-prev { inset-inline-start: 3px; }
@@ -490,6 +492,45 @@ html:is([lang="ar"], [lang="ur"]) .st :is(h1, h2) { letter-spacing: 0 !important
 .st-recent-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; padding: 8px; box-sizing: border-box; }
 .st-recent-name { font-size: 12.5px; font-weight: 600; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 @media (min-width: 700px) { .st-recent ul { grid-template-columns: repeat(auto-fill, minmax(150px, 180px)); gap: 18px; } .st-recent-name { font-size: 13.5px; } }
+
+/* the product-management build (2026-11-19): staff's mark (badge) and Preview as chips in the store's colours, over a card's
+   photo and beside a product's name; a pre-order's status line on a card; the store page's collections, each one row of
+   cards that swipes sideways under its heading and See all; the banner across the top of the store's pages; a category
+   page's second row of chips (its sub-categories) */
+.st-mark { display: inline-flex; align-items: center; gap: 5px; max-width: 100%; box-sizing: border-box; padding: 4px 10px; border-radius: 999px; background: #fff; color: var(--st-ink); font-size: 12px; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: inset 0 0 0 1px var(--st-line-2); }
+.st-mark .st-ic { vertical-align: 0; }
+.st-mark.is-new { background: var(--st-green); color: #fbf9f4; box-shadow: none; }
+.st-mark.is-best { background: var(--st-ink); color: #fbf9f4; box-shadow: none; }
+.st-mark.is-limited { background: var(--st-amber-soft); color: var(--st-amber); box-shadow: inset 0 0 0 1px rgba(138, 92, 20, .3); }
+.st-mark.is-exclusive { background: #fff; color: var(--st-ink); box-shadow: inset 0 0 0 1.5px var(--st-ink); }
+.st-mark.is-sale { background: var(--st-red); color: #fbf9f4; box-shadow: none; }
+.st-mark.is-custom { background: var(--st-well); color: var(--st-ink); }
+.st-mark.is-preview { background: #fff; color: var(--st-ink-2); box-shadow: none; border: 1.5px dashed var(--st-ink-3); }
+.st-card-pre { display: inline-flex; align-items: center; gap: 5px; min-width: 0; font-size: 12.5px; font-weight: 600; color: var(--st-ink-2); }
+.st-card-pre .st-ic { color: var(--st-green); vertical-align: 0; }
+.st-card-pre > span { overflow: hidden; text-overflow: ellipsis; }
+.st-coll { margin: 8px 0 36px; }
+.st-coll-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; }
+.st-coll-head .st-h2 { min-width: 0; margin: 0; }
+.st-coll-all { flex: none; display: inline-flex; align-items: center; gap: 4px; min-height: 44px; color: var(--st-green) !important; font-size: 14px; font-weight: 700; }
+.st-coll-all:hover { text-decoration: underline; text-underline-offset: 3px; }
+.st-coll-row { --st-ratio: 1 / 1; list-style: none; margin: 0 -16px; padding: 2px 16px 14px; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(150px, 44%); gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: 16px; scrollbar-width: none; overscroll-behavior-x: contain; }
+.st-coll-row::-webkit-scrollbar { display: none; }
+.st-coll-row > li { display: flex; min-width: 0; scroll-snap-align: start; }
+.st-coll-row > li > * { flex: 1; }
+.st-all-h { margin-top: 8px; }
+.st-banner { margin: -12px 0 22px; border-radius: var(--st-r-ctl); font-size: 14.5px; font-weight: 600; line-height: 1.4; text-align: center; }
+.st-banner, .st-banner > a { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; box-sizing: border-box; padding: 10px 16px; }
+.st-banner > a { margin: -10px -16px; flex: 1; color: inherit !important; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.st-banner-text { min-width: 0; overflow-wrap: anywhere; }
+.st-banner.is-brand { background: var(--st-green); color: #fbf9f4; }
+.st-banner.is-dark { background: var(--st-ink); color: #fbf9f4; }
+.st-banner.is-sale { background: var(--st-red); color: #fbf9f4; }
+.st-banner.is-info { background: var(--st-well); color: var(--st-ink); box-shadow: inset 0 0 0 1px var(--st-line-2); }
+.st-chips-sub { margin-top: -6px; }
+.st-chips-sub a[aria-current="page"] { background: var(--st-green-soft); border-color: var(--st-green); color: var(--st-green-2); }
+@media (min-width: 700px) { .st-coll-row { grid-auto-columns: minmax(200px, 31%); gap: 18px; } }
+@media (min-width: 1000px) { .st-coll-row { margin: 0; padding: 2px 0 14px; scroll-padding-inline: 0; grid-auto-columns: calc((100% - 60px) / 4); gap: 20px; } .st-banner { margin-top: -16px; } }
 
 /* ── w3a (store build 2026-11-15): the product page's top half. D10 three columns on a desktop, D11-C steps and D12-C
    peeking photos on a phone, F13 the photo viewer, F18/D15-B colour photos, F20-F22 sizes and the size guide, F24 key
@@ -690,6 +731,13 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-buy
 .st-policy p + p { margin-top: 8px; }
 .st-policy .st-policy-lead { font-weight: 600; color: #1a1919; }
 .st-nt-msg { margin: 0 0 12px; }
+
+/* the product-management build (2026-11-19): staff's mark and Preview above a product's name; a pre-order (or a Preview)
+   where the buy box says the stock, its own drawn mark in place of the stock's dot */
+.st-pdp-marks { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 10px; }
+.st-stock.is-pre::before { display: none; }
+.st-pre { display: inline-flex; align-items: center; gap: 8px; color: var(--st-ink); }
+.st-pre .st-ic { color: var(--st-green); vertical-align: 0; }
 
 /* ── w3b: the product page's sections below the buy box (store build 2026-11-15): F36 the grouped specification table,
    F37 what's in the box, F38 the fit panel, F30 + D17-C the add-ons with their own Add (D14-E "Added"), F31 the starter
@@ -925,6 +973,13 @@ html:is([lang="ar"], [lang="ur"]) .st-pd-spec-g th { letter-spacing: 0; text-tra
 .st-gc-cart { display: inline-flex; align-items: center; min-height: 44px; margin-top: 6px; color: #077a4b !important; font-weight: 700; font-size: 14px; }
 .st-gc-about { margin: 14px 0 0; font-size: 15px; line-height: 1.65; color: #2e352f; max-width: 620px; }
 @media (min-width: 900px) { .st-gc { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 44px; } }
+
+/* the product-management build (2026-11-19): a pre-order's line in the cart and at checkout, the limit per order a line
+   has reached, and how much more the smallest order needs above Checkout */
+.st-line-pre { display: flex; align-items: center; gap: 6px; margin-top: 4px; color: var(--st-green-2); font-size: 13px; font-weight: 600; }
+.st-line-pre .st-ic { vertical-align: 0; }
+.st-line-max { margin: 4px 0 0; color: var(--st-amber); font-size: 13px; font-weight: 600; }
+.st-min { margin: 12px 0 10px; color: var(--st-amber); font-size: 14px; font-weight: 600; line-height: 1.45; text-align: center; }
 
 /* ── w5 (store build 2026-11-15): after the order. Out for delivery (F96), the simplified tax invoice with its ZATCA QR
    and Arabic beside the page's labels (L06), refunds under it (X09), the gift cards an order bought (F57), a return or an

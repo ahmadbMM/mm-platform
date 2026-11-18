@@ -42,6 +42,9 @@ export function payError(r: { status: number; message: string }): { error: strin
     STORE_BUSY: "busy", STORE_RETURN_WINDOW: "return_window", STORE_RETURN_OPEN: "return_open", STORE_RETURN_ITEMS: "return_items",
     STORE_REVIEW_STATE: "review_state", STORE_REVIEW_DONE: "review_done", STORE_REVIEW_ITEM: "review_item", STORE_REVIEW_RATING: "invalid",
     STORE_KIND: "invalid", STORE_BUNDLE: "invalid",
+    // the product-management build (2026-11-19, CONTRACT.md section 5): over a product's limit per order, under the
+    // store's smallest order
+    STORE_MAX_QTY: "max_qty", STORE_MIN_ORDER: "min_order",
   };
   // A refusal the database named is read whatever the status: NOT_FOUND is raised with errcode P0002, which PostgREST
   // answers 500 (bug hunt 2026-11-11). Only a 5xx that names none is the way failing.

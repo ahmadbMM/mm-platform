@@ -6,6 +6,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { TxProvider } from "@/i18n/TxProvider";
 import { localize } from "@/i18n/tx";
 import { storeOf } from "../store";
+import { noFilters } from "../store-listing";
 import { orderOf } from "../store-order";
 import { paySettings } from "../pay/settings";
 
@@ -26,7 +27,7 @@ const STORE = storeOf(
 describe("the store's pages", () => {
   it("list the products with their prices, low stock and no former price without a licence", async () => {
     const { default: StoreGrid } = await import("@/components/store/StoreGrid");
-    const html = render(wrap("en", createElement(StoreGrid, { locale: "en", products: STORE.products, start: { sort: "featured", filters: { price: [], size: [], colour: [], brand: [] } },
+    const html = render(wrap("en", createElement(StoreGrid, { locale: "en", products: STORE.products, start: { sort: "featured", filters: noFilters() },
       licence: false, today: "2026-11-16", whens: { ship: null, local: null } })));
     expect(html).toContain("Aero Helmet");
     expect(html).toContain("Only 2 left");

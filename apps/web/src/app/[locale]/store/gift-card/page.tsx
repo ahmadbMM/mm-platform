@@ -8,6 +8,8 @@ import { T as W } from "@/components/store/w4.text";
 import { Link } from "@/i18n/navigation";
 import { serverLocalize } from "@/i18n/dicts";
 import { categoryHref, paragraphs, pick, type StoreProduct } from "@/lib/store";
+import { catName, catOf } from "@/lib/store-cats";
+import { StoreBannerLine } from "@/components/store/spm-parts";
 import "@/components/experiences/experiences.css";
 import "@/components/store/store.css";
 
@@ -18,7 +20,8 @@ import "@/components/store/store.css";
 // (checkout's "digital"). /store/<a gift card's slug> comes here (productHref).
 type Props = { params: Promise<{ locale: string }> };
 
-const giftCards = (products: StoreProduct[]) => products.filter((p) => p.kind === "gift_card").sort((a, b) => a.sort - b.sort || a.name_en.localeCompare(b.name_en));
+// a Preview gift card (the staging site only) is never sold, so this page never offers one
+const giftCards = (products: StoreProduct[]) => products.filter((p) => p.kind === "gift_card" && !p.preview).sort((a, b) => a.sort - b.sort || a.name_en.localeCompare(b.name_en));
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
@@ -38,10 +41,11 @@ export default async function GiftCardPage({ params }: Props) {
   return (
     <PageShell locale={locale} site={s.site} preview={s.previewing} hidden={s.hidden}>
       <div className="st">
+        <StoreBannerLine banner={s.banner} locale={locale} />
         <nav className="st-crumbs" aria-label={s.t.store}>
           <ol>
             <li><Link href="/store">{s.t.store}</Link></li>
-            <li><Link href={categoryHref("gift")}>{s.t.cats.gift}</Link></li>
+            {catOf(s.cats, "gift") && <li><Link href={categoryHref("gift")}><bdi>{catName(s.cats, "gift", locale, s.t.cats)}</bdi></Link></li>}
             <li aria-current="page">{w.giftTitle}</li>
           </ol>
         </nav>

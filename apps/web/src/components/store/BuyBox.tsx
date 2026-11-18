@@ -11,6 +11,8 @@ import { T as B } from "./sx-B2.text";
 import { Amt, Ic, WhatsAppMark } from "./bits";
 import { Bidi } from "./pdp-bits";
 import { B2Icon } from "./sx-B2-icons";
+import { T as SPM } from "./spm.text";
+import { PreorderLine, SpmIc } from "./spm-parts";
 
 // The buy box (D10, F25, F35, F83, F32, D14-E): bordered, beside the choices on a desktop (and in view as the page
 // scrolls), under them on a phone, where a bike's reads as the summary of its steps. It holds the price, the day it
@@ -23,10 +25,13 @@ import { B2Icon } from "./sx-B2-icons";
 // SM05-B); the box holds the total, not a second price (SM08-B); "Added" brings a "View cart" link where the quantity
 // was, for that moment (SM09-B); the facts under Buy now (`facts`: the free check-up N12, the rider's own rides on the
 // type N16, an ex-rental's record N25); "See it on video" beside the question on a bike (N24).
+//   The product-management build (2026-11-19): a pre-order says so with the day it ships by where the stock is said, and
+// its button says Pre-order; a Preview (the staging site only) shows its mark and nothing to buy it with.
 type Line = { variant: string; price: number; product: StoreProduct };
 
-export default function BuyBox({ locale, rtl, bike, name, v, unit, qty, max, stock, extras, est, canAdd, added, need, applePay, askHref, videoHref, ways, facts, onQty, onAdd, onBuy, onNotify }: {
+export default function BuyBox({ locale, rtl, bike, name, v, unit, qty, max, stock, preorder = null, preview = false, extras, est, canAdd, added, need, applePay, askHref, videoHref, ways, facts, onQty, onAdd, onBuy, onNotify }: {
   locale: string; rtl: boolean; bike: boolean; name: string; v: StoreVariant | null; unit: number | null; qty: number; max: number; stock: StockState;
+  preorder?: { ships: string | null } | null; preview?: boolean;
   extras: Line[]; est: Estimate; canAdd: boolean; added: boolean; need: string; applePay: boolean; askHref: string; videoHref: string;
   ways: ReactNode; facts: ReactNode;
   onQty: (q: number) => void; onAdd: () => void; onBuy: () => void; onNotify: () => void;
@@ -34,12 +39,16 @@ export default function BuyBox({ locale, rtl, bike, name, v, unit, qty, max, sto
   const t = useLocalize(T);
   const w = useLocalize(W);
   const b = useLocalize(B);
+  const sp = useLocalize(SPM);
   const way = est.way;
-  const pickName = (x: StoreProduct) => pick(locale, x.name_en, x.name_ar);
+  const pickName = (p: StoreProduct) => pick(locale, p.name_en, p.name_ar);
   const Box = bike ? "section" : "div";
+  if (preview) return <div className="st-buybox"><p className="st-stock is-pre"><span className="st-mark is-preview"><SpmIc name="preview" />{sp.preview}</span></p></div>;
   return (
     <Box className="st-buybox" {...(bike ? { "aria-labelledby": "st-buy-h" } : {})}>
-      <p className={`st-stock ${stock.kind}`}>{stock.kind === "out" ? t.soldOut : stock.kind === "low" ? t.left(stock.left) : t.inStock}</p>
+      {preorder
+        ? <p className="st-stock in is-pre"><PreorderLine ships={preorder.ships} x={sp} /></p>
+        : <p className={`st-stock ${stock.kind}`}>{stock.kind === "out" ? t.soldOut : stock.kind === "low" ? t.left(stock.left) : t.inStock}</p>}
       {ways}
       {bike && <h2 id="st-buy-h" className="st-buybox-h">{w.summary}</h2>}
 
@@ -65,7 +74,7 @@ export default function BuyBox({ locale, rtl, bike, name, v, unit, qty, max, sto
           </div>
         )}
         <button type="button" className={`bk-btn grow st-add${added ? " is-added" : ""}`} onClick={onAdd} disabled={!canAdd}>
-          {added ? <><Ic name="tick" size={18} />{w.addedBtn}</> : <><Ic name="bag" size={18} />{canAdd ? t.add : t.soldOut}</>}
+          {added ? <><Ic name="tick" size={18} />{w.addedBtn}</> : <><Ic name="bag" size={18} />{canAdd ? (preorder ? sp.preorder : t.add) : t.soldOut}</>}
         </button>
       </div>
       <p className="st-sr" aria-live="polite">{added ? t.added : ""}</p>

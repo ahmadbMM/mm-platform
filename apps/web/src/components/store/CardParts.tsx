@@ -79,13 +79,13 @@ export function SaveHeart({ slug, label }: { slug: string; label: string }) {
 /** Add to cart from the card (F06), for gear sold in one size and one colour: the round bag turns into "Added" with a
  *  drawn tick for a moment (D14-E, no pop-up), or says the cart cannot take more of it: the cart is full, or it already
  *  holds all that is in stock (10 a line at most), as the product page's Add counts. */
-export function QuickAdd({ variant, stock, label, added, cant }: { variant: string; stock: number; label: string; added: string; cant: string }) {
+export function QuickAdd({ variant, stock, limit = null, label, added, cant }: { variant: string; stock: number; limit?: number | null; label: string; added: string; cant: string }) {
   const [state, setState] = useState<"" | "added" | "cant">("");
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const cart = useCart();
   useEffect(() => () => clearTimeout(timer.current), []);
   const add = () => {
-    const got = quickRoom(cart, { id: variant, stock }) > 0 ? cartAdd(variant, 1) : 0;
+    const got = quickRoom(cart, { id: variant, stock }, limit) > 0 ? cartAdd(variant, 1) : 0;
     setState(got !== null && got > 0 ? "added" : "cant");
     clearTimeout(timer.current);
     timer.current = setTimeout(() => setState(""), ADDED_MS);

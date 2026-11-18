@@ -39,6 +39,7 @@ export async function CheckoutView({ s, locale, acct, buy, quote = null }: {
       lookup={storeSwitches(s.content).addressLookup && !!storeEnv().NATIONAL_ADDRESS_KEY}
       buy={buy.length ? buy : null}
       sx={sx}
+      minOrder={s.rules.minOrder}
     />
   );
 }

@@ -10,10 +10,12 @@ import { localize } from "@/i18n/tx";
 import { storeOf, type Store } from "../store";
 import { paySettings } from "../pay/settings";
 import {
-  bySlugs, cardWhen, cardWhens, categoryTiles, cleanFilters, facetsOf, filterCount, listOf, listProducts, listQueryOf, listQueryText, matches, noFilters,
+  bySlugs, cardWhen, cardWhens, cleanFilters, facetsOf, filterCount, listOf, listProducts, listQueryOf, listQueryText, matches, noFilters,
   quickRoom, quickVariant, recentItems, sortSizes, warrantyText, whenFor, whenText, type CardWhens,
 } from "../store-listing";
 import { T as W } from "../../components/store/w2.text";
+import { T as ST } from "../../components/store/Store.text";
+import { BUILTIN_TREE, catTiles } from "../store-cats";
 
 // The store's lists (chain w2, 2026-11-15): the category tiles and pages (O01-E, F01, F02), the filters (O05-C), the cards'
 // delivery chip (F05), quick add (F06), Saved and Recently viewed (F07, F08), certified pre-owned (F53), and the cards and
@@ -157,8 +159,9 @@ describe("a card", () => {
 
 describe("the store page's tiles and the browser-kept rows", () => {
   it("give each category with a product a tile, with its first photo of one in stock (O01-E)", () => {
-    expect(categoryTiles(STORE.products)).toEqual([
-      { cat: "bikes", image: IMG[0] }, { cat: "accessories", image: "/media/store/h/1.webp" }, { cat: "apparel", image: "/media/store/j/1.webp" }, { cat: "gift", image: "/media/store/g/1.webp" },
+    expect(catTiles(BUILTIN_TREE, STORE.products, "en", ST.en.cats)).toEqual([
+      { cat: "bikes", name: "Bikes", image: IMG[0] }, { cat: "accessories", name: "Accessories", image: "/media/store/h/1.webp" },
+      { cat: "apparel", name: "Apparel", image: "/media/store/j/1.webp" }, { cat: "gift", name: "Gifts", image: "/media/store/g/1.webp" },
     ]);
   });
   it("name kept products in the list's order, a slug no longer sold left out (F07, F08)", () => {
@@ -222,11 +225,11 @@ describe("the lists as the server draws them", () => {
     const { BrandBand, CategoryChips, CategoryTiles, Showroom } = await import("@/components/store/StoreExtras");
     const { T } = await import("@/components/store/Store.text");
     const t = localize(T, "en", null);
-    const tiles = render(wrap("en", createElement(CategoryTiles, { tiles: categoryTiles(STORE.products), t })));
+    const tiles = render(wrap("en", createElement(CategoryTiles, { tiles: catTiles(BUILTIN_TREE, STORE.products, "en", t.cats), t })));
     expect(tiles).toContain('href="/store/category/bikes"');
     expect(tiles).toContain(">Accessories<");
-    expect(render(wrap("en", createElement(CategoryTiles, { tiles: [{ cat: "bikes", image: null }], t })))).toBe("");
-    const chips = render(wrap("en", createElement(CategoryChips, { cats: ["bikes", "apparel"], at: "apparel", t })));
+    expect(render(wrap("en", createElement(CategoryTiles, { tiles: [{ cat: "bikes", name: "Bikes", image: null }], t })))).toBe("");
+    const chips = render(wrap("en", createElement(CategoryChips, { cats: [{ cat: "bikes", name: "Bikes" }, { cat: "apparel", name: "Apparel" }], at: "apparel", t })));
     expect(chips).toMatch(/href="\/store\/category\/apparel" aria-current="page"|aria-current="page"[^>]*href="\/store\/category\/apparel"/);
     expect(chips).toContain('href="/store"');
     const band = render(wrap("en", createElement(BrandBand, { w: EN, showroom: true })));

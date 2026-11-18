@@ -10,6 +10,7 @@ import { T } from "./Store.text";
 import { useHydrated } from "./useCart";
 import { useSaved } from "./useLists";
 import { T as W } from "./w2.text";
+import { T as SPM } from "./spm.text";
 
 // /store/saved (F07): the products this browser saved with a card's heart, newest first, as the store's cards (a heart
 // tapped again takes one out). No account: the list is kept in this browser alone. Drawn once the page runs in the
@@ -18,6 +19,7 @@ import { T as W } from "./w2.text";
 export default function SavedList({ locale, products, licence, today, whens, shared = null }: ListProps & { locale: string; shared?: string[] | null }) {
   const t = useLocalize(T);
   const w = useLocalize(W);
+  const x = useLocalize(SPM);
   const own = useSaved();
   const slugs = shared ?? own;
   const ready = useHydrated();
@@ -35,7 +37,7 @@ export default function SavedList({ locale, products, licence, today, whens, sha
     <>
       <p className="st-count" aria-live="polite">{list.length === 1 ? t.count1 : t.countN(list.length)}</p>
       <div className="st-grid">
-        {list.map((p, i) => <ProductCard key={p.id} p={p} locale={locale} t={t} w={w} licence={licence} today={today} whens={whens} eager={i === 0} />)}
+        {list.map((p, i) => <ProductCard key={p.id} p={p} locale={locale} t={t} w={w} x={x} licence={licence} today={today} whens={whens} eager={i === 0} />)}
       </div>
     </>
   );

@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { STORE_SORTS, type StoreProduct, type StoreSort } from "@/lib/store-core";
-import { cleanFilters, facetsOf, filterCount, listOf, listQueryText, noFilters, type CardWhens, type ListFilters } from "@/lib/store-listing";
+import { BASE_GROUPS, cleanFilters, facetsOf, filterCount, listOf, listQueryText, noFilters, type CardWhens, type FilterKey, type ListFilters } from "@/lib/store-listing";
 import { activeFilters, withoutFilter } from "@/lib/sx-B1-list";
 import { T } from "./Store.text";
 import { T as W } from "./w2.text";
@@ -12,6 +12,7 @@ import Modal from "./Modal";
 import ProductCard from "./ProductCard";
 import { StIcon } from "./icons";
 import { FilterPills, SortMark } from "./sx-B1-parts";
+import { T as SPM } from "./spm.text";
 import "./sx-B1.css";
 
 // A list of products: on /store every product under the category tiles (F01), on a category's page that category's
@@ -21,28 +22,34 @@ import "./sx-B1.css";
 // drawn badge (F53). On every screen (SM13-B, P11, P18): Filters and Sort are two equal buttons on one row, the order a
 // native menu at 16px drawn as a button (iOS does not zoom it); the filters that are on show as pills above the list,
 // each taking itself off, and Filters counts them. Bikes take a wider card (SM03-B, ProductCard).
-export default function StoreGrid({ locale, products, start, licence, today, whens }: {
+//   The product-management build (2026-11-19): the filter groups are the list's own (`groups`: staff's pick for the
+// category, lib/store-cats.ts catFilters), and the order before the visitor picks one is the store's (`dflt`, store.sort),
+// left out of the address as Featured was.
+export default function StoreGrid({ locale, products, start, licence, today, whens, groups = BASE_GROUPS, dflt = "featured" }: {
   locale: string; products: StoreProduct[]; start: { sort: StoreSort; filters: ListFilters }; licence: boolean; today: string; whens: CardWhens;
+  groups?: readonly FilterKey[]; dflt?: StoreSort;
 }) {
   const t = useLocalize(T);
   const w = useLocalize(W);
-  const facets = useMemo(() => facetsOf(products), [products]);
+  const x = useLocalize(SPM);
+  const ctx = useMemo(() => ({ licence, today }), [licence, today]);
+  const facets = useMemo(() => facetsOf(products, groups, ctx), [products, groups, ctx]);
   const [sort, setSort] = useState<StoreSort>(start.sort);
   const [f, setF] = useState<ListFilters>(() => cleanFilters(start.filters, facets));
   const [open, setOpen] = useState(false);
-  const { fresh, certified } = useMemo(() => listOf(products, f, sort), [products, f, sort]);
+  const { fresh, certified } = useMemo(() => listOf(products, f, sort, ctx), [products, f, sort, ctx]);
   const shown = fresh.length + certified.length;
   const active = filterCount(f);
   const on = useMemo(() => activeFilters(f, facets), [f, facets]);
 
   const remember = (nf: ListFilters, s: StoreSort) =>
-    window.history.replaceState(window.history.state, "", `${window.location.pathname}${listQueryText(window.location.search, nf, s)}${window.location.hash}`);
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${listQueryText(window.location.search, nf, s, dflt)}${window.location.hash}`);
   const pickSort = (s: StoreSort) => { setSort(s); remember(f, s); };
   const pickFilters = (nf: ListFilters) => { setF(nf); remember(nf, sort); };
   const clear = () => pickFilters(noFilters());
 
   if (!products.length) return <p className="st-empty">{t.emptyStore}</p>;
-  const card = (p: StoreProduct, i: number) => <ProductCard key={p.id} p={p} locale={locale} t={t} w={w} licence={licence} today={today} whens={whens} eager={i === 0} />;
+  const card = (p: StoreProduct, i: number) => <ProductCard key={p.id} p={p} locale={locale} t={t} w={w} x={x} licence={licence} today={today} whens={whens} eager={i === 0} />;
   return (
     <div className={`st-list${facets.length ? " has-side" : ""}`}>
       {facets.length > 0 && (

@@ -34,7 +34,7 @@ export default function BundleCard({ products, price, licence, locale }: { produ
   function add() {
     if (picks.some((x) => !x.v)) { setNeed("pick"); return; }
     const vs = picks.map((x) => x.v as StoreVariant);
-    const room = cartRoom(cart, vs);
+    const room = cartRoom(cart, vs, products);
     if (room !== "ok") { setNeed(room); return; }
     for (const v of vs) cartAdd(v.id, 1);
     setNeed("");

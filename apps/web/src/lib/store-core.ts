@@ -4,8 +4,12 @@
 import { paySettings } from "./pay/settings";
 import type { SiteContent } from "./site";
 
+/** The six categories the store began with: what the store shows while staff's own categories (store_categories, the
+ *  product-management build 2026-11-19, lib/store-cats.ts) cannot be read. */
 export const STORE_CATEGORIES = ["bikes", "accessories", "apparel", "parts", "nutrition", "gift"] as const;
-export type StoreCategory = (typeof STORE_CATEGORIES)[number];
+/** A category's slug: one of the six, or one staff made (store_categories, `^[a-z][a-z0-9-]{1,40}$`). */
+export type StoreCategory = string;
+export const CATEGORY_SLUG = /^[a-z][a-z0-9-]{1,40}$/;
 
 /** One line of a product's specifications in both languages: {en: [label, value], ar: [label, value]}. */
 export type StoreSpec = { en?: [string, string]; ar?: [string, string] };
@@ -35,6 +39,13 @@ export type SizeRow = { size: string; height: CmRange | null; chest: CmRange | n
 export type PhotoMeta = { alt_en: string | null; alt_ar: string | null; colour: string | null };
 /** One price for this product with 1-3 others (F31); shown and charged only beside a discount licence. */
 export type Bundle = { items: string[]; price: number };
+/** The mark staff put on a product (the product-management build 2026-11-19, CONTRACT.md section 5): a word of the
+ *  store's own, or staff's own words ("custom"), shown until `until` (YYYY-MM-DD, that day included) when set. */
+export const BADGE_KINDS = ["new", "best", "limited", "exclusive", "sale", "custom"] as const;
+export type BadgeKind = (typeof BADGE_KINDS)[number];
+export type ProductBadge = { kind: BadgeKind; en: string | null; ar: string | null; until: string | null };
+/** What search engines read for a page staff gave its own (a product, a category, a collection, the store page). */
+export type StoreSeo = { title_en: string | null; title_ar: string | null; desc_en: string | null; desc_ar: string | null };
 /** A verified buyer's review staff chose to show (F42): no name, only the month it was bought. */
 export type StoreReview = { id: string; product_id: string; rating: number; body: string | null; lang: string | null; bought: string };
 
@@ -96,13 +107,35 @@ export type StoreProduct = {
   sale_to: string | null;
   /** The /bikes catalogue's model this product sells (F12). */
   catalog_model: string | null;
+  // ── the product-management build (2026-11-19, CONTRACT.md sections 2 and 5); a database without the columns reads as
+  // a product without them: no tags, no badge, no limit, not a pre-order, published as it was read ──
+  /** Staff's words the store's search also finds the product by. */
+  tags: string[];
+  /** Staff's mark as written (lib/store-rules.ts withSettings keeps only one still shown, or the automatic New). */
+  badge: ProductBadge | null;
+  seo: StoreSeo | null;
+  /** How many of the product one order may hold (all its sizes and colours together); null: no limit of its own. After
+   *  withSettings: the limit in force (the product's, else store.maxPerOrder), null for none. */
+  max_per_order: number | null;
+  /** Orders are taken beyond its stock; `ships_on` (YYYY-MM-DD) is the day it is expected to ship. */
+  preorder: boolean;
+  ships_on: string | null;
+  published: boolean;
+  /** Shown on the staging site only, marked Preview and never sold (lib/store-rules.ts visibleProducts sets it true only
+   *  for a product shown that way; a live product reads false). */
+  preview: boolean;
+  /** ISO timestamps: published only from / until then. */
+  publish_at: string | null;
+  unpublish_at: string | null;
+  /** "Only N left" at or under this many (store.showStock; 0: never). Unset: 3, as before the setting. */
+  low_at?: number;
 };
 
 export type Store = { products: StoreProduct[] };
 
 const str = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
 const num = (v: unknown) => (typeof v === "number" ? v : typeof v === "string" && v.trim() ? Number(v) : NaN);
-const isCat = (v: unknown): v is StoreCategory => typeof v === "string" && (STORE_CATEGORIES as readonly string[]).includes(v);
+const isCat = (v: unknown): v is StoreCategory => typeof v === "string" && CATEGORY_SLUG.test(v);
 
 function specOf(v: unknown): StoreSpec | null {
   if (!v || typeof v !== "object") return null;
@@ -171,6 +204,25 @@ function metaOf(v: unknown, images: string[]): Record<string, PhotoMeta> {
 }
 const idsOf = (v: unknown, max: number, self: string): string[] =>
   [...new Set(list(v, 20).filter((x): x is string => typeof x === "string" && UUID.test(x)).map((x) => x.toLowerCase()))].filter((x) => x !== self.toLowerCase()).slice(0, max);
+const isBadge = (v: unknown): v is BadgeKind => typeof v === "string" && (BADGE_KINDS as readonly string[]).includes(v);
+const dayOf = (v: unknown) => (typeof v === "string" && DAY.test(v.slice(0, 10)) ? v.slice(0, 10) : null);
+/** Staff's mark: a custom one needs its English words (as the database asks). */
+function badgeOf_(p: Record<string, unknown>): ProductBadge | null {
+  if (!isBadge(p.badge)) return null;
+  const en = txt(p.badge_en, 24), ar = txt(p.badge_ar, 24);
+  if (p.badge === "custom" && !en) return null;
+  return { kind: p.badge, en, ar, until: dayOf(p.badge_until) };
+}
+export function seoOf(o: Record<string, unknown>): StoreSeo | null {
+  const s = { title_en: txt(o.seo_title_en, 70), title_ar: txt(o.seo_title_ar, 70), desc_en: txt(o.seo_desc_en, 170), desc_ar: txt(o.seo_desc_ar, 170) };
+  return s.title_en || s.title_ar || s.desc_en || s.desc_ar ? s : null;
+}
+/** Up to 12 tags, each 1 to 30 characters, said once. */
+const tagsOf = (v: unknown): string[] =>
+  [...new Set(list(v, 12).map((x) => txt(x, 30)).filter((x): x is string => !!x))];
+const limitOf = (v: unknown) => { const n = num(v); return Number.isInteger(n) && n >= 1 && n <= 99 ? n : null; };
+const isoOf = (v: unknown) => (typeof v === "string" && Number.isFinite(Date.parse(v)) ? v : null);
+
 function bundleOf_(v: unknown, self: string): Bundle | null {
   const o = obj(v);
   if (!o) return null;
@@ -200,7 +252,7 @@ export function storeOf(products: Record<string, unknown>[], variants: Record<st
     const images = (Array.isArray(p.images) ? p.images : []).filter((u): u is string => typeof u === "string" && /^(\/(site|media)\/|https:\/\/)/.test(u));
     const condition: ProductCondition = p.condition === "certified" ? "certified" : "new";
     const wm = num(p.warranty_months);
-    const day = (v: unknown) => (typeof v === "string" && DAY.test(v.slice(0, 10)) ? v.slice(0, 10) : null);
+    const day = dayOf;
     out.push({
       id, slug, category: p.category, brand: str(p.brand), name_en: name, name_ar: str(p.name_ar),
       tagline_en: str(p.tagline_en), tagline_ar: str(p.tagline_ar), description_en: str(p.description_en), description_ar: str(p.description_ar),
@@ -223,6 +275,17 @@ export function storeOf(products: Record<string, unknown>[], variants: Record<st
       bundle: bundleOf_(p.bundle, id),
       sale_from: day(p.sale_from), sale_to: day(p.sale_to),
       catalog_model: typeof p.catalog_model === "string" && UUID.test(p.catalog_model) ? p.catalog_model.toLowerCase() : null,
+      tags: tagsOf(p.tags),
+      badge: badgeOf_(p),
+      seo: seoOf(p),
+      max_per_order: limitOf(p.max_per_order),
+      preorder: p.preorder === true,
+      ships_on: day(p.ships_on),
+      // a read without the column asked only for published rows
+      published: p.published !== false,
+      preview: p.preview === true,
+      publish_at: isoOf(p.publish_at),
+      unpublish_at: isoOf(p.unpublish_at),
     });
   }
   return { products: out };
@@ -270,14 +333,19 @@ export function priceRange(p: StoreProduct): { lo: number; hi: number } {
 }
 
 export type StockState = { kind: "out" } | { kind: "low"; left: number } | { kind: "in" };
-/** Sold out at 0, "Only N left" at 1 to 3. */
-export function stockState(stock: number): StockState {
+/** Sold out at 0, "Only N left" at 1 to `under` (3 unless store.showStock says otherwise; 0: never said). */
+export function stockState(stock: number, under = 3): StockState {
   if (stock <= 0) return { kind: "out" };
-  if (stock <= 3) return { kind: "low", left: stock };
+  if (stock <= under) return { kind: "low", left: stock };
   return { kind: "in" };
 }
-/** The product as a whole: sold out when no variant can be sold; low when all it has left is 1 to 3. */
-export const productStock = (p: StoreProduct): StockState => stockState(p.variants.reduce((n, v) => n + v.stock, 0));
+/** The product as a whole: sold out when no variant can be sold; low when all it has left is 1 to its low mark. A
+ *  pre-order is never sold out (orders are taken beyond its stock) and says nothing of its stock. */
+export const productStock = (p: StoreProduct): StockState =>
+  p.preorder ? { kind: "in" } : stockState(p.variants.reduce((n, v) => n + v.stock, 0), p.low_at ?? 3);
+/** One variant's stock as the product page says it (the product's low mark; a pre-order is never sold out). */
+export const variantStock = (p: Pick<StoreProduct, "preorder" | "low_at">, v: Pick<StoreVariant, "stock">): StockState =>
+  p.preorder ? { kind: "in" } : stockState(v.stock, p.low_at ?? 3);
 
 /** "M · Black": the variant's size and colour in the page's language, or "" when it has neither. */
 export const variantLabel = (v: StoreVariant, locale: string) => [v.size, pick(locale, v.color_en, v.color_ar)].filter(Boolean).join(" · ");
@@ -306,7 +374,8 @@ export function pickVariant(p: StoreProduct, size: string | null, colour: string
 /** Whether a size (or a colour) can still be had, with the other choice as it stands; a variant without the size (or
  *  the colour) has every one of it, as pickVariant reads it. */
 export function optionOpen(p: StoreProduct, dim: "size" | "colour", value: string, other: string | null): boolean {
-  return p.variants.some((v) => v.stock > 0 && (dim === "size"
+  // a pre-order takes orders beyond its stock: every size and colour it comes in can be had
+  return p.variants.some((v) => (p.preorder || v.stock > 0) && (dim === "size"
     ? (!v.size || v.size === value) && (!other || !v.color_en || v.color_en === other)
     : (!v.color_en || v.color_en === value) && (!other || !v.size || v.size === other)));
 }
@@ -336,8 +405,10 @@ export function sortProducts(list: StoreProduct[], sort: StoreSort): StoreProduc
   return out;
 }
 
-/** The categories that have a product, in the store's order. */
-export const categoriesIn = (store: Store): StoreCategory[] => STORE_CATEGORIES.filter((c) => store.products.some((p) => p.category === c));
+/** The categories that have a product: the six first in the store's order, then any other in the products' order (the
+ *  category pages themselves follow staff's tree, lib/store-cats.ts). */
+export const categoriesIn = (store: Store): StoreCategory[] =>
+  [...new Set<string>([...STORE_CATEGORIES.filter((c) => store.products.some((p) => p.category === c)), ...store.products.map((p) => p.category)])];
 
 /** A riyal amount as the booking app writes it (_sar): the riyal sign (U+20C1, the MM Riyal font of
  *  store.css .tk-amt) left of the number, the whole isolated left-to-right; grouped, cents only when there are any. */
@@ -359,6 +430,8 @@ export const pickBi = (locale: string, b: StoreBi | null | undefined): string =>
 export const productHref = (p: Pick<StoreProduct, "slug" | "kind">): string => (p.kind === "gift_card" ? "/store/gift-card" : `/store/${p.slug}`);
 /** A category's own list page (O01-E). */
 export const categoryHref = (cat: StoreCategory): string => `/store/category/${cat}`;
+/** A collection's own page (the product-management build 2026-11-19). */
+export const collectionHref = (slug: string): string => `/store/collection/${slug}`;
 export const isStoreCategory = isCat;
 
 /** What staff wrote about a photo, in the page's language (Arabic falls back to the English); "" when nothing (X10). */
@@ -415,10 +488,11 @@ export function sizeForHeight(p: StoreProduct, cm: number): string | null {
   return p.sizes.find((r) => inCm(r.height, cm) && (!sizes.length || sizes.includes(r.size)))?.size ?? null;
 }
 
-/** The products these ids name, in their order: published ones only (the store holds no other), never `self`. */
+/** The products these ids name, in their order: published ones only (the store holds no other), never `self`, and never
+ *  a Preview (the staging site's, never sold). */
 export function relatedOf(store: Store, ids: readonly string[], self?: string): StoreProduct[] {
   const by = new Map(store.products.map((p) => [p.id.toLowerCase(), p]));
-  return ids.map((id) => by.get(id.toLowerCase())).filter((p): p is StoreProduct => !!p && p.id !== self);
+  return ids.map((id) => by.get(id.toLowerCase())).filter((p): p is StoreProduct => !!p && p.id !== self && !p.preview);
 }
 
 /** The starter bundle (F31): this product and its bundle's items at one price, only beside a discount licence, with

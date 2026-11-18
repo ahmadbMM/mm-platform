@@ -55,6 +55,9 @@ export function cartAdd(variant: string, qty: number): number | null {
 export const cartSetQty = (variant: string, qty: number) => write(setItemQty(read(), variant, qty));
 export const cartRemove = (variant: string) => write(removeItem(read(), variant));
 export const cartClear = () => write([]);
+/** The cart as given, in place of what is there (the cart page's limit per order brings a line down: lib/cart.ts
+ *  clampCart). */
+export const cartReplace = (items: CartItem[]) => write(items);
 /** Puts lines back (an order that was not paid): each added to what is there. */
 export function cartRestore(items: CartItem[]) {
   let c = read();

@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { isRtl } from "@/i18n/locales";
-import { ADDED_MS, MAX_QTY } from "@/lib/cart";
+import { ADDED_MS, MAX_QTY, productInCart, roomFor } from "@/lib/cart";
 import type { PaySettings } from "@/lib/pay/settings";
 import {
-  optionOpen, optionsOf, photosFor, pick, pickVariant, priceRange, productStock, sar, sizeForHeight, stockState, variantLabel, variantPrice,
+  optionOpen, optionsOf, photosFor, pick, pickVariant, priceRange, productStock, sar, sizeForHeight, variantLabel, variantPrice, variantStock,
   wasPriceAt, type StoreProduct, type StoreVariant,
 } from "@/lib/store-core";
 import { warrantyMonths } from "@/lib/store-policy";
@@ -32,6 +32,8 @@ import type { B2Top } from "./sx-B2-top";
 import ShareButton from "./sx-B2-share";
 import WayStep from "./sx-B2-ways";
 import HandoverPick from "./sx-B2-handover";
+import { T as SPM } from "./spm.text";
+import { ProductMarks } from "./spm-parts";
 
 // The top of a product's page (store build 2026-11-15, chain w3a): its photos, its name and price, the choices, the buy
 // box and the delivery and returns box, as one piece because they share what is picked.
@@ -46,6 +48,9 @@ import HandoverPick from "./sx-B2-handover";
 //   says Added with a tick for a moment, no pop-up (D14-E). A sold-out size or colour asks to be told when it is back
 //   (F34). The delivery rows and the total follow the price of what is picked, the extras and the way picked (F25, X06),
 //   and the way picked is the cart's (mm-cart-fulfil).
+//   The product-management build (2026-11-19): staff's mark (or the automatic New) and Preview above the name; a
+// pre-order is never sold out, says the day it ships by, and its button says Pre-order; the quantity stops at the
+// product's limit per order (all its sizes and colours in the cart counted); a Preview (staging only) is never sold.
 export type TopProps = {
   p: StoreProduct;
   locale: string;
@@ -70,6 +75,8 @@ export type TopProps = {
   /** The "do all" build's additions (2026-11-18, sx-B2-top.tsx): the size and colour the address asks for (N09), the
    *  free check-up (N12), the order-by lines (N36) and the streamed fact rows (N16, N25). */
   b2?: B2Top;
+  /** A pre-order's day it ships by, written for this language; null for none. */
+  ships?: string | null;
 };
 
 type Need = "" | "size" | "colour" | "full" | "most";
@@ -84,8 +91,9 @@ function useApplePayHere(on: boolean): boolean {
 }
 
 export default function ProductTop(props: TopProps) {
-  const { p, locale, licence, today, related, settings, whens, showroom, policy, whatsapp, tabby, applePay, href, b2 } = props;
+  const { p, locale, licence, today, related, settings, whens, showroom, policy, whatsapp, tabby, applePay, href, b2, ships = null } = props;
   const t = useLocalize(T);
+  const x = useLocalize(SPM);
   const w = useLocalize(W);
   const b = useLocalize(B);
   const rtl = isRtl(locale);
@@ -119,14 +127,14 @@ export default function ProductTop(props: TopProps) {
   const unit = v ? variantPrice(p, v) : lo === hi ? lo : null;
   const priceText = unit !== null ? sar(unit) : t.from(sar(lo));
   const was = wasPriceAt(p, licence, today, unit);
-  const stock = v ? stockState(v.stock) : productStock(p);
-  const inCart = v ? cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0 : 0;
-  const room = Math.min(MAX_QTY, v?.stock ?? MAX_QTY) - inCart;
+  const stock = v ? variantStock(p, v) : productStock(p);
+  // 10 a line, the stock (not for a pre-order) and the product's limit per order, less what the cart holds of it
+  const room = v ? roomFor(cart, p, v) : Math.min(MAX_QTY, (p.max_per_order ?? MAX_QTY) - productInCart(cart, p));
   const max = Math.max(1, room);
   const n = Math.min(qty, max);
   const name = pick(locale, p.name_en, p.name_ar);
   const tagline = pick(locale, p.tagline_en, p.tagline_ar);
-  const canAdd = !(v && v.stock <= 0) && stock.kind !== "out";
+  const canAdd = !p.preview && !(v && v.stock <= 0 && !p.preorder) && stock.kind !== "out";
 
   // the Extras step (bikes only, F60): ticked rows, each with the choice staff's first in-stock variant until changed
   const extras = bike ? extrasOf(related) : [];
@@ -159,7 +167,7 @@ export default function ProductTop(props: TopProps) {
   function chosen(): StoreVariant | null {
     if (o.colours.length && !colour) { setNeed("colour"); return null; }
     if (o.sizes.length && !size) { setNeed("size"); sizeGroup.current?.querySelector<HTMLButtonElement>("button:not(.st-out)")?.focus(); return null; }
-    if (!v || v.stock <= 0) return null;
+    if (!v || p.preview || (v.stock <= 0 && !p.preorder)) return null;
     return v;
   }
   function add() {
@@ -170,7 +178,7 @@ export default function ProductTop(props: TopProps) {
     // and the cart's lines, as an add-on's Add is (cartRoom), so nothing goes in when one of them cannot (bug hunt
     // 2026-11-18: an extra past its stock went in, and one the cart could take no more of counted as added)
     const xs = withX.map((x) => x.product.variants.find((c) => c.id.toLowerCase() === x.variant)).filter((c): c is StoreVariant => !!c);
-    const fits = cartRoom(cart, [got0, ...xs]);
+    const fits = cartRoom(cart, [got0, ...xs], [p, ...related]);
     if (fits !== "ok") { setNeed(fits); return; }
     const got = cartAdd(got0.id, n);
     if (got === null) { setNeed("full"); return; }
@@ -208,6 +216,7 @@ export default function ProductTop(props: TopProps) {
       <ProductGallery key={colour ?? ""} p={p} photos={photos} locale={locale} name={name} />
 
       <div className="st-pdp-info">
+        {(p.badge || p.preview) && <p className="st-pdp-marks"><ProductMarks p={p} locale={locale} x={x} /></p>}
         {p.brand && <p className="st-brand"><Bidi text={p.brand} rtl={rtl} /></p>}
         <div className="st-pdp-name">
           <h1><Bidi text={name} rtl={rtl} /></h1>
@@ -246,6 +255,7 @@ export default function ProductTop(props: TopProps) {
 
       <div className="st-pdp-buy">
         <BuyBox locale={locale} rtl={rtl} bike={bike} name={name} v={v} unit={unit} qty={n} max={max} stock={stock}
+          preorder={p.preorder ? { ships } : null} preview={p.preview}
           extras={withX} est={est} canAdd={canAdd} added={added} need={need} applePay={appleHere} askHref={askHref} videoHref={videoHref}
           ways={<WayStep bike={bike} step={wayStep} est={est} onWay={pickWay} whens={whens} freeOver={settings.delivery.freeOver} showroom={showroom}
             orderBy={b2?.orderBy ?? {}} handover={bike && est.way?.id === "pickup" ? <HandoverPick locale={locale} /> : null} />}

@@ -41,8 +41,9 @@ export const setItemQty = (cart: CartItem[], variant: string, qty: number): Cart
 export const removeItem = (cart: CartItem[], variant: string): CartItem[] => cart.filter((l) => l.variant !== variant);
 export const cartCount = (cart: CartItem[]) => cart.reduce((n, l) => n + l.qty, 0);
 
-/** Why a line cannot be ordered as it is: the variant is gone, sold out, or has fewer left than asked for. */
-export type LineIssue = "gone" | "out" | "short" | null;
+/** Why a line cannot be ordered as it is: the variant is gone, sold out, has fewer left than asked for, or the line takes
+ *  its product past the most one order may hold ("max", the product-management build 2026-11-19). */
+export type LineIssue = "gone" | "out" | "short" | "max" | null;
 export type CartLine = {
   item: CartItem;
   product: StoreProduct | null;
@@ -52,15 +53,56 @@ export type CartLine = {
   issue: LineIssue;
 };
 
-/** The cart priced with the store as the page has it. A line that cannot be ordered costs nothing here. */
+/** The cart priced with the store as the page has it. A line that cannot be ordered costs nothing here. A Preview product
+ *  (staging) is never sold, so its line is gone; a pre-order is ordered beyond its stock; a product's lines together hold
+ *  at most its limit (max_per_order), the line that goes past it marked "max". */
 export function cartLines(cart: CartItem[], store: Store): CartLine[] {
+  const had = new Map<string, number>();
   return cart.map((item) => {
     const hit = findVariant(store, item.variant);
-    if (!hit) return { item, product: null, variant: null, unit: 0, total: 0, issue: "gone" };
+    if (!hit || hit.product.preview) return { item, product: null, variant: null, unit: 0, total: 0, issue: "gone" };
     const unit = variantPrice(hit.product, hit.variant);
-    const issue: LineIssue = hit.variant.stock <= 0 ? "out" : hit.variant.stock < item.qty ? "short" : null;
+    const before = had.get(hit.product.id) ?? 0;
+    had.set(hit.product.id, before + item.qty);
+    const limit = hit.product.max_per_order;
+    const issue: LineIssue = !hit.product.preorder && hit.variant.stock <= 0 ? "out" : !hit.product.preorder && hit.variant.stock < item.qty ? "short"
+      : limit !== null && before + item.qty > limit ? "max" : null;
     return { item, product: hit.product, variant: hit.variant, unit, total: issue ? 0 : Math.round(unit * item.qty * 100) / 100, issue };
   });
+}
+
+/** How many of a product's sizes and colours together the cart holds. */
+export const productInCart = (cart: readonly CartItem[], p: Pick<StoreProduct, "variants">): number => {
+  const ids = new Set(p.variants.map((v) => v.id.toLowerCase()));
+  return cart.reduce((n, l) => n + (ids.has(l.variant) ? l.qty : 0), 0);
+};
+
+/** How many more of a variant the cart can take: 10 a line, what is in stock (a pre-order has no such bound) and the
+ *  product's limit across its lines, less what the cart holds. */
+export function roomFor(cart: readonly CartItem[], p: Pick<StoreProduct, "variants" | "preorder" | "max_per_order">, v: Pick<StoreVariant, "id" | "stock">): number {
+  const line = cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0;
+  const byStock = p.preorder ? MAX_QTY : v.stock;
+  const byLimit = p.max_per_order === null ? Infinity : p.max_per_order - productInCart(cart, p);
+  return Math.max(0, Math.min(MAX_QTY - line, byStock - line, byLimit));
+}
+
+/** The cart with each product's lines brought down to its limit (max_per_order): the first lines keep theirs, a later
+ *  one takes what is left and goes when nothing is. `changed` says whether anything was cut. */
+export function clampCart(cart: readonly CartItem[], store: Store): { cart: CartItem[]; changed: boolean } {
+  const had = new Map<string, number>();
+  const out: CartItem[] = [];
+  let changed = false;
+  for (const l of cart) {
+    const hit = findVariant(store, l.variant);
+    const limit = hit?.product.max_per_order ?? null;
+    if (!hit || limit === null) { out.push(l); continue; }
+    const before = had.get(hit.product.id) ?? 0;
+    const qty = Math.min(l.qty, Math.max(0, limit - before));
+    had.set(hit.product.id, before + qty);
+    if (qty !== l.qty) changed = true;
+    if (qty > 0) out.push(qty === l.qty ? l : { ...l, qty });
+  }
+  return { cart: out, changed };
 }
 
 export const subtotalOf = (lines: CartLine[]) => Math.round(lines.reduce((n, l) => n + l.total, 0) * 100) / 100;

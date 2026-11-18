@@ -8,6 +8,8 @@ import { CardStrip, QuickAdd, SaveHeart } from "./CardParts";
 import BidiText from "./BidiText";
 import { StIcon } from "./icons";
 import { brandOnce, cardSizes, isWideCard } from "@/lib/sx-B1-list";
+import type { SpmText } from "./spm.text";
+import { PreorderLine, ProductMarks } from "./spm-parts";
 import "./sx-B1.css";
 
 // One product as the lists show it (D02-A to D08-A as staging has them, store build 2026-11-15): a white card with a
@@ -23,8 +25,11 @@ import "./sx-B1.css";
 // same places, empty or not (the brand, the name on two lines, the colour dots, one status line: a certified bike's
 // warranty or "Only N left", then the delivery chip on one line saying what the product page's first way promises), so
 // the lines of a row line up; the name leaves out the brand the brand line already says.
-export default function ProductCard({ p, locale, t, w, licence, today, whens, eager }: {
-  p: StoreProduct; locale: string; t: StoreText; w: W2Text; licence: boolean; today: string; whens: CardWhens; eager?: boolean;
+//   The product-management build (2026-11-19): staff's mark (or the automatic New) and, on the staging site, Preview sit
+// over the photo with Sold out; a pre-order says so on the status line (never Sold out); quick add stops at the
+// product's limit per order, and a pre-order or a Preview opens its page instead.
+export default function ProductCard({ p, locale, t, w, x, licence, today, whens, eager }: {
+  p: StoreProduct; locale: string; t: StoreText; w: W2Text; x: SpmText; licence: boolean; today: string; whens: CardWhens; eager?: boolean;
 }) {
   const name = pick(locale, p.name_en, p.name_ar);
   const href = productHref(p);
@@ -36,14 +41,20 @@ export default function ProductCard({ p, locale, t, w, licence, today, whens, ea
   const quick = quickVariant(p);
   const wide = isWideCard(p);
   // one status line: a certified pre-owned bike's warranty (one of a kind, so always "Only 1 left"), else the live stock
-  const status = p.condition === "certified"
+  const status = p.preorder ? <PreorderLine ships={null} x={x} className="st-card-pre" />
+    : p.condition === "certified"
     ? <span className="st-card-warranty"><StIcon name="shield" size={16} />{warrantyText(p, w)}</span>
     : stock.kind === "low" ? <span className="st-low">{t.left(stock.left)}</span> : null;
   return (
     <div className={`st-card${wide ? " is-wide" : ""}${stock.kind === "out" ? " is-out" : ""}`}>
       <div className="st-card-img">
         <CardStrip photos={p.images} alts={p.images.map((src) => photoAlt(p, src, locale))} href={href} eager={eager} sizes={cardSizes(wide)} prev={w.prevPhoto} next={w.nextPhoto} />
-        {stock.kind === "out" && <span className="st-flag">{t.soldOut}</span>}
+        {(stock.kind === "out" || p.badge || p.preview) && (
+          <span className="st-flags">
+            {stock.kind === "out" && <span className="st-flag">{t.soldOut}</span>}
+            <ProductMarks p={p} locale={locale} x={x} />
+          </span>
+        )}
         <SaveHeart slug={p.slug} label={w.save(name)} />
       </div>
       <div className={`st-card-body${quick ? " has-quick" : ""}`}>
@@ -62,7 +73,7 @@ export default function ProductCard({ p, locale, t, w, licence, today, whens, ea
           <Amt>{from ? t.from(sar(lo)) : sar(lo)}</Amt>
           {was !== null && <s className="st-was"><Amt>{sar(was)}</Amt></s>}
         </span>
-        {quick && <QuickAdd variant={quick.id} stock={quick.stock} label={w.quickAdd(name)} added={w.added} cant={w.cantAdd} />}
+        {quick && <QuickAdd variant={quick.id} stock={quick.stock} limit={p.max_per_order} label={w.quickAdd(name)} added={w.added} cant={w.cantAdd} />}
       </div>
     </div>
   );

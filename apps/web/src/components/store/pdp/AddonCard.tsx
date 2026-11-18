@@ -33,8 +33,8 @@ export default function AddonCard({ p, locale }: { p: StoreProduct; locale: stri
 
   function add() {
     if (!v) { setNeed("pick"); select.current?.focus(); return; }
-    if (v.stock <= 0) return;
-    const room = cartRoom(cart, [v]);
+    if (v.stock <= 0 && !p.preorder) return;
+    const room = cartRoom(cart, [v], [p]);
     if (room !== "ok") { setNeed(room); return; }
     const got = cartAdd(v.id, 1);
     if (got === null) { setNeed("full"); return; }

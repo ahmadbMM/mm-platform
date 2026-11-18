@@ -11,7 +11,9 @@ import { termsSchema } from "@/content/pages/terms";
 import { asLocale, resolvePage } from "@/lib/content";
 import { fill } from "@/lib/fill";
 import { pageState } from "@/lib/page-state";
-import { loadStore, storeOpen } from "@/lib/store";
+import { loadCats, loadStore, storeOpen } from "@/lib/store";
+import { riyadhToday } from "@/lib/store-delivery";
+import { storeRules, withRules } from "@/lib/store-rules";
 import { storeSearchItems } from "@/lib/store-site";
 import { serverLocalize } from "@/i18n/dicts";
 
@@ -69,8 +71,9 @@ export async function searchIndex(locale: string): Promise<SearchItem[]> {
     for (const c of list(resolvePage(termsSchema, content, L).clauses.items)) if (S(c.title)) items.push({ title: S(c.title), text: S(c.body).replace(/^- /gm, ""), href: "/terms" });
   }
   if (storeOpen(content)) {
-    const store = await loadStore();
-    if (store) items.push(...storeSearchItems(store, L, serverLocalize(StoreT, L)));
+    const [store, cats] = await Promise.all([loadStore(), loadCats()]);
+    // "Only N left" as the store's cards say it (store.showStock)
+    if (store) items.push(...storeSearchItems({ products: withRules(store.products, storeRules(content), riyadhToday(), Date.now()) }, L, serverLocalize(StoreT, L), cats));
   }
   kept.set(key, { at: Date.now(), items });
   return items;

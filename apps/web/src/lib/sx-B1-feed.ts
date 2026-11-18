@@ -1,8 +1,9 @@
 import { brandOnce } from "./sx-B1-list";
 import {
   pick, productHref, productStock, sortProducts, variantPrice, wasPriceAt,
-  type StoreCategory, type StoreProduct, type StoreVariant,
+  type StoreProduct, type StoreVariant,
 } from "./store-core";
+import { BUILTIN_TREE, catPath, topOf, type CatTree } from "./store-cats";
 
 // The store's products as a Google Merchant Center feed (the user, 2026-11-18: "do all", N27): micromobility.sa/store/
 // feed.xml, one RSS 2.0 file in the Google namespace, so the bikes and the gear can show free in Shopping, Images and Lens
@@ -12,8 +13,9 @@ import {
 // them) and so is a product without a photo (an item needs one). ?lang=ar writes the Arabic names and links the Arabic
 // pages, for a second feed of Arabic listings. Pure, so it is tested without a database.
 
-/** Google's own category for each of the store's, where its taxonomy has one beyond doubt; others are left to Google. */
-const GOOGLE_CATEGORY: Partial<Record<StoreCategory, string>> = {
+/** Google's own category for each of the store's, where its taxonomy has one beyond doubt; others are left to Google.
+ *  Staff's sub-category takes its category's (the product-management build 2026-11-19). */
+const GOOGLE_CATEGORY: Partial<Record<string, string>> = {
   bikes: "Sporting Goods > Outdoor Recreation > Cycling > Bicycles",
   accessories: "Sporting Goods > Outdoor Recreation > Cycling > Bicycle Accessories",
   parts: "Sporting Goods > Outdoor Recreation > Cycling > Bicycle Parts",
@@ -38,13 +40,18 @@ export function absolute(src: string, site: string): string | null {
   return src.startsWith("/") && !src.startsWith("//") ? `${site}${src}` : null;
 }
 
-export type FeedOptions = { site: string; lang: "en" | "ar"; licence: string | null; today: string; storeName: string };
+export type FeedOptions = { site: string; lang: "en" | "ar"; licence: string | null; today: string; storeName: string; cats?: CatTree };
 
 /** One <item> for each variant of each product the feed can list, in staff's order. */
 export function feedItems(products: readonly StoreProduct[], o: FeedOptions): string[] {
   const out: string[] = [];
+  const cats = o.cats ?? BUILTIN_TREE;
   for (const p of sortProducts([...products], "featured")) {
-    if (p.kind === "gift_card") continue;
+    // a Preview (the staging site's alone) is never listed
+    if (p.kind === "gift_card" || p.preview) continue;
+    const google = GOOGLE_CATEGORY[topOf(cats, p.category)];
+    // the store's own path to it: "bikes > road" for staff's sub-category
+    const type = cats.table ? catPath(cats, p.category).map((c) => c.slug).join(" > ") || p.category : p.category;
     const photos = p.images.map((src) => absolute(src, o.site)).filter((x): x is string => !!x);
     if (!photos.length) continue;
     const name = pick(o.lang, p.name_en, p.name_ar);
@@ -76,8 +83,8 @@ export function feedItems(products: readonly StoreProduct[], o: FeedOptions): st
         ...(p.brand ? [["g:brand", p.brand]] : [["g:brand", o.storeName]]),
         ["g:condition", p.condition === "certified" ? "refurbished" : "new"],
         ["g:identifier_exists", "no"],
-        ...(GOOGLE_CATEGORY[p.category] ? [["g:google_product_category", GOOGLE_CATEGORY[p.category]!]] : []),
-        ["g:product_type", p.category],
+        ...(google ? [["g:google_product_category", google]] : []),
+        ["g:product_type", type],
         ...(v?.size ? [["g:size", v.size]] : []),
         ...(colour ? [["g:color", colour]] : []),
       ];

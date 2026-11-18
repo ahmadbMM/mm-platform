@@ -206,7 +206,8 @@ describe("reading the store", () => {
     }) as unknown as typeof fetch;
     const s = await loadStore(f, 1);
     expect(s?.products.map((p) => p.slug)).toEqual(["da54"]);
-    expect(urls.filter((u) => u.includes("store_products"))).toHaveLength(2);
+    // with the product-management build's columns, then the store build's, then the first ones
+    expect(urls.filter((u) => u.includes("store_products"))).toHaveLength(3);
     expect(urls[0]).toContain("image_meta");
     await memoSettled();
   });

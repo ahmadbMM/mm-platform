@@ -37,7 +37,8 @@ const STORE: Store = storeOf(
 
 describe("the store's rows", () => {
   it("become products with their variants; a row the pages could not draw is left out", () => {
-    const s = storeOf([product("a", "ok"), product("b", "bad", { category: "service" }), product("c", "", {}), product("d", "free", { price: 0 })], [variant(9, "a", { price: "45.5" }), variant(10, "a", { price: -1 })]);
+    // any category staff made reads (store_categories decides what is shown); one no category could have is left out
+    const s = storeOf([product("a", "ok"), product("b", "bad", { category: "Not A Slug" }), product("c", "", {}), product("d", "free", { price: 0 })], [variant(9, "a", { price: "45.5" }), variant(10, "a", { price: -1 })]);
     expect(s.products.map((p) => p.slug)).toEqual(["ok"]);
     expect(s.products[0].variants.map((v) => v.price)).toEqual([45.5]);
   });
@@ -61,7 +62,8 @@ describe("the store's rows", () => {
     expect(urls.find((u) => u.includes("store_variants"))).toContain("active=is.true");
     await loadStore(f, 30_000);
     await memoSettled();
-    expect(f).toHaveBeenCalledTimes(2);
+    // the products, their variants and staff's categories (store_categories), each once a minute
+    expect(f).toHaveBeenCalledTimes(3);
   });
   afterEach(() => { resetStore(); vi.unstubAllEnvs(); });
 });

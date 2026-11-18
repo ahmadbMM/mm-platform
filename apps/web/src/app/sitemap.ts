@@ -9,7 +9,8 @@ import { SWITCHED_PAGES, loadJournalContent, pageOn } from "@/lib/site";
 import { pageState } from "@/lib/page-state";
 import { tmSitemapPaths } from "@/lib/testimonials";
 import { loadCatalog, modelPath, subtypesOf, topCategories } from "@/lib/catalog";
-import { loadStore, storeOpen } from "@/lib/store";
+import { loadCats, loadColls, loadStore, storeOpen } from "@/lib/store";
+import { riyadhToday } from "@/lib/store-delivery";
 import { storePaths } from "@/lib/store-site";
 
 // micromobility.sa/sitemap.xml: every page a visitor can open, in every language. Addresses carry
@@ -59,8 +60,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
   if (storeOpen(content)) {
-    const store = await loadStore();
-    if (store) paths.push(...storePaths(store));
+    const [store, cats, colls] = await Promise.all([loadStore(), loadCats(), loadColls()]);
+    if (store) paths.push(...storePaths(store, cats, colls, riyadhToday()));
   }
   const abs = (p: string) => `${SITE_URL}${p}`;
   return paths.flatMap((path) => {

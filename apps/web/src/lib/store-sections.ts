@@ -10,7 +10,7 @@ import {
   KEY_SPEC_ICONS, linePhotos, optionsOf, pick, priceRange, productHref, productStock, relatedOf, reviewSummary, variantLabel,
   type CmRange, type KeySpecIcon, type Store, type StoreProduct, type StoreReview, type StoreSpec, type StoreVariant,
 } from "./store-core";
-import { MAX_LINES, MAX_QTY } from "./cart";
+import { MAX_LINES, MAX_QTY, roomFor } from "./cart";
 import { RETURN_DAYS, warrantyMonths } from "./store-policy";
 
 // ── F36: the specification table ─────────────────────────────────────────────────────────────────
@@ -120,10 +120,12 @@ export const choicesOf = (p: StoreProduct, locale: string): { id: string; label:
 
 /** Whether one more of each of these variants fits the cart (an add-on's Add, the starter set's "Add the set"): "most"
  *  when one is sold out or the cart already holds the most of it that can be ordered (10, or what is left), "full" when
- *  its new lines would take the cart past its 20, else "ok". */
-export function cartRoom(cart: readonly { variant: string; qty: number }[], vs: readonly StoreVariant[]): "ok" | "most" | "full" {
+ *  its new lines would take the cart past its 20, else "ok". Given their products (the product-management build
+ *  2026-11-19), a pre-order counts no stock and a product's limit per order counts all its lines (lib/cart.ts roomFor). */
+export function cartRoom(cart: readonly { variant: string; qty: number }[], vs: readonly StoreVariant[], products: readonly StoreProduct[] = []): "ok" | "most" | "full" {
   const inCart = (v: StoreVariant) => cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0;
-  if (vs.some((v) => v.stock <= 0 || inCart(v) >= Math.min(MAX_QTY, v.stock))) return "most";
+  const of = (v: StoreVariant) => products.find((p) => p.id === v.product_id);
+  if (vs.some((v) => { const p = of(v); return p ? roomFor(cart, p, v) <= 0 : v.stock <= 0 || inCart(v) >= Math.min(MAX_QTY, v.stock); })) return "most";
   const fresh = new Set(vs.map((v) => v.id.toLowerCase()).filter((id) => !cart.some((l) => l.variant === id))).size;
   return cart.length + fresh > MAX_LINES ? "full" : "ok";
 }

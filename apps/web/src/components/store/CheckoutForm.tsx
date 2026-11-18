@@ -33,6 +33,9 @@ import { handoverPickOf, pickOpen } from "@/lib/sx-b3-handover";
 import { T as X } from "./sx-B3.text";
 import { CompanyBox, HandoverBox, handoverText, LearningTick, PinBox, SessionPick, type SxCheckout } from "./CheckoutPlus";
 import { useBoxCookie } from "./sx-b3-reserve";
+import { minOrderLeft } from "@/lib/store-rules";
+import { T as SPM } from "./spm.text";
+import { PreorderLine } from "./spm-parts";
 import "./sx-B3.css";
 
 // micromobility.sa/store/checkout (store build 2026-11-15, O12-C): steps that close into a summary when done - Contact
@@ -47,6 +50,9 @@ import "./sx-B3.css";
 // to the order when a gift card or the wallet paid it all. A refusal is put where it belongs, and nothing the customer
 // typed is cleared: what they type is kept for this visit, so signing in (which reloads the page) or coming back from
 // the payment page keeps it too. "Buy now" (?buy=, F35) checks out that line with its extras and leaves the cart alone.
+//   The product-management build (2026-11-19): a pre-order's line says so with the day it ships by; a line past its
+// product's limit per order holds the order (lib/cart.ts cartLines "max"); under the store's smallest order
+// (store.minOrder) the button waits, one line saying how much more it needs; the database's refusals for both are said.
 export type CheckoutAccount = { name: string; phone: string; email: string } | null;
 type Props = {
   locale: string; intl: string; products: StoreProduct[]; settings: PaySettings; whens: Whens; showroom: { address: string; hours: string };
@@ -56,6 +62,8 @@ type Props = {
   buy: CartItem[] | null;
   /** The build of 2026-11-18 (B3): a company, the pin, the handover slot, a session, still learning, a quote's link. */
   sx: SxCheckout;
+  /** store.minOrder: the smallest subtotal an order may have, null for none. */
+  minOrder?: number | null;
 };
 /** `who`: the account the draft was typed under ("" a guest), so another account never takes it over. `x`: the build of
  *  2026-11-18's parts (lib/sx-b3.ts SxDraft). */
@@ -128,8 +136,9 @@ export default function CheckoutForm(props: Props) {
 }
 
 function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => void }) {
-  const { locale, intl, products, settings, whens, showroom, account, balance, links, licence, today, slots, districts, lookup, cart, onPlaced, sx } = props;
+  const { locale, intl, products, settings, whens, showroom, account, balance, links, licence, today, slots, districts, lookup, cart, onPlaced, sx, minOrder = null } = props;
   const t = useLocalize(T);
+  const sp = useLocalize(SPM);
   const w = useLocalize(W);
   const x = useLocalize(X);
   const payT = useLocalize(PayT);
@@ -163,7 +172,8 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
   const pickupOn = options.some((o) => o.id === "pickup");
   const money = checkoutMoney({ lines, settings, way, licence, code: promo.hit?.discount, gift: giftLines ? 0 : gift.card?.balance, wallet: wallet && account ? balance : 0 });
   const giftValue = lines.filter((l) => l.product?.kind === "gift_card").reduce((n, l) => n + l.total, 0);
-  const blocked = lines.some((l) => l.issue);
+  const short = minOrderLeft(minOrder, money.subtotal);
+  const blocked = lines.some((l) => l.issue) || short > 0;
   const steps = stepsFor(way);
   const slotsOn = way === "jeddah" && slots ? slots : null;
   // the build of 2026-11-18 (B3): handed over at a session (N15: small things, the account's own seated booking), the
@@ -296,6 +306,7 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
     if (busy) return;
     setMsg("");
     setLineErr({});
+    if (short > 0 && !lines.some((l) => l.issue)) return fail(sp.minLeft(sar(short)));
     if (blocked) return fail(t.fixCart);
     if (problems.length) {
       if (problems.includes("district_unserved") && unservedSwitch()) return fail(w.unserved(draft.address.district.trim(), wayName("pickup")));
@@ -329,7 +340,8 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
       }
       const code = b.error || "generic";
       const place = refusalPlace(code);
-      if (place.line && b.variant) setLineErr({ [b.variant]: t.lineIssue[code] ?? t.lineIssue.gone });
+      const cap = code === "max_qty" ? lines.find((l) => l.item.variant === b.variant)?.product?.max_per_order ?? null : null;
+      if (place.line && b.variant) setLineErr({ [b.variant]: cap !== null ? sp.perOrder(cap) : t.lineIssue[code] ?? t.lineIssue.gone });
       // the build of 2026-11-18's refusals: put on their part, in their step (lib/sx-b3.ts sxPlace)
       const sxf = sxPlace(code);
       if (sxf) {
@@ -345,7 +357,7 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
       // Place order goes through without it rather than being refused the same way again
       if (field === "promo") promo.remove();
       if (field === "giftCard") gift.remove();
-      fail(code === "city" ? t.errs.address : x.checks[code] ?? w.checks[code] ?? t.errs[code] ?? t.errs.generic);
+      fail(code === "city" ? t.errs.address : code === "max_qty" ? sp.errMax : code === "min_order" ? sp.errMin : x.checks[code] ?? w.checks[code] ?? t.errs[code] ?? t.errs.generic);
     } catch {
       fail(t.errs.network);
     }
@@ -498,13 +510,15 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
           <ul className="st-mini">
             {lines.map((l) => {
               const p = l.product, v = l.variant, img = p ? linePhoto(p, v) : null;
-              const issue = lineErr[l.item.variant] || (l.issue === "gone" ? t.gone : l.issue === "out" ? t.out : l.issue === "short" ? t.short(v?.stock ?? 0) : "");
+              const issue = lineErr[l.item.variant] || (l.issue === "gone" ? t.gone : l.issue === "out" ? t.out : l.issue === "short" ? t.short(v?.stock ?? 0)
+                : l.issue === "max" && p?.max_per_order != null ? sp.perOrder(p.max_per_order) : "");
               return (
                 <li key={l.item.variant} className={issue ? "bad" : undefined}>
                   <span className="st-mini-img">{img ? <img src={sized(img, 640)} alt="" loading="lazy" /> : <NoPhoto />}<i>{l.item.qty}</i></span>
                   <span className="st-mini-mid">
                     <b>{p ? pick(locale, p.name_en, p.name_ar) : t.unavailable}</b>
                     {v && variantLabel(v, locale) && <small>{variantLabel(v, locale)}</small>}
+                    {p?.preorder && <PreorderLine ships={p.ships_on ? dayLabel(p.ships_on, intl) : null} x={sp} className="st-line-pre" />}
                     {issue && <small className="st-line-issue">{issue}</small>}
                   </span>
                   <Amt>{sar(l.unit * l.item.qty)}</Amt>
@@ -521,6 +535,7 @@ function Checkout(props: Props & { cart: CartItem[]; onPlaced: (url: string) => 
           {money.gift > 0 && <p className="bk-sum-row"><span>{w.giftLine}</span><Off n={money.gift} /></p>}
           {money.wallet > 0 && <p className="bk-sum-row"><span>{t.fromWallet}</span><Off n={money.wallet} /></p>}
           {(money.gift > 0 || money.wallet > 0) && <p className="bk-sum-row st-due"><span>{t.toPay}</span><Amt>{sar(money.due)}</Amt></p>}
+          {short > 0 && !lines.some((l) => l.issue) && <p className="st-min" role="status">{sp.minLeft(sar(short))}</p>}
           <p ref={top} tabIndex={-1} className="bk-err st-co-msg" role="alert">{msg}</p>
           {/* the pre-contract statement (L05): the Terms and the returns policy, side by side above the button */}
           <p className="st-legal st-co-legal">

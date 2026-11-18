@@ -1,6 +1,6 @@
 import { SITE_URL } from "@/lib/seo";
 import { pageState } from "@/lib/page-state";
-import { discountLicence, loadStore, storeOpen } from "@/lib/store";
+import { discountLicence, loadCats, loadStore, storeOpen } from "@/lib/store";
 import { riyadhToday } from "@/lib/store-delivery";
 import { productFeed } from "@/lib/sx-B1-feed";
 
@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 export async function GET(req: Request): Promise<Response> {
   const { content, closed } = await pageState();
   if (closed || !storeOpen(content)) return new Response("Not found", { status: 404, headers: { "Cache-Control": "no-store" } });
-  const store = await loadStore();
+  const [store, cats] = await Promise.all([loadStore(), loadCats()]);
   if (!store) return new Response("Try again later", { status: 503, headers: { "Retry-After": "600", "Cache-Control": "no-store" } });
   const lang = new URL(req.url).searchParams.get("lang") === "ar" ? "ar" : "en";
   const xml = productFeed(store.products, {
@@ -23,6 +23,7 @@ export async function GET(req: Request): Promise<Response> {
     licence: discountLicence(content),
     today: riyadhToday(),
     storeName: "Micromobility",
+    cats,
     description: lang === "ar" ? "دراجات وإكسسوارات ومستلزمات من متجرنا في جدة. الأسعار شاملة الضريبة." : "Bikes, accessories and gear from our Jeddah store. Prices include VAT.",
   });
   return new Response(xml, { headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" } });

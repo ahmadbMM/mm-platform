@@ -1,10 +1,11 @@
-import { MAX_QTY, type CartItem } from "./cart";
+import { MAX_QTY, roomFor, type CartItem } from "./cart";
+import { onSale } from "./store-colls";
 import type { PaySettings } from "./pay/settings";
 import { deliveryOptions, deliveryRange } from "./store-delivery";
 import { warrantyMonths, warrantyParts } from "./store-policy";
 import {
-  optionsOf, pick, priceRange, productStock, sortProducts, STORE_CATEGORIES, STORE_SORTS, variantPrice,
-  type StoreCategory, type StoreProduct, type StoreSort, type StoreVariant,
+  optionsOf, pick, priceRange, productStock, sortProducts, STORE_SORTS, variantPrice,
+  type StoreProduct, type StoreSort, type StoreVariant,
 } from "./store-core";
 
 // The store's lists (store build 2026-11-15, chain w2): /store with its category tiles and every product under them
@@ -12,12 +13,20 @@ import {
 // browser's list and the server's first drawing agree: the filters (O05-C) and where they sit in the address, the
 // delivery chip on a card (F05), quick add (F06), the certified pre-owned section (F53) and the tiles' photos.
 
-// ── Filters (O05-C): price band, size, colour, brand ──────────────────────────────────────────────
+// ── Filters (O05-C): price band, size, colour, brand; and since the product-management build (2026-11-19) in stock, on
+// sale, condition and tags, each offered where staff's category asks for it (lib/store-cats.ts catFilters) ──────────
 
-export const FILTER_KEYS = ["price", "size", "colour", "brand"] as const;
+export const FILTER_KEYS = ["price", "size", "colour", "brand", "instock", "sale", "condition", "tags"] as const;
 export type FilterKey = (typeof FILTER_KEYS)[number];
 export type ListFilters = Record<FilterKey, string[]>;
-export const noFilters = (): ListFilters => ({ price: [], size: [], colour: [], brand: [] });
+export const noFilters = (): ListFilters => ({ price: [], size: [], colour: [], brand: [], instock: [], sale: [], condition: [], tags: [] });
+/** The groups a list offers when it says nothing: the four the store always had. */
+export const BASE_GROUPS: readonly FilterKey[] = ["price", "size", "colour", "brand"];
+/** What a sale filter reads (a former price shows only beside the licence, between its dates). */
+export type SaleCtx = { licence: string | boolean | null; today: string };
+const NO_SALE: SaleCtx = { licence: null, today: "" };
+/** Stock on hand (a pre-order's is what is there, not what it can take). */
+const onHand = (p: StoreProduct) => p.kind !== "gift_card" && p.variants.some((v) => v.stock > 0);
 
 /** A price band in riyals, VAT included: from `min` (null: from nothing) up to but not including `max` (null: no top). */
 export type PriceBand = { id: string; min: number | null; max: number | null };
@@ -33,8 +42,9 @@ const bandById = new Map(PRICE_BANDS.map((b) => [b.id, b]));
 const inBand = (b: PriceBand, n: number) => (b.min === null || n >= b.min) && (b.max === null || n < b.max);
 /** Every price the product is sold at (its variants', or its own without any). */
 const pricesOf = (p: StoreProduct) => (p.variants.length ? p.variants.map((v) => variantPrice(p, v)) : [p.price]);
-/** What can be bought now: the variants with stock. A gift card's face values are no sizes or colours. */
-const buyable = (p: StoreProduct): StoreVariant[] => (p.kind === "gift_card" ? [] : p.variants.filter((v) => v.stock > 0));
+/** What can be bought now: the variants with stock (every one of a pre-order). A gift card's face values are no sizes or
+ *  colours. */
+const buyable = (p: StoreProduct): StoreVariant[] => (p.kind === "gift_card" ? [] : p.variants.filter((v) => p.preorder || v.stock > 0));
 
 /** One choice of a filter: its value in the address, and for a colour its English and Arabic names and its dot. */
 export type FacetOption = { value: string; en: string; ar: string | null; hex: string | null; band: PriceBand | null };
@@ -52,9 +62,11 @@ export function sortSizes(sizes: readonly string[]): string[] {
   return sizes.map((s, i) => ({ s, r: rank(s, i) })).sort((a, b) => a.r - b.r).map((x) => x.s);
 }
 
-/** The filters these products can be narrowed by: a filter only when it has two choices or more (one choice narrows
- *  nothing), each choice only when a product has it (a size or a colour only in stock). */
-export function facetsOf(products: readonly StoreProduct[]): Facet[] {
+/** The filters these products can be narrowed by, among the groups the list offers (`groups`, the four the store always
+ *  had unless said): a filter only when it has two choices or more (one choice narrows nothing), each choice only when a
+ *  product has it (a size or a colour only in stock); In stock, On sale, a condition and a tag also on their own, when
+ *  some of the products have it and some do not. */
+export function facetsOf(products: readonly StoreProduct[], groups: readonly FilterKey[] = BASE_GROUPS, ctx: SaleCtx = NO_SALE): Facet[] {
   const bands = PRICE_BANDS.filter((b) => products.some((p) => pricesOf(p).some((n) => inBand(b, n))));
   const sizes: string[] = [];
   const colours = new Map<string, FacetOption>();
@@ -72,13 +84,26 @@ export function facetsOf(products: readonly StoreProduct[]): Facet[] {
     { key: "size", options: sortSizes(sizes).map(plain) },
     { key: "colour", options: [...colours.values()] },
     { key: "brand", options: brands.sort((a, b) => a.localeCompare(b)).map(plain) },
-  ];
-  return all.filter((f) => f.options.length >= 2);
+  ].filter((f) => f.options.length >= 2) as Facet[];
+  // the product-management build's groups: a choice is offered when it narrows the list (some have it, some do not)
+  const narrows = (has: (p: StoreProduct) => boolean) => products.some(has) && !products.every(has);
+  if (narrows(onHand)) all.push({ key: "instock", options: [plain("1")] });
+  if (narrows((p) => onSale(p, ctx.licence, ctx.today))) all.push({ key: "sale", options: [plain("1")] });
+  const conds = (["new", "certified"] as const).filter((c) => products.some((p) => p.condition === c));
+  if (conds.length >= 2) all.push({ key: "condition", options: conds.map(plain) });
+  const tags = [...new Set(products.flatMap((p) => p.tags))].sort((a, b) => a.localeCompare(b));
+  const shownTags = tags.length >= 2 ? tags : tags.filter((t) => narrows((p) => p.tags.includes(t)));
+  if (shownTags.length) all.push({ key: "tags", options: shownTags.map(plain) });
+  return FILTER_KEYS.filter((k) => groups.includes(k)).map((k) => all.find((f) => f.key === k)).filter((f): f is Facet => !!f);
 }
 
 /** Whether a product is one the filters keep: any choice of a filter (or), every filter set (and). A size and a colour
  *  are asked of the same variant in stock, so "M" and "Black" keep a product sold in M in Black. */
-export function matches(p: StoreProduct, f: ListFilters): boolean {
+export function matches(p: StoreProduct, f: ListFilters, ctx: SaleCtx = NO_SALE): boolean {
+  if (f.instock.length && !onHand(p)) return false;
+  if (f.sale.length && !onSale(p, ctx.licence, ctx.today)) return false;
+  if (f.condition.length && !f.condition.includes(p.condition)) return false;
+  if (f.tags.length && !p.tags.some((t) => f.tags.includes(t))) return false;
   if (f.price.length) {
     const bands = f.price.map((id) => bandById.get(id)).filter((b): b is PriceBand => !!b);
     if (!pricesOf(p).some((n) => bands.some((b) => inBand(b, n)))) return false;
@@ -100,8 +125,9 @@ export function cleanFilters(f: ListFilters, facets: readonly Facet[]): ListFilt
   return out;
 }
 
-/** The filters and the order a list's address asks for: ?price=500-2000&size=M&size=L&colour=Black&brand=Alvas&sort=price-asc. */
-export function listQueryOf(q: Record<string, string | string[] | undefined> | URLSearchParams): { filters: ListFilters; sort: StoreSort } {
+/** The filters and the order a list's address asks for: ?price=500-2000&size=M&size=L&colour=Black&brand=Alvas&sort=price-asc.
+ *  No order asked for: the store's own (store.sort, `dflt`). */
+export function listQueryOf(q: Record<string, string | string[] | undefined> | URLSearchParams, dflt: StoreSort = "featured"): { filters: ListFilters; sort: StoreSort } {
   const all = (k: string): string[] => {
     const v = q instanceof URLSearchParams ? q.getAll(k) : q[k];
     return (Array.isArray(v) ? v : typeof v === "string" ? [v] : []).map((s) => s.trim().slice(0, 40)).filter(Boolean).slice(0, 12);
@@ -109,41 +135,47 @@ export function listQueryOf(q: Record<string, string | string[] | undefined> | U
   const filters = noFilters();
   for (const k of FILTER_KEYS) filters[k] = [...new Set(all(k))];
   const s = all("sort")[0] ?? "";
-  return { filters, sort: (STORE_SORTS as readonly string[]).includes(s) ? (s as StoreSort) : "featured" };
+  return { filters, sort: (STORE_SORTS as readonly string[]).includes(s) ? (s as StoreSort) : dflt };
 }
 
-/** The address's query with these filters and this order in it (the defaults left out), other keys kept. */
-export function listQueryText(base: string, f: ListFilters, sort: StoreSort): string {
+/** The address's query with these filters and this order in it (the defaults left out: `dflt` is the store's own order),
+ *  other keys kept. */
+export function listQueryText(base: string, f: ListFilters, sort: StoreSort, dflt: StoreSort = "featured"): string {
   const q = new URLSearchParams(base);
   for (const k of [...FILTER_KEYS, "sort", "cat"]) q.delete(k);
   for (const k of FILTER_KEYS) for (const v of f[k]) q.append(k, v);
-  if (sort !== "featured") q.set("sort", sort);
+  if (sort !== dflt) q.set("sort", sort);
   // the query as text, not q.size: Safari before 17 has no URLSearchParams.size
   const s = q.toString();
   return s ? `?${s}` : "";
 }
 
 /** The list as it is drawn: filtered, in the order asked for, the certified pre-owned products apart (F53). */
-export function listOf(products: readonly StoreProduct[], f: ListFilters, sort: StoreSort): { fresh: StoreProduct[]; certified: StoreProduct[] } {
-  const shown = sortProducts(products.filter((p) => matches(p, f)), sort);
+export function listOf(products: readonly StoreProduct[], f: ListFilters, sort: StoreSort, ctx: SaleCtx = NO_SALE): { fresh: StoreProduct[]; certified: StoreProduct[] } {
+  const shown = sortProducts(products.filter((p) => matches(p, f, ctx)), sort);
   return { fresh: shown.filter((p) => p.condition !== "certified"), certified: shown.filter((p) => p.condition === "certified") };
 }
 
 // ── A card ───────────────────────────────────────────────────────────────────────────────────────
 
 /** The one variant a card can add straight to the cart (F06): gear sold in one size and one colour, in stock. A bike, a
- *  gift card or anything with a choice to make opens its page instead (a pop-up for a choice is not built). */
+ *  gift card or anything with a choice to make opens its page instead (a pop-up for a choice is not built), and so do a
+ *  pre-order (its page says when it ships) and a Preview (never sold). */
 export function quickVariant(p: StoreProduct): StoreVariant | null {
-  if (p.kind !== "item" || p.category === "bikes" || p.variants.length !== 1) return null;
+  if (p.kind !== "item" || p.category === "bikes" || p.variants.length !== 1 || p.preorder || p.preview) return null;
   const v = p.variants[0];
   return v.stock > 0 ? v : null;
 }
 
-/** How many more of a variant the cart can take from a card's quick add: what is in stock, 10 a line at most, less what
- *  the cart already holds (the product page's Add counts the same way, BuyBox `room`). */
-export function quickRoom(cart: readonly CartItem[], v: Pick<StoreVariant, "id" | "stock">): number {
-  const had = cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0;
-  return Math.max(0, Math.min(MAX_QTY, v.stock) - had);
+/** How many more of a variant the cart can take from a card's quick add: what is in stock, 10 a line at most and the
+ *  product's limit per order (`limit`, null for none), less what the cart already holds (the product page's Add counts the
+ *  same way, lib/cart.ts roomFor). */
+export function quickRoom(cart: readonly CartItem[], v: Pick<StoreVariant, "id" | "stock">, limit: number | null = null): number {
+  if (limit === null) {
+    const had = cart.find((l) => l.variant === v.id.toLowerCase())?.qty ?? 0;
+    return Math.max(0, Math.min(MAX_QTY, v.stock) - had);
+  }
+  return roomFor(cart, { variants: [{ id: v.id }] as StoreVariant[], preorder: false, max_per_order: limit }, v);
 }
 
 /** The colours a card shows as dots (F04): every one the product comes in, in staff's order. */
@@ -200,20 +232,7 @@ export function warrantyText(p: Pick<StoreProduct, "condition" | "warranty_month
   return years === 1 ? t.year1 : years === 2 ? t.year2 : t.years(String(years));
 }
 
-// ── The store page's tiles and the browser-kept rows ────────────────────────────────────────────
-
-/** A tile per category that has a product (O01-E), with the photo of its first product in staff's order that has one
- *  (one in stock first). */
-export function categoryTiles(products: readonly StoreProduct[]): { cat: StoreCategory; image: string | null }[] {
-  const featured = sortProducts([...products], "featured");
-  return STORE_CATEGORIES.flatMap((cat) => {
-    const of = featured.filter((p) => p.category === cat);
-    if (!of.length) return [];
-    const withPhoto = of.filter((p) => p.images.length);
-    const p = withPhoto.find((x) => productStock(x).kind !== "out") ?? withPhoto[0];
-    return [{ cat, image: p?.images[0] ?? null }];
-  });
-}
+// ── The browser-kept rows (the store page's tiles: lib/store-cats.ts catTiles) ─────────────────────
 
 /** The products a kept list names, in its order: a slug no longer in the store is left out; `max` at most. */
 export function bySlugs<P extends { slug: string }>(products: readonly P[], slugs: readonly string[], max: number): P[] {

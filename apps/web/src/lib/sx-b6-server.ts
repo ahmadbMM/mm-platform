@@ -20,7 +20,7 @@ export async function sxFlow(content: SiteContent | null | undefined, locale: st
   if (storeOpen(content)) {
     try {
       const st = await loadStore();
-      const ps = (st?.products ?? []).filter((p) => p.kind !== "gift_card").map((p) => ({
+      const ps = (st?.products ?? []).filter((p) => p.kind !== "gift_card" && !p.preview).map((p) => ({
         slug: p.slug, name: (locale === "ar" && p.name_ar) || p.name_en, photo: p.images[0] ?? null,
         // matched by its English name whatever the page's language
         en: p.name_en,

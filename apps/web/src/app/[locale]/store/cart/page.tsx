@@ -5,6 +5,7 @@ import PageShell from "@/components/site/PageShell";
 import CartView from "@/components/store/CartView";
 import { allWhens, openOr404, storeState } from "@/components/store/store-data";
 import { cartProducts } from "@/components/store/slim";
+import { StoreBannerLine } from "@/components/store/spm-parts";
 import { payEnv, payReady } from "@/lib/pay/config";
 import { boxCookie, CART_N_COOKIE, reserveHeights, reserveOf } from "@/lib/sx-b3";
 import "@/components/experiences/experiences.css";
@@ -29,9 +30,10 @@ export default async function CartPage({ params }: Props) {
   return (
     <PageShell locale={locale} site={s.site} preview={s.previewing} hidden={s.hidden}>
       <div className="st">
+        <StoreBannerLine banner={s.banner} locale={locale} />
         <h1 className="st-title">{s.t.cart}</h1>
         <CartView locale={locale} products={cartProducts(s.store)} settings={s.settings} whens={allWhens(s, locale)} licence={s.licence}
-          applePay={s.settings.enabled && payReady() && !!payEnv().APPLE_PAY_DOMAIN_FILE} reserve={reserve} />
+          applePay={s.settings.enabled && payReady() && !!payEnv().APPLE_PAY_DOMAIN_FILE} reserve={reserve} minOrder={s.rules.minOrder} />
       </div>
     </PageShell>
   );

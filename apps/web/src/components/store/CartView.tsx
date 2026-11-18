@@ -1,24 +1,28 @@
 "use client";
 
-import { useRef, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useRouter } from "@/i18n/navigation";
 import { useLocalize } from "@/i18n/TxProvider";
-import { cartLines, MAX_QTY, shipsKsa, type CartLine } from "@/lib/cart";
+import { intlOf } from "@/i18n/locales";
+import { cartLines, clampCart, MAX_QTY, productInCart, shipsKsa, type CartItem, type CartLine } from "@/lib/cart";
+import { minOrderLeft } from "@/lib/store-rules";
 import { sized } from "@/lib/img";
 import type { PaySettings } from "@/lib/pay/settings";
 import { linePhoto, pick, priceRange, productHref, sar, variantLabel, vatIn, type StoreProduct } from "@/lib/store-core";
 import { deliveryOptions, freeProgress, type Fulfil } from "@/lib/store-delivery";
-import { checkoutMoney, digitalOnly, goesWithCart, hasBike, onlyChoice, type Way } from "@/lib/store-checkout";
+import { checkoutMoney, dayLabel, digitalOnly, goesWithCart, hasBike, onlyChoice, type Way } from "@/lib/store-checkout";
 import { T, type StoreText } from "./Store.text";
 import { T as W, type W4Text } from "./w4.text";
 import { Amt, Ic, NoPhoto } from "./bits";
 import { ApplePayButton, CodeRow, Off } from "./CheckoutBits";
-import { cartAdd, cartRemove, cartSetQty, savedFulfil, saveFulfil, useCart, useHydrated } from "./useCart";
+import { cartAdd, cartRemove, cartReplace, cartSetQty, savedFulfil, saveFulfil, useCart, useHydrated } from "./useCart";
 import { laterPut, laterRemove, useLater } from "./useLists";
 import { useApplePay, usePromo } from "./useCode";
 import { T as X, type SxText } from "./sx-B3.text";
 import { SxIcon } from "./sx-b3-icons";
 import { useBoxCookie } from "./sx-b3-reserve";
+import { T as SPM, type SpmText } from "./spm.text";
+import { PreorderLine } from "./spm-parts";
 import "./sx-B3.css";
 
 // micromobility.sa/store/cart: each line with its photo, choice, price and quantity; a line that cannot be ordered as it
@@ -32,16 +36,22 @@ import "./sx-B3.css";
 // colour and the price on one row; under it the 44 px stepper and the drawn Save for later and Remove buttons), the box
 // kept at the height it had when last drawn here until the browser's cart is read (lib/sx-b3.ts), on a phone a row at
 // the top with the total and Checkout, and under the total Apple Pay first, then Checkout.
+//   The product-management build (2026-11-19): a product's lines are brought down to its limit per order as the cart is
+// read (lib/cart.ts clampCart) and say the limit once they reach it; a pre-order's line says so with the day it ships by;
+// under the store's smallest order (store.minOrder) Checkout waits, one line saying how much more it needs.
 export type Whens = Record<string, string | null>;
 
-export default function CartView({ locale, products, settings, whens, licence, applePay, reserve }: {
+export default function CartView({ locale, products, settings, whens, licence, applePay, reserve, minOrder = null }: {
   locale: string; products: StoreProduct[]; settings: PaySettings; whens: Whens; licence: string | null; applePay: boolean;
   /** the box's height until the cart is read: narrow (under 900 px) and wide, in px */
   reserve: { narrow: number; wide: number };
+  /** store.minOrder: the smallest subtotal an order may have, null for none */
+  minOrder?: number | null;
 }) {
   const t = useLocalize(T);
   const w = useLocalize(W);
   const x = useLocalize(X);
+  const sp = useLocalize(SPM);
   const box = useRef<HTMLDivElement>(null);
   const cart = useCart();
   const later = useLater();
@@ -53,6 +63,12 @@ export default function CartView({ locale, products, settings, whens, licence, a
   const [gwAdded, setGwAdded] = useState<string[]>([]);
   const promo = usePromo(cart, !!licence && !digitalOnly(cartLines(cart, { products })));
   useBoxCookie(box, "cart", cart.length, ready);
+  // a product's lines past its limit per order are brought down to it once the cart is read
+  useEffect(() => {
+    if (!ready) return;
+    const c = clampCart(cart, { products });
+    if (c.changed) cartReplace(c.cart);
+  }, [ready, cart, products]);
   if (!ready) return <ReserveBox reserve={reserve} />;
   const store = { products };
   const lines = cartLines(cart, store);
@@ -90,7 +106,8 @@ export default function CartView({ locale, products, settings, whens, licence, a
   const money = checkoutMoney({ lines, settings, way, licence, code: promo.hit?.discount });
   const giftValue = lines.filter((l) => l.product?.kind === "gift_card").reduce((n, l) => n + l.total, 0);
   const free = digital ? null : freeProgress(settings, before.subtotal - before.discount);
-  const blocked = lines.some((l) => l.issue);
+  const short = minOrderLeft(minOrder, money.subtotal);
+  const blocked = lines.some((l) => l.issue) || short > 0;
   const pickWay = (id: Fulfil) => { setPicked(id); saveFulfil(id); };
   const wayName = (id: Fulfil) => (id === "pickup" ? (bike ? w.pickupBuilt : t.pickup) : id === "jeddah" ? (bike ? w.jeddahBuilt : t.jeddah) : t.ksa);
   const wayLine = (id: Fulfil) => (id === "pickup" ? (whens.pickup ? w.ready(whens.pickup) : "") : whens[id] ? t.arrives(whens[id] as string) : "");
@@ -109,7 +126,7 @@ export default function CartView({ locale, products, settings, whens, licence, a
       </div>
       <div className="st-ct-main">
         <ul className="st-lines">
-          {lines.map((l) => <Line key={l.item.variant} l={l} t={t} w={w} x={x} locale={locale} />)}
+          {lines.map((l) => <Line key={l.item.variant} l={l} cart={cart} t={t} w={w} x={x} sp={sp} locale={locale} />)}
         </ul>
         {goes.length > 0 && <GoesWith list={goes} added={gwLive} onAdded={(id) => setGwAdded((x) => (x.includes(id) ? x : [...x, id]))} t={t} w={w} locale={locale} />}
         {laterList}
@@ -142,7 +159,7 @@ export default function CartView({ locale, products, settings, whens, licence, a
         )}
         <p className="bk-sum-tot sep"><span>{t.total}</span><Amt>{sar(money.total)}</Amt></p>
         <p className="st-vatline">{t.vatOf(sar(vatIn(Math.max(0, money.total - giftValue))))}</p>
-        {blocked && <p className="bk-err" role="alert">{t.fixCart}</p>}
+        {lines.some((l) => l.issue) ? <p className="bk-err" role="alert">{t.fixCart}</p> : short > 0 && <p className="st-min" role="status">{sp.minLeft(sar(short))}</p>}
         {/* SM10-B: the express button first, then Checkout (both lead to the same checkout) */}
         {apple && !blocked && <ApplePayButton label={w.applePay} lang={locale} onClick={() => router.push("/store/checkout")} />}
         {go}
@@ -159,11 +176,15 @@ export function ReserveBox({ reserve }: { reserve: { narrow: number; wide: numbe
 
 /** One line (SM10-B, P16): the photo, the name, the size and colour (and "2 × price" for more than one) and the line's
  *  price on the first row; the stepper, Save for later and Remove on the second, always in the same places. */
-function Line({ l, t, w, x, locale }: { l: CartLine; t: StoreText; w: W4Text; x: SxText; locale: string }) {
+function Line({ l, cart, t, w, x, sp, locale }: { l: CartLine; cart: CartItem[]; t: StoreText; w: W4Text; x: SxText; sp: SpmText; locale: string }) {
   const p = l.product, v = l.variant, img = p ? linePhoto(p, v) : null;
   const name = p ? pick(locale, p.name_en, p.name_ar) : "";
-  const max = Math.max(1, Math.min(MAX_QTY, v?.stock ?? 1));
-  const issue = l.issue === "gone" ? t.gone : l.issue === "out" ? t.out : l.issue === "short" ? t.short(v?.stock ?? 0) : "";
+  // 10 a line, the stock (not for a pre-order) and what the product's limit leaves beside its other lines
+  const limit = p?.max_per_order ?? null;
+  const others = p ? productInCart(cart, p) - l.item.qty : 0;
+  const max = Math.max(1, Math.min(MAX_QTY, p?.preorder ? MAX_QTY : v?.stock ?? 1, limit === null ? MAX_QTY : limit - others));
+  const atLimit = limit !== null && p !== null && others + l.item.qty >= limit;
+  const issue = l.issue === "gone" ? t.gone : l.issue === "out" ? t.out : l.issue === "short" ? t.short(v?.stock ?? 0) : l.issue === "max" && limit !== null ? sp.perOrder(limit) : "";
   const label = v ? variantLabel(v, locale) : "";
   return (
     <li className={`st-line${l.issue ? " bad" : ""}`}>
@@ -171,11 +192,12 @@ function Line({ l, t, w, x, locale }: { l: CartLine; t: StoreText; w: W4Text; x:
       <div className="st-line-mid">
         {p ? <Link href={productHref(p)} className="st-line-name">{name}</Link> : <span className="st-line-name">{t.unavailable}</span>}
         {(label || (p && l.item.qty > 1)) && <small>{[label, p && l.item.qty > 1 ? x.times(l.item.qty, sar(l.unit)) : ""].filter(Boolean).join(" · ")}</small>}
-        {issue && <p className="st-line-issue" role="status">{issue}</p>}
+        {p?.preorder && <PreorderLine ships={p.ships_on ? dayLabel(p.ships_on, intlOf(locale)) : null} x={sp} className="st-line-pre" />}
+        {issue ? <p className="st-line-issue" role="status">{issue}</p> : atLimit && <p className="st-line-max">{sp.perOrder(limit)}</p>}
       </div>
       <Amt className="st-line-tot">{sar(l.issue ? l.unit * l.item.qty : l.total)}</Amt>
       <div className="st-line-acts">
-        {p && v && v.stock > 0 ? (
+        {p && v && (v.stock > 0 || p.preorder) ? (
           <div className="st-qty sm" role="group" aria-label={`${t.qty}: ${name}`}>
             <button type="button" onClick={() => cartSetQty(l.item.variant, l.item.qty - 1)} disabled={l.item.qty <= 1} aria-label={t.less}><Ic name="minus" size={15} /></button>
             <output>{l.item.qty}</output>

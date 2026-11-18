@@ -80,7 +80,7 @@ export function checkoutBody(f: { items: CartItem[]; fulfil: Fulfil | "digital";
 /** Where the checkout's refusal (api/store/checkout, lib/pay/http.ts payError) belongs on the page: a field,
  *  the cart line it names, or the form as a whole. */
 export function refusalPlace(error: string): { field?: string; line?: true } {
-  if (error === "stock" || error === "gone" || error === "no_ship") return { line: true };
+  if (error === "stock" || error === "gone" || error === "no_ship" || error === "max_qty") return { line: true };
   if (error === "phone" || error === "name" || error === "email" || error === "city") return { field: error };
   if (error === "address") return { field: "address" };
   // the store build (2026-11-15): the district a Jeddah delivery does not serve, the delivery slot, the code, the gift card

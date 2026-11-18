@@ -8,6 +8,8 @@ import { linePhotos, productHref, relatedOf, type StoreProduct } from "@/lib/sto
 import { returnsAnswers } from "@/lib/policies";
 import { storeSwitches } from "@/lib/store-settings";
 import { waDigits } from "@/lib/store-pdp";
+import { dayLabel } from "@/lib/store-checkout";
+import { intlOf } from "@/i18n/locales";
 import { allWhens, type StoreState } from "./store-data";
 import type { TopProps } from "./ProductTop";
 
@@ -49,5 +51,7 @@ export function topProps(s: StoreState, p: StoreProduct, locale: string): TopPro
     // Worker secret): the cart's express button asks the same (app/[locale]/store/cart/page.tsx)
     applePay: s.settings.enabled && payReady() && !!payEnv().APPLE_PAY_DOMAIN_FILE,
     href: `${SITE_URL}${productHref(p)}`,
+    // a pre-order's day it ships by, written here (the server has every language's dates)
+    ships: p.preorder && p.ships_on ? dayLabel(p.ships_on, intlOf(locale)) : null,
   };
 }

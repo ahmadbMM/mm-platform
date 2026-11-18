@@ -1,6 +1,7 @@
 import { Link } from "@/i18n/navigation";
 import { sized, srcSet } from "@/lib/img";
-import { categoryHref, type StoreCategory } from "@/lib/store-core";
+import { categoryHref } from "@/lib/store-core";
+import type { CatChip, CatTile } from "@/lib/store-cats";
 import type { StoreText } from "./Store.text";
 import type { W2Text } from "./w2.text";
 import { NoPhoto } from "./bits";
@@ -16,19 +17,21 @@ import "./sx-B1.css";
  *  page. On a phone and a tablet a row of chips like a category page's, so the first products show in the first screen;
  *  on a computer a row of short panels, each with its first product's photo on the soft panel and the category's name
  *  (All is the heading there). */
-export function CategoryTiles({ tiles, t }: { tiles: { cat: StoreCategory; image: string | null }[]; t: StoreText }) {
+//   Since the product-management build (2026-11-19) the categories are staff's (lib/store-cats.ts catTiles: the first
+// level, each named in the page's language, with staff's photo or its first product's).
+export function CategoryTiles({ tiles, t }: { tiles: CatTile[]; t: StoreText }) {
   if (tiles.length < 2) return null;
   return (
     <nav className="st-tiles" aria-label={t.catsLabel}>
       <ul>
         <li className="st-tile-all"><Link href="/store" className="st-tile" aria-current="page"><span className="st-tile-name">{t.cats.all}</span></Link></li>
-        {tiles.map(({ cat, image }) => (
+        {tiles.map(({ cat, name, image }) => (
           <li key={cat}>
             <Link href={categoryHref(cat)} className="st-tile">
               <span className="st-tile-img" aria-hidden="true">
                 {image ? <img src={sized(image, 640)} srcSet={srcSet(image)} sizes="(max-width: 999px) 1px, 160px" alt="" loading="lazy" decoding="async" /> : <NoPhoto />}
               </span>
-              <span className="st-tile-name">{t.cats[cat] ?? cat}</span>
+              <span className="st-tile-name"><bdi>{name}</bdi></span>
             </Link>
           </li>
         ))}
@@ -37,12 +40,16 @@ export function CategoryTiles({ tiles, t }: { tiles: { cat: StoreCategory; image
   );
 }
 
-/** A category page's chips (F02): All (the store page) and each category with a product, this one filled. */
-export function CategoryChips({ cats, at, t }: { cats: StoreCategory[]; at: StoreCategory; t: StoreText }) {
+/** A category page's chips (F02): All (the store page) and each category with a product, this one filled. A category
+ *  with sub-categories has a second row the same way (`all`: its own page, filled while no sub-category is open; `label`:
+ *  the row's name for screen readers). */
+export function CategoryChips({ cats, at, t, all = "/store", label, sub }: {
+  cats: CatChip[]; at: string | null; t: StoreText; all?: string; label?: string; sub?: boolean;
+}) {
   return (
-    <nav className="st-chips st-chips-nav" aria-label={t.catsLabel}>
-      <Link href="/store">{t.cats.all}</Link>
-      {cats.map((c) => <Link key={c} href={categoryHref(c)} aria-current={c === at ? "page" : undefined}>{t.cats[c] ?? c}</Link>)}
+    <nav className={`st-chips st-chips-nav${sub ? " st-chips-sub" : ""}`} aria-label={label ?? t.catsLabel}>
+      <Link href={all} aria-current={sub && at === null ? "page" : undefined}>{t.cats.all}</Link>
+      {cats.map((c) => <Link key={c.cat} href={categoryHref(c.cat)} aria-current={c.cat === at ? "page" : undefined}><bdi>{c.name}</bdi></Link>)}
     </nav>
   );
 }
