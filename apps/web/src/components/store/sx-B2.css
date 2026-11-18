@@ -1,0 +1,55 @@
+/* ── The product page, the "do all" build of 2026-11-18 (builder B2): SM05-B a phone's first screen (one-line back link,
+   4:3 photo, the price under the name), P21 the way to have it above Add, SM06-B the size grid's container, SM09-B
+   "View cart" after Add, N01 Share, N12/N16/N25 the buy box's facts, N24 "See it on video", N36 the order-by line,
+   N13 the handover time. Store tokens (--st-*), logical properties only, nothing fixed to the screen. ── */
+
+/* SM05-B: on a phone one line back to the category instead of the trail, and less paper above it */
+.st-b2-back { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin: -6px 0 2px; padding-inline-end: 8px; color: var(--st-ink-2) !important; font-size: 14px; font-weight: 600; text-decoration: none; }
+@media (hover: hover) { .st-b2-back:hover { color: var(--st-ink) !important; } }
+@media (max-width: 767px) {
+  .st.st-b2-pdp { padding-top: 10px; }
+  .st-b2-crumbs { display: none; }
+}
+@media (min-width: 768px) { .st-b2-back { display: none; } }
+
+/* SM06-B: the size buttons' column is the container their grid reads (store.css .st-sizes) */
+.st-b2-szbox { container: st-sz / inline-size; }
+
+/* N01: Share beside Save, the same round button */
+.st-b2-share { flex: none; width: 44px; height: 44px; margin-top: 2px; padding: 0; border-radius: 50%; border: 1px solid var(--st-ctl); background: #fff; color: var(--st-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color .2s ease, color .2s ease; }
+@media (hover: hover) { .st-b2-share:hover { border-color: rgba(26, 25, 25, .4); } }
+.st-b2-share.is-done { color: var(--st-green); border-color: rgba(7, 122, 75, .4); }
+.st-b2-share:focus-visible { outline: 2.5px solid var(--st-green); outline-offset: 2px; }
+
+/* P21, SM05-B: How to get it, the step before Add, at the top of the buy box */
+.st-b2-way { display: flex; flex-direction: column; gap: 10px; }
+.st-b2-way-k { display: flex; align-items: center; gap: 8px; margin: 0; font-size: 15px; font-weight: 700; color: var(--st-ink); }
+.st-b2-way .st-ways li { align-items: flex-start; }
+.st-b2-way .st-ways small.st-b2-by, .st-b2-by { color: var(--st-green-2); font-weight: 600; }
+.st-b2-free { margin: 0; }
+
+/* SM09-B: "View cart" where the quantity was, while the button says Added */
+.st-b2-viewcart { flex: 0 1 auto; display: inline-flex; align-items: center; justify-content: center; min-height: 52px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--st-ctl); background: #fff; color: var(--st-ink) !important; font-size: 15px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+@media (hover: hover) { .st-b2-viewcart:hover { border-color: rgba(26, 25, 25, .4); } }
+
+/* N12, N16, N25: facts as rows, no sentence under them */
+.st-b2-facts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.st-b2-facts:empty { display: none; }
+.st-b2-fact { display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; color: var(--st-ink-2); line-height: 1.35; }
+.st-b2-fact .st-ic { color: var(--st-green); }
+
+/* N24: the WhatsApp question and the video call side by side, wrapping on a narrow phone */
+.st-b2-asks { display: flex; flex-wrap: wrap; justify-content: center; gap: 0 4px; }
+
+/* N13: the 20-minute handover under "Collect fully built" */
+.st-b2-ho { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 10px; padding: 8px 12px; border-radius: var(--st-r-ctl); background: var(--st-well); font-size: 14px; }
+.st-b2-ho > span { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; min-width: 0; }
+.st-b2-ho .st-ic { color: var(--st-green); }
+.st-b2-ho .st-linkbtn { min-height: 44px; }
+.st-b2-slots { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin: 0 0 6px; }
+.st-b2-slots button { min-height: 48px; border-radius: var(--st-r-ctl); border: 1px solid var(--st-ctl); background: #fff; color: var(--st-ink); font: inherit; font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; cursor: pointer; }
+.st-b2-slots button[aria-pressed="true"] { background: var(--st-ink); border-color: var(--st-ink); color: #fbf9f4; }
+.st-b2-slots button:disabled { color: var(--st-ink-4); background: #fbf9f4; cursor: default; }
+@media (hover: hover) { .st-b2-slots button:hover:not(:disabled):not([aria-pressed="true"]) { border-color: rgba(26, 25, 25, .45); } }
+.st-b2-slots-day { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--st-ink-2); }
+.st-b2-slots-note { margin: 0; font-size: 14px; color: var(--st-ink-2); }

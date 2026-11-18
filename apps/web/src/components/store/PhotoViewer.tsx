@@ -4,7 +4,8 @@ import { useEffect, useRef, useState, type PointerEvent as RPointerEvent, type W
 import { useDialogFocus } from "@/components/site/use-dialog-focus";
 import { useLocalize } from "@/i18n/TxProvider";
 import { isRtl } from "@/i18n/locales";
-import { sized, srcSet } from "@/lib/img";
+import { sized } from "@/lib/img";
+import { pdpSrcSet } from "@/lib/sx-B2";
 import { clampPan, clampScale, keyStep, pinchScale, stepPhoto, swipeStep } from "@/lib/store-pdp";
 import { T } from "./Store.text";
 import { T as W } from "./w3a.text";
@@ -130,7 +131,7 @@ export default function PhotoViewer({ photos, start, locale, name, altOf, onClos
           if (lastType.current !== "mouse") return;
           setZ(z.s > 1 ? FLAT : { s: 2.5, x: 0, y: 0 });
         }} onWheel={wheel}>
-        <img key={src} src={sized(src, 1280)} srcSet={srcSet(src)} sizes="100vw" alt={alt} draggable={false}
+        <img key={src} src={sized(src, 1280)} srcSet={pdpSrcSet(src)} sizes="100vw" alt={alt} draggable={false}
           style={{ transform: `translate3d(${z.x}px, ${z.y}px, 0) scale(${z.s})` }} className={z.s > 1 ? "zoomed" : undefined} />
       </div>
       {n > 1 && (

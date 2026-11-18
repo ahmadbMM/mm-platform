@@ -20,7 +20,11 @@
 // application/octet-stream, so a .gpx is always handed over as a download, never opened as a page
 // (GPX is XML, which a browser would render - and an XHTML script in it would run as the site). Eight seconds per fetch: past that the answer is a 504 nobody
 // keeps, not a Worker hanging on a slow bucket.
-const WIDTHS = new Set(["640", "1280"]);
+// The "do all" build (2026-11-18, P09): ?w=320 for a thumbnail and ?w=1600 for a large sharp screen as well. Until the
+// staff page saves those two copies too, each is answered with the nearest copy it does save (320 -> 640, 1600 -> 1280),
+// then the photo itself, so nothing gets heavier than before.
+const WIDTHS = new Set(["320", "640", "1280", "1600"]);
+const NEAREST: Record<string, string> = { "320": "640", "1600": "1280" };
 const TIMEOUT_MS = 8000;
 const SERVED = /^(?:image\/(?!svg)[a-z0-9.+-]+|application\/pdf)\b/i;
 /** How long Cloudflare's edge keeps a file fetched from the bucket: a day. */
@@ -48,10 +52,11 @@ export async function GET(req: Request, { params }: { params: Promise<{ path: st
   const w = new URL(req.url).searchParams.get("w") ?? "";
   const small = WIDTHS.has(w) && /\.(jpe?g|png|webp)$/i.test(rel) ? rel.replace(/\.(jpe?g|png|webp)$/i, `.w${w}.webp`) : "";
   let res = small ? await fromStorage(base + small) : null;
+  if (small && (!res || !res.ok) && NEAREST[w]) res = await fromStorage(base + rel.replace(/\.(jpe?g|png|webp)$/i, `.w${NEAREST[w]}.webp`));
   // A PNG narrower than 1280 px has no 1280 copy (the staff page never makes one larger than the
   // photo), so ?w=1280 used to send the whole PNG - 1.8 MB for Home's "Ride with us" card. Its 640
   // copy is sent instead: a little softer on a sharp screen, a twentieth of the weight.
-  if (small && (!res || !res.ok) && w === "1280" && /\.png$/i.test(rel)) res = await fromStorage(base + rel.replace(/\.png$/i, ".w640.webp"));
+  if (small && (!res || !res.ok) && (w === "1280" || w === "1600") && /\.png$/i.test(rel)) res = await fromStorage(base + rel.replace(/\.png$/i, ".w640.webp"));
   if (!res || !res.ok) res = await fromStorage(base + rel);
   if (!res) return new Response("The photo could not be fetched", { status: 504, headers: { "cache-control": "no-store" } });
   if (!res.ok) return new Response("Not found", { status: 404, headers: { "cache-control": "public, max-age=60" } });
