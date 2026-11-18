@@ -2663,5 +2663,8 @@
   "{0} × {1}": "{0} × {1}",
   "{0}, your next ride at MicroMobility is on me. Book it here: {1}": "{0}さん、MicroMobilityでの次のライドは私からのプレゼントです。こちらから予約してください：{1}",
   "{0}-minute handover": "{0}分のお引き渡し",
-  "{0}° at {1}": "{1}時点で{0}°"
+  "{0}° at {1}": "{1}時点で{0}°",
+  "For kids": "子ども向け",
+  "Time slot": "時間帯",
+  "{0} sessions left": "残り{0}回"
 }

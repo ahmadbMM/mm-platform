@@ -73,7 +73,7 @@ export const T = {
     packs: "Packs",
     packLessons: (n: number) => `${n} sessions`,
     packBuy: "Buy",
-    packLeft: (n: number) => `${n} left`,
+    packLeft: (n: number) => `${n} sessions left`,
     packUse: "Use my pack",
     packUntil: (d: string) => `Until ${d}`,
     close: "Close",

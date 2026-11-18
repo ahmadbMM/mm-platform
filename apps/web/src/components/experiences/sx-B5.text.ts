@@ -9,7 +9,7 @@ export const T = {
     week: "This week",
     weekend: "This weekend",
     women: "Women only",
-    kids: "Kids",
+    kids: "For kids",
     showAll: "Show all",
     noMatch: "No dates match.",
     every: "Every {0}",

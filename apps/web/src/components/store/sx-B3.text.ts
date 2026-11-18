@@ -37,7 +37,7 @@ export const T = {
     // N13 the handover slot of "Collect fully built"
     handover: "Handover",
     handoverDay: "Handover day",
-    handoverTime: "Time",
+    handoverTime: "Time slot",
     anyTime: "Any time",
 
     // N15 handed over at one of the rider's own sessions

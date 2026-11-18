@@ -25,7 +25,7 @@ export const T = {
     pickupOn: (d: string) => `Pickup on ${d}`,
     changeTime: "Change time",
     pickDay: "Day",
-    pickTime: "Time",
+    pickTime: "Time slot",
     saveTime: "Save",
     timeChanged: "Time changed",
     noTimes: "No other times are open.",

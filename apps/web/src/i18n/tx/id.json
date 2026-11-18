@@ -2663,5 +2663,8 @@
   "{0} × {1}": "{0} × {1}",
   "{0}, your next ride at MicroMobility is on me. Book it here: {1}": "{0}, sesi bersepeda kamu berikutnya di MicroMobility aku yang traktir. Pesan di sini: {1}",
   "{0}-minute handover": "Serah terima {0} menit",
-  "{0}° at {1}": "{0}° pukul {1}"
+  "{0}° at {1}": "{0}° pukul {1}",
+  "For kids": "Untuk anak",
+  "Time slot": "Slot waktu",
+  "{0} sessions left": "Sisa {0} sesi"
 }

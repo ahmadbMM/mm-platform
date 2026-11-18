@@ -2663,5 +2663,8 @@
   "{0} × {1}": "{0} × {1}",
   "{0}, your next ride at MicroMobility is on me. Book it here: {1}": "{0}, seu próximo passeio na MicroMobility é por minha conta. Reserve aqui: {1}",
   "{0}-minute handover": "Entrega técnica de {0} minutos",
-  "{0}° at {1}": "{0}° às {1}"
+  "{0}° at {1}": "{0}° às {1}",
+  "For kids": "Para crianças",
+  "Time slot": "Horário",
+  "{0} sessions left": "Sessões restantes: {0}"
 }

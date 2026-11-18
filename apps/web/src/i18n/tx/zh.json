@@ -2663,5 +2663,8 @@
   "{0} × {1}": "{0} × {1}",
   "{0}, your next ride at MicroMobility is on me. Book it here: {1}": "{0}，你在 MicroMobility 的下一次骑行由我请客。在这里预订：{1}",
   "{0}-minute handover": "{0} 分钟交车",
-  "{0}° at {1}": "{1} 气温 {0}°"
+  "{0}° at {1}": "{1} 气温 {0}°",
+  "For kids": "适合儿童",
+  "Time slot": "时间段",
+  "{0} sessions left": "剩余 {0} 节课"
 }

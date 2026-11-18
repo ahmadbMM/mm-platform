@@ -2663,5 +2663,8 @@
   "{0} × {1}": "{0} × {1}",
   "{0}, your next ride at MicroMobility is on me. Book it here: {1}": "{0}, sagot ko na ang susunod mong ride sa MicroMobility. I-book ito rito: {1}",
   "{0}-minute handover": "{0} minutong handover",
-  "{0}° at {1}": "{0}° pagsapit ng {1}"
+  "{0}° at {1}": "{0}° pagsapit ng {1}",
+  "For kids": "Para sa mga bata",
+  "Time slot": "Oras",
+  "{0} sessions left": "{0} session pa ang natitira"
 }
