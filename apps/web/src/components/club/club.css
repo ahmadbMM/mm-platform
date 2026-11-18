@@ -191,3 +191,22 @@ html:is([lang="ar"], [lang="ur"]) .club-members h3 { letter-spacing: 0; }
 .club-bup-s { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #57605a; }
 .club-bup-l li:is(.done, .held) .club-bup-s { color: #077a4b; }
 .club-mine .club-bup-go { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; color: #077a4b; font-weight: 800; font-size: 13.5px; white-space: nowrap; }
+
+/* My interests (Interests.tsx; the booking app's .int-card with its .mt-chip chips, 2026-11-18): chips that flip where they
+   are, Save (and Cancel when changing a save); once saved, the picks as quiet chips and Change. */
+.club-int { border-top: 1px solid rgba(0, 0, 0, .08); padding-top: 14px; }
+.club-int h3 { display: flex; align-items: center; gap: 6px; }
+.club-int h3 .mm-ic { color: #077a4b; }
+.club-int-picks, .club-int-mine { display: flex; flex-wrap: wrap; gap: 8px; }
+.club-int-mine { list-style: none; margin: 0 0 12px; padding: 0; }
+.club-int-mine li { padding: 6px 12px; border-radius: 999px; background: rgba(7, 122, 75, .1); color: #055c38; font-size: 13.5px; font-weight: 700; }
+.club-int-chip { min-height: 44px; padding: 8px 14px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .16); background: #fff; color: #1a1919; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.club-int-chip.on { border-color: #077a4b; background: #077a4b; color: #fff; }
+.club-int-chip:focus-visible, .club-int-btn:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+.club-int-acts { display: flex; gap: 10px; margin-top: 14px; }
+.club-int-btn { min-height: 44px; padding: 10px 18px; border-radius: 12px; border: 1px solid rgba(0, 0, 0, .16); background: #fff; color: #1a1919; font: inherit; font-size: 14.5px; font-weight: 700; cursor: pointer; }
+.club-int > .club-int-btn { width: 100%; }
+.club-int-acts .club-int-btn { flex: 1 1 0; }
+.club-int-save { border-color: #077a4b; background: #077a4b; color: #fff; }
+.club-int-btn:disabled { opacity: .6; cursor: default; }
+.club-int-err { margin: 10px 0 0; font-size: 13.5px; font-weight: 600; color: #a3271d; }

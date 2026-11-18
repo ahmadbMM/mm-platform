@@ -20,6 +20,9 @@ import MyMonth from "./MyMonth";
 import PlanSaturdays from "./PlanSaturdays";
 import BuildupPlan from "./BuildupPlan";
 import type { BupPlan } from "@/lib/buildup-plan";
+import { InterestsBox, InterestsCard } from "./Interests";
+import type { Interests } from "@/lib/member-interests";
+import { interestWords } from "./MemberHub.words";
 import { memberHubWords } from "./MemberHub.words";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
@@ -34,7 +37,8 @@ import { memberHubWords } from "./MemberHub.words";
 // Since the new features build (2026-11-13), the app's My month (F13, from the 26th) after their rides and Plan my
 // Saturdays (F10) after the upcoming rides (lib/member-hub.ts): each drawn only when its read answered.
 // The Community features round (2026-11-18), placed as the app's tab places them: the Build-up plan (BuildupPlan.tsx) right
-// after the card, as the app's comes right after its first card.
+// after the card, as the app's comes right after its first card; My interests (Interests.tsx) after it until the member
+// first saves them, then at the end of the area.
 type Props = {
   locale: string;
   L: Locale;
@@ -74,9 +78,11 @@ type Props = {
   kindName?: (k: RideKind) => string;
   /** The Build-up plan (lib/buildup-plan.ts) and the event's name in the page's language; none: not drawn. */
   bup?: { plan: BupPlan; name: string } | null;
+  /** My interests (member_interests_get, lib/member-interests.ts); none: no card. */
+  interests?: Interests | null;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup, interests }: Props) {
   const t = serverLocalize(T, locale);
   const ask = serverLocalize(ASK_T, locale);
   const N = (n: number) => fmtNum(n, locale);
@@ -90,6 +96,7 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
     return m ? <bdi dir="ltr">{m[1]} – {m[2]}</bdi> : time ? <bdi dir="ltr">{time}</bdi> : null;
   };
   return (
+    <InterestsBox initial={interests ?? null} words={interestWords(locale)}>
     <div className="club-mine club-members">
       <h2>{t.title}</h2>
       {isBirthday(a.birthDate, today) && (
@@ -110,6 +117,7 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
       <p className="club-mine-next">{a.tier >= 2 || !a.next ? t.top : t.toNext(N(Math.max(0, a.next - a.credits)), tierNames[a.tier + 1])}</p>
 
       {bup && <BuildupPlan locale={locale} plan={bup.plan} name={bup.name} bookAt={(id) => bookAt(id, "saturday")} />}
+      <InterestsCard at="first" />
 
       {title && (
         <section className="club-comm" aria-labelledby="club-comm-h">
@@ -184,6 +192,8 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
           <ul>{anns.map((x, i) => <li key={i}>{x.text}{x.cta && x.href ? <> <a href={localHref(x.href, locale)}>{x.cta} {arrow}</a></> : null}</li>)}</ul>
         </section>
       )}
+      <InterestsCard at="end" />
     </div>
+    </InterestsBox>
   );
 }
