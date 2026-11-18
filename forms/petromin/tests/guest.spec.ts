@@ -367,7 +367,7 @@ test('@webkit Edit after a reload asks for the account again, then saves the cha
   await page.goto('/petromin?lang=en');
   await expect(page.locator('#chip-booking-value')).toHaveText('I-003');
   await page.click('#edit');
-  expect(looked[0]).toEqual({ p_invite_no: 'I-003', p_phone: GUEST.phone, p_session_id: S1.id });
+  await expect.poll(() => looked[0]).toEqual({ p_invite_no: 'I-003', p_phone: GUEST.phone, p_session_id: S1.id }); // the lookup answers after the tap
   // No account in memory after the reload: sign in first.
   await expect(page.locator('#ac-signin')).toBeVisible();
   await expect(page.locator('#form .title')).toHaveText('Edit your booking');
