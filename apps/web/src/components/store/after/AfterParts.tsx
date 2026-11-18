@@ -147,7 +147,7 @@ export function afterParts(a: {
         <Link className="bk-btn2" href={`/workshop?checkup=${encodeURIComponent(no)}`}><AfterIcon name="calendarPlus" size={18} />{t.checkupBook}</Link>
       )}
       {checkCal && <a className="bk-btn2" href={checkCal}><AfterIcon name="calendarPlus" size={18} />{t.addCal}</a>}
-      {ride && <Link className="bk-btn2" href="/experiences?kind=saturday"><AfterIcon name="bike" size={18} />{t.rideSat}</Link>}
+      {ride && <Link className="bk-btn2" href="/experiences?k=saturday"><AfterIcon name="bike" size={18} />{t.rideSat}</Link>}
       {push && k && <OrderPush no={o.no} k={k} on={after?.push === true} />}
       <HomeScreen />
     </>
