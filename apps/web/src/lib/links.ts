@@ -22,6 +22,8 @@ export const NAV_LINKS: NavLink[] = [
   { key: "routes", href: "/routes", ...phrase("Routes", "المسارات") },
   { key: "gallery", href: "/gallery", ...phrase("Gallery", "المعرض") },
   { key: "journal", href: "/journal", ...phrase("Journal", "المدونة") },
+  // Testimonials (2026-11-18): under Community, only while their launch switch is on (lib/site.ts hiddenPages)
+  { key: "testimonials", href: "/testimonials", ...phrase("Testimonials", "آراء الدرّاجين") },
   { key: "business", href: "/business", ...phrase("Business", "للشركات") },
   { key: "about", href: "/about", ...phrase("About", "من نحن") },
   { key: "help", href: "/help", ...phrase("Help", "المساعدة") },
@@ -30,7 +32,7 @@ export const NAV_LINKS: NavLink[] = [
 /** The header (owner, 2026-09-25): the sections, with Community holding the pages its riders
  *  use, and every page reachable from it. Bikes (the catalogue, 2026-09-27) sits next to the
  *  store it sells for. Help is not a header section - the footer and the search reach it. */
-export const COMMUNITY = { key: "community", ...phrase("Community", "المجتمع"), pages: ["club", "ambassadors", "events", "routes", "gallery", "journal"] };
+export const COMMUNITY = { key: "community", ...phrase("Community", "المجتمع"), pages: ["club", "ambassadors", "events", "routes", "gallery", "journal", "testimonials"] };
 export const HEADER: string[] = ["store", "bikes", "experiences", "workshop", "community", "business", "about"];
 
 

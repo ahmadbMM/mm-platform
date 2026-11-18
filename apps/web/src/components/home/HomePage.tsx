@@ -7,15 +7,18 @@ import BuildStory, { type Step } from "@/components/home/BuildStory";
 import PhotoWall from "@/components/home/PhotoWall";
 import FitQuiz, { type QuizText } from "@/components/home/FitQuiz";
 import OpenNow from "@/components/home/OpenNow";
-import ReviewsStrip from "@/components/home/ReviewsStrip";
+import ReviewsStrip, { type Review } from "@/components/home/ReviewsStrip";
 import LazyMap from "@/components/home/LazyMap";
 import LazyBackgrounds from "@/components/site/LazyBackgrounds";
 import { ArrowIcon, StarIcon } from "@/components/site/Icons";
 import LearnTeaser, { type LearnTeaserText } from "@/components/learn/LearnTeaser";
 import "@/components/site/site.css";
 import "@/components/home/home.css";
+import "@/components/testimonials/testimonials.css";
+import { T as TM } from "@/components/testimonials/Testimonials.text";
 import { bookingLink, localHref, pageOf } from "@/lib/links";
-import { serverL } from "@/i18n/dicts";
+import { tmStripItems, type TmCard } from "@/lib/testimonials";
+import { serverL, serverLocalize } from "@/i18n/dicts";
 import { localeInfo } from "@/i18n/locales";
 import { bg, sized, srcSet } from "@/lib/img";
 
@@ -30,8 +33,10 @@ const S = (v: unknown) => (typeof v === "string" ? v : "");
 const N = (v: unknown) => (typeof v === "number" ? v : 0);
 const list = (v: unknown) => (Array.isArray(v) ? (v as Sec[]) : []);
 
-/** `learn`: the Learn to ride question (Experiences > Learn to ride), or null while it is not offered. */
-export default function HomePage({ locale, home, site, preview, hidden = [], learn = null, shop = false }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean; hidden?: string[]; learn?: LearnTeaserText | null; shop?: boolean }) {
+/** `learn`: the Learn to ride question (Experiences > Learn to ride), or null while it is not offered. `featured`: the
+ *  testimonials staff featured (12 at most), read only while their launch switch is on: "What riders say" shows them
+ *  after the reviews staff typed in, and with neither the strip stays hidden as before. */
+export default function HomePage({ locale, home, site, preview, hidden = [], learn = null, shop = false, featured = [] }: { locale: string; home: Record<string, Sec>; site: Record<string, Sec>; preview: boolean; hidden?: string[]; learn?: LearnTeaserText | null; shop?: boolean; featured?: TmCard[] }) {
   const tx = serverL(locale);
   // A button to a page staff have switched off would only reload Home (the proxy sends it back
   // here): a ride page opens the booking app instead, and any other button is left out - it used to
@@ -51,7 +56,10 @@ export default function HomePage({ locale, home, site, preview, hidden = [], lea
   const steps: Step[] = list(st.steps).map((s) => ({ title: S(s.title), text: S(s.text), image: S(s.image) })).filter((s) => s.title);
   const photos = list(c.photos).map((p) => S(p.image)).filter(Boolean);
   const stats = list(c.stats).map((s) => ({ value: S(s.value), label: S(s.label) })).filter((s) => s.value && s.label);
-  const reviews = list(r.items).map((x) => ({ name: S(x.name), role: S(x.role), quote: S(x.quote) })).filter((x) => x.name && x.quote);
+  const reviews: Review[] = list(r.items).map((x) => ({ name: S(x.name), role: S(x.role), quote: S(x.quote) })).filter((x) => x.name && x.quote);
+  // the featured testimonials, as riders wrote them (their own direction), each with its stars; the "since" line, else
+  // what it is about, under the name the rider chose (or "A MicroMobility rider")
+  if (featured.length) reviews.push(...tmStripItems(featured, serverLocalize(TM, locale)));
   const rating = N(v.rating);
   const recs = (k: "road" | "city" | "trail") => ({ name: S(q[`${k}Name`]), image: S(q[`${k}Image`]), price: N(q[`${k}Price`]),
     why: { speed: S(q[`${k}Speed`]), comfort: S(q[`${k}Comfort`]), value: S(q[`${k}Value`]) } });

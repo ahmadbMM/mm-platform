@@ -19,6 +19,8 @@ import { learnTeaser } from "@/components/learn/LearnTeaser";
 import ClaimPage from "@/components/claim/ClaimPage";
 import { claimToken } from "@/lib/claim";
 import { storeOpen } from "@/lib/store-core";
+import { testimonialsOn } from "@/lib/testimonials";
+import { readFeatured } from "@/lib/testimonials-server";
 
 // micromobility.sa. While the site is closed (Coming Soon on in the staff page, or Home not
 // released yet) visitors get the Coming Soon screen and staff previewing get the real Home.
@@ -88,10 +90,13 @@ export default async function Page({ params, searchParams }: { params: Promise<{
   // The Learn to ride question, from the Experiences page's content: only while staff offer
   // lessons and Experiences is open - the sign-up it leads to lives under /experiences.
   const learn = hidden.includes("experiences") ? null : learnTeaser(resolvePage(experiencesSchema, s.content, L).learn);
+  // "What riders say" takes the featured testimonials too, once their launch switch is on (lib/testimonials.ts); while
+  // it is off nothing is read and the strip is as before
+  const featured = testimonialsOn(s.content) ? await readFeatured() : [];
   return (
     <>
       <JsonLd data={companyData(site as Record<string, Record<string, unknown>>, locale)} />
-      <HomePage locale={locale} home={resolvePage(homeSchema, s.content, L)} site={site} preview={s.previewing} hidden={hidden} learn={learn} shop={storeOpen(s.content)} />
+      <HomePage locale={locale} home={resolvePage(homeSchema, s.content, L)} site={site} preview={s.previewing} hidden={hidden} learn={learn} shop={storeOpen(s.content)} featured={featured} />
     </>
   );
 }

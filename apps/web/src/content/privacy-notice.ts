@@ -128,6 +128,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "Planning rides and sessions around what our members suggest, and telling you in your Updates list when yours is planned or happens"
      ],
      [
+      "Testimonials: the words you write about our rides and services, your star rating, what it is about, your name as you choose to show it (your full name, your first name and last initial, or none), a photo if you add one, and, beside a name, the year you started riding with us and how many rides you have done",
+      "Always optional: only if you write one and tick that MicroMobility may publish it. Seen by our staff; once our staff publish it, by anyone on micromobility.sa. You can delete yours at any time in Account.",
+      "Publishing what riders say about us on our website, with your consent. A photo is deleted as soon as our team decides not to publish it."
+     ],
+     [
       "The mentorship programme (Community members only): if you register as a mentee, your university, field of study, city, country, starting year, the help you want, your goal and the mentor gender you prefer; if you register as a mentor, where and what you studied, your work, the places you know, how you can help and what you tell us",
       "Optional: only if you register. A mentee’s university and field of study are shown to Community members without their name; their city, country, starting year, the help wanted, their goal and the mentor gender they prefer are seen by our staff only. What a mentor tells us is seen by our staff only; a short line about their experience, without their name, is shown to the one student our staff propose them to. Once you both accept, we share your first name and WhatsApp number with that one person. You can step back at any time; we then stop sharing them.",
       "Matching students starting university with Community members who can help them, and following up on each match"
@@ -237,7 +242,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>To share an athlete’s details with Kamin Sports for Victory Lap:</strong> your consent, which we ask for before you can take part in the race.",
     "<strong>To share an athlete’s details with WeSportify, Mile and Gymnation for the Arena Heros Hybrid Race:</strong> your consent, which we ask for before you can take part in the race.",
     "<strong>To share a donor’s details with the partners and third parties of a blood donation event:</strong> your consent, which we ask for before you can register.",
-    "<strong>To share a mentor’s or a mentee’s first name and WhatsApp number with their match:</strong> your consent, which we ask for when you register and which you withdraw by stepping back."
+    "<strong>To share a mentor’s or a mentee’s first name and WhatsApp number with their match:</strong> your consent, which we ask for when you register and which you withdraw by stepping back.",
+    "<strong>To publish your testimonial on our website:</strong> your consent, the box you tick when you send it, which you withdraw by deleting it."
    ]
   },
   {
@@ -387,7 +393,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>The proof you attach to a badge request:</strong> deleted as soon as our team answers the request.",
     "<strong>Your Updates list:</strong> each message is deleted after 90 days.",
     "<strong>The Saturdays you plan to come:</strong> deleted when the month ends.",
-    "<strong>Your interests:</strong> kept until you change them or your account is deleted."
+    "<strong>Your interests:</strong> kept until you change them or your account is deleted.",
+    "<strong>Testimonials:</strong> kept until you delete yours or our staff remove it; a photo is deleted as soon as our team decides not to publish it."
    ]
   },
   {
@@ -553,6 +560,11 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
       "لتخطيط الجولات والفعاليات وفق ما يقترحه أعضاؤنا، ولإبلاغك في قائمة التحديثات عندما نخطط لاقتراحك أو ننفّذه"
      ],
      [
+      "الشهادات: الكلمات التي تكتبها عن جولاتنا وخدماتنا، وتقييمك بالنجوم، وموضوعها، واسمك كما تختار أن يظهر (اسمك الكامل، أو اسمك الأول والحرف الأول من اسم العائلة، أو دون اسم)، وصورة إن أضفتها، وإلى جانب الاسم السنة التي بدأت فيها الركوب معنا وعدد جولاتك",
+      "اختياري دائماً: فقط إن كتبت شهادة ووافقت على أن تنشرها MicroMobility. يراها موظفونا، وبعد أن ينشرها موظفونا يراها أي زائر لموقع micromobility.sa. يمكنك حذف شهادتك في أي وقت من «الحساب».",
+      "لنشر ما يقوله الراكبون عنا على موقعنا الإلكتروني، بموافقتك. تُحذف الصورة فور أن يقرر فريقنا عدم نشر الشهادة."
+     ],
+     [
       "برنامج الإرشاد (لأعضاء المجتمع فقط): إن سجّلت كمسترشد: جامعتك وتخصصك ومدينتك ودولتك وسنة بدئك والمساعدة التي تريدها وهدفك وجنس المرشد الذي تفضّله؛ وإن سجّلت كمرشد: أين درست وماذا درست وعملك والأماكن التي تعرفها وكيف يمكنك المساعدة وما تخبرنا به",
       "اختياري: فقط إذا سجّلت. تُعرض جامعة المسترشد وتخصصه لأعضاء المجتمع دون اسمه، ولا يرى مدينته ودولته وسنة بدئه والمساعدة التي يريدها وهدفه وجنس المرشد الذي يفضّله إلا موظفونا. وما يخبرنا به المرشد لا يراه إلا موظفونا، ويُعرض سطر قصير عن خبرته، دون اسمه، على الطالب الوحيد الذي يقترحه عليه موظفونا. وبعد قبولكما كليكما، نشارك اسمك الأول ورقم واتساب الخاص بك مع ذلك الشخص وحده. ويمكنك الانسحاب في أي وقت، وعندها نتوقف عن مشاركتهما.",
       "مطابقة الطلاب الذين يبدؤون دراستهم الجامعية مع أعضاء المجتمع القادرين على مساعدتهم، ومتابعة كل مطابقة"
@@ -662,7 +674,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>لمشاركة بيانات الرياضي مع كامن سبورتس لسباق فيكتوري لاب:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
     "<strong>لمشاركة بيانات الرياضي مع WeSportify وMile وGymnation لسباق أرينا هيروز الهجين:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من المشاركة في السباق.",
     "<strong>لمشاركة بيانات المتبرع مع الشركاء والأطراف الثالثة لفعالية تبرع بالدم:</strong> موافقتك، ونطلبها منك قبل أن تتمكن من التسجيل.",
-    "<strong>لمشاركة الاسم الأول ورقم واتساب للمرشد أو المسترشد مع من تتم مطابقته معه:</strong> موافقتك، ونطلبها عند تسجيلك، وتسحبها بالانسحاب."
+    "<strong>لمشاركة الاسم الأول ورقم واتساب للمرشد أو المسترشد مع من تتم مطابقته معه:</strong> موافقتك، ونطلبها عند تسجيلك، وتسحبها بالانسحاب.",
+    "<strong>لنشر شهادتك على موقعنا الإلكتروني:</strong> موافقتك، أي المربع الذي تضع عليه علامة عند إرسالها، وتسحبها بحذف الشهادة."
    ]
   },
   {
@@ -812,7 +825,8 @@ export const PRIVACY_NOTICE: { en: NoticeBlock[]; ar: NoticeBlock[] } = {
     "<strong>الإثبات الذي ترفقه بطلب وسام:</strong> يُحذف فور ردّ فريقنا على الطلب.",
     "<strong>قائمة التحديثات:</strong> تُحذف كل رسالة بعد 90 يومًا.",
     "<strong>أيام السبت التي تنوي الحضور فيها:</strong> تُحذف بانتهاء الشهر.",
-    "<strong>اهتماماتك:</strong> نحتفظ بها حتى تغيّرها أو يُحذف حسابك."
+    "<strong>اهتماماتك:</strong> نحتفظ بها حتى تغيّرها أو يُحذف حسابك.",
+    "<strong>الشهادات:</strong> نحتفظ بها حتى تحذف شهادتك أو يزيلها موظفونا؛ وتُحذف الصورة فور أن يقرر فريقنا عدم نشر الشهادة."
    ]
   },
   {

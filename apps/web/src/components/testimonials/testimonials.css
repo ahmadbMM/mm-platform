@@ -1,0 +1,100 @@
+/* Testimonials: the public page (micromobility.sa/testimonials), the page where one is written (/testimonials/write),
+   the ask after a high rating (inside the rating's pop-up or its card on My Account) and the stars on Home's strip.
+   Stars are drawn (Stars.tsx), never a character. */
+
+/* stars: five, each full, half (filled from the reading side) or empty */
+.tm-stars { display: inline-flex; align-items: center; gap: 2px; line-height: 0; vertical-align: middle; }
+.tm-star { position: relative; display: inline-block; flex: none; }
+.tm-star svg { display: block; fill: #e6e0d4; }
+.tm-star.is-full svg { fill: #f0a500; }
+.tm-star-cut { position: absolute; top: 0; bottom: 0; inset-inline-start: 0; width: 50%; overflow: hidden; }
+.tm-star-cut svg { fill: #f0a500; }
+.hm-review-stars { margin-bottom: -4px; }
+
+/* the public page */
+.tm-page h1 { margin-bottom: 22px; }
+.tm-sum { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px; margin: 0 0 30px; }
+.tm-avg { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0; font-size: 17px; font-weight: 700; color: #1a1919; }
+.tm-pills { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 26px; }
+.tm-pills a, .tm-radios label { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .2); background: transparent; color: #4a534c; font-size: 13.5px; font-weight: 700; text-decoration: none; cursor: pointer; box-sizing: border-box; }
+.tm-pills a[aria-current="page"], .tm-radios label.on { background: #03ff89; border-color: #03ff89; color: #1a1919; }
+.tm-pills a:focus-visible, .tm-radios label:has(input:focus-visible), .tm-starpick label:has(input:focus-visible) { outline: 2px solid #077a4b; outline-offset: 2px; }
+.tm-grid { columns: 3 300px; column-gap: 16px; }
+.tm-card { break-inside: avoid; margin: 0 0 16px; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 22px; padding: 22px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 18px 60px rgba(9, 48, 26, .06); }
+.tm-photo { display: block; width: 100%; height: auto; max-height: 360px; object-fit: cover; border-radius: 14px; background: #eef1ec; }
+.tm-card blockquote { margin: 0; font-size: 16px; line-height: 1.6; color: #2b332d; white-space: pre-line; overflow-wrap: anywhere; }
+.tm-card figcaption { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 12px; }
+.tm-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tm-name { font-weight: 700; font-size: 14.5px; color: #1a1919; overflow-wrap: anywhere; }
+.tm-since { color: #57605a; font-size: 12.5px; }
+.tm-about { flex: none; font-size: 11.5px; font-weight: 700; padding: 5px 11px; border-radius: 999px; background: rgba(7, 122, 75, .1); color: #077a4b; }
+.tm-empty, .tm-note { color: #57605a; font-size: 17px; margin: 0; }
+.tm-note:empty { min-height: 200px; }
+.tm-pager { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+.tm-pager a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 20px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .2); background: #fff; color: #1a1919; font-weight: 700; font-size: 14px; text-decoration: none; }
+.tm-pager a:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+
+/* the page where one is written */
+.tm-box { max-width: 640px; box-sizing: border-box; background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 26px; padding: clamp(20px, 3.4vw, 32px); display: flex; flex-direction: column; gap: 22px; }
+.mm-site .tm-box h2, .mm-site .tm-mine h2 { font-size: clamp(20px, 2.4vw, 26px); letter-spacing: -.5px; line-height: 1.15; margin: 0; }
+.tm-signin { gap: 16px; }
+.mm-site a.tm-create { align-self: flex-start; display: inline-flex; align-items: center; min-height: 44px; color: #077a4b; font-size: 15px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.tm-fs { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.tm-q { padding: 0; font-size: 14px; font-weight: 700; color: #1a1919; }
+.tm-opt { font-weight: 500; color: #57605a; }
+.tm-radios { margin: 0; }
+.tm-radios.err label:not(.on) { border-color: rgba(179, 38, 30, .55); }
+/* a pill's or a star's own radio lies over it, unseen: a tap anywhere on it is a tap on the radio */
+.tm-radios input, .tm-starpick input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; opacity: 0; cursor: pointer; }
+.tm-file { position: relative; }
+.tm-file input { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); border: 0; white-space: nowrap; opacity: 0; }
+.tm-radios label { position: relative; gap: 6px; }
+.tm-starpick { display: flex; gap: 4px; }
+.tm-starpick label { position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 10px; cursor: pointer; }
+.tm-starpick svg { fill: #e6e0d4; transition: fill .12s ease; }
+.tm-starpick label.on svg { fill: #f0a500; }
+.tm-field { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tm-words { border: 1px solid rgba(0, 0, 0, .18); border-radius: 14px; padding: 12px 14px; font: inherit; font-size: 16px; line-height: 1.55; resize: vertical; min-height: 120px; background: #fff; color: #1a1919; box-sizing: border-box; width: 100%; }
+.tm-words:focus { outline: none; border-color: #077a4b; box-shadow: 0 0 0 3px rgba(7, 122, 75, .12); }
+.tm-words[aria-invalid="true"] { border-color: #b3261e; }
+.tm-count { align-self: flex-end; color: #57605a; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.tm-photo-pick { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.tm-photo-pick img { width: 96px; height: 96px; object-fit: cover; border-radius: 14px; border: 1px solid rgba(0, 0, 0, .08); }
+.tm-btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; align-self: flex-start; min-height: 48px; padding: 0 26px; border: 0; border-radius: 999px; background: #077a4b; color: #fbf9f4; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; text-decoration: none; box-sizing: border-box; }
+.tm-btn.tm-btn-line { min-height: 44px; padding: 0 18px; background: #fff; color: #1a1919; border: 1px solid rgba(0, 0, 0, .2); font-size: 14px; }
+.tm-btn:disabled, .tm-file.busy { opacity: .6; cursor: default; }
+.tm-btn:focus-visible, .tm-file:has(input:focus-visible) { outline: 2px solid #077a4b; outline-offset: 2px; }
+.tm-preview { margin: 0; color: #57605a; font-size: 13.5px; }
+.tm-consent { display: flex; align-items: flex-start; gap: 10px; font-size: 14.5px; line-height: 1.45; color: #1a1919; cursor: pointer; }
+.tm-consent input { flex: none; width: 20px; height: 20px; margin: 1px 0 0; accent-color: #077a4b; cursor: pointer; }
+.tm-consent.err span { color: #b3261e; }
+.tm-form .ac-err, .tm-ask .ac-err, .tm-mine .ac-err { color: #b3261e; font-size: 13.5px; font-weight: 600; margin: 0; }
+
+/* the rider's own */
+.tm-mine { max-width: 640px; margin-top: 40px; display: flex; flex-direction: column; gap: 14px; }
+.tm-mine ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.tm-mine-item { background: #fff; border: 1px solid rgba(0, 0, 0, .08); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 10px; }
+.tm-mine-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.tm-status { font-size: 12px; font-weight: 700; padding: 5px 11px; border-radius: 999px; }
+.tm-status-waiting { background: #fff4d6; color: #7a5300; }
+.tm-status-published { background: rgba(7, 122, 75, .12); color: #077a4b; }
+.tm-status-not { background: #f1efea; color: #57605a; }
+.tm-mine-body { margin: 0; font-size: 15px; line-height: 1.55; color: #2b332d; white-space: pre-line; overflow-wrap: anywhere; }
+.tm-mine-name { margin: 0; color: #57605a; font-size: 13px; }
+.tm-del { align-self: flex-start; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(0, 0, 0, .2); background: #fff; color: #1a1919; font: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; }
+.tm-del.sure { background: #b3261e; border-color: #b3261e; color: #fff; }
+.tm-del:disabled { opacity: .6; cursor: default; }
+.tm-del:focus-visible { outline: 2px solid #077a4b; outline-offset: 2px; }
+
+/* the ask after a high rating: in the rating's pop-up (centred, as every pop-up) or under its card on My Account */
+.tm-ask { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.tm-ask .tm-words { min-height: 100px; }
+.tm-ask .tm-radios label { min-height: 38px; }
+.rr-card .tm-ask { margin-top: 14px; padding-top: 16px; border-top: 1px solid rgba(0, 0, 0, .08); }
+.rr-card .tm-ask .rg-title { font-size: 20px; }
+
+@media (max-width: 640px) {
+  .tm-grid { columns: 1; }
+  .tm-card { padding: 18px; border-radius: 18px; }
+  .tm-box { border-radius: 20px; }
+}

@@ -7,6 +7,7 @@ import { LOCALES } from "@/i18n/locales";
 import { SITE_URL, langPath, languageAlternates } from "@/lib/seo";
 import { SWITCHED_PAGES, loadJournalContent, pageOn } from "@/lib/site";
 import { pageState } from "@/lib/page-state";
+import { tmSitemapPaths } from "@/lib/testimonials";
 import { loadCatalog, modelPath, subtypesOf, topCategories } from "@/lib/catalog";
 import { loadStore, storeOpen } from "@/lib/store";
 import { storePaths } from "@/lib/store-site";
@@ -17,7 +18,8 @@ import { storePaths } from "@/lib/store-site";
 // Empty while the site is Coming Soon; afterwards it lists Home, the Privacy Notice, the pages
 // staff have switched on (not the account page, which is private), the Learn to ride sign-up
 // while Experiences is on and staff offer lessons, the Journal's articles and the bike
-// catalogue's categories, sub-types and models (never the fleet's tag pages). The store build (2026-11-15, X11): the
+// catalogue's categories, sub-types and models (never the fleet's tag pages), and the published testimonials once their
+// launch switch is on (lib/testimonials.ts; never the page where one is written). The store build (2026-11-15, X11): the
 // Returns and Complaints pages (open whatever the switches, as the Privacy Notice is), and, while staff have the site's own
 // store open, the store, its category pages and every product's page (lib/store-site.ts storePaths); until then those
 // addresses forward to the Salla shop and are none of this site's pages.
@@ -31,6 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   if (closed) return [];
   const paths = ["/", "/privacy", "/returns", "/complaints", ...SWITCHED_PAGES.filter((p) => !PRIVATE.has(p) && pageOn(content, p)).map((p) => `/${p}`)];
   if (pageOn(content, "experiences") && resolvePage(experiencesSchema, content, "en").learn.on) paths.push("/experiences/learn");
+  paths.push(...tmSitemapPaths(content));
   // Addresses that exist in some languages only: an article staff wrote in English alone is not on
   // the Arabic Journal (lib/journal.ts toPosts), so its Arabic address is neither listed nor named.
   const missing = new Map<string, string[]>();

@@ -6,6 +6,7 @@ import { ACCOUNT_COOKIE, decodeSession } from "@/lib/account-core";
 import { accountBookings, rpcServer } from "@/lib/account";
 import { asLocale, resolvePage } from "@/lib/content";
 import { formOf, pendingRating, ratingNoBike, rideWord } from "@/lib/rating";
+import { tmAboutOfKind } from "@/lib/testimonials";
 import { kindNames, sessionName } from "@/lib/rides";
 import { cookieValue } from "@/lib/live";
 import { withinLimit } from "@/lib/rate-limit";
@@ -58,6 +59,8 @@ export async function GET(req: Request) {
       restaurant: breakfastFor(s, L)?.name ?? null,
       // a score at or under this asks why (the booking app's rg_low, Settings > Business)
       rgLow: bizOf(content).rgLow,
+      // what the booking was, for the ask to share a 9 or 10 as a testimonial (2026-11-18)
+      about: tmAboutOfKind(s?.kind),
     },
   });
 }

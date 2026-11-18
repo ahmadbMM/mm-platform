@@ -21,7 +21,7 @@ import { cookieValue } from "@/lib/live";
 //
 // A rider who left an Ask page to create an account (micromobility.sa/ask; components/ask/AskSignIn.tsx notes the
 // page's address in a cookie only this route is sent, for half an hour) lands back on that page, which says whom they
-// are signed in as the way the account page does (?handoff=done). Only /ask and /ask/<slug> are ever landed on
+// are signed in as the way the account page does (?handoff=done). Only /ask, /ask/<slug> and /testimonials/write are ever landed on
 // (lib/ask.ts askBack); the note is spent by the first hand-back that carries it.
 export const dynamic = "force-dynamic";
 

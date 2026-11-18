@@ -2,11 +2,14 @@
 
 import { useState } from "react";
 import { useL } from "@/i18n/TxProvider";
+import Stars from "@/components/testimonials/Stars";
 
 // What riders say, on Home: one row that moves on its own (mmMarquee). The mouse pauses it on hover; a phone or a
 // keyboard has this button (WCAG 2.2.2, as the announcements' pause), and focus inside it pauses it too. A reader who
 // asks for less motion gets the cards still and wrapped onto rows (home.css), so none of them is out of reach.
-export type Review = { name: string; role: string; quote: string };
+// A featured testimonial (`own`: a rider's own words, 2026-11-18) is drawn with its stars, and its words and name in
+// their own direction; a review staff typed in is drawn as before.
+export type Review = { name: string; role: string; quote: string; stars?: number | null; starsLabel?: string; own?: boolean };
 
 export default function ReviewsStrip({ reviews, dir }: { reviews: Review[]; dir: string }) {
   const tx = useL();
@@ -17,8 +20,9 @@ export default function ReviewsStrip({ reviews, dir }: { reviews: Review[]; dir:
         <div className="hm-reviews-row">
           {[...reviews, ...reviews].map((x, i) => (
             <figure className="hm-review" key={i} dir={dir} aria-hidden={i >= reviews.length ? true : undefined}>
-              <blockquote>“{x.quote}”</blockquote>
-              <figcaption><span className="init">{x.name.trim().charAt(0)}</span><span><strong>{x.name}</strong><small>{x.role}</small></span></figcaption>
+              {x.own && x.stars ? <Stars value={x.stars} label={x.starsLabel ?? ""} size={16} className="hm-review-stars" /> : null}
+              {x.own ? <blockquote dir="auto">“{x.quote}”</blockquote> : <blockquote>“{x.quote}”</blockquote>}
+              <figcaption><span className="init">{x.name.trim().charAt(0)}</span><span>{x.own ? <strong><bdi dir="auto">{x.name}</bdi></strong> : <strong>{x.name}</strong>}<small>{x.role}</small></span></figcaption>
             </figure>
           ))}
         </div>

@@ -57,6 +57,7 @@ import { kindNames, sessionName, type RideKind } from "@/lib/rides";
 import { routeItems } from "@/lib/route-names";
 import { routePageOf } from "@/lib/route-track";
 import { RATE_FROM, formOf, pendingRating, ratingNoBike, rideWord, unratedRides } from "@/lib/rating";
+import { tmAboutOfKind } from "@/lib/testimonials";
 import { isNonBike } from "@/lib/bike-kinds";
 import { loadAddonItems } from "@/lib/ticket-addons";
 import { BOOTH_DIR, bfFor, bloodDone, breakfastFor, cancelledGroups, doneToday, fmtDayDate, lockersOf, lockerText, ownLockersOf, placeLink, rideCompleted, shareLink, type TicketSession, ticketCue, ticketGroups, ticketRoute, todayCode } from "@/lib/tickets";
@@ -375,6 +376,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
       ["workshop", tx("Request a service", "اطلب صيانة"), "/workshop"],
       ["ambassadors", tx("Ambassador Program", "برنامج السفراء"), "/ambassadors"],
       ["help", tx("Help", "المساعدة"), "/help"],
+      // Testimonials (2026-11-18): only while their launch switch is on (lib/site.ts hiddenPages)
+      ["testimonials", tx("Write a testimonial", "اكتب شهادة"), "/testimonials/write"],
     ].filter(([k]) => !hidden.includes(k));
     const calendarOn = await calendarP;
     return (
@@ -473,7 +476,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
                 const s = sessions.get(r.sessionId);
                 // a Saturday ride's form names the restaurant its breakfast was at, as the pop-up's does
                 const word = rideWord(s?.kind, r.sessionId);
-                return <RateRide key={r.entryId} entryId={r.entryId} name={rideName(s, r.sessionId)} when={fmtDayDate(r.date, locale)} form={formOf(s?.kind)} noBike={ratingNoBike(r.ownBike, s, r.sessionId)} run={word === "run"} session={word === "session"} restaurant={breakfastFor(s, locale)?.name ?? null} rgLow={bizOf(content).rgLow} />;
+                return <RateRide key={r.entryId} entryId={r.entryId} name={rideName(s, r.sessionId)} when={fmtDayDate(r.date, locale)} form={formOf(s?.kind)} noBike={ratingNoBike(r.ownBike, s, r.sessionId)} run={word === "run"} session={word === "session"} restaurant={breakfastFor(s, locale)?.name ?? null} rgLow={bizOf(content).rgLow} about={tmAboutOfKind(s?.kind)} />;
               })}
             </div>
           </section>

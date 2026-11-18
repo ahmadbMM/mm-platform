@@ -86,6 +86,11 @@ export const POLICY_PAGE = /^(?:\/(?:en|ar))?\/(?:returns|complaints)\/?$/;
 // the site's state: the first two stand alone while the site is Coming Soon, and the screen always does
 // (app/[locale]/ask). A slug is lower-case letters, digits and single dashes.
 const ASK_PAGE = /^(?:\/(?:en|ar))?\/ask(?:\/[a-z0-9]+(?:-[a-z0-9]+)*(?:\/screen)?)?\/?$/;
+// Testimonials (the user, 2026-11-18: the page works by its link only until staff turn on the launch switch):
+// micromobility.sa/testimonials (the published ones) and /testimonials/write (a signed-in rider writes one). Their link
+// may be shared before the switch is on, so they open the same way as the Ask pages, whatever the site's state: alone
+// while the site is Coming Soon (components/testimonials/TmFrame.tsx).
+const TESTIMONIALS_PAGE = /^(?:\/(?:en|ar))?\/testimonials(?:\/write)?\/?$/;
 /** An Ask address typed with capitals (a phone's keyboard writes micromobility.sa/Ask off the big screen) is the same
  *  address in lower case; null for any other address. Only the path changes: a screen's key (?k=) is kept as written. */
 export function askLower(pathname: string): string | null {
@@ -205,8 +210,8 @@ export default async function proxy(req: NextRequest) {
   // A fleet bike's tag page (/bikes/42: a rider tapping a sticker) opens whatever the site's
   // state - Coming Soon on, or the Bikes page not switched on. It is never a catalogue page: a
   // category's address starts with a letter (the database insists), so digits can only be a tag.
-  // The Learn to ride sign-up, the Privacy Notice, the Returns and Complaints pages and the Ask pages open the same way
-  // (LEARN_PAGE, PRIVACY_PAGE, POLICY_PAGE, ASK_PAGE).
+  // The Learn to ride sign-up, the Privacy Notice, the Returns and Complaints pages, the Ask pages and the testimonials'
+  // open the same way (LEARN_PAGE, PRIVACY_PAGE, POLICY_PAGE, ASK_PAGE, TESTIMONIALS_PAGE).
   // A form's page of the website (SITE_FORMS) carries the site's security headers from here: next.config.ts leaves its
   // address to the form's own page (?classic=1), which sends its own.
   if (form) {
@@ -214,7 +219,7 @@ export default async function proxy(req: NextRequest) {
     for (const { key, value } of SECURITY_HEADERS) res.headers.set(key, value);
     return res;
   }
-  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname) || POLICY_PAGE.test(pathname) || ASK_PAGE.test(pathname)) return keepLang(intl(req));
+  if (FLEET_PAGE.test(pathname) || LEARN_PAGE.test(pathname) || PRIVACY_PAGE.test(pathname) || POLICY_PAGE.test(pathname) || ASK_PAGE.test(pathname) || TESTIMONIALS_PAGE.test(pathname)) return keepLang(intl(req));
   // While the site is Coming Soon, it is the only page: /login, /about and anything else go
   // back to it. /store forwards to the shop before this runs (above), and the old /b/42 tag
   // address is redirected to /bikes/42 before this runs (next.config redirects).

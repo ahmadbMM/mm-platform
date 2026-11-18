@@ -38,6 +38,7 @@ const WORDS: Record<string, string> = {
   gallery: "photos pictures صور",
   routes: "maps where to ride paths مسارات خرائط",
   journal: "blog articles news tips guides مقالات مدونة نصائح أدلة",
+  testimonials: "reviews ratings stars opinions what riders say شهادات آراء تقييمات نجوم",
   privacy: "data policy personal بيانات خصوصية",
   account: "sign in login bookings profile تسجيل الدخول حجوزاتي حساب",
   terms: "conditions rules legal policy returns refund الشروط الأحكام سياسة استرجاع",
