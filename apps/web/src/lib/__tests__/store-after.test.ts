@@ -9,7 +9,7 @@ import { localize } from "@/i18n/tx";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
-  discountRows, eventKey, eventNote, giftState, invoiceIssued, invoiceNumber, invoiceQr, lineHref, outToday, paidParts, refundRows, returnableLines,
+  discountRows, eventKey, eventNote, giftState, invoiceIssued, invoiceNumber, invoiceQr, invoiceSeller, lineHref, outToday, paidParts, refundRows, returnableLines,
   returnBody, returnLines, reviewItems, riyadhDayOf, serviceShown, slotWhen, statusKey, wholeCodes,
 } from "../store-after";
 import { GIFT_KEYS_KEY, giftKeyFirst, giftKeyOf, MAX_GIFT_KEYS, parseGiftKeys } from "../store-lists";
@@ -82,6 +82,26 @@ describe("the simplified tax invoice (L06)", () => {
     expect(zatcaFields(qr)).toEqual({ 1: "شركة التنقل الدقيق المحدودة", 2: "312555068900003", 3: "2026-11-10T08:05:00Z", 4: "8700.00", 5: "1121.74" });
     expect(invoiceQr(order({ status: "pending", paid_at: null }), { name: "X", vat: "312555068900003" })).toBeNull();
     expect(invoiceQr(order(), { name: "X", vat: "31255506890000" })).toBeNull(); // not 15 digits
+  });
+  it("names the seller the order kept when its invoice was issued, today's settings only for an order without it (stg11-4)", () => {
+    const now = { "site.legal.legalName": { en: "New Name Co.", ar: "شركة الاسم الجديد" }, "site.legal.vat": { en: "300000000000003", ar: "300000000000003" },
+      "site.legal.cr": { en: "4030000001", ar: "4030000001" } };
+    const kept = { name_en: "Micromobility Company Ltd.", name_ar: "شركة التنقل الدقيق المحدودة", vat: "312555068900003", cr: "1009107240" };
+    // the order's own snapshot, as the `seller` object or as the columns themselves
+    for (const o of [order({ seller: kept }), order({ seller_name_en: kept.name_en, seller_name_ar: kept.name_ar, seller_vat: kept.vat, seller_cr: kept.cr })]) {
+      expect(o.seller).toEqual(kept);
+      expect(invoiceSeller(o, now, "en")).toEqual({ legal: kept.name_en, legalBeside: kept.name_ar, vat: kept.vat, cr: kept.cr, qrName: kept.name_ar });
+      expect(invoiceSeller(o, now, "ar")).toMatchObject({ legal: kept.name_ar, legalBeside: kept.name_en, qrName: kept.name_ar });
+      // the QR carries what the order kept, not today's Legal line
+      expect(zatcaFields(invoiceQr(o, { name: invoiceSeller(o, now, "en").qrName, vat: invoiceSeller(o, now, "en").vat })!)).toMatchObject({ 1: kept.name_ar, 2: kept.vat });
+    }
+    // an order issued before the database kept it: today's settings, as before
+    expect(order().seller).toBeNull();
+    expect(order({ seller: null, seller_vat: null }).seller).toBeNull();
+    expect(invoiceSeller(order(), now, "en")).toEqual({ legal: "New Name Co.", legalBeside: "شركة الاسم الجديد", vat: "300000000000003", cr: "4030000001", qrName: "شركة الاسم الجديد" });
+    // a VAT number that is not 15 digits is not the order's: today's one stands in
+    expect(order({ seller: { ...kept, vat: "3125" } }).seller?.vat).toBeNull();
+    expect(invoiceSeller(order({ seller: { ...kept, vat: "3125" } }), now, "en").vat).toBe("300000000000003");
   });
   it("says what the gift card, the wallet and the card each paid, and each discount", () => {
     expect(paidParts(order())).toEqual({ gift: 100, wallet: 200, card: 8400 });

@@ -11,11 +11,11 @@ import { rpcServer } from "@/lib/account";
 import { ACCOUNT_COOKIE, decodeSession, type Session } from "@/lib/account-core";
 import { bookingLink } from "@/lib/links";
 import { payRpc } from "@/lib/pay/server";
-import { slotWhen } from "@/lib/store-after";
+import { invoiceSeller, slotWhen } from "@/lib/store-after";
 import { fmtRange } from "@/lib/store-delivery";
 import { orderExpected, orderOf, type Order } from "@/lib/store-order";
 import { POLICY } from "@/lib/store-policy";
-import { deliverySlots, storeLegal } from "@/lib/store-settings";
+import { deliverySlots } from "@/lib/store-settings";
 import { serverLocalize } from "@/i18n/dicts";
 import { intlOf } from "@/i18n/locales";
 import "@/components/experiences/experiences.css";
@@ -64,11 +64,11 @@ export default async function OrderPage({ params, searchParams }: Props) {
   const expected = orderExpected(o, s.settings);
   const guest = !acct;
   const app = navFrom(site).booking.replace(/[?#].*$/, "");
-  // the seller as the invoice names it (L06): the store's one legal identity (lib/store-settings.ts storeLegal), the
-  // legal name in the page's language with the other one beside it, the Arabic one in ZATCA's QR
-  const legal = storeLegal(s.content, locale);
+  // the seller as the invoice names it (L06): the one the order kept when its invoice was issued, else the store's one
+  // legal identity of today (lib/store-after.ts invoiceSeller); the legal name in the page's language with the other one
+  // beside it, the Arabic one in ZATCA's QR
+  const seller = invoiceSeller(o, s.content, locale);
   const ar = locale === "ar";
-  const other = storeLegal(s.content, ar ? "en" : "ar");
   const intl = intlOf(locale);
   const booked = slotWhen(o, deliverySlots(s.content));
   const slot = booked ? [fmtRange({ from: booked.day, to: booked.day }, intl), booked.from && booked.to ? `${booked.from}–${booked.to}` : ""].filter(Boolean).join(", ") : null;
@@ -77,10 +77,7 @@ export default async function OrderPage({ params, searchParams }: Props) {
       <OrderView
         o={o} t={t} w={serverLocalize(W5, locale)} locale={locale} now={now} today={s.today}
         beside={ar ? { lang: "en", t: STORE_T.en, w: W5.en } : { lang: "ar", t: STORE_T.ar, w: W5.ar }}
-        seller={{
-          trade: "Micromobility", legal: legal.legalName, legalBeside: other.legalName, vat: legal.vat, cr: legal.cr,
-          address: S(site.contact.address), qrName: storeLegal(s.content, "ar").legalName,
-        }}
+        seller={{ trade: "Micromobility", ...seller, address: S(site.contact.address) }}
         whatsapp={S(site.contact.phone).replace(/\D/g, "")}
         showroom={S(site.contact.address)}
         expected={expected ? fmtRange(expected, intl) : null}

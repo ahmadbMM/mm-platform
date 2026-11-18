@@ -31,6 +31,10 @@ export type OrderReturn = {
 export type IssuedGiftCard = { code: string; amount: number; balance: number; status: "active" | "void"; expires_at: string | null; masked: boolean };
 /** dest: "card", "wallet" or "gift" (back onto the gift card that paid). */
 export type OrderRefund = { amount: number; dest: string; status: string; at: string };
+/** The seller as the order kept it when its invoice was issued (rentals _store_invoice, bug hunt 2026-11-18 stg11-4): the
+ *  legal name in English and Arabic, the VAT number and the CR; each null when the database does not give it (an order
+ *  issued before it kept them, or not issued yet). */
+export type OrderSeller = { name_en: string | null; name_ar: string | null; vat: string | null; cr: string | null };
 export type OrderPayment = { id: string; status: string; method: string | null; brand: string | null; last4: string | null; receipt_no: number | null; expires_at: string; paid_at: string | null; amount: number };
 export type Order = {
   id: string; no: number; key: string | null; status: OrderStatus; fulfil: OrderFulfil; name: string; phone: string;
@@ -52,6 +56,8 @@ export type Order = {
   /** The first "delivered" event: returns are counted from it (F93). */
   delivered_at: string | null;
   returns: OrderReturn[]; gift_cards: IssuedGiftCard[];
+  /** The seller its invoice was issued under, or null (lib/store-after.ts invoiceSeller falls back to today's settings). */
+  seller: OrderSeller | null;
 };
 
 const STATUSES: readonly string[] = ["pending", "paid", "preparing", "ready", "shipped", "out", "delivered", "cancelled", "refunded"];
@@ -93,7 +99,22 @@ export function orderOf(data: unknown, key: string | null = null): Order | null 
     gift_cards: arr(o.gift_cards).filter((g) => typeof g.code === "string" && g.code).map((g) => ({
       code: String(g.code), amount: n(g.amount), balance: n(g.balance), status: g.status === "void" ? "void" : "active", expires_at: s(g.expires_at),
       masked: g.masked === true || String(g.code).includes("•") })),
+    seller: sellerOf(o),
   };
+}
+
+/** The seller kept on the order: its `seller` object ({name_en, name_ar, vat, cr}) or the columns themselves (seller_name_en,
+ *  seller_name_ar, seller_vat, seller_cr), whichever the database answers; null when it carries none. A VAT number counts
+ *  only as 15 digits, as the invoice's QR needs it. */
+function sellerOf(o: Record<string, unknown>): OrderSeller | null {
+  const x = o.seller && typeof o.seller === "object" ? (o.seller as Record<string, unknown>) : null;
+  const t = (a: unknown, b: unknown) => (typeof a === "string" && a.trim() ? a.trim() : typeof b === "string" && b.trim() ? b.trim() : null);
+  const vat = t(x?.vat ?? x?.seller_vat, o.seller_vat);
+  const seller: OrderSeller = {
+    name_en: t(x?.name_en ?? x?.seller_name_en, o.seller_name_en), name_ar: t(x?.name_ar ?? x?.seller_name_ar, o.seller_name_ar),
+    vat: vat && /^\d{15}$/.test(vat) ? vat : null, cr: t(x?.cr ?? x?.seller_cr, o.seller_cr),
+  };
+  return seller.name_en || seller.name_ar || seller.vat || seller.cr ? seller : null;
 }
 
 /** The invoice number as the database writes it ("INV-000042", its `invoice`), or its number (`invoice_no`) written that way. */

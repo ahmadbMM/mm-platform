@@ -1,5 +1,6 @@
 import { outAt, reviewable, type IssuedGiftCard, type Order, type OrderItem, type OrderReturn, type ReturnReason, RETURN_REASONS } from "./store-order";
-import { DEFAULT_SLOTS, type Slots } from "./store-settings";
+import { DEFAULT_SLOTS, storeLegal, type Slots } from "./store-settings";
+import type { SiteContent } from "./site";
 import { zatcaQr } from "./zatca";
 
 // After the order (the store build, 2026-11-15, chain w5): the rules an order's page draws by, kept here so the page and
@@ -45,6 +46,22 @@ export const invoiceNumber = (o: Pick<Order, "invoice_no" | "receipt_no">): stri
 export function invoiceQr(o: Pick<Order, "paid_at" | "status" | "total" | "vat">, seller: { name: string; vat: string }): string | null {
   if (!invoiceIssued(o) || !o.paid_at || !seller.name.trim() || !/^\d{15}$/.test(seller.vat)) return null;
   return zatcaQr({ seller: seller.name.trim(), vat: seller.vat, at: o.paid_at, total: o.total, vatAmount: o.vat });
+}
+
+/** The seller the invoice names (L06): the one the order kept when its invoice was issued (bug hunt 2026-11-18 stg11-4: an
+ *  issued invoice and its QR never change after the fact), each value from the shop's legal identity of today
+ *  (store-settings.ts storeLegal) only where the order has none: an order not issued yet, or issued before the database
+ *  kept it. The legal name in the page's language with the other one beside it, the Arabic one in ZATCA's QR. */
+export function invoiceSeller(o: Pick<Order, "seller">, c: SiteContent | null | undefined, locale: string):
+  { legal: string; legalBeside: string; vat: string; cr: string; qrName: string } {
+  const k = o.seller;
+  const ar = locale === "ar";
+  const now = storeLegal(c, locale);
+  const en = k?.name_en ?? storeLegal(c, "en").legalName, arName = k?.name_ar ?? storeLegal(c, "ar").legalName;
+  return {
+    legal: ar ? arName : en, legalBeside: ar ? en : arName,
+    vat: k?.vat ?? now.vat, cr: k?.cr ?? now.cr, qrName: arName,
+  };
 }
 
 /** What each way of paying paid: a gift card first, then the wallet, the card the rest (CONTRACTS.md section 3.1). */
