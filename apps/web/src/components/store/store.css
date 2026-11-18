@@ -115,6 +115,7 @@ html:is([lang="ar"], [lang="ur"], [lang="hi"], [lang="ne"], [lang="bn"]) .st-bra
    column has room (six across); the product page sets both (PdpPickers, lib/sx-B2.ts sizeGrid) */
 .st-sizes { display: grid; grid-template-columns: repeat(var(--sz-n, 3), minmax(0, 1fr)); gap: 6px; }
 @container st-sz (min-width: 400px) { .st-sizes { grid-template-columns: repeat(var(--sz-w, var(--sz-n, 3)), minmax(0, 1fr)); } }
+@container st-sz2 (min-width: 520px) { .st-sizes { grid-template-columns: repeat(var(--sz-w, var(--sz-n, 3)), minmax(0, 1fr)); } } /* two lines need more room */
 .st-sizes button { position: relative; min-width: 0; min-height: 46px; padding: 0 8px; border-radius: var(--st-r-ctl); border: 1px solid var(--st-ctl); background: #fff; color: #1a1919; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer; transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease; }
 .st-sizes button:hover:not(:disabled):not([aria-pressed="true"]) { border-color: rgba(26, 25, 25, .45); }
 .st-sizes button[aria-pressed="true"] { background: #1a1919; border-color: #1a1919; color: #fbf9f4; }

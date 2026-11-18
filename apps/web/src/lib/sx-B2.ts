@@ -145,3 +145,39 @@ export function rodeOf(v: unknown): number | null {
   const n = Number(obj(v)?.rides ?? v);
   return Number.isInteger(n) && n > 0 && n < 10000 ? n : null;
 }
+
+// ── N13: the 20-minute handover, the buy box's half (B3 owns checkout and store_handover_slots; its contract: SX
+// results/B3.md, GET /api/store/handover answering {ok, on, minutes, days: [{day, slots: [{at, to, open}]}]}) ─────────
+
+/** Where the buy box leaves the time picked for checkout (B3's HANDOVER_KEY in lib/sx-b3-handover.ts: one name). */
+export const HANDOVER_STORE = "mm-handover";
+export type HoSlot = { at: string; to: string; open: boolean };
+export type HoDay = { day: string; slots: HoSlot[] };
+export type HoAnswer = { on: boolean; minutes: number; days: HoDay[] };
+const HM = /^\d{2}:\d{2}$/;
+
+/** The route's answer, or off for anything out of shape (an older site or database answers 404: off). */
+export function handoverAnswer(raw: unknown): HoAnswer {
+  const o = obj(raw);
+  if (!o || o.on !== true || !Array.isArray(o.days)) return { on: false, minutes: 20, days: [] };
+  const m = Number(o.minutes);
+  const days: HoDay[] = [];
+  for (const d of o.days.slice(0, 14)) {
+    const x = obj(d);
+    if (!x || typeof x.day !== "string" || !DAY.test(x.day) || !Array.isArray(x.slots)) continue;
+    const slots = x.slots.map(obj).filter((s): s is Record<string, unknown> => !!s && typeof s.at === "string" && HM.test(s.at) && typeof s.to === "string" && HM.test(s.to))
+      .slice(0, 96).map((s) => ({ at: s.at as string, to: s.to as string, open: s.open === true }));
+    days.push({ day: x.day, slots });
+  }
+  return { on: days.length > 0, minutes: Number.isInteger(m) && m >= 10 && m <= 60 ? m : 20, days };
+}
+
+/** A time kept from an earlier pick, while that day still offers it open; else null. */
+export function keptSlot(raw: string | null, a: HoAnswer): { day: string; at: string } | null {
+  let v: unknown = null;
+  try { v = raw ? JSON.parse(raw) : null; } catch { return null; }
+  const o = obj(v);
+  if (!o || typeof o.day !== "string" || typeof o.at !== "string") return null;
+  const ok = a.days.some((d) => d.day === o.day && d.slots.some((s) => s.at === o.at && s.open));
+  return ok ? { day: o.day, at: o.at } : null;
+}

@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { paySettings } from "../pay/settings";
 import { storeOf } from "../store-core";
 import {
-  checkupWeeks, fleetRecordOf, GALLERY_SIZES, MEDIA_WIDTHS, orderByDays, orderByOf, pdpSrcSet, presetOf, previewText, rodeOf, shareHref,
+  checkupWeeks, fleetRecordOf, GALLERY_SIZES, handoverAnswer, HANDOVER_STORE, keptSlot, MEDIA_WIDTHS, orderByDays, orderByOf, pdpSrcSet, presetOf, previewText, rodeOf, shareHref,
   sharedSlugs, sizeGrid, thumbSrc,
 } from "../sx-B2";
 
@@ -174,5 +174,45 @@ describe("the product page's layout", () => {
     expect(site).toContain(".mm-cart-n.is-new { animation: mmCartPulse");
     expect(site).toContain("@media (prefers-reduced-motion: reduce) { .mm-cart-n.is-new { animation: none; } }");
     expect(src("../../components/site/SiteNav.tsx")).toContain('className={`mm-cart-n${said ? " is-new" : ""}`}');
+  });
+});
+
+describe("N13: the handover time, the buy box's half", () => {
+  const raw = { ok: true, on: true, minutes: 20, days: [
+    { day: "2026-11-21", slots: [{ at: "16:00", to: "16:20", open: false }, { at: "16:20", to: "16:40", open: true }] },
+    { day: "2026-11-22", slots: [] },
+    { day: "bad", slots: [] },
+  ] };
+  it("reads B3's route answer and drops what is out of shape", () => {
+    const a = handoverAnswer(raw);
+    expect(a.on).toBe(true);
+    expect(a.minutes).toBe(20);
+    expect(a.days.map((d) => d.day)).toEqual(["2026-11-21", "2026-11-22"]);
+    expect(a.days[0].slots[1]).toEqual({ at: "16:20", to: "16:40", open: true });
+  });
+  it("is off while the feature is off, the route is missing or the answer is anything else", () => {
+    expect(handoverAnswer({ ok: true, on: false }).on).toBe(false);
+    expect(handoverAnswer(null).on).toBe(false);
+    expect(handoverAnswer({ on: true, days: [] }).on).toBe(false);
+  });
+  it("keeps an earlier pick only while that time is still open", () => {
+    const a = handoverAnswer(raw);
+    expect(keptSlot(JSON.stringify({ day: "2026-11-21", at: "16:20" }), a)).toEqual({ day: "2026-11-21", at: "16:20" });
+    expect(keptSlot(JSON.stringify({ day: "2026-11-21", at: "16:00" }), a)).toBeNull();
+    expect(keptSlot("{", a)).toBeNull();
+    expect(keptSlot(null, a)).toBeNull();
+  });
+  it("leaves the pick where checkout reads it (B3: mm-handover)", () => {
+    expect(HANDOVER_STORE).toBe("mm-handover");
+  });
+});
+
+describe("N01 on the saved page", () => {
+  it("shares the saved list as a link that opens it for a friend, their own list untouched", () => {
+    const page = src("../../app/[locale]/store/saved/page.tsx");
+    expect(page).toContain("sharedSlugs((await searchParams).list, MAX_SAVED)");
+    expect(page).toContain("<SavedList locale={locale} {...listProps(s, locale)} shared={shared} />");
+    expect(src("../../components/store/sx-B2-saved.tsx")).toContain("/store/saved?list=");
+    expect(src("../../components/store/SavedList.tsx")).toContain("const slugs = shared ?? own;");
   });
 });

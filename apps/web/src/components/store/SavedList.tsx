@@ -13,11 +13,13 @@ import { T as W } from "./w2.text";
 
 // /store/saved (F07): the products this browser saved with a card's heart, newest first, as the store's cards (a heart
 // tapped again takes one out). No account: the list is kept in this browser alone. Drawn once the page runs in the
-// browser, which is where the list is.
-export default function SavedList({ locale, products, licence, today, whens }: ListProps & { locale: string }) {
+// browser, which is where the list is. A list a friend shared (N01, the "do all" build of 2026-11-18:
+// /store/saved?list=...) shows those products instead, each with its own heart.
+export default function SavedList({ locale, products, licence, today, whens, shared = null }: ListProps & { locale: string; shared?: string[] | null }) {
   const t = useLocalize(T);
   const w = useLocalize(W);
-  const slugs = useSaved();
+  const own = useSaved();
+  const slugs = shared ?? own;
   const ready = useHydrated();
   if (!ready) return <div className="st-cart-wait" />;
   const list = bySlugs(products, slugs, MAX_SAVED);

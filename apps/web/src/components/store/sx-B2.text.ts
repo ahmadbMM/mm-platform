@@ -27,12 +27,10 @@ export const T = {
     orderBy: (d: string, what: string) => `Order by ${d} for ${what} delivery`,
     orderByPickup: (d: string, what: string) => `Order by ${d} to collect it for ${what}`,
     // N13: the handover appointment
-    handover: "20-minute handover",
+    handover: (m: number) => `${m}-minute handover`,
     pickTime: "Pick a time",
     changeTime: "Change",
-    handoverAt: (t: string) => `Handover at ${t}`,
-    noTimes: "No times left that day. We'll arrange one with you.",
-    timesFailed: "The times could not be loaded.",
+    noTimes: "No free times that day.",
   },
   ar: {
     howToGet: "طريقة الاستلام",
@@ -48,12 +46,10 @@ export const T = {
     videoMsg: (name: string, url: string) => `السلام عليكم، أرغب في رؤية ${name} بمكالمة فيديو: ${url}`,
     orderBy: (d: string, what: string) => `اطلب حتى ${d} ليصلك قبل ${what}`,
     orderByPickup: (d: string, what: string) => `اطلب حتى ${d} لتستلمها قبل ${what}`,
-    handover: "تسليم في 20 دقيقة",
+    handover: (m: number) => `موعد تسليم مدته ${m} دقيقة`,
     pickTime: "اختر الوقت",
     changeTime: "تغيير",
-    handoverAt: (t: string) => `التسليم الساعة ${t}`,
-    noTimes: "لا أوقات متاحة في ذلك اليوم. سنتفق معك على وقت.",
-    timesFailed: "تعذّر تحميل الأوقات.",
+    noTimes: "لا أوقات متاحة في هذا اليوم.",
   },
 };
 export type B2Text = typeof T.en;

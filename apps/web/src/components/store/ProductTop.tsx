@@ -31,6 +31,7 @@ import { T as B } from "./sx-B2.text";
 import type { B2Top } from "./sx-B2-top";
 import ShareButton from "./sx-B2-share";
 import WayStep from "./sx-B2-ways";
+import HandoverPick from "./sx-B2-handover";
 
 // The top of a product's page (store build 2026-11-15, chain w3a): its photos, its name and price, the choices, the buy
 // box and the delivery and returns box, as one piece because they share what is picked.
@@ -247,7 +248,7 @@ export default function ProductTop(props: TopProps) {
         <BuyBox locale={locale} rtl={rtl} bike={bike} name={name} v={v} unit={unit} qty={n} max={max} stock={stock}
           extras={withX} est={est} canAdd={canAdd} added={added} need={need} applePay={appleHere} askHref={askHref} videoHref={videoHref}
           ways={<WayStep bike={bike} step={wayStep} est={est} onWay={pickWay} whens={whens} freeOver={settings.delivery.freeOver} showroom={showroom}
-            orderBy={b2?.orderBy ?? {}} />}
+            orderBy={b2?.orderBy ?? {}} handover={bike && est.way?.id === "pickup" ? <HandoverPick locale={locale} /> : null} />}
           facts={<>
             {b2?.checkup ? <li className="st-b2-fact"><StIcon name="spanner" size={20} /><span>{b.checkup(b2.checkup)}</span></li> : null}
             {b2?.facts}

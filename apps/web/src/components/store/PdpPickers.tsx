@@ -72,7 +72,7 @@ export default function PdpPickers(props: {
             <p className="st-opt-k" id="st-size-k">{num()}<span>{t.size}{size ? <b>: {size}</b> : null}</span></p>
             {guide && <button type="button" className="st-guide-btn" aria-haspopup="dialog" onClick={onGuide}><StIcon name="ruler" size={18} />{w.sizeGuide}</button>}
           </div>
-          <div className="st-b2-szbox" style={sizeVars(o.sizes.length, !!guide?.cols.includes("height"))}>
+          <div className={`st-b2-szbox${guide?.cols.includes("height") ? " is-two" : ""}`} style={sizeVars(o.sizes.length, !!guide?.cols.includes("height"))}>
           <div className="st-sizes" role="group" aria-labelledby="st-size-k" ref={sizeGroup}>
             {o.sizes.map((s) => {
               const open = optionOpen(p, "size", s, null), here = optionOpen(p, "size", s, colour);

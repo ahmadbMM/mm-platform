@@ -14,6 +14,7 @@
 
 /* SM06-B: the size buttons' column is the container their grid reads (store.css .st-sizes) */
 .st-b2-szbox { container: st-sz / inline-size; }
+.st-b2-szbox.is-two { container-name: st-sz2; } /* sizes with the rider height go six across only from 520px */
 
 /* N01: Share beside Save, the same round button */
 .st-b2-share { flex: none; width: 44px; height: 44px; margin-top: 2px; padding: 0; border-radius: 50%; border: 1px solid var(--st-ctl); background: #fff; color: var(--st-ink); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color .2s ease, color .2s ease; }
@@ -53,3 +54,11 @@
 @media (hover: hover) { .st-b2-slots button:hover:not(:disabled):not([aria-pressed="true"]) { border-color: rgba(26, 25, 25, .45); } }
 .st-b2-slots-day { margin: 0 0 12px; font-size: 14px; font-weight: 600; color: var(--st-ink-2); }
 .st-b2-slots-note { margin: 0; font-size: 14px; color: var(--st-ink-2); }
+
+/* N01 on /store/saved: Share at the end of the heading's row */
+.st-b2-savedhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.st-b2-savedhead h1 { margin-bottom: 0; }
+.st-b2-savedhead + * { margin-top: 16px; }
+.st-b2-hodays { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 14px; }
+.st-b2-hodays button { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--st-ctl); background: #fff; color: var(--st-ink); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+.st-b2-hodays button[aria-pressed="true"] { background: var(--st-ink); border-color: var(--st-ink); color: #fbf9f4; }
