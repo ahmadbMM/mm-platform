@@ -5,6 +5,7 @@ import { SESSION_COLS_FBK, SESSION_COLS_GENDER, SESSION_COLS_TITLE_AR, sessionRo
 import { bupBookings, bupEvent, bupFrom, bupSession, buildupPlan, dayPlus, type BupPlan, type BupSession } from "./buildup-plan";
 import type { SessionGender } from "./session-gender";
 import { interestsOf, type Interests } from "./member-interests";
+import { rsgRows, type RsgRow } from "./ride-suggestions";
 
 /** Plan my Saturdays and My month for a signed-in member of /club (lib/member-hub.ts), read with the account's own
  *  token, at once: hub_plan always, hub_month only from the 26th (Riyadh's `today`, "YYYY-MM-DD"), as the booking app
@@ -54,4 +55,11 @@ export async function readBuildup(acct: Session, today: string, gender: SessionG
  *  without the function, no answer). */
 export async function readInterests(acct: Session): Promise<Interests | null> {
   return interestsOf(await rpcServer<unknown>("member_interests_get", { p_id: acct.id, p_token: acct.token }));
+}
+
+/** Suggest a ride for a signed-in member of /club (lib/ride-suggestions.ts; the booking app's _rsgFetch, 2026-11-18): the
+ *  member's own suggestions (ride_suggestions_mine with the account's own token), never kept. Null: no card (a refusal, a
+ *  database without the function, no answer). */
+export async function readSuggestions(acct: Session): Promise<RsgRow[] | null> {
+  return rsgRows(await rpcServer<unknown>("ride_suggestions_mine", { p_id: acct.id, p_token: acct.token }));
 }

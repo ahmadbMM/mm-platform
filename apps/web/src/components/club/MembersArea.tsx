@@ -22,7 +22,9 @@ import BuildupPlan from "./BuildupPlan";
 import type { BupPlan } from "@/lib/buildup-plan";
 import { InterestsBox, InterestsCard } from "./Interests";
 import type { Interests } from "@/lib/member-interests";
-import { interestWords } from "./MemberHub.words";
+import { interestWords, suggestWords } from "./MemberHub.words";
+import SuggestRide from "./SuggestRide";
+import type { RsgRow } from "@/lib/ride-suggestions";
 import { memberHubWords } from "./MemberHub.words";
 
 // The members' area on /club, for a signed-in community member (member_area, lib/members.ts):
@@ -38,7 +40,8 @@ import { memberHubWords } from "./MemberHub.words";
 // Saturdays (F10) after the upcoming rides (lib/member-hub.ts): each drawn only when its read answered.
 // The Community features round (2026-11-18), placed as the app's tab places them: the Build-up plan (BuildupPlan.tsx) right
 // after the card, as the app's comes right after its first card; My interests (Interests.tsx) after it until the member
-// first saves them, then at the end of the area.
+// first saves them, then at the end of the area; Suggest a ride (SuggestRide.tsx) after the announcements, as the app's
+// stands near the end of its tab, before its invitation.
 type Props = {
   locale: string;
   L: Locale;
@@ -80,9 +83,11 @@ type Props = {
   bup?: { plan: BupPlan; name: string } | null;
   /** My interests (member_interests_get, lib/member-interests.ts); none: no card. */
   interests?: Interests | null;
+  /** Suggest a ride: the member's own suggestions (ride_suggestions_mine, lib/ride-suggestions.ts); none: no card. */
+  suggestions?: RsgRow[] | null;
 };
 
-export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup, interests }: Props) {
+export default function MembersArea({ locale, L, area: a, tierNames, nameOf, bookAt, today, empty, opens, opensAt, opensWords, sgOf, refusalOf, title, communityHref, accountHref, asks, plan, month, kindName, bup, interests, suggestions }: Props) {
   const t = serverLocalize(T, locale);
   const ask = serverLocalize(ASK_T, locale);
   const N = (n: number) => fmtNum(n, locale);
@@ -192,6 +197,7 @@ export default function MembersArea({ locale, L, area: a, tierNames, nameOf, boo
           <ul>{anns.map((x, i) => <li key={i}>{x.text}{x.cta && x.href ? <> <a href={localHref(x.href, locale)}>{x.cta} {arrow}</a></> : null}</li>)}</ul>
         </section>
       )}
+      {suggestions && <SuggestRide locale={locale} rows={suggestions} words={suggestWords(locale)} />}
       <InterestsCard at="end" />
     </div>
     </InterestsBox>
