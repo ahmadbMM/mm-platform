@@ -53,7 +53,7 @@ export const tmJson = (body: unknown, status = 200) =>
 export const tmSessionOf = (req: Request): Session | null => decodeSession(cookieValue(req.headers.get("cookie"), ACCOUNT_COOKIE));
 
 /** GET /api/testimonials/mine: testimonial_mine for the signed-in account, as lib/testimonials.ts tmMine reads it,
- *  {ok: true, on, names, since, items}; or {ok: false, error}: "signin" (no cookie, or a session the database refused),
+ *  the database's {ok: true, on, names, since, items} (without its ask); or {ok: false, error}: "signin" (no cookie, or a session the database refused),
  *  "busy", "absent" (no such function yet), "generic" (no answer). */
 export async function tmMineGet(req: Request): Promise<Response> {
   const s = tmSessionOf(req);
@@ -62,8 +62,14 @@ export async function tmMineGet(req: Request): Promise<Response> {
   const r = await rpcServer<unknown>("testimonial_mine", { p_id: s.id, p_token: s.token });
   if (r.status === 0 || r.status >= 500) return tmJson({ ok: false, error: "generic" }, 502);
   if (r.status >= 400) return tmJson({ ok: false, error: emAbsent(r) ? "absent" : "generic" }, emAbsent(r) ? 404 : 502);
-  const mine = tmMine(r.data);
-  if (mine) return tmJson({ ok: true, ...mine });
+  // The database's own answer goes to the page as it is (the page reads it with tmMine, once): handing on tmMine's
+  // result instead made the page read its camelCase as the database's names, and every name read as Anonymous. The
+  // one-time ask about an old comment is the booking app's alone and stays here.
+  if (tmMine(r.data)) {
+    const answer = { ...(r.data as Record<string, unknown>) };
+    delete answer.ask;
+    return tmJson(answer);
+  }
   const e = tmRefusal(r.data) ?? "generic";
   return tmJson({ ok: false, error: e }, e === "signin" ? 401 : 502);
 }

@@ -302,6 +302,14 @@ describe("the routes", () => {
     expect(String(f.mock.calls[0][0])).toBe("https://example.supabase.co/rest/v1/rpc/testimonial_mine");
     expect(JSON.parse(String((f.mock.calls[0][1] as RequestInit).body))).toEqual({ p_id: "cust1", p_token: "tok_0123456789abcdef" });
   });
+  it("mine: the page reads the route's answer once - the chosen name, the booking and the dates survive the trip", async () => {
+    const item = { id: 7, about: "saturday", stars: 5, body: "Words long enough to be a testimonial.", lang: "en", name_mode: "short", display_name: "Sara A.",
+      status: "pending", photo: true, source: "rating", entry_id: "e1", created_at: "2026-11-18T10:00:00Z", published_at: null };
+    vi.stubGlobal("fetch", rpc(() => json({ ok: true, on: true, names: { full: "Sara Ahmed", short: "Sara A." }, since: { year: 2025, rides: 3 }, items: [item], ask: { entry_id: "e9", body: "Old words" } })));
+    const out = await (await mineGET(new Request(`${SITE}/api/testimonials/mine`, { headers: { cookie: ACCT } }))).json();
+    expect(out.ask).toBeUndefined();
+    expect(tmMine(out)?.items[0]).toMatchObject({ id: 7, nameMode: "short", displayName: "Sara A.", entryId: "e1", createdAt: "2026-11-18T10:00:00Z", photo: true });
+  });
   it("mine: a session refused, a database without the function, no answer", async () => {
     vi.stubGlobal("fetch", rpc(() => json({ ok: false, error: "signin" })));
     expect(await (await mineGET(new Request(`${SITE}/x`, { headers: { cookie: ACCT } }))).json()).toEqual({ ok: false, error: "signin" });
