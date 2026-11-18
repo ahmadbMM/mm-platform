@@ -125,6 +125,15 @@ describe("prices", () => {
     expect(promoRows(free, base, [r("Road"), r("Hybrid"), r("Road")], null)).toEqual([true, false, false]);
     expect(promoRows(free, base, [r("Road Carbon"), r("Road")], null)).toEqual([false, false]);
   });
+  it("lets a gift ride's or a lesson pack's code pay for one rider's place, the first it fits (the database counts one use per row)", () => {
+    const gift = { code: "GF-AB12CD34", kind: "flat", value: 75, appliesTo: "Road" };
+    expect(promoDiscount(gift, base, [r("Hybrid"), r("Road"), r("Road")], prices, null)).toBe(75);
+    expect(promoRows(gift, base, [r("Hybrid"), r("Road"), r("Road")], null)).toEqual([false, true, false]);
+    const pack = { code: "PK-AB12CD34", kind: "pct", value: 100, appliesTo: null };
+    expect(promoDiscount(pack, base, [r("Road"), r("Hybrid")], prices, null)).toBe(75);
+    expect(promoRows(pack, base, [r("Road"), r("Hybrid")], null)).toEqual([true, false]);
+    expect(promoDiscount({ ...gift, code: "GF-AB12CD3" }, base, [r("Road"), r("Road")], prices, null)).toBe(150);
+  });
 });
 
 describe("add-ons", () => {

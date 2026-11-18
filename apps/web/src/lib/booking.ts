@@ -278,6 +278,13 @@ export function promoDiscount(p: Promo | null, s: Pick<BookSession, "free" | "se
     const d = p.kind === "flat" ? Math.min(Number(p.value), n) : n * (Number(p.value) / 100);
     return Math.min(base, Math.max(0, round2(d)));
   }
+  if (codeFirst(p.code)) {
+    const i = promoRows(p, s, riders, acct).indexOf(true);
+    const l = i < 0 ? null : lines[i];
+    const n = !l ? 0 : l.kind === "sar" ? l.n : l.kind === "range" ? priceFor(prices, riders[i].type || "Any") : 0;
+    const d = p.kind === "flat" ? Math.min(Number(p.value), n) : n * (Number(p.value) / 100);
+    return Math.min(base, Math.max(0, round2(d)));
+  }
   if (p.appliesTo) {
     let d = 0;
     lines.forEach((l, i) => {
@@ -293,8 +300,13 @@ export function promoDiscount(p: Promo | null, s: Pick<BookSession, "free" | "se
 /** Which riders carry the code into the booking (_applyPromoToEntries): only the ones it
  *  discounts - the database counts a use per row that carries it. A personal one-use code: rider 1 alone, never on
  *  Carbon. */
-export function promoRows(p: Pick<Promo, "appliesTo" | "one"> | null, s: Pick<BookSession, "free" | "seat">, riders: Pick<Rider, "type" | "name">[], acct: Pick<BookAccount, "name" | "house"> | null): boolean[] {
-  return riders.map((r, i) => {
+/** A gift ride's code (GF-) or a lesson pack's (PK-, the 2026-11-18 build, EF20/EF21): one rider's place per booking, so
+ *  only the first rider it fits carries it and is discounted (a party of two on the gifted bike type pays for the second;
+ *  the database counts one use per row that carries a code, and a gift has one). */
+export const codeFirst = (code: string | undefined) => !!code && /^(GF|PK)-[A-Z0-9]{8}$/.test(code);
+
+export function promoRows(p: (Pick<Promo, "appliesTo" | "one"> & { code?: string }) | null, s: Pick<BookSession, "free" | "seat">, riders: Pick<Rider, "type" | "name">[], acct: Pick<BookAccount, "name" | "house"> | null): boolean[] {
+  const rows = riders.map((r, i) => {
     if (!p || s.free || r.type === "Own") return false;
     // a seat on a paid event has no bike type and is discounted all the same (riderPrices, promoDiscount; bug hunt
     // 2026-11-11): its row carries the code, or the database charges the full seat the review took the code off
@@ -303,6 +315,9 @@ export function promoRows(p: Pick<Promo, "appliesTo" | "one"> | null, s: Pick<Bo
     if (p.one) return i === 0 && !!r.type && !/carbon/i.test(r.type);
     return !p.appliesTo || p.appliesTo === r.type;
   });
+  if (!p || !codeFirst(p.code)) return rows;
+  const first = rows.indexOf(true);
+  return rows.map((_, i) => i === first);
 }
 
 // ── Add-ons ──────────────────────────────────────────────────────────────────────────────────
