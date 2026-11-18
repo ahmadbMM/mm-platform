@@ -8,7 +8,9 @@ import { BIKE_KINDS, isNonBike } from "./bike-kinds";
 import type { BadgeReq } from "./badge-request";
 
 /** What the record needs of a session: its kind, and whether it costs nothing (_isFreeRide). */
-export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: boolean; groupKm?: { beg: number; int: number }; km?: number };
+export type RecordSession = { kind: RideKind; freeRide: boolean; approval?: boolean; groupKm?: { beg: number; int: number }; km?: number;
+  /** The route it followed (sessions.route_slug; My records' Routes ridden, lib/my-records.ts), null for none; absent when not read. */
+  route?: string | null };
 /** A night on a bike (lib/bike-kinds.ts BIKE_KINDS): the only nights Your rides and the ride badges count
  *  (the owner, 2026-10-18: the pool, the workshop, an event, a run and Victory Lap are not rides). A session
  *  that did not load counts unless its id names a kind without a bike. */

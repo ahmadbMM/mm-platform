@@ -284,3 +284,9 @@ dialog.bdr-dlg::backdrop { background: rgba(26, 25, 25, .5); }
 .ac-calf-note { margin: 0; font-size: 13px; line-height: 1.45; color: #4a4843; overflow-wrap: anywhere; user-select: all; -webkit-user-select: all; }
 .ac-calf-err { margin: 0; font-size: 13px; font-weight: 600; color: #a33b2e; }
 :is(.ac-calf-note, .ac-calf-err):empty { display: none; }
+/* My records (MyRecords.tsx; the booking app's .rec, 2026-11-18): two tiles a row, each a big number, its name and one short value. */
+.rec-g { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.rec-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 12px 14px; border-radius: 12px; background: #f6f3ec; }
+.rec-n { font-size: 26px; font-weight: 700; line-height: 1.15; color: #1a1919; font-variant-numeric: tabular-nums; }
+.rec-l { font-size: 13px; font-weight: 600; color: #1a1919; }
+.rec-v { font-size: 13px; color: #6e6b63; }

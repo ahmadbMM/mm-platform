@@ -57,7 +57,9 @@ import { BOOTH_DIR, bfFor, bloodDone, breakfastFor, cancelledGroups, doneToday, 
 import { anyoneAhead, loadTicketSessions } from "@/lib/tickets-data";
 import { bikeReport } from "@/lib/bike-report";
 import { badgeList, ledRides, recordRows, rideMore, rideStats } from "@/lib/ride-record";
-import { bikeName, loadBadgeData, loadOpenKinds, loadRecordSessions } from "@/lib/ride-record-data";
+import { bikeName, loadBadgeData, loadBikeTypes, loadOpenKinds, loadRecordSessions } from "@/lib/ride-record-data";
+import { myRecords } from "@/lib/my-records";
+import MyRecords from "@/components/account/MyRecords";
 import { anniversaryOf, annivLine, triedKinds } from "@/lib/landmarks";
 import { helperPathOf } from "@/lib/helper-path";
 import { shareDays } from "@/lib/share-days";
@@ -465,13 +467,18 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
   // A community member's Helper path (customer_helper_path, rentals 20261114082300; the booking app's F23): the card on
   // Badges, the helper days under Rides led on Stats; a rider who is not a member, or a read that failed, sees neither.
   // Stats' personal landmarks (the booking app's F16): the first ride's anniversary card leads it for that week, and the
-  // kinds tried sit under By event (the kinds the account can still book: loadOpenKinds).
+  // kinds tried sit under By event (the kinds the account can still book: loadOpenKinds). My records (the booking app's
+  // _recHtml, 2026-11-18; lib/my-records.ts) follow Your rides on Stats.
   const recordMain = async (p: "stats" | "badges") => {
     // no record from bookings that could not be read: every ride badge would read as not earned
     if (unread) return <section className="ac-sec" aria-label={p === "stats" ? recordBase.stats : recordBase.badges}>{failed}</section>;
     const record = recordRows(rows);
-    const [recSessions, badges, referralRaw, helperRaw, openKinds] = await Promise.all([loadRecordSessions(record.map((r) => r.sessionId), acct), loadBadgeData(acct), referralP,
-      rpcServer<unknown>("customer_helper_path", { p_id: acct.id, p_token: acct.token }), p === "stats" ? loadOpenKinds(today, acct) : Promise.resolve(null)]);
+    // My records' Bike types tried (lib/my-records.ts): the type of each bike handed over on a booking made for no type, read
+    // only when Stats has such a booking
+    const anyBikes = p === "stats" ? record.filter((r) => r.type === "Any" && r.bikeId && (r.status === "done" || r.status === "active")).map((r) => r.bikeId as string) : [];
+    const [recSessions, badges, referralRaw, helperRaw, openKinds, bikeTypes] = await Promise.all([loadRecordSessions(record.map((r) => r.sessionId), acct), loadBadgeData(acct), referralP,
+      rpcServer<unknown>("customer_helper_path", { p_id: acct.id, p_token: acct.token }), p === "stats" ? loadOpenKinds(today, acct) : Promise.resolve(null),
+      anyBikes.length ? loadBikeTypes(anyBikes) : Promise.resolve(new Map<string, string>())]);
     const helper = helperPathOf(helperRaw.data);
     badges.referralRode = referralRodeOf(referralRaw); // the Recruiter badge counts these friends
     const allBadges = badgeList(record, recSessions, badges, today, acct.profile ?? null);
@@ -494,6 +501,8 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
     const kindName = (k: RideKind) => names[k] || enNames[k] || k;
     const more = rideMore(record, recSessions, today, { type: typeName, kind: kindName, locale: intlOf(locale) });
     const anniv = anniversaryOf(stats?.first, today);
+    // My records (the booking app's _recHtml, 2026-11-18): after Your rides, for two or more finished sessions
+    const recs = myRecords(record, recSessions, (id) => bikeTypes.get(id) ?? null);
     // a Farm House Night on offer is named to a community member alone (2026-11-13: "not to public"); one the rider
     // went to is theirs, and stays among the kinds done
     if (openKinds?.has("farm") && (await rpcServer<boolean>("community_member", { p_id: acct.id, p_token: acct.token })).data !== true) openKinds.delete("farm");
@@ -503,6 +512,7 @@ export default async function AccountPage({ params, searchParams }: { params: Pr
         {anniv && <Anniversary locale={locale} years={anniv.years} first={anniv.first} firstLabel={recordText.first} line={annivLine(content, locale)} />}
         {!stats && !led && <p className="ac-none">{recordText.none}</p>}
         <RideRecord part="stats" locale={locale} stats={stats} led={led} badges={[]} t={recordText} typeName={typeName} dur={dur} helper={helperLine(locale, helper)} />
+        {recs && <MyRecords locale={locale} recs={recs} />}
         <RideMore locale={locale} more={more} t={recordText} typeName={typeName} kindName={kindName}
           earned={{ n: allBadges.filter((x) => x.on).length, of: allBadges.length, href: localHref(accountPartHref("badges"), locale) }}
           tried={tried.length > 0 ? <TriedKinds locale={locale} kinds={tried} name={kindName} /> : null} />
