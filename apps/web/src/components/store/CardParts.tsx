@@ -10,18 +10,18 @@ import { ADDED_MS } from "@/lib/cart";
 import { cartAdd, useCart } from "./useCart";
 import { savedToggle, useSaved } from "./useLists";
 import { BagPlus } from "./w2-icons";
+import { photoLoad } from "@/lib/sx-B1-list";
 
 // The moving parts of a product card on the store's lists (chain w2): its photo strip (D06-C), its heart (F07) and its
 // quick add (F06). The card itself (ProductCard) is plain markup around them.
 
-const SIZES = "(max-width: 700px) 50vw, (max-width: 1000px) 33vw, 25vw";
-
 /** The card's photos in a strip that swipes sideways (D06-C), with dots for where it is and small arrows to tap instead
- *  (WCAG 2.5.7). Each photo opens the product; the keyboard reaches the product by the card's name, so the photos are out
+ *  (WCAG 2.5.7; each a 44px target around its drawn circle, P12). The list's first photo loads at once and first, every
+ *  other one as it nears the screen (SM12-B: lib/sx-B1-list.ts photoLoad); `sizes` follows the card's width (cardSizes). Each photo opens the product; the keyboard reaches the product by the card's name, so the photos are out
  *  of the tab order, and one without a description is hidden from screen readers (the name says it; X10). On a
  *  right-to-left page the strip runs right to left and the arrows point that way (A06-A); a photo is never mirrored. */
-export function CardStrip({ photos, alts, href, eager, prev, next }: {
-  photos: string[]; alts: string[]; href: string; eager?: boolean; prev: string; next: string;
+export function CardStrip({ photos, alts, href, eager, sizes, prev, next }: {
+  photos: string[]; alts: string[]; href: string; eager?: boolean; sizes: string; prev: string; next: string;
 }) {
   const box = useRef<HTMLDivElement>(null);
   const [at, setAt] = useState(0);
@@ -45,7 +45,7 @@ export function CardStrip({ photos, alts, href, eager, prev, next }: {
       <div ref={box} className="st-strip" onScroll={n > 1 ? onScroll : undefined}>
         {photos.map((src, i) => (
           <Link key={src + i} href={href} className="st-strip-i" tabIndex={-1} aria-hidden={alts[i] ? undefined : true} draggable={false}>
-            <img src={sized(src, 640)} srcSet={srcSet(src)} sizes={SIZES} alt={alts[i]} loading={i === 0 && eager ? undefined : "lazy"} decoding="async" draggable={false} />
+            <img src={sized(src, 640)} srcSet={srcSet(src)} sizes={sizes} alt={alts[i]} {...photoLoad(!!eager, i)} decoding="async" draggable={false} />
           </Link>
         ))}
       </div>

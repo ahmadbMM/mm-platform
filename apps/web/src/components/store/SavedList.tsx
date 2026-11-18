@@ -33,7 +33,7 @@ export default function SavedList({ locale, products, licence, today, whens }: L
     <>
       <p className="st-count" aria-live="polite">{list.length === 1 ? t.count1 : t.countN(list.length)}</p>
       <div className="st-grid">
-        {list.map((p, i) => <ProductCard key={p.id} p={p} locale={locale} t={t} w={w} licence={licence} today={today} whens={whens} eager={i < 4} />)}
+        {list.map((p, i) => <ProductCard key={p.id} p={p} locale={locale} t={t} w={w} licence={licence} today={today} whens={whens} eager={i === 0} />)}
       </div>
     </>
   );

@@ -7,6 +7,8 @@ import { Amt, Ic } from "./bits";
 import { CardStrip, QuickAdd, SaveHeart } from "./CardParts";
 import BidiText from "./BidiText";
 import { StIcon } from "./icons";
+import { brandOnce, cardSizes, isWideCard } from "@/lib/sx-B1-list";
+import "./sx-B1.css";
 
 // One product as the lists show it (D02-A to D08-A as staging has them, store build 2026-11-15): a white card with a
 // 1px border (green on hover), its photos in a fixed square on white, never cropped, in a strip that swipes (D06-C), a
@@ -15,6 +17,12 @@ import { StIcon } from "./icons";
 // row line up (A02-A), with the quick-add bag at its end for one-size gear (F06). Sold out is the only flag. A
 // certified pre-owned product says its warranty (F53). A former price shows only beside a discount licence, between the
 // licence's dates (F107).
+//   On every screen (the user, 2026-11-18: "do all", SM03-B, SM04-B, P17, P22): a bike's card is wider (a whole row on a
+// phone, with its price beside its name so it shows in the first screen; half a row on a tablet; two of four columns on a
+// computer) and its photo box wider in step, so a row's photos stand as tall; every card keeps the same slots in the
+// same places, empty or not (the brand, the name on two lines, the colour dots, one status line: a certified bike's
+// warranty or "Only N left", then the delivery chip on one line saying what the product page's first way promises), so
+// the lines of a row line up; the name leaves out the brand the brand line already says.
 export default function ProductCard({ p, locale, t, w, licence, today, whens, eager }: {
   p: StoreProduct; locale: string; t: StoreText; w: W2Text; licence: boolean; today: string; whens: CardWhens; eager?: boolean;
 }) {
@@ -26,24 +34,30 @@ export default function ProductCard({ p, locale, t, w, licence, today, whens, ea
   const was = wasPriceAt(p, licence, today, from ? null : lo);
   const when = whenFor(p, whens);
   const quick = quickVariant(p);
+  const wide = isWideCard(p);
+  // one status line: a certified pre-owned bike's warranty (one of a kind, so always "Only 1 left"), else the live stock
+  const status = p.condition === "certified"
+    ? <span className="st-card-warranty"><StIcon name="shield" size={16} />{warrantyText(p, w)}</span>
+    : stock.kind === "low" ? <span className="st-low">{t.left(stock.left)}</span> : null;
   return (
-    <div className={`st-card${stock.kind === "out" ? " is-out" : ""}`}>
+    <div className={`st-card${wide ? " is-wide" : ""}${stock.kind === "out" ? " is-out" : ""}`}>
       <div className="st-card-img">
-        <CardStrip photos={p.images} alts={p.images.map((src) => photoAlt(p, src, locale))} href={href} eager={eager} prev={w.prevPhoto} next={w.nextPhoto} />
+        <CardStrip photos={p.images} alts={p.images.map((src) => photoAlt(p, src, locale))} href={href} eager={eager} sizes={cardSizes(wide)} prev={w.prevPhoto} next={w.nextPhoto} />
         {stock.kind === "out" && <span className="st-flag">{t.soldOut}</span>}
         <SaveHeart slug={p.slug} label={w.save(name)} />
       </div>
       <div className={`st-card-body${quick ? " has-quick" : ""}`}>
-        {p.brand && <span className="st-brand">{p.brand}</span>}
-        <Link href={href} className="st-card-name"><BidiText text={name} locale={locale} /></Link>
-        {colours.length > 0 && (
+        <span className="st-brand" aria-hidden={p.brand ? undefined : true}>{p.brand}</span>
+        <Link href={href} className="st-card-name" aria-label={name === brandOnce(name, p.brand) ? undefined : name}><BidiText text={brandOnce(name, p.brand)} locale={locale} /></Link>
+        {colours.length > 0 ? (
           <span className="st-dots" role="img" aria-label={w.coloursOf(colours.map((c) => pick(locale, c.en, c.ar)).join(", "))}>
             {colours.map((c) => <i key={c.key} className={c.hex ? undefined : "st-dot-none"} style={c.hex ? { background: c.hex } : undefined} title={pick(locale, c.en, c.ar)} />)}
           </span>
-        )}
-        {p.condition === "certified" && <span className="st-card-warranty"><StIcon name="shield" size={16} />{warrantyText(p, w)}</span>}
-        {when && <span className={`st-when is-${when.way}`}><Ic name={when.way === "pickup" ? "shop" : "truck"} size={15} />{when.text}</span>}
-        {stock.kind === "low" && <span className="st-low">{t.left(stock.left)}</span>}
+        ) : <span className="st-dots" aria-hidden="true" />}
+        <span className="st-card-status">{status}</span>
+        {when
+          ? <span className={`st-when is-${when.way}`} title={when.text}><Ic name={when.way === "pickup" ? "shop" : "truck"} size={15} /><span>{when.text}</span></span>
+          : <span className="st-when" aria-hidden="true" />}
         <span className="st-card-price">
           <Amt>{from ? t.from(sar(lo)) : sar(lo)}</Amt>
           {was !== null && <s className="st-was"><Amt>{sar(was)}</Amt></s>}

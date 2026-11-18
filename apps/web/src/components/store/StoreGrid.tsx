@@ -4,18 +4,23 @@ import { useMemo, useState } from "react";
 import { useLocalize } from "@/i18n/TxProvider";
 import { STORE_SORTS, type StoreProduct, type StoreSort } from "@/lib/store-core";
 import { cleanFilters, facetsOf, filterCount, listOf, listQueryText, noFilters, type CardWhens, type ListFilters } from "@/lib/store-listing";
+import { activeFilters, withoutFilter } from "@/lib/sx-B1-list";
 import { T } from "./Store.text";
 import { T as W } from "./w2.text";
 import FilterPanel from "./FilterPanel";
 import Modal from "./Modal";
 import ProductCard from "./ProductCard";
 import { StIcon } from "./icons";
+import { FilterPills, SortMark } from "./sx-B1-parts";
+import "./sx-B1.css";
 
 // A list of products: on /store every product under the category tiles (F01), on a category's page that category's
 // (O01-E). The order (O04-A, the Sort select) and the filters (O05-C: a panel beside the list on a wide screen, a
 // Filters button opening a centred pop-up on a phone) stay in the address (?sort=price-asc&size=M), so a shared link
 // opens the same list. The certified pre-owned products sit apart under the new ones, in their own section with its
-// drawn badge (F53).
+// drawn badge (F53). On every screen (SM13-B, P11, P18): Filters and Sort are two equal buttons on one row, the order a
+// native menu at 16px drawn as a button (iOS does not zoom it); the filters that are on show as pills above the list,
+// each taking itself off, and Filters counts them. Bikes take a wider card (SM03-B, ProductCard).
 export default function StoreGrid({ locale, products, start, licence, today, whens }: {
   locale: string; products: StoreProduct[]; start: { sort: StoreSort; filters: ListFilters }; licence: boolean; today: string; whens: CardWhens;
 }) {
@@ -28,6 +33,7 @@ export default function StoreGrid({ locale, products, start, licence, today, whe
   const { fresh, certified } = useMemo(() => listOf(products, f, sort), [products, f, sort]);
   const shown = fresh.length + certified.length;
   const active = filterCount(f);
+  const on = useMemo(() => activeFilters(f, facets), [f, facets]);
 
   const remember = (nf: ListFilters, s: StoreSort) =>
     window.history.replaceState(window.history.state, "", `${window.location.pathname}${listQueryText(window.location.search, nf, s)}${window.location.hash}`);
@@ -36,7 +42,7 @@ export default function StoreGrid({ locale, products, start, licence, today, whe
   const clear = () => pickFilters(noFilters());
 
   if (!products.length) return <p className="st-empty">{t.emptyStore}</p>;
-  const card = (p: StoreProduct, i: number) => <ProductCard key={p.id} p={p} locale={locale} t={t} w={w} licence={licence} today={today} whens={whens} eager={i < 4} />;
+  const card = (p: StoreProduct, i: number) => <ProductCard key={p.id} p={p} locale={locale} t={t} w={w} licence={licence} today={today} whens={whens} eager={i === 0} />;
   return (
     <div className={`st-list${facets.length ? " has-side" : ""}`}>
       {facets.length > 0 && (
@@ -57,11 +63,13 @@ export default function StoreGrid({ locale, products, start, licence, today, whe
           )}
           <label className="st-sort">
             <span>{t.sortLabel}</span>
+            <SortMark />
             <select value={sort} onChange={(e) => pickSort(e.target.value as StoreSort)}>
               {STORE_SORTS.map((s) => <option key={s} value={s}>{t.sorts[s]}</option>)}
             </select>
           </label>
         </div>
+        <FilterPills on={on} locale={locale} t={t} w={w} onRemove={(k, v) => pickFilters(withoutFilter(f, k, v))} onClear={clear} />
         <p className="st-count" aria-live="polite">{shown === 1 ? t.count1 : t.countN(shown)}</p>
         {shown === 0 ? (
           <div className="st-empty">
